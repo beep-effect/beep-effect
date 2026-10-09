@@ -32,7 +32,8 @@ export interface HolderProps {
 /**
  * A component that shows one element and lets its owner swap it in place.
  *
- * @remarks
+ * **Details**
+ *
  * Everything above the holder stays mounted across a swap: the screen's error boundary, its context, the root keys
  * and the colour hold. Only the held subtree changes, so the screen's `ScreenControl` keeps meaning the same screen.
  * The swap function is handed over in a layout effect, before the first frame is written, and taken back in that

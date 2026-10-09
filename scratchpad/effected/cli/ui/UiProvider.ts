@@ -8,7 +8,8 @@ import * as O from "@beep/utils/Option";
 /**
  * What the kit's hooks read in a tree the kit did not mount: the theme, the glyph set, and optionally the size.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Only `CliUi.context` mints one, because only it also loads the Ink and React the provider renders with. A value
  * without the brand does not compile, which stops one being built by accident; the brand is a plain key, so a
  * literal that spells it out compiles, and must never be written. Spread a minted value to change its fields
@@ -50,7 +51,8 @@ export interface UiProviderProps {
  * Provide the kit's context to an Ink tree the kit did not mount, so `useTheme`, `useGlyphs`, `Styled` and
  * `useTerminalSize` work in it.
  *
- * @remarks
+ * **Details**
+ *
  * Take the value from `CliUi.context`, which also loads Ink and React: the provider and the kit's hooks render with
  * the modules the kit loaded. A screen mounted by `CliUi.run` already has this context.
  *
@@ -65,7 +67,6 @@ export interface UiProviderProps {
  * Ink's colour level is the host's: `Styled` passes the theme's props, none at colour `none`.
  *
  * @param props - the context, and the tree
- *
  * @public
  */
 export const UiProvider = (props: UiProviderProps): ReactElement => {

@@ -28,7 +28,8 @@ const causeMessage = (cause: unknown): string | undefined => {
  * (including the default catalog declared twice), or a config dependency whose
  * `pnpmfile.cjs` cannot be loaded or replayed.
  *
- * @remarks
+ * **Details**
+ *
  * A *missing* `pnpm-workspace.yaml`, an *absent* `workspaces` field, or one
  * explicitly `null` is not an error: there is simply nothing to misread, so
  * assembly yields the empty set. The reader is otherwise **hard-fail by design** —
@@ -79,17 +80,18 @@ export class CatalogAssemblyError extends S.TaggedError<CatalogAssemblyError>($I
 	).annotateKey({ description: "Why a `hooks`-source failure could not resolve a config dependency at its declared version, when that is what failed. Absent for every other failure, including a pnpmfile that resolved but failed to load or replay." }),
 }, $I.annote("CatalogAssemblyError", { description: "Raised when a workspace's catalogs cannot be assembled — a `pnpm-workspace.yaml` that is unreadable or not valid YAML, a root `package.json` `workspaces` field whose shape or catalog blocks are malformed in a way pnpm itself rejects (including the default catalog declared twice), or a config dependency whose `pnpmfile.cjs` cannot be loaded or replayed." })) {
 	/**
-	 * Renders the failing source into a one-line summary, followed by the
-	 * cause's own message when the cause carries one.
-	 *
-	 * @remarks
-	 * The cause is where the actionable detail lives — which version was
-	 * declared, what is installed, which stores were searched, the module a
-	 * pnpmfile could not import — so a consumer rendering only `message`, the
-	 * normal Effect path, must not lose it. A cause that is itself a
-	 * `CatalogAssemblyError` (a nested assembly error) already renders its own
-	 * summary, so its message is used as-is rather than prefixed a second time.
-	 */
+  * Renders the failing source into a one-line summary, followed by the
+  * cause's own message when the cause carries one.
+  *
+  * **Details**
+  *
+  * The cause is where the actionable detail lives — which version was
+  * declared, what is installed, which stores were searched, the module a
+  * pnpmfile could not import — so a consumer rendering only `message`, the
+  * normal Effect path, must not lose it. A cause that is itself a
+  * `CatalogAssemblyError` (a nested assembly error) already renders its own
+  * summary, so its message is used as-is rather than prefixed a second time.
+  */
 	override get message(): string {
 		if (S.is(CatalogAssemblyError)(this.cause)) return this.cause.message;
 		const summary = `Failed to assemble catalogs from ${this.source} ${this.path}`;

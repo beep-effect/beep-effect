@@ -25,7 +25,8 @@ const $I = $ScratchpadId.create("effected/sbom/NtiaReport");
 /**
  * The seven NTIA minimum elements, by stable identifier.
  *
- * @remarks
+ * **Details**
+ *
  * A literal union rather than free text: this is what a consumer branches on,
  * and a display name is what it renders afterwards.
  *
@@ -158,7 +159,8 @@ const timestamp = (document: SbomDocument): NtiaElement => {
 /**
  * A document's standing against the NTIA minimum elements.
  *
- * @example
+ * **Example** (Check an SBOM for missing NTIA elements)
+ *
  * ```ts
  * import { Component, NtiaReport, Sbom } from "./index.ts";
  *

@@ -59,7 +59,8 @@ const familyOf = (value: string): string =>
  * The name of the AI agent running this process, if any, as its family: `claude`, not the
  * `claude-code_2-1-285_agent` Claude Code puts in `AI_AGENT`.
  *
- * @remarks
+ * **Details**
+ *
  * `AI_AGENT` wins over every table row. It is lower-cased, the two `github_copilot_*` names collapse to
  * `copilot`, and a value that is a known family or starts with one followed by `-` or `_` becomes that family.
  * Any other value is returned as it was lower-cased.

@@ -23,7 +23,8 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
 /**
  * Everything GitHub reports about a repository.
  *
- * @remarks
+ * **Details**
+ *
  * The **generated** response type for `GET /repos/{owner}/{repo}`, not a
  * hand-written projection, so every field GitHub documents is available with
  * its documented type.
@@ -43,7 +44,8 @@ export type RepositoryPatch = Omit<Rest.Params<"PATCH /repos/{owner}/{repo}">, "
  * A {@link RepositoryPatch} under construction, where an absent field may be
  * spelled as an explicit `undefined`.
  *
- * @remarks
+ * **Details**
+ *
  * The shape you actually have when you are applying only what a user
  * configured. Octokit's generated params spell an optional field as
  * `has_issues?: boolean`, **not** `has_issues?: boolean | undefined`, so under
@@ -61,7 +63,8 @@ export type RepositoryPatchDraft = {
  * A {@link RepositoryPatch} from a draft, dropping every explicitly-`undefined`
  * field.
  *
- * @remarks
+ * **Details**
+ *
  * The supported spelling for "apply only what was configured" — the natural
  * shape for a sync action, without a cast at the call site.
  *
@@ -73,7 +76,8 @@ export type RepositoryPatchDraft = {
  * accesses (`draft[key] = source[key]` over a union `key`), which no helper can
  * fix — build the draft as a literal where you can.
  *
- * @example
+ * **Example** (Build a repository patch from configured fields)
+ *
  * ```ts
  * import { repositoryPatch } from "./index.ts";
  *
@@ -87,7 +91,6 @@ export type RepositoryPatchDraft = {
  *
  * @param draft - The fields to apply, any of which may be `undefined`.
  * @returns A patch carrying only the fields that were actually set.
- *
  * @public
  */
 export const repositoryPatch = (draft: RepositoryPatchDraft): RepositoryPatch => {
@@ -109,7 +112,8 @@ export type OwnerType = "User" | "Organization";
  * Fields in the user-facing `security_and_analysis` block that GitHub accepts
  * as `{ status: "enabled" | "disabled" }`.
  *
- * @remarks
+ * **Details**
+ *
  * A caller supplies the bare string; it is wrapped before sending.
  *
  * @public
@@ -130,7 +134,8 @@ export const SECURITY_ANALYSIS_STATUS_FIELDS: HashSet.HashSet<string> = HashSet.
  * Settings reachable **only** through the GraphQL `updateRepository` mutation,
  * mapped from snake_case keys to camelCase GraphQL input fields.
  *
- * @remarks
+ * **Gotchas**
+ *
  * GitHub never exposed these on the REST repository endpoint — the
  * `PATCH /repos/{owner}/{repo}` route accepts none of them, and
  * `has_discussions` is the treacherous one: the REST **read** returns it, so
@@ -157,7 +162,8 @@ const isStatusObject = S.is(StatusObject);
  * Translate a user-facing `security_and_analysis` block into the shape
  * `PATCH /repos/{owner}/{repo}` expects.
  *
- * @remarks
+ * **Details**
+ *
  * **Both shapes are accepted.** A bare `"enabled"` / `"disabled"` is wrapped;
  * an already-wrapped `{ status }` — which is what `RepositoryPatch` actually
  * types, since it is GitHub's own parameter type — passes through untouched.
@@ -210,7 +216,8 @@ const UpdateRepositoryResponse = S.Struct({
 /**
  * The `updateRepository` mutation, as an owned document.
  *
- * @remarks
+ * **Details**
+ *
  * Named `UpdateRepository`; {@link GitHubClient.layerFixture} keys its GraphQL
  * fixtures by that name.
  */
@@ -227,7 +234,8 @@ const UpdateRepository = GraphQLDocument.make({
 /**
  * Keys GitHub rejects when the strategy that owns them is being turned off.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Sending `merge_commit_title` in the same request that sets
  * `allow_merge_commit: false` is a 422, so the dependent keys go out with the
  * strategy that owns them rather than alone.
@@ -240,7 +248,8 @@ const DEPENDENT_MERGE_KEYS = {
 /**
  * Everything both write paths owe the API before a patch is sent.
  *
- * @remarks
+ * **Details**
+ *
  * Shared by `updateSettings` and `applySettings` deliberately: a caller should
  * not get a different `security_and_analysis` shape depending on which one they
  * reached for.
@@ -267,7 +276,8 @@ const preparePatch = (patch: Record<string, unknown>): Record<string, unknown> =
 /**
  * What {@link GitHubRepositoryShape.applySettings} actually sent.
  *
- * @remarks
+ * **Details**
+ *
  * **These are the fields that went out, not the fields you asked for**, and the
  * difference is the point. `applySettings` drops what GitHub would reject —
  * merge keys whose strategy is being disabled, a `security_and_analysis` block
@@ -299,57 +309,61 @@ export interface GitHubRepositoryShape {
 	/** Apply a settings patch and return what GitHub then reports. */
 	readonly updateSettings: (patch: RepositoryPatch) => Effect.Effect<RepositorySettings, GitHubError, Repo>;
 	/**
-	 * The default branch's name.
-	 *
-	 * @remarks
-	 * Reads the repository payload and returns `default_branch`.
-	 */
+  * The default branch's name.
+  *
+  * **Details**
+  *
+  * Reads the repository payload and returns `default_branch`.
+  */
 	readonly defaultBranch: Effect.Effect<string, GitHubError, Repo>;
 	/**
-	 * The repository's GraphQL node id.
-	 *
-	 * @remarks
-	 * Needed as `repositoryId` by the `createLinkedBranch` and `createPullRequest`
-	 * mutations.
-	 */
+  * The repository's GraphQL node id.
+  *
+  * **Details**
+  *
+  * Needed as `repositoryId` by the `createLinkedBranch` and `createPullRequest`
+  * mutations.
+  */
 	readonly nodeId: Effect.Effect<string, GitHubError, Repo>;
 
 	/**
-	 * Whether the repository's owner is a user or an organization.
-	 *
-	 * @remarks
-	 * Gates the settings that only exist on organization-owned repositories:
-	 * sending one to a personal repository is rejected, so a caller applying a
-	 * shared settings template filters by this first.
-	 *
-	 * The route is account-scoped (`GET /users/{username}`) but the question is a
-	 * repository question — *may I send org-only fields to this repository?* —
-	 * so it sources the login from `Repo.owner` rather than taking an argument.
-	 * Shaping the API around the route instead of the question would hand every
-	 * caller a login to thread for no reason.
-	 */
+  * Whether the repository's owner is a user or an organization.
+  *
+  * **Details**
+  *
+  * Gates the settings that only exist on organization-owned repositories:
+  * sending one to a personal repository is rejected, so a caller applying a
+  * shared settings template filters by this first.
+  *
+  * The route is account-scoped (`GET /users/{username}`) but the question is a
+  * repository question — *may I send org-only fields to this repository?* —
+  * so it sources the login from `Repo.owner` rather than taking an argument.
+  * Shaping the API around the route instead of the question would hand every
+  * caller a login to thread for no reason.
+  */
 	readonly ownerType: Effect.Effect<OwnerType, GitHubError, Repo>;
 
 	/**
-	 * Apply a settings map that may span REST and GraphQL.
-	 *
-	 * @remarks
-	 * `updateSettings` is the thin, faithfully-typed PATCH and returns what
-	 * GitHub then reports. This is the **applicator**: it takes an open map,
-	 * routes each key to whichever API can actually set it, and returns an
-	 * {@link AppliedSettings} naming the keys that were sent through each.
-	 *
-	 * Three settings — `has_sponsorships`, `has_pull_requests` and
-	 * `has_discussions` ({@link GRAPHQL_ONLY_SETTINGS}) — are only reachable
-	 * through GraphQL's `updateRepository`, which addresses a repository by **node
-	 * id**. So a map touching any of them costs an extra read; a map touching none
-	 * does not, which is the common case.
-	 *
-	 * The map is open by design. GitHub's settings surface is large and moving,
-	 * and a closed type here would date the package — but it also means a typo is
-	 * forwarded rather than rejected, so a caller that owns a schema should
-	 * validate before calling.
-	 */
+  * Apply a settings map that may span REST and GraphQL.
+  *
+  * **Details**
+  *
+  * `updateSettings` is the thin, faithfully-typed PATCH and returns what
+  * GitHub then reports. This is the **applicator**: it takes an open map,
+  * routes each key to whichever API can actually set it, and returns an
+  * {@link AppliedSettings} naming the keys that were sent through each.
+  *
+  * Three settings — `has_sponsorships`, `has_pull_requests` and
+  * `has_discussions` ({@link GRAPHQL_ONLY_SETTINGS}) — are only reachable
+  * through GraphQL's `updateRepository`, which addresses a repository by **node
+  * id**. So a map touching any of them costs an extra read; a map touching none
+  * does not, which is the common case.
+  *
+  * The map is open by design. GitHub's settings surface is large and moving,
+  * and a closed type here would date the package — but it also means a typo is
+  * forwarded rather than rejected, so a caller that owns a schema should
+  * validate before calling.
+  */
 	readonly applySettings: (
 		settings: Record<string, unknown>,
 	) => Effect.Effect<AppliedSettings, GitHubError | GitHubGraphQLError, Repo>;
@@ -359,12 +373,14 @@ export interface GitHubRepositoryShape {
  * Read and update a repository's settings, including settings only GraphQL can
  * write, and look up its default branch, node id and owner type.
  *
- * @remarks
+ * **Details**
+ *
  * Provide it with {@link GitHubRepository.layer}, which needs a `GitHubClient`;
  * every member also needs a `Repo` in `R`. `settings`, `defaultBranch`, `nodeId`
  * and `ownerType` are `Effect` values, not functions.
  *
- * @example
+ * **Example** (Read the default branch and apply REST and GraphQL settings)
+ *
  * ```ts
  * import { GitHubRepository } from "./index.ts";
  * import * as Effect from "effect/Effect";

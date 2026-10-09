@@ -55,7 +55,8 @@ export const MarkdownVisitorEvent = Data.taggedEnum<MarkdownVisitorEvent>();
  * Walks a parsed markdown tree as a lazy `Stream` of `Enter`/`Exit` events in
  * document pre-order. Not instantiable.
  *
- * @example
+ * **Example** (Collect node types from visitor enter events)
+ *
  * ```ts
  * import { Markdown, MarkdownVisitor, MarkdownVisitorEvent } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -78,24 +79,25 @@ export class MarkdownVisitor {
 	private constructor() {}
 
 	/**
-	 * Create a lazy `Stream` of `MarkdownVisitorEvent` walking `root` in
-	 * document pre-order: `Enter` and `Exit` for every node including the
-	 * root and every leaf. Events are produced on demand, so combining with
-	 * `Stream.take` allows efficient partial scans without walking the rest
-	 * of the tree.
-	 *
-	 * @remarks
-	 * Infallible at the type level. A tree produced by `Markdown.parse` can
-	 * never trip the walk's depth guard — the parser refuses deeper input —
-	 * but a decoded foreign tree (`Mdast.fromMdast`) can; the trip surfaces
-	 * as a terminal `MarkdownVisitorEvent` `Error` event carrying a
-	 * `NestingDepthExceeded` {@link MarkdownDiagnostic}, mirroring the typed
-	 * failure `Markdown.stringify` produces for the same tree.
-	 *
-	 * @param root - The tree to walk.
-	 * @returns A lazy `Stream` of `MarkdownVisitorEvent`, infallible at the type
-	 *   level.
-	 */
+  * Create a lazy `Stream` of `MarkdownVisitorEvent` walking `root` in
+  * document pre-order: `Enter` and `Exit` for every node including the
+  * root and every leaf. Events are produced on demand, so combining with
+  * `Stream.take` allows efficient partial scans without walking the rest
+  * of the tree.
+  *
+  * **Details**
+  *
+  * Infallible at the type level. A tree produced by `Markdown.parse` can
+  * never trip the walk's depth guard — the parser refuses deeper input —
+  * but a decoded foreign tree (`Mdast.fromMdast`) can; the trip surfaces
+  * as a terminal `MarkdownVisitorEvent` `Error` event carrying a
+  * `NestingDepthExceeded` {@link MarkdownDiagnostic}, mirroring the typed
+  * failure `Markdown.stringify` produces for the same tree.
+  *
+  * @param root - The tree to walk.
+  * @returns A lazy `Stream` of `MarkdownVisitorEvent`, infallible at the type
+  *   level.
+  */
 	static visit(root: Root): Stream.Stream<MarkdownVisitorEvent> {
 		return Stream.fromIterable(walkIterable(root));
 	}

@@ -10,7 +10,8 @@ const $I = $ScratchpadId.create("effected/config-file/ConfigEvent");
 /**
  * A reference to one configuration source that contributed to a load.
  *
- * @remarks
+ * **Details**
+ *
  * Carries the resolver's name alongside the path so a subscriber can tell
  * `/etc/app/.apprc` found by `systemEtc` from the same path passed explicitly.
  *
@@ -27,7 +28,8 @@ export const ConfigSourceRef = S.Struct({
  * Every event published during config discovery, parsing, validation and
  * persistence.
  *
- * @remarks
+ * **Details**
+ *
  * There is no discovery-failure variant: under this package's
  * resolver-absorption contract a resolver's error channel is `never` — every
  * filesystem failure becomes `Option.none()` — so the pipeline never observes a
@@ -106,7 +108,8 @@ export interface ConfigEventsShape {
  * The opt-in event hook: a PubSub of {@link ConfigEvent} that consumers
  * subscribe to.
  *
- * @remarks
+ * **Details**
+ *
  * Opt-in and honestly zero-cost: when `ConfigFileOptions.events` is omitted the
  * pipeline's `emit` is `Effect.void` and never even looks the service up.
  *
@@ -114,7 +117,8 @@ export interface ConfigEventsShape {
  * channel — every public fallible method is also an `Effect.fn` named span, and
  * the library stays telemetry-agnostic.
  *
- * @example
+ * **Example** (Wire a shared config event hub)
+ *
  * ```ts
  * const events = ConfigEvents.layer;
  * const AppLayer = Layer.mergeAll(
@@ -129,14 +133,15 @@ export class ConfigEvents extends Context.Service<ConfigEvents, ConfigEventsShap
 	$I`ConfigEvents`,
 ) {
 	/**
-	 * An unbounded PubSub of config events.
-	 *
-	 * @remarks
-	 * Unbounded on purpose: a slow subscriber must never apply backpressure to a
-	 * config load. Bind this to a const and provide that const — building it
-	 * twice mints two hubs, and the subscriber would watch the one `emit` does
-	 * not publish to.
-	 */
+  * An unbounded PubSub of config events.
+  *
+  * **Gotchas**
+  *
+  * Unbounded on purpose: a slow subscriber must never apply backpressure to a
+  * config load. Bind this to a const and provide that const — building it
+  * twice mints two hubs, and the subscriber would watch the one `emit` does
+  * not publish to.
+  */
 	static readonly layer: Layer.Layer<ConfigEvents> = Layer.effect(
 		ConfigEvents,
 		Effect.gen(function* () {

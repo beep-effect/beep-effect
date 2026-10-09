@@ -69,20 +69,22 @@ export class ResolvedTool extends S.Class<ResolvedTool>($I`ResolvedTool`)({
 	context: S.optionalKey(ExecContext).annotateKey({ description: "The project-local execution context, when ResolvedTool.source is `\"local\"`." }),
 }, $I.annote("ResolvedTool", { description: "A tool that was found, with everything discovery learned about it." })) {
 	/**
-	 * A core `Command` that runs this tool — bare for a global resolution,
-	 * launcher-prefixed and directory-scoped for a local one.
-	 *
-	 * @remarks
-	 * Returns core's own `ChildProcess.Command`, not a wrapper: hand it to
-	 * {@link Run} or to core's spawner directly, and compose it with core's
-	 * combinators.
-	 *
-	 * @example
-	 * ```ts
-	 * const biome = yield* discovery.resolve(Tool.named("biome"));
-	 * yield* Run.text(biome.command("check", "."));
-	 * ```
-	 */
+  * A core `Command` that runs this tool — bare for a global resolution,
+  * launcher-prefixed and directory-scoped for a local one.
+  *
+  * **Details**
+  *
+  * Returns core's own `ChildProcess.Command`, not a wrapper: hand it to
+  * {@link Run} or to core's spawner directly, and compose it with core's
+  * combinators.
+  *
+  * **Example** (Run a Biome check with a resolved tool)
+  *
+  * ```ts
+  * const biome = yield* discovery.resolve(Tool.named("biome"));
+  * yield* Run.text(biome.command("check", "."));
+  * ```
+  */
 	command(...args: ReadonlyArray<string>): ChildProcess.Command {
 		const bare = ChildProcess.make(this.name, args);
 		return this.source === "local" && this.context !== undefined ? this.context.apply(bare) : bare;
@@ -131,7 +133,8 @@ export class ToolVersionMismatchError extends S.TaggedError<ToolVersionMismatchE
  * A tool name that cannot safely be spawned was refused before any process
  * started.
  *
- * @remarks
+ * **Details**
+ *
  * An empty name, or one beginning with `-`, which the operating system would
  * read as a flag rather than an executable. The refusal happens **pre-spawn**,
  * which is the point: `Tool.named("-rf")` never reaches a shell, and this
@@ -178,7 +181,8 @@ type Evidence = typeof Evidence.Type;
 /**
  * The cache key: everything the probe outcome depends on, and nothing else.
  *
- * @remarks
+ * **Details**
+ *
  * A `Schema.Class` rather than a string because the cache's `MutableHashMap`
  * keys on `Equal`/`Hash`, which schema classes implement structurally — so the
  * key can carry the probe itself instead of an encoded rendering of it, and the
@@ -219,7 +223,8 @@ const extractVersion = (probe: VersionProbe, stdout: string): O.Option<string> =
 /**
  * Runs one location's probe.
  *
- * @remarks
+ * **Details**
+ *
  * Presence is decided by whether the process **ran**, never by its exit code:
  * a tool whose `--version` exits non-zero still exists. Absence is a spawn
  * failure, which is why `Run.collect`'s typed failure is the signal here and
@@ -397,7 +402,8 @@ const notStubbed = (method: string) => () =>
  * Resolves CLI tools: globally on `PATH`, or project-locally through the
  * launcher {@link LocalExec} describes.
  *
- * @remarks
+ * **Details**
+ *
  * Presence is proven by **running** the tool, never by a shell `command -v` and
  * never by a filesystem scan: a spawn that completes proves existence whatever
  * the exit code, and a spawn failure proves absence. That is one probe per
@@ -410,7 +416,8 @@ const notStubbed = (method: string) => () =>
  * mid-process is picked up on the next call; call `invalidate` to force a
  * re-probe of a tool that changed.
  *
- * @example
+ * **Example** (Check Git availability and run its version command)
+ *
  * ```ts
  * import { LocalExec, Run, Tool, ToolDiscovery } from "./index.ts";
  * import { NodeServices } from "@effect/platform-node";
@@ -444,14 +451,15 @@ export class ToolDiscovery extends Context.Service<ToolDiscovery, ToolDiscoveryS
 		Layer.effect(this, make());
 
 	/**
-	 * An in-memory test double: stub only what the test exercises; every other
-	 * member dies with a defect naming itself.
-	 *
-	 * @remarks
-	 * No member has an honest default — a fabricated `ResolvedTool` would leak
-	 * into consumer logic as fact — so an unstubbed call fails loudly rather
-	 * than lying.
-	 */
+  * An in-memory test double: stub only what the test exercises; every other
+  * member dies with a defect naming itself.
+  *
+  * **Details**
+  *
+  * No member has an honest default — a fabricated `ResolvedTool` would leak
+  * into consumer logic as fact — so an unstubbed call fails loudly rather
+  * than lying.
+  */
 	static readonly makeTest = (overrides: Partial<ToolDiscoveryShape> = {}): ToolDiscoveryShape => ({
 		resolve: notStubbed("resolve"),
 		isAvailable: notStubbed("isAvailable"),
@@ -465,13 +473,14 @@ export class ToolDiscovery extends Context.Service<ToolDiscovery, ToolDiscoveryS
 	});
 
 	/**
-	 * {@link ToolDiscovery.makeTest} behind `Layer.succeed`.
-	 *
-	 * @remarks
-	 * A parameterized layer factory mints a fresh reference per call and layers
-	 * memoize by reference — bind the result to a `const` rather than calling it
-	 * at each composition site.
-	 */
+  * {@link ToolDiscovery.makeTest} behind `Layer.succeed`.
+  *
+  * **Gotchas**
+  *
+  * A parameterized layer factory mints a fresh reference per call and layers
+  * memoize by reference — bind the result to a `const` rather than calling it
+  * at each composition site.
+  */
 	static readonly layerTest = (overrides: Partial<ToolDiscoveryShape> = {}): Layer.Layer<ToolDiscovery> =>
 		Layer.succeed(ToolDiscovery, ToolDiscovery.makeTest(overrides));
 }

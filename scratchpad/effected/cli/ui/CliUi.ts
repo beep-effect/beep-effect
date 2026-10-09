@@ -47,7 +47,8 @@ class ScreenExited extends S.TaggedError<ScreenExited>($I`ScreenExited`)(
 /**
  * How a screen ends: with a result, or cancelled for a reason.
  *
- * @remarks
+ * **Details**
+ *
  * Only the first call counts. Resolving with an empty value (`[]`, `""`) is a result, not a cancel.
  *
  * @public
@@ -62,7 +63,8 @@ export interface ScreenControl<A> {
 /**
  * A screen: given its control, the React element to mount, or a promise of one.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The kit's widgets sanitise the text they draw from data; a screen's own components (Ink's `Text`, `Styled`) draw
  * what they are given, so text from data in them is the screen author's to pass through `Fmt.sanitize` first.
  *
@@ -228,7 +230,8 @@ const mount = Effect.fn("mount")(function* <A>(
 /**
  * Interactive screens drawn with Ink, mounted as scoped resources.
  *
- * @example
+ * **Example** (Confirm a config overwrite with a non-interactive default)
+ *
  * ```ts
  * import { CliUi, Confirm } from "../ui.ts"
  * import * as Effect from "effect/Effect";
@@ -245,42 +248,43 @@ export class CliUi {
 	private constructor() {}
 
 	/**
-	 * Mount `screen` and wait for it to resolve or cancel.
-	 *
-	 * @remarks
-	 * When `CliInteractive` is false it fails with `NotInteractive` and mounts nothing; Ink and React are not even
-	 * loaded. Otherwise it loads them, holds Ink's colour level at stdout's, and mounts the screen on
-	 * `UiStreams` with Ink's own Ctrl-C exit off: Ctrl-C cancels with `"interrupt"` and Esc with `"escape"`.
-	 *
-	 * Mounting is one scoped resource. However the screen ends (resolved, cancelled, crashed, or the fiber
-	 * interrupted), it is unmounted, raw mode and bracketed paste are off, the cursor is shown, and the colour level is
-	 * restored. A
-	 * component that throws is a defect, never a hang or a typed failure, and nothing of Ink's crash screen reaches
-	 * stdout. So is a `useKeys` handler that throws; a handler a consumer registers with Ink's own `useInput` or
-	 * `usePaste` is outside the kit, and what it throws escapes as Ink leaves it. A crash wins over an end in the same
-	 * tick: a handler that cancels or resolves and then throws, or a component that throws before the screen has
-	 * unmounted, is a defect, never the `Cancelled` or the value; a defect raised while the screen unmounts stays beside
-	 * that crash in the cause rather than replacing it. An interrupt stays an interrupt, even when the tree reports a
-	 * crash as it unmounts.
-	 *
-	 * A screen draws on stdout (`UiStreams`), and mounts only when `CliInteractive` is true: a human audience, a
-	 * terminal on both stdin and stdout, and a `TERM` that is not `dumb`. `CliInteractive` reads `false` until a layer
-	 * sets it (`CliRuntime.main`'s `env` does), so a program that never provides one always gets `NotInteractive`.
-	 *
-	 * Screens run one at a time, process-wide: Ink owns raw mode on the one terminal, so a second `run` waits until the
-	 * first is released; so does a `run` while a {@link CliUi.live} view has a run drawn. A screen that itself awaits
-	 * another `CliUi.run` therefore deadlocks, and nothing guards against it.
-	 *
-	 * Do not log while a screen is mounted. Ink redraws its frame by counting the lines it last wrote, and it is
-	 * mounted with `patchConsole` off, so a line written to the terminal from elsewhere (an `Effect.log`, `CliLog`, a
-	 * background fiber) lands inside the frame and tears it. Log before the screen mounts or after it resolves.
-	 *
-	 * With `clear` the last frame is erased as the screen unmounts, so a wizard of several screens leaves only what the
-	 * program prints; without it the last frame stays, with the highlight where the answer was.
-	 *
-	 * @param screen - builds the element to mount from its {@link ScreenControl}
-	 * @param options - whether to erase the last frame
-	 */
+  * Mount `screen` and wait for it to resolve or cancel.
+  *
+  * **Details**
+  *
+  * When `CliInteractive` is false it fails with `NotInteractive` and mounts nothing; Ink and React are not even
+  * loaded. Otherwise it loads them, holds Ink's colour level at stdout's, and mounts the screen on
+  * `UiStreams` with Ink's own Ctrl-C exit off: Ctrl-C cancels with `"interrupt"` and Esc with `"escape"`.
+  *
+  * Mounting is one scoped resource. However the screen ends (resolved, cancelled, crashed, or the fiber
+  * interrupted), it is unmounted, raw mode and bracketed paste are off, the cursor is shown, and the colour level is
+  * restored. A
+  * component that throws is a defect, never a hang or a typed failure, and nothing of Ink's crash screen reaches
+  * stdout. So is a `useKeys` handler that throws; a handler a consumer registers with Ink's own `useInput` or
+  * `usePaste` is outside the kit, and what it throws escapes as Ink leaves it. A crash wins over an end in the same
+  * tick: a handler that cancels or resolves and then throws, or a component that throws before the screen has
+  * unmounted, is a defect, never the `Cancelled` or the value; a defect raised while the screen unmounts stays beside
+  * that crash in the cause rather than replacing it. An interrupt stays an interrupt, even when the tree reports a
+  * crash as it unmounts.
+  *
+  * A screen draws on stdout (`UiStreams`), and mounts only when `CliInteractive` is true: a human audience, a
+  * terminal on both stdin and stdout, and a `TERM` that is not `dumb`. `CliInteractive` reads `false` until a layer
+  * sets it (`CliRuntime.main`'s `env` does), so a program that never provides one always gets `NotInteractive`.
+  *
+  * Screens run one at a time, process-wide: Ink owns raw mode on the one terminal, so a second `run` waits until the
+  * first is released; so does a `run` while a {@link CliUi.live} view has a run drawn. A screen that itself awaits
+  * another `CliUi.run` therefore deadlocks, and nothing guards against it.
+  *
+  * Do not log while a screen is mounted. Ink redraws its frame by counting the lines it last wrote, and it is
+  * mounted with `patchConsole` off, so a line written to the terminal from elsewhere (an `Effect.log`, `CliLog`, a
+  * background fiber) lands inside the frame and tears it. Log before the screen mounts or after it resolves.
+  *
+  * With `clear` the last frame is erased as the screen unmounts, so a wizard of several screens leaves only what the
+  * program prints; without it the last frame stays, with the highlight where the answer was.
+  *
+  * @param screen - builds the element to mount from its {@link ScreenControl}
+  * @param options - whether to erase the last frame
+  */
 	static readonly run = Effect.fn("run")(function* <A>(
 		screen: Screen<A>,
 		options?: CliUiRunOptions,
@@ -341,105 +345,107 @@ export class CliUi {
 	});
 
 	/**
-	 * A live view over a stream: fold `events` into state, and draw it with Ink while a run is going, for the caller's
-	 * scope.
-	 *
-	 * @remarks
-	 * `events` is a `PubSub` subscription or a stream, folded in a fiber of the caller's scope. A subscription, made
-	 * before the first publish, is the surest: nothing published after it is missed. `live` makes a stream's first pull
-	 * before it returns, so one that subscribes on its first pull without forking (`Stream.fromPubSub`) is subscribed by
-	 * then; one that forks its upstream (`Stream.merge`, `buffer`, a concurrent `flatMap`) subscribes later, and loses
-	 * what is published before.
-	 *
-	 * `live` returns its handle at once, before Ink has loaded: it loads Ink when a run first mounts (or, when not
-	 * interactive, when an owned run without a `final` prints its final frame), and it waits on nothing asynchronous before returning, so
-	 * a host outside Effect can take the handle with `Effect.runSync`. The handle works from the start: a `close`
-	 * before any run has mounted folds what is queued and ends the view as the events ending would, waiting for a mount
-	 * already under way, and one with no run to end loads nothing.
-	 *
-	 * End the view with `handle.close`: it stops taking events, folds what is still queued (a subscription's queued
-	 * messages included), commits or prints the run as the events ending would, and waits for `done`. Then close the
-	 * scope. A publisher may instead end a subscription with `PubSub.end(pubsub, last)`, which keeps everything: the view
-	 * folds what is buffered and `last` once, then ends. A `PubSub.shutdown` drops what the view has not taken yet, and
-	 * closing the scope by itself stops the fold at once: both lose a run's tail. Closing the scope unmounts whatever is drawn: the terminal is restored (the
-	 * cursor shown, Ink's colour level put back) and nothing more is written. `done` completes when the events end.
-	 *
-	 * A run begins at an `isStart` event (or wherever `begins` says, given the state before and after the event) and ends
-	 * at an `isTerminal` event; an event while no run is going that begins none is folded and not drawn, so what a program
-	 * reports after a run ends never mounts a second copy of it. A run mounts the view; its end unmounts it, which leaves
-	 * its last frame on the terminal, and the next run mounts afresh below it. A start while a run is drawn redraws in
-	 * place: the frame is never cleared, so nothing above it is erased. The state is never reset by the kit: a reducer that wants a fresh run
-	 * resets it on the start.
-	 *
-	 * The frame is at most the terminal's rows less one, re-read on every render and on a resize, so a tall frame never
-	 * makes Ink wipe the scrollback; its width is Ink's own. The clamp
-	 * lags one paint when the terminal gets shorter: Ink re-lays out and repaints the tree it already has on a resize,
-	 * before React re-renders with the new row count, so a frame already at the old height can be drawn once taller
-	 * than the terminal, which Ink answers by clearing the screen and its scrollback. Only a shrink in height while
-	 * the frame is at its full height does it; a frame that keeps a few rows spare never meets it.
-	 *
-	 * While a run is drawn the view also redraws on a tick of `tickMillis` (80 by default), a schedule in the run's
-	 * scope: interrupted with the run or the scope, it never outlives them. Its timer is not unref'd, so while a run is
-	 * drawn it keeps the process alive: the run's terminal event, or the scope's close, is what lets the process exit.
-	 * The frame index never steps back. Events that arrive at
-	 * once, in one chunk or in several the view had not yet caught up with, are folded together and drawn once. The view
-	 * takes events from `events` as fast as the stream yields them, so a stream that applies backpressure buffers in the
-	 * view while it draws.
-	 *
-	 * A run whose drawing fails (a `render` that throws, or a mount that fails) degrades rather than ending the view:
-	 * it is unmounted, leaving its last good frame on the terminal, then one warning is logged (`Effect.logWarning`),
-	 * and the fold goes on. At its terminal event, a run with no frame left on the terminal (it never painted, or its
-	 * last good frame threw too) writes its final frame once, as a string. The next run mounts afresh, and so does a
-	 * start that comes while a degraded run is going: it ends that run as its terminal event would. A `reduce` that
-	 * throws, or an `events` stream that dies, unmounts the run, then `done` dies with the error.
-	 *
-	 * When the run is not interactive, nothing is mounted and Ink is loaded only when a string is due. In the `owned`
-	 * mode (the default) each run's final frame is written once to stdout, as a string laid out at stdout's width (80
-	 * when it reports none) with no height to fit, at its terminal event or when the stream ends. It is escape-free at
-	 * colour `none`, and for an agent audience (`Audience`, when provided) whatever the terminal could do. With a
-	 * `final` document, that document is printed instead, once per run, rendered as `Doc.print` renders it, and Ink,
-	 * React and a `CliUi.lazyView` module are never loaded: an agent, CI or piped run of a command with a live view pays
-	 * for none of them. In the `hosted` mode nothing is written.
-	 *
-	 * Keep React off the runs that never draw (`--help`, a usage error) with `render: CliUi.lazyView(() => import(...))`.
-	 *
-	 * No input is mounted: the view reads no keys and never enters raw mode, so Ctrl-C stays the platform's SIGINT,
-	 * which interrupts the program and so closes the scope. Each run holds the process-wide mount permit from its
-	 * mount to its end, so a `CliUi.run` during a run waits for the run to end, and one between runs mounts at once.
-	 *
-	 * While a run is drawn, write logs through `logConsole`, provided around the work the view reports on: its lines
-	 * land above the frame. A line written to the terminal any other way tears the frame.
-	 *
-	 * The view draws on stdout (`UiStreams`), at stdout's colour level and glyphs, and mounts only when the run is
-	 * interactive (`CliInteractive`).
-	 *
-	 * @param options - the events, the fold, the drawing, and what starts and ends a run
-	 */
+  * A live view over a stream: fold `events` into state, and draw it with Ink while a run is going, for the caller's
+  * scope.
+  *
+  * **Details**
+  *
+  * `events` is a `PubSub` subscription or a stream, folded in a fiber of the caller's scope. A subscription, made
+  * before the first publish, is the surest: nothing published after it is missed. `live` makes a stream's first pull
+  * before it returns, so one that subscribes on its first pull without forking (`Stream.fromPubSub`) is subscribed by
+  * then; one that forks its upstream (`Stream.merge`, `buffer`, a concurrent `flatMap`) subscribes later, and loses
+  * what is published before.
+  *
+  * `live` returns its handle at once, before Ink has loaded: it loads Ink when a run first mounts (or, when not
+  * interactive, when an owned run without a `final` prints its final frame), and it waits on nothing asynchronous before returning, so
+  * a host outside Effect can take the handle with `Effect.runSync`. The handle works from the start: a `close`
+  * before any run has mounted folds what is queued and ends the view as the events ending would, waiting for a mount
+  * already under way, and one with no run to end loads nothing.
+  *
+  * End the view with `handle.close`: it stops taking events, folds what is still queued (a subscription's queued
+  * messages included), commits or prints the run as the events ending would, and waits for `done`. Then close the
+  * scope. A publisher may instead end a subscription with `PubSub.end(pubsub, last)`, which keeps everything: the view
+  * folds what is buffered and `last` once, then ends. A `PubSub.shutdown` drops what the view has not taken yet, and
+  * closing the scope by itself stops the fold at once: both lose a run's tail. Closing the scope unmounts whatever is drawn: the terminal is restored (the
+  * cursor shown, Ink's colour level put back) and nothing more is written. `done` completes when the events end.
+  *
+  * A run begins at an `isStart` event (or wherever `begins` says, given the state before and after the event) and ends
+  * at an `isTerminal` event; an event while no run is going that begins none is folded and not drawn, so what a program
+  * reports after a run ends never mounts a second copy of it. A run mounts the view; its end unmounts it, which leaves
+  * its last frame on the terminal, and the next run mounts afresh below it. A start while a run is drawn redraws in
+  * place: the frame is never cleared, so nothing above it is erased. The state is never reset by the kit: a reducer that wants a fresh run
+  * resets it on the start.
+  *
+  * The frame is at most the terminal's rows less one, re-read on every render and on a resize, so a tall frame never
+  * makes Ink wipe the scrollback; its width is Ink's own. The clamp
+  * lags one paint when the terminal gets shorter: Ink re-lays out and repaints the tree it already has on a resize,
+  * before React re-renders with the new row count, so a frame already at the old height can be drawn once taller
+  * than the terminal, which Ink answers by clearing the screen and its scrollback. Only a shrink in height while
+  * the frame is at its full height does it; a frame that keeps a few rows spare never meets it.
+  *
+  * While a run is drawn the view also redraws on a tick of `tickMillis` (80 by default), a schedule in the run's
+  * scope: interrupted with the run or the scope, it never outlives them. Its timer is not unref'd, so while a run is
+  * drawn it keeps the process alive: the run's terminal event, or the scope's close, is what lets the process exit.
+  * The frame index never steps back. Events that arrive at
+  * once, in one chunk or in several the view had not yet caught up with, are folded together and drawn once. The view
+  * takes events from `events` as fast as the stream yields them, so a stream that applies backpressure buffers in the
+  * view while it draws.
+  *
+  * A run whose drawing fails (a `render` that throws, or a mount that fails) degrades rather than ending the view:
+  * it is unmounted, leaving its last good frame on the terminal, then one warning is logged (`Effect.logWarning`),
+  * and the fold goes on. At its terminal event, a run with no frame left on the terminal (it never painted, or its
+  * last good frame threw too) writes its final frame once, as a string. The next run mounts afresh, and so does a
+  * start that comes while a degraded run is going: it ends that run as its terminal event would. A `reduce` that
+  * throws, or an `events` stream that dies, unmounts the run, then `done` dies with the error.
+  *
+  * When the run is not interactive, nothing is mounted and Ink is loaded only when a string is due. In the `owned`
+  * mode (the default) each run's final frame is written once to stdout, as a string laid out at stdout's width (80
+  * when it reports none) with no height to fit, at its terminal event or when the stream ends. It is escape-free at
+  * colour `none`, and for an agent audience (`Audience`, when provided) whatever the terminal could do. With a
+  * `final` document, that document is printed instead, once per run, rendered as `Doc.print` renders it, and Ink,
+  * React and a `CliUi.lazyView` module are never loaded: an agent, CI or piped run of a command with a live view pays
+  * for none of them. In the `hosted` mode nothing is written.
+  *
+  * Keep React off the runs that never draw (`--help`, a usage error) with `render: CliUi.lazyView(() => import(...))`.
+  *
+  * No input is mounted: the view reads no keys and never enters raw mode, so Ctrl-C stays the platform's SIGINT,
+  * which interrupts the program and so closes the scope. Each run holds the process-wide mount permit from its
+  * mount to its end, so a `CliUi.run` during a run waits for the run to end, and one between runs mounts at once.
+  *
+  * While a run is drawn, write logs through `logConsole`, provided around the work the view reports on: its lines
+  * land above the frame. A line written to the terminal any other way tears the frame.
+  *
+  * The view draws on stdout (`UiStreams`), at stdout's colour level and glyphs, and mounts only when the run is
+  * interactive (`CliInteractive`).
+  *
+  * @param options - the events, the fold, the drawing, and what starts and ends a run
+  */
 	static readonly live: <E, S>(
 		options: LiveOptions<E, S>,
 	) => Effect.Effect<LiveHandle<S>, never, Scope.Scope | Cli.CliTheme> = live;
 
 	/**
-	 * Run `screen` from a handler when the run is interactive; otherwise answer with `otherwise`, or fail with
-	 * `NotInteractive` when there is none.
-	 *
-	 * @remarks
-	 * `CliUi.run` with a default: not interactive, it returns `otherwise` and Ink and React are never loaded.
-	 * Interactive, it mounts the screen, and a cancel is the typed `Cancelled` a handler can catch, which
-	 * `CliRuntime.main` otherwise renders as one line with exit `130`. A missing Ink in an interactive run is a defect
-	 * naming the peers, never a silent `otherwise`. Screens in sequence make a wizard: discover the defaults first,
-	 * pass each as an `otherwise`, and a non-interactive run returns exactly them.
-	 *
-	 * Without `otherwise`, `NotInteractive` stays in the error type even after the caller checked `CliInteractive`, since
-	 * the type cannot know. Catch the tag and fail with `CliError.UserError` to exit as a usage error (`64` under
-	 * `CliRuntime.main`).
-	 *
-	 * As with `CliUi.run`, do not log while the screen is mounted: a line written to the terminal from elsewhere tears
-	 * the frame.
-	 *
-	 * @param screen - the screen to show
-	 * @param options - the non-interactive default, and whether to erase the last frame
-	 */
+  * Run `screen` from a handler when the run is interactive; otherwise answer with `otherwise`, or fail with
+  * `NotInteractive` when there is none.
+  *
+  * **Details**
+  *
+  * `CliUi.run` with a default: not interactive, it returns `otherwise` and Ink and React are never loaded.
+  * Interactive, it mounts the screen, and a cancel is the typed `Cancelled` a handler can catch, which
+  * `CliRuntime.main` otherwise renders as one line with exit `130`. A missing Ink in an interactive run is a defect
+  * naming the peers, never a silent `otherwise`. Screens in sequence make a wizard: discover the defaults first,
+  * pass each as an `otherwise`, and a non-interactive run returns exactly them.
+  *
+  * Without `otherwise`, `NotInteractive` stays in the error type even after the caller checked `CliInteractive`, since
+  * the type cannot know. Catch the tag and fail with `CliError.UserError` to exit as a usage error (`64` under
+  * `CliRuntime.main`).
+  *
+  * As with `CliUi.run`, do not log while the screen is mounted: a line written to the terminal from elsewhere tears
+  * the frame.
+  *
+  * @param screen - the screen to show
+  * @param options - the non-interactive default, and whether to erase the last frame
+  */
 	static readonly prompt = <A>(
 		screen: Screen<A>,
 		options?: CliUiPromptOptions<A>,
@@ -453,40 +459,41 @@ export class CliUi {
 		);
 
 	/**
-	 * A fallback for `Flag.withFallbackPrompt` or `Argument.withFallbackPrompt` that shows a screen when the run is
-	 * interactive: `CliPrompt.fallback` for screens.
-	 *
-	 * @remarks
-	 * Interactive, the screen mounts and its answer is the parameter's value. Not interactive, `otherwise` is used when
-	 * given and Ink and React are never loaded; without it the parameter fails as missing, exactly as with no fallback,
-	 * so core renders its own message and `CliRuntime.main` exits `64`. Name the parameter with `flag` (the name
-	 * without dashes) or `argument` so that error can be built.
-	 *
-	 * The options are {@link @effected/cli!CliPromptFallbackOptions}, the same as `CliPrompt.fallback`'s, and `clear`
-	 * as for {@link CliUi.run}.
-	 *
-	 * It runs during parsing, whose environment is core's alone, so it reads `CliTheme` if one is there: with
-	 * `CliRuntime.main`'s `env` (`CliEnv.layer`), or provided around the program. With no theme it treats the run as
-	 * not interactive, and when `CliInteractive` is on it says so once, at debug level. Interactivity is
-	 * `CliInteractive`, which an audience flag can set before parsing under `CliAudience`.
-	 *
-	 * As with `CliPrompt.fallback`, the screen runs here rather than being handed to core, whose fallback runner
-	 * turns a quit into the missing-parameter error, which would exit `64`. A cancel (Esc, Ctrl-C) is `Cancelled`,
-	 * raised as a defect because core's parse step turns every typed failure into a usage error, so only
-	 * `CliRuntime.main` (or `CliRuntime.reportFailures`) renders it, as one line with exit `130`. A missing Ink in an
-	 * interactive run is a defect naming the peers, never a silent `otherwise`.
-	 *
-	 * After the screen has unmounted, core still runs the answered `Prompt.succeed` it is handed against the
-	 * terminal, exactly as it does for `CliPrompt.fallback`: `Prompt.run` opens the terminal's input in a scope (on
-	 * Node a readline over stdin, in raw mode) before looking at the prompt. That is harmless. The prompt is already
-	 * answered, so nothing is read and no key is waited for; the scope closes at once, restoring the mode and closing
-	 * the reader; and Ink has already let go of stdin, so the two never hold it together. Not interactive, the screen
-	 * never mounts, and `CliPrompt.gateTerminal`, which `CliEnv.layer` installs, keeps that subscription off the real
-	 * terminal altogether.
-	 *
-	 * @param screen - the screen to show
-	 * @param options - the parameter it stands in for, the non-interactive default, and whether to erase the last frame
-	 */
+  * A fallback for `Flag.withFallbackPrompt` or `Argument.withFallbackPrompt` that shows a screen when the run is
+  * interactive: `CliPrompt.fallback` for screens.
+  *
+  * **Details**
+  *
+  * Interactive, the screen mounts and its answer is the parameter's value. Not interactive, `otherwise` is used when
+  * given and Ink and React are never loaded; without it the parameter fails as missing, exactly as with no fallback,
+  * so core renders its own message and `CliRuntime.main` exits `64`. Name the parameter with `flag` (the name
+  * without dashes) or `argument` so that error can be built.
+  *
+  * The options are {@link @effected/cli!CliPromptFallbackOptions}, the same as `CliPrompt.fallback`'s, and `clear`
+  * as for {@link CliUi.run}.
+  *
+  * It runs during parsing, whose environment is core's alone, so it reads `CliTheme` if one is there: with
+  * `CliRuntime.main`'s `env` (`CliEnv.layer`), or provided around the program. With no theme it treats the run as
+  * not interactive, and when `CliInteractive` is on it says so once, at debug level. Interactivity is
+  * `CliInteractive`, which an audience flag can set before parsing under `CliAudience`.
+  *
+  * As with `CliPrompt.fallback`, the screen runs here rather than being handed to core, whose fallback runner
+  * turns a quit into the missing-parameter error, which would exit `64`. A cancel (Esc, Ctrl-C) is `Cancelled`,
+  * raised as a defect because core's parse step turns every typed failure into a usage error, so only
+  * `CliRuntime.main` (or `CliRuntime.reportFailures`) renders it, as one line with exit `130`. A missing Ink in an
+  * interactive run is a defect naming the peers, never a silent `otherwise`.
+  *
+  * After the screen has unmounted, core still runs the answered `Prompt.succeed` it is handed against the
+  * terminal, exactly as it does for `CliPrompt.fallback`: `Prompt.run` opens the terminal's input in a scope (on
+  * Node a readline over stdin, in raw mode) before looking at the prompt. That is harmless. The prompt is already
+  * answered, so nothing is read and no key is waited for; the scope closes at once, restoring the mode and closing
+  * the reader; and Ink has already let go of stdin, so the two never hold it together. Not interactive, the screen
+  * never mounts, and `CliPrompt.gateTerminal`, which `CliEnv.layer` installs, keeps that subscription off the real
+  * terminal altogether.
+  *
+  * @param screen - the screen to show
+  * @param options - the parameter it stands in for, the non-interactive default, and whether to erase the last frame
+  */
 	static readonly fallback = <A>(screen: Screen<A>, options: CliUiFallbackOptions<A>): Param.FallbackPrompt<A> => {
 		// Said once per fallback: a parse that retries must not repeat it.
 		let explained = false;

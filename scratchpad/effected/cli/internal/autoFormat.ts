@@ -7,7 +7,8 @@ import * as O from "effect/Option";
  * Whether the environment says the program runs under GitHub Actions, whose runner reads workflow commands out of
  * the log.
  *
- * @remarks
+ * **Details**
+ *
  * `CurrentRuntimeEnv` is read if the environment has it and is not required: without it, the answer is no.
  *
  * @internal
@@ -23,7 +24,8 @@ export const underGithubActions: Effect.Effect<boolean> = Effect.gen(function* (
 /**
  * The renderer an audience gets when nothing says otherwise: a person is painted, a machine reads plain text.
  *
- * @remarks
+ * **Details**
+ *
  * A CI gets GitHub's log format only where `CurrentRuntimeEnv` says it is GitHub Actions; that service is read if the
  * environment has it and is not required. Shared by `Doc.print` and the failure report.
  *

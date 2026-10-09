@@ -22,7 +22,8 @@ const configDependencies = Effect.fn("PnpmEnvLockfile.configDependencies")((cont
 /**
  * Readers over the env ("preamble") document of a `pnpm-lock.yaml`.
  *
- * @remarks
+ * **Details**
+ *
  * A `pnpm-lock.yaml` is a YAML stream. When a workspace declares
  * `devEngines.packageManager` or `configDependencies`, pnpm writes an env
  * preamble document ahead of the lockfile proper: the preamble is always the
@@ -59,30 +60,31 @@ export interface PnpmEnvLockfileReaders {
 	) => Effect.Effect<O.Option<PackageManagerLock>, LockfileParseError | LockfileFramingError>;
 
 	/**
-	 * Read the config dependencies a `pnpm-lock.yaml` records, each with its
-	 * recorded integrity. Pure: takes the lockfile text, performs no IO.
-	 *
-	 * @remarks
-	 * The integrity source for a `configDependencies` entry written as a bare
-	 * version: pnpm 11 and 12 keep it here rather than inline in
-	 * `pnpm-workspace.yaml`. Read by `@effected/workspaces` to verify a config
-	 * dependency it fetches at a version this checkout never installed.
-	 *
-	 * @param content - The `pnpm-lock.yaml` text.
-	 * @returns An Effect HashMap keyed by config-dependency name. Empty when the lockfile
-	 *   records none — a single-document lockfile (no preamble), or a preamble
-	 *   whose root importer declares no `configDependencies`.
-	 *   Iteration order is unspecified.
-	 *
-	 * Fails exactly as {@link PnpmEnvLockfileReaders.packageManager} does, with
-	 * {@link LockfileParseError} for broken YAML (`stage: "syntax"`) or a
-	 * malformed preamble (`stage: "validation"`), and with
-	 * {@link LockfileFramingError} (`reason: "unexpectedDocuments"`) for more
-	 * than two documents. A recorded entry the lockfile cannot back fails at
-	 * `stage: "validation"`: an empty version, or a `<name>@<version>` with no
-	 * `packages` entry, no `resolution.integrity`, or an integrity that is not
-	 * SRI. An entry is never silently dropped.
-	 */
+  * Read the config dependencies a `pnpm-lock.yaml` records, each with its
+  * recorded integrity. Pure: takes the lockfile text, performs no IO.
+  *
+  * **Details**
+  *
+  * The integrity source for a `configDependencies` entry written as a bare
+  * version: pnpm 11 and 12 keep it here rather than inline in
+  * `pnpm-workspace.yaml`. Read by `@effected/workspaces` to verify a config
+  * dependency it fetches at a version this checkout never installed.
+  *
+  * @param content - The `pnpm-lock.yaml` text.
+  * @returns An Effect HashMap keyed by config-dependency name. Empty when the lockfile
+  *   records none — a single-document lockfile (no preamble), or a preamble
+  *   whose root importer declares no `configDependencies`.
+  *   Iteration order is unspecified.
+  *
+  * Fails exactly as {@link PnpmEnvLockfileReaders.packageManager} does, with
+  * {@link LockfileParseError} for broken YAML (`stage: "syntax"`) or a
+  * malformed preamble (`stage: "validation"`), and with
+  * {@link LockfileFramingError} (`reason: "unexpectedDocuments"`) for more
+  * than two documents. A recorded entry the lockfile cannot back fails at
+  * `stage: "validation"`: an empty version, or a `<name>@<version>` with no
+  * `packages` entry, no `resolution.integrity`, or an integrity that is not
+  * SRI. An entry is never silently dropped.
+  */
 	readonly configDependencies: (
 		content: string,
 	) => Effect.Effect<HashMap.HashMap<string, ConfigDependencyLock>, LockfileParseError | LockfileFramingError>;

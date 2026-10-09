@@ -100,20 +100,21 @@ export interface SyncFileSystem {
 	/** Whether `path` is a directory. May throw; a throw reads as `false`. */
 	readonly isDirectory: (path: string) => boolean;
 	/**
-	 * Optional fast path: the entries inside `path` with their types already
-	 * known, in ONE call.
-	 *
-	 * @remarks
-	 * Package enumeration otherwise costs a `readDirectory` plus one
-	 * `isDirectory` per entry — the readdir-then-stat-per-entry shape, which on
-	 * a large workspace is a syscall per file. Supplying this collapses that to
-	 * a single `readdirSync(path, { withFileTypes: true })`; `nodeFileSystem`
-	 * does. Omit it and enumeration falls back to the four required operations
-	 * with identical results, so this is purely a cost optimization and never a
-	 * behavior switch.
-	 *
-	 * May throw; a throw skips the directory, exactly like `readDirectory`.
-	 */
+  * Optional fast path: the entries inside `path` with their types already
+  * known, in ONE call.
+  *
+  * **Details**
+  *
+  * Package enumeration otherwise costs a `readDirectory` plus one
+  * `isDirectory` per entry — the readdir-then-stat-per-entry shape, which on
+  * a large workspace is a syscall per file. Supplying this collapses that to
+  * a single `readdirSync(path, { withFileTypes: true })`; `nodeFileSystem`
+  * does. Omit it and enumeration falls back to the four required operations
+  * with identical results, so this is purely a cost optimization and never a
+  * behavior switch.
+  *
+  * May throw; a throw skips the directory, exactly like `readDirectory`.
+  */
 	readonly readDirectoryWithTypes?: ((path: string) => ReadonlyArray<SyncDirectoryEntry>) | undefined;
 }
 
@@ -122,7 +123,8 @@ export interface SyncFileSystem {
  * {@link SyncFileSystem.readDirectoryWithTypes} fast path reports it. Node's
  * `Dirent` satisfies it after mapping its predicate methods to booleans.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `isSymbolicLink` is not decoration. A `Dirent` describes the entry ITSELF, so
  * a symbolic link pointing at a directory reports `isDirectory: false` — while
  * the `stat`-based slow path, which resolves the link, calls the same entry a
@@ -202,7 +204,8 @@ export interface WorkspacesSyncOptions {
  * Why {@link getWorkspacePackagesSync} left a manifest out of its result — the
  * `WorkspaceDiscoveryError.kind` values a single manifest read can produce.
  *
- * @remarks
+ * **Details**
+ *
  * The same vocabulary the Effect surface fails with, deliberately: a member the
  * async `listPackages()` rejects as `missingName` is the member the sync facade
  * reports as `missingName`. `invalidYaml` is excluded because it describes the
@@ -227,7 +230,8 @@ export type WorkspaceDiscoverySkipKind = Exclude<WorkspaceDiscoveryError["kind"]
  * One manifest {@link getWorkspacePackagesSync} skipped, reported through
  * {@link GetWorkspacePackagesSyncOptions.onSkip}.
  *
- * @remarks
+ * **Details**
+ *
  * The sync facade is total, so it cannot fail the way `WorkspaceDiscovery`
  * does — but a skipped member must still be observable. Without a report, a
  * hand-written fixture with one unusable manifest would enumerate as a
@@ -376,30 +380,32 @@ const isPackage = (options: WorkspacesSyncOptions, dir: string): boolean =>
  */
 export interface FindWorkspaceRootSyncOptions extends WorkspacesSyncOptions {
 	/**
-	 * A ceiling directory, with the semantics of `FindWorkspaceRootOptions.stopAt`
-	 * on the Effect surface. The ascent stops after probing it, so an unmarked
-	 * `stopAt` returns `null` rather than silently adopting an enclosing
-	 * repository's workspace.
-	 *
-	 * @remarks
-	 * Inclusive: a ceiling that is itself a workspace root is returned. The
-	 * ceiling is resolved through the supplied {@link SyncPath.resolve} at
-	 * lookup time, so a relative one is taken against the process working
-	 * directory when the call runs (with `node:path`). A ceiling that names no
-	 * ancestor of `cwd` never matches, and the ascent runs to the filesystem
-	 * root. Omit it for the unbounded ascent.
-	 *
-	 * Pass `stopAt: cwd` for a checkout nested inside someone else's workspace
-	 * (a self-hosted runner, `actions/checkout` with `path:`): a checkout that is
-	 * itself a root still resolves, and one that is not returns `null`.
-	 */
+  * A ceiling directory, with the semantics of `FindWorkspaceRootOptions.stopAt`
+  * on the Effect surface. The ascent stops after probing it, so an unmarked
+  * `stopAt` returns `null` rather than silently adopting an enclosing
+  * repository's workspace.
+  *
+  * **Details**
+  *
+  * Inclusive: a ceiling that is itself a workspace root is returned. The
+  * ceiling is resolved through the supplied {@link SyncPath.resolve} at
+  * lookup time, so a relative one is taken against the process working
+  * directory when the call runs (with `node:path`). A ceiling that names no
+  * ancestor of `cwd` never matches, and the ascent runs to the filesystem
+  * root. Omit it for the unbounded ascent.
+  *
+  * Pass `stopAt: cwd` for a checkout nested inside someone else's workspace
+  * (a self-hosted runner, `actions/checkout` with `path:`): a checkout that is
+  * itself a root still resolves, and one that is not returns `null`.
+  */
 	readonly stopAt?: string | undefined;
 }
 
 /**
  * The nearest workspace root at or above `cwd`, or `null`.
  *
- * @remarks
+ * **Details**
+ *
  * **Synchronous.** The Effect surface is `WorkspaceRoot`; reach for this one
  * only where you genuinely cannot run an Effect — a Vitest config being the
  * motivating case. The file and path operations are the caller's
@@ -421,12 +427,8 @@ export interface FindWorkspaceRootSyncOptions extends WorkspacesSyncOptions {
  * returns `null` — the facade is total and has no error channel, and the
  * caller already holds the ceiling it passed.
  *
- * @param cwd - Where to start the ascent (typically `process.cwd()`),
- *   matching the Effect layers' `{ cwd }` option.
- * @param options - The consumer-supplied file and path operations, plus an
- *   optional `stopAt` ceiling.
+ * **Example** (Find the workspace root with Node filesystem operations)
  *
- * @example
  * ```ts
  * import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
  * import * as path from "node:path";
@@ -443,6 +445,10 @@ export interface FindWorkspaceRootSyncOptions extends WorkspacesSyncOptions {
  * });
  * ```
  *
+ * @param cwd - Where to start the ascent (typically `process.cwd()`),
+ *   matching the Effect layers' `{ cwd }` option.
+ * @param options - The consumer-supplied file and path operations, plus an
+ *   optional `stopAt` ceiling.
  * @public
  */
 export const findWorkspaceRootSync: {
@@ -582,24 +588,26 @@ export interface GetWorkspacePackagesSyncOptions extends WorkspacesSyncOptions {
 	 */
 	readonly maxDepth?: number;
 	/**
-	 * Called once for every manifest the enumeration found and could not use,
-	 * with the file and the reason — so a skipped member is observable even
-	 * though this function is total and has no error channel to raise it on.
-	 *
-	 * @remarks
-	 * Omit it and skips are simply not reported; nothing is logged in its
-	 * place. The callback is invoked synchronously, before the result is
-	 * returned, in enumeration order — members first, then the root, which is
-	 * read last even though it is returned first. Its result is discarded, and a throw from it propagates: the facade is total
-	 * over *data*, not over caller mistakes, exactly as a bad `maxDepth` is.
-	 */
+  * Called once for every manifest the enumeration found and could not use,
+  * with the file and the reason — so a skipped member is observable even
+  * though this function is total and has no error channel to raise it on.
+  *
+  * **Gotchas**
+  *
+  * Omit it and skips are simply not reported; nothing is logged in its
+  * place. The callback is invoked synchronously, before the result is
+  * returned, in enumeration order — members first, then the root, which is
+  * read last even though it is returned first. Its result is discarded, and a throw from it propagates: the facade is total
+  * over *data*, not over caller mistakes, exactly as a bad `maxDepth` is.
+  */
 	readonly onSkip?: ((skip: WorkspaceDiscoverySkip) => void) | undefined;
 }
 
 /**
  * Every workspace package under `root`, root package first.
  *
- * @remarks
+ * **Details**
+ *
  * **Synchronous.** The Effect surface is `WorkspaceDiscovery`. The file and
  * path operations are the caller's ({@link GetWorkspacePackagesSyncOptions}
  * extends {@link WorkspacesSyncOptions}); this module imports no `node:*` and
@@ -626,11 +634,8 @@ export interface GetWorkspacePackagesSyncOptions extends WorkspacesSyncOptions {
  * pnpm accepts a version-less private package, so it is a member with
  * `version` absent — on both surfaces.
  *
- * @param root - The workspace root, from {@link findWorkspaceRootSync}.
- * @param options - The consumer-supplied operations and traversal bounds; see
- *   {@link GetWorkspacePackagesSyncOptions}.
+ * **Example** (Enumerate workspace packages with Node filesystem operations)
  *
- * @example
  * ```ts
  * import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
  * import * as path from "node:path";
@@ -649,6 +654,9 @@ export interface GetWorkspacePackagesSyncOptions extends WorkspacesSyncOptions {
  * const packages = root === null ? [] : getWorkspacePackagesSync(root, ops);
  * ```
  *
+ * @param root - The workspace root, from {@link findWorkspaceRootSync}.
+ * @param options - The consumer-supplied operations and traversal bounds; see
+ *   {@link GetWorkspacePackagesSyncOptions}.
  * @public
  */
 export const getWorkspacePackagesSync: {

@@ -45,7 +45,8 @@ const isKind = S.is(AudienceKind);
 /**
  * Read the audience flags straight out of `argv`, the way core will parse them later.
  *
- * @remarks
+ * **Details**
+ *
  * Pure, and needed because the audience must be known BEFORE core parses: a fallback prompt fires during the
  * parse, which happens before any parsed flag is visible to it. Mirrors the syntax core accepts for the four
  * flags: `--audience v`, `--audience=v`, `--human`, `--agent` and `--ci`, each boolean with an optional `=true`

@@ -50,20 +50,22 @@ export class LinkedIssue extends S.Class<LinkedIssue>($I`LinkedIssue`)({
 	url: S.String.annotateKey({ description: "The web URL of an issue the pull request closes" }),
 	nodeId: S.String.annotateKey({ description: "GitHub's GraphQL node identifier for an issue the pull request closes" }),
 	/**
-	 * Whether a human wrote the link, rather than GitHub inferring it from the
-	 * branch or commit messages.
-	 *
-	 * @remarks
-	 * Resolved by querying the pull request's closing references twice, once with
-	 * `userLinkedOnly`, and marking the issues present in the second result.
-	 */
+  * Whether a human wrote the link, rather than GitHub inferring it from the
+  * branch or commit messages.
+  *
+  * **Details**
+  *
+  * Resolved by querying the pull request's closing references twice, once with
+  * `userLinkedOnly`, and marking the issues present in the second result.
+  */
 	userLinked: S.Boolean.annotateKey({ description: "Whether a human wrote the link, rather than GitHub inferring it from the branch or commit messages." }),
 }, $I.annote("LinkedIssue", { description: "An issue a pull request closes." })) {}
 
 /**
  * What {@link GitHubIssueShape.commentOnce} found or wrote.
  *
- * @remarks
+ * **Details**
+ *
  * `wrote` is the field the caller branches on: `true` means this call created
  * the comment, `false` means the marker was already on the issue and nothing
  * was posted. Either way `comment` is the marked comment itself.
@@ -153,11 +155,12 @@ export interface GitHubIssueShape {
 	/** Read one issue. Fails `notFound` when it does not exist. */
 	readonly get: (number: number) => Effect.Effect<IssueInfo, GitHubError, Repo>;
 	/**
-	 * List issues, paginated. `state` is omitted from the request when unset, so GitHub's default applies.
-	 *
-	 * @remarks
-	 * GitHub's issues endpoint also returns pull requests; this does not filter them out.
-	 */
+  * List issues, paginated. `state` is omitted from the request when unset, so GitHub's default applies.
+  *
+  * **Gotchas**
+  *
+  * GitHub's issues endpoint also returns pull requests; this does not filter them out.
+  */
 	readonly list: (options?: {
 		readonly state?: "open" | "closed" | "all" | undefined;
 		readonly labels?: ReadonlyArray<string> | undefined;
@@ -168,26 +171,27 @@ export interface GitHubIssueShape {
 	/** Post a comment and return its id. */
 	readonly comment: (number: number, body: string) => Effect.Effect<number, GitHubError, Repo>;
 	/**
-	 * Post a marked comment once: create it, or skip if it already exists.
-	 *
-	 * @remarks
-	 * Create-or-skip, **never edit** — the counterpart to
-	 * `PullRequestComment.upsert`, which edits in place. The marker is appended
-	 * to the body exactly as `upsert` formats it, so a comment either member
-	 * writes stays findable by the other.
-	 *
-	 * The check-then-create is **not atomic** — GitHub offers no conditional
-	 * create, so two callers racing the same issue can both observe no marker
-	 * and both post. The guard is idempotence across *sequential* invocations
-	 * (a re-run workflow, the motivating case), not mutual exclusion across
-	 * concurrent ones; a caller needing the latter must serialize externally.
-	 *
-	 * The existence check is the comment itself: the issue's comments are
-	 * paginated and the first body carrying the marker means skip. That is the
-	 * guard {@link GitHubIssueShape.isCrossReferencedBy}'s docstring tells you
-	 * to build — an issue reached via `linkedIssues` is cross-referenced from
-	 * the outset, so only the marker answers "have I commented yet?".
-	 */
+  * Post a marked comment once: create it, or skip if it already exists.
+  *
+  * **Gotchas**
+  *
+  * Create-or-skip, **never edit** — the counterpart to
+  * `PullRequestComment.upsert`, which edits in place. The marker is appended
+  * to the body exactly as `upsert` formats it, so a comment either member
+  * writes stays findable by the other.
+  *
+  * The check-then-create is **not atomic** — GitHub offers no conditional
+  * create, so two callers racing the same issue can both observe no marker
+  * and both post. The guard is idempotence across *sequential* invocations
+  * (a re-run workflow, the motivating case), not mutual exclusion across
+  * concurrent ones; a caller needing the latter must serialize externally.
+  *
+  * The existence check is the comment itself: the issue's comments are
+  * paginated and the first body carrying the marker means skip. That is the
+  * guard {@link GitHubIssueShape.isCrossReferencedBy}'s docstring tells you
+  * to build — an issue reached via `linkedIssues` is cross-referenced from
+  * the outset, so only the marker answers "have I commented yet?".
+  */
 	readonly commentOnce: (
 		issueNumber: number,
 		marker: CommentMarker,
@@ -196,25 +200,26 @@ export interface GitHubIssueShape {
 	/** The issues a pull request closes, with `userLinked` telling you who linked them. */
 	readonly linkedIssues: (prNumber: number) => Effect.Effect<ReadonlyArray<LinkedIssue>, GitHubGraphQLError, Repo>;
 	/**
-	 * Has `prNumber` already been cross-referenced on this issue?
-	 *
-	 * @remarks
-	 * An idempotence guard over the issue's timeline, so that re-running a
-	 * workflow does not comment twice.
-	 *
-	 * Two hazards before building on it:
-	 *
-	 * - **An issue obtained from `linkedIssues(pr)` answers `true` from the
-	 *   outset** — the closing link itself puts a cross-reference on the
-	 *   issue's timeline. As a "have I commented yet?" guard on those issues
-	 *   the answer is always yes, and the comment is never posted. Guard a
-	 *   comment by looking for the comment (a marker in its body), not for a
-	 *   cross-reference.
-	 * - **It observes `CROSS_REFERENCED_EVENT` only, not `ConnectedEvent`** —
-	 *   an issue a human attached through the sidebar's Development section is
-	 *   connected, not cross-referenced, and reads `false` here even though
-	 *   GitHub's UI shows the link.
-	 */
+  * Has `prNumber` already been cross-referenced on this issue?
+  *
+  * **Gotchas**
+  *
+  * An idempotence guard over the issue's timeline, so that re-running a
+  * workflow does not comment twice.
+  *
+  * Two hazards before building on it:
+  *
+  * - **An issue obtained from `linkedIssues(pr)` answers `true` from the
+  *   outset** — the closing link itself puts a cross-reference on the
+  *   issue's timeline. As a "have I commented yet?" guard on those issues
+  *   the answer is always yes, and the comment is never posted. Guard a
+  *   comment by looking for the comment (a marker in its body), not for a
+  *   cross-reference.
+  * - **It observes `CROSS_REFERENCED_EVENT` only, not `ConnectedEvent`** —
+  *   an issue a human attached through the sidebar's Development section is
+  *   connected, not cross-referenced, and reads `false` here even though
+  *   GitHub's UI shows the link.
+  */
 	readonly isCrossReferencedBy: (
 		issueNumber: number,
 		prNumber: number,
@@ -225,11 +230,13 @@ export interface GitHubIssueShape {
  * Read, list, close and comment on issues, and resolve the issues a pull
  * request closes.
  *
- * @remarks
+ * **Details**
+ *
  * Provide it with {@link GitHubIssue.layer}, which needs a `GitHubClient`; each
  * method also needs a `Repo` in `R`.
  *
- * @example
+ * **Example** (Comment on an issue and close it as not planned)
+ *
  * ```ts
  * import { GitHubIssue } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -274,7 +281,8 @@ const unstubbed = (member: string): never => {
 /**
  * The REST calendar version this module's requests pin.
  *
- * @remarks
+ * **Details**
+ *
  * The routes are not deprecated — the **default api-version** is. When no
  * `x-github-api-version` header is sent (octokit sends none), GitHub serves
  * calendar version 2022-11-28, which it deprecated when 2026-03-10 shipped and

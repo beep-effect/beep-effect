@@ -36,12 +36,12 @@ const esmResolve: ((specifier: string) => string) | undefined =
  * The path of Ink's entry: through `resolve` (the runtime's `import.meta.resolve` by default), or, where that is
  * missing or throws, through Node's CommonJS resolution from this module.
  *
- * @remarks
+ * **Details**
+ *
  * Vite's module runner, which evaluates a Vitest reporter loaded by path, has an `import.meta.resolve` that throws
  * ("not supported"); the CommonJS resolution finds the same file, since Ink's `exports` has a `default` condition.
  *
  * @param resolve - an ESM resolver, to stand in for the runtime's in a test
- *
  * @internal
  */
 export const resolveInkEntry = (resolve: ((specifier: string) => string) | undefined = esmResolve): string => {
@@ -58,7 +58,8 @@ export const resolveInkEntry = (resolve: ((specifier: string) => string) | undef
 /**
  * The chalk instance Ink itself imports, resolved from Ink's own location; `None` when it cannot be resolved.
  *
- * @remarks
+ * **Details**
+ *
  * One of the three files licensed to touch Node. Ink's `exports` has
  * only `"."` and chalk is its own dependency, so the kit cannot import Ink's chalk by name: a `chalk` of the kit's
  * own could be a different copy, and setting its level would silently change nothing. Resolving `chalk` from Ink's
@@ -68,7 +69,6 @@ export const resolveInkEntry = (resolve: ((specifier: string) => string) | undef
  * or a scoped Node FileSystem layer when the caller has no platform layer.
  *
  * @param inkEntryOf - how Ink's entry is found; {@link resolveInkEntry} by default
- *
  * @internal
  */
 export const inkChalk = Effect.fn("inkChalk")(function* (

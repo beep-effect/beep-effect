@@ -10,7 +10,8 @@ const $I = $ScratchpadId.create("effected/templates/Section");
  * The name identifying a managed section, as it literally appears in the
  * file's markers.
  *
- * @remarks
+ * **Details**
+ *
  * Keys are **case-sensitive** and rendered verbatim: the key a consumer
  * declares is the key the marker carries. A file already containing
  * `SAVVY-LINT` markers is managed by declaring the key `"SAVVY-LINT"`.
@@ -47,12 +48,14 @@ export type SectionKey = typeof SectionKey.Type;
  * What identifies a managed section inside a document: its key and the
  * comment style its markers are written in.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `commentStyle` is **required, with no default**. A defaulted style is how a
  * caller who forgets the argument writes `#` markers into a TypeScript file —
  * a syntax error in the user's own source, produced silently by an omission.
  *
- * @example
+ * **Example** (Create a named section with hash markers)
+ *
  * ```ts
  * import { CommentStyle, SectionId } from "./index.ts";
  *
@@ -73,13 +76,14 @@ export class SectionId extends S.Class<SectionId>($I`SectionId`)({
 	commentStyle: CommentStyle.annotateKey({ description: "How this section's markers are commented out." }),
 }, $I.annote("SectionId", { description: "What identifies a managed section inside a document: its key and the comment style its markers are written in." })) {
 	/**
-	 * Pair this identity with the content a tool wants inside it.
-	 *
-	 * @remarks
-	 * `attributes` become `name="value"` pairs on the section's BEGIN marker,
-	 * emitted in the record's insertion order. They are metadata, not identity:
-	 * see {@link Section} for the grammar and the equality rules.
-	 */
+  * Pair this identity with the content a tool wants inside it.
+  *
+  * **Details**
+  *
+  * `attributes` become `name="value"` pairs on the section's BEGIN marker,
+  * emitted in the record's insertion order. They are metadata, not identity:
+  * see {@link Section} for the grammar and the equality rules.
+  */
 	section(content: string, attributes?: Readonly<Record<string, string>>): Section {
 		return Section.make({
 			key: this.key,
@@ -95,7 +99,8 @@ export class SectionId extends S.Class<SectionId>($I`SectionId`)({
  * A managed section: an identity plus the content its owner wants between the
  * markers.
  *
- * @remarks
+ * **Details**
+ *
  * Equality is **structural and whitespace-significant**: a template change that
  * alters only indentation is a real change and reaches the file. The one
  * normalization this package applies is to line endings, and it happens at
@@ -143,7 +148,8 @@ export class Section extends S.Class<Section>($I`Section`)({
 /**
  * A managed section as found in a document, carrying the span it occupies.
  *
- * @remarks
+ * **Details**
+ *
  * `start` and `end` bound the **whole** block, from the first character of
  * the begin marker to one past the last character of the end marker, so
  * `text.slice(start, end)` is exactly the block as written. `line` is 1-based

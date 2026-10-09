@@ -19,7 +19,8 @@ export interface Collected {
  * Spawns `command` and collects its stdout, stderr, and exit code as a single
  * triple.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Collection is concurrent (`{ concurrency: "unbounded" }`) — this is
  * load-bearing, not a style choice. Reading stdout, stderr, and exit code
  * sequentially can deadlock the moment either pipe's OS buffer fills:

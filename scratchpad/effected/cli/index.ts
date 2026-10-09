@@ -1,6 +1,8 @@
 /**
  * The presentation and boundary layer of a command-line program built on `effect/cli`.
  *
+ * **Details**
+ *
  * `effect/cli` owns argument parsing, flags, the command tree and help. This package owns what surrounds it: who is
  * running the program (an audience), what the terminal can do (colour, width, hyperlinks, interactivity), how
  * output is themed, how a failure is reported and exits, and how diagnostics are kept apart from a program's
@@ -10,7 +12,8 @@
  * machine.** None of it fails a type-check or a review of the code in isolation; the default behaviour is wrong in
  * a way the author cannot see from the call site.
  *
- * @example
+ * **Example** (Run a CLI with audience flags and runtime services)
+ *
  * ```ts
  * import { CliAudience, CliRuntime } from "./index.ts"
  * import { NodeRuntime, NodeServices } from "@effect/platform-node"

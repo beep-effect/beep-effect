@@ -99,7 +99,8 @@ export type TomlErrorCode = typeof TomlErrorCode.Type;
  * human-readable `message`, and its exact position (`offset`/`length`, plus
  * zero-based `line`/`character`).
  *
- * @remarks
+ * **Details**
+ *
  * The five-field positional core (`code`/`offset`/`length`/`line`/`character`)
  * is structurally identical to `@effected/jsonc`'s parse-error detail shape
  * and `@effected/yaml`'s `YamlDiagnostic`; `message` is this package's

@@ -55,7 +55,8 @@ export class LayerPolicyError extends S.TaggedError<LayerPolicyError>($I`LayerPo
 /**
  * A committed dependency-layering policy (`layers.json`).
  *
- * @remarks
+ * **Details**
+ *
  * `layers` is top-down: an edge may only point from a layer to one BELOW it
  * (a higher index), or into `tooling`. `tooling` packages may depend on each
  * other but never reach a layer. `unconstrained` holds globs (through
@@ -76,7 +77,8 @@ export class LayerPolicyError extends S.TaggedError<LayerPolicyError>($I`LayerPo
  * leave the report green. `$schema` is always accepted. A file that carries
  * keys of its own, such as a `harness` block, passes them in `allowKeys`.
  *
- * @example
+ * **Example** (Load a dependency layering policy from disk)
+ *
  * ```ts
  * import { NodeServices } from "@effect/platform-node";
  * import { LayerPolicy } from "./testing.ts";
@@ -111,13 +113,14 @@ export class LayerPolicy extends S.Class<LayerPolicy>($I`LayerPolicy`)({
 	}
 
 	/**
-	 * Decode a policy from a parsed JSON value.
-	 *
-	 * @remarks
-	 * Every key the policy does not model fails, except `$schema` and the
-	 * keys named in `options.allowKeys`, which are dropped before decoding.
-	 * `options.path` names the file in the error.
-	 */
+  * Decode a policy from a parsed JSON value.
+  *
+  * **Details**
+  *
+  * Every key the policy does not model fails, except `$schema` and the
+  * keys named in `options.allowKeys`, which are dropped before decoding.
+  * `options.path` names the file in the error.
+  */
 	static readonly decode = Effect.fn("LayerPolicy.decode")(
 		(
 			input: unknown,

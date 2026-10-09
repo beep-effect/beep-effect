@@ -55,7 +55,8 @@ export class YamlRange extends S.Class<YamlRange>($I`YamlRange`)({
  * A non-mutating text edit: replace the span `[offset, offset + length)` with
  * `content`. Set `length` to `0` to insert, `content` to `""` to delete.
  *
- * @remarks
+ * **Details**
+ *
  * Structurally identical to the edit shape of `@effected/jsonc`,
  * `@effected/toml` and `@effected/markdown` (same field names, types and
  * semantics), so consumer code can be written once over "a document codec's

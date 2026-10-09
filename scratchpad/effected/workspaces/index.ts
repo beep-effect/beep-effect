@@ -4,13 +4,16 @@
  * manager, resolve pnpm catalogs, read the lockfile, and work out which
  * packages a git range touches.
  *
+ * **Details**
+ *
  * The pure halves live in siblings — `@effected/lockfiles` parses lockfile
  * text, `@effected/glob` matches patterns, `@effected/walker` ascends
  * directories. This package is the part that needs a filesystem and a package
  * manager under it, and it is where `@effected/npm`'s `CatalogResolver` and
  * `WorkspaceResolver` contracts are implemented.
  *
- * @example
+ * **Example** (List workspace package names with Effect services)
+ *
  * ```ts
  * import { NodeServices } from "@effect/platform-node";
  * import { WorkspaceDiscovery, Workspaces } from "./index.ts";

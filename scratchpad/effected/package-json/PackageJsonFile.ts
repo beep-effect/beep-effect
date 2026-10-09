@@ -194,7 +194,8 @@ export interface PackageJsonFileShape {
  * `@effect/platform-node`'s `NodeFileSystem` / `NodePath` (or a bun equivalent)
  * at the application boundary.
  *
- * @example
+ * **Example** (Read a package file with Node filesystem services)
+ *
  * ```ts
  * import { PackageJsonFile } from "./index.ts";
  * import { NodeFileSystem, NodePath } from "@effect/platform-node";

@@ -35,7 +35,8 @@ export function toArrayBufferView(src: Uint8Array): Uint8Array<ArrayBuffer> {
 /**
  * Derive an AES-GCM key from a passphrase via PBKDF2.
  *
- * @remarks
+ * **Details**
+ *
  * The caller memoizes this so PBKDF2 runs once per codec instance.
  *
  * @internal
@@ -71,7 +72,8 @@ export const deriveKey: {
 /**
  * Decode base64 into bytes.
  *
- * @remarks
+ * **Details**
+ *
  * `atob` is available in all modern environments (Node 20+, Bun, Deno).
  *
  * @internal

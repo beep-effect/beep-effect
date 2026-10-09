@@ -8,7 +8,8 @@ const $I = $ScratchpadId.create("effected/lockfiles/WorkspaceDependency");
  * A directed dependency edge between two workspace packages as recorded in
  * the lockfile.
  *
- * @remarks
+ * **Details**
+ *
  * - `from` — the workspace package declaring the dependency. For pnpm this
  *   is the importer path until `Lockfile#withImporterNames` rewrites it.
  * - `to` — the workspace package depended upon.

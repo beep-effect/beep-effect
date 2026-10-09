@@ -7,7 +7,8 @@ const $I = $ScratchpadId.create("effected/lockfiles/ImporterDependency");
 /**
  * One declared dependency of one workspace importer, as the lockfile records it.
  *
- * @remarks
+ * **Details**
+ *
  * - `name` — the dependency's package name.
  * - `specifier` — the declared range, typed through `@effected/npm`'s
  *   `DependencySpecifier.FromString` codec: the decoded value is a tag-matchable

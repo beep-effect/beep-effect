@@ -61,7 +61,8 @@ export class MarkdownRange extends S.Class<MarkdownRange>($I`MarkdownRange`)({
  * A non-mutating text edit: replace the span `[offset, offset + length)` with
  * `content`. Set `length` to `0` to insert, `content` to `""` to delete.
  *
- * @remarks
+ * **Details**
+ *
  * Structurally identical to `@effected/jsonc`'s, `@effected/yaml`'s and
  * `@effected/toml`'s edit shapes (same field names, types and semantics) per
  * the cross-package parity convention, so consumer code can be written once

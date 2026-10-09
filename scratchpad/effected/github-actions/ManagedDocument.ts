@@ -18,7 +18,8 @@ export class RejectedRegionDialectError extends S.TaggedError<RejectedRegionDial
  * The grammar shared by a document's `namespace`, its `key` and every region
  * key.
  *
- * @remarks
+ * **Details**
+ *
  * Letters, digits, dashes and underscores, starting alphanumeric. Dots are
  * excluded deliberately: the three parts are joined with `.` into the marker
  * key written to the wire (`namespace.key.region`), and a dot inside a part
@@ -41,7 +42,8 @@ const REGION_DIALECT: SectionDialect = SectionDialect.make({
  * Raised when a managed document cannot be read or regenerated without
  * guessing.
  *
- * @remarks
+ * **Details**
+ *
  * The four structural kinds (`unterminatedRegion`, `orphanedEnd`,
  * `overlappingRegions`, `duplicateRegion`) surface at parse time and name an
  * ambiguity whose silent resolution would corrupt content a human wrote by
@@ -131,7 +133,8 @@ export interface ManagedDocumentSource {
  * A marker-delimited document: named regions a tool owns, inside text a human
  * may also edit.
  *
- * @remarks
+ * **Details**
+ *
  * The one primitive behind both the sticky PR comment and the managed PR
  * description. A sentinel HTML comment (`<!-- namespace:key -->`) identifies
  * the document; each region is delimited by HTML-comment markers keyed
@@ -152,7 +155,8 @@ export interface ManagedDocumentSource {
  * yet. `ManagedDocument.make` is the raw schema constructor and performs no
  * structural validation.
  *
- * @example
+ * **Example** (Parse a managed document and replace its regions)
+ *
  * ```ts
  * import { ManagedDocument } from "./index.ts";
  * import * as Result from "effect/Result";
@@ -177,28 +181,30 @@ export class ManagedDocument extends S.Class<ManagedDocument>($I`ManagedDocument
 	text: S.String.annotateKey({ description: "The document's full text, sentinel and regions included." }),
 }, $I.annote("ManagedDocument", { description: "A marker-delimited document: named regions a tool owns, inside text a human may also edit." })) {
 	/**
-	 * Read a document out of existing text, or begin a fresh one.
-	 *
-	 * @remarks
-	 * The synchronous primitive; {@link ManagedDocument.parse} derives from it.
-	 * Absent text, empty text and text that carries no sentinel are all legal —
-	 * the sentinel and regions are added by the first
-	 * {@link ManagedDocument.withRegionsResult}. Only a *structurally corrupt*
-	 * region layout fails, because every structural ambiguity is a case where
-	 * a silent choice would destroy content a human wrote.
-	 */
+  * Read a document out of existing text, or begin a fresh one.
+  *
+  * **Details**
+  *
+  * The synchronous primitive; {@link ManagedDocument.parse} derives from it.
+  * Absent text, empty text and text that carries no sentinel are all legal —
+  * the sentinel and regions are added by the first
+  * {@link ManagedDocument.withRegionsResult}. Only a *structurally corrupt*
+  * region layout fails, because every structural ambiguity is a case where
+  * a silent choice would destroy content a human wrote.
+  */
 	static parseResult(source: ManagedDocumentSource): Result.Result<ManagedDocument, ManagedDocumentError> {
 		const document = ManagedDocument.make({ namespace: source.namespace, key: source.key, text: source.text ?? "" });
 		return Result.map(Result.mapError(document.scan(), structural), () => document);
 	}
 
 	/**
-	 * Read a document out of existing text, in `Effect`.
-	 *
-	 * @remarks
-	 * Defined in terms of {@link ManagedDocument.parseResult} — synchronous
-	 * callers can use that variant directly.
-	 */
+  * Read a document out of existing text, in `Effect`.
+  *
+  * **Details**
+  *
+  * Defined in terms of {@link ManagedDocument.parseResult} — synchronous
+  * callers can use that variant directly.
+  */
 	static readonly parse = Effect.fn("ManagedDocument.parse")((source: ManagedDocumentSource) =>
 		Effect.fromResult(ManagedDocument.parseResult(source)),
 	);
@@ -219,26 +225,28 @@ export class ManagedDocument extends S.Class<ManagedDocument>($I`ManagedDocument
 	}
 
 	/**
-	 * One region's content and metadata together, if the document carries it.
-	 *
-	 * @remarks
-	 * `meta` is the region's `name="value"` marker attributes, empty when the
-	 * marker carries none. Metadata never participates in region
-	 * addressability — this looks up by key exactly as
-	 * {@link ManagedDocument.region} does.
-	 */
+  * One region's content and metadata together, if the document carries it.
+  *
+  * **Details**
+  *
+  * `meta` is the region's `name="value"` marker attributes, empty when the
+  * marker carries none. Metadata never participates in region
+  * addressability — this looks up by key exactly as
+  * {@link ManagedDocument.region} does.
+  */
 	entry(key: string): O.Option<{ readonly content: string; readonly meta: Readonly<Record<string, string>> }> {
 		const found = this.ownRegions().find((candidate) => candidate.key === key);
 		return found === undefined ? O.none() : O.some({ content: found.content, meta: found.meta });
 	}
 
 	/**
-	 * Every region this document carries, in document order.
-	 *
-	 * @remarks
-	 * `meta` is always present: a region whose marker carries no attributes
-	 * reports an empty record, so callers never branch on absence.
-	 */
+  * Every region this document carries, in document order.
+  *
+  * **Details**
+  *
+  * `meta` is always present: a region whose marker carries no attributes
+  * reports an empty record, so callers never branch on absence.
+  */
 	get regions(): ReadonlyArray<{
 		readonly key: string;
 		readonly content: string;
@@ -248,31 +256,32 @@ export class ManagedDocument extends S.Class<ManagedDocument>($I`ManagedDocument
 	}
 
 	/**
-	 * The document with these regions replaced from current state.
-	 *
-	 * @remarks
-	 * The synchronous primitive; {@link ManagedDocument.withRegions} derives
-	 * from it. Each entry pairs a region key with its full new content, plus
-	 * optional metadata. A region already present is **replaced in place**; a
-	 * region not present yet is added; regions not named are left exactly as
-	 * they are; and every byte outside a managed region survives untouched.
-	 * Applying entries that change nothing returns byte-identical text, which
-	 * is what lets a caller compare-and-skip instead of issuing a write.
-	 *
-	 * `meta` becomes `name="value"` attributes on the region's BEGIN marker.
-	 * It round-trips verbatim through {@link ManagedDocument.entry}, survives
-	 * writes by parties that do not know about it — a region not named in a
-	 * call keeps its content *and* its metadata untouched — and never
-	 * participates in region addressability: a region is found by key alone,
-	 * so changing metadata updates the region in place. A two-element entry
-	 * supplies no metadata. Names must match
-	 * `[A-Za-z][A-Za-z0-9_-]*` and values may not contain `"` or a line
-	 * break; violations fail typed as `invalidAttribute`.
-	 *
-	 * Region keys share the name grammar `namespace` and `key` obey; a key
-	 * outside it is a wiring error and throws at construction rather than
-	 * surfacing in the typed channel.
-	 */
+  * The document with these regions replaced from current state.
+  *
+  * **Details**
+  *
+  * The synchronous primitive; {@link ManagedDocument.withRegions} derives
+  * from it. Each entry pairs a region key with its full new content, plus
+  * optional metadata. A region already present is **replaced in place**; a
+  * region not present yet is added; regions not named are left exactly as
+  * they are; and every byte outside a managed region survives untouched.
+  * Applying entries that change nothing returns byte-identical text, which
+  * is what lets a caller compare-and-skip instead of issuing a write.
+  *
+  * `meta` becomes `name="value"` attributes on the region's BEGIN marker.
+  * It round-trips verbatim through {@link ManagedDocument.entry}, survives
+  * writes by parties that do not know about it — a region not named in a
+  * call keeps its content *and* its metadata untouched — and never
+  * participates in region addressability: a region is found by key alone,
+  * so changing metadata updates the region in place. A two-element entry
+  * supplies no metadata. Names must match
+  * `[A-Za-z][A-Za-z0-9_-]*` and values may not contain `"` or a line
+  * break; violations fail typed as `invalidAttribute`.
+  *
+  * Region keys share the name grammar `namespace` and `key` obey; a key
+  * outside it is a wiring error and throws at construction rather than
+  * surfacing in the typed channel.
+  */
 	withRegionsResult(
 		entries: ReadonlyArray<readonly [key: string, content: string, meta?: Readonly<Record<string, string>>]>,
 	): Result.Result<ManagedDocument, ManagedDocumentError> {
@@ -304,12 +313,13 @@ export class ManagedDocument extends S.Class<ManagedDocument>($I`ManagedDocument
 	}
 
 	/**
-	 * The document with these regions replaced, in `Effect`.
-	 *
-	 * @remarks
-	 * Defined in terms of {@link ManagedDocument.withRegionsResult} —
-	 * synchronous callers can use that variant directly.
-	 */
+  * The document with these regions replaced, in `Effect`.
+  *
+  * **Details**
+  *
+  * Defined in terms of {@link ManagedDocument.withRegionsResult} —
+  * synchronous callers can use that variant directly.
+  */
 	withRegions(
 		entries: ReadonlyArray<readonly [key: string, content: string, meta?: Readonly<Record<string, string>>]>,
 	): Effect.Effect<ManagedDocument, ManagedDocumentError> {
@@ -342,16 +352,17 @@ export class ManagedDocument extends S.Class<ManagedDocument>($I`ManagedDocument
 	}
 
 	/**
-	 * This document's own regions, in document order.
-	 *
-	 * @remarks
-	 * A document a human already edited can be structurally corrupt, and a
-	 * read has no error channel worth having — a corrupt document simply has
-	 * no readable regions; {@link ManagedDocument.parseResult} is where
-	 * corruption fails typed. Regions belonging to a *different* document in
-	 * the same text (another namespace or key) are not this document's and are
-	 * never reported.
-	 */
+  * This document's own regions, in document order.
+  *
+  * **Gotchas**
+  *
+  * A document a human already edited can be structurally corrupt, and a
+  * read has no error channel worth having — a corrupt document simply has
+  * no readable regions; {@link ManagedDocument.parseResult} is where
+  * corruption fails typed. Regions belonging to a *different* document in
+  * the same text (another namespace or key) are not this document's and are
+  * never reported.
+  */
 	private ownRegions(): ReadonlyArray<{
 		readonly key: string;
 		readonly content: string;
@@ -372,13 +383,14 @@ export class ManagedDocument extends S.Class<ManagedDocument>($I`ManagedDocument
 	}
 
 	/**
-	 * Append the sentinel when the text does not carry it yet.
-	 *
-	 * @remarks
-	 * Appended at the end — the same position `PullRequestComment.upsert`
-	 * writes its marker to — so a document rendered here and a comment written
-	 * there agree about where the identity line lives.
-	 */
+  * Append the sentinel when the text does not carry it yet.
+  *
+  * **Details**
+  *
+  * Appended at the end — the same position `PullRequestComment.upsert`
+  * writes its marker to — so a document rendered here and a comment written
+  * there agree about where the identity line lives.
+  */
 	private ensureSentinel(text: string, eol: "\n" | "\r\n"): string {
 		if (text.includes(this.sentinel)) {
 			return text;

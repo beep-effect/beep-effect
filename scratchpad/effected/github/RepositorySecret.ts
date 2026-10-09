@@ -19,7 +19,8 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
 /**
  * Which secret store an operation acts on.
  *
- * @remarks
+ * **Details**
+ *
  * Three separate stores on the same repository, each with **its own public
  * key** — which is why a key fetch cannot be cached across scopes.
  *
@@ -30,7 +31,8 @@ export type SecretScope = "actions" | "dependabot" | "codespaces";
 /**
  * A secret, as listing returns it.
  *
- * @remarks
+ * **Details**
+ *
  * The name only. GitHub never returns a secret's value from any endpoint —
  * that is the point of a secret store — so there is nothing else to carry, and
  * a consumer comparing desired against live can detect a **deleted** secret but
@@ -100,7 +102,8 @@ const ROUTES = {
  * Write, list and delete repository and environment secrets, encrypted
  * client-side before they leave the process.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Every write is a **two-step**: fetch the store's public key, then `PUT` a
  * libsodium sealed box. The plaintext never crosses the wire, and the key fetch
  * cannot be cached across stores because each has its own key.
@@ -117,7 +120,8 @@ const ROUTES = {
  * Provide it with {@link RepositorySecret.layer}, which needs a `GitHubClient`;
  * each method also needs a `Repo` in `R`.
  *
- * @example
+ * **Example** (Set an encrypted Actions secret and list secret names)
+ *
  * ```ts
  * import { RepositorySecret } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -138,7 +142,8 @@ export class RepositorySecret extends Context.Service<RepositorySecret, Reposito
   /**
    * The live service, built over a `GitHubClient`.
    *
-   * @remarks
+   * **Gotchas**
+   *
    * `(client) => make(client)` rather than `make`: a static initializer runs
    * while the module body is still evaluating, so naming a `const` declared
    * further down throws at import time with a clean typecheck.
@@ -170,7 +175,8 @@ const unstubbed = (member: string): never => {
 /**
  * Seal a value, turning a malformed public key into a typed failure.
  *
- * @remarks
+ * **Details**
+ *
  * `encryptSecret` returns a `Result` because base64 decoding or key length validation can fail. A public
  * key GitHub cannot have produced is still *input*, and input failures are
  * typed rather than thrown — so this maps it onto the same `GitHubError` a

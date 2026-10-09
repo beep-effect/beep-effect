@@ -25,7 +25,8 @@ export const SPEC_VERSION = "1.6" as const;
 /**
  * The CycloneDX component types this package emits.
  *
- * @remarks
+ * **Details**
+ *
  * A deliberate subset of the specification's fourteen: an npm SBOM describes
  * libraries and applications. The full enum is available in the schema; adding
  * a member here is a one-line change when something needs one.
@@ -44,7 +45,8 @@ export type ComponentType = typeof ComponentType.Type;
 /**
  * An external reference's kind.
  *
- * @remarks
+ * **Details**
+ *
  * The four the manifest mapping produces, out of the specification's 43. Each
  * corresponds to a `package.json` field: `vcs` ← `repository`,
  * `issue-tracker` ← `bugs`, `website` and `documentation` ← `homepage`.
@@ -89,7 +91,8 @@ export class Contact extends S.Class<Contact>($I`Contact`)({
 /**
  * The organization that supplied a component.
  *
- * @remarks
+ * **Details**
+ *
  * `name` is required because `metadata.supplier.name` is **NTIA minimum
  * element 1**; a supplier without one satisfies nothing.
  *
@@ -107,7 +110,8 @@ export class Supplier extends S.Class<Supplier>($I`Supplier`)({
 /**
  * One component in the BOM — the root, or a dependency.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `bomRef` is spelled **`bom-ref`** in the emitted JSON; the rename happens in
  * `Sbom.toJson`. Emitting `bomRef` produces a document that looks
  * correct and validates wrong.
@@ -160,7 +164,8 @@ export class SbomMetadata extends S.Class<SbomMetadata>($I`SbomMetadata`)({
 /**
  * A CycloneDX 1.6 bill of materials.
  *
- * @remarks
+ * **Details**
+ *
  * Constructed by `Sbom.generate` and serialized by `Sbom.toJson`; both are
  * total functions, because an owned model over validated values has nothing to
  * fail at.

@@ -51,7 +51,8 @@ export type ProjectDirInput = typeof ProjectDirInput.Type;
 /**
  * Resolves where a tool launched by an agent host should treat as its project.
  *
- * @example
+ * **Example** (Resolve the project directory from the host environment)
+ *
  * ```ts
  * import { LaunchContext } from "./index.ts"
  *
@@ -70,12 +71,13 @@ export class LaunchContext {
 	private constructor() {}
 
 	/**
-	 * Whether a value still carries a literal `${VAR}` placeholder.
-	 *
-	 * @remarks
-	 * An agent host can pass `${CLAUDE_PROJECT_DIR}` through unsubstituted in
-	 * some launch paths; a path containing a placeholder is never what was meant.
-	 */
+  * Whether a value still carries a literal `${VAR}` placeholder.
+  *
+  * **Gotchas**
+  *
+  * An agent host can pass `${CLAUDE_PROJECT_DIR}` through unsubstituted in
+  * some launch paths; a path containing a placeholder is never what was meant.
+  */
 	static readonly isUnsubstituted = (value: string): boolean => {
 		// A `${` with any `}` after it. The first `${` has the most text after it,
 		// so it alone decides; two scans keep this linear, where the equivalent

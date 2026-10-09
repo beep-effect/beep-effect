@@ -43,7 +43,8 @@ export type TokenCredential = typeof TokenCredential.Type;
 /**
  * HTTP basic auth — npm's `_auth`, carried as the **already-encoded** blob.
  *
- * @remarks
+ * **Details**
+ *
  * The credential is base64 of `user:password`, and this type deliberately holds
  * it **encoded rather than as a pair**, because that is what npm itself stores
  * and what registry configuration in the wild already contains. npm assigns the
@@ -67,7 +68,8 @@ export type BasicCredential = typeof BasicCredential.Type;
 /**
  * How to authenticate to a registry.
  *
- * @remarks
+ * **Details**
+ *
  * Both npmrc spellings npm supports for a registry, as a closed union so the
  * npmrc key and the HTTP scheme are chosen together. A read probe and a publish
  * that disagreed about the scheme would authenticate differently against the
@@ -85,7 +87,8 @@ export type RegistryCredential = typeof RegistryCredential.Type;
 /**
  * A {@link BasicCredential} from a username and password, encoding for you.
  *
- * @remarks
+ * **Details**
+ *
  * A convenience over the primitive, for the caller that holds a pair rather
  * than a blob. Prefer carrying the encoded form end to end where the
  * configuration already has one.
@@ -97,7 +100,6 @@ export type RegistryCredential = typeof RegistryCredential.Type;
  *   auth and is refused rather than silently corrupting the credential.
  * @param password - The password half.
  * @returns An Effect producing the encoded credential or failing with InvalidBasicAuthUsernameError.
- *
  * @public
  */
 export const basicCredentialFromPair = Effect.fn("RegistryCredential.basicCredentialFromPair")((

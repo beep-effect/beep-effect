@@ -81,7 +81,8 @@ const PublishFailureFromPayload = PublishErrorPayload.pipe(
 /**
  * A publish-workflow step failed.
  *
- * @remarks
+ * **Details**
+ *
  * `kind` is the routing surface, sized to the steps that actually exist:
  * `"auth"` (the npmrc could not be written), `"pack"` (`npm pack` failed),
  * `"publish"` (`npm publish` failed), `"output"` (npm ran but its `--json`

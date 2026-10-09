@@ -1,7 +1,8 @@
 /**
  * Zero-dependency TOML 1.1.0 parsing and stringification as Effect schemas.
  *
- * @remarks
+ * **Details**
+ *
  * {@link Toml} is the value-level facade (`parse`/`stringify` and the schema
  * factories); {@link TomlDiagnostic} is the structured diagnostic every
  * failure carries; the `TomlNode` classes are the lossless linear CST; the

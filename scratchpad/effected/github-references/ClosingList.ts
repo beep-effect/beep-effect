@@ -49,7 +49,8 @@ const $I = $ScratchpadId.create("effected/github-references/ClosingList");
 /**
  * The non-closing reference keywords the list dialect accepts, lowercased.
  *
- * @remarks
+ * **Details**
+ *
  * GitHub does not act on these — they associate without closing — but a
  * generated references region writes them, so the list parsers read them.
  *
@@ -197,7 +198,8 @@ const parseItems = (line: string, from: number): O.Option<ReadonlyArray<number>>
  * The issue list a whole line carries under either keyword set, or
  * `Option.none()`.
  *
- * @remarks
+ * **Details**
+ *
  * Accepts the nine closing keywords plus {@link REFERENCE_KEYWORDS}, and
  * reports which set matched in the result's `closing` flag.
  *
@@ -216,7 +218,8 @@ const parseItems = (line: string, from: number): O.Option<ReadonlyArray<number>>
  * scan with no regular expressions, so time is linear in the line length and
  * no input is truncated.
  *
- * @example
+ * **Example** (Parse a closing issue list and reject trailing prose)
+ *
  * ```ts
  * import { parseReferenceList } from "./index.ts";
  * import * as O from "effect/Option";
@@ -252,7 +255,8 @@ export const parseReferenceList = (line: string): O.Option<ReferenceList> => {
  * Every reference list a text carries, line by line, whether a line is a
  * whole-line list or has lists inline in prose.
  *
- * @remarks
+ * **Details**
+ *
  * Handles a commit body that interleaves trailer lines with prose: each line is
  * tried as a whole-line reference list first ({@link parseReferenceList} —
  * colon-tolerant, per the line dialect), and only a line that is not one is
@@ -286,7 +290,8 @@ export const collectReferenceLists = (text: string): ReadonlyArray<ReferenceList
  * The closing-only view of {@link parseReferenceList}: the list a whole line
  * carries under one of the nine closing keywords, or `Option.none()`.
  *
- * @remarks
+ * **Details**
+ *
  * A `Refs:` line is a valid reference list but not a closing one, so it
  * returns `Option.none()` here and `closing: false` from
  * {@link parseReferenceList}.
@@ -301,7 +306,8 @@ export const parseClosingList = (line: string): O.Option<ClosingList> =>
 /**
  * Every reference list a whole text carries, one whole-line list per line.
  *
- * @remarks
+ * **Details**
+ *
  * The per-line convenience over {@link parseReferenceList}: split on `"\n"`
  * (the parser's own trim absorbs a `"\r"`, so CRLF input needs no special
  * case), parse each line, and collect the accepted lists in line order.
@@ -323,7 +329,8 @@ export const parseReferenceLists = (text: string): ReadonlyArray<ReferenceList> 
 /**
  * Every closing list a whole text carries, one whole-line list per line.
  *
- * @remarks
+ * **Details**
+ *
  * The per-line convenience over {@link parseClosingList} — the closing-only
  * view of {@link parseReferenceLists}, with the same split-on-`"\n"`,
  * collect-the-accepted shape and the same deliberate absence of line
@@ -382,7 +389,8 @@ export type HarvestedReferenceList = typeof HarvestedReferenceList.Type;
 /**
  * Every reference list found inline in `text`, in document order.
  *
- * @remarks
+ * **Details**
+ *
  * The inline-in-prose posture generalized to lists:
  * `Closes #123, Fixes #456` in one line of a commit body yields two
  * single-item lists, where

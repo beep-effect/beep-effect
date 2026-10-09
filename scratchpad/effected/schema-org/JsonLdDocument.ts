@@ -144,6 +144,8 @@ const withoutUndefined = (value: Record<string, S.Json | undefined>): Record<str
  * A JSON-LD document: `@context` plus a flat `@graph` of nodes that reference
  * each other by `@id`.
  *
+ * **Details**
+ *
  * `JsonLdDocument` is a `Schema.Class`, so its encode direction is available through the
  * schema as well as through {@link JsonLdDocument.toJsonLd}. **The two are not the same
  * value**, and the difference is deliberate: `Schema.encodeSync(JsonLdDocument)` produces the
@@ -159,7 +161,8 @@ const withoutUndefined = (value: Record<string, S.Json | undefined>): Record<str
  * drops the flattened catch-all keys. Do not infer `decode(encode(g))`
  * round-tripping from the fact that this is a `Schema.Class`.
  *
- * @example
+ * **Example** (Build and serialize a graph of linked nodes)
+ *
  * ```ts
  * import { JsonLdDocument, NodeRef, SoftwareSourceCode, TechArticle } from "./index.ts";
  * import * as Result from "effect/Result";

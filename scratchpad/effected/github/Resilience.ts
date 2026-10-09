@@ -10,7 +10,8 @@ const $I = $ScratchpadId.create("effected/github/Resilience");
 /**
  * What GitHub's rate-limit headers said on the most recent REST response.
  *
- * @remarks
+ * **Details**
+ *
  * Every REST response carries `x-ratelimit-remaining`, `x-ratelimit-limit` and
  * `x-ratelimit-reset`; the client parses them into this and keeps the latest
  * one. Read it through the client's `rateLimit` member when you want to pace
@@ -43,7 +44,8 @@ export class RateLimitSnapshot extends S.Class<RateLimitSnapshot>($I`RateLimitSn
 /**
  * The shape {@link RetryPolicy} needs from a failure to decide anything.
  *
- * @remarks
+ * **Details**
+ *
  * Declared structurally so this module imports no error class. That keeps the
  * policy usable for both the REST and the GraphQL error without either of them
  * importing the other, and it makes every policy decision testable against a
@@ -61,7 +63,8 @@ export interface RetryableFailure {
 /**
  * How the client retries a failed request.
  *
- * @remarks
+ * **Details**
+ *
  * There is exactly **one** retry policy in this package, and it is wired into
  * the client so every resource inherits it and no resource carries its own.
  *
@@ -69,7 +72,8 @@ export interface RetryableFailure {
  * means a transport failure or a rate limit. A 404, a validation rejection and
  * an authorization failure fail on the first attempt.
  *
- * @example
+ * **Example** (Configure retry limits for a token-authenticated client)
+ *
  * ```ts
  * import { GitHubClient, RetryPolicy } from "./index.ts";
  * import * as Duration from "effect/Duration";
@@ -93,13 +97,14 @@ export class RetryPolicy extends S.Class<RetryPolicy>($I`RetryPolicy`)({
 	/** Prefer GitHub's `retry-after` / rate-limit reset over the computed backoff. */
 	respectRetryAfter: S.Boolean.annotateKey({ description: "Prefer GitHub's `retry-after` / rate-limit reset over the computed backoff." }),
 	/**
-	 * Refuse to wait longer than this for a server-advised delay.
-	 *
-	 * @remarks
-	 * A primary rate-limit window can be three quarters of an hour out. Sleeping
-	 * through it converts a failure into a hang, so past this ceiling the error
-	 * is re-failed immediately and the caller decides what to do.
-	 */
+  * Refuse to wait longer than this for a server-advised delay.
+  *
+  * **Gotchas**
+  *
+  * A primary rate-limit window can be three quarters of an hour out. Sleeping
+  * through it converts a failure into a hang, so past this ceiling the error
+  * is re-failed immediately and the caller decides what to do.
+  */
 	maxServerAdvisedDelay: S.DurationFromMillis.annotateKey({ description: "Refuse to wait longer than this for a server-advised delay." }),
 }, $I.annote("RetryPolicy", { description: "How the client retries a failed request." })) {
 	/** Four retries, 1s base, 30s cap, honoring server-advised delays up to a minute. */
@@ -121,12 +126,13 @@ export class RetryPolicy extends S.Class<RetryPolicy>($I`RetryPolicy`)({
 	});
 
 	/**
-	 * Whether this policy would retry `failure` at all, ignoring attempt counts.
-	 *
-	 * @remarks
-	 * Pure and total, so the classification is testable without a clock, a
-	 * runtime or a schedule.
-	 */
+  * Whether this policy would retry `failure` at all, ignoring attempt counts.
+  *
+  * **Details**
+  *
+  * Pure and total, so the classification is testable without a clock, a
+  * runtime or a schedule.
+  */
 	retries(failure: RetryableFailure): boolean {
 		if (this.maxRetries === 0 || !failure.retryable) return false;
 		const advised = this.advisedMillis(failure);
@@ -134,18 +140,19 @@ export class RetryPolicy extends S.Class<RetryPolicy>($I`RetryPolicy`)({
 	}
 
 	/**
-	 * The delay before the given attempt, for a failure and a `[0, 1)` draw.
-	 *
-	 * @remarks
-	 * A server-advised delay wins outright when `respectRetryAfter`
-	 * is set: GitHub knows when its window reopens and a computed backoff can only
-	 * guess. Otherwise this is **full jitter** — a uniform draw from
-	 * `[0, min(baseDelay * 2^(attempt-1), maxDelay)]` — which spreads a fleet of
-	 * retrying callers rather than synchronizing them into a second herd.
-	 *
-	 * `random` is a parameter so the arithmetic is checkable without stubbing a
-	 * generator.
-	 */
+  * The delay before the given attempt, for a failure and a `[0, 1)` draw.
+  *
+  * **Details**
+  *
+  * A server-advised delay wins outright when `respectRetryAfter`
+  * is set: GitHub knows when its window reopens and a computed backoff can only
+  * guess. Otherwise this is **full jitter** — a uniform draw from
+  * `[0, min(baseDelay * 2^(attempt-1), maxDelay)]` — which spreads a fleet of
+  * retrying callers rather than synchronizing them into a second herd.
+  *
+  * `random` is a parameter so the arithmetic is checkable without stubbing a
+  * generator.
+  */
 	delayFor(failure: RetryableFailure, attempt: number, random: number): Duration.Duration {
 		const advised = this.advisedMillis(failure);
 		if (advised !== undefined) return Duration.millis(advised);
@@ -160,14 +167,15 @@ export class RetryPolicy extends S.Class<RetryPolicy>($I`RetryPolicy`)({
 	}
 
 	/**
-	 * The `Schedule` this policy compiles to, for `Effect.retry`.
-	 *
-	 * @remarks
-	 * Built on `Schedule.modifyDelay`, whose callback receives the schedule's
-	 * `Metadata` — including the **input that failed**. That is what makes a
-	 * header-driven policy expressible as a `Schedule` at all: the delay is a
-	 * function of the error, not only of the attempt number.
-	 */
+  * The `Schedule` this policy compiles to, for `Effect.retry`.
+  *
+  * **Details**
+  *
+  * Built on `Schedule.modifyDelay`, whose callback receives the schedule's
+  * `Metadata` — including the **input that failed**. That is what makes a
+  * header-driven policy expressible as a `Schedule` at all: the delay is a
+  * function of the error, not only of the attempt number.
+  */
 	schedule<E extends RetryableFailure>(): Schedule.Schedule<number, E> {
 		return Schedule.forever.pipe(
 			Schedule.modifyDelay(({ input, attempt }: Schedule.Metadata<number, E>) =>

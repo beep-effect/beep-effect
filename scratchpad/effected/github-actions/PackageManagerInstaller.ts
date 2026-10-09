@@ -125,32 +125,33 @@ export interface PackageManagerInstallOptions {
 	 */
 	readonly requireIntegrity?: boolean | undefined;
 	/**
-	 * The expected integrity of the manager's own artifact, supplied beside
-	 * the pin rather than through its `+<integrity>` tail — for a caller whose
-	 * digest comes from somewhere other than the pin (a lockfile, or the
-	 * registry's `dist.integrity`) and that should not have to rewrite the pin
-	 * to carry it.
-	 *
-	 * @remarks
-	 * Corepack form only (`<algo>.<hex>`), the same brand the pin's own
-	 * `integrity` carries; convert a registry or lockfile SRI string with
-	 * `CorepackIntegrityHash.fromSri` from `@effected/npm`. It verifies
-	 * exactly what a pin integrity verifies — the registry tarball for npm,
-	 * pnpm and yarn 1.x, the standalone `yarn.js` for yarn 2+, the platform zip
-	 * for bun — and stands in for the pin's in every rule: it silences the
-	 * "carries no integrity hash" warning, satisfies `requireIntegrity`, and a
-	 * tool-cache hit is answered without re-verifying, exactly as it is for an
-	 * integrity-carrying pin.
-	 *
-	 * Fail-closed, before any cache lookup or download: a value not in corepack
-	 * form (an SRI or yarn hash) fails with `integrityMismatch` on its
-	 * could-not-verify arm (no `expected`, no `actual`, `subject` naming the
-	 * option); and when the pin also carries an integrity and the two differ,
-	 * the install fails with `integrityMismatch` (`expected` is this option,
-	 * `subject` names the pin's value) — neither is chosen silently. Equal
-	 * values verify once. It governs the wrapper only; pnpm 12's native
-	 * binary is `nativeIntegrity`'s business.
-	 */
+  * The expected integrity of the manager's own artifact, supplied beside
+  * the pin rather than through its `+<integrity>` tail — for a caller whose
+  * digest comes from somewhere other than the pin (a lockfile, or the
+  * registry's `dist.integrity`) and that should not have to rewrite the pin
+  * to carry it.
+  *
+  * **Details**
+  *
+  * Corepack form only (`<algo>.<hex>`), the same brand the pin's own
+  * `integrity` carries; convert a registry or lockfile SRI string with
+  * `CorepackIntegrityHash.fromSri` from `@effected/npm`. It verifies
+  * exactly what a pin integrity verifies — the registry tarball for npm,
+  * pnpm and yarn 1.x, the standalone `yarn.js` for yarn 2+, the platform zip
+  * for bun — and stands in for the pin's in every rule: it silences the
+  * "carries no integrity hash" warning, satisfies `requireIntegrity`, and a
+  * tool-cache hit is answered without re-verifying, exactly as it is for an
+  * integrity-carrying pin.
+  *
+  * Fail-closed, before any cache lookup or download: a value not in corepack
+  * form (an SRI or yarn hash) fails with `integrityMismatch` on its
+  * could-not-verify arm (no `expected`, no `actual`, `subject` naming the
+  * option); and when the pin also carries an integrity and the two differ,
+  * the install fails with `integrityMismatch` (`expected` is this option,
+  * `subject` names the pin's value) — neither is chosen silently. Equal
+  * values verify once. It governs the wrapper only; pnpm 12's native
+  * binary is `nativeIntegrity`'s business.
+  */
 	readonly integrity?: IntegrityHashBrand | undefined;
 	/**
 	 * The npm registry host the npm, pnpm and yarn tarballs download from.
@@ -166,41 +167,43 @@ export interface PackageManagerInstallOptions {
 	 */
 	readonly registry?: string | undefined;
 	/**
-	 * The expected Subresource Integrity of each pnpm native-binary package,
-	 * keyed by bare package name with no version (`"@pnpm/exe.linux-x64"`) —
-	 * usually read straight from the lockfile, which records every platform's
-	 * entry.
-	 *
-	 * @remarks
-	 * Consulted only for a pin whose wrapper overlays a native binary (pnpm 12
-	 * and later); every other pin ignores it. When supplied, the installer
-	 * verifies the host's `@pnpm/exe.<target>` tarball against this map's entry
-	 * (its strongest listed algorithm) INSTEAD of the registry's packument, so
-	 * the packument route is never requested and a tarball-only mirror
-	 * suffices. Fail-closed throughout: a map with no entry for the host's
-	 * package fails with `integrityMissing` naming that package, an entry
-	 * carrying no parseable SRI fails with `integrityMismatch` (the
-	 * could-not-verify arm), and a tarball that hashes to anything else fails
-	 * with `integrityMismatch` naming the tarball url. Absent, the registry's
-	 * own `dist.integrity` is the authority. A tool-cache hit is
-	 * answered without re-verifying, exactly as the pin's own integrity is.
-	 */
+  * The expected Subresource Integrity of each pnpm native-binary package,
+  * keyed by bare package name with no version (`"@pnpm/exe.linux-x64"`) —
+  * usually read straight from the lockfile, which records every platform's
+  * entry.
+  *
+  * **Details**
+  *
+  * Consulted only for a pin whose wrapper overlays a native binary (pnpm 12
+  * and later); every other pin ignores it. When supplied, the installer
+  * verifies the host's `@pnpm/exe.<target>` tarball against this map's entry
+  * (its strongest listed algorithm) INSTEAD of the registry's packument, so
+  * the packument route is never requested and a tarball-only mirror
+  * suffices. Fail-closed throughout: a map with no entry for the host's
+  * package fails with `integrityMissing` naming that package, an entry
+  * carrying no parseable SRI fails with `integrityMismatch` (the
+  * could-not-verify arm), and a tarball that hashes to anything else fails
+  * with `integrityMismatch` naming the tarball url. Absent, the registry's
+  * own `dist.integrity` is the authority. A tool-cache hit is
+  * answered without re-verifying, exactly as the pin's own integrity is.
+  */
 	readonly nativeIntegrity?: Readonly<Record<string, string>> | undefined;
 	/**
-	 * Whether an npm pin may be answered by the runner's own ambient npm.
-	 * Defaults to `true`.
-	 *
-	 * @remarks
-	 * Set `false` when the run REPLACES node: a consumer that installs a pinned
-	 * node in the same run puts that node's bundled npm ahead of the runner's on
-	 * every path that matters afterward (the install child's `PATH`, and every
-	 * later workflow step via `GITHUB_PATH`). The ambient probe interrogates the
-	 * RUNNER's npm, so its exact-version match can diverge from the npm that
-	 * actually executes once the pinned node shadows it. Suppressing the probe
-	 * skips it entirely — no `npm --version` is ever spawned — and the install
-	 * goes straight to the tool-cache/dist path, answering
-	 * `source: "tool-cache"` with its own `binDir` as usual.
-	 */
+  * Whether an npm pin may be answered by the runner's own ambient npm.
+  * Defaults to `true`.
+  *
+  * **Gotchas**
+  *
+  * Set `false` when the run REPLACES node: a consumer that installs a pinned
+  * node in the same run puts that node's bundled npm ahead of the runner's on
+  * every path that matters afterward (the install child's `PATH`, and every
+  * later workflow step via `GITHUB_PATH`). The ambient probe interrogates the
+  * RUNNER's npm, so its exact-version match can diverge from the npm that
+  * actually executes once the pinned node shadows it. Suppressing the probe
+  * skips it entirely — no `npm --version` is ever spawned — and the install
+  * goes straight to the tool-cache/dist path, answering
+  * `source: "tool-cache"` with its own `binDir` as usual.
+  */
 	readonly allowAmbient?: boolean | undefined;
 }
 
@@ -208,7 +211,8 @@ export interface PackageManagerInstallOptions {
  * A package manager the runner's own toolchain already had: nothing was
  * downloaded and nothing was cached, so there is no directory to publish.
  *
- * @remarks
+ * **Details**
+ *
  * `bins` values are bare command names (`npm`, `npx`) resolved through the
  * ambient `PATH` — the toolchain already put them there.
  *
@@ -229,7 +233,8 @@ export class AmbientPackageManager extends S.Class<AmbientPackageManager>($I`Amb
  * A package manager living in the runner's tool cache — found there, or
  * installed into it by this call.
  *
- * @remarks
+ * **Details**
+ *
  * `binDir` is the directory a consumer hands to `ActionOutputs.addPath` to
  * make the manager invokable by name in subsequent workflow steps. For the
  * npm-registry managers it is the entry's `.bin` directory of executable
@@ -269,7 +274,8 @@ export class CachedPackageManager extends S.Class<CachedPackageManager>($I`Cache
  * `addPath`-able `binDir`. The union is a `Schema`, so the record round-trips
  * through `ActionState` for a later phase to read back.
  *
- * @remarks
+ * **Gotchas**
+ *
  * **Construct the variant classes, never the union.** The union's inherited
  * `make` typechecks against *both* variants at once, so a wrong field yields
  * a confusing two-branch error instead of "this variant wants X" — reach for
@@ -640,18 +646,19 @@ const make = Effect.gen(function* () {
 		R.fromEntries(R.toEntries(bins).map(([name, relative]): [string, string] => [name, path.join(directory, relative)]));
 
 	/**
-	 * Write one executable shim per bin into `<into>/.bin`, each invoking
-	 * `node <finalDirectory>/<relative>`.
-	 *
-	 * @remarks
-	 * `into` and `finalDirectory` are DIFFERENT on the install path on purpose:
-	 * the shims are written into the *staged* tree so they are part of the entry
-	 * ToolInstaller renames into place (the cache only ever contains complete
-	 * entries), while their contents must name the *final* cache path the entry
-	 * is about to land at. On the cache-hit regeneration path the two coincide.
-	 * When `skipExisting` is set, a shim already present is left untouched — the
-	 * regeneration path must not rewrite a shared cache entry another writer owns.
-	 */
+  * Write one executable shim per bin into `<into>/.bin`, each invoking
+  * `node <finalDirectory>/<relative>`.
+  *
+  * **Details**
+  *
+  * `into` and `finalDirectory` are DIFFERENT on the install path on purpose:
+  * the shims are written into the *staged* tree so they are part of the entry
+  * ToolInstaller renames into place (the cache only ever contains complete
+  * entries), while their contents must name the *final* cache path the entry
+  * is about to land at. On the cache-hit regeneration path the two coincide.
+  * When `skipExisting` is set, a shim already present is left untouched — the
+  * regeneration path must not rewrite a shared cache entry another writer owns.
+  */
 	const writeShims = Effect.fnUntraced(function* (
 		pin: PackageManagerPin,
 		into: string,
@@ -1096,7 +1103,8 @@ const dies = unstubbed("PackageManagerInstaller.makeTest");
 /**
  * First-class exact-version package-manager provisioning on a GitHub runner.
  *
- * @remarks
+ * **Details**
+ *
  * Takes a corepack pin (`@effected/npm`'s `PackageManagerPin`) and answers
  * with an installed manager: tool-cache `find` first, then — for npm — an
  * ambient `npm --version` probe (every Node toolchain ships npm), and only
@@ -1124,7 +1132,8 @@ const dies = unstubbed("PackageManagerInstaller.makeTest");
  * Keeping node and the manager pins coherent is the consumer's call, made
  * where it pins node.
  *
- * @example
+ * **Example** (Install pinned pnpm and publish its bin directory)
+ *
  * ```ts
  * import { ActionOutputs, PackageManagerInstaller } from "./index.ts";
  * import { PackageManagerPin } from "../npm/index.ts";
@@ -1147,13 +1156,14 @@ export class PackageManagerInstaller extends Context.Service<PackageManagerInsta
 	$I`PackageManagerInstaller`,
 ) {
 	/**
-	 * The live installer, caching through {@link ToolInstaller}.
-	 *
-	 * @remarks
-	 * Fails with {@link PackageManagerInstallerError}; requires the runner's
-	 * environment, a filesystem, `Path`, a child-process spawner and a
-	 * `ToolInstaller`.
-	 */
+  * The live installer, caching through {@link ToolInstaller}.
+  *
+  * **Details**
+  *
+  * Fails with {@link PackageManagerInstallerError}; requires the runner's
+  * environment, a filesystem, `Path`, a child-process spawner and a
+  * `ToolInstaller`.
+  */
 	static readonly layer: Layer.Layer<
 		PackageManagerInstaller,
 		never,

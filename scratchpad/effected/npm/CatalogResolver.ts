@@ -20,6 +20,8 @@ const $I = $ScratchpadId.create("effected/npm/CatalogResolver");
  * Contract for resolving pnpm `catalog:` dependency specifiers to concrete
  * version ranges.
  *
+ * **Details**
+ *
  * `rangeOf` takes a package name and an optional catalog name
  * (`Option.none()` selects the default catalog) and returns the configured
  * range as `Option.some`, or `Option.none()` when the specifier is absent
@@ -35,7 +37,8 @@ const $I = $ScratchpadId.create("effected/npm/CatalogResolver");
  * (e.g. `@effected/workspaces`) provide a working implementation at the
  * application boundary.
  *
- * @example
+ * **Example** (Resolve a default catalog with the no-op resolver)
+ *
  * ```ts
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option";

@@ -20,7 +20,8 @@ const $I = $ScratchpadId.create("effected/cli/CliTheme");
 /**
  * The shape of the {@link CliTheme} service: a colour level, a glyph set and the functions that use them.
  *
- * @remarks
+ * **Details**
+ *
  * The whole shape is one immutable value with no mockable behaviour, so `Layer.succeed` (via
  * {@link CliTheme.layerTest}) is the complete double.
  *
@@ -28,13 +29,14 @@ const $I = $ScratchpadId.create("effected/cli/CliTheme");
  */
 export interface CliThemeShape extends StreamTheme {
 	/**
-	 * The theme of one output stream, painting with THAT stream's colour level.
-	 *
-	 * @remarks
-	 * The members above are the `stdout` ones. Anything written to stderr must be painted through
-	 * `forStream("stderr")`: redirecting one stream (`tool 2>err.log`, `tool | jq`) changes that stream's colour
-	 * and not the other's.
-	 */
+  * The theme of one output stream, painting with THAT stream's colour level.
+  *
+  * **Gotchas**
+  *
+  * The members above are the `stdout` ones. Anything written to stderr must be painted through
+  * `forStream("stderr")`: redirecting one stream (`tool 2>err.log`, `tool | jq`) changes that stream's colour
+  * and not the other's.
+  */
 	readonly forStream: (stream: "stdout" | "stderr") => StreamTheme;
 }
 
@@ -47,12 +49,13 @@ export interface StreamTheme {
 	/** Render `text` in a token or an explicit style; the identity when colour is `none`. */
 	readonly paint: (token: TokenName | Style, text: string) => string;
 	/**
-	 * The resolved {@link Style} of a token or style: the one `paint` renders, whatever the colour level.
-	 *
-	 * @remarks
-	 * Pure data, for a renderer that is not ANSI (an Ink component maps it to its own props). It applies this
-	 * theme's token overrides, so it is `Token.resolve` with them.
-	 */
+  * The resolved {@link Style} of a token or style: the one `paint` renders, whatever the colour level.
+  *
+  * **Details**
+  *
+  * Pure data, for a renderer that is not ANSI (an Ink component maps it to its own props). It applies this
+  * theme's token overrides, so it is `Token.resolve` with them.
+  */
 	readonly style: (token: TokenName | Style) => Style;
 	/** The raw opening SGR sequence of a token or style; `""` when colour is `none`. */
 	readonly sgr: (token: TokenName | Style) => string;
@@ -151,7 +154,8 @@ const ASCII_PROMPT_GLYPHS = {
 /**
  * The presentation of a CLI: colour tokens, glyphs and statuses, decided once from the terminal.
  *
- * @remarks
+ * **Details**
+ *
  * A `Context.Service`, not a `Reference`. A colour level is a fact about the terminal, not a preference with a
  * safe default, so there is nothing sensible for an unprovided theme to read; requiring it puts `CliTheme` in
  * `R` and a program that forgot to wire it fails to compile rather than printing plain text to a colour
@@ -161,14 +165,15 @@ const ASCII_PROMPT_GLYPHS = {
  */
 export class CliTheme extends Context.Service<CliTheme, CliThemeShape>()($I`CliTheme`) {
 	/**
-	 * The theme for the terminal `TerminalEnv` describes.
-	 *
-	 * @remarks
-	 * Bind the layer to a constant and provide it once. With `glyphs: "auto"` the glyph set is ASCII only when
-	 * `TERM=dumb`, read through `Config`.
-	 *
-	 * @param options - token overrides and the glyph set
-	 */
+  * The theme for the terminal `TerminalEnv` describes.
+  *
+  * **Details**
+  *
+  * Bind the layer to a constant and provide it once. With `glyphs: "auto"` the glyph set is ASCII only when
+  * `TERM=dumb`, read through `Config`.
+  *
+  * @param options - token overrides and the glyph set
+  */
 	static readonly layer = (options?: CliThemeOptions): Layer.Layer<CliTheme, never, TerminalEnv> =>
 		Layer.effect(
 			CliTheme,
@@ -231,13 +236,14 @@ export class CliTheme extends Context.Service<CliTheme, CliThemeShape>()($I`CliT
 		);
 
 	/**
-	 * Sets core's `Prompt.Theme` from the tokens, so built-in prompts match the rest of the output.
-	 *
-	 * @remarks
-	 * The colour fields are raw SGR openers and are empty strings when colour is `none`. Under ASCII glyphs the
-	 * prompt symbols fall back to ASCII too. A colourless theme is not byte-clean: core's `Ansi.annotate`
-	 * appends a `\x1b[0m` reset, and prompts write cursor and underline codes, whatever the theme says.
-	 */
+  * Sets core's `Prompt.Theme` from the tokens, so built-in prompts match the rest of the output.
+  *
+  * **Gotchas**
+  *
+  * The colour fields are raw SGR openers and are empty strings when colour is `none`. Under ASCII glyphs the
+  * prompt symbols fall back to ASCII too. A colourless theme is not byte-clean: core's `Ansi.annotate`
+  * appends a `\x1b[0m` reset, and prompts write cursor and underline codes, whatever the theme says.
+  */
 	static readonly promptTheme: Layer.Layer<never, never, CliTheme> = Layer.effect(
 		Prompt.Theme,
 		Effect.gen(function* () {

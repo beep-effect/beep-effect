@@ -18,7 +18,8 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
 /**
  * What to record about a published artifact.
  *
- * @remarks
+ * **Details**
+ *
  * These are the fields the storage-record endpoint accepts.
  *
  * @public
@@ -41,7 +42,8 @@ export class StorageRecordInput extends S.Class<StorageRecordInput>($I`StorageRe
 /**
  * Organization-level artifact metadata.
  *
- * @remarks
+ * **Details**
+ *
  * The endpoint is org-scoped rather than repository-scoped, but the
  * organization is resolved from {@link Repo}'s `owner` per call like every
  * other resource. `Repo.provide` covers the cross-org case, exactly as it
@@ -57,7 +59,8 @@ export interface ArtifactMetadataShape {
 /**
  * Records where published artifacts are stored, at the organization level.
  *
- * @remarks
+ * **Details**
+ *
  * Provide it with {@link ArtifactMetadata.layer}, which needs a `GitHubClient`;
  * `createStorageRecord` also needs a `Repo` in `R`.
  *

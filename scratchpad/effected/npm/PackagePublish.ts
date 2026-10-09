@@ -27,7 +27,8 @@ const PROVENANCE_URL = /https:\/\/search\.sigstore\.dev\/\?logIndex=\d+/;
 /**
  * The npm config key that carries a registry's auth token.
  *
- * @remarks
+ * **Gotchas**
+ *
  * npm "nerf-darts" the registry: scheme stripped, **trailing slash required**.
  * `//npm.pkg.github.com/:_authToken` matches; `//npm.pkg.github.com:_authToken`
  * never does, and the publish goes out unauthenticated with no diagnostic. A
@@ -87,13 +88,14 @@ export class PackedTarball extends S.Class<PackedTarball>($I`PackedTarball`)({
 	 */
 	integrity: S.optionalKey(IntegrityHash).annotateKey({ description: "npm's own integrity for the tarball (`sha512-<base64>`) — the value the registry stores as `dist.integrity`, so it compares directly against `NpmRegistry.version(...)`'s `integrity`." }),
 	/**
-	 * SHA-256 of the tarball bytes, lowercase hex, no prefix.
-	 *
-	 * @remarks
-	 * **Not interchangeable with {@link PackedTarball.integrity}**: different
-	 * algorithm, different encoding. This is the digest format the GitHub
-	 * attestation APIs accept as a subject; comparing the two silently fails.
-	 */
+  * SHA-256 of the tarball bytes, lowercase hex, no prefix.
+  *
+  * **Gotchas**
+  *
+  * **Not interchangeable with {@link PackedTarball.integrity}**: different
+  * algorithm, different encoding. This is the digest format the GitHub
+  * attestation APIs accept as a subject; comparing the two silently fails.
+  */
 	sha256Hex: S.String.annotateKey({ description: "SHA-256 of the tarball bytes, lowercase hex, no prefix." }),
 	/** Tarball size in bytes. */
 	packedSize: S.optionalKey(S.Finite).annotateKey({ description: "Tarball size in bytes." }),
@@ -120,7 +122,8 @@ export type PublishOutcome = typeof PublishOutcome.Type;
 /**
  * What a dry run reported.
  *
- * @remarks
+ * **Details**
+ *
  * `ok: false` is a **result**, not an error: "this package cannot pack" is a
  * valid answer to "would this publish?". The error channel is reserved for a
  * structural failure — npm could not be spawned, or its output was unreadable.
@@ -170,14 +173,15 @@ export const PublishOptions = S.Struct({
 	/** Request npm's native provenance. */
 	provenance: S.optional(S.Boolean).annotateKey({ description: "Whether to request npm provenance." }),
 	/**
-	 * Force classic `_authToken` auth by blanking the Actions OIDC environment.
-	 *
-	 * @remarks
-	 * npm attempts tokenless trusted publishing whenever the OIDC variables are
-	 * present and does **not** fall back to a configured `_authToken` when that
-	 * attempt fails. Required for GitHub Packages, and as the bootstrap path for
-	 * a package with no trusted publisher configured yet.
-	 */
+  * Force classic `_authToken` auth by blanking the Actions OIDC environment.
+  *
+  * **Gotchas**
+  *
+  * npm attempts tokenless trusted publishing whenever the OIDC variables are
+  * present and does **not** fall back to a configured `_authToken` when that
+  * attempt fails. Required for GitHub Packages, and as the bootstrap path for
+  * a package with no trusted publisher configured yet.
+  */
 	tokenAuth: S.optional(S.Boolean).annotateKey({ description: "Whether to blank the OIDC environment for classic token auth." }),
 }).annotate($I.annote("PublishOptions", { description: "Structural options for uploading a previously packed tarball." }));
 export type PublishOptions = typeof PublishOptions.Type;
@@ -189,19 +193,20 @@ export type PublishOptions = typeof PublishOptions.Type;
  */
 export interface PackagePublishShape {
 	/**
-	 * Write a registry auth token into an npmrc.
-	 *
-	 * @remarks
-	 * The token goes to the file, **never to argv** — redaction protects this
-	 * kit's error messages, not the operating system's process table. Masking
-	 * the token in a CI log is the **caller's** job; this package takes a
-	 * `Redacted` and has no opinion about log output.
-	 *
-	 * An existing npmrc is appended to, never replaced. A missing file
-	 * (`NotFound`) starts empty; any other read failure — an unreadable file, a
-	 * directory at the path — fails `PublishError` with kind `"auth"` and leaves
-	 * the file untouched, rather than overwriting config it could not read.
-	 */
+  * Write a registry auth token into an npmrc.
+  *
+  * **Gotchas**
+  *
+  * The token goes to the file, **never to argv** — redaction protects this
+  * kit's error messages, not the operating system's process table. Masking
+  * the token in a CI log is the **caller's** job; this package takes a
+  * `Redacted` and has no opinion about log output.
+  *
+  * An existing npmrc is appended to, never replaced. A missing file
+  * (`NotFound`) starts empty; any other read failure — an unreadable file, a
+  * directory at the path — fails `PublishError` with kind `"auth"` and leaves
+  * the file untouched, rather than overwriting config it could not read.
+  */
 	readonly setupAuth: (options: {
 		readonly registry: string;
 		readonly credential: RegistryCredential;
@@ -226,14 +231,15 @@ const make = Effect.fnUntraced(function* () {
 	const local = yield* LocalExec;
 
 	/**
-	 * Discharges the two services the command path needs, once, here.
-	 *
-	 * @remarks
-	 * `Run.collect` requires `ChildProcessSpawner` and `NpmExecutor.command`
-	 * requires `LocalExec`. Resolving both at construction is what keeps every
-	 * method's `R` at `never` — the `@effected/git` shape — so a consumer wires
-	 * this service once and its methods compose anywhere.
-	 */
+  * Discharges the two services the command path needs, once, here.
+  *
+  * **Details**
+  *
+  * `Run.collect` requires `ChildProcessSpawner` and `NpmExecutor.command`
+  * requires `LocalExec`. Resolving both at construction is what keeps every
+  * method's `R` at `never` — the `@effected/git` shape — so a consumer wires
+  * this service once and its methods compose anywhere.
+  */
 	const discharge = <A, E>(
 		effect: Effect.Effect<A, E, ChildProcessSpawner.ChildProcessSpawner | LocalExec>,
 	): Effect.Effect<A, E> =>
@@ -460,7 +466,8 @@ const notStubbed = (method: string) => () =>
  * Packs, dry-runs and publishes npm tarballs, and writes registry auth into an
  * npmrc, by running `npm` through `@effected/commands`.
  *
- * @remarks
+ * **Details**
+ *
  * Every invocation goes through `Run`, so a non-zero npm exit arrives as a
  * typed {@link PublishError} and npm's `--json` output is schema-decoded rather
  * than cast. The service deliberately does **not** own: log masking (the
@@ -472,7 +479,8 @@ const notStubbed = (method: string) => () =>
  * Every method's `R` is `never`: the live layer resolves its platform services
  * once at construction.
  *
- * @example
+ * **Example** (Pack and publish a tarball with provenance)
+ *
  * ```ts
  * import { PackagePublish } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -515,12 +523,13 @@ export class PackagePublish extends Context.Service<PackagePublish, PackagePubli
 	});
 
 	/**
-	 * {@link PackagePublish.makeTest} behind `Layer.succeed`.
-	 *
-	 * @remarks
-	 * A parameterized layer factory mints a fresh reference per call and layers
-	 * memoize by reference — bind the result to a `const`.
-	 */
+  * {@link PackagePublish.makeTest} behind `Layer.succeed`.
+  *
+  * **Gotchas**
+  *
+  * A parameterized layer factory mints a fresh reference per call and layers
+  * memoize by reference — bind the result to a `const`.
+  */
 	static readonly layerTest = (overrides: Partial<PackagePublishShape> = {}): Layer.Layer<PackagePublish> =>
 		Layer.succeed(PackagePublish, PackagePublish.makeTest(overrides));
 }

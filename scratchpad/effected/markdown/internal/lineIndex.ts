@@ -34,7 +34,8 @@ export interface LineColumn {
  * answering `positionAt(offset)` in `O(log n)` via binary search rather than
  * rescanning the text per query.
  *
- * @remarks
+ * **Details**
+ *
  * Only `\n` begins a new line. A `\r` immediately before a `\n` (CRLF) is
  * left as the trailing character of the prior line — the pair still reads as
  * a single boundary because the following `\n` is what advances the line
@@ -51,12 +52,13 @@ export class LineIndex {
 	}
 
 	/**
-	 * Build a {@link LineIndex} over `text` with one forward scan.
-	 *
-	 * @remarks
-	 * Recognizes only `\n`, which is why the block pass hands over its own
-	 * line table instead — see {@link LineIndex.fromLineStarts}.
-	 */
+  * Build a {@link LineIndex} over `text` with one forward scan.
+  *
+  * **Details**
+  *
+  * Recognizes only `\n`, which is why the block pass hands over its own
+  * line table instead — see {@link LineIndex.fromLineStarts}.
+  */
 	static make(text: string): LineIndex {
 		const lineStarts: number[] = [0];
 		for (let i = 0; i < text.length; i++) {
@@ -68,20 +70,21 @@ export class LineIndex {
 	}
 
 	/**
-	 * Build a {@link LineIndex} over `text` from a line table someone else
-	 * already computed.
-	 *
-	 * @remarks
-	 * The parser splits lines on `\r\n`, `\n` AND a bare `\r`; this index's
-	 * own scan recognizes only `\n`. For any document without a bare `\r` the
-	 * two agree, but for one with them they disagree about what a line is, and
-	 * every reported line number would be wrong. Handing the parser's own
-	 * table over removes the possibility rather than documenting it: there is
-	 * one definition of a line, and it belongs to the preprocessor.
-	 *
-	 * `starts` must be ascending and begin at 0; a table that is neither is a
-	 * wiring bug and dies as a defect.
-	 */
+  * Build a {@link LineIndex} over `text` from a line table someone else
+  * already computed.
+  *
+  * **Gotchas**
+  *
+  * The parser splits lines on `\r\n`, `\n` AND a bare `\r`; this index's
+  * own scan recognizes only `\n`. For any document without a bare `\r` the
+  * two agree, but for one with them they disagree about what a line is, and
+  * every reported line number would be wrong. Handing the parser's own
+  * table over removes the possibility rather than documenting it: there is
+  * one definition of a line, and it belongs to the preprocessor.
+  *
+  * `starts` must be ascending and begin at 0; a table that is neither is a
+  * wiring bug and dies as a defect.
+  */
 	static fromLineStarts(text: string, starts: ReadonlyArray<number>): LineIndex {
 		if (starts.length === 0 || starts[0] !== 0) {
 			throw InvalidLineTableError.make({ message: "line index: a line table must be non-empty and start at offset 0" });

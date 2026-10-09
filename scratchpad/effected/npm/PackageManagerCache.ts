@@ -116,7 +116,8 @@ const under = (home: string, windows: boolean, ...parts: ReadonlyArray<string>):
  * Where each package manager caches by default — a facts table, one
  * documented authority per row.
  *
- * @remarks
+ * **Gotchas**
+ *
  * **Defaults only, deliberately.** Each manager also honours overrides this
  * table does not model — pnpm's `$PNPM_HOME`/`$XDG_DATA_HOME`, yarn Berry's
  * `globalFolder`, bun's `$BUN_INSTALL_CACHE_DIR`, npm's `--cache`, and
@@ -124,7 +125,8 @@ const under = (home: string, windows: boolean, ...parts: ReadonlyArray<string>):
  * asks the manager itself; this table answers for the fresh-install case a CI
  * runner is.
  *
- * @example
+ * **Example** (Find the default pnpm cache directory on macOS)
+ *
  * ```ts
  * import { PackageManagerCache } from "./index.ts";
  *
@@ -141,35 +143,36 @@ export class PackageManagerCache {
 	static readonly Manager = CachingPackageManager;
 
 	/**
-	 * The default cache directory for a manager on a platform.
-	 *
-	 * @remarks
-	 * Row authorities, each the manager's own documentation or source
-	 * (verified 2026-08-02):
-	 *
-	 * - **npm** — the `cache` config default (docs.npmjs.com, cli v11):
-	 *   `%LocalAppData%\npm-cache` on Windows, `~/.npm` on Posix. The content-
-	 *   addressable store lives in `_cacache` beneath it.
-	 * - **pnpm** — the `storeDir` default chain (pnpm.io/settings/store), with
-	 *   no `$PNPM_HOME`/`$XDG_DATA_HOME` set: `~/AppData/Local/pnpm/store` on
-	 *   Windows, `~/Library/pnpm/store` on macOS, `~/.local/share/pnpm/store`
-	 *   on Linux. pnpm reports a **versioned subdirectory** of this (`…/v10`)
-	 *   from `pnpm store path`.
-	 * - **yarn-classic** — v1's `getCacheDir` (`src/util/user-dirs.js`):
-	 *   `%LocalAppData%\Yarn\Cache` on Windows, `~/Library/Caches/Yarn` on
-	 *   macOS, `~/.cache/yarn` on Linux (sans `$XDG_CACHE_HOME`). Classic
-	 *   writes into a versioned subdirectory (`…/v6`).
-	 * - **yarn-berry** — `getDefaultGlobalFolder` (`@yarnpkg/core`
-	 *   `folderUtils.ts`) plus the `cacheFolder` default `<globalFolder>/cache`:
-	 *   `%LocalAppData%\Yarn\Berry\cache` on Windows, `~/.yarn/berry/cache`
-	 *   elsewhere (sans `$XDG_DATA_HOME`). The **global** cache is the default
-	 *   since Berry v4 (`enableGlobalCache: true`); a v3 project defaulted to
-	 *   its per-project `.yarn/cache` instead.
-	 * - **bun** — the global install cache (bun.com/docs, `install.cache`):
-	 *   `~/.bun/install/cache` on **every** platform — bun documents no Windows
-	 *   divergence, so the Windows answer is under the user profile, not
-	 *   `AppData`.
-	 */
+  * The default cache directory for a manager on a platform.
+  *
+  * **Details**
+  *
+  * Row authorities, each the manager's own documentation or source
+  * (verified 2026-08-02):
+  *
+  * - **npm** — the `cache` config default (docs.npmjs.com, cli v11):
+  *   `%LocalAppData%\npm-cache` on Windows, `~/.npm` on Posix. The content-
+  *   addressable store lives in `_cacache` beneath it.
+  * - **pnpm** — the `storeDir` default chain (pnpm.io/settings/store), with
+  *   no `$PNPM_HOME`/`$XDG_DATA_HOME` set: `~/AppData/Local/pnpm/store` on
+  *   Windows, `~/Library/pnpm/store` on macOS, `~/.local/share/pnpm/store`
+  *   on Linux. pnpm reports a **versioned subdirectory** of this (`…/v10`)
+  *   from `pnpm store path`.
+  * - **yarn-classic** — v1's `getCacheDir` (`src/util/user-dirs.js`):
+  *   `%LocalAppData%\Yarn\Cache` on Windows, `~/Library/Caches/Yarn` on
+  *   macOS, `~/.cache/yarn` on Linux (sans `$XDG_CACHE_HOME`). Classic
+  *   writes into a versioned subdirectory (`…/v6`).
+  * - **yarn-berry** — `getDefaultGlobalFolder` (`@yarnpkg/core`
+  *   `folderUtils.ts`) plus the `cacheFolder` default `<globalFolder>/cache`:
+  *   `%LocalAppData%\Yarn\Berry\cache` on Windows, `~/.yarn/berry/cache`
+  *   elsewhere (sans `$XDG_DATA_HOME`). The **global** cache is the default
+  *   since Berry v4 (`enableGlobalCache: true`); a v3 project defaulted to
+  *   its per-project `.yarn/cache` instead.
+  * - **bun** — the global install cache (bun.com/docs, `install.cache`):
+  *   `~/.bun/install/cache` on **every** platform — bun documents no Windows
+  *   divergence, so the Windows answer is under the user profile, not
+  *   `AppData`.
+  */
 	static defaultDirectory(manager: CachingPackageManager, options: DefaultCacheDirectoryOptions): string {
 		const windows = options.platform === "win32";
 		const darwin = options.platform === "darwin";

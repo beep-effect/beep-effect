@@ -59,7 +59,8 @@ const DependencyRecord = S.Record(S.String, S.String).annotate(
  * errors, a catalog-assembly failure from the inline config source or the
  * config-dependency hook replay at the ref, or an unfindable workspace root.
  *
- * @remarks
+ * **Details**
+ *
  * Narrow by design. `at` reads through git and never enumerates the live
  * filesystem, so no `WorkspaceDiscoveryError` / `WorkspacePatternError` appears —
  * and a malformed *lockfile* at the ref degrades to no catalogs (a lockfile is a
@@ -79,7 +80,8 @@ export type WorkspaceSnapshotAtFailure =
  * Every failure `WorkspaceSnapshots.worktree` can surface: the discovery
  * failures plus a catalog-assembly failure.
  *
- * @remarks
+ * **Details**
+ *
  * `worktree` never invokes git — it reads the live tree over
  * {@link WorkspaceDiscovery} and {@link WorkspaceCatalogs} — so no git error is
  * reachable.
@@ -103,47 +105,49 @@ export interface WorkspaceSnapshotsOptions {
 	 */
 	readonly cwd?: string;
 	/**
-	 * A ceiling for the root ascent from `cwd`, passed straight through to the
-	 * `stopAt` of {@link WorkspaceRoot}'s `find`.
-	 *
-	 * @remarks
-	 * Inclusive, and resolved to an absolute path exactly as `cwd` is. When no
-	 * root is found at or below the ceiling, `at(ref)` fails with
-	 * {@link WorkspaceRootNotFoundError} carrying the resolved `stopAt` rather
-	 * than adopting an enclosing directory's workspace. Pass the same value as
-	 * {@link WorkspaceDiscoveryOptions.stopAt} so every service agrees on the
-	 * root; the `Workspaces.*` composites forward one `stopAt` to all of them.
-	 *
-	 * @defaultValue no ceiling — the ascent runs to the filesystem root.
-	 */
+  * A ceiling for the root ascent from `cwd`, passed straight through to the
+  * `stopAt` of {@link WorkspaceRoot}'s `find`.
+  *
+  * **Details**
+  *
+  * Inclusive, and resolved to an absolute path exactly as `cwd` is. When no
+  * root is found at or below the ceiling, `at(ref)` fails with
+  * {@link WorkspaceRootNotFoundError} carrying the resolved `stopAt` rather
+  * than adopting an enclosing directory's workspace. Pass the same value as
+  * {@link WorkspaceDiscoveryOptions.stopAt} so every service agrees on the
+  * root; the `Workspaces.*` composites forward one `stopAt` to all of them.
+  *
+  * @defaultValue no ceiling — the ascent runs to the filesystem root.
+  */
 	readonly stopAt?: string | undefined;
 	/**
-	 * Catalogs every snapshot this service produces carries as its
-	 * `seededCatalogs` — consulted only where the snapshot's own catalogs cannot
-	 * answer.
-	 *
-	 * @remarks
-	 * The layer-level spelling of `WorkspaceStateSnapshot.withSeededCatalogs`,
-	 * for the common case where the seed is the same for every read: a consumer
-	 * diffing many refs against one live workspace seeds once here instead of
-	 * remembering to call `withSeededCatalogs` at each site — and a forgotten
-	 * call is a silently missing diff row, not a type error.
-	 *
-	 * **This executes nothing by itself.** The caller supplies the set, and
-	 * `at(ref)` still never fetches. Whether `at(ref)` replays that ref's
-	 * config-dependency hooks is decided by the {@link ConfigDependencyHooks}
-	 * layer in scope, not by this option: under a replaying layer the ref's own
-	 * replay answers first and the seed fills only what neither source declared;
-	 * under `layerNoop` the seed is the only way a hook-injected catalog reaches
-	 * the ref side at all.
-	 *
-	 * Applied to `worktree()` too, for symmetry. There it is usually inert: a
-	 * live set assembled under a config-dependency layer already contains the
-	 * hook-injected catalogs at full precedence, so the seed answers nothing the
-	 * snapshot could not answer itself.
-	 *
-	 * @defaultValue absent — no seed.
-	 */
+  * Catalogs every snapshot this service produces carries as its
+  * `seededCatalogs` — consulted only where the snapshot's own catalogs cannot
+  * answer.
+  *
+  * **Details**
+  *
+  * The layer-level spelling of `WorkspaceStateSnapshot.withSeededCatalogs`,
+  * for the common case where the seed is the same for every read: a consumer
+  * diffing many refs against one live workspace seeds once here instead of
+  * remembering to call `withSeededCatalogs` at each site — and a forgotten
+  * call is a silently missing diff row, not a type error.
+  *
+  * **This executes nothing by itself.** The caller supplies the set, and
+  * `at(ref)` still never fetches. Whether `at(ref)` replays that ref's
+  * config-dependency hooks is decided by the {@link ConfigDependencyHooks}
+  * layer in scope, not by this option: under a replaying layer the ref's own
+  * replay answers first and the seed fills only what neither source declared;
+  * under `layerNoop` the seed is the only way a hook-injected catalog reaches
+  * the ref side at all.
+  *
+  * Applied to `worktree()` too, for symmetry. There it is usually inert: a
+  * live set assembled under a config-dependency layer already contains the
+  * hook-injected catalogs at full precedence, so the seed answers nothing the
+  * snapshot could not answer itself.
+  *
+  * @defaultValue absent — no seed.
+  */
 	readonly seedCatalogs?: CatalogSet;
 }
 
@@ -154,17 +158,18 @@ export interface WorkspaceSnapshotsOptions {
  */
 export interface WorkspaceSnapshotsShape {
 	/**
-	 * The workspace state at a git ref, read with no checkout. Cached per
-	 * `(root, ref)`.
-	 *
-	 * @remarks
-	 * The ref's `pnpm-workspace.yaml` `configDependencies` are replayed through
-	 * the {@link ConfigDependencyHooks} layer in scope at the versions THAT ref
-	 * declares (a replaying layer resolves them via `.pnpm-config` or the pnpm
-	 * store and fails closed when a declared version is installed nowhere;
-	 * `layerNoop` executes nothing). The injected catalogs merge above the
-	 * ref's lockfile and inline sources, exactly as the live assembler does.
-	 */
+  * The workspace state at a git ref, read with no checkout. Cached per
+  * `(root, ref)`.
+  *
+  * **Details**
+  *
+  * The ref's `pnpm-workspace.yaml` `configDependencies` are replayed through
+  * the {@link ConfigDependencyHooks} layer in scope at the versions THAT ref
+  * declares (a replaying layer resolves them via `.pnpm-config` or the pnpm
+  * store and fails closed when a declared version is installed nowhere;
+  * `layerNoop` executes nothing). The injected catalogs merge above the
+  * ref's lockfile and inline sources, exactly as the live assembler does.
+  */
 	readonly at: (ref: string) => Effect.Effect<WorkspaceStateSnapshot, WorkspaceSnapshotAtFailure>;
 	/** The live workspace state, over discovery and catalog assembly. Uncached. */
 	readonly worktree: Effect.Effect<WorkspaceStateSnapshot, WorkspaceSnapshotWorktreeFailure>;
@@ -239,7 +244,8 @@ const bunInlineCatalogs = (manifest: Record<string, unknown>): CatalogSet => {
  * What one parse of a manager's lockfile contributes to a snapshot: the catalogs
  * it records, and each importer's resolved versions.
  *
- * @remarks
+ * **Details**
+ *
  * Both come from the SAME parse deliberately. Reading the lockfile twice — once
  * for catalogs, once for importer versions — would let the two halves disagree
  * if the file changed between reads, and would double the git object reads
@@ -266,14 +272,16 @@ const unstubbed = (method: string): Effect.Effect<never> =>
 /**
  * Reads workspace state at a git ref with no checkout, and the live worktree.
  *
- * @remarks
+ * **Details**
+ *
  * `at(ref)` is cached per `(resolved root, ref)` via
  * `Effect.cachedInvalidateWithTTL` at `Duration.infinity`, invalidated on any
  * non-success exit — never bare `Effect.cached`, which would memoize an
  * interrupt. A failed `at(ref)` init is therefore retried on the next call, not
  * memoized.
  *
- * @example
+ * **Example** (Read package versions from a git ref and the worktree)
+ *
  * ```ts
  * import { WorkspaceSnapshots } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -292,15 +300,16 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 	$I`WorkspaceSnapshots`,
 ) {
 	/**
-	 * Builds the service over `Git`, {@link WorkspaceRoot}, {@link WorkspaceDiscovery},
-	 * {@link WorkspaceCatalogs} and {@link ConfigDependencyHooks}.
-	 *
-	 * @remarks
-	 * `ConfigDependencyHooks` is what `at(ref)` replays a ref's
-	 * `configDependencies` through — at the versions THAT ref declares, which is
-	 * why the composites hand the same hooks layer to this service and to
-	 * `WorkspaceCatalogs`. Under `layerNoop` the ref read executes nothing.
-	 */
+  * Builds the service over `Git`, {@link WorkspaceRoot}, {@link WorkspaceDiscovery},
+  * {@link WorkspaceCatalogs} and {@link ConfigDependencyHooks}.
+  *
+  * **Details**
+  *
+  * `ConfigDependencyHooks` is what `at(ref)` replays a ref's
+  * `configDependencies` through — at the versions THAT ref declares, which is
+  * why the composites hand the same hooks layer to this service and to
+  * `WorkspaceCatalogs`. Under `layerNoop` the ref read executes nothing.
+  */
 	static readonly make = Effect.fn("make")(function* (
 		options?: WorkspaceSnapshotsOptions,
 	): Effect.fn.Return<
@@ -556,15 +565,16 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 	});
 
 	/**
-	 * The live layer, reading workspace state at a git ref or from the live
-	 * worktree.
-	 *
-	 * @remarks
-	 * Parameterized, so it mints a fresh reference per call — bind it to a
-	 * `const` and reuse it, or layer memoization does not apply.
-	 *
-	 * @param options - Root resolution and the optional `seedCatalogs`.
-	 */
+  * The live layer, reading workspace state at a git ref or from the live
+  * worktree.
+  *
+  * **Gotchas**
+  *
+  * Parameterized, so it mints a fresh reference per call — bind it to a
+  * `const` and reuse it, or layer memoization does not apply.
+  *
+  * @param options - Root resolution and the optional `seedCatalogs`.
+  */
 	static readonly layer = (
 		options?: WorkspaceSnapshotsOptions,
 	): Layer.Layer<
@@ -574,43 +584,45 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 	> => Layer.effect(WorkspaceSnapshots, WorkspaceSnapshots.make(options));
 
 	/**
-	 * A test double satisfying the full {@link WorkspaceSnapshotsShape} with no
-	 * git, filesystem, discovery, or catalog assembly.
-	 *
-	 * @remarks
-	 * There are **no honest defaults and no derivations** here: `at(ref)` and
-	 * `worktree()` are two independent reads of two different sources (a git ref
-	 * vs. the live tree), so neither can be honestly derived from the other, and
-	 * a fabricated empty {@link WorkspaceStateSnapshot} on either side of a
-	 * before/after diff reads as every dependency newly added or removed — the
-	 * exact silent-empty failure class this package documents on the live paths.
-	 * Both methods therefore **die** with an instructive defect until stubbed; a
-	 * test-wiring mistake fails loudly as a defect rather than succeeding with a
-	 * lie.
-	 *
-	 * **A defect is not absorbed by `Effect.catch` or any typed-error handler**,
-	 * and that is the point: code under test with a best-effort `catch` around
-	 * its snapshot reads cannot make a mandatory stub look optional — the
-	 * unstubbed call still fails the test instead of quietly taking the catch
-	 * branch. Only defect-level combinators (`Effect.catchDefect`,
-	 * `Effect.exit`) would see it.
-	 *
-	 * @example
-	 * ```ts
-	 * import { CatalogSet, WorkspaceSnapshots, WorkspaceStateSnapshot } from "./index.ts";
-	 * import * as Effect from "effect/Effect";
-	 *
-	 * const empty = WorkspaceStateSnapshot.make({
-	 *   packages: [],
-	 *   catalogs: CatalogSet.empty(),
-	 *   importerVersions: {},
-	 * });
-	 * const double = WorkspaceSnapshots.makeTest({
-	 *   at: () => Effect.succeed(empty),
-	 *   worktree: Effect.succeed(empty),
-	 * });
-	 * ```
-	 */
+  * A test double satisfying the full {@link WorkspaceSnapshotsShape} with no
+  * git, filesystem, discovery, or catalog assembly.
+  *
+  * **Gotchas**
+  *
+  * There are **no honest defaults and no derivations** here: `at(ref)` and
+  * `worktree()` are two independent reads of two different sources (a git ref
+  * vs. the live tree), so neither can be honestly derived from the other, and
+  * a fabricated empty {@link WorkspaceStateSnapshot} on either side of a
+  * before/after diff reads as every dependency newly added or removed — the
+  * exact silent-empty failure class this package documents on the live paths.
+  * Both methods therefore **die** with an instructive defect until stubbed; a
+  * test-wiring mistake fails loudly as a defect rather than succeeding with a
+  * lie.
+  *
+  * **A defect is not absorbed by `Effect.catch` or any typed-error handler**,
+  * and that is the point: code under test with a best-effort `catch` around
+  * its snapshot reads cannot make a mandatory stub look optional — the
+  * unstubbed call still fails the test instead of quietly taking the catch
+  * branch. Only defect-level combinators (`Effect.catchDefect`,
+  * `Effect.exit`) would see it.
+  *
+  * **Example** (Stub both workspace snapshot reads)
+  *
+  * ```ts
+  * import { CatalogSet, WorkspaceSnapshots, WorkspaceStateSnapshot } from "./index.ts";
+  * import * as Effect from "effect/Effect";
+  *
+  * const empty = WorkspaceStateSnapshot.make({
+  *   packages: [],
+  *   catalogs: CatalogSet.empty(),
+  *   importerVersions: {},
+  * });
+  * const double = WorkspaceSnapshots.makeTest({
+  *   at: () => Effect.succeed(empty),
+  *   worktree: Effect.succeed(empty),
+  * });
+  * ```
+  */
 	static readonly makeTest = (overrides: Partial<WorkspaceSnapshotsShape> = {}): WorkspaceSnapshotsShape => ({
 		at: () => unstubbed("at"),
 		worktree: Effect.suspend(() => unstubbed("worktree")),
@@ -618,28 +630,30 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 	});
 
 	/**
-	 * The test layer: {@link WorkspaceSnapshots.makeTest} behind `Layer.succeed`,
-	 * so a suite provides only the methods it exercises.
-	 *
-	 * @remarks
-	 * A parameterized layer factory mints a **fresh reference per call**, and
-	 * layers memoize by reference — bind the result to a `const` and reuse it
-	 * rather than calling `layerTest(...)` at each composition site.
-	 *
-	 * @example
-	 * ```ts
-	 * import { CatalogSet, WorkspaceSnapshots, WorkspaceStateSnapshot } from "./index.ts";
-	 * import * as Effect from "effect/Effect";
-	 *
-	 * const TestSnapshots = WorkspaceSnapshots.layerTest({
-	 *   worktree:
-	 *     Effect.succeed(
-	 *       WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty(), importerVersions: {} }),
-	 *     ),
-	 * });
-	 * // program.pipe(Effect.provide(TestSnapshots))
-	 * ```
-	 */
+  * The test layer: {@link WorkspaceSnapshots.makeTest} behind `Layer.succeed`,
+  * so a suite provides only the methods it exercises.
+  *
+  * **Gotchas**
+  *
+  * A parameterized layer factory mints a **fresh reference per call**, and
+  * layers memoize by reference — bind the result to a `const` and reuse it
+  * rather than calling `layerTest(...)` at each composition site.
+  *
+  * **Example** (Provide a test layer for worktree snapshots)
+  *
+  * ```ts
+  * import { CatalogSet, WorkspaceSnapshots, WorkspaceStateSnapshot } from "./index.ts";
+  * import * as Effect from "effect/Effect";
+  *
+  * const TestSnapshots = WorkspaceSnapshots.layerTest({
+  *   worktree:
+  *     Effect.succeed(
+  *       WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty(), importerVersions: {} }),
+  *     ),
+  * });
+  * // program.pipe(Effect.provide(TestSnapshots))
+  * ```
+  */
 	static readonly layerTest = (overrides: Partial<WorkspaceSnapshotsShape> = {}): Layer.Layer<WorkspaceSnapshots> =>
 		Layer.succeed(WorkspaceSnapshots, WorkspaceSnapshots.makeTest(overrides));
 }

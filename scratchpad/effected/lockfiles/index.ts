@@ -5,6 +5,8 @@
  * model, plus pure integrity checking of that model against workspace
  * manifests.
  *
+ * **Details**
+ *
  * Supported lockfile *format* versions are pnpm `lockfileVersion` 9+ and npm
  * `lockfileVersion` 3+; older formats fail typed rather than parsing into a
  * model that cannot answer resolution questions.
@@ -17,7 +19,8 @@
  *
  * Every entrypoint takes content as a string; this package performs no IO.
  *
- * @example
+ * **Example** (Parse a pnpm lockfile and count workspace packages)
+ *
  * ```typescript
  * import { Lockfile } from "./index.ts";
  * import * as Effect from "effect/Effect";

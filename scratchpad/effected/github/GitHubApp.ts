@@ -31,7 +31,8 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
 /**
  * A GitHub App call failed.
  *
- * @remarks
+ * **Details**
+ *
  * Distinct from `GitHubError` because "I could not obtain credentials" and "the
  * API call failed" are different problems with different fixes: the first is a
  * misconfigured app, a wrong private key or a missing installation; the second
@@ -60,7 +61,8 @@ export class GitHubAppError extends S.TaggedError<GitHubAppError>($I`GitHubAppEr
 /**
  * The credentials that identify a GitHub App.
  *
- * @remarks
+ * **Details**
+ *
  * `appId` accepts either the numeric app id or the newer client id — GitHub
  * accepts both as the JWT issuer, and this package does not care which you use.
  *
@@ -70,16 +72,17 @@ export interface AppCredentials {
 	/** The app id or client id. */
 	readonly appId: string;
 	/**
-	 * The app's private key, in PEM.
-	 *
-	 * @remarks
-	 * PKCS#1 (`-----BEGIN RSA PRIVATE KEY-----`, which is what github.com hands
-	 * you) is converted to PKCS#8 automatically **on Node**. On a runtime without
-	 * `node:crypto` a PKCS#1 key fails with an explicit `kind: "jwt"` error, and
-	 * the fix is to convert the key once with
-	 * `openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt`. This constraint is
-	 * inherited from the JWT signer and is identical to `@octokit/auth-app`'s.
-	 */
+  * The app's private key, in PEM.
+  *
+  * **Gotchas**
+  *
+  * PKCS#1 (`-----BEGIN RSA PRIVATE KEY-----`, which is what github.com hands
+  * you) is converted to PKCS#8 automatically **on Node**. On a runtime without
+  * `node:crypto` a PKCS#1 key fails with an explicit `kind: "jwt"` error, and
+  * the fix is to convert the key once with
+  * `openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt`. This constraint is
+  * inherited from the JWT signer and is identical to `@octokit/auth-app`'s.
+  */
 	readonly privateKey: Redacted.Redacted<string>;
 }
 
@@ -92,21 +95,23 @@ export interface TokenRequest extends AppCredentials {
 	/** The installation. Discovered from `owner` when omitted. */
 	readonly installationId?: number | undefined;
 	/**
-	 * The account whose installation to use, when `installationId` is omitted.
-	 *
-	 * @remarks
-	 * Discovery costs a JWT mint plus a paginated walk of `GET /app/installations`,
-	 * so supplying `installationId` is strictly cheaper. When both are omitted and
-	 * the app has exactly one installation, that one is used; with several, the
-	 * failure names them.
-	 */
+  * The account whose installation to use, when `installationId` is omitted.
+  *
+  * **Details**
+  *
+  * Discovery costs a JWT mint plus a paginated walk of `GET /app/installations`,
+  * so supplying `installationId` is strictly cheaper. When both are omitted and
+  * the app has exactly one installation, that one is used; with several, the
+  * failure names them.
+  */
 	readonly owner?: string | undefined;
 }
 
 /**
  * An installation access token and what GitHub said about it.
  *
- * @remarks
+ * **Details**
+ *
  * Encodable on purpose. `@effected/github-actions` persists one across the
  * `pre`/`main`/`post` process boundary through `GITHUB_STATE`, and
  * `Schema.encodeUnknownEffect` produces JSON with the token as a plain string
@@ -133,12 +138,13 @@ export class InstallationToken extends S.Class<InstallationToken>($I`Installatio
 	appName: S.optionalKey(S.String).annotateKey({ description: "The app's display name, when identity was resolved." }),
 }, $I.annote("InstallationToken", { description: "An installation access token and what GitHub said about it." })) {
 	/**
-	 * Whether this token is spent, `skew` before its stated expiry.
-	 *
-	 * @remarks
-	 * `skew` defaults to one minute, so a token is treated as spent slightly early
-	 * rather than answering 401 mid-request.
-	 */
+  * Whether this token is spent, `skew` before its stated expiry.
+  *
+  * **Details**
+  *
+  * `skew` defaults to one minute, so a token is treated as spent slightly early
+  * rather than answering 401 mid-request.
+  */
 	isExpired(nowMillis: number, skew: Duration.Duration = DEFAULT_SKEW): boolean {
 		return DateTime.toEpochMillis(this.expiresAt) - Duration.toMillis(skew) <= nowMillis;
 	}
@@ -160,7 +166,8 @@ const DEFAULT_SKEW = Duration.seconds(60);
 /**
  * Who a bot commits as.
  *
- * @remarks
+ * **Details**
+ *
  * A **pure class**, not a `GitHubApp` service member: a synchronous method on
  * the service shape would be required in every `Layer.mock` and would silently
  * degrade every partial double to a full implementation. Get one from
@@ -193,18 +200,19 @@ export class BotIdentity extends S.Class<BotIdentity>($I`BotIdentity`)({
 	});
 
 	/**
-	 * The DCO sign-off trailer for this identity.
-	 *
-	 * @remarks
-	 * `Signed-off-by: name <email>` — DCO 1.1's fixed casing and spacing, with
-	 * only the email in angle brackets, rendered by the type that owns the
-	 * data. Commits created
-	 * through the Git Data API bypass `git commit -s`, so no porcelain adds
-	 * the trailer, and a hand-built one that is subtly wrong fails late as a
-	 * red DCO check on someone else's pull request. Whether a missing
-	 * identity falls back to {@link BotIdentity.githubActions} stays the
-	 * caller's policy.
-	 */
+  * The DCO sign-off trailer for this identity.
+  *
+  * **Details**
+  *
+  * `Signed-off-by: name <email>` — DCO 1.1's fixed casing and spacing, with
+  * only the email in angle brackets, rendered by the type that owns the
+  * data. Commits created
+  * through the Git Data API bypass `git commit -s`, so no porcelain adds
+  * the trailer, and a hand-built one that is subtly wrong fails late as a
+  * red DCO check on someone else's pull request. Whether a missing
+  * identity falls back to {@link BotIdentity.githubActions} stays the
+  * caller's policy.
+  */
 	get signoff(): string {
 		return `Signed-off-by: ${this.name} <${this.email}>`;
 	}
@@ -263,7 +271,8 @@ export interface GitHubAppOptions {
 /**
  * GitHub App authentication: mint, revoke and identify.
  *
- * @remarks
+ * **Details**
+ *
  * **This is the only module in the package that imports a JWT signer**, which is
  * what makes the tree-shaking invariant structural rather than aspirational: a
  * consumer that authenticates with a token it already holds imports
@@ -279,7 +288,8 @@ export interface GitHubAppOptions {
  * The JWT signer is `universal-github-app-jwt` — zero dependencies, and
  * `@octokit/auth-app`'s own JWT dependency.
  *
- * @example
+ * **Example** (Count repositories accessible to an app installation)
+ *
  * ```ts
  * import { GitHubApp, GitHubClient } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -308,34 +318,36 @@ export class GitHubApp extends Context.Service<GitHubApp, GitHubAppShape>()($I`G
 	static readonly layer: Layer.Layer<GitHubApp> = Layer.effect(this, makeApp({}));
 
 	/**
-	 * A transport with custom settings.
-	 *
-	 * @remarks
-	 * Parameterized, so **bind the result to a `const`** and reuse it. Calling
-	 * this at two provide sites builds two instances, because layers are
-	 * memoized by reference.
-	 */
+  * A transport with custom settings.
+  *
+  * **Gotchas**
+  *
+  * Parameterized, so **bind the result to a `const`** and reuse it. Calling
+  * this at two provide sites builds two instances, because layers are
+  * memoized by reference.
+  */
 	static readonly layerWith = (options: GitHubAppOptions): Layer.Layer<GitHubApp> =>
 		Layer.effect(GitHubApp, makeApp(options));
 
 	/**
-	 * A {@link GitHubClient} authenticated as an app installation.
-	 *
-	 * @remarks
-	 * The token's lifetime is the layer's scope: it is minted on build and
-	 * **revoked on release**, best-effort, so a workflow does not leave live
-	 * credentials behind. It is also **re-minted automatically** a minute before
-	 * it expires, so a long-running program does not start answering 401 when
-	 * the hour ends.
-	 *
-	 * Building the layer mints the first token, so a misconfigured app fails
-	 * construction with `GitHubAppError`. After that, a failure to obtain
-	 * credentials surfaces to the caller as a
-	 * `GitHubError { kind: "unauthorized" }` carrying the `GitHubAppError` as its
-	 * cause: from a request's point of view, "could not authenticate" is an
-	 * authorization failure, and widening every method's error channel to say so
-	 * would tax every caller for a case only this layer can produce.
-	 */
+  * A {@link GitHubClient} authenticated as an app installation.
+  *
+  * **Details**
+  *
+  * The token's lifetime is the layer's scope: it is minted on build and
+  * **revoked on release**, best-effort, so a workflow does not leave live
+  * credentials behind. It is also **re-minted automatically** a minute before
+  * it expires, so a long-running program does not start answering 401 when
+  * the hour ends.
+  *
+  * Building the layer mints the first token, so a misconfigured app fails
+  * construction with `GitHubAppError`. After that, a failure to obtain
+  * credentials surfaces to the caller as a
+  * `GitHubError { kind: "unauthorized" }` carrying the `GitHubAppError` as its
+  * cause: from a request's point of view, "could not authenticate" is an
+  * authorization failure, and widening every method's error channel to say so
+  * would tax every caller for a case only this layer can produce.
+  */
 	static readonly clientLayer = (
 		request: TokenRequest,
 		options: GitHubAppOptions = {},
@@ -362,7 +374,8 @@ export class GitHubApp extends Context.Service<GitHubApp, GitHubAppShape>()($I`G
 /**
  * The app-authentication surface.
  *
- * @remarks
+ * **Details**
+ *
  * Every member is a function returning an `Effect`, so a partial double stays
  * partial. `installations` takes credentials rather than being an
  * `Effect`-valued property because the credentials are per-call, not per-layer.
@@ -371,32 +384,35 @@ export class GitHubApp extends Context.Service<GitHubApp, GitHubAppShape>()($I`G
  */
 export interface GitHubAppShape {
 	/**
-	 * Mint an installation token.
-	 *
-	 * @remarks
-	 * `installationId` is used when given; otherwise the installation is
-	 * discovered from `owner`, or from the app's only installation.
-	 */
+  * Mint an installation token.
+  *
+  * **Details**
+  *
+  * `installationId` is used when given; otherwise the installation is
+  * discovered from `owner`, or from the app's only installation.
+  */
 	readonly token: (request: TokenRequest) => Effect.Effect<InstallationToken, GitHubAppError>;
 	/**
-	 * Mint a token that is revoked, best-effort, when the scope closes.
-	 *
-	 * @remarks
-	 * Mints through `token` and releases through `revoke`.
-	 */
+  * Mint a token that is revoked, best-effort, when the scope closes.
+  *
+  * **Details**
+  *
+  * Mints through `token` and releases through `revoke`.
+  */
 	readonly scopedToken: (request: TokenRequest) => Effect.Effect<InstallationToken, GitHubAppError, Scope.Scope>;
 	/**
 	 * Revoke a token now.
 	 */
 	readonly revoke: (token: Redacted.Redacted<string>) => Effect.Effect<void, GitHubAppError>;
 	/**
-	 * Resolve the app's slug, name and bot user id.
-	 *
-	 * @remarks
-	 * Supply `installationToken` when you have one: `GET /users/{slug}[bot]`
-	 * rejects an app JWT, so without it the lookup runs unauthenticated at
-	 * GitHub's 60-requests-per-hour-per-IP limit.
-	 */
+  * Resolve the app's slug, name and bot user id.
+  *
+  * **Gotchas**
+  *
+  * Supply `installationToken` when you have one: `GET /users/{slug}[bot]`
+  * rejects an app JWT, so without it the lookup runs unauthenticated at
+  * GitHub's 60-requests-per-hour-per-IP limit.
+  */
 	readonly identity: (
 		request: AppCredentials & { readonly installationToken?: Redacted.Redacted<string> | undefined },
 	) => Effect.Effect<AppIdentity, GitHubAppError>;
@@ -539,7 +555,8 @@ const normalizePermissions = (raw: unknown): Record<string, string> => {
 /**
  * A client shape that re-mints its installation token before it expires.
  *
- * @remarks
+ * **Details**
+ *
  * The rotation is invisible to a caller: each member resolves the current
  * client first, and "current" means "minted, and not within a minute of
  * expiry". Rotating revokes the token it replaces, so at most one live token

@@ -20,7 +20,8 @@ const $I = $ScratchpadId.create("effected/cli/CliLinks");
 /**
  * Whether file links open in an editor.
  *
- * @remarks
+ * **Details**
+ *
  * `vscode` writes `vscode://file/<path>:<line>:<col>`, `file` writes `file://<path>`, `off` writes no file link, and
  * `auto` picks `vscode` when it finds a signal of VS Code and `file` otherwise.
  *
@@ -37,13 +38,14 @@ export interface CliLinksShape {
 	/** The mode `auto` resolved to, or the one that was asked for. */
 	readonly mode: "vscode" | "file" | "off";
 	/**
-	 * The URL a target opens, or `None` when it has none.
-	 *
-	 * @remarks
-	 * A `{ url }` target is its URL, whatever the mode. A `{ file }` target is `vscode://file/<path>:<line>:<col>` or
-	 * `file://<path>`, with the path URL-encoded; `off` gives it none, and so does a relative path when the layer
-	 * has no working directory to resolve it against. A column needs a line.
-	 */
+  * The URL a target opens, or `None` when it has none.
+  *
+  * **Details**
+  *
+  * A `{ url }` target is its URL, whatever the mode. A `{ file }` target is `vscode://file/<path>:<line>:<col>` or
+  * `file://<path>`, with the path URL-encoded; `off` gives it none, and so does a relative path when the layer
+  * has no working directory to resolve it against. A column needs a line.
+  */
 	readonly target: (target: LinkTarget) => O.Option<string>;
 }
 
@@ -193,7 +195,8 @@ const build = Effect.fn("build")(function* (
 /**
  * Editor-aware links for file targets: where a link to a file opens.
  *
- * @remarks
+ * **Details**
+ *
  * The mode is decided once, when the layer is built. `auto` is `vscode` when `CurrentRuntimeEnv.terminal` is
  * `vscode` (`TERM_PROGRAM=vscode`) or a `.vscode/` directory sits at the project root, and `file` otherwise. The
  * root is the nearest directory, from the working directory up, that holds `.git` or `pnpm-workspace.yaml`; the
@@ -206,13 +209,14 @@ const build = Effect.fn("build")(function* (
  */
 export class CliLinks extends Context.Service<CliLinks, CliLinksShape>()($I`CliLinks`) {
 	/**
-	 * The links for the working directory, reading the filesystem for a `.vscode/` directory.
-	 *
-	 * @remarks
-	 * A layer-returning function mints a fresh layer per call: call it once and bind the result to a constant.
-	 *
-	 * @param options - the setting, the environment variable that overrides it, and the working directory
-	 */
+  * The links for the working directory, reading the filesystem for a `.vscode/` directory.
+  *
+  * **Gotchas**
+  *
+  * A layer-returning function mints a fresh layer per call: call it once and bind the result to a constant.
+  *
+  * @param options - the setting, the environment variable that overrides it, and the working directory
+  */
 	static readonly layer = (
 		options: CliLinksOptions = {},
 	): LayerType.Layer<CliLinks, never, FileSystem.FileSystem | Path.Path | CurrentRuntimeEnv> =>
@@ -237,18 +241,19 @@ export class CliLinks extends Context.Service<CliLinks, CliLinksShape>()($I`CliL
 		});
 
 	/**
-	 * The function that writes a link: a target and a label in, the label out, wrapped in OSC 8 when it should be.
-	 *
-	 * @remarks
-	 * It writes the hyperlink `ESC ] 8 ; ; URL ESC \ label ESC ] 8 ; ; ESC \` only when the stream's terminal can
-	 * render it (`hyperlinks`) and the audience is not an agent, which never gets an escape of any kind; in every other
-	 * case, and whenever the target has no URL, it returns the label unchanged. The URL has its control characters
-	 * removed again here, so a hostile target cannot end the sequence early or start another, and a URL whose scheme is
-	 * not one a link may have (`javascript:`, `data:`, and the like; the same list markdown uses) is the label alone. It is pure and cheap,
-	 * which {@link RenderContext}'s `link` requires.
-	 *
-	 * @param options - the links, whether hyperlinks are available, and the audience
-	 */
+  * The function that writes a link: a target and a label in, the label out, wrapped in OSC 8 when it should be.
+  *
+  * **Details**
+  *
+  * It writes the hyperlink `ESC ] 8 ; ; URL ESC \ label ESC ] 8 ; ; ESC \` only when the stream's terminal can
+  * render it (`hyperlinks`) and the audience is not an agent, which never gets an escape of any kind; in every other
+  * case, and whenever the target has no URL, it returns the label unchanged. The URL has its control characters
+  * removed again here, so a hostile target cannot end the sequence early or start another, and a URL whose scheme is
+  * not one a link may have (`javascript:`, `data:`, and the like; the same list markdown uses) is the label alone. It is pure and cheap,
+  * which {@link RenderContext}'s `link` requires.
+  *
+  * @param options - the links, whether hyperlinks are available, and the audience
+  */
 	static readonly linker =
 		(options: CliLinksLinkerOptions) =>
 		(target: LinkTarget, label: string): string => {

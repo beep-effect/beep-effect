@@ -58,17 +58,18 @@ export class Position extends S.Class<Position>($I`Position`)({
 	end: Point.annotateKey({ description: "Exclusive source point immediately after the node" }),
 }, $I.annote("Position", { description: "The source span of a node: `start` inclusive, `end` exclusive." })) {
 	/**
-	 * The zero-width synthetic position: line 1, column 1, offset 0 at both
-	 * ends — the span every node class's `make` fills in when `position` is
-	 * omitted, and the same sentinel `Mdast.fromMdast` synthesizes for foreign
-	 * nodes that carry none.
-	 *
-	 * @remarks
-	 * Clearly synthetic and inert for rendering: trees carrying it serve
-	 * tree-level workflows (stringify, the visitor, `MarkdownFormat.modify`
-	 * replacement fragments, projection out), not offset-splice editing, whose
-	 * offsets must come from a real parse.
-	 */
+  * The zero-width synthetic position: line 1, column 1, offset 0 at both
+  * ends — the span every node class's `make` fills in when `position` is
+  * omitted, and the same sentinel `Mdast.fromMdast` synthesizes for foreign
+  * nodes that carry none.
+  *
+  * **Gotchas**
+  *
+  * Clearly synthetic and inert for rendering: trees carrying it serve
+  * tree-level workflows (stringify, the visitor, `MarkdownFormat.modify`
+  * replacement fragments, projection out), not offset-splice editing, whose
+  * offsets must come from a real parse.
+  */
 	static readonly synthetic: Position = Position.make({
 		start: Point.make({ line: 1, column: 1, offset: 0 }),
 		end: Point.make({ line: 1, column: 1, offset: 0 }),
@@ -248,7 +249,8 @@ export type TableAlign = typeof TableAlign.Type;
  * Text — a run of literal characters, with entity references and backslash
  * escapes already resolved into `value`.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `escapeStyle` is an opt-in emitter extra, the one fidelity field the
  * parser never sets: absent (or `"canonical"`), `Markdown.stringify` escapes
  * the value canonically so it re-parses to the same text. `"literal"` is the

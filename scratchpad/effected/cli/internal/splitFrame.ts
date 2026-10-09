@@ -7,7 +7,8 @@ const isSpace = (ch: string | undefined): boolean => ch !== undefined && /\s/.te
 /**
  * A frame text split as `fn (location)`: at the FIRST whitespace run followed by `(`, when the text ends with `)`.
  *
- * @remarks
+ * **Details**
+ *
  * A linear scan with exactly the result of `/^(.*?)\s+\((.*)\)$/`, which backtracks polynomially on a long whitespace
  * run with no closing parenthesis. The split is the first one, not the last, because a location can hold parentheses
  * (an `eval` frame's `eval at <anonymous> (file:1:2), <anonymous>:1:1`). As with the regular expression, neither the

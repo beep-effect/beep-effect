@@ -6,14 +6,16 @@ const $I = $ScratchpadId.create("effected/engine/Remediation");
 /**
  * What a caller — usually an agent — should do after a failure.
  *
- * @remarks
+ * **Details**
+ *
  * `hint` is the human-readable instruction. `suggestedTool` and `suggestedArgs`
  * optionally name the tool to call next and the arguments to call it with, so
  * an agent can act without parsing the hint. The optional keys are
  * `optionalKey`: omit them rather than passing an explicit `undefined`, which
  * is rejected instead of silently encoded.
  *
- * @example
+ * **Example** (Suggest a validation tool and its arguments)
+ *
  * ```ts
  * import { Remediation } from "./index.ts"
  *

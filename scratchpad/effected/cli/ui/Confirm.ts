@@ -252,14 +252,15 @@ export class Confirm {
 	static readonly keys: KeyTable<ConfirmAction> = KEYS;
 
 	/**
-	 * Draw the confirm: the question, the answer row (`[Yes]  No` or ` Yes  [No]`, the chosen answer in brackets so it
-	 * shows without colour, and in the accent token), a {@link Toggle} row per toggle, and the key help.
-	 *
-	 * @remarks
-	 * Single-shot, like `Select.View`: the options are read once at mount.
-	 *
-	 * @param props - the question, the starting answer, the toggles and where the result goes
-	 */
+  * Draw the confirm: the question, the answer row (`[Yes]  No` or ` Yes  [No]`, the chosen answer in brackets so it
+  * shows without colour, and in the accent token), a {@link Toggle} row per toggle, and the key help.
+  *
+  * **Details**
+  *
+  * Single-shot, like `Select.View`: the options are read once at mount.
+  *
+  * @param props - the question, the starting answer, the toggles and where the result goes
+  */
 	static readonly View = <K extends string>(props: ConfirmViewProps<K>): ReactElement => {
 		const { ink, react } = inkModules();
 		const glyphs = useGlyphs();

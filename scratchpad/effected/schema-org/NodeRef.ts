@@ -34,7 +34,8 @@ export class InvalidNodeIdError extends S.TaggedError<InvalidNodeIdError>($I`Inv
 /**
  * The identifier rule: non-empty, no whitespace, no control characters.
  *
- * @remarks
+ * **Details**
+ *
  * Written lookahead-free so that `Arbitrary.schema` derivation stays possible
  * for property tests.
  *
@@ -78,6 +79,8 @@ export interface HasNodeId {
 /**
  * A reference from one node to another: the `{"@id": "…"}` form.
  *
+ * **Details**
+ *
  * Every node-valued property in this package holds a `NodeRef` rather than an
  * embedded node. The `@graph` form exists so that nodes are siblings addressed
  * by `@id`; embedding is the alternative serialization of the same
@@ -91,7 +94,8 @@ export interface HasNodeId {
  * whose graph is meant to be closed can gate on them, and one whose graph is
  * deliberately open can ignore them.
  *
- * @example
+ * **Example** (Reference an article author)
+ *
  * ```ts
  * import { Person, NodeRef, TechArticle } from "./index.ts";
  *

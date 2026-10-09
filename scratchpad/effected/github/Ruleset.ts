@@ -18,7 +18,8 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
 /**
  * A ruleset, as listing returns it.
  *
- * @remarks
+ * **Details**
+ *
  * `source_type` is the field that matters and the one easiest to drop from a
  * projection: a repository's ruleset listing includes rulesets **inherited from
  * the organization**, and they are indistinguishable from the repository's own
@@ -78,7 +79,8 @@ export interface RulesetShape {
   /**
    * Create or update a ruleset, matched by name.
    *
-   * @remarks
+   * **Gotchas**
+   *
    * A ruleset has **no natural key** on GitHub's side — only a numeric id
    * assigned at creation — so this matches on `name`. Renaming a ruleset in a
    * caller's configuration therefore creates a second one rather than renaming
@@ -93,7 +95,8 @@ export interface RulesetShape {
   /**
    * A team's numeric id, for a bypass actor.
    *
-   * @remarks
+   * **Details**
+   *
    * Org-scoped, sourced from `Repo.owner` — the organization that owns the
    * repository. A team in a *different* organization is not reachable here and
    * should not be: `Repo` would be lying about the scope.
@@ -107,7 +110,8 @@ export interface RulesetShape {
  * Create or update, list and delete repository rulesets, and look up the team
  * and role ids their bypass actors need.
  *
- * @remarks
+ * **Gotchas**
+ *
  * ## An inherited ruleset is never written to
  *
  * `GET /repos/{owner}/{repo}/rulesets` returns rulesets **inherited from the
@@ -122,7 +126,8 @@ export interface RulesetShape {
  * Provide it with {@link Ruleset.layer}, which needs a `GitHubClient`; each
  * method also needs a `Repo` in `R`.
  *
- * @example
+ * **Example** (Protect the default branch against deletion)
+ *
  * ```ts
  * import { Ruleset } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -145,7 +150,8 @@ export class Ruleset extends Context.Service<Ruleset, RulesetShape>()($I`Ruleset
   /**
    * The live service, built over a `GitHubClient`.
    *
-   * @remarks
+   * **Gotchas**
+   *
    * `(client) => make(client)` rather than `make`: a static initializer runs
    * while the module body is still evaluating, so naming a `const` declared
    * further down throws at import time with a clean typecheck.

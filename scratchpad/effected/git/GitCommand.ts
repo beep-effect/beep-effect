@@ -11,7 +11,8 @@ const $I = $ScratchpadId.create("effected/git/GitCommand");
  * A pure `git` invocation: the spawnable command plus the diagnostic argv the
  * error taxonomy is allowed to persist.
  *
- * @remarks
+ * **Details**
+ *
  * `command.args` holds the raw argv git actually receives; `redactedArgs` is
  * the same argv with every sensitive positional masked — a config value
  * replaced by `<redacted>` entirely, and a URL's embedded userinfo (an
@@ -66,7 +67,8 @@ const redactUrlUserinfo = (value: string): string =>
  * Builds a `git` {@link GitInvocation} with the argv this package classifies
  * against.
  *
- * @remarks
+ * **Details**
+ *
  * The returned command carries neither `cwd` NOR any environment pin — every
  * `GitCommand` constructor produces a pure, context-free value. The caller
  * (the `Git` service) applies both per invocation, via `ChildProcess.setCwd`
@@ -299,7 +301,8 @@ const log = (
 /**
  * Which configuration file a read is scoped to.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Omitted, git reads the MERGED configuration — repository-local plus global
  * plus system — which is what a consumer wants for "what is the effective
  * value" and precisely wrong for "what does THIS checkout declare". A globally
@@ -549,7 +552,8 @@ const lsFiles = (pathspec: ReadonlyArray<string> = []): GitInvocation =>
  * Pure constructors for the `git` {@link GitInvocation} values this package
  * spawns.
  *
- * @remarks
+ * **Details**
+ *
  * Every constructor returns a cwd-less, argv-only {@link GitInvocation} — no
  * spawning, no working directory baked in. `Git` applies the working
  * directory per call with `ChildProcess.setCwd` on `invocation.command` and
@@ -578,15 +582,16 @@ export class GitCommand {
 	static readonly show = show;
 
 	/**
-	 * `git ls-tree -r -z <ref> [-- <pathspec>...]` — every path in the tree at
-	 * `ref`, recursively, NUL-terminated, optionally scoped to `pathspec`.
-	 *
-	 * @remarks
-	 * `-z` is load-bearing: git paths may themselves contain newlines, so the
-	 * caller must split on `"\0"`, never on `"\n"`. When `pathspec` is provided,
-	 * a literal `--` separator is inserted before the pathspec entries to prevent
-	 * git from interpreting pathspec values as options.
-	 */
+  * `git ls-tree -r -z <ref> [-- <pathspec>...]` — every path in the tree at
+  * `ref`, recursively, NUL-terminated, optionally scoped to `pathspec`.
+  *
+  * **Gotchas**
+  *
+  * `-z` is load-bearing: git paths may themselves contain newlines, so the
+  * caller must split on `"\0"`, never on `"\n"`. When `pathspec` is provided,
+  * a literal `--` separator is inserted before the pathspec entries to prevent
+  * git from interpreting pathspec values as options.
+  */
 	static readonly lsTree = lsTree;
 
 	/**
@@ -596,72 +601,77 @@ export class GitCommand {
 	static readonly refExists = refExists;
 
 	/**
-	 * `git merge-base <a> <b>` — the best common ancestor commit of `a` and `b`.
-	 *
-	 * @remarks
-	 * Two refs with NO common ancestor (disjoint histories) exit 1 with
-	 * silent stderr. One builder backs both service members: `Git.mergeBase`
-	 * surfaces that shape as a loud `GitCommandError` (absence is
-	 * exceptional), while `Git.mergeBaseOption` degrades it to `Option.none`
-	 * (a probe answer). The argv is identical either way.
-	 */
+  * `git merge-base <a> <b>` — the best common ancestor commit of `a` and `b`.
+  *
+  * **Gotchas**
+  *
+  * Two refs with NO common ancestor (disjoint histories) exit 1 with
+  * silent stderr. One builder backs both service members: `Git.mergeBase`
+  * surfaces that shape as a loud `GitCommandError` (absence is
+  * exceptional), while `Git.mergeBaseOption` degrades it to `Option.none`
+  * (a probe answer). The argv is identical either way.
+  */
 	static readonly mergeBase = mergeBase;
 
 	/**
-	 * `git diff --name-only -z [--relative] <base>...<head>` — the paths that
-	 * differ between the merge base of `base` and `head`, and `head` itself,
-	 * NUL-terminated.
-	 *
-	 * @remarks
-	 * `-z` is load-bearing here too, for the same reason as {@link GitCommand.lsTree}: split
-	 * the output on `"\0"`, never on `"\n"`.
-	 *
-	 * The relative flag is **explicit in both branches** — `--relative` when
-	 * `relative` is true, `--no-relative` when false — never omitted. git honors a
-	 * configured `diff.relative=true` when no flag is passed, so an omitted flag
-	 * would silently yield cwd-relative paths on such a machine even for
-	 * `relative: false`, misaligning with {@link GitCommand.untrackedFiles}'s
-	 * repo-root base and breaking `Git.workingChanges`' dedup in a nested workspace.
-	 * `--relative` scopes the report to `cwd` (a workspace nested inside a larger
-	 * repository); `--no-relative` overrides any `diff.relative` config and reports
-	 * paths from the repository top-level.
-	 */
+  * `git diff --name-only -z [--relative] <base>...<head>` — the paths that
+  * differ between the merge base of `base` and `head`, and `head` itself,
+  * NUL-terminated.
+  *
+  * **Gotchas**
+  *
+  * `-z` is load-bearing here too, for the same reason as {@link GitCommand.lsTree}: split
+  * the output on `"\0"`, never on `"\n"`.
+  *
+  * The relative flag is **explicit in both branches** — `--relative` when
+  * `relative` is true, `--no-relative` when false — never omitted. git honors a
+  * configured `diff.relative=true` when no flag is passed, so an omitted flag
+  * would silently yield cwd-relative paths on such a machine even for
+  * `relative: false`, misaligning with {@link GitCommand.untrackedFiles}'s
+  * repo-root base and breaking `Git.workingChanges`' dedup in a nested workspace.
+  * `--relative` scopes the report to `cwd` (a workspace nested inside a larger
+  * repository); `--no-relative` overrides any `diff.relative` config and reports
+  * paths from the repository top-level.
+  */
 	static readonly changedFiles = changedFiles;
 
 	/**
-	 * `git diff --name-only -z (--relative | --no-relative)` — the paths with
-	 * unstaged working-tree changes (the working tree against the index),
-	 * NUL-terminated.
-	 *
-	 * @remarks
-	 * `relative` behaves as it does for {@link GitCommand.changedFiles}, including the
-	 * explicit-flag-in-both-branches rule: `--no-relative` is passed for
-	 * `relative: false` so a configured `diff.relative=true` cannot silently make the
-	 * output cwd-relative.
-	 */
+  * `git diff --name-only -z (--relative | --no-relative)` — the paths with
+  * unstaged working-tree changes (the working tree against the index),
+  * NUL-terminated.
+  *
+  * **Details**
+  *
+  * `relative` behaves as it does for {@link GitCommand.changedFiles}, including the
+  * explicit-flag-in-both-branches rule: `--no-relative` is passed for
+  * `relative: false` so a configured `diff.relative=true` cannot silently make the
+  * output cwd-relative.
+  */
 	static readonly unstagedChanges = unstagedChanges;
 
 	/**
-	 * `git diff --name-only -z (--relative | --no-relative) --cached` — the paths
-	 * staged for the next commit (the index against `HEAD`), NUL-terminated.
-	 *
-	 * @remarks
-	 * `relative` behaves as it does for {@link GitCommand.changedFiles}, including the
-	 * explicit `--no-relative` on the `relative: false` branch.
-	 */
+  * `git diff --name-only -z (--relative | --no-relative) --cached` — the paths
+  * staged for the next commit (the index against `HEAD`), NUL-terminated.
+  *
+  * **Details**
+  *
+  * `relative` behaves as it does for {@link GitCommand.changedFiles}, including the
+  * explicit `--no-relative` on the `relative: false` branch.
+  */
 	static readonly stagedChanges = stagedChanges;
 
 	/**
-	 * `git ls-files --others --exclude-standard -z [--full-name]` — the untracked
-	 * paths git is not ignoring, NUL-terminated.
-	 *
-	 * @remarks
-	 * `ls-files` reports paths relative to `cwd` by default, matching the
-	 * `--relative` diffs. When `relative` is `false`, `--full-name` makes it emit
-	 * repo-root-relative paths instead, so the untracked half shares a base with the
-	 * un-`--relative` diffs — otherwise `Git.workingChanges`'s union would dedup two
-	 * spellings of one file from a nested `cwd`.
-	 */
+  * `git ls-files --others --exclude-standard -z [--full-name]` — the untracked
+  * paths git is not ignoring, NUL-terminated.
+  *
+  * **Details**
+  *
+  * `ls-files` reports paths relative to `cwd` by default, matching the
+  * `--relative` diffs. When `relative` is `false`, `--full-name` makes it emit
+  * repo-root-relative paths instead, so the untracked half shares a base with the
+  * un-`--relative` diffs — otherwise `Git.workingChanges`'s union would dedup two
+  * spellings of one file from a nested `cwd`.
+  */
 	static readonly untrackedFiles = untrackedFiles;
 
 	/**
@@ -678,155 +688,165 @@ export class GitCommand {
 	static readonly checkout = checkout;
 
 	/**
-	 * Mutating: `git fetch [--depth <n>] [--unshallow] <remote> [tag] <ref>` —
-	 * fetches the given ref from a remote, optionally with a depth limit, the
-	 * `--unshallow` mode, and the `tag` keyword.
-	 *
-	 * @remarks
-	 * `ref` may also be a full refspec (`src:dst`, optionally `+`-prefixed) —
-	 * it is passed through VERBATIM, never transformed. That matters under a
-	 * single-branch clone (`actions/checkout`'s default): a bare-ref fetch
-	 * there updates `FETCH_HEAD` only and never creates the remote-tracking
-	 * ref, so `+refs/heads/<b>:refs/remotes/origin/<b>` is the only spelling
-	 * that materializes `origin/<b>`.
-	 *
-	 * `unshallow` is a distinct MODE like {@link GitCommand.fetchUnshallow}'s:
-	 * git rejects it in a non-shallow repository and rejects it alongside
-	 * `--depth`. `remote` may be a URL as well as a remote name; an embedded
-	 * `userinfo@` credential is masked in {@link GitInvocation.redactedArgs}.
-	 */
+  * Mutating: `git fetch [--depth <n>] [--unshallow] <remote> [tag] <ref>` —
+  * fetches the given ref from a remote, optionally with a depth limit, the
+  * `--unshallow` mode, and the `tag` keyword.
+  *
+  * **Gotchas**
+  *
+  * `ref` may also be a full refspec (`src:dst`, optionally `+`-prefixed) —
+  * it is passed through VERBATIM, never transformed. That matters under a
+  * single-branch clone (`actions/checkout`'s default): a bare-ref fetch
+  * there updates `FETCH_HEAD` only and never creates the remote-tracking
+  * ref, so `+refs/heads/<b>:refs/remotes/origin/<b>` is the only spelling
+  * that materializes `origin/<b>`.
+  *
+  * `unshallow` is a distinct MODE like {@link GitCommand.fetchUnshallow}'s:
+  * git rejects it in a non-shallow repository and rejects it alongside
+  * `--depth`. `remote` may be a URL as well as a remote name; an embedded
+  * `userinfo@` credential is masked in {@link GitInvocation.redactedArgs}.
+  */
 	static readonly fetch = fetch;
 
 	/**
-	 * Mutating: `git fetch --unshallow <remote>` — converts a shallow clone
-	 * into a complete one by fetching the missing history.
-	 *
-	 * @remarks
-	 * `--unshallow` is a distinct MODE, not a depth value: git rejects it
-	 * outright in a repository that is not shallow, with
-	 * `--unshallow on a complete repository does not make sense`, so it
-	 * cannot be expressed as `fetch`'s `depth` option. The caller decides
-	 * whether to run it — probe with `Git.isShallow` first.
-	 *
-	 * `remote` may be a URL as well as a remote name; an embedded `userinfo@`
-	 * credential is masked in {@link GitInvocation.redactedArgs}.
-	 */
+  * Mutating: `git fetch --unshallow <remote>` — converts a shallow clone
+  * into a complete one by fetching the missing history.
+  *
+  * **Gotchas**
+  *
+  * `--unshallow` is a distinct MODE, not a depth value: git rejects it
+  * outright in a repository that is not shallow, with
+  * `--unshallow on a complete repository does not make sense`, so it
+  * cannot be expressed as `fetch`'s `depth` option. The caller decides
+  * whether to run it — probe with `Git.isShallow` first.
+  *
+  * `remote` may be a URL as well as a remote name; an embedded `userinfo@`
+  * credential is masked in {@link GitInvocation.redactedArgs}.
+  */
 	static readonly fetchUnshallow = fetchUnshallow;
 
 	/**
-	 * `git rev-parse --is-shallow-repository` — prints `true` when the
-	 * repository is a shallow clone, `false` otherwise.
-	 *
-	 * @remarks
-	 * A dedicated probe constructor, deliberately separate from
-	 * {@link GitCommand.revParse}: `revParse` takes a REF and resolves it,
-	 * while this takes nothing and answers a repository-shape question.
-	 * Folding the flag into `revParse` would make that constructor
-	 * sometimes-takes-a-ref, sometimes-takes-a-flag.
-	 */
+  * `git rev-parse --is-shallow-repository` — prints `true` when the
+  * repository is a shallow clone, `false` otherwise.
+  *
+  * **Details**
+  *
+  * A dedicated probe constructor, deliberately separate from
+  * {@link GitCommand.revParse}: `revParse` takes a REF and resolves it,
+  * while this takes nothing and answers a repository-shape question.
+  * Folding the flag into `revParse` would make that constructor
+  * sometimes-takes-a-ref, sometimes-takes-a-flag.
+  */
 	static readonly isShallow = isShallow;
 
 	/**
-	 * Mutating: `git reset --soft|--mixed|--hard [<ref>]` — moves `HEAD` (and,
-	 * per mode, the index and working tree) to `ref`.
-	 *
-	 * @remarks
-	 * The mode flag is always explicit — `--mixed` is emitted for the default
-	 * rather than omitted — so the argv states what runs. `ref` may be any
-	 * commit-ish, including a gitlink sha.
-	 */
+  * Mutating: `git reset --soft|--mixed|--hard [<ref>]` — moves `HEAD` (and,
+  * per mode, the index and working tree) to `ref`.
+  *
+  * **Details**
+  *
+  * The mode flag is always explicit — `--mixed` is emitted for the default
+  * rather than omitted — so the argv states what runs. `ref` may be any
+  * commit-ish, including a gitlink sha.
+  */
 	static readonly reset = reset;
 
 	/**
-	 * Mutating: `git clean --force [-d] [-x] [-- <paths>...]` — deletes
-	 * untracked files from the working tree.
-	 *
-	 * @remarks
-	 * `--force` is unconditional: this constructor exists so a consumer can
-	 * restore a tree to a known state (e.g. before retrying a non-idempotent
-	 * operation), and without `--force` git refuses to clean at all under the
-	 * default `clean.requireForce` config — a clean that silently did nothing
-	 * would hand the retry the same dirty tree. `-d` removes untracked
-	 * directories too; `-x` removes ignored files as well. The literal `--`
-	 * separator makes the optional pathspec injection-safe by construction.
-	 */
+  * Mutating: `git clean --force [-d] [-x] [-- <paths>...]` — deletes
+  * untracked files from the working tree.
+  *
+  * **Details**
+  *
+  * `--force` is unconditional: this constructor exists so a consumer can
+  * restore a tree to a known state (e.g. before retrying a non-idempotent
+  * operation), and without `--force` git refuses to clean at all under the
+  * default `clean.requireForce` config — a clean that silently did nothing
+  * would hand the retry the same dirty tree. `-d` removes untracked
+  * directories too; `-x` removes ignored files as well. The literal `--`
+  * separator makes the optional pathspec injection-safe by construction.
+  */
 	static readonly clean = clean;
 
 	/**
-	 * Mutating: `git restore [--source <ref>] [--staged] [--worktree] -- <paths...>`
-	 * — restores the given paths from the index (or from `source`), the
-	 * `checkout -- <paths>`-shaped operation.
-	 *
-	 * @remarks
-	 * This is a separate constructor precisely because {@link GitCommand.checkout}'s
-	 * service guard refuses `--` and option-like refs by design — `restore` is
-	 * git's own verb for pathspec restoration, and its paths always sit behind
-	 * a literal `--`, so they are injection-safe by construction. With neither
-	 * `staged` nor `worktree` set, git defaults to restoring the working tree.
-	 */
+  * Mutating: `git restore [--source <ref>] [--staged] [--worktree] -- <paths...>`
+  * — restores the given paths from the index (or from `source`), the
+  * `checkout -- <paths>`-shaped operation.
+  *
+  * **Details**
+  *
+  * This is a separate constructor precisely because {@link GitCommand.checkout}'s
+  * service guard refuses `--` and option-like refs by design — `restore` is
+  * git's own verb for pathspec restoration, and its paths always sit behind
+  * a literal `--`, so they are injection-safe by construction. With neither
+  * `staged` nor `worktree` set, git defaults to restoring the working tree.
+  */
 	static readonly restore = restore;
 
 	/**
-	 * Mutating: `git branch [-f] <name> [<start-point>]`, or
-	 * `git checkout (-b | -B) <name> [<start-point>]` when `checkout` is true —
-	 * creates a branch, optionally from an explicit start point, optionally
-	 * switching to it, optionally force-resetting an existing branch.
-	 *
-	 * @remarks
-	 * Branch creation is a branch-member concern, NOT a widening of
-	 * {@link GitCommand.checkout}: `checkout`'s contract stays "move to an
-	 * existing ref" and its option-like-ref refusal stays intact. The `-b` /
-	 * `-B` here is this constructor's own literal, never caller data.
-	 *
-	 * `force` with `checkout` exists because the delete-then-create longhand
-	 * (`branch -D` swallowed, then `checkout -b`) papers over a real edge:
-	 * `git branch -D` refuses to delete the currently checked-out branch,
-	 * while `checkout -B` resets it fine — one invocation handles both
-	 * states.
-	 */
+  * Mutating: `git branch [-f] <name> [<start-point>]`, or
+  * `git checkout (-b | -B) <name> [<start-point>]` when `checkout` is true —
+  * creates a branch, optionally from an explicit start point, optionally
+  * switching to it, optionally force-resetting an existing branch.
+  *
+  * **Details**
+  *
+  * Branch creation is a branch-member concern, NOT a widening of
+  * {@link GitCommand.checkout}: `checkout`'s contract stays "move to an
+  * existing ref" and its option-like-ref refusal stays intact. The `-b` /
+  * `-B` here is this constructor's own literal, never caller data.
+  *
+  * `force` with `checkout` exists because the delete-then-create longhand
+  * (`branch -D` swallowed, then `checkout -b`) papers over a real edge:
+  * `git branch -D` refuses to delete the currently checked-out branch,
+  * while `checkout -B` resets it fine — one invocation handles both
+  * states.
+  */
 	static readonly branchCreate = branchCreate;
 
 	/**
-	 * Mutating: `git branch -d <name>` (or `-D` when `force` is true) —
-	 * deletes a local branch.
-	 *
-	 * @remarks
-	 * The default `-d` refuses to delete a branch not fully merged — a typed
-	 * failure, which is usually the honest answer. `force: true` emits `-D`
-	 * and deletes regardless.
-	 */
+  * Mutating: `git branch -d <name>` (or `-D` when `force` is true) —
+  * deletes a local branch.
+  *
+  * **Gotchas**
+  *
+  * The default `-d` refuses to delete a branch not fully merged — a typed
+  * failure, which is usually the honest answer. `force: true` emits `-D`
+  * and deletes regardless.
+  */
 	static readonly branchDelete = branchDelete;
 
 	/**
-	 * Mutating:
-	 * `git submodule update [--init] [--checkout] [--remote] [--no-fetch] [--recursive] [--force] [--depth <n>] [-- <paths>...]`
-	 * — updates registered submodules, optionally initializing them, with an
-	 * optional depth limit, and scoped to specific paths. The literal `--`
-	 * separator makes the pathspec injection-safe by construction.
-	 *
-	 * @remarks
-	 * `options.checkout` is the documented override for a
-	 * `submodule.<name>.update = none` configuration — without it, an update of
-	 * such a submodule silently skips it (git reports success and checks out
-	 * nothing). `options.fetch` accepts only the literal `false` (emitting
-	 * `--no-fetch`): git's default already fetches and offers no positive
-	 * `--fetch` spelling, so `true` would be an unrepresentable no-op.
-	 * `options.remote` tracks the remote branch's tip instead of the
-	 * superproject's recorded sha; `options.recursive` descends into nested
-	 * submodules; `options.force` discards local changes in the submodule
-	 * working tree (and re-checks-out even when the recorded sha is current).
-	 */
+  * Mutating:
+  * `git submodule update [--init] [--checkout] [--remote] [--no-fetch] [--recursive] [--force] [--depth <n>] [-- <paths>...]`
+  * — updates registered submodules, optionally initializing them, with an
+  * optional depth limit, and scoped to specific paths. The literal `--`
+  * separator makes the pathspec injection-safe by construction.
+  *
+  * **Gotchas**
+  *
+  * `options.checkout` is the documented override for a
+  * `submodule.<name>.update = none` configuration — without it, an update of
+  * such a submodule silently skips it (git reports success and checks out
+  * nothing). `options.fetch` accepts only the literal `false` (emitting
+  * `--no-fetch`): git's default already fetches and offers no positive
+  * `--fetch` spelling, so `true` would be an unrepresentable no-op.
+  * `options.remote` tracks the remote branch's tip instead of the
+  * superproject's recorded sha; `options.recursive` descends into nested
+  * submodules; `options.force` discards local changes in the submodule
+  * working tree (and re-checks-out even when the recorded sha is current).
+  */
 	static readonly submoduleUpdate = submoduleUpdate;
 
 	/**
-	 * Mutating: `git submodule add [--depth <n>] -- <url> <path>` — registers and
-	 * initializes a new submodule. The literal `--` separator makes the url and path
-	 * injection-safe by construction.
-	 *
-	 * @remarks
-	 * An embedded `userinfo@` credential in `url` is masked in
-	 * {@link GitInvocation.redactedArgs}.
-	 */
+  * Mutating: `git submodule add [--depth <n>] -- <url> <path>` — registers and
+  * initializes a new submodule. The literal `--` separator makes the url and path
+  * injection-safe by construction.
+  *
+  * **Details**
+  *
+  * An embedded `userinfo@` credential in `url` is masked in
+  * {@link GitInvocation.redactedArgs}.
+  */
 	static readonly submoduleAdd = submoduleAdd;
 
 	/**
@@ -838,16 +858,17 @@ export class GitCommand {
 	static readonly sparseCheckoutSet = sparseCheckoutSet;
 
 	/**
-	 * Mutating: `git config [-f <file>] <key> <value>` — writes a configuration value,
-	 * optionally into an explicit configuration file (e.g., `.gitmodules`).
-	 *
-	 * @remarks
-	 * `value` may be a secret (a token, a credential-bearing URL), so it is
-	 * masked wholesale — as `<redacted>` — in
-	 * {@link GitInvocation.redactedArgs}. The key and file stay visible: they
-	 * are stable identifiers, and they are what a caller debugging a failed
-	 * write actually needs.
-	 */
+  * Mutating: `git config [-f <file>] <key> <value>` — writes a configuration value,
+  * optionally into an explicit configuration file (e.g., `.gitmodules`).
+  *
+  * **Details**
+  *
+  * `value` may be a secret (a token, a credential-bearing URL), so it is
+  * masked wholesale — as `<redacted>` — in
+  * {@link GitInvocation.redactedArgs}. The key and file stay visible: they
+  * are stable identifiers, and they are what a caller debugging a failed
+  * write actually needs.
+  */
 	static readonly configSet = configSet;
 
 	/**
@@ -857,40 +878,43 @@ export class GitCommand {
 	static readonly add = add;
 
 	/**
-	 * `git diff --name-status -z (--relative | --no-relative) [<base> | <base>...<head>]`
-	 * — the changed paths WITH their one-letter status codes, NUL-terminated.
-	 *
-	 * @remarks
-	 * With `head` omitted this is the single-argument diff form: the working tree
-	 * (staged + unstaged) against `base` — NOT a two-ref range. With `head`
-	 * present it is the familiar `base...head` merge-base form, matching
-	 * {@link GitCommand.changedFiles}. `-z` and the explicit relative flag follow
-	 * the same rules as {@link GitCommand.changedFiles}. In `-z` mode a rename or
-	 * copy entry is THREE NUL tokens: `R<score>`, the old path, the new path.
-	 */
+  * `git diff --name-status -z (--relative | --no-relative) [<base> | <base>...<head>]`
+  * — the changed paths WITH their one-letter status codes, NUL-terminated.
+  *
+  * **Details**
+  *
+  * With `head` omitted this is the single-argument diff form: the working tree
+  * (staged + unstaged) against `base` — NOT a two-ref range. With `head`
+  * present it is the familiar `base...head` merge-base form, matching
+  * {@link GitCommand.changedFiles}. `-z` and the explicit relative flag follow
+  * the same rules as {@link GitCommand.changedFiles}. In `-z` mode a rename or
+  * copy entry is THREE NUL tokens: `R<score>`, the old path, the new path.
+  */
 	static readonly nameStatus = nameStatus;
 
 	/**
-	 * `git symbolic-ref --quiet --short refs/remotes/<remote>/HEAD` — the name of
-	 * the default branch on the given remote, or empty string / exit 1 if unset.
-	 *
-	 * @remarks
-	 * `--quiet` suppresses error messages; the exit code alone signals success
-	 * (0) or "symbolic-ref does not exist" (1). The contract is "does the remote
-	 * have a HEAD?" — an unset symbolic ref exits 1 silently, which `Git.defaultBranch`
-	 * degrades to `Option.none()` rather than a typed error. `symbolic-ref` is a
-	 * purely local ref lookup; it never touches the network.
-	 */
+  * `git symbolic-ref --quiet --short refs/remotes/<remote>/HEAD` — the name of
+  * the default branch on the given remote, or empty string / exit 1 if unset.
+  *
+  * **Details**
+  *
+  * `--quiet` suppresses error messages; the exit code alone signals success
+  * (0) or "symbolic-ref does not exist" (1). The contract is "does the remote
+  * have a HEAD?" — an unset symbolic ref exits 1 silently, which `Git.defaultBranch`
+  * degrades to `Option.none()` rather than a typed error. `symbolic-ref` is a
+  * purely local ref lookup; it never touches the network.
+  */
 	static readonly defaultBranch = defaultBranch;
 
 	/**
-	 * `git rev-parse --abbrev-ref HEAD` — the name of the branch `HEAD` is
-	 * pointing to.
-	 *
-	 * @remarks
-	 * Returns `"HEAD"` (detached state), `"<branch>"` (an attached branch), or
-	 * fails if the repository has no commits.
-	 */
+  * `git rev-parse --abbrev-ref HEAD` — the name of the branch `HEAD` is
+  * pointing to.
+  *
+  * **Gotchas**
+  *
+  * Returns `"HEAD"` (detached state), `"<branch>"` (an attached branch), or
+  * fails if the repository has no commits.
+  */
 	static readonly currentBranch = currentBranch;
 
 	/**
@@ -900,59 +924,62 @@ export class GitCommand {
 	static readonly repoRoot = repoRoot;
 
 	/**
-	 * `git rev-parse --path-format=absolute --git-common-dir` — the absolute,
-	 * symlink-resolved path of the directory a repository and all of its linked
-	 * worktrees share.
-	 *
-	 * @remarks
-	 * Without `--path-format=absolute` git prints this relative to the working
-	 * directory in a plain checkout (`.git`) but absolute from inside a linked
-	 * worktree, so two answers cannot be compared as strings. The flag needs
-	 * git 2.31 or later.
-	 */
+  * `git rev-parse --path-format=absolute --git-common-dir` — the absolute,
+  * symlink-resolved path of the directory a repository and all of its linked
+  * worktrees share.
+  *
+  * **Gotchas**
+  *
+  * Without `--path-format=absolute` git prints this relative to the working
+  * directory in a plain checkout (`.git`) but absolute from inside a linked
+  * worktree, so two answers cannot be compared as strings. The flag needs
+  * git 2.31 or later.
+  */
 	static readonly commonDir = commonDir;
 
 	/**
-	 * `git log -1 --format=%H%x00%G?%x00%B <ref>` — a NUL-separated triple: the
-	 * full commit hash, the GPG trust level, and the full commit body (message),
-	 * all untrimmed.
-	 *
-	 * @remarks
-	 * `%H` is the full object id (40-char sha1, or sha256 if configured).
-	 * `%x00` is a literal NUL byte (the separator). `%G?` is the GPG trust level
-	 * (`G` = good signature, `B` = bad, `U` = untrusted, `X` = expired, `Y` =
-	 * expired key, `R` = revoked key, `E` = error, or `N` = not signed).
-	 * `%B` is the full body, **untrimmed** — it includes leading/trailing
-	 * whitespace — so the caller must decide whether to trim it. Splits on the
-	 * two `\x00` bytes to extract all three values.
-	 */
+  * `git log -1 --format=%H%x00%G?%x00%B <ref>` — a NUL-separated triple: the
+  * full commit hash, the GPG trust level, and the full commit body (message),
+  * all untrimmed.
+  *
+  * **Details**
+  *
+  * `%H` is the full object id (40-char sha1, or sha256 if configured).
+  * `%x00` is a literal NUL byte (the separator). `%G?` is the GPG trust level
+  * (`G` = good signature, `B` = bad, `U` = untrusted, `X` = expired, `Y` =
+  * expired key, `R` = revoked key, `E` = error, or `N` = not signed).
+  * `%B` is the full body, **untrimmed** — it includes leading/trailing
+  * whitespace — so the caller must decide whether to trim it. Splits on the
+  * two `\x00` bytes to extract all three values.
+  */
 	static readonly commitInfo = commitInfo;
 
 	/**
-	 * `git log -z --format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae --name-only` —
-	 * a commit listing carrying each commit's sha, both ISO dates, its author
-	 * identity and the paths it touched. Four optional flags follow, in this
-	 * order: `--follow`, `--diff-merges=first-parent`, `--max-count=N`, then
-	 * the `--` separator and the pathspec.
-	 *
-	 * @remarks
-	 * `-z` is unconditional and does two things at once: it terminates the
-	 * `--format` output with a NUL instead of a newline, and it makes
-	 * `--name-only` emit paths RAW — no C-style quoting — so a path containing
-	 * a space, a quote or a newline comes back verbatim and `core.quotePath`
-	 * never enters the picture.
-	 *
-	 * `%x00` opens every record with an empty NUL token, which a pathname
-	 * cannot contain. Each record is then
-	 * `\0<sha>\0<authoredAt>\0<committedAt>\0<authorName>\0<authorEmail>\0`
-	 * followed, when the commit touched anything, by `\n` and one
-	 * NUL-terminated path per changed file.
-	 *
-	 * `--follow` requires exactly one path — git's own restriction, enforced
-	 * pre-spawn by `Git.log`. Without `--diff-merges=first-parent` a merge
-	 * commit contributes a record with NO path lines, which is git's default
-	 * and not an anomaly.
-	 */
+  * `git log -z --format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae --name-only` —
+  * a commit listing carrying each commit's sha, both ISO dates, its author
+  * identity and the paths it touched. Four optional flags follow, in this
+  * order: `--follow`, `--diff-merges=first-parent`, `--max-count=N`, then
+  * the `--` separator and the pathspec.
+  *
+  * **Details**
+  *
+  * `-z` is unconditional and does two things at once: it terminates the
+  * `--format` output with a NUL instead of a newline, and it makes
+  * `--name-only` emit paths RAW — no C-style quoting — so a path containing
+  * a space, a quote or a newline comes back verbatim and `core.quotePath`
+  * never enters the picture.
+  *
+  * `%x00` opens every record with an empty NUL token, which a pathname
+  * cannot contain. Each record is then
+  * `\0<sha>\0<authoredAt>\0<committedAt>\0<authorName>\0<authorEmail>\0`
+  * followed, when the commit touched anything, by `\n` and one
+  * NUL-terminated path per changed file.
+  *
+  * `--follow` requires exactly one path — git's own restriction, enforced
+  * pre-spawn by `Git.log`. Without `--diff-merges=first-parent` a merge
+  * commit contributes a record with NO path lines, which is git's default
+  * and not an anomaly.
+  */
 	static readonly log = log;
 
 	/**
@@ -969,28 +996,30 @@ export class GitCommand {
 	static readonly remoteUrl = remoteUrl;
 
 	/**
-	 * `git status --porcelain -z` — the porcelain (stable, machine-readable) short
-	 * status of every modified file in the working tree, NUL-terminated.
-	 *
-	 * @remarks
-	 * `-z` is load-bearing here too, for the same reason as
-	 * {@link GitCommand.lsTree}: split the output on `"\0"`, never on `"\n"`.
-	 * Each entry is a pair of status codes followed by a space and the path.
-	 */
+  * `git status --porcelain -z` — the porcelain (stable, machine-readable) short
+  * status of every modified file in the working tree, NUL-terminated.
+  *
+  * **Gotchas**
+  *
+  * `-z` is load-bearing here too, for the same reason as
+  * {@link GitCommand.lsTree}: split the output on `"\0"`, never on `"\n"`.
+  * Each entry is a pair of status codes followed by a space and the path.
+  */
 	static readonly status = status;
 
 	/**
-	 * `git submodule status [--recursive] [-- <paths>...]` — one line per
-	 * registered submodule: a state prefix, the checked-out (or gitlink) sha,
-	 * the path, and — when the submodule is initialized — a `git describe`
-	 * suffix in parentheses.
-	 *
-	 * @remarks
-	 * `git submodule status` has no `-z` mode, so its output is line-based —
-	 * the one path-emitting constructor in this package that cannot follow
-	 * the `-z` rule. A submodule path containing a newline would corrupt the
-	 * parse; accepted as a git-imposed limitation.
-	 */
+  * `git submodule status [--recursive] [-- <paths>...]` — one line per
+  * registered submodule: a state prefix, the checked-out (or gitlink) sha,
+  * the path, and — when the submodule is initialized — a `git describe`
+  * suffix in parentheses.
+  *
+  * **Gotchas**
+  *
+  * `git submodule status` has no `-z` mode, so its output is line-based —
+  * the one path-emitting constructor in this package that cannot follow
+  * the `-z` rule. A submodule path containing a newline would corrupt the
+  * parse; accepted as a git-imposed limitation.
+  */
 	static readonly submoduleStatus = submoduleStatus;
 
 	/**
@@ -1017,15 +1046,16 @@ export class GitCommand {
 	static readonly submoduleSync = submoduleSync;
 
 	/**
-	 * Mutating: `git submodule set-url -- <path> <url>` — rewrites the
-	 * submodule's URL in `.gitmodules` and synchronizes it into
-	 * `.git/config`. The literal `--` separator makes the path and url
-	 * injection-safe by construction.
-	 *
-	 * @remarks
-	 * An embedded `userinfo@` credential in `url` is masked in
-	 * {@link GitInvocation.redactedArgs}.
-	 */
+  * Mutating: `git submodule set-url -- <path> <url>` — rewrites the
+  * submodule's URL in `.gitmodules` and synchronizes it into
+  * `.git/config`. The literal `--` separator makes the path and url
+  * injection-safe by construction.
+  *
+  * **Details**
+  *
+  * An embedded `userinfo@` credential in `url` is masked in
+  * {@link GitInvocation.redactedArgs}.
+  */
 	static readonly submoduleSetUrl = submoduleSetUrl;
 
 	/**
@@ -1044,43 +1074,46 @@ export class GitCommand {
 	static readonly submoduleAbsorbgitdirs = submoduleAbsorbgitdirs;
 
 	/**
-	 * Mutating: `git submodule foreach [--recursive] <command>` — runs a shell
-	 * command in every checked-out submodule. `command` is a single shell
-	 * string, evaluated by git in each submodule's directory; it can mutate
-	 * anything, which is why the constructor is marked mutating regardless of
-	 * what the command does.
-	 *
-	 * @remarks
-	 * This is the ONE constructor whose argument cannot be made injection-safe
-	 * by construction: git evaluates `command` with `sh -c`, so every character
-	 * of it is shell code — a `--` separator or quoting cannot help. Callers
-	 * must treat `command` as a trusted literal and never interpolate untrusted
-	 * data into it.
-	 */
+  * Mutating: `git submodule foreach [--recursive] <command>` — runs a shell
+  * command in every checked-out submodule. `command` is a single shell
+  * string, evaluated by git in each submodule's directory; it can mutate
+  * anything, which is why the constructor is marked mutating regardless of
+  * what the command does.
+  *
+  * **Gotchas**
+  *
+  * This is the ONE constructor whose argument cannot be made injection-safe
+  * by construction: git evaluates `command` with `sh -c`, so every character
+  * of it is shell code — a `--` separator or quoting cannot help. Callers
+  * must treat `command` as a trusted literal and never interpolate untrusted
+  * data into it.
+  */
 	static readonly submoduleForeach = submoduleForeach;
 
 	/**
-	 * `git ls-remote [--heads] [--tags] <remote> [<patterns>...]` — the refs a
-	 * remote advertises (sha + refname), optionally filtered to branch heads,
-	 * tags, and/or shell-glob patterns.
-	 *
-	 * @remarks
-	 * A read that talks to the NETWORK, not to the local repository — the one
-	 * non-mutating constructor in this package that does. An embedded
-	 * `userinfo@` credential in `remote` is masked in
-	 * {@link GitInvocation.redactedArgs}. An annotated tag advertises two
-	 * entries: `refs/tags/<name>` (the tag object) and `refs/tags/<name>^{}`
-	 * (the peeled commit).
-	 */
+  * `git ls-remote [--heads] [--tags] <remote> [<patterns>...]` — the refs a
+  * remote advertises (sha + refname), optionally filtered to branch heads,
+  * tags, and/or shell-glob patterns.
+  *
+  * **Details**
+  *
+  * A read that talks to the NETWORK, not to the local repository — the one
+  * non-mutating constructor in this package that does. An embedded
+  * `userinfo@` credential in `remote` is masked in
+  * {@link GitInvocation.redactedArgs}. An annotated tag advertises two
+  * entries: `refs/tags/<name>` (the tag object) and `refs/tags/<name>^{}`
+  * (the peeled commit).
+  */
 	static readonly lsRemote = lsRemote;
 
 	/**
-	 * Mutating: `git remote add <name> <url>` — registers a new remote.
-	 *
-	 * @remarks
-	 * An embedded `userinfo@` credential in `url` is masked in
-	 * {@link GitInvocation.redactedArgs}.
-	 */
+  * Mutating: `git remote add <name> <url>` — registers a new remote.
+  *
+  * **Details**
+  *
+  * An embedded `userinfo@` credential in `url` is masked in
+  * {@link GitInvocation.redactedArgs}.
+  */
 	static readonly remoteAdd = remoteAdd;
 
 	/**
@@ -1090,13 +1123,14 @@ export class GitCommand {
 	static readonly remoteRemove = remoteRemove;
 
 	/**
-	 * Mutating: `git remote set-url <name> <url>` — rewrites a remote's fetch
-	 * URL.
-	 *
-	 * @remarks
-	 * An embedded `userinfo@` credential in `url` is masked in
-	 * {@link GitInvocation.redactedArgs}.
-	 */
+  * Mutating: `git remote set-url <name> <url>` — rewrites a remote's fetch
+  * URL.
+  *
+  * **Details**
+  *
+  * An embedded `userinfo@` credential in `url` is masked in
+  * {@link GitInvocation.redactedArgs}.
+  */
 	static readonly remoteSetUrl = remoteSetUrl;
 
 	/**
@@ -1130,28 +1164,30 @@ export class GitCommand {
 	static readonly stashDrop = stashDrop;
 
 	/**
-	 * `git stash list -z --format=%gd%x1f%H%x1f%gs` — every stash entry as a
-	 * NUL-terminated record of unit-separated fields: the reflog selector
-	 * (`stash@{0}`), the stash commit sha, and the reflog subject.
-	 *
-	 * @remarks
-	 * The `%x1f` (ASCII unit separator) field separator plus `-z` record
-	 * terminator keeps the parse split-safe: a stash message cannot contain
-	 * either byte (reflog subjects are single-line).
-	 */
+  * `git stash list -z --format=%gd%x1f%H%x1f%gs` — every stash entry as a
+  * NUL-terminated record of unit-separated fields: the reflog selector
+  * (`stash@{0}`), the stash commit sha, and the reflog subject.
+  *
+  * **Details**
+  *
+  * The `%x1f` (ASCII unit separator) field separator plus `-z` record
+  * terminator keeps the parse split-safe: a stash message cannot contain
+  * either byte (reflog subjects are single-line).
+  */
 	static readonly stashList = stashList;
 
 	/**
-	 * `git branch --list [--remotes | --all] --format=%(HEAD)%00%(refname:short)%00%(objectname)`
-	 * — every branch as a NUL-separated triple: the current-branch marker, the
-	 * short name, and the tip sha.
-	 *
-	 * @remarks
-	 * Records are newline-separated, which is split-safe here: git refnames
-	 * cannot contain a newline (or a space), so the only NUL bytes are the
-	 * format's own field separators. `all` wins over `remotes` when both are
-	 * set.
-	 */
+  * `git branch --list [--remotes | --all] --format=%(HEAD)%00%(refname:short)%00%(objectname)`
+  * — every branch as a NUL-separated triple: the current-branch marker, the
+  * short name, and the tip sha.
+  *
+  * **Details**
+  *
+  * Records are newline-separated, which is split-safe here: git refnames
+  * cannot contain a newline (or a space), so the only NUL bytes are the
+  * format's own field separators. `all` wins over `remotes` when both are
+  * set.
+  */
 	static readonly branchList = branchList;
 
 	/**
@@ -1171,16 +1207,17 @@ export class GitCommand {
 	static readonly tagList = tagList;
 
 	/**
-	 * `git for-each-ref --format=%(refname)%00%(objectname)%00%(objecttype) [<patterns>...]`
-	 * — every matching ref as a NUL-separated triple: full refname, sha, and
-	 * object type.
-	 *
-	 * @remarks
-	 * The format is this package's own fixed triple — the parse contract and
-	 * the argv are decided together, so the format string is a constructor
-	 * literal, never caller data. An annotated tag's `objecttype` is `tag`
-	 * (the tag object), not `commit`.
-	 */
+  * `git for-each-ref --format=%(refname)%00%(objectname)%00%(objecttype) [<patterns>...]`
+  * — every matching ref as a NUL-separated triple: full refname, sha, and
+  * object type.
+  *
+  * **Details**
+  *
+  * The format is this package's own fixed triple — the parse contract and
+  * the argv are decided together, so the format string is a constructor
+  * literal, never caller data. An annotated tag's `objecttype` is `tag`
+  * (the tag object), not `commit`.
+  */
 	static readonly forEachRef = forEachRef;
 
 	/**
@@ -1200,35 +1237,38 @@ export class GitCommand {
 	static readonly commit = commit;
 
 	/**
-	 * Mutating: `git push [--force | --force-with-lease] [--tags] [--set-upstream] <remote> [<refspec>]`
-	 * — updates remote refs.
-	 *
-	 * @remarks
-	 * `remote` may be a URL as well as a remote name; an embedded `userinfo@`
-	 * credential is masked in {@link GitInvocation.redactedArgs}.
-	 */
+  * Mutating: `git push [--force | --force-with-lease] [--tags] [--set-upstream] <remote> [<refspec>]`
+  * — updates remote refs.
+  *
+  * **Details**
+  *
+  * `remote` may be a URL as well as a remote name; an embedded `userinfo@`
+  * credential is masked in {@link GitInvocation.redactedArgs}.
+  */
 	static readonly push = push;
 
 	/**
-	 * Mutating: `git pull [--rebase] [--ff-only] <remote> [<ref>]` — fetches
-	 * and integrates.
-	 *
-	 * @remarks
-	 * `remote` may be a URL as well as a remote name; an embedded `userinfo@`
-	 * credential is masked in {@link GitInvocation.redactedArgs}.
-	 */
+  * Mutating: `git pull [--rebase] [--ff-only] <remote> [<ref>]` — fetches
+  * and integrates.
+  *
+  * **Details**
+  *
+  * `remote` may be a URL as well as a remote name; an embedded `userinfo@`
+  * credential is masked in {@link GitInvocation.redactedArgs}.
+  */
 	static readonly pull = pull;
 
 	/**
-	 * `git config [-f <file>] --list -z` — every configuration entry in scope
-	 * (or in the given file only), NUL-terminated, the key separated from the
-	 * value by a newline within each record.
-	 *
-	 * @remarks
-	 * `-z` is load-bearing: a config VALUE may contain newlines; only the NUL
-	 * record terminator plus first-newline field split parses it losslessly.
-	 * A valueless key (git's boolean-true shorthand) emits no newline at all.
-	 */
+  * `git config [-f <file>] --list -z` — every configuration entry in scope
+  * (or in the given file only), NUL-terminated, the key separated from the
+  * value by a newline within each record.
+  *
+  * **Gotchas**
+  *
+  * `-z` is load-bearing: a config VALUE may contain newlines; only the NUL
+  * record terminator plus first-newline field split parses it losslessly.
+  * A valueless key (git's boolean-true shorthand) emits no newline at all.
+  */
 	static readonly configList = configList;
 
 	/**
@@ -1239,37 +1279,40 @@ export class GitCommand {
 	static readonly configGetAll = configGetAll;
 
 	/**
-	 * Mutating: `git config [-f <file>] (--unset | --unset-all) <key>` —
-	 * removes a key (or, with `all`, every value of a multi-valued key).
-	 *
-	 * @remarks
-	 * git exits 5, silently, when the key was not set — a loud failure by
-	 * this package's classification, deliberately: an unset that silently did
-	 * nothing is indistinguishable from one that worked.
-	 */
+  * Mutating: `git config [-f <file>] (--unset | --unset-all) <key>` —
+  * removes a key (or, with `all`, every value of a multi-valued key).
+  *
+  * **Gotchas**
+  *
+  * git exits 5, silently, when the key was not set — a loud failure by
+  * this package's classification, deliberately: an unset that silently did
+  * nothing is indistinguishable from one that worked.
+  */
 	static readonly configUnset = configUnset;
 
 	/**
-	 * Mutating: `git config [-f <file>] --remove-section <section>` — removes
-	 * a whole configuration section (every key under it, and the section
-	 * header itself).
-	 *
-	 * @remarks
-	 * git exits 128 (`fatal: no such section`) when the section does not
-	 * exist — a loud failure by this package's classification, matching
-	 * {@link GitCommand.configUnset}'s posture: a removal that silently did
-	 * nothing is indistinguishable from one that worked.
-	 */
+  * Mutating: `git config [-f <file>] --remove-section <section>` — removes
+  * a whole configuration section (every key under it, and the section
+  * header itself).
+  *
+  * **Gotchas**
+  *
+  * git exits 128 (`fatal: no such section`) when the section does not
+  * exist — a loud failure by this package's classification, matching
+  * {@link GitCommand.configUnset}'s posture: a removal that silently did
+  * nothing is indistinguishable from one that worked.
+  */
 	static readonly configRemoveSection = configRemoveSection;
 
 	/**
-	 * Mutating: `git config [-f <file>] --rename-section <old> <new>` —
-	 * renames a configuration section, carrying every key under it across.
-	 *
-	 * @remarks
-	 * git exits 128 (`fatal: no such section`) when the old section does not
-	 * exist — the same loud posture as {@link GitCommand.configRemoveSection}.
-	 */
+  * Mutating: `git config [-f <file>] --rename-section <old> <new>` —
+  * renames a configuration section, carrying every key under it across.
+  *
+  * **Gotchas**
+  *
+  * git exits 128 (`fatal: no such section`) when the old section does not
+  * exist — the same loud posture as {@link GitCommand.configRemoveSection}.
+  */
 	static readonly configRenameSection = configRenameSection;
 
 	/**
@@ -1288,17 +1331,18 @@ export class GitCommand {
 	static readonly mv = mv;
 
 	/**
-	 * `git check-ignore -z --stdin` — which of the given paths git would
-	 * ignore, paths fed NUL-separated via stdin and answers returned
-	 * NUL-separated.
-	 *
-	 * @remarks
-	 * The `--stdin -z` form is the only fully robust one: `-z` without
-	 * `--stdin` is rejected by git outright, and the non-`-z` output C-quotes
-	 * special-character paths. Feeding paths via stdin also makes them
-	 * injection-safe by construction — nothing caller-controlled enters the
-	 * argv. When NO path is ignored, git exits 1 with silent stderr.
-	 */
+  * `git check-ignore -z --stdin` — which of the given paths git would
+  * ignore, paths fed NUL-separated via stdin and answers returned
+  * NUL-separated.
+  *
+  * **Gotchas**
+  *
+  * The `--stdin -z` form is the only fully robust one: `-z` without
+  * `--stdin` is rejected by git outright, and the non-`-z` output C-quotes
+  * special-character paths. Feeding paths via stdin also makes them
+  * injection-safe by construction — nothing caller-controlled enters the
+  * argv. When NO path is ignored, git exits 1 with silent stderr.
+  */
 	static readonly checkIgnore = checkIgnore;
 
 	/**
@@ -1320,16 +1364,17 @@ export class GitCommand {
 	static readonly worktreeRemove = worktreeRemove;
 
 	/**
-	 * `git ls-files --stage -z [-- <pathspec>...]` — every INDEX entry (mode,
-	 * oid, stage number, path), NUL-terminated, optionally scoped to
-	 * `pathspec`.
-	 *
-	 * @remarks
-	 * The index-side sibling of {@link GitCommand.lsTree}: `lsTree` reads a
-	 * COMMITTED tree at a ref, while this reads the staging area — the only
-	 * place a staged-but-uncommitted gitlink (`160000 <oid> 0 <path>`) is
-	 * visible. `-z` is load-bearing twice over: paths may contain newlines,
-	 * and the non-`-z` output C-quotes special-character paths.
-	 */
+  * `git ls-files --stage -z [-- <pathspec>...]` — every INDEX entry (mode,
+  * oid, stage number, path), NUL-terminated, optionally scoped to
+  * `pathspec`.
+  *
+  * **Details**
+  *
+  * The index-side sibling of {@link GitCommand.lsTree}: `lsTree` reads a
+  * COMMITTED tree at a ref, while this reads the staging area — the only
+  * place a staged-but-uncommitted gitlink (`160000 <oid> 0 <path>`) is
+  * visible. `-z` is load-bearing twice over: paths may contain newlines,
+  * and the non-`-z` output C-quotes special-character paths.
+  */
 	static readonly lsFiles = lsFiles;
 }

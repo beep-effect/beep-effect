@@ -18,33 +18,35 @@ import * as P from "effect/Predicate";
  */
 export interface CliLoggerOptions {
 	/**
-	 * Render one message. Defaults to joining an array with spaces and
-	 * `String`-ing anything else.
-	 *
-	 * @remarks
-	 * An array arrives because `Effect.log("synced", 3, "repos")` is variadic.
-	 *
-	 * The text is sanitised, because it is whatever the program logged: with the default render, the line has its
-	 * escape sequences and control characters removed (a line break stays one, a tab becomes a space); with yours, you
-	 * receive the string parts already sanitised and own what you add, a colour included. Under GitHub Actions, where
-	 * `CurrentRuntimeEnv` says so, a line the runner would read as a workflow command is neutralized either way.
-	 *
-	 * The logger reads `CurrentRuntimeEnv` from the logging fiber's context, so a line logged outside its scope
-	 * (`CliLogger.layer()` provided alone, with no `CurrentRuntimeEnv`, or the warnings logged while `CliRuntime.main`
-	 * builds its environment) is sanitised but not neutralized. Provide the environment around the program, as `main`
-	 * does, for the neutralizing to apply.
-	 */
+  * Render one message. Defaults to joining an array with spaces and
+  * `String`-ing anything else.
+  *
+  * **Details**
+  *
+  * An array arrives because `Effect.log("synced", 3, "repos")` is variadic.
+  *
+  * The text is sanitised, because it is whatever the program logged: with the default render, the line has its
+  * escape sequences and control characters removed (a line break stays one, a tab becomes a space); with yours, you
+  * receive the string parts already sanitised and own what you add, a colour included. Under GitHub Actions, where
+  * `CurrentRuntimeEnv` says so, a line the runner would read as a workflow command is neutralized either way.
+  *
+  * The logger reads `CurrentRuntimeEnv` from the logging fiber's context, so a line logged outside its scope
+  * (`CliLogger.layer()` provided alone, with no `CurrentRuntimeEnv`, or the warnings logged while `CliRuntime.main`
+  * builds its environment) is sanitised but not neutralized. Provide the environment around the program, as `main`
+  * does, for the neutralizing to apply.
+  */
 	readonly render?: ((message: unknown) => string) | undefined;
 	/**
-	 * The level at and above which output goes to stderr. Defaults to `"All"`,
-	 * so every log level is a diagnostic and stdout carries only what the
-	 * program writes with `Console.log`.
-	 *
-	 * @remarks
-	 * Pass `"Error"` to send only errors to stderr, for a tool whose output *is*
-	 * its log lines rather than a separate document written with
-	 * `Console.log`.
-	 */
+  * The level at and above which output goes to stderr. Defaults to `"All"`,
+  * so every log level is a diagnostic and stdout carries only what the
+  * program writes with `Console.log`.
+  *
+  * **Details**
+  *
+  * Pass `"Error"` to send only errors to stderr, for a tool whose output *is*
+  * its log lines rather than a separate document written with
+  * `Console.log`.
+  */
 	readonly stderrFrom?: LogLevel.LogLevel | undefined;
 }
 
@@ -55,7 +57,8 @@ const defaultRender = (message: unknown): string =>
  * A `Logger` that renders CLI output rather than service logs: no timestamp, level or fiber id, with every level
  * going to stderr by default so stdout carries only what the program writes.
  *
- * @remarks
+ * **Details**
+ *
  * Effect's default logger emits `[00:33:56.619] INFO (#2): message`. That is
  * the right shape for a long-running service being scraped and the wrong one
  * for a tool a person is watching: the timestamp, level and fiber id are noise
@@ -72,7 +75,8 @@ const defaultRender = (message: unknown): string =>
  * `yield*`. `Console.Console` is a `Context.Reference`, so it never appears in
  * `R`, and a test swaps the reference rather than stubbing a global.
  *
- * @example
+ * **Example** (Separate diagnostics from program output)
+ *
  * ```ts
  * import { CliLogger } from "./index.ts"
  * import * as Console from "effect/Console";
@@ -98,24 +102,26 @@ export class CliLogger {
 	private constructor() {}
 
 	/**
-	 * The logger itself, for composing into an existing `Logger.layer` set.
-	 *
-	 * @remarks
-	 * Prefer {@link CliLogger.layer}. Reach for this only when you are building
-	 * the logger set yourself and want this one among several.
-	 */
+  * The logger itself, for composing into an existing `Logger.layer` set.
+  *
+  * **Details**
+  *
+  * Prefer {@link CliLogger.layer}. Reach for this only when you are building
+  * the logger set yourself and want this one among several.
+  */
 	static readonly make = (options: CliLoggerOptions = {}): Logger.Logger<unknown, void> => makeCliLogger(options);
 
 	/**
-	 * Replace the default logger with this one.
-	 *
-	 * @remarks
-	 * `Logger.layer` **replaces** rather than merges, so nothing is emitted twice.
-	 *
-	 * Merge this into the layer you provide to the whole program rather than
-	 * providing it beneath: merged, it also covers lines emitted during layer
-	 * construction, which is exactly where a startup failure prints.
-	 */
+  * Replace the default logger with this one.
+  *
+  * **Details**
+  *
+  * `Logger.layer` **replaces** rather than merges, so nothing is emitted twice.
+  *
+  * Merge this into the layer you provide to the whole program rather than
+  * providing it beneath: merged, it also covers lines emitted during layer
+  * construction, which is exactly where a startup failure prints.
+  */
 	static readonly layer = (options: CliLoggerOptions = {}): Layer.Layer<never> =>
 		Logger.layer([CliLogger.make(options)]);
 }

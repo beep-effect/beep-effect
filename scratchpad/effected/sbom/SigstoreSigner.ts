@@ -30,7 +30,8 @@ const $I = $ScratchpadId.create("effected/sbom/SigstoreSigner");
 /**
  * The OIDC audience Sigstore's certificate authority requires.
  *
- * @remarks
+ * **Details**
+ *
  * It lives here, not at the call site, because it is the **signing protocol's**
  * requirement rather than the caller's knowledge — which is why
  * {@link SigstoreSignerShape.sign} takes only a statement and asks the identity
@@ -57,7 +58,8 @@ export type SigningErrorKind = typeof SigningErrorKind.Type;
 /**
  * Raised when a statement cannot be signed.
  *
- * @remarks
+ * **Details**
+ *
  * Sized to what a caller can act on: an `identity` failure is a workflow
  * permissions problem, `certificate` is Fulcio, `transparencyLog` is Rekor, and
  * `bundle` is everything else about assembling the result. The original failure
@@ -97,7 +99,8 @@ const kindOf = (cause: unknown): SigningErrorKind => {
 /**
  * Where signing happens, and with what.
  *
- * @remarks
+ * **Details**
+ *
  * The URL overrides exist for the Sigstore **staging** instance, which is what
  * an opt-in end-to-end test points at. `signer` and `witnesses` replace the
  * default Fulcio/Rekor pair outright — the seam that lets a test drive the
@@ -123,13 +126,14 @@ export interface SigstoreSignerOptions {
  */
 export interface SigstoreSignerShape {
 	/**
-	 * Sign a statement into a DSSE bundle.
-	 *
-	 * @remarks
-	 * The identity token is fetched, used and discarded inside this call; it is
-	 * `Redacted` from the contract to the moment it is handed to Fulcio, and
-	 * declassified exactly once, here.
-	 */
+  * Sign a statement into a DSSE bundle.
+  *
+  * **Details**
+  *
+  * The identity token is fetched, used and discarded inside this call; it is
+  * `Redacted` from the contract to the moment it is handed to Fulcio, and
+  * declassified exactly once, here.
+  */
 	readonly sign: (statement: InTotoStatement) => Effect.Effect<SigstoreBundle, SigningError>;
 }
 
@@ -191,11 +195,13 @@ const unstubbed = (): never => {
  * Signs an in-toto statement into a Sigstore DSSE bundle, using a Fulcio
  * certificate and a Rekor transparency-log entry.
  *
- * @remarks
+ * **Details**
+ *
  * Fails with {@link SigningError}. The live {@link (SigstoreSigner:class).layer}
  * requires {@link IdentityToken} in `R`.
  *
- * @example
+ * **Example** (Sign a statement with a static OIDC token)
+ *
  * ```ts
  * import type { InTotoStatement } from "./index.ts";
  * import { IdentityToken, SigstoreSigner } from "./index.ts";
@@ -233,15 +239,16 @@ export class SigstoreSigner extends Context.Service<SigstoreSigner, SigstoreSign
 		);
 
 	/**
-	 * An in-memory double whose `sign` **dies** unless stubbed.
-	 *
-	 * @remarks
-	 * The strongest case in the kit for the die-loudly default: no honest
-	 * fabricated answer exists, because a bundle that looks signed and is not is
-	 * exactly the failure an attestation exists to prevent. A test that wants a
-	 * real bundle without a network drives the real builder through
-	 * {@link (SigstoreSigner:class).layerWith}.
-	 */
+  * An in-memory double whose `sign` **dies** unless stubbed.
+  *
+  * **Gotchas**
+  *
+  * The strongest case in the kit for the die-loudly default: no honest
+  * fabricated answer exists, because a bundle that looks signed and is not is
+  * exactly the failure an attestation exists to prevent. A test that wants a
+  * real bundle without a network drives the real builder through
+  * {@link (SigstoreSigner:class).layerWith}.
+  */
 	static readonly makeTest = (overrides: Partial<SigstoreSignerShape> = {}): SigstoreSignerShape => ({
 		sign: overrides.sign ?? unstubbed,
 	});

@@ -58,7 +58,8 @@ export interface FailureSettings {
 /**
  * A cell `CliRuntime.main` provides outside failure reporting and fills from inside it.
  *
- * @remarks
+ * **Details**
+ *
  * `reportFailures` catches OUTSIDE the layers `main` provides, so the theme, terminal, audience and links a report is
  * rendered with are not in its context when a failure arrives. The environment layer writes the target here as it is
  * built, and an audience flag rewrites it once the flag is read. A `Reference` defaulting to `undefined`, so a
@@ -92,7 +93,8 @@ export const fallbackTarget: FailureTarget = {
 /**
  * The target for the services in the current context, or `undefined` when it lacks any of the four.
  *
- * @remarks
+ * **Details**
+ *
  * Each is read with `serviceOption`, so this never adds a requirement. `audience` overrides the one in context: an
  * audience flag is provided deeper than the environment layer, where the report cannot see it.
  */
@@ -222,7 +224,8 @@ export const linesOf: {
 /**
  * A consumer `render`'s lines, made safe: neutralized under GitHub Actions, and stripped of escapes for an agent.
  *
- * @remarks
+ * **Details**
+ *
  * What a consumer's `render` returns is text the kit did not build and cannot vouch for: it interpolates error
  * messages, file names, whatever the failure carried. So it gets the output policy the kit's own report has. Under
  * GitHub Actions (the target says so, and with no environment services at all it is assumed) every line is neutralized,

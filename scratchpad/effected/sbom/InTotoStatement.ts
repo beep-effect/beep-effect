@@ -18,8 +18,7 @@ const $I = $ScratchpadId.create("effected/sbom/InTotoStatement");
  * The in-toto Statement v1 type URI, stamped onto every statement this package
  * emits.
  *
- * @see {@link https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md | in-toto Statement v1}
- *
+ * @see {@link https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md | in-toto Statement v1} for the Statement v1 specification
  * @public
  */
 export const IN_TOTO_STATEMENT_V1 = "https://in-toto.io/Statement/v1" as const;
@@ -34,7 +33,8 @@ export const CYCLONEDX_BOM_PREDICATE = "https://cyclonedx.org/bom" as const;
 /**
  * The URI naming what a statement asserts about its subjects.
  *
- * @remarks
+ * **Details**
+ *
  * Deliberately an open string rather than a union: the predicate vocabulary is
  * extensible by design, and a closed union here would refuse a valid statement
  * for a predicate type this package has never heard of.
@@ -110,7 +110,8 @@ const Sha256DigestBase: Omit<S.Opaque<Sha256Digest, typeof sha256Digest, {}>, ne
  * A SHA-256 digest as 64 lowercase hexadecimal characters, without an
  * algorithm prefix.
  *
- * @remarks
+ * **Details**
+ *
  * A deliberate small duplication rather than a shared package: `@effected/github`
  * types the same value structurally on its attestation surface, and dragging a
  * package across that seam to share one branded string would cost more than the
@@ -134,7 +135,8 @@ export type Sha256Digest = string & Brand.Brand<"Sha256Digest">;
 /**
  * A content-addressed artifact an attestation is about.
  *
- * @remarks
+ * **Details**
+ *
  * `name` is conventionally a package URL (`pkg:npm/%40scope/name@1.0.0`), but
  * the specification requires only that it be unique within the statement.
  * `digest` is an open algorithm → hex map because in-toto permits several; this
@@ -149,12 +151,13 @@ export class InTotoSubject extends S.Class<InTotoSubject>($I`InTotoSubject`)({
 	digest: S.Record(S.String, S.String).annotateKey({ description: "Algorithm to hex digest." }),
 }, $I.annote("InTotoSubject", { description: "A content-addressed artifact an attestation is about." })) {
 	/**
-	 * A subject identified by a SHA-256 digest.
-	 *
-	 * @remarks
-	 * **Total** — the digest is already validated, which is what
-	 * {@link (Sha256Digest:variable).parseResult} is for.
-	 */
+  * A subject identified by a SHA-256 digest.
+  *
+  * **Details**
+  *
+  * **Total** — the digest is already validated, which is what
+  * {@link (Sha256Digest:variable).parseResult} is for.
+  */
 	static forSha256(name: string, digest: Sha256Digest): InTotoSubject {
 		return InTotoSubject.make({ name, digest: { sha256: digest } });
 	}
@@ -186,7 +189,8 @@ export type InTotoStatementInput = typeof InTotoStatementInput.Type;
 /**
  * Input to {@link (InTotoStatement:class).forSubject}.
  *
- * @remarks
+ * **Details**
+ *
  * A record rather than positional arguments on purpose: `name` and
  * `predicateType` are both strings, and a positional constructor invites a
  * statement that silently attests the wrong thing.
@@ -209,12 +213,14 @@ export type InTotoSubjectInput = typeof InTotoSubjectInput.Type;
 /**
  * An in-toto Statement v1.
  *
- * @remarks
+ * **Details**
+ *
  * `predicate` is `unknown` by design — SLSA provenance, a CycloneDX BOM and a
  * caller's own predicate all travel here, and the statement layer has no reason
  * to introspect any of them.
  *
- * @example
+ * **Example** (Create a statement for a SHA-256 subject)
+ *
  * ```ts
  * import { InTotoStatement, Sha256Digest, SlsaProvenance } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -262,13 +268,14 @@ export class InTotoStatement extends S.Class<InTotoStatement>($I`InTotoStatement
 	}
 
 	/**
-	 * The statement as JSON — the bytes a DSSE envelope carries as its payload.
-	 *
-	 * @remarks
-	 * Compact and in a fixed key order by default, so the same statement
-	 * serializes to the same bytes on every run. Pass `space` for a form meant to
-	 * be read by a person.
-	 */
+  * The statement as JSON — the bytes a DSSE envelope carries as its payload.
+  *
+  * **Details**
+  *
+  * Compact and in a fixed key order by default, so the same statement
+  * serializes to the same bytes on every run. Pass `space` for a form meant to
+  * be read by a person.
+  */
 	toJson(options?: { readonly space?: number | undefined }): string {
 		return Result.getOrThrow(
 			S.encodeResult(S.fromJsonString(S.Unknown, { space: options?.space ?? 0 }))({

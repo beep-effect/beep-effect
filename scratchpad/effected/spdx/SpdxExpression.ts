@@ -215,7 +215,8 @@ const parseResult = (input: string): Result.Result<SpdxExpression, InvalidSpdxEx
  * hooks, config-time checks); it shares its engine with
  * {@link (SpdxExpression:variable).parse}, so a `true` here guarantees a successful parse.
  *
- * @example
+ * **Example** (Validate a license choice and reject an incomplete conjunction)
+ *
  * ```ts
  * import { isValidExpression } from "./index.ts";
  *
@@ -261,7 +262,8 @@ const FromString: S.Codec<SpdxExpression, string> = S.String.pipe(
 /**
  * Resolve one simple-license leaf to its catalog {@link License}.
  *
- * @remarks
+ * **Details**
+ *
  * The `+` ("or later") marker is dropped: it qualifies a catalog entry rather
  * than naming a different one, and `License` models identifiers, not operators.
  * A leaf whose id is neither a catalog member nor a well-formed reference
@@ -301,7 +303,8 @@ const collectLicenses: (expr: SpdxExpression) => (into: Array<License>) => void 
  * Every license named by an expression, in the order it is written, without
  * duplicates.
  *
- * @remarks
+ * **Details**
+ *
  * Reach for this wherever a target permits more than one license. Collapsing
  * `(MIT OR Apache-2.0)` to a single value discards a choice the author
  * deliberately offered, and collapsing `(MIT AND Apache-2.0)` discards a term
@@ -310,7 +313,8 @@ const collectLicenses: (expr: SpdxExpression) => (into: Array<License>) => void 
  * De-duplication is by identifier, keeping first appearance, so `(MIT OR MIT)`
  * yields one license.
  *
- * @example
+ * **Example** (Collect the licenses in a license choice)
+ *
  * ```ts
  * import { SpdxExpression } from "./index.ts";
  * import * as Result from "effect/Result";
@@ -337,7 +341,8 @@ const licensesOf = (expr: SpdxExpression): ReadonlyArray<License> => {
 /**
  * The single license an expression can be said to be under, when there is one.
  *
- * @remarks
+ * **Details**
+ *
  * Reach for this wherever a target permits exactly one license — schema.org's
  * `license`, a badge, a summary line.
  *
@@ -352,7 +357,8 @@ const licensesOf = (expr: SpdxExpression): ReadonlyArray<License> => {
  *   term that legally applies. A caller that reaches this should emit the array
  *   from {@link (SpdxExpression:variable).licensesOf} instead.
  *
- * @example
+ * **Example** (Select the first license choice and handle a conjunction)
+ *
  * ```ts
  * import { SpdxExpression } from "./index.ts";
  * import * as O from "effect/Option";
@@ -388,13 +394,14 @@ const primaryLicense: (expr: SpdxExpression) => O.Option<License> = Match.type<S
  */
 export const SpdxExpression = {
 	/**
-	 * The recursive tagged-union `Schema` for the AST.
-	 *
-	 * @remarks
-	 * The parser's nesting-depth cap guards STRING parsing only (via {@link (SpdxExpression:variable).parse}
-	 * and {@link (SpdxExpression:variable).FromString}); decoding an already-built POJO directly through
-	 * this raw `Schema` is not depth-capped.
-	 */
+  * The recursive tagged-union `Schema` for the AST.
+  *
+  * **Gotchas**
+  *
+  * The parser's nesting-depth cap guards STRING parsing only (via {@link (SpdxExpression:variable).parse}
+  * and {@link (SpdxExpression:variable).FromString}); decoding an already-built POJO directly through
+  * this raw `Schema` is not depth-capped.
+  */
 	Schema: SpdxExpressionUnion,
 	/**
 	 * A `Schema.Codec` from a raw expression string to the AST and back. Decoding

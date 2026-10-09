@@ -12,7 +12,8 @@ const $I = $ScratchpadId.create("effected/github/GitHubError");
 /**
  * Why a GitHub call failed, as a value you can branch on.
  *
- * @remarks
+ * **Details**
+ *
  * Branch on this discriminant instead of string-matching an error message:
  * `alreadyExists` tells "someone else created it" apart from "that failed", so
  * an upsert needs no follow-up existence check.
@@ -42,7 +43,8 @@ export type GitHubErrorKind = typeof GitHubErrorKind.Type;
 /**
  * The validation codes GitHub documents for a 422's `errors[].code`.
  *
- * @remarks
+ * **Details**
+ *
  * The complete documented set. Only `already_exists` earns its own
  * {@link GitHubErrorKind}; every other code classifies as `rejected`, and a
  * caller that needs to tell them apart reads {@link GitHubError}'s `validation`
@@ -76,7 +78,8 @@ export type GitHubValidationCode = typeof GitHubValidationCode.Type;
 /**
  * One entry from a failed response's `data.errors` array, as GitHub sent it.
  *
- * @remarks
+ * **Details**
+ *
  * Every field is optional because GitHub's entries vary by endpoint: the
  * releases endpoint sends `resource`, `code` and `field` with no `message`,
  * while a `custom` entry may carry only a `message`. `code` is a plain string
@@ -100,7 +103,8 @@ export class GitHubValidationEntry extends S.Class<GitHubValidationEntry>($I`Git
 /**
  * Every REST failure this package produces, from every resource.
  *
- * @remarks
+ * **Details**
+ *
  * One error class, not one per resource: {@link GitHubErrorKind} routes and
  * `operation` identifies what was attempted. This mirrors `@effected/git`,
  * where classification happens once so no consumer string-matches stderr.
@@ -117,23 +121,25 @@ export class GitHubError extends S.TaggedError<GitHubError>($I`GitHubError`)("Gi
 	/** GitHub's HTTP status, when the request reached GitHub at all. */
 	status: S.optionalKey(S.Int).annotateKey({ description: "GitHub's HTTP status, when the request reached GitHub at all." }),
 	/**
-	 * A server-advised delay before retrying, in milliseconds.
-	 *
-	 * @remarks
-	 * Written by the client from `retry-after` or the rate-limit reset, and read
-	 * by exactly one thing: the retry `Schedule`. It is a policy input, not
-	 * information for a caller. Whether a failure is worth retrying at all is the
-	 * derived `retryable` getter.
-	 */
+  * A server-advised delay before retrying, in milliseconds.
+  *
+  * **Details**
+  *
+  * Written by the client from `retry-after` or the rate-limit reset, and read
+  * by exactly one thing: the retry `Schedule`. It is a policy input, not
+  * information for a caller. Whether a failure is worth retrying at all is the
+  * derived `retryable` getter.
+  */
 	retryAfterMillis: S.optionalKey(S.Int).annotateKey({ description: "A server-advised delay before retrying, in milliseconds." }),
 	/**
-	 * GitHub's validation entries, when the failed response carried any.
-	 *
-	 * @remarks
-	 * The structured half of a 422: branch on an entry's `code` and `field`
-	 * rather than on `reason`. Absent when GitHub sent no `errors` array — some
-	 * 422s ("Update is not a fast forward") are prose only.
-	 */
+  * GitHub's validation entries, when the failed response carried any.
+  *
+  * **Details**
+  *
+  * The structured half of a 422: branch on an entry's `code` and `field`
+  * rather than on `reason`. Absent when GitHub sent no `errors` array — some
+  * 422s ("Update is not a fast forward") are prose only.
+  */
 	validation: GitHubValidationEntry.pipe(S.Array, S.optionalKey).annotateKey({ description: "GitHub's validation entries, when the failed response carried any." }),
 	/** The underlying throwable, when one exists. */
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying throwable, when one exists." }),
@@ -146,13 +152,14 @@ export class GitHubError extends S.TaggedError<GitHubError>($I`GitHubError`)("Gi
 	}
 
 	/**
-	 * Whether retrying could plausibly succeed.
-	 *
-	 * @remarks
-	 * Derived from `kind` rather than stored. A 404 or a
-	 * validation rejection will fail identically on every attempt; only a
-	 * transport failure or a rate limit can change its mind.
-	 */
+  * Whether retrying could plausibly succeed.
+  *
+  * **Details**
+  *
+  * Derived from `kind` rather than stored. A 404 or a
+  * validation rejection will fail identically on every attempt; only a
+  * transport failure or a rate limit can change its mind.
+  */
 	get retryable(): boolean {
 		return this.kind === "transport" || this.kind === "rateLimited";
 	}
@@ -188,19 +195,20 @@ export class GitHubError extends S.TaggedError<GitHubError>($I`GitHubError`)("Gi
 	}
 
 	/**
-	 * Classify anything octokit threw.
-	 *
-	 * @remarks
-	 * The single classification step for the whole package — every resource
-	 * method's failures come through here, so the taxonomy cannot drift between
-	 * resources.
-	 *
-	 * `nowMillis` is passed in rather than read from the wall clock so the
-	 * function stays pure and total: the rate-limit reset header is an absolute
-	 * epoch second, and turning it into a delay needs a "now" the caller controls.
-	 * The client supplies `Clock.currentTimeMillis`, which is the `TestClock`
-	 * under test.
-	 */
+  * Classify anything octokit threw.
+  *
+  * **Details**
+  *
+  * The single classification step for the whole package — every resource
+  * method's failures come through here, so the taxonomy cannot drift between
+  * resources.
+  *
+  * `nowMillis` is passed in rather than read from the wall clock so the
+  * function stays pure and total: the rate-limit reset header is an absolute
+  * epoch second, and turning it into a delay needs a "now" the caller controls.
+  * The client supplies `Clock.currentTimeMillis`, which is the `TestClock`
+  * under test.
+  */
 	static fromOctokit(operation: string, error: unknown, nowMillis: number): GitHubError {
 		const facts = readThrowable(error);
 		const retryAfterMillis = retryAfterMillisFrom(facts.headers, nowMillis);
@@ -217,45 +225,48 @@ export class GitHubError extends S.TaggedError<GitHubError>($I`GitHubError`)("Gi
 	}
 
 	/**
-	 * A predicate over one or more kinds, for `Effect.catchIf`.
-	 *
-	 * @example
-	 * ```ts
-	 * import { GitHubError } from "./index.ts";
-	 * import * as Effect from "effect/Effect";
-	 *
-	 * declare const read: Effect.Effect<string, GitHubError>;
-	 *
-	 * const orDefault = read.pipe(
-	 *   Effect.catchIf(GitHubError.hasKind("notFound"), () => Effect.succeed("")),
-	 * );
-	 * ```
-	 */
+  * A predicate over one or more kinds, for `Effect.catchIf`.
+  *
+  * **Example** (Recover from a missing resource with an empty string)
+  *
+  * ```ts
+  * import { GitHubError } from "./index.ts";
+  * import * as Effect from "effect/Effect";
+  *
+  * declare const read: Effect.Effect<string, GitHubError>;
+  *
+  * const orDefault = read.pipe(
+  *   Effect.catchIf(GitHubError.hasKind("notFound"), () => Effect.succeed("")),
+  * );
+  * ```
+  */
 	static hasKind(...kinds: ReadonlyArray<(typeof GitHubErrorKind.literals)[number]>): (error: GitHubError) => boolean {
 		const set = HashSet.fromIterable<string>(kinds);
 		return (error) => HashSet.has(set, error.kind);
 	}
 
 	/**
-	 * A predicate over GitHub's validation codes, for `Effect.catchIf`.
-	 *
-	 * @remarks
-	 * Matches when any entry in {@link GitHubError}'s `validation` carries one of
-	 * the codes. Use it for the distinctions {@link GitHubErrorKind} deliberately
-	 * does not draw, such as a `missing_field` against an `invalid`.
-	 *
-	 * @example
-	 * ```ts
-	 * import { GitHubError } from "./index.ts";
-	 * import * as Effect from "effect/Effect";
-	 *
-	 * declare const create: Effect.Effect<void, GitHubError>;
-	 *
-	 * const tolerant = create.pipe(
-	 *   Effect.catchIf(GitHubError.hasValidationCode("missing"), () => Effect.void),
-	 * );
-	 * ```
-	 */
+  * A predicate over GitHub's validation codes, for `Effect.catchIf`.
+  *
+  * **Details**
+  *
+  * Matches when any entry in {@link GitHubError}'s `validation` carries one of
+  * the codes. Use it for the distinctions {@link GitHubErrorKind} deliberately
+  * does not draw, such as a `missing_field` against an `invalid`.
+  *
+  * **Example** (Ignore a missing resource validation error)
+  *
+  * ```ts
+  * import { GitHubError } from "./index.ts";
+  * import * as Effect from "effect/Effect";
+  *
+  * declare const create: Effect.Effect<void, GitHubError>;
+  *
+  * const tolerant = create.pipe(
+  *   Effect.catchIf(GitHubError.hasValidationCode("missing"), () => Effect.void),
+  * );
+  * ```
+  */
 	static hasValidationCode(
 		...codes: ReadonlyArray<(typeof GitHubValidationCode.literals)[number]>
 	): (error: GitHubError) => boolean {
@@ -275,7 +286,8 @@ interface Throwable {
 /**
  * Read an unknown throwable structurally.
  *
- * @remarks
+ * **Details**
+ *
  * Deliberately structural rather than `instanceof RequestError`:
  * `@octokit/request-error` is a transitive dependency this package does not
  * declare, and importing a package you did not declare is how a peer closure
@@ -307,7 +319,8 @@ const asRecord = (value: unknown): Record<string, unknown> | undefined =>
  * GitHub answers some requests with an HTML error page whose body becomes a
  * multi-kilobyte "message".
  *
- * @remarks
+ * **Gotchas**
+ *
  * An HTML body is never a useful reason string, and letting one through means
  * a log line with a whole web page in it.
  */
@@ -379,7 +392,8 @@ const classify = (
 };
 
 /**
- * @remarks
+ * **Details**
+ *
  * The structured code is the authority — the releases endpoint sends it with
  * no message at all. The prose checks cover endpoints that say so only in
  * words, such as `/git/refs` answering "Reference already exists".

@@ -37,32 +37,33 @@ export class CliPrompt {
 	private constructor() {}
 
 	/**
-	 * A fallback for `Flag.withFallbackPrompt` or `Argument.withFallbackPrompt` that only prompts when the run is
-	 * interactive.
-	 *
-	 * @remarks
-	 * Interactive (`CliInteractive`): the prompt runs and its answer is used. Not interactive: `otherwise` is used
-	 * when given, and the terminal is never read; without it the parameter fails as missing, exactly as it would
-	 * with no fallback, so core renders its own message and `CliRuntime.main` exits `64`. Name the parameter with
-	 * `flag` (the name without dashes, as given to `Flag.String`) or `argument` so that error can be built.
-	 *
-	 * Why the prompt runs inside this function rather than being handed back to core: core's
-	 * `withFallbackPrompt` turns a quit, such as Ctrl-C, into the original missing-parameter error, which would
-	 * exit `64` as if the flag had been forgotten. Here a quit is `Cancelled` with reason `interrupt`, exit `130`.
-	 * It is raised as a defect because core's parse step turns every typed failure into a usage error. Core then
-	 * runs the already-answered `Prompt.succeed` it is handed. Because it travels as a defect, a handler's
-	 * `Effect.catchTag("Cancelled", ...)` cannot see it, and only `CliRuntime.main` (or
-	 * `CliRuntime.reportFailures`) renders it as one line with exit `130`; under a bare `runMain` it prints a
-	 * stack.
-	 *
-	 * Pair it with `CliPrompt.gateTerminal`, which `CliEnv.layer` installs: core still runs `Prompt.run` on the
-	 * answered prompt it is handed, and `Prompt.run` subscribes the terminal's input, which on a real terminal
-	 * attaches a reader to stdin and drops piped input. The gate makes that subscription harmless when the run is
-	 * not interactive.
-	 *
-	 * @param prompt - the prompt to show
-	 * @param options - the parameter it stands in for, and the non-interactive default
-	 */
+  * A fallback for `Flag.withFallbackPrompt` or `Argument.withFallbackPrompt` that only prompts when the run is
+  * interactive.
+  *
+  * **Gotchas**
+  *
+  * Interactive (`CliInteractive`): the prompt runs and its answer is used. Not interactive: `otherwise` is used
+  * when given, and the terminal is never read; without it the parameter fails as missing, exactly as it would
+  * with no fallback, so core renders its own message and `CliRuntime.main` exits `64`. Name the parameter with
+  * `flag` (the name without dashes, as given to `Flag.String`) or `argument` so that error can be built.
+  *
+  * Why the prompt runs inside this function rather than being handed back to core: core's
+  * `withFallbackPrompt` turns a quit, such as Ctrl-C, into the original missing-parameter error, which would
+  * exit `64` as if the flag had been forgotten. Here a quit is `Cancelled` with reason `interrupt`, exit `130`.
+  * It is raised as a defect because core's parse step turns every typed failure into a usage error. Core then
+  * runs the already-answered `Prompt.succeed` it is handed. Because it travels as a defect, a handler's
+  * `Effect.catchTag("Cancelled", ...)` cannot see it, and only `CliRuntime.main` (or
+  * `CliRuntime.reportFailures`) renders it as one line with exit `130`; under a bare `runMain` it prints a
+  * stack.
+  *
+  * Pair it with `CliPrompt.gateTerminal`, which `CliEnv.layer` installs: core still runs `Prompt.run` on the
+  * answered prompt it is handed, and `Prompt.run` subscribes the terminal's input, which on a real terminal
+  * attaches a reader to stdin and drops piped input. The gate makes that subscription harmless when the run is
+  * not interactive.
+  *
+  * @param prompt - the prompt to show
+  * @param options - the parameter it stands in for, and the non-interactive default
+  */
 	static readonly fallback: <A>(
 		prompt: Prompt.Prompt<A>,
 		options: CliPromptFallbackOptions<A>,
@@ -80,22 +81,23 @@ export class CliPrompt {
 	});
 
 	/**
-	 * Gates core's `Terminal` on `CliInteractive`, so a run that is not interactive never touches the real one.
-	 *
-	 * @remarks
-	 * Core's prompt runner subscribes the terminal's input even for a prompt that is already answered, and the
-	 * real Node terminal then attaches a readline to stdin, which drops piped input and puts a TTY stdin into raw
-	 * mode. Not interactive, this terminal's input is an already-ended queue, its `readLine` fails as quit and its
-	 * `display` writes nothing, so any prompt, the wizard included, is quit at once and the real terminal is never
-	 * read. Its `columns` and `rows` always come from the real one, so layout keeps working. Interactive, every
-	 * call passes through to the real terminal.
-	 *
-	 * The decision is made on every call, not when the layer is built, so a scope that narrows `CliInteractive`
-	 * later, such as an audience flag under `CliAudience.runWith`, gates it too.
-	 *
-	 * It requires the real `Terminal`. `CliEnv.layer` installs it, after `TerminalEnv` is built from the real
-	 * terminal, so consumers do not compose it.
-	 */
+  * Gates core's `Terminal` on `CliInteractive`, so a run that is not interactive never touches the real one.
+  *
+  * **Details**
+  *
+  * Core's prompt runner subscribes the terminal's input even for a prompt that is already answered, and the
+  * real Node terminal then attaches a readline to stdin, which drops piped input and puts a TTY stdin into raw
+  * mode. Not interactive, this terminal's input is an already-ended queue, its `readLine` fails as quit and its
+  * `display` writes nothing, so any prompt, the wizard included, is quit at once and the real terminal is never
+  * read. Its `columns` and `rows` always come from the real one, so layout keeps working. Interactive, every
+  * call passes through to the real terminal.
+  *
+  * The decision is made on every call, not when the layer is built, so a scope that narrows `CliInteractive`
+  * later, such as an audience flag under `CliAudience.runWith`, gates it too.
+  *
+  * It requires the real `Terminal`. `CliEnv.layer` installs it, after `TerminalEnv` is built from the real
+  * terminal, so consumers do not compose it.
+  */
 	static readonly gateTerminal: Layer.Layer<Terminal.Terminal, never, Terminal.Terminal> = Layer.effect(
 		Terminal.Terminal,
 		Effect.gen(function* () {
@@ -118,18 +120,19 @@ export class CliPrompt {
 	);
 
 	/**
-	 * Drops core's `--wizard` built-in flag when the run is not interactive.
-	 *
-	 * @remarks
-	 * The wizard prompts, so offering it without a terminal only leads to a dead end. With the flag gone, core
-	 * treats `--wizard` as an unknown flag, a usage error that exits `64`, and lists it nowhere in `--help`.
-	 * The layer reads `CliInteractive` and the ambient `CliConfig` when it is built, so provide those first, for
-	 * example `CliPrompt.gateWizard.pipe(Layer.provide(CliInteractive.layer))`. It filters the ambient `CliConfig`,
-	 * so a consumer's own `builtIns` survive, and returns it untouched when interactive. An audience flag read
-	 * later is covered by `CliAudience.runWith`, which drops the wizard too. When this layer removes the flag it records
-	 * that it did, so `runWith` puts it back only when a flag turns interactivity on where this took it away: a
-	 * consumer who never had `Wizard` in their `builtIns` keeps it out.
-	 */
+  * Drops core's `--wizard` built-in flag when the run is not interactive.
+  *
+  * **Details**
+  *
+  * The wizard prompts, so offering it without a terminal only leads to a dead end. With the flag gone, core
+  * treats `--wizard` as an unknown flag, a usage error that exits `64`, and lists it nowhere in `--help`.
+  * The layer reads `CliInteractive` and the ambient `CliConfig` when it is built, so provide those first, for
+  * example `CliPrompt.gateWizard.pipe(Layer.provide(CliInteractive.layer))`. It filters the ambient `CliConfig`,
+  * so a consumer's own `builtIns` survive, and returns it untouched when interactive. An audience flag read
+  * later is covered by `CliAudience.runWith`, which drops the wizard too. When this layer removes the flag it records
+  * that it did, so `runWith` puts it back only when a flag turns interactivity on where this took it away: a
+  * consumer who never had `Wizard` in their `builtIns` keeps it out.
+  */
 	static readonly gateWizard: Layer.Layer<never> = Layer.effectContext(
 		Effect.gen(function* () {
 			// The ambient config, never core's full list: a consumer's own `builtIns` (from `CliConfig.layer`) survive.

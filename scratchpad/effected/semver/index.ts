@@ -1,13 +1,16 @@
 /**
  * Strict SemVer 2.0.0 versions, ranges and comparators as Effect schemas.
  *
+ * **Details**
+ *
  * Domain classes carry their own behavior — instance methods are the
  * canonical API, cross-cutting operations are dual statics on the owning
  * class, and each class doubles as its schema (`SemVer.FromString`,
  * `Range.FromString`, `Comparator.FromString` transform to and from the
  * canonical strings).
  *
- * @example
+ * **Example** (Bump a version and test range membership)
+ *
  * ```ts
  * import { Range, SemVer } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -23,10 +26,9 @@
  * // => ["1.3.0", true, false]
  * ```
  *
- * @see {@link https://semver.org | SemVer 2.0.0 Specification}
- * @see {@link https://effect.website | Effect}
- *
  * @packageDocumentation
+ * @see {@link https://semver.org | SemVer 2.0.0 Specification} for the version grammar
+ * @see {@link https://effect.website | Effect} for the Effect framework
  */
 
 export { Comparator, InvalidComparatorError } from "./Comparator.ts";

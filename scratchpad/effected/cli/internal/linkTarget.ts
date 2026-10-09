@@ -39,7 +39,8 @@ export const encodePath = (path: string): string =>
  * The encoded path part of a `file:` URL for an absolute path (the part after `file://`), or `undefined` for a UNC
  * path. One builder, so `CliLinks` and `Render.markdown` link a file the same way.
  *
- * @remarks
+ * **Details**
+ *
  * A drive path keeps its drive and becomes `/C:/x/y.ts`: the colon is part of the URL's path, not data to encode.
  *
  * @internal

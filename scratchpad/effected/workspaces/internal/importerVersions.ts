@@ -66,7 +66,8 @@ const isConcreteVersion = (version: string): boolean =>
  * Build the importer-path → dependency-name → version index a snapshot uses to
  * answer `catalog:` specifiers its catalog set cannot resolve.
  *
- * @remarks
+ * **Details**
+ *
  * Keyed by **name only** within each importer, deliberately across every
  * dependency field. The bug this fixes is a peer declared `catalog:effect:peers`
  * whose importer records no `peerDependencies` entry at all — pnpm writes peer
@@ -102,7 +103,8 @@ export const importerVersionsOf = (lockfile: Lockfile): VersionIndex => {
  * The version every importer agrees `dependency` resolved to, or `undefined`
  * when they disagree or none record it.
  *
- * @remarks
+ * **Details**
+ *
  * The unambiguity rule is what makes a workspace-wide answer safe from a
  * snapshot method that receives no importer context. Two packages in one
  * monorepo may legitimately hold different versions of the same dependency; in

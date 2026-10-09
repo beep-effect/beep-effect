@@ -36,7 +36,8 @@ const DEFAULT_PER_PAGE = 100;
  * The typed GitHub transport: one request, one paginated read, one GraphQL
  * document, and whatever the rate-limit headers last said.
  *
- * @remarks
+ * **Details**
+ *
  * Every member is an `Effect`, a `Stream`, or a function returning one — the
  * rule that keeps `Layer.mock` and `layerTest(Partial<Shape>)` useful. That
  * includes `rateLimit`, which is an `Effect`-valued property rather than a
@@ -46,37 +47,39 @@ const DEFAULT_PER_PAGE = 100;
  */
 export interface GitHubClientShape {
 	/**
-	 * One request. The route types both the parameters and the returned `data`.
-	 *
-	 * @example
-	 * ```ts
-	 * import { GitHubClient } from "./index.ts";
-	 * import * as Effect from "effect/Effect";
-	 *
-	 * const defaultBranch = Effect.gen(function* () {
-	 *   const client = yield* GitHubClient;
-	 *   const repo = yield* client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" });
-	 *   return repo.default_branch; // string — no cast, no hand-written interface
-	 * });
-	 * ```
-	 */
+  * One request. The route types both the parameters and the returned `data`.
+  *
+  * **Example** (Read the default branch with a typed request)
+  *
+  * ```ts
+  * import { GitHubClient } from "./index.ts";
+  * import * as Effect from "effect/Effect";
+  *
+  * const defaultBranch = Effect.gen(function* () {
+  *   const client = yield* GitHubClient;
+  *   const repo = yield* client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" });
+  *   return repo.default_branch; // string — no cast, no hand-written interface
+  * });
+  * ```
+  */
 	readonly request: <R extends Rest.Route>(
 		route: R,
 		params: Rest.Params<R>,
 	) => Effect.Effect<Rest.Data<R>, GitHubError>;
 
 	/**
-	 * A route GitHub does not describe in its OpenAPI schema, or one whose live
-	 * shape differs from it.
-	 *
-	 * @remarks
-	 * The `schema` is **mandatory**. This is an escape hatch from the route
-	 * table, never from typing: the payload still arrives decoded, and a shape
-	 * mismatch fails as `kind: "decode"` rather than surfacing as a value nobody
-	 * checked. The attestations read uses it, because pinning
-	 * `X-GitHub-Api-Version` puts the response on a contract the generated types
-	 * do not describe.
-	 */
+  * A route GitHub does not describe in its OpenAPI schema, or one whose live
+  * shape differs from it.
+  *
+  * **Details**
+  *
+  * The `schema` is **mandatory**. This is an escape hatch from the route
+  * table, never from typing: the payload still arrives decoded, and a shape
+  * mismatch fails as `kind: "decode"` rather than surfacing as a value nobody
+  * checked. The attestations read uses it, because pinning
+  * `X-GitHub-Api-Version` puts the response on a contract the generated types
+  * do not describe.
+  */
 	readonly requestDecoded: <A, I>(
 		route: string,
 		params: Record<string, unknown> & Rest.RequestExtras,
@@ -84,11 +87,12 @@ export interface GitHubClientShape {
 	) => Effect.Effect<A, GitHubError>;
 
 	/**
-	 * Collect every page of a paginating route, honoring {@link PageOptions}.
-	 *
-	 * @remarks
-	 * Handing this a non-paginating route is a compile error.
-	 */
+  * Collect every page of a paginating route, honoring {@link PageOptions}.
+  *
+  * **Gotchas**
+  *
+  * Handing this a non-paginating route is a compile error.
+  */
 	readonly paginate: <R extends Rest.PaginatingRoute>(
 		route: R,
 		params: Rest.Params<R>,
@@ -96,12 +100,13 @@ export interface GitHubClientShape {
 	) => Effect.Effect<ReadonlyArray<Rest.Item<R>>, GitHubError>;
 
 	/**
-	 * The same traversal as a `Stream`, for when the caller decides where to stop.
-	 *
-	 * @remarks
-	 * Lazy in requests: a downstream `Stream.take` stops the walk rather than
-	 * filtering pages that were already fetched.
-	 */
+  * The same traversal as a `Stream`, for when the caller decides where to stop.
+  *
+  * **Details**
+  *
+  * Lazy in requests: a downstream `Stream.take` stops the walk rather than
+  * filtering pages that were already fetched.
+  */
 	readonly paginateStream: <R extends Rest.PaginatingRoute>(
 		route: R,
 		params: Rest.Params<R>,
@@ -115,13 +120,14 @@ export interface GitHubClientShape {
 	) => Effect.Effect<A, GitHubGraphQLError>;
 
 	/**
-	 * What GitHub's rate-limit headers said on the most recent response.
-	 *
-	 * @remarks
-	 * Observation, not policy: **nothing here throttles on your behalf.** The
-	 * client retries a rate-limited failure with GitHub's own advised delay, and
-	 * a caller that wants to pace itself proactively reads this.
-	 */
+  * What GitHub's rate-limit headers said on the most recent response.
+  *
+  * **Gotchas**
+  *
+  * Observation, not policy: **nothing here throttles on your behalf.** The
+  * client retries a rate-limited failure with GitHub's own advised delay, and
+  * a caller that wants to pace itself proactively reads this.
+  */
 	readonly rateLimit: Effect.Effect<O.Option<RateLimitSnapshot>>;
 }
 
@@ -140,14 +146,15 @@ export interface GitHubClientOptions {
 	/** Appended to octokit's own user agent. */
 	readonly userAgent?: string | undefined;
 	/**
-	 * A replacement for the global `fetch`.
-	 *
-	 * @remarks
-	 * octokit's own documented hook. It is the seam a test drives the **real**
-	 * request path through — classification, header capture, retry and
-	 * pagination all exercised against canned HTTP responses instead of against
-	 * a hand-written double of this service.
-	 */
+  * A replacement for the global `fetch`.
+  *
+  * **Details**
+  *
+  * octokit's own documented hook. It is the seam a test drives the **real**
+  * request path through — classification, header capture, retry and
+  * pagination all exercised against canned HTTP responses instead of against
+  * a hand-written double of this service.
+  */
 	readonly fetch?: typeof globalThis.fetch | undefined;
 }
 
@@ -225,15 +232,16 @@ export interface GitHubFixtures {
 	/** What `rateLimit` answers. */
 	readonly rateLimit?: RateLimitSnapshot | undefined;
 	/**
-	 * Every call the fixture served, in order. Populated as the test runs.
-	 *
-	 * @remarks
-	 * `kind` says which surface was used. A paginated read carries the
-	 * `perPage` it asked for; `request` and `requestDecoded` carry the
-	 * **params** they were called with, which is what lets a suite assert that a
-	 * method sent the right `owner`/`repo`/body rather than only the right
-	 * route. `graphql` records the document name as `route`.
-	 */
+  * Every call the fixture served, in order. Populated as the test runs.
+  *
+  * **Details**
+  *
+  * `kind` says which surface was used. A paginated read carries the
+  * `perPage` it asked for; `request` and `requestDecoded` carry the
+  * **params** they were called with, which is what lets a suite assert that a
+  * method sent the right `owner`/`repo`/body rather than only the right
+  * route. `graphql` records the document name as `route`.
+  */
 	readonly requested?: Array<RecordedCall> | undefined;
 }
 
@@ -251,7 +259,8 @@ const unstubbed = (member: string): never => {
 /**
  * The typed GitHub API client.
  *
- * @remarks
+ * **Details**
+ *
  * The route is the key. `@octokit/types` generates a map from GitHub's OpenAPI
  * description that carries every endpoint's parameter and response shapes, and
  * `@octokit/core`'s `request` already consumes it — so a caller writes a route
@@ -262,7 +271,8 @@ const unstubbed = (member: string): never => {
  * the only thing written, and a mismatch between a route and its parameters is
  * a compile error.
  *
- * @example
+ * **Example** (Read the latest release tag with token authentication)
+ *
  * ```ts
  * import { GitHubClient } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -285,27 +295,29 @@ const unstubbed = (member: string): never => {
  */
 export class GitHubClient extends Context.Service<GitHubClient, GitHubClientShape>()($I`GitHubClient`) {
 	/**
-	 * A client authenticated with a token you already hold.
-	 *
-	 * @remarks
-	 * This module imports `@octokit/core` and nothing heavier. A consumer that
-	 * only ever authenticates with a token never links the GitHub App JWT signer,
-	 * because the App-authenticated layer lives in `GitHubApp` — a different
-	 * module — rather than as a third static here.
-	 */
+  * A client authenticated with a token you already hold.
+  *
+  * **Details**
+  *
+  * This module imports `@octokit/core` and nothing heavier. A consumer that
+  * only ever authenticates with a token never links the GitHub App JWT signer,
+  * because the App-authenticated layer lives in `GitHubApp` — a different
+  * module — rather than as a third static here.
+  */
 	static readonly layerFromToken = (options: GitHubClientOptions): Layer.Layer<GitHubClient> =>
 		Layer.effect(this, makeClientShape(options));
 
 	/**
-	 * A client authenticated from configuration, `GITHUB_TOKEN` by default.
-	 *
-	 * @remarks
-	 * Reads through the ambient `ConfigProvider`, not `process.env`, so a test
-	 * provides a provider instead of mutating the environment and a non-Actions
-	 * consumer can source the token however it likes.
-	 *
-	 * Construction fails with core's `ConfigError` when no token is configured.
-	 */
+  * A client authenticated from configuration, `GITHUB_TOKEN` by default.
+  *
+  * **Details**
+  *
+  * Reads through the ambient `ConfigProvider`, not `process.env`, so a test
+  * provides a provider instead of mutating the environment and a non-Actions
+  * consumer can source the token however it likes.
+  *
+  * Construction fails with core's `ConfigError` when no token is configured.
+  */
 	static readonly layerFromConfig = (
 		options: Omit<GitHubClientOptions, "token"> & { readonly name?: string | undefined } = {},
 	): Layer.Layer<GitHubClient, Config.ConfigError> =>
@@ -318,18 +330,19 @@ export class GitHubClient extends Context.Service<GitHubClient, GitHubClientShap
 		);
 
 	/**
-	 * An in-memory double: stub the members a test exercises, and every other
-	 * member **dies** naming itself.
-	 *
-	 * @remarks
-	 * No member has an honest default. A fabricated response — an empty list, a
-	 * made-up sha — would leak into the code under test as fact, so the double
-	 * fails loudly instead, which also makes it proof that a test touches nothing
-	 * but what it stubbed.
-	 *
-	 * For recorded responses that page for real, use
-	 * {@link GitHubClient.layerFixture}.
-	 */
+  * An in-memory double: stub the members a test exercises, and every other
+  * member **dies** naming itself.
+  *
+  * **Gotchas**
+  *
+  * No member has an honest default. A fabricated response — an empty list, a
+  * made-up sha — would leak into the code under test as fact, so the double
+  * fails loudly instead, which also makes it proof that a test touches nothing
+  * but what it stubbed.
+  *
+  * For recorded responses that page for real, use
+  * {@link GitHubClient.layerFixture}.
+  */
 	static readonly makeTest = (overrides: Partial<GitHubClientShape> = {}): GitHubClientShape => ({
 		request: overrides.request ?? (() => unstubbed("request")),
 		requestDecoded: overrides.requestDecoded ?? (() => unstubbed("requestDecoded")),
@@ -344,17 +357,18 @@ export class GitHubClient extends Context.Service<GitHubClient, GitHubClientShap
 		Layer.succeed(GitHubClient, GitHubClient.makeTest(overrides));
 
 	/**
-	 * A double over recorded responses that **pages them for real**.
-	 *
-	 * @remarks
-	 * The recorded-response double in this package. It reimplements no behavior:
-	 * it builds a `PageSource` over the recorded
-	 * array and hands it to the same `paginate` engine the live client uses, so
-	 * `perPage` and `maxPages` cannot behave differently here than in production.
-	 *
-	 * `fixtures.requested` is appended to as the test runs, so a suite can assert
-	 * which routes were walked and at what page size.
-	 */
+  * A double over recorded responses that **pages them for real**.
+  *
+  * **Details**
+  *
+  * The recorded-response double in this package. It reimplements no behavior:
+  * it builds a `PageSource` over the recorded
+  * array and hands it to the same `paginate` engine the live client uses, so
+  * `perPage` and `maxPages` cannot behave differently here than in production.
+  *
+  * `fixtures.requested` is appended to as the test runs, so a suite can assert
+  * which routes were walked and at what page size.
+  */
 	static readonly layerFixture = (fixtures: GitHubFixtures): Layer.Layer<GitHubClient> =>
 		Layer.succeed(GitHubClient, makeFixture(fixtures));
 }
@@ -362,7 +376,8 @@ export class GitHubClient extends Context.Service<GitHubClient, GitHubClientShap
 /**
  * Builds the live shape over a constructed transport.
  *
- * @remarks
+ * **Details**
+ *
  * Exported for `GitHubApp`, which builds clients of its own — one speaking as
  * the app (JWT), one as an installation, and one unauthenticated for the bot-user
  * lookup that rejects an app JWT. Not part of the public surface.

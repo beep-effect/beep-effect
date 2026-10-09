@@ -40,18 +40,19 @@ export const CompileAndExpandOptions = S.Struct({
 	onUnreadable: S.optionalKey(S.Literals(["fail", "skip"])).annotateKey({ description: "Whether unreadable directories fail or are skipped; record mode is excluded." }),
 	followSymlinks: S.optionalKey(S.Boolean).annotateKey({ description: "Whether symlinked directories are followed with per-branch cycle safety." }),
 	/**
-	 * The options the pattern compiles under — **required, deliberately**.
-	 *
-	 * @remarks
-	 * Matching semantics (`dot` above all) are the thing two call sites most
-	 * easily disagree about, and an optional field invites exactly that: one
-	 * site passes `{ dot: true }`, another omits it, and the same package now
-	 * has two glob dialects that nothing makes visible. Required means every
-	 * call site states its dialect in its own source, so a divergence is a
-	 * visible difference between two spellings rather than the absence of one.
-	 * Pass `GlobPatternOptions.make({})` to mean "the defaults" — that is a
-	 * deliberate choice being written down, not boilerplate.
-	 */
+  * The options the pattern compiles under — **required, deliberately**.
+  *
+  * **Details**
+  *
+  * Matching semantics (`dot` above all) are the thing two call sites most
+  * easily disagree about, and an optional field invites exactly that: one
+  * site passes `{ dot: true }`, another omits it, and the same package now
+  * has two glob dialects that nothing makes visible. Required means every
+  * call site states its dialect in its own source, so a divergence is a
+  * visible difference between two spellings rather than the absence of one.
+  * Pass `GlobPatternOptions.make({})` to mean "the defaults" — that is a
+  * deliberate choice being written down, not boilerplate.
+  */
 	glob: GlobPatternOptions.annotateKey({ description: "The explicitly supplied matching dialect." }),
 }).annotate($I.annote("CompileAndExpandOptions", { description: "Downward traversal options and the required glob matching dialect." }));
 export type CompileAndExpandOptions = typeof CompileAndExpandOptions.Type;
@@ -61,7 +62,8 @@ export type CompileAndExpandOptions = typeof CompileAndExpandOptions.Type;
  * compile+expand recipe fails with, so a caller catches one tag rather than
  * folding two error channels by hand.
  *
- * @remarks
+ * **Details**
+ *
  * One tag, two genuinely different causes — "your pattern is malformed" and
  * "that directory is unreadable" are different problems with different fixes,
  * so `cause` keeps the underlying typed error intact
@@ -100,7 +102,8 @@ export class GlobExpansionError extends S.TaggedError<GlobExpansionError>($I`Glo
  * Compile a glob pattern and expand it against the filesystem in one call:
  * matching FILE paths relative to `options.cwd`, POSIX separators, sorted.
  *
- * @remarks
+ * **Details**
+ *
  * The recipe form of `descend`. Everything `descend` documents about
  * traversal holds unchanged — the literal fast-path, the negated-pattern walk
  * from `cwd`, files-only matching, symlink and prune handling, `maxDepth`,
@@ -123,7 +126,8 @@ export class GlobExpansionError extends S.TaggedError<GlobExpansionError>($I`Glo
  * consumer's platform layer stays the single place that choice is made.
  * Provide both once at the application boundary, not per call site.
  *
- * @example
+ * **Example** (Compile and expand a TypeScript glob)
+ *
  * ```ts
  * import { GlobPatternOptions } from "../glob/index.ts";
  * import { compileAndExpand } from "./index.ts";

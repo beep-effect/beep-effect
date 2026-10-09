@@ -12,7 +12,8 @@ const $I = $ScratchpadId.create("effected/cli/internal/logSafety");
 /**
  * Marks a log line the kit has already rendered, so the logger does not strip the escapes the kit painted into it.
  *
- * @remarks
+ * **Details**
+ *
  * The failure report renders a document for the audience (painted for a person) and writes each line through the
  * logger. That text is not consumer-supplied any more: its consumer text was sanitised when the document was built. A
  * `Reference` rather than a log annotation, so it never appears in a diagnostics record.

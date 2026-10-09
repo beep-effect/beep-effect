@@ -46,7 +46,8 @@ export type PackageManagerName = typeof PackageManagerName.Type;
  * The markers {@link PackageManagerDetector} probes, in the priority order it
  * probes them.
  *
- * @remarks
+ * **Details**
+ *
  * One vocabulary serves both halves of the detection contract: the failure path
  * reports every member as `PackageManagerDetectionError.checked`, and the
  * success path reports the one that fired as
@@ -89,7 +90,8 @@ export type PackageManagerEvidence = typeof PackageManagerEvidence.Type;
 /**
  * The outcome of package-manager detection at a workspace root.
  *
- * @remarks
+ * **Details**
+ *
  * `version` is `Option.none()` unless a manifest field naming the *same* manager
  * that was detected also carries a version — a `packageManager: "yarn@4"` in a
  * pnpm workspace tells us nothing about pnpm's version, so it is not reported as
@@ -229,7 +231,8 @@ export type PackageManagerDetectionFailure = PackageManagerDetectionError | Work
 /**
  * The {@link PackageManagerDetector} service shape.
  *
- * @remarks
+ * **Details**
+ *
  * Exported so a consumer can type a bespoke double against the contract without
  * reaching into the class — the `WorkspaceDiscoveryShape` /
  * `PublishabilityDetectorShape` convention.
@@ -244,7 +247,8 @@ export interface PackageManagerDetectorShape {
 /**
  * Detects which package manager owns a workspace root.
  *
- * @remarks
+ * **Details**
+ *
  * **Lockfile evidence is the primary signal** — it is what says which manager
  * actually ran. Priority, first match wins: a `pnpm-workspace.yaml` means pnpm;
  * a bun lockfile *plus* a manifest field naming bun means bun; a `yarn.lock`
@@ -514,46 +518,48 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 	);
 
 	/**
-	 * The sanctioned in-memory double.
-	 *
-	 * @remarks
-	 * **`detect` has no honest default, so an unstubbed call dies** — the
-	 * `WorkspaceDiscovery.info` posture, for the same reason. A stand-in that
-	 * answered `"pnpm"` would hand a consumer a fact nothing established, and it
-	 * would contradict the very service it stands in for: the live detector's
-	 * defining property is that it refuses to guess when no evidence matches.
-	 * A double that guesses is worse than no double.
-	 *
-	 * Failing typed would be the subtler mistake: `PackageManagerDetectionError`
-	 * reads as a legitimate "no manager here" answer, so a consumer would branch
-	 * on it and proceed, never learning that the test simply forgot to stub.
-	 *
-	 * The defect is also not absorbed by `Effect.catch` or any typed-error
-	 * handler — deliberately, so code under test with a best-effort `catch`
-	 * around detection cannot make the mandatory stub look optional; the
-	 * unstubbed call still fails the test.
-	 *
-	 * @param overrides - Members to supply; anything omitted dies on use.
-	 *
-	 * @example
-	 * ```ts
-	 * import { DetectedPackageManager, PackageManagerDetector } from "./index.ts";
-	 * import * as Effect from "effect/Effect";
-	 * import * as O from "effect/Option";
-	 *
-	 * const TestDetector = PackageManagerDetector.layerTest({
-	 *   detect: () =>
-	 *     Effect.succeed(
-	 *       DetectedPackageManager.make({
-	 *         name: "pnpm",
-	 *         version: O.none(),
-	 *         runtime: "node",
-	 *         evidence: "pnpm-workspace.yaml",
-	 *       }),
-	 *     ),
-	 * });
-	 * ```
-	 */
+  * The sanctioned in-memory double.
+  *
+  * **Gotchas**
+  *
+  * **`detect` has no honest default, so an unstubbed call dies** — the
+  * `WorkspaceDiscovery.info` posture, for the same reason. A stand-in that
+  * answered `"pnpm"` would hand a consumer a fact nothing established, and it
+  * would contradict the very service it stands in for: the live detector's
+  * defining property is that it refuses to guess when no evidence matches.
+  * A double that guesses is worse than no double.
+  *
+  * Failing typed would be the subtler mistake: `PackageManagerDetectionError`
+  * reads as a legitimate "no manager here" answer, so a consumer would branch
+  * on it and proceed, never learning that the test simply forgot to stub.
+  *
+  * The defect is also not absorbed by `Effect.catch` or any typed-error
+  * handler — deliberately, so code under test with a best-effort `catch`
+  * around detection cannot make the mandatory stub look optional; the
+  * unstubbed call still fails the test.
+  *
+  * **Example** (Stub pnpm detection with workspace evidence)
+  *
+  * ```ts
+  * import { DetectedPackageManager, PackageManagerDetector } from "./index.ts";
+  * import * as Effect from "effect/Effect";
+  * import * as O from "effect/Option";
+  *
+  * const TestDetector = PackageManagerDetector.layerTest({
+  *   detect: () =>
+  *     Effect.succeed(
+  *       DetectedPackageManager.make({
+  *         name: "pnpm",
+  *         version: O.none(),
+  *         runtime: "node",
+  *         evidence: "pnpm-workspace.yaml",
+  *       }),
+  *     ),
+  * });
+  * ```
+  *
+  * @param overrides - Members to supply; anything omitted dies on use.
+  */
 	static readonly makeTest = (overrides: Partial<PackageManagerDetectorShape> = {}): PackageManagerDetectorShape => ({
 		detect: () =>
 			Effect.die(
@@ -565,16 +571,17 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 	});
 
 	/**
-	 * {@link PackageManagerDetector.makeTest} behind `Layer.succeed`.
-	 *
-	 * @remarks
-	 * A parameterized layer factory mints a **fresh reference per call**, and
-	 * layers memoize by reference — bind the result to a `const` and reuse it
-	 * rather than calling `layerTest(...)` at each composition site.
-	 *
-	 * Pairs with `WorkspaceRoot.layerTest` and `WorkspaceDiscovery.layerTest` to
-	 * stand up the whole discovery path with no filesystem at all.
-	 */
+  * {@link PackageManagerDetector.makeTest} behind `Layer.succeed`.
+  *
+  * **Gotchas**
+  *
+  * A parameterized layer factory mints a **fresh reference per call**, and
+  * layers memoize by reference — bind the result to a `const` and reuse it
+  * rather than calling `layerTest(...)` at each composition site.
+  *
+  * Pairs with `WorkspaceRoot.layerTest` and `WorkspaceDiscovery.layerTest` to
+  * stand up the whole discovery path with no filesystem at all.
+  */
 	static readonly layerTest = (
 		overrides: Partial<PackageManagerDetectorShape> = {},
 	): Layer.Layer<PackageManagerDetector> =>

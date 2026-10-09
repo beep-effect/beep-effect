@@ -140,14 +140,16 @@ const cycleOf = (
 /**
  * Holds a workspace's package graph to a committed {@link LayerPolicy}.
  *
- * @remarks
+ * **Details**
+ *
  * `check` is pure, so positive-control fixture graphs need no filesystem.
  * `edgesOf` recomputes one edge per declaring field, because
  * `DependencyGraph` merges the four fields into one adjacency and a policy
  * may check only some of them. An edge exists wherever a dependency NAME is
  * a workspace package, whatever its specifier protocol.
  *
- * @example
+ * **Example** (Check workspace dependencies against a layer policy)
+ *
  * ```ts
  * import { NodeServices } from "@effect/platform-node";
  * import { Workspaces } from "./index.ts";

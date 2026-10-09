@@ -14,7 +14,8 @@ const EMPTY_EDGE_NAMES: ReadonlyArray<string> = [];
 /**
  * A package resolved from a lockfile.
  *
- * @remarks
+ * **Details**
+ *
  * The common shape every format's entries normalize into:
  *
  * - `instanceId` — the lockfile-native identity of this *instance*, verbatim:

@@ -19,7 +19,8 @@ const $I = $ScratchpadId.create("effected/templates/ManagedSection");
  * Raised when the file behind a managed-section operation could not be read or
  * written.
  *
- * @remarks
+ * **Details**
+ *
  * The underlying `PlatformError` is preserved structurally in `cause` rather
  * than stringified. `operation` is what a bare platform error cannot tell a
  * caller: these operations are read-modify-write, so "it failed" is ambiguous
@@ -46,7 +47,8 @@ export class SectionFileError extends S.TaggedError<SectionFileError>($I`Section
 /**
  * The {@link ManagedSection} service shape.
  *
- * @remarks
+ * **Details**
+ *
  * Exported so a consumer can type a function against the shape without naming
  * the service class, and so the surface is a reviewable declaration rather
  * than whatever the implementation happened to return.
@@ -77,12 +79,13 @@ export interface ManagedSectionShape {
 	) => Effect.Effect<SyncOutcome, SectionParseError | SectionRenderError | SectionFileError>;
 
 	/**
-	 * Make a whole set of sections say what they should, in declared order.
-	 *
-	 * @remarks
-	 * The declared order is written into the file — see
-	 * {@link SectionDocument.reconcile}. Writes only if the text changes.
-	 */
+  * Make a whole set of sections say what they should, in declared order.
+  *
+  * **Details**
+  *
+  * The declared order is written into the file — see
+  * {@link SectionDocument.reconcile}. Writes only if the text changes.
+  */
 	readonly syncAll: (
 		path: string,
 		sections: ReadonlyArray<Section>,
@@ -116,7 +119,8 @@ const notFound = (error: PlatformError.PlatformError): boolean => error.reason._
 /**
  * Decodes file bytes **without** consuming a byte-order mark.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `FileSystem.readFileString` decodes through a default `TextDecoder`, which
  * strips a leading BOM. Reading through it would make the first sync of a
  * BOM-carrying file silently delete the BOM, which violates this package's
@@ -262,7 +266,8 @@ const unimplemented = (member: string): never => {
  * Managed sections in files: read, compare, sync and remove delimited blocks
  * whose surrounding content belongs to the user.
  *
- * @remarks
+ * **Details**
+ *
  * A thin shell over {@link SectionDocument}: every member reads the file, runs
  * the pure core, and writes back only when the text actually changed. All the
  * interesting behavior — and all the interesting tests — live in the pure core.
@@ -271,7 +276,8 @@ const unimplemented = (member: string): never => {
  * layer at the edge. No `Path` is required: paths are handed to `FileSystem`
  * untouched.
  *
- * @example
+ * **Example** (Sync file sections in declared order)
+ *
  * ```ts
  * import { CommentStyle, ManagedSection, SectionId } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -295,22 +301,24 @@ export class ManagedSection extends Context.Service<ManagedSection, ManagedSecti
 	$I`ManagedSection`,
 ) {
 	/**
-	 * The default layer, reading and writing {@link SectionDialect.default}
-	 * markers.
-	 *
-	 * @remarks
-	 * A bound `const`, not a function, so it memoizes by reference.
-	 */
+  * The default layer, reading and writing {@link SectionDialect.default}
+  * markers.
+  *
+  * **Details**
+  *
+  * A bound `const`, not a function, so it memoizes by reference.
+  */
 	static readonly layer: Layer.Layer<ManagedSection, never, FileSystem.FileSystem> = Layer.effect(this, make());
 
 	/**
-	 * A layer with a custom marker dialect.
-	 *
-	 * @remarks
-	 * A parameterized layer factory mints a **fresh reference per call**, and
-	 * layers memoize by reference — bind the result to a `const` and reuse it
-	 * rather than calling `layerWith(...)` at each composition site.
-	 */
+  * A layer with a custom marker dialect.
+  *
+  * **Gotchas**
+  *
+  * A parameterized layer factory mints a **fresh reference per call**, and
+  * layers memoize by reference — bind the result to a `const` and reuse it
+  * rather than calling `layerWith(...)` at each composition site.
+  */
 	static readonly layerWith = (
 		options: ManagedSectionOptions,
 	): Layer.Layer<ManagedSection, never, FileSystem.FileSystem> => Layer.effect(ManagedSection, make(options));
@@ -332,13 +340,14 @@ export class ManagedSection extends Context.Service<ManagedSection, ManagedSecti
 	});
 
 	/**
-	 * The test layer: {@link ManagedSection.makeTest} behind `Layer.succeed`, so
-	 * a suite provides only the members it exercises.
-	 *
-	 * @remarks
-	 * A parameterized layer factory mints a fresh reference per call — bind it
-	 * to a `const` rather than calling it at each composition site.
-	 */
+  * The test layer: {@link ManagedSection.makeTest} behind `Layer.succeed`, so
+  * a suite provides only the members it exercises.
+  *
+  * **Gotchas**
+  *
+  * A parameterized layer factory mints a fresh reference per call — bind it
+  * to a `const` rather than calling it at each composition site.
+  */
 	static readonly layerTest = (overrides: Partial<ManagedSectionShape> = {}): Layer.Layer<ManagedSection> =>
 		Layer.succeed(ManagedSection, ManagedSection.makeTest(overrides));
 }

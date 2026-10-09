@@ -16,7 +16,8 @@ const $I = $ScratchpadId.create("effected/lockfiles/LockfileIntegrity");
  * The minimal manifest shape {@link LockfileIntegrity.compare} checks a
  * lockfile against: a package name plus the four optional dependency maps.
  *
- * @remarks
+ * **Details**
+ *
  * Deliberately *not* a `@effected/package-json` type — this package takes
  * manifests as plain values so its consumers own the manifest IO (and may
  * derive these from any richer model).
@@ -38,7 +39,8 @@ const decodeSemVer = S.decodeUnknownExit(SemVer.FromString);
  * Result of checking a parsed lockfile against the workspace's declared
  * manifests.
  *
- * @remarks
+ * **Details**
+ *
  * A data type, not an error: it reports *what* mismatches exist without
  * failing anything.
  *
@@ -67,28 +69,29 @@ export class LockfileIntegrity extends S.Class<LockfileIntegrity>($I`LockfileInt
 	).annotateKey({ description: "Declared SemVer constraints satisfied by no parseable resolved candidate, with workspace, dependency section and all candidate versions" }),
 }, $I.annote("LockfileIntegrity", { description: "Result of checking a parsed lockfile against the workspace's declared manifests." })) {
 	/**
-	 * Check a lockfile's consistency against workspace manifests — a total,
-	 * pure function: no Effect, no error channel, no IO.
-	 *
-	 * @remarks
-	 * Constraint checking is best-effort by design: `workspace:` / `link:` /
-	 * `file:` specifiers and rows whose range (or every resolved version) does
-	 * not parse as SemVer are skipped.
-	 * A lockfile may resolve the same package at several versions; a
-	 * constraint is satisfied when *any* resolved version matches, and an
-	 * unsatisfied row reports every candidate in `resolved`. The
-	 * caller reads the manifests (this package does no IO). For pnpm, apply
-	 * `Lockfile#withImporterNames` first so workspace names align with
-	 * manifest names.
-	 *
-	 * (Named `compare`, not `check`: every `Schema.Class` already carries a
-	 * `static check(...checks)` for attaching schema checks, and statics cannot
-	 * be shadowed with an incompatible signature.)
-	 *
-	 * @param lockfile - The parsed lockfile.
-	 * @param manifests - The workspace manifests to compare against.
-	 * @returns The integrity report.
-	 */
+  * Check a lockfile's consistency against workspace manifests — a total,
+  * pure function: no Effect, no error channel, no IO.
+  *
+  * **Details**
+  *
+  * Constraint checking is best-effort by design: `workspace:` / `link:` /
+  * `file:` specifiers and rows whose range (or every resolved version) does
+  * not parse as SemVer are skipped.
+  * A lockfile may resolve the same package at several versions; a
+  * constraint is satisfied when *any* resolved version matches, and an
+  * unsatisfied row reports every candidate in `resolved`. The
+  * caller reads the manifests (this package does no IO). For pnpm, apply
+  * `Lockfile#withImporterNames` first so workspace names align with
+  * manifest names.
+  *
+  * (Named `compare`, not `check`: every `Schema.Class` already carries a
+  * `static check(...checks)` for attaching schema checks, and statics cannot
+  * be shadowed with an incompatible signature.)
+  *
+  * @param lockfile - The parsed lockfile.
+  * @param manifests - The workspace manifests to compare against.
+  * @returns The integrity report.
+  */
 	static compare(lockfile: Lockfile, manifests: ReadonlyArray<WorkspaceManifest>): LockfileIntegrity {
 		const workspacePackages = lockfile.packages.filter((p) => p.isWorkspace && p.relativePath !== undefined);
 

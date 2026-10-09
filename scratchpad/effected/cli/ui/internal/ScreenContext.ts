@@ -50,7 +50,8 @@ const ignore = (): void => undefined;
 /**
  * The mounted screen's cancel, for a widget whose own key (such as Select's `q`) ends the screen.
  *
- * @remarks
+ * **Gotchas**
+ *
  * A React hook; throws outside a screen mounted by `CliUi.run` or a `UiProvider`. Under a tree that is not a screen
  * (a `UiProvider`, a live view) there is nothing to cancel, and it does nothing.
  *
@@ -68,7 +69,8 @@ export const useScreenCancel = (): ((reason: "escape" | "interrupt") => void) =>
 /**
  * Wrap an input handler so a throw ends the screen as a defect instead of escaping.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Ink calls `useInput` and `usePaste` handlers from its stdin listener, outside React's render, so an error boundary
  * never sees what they throw: unguarded, it is an uncaught exception (the process dies, Effect finalizers skipped)
  * or, where something keeps the process alive, a screen left waiting. Guarded, the screen dies with the error and

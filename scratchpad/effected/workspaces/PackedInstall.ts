@@ -47,7 +47,8 @@ const JsonValue = S.fromJsonString(S.Unknown);
 /**
  * Where each closure package is packed from.
  *
- * @remarks
+ * **Details**
+ *
  * `{ directory }` runs `npm pack` in that subdirectory of each package, whose
  * manifest must already be publish-ready. The default,
  * `{ directory: "dist/prod/npm/pkg" }`, is `@savvy-web/bundler`'s prod npm
@@ -71,7 +72,8 @@ export type PackSource = "source" | { readonly directory: string };
  * What decides the set of packages a packed install packs: the options
  * {@link PackedInstall.closure} and {@link PackedInstall.run} share.
  *
- * @remarks
+ * **Details**
+ *
  * The run's options satisfy this interface, so
  * `PackedInstall.closure(options.carrier, options)` answers for exactly the
  * run those options describe.
@@ -87,28 +89,29 @@ export interface PackedInstallClosureOptions {
 	 */
 	readonly closure?: ReadonlyArray<string> | "auto" | undefined;
 	/**
-	 * Packages from outside the workspace that replace registry resolution in
-	 * every scratch consumer: package name to a local package directory or a
-	 * `.tgz`, with or without a `file:` prefix.
-	 *
-	 * @remarks
-	 * For a closure member that imports a surface of a dependency existing
-	 * only in a sibling checkout's unreleased build, which the registry's copy
-	 * lacks. A directory is `npm pack`ed, so it must be
-	 * publish-ready (for a package built by `@savvy-web/bundler`, its
-	 * `dist/prod/npm/pkg`); a `.tgz` is used as it is. Either way the packed
-	 * manifest must be named as its key, carry no specifier only a workspace
-	 * could resolve, and it joins `PackedInstallResult.tarballs`. Each
-	 * consumer steers the package to that tarball through the same override
-	 * field as the closure (npm's and bun's `overrides`, Yarn's `resolutions`,
-	 * pnpm's `overrides` in `pnpm-workspace.yaml`), so the carrier's
-	 * transitive references resolve to it too, whatever range they ask for.
-	 *
-	 * A relative path resolves against the workspace root. A key naming the
-	 * carrier or a closure member, a path that is neither a directory with a
-	 * `package.json` nor a `.tgz` file, or a manifest named otherwise fails
-	 * `InvalidOverride`. Entries here win over `workspaceOverrides` ones.
-	 */
+  * Packages from outside the workspace that replace registry resolution in
+  * every scratch consumer: package name to a local package directory or a
+  * `.tgz`, with or without a `file:` prefix.
+  *
+  * **Details**
+  *
+  * For a closure member that imports a surface of a dependency existing
+  * only in a sibling checkout's unreleased build, which the registry's copy
+  * lacks. A directory is `npm pack`ed, so it must be
+  * publish-ready (for a package built by `@savvy-web/bundler`, its
+  * `dist/prod/npm/pkg`); a `.tgz` is used as it is. Either way the packed
+  * manifest must be named as its key, carry no specifier only a workspace
+  * could resolve, and it joins `PackedInstallResult.tarballs`. Each
+  * consumer steers the package to that tarball through the same override
+  * field as the closure (npm's and bun's `overrides`, Yarn's `resolutions`,
+  * pnpm's `overrides` in `pnpm-workspace.yaml`), so the carrier's
+  * transitive references resolve to it too, whatever range they ask for.
+  *
+  * A relative path resolves against the workspace root. A key naming the
+  * carrier or a closure member, a path that is neither a directory with a
+  * `package.json` nor a `.tgz` file, or a manifest named otherwise fails
+  * `InvalidOverride`. Entries here win over `workspaceOverrides` ones.
+  */
 	readonly overrides?: Readonly<Record<string, string>> | undefined;
 	/**
 	 * Also read the workspace root's `pnpm-workspace.yaml` and take every
@@ -146,44 +149,46 @@ export interface PackedInstallOptions extends PackedInstallClosureOptions {
 	 */
 	readonly packFrom?: PackSource | undefined;
 	/**
-	 * Bin names every consumer must expose, executable, in `node_modules/.bin`.
-	 *
-	 * @remarks
-	 * By default only the carrier may declare them. Whatever this lists, a
-	 * packed package other than the carrier that declares one of the
-	 * carrier's own bin names fails `BinConflict` before any install, unless
-	 * `allowSharedBins` is set: under a flat layout (npm, bun,
-	 * Yarn's `node-modules` linker) either package can take the `.bin` slot,
-	 * so the bin check and every bin run could pass on the wrong package.
-	 *
-	 * The check compares packed packages only (the carrier, the closure and
-	 * `overrides`), reading each manifest's `bin` field; it does not read
-	 * `directories.bin`, and a dependency installed from the registry that
-	 * declares the same bin name goes undetected.
-	 */
+  * Bin names every consumer must expose, executable, in `node_modules/.bin`.
+  *
+  * **Gotchas**
+  *
+  * By default only the carrier may declare them. Whatever this lists, a
+  * packed package other than the carrier that declares one of the
+  * carrier's own bin names fails `BinConflict` before any install, unless
+  * `allowSharedBins` is set: under a flat layout (npm, bun,
+  * Yarn's `node-modules` linker) either package can take the `.bin` slot,
+  * so the bin check and every bin run could pass on the wrong package.
+  *
+  * The check compares packed packages only (the carrier, the closure and
+  * `overrides`), reading each manifest's `bin` field; it does not read
+  * `directories.bin`, and a dependency installed from the registry that
+  * declares the same bin name goes undetected.
+  */
 	readonly bins: ReadonlyArray<string>;
 	/**
-	 * Skip the `BinConflict` check: the front ends declare the carrier's bin
-	 * names too, deliberately.
-	 *
-	 * @remarks
-	 * A supported, permanent choice for a carrier whose front ends are also
-	 * installed and run on their own, and a stopgap for one migrating to
-	 * carrier-only bins. Its cost is provenance: under npm, bun and Yarn's
-	 * `node-modules` linker, either package can take the `.bin` slot (npm and
-	 * bun were observed to link the package whose name sorts first, which for
-	 * a `cli` front end and a `plugin` carrier is the front end; Yarn 1 and 4
-	 * were observed to keep the carrier's, the consumer's direct dependency),
-	 * and the bin that runs then carries no distribution identity: no
-	 * `--version` suffix.
-	 * When every shared bin calls the same `main()`, nothing else changes.
-	 *
-	 * Every expected bin in `bins` is still verified present and executable,
-	 * but that check, and `runBin`, can pass on the front end's bin. Prove the
-	 * carrier's own shim with `InstalledConsumer.runCarrierBin`, and read who
-	 * owns the slot with `InstalledConsumer.binProvenance`. Defaults to
-	 * `false`, so sharing is an explicit choice.
-	 */
+  * Skip the `BinConflict` check: the front ends declare the carrier's bin
+  * names too, deliberately.
+  *
+  * **Gotchas**
+  *
+  * A supported, permanent choice for a carrier whose front ends are also
+  * installed and run on their own, and a stopgap for one migrating to
+  * carrier-only bins. Its cost is provenance: under npm, bun and Yarn's
+  * `node-modules` linker, either package can take the `.bin` slot (npm and
+  * bun were observed to link the package whose name sorts first, which for
+  * a `cli` front end and a `plugin` carrier is the front end; Yarn 1 and 4
+  * were observed to keep the carrier's, the consumer's direct dependency),
+  * and the bin that runs then carries no distribution identity: no
+  * `--version` suffix.
+  * When every shared bin calls the same `main()`, nothing else changes.
+  *
+  * Every expected bin in `bins` is still verified present and executable,
+  * but that check, and `runBin`, can pass on the front end's bin. Prove the
+  * carrier's own shim with `InstalledConsumer.runCarrierBin`, and read who
+  * owns the slot with `InstalledConsumer.binProvenance`. Defaults to
+  * `false`, so sharing is an explicit choice.
+  */
 	readonly allowSharedBins?: boolean | undefined;
 	/**
 	 * The environment for every spawn: pass `process.env` from the test file, the edge that supplies the host
@@ -193,24 +198,25 @@ export interface PackedInstallOptions extends PackedInstallClosureOptions {
 	 */
 	readonly env: Readonly<Record<string, string | undefined>>;
 	/**
-	 * Extra consumer dependencies, name to range or `file:` tarball spec.
-	 *
-	 * @remarks
-	 * Declare here every package the consumer's own code imports directly
-	 * other than the carrier. pnpm's isolated layout links only the consumer's
-	 * declared dependencies at its top level, so a closure package reached only
-	 * through the carrier's peers or the overrides resolves inside the carrier
-	 * but fails `ERR_MODULE_NOT_FOUND` when imported from the consumer root,
-	 * while npm and bun hoist it and pass. That is a property of the consumer,
-	 * not of the pack.
-	 *
-	 * An entry naming a packed package (the carrier, a closure member or an
-	 * `overrides` package) is written as that package's `file:` tarball,
-	 * whatever spec you pass, so any range will do: the packed tarball always
-	 * wins. npm fails an install whose direct spec differs from its override
-	 * (`EOVERRIDE`), so a range written through unchanged would break every
-	 * npm consumer.
-	 */
+  * Extra consumer dependencies, name to range or `file:` tarball spec.
+  *
+  * **Gotchas**
+  *
+  * Declare here every package the consumer's own code imports directly
+  * other than the carrier. pnpm's isolated layout links only the consumer's
+  * declared dependencies at its top level, so a closure package reached only
+  * through the carrier's peers or the overrides resolves inside the carrier
+  * but fails `ERR_MODULE_NOT_FOUND` when imported from the consumer root,
+  * while npm and bun hoist it and pass. That is a property of the consumer,
+  * not of the pack.
+  *
+  * An entry naming a packed package (the carrier, a closure member or an
+  * `overrides` package) is written as that package's `file:` tarball,
+  * whatever spec you pass, so any range will do: the packed tarball always
+  * wins. npm fails an install whose direct spec differs from its override
+  * (`EOVERRIDE`), so a range written through unchanged would break every
+  * npm consumer.
+  */
 	readonly consumerDependencies?: Readonly<Record<string, string>> | undefined;
 	/** Ceiling on each install. Defaults to four minutes. Expiry fails `InstallFailed` with a message naming the manager and this duration. */
 	readonly installTimeout?: Duration.Input | undefined;
@@ -286,20 +292,21 @@ export interface RunBinOptions extends BinCommandOptions {
 	/** Ceiling on the run. Defaults to one minute. Expiry fails `BinFailed` with a message naming the bin and this duration. */
 	readonly timeout?: Duration.Input | undefined;
 	/**
-	 * What to write to the bin's stdin, which is then closed: a string (UTF-8
-	 * encoded), bytes, or a byte stream for input that must arrive in pieces,
-	 * such as a framed LSP session.
-	 *
-	 * @remarks
-	 * Omitted or `""`, the bin's stdin is the null device: it reads end of
-	 * input immediately, never an open pipe, so a bin that reads stdin exits
-	 * instead of hanging until the ceiling. Empty bytes and an empty stream
-	 * are sent as given: the bin sees an ended, empty input. A bin that answers
-	 * only after the input is complete is driven by this option; one that must
-	 * be interleaved with its output is driven through
-	 * {@link InstalledConsumer.command} or {@link InstalledConsumer.carrierCommand},
-	 * which leave stdin open.
-	 */
+  * What to write to the bin's stdin, which is then closed: a string (UTF-8
+  * encoded), bytes, or a byte stream for input that must arrive in pieces,
+  * such as a framed LSP session.
+  *
+  * **Details**
+  *
+  * Omitted or `""`, the bin's stdin is the null device: it reads end of
+  * input immediately, never an open pipe, so a bin that reads stdin exits
+  * instead of hanging until the ceiling. Empty bytes and an empty stream
+  * are sent as given: the bin sees an ended, empty input. A bin that answers
+  * only after the input is complete is driven by this option; one that must
+  * be interleaved with its output is driven through
+  * {@link InstalledConsumer.command} or {@link InstalledConsumer.carrierCommand},
+  * which leave stdin open.
+  */
 	readonly stdin?: string | Uint8Array | Stream.Stream<Uint8Array, PlatformError.PlatformError> | undefined;
 }
 
@@ -360,32 +367,33 @@ export class InstalledConsumer extends S.Class<InstalledConsumer>($I`InstalledCo
 	}
 
 	/**
-	 * Which installed package the `node_modules/.bin` entry `name` resolves into.
-	 *
-	 * @remarks
-	 * Under a flat layout (npm, bun, and Yarn with the `node-modules` linker
-	 * this run configures), a hoisted bin of the same name from another package
-	 * can shadow the carrier's, and running it cannot tell you which one ran.
-	 * Those managers write each `.bin` entry as a symlink, so this reads the
-	 * link, realpaths its target, and walks up to the nearest `package.json`
-	 * with a string `name`, staying inside the consumer directory (itself
-	 * realpath'd first, so a `/var` alias of `/private/var` or a trailing
-	 * slash does not move the bound). A manifest that is valid JSON but not an
-	 * object, or has no string `name` (a `dist/package.json` carrying only
-	 * `type`), is passed over. Assert `package` is your carrier.
-	 *
-	 * `undefined` means one thing: the entry exists and is not a symlink.
-	 * pnpm writes `.bin` entries as shell shims, whose target this does not
-	 * parse; its isolated layout links only the consumer's direct dependencies
-	 * at the top level, so a shadowing bin needs a direct dependency there.
-	 *
-	 * An entry that does not exist, or a link whose target does not, fails
-	 * `MissingBin`. A link into no named package inside the consumer fails
-	 * `UnownedBin`, naming the target. Any other read failure, a
-	 * `package.json` that is not JSON included, fails `Io`.
-	 *
-	 * @param name - The bin, as named in `node_modules/.bin`.
-	 */
+  * Which installed package the `node_modules/.bin` entry `name` resolves into.
+  *
+  * **Details**
+  *
+  * Under a flat layout (npm, bun, and Yarn with the `node-modules` linker
+  * this run configures), a hoisted bin of the same name from another package
+  * can shadow the carrier's, and running it cannot tell you which one ran.
+  * Those managers write each `.bin` entry as a symlink, so this reads the
+  * link, realpaths its target, and walks up to the nearest `package.json`
+  * with a string `name`, staying inside the consumer directory (itself
+  * realpath'd first, so a `/var` alias of `/private/var` or a trailing
+  * slash does not move the bound). A manifest that is valid JSON but not an
+  * object, or has no string `name` (a `dist/package.json` carrying only
+  * `type`), is passed over. Assert `package` is your carrier.
+  *
+  * `undefined` means one thing: the entry exists and is not a symlink.
+  * pnpm writes `.bin` entries as shell shims, whose target this does not
+  * parse; its isolated layout links only the consumer's direct dependencies
+  * at the top level, so a shadowing bin needs a direct dependency there.
+  *
+  * An entry that does not exist, or a link whose target does not, fails
+  * `MissingBin`. A link into no named package inside the consumer fails
+  * `UnownedBin`, naming the target. Any other read failure, a
+  * `package.json` that is not JSON included, fails `Io`.
+  *
+  * @param name - The bin, as named in `node_modules/.bin`.
+  */
 	binProvenance(
 		name: string,
 	): Effect.Effect<BinProvenance | undefined, PackedInstallError, FileSystem.FileSystem | Path.Path> {
@@ -397,34 +405,36 @@ export class InstalledConsumer extends S.Class<InstalledConsumer>($I`InstalledCo
 	}
 
 	/**
-	 * The command {@link InstalledConsumer.runBin} spawns for the bin `name`,
-	 * for a caller that drives the child itself, such as `McpProbe.initialize`
-	 * from `@effected/mcp/testing`.
-	 *
-	 * @remarks
-	 * {@link InstalledConsumer.binPath}, from the consumer's directory, under
-	 * the install's scrubbed environment with `options.env` layered over it
-	 * after the scrub, and nothing inherited beyond that. `runBin` builds its
-	 * command here and then ignores stdin; this one leaves stdin as the
-	 * spawner's default pipe, so a probe can write to it. Spawn it inside the
-	 * scope that ran `PackedInstall.run`: the scratch directory is removed
-	 * when that scope closes.
-	 *
-	 * @example
-	 * ```ts
-	 * import { McpProbe } from "@effected/mcp/testing";
-	 * import type { InstalledConsumer } from "./testing.ts";
-	 *
-	 * declare const consumer: InstalledConsumer;
-	 * declare const xdg: string;
-	 *
-	 * const probe = McpProbe.initialize(consumer.command("my-tool-mcp", [], { env: { XDG_DATA_HOME: xdg } }));
-	 * ```
-	 *
-	 * @param name - The bin, as named in `node_modules/.bin`.
-	 * @param args - Its arguments.
-	 * @param options - Extra environment and working directory.
-	 */
+  * The command {@link InstalledConsumer.runBin} spawns for the bin `name`,
+  * for a caller that drives the child itself, such as `McpProbe.initialize`
+  * from `@effected/mcp/testing`.
+  *
+  * **Details**
+  *
+  * {@link InstalledConsumer.binPath}, from the consumer's directory, under
+  * the install's scrubbed environment with `options.env` layered over it
+  * after the scrub, and nothing inherited beyond that. `runBin` builds its
+  * command here and then ignores stdin; this one leaves stdin as the
+  * spawner's default pipe, so a probe can write to it. Spawn it inside the
+  * scope that ran `PackedInstall.run`: the scratch directory is removed
+  * when that scope closes.
+  *
+  * **Example** (Initialize an MCP probe from an installed bin)
+  *
+  * ```ts
+  * import { McpProbe } from "@effected/mcp/testing";
+  * import type { InstalledConsumer } from "./testing.ts";
+  *
+  * declare const consumer: InstalledConsumer;
+  * declare const xdg: string;
+  *
+  * const probe = McpProbe.initialize(consumer.command("my-tool-mcp", [], { env: { XDG_DATA_HOME: xdg } }));
+  * ```
+  *
+  * @param name - The bin, as named in `node_modules/.bin`.
+  * @param args - Its arguments.
+  * @param options - Extra environment and working directory.
+  */
 	command(
 		name: string,
 		args: ReadonlyArray<string> = [],
@@ -438,25 +448,26 @@ export class InstalledConsumer extends S.Class<InstalledConsumer>($I`InstalledCo
 	}
 
 	/**
-	 * Run the installed bin `name` to completion and collect what it wrote.
-	 *
-	 * @remarks
-	 * Spawns {@link InstalledConsumer.command} with `options.stdin` as its
-	 * input (the null device when omitted, so a bin never waits on an open
-	 * pipe): the bin
-	 * from the consumer's directory, under the install's scrubbed environment
-	 * with `options.env` layered over it after the scrub, and nothing
-	 * inherited beyond that. A
-	 * non-zero exit is a result, read from `exitCode`, never a failure. A bin
-	 * that cannot spawn, outlives `options.timeout` or floods its output fails
-	 * `BinFailed` naming the manager and the bin. Run it inside the scope that
-	 * ran `PackedInstall.run`: the scratch directory is removed when that
-	 * scope closes.
-	 *
-	 * @param name - The bin, as named in `node_modules/.bin`.
-	 * @param args - Its arguments.
-	 * @param options - Extra environment, working directory, ceiling and stdin.
-	 */
+  * Run the installed bin `name` to completion and collect what it wrote.
+  *
+  * **Details**
+  *
+  * Spawns {@link InstalledConsumer.command} with `options.stdin` as its
+  * input (the null device when omitted, so a bin never waits on an open
+  * pipe): the bin
+  * from the consumer's directory, under the install's scrubbed environment
+  * with `options.env` layered over it after the scrub, and nothing
+  * inherited beyond that. A
+  * non-zero exit is a result, read from `exitCode`, never a failure. A bin
+  * that cannot spawn, outlives `options.timeout` or floods its output fails
+  * `BinFailed` naming the manager and the bin. Run it inside the scope that
+  * ran `PackedInstall.run`: the scratch directory is removed when that
+  * scope closes.
+  *
+  * @param name - The bin, as named in `node_modules/.bin`.
+  * @param args - Its arguments.
+  * @param options - Extra environment, working directory, ceiling and stdin.
+  */
 	runBin(
 		name: string,
 		args: ReadonlyArray<string> = [],
@@ -466,36 +477,37 @@ export class InstalledConsumer extends S.Class<InstalledConsumer>($I`InstalledCo
 	}
 
 	/**
-	 * The command that runs the CARRIER's own bin `name`, whichever package
-	 * won the `node_modules/.bin` slot.
-	 *
-	 * @remarks
-	 * With `allowSharedBins`, a flat layout (npm, bun, Yarn's `node-modules`
-	 * linker) can link a front end's same-named bin into `.bin`, so
-	 * {@link InstalledConsumer.runBin} proves only that SOME package's bin runs.
-	 * This reads the carrier's installed `node_modules/<carrier>/package.json`,
-	 * takes `name` from its `bin` map (a `bin` string answers to the unscoped
-	 * package name), and returns `node <that file> ...args`: the carrier's shim
-	 * itself, run by the `node` on the environment's `PATH`.
-	 *
-	 * Running it through `node` has three limits. It assumes a Node script, so
-	 * a non-Node shim misruns. It drops any flags in the shim's shebang (a
-	 * `#!/usr/bin/env -S node --enable-source-maps` runs without them). And it
-	 * bypasses the file's executable bit, so under shared bins it does not
-	 * prove the carrier's shim is executable, only that it runs: the manager
-	 * that linked a front end's bin into the slot may never have made the
-	 * carrier's target executable. Environment and working directory are built as
-	 * {@link InstalledConsumer.command} builds them, stdin left open for a probe
-	 * such as `McpProbe.initialize`.
-	 *
-	 * A consumer with no `carrier`, a carrier that is not installed or does not
-	 * declare `name`, or a declared file that does not exist fails
-	 * `MissingBin`; a manifest that cannot be read or is not JSON fails `Io`.
-	 *
-	 * @param name - The bin, as the carrier's `bin` map names it.
-	 * @param args - Its arguments.
-	 * @param options - Extra environment and working directory.
-	 */
+  * The command that runs the CARRIER's own bin `name`, whichever package
+  * won the `node_modules/.bin` slot.
+  *
+  * **Gotchas**
+  *
+  * With `allowSharedBins`, a flat layout (npm, bun, Yarn's `node-modules`
+  * linker) can link a front end's same-named bin into `.bin`, so
+  * {@link InstalledConsumer.runBin} proves only that SOME package's bin runs.
+  * This reads the carrier's installed `node_modules/<carrier>/package.json`,
+  * takes `name` from its `bin` map (a `bin` string answers to the unscoped
+  * package name), and returns `node <that file> ...args`: the carrier's shim
+  * itself, run by the `node` on the environment's `PATH`.
+  *
+  * Running it through `node` has three limits. It assumes a Node script, so
+  * a non-Node shim misruns. It drops any flags in the shim's shebang (a
+  * `#!/usr/bin/env -S node --enable-source-maps` runs without them). And it
+  * bypasses the file's executable bit, so under shared bins it does not
+  * prove the carrier's shim is executable, only that it runs: the manager
+  * that linked a front end's bin into the slot may never have made the
+  * carrier's target executable. Environment and working directory are built as
+  * {@link InstalledConsumer.command} builds them, stdin left open for a probe
+  * such as `McpProbe.initialize`.
+  *
+  * A consumer with no `carrier`, a carrier that is not installed or does not
+  * declare `name`, or a declared file that does not exist fails
+  * `MissingBin`; a manifest that cannot be read or is not JSON fails `Io`.
+  *
+  * @param name - The bin, as the carrier's `bin` map names it.
+  * @param args - Its arguments.
+  * @param options - Extra environment and working directory.
+  */
 	carrierCommand(
 		name: string,
 		args: ReadonlyArray<string> = [],
@@ -507,24 +519,25 @@ export class InstalledConsumer extends S.Class<InstalledConsumer>($I`InstalledCo
 	}
 
 	/**
-	 * Run the carrier's own bin `name` to completion, whichever package won
-	 * the `node_modules/.bin` slot.
-	 *
-	 * @remarks
-	 * Spawns {@link InstalledConsumer.carrierCommand} with `options.stdin` as
-	 * its input (the null device when omitted), and
-	 * reports as {@link InstalledConsumer.runBin} does: a non-zero exit is a
-	 * result, and a bin that cannot spawn or outlives `options.timeout` (one
-	 * minute by default) fails `BinFailed`. Use it beside `runBin` under
-	 * `allowSharedBins`: `runBin` proves what a user typing the bin name gets,
-	 * this proves the carrier's shim itself works, within `carrierCommand`'s
-	 * limits (a Node script, shebang flags dropped, executable bit not
-	 * checked).
-	 *
-	 * @param name - The bin, as the carrier's `bin` map names it.
-	 * @param args - Its arguments.
-	 * @param options - Extra environment, working directory, ceiling and stdin.
-	 */
+  * Run the carrier's own bin `name` to completion, whichever package won
+  * the `node_modules/.bin` slot.
+  *
+  * **Details**
+  *
+  * Spawns {@link InstalledConsumer.carrierCommand} with `options.stdin` as
+  * its input (the null device when omitted), and
+  * reports as {@link InstalledConsumer.runBin} does: a non-zero exit is a
+  * result, and a bin that cannot spawn or outlives `options.timeout` (one
+  * minute by default) fails `BinFailed`. Use it beside `runBin` under
+  * `allowSharedBins`: `runBin` proves what a user typing the bin name gets,
+  * this proves the carrier's shim itself works, within `carrierCommand`'s
+  * limits (a Node script, shebang flags dropped, executable bit not
+  * checked).
+  *
+  * @param name - The bin, as the carrier's `bin` map names it.
+  * @param args - Its arguments.
+  * @param options - Extra environment, working directory, ceiling and stdin.
+  */
 	runCarrierBin(
 		name: string,
 		args: ReadonlyArray<string> = [],
@@ -812,7 +825,8 @@ const planClosure = Effect.fn("planClosure")(function* (carrier: string, options
  * Prove a carrier's bins reach a consumer that is not part of the workspace,
  * once per available package manager.
  *
- * @remarks
+ * **Details**
+ *
  * Packs the carrier and its closure into a scoped, realpath'd scratch
  * directory (so `file:` specs and the install cwd agree on macOS). Then, for
  * each manager that answers `--version` from that directory (so a corepack
@@ -834,7 +848,8 @@ const planClosure = Effect.fn("planClosure")(function* (carrier: string, options
  * removed when the scope closes. Size the test's outer timeout with
  * {@link PackedInstall.timeoutBudget}. POSIX only.
  *
- * @example
+ * **Example** (Install packed packages and run each consumer bin)
+ *
  * ```ts
  * import { NodeServices } from "@effect/platform-node";
  * import { Workspaces } from "./index.ts";
@@ -872,39 +887,41 @@ export class PackedInstall {
 	static readonly scrubEnv: (env: Readonly<Record<string, string | undefined>>) => Record<string, string> = scrubEnv;
 
 	/**
-	 * The ceiling a test's outer timeout should cover so that every one of the
-	 * run's own ceilings fires first, as a named `PackedInstallError`, rather
-	 * than the outer guard's `TimeoutError` that names nothing.
-	 *
-	 * @remarks
-	 * The worst case of the run's own ceilings, taken in sequence as the run
-	 * takes them: each manager's `--version` probe (30 seconds), install
-	 * (`installTimeout`) and `perConsumer` (one minute by default, one `runBin`
-	 * at its default ceiling), plus each package's pack
-	 * (`packTimeout`, two minutes by default) and manifest read (30 seconds),
-	 * plus 30 seconds for the untimed steps and one minute for cleanup:
-	 * removing the scratch root when the scope closes, and killing a child
-	 * whose ceiling interrupted it. It reads the same defaults the run does.
-	 * Pass `packages` as the names {@link PackedInstall.closure} returns to
-	 * size it before the run. A vitest test timeout must sit above it, since
-	 * vitest's own guard should not pre-empt the Effect's.
-	 *
-	 * @example
-	 * ```ts
-	 * import { PackedInstall } from "./testing.ts";
-	 * import * as Duration from "effect/Duration";
-	 *
-	 * const budget = PackedInstall.timeoutBudget({
-	 *   managers: ["npm", "pnpm", "yarn", "bun"],
-	 *   installTimeout: "3 minutes",
-	 *   packTimeout: "30 seconds",
-	 *   packages: ["my-tool", "my-tool-cli", "my-tool-core"],
-	 *   perConsumer: "2 minutes",
-	 * });
-	 * console.log(Duration.format(budget));
-	 * // => 26m 30s
-	 * ```
-	 */
+  * The ceiling a test's outer timeout should cover so that every one of the
+  * run's own ceilings fires first, as a named `PackedInstallError`, rather
+  * than the outer guard's `TimeoutError` that names nothing.
+  *
+  * **Details**
+  *
+  * The worst case of the run's own ceilings, taken in sequence as the run
+  * takes them: each manager's `--version` probe (30 seconds), install
+  * (`installTimeout`) and `perConsumer` (one minute by default, one `runBin`
+  * at its default ceiling), plus each package's pack
+  * (`packTimeout`, two minutes by default) and manifest read (30 seconds),
+  * plus 30 seconds for the untimed steps and one minute for cleanup:
+  * removing the scratch root when the scope closes, and killing a child
+  * whose ceiling interrupted it. It reads the same defaults the run does.
+  * Pass `packages` as the names {@link PackedInstall.closure} returns to
+  * size it before the run. A vitest test timeout must sit above it, since
+  * vitest's own guard should not pre-empt the Effect's.
+  *
+  * **Example** (Calculate a packed-install timeout budget)
+  *
+  * ```ts
+  * import { PackedInstall } from "./testing.ts";
+  * import * as Duration from "effect/Duration";
+  *
+  * const budget = PackedInstall.timeoutBudget({
+  *   managers: ["npm", "pnpm", "yarn", "bun"],
+  *   installTimeout: "3 minutes",
+  *   packTimeout: "30 seconds",
+  *   packages: ["my-tool", "my-tool-cli", "my-tool-core"],
+  *   perConsumer: "2 minutes",
+  * });
+  * console.log(Duration.format(budget));
+  * // => 26m 30s
+  * ```
+  */
 	static readonly timeoutBudget = (budget: PackedInstallBudget): Duration.Duration => {
 		const perManager = [
 			PROBE_TIMEOUT,
@@ -928,35 +945,37 @@ export class PackedInstall {
 	};
 
 	/**
-	 * The packages a run packs, in the order it packs them, without packing
-	 * anything: the carrier, the rest of the closure, then the `overrides`
-	 * packages by name.
-	 *
-	 * @remarks
-	 * The same implementation {@link PackedInstall.run} plans with, so for the
-	 * same workspace and options the result equals the keys of
-	 * `PackedInstallResult.tarballs`, in order. `options.closure` defaults to
-	 * `"auto"`, and the run's own options object is accepted as it is. It
-	 * fails as the run would before packing: `UnknownPackage`, `Discovery`,
-	 * `InvalidOverride` or `Io`. Use it to size
-	 * {@link PackedInstall.timeoutBudget} before the test is declared.
-	 *
-	 * @example
-	 * ```ts
-	 * import { NodeServices } from "@effect/platform-node";
-	 * import { Workspaces } from "./index.ts";
-	 * import { PackedInstall } from "./testing.ts";
-	 * import * as Effect from "effect/Effect";
-	 * import * as Layer from "effect/Layer";
-	 *
-	 * const Live = Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(NodeServices.layer));
-	 * const packages = await Effect.runPromise(PackedInstall.closure("my-tool").pipe(Effect.provide(Live)));
-	 * const budget = PackedInstall.timeoutBudget({ managers: ["npm", "pnpm"], packages });
-	 * ```
-	 *
-	 * @param carrier - The carrier, as the run's `carrier`.
-	 * @param options - The closure and override options, as the run takes them.
-	 */
+  * The packages a run packs, in the order it packs them, without packing
+  * anything: the carrier, the rest of the closure, then the `overrides`
+  * packages by name.
+  *
+  * **Details**
+  *
+  * The same implementation {@link PackedInstall.run} plans with, so for the
+  * same workspace and options the result equals the keys of
+  * `PackedInstallResult.tarballs`, in order. `options.closure` defaults to
+  * `"auto"`, and the run's own options object is accepted as it is. It
+  * fails as the run would before packing: `UnknownPackage`, `Discovery`,
+  * `InvalidOverride` or `Io`. Use it to size
+  * {@link PackedInstall.timeoutBudget} before the test is declared.
+  *
+  * **Example** (Plan the package closure to size a timeout budget)
+  *
+  * ```ts
+  * import { NodeServices } from "@effect/platform-node";
+  * import { Workspaces } from "./index.ts";
+  * import { PackedInstall } from "./testing.ts";
+  * import * as Effect from "effect/Effect";
+  * import * as Layer from "effect/Layer";
+  *
+  * const Live = Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(NodeServices.layer));
+  * const packages = await Effect.runPromise(PackedInstall.closure("my-tool").pipe(Effect.provide(Live)));
+  * const budget = PackedInstall.timeoutBudget({ managers: ["npm", "pnpm"], packages });
+  * ```
+  *
+  * @param carrier - The carrier, as the run's `carrier`.
+  * @param options - The closure and override options, as the run takes them.
+  */
 	static readonly closure = (
 		carrier: string,
 		options: PackedInstallClosureOptions = {},
@@ -964,46 +983,48 @@ export class PackedInstall {
 		planClosure(carrier, options).pipe(Effect.map(namesOf), Effect.withSpan("PackedInstall.closure"));
 
 	/**
-	 * {@link PackedInstall.timeoutBudget} for exactly the run `options`
-	 * describes, planned from the options themselves.
-	 *
-	 * @remarks
-	 * Plans the closure with {@link PackedInstall.closure} (the run's own
-	 * planner, `overrides` and `workspaceOverrides` included) and takes
-	 * `managers`, `installTimeout` and `packTimeout` from the same object, so
-	 * nothing is written twice. `perConsumer` is the one input a run's options
-	 * do not carry. It is an Effect because planning reads the workspace; in a
-	 * vitest file, await it at module evaluation, since a test's timeout is
-	 * fixed when the test is declared. Fails as `closure` does.
-	 *
-	 * @example
-	 * ```ts
-	 * import { NodeServices } from "@effect/platform-node";
-	 * import { Workspaces } from "./index.ts";
-	 * import type { PackedInstallOptions } from "./testing.ts";
-	 * import { PackedInstall } from "./testing.ts";
-	 * import * as Duration from "effect/Duration";
-	 * import * as Effect from "effect/Effect";
-	 * import * as Layer from "effect/Layer";
-	 *
-	 * const Live = Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(NodeServices.layer));
-	 * const RUN: PackedInstallOptions = {
-	 *   carrier: "my-tool",
-	 *   closure: "auto",
-	 *   managers: ["npm", "pnpm"],
-	 *   bins: ["my-tool"],
-	 *   env: process.env,
-	 *   packTimeout: "30 seconds",
-	 * };
-	 * const budget = await Effect.runPromise(
-	 *   PackedInstall.timeoutBudgetFor(RUN, { perConsumer: "1 minute" }).pipe(Effect.provide(Live)),
-	 * );
-	 * const TEST_TIMEOUT_MS = Duration.toMillis(budget) + 60_000;
-	 * ```
-	 *
-	 * @param options - The run's options, the same object passed to `run`.
-	 * @param extra - What the test does with each consumer afterwards.
-	 */
+  * {@link PackedInstall.timeoutBudget} for exactly the run `options`
+  * describes, planned from the options themselves.
+  *
+  * **Details**
+  *
+  * Plans the closure with {@link PackedInstall.closure} (the run's own
+  * planner, `overrides` and `workspaceOverrides` included) and takes
+  * `managers`, `installTimeout` and `packTimeout` from the same object, so
+  * nothing is written twice. `perConsumer` is the one input a run's options
+  * do not carry. It is an Effect because planning reads the workspace; in a
+  * vitest file, await it at module evaluation, since a test's timeout is
+  * fixed when the test is declared. Fails as `closure` does.
+  *
+  * **Example** (Derive a test timeout from packed-install options)
+  *
+  * ```ts
+  * import { NodeServices } from "@effect/platform-node";
+  * import { Workspaces } from "./index.ts";
+  * import type { PackedInstallOptions } from "./testing.ts";
+  * import { PackedInstall } from "./testing.ts";
+  * import * as Duration from "effect/Duration";
+  * import * as Effect from "effect/Effect";
+  * import * as Layer from "effect/Layer";
+  *
+  * const Live = Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(NodeServices.layer));
+  * const RUN: PackedInstallOptions = {
+  *   carrier: "my-tool",
+  *   closure: "auto",
+  *   managers: ["npm", "pnpm"],
+  *   bins: ["my-tool"],
+  *   env: process.env,
+  *   packTimeout: "30 seconds",
+  * };
+  * const budget = await Effect.runPromise(
+  *   PackedInstall.timeoutBudgetFor(RUN, { perConsumer: "1 minute" }).pipe(Effect.provide(Live)),
+  * );
+  * const TEST_TIMEOUT_MS = Duration.toMillis(budget) + 60_000;
+  * ```
+  *
+  * @param options - The run's options, the same object passed to `run`.
+  * @param extra - What the test does with each consumer afterwards.
+  */
 	static readonly timeoutBudgetFor = (
 		options: PackedInstallOptions,
 		extra: { readonly perConsumer?: Duration.Input | undefined } = {},
@@ -1021,39 +1042,41 @@ export class PackedInstall {
 		);
 
 	/**
-	 * Whether the pack source {@link PackedInstall.run} would read is on disk,
-	 * before any package manager is spawned.
-	 *
-	 * @remarks
-	 * Plans the closure as the run does (`PackedInstall.closure`'s planner) and
-	 * checks the `package.json` of each closure package under `packFrom`
-	 * (default `{ directory: "dist/prod/npm/pkg" }`), the same file whose
-	 * absence makes the run fail `PackSourceMissing`. Under `packFrom: "source"`
-	 * the packer builds nothing of its own, so nothing is checked and the
-	 * result is ready. A package a bundler's dev build produced is no
-	 * substitute: the prod output exists only after the prod build, which a
-	 * test job's usual `build:dev` pre-step does not run. Pair it with
-	 * {@link PackedInstall.gate} to skip locally and fail under CI.
-	 *
-	 * Fails as `closure` does, plus `Io` when a path cannot be inspected.
-	 *
-	 * @example
-	 * ```ts
-	 * import { NodeServices } from "@effect/platform-node";
-	 * import { Workspaces } from "./index.ts";
-	 * import { PackedInstall } from "./testing.ts";
-	 * import * as Effect from "effect/Effect";
-	 * import * as Layer from "effect/Layer";
-	 *
-	 * const Live = Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(NodeServices.layer));
-	 * const preflight = await Effect.runPromise(
-	 *   PackedInstall.preflight({ carrier: "my-tool", closure: "auto" }).pipe(Effect.provide(Live)),
-	 * );
-	 * console.log(preflight.ready, preflight.missing);
-	 * ```
-	 *
-	 * @param options - The run's carrier, closure, overrides and pack source.
-	 */
+  * Whether the pack source {@link PackedInstall.run} would read is on disk,
+  * before any package manager is spawned.
+  *
+  * **Details**
+  *
+  * Plans the closure as the run does (`PackedInstall.closure`'s planner) and
+  * checks the `package.json` of each closure package under `packFrom`
+  * (default `{ directory: "dist/prod/npm/pkg" }`), the same file whose
+  * absence makes the run fail `PackSourceMissing`. Under `packFrom: "source"`
+  * the packer builds nothing of its own, so nothing is checked and the
+  * result is ready. A package a bundler's dev build produced is no
+  * substitute: the prod output exists only after the prod build, which a
+  * test job's usual `build:dev` pre-step does not run. Pair it with
+  * {@link PackedInstall.gate} to skip locally and fail under CI.
+  *
+  * Fails as `closure` does, plus `Io` when a path cannot be inspected.
+  *
+  * **Example** (Check whether production pack sources exist)
+  *
+  * ```ts
+  * import { NodeServices } from "@effect/platform-node";
+  * import { Workspaces } from "./index.ts";
+  * import { PackedInstall } from "./testing.ts";
+  * import * as Effect from "effect/Effect";
+  * import * as Layer from "effect/Layer";
+  *
+  * const Live = Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(NodeServices.layer));
+  * const preflight = await Effect.runPromise(
+  *   PackedInstall.preflight({ carrier: "my-tool", closure: "auto" }).pipe(Effect.provide(Live)),
+  * );
+  * console.log(preflight.ready, preflight.missing);
+  * ```
+  *
+  * @param options - The run's carrier, closure, overrides and pack source.
+  */
 	static readonly preflight: (
 		options: PackedInstallPreflightOptions,
 	) => Effect.Effect<
@@ -1078,40 +1101,42 @@ export class PackedInstall {
 	});
 
 	/**
-	 * Turns a {@link PackedInstallPreflight} into the suite's decision: run,
-	 * skip locally, or fail under CI.
-	 *
-	 * @remarks
-	 * `CI` is read through `Config`, so the ambient `ConfigProvider` decides —
-	 * the process environment at a test file's top level, and whatever a test
-	 * provides in a test; nothing here reads `process`. `CI` counts as set when
-	 * it is present and not `""`, `"0"` or `"false"` (case-insensitive), and an
-	 * unreadable `CI` counts as unset. Ready is always `"run"`;
-	 * missing is `"skip"` off CI and `"fail"` on it, so a CI job that never ran
-	 * the prod build cannot pass by silently skipping the proof. The message
-	 * names every missing path. The test job must run the prod build
-	 * (`build:prod` for a `@savvy-web/bundler` package) before the packed-install
-	 * tests: a dev build leaves `dist/prod` absent.
-	 *
-	 * @example
-	 * ```ts
-	 * import { assert, describe, it } from "@effect/vitest";
-	 * import { PackedInstall } from "./testing.ts";
-	 * import * as Effect from "effect/Effect";
-	 *
-	 * declare const preflight: { readonly ready: boolean; readonly missing: ReadonlyArray<string> };
-	 * const gate = Effect.runSync(PackedInstall.gate(preflight));
-	 *
-	 * describe.runIf(gate.action === "run")("packed install", () => {
-	 *   it("installs", () => {});
-	 * });
-	 * describe.runIf(gate.action === "fail")("packed install prod build", () => {
-	 *   it("exists", () => assert.fail(gate.message));
-	 * });
-	 * ```
-	 *
-	 * @param preflight - What {@link PackedInstall.preflight} answered.
-	 */
+  * Turns a {@link PackedInstallPreflight} into the suite's decision: run,
+  * skip locally, or fail under CI.
+  *
+  * **Details**
+  *
+  * `CI` is read through `Config`, so the ambient `ConfigProvider` decides —
+  * the process environment at a test file's top level, and whatever a test
+  * provides in a test; nothing here reads `process`. `CI` counts as set when
+  * it is present and not `""`, `"0"` or `"false"` (case-insensitive), and an
+  * unreadable `CI` counts as unset. Ready is always `"run"`;
+  * missing is `"skip"` off CI and `"fail"` on it, so a CI job that never ran
+  * the prod build cannot pass by silently skipping the proof. The message
+  * names every missing path. The test job must run the prod build
+  * (`build:prod` for a `@savvy-web/bundler` package) before the packed-install
+  * tests: a dev build leaves `dist/prod` absent.
+  *
+  * **Example** (Gate packed-install tests on preflight readiness)
+  *
+  * ```ts
+  * import { assert, describe, it } from "@effect/vitest";
+  * import { PackedInstall } from "./testing.ts";
+  * import * as Effect from "effect/Effect";
+  *
+  * declare const preflight: { readonly ready: boolean; readonly missing: ReadonlyArray<string> };
+  * const gate = Effect.runSync(PackedInstall.gate(preflight));
+  *
+  * describe.runIf(gate.action === "run")("packed install", () => {
+  *   it("installs", () => {});
+  * });
+  * describe.runIf(gate.action === "fail")("packed install prod build", () => {
+  *   it("exists", () => assert.fail(gate.message));
+  * });
+  * ```
+  *
+  * @param preflight - What {@link PackedInstall.preflight} answered.
+  */
 	static readonly gate = Effect.fn("gate")(function* (preflight: PackedInstallPreflight): Effect.fn.Return<PackedInstallGate> {
 			if (preflight.ready) return { action: "run", message: "" } satisfies PackedInstallGate;
 			const ci = yield* Config.option(Config.String("CI")).pipe(Effect.orElseSucceed(O.none<string>));

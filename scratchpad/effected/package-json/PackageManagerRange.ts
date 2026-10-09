@@ -169,7 +169,8 @@ const fromParts = (
  * **range**, carried verbatim: `name`, `range` and an optional `integrity`
  * hash.
  *
- * @remarks
+ * **Details**
+ *
  * The range-tolerant sibling of {@link PackageManager}. The strict class
  * models the corepack pin — an exact version, which is all corepack itself
  * accepts — and stays strict; this class models the field as pnpm reads it,
@@ -188,7 +189,8 @@ const fromParts = (
  * the strict grammar — the version position of this field never carries
  * semver build metadata.
  *
- * @example
+ * **Example** (Decode a package manager semver range)
+ *
  * ```ts
  * import { PackageManagerRange } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -221,15 +223,16 @@ export class PackageManagerRange extends S.Class<PackageManagerRange>($I`Package
 	integrity: S.Option(CorepackIntegrityHash).annotateKey({ description: "The optional integrity hash (e.g. `sha512.abc`): `@effected/npm`'s `CorepackIntegrityHash`. Meaningful only alongside an exact range — an integrity pins one artifact — but carried whenever the manifest carries it, because fidelity outranks plausibility in a field model." }),
 }, $I.annote("PackageManagerRange", { description: "A structured `packageManager` value whose version position is a semver **range**, carried verbatim: `name`, `range` and an optional `integrity` hash." })) {
 	/**
-	 * Schema transformation between the `"name@range[+integrity]"` string and a
-	 * {@link PackageManagerRange}.
-	 *
-	 * @remarks
-	 * Decoding parses via {@link PackageManagerRange.parseResult}, so every
-	 * failure is a typed decode failure naming the component that failed.
-	 * Encoding prints `toString()`, reconstructed from the verbatim parts, so
-	 * it is byte-identical to any input this codec accepts.
-	 */
+  * Schema transformation between the `"name@range[+integrity]"` string and a
+  * {@link PackageManagerRange}.
+  *
+  * **Details**
+  *
+  * Decoding parses via {@link PackageManagerRange.parseResult}, so every
+  * failure is a typed decode failure naming the component that failed.
+  * Encoding prints `toString()`, reconstructed from the verbatim parts, so
+  * it is byte-identical to any input this codec accepts.
+  */
 	static readonly FromString: S.Codec<PackageManagerRange, string> = S.String.pipe(
 		S.decodeTo(
 			S.instanceOf(PackageManagerRange),
@@ -246,22 +249,23 @@ export class PackageManagerRange extends S.Class<PackageManagerRange>($I`Package
 	);
 
 	/**
-	 * Parse a `packageManager` string (`name@range[+integrity]`), synchronously,
-	 * returning a `Result` instead of an `Effect`.
-	 *
-	 * @remarks
-	 * Splits on the first `@`, then on the first `+` — which always begins the
-	 * integrity, never semver build metadata — and validates each component:
-	 * the name against the lowercase grammar, the range through
-	 * `@effected/semver`'s `Range.parseResult`, the integrity through
-	 * `CorepackIntegrityHash`. {@link PackageManagerRange.parse} is defined in
-	 * terms of this function.
-	 *
-	 * @param input - the `packageManager` value to parse
-	 * @returns a `Result` succeeding with the parsed {@link PackageManagerRange},
-	 * or failing with {@link InvalidPackageManagerRangeError} naming the
-	 * component that failed.
-	 */
+  * Parse a `packageManager` string (`name@range[+integrity]`), synchronously,
+  * returning a `Result` instead of an `Effect`.
+  *
+  * **Details**
+  *
+  * Splits on the first `@`, then on the first `+` — which always begins the
+  * integrity, never semver build metadata — and validates each component:
+  * the name against the lowercase grammar, the range through
+  * `@effected/semver`'s `Range.parseResult`, the integrity through
+  * `CorepackIntegrityHash`. {@link PackageManagerRange.parse} is defined in
+  * terms of this function.
+  *
+  * @param input - the `packageManager` value to parse
+  * @returns a `Result` succeeding with the parsed {@link PackageManagerRange},
+  * or failing with {@link InvalidPackageManagerRangeError} naming the
+  * component that failed.
+  */
 	static parseResult(input: string): Result.Result<PackageManagerRange, InvalidPackageManagerRangeError> {
 		const at = input.indexOf("@");
 		return at === -1
@@ -282,27 +286,28 @@ export class PackageManagerRange extends S.Class<PackageManagerRange>($I`Package
 	);
 
 	/**
-	 * Read a `devEngines.packageManager` entry onto this model, synchronously,
-	 * returning a `Result`.
-	 *
-	 * @remarks
-	 * The entry's `name` is the package-manager name and its `version` is the
-	 * same `<range>[+<integrity>]` tail the `packageManager` field carries after
-	 * its `@` — `^12.6.0`, `12.6.0`, or `12.6.0+sha512.<hex>`. Both are validated exactly as
-	 * {@link PackageManagerRange.parseResult} validates them. The `version`
-	 * slot is optional on a {@link DevEngine}, but an entry without one names
-	 * no range, so it fails with `reason: "range"`; `onFail` is ignored. The
-	 * parameter is the encoded {@link DevEnginePackageManagerEntry} shape, so a
-	 * plain object read off disk needs no `DevEngine` construction first.
-	 *
-	 * To write the entry back without its integrity (the bare form pnpm 11+
-	 * writes), use `range` — the verbatim range with its operator kept and the
-	 * integrity dropped.
-	 *
-	 * @param engine - the `devEngines.packageManager` entry to read
-	 * @returns a `Result` succeeding with the {@link PackageManagerRange}, or
-	 * failing with {@link InvalidPackageManagerRangeError}.
-	 */
+  * Read a `devEngines.packageManager` entry onto this model, synchronously,
+  * returning a `Result`.
+  *
+  * **Details**
+  *
+  * The entry's `name` is the package-manager name and its `version` is the
+  * same `<range>[+<integrity>]` tail the `packageManager` field carries after
+  * its `@` — `^12.6.0`, `12.6.0`, or `12.6.0+sha512.<hex>`. Both are validated exactly as
+  * {@link PackageManagerRange.parseResult} validates them. The `version`
+  * slot is optional on a {@link DevEngine}, but an entry without one names
+  * no range, so it fails with `reason: "range"`; `onFail` is ignored. The
+  * parameter is the encoded {@link DevEnginePackageManagerEntry} shape, so a
+  * plain object read off disk needs no `DevEngine` construction first.
+  *
+  * To write the entry back without its integrity (the bare form pnpm 11+
+  * writes), use `range` — the verbatim range with its operator kept and the
+  * integrity dropped.
+  *
+  * @param engine - the `devEngines.packageManager` entry to read
+  * @returns a `Result` succeeding with the {@link PackageManagerRange}, or
+  * failing with {@link InvalidPackageManagerRangeError}.
+  */
 	static fromDevEngineResult(
 		engine: DevEnginePackageManagerEntry,
 	): Result.Result<PackageManagerRange, InvalidPackageManagerRangeError> {
@@ -378,21 +383,22 @@ export class PackageManagerRange extends S.Class<PackageManagerRange>($I`Package
 	}
 
 	/**
-	 * The same range re-anchored on `version`, operator kept and integrity
-	 * dropped (`^12.6.0+sha512.<hex>` with `12.8.1` → `^12.8.1`), synchronously,
-	 * returning a `Result`.
-	 *
-	 * @remarks
-	 * Only a single exact, caret or tilde comparator can be re-anchored (see
-	 * {@link PackageManagerRange.operator}); any other range, or a `version`
-	 * that is not a pinnable semver version, fails with `reason: "range"`. The
-	 * integrity is dropped because it named the old version's artifact.
-	 *
-	 * @param version - the pinnable version to anchor the range on
-	 * @returns a `Result` succeeding with the re-anchored
-	 * {@link PackageManagerRange}, or failing with
-	 * {@link InvalidPackageManagerRangeError}.
-	 */
+  * The same range re-anchored on `version`, operator kept and integrity
+  * dropped (`^12.6.0+sha512.<hex>` with `12.8.1` → `^12.8.1`), synchronously,
+  * returning a `Result`.
+  *
+  * **Gotchas**
+  *
+  * Only a single exact, caret or tilde comparator can be re-anchored (see
+  * {@link PackageManagerRange.operator}); any other range, or a `version`
+  * that is not a pinnable semver version, fails with `reason: "range"`. The
+  * integrity is dropped because it named the old version's artifact.
+  *
+  * @param version - the pinnable version to anchor the range on
+  * @returns a `Result` succeeding with the re-anchored
+  * {@link PackageManagerRange}, or failing with
+  * {@link InvalidPackageManagerRangeError}.
+  */
 	withVersionResult(version: string): Result.Result<PackageManagerRange, InvalidPackageManagerRangeError> {
 		const parts = singleComparator(this.range);
 		if (O.isNone(parts) || !SemVer.isPinnable(version)) {

@@ -7,7 +7,8 @@ const $I = $ScratchpadId.create("effected/cli/ui/UiStreams");
 /**
  * The streams a screen mounts on: Node streams, because Ink's stream contract is Node's.
  *
- * @remarks
+ * **Details**
+ *
  * `stdin` must offer `isTTY`, `setRawMode`, `ref` and `unref`, and emit `readable`; `stdout` and `stderr` offer
  * `columns`, `rows`, `isTTY` and `write`, and emit `resize`.
  *
@@ -28,7 +29,8 @@ export interface UiStreamsShape {
 /**
  * The streams a screen mounts on, the process's own standard streams by default.
  *
- * @remarks
+ * **Details**
+ *
  * A `Context.Reference`, so it never appears in `R`: the default reads the process streams when first used, never
  * at import, and a test provides in-memory streams with `Effect.provideService(UiStreams, streams)`. `./ui` binds
  * Node's process streams.

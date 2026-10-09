@@ -15,16 +15,17 @@ export interface ConfigSource<A> {
 	/** The name of the resolver that found it. */
 	readonly resolver: string;
 	/**
-	 * How the resolver found it — the anchor directory and the candidate that
-	 * matched.
-	 *
-	 * @remarks
-	 * Populated by `ConfigFile.discover` for every source it produces: a
-	 * resolver implementing `ConfigResolver.resolveMatch` reports its own
-	 * detail, and one that does not yields a bare `{ path }`. Optional on the
-	 * type so a hand-built `ConfigSource` — a merge-strategy test, a synthetic
-	 * source — stays valid without one.
-	 */
+  * How the resolver found it — the anchor directory and the candidate that
+  * matched.
+  *
+  * **Details**
+  *
+  * Populated by `ConfigFile.discover` for every source it produces: a
+  * resolver implementing `ConfigResolver.resolveMatch` reports its own
+  * detail, and one that does not yields a bare `{ path }`. Optional on the
+  * type so a hand-built `ConfigSource` — a merge-strategy test, a synthetic
+  * source — stays valid without one.
+  */
 	readonly match?: ConfigMatch;
 	/** The decoded, validated configuration value. */
 	readonly value: A;
@@ -36,7 +37,8 @@ export type NonEmptySources<A> = readonly [ConfigSource<A>, ...ConfigSource<A>[]
 /**
  * Strategy for combining several {@link ConfigSource} entries into one value.
  *
- * @remarks
+ * **Details**
+ *
  * Sources arrive in priority order, highest first. The list is non-empty by
  * construction — the empty case is the pipeline's concern and raises
  * `ConfigFileNotFoundError` before a strategy is ever consulted — so a strategy
@@ -59,7 +61,8 @@ const firstMatch = <A>(): MergeStrategy<A> => ({
 /**
  * Deep-merge every contributing source, higher priority winning on conflict.
  *
- * @remarks
+ * **Details**
+ *
  * Two values merge only when both are record-like and share a prototype, so a
  * document decoded through `Schema.Class` merges with another of the same class
  * and **survives as a real instance** — `instanceof` holds and its getters
@@ -94,11 +97,13 @@ const layeredMerge = <A>(): MergeStrategy<A> => ({
  * Built-in merge strategies: `firstMatch` (the highest-priority source wins
  * whole) and `layeredMerge` (every source deep-merged, higher priority winning).
  *
- * @remarks
+ * **Details**
+ *
  * Strategies only combine sources; the walk up the directory tree belongs to
  * the `upwardWalk` resolver.
  *
- * @example
+ * **Example** (Create a layered merge strategy)
+ *
  * ```ts
  * import { MergeStrategy } from "./index.ts";
  *

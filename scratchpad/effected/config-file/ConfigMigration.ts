@@ -12,7 +12,8 @@ const $I = $ScratchpadId.create("effected/config-file/ConfigMigration");
 /**
  * Indicates that a versioned config migration failed.
  *
- * @remarks
+ * **Details**
+ *
  * `phase` says where: reading the current version, applying a step, or writing
  * the new version back. `cause` preserves the underlying failure by identity
  * when the failing step signals recoverable failure with `Effect.fail`.
@@ -39,7 +40,8 @@ export class ConfigMigrationError extends S.TaggedError<ConfigMigrationError>($I
 /**
  * A single versioned migration step.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Steps are forward-only: there is no reverse (`down`) migration.
  *
  * @public
@@ -96,7 +98,8 @@ export interface ConfigMigrationOptions<EM = unknown, EV = unknown> {
  * Runs one migration phase, mapping its declared failure into a
  * {@link ConfigMigrationError}.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `up` and {@link (VersionAccess:interface)} are caller-supplied code with a declared error
  * channel: they signal failure with `Effect.fail`. A `throw` from one of them is
  * a contract violation — a programmer bug, not a data condition — and stays a

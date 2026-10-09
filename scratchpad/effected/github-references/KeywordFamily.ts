@@ -48,14 +48,16 @@ const FAMILIES: Record<ListKeyword, KeywordFamily> = {
 /**
  * The family a keyword belongs to.
  *
- * @remarks
+ * **Details**
+ *
  * Total over both keyword sets by construction — an explicit record rather
  * than a `startsWith` heuristic, so a keyword added without a family entry is
  * a type error. `close`, `closes` and `closed` map to `"close"`; the `fix`
  * and `resolve` conjugations likewise; `ref`, `refs` and `references` map to
  * `"ref"`.
  *
- * @example
+ * **Example** (Map closing and reference keywords to their families)
+ *
  * ```ts
  * import { keywordFamily } from "./index.ts";
  *

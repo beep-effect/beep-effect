@@ -21,7 +21,8 @@ const $I = $ScratchpadId.create("effected/workspaces/SourceBoundary");
 /**
  * One rule a source file must keep.
  *
- * @remarks
+ * **Details**
+ *
  * `"process"` forbids a read of the global `process`. `"node:process"` forbids
  * importing `node:process` or `process`. `"stdout-write"` forbids a
  * `stdout.write` on anything, and a `stdout.end(chunk)`, which writes its
@@ -488,7 +489,8 @@ const FIXTURES: ReadonlyArray<BoundaryFixture> = [
  * Source-text boundary checks: which files read `process`, import a forbidden
  * module, or write to stdout or the console.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Every check runs over one lexer pass that separates code from comments,
  * strings, template text and regex bodies, so `process` in prose, in a string
  * or in an embedded script's template text never counts, and a `/*` inside a
@@ -528,7 +530,8 @@ const FIXTURES: ReadonlyArray<BoundaryFixture> = [
  * proves the scanner you are trusting still flags what it must and spares
  * what it must.
  *
- * @example
+ * **Example** (Detect a process reference and verify scanner fixtures)
+ *
  * ```ts
  * import { SourceBoundary } from "./testing.ts";
  *
@@ -559,21 +562,22 @@ export class SourceBoundary {
 		SourceBoundary.importSpecifiers(text).some((specifier) => isNodeModule(specifier, module));
 
 	/**
-	 * Every place `text` breaks one of `rules`, in source order, attributed to `file`.
-	 *
-	 * @remarks
-	 * A `{ forbidTokens }` entry matches its exact text in code only: comments,
-	 * strings, template text and regex bodies are blanked first, so a token that
-	 * itself contains a string literal never matches, and whitespace inside a
-	 * token must match byte for byte. A token that starts with an identifier
-	 * character does not match inside a longer identifier or after `#`, and one
-	 * that ends with one does not match when an identifier character follows.
-	 * A member access is still a match: `globalThis.process.env.X` contains the
-	 * token `process.env.X`. A token listed twice is reported once. A token with
-	 * no identifier character at either end (`"=>"`, `"?."`) has no edge guard,
-	 * so it matches inside longer punctuation, and consecutive matches of it can
-	 * overlap.
-	 */
+  * Every place `text` breaks one of `rules`, in source order, attributed to `file`.
+  *
+  * **Details**
+  *
+  * A `{ forbidTokens }` entry matches its exact text in code only: comments,
+  * strings, template text and regex bodies are blanked first, so a token that
+  * itself contains a string literal never matches, and whitespace inside a
+  * token must match byte for byte. A token that starts with an identifier
+  * character does not match inside a longer identifier or after `#`, and one
+  * that ends with one does not match when an identifier character follows.
+  * A member access is still a match: `globalThis.process.env.X` contains the
+  * token `process.env.X`. A token listed twice is reported once. A token with
+  * no identifier character at either end (`"=>"`, `"?."`) has no edge guard,
+  * so it matches inside longer punctuation, and consecutive matches of it can
+  * overlap.
+  */
 	static readonly check = (
 		file: string,
 		text: string,
@@ -623,29 +627,31 @@ export class SourceBoundary {
 	};
 
 	/**
-	 * Check every source file under `root` against `rules`.
-	 *
-	 * @remarks
-	 * Walks with an explicit stack and real-directory ancestry (via
-	 * `realPath`), so ancestor symlink cycles terminate while distinct logical
-	 * paths are each scanned with their own waiver policy. `node_modules` is never entered. Paths come back relative
-	 * and `/`-separated whatever the platform's separator, and that is also
-	 * what `allow` globs match against. A missing root fails; it never scans
-	 * nothing. A dangling symlink under the root is skipped, having nothing to
-	 * scan; any other entry that cannot be read fails the scan.
-	 *
-	 * @example
-	 * ```ts
-	 * import { NodeServices } from "@effect/platform-node";
-	 * import { SourceBoundary } from "./testing.ts";
-	 * import * as Effect from "effect/Effect";
-	 *
-	 * const scan = SourceBoundary.scan({
-	 *   root: "/repo/packages/engine/src",
-	 *   rules: ["process", "node:process", { forbidImports: ["node:*", "@effect/platform*"] }],
-	 * }).pipe(Effect.provide(NodeServices.layer));
-	 * ```
-	 */
+  * Check every source file under `root` against `rules`.
+  *
+  * **Details**
+  *
+  * Walks with an explicit stack and real-directory ancestry (via
+  * `realPath`), so ancestor symlink cycles terminate while distinct logical
+  * paths are each scanned with their own waiver policy. `node_modules` is never entered. Paths come back relative
+  * and `/`-separated whatever the platform's separator, and that is also
+  * what `allow` globs match against. A missing root fails; it never scans
+  * nothing. A dangling symlink under the root is skipped, having nothing to
+  * scan; any other entry that cannot be read fails the scan.
+  *
+  * **Example** (Scan source files for forbidden globals and imports)
+  *
+  * ```ts
+  * import { NodeServices } from "@effect/platform-node";
+  * import { SourceBoundary } from "./testing.ts";
+  * import * as Effect from "effect/Effect";
+  *
+  * const scan = SourceBoundary.scan({
+  *   root: "/repo/packages/engine/src",
+  *   rules: ["process", "node:process", { forbidImports: ["node:*", "@effect/platform*"] }],
+  * }).pipe(Effect.provide(NodeServices.layer));
+  * ```
+  */
 	static readonly scan = Effect.fn("SourceBoundary.scan")(function* (options: ScanOptions) {
 		const fs = yield* FileSystem.FileSystem;
 		const path = yield* Path.Path;

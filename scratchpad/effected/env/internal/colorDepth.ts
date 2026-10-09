@@ -60,7 +60,8 @@ const isSet = (value: string | undefined): boolean => value !== undefined && val
  * The table: Node's getColorDepth with the FORCE_COLOR branch and warning removed, and its win32 branch keyed on
  * `OS=Windows_NT`.
  *
- * @remarks
+ * **Details**
+ *
  * Node's win32 branch reads `process.platform` and the OS release: truecolor from Windows 10 build 14931, 256 colours
  * from build 10586, 16 before. Here the environment is read only through `Config`, so `OS=Windows_NT`, which Windows
  * sets system-wide and Git Bash keeps, stands in for the platform, and the branch gives truecolor. That approximates

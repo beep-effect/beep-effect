@@ -54,26 +54,27 @@ export interface TextInputScreenOptions {
 	/** Returns a message when the value cannot be submitted, or `undefined` when it can; given the real text. */
 	readonly validate?: (value: string) => string | undefined;
 	/**
-	 * Draw the value masked, so a secret typed or pasted into it is never drawn: one mask per grapheme, so an emoji, a
-	 * flag or a letter with a combining accent is one mask, not one per code unit. `true` masks with `•` (`*` under ASCII
-	 * glyphs); a string masks with that string, its controls removed. A predicate, `(value) => boolean`, is asked with
-	 * the real value and masks with `•` from the first render it answers `true`, and then LATCHES: the value stays masked
-	 * through every edit after (deleting a pasted token's first character never redraws the rest in clear) until the
-	 * value is cleared to empty. So a field that holds an address (an `op://` reference) stays readable while typed and
-	 * hides a value the moment it looks like a token. Match a giveaway ANYWHERE in the value, never as a prefix:
-	 * `(value) => /gh[pousr]_|github_pat_/.test(value)` masks `op://v/` followed by a pasted token, which a prefix
-	 * match never would. Frames drawn before it first answered `true` showed the text typed so far; a paste arrives
-	 * whole, so a pasted token is masked from its first frame. Unmasked by default.
-	 *
-	 * @remarks
-	 * Only the drawing changes: `validate` and the resolved value get the real text, the cursor moves through it as
-	 * before, and the placeholder still shows while the value is empty. A masked frame never holds the text, so neither
-	 * does the scrollback; erase the frame as well with `clear: true` on the run when even the mask's length should not
-	 * stay behind.
-	 *
-	 * The message `validate` returns is drawn as it is, unmasked: a message that echoes the value (`"ghp_abc is a
-	 * token"`) draws the secret in the frame. Say what is wrong without quoting the value.
-	 */
+  * Draw the value masked, so a secret typed or pasted into it is never drawn: one mask per grapheme, so an emoji, a
+  * flag or a letter with a combining accent is one mask, not one per code unit. `true` masks with `•` (`*` under ASCII
+  * glyphs); a string masks with that string, its controls removed. A predicate, `(value) => boolean`, is asked with
+  * the real value and masks with `•` from the first render it answers `true`, and then LATCHES: the value stays masked
+  * through every edit after (deleting a pasted token's first character never redraws the rest in clear) until the
+  * value is cleared to empty. So a field that holds an address (an `op://` reference) stays readable while typed and
+  * hides a value the moment it looks like a token. Match a giveaway ANYWHERE in the value, never as a prefix:
+  * `(value) => /gh[pousr]_|github_pat_/.test(value)` masks `op://v/` followed by a pasted token, which a prefix
+  * match never would. Frames drawn before it first answered `true` showed the text typed so far; a paste arrives
+  * whole, so a pasted token is masked from its first frame. Unmasked by default.
+  *
+  * **Gotchas**
+  *
+  * Only the drawing changes: `validate` and the resolved value get the real text, the cursor moves through it as
+  * before, and the placeholder still shows while the value is empty. A masked frame never holds the text, so neither
+  * does the scrollback; erase the frame as well with `clear: true` on the run when even the mask's length should not
+  * stay behind.
+  *
+  * The message `validate` returns is drawn as it is, unmasked: a message that echoes the value (`"ghp_abc is a
+  * token"`) draws the secret in the frame. Say what is wrong without quoting the value.
+  */
 	readonly mask?: string | true | ((value: string) => boolean);
 }
 
@@ -245,11 +246,13 @@ const HELP: KeyTable<"submit"> = KeyTable.make<"submit">([{ keys: ["enter"], act
 /**
  * One line of text: a pure reducer, a view and a ready-made screen.
  *
- * @remarks
+ * **Details**
+ *
  * Every typed character is text, `q` included: the input binds no letter, so Esc and Ctrl-C are the screen's root
  * keys and still cancel with `"escape"` and `"interrupt"`.
  *
- * @example
+ * **Example** (Ask for a required package name)
+ *
  * ```ts
  * import { CliUi, TextInput } from "../ui.ts"
  * import * as Effect from "effect/Effect";
@@ -289,19 +292,20 @@ export class TextInput {
 	static readonly step: (state: TextInputState, key: UiKey) => TextInputState = step;
 
 	/**
-	 * Draw the input: the message, the value with the cursor shown as `▏` (`|` under ASCII glyphs, so it stays visible
-	 * without colour), or one mask per grapheme in its place with `mask`, the placeholder while empty, a validation
-	 * message in the error token, and the key help. Enter
-	 * submits when `validate` passes; otherwise its message is shown until the next key other than enter, or a paste.
-	 *
-	 * @remarks
-	 * Text read in one go (a fast typist) is typed as it reads: printable runs are inserted whole, a return submits
-	 * what came before it (anything after it is dropped), a backspace byte deletes, a line feed becomes a space, and a
-	 * tab or other control character is dropped. A bracketed paste is inserted as text, its line breaks as spaces, and
-	 * never submits.
-	 *
-	 * @param props - the message, the starting text, the placeholder, the validator and where the value goes
-	 */
+  * Draw the input: the message, the value with the cursor shown as `▏` (`|` under ASCII glyphs, so it stays visible
+  * without colour), or one mask per grapheme in its place with `mask`, the placeholder while empty, a validation
+  * message in the error token, and the key help. Enter
+  * submits when `validate` passes; otherwise its message is shown until the next key other than enter, or a paste.
+  *
+  * **Details**
+  *
+  * Text read in one go (a fast typist) is typed as it reads: printable runs are inserted whole, a return submits
+  * what came before it (anything after it is dropped), a backspace byte deletes, a line feed becomes a space, and a
+  * tab or other control character is dropped. A bracketed paste is inserted as text, its line breaks as spaces, and
+  * never submits.
+  *
+  * @param props - the message, the starting text, the placeholder, the validator and where the value goes
+  */
 	static readonly View = (props: TextInputViewProps): ReactElement => {
 		const { ink, react } = inkModules();
 		const glyphs = useGlyphs();

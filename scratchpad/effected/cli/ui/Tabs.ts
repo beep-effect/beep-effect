@@ -103,7 +103,8 @@ const fitAround = (widths: ReadonlyArray<number>, active: number, gap: number, w
 /**
  * A row (or column) of tabs, for a consumer's own screen.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Not a screen: render `Tabs.View` inside a consumer's own screen. Its keys come from one `useKeys`, so there is a
  * single input reader. Tab and Shift-Tab cycle whenever the tabs are focused, and plain digits jump, so a screen that
  * hosts Tabs beside another widget reading Tab, arrows or digits (a `TextInput`, say) must decide who has the keys:
@@ -132,18 +133,19 @@ export class Tabs {
 	static readonly columnKeys: KeyTable<TabsAction> = COLUMN_KEYS;
 
 	/**
-	 * Draw the tabs: the active one in the accent token, bold and underlined; the others plain; every tab muted while
-	 * unfocused. At colour `"none"`, where all of that vanishes, the active tab is bracketed, `[Alpha]`, and the others
-	 * padded a space each side. A row wider than the terminal shows the tabs that fit around the active one, with the
-	 * glyph set's ellipsis at a cut edge, so it never wraps.
-	 *
-	 * @remarks
-	 * Controlled when `value` is given: a key calls `onChange` and the active tab moves only when `value` does.
-	 * Uncontrolled otherwise, starting at `defaultValue` or the first tab. Either way `onChange` fires once on mount
-	 * with the starting tab.
-	 *
-	 * @param props - the tabs and how they behave
-	 */
+  * Draw the tabs: the active one in the accent token, bold and underlined; the others plain; every tab muted while
+  * unfocused. At colour `"none"`, where all of that vanishes, the active tab is bracketed, `[Alpha]`, and the others
+  * padded a space each side. A row wider than the terminal shows the tabs that fit around the active one, with the
+  * glyph set's ellipsis at a cut edge, so it never wraps.
+  *
+  * **Details**
+  *
+  * Controlled when `value` is given: a key calls `onChange` and the active tab moves only when `value` does.
+  * Uncontrolled otherwise, starting at `defaultValue` or the first tab. Either way `onChange` fires once on mount
+  * with the starting tab.
+  *
+  * @param props - the tabs and how they behave
+  */
 	static readonly View = <N extends string>(props: TabsProps<N>): ReactElement => {
 		const { ink, react } = inkModules();
 		const glyphs = useGlyphs();

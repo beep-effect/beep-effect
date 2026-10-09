@@ -34,7 +34,8 @@ const StatusDefinition = S.Struct({
 /**
  * A status as a document stores it: its name and its resolved definition.
  *
- * @remarks
+ * **Details**
+ *
  * The definition is stored, not the vocabulary, so a node stays plain data.
  *
  * @public
@@ -117,7 +118,8 @@ export type Inline = ReturnType<typeof inlineShape<S.Codec<InlineChildren>>>["Ty
 /**
  * Content that flows inside a line.
  *
- * @remarks
+ * **Details**
+ *
  * - `Text`: a run of text, optionally painted with a token or style.
  * - `Code`: code in a monospace span.
  * - `Link`: a labelled link to a URL or a file position.
@@ -386,7 +388,8 @@ export type Block = ReturnType<typeof blockShape<S.Codec<BlockChildren>>>["Type"
 /**
  * A block of a document.
  *
- * @remarks
+ * **Details**
+ *
  * - `Paragraph`: one logical line; a paragraph of paragraphs is a `Section`.
  * - `List` and `Table`: with an optional `cap` on the rows shown, and an `overflow` that says what the hidden rows
  *   amount to, given how many there are.
@@ -536,7 +539,8 @@ export type Document = ReadonlyArray<Block>;
 /**
  * What a constructor accepts for content: a string, one `Inline`, or an array of either.
  *
- * @remarks
+ * **Details**
+ *
  * A string becomes a `Text` node with no token.
  *
  * @public
@@ -666,7 +670,8 @@ export interface DocPrintOptions {
 /**
  * Constructors for the document IR, and two helpers a renderer shares.
  *
- * @remarks
+ * **Details**
+ *
  * Every constructor returns a readonly plain node and copies the arrays it is given, so editing an input afterwards
  * cannot change a document. An optional field that is not given is absent from the node, not `undefined`.
  * Content arguments accept a string, an `Inline` or an array of either.
@@ -677,7 +682,8 @@ export interface DocPrintOptions {
  * Readonly types describe constructor results. A `Style` object given as a token is shared by reference;
  * copied status definitions are shallow for the same reason.
  *
- * @example
+ * **Example** (Build a results report with a status and timing table)
+ *
  * ```ts
  * import { Doc, Status } from "./index.ts"
  *
@@ -742,14 +748,15 @@ export class Doc {
 	}
 
 	/**
-	 * A status glyph, holding the resolved definition.
-	 *
-	 * @remarks
-	 * A name the vocabulary does not have is a compile error.
-	 *
-	 * @param vocab - the vocabulary the name belongs to
-	 * @param name - a status name in it
-	 */
+  * A status glyph, holding the resolved definition.
+  *
+  * **Gotchas**
+  *
+  * A name the vocabulary does not have is a compile error.
+  *
+  * @param vocab - the vocabulary the name belongs to
+  * @param name - a status name in it
+  */
 	static status<N extends string>(vocab: Status<N>, name: NoInfer<N>): InlineOf<"StatusMark"> {
 		return { _tag: "StatusMark", name, def: vocab.resolve(name) };
 	}
@@ -920,16 +927,17 @@ export class Doc {
 	}
 
 	/**
-	 * Children under an optional title.
-	 *
-	 * @remarks
-	 * The children are separated by blank lines (unless the document is compact); a title sits directly above the first.
-	 * `Doc.section(undefined, blocks)` is the way to space a document's top-level blocks, which are otherwise joined with
-	 * no blank line.
-	 *
-	 * @param title - the title, or `undefined` for none
-	 * @param children - the blocks
-	 */
+  * Children under an optional title.
+  *
+  * **Details**
+  *
+  * The children are separated by blank lines (unless the document is compact); a title sits directly above the first.
+  * `Doc.section(undefined, blocks)` is the way to space a document's top-level blocks, which are otherwise joined with
+  * no blank line.
+  *
+  * @param title - the title, or `undefined` for none
+  * @param children - the blocks
+  */
 	static section(title: InlineInput | undefined, children: ReadonlyArray<Block>): BlockOf<"Section"> {
 		return {
 			_tag: "Section",
@@ -939,21 +947,22 @@ export class Doc {
 	}
 
 	/**
-	 * One counter of a `Counts` block, with its status definition resolved.
-	 *
-	 * @remarks
-	 * A name the vocabulary does not have is a compile error.
-	 *
-	 * The label is one string, or `{ one, other }` to pluralise by count: `one` when the count is exactly 1 and `other`
-	 * for every other count, 0 included. A count standing alone reads by its own `n` (`1 change`, `2 changes`); a
-	 * headline shown as a share of the total reads by that total, the noun it counts (`1/1 repo`, `1/3 repos`,
-	 * `2/3 repos`).
-	 *
-	 * @param vocab - the vocabulary the status belongs to
-	 * @param name - a status name in it
-	 * @param options - the counter's `key`, its `label` (one string, or `{ one, other }`), its count `n`, and `showZero`
-	 * to keep it when `n` is zero
-	 */
+  * One counter of a `Counts` block, with its status definition resolved.
+  *
+  * **Details**
+  *
+  * A name the vocabulary does not have is a compile error.
+  *
+  * The label is one string, or `{ one, other }` to pluralise by count: `one` when the count is exactly 1 and `other`
+  * for every other count, 0 included. A count standing alone reads by its own `n` (`1 change`, `2 changes`); a
+  * headline shown as a share of the total reads by that total, the noun it counts (`1/1 repo`, `1/3 repos`,
+  * `2/3 repos`).
+  *
+  * @param vocab - the vocabulary the status belongs to
+  * @param name - a status name in it
+  * @param options - the counter's `key`, its `label` (one string, or `{ one, other }`), its count `n`, and `showZero`
+  * to keep it when `n` is zero
+  */
 	static counter<N extends string>(
 		vocab: Status<N>,
 		name: NoInfer<N>,
@@ -994,23 +1003,24 @@ export class Doc {
 	}
 
 	/**
-	 * Counters as a table: a row per entry, a column per counter key (in the order the keys first appear, headed by
-	 * the counter's label), and an optional total row summing each column.
-	 *
-	 * @remarks
-	 * A row without a counter for some key leaves that cell empty, and it counts as zero in the total. A counter whose
-	 * `n` is zero shows `0`, as a `Doc.table` cell would: a counter's `showZero` has no effect in a table, only in a
-	 * `Counts` block, so there is no need to set it. `totalRow`
-	 * labels the total row with a plain `Total` when `true`, or with the content given: for a bold one, pass
-	 * `totalRow: Doc.strong("Total")`. A column is headed by its counter's `label`; a counter's status paints its cells
-	 * in `ansi` and is ignored in markdown, so a plain numbers table may pass any status. `labelHeader` heads the label column, which
-	 * is otherwise empty. When some row has a `durationMs`, a last column shows it with `Fmt.duration`, headed
-	 * `durationHeader` (`duration` by default); a row without one has an empty cell there and counts as zero in the
-	 * total row's summed duration.
-	 *
-	 * @param rows - each row's label, counters and optional duration
-	 * @param options - `totalRow`, to add the summed row; the label and duration column headers
-	 */
+  * Counters as a table: a row per entry, a column per counter key (in the order the keys first appear, headed by
+  * the counter's label), and an optional total row summing each column.
+  *
+  * **Details**
+  *
+  * A row without a counter for some key leaves that cell empty, and it counts as zero in the total. A counter whose
+  * `n` is zero shows `0`, as a `Doc.table` cell would: a counter's `showZero` has no effect in a table, only in a
+  * `Counts` block, so there is no need to set it. `totalRow`
+  * labels the total row with a plain `Total` when `true`, or with the content given: for a bold one, pass
+  * `totalRow: Doc.strong("Total")`. A column is headed by its counter's `label`; a counter's status paints its cells
+  * in `ansi` and is ignored in markdown, so a plain numbers table may pass any status. `labelHeader` heads the label column, which
+  * is otherwise empty. When some row has a `durationMs`, a last column shows it with `Fmt.duration`, headed
+  * `durationHeader` (`duration` by default); a row without one has an empty cell there and counts as zero in the
+  * total row's summed duration.
+  *
+  * @param rows - each row's label, counters and optional duration
+  * @param options - `totalRow`, to add the summed row; the label and duration column headers
+  */
 	static countsTable(
 		rows: ReadonlyArray<{
 			readonly label: InlineInput;
@@ -1047,19 +1057,20 @@ export class Doc {
 	}
 
 	/**
-	 * One line of content; with `truncate`, it is cut to the width with the glyph set's ellipsis instead of wrapping,
-	 * and with `wrap: false` it is kept whole on one line whatever the width.
-	 *
-	 * @remarks
-	 * By default a line longer than the width wraps. `wrap: false` keeps it atomic in every audience and renderer, still
-	 * carrying its status glyphs, theme tokens and links, which {@link Doc.verbatim} (a plain string) cannot: the tool for
-	 * a finding such as `✗ path:line:col  rule  message` that a reader greps or reads line by line, while the prose around
-	 * it still wraps. A line break inside it is still a space. With both `truncate` and `wrap: false`, `truncate` wins:
-	 * the line is cut to the width.
-	 *
-	 * @param content - the line
-	 * @param options - `truncate`, to cut it to the width; `wrap: false`, to keep it whole
-	 */
+  * One line of content; with `truncate`, it is cut to the width with the glyph set's ellipsis instead of wrapping,
+  * and with `wrap: false` it is kept whole on one line whatever the width.
+  *
+  * **Details**
+  *
+  * By default a line longer than the width wraps. `wrap: false` keeps it atomic in every audience and renderer, still
+  * carrying its status glyphs, theme tokens and links, which {@link Doc.verbatim} (a plain string) cannot: the tool for
+  * a finding such as `✗ path:line:col  rule  message` that a reader greps or reads line by line, while the prose around
+  * it still wraps. A line break inside it is still a space. With both `truncate` and `wrap: false`, `truncate` wins:
+  * the line is cut to the width.
+  *
+  * @param content - the line
+  * @param options - `truncate`, to cut it to the width; `wrap: false`, to keep it whole
+  */
 	static line(
 		content: InlineInput,
 		options?: { readonly truncate?: boolean; readonly wrap?: boolean },
@@ -1073,20 +1084,21 @@ export class Doc {
 	}
 
 	/**
-	 * A unified diff as given, such as a test runner's: sanitized, its `+` and `-` lines painted `success` and
-	 * `failure` in `ansi`, and a `diff` fence in markdown.
-	 *
-	 * @remarks
-	 * With `truncate`, plain and `ansi` cut each line to the width with the glyph set's ellipsis instead of wrapping
-	 * it; an agent's or a CI's width is unbounded, so nothing is cut for them unless the context gives a finite width.
-	 * Markdown keeps every line whole. Inside a compact list item a blank line of the diff keeps the item's indent.
-	 *
-	 * A trailing line break ends the last line, as in a unified diff file, and adds no blank line after it: `"a\n"` is
-	 * one line. To end on a blank line, end the text with two line breaks.
-	 *
-	 * @param unified - the diff
-	 * @param options - `cap`, the most lines shown; `truncate`, to cut each line to the width
-	 */
+  * A unified diff as given, such as a test runner's: sanitized, its `+` and `-` lines painted `success` and
+  * `failure` in `ansi`, and a `diff` fence in markdown.
+  *
+  * **Details**
+  *
+  * With `truncate`, plain and `ansi` cut each line to the width with the glyph set's ellipsis instead of wrapping
+  * it; an agent's or a CI's width is unbounded, so nothing is cut for them unless the context gives a finite width.
+  * Markdown keeps every line whole. Inside a compact list item a blank line of the diff keeps the item's indent.
+  *
+  * A trailing line break ends the last line, as in a unified diff file, and adds no blank line after it: `"a\n"` is
+  * one line. To end on a blank line, end the text with two line breaks.
+  *
+  * @param unified - the diff
+  * @param options - `cap`, the most lines shown; `truncate`, to cut each line to the width
+  */
 	static diffText(
 		unified: string,
 		options?: { readonly cap?: number; readonly truncate?: boolean },
@@ -1100,33 +1112,35 @@ export class Doc {
 	}
 
 	/**
-	 * Lines kept exactly: each indented by `indent` spaces, sanitized, and never wrapped.
-	 *
-	 * @remarks
-	 * Plain, `ansi` and `githubLog` write the lines as they are; markdown fences them, so the indentation survives.
-	 *
-	 * It is the tool for a single line that must never wrap nor be cut, whatever the width: {@link Doc.line} wraps at
-	 * the width, or cuts with `truncate`, and `verbatim` does neither.
-	 *
-	 * @param text - the lines
-	 * @param options - `indent`, the spaces in front of every line; none by default
-	 */
+  * Lines kept exactly: each indented by `indent` spaces, sanitized, and never wrapped.
+  *
+  * **Details**
+  *
+  * Plain, `ansi` and `githubLog` write the lines as they are; markdown fences them, so the indentation survives.
+  *
+  * It is the tool for a single line that must never wrap nor be cut, whatever the width: {@link Doc.line} wraps at
+  * the width, or cuts with `truncate`, and `verbatim` does neither.
+  *
+  * @param text - the lines
+  * @param options - `indent`, the spaces in front of every line; none by default
+  */
 	static verbatim(text: string, options?: { readonly indent?: number }): BlockOf<"Verbatim"> {
 		return { _tag: "Verbatim", text, ...O.getSomesStruct({ indent: O.fromUndefinedOr(options?.indent) }) };
 	}
 
 	/**
-	 * A GitHub Actions annotation: `Render.githubLog` writes it as one workflow command (`::error file=…::message`),
-	 * and every other renderer writes nothing.
-	 *
-	 * @remarks
-	 * It is the kit's own command, so `githubLog` does not neutralize it; its message and properties are escaped, so
-	 * no text in them can end the command or start another. It is a command where a line starts: at the top level, as a
-	 * top-level section's child, or as a direct child of a group's body. Nested deeper, it is dropped.
-	 *
-	 * @param options - the level, and the optional file, position and title
-	 * @param message - what it says
-	 */
+  * A GitHub Actions annotation: `Render.githubLog` writes it as one workflow command (`::error file=…::message`),
+  * and every other renderer writes nothing.
+  *
+  * **Details**
+  *
+  * It is the kit's own command, so `githubLog` does not neutralize it; its message and properties are escaped, so
+  * no text in them can end the command or start another. It is a command where a line starts: at the top level, as a
+  * top-level section's child, or as a direct child of a group's body. Nested deeper, it is dropped.
+  *
+  * @param options - the level, and the optional file, position and title
+  * @param message - what it says
+  */
 	static annotation(options: AnnotationOptions, message: string): BlockOf<"Annotation"> {
 		return {
 			_tag: "Annotation",
@@ -1142,13 +1156,14 @@ export class Doc {
 	}
 
 	/**
-	 * The total of a `Counts` block: the caller's rule when it has one, otherwise the sum of `n` over every counter.
-	 *
-	 * @remarks
-	 * The rule sees every counter, including the ones a renderer hides, so hiding never changes the total.
-	 *
-	 * @param block - the `Counts` block
-	 */
+  * The total of a `Counts` block: the caller's rule when it has one, otherwise the sum of `n` over every counter.
+  *
+  * **Details**
+  *
+  * The rule sees every counter, including the ones a renderer hides, so hiding never changes the total.
+  *
+  * @param block - the `Counts` block
+  */
 	static total(block: BlockOf<"Counts">): number {
 		return totalOf(block);
 	}
@@ -1163,28 +1178,29 @@ export class Doc {
 	}
 
 	/**
-	 * Render a document for whoever is running the program and write it to a stream.
-	 *
-	 * @remarks
-	 * The context is {@link Render.context} for the stream, so the width, the colour, the links and the audience
-	 * come from the services the program already has, and the text is written with `Console.log` or
-	 * `Console.error`: a test captures it by swapping the `Console`. With `format: "auto"` the renderer follows
-	 * the audience, and the width is unbounded for an agent, a CI, and a human whose stream is not a terminal.
-	 *
-	 * An agent is never written an escape of any kind, even with an explicit `format: "ansi"`: its context is
-	 * colourless and its links are off. A document that renders to nothing prints nothing.
-	 *
-	 * The whole document is written as one `Console.log` (or `Console.error`) call, with its line breaks embedded, so a
-	 * captured `Console` holds one entry per document, not one per line. Top-level blocks are joined with no blank
-	 * line between them; wrap them in `Doc.section(undefined, [...])` to space them.
-	 *
-	 * `CurrentRuntimeEnv` is read if the environment has one and is not required: a `ci` audience prints
-	 * GitHub's log format only when it says GitHub Actions, and plain text otherwise, including when it is
-	 * absent. An explicit `format` is honoured whatever the audience.
-	 *
-	 * @param doc - the document
-	 * @param options - the stream and the format
-	 */
+  * Render a document for whoever is running the program and write it to a stream.
+  *
+  * **Details**
+  *
+  * The context is {@link Render.context} for the stream, so the width, the colour, the links and the audience
+  * come from the services the program already has, and the text is written with `Console.log` or
+  * `Console.error`: a test captures it by swapping the `Console`. With `format: "auto"` the renderer follows
+  * the audience, and the width is unbounded for an agent, a CI, and a human whose stream is not a terminal.
+  *
+  * An agent is never written an escape of any kind, even with an explicit `format: "ansi"`: its context is
+  * colourless and its links are off. A document that renders to nothing prints nothing.
+  *
+  * The whole document is written as one `Console.log` (or `Console.error`) call, with its line breaks embedded, so a
+  * captured `Console` holds one entry per document, not one per line. Top-level blocks are joined with no blank
+  * line between them; wrap them in `Doc.section(undefined, [...])` to space them.
+  *
+  * `CurrentRuntimeEnv` is read if the environment has one and is not required: a `ci` audience prints
+  * GitHub's log format only when it says GitHub Actions, and plain text otherwise, including when it is
+  * absent. An explicit `format` is honoured whatever the audience.
+  *
+  * @param doc - the document
+  * @param options - the stream and the format
+  */
 	static readonly print: (
 		doc: Document,
 		options?: DocPrintOptions,

@@ -146,13 +146,14 @@ export class CliAudience {
 	private constructor() {}
 
 	/**
-	 * The four flags, for `Command.withSharedFlags` on the root command.
-	 *
-	 * @remarks
-	 * Each is repeatable, so every occurrence is counted; a boolean given as `false` (`--agent=false`,
-	 * `--no-agent`) is not an occurrence. Core lists shared flags in every command's help; pass
-	 * `hidden` to remove them from all of them.
-	 */
+  * The four flags, for `Command.withSharedFlags` on the root command.
+  *
+  * **Details**
+  *
+  * Each is repeatable, so every occurrence is counted; a boolean given as `false` (`--agent=false`,
+  * `--no-agent`) is not an occurrence. Core lists shared flags in every command's help; pass
+  * `hidden` to remove them from all of them.
+  */
 	static readonly flags = (
 		options?: CliAudienceFlagsOptions,
 	): {
@@ -185,21 +186,22 @@ export class CliAudience {
 	};
 
 	/**
-	 * Resolve the flags before every subcommand handler and re-provide `Audience`.
-	 *
-	 * @remarks
-	 * `CliAudience.run` and `runWith` apply this themselves, so a program run through them never needs it. Use it
-	 * directly only with a bare `Command.run`, which leaves a fallback prompt blind to the flags (see the class
-	 * remarks).
-	 *
-	 * A failure report is written outside the run, where the flag is not in force, so only `runWith` and `run` carry
-	 * the flag's audience to it; with this on its own the report follows the environment's audience.
-	 *
-	 * Pipe it onto the composite root, after `withSubcommands`, since a parent's handler does not run when a
-	 * subcommand is selected. With exactly one flag the audience is `{ kind, source: "flag" }`; with none the
-	 * ambient `Audience` is read and provided back unchanged, so `Audience` stays in the requirement a handler
-	 * reading it already has, and is added to a program whose handlers do not read it.
-	 */
+  * Resolve the flags before every subcommand handler and re-provide `Audience`.
+  *
+  * **Gotchas**
+  *
+  * `CliAudience.run` and `runWith` apply this themselves, so a program run through them never needs it. Use it
+  * directly only with a bare `Command.run`, which leaves a fallback prompt blind to the flags (see the class
+  * remarks).
+  *
+  * A failure report is written outside the run, where the flag is not in force, so only `runWith` and `run` carry
+  * the flag's audience to it; with this on its own the report follows the environment's audience.
+  *
+  * Pipe it onto the composite root, after `withSubcommands`, since a parent's handler does not run when a
+  * subcommand is selected. With exactly one flag the audience is `{ kind, source: "flag" }`; with none the
+  * ambient `Audience` is read and provided back unchanged, so `Audience` stays in the requirement a handler
+  * reading it already has, and is added to a program whose handlers do not read it.
+  */
 	static readonly provide = <const Name extends string, Input extends AudienceFlagInput, ContextInput, E, R>(
 		command: Command.Command<Name, Input, ContextInput, E, R>,
 	): Command.Command<Name, Input, ContextInput, E | CliError.UserError, Exclude<R, Audience> | Audience> =>
@@ -218,20 +220,21 @@ export class CliAudience {
 		);
 
 	/**
-	 * Run a command the way `Command.runWith` does, with the audience flag resolved BEFORE core parses.
-	 *
-	 * @remarks
-	 * It scans `argv` for the four audience flags first, then runs core around a provided `Audience` (when exactly
-	 * one is given: `{ kind, source: "flag" }`) and a `CliInteractive` decided from it: `--human` is interactive when
-	 * `TerminalEnv` reports a terminal on stdin and stdout and `TERM` is not `dumb` (it can turn prompting on under a detected agent), a
-	 * non-human flag or a conflict makes it false. A fallback prompt fires while core parses, earlier than
-	 * anything `CliAudience.provide` can reach, so `--agent init` on a terminal would otherwise still prompt. No
-	 * flag leaves the ambient values untouched. A conflict still gets core's own usage error, exit `64`, from
-	 * `CliAudience.provide`'s resolver.
-	 *
-	 * @param command - the composite root, with the flags shared and `CliAudience.provide` piped on
-	 * @param config - the same `version` and `renderErrors` as core's
-	 */
+  * Run a command the way `Command.runWith` does, with the audience flag resolved BEFORE core parses.
+  *
+  * **Details**
+  *
+  * It scans `argv` for the four audience flags first, then runs core around a provided `Audience` (when exactly
+  * one is given: `{ kind, source: "flag" }`) and a `CliInteractive` decided from it: `--human` is interactive when
+  * `TerminalEnv` reports a terminal on stdin and stdout and `TERM` is not `dumb` (it can turn prompting on under a detected agent), a
+  * non-human flag or a conflict makes it false. A fallback prompt fires while core parses, earlier than
+  * anything `CliAudience.provide` can reach, so `--agent init` on a terminal would otherwise still prompt. No
+  * flag leaves the ambient values untouched. A conflict still gets core's own usage error, exit `64`, from
+  * `CliAudience.provide`'s resolver.
+  *
+  * @param command - the composite root, with the flags shared and `CliAudience.provide` piped on
+  * @param config - the same `version` and `renderErrors` as core's
+  */
 	static readonly runWith = <const Name extends string, Input, E, R, ContextInput>(
 		command: Command.Command<Name, Input, ContextInput, E, R> & RequiresAudienceFlags<Input>,
 		config: { readonly version: string; readonly renderErrors?: boolean | undefined },

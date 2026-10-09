@@ -6,7 +6,8 @@ import { FrontmatterDecodeError, FrontmatterEncodeError, FrontmatterFormatMismat
 /**
  * The toml frontmatter codec, over `@effected/toml`.
  *
- * @remarks
+ * **Details**
+ *
  * Decodes a `+++`-fenced capture's raw value with `Toml.parse`, so the toml
  * engine's nesting depth cap fails through the typed channel: a hostile
  * frontmatter block surfaces as a {@link FrontmatterDecodeError} carrying the

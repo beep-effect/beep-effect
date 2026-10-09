@@ -1,7 +1,8 @@
 /**
  * Zero-dependency YAML 1.2 parsing, editing and formatting as Effect schemas.
  *
- * @remarks
+ * **Details**
+ *
  * {@link Yaml} is the value-level facade (`parse`/`parseAll`/`stringify`,
  * comment stripping, semantic equality and the schema factories);
  * {@link YamlDocument} exposes the full parsed AST plus recovered

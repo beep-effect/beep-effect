@@ -22,7 +22,8 @@ const neutralize = (line: string): string => {
 /**
  * Make text safe to write to a GitHub Actions log: no line of it can be read by the runner as a workflow command.
  *
- * @remarks
+ * **Details**
+ *
  * The runner has TWO command parsers, and a line is a command if either accepts it
  * (`actions/runner`, `src/Runner.Common/ActionCommand.cs` and `src/Runner.Worker/ActionCommandManager.cs`, where
  * `TryProcessCommand` tries `TryParseV2` and then `TryParse`):
@@ -45,7 +46,8 @@ const neutralize = (line: string): string => {
  * command, shipped beside the code that neutralizes it, would be the implementation's own opinion, and a test using it
  * would pin the output as its own oracle.
  *
- * @example
+ * **Example** (Neutralize modern and legacy workflow commands in log text)
+ *
  * ```ts
  * import { CommandNeutralizer } from "./index.ts";
  *
@@ -69,13 +71,14 @@ export class CommandNeutralizer {
 	}
 
 	/**
-	 * Neutralize `text` and join the lines with a line feed.
-	 *
-	 * @remarks
-	 * Line breaks come back as LF whatever they were, which is what the runner reads them as.
-	 *
-	 * @param text - text that is data, not a command
-	 */
+  * Neutralize `text` and join the lines with a line feed.
+  *
+  * **Details**
+  *
+  * Line breaks come back as LF whatever they were, which is what the runner reads them as.
+  *
+  * @param text - text that is data, not a command
+  */
 	static text(text: string): string {
 		return pipe(CommandNeutralizer.lines(text), A.join("\n"));
 	}

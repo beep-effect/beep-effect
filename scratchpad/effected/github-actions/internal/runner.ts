@@ -28,7 +28,8 @@ export const isWindowsRunner = (env: ActionEnvironmentShape): Effect.Effect<bool
  * The tool-cache root: `RUNNER_TOOL_CACHE`, or `/tmp/runner-tool-cache` off a
  * runner.
  *
- * @remarks
+ * **Details**
+ *
  * Resolved at layer construction, never at import: the source package read
  * the variable into a module-level constant, which fixed the root before any
  * layer could say otherwise and made it impossible to point a test elsewhere.

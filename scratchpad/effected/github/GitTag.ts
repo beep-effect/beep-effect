@@ -50,7 +50,8 @@ export class SemverTag extends S.Class<SemverTag>($I`SemverTag`)({
 /**
  * Read a version out of a tag name.
  *
- * @remarks
+ * **Details**
+ *
  * The default covers the three shapes `@effected/workspaces`' `ReleaseTag`
  * produces: `v1.2.3`, `pkg@v1.2.3` and
  * `@scope/pkg@1.2.3`. Taking the substring after the **last** `@` is what makes
@@ -102,30 +103,32 @@ export interface GitTagShape {
 		readonly page?: PageOptions | undefined;
 	}) => Effect.Effect<ReadonlyArray<TagRef>, GitHubError, Repo>;
 	/**
-	 * The commit a tag points at, dereferencing annotated tags.
-	 *
-	 * @remarks
-	 * Fails typed past five levels of nesting rather than looping.
-	 */
+  * The commit a tag points at, dereferencing annotated tags.
+  *
+  * **Details**
+  *
+  * Fails typed past five levels of nesting rather than looping.
+  */
 	readonly resolve: (tag: string) => Effect.Effect<string, GitHubError, Repo>;
 	/**
-	 * The newest version-shaped tag.
-	 *
-	 * @remarks
-	 * Parsing and comparison are both synchronous in `@effected/semver`
-	 * (`parseResult`, `compare`), so this is a single pass over the page stream
-	 * with no extra round trips.
-	 *
-	 * **"Newest" means highest version, not most recent.** That is the right
-	 * answer for a single-versioned repository and the wrong instrument for a
-	 * **monorepo publishing independently versioned packages**, where version
-	 * ordering and recency are unrelated: a `pkg-a@2.0.0` tag outranks a
-	 * `pkg-b@1.4.0` cut yesterday, so the result can sit several releases behind
-	 * the actual head and never move. Nothing about the failure is visible —
-	 * a stale-but-plausible tag comes back. In a monorepo, filter by the
-	 * package's tag prefix (see {@link LatestSemverOptions}) so the comparison
-	 * runs within one version line, or order by tagged-commit date instead.
-	 */
+  * The newest version-shaped tag.
+  *
+  * **Gotchas**
+  *
+  * Parsing and comparison are both synchronous in `@effected/semver`
+  * (`parseResult`, `compare`), so this is a single pass over the page stream
+  * with no extra round trips.
+  *
+  * **"Newest" means highest version, not most recent.** That is the right
+  * answer for a single-versioned repository and the wrong instrument for a
+  * **monorepo publishing independently versioned packages**, where version
+  * ordering and recency are unrelated: a `pkg-a@2.0.0` tag outranks a
+  * `pkg-b@1.4.0` cut yesterday, so the result can sit several releases behind
+  * the actual head and never move. Nothing about the failure is visible —
+  * a stale-but-plausible tag comes back. In a monorepo, filter by the
+  * package's tag prefix (see {@link LatestSemverOptions}) so the comparison
+  * runs within one version line, or order by tagged-commit date instead.
+  */
 	readonly latestSemver: (options?: LatestSemverOptions) => Effect.Effect<O.Option<SemverTag>, GitHubError, Repo>;
 }
 
@@ -133,11 +136,13 @@ export interface GitTagShape {
  * Create, move, resolve, list and delete tag refs through GitHub's Git Database
  * API, and find the newest version-shaped tag.
  *
- * @remarks
+ * **Details**
+ *
  * Provide it with {@link GitTag.layer}, which needs a `GitHubClient`; each
  * method also needs a `Repo` in `R`.
  *
- * @example
+ * **Example** (Find the highest version tag with a v prefix)
+ *
  * ```ts
  * import { GitTag } from "./index.ts";
  * import * as Effect from "effect/Effect";

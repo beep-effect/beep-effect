@@ -21,11 +21,14 @@ const classifyDiff = (a: SemVer, b: SemVer): "major" | "minor" | "patch" | "prer
  * the change plus signed numeric deltas. A `Schema.TaggedClass`, so a serialized
  * diff carries a `_tag` discriminator.
  *
+ * **Details**
+ *
  * The `type` field is the highest-precedence field that differs: `"major"`,
  * `"minor"`, `"patch"`, `"prerelease"` (only prerelease identifiers differ),
  * `"build"` (only build metadata differs) or `"none"`.
  *
- * @example
+ * **Example** (Classify a major version change and its delta)
+ *
  * ```ts
  * import { SemVer, VersionDiff } from "./index.ts";
  * import * as Effect from "effect/Effect";

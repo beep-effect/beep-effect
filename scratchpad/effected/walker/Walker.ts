@@ -208,103 +208,109 @@ export class Walker {
 	private constructor() {}
 
 	/**
-	 * Ascend from `start` toward the filesystem root, yielding each directory,
-	 * nearest first.
-	 *
-	 * @remarks
-	 * Lexical, not physical: `Path.dirname` does not resolve symlinks, so ascending
-	 * out of a symlinked directory follows the path you were given rather than the
-	 * real filesystem parent. That is deliberate — config discovery wants the file
-	 * nearest the path the user named.
-	 *
-	 * Bounded twice over: `dirname` is a fixpoint at the root, and `maxDepth` guards
-	 * a pathological `Path` implementation that never reaches one.
-	 *
-	 * `stopAt` is compared in normalized form — see {@link AscendOptions.stopAt}.
-	 * Comparing raw strings would let an unnormalized ceiling match nothing and
-	 * the ascent run silently to the filesystem root, which is the unbounded walk
-	 * the option exists to prevent. A relative ceiling **dies** for the same
-	 * reason — resolving one against `process.cwd()` would reintroduce the
-	 * silent-wrong-walk failure through a different door. See
-	 * {@link AscendOptions.stopAt} for why that is a defect rather than a typed
-	 * error; the error channel stays `never`.
-	 *
-	 * @example
-	 * ```ts
-	 * import { Walker } from "./index.ts";
-	 * import * as Effect from "effect/Effect";
-	 *
-	 * const program = Effect.gen(function* () {
-	 * 	// => ["/repo/packages/app", "/repo/packages", "/repo"]
-	 * 	return yield* Walker.ascend("/repo/packages/app", { stopAt: "/repo" });
-	 * });
-	 * // Requires `Path` from the platform layer.
-	 * ```
-	 */
+  * Ascend from `start` toward the filesystem root, yielding each directory,
+  * nearest first.
+  *
+  * **Details**
+  *
+  * Lexical, not physical: `Path.dirname` does not resolve symlinks, so ascending
+  * out of a symlinked directory follows the path you were given rather than the
+  * real filesystem parent. That is deliberate — config discovery wants the file
+  * nearest the path the user named.
+  *
+  * Bounded twice over: `dirname` is a fixpoint at the root, and `maxDepth` guards
+  * a pathological `Path` implementation that never reaches one.
+  *
+  * `stopAt` is compared in normalized form — see {@link AscendOptions.stopAt}.
+  * Comparing raw strings would let an unnormalized ceiling match nothing and
+  * the ascent run silently to the filesystem root, which is the unbounded walk
+  * the option exists to prevent. A relative ceiling **dies** for the same
+  * reason — resolving one against `process.cwd()` would reintroduce the
+  * silent-wrong-walk failure through a different door. See
+  * {@link AscendOptions.stopAt} for why that is a defect rather than a typed
+  * error; the error channel stays `never`.
+  *
+  * **Example** (Ascend to a repository ceiling)
+  *
+  * ```ts
+  * import { Walker } from "./index.ts";
+  * import * as Effect from "effect/Effect";
+  *
+  * const program = Effect.gen(function* () {
+  * 	// => ["/repo/packages/app", "/repo/packages", "/repo"]
+  * 	return yield* Walker.ascend("/repo/packages/app", { stopAt: "/repo" });
+  * });
+  * // Requires `Path` from the platform layer.
+  * ```
+  */
 	static readonly ascend = ascend;
 
 	/**
-	 * {@link Walker.ascend} bounded by a PHYSICAL ceiling: stops at the nearest
-	 * directory whose real path is the ceiling's real path, inclusive.
-	 *
-	 * @remarks
-	 * Use this when the ceiling came from something that resolves symlinks —
-	 * `Git.repoRoot` (`git rev-parse --show-toplevel`) above all. `ascend`
-	 * compares `stopAt` lexically, so when `start` is reached through a symlink
-	 * (every macOS tmpdir: `/var` → `/private/var`; any symlinked checkout) the
-	 * chain never spells git's root, the ceiling never matches, and the walk
-	 * runs silently to the filesystem root.
-	 *
-	 * The chain is still the lexical one derived from `start`, exactly as
-	 * `ascend` yields it; only the stopping test is physical. A ceiling the
-	 * chain already spells stops without touching the filesystem. Otherwise each
-	 * ancestor's `realPath` is compared with the ceiling's, and a failed probe
-	 * is absorbed as "not the ceiling", as {@link Walker.firstMatch} absorbs
-	 * one. A ceiling that names no ancestor, or cannot itself be resolved,
-	 * leaves the chain running to the filesystem root, as `ascend` does.
-	 *
-	 * The ceiling is an `Option` so "no ceiling" is spelled explicitly:
-	 * `Option.none()` ascends to the filesystem root exactly as `ascend(start)`
-	 * does, which is the natural answer outside any repository —
-	 * `Walker.ascendWithin(start, yield* Effect.option(git.repoRoot(start)))`.
-	 * A present ceiling must be absolute; a relative one **dies**, for the
-	 * reasons {@link AscendOptions.stopAt} gives.
-	 */
+  * {@link Walker.ascend} bounded by a PHYSICAL ceiling: stops at the nearest
+  * directory whose real path is the ceiling's real path, inclusive.
+  *
+  * **Details**
+  *
+  * Use this when the ceiling came from something that resolves symlinks —
+  * `Git.repoRoot` (`git rev-parse --show-toplevel`) above all. `ascend`
+  * compares `stopAt` lexically, so when `start` is reached through a symlink
+  * (every macOS tmpdir: `/var` → `/private/var`; any symlinked checkout) the
+  * chain never spells git's root, the ceiling never matches, and the walk
+  * runs silently to the filesystem root.
+  *
+  * The chain is still the lexical one derived from `start`, exactly as
+  * `ascend` yields it; only the stopping test is physical. A ceiling the
+  * chain already spells stops without touching the filesystem. Otherwise each
+  * ancestor's `realPath` is compared with the ceiling's, and a failed probe
+  * is absorbed as "not the ceiling", as {@link Walker.firstMatch} absorbs
+  * one. A ceiling that names no ancestor, or cannot itself be resolved,
+  * leaves the chain running to the filesystem root, as `ascend` does.
+  *
+  * The ceiling is an `Option` so "no ceiling" is spelled explicitly:
+  * `Option.none()` ascends to the filesystem root exactly as `ascend(start)`
+  * does, which is the natural answer outside any repository —
+  * `Walker.ascendWithin(start, yield* Effect.option(git.repoRoot(start)))`.
+  * A present ceiling must be absolute; a relative one **dies**, for the
+  * reasons {@link AscendOptions.stopAt} gives.
+  */
 	static readonly ascendWithin = ascendWithin;
 
 	/**
-	 * The first candidate whose `predicate` reports true, or `Option.none()`.
-	 *
-	 * @remarks
-	 * Each predicate is absorbed **individually**: a failure on one candidate is
-	 * treated as "this candidate did not match" and the scan continues. One
-	 * unreadable ancestor must never abort the walk, or a permission error deep in
-	 * the tree would hide a valid root above it. Not-found and cannot-look are
-	 * therefore indistinguishable to the caller; discovery is best-effort.
-	 *
-	 * `Effect.catch` catches failures, **not defects**. A predicate that throws is
-	 * programmer error and surfaces as a defect. Do not change this to
-	 * `Effect.catchCause` — the distinction is load-bearing.
-	 */
+  * The first candidate whose `predicate` reports true, or `Option.none()`.
+  *
+  * **Gotchas**
+  *
+  * Each predicate is absorbed **individually**: a failure on one candidate is
+  * treated as "this candidate did not match" and the scan continues. One
+  * unreadable ancestor must never abort the walk, or a permission error deep in
+  * the tree would hide a valid root above it. Not-found and cannot-look are
+  * therefore indistinguishable to the caller; discovery is best-effort.
+  *
+  * `Effect.catch` catches failures, **not defects**. A predicate that throws is
+  * programmer error and surfaces as a defect. Do not change this to
+  * `Effect.catchCause` — the distinction is load-bearing.
+  */
 	static readonly firstMatch = firstMatch;
 
 	/**
-	 * The first existing path among the candidates `candidatesFor` produces for each
-	 * directory in `dirs`, scanned in order. Nearer directories win.
-	 *
-	 * @remarks
-	 * Candidates materialize up front, bounded by `dirs.length × candidatesFor`'s
-	 * output — a few hundred strings under the default `maxDepth`.
-	 */
+  * The first existing path among the candidates `candidatesFor` produces for each
+  * directory in `dirs`, scanned in order. Nearer directories win.
+  *
+  * **Details**
+  *
+  * Candidates materialize up front, bounded by `dirs.length × candidatesFor`'s
+  * output — a few hundred strings under the default `maxDepth`.
+  */
 	static readonly findUpward = findUpward;
 
 	/**
-	 * The first directory in `dirs` that `isRoot` accepts.
-	 *
-	 * @remarks
-	 * `firstMatch` over the directories themselves — the candidate expansion is the
-	 * identity. `isRoot` is a caller-supplied marker test (a `.git` entry, a
-	 * `pnpm-workspace.yaml`), and its failures are absorbed per directory.
-	 */
+  * The first directory in `dirs` that `isRoot` accepts.
+  *
+  * **Details**
+  *
+  * `firstMatch` over the directories themselves — the candidate expansion is the
+  * identity. `isRoot` is a caller-supplied marker test (a `.git` entry, a
+  * `pnpm-workspace.yaml`), and its failures are absorbed per directory.
+  */
 	static readonly findRoot = findRoot;
 }

@@ -45,7 +45,8 @@ export const isValidSpdx = (value: string): boolean => {
  * A valid SPDX license identifier, expression, `UNLICENSED`, or
  * `SEE LICENSE IN <file>`.
  *
- * @remarks
+ * **Gotchas**
+ *
  * **A branded value here is not necessarily parseable as SPDX.** npm's
  * `license` field admits two strings that the SPDX grammar does not —
  * `UNLICENSED` and `SEE LICENSE IN <file>` — and this brand accepts both,
@@ -82,7 +83,8 @@ export type SpdxLicense = string & Brand.Brand<"SpdxLicense">;
  * The parsed SPDX expression a manifest's `license` denotes, or `Option.none()`
  * when it denotes no expression at all.
  *
- * @remarks
+ * **Details**
+ *
  * This is the accessor to reach for whenever a branded `SpdxLicense` has
  * to become an actual expression — a license URL, a badge, structured data, a
  * policy check. It exists because the brand and the grammar disagree, so no
@@ -95,7 +97,8 @@ export type SpdxLicense = string & Brand.Brand<"SpdxLicense">;
  * and it needs no change on that day, because "not an expression" is answered
  * by the grammar rather than by a list of spellings kept in step with npm.
  *
- * @example
+ * **Example** (Distinguish SPDX expressions from npm license placeholders)
+ *
  * ```ts
  * import { SpdxLicense, licenseExpressionOf } from "./index.ts";
  * import * as O from "effect/Option";
@@ -110,7 +113,6 @@ export type SpdxLicense = string & Brand.Brand<"SpdxLicense">;
  *
  * @param license - a branded manifest license value
  * @returns the parsed expression, or none for a spelling that is not one
- *
  * @public
  */
 export const licenseExpressionOf = (license: SpdxLicense): O.Option<SpdxExpression> =>

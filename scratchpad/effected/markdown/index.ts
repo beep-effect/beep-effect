@@ -1,7 +1,8 @@
 /**
  * CommonMark and GFM markdown parse, edit and transform schemas for Effect.
  *
- * @remarks
+ * **Details**
+ *
  * The parse surface covers CommonMark 0.31.2 and the GFM dialect (tables,
  * strikethrough, autolink literals, task-list items and footnotes; `gfm` is
  * the default dialect): {@link Markdown} (the `parseResult` primitive, the

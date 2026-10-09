@@ -17,7 +17,8 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
 /**
  * A CodeQL default-setup configuration.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Every field is optional and an **omitted field means "leave it alone"**, which
  * is why this is a partial rather than a full configuration: sending
  * `undefined` for a key the caller never mentioned would clear a setting they
@@ -50,32 +51,34 @@ export type CodeScanningSetup = typeof CodeScanningSetup.Type;
  */
 export interface CodeScanningShape {
 	/**
-	 * Apply a default-setup configuration.
-	 *
-	 * @remarks
-	 * The endpoint answers **202 Accepted** and configures asynchronously.
-	 * Nothing here polls: a successful call means GitHub accepted the request,
-	 * not that scanning is running.
-	 *
-	 * **Turning it back off does not undo everything it did.** Setting `state`
-	 * to `not-configured` stops default setup, but the synthetic CodeQL workflow
-	 * GitHub created when it was enabled **survives** — it remains listed among
-	 * the repository's workflows afterwards. A caller that treats "default setup
-	 * is off" as "no CodeQL workflow exists" will be wrong, and one that counts
-	 * workflows to decide whether a repository has any CI will count that one.
-	 * Observed against a real organization, not inferred from the API
-	 * description.
-	 */
+  * Apply a default-setup configuration.
+  *
+  * **Gotchas**
+  *
+  * The endpoint answers **202 Accepted** and configures asynchronously.
+  * Nothing here polls: a successful call means GitHub accepted the request,
+  * not that scanning is running.
+  *
+  * **Turning it back off does not undo everything it did.** Setting `state`
+  * to `not-configured` stops default setup, but the synthetic CodeQL workflow
+  * GitHub created when it was enabled **survives** — it remains listed among
+  * the repository's workflows afterwards. A caller that treats "default setup
+  * is off" as "no CodeQL workflow exists" will be wrong, and one that counts
+  * workflows to decide whether a repository has any CI will count that one.
+  * Observed against a real organization, not inferred from the API
+  * description.
+  */
 	readonly configure: (setup: CodeScanningSetup) => Effect.Effect<void, GitHubError, Repo>;
 	/**
-	 * The languages GitHub detects in the repository.
-	 *
-	 * @remarks
-	 * The response maps language name to bytes; only the names are returned, in
-	 * GitHub's own order (most bytes first). Use it to filter a configured
-	 * language list down to what the repository actually contains — GitHub
-	 * rejects a default-setup call naming a language it does not detect.
-	 */
+  * The languages GitHub detects in the repository.
+  *
+  * **Details**
+  *
+  * The response maps language name to bytes; only the names are returned, in
+  * GitHub's own order (most bytes first). Use it to filter a configured
+  * language list down to what the repository actually contains — GitHub
+  * rejects a default-setup call naming a language it does not detect.
+  */
 	readonly languages: Effect.Effect<ReadonlyArray<string>, GitHubError, Repo>;
 }
 
@@ -83,7 +86,8 @@ export interface CodeScanningShape {
  * Configure CodeQL default setup and read the languages GitHub detects in a
  * repository.
  *
- * @remarks
+ * **Details**
+ *
  * Provide it with {@link CodeScanning.layer}, which needs a `GitHubClient`; each
  * method also needs a `Repo` in `R`.
  *
@@ -91,15 +95,16 @@ export interface CodeScanningShape {
  */
 export class CodeScanning extends Context.Service<CodeScanning, CodeScanningShape>()($I`CodeScanning`) {
 	/**
-	 * The live service, built over a `GitHubClient`.
-	 *
-	 * @remarks
-	 * The callback is written `(client) => make(client)` rather than passed as
-	 * `make` directly, and that is load-bearing: a static initializer runs while
-	 * the module body is still evaluating, so naming a `const` declared further
-	 * down throws `Cannot access 'make' before initialization` **at import time**,
-	 * with a clean typecheck.
-	 */
+  * The live service, built over a `GitHubClient`.
+  *
+  * **Gotchas**
+  *
+  * The callback is written `(client) => make(client)` rather than passed as
+  * `make` directly, and that is load-bearing: a static initializer runs while
+  * the module body is still evaluating, so naming a `const` declared further
+  * down throws `Cannot access 'make' before initialization` **at import time**,
+  * with a clean typecheck.
+  */
 	static readonly layer: Layer.Layer<CodeScanning, never, GitHubClient> = Layer.effect(
 		this,
 		Effect.map(GitHubClient, (client) => make(client)),

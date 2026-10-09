@@ -233,7 +233,8 @@ const make: FileSystem.FileSystem = FileSystem.make({
 /**
  * A read-only, synchronous `FileSystem` over `node:fs`.
  *
- * @remarks
+ * **Details**
+ *
  * Every read member (`access`, `exists`, `stat`, `readFile`,
  * `readFileString`, `readDirectory`, `readLink`, `realPath`) calls `node:fs`'s
  * sync API, so a program using only those runs under `Effect.runSync`.
@@ -249,7 +250,8 @@ const make: FileSystem.FileSystem = FileSystem.make({
  * filesystem never writes, and a caller that tries has a wiring bug
  * `Effect.catch` must not absorb.
  *
- * @example
+ * **Example** (Read a package manifest with Effect.runSync)
+ *
  * ```ts
  * import { NodeSyncFileSystem } from "./NodeSyncFileSystem.ts";
  * import * as Effect from "effect/Effect";

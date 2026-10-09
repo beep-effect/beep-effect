@@ -27,7 +27,8 @@ export const TechArticleFields = {
 /**
  * A schema.org `TechArticle` — a piece of technical documentation.
  *
- * @example
+ * **Example** (Link a technical article to package source code)
+ *
  * ```ts
  * import { NodeRef, TechArticle } from "./index.ts";
  *

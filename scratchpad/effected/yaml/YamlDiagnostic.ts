@@ -123,7 +123,8 @@ export type YamlErrorCode = typeof YamlErrorCode.Type;
  * zero-based `line`/`character`). Used for both errors and warnings-as-data;
  * fatality is a property of the code — see {@link YamlDiagnostic.isFatal}.
  *
- * @remarks
+ * **Details**
+ *
  * The five-field positional core (`code`/`offset`/`length`/`line`/`character`)
  * is structurally identical to `@effected/jsonc`'s parse-error detail shape;
  * `message` is this package's additive extra.

@@ -39,7 +39,8 @@ const findNearest = Effect.fn("findNearest")(function* (
 /**
  * Nearest-config upward discovery for `tsconfig.json`.
  *
- * @example
+ * **Example** (Find the nearest tsconfig from the current directory)
+ *
  * ```ts
  * import { TsconfigDiscovery } from "./index.ts";
  * import * as Effect from "effect/Effect";

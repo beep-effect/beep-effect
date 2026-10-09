@@ -17,7 +17,8 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
 /**
  * The api-version this surface pins.
  *
- * @remarks
+ * **Details**
+ *
  * The legacy shape, which inlines the whole bundle in the listing, is deprecated
  * with a stated sunset. Pinning the version means the response is on a contract
  * the generated types do not describe — which is why this module is the one that
@@ -62,7 +63,8 @@ const ListResponse = S.Struct({
 /**
  * The attestation REST surface.
  *
- * @remarks
+ * **Details**
+ *
  * Upload and listing only. Building a statement, signing it and producing the
  * bundle belong to `@effected/sbom`; assembling those into a pipeline belongs to
  * the consumer.
@@ -73,13 +75,14 @@ export interface AttestationShape {
 	/** Store a signed bundle against the repository. */
 	readonly upload: (bundle: unknown) => Effect.Effect<AttestationRecord, GitHubError, Repo>;
 	/**
-	 * Everything attested about a subject digest.
-	 *
-	 * @remarks
-	 * **404 and 422 both mean "none"**, not "broken" — GitHub answers a digest it
-	 * has never seen either way depending on the path, and a caller asking "is
-	 * this attested?" wants an empty list for both.
-	 */
+  * Everything attested about a subject digest.
+  *
+  * **Details**
+  *
+  * **404 and 422 both mean "none"**, not "broken" — GitHub answers a digest it
+  * has never seen either way depending on the path, and a caller asking "is
+  * this attested?" wants an empty list for both.
+  */
 	readonly listForSubject: (
 		sha256: string,
 		options?: { readonly predicateType?: string | undefined },
@@ -90,7 +93,8 @@ export interface AttestationShape {
  * Uploads signed attestation bundles to a repository and lists what is attested
  * about a subject digest.
  *
- * @remarks
+ * **Details**
+ *
  * Provide it with {@link Attestation.layer}, which needs a `GitHubClient`; each
  * method also needs a `Repo` in `R`.
  *

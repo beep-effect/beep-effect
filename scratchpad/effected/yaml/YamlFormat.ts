@@ -74,6 +74,8 @@ export type YamlRangeLike = YamlRange | { readonly offset: number; readonly leng
  * region; the positional `range` argument of {@link YamlFormat.format} takes
  * precedence over this field) and `requoteScalars` (default `false`).
  *
+ * **Details**
+ *
  * `requoteScalars` makes `quoteStyle` apply to scalars **already quoted in
  * the source** on the format path — by default formatting preserves an
  * existing scalar's own quote style, and `quoteStyle` governs only quotes the
@@ -94,7 +96,8 @@ export type YamlRangeLike = YamlRange | { readonly offset: number; readonly leng
  * the kit convention (never `new`). Call sites that take a
  * `YamlFormattingOptions` also accept a structurally-matching plain literal.
  *
- * @example
+ * **Example** (Format a mapping with indented sequence items)
+ *
  * ```ts
  * import { YamlFormat, YamlFormattingOptions } from "./index.ts";
  *
@@ -793,21 +796,8 @@ function tryRegionalScalarEdit(
  * Formats YAML text and modifies values at a path as byte-minimal edits that
  * preserve comments and layout elsewhere. Not instantiable.
  *
- * @example
- * ```ts
- * import { YamlFormat } from "./index.ts";
- * import * as Effect from "effect/Effect";
+ * **Gotchas**
  *
- * const formatted = YamlFormat.formatToString("a:   1\nb:\n    - x\n    - y # c\n");
- * // => "a: 1\nb:\n- x\n- y # c\n"
- *
- * const program = Effect.gen(function* () {
- *   return yield* YamlFormat.modifyToString("port: 3000 # dev\n", ["port"], 8080);
- *   // => "port: 8080 # dev\n"
- * });
- * ```
- *
- * @remarks
  * `format`/`formatToString` are pure and total (edit computation never fails
  * — malformed input yields no edits rather than corrupting the document).
  * `modify`/`modifyToString` carry a real error channel: navigation failures
@@ -834,61 +824,77 @@ function tryRegionalScalarEdit(
  * diagnostic. Directive re-emission is unimplemented, and the refusal is what
  * stops the corruption.
  *
+ * **Example** (Format YAML and update a value while preserving comments)
+ *
+ * ```ts
+ * import { YamlFormat } from "./index.ts";
+ * import * as Effect from "effect/Effect";
+ *
+ * const formatted = YamlFormat.formatToString("a:   1\nb:\n    - x\n    - y # c\n");
+ * // => "a: 1\nb:\n- x\n- y # c\n"
+ *
+ * const program = Effect.gen(function* () {
+ *   return yield* YamlFormat.modifyToString("port: 3000 # dev\n", ["port"], 8080);
+ *   // => "port: 8080 # dev\n"
+ * });
+ * ```
+ *
  * @public
  */
 export class YamlFormat {
 	private constructor() {}
 
 	/**
-	 * Compute formatting edits for a YAML document. Non-mutating — apply the
-	 * result with `YamlEdit.applyAll` (or use {@link YamlFormat.formatToString}).
-	 * Pure and total: malformed input (a fatal parse error) yields `[]` rather
-	 * than corrupting the document.
-	 *
-	 * **Multi-document streams format whole.** Input containing more than one
-	 * document (a `---`-separated stream — a Kubernetes manifest, a pnpm 11
-	 * `pnpm-lock.yaml` with a config-dependency preamble) formats every
-	 * document in order, re-emitting each document's own framing (`---`,
-	 * `...`, comment blocks); no document is ever dropped. Document detection
-	 * is CST-level, so a `---` inside a block scalar or quoted string is
-	 * content, not a document boundary. Two multi-document shapes yield `[]`
-	 * (untouched) because they cannot be re-emitted faithfully: a stream with
-	 * a fatal diagnostic in any document (the same posture as single-document
-	 * input) and a stream carrying `%YAML`/`%TAG` directives.
-	 *
-	 * **Directive-carrying documents yield `[]` on the single-document path
-	 * too.** Directive lines are not re-emitted, and dropping a `%TAG` while
-	 * keeping the shorthand tags that depend on it would turn a valid document
-	 * into an unparseable one — so a document carrying `%YAML`/`%TAG`
-	 * directives is left untouched. Detection is directive-token-level: a
-	 * literal `%TAG` inside a scalar is content and formats normally.
-	 *
-	 * @param text - The YAML source to format.
-	 * @param range - Optional sub-range; only edits fully within it are returned.
-	 * @param options - Optional {@link YamlFormattingOptions}.
-	 * @returns The edits that bring `text` to canonical shape; apply them with
-	 *   `YamlEdit.applyAll`. Empty when the input cannot be formatted faithfully.
-	 *
-	 * @remarks
-	 * The positional `range` argument takes precedence over
-	 * `options?.range` when both are given; either accepts a plain
-	 * `{ offset, length }` object as well as a {@link YamlRange} instance, so
-	 * callers do not need `YamlRange.make(...)` for the common case.
-	 *
-	 * Formatting preserves an existing scalar's own quote style by default —
-	 * `quoteStyle` governs only quotes the stringifier introduces. The opt-in
-	 * `options.requoteScalars` makes `quoteStyle` apply to already-quoted
-	 * source scalars too, re-quoting only where the parsed value is provably
-	 * preserved; see {@link YamlFormattingOptions} for the exact skip rules.
-	 *
-	 * A plain `<<` mapping key is preserved unquoted, keeping its merge-key
-	 * meaning (`tag:yaml.org,2002:merge`) — quoting it to `'<<'` would produce
-	 * an ordinary string key that merges nothing, changing what the document
-	 * means with no error raised. A key the author quoted explicitly keeps its
-	 * quotes, since that is a literal string key they wrote deliberately. Note
-	 * that {@link Yaml.stringify} is deliberately the other way round for a
-	 * `"<<"` key on a plain JavaScript object.
-	 */
+  * Compute formatting edits for a YAML document. Non-mutating — apply the
+  * result with `YamlEdit.applyAll` (or use {@link YamlFormat.formatToString}).
+  * Pure and total: malformed input (a fatal parse error) yields `[]` rather
+  * than corrupting the document.
+  *
+  * **Details**
+  *
+  * **Multi-document streams format whole.** Input containing more than one
+  * document (a `---`-separated stream — a Kubernetes manifest, a pnpm 11
+  * `pnpm-lock.yaml` with a config-dependency preamble) formats every
+  * document in order, re-emitting each document's own framing (`---`,
+  * `...`, comment blocks); no document is ever dropped. Document detection
+  * is CST-level, so a `---` inside a block scalar or quoted string is
+  * content, not a document boundary. Two multi-document shapes yield `[]`
+  * (untouched) because they cannot be re-emitted faithfully: a stream with
+  * a fatal diagnostic in any document (the same posture as single-document
+  * input) and a stream carrying `%YAML`/`%TAG` directives.
+  *
+  * **Directive-carrying documents yield `[]` on the single-document path
+  * too.** Directive lines are not re-emitted, and dropping a `%TAG` while
+  * keeping the shorthand tags that depend on it would turn a valid document
+  * into an unparseable one — so a document carrying `%YAML`/`%TAG`
+  * directives is left untouched. Detection is directive-token-level: a
+  * literal `%TAG` inside a scalar is content and formats normally.
+  *
+  * The positional `range` argument takes precedence over
+  * `options?.range` when both are given; either accepts a plain
+  * `{ offset, length }` object as well as a {@link YamlRange} instance, so
+  * callers do not need `YamlRange.make(...)` for the common case.
+  *
+  * Formatting preserves an existing scalar's own quote style by default —
+  * `quoteStyle` governs only quotes the stringifier introduces. The opt-in
+  * `options.requoteScalars` makes `quoteStyle` apply to already-quoted
+  * source scalars too, re-quoting only where the parsed value is provably
+  * preserved; see {@link YamlFormattingOptions} for the exact skip rules.
+  *
+  * A plain `<<` mapping key is preserved unquoted, keeping its merge-key
+  * meaning (`tag:yaml.org,2002:merge`) — quoting it to `'<<'` would produce
+  * an ordinary string key that merges nothing, changing what the document
+  * means with no error raised. A key the author quoted explicitly keeps its
+  * quotes, since that is a literal string key they wrote deliberately. Note
+  * that {@link Yaml.stringify} is deliberately the other way round for a
+  * `"<<"` key on a plain JavaScript object.
+  *
+  * @param text - The YAML source to format.
+  * @param range - Optional sub-range; only edits fully within it are returned.
+  * @param options - Optional {@link YamlFormattingOptions}.
+  * @returns The edits that bring `text` to canonical shape; apply them with
+  *   `YamlEdit.applyAll`. Empty when the input cannot be formatted faithfully.
+  */
 	static format(text: string, range?: YamlRangeLike, options?: YamlFormattingOptions): ReadonlyArray<YamlEdit> {
 		const formatted = formatDocument(text, options);
 		if (formatted === undefined) return [];
@@ -927,76 +933,77 @@ export class YamlFormat {
 	}
 
 	/**
-	 * Compute the edits that insert, replace, or remove a value at `path`.
-	 * Passing `value === undefined` removes the target key/element; a missing
-	 * insertion target appends after the last pair/element. Fails with
-	 * {@link YamlModificationError} on a fatal parse error or a structural
-	 * navigation mismatch.
-	 *
-	 * **`value` may be a whole object graph.** An array is written as a block
-	 * sequence and any other non-null object as a block mapping over its own
-	 * enumerable string keys, recursively — the same lowering
-	 * {@link Yaml.stringify} applies to the same value, so `modify` and
-	 * `stringify` agree on what a given JavaScript value means. For a synthesized
-	 * subtree (an object/array value) only the surrounding document is
-	 * preserved byte-for-byte; the subtree carries no comments and takes the
-	 * stringifier's styles.
-	 *
-	 * **Scalar replacement is region-confined and quote-preserving.**
-	 * When the path resolves to an existing single-line `plain`,
-	 * `single-quoted`, or `double-quoted` scalar with no tag or anchor, and
-	 * the replacement is a string, number, or boolean, `modify` splices
-	 * ONLY the target scalar's source span and emits a single edit: a string
-	 * into a quoted scalar keeps the original quote character, a non-string
-	 * renders plain (quoting it would change the resolved type), and every
-	 * byte outside the span — line endings included, so a CRLF document keeps
-	 * its CRLFs and a same-line trailing comment survives — is untouched. The
-	 * splice is taken only when the rendered text re-parses to exactly the
-	 * caller's value and renders as a single line; a no-op replacement yields
-	 * no edits. Anything else — removals (`value === undefined`), nulls,
-	 * insertions, object/array values, block or multi-line scalars, tagged or anchored
-	 * targets, or any document-shaping / explicit-style option
-	 * (`defaultScalarStyle`, `forceDefaultStyles`, `sortKeys`, `indent`,
-	 * `indentSequences`, `finalNewline`) — falls back to re-serialising the
-	 * whole document, which normalises line endings to LF, applies those
-	 * options, and renders the replacement in the stringifier's styles.
-	 *
-	 * Two replacement values have no finite rendering and fail typed rather
-	 * than hanging or overflowing the stack: one containing a circular
-	 * reference (`CircularReference`) and one nesting deeper than 256 levels
-	 * (`NestingDepthExceeded`).
-	 *
-	 * **Single-document contract.** A `path` carries no document index, so on
-	 * a multi-document stream there is no rule for which document it names —
-	 * `modify` fails with {@link YamlModificationError} carrying a
-	 * `MultiDocumentStream` diagnostic rather than guessing document 1 (and
-	 * unlike {@link YamlFormat.format}, which formats a stream whole because
-	 * formatting needs no target). Detection is CST-level: a `---` inside a
-	 * block scalar or quoted string is content, not a document boundary.
-	 *
-	 * **Directive-carrying documents are refused.** A document carrying
-	 * `%YAML`/`%TAG` directives fails with {@link YamlModificationError}
-	 * carrying a `DirectiveCarryingDocument` diagnostic: modify re-emits the
-	 * whole document and does not re-emit directive lines, so applying it
-	 * would drop the `%TAG` while keeping the shorthand tags that depend on
-	 * it — unparseable output. A typed refusal beats silent corruption;
-	 * directive re-emission is unimplemented, not undesired. A literal
-	 * `%TAG` inside a scalar is content and does not trigger the refusal.
-	 *
-	 * @param text - The YAML source to modify.
-	 * @param path - The location to insert, replace or remove.
-	 * @param value - The JavaScript value to write; `undefined` removes the
-	 *   target instead.
-	 * @param options - Optional {@link YamlStringifyOptions} for the
-	 *   re-stringify step.
-	 * @returns An `Effect` that succeeds with the edits to apply (via
-	 *   `YamlEdit.applyAll`), or fails with {@link YamlModificationError}.
-	 *
-	 * @remarks
-	 * `options` is a bare {@link YamlStringifyOptions} — it controls only the
-	 * internal re-stringify step, not a range (there is no range to restrict
-	 * for a path-targeted modification).
-	 */
+  * Compute the edits that insert, replace, or remove a value at `path`.
+  * Passing `value === undefined` removes the target key/element; a missing
+  * insertion target appends after the last pair/element. Fails with
+  * {@link YamlModificationError} on a fatal parse error or a structural
+  * navigation mismatch.
+  *
+  * **Details**
+  *
+  * **`value` may be a whole object graph.** An array is written as a block
+  * sequence and any other non-null object as a block mapping over its own
+  * enumerable string keys, recursively — the same lowering
+  * {@link Yaml.stringify} applies to the same value, so `modify` and
+  * `stringify` agree on what a given JavaScript value means. For a synthesized
+  * subtree (an object/array value) only the surrounding document is
+  * preserved byte-for-byte; the subtree carries no comments and takes the
+  * stringifier's styles.
+  *
+  * **Scalar replacement is region-confined and quote-preserving.**
+  * When the path resolves to an existing single-line `plain`,
+  * `single-quoted`, or `double-quoted` scalar with no tag or anchor, and
+  * the replacement is a string, number, or boolean, `modify` splices
+  * ONLY the target scalar's source span and emits a single edit: a string
+  * into a quoted scalar keeps the original quote character, a non-string
+  * renders plain (quoting it would change the resolved type), and every
+  * byte outside the span — line endings included, so a CRLF document keeps
+  * its CRLFs and a same-line trailing comment survives — is untouched. The
+  * splice is taken only when the rendered text re-parses to exactly the
+  * caller's value and renders as a single line; a no-op replacement yields
+  * no edits. Anything else — removals (`value === undefined`), nulls,
+  * insertions, object/array values, block or multi-line scalars, tagged or anchored
+  * targets, or any document-shaping / explicit-style option
+  * (`defaultScalarStyle`, `forceDefaultStyles`, `sortKeys`, `indent`,
+  * `indentSequences`, `finalNewline`) — falls back to re-serialising the
+  * whole document, which normalises line endings to LF, applies those
+  * options, and renders the replacement in the stringifier's styles.
+  *
+  * Two replacement values have no finite rendering and fail typed rather
+  * than hanging or overflowing the stack: one containing a circular
+  * reference (`CircularReference`) and one nesting deeper than 256 levels
+  * (`NestingDepthExceeded`).
+  *
+  * **Single-document contract.** A `path` carries no document index, so on
+  * a multi-document stream there is no rule for which document it names —
+  * `modify` fails with {@link YamlModificationError} carrying a
+  * `MultiDocumentStream` diagnostic rather than guessing document 1 (and
+  * unlike {@link YamlFormat.format}, which formats a stream whole because
+  * formatting needs no target). Detection is CST-level: a `---` inside a
+  * block scalar or quoted string is content, not a document boundary.
+  *
+  * **Directive-carrying documents are refused.** A document carrying
+  * `%YAML`/`%TAG` directives fails with {@link YamlModificationError}
+  * carrying a `DirectiveCarryingDocument` diagnostic: modify re-emits the
+  * whole document and does not re-emit directive lines, so applying it
+  * would drop the `%TAG` while keeping the shorthand tags that depend on
+  * it — unparseable output. A typed refusal beats silent corruption;
+  * directive re-emission is unimplemented, not undesired. A literal
+  * `%TAG` inside a scalar is content and does not trigger the refusal.
+  *
+  * `options` is a bare {@link YamlStringifyOptions} — it controls only the
+  * internal re-stringify step, not a range (there is no range to restrict
+  * for a path-targeted modification).
+  *
+  * @param text - The YAML source to modify.
+  * @param path - The location to insert, replace or remove.
+  * @param value - The JavaScript value to write; `undefined` removes the
+  *   target instead.
+  * @param options - Optional {@link YamlStringifyOptions} for the
+  *   re-stringify step.
+  * @returns An `Effect` that succeeds with the edits to apply (via
+  *   `YamlEdit.applyAll`), or fails with {@link YamlModificationError}.
+  */
 	static readonly modify = Effect.fn("YamlFormat.modify")(function* (
 		text: string,
 		path: YamlPath,

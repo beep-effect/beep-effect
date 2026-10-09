@@ -9,7 +9,8 @@ const $I = $ScratchpadId.create("effected/lockfiles/LockfileFormat");
  * `package-lock.json` (JSON), pnpm's `pnpm-lock.yaml` and yarn Berry's
  * `yarn.lock` (both YAML).
  *
- * @remarks
+ * **Details**
+ *
  * The literal names the *lockfile format*, not the package manager that
  * happens to write it — this package models lockfiles. Yarn support is
  * Berry only; classic (v1) `yarn.lock` is not YAML and fails
@@ -43,7 +44,8 @@ const FILENAMES: Readonly<Record<LockfileFormat, readonly [string, ...ReadonlyAr
  * The conventional lockfile filename for a format: `"bun.lock"`,
  * `"package-lock.json"`, `"pnpm-lock.yaml"` or `"yarn.lock"`.
  *
- * @remarks
+ * **Details**
+ *
  * The primary name only — the first element of {@link filenamesFor}, which is
  * what detection that must also see the genuine alternates should use.
  *
@@ -54,7 +56,8 @@ export const filenameFor = (format: LockfileFormat): string => FILENAMES[format]
 /**
  * Every filename a format is genuinely written under, primary first.
  *
- * @remarks
+ * **Details**
+ *
  * Real detection needs more than the conventional name: npm honours
  * `npm-shrinkwrap.json` (and prefers it over `package-lock.json` when both
  * exist — the ordering here is conventional-name-first, not npm's own
@@ -78,7 +81,8 @@ export const filenamesFor = (format: LockfileFormat): readonly [string, ...Reado
 /**
  * The format a lockfile filename identifies, if any.
  *
- * @remarks
+ * **Details**
+ *
  * Matches exact conventional filenames only (`"bun.lock"`,
  * `"package-lock.json"`, `"pnpm-lock.yaml"`, `"yarn.lock"`) — paths, other
  * spellings and the {@link filenamesFor} alternates return `Option.none()`.

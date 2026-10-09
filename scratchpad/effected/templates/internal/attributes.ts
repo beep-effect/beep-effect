@@ -45,7 +45,8 @@ const isSeparator = (code: number): boolean => code === 32 || code === 9; // spa
 /**
  * Parse a captured attribute run, or refuse it.
  *
- * @remarks
+ * **Details**
+ *
  * `undefined` means the run is not a valid attribute run and the line carrying
  * it is **not a marker** — it is ordinary content. That covers a mangled pair
  * and a name declared twice: two values for one name is two intentions for one

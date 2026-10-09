@@ -47,11 +47,13 @@ export type CoreStatusName = typeof CoreStatusName.Type;
 /**
  * An open vocabulary of statuses.
  *
- * @remarks
+ * **Details**
+ *
  * Start from `Status.core` and add your own with `extend`. The names are a type parameter,
  * so `def` and `worst` reject a name the vocabulary does not have at compile time.
  *
- * @example
+ * **Example** (Extend statuses and select the most severe)
+ *
  * ```ts
  * import { Status } from "./index.ts"
  *
@@ -92,15 +94,16 @@ export class Status<Names extends string> {
 	): Status<CoreStatusName | (keyof Extra & string)> => Status.core.extend(extra);
 
 	/**
-	 * This vocabulary plus `extra`; an entry that reuses a name replaces it.
-	 *
-	 * @remarks
-	 * An entry may replace a core name. Replacing `warning` with a lower rank moves the threshold at which
-	 * `CliMessage.status` defaults to stderr for this vocabulary, since that threshold is `warning`'s rank in the
-	 * vocabulary it is given.
-	 *
-	 * @param extra - the statuses to add, by name
-	 */
+  * This vocabulary plus `extra`; an entry that reuses a name replaces it.
+  *
+  * **Gotchas**
+  *
+  * An entry may replace a core name. Replacing `warning` with a lower rank moves the threshold at which
+  * `CliMessage.status` defaults to stderr for this vocabulary, since that threshold is `warning`'s rank in the
+  * vocabulary it is given.
+  *
+  * @param extra - the statuses to add, by name
+  */
 	extend<const Extra extends Record<string, StatusDef>>(
 		extra: Extra,
 	): Status<Names | (keyof Extra & string)> {
@@ -108,14 +111,15 @@ export class Status<Names extends string> {
 	}
 
 	/**
-	 * The definition of a status.
-	 *
-	 * @remarks
-	 * A name the vocabulary does not have is a defect: it throws an `Error` naming it and the names that exist. The
-	 * types already reject one, so it is reachable only through a cast.
-	 *
-	 * @param name - a name in this vocabulary
-	 */
+  * The definition of a status.
+  *
+  * **Gotchas**
+  *
+  * A name the vocabulary does not have is a defect: it throws an `Error` naming it and the names that exist. The
+  * types already reject one, so it is reachable only through a cast.
+  *
+  * @param name - a name in this vocabulary
+  */
 	def(name: Names | CoreStatusName): StatusDef {
 		if (!R.has(this.defs, name)) {
 			throw UnknownStatusError.make({
@@ -126,32 +130,34 @@ export class Status<Names extends string> {
 	}
 
 	/**
-	 * The full definition of a status as an immutable snapshot, for a caller that stores it.
-	 *
-	 * @remarks
-	 * `def` answers the vocabulary's own entry. `resolve` answers a readonly copy, so a document node that holds
-	 * the definition stays plain data and editing it cannot change the vocabulary. The copy is shallow: a
-	 * `token` given as a `Style` keeps its own identity. Throws on an unknown name, as {@link Status.def} does;
-	 * storing an empty definition in a document instead would fail far from the cause.
-	 *
-	 * @param name - a name in this vocabulary
-	 */
+  * The full definition of a status as an immutable snapshot, for a caller that stores it.
+  *
+  * **Details**
+  *
+  * `def` answers the vocabulary's own entry. `resolve` answers a readonly copy, so a document node that holds
+  * the definition stays plain data and editing it cannot change the vocabulary. The copy is shallow: a
+  * `token` given as a `Style` keeps its own identity. Throws on an unknown name, as {@link Status.def} does;
+  * storing an empty definition in a document instead would fail far from the cause.
+  *
+  * @param name - a name in this vocabulary
+  */
 	resolve(name: Names): StatusDef {
 		return { ...this.def(name) };
 	}
 
 	/**
-	 * A status's glyph from a glyph set: `def.ascii` for an ASCII set, `def.glyph` otherwise. Unpainted, for a caller
-	 * that draws it itself (an Ink tree, a reporter).
-	 *
-	 * @remarks
-	 * Throws on an unknown name, as {@link Status.def} does. The glyph is sanitised, as text in a document is: escape
-	 * sequences and control characters in a vocabulary's glyph are removed, so a glyph built from data cannot paint the
-	 * terminal, plant a hyperlink or move the cursor. Every kit path that draws a status glyph takes it from here.
-	 *
-	 * @param name - a name in this vocabulary
-	 * @param glyphs - the glyph set, such as `Glyphs.unicode`, `Glyphs.ascii` or a theme's
-	 */
+  * A status's glyph from a glyph set: `def.ascii` for an ASCII set, `def.glyph` otherwise. Unpainted, for a caller
+  * that draws it itself (an Ink tree, a reporter).
+  *
+  * **Details**
+  *
+  * Throws on an unknown name, as {@link Status.def} does. The glyph is sanitised, as text in a document is: escape
+  * sequences and control characters in a vocabulary's glyph are removed, so a glyph built from data cannot paint the
+  * terminal, plant a hyperlink or move the cursor. Every kit path that draws a status glyph takes it from here.
+  *
+  * @param name - a name in this vocabulary
+  * @param glyphs - the glyph set, such as `Glyphs.unicode`, `Glyphs.ascii` or a theme's
+  */
 	glyph(name: Names, glyphs: GlyphSet): string {
 		const def = this.def(name);
 		// A vocabulary is configuration, but one built from data must not paint the terminal: every path that draws a
@@ -160,19 +166,20 @@ export class Status<Names extends string> {
 	}
 
 	/**
-	 * The status with the highest rank; a tie goes to the one that comes first in `names`.
-	 *
-	 * @remarks
-	 * `rank` is SEVERITY, not an aggregation policy: the higher rank wins, so in `Status.core` a `skip` outranks a
-	 * `success`. A consumer whose aggregate differs (a test run where passes dominate skips, say) folds its own
-	 * rule over the names instead of reading this.
-	 *
-	 * Takes at least one name, so the answer is always a name. For an array that may be empty, use
-	 * {@link Status.worstOption}. They are two methods because a literal and an array variable are the same
-	 * array at runtime, so one method could not return a name for one and an `Option` for the other.
-	 *
-	 * @param names - the statuses to compare
-	 */
+  * The status with the highest rank; a tie goes to the one that comes first in `names`.
+  *
+  * **Gotchas**
+  *
+  * `rank` is SEVERITY, not an aggregation policy: the higher rank wins, so in `Status.core` a `skip` outranks a
+  * `success`. A consumer whose aggregate differs (a test run where passes dominate skips, say) folds its own
+  * rule over the names instead of reading this.
+  *
+  * Takes at least one name, so the answer is always a name. For an array that may be empty, use
+  * {@link Status.worstOption}. They are two methods because a literal and an array variable are the same
+  * array at runtime, so one method could not return a name for one and an `Option` for the other.
+  *
+  * @param names - the statuses to compare
+  */
 	worst(names: Arr.NonEmptyReadonlyArray<Names>): Names {
 		let worst = names[0];
 		for (const name of names) {

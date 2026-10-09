@@ -75,11 +75,14 @@ export const CreativeWorkFields = {
  * A schema.org `CreativeWork` — the general node for a created work, and the
  * base vocabulary the more specific nodes in this package extend.
  *
+ * **Details**
+ *
  * Reach for a more specific class where one fits: `SoftwareSourceCode` for a
  * package's source, `TechArticle` for documentation, `APIReference` for an API
  * surface. `CreativeWork` is what to use when none of those is right.
  *
- * @example
+ * **Example** (Create a licensed creative work)
+ *
  * ```ts
  * import { CreativeWork } from "./index.ts";
  *

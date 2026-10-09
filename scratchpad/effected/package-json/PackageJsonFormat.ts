@@ -114,7 +114,8 @@ export class PackageJsonModifyError extends S.TaggedError<PackageJsonModifyError
 /**
  * Decode-free canonical sort and format statics. Not instantiable.
  *
- * @remarks
+ * **Details**
+ *
  * The guarantee both statics make is that they are **source-preserving**:
  * neither decodes into a `Package`, so neither can normalize a field encoding.
  * String-form `author` shorthand, unknown fields, unusual value shapes and
@@ -134,37 +135,40 @@ export class PackageJsonFormat {
 	private constructor() {}
 
 	/**
-	 * Order a package.json object's keys canonically **without decoding it into
-	 * a `Package`**: known top-level keys in `sort-package-json`'s order, then
-	 * unknown public keys alphabetically, then `_`-prefixed keys, with the
-	 * dependency maps and `scripts` / `engines` / `bin` alphabetized.
-	 *
-	 * Value in, value out — for hosts that already hold parsed JSON and never
-	 * want a string. {@link PackageJsonFormat.formatToString} is the same
-	 * ordering for hosts holding file text. Pure and total.
-	 *
-	 * Returns a new object; nested values are shared by reference rather than
-	 * cloned, except the maps whose own keys are reordered. A value that is not
-	 * a JSON object (an array, a scalar, `null`) is returned unchanged rather
-	 * than mangled, so a mistyped `Json` union cannot silently lose data.
-	 *
-	 * Reordering keys is the whole of it — **no key is ever added or removed**,
-	 * which is what lets the return type be the input type `T` and makes this a
-	 * drop-in. Use {@link PackageJsonFormat.formatToString} with `stripEmpty`
-	 * when removing empty maps is wanted; it returns a string and so carries no
-	 * such obligation.
-	 *
-	 * @param value - the parsed package.json object
-	 * @returns a new object with canonically ordered keys
-	 *
-	 * @example
-	 * ```ts
-	 * import { PackageJsonFormat } from "./index.ts";
-	 *
-	 * const sorted = PackageJsonFormat.sortValue({ version: "1.0.0", name: "p" });
-	 * // => { name: "p", version: "1.0.0" }
-	 * ```
-	 */
+  * Order a package.json object's keys canonically **without decoding it into
+  * a `Package`**: known top-level keys in `sort-package-json`'s order, then
+  * unknown public keys alphabetically, then `_`-prefixed keys, with the
+  * dependency maps and `scripts` / `engines` / `bin` alphabetized.
+  *
+  * **Details**
+  *
+  * Value in, value out — for hosts that already hold parsed JSON and never
+  * want a string. {@link PackageJsonFormat.formatToString} is the same
+  * ordering for hosts holding file text. Pure and total.
+  *
+  * Returns a new object; nested values are shared by reference rather than
+  * cloned, except the maps whose own keys are reordered. A value that is not
+  * a JSON object (an array, a scalar, `null`) is returned unchanged rather
+  * than mangled, so a mistyped `Json` union cannot silently lose data.
+  *
+  * Reordering keys is the whole of it — **no key is ever added or removed**,
+  * which is what lets the return type be the input type `T` and makes this a
+  * drop-in. Use {@link PackageJsonFormat.formatToString} with `stripEmpty`
+  * when removing empty maps is wanted; it returns a string and so carries no
+  * such obligation.
+  *
+  * **Example** (Sort package object keys canonically)
+  *
+  * ```ts
+  * import { PackageJsonFormat } from "./index.ts";
+  *
+  * const sorted = PackageJsonFormat.sortValue({ version: "1.0.0", name: "p" });
+  * // => { name: "p", version: "1.0.0" }
+  * ```
+  *
+  * @param value - the parsed package.json object
+  * @returns a new object with canonically ordered keys
+  */
 	static sortValue<T extends { readonly [k: string]: unknown }>(value: T): T;
 	static sortValue(value: { readonly [k: string]: unknown }): { readonly [k: string]: unknown } {
 		if (!isJsonObject(value)) return value;
@@ -172,38 +176,41 @@ export class PackageJsonFormat {
 	}
 
 	/**
-	 * Sort and format package.json text **without decoding it into a
-	 * `Package`**. Text in, text out — for hosts that hold file contents and
-	 * cannot afford a decode. {@link PackageJsonFormat.sortValue} is the same
-	 * ordering for hosts that already hold parsed JSON.
-	 *
-	 * Any syntactically valid JSON object formats, whatever it contains: a
-	 * version-less root, `{"private": true}`, a malformed `packageManager`
-	 * integrity. Nothing is decoded, so nothing is normalized — string-form
-	 * `author` shorthand, unknown fields, unusual value shapes and empty maps
-	 * all survive byte-for-byte. Only key order, indentation and the trailing
-	 * newline change.
-	 *
-	 * Pure and synchronous: it returns a `Result` rather than an `Effect`, so
-	 * synchronous hosts can call it directly. Lift it with `Effect.fromResult`.
-	 *
-	 * @param source - the package.json file contents
-	 * @param options - formatting options; see {@link PackageFormatTextOptions}
-	 * @returns the formatted text, or a {@link PackageJsonSyntaxError}
-	 *
-	 * @example
-	 * ```ts
-	 * import { PackageJsonFormat } from "./index.ts";
-	 * import * as Effect from "effect/Effect";
-	 * import * as Result from "effect/Result";
-	 *
-	 * const formatted = PackageJsonFormat.formatToString('{"private": true}');
-	 * if (Result.isSuccess(formatted)) console.log(formatted.success);
-	 *
-	 * // In an Effect program:
-	 * const program = Effect.fromResult(PackageJsonFormat.formatToString('{"private": true}'));
-	 * ```
-	 */
+  * Sort and format package.json text **without decoding it into a
+  * `Package`**. Text in, text out — for hosts that hold file contents and
+  * cannot afford a decode. {@link PackageJsonFormat.sortValue} is the same
+  * ordering for hosts that already hold parsed JSON.
+  *
+  * **Details**
+  *
+  * Any syntactically valid JSON object formats, whatever it contains: a
+  * version-less root, `{"private": true}`, a malformed `packageManager`
+  * integrity. Nothing is decoded, so nothing is normalized — string-form
+  * `author` shorthand, unknown fields, unusual value shapes and empty maps
+  * all survive byte-for-byte. Only key order, indentation and the trailing
+  * newline change.
+  *
+  * Pure and synchronous: it returns a `Result` rather than an `Effect`, so
+  * synchronous hosts can call it directly. Lift it with `Effect.fromResult`.
+  *
+  * **Example** (Format package text and lift the result into Effect)
+  *
+  * ```ts
+  * import { PackageJsonFormat } from "./index.ts";
+  * import * as Effect from "effect/Effect";
+  * import * as Result from "effect/Result";
+  *
+  * const formatted = PackageJsonFormat.formatToString('{"private": true}');
+  * if (Result.isSuccess(formatted)) console.log(formatted.success);
+  *
+  * // In an Effect program:
+  * const program = Effect.fromResult(PackageJsonFormat.formatToString('{"private": true}'));
+  * ```
+  *
+  * @param source - the package.json file contents
+  * @param options - formatting options; see {@link PackageFormatTextOptions}
+  * @returns the formatted text, or a {@link PackageJsonSyntaxError}
+  */
 	static formatToString(
 		source: string,
 		options?: PackageFormatTextOptions,
@@ -279,25 +286,26 @@ export class PackageJsonFormat {
 	});
 
 	/**
-	 * Modify `source` and apply the resulting edits in one step
-	 * (`JsoncEdit.applyAll` composed over {@link PackageJsonFormat.modify}).
-	 * Text in, text out; every byte outside the edited span is preserved.
-	 * Inherits the modify error channel: {@link PackageJsonSyntaxError} when
-	 * the source is not a JSON object, {@link PackageJsonModifyError} when the
-	 * path cannot be navigated.
-	 *
-	 * @example
-	 * ```ts
-	 * import { PackageJsonFormat } from "./index.ts";
-	 * import * as Effect from "effect/Effect";
-	 *
-	 * const program = PackageJsonFormat.modifyToString(
-	 *   '{\n  "private": true,\n  "packageManager": "pnpm@11.2.0"\n}\n',
-	 *   ["packageManager"],
-	 *   "pnpm@11.3.0",
-	 * ); // only the packageManager value changes; every other byte survives
-	 * ```
-	 */
+  * Modify `source` and apply the resulting edits in one step
+  * (`JsoncEdit.applyAll` composed over {@link PackageJsonFormat.modify}).
+  * Text in, text out; every byte outside the edited span is preserved.
+  * Inherits the modify error channel: {@link PackageJsonSyntaxError} when
+  * the source is not a JSON object, {@link PackageJsonModifyError} when the
+  * path cannot be navigated.
+  *
+  * **Example** (Update the package manager pin while preserving surrounding text)
+  *
+  * ```ts
+  * import { PackageJsonFormat } from "./index.ts";
+  * import * as Effect from "effect/Effect";
+  *
+  * const program = PackageJsonFormat.modifyToString(
+  *   '{\n  "private": true,\n  "packageManager": "pnpm@11.2.0"\n}\n',
+  *   ["packageManager"],
+  *   "pnpm@11.3.0",
+  * ); // only the packageManager value changes; every other byte survives
+  * ```
+  */
 	static readonly modifyToString = Effect.fn("PackageJsonFormat.modifyToString")(function* (
 		source: string,
 		path: JsoncPath,

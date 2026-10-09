@@ -19,7 +19,8 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
 /**
  * The hidden marker that makes a comment findable again.
  *
- * @remarks
+ * **Details**
+ *
  * The marker is `<!-- namespace:key -->`, an HTML comment appended to the body.
  * The namespace is the caller's, so the library has no opinion about whose
  * comments these are, and a marker is testable without a client.
@@ -64,24 +65,26 @@ export interface PullRequestCommentShape {
 	/** Post a new comment. */
 	readonly create: (issueNumber: number, body: string) => Effect.Effect<CommentRecord, GitHubError, Repo>;
 	/**
-	 * Update the marked comment if there is one, or post it.
-	 *
-	 * @remarks
-	 * The marker is appended to the body, so a comment written by `upsert` is
-	 * always findable by the same marker afterwards.
-	 */
+  * Update the marked comment if there is one, or post it.
+  *
+  * **Details**
+  *
+  * The marker is appended to the body, so a comment written by `upsert` is
+  * always findable by the same marker afterwards.
+  */
 	readonly upsert: (
 		issueNumber: number,
 		marker: CommentMarker,
 		body: string,
 	) => Effect.Effect<CommentRecord, GitHubError, Repo>;
 	/**
-	 * Find the marked comment.
-	 *
-	 * @remarks
-	 * **Paginates**, so the marker is found on a busy pull request too; pass
-	 * `page` to bound the walk.
-	 */
+  * Find the marked comment.
+  *
+  * **Details**
+  *
+  * **Paginates**, so the marker is found on a busy pull request too; pass
+  * `page` to bound the walk.
+  */
 	readonly find: (
 		issueNumber: number,
 		marker: CommentMarker,
@@ -95,11 +98,13 @@ export interface PullRequestCommentShape {
  * Post, update, find and delete comments on a pull request or issue, including
  * a "sticky" comment kept current through a `CommentMarker`.
  *
- * @remarks
+ * **Details**
+ *
  * Provide it with {@link PullRequestComment.layer}, which needs a `GitHubClient`;
  * each method also needs a `Repo` in `R`.
  *
- * @example
+ * **Example** (Upsert a report comment with a hidden marker)
+ *
  * ```ts
  * import { CommentMarker, PullRequestComment } from "./index.ts";
  * import * as Effect from "effect/Effect";

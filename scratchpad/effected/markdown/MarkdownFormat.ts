@@ -78,7 +78,8 @@ export type MarkdownRangeLike = MarkdownRange | { readonly offset: number; reado
  * The two ways CommonMark spells a code block: `fenced` (a backtick or tilde
  * fence) and `indented` (four-space indentation).
  *
- * @remarks
+ * **Details**
+ *
  * A formatting target for {@link MarkdownFormattingOptions}, not a node
  * fidelity field: on a {@link Code} node the two spellings are told apart by
  * the presence or absence of `fenceChar`/`fenceLength`, and a language-less
@@ -101,12 +102,15 @@ export type CodeBlockStyle = typeof CodeBlockStyle.Type;
  * source with (same defaults as `Markdown.parse`). Every marker option is
  * optional and independent; an absent option normalizes nothing.
  *
+ * **Details**
+ *
  * Scope is marker normalization only — heading style, bullet
  * character, emphasis/strong marker, fence character, thematic-break
  * character, code-block style. Content is never rewritten, rewrapped or
  * reflowed.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `codeBlockStyle` is the opt-in that converts between the two code-block
  * spellings for **language-less** blocks (a block with a `lang` has no
  * indented spelling and is never touched). It exists because the default
@@ -654,7 +658,19 @@ const findAncestry = (root: Root, target: MarkdownNode): ReadonlyArray<MarkdownN
  * Normalizes markdown markers and replaces a single node, as byte-minimal
  * edits that leave the rest of the source untouched. Not instantiable.
  *
- * @example
+ * **Details**
+ *
+ * `format`/`formatToString` are pure and total: input that trips a parse
+ * hardening guard yields no edits rather than corrupting the document, and
+ * every emitted edit is guarded against the re-parse hazards listed in the
+ * module documentation — a hazardous conversion is skipped, never attempted.
+ * `modify`/`modifyToString` carry a real error channel
+ * ({@link MarkdownModificationError}) and render every replacement through
+ * the canonical stringifier, so a modified document re-parses cleanly by
+ * construction.
+ *
+ * **Example** (Normalize markdown markers and replace a paragraph)
+ *
  * ```ts
  * import { MarkdownDocument, MarkdownFormat, MarkdownFormattingOptions } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -671,16 +687,6 @@ const findAncestry = (root: Root, target: MarkdownNode): ReadonlyArray<MarkdownN
  *   // => "# Title\n\nGoodbye\n"
  * });
  * ```
- *
- * @remarks
- * `format`/`formatToString` are pure and total: input that trips a parse
- * hardening guard yields no edits rather than corrupting the document, and
- * every emitted edit is guarded against the re-parse hazards listed in the
- * module documentation — a hazardous conversion is skipped, never attempted.
- * `modify`/`modifyToString` carry a real error channel
- * ({@link MarkdownModificationError}) and render every replacement through
- * the canonical stringifier, so a modified document re-parses cleanly by
- * construction.
  *
  * @public
  */

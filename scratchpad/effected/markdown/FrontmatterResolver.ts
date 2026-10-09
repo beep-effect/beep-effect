@@ -36,7 +36,8 @@ class SchemaRegistryError extends S.TaggedError<SchemaRegistryError>($I`SchemaRe
  * A `$schema` declaration referencing a schema by URL — any string containing
  * `://`.
  *
- * @remarks
+ * **Details**
+ *
  * Carried as data, never resolved in-package: the pure tier does no IO. An
  * external resolver implementing {@link FrontmatterSchemaResolver} may fetch
  * and interpret it.
@@ -52,7 +53,8 @@ export class SchemaDeclarationByUrl extends S.TaggedClass<SchemaDeclarationByUrl
  * A `$schema` declaration referencing a schema by path — any string starting
  * `./`, `../` or `/` (a bundle- or file-relative reference).
  *
- * @remarks
+ * **Details**
+ *
  * Carried as data, never resolved in-package: the pure tier does no IO.
  *
  * @public
@@ -66,7 +68,8 @@ export class SchemaDeclarationByPath extends S.TaggedClass<SchemaDeclarationByPa
  * A `$schema` declaration carrying an inline JSON-Schema-like document — the
  * declaration value is itself a mapping.
  *
- * @remarks
+ * **Details**
+ *
  * Carried as data: the kit deliberately ships no JSON Schema engine
  * (`@effected/json-schema` is off the roadmap), so an inline document is
  * interpretable only through an external resolver plugged into the
@@ -83,7 +86,8 @@ export class SchemaDeclarationInline extends S.TaggedClass<SchemaDeclarationInli
  * A `$schema` declaration referencing a registered schema by name — any other
  * string, with the committed `name[@version]` grammar.
  *
- * @remarks
+ * **Details**
+ *
  * The string splits at the **last** `@`, so a leading npm-style scope
  * survives: `@savvy/skill@2.1.0` is name `@savvy/skill`, version `2.1.0`.
  * The version grammar is `X[.Y[.Z]]` — one to three dot-separated
@@ -216,7 +220,8 @@ export type FrontmatterResolveError =
  * The resolver seam: given a classified declaration **and** the whole decoded
  * frontmatter data, produce the schema to validate with, or fail typed.
  *
- * @remarks
+ * **Details**
+ *
  * The whole-data second argument is the dispatch seam: because a resolver
  * sees everything the frontmatter decoded to, it need not key on `$schema`
  * at all — an OKF resolver dispatches on OKF's `type` field with zero OKF
@@ -256,20 +261,21 @@ const isMapping = (value: unknown): value is Record<string, unknown> =>
  */
 export class SchemaResolver {
 	/**
-	 * Classify a raw `$schema` value into the declaration union.
-	 *
-	 * @remarks
-	 * Total over its legal domain and typed on junk: a string containing
-	 * `://` is {@link SchemaDeclarationByUrl}; a string starting `./`, `../`
-	 * or `/` is {@link SchemaDeclarationByPath}; a mapping is
-	 * {@link SchemaDeclarationInline}; any other non-empty string is
-	 * {@link SchemaDeclarationByName} under the `name[@version]` grammar.
-	 * Everything else — and a name whose version falls outside `X[.Y[.Z]]` —
-	 * fails with {@link SchemaDeclarationInvalidError}.
-	 *
-	 * @param value - The raw `$schema` value from decoded frontmatter data.
-	 * @returns The classified declaration, or the typed classification error.
-	 */
+  * Classify a raw `$schema` value into the declaration union.
+  *
+  * **Details**
+  *
+  * Total over its legal domain and typed on junk: a string containing
+  * `://` is {@link SchemaDeclarationByUrl}; a string starting `./`, `../`
+  * or `/` is {@link SchemaDeclarationByPath}; a mapping is
+  * {@link SchemaDeclarationInline}; any other non-empty string is
+  * {@link SchemaDeclarationByName} under the `name[@version]` grammar.
+  * Everything else — and a name whose version falls outside `X[.Y[.Z]]` —
+  * fails with {@link SchemaDeclarationInvalidError}.
+  *
+  * @param value - The raw `$schema` value from decoded frontmatter data.
+  * @returns The classified declaration, or the typed classification error.
+  */
 	static classify(value: unknown): Result.Result<SchemaDeclaration, SchemaDeclarationInvalidError> {
 		if (P.isString(value)) {
 			if (value.length === 0) {
@@ -308,20 +314,21 @@ export class SchemaResolver {
 	}
 
 	/**
-	 * Extract and classify the `$schema` declaration from decoded frontmatter
-	 * data.
-	 *
-	 * @remarks
-	 * Non-mapping data and a mapping without a `$schema` key both carry no
-	 * declaration: the result succeeds with `undefined` by default, or fails
-	 * with {@link SchemaDeclarationMissingError} under `requireDeclaration`.
-	 *
-	 * @param data - The decoded frontmatter data.
-	 * @param options - `requireDeclaration` makes a missing `$schema` a typed
-	 *   error.
-	 * @returns The classified declaration, `undefined` when absent and
-	 *   tolerated, or the typed error.
-	 */
+  * Extract and classify the `$schema` declaration from decoded frontmatter
+  * data.
+  *
+  * **Details**
+  *
+  * Non-mapping data and a mapping without a `$schema` key both carry no
+  * declaration: the result succeeds with `undefined` by default, or fails
+  * with {@link SchemaDeclarationMissingError} under `requireDeclaration`.
+  *
+  * @param data - The decoded frontmatter data.
+  * @param options - `requireDeclaration` makes a missing `$schema` a typed
+  *   error.
+  * @returns The classified declaration, `undefined` when absent and
+  *   tolerated, or the typed error.
+  */
 	static declarationOf(
 		data: unknown,
 		options?: { readonly requireDeclaration?: boolean },
@@ -335,28 +342,29 @@ export class SchemaResolver {
 	}
 
 	/**
-	 * The package's one built-in resolver: a name-keyed registry with
-	 * exact version-segment resolution.
-	 *
-	 * @remarks
-	 * Registration keys use the same `name[@version]` grammar as declarations
-	 * — carrying a concrete version or none — and are validated eagerly: a key
-	 * outside the grammar, or two keys whose version segments collide
-	 * numerically, throws at construction (programmer error, not input).
-	 *
-	 * Resolution is exact: a declaration resolves only against an identically
-	 * written registration (version segments compared numerically), a
-	 * versionless declaration only against a versionless registration, and a
-	 * legal-but-unsatisfied version fails with the dedicated
-	 * {@link SchemaVersionUnresolvableError}, distinct from
-	 * {@link SchemaNameUnknownError}. URL, path and inline declarations are
-	 * never resolvable here — those belong to external resolvers plugged into
-	 * the same seam. A registry cannot dispatch without a declaration, so an
-	 * absent one fails with {@link SchemaDeclarationMissingError}.
-	 *
-	 * @param registrations - Schemas keyed by `name[@version]`.
-	 * @returns The registry-backed resolver.
-	 */
+  * The package's one built-in resolver: a name-keyed registry with
+  * exact version-segment resolution.
+  *
+  * **Details**
+  *
+  * Registration keys use the same `name[@version]` grammar as declarations
+  * — carrying a concrete version or none — and are validated eagerly: a key
+  * outside the grammar, or two keys whose version segments collide
+  * numerically, throws at construction (programmer error, not input).
+  *
+  * Resolution is exact: a declaration resolves only against an identically
+  * written registration (version segments compared numerically), a
+  * versionless declaration only against a versionless registration, and a
+  * legal-but-unsatisfied version fails with the dedicated
+  * {@link SchemaVersionUnresolvableError}, distinct from
+  * {@link SchemaNameUnknownError}. URL, path and inline declarations are
+  * never resolvable here — those belong to external resolvers plugged into
+  * the same seam. A registry cannot dispatch without a declaration, so an
+  * absent one fails with {@link SchemaDeclarationMissingError}.
+  *
+  * @param registrations - Schemas keyed by `name[@version]`.
+  * @returns The registry-backed resolver.
+  */
 	static fromRegistry(registrations: Readonly<Record<string, S.Top>>): FrontmatterSchemaResolver {
 		// Hash keys keep registration names independent of object prototypes.
 		const byName = MutableHashMap.empty<

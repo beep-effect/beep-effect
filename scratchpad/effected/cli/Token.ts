@@ -9,7 +9,8 @@ const $I = $ScratchpadId.create("effected/cli/Token");
 /**
  * A named terminal colour: the eight ANSI colours and their bright variants.
  *
- * @remarks
+ * **Details**
+ *
  * The bright variants are spelled as chalk and Ink spell them (`redBright`, `blackBright`), so a style maps to
  * either without a rename table. `gray` is chalk's alias for `blackBright`.
  *
@@ -39,7 +40,8 @@ export type NamedColor = typeof NamedColor.Type;
 /**
  * A terminal style: an optional foreground colour and text attributes.
  *
- * @remarks
+ * **Details**
+ *
  * A style is data; it carries no escape sequences. `CliTheme.paint` renders it for the terminal's colour
  * level, and at level `none` rendering is the identity. A hex foreground that is not `#rgb` or `#rrggbb`, and
  * a name that is not a {@link NamedColor}, is ignored when rendered rather than failing.
@@ -102,25 +104,27 @@ export class Token {
 	private constructor() {}
 
 	/**
-	 * The default {@link Style} of every token, readonly.
-	 *
-	 * @remarks
-	 * Data, not a service: it is what `CliTheme` starts from, and a renderer with no Effect context (an Ink
-	 * component) reads it directly.
-	 */
+  * The default {@link Style} of every token, readonly.
+  *
+  * **Details**
+  *
+  * Data, not a service: it is what `CliTheme` starts from, and a renderer with no Effect context (an Ink
+  * component) reads it directly.
+  */
 	static readonly defaults: Readonly<Record<TokenName, Style>> = DEFAULTS;
 
 	/**
-	 * The style a token or style resolves to, as a pure function: no service, no terminal.
-	 *
-	 * @remarks
-	 * An explicit style resolves to itself. A token name resolves to its override when `overrides` has one, else
-	 * its default; a name that is not a token (including an `Object.prototype` member) resolves to the empty
-	 * style. This is the same resolution `CliTheme.paint` applies, which is what `StreamTheme.style` reports.
-	 *
-	 * @param token - a token name or an explicit style
-	 * @param overrides - styles that replace the default of a token, as `CliThemeOptions.tokens` does
-	 */
+  * The style a token or style resolves to, as a pure function: no service, no terminal.
+  *
+  * **Details**
+  *
+  * An explicit style resolves to itself. A token name resolves to its override when `overrides` has one, else
+  * its default; a name that is not a token (including an `Object.prototype` member) resolves to the empty
+  * style. This is the same resolution `CliTheme.paint` applies, which is what `StreamTheme.style` reports.
+  *
+  * @param token - a token name or an explicit style
+  * @param overrides - styles that replace the default of a token, as `CliThemeOptions.tokens` does
+  */
 	static readonly resolve = (token: TokenName | Style, overrides?: Partial<Record<TokenName, Style>>): Style => {
 		if (!P.isString(token)) return token;
 		const own =

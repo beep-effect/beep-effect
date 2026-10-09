@@ -26,7 +26,8 @@ const $I = $ScratchpadId.create("effected/sbom/IdentityToken");
 /**
  * Raised when an identity token cannot be obtained.
  *
- * @remarks
+ * **Details**
+ *
  * The audience is on the error because "which audience" is the first thing a
  * caller checks when an exchange is refused — a token minted for the wrong one
  * fails at the certificate authority, far from here.
@@ -47,7 +48,8 @@ export class IdentityTokenError extends S.TaggedError<IdentityTokenError>($I`Ide
 /**
  * The contract: one method, one audience, one redacted token.
  *
- * @remarks
+ * **Details**
+ *
  * Deliberately smaller than any issuer's own surface. An implementation may
  * cache, may decode claims, may do neither — none of that is this package's
  * business, and a wider contract would make github-actions' issuer the only
@@ -67,13 +69,15 @@ const TEST_TOKEN = "test-identity-token";
  * A source of workload identity tokens (OIDC), the input `SigstoreSigner` needs
  * to obtain a signing certificate.
  *
- * @remarks
+ * **Details**
+ *
  * In GitHub Actions, provide `ActionsIdentityToken.layer` from
  * `@effected/github-actions`. A consumer that already holds a token uses
  * {@link (IdentityToken:class).layerStatic}; tests use
  * {@link (IdentityToken:class).layerTest}.
  *
- * @example
+ * **Example** (Provide a static identity token to the Sigstore signer)
+ *
  * ```ts
  * import { IdentityToken, SigstoreSigner } from "./index.ts";
  * import * as Layer from "effect/Layer";
@@ -88,15 +92,16 @@ export class IdentityToken extends Context.Service<IdentityToken, IdentityTokenS
 	$I`IdentityToken`,
 ) {
 	/**
-	 * A layer answering with a token the caller already holds.
-	 *
-	 * @remarks
-	 * For a consumer that obtained a token by some other route — a CI system
-	 * that is not GitHub Actions, or a script that exchanged one itself. The
-	 * audience is **ignored**, so it is the caller's job to have minted the token
-	 * for the audience it will be used with; a layer cannot check that, and
-	 * pretending otherwise would be theatre.
-	 */
+  * A layer answering with a token the caller already holds.
+  *
+  * **Gotchas**
+  *
+  * For a consumer that obtained a token by some other route — a CI system
+  * that is not GitHub Actions, or a script that exchanged one itself. The
+  * audience is **ignored**, so it is the caller's job to have minted the token
+  * for the audience it will be used with; a layer cannot check that, and
+  * pretending otherwise would be theatre.
+  */
 	static readonly layerStatic = (token: Redacted.Redacted<string> | string): Layer.Layer<IdentityToken> =>
 		Layer.succeed(IdentityToken, {
 			token: Effect.fn("IdentityToken.token")(() =>
@@ -105,13 +110,14 @@ export class IdentityToken extends Context.Service<IdentityToken, IdentityTokenS
 		});
 
 	/**
-	 * An in-memory double.
-	 *
-	 * @remarks
-	 * Unlike {@link (SigstoreSigner:class).makeTest}, this one **answers** rather than
-	 * dying: a fabricated OIDC token is a real answer to "give me a token" in a
-	 * test, where a fabricated signature would be a lie about cryptography.
-	 */
+  * An in-memory double.
+  *
+  * **Details**
+  *
+  * Unlike {@link (SigstoreSigner:class).makeTest}, this one **answers** rather than
+  * dying: a fabricated OIDC token is a real answer to "give me a token" in a
+  * test, where a fabricated signature would be a lie about cryptography.
+  */
 	static readonly makeTest = (overrides: Partial<IdentityTokenShape> = {}): IdentityTokenShape => ({
 		token: overrides.token ?? (() => Effect.succeed(Redacted.make(TEST_TOKEN))),
 	});

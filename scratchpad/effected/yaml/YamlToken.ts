@@ -111,47 +111,50 @@ export class YamlTokens {
 	private constructor() {}
 
 	/**
-	 * Tokenize YAML text into the full positioned token array — the sync
-	 * `Result` primitive (tokenizing is a pure batch transform; the
-	 * {@link YamlTokens.stream} form is derived from this one).
-	 *
-	 * @remarks
-	 * The failure channel is **reserved** for input-hardening guards and never
-	 * fires today: the lexer is total, and lexical errors surface as
-	 * `"error"`-kind tokens **in the success array** so that linting can run
-	 * on malformed input — the `parse-validity` lint rule exists precisely for
-	 * documents that do not parse. Do not "fix" this method to fail on
-	 * `"error"` tokens; that would make malformed documents unlintable.
-	 *
-	 * @example
-	 * ```ts
-	 * import { YamlTokens } from "./index.ts";
-	 * import * as Result from "effect/Result";
-	 *
-	 * const result = YamlTokens.tokenize("a: 1\n");
-	 * if (Result.isSuccess(result)) {
-	 *   result.success.map((t) => t.kind); // ["scalar", "block-map-start", ...]
-	 * }
-	 * ```
-	 *
-	 * @param text - The YAML source to tokenize.
-	 * @returns A `Result` succeeding with every token in source order.
-	 */
+  * Tokenize YAML text into the full positioned token array — the sync
+  * `Result` primitive (tokenizing is a pure batch transform; the
+  * {@link YamlTokens.stream} form is derived from this one).
+  *
+  * **Gotchas**
+  *
+  * The failure channel is **reserved** for input-hardening guards and never
+  * fires today: the lexer is total, and lexical errors surface as
+  * `"error"`-kind tokens **in the success array** so that linting can run
+  * on malformed input — the `parse-validity` lint rule exists precisely for
+  * documents that do not parse. Do not "fix" this method to fail on
+  * `"error"` tokens; that would make malformed documents unlintable.
+  *
+  * **Example** (Inspect token kinds in a YAML mapping)
+  *
+  * ```ts
+  * import { YamlTokens } from "./index.ts";
+  * import * as Result from "effect/Result";
+  *
+  * const result = YamlTokens.tokenize("a: 1\n");
+  * if (Result.isSuccess(result)) {
+  *   result.success.map((t) => t.kind); // ["scalar", "block-map-start", ...]
+  * }
+  * ```
+  *
+  * @param text - The YAML source to tokenize.
+  * @returns A `Result` succeeding with every token in source order.
+  */
 	static tokenize(text: string): Result.Result<ReadonlyArray<YamlToken>, YamlParseError> {
 		return Result.succeed(promoteAll(text, lexAll(text)));
 	}
 
 	/**
-	 * Tokenize YAML text as a lazy `Stream` of tokens — the derived form of
-	 * {@link YamlTokens.tokenize} for genuinely incremental (SAX-style)
-	 * consumers, parallel to `YamlVisitor.visit`.
-	 *
-	 * @remarks
-	 * Derived from the sync primitive, so it shares its contract: lexical
-	 * errors arrive as `"error"`-kind tokens in the stream, never as a stream
-	 * failure. (The primitive's reserved failure channel would surface as a
-	 * defect here; it never fires today.)
-	 */
+  * Tokenize YAML text as a lazy `Stream` of tokens — the derived form of
+  * {@link YamlTokens.tokenize} for genuinely incremental (SAX-style)
+  * consumers, parallel to `YamlVisitor.visit`.
+  *
+  * **Details**
+  *
+  * Derived from the sync primitive, so it shares its contract: lexical
+  * errors arrive as `"error"`-kind tokens in the stream, never as a stream
+  * failure. (The primitive's reserved failure channel would surface as a
+  * defect here; it never fires today.)
+  */
 	static stream(text: string): Stream.Stream<YamlToken> {
 		return Stream.suspend(() =>
 			Result.match(YamlTokens.tokenize(text), {

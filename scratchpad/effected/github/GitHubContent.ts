@@ -24,14 +24,15 @@ const JsonValue = S.fromJsonString(S.String);
  */
 export interface GitHubContentShape {
 	/**
-	 * A text file's contents at `ref`, or the default branch when `ref` is
-	 * omitted.
-	 *
-	 * @remarks
-	 * Fails `notFound` when the path does not exist, and `rejected` when it is a
-	 * directory, is not a regular file, or is too large for the contents API
-	 * (which answers an empty body above roughly a megabyte).
-	 */
+  * A text file's contents at `ref`, or the default branch when `ref` is
+  * omitted.
+  *
+  * **Gotchas**
+  *
+  * Fails `notFound` when the path does not exist, and `rejected` when it is a
+  * directory, is not a regular file, or is too large for the contents API
+  * (which answers an empty body above roughly a megabyte).
+  */
 	readonly getFile: (
 		path: string,
 		options?: { readonly ref?: string | undefined },
@@ -47,11 +48,13 @@ export interface GitHubContentShape {
  * Read a text file out of a repository at a ref, with absence as an `Option`
  * when you want it.
  *
- * @remarks
+ * **Details**
+ *
  * Provide it with {@link GitHubContent.layer}, which needs a `GitHubClient`;
  * each method also needs a `Repo` in `R`.
  *
- * @example
+ * **Example** (Read a README with an empty fallback)
+ *
  * ```ts
  * import { GitHubContent } from "./index.ts";
  * import * as Effect from "effect/Effect";

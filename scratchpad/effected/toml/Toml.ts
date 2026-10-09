@@ -28,7 +28,8 @@ const $I = $ScratchpadId.create("effected/toml/Toml");
  * Options controlling stringify behavior. The only knob is `newline` —
  * omitted, it resolves to `"\n"`.
  *
- * @remarks
+ * **Details**
+ *
  * Stringify deliberately emits only TOML 1.0.0 spellings — seconds always
  * present in times, no `\e`/`\xHH` escapes, single-line inline tables — even
  * though {@link Toml.parse} accepts the full TOML 1.1.0 grammar. Every 1.0
@@ -47,7 +48,8 @@ export class TomlStringifyOptions extends S.Class<TomlStringifyOptions>($I`TomlS
  * array shape matches `@effected/yaml`'s aggregate contract). Raised by
  * {@link Toml.parse} and the decode direction of the schema factories.
  *
- * @remarks
+ * **Details**
+ *
  * The `message` renders the first diagnostic's position 1-based
  * (`line + 1:character + 1`) for human readers — a CLI printing this string
  * shows the line/column a person counts in their editor. The structured
@@ -170,7 +172,8 @@ export interface TomlBoundCodec<T, RD = never, RE = never> {
  * Static entry points for TOML parsing, stringification and the schema
  * factories. Not instantiable.
  *
- * @remarks
+ * **Details**
+ *
  * `parse`, `stringify` and the schema factories carry real typed error
  * channels — including the hardening guards (nesting-depth caps on both
  * sides, circular-reference detection on encode) that keep malformed or
@@ -178,7 +181,8 @@ export interface TomlBoundCodec<T, RD = never, RE = never> {
  * unhandled defect. `parse` takes no options: TOML 1.1.0 parsing has no
  * knobs.
  *
- * @example
+ * **Example** (Parse TOML values in an Effect)
+ *
  * ```ts
  * import { Toml } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -195,44 +199,46 @@ export class Toml {
 	private constructor() {}
 
 	/**
-	 * Parse a TOML 1.1.0 document into a plain JavaScript value, synchronously,
-	 * returning a `Result` instead of an `Effect`: tables and inline tables
-	 * become plain objects (`__proto__` lands as an own data property), arrays
-	 * become plain arrays, integers become `number` (or `bigint` past 2^53) and
-	 * date-times become the four `TomlDateTime` classes. Fails with
-	 * {@link TomlParseError} at the first violation; returns `unknown`, never
-	 * `any`.
-	 *
-	 * A nesting-depth bomb (arrays or inline tables past the engine cap) also
-	 * fails through {@link TomlParseError} with a `NestingDepthExceeded`
-	 * diagnostic, never as an unhandled defect.
-	 *
-	 * @remarks
-	 * {@link Toml.parse} is defined in terms of this function; the two never
-	 * diverge. Reach for the `Effect` variant inside Effect code — it carries
-	 * the `Toml.parse` tracing span — and for this one at synchronous
-	 * boundaries such as a lint-staged handler.
-	 *
-	 * @example
-	 * ```ts
-	 * import { Toml } from "./index.ts";
-	 * import * as Result from "effect/Result";
-	 *
-	 * const ok = Toml.parseResult('name = "Alice"');
-	 * if (Result.isSuccess(ok)) {
-	 *   console.log(ok.success); // => { name: "Alice" }
-	 * }
-	 *
-	 * const bad = Toml.parseResult("name = ");
-	 * if (Result.isFailure(bad)) {
-	 *   console.log(bad.failure._tag); // => "TomlParseError"
-	 * }
-	 * ```
-	 *
-	 * @param text - The TOML source to parse.
-	 * @returns A `Result` succeeding with the decoded value (`unknown`, never
-	 *   `any`), or failing with {@link TomlParseError}.
-	 */
+  * Parse a TOML 1.1.0 document into a plain JavaScript value, synchronously,
+  * returning a `Result` instead of an `Effect`: tables and inline tables
+  * become plain objects (`__proto__` lands as an own data property), arrays
+  * become plain arrays, integers become `number` (or `bigint` past 2^53) and
+  * date-times become the four `TomlDateTime` classes. Fails with
+  * {@link TomlParseError} at the first violation; returns `unknown`, never
+  * `any`.
+  *
+  * **Details**
+  *
+  * A nesting-depth bomb (arrays or inline tables past the engine cap) also
+  * fails through {@link TomlParseError} with a `NestingDepthExceeded`
+  * diagnostic, never as an unhandled defect.
+  *
+  * {@link Toml.parse} is defined in terms of this function; the two never
+  * diverge. Reach for the `Effect` variant inside Effect code — it carries
+  * the `Toml.parse` tracing span — and for this one at synchronous
+  * boundaries such as a lint-staged handler.
+  *
+  * **Example** (Handle synchronous TOML parse results)
+  *
+  * ```ts
+  * import { Toml } from "./index.ts";
+  * import * as Result from "effect/Result";
+  *
+  * const ok = Toml.parseResult('name = "Alice"');
+  * if (Result.isSuccess(ok)) {
+  *   console.log(ok.success); // => { name: "Alice" }
+  * }
+  *
+  * const bad = Toml.parseResult("name = ");
+  * if (Result.isFailure(bad)) {
+  *   console.log(bad.failure._tag); // => "TomlParseError"
+  * }
+  * ```
+  *
+  * @param text - The TOML source to parse.
+  * @returns A `Result` succeeding with the decoded value (`unknown`, never
+  *   `any`), or failing with {@link TomlParseError}.
+  */
 	static parseResult(text: string): Result.Result<unknown, TomlParseError> {
 		return parseToResult(text);
 	}
@@ -249,43 +255,45 @@ export class Toml {
 	static readonly parse = Effect.fn("Toml.parse")((text: string) => Effect.fromResult(Toml.parseResult(text)));
 
 	/**
-	 * Stringify a plain JavaScript value as a canonical TOML document,
-	 * synchronously, returning a `Result` instead of an `Effect`: within a
-	 * table, non-table pairs first, then sub-tables as `[dotted.header]`
-	 * sections depth-first, then arrays of tables as `[[dotted.header]]`
-	 * sections, a blank line before every header except at document start.
-	 * Fails with {@link TomlStringifyError} on unsupported values (TOML has no
-	 * null), out-of-int64-range `bigint`s, circular references and
-	 * depth-guard trips — all on the typed channel.
-	 *
-	 * @remarks
-	 * {@link Toml.stringify} is defined in terms of this function; the two
-	 * never diverge. Reach for the `Effect` variant inside Effect code — it
-	 * carries the `Toml.stringify` tracing span — and for this one at
-	 * synchronous boundaries.
-	 *
-	 * @example
-	 * ```ts
-	 * import { Toml } from "./index.ts";
-	 * import * as Result from "effect/Result";
-	 *
-	 * const ok = Toml.stringifyResult({ name: "Alice" });
-	 * if (Result.isSuccess(ok)) {
-	 *   console.log(ok.success); // => 'name = "Alice"\n'
-	 * }
-	 *
-	 * const bad = Toml.stringifyResult({ nope: null });
-	 * if (Result.isFailure(bad)) {
-	 *   console.log(bad.failure._tag); // => "TomlStringifyError"
-	 * }
-	 * ```
-	 *
-	 * @param value - The plain JavaScript value to stringify.
-	 * @param options - Optional {@link TomlStringifyOptions}; `newline`
-	 *   defaults to `"\n"`.
-	 * @returns A `Result` succeeding with the TOML text, or failing with
-	 *   {@link TomlStringifyError}.
-	 */
+  * Stringify a plain JavaScript value as a canonical TOML document,
+  * synchronously, returning a `Result` instead of an `Effect`: within a
+  * table, non-table pairs first, then sub-tables as `[dotted.header]`
+  * sections depth-first, then arrays of tables as `[[dotted.header]]`
+  * sections, a blank line before every header except at document start.
+  * Fails with {@link TomlStringifyError} on unsupported values (TOML has no
+  * null), out-of-int64-range `bigint`s, circular references and
+  * depth-guard trips — all on the typed channel.
+  *
+  * **Details**
+  *
+  * {@link Toml.stringify} is defined in terms of this function; the two
+  * never diverge. Reach for the `Effect` variant inside Effect code — it
+  * carries the `Toml.stringify` tracing span — and for this one at
+  * synchronous boundaries.
+  *
+  * **Example** (Handle synchronous TOML stringify results)
+  *
+  * ```ts
+  * import { Toml } from "./index.ts";
+  * import * as Result from "effect/Result";
+  *
+  * const ok = Toml.stringifyResult({ name: "Alice" });
+  * if (Result.isSuccess(ok)) {
+  *   console.log(ok.success); // => 'name = "Alice"\n'
+  * }
+  *
+  * const bad = Toml.stringifyResult({ nope: null });
+  * if (Result.isFailure(bad)) {
+  *   console.log(bad.failure._tag); // => "TomlStringifyError"
+  * }
+  * ```
+  *
+  * @param value - The plain JavaScript value to stringify.
+  * @param options - Optional {@link TomlStringifyOptions}; `newline`
+  *   defaults to `"\n"`.
+  * @returns A `Result` succeeding with the TOML text, or failing with
+  *   {@link TomlStringifyError}.
+  */
 	static stringifyResult(value: unknown, options?: TomlStringifyOptions): Result.Result<string, TomlStringifyError> {
 		return stringifyToResult(value, options);
 	}
@@ -353,41 +361,43 @@ export class Toml {
 	}
 
 	/**
-	 * Bind a target schema to the TOML codec once, yielding the composed
-	 * schema plus pre-derived `decode`/`encode` directions — the
-	 * {@link Toml.schema} composition without the generic `Schema` machinery
-	 * at every use site. Binds the plain form only: TOML 1.1.0 parsing on
-	 * decode, default stringify options on encode.
-	 *
-	 * Both directions fail with `Schema.SchemaError`, exactly as
-	 * `Schema.decodeEffect`/`Schema.encodeEffect` over {@link Toml.schema}
-	 * would; the target's decoding/encoding service requirements flow through.
-	 *
-	 * @remarks
-	 * Schema-producing: each call composes a fresh schema and derives both
-	 * directions from it. Bind the result to a `const` — that single binding is
-	 * the point.
-	 *
-	 * @example
-	 * ```ts
-	 * import { Toml } from "./index.ts";
-	 * import * as Effect from "effect/Effect";
-	 * import * as S from "effect/Schema";
-	 *
-	 * const Config = S.Struct({ name: S.String });
-	 * const config = Toml.bind(Config);
-	 *
-	 * const program = Effect.gen(function* () {
-	 *   const value = yield* config.decode('name = "Alice"');
-	 *   const text = yield* config.encode(value);
-	 *   return [value, text] as const;
-	 * });
-	 * ```
-	 *
-	 * @param target - The domain schema decoded values must satisfy.
-	 * @returns A {@link TomlBoundCodec} carrying the composed schema and its
-	 *   two pre-bound directions.
-	 */
+  * Bind a target schema to the TOML codec once, yielding the composed
+  * schema plus pre-derived `decode`/`encode` directions — the
+  * {@link Toml.schema} composition without the generic `Schema` machinery
+  * at every use site. Binds the plain form only: TOML 1.1.0 parsing on
+  * decode, default stringify options on encode.
+  *
+  * **Details**
+  *
+  * Both directions fail with `Schema.SchemaError`, exactly as
+  * `Schema.decodeEffect`/`Schema.encodeEffect` over {@link Toml.schema}
+  * would; the target's decoding/encoding service requirements flow through.
+  *
+  * Schema-producing: each call composes a fresh schema and derives both
+  * directions from it. Bind the result to a `const` — that single binding is
+  * the point.
+  *
+  * **Example** (Bind a schema to decode and encode TOML)
+  *
+  * ```ts
+  * import { Toml } from "./index.ts";
+  * import * as Effect from "effect/Effect";
+  * import * as S from "effect/Schema";
+  *
+  * const Config = S.Struct({ name: S.String });
+  * const config = Toml.bind(Config);
+  *
+  * const program = Effect.gen(function* () {
+  *   const value = yield* config.decode('name = "Alice"');
+  *   const text = yield* config.encode(value);
+  *   return [value, text] as const;
+  * });
+  * ```
+  *
+  * @param target - The domain schema decoded values must satisfy.
+  * @returns A {@link TomlBoundCodec} carrying the composed schema and its
+  *   two pre-bound directions.
+  */
 	static bind<T, E, RD = never, RE = never>(target: S.Codec<T, E, RD, RE>): TomlBoundCodec<T, RD, RE> {
 		const schema = Toml.schema(target);
 		return {

@@ -81,7 +81,8 @@ const specVersion = SemVer.pipe(
  * A pnpm `configDependencies` spec from `pnpm-workspace.yaml`: an exact
  * `version` and, on the legacy inline form only, an SRI `integrity`.
  *
- * @remarks
+ * **Details**
+ *
  * pnpm 11 and later write the **bare** form — `pnpm add --config` records
  * `0.11.1`, and the integrity lives in the lockfile. The inline form
  * `0.11.1+sha512-<base64>` is deprecated but still read, and workspaces in the
@@ -99,7 +100,8 @@ const specVersion = SemVer.pipe(
  * accepted, ranges (`^0.11.1`), partial versions, dist-tags, a `v` prefix and
  * padded values are not.
  *
- * @example
+ * **Example** (Parse an inline config dependency integrity)
+ *
  * ```ts
  * import { ConfigDependencySpec } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -150,22 +152,23 @@ export class ConfigDependencySpec extends S.Class<ConfigDependencySpec>($I`Confi
 	);
 
 	/**
-	 * Parse a `configDependencies` spec, synchronously, returning a `Result`
-	 * instead of an `Effect`.
-	 *
-	 * @remarks
-	 * The text before the first `+` must be an exact SemVer version that
-	 * renders back to itself byte for byte (`SemVer.isPinnable`, plus a
-	 * canonical-spelling check so `toString()` round-trips); the text after it,
-	 * when present, must be an SRI `<algo>-<base64>` hash. An empty tail
-	 * (`0.11.1+`) is an integrity failure, not a bare spec.
-	 * {@link ConfigDependencySpec.parse} is defined in terms of this function.
-	 *
-	 * @param input - the spec string to parse
-	 * @returns a `Result` succeeding with the parsed {@link ConfigDependencySpec},
-	 * or failing with {@link InvalidConfigDependencySpecError} naming the half
-	 * that failed.
-	 */
+  * Parse a `configDependencies` spec, synchronously, returning a `Result`
+  * instead of an `Effect`.
+  *
+  * **Details**
+  *
+  * The text before the first `+` must be an exact SemVer version that
+  * renders back to itself byte for byte (`SemVer.isPinnable`, plus a
+  * canonical-spelling check so `toString()` round-trips); the text after it,
+  * when present, must be an SRI `<algo>-<base64>` hash. An empty tail
+  * (`0.11.1+`) is an integrity failure, not a bare spec.
+  * {@link ConfigDependencySpec.parse} is defined in terms of this function.
+  *
+  * @param input - the spec string to parse
+  * @returns a `Result` succeeding with the parsed {@link ConfigDependencySpec},
+  * or failing with {@link InvalidConfigDependencySpecError} naming the half
+  * that failed.
+  */
 	static parseResult(input: string): Result.Result<ConfigDependencySpec, InvalidConfigDependencySpecError> {
 		const parts = splitConfigDependencySpec(input);
 		const version = SemVer.parseResult(parts.version);

@@ -18,7 +18,8 @@ const $I = $ScratchpadId.create("effected/templates/SectionDocument");
  * Raised when a document's managed-section structure cannot be read without
  * guessing.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Every reason names an ambiguity whose silent resolution corrupts a file.
  * A skipped unterminated marker makes the next write append a **second** copy
  * of the section; a duplicate means every sync updates the first copy while
@@ -45,12 +46,13 @@ export class SectionParseError extends S.TaggedError<SectionParseError>($I`Secti
 	}
 
 	/**
-	 * The same failure, attributed to a file.
-	 *
-	 * @remarks
-	 * The pure core has no path to report; the service that read the file
-	 * attaches one on the way out.
-	 */
+  * The same failure, attributed to a file.
+  *
+  * **Details**
+  *
+  * The pure core has no path to report; the service that read the file
+  * attaches one on the way out.
+  */
 	static at(path: string, error: SectionParseError): SectionParseError {
 		return SectionParseError.make({
 			reason: error.reason,
@@ -77,14 +79,16 @@ export type SectionReconciliation = typeof SectionReconciliation.Type;
  * A parsed document: its text, the dialect it was read with, and every
  * managed section found in it.
  *
- * @remarks
+ * **Details**
+ *
  * This is the package's pure core. Parsing, inspection, reconciliation and
  * removal are all string-to-string, so every interesting invariant —
  * idempotency, text preservation, ordering normalization, line-ending
  * handling, marker-injection refusal — is assertable from a string literal
  * with no layer, no runtime and no filesystem.
  *
- * @example
+ * **Example** (Parse a document and reconcile a section)
+ *
  * ```ts
  * import { CommentStyle, SectionDocument, SectionId } from "./index.ts";
  * import * as Result from "effect/Result";
@@ -109,14 +113,15 @@ export class SectionDocument extends S.Class<SectionDocument>($I`SectionDocument
 	eol: Eol.annotateKey({ description: "The document's dominant line ending." }),
 }, $I.annote("SectionDocument", { description: "A parsed document: its text, the dialect it was read with, and every managed section found in it." })) {
 	/**
-	 * Parse a document. The synchronous primitive.
-	 *
-	 * @remarks
-	 * Pure computation exposes the sync form as the primitive; {@link SectionDocument.parse}
-	 * derives from this and adds only the tracing span, so the two cannot drift.
-	 * Synchronous callers — a lint hook, a build plugin — use this directly and
-	 * never build an Effect runtime.
-	 */
+  * Parse a document. The synchronous primitive.
+  *
+  * **Details**
+  *
+  * Pure computation exposes the sync form as the primitive; {@link SectionDocument.parse}
+  * derives from this and adds only the tracing span, so the two cannot drift.
+  * Synchronous callers — a lint hook, a build plugin — use this directly and
+  * never build an Effect runtime.
+  */
 	static parseResult(
 		text: string,
 		dialect: SectionDialect = SectionDialect.default,
@@ -130,12 +135,13 @@ export class SectionDocument extends S.Class<SectionDocument>($I`SectionDocument
 	}
 
 	/**
-	 * Parse a document, in `Effect`.
-	 *
-	 * @remarks
-	 * Defined in terms of {@link SectionDocument.parseResult} — synchronous
-	 * callers can use that variant directly.
-	 */
+  * Parse a document, in `Effect`.
+  *
+  * **Details**
+  *
+  * Defined in terms of {@link SectionDocument.parseResult} — synchronous
+  * callers can use that variant directly.
+  */
 	static readonly parse = Effect.fn("SectionDocument.parse")(
 		(text: string, dialect: SectionDialect = SectionDialect.default) =>
 			Effect.fromResult(SectionDocument.parseResult(text, dialect)),
@@ -156,13 +162,14 @@ export class SectionDocument extends S.Class<SectionDocument>($I`SectionDocument
 	}
 
 	/**
-	 * Compare a declared section against the document, changing nothing.
-	 *
-	 * @remarks
-	 * Total: there is no way for a comparison to fail. Line endings are
-	 * normalized on both sides, so a CRLF document does not report drift
-	 * against LF content forever.
-	 */
+  * Compare a declared section against the document, changing nothing.
+  *
+  * **Details**
+  *
+  * Total: there is no way for a comparison to fail. Line endings are
+  * normalized on both sides, so a CRLF document does not report drift
+  * against LF content forever.
+  */
 	check(section: Section): CheckOutcome {
 		const expected = section.withContent(normalizeEol(section.content));
 		const current = this.read(section.id);
@@ -175,16 +182,17 @@ export class SectionDocument extends S.Class<SectionDocument>($I`SectionDocument
 	}
 
 	/**
-	 * Fit a declared set of sections into this document.
-	 *
-	 * @remarks
-	 * Declared sections come back **in declared order** — the ordering
-	 * normalization is a guarantee consumers depend on, not a side effect.
-	 * Text outside a managed span and sections this dialect does not own are
-	 * preserved byte-for-byte. Nothing is rendered into the output until every
-	 * declared section has rendered successfully, so a refusal leaves the
-	 * document untouched.
-	 */
+  * Fit a declared set of sections into this document.
+  *
+  * **Details**
+  *
+  * Declared sections come back **in declared order** — the ordering
+  * normalization is a guarantee consumers depend on, not a side effect.
+  * Text outside a managed span and sections this dialect does not own are
+  * preserved byte-for-byte. Nothing is rendered into the output until every
+  * declared section has rendered successfully, so a refusal leaves the
+  * document untouched.
+  */
 	reconcile(sections: ReadonlyArray<Section>): Result.Result<SectionReconciliation, SectionRenderError> {
 		return reconcile({
 			text: this.text,
@@ -196,12 +204,13 @@ export class SectionDocument extends S.Class<SectionDocument>($I`SectionDocument
 	}
 
 	/**
-	 * The document with this section removed, or `none` if it was not there.
-	 *
-	 * @remarks
-	 * The blank lines around the removed block collapse into a single
-	 * separator, so repeated removals never accumulate gaps.
-	 */
+  * The document with this section removed, or `none` if it was not there.
+  *
+  * **Details**
+  *
+  * The blank lines around the removed block collapse into a single
+  * separator, so repeated removals never accumulate gaps.
+  */
 	remove(id: SectionId): O.Option<string> {
 		const identity = identityOf(id.key, id.commentStyle);
 		const found = this.sections.find(

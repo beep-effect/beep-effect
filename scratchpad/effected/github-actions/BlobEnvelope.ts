@@ -85,7 +85,8 @@ export class BlobMetadataEncodeError extends S.TaggedError<BlobMetadataEncodeErr
 /**
  * Anything that can go wrong reading or writing a blob envelope.
  *
- * @remarks
+ * **Details**
+ *
  * **One class per failure, rather than one class with a `reason` field.** Each
  * member carries exactly the fields its own message needs — the version is
  * required on the one member that reports it — so a value short a field is a
@@ -112,7 +113,8 @@ const HEADER_BYTES = MAGIC.length + 1 + 4;
 /**
  * The schema-versioned frame that gives a stored blob a **metadata channel**.
  *
- * @remarks
+ * **Details**
+ *
  * Layout:
  *
  * ```text
@@ -136,7 +138,8 @@ const HEADER_BYTES = MAGIC.length + 1 + 4;
  * **Pure**: `Result`-returning, no IO, no service — the framing is testable
  * from a byte array, which is the point.
  *
- * @example
+ * **Example** (Encode and decode a blob with typed metadata)
+ *
  * ```ts
  * import { BlobEnvelope } from "./index.ts";
  * import * as Result from "effect/Result";

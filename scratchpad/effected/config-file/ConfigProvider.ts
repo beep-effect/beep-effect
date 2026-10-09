@@ -10,7 +10,8 @@ import type { ConfigFileShape, ConfigLoadError } from "./ConfigFile.ts";
  * so it can be read through `Config.String("port")` and layered beneath other
  * providers.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Strictly additive, and deliberately in its own module so it never becomes a
  * required import. The schema-validated whole-document
  * {@link ConfigFileShape.load} remains the primary API: `Config` has no
@@ -46,7 +47,8 @@ import type { ConfigFileShape, ConfigLoadError } from "./ConfigFile.ts";
  * Descent by own property is also why a prototype getter and `__proto__` are
  * both unreachable through the returned provider.
  *
- * @example
+ * **Example** (Use file configuration as an environment fallback)
+ *
  * ```ts
  * import { asConfigProvider } from "./index.ts";
  * import * as ConfigProvider from "effect/ConfigProvider";
@@ -73,13 +75,14 @@ export const asConfigProvider = <A>(
  */
 export interface LayerConfigProviderOptions {
 	/**
-	 * Make the config file the primary source, consulted before the ambient
-	 * provider rather than after it.
-	 *
-	 * @remarks
-	 * Defaults to `false`, which is the precedence almost every application
-	 * wants: an environment variable overrides the file it was deployed with.
-	 */
+  * Make the config file the primary source, consulted before the ambient
+  * provider rather than after it.
+  *
+  * **Details**
+  *
+  * Defaults to `false`, which is the precedence almost every application
+  * wants: an environment variable overrides the file it was deployed with.
+  */
 	readonly asPrimary?: boolean;
 }
 
@@ -87,7 +90,8 @@ export interface LayerConfigProviderOptions {
  * Install a loaded config document as a fallback beneath the **ambient**
  * `ConfigProvider`, so `Config` accessors read env first and the file second.
  *
- * @remarks
+ * **Details**
+ *
  * This layer composes beneath the **ambient** `ConfigProvider` (a
  * `Context.Reference`), so a consumer supplying `ConfigProvider.layer(...)` controls
  * precedence explicitly: whatever that provider resolves wins, and the config
@@ -101,7 +105,8 @@ export interface LayerConfigProviderOptions {
  * surfaces in the layer's error channel rather than degrading to an empty
  * provider — the same honesty {@link asConfigProvider} keeps.
  *
- * @example
+ * **Example** (Provide a config service to the fallback provider layer)
+ *
  * ```ts
  * const stack = layerConfigProvider(AppConfig).pipe(Layer.provide(AppConfigLive));
  * ```

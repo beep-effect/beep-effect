@@ -7,7 +7,8 @@ import type { CommandFailedError } from "./Run.ts";
 /**
  * Substrings that mark a failure as a transport hiccup rather than a verdict.
  *
- * @remarks
+ * **Details**
+ *
  * Matched case-insensitively against captured stderr, captured stdout (npm and
  * friends route real errors there) and an absorbed spawn failure's message.
  * Exported so a caller extends the set through
@@ -74,7 +75,8 @@ const transient = (options?: {
  * Transience classification for command failures, and the retry policy built
  * on it.
  *
- * @remarks
+ * **Details**
+ *
  * This is composable vocabulary rather than a retrying runner, because core's
  * `Effect.retry` already accepts `{ while, schedule, times }`.
  *
@@ -84,22 +86,23 @@ export class Retry {
 	private constructor() {}
 
 	/**
-	 * Whether a failure looks like a transport hiccup worth retrying.
-	 *
-	 * @remarks
-	 * Two classifications are structural rather than textual, and both matter more
-	 * than the pattern list:
-	 *
-	 * - **A missing executable is never transient.** Retrying cannot install a
-	 *   tool, so `kind: "spawn"` with {@link CommandFailedError.notFound} is
-	 *   permanent however many attempts remain.
-	 * - **A timeout is not transient by default.** A command that hangs
-	 *   deterministically would burn its entire ceiling on every attempt; a caller
-	 *   who knows better opts in via {@link Retry.transient}'s `while`.
-	 *
-	 * Any other spawn failure (a busy or momentarily locked binary) *is* treated as
-	 * transient — that condition does clear.
-	 */
+  * Whether a failure looks like a transport hiccup worth retrying.
+  *
+  * **Details**
+  *
+  * Two classifications are structural rather than textual, and both matter more
+  * than the pattern list:
+  *
+  * - **A missing executable is never transient.** Retrying cannot install a
+  *   tool, so `kind: "spawn"` with {@link CommandFailedError.notFound} is
+  *   permanent however many attempts remain.
+  * - **A timeout is not transient by default.** A command that hangs
+  *   deterministically would burn its entire ceiling on every attempt; a caller
+  *   who knows better opts in via {@link Retry.transient}'s `while`.
+  *
+  * Any other spawn failure (a busy or momentarily locked binary) *is* treated as
+  * transient — that condition does clear.
+  */
 	static readonly isTransient = isTransient;
 
 	/**

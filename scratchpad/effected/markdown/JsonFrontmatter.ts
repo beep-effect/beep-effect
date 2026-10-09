@@ -6,7 +6,8 @@ import { FrontmatterDecodeError, FrontmatterEncodeError, FrontmatterFormatMismat
 /**
  * The json frontmatter codec, over `@effected/jsonc`.
  *
- * @remarks
+ * **Details**
+ *
  * Decodes a `---json`-fenced capture's raw value with `Jsonc.parse`, so the
  * jsonc engine's nesting depth cap fails through the typed channel: a hostile
  * frontmatter block surfaces as a {@link FrontmatterDecodeError} carrying the

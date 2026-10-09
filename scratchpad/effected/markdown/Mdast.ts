@@ -31,7 +31,8 @@ const $I = $ScratchpadId.create("effected/markdown/Mdast");
 /**
  * A plain mdast node: a `type` tag plus whatever fields that type carries.
  *
- * @remarks
+ * **Details**
+ *
  * Deliberately loose — plain-object mdast is a foreign, structurally-typed
  * contract; the precise shapes live in the mdast specification, and
  * {@link Mdast.fromMdast} is the checked way back into typed nodes.
@@ -47,7 +48,8 @@ export interface MdastNode {
  * Indicates that foreign mdast input failed to decode into the package's
  * node classes.
  *
- * @remarks
+ * **Details**
+ *
  * `issue` carries the **structured** schema failure — at runtime a
  * `SchemaIssue.Issue` tree, reachable through `_tag` and nested `issues` —
  * never a stringified rendering. It is typed `unknown` because core exposes
@@ -449,7 +451,8 @@ const decodeRoot = S.decodeUnknownResult(Root);
  * back into this package's node classes, for interop with the remark
  * ecosystem.
  *
- * @remarks
+ * **Details**
+ *
  * `Mdast.toMdast` projects a parsed {@link Root} to plain spec-valid mdast
  * objects — fidelity extras stripped, optional fields spelled the way
  * `mdast-util-from-markdown@2.0.3` spells them (explicit `null`/`false` where
@@ -469,7 +472,8 @@ const decodeRoot = S.decodeUnknownResult(Root);
  * node classes, synthesizing zero-width sentinel positions where unist leaves
  * them optional.
  *
- * @example
+ * **Example** (Round-trip a markdown tree through plain mdast)
+ *
  * ```ts
  * import { Markdown, Mdast } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -485,59 +489,61 @@ const decodeRoot = S.decodeUnknownResult(Root);
  */
 export class Mdast {
 	/**
-	 * Project a parsed {@link Root} to plain mdast JSON.
-	 *
-	 * @remarks
-	 * Total and pure: every tree the parser or {@link Mdast.fromMdast}
-	 * produces projects without failure. Fidelity extras are stripped;
-	 * optional mdast fields are spelled the way `mdast-util-from-markdown`
-	 * spells them, so the output deep-equals the reference utility's trees
-	 * (the vendored interop corpus pins this). The frontmatter capture
-	 * projects to a `yaml`/`toml`/`json` literal node.
-	 *
-	 * @param root - The parsed document tree.
-	 * @returns A plain mdast `root` object with unist positions.
-	 */
+  * Project a parsed {@link Root} to plain mdast JSON.
+  *
+  * **Details**
+  *
+  * Total and pure: every tree the parser or {@link Mdast.fromMdast}
+  * produces projects without failure. Fidelity extras are stripped;
+  * optional mdast fields are spelled the way `mdast-util-from-markdown`
+  * spells them, so the output deep-equals the reference utility's trees
+  * (the vendored interop corpus pins this). The frontmatter capture
+  * projects to a `yaml`/`toml`/`json` literal node.
+  *
+  * @param root - The parsed document tree.
+  * @returns A plain mdast `root` object with unist positions.
+  */
 	static toMdast(root: Root): MdastNode {
 		return projectNode(root);
 	}
 
 	/**
-	 * Decode foreign plain mdast into the package's node classes,
-	 * synchronously, as a `Result`. The pure primitive twin of
-	 * {@link Mdast.fromMdast}.
-	 *
-	 * @remarks
-	 * unist makes positions optional and this package's classes require
-	 * them, so missing or incomplete positions are synthesized as the
-	 * zero-width sentinel (line 1, column 1, offset 0) — clearly synthetic
-	 * and inert for rendering. Trees carrying sentinel positions serve
-	 * tree-level workflows (stringify, the visitor, projection back out),
-	 * not offset-splice editing, whose offsets must come from a real parse.
-	 * `null` values on optional fields normalize to absence per unist's
-	 * null-equals-absent convention; foreign `data` and other unrecognized
-	 * fields are dropped at the boundary; `yaml`/`toml`/`json` literal nodes
-	 * decode into the {@link Frontmatter} capture. Unknown node types fail
-	 * typed.
-	 *
-	 * **This package's fidelity fields are among the fields dropped**, because
-	 * they are not spec mdast. A `fenceChar`, `headingStyle`, `markerChar` or
-	 * `delimiter` set on the tree BEFORE admission is silently discarded, and
-	 * the node then serializes with the canonical default — set them on the
-	 * decoded nodes this returns instead. The drop is correct (the boundary
-	 * admits spec mdast and nothing else) but it is silent, which is why it is
-	 * called out here.
-	 *
-	 * **One exception: `escapeStyle` on a `text` node is admitted.** It
-	 * records no source spelling; it is the caller's instruction to the
-	 * emitter (`"literal"` writes the value verbatim, see {@link Text}), so a
-	 * plain tree built for `Markdown.stringify` can carry it straight in. A
-	 * value outside `"canonical" | "literal"` fails the decode typed.
-	 *
-	 * @param input - A plain mdast tree, typically a `root`.
-	 * @returns A `Result` succeeding with the decoded {@link Root}, or
-	 *   failing with {@link MdastDecodeError} carrying the structured issue.
-	 */
+  * Decode foreign plain mdast into the package's node classes,
+  * synchronously, as a `Result`. The pure primitive twin of
+  * {@link Mdast.fromMdast}.
+  *
+  * **Gotchas**
+  *
+  * unist makes positions optional and this package's classes require
+  * them, so missing or incomplete positions are synthesized as the
+  * zero-width sentinel (line 1, column 1, offset 0) — clearly synthetic
+  * and inert for rendering. Trees carrying sentinel positions serve
+  * tree-level workflows (stringify, the visitor, projection back out),
+  * not offset-splice editing, whose offsets must come from a real parse.
+  * `null` values on optional fields normalize to absence per unist's
+  * null-equals-absent convention; foreign `data` and other unrecognized
+  * fields are dropped at the boundary; `yaml`/`toml`/`json` literal nodes
+  * decode into the {@link Frontmatter} capture. Unknown node types fail
+  * typed.
+  *
+  * **This package's fidelity fields are among the fields dropped**, because
+  * they are not spec mdast. A `fenceChar`, `headingStyle`, `markerChar` or
+  * `delimiter` set on the tree BEFORE admission is silently discarded, and
+  * the node then serializes with the canonical default — set them on the
+  * decoded nodes this returns instead. The drop is correct (the boundary
+  * admits spec mdast and nothing else) but it is silent, which is why it is
+  * called out here.
+  *
+  * **One exception: `escapeStyle` on a `text` node is admitted.** It
+  * records no source spelling; it is the caller's instruction to the
+  * emitter (`"literal"` writes the value verbatim, see {@link Text}), so a
+  * plain tree built for `Markdown.stringify` can carry it straight in. A
+  * value outside `"canonical" | "literal"` fails the decode typed.
+  *
+  * @param input - A plain mdast tree, typically a `root`.
+  * @returns A `Result` succeeding with the decoded {@link Root}, or
+  *   failing with {@link MdastDecodeError} carrying the structured issue.
+  */
 	static fromMdastResult(input: unknown): Result.Result<Root, MdastDecodeError> {
 		return Result.mapError(decodeRoot(normalizeNode(input)), (error) => MdastDecodeError.make({ issue: error.issue }));
 	}

@@ -26,7 +26,8 @@ export class BlobTransferError extends S.TaggedError<BlobTransferError>($I`BlobT
  * Moving whole files to and from the signed blob url a results-backend RPC
  * hands back.
  *
- * @remarks
+ * **Details**
+ *
  * The seam exists because the *protocol* is what this package owns and the
  * *transport* is not: the Actions results backend answers a Twirp RPC with a
  * pre-signed Azure url, and everything interesting — the RPC sequence, the
@@ -51,7 +52,8 @@ export interface FileBlobTransfer {
 /**
  * Moving in-memory bytes to and from a signed blob url.
  *
- * @remarks
+ * **Details**
+ *
  * The {@link FileBlobTransfer} counterpart for payloads that never touch the
  * filesystem. Split rather than merged because the cache and artifact protocols
  * only ever move files and the blob store only ever moves buffers — a single

@@ -4,7 +4,8 @@ import * as Effect from "effect/Effect";
 /**
  * Whether a drain mode drains: `true` and `false` as given, and `"auto"` unless `NODE_ENV` is exactly `"production"`.
  *
- * @remarks
+ * **Details**
+ *
  * React picks its development build whenever `NODE_ENV` is not exactly `"production"`, and that build records
  * user-timing entries on every render and never clears them. An
  * unset `NODE_ENV`, the common case for a CLI, leaks like `"development"`, so `"auto"` drains then too. `NODE_ENV` is
@@ -24,7 +25,8 @@ export const resolveDrain = (mode: boolean | "auto"): Effect.Effect<boolean> =>
 /**
  * Clear every user-timing `measure` entry in the process, when `drain` is true.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The clear is global: it removes a consumer's own measures too, because the platform's `clearMeasures` filters only
  * by name, and React's entries (`Update`, `Mount`, tagged `detail.devtools`) share their names with anything a
  * consumer might call a measure. Marks are left alone: React's development build leaks measures only, never marks,

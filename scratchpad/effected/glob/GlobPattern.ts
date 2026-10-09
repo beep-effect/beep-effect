@@ -152,7 +152,8 @@ const compilesUnderDefaults = (source: string): true | string => {
  * A compiled glob pattern with a total `matches(candidate)` predicate, plus the
  * metadata a directory walker needs.
  *
- * @remarks
+ * **Details**
+ *
  * The schema IS the domain class. One encoded field, `source`; the compiled
  * matcher lives in a private field the schema never encodes, built lazily for
  * `make`/decode-constructed instances and pre-warmed by
@@ -186,40 +187,42 @@ export class GlobPattern extends S.Class<GlobPattern>($I`GlobPattern`)(
 	}
 
 	/**
-	 * Compile a pattern under the given options, synchronously — the package's
-	 * fallible boundary in its primitive form. Compilation is pure
-	 * string→predicate work with no IO, no services and no async step, so the
-	 * sync form is the real primitive and {@link GlobPattern.compile} is
-	 * derived from it.
-	 *
-	 * Total: never throws for pattern input. Guard trips (over-length,
-	 * expansion budget, nesting depth) come back as a `Result` failure holding
-	 * {@link GlobPatternError}; invalid *options* never reach here (they throw
-	 * at `GlobPatternOptions.make`, a wiring defect).
-	 *
-	 * The pattern must also compile under DEFAULT options, whatever the
-	 * effective options are — permissive options (say `nobrace` over a brace
-	 * bomb) do not admit a defaults-rejected pattern; the same typed error
-	 * surfaces instead.
-	 *
-	 * @remarks
-	 * For synchronous call sites that cannot host an Effect — a lint-staged
-	 * handler, a config predicate — this removes the
-	 * `Effect.runSync(Effect.result(...))` escape hatch: pair it with
-	 * `Result.isSuccess` and read `.success` directly. Effect call sites should
-	 * prefer {@link GlobPattern.compile}, which carries the tracing span.
-	 *
-	 * @example
-	 * ```ts
-	 * import { GlobPattern } from "./index.ts";
-	 * import * as Result from "effect/Result";
-	 *
-	 * const compiled = GlobPattern.compileResult("src/*.ts");
-	 * if (Result.isSuccess(compiled)) {
-	 * 	compiled.success.matches("src/index.ts"); // => true
-	 * }
-	 * ```
-	 */
+  * Compile a pattern under the given options, synchronously — the package's
+  * fallible boundary in its primitive form. Compilation is pure
+  * string→predicate work with no IO, no services and no async step, so the
+  * sync form is the real primitive and {@link GlobPattern.compile} is
+  * derived from it.
+  *
+  * **Details**
+  *
+  * Total: never throws for pattern input. Guard trips (over-length,
+  * expansion budget, nesting depth) come back as a `Result` failure holding
+  * {@link GlobPatternError}; invalid *options* never reach here (they throw
+  * at `GlobPatternOptions.make`, a wiring defect).
+  *
+  * The pattern must also compile under DEFAULT options, whatever the
+  * effective options are — permissive options (say `nobrace` over a brace
+  * bomb) do not admit a defaults-rejected pattern; the same typed error
+  * surfaces instead.
+  *
+  * For synchronous call sites that cannot host an Effect — a lint-staged
+  * handler, a config predicate — this removes the
+  * `Effect.runSync(Effect.result(...))` escape hatch: pair it with
+  * `Result.isSuccess` and read `.success` directly. Effect call sites should
+  * prefer {@link GlobPattern.compile}, which carries the tracing span.
+  *
+  * **Example** (Compile and match a glob synchronously)
+  *
+  * ```ts
+  * import { GlobPattern } from "./index.ts";
+  * import * as Result from "effect/Result";
+  *
+  * const compiled = GlobPattern.compileResult("src/*.ts");
+  * if (Result.isSuccess(compiled)) {
+  * 	compiled.success.matches("src/index.ts"); // => true
+  * }
+  * ```
+  */
 	static compileResult(source: string, options?: GlobPatternOptions): Result.Result<GlobPattern, GlobPatternError> {
 		const engineOptions = toEngineOptions(options);
 		try {
@@ -275,22 +278,23 @@ export class GlobPattern extends S.Class<GlobPattern>($I`GlobPattern`)(
 	}
 
 	/**
-	 * The longest literal directory prefix: the common run of leading literal
-	 * segments across every brace alternative, joined and slash-terminated;
-	 * `""` when the first segment carries magic. Designed for directory
-	 * enumerators; well-defined for default-options patterns.
-	 *
-	 * @remarks
-	 * Meaningful for **non-negated** patterns only. For a negated pattern
-	 * ({@link GlobPattern.negated}), the prefix is still computed from the inner
-	 * pattern, but {@link GlobPattern.matches} inverts the result — so the
-	 * pattern can match paths *outside* this prefix. A consumer that bounds
-	 * traversal to `enumerationPrefix` (e.g. a walker's descent) will
-	 * under-enumerate against a negated pattern; guard on `negated` and do not
-	 * use `enumerationPrefix` as the traversal root there — enumerate from `cwd`
-	 * or another encompassing root instead. The inversion is not the getter's
-	 * semantics to express — check `negated` at the call site.
-	 */
+  * The longest literal directory prefix: the common run of leading literal
+  * segments across every brace alternative, joined and slash-terminated;
+  * `""` when the first segment carries magic. Designed for directory
+  * enumerators; well-defined for default-options patterns.
+  *
+  * **Gotchas**
+  *
+  * Meaningful for **non-negated** patterns only. For a negated pattern
+  * ({@link GlobPattern.negated}), the prefix is still computed from the inner
+  * pattern, but {@link GlobPattern.matches} inverts the result — so the
+  * pattern can match paths *outside* this prefix. A consumer that bounds
+  * traversal to `enumerationPrefix` (e.g. a walker's descent) will
+  * under-enumerate against a negated pattern; guard on `negated` and do not
+  * use `enumerationPrefix` as the traversal root there — enumerate from `cwd`
+  * or another encompassing root instead. The inversion is not the getter's
+  * semantics to express — check `negated` at the call site.
+  */
 	get enumerationPrefix(): string {
 		const set = this.#engineOf().set;
 		if (set.length === 0) return "";
@@ -314,17 +318,18 @@ export class GlobPattern extends S.Class<GlobPattern>($I`GlobPattern`)(
 	}
 
 	/**
-	 * Whether the pattern can match more than one level below
-	 * {@link GlobPattern.enumerationPrefix}: true iff any alternative contains
-	 * a globstar, or a magic segment followed by more segments. The enumerator
-	 * uses this to decide between a single-level read and a bounded recursive
-	 * descent.
-	 *
-	 * @remarks
-	 * Like {@link GlobPattern.enumerationPrefix}, this reads the inner pattern
-	 * and does not account for whole-pattern negation; guard on
-	 * {@link GlobPattern.negated} at the call site.
-	 */
+  * Whether the pattern can match more than one level below
+  * {@link GlobPattern.enumerationPrefix}: true iff any alternative contains
+  * a globstar, or a magic segment followed by more segments. The enumerator
+  * uses this to decide between a single-level read and a bounded recursive
+  * descent.
+  *
+  * **Gotchas**
+  *
+  * Like {@link GlobPattern.enumerationPrefix}, this reads the inner pattern
+  * and does not account for whole-pattern negation; guard on
+  * {@link GlobPattern.negated} at the call site.
+  */
 	get crossesSegments(): boolean {
 		return this.#engineOf().set.some((row) => {
 			if (row.includes(GLOBSTAR)) return true;

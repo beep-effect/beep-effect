@@ -129,9 +129,12 @@ const dedupeSorted = (versions: ReadonlyArray<SemVer>): ReadonlyArray<SemVer> =>
  * precedence. Pure state (a `Ref` of a sorted array) — no IO. Versions that
  * differ only in build metadata occupy one slot.
  *
+ * **Details**
+ *
  * Provide {@link VersionCache.layer} to construct the live implementation.
  *
- * @example
+ * **Example** (Load cached versions and retrieve the latest)
+ *
  * ```ts
  * import { SemVer, VersionCache } from "./index.ts";
  * import * as Effect from "effect/Effect";

@@ -28,7 +28,8 @@ export const columnLabel = (counter: Counter): string =>
 /**
  * The total of a `Counts` block: the caller's rule when it has one, otherwise the sum of `n` over every counter.
  *
- * @remarks
+ * **Details**
+ *
  * Lives here, not on `Doc`, so a renderer needs nothing from `Doc` at runtime: `Doc.print` imports the renderers, and
  * a renderer importing `Doc` back would make a cycle. `Doc.total` is this function.
  *
@@ -52,7 +53,8 @@ export const visibleCountersOf = (block: BlockOf<"Counts">): ReadonlyArray<Count
  * has no counter for the key; a duration column, when some row has a `durationMs`, formatted with `Fmt.duration`; and,
  * with `totalRow`, a last row summing each column (a missing count or duration is zero).
  *
- * @remarks
+ * **Details**
+ *
  * Plain literals, not `Doc` constructors: a renderer needs nothing from `Doc` at runtime (see {@link totalOf}).
  *
  * @internal

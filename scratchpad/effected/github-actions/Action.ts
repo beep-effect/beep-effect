@@ -22,7 +22,8 @@ import { ActionState } from "./ActionState.ts";
 /**
  * Everything {@link ActionRuntime.layer} provides.
  *
- * @remarks
+ * **Details**
+ *
  * Spelled out rather than inferred so a caller can name it — a program written
  * against `ActionServices` is a program `Action.run` can run, and the compiler
  * says so before the runner does.
@@ -40,7 +41,8 @@ export type ActionServices =
 /**
  * The default runtime an action executes inside.
  *
- * @remarks
+ * **Details**
+ *
  * The one place in the kit where `@effect/platform-node` is composed rather
  * than left to the consumer, and the reason is that there is no second answer:
  * a GitHub Action is a Node process on a GitHub-provided runner.
@@ -58,14 +60,15 @@ export class ActionRuntime {
 	private constructor() {}
 
 	/**
-	 * The composed default: the runner services, the platform, an HTTP client
-	 * and the workflow-command `Logger`.
-	 *
-	 * @remarks
-	 * A bound constant rather than a factory. A layer-returning function mints a
-	 * fresh layer per call, and layers memoize by reference — a factory here
-	 * would rebuild the environment snapshot for every composition site.
-	 */
+  * The composed default: the runner services, the platform, an HTTP client
+  * and the workflow-command `Logger`.
+  *
+  * **Details**
+  *
+  * A bound constant rather than a factory. A layer-returning function mints a
+  * fresh layer per call, and layers memoize by reference — a factory here
+  * would rebuild the environment snapshot for every composition site.
+  */
 	static readonly layer: Layer.Layer<ActionServices> = Layer.mergeAll(
 		ActionLogger.layer,
 		// The named constant, not a second spelling of it: two `Logger.layer([...])`
@@ -100,30 +103,32 @@ export class ActionRuntime {
  */
 export interface ActionRunOptions<R> {
 	/**
-	 * Services the program needs beyond {@link ActionServices}.
-	 *
-	 * @remarks
-	 * It may require anything {@link ActionRuntime.layer} provides — which is
-	 * what makes `{ layer: ActionCache.layer }` compile with no further wiring.
-	 */
+  * Services the program needs beyond {@link ActionServices}.
+  *
+  * **Details**
+  *
+  * It may require anything {@link ActionRuntime.layer} provides — which is
+  * what makes `{ layer: ActionCache.layer }` compile with no further wiring.
+  */
 	readonly layer?: Layer.Layer<R, never, ActionServices> | undefined;
 	/**
-	 * Whether step debugging lowers the minimum log level to `Debug`.
-	 *
-	 * @remarks
-	 * Defaults to `true`. With step debugging on (`RUNNER_DEBUG=1`, read through
-	 * {@link ActionEnvironmentShape.isDebug}), `Action.run` lowers core's
-	 * `References.MinimumLogLevel` — `Info` by default — to `Debug` for the whole
-	 * program, so `Effect.logDebug` calls reach the runner as `::debug::` lines
-	 * instead of being filtered before any logger sees them. It only ever
-	 * **lowers**: a level already at `Debug` or below, from the `layer` option,
-	 * is left alone.
-	 *
-	 * Pass `false` to keep the ambient level regardless of step debugging — an
-	 * action whose debug output is too heavy to show even to someone who asked
-	 * for it. A program can still provide its own `MinimumLogLevel` either way;
-	 * the innermost provision wins.
-	 */
+  * Whether step debugging lowers the minimum log level to `Debug`.
+  *
+  * **Details**
+  *
+  * Defaults to `true`. With step debugging on (`RUNNER_DEBUG=1`, read through
+  * {@link ActionEnvironmentShape.isDebug}), `Action.run` lowers core's
+  * `References.MinimumLogLevel` — `Info` by default — to `Debug` for the whole
+  * program, so `Effect.logDebug` calls reach the runner as `::debug::` lines
+  * instead of being filtered before any logger sees them. It only ever
+  * **lowers**: a level already at `Debug` or below, from the `layer` option,
+  * is left alone.
+  *
+  * Pass `false` to keep the ambient level regardless of step debugging — an
+  * action whose debug output is too heavy to show even to someone who asked
+  * for it. A program can still provide its own `MinimumLogLevel` either way;
+  * the innermost provision wins.
+  */
 	readonly stepDebugLogLevel?: boolean | undefined;
 }
 
@@ -143,7 +148,8 @@ const withStepDebugLogLevel = Effect.fn("withStepDebugLogLevel")(function* <A, E
 /**
  * A readable one-line summary of why an action failed.
  *
- * @remarks
+ * **Details**
+ *
  * `[Tag]: message` because a workflow log is read by a human scanning for the
  * first red line, and every error in this kit carries both. The `_tag` is what
  * makes two failures with the same wording distinguishable, and the `message`
@@ -182,7 +188,8 @@ const describeError = (error: unknown): string => {
 /**
  * The entry point an action's `main`, `pre` and `post` scripts call.
  *
- * @remarks
+ * **Details**
+ *
  * Everything an action entry point does that is not the action: compose the
  * runtime, run the program, render a failure as a `::error::` annotation, and
  * **set the exit code** — which is the piece
@@ -217,7 +224,8 @@ const describeError = (error: unknown): string => {
  * visible error, because in a bundled action it points at one line of
  * `dist/main.js`.
  *
- * @example
+ * **Example** (Run an action with the cache layer)
+ *
  * ```ts
  * import { Action, ActionCache } from "./index.ts";
  *
@@ -233,13 +241,14 @@ export class Action {
 	static readonly describeCause = describeCause;
 
 	/**
-	 * Run an action program to completion.
-	 *
-	 * @remarks
-	 * Never rejects: the promise resolves whether the program succeeded or not,
-	 * so read `process.exitCode` for the verdict. Requirements beyond
-	 * {@link ActionServices} come from `options.layer`.
-	 */
+  * Run an action program to completion.
+  *
+  * **Details**
+  *
+  * Never rejects: the promise resolves whether the program succeeded or not,
+  * so read `process.exitCode` for the verdict. Requirements beyond
+  * {@link ActionServices} come from `options.layer`.
+  */
 	static readonly run = <E, R = never>(
 		program: Effect.Effect<void, E, ActionServices | R>,
 		options: ActionRunOptions<R> = {},

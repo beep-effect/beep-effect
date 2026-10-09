@@ -18,7 +18,8 @@ class DuplicateViewportKeyError extends S.TaggedError<DuplicateViewportKeyError>
 /**
  * Where a viewport is: the selected item, the first item in view, how many items fit, and how many there are.
  *
- * @remarks
+ * **Details**
+ *
  * Every number counts items, never section headers. The reducer keeps `0 <= cursor < count` (or both 0 when there
  * are no items) and `offset <= cursor < offset + height`, and never lets the window run past the last item.
  *
@@ -194,7 +195,8 @@ const slice = (
 /**
  * A scrolling list: a pure reducer over a window of items, its key table, and a view that draws the window.
  *
- * @remarks
+ * **Details**
+ *
  * The view never draws more lines than fit: its height is `min(state.height, terminal rows - 1 - reserved)`, and
  * every row is clipped to one line of `columns - 1` cells, so a frame never fills the terminal and Ink never clears
  * the screen and scrollback to redraw it. A section header stays visible: when the header of the first visible item

@@ -115,12 +115,15 @@ const matchesExclude = (name: string, patterns: readonly string[]): boolean =>
  * `minimumReleaseAgeExclude` config so a resolver can drop too-young candidate
  * versions before picking, avoiding `ERR_PNPM_NO_MATURE_MATCHING_VERSION`.
  *
+ * **Details**
+ *
  * `ageMinutes` is constrained non-negative and finite; a `ReleaseAgeGate` with
  * `ageMinutes <= 0` is an inert gate that filters nothing. Assemble a gate from
  * multiple config sources with {@link ReleaseAgeGate.combine}, and apply it to
  * a package's candidate versions with {@link ReleaseAgeGate.filterVersions}.
  *
- * @example
+ * **Example** (Combine release-age settings and filter candidate versions)
+ *
  * ```ts
  * import { ReleaseAgeGate } from "./index.ts";
  *
@@ -173,23 +176,24 @@ export class ReleaseAgeGate extends S.Class<ReleaseAgeGate>($I`ReleaseAgeGate`)(
 	}
 
 	/**
-	 * Whether a package name matches any of `patterns`, using pnpm's
-	 * `@pnpm/matcher` semantics: an exact-name match, or a `*`-glob where `*`
-	 * matches any run of characters **including `/`** — so a bare `*` matches a
-	 * scoped name like `@scope/pkg`, and `@scope/*` matches every package in a
-	 * scope.
-	 *
-	 * @remarks
-	 * This is deliberately **NOT** `@effected/glob`'s minimatch dialect, in
-	 * which `*` refuses to cross `/` (there `*` matches `pkg` but not
-	 * `@scope/pkg`, and you would need `**`). pnpm treats the package name as a
-	 * flat string, so this matcher does too. Do not "fix" this to route through
-	 * `@effected/glob`: it would silently change which packages a gate exempts
-	 * and diverge from pnpm's own behavior.
-	 *
-	 * @param name - the package name to test.
-	 * @param patterns - the exclude patterns (exact names or `*`-globs).
-	 */
+  * Whether a package name matches any of `patterns`, using pnpm's
+  * `@pnpm/matcher` semantics: an exact-name match, or a `*`-glob where `*`
+  * matches any run of characters **including `/`** — so a bare `*` matches a
+  * scoped name like `@scope/pkg`, and `@scope/*` matches every package in a
+  * scope.
+  *
+  * **Gotchas**
+  *
+  * This is deliberately **NOT** `@effected/glob`'s minimatch dialect, in
+  * which `*` refuses to cross `/` (there `*` matches `pkg` but not
+  * `@scope/pkg`, and you would need `**`). pnpm treats the package name as a
+  * flat string, so this matcher does too. Do not "fix" this to route through
+  * `@effected/glob`: it would silently change which packages a gate exempts
+  * and diverge from pnpm's own behavior.
+  *
+  * @param name - the package name to test.
+  * @param patterns - the exclude patterns (exact names or `*`-globs).
+  */
 	static matchesExclude(name: string, patterns: readonly string[]): boolean {
 		return matchesExclude(name, patterns);
 	}

@@ -148,7 +148,8 @@ const decodePreamble = Effect.fn("decodePreamble")(function* (content: string): 
 /**
  * Read the package manager pinned by a `pnpm-lock.yaml`'s env preamble.
  *
- * @remarks
+ * **Details**
+ *
  * `undefined` means the lockfile records no package manager: no preamble, or
  * a preamble whose root importer declares no `pnpm` package-manager
  * dependency. Everything past that point is a claim the lockfile made, so a
@@ -189,7 +190,8 @@ export const readPnpmPackageManager = Effect.fn("readPnpmPackageManager")(functi
  * Read the config dependencies recorded by a `pnpm-lock.yaml`'s env preamble,
  * keyed by name, each with the integrity pnpm recorded for it.
  *
- * @remarks
+ * **Details**
+ *
  * An empty map means the lockfile records none: no preamble, or a preamble
  * whose root importer declares no `configDependencies`. As with
  * {@link readPnpmPackageManager}, every entry the importer names is a claim,

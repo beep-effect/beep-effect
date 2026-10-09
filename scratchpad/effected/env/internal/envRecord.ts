@@ -16,7 +16,8 @@ export const normalizeEnv = (record: Env): Env =>
 /**
  * Read a fixed key set from the ambient `ConfigProvider` into a plain {@link Env} record.
  *
- * @remarks
+ * **Details**
+ *
  * A key that is absent, or whose read fails for any reason, is left out of the record, so the record carries
  * non-empty values only. An empty string is normalized to absent here, under every provider, including one built
  * with `preserveEmptyStrings: true`, so `FORCE_COLOR=""` reads as unset whichever provider is ambient.

@@ -75,49 +75,51 @@ export class ActionCacheError extends S.TaggedError<ActionCacheError>($I`ActionC
  */
 export interface ActionCacheShape {
 	/**
-	 * Archive the files and directories matching `paths` and store them under
-	 * `key`.
-	 *
-	 * @remarks
-	 * `paths` is a list of glob **patterns**, resolved with `actions/cache`
-	 * parity before `tar` ever sees them: a pattern may match directories (a
-	 * matched directory is archived recursively, never expanded into its
-	 * descendants), a pattern that matches nothing — including a literal path
-	 * that is not on disk — is silently dropped, and a list that resolves to
-	 * nothing at all fails typed rather than reserving an entry no archive will
-	 * ever back. A leading `~` expands to the caller's home directory, relative
-	 * patterns root at `GITHUB_WORKSPACE` (falling back to the working
-	 * directory), and a leading `!` marks an exclusion.
-	 *
-	 * The entry **version** is a digest of the literal pattern list, exactly as
-	 * `actions/cache` computes it — resolution feeds `tar` only, never the
-	 * version — so {@link ActionCacheShape.restore | restore}, which resolves
-	 * nothing, derives the same version from the same list for free.
-	 *
-	 * One deliberate divergence from the toolkit: where `actions/cache` re-roots
-	 * every match relative to the workspace, resolved paths here stay
-	 * **absolute** and are archived with `tar -P`, so a restore puts every file
-	 * back where it came from regardless of the restoring step's working
-	 * directory.
-	 *
-	 * A key that already exists is a **success**: cache entries are immutable, so
-	 * another job having written it first is the outcome the caller wanted.
-	 */
+  * Archive the files and directories matching `paths` and store them under
+  * `key`.
+  *
+  * **Details**
+  *
+  * `paths` is a list of glob **patterns**, resolved with `actions/cache`
+  * parity before `tar` ever sees them: a pattern may match directories (a
+  * matched directory is archived recursively, never expanded into its
+  * descendants), a pattern that matches nothing — including a literal path
+  * that is not on disk — is silently dropped, and a list that resolves to
+  * nothing at all fails typed rather than reserving an entry no archive will
+  * ever back. A leading `~` expands to the caller's home directory, relative
+  * patterns root at `GITHUB_WORKSPACE` (falling back to the working
+  * directory), and a leading `!` marks an exclusion.
+  *
+  * The entry **version** is a digest of the literal pattern list, exactly as
+  * `actions/cache` computes it — resolution feeds `tar` only, never the
+  * version — so {@link ActionCacheShape.restore | restore}, which resolves
+  * nothing, derives the same version from the same list for free.
+  *
+  * One deliberate divergence from the toolkit: where `actions/cache` re-roots
+  * every match relative to the workspace, resolved paths here stay
+  * **absolute** and are archived with `tar -P`, so a restore puts every file
+  * back where it came from regardless of the restoring step's working
+  * directory.
+  *
+  * A key that already exists is a **success**: cache entries are immutable, so
+  * another job having written it first is the outcome the caller wanted.
+  */
 	readonly save: (paths: ReadonlyArray<string>, key: string | CacheKey) => Effect.Effect<void, ActionCacheError>;
 	/**
-	 * Restore `paths` from the first entry that matches, and answer with the key
-	 * that matched.
-	 *
-	 * @remarks
-	 * `Option.none()` is a miss, not a failure — a cold cache is the normal state
-	 * of a new branch. Passing a {@link CacheKey} supplies its restore-key ladder
-	 * automatically; passing a `string` and no ladder means "this key or nothing".
-	 *
-	 * `paths` only derives the entry version and MUST be the same literal list
-	 * the save used — no glob resolution happens here, because none is needed:
-	 * extraction consumes no path list (the archive already names its contents),
-	 * and `actions/cache` likewise hashes the un-resolved list on both sides.
-	 */
+  * Restore `paths` from the first entry that matches, and answer with the key
+  * that matched.
+  *
+  * **Details**
+  *
+  * `Option.none()` is a miss, not a failure — a cold cache is the normal state
+  * of a new branch. Passing a {@link CacheKey} supplies its restore-key ladder
+  * automatically; passing a `string` and no ladder means "this key or nothing".
+  *
+  * `paths` only derives the entry version and MUST be the same literal list
+  * the save used — no glob resolution happens here, because none is needed:
+  * extraction consumes no path list (the archive already names its contents),
+  * and `actions/cache` likewise hashes the un-resolved list on both sides.
+  */
 	readonly restore: (
 		paths: ReadonlyArray<string>,
 		key: string | CacheKey,
@@ -128,7 +130,8 @@ export interface ActionCacheShape {
 /**
  * The entry version, byte-compatible with `actions/cache`.
  *
- * @remarks
+ * **Gotchas**
+ *
  * A cache entry is keyed on `(key, version)`, and the version is a digest of
  * the archived paths plus the compression method. **The paths are not sorted**,
  * because upstream does not sort them: sorting here would compute a version no
@@ -149,7 +152,8 @@ const versionOf = (paths: ReadonlyArray<string>): string => sha256Hex([...paths,
 /**
  * The Azure half, duplicated on purpose.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `@azure/storage-blob` may be imported here, by `Artifact` and by
  * `BlobStore.githubCache`, and nowhere else — hoisting these two calls into a
  * shared `internal/` helper is exactly how a heavy import leaks into the graph
@@ -224,18 +228,19 @@ const make = Effect.fn("make")(function* (
 		});
 
 		/**
-		 * Run `tar` ONCE, keeping its stderr.
-		 *
-		 * @remarks
-		 * On Windows, extraction runs with `-k` so a file another process holds
-		 * open is skipped rather than failing the whole restore — and `tar` then
-		 * exits 1 to say so, which is a warning rather than an error. Exit 2 and
-		 * above stays a failure on every platform.
-		 *
-		 * Output and exit code come from the SAME `spawn` handle
-		 * (`internal/spawn.ts` — the spawner's convenience members each spawn
-		 * independently, so reading both from them would run `tar` twice).
-		 */
+   * Run `tar` ONCE, keeping its stderr.
+   *
+   * **Details**
+   *
+   * On Windows, extraction runs with `-k` so a file another process holds
+   * open is skipped rather than failing the whole restore — and `tar` then
+   * exits 1 to say so, which is a warning rather than an error. Exit 2 and
+   * above stays a failure on every platform.
+   *
+   * Output and exit code come from the SAME `spawn` handle
+   * (`internal/spawn.ts` — the spawner's convenience members each spawn
+   * independently, so reading both from them would run `tar` twice).
+   */
 		const tar = Effect.fn("tar")(function*(args: ReadonlyArray<string>, key: string, tolerateWarnings: boolean) {
 				const { output, code } = yield* spawnOnce(spawner, ChildProcess.make("tar", [...args])).pipe(
 					Effect.mapError(archiveFailed(key)),
@@ -266,27 +271,28 @@ const make = Effect.fn("make")(function* (
 		const posix = (value: string): string => value.replaceAll("\\", "/");
 
 		/**
-		 * Resolve the caller's patterns to the concrete files and directories
-		 * `tar` will archive, with `actions/cache` parity.
-		 *
-		 * @remarks
-		 * The toolkit resolves through `@actions/glob` with `implicitDescendants`
-		 * disabled (`cacheUtils.ts:48-70`): a matched directory is answered as
-		 * itself and `tar` recurses into it, a pattern that matches nothing —
-		 * including a literal path that is not on disk — contributes nothing
-		 * (`internal-globber.ts:90-100` existence-filters every search path), a
-		 * leading `~` expands to the home directory with the expansion
-		 * glob-escaped (`internal-pattern.ts:226-234`), and blank or `#` members
-		 * are skipped (the toolkit joins the list with newlines, where both are
-		 * inert). A fully empty resolution is the toolkit's hard
-		 * "Path Validation Error" (`cache.ts:662-666`) and a typed failure here.
-		 *
-		 * Two knowing departures: matches stay ABSOLUTE for the `-P` archive
-		 * posture rather than being re-rooted at the workspace (the version
-		 * hashes the literal list, so the wire protocol never sees the
-		 * difference), and the walk does not follow directory symlinks, where
-		 * the toolkit's globber does.
-		 */
+   * Resolve the caller's patterns to the concrete files and directories
+   * `tar` will archive, with `actions/cache` parity.
+   *
+   * **Details**
+   *
+   * The toolkit resolves through `@actions/glob` with `implicitDescendants`
+   * disabled (`cacheUtils.ts:48-70`): a matched directory is answered as
+   * itself and `tar` recurses into it, a pattern that matches nothing —
+   * including a literal path that is not on disk — contributes nothing
+   * (`internal-globber.ts:90-100` existence-filters every search path), a
+   * leading `~` expands to the home directory with the expansion
+   * glob-escaped (`internal-pattern.ts:226-234`), and blank or `#` members
+   * are skipped (the toolkit joins the list with newlines, where both are
+   * inert). A fully empty resolution is the toolkit's hard
+   * "Path Validation Error" (`cache.ts:662-666`) and a typed failure here.
+   *
+   * Two knowing departures: matches stay ABSOLUTE for the `-P` archive
+   * posture rather than being re-rooted at the workspace (the version
+   * hashes the literal list, so the wire protocol never sees the
+   * difference), and the walk does not follow directory symlinks, where
+   * the toolkit's globber does.
+   */
 		const resolvePaths = Effect.fnUntraced(function* (
 			patterns: ReadonlyArray<string>,
 			key: string,
@@ -481,7 +487,8 @@ const dies = unstubbed("ActionCache.makeTest");
  * The runner's own cache: archive a set of paths under a key, and get them back
  * in a later job.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Speaks the Actions cache **Twirp v2** protocol at `ACTIONS_RESULTS_URL`,
  * which answers with a pre-signed Azure blob url for the archive itself. No
  * `@actions/cache` dependency — that package alone brings a dependency tree
@@ -493,7 +500,8 @@ const dies = unstubbed("ActionCache.makeTest");
  * `misconfigured` when a workflow invokes it with `node ./main.js`. The failure
  * names the absent variable, because nothing else distinguishes the two cases.
  *
- * @example
+ * **Example** (Restore a pnpm store and save on a cache miss)
+ *
  * ```ts
  * import { ActionCache, CacheKey } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -526,19 +534,20 @@ export class ActionCache extends Context.Service<ActionCache, ActionCacheShape>(
 	> = Layer.effect(this, make(azure));
 
 	/**
-	 * The cache, over a supplied transport.
-	 *
-	 * @remarks
-	 * The protocol, the version derivation, the conflict handling and the archive
-	 * are what this package owns; the pre-signed `PUT` is not. Supplying the
-	 * transport is what lets a test exercise all of the first group without the
-	 * second, and what an integration test uses to point the same protocol at a
-	 * local blob endpoint.
-	 *
-	 * A parameterized layer factory mints a fresh layer per call and layers
-	 * memoize by reference — bind it to a `const` rather than calling it at each
-	 * composition site.
-	 */
+  * The cache, over a supplied transport.
+  *
+  * **Details**
+  *
+  * The protocol, the version derivation, the conflict handling and the archive
+  * are what this package owns; the pre-signed `PUT` is not. Supplying the
+  * transport is what lets a test exercise all of the first group without the
+  * second, and what an integration test uses to point the same protocol at a
+  * local blob endpoint.
+  *
+  * A parameterized layer factory mints a fresh layer per call and layers
+  * memoize by reference — bind it to a `const` rather than calling it at each
+  * composition site.
+  */
 	static readonly layerWith = (
 		transfer: FileBlobTransfer,
 	): Layer.Layer<

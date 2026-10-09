@@ -19,7 +19,8 @@ const $I = $ScratchpadId.create("effected/workspaces/ReleaseTag");
 /**
  * Whether one shared tag names a whole release, or one tag names each package.
  *
- * @remarks
+ * **Details**
+ *
  * `single` is the shape of a single-package repo and of a monorepo whose
  * publishable packages all version in lockstep; `scoped` is the shape of
  * independent versioning, where a shared tag would be ambiguous.
@@ -42,15 +43,16 @@ export type TagStyle = typeof TagStyle.Type;
  */
 export interface TagFormatOptions {
 	/**
-	 * The prefix on the version segment.
-	 *
-	 * @remarks
-	 * Defaults to `""` uniformly, for both {@link ReleaseTag.single} and
-	 * {@link ReleaseTag.scoped} — strict SemVer, deliberately chosen. Pass
-	 * `"v"` for the GitHub release-tag convention (`v1.2.3`), which tools such
-	 * as `actions/checkout`'s ref resolution and third-party changelog
-	 * generators expect.
-	 */
+  * The prefix on the version segment.
+  *
+  * **Details**
+  *
+  * Defaults to `""` uniformly, for both {@link ReleaseTag.single} and
+  * {@link ReleaseTag.scoped} — strict SemVer, deliberately chosen. Pass
+  * `"v"` for the GitHub release-tag convention (`v1.2.3`), which tools such
+  * as `actions/checkout`'s ref resolution and third-party changelog
+  * generators expect.
+  */
 	readonly versionPrefix?: string;
 }
 
@@ -125,7 +127,8 @@ export interface TrackingTagOptions {
  * A floating alias tag — `v1`, `v1.2` — that a repo re-points at its newest
  * matching release.
  *
- * @remarks
+ * **Details**
+ *
  * This is the GitHub Actions distribution convention: a consumer writes
  * `uses: owner/repo@v1` and receives whatever 1.x the repo last pointed `v1` at.
  *
@@ -139,7 +142,8 @@ export interface TrackingTagOptions {
  * git tag is not this package's business** — a consumer does that through git,
  * and the deliberate omission is what keeps this module a pure leaf.
  *
- * @example
+ * **Example** (Derive stable tracking aliases with optional package prefixes)
+ *
  * ```ts
  * import { TrackingTag } from "./index.ts";
  *
@@ -167,28 +171,29 @@ export class TrackingTag extends S.Class<TrackingTag>($I`TrackingTag`)({
 	}
 
 	/**
-	 * The tracking tags a release of `version` should be pointed at.
-	 *
-	 * @remarks
-	 * **A prerelease derives nothing.** Anyone depending on `owner/repo@v1` is
-	 * asking for the newest *stable* 1.x, so re-pointing that alias at
-	 * `1.0.0-beta.3` would ship a prerelease to every such consumer with no
-	 * signal at all. `includePrerelease` exists for callers who genuinely mean
-	 * it — a prerelease-only distribution channel — and should be rare.
-	 *
-	 * **Total, never throwing.** A version that is not `X.Y.Z` derives nothing
-	 * rather than failing: this is a query about a version, not a validation of
-	 * one, and `WorkspacePackage.version` is deliberately tolerant, so odd
-	 * versions reach here routinely.
-	 *
-	 * 0.x versions DO derive aliases. Floating `v0` across 0.x minors is a real
-	 * hazard, but which aliases to publish is the caller's policy, decided where
-	 * the tags are moved — not something a derivation should quietly withhold.
-	 *
-	 * @param version - The version being released.
-	 * @param options - Package prefix, precision and the prerelease override.
-	 * @returns The aliases, broadest first; empty when none apply.
-	 */
+  * The tracking tags a release of `version` should be pointed at.
+  *
+  * **Gotchas**
+  *
+  * **A prerelease derives nothing.** Anyone depending on `owner/repo@v1` is
+  * asking for the newest *stable* 1.x, so re-pointing that alias at
+  * `1.0.0-beta.3` would ship a prerelease to every such consumer with no
+  * signal at all. `includePrerelease` exists for callers who genuinely mean
+  * it — a prerelease-only distribution channel — and should be rare.
+  *
+  * **Total, never throwing.** A version that is not `X.Y.Z` derives nothing
+  * rather than failing: this is a query about a version, not a validation of
+  * one, and `WorkspacePackage.version` is deliberately tolerant, so odd
+  * versions reach here routinely.
+  *
+  * 0.x versions DO derive aliases. Floating `v0` across 0.x minors is a real
+  * hazard, but which aliases to publish is the caller's policy, decided where
+  * the tags are moved — not something a derivation should quietly withhold.
+  *
+  * @param version - The version being released.
+  * @param options - Package prefix, precision and the prerelease override.
+  * @returns The aliases, broadest first; empty when none apply.
+  */
 	static forVersion(version: string, options?: TrackingTagOptions): ReadonlyArray<TrackingTag> {
 		const core = versionCore(version);
 		if (core === undefined) return [];
@@ -226,7 +231,8 @@ const splitTag = (tag: string): { readonly packageName?: string; readonly rest: 
 /**
  * Decide whether a tag string is a release tag, a tracking alias, or neither.
  *
- * @remarks
+ * **Details**
+ *
  * The two families are told apart by **segment count**, not by the `v` prefix:
  * three numeric segments is a version (so `1.0.0` and `v1.0.0` are both release
  * tags), while one or two segments is a truncated alias. The `v` *is* required
@@ -242,7 +248,6 @@ const splitTag = (tag: string): { readonly packageName?: string; readonly rest: 
  *
  * @param tag - Any tag string.
  * @returns The classification.
- *
  * @public
  */
 export const classifyTag = (tag: string): TagClassification => {
@@ -293,7 +298,8 @@ export const classifyTag = (tag: string): TagClassification => {
 /**
  * A git tag naming a release, and the parts it was built from.
  *
- * @remarks
+ * **Details**
+ *
  * `value` is the tag exactly as it appears in git; `version` stays **bare**
  * even when `value` carries a prefix, so a consumer comparing versions never
  * has to strip one back off.
@@ -304,7 +310,8 @@ export const classifyTag = (tag: string): TagClassification => {
  * dies as a defect, the same posture as an uncompilable glob literal in
  * `WorkspacePackage.matchesDependency`.
  *
- * @example
+ * **Example** (Format shared and package-scoped release tags)
+ *
  * ```ts
  * import { ReleaseTag } from "./index.ts";
  *

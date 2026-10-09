@@ -51,7 +51,8 @@ export interface GlyphSelectOptions {
 /**
  * The two glyph sets: Unicode, and a plain-ASCII fallback for terminals that cannot draw it.
  *
- * @remarks
+ * **Details**
+ *
  * The sets are shared, so they and their nested values have readonly types.
  *
  * @public
@@ -72,15 +73,16 @@ export class Glyphs {
 	};
 
 	/**
-	 * Pick a glyph set without a service: the one `CliTheme` uses, as a pure function.
-	 *
-	 * @remarks
-	 * `CliTheme.layer` reads `TERM` through `Config` and calls this, so the two agree. `StreamEnv` carries no
-	 * `TERM`, and nothing else in it decides ASCII, so the caller passes `term` when it wants `auto` to mean
-	 * something.
-	 *
-	 * @param options - whether to force ASCII or Unicode, and the `TERM` value `auto` reads
-	 */
+  * Pick a glyph set without a service: the one `CliTheme` uses, as a pure function.
+  *
+  * **Details**
+  *
+  * `CliTheme.layer` reads `TERM` through `Config` and calls this, so the two agree. `StreamEnv` carries no
+  * `TERM`, and nothing else in it decides ASCII, so the caller passes `term` when it wants `auto` to mean
+  * something.
+  *
+  * @param options - whether to force ASCII or Unicode, and the `TERM` value `auto` reads
+  */
 	static readonly select = (options?: GlyphSelectOptions): GlyphSet => {
 		const ascii = options?.ascii ?? "auto";
 		return ascii === true || (ascii === "auto" && options?.term === "dumb") ? Glyphs.ascii : Glyphs.unicode;

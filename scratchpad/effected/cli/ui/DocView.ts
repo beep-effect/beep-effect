@@ -95,7 +95,8 @@ const docView: () => FunctionComponent<DocViewProps> = fromReact((react) => {
  * The kit's document IR (`Doc`) drawn as Ink rows, laid out by the kit's own renderers, so a live view and a static
  * report show a document the same way.
  *
- * @remarks
+ * **Details**
+ *
  * The document is rendered with `Render.ansi` (`Render.plain` at colour `none`) at the width, and each line becomes
  * one Ink `Text` row cut with `wrap: "truncate-end"`, so Ink never re-wraps what the renderer laid out. Everything the
  * static renderers do holds: a collapsible is drawn open, an annotation is skipped, text from data is sanitised.
@@ -106,7 +107,6 @@ const docView: () => FunctionComponent<DocViewProps> = fromReact((react) => {
  * live view's tick does, and the renderer does not run again; build a new document only when it changes.
  *
  * @param props - the document, and optionally the render context
- *
  * @public
  */
 export const DocView = (props: DocViewProps): ReactElement =>

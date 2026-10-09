@@ -72,12 +72,13 @@ export interface StoredBlob<A> {
  */
 export interface BlobStoreShape {
 	/**
-	 * Read a blob, or nothing if the key is absent.
-	 *
-	 * @remarks
-	 * Fails with {@link BlobStoreError}, or a {@link BlobEnvelopeError} when the
-	 * stored bytes are not a valid envelope for `schema`.
-	 */
+  * Read a blob, or nothing if the key is absent.
+  *
+  * **Details**
+  *
+  * Fails with {@link BlobStoreError}, or a {@link BlobEnvelopeError} when the
+  * stored bytes are not a valid envelope for `schema`.
+  */
 	readonly get: <A, I>(
 		key: string,
 		schema: S.Codec<A, I>,
@@ -103,14 +104,15 @@ export interface S3Config {
 	/** The bucket's region, used for SigV4 signing and the default AWS endpoint. */
 	readonly region: string;
 	/**
-	 * A custom endpoint, e.g. `https://<account>.r2.cloudflarestorage.com`.
-	 *
-	 * @remarks
-	 * Omitting it targets AWS itself. Addressing is always **path-style**
-	 * (`<endpoint>/<bucket>/<key>`), which is what makes the same layer work
-	 * against R2, MinIO and Spaces — virtual-host addressing needs per-bucket
-	 * DNS that none of them provide the same way.
-	 */
+  * A custom endpoint, e.g. `https://<account>.r2.cloudflarestorage.com`.
+  *
+  * **Details**
+  *
+  * Omitting it targets AWS itself. Addressing is always **path-style**
+  * (`<endpoint>/<bucket>/<key>`), which is what makes the same layer work
+  * against R2, MinIO and Spaces — virtual-host addressing needs per-bucket
+  * DNS that none of them provide the same way.
+  */
 	readonly endpoint?: string | undefined;
 	/** The access key id. */
 	readonly accessKeyId: string;
@@ -125,7 +127,8 @@ export interface S3Config {
 /**
  * Durable blob storage with a metadata channel.
  *
- * @remarks
+ * **Details**
+ *
  * `get`/`put`/`has` over `Uint8Array` **plus the caller's own metadata**, framed
  * by {@link BlobEnvelope}. The metadata channel is the reason this exists:
  * fields like a cache tag or a duration travel as schema-typed metadata, and a
@@ -137,7 +140,8 @@ export interface S3Config {
  * Backends: {@link BlobStore.layerS3}, `GitHubCacheBlobStore.layer` and the
  * in-memory {@link BlobStore.layerMemory}.
  *
- * @example
+ * **Example** (Store and retrieve a blob with typed metadata)
+ *
  * ```ts
  * import { BlobStore } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -156,18 +160,19 @@ export interface S3Config {
  */
 export class BlobStore extends Context.Service<BlobStore, BlobStoreShape>()($I`BlobStore`) {
 	/**
-	 * An S3-compatible backend, signed with SigV4.
-	 *
-	 * @remarks
-	 * No `@aws-sdk/*` dependency: signing is a specified algorithm over strings
-	 * and HMACs, and this package already has `node:crypto`. The SDK's weight is
-	 * in credential management, retries and a service catalogue none of which
-	 * this needs.
-	 *
-	 * A parameterized layer factory mints a fresh layer per call and layers
-	 * memoize by reference — bind it to a `const` rather than calling it at each
-	 * composition site.
-	 */
+  * An S3-compatible backend, signed with SigV4.
+  *
+  * **Details**
+  *
+  * No `@aws-sdk/*` dependency: signing is a specified algorithm over strings
+  * and HMACs, and this package already has `node:crypto`. The SDK's weight is
+  * in credential management, retries and a service catalogue none of which
+  * this needs.
+  *
+  * A parameterized layer factory mints a fresh layer per call and layers
+  * memoize by reference — bind it to a `const` rather than calling it at each
+  * composition site.
+  */
 	static readonly layerS3 = (config: S3Config): Layer.Layer<BlobStore, never, HttpClient.HttpClient | ActionOutputs> =>
 		Layer.effect(BlobStore, makeS3(config));
 
@@ -184,14 +189,15 @@ export class BlobStore extends Context.Service<BlobStore, BlobStoreShape>()($I`B
 		Layer.succeed(BlobStore, BlobStore.makeTest(overrides));
 
 	/**
-	 * An in-memory backend.
-	 *
-	 * @remarks
-	 * Not a stub: it runs the real {@link BlobEnvelope} framing, so a round trip
-	 * through it exercises encode and decode exactly as a network backend would.
-	 * A test that wants to prove its metadata survives storage should use this
-	 * rather than a double whose `get` returns whatever its `put` was handed.
-	 */
+  * An in-memory backend.
+  *
+  * **Details**
+  *
+  * Not a stub: it runs the real {@link BlobEnvelope} framing, so a round trip
+  * through it exercises encode and decode exactly as a network backend would.
+  * A test that wants to prove its metadata survives storage should use this
+  * rather than a double whose `get` returns whatever its `put` was handed.
+  */
 	static readonly layerMemory: Layer.Layer<BlobStore> = Layer.sync(BlobStore, () => {
 		const entries = MutableHashMap.empty<string, Uint8Array>();
 		return {

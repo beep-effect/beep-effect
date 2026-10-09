@@ -303,6 +303,8 @@ function assertedTerms(node: JsonLdNode): ReadonlyArray<string> {
  * The offline conformance gate: does schema.org define this `@type`, and is
  * every property on it legal for that type?
  *
+ * **Details**
+ *
  * The failure this exists to catch is not malformed JSON — the serializer
  * cannot produce that — but a plausible property schema.org does not define on
  * that type, which reads correct and is silently ignored downstream. Typed
@@ -319,7 +321,8 @@ function assertedTerms(node: JsonLdNode): ReadonlyArray<string> {
  * policy on its own schedule. A clean graph here says schema.org defines your
  * terms; it says nothing about whether a rich result will appear.
  *
- * @example
+ * **Example** (Report an illegal source code property)
+ *
  * ```ts
  * import { JsonLdDocument, SoftwareSourceCode } from "./index.ts";
  * import { Conformance } from "./conformance-entry.ts";

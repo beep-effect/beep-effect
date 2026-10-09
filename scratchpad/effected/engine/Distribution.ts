@@ -8,7 +8,8 @@ const $I = $ScratchpadId.create("effected/engine/Distribution");
 /**
  * The carrier package a tool's bins were installed through.
  *
- * @remarks
+ * **Details**
+ *
  * A carrier (`@scope/plugin`) re-exposes its front ends' bins and passes its
  * own identity down to each front end's `main`. A plain struct rather than a
  * `Schema.Class`, because it travels in JSON envelopes as a plain object and
@@ -64,7 +65,8 @@ export type DistributionField = typeof DistributionField.Type;
  * The carrier this run was installed through, read anywhere without
  * appearing in `R`.
  *
- * @remarks
+ * **Details**
+ *
  * A `Context.Reference`, not a `Context.Service`: it carries its own default
  * (`Option.none()`), so a direct install needs no provision at all. A front
  * end's `main` provides it once, at the top of the program, with

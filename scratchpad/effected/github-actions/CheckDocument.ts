@@ -26,7 +26,8 @@ const $I = $ScratchpadId.create("effected/github-actions/CheckDocument");
  * What a run knows about one of its checks: the authoritative state, and the
  * presentation facts a renderer projects into the document.
  *
- * @remarks
+ * **Details**
+ *
  * Only `state` is required. The rest exist because a status table needs them:
  * `title` when the display name differs from the registry key, `outcome` for
  * the one-line verdict cell, `url` for linking the check's name, and `detail`
@@ -87,7 +88,8 @@ const KIND_PROSE = {
 /**
  * Raised when the check document cannot be regenerated, read back or written.
  *
- * @remarks
+ * **Details**
+ *
  * `render` — projecting the registry onto the document failed, almost always
  * because a reported `detail` contains a line the region scanner would read
  * as a marker; the underlying `ManagedDocumentError` rides in `cause`.
@@ -131,13 +133,14 @@ export class CheckDocumentStamp extends S.Class<CheckDocumentStamp>($I`CheckDocu
 	runId: S.String.annotateKey({ description: "The run's identifier — on GitHub, `GITHUB_RUN_ID`." }),
 }, $I.annote("CheckDocumentStamp", { description: "A run's identity for staleness ordering: when it started and which run it is." })) {
 	/**
-	 * Is `incoming` allowed to overwrite regions stamped `existing`?
-	 *
-	 * @remarks
-	 * Total and reflexive: equal stamps answer `true`, so a run always may
-	 * rewrite what it wrote itself. Only a strictly older `incoming` answers
-	 * `false`.
-	 */
+  * Is `incoming` allowed to overwrite regions stamped `existing`?
+  *
+  * **Details**
+  *
+  * Total and reflexive: equal stamps answer `true`, so a run always may
+  * rewrite what it wrote itself. Only a strictly older `incoming` answers
+  * `false`.
+  */
 	static isAtLeastAsRecent(
 		incoming: { readonly at: string; readonly runId: string },
 		existing: { readonly at: string; readonly runId: string },
@@ -216,7 +219,8 @@ const maxStampOf = (
 /**
  * What one reconcile pass did.
  *
- * @remarks
+ * **Details**
+ *
  * `written` — the render changed and the sink wrote it. `unchanged` — the
  * render was byte-identical, so no write was issued. `stale` — the document
  * already carries regions from a more recent run, so the pass was dropped
@@ -230,7 +234,8 @@ export type CheckFlushOutcome = "written" | "unchanged" | "stale";
 /**
  * How a rendered document leaves the process: the narrow sink contract.
  *
- * @remarks
+ * **Details**
+ *
  * The function form is one rendered document in, one write effect out —
  * nothing else. That is what lets the sticky PR comment
  * (`PullRequestComment.upsert`), the PR description (`PATCH` on the pull
@@ -276,36 +281,38 @@ export interface CheckDocumentOptions<E = unknown> {
 	 */
 	readonly initial?: string | undefined;
 	/**
-	 * The pure projection from registry state to region entries.
-	 *
-	 * @remarks
-	 * Called with the full snapshot on every reconcile pass; returns the
-	 * regions to replace, keyed however the consumer's document is laid out —
-	 * typically one region per check plus a shared status table. It must be a
-	 * pure function of the snapshot: rendering the same state twice must
-	 * produce the same entries, because byte-identical output is what
-	 * suppresses the write.
-	 */
+  * The pure projection from registry state to region entries.
+  *
+  * **Gotchas**
+  *
+  * Called with the full snapshot on every reconcile pass; returns the
+  * regions to replace, keyed however the consumer's document is laid out —
+  * typically one region per check plus a shared status table. It must be a
+  * pure function of the snapshot: rendering the same state twice must
+  * produce the same entries, because byte-identical output is what
+  * suppresses the write.
+  */
 	readonly render: (snapshot: CheckDocumentSnapshot) => ReadonlyArray<readonly [key: string, content: string]>;
 	/** Where the rendered document goes. */
 	readonly sink: CheckDocumentSink<E>;
 	/**
-	 * This run's identity, for staleness ordering against other runs.
-	 *
-	 * @remarks
-	 * A **per-run constant** — mint it once at startup, never per pass. When
-	 * present, every region a pass writes carries `at`/`runId` metadata, and a
-	 * pass whose stamp is strictly older than the most recent stamp already on
-	 * the document is **dropped** rather than written, so a delayed re-run can
-	 * never clobber a newer run's regions. Equal stamps pass: a run may refine
-	 * its own regions.
-	 *
-	 * The constant is what preserves write suppression: the same run rendering
-	 * the same state produces byte-identical text (stamp included), so no
-	 * write is issued. The accepted corner is that a content-identical pass
-	 * therefore does not refresh the document's stamp to "now" — suppression
-	 * wins — which is sound because only strictly-older stamps drop.
-	 */
+  * This run's identity, for staleness ordering against other runs.
+  *
+  * **Details**
+  *
+  * A **per-run constant** — mint it once at startup, never per pass. When
+  * present, every region a pass writes carries `at`/`runId` metadata, and a
+  * pass whose stamp is strictly older than the most recent stamp already on
+  * the document is **dropped** rather than written, so a delayed re-run can
+  * never clobber a newer run's regions. Equal stamps pass: a run may refine
+  * its own regions.
+  *
+  * The constant is what preserves write suppression: the same run rendering
+  * the same state produces byte-identical text (stamp included), so no
+  * write is issued. The accepted corner is that a content-identical pass
+  * therefore does not refresh the document's stamp to "now" — suppression
+  * wins — which is sound because only strictly-older stamps drop.
+  */
 	readonly stamp?: { readonly at: string; readonly runId: string } | undefined;
 	/**
 	 * Debounce parameters: `quiet` is the trailing settle window, `maxWait`
@@ -316,18 +323,19 @@ export interface CheckDocumentOptions<E = unknown> {
 		| { readonly quiet?: Duration.Input | undefined; readonly maxWait?: Duration.Input | undefined }
 		| undefined;
 	/**
-	 * How long one sink write — or one read-back, when the sink carries a
-	 * `read` — may run before the pass fails with `kind: "sink"` (or
-	 * `kind: "read"`). Default: 30 seconds.
-	 *
-	 * @remarks
-	 * The reconciler serializes passes behind one permit, and the finalizer's
-	 * last flush waits on that same permit — so a sink that never resolves
-	 * would otherwise stall every later pass AND scope teardown. The bound
-	 * turns a hung write into the ordinary sink failure path: a background
-	 * pass logs and retries on the next report, `flush` surfaces the typed
-	 * error.
-	 */
+  * How long one sink write — or one read-back, when the sink carries a
+  * `read` — may run before the pass fails with `kind: "sink"` (or
+  * `kind: "read"`). Default: 30 seconds.
+  *
+  * **Details**
+  *
+  * The reconciler serializes passes behind one permit, and the finalizer's
+  * last flush waits on that same permit — so a sink that never resolves
+  * would otherwise stall every later pass AND scope teardown. The bound
+  * turns a hung write into the ordinary sink failure path: a background
+  * pass logs and retries on the next report, `flush` surfaces the typed
+  * error.
+  */
 	readonly sinkTimeout?: Duration.Input | undefined;
 }
 
@@ -339,26 +347,28 @@ export interface CheckDocumentOptions<E = unknown> {
  */
 export interface CheckDocumentShape {
 	/**
-	 * Record a check's current state and schedule a reconcile.
-	 *
-	 * @remarks
-	 * Never fails and never blocks on the write — the state lands in the
-	 * registry, and the debounced background pass projects it. Reporting the
-	 * same key again replaces the entry; resolution is **not** terminal, so
-	 * `pass` followed by `fail` leaves `fail` even inside one debounce window.
-	 */
+  * Record a check's current state and schedule a reconcile.
+  *
+  * **Details**
+  *
+  * Never fails and never blocks on the write — the state lands in the
+  * registry, and the debounced background pass projects it. Reporting the
+  * same key again replaces the entry; resolution is **not** terminal, so
+  * `pass` followed by `fail` leaves `fail` even inside one debounce window.
+  */
 	readonly report: (check: string, report: CheckReport) => Effect.Effect<void>;
 	/** The registry as of now, with its explicit first-report order. */
 	readonly checks: Effect.Effect<CheckDocumentSnapshot>;
 	/**
-	 * Reconcile immediately, skipping the debounce.
-	 *
-	 * @remarks
-	 * Rendering unchanged state issues no write. Call it at the end of a run;
-	 * the layer's finalizer also runs it, so the last burst of reports lands
-	 * even when the scope closes inside the quiet window. The outcome says
-	 * what the pass did — `written`, `unchanged` or `stale`.
-	 */
+  * Reconcile immediately, skipping the debounce.
+  *
+  * **Details**
+  *
+  * Rendering unchanged state issues no write. Call it at the end of a run;
+  * the layer's finalizer also runs it, so the last burst of reports lands
+  * even when the scope closes inside the quiet window. The outcome says
+  * what the pass did — `written`, `unchanged` or `stale`.
+  */
 	readonly flush: Effect.Effect<CheckFlushOutcome, CheckDocumentError>;
 }
 
@@ -421,15 +431,16 @@ export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentS
 	$I`CheckDocument`,
 ) {
 	/**
-	 * The reconciler over one document.
-	 *
-	 * @remarks
-	 * Forks the debounce fiber into the layer's scope and registers a
-	 * finalizer that flushes once more on the way out, so the scope closing
-	 * mid-window cannot strand the final state. A background pass that fails
-	 * logs a structured warning and leaves the registry intact — the next
-	 * report retries it; only `flush` surfaces the typed error.
-	 */
+  * The reconciler over one document.
+  *
+  * **Details**
+  *
+  * Forks the debounce fiber into the layer's scope and registers a
+  * finalizer that flushes once more on the way out, so the scope closing
+  * mid-window cannot strand the final state. A background pass that fails
+  * logs a structured warning and leaves the registry intact — the next
+  * report retries it; only `flush` surfaces the typed error.
+  */
 	static layer<E>(options: CheckDocumentOptions<E>): Layer.Layer<CheckDocument> {
 		return Layer.effect(
 			CheckDocument,

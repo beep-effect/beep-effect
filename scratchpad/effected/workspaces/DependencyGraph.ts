@@ -25,7 +25,8 @@ const $I = $ScratchpadId.create("effected/workspaces/DependencyGraph");
  * Raised when the workspace dependency graph cannot be topologically ordered
  * because it contains a cycle.
  *
- * @remarks
+ * **Details**
+ *
  * `cycle` names the actual cycle members — the sorted union of every strongly
  * connected component with more than one package. Packages merely downstream
  * of a cycle are excluded, so it is exactly the set to break, not necessarily
@@ -81,7 +82,8 @@ interface Edges {
  * The directed graph of dependencies **between workspace packages**. External
  * npm dependencies are not nodes.
  *
- * @remarks
+ * **Details**
+ *
  * A pure value over the discovered package list, with the edge indexes built
  * lazily into `#private` fields the schema never encodes. Edges are drawn from
  * `dependencies`, `devDependencies`, `peerDependencies` and
@@ -91,7 +93,8 @@ interface Edges {
  * an unknown name, and the ordering operations (`levels`, `sort`, `sortSubset`)
  * fail with {@link CyclicDependencyError} when the graph has a cycle.
  *
- * @example
+ * **Example** (Group workspace packages into build levels)
+ *
  * ```ts
  * import { DependencyGraph, WorkspaceDiscovery } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -142,12 +145,13 @@ export class DependencyGraph extends S.Class<DependencyGraph>($I`DependencyGraph
 	}
 
 	/**
-	 * Whether the graph contains a cycle. Total.
-	 *
-	 * @remarks
-	 * An explicit-stack DFS with an on-stack set — never recursive, so a long
-	 * dependency chain cannot overflow.
-	 */
+  * Whether the graph contains a cycle. Total.
+  *
+  * **Details**
+  *
+  * An explicit-stack DFS with an on-stack set — never recursive, so a long
+  * dependency chain cannot overflow.
+  */
 	get hasCycle(): boolean {
 		const { forward } = this.#index();
 		const visited = MutableHashSet.empty<string>();
@@ -229,13 +233,14 @@ export class DependencyGraph extends S.Class<DependencyGraph>($I`DependencyGraph
 	);
 
 	/**
-	 * Packages grouped into parallel build levels: level 0 depends on nothing in
-	 * the workspace, level *n* depends only on levels below it.
-	 *
-	 * @remarks
-	 * Kahn's algorithm over the reverse-edge index, linear in the edge count.
-	 * Each level is sorted lexicographically, so the output is deterministic.
-	 */
+  * Packages grouped into parallel build levels: level 0 depends on nothing in
+  * the workspace, level *n* depends only on levels below it.
+  *
+  * **Details**
+  *
+  * Kahn's algorithm over the reverse-edge index, linear in the edge count.
+  * Each level is sorted lexicographically, so the output is deterministic.
+  */
 	readonly levels = Effect.fn("DependencyGraph.levels")(
 		(): Effect.Effect<ReadonlyArray<ReadonlyArray<string>>, CyclicDependencyError> =>
 			Effect.suspend(() => {
@@ -254,16 +259,17 @@ export class DependencyGraph extends S.Class<DependencyGraph>($I`DependencyGraph
 	);
 
 	/**
-	 * A topological order over `names` plus their transitive workspace
-	 * dependencies — the build order for a subset.
-	 *
-	 * @remarks
-	 * Fails with `PackageNotFoundError` for a name the graph does not contain,
-	 * and with {@link CyclicDependencyError} when the subset's closure has a
-	 * cycle.
-	 *
-	 * @param names - The packages to build; each must be a workspace package.
-	 */
+  * A topological order over `names` plus their transitive workspace
+  * dependencies — the build order for a subset.
+  *
+  * **Details**
+  *
+  * Fails with `PackageNotFoundError` for a name the graph does not contain,
+  * and with {@link CyclicDependencyError} when the subset's closure has a
+  * cycle.
+  *
+  * @param names - The packages to build; each must be a workspace package.
+  */
 	readonly sortSubset = Effect.fn("DependencyGraph.sortSubset")(
 		(
 			names: ReadonlyArray<string>,
@@ -317,16 +323,17 @@ export class DependencyGraph extends S.Class<DependencyGraph>($I`DependencyGraph
 	);
 
 	/**
-	 * The graph rendered as a Mermaid `flowchart TD`. Total.
-	 *
-	 * @remarks
-	 * Renders through core's `Graph.toMermaid` over a transient graph built from
-	 * the edge index. Node IDs are numeric indexes assigned in sorted-name order
-	 * and package names appear only inside quoted labels, so scoped names
-	 * (`@scope/a`) never break Mermaid syntax. Nodes and each node's edges are
-	 * emitted in sorted order — the output is deterministic regardless of
-	 * manifest key order.
-	 */
+  * The graph rendered as a Mermaid `flowchart TD`. Total.
+  *
+  * **Details**
+  *
+  * Renders through core's `Graph.toMermaid` over a transient graph built from
+  * the edge index. Node IDs are numeric indexes assigned in sorted-name order
+  * and package names appear only inside quoted labels, so scoped names
+  * (`@scope/a`) never break Mermaid syntax. Nodes and each node's edges are
+  * emitted in sorted order — the output is deterministic regardless of
+  * manifest key order.
+  */
 	toMermaid(): string {
 		return Graph.toMermaid(materialize(this.#index()).graph, { edgeLabel: () => "" });
 	}

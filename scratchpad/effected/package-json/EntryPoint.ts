@@ -23,22 +23,24 @@ export interface ResolveEntryPointOptions {
 	/** Reserved for manifest arguments, so one-argument calls are unambiguous. */
 	readonly main?: never;
 	/**
-	 * The export conditions to honour, in priority order.
-	 *
-	 * @remarks
-	 * The first condition present in the manifest wins, so the order is the
-	 * policy — `["require", "import"]` and `["import", "require"]` resolve the
-	 * same manifest to different files, on purpose.
-	 *
-	 * @defaultValue `["import", "default"]`
-	 */
+  * The export conditions to honour, in priority order.
+  *
+  * **Details**
+  *
+  * The first condition present in the manifest wins, so the order is the
+  * policy — `["require", "import"]` and `["import", "require"]` resolve the
+  * same manifest to different files, on purpose.
+  *
+  * @defaultValue `["import", "default"]`
+  */
 	readonly conditions?: ReadonlyArray<string>;
 }
 
 /**
  * Raised when a manifest resolves no root entry point.
  *
- * @remarks
+ * **Details**
+ *
  * The reason is discriminated rather than a bare "not found" because the three
  * shapes call for different responses, and a caller needs to know which one it
  * hit.
@@ -73,7 +75,8 @@ export class UnresolvedEntryPointError extends S.TaggedError<UnresolvedEntryPoin
 /**
  * The manifest fields entry resolution reads.
  *
- * @remarks
+ * **Details**
+ *
  * Deliberately structural rather than the full {@link PackageManifest}, so a
  * caller can resolve an entry point from any object carrying these two fields —
  * a manifest parsed straight from a tarball, for instance, with nothing else
@@ -97,7 +100,8 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> =>
 /**
  * Is this `exports` object a conditions map rather than a subpath map?
  *
- * @remarks
+ * **Details**
+ *
  * Node's rule: the two forms cannot be mixed, and a subpath map is identified
  * by keys starting with `"."`. So an object with no `"."`-prefixed key is
  * conditions-only sugar for the `"."` subpath. An empty object is neither — it
@@ -111,7 +115,8 @@ const isRootConditions = (exportsObject: Record<string, unknown>): boolean => {
 /**
  * Resolve a conditions object to a file, honouring `conditions` in order.
  *
- * @remarks
+ * **Details**
+ *
  * Recurses, because conditions nest: `{ "import": { "node": "./n.js" } }` is
  * legal and a non-recursive reader answers an object where a path belongs.
  */

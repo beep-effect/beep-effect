@@ -33,7 +33,8 @@ const CONTROL = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g;
  * removed (a stray ESC, BEL, BS, DEL, the C1 range) except line feed and carriage return, and a tab turned into a
  * space.
  *
- * @remarks
+ * **Details**
+ *
  * Stripping complete sequences is not enough on its own: a lone ESC survives it, and so does whatever would
  * complete a sequence once two adjacent pieces of text are joined (`ESC` in one node, `[31m` in the next). With
  * every ESC and C0 or C1 control gone after the strip, nothing can reassemble, so the width of the text equals what
@@ -52,16 +53,17 @@ export class Fmt {
 	private constructor() {}
 
 	/**
-	 * Text made safe to lay out and print, exactly as the renderers make it: complete ANSI and OSC sequences removed,
-	 * every other control character removed (a stray ESC, BEL, BS, DEL, the C1 range) except line feed and carriage
-	 * return, and a tab turned into a space.
-	 *
-	 * @remarks
-	 * For a `render` or any other text a program builds by hand from data it does not control: an error message, a
-	 * file name, a value from the environment. Line breaks are kept, so split on them if the text must be one line.
-	 *
-	 * @param text - the text
-	 */
+  * Text made safe to lay out and print, exactly as the renderers make it: complete ANSI and OSC sequences removed,
+  * every other control character removed (a stray ESC, BEL, BS, DEL, the C1 range) except line feed and carriage
+  * return, and a tab turned into a space.
+  *
+  * **Details**
+  *
+  * For a `render` or any other text a program builds by hand from data it does not control: an error message, a
+  * file name, a value from the environment. Line breaks are kept, so split on them if the text must be one line.
+  *
+  * @param text - the text
+  */
 	static readonly sanitize: (text: string) => string = sanitize;
 
 	/**
@@ -73,19 +75,20 @@ export class Fmt {
 	static readonly width = (text: string): number => displayWidth(text);
 
 	/**
-	 * Cut `text` to at most `width` columns, ending in `ellipsis` when it was cut.
-	 *
-	 * @remarks
-	 * Grapheme-safe: a grapheme, such as a wide character or an emoji ZWJ family, is kept whole or dropped
-	 * whole, so the result is never wider than `width`. Text that already fits is returned unchanged, colour
-	 * escapes included. Text that must be cut is cut as plain text: its ANSI escapes are dropped rather than cut
-	 * in half. When the ellipsis cannot fit, it is omitted and the text is cut to `width`; a `width` of 0 or
-	 * less gives `""`.
-	 *
-	 * @param text - the text to truncate
-	 * @param width - the most columns the result may take
-	 * @param options - the ellipsis
-	 */
+  * Cut `text` to at most `width` columns, ending in `ellipsis` when it was cut.
+  *
+  * **Details**
+  *
+  * Grapheme-safe: a grapheme, such as a wide character or an emoji ZWJ family, is kept whole or dropped
+  * whole, so the result is never wider than `width`. Text that already fits is returned unchanged, colour
+  * escapes included. Text that must be cut is cut as plain text: its ANSI escapes are dropped rather than cut
+  * in half. When the ellipsis cannot fit, it is omitted and the text is cut to `width`; a `width` of 0 or
+  * less gives `""`.
+  *
+  * @param text - the text to truncate
+  * @param width - the most columns the result may take
+  * @param options - the ellipsis
+  */
 	static readonly truncate = (text: string, width: number, options?: TruncateOptions): string => {
 		const limit = Number.isFinite(width) ? Math.floor(width) : width === Number.POSITIVE_INFINITY ? Infinity : 0;
 		if (limit <= 0) return "";
@@ -109,17 +112,18 @@ export class Fmt {
 	};
 
 	/**
-	 * A duration in milliseconds as short human text: `250ms`, `1.2s`, `2s`, `1m 3s`, `2m`, `1h 2m`, `2h`.
-	 *
-	 * @remarks
-	 * Under a second it is whole milliseconds; under a minute, seconds to one decimal with a trailing `.0`
-	 * dropped; under an hour, minutes and whole seconds, with the seconds dropped when zero; from an hour, hours and
-	 * whole minutes, the seconds dropped. A value that rounds up to the next unit (`999.6` to a second, `59999` to a
-	 * minute, `3599999` to an hour) is written in that unit, so `1000ms`, `60s` and `60m` never appear. There is no
-	 * days unit. A negative or non-finite input is `0ms`.
-	 *
-	 * @param ms - the duration in milliseconds
-	 */
+  * A duration in milliseconds as short human text: `250ms`, `1.2s`, `2s`, `1m 3s`, `2m`, `1h 2m`, `2h`.
+  *
+  * **Details**
+  *
+  * Under a second it is whole milliseconds; under a minute, seconds to one decimal with a trailing `.0`
+  * dropped; under an hour, minutes and whole seconds, with the seconds dropped when zero; from an hour, hours and
+  * whole minutes, the seconds dropped. A value that rounds up to the next unit (`999.6` to a second, `59999` to a
+  * minute, `3599999` to an hour) is written in that unit, so `1000ms`, `60s` and `60m` never appear. There is no
+  * days unit. A negative or non-finite input is `0ms`.
+  *
+  * @param ms - the duration in milliseconds
+  */
 	static readonly duration = (ms: number): string => {
 		const value = Number.isFinite(ms) ? Math.max(0, ms) : 0;
 		const whole = Math.round(value);
@@ -138,16 +142,17 @@ export class Fmt {
 	};
 
 	/**
-	 * A ratio from 0 to 1 as a percentage, or a number already from 0 to 100 with `scale: 100`: `83.3%`, `50%`,
-	 * `100%`.
-	 *
-	 * @remarks
-	 * Rounded to `digits` decimal places (one by default) with trailing zeros dropped, so whole values print
-	 * without a decimal. A value that rounds to zero prints `0%`, never `-0%`. The input is not validated.
-	 *
-	 * @param n - the ratio, 0 to 1 (0 to 100 with `scale: 100`)
-	 * @param options - the decimal places and the scale
-	 */
+  * A ratio from 0 to 1 as a percentage, or a number already from 0 to 100 with `scale: 100`: `83.3%`, `50%`,
+  * `100%`.
+  *
+  * **Details**
+  *
+  * Rounded to `digits` decimal places (one by default) with trailing zeros dropped, so whole values print
+  * without a decimal. A value that rounds to zero prints `0%`, never `-0%`. The input is not validated.
+  *
+  * @param n - the ratio, 0 to 1 (0 to 100 with `scale: 100`)
+  * @param options - the decimal places and the scale
+  */
 	static readonly percent = (n: number, options?: PercentOptions): string => {
 		const digits = Math.min(10, Math.max(0, Math.floor(options?.digits ?? 1)));
 		const percent = options?.scale === 100 ? n : n * 100;

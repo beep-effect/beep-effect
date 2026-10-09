@@ -6,7 +6,8 @@ const ESC = String.fromCharCode(0x1b);
  * A small terminal model for the production render path: what a terminal shows after `written`, as its non-empty
  * lines.
  *
- * @remarks
+ * **Details**
+ *
  * It applies printable text, line feeds, the erase and cursor moves Ink's log-update writes (erase line, cursor up,
  * cursor to column one), and the clears of Ink's clear-terminal frame: `ESC[2J` blanks the visible screen, `ESC[3J`
  * drops the scrollback above it, `ESC[H` homes the cursor to the screen's top left. The visible screen is the last
@@ -16,7 +17,6 @@ const ESC = String.fromCharCode(0x1b);
  *
  * @param written - every byte written to the terminal
  * @param rows - the terminal's height, which decides how much of the buffer a clear takes as the screen
- *
  * @internal
  */
 export const screenAfter: {

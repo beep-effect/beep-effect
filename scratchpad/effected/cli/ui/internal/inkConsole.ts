@@ -91,7 +91,8 @@ const now = (): number => globalThis.performance?.now() ?? Clock.Clock.defaultVa
 /**
  * Build an `InkConsole` over `UiStreams`.
  *
- * @remarks
+ * **Details**
+ *
  * Ink's writers (`useStdout().write`, `useStderr().write`) clear the frame, write the line and repaint the frame, so a
  * line written through them lands above the frame without tearing it; a raw write to the stream lands inside the frame
  * instead. They are reachable only from inside the tree, which is what the `Bridge` is for. Ink drops whatever they

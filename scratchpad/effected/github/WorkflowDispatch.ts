@@ -44,7 +44,8 @@ export class WorkflowRunStatus extends S.Class<WorkflowRunStatus>($I`WorkflowRun
 /**
  * One workflow defined in the repository.
  *
- * @remarks
+ * **Details**
+ *
  * `state` is GitHub's own value — `active`, `disabled_manually`,
  * `disabled_inactivity`, and so on. It is reported rather than interpreted:
  * whether a *disabled* workflow counts for a given GitHub feature is that
@@ -100,7 +101,8 @@ export interface WorkflowDispatchShape {
   /**
    * Every workflow defined in the repository.
    *
-   * @remarks
+   * **Details**
+   *
    * The question this answers is "does this repository have workflows at all",
    * which nothing else in the package could ask: repository *languages* come
    * from linguist and can never report `actions`, while GitHub validates that
@@ -115,7 +117,8 @@ export interface WorkflowDispatchShape {
   /**
    * Dispatch, find the run it created, and wait for it to finish.
    *
-   * @remarks
+   * **Details**
+   *
    * The wait is `Effect.repeat` with a predicate over the **success** value, so
    * "not finished yet" is never an error. If the run is not found finished
    * within `poll.timeout`, it fails with a `rejected` `GitHubError` (status
@@ -139,12 +142,14 @@ export interface WorkflowDispatchShape {
  * Dispatch workflows, wait for the run they start, and list the repository's
  * workflows.
  *
- * @remarks
+ * **Details**
+ *
  * Provide it with {@link WorkflowDispatch.layer}, which needs a `GitHubClient`;
  * each method also needs a `Repo` in `R`. `list` is an `Effect` value, not a
  * function.
  *
- * @example
+ * **Example** (Dispatch a release workflow and await its conclusion)
+ *
  * ```ts
  * import { WorkflowDispatch } from "./index.ts";
  * import * as Duration from "effect/Duration";

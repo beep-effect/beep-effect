@@ -69,12 +69,13 @@ const indentOf = (indent: number | string | undefined): string => {
  */
 export interface CliLogOptions {
 	/**
-	 * The diagnostics level, for a host that has already decided it.
-	 *
-	 * @remarks
-	 * Beats `envVar`, which is then not read at all (so a bad value there neither warns nor overrides this), and
-	 * loses to core's `--log-level` flag like every diagnostics level: the sink follows the flag while it is set.
-	 */
+  * The diagnostics level, for a host that has already decided it.
+  *
+  * **Details**
+  *
+  * Beats `envVar`, which is then not read at all (so a bad value there neither warns nor overrides this), and
+  * loses to core's `--log-level` flag like every diagnostics level: the sink follows the flag while it is set.
+  */
 	readonly level?: LogLevel.LogLevel | undefined;
 	/**
 	 * The environment variable that sets the diagnostics level, for example `MYTOOL_LOG_LEVEL`. Read through
@@ -82,61 +83,65 @@ export interface CliLogOptions {
 	 */
 	readonly envVar?: string | undefined;
 	/**
-	 * Whether to install the plain `CliLogger` for ordinary lines. `true` by default.
-	 *
-	 * @remarks
-	 * `false` is the diagnostics-only mode for a library host (an MCP server, a test reporter): the layer installs
-	 * only the diagnostics sink, the file sink if any, and `extraLoggers`. With no level set as well, stderr gets
-	 * no output. An invalid level in `envVar` still prints its one warning line, through a private `CliLogger`,
-	 * since that is a configuration error the host should see.
-	 *
-	 * Only `CliLog`'s own records are silenced. Under `CliRuntime.main`, what the platform logs while it builds follows
-	 * the build-time format: in NDJSON (`json`, or `auto` for an agent or a CI) it goes through this layer, so `false`
-	 * silences it there as at runtime; otherwise it goes through a plain `CliLogger`, routed by `logger.stderrFrom` as the
-	 * host set it. The audience-override warning is a
-	 * configuration error and is never silenced: it is written exactly once, as NDJSON when the build-time format is
-	 * NDJSON and as a plain line otherwise, whatever this option says, to stderr alone (never stdout, whatever
-	 * `logger.stderrFrom` says) and never to `extraLoggers` or the file sink. The failure report and the `CliMessage` lines
-	 * always go through a plain `CliLogger`.
-	 */
+  * Whether to install the plain `CliLogger` for ordinary lines. `true` by default.
+  *
+  * **Details**
+  *
+  * `false` is the diagnostics-only mode for a library host (an MCP server, a test reporter): the layer installs
+  * only the diagnostics sink, the file sink if any, and `extraLoggers`. With no level set as well, stderr gets
+  * no output. An invalid level in `envVar` still prints its one warning line, through a private `CliLogger`,
+  * since that is a configuration error the host should see.
+  *
+  * Only `CliLog`'s own records are silenced. Under `CliRuntime.main`, what the platform logs while it builds follows
+  * the build-time format: in NDJSON (`json`, or `auto` for an agent or a CI) it goes through this layer, so `false`
+  * silences it there as at runtime; otherwise it goes through a plain `CliLogger`, routed by `logger.stderrFrom` as the
+  * host set it. The audience-override warning is a
+  * configuration error and is never silenced: it is written exactly once, as NDJSON when the build-time format is
+  * NDJSON and as a plain line otherwise, whatever this option says, to stderr alone (never stdout, whatever
+  * `logger.stderrFrom` says) and never to `extraLoggers` or the file sink. The failure report and the `CliMessage` lines
+  * always go through a plain `CliLogger`.
+  */
 	readonly plainLogger?: boolean | undefined;
 	/**
-	 * `json` is NDJSON, `pretty` a human line, `auto` (the default) decides by the audience alone: NDJSON for an agent
-	 * or a CI, the pretty `CliLogger` line for a human, at build time and at runtime alike.
-	 *
-	 * @remarks
-	 * Stderr's terminal state is never consulted, so a human piping stderr to a file gets plain lines, never a mix of
-	 * plain and NDJSON; colour still follows `stderr.color`, so those lines carry no escapes when stderr is not a colour
-	 * terminal. Pass `format: "json"` for machine-readable logs whoever runs the program.
-	 *
-	 * Under `CliRuntime.main` with `env.log`, what the platform logs while it builds is written before the platform
-	 * provides the terminal or the arguments, so `auto` decides those lines from what needs no platform: an audience
-	 * flag in {@link CliLogOptions.argv}, else the audience override variable (`env.audienceEnvVar`), else agent and
-	 * CI detection from the environment. An agent or a CI gets NDJSON, as its runtime lines are; anything else gets
-	 * a plain line, the same choice the runtime lines make. `json` is NDJSON and `pretty` plain throughout.
-	 */
+  * `json` is NDJSON, `pretty` a human line, `auto` (the default) decides by the audience alone: NDJSON for an agent
+  * or a CI, the pretty `CliLogger` line for a human, at build time and at runtime alike.
+  *
+  * **Details**
+  *
+  * Stderr's terminal state is never consulted, so a human piping stderr to a file gets plain lines, never a mix of
+  * plain and NDJSON; colour still follows `stderr.color`, so those lines carry no escapes when stderr is not a colour
+  * terminal. Pass `format: "json"` for machine-readable logs whoever runs the program.
+  *
+  * Under `CliRuntime.main` with `env.log`, what the platform logs while it builds is written before the platform
+  * provides the terminal or the arguments, so `auto` decides those lines from what needs no platform: an audience
+  * flag in {@link CliLogOptions.argv}, else the audience override variable (`env.audienceEnvVar`), else agent and
+  * CI detection from the environment. An agent or a CI gets NDJSON, as its runtime lines are; anything else gets
+  * a plain line, the same choice the runtime lines make. `json` is NDJSON and `pretty` plain throughout.
+  */
 	readonly format?: "auto" | "json" | "pretty" | undefined;
 	/**
-	 * The program's arguments, for the format of what the platform logs while it builds under `CliRuntime.main` with
-	 * `format: "auto"`: an audience flag (`--agent`, `--ci`, `--human`, `--audience <kind>`) in them decides those
-	 * lines as it decides the run's. Only `CliRuntime.main` reads this.
-	 *
-	 * @remarks
-	 * The arguments core parses come from the platform's `Stdio`, which does not exist until the platform is built, and
-	 * this package never reads `process`. A Node host passes `process.argv.slice(2)`; without it the build-time lines
-	 * follow the environment alone, so `--agent` with no agent detected gets plain lines until the platform is built.
-	 */
+  * The program's arguments, for the format of what the platform logs while it builds under `CliRuntime.main` with
+  * `format: "auto"`: an audience flag (`--agent`, `--ci`, `--human`, `--audience <kind>`) in them decides those
+  * lines as it decides the run's. Only `CliRuntime.main` reads this.
+  *
+  * **Details**
+  *
+  * The arguments core parses come from the platform's `Stdio`, which does not exist until the platform is built, and
+  * this package never reads `process`. A Node host passes `process.argv.slice(2)`; without it the build-time lines
+  * follow the environment alone, so `--agent` with no agent detected gets plain lines until the platform is built.
+  */
 	readonly argv?: ReadonlyArray<string> | undefined;
 	/** Options for the `CliLogger` this layer builds for ordinary log lines; see {@link CliLoggerOptions}. */
 	readonly logger?: CliLoggerOptions | undefined;
 	/**
-	 * Loggers to keep beside the `CliLogger` and the sink, for example a telemetry logger: the layer owns the
-	 * whole set, so anything not listed here is dropped.
-	 *
-	 * @remarks
-	 * Each is floored at the `MinimumLogLevel` it had, like the `CliLogger`, so lowering the level for the
-	 * diagnostics sink never makes it see records it would not have seen otherwise.
-	 */
+  * Loggers to keep beside the `CliLogger` and the sink, for example a telemetry logger: the layer owns the
+  * whole set, so anything not listed here is dropped.
+  *
+  * **Details**
+  *
+  * Each is floored at the `MinimumLogLevel` it had, like the `CliLogger`, so lowering the level for the
+  * diagnostics sink never makes it see records it would not have seen otherwise.
+  */
 	readonly extraLoggers?: ReadonlyArray<Logger.Logger<unknown, unknown>> | undefined;
 	/**
 	 * Whether a line the GitHub Actions runner would read as a workflow command is neutralized. `auto`, the default,
@@ -146,19 +151,20 @@ export interface CliLogOptions {
 	 */
 	readonly neutralize?: boolean | "auto" | undefined;
 	/**
-	 * The runtime environment `neutralize: "auto"` falls back to for a record whose fiber has no `CurrentRuntimeEnv`.
-	 *
-	 * @remarks
-	 * Given, it is used in place of the `CurrentRuntimeEnv` the layer captured when it was built, and beats it; the
-	 * logging fiber's own `CurrentRuntimeEnv` still comes first. The capture is invisible in the layer's type (it is read
-	 * if present, never required), so a host that builds this layer outside its environment either passes the snapshot
-	 * here, for example `RuntimeEnv.fromRecord(process.env)`, or provides `CurrentRuntimeEnv` around the layer.
-	 *
-	 * Neutralization under `"auto"` reads the logging fiber's `CurrentRuntimeEnv`, then this option, then the
-	 * `CurrentRuntimeEnv` captured when the layer was built. With none of the three, a record is not neutralized: set
-	 * this option, provide `CurrentRuntimeEnv` around the layer, or pass `neutralize: true`. Every `CliLog.layer`
-	 * overload points here.
-	 */
+  * The runtime environment `neutralize: "auto"` falls back to for a record whose fiber has no `CurrentRuntimeEnv`.
+  *
+  * **Gotchas**
+  *
+  * Given, it is used in place of the `CurrentRuntimeEnv` the layer captured when it was built, and beats it; the
+  * logging fiber's own `CurrentRuntimeEnv` still comes first. The capture is invisible in the layer's type (it is read
+  * if present, never required), so a host that builds this layer outside its environment either passes the snapshot
+  * here, for example `RuntimeEnv.fromRecord(process.env)`, or provides `CurrentRuntimeEnv` around the layer.
+  *
+  * Neutralization under `"auto"` reads the logging fiber's `CurrentRuntimeEnv`, then this option, then the
+  * `CurrentRuntimeEnv` captured when the layer was built. With none of the three, a record is not neutralized: set
+  * this option, provide `CurrentRuntimeEnv` around the layer, or pass `neutralize: true`. Every `CliLog.layer`
+  * overload points here.
+  */
 	readonly runtimeEnv?: RuntimeEnv | undefined;
 }
 
@@ -176,23 +182,24 @@ export type CliLogFile = { readonly envVar: string } | { readonly path: string }
  */
 export interface CliLogFileOptions extends CliLogOptions {
 	/**
-	 * Also write every record the sink accepts to a file as NDJSON, asynchronously.
-	 *
-	 * @remarks
-	 * The line is identical to the stderr NDJSON line for the same log call and is filtered by the same
-	 * {@link CliLog.Level}. Lines are queued and appended by a fiber scoped to the layer, so logging never waits
-	 * on the disk, and the parent directory is created. The first write error prints exactly one stderr line,
-	 * `diagnostics log file <path> failed: <message>; further file logging disabled`, and the program keeps
-	 * running with its normal exit code: from then on lines, including any still queued, are discarded silently.
-	 * Closing the layer's scope flushes the lines queued before it, unless the sink had already disabled itself.
-	 * `{ envVar }` names the variable that holds the path; unset or empty, no file is written.
-	 *
-	 * `undefined` writes no file but keeps the requirements of a file sink (`FileSystem` and `Path`) in `R`, so a
-	 * host whose sink is optional has one stable layer type either way.
-	 *
-	 * Under `CliRuntime.main` with `env.log`, what the platform logs while it builds, before it provides
-	 * `FileSystem`, reaches stderr but not the file; the file starts with the program's own records.
-	 */
+  * Also write every record the sink accepts to a file as NDJSON, asynchronously.
+  *
+  * **Details**
+  *
+  * The line is identical to the stderr NDJSON line for the same log call and is filtered by the same
+  * {@link CliLog.Level}. Lines are queued and appended by a fiber scoped to the layer, so logging never waits
+  * on the disk, and the parent directory is created. The first write error prints exactly one stderr line,
+  * `diagnostics log file <path> failed: <message>; further file logging disabled`, and the program keeps
+  * running with its normal exit code: from then on lines, including any still queued, are discarded silently.
+  * Closing the layer's scope flushes the lines queued before it, unless the sink had already disabled itself.
+  * `{ envVar }` names the variable that holds the path; unset or empty, no file is written.
+  *
+  * `undefined` writes no file but keeps the requirements of a file sink (`FileSystem` and `Path`) in `R`, so a
+  * host whose sink is optional has one stable layer type either way.
+  *
+  * Under `CliRuntime.main` with `env.log`, what the platform logs while it builds, before it provides
+  * `FileSystem`, reaches stderr but not the file; the file starts with the program's own records.
+  */
 	readonly file: CliLogFile | undefined;
 }
 
@@ -255,7 +262,8 @@ const actionsDecision =
 /**
  * Diagnostics kept apart from a program's output: a level, a format and a place to write.
  *
- * @remarks
+ * **Details**
+ *
  * Two kinds of line must never be silenced by a diagnostics default: the failure report
  * `CliRuntime.reportFailures` writes through `CliLogger`, and the `CliMessage` lines. This package therefore
  * never makes the diagnostics level a global switch. The diagnostics logger filters on its **own** threshold,
@@ -298,7 +306,8 @@ const actionsDecision =
  * sink keeps filtering on its own level rather than following the flag. The plain `CliLogger` prints those records
  * regardless.
  *
- * @example
+ * **Example** (Enable diagnostics with an environment variable)
+ *
  * ```ts
  * import { CliRuntime } from "./index.ts"
  * import { NodeRuntime, NodeServices } from "@effect/platform-node"
@@ -318,100 +327,107 @@ export class CliLog {
 	private constructor() {}
 
 	/**
-	 * The diagnostics threshold. Defaults to `None`, silent.
-	 *
-	 * @remarks
-	 * `CliLog.layer` sets it from the environment variable. A scope may raise it to narrow the output; it
-	 * cannot lower it below the level the layer installed, because Effect has already dropped those records.
-	 */
+  * The diagnostics threshold. Defaults to `None`, silent.
+  *
+  * **Details**
+  *
+  * `CliLog.layer` sets it from the environment variable. A scope may raise it to narrow the output; it
+  * cannot lower it below the level the layer installed, because Effect has already dropped those records.
+  */
 	static readonly Level: Context.Reference<LogLevel.LogLevel> = Level;
 
 	/**
-	 * The whole logger set of a program: a `CliLogger` for ordinary lines plus the diagnostics sink.
-	 *
-	 * @remarks
-	 * Replaces the installed loggers without reading them. Provide it on the program you pass to
-	 * `CliRuntime.main`, or use `main`'s `env.log` option; never wrap it around `main`, whose own logger would
-	 * replace this one. Bind it to a constant.
-	 *
-	 * The requirements follow the format. `format: "json"` reads neither the audience nor the terminal, so it
-	 * requires neither; `"pretty"` requires `TerminalEnv` alone, for the stderr colour; `"auto"` and an omitted
-	 * format require both. A long-lived host that never builds a platform `Terminal` can provide
-	 * `TerminalEnv.layerStdio()` for the pretty case.
-	 *
-	 * A platform or program that installs its own `Logger.layer([...])` replaces this set: do not. The diagnostics
-	 * then go silent with no error.
-	 *
-	 * The NDJSON line is core's `Logger.formatJson`, unchanged so it stays interoperable with Effect tooling: the
-	 * `message` field is a string for one log argument and an array for several.
-	 *
-	 * Level parsing is case-insensitive and accepts `warn`, `warning`, `error`, `info`, `debug`, `trace`,
-	 * `fatal`, `all` and `none`. An invalid value warns once, through the `CliLogger`, and leaves diagnostics
-	 * off.
-	 *
-	 * With a `file` option ({@link CliLogFileOptions}) the layer also writes an async NDJSON file, and only then
-	 * does it require `FileSystem` and `Path`, and it leaves them in `R` unprovided: the platform supplies them, or
-	 * a test supplies a memory filesystem, so a host never provides Node inside its own layer.
-	 *
-	 * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
-	 *
-	 * @param options - the level, the env var, the format, the `CliLogger` options and the optional file sink
-	 */
+  * The whole logger set of a program: a `CliLogger` for ordinary lines plus the diagnostics sink.
+  *
+  * **Details**
+  *
+  * Replaces the installed loggers without reading them. Provide it on the program you pass to
+  * `CliRuntime.main`, or use `main`'s `env.log` option; never wrap it around `main`, whose own logger would
+  * replace this one. Bind it to a constant.
+  *
+  * The requirements follow the format. `format: "json"` reads neither the audience nor the terminal, so it
+  * requires neither; `"pretty"` requires `TerminalEnv` alone, for the stderr colour; `"auto"` and an omitted
+  * format require both. A long-lived host that never builds a platform `Terminal` can provide
+  * `TerminalEnv.layerStdio()` for the pretty case.
+  *
+  * A platform or program that installs its own `Logger.layer([...])` replaces this set: do not. The diagnostics
+  * then go silent with no error.
+  *
+  * The NDJSON line is core's `Logger.formatJson`, unchanged so it stays interoperable with Effect tooling: the
+  * `message` field is a string for one log argument and an array for several.
+  *
+  * Level parsing is case-insensitive and accepts `warn`, `warning`, `error`, `info`, `debug`, `trace`,
+  * `fatal`, `all` and `none`. An invalid value warns once, through the `CliLogger`, and leaves diagnostics
+  * off.
+  *
+  * With a `file` option ({@link CliLogFileOptions}) the layer also writes an async NDJSON file, and only then
+  * does it require `FileSystem` and `Path`, and it leaves them in `R` unprovided: the platform supplies them, or
+  * a test supplies a memory filesystem, so a host never provides Node inside its own layer.
+  *
+  * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
+  *
+  * @param options - the level, the env var, the format, the `CliLogger` options and the optional file sink
+  */
 	static layer(
 		options: CliLogOptions & { readonly format: "json"; readonly file?: undefined },
 	): Layer.Layer<never, never, never>;
 	/**
-	 * The logger set with NDJSON diagnostics and a file sink; see the first overload.
-	 *
-	 * @remarks
-	 * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
-	 *
-	 * @param options - the level, the env var, the `CliLogger` options and the file sink
-	 */
+  * The logger set with NDJSON diagnostics and a file sink; see the first overload.
+  *
+  * **Gotchas**
+  *
+  * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
+  *
+  * @param options - the level, the env var, the `CliLogger` options and the file sink
+  */
 	static layer(
 		options: CliLogFileOptions & { readonly format: "json" },
 	): Layer.Layer<never, never, FileSystem.FileSystem | PathModule.Path>;
 	/**
-	 * The logger set with pretty diagnostics; see the first overload.
-	 *
-	 * @remarks
-	 * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
-	 *
-	 * @param options - the level, the env var and the `CliLogger` options
-	 */
+  * The logger set with pretty diagnostics; see the first overload.
+  *
+  * **Gotchas**
+  *
+  * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
+  *
+  * @param options - the level, the env var and the `CliLogger` options
+  */
 	static layer(
 		options: CliLogOptions & { readonly format: "pretty"; readonly file?: undefined },
 	): Layer.Layer<never, never, TerminalEnv>;
 	/**
-	 * The logger set with pretty diagnostics and a file sink; see the first overload.
-	 *
-	 * @remarks
-	 * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
-	 *
-	 * @param options - the level, the env var, the `CliLogger` options and the file sink
-	 */
+  * The logger set with pretty diagnostics and a file sink; see the first overload.
+  *
+  * **Gotchas**
+  *
+  * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
+  *
+  * @param options - the level, the env var, the `CliLogger` options and the file sink
+  */
 	static layer(
 		options: CliLogFileOptions & { readonly format: "pretty" },
 	): Layer.Layer<never, never, TerminalEnv | FileSystem.FileSystem | PathModule.Path>;
 	/**
-	 * The logger set with the format decided by the audience; see the first overload.
-	 *
-	 * @remarks
-	 * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
-	 *
-	 * @param options - the level, the env var, the format and the `CliLogger` options
-	 */
+  * The logger set with the format decided by the audience; see the first overload.
+  *
+  * **Gotchas**
+  *
+  * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
+  *
+  * @param options - the level, the env var, the format and the `CliLogger` options
+  */
 	static layer(
 		options?: CliLogOptions & { readonly file?: undefined },
 	): Layer.Layer<never, never, Audience | TerminalEnv>;
 	/**
-	 * The logger set with the format decided by the audience, and a file sink; see the first overload.
-	 *
-	 * @remarks
-	 * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
-	 *
-	 * @param options - the level, the env var, the format, the `CliLogger` options and the file sink
-	 */
+  * The logger set with the format decided by the audience, and a file sink; see the first overload.
+  *
+  * **Gotchas**
+  *
+  * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
+  *
+  * @param options - the level, the env var, the format, the `CliLogger` options and the file sink
+  */
 	static layer(
 		options: CliLogFileOptions,
 	): Layer.Layer<never, never, Audience | TerminalEnv | FileSystem.FileSystem | PathModule.Path>;
@@ -529,39 +545,41 @@ export class CliLog {
 	}
 
 	/**
-	 * Log a status line: its glyph painted through the theme, then `text`, at a level that follows the status.
-	 *
-	 * @remarks
-	 * The line goes through the logger, so it is a diagnostic like any `Effect.log*` call: filtered by the level in
-	 * force (`--log-level`, `CliLog.Level`), routed by `CliLogger`'s `stderrFrom` (stderr by default) and neutralized
-	 * under GitHub Actions. What differs is the glyph: the logger sanitises every line a program logs, which strips a
-	 * colour a program painted itself, so a glyph on the log channel was always drawn bare. Here the kit paints it and
-	 * marks the line as its own, so the plain `CliLogger` line keeps the colour, while `text` is still sanitised:
-	 * escape sequences and control characters in it are removed, as in every line the kit writes.
-	 *
-	 * The glyph is painted with stderr's theme (where diagnostics go) through {@link CliTheme.forAudience}, so an agent
-	 * gets it unpainted, and an `Audience` is read only when provided, so it stays out of the requirements. ASCII glyphs
-	 * give the status's ASCII form. A diagnostics record carries the line as its message as any record does: the `CliLog`
-	 * sink's pretty line sanitises it (the glyph is drawn bare there), and NDJSON keeps it, JSON-escaped.
-	 *
-	 * The level defaults to the status's rank in `vocab`: `Error` at or above `failure`'s, `Warn` at or above
-	 * `warning`'s, `Info` below, so a custom status follows its own rank. Pass `level` to choose it, and `indent` (a
-	 * number of spaces, or a string, sanitised) to start the line inside an indented block: `    ✗ error   x: red`.
-	 *
-	 * @example
-	 * ```ts
-	 * import { CliLog, Status } from "./index.ts"
-	 *
-	 * // ✗ in the failure colour, then the message: on stderr, filtered by the log level.
-	 * const reportError = (resource: string, message: string) =>
-	 *   CliLog.status(Status.core, "failure", `${resource}: ${message}`)
-	 * ```
-	 *
-	 * @param vocab - the vocabulary the status belongs to
-	 * @param name - the status
-	 * @param text - the text after the glyph, sanitised
-	 * @param options - the level to log at, and the indent before the glyph
-	 */
+  * Log a status line: its glyph painted through the theme, then `text`, at a level that follows the status.
+  *
+  * **Details**
+  *
+  * The line goes through the logger, so it is a diagnostic like any `Effect.log*` call: filtered by the level in
+  * force (`--log-level`, `CliLog.Level`), routed by `CliLogger`'s `stderrFrom` (stderr by default) and neutralized
+  * under GitHub Actions. What differs is the glyph: the logger sanitises every line a program logs, which strips a
+  * colour a program painted itself, so a glyph on the log channel was always drawn bare. Here the kit paints it and
+  * marks the line as its own, so the plain `CliLogger` line keeps the colour, while `text` is still sanitised:
+  * escape sequences and control characters in it are removed, as in every line the kit writes.
+  *
+  * The glyph is painted with stderr's theme (where diagnostics go) through {@link CliTheme.forAudience}, so an agent
+  * gets it unpainted, and an `Audience` is read only when provided, so it stays out of the requirements. ASCII glyphs
+  * give the status's ASCII form. A diagnostics record carries the line as its message as any record does: the `CliLog`
+  * sink's pretty line sanitises it (the glyph is drawn bare there), and NDJSON keeps it, JSON-escaped.
+  *
+  * The level defaults to the status's rank in `vocab`: `Error` at or above `failure`'s, `Warn` at or above
+  * `warning`'s, `Info` below, so a custom status follows its own rank. Pass `level` to choose it, and `indent` (a
+  * number of spaces, or a string, sanitised) to start the line inside an indented block: `    ✗ error   x: red`.
+  *
+  * **Example** (Log a themed failure status)
+  *
+  * ```ts
+  * import { CliLog, Status } from "./index.ts"
+  *
+  * // ✗ in the failure colour, then the message: on stderr, filtered by the log level.
+  * const reportError = (resource: string, message: string) =>
+  *   CliLog.status(Status.core, "failure", `${resource}: ${message}`)
+  * ```
+  *
+  * @param vocab - the vocabulary the status belongs to
+  * @param name - the status
+  * @param text - the text after the glyph, sanitised
+  * @param options - the level to log at, and the indent before the glyph
+  */
 	static readonly status = Effect.fn("status")(function* <N extends string>(
 		vocab: Status<N>,
 		name: N,
@@ -583,13 +601,14 @@ export class CliLog {
 	});
 
 	/**
-	 * Mark the log records an effect emits as coming from `name`.
-	 *
-	 * @remarks
-	 * Shown as `[name]` in pretty output and as `annotations.component` in NDJSON.
-	 *
-	 * @param name - the component
-	 */
+  * Mark the log records an effect emits as coming from `name`.
+  *
+  * **Details**
+  *
+  * Shown as `[name]` in pretty output and as `annotations.component` in NDJSON.
+  *
+  * @param name - the component
+  */
 	static readonly component =
 		(name: string) =>
 		<A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
@@ -639,7 +658,8 @@ const buildTimeDecision = Effect.fn("buildTimeDecision")(function* (
  * The logger the platform is built under by `CliRuntime.main` with `env.log`: the log level and env var apply to
  * what the platform logs while it builds, too.
  *
- * @remarks
+ * **Details**
+ *
  * With `format: "json"`, or `auto` when the build-time audience (`argv`, the override variable, detection) is an
  * agent or a CI, it is the full `CliLog.layer` in NDJSON (that format needs neither the audience nor the terminal,
  * which the platform has not built yet), without the file sink, whose `FileSystem` the platform provides. Otherwise it
@@ -684,7 +704,8 @@ export const platformLogLayer: {
 /**
  * The logger `CliRuntime.main` builds the environment layer under: one line per record, in the build-time format.
  *
- * @remarks
+ * **Details**
+ *
  * What the environment layer logs is a configuration error (an invalid audience override, which interpolates the
  * variable's value), so it is never silenced and never written twice: NDJSON alone for an agent or a CI (`json`, or
  * `auto` for that build-time audience), a plain `CliLogger` line otherwise, whatever `plainLogger` and the diagnostics

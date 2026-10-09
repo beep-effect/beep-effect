@@ -7,7 +7,8 @@ import type { GitHubError } from "../GitHubError.ts";
 /**
  * A source of pages, whatever they come from.
  *
- * @remarks
+ * **Details**
+ *
  * The seam that lets the live client and the fixture double share one
  * traversal. `next` yields the next page, or `Option.none()` when the traversal
  * is finished; it is called at most once per page and never again after it
@@ -26,7 +27,8 @@ export interface PageSource<A> {
 /**
  * Walk a {@link PageSource} into a stream of its items.
  *
- * @remarks
+ * **Details**
+ *
  * **This is the only pagination implementation in the package**, and it is why
  * the fixture double cannot drift from the live client: both build a
  * `PageSource` and hand it here, so `maxPages` and item flattening have exactly
@@ -61,7 +63,8 @@ export const paginate: {
 /**
  * A {@link PageSource} over an already-collected array, sliced into pages.
  *
- * @remarks
+ * **Details**
+ *
  * What the fixture double records. Slicing here rather than inside the double
  * keeps "what is a page" in one place: a recorded fixture of 250 items with
  * `perPage: 100` pages exactly as GitHub would, so a test can assert a caller's

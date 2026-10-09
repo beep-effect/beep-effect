@@ -266,7 +266,8 @@ const discoverStores = Effect.fn("discoverStores")(function* (root: string): Eff
  * whose manifest carries exactly `declared`, from the FIRST store (in
  * discovery order) that holds any — `[]` when none does.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The `<hash>` segment is pnpm's, and it is NOT derivable from the declared
  * integrity (sha256/sha512 of the integrity string, its decoded bytes, the
  * `name@version` dep path and the tarball URL were all tried and none match),
@@ -385,7 +386,8 @@ const pnpmfileIn = (name: string, dir: string): Effect.Effect<O.Option<string>, 
  * `locks` is the declaring side's memoized lockfile decode, run at most once
  * per call and only by the fetch rung.
  *
- * @remarks
+ * **Details**
+ *
  * A fetch failure is folded into the not-installed message, so the error
  * still says what was declared, what is installed and where the ladder
  * looked, and it keeps the fetch rung's own `reason` (`integrityMismatch`,

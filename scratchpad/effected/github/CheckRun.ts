@@ -61,7 +61,8 @@ export class Annotation extends S.Class<Annotation>($I`Annotation`)({
 /**
  * A check run's rendered output.
  *
- * @remarks
+ * **Gotchas**
+ *
  * GitHub's limits are **byte** limits, and that distinction is the whole reason
  * this class exists rather than a struct: `✅`, `❌`, `🦋` and `│` cost several
  * bytes each, so a character-count check passes while the request comes back
@@ -89,7 +90,8 @@ export class CheckRunOutput extends S.Class<CheckRunOutput>($I`CheckRunOutput`)(
   /**
    * This output, cut to fit GitHub's limits.
    *
-   * @remarks
+   * **Details**
+   *
    * Pure, so the byte arithmetic is testable with no client, no layer and no
    * network — which is what lets a property test hammer it with arbitrary
    * multi-byte input.
@@ -108,7 +110,8 @@ export class CheckRunOutput extends S.Class<CheckRunOutput>($I`CheckRunOutput`)(
 /**
  * Cut `value` to GitHub's byte budget without leaving a broken code point.
  *
- * @remarks
+ * **Details**
+ *
  * A cut inside a UTF-8 sequence moves back to its leading byte before
  * decoding. Complete characters, including an existing U+FFFD, survive.
  */
@@ -139,7 +142,8 @@ export class CheckRunRef extends S.Class<CheckRunRef>($I`CheckRunRef`)({
 /**
  * Conclude the surrounding {@link CheckRunShape.withCheckRun} explicitly.
  *
- * @remarks
+ * **Details**
+ *
  * **Recording, not sending.** The call stores the verdict; the bracket's
  * finalizer writes it exactly once, on whichever path `use` leaves by. That is
  * what makes an explicit conclusion survive a later failure or an interrupt,
@@ -164,7 +168,8 @@ export type ConcludeCheckRun = (
  * Create, update and conclude GitHub check runs on a commit, including a
  * bracket that always concludes the run.
  *
- * @remarks
+ * **Details**
+ *
  * Every member resolves the target repository from the `Repo` service in `R`.
  *
  * @public
@@ -184,7 +189,8 @@ export interface CheckRunShape {
   /**
    * Run `use` inside a check run, concluding it however `use` exits.
    *
-   * @remarks
+   * **Details**
+   *
    * **Every exit reaches a terminal state.** Left to itself the bracket
    * concludes `"success"` on success, `"failure"` on a typed failure or a
    * defect, and `"cancelled"` on an interrupt. A run left `in_progress` is
@@ -206,7 +212,8 @@ export interface CheckRunShape {
    * `use` keeps its own `R` and its own `A`, so the bracket composes with
    * whatever services the wrapped work needs.
    *
-   * @example
+   * **Example** (Conclude a lint check with a neutral verdict)
+   *
    * ```ts
    * import { CheckRun, CheckRunOutput } from "./index.ts";
    * import * as Effect from "effect/Effect";
@@ -239,7 +246,8 @@ export interface CheckRunShape {
  * Create, update and conclude GitHub check runs, including the
  * {@link CheckRunShape.withCheckRun} bracket that always reaches a terminal state.
  *
- * @remarks
+ * **Details**
+ *
  * Provide it with {@link CheckRun.layer}, which needs a `GitHubClient`; each
  * method also needs a `Repo` in `R`.
  *
@@ -298,7 +306,8 @@ interface RecordedConclusion {
 /**
  * What the bracket concludes when `use` recorded nothing.
  *
- * @remarks
+ * **Gotchas**
+ *
  * **Exit-aware, because a `tap`/`tapError` pair is not.** Those two fire on
  * success and on a *typed* failure; an interrupted `use` — a cancelled
  * workflow, a job timeout, a losing branch of a race — and a defect hit
@@ -328,7 +337,8 @@ const defaultConclusion = <A, E>(name: string, exit: Exit.Exit<A, E>): RecordedC
 /**
  * Conclude a bracketed run: the verdict `use` recorded, or the exit's default.
  *
- * @remarks
+ * **Details**
+ *
  * **`recorded` wins on every exit path**, including failure and interruption.
  * How the *check* ran and how the surrounding *program* ended are different
  * questions, and only `use` knows the first one — a findings-derived

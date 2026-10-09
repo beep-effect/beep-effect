@@ -7,7 +7,8 @@ const $I = $ScratchpadId.create("effected/config-file/ConfigCodec");
 /**
  * Indicates that a codec failed to parse or stringify configuration content.
  *
- * @remarks
+ * **Details**
+ *
  * The underlying failure is preserved structurally in `cause` — it is never
  * stringified. Route on the `"ConfigCodecError"` tag with `Effect.catchTag`.
  *
@@ -30,15 +31,16 @@ export class ConfigCodecError extends S.TaggedError<ConfigCodecError>($I`ConfigC
 	/** The underlying failure, preserved structurally. */
 	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
 	/**
-	 * The file the content came from, when a caller knew it.
-	 *
-	 * @remarks
-	 * A codec sees a string, never a path, so it cannot fill this in itself.
-	 * `ConfigFile`'s read/write pipeline does: every site that feeds a codec a
-	 * path it resolved re-raises the error with `path` attached, so a discovery
-	 * pass over several candidates still names the file that failed. Absent
-	 * only when a codec was driven directly, outside that pipeline.
-	 */
+  * The file the content came from, when a caller knew it.
+  *
+  * **Details**
+  *
+  * A codec sees a string, never a path, so it cannot fill this in itself.
+  * `ConfigFile`'s read/write pipeline does: every site that feeds a codec a
+  * path it resolved re-raises the error with `path` attached, so a discovery
+  * pass over several candidates still names the file that failed. Absent
+  * only when a codec was driven directly, outside that pipeline.
+  */
 	path: S.optionalKey(S.String).annotateKey({ description: "The file the content came from, when a caller knew it." }),
 }, $I.annote("ConfigCodecError", { description: "Indicates that a codec failed to parse or stringify configuration content." })) {
 	override get message(): string {
@@ -50,7 +52,8 @@ export class ConfigCodecError extends S.TaggedError<ConfigCodecError>($I`ConfigC
  * A pluggable configuration file codec: how to turn file content into a value
  * and back.
  *
- * @remarks
+ * **Details**
+ *
  * `E` is the codec's error channel. It defaults to {@link ConfigCodecError};
  * decorator codecs such as `EncryptedCodec` and `ConfigMigration.make` widen it
  * rather than flattening their own failures into a string.

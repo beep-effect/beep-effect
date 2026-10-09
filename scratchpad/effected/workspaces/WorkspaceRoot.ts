@@ -34,7 +34,8 @@ const PACKAGE_JSON_MARKER_PROSE = 'package.json with a "workspaces" field';
 /**
  * Options for {@link WorkspaceRoot}'s `find`.
  *
- * @remarks
+ * **Details**
+ *
  * Both bounds are passed straight through to `@effected/walker`'s
  * `Walker.ascend`; this package does not re-decide either.
  *
@@ -42,32 +43,35 @@ const PACKAGE_JSON_MARKER_PROSE = 'package.json with a "workspaces" field';
  */
 export interface FindWorkspaceRootOptions {
 	/**
-	 * A ceiling directory. The ascent stops after probing it, so an unmarked
-	 * `stopAt` fails typed as {@link WorkspaceRootNotFoundError} rather than
-	 * silently escaping into an enclosing repository.
-	 *
-	 * @remarks
-	 * Resolved to an absolute path before comparison, exactly as `cwd` is — a
-	 * relative or non-normalized ceiling that never string-matched an ancestor
-	 * would reintroduce the unbounded ascent it was passed to prevent.
-	 */
+  * A ceiling directory. The ascent stops after probing it, so an unmarked
+  * `stopAt` fails typed as {@link WorkspaceRootNotFoundError} rather than
+  * silently escaping into an enclosing repository.
+  *
+  * **Details**
+  *
+  * Resolved to an absolute path before comparison, exactly as `cwd` is — a
+  * relative or non-normalized ceiling that never string-matched an ancestor
+  * would reintroduce the unbounded ascent it was passed to prevent.
+  */
 	readonly stopAt?: string;
 	/**
-	 * Hard cap on the number of directories probed.
-	 *
-	 * @remarks
-	 * A non-integer or non-positive value is a **defect**, not a typed failure —
-	 * it is developer wiring, and walker's guard raises it.
-	 *
-	 * @defaultValue 256
-	 */
+  * Hard cap on the number of directories probed.
+  *
+  * **Gotchas**
+  *
+  * A non-integer or non-positive value is a **defect**, not a typed failure —
+  * it is developer wiring, and walker's guard raises it.
+  *
+  * @defaultValue 256
+  */
 	readonly maxDepth?: number;
 }
 
 /**
  * Raised when no workspace root can be found by ascending from a directory.
  *
- * @remarks
+ * **Details**
+ *
  * `markers` records what was probed, so the failure names the contract rather
  * than paraphrasing it in prose.
  *
@@ -81,14 +85,15 @@ export class WorkspaceRootNotFoundError extends S.TaggedError<WorkspaceRootNotFo
 		/** The marker filenames probed at each ancestor. */
 		markers: S.Array(S.String).annotateKey({ description: "The marker filenames probed at each ancestor." }),
 		/**
-		 * The resolved ceiling the ascent was bounded by, when one was supplied.
-		 *
-		 * @remarks
-		 * Absent means the ascent ran to the filesystem root. Its presence is what
-		 * lets a caller tell "there is no workspace root anywhere above me" from
-		 * "there is none below the ceiling I set" — two failures that otherwise
-		 * render identically.
-		 */
+   * The resolved ceiling the ascent was bounded by, when one was supplied.
+   *
+   * **Details**
+   *
+   * Absent means the ascent ran to the filesystem root. Its presence is what
+   * lets a caller tell "there is no workspace root anywhere above me" from
+   * "there is none below the ceiling I set" — two failures that otherwise
+   * render identically.
+   */
 		stopAt: S.optionalKey(S.String).annotateKey({ description: "The resolved ceiling the ascent was bounded by, when one was supplied." }),
 	}, $I.annote("WorkspaceRootNotFoundError", { description: "Raised when no workspace root can be found by ascending from a directory." }),
 ) {
@@ -139,7 +144,8 @@ const isWorkspaceRoot = Effect.fn("isWorkspaceRoot")(function* (dir: string): Ef
 /**
  * The {@link WorkspaceRoot} service contract.
  *
- * @remarks
+ * **Details**
+ *
  * Named so a consumer can type its own double — or a `Layer.succeed` — against
  * the contract rather than re-deriving it, exactly as `WorkspaceDiscoveryShape`
  * does. Prefer {@link WorkspaceRoot.layerTest} to hand-rolling one.
@@ -169,7 +175,8 @@ const isAtOrBelow = (descendant: string, ancestor: string): boolean => {
 /**
  * Locates the workspace root by ascending from a starting directory.
  *
- * @example
+ * **Example** (Find the workspace root from a package directory)
+ *
  * ```ts
  * import { WorkspaceRoot } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -180,7 +187,8 @@ const isAtOrBelow = (descendant: string, ancestor: string): boolean => {
  * });
  * ```
  *
- * @example
+ * **Example** (Bound root discovery to a fixture directory)
+ *
  * Bounded: an unmarked fixture directory fails typed instead of escaping into
  * the enclosing repository.
  *
@@ -248,31 +256,32 @@ export class WorkspaceRoot extends Context.Service<WorkspaceRoot, WorkspaceRootS
 	);
 
 	/**
-	 * A test double resolving every `find` to `root`, with no filesystem.
-	 *
-	 * @remarks
-	 * Stands in for a hand-written `Layer.succeed` over a `find` that ignores its
-	 * arguments. Unlike that, this double **honours `stopAt`**: a `find` that
-	 * ignores the ceiling makes a bounded call pass under test and fail against
-	 * the live service, which is the failure mode the option exists to catch. A `root` above the ceiling fails
-	 * here exactly as it would live, with the same
-	 * {@link WorkspaceRootNotFoundError}.
-	 *
-	 * The ceiling is `path.resolve`d through the injected `Path` service before
-	 * the comparison, exactly as the live `make` path does — so a `stopAt`
-	 * carrying `..` segments bounds the double identically to the live service,
-	 * not by raw string. This is why `makeTest` yields an `Effect` requiring
-	 * `Path`: it captures the service once at construction, the same shape as
-	 * `make`. Consumers reach for {@link WorkspaceRoot.layerTest}, which provides
-	 * `Path.layer` internally, so the requirement never surfaces at their call
-	 * site.
-	 *
-	 * `maxDepth` is deliberately NOT modelled: the double does not walk, so it has
-	 * no depth to cap, and pretending otherwise would encode a fiction. A suite
-	 * exercising the depth guard wants the live service over a fixture tree.
-	 *
-	 * @param root - The root every unbounded `find` resolves to.
-	 */
+  * A test double resolving every `find` to `root`, with no filesystem.
+  *
+  * **Details**
+  *
+  * Stands in for a hand-written `Layer.succeed` over a `find` that ignores its
+  * arguments. Unlike that, this double **honours `stopAt`**: a `find` that
+  * ignores the ceiling makes a bounded call pass under test and fail against
+  * the live service, which is the failure mode the option exists to catch. A `root` above the ceiling fails
+  * here exactly as it would live, with the same
+  * {@link WorkspaceRootNotFoundError}.
+  *
+  * The ceiling is `path.resolve`d through the injected `Path` service before
+  * the comparison, exactly as the live `make` path does — so a `stopAt`
+  * carrying `..` segments bounds the double identically to the live service,
+  * not by raw string. This is why `makeTest` yields an `Effect` requiring
+  * `Path`: it captures the service once at construction, the same shape as
+  * `make`. Consumers reach for {@link WorkspaceRoot.layerTest}, which provides
+  * `Path.layer` internally, so the requirement never surfaces at their call
+  * site.
+  *
+  * `maxDepth` is deliberately NOT modelled: the double does not walk, so it has
+  * no depth to cap, and pretending otherwise would encode a fiction. A suite
+  * exercising the depth guard wants the live service over a fixture tree.
+  *
+  * @param root - The root every unbounded `find` resolves to.
+  */
 	static readonly makeTest = Effect.fn("WorkspaceRoot.makeTest")(function* (root: string): Effect.fn.Return<WorkspaceRootShape, never, Path.Path> {
 		const path = yield* Path.Path;
 		return {
@@ -294,34 +303,36 @@ export class WorkspaceRoot extends Context.Service<WorkspaceRoot, WorkspaceRootS
 	});
 
 	/**
-	 * The test layer: {@link WorkspaceRoot.makeTest} with `Path.layer` provided.
-	 *
-	 * @remarks
-	 * `makeTest` requires `Path` to normalize the `stopAt` ceiling; this layer
-	 * supplies core's `Path.layer` internally, so the requirement never reaches a
-	 * consumer — the published type stays `Layer.Layer<WorkspaceRoot>`.
-	 *
-	 * A parameterized layer factory mints a **fresh reference per call**, and
-	 * layers memoize by reference — bind the result to a `const` and reuse it
-	 * rather than calling `layerTest(...)` at each composition site.
-	 *
-	 * Pair it with `WorkspaceDiscovery.layerTest` to stand up the whole discovery
-	 * path without a filesystem; between them there is nothing left for a
-	 * module-level mock of `@effected/workspaces` to do, and a provided layer
-	 * keeps the service graph — and its typed errors — intact.
-	 *
-	 * @example
-	 * ```ts
-	 * import { WorkspaceDiscovery, WorkspaceRoot } from "./index.ts";
-	 * import * as Effect from "effect/Effect";
-	 *
-	 * const TestRoot = WorkspaceRoot.layerTest("/repo");
-	 * const TestDiscovery = WorkspaceDiscovery.layerTest({
-	 *   listPackages: Effect.succeed([]),
-	 * });
-	 * // program.pipe(Effect.provide(TestRoot), Effect.provide(TestDiscovery))
-	 * ```
-	 */
+  * The test layer: {@link WorkspaceRoot.makeTest} with `Path.layer` provided.
+  *
+  * **Details**
+  *
+  * `makeTest` requires `Path` to normalize the `stopAt` ceiling; this layer
+  * supplies core's `Path.layer` internally, so the requirement never reaches a
+  * consumer — the published type stays `Layer.Layer<WorkspaceRoot>`.
+  *
+  * A parameterized layer factory mints a **fresh reference per call**, and
+  * layers memoize by reference — bind the result to a `const` and reuse it
+  * rather than calling `layerTest(...)` at each composition site.
+  *
+  * Pair it with `WorkspaceDiscovery.layerTest` to stand up the whole discovery
+  * path without a filesystem; between them there is nothing left for a
+  * module-level mock of `@effected/workspaces` to do, and a provided layer
+  * keeps the service graph — and its typed errors — intact.
+  *
+  * **Example** (Provide root and discovery test layers)
+  *
+  * ```ts
+  * import { WorkspaceDiscovery, WorkspaceRoot } from "./index.ts";
+  * import * as Effect from "effect/Effect";
+  *
+  * const TestRoot = WorkspaceRoot.layerTest("/repo");
+  * const TestDiscovery = WorkspaceDiscovery.layerTest({
+  *   listPackages: Effect.succeed([]),
+  * });
+  * // program.pipe(Effect.provide(TestRoot), Effect.provide(TestDiscovery))
+  * ```
+  */
 	static readonly layerTest = (root: string): Layer.Layer<WorkspaceRoot> =>
 		Layer.effect(WorkspaceRoot, WorkspaceRoot.makeTest(root)).pipe(Layer.provide(Path.layer));
 }

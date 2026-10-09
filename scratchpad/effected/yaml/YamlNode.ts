@@ -266,7 +266,8 @@ export interface YamlAliasEncoded extends S.Codec.Encoded<typeof YamlAlias> {}
  * Defined lazily via `Schema.suspend` to break the recursive reference chain
  * `YamlNode → YamlMap → YamlPair → YamlNode`.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Construct member nodes via their `.make(...)` static (e.g.
  * `YamlScalar.make(...)`), never `new YamlScalar(...)` — the internal
  * composer's hot-path `new` construction is the one recorded exception, kept

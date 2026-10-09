@@ -58,7 +58,8 @@ class WorkspaceDiscoveryCause extends S.TaggedError<WorkspaceDiscoveryCause>($I`
  * Raised when a workspace member's `package.json` cannot be read, parsed, or
  * used — it is missing, malformed, or lacks a `name`.
  *
- * @remarks
+ * **Details**
+ *
  * `kind` is the discriminant a caller branches on; `cause` preserves the
  * originating failure rather than flattening it into a sentence.
  *
@@ -114,7 +115,8 @@ export class WorkspacePatternError extends S.TaggedError<WorkspacePatternError>(
 /**
  * Raised when a workspace package is requested by a name no member carries.
  *
- * @remarks
+ * **Details**
+ *
  * `available` lists every known member, which is what makes the error
  * actionable — a typo is obvious next to the list it missed.
  *
@@ -180,30 +182,31 @@ export interface WorkspaceDiscoveryOptions {
 	 */
 	readonly cwd?: string;
 	/**
-	 * A ceiling for the layer-bound root ascent from `cwd`, passed straight
-	 * through to the `stopAt` of {@link WorkspaceRoot}'s `find`.
-	 *
-	 * @remarks
-	 * Inclusive: the ceiling itself is probed, so a `cwd` that is its own
-	 * workspace root still resolves with `stopAt: cwd`. A relative ceiling is
-	 * resolved against the process working directory, exactly as `cwd` is. When
-	 * no root is found at or below the ceiling, the methods fail with
-	 * {@link WorkspaceRootNotFoundError} carrying the resolved `stopAt`, rather
-	 * than adopting an enclosing directory's workspace — pass `stopAt: cwd` for
-	 * a checkout nested inside someone else's monorepo.
-	 *
-	 * Applies ONLY to the layer-bound methods (`info`, `listPackages`,
-	 * `importerMap`, `getPackage`, `resolveFile`, `resolveFiles`). The per-call
-	 * `infoIn`, `listPackagesIn` and `refreshIn` resolve from an arbitrary
-	 * directory the caller names, which a single layer-level ceiling cannot
-	 * sensibly bound, so they ascend unbounded.
-	 *
-	 * `LockfileReader`, `WorkspaceCatalogs` and `WorkspaceSnapshots` each
-	 * take the same option; give them the same value when wiring by hand, or let a `Workspaces.*` composite forward one
-	 * `stopAt` to all of them, so no service adopts a root another refused.
-	 *
-	 * @defaultValue no ceiling — the ascent runs to the filesystem root.
-	 */
+  * A ceiling for the layer-bound root ascent from `cwd`, passed straight
+  * through to the `stopAt` of {@link WorkspaceRoot}'s `find`.
+  *
+  * **Details**
+  *
+  * Inclusive: the ceiling itself is probed, so a `cwd` that is its own
+  * workspace root still resolves with `stopAt: cwd`. A relative ceiling is
+  * resolved against the process working directory, exactly as `cwd` is. When
+  * no root is found at or below the ceiling, the methods fail with
+  * {@link WorkspaceRootNotFoundError} carrying the resolved `stopAt`, rather
+  * than adopting an enclosing directory's workspace — pass `stopAt: cwd` for
+  * a checkout nested inside someone else's monorepo.
+  *
+  * Applies ONLY to the layer-bound methods (`info`, `listPackages`,
+  * `importerMap`, `getPackage`, `resolveFile`, `resolveFiles`). The per-call
+  * `infoIn`, `listPackagesIn` and `refreshIn` resolve from an arbitrary
+  * directory the caller names, which a single layer-level ceiling cannot
+  * sensibly bound, so they ascend unbounded.
+  *
+  * `LockfileReader`, `WorkspaceCatalogs` and `WorkspaceSnapshots` each
+  * take the same option; give them the same value when wiring by hand, or let a `Workspaces.*` composite forward one
+  * `stopAt` to all of them, so no service adopts a root another refused.
+  *
+  * @defaultValue no ceiling — the ascent runs to the filesystem root.
+  */
 	readonly stopAt?: string | undefined;
 	/** Descent cap for segment-crossing patterns. Defaults to 32. */
 	readonly maxDepth?: number;
@@ -239,33 +242,34 @@ export interface WorkspaceDiscoveryShape {
 	 */
 	readonly infoIn: (directory: string) => Effect.Effect<WorkspaceInfo, WorkspaceDiscoveryFailure>;
 	/**
-	 * Every package of the workspace containing `directory`, discovered against
-	 * THAT root rather than the layer-bound one.
-	 *
-	 * @remarks
-	 * For a **long-lived host serving many roots** — an MCP server or a language
-	 * server that resolves one workspace at startup and then answers calls
-	 * scoped to a git worktree, a nested repository, or another project
-	 * entirely. The layer-bound {@link WorkspaceDiscoveryShape.listPackages}
-	 * answers about the root discovered from `options.cwd`, which such a host
-	 * has no way to vary per call without building a fresh layer.
-	 *
-	 * **This re-reads; it does not re-root.** The tempting cheap fix — take the
-	 * layer's package list and rewrite each `path` onto the caller's directory —
-	 * produces correct-looking paths over the ORIGINAL root's manifests, so a
-	 * worktree whose branch adds, removes or renames a package reports the other
-	 * branch's membership with no error. Patterns, member manifests, names and
-	 * versions all come from beneath `directory`'s own root here.
-	 *
-	 * `directory` may be the workspace root or anything inside it: the root is
-	 * resolved by the same upward walk the layer-bound path uses, and results are
-	 * memoized per RESOLVED root, so many directories in one workspace share one
-	 * discovery. The memo holds one entry per distinct root for the layer's
-	 * lifetime; {@link WorkspaceDiscoveryShape.refresh} drops all of them.
-	 *
-	 * @param directory - Absolute path to the workspace root, or to any
-	 *   directory inside it.
-	 */
+  * Every package of the workspace containing `directory`, discovered against
+  * THAT root rather than the layer-bound one.
+  *
+  * **Details**
+  *
+  * For a **long-lived host serving many roots** — an MCP server or a language
+  * server that resolves one workspace at startup and then answers calls
+  * scoped to a git worktree, a nested repository, or another project
+  * entirely. The layer-bound {@link WorkspaceDiscoveryShape.listPackages}
+  * answers about the root discovered from `options.cwd`, which such a host
+  * has no way to vary per call without building a fresh layer.
+  *
+  * **This re-reads; it does not re-root.** The tempting cheap fix — take the
+  * layer's package list and rewrite each `path` onto the caller's directory —
+  * produces correct-looking paths over the ORIGINAL root's manifests, so a
+  * worktree whose branch adds, removes or renames a package reports the other
+  * branch's membership with no error. Patterns, member manifests, names and
+  * versions all come from beneath `directory`'s own root here.
+  *
+  * `directory` may be the workspace root or anything inside it: the root is
+  * resolved by the same upward walk the layer-bound path uses, and results are
+  * memoized per RESOLVED root, so many directories in one workspace share one
+  * discovery. The memo holds one entry per distinct root for the layer's
+  * lifetime; {@link WorkspaceDiscoveryShape.refresh} drops all of them.
+  *
+  * @param directory - Absolute path to the workspace root, or to any
+  *   directory inside it.
+  */
 	readonly listPackagesIn: (
 		directory: string,
 	) => Effect.Effect<ReadonlyArray<WorkspacePackage>, WorkspaceDiscoveryFailure>;
@@ -275,31 +279,33 @@ export interface WorkspaceDiscoveryShape {
 	 */
 	readonly refresh: Effect.Effect<void>;
 	/**
-	 * Drop only the memo for the workspace containing `directory`, leaving the
-	 * layer-bound memo and every other root's untouched.
-	 *
-	 * @remarks
-	 * The precise counterpart to {@link WorkspaceDiscoveryShape.refresh} for a
-	 * host serving several roots: refreshing one worktree because it changed
-	 * should not discard sibling worktrees that did not, which is all `refresh`
-	 * can do.
-	 *
-	 * **Fails typed on a directory in no workspace**, exactly as
-	 * {@link WorkspaceDiscoveryShape.listPackagesIn} does for the same input —
-	 * the three per-root methods answer a bad path the same way, and a caller
-	 * that would rather treat it as a no-op writes `Effect.ignore`. Refreshing a
-	 * root that HAS no memo is an ordinary no-op and not an error.
-	 *
-	 * @param directory - Absolute path to the workspace root, or to any
-	 *   directory inside it.
-	 */
+  * Drop only the memo for the workspace containing `directory`, leaving the
+  * layer-bound memo and every other root's untouched.
+  *
+  * **Details**
+  *
+  * The precise counterpart to {@link WorkspaceDiscoveryShape.refresh} for a
+  * host serving several roots: refreshing one worktree because it changed
+  * should not discard sibling worktrees that did not, which is all `refresh`
+  * can do.
+  *
+  * **Fails typed on a directory in no workspace**, exactly as
+  * {@link WorkspaceDiscoveryShape.listPackagesIn} does for the same input —
+  * the three per-root methods answer a bad path the same way, and a caller
+  * that would rather treat it as a no-op writes `Effect.ignore`. Refreshing a
+  * root that HAS no memo is an ordinary no-op and not an error.
+  *
+  * @param directory - Absolute path to the workspace root, or to any
+  *   directory inside it.
+  */
 	readonly refreshIn: (directory: string) => Effect.Effect<void, WorkspaceRootNotFoundError>;
 }
 
 /**
  * Discovers the packages of a workspace.
  *
- * @remarks
+ * **Details**
+ *
  * Layer construction is O(1): the root walk, pattern read, enumeration and
  * per-package decode all happen on the first method call and are memoized for
  * the lifetime of the layer. A Vitest reporter that builds the layer per call
@@ -309,7 +315,8 @@ export interface WorkspaceDiscoveryShape {
  * init interrupted by an unrelated timeout cannot brick the layer, and the next
  * call retries.
  *
- * @example
+ * **Example** (List workspace package names)
+ *
  * ```ts
  * import { WorkspaceDiscovery } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -698,68 +705,71 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 		});
 
 	/**
-	 * The live layer, discovering the workspace from `options.cwd`.
-	 *
-	 * @remarks
-	 * A parameterized layer factory mints a **fresh reference per call**, and
-	 * layers memoize by reference — bind the result to a `const` and reuse it
-	 * rather than calling `layer(...)` at each composition site.
-	 *
-	 * @param options - Root resolution and enumeration bounds.
-	 */
+  * The live layer, discovering the workspace from `options.cwd`.
+  *
+  * **Gotchas**
+  *
+  * A parameterized layer factory mints a **fresh reference per call**, and
+  * layers memoize by reference — bind the result to a `const` and reuse it
+  * rather than calling `layer(...)` at each composition site.
+  *
+  * @param options - Root resolution and enumeration bounds.
+  */
 	static readonly layer = (
 		options?: WorkspaceDiscoveryOptions,
 	): Layer.Layer<WorkspaceDiscovery, never, WorkspaceRoot | FileSystem.FileSystem | Path.Path> =>
 		Layer.effect(WorkspaceDiscovery, WorkspaceDiscovery.make(options));
 
 	/**
-	 * An in-memory test double of the service shape, with every method
-	 * defaulted so a test stubs only what it exercises.
-	 *
-	 * @remarks
-	 * The defaults model an **empty workspace**, and the derived methods run
-	 * over the *effective* `listPackages` — the override when one is supplied —
-	 * so stubbing only `listPackages` yields a consistent double:
-	 *
-	 * - `listPackages` — succeeds with `[]`.
-	 * - `importerMap` — derived: the packages keyed by `relativePath`.
-	 * - `getPackage` — derived: a name lookup that fails with the service's own
-	 *   typed {@link PackageNotFoundError} on a miss, exactly as the live
-	 *   implementation does.
-	 * - `resolveFile` / `resolveFiles` — derived: longest-prefix ownership over
-	 *   `pkg.path`, POSIX-terminated (`"/"`); supply a win32 double explicitly
-	 *   if your fixture paths are win32.
-	 * - `refresh` — a no-op (`Effect.void`); there is nothing memoized to drop.
-	 * - `info` — **dies** with an explanatory defect. No honest default exists
-	 *   (a fabricated root path would leak into consumer path logic), so an
-	 *   unstubbed `info()` call is a test-wiring mistake and fails loudly as a
-	 *   defect rather than succeeding with a lie or failing with a dishonest
-	 *   typed error. A defect is not absorbed by `Effect.catch` or any
-	 *   typed-error handler — deliberately, so code under test with a
-	 *   best-effort `catch` cannot make the mandatory stub look optional; the
-	 *   unstubbed call still fails the test.
-	 *
-	 * @example
-	 * ```ts
-	 * import { WorkspaceDiscovery, WorkspacePackage } from "./index.ts";
-	 * import * as Effect from "effect/Effect";
-	 *
-	 * const double = WorkspaceDiscovery.makeTest({
-	 *   listPackages:
-	 *     Effect.succeed([
-	 *       WorkspacePackage.make({
-	 *         name: "@my-org/utils",
-	 *         version: "1.0.0",
-	 *         path: "/repo/packages/utils",
-	 *         packageJsonPath: "/repo/packages/utils/package.json",
-	 *         relativePath: "packages/utils",
-	 *         workspaceRoot: "/repo",
-	 *       }),
-	 *     ]),
-	 * });
-	 * // `getPackage`, `importerMap`, `resolveFile(s)` now answer consistently.
-	 * ```
-	 */
+  * An in-memory test double of the service shape, with every method
+  * defaulted so a test stubs only what it exercises.
+  *
+  * **Details**
+  *
+  * The defaults model an **empty workspace**, and the derived methods run
+  * over the *effective* `listPackages` — the override when one is supplied —
+  * so stubbing only `listPackages` yields a consistent double:
+  *
+  * - `listPackages` — succeeds with `[]`.
+  * - `importerMap` — derived: the packages keyed by `relativePath`.
+  * - `getPackage` — derived: a name lookup that fails with the service's own
+  *   typed {@link PackageNotFoundError} on a miss, exactly as the live
+  *   implementation does.
+  * - `resolveFile` / `resolveFiles` — derived: longest-prefix ownership over
+  *   `pkg.path`, POSIX-terminated (`"/"`); supply a win32 double explicitly
+  *   if your fixture paths are win32.
+  * - `refresh` — a no-op (`Effect.void`); there is nothing memoized to drop.
+  * - `info` — **dies** with an explanatory defect. No honest default exists
+  *   (a fabricated root path would leak into consumer path logic), so an
+  *   unstubbed `info()` call is a test-wiring mistake and fails loudly as a
+  *   defect rather than succeeding with a lie or failing with a dishonest
+  *   typed error. A defect is not absorbed by `Effect.catch` or any
+  *   typed-error handler — deliberately, so code under test with a
+  *   best-effort `catch` cannot make the mandatory stub look optional; the
+  *   unstubbed call still fails the test.
+  *
+  * **Example** (Stub discovery with a workspace package)
+  *
+  * ```ts
+  * import { WorkspaceDiscovery, WorkspacePackage } from "./index.ts";
+  * import * as Effect from "effect/Effect";
+  *
+  * const double = WorkspaceDiscovery.makeTest({
+  *   listPackages:
+  *     Effect.succeed([
+  *       WorkspacePackage.make({
+  *         name: "@my-org/utils",
+  *         version: "1.0.0",
+  *         path: "/repo/packages/utils",
+  *         packageJsonPath: "/repo/packages/utils/package.json",
+  *         relativePath: "packages/utils",
+  *         workspaceRoot: "/repo",
+  *       }),
+  *     ]),
+  * });
+  * // `getPackage`, `importerMap`, `resolveFile(s)` now answer consistently.
+  * ```
+  */
 	static readonly makeTest = (overrides: Partial<WorkspaceDiscoveryShape> = {}): WorkspaceDiscoveryShape => {
 		const listPackages = overrides.listPackages ?? Effect.succeed([]);
 
@@ -825,56 +835,60 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 	};
 
 	/**
-	 * The test layer: {@link WorkspaceDiscovery.makeTest} behind
-	 * `Layer.succeed`, so a suite provides only the methods it exercises.
-	 *
-	 * @remarks
-	 * A parameterized layer factory mints a **fresh reference per call**, and
-	 * layers memoize by reference — bind the result to a `const` and reuse it
-	 * rather than calling `layerTest(...)` at each composition site.
-	 *
-	 * @example
-	 * ```ts
-	 * import { WorkspaceDiscovery } from "./index.ts";
-	 * import * as Effect from "effect/Effect";
-	 *
-	 * const TestDiscovery = WorkspaceDiscovery.layerTest({
-	 *   listPackages: Effect.succeed([]),
-	 * });
-	 * // program.pipe(Effect.provide(TestDiscovery))
-	 * ```
-	 */
+  * The test layer: {@link WorkspaceDiscovery.makeTest} behind
+  * `Layer.succeed`, so a suite provides only the methods it exercises.
+  *
+  * **Gotchas**
+  *
+  * A parameterized layer factory mints a **fresh reference per call**, and
+  * layers memoize by reference — bind the result to a `const` and reuse it
+  * rather than calling `layerTest(...)` at each composition site.
+  *
+  * **Example** (Provide an empty workspace discovery test layer)
+  *
+  * ```ts
+  * import { WorkspaceDiscovery } from "./index.ts";
+  * import * as Effect from "effect/Effect";
+  *
+  * const TestDiscovery = WorkspaceDiscovery.layerTest({
+  *   listPackages: Effect.succeed([]),
+  * });
+  * // program.pipe(Effect.provide(TestDiscovery))
+  * ```
+  */
 	static readonly layerTest = (overrides: Partial<WorkspaceDiscoveryShape> = {}): Layer.Layer<WorkspaceDiscovery> =>
 		Layer.succeed(WorkspaceDiscovery, WorkspaceDiscovery.makeTest(overrides));
 
 	/**
-	 * The real implementation of `@effected/npm`'s `WorkspaceResolver` contract
-	 * — the one `@effected/package-json` declares but cannot fill.
-	 *
-	 * @remarks
-	 * `versionOf` returns `Option.none()` for a name that is not a workspace
-	 * member, per the contract's convention; the `DependencyResolutionError`
-	 * channel is reserved for a failure of the resolution *mechanism* (an
-	 * unfindable root, an unreadable manifest), never an ordinary miss.
-	 *
-	 * A member that declares **no `version`** is neither: it is a known member
-	 * with nothing for `workspace:` to resolve to. Answering `none` would read
-	 * as "not a member" downstream, so it fails typed instead, naming the
-	 * specifier — the same channel a consumer already handles for an
-	 * unresolvable workspace.
-	 *
-	 * @example
-	 * ```ts
-	 * import { Package } from "../package-json/index.ts";
-	 * import { WorkspaceDiscovery } from "./index.ts";
-	 * import * as Layer from "effect/Layer";
-	 *
-	 * const resolvers = WorkspaceDiscovery.workspaceResolver.pipe(
-	 *   Layer.provide(WorkspaceDiscovery.layer()),
-	 * );
-	 * // `Package.resolve` now resolves `workspace:*` for real.
-	 * ```
-	 */
+  * The real implementation of `@effected/npm`'s `WorkspaceResolver` contract
+  * — the one `@effected/package-json` declares but cannot fill.
+  *
+  * **Details**
+  *
+  * `versionOf` returns `Option.none()` for a name that is not a workspace
+  * member, per the contract's convention; the `DependencyResolutionError`
+  * channel is reserved for a failure of the resolution *mechanism* (an
+  * unfindable root, an unreadable manifest), never an ordinary miss.
+  *
+  * A member that declares **no `version`** is neither: it is a known member
+  * with nothing for `workspace:` to resolve to. Answering `none` would read
+  * as "not a member" downstream, so it fails typed instead, naming the
+  * specifier — the same channel a consumer already handles for an
+  * unresolvable workspace.
+  *
+  * **Example** (Provide a resolver for workspace dependencies)
+  *
+  * ```ts
+  * import { Package } from "../package-json/index.ts";
+  * import { WorkspaceDiscovery } from "./index.ts";
+  * import * as Layer from "effect/Layer";
+  *
+  * const resolvers = WorkspaceDiscovery.workspaceResolver.pipe(
+  *   Layer.provide(WorkspaceDiscovery.layer()),
+  * );
+  * // `Package.resolve` now resolves `workspace:*` for real.
+  * ```
+  */
 	static readonly workspaceResolver: Layer.Layer<WorkspaceResolver, never, WorkspaceDiscovery> = Layer.effect(
 		WorkspaceResolver,
 		Effect.gen(function* () {

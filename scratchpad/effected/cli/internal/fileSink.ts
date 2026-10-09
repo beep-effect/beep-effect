@@ -19,7 +19,8 @@ const CLOSE_TIMEOUT = "2 seconds";
 /**
  * An asynchronous NDJSON file logger.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `Logger.make` takes a synchronous callback, so the logger only offers the line to a queue; a fiber scoped to the
  * layer drains it and appends each batch with `FileSystem.writeFileString(..., { flag: "a" })`. The first write
  * error prints one stderr line and disables the sink: later lines, including any still queued, are discarded

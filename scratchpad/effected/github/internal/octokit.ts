@@ -28,7 +28,8 @@ const RequestMethod = LiteralKit(["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT
  * The one place `@octokit/core` is constructed, and the one place its
  * throwables become typed errors.
  *
- * @remarks
+ * **Details**
+ *
  * `@octokit/rest` is deliberately **not** used. Route-keyed typing comes from
  * `@octokit/types`' generated `Endpoints` map, which `@octokit/core`'s `request`
  * already consumes; the rest wrapper would add `plugin-request-log` (which this
@@ -86,7 +87,8 @@ const SILENT_LOG = {
 /**
  * Build the octokit instance.
  *
- * @remarks
+ * **Details**
+ *
  * `auth` takes the raw token string. `@octokit/auth-token` inspects it and
  * emits `bearer` for a three-segment JWT and `token` otherwise — exactly the
  * distinction an app JWT and an installation token need, so the App path
@@ -110,7 +112,8 @@ const makeOctokit = (options: TransportOptions): Octokit =>
 /**
  * Build a transport over a freshly constructed octokit instance.
  *
- * @remarks
+ * **Details**
+ *
  * The rate-limit cell lives here, in the closure of the layer that writes it,
  * so the writer and the reader can never see different cells.
  */
@@ -125,13 +128,14 @@ export const makeTransport = Effect.fn("makeTransport")(function* (options: Tran
 		};
 
 		/**
-		 * Run one promise-producing call, classifying whatever it throws.
-		 *
-		 * @remarks
-		 * The `AbortSignal` `Effect.tryPromise` supplies is threaded into octokit's
-		 * `request.signal`, so interrupting the fiber aborts the in-flight HTTP
-		 * request rather than leaving it running unobserved.
-		 */
+   * Run one promise-producing call, classifying whatever it throws.
+   *
+   * **Details**
+   *
+   * The `AbortSignal` `Effect.tryPromise` supplies is threaded into octokit's
+   * `request.signal`, so interrupting the fiber aborts the in-flight HTTP
+   * request rather than leaving it running unobserved.
+   */
 		const attempt = <A, E>(
 			call: (signal: AbortSignal) => Promise<A>,
 			classify: (error: unknown, nowMillis: number) => E,

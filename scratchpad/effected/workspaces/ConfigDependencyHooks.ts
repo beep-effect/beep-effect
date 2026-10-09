@@ -66,7 +66,8 @@ const JsonValue = S.fromJsonString(S.Unknown);
  * pnpm's `peerDependencyRules` block — the suppression policy pnpm applies
  * **after** computing peer violations, in pnpm's own shape.
  *
- * @remarks
+ * **Details**
+ *
  * The shape is pnpm's own, because that is what comes back off the threaded
  * config: a replayed hook returns `{ allowedVersions, ignoreMissing, allowAny }`
  * intact, needing no reshaping.
@@ -117,7 +118,8 @@ type HookConfig = typeof HookConfig.Type;
 /**
  * The empty {@link PeerDependencyRules}: every axis present and empty.
  *
- * @remarks
+ * **Details**
+ *
  * Exported so that "I assert this workspace's rules are empty" is **one token**
  * rather than three hand-written empty axes. That matters where the distinction
  * is load-bearing — supplying rules asserts they were looked up, while omitting
@@ -156,7 +158,8 @@ export type HookReplaySource = typeof HookReplaySource.Type;
  * What the side whose `configDependencies` are being replayed recorded beyond
  * that map — the input the fetch rung needs to verify what it fetches.
  *
- * @remarks
+ * **Details**
+ *
  * Both fields are optional, and omitting the whole context is always valid:
  * nothing here changes which version is replayed. `lockfile` matters only when
  * a replaying layer must fetch a version installed nowhere, and only
@@ -190,7 +193,8 @@ export type HookReplayContext = typeof HookReplayContext.Type;
  * Which version of a config dependency a replay actually loaded, and where
  * that version came from.
  *
- * @remarks
+ * **Details**
+ *
  * Recorded per dependency so a consumer diffing two refs can tell not just
  * WHAT the hooks injected but which pinned version injected it — the
  * evidence that a "range moved" row came from a config-dependency bump and
@@ -217,7 +221,8 @@ export type HookReplay = typeof HookReplay.Type;
  * the hooks yield, and the release-age gate contribution they leave on the
  * config (pnpm's `minimumReleaseAge` / `minimumReleaseAgeExclude`).
  *
- * @remarks
+ * **Details**
+ *
  * `releaseAge` is a `PartialReleaseAgeGate` — the age, the exclude list,
  * both, or neither, depending on what the replayed hooks set. It is deliberately
  * a *partial* contribution: a consumer folds it into an effective gate with
@@ -232,18 +237,19 @@ export const HookInjection = S.Struct({
 	/** The release-age gate contribution the replayed hooks leave on the config. */
 	releaseAge: PartialReleaseAgeGate.annotateKey({ description: "The partial release-age contribution left by the hooks." }),
 	/**
-	 * The **effective** peer-dependency rules: the seeded workspace-file rules
-	 * with every replayed hook's contribution threaded over them.
-	 *
-	 * @remarks
-	 * Effective rather than hook-only because the rules are **seeded** into the
-	 * threaded config and the hooks merge onto them, exactly as pnpm seeds its
-	 * own config and takes back what the hooks return, so there is no second
-	 * merge implementation to drift from pnpm's threading.
-	 *
-	 * A plugin whose hook *overwrites* the seeded rules rather than merging
-	 * onto them replaces them here exactly as it does under pnpm.
-	 */
+  * The **effective** peer-dependency rules: the seeded workspace-file rules
+  * with every replayed hook's contribution threaded over them.
+  *
+  * **Details**
+  *
+  * Effective rather than hook-only because the rules are **seeded** into the
+  * threaded config and the hooks merge onto them, exactly as pnpm seeds its
+  * own config and takes back what the hooks return, so there is no second
+  * merge implementation to drift from pnpm's threading.
+  *
+  * A plugin whose hook *overwrites* the seeded rules rather than merging
+  * onto them replaces them here exactly as it does under pnpm.
+  */
 	peerDependencyRules: PeerDependencyRules.annotateKey({ description: "The effective peer rules after all hook contributions." }),
 	/**
 	 * Which version each declared config dependency was replayed from, keyed
@@ -260,7 +266,8 @@ export type HookInjection = typeof HookInjection.Type;
 /**
  * The {@link ConfigDependencyHooks} service shape.
  *
- * @remarks
+ * **Details**
+ *
  * `inject` is given the workspace root, the manifest's `configDependencies`
  * (name → version+integrity), and the inline-catalog seed as a plain
  * `catalog name → dependency name → range` record, and produces a
@@ -273,38 +280,39 @@ export type HookInjection = typeof HookInjection.Type;
  */
 export interface ConfigDependencyHooksShape {
 	/**
-	 * Replay each config dependency's `updateConfig` hook over `seed`, in
-	 * declaration order, and return both the resulting catalogs and the
-	 * release-age gate contribution the hooks leave behind.
-	 *
-	 * @remarks
-	 * The hooks are replayed once over a single threaded config object, exactly
-	 * as pnpm does — so catalogs and the release-age keys
-	 * (`minimumReleaseAge` / `minimumReleaseAgeExclude`) are both read off that
-	 * one final object, and the config-dependency code executes only once. When
-	 * two hooks both set a release-age key the **later hook wins** (it rewrites
-	 * the threaded value); a hook that returns a malformed value for a key leaves
-	 * the prior threaded value in place (tolerant threading, matching the catalog
-	 * slice). A hook failing to load or replay fails typed with a
-	 * `hooks`-source `CatalogAssemblyError`, never a silent skip.
-	 *
-	 * @param root - The workspace root; config dependencies resolve under
-	 *   `<root>/node_modules/.pnpm-config/<name>` when that holds the declared
-	 *   version, else through the pnpm store.
-	 * @param configDependencies - The `configDependencies` map (name →
-	 *   `<version>+<integrity>`, or a bare `<version>`) declared in the
-	 *   `pnpm-workspace.yaml` being read — the live one, or the one at a ref.
-	 *   The replaying layers load the pnpmfile of the DECLARED version.
-	 * @param seed - The inline catalogs, as `catalog name → dependency → range`.
-	 * @param rules - The workspace file's `peerDependencyRules`, seeded into the
-	 *   threaded config so hooks merge onto them rather than replacing them.
-	 *   Omitted means "the workspace file declares none", which is different
-	 *   from "nobody looked" — the caller owns that distinction.
-	 * @param context - What the declaring side recorded beyond the map: its
-	 *   lockfile, which verifies a fetched version, and its ref, which names it
-	 *   in errors. Only {@link ConfigDependencyHooks.layerSubprocess} reads the
-	 *   lockfile; omitting the context never changes which version is replayed.
-	 */
+  * Replay each config dependency's `updateConfig` hook over `seed`, in
+  * declaration order, and return both the resulting catalogs and the
+  * release-age gate contribution the hooks leave behind.
+  *
+  * **Details**
+  *
+  * The hooks are replayed once over a single threaded config object, exactly
+  * as pnpm does — so catalogs and the release-age keys
+  * (`minimumReleaseAge` / `minimumReleaseAgeExclude`) are both read off that
+  * one final object, and the config-dependency code executes only once. When
+  * two hooks both set a release-age key the **later hook wins** (it rewrites
+  * the threaded value); a hook that returns a malformed value for a key leaves
+  * the prior threaded value in place (tolerant threading, matching the catalog
+  * slice). A hook failing to load or replay fails typed with a
+  * `hooks`-source `CatalogAssemblyError`, never a silent skip.
+  *
+  * @param root - The workspace root; config dependencies resolve under
+  *   `<root>/node_modules/.pnpm-config/<name>` when that holds the declared
+  *   version, else through the pnpm store.
+  * @param configDependencies - The `configDependencies` map (name →
+  *   `<version>+<integrity>`, or a bare `<version>`) declared in the
+  *   `pnpm-workspace.yaml` being read — the live one, or the one at a ref.
+  *   The replaying layers load the pnpmfile of the DECLARED version.
+  * @param seed - The inline catalogs, as `catalog name → dependency → range`.
+  * @param rules - The workspace file's `peerDependencyRules`, seeded into the
+  *   threaded config so hooks merge onto them rather than replacing them.
+  *   Omitted means "the workspace file declares none", which is different
+  *   from "nobody looked" — the caller owns that distinction.
+  * @param context - What the declaring side recorded beyond the map: its
+  *   lockfile, which verifies a fetched version, and its ref, which names it
+  *   in errors. Only {@link ConfigDependencyHooks.layerSubprocess} reads the
+  *   lockfile; omitting the context never changes which version is replayed.
+  */
 	readonly inject: (
 		root: string,
 		configDependencies: Readonly<Record<string, string>>,
@@ -353,7 +361,8 @@ const stringArrayOr = (value: unknown, fallback: readonly string[] | undefined):
  * Read the catalog slice and the release-age keys back out of whatever a hook
  * returned, threading the prior config as the fallback.
  *
- * @remarks
+ * **Details**
+ *
  * Tolerant by design, matching this seam's discipline: a hook's returned *data*
  * is normalized, never a typed failure (only a load/replay *mechanism* failure
  * raises `CatalogAssemblyError`). A hook that omits a key, or returns a
@@ -478,7 +487,8 @@ const injectionOf = (config: HookConfig, pnpmfiles: ReadonlyArray<ResolvedPnpmfi
  * {@link ConfigDependencyHooks.layerFrom} share; only how the paths were
  * found differs.
  *
- * @remarks
+ * **Details**
+ *
  * Each file is loaded via a dynamic `import()` of its file URL. Because the
  * caller has already established that the file exists (listed by the
  * ladder's directory read, or by the caller's own word under `layerFrom`),
@@ -526,7 +536,8 @@ const replayInProcess = Effect.fn("replayInProcess")(function* (
  * The subprocess replay program {@link ConfigDependencyHooks.layerSubprocess}
  * hands to `node --input-type=module -e`.
  *
- * @remarks
+ * **Details**
+ *
  * A **static** string constant, deliberately: a bundler compiles a *computed*
  * dynamic `import()` into a context module that cannot resolve a runtime path
  * (`Cannot find module 'file:///…'`), so the computed import has to run in a
@@ -672,7 +683,8 @@ const replayFailureCause = (payload: { readonly message?: string; readonly stack
  * catalogs — the opt-in seam that lets hook-injected catalogs participate in
  * assembly.
  *
- * @remarks
+ * **Details**
+ *
  * A contract-only service: it declares the shape and ships layers, never a
  * baked-in default. {@link ConfigDependencyHooks.layerNoop} executes no
  * config-dependency code (it returns the seed untouched) and is what the default
@@ -708,38 +720,39 @@ export class ConfigDependencyHooks extends Context.Service<ConfigDependencyHooks
 	});
 
 	/**
-	 * The live layer: resolves each config dependency to the pnpmfile of its
-	 * **declared** version, dynamically imports it (in process, no subprocess)
-	 * and replays its `updateConfig` hook over the seed, in declaration order.
-	 * A dependency that ships no pnpmfile contributes nothing; a dependency
-	 * whose declared version is installed nowhere, or whose file fails to load
-	 * or replay, fails typed with a `hooks`-source `CatalogAssemblyError`, never
-	 * a silent skip.
-	 *
-	 * @remarks
-	 * Resolution is a ladder, fail-closed, with no registry fetch ever:
-	 * `<root>/node_modules/.pnpm-config/<name>` when its `package.json`
-	 * `version` equals the declared version (the text before the first `+` of
-	 * the `configDependencies` value), else the pnpm store's
-	 * `links/<name>/<declared>/*\/node_modules/<name>` (the store is located
-	 * from `node_modules/.modules.yaml`, the realpath of any `.pnpm-config`
-	 * entry, then `$PNPM_HOME` / `$XDG_DATA_HOME` / the platform default), else
-	 * a typed error with `reason: "notInstalled"` naming the package, the
-	 * declared version, what is installed, the stores searched, and the
-	 * remediation (`pnpm add --config <name>@<version>` in a throwaway
-	 * workspace, or the subprocess layer, which fetches). In the
-	 * chosen directory the first of `pnpmfile.mjs`, `pnpmfile.cjs`,
-	 * `pnpmfile.js` present in one directory listing is loaded; a listed but
-	 * unreadable file fails typed at import time, never as "ships no hook".
-	 *
-	 * Runtime-coupled by design, not node-exclusive. The `import()` loads
-	 * **and executes** a config dependency's pnpmfile in-process — code execution,
-	 * not IO, so no `FileSystem` / `Path` service abstracts it — and the ladder
-	 * reads the real disk through `node:fs` for the same reason: the store it
-	 * searches is real even when the caller's `FileSystem` is virtual. Only ever
-	 * wired by `WorkspaceCatalogs.layerWithConfigDependencies` and the
-	 * `Workspaces` composites of the same name.
-	 */
+  * The live layer: resolves each config dependency to the pnpmfile of its
+  * **declared** version, dynamically imports it (in process, no subprocess)
+  * and replays its `updateConfig` hook over the seed, in declaration order.
+  * A dependency that ships no pnpmfile contributes nothing; a dependency
+  * whose declared version is installed nowhere, or whose file fails to load
+  * or replay, fails typed with a `hooks`-source `CatalogAssemblyError`, never
+  * a silent skip.
+  *
+  * **Details**
+  *
+  * Resolution is a ladder, fail-closed, with no registry fetch ever:
+  * `<root>/node_modules/.pnpm-config/<name>` when its `package.json`
+  * `version` equals the declared version (the text before the first `+` of
+  * the `configDependencies` value), else the pnpm store's
+  * `links/<name>/<declared>/*\/node_modules/<name>` (the store is located
+  * from `node_modules/.modules.yaml`, the realpath of any `.pnpm-config`
+  * entry, then `$PNPM_HOME` / `$XDG_DATA_HOME` / the platform default), else
+  * a typed error with `reason: "notInstalled"` naming the package, the
+  * declared version, what is installed, the stores searched, and the
+  * remediation (`pnpm add --config <name>@<version>` in a throwaway
+  * workspace, or the subprocess layer, which fetches). In the
+  * chosen directory the first of `pnpmfile.mjs`, `pnpmfile.cjs`,
+  * `pnpmfile.js` present in one directory listing is loaded; a listed but
+  * unreadable file fails typed at import time, never as "ships no hook".
+  *
+  * Runtime-coupled by design, not node-exclusive. The `import()` loads
+  * **and executes** a config dependency's pnpmfile in-process — code execution,
+  * not IO, so no `FileSystem` / `Path` service abstracts it — and the ladder
+  * reads the real disk through `node:fs` for the same reason: the store it
+  * searches is real even when the caller's `FileSystem` is virtual. Only ever
+  * wired by `WorkspaceCatalogs.layerWithConfigDependencies` and the
+  * `Workspaces` composites of the same name.
+  */
 	static readonly layerLive: Layer.Layer<ConfigDependencyHooks> = Layer.succeed(ConfigDependencyHooks, {
 		inject: Effect.fn("ConfigDependencyHooks.inject")(function* (root: string, configDependencies: Readonly<Record<string, string>>, seed: Readonly<Record<string, Readonly<Record<string, string>>>>, rules: PeerDependencyRules | undefined, context: HookReplayContext | undefined) {
 				if (R.keys(configDependencies).length === 0) return untouched(seed, rules);
@@ -749,42 +762,44 @@ export class ConfigDependencyHooks extends Context.Service<ConfigDependencyHooks
 	});
 
 	/**
-	 * The hermetic layer: replays caller-supplied pnpmfiles, keyed
-	 * `"<name>@<version>"` → absolute path, with **no resolution** — it consults
-	 * neither `node_modules/.pnpm-config` nor the pnpm store, and never the
-	 * effect `FileSystem` service, so it works unchanged under an
-	 * `@effected/memfs` volume.
-	 *
-	 * @remarks
-	 * The test seam for anything that replays hooks: a suite can pin what
-	 * `at(ref)` replays for a ref declaring `plugin@1.0.0` versus one declaring
-	 * `plugin@2.0.0` by mapping both keys to fixture files, with no store on
-	 * disk. The version half of the key is the declared version — the text
-	 * before the first `+` of the `configDependencies` value — so a
-	 * `<version>+<integrity>` spec and a bare `<version>` spec look up the same
-	 * entry.
-	 *
-	 * Same typed semantics as {@link ConfigDependencyHooks.layerLive} past the
-	 * lookup: the same in-process `import()`, the same hook-locator shapes, the
-	 * same tolerant threading, the same `hooks`-source attribution. A declared
-	 * `(name, version)` with no entry fails closed, the same shape as an
-	 * uninstalled version under `layerLive`; an empty `configDependencies`
-	 * returns the seed untouched. A `..` segment in a name is refused before
-	 * any lookup.
-	 *
-	 * @param entries - `"<name>@<version>"` → the absolute path of the pnpmfile
-	 *   to replay for that declared version.
-	 *
-	 * @example
-	 * ```ts
-	 * import { ConfigDependencyHooks } from "./index.ts";
-	 *
-	 * const hooks = ConfigDependencyHooks.layerFrom({
-	 *   "@scope/plugin@1.0.0": "/fixtures/plugin-1/pnpmfile.mjs",
-	 *   "@scope/plugin@2.0.0": "/fixtures/plugin-2/pnpmfile.mjs",
-	 * });
-	 * ```
-	 */
+  * The hermetic layer: replays caller-supplied pnpmfiles, keyed
+  * `"<name>@<version>"` → absolute path, with **no resolution** — it consults
+  * neither `node_modules/.pnpm-config` nor the pnpm store, and never the
+  * effect `FileSystem` service, so it works unchanged under an
+  * `@effected/memfs` volume.
+  *
+  * **Details**
+  *
+  * The test seam for anything that replays hooks: a suite can pin what
+  * `at(ref)` replays for a ref declaring `plugin@1.0.0` versus one declaring
+  * `plugin@2.0.0` by mapping both keys to fixture files, with no store on
+  * disk. The version half of the key is the declared version — the text
+  * before the first `+` of the `configDependencies` value — so a
+  * `<version>+<integrity>` spec and a bare `<version>` spec look up the same
+  * entry.
+  *
+  * Same typed semantics as {@link ConfigDependencyHooks.layerLive} past the
+  * lookup: the same in-process `import()`, the same hook-locator shapes, the
+  * same tolerant threading, the same `hooks`-source attribution. A declared
+  * `(name, version)` with no entry fails closed, the same shape as an
+  * uninstalled version under `layerLive`; an empty `configDependencies`
+  * returns the seed untouched. A `..` segment in a name is refused before
+  * any lookup.
+  *
+  * **Example** (Map plugin versions to fixture pnpmfiles)
+  *
+  * ```ts
+  * import { ConfigDependencyHooks } from "./index.ts";
+  *
+  * const hooks = ConfigDependencyHooks.layerFrom({
+  *   "@scope/plugin@1.0.0": "/fixtures/plugin-1/pnpmfile.mjs",
+  *   "@scope/plugin@2.0.0": "/fixtures/plugin-2/pnpmfile.mjs",
+  * });
+  * ```
+  *
+  * @param entries - `"<name>@<version>"` → the absolute path of the pnpmfile
+  *   to replay for that declared version.
+  */
 	static readonly layerFrom = (entries: Readonly<Record<string, string>>): Layer.Layer<ConfigDependencyHooks> =>
 		Layer.succeed(ConfigDependencyHooks, {
 			inject: Effect.fn("ConfigDependencyHooks.inject")(function* (_root: string, configDependencies: Readonly<Record<string, string>>, seed: Readonly<Record<string, Readonly<Record<string, string>>>>, rules: PeerDependencyRules | undefined) {
@@ -795,85 +810,86 @@ export class ConfigDependencyHooks extends Context.Service<ConfigDependencyHooks
 		});
 
 	/**
-	 * The subprocess layer: replays each config dependency's pnpmfile in a `node`
-	 * child process instead of an in-process dynamic `import()`, with identical
-	 * typed semantics to {@link ConfigDependencyHooks.layerLive} — the two are
-	 * drop-in interchangeable.
-	 *
-	 * @remarks
-	 * `layerLive` computes the `import()` path at runtime, and a bundler (rspack,
-	 * for one) compiles a *computed* dynamic import into a context module that
-	 * throws `Cannot find module 'file:///…'` at runtime — so in any bundled
-	 * consumer, a GitHub Action above all, the in-process replay is unreachable.
-	 * This layer keeps every computed load out of the bundle graph: the replay
-	 * program is a **static** string constant passed via argv
-	 * (`node --input-type=module -e <script> <seed> <rules> <entries>`), and the
-	 * child process performs the computed imports where no bundler rewrote them.
-	 * A subprocess also keeps config-dependency code out of the consumer's own
-	 * process.
-	 *
-	 * The declared-version resolution is the PARENT's: the same ladder as
-	 * `layerLive` (`.pnpm-config` when it holds the declared version, else the
-	 * pnpm store) runs here, and the child receives the resolved
-	 * `[name, fileUrl]` pairs as one JSON argv argument.
-	 *
-	 * One rung more than `layerLive`: a version held nowhere is FETCHED into
-	 * the store rather than failing, so a diff whose base side declares a
-	 * version this checkout never installed still replays that version. pnpm
-	 * runs `install --frozen-lockfile` in a scratch workspace (removed
-	 * afterwards) whose lockfile pins the integrity the declaring side recorded
-	 * — the inline `<version>+<integrity>` spec, else that side's
-	 * `pnpm-lock.yaml` env preamble ({@link HookReplayContext.lockfile}) — so
-	 * pnpm itself refuses a download that does not match. It writes to the
-	 * first store the ladder searched, so the next replay finds the version
-	 * there. The replay records `source: "fetched"`. Fail-closed: two recorded
-	 * integrities that disagree fail with `reason: "integrityMismatch"`, none
-	 * with `reason: "integrityUnavailable"` — nothing is fetched in either case
-	 * — and a fetch that fails with `reason: "fetchFailed"`, keeping the
-	 * not-installed remediation. The fetch needs `pnpm` 11 or 12 on `PATH` and
-	 * registry access, and is bounded at two minutes.
-	 *
-	 * The scratch workspace fetches through the same registries a
-	 * `pnpm install` in the workspace would: the workspace root's `.npmrc` (scoped
-	 * registries, mirrors, auth) is copied into it as-is, with `${VAR}`
-	 * references left for pnpm to expand, never read or logged, and removed
-	 * with the scratch; and the root `pnpm-workspace.yaml`'s `registry` and
-	 * `registries` keys are carried into the scratch's. That is the CURRENT
-	 * checkout's registry config for both sides of a diff — a base ref's
-	 * `.npmrc` is not read through git — and relative paths inside the `.npmrc`
-	 * (a `cafile=./ca.pem`) resolve against the scratch, not the root.
-	 *
-	 * An empty `configDependencies`, or one whose dependencies all
-	 * ship no pnpmfile, returns the seed without spawning anything; a `..` path
-	 * segment in a dependency name fails typed **before** any spawn; a
-	 * load failure in the child — a syntax error, a throwing top level, an
-	 * `ERR_MODULE_NOT_FOUND` for a module the pnpmfile itself imports — and a
-	 * hook that throws when called are serialized back per-name and surface
-	 * typed as a `hooks`-source `CatalogAssemblyError` naming that dependency.
-	 * A hook's returned *data* stays tolerantly threaded (last well-formed write
-	 * wins), never fatal. Spawn and transport failures — `node` absent, a
-	 * non-zero exit without a result payload, unparseable output — fail typed
-	 * too, never a defect and never a silent skip.
-	 *
-	 * Two bounds this layer imposes that `layerLive` cannot: the replay is
-	 * given thirty seconds (a pnpmfile that loops or awaits forever fails typed
-	 * instead of hanging the memoized assemble pass — a subprocess is killable,
-	 * while `layerLive`'s in-process synchronous hook call is not interruptible
-	 * by any means, so the asymmetry is inherent, not a parity violation), and
-	 * the child's stdout is captured under `Run.jsonLine`'s 16 MiB default
-	 * ceiling (a hook that logs more than that fails typed as `tooLarge`, where
-	 * `layerLive` — which captures nothing — would succeed).
-	 *
-	 * Catalog folding and normalization stay in the **parent** (the same
-	 * `@pnpm/catalogs`-derived path `layerLive` uses); the child returns only the
-	 * raw threaded config slice, since the script cannot import kit code.
-	 *
-	 * Requires core's `ChildProcessSpawner`, resolved when the layer is built —
-	 * the consumer provides it once at the edge (`@effect/platform-node`'s
-	 * `NodeServices.layer`), the same discharge `@effected/git` uses. Wired by
-	 * `WorkspaceCatalogs.layerWithConfigDependenciesSubprocess` /
-	 * `Workspaces.layerWithConfigDependenciesSubprocess`.
-	 */
+  * The subprocess layer: replays each config dependency's pnpmfile in a `node`
+  * child process instead of an in-process dynamic `import()`, with identical
+  * typed semantics to {@link ConfigDependencyHooks.layerLive} — the two are
+  * drop-in interchangeable.
+  *
+  * **Details**
+  *
+  * `layerLive` computes the `import()` path at runtime, and a bundler (rspack,
+  * for one) compiles a *computed* dynamic import into a context module that
+  * throws `Cannot find module 'file:///…'` at runtime — so in any bundled
+  * consumer, a GitHub Action above all, the in-process replay is unreachable.
+  * This layer keeps every computed load out of the bundle graph: the replay
+  * program is a **static** string constant passed via argv
+  * (`node --input-type=module -e <script> <seed> <rules> <entries>`), and the
+  * child process performs the computed imports where no bundler rewrote them.
+  * A subprocess also keeps config-dependency code out of the consumer's own
+  * process.
+  *
+  * The declared-version resolution is the PARENT's: the same ladder as
+  * `layerLive` (`.pnpm-config` when it holds the declared version, else the
+  * pnpm store) runs here, and the child receives the resolved
+  * `[name, fileUrl]` pairs as one JSON argv argument.
+  *
+  * One rung more than `layerLive`: a version held nowhere is FETCHED into
+  * the store rather than failing, so a diff whose base side declares a
+  * version this checkout never installed still replays that version. pnpm
+  * runs `install --frozen-lockfile` in a scratch workspace (removed
+  * afterwards) whose lockfile pins the integrity the declaring side recorded
+  * — the inline `<version>+<integrity>` spec, else that side's
+  * `pnpm-lock.yaml` env preamble ({@link HookReplayContext.lockfile}) — so
+  * pnpm itself refuses a download that does not match. It writes to the
+  * first store the ladder searched, so the next replay finds the version
+  * there. The replay records `source: "fetched"`. Fail-closed: two recorded
+  * integrities that disagree fail with `reason: "integrityMismatch"`, none
+  * with `reason: "integrityUnavailable"` — nothing is fetched in either case
+  * — and a fetch that fails with `reason: "fetchFailed"`, keeping the
+  * not-installed remediation. The fetch needs `pnpm` 11 or 12 on `PATH` and
+  * registry access, and is bounded at two minutes.
+  *
+  * The scratch workspace fetches through the same registries a
+  * `pnpm install` in the workspace would: the workspace root's `.npmrc` (scoped
+  * registries, mirrors, auth) is copied into it as-is, with `${VAR}`
+  * references left for pnpm to expand, never read or logged, and removed
+  * with the scratch; and the root `pnpm-workspace.yaml`'s `registry` and
+  * `registries` keys are carried into the scratch's. That is the CURRENT
+  * checkout's registry config for both sides of a diff — a base ref's
+  * `.npmrc` is not read through git — and relative paths inside the `.npmrc`
+  * (a `cafile=./ca.pem`) resolve against the scratch, not the root.
+  *
+  * An empty `configDependencies`, or one whose dependencies all
+  * ship no pnpmfile, returns the seed without spawning anything; a `..` path
+  * segment in a dependency name fails typed **before** any spawn; a
+  * load failure in the child — a syntax error, a throwing top level, an
+  * `ERR_MODULE_NOT_FOUND` for a module the pnpmfile itself imports — and a
+  * hook that throws when called are serialized back per-name and surface
+  * typed as a `hooks`-source `CatalogAssemblyError` naming that dependency.
+  * A hook's returned *data* stays tolerantly threaded (last well-formed write
+  * wins), never fatal. Spawn and transport failures — `node` absent, a
+  * non-zero exit without a result payload, unparseable output — fail typed
+  * too, never a defect and never a silent skip.
+  *
+  * Two bounds this layer imposes that `layerLive` cannot: the replay is
+  * given thirty seconds (a pnpmfile that loops or awaits forever fails typed
+  * instead of hanging the memoized assemble pass — a subprocess is killable,
+  * while `layerLive`'s in-process synchronous hook call is not interruptible
+  * by any means, so the asymmetry is inherent, not a parity violation), and
+  * the child's stdout is captured under `Run.jsonLine`'s 16 MiB default
+  * ceiling (a hook that logs more than that fails typed as `tooLarge`, where
+  * `layerLive` — which captures nothing — would succeed).
+  *
+  * Catalog folding and normalization stay in the **parent** (the same
+  * `@pnpm/catalogs`-derived path `layerLive` uses); the child returns only the
+  * raw threaded config slice, since the script cannot import kit code.
+  *
+  * Requires core's `ChildProcessSpawner`, resolved when the layer is built —
+  * the consumer provides it once at the edge (`@effect/platform-node`'s
+  * `NodeServices.layer`), the same discharge `@effected/git` uses. Wired by
+  * `WorkspaceCatalogs.layerWithConfigDependenciesSubprocess` /
+  * `Workspaces.layerWithConfigDependenciesSubprocess`.
+  */
 	static readonly layerSubprocess: Layer.Layer<ConfigDependencyHooks, never, ChildProcessSpawner.ChildProcessSpawner> =
 		Layer.effect(
 			ConfigDependencyHooks,

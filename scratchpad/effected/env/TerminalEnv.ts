@@ -28,23 +28,25 @@ export const StreamEnv = S.Struct({
 	/** The colour level: `none` unless the stream is a terminal or `FORCE_COLOR` says otherwise. */
 	color: ColorLevel.pipe($I.annoteKey("StreamEnv.color", { description: "The colour level: none unless the stream is a terminal or FORCE_COLOR says otherwise." })),
 	/**
-	 * Whether the terminal can render OSC 8 hyperlinks on this stream.
-	 *
-	 * @remarks
-	 * Decided in this order: a truthy `FORCE_HYPERLINK` turns links on, even on a stream that is not a terminal; a
-	 * truthy `NO_HYPERLINK` or a non-empty `NO_COLOR` turns them off; then the stream must be a terminal, not inside a
-	 * multiplexer that strips them (tmux, GNU screen), and a known terminal at a version that renders them.
-	 *
-	 * This is terminal capability only and does not consider the audience. Turning links off for an agent audience
-	 * is applied by `@effected/cli`, where the audience is known.
-	 */
+  * Whether the terminal can render OSC 8 hyperlinks on this stream.
+  *
+  * **Details**
+  *
+  * Decided in this order: a truthy `FORCE_HYPERLINK` turns links on, even on a stream that is not a terminal; a
+  * truthy `NO_HYPERLINK` or a non-empty `NO_COLOR` turns them off; then the stream must be a terminal, not inside a
+  * multiplexer that strips them (tmux, GNU screen), and a known terminal at a version that renders them.
+  *
+  * This is terminal capability only and does not consider the audience. Turning links off for an agent audience
+  * is applied by `@effected/cli`, where the audience is known.
+  */
 	hyperlinks: S.Boolean.pipe($I.annoteKey("StreamEnv.hyperlinks", { description: "Whether the terminal can render OSC 8 hyperlinks on this stream." })),
 	/**
-	 * The terminal width in columns, or `None` when it is unknown.
-	 *
-	 * @remarks
-	 * Core's `Terminal` exposes one width, so `stderr.columns` reports stdout's width.
-	 */
+  * The terminal width in columns, or `None` when it is unknown.
+  *
+  * **Gotchas**
+  *
+  * Core's `Terminal` exposes one width, so `stderr.columns` reports stdout's width.
+  */
 	columns: S.Option(S.declare(P.isNumber, $I.annote("StreamColumns", {
 		description: "A stream column number, retaining the full JavaScript number domain accepted by stream snapshots.",
 	}))).pipe($I.annoteKey("StreamEnv.columns", { description: "The terminal width in columns, or None when it is unknown." })),
@@ -131,12 +133,14 @@ const quiet: StreamEnv = { isTerminal: false, color: "none", hyperlinks: false, 
 /**
  * What the terminal can do: per-stream colour level, hyperlink support and columns, and the width to lay out at.
  *
- * @remarks
+ * **Details**
+ *
  * `layer` reads the environment through `Config` and the TTY state through `Stdio` and `Terminal` once, when it
  * is built. `layerTest` is the only way a test changes it, and defaults to a quiet terminal so a test opts into
  * colour. `colorLevel` needs `Stdio` alone, so a caller that only decides colour never requires `Terminal`.
  *
- * @example
+ * **Example** (Read colour and width from a fixed terminal)
+ *
  * ```ts
  * import { TerminalEnv } from "./index.ts"
  * import * as Effect from "effect/Effect";
@@ -152,14 +156,15 @@ const quiet: StreamEnv = { isTerminal: false, color: "none", hyperlinks: false, 
  */
 export class TerminalEnv extends Context.Service<TerminalEnv, TerminalEnvShape>()($I`TerminalEnv`) {
 	/**
-	 * Build the snapshot from `Stdio`, `Terminal` and the ambient `ConfigProvider`.
-	 *
-	 * @remarks
-	 * `Stdio` reports only stdout, so stderr mirrors it unless `options.stderrIsTerminal` supplies its own answer.
-	 * A layer-returning function mints a fresh layer per call: call it once and bind the result to a constant.
-	 *
-	 * @param options - `stderrIsTerminal` overrides the stderr TTY check
-	 */
+  * Build the snapshot from `Stdio`, `Terminal` and the ambient `ConfigProvider`.
+  *
+  * **Details**
+  *
+  * `Stdio` reports only stdout, so stderr mirrors it unless `options.stderrIsTerminal` supplies its own answer.
+  * A layer-returning function mints a fresh layer per call: call it once and bind the result to a constant.
+  *
+  * @param options - `stderrIsTerminal` overrides the stderr TTY check
+  */
 	static layer(
 		options?: TerminalEnvOptions,
 	): Layer.Layer<TerminalEnv, never, StdioModule.Stdio | TerminalModule.Terminal> {
@@ -174,18 +179,19 @@ export class TerminalEnv extends Context.Service<TerminalEnv, TerminalEnvShape>(
 	}
 
 	/**
-	 * The snapshot from `Stdio` and the ambient `ConfigProvider` alone: it never requires or builds `Terminal`, and
-	 * reports no columns.
-	 *
-	 * @remarks
-	 * Everything else is what {@link TerminalEnv.layer} reports: the TTY facts come from `Stdio`, the colour and
-	 * hyperlink decisions from the environment, and `width()` falls back to `COLUMNS`, then the fallback, since no
-	 * terminal width is known. Use it where building the platform `Terminal` has a cost, for example a long-lived
-	 * host, where `NodeTerminal` listens on `process.stdin`. A layer-returning function mints a fresh layer per
-	 * call: call it once and bind the result to a constant.
-	 *
-	 * @param options - `stderrIsTerminal` overrides the stderr TTY check
-	 */
+  * The snapshot from `Stdio` and the ambient `ConfigProvider` alone: it never requires or builds `Terminal`, and
+  * reports no columns.
+  *
+  * **Details**
+  *
+  * Everything else is what {@link TerminalEnv.layer} reports: the TTY facts come from `Stdio`, the colour and
+  * hyperlink decisions from the environment, and `width()` falls back to `COLUMNS`, then the fallback, since no
+  * terminal width is known. Use it where building the platform `Terminal` has a cost, for example a long-lived
+  * host, where `NodeTerminal` listens on `process.stdin`. A layer-returning function mints a fresh layer per
+  * call: call it once and bind the result to a constant.
+  *
+  * @param options - `stderrIsTerminal` overrides the stderr TTY check
+  */
 	static layerStdio(options?: TerminalEnvOptions): Layer.Layer<TerminalEnv, never, StdioModule.Stdio> {
 		return Layer.effect(TerminalEnv, snapshot(options, O.none()));
 	}
@@ -207,16 +213,17 @@ export class TerminalEnv extends Context.Service<TerminalEnv, TerminalEnvShape>(
 	};
 
 	/**
-	 * The colour level of a stream.
-	 *
-	 * @remarks
-	 * An ambient `TerminalEnv`, when one is provided, answers with its stdout colour, so a test that fixes the
-	 * terminal with `layerTest` also fixes this. Without one it is decided from `Config` and `Stdio` alone. It
-	 * requires only `Stdio`, never `Terminal` or `TerminalEnv`, so a caller that only decides colour (a CLI's
-	 * output formatter) keeps a `Stdio`-only requirement.
-	 *
-	 * @param _stream - the stream to decide for; only `stdout` is available, since `Stdio` reports no other
-	 */
+  * The colour level of a stream.
+  *
+  * **Details**
+  *
+  * An ambient `TerminalEnv`, when one is provided, answers with its stdout colour, so a test that fixes the
+  * terminal with `layerTest` also fixes this. Without one it is decided from `Config` and `Stdio` alone. It
+  * requires only `Stdio`, never `Terminal` or `TerminalEnv`, so a caller that only decides colour (a CLI's
+  * output formatter) keeps a `Stdio`-only requirement.
+  *
+  * @param _stream - the stream to decide for; only `stdout` is available, since `Stdio` reports no other
+  */
 	static readonly colorLevel = Effect.fn("colorLevel")(function* (_stream: "stdout"): Effect.fn.Return<ColorLevel, never, StdioModule.Stdio> {
 		const ambient = yield* Effect.serviceOption(TerminalEnv);
 		if (O.isSome(ambient)) return ambient.value.stdout.color;

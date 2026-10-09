@@ -8,7 +8,8 @@ const $I = $ScratchpadId.create("effected/cli/ui/UiKey");
 /**
  * The named keys a screen understands and a test can press.
  *
- * @remarks
+ * **Details**
+ *
  * Letters, digits and punctuation are not named: they arrive as typed text.
  *
  * @public
@@ -32,7 +33,8 @@ const Char = S.Struct({
 /**
  * A key as a screen sees it: a named key, or typed text.
  *
- * @remarks
+ * **Details**
+ *
  * Space is always `Named("space")`, never `Char(" ")`, so a key table binds it once. A `Char` is what Ink delivers
  * as one input, so a paste arrives as one `Char` holding the pasted text.
  *

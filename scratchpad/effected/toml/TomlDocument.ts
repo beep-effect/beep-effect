@@ -55,7 +55,8 @@ const materializeError = (text: string, defect: unknown): TomlParseError => {
  * exactly, and
  * any semantic violations as {@link TomlDiagnostic} data.
  *
- * @remarks
+ * **Details**
+ *
  * `parse` fails typed only on lex/parse errors; a syntactically valid but
  * semantically illegal document (say, a duplicate key) still parses with the
  * violation recorded in `diagnostics`, so the text stays inspectable and
@@ -67,7 +68,8 @@ const materializeError = (text: string, defect: unknown): TomlParseError => {
  * Construct via {@link TomlDocument.parse}; `TomlDocument.make` is for
  * synthetic documents.
  *
- * @example
+ * **Example** (Preserve TOML source and decode its value)
+ *
  * ```ts
  * import { TomlDocument } from "./index.ts";
  * import * as Effect from "effect/Effect";

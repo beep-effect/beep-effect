@@ -71,16 +71,17 @@ export interface FailureDetails {
 	 */
 	readonly isDefect: boolean;
 	/**
-	 * `true` when the squashed `error` is the kit's {@link Cancelled}: the person quit a prompt or screen (Esc, Ctrl-C).
-	 * It is not a bug and there is nothing to report, whichever channel it arrived through.
-	 *
-	 * @remarks
-	 * A cancel from `CliPrompt.fallback` is a defect (`isDefect` is `true`) and one from `CliUi.run` is a typed failure
-	 * (`isDefect` is `false`), so a `render` that gives a defect the "please report this" treatment must test this flag
-	 * first, or Esc prints an issue-report request. `isDefect` keeps its plain meaning, the absence of a typed failure,
-	 * and the exit code is unchanged (`130` for the `interrupt` reason). `defaultLines` and `lines()` already draw it as
-	 * its one fixed line.
-	 */
+  * `true` when the squashed `error` is the kit's {@link Cancelled}: the person quit a prompt or screen (Esc, Ctrl-C).
+  * It is not a bug and there is nothing to report, whichever channel it arrived through.
+  *
+  * **Gotchas**
+  *
+  * A cancel from `CliPrompt.fallback` is a defect (`isDefect` is `true`) and one from `CliUi.run` is a typed failure
+  * (`isDefect` is `false`), so a `render` that gives a defect the "please report this" treatment must test this flag
+  * first, or Esc prints an issue-report request. `isDefect` keeps its plain meaning, the absence of a typed failure,
+  * and the exit code is unchanged (`130` for the `interrupt` reason). `defaultLines` and `lines()` already draw it as
+  * its one fixed line.
+  */
 	readonly isCancelled: boolean;
 	/**
 	 * `true` when the squashed `error` is the kit's {@link NotInteractive}: the program asked for a prompt or a screen in
@@ -128,52 +129,55 @@ export interface FailureDetails {
  */
 export interface ReportFailuresOptions {
 	/**
-	 * Render the failure. Defaults to the failure's document, `CliFailure.toDoc(cause)`, rendered for the
-	 * audience: a failure status line, a tree for a schema failure, a defect's message with its cleaned stack, and
-	 * the one fixed line each for `Cancelled` and `NotInteractive`. Under `CliRuntime.main` with `env` it is painted for
-	 * a person and plain for an agent or a CI; elsewhere it is plain. It is still written through the logger.
-	 *
-	 * @remarks
-	 * Return several lines to print several: a config error's own message
-	 * followed by the rendered issue lines, say.
-	 *
-	 * `error` is the squashed cause: the first typed failure when there is
-	 * one, otherwise the first defect. `details` says which it is, so a typed
-	 * failure can render as one line and a defect as a full report, without
-	 * guessing from the error's shape. A renderer that takes only `error`
-	 * still fits.
-	 *
-	 * What it returns is text the kit did not build, so the report applies the output policy to it: under GitHub
-	 * Actions a line the runner would read as a workflow command is neutralized (with no environment services at all,
-	 * always), and for an agent or a CI audience escape sequences are removed (GitHub Actions detects as `ci`). For a person the escapes you return are kept,
-	 * since the kit cannot tell your own colour from an injected sequence: a `render` must sanitise the data it
-	 * interpolates (an error message, a file name) itself.
-	 */
+  * Render the failure. Defaults to the failure's document, `CliFailure.toDoc(cause)`, rendered for the
+  * audience: a failure status line, a tree for a schema failure, a defect's message with its cleaned stack, and
+  * the one fixed line each for `Cancelled` and `NotInteractive`. Under `CliRuntime.main` with `env` it is painted for
+  * a person and plain for an agent or a CI; elsewhere it is plain. It is still written through the logger.
+  *
+  * **Details**
+  *
+  * Return several lines to print several: a config error's own message
+  * followed by the rendered issue lines, say.
+  *
+  * `error` is the squashed cause: the first typed failure when there is
+  * one, otherwise the first defect. `details` says which it is, so a typed
+  * failure can render as one line and a defect as a full report, without
+  * guessing from the error's shape. A renderer that takes only `error`
+  * still fits.
+  *
+  * What it returns is text the kit did not build, so the report applies the output policy to it: under GitHub
+  * Actions a line the runner would read as a workflow command is neutralized (with no environment services at all,
+  * always), and for an agent or a CI audience escape sequences are removed (GitHub Actions detects as `ci`). For a person the escapes you return are kept,
+  * since the kit cannot tell your own colour from an injected sequence: a `render` must sanitise the data it
+  * interpolates (an error message, a file name) itself.
+  */
 	readonly render?: ((error: unknown, details: FailureDetails) => string | ReadonlyArray<string>) | undefined;
 	/**
-	 * The exit code to use when the error does not carry one.
-	 *
-	 * @remarks
-	 * An error carrying `Runtime.errorExitCode` keeps its own; this is only the
-	 * fallback, and it defaults to `1`. Pass an integer in `0..255`, the range a
-	 * POSIX exit status can carry — `256` wraps to `0` and passes a failed run.
-	 */
+  * The exit code to use when the error does not carry one.
+  *
+  * **Gotchas**
+  *
+  * An error carrying `Runtime.errorExitCode` keeps its own; this is only the
+  * fallback, and it defaults to `1`. Pass an integer in `0..255`, the range a
+  * POSIX exit status can carry — `256` wraps to `0` and passes a failed run.
+  */
 	readonly exitCode?: number | undefined;
 	/**
-	 * The exit code for a usage error: a `ShowHelp` carrying parse errors, or a
-	 * `CliError.UserError` `Command.runWith` already printed.
-	 *
-	 * @remarks
-	 * Defaults to `64` (BSD `EX_USAGE`); pass an integer in `0..255`. A
-	 * `ShowHelp` with no errors — a bare root invocation, or `--help` — always
-	 * exits `0`. A `UserError` that carries its own `Runtime.errorExitCode` —
-	 * one marked with `CliRuntime.reported(error, 3)` — keeps that code instead.
-	 *
-	 * Keep `Command.runWith`'s default `renderErrors`: with `renderErrors: false`
-	 * runWith prints no parse errors and `reportFailures` never renders a
-	 * `ShowHelp`, so a parse error would exit with this code having printed
-	 * nothing on stderr.
-	 */
+  * The exit code for a usage error: a `ShowHelp` carrying parse errors, or a
+  * `CliError.UserError` `Command.runWith` already printed.
+  *
+  * **Details**
+  *
+  * Defaults to `64` (BSD `EX_USAGE`); pass an integer in `0..255`. A
+  * `ShowHelp` with no errors — a bare root invocation, or `--help` — always
+  * exits `0`. A `UserError` that carries its own `Runtime.errorExitCode` —
+  * one marked with `CliRuntime.reported(error, 3)` — keeps that code instead.
+  *
+  * Keep `Command.runWith`'s default `renderErrors`: with `renderErrors: false`
+  * runWith prints no parse errors and `reportFailures` never renders a
+  * `ShowHelp`, so a parse error would exit with this code having printed
+  * nothing on stderr.
+  */
 	readonly usageExitCode?: number | undefined;
 }
 
@@ -194,50 +198,52 @@ export interface MainOptions<RP, EP> extends ReportFailuresOptions {
 	 */
 	readonly logger?: Layer.Layer<never> | undefined;
 	/**
-	 * Provide the environment services, built by {@link CliEnv.layer}, inside failure reporting, where the platform
-	 * sits, together with `CliColor.formatterLayer` so help text follows the same colour decision.
-	 *
-	 * @remarks
-	 * The program may then require `CurrentRuntimeEnv`, `TerminalEnv`, `Audience` and `CliTheme` and read
-	 * `CliInteractive`. Without it `CliInteractive` keeps its non-interactive default, so forgetting this wiring
-	 * gives a CLI that never prompts. With `env.log`, `main` uses `CliLog.layer` as the logger set, and `env.log`
-	 * may carry the `file` option when the platform provides `FileSystem` and `Path`. A failure building the env
-	 * layer renders as one line and exits through `exitCode`.
-	 *
-	 * Not interactive, the `Terminal` the program sees is gated: its `readLine` fails as a quit, its input is
-	 * already ended and its `display` writes nothing. A program that reads piped data must read `Stdio.stdin`, and
-	 * one that writes output must use `Console` or `Stdio`, never `Terminal`.
-	 *
-	 * Stderr's colour mirrors stdout's terminal check unless `env.stderrIsTerminal` says otherwise, so with stderr
-	 * redirected and stdout a terminal the failure report is painted into the file. On Node, pass the real check from
-	 * the bin's entry, the one place it reads the host:
-	 * `env: { stderrIsTerminal: Effect.sync(() => process.stderr.isTTY === true) }`. Core's `Stdio` reports only
-	 * stdout (upstream Effect-TS/effect#8639); once core has a stderr check, this option reads it and the bin passes
-	 * nothing.
-	 */
+  * Provide the environment services, built by {@link CliEnv.layer}, inside failure reporting, where the platform
+  * sits, together with `CliColor.formatterLayer` so help text follows the same colour decision.
+  *
+  * **Gotchas**
+  *
+  * The program may then require `CurrentRuntimeEnv`, `TerminalEnv`, `Audience` and `CliTheme` and read
+  * `CliInteractive`. Without it `CliInteractive` keeps its non-interactive default, so forgetting this wiring
+  * gives a CLI that never prompts. With `env.log`, `main` uses `CliLog.layer` as the logger set, and `env.log`
+  * may carry the `file` option when the platform provides `FileSystem` and `Path`. A failure building the env
+  * layer renders as one line and exits through `exitCode`.
+  *
+  * Not interactive, the `Terminal` the program sees is gated: its `readLine` fails as a quit, its input is
+  * already ended and its `display` writes nothing. A program that reads piped data must read `Stdio.stdin`, and
+  * one that writes output must use `Console` or `Stdio`, never `Terminal`.
+  *
+  * Stderr's colour mirrors stdout's terminal check unless `env.stderrIsTerminal` says otherwise, so with stderr
+  * redirected and stdout a terminal the failure report is painted into the file. On Node, pass the real check from
+  * the bin's entry, the one place it reads the host:
+  * `env: { stderrIsTerminal: Effect.sync(() => process.stderr.isTTY === true) }`. Core's `Stdio` reports only
+  * stdout (upstream Effect-TS/effect#8639); once core has a stderr check, this option reads it and the bin passes
+  * nothing.
+  */
 	readonly env?: CliEnvOptions | undefined;
 	/**
-	 * Where the help document goes when it is printed with a usage error:
-	 * `"stdout"` (the default, core's behaviour) or `"stderr"`, beside the
-	 * errors.
-	 *
-	 * @remarks
-	 * `"stderr"` keeps stdout clean for a caller that parses it, such as a
-	 * hook piping JSON into `jq`: an unknown flag, a bad value or an unknown
-	 * subcommand then writes nothing to stdout. An explicit `--help` and a
-	 * bare invocation of a command group still print help on stdout: neither
-	 * is an error.
-	 *
-	 * Two cases keep help on stdout even under `"stderr"`. A `CliOutput`
-	 * Formatter or a `Console` provided inside `program` is not seen by
-	 * `main`, so its help is not rerouted. To change the Formatter, pass
-	 * `env.formatter` (for example `formatVersion`): `main` installs its own
-	 * Formatter inside the platform, so that is the way in, and a Formatter
-	 * provided inside the program is invisible to the routing. A Formatter
-	 * the platform provides is shadowed by `main`'s, so pass it through
-	 * `env.formatter` as well. And with `Command.runWith`'s `renderErrors: false`
-	 * no errors are printed, so nothing marks the help as a usage error's.
-	 */
+  * Where the help document goes when it is printed with a usage error:
+  * `"stdout"` (the default, core's behaviour) or `"stderr"`, beside the
+  * errors.
+  *
+  * **Gotchas**
+  *
+  * `"stderr"` keeps stdout clean for a caller that parses it, such as a
+  * hook piping JSON into `jq`: an unknown flag, a bad value or an unknown
+  * subcommand then writes nothing to stdout. An explicit `--help` and a
+  * bare invocation of a command group still print help on stdout: neither
+  * is an error.
+  *
+  * Two cases keep help on stdout even under `"stderr"`. A `CliOutput`
+  * Formatter or a `Console` provided inside `program` is not seen by
+  * `main`, so its help is not rerouted. To change the Formatter, pass
+  * `env.formatter` (for example `formatVersion`): `main` installs its own
+  * Formatter inside the platform, so that is the way in, and a Formatter
+  * provided inside the program is invisible to the routing. A Formatter
+  * the platform provides is shadowed by `main`'s, so pass it through
+  * `env.formatter` as well. And with `Command.runWith`'s `renderErrors: false`
+  * no errors are printed, so nothing marks the help as a usage error's.
+  */
 	readonly helpOnUsageError?: "stdout" | "stderr" | undefined;
 }
 
@@ -258,7 +264,8 @@ const toLines = (rendered: string | ReadonlyArray<string>): ReadonlyArray<string
 /**
  * The error's own exit code when it carries one, otherwise the fallback.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `Runtime.getErrorExitCode` cannot serve alone here: it answers `1` both for
  * an error marked `1` and for an unmarked one, so an `exitCode` option would
  * silently override a deliberate `1`. Testing for the marker keeps "the error
@@ -272,7 +279,8 @@ const chooseExitCode = (error: unknown, fallback: number | undefined): number =>
 /**
  * Report a CLI program's failures through the program's own logger.
  *
- * @remarks
+ * **Details**
+ *
  * ## What it prevents
  *
  * A platform `runMain` reports an unhandled failure using Effect's **default**
@@ -333,7 +341,8 @@ const chooseExitCode = (error: unknown, fallback: number | undefined): number =>
  * raises is likewise never rendered; it only carries the exit code a
  * successful program recorded through `CliExit`.
  *
- * @example
+ * **Example** (Report program failures through the configured logger)
+ *
  * ```ts
  * import { CliRuntime } from "./index.ts"
  * import { NodeRuntime } from "@effect/platform-node"
@@ -465,36 +474,38 @@ export class CliRuntime {
 			);
 
 	/**
-	 * Assemble a CLI program in the one order that reports every failure well.
-	 *
-	 * @remarks
-	 * - `CliExit` is provided fresh, and a non-zero code after success becomes a
-	 *   marked failure the teardown honours.
-	 * - The platform layer is provided **inside** failure reporting, so a
-	 *   layer-build failure (`HOME` unset, say) renders as one line with the
-	 *   fallback code rather than escaping to the runtime's stack trace.
-	 * - The logger is provided **outermost**, so it is present whichever branch
-	 *   fails.
-	 * - With the `env` option, `CliEnv.layer` and `CliColor.formatterLayer` are
-	 *   provided beside the platform, inside failure reporting, so the program can
-	 *   read the audience, terminal, theme and `CliInteractive`.
-	 *
-	 * You still call your platform's runner.
-	 *
-	 * @example
-	 * ```ts
-	 * import { CliRuntime } from "./index.ts"
-	 * import { NodeRuntime, NodeServices } from "@effect/platform-node"
-	 * import { Command } from "effect/cli"
-	 *
-	 * NodeRuntime.runMain(
-	 *   CliRuntime.main(Command.run(root, { version: "1.0.0" }), { platform: NodeServices.layer, exitCode: 3 }),
-	 * )
-	 * ```
-	 *
-	 * @param program - the CLI program, usually `Command.run(root, { version })`
-	 * @param options - the platform layer, and optionally the logger, environment services, exit codes and rendering
-	 */
+  * Assemble a CLI program in the one order that reports every failure well.
+  *
+  * **Details**
+  *
+  * - `CliExit` is provided fresh, and a non-zero code after success becomes a
+  *   marked failure the teardown honours.
+  * - The platform layer is provided **inside** failure reporting, so a
+  *   layer-build failure (`HOME` unset, say) renders as one line with the
+  *   fallback code rather than escaping to the runtime's stack trace.
+  * - The logger is provided **outermost**, so it is present whichever branch
+  *   fails.
+  * - With the `env` option, `CliEnv.layer` and `CliColor.formatterLayer` are
+  *   provided beside the platform, inside failure reporting, so the program can
+  *   read the audience, terminal, theme and `CliInteractive`.
+  *
+  * You still call your platform's runner.
+  *
+  * **Example** (Run a Node CLI with a custom failure exit code)
+  *
+  * ```ts
+  * import { CliRuntime } from "./index.ts"
+  * import { NodeRuntime, NodeServices } from "@effect/platform-node"
+  * import { Command } from "effect/cli"
+  *
+  * NodeRuntime.runMain(
+  *   CliRuntime.main(Command.run(root, { version: "1.0.0" }), { platform: NodeServices.layer, exitCode: 3 }),
+  * )
+  * ```
+  *
+  * @param program - the CLI program, usually `Command.run(root, { version })`
+  * @param options - the platform layer, and optionally the logger, environment services, exit codes and rendering
+  */
 	static main<A, E, R, RP, EP>(
 		program: Effect.Effect<A, E, R>,
 		options: MainOptions<RP, EP> & { readonly env?: undefined },
@@ -619,41 +630,42 @@ export class CliRuntime {
 	}
 
 	/**
-	 * Mark an error as already reported, carrying an exit code.
-	 *
-	 * @remarks
-	 * Exported because a program that reports a failure itself — a validation
-	 * command that prints its own diagnostics, say — needs the same two marks
-	 * and should not have to rediscover the inverted polarity.
-	 *
-	 * Under `CliRuntime.main` or {@link CliRuntime.reportFailures}, do NOT
-	 * print the failure yourself before failing with it: `reportFailures`
-	 * renders every error except a `ShowHelp` and a `CliError.UserError` whose
-	 * reported mark is `false`, so it would print twice. Fail with the marked
-	 * error and put any multi-line rendering in the `render` option instead. The
-	 * mark matters for a program run WITHOUT `reportFailures`, where it keeps the
-	 * runtime from reporting a failure the program already printed.
-	 *
-	 * A `CliError.UserError` marked with `reported` is treated as already
-	 * printed and is not rendered — use a different error type if the program
-	 * has not printed it. `reportFailures` cannot tell a `UserError` that
-	 * `Command.runWith` printed from one marked here: both carry the same `false`
-	 * mark. It does keep the code you pass: `reported(userError, 3)` exits `3`,
-	 * not `usageExitCode`.
-	 *
-	 * The marks are added in place, so a typed error comes back as its own
-	 * type: the `E` overload returns the very instance it was given, and a
-	 * program failing with it keeps `catchTags` narrowing downstream without a
-	 * cast. Any other value takes the `unknown` fallback and is wrapped in a
-	 * plain `Error`.
-	 *
-	 * The `E extends Error` constraint is structural, not nominal — TypeScript
-	 * cannot express "is really an `Error`", so the guarantee holds only when
-	 * the argument passes `instanceof Error` at runtime. A value that merely
-	 * satisfies `Error`'s shape (an object `implements Error`, or an error
-	 * revived from JSON) still takes the wrapping branch and comes back as a
-	 * fresh, stripped `Error` typed as `E`.
-	 */
+  * Mark an error as already reported, carrying an exit code.
+  *
+  * **Gotchas**
+  *
+  * Exported because a program that reports a failure itself — a validation
+  * command that prints its own diagnostics, say — needs the same two marks
+  * and should not have to rediscover the inverted polarity.
+  *
+  * Under `CliRuntime.main` or {@link CliRuntime.reportFailures}, do NOT
+  * print the failure yourself before failing with it: `reportFailures`
+  * renders every error except a `ShowHelp` and a `CliError.UserError` whose
+  * reported mark is `false`, so it would print twice. Fail with the marked
+  * error and put any multi-line rendering in the `render` option instead. The
+  * mark matters for a program run WITHOUT `reportFailures`, where it keeps the
+  * runtime from reporting a failure the program already printed.
+  *
+  * A `CliError.UserError` marked with `reported` is treated as already
+  * printed and is not rendered — use a different error type if the program
+  * has not printed it. `reportFailures` cannot tell a `UserError` that
+  * `Command.runWith` printed from one marked here: both carry the same `false`
+  * mark. It does keep the code you pass: `reported(userError, 3)` exits `3`,
+  * not `usageExitCode`.
+  *
+  * The marks are added in place, so a typed error comes back as its own
+  * type: the `E` overload returns the very instance it was given, and a
+  * program failing with it keeps `catchTags` narrowing downstream without a
+  * cast. Any other value takes the `unknown` fallback and is wrapped in a
+  * plain `Error`.
+  *
+  * The `E extends Error` constraint is structural, not nominal — TypeScript
+  * cannot express "is really an `Error`", so the guarantee holds only when
+  * the argument passes `instanceof Error` at runtime. A value that merely
+  * satisfies `Error`'s shape (an object `implements Error`, or an error
+  * revived from JSON) still takes the wrapping branch and comes back as a
+  * fresh, stripped `Error` typed as `E`.
+  */
 	static reported<E extends Error>(error: E, exitCode?: number): E;
 	static reported(error: unknown, exitCode?: number): Error;
 	static reported(error: unknown, exitCode = 1): Error {

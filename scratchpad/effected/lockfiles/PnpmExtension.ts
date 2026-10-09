@@ -53,7 +53,8 @@ export type PnpmCatalogs = typeof PnpmCatalogs.Type;
  * Extension data specific to pnpm lockfiles, attached to `Lockfile.extension`
  * when the format is `"pnpm"`.
  *
- * @remarks
+ * **Details**
+ *
  * - `catalogs` — pnpm catalog definitions ({@link PnpmCatalogs}).
  * - `overrides` — the version override map recorded in the lockfile header.
  * - `settings` — pnpm settings recorded in the lockfile header.

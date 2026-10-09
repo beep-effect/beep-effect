@@ -24,14 +24,14 @@ export interface KeyHelpProps {
  * A one-line footer naming every visible binding of the given tables, then the root keys:
  * `↑/↓ move · space toggle · enter continue · esc cancel`.
  *
- * @remarks
+ * **Details**
+ *
  * Drawn from the same tables that dispatch the keys, so the help cannot name a key the screen ignores. Neighbouring
  * rows with the same help share one entry (`↑/↓ move`). It stays one line, cut to the terminal width with the glyph
  * set's ellipsis; when it must be cut, the widget's own keys give way and the root hint (`esc cancel`) stays whole at
  * the end. Painted with the `muted` token; labels follow the screen's glyph set.
  *
  * @param props - the tables, and whether to append the root keys
- *
  * @public
  */
 export const KeyHelp = (props: KeyHelpProps): ReactElement => {

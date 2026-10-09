@@ -29,7 +29,8 @@ const $I = $ScratchpadId.create("effected/git/GitConfig");
 /**
  * One structural problem found while parsing git-config text.
  *
- * @remarks
+ * **Details**
+ *
  * Carries the kit's shared diagnostic core: a `code` from the
  * `GitConfigErrorCode` union, a human `message`, the character
  * `offset`/`length` span, and the zero-based `line`/`character` position
@@ -56,7 +57,8 @@ export class GitConfigDiagnostic extends S.Class<GitConfigDiagnostic>($I`GitConf
 /**
  * The document could not be parsed as git-config text.
  *
- * @remarks
+ * **Details**
+ *
  * Malformed input always fails through this typed error, never as a defect.
  * `diagnostics` is an array even when only one is populated — the array is
  * the cross-package diagnostic contract.
@@ -122,7 +124,8 @@ export class GitConfigEditError extends S.TaggedError<GitConfigEditError>($I`Git
 /**
  * One variable line of a git-config document.
  *
- * @remarks
+ * **Details**
+ *
  * `value` is the DECODED value (quotes removed, escapes resolved, unquoted
  * trailing whitespace discarded). An absent `value` is git's bare-`key`
  * boolean-true shorthand — the distinction is preserved here even though the
@@ -145,7 +148,8 @@ export class GitConfigEntry extends S.Class<GitConfigEntry>($I`GitConfigEntry`)(
 /**
  * One section of a git-config document.
  *
- * @remarks
+ * **Details**
+ *
  * `name` preserves the raw spelling (section names compare
  * case-insensitively); `subsection` is the decoded subsection name, which
  * compares case-SENSITIVELY; the deprecated `[section.subsection]` dotted
@@ -172,7 +176,8 @@ export class GitConfigSection extends S.Class<GitConfigSection>($I`GitConfigSect
 /**
  * One `include` / `includeIf` directive found in the document.
  *
- * @remarks
+ * **Details**
+ *
  * Recognized and surfaced, deliberately NOT resolved — following an include
  * means filesystem IO and condition evaluation, which a pure document model
  * must not do. `condition` is the `includeIf` condition (e.g.
@@ -343,7 +348,8 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
    * Parses git-config text into a lossless document — the pure, synchronous
    * primitive.
    *
-   * @remarks
+   * **Details**
+   *
    * Malformed input fails typed with every diagnostic found, never as a
    * defect. Effect consumers want {@link GitConfig.parse}, which is defined
    * in terms of this behind its named span.
@@ -365,7 +371,8 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
   /**
    * Parses git-config text into a lossless document.
    *
-   * @remarks
+   * **Details**
+   *
    * Defined in terms of {@link GitConfig.parseResult} — synchronous callers
    * can use that variant directly.
    */
@@ -382,7 +389,8 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
    * The effective value of `key` in `[section]` / `[section "subsection"]`,
    * last occurrence wins (git's read semantics across duplicate sections).
    *
-   * @remarks
+   * **Details**
+   *
    * A bare `key` line decodes as `"true"` here, matching git's boolean
    * semantics for a value-less variable; the entry model
    * (`GitConfigEntry.value`) preserves the distinction.

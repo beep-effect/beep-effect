@@ -30,7 +30,8 @@ const encodeJsonString = S.encodeEffect(S.fromJsonString(S.String));
  * The environment EVERY `Git` invocation is spawned with. A network-touching
  * member adds one more key on top, resolved per call — see {@link sshEnv}.
  *
- * @remarks
+ * **Details**
+ *
  * These live here, next to `classify` and `GIT_TIMEOUT`, because they exist
  * to serve them — not on the pure `GitCommand` constructors, which carry no
  * run-time context at all.
@@ -81,7 +82,8 @@ const OPENSSH_PROGRAM = /(?:^|[\\/])ssh(?:\.exe)?$/i;
  * to treat the command as OpenSSH. `auto` means "infer from the basename",
  * which is the inference {@link OPENSSH_PROGRAM} performs.
  *
- * @remarks
+ * **Gotchas**
+ *
  * This exists because the basename inference is OVERRIDABLE, and the override
  * silently changes the argument grammar. Verified against git 2.55: a program
  * literally named `ssh` with `ssh.variant=plink` set is invoked with plink's
@@ -105,7 +107,8 @@ const OPENSSH_VARIANTS = HashSet.make("", "auto", "ssh");
 /**
  * Whether an ssh command line already decides `BatchMode` for itself.
  *
- * @remarks
+ * **Details**
+ *
  * Deliberately matches `BatchMode` only where it is an OPTION — after a `-o`,
  * with or without intervening space or quoting, and taking either the
  * `Key=value` or the `"Key value"` spelling `ssh -o` accepts. A bare
@@ -123,7 +126,8 @@ const DECIDES_BATCH_MODE = /(?:^|\s)-o\s*["']?\s*BatchMode\s*[=\s]/i;
 /**
  * The program an ssh command line invokes, as git's shell would see it.
  *
- * @remarks
+ * **Details**
+ *
  * `GIT_SSH_COMMAND` is interpreted by the shell, so the program may be
  * QUOTED to carry spaces — `"/opt/my tools/ssh" -i key` is a working setup
  * (verified against git 2.55). Splitting on whitespace alone would read that
@@ -147,7 +151,8 @@ const sshProgram = (command: string): string | undefined => {
 /**
  * Appends `-o BatchMode=yes` to an ssh command line, or declines.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Declining is the important half, and it covers two cases where appending
  * would do harm rather than good:
  *
@@ -178,7 +183,8 @@ const withBatchMode = (command: string): O.Option<string> => {
  * a `GIT_SSH_COMMAND` carrying `BatchMode`, when there is an ssh command
  * worth pinning.
  *
- * @remarks
+ * **Details**
+ *
  * `resolved` is the ssh COMMAND git would have used if this package pinned
  * nothing. Resolving it first is what makes the pin additive rather than
  * destructive: a pinned environment key wins over the merged parent
@@ -208,7 +214,8 @@ const sshEnv = (resolved: string): Record<string, string> =>
  * ({@link NotARepositoryError} / {@link UnknownRefError}), or the spawn itself
  * failed before git could run at all.
  *
- * @remarks
+ * **Details**
+ *
  * `exitCode` and `stderr` are populated when git actually ran. `detail`
  * carries a human-readable explanation whenever the failure is not summed up
  * by an exit code: an absorbed spawn-level `PlatformError`, a per-run timeout,
@@ -310,7 +317,8 @@ export class UnknownRefError extends S.TaggedError<UnknownRefError>($I`UnknownRe
  * non-fast-forward rejection (`fetch first` / `non-fast-forward`), or a
  * `--force-with-lease` lease failure (`stale info`).
  *
- * @remarks
+ * **Details**
+ *
  * The typed signal a fetch-then-retry (or rebase-then-retry) fallback
  * branches on — every other push failure stays a {@link GitCommandError}.
  * Only `Git.push` can fail with this error.
@@ -335,7 +343,8 @@ export class NonFastForwardError extends S.TaggedError<NonFastForwardError>($I`N
  * A merge-shaped operation (`pull`, `stash pop`, `stash apply`) stopped with
  * conflict markers in the working tree.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The typed signal a resolve-or-abort recovery branches on. The conflicted
  * state is REAL: git has already written conflict markers, and (for `pull`)
  * `MERGE_HEAD` is set — the caller owns resolving or aborting. Detection
@@ -359,7 +368,8 @@ export class MergeConflictError extends S.TaggedError<MergeConflictError>($I`Mer
  * be overwritten — git's refusal reads
  * `Your local changes ... would be overwritten by merge`.
  *
- * @remarks
+ * **Details**
+ *
  * The typed "commit or stash first" signal. Unlike {@link MergeConflictError}
  * the working tree is UNTOUCHED — git aborted before changing anything.
  * Only the merge-shaped methods (`pull`, `stashPop`, `stashApply`) can fail
@@ -412,7 +422,8 @@ type NameStatusCode = typeof NameStatusCode.Type;
 /**
  * One entry of a `git diff --name-status` listing.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The `status` vocabulary is this package's own decoded spelling:
  * `"typeChanged"` and `"broken"` — deliberately NOT git porcelain's
  * `"typechange"` word. A consumer mapping these values onto an existing
@@ -739,7 +750,8 @@ export class CommitInfo extends S.Class<CommitInfo>($I`CommitInfo`)({
 /**
  * One commit of a `git log` listing, with the paths that commit touched.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Both dates are decoded from git's strict-ISO `%aI` / `%cI` into
  * `DateTime.Utc` — the instant, comparable and orderable across commits made
  * in different timezones. **The committer's local UTC offset is not
@@ -878,7 +890,8 @@ export class StatusEntry extends S.Class<StatusEntry>($I`StatusEntry`)({
   /**
    * Renders this entry back to one porcelain-shaped line: `XY <path>`.
    *
-   * @remarks
+   * **Gotchas**
+   *
    * **The rename convention is decided here, once, for every consumer.** By
    * default a rename/copy entry renders its NEW path only — `path` IS the
    * entry's current path, the one a line-oriented downstream can actually
@@ -904,7 +917,8 @@ export class StatusEntry extends S.Class<StatusEntry>($I`StatusEntry`)({
    * Renders entries back to porcelain-shaped text: one {@link StatusEntry.toLine}
    * line per entry, newline-joined, no trailing newline.
    *
-   * @remarks
+   * **Details**
+   *
    * The route back from `Git.status`'s parsed entries to line-oriented text,
    * so a consumer whose downstream contract is porcelain-shaped text does
    * not hand-roll its own renderer (and re-decide the rename convention —
@@ -979,7 +993,8 @@ const parseStatus = (output: string): ReadonlyArray<StatusEntry> => {
 /**
  * One line of a `git submodule status` listing.
  *
- * @remarks
+ * **Details**
+ *
  * The `state` decodes git's one-character prefix: `" "` → `"current"` (the
  * checked-out commit matches the index gitlink), `"-"` → `"uninitialized"`,
  * `"+"` → `"outOfSync"` (the checked-out commit differs from the gitlink),
@@ -1041,7 +1056,8 @@ const parseSubmoduleStatus = (output: string): ReadonlyArray<SubmoduleStatusEntr
 /**
  * One ref a remote advertises, from `git ls-remote`.
  *
- * @remarks
+ * **Details**
+ *
  * `ref` is the FULL refname as advertised (`refs/heads/main`,
  * `refs/tags/v1`), including the `^{}` suffix on an annotated tag's peeled
  * entry — an annotated tag appears twice, once as the tag object and once
@@ -1076,7 +1092,8 @@ export class LsRemoteEntry extends S.Class<LsRemoteEntry>($I`LsRemoteEntry`)({
    * `_`) — the monorepo-prefixed-tag case, where a caller asks for
    * `4.0.0` and the remote advertises `effect@4.0.0`.
    *
-   * @remarks
+   * **Details**
+   *
    * A pure, decode-side helper for validate-before-mutate flows: run
    * `lsRemote`, look for the wanted ref, and when it is absent hand the
    * listing to this to compute a suggestion. Deliberately a helper on the
@@ -1333,7 +1350,8 @@ const parseWorktreeList = (output: string): ReadonlyArray<WorktreeEntry> => {
 /**
  * One index (staging area) entry, from `git ls-files --stage`.
  *
- * @remarks
+ * **Details**
+ *
  * The index-side sibling of {@link LsTreeEntry}: this is the ONLY place a
  * staged-but-uncommitted gitlink (`mode` `160000`) is visible — `lsTree`
  * reads the committed tree and misses exactly that window.
@@ -3575,7 +3593,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
 /**
  * The {@link Git} service shape.
  *
- * @remarks
+ * **Details**
+ *
  * Exported so a consumer can type a variable, field or test fake holding the
  * service without re-declaring the surface — `Layer.succeed(Git, fake)`
  * accepts any `GitShape`.
@@ -4012,7 +4031,8 @@ export interface GitShape {
    * `key` into the repository config, or into `options.file` when given
    * (e.g. `.gitmodules`).
    *
-   * @remarks
+   * **Details**
+   *
    * **The write is repository-LOCAL, always.** A bare
    * `git config <key> <value>` writes the checkout's own `.git/config`, and
    * this method emits no scope flag, so the setting applies to every later git
@@ -4091,7 +4111,8 @@ export interface GitShape {
   /**
    * `git rev-parse --show-toplevel` — the absolute repository root path, trimmed.
    *
-   * @remarks
+   * **Gotchas**
+   *
    * The path is PHYSICAL: git resolves symlinks, so it need not match the
    * spelling the caller reached the repository by (every macOS tmpdir:
    * `/var` → `/private/var`). Bound an upward walk by it with
@@ -4104,7 +4125,8 @@ export interface GitShape {
    * symlink-resolved directory a repository shares with all of its linked
    * worktrees, with git's terminating newline removed.
    *
-   * @remarks
+   * **Details**
+   *
    * Repository identity that holds across worktrees: every checkout of one
    * repository — the main worktree, any subdirectory, any linked worktree,
    * and any path reached through a symlink — answers the same string, so two
@@ -4122,7 +4144,8 @@ export interface GitShape {
    * `git config [--<scope>] --get <key>` — the trimmed value, or `Option.none`
    * when the key is unset.
    *
-   * @remarks
+   * **Details**
+   *
    * With no `scope` this reads the MERGED configuration, so a globally set key
    * answers here even when this repository declares nothing. Pass
    * `{ scope: "local" }` to ask what this checkout itself declares — see
@@ -4152,7 +4175,8 @@ export interface GitShape {
    * both dates, its author identity and the paths it touched. The full argv,
    * flag by flag, is on `GitCommand.log`.
    *
-   * @remarks
+   * **Details**
+   *
    * Scoped by `paths` (a git pathspec, relative to `cwd`) and, with
    * `follow: true`, walked ACROSS renames — git's `--follow`, which requires
    * exactly one path and is refused pre-spawn as a `"refused"`
@@ -4427,7 +4451,8 @@ export interface GitShape {
    * in scope (or in `options.file` only) as {@link ConfigListEntry} values.
    * `-z` keeps multi-line values lossless.
    *
-   * @remarks
+   * **Gotchas**
+   *
    * **With no `scope`, this reads the MERGED configuration** — repository-local
    * plus global plus system. That is right for "what is the effective value"
    * and wrong for "what does this checkout declare": a globally set key
@@ -4620,7 +4645,8 @@ const notStubbed = (method: string) => () =>
  * sparse-checkout, config writes and staging — that changes it. Every
  * mutating method's TSDoc opens with the literal word `Mutating:`.
  *
- * @remarks
+ * **Details**
+ *
  * Every method takes `cwd` explicitly and classifies git's stderr/exit-code
  * taxonomy exactly once, in this module's private `classify` step — a
  * spawn-level `PlatformError` and `Cause.TimeoutError` never escape a `Git`
@@ -4656,7 +4682,8 @@ const notStubbed = (method: string) => () =>
  * paths, remote names — never config values and never URLs, which can embed
  * userinfo.
  *
- * @example
+ * **Example** (Read the repository root, current branch, and changed files)
+ *
  * ```ts
  * import { Git } from "./index.ts";
  * import { NodeServices } from "@effect/platform-node";
@@ -4716,7 +4743,8 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
    * An in-memory test double of the service shape: stub only the methods the
    * test exercises, every other method **dies** with a defect naming itself.
    *
-   * @remarks
+   * **Gotchas**
+   *
    * Unlike `WorkspaceDiscovery.makeTest`, **no method here has an honest
    * default** — the shape is unrelated git operations, and a
    * fabricated answer for any of them (an empty tree, a made-up sha, a silent
@@ -4734,7 +4762,8 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
    * what it is told and nothing else. A suite exercising any of those wants
    * `Git.layer` over a mocked `ChildProcessSpawner` (or real git) instead.
    *
-   * @example
+   * **Example** (Stub file contents with a Git test double)
+   *
    * ```ts
    * import { Git } from "./index.ts";
    * import * as Effect from "effect/Effect";
@@ -4829,12 +4858,14 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
    * The test layer: {@link Git.makeTest} behind `Layer.succeed`, so a suite
    * provides only the methods it exercises.
    *
-   * @remarks
+   * **Gotchas**
+   *
    * A parameterized layer factory mints a **fresh reference per call**, and
    * layers memoize by reference — bind the result to a `const` and reuse it
    * rather than calling `layerTest(...)` at each composition site.
    *
-   * @example
+   * **Example** (Provide a Git test layer with a stubbed tree listing)
+   *
    * ```ts
    * import { Git, LsTreeEntry } from "./index.ts";
    * import * as Effect from "effect/Effect";

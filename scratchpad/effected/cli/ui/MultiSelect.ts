@@ -63,7 +63,8 @@ export interface MultiSelectSection<A> {
  * Where a {@link MultiSelect} is: its sections, which items are selected, the viewport over the items, and whether
  * it was submitted.
  *
- * @remarks
+ * **Details**
+ *
  * Items are numbered across sections in order, section by section; `chosen` holds those numbers.
  *
  * @public
@@ -196,13 +197,15 @@ const RESERVED = 3;
 /**
  * Several choices from sectioned lists: a pure reducer, its key table, a view and a ready-made screen.
  *
+ * **Details**
+ *
  * Item keys must be unique across all sections; `init` throws, and `screen` dies, on a repeat.
  *
- * @remarks
  * The cursor moves over items only; section titles are headers drawn by the viewport, which keeps a scrolled-off
  * header visible. Submitting with nothing selected resolves an empty list, which is a result, not a cancel.
  *
- * @example
+ * **Example** (Select features from a sectioned list)
+ *
  * ```ts
  * import { CliUi, MultiSelect } from "../ui.ts"
  * import * as Effect from "effect/Effect";
@@ -263,15 +266,16 @@ export class MultiSelect {
 	static readonly keys: KeyTable<MultiSelectAction> = KEYS;
 
 	/**
-	 * Draw the multi-select: the message, the sections (each item a check glyph, `◉`/`◯` or `[x]`/`[ ]` under ASCII,
-	 * then its label cut to the width; the highlighted one in the accent token with the arrow glyph), the highlighted
-	 * item's detail, and the key help. Enter calls `onSubmit` with the selected values; `q` cancels with `"escape"`.
-	 *
-	 * @remarks
-	 * Single-shot, like `Select.View`: the sections are read once at mount.
-	 *
-	 * @param props - the message, the sections, and where the selection goes
-	 */
+  * Draw the multi-select: the message, the sections (each item a check glyph, `◉`/`◯` or `[x]`/`[ ]` under ASCII,
+  * then its label cut to the width; the highlighted one in the accent token with the arrow glyph), the highlighted
+  * item's detail, and the key help. Enter calls `onSubmit` with the selected values; `q` cancels with `"escape"`.
+  *
+  * **Details**
+  *
+  * Single-shot, like `Select.View`: the sections are read once at mount.
+  *
+  * @param props - the message, the sections, and where the selection goes
+  */
 	static readonly View = <A>(props: MultiSelectViewProps<A>): ReactElement => {
 		const { ink, react } = inkModules();
 		const glyphs = useGlyphs();

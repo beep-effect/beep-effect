@@ -20,7 +20,8 @@ import * as O from "@beep/utils/Option";
  * The protocol an error class implements to say how a failure is shown: a method under this key that returns the
  * document.
  *
- * @remarks
+ * **Details**
+ *
  * `CliFailure.toDoc` calls it for a typed failure that has one, so an application error draws itself (a heading, a
  * table of what went wrong) and the default report uses it with no registration. A `Symbol.for` key, so two copies
  * of this package agree on it.
@@ -60,21 +61,22 @@ export interface CliFailureOptions {
 	 */
 	readonly stackFrames?: "app" | "all" | undefined;
 	/**
-	 * Which spans the `in: outer › inner` trail after a failure names. `app`, the default, leaves out the spans the kit
-	 * and Effect define themselves: a span whose definition site (an `Effect.fn`'s, or where the span was opened) is a
-	 * file under `node_modules/@effected/` or `node_modules/effect/`. A config that fails to decode under
-	 * `@effected/config-file` then reports no `ConfigFile.loadFrom` trail, while the program's own spans stay. `all`
-	 * shows every span, and `off` drops the trail. Under either, an `Effect.fn` call and its definition are one entry,
-	 * `name`, never `name (definition) › name`.
-	 *
-	 * @remarks
-	 * The rule reads file paths, never span names, and it fails open: when it cannot tell, it shows the span. A span
-	 * with no captured stack is kept. A kit package linked into a workspace (`link:`, `workspace:`) runs from its own
-	 * checkout rather than from `node_modules`, so its spans show as the program's. A bundled program is one file, so
-	 * `app` shows what `all` does, unless the bundle is itself installed under `node_modules/@effected/`. A program that
-	 * is installed under `node_modules/@effected/` (a kit companion's bin) names itself with `appModule`, or its own
-	 * spans are left out with the kit's.
-	 */
+  * Which spans the `in: outer › inner` trail after a failure names. `app`, the default, leaves out the spans the kit
+  * and Effect define themselves: a span whose definition site (an `Effect.fn`'s, or where the span was opened) is a
+  * file under `node_modules/@effected/` or `node_modules/effect/`. A config that fails to decode under
+  * `@effected/config-file` then reports no `ConfigFile.loadFrom` trail, while the program's own spans stay. `all`
+  * shows every span, and `off` drops the trail. Under either, an `Effect.fn` call and its definition are one entry,
+  * `name`, never `name (definition) › name`.
+  *
+  * **Gotchas**
+  *
+  * The rule reads file paths, never span names, and it fails open: when it cannot tell, it shows the span. A span
+  * with no captured stack is kept. A kit package linked into a workspace (`link:`, `workspace:`) runs from its own
+  * checkout rather than from `node_modules`, so its spans show as the program's. A bundled program is one file, so
+  * `app` shows what `all` does, unless the bundle is itself installed under `node_modules/@effected/`. A program that
+  * is installed under `node_modules/@effected/` (a kit companion's bin) names itself with `appModule`, or its own
+  * spans are left out with the kit's.
+  */
 	readonly spans?: "app" | "all" | "off" | undefined;
 	/**
 	 * A module of the running program itself, as a `file:` URL or an absolute path: its bin's `import.meta.url`. With
@@ -384,7 +386,8 @@ const spanBlocks = (
 /**
  * A failure as a document: what the default report prints, and a building block for a custom one.
  *
- * @remarks
+ * **Details**
+ *
  * One run of blocks per `Cause` reason. A typed failure is, in order of preference: the document of an error that
  * implements {@link CliDoc}; the document `options.render` holds for its `_tag`; for `Cancelled` and
  * `NotInteractive`, their one fixed line; a `Tree` of the rejected values, for a schema error or issue; else a failure

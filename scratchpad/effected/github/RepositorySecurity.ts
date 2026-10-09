@@ -41,7 +41,8 @@ export interface RepositorySecurityShape {
  * Read and toggle Dependabot alerts, Dependabot security fixes and private
  * vulnerability reporting.
  *
- * @remarks
+ * **Details**
+ *
  * These are **not** `security_and_analysis` fields and cannot ride along on the
  * settings `PATCH`. Each is its own pair of endpoints where **the HTTP verb is
  * the value**, which is why every setter branches on `enabled` rather than
@@ -65,7 +66,8 @@ export interface RepositorySecurityShape {
  * Provide it with {@link RepositorySecurity.layer}, which needs a
  * `GitHubClient`; each method also needs a `Repo` in `R`.
  *
- * @example
+ * **Example** (Enable vulnerability alerts and private vulnerability reporting)
+ *
  * ```ts
  * import { RepositorySecurity } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -86,7 +88,8 @@ export class RepositorySecurity extends Context.Service<RepositorySecurity, Repo
   /**
    * The live service, built over a `GitHubClient`.
    *
-   * @remarks
+   * **Gotchas**
+   *
    * `(client) => make(client)` rather than `make`: a static initializer runs
    * while the module body is still evaluating, so naming a `const` declared
    * further down throws at import time with a clean typecheck.

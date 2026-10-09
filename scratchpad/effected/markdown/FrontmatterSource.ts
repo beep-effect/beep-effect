@@ -39,7 +39,8 @@ export type FrontmatterNewline = typeof FrontmatterNewline.Type;
  * A frontmatter block at string level: the format its fence declared, the
  * exact bytes between the fence lines, and the fence lines' terminator.
  *
- * @remarks
+ * **Details**
+ *
  * `value` is the exact source slice strictly between the opening fence line
  * (its terminator included) and the closing fence line: every value line
  * WITH its own terminator, verbatim — so a block whose value is one blank
@@ -67,7 +68,8 @@ export class FrontmatterSourceBlock extends S.Class<FrontmatterSourceBlock>($I`F
  * The result of {@link FrontmatterSource.split}: the frontmatter block when
  * one exists, the exact body remainder, and the body's byte offset.
  *
- * @remarks
+ * **Details**
+ *
  * `body` is exactly `source.slice(bodyOffset)` — the string and the offset
  * can never disagree. With no block, `body` is the whole source and
  * `bodyOffset` is `0`. With a block, `bodyOffset` sits immediately after
@@ -112,40 +114,42 @@ export class FrontmatterSource {
 	private constructor() {}
 
 	/**
-	 * Split raw source into its frontmatter block and body, at string level.
-	 * Total: never fails, never parses — absence of a block (including an
-	 * opening fence with no closing fence, which per the grammar is not
-	 * frontmatter) is a representable result, not an error.
-	 *
-	 * @remarks
-	 * The grammar is the parser's own offset-0 pre-scan, over raw bytes:
-	 * the fence set is closed (`---` yaml, `+++` toml, `---json` json), a
-	 * fence line is exactly the fence with no surrounding whitespace, and a
-	 * leading BOM means offset 0 is not a fence — strip one before calling
-	 * if the source may carry it. Unlike the parse path there is no capture
-	 * toggle here, so absence is one fact: the source has no closed block.
-	 * (`MarkdownDocument`'s two-reason absence exists because parsing can be
-	 * asked not to look; this surface always looks.)
-	 *
-	 * Byte exactness: `source.slice(0, result.bodyOffset) + result.body`
-	 * reassembles `source` exactly, and {@link FrontmatterSource.join}
-	 * reproduces the original bytes for an unmodified round-trip — see
-	 * `join` for the two normalizations at the contract's edge.
-	 *
-	 * @example
-	 * ```ts
-	 * import { FrontmatterSource } from "./index.ts";
-	 *
-	 * const split = FrontmatterSource.split("---\ntitle: hi\n---\n\n# Body\n");
-	 * console.log(split.frontmatter?.format); // => "yaml"
-	 * console.log(split.frontmatter?.value); // => "title: hi\n"
-	 * console.log(split.body); // => "\n# Body\n"
-	 * ```
-	 *
-	 * @param source - The raw document source, body format irrelevant.
-	 * @returns A {@link FrontmatterSourceSplit}; `frontmatter` is absent when
-	 *   the source opens with no closed fence block.
-	 */
+  * Split raw source into its frontmatter block and body, at string level.
+  * Total: never fails, never parses — absence of a block (including an
+  * opening fence with no closing fence, which per the grammar is not
+  * frontmatter) is a representable result, not an error.
+  *
+  * **Details**
+  *
+  * The grammar is the parser's own offset-0 pre-scan, over raw bytes:
+  * the fence set is closed (`---` yaml, `+++` toml, `---json` json), a
+  * fence line is exactly the fence with no surrounding whitespace, and a
+  * leading BOM means offset 0 is not a fence — strip one before calling
+  * if the source may carry it. Unlike the parse path there is no capture
+  * toggle here, so absence is one fact: the source has no closed block.
+  * (`MarkdownDocument`'s two-reason absence exists because parsing can be
+  * asked not to look; this surface always looks.)
+  *
+  * Byte exactness: `source.slice(0, result.bodyOffset) + result.body`
+  * reassembles `source` exactly, and {@link FrontmatterSource.join}
+  * reproduces the original bytes for an unmodified round-trip — see
+  * `join` for the two normalizations at the contract's edge.
+  *
+  * **Example** (Split YAML frontmatter from the document body)
+  *
+  * ```ts
+  * import { FrontmatterSource } from "./index.ts";
+  *
+  * const split = FrontmatterSource.split("---\ntitle: hi\n---\n\n# Body\n");
+  * console.log(split.frontmatter?.format); // => "yaml"
+  * console.log(split.frontmatter?.value); // => "title: hi\n"
+  * console.log(split.body); // => "\n# Body\n"
+  * ```
+  *
+  * @param source - The raw document source, body format irrelevant.
+  * @returns A {@link FrontmatterSourceSplit}; `frontmatter` is absent when
+  *   the source opens with no closed fence block.
+  */
 	static split(source: string): FrontmatterSourceSplit {
 		const capture = scanRawFrontmatter(source);
 		if (capture === null) {
@@ -163,28 +167,29 @@ export class FrontmatterSource {
 	}
 
 	/**
-	 * Serialize a split back to one source string. Total and pure.
-	 *
-	 * @remarks
-	 * With no block the body is returned verbatim. With a block the output
-	 * is the opening fence, `newline` (default `"\n"`), the value — a
-	 * non-empty value missing a final line terminator gets `newline`
-	 * appended, so the closing fence always starts its own line — the
-	 * closing fence, `newline`, then the body verbatim.
-	 *
-	 * **Round-trip contract:** `join(split(source)) === source`, byte for
-	 * byte, for every source whose closing fence line ends with a line
-	 * terminator matching the opening fence's. The two edges where join
-	 * normalizes instead: a closing fence at end-of-document gains a final
-	 * `newline` (the block's one unterminated spelling), and fence lines
-	 * with MISMATCHED terminators (say `---\r\n … ---\n`) re-emit both with
-	 * the opening one. Value and body bytes survive verbatim in every case.
-	 *
-	 * @param split - The parts to serialize, typically from
-	 *   {@link FrontmatterSource.split} or built with
-	 *   `FrontmatterSourceSplit.make`.
-	 * @returns The combined source string.
-	 */
+  * Serialize a split back to one source string. Total and pure.
+  *
+  * **Details**
+  *
+  * With no block the body is returned verbatim. With a block the output
+  * is the opening fence, `newline` (default `"\n"`), the value — a
+  * non-empty value missing a final line terminator gets `newline`
+  * appended, so the closing fence always starts its own line — the
+  * closing fence, `newline`, then the body verbatim.
+  *
+  * **Round-trip contract:** `join(split(source)) === source`, byte for
+  * byte, for every source whose closing fence line ends with a line
+  * terminator matching the opening fence's. The two edges where join
+  * normalizes instead: a closing fence at end-of-document gains a final
+  * `newline` (the block's one unterminated spelling), and fence lines
+  * with MISMATCHED terminators (say `---\r\n … ---\n`) re-emit both with
+  * the opening one. Value and body bytes survive verbatim in every case.
+  *
+  * @param split - The parts to serialize, typically from
+  *   {@link FrontmatterSource.split} or built with
+  *   `FrontmatterSourceSplit.make`.
+  * @returns The combined source string.
+  */
 	static join(split: FrontmatterSourceSplit): string {
 		const block = split.frontmatter;
 		if (block === undefined) {

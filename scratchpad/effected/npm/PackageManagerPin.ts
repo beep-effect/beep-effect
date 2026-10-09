@@ -66,7 +66,8 @@ export class InvalidPackageManagerPinError extends S.TaggedError<InvalidPackageM
 /**
  * The four package managers a corepack pin can name.
  *
- * @remarks
+ * **Details**
+ *
  * Structurally identical to `@effected/workspaces`' `PackageManagerName` and
  * `@effected/commands`' `Launcher`, and assigns freely to both. It is
  * deliberately a mirror, not an import: either edge would point from this
@@ -121,6 +122,8 @@ const pinVersion = SemVer.pipe(
  * A corepack package-manager pin: the `<name>@<version>[+<integrity>]` triple
  * (e.g. `pnpm@11.17.0+sha512.abc…`), independent of any `package.json` field.
  *
+ * **Details**
+ *
  * `version` is an exact `@effected/semver` `SemVer` — prerelease versions are
  * pinnable (`pnpm@10.0.0-rc.1` is a valid pin), ranges, partial versions and
  * dist-tags are not, and build metadata is impossible by grammar: the first
@@ -136,7 +139,8 @@ const pinVersion = SemVer.pipe(
  * `reason: "integrity"`. Build-metadata-carrying versions are not pinnable by
  * design; the `+` position is spoken for.
  *
- * @example
+ * **Example** (Parse a pnpm pin with corepack integrity)
+ *
  * ```ts
  * import { PackageManagerPin } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -191,31 +195,32 @@ export class PackageManagerPin extends S.Class<PackageManagerPin>($I`PackageMana
 	);
 
 	/**
-	 * Parse a corepack pin string, synchronously, returning a `Result` instead
-	 * of an `Effect`.
-	 *
-	 * The first `+` after the version always begins the integrity component: a
-	 * pin's version never carries semver build metadata, and a malformed tail
-	 * after a `+` fails with `reason: "integrity"` rather than falling back to
-	 * build-metadata parsing — `pnpm@10.20.0+deadbeef`, whose tail is valid
-	 * semver build metadata but not a corepack `<algo>.<hex>` hash, is
-	 * intentionally not pinnable. Prerelease versions are accepted; ranges
-	 * (`^9.0.0`), partial versions (`9`, `9.1`), dist-tags (`latest`,
-	 * `berry`) and padded versions (`pnpm@ 11.17.0` — the version substring is
-	 * ruled on by `@effected/semver`'s `SemVer.isPinnable`, which rejects
-	 * surrounding whitespace) fail with `reason: "version"`.
-	 *
-	 * @remarks
-	 * {@link PackageManagerPin.parse} is defined in terms of this function; the
-	 * two never diverge. Reach for the `Effect` variant inside Effect code — it
-	 * carries the `PackageManagerPin.parse` tracing span — and for this one at
-	 * synchronous boundaries.
-	 *
-	 * @param input - the pin string to parse
-	 * @returns a `Result` succeeding with the parsed {@link PackageManagerPin},
-	 * or failing with {@link InvalidPackageManagerPinError} when `input` is not
-	 * a valid pin.
-	 */
+  * Parse a corepack pin string, synchronously, returning a `Result` instead
+  * of an `Effect`.
+  *
+  * **Details**
+  *
+  * The first `+` after the version always begins the integrity component: a
+  * pin's version never carries semver build metadata, and a malformed tail
+  * after a `+` fails with `reason: "integrity"` rather than falling back to
+  * build-metadata parsing — `pnpm@10.20.0+deadbeef`, whose tail is valid
+  * semver build metadata but not a corepack `<algo>.<hex>` hash, is
+  * intentionally not pinnable. Prerelease versions are accepted; ranges
+  * (`^9.0.0`), partial versions (`9`, `9.1`), dist-tags (`latest`,
+  * `berry`) and padded versions (`pnpm@ 11.17.0` — the version substring is
+  * ruled on by `@effected/semver`'s `SemVer.isPinnable`, which rejects
+  * surrounding whitespace) fail with `reason: "version"`.
+  *
+  * {@link PackageManagerPin.parse} is defined in terms of this function; the
+  * two never diverge. Reach for the `Effect` variant inside Effect code — it
+  * carries the `PackageManagerPin.parse` tracing span — and for this one at
+  * synchronous boundaries.
+  *
+  * @param input - the pin string to parse
+  * @returns a `Result` succeeding with the parsed {@link PackageManagerPin},
+  * or failing with {@link InvalidPackageManagerPinError} when `input` is not
+  * a valid pin.
+  */
 	static parseResult(input: string): Result.Result<PackageManagerPin, InvalidPackageManagerPinError> {
 		const at = O.getOrElse(Str.indexOf("@")(input), () => -1);
 		if (at === -1) {

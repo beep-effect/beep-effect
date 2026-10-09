@@ -8,7 +8,8 @@ import * as P from "effect/Predicate";
  * Run `program` so a help document printed together with parse errors goes to
  * stderr, beside the errors, instead of stdout.
  *
- * @remarks
+ * **Details**
+ *
  * Core's `Command.runWith` prints a usage error as `Console.log(help)` then
  * `Console.error(errors)`, and an explicit `--help` or a bare group
  * invocation as the same `Console.log(help)` with nothing after it. The two

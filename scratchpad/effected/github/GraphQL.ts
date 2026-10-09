@@ -24,7 +24,8 @@ export class GraphQLErrorEntry extends S.Class<GraphQLErrorEntry>($I`GraphQLErro
 /**
  * A GraphQL call failed.
  *
- * @remarks
+ * **Details**
+ *
  * Separate from `GitHubError` because GraphQL genuinely answers differently:
  * a 200 response can still carry failures, and it carries a **list** of them.
  * `errors` carries every entry GitHub reported, in order.
@@ -35,7 +36,8 @@ export class GitHubGraphQLError extends S.TaggedError<GitHubGraphQLError>($I`Git
   /**
    * Structural routing, mirroring `GitHubError`'s.
    *
-   * @remarks
+   * **Details**
+   *
    * `"alreadyExists"` exists here for the same reason it exists on the REST
    * error: it lets a caller make a create idempotent without lowercasing the
    * message and grepping it.
@@ -83,7 +85,8 @@ export class GitHubGraphQLError extends S.TaggedError<GitHubGraphQLError>($I`Git
   /**
    * Classify anything the GraphQL transport threw.
    *
-   * @remarks
+   * **Details**
+   *
    * octokit surfaces two different failures here: a `GraphqlResponseError`,
    * which is an HTTP 200 whose body carries `errors`, and an ordinary HTTP
    * failure with a `status`. Both arrive as throwables and both are read
@@ -159,7 +162,8 @@ const classify = (
 /**
  * A named GraphQL document, its variables, and how to read its answer.
  *
- * @remarks
+ * **Details**
+ *
  * This is the mechanism that makes `client.graphql` return a **domain value**
  * rather than an `unknown` the caller casts: the response schema ties the
  * query to its decoded type.
@@ -168,7 +172,8 @@ const classify = (
  * domain of its own (GitHub Projects, say) builds its own `GraphQLDocument` and
  * gets the same typing and the same error taxonomy.
  *
- * @example
+ * **Example** (Query an owner login with a typed GraphQL document)
+ *
  * ```ts
  * import { GitHubClient, GraphQLDocument } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -199,7 +204,8 @@ export class GraphQLDocument<A, V extends Record<string, unknown>> {
   /**
    * Turns the caller's variables into the wire object.
    *
-   * @remarks
+   * **Details**
+   *
    * Identity by default. It exists so `V` is genuinely load-bearing: without
    * a member mentioning it, TypeScript's structural typing would make
    * documents with different variable shapes interchangeable and the
@@ -217,7 +223,8 @@ export class GraphQLDocument<A, V extends Record<string, unknown>> {
     /**
      * Turns the caller's variables into the wire object.
      *
-     * @remarks
+     * **Details**
+     *
      * Identity by default. It exists so `V` is genuinely load-bearing: without
      * a member mentioning it, TypeScript's structural typing would make
      * documents with different variable shapes interchangeable and the
@@ -234,7 +241,8 @@ export class GraphQLDocument<A, V extends Record<string, unknown>> {
   /**
    * Build a document from a response schema.
    *
-   * @remarks
+   * **Details**
+   *
    * Curried, because `A` is inferred from `response` while `V` is stated:
    * TypeScript takes explicit type arguments all-or-nothing, so a single call
    * would force the caller to spell out the decoded type as well.

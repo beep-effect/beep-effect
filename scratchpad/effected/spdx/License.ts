@@ -16,13 +16,15 @@ const $I = $ScratchpadId.create("effected/spdx/License");
  * unrecognized license or exception identifier, or a malformed
  * `LicenseRef-`/`DocumentRef-` reference.
  *
+ * **Details**
+ *
  * This is the package's single typed error. Both malformed grammar and an
  * unknown identifier fail through it on the `E` channel — never as a defect.
  * {@link License.parse} and
  * `LicenseException.parse` raise it, and the recursive expression parser reuses
  * it for the whole grammar.
  *
- * @see {@link https://spdx.github.io/spdx-spec/v2.3/SPDX-license-expressions/ | SPDX License Expressions}
+ * @see {@link https://spdx.github.io/spdx-spec/v2.3/SPDX-license-expressions/ | SPDX License Expressions} for the SPDX expression grammar
  * @public
  */
 export class InvalidSpdxExpressionError extends S.TaggedError<InvalidSpdxExpressionError>($I`InvalidSpdxExpressionError`)(
@@ -65,6 +67,8 @@ const isLicenseRefId = S.is(LicenseRefId);
  * `LicenseRef-`/`DocumentRef-` reference. The class doubles as its own schema —
  * there is no `*Schema` suffix.
  *
+ * **Details**
+ *
  * This is the catalog-level model: it validates and resolves an identifier and
  * owns the static catalog and predicates. It is deliberately distinct from the
  * expression AST's simple-license leaf ({@link LicenseNode}): the trailing `+`
@@ -75,7 +79,8 @@ const isLicenseRefId = S.is(LicenseRefId);
  * (Effect) or {@link License.parseResult} (the synchronous `Result` primitive);
  * the inherited `make` remains the field-level struct constructor.
  *
- * @example
+ * **Example** (Parse a license identifier and inspect its deprecation flag)
+ *
  * ```ts
  * import { License } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -89,7 +94,7 @@ const isLicenseRefId = S.is(LicenseRefId);
  * // => ["MIT", false]
  * ```
  *
- * @see {@link https://spdx.org/licenses/ | SPDX License List}
+ * @see {@link https://spdx.org/licenses/ | SPDX License List} for the catalog of SPDX license identifiers
  * @public
  */
 export class License extends S.Class<License>($I`License`)({
@@ -149,21 +154,22 @@ export class License extends S.Class<License>($I`License`)({
 	// ── Construction ────────────────────────────────────────────────────
 
 	/**
-	 * Validate a license identifier synchronously, returning a `Result`. The
-	 * `id` is accepted when it is a catalog member (active or deprecated) or a
-	 * well-formed `LicenseRef`/`DocumentRef` reference; anything else fails with
-	 * {@link InvalidSpdxExpressionError}.
-	 *
-	 * @remarks
-	 * {@link License.parse} is defined in terms of this function; the two never
-	 * diverge. Reach for the `Effect` variant inside Effect code — it carries
-	 * the `License.parse` tracing span — and for this one at synchronous
-	 * boundaries.
-	 *
-	 * @param id - the license identifier to validate
-	 * @returns a `Result` succeeding with the resolved {@link License}, or
-	 * failing with {@link InvalidSpdxExpressionError}.
-	 */
+  * Validate a license identifier synchronously, returning a `Result`. The
+  * `id` is accepted when it is a catalog member (active or deprecated) or a
+  * well-formed `LicenseRef`/`DocumentRef` reference; anything else fails with
+  * {@link InvalidSpdxExpressionError}.
+  *
+  * **Details**
+  *
+  * {@link License.parse} is defined in terms of this function; the two never
+  * diverge. Reach for the `Effect` variant inside Effect code — it carries
+  * the `License.parse` tracing span — and for this one at synchronous
+  * boundaries.
+  *
+  * @param id - the license identifier to validate
+  * @returns a `Result` succeeding with the resolved {@link License}, or
+  * failing with {@link InvalidSpdxExpressionError}.
+  */
 	static parseResult(id: string): Result.Result<License, InvalidSpdxExpressionError> {
 		const known = HashMap.get(License.catalog, id);
 		if (O.isSome(known)) return Result.succeed(known.value);
@@ -203,26 +209,29 @@ export class License extends S.Class<License>($I`License`)({
 	// ── Catalog metadata ────────────────────────────────────────────────
 
 	/**
-	 * The canonical SPDX web page for this license — for example
-	 * `https://spdx.org/licenses/MIT.html` — or `Option.none()` when `id` is not
-	 * a catalog member.
-	 *
-	 * A `LicenseRef-`/`DocumentRef-` reference names a license that lives in the
-	 * consuming document, not on spdx.org, and so has no page; the same holds
-	 * for an id this catalog does not know. `None` is the honest answer there —
-	 * templating the URL anyway would hand callers a confidently broken link.
-	 *
-	 * @example
-	 * ```ts
-	 * import { License } from "./index.ts";
-	 * import * as O from "effect/Option";
-	 *
-	 * console.log(O.getOrNull(License.of("MIT").referenceUrl));
-	 * // => "https://spdx.org/licenses/MIT.html"
-	 * console.log(O.getOrNull(License.of("LicenseRef-Acme").referenceUrl));
-	 * // => null
-	 * ```
-	 */
+  * The canonical SPDX web page for this license — for example
+  * `https://spdx.org/licenses/MIT.html` — or `Option.none()` when `id` is not
+  * a catalog member.
+  *
+  * **Details**
+  *
+  * A `LicenseRef-`/`DocumentRef-` reference names a license that lives in the
+  * consuming document, not on spdx.org, and so has no page; the same holds
+  * for an id this catalog does not know. `None` is the honest answer there —
+  * templating the URL anyway would hand callers a confidently broken link.
+  *
+  * **Example** (Look up a catalog license URL and handle a custom reference)
+  *
+  * ```ts
+  * import { License } from "./index.ts";
+  * import * as O from "effect/Option";
+  *
+  * console.log(O.getOrNull(License.of("MIT").referenceUrl));
+  * // => "https://spdx.org/licenses/MIT.html"
+  * console.log(O.getOrNull(License.of("LicenseRef-Acme").referenceUrl));
+  * // => null
+  * ```
+  */
 	get referenceUrl(): O.Option<string> {
 		// Templated rather than vendored: every upstream entry's `reference` is
 		// exactly this form, and lib/scripts/generate-data.ts asserts that for every
@@ -249,14 +258,15 @@ export class License extends S.Class<License>($I`License`)({
 	}
 
 	/**
-	 * Whether the FSF lists this license as libre. `false` for a reference and
-	 * for any uncataloged id.
-	 *
-	 * @remarks
-	 * The FSF's list is much shorter than the OSI's and the two disagree in both
-	 * directions: `0BSD` is OSI-approved and not FSF-libre, `Apache-1.0` is
-	 * FSF-libre and not OSI-approved. Never derive one flag from the other.
-	 */
+  * Whether the FSF lists this license as libre. `false` for a reference and
+  * for any uncataloged id.
+  *
+  * **Gotchas**
+  *
+  * The FSF's list is much shorter than the OSI's and the two disagree in both
+  * directions: `0BSD` is OSI-approved and not FSF-libre, `Apache-1.0` is
+  * FSF-libre and not OSI-approved. Never derive one flag from the other.
+  */
 	get fsfLibre(): boolean {
 		return O.exists(HashMap.get(LICENSE_META, this.id), (meta) => (meta[2] & META_FLAG_FSF_LIBRE) !== 0);
 	}

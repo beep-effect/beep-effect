@@ -172,7 +172,8 @@ const decodeJson = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
  * tree, listing candidate packages — where the document is other people's
  * data and one malformed field must not fail the read.
  *
- * @remarks
+ * **Details**
+ *
  * **This is the discovery tier, not a validation bypass.** Every field shares
  * its name with the strict `Package` model, but is typed as its plain permissive JSON
  * shape: `name` and `version` are any string (a legacy uppercase name or a
@@ -199,7 +200,8 @@ const decodeJson = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
  * path; editing belongs to the strict tiers and to
  * `PackageJsonFormat.modifyToString` / `PackageJsonFile.modify`.
  *
- * @example
+ * **Example** (Recover malformed manifest fields with diagnostic issues)
+ *
  * ```ts
  * import { LenientManifest } from "./index.ts";
  * import * as Effect from "effect/Effect";

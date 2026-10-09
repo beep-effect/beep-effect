@@ -80,7 +80,8 @@ export type IssueReference = typeof IssueReference.Type;
 /**
  * The closing reference a bare line carries, per {@link parseBareLineReference}.
  *
- * @remarks
+ * **Details**
+ *
  * No offsets: in the bare-line dialect the whole line is the reference, so
  * positions within it locate nothing a caller acts on.
  *
@@ -123,7 +124,8 @@ const safeIssueNumber: (digits: string) => O.Option<number> = flow(Number, O.lif
 /**
  * Every inline closing reference in `text`, in document order.
  *
- * @remarks
+ * **Details**
+ *
  * The **inline-in-prose** dialect: case-insensitive `<keyword> #<number>`
  * anywhere in the text, whitespace mandatory, colon not accepted — a colon
  * spelling belongs to the bare-line dialect and {@link parseBareLineReference}.
@@ -134,7 +136,8 @@ const safeIssueNumber: (digits: string) => O.Option<number> = flow(Number, O.lif
  * misparsed. Cross-repo (`owner/repo#N`) and full-URL references are not
  * recognized.
  *
- * @example
+ * **Example** (Harvest inline closing references with offsets)
+ *
  * ```ts
  * import { harvestIssueReferences } from "./index.ts";
  *
@@ -167,7 +170,8 @@ export const harvestIssueReferences = (text: string): ReadonlyArray<IssueReferen
 /**
  * The reference a whole line carries, or `Option.none()`.
  *
- * @remarks
+ * **Details**
+ *
  * The **bare-line** dialect: after trimming, the entire line must be
  * `<keyword>[:] #<number>` — keyword case-insensitive, colon optional,
  * whitespace before the `#` mandatory. Trailing prose, a missing keyword, or
@@ -175,7 +179,8 @@ export const harvestIssueReferences = (text: string): ReadonlyArray<IssueReferen
  * one reference or none. Digits past `Number.MAX_SAFE_INTEGER` reject too,
  * for the same reason {@link harvestIssueReferences} skips them.
  *
- * @example
+ * **Example** (Parse a closing reference with an optional colon)
+ *
  * ```ts
  * import { parseBareLineReference } from "./index.ts";
  *
@@ -197,7 +202,8 @@ export const parseBareLineReference = (line: string): O.Option<BareLineReference
 /**
  * Every bare-line reference a whole text carries, one per line.
  *
- * @remarks
+ * **Details**
+ *
  * The per-line convenience over {@link parseBareLineReference}: split on
  * `"\n"` (the parser's own trim absorbs a `"\r"`, so CRLF input needs no
  * special case), parse each line, and collect the accepted references in

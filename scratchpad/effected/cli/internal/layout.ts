@@ -11,7 +11,8 @@ import * as O from "@beep/utils/Option";
 /**
  * A run of text with one style and one link: the unit a renderer lays out.
  *
- * @remarks
+ * **Details**
+ *
  * `text` is plain: flattening removes any escape sequence it carried. Spans that came from one `Link` inline share
  * the same `link` object, which is how painting wraps them in a single hyperlink.
  *
@@ -84,7 +85,8 @@ const spansOf = (inline: Inline, ctx: RenderContext): ReadonlyArray<Span> =>
 /**
  * Flatten inline nodes into spans.
  *
- * @remarks
+ * **Details**
+ *
  * A `Path` becomes its segments joined by the audience's separator (`›` with spaces around it for a person, ` > `
  * for an agent), a `StatusMark` its glyph from the context's glyph set painted with the definition's token, and a
  * `Code` its text with `code` set. Escape sequences in content and in link targets are removed and empty spans
@@ -101,7 +103,8 @@ export const flatten: {
 /**
  * The display width of spans in terminal columns.
  *
- * @remarks
+ * **Details**
+ *
  * Graphemes are measured within a span, deliberately: a cluster split across two spans (the two halves of a flag,
  * a joiner and the next emoji) counts as two characters, as it is laid out. Content does not split a cluster unless
  * the caller does.
@@ -140,7 +143,8 @@ const spansFromCells = (cells: ReadonlyArray<Cell>): ReadonlyArray<Span> => {
 /**
  * Cut spans to at most `width` columns, marking the cut with `ellipsis`.
  *
- * @remarks
+ * **Details**
+ *
  * Cuts on grapheme boundaries and before any painting, so a colour or hyperlink is never cut in half: the kept
  * text keeps its span's token and link, and the marker joins the last kept span (or follows a `Code` span as plain
  * text under the same link). When nothing but the marker fits, it takes the first span's token and link, as it
@@ -192,7 +196,8 @@ export const truncateSpans: {
 /**
  * Paint spans, then link them: the string a terminal shows.
  *
- * @remarks
+ * **Details**
+ *
  * Each span is painted with its token, and consecutive spans that share a link (by identity) are wrapped in one
  * hyperlink. Truncate and wrap first: painting is last, so an escape sequence is never cut.
  *
@@ -243,7 +248,8 @@ export interface WrapOptions {
 /**
  * Word-wrap spans to `width` columns.
  *
- * @remarks
+ * **Details**
+ *
  * Spaces are the break points, and the space at a break is dropped, as are trailing spaces; spaces inside a line,
  * and the indentation of the first line or one after a newline, are kept. A newline is a forced break. A word
  * longer than the width starts on a line of its own and is broken at the edge, never inside a grapheme, so a wide

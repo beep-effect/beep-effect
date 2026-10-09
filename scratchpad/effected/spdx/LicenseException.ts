@@ -16,6 +16,8 @@ const $I = $ScratchpadId.create("effected/spdx/LicenseException");
  * `id` is a member of the SPDX exception list. The class doubles as its own
  * schema.
  *
+ * **Details**
+ *
  * Unlike {@link License}, an exception has no reference grammar — an exception
  * identifier is valid only when it is a catalog member. Construction goes
  * through {@link LicenseException.parse} (Effect) or
@@ -23,7 +25,8 @@ const $I = $ScratchpadId.create("effected/spdx/LicenseException");
  * the inherited `make` remains the field-level struct constructor. Validation
  * failures reuse {@link InvalidSpdxExpressionError}, the package's single error.
  *
- * @example
+ * **Example** (Parse a license exception identifier)
+ *
  * ```ts
  * import { LicenseException } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -37,7 +40,7 @@ const $I = $ScratchpadId.create("effected/spdx/LicenseException");
  * // => "Classpath-exception-2.0"
  * ```
  *
- * @see {@link https://spdx.org/licenses/exceptions-index.html | SPDX Exceptions List}
+ * @see {@link https://spdx.org/licenses/exceptions-index.html | SPDX Exceptions List} for the catalog of SPDX license exceptions
  * @public
  */
 export class LicenseException extends S.Class<LicenseException>($I`LicenseException`)({
@@ -80,20 +83,21 @@ export class LicenseException extends S.Class<LicenseException>($I`LicenseExcept
 	// ── Construction ────────────────────────────────────────────────────
 
 	/**
-	 * Validate an exception identifier synchronously, returning a `Result`. The
-	 * `id` is accepted only when it is a catalog member (active or deprecated);
-	 * anything else fails with {@link InvalidSpdxExpressionError}.
-	 *
-	 * @remarks
-	 * {@link LicenseException.parse} is defined in terms of this function; the
-	 * two never diverge. Reach for the `Effect` variant inside Effect code — it
-	 * carries the `LicenseException.parse` tracing span — and for this one at
-	 * synchronous boundaries.
-	 *
-	 * @param id - the exception identifier to validate
-	 * @returns a `Result` succeeding with the resolved {@link LicenseException},
-	 * or failing with {@link InvalidSpdxExpressionError}.
-	 */
+  * Validate an exception identifier synchronously, returning a `Result`. The
+  * `id` is accepted only when it is a catalog member (active or deprecated);
+  * anything else fails with {@link InvalidSpdxExpressionError}.
+  *
+  * **Details**
+  *
+  * {@link LicenseException.parse} is defined in terms of this function; the
+  * two never diverge. Reach for the `Effect` variant inside Effect code — it
+  * carries the `LicenseException.parse` tracing span — and for this one at
+  * synchronous boundaries.
+  *
+  * @param id - the exception identifier to validate
+  * @returns a `Result` succeeding with the resolved {@link LicenseException},
+  * or failing with {@link InvalidSpdxExpressionError}.
+  */
 	static parseResult(id: string): Result.Result<LicenseException, InvalidSpdxExpressionError> {
 		const known = HashMap.get(LicenseException.catalog, id);
 		if (O.isSome(known)) return Result.succeed(known.value);

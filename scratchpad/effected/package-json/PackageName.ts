@@ -112,7 +112,8 @@ const PackageNameBase: Omit<S.Opaque<PackageName, typeof PackageNameUnion, {}>, 
  * the schema for a package-name field and reach for the statics to inspect a raw
  * string.
  *
- * @example
+ * **Example** (Validate and inspect a scoped package name)
+ *
  * ```ts
  * import { PackageName } from "./index.ts";
  *

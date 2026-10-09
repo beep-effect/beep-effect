@@ -48,6 +48,8 @@ export class YamlDirective extends S.Class<YamlDirective>($I`YamlDirective`)({
  * the {@link YamlDirective} list, the optional document-level comments and the
  * `---`/`...` framing flags (absent flags read as `false`).
  *
+ * **Details**
+ *
  * `commentBefore` is a header block sitting AHEAD of a `---` marker; `comment`
  * is the trailing block after the content or the `...` marker. A header with
  * no marker, or one after the marker, belongs to the content rather than the
@@ -57,7 +59,8 @@ export class YamlDirective extends S.Class<YamlDirective>($I`YamlDirective`)({
  * Construct via `YamlDocument.parse` / `parseAll`; `YamlDocument.make` is for
  * synthetic documents.
  *
- * @example
+ * **Example** (Parse a YAML document and inspect recovered errors)
+ *
  * ```ts
  * import { YamlDocument } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -162,29 +165,30 @@ export class YamlDocument extends S.Class<YamlDocument>($I`YamlDocument`)({
 	}
 
 	/**
-	 * Stringify this document (contents, directives and framing) as YAML.
-	 * Fails with {@link YamlStringifyError} on circular references introduced
-	 * into a synthetic AST (`CircularReference`) or on a synthetic AST nested
-	 * deeper than the stringifier's recursion budget (`NestingDepthExceeded`)
-	 * — both surface through the typed error channel rather than as an
-	 * unhandled stack-overflow defect.
-	 *
-	 * @remarks
-	 * `YamlStringifyOptions.lineWidth` is not honored here: column-based
-	 * scalar folding exists only on the value path, through the entry points
-	 * that accept stringify options ({@link Yaml.stringify} and
-	 * {@link Yaml.stringifyResult}). The
-	 * document/node path threads `lineWidth` into its render context but
-	 * never reads it, so long scalars are emitted unfolded regardless of the
-	 * option. Callers that need folding should render the plain value
-	 * instead — `Yaml.stringify(doc.toValue(), options)` — at the cost of
-	 * the document-level framing and styles this path preserves.
-	 *
-	 * @param options - Optional {@link YamlStringifyOptions}; defaults apply for
-	 *   omitted fields.
-	 * @returns An `Effect` that succeeds with the YAML text, or fails with
-	 *   {@link YamlStringifyError}.
-	 */
+  * Stringify this document (contents, directives and framing) as YAML.
+  * Fails with {@link YamlStringifyError} on circular references introduced
+  * into a synthetic AST (`CircularReference`) or on a synthetic AST nested
+  * deeper than the stringifier's recursion budget (`NestingDepthExceeded`)
+  * — both surface through the typed error channel rather than as an
+  * unhandled stack-overflow defect.
+  *
+  * **Gotchas**
+  *
+  * `YamlStringifyOptions.lineWidth` is not honored here: column-based
+  * scalar folding exists only on the value path, through the entry points
+  * that accept stringify options ({@link Yaml.stringify} and
+  * {@link Yaml.stringifyResult}). The
+  * document/node path threads `lineWidth` into its render context but
+  * never reads it, so long scalars are emitted unfolded regardless of the
+  * option. Callers that need folding should render the plain value
+  * instead — `Yaml.stringify(doc.toValue(), options)` — at the cost of
+  * the document-level framing and styles this path preserves.
+  *
+  * @param options - Optional {@link YamlStringifyOptions}; defaults apply for
+  *   omitted fields.
+  * @returns An `Effect` that succeeds with the YAML text, or fails with
+  *   {@link YamlStringifyError}.
+  */
 	stringify(options?: YamlStringifyOptions): Effect.Effect<string, YamlStringifyError> {
 		return Effect.try({
 			try: () => stringifyDocument(toRawDocument(this), toStringifyInput(options)),

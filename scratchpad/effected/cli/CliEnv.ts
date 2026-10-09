@@ -25,44 +25,47 @@ export interface CliEnvOptions {
 	/** The environment variable that overrides the audience, read through `Config`; see `Audience.layer`. */
 	readonly audienceEnvVar?: string | undefined;
 	/**
-	 * Overrides the stderr terminal check; `Stdio` reports only stdout, so stderr mirrors it otherwise.
-	 *
-	 * @remarks
-	 * Mirroring means a program whose stdout is a terminal but whose stderr is redirected to a file still paints
-	 * stderr (a failure report, a warning) with colour escapes. A Node host that redirects stderr passes the real
-	 * answer: `env: { stderrIsTerminal: Effect.sync(() => process.stderr.isTTY === true) }`. Core's `Stdio` has no
-	 * stderr terminal check to read instead; that gap is tracked upstream as Effect-TS/effect#8639.
-	 */
+  * Overrides the stderr terminal check; `Stdio` reports only stdout, so stderr mirrors it otherwise.
+  *
+  * **Gotchas**
+  *
+  * Mirroring means a program whose stdout is a terminal but whose stderr is redirected to a file still paints
+  * stderr (a failure report, a warning) with colour escapes. A Node host that redirects stderr passes the real
+  * answer: `env: { stderrIsTerminal: Effect.sync(() => process.stderr.isTTY === true) }`. Core's `Stdio` has no
+  * stderr terminal check to read instead; that gap is tracked upstream as Effect-TS/effect#8639.
+  */
 	readonly stderrIsTerminal?: Effect.Effect<boolean> | undefined;
 	/** Options for the theme; see {@link CliThemeOptions}. */
 	readonly theme?: CliThemeOptions | undefined;
 	/**
-	 * Diagnostics options. Only `CliRuntime.main` reads this: when given, `main` uses `CliLog.layer` with these
-	 * options as the program's logger, instead of the default `CliLogger.layer()`. The platform is built under
-	 * that logger, so a line it logs while building goes to stderr.
-	 *
-	 * @remarks
-	 * It may carry the `file` option, which also writes an async NDJSON file. The platform must then provide
-	 * `FileSystem` and `Path`, and `main`'s type says so when it does not.
-	 *
-	 * A platform or program that installs its own `Logger.layer([...])` replaces this logger set, and the
-	 * diagnostics go silent with no error: do not install one. See `CliLog.layer`. Only `CliLog`'s own records can be
-	 * silenced (`plainLogger: false`): what the platform logs while it builds goes through the full `CliLog` when its
-	 * build-time format is NDJSON (`json`, or `auto` for an agent or a CI; see `CliLogOptions.format`) and through a plain
-	 * `CliLogger` otherwise, routed by `logger.stderrFrom` as the host set it. The audience-override warning is never silenced: it is written exactly once, in NDJSON when
-	 * the build-time format is NDJSON and as a plain line otherwise, to stderr alone (never stdout, whatever
-	 * `logger.stderrFrom` says) and never to the host's `extraLoggers` or log file. The failure report and the `CliMessage` lines always
-	 * go through a plain `CliLogger`.
-	 */
+  * Diagnostics options. Only `CliRuntime.main` reads this: when given, `main` uses `CliLog.layer` with these
+  * options as the program's logger, instead of the default `CliLogger.layer()`. The platform is built under
+  * that logger, so a line it logs while building goes to stderr.
+  *
+  * **Details**
+  *
+  * It may carry the `file` option, which also writes an async NDJSON file. The platform must then provide
+  * `FileSystem` and `Path`, and `main`'s type says so when it does not.
+  *
+  * A platform or program that installs its own `Logger.layer([...])` replaces this logger set, and the
+  * diagnostics go silent with no error: do not install one. See `CliLog.layer`. Only `CliLog`'s own records can be
+  * silenced (`plainLogger: false`): what the platform logs while it builds goes through the full `CliLog` when its
+  * build-time format is NDJSON (`json`, or `auto` for an agent or a CI; see `CliLogOptions.format`) and through a plain
+  * `CliLogger` otherwise, routed by `logger.stderrFrom` as the host set it. The audience-override warning is never silenced: it is written exactly once, in NDJSON when
+  * the build-time format is NDJSON and as a plain line otherwise, to stderr alone (never stdout, whatever
+  * `logger.stderrFrom` says) and never to the host's `extraLoggers` or log file. The failure report and the `CliMessage` lines always
+  * go through a plain `CliLogger`.
+  */
 	readonly log?: CliLogOptions | CliLogFileOptions | undefined;
 	/**
-	 * Methods of core's `CliOutput.Formatter` to replace in the one `CliRuntime.main` installs, for example
-	 * `formatVersion` to name the carrier a bin runs through. Only `CliRuntime.main` reads this.
-	 *
-	 * @remarks
-	 * `main` installs a coloured default formatter inside the platform, which shadows any formatter the platform
-	 * sets; this is the way to keep a method of your own. Methods you omit keep the coloured defaults.
-	 */
+  * Methods of core's `CliOutput.Formatter` to replace in the one `CliRuntime.main` installs, for example
+  * `formatVersion` to name the carrier a bin runs through. Only `CliRuntime.main` reads this.
+  *
+  * **Details**
+  *
+  * `main` installs a coloured default formatter inside the platform, which shadows any formatter the platform
+  * sets; this is the way to keep a method of your own. Methods you omit keep the coloured defaults.
+  */
 	readonly formatter?: Partial<CliOutput.Formatter> | undefined;
 	/**
 	 * Turns an absolute path into its display form, for example relative to the workspace: the stack frames of the
@@ -145,7 +148,8 @@ export type CliEnvTestServices = TerminalEnv | Audience | CliTheme;
 /**
  * The environment services a CLI reads, built once and in the right order.
  *
- * @remarks
+ * **Details**
+ *
  * Builds `CurrentRuntimeEnv`, `TerminalEnv`, `Audience`, `CliTheme` and `CliLinks`, and sets `CliInteractive` from them, then
  * installs the two gates for the program: `CliPrompt.gateTerminal`, which replaces `Terminal` with a quiet one when
  * the run is not interactive so no prompt runner ever attaches to stdin, and `CliPrompt.gateWizard`, which drops
@@ -171,13 +175,14 @@ export class CliEnv {
 	private constructor() {}
 
 	/**
-	 * The environment services for the terminal `Stdio` and `Terminal` describe.
-	 *
-	 * @remarks
-	 * A layer-returning function mints a fresh layer per call: call it once and bind the result to a constant.
-	 *
-	 * @param options - the audience env var, the stderr check and the theme options
-	 */
+  * The environment services for the terminal `Stdio` and `Terminal` describe.
+  *
+  * **Gotchas**
+  *
+  * A layer-returning function mints a fresh layer per call: call it once and bind the result to a constant.
+  *
+  * @param options - the audience env var, the stderr check and the theme options
+  */
 	static readonly layer = (
 		options: CliEnvOptions = {},
 	): Layer.Layer<CliEnvServices, never, Stdio.Stdio | Terminal.Terminal> => {
@@ -208,21 +213,22 @@ export class CliEnv {
 	};
 
 	/**
-	 * The environment services a test fixes, needing nothing and reading nothing of the host's: `TerminalEnv` and
-	 * `Audience` from the answers given, `CliTheme` built from them as {@link CliEnv.layer} builds it, and
-	 * `CliInteractive` set from them by the same rule (a human, every stream a terminal, and a `TERM` that is not
-	 * `dumb`).
-	 *
-	 * @remarks
-	 * `term` is handed to the theme and interactivity builds alone, through a `ConfigProvider` of their own: the
-	 * program under the layer keeps its own provider, and a host's `TERM` (a test runner in a dumb terminal) never
-	 * decides. A screen or a live view also needs `UiStreams` from `@effected/cli/ui`, which `CliUiTest` provides; this
-	 * layer provides no `Terminal` and installs neither of `CliEnv.layer`'s prompt gates.
-	 *
-	 * A layer-returning function mints a fresh layer per call: call it once and bind the result to a constant.
-	 *
-	 * @param options - whether the streams are terminals, the `TERM`, the audience, the width, the colour and the theme
-	 */
+  * The environment services a test fixes, needing nothing and reading nothing of the host's: `TerminalEnv` and
+  * `Audience` from the answers given, `CliTheme` built from them as {@link CliEnv.layer} builds it, and
+  * `CliInteractive` set from them by the same rule (a human, every stream a terminal, and a `TERM` that is not
+  * `dumb`).
+  *
+  * **Details**
+  *
+  * `term` is handed to the theme and interactivity builds alone, through a `ConfigProvider` of their own: the
+  * program under the layer keeps its own provider, and a host's `TERM` (a test runner in a dumb terminal) never
+  * decides. A screen or a live view also needs `UiStreams` from `@effected/cli/ui`, which `CliUiTest` provides; this
+  * layer provides no `Terminal` and installs neither of `CliEnv.layer`'s prompt gates.
+  *
+  * A layer-returning function mints a fresh layer per call: call it once and bind the result to a constant.
+  *
+  * @param options - whether the streams are terminals, the `TERM`, the audience, the width, the colour and the theme
+  */
 	static readonly layerTest = (options: CliEnvTestOptions = {}): Layer.Layer<CliEnvTestServices> => {
 		const tty = options.tty ?? false;
 		const stream: Partial<StreamEnv> = {

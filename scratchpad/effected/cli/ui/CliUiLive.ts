@@ -103,26 +103,27 @@ export interface LiveOptions<E, S> {
 	 */
 	readonly mode?: "owned" | "hosted";
 	/**
-	 * The final frame of a run that is not interactive (an agent, CI, a pipe, `TERM=dumb`), as a document: given, an
-	 * `owned` view prints each run's `final(state)` at the run's end instead of rendering `render` to a string with Ink,
-	 * so such a run loads neither Ink nor React, nor a `CliUi.lazyView` module.
-	 *
-	 * @remarks
-	 * It is called once per run, at the run's terminal event (or when the events end mid-run), with the state then, and
-	 * replaces the string that run would have printed: never both. It is rendered as `Doc.print` renders a document:
-	 * `Render.context("stdout")` when the environment `CliRuntime.main` builds is there (`TerminalEnv`, `Audience` and
-	 * `CliLinks`; otherwise the stdout theme, the `Audience` if any, and no width limit), the renderer the audience gets
-	 * (`ansi` for a person, `plain` for an agent, `githubLog` under GitHub Actions), and an agent gets no escape. It is
-	 * written where the view writes, to `UiStreams` stdout, so a host's capture of the view's output holds it. A document
-	 * that renders to nothing prints nothing. A `final` that throws is the run degrading: one warning, nothing printed.
-	 *
-	 * An interactive run never calls it, and a `hosted` view never prints either way. It need not match the Ink frame:
-	 * it is what a reader with no terminal gets.
-	 *
-	 * With `final` set, `render` is never called on a run that is not interactive, not even to build a string that would
-	 * go unused: the run's output is `final(state)` alone. (Pinned by `CliUi.live.final.test.ts`, whose watch-mode test
-	 * counts zero `render` calls over three runs.)
-	 */
+  * The final frame of a run that is not interactive (an agent, CI, a pipe, `TERM=dumb`), as a document: given, an
+  * `owned` view prints each run's `final(state)` at the run's end instead of rendering `render` to a string with Ink,
+  * so such a run loads neither Ink nor React, nor a `CliUi.lazyView` module.
+  *
+  * **Details**
+  *
+  * It is called once per run, at the run's terminal event (or when the events end mid-run), with the state then, and
+  * replaces the string that run would have printed: never both. It is rendered as `Doc.print` renders a document:
+  * `Render.context("stdout")` when the environment `CliRuntime.main` builds is there (`TerminalEnv`, `Audience` and
+  * `CliLinks`; otherwise the stdout theme, the `Audience` if any, and no width limit), the renderer the audience gets
+  * (`ansi` for a person, `plain` for an agent, `githubLog` under GitHub Actions), and an agent gets no escape. It is
+  * written where the view writes, to `UiStreams` stdout, so a host's capture of the view's output holds it. A document
+  * that renders to nothing prints nothing. A `final` that throws is the run degrading: one warning, nothing printed.
+  *
+  * An interactive run never calls it, and a `hosted` view never prints either way. It need not match the Ink frame:
+  * it is what a reader with no terminal gets.
+  *
+  * With `final` set, `render` is never called on a run that is not interactive, not even to build a string that would
+  * go unused: the run's output is `final(state)` alone. (Pinned by `CliUi.live.final.test.ts`, whose watch-mode test
+  * counts zero `render` calls over three runs.)
+  */
 	readonly final?: ((state: S) => Cli.Document) | undefined;
 	/**
 	 * The frame tick, in milliseconds; 80 by default. While a run is drawn the view redraws on every tick, so a spinner

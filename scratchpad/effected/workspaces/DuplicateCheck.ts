@@ -32,23 +32,25 @@ const $I = $ScratchpadId.create("effected/workspaces/DuplicateCheck");
  */
 export interface DuplicateCheckOptions {
 	/**
-	 * Which package names to REPORT on. Defaults to every name.
-	 *
-	 * @remarks
-	 * The predicate narrows the report, never the walk: a package it rejects is
-	 * still followed and still appears as a dependent wherever it pulls a copy
-	 * of a package it accepts. Pruning the walk instead would drop exactly the
-	 * culprit a consumer needs named — the untouched third package holding the
-	 * stale copy. {@link DuplicateCheck.kit} is the predicate every consumer of
-	 * this kit wants.
-	 */
+  * Which package names to REPORT on. Defaults to every name.
+  *
+  * **Details**
+  *
+  * The predicate narrows the report, never the walk: a package it rejects is
+  * still followed and still appears as a dependent wherever it pulls a copy
+  * of a package it accepts. Pruning the walk instead would drop exactly the
+  * culprit a consumer needs named — the untouched third package holding the
+  * stale copy. {@link DuplicateCheck.kit} is the predicate every consumer of
+  * this kit wants.
+  */
 	readonly names?: (name: string) => boolean;
 }
 
 /**
  * Who pulls one resolved instance into the graph.
  *
- * @remarks
+ * **Details**
+ *
  * A tagged union a renderer narrows with `switch (dependent._tag)`:
  *
  * - `"importer"` — a workspace importer takes the instance directly; `path`
@@ -81,7 +83,8 @@ export type Dependent = typeof Dependent.Type;
 /**
  * One resolved instance of a duplicated version, with everything that pulls it.
  *
- * @remarks
+ * **Details**
+ *
  * `dependents` is deduplicated and in lockfile order: importers first, in the
  * order the lockfile lists them, then packages in the order the lockfile lists
  * them. Two instances of one `name@version` that differ only by peer suffix
@@ -112,7 +115,8 @@ export class DuplicatedVersion extends S.Class<DuplicatedVersion>($I`DuplicatedV
 /**
  * One package name reached at two or more distinct versions.
  *
- * @remarks
+ * **Details**
+ *
  * `versions` always has at least two entries: a name resolved at one version
  * is never a duplicate, however many peer-suffix instances that version has.
  * Two instances of the same version load identical code and cannot produce the
@@ -132,7 +136,8 @@ export class DuplicatedPackage extends S.Class<DuplicatedPackage>($I`DuplicatedP
  * The result of checking a lockfile for packages resolved at more than one
  * version.
  *
- * @remarks
+ * **Details**
+ *
  * A report rather than a bare array, for the reason `PeerCheck` is one: an
  * empty array is indistinguishable from "this importer could not be looked
  * at". `unresolvedImporters` makes that difference legible.
@@ -140,7 +145,8 @@ export class DuplicatedPackage extends S.Class<DuplicatedPackage>($I`DuplicatedP
  * Pure and total — construct it with {@link DuplicateCheck.run}, which never
  * fails.
  *
- * @example
+ * **Example** (Report duplicate kit versions and their dependents)
+ *
  * ```ts
  * import { Lockfile } from "../lockfiles/index.ts";
  * import { DuplicateCheck } from "./index.ts";
@@ -171,79 +177,83 @@ export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)(
 	 */
 	duplicates: S.Array(DuplicatedPackage).annotateKey({ description: "Every reported name resolved at two or more distinct versions, in lockfile order." }),
 	/**
-	 * Importers whose dependencies could not be resolved to instances, so
-	 * nothing reachable only through them was counted.
-	 *
-	 * @remarks
-	 * In practice this is the **root importer under npm and bun**: neither
-	 * records a resolved version per importer dependency, and neither emits a
-	 * package row for the root, so there is nothing to join on. pnpm records a
-	 * version per importer dependency and is unaffected. `PeerCheck` reports the
-	 * same limitation.
-	 *
-	 * Reported rather than silently skipped: a gate that sees no duplicates is
-	 * entitled to know whether that means "clean" or "not looked at".
-	 */
+  * Importers whose dependencies could not be resolved to instances, so
+  * nothing reachable only through them was counted.
+  *
+  * **Gotchas**
+  *
+  * In practice this is the **root importer under npm and bun**: neither
+  * records a resolved version per importer dependency, and neither emits a
+  * package row for the root, so there is nothing to join on. pnpm records a
+  * version per importer dependency and is unaffected. `PeerCheck` reports the
+  * same limitation.
+  *
+  * Reported rather than silently skipped: a gate that sees no duplicates is
+  * entitled to know whether that means "clean" or "not looked at".
+  */
 	unresolvedImporters: S.Array(S.String).annotateKey({ description: "Importers whose dependencies could not be resolved to instances, so nothing reachable only through them was counted." }),
 }, $I.annote("DuplicateCheck", { description: "The result of checking a lockfile for packages resolved at more than one version." })) {
 	/**
-	 * Whether no reported name is duplicated.
-	 *
-	 * @remarks
-	 * Answers for the names asked about, not for the whole graph: with a
-	 * `names` filter, a duplicated name the filter rejects does not make the
-	 * report unclean. It says nothing about `unresolvedImporters` — a gate
-	 * wanting a proven-clean answer checks both.
-	 */
+  * Whether no reported name is duplicated.
+  *
+  * **Gotchas**
+  *
+  * Answers for the names asked about, not for the whole graph: with a
+  * `names` filter, a duplicated name the filter rejects does not make the
+  * report unclean. It says nothing about `unresolvedImporters` — a gate
+  * wanting a proven-clean answer checks both.
+  */
 	get isClean(): boolean {
 		return this.duplicates.length === 0;
 	}
 
 	/**
-	 * The names every consumer of this kit asks about: `effect` itself and every
-	 * `@effected/*` package.
-	 *
-	 * @remarks
-	 * Exactly those — not `@effect/*`, and not names merely starting with
-	 * `effect`. A duplicated kit package presents as a `Layer` requirement that
-	 * looks provided yet cannot be satisfied, at the entry point, naming neither
-	 * the package nor the skew; this predicate is the check that names both.
-	 *
-	 * @param name - a package name
-	 * @returns whether the name belongs to the kit
-	 */
+  * The names every consumer of this kit asks about: `effect` itself and every
+  * `@effected/*` package.
+  *
+  * **Details**
+  *
+  * Exactly those — not `@effect/*`, and not names merely starting with
+  * `effect`. A duplicated kit package presents as a `Layer` requirement that
+  * looks provided yet cannot be satisfied, at the entry point, naming neither
+  * the package nor the skew; this predicate is the check that names both.
+  *
+  * @param name - a package name
+  * @returns whether the name belongs to the kit
+  */
 	static kit(name: string): boolean {
 		return name === "effect" || name.startsWith("@effected/");
 	}
 
 	/**
-	 * Compute which packages a parsed lockfile resolves at more than one
-	 * version, and who pulls each copy.
-	 *
-	 * @remarks
-	 * Pure, total and format-free: no IO, no error channel, and no knowledge of
-	 * which package manager wrote the file.
-	 *
-	 * The walk starts at each importer's resolved dependencies and follows
-	 * `resolved` edges, so only instances some importer actually reaches are
-	 * counted — a stale row the lockfile still carries but nothing depends on is
-	 * not a duplicate. A name is a duplicate when the walk reaches it at **two
-	 * or more distinct versions**; peer-suffix instances of one version are
-	 * listed under that version but never make a name a duplicate on their own.
-	 *
-	 * Each instance's `dependents` are every importer whose roots include it and
-	 * every reached package whose `resolved` map points at it, deduplicated, in
-	 * lockfile order. `options.names` narrows what is reported, never what is
-	 * walked, so a filtered-out package still appears as a dependent where it
-	 * pulls a reported copy.
-	 *
-	 * The one limit it does not paper over is the npm and bun root importer
-	 * (see `unresolvedImporters`).
-	 *
-	 * @param lockfile - a lockfile parsed by `@effected/lockfiles`
-	 * @param options - see {@link DuplicateCheckOptions}
-	 * @returns the report; never fails
-	 */
+  * Compute which packages a parsed lockfile resolves at more than one
+  * version, and who pulls each copy.
+  *
+  * **Details**
+  *
+  * Pure, total and format-free: no IO, no error channel, and no knowledge of
+  * which package manager wrote the file.
+  *
+  * The walk starts at each importer's resolved dependencies and follows
+  * `resolved` edges, so only instances some importer actually reaches are
+  * counted — a stale row the lockfile still carries but nothing depends on is
+  * not a duplicate. A name is a duplicate when the walk reaches it at **two
+  * or more distinct versions**; peer-suffix instances of one version are
+  * listed under that version but never make a name a duplicate on their own.
+  *
+  * Each instance's `dependents` are every importer whose roots include it and
+  * every reached package whose `resolved` map points at it, deduplicated, in
+  * lockfile order. `options.names` narrows what is reported, never what is
+  * walked, so a filtered-out package still appears as a dependent where it
+  * pulls a reported copy.
+  *
+  * The one limit it does not paper over is the npm and bun root importer
+  * (see `unresolvedImporters`).
+  *
+  * @param lockfile - a lockfile parsed by `@effected/lockfiles`
+  * @param options - see {@link DuplicateCheckOptions}
+  * @returns the report; never fails
+  */
 	static run(lockfile: Lockfile, options?: DuplicateCheckOptions): DuplicateCheck {
 		const names = options?.names ?? (() => true);
 		const index = indexInstances(lockfile);

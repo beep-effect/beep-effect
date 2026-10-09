@@ -191,7 +191,8 @@ export type PackagePatch = Partial<{
  * `rest` catch-all preserving unknown top-level fields across a read/edit/write
  * cycle, computed getters, and immutable mutation statics.
  *
- * @example
+ * **Example** (Update a package version and serialize the result)
+ *
  * ```ts
  * import { Package } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -467,42 +468,44 @@ export class Package extends S.Class<Package>($I`Package`)({
 	// ── Resolution ────────────────────────────────────────────────────────
 
 	/**
-	 * Resolve `catalog:` and `workspace:` specifiers across all four dependency
-	 * maps using the `CatalogResolver` and `WorkspaceResolver` from context,
-	 * returning a new `Package`. This is the explicit resolution step —
-	 * `PackageJsonFile.write` never resolves.
-	 *
-	 * @remarks
-	 * Classification and projection go through `@effected/npm`'s
-	 * `DependencySpecifier` statics: `workspace:` uses the pnpm publish-time
-	 * projection, and the alias form `workspace:<name>@<range>` resolves the
-	 * TARGET package's version and becomes the published `npm:<name>@<range>`
-	 * alias. Specifiers the resolvers answer `Option.none()` for are left
-	 * unchanged — resolution still succeeds. Fails with `@effected/npm`'s
-	 * `CatalogAssemblyError` when catalog assembly failed, or
-	 * `DependencyResolutionError` when a resolver's mechanism failed; requires
-	 * `CatalogResolver` and `WorkspaceResolver` in `R`. For fail-typed
-	 * resolution over the tolerant model, see `@effected/npm`'s
-	 * `Manifest#resolve`.
-	 *
-	 * @example
-	 * ```ts
-	 * import { Default } from "../npm/index.ts";
-	 * import { Package } from "./index.ts";
-	 * import * as Effect from "effect/Effect";
-	 *
-	 * const program = Effect.gen(function* () {
-	 *   const pkg = yield* Package.decode({
-	 *     name: "my-pkg",
-	 *     version: "1.0.0",
-	 *     dependencies: { effect: "catalog:" },
-	 *   });
-	 *   return yield* Package.resolve(pkg);
-	 * }).pipe(Effect.provide(Default)); // the no-op resolvers leave `catalog:` unchanged
-	 * ```
-	 *
-	 * @param pkg - the package whose specifiers to resolve
-	 */
+  * Resolve `catalog:` and `workspace:` specifiers across all four dependency
+  * maps using the `CatalogResolver` and `WorkspaceResolver` from context,
+  * returning a new `Package`. This is the explicit resolution step —
+  * `PackageJsonFile.write` never resolves.
+  *
+  * **Details**
+  *
+  * Classification and projection go through `@effected/npm`'s
+  * `DependencySpecifier` statics: `workspace:` uses the pnpm publish-time
+  * projection, and the alias form `workspace:<name>@<range>` resolves the
+  * TARGET package's version and becomes the published `npm:<name>@<range>`
+  * alias. Specifiers the resolvers answer `Option.none()` for are left
+  * unchanged — resolution still succeeds. Fails with `@effected/npm`'s
+  * `CatalogAssemblyError` when catalog assembly failed, or
+  * `DependencyResolutionError` when a resolver's mechanism failed; requires
+  * `CatalogResolver` and `WorkspaceResolver` in `R`. For fail-typed
+  * resolution over the tolerant model, see `@effected/npm`'s
+  * `Manifest#resolve`.
+  *
+  * **Example** (Resolve catalog dependencies with no-op resolvers)
+  *
+  * ```ts
+  * import { Default } from "../npm/index.ts";
+  * import { Package } from "./index.ts";
+  * import * as Effect from "effect/Effect";
+  *
+  * const program = Effect.gen(function* () {
+  *   const pkg = yield* Package.decode({
+  *     name: "my-pkg",
+  *     version: "1.0.0",
+  *     dependencies: { effect: "catalog:" },
+  *   });
+  *   return yield* Package.resolve(pkg);
+  * }).pipe(Effect.provide(Default)); // the no-op resolvers leave `catalog:` unchanged
+  * ```
+  *
+  * @param pkg - the package whose specifiers to resolve
+  */
 	static readonly resolve = Effect.fn("Package.resolve")(function* (pkg: Package) {
 		const workspace = yield* WorkspaceResolver;
 		const catalog = yield* CatalogResolver;

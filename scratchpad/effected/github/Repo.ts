@@ -34,13 +34,14 @@ export class RepoRef extends S.Class<RepoRef>($I`RepoRef`)({
 	repo: S.NonEmptyString.annotateKey({ description: "The repository name, without the owner." }),
 }, $I.annote("RepoRef", { description: "Which repository an operation acts on." })) {
 	/**
-	 * Parse `"owner/repo"`, synchronously.
-	 *
-	 * @remarks
-	 * The sync `Result` primitive; {@link RepoRef.parse} is the `Effect` form over
-	 * it. `make` is reserved by the class factory for the validated field
-	 * constructor, which is why string parsing is named rather than overloaded.
-	 */
+  * Parse `"owner/repo"`, synchronously.
+  *
+  * **Details**
+  *
+  * The sync `Result` primitive; {@link RepoRef.parse} is the `Effect` form over
+  * it. `make` is reserved by the class factory for the validated field
+  * constructor, which is why string parsing is named rather than overloaded.
+  */
 	static parseResult(slug: string): Result.Result<RepoRef, InvalidRepoRefError> {
 		const parts = slug.split("/");
 		const [owner, repo] = parts;
@@ -62,7 +63,8 @@ export class RepoRef extends S.Class<RepoRef>($I`RepoRef`)({
 /**
  * The repository the surrounding program acts on.
  *
- * @remarks
+ * **Details**
+ *
  * Every resource service takes this in its `R` and **no method takes an
  * `{ owner, repo }` argument**, which is what makes a read like
  * `GitHubRepository.defaultBranch` a single expression instead of a preamble.
@@ -74,7 +76,8 @@ export class RepoRef extends S.Class<RepoRef>($I`RepoRef`)({
  * The service shape is entirely one immutable value (a `RepoRef`), with no
  * methods, so `Layer.succeed` is the correct test double.
  *
- * @example
+ * **Example** (Run an operation across repositories concurrently)
+ *
  * ```ts
  * import { Repo, RepoRef } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -88,9 +91,9 @@ export class RepoRef extends S.Class<RepoRef>($I`RepoRef`)({
  * ```
  *
  * Repo is resolved per operation so Repo.provide can redirect an already built resource service.
- * @effect-leakable-service
  *
  * @public
+ * @effect-leakable-service
  */
 export class Repo extends Context.Service<Repo, RepoRef>()($I`Repo`) {
 	/** The repository, as a value you already have. */
@@ -101,13 +104,14 @@ export class Repo extends Context.Service<Repo, RepoRef>()($I`Repo`) {
 		Layer.effect(Repo, RepoRef.parse(slug));
 
 	/**
-	 * The repository from configuration, `GITHUB_REPOSITORY` by default.
-	 *
-	 * @remarks
-	 * The one env-driven variant, read through the ambient `ConfigProvider` rather
-	 * than `process.env` — so a test provides a provider instead of mutating the
-	 * environment, and a consumer outside Actions can source it however it likes.
-	 */
+  * The repository from configuration, `GITHUB_REPOSITORY` by default.
+  *
+  * **Details**
+  *
+  * The one env-driven variant, read through the ambient `ConfigProvider` rather
+  * than `process.env` — so a test provides a provider instead of mutating the
+  * environment, and a consumer outside Actions can source it however it likes.
+  */
 	static readonly layerFromConfig = (
 		options: { readonly name?: string | undefined } = {},
 	): Layer.Layer<Repo, Config.ConfigError | InvalidRepoRefError> =>

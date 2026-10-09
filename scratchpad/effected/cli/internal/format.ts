@@ -6,7 +6,8 @@ import * as SchemaIssue from "effect/SchemaIssue";
 /**
  * Core's structured formatter, with one phrasing override.
  *
- * @remarks
+ * **Details**
+ *
  * Built once: it is a pure function of the issue tree and carries no state.
  *
  * Core renders an excess property as `"Expected no excess property"`, which
@@ -25,7 +26,8 @@ const formatter = SchemaIssue.makeFormatterStandardSchemaV1({
 /**
  * Flatten an issue tree to one line per rejected value.
  *
- * @remarks
+ * **Details**
+ *
  * Shared by `SchemaIssueRenderer` and `ConfigIssueRenderer` and imported by
  * nothing else. It lives here rather than in either module so that
  * `ConfigIssueRenderer` — the only export that references the optional
@@ -60,7 +62,8 @@ export interface IssueEntry {
 /**
  * The rejected values of an issue tree, once each: what both the lines and the tree are built from.
  *
- * @remarks
+ * **Details**
+ *
  * Anything that is not an issue tree yields none rather than throwing. A rendering helper on an error path must never
  * become the reason a program dies: it is called when something has already gone wrong. A union reports every branch
  * it tried, so one wrong key in a three-member union is the same entry three times; the per-branch "Missing key"

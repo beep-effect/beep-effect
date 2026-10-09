@@ -2,6 +2,8 @@
  * SPDX license identifiers, exceptions and license expressions as Effect
  * schemas.
  *
+ * **Details**
+ *
  * {@link License} and {@link LicenseException} validate an identifier against
  * the vendored SPDX catalogs (or, for a license, the `LicenseRef-`/
  * `DocumentRef-` reference grammar); each class doubles as its own schema. The
@@ -13,7 +15,8 @@
  * through the single typed {@link InvalidSpdxExpressionError}, never as a
  * defect.
  *
- * @example
+ * **Example** (Parse and serialize a license choice and reject an incomplete conjunction)
+ *
  * ```ts
  * import { isValidExpression, SpdxExpression } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -29,10 +32,9 @@
  * // => false
  * ```
  *
- * @see {@link https://spdx.github.io/spdx-spec/v2.3/SPDX-license-expressions/ | SPDX License Expressions}
- * @see {@link https://effect.website | Effect}
- *
  * @packageDocumentation
+ * @see {@link https://spdx.github.io/spdx-spec/v2.3/SPDX-license-expressions/ | SPDX License Expressions} for the SPDX expression grammar
+ * @see {@link https://effect.website | Effect} for the Effect framework
  */
 
 export { InvalidSpdxExpressionError, License } from "./License.ts";

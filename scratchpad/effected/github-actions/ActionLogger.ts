@@ -21,7 +21,8 @@ const $I = $ScratchpadId.create("effected/github-actions/ActionLogger");
  * Render a log message, which arrives as an array of the values passed to
  * `Effect.log*`.
  *
- * @remarks
+ * **Details**
+ *
  * `toStringUnknown` is called with zero indentation on purpose: a pretty-printed
  * object would span lines, and a workflow command escapes every newline, so the
  * indented form buys nothing and costs readability.
@@ -53,7 +54,8 @@ const numericAnnotation = (record: Readonly<Record<string, unknown>>, key: strin
 /**
  * Project log annotations onto the annotation vocabulary.
  *
- * @remarks
+ * **Details**
+ *
  * The keys are the readable ones from {@link AnnotationProperties}, not GitHub's
  * abbreviated wire names — one vocabulary per package, with the abbreviation
  * confined to {@link WorkflowCommand}. Undefined fields are omitted rather than
@@ -87,7 +89,8 @@ const annotationRecord = (properties: AnnotationProperties): Record<string, unkn
 /**
  * Map one log entry onto the line the runner should see.
  *
- * @remarks
+ * **Details**
+ *
  * `Info` is deliberately plain text with no command prefix — it is ordinary
  * step output, and prefixing it would make every informational line an
  * annotation in the workflow summary. It is neutralized, though: the text is
@@ -128,7 +131,8 @@ interface BufferState {
 /**
  * The buffer the current fiber is writing into, or `null` when not buffering.
  *
- * @remarks
+ * **Details**
+ *
  * A `Context.Reference` rather than a module-level "current buffer": two steps
  * running concurrently each keep their own transcript, and neither has to
  * restore anything. A save/restore global is LIFO-correct only while the two
@@ -169,15 +173,16 @@ const flush = (state: BufferState): Effect.Effect<void> =>
  */
 export interface WithBufferOptions {
 	/**
-	 * What happens to the captured transcript when the step **succeeds**.
-	 *
-	 * @remarks
-	 * `"flush"` — the default — replays it, so a clean run still prints what it
-	 * did. `"discard"` drops it, which is what keeps a green release log to one
-	 * line per step: the transcript exists only as the failure report. A failure,
-	 * a defect or an interruption flushes under either setting — the choice is
-	 * only about what a success is worth in the log.
-	 */
+  * What happens to the captured transcript when the step **succeeds**.
+  *
+  * **Details**
+  *
+  * `"flush"` — the default — replays it, so a clean run still prints what it
+  * did. `"discard"` drops it, which is what keeps a green release log to one
+  * line per step: the transcript exists only as the failure report. A failure,
+  * a defect or an interruption flushes under either setting — the choice is
+  * only about what a success is worth in the log.
+  */
 	readonly onSuccess?: "flush" | "discard";
 }
 
@@ -188,12 +193,13 @@ export interface WithBufferOptions {
  */
 export interface WithStepOptions {
 	/**
-	 * The info line emitted when the step **succeeds**.
-	 *
-	 * @remarks
-	 * Defaults to `✅ <name>`. This is the line the buffered transcript is traded
-	 * for: a green step reports that it happened and nothing else.
-	 */
+  * The info line emitted when the step **succeeds**.
+  *
+  * **Details**
+  *
+  * Defaults to `✅ <name>`. This is the line the buffered transcript is traded
+  * for: a green step reports that it happened and nothing else.
+  */
 	readonly summary?: string;
 }
 
@@ -207,84 +213,88 @@ export interface ActionLoggerShape {
 	/** Run an effect inside a collapsible log group. */
 	readonly group: <A, E, R>(name: string, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
 	/**
-	 * Run an effect with its verbose output captured and replayed on exit.
-	 *
-	 * @remarks
-	 * Warnings and errors are **not** buffered — they go out as they happen, so a
-	 * long step still reports trouble while it is running. Everything at `Info`
-	 * and below is held and flushed on every exit path, including a defect or an
-	 * interruption, so a clean run still prints its transcript. A step that
-	 * should be **quiet** when it succeeds passes
-	 * `{ onSuccess: "discard" }` ({@link WithBufferOptions}); failure still
-	 * spills the transcript either way.
-	 *
-	 * Buffering is skipped entirely when the runner has step debugging enabled or
-	 * the ambient minimum log level is already `Debug` or lower — someone asking
-	 * for verbose output wants it live, and that overrides
-	 * `onSuccess: "discard"` too: asking for debug output means wanting to see
-	 * what a green step did. Under `Action.run` the two conditions coincide,
-	 * because step debugging is what lowers the ambient level to `Debug`; the
-	 * step-debug check still stands on its own for a program that opted out
-	 * with `stepDebugLogLevel: false` or runs outside `Action.run`.
-	 */
+  * Run an effect with its verbose output captured and replayed on exit.
+  *
+  * **Details**
+  *
+  * Warnings and errors are **not** buffered — they go out as they happen, so a
+  * long step still reports trouble while it is running. Everything at `Info`
+  * and below is held and flushed on every exit path, including a defect or an
+  * interruption, so a clean run still prints its transcript. A step that
+  * should be **quiet** when it succeeds passes
+  * `{ onSuccess: "discard" }` ({@link WithBufferOptions}); failure still
+  * spills the transcript either way.
+  *
+  * Buffering is skipped entirely when the runner has step debugging enabled or
+  * the ambient minimum log level is already `Debug` or lower — someone asking
+  * for verbose output wants it live, and that overrides
+  * `onSuccess: "discard"` too: asking for debug output means wanting to see
+  * what a green step did. Under `Action.run` the two conditions coincide,
+  * because step debugging is what lowers the ambient level to `Debug`; the
+  * step-debug check still stands on its own for a program that opted out
+  * with `stepDebugLogLevel: false` or runs outside `Action.run`.
+  */
 	readonly withBuffer: <A, E, R>(
 		label: string,
 		effect: Effect.Effect<A, E, R>,
 		options?: WithBufferOptions,
 	) => Effect.Effect<A, E, R>;
 	/**
-	 * Run a named step: quiet when it succeeds, its full transcript when it does
-	 * not.
-	 *
-	 * @remarks
-	 * The composition a release log actually wants, and the one
-	 * {@link ActionLoggerShape.withBuffer} alone does not reach. Buffering with
-	 * `{ onSuccess: "discard" }` gets a green step to *zero* lines; this trades
-	 * that transcript for exactly one:
-	 *
-	 * 1. verbose output is captured rather than printed live,
-	 * 2. on success the transcript is dropped and a single info line — `summary`,
-	 *    default `✅ <name>` ({@link WithStepOptions}) — goes out in its place,
-	 * 3. on failure a `❌ <name>` header lands **first**, then the transcript
-	 *    spills beneath it.
-	 *
-	 * The ordering in (3) is a property of the **buffered** path. With step
-	 * debugging on, nothing is buffered — verbose output has already gone out
-	 * live by the time the failure fires — so the header lands *after* the
-	 * transcript it would otherwise introduce. That is the honest trade of
-	 * asking for live output, not a defect, and both orderings are pinned by
-	 * test.
-	 *
-	 * The header and the summary are the whole difference from `withBuffer`, and
-	 * they are why this is a member rather than a documented recipe: `group` +
-	 * `withBuffer` looks like complete parity until you notice nothing emits the
-	 * success line.
-	 *
-	 * The summary survives step debugging. Buffering is skipped when the runner
-	 * asks for verbose output, but the line naming what succeeded is still the
-	 * cheapest thing in the log.
-	 */
+  * Run a named step: quiet when it succeeds, its full transcript when it does
+  * not.
+  *
+  * **Details**
+  *
+  * The composition a release log actually wants, and the one
+  * {@link ActionLoggerShape.withBuffer} alone does not reach. Buffering with
+  * `{ onSuccess: "discard" }` gets a green step to *zero* lines; this trades
+  * that transcript for exactly one:
+  *
+  * 1. verbose output is captured rather than printed live,
+  * 2. on success the transcript is dropped and a single info line — `summary`,
+  *    default `✅ <name>` ({@link WithStepOptions}) — goes out in its place,
+  * 3. on failure a `❌ <name>` header lands **first**, then the transcript
+  *    spills beneath it.
+  *
+  * The ordering in (3) is a property of the **buffered** path. With step
+  * debugging on, nothing is buffered — verbose output has already gone out
+  * live by the time the failure fires — so the header lands *after* the
+  * transcript it would otherwise introduce. That is the honest trade of
+  * asking for live output, not a defect, and both orderings are pinned by
+  * test.
+  *
+  * The header and the summary are the whole difference from `withBuffer`, and
+  * they are why this is a member rather than a documented recipe: `group` +
+  * `withBuffer` looks like complete parity until you notice nothing emits the
+  * success line.
+  *
+  * The summary survives step debugging. Buffering is skipped when the runner
+  * asks for verbose output, but the line naming what succeeded is still the
+  * cheapest thing in the log.
+  */
 	readonly withStep: <A, E, R>(
 		name: string,
 		effect: Effect.Effect<A, E, R>,
 		options?: WithStepOptions,
 	) => Effect.Effect<A, E, R>;
 	/**
-	 * Emit a `::notice::` annotation.
-	 *
-	 * @remarks
-	 * A dedicated member rather than a log level, because Effect has no level
-	 * between `Info` and `Warn` to map onto notices.
-	 */
+  * Emit a `::notice::` annotation.
+  *
+  * **Details**
+  *
+  * A dedicated member rather than a log level, because Effect has no level
+  * between `Info` and `Warn` to map onto notices.
+  */
 	readonly notice: (message: string, properties?: AnnotationProperties) => Effect.Effect<void>;
 	/**
-	 * Attach source annotations to every `Effect.log*` inside an effect.
-	 *
-	 * @remarks
-	 * The point is that a caller never spells an annotation key: the fields go in
-	 * as `AnnotationProperties` (from `@effected/github-commands`) and come out as `file=`/`line=` on the
-	 * rendered command.
-	 */
+  * Attach source annotations to every `Effect.log*` inside an effect.
+  *
+  * **Details**
+  *
+  * The point is that a caller never spells an annotation key: the fields go in
+  * as `AnnotationProperties` (from `@effected/github-commands`) and come out as `file=`/`line=` on the
+  * rendered command.
+  */
 	readonly annotated: <A, E, R>(
 		properties: AnnotationProperties,
 		effect: Effect.Effect<A, E, R>,
@@ -372,13 +382,15 @@ const make = Effect.gen(function* () {
  * Groups, buffered step transcripts, notices — and the `Logger` that renders
  * every `Effect.log*` in the kit as a workflow command.
  *
- * @remarks
+ * **Details**
+ *
  * The `Logger` is the seam that lets every other `@effected` package stay
  * telemetry-agnostic: libraries call `Effect.logWarning`, and exactly one
  * logger — installed at the edge by an action — turns those into `::warning::`
  * annotations. No library needs to know it is running inside Actions.
  *
- * @example
+ * **Example** (Group and buffer installation logs)
+ *
  * ```ts
  * import { ActionLogger } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -395,47 +407,51 @@ export class ActionLogger extends Context.Service<ActionLogger, ActionLoggerShap
 	$I`ActionLogger`,
 ) {
 	/**
-	 * The service: groups, the buffered step renderer, notices and annotations.
-	 *
-	 * @remarks
-	 * This installs no `Logger`. Without {@link ActionLogger.layerLogger} (or `Action.run`, which installs it) Effect's
-	 * default logger writes `Effect.log*` text raw, so a message carrying `::add-mask::` or `##[` is a workflow command
-	 * to the runner. Install both: the service for its structure, the logger for its neutralizing of every log line.
-	 */
+  * The service: groups, the buffered step renderer, notices and annotations.
+  *
+  * **Gotchas**
+  *
+  * This installs no `Logger`. Without {@link ActionLogger.layerLogger} (or `Action.run`, which installs it) Effect's
+  * default logger writes `Effect.log*` text raw, so a message carrying `::add-mask::` or `##[` is a workflow command
+  * to the runner. Install both: the service for its structure, the logger for its neutralizing of every log line.
+  */
 	static readonly layer: Layer.Layer<ActionLogger, never, ActionEnvironment> = Layer.effect(this, make);
 
 	/**
-	 * The `Logger` that maps Effect log levels onto workflow commands.
-	 *
-	 * @remarks
-	 * `Error` and `Fatal` render `::error::`, `Warn` renders `::warning::`,
-	 * `Debug` and `Trace` render `::debug::`, and `Info` renders as plain text.
-	 * Annotations set by `annotated` travel with the entry.
-	 *
-	 * It writes through core `Console`, which is what makes its output
-	 * observable in a test without a runner.
-	 */
+  * The `Logger` that maps Effect log levels onto workflow commands.
+  *
+  * **Details**
+  *
+  * `Error` and `Fatal` render `::error::`, `Warn` renders `::warning::`,
+  * `Debug` and `Trace` render `::debug::`, and `Info` renders as plain text.
+  * Annotations set by `annotated` travel with the entry.
+  *
+  * It writes through core `Console`, which is what makes its output
+  * observable in a test without a runner.
+  */
 	static readonly logger: Logger.Logger<unknown, void> = commandLogger;
 
 	/**
-	 * {@link ActionLogger.logger} installed as the only logger.
-	 *
-	 * @remarks
-	 * Bound to a constant so every composition site shares one layer;
-	 * `ActionRuntime.layer` already includes it.
-	 */
+  * {@link ActionLogger.logger} installed as the only logger.
+  *
+  * **Details**
+  *
+  * Bound to a constant so every composition site shares one layer;
+  * `ActionRuntime.layer` already includes it.
+  */
 	static readonly layerLogger: Layer.Layer<never> = Logger.layer([ActionLogger.logger]);
 
 	/**
-	 * A silent double.
-	 *
-	 * @remarks
-	 * **A recorded exception to the die-on-unstubbed rule**, alongside
-	 * {@link ActionEnvironment.makeTest}. A logger that dies when a suite logs
-	 * would make every double unusable, and silence is the honest default for a
-	 * service whose whole job is output. Group and buffer wrappers pass their
-	 * effect through unchanged.
-	 */
+  * A silent double.
+  *
+  * **Details**
+  *
+  * **A recorded exception to the die-on-unstubbed rule**, alongside
+  * {@link ActionEnvironment.makeTest}. A logger that dies when a suite logs
+  * would make every double unusable, and silence is the honest default for a
+  * service whose whole job is output. Group and buffer wrappers pass their
+  * effect through unchanged.
+  */
 	static readonly makeTest = (overrides: Partial<ActionLoggerShape> = {}): ActionLoggerShape => ({
 		group: <A, E, R>(_name: string, effect: Effect.Effect<A, E, R>) => effect,
 		withBuffer: <A, E, R>(_label: string, effect: Effect.Effect<A, E, R>) => effect,
@@ -450,12 +466,13 @@ export class ActionLogger extends Context.Service<ActionLogger, ActionLoggerShap
 		Layer.succeed(ActionLogger, ActionLogger.makeTest(overrides));
 
 	/**
-	 * A silent service **and** a silent `Effect.log*`.
-	 *
-	 * @remarks
-	 * This one layer stands in for a bare `Effect.provide(Logger.layer([]))`
-	 * repeated in every suite just to keep test output quiet. Bound to a
-	 * constant rather than exposed as a factory, so composing it twice is free.
-	 */
+  * A silent service **and** a silent `Effect.log*`.
+  *
+  * **Details**
+  *
+  * This one layer stands in for a bare `Effect.provide(Logger.layer([]))`
+  * repeated in every suite just to keep test output quiet. Bound to a
+  * constant rather than exposed as a factory, so composing it twice is free.
+  */
 	static readonly layerSilent: Layer.Layer<ActionLogger> = Layer.mergeAll(ActionLogger.layerTest(), Logger.layer([]));
 }

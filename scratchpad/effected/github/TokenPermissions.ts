@@ -96,7 +96,8 @@ export class TokenPermissionError extends S.TaggedError<TokenPermissionError>($I
 /**
  * The permissions a token was granted, and what they satisfy.
  *
- * @remarks
+ * **Details**
+ *
  * **A pure class, not a service.** It compares permission levels
  * (`read < write < admin`), so there is no layer and no test double: a caller
  * holds the permissions GitHub already gave it (`InstallationToken.permissions`)
@@ -104,7 +105,8 @@ export class TokenPermissionError extends S.TaggedError<TokenPermissionError>($I
  * `TokenPermissionError` because failing typed is more useful than returning a
  * boolean.
  *
- * @example
+ * **Example** (Assert write permissions for contents and pull requests)
+ *
  * ```ts
  * import { TokenPermissions } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -126,7 +128,8 @@ export class TokenPermissions extends S.Class<TokenPermissions>($I`TokenPermissi
   /**
    * Read GitHub's permission map, ignoring anything unrecognized.
    *
-   * @remarks
+   * **Details**
+   *
    * GitHub adds permission levels over time; a token carrying one this package
    * does not know about is not a reason to fail a comparison about a different
    * permission entirely.
@@ -181,7 +184,8 @@ export class TokenPermissions extends S.Class<TokenPermissions>($I`TokenPermissi
   /**
    * Fail unless the token holds exactly what was asked for.
    *
-   * @remarks
+   * **Details**
+   *
    * For the workflow that wants a least-privilege token and treats a broader
    * one as a misconfiguration worth stopping for.
    */

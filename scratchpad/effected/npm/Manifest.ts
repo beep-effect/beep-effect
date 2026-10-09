@@ -127,6 +127,8 @@ const makeWire = (
  * A tolerant manifest as a domain model: the four dependency fields typed as
  * string→string records, everything else preserved verbatim in `rest`.
  *
+ * **Details**
+ *
  * This is deliberately NOT a strict package.json model — the input to
  * manifest-level resolution is an arbitrary user manifest mid-build, and a
  * strict decode would reject manifests this module has no business
@@ -142,7 +144,8 @@ const makeWire = (
  * {@link Manifest.toRecord} encodes back to the wire shape with `rest`
  * flattened to the top level.
  *
- * @example
+ * **Example** (Decode and round-trip a manifest)
+ *
  * ```ts
  * import { Default, Manifest } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -211,27 +214,28 @@ export class Manifest extends S.Class<Manifest>($I`Manifest`)({
 	}
 
 	/**
-	 * Project the whole manifest: every `catalog:` specifier resolves through
-	 * {@link CatalogResolver}, every `workspace:` specifier through
-	 * {@link WorkspaceResolver} followed by the pnpm publish-time projection
-	 * (`DependencySpecifier.resolveWorkspace`), and everything else — other
-	 * specifier forms, non-dependency fields — passes through untouched. The
-	 * alias form (`workspace:<name>@<range>`) resolves the TARGET package's
-	 * version and projects to the `npm:<name>@<range>` alias pnpm publishes.
-	 * This instance is never mutated; a new `Manifest` is returned with `rest`
-	 * carried over unchanged. A specifier the resolvers cannot answer fails
-	 * typed as {@link UnresolvedDependencyError}; mechanism failures surface
-	 * as the resolver contracts' own {@link CatalogAssemblyError} /
-	 * {@link DependencyResolutionError}. Requires {@link CatalogResolver} and
-	 * {@link WorkspaceResolver} in `R`.
-	 *
-	 * @remarks
-	 * Fails typed on unresolvable entries. For the leave-unchanged policy over
-	 * the strict package.json model, see `@effected/package-json`'s
-	 * `Package#resolve`.
-	 *
-	 * @returns an Effect resolving to a new `Manifest` with concrete ranges
-	 */
+  * Project the whole manifest: every `catalog:` specifier resolves through
+  * {@link CatalogResolver}, every `workspace:` specifier through
+  * {@link WorkspaceResolver} followed by the pnpm publish-time projection
+  * (`DependencySpecifier.resolveWorkspace`), and everything else — other
+  * specifier forms, non-dependency fields — passes through untouched. The
+  * alias form (`workspace:<name>@<range>`) resolves the TARGET package's
+  * version and projects to the `npm:<name>@<range>` alias pnpm publishes.
+  * This instance is never mutated; a new `Manifest` is returned with `rest`
+  * carried over unchanged. A specifier the resolvers cannot answer fails
+  * typed as {@link UnresolvedDependencyError}; mechanism failures surface
+  * as the resolver contracts' own {@link CatalogAssemblyError} /
+  * {@link DependencyResolutionError}. Requires {@link CatalogResolver} and
+  * {@link WorkspaceResolver} in `R`.
+  *
+  * **Details**
+  *
+  * Fails typed on unresolvable entries. For the leave-unchanged policy over
+  * the strict package.json model, see `@effected/package-json`'s
+  * `Package#resolve`.
+  *
+  * @returns an Effect resolving to a new `Manifest` with concrete ranges
+  */
 	resolve(): Effect.Effect<
 		Manifest,
 		CatalogAssemblyError | DependencyResolutionError | UnresolvedDependencyError,

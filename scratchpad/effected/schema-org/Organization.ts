@@ -8,11 +8,14 @@ const $I = $ScratchpadId.create("effected/schema-org/Organization");
  * A schema.org `Organization` — a company, project or team that authors or
  * publishes a work.
  *
+ * **Details**
+ *
  * Carries only `Thing`-level fields plus the two organization-specific ones,
  * for the same reason as {@link Person}: the `CreativeWork` vocabulary is not
  * legal here.
  *
- * @example
+ * **Example** (Create an organization with a legal name)
+ *
  * ```ts
  * import { Organization } from "./index.ts";
  *

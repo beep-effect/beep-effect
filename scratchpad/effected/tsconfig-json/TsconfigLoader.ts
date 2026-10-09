@@ -201,7 +201,8 @@ const compilerOptions = Effect.fn("TsconfigLoader.compilerOptions")(function* (c
  * merge -\> `${configDir}` pipeline, and {@link TsconfigLoader.compilerOptions}
  * projects the resolved result down to its merged `compilerOptions`.
  *
- * @example
+ * **Example** (Read the target from a resolved tsconfig)
+ *
  * ```ts
  * import { TsconfigLoader } from "./index.ts";
  * import * as Effect from "effect/Effect";

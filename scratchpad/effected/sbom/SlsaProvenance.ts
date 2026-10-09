@@ -31,13 +31,13 @@ export const SLSA_PROVENANCE_V1 = "https://slsa.dev/provenance/v1" as const;
 /**
  * The SLSA build type identifying a GitHub Actions workflow build.
  *
- * @remarks
+ * **Details**
+ *
  * A published **SLSA build-type identifier** — it names a provenance shape, not
  * an Actions runtime detail — which is why it lives with the provenance model
  * rather than in `@effected/github-actions`.
  *
- * @see {@link https://github.com/slsa-framework/github-actions-buildtypes/tree/main/workflow/v1 | workflow/v1}
- *
+ * @see {@link https://github.com/slsa-framework/github-actions-buildtypes/tree/main/workflow/v1 | workflow/v1} for the GitHub Actions workflow build type specification
  * @public
  */
 export const GITHUB_BUILD_TYPE = "https://actions.github.io/buildtypes/workflow/v1" as const;
@@ -109,7 +109,8 @@ export class SlsaRunDetails extends S.Class<SlsaRunDetails>($I`SlsaRunDetails`)(
  * The claims and runner facts a GitHub Actions provenance predicate is built
  * from.
  *
- * @remarks
+ * **Details**
+ *
  * A plain input record, **not** a service. There is nothing to swap and no IO
  * to invert — it is the argument to a data constructor.
  *
@@ -163,7 +164,8 @@ const workflowPathOf = (input: GitHubWorkflowProvenance): string =>
 /**
  * A SLSA Provenance v1 predicate.
  *
- * @example
+ * **Example** (Create provenance for a GitHub Actions workflow)
+ *
  * ```ts
  * import { SlsaProvenance } from "./index.ts";
  *
@@ -198,13 +200,14 @@ export class SlsaProvenance extends S.Class<SlsaProvenance>($I`SlsaProvenance`)(
 	static readonly buildType: string = GITHUB_BUILD_TYPE;
 
 	/**
-	 * Provenance for a GitHub Actions `workflow/v1` build.
-	 *
-	 * @remarks
-	 * **Total** — a pure projection of its argument. Every value it needs is
-	 * already in the input; nothing is read from the environment and nothing can
-	 * fail.
-	 */
+  * Provenance for a GitHub Actions `workflow/v1` build.
+  *
+  * **Details**
+  *
+  * **Total** — a pure projection of its argument. Every value it needs is
+  * already in the input; nothing is read from the environment and nothing can
+  * fail.
+  */
 	static forGitHubWorkflow(input: GitHubWorkflowProvenance): SlsaProvenance {
 		return SlsaProvenance.make({
 			buildDefinition: SlsaBuildDefinition.make({

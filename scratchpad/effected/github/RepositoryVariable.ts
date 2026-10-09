@@ -17,7 +17,8 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
 /**
  * A variable's name and value, as listing returns it.
  *
- * @remarks
+ * **Details**
+ *
  * Unlike a secret this carries its **value**: variables are readable, so a
  * consumer comparing desired against live can detect an *edited* variable and
  * not merely a deleted one. Discarding the value in a projection here would
@@ -43,7 +44,8 @@ export interface RepositoryVariableShape {
   /**
    * Create or update one repository variable.
    *
-   * @remarks
+   * **Details**
+   *
    * GitHub has **no upsert** for variables: creating uses `POST` on the
    * collection and updating uses `PATCH` on the item, and each fails if used
    * for the other case. So this reads first and branches — one extra request
@@ -88,7 +90,8 @@ export interface RepositoryVariableShape {
  * Create or update, list and delete Actions variables on a repository and on
  * its environments.
  *
- * @remarks
+ * **Details**
+ *
  * No encryption and no public key, unlike secrets — but also **no upsert**,
  * which is the asymmetry worth knowing: every write costs a read first, because
  * the create and update routes are different endpoints with different verbs and
@@ -97,7 +100,8 @@ export interface RepositoryVariableShape {
  * Provide it with {@link RepositoryVariable.layer}, which needs a
  * `GitHubClient`; each method also needs a `Repo` in `R`.
  *
- * @example
+ * **Example** (Set an Actions variable and list repository variables)
+ *
  * ```ts
  * import { RepositoryVariable } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -117,7 +121,8 @@ export class RepositoryVariable extends Context.Service<RepositoryVariable, Repo
   /**
    * The live service, built over a `GitHubClient`.
    *
-   * @remarks
+   * **Gotchas**
+   *
    * `(client) => make(client)` rather than `make`: a static initializer runs
    * while the module body is still evaluating, so naming a `const` declared
    * further down throws at import time with a clean typecheck.
@@ -150,7 +155,8 @@ const make = (client: GitHubClient["Service"]): RepositoryVariableShape => {
   /**
    * Does this variable already exist? One by-name read, not a listing.
    *
-   * @remarks
+   * **Details**
+   *
    * GitHub answers 404 for an absent variable, which makes the pre-write check
    * constant cost — paginating the whole collection to answer one yes/no grows
    * with a repository that has nothing to do with the variable being written.

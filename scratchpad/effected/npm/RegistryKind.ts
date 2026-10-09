@@ -8,7 +8,8 @@ const $I = $ScratchpadId.create("effected/npm/RegistryKind");
 /**
  * Which well-known registry a URL points at.
  *
- * @remarks
+ * **Details**
+ *
  * The distinction is behavioral, not cosmetic: npm's `--provenance` is
  * meaningful only on the public npm registry, GitHub Packages needs classic
  * `_authToken` auth rather than a trusted-publisher exchange, and JSR is not
@@ -44,7 +45,8 @@ const hostnameOf = (registry: string): string | undefined => {
 /**
  * Whether `hostname` is `domain` or a subdomain of it.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The leading dot is load-bearing: a bare `endsWith(domain)` would classify
  * `evil-npmjs.org` as the public npm registry, and that classification decides
  * whether a token is sent and whether provenance is requested.
@@ -55,7 +57,8 @@ const matchesDomain = (hostname: string | undefined, domain: string): boolean =>
 /**
  * Classify a registry URL.
  *
- * @remarks
+ * **Details**
+ *
  * An absent registry classifies as `"npm"`: no registry configured means the
  * public npm registry, which is every npm client's default and this package's
  * {@link DEFAULT_REGISTRY}.
@@ -64,11 +67,8 @@ const matchesDomain = (hostname: string | undefined, domain: string): boolean =>
  * consumer `switch`es exhaustively instead of composing booleans that can
  * disagree or negating one to mean "everything else".
  *
- * @param registry - A registry URL or bare host; absent or empty means the
- *   public npm registry.
- * @returns The registry's kind.
+ * **Example** (Classify public and custom registry URLs)
  *
- * @example
  * ```ts
  * import { classifyRegistry } from "./index.ts";
  *
@@ -78,6 +78,9 @@ const matchesDomain = (hostname: string | undefined, domain: string): boolean =>
  * classifyRegistry("https://registry.example.com/"); // => "custom"
  * ```
  *
+ * @param registry - A registry URL or bare host; absent or empty means the
+ *   public npm registry.
+ * @returns The registry's kind.
  * @public
  */
 export const classifyRegistry = (registry: string | undefined): RegistryKind => {
@@ -92,7 +95,8 @@ export const classifyRegistry = (registry: string | undefined): RegistryKind => 
 /**
  * The host of a registry URL, for use as a label.
  *
- * @remarks
+ * **Details**
+ *
  * The **port is kept**, unlike the hostname used for classification: two custom
  * registries on the same host and different ports are different registries, and
  * a label that collapsed them would be actively misleading in a publish report.
@@ -103,7 +107,6 @@ export const classifyRegistry = (registry: string | undefined): RegistryKind => 
  *
  * @param registry - A registry URL or bare host.
  * @returns The host portion.
- *
  * @public
  */
 export const registryHost = (registry: string): string => {
@@ -127,7 +130,8 @@ export const registryHost = (registry: string): string => {
 /**
  * A compact label for a registry: `npm`, `github`, `jsr`, or the host.
  *
- * @remarks
+ * **Details**
+ *
  * For a log-tree row or any other place a full name would not fit. The
  * well-known registries collapse to a short name and everything else falls back
  * to {@link registryHost}.
@@ -149,7 +153,6 @@ export const registryHost = (registry: string): string => {
  *
  * @param registry - A registry URL or bare host.
  * @returns The short label.
- *
  * @public
  */
 export const registryShortLabel = (registry: string): string =>
@@ -164,7 +167,8 @@ export const registryShortLabel = (registry: string): string =>
  * A human-readable display name for a registry: `npm`, `GitHub Packages`,
  * `JSR`, or the host.
  *
- * @remarks
+ * **Details**
+ *
  * The spelled-out counterpart to {@link registryShortLabel}, for prose and
  * summaries rather than table rows. The same host fallback and the same
  * classification guard apply.
@@ -176,7 +180,6 @@ export const registryShortLabel = (registry: string): string =>
  * @param registry - A registry URL or bare host, or nothing when none is
  *   configured. Absent or empty means the public npm registry.
  * @returns The display name.
- *
  * @public
  */
 export const registryDisplayName = (registry: string | null | undefined): string => {

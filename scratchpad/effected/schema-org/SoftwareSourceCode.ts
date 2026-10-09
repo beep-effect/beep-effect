@@ -8,13 +8,16 @@ const $I = $ScratchpadId.create("effected/schema-org/SoftwareSourceCode");
 /**
  * A schema.org `SoftwareSourceCode` — the node describing a package's source.
  *
+ * **Details**
+ *
  * Note that the version property is `version`, inherited from `CreativeWork`.
  * `softwareVersion` reads like the right name and is **not** legal here:
  * schema.org defines it on `SoftwareApplication`. It serializes fine and is
  * silently ignored downstream, which is exactly the failure the conformance
  * validator exists to catch.
  *
- * @example
+ * **Example** (Describe package source code and its version)
+ *
  * ```ts
  * import { NodeRef, SoftwareSourceCode } from "./index.ts";
  *

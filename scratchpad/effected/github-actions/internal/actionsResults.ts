@@ -34,23 +34,25 @@ export interface ResultsBackend {
 	/** Always ends in `/`, so a caller composes paths by concatenation. */
 	readonly baseUrl: string;
 	/**
-	 * The runtime token.
-	 *
-	 * @remarks
-	 * Wrapped on the way *in*, not unwrapped on the way out: it arrives from the
-	 * environment as plaintext, and `HttpClientRequest.bearerToken` accepts a
-	 * `Redacted` directly, so this package's declassification seam is never
-	 * involved and `Redacted.value` is never called.
-	 */
+  * The runtime token.
+  *
+  * **Details**
+  *
+  * Wrapped on the way *in*, not unwrapped on the way out: it arrives from the
+  * environment as plaintext, and `HttpClientRequest.bearerToken` accepts a
+  * `Redacted` directly, so this package's declassification seam is never
+  * involved and `Redacted.value` is never called.
+  */
 	readonly token: Redacted.Redacted<string>;
 	/**
-	 * The backend ids, or why they could not be read.
-	 *
-	 * @remarks
-	 * A `Result` rather than a failure, because only the artifact protocol needs
-	 * them: a runtime token with no `Actions.Results` scope must not stop a cache
-	 * save that never looks at one.
-	 */
+  * The backend ids, or why they could not be read.
+  *
+  * **Details**
+  *
+  * A `Result` rather than a failure, because only the artifact protocol needs
+  * them: a runtime token with no `Actions.Results` scope must not stop a cache
+  * save that never looks at one.
+  */
 	readonly backendIds: Result.Result<BackendIds, string>;
 }
 
@@ -77,7 +79,8 @@ export const misconfiguredDetail: {
  * The run and job ids the artifact protocol needs, from the runtime token's
  * `scp` claim.
  *
- * @remarks
+ * **Details**
+ *
  * The scope is space-separated and the interesting entry is
  * `Actions.Results:<run>:<job>`. Exported so its own failures are tested
  * directly rather than through four RPC round trips.
@@ -114,7 +117,8 @@ export const backendIdsFrom = (token: string): Result.Result<BackendIds, string>
 /**
  * Read the results-backend coordinates from the runner environment.
  *
- * @remarks
+ * **Details**
+ *
  * Fails with the *name* of whichever variable is missing. Both are injected
  * only into `uses:` steps, so their absence is the single most common way one
  * of these three services is misused — a caller that reads the name can say so.

@@ -91,7 +91,8 @@ const bound = (binding: KeyName | { readonly char: string }, key: UiKey): boolea
  * The keys a widget understands, as data: the one source both for dispatching input and for the help line, so the
  * two cannot drift apart.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Read it with {@link useKeys}, whose handler must step from current state, never render-closure state: several keys
  * from one stdin read are dispatched before React re-renders.
  *
@@ -137,15 +138,16 @@ export class KeyTable<Action> {
 	};
 
 	/**
-	 * The help rows of every binding not hidden that can still fire, in order, labelled for `glyphs`: `↑/↓` under
-	 * Unicode, `up/down` under ASCII.
-	 *
-	 * @remarks
-	 * A key an earlier binding already holds (hidden or not) can never fire a later one, so a later binding is
-	 * labelled with its remaining keys only, and left out when none remain.
-	 *
-	 * @param glyphs - the glyph set the labels are drawn with
-	 */
+  * The help rows of every binding not hidden that can still fire, in order, labelled for `glyphs`: `↑/↓` under
+  * Unicode, `up/down` under ASCII.
+  *
+  * **Details**
+  *
+  * A key an earlier binding already holds (hidden or not) can never fire a later one, so a later binding is
+  * labelled with its remaining keys only, and left out when none remain.
+  *
+  * @param glyphs - the glyph set the labels are drawn with
+  */
 	readonly help = (glyphs: Cli.GlyphSet): ReadonlyArray<KeyHelpRow> => {
 		const taken = MutableHashSet.empty<string>();
 		const rows: Array<KeyHelpRow> = [];
@@ -212,7 +214,8 @@ const keysOf = (input: string, key: Parameters<typeof UiKey.fromInk>[1]): Readon
 /**
  * Read the keys of `table` and dispatch the action each one matches; keys the table does not bind are ignored.
  *
- * @remarks
+ * **Details**
+ *
  * One Ink `useInput` per call, and nothing else reads input.
  *
  * Text read in one go (`"yy"`, `"y\r"`) reaches Ink's `useInput` as one string; it is split here into a key per
@@ -232,7 +235,6 @@ const keysOf = (input: string, key: Parameters<typeof UiKey.fromInk>[1]): Readon
  * @param table - the keys to read
  * @param dispatch - receives each matched action
  * @param options - whether the keys are read
- *
  * @public
  */
 export const useKeys: {

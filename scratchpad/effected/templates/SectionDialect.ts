@@ -32,7 +32,8 @@ export type Eol = typeof Eol.Type;
 /**
  * Raised when a section cannot be turned into marker-delimited text.
  *
- * @remarks
+ * **Details**
+ *
  * Both reasons describe a document this package would be unable to read back
  * correctly, so rendering refuses rather than writing something it cannot
  * re-parse.
@@ -88,7 +89,8 @@ const GAP = "[ \\t]+";
  * The marker vocabulary: what phrase delimits a managed section, and which
  * comment styles a document is scanned for.
  *
- * @remarks
+ * **Details**
+ *
  * `styles` exists because reconciliation must **recognize sections it does
  * not own** — a foreign tool's block in the same file is preserved verbatim
  * and must never be mistaken for prose. That set cannot be derived from the
@@ -102,13 +104,14 @@ const GAP = "[ \\t]+";
  */
 export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)({
 	/**
-	 * The phrase between the key and the closing rule.
-	 *
-	 * @remarks
-	 * Letters, digits, spaces and underscores only. Dashes are excluded so a
-	 * phrase can never contain the `---` rule and make a marker ambiguous
-	 * against itself.
-	 */
+  * The phrase between the key and the closing rule.
+  *
+  * **Details**
+  *
+  * Letters, digits, spaces and underscores only. Dashes are excluded so a
+  * phrase can never contain the `---` rule and make a marker ambiguous
+  * against itself.
+  */
 	phrase: S.String.check(S.isPattern(/^[A-Za-z0-9][A-Za-z0-9 _]*$/u)).annotateKey({ description: "The phrase between the key and the closing rule." }),
 	/** Which comment styles the document scanner recognizes. At least one. */
 	styles: S.Array(CommentStyle).check(S.isMinLength(1)).annotateKey({ description: "Which comment styles the document scanner recognizes. At least one." }),
@@ -141,13 +144,14 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 	}
 
 	/**
-	 * A section as marker-delimited text, or a typed refusal.
-	 *
-	 * @remarks
-	 * Fails rather than producing a document it could not read back: see
-	 * {@link SectionRenderError}. Content is emitted with `eol` throughout,
-	 * so a section rendered into a CRLF document stays CRLF.
-	 */
+  * A section as marker-delimited text, or a typed refusal.
+  *
+  * **Details**
+  *
+  * Fails rather than producing a document it could not read back: see
+  * {@link SectionRenderError}. Content is emitted with `eol` throughout,
+  * so a section rendered into a CRLF document stays CRLF.
+  */
 	render(section: Section, eol: Eol = "\n"): Result.Result<string, SectionRenderError> {
 		if (!this.recognizes(section.commentStyle)) {
 			return Result.fail(SectionRenderError.make({ reason: "unknownCommentStyle", key: section.key }));
@@ -198,16 +202,17 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 	}
 
 	/**
-	 * One compiled scanner per recognized comment style, memoized.
-	 *
-	 * @remarks
-	 * Each pattern is anchored per line, bounds the key with an explicit
-	 * character class, and carries no nested quantifier, so scanning is linear
-	 * in document length. Every caller-supplied fragment — prefix, suffix,
-	 * phrase — is regex-escaped before interpolation.
-	 *
-	 * @internal
-	 */
+  * One compiled scanner per recognized comment style, memoized.
+  *
+  * **Details**
+  *
+  * Each pattern is anchored per line, bounds the key with an explicit
+  * character class, and carries no nested quantifier, so scanning is linear
+  * in document length. Every caller-supplied fragment — prefix, suffix,
+  * phrase — is regex-escaped before interpolation.
+  *
+  * @internal
+  */
 	matchers(): ReadonlyArray<{ readonly style: CommentStyle; readonly regex: RegExp }> {
 		return this.#compiledMatchers;
 	}

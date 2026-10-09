@@ -23,7 +23,8 @@ export interface CliMessageOptions {
 /**
  * One-line status messages: a glyph and some text, themed for a person and plain for an agent.
  *
- * @remarks
+ * **Details**
+ *
  * Each line goes through `Console`, `log` for stdout and `error` for stderr, never through the logger, so no
  * log level can silence it. Only the glyph is painted; the text stays plain. An `agent` audience gets the glyph
  * and the text and never colour, even when the theme has colour. `success` and `info` go to stdout, `warning`
@@ -40,17 +41,18 @@ export class CliMessage {
 	private constructor() {}
 
 	/**
-	 * Print a status line from a vocabulary.
-	 *
-	 * @remarks
-	 * The stream defaults to stderr when the status ranks at or above `warning` in `vocab`, and stdout
-	 * otherwise, so a custom status follows its own rank: a `timeout` ranked 85 goes to stderr.
-	 *
-	 * @param vocab - the vocabulary the status belongs to
-	 * @param name - the status
-	 * @param text - the text after the glyph
-	 * @param options - the stream override
-	 */
+  * Print a status line from a vocabulary.
+  *
+  * **Details**
+  *
+  * The stream defaults to stderr when the status ranks at or above `warning` in `vocab`, and stdout
+  * otherwise, so a custom status follows its own rank: a `timeout` ranked 85 goes to stderr.
+  *
+  * @param vocab - the vocabulary the status belongs to
+  * @param name - the status
+  * @param text - the text after the glyph
+  * @param options - the stream override
+  */
 	static readonly status = Effect.fn("status")(function* <N extends string>(
 		vocab: Status<N>,
 		name: N,

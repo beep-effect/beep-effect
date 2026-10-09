@@ -35,7 +35,8 @@ export type MarkdownParseErrorCode = typeof MarkdownParseErrorCode.Type;
  * human-readable `message`, and its exact position (`offset`/`length`, plus
  * zero-based `line`/`character`).
  *
- * @remarks
+ * **Details**
+ *
  * The five-field positional core (`code`/`offset`/`length`/`line`/`character`)
  * is structurally identical to `@effected/toml`'s `TomlDiagnostic` (and, by
  * the same cross-package contract, `@effected/jsonc`'s parse-error detail

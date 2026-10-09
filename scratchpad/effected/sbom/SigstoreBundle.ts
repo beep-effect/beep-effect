@@ -14,7 +14,8 @@ const $I = $ScratchpadId.create("effected/sbom/SigstoreBundle");
 /**
  * The Sigstore bundle media type this package produces.
  *
- * @remarks
+ * **Details**
+ *
  * v0.3 with a single certificate — what `DSSEBundleBuilder` emits by default,
  * and what GitHub's `POST /repos/{owner}/{repo}/attestations` accepts.
  *
@@ -33,7 +34,8 @@ export const IN_TOTO_PAYLOAD_TYPE = "application/vnd.in-toto+json" as const;
 /**
  * A signed Sigstore bundle: the wire form of an attestation.
  *
- * @remarks
+ * **Details**
+ *
  * `verificationMaterial` and `dsseEnvelope` are `unknown` because their shapes
  * belong to the Sigstore protobuf specifications, and re-declaring them here
  * would be a second, drifting copy of a wire format this package does not own.
@@ -43,8 +45,7 @@ export const IN_TOTO_PAYLOAD_TYPE = "application/vnd.in-toto+json" as const;
  * asserted — the version is the producer's statement about the bundle, and a
  * literal here would quietly lie the day a builder emits a different one.
  *
- * @see {@link https://github.com/sigstore/protobuf-specs/blob/main/protos/sigstore_bundle.proto | sigstore_bundle.proto}
- *
+ * @see {@link https://github.com/sigstore/protobuf-specs/blob/main/protos/sigstore_bundle.proto | sigstore_bundle.proto} for the bundle wire format
  * @public
  */
 export class SigstoreBundle extends S.Class<SigstoreBundle>($I`SigstoreBundle`)({

@@ -25,7 +25,8 @@ const $I = $ScratchpadId.create("effected/config-file/ConfigFile");
 /**
  * Indicates that the resolver chain produced no configuration source.
  *
- * @remarks
+ * **Details**
+ *
  * Its own tag, so "no config anywhere" is routable with `Effect.catchTag`
  * separately from "the config I found is broken" — the single most important
  * distinction in the error set.
@@ -36,16 +37,17 @@ export class ConfigFileNotFoundError extends S.TaggedError<ConfigFileNotFoundErr
 	/** The names of the resolvers that were probed, in order. */
 	searched: S.Array(S.String).annotateKey({ description: "The names of the resolvers that were probed, in order." }),
 	/**
-	 * The candidate paths the chain actually checked on disk, in probe order
-	 * across every resolver — the failure-path mirror of {@link ConfigMatch}.
-	 *
-	 * @remarks
-	 * One `searched` name can hide many paths: an `upwardWalk` with a
-	 * `filenames` list probes every name at every ancestor. Resolvers that omit
-	 * the optional `resolveProbe` member contribute nothing here, so the list
-	 * can be shorter than the true search (or empty for a fully hand-rolled
-	 * chain) — `searched` remains the complete resolver list either way.
-	 */
+  * The candidate paths the chain actually checked on disk, in probe order
+  * across every resolver — the failure-path mirror of {@link ConfigMatch}.
+  *
+  * **Gotchas**
+  *
+  * One `searched` name can hide many paths: an `upwardWalk` with a
+  * `filenames` list probes every name at every ancestor. Resolvers that omit
+  * the optional `resolveProbe` member contribute nothing here, so the list
+  * can be shorter than the true search (or empty for a fully hand-rolled
+  * chain) — `searched` remains the complete resolver list either way.
+  */
 	candidates: S.Array(S.String).annotateKey({ description: "The candidate paths the chain actually checked on disk, in probe order across every resolver — the failure-path mirror of ConfigMatch." }),
 }, $I.annote("ConfigFileNotFoundError", { description: "Indicates that the resolver chain produced no configuration source." })) {
 	override get message(): string {
@@ -58,7 +60,8 @@ export class ConfigFileNotFoundError extends S.TaggedError<ConfigFileNotFoundErr
 /**
  * Indicates that a config file could not be read from the filesystem.
  *
- * @remarks
+ * **Details**
+ *
  * `cause` preserves the underlying filesystem failure structurally rather than
  * flattening it to a string.
  *
@@ -95,7 +98,8 @@ export class ConfigFileWriteError extends S.TaggedError<ConfigFileWriteError>($I
  * Indicates that {@link ConfigFileShape.save} or {@link ConfigFileShape.update}
  * was called on a service configured without a `defaultPath`.
  *
- * @remarks
+ * **Details**
+ *
  * It is distinct by tag from a real {@link ConfigFileWriteError}, so a caller
  * can tell "no destination was configured" from "the write failed".
  *
@@ -118,7 +122,8 @@ export class ConfigDefaultPathMissingError extends S.TaggedError<ConfigDefaultPa
  * Indicates that parsed config content did not satisfy the schema, or that a
  * caller-supplied `validate` rejected it.
  *
- * @remarks
+ * **Details**
+ *
  * `issue` carries the **structured** schema failure — at runtime a
  * `SchemaIssue.Issue` tree, reachable through `_tag` and nested `issues`, so
  * every field a caller might branch on survives. It is typed `unknown` because
@@ -148,7 +153,8 @@ export type ConfigLoadError = ConfigFileNotFoundError | ConfigFileReadError | Co
 /**
  * The failure modes of reading one known path.
  *
- * @remarks
+ * **Details**
+ *
  * Deliberately excludes {@link ConfigFileNotFoundError}: every method typed with
  * this union either takes an explicit path or treats "nothing found" as success.
  *
@@ -159,7 +165,8 @@ export type ConfigReadError = ConfigFileReadError | ConfigCodecError | ConfigVal
 /**
  * The failure modes of encoding and writing one known path.
  *
- * @remarks
+ * **Details**
+ *
  * Deliberately excludes {@link ConfigFileNotFoundError} — the path is explicit,
  * so there is nothing to discover — and {@link ConfigDefaultPathMissingError},
  * because no default path is consulted.
@@ -172,7 +179,8 @@ export type ConfigWriteError = ConfigFileWriteError | ConfigCodecError | ConfigV
  * The failure modes of {@link ConfigFileShape.encode}: everything on the write
  * path except the write itself.
  *
- * @remarks
+ * **Details**
+ *
  * Deliberately excludes {@link ConfigFileWriteError} — nothing touches the
  * filesystem — so a `--dry-run` caller's error channel is honest about that.
  *
@@ -187,18 +195,19 @@ export type ConfigEncodeError = ConfigCodecError | ConfigValidationError;
  */
 export interface ConfigEncodeOptions {
 	/**
-	 * Text emitted **verbatim** in front of the serialized document, separated
-	 * from it by exactly one newline. If `header` already ends in `"\n"`, no
-	 * further newline is added.
-	 *
-	 * @remarks
-	 * The caller owns the header's validity in the target format: `#` comment
-	 * lines for TOML and YAML, `//` for JSONC. JSON has no comment syntax, so a
-	 * header on a JSON codec yields an unparseable file by construction — the
-	 * service does not check. The motivating case is a schema directive such as
-	 * `#:schema https://example.com/config.schema.json` at the top of a TOML
-	 * file, which editors read for completion and validation.
-	 */
+  * Text emitted **verbatim** in front of the serialized document, separated
+  * from it by exactly one newline. If `header` already ends in `"\n"`, no
+  * further newline is added.
+  *
+  * **Gotchas**
+  *
+  * The caller owns the header's validity in the target format: `#` comment
+  * lines for TOML and YAML, `//` for JSONC. JSON has no comment syntax, so a
+  * header on a JSON codec yields an unparseable file by construction — the
+  * service does not check. The motivating case is a schema directive such as
+  * `#:schema https://example.com/config.schema.json` at the top of a TOML
+  * file, which editors read for completion and validation.
+  */
 	readonly header?: string;
 }
 
@@ -219,7 +228,8 @@ export type ConfigUpdateError = ConfigLoadError | ConfigFileWriteError | ConfigD
 /**
  * The config file service, generic over the decoded config type `A`.
  *
- * @remarks
+ * **Details**
+ *
  * Error unions are narrowed per method: `loadOrDefault` cannot fail with
  * {@link ConfigFileNotFoundError} because that is the branch it handles, and
  * `discover` treats an empty result as success.
@@ -232,44 +242,48 @@ export interface ConfigFileShape<A> {
 	/** Read, decode and validate one explicit path. */
 	readonly loadFrom: (path: string) => Effect.Effect<A, ConfigReadError>;
 	/**
-	 * Every source the resolver chain found, in priority order. Empty is success.
-	 *
-	 * @remarks
-	 * A found-but-corrupt source ABORTS discovery with a typed error rather than
-	 * being silently skipped: silently skipping a corrupt file would mean running
-	 * on the wrong config. This is deliberate.
-	 */
+  * Every source the resolver chain found, in priority order. Empty is success.
+  *
+  * **Gotchas**
+  *
+  * A found-but-corrupt source ABORTS discovery with a typed error rather than
+  * being silently skipped: silently skipping a corrupt file would mean running
+  * on the wrong config. This is deliberate.
+  */
 	readonly discover: Effect.Effect<ReadonlyArray<ConfigSource<A>>, ConfigReadError>;
 	/**
-	 * Like {@link ConfigFileShape.load}, but yields `defaultValue` when nothing is found.
-	 *
-	 * @remarks
-	 * `defaultValue` is returned as-is: neither the schema nor `options.validate`
-	 * is applied to it. It is trusted caller input, not a discovered document.
-	 */
+  * Like {@link ConfigFileShape.load}, but yields `defaultValue` when nothing is found.
+  *
+  * **Gotchas**
+  *
+  * `defaultValue` is returned as-is: neither the schema nor `options.validate`
+  * is applied to it. It is trusted caller input, not a discovered document.
+  */
 	readonly loadOrDefault: (defaultValue: A) => Effect.Effect<A, ConfigReadError>;
 	/** Decode and validate an in-memory value. */
 	readonly validate: (value: unknown) => Effect.Effect<A, ConfigValidationError>;
 	/**
-	 * Encode `value` to its serialized text without writing anything.
-	 *
-	 * @remarks
-	 * Produces byte-for-byte what `write(value, path, options)` puts on disk —
-	 * the primitive for `--dry-run` and "show me the file" callers. Emits no
-	 * event, because nothing was written. A codec failure here carries no
-	 * `path`, and a validation failure's `path` is `Option.none()`: there is no
-	 * file to name.
-	 */
+  * Encode `value` to its serialized text without writing anything.
+  *
+  * **Details**
+  *
+  * Produces byte-for-byte what `write(value, path, options)` puts on disk —
+  * the primitive for `--dry-run` and "show me the file" callers. Emits no
+  * event, because nothing was written. A codec failure here carries no
+  * `path`, and a validation failure's `path` is `Option.none()`: there is no
+  * file to name.
+  */
 	readonly encode: (value: A, options?: ConfigEncodeOptions) => Effect.Effect<string, ConfigEncodeError>;
 	/**
-	 * Encode `value` and write it to an explicit `path`.
-	 *
-	 * @remarks
-	 * Does **not** create the parent directory — that is
-	 * {@link ConfigFileShape.save}'s job, and the distinction is load-bearing:
-	 * `write` targets a path the caller already vouched for. `options` are the
-	 * same as {@link ConfigFileShape.encode}'s, so the two stay in lockstep.
-	 */
+  * Encode `value` and write it to an explicit `path`.
+  *
+  * **Gotchas**
+  *
+  * Does **not** create the parent directory — that is
+  * {@link ConfigFileShape.save}'s job, and the distinction is load-bearing:
+  * `write` targets a path the caller already vouched for. `options` are the
+  * same as {@link ConfigFileShape.encode}'s, so the two stay in lockstep.
+  */
 	readonly write: (value: A, path: string, options?: ConfigEncodeOptions) => Effect.Effect<void, ConfigWriteError>;
 	/**
 	 * Resolve `defaultPath`, `mkdir -p` its parent, encode `value` into it, and
@@ -277,20 +291,22 @@ export interface ConfigFileShape<A> {
 	 */
 	readonly save: (value: A) => Effect.Effect<string, ConfigSaveError>;
 	/**
-	 * Load the current value, apply `fn`, {@link ConfigFileShape.save} the result
-	 * and return it.
-	 *
-	 * @remarks
-	 * With `defaultValue` the load cannot fail with
-	 * {@link ConfigFileNotFoundError}; without it, it can.
-	 */
+  * Load the current value, apply `fn`, {@link ConfigFileShape.save} the result
+  * and return it.
+  *
+  * **Details**
+  *
+  * With `defaultValue` the load cannot fail with
+  * {@link ConfigFileNotFoundError}; without it, it can.
+  */
 	readonly update: (fn: (current: A) => A, defaultValue?: A) => Effect.Effect<A, ConfigUpdateError>;
 }
 
 /**
  * Options for {@link ConfigFile.layer}.
  *
- * @remarks
+ * **Details**
+ *
  * `RR` is the union of the resolvers' requirements. It flows into the layer's
  * `R` rather than being cast away.
  *
@@ -298,14 +314,15 @@ export interface ConfigFileShape<A> {
  */
 export interface ConfigFileOptions<A, I, RR> {
 	/**
-	 * The schema every discovered document is decoded through.
-	 *
-	 * @remarks
-	 * `S.Codec<A, I>` rather than the one-parameter `S.Schema<A>`,
-	 * because the encoded form `I` matters on the write path. Its decoding and
-	 * encoding service channels default to `never`, keeping `decode` free of
-	 * requirements.
-	 */
+  * The schema every discovered document is decoded through.
+  *
+  * **Details**
+  *
+  * `S.Codec<A, I>` rather than the one-parameter `S.Schema<A>`,
+  * because the encoded form `I` matters on the write path. Its decoding and
+  * encoding service channels default to `never`, keeping `decode` free of
+  * requirements.
+  */
 	readonly schema: S.Codec<A, I>;
 	/** How file content becomes an unknown document, and back. */
 	readonly codec: ConfigCodec;
@@ -316,49 +333,52 @@ export interface ConfigFileOptions<A, I, RR> {
 	/** An optional caller-supplied check run after schema decoding. */
 	readonly validate?: (value: A) => Effect.Effect<A, ConfigValidationError>;
 	/**
-	 * Parse options threaded into every schema decode this performs.
-	 *
-	 * @remarks
-	 * The field that matters here is `onExcessProperty`. It defaults to
-	 * `"ignore"` in core, so a document's unknown keys are dropped silently and
-	 * a loader cannot report a typo'd section — or enforce a field this schema
-	 * deliberately removed. `{ onExcessProperty: "error" }` turns both into a
-	 * {@link ConfigValidationError} whose issue names the offending path.
-	 *
-	 * It cannot be expressed with {@link ConfigFileOptions.validate}: that runs
-	 * on the *decoded* value, by which point the excess keys are already gone.
-	 *
-	 * Keys covered by a `S.StructWithRest` rest are not excess, so a schema
-	 * that deliberately admits a pass-through section keeps working under
-	 * `"error"`.
-	 *
-	 * Absent, nothing changes: core's defaults apply.
-	 *
-	 * Pair it with `errors: "all"`. Core defaults to `"first"`, which for a
-	 * *loader* means a file with three typos surfaces one per run — fix,
-	 * re-run, discover the next. The extra work only happens on a document
-	 * that is already failing.
-	 */
+  * Parse options threaded into every schema decode this performs.
+  *
+  * **Gotchas**
+  *
+  * The field that matters here is `onExcessProperty`. It defaults to
+  * `"ignore"` in core, so a document's unknown keys are dropped silently and
+  * a loader cannot report a typo'd section — or enforce a field this schema
+  * deliberately removed. `{ onExcessProperty: "error" }` turns both into a
+  * {@link ConfigValidationError} whose issue names the offending path.
+  *
+  * It cannot be expressed with {@link ConfigFileOptions.validate}: that runs
+  * on the *decoded* value, by which point the excess keys are already gone.
+  *
+  * Keys covered by a `S.StructWithRest` rest are not excess, so a schema
+  * that deliberately admits a pass-through section keeps working under
+  * `"error"`.
+  *
+  * Absent, nothing changes: core's defaults apply.
+  *
+  * Pair it with `errors: "all"`. Core defaults to `"first"`, which for a
+  * *loader* means a file with three typos surfaces one per run — fix,
+  * re-run, discover the next. The extra work only happens on a document
+  * that is already failing.
+  */
 	readonly parseOptions?: SchemaAST.ParseOptions;
 	/**
-	 * Where {@link ConfigFileShape.save} writes when given no explicit path.
-	 *
-	 * @remarks
-	 * Its requirements join the resolvers' in `RR` and flow into the layer's `R`.
-	 *
-	 * When absent, `save` and `update` fail with
-	 * {@link ConfigDefaultPathMissingError}.
-	 */
+  * Where {@link ConfigFileShape.save} writes when given no explicit path.
+  *
+  * **Details**
+  *
+  * Its requirements join the resolvers' in `RR` and flow into the layer's `R`.
+  *
+  * When absent, `save` and `update` fail with
+  * {@link ConfigDefaultPathMissingError}.
+  */
 	readonly defaultPath?: Effect.Effect<string, never, RR>;
 	/**
-	 * The opt-in event hook. Pass the `ConfigEvents` class itself.
-	 *
-	 * @remarks
-	 * A **key**, not an instance: the service is looked up in the ambient context
-	 * at call time with `Effect.serviceOption`, so it never enters the layer's
-	 * `R`. When this is omitted, `emit` is `Effect.void` — it does not even
-	 * perform the lookup. That is what "zero-cost when absent" means here.
-	 */
+  * The opt-in event hook. Pass the `ConfigEvents` class itself.
+  *
+  * **Details**
+  *
+  * A **key**, not an instance: the service is looked up in the ambient context
+  * at call time with `Effect.serviceOption`, so it never enters the layer's
+  * `R`. When this is omitted, `emit` is `Effect.void` — it does not even
+  * perform the lookup. That is what "zero-cost when absent" means here.
+  */
 	readonly events?: Context.Key<ConfigEvents, ConfigEventsShape>;
 }
 
@@ -371,7 +391,8 @@ const Service =
 /**
  * Re-raise a codec failure with the file it came from attached.
  *
- * @remarks
+ * **Details**
+ *
  * A codec is handed a string and never a path, so `ConfigCodecError.path` can
  * only be filled in here, where the resolved target is in scope. An error that
  * already carries a path is left alone — a decorator codec that knew better
@@ -405,21 +426,22 @@ const makeImpl = <A, I, RR>(
 	resolverEnv: Context.Context<RR>,
 ): ConfigFileShape<A> => {
 	/**
-	 * Publish one event, or nothing at all.
-	 *
-	 * @remarks
-	 * Three properties hold, in order of how easy they are to lose:
-	 *
-	 * 1. **Zero-cost when absent.** No `events` option means `Effect.void` — no
-	 *    context lookup, no `DateTime.now`.
-	 * 2. **Never a requirement.** `Effect.serviceOption` reads the ambient context
-	 *    without adding to `R`, so wiring events cannot change a layer's type.
-	 * 3. **Never fatal.** A subscriber's hub is consumer-supplied code. It cannot
-	 *    FAIL — `PubSub.publish` has no error channel — but it CAN throw, and
-	 *    `catchDefect` absorbs that; interruption is deliberately left to
-	 *    propagate, because a config load that is being interrupted must stay
-	 *    interrupted.
-	 */
+  * Publish one event, or nothing at all.
+  *
+  * **Details**
+  *
+  * Three properties hold, in order of how easy they are to lose:
+  *
+  * 1. **Zero-cost when absent.** No `events` option means `Effect.void` — no
+  *    context lookup, no `DateTime.now`.
+  * 2. **Never a requirement.** `Effect.serviceOption` reads the ambient context
+  *    without adding to `R`, so wiring events cannot change a layer's type.
+  * 3. **Never fatal.** A subscriber's hub is consumer-supplied code. It cannot
+  *    FAIL — `PubSub.publish` has no error channel — but it CAN throw, and
+  *    `catchDefect` absorbs that; interruption is deliberately left to
+  *    propagate, because a config load that is being interrupted must stay
+  *    interrupted.
+  */
 	const emit = (payload: ConfigEventPayload): Effect.Effect<void> =>
 		options.events === undefined
 			? Effect.void
@@ -652,17 +674,18 @@ const makeImpl = <A, I, RR>(
 	});
 
 	/**
-	 * Serializes `update`'s read-modify-write. One permit, one service instance.
-	 *
-	 * @remarks
-	 * `update` is load → transform → save. Without a lock, two concurrent calls
-	 * both read the old document across the read's async boundary and both write
-	 * their own transform of it, so one caller's change is silently lost. The
-	 * lock covers the whole critical section, not just the write.
-	 *
-	 * This guards a single service instance in a single process. It is not a file
-	 * lock: another process writing the same path concurrently can still clobber.
-	 */
+  * Serializes `update`'s read-modify-write. One permit, one service instance.
+  *
+  * **Gotchas**
+  *
+  * `update` is load → transform → save. Without a lock, two concurrent calls
+  * both read the old document across the read's async boundary and both write
+  * their own transform of it, so one caller's change is silently lost. The
+  * lock covers the whole critical section, not just the write.
+  *
+  * This guards a single service instance in a single process. It is not a file
+  * lock: another process writing the same path concurrently can still clobber.
+  */
 	const updateLock = Semaphore.makeUnsafe(1);
 
 	const update = Effect.fn("ConfigFile.update")(function* (fn: (current: A) => A, defaultValue?: A) {
@@ -717,7 +740,8 @@ const layer = <Self, A, I, RR = never, S extends ConfigFileShape<A> = ConfigFile
 /**
  * Options for {@link ConfigFile.testLayer}.
  *
- * @remarks
+ * **Details**
+ *
  * Deliberately has no `resolvers`: `testLayer` synthesizes one
  * {@link (ConfigResolver:class).staticDir} per seeded file, in `files`
  * insertion order, so the first key wins under
@@ -738,12 +762,13 @@ export interface ConfigFileTestOptions<A, I> {
 	/** How several discovered sources become one value. */
 	readonly strategy: MergeStrategy<A>;
 	/**
-	 * Filenames (relative to the temp dir) mapped to their raw contents.
-	 *
-	 * @remarks
-	 * A name may contain separators (`"nested/.apprc"`); the parent directory is
-	 * created for you.
-	 */
+  * Filenames (relative to the temp dir) mapped to their raw contents.
+  *
+  * **Details**
+  *
+  * A name may contain separators (`"nested/.apprc"`); the parent directory is
+  * created for you.
+  */
 	readonly files: Record<string, string>;
 	/** An optional caller-supplied check run after schema decoding. */
 	readonly validate?: (value: A) => Effect.Effect<A, ConfigValidationError>;
@@ -804,23 +829,25 @@ export interface ConfigReadOptions<A, I> {
 	/** The schema the document is decoded through. */
 	readonly schema: S.Codec<A, I>;
 	/**
-	 * How file content becomes an unknown document.
-	 *
-	 * @remarks
-	 * An explicit argument, never inferred from the file extension or defaulted
-	 * to JSON. Naming the codec at the call site is what keeps the
-	 * free-standing-codec tree-shaking guarantee: a consumer that only ever
-	 * passes `JsonCodec` never references the JSONC, YAML or TOML modules, so
-	 * their engines stay out of the bundle.
-	 */
+  * How file content becomes an unknown document.
+  *
+  * **Details**
+  *
+  * An explicit argument, never inferred from the file extension or defaulted
+  * to JSON. Naming the codec at the call site is what keeps the
+  * free-standing-codec tree-shaking guarantee: a consumer that only ever
+  * passes `JsonCodec` never references the JSONC, YAML or TOML modules, so
+  * their engines stay out of the bundle.
+  */
 	readonly codec: ConfigCodec;
 	/**
-	 * Parse options for the decode, chiefly `onExcessProperty`.
-	 *
-	 * @remarks
-	 * See {@link ConfigFileOptions.parseOptions}; it means the same thing here.
-	 * Absent, core's defaults apply and unknown keys are dropped silently.
-	 */
+  * Parse options for the decode, chiefly `onExcessProperty`.
+  *
+  * **Gotchas**
+  *
+  * See {@link ConfigFileOptions.parseOptions}; it means the same thing here.
+  * Absent, core's defaults apply and unknown keys are dropped silently.
+  */
 	readonly parseOptions?: SchemaAST.ParseOptions;
 }
 
@@ -857,126 +884,133 @@ export class ConfigFile {
 	private constructor() {}
 
 	/**
-	 * Create a uniquely-keyed service class for one config schema.
-	 *
-	 * @example
-	 * ```ts
-	 * class AppConfig extends ConfigFile.Service<AppConfig, AppShape>()("app/Config") {}
-	 * ```
-	 */
+  * Create a uniquely-keyed service class for one config schema.
+  *
+  * **Example** (Create an application config service)
+  *
+  * ```ts
+  * class AppConfig extends ConfigFile.Service<AppConfig, AppShape>()("app/Config") {}
+  * ```
+  */
 	static readonly Service = Service;
 
 	/**
-	 * Build the live layer for a config service class.
-	 *
-	 * @remarks
-	 * Resolver requirements flow into the layer's `R` type: the result is
-	 * `Layer<Self, never, FileSystem | Path | RR>`, so the platform services and
-	 * every resolver's needs are visible at the provide site.
-	 *
-	 * `ConfigFile.layer` is a layer-RETURNING function, not a layer: calling it
-	 * twice builds two independent service instances. Bind its result to a const
-	 * and provide that const — do not call `ConfigFile.layer(...)` inline at each
-	 * provide site.
-	 *
-	 * `tag` is a {@link ConfigFile.Service} key — its service type
-	 * `ConfigFileShape<A>` for the schema's `A`. A key whose shape adds members
-	 * (`ConfigFileShape<A> & { … }`) is a compile error, reported as an argument
-	 * "not assignable to parameter of type 'never'", because this layer could not
-	 * supply them. The check cannot see through method-syntax parameter
-	 * bivariance: a member redeclared as a method with a wider parameter still
-	 * compiles.
-	 *
-	 * @example
-	 * ```ts
-	 * import { ConfigFile, ConfigResolver, JsonCodec, MergeStrategy } from "./index.ts";
-	 * import * as S from "effect/Schema";
-	 *
-	 * const AppShape = S.Struct({ port: S.Finite });
-	 * class AppConfig extends ConfigFile.Service<AppConfig, typeof AppShape.Type>()("app/Config") {}
-	 *
-	 * const AppConfigLive = ConfigFile.layer(AppConfig, {
-	 * 	schema: AppShape,
-	 * 	codec: JsonCodec,
-	 * 	resolvers: [ConfigResolver.explicitPath("./app.config.json")],
-	 * 	strategy: MergeStrategy.firstMatch<typeof AppShape.Type>(),
-	 * });
-	 * ```
-	 */
+  * Build the live layer for a config service class.
+  *
+  * **Gotchas**
+  *
+  * Resolver requirements flow into the layer's `R` type: the result is
+  * `Layer<Self, never, FileSystem | Path | RR>`, so the platform services and
+  * every resolver's needs are visible at the provide site.
+  *
+  * `ConfigFile.layer` is a layer-RETURNING function, not a layer: calling it
+  * twice builds two independent service instances. Bind its result to a const
+  * and provide that const — do not call `ConfigFile.layer(...)` inline at each
+  * provide site.
+  *
+  * `tag` is a {@link ConfigFile.Service} key — its service type
+  * `ConfigFileShape<A>` for the schema's `A`. A key whose shape adds members
+  * (`ConfigFileShape<A> & { … }`) is a compile error, reported as an argument
+  * "not assignable to parameter of type 'never'", because this layer could not
+  * supply them. The check cannot see through method-syntax parameter
+  * bivariance: a member redeclared as a method with a wider parameter still
+  * compiles.
+  *
+  * **Example** (Build a JSON config layer for an explicit path)
+  *
+  * ```ts
+  * import { ConfigFile, ConfigResolver, JsonCodec, MergeStrategy } from "./index.ts";
+  * import * as S from "effect/Schema";
+  *
+  * const AppShape = S.Struct({ port: S.Finite });
+  * class AppConfig extends ConfigFile.Service<AppConfig, typeof AppShape.Type>()("app/Config") {}
+  *
+  * const AppConfigLive = ConfigFile.layer(AppConfig, {
+  * 	schema: AppShape,
+  * 	codec: JsonCodec,
+  * 	resolvers: [ConfigResolver.explicitPath("./app.config.json")],
+  * 	strategy: MergeStrategy.firstMatch<typeof AppShape.Type>(),
+  * });
+  * ```
+  */
 	static readonly layer = layer;
 
 	/**
-	 * A scoped layer that seeds `files` into a temp directory, wires the **real**
-	 * live implementation over them, and removes the directory when the scope
-	 * closes.
-	 *
-	 * @remarks
-	 * Deliberately not a mock. It delegates to the very same `makeImpl` that
-	 * {@link ConfigFile.layer} uses, so tests exercise the actual codec, resolver
-	 * and merge pipeline rather than a parallel implementation that can drift from
-	 * it. A stubbed test layer would make every downstream test a claim about the
-	 * stub instead of about the code under test.
-	 *
-	 * Platform-agnostic: the consumer supplies the `FileSystem` layer, and the temp
-	 * directory is created through `FileSystem.makeTempDirectory` rather than
-	 * `node:fs`.
-	 *
-	 * The temp directory is removed by a finalizer bound to the layer's own scope,
-	 * so cleanup runs on release without surfacing `Scope` in the layer's
-	 * requirements.
-	 *
-	 * `tag` takes the same `ConfigFileShape<A>` key as {@link ConfigFile.layer},
-	 * with the same check: a shape that adds members is a compile error.
-	 *
-	 * @example
-	 * ```ts
-	 * const TestConfig = ConfigFile.testLayer(AppConfig, {
-	 * 	schema: AppShape,
-	 * 	codec: JsonCodec,
-	 * 	strategy: MergeStrategy.firstMatch<AppShape>(),
-	 * 	files: { ".apprc": `{"port":4242}` },
-	 * }).pipe(Layer.provide(NodeServices.layer));
-	 * ```
-	 */
+  * A scoped layer that seeds `files` into a temp directory, wires the **real**
+  * live implementation over them, and removes the directory when the scope
+  * closes.
+  *
+  * **Details**
+  *
+  * Deliberately not a mock. It delegates to the very same `makeImpl` that
+  * {@link ConfigFile.layer} uses, so tests exercise the actual codec, resolver
+  * and merge pipeline rather than a parallel implementation that can drift from
+  * it. A stubbed test layer would make every downstream test a claim about the
+  * stub instead of about the code under test.
+  *
+  * Platform-agnostic: the consumer supplies the `FileSystem` layer, and the temp
+  * directory is created through `FileSystem.makeTempDirectory` rather than
+  * `node:fs`.
+  *
+  * The temp directory is removed by a finalizer bound to the layer's own scope,
+  * so cleanup runs on release without surfacing `Scope` in the layer's
+  * requirements.
+  *
+  * `tag` takes the same `ConfigFileShape<A>` key as {@link ConfigFile.layer},
+  * with the same check: a shape that adds members is a compile error.
+  *
+  * **Example** (Seed a temporary JSON config for tests)
+  *
+  * ```ts
+  * const TestConfig = ConfigFile.testLayer(AppConfig, {
+  * 	schema: AppShape,
+  * 	codec: JsonCodec,
+  * 	strategy: MergeStrategy.firstMatch<AppShape>(),
+  * 	files: { ".apprc": `{"port":4242}` },
+  * }).pipe(Layer.provide(NodeServices.layer));
+  * ```
+  */
 	static readonly testLayer = testLayer;
 
 	/**
-	 * Read, decode and validate one explicit path — no service, no layer, no tag.
-	 *
-	 * @remarks
-	 * The one-shot form. {@link ConfigFile.layer} binds schema and codec at layer
-	 * construction, which is the right model for a config file an application
-	 * *has* — several candidate locations, `save`/`update`, migrations, events —
-	 * and heavy for a call site that decodes one known path once, where it costs a
-	 * service subclass, a layer bound to a const and a provide at the boundary.
-	 * Unlike the service, `read` takes its schema per call, so one call site can
-	 * read several unrelated files without a service class each.
-	 *
-	 * It is deliberately read-only and discovery-free: there is no resolver chain
-	 * and no write path. Reach for {@link ConfigFile.layer} the moment either is
-	 * wanted, rather than growing this.
-	 *
-	 * The error channel is `ConfigReadError` — the same narrowed union
-	 * {@link ConfigFileShape.loadFrom} carries, with causes and schema issues held
-	 * structurally rather than flattened into a message.
-	 *
-	 * @example
-	 * ```ts
-	 * import { ConfigFile, JsonCodec } from "./index.ts";
-	 * import * as Effect from "effect/Effect";
-	 * import * as S from "effect/Schema";
-	 *
-	 * const MyConfig = S.Struct({ port: S.Finite });
-	 *
-	 * // Requires `FileSystem` in `R`; provide it from a platform layer.
-	 * const program = Effect.gen(function* () {
-	 * 	const config = yield* ConfigFile.read("./app.config.json", {
-	 * 		schema: MyConfig,
-	 * 		codec: JsonCodec,
-	 * 	});
-	 * 	return config.port;
-	 * });
-	 * ```
-	 */
+  * Read, decode and validate one explicit path — no service, no layer, no tag.
+  *
+  * **Details**
+  *
+  * The one-shot form. {@link ConfigFile.layer} binds schema and codec at layer
+  * construction, which is the right model for a config file an application
+  * *has* — several candidate locations, `save`/`update`, migrations, events —
+  * and heavy for a call site that decodes one known path once, where it costs a
+  * service subclass, a layer bound to a const and a provide at the boundary.
+  * Unlike the service, `read` takes its schema per call, so one call site can
+  * read several unrelated files without a service class each.
+  *
+  * It is deliberately read-only and discovery-free: there is no resolver chain
+  * and no write path. Reach for {@link ConfigFile.layer} the moment either is
+  * wanted, rather than growing this.
+  *
+  * The error channel is `ConfigReadError` — the same narrowed union
+  * {@link ConfigFileShape.loadFrom} carries, with causes and schema issues held
+  * structurally rather than flattened into a message.
+  *
+  * **Example** (Read a port from a validated JSON file)
+  *
+  * ```ts
+  * import { ConfigFile, JsonCodec } from "./index.ts";
+  * import * as Effect from "effect/Effect";
+  * import * as S from "effect/Schema";
+  *
+  * const MyConfig = S.Struct({ port: S.Finite });
+  *
+  * // Requires `FileSystem` in `R`; provide it from a platform layer.
+  * const program = Effect.gen(function* () {
+  * 	const config = yield* ConfigFile.read("./app.config.json", {
+  * 		schema: MyConfig,
+  * 		codec: JsonCodec,
+  * 	});
+  * 	return config.port;
+  * });
+  * ```
+  */
 	static readonly read = read;
 }

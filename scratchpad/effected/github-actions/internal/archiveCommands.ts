@@ -109,7 +109,8 @@ const dotnetCompressionLevel = (level: number): string =>
  * The manifest the Windows zip script reads: `files` one per line, `\n`-joined,
  * with a trailing newline. Pure; the caller writes it (UTF-8, no BOM).
  *
- * @remarks
+ * **Gotchas**
+ *
  * A path containing `\n` or `\r` is unrepresentable — it would split into two
  * entries — and this function does not check; `Artifact.zip` rejects such a
  * file as `invalidOptions`, naming it, before anything is written.

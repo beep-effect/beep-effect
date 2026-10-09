@@ -25,7 +25,8 @@ export const configDependenciesOf = (document: unknown): Record<string, string> 
  * `pnpm:export` materializes into the file, as opposed to the half a config
  * dependency injects at replay time.
  *
- * @remarks
+ * **Details**
+ *
  * **Tolerant, unlike the catalog blocks**, and the asymmetry is deliberate: a
  * malformed catalog block must hard-fail because a silently-empty catalog makes
  * every dependency look newly added, whereas a malformed rules block costs only

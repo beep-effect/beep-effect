@@ -38,7 +38,8 @@ export class InvalidComparatorError extends S.TaggedError<InvalidComparatorError
  * `<`, `<=`) followed by a complete version; a missing operator means `=`.
  * Wildcards and range sugar are not allowed — those belong to `Range`.
  *
- * @example
+ * **Example** (Test a version against a comparator)
+ *
  * ```ts
  * import { Comparator, SemVer } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -90,30 +91,32 @@ export class Comparator extends S.Class<Comparator>($I`Comparator`)({
 	// ── Construction ────────────────────────────────────────────────────
 
 	/**
-	 * Parse a comparator string (e.g. `">=1.2.3"`), synchronously, returning a
-	 * `Result` instead of an `Effect`.
-	 *
-	 * @remarks
-	 * {@link Comparator.parse} is defined in terms of this function; the two
-	 * never diverge. Reach for the `Effect` variant inside Effect code — it
-	 * carries the `Comparator.parse` tracing span — and for this one at
-	 * synchronous boundaries.
-	 *
-	 * @example
-	 * ```ts
-	 * import { Comparator } from "./index.ts";
-	 * import * as Result from "effect/Result";
-	 *
-	 * const ok = Comparator.parseResult(">=1.2.3");
-	 * if (Result.isSuccess(ok)) {
-	 *   console.log(ok.success.operator); // => ">="
-	 * }
-	 * ```
-	 *
-	 * @param input - the comparator string to parse
-	 * @returns a `Result` succeeding with the parsed {@link Comparator}, or
-	 * failing with {@link InvalidComparatorError}.
-	 */
+  * Parse a comparator string (e.g. `">=1.2.3"`), synchronously, returning a
+  * `Result` instead of an `Effect`.
+  *
+  * **Details**
+  *
+  * {@link Comparator.parse} is defined in terms of this function; the two
+  * never diverge. Reach for the `Effect` variant inside Effect code — it
+  * carries the `Comparator.parse` tracing span — and for this one at
+  * synchronous boundaries.
+  *
+  * **Example** (Parse a comparator synchronously)
+  *
+  * ```ts
+  * import { Comparator } from "./index.ts";
+  * import * as Result from "effect/Result";
+  *
+  * const ok = Comparator.parseResult(">=1.2.3");
+  * if (Result.isSuccess(ok)) {
+  *   console.log(ok.success.operator); // => ">="
+  * }
+  * ```
+  *
+  * @param input - the comparator string to parse
+  * @returns a `Result` succeeding with the parsed {@link Comparator}, or
+  * failing with {@link InvalidComparatorError}.
+  */
 	static parseResult(input: string): Result.Result<Comparator, InvalidComparatorError> {
 		const result = parseComparator(input);
 		if (!result.ok) {

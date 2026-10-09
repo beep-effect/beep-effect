@@ -34,41 +34,45 @@ export type DeploymentEnvironmentInfo = typeof DeploymentEnvironmentInfo.Type;
  */
 export interface DeploymentEnvironmentShape {
 	/**
-	 * Create or update a deployment environment.
-	 *
-	 * @remarks
-	 * The route is **idempotent** — a `PUT` on an existing environment updates it
-	 * — so there is no list-then-branch here, unlike variables.
-	 *
-	 * `config` stays an open record because the protection-rule body is a moving
-	 * target: wait timers, reviewers, deployment-branch policies and whatever
-	 * GitHub adds next.
-	 */
+  * Create or update a deployment environment.
+  *
+  * **Details**
+  *
+  * The route is **idempotent** — a `PUT` on an existing environment updates it
+  * — so there is no list-then-branch here, unlike variables.
+  *
+  * `config` stays an open record because the protection-rule body is a moving
+  * target: wait timers, reviewers, deployment-branch policies and whatever
+  * GitHub adds next.
+  */
 	readonly upsert: (name: string, config?: Record<string, unknown>) => Effect.Effect<void, GitHubError, Repo>;
 
 	/** The repository's deployment environments. */
 	readonly list: Effect.Effect<ReadonlyArray<DeploymentEnvironmentInfo>, GitHubError, Repo>;
 
 	/**
-	 * Remove one deployment environment.
-	 *
-	 * @remarks
-	 * **This deletes the environment's secrets and variables with it.** Anything
-	 * sequencing a cleanup pass depends on that: removing an environment after
-	 * its secrets is redundant, and removing it before them makes those deletions
-	 * fail against a resource that no longer exists.
-	 */
+  * Remove one deployment environment.
+  *
+  * **Gotchas**
+  *
+  * **This deletes the environment's secrets and variables with it.** Anything
+  * sequencing a cleanup pass depends on that: removing an environment after
+  * its secrets is redundant, and removing it before them makes those deletions
+  * fail against a resource that no longer exists.
+  */
 	readonly delete: (name: string) => Effect.Effect<void, GitHubError, Repo>;
 }
 
 /**
  * Create or update, list and delete a repository's deployment environments.
  *
- * @remarks
+ * **Details**
+ *
  * Provide it with {@link DeploymentEnvironment.layer}, which needs a
  * `GitHubClient`; each method also needs a `Repo` in `R`.
  *
- * @example
+ * **Example** (Configure a production wait timer and list environments)
+ *
  * ```ts
  * import { DeploymentEnvironment } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -86,13 +90,14 @@ export class DeploymentEnvironment extends Context.Service<DeploymentEnvironment
 	$I`DeploymentEnvironment`,
 ) {
 	/**
-	 * The live service, built over a `GitHubClient`.
-	 *
-	 * @remarks
-	 * `(client) => make(client)` rather than `make`: a static initializer runs
-	 * while the module body is still evaluating, so naming a `const` declared
-	 * further down throws at import time with a clean typecheck.
-	 */
+  * The live service, built over a `GitHubClient`.
+  *
+  * **Gotchas**
+  *
+  * `(client) => make(client)` rather than `make`: a static initializer runs
+  * while the module body is still evaluating, so naming a `const` declared
+  * further down throws at import time with a clean typecheck.
+  */
 	static readonly layer: Layer.Layer<DeploymentEnvironment, never, GitHubClient> = Layer.effect(
 		this,
 		Effect.map(GitHubClient, (client) => make(client)),

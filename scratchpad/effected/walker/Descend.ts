@@ -106,7 +106,8 @@ export interface DescendOptions {
  * Options for `descend` under `onUnreadable: "record"`: every
  * {@link DescendOptions} field, with `onUnreadable` fixed to `"record"`.
  *
- * @remarks
+ * **Details**
+ *
  * A separate type rather than `DescendOptions & { onUnreadable: "record" }`,
  * because the two options types are the discriminator between two different
  * RETURN types. If `DescendOptions` itself admitted `"record"`, a value
@@ -135,14 +136,15 @@ export interface DescendRecordOptions extends Omit<DescendOptions, "onUnreadable
  */
 export const UnreadableDirectory = S.Struct({
 	/**
-	 * The directory's path relative to `cwd`, POSIX separators.
-	 *
-	 * @remarks
-	 * **The walk base appears as the empty string `""`**, since its own
-	 * `cwd`-relative path is empty — so an unreadable base yields
-	 * `{ matches: [], unreadable: [{ path: "", cause }] }`. Code matching
-	 * these entries as ordinary paths will not expect that; special-case it.
-	 */
+  * The directory's path relative to `cwd`, POSIX separators.
+  *
+  * **Gotchas**
+  *
+  * **The walk base appears as the empty string `""`**, since its own
+  * `cwd`-relative path is empty — so an unreadable base yields
+  * `{ matches: [], unreadable: [{ path: "", cause }] }`. Code matching
+  * these entries as ordinary paths will not expect that; special-case it.
+  */
 	path: S.String.annotateKey({ description: "The cwd-relative POSIX directory path; the base is an empty string." }),
 	/** The `readDirectory` (or, for a link under `followSymlinks`, `realPath`) failure, never `NotFound` (a vanished directory is a benign race and is not recorded). */
 	cause: S.instanceOf(PlatformError.PlatformError).annotateKey({ description: "The absorbed readDirectory or realPath failure." }),

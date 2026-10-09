@@ -48,7 +48,8 @@ export type SbomJsonOptions = typeof SbomJsonOptions.Type;
 /**
  * Raised when a BOM cannot be written to disk.
  *
- * @remarks
+ * **Details**
+ *
  * The package's **only** error, and it is the filesystem's rather than the
  * emitter's — assembling and serializing a document cannot fail.
  *
@@ -115,7 +116,8 @@ const write = Effect.fn("Sbom.write")(function* (document: SbomDocument, path: s
 /**
  * The SBOM emitter: assemble, serialize, write.
  *
- * @example
+ * **Example** (Generate and serialize a CycloneDX SBOM)
+ *
  * ```ts
  * import { Component, Sbom } from "./index.ts";
  *
@@ -130,33 +132,36 @@ export class Sbom {
 	private constructor() {}
 
 	/**
-	 * Assemble a CycloneDX 1.6 document.
-	 *
-	 * @remarks
-	 * **Total** — no error channel, because there is nothing here that can fail.
-	 * Components are sorted by name so two runs over the same inputs produce the
-	 * same bytes: an SBOM's digest becomes an attestation subject, and a document
-	 * that reordered itself between runs would change that digest for no reason.
-	 */
+  * Assemble a CycloneDX 1.6 document.
+  *
+  * **Details**
+  *
+  * **Total** — no error channel, because there is nothing here that can fail.
+  * Components are sorted by name so two runs over the same inputs produce the
+  * same bytes: an SBOM's digest becomes an attestation subject, and a document
+  * that reordered itself between runs would change that digest for no reason.
+  */
 	static readonly generate = generate;
 
 	/**
-	 * Serialize a document to canonical CycloneDX 1.6 JSON.
-	 *
-	 * @remarks
-	 * **Total.** Absent optional fields are omitted rather than emitted as `null`,
-	 * and `bomRef` becomes the specification's hyphenated `bom-ref`.
-	 */
+  * Serialize a document to canonical CycloneDX 1.6 JSON.
+  *
+  * **Details**
+  *
+  * **Total.** Absent optional fields are omitted rather than emitted as `null`,
+  * and `bomRef` becomes the specification's hyphenated `bom-ref`.
+  */
 	static readonly toJson = toJson;
 
 	/**
-	 * Write a document to `path` as canonical JSON.
-	 *
-	 * @remarks
-	 * The one fallible member; it fails with {@link SbomWriteError} and requires
-	 * `FileSystem` in `R`. It does not create parent directories — a caller
-	 * that wants one creates it, so the failure mode stays "the path you gave me
-	 * is not writable" rather than "something was created somewhere".
-	 */
+  * Write a document to `path` as canonical JSON.
+  *
+  * **Details**
+  *
+  * The one fallible member; it fails with {@link SbomWriteError} and requires
+  * `FileSystem` in `R`. It does not create parent directories — a caller
+  * that wants one creates it, so the failure mode stays "the path you gave me
+  * is not writable" rather than "something was created somewhere".
+  */
 	static readonly write = write;
 }

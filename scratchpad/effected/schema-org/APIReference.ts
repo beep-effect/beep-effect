@@ -7,10 +7,13 @@ const $I = $ScratchpadId.create("effected/schema-org/APIReference");
 /**
  * A schema.org `APIReference` — documentation of an API surface.
  *
+ * **Details**
+ *
  * `APIReference` is `rdfs:subClassOf TechArticle` in the vocabulary, so every
  * `TechArticle` field is legal here and is spread in.
  *
- * @example
+ * **Example** (Create an API reference with version metadata)
+ *
  * ```ts
  * import { APIReference } from "./index.ts";
  *

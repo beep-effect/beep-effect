@@ -847,7 +847,18 @@ const terminal = (cur: Cursor, segment: TomlSegment, value: unknown, ctx: Modify
  * Formats TOML text and modifies values at a path as byte-minimal edits that
  * leave comments and layout elsewhere untouched. Not instantiable.
  *
- * @example
+ * **Details**
+ *
+ * `format`/`formatToString` are pure and total: malformed input yields no
+ * edits rather than corrupting the document, and every edit derives from an
+ * expression or value span, so bytes inside multi-line strings are
+ * untouchable by construction. `modify`/`modifyToString` carry a real error
+ * channel — {@link TomlParseError} when the source does not parse and
+ * {@link TomlModificationError} for path-resolution and insertion-target
+ * failures — and every document they produce reparses cleanly.
+ *
+ * **Example** (Format TOML and modify a value while preserving comments)
+ *
  * ```ts
  * import { TomlFormat } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -860,15 +871,6 @@ const terminal = (cur: Cursor, segment: TomlSegment, value: unknown, ctx: Modify
  *   // => "[server]\nport = 2 # dev\n"
  * });
  * ```
- *
- * @remarks
- * `format`/`formatToString` are pure and total: malformed input yields no
- * edits rather than corrupting the document, and every edit derives from an
- * expression or value span, so bytes inside multi-line strings are
- * untouchable by construction. `modify`/`modifyToString` carry a real error
- * channel — {@link TomlParseError} when the source does not parse and
- * {@link TomlModificationError} for path-resolution and insertion-target
- * failures — and every document they produce reparses cleanly.
  *
  * @public
  */

@@ -62,7 +62,8 @@ export type FileChange = FileContent | FileDeletion;
 /**
  * A commit, projected to the three fields callers actually use.
  *
- * @remarks
+ * **Details**
+ *
  * `treeSha` is here because the Git Data API's `base_tree` wants a tree SHA,
  * not a commit SHA.
  *
@@ -97,25 +98,26 @@ export interface GitCommitShape {
 		readonly parents: ReadonlyArray<string>;
 	}) => Effect.Effect<string, GitHubError, Repo>;
 	/**
-	 * Write `changes` onto `branch` as one commit, returning its sha.
-	 *
-	 * @remarks
-	 * The four-call sequence — read the branch, build a tree on its commit's
-	 * tree, create the commit, move the ref — as one operation. The ref update is
-	 * **not** forced: a branch that moved underneath you is a conflict worth
-	 * hearing about, not one to overwrite.
-	 *
-	 * **This is "commit onto a branch you own", not a rebase.** Putting a commit
-	 * on top of *another* branch's head — the release-branch pattern — is a
-	 * different operation, and it composes from the members above with no
-	 * observable intermediate state: {@link GitCommitShape.get} the target head
-	 * for its `treeSha`, {@link GitCommitShape.createTree} on it,
-	 * {@link GitCommitShape.createCommit} with the target as parent, then one
-	 * `GitBranch.upsert` straight to the finished commit. Do **not** spell a
-	 * rebase as `upsert(branch, targetHead)` followed by `commitFiles`: between
-	 * those calls the branch *is* the target head, an open pull request from it
-	 * has an empty diff, and GitHub auto-closes PRs in that state.
-	 */
+  * Write `changes` onto `branch` as one commit, returning its sha.
+  *
+  * **Gotchas**
+  *
+  * The four-call sequence — read the branch, build a tree on its commit's
+  * tree, create the commit, move the ref — as one operation. The ref update is
+  * **not** forced: a branch that moved underneath you is a conflict worth
+  * hearing about, not one to overwrite.
+  *
+  * **This is "commit onto a branch you own", not a rebase.** Putting a commit
+  * on top of *another* branch's head — the release-branch pattern — is a
+  * different operation, and it composes from the members above with no
+  * observable intermediate state: {@link GitCommitShape.get} the target head
+  * for its `treeSha`, {@link GitCommitShape.createTree} on it,
+  * {@link GitCommitShape.createCommit} with the target as parent, then one
+  * `GitBranch.upsert` straight to the finished commit. Do **not** spell a
+  * rebase as `upsert(branch, targetHead)` followed by `commitFiles`: between
+  * those calls the branch *is* the target head, an open pull request from it
+  * has an empty diff, and GitHub auto-closes PRs in that state.
+  */
 	readonly commitFiles: (options: {
 		readonly branch: string;
 		readonly message: string;
@@ -127,12 +129,14 @@ export interface GitCommitShape {
  * Read commits and build trees and commits through GitHub's Git Database API,
  * including a one-call "commit these files onto a branch".
  *
- * @remarks
+ * **Details**
+ *
  * Provide it with {@link GitCommit.layer}, which needs a `GitHubClient`; each
  * method also needs a `Repo` in `R`. No local git runs: this is the REST API,
  * not `@effected/git`.
  *
- * @example
+ * **Example** (Commit a notes file onto a branch)
+ *
  * ```ts
  * import { FileContent, GitCommit } from "./index.ts";
  * import * as Effect from "effect/Effect";

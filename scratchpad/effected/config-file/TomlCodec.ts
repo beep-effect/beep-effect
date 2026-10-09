@@ -6,7 +6,8 @@ import { ConfigCodecError } from "./ConfigCodec.ts";
 /**
  * A `ConfigCodec` backed by `@effected/toml`.
  *
- * @remarks
+ * **Details**
+ *
  * `@effected/toml`'s input hardening — a nesting-depth cap on arrays and
  * inline tables, enforced independently on both the parse and stringify
  * sides — fails through the typed error channel, so a hostile config file

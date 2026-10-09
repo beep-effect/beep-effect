@@ -6,7 +6,8 @@ import * as R from "effect/Record";
  * A true plain object: `{}` or `Object.create(null)`. Class instances, `Date`,
  * `Map`, `Set`, `RegExp` and arrays are values, not merge targets.
  *
- * @remarks
+ * **Details**
+ *
  * This is deliberately narrower than `typeof v === "object"`. A `Date` spread
  * into a fresh object loses every internal slot and yields `{}`; a class
  * instance loses its prototype, so `instanceof` fails and its getters vanish.
@@ -32,7 +33,8 @@ const isRecordLike = (value: unknown): value is Record<string, unknown> =>
  * Two values may be merged only if both are record-like and share a prototype.
  * Same-prototype instances merge field-wise; anything else is atomic.
  *
- * @remarks
+ * **Details**
+ *
  * Requiring an identical prototype is what keeps the merge honest: a document
  * decoded through `Schema.Class` merges with another of the same class and
  * keeps its identity, and nothing else is ever silently reshaped.
@@ -47,7 +49,8 @@ export const canMerge: {
  * Recursively merge `source` into `target`; keys already present on `target`
  * win. Nested plain objects merge; every other value is atomic.
  *
- * @remarks
+ * **Details**
+ *
  * The result is built on `target`'s prototype rather than spread into `{}`, so
  * a decoded `Schema.Class` document survives the merge as a real instance —
  * `instanceof` holds and its getters still work. Without this, `load` would

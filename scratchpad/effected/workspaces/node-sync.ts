@@ -4,6 +4,8 @@
  * `findWorkspaceRootSync` / `getWorkspacePackagesSync` is one import instead
  * of four hand-wired one-liners.
  *
+ * **Details**
+ *
  * Deliberately a **separate subpath** (`@effected/workspaces/node-sync`), not
  * part of the main entry: the main entry imports nothing platform-shaped, and
  * re-exporting these from it would drag `node:*` imports into every consumer —
@@ -12,7 +14,8 @@
  * built-ins are the platform you mean; `nodePath` is the running platform's
  * `node:path`, so on Windows the paths handed back are win32 paths.
  *
- * @example
+ * **Example** (Enumerate workspace packages with the Node sync binding)
+ *
  * ```ts
  * import { findWorkspaceRootSync, getWorkspacePackagesSync } from "./index.ts";
  * import { nodeSyncOps } from "./node-sync.ts";
@@ -40,7 +43,8 @@ export type { SyncDirectoryEntry, SyncFileSystem, SyncPath, WorkspacesSyncOption
 /**
  * `SyncFileSystem` over `node:fs`.
  *
- * @remarks
+ * **Details**
+ *
  * `existsSync` never throws, satisfying `exists`'s must-not-throw contract;
  * the other three may throw and every throw lands in the sync entry points'
  * documented degraded-skip semantics.

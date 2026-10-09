@@ -6,7 +6,8 @@ import { FrontmatterDecodeError, FrontmatterEncodeError, FrontmatterFormatMismat
 /**
  * The yaml frontmatter codec, over `@effected/yaml`.
  *
- * @remarks
+ * **Details**
+ *
  * Decodes a `---`-fenced capture's raw value with `Yaml.parse`, so the yaml
  * engine's input hardening — the alias-expansion budget and the nesting depth
  * cap — fails through the typed channel: a hostile frontmatter block surfaces

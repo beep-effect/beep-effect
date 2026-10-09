@@ -28,7 +28,8 @@ const $I = $ScratchpadId.create("effected/markdown/Frontmatter");
  * Indicates that a frontmatter codec was handed a capture of a different
  * format — a yaml codec applied to a `+++` toml capture, for example.
  *
- * @remarks
+ * **Details**
+ *
  * The mismatch is detected before any parsing happens, so `cause`-free: the
  * node's `format` marker and the codec's declared `format` simply disagree.
  * Route on the `"FrontmatterFormatMismatchError"` tag with `Effect.catchTag`.
@@ -53,7 +54,8 @@ export class FrontmatterFormatMismatchError extends S.TaggedError<FrontmatterFor
  * Indicates that a frontmatter capture's content failed to parse in its
  * declared format.
  *
- * @remarks
+ * **Details**
+ *
  * The underlying format package's failure is preserved structurally in
  * `cause` — never stringified — so a consumer can reach the positioned
  * diagnostics the format engines carry. Route on the
@@ -75,7 +77,8 @@ export class FrontmatterDecodeError extends S.TaggedError<FrontmatterDecodeError
 /**
  * Indicates that frontmatter data failed to serialize in a codec's format.
  *
- * @remarks
+ * **Details**
+ *
  * The exact mirror of {@link FrontmatterDecodeError} on the write side: the
  * underlying format package's failure is preserved structurally in `cause` —
  * never stringified — so a consumer can reach the typed stringify error the
@@ -99,7 +102,8 @@ export class FrontmatterEncodeError extends S.TaggedError<FrontmatterEncodeError
  * A frontmatter codec: how to turn a raw `Frontmatter` capture into decoded
  * data, and data back into a serialized frontmatter body.
  *
- * @remarks
+ * **Details**
+ *
  * The three built-in codecs — `YamlFrontmatter`, `TomlFrontmatter` and
  * `JsonFrontmatter` — are free-standing named exports, one per module, each
  * peering on its format package (`@effected/yaml`, `@effected/toml`,
@@ -137,7 +141,8 @@ export interface FrontmatterCodec {
 /**
  * Why a frontmatter decoder found no capture on a document.
  *
- * @remarks
+ * **Details**
+ *
  * `"absent"` — the source genuinely has no frontmatter block.
  * `"captureDisabled"` — the source opens with a well-formed frontmatter
  * block, but the document carries no capture node: it was parsed without
@@ -159,7 +164,8 @@ export type FrontmatterMissingReason = typeof FrontmatterMissingReason.Type;
  * Indicates that a document handed to a frontmatter decoder carries no
  * frontmatter capture.
  *
- * @remarks
+ * **Details**
+ *
  * `reason` distinguishes the two ways this happens: `"absent"` when the
  * source genuinely has no frontmatter block, `"captureDisabled"` when the
  * source opens with one but the document was parsed with the capture toggle
@@ -190,7 +196,8 @@ export class FrontmatterMissingError extends S.TaggedError<FrontmatterMissingErr
  * Indicates that decoded frontmatter data did not satisfy the consumer's
  * schema.
  *
- * @remarks
+ * **Details**
+ *
  * `issue` carries the **structured** schema failure — at runtime a
  * `SchemaIssue.Issue` tree, reachable through `_tag` and nested `issues` —
  * never a stringified rendering. It is typed `unknown` because core exposes
@@ -224,7 +231,8 @@ export type FrontmatterSchemaError =
 /**
  * The union of everything the frontmatter write seam can fail with.
  *
- * @remarks
+ * **Details**
+ *
  * Deliberately without `FrontmatterMissingError`: a document with no
  * frontmatter capture is the **insert** path of {@link MarkdownFrontmatter.set},
  * not an error.
@@ -263,12 +271,14 @@ const renderBlock = (format: FrontmatterFormat, body: string): string => {
 /**
  * The frontmatter schema composition facade: decodes a parsed document's frontmatter into typed data, and writes typed data back as a frontmatter block.
  *
- * @remarks
+ * **Details**
+ *
  * Named `MarkdownFrontmatter` rather than `Frontmatter` because `Frontmatter`
  * names the capture node class (the node classes are named after their mdast
  * types).
  *
- * @example
+ * **Example** (Decode YAML frontmatter with a schema)
+ *
  * ```ts
  * import { MarkdownDocument, MarkdownFrontmatter, MarkdownParseOptions, YamlFrontmatter } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -288,32 +298,33 @@ const renderBlock = (format: FrontmatterFormat, body: string): string => {
  */
 export class MarkdownFrontmatter {
 	/**
-	 * Compose a consumer schema with a {@link FrontmatterCodec} into a typed
-	 * decoder over a parsed `MarkdownDocument`.
-	 *
-	 * @remarks
-	 * The decoder reads the document's frontmatter capture (parse with
-	 * `frontmatter: true` — the toggle defaults off), decodes its raw value
-	 * through the codec, then validates the data against `schema`. Each stage
-	 * fails typed: no capture is {@link FrontmatterMissingError} (its `reason`
-	 * says whether the block is genuinely absent or capture was left off), a
-	 * wrong-format codec is {@link FrontmatterFormatMismatchError}, unparseable
-	 * content is {@link FrontmatterDecodeError}, and schema-invalid data is
-	 * {@link FrontmatterValidationError} carrying the structured issue.
-	 *
-	 * The seam takes the parsed document, not raw source: parse options
-	 * (dialect, the frontmatter toggle) stay at the consumer's parse call and
-	 * are never guessed here. Node-level composition remains available through
-	 * `MarkdownDocument.frontmatter` plus the codec's own `decode`.
-	 *
-	 * Schema-producing in spirit: bind the returned decoder to a `const` when
-	 * decoding many documents.
-	 *
-	 * @param schema - The schema the decoded frontmatter data must satisfy.
-	 * @param codec - The format codec to decode the raw capture with.
-	 * @returns A function from a parsed document to an `Effect` of the typed
-	 *   frontmatter data.
-	 */
+  * Compose a consumer schema with a {@link FrontmatterCodec} into a typed
+  * decoder over a parsed `MarkdownDocument`.
+  *
+  * **Details**
+  *
+  * The decoder reads the document's frontmatter capture (parse with
+  * `frontmatter: true` — the toggle defaults off), decodes its raw value
+  * through the codec, then validates the data against `schema`. Each stage
+  * fails typed: no capture is {@link FrontmatterMissingError} (its `reason`
+  * says whether the block is genuinely absent or capture was left off), a
+  * wrong-format codec is {@link FrontmatterFormatMismatchError}, unparseable
+  * content is {@link FrontmatterDecodeError}, and schema-invalid data is
+  * {@link FrontmatterValidationError} carrying the structured issue.
+  *
+  * The seam takes the parsed document, not raw source: parse options
+  * (dialect, the frontmatter toggle) stay at the consumer's parse call and
+  * are never guessed here. Node-level composition remains available through
+  * `MarkdownDocument.frontmatter` plus the codec's own `decode`.
+  *
+  * Schema-producing in spirit: bind the returned decoder to a `const` when
+  * decoding many documents.
+  *
+  * @param schema - The schema the decoded frontmatter data must satisfy.
+  * @param codec - The format codec to decode the raw capture with.
+  * @returns A function from a parsed document to an `Effect` of the typed
+  *   frontmatter data.
+  */
 	static schema<T, E, RD = never, RE = never>(
 		schema: S.Codec<T, E, RD, RE>,
 		codec: FrontmatterCodec,
@@ -344,45 +355,46 @@ export class MarkdownFrontmatter {
 	}
 
 	/**
-	 * Compose a consumer schema with a {@link FrontmatterCodec} into a typed
-	 * frontmatter **writer** over a parsed `MarkdownDocument` — the write
-	 * mirror of {@link MarkdownFrontmatter.schema}.
-	 *
-	 * @remarks
-	 * The writer schema-**encodes** the typed data, serializes it through the
-	 * codec and returns the offset-splice edits that put the block in place —
-	 * always exactly one:
-	 *
-	 * - A document **with** a frontmatter capture of the codec's format gets a
-	 *   replacement of the entire block, both fence lines included; everything
-	 *   outside the block survives byte-identical. A capture of a *different*
-	 *   format fails with {@link FrontmatterFormatMismatchError} — the fences
-	 *   are never switched.
-	 * - A document with **no** capture gets one insert at offset 0: the fenced
-	 *   block plus a blank line separating it from the existing content. Parse
-	 *   with `frontmatter: true` (the toggle defaults off) — the same
-	 *   precondition `schema` has — so absence means genuinely-no-frontmatter
-	 *   and the insert cannot double a block the parse ignored.
-	 *
-	 * Each stage fails typed: schema-invalid data is
-	 * {@link FrontmatterValidationError} carrying the structured issue, and a
-	 * value the format cannot serialize is {@link FrontmatterEncodeError}
-	 * carrying the format package's failure structurally.
-	 *
-	 * The block is re-serialized **whole** from the encoded data — gray-matter
-	 * parity, not surgical editing — so anything the format's data model does
-	 * not carry is not preserved: comments inside a yaml frontmatter block do
-	 * **not** survive `set`. A per-key surgical mode over the format packages'
-	 * edit layers is not offered.
-	 *
-	 * Schema-producing in spirit: bind the returned writer to a `const` when
-	 * writing many documents.
-	 *
-	 * @param schema - The schema the frontmatter data is encoded through.
-	 * @param codec - The format codec to serialize the encoded data with.
-	 * @returns A function from a parsed document and the typed data to an
-	 *   `Effect` of the edits that install the block.
-	 */
+  * Compose a consumer schema with a {@link FrontmatterCodec} into a typed
+  * frontmatter **writer** over a parsed `MarkdownDocument` — the write
+  * mirror of {@link MarkdownFrontmatter.schema}.
+  *
+  * **Details**
+  *
+  * The writer schema-**encodes** the typed data, serializes it through the
+  * codec and returns the offset-splice edits that put the block in place —
+  * always exactly one:
+  *
+  * - A document **with** a frontmatter capture of the codec's format gets a
+  *   replacement of the entire block, both fence lines included; everything
+  *   outside the block survives byte-identical. A capture of a *different*
+  *   format fails with {@link FrontmatterFormatMismatchError} — the fences
+  *   are never switched.
+  * - A document with **no** capture gets one insert at offset 0: the fenced
+  *   block plus a blank line separating it from the existing content. Parse
+  *   with `frontmatter: true` (the toggle defaults off) — the same
+  *   precondition `schema` has — so absence means genuinely-no-frontmatter
+  *   and the insert cannot double a block the parse ignored.
+  *
+  * Each stage fails typed: schema-invalid data is
+  * {@link FrontmatterValidationError} carrying the structured issue, and a
+  * value the format cannot serialize is {@link FrontmatterEncodeError}
+  * carrying the format package's failure structurally.
+  *
+  * The block is re-serialized **whole** from the encoded data — gray-matter
+  * parity, not surgical editing — so anything the format's data model does
+  * not carry is not preserved: comments inside a yaml frontmatter block do
+  * **not** survive `set`. A per-key surgical mode over the format packages'
+  * edit layers is not offered.
+  *
+  * Schema-producing in spirit: bind the returned writer to a `const` when
+  * writing many documents.
+  *
+  * @param schema - The schema the frontmatter data is encoded through.
+  * @param codec - The format codec to serialize the encoded data with.
+  * @returns A function from a parsed document and the typed data to an
+  *   `Effect` of the edits that install the block.
+  */
 	static set<T, E, RD = never, RE = never>(
 		schema: S.Codec<T, E, RD, RE>,
 		codec: FrontmatterCodec,
@@ -417,20 +429,21 @@ export class MarkdownFrontmatter {
 	}
 
 	/**
-	 * Like {@link MarkdownFrontmatter.set}, but applies the edits to the
-	 * document's source and returns the updated markdown text — the
-	 * `modifyToString` parallel.
-	 *
-	 * @remarks
-	 * Everything `set` documents holds verbatim: the whole-block
-	 * re-serialization, the format-mismatch posture, the `frontmatter: true`
-	 * precondition and the typed failures.
-	 *
-	 * @param schema - The schema the frontmatter data is encoded through.
-	 * @param codec - The format codec to serialize the encoded data with.
-	 * @returns A function from a parsed document and the typed data to an
-	 *   `Effect` of the updated source text.
-	 */
+  * Like {@link MarkdownFrontmatter.set}, but applies the edits to the
+  * document's source and returns the updated markdown text — the
+  * `modifyToString` parallel.
+  *
+  * **Details**
+  *
+  * Everything `set` documents holds verbatim: the whole-block
+  * re-serialization, the format-mismatch posture, the `frontmatter: true`
+  * precondition and the typed failures.
+  *
+  * @param schema - The schema the frontmatter data is encoded through.
+  * @param codec - The format codec to serialize the encoded data with.
+  * @returns A function from a parsed document and the typed data to an
+  *   `Effect` of the updated source text.
+  */
 	static setToString<T, E, RD = never, RE = never>(
 		schema: S.Codec<T, E, RD, RE>,
 		codec: FrontmatterCodec,

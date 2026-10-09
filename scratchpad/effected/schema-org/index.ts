@@ -2,13 +2,16 @@
  * schema.org as Effect Schema classes: build a JSON-LD graph of typed nodes,
  * and serialize it safely into a `<script>` element.
  *
+ * **Details**
+ *
  * Assemble nodes with {@link JsonLdDocument}, link them with {@link NodeRef},
  * and write the result with `toScriptBody()`, the escaped serializer. Offline
  * conformance checking against schema.org's vocabulary lives in the separate
  * `@effected/schema-org/validate` entrypoint so a graph-only consumer never
  * loads the vocabulary table.
  *
- * @example
+ * **Example** (Serialize linked source code and documentation nodes)
+ *
  * ```ts
  * import { JsonLdDocument, NodeRef, SoftwareSourceCode, TechArticle } from "./index.ts";
  * import * as Result from "effect/Result";

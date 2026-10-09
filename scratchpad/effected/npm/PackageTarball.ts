@@ -112,13 +112,14 @@ export class TarballError extends S.TaggedError<TarballError>($I`TarballError`)(
  */
 export interface PackageTarballShape {
 	/**
-	 * Download, verify and extract one published version, answering the
-	 * directory its `package/` root was unpacked into.
-	 *
-	 * @remarks
-	 * **Scoped**: the temporary directory is removed when the calling scope
-	 * closes, so a caller reads what it needs and never owns the cleanup.
-	 */
+  * Download, verify and extract one published version, answering the
+  * directory its `package/` root was unpacked into.
+  *
+  * **Details**
+  *
+  * **Scoped**: the temporary directory is removed when the calling scope
+  * closes, so a caller reads what it needs and never owns the cleanup.
+  */
 	readonly extract: (published: PublishedVersion) => Effect.Effect<string, TarballError, Scope.Scope>;
 }
 
@@ -230,7 +231,8 @@ const make = Effect.fnUntraced(function* () {
 /**
  * Fetch, verify and extract a published tarball.
  *
- * @remarks
+ * **Details**
+ *
  * The inbound half of the registry surface: `NpmRegistry` reads *metadata* and
  * `PackagePublish` sends a tarball out, while this service reads a published
  * tarball back. Use it to read something out of a published package **before
@@ -249,7 +251,8 @@ const make = Effect.fnUntraced(function* () {
  * core-only dependency footprint. `tar` is on every CI runner image; a consumer
  * off a runner needs both a spawner and the `tar` binary.
  *
- * @example
+ * **Example** (Look up and extract a published package within a scope)
+ *
  * ```ts
  * import { NpmRegistry, PackageTarball } from "./index.ts";
  * import * as Effect from "effect/Effect";

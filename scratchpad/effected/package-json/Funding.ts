@@ -120,14 +120,16 @@ const FieldValue = S.Union([EntryValue, S.Array(EntryValue)]);
 /**
  * Where to send money for a package: one funding entry.
  *
- * @remarks
+ * **Details**
+ *
  * npm's `funding` field accepts a bare URL string, this object form, or an
  * array of either. `url` is **required** — it is the only thing the field
  * actually says — so an object without one fails to decode rather than
  * producing a half-populated entry. `type` (`"individual"`, `"github"`, …) is
  * caller data and is kept **verbatim**, never normalized.
  *
- * @example
+ * **Example** (Decode a funding URL into an entry array)
+ *
  * ```ts
  * import { Funding } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -174,14 +176,15 @@ export class Funding extends S.Class<Funding>($I`Funding`)({
 	}
 
 	/**
-	 * A single `funding` entry: the bare URL string or the object form, always
-	 * decoded to a {@link Funding} and always re-encoded in the form it was read
-	 * from.
-	 *
-	 * @remarks
-	 * Provenance belongs to the instance, so an entry that is *rebuilt* rather
-	 * than carried through has none and encodes in the canonical object form.
-	 */
+  * A single `funding` entry: the bare URL string or the object form, always
+  * decoded to a {@link Funding} and always re-encoded in the form it was read
+  * from.
+  *
+  * **Details**
+  *
+  * Provenance belongs to the instance, so an entry that is *rebuilt* rather
+  * than carried through has none and encodes in the canonical object form.
+  */
 	static readonly FromValue: S.Codec<Funding, string | { readonly [k: string]: unknown }> = EntryValue.pipe(
 		S.decodeTo(
 			S.instanceOf(Funding),
@@ -197,18 +200,19 @@ export class Funding extends S.Class<Funding>($I`Funding`)({
 	);
 
 	/**
-	 * The `funding` field: a lone entry or an array of them, **always** decoded
-	 * to an array so a consumer never branches on arity.
-	 *
-	 * @remarks
-	 * The normalization is one-directional. A field written bare re-encodes
-	 * bare, not as a one-element array — the arity is remembered against the
-	 * single entry that WAS the field, and the replay is guarded on that entry
-	 * still being alone, so pushing a second entry into the decoded array in
-	 * place upgrades the field to the array form instead of silently dropping
-	 * the addition. An entry built by hand has no provenance, so an array of
-	 * such entries encodes as an array.
-	 */
+  * The `funding` field: a lone entry or an array of them, **always** decoded
+  * to an array so a consumer never branches on arity.
+  *
+  * **Details**
+  *
+  * The normalization is one-directional. A field written bare re-encodes
+  * bare, not as a one-element array — the arity is remembered against the
+  * single entry that WAS the field, and the replay is guarded on that entry
+  * still being alone, so pushing a second entry into the decoded array in
+  * place upgrades the field to the array form instead of silently dropping
+  * the addition. An entry built by hand has no provenance, so an array of
+  * such entries encodes as an array.
+  */
 	static readonly FromField: S.Codec<
 		ReadonlyArray<Funding>,
 		string | { readonly [k: string]: unknown } | ReadonlyArray<string | { readonly [k: string]: unknown }>

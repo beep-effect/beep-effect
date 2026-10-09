@@ -56,7 +56,8 @@ export interface TestTerminalHandle {
 /**
  * A scripted `Terminal` for testing prompts and anything that reads the terminal.
  *
- * @remarks
+ * **Details**
+ *
  * Queue keys with `input` or `type`, run the program under `layer`, then read `output`. To assert that a code path
  * did NOT touch the terminal, queue some keys first and check `reads` is all zero (no subscription, no key, no
  * line) and `pending` is unchanged afterwards. Only

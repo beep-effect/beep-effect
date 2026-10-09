@@ -51,7 +51,8 @@ export type ComparatorSet = ReadonlyArray<Comparator>;
  * (`1.x`, `*`), tilde (`~1.2.3`), caret (`^1.2.3`) and `||` unions — which
  * parsing desugars into primitive comparators and normalizes.
  *
- * @example
+ * **Example** (Test a version against a caret range)
+ *
  * ```ts
  * import { Range, SemVer } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -111,30 +112,32 @@ export class Range extends S.Class<Range>($I`Range`)({
 	// ── Construction ────────────────────────────────────────────────────
 
 	/**
-	 * Parse a range expression and normalize its comparator sets,
-	 * synchronously, returning a `Result` instead of an `Effect`.
-	 *
-	 * @remarks
-	 * {@link Range.parse} is defined in terms of this function; the two never
-	 * diverge. Reach for the `Effect` variant inside Effect code — it carries
-	 * the `Range.parse` tracing span — and for this one at synchronous
-	 * boundaries.
-	 *
-	 * @example
-	 * ```ts
-	 * import { Range } from "./index.ts";
-	 * import * as Result from "effect/Result";
-	 *
-	 * const ok = Range.parseResult("^1.0.0");
-	 * if (Result.isSuccess(ok)) {
-	 *   console.log(ok.success.toString()); // => ">=1.0.0 <2.0.0-0"
-	 * }
-	 * ```
-	 *
-	 * @param input - the range expression to parse
-	 * @returns a `Result` succeeding with the parsed {@link Range}, or failing
-	 * with {@link InvalidRangeError}.
-	 */
+  * Parse a range expression and normalize its comparator sets,
+  * synchronously, returning a `Result` instead of an `Effect`.
+  *
+  * **Details**
+  *
+  * {@link Range.parse} is defined in terms of this function; the two never
+  * diverge. Reach for the `Effect` variant inside Effect code — it carries
+  * the `Range.parse` tracing span — and for this one at synchronous
+  * boundaries.
+  *
+  * **Example** (Normalize a caret range synchronously)
+  *
+  * ```ts
+  * import { Range } from "./index.ts";
+  * import * as Result from "effect/Result";
+  *
+  * const ok = Range.parseResult("^1.0.0");
+  * if (Result.isSuccess(ok)) {
+  *   console.log(ok.success.toString()); // => ">=1.0.0 <2.0.0-0"
+  * }
+  * ```
+  *
+  * @param input - the range expression to parse
+  * @returns a `Result` succeeding with the parsed {@link Range}, or failing
+  * with {@link InvalidRangeError}.
+  */
 	static parseResult(input: string): Result.Result<Range, InvalidRangeError> {
 		const result = parseRange(input);
 		if (!result.ok) {
@@ -158,50 +161,53 @@ export class Range extends S.Class<Range>($I`Range`)({
 	// ── Matching statics (dual) ─────────────────────────────────────────
 
 	/**
-	 * Test whether a version satisfies a range; see {@link Range.test} for the
-	 * prerelease matching rule. Dual API.
-	 *
-	 * @remarks
-	 * **Data-first order is `(version, range)`** — the version being tested
-	 * comes first, the range it is tested against second. The data-last form
-	 * takes the range: `Range.satisfies(range)` applied to a version.
-	 *
-	 * The two parameters are distinct classes and the order is not recoverable
-	 * from the call site. TypeScript rejects a flipped call outright, so this
-	 * only bites callers without type checking (untyped scripts, REPL probes).
-	 * There, `Range.satisfies(range, version)` dispatches data-first, binds the
-	 * `Range` to `version`, and dies with
-	 * `TypeError: range.test is not a function` — a message that reads as a
-	 * defect inside this package rather than a caller error.
-	 *
-	 * The same order and the same hazard apply to `Range.filter`,
-	 * {@link Range.maxSatisfying} and {@link Range.minSatisfying}: subject
-	 * first, range second.
-	 */
+  * Test whether a version satisfies a range; see {@link Range.test} for the
+  * prerelease matching rule. Dual API.
+  *
+  * **Gotchas**
+  *
+  * **Data-first order is `(version, range)`** — the version being tested
+  * comes first, the range it is tested against second. The data-last form
+  * takes the range: `Range.satisfies(range)` applied to a version.
+  *
+  * The two parameters are distinct classes and the order is not recoverable
+  * from the call site. TypeScript rejects a flipped call outright, so this
+  * only bites callers without type checking (untyped scripts, REPL probes).
+  * There, `Range.satisfies(range, version)` dispatches data-first, binds the
+  * `Range` to `version`, and dies with
+  * `TypeError: range.test is not a function` — a message that reads as a
+  * defect inside this package rather than a caller error.
+  *
+  * The same order and the same hazard apply to `Range.filter`,
+  * {@link Range.maxSatisfying} and {@link Range.minSatisfying}: subject
+  * first, range second.
+  */
 	static readonly satisfies: {
 		(range: Range): (version: SemVer) => boolean;
 		(version: SemVer, range: Range): boolean;
 	} = Fn.dual(2, (version: SemVer, range: Range): boolean => range.test(version));
 
 	/**
-	 * Filter versions that satisfy a range, preserving order. Dual API.
-	 *
-	 * @remarks
-	 * Data-first order is `(versions, range)` — see {@link Range.satisfies}
-	 * for why the order is spelled out.
-	 */
+  * Filter versions that satisfy a range, preserving order. Dual API.
+  *
+  * **Details**
+  *
+  * Data-first order is `(versions, range)` — see {@link Range.satisfies}
+  * for why the order is spelled out.
+  */
 	static readonly filter: {
 		(range: Range): (versions: ReadonlyArray<SemVer>) => ReadonlyArray<SemVer>;
 		(versions: ReadonlyArray<SemVer>, range: Range): ReadonlyArray<SemVer>;
 	} = Fn.dual(2, (versions: ReadonlyArray<SemVer>, range: Range): ReadonlyArray<SemVer> => range.filter(versions));
 
 	/**
-	 * Highest satisfying version, or `Option.none()`. Dual API.
-	 *
-	 * @remarks
-	 * Data-first order is `(versions, range)` — see {@link Range.satisfies}
-	 * for why the order is spelled out.
-	 */
+  * Highest satisfying version, or `Option.none()`. Dual API.
+  *
+  * **Details**
+  *
+  * Data-first order is `(versions, range)` — see {@link Range.satisfies}
+  * for why the order is spelled out.
+  */
 	static readonly maxSatisfying: {
 		(range: Range): (versions: ReadonlyArray<SemVer>) => O.Option<SemVer>;
 		(versions: ReadonlyArray<SemVer>, range: Range): O.Option<SemVer>;
@@ -214,12 +220,13 @@ export class Range extends S.Class<Range>($I`Range`)({
 	});
 
 	/**
-	 * Lowest satisfying version, or `Option.none()`. Dual API.
-	 *
-	 * @remarks
-	 * Data-first order is `(versions, range)` — see {@link Range.satisfies}
-	 * for why the order is spelled out.
-	 */
+  * Lowest satisfying version, or `Option.none()`. Dual API.
+  *
+  * **Details**
+  *
+  * Data-first order is `(versions, range)` — see {@link Range.satisfies}
+  * for why the order is spelled out.
+  */
 	static readonly minSatisfying: {
 		(range: Range): (versions: ReadonlyArray<SemVer>) => O.Option<SemVer>;
 		(versions: ReadonlyArray<SemVer>, range: Range): O.Option<SemVer>;
@@ -243,31 +250,33 @@ export class Range extends S.Class<Range>($I`Range`)({
 	} = Fn.dual(2, (self: Range, that: Range): Range => Range.make({ sets: [...self.sets, ...that.sets] }));
 
 	/**
-	 * Intersect two ranges via a cross-product of their comparator sets,
-	 * keeping only satisfiable combinations, synchronously, returning a
-	 * `Result` instead of an `Effect`. Fails with
-	 * {@link UnsatisfiableConstraintError} when no satisfiable set remains —
-	 * an honest typed failure instead of an unsatisfiable range. Dual API.
-	 *
-	 * @remarks
-	 * {@link Range.intersect} is defined in terms of this function; the two
-	 * never diverge. Reach for the `Effect` variant inside Effect code — it
-	 * carries the `Range.intersect` tracing span — and for this one at
-	 * synchronous boundaries.
-	 *
-	 * @example
-	 * ```ts
-	 * import { Range } from "./index.ts";
-	 * import * as Result from "effect/Result";
-	 *
-	 * const a = Result.getOrThrow(Range.parseResult("^1.0.0"));
-	 * const b = Result.getOrThrow(Range.parseResult(">=1.5.0"));
-	 * const merged = Range.intersectResult(a, b);
-	 * if (Result.isSuccess(merged)) {
-	 *   console.log(merged.success.toString()); // => ">=1.0.0 <2.0.0-0 >=1.5.0"
-	 * }
-	 * ```
-	 */
+  * Intersect two ranges via a cross-product of their comparator sets,
+  * keeping only satisfiable combinations, synchronously, returning a
+  * `Result` instead of an `Effect`. Fails with
+  * {@link UnsatisfiableConstraintError} when no satisfiable set remains —
+  * an honest typed failure instead of an unsatisfiable range. Dual API.
+  *
+  * **Details**
+  *
+  * {@link Range.intersect} is defined in terms of this function; the two
+  * never diverge. Reach for the `Effect` variant inside Effect code — it
+  * carries the `Range.intersect` tracing span — and for this one at
+  * synchronous boundaries.
+  *
+  * **Example** (Intersect two ranges synchronously)
+  *
+  * ```ts
+  * import { Range } from "./index.ts";
+  * import * as Result from "effect/Result";
+  *
+  * const a = Result.getOrThrow(Range.parseResult("^1.0.0"));
+  * const b = Result.getOrThrow(Range.parseResult(">=1.5.0"));
+  * const merged = Range.intersectResult(a, b);
+  * if (Result.isSuccess(merged)) {
+  *   console.log(merged.success.toString()); // => ">=1.0.0 <2.0.0-0 >=1.5.0"
+  * }
+  * ```
+  */
 	static readonly intersectResult: {
 		(that: Range): (self: Range) => Result.Result<Range, UnsatisfiableConstraintError>;
 		(self: Range, that: Range): Result.Result<Range, UnsatisfiableConstraintError>;
@@ -307,18 +316,19 @@ export class Range extends S.Class<Range>($I`Range`)({
 	);
 
 	/**
-	 * Check whether every version matched by `sub` is also matched by `sup`.
-	 * Dual API.
-	 *
-	 * @remarks
-	 * This check is a conservative approximation: it may return `false` for
-	 * ranges that are technically subsets when the sub-range straddles
-	 * comparator-set boundaries in the sup-range. For example,
-	 * `>=1.0.0 <3.0.0` is a subset of `>=1.0.0 <2.0.0 || >=2.0.0 <3.0.0`,
-	 * but `isSubset` returns `false` because no single sup-set fully implies
-	 * the sub-set. This is a known limitation; false negatives are safe
-	 * (they prevent incorrect simplification).
-	 */
+  * Check whether every version matched by `sub` is also matched by `sup`.
+  * Dual API.
+  *
+  * **Gotchas**
+  *
+  * This check is a conservative approximation: it may return `false` for
+  * ranges that are technically subsets when the sub-range straddles
+  * comparator-set boundaries in the sup-range. For example,
+  * `>=1.0.0 <3.0.0` is a subset of `>=1.0.0 <2.0.0 || >=2.0.0 <3.0.0`,
+  * but `isSubset` returns `false` because no single sup-set fully implies
+  * the sub-set. This is a known limitation; false negatives are safe
+  * (they prevent incorrect simplification).
+  */
 	static readonly isSubset: {
 		(sup: Range): (sub: Range) => boolean;
 		(sub: Range, sup: Range): boolean;
@@ -356,14 +366,15 @@ export class Range extends S.Class<Range>($I`Range`)({
 	// ── Instance ────────────────────────────────────────────────────────
 
 	/**
-	 * Test whether a version satisfies this range.
-	 *
-	 * @remarks
-	 * Matches node-semver's prerelease restriction: a prerelease version only
-	 * satisfies the range when at least one comparator in the matching set
-	 * carries a prerelease on the same `major.minor.patch` tuple. This keeps
-	 * `^1.2.3` from unexpectedly matching `1.2.4-alpha`.
-	 */
+  * Test whether a version satisfies this range.
+  *
+  * **Details**
+  *
+  * Matches node-semver's prerelease restriction: a prerelease version only
+  * satisfies the range when at least one comparator in the matching set
+  * carries a prerelease on the same `major.minor.patch` tuple. This keeps
+  * `^1.2.3` from unexpectedly matching `1.2.4-alpha`.
+  */
 	test(version: SemVer): boolean {
 		return this.sets.some((set) => satisfiesSet(version, set));
 	}

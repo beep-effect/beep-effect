@@ -130,7 +130,8 @@ const FETCH_TIMEOUT = Duration.minutes(2);
  * lockfile that cannot be read all fail typed. A lockfile that records the
  * name at a different version is not a source for this version.
  *
- * @remarks
+ * **Gotchas**
+ *
  * An unreadable lockfile fails closed even when the spec carries an inline
  * integrity: the lockfile is the declaring side's own checksum store, and a
  * store that cannot be read cannot be confirmed to agree with the inline pin.

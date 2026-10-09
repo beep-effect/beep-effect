@@ -54,7 +54,8 @@ type CommandProperties = Readonly<Record<string, string | number | boolean | und
 /**
  * Escape a command's message.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The percent sign is replaced **first**, and the order is load-bearing: doing
  * it last would re-escape the `%` of an escape sequence this function just
  * produced, turning `%0A` into `%250A`.
@@ -64,7 +65,8 @@ const escapeMessage = flow(Str.replaceAll("%", "%25"), Str.replaceAll("\r", "%0D
 /**
  * Escape a property value.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Everything a message escapes, plus `:` and `,` — the two characters that
  * delimit the property list and terminate it. An unescaped one truncates the
  * command or lets a value be read as a new property.
@@ -74,7 +76,8 @@ const escapeProperty = flow(escapeMessage, Str.replaceAll(":", "%3A"), Str.repla
 /**
  * The GitHub Actions workflow-command wire protocol: `::name key=value::message`.
  *
- * @remarks
+ * **Details**
+ *
  * **Pure.** This module renders strings and nothing else — it performs no IO
  * and holds no service — which is what makes the escaping rules testable
  * without a runner, and what lets a non-Actions consumer reuse the protocol.
@@ -84,7 +87,8 @@ const escapeProperty = flow(escapeMessage, Str.replaceAll(":", "%3A"), Str.repla
  * newline does not merely render oddly: the runner reads the text after it as
  * a **new command**, so an unescaped log line is a command-injection vector.
  *
- * @example
+ * **Example** (Render an error annotation with a source location)
+ *
  * ```ts
  * import { WorkflowCommand } from "./index.ts";
  *
@@ -98,23 +102,24 @@ export class WorkflowCommand {
 	private constructor() {}
 
 	/**
-	 * Render an arbitrary command: `::name key=value::message`, with the message and
-	 * property values escaped. The primitive every other member uses.
-	 *
-	 * @remarks
-	 * Properties whose value is `undefined` are omitted.
-	 *
-	 * Use a name the runner registers (`error`, `warning`, `notice`, `debug`, `group`, `endgroup`, `add-mask` and the
-	 * rest of its list). The runner tries its V2 parser first and, if the name is not registered, rejects the line, and
-	 * its legacy parser then reads the line for `##[` ANYWHERE in it: a `##[` in the data of a command with an
-	 * unregistered name is therefore a command. {@link CommandNeutralizer} is the tool for text that is only data.
-	 *
-	 * @privateRemarks
-	 * The property type is written out structurally rather than as the module's
-	 * `CommandProperties` alias: an internal named type on a `@public` signature
-	 * fails the API Extractor gate, and neither an `@internal` tag nor a second
-	 * alias helps — only inlining does.
-	 */
+  * Render an arbitrary command: `::name key=value::message`, with the message and
+  * property values escaped. The primitive every other member uses.
+  *
+  * **Gotchas**
+  *
+  * Properties whose value is `undefined` are omitted.
+  *
+  * Use a name the runner registers (`error`, `warning`, `notice`, `debug`, `group`, `endgroup`, `add-mask` and the
+  * rest of its list). The runner tries its V2 parser first and, if the name is not registered, rejects the line, and
+  * its legacy parser then reads the line for `##[` ANYWHERE in it: a `##[` in the data of a command with an
+  * unregistered name is therefore a command. {@link CommandNeutralizer} is the tool for text that is only data.
+  *
+  * @privateRemarks
+  * The property type is written out structurally rather than as the module's
+  * `CommandProperties` alias: an internal named type on a `@public` signature
+  * fails the API Extractor gate, and neither an `@internal` tag nor a second
+  * alias helps — only inlining does.
+  */
 	static render(
 		name: string,
 		properties: Readonly<Record<string, string | number | boolean | undefined>>,

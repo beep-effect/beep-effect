@@ -31,7 +31,8 @@ export const DEFAULT_REGISTRY = "https://registry.npmjs.org";
 /**
  * Which registry to read from, and how to authenticate.
  *
- * @remarks
+ * **Details**
+ *
  * **Per call, never baked into the layer.** A publish flow probes two
  * registries for one package inside a single program, so a layer-scoped
  * registry cannot express what consumers actually do — and a test double
@@ -58,14 +59,15 @@ export const RegistryTarget = S.Struct({
 	 */
 	token: S.optionalKey(S.Never).annotateKey({ description: "Removed token option; use a token credential instead." }),
 	/**
-	 * How to authenticate, for a registry that requires auth to read.
-	 *
-	 * @remarks
-	 * The same union `PackagePublish.setupAuth` writes into an npmrc, so the
-	 * read probe and the publish cannot disagree about the scheme for one
-	 * registry — a bearer probe against a basic-auth registry answers 401 and
-	 * reads as "not published".
-	 */
+  * How to authenticate, for a registry that requires auth to read.
+  *
+  * **Details**
+  *
+  * The same union `PackagePublish.setupAuth` writes into an npmrc, so the
+  * read probe and the publish cannot disagree about the scheme for one
+  * registry — a bearer probe against a basic-auth registry answers 401 and
+  * reads as "not published".
+  */
 	credential: S.optional(RegistryCredential).annotateKey({ description: "The redacted credential for this registry read." }),
 }).annotate($I.annote("RegistryTarget", { description: "A structural per-call registry and credential boundary." }));
 export interface RegistryTarget extends S.Schema.Type<typeof RegistryTarget> {
@@ -92,7 +94,8 @@ export class PublishedVersion extends S.Class<PublishedVersion>($I`PublishedVers
 /**
  * When one version of a package was published.
  *
- * @remarks
+ * **Details**
+ *
  * A class rather than a bare `version → timestamp` record because the
  * registry's `time` object mixes per-version entries with two non-version keys
  * (`created`, `modified`), and every consumer that reads it raw has to
@@ -161,7 +164,8 @@ const registryReadFailure = flow(S.decodeUnknownResult(RegistryReadFailureFromPa
 /**
  * A registry read failed.
  *
- * @remarks
+ * **Details**
+ *
  * `kind` is the routing surface: `"transport"` (the request never produced a
  * response), `"status"` (the registry answered, unsuccessfully — `status`
  * carries the code), `"decode"` (the body was not what the registry protocol
@@ -186,7 +190,8 @@ export class RegistryReadError extends S.TaggedError<RegistryReadError>($I`Regis
 /**
  * The `Authorization` header for a credential, or none at all.
  *
- * @remarks
+ * **Details**
+ *
  * The scheme follows the credential's kind rather than being fixed, matching
  * what npm sends for the same npmrc entry: a `_authToken` goes out as `Bearer`
  * and an `_auth` blob as `Basic`, used verbatim with no re-encoding.
@@ -224,7 +229,8 @@ const NON_VERSION_TIME_KEYS = HashSet.make("created", "modified");
  * The `integrity` field for a `PublishedVersion`, present only when the raw
  * value is a valid integrity hash.
  *
- * @remarks
+ * **Details**
+ *
  * Validated through the brand's own schema rather than cast: a registry that
  * serves an integrity this package cannot classify yields *no* integrity, not
  * a lie and not a failed read. Returns a spreadable object so the caller never
@@ -248,14 +254,15 @@ const packageUrl = (registry: string, name: string, version?: string): string =>
  */
 export interface NpmRegistryShape {
 	/**
-	 * One published version, or `None` when that version is not on that registry.
-	 *
-	 * @remarks
-	 * A `github-packages` target is read through the packument (GitHub Packages
-	 * answers the per-version endpoint with 405 regardless of credentials); any
-	 * other registry answering 405 on the per-version path is retried the same
-	 * way.
-	 */
+  * One published version, or `None` when that version is not on that registry.
+  *
+  * **Details**
+  *
+  * A `github-packages` target is read through the packument (GitHub Packages
+  * answers the per-version endpoint with 405 regardless of credentials); any
+  * other registry answering 405 on the per-version path is retried the same
+  * way.
+  */
 	readonly version: (
 		name: string,
 		version: string,
@@ -280,12 +287,13 @@ const make = Effect.fnUntraced(function* () {
 	const client = yield* HttpClient.HttpClient;
 
 	/**
-	 * Fetches and decodes one registry document, mapping absence to `None`.
-	 *
-	 * @remarks
-	 * The 404-is-absence rule is applied on the **status**, structurally, rather
-	 * than by matching the wording of a CLI's stderr.
-	 */
+  * Fetches and decodes one registry document, mapping absence to `None`.
+  *
+  * **Details**
+  *
+  * The 404-is-absence rule is applied on the **status**, structurally, rather
+  * than by matching the wording of a CLI's stderr.
+  */
 	const read = <A, I>(
 		schema: S.Codec<A, I>,
 		url: string,
@@ -324,14 +332,15 @@ const make = Effect.fnUntraced(function* () {
 	};
 
 	/**
-	 * Resolves one version by reading the whole packument and selecting it.
-	 *
-	 * @remarks
-	 * The read path for registries that do not implement the per-version
-	 * endpoint — GitHub Packages answers it with 405 regardless of credentials,
-	 * so `version` routes here up front for that kind, and falls back here on a
-	 * 405 from any other registry.
-	 */
+  * Resolves one version by reading the whole packument and selecting it.
+  *
+  * **Details**
+  *
+  * The read path for registries that do not implement the per-version
+  * endpoint — GitHub Packages answers it with 405 regardless of credentials,
+  * so `version` routes here up front for that kind, and falls back here on a
+  * 405 from any other registry.
+  */
 	const versionFromPackument = (
 		name: string,
 		versionNumber: string,
@@ -455,7 +464,8 @@ export type SeededVersion = typeof SeededVersion.Type;
 /**
  * A whole fake registry world, keyed the way real reads are.
  *
- * @remarks
+ * **Details**
+ *
  * `registries[registry][name][version]` — all three axes, so one seed can serve
  * two versions of one package and two registries for one version (a mixed
  * publish/recover run). Registry keys are matched exactly against
@@ -475,7 +485,8 @@ export type RegistrySeed = typeof RegistrySeed.Type;
  * Reads package metadata from an npm-protocol registry over core `HttpClient`:
  * one version, every version, dist-tags and per-version publish times.
  *
- * @remarks
+ * **Details**
+ *
  * No `npm view` subprocess is involved. The registry is a **per-call**
  * argument, a 404 is `Option.none()` (or an empty collection) rather than an
  * error, and `integrity` is typed as this package's own {@link IntegrityHash}
@@ -483,7 +494,8 @@ export type RegistrySeed = typeof RegistrySeed.Type;
  * {@link NpmRegistry.layer} requires `HttpClient`; tests use
  * {@link NpmRegistry.layerSeeded} or {@link NpmRegistry.layerTest}.
  *
- * @example
+ * **Example** (Look up a published version tarball URL)
+ *
  * ```ts
  * import { NpmRegistry } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -506,14 +518,15 @@ export class NpmRegistry extends Context.Service<NpmRegistry, NpmRegistryShape>(
 	static readonly layer: Layer.Layer<NpmRegistry, never, HttpClient.HttpClient> = Layer.effect(this, make());
 
 	/**
-	 * An in-memory double: stub only the members the test exercises; every other
-	 * member **dies** with a defect naming itself.
-	 *
-	 * @remarks
-	 * No member has an honest default — a fabricated version list or integrity
-	 * would leak into consumer logic as fact. For a test that wants a working
-	 * registry rather than a stub, use {@link NpmRegistry.layerSeeded}.
-	 */
+  * An in-memory double: stub only the members the test exercises; every other
+  * member **dies** with a defect naming itself.
+  *
+  * **Gotchas**
+  *
+  * No member has an honest default — a fabricated version list or integrity
+  * would leak into consumer logic as fact. For a test that wants a working
+  * registry rather than a stub, use {@link NpmRegistry.layerSeeded}.
+  */
 	static readonly makeTest = (overrides: Partial<NpmRegistryShape> = {}): NpmRegistryShape => ({
 		version: notStubbed("version"),
 		versions: notStubbed("versions"),
@@ -523,13 +536,14 @@ export class NpmRegistry extends Context.Service<NpmRegistry, NpmRegistryShape>(
 	});
 
 	/**
-	 * {@link NpmRegistry.makeTest} behind `Layer.succeed`.
-	 *
-	 * @remarks
-	 * A parameterized layer factory mints a fresh reference per call and layers
-	 * memoize by reference — bind the result to a `const` rather than calling it
-	 * at each composition site.
-	 */
+  * {@link NpmRegistry.makeTest} behind `Layer.succeed`.
+  *
+  * **Gotchas**
+  *
+  * A parameterized layer factory mints a fresh reference per call and layers
+  * memoize by reference — bind the result to a `const` rather than calling it
+  * at each composition site.
+  */
 	static readonly layerTest = (overrides: Partial<NpmRegistryShape> = {}): Layer.Layer<NpmRegistry> =>
 		Layer.succeed(NpmRegistry, NpmRegistry.makeTest(overrides));
 

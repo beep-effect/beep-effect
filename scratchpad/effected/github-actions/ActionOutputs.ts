@@ -104,7 +104,8 @@ export class DetachedOutputError extends S.TaggedError<DetachedOutputError>($I`D
 /**
  * Anything that can go wrong publishing an output, variable or summary.
  *
- * @remarks
+ * **Details**
+ *
  * **One class per failure, rather than one class with a `reason` field.** The
  * runner file is required on the members that name one and the output name on
  * the members that name one, so a value short a field is a compile error rather
@@ -161,7 +162,8 @@ const encodeJson = <A, I>(
 /**
  * One call an {@link ActionOutputs.recording} double observed.
  *
- * @remarks
+ * **Details**
+ *
  * `value` is always the string the runner would have seen: for `setJson` that
  * is the **encoded** JSON text, after the same schema encode the real layer
  * performs, so a test asserting on it reads exactly what a later step's
@@ -221,16 +223,17 @@ export interface ActionOutputsShape {
 	/** Export an environment variable to **subsequent** steps. */
 	readonly exportVariable: (name: string, value: string) => Effect.Effect<void, ActionOutputError>;
 	/**
-	 * Prepend a directory to `PATH` for **subsequent** steps.
-	 *
-	 * @remarks
-	 * This appends to the `GITHUB_PATH` runner file and does **nothing else** —
-	 * unlike `@actions/core`, it does NOT mutate the live `process.env.PATH` of
-	 * the current process. A same-process probe of a tool that was just added
-	 * (`pnpm --version`, a shim, a binary) will not find it by name; probe by
-	 * absolute path instead. The runner applies the addition when the next step
-	 * starts, exactly as it does for {@link ActionOutputsShape.exportVariable}.
-	 */
+  * Prepend a directory to `PATH` for **subsequent** steps.
+  *
+  * **Gotchas**
+  *
+  * This appends to the `GITHUB_PATH` runner file and does **nothing else** —
+  * unlike `@actions/core`, it does NOT mutate the live `process.env.PATH` of
+  * the current process. A same-process probe of a tool that was just added
+  * (`pnpm --version`, a shim, a binary) will not find it by name; probe by
+  * absolute path instead. The runner applies the addition when the next step
+  * starts, exactly as it does for {@link ActionOutputsShape.exportVariable}.
+  */
 	readonly addPath: (path: string) => Effect.Effect<void, ActionOutputError>;
 	/** Emit an error annotation. Does not itself set the exit code. */
 	readonly setFailed: (message: string) => Effect.Effect<void>;
@@ -272,7 +275,8 @@ const dies = unstubbed("ActionOutputs.makeTest");
  * Everything an action publishes: step outputs, exported variables, `PATH`
  * additions, the job summary, log masking and failure annotations.
  *
- * @remarks
+ * **Details**
+ *
  * Outputs and variables go to the runner's **files** (`GITHUB_OUTPUT` and
  * friends); masking and annotations go to stdout as workflow commands, through
  * core `Console` so a test can observe them without a runner.
@@ -283,7 +287,8 @@ const dies = unstubbed("ActionOutputs.makeTest");
  *
  * Members that write a runner file fail with {@link ActionOutputError}.
  *
- * @example
+ * **Example** (Publish string and schema-encoded JSON outputs)
+ *
  * ```ts
  * import { ActionOutputs } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -302,53 +307,55 @@ export class ActionOutputs extends Context.Service<ActionOutputs, ActionOutputsS
 	$I`ActionOutputs`,
 ) {
 	/**
-	 * The live service, appending to the runner's `GITHUB_OUTPUT`, `GITHUB_ENV`,
-	 * `GITHUB_PATH` and `GITHUB_STEP_SUMMARY` files.
-	 *
-	 * @remarks
-	 * `ActionRuntime.layer` already provides every requirement.
-	 */
+  * The live service, appending to the runner's `GITHUB_OUTPUT`, `GITHUB_ENV`,
+  * `GITHUB_PATH` and `GITHUB_STEP_SUMMARY` files.
+  *
+  * **Details**
+  *
+  * `ActionRuntime.layer` already provides every requirement.
+  */
 	static readonly layer: Layer.Layer<ActionOutputs, never, ActionEnvironment | FileSystem.FileSystem> = Layer.effect(
 		this,
 		make,
 	);
 
 	/**
-	 * The outputs surface that is correct inside a **detached worker**.
-	 *
-	 * @remarks
-	 * The masking model assumes the runner parses stdout. A detached worker's
-	 * stdout is a **log file no runner parses**, so under the real layer
-	 * `setSecret` emits `::add-mask::<plaintext>` into that file — a command
-	 * that is simultaneously **inert** (nothing reads it, so nothing is masked)
-	 * and a **secret leak** (the plaintext is now sitting verbatim in a log).
-	 * This layer is the worker-side guard; the parent-side rule is that every
-	 * secret a worker will hold is masked **before** the spawn, by
-	 * `Secret.forChildEnv` under the real layer.
-	 *
-	 * The layer needs no environment and no filesystem — its `R` is `never` —
-	 * so a worker composing it structurally *cannot* write a runner file.
-	 * Per-member behavior:
-	 *
-	 * - **`setSecret` — silent no-op.** The value must not be written
-	 *   *anywhere*: there is no runner on this channel to hand it to, and any
-	 *   spelling of it in the log IS the leak. Masking is the parent's job,
-	 *   before the worker exists.
-	 * - **`set`, `setJson`, `exportVariable`, `addPath`, `summary` — fail
-	 *   typed** with {@link DetachedOutputError}, naming the file. Each writes a runner
-	 *   file that configures the parent job's *later steps* — `GITHUB_OUTPUT`,
-	 *   `GITHUB_ENV`, `GITHUB_PATH` — or is collected when the step completes
-	 *   (`GITHUB_STEP_SUMMARY`). A detached worker has no later steps, may
-	 *   outlive the job entirely, and even an inherited file path would be
-	 *   read at a moment unrelated to the write — so a worker calling one of
-	 *   these is a program error worth surfacing, not a write to degrade
-	 *   silently.
-	 * - **`setFailed` — degrades to a plain log line** (`Console.error`,
-	 *   without the `::error::` syntax nothing here would parse). Unlike the
-	 *   file members it is log-like: "record that something failed" still
-	 *   means something in a worker's log, and its signature carries no error
-	 *   channel to fail through.
-	 */
+  * The outputs surface that is correct inside a **detached worker**.
+  *
+  * **Gotchas**
+  *
+  * The masking model assumes the runner parses stdout. A detached worker's
+  * stdout is a **log file no runner parses**, so under the real layer
+  * `setSecret` emits `::add-mask::<plaintext>` into that file — a command
+  * that is simultaneously **inert** (nothing reads it, so nothing is masked)
+  * and a **secret leak** (the plaintext is now sitting verbatim in a log).
+  * This layer is the worker-side guard; the parent-side rule is that every
+  * secret a worker will hold is masked **before** the spawn, by
+  * `Secret.forChildEnv` under the real layer.
+  *
+  * The layer needs no environment and no filesystem — its `R` is `never` —
+  * so a worker composing it structurally *cannot* write a runner file.
+  * Per-member behavior:
+  *
+  * - **`setSecret` — silent no-op.** The value must not be written
+  *   *anywhere*: there is no runner on this channel to hand it to, and any
+  *   spelling of it in the log IS the leak. Masking is the parent's job,
+  *   before the worker exists.
+  * - **`set`, `setJson`, `exportVariable`, `addPath`, `summary` — fail
+  *   typed** with {@link DetachedOutputError}, naming the file. Each writes a runner
+  *   file that configures the parent job's *later steps* — `GITHUB_OUTPUT`,
+  *   `GITHUB_ENV`, `GITHUB_PATH` — or is collected when the step completes
+  *   (`GITHUB_STEP_SUMMARY`). A detached worker has no later steps, may
+  *   outlive the job entirely, and even an inherited file path would be
+  *   read at a moment unrelated to the write — so a worker calling one of
+  *   these is a program error worth surfacing, not a write to degrade
+  *   silently.
+  * - **`setFailed` — degrades to a plain log line** (`Console.error`,
+  *   without the `::error::` syntax nothing here would parse). Unlike the
+  *   file members it is log-like: "record that something failed" still
+  *   means something in a worker's log, and its signature carries no error
+  *   channel to fail through.
+  */
 	static readonly layerDetached: Layer.Layer<ActionOutputs> = Layer.succeed(this, {
 		set: (name) => Effect.fail(DetachedOutputError.make({ file: RUNNER_FILE.set, name })),
 		setJson: (name) => Effect.fail(DetachedOutputError.make({ file: RUNNER_FILE.setJson, name })),
@@ -360,20 +367,21 @@ export class ActionOutputs extends Context.Service<ActionOutputs, ActionOutputsS
 	} satisfies ActionOutputsShape);
 
 	/**
-	 * A test double. Unstubbed members die rather than silently succeeding.
-	 *
-	 * @remarks
-	 * **`setJson` always encodes first.** The value is encoded through its
-	 * schema exactly as the real layer does — failing typed with
-	 * {@link OutputEncodeError} — and only then is a supplied `setJson`
-	 * override called, with the original `(name, value, schema)`. An override
-	 * that accepts `schema` and ignores it therefore **cannot disable
-	 * output-schema checking**: a value/schema drift is a typed failure under
-	 * this double whether or not the override looks at the schema. Without an
-	 * override, a valid value still dies unimplemented as every other unstubbed
-	 * member does. Most tests want neither: reach for
-	 * {@link ActionOutputs.recording} instead.
-	 */
+  * A test double. Unstubbed members die rather than silently succeeding.
+  *
+  * **Details**
+  *
+  * **`setJson` always encodes first.** The value is encoded through its
+  * schema exactly as the real layer does — failing typed with
+  * {@link OutputEncodeError} — and only then is a supplied `setJson`
+  * override called, with the original `(name, value, schema)`. An override
+  * that accepts `schema` and ignores it therefore **cannot disable
+  * output-schema checking**: a value/schema drift is a typed failure under
+  * this double whether or not the override looks at the schema. Without an
+  * override, a valid value still dies unimplemented as every other unstubbed
+  * member does. Most tests want neither: reach for
+  * {@link ActionOutputs.recording} instead.
+  */
 	static readonly makeTest = (overrides: Partial<ActionOutputsShape> = {}): ActionOutputsShape => {
 		const setJson: ActionOutputsShape["setJson"] = overrides.setJson ?? (() => dies("setJson"));
 		return {
@@ -394,29 +402,30 @@ export class ActionOutputs extends Context.Service<ActionOutputs, ActionOutputsS
 		Layer.succeed(ActionOutputs, ActionOutputs.makeTest(overrides));
 
 	/**
-	 * A recording double: every member appends a {@link RecordedOutput} to a
-	 * journal the test reads back, in call order.
-	 *
-	 * @remarks
-	 * This is the double most tests of an action want — "what did it publish?"
-	 * — shipped so that nobody hand-writes a `setJson` override that drops the
-	 * schema encode (a trap `makeTest` closes too). `setJson` encodes
-	 * through its schema exactly as the real layer does, failing typed with
-	 * {@link OutputEncodeError} and recording nothing on a drift, and records
-	 * the **encoded JSON text** — what the runner would have read — not the
-	 * decoded value. `set`, `exportVariable` and `setJson` refuse an unusable
-	 * name with {@link InvalidOutputNameError}, as the real layer does, rather
-	 * than recording it.
-	 *
-	 * `setSecret` records the secret's **plaintext** under
-	 * `member: "setSecret"`. That is deliberate for a recording double: the
-	 * journal never leaves the test, and a test asserting that a value *was*
-	 * masked needs to see which one. Do not hand this journal to anything that
-	 * logs.
-	 *
-	 * Each call returns a fresh, independent journal — there is no state shared
-	 * between two `recording()` calls.
-	 */
+  * A recording double: every member appends a {@link RecordedOutput} to a
+  * journal the test reads back, in call order.
+  *
+  * **Details**
+  *
+  * This is the double most tests of an action want — "what did it publish?"
+  * — shipped so that nobody hand-writes a `setJson` override that drops the
+  * schema encode (a trap `makeTest` closes too). `setJson` encodes
+  * through its schema exactly as the real layer does, failing typed with
+  * {@link OutputEncodeError} and recording nothing on a drift, and records
+  * the **encoded JSON text** — what the runner would have read — not the
+  * decoded value. `set`, `exportVariable` and `setJson` refuse an unusable
+  * name with {@link InvalidOutputNameError}, as the real layer does, rather
+  * than recording it.
+  *
+  * `setSecret` records the secret's **plaintext** under
+  * `member: "setSecret"`. That is deliberate for a recording double: the
+  * journal never leaves the test, and a test asserting that a value *was*
+  * masked needs to see which one. Do not hand this journal to anything that
+  * logs.
+  *
+  * Each call returns a fresh, independent journal — there is no state shared
+  * between two `recording()` calls.
+  */
 	static readonly recording = (): RecordingOutputs => {
 		const entries: Array<RecordedOutput> = [];
 		const record = (member: RecordedOutputMember, value: string, name?: string): Effect.Effect<void> =>

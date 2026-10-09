@@ -2,6 +2,8 @@
  * The offline conformance half of `@effected/schema-org`: the vendored
  * schema.org vocabulary and the validator that reads it.
  *
+ * **Details**
+ *
  * This is a **separate entrypoint on purpose**. The vocabulary table is the
  * whole of what a graph-only consumer avoids: importing `@effected/schema-org`
  * loads the node classes and the serializer and nothing else, while the table
@@ -14,7 +16,8 @@
  * at runtime and the split holds: `Conformance.check` takes a `JsonLdDocument`, and its
  * declaration has to be able to name one.
  *
- * @example
+ * **Example** (Read the vocabulary version and check graph conformance)
+ *
  * ```ts
  * import { Conformance, Vocabulary } from "./conformance-entry.ts";
  *

@@ -22,12 +22,14 @@ const $I = $ScratchpadId.create("effected/semver/SemVer");
 /**
  * Indicates that a string could not be parsed as a valid SemVer 2.0.0 version.
  *
+ * **Details**
+ *
  * Raised by {@link SemVer.parse}. The decode direction of
  * {@link SemVer.FromString} reports the same failure through a generic
  * `Schema` parse error instead of this class, carrying the same message.
  * Unlike node-semver, no loose parsing or `v`-prefix coercion is performed.
  *
- * @see {@link https://semver.org | SemVer 2.0.0 Specification}
+ * @see {@link https://semver.org | SemVer 2.0.0 Specification} for the version grammar
  * @public
  */
 export class InvalidVersionError extends S.TaggedError<InvalidVersionError>($I`InvalidVersionError`)("InvalidVersionError", {
@@ -66,11 +68,14 @@ const buildIdentifier = S.String.check(S.isPattern(/^[0-9A-Za-z-]+$/u));
  * validated in-schema (non-negative integer components, well-formed
  * identifiers), so `SemVer.make` only produces valid versions.
  *
+ * **Details**
+ *
  * Instance methods are the canonical API; cross-cutting operations exist as
  * dual statics on the class. The string representation is the schema's
  * encoded form via {@link SemVer.FromString}.
  *
- * @example
+ * **Example** (Bump a minor version and compare stability)
+ *
  * ```ts
  * import { SemVer } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -85,7 +90,7 @@ const buildIdentifier = S.String.check(S.isPattern(/^[0-9A-Za-z-]+$/u));
  * // => ["1.3.0", false, true]
  * ```
  *
- * @see {@link https://semver.org | SemVer 2.0.0 Specification}
+ * @see {@link https://semver.org | SemVer 2.0.0 Specification} for the version grammar
  * @public
  */
 export class SemVer extends S.Class<SemVer>($I`SemVer`)({
@@ -128,19 +133,20 @@ export class SemVer extends S.Class<SemVer>($I`SemVer`)({
 	);
 
 	/**
-	 * `Schema.String` refined by {@link SemVer.isValid}: an exact SemVer 2.0.0
-	 * version string whose type stays `string`.
-	 *
-	 * @remarks
-	 * For consumer structs whose field must remain a plain string — a manifest
-	 * model, an action input — while still refusing everything that is not
-	 * exactly one version: ranges, partial versions, dist-tags, and padded
-	 * input (see {@link SemVer.isValid} for the whitespace posture). Build
-	 * metadata is valid grammar and passes; reach for
-	 * {@link SemVer.PinnableVersionString} when the `+` position is spoken for.
-	 * Decode to a {@link SemVer} instance with {@link SemVer.FromString}
-	 * instead when the parsed components are wanted.
-	 */
+  * `Schema.String` refined by {@link SemVer.isValid}: an exact SemVer 2.0.0
+  * version string whose type stays `string`.
+  *
+  * **Details**
+  *
+  * For consumer structs whose field must remain a plain string — a manifest
+  * model, an action input — while still refusing everything that is not
+  * exactly one version: ranges, partial versions, dist-tags, and padded
+  * input (see {@link SemVer.isValid} for the whitespace posture). Build
+  * metadata is valid grammar and passes; reach for
+  * {@link SemVer.PinnableVersionString} when the `+` position is spoken for.
+  * Decode to a {@link SemVer} instance with {@link SemVer.FromString}
+  * instead when the parsed components are wanted.
+  */
 	static readonly ExactVersionString: S.String = S.String.pipe(
 		S.check(
 			S.makeFilterGroup([
@@ -156,16 +162,17 @@ export class SemVer extends S.Class<SemVer>($I`SemVer`)({
 	);
 
 	/**
-	 * `Schema.String` refined by {@link SemVer.isPinnable}: an exact,
-	 * build-metadata-free SemVer 2.0.0 version string whose type stays
-	 * `string`.
-	 *
-	 * @remarks
-	 * The corepack-pinnable notion: what the `<name>@<version>[+<integrity>]`
-	 * pin grammar can express in its version position, where the first `+`
-	 * always begins the integrity component. `@effected/package-json`'s
-	 * `PackageManager` field model uses this schema directly.
-	 */
+  * `Schema.String` refined by {@link SemVer.isPinnable}: an exact,
+  * build-metadata-free SemVer 2.0.0 version string whose type stays
+  * `string`.
+  *
+  * **Details**
+  *
+  * The corepack-pinnable notion: what the `<name>@<version>[+<integrity>]`
+  * pin grammar can express in its version position, where the first `+`
+  * always begins the integrity component. `@effected/package-json`'s
+  * `PackageManager` field model uses this schema directly.
+  */
 	static readonly PinnableVersionString: S.String = S.String.pipe(
 		S.check(
 			S.makeFilterGroup([
@@ -183,45 +190,49 @@ export class SemVer extends S.Class<SemVer>($I`SemVer`)({
 	// ── Construction ────────────────────────────────────────────────────
 
 	/**
-	 * Parse a strict SemVer 2.0.0 version string, synchronously, returning a
-	 * `Result` instead of an `Effect`.
-	 *
-	 * Rejects `v`/`V` prefixes, `=` prefixes, leading zeros on numeric
-	 * identifiers and partially consumed input.
-	 *
-	 * @remarks
-	 * **Surrounding whitespace is TRIMMED before parsing**, matching
-	 * node-semver's constructor: `" 1.2.3"` parses successfully. When padded
-	 * input should be the caller's error rather than silently canonicalized,
-	 * reach for {@link SemVer.isValid} / {@link SemVer.ExactVersionString}
-	 * (or their pinnable twins), which deliberately reject it.
-	 *
-	 * {@link SemVer.parse} is defined in terms of this function; the two never
-	 * diverge. Reach for the `Effect` variant inside Effect code — it carries
-	 * the `SemVer.parse` tracing span — and for this one at synchronous
-	 * boundaries.
-	 *
-	 * @example
-	 * ```ts
-	 * import { SemVer } from "./index.ts";
-	 * import * as Result from "effect/Result";
-	 *
-	 * const ok = SemVer.parseResult("1.2.3");
-	 * if (Result.isSuccess(ok)) {
-	 *   console.log(ok.success.major); // => 1
-	 * }
-	 *
-	 * const bad = SemVer.parseResult("v1.2.3");
-	 * if (Result.isFailure(bad)) {
-	 *   console.log(bad.failure._tag); // => "InvalidVersionError"
-	 * }
-	 * ```
-	 *
-	 * @param input - the version string to parse
-	 * @returns a `Result` succeeding with the parsed {@link SemVer}, or failing
-	 * with {@link InvalidVersionError} when `input` is not a valid version
-	 * string.
-	 */
+  * Parse a strict SemVer 2.0.0 version string, synchronously, returning a
+  * `Result` instead of an `Effect`.
+  *
+  * **Details**
+  *
+  * Rejects `v`/`V` prefixes, `=` prefixes, leading zeros on numeric
+  * identifiers and partially consumed input.
+  *
+  * **Gotchas**
+  *
+  * **Surrounding whitespace is TRIMMED before parsing**, matching
+  * node-semver's constructor: `" 1.2.3"` parses successfully. When padded
+  * input should be the caller's error rather than silently canonicalized,
+  * reach for {@link SemVer.isValid} / {@link SemVer.ExactVersionString}
+  * (or their pinnable twins), which deliberately reject it.
+  *
+  * {@link SemVer.parse} is defined in terms of this function; the two never
+  * diverge. Reach for the `Effect` variant inside Effect code — it carries
+  * the `SemVer.parse` tracing span — and for this one at synchronous
+  * boundaries.
+  *
+  * **Example** (Parse a version and reject a prefixed version)
+  *
+  * ```ts
+  * import { SemVer } from "./index.ts";
+  * import * as Result from "effect/Result";
+  *
+  * const ok = SemVer.parseResult("1.2.3");
+  * if (Result.isSuccess(ok)) {
+  *   console.log(ok.success.major); // => 1
+  * }
+  *
+  * const bad = SemVer.parseResult("v1.2.3");
+  * if (Result.isFailure(bad)) {
+  *   console.log(bad.failure._tag); // => "InvalidVersionError"
+  * }
+  * ```
+  *
+  * @param input - the version string to parse
+  * @returns a `Result` succeeding with the parsed {@link SemVer}, or failing
+  * with {@link InvalidVersionError} when `input` is not a valid version
+  * string.
+  */
 	static parseResult(input: string): Result.Result<SemVer, InvalidVersionError> {
 		const result = parseVersion(input);
 		if (!result.ok) {
@@ -244,44 +255,46 @@ export class SemVer extends S.Class<SemVer>($I`SemVer`)({
 	// ── Validation ──────────────────────────────────────────────────────
 
 	/**
-	 * Whether `input` is a valid SemVer 2.0.0 version string, exactly as
-	 * given.
-	 *
-	 * @remarks
-	 * Strict grammar validity — the same grammar as {@link SemVer.parseResult}
-	 * — with one deliberate divergence: surrounding whitespace is **rejected**.
-	 * `parseResult` trims its input (matching node-semver, whose `SemVer`
-	 * constructor trims), so `" 1.2.3"` parses; this predicate answers a
-	 * different question — "is this string, byte for byte, a version?" — and a
-	 * padded input is the caller's bug to surface, not this package's to hide.
-	 * Build metadata is valid grammar (`isValid("1.2.3+build")` is `true`);
-	 * reach for {@link SemVer.isPinnable} when the `+` position must stay
-	 * free.
-	 *
-	 * @param input - the candidate version string
-	 * @returns `true` when `input` is a valid version string with no
-	 * surrounding whitespace.
-	 */
+  * Whether `input` is a valid SemVer 2.0.0 version string, exactly as
+  * given.
+  *
+  * **Details**
+  *
+  * Strict grammar validity — the same grammar as {@link SemVer.parseResult}
+  * — with one deliberate divergence: surrounding whitespace is **rejected**.
+  * `parseResult` trims its input (matching node-semver, whose `SemVer`
+  * constructor trims), so `" 1.2.3"` parses; this predicate answers a
+  * different question — "is this string, byte for byte, a version?" — and a
+  * padded input is the caller's bug to surface, not this package's to hide.
+  * Build metadata is valid grammar (`isValid("1.2.3+build")` is `true`);
+  * reach for {@link SemVer.isPinnable} when the `+` position must stay
+  * free.
+  *
+  * @param input - the candidate version string
+  * @returns `true` when `input` is a valid version string with no
+  * surrounding whitespace.
+  */
 	static isValid(input: string): boolean {
 		return input === input.trim() && Result.isSuccess(SemVer.parseResult(input));
 	}
 
 	/**
-	 * Whether `input` is a corepack-pinnable version string: valid by
-	 * {@link SemVer.isValid} **and** carrying no build metadata.
-	 *
-	 * @remarks
-	 * The notion the `<name>@<version>[+<integrity>]` pin grammar needs: there
-	 * the first `+` after the version always begins the integrity component,
-	 * so a version carrying build identifiers would encode to a string that
-	 * re-parses differently. Prerelease versions are pinnable; the whitespace
-	 * posture is {@link SemVer.isValid}'s.
-	 *
-	 * @param input - the candidate version string
-	 * @returns `true` when `input` is a valid version string with no
-	 * surrounding whitespace (the string equals its own trim) and whose
-	 * build metadata is empty.
-	 */
+  * Whether `input` is a corepack-pinnable version string: valid by
+  * {@link SemVer.isValid} **and** carrying no build metadata.
+  *
+  * **Details**
+  *
+  * The notion the `<name>@<version>[+<integrity>]` pin grammar needs: there
+  * the first `+` after the version always begins the integrity component,
+  * so a version carrying build identifiers would encode to a string that
+  * re-parses differently. Prerelease versions are pinnable; the whitespace
+  * posture is {@link SemVer.isValid}'s.
+  *
+  * @param input - the candidate version string
+  * @returns `true` when `input` is a valid version string with no
+  * surrounding whitespace (the string equals its own trim) and whose
+  * build metadata is empty.
+  */
 	static isPinnable(input: string): boolean {
 		if (input !== input.trim()) {
 			return false;
@@ -633,13 +646,16 @@ function overflow(component: SemVerBumpComponent, cause: unknown): never {
  * is always reached through a `SemVer` instance. Every operation returns a
  * new {@link SemVer}; build metadata never survives a bump.
  *
+ * **Details**
+ *
  * `major`/`minor`/`patch` always increment the requested component, whether
  * or not the receiver is a prerelease — this deliberately diverges from
  * node-semver, where `inc("2.0.0-beta.1", "major")` answers `"2.0.0"` (the
  * release target of an in-progress prerelease, not a further increment). Here
  * the same call answers `"3.0.0"`.
  *
- * @example
+ * **Example** (Bump patch, minor and prerelease versions)
+ *
  * ```ts
  * import { SemVer } from "./index.ts";
  *

@@ -39,7 +39,8 @@ const DependencyMap = S.Record(S.String, S.String).pipe(
  * A snapshot's `version` field: absent when the manifest declared none, and
  * never `""`.
  *
- * @remarks
+ * **Details**
+ *
  * The Type side is a `NonEmptyString`, so `make` rejects `""` outright. The
  * encoded side stays a plain optional string so that a stored value carrying
  * `""` still decodes, to the absent key it meant — a stored value and a fresh
@@ -60,7 +61,8 @@ const SnapshotVersion = S.optionalKey(S.String).pipe(
  * serializable slice a snapshot diff reads: identity, version, location, and the
  * four dependency records.
  *
- * @remarks
+ * **Details**
+ *
  * Deliberately narrower than {@link WorkspacePackage}: a snapshot is a value to
  * store and diff, not a located member to act on, so it carries no absolute
  * paths, `publishConfig`, or `private` flag. The four records are keyed by the
@@ -73,22 +75,23 @@ export class PackageStateSnapshot extends S.Class<PackageStateSnapshot>($I`Packa
 	/** The package name. */
 	name: S.NonEmptyString.annotateKey({ description: "The package name." }),
 	/**
-	 * The raw `version` string, as recorded at the captured moment — absent for
-	 * a manifest that declared none.
-	 *
-	 * @remarks
-	 * Optional exactly as `WorkspacePackage.version` is: a version-less member is
-	 * an ordinary pnpm shape. Both capture paths — `WorkspaceSnapshots.at(ref)`
-	 * and `WorkspaceSnapshots.worktree` — omit the key for such a member, so
-	 * the two sides of a diff agree without a placeholder. Never `""`: `make`
-	 * rejects it, and a stored `""` decodes to the absent key.
-	 *
-	 * A version-less member is still a member: it appears in `packages` and
-	 * answers {@link WorkspaceStateSnapshot.package}, but is absent from
-	 * {@link WorkspaceStateSnapshot.versions}, resolves a `workspace:` specifier
-	 * to `Option.none()`, and fails its snapshot-bound `WorkspaceResolver`'s
-	 * `versionOf` typed.
-	 */
+  * The raw `version` string, as recorded at the captured moment — absent for
+  * a manifest that declared none.
+  *
+  * **Details**
+  *
+  * Optional exactly as `WorkspacePackage.version` is: a version-less member is
+  * an ordinary pnpm shape. Both capture paths — `WorkspaceSnapshots.at(ref)`
+  * and `WorkspaceSnapshots.worktree` — omit the key for such a member, so
+  * the two sides of a diff agree without a placeholder. Never `""`: `make`
+  * rejects it, and a stored `""` decodes to the absent key.
+  *
+  * A version-less member is still a member: it appears in `packages` and
+  * answers {@link WorkspaceStateSnapshot.package}, but is absent from
+  * {@link WorkspaceStateSnapshot.versions}, resolves a `workspace:` specifier
+  * to `Option.none()`, and fails its snapshot-bound `WorkspaceResolver`'s
+  * `versionOf` typed.
+  */
 	version: SnapshotVersion.annotateKey({ description: "The raw `version` string, as recorded at the captured moment — absent for a manifest that declared none." }),
 	/** POSIX path relative to the workspace root; `"."` for the root package. */
 	relativePath: S.String.annotateKey({ description: "POSIX path relative to the workspace root; `\".\"` for the root package." }),
@@ -102,13 +105,14 @@ export class PackageStateSnapshot extends S.Class<PackageStateSnapshot>($I`Packa
 	optionalDependencies: DependencyMap.annotateKey({ description: "Optional dependencies." }),
 }, $I.annote("PackageStateSnapshot", { description: "One workspace member as captured in a WorkspaceStateSnapshot — the serializable slice a snapshot diff reads: identity, version, location, and the four dependency records." })) {
 	/**
-	 * Every dependency, merged across the four kinds.
-	 *
-	 * @remarks
-	 * Precedence on a name declared in several kinds runs
-	 * `dependencies` \> `devDependencies` \> `peerDependencies` \>
-	 * `optionalDependencies`.
-	 */
+  * Every dependency, merged across the four kinds.
+  *
+  * **Details**
+  *
+  * Precedence on a name declared in several kinds runs
+  * `dependencies` \> `devDependencies` \> `peerDependencies` \>
+  * `optionalDependencies`.
+  */
 	get allDependencies(): Record<string, string> {
 		return R.fromEntries([
 			...R.toEntries(this.optionalDependencies),
@@ -123,7 +127,8 @@ export class PackageStateSnapshot extends S.Class<PackageStateSnapshot>($I`Packa
  * The state of a whole workspace at one moment — its packages and its assembled
  * catalog set — as a serializable value.
  *
- * @remarks
+ * **Details**
+ *
  * Produced by `WorkspaceSnapshots.at` (a git ref, read with no checkout)
  * or `WorkspaceSnapshots.worktree` (the live tree). The lookup and
  * resolution surfaces (`versions`, `package`, `resolve`, the resolver layers)
@@ -135,7 +140,8 @@ export class PackageStateSnapshot extends S.Class<PackageStateSnapshot>($I`Packa
  * `workspace:*` mean as of that ref". An unmatched specifier is always
  * `Option.none()`, never an error.
  *
- * @example
+ * **Example** (Resolve a catalog specifier at a git ref)
+ *
  * ```ts
  * import { WorkspaceSnapshots } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -155,55 +161,58 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 	/** The catalog set assembled at this moment. */
 	catalogs: CatalogSet.annotateKey({ description: "The catalog set assembled at this moment." }),
 	/**
-	 * Each importer's dependency-name → resolved-version map, as the manager's
-	 * lockfile recorded it at this moment.
-	 *
-	 * @remarks
-	 * Defaults to `{}` when absent from a stored value; an empty index makes the
-	 * `catalog:` fallback in {@link WorkspaceStateSnapshot.resolve} inert. Only
-	 * pnpm records importer versions; bun and npm yield an empty index.
-	 */
+  * Each importer's dependency-name → resolved-version map, as the manager's
+  * lockfile recorded it at this moment.
+  *
+  * **Details**
+  *
+  * Defaults to `{}` when absent from a stored value; an empty index makes the
+  * `catalog:` fallback in {@link WorkspaceStateSnapshot.resolve} inert. Only
+  * pnpm records importer versions; bun and npm yield an empty index.
+  */
 	importerVersions: S.optionalKey(S.Record(S.String, S.Record(S.String, S.String))).annotateKey({ description: "Each importer's dependency-name → resolved-version map, as the manager's lockfile recorded it at this moment." }),
 	/**
-	 * Which version each declared config dependency's hook was replayed from at
-	 * this moment, keyed by name.
-	 *
-	 * @remarks
-	 * Versions only — WHERE this machine found each pnpmfile (the `source` of a
-	 * live `HookReplay`) is machine-local provenance, not part of "what the
-	 * workspace looked like then", so it stays on the live `HookInjection`
-	 * diagnostic and off this serializable value. Every fresh read sets the
-	 * field: `{}` under the no-op layer, which resolves nothing, when the file
-	 * declares no config dependencies, or on the bun / `package.json` path,
-	 * where config dependencies do not exist. Absent only when decoding a stored
-	 * value that omits it. Carried through `withSeededCatalogs` and `crossSeed`
-	 * unchanged, like `importerVersions`.
-	 */
+  * Which version each declared config dependency's hook was replayed from at
+  * this moment, keyed by name.
+  *
+  * **Details**
+  *
+  * Versions only — WHERE this machine found each pnpmfile (the `source` of a
+  * live `HookReplay`) is machine-local provenance, not part of "what the
+  * workspace looked like then", so it stays on the live `HookInjection`
+  * diagnostic and off this serializable value. Every fresh read sets the
+  * field: `{}` under the no-op layer, which resolves nothing, when the file
+  * declares no config dependencies, or on the bun / `package.json` path,
+  * where config dependencies do not exist. Absent only when decoding a stored
+  * value that omits it. Carried through `withSeededCatalogs` and `crossSeed`
+  * unchanged, like `importerVersions`.
+  */
 	hookReplays: S.optionalKey(S.Record(S.String, S.String)).annotateKey({ description: "Which version each declared config dependency's hook was replayed from at this moment, keyed by name." }),
 	/**
-	 * Catalogs supplied from OUTSIDE this moment, consulted only when
-	 * `catalogs` cannot answer.
-	 *
-	 * @remarks
-	 * **This is deliberately not merged into `catalogs`.** That field means "the
-	 * catalog set assembled at this moment" and a snapshot is a serializable
-	 * value someone stores and diffs; blending an external set into it would
-	 * quietly make the field mean something else, and nothing downstream could
-	 * tell the two apart afterwards. Kept separate, the ref's own declaration
-	 * always wins and both halves stay readable.
-	 *
-	 * The motivating case is a catalog injected by a config-dependency
-	 * `pnpmfile` hook. It is recorded in no committed catalog source, so under
-	 * a non-replaying `ConfigDependencyHooks` layer (`layerNoop`, the default)
-	 * `WorkspaceSnapshots.at(ref)` cannot see it, and a `catalog:` specifier
-	 * against it resolves to nothing on BOTH sides of a diff. Seeding the live
-	 * hook-injected set, or the other side's set, restores a declared RANGE
-	 * without executing any historical code. Under a replaying layer `at(ref)`
-	 * replays the ref's own pinned hook and the seed answers only what neither
-	 * source declared.
-	 *
-	 * Defaults to absent, which makes the seed inert.
-	 */
+  * Catalogs supplied from OUTSIDE this moment, consulted only when
+  * `catalogs` cannot answer.
+  *
+  * **Details**
+  *
+  * **This is deliberately not merged into `catalogs`.** That field means "the
+  * catalog set assembled at this moment" and a snapshot is a serializable
+  * value someone stores and diffs; blending an external set into it would
+  * quietly make the field mean something else, and nothing downstream could
+  * tell the two apart afterwards. Kept separate, the ref's own declaration
+  * always wins and both halves stay readable.
+  *
+  * The motivating case is a catalog injected by a config-dependency
+  * `pnpmfile` hook. It is recorded in no committed catalog source, so under
+  * a non-replaying `ConfigDependencyHooks` layer (`layerNoop`, the default)
+  * `WorkspaceSnapshots.at(ref)` cannot see it, and a `catalog:` specifier
+  * against it resolves to nothing on BOTH sides of a diff. Seeding the live
+  * hook-injected set, or the other side's set, restores a declared RANGE
+  * without executing any historical code. Under a replaying layer `at(ref)`
+  * replays the ref's own pinned hook and the seed answers only what neither
+  * source declared.
+  *
+  * Defaults to absent, which makes the seed inert.
+  */
 	seededCatalogs: S.optionalKey(CatalogSet).annotateKey({ description: "Catalogs supplied from OUTSIDE this moment, consulted only when `catalogs` cannot answer." }),
 }, $I.annote("WorkspaceStateSnapshot", { description: "The state of a whole workspace at one moment — its packages and its assembled catalog set — as a serializable value." })) {
 	#versionIndex: HashMap.HashMap<string, string> | undefined;
@@ -236,14 +245,15 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 	}
 
 	/**
-	 * Every captured package's name → version, for the packages that declared
-	 * one. Total; O(1) after the first call.
-	 *
-	 * @remarks
-	 * A member whose manifest declared no version is **absent** from this map,
-	 * so every value is a real version and presence answers "has a version",
-	 * not membership — ask {@link WorkspaceStateSnapshot.package} for that.
-	 */
+  * Every captured package's name → version, for the packages that declared
+  * one. Total; O(1) after the first call.
+  *
+  * **Gotchas**
+  *
+  * A member whose manifest declared no version is **absent** from this map,
+  * so every value is a real version and presence answers "has a version",
+  * not membership — ask {@link WorkspaceStateSnapshot.package} for that.
+  */
 	get versions(): HashMap.HashMap<string, string> {
 		return this.#versions();
 	}
@@ -270,40 +280,41 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 	}
 
 	/**
-	 * The concrete range or version a specifier resolved to AS OF this snapshot.
-	 *
-	 * @remarks
-	 * The specifier is classified through `@effected/npm`'s
-	 * `DependencySpecifier.FromString` — never by prefix-sniffing.
-	 * A `workspace:` specifier resolves to the captured version of `dependency`; a
-	 * `catalog:` specifier resolves against the captured catalog set. Every other
-	 * form — a plain range, a dist-tag, a `file:`/git/url specifier, or an
-	 * unparseable string — is `Option.none()`, because there is no indirection to
-	 * resolve. Total.
-	 *
-	 * A `catalog:` specifier resolves in three steps, and the order is the
-	 * contract: this moment's own `catalogs` first,
-	 * then `seededCatalogs` if one was supplied,
-	 * then the `importerVersions` fallback below. The first two answer with a
-	 * declared RANGE and the third with a concrete version, so a seeded snapshot
-	 * reports a range change where an unseeded one could only report a version —
-	 * which is the difference between a diff row and no row when both refs
-	 * recorded the same installed version.
-	 *
-	 * A `catalog:` specifier neither catalog set can resolve falls back to this
-	 * snapshot's `importerVersions` — but only to a version
-	 * **every** importer recording that dependency agrees on. A catalog injected
-	 * by a config-dependency pnpmfile hook appears in no committed catalog source,
-	 * so without this fallback both sides of a before/after diff resolve it to the
-	 * same raw string and a real version movement produces no row. When importers
-	 * disagree there is no single correct answer, so this stays `Option.none()`
-	 * rather than inventing one; {@link WorkspaceStateSnapshot.resolveIn} answers
-	 * precisely for callers that know which importer is asking.
-	 *
-	 * @param dependency - The dependency's package name (what `workspace:` /
-	 *   `catalog:` resolve for).
-	 * @param specifier - The raw specifier string.
-	 */
+  * The concrete range or version a specifier resolved to AS OF this snapshot.
+  *
+  * **Details**
+  *
+  * The specifier is classified through `@effected/npm`'s
+  * `DependencySpecifier.FromString` — never by prefix-sniffing.
+  * A `workspace:` specifier resolves to the captured version of `dependency`; a
+  * `catalog:` specifier resolves against the captured catalog set. Every other
+  * form — a plain range, a dist-tag, a `file:`/git/url specifier, or an
+  * unparseable string — is `Option.none()`, because there is no indirection to
+  * resolve. Total.
+  *
+  * A `catalog:` specifier resolves in three steps, and the order is the
+  * contract: this moment's own `catalogs` first,
+  * then `seededCatalogs` if one was supplied,
+  * then the `importerVersions` fallback below. The first two answer with a
+  * declared RANGE and the third with a concrete version, so a seeded snapshot
+  * reports a range change where an unseeded one could only report a version —
+  * which is the difference between a diff row and no row when both refs
+  * recorded the same installed version.
+  *
+  * A `catalog:` specifier neither catalog set can resolve falls back to this
+  * snapshot's `importerVersions` — but only to a version
+  * **every** importer recording that dependency agrees on. A catalog injected
+  * by a config-dependency pnpmfile hook appears in no committed catalog source,
+  * so without this fallback both sides of a before/after diff resolve it to the
+  * same raw string and a real version movement produces no row. When importers
+  * disagree there is no single correct answer, so this stays `Option.none()`
+  * rather than inventing one; {@link WorkspaceStateSnapshot.resolveIn} answers
+  * precisely for callers that know which importer is asking.
+  *
+  * @param dependency - The dependency's package name (what `workspace:` /
+  *   `catalog:` resolve for).
+  * @param specifier - The raw specifier string.
+  */
 	resolve(dependency: string, specifier: string): O.Option<string> {
 		return this.#resolveWith(dependency, specifier, () =>
 			O.fromUndefinedOr(unanimousVersionOf(this.importerVersions ?? {}, dependency)),
@@ -311,26 +322,27 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 	}
 
 	/**
-	 * The concrete range or version a specifier resolved to AS OF this snapshot,
-	 * scoped to the importer that declared it.
-	 *
-	 * @remarks
-	 * Identical to {@link WorkspaceStateSnapshot.resolve} except in how an
-	 * unresolvable `catalog:` specifier falls back: this consults **only**
-	 * `importerPath`'s own recorded versions, so a monorepo whose packages hold
-	 * different versions of one dependency still gets an exact answer where
-	 * `resolve` must abstain. Prefer this whenever the caller knows the importer —
-	 * a consumer iterating `packages` has `relativePath` in hand, which is the
-	 * importer key (`"."` for the root package).
-	 *
-	 * An unknown `importerPath`, or one recording nothing for `dependency`, is
-	 * `Option.none()`. Total.
-	 *
-	 * @param importerPath - The importer's path relative to the workspace root,
-	 *   `"."` for the root package — `PackageStateSnapshot.relativePath`.
-	 * @param dependency - The dependency's package name.
-	 * @param specifier - The raw specifier string.
-	 */
+  * The concrete range or version a specifier resolved to AS OF this snapshot,
+  * scoped to the importer that declared it.
+  *
+  * **Details**
+  *
+  * Identical to {@link WorkspaceStateSnapshot.resolve} except in how an
+  * unresolvable `catalog:` specifier falls back: this consults **only**
+  * `importerPath`'s own recorded versions, so a monorepo whose packages hold
+  * different versions of one dependency still gets an exact answer where
+  * `resolve` must abstain. Prefer this whenever the caller knows the importer —
+  * a consumer iterating `packages` has `relativePath` in hand, which is the
+  * importer key (`"."` for the root package).
+  *
+  * An unknown `importerPath`, or one recording nothing for `dependency`, is
+  * `Option.none()`. Total.
+  *
+  * @param importerPath - The importer's path relative to the workspace root,
+  *   `"."` for the root package — `PackageStateSnapshot.relativePath`.
+  * @param dependency - The dependency's package name.
+  * @param specifier - The raw specifier string.
+  */
 	resolveIn(importerPath: string, dependency: string, specifier: string): O.Option<string> {
 		return this.#resolveWith(dependency, specifier, () =>
 			O.flatMap(R.get(this.importerVersions ?? {}, importerPath), R.get(dependency)),
@@ -365,15 +377,16 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 	}
 
 	/**
-	 * The catalog half of resolution, in precedence order: this moment's own
-	 * catalogs first, the external seed second.
-	 *
-	 * @remarks
-	 * The ordering is the whole contract. What the ref itself declared can never
-	 * be overridden by something handed in from outside, so a seed can only ever
-	 * ADD an answer where there was none — which is why seeding is safe to do
-	 * unconditionally and why an over-broad seed cannot corrupt a diff.
-	 */
+  * The catalog half of resolution, in precedence order: this moment's own
+  * catalogs first, the external seed second.
+  *
+  * **Details**
+  *
+  * The ordering is the whole contract. What the ref itself declared can never
+  * be overridden by something handed in from outside, so a seed can only ever
+  * ADD an answer where there was none — which is why seeding is safe to do
+  * unconditionally and why an over-broad seed cannot corrupt a diff.
+  */
 	#catalogRange(dependency: string, catalog: O.Option<string>): O.Option<string> {
 		const own = this.catalogs.rangeOf(dependency, catalog);
 		if (O.isSome(own)) return own;
@@ -381,41 +394,43 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 	}
 
 	/**
-	 * This snapshot with `seed` as its `seededCatalogs`
-	 * — catalogs consulted only where this moment's own catalogs cannot answer.
-	 *
-	 * @remarks
-	 * Returns a NEW snapshot; the receiver is untouched, and the seed REPLACES
-	 * any seed already present rather than merging with it (a snapshot is a
-	 * value, and an accumulating seed would make precedence depend on call
-	 * order). {@link WorkspaceStateSnapshot.crossSeed} is the deliberate
-	 * exception: it composes the two seeds explicitly, precisely because a bare
-	 * replace would discard a layer-level seed. `catalogs`, `packages`, `importerVersions` and `hookReplays` are
-	 * carried through unchanged, so what the ref declared is still exactly what it declared.
-	 *
-	 * The two seeds worth reaching for: the LIVE hook-injected catalog set (from
-	 * a `WorkspaceCatalogs` built by one of the config-dependency layers), or the
-	 * other side of a two-ref diff — see
-	 * {@link WorkspaceStateSnapshot.crossSeed}.
-	 *
-	 * @param seed - The catalogs to consult as a fallback.
-	 *
-	 * @example
-	 * ```ts
-	 * import { WorkspaceCatalogs, WorkspaceSnapshots } from "./index.ts";
-	 * import * as Effect from "effect/Effect";
-	 *
-	 * const program = Effect.gen(function* () {
-	 *   const snapshots = yield* WorkspaceSnapshots;
-	 *   const catalogs = yield* WorkspaceCatalogs;
-	 *   // The live set includes hook-injected catalogs under a config-dependency
-	 *   // layer; the ref's own set never can.
-	 *   const live = yield* catalogs.set;
-	 *   const before = (yield* snapshots.at("origin/main")).withSeededCatalogs(live);
-	 *   return before.resolve("effect", "catalog:");
-	 * });
-	 * ```
-	 */
+  * This snapshot with `seed` as its `seededCatalogs`
+  * — catalogs consulted only where this moment's own catalogs cannot answer.
+  *
+  * **Details**
+  *
+  * Returns a NEW snapshot; the receiver is untouched, and the seed REPLACES
+  * any seed already present rather than merging with it (a snapshot is a
+  * value, and an accumulating seed would make precedence depend on call
+  * order). {@link WorkspaceStateSnapshot.crossSeed} is the deliberate
+  * exception: it composes the two seeds explicitly, precisely because a bare
+  * replace would discard a layer-level seed. `catalogs`, `packages`, `importerVersions` and `hookReplays` are
+  * carried through unchanged, so what the ref declared is still exactly what it declared.
+  *
+  * The two seeds worth reaching for: the LIVE hook-injected catalog set (from
+  * a `WorkspaceCatalogs` built by one of the config-dependency layers), or the
+  * other side of a two-ref diff — see
+  * {@link WorkspaceStateSnapshot.crossSeed}.
+  *
+  * **Example** (Seed a historical snapshot with live catalogs)
+  *
+  * ```ts
+  * import { WorkspaceCatalogs, WorkspaceSnapshots } from "./index.ts";
+  * import * as Effect from "effect/Effect";
+  *
+  * const program = Effect.gen(function* () {
+  *   const snapshots = yield* WorkspaceSnapshots;
+  *   const catalogs = yield* WorkspaceCatalogs;
+  *   // The live set includes hook-injected catalogs under a config-dependency
+  *   // layer; the ref's own set never can.
+  *   const live = yield* catalogs.set;
+  *   const before = (yield* snapshots.at("origin/main")).withSeededCatalogs(live);
+  *   return before.resolve("effect", "catalog:");
+  * });
+  * ```
+  *
+  * @param seed - The catalogs to consult as a fallback.
+  */
 	withSeededCatalogs(seed: CatalogSet): WorkspaceStateSnapshot {
 		return WorkspaceStateSnapshot.make({
 			packages: this.packages,
@@ -427,65 +442,67 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 	}
 
 	/**
-	 * Both sides of a diff, each seeded with the other's catalogs.
-	 *
-	 * @remarks
-	 * The two-ref symmetry the hook-catalog gap actually needs. A catalog
-	 * injected by a config-dependency hook is declared in no committed source,
-	 * so neither ref's snapshot can see it and a `catalog:` specifier against it
-	 * resolves to nothing on both sides — a real version movement then produces
-	 * no row. Cross-seeding restores a declared RANGE on whichever side is
-	 * missing it, at strictly lower precedence than that side's own catalogs, so
-	 * a genuine change between the refs still reads as a change.
-	 *
-	 * **What cross-seeding can and cannot see depends on the hooks layer.** A
-	 * range change made purely by bumping the config dependency BETWEEN the two
-	 * refs is detected when the snapshots were read under a replaying
-	 * `ConfigDependencyHooks` layer: `WorkspaceSnapshots.at(ref)` replays each
-	 * ref's hook at the version that ref's `configDependencies` declares, so
-	 * each side's OWN catalogs carry that side's injected range and the seed
-	 * never gets a say. Under `layerNoop` the case stays suppressed — neither
-	 * committed source declares the catalog, so each side falls back to the
-	 * other's value and the two agree by construction; there, diff
-	 * `configDependencies` in `pnpm-workspace.yaml` directly, the only committed
-	 * evidence that the injection changed. Cross-seeding is harmless under a
-	 * replaying layer (own catalogs take precedence) and still worthwhile under
-	 * the no-op one, which is why it stays.
-	 *
-	 * **The seeding relationship is symmetric; the RETURN ORDER is not.** Each
-	 * snapshot is seeded with the other's catalogs, so neither argument is
-	 * privileged and swapping them produces the same two values — but they come
-	 * back mirroring the order they went in, so destructure in the order you
-	 * passed. The `before`/`after` names describe the intended calling
-	 * convention for a two-ref diff, not a constraint on what may be passed.
-	 *
-	 * **A seed already present on either snapshot is preserved**, beneath the
-	 * other side's catalogs — which matters because
-	 * `WorkspaceSnapshotsOptions.seedCatalogs` puts one there on every snapshot
-	 * the service returns. Composing the two surfaces is therefore safe: the
-	 * layer-level seed keeps answering what neither ref declared, while the
-	 * other ref's committed declaration wins where it has one.
-	 *
-	 * @param before - One snapshot, conventionally the earlier one.
-	 * @param after - The other snapshot, conventionally the later one.
-	 * @returns Both snapshots in the order given, each carrying the other's
-	 *   catalogs as its seed.
-	 *
-	 * @example
-	 * ```ts
-	 * import { WorkspaceSnapshots, WorkspaceStateSnapshot } from "./index.ts";
-	 * import * as Effect from "effect/Effect";
-	 *
-	 * const program = Effect.gen(function* () {
-	 *   const snapshots = yield* WorkspaceSnapshots;
-	 *   const [before, after] = WorkspaceStateSnapshot.crossSeed(
-	 *     yield* snapshots.at("origin/main"),
-	 *     yield* snapshots.worktree,
-	 *   );
-	 *   return { before: before.resolve("effect", "catalog:"), after: after.resolve("effect", "catalog:") };
-	 * });
-	 * ```
-	 */
+  * Both sides of a diff, each seeded with the other's catalogs.
+  *
+  * **Gotchas**
+  *
+  * The two-ref symmetry the hook-catalog gap actually needs. A catalog
+  * injected by a config-dependency hook is declared in no committed source,
+  * so neither ref's snapshot can see it and a `catalog:` specifier against it
+  * resolves to nothing on both sides — a real version movement then produces
+  * no row. Cross-seeding restores a declared RANGE on whichever side is
+  * missing it, at strictly lower precedence than that side's own catalogs, so
+  * a genuine change between the refs still reads as a change.
+  *
+  * **What cross-seeding can and cannot see depends on the hooks layer.** A
+  * range change made purely by bumping the config dependency BETWEEN the two
+  * refs is detected when the snapshots were read under a replaying
+  * `ConfigDependencyHooks` layer: `WorkspaceSnapshots.at(ref)` replays each
+  * ref's hook at the version that ref's `configDependencies` declares, so
+  * each side's OWN catalogs carry that side's injected range and the seed
+  * never gets a say. Under `layerNoop` the case stays suppressed — neither
+  * committed source declares the catalog, so each side falls back to the
+  * other's value and the two agree by construction; there, diff
+  * `configDependencies` in `pnpm-workspace.yaml` directly, the only committed
+  * evidence that the injection changed. Cross-seeding is harmless under a
+  * replaying layer (own catalogs take precedence) and still worthwhile under
+  * the no-op one, which is why it stays.
+  *
+  * **The seeding relationship is symmetric; the RETURN ORDER is not.** Each
+  * snapshot is seeded with the other's catalogs, so neither argument is
+  * privileged and swapping them produces the same two values — but they come
+  * back mirroring the order they went in, so destructure in the order you
+  * passed. The `before`/`after` names describe the intended calling
+  * convention for a two-ref diff, not a constraint on what may be passed.
+  *
+  * **A seed already present on either snapshot is preserved**, beneath the
+  * other side's catalogs — which matters because
+  * `WorkspaceSnapshotsOptions.seedCatalogs` puts one there on every snapshot
+  * the service returns. Composing the two surfaces is therefore safe: the
+  * layer-level seed keeps answering what neither ref declared, while the
+  * other ref's committed declaration wins where it has one.
+  *
+  * **Example** (Cross-seed snapshots for catalog resolution)
+  *
+  * ```ts
+  * import { WorkspaceSnapshots, WorkspaceStateSnapshot } from "./index.ts";
+  * import * as Effect from "effect/Effect";
+  *
+  * const program = Effect.gen(function* () {
+  *   const snapshots = yield* WorkspaceSnapshots;
+  *   const [before, after] = WorkspaceStateSnapshot.crossSeed(
+  *     yield* snapshots.at("origin/main"),
+  *     yield* snapshots.worktree,
+  *   );
+  *   return { before: before.resolve("effect", "catalog:"), after: after.resolve("effect", "catalog:") };
+  * });
+  * ```
+  *
+  * @param before - One snapshot, conventionally the earlier one.
+  * @param after - The other snapshot, conventionally the later one.
+  * @returns Both snapshots in the order given, each carrying the other's
+  *   catalogs as its seed.
+  */
 	static crossSeed(
 		before: WorkspaceStateSnapshot,
 		after: WorkspaceStateSnapshot,
@@ -507,17 +524,18 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 	}
 
 	/**
-	 * A `CatalogResolver` layer implementing `@effected/npm`'s contract against
-	 * THIS snapshot's catalog set — so code written to the contract resolves
-	 * `catalog:` specifiers as of this ref. Built once per instance and cached, so
-	 * it memoizes by reference.
-	 *
-	 * @remarks
-	 * The contract's error channel (`CatalogAssemblyError` /
-	 * `DependencyResolutionError`) is satisfied vacuously: a snapshot's catalogs
-	 * were already assembled when it was captured, so this resolver is total —
-	 * `rangeOf` never fails.
-	 */
+  * A `CatalogResolver` layer implementing `@effected/npm`'s contract against
+  * THIS snapshot's catalog set — so code written to the contract resolves
+  * `catalog:` specifiers as of this ref. Built once per instance and cached, so
+  * it memoizes by reference.
+  *
+  * **Details**
+  *
+  * The contract's error channel (`CatalogAssemblyError` /
+  * `DependencyResolutionError`) is satisfied vacuously: a snapshot's catalogs
+  * were already assembled when it was captured, so this resolver is total —
+  * `rangeOf` never fails.
+  */
 	get catalogResolver(): Layer.Layer<CatalogResolver> {
 		if (this.#catalogResolver === undefined) {
 			this.#catalogResolver = Layer.succeed(CatalogResolver, {

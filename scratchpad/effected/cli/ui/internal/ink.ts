@@ -55,7 +55,8 @@ const importPeers = (): Promise<InkModules> => Promise.all([import("ink"), impor
  * Load `ink` and `react`, once. The only runtime access the kit has to either package: nothing imports a value
  * from them, so importing `./ui` loads neither, and only mounting a screen does.
  *
- * @remarks
+ * **Details**
+ *
  * Concurrent loads share one import, and a failed one is retried by the next call. A missing peer is a defect, not
  * a typed failure, because it is an installation error no handler can recover from; its message names both peers.
  *
@@ -87,7 +88,8 @@ export const loadInk: Effect.Effect<InkModules> = Effect.suspend(() => {
 /**
  * The modules {@link loadInk} loaded, read at render time by kit components.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Throws when nothing has loaded them: a kit component rendered outside a screen. Inside a render that throw is
  * caught by the screen's error boundary and becomes a defect.
  *
@@ -102,7 +104,8 @@ export const inkModules = (): InkModules => {
  * A value built once from the loaded React, such as a class component or a context, which cannot be declared at
  * module scope because the kit holds no runtime React until {@link loadInk} runs.
  *
- * @remarks
+ * **Details**
+ *
  * The returned accessor builds on first call and returns the same value thereafter; like {@link inkModules}, it
  * throws if called before the load.
  *

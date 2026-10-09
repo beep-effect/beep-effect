@@ -35,7 +35,8 @@ export type LicenseMetaEntry = readonly [id: string, name: string, flags: number
 /**
  * One row per license, TAB-separated as `id\tname\tflags`.
  *
- * @remarks
+ * **Details**
+ *
  * A row is a single string rather than a tuple because **a formatter cannot
  * break a string literal.** The longest SPDX name is 88 characters, which
  * overflows the 120-column limit once the id and flags are appended, so a

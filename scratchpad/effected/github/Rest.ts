@@ -9,7 +9,8 @@ const $I = $ScratchpadId.create("effected/github/Rest");
  * Every REST route GitHub documents, as a `"<METHOD> <path>"` literal — for
  * example `"GET /repos/{owner}/{repo}"`.
  *
- * @remarks
+ * **Details**
+ *
  * This is the key the whole typed surface turns on. `@octokit/types` generates
  * the `Endpoints` map from GitHub's own OpenAPI description, so a route literal
  * carries both its parameter shape and its response shape with it, and neither
@@ -26,7 +27,8 @@ export type Route = keyof Endpoints;
  * Transport knobs octokit accepts on any route, narrowed to the three this
  * package allows.
  *
- * @remarks
+ * **Details**
+ *
  * octokit's own `RequestParameters` carries an `[parameter: string]: unknown`
  * index signature, so intersecting it would silently accept every misspelled
  * parameter. These three are the ones callers need:
@@ -74,7 +76,8 @@ export type Data<R extends Route> = R extends Route
 /**
  * The subset of routes that paginate.
  *
- * @remarks
+ * **Details**
+ *
  * Handing a non-paginating route to a paginating call is a **compile** error.
  *
  * Intersected with `Rest.Route` because `plugin-paginate-rest` generates its
@@ -89,7 +92,8 @@ export type PaginatingRoute = keyof PaginatingEndpoints & Route;
 /**
  * One element of a paginating route's collection.
  *
- * @remarks
+ * **Details**
+ *
  * Derived here rather than imported: `@octokit/plugin-paginate-rest` computes
  * the same thing internally as `GetResultsType`, but does not export it. The
  * second branch covers the search-shaped endpoints whose payload is
@@ -108,7 +112,8 @@ export type Item<R extends PaginatingRoute> =
 /**
  * How far a paginated read should go.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Both fields are honored by every paginating method in this package. Unset,
  * a read requests 100-item pages and walks until GitHub stops.
  *
@@ -129,12 +134,13 @@ export class PageOptions extends S.Class<PageOptions>($I`PageOptions`)({
 	static readonly all: PageOptions = PageOptions.make({ perPage: 100 });
 
 	/**
-	 * Reads at most one page of `perPage` items.
-	 *
-	 * @remarks
-	 * The shape a "is there any?" or "give me the newest few" read wants, where
-	 * walking every page is waste.
-	 */
+  * Reads at most one page of `perPage` items.
+  *
+  * **Details**
+  *
+  * The shape a "is there any?" or "give me the newest few" read wants, where
+  * walking every page is waste.
+  */
 	static first(perPage: number): PageOptions {
 		return PageOptions.make({ perPage, maxPages: 1 });
 	}

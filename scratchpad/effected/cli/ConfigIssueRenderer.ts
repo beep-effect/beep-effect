@@ -4,7 +4,8 @@ import { formatIssue } from "./internal/format.ts";
 /**
  * Turns a `@effected/config-file` `ConfigValidationError` into one line per rejected value.
  *
- * @remarks
+ * **Details**
+ *
  * `ConfigValidationError` carries the structured `issue` tree rather than a
  * string, so a caller holds a tree it has to turn into sentences. This is that
  * step, the same treatment {@link SchemaIssueRenderer} gives a bare issue.
@@ -18,7 +19,8 @@ import { formatIssue } from "./internal/format.ts";
  * the package installed can import this module without the resolver being asked
  * for it.
  *
- * @example
+ * **Example** (Log diagnostics for rejected configuration values)
+ *
  * ```ts
  * import { ConfigIssueRenderer } from "./index.ts"
  * import * as Effect from "effect/Effect";
@@ -39,19 +41,20 @@ export class ConfigIssueRenderer {
 	private constructor() {}
 
 	/**
-	 * One line per rejected value.
-	 *
-	 * @remarks
-	 * Takes the **error**, not its `issue`, because that is what a `catchTag`
-	 * hands you and because `issue` is typed `Schema.Defect`, which every call
-	 * site would otherwise have to reach into. Inside
-	 * `Effect.catchTag("ConfigValidationError", …)` the error is already this
-	 * type.
-	 *
-	 * It cannot throw on a malformed value: the issue tree is validated by
-	 * a guard before it is read, so a renderer on an error path never becomes the
-	 * reason a program dies.
-	 */
+  * One line per rejected value.
+  *
+  * **Details**
+  *
+  * Takes the **error**, not its `issue`, because that is what a `catchTag`
+  * hands you and because `issue` is typed `Schema.Defect`, which every call
+  * site would otherwise have to reach into. Inside
+  * `Effect.catchTag("ConfigValidationError", …)` the error is already this
+  * type.
+  *
+  * It cannot throw on a malformed value: the issue tree is validated by
+  * a guard before it is read, so a renderer on an error path never becomes the
+  * reason a program dies.
+  */
 	static readonly render = (error: ConfigValidationError): ReadonlyArray<string> =>
 		formatIssue(error?.issue);
 }

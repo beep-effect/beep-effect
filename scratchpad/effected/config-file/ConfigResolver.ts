@@ -13,7 +13,8 @@ const JsonValue = S.fromJsonString(S.Unknown);
 /**
  * A composable config file resolver: one lookup strategy.
  *
- * @remarks
+ * **Details**
+ *
  * `resolve` yields `Option.some(path)` when a config file is found and
  * `Option.none()` when it is not. **Its error channel is `never` by contract**:
  * every filesystem failure — permission denied, ENOTDIR, a broken symlink — is
@@ -32,53 +33,56 @@ export interface ConfigResolver<R = never> {
 	/** Look up the config file's path: `Option.some(path)` when found, `Option.none()` otherwise. */
 	readonly resolve: Effect.Effect<O.Option<string>, never, R>;
 	/**
-	 * The same lookup, reporting **how** the file was found rather than only
-	 * where.
-	 *
-	 * @remarks
-	 * Optional, and optional forever: a hand-rolled resolver that omits it is a
-	 * complete `ConfigResolver`, and the pipeline falls back to `resolve`,
-	 * reporting a bare `{ path }` match. Every built-in implements it, and
-	 * derives `resolve` from it, so the two can never disagree.
-	 *
-	 * It exists because a resolver's `name` cannot identify *which* candidate
-	 * matched once one resolver probes several — `upwardWalk` with a
-	 * `filenames` list, or with `subpaths`, is one resolver with many
-	 * candidates. A consumer that needs the anchor directory (a CLI computing
-	 * its project root from the discovered config) reads
-	 * {@link ConfigMatch.dir} instead of string-matching the discovered path's
-	 * tail.
-	 */
+  * The same lookup, reporting **how** the file was found rather than only
+  * where.
+  *
+  * **Details**
+  *
+  * Optional, and optional forever: a hand-rolled resolver that omits it is a
+  * complete `ConfigResolver`, and the pipeline falls back to `resolve`,
+  * reporting a bare `{ path }` match. Every built-in implements it, and
+  * derives `resolve` from it, so the two can never disagree.
+  *
+  * It exists because a resolver's `name` cannot identify *which* candidate
+  * matched once one resolver probes several — `upwardWalk` with a
+  * `filenames` list, or with `subpaths`, is one resolver with many
+  * candidates. A consumer that needs the anchor directory (a CLI computing
+  * its project root from the discovered config) reads
+  * {@link ConfigMatch.dir} instead of string-matching the discovered path's
+  * tail.
+  */
 	readonly resolveMatch?: Effect.Effect<O.Option<ConfigMatch>, never, R>;
 	/**
-	 * The same lookup, additionally reporting every candidate path actually
-	 * checked on disk, in probe order.
-	 *
-	 * @remarks
-	 * Optional, and optional forever: a hand-rolled resolver that omits it is a
-	 * complete `ConfigResolver`, and the pipeline falls back to `resolveMatch`
-	 * (then `resolve`), contributing nothing to
-	 * `ConfigFileNotFoundError.candidates` — the failure-path mirror of
-	 * `ConfigSource.match` degrading to a bare path. Every built-in implements
-	 * it, and derives the other two from it, so the three can never disagree.
-	 *
-	 * It exists because a resolver's `name` under-reports a search once one
-	 * resolver probes several candidates: after the `filenames`/`subpaths`
-	 * forms of `upwardWalk`, one `searched` entry can hide dozens of probed
-	 * paths, and "nothing found, here is what I looked for" becomes less
-	 * informative than the chain actually is.
-	 *
-	 * `probed` reports what the lookup CHECKED, not everything it could have:
-	 * a short-circuiting walk lists the prefix ending at the match, and an
-	 * absorbed filesystem failure lists nothing.
-	 */
+  * The same lookup, additionally reporting every candidate path actually
+  * checked on disk, in probe order.
+  *
+  * **Details**
+  *
+  * Optional, and optional forever: a hand-rolled resolver that omits it is a
+  * complete `ConfigResolver`, and the pipeline falls back to `resolveMatch`
+  * (then `resolve`), contributing nothing to
+  * `ConfigFileNotFoundError.candidates` — the failure-path mirror of
+  * `ConfigSource.match` degrading to a bare path. Every built-in implements
+  * it, and derives the other two from it, so the three can never disagree.
+  *
+  * It exists because a resolver's `name` under-reports a search once one
+  * resolver probes several candidates: after the `filenames`/`subpaths`
+  * forms of `upwardWalk`, one `searched` entry can hide dozens of probed
+  * paths, and "nothing found, here is what I looked for" becomes less
+  * informative than the chain actually is.
+  *
+  * `probed` reports what the lookup CHECKED, not everything it could have:
+  * a short-circuiting walk lists the prefix ending at the match, and an
+  * absorbed filesystem failure lists nothing.
+  */
 	readonly resolveProbe?: Effect.Effect<ConfigProbe, never, R>;
 }
 
 /**
  * How a resolver found a config file, not merely where.
  *
- * @remarks
+ * **Details**
+ *
  * `path` is always present; the rest describe the candidate that matched and
  * are populated only when the resolver knows them. `dir` is the **anchor**: the
  * directory the candidate was resolved against — the ancestor `upwardWalk`
@@ -102,7 +106,8 @@ export interface ConfigMatch {
 /**
  * The full report of one resolver lookup: what matched, and what was checked.
  *
- * @remarks
+ * **Details**
+ *
  * `probed` carries the candidate paths the resolver actually asked the
  * filesystem about, in probe order — for `upwardWalk`, the prefix of its
  * directory-major candidate list ending at the match, or the full list when
@@ -127,7 +132,8 @@ export interface ConfigProbe {
  * Build a resolver from a probe-reporting lookup, deriving `resolveMatch` and
  * `resolve` from it.
  *
- * @remarks
+ * **Details**
+ *
  * Every built-in goes through here, so `resolve`, `resolveMatch` and
  * `resolveProbe` are one implementation and cannot drift.
  */
@@ -187,7 +193,8 @@ const staticDir = (options: {
 /**
  * Options for `ConfigResolver.upwardWalk`.
  *
- * @remarks
+ * **Details**
+ *
  * Exactly one of `filename` and `filenames` is given. `filename` is the
  * original one-name form and keeps working unchanged; `filenames` is the
  * per-directory candidate list — every name is probed at each ancestor before
@@ -214,14 +221,15 @@ export type UpwardWalkOptions =
 			/** Directories probed under each ancestor, in order. Defaults to `["."]`. */
 			readonly subpaths?: ReadonlyArray<string>;
 			/**
-			 * The resolver's reported name. Defaults to `"walk"`.
-			 *
-			 * @remarks
-			 * Two `upwardWalk` entries in one chain otherwise report the same
-			 * `"walk"`, so `ConfigSource.resolver` cannot tell them apart. Pass a
-			 * distinct name per call — or read `ConfigSource.match` instead, which
-			 * identifies the matching candidate rather than the resolver.
-			 */
+    * The resolver's reported name. Defaults to `"walk"`.
+    *
+    * **Gotchas**
+    *
+    * Two `upwardWalk` entries in one chain otherwise report the same
+    * `"walk"`, so `ConfigSource.resolver` cannot tell them apart. Pass a
+    * distinct name per call — or read `ConfigSource.match` instead, which
+    * identifies the matching candidate rather than the resolver.
+    */
 			readonly name?: string;
 	  }
 	| {
@@ -425,20 +433,21 @@ export class ConfigResolver {
 	static readonly staticDir = staticDir;
 
 	/**
-	 * Ascends from `cwd` (or the process cwd) toward `stopAt`, resolving the
-	 * first `subpaths/filename` combination found at each level.
-	 *
-	 * @remarks
-	 * `filenames` replaces `filename` with a per-directory candidate list: every
-	 * name is probed at one ancestor before the walk ascends, so a child's
-	 * second candidate still beats a parent's first. Registering one resolver
-	 * per filename cannot do this — the chain runs a resolver to the filesystem
-	 * root before starting the next.
-	 *
-	 * `name` overrides the reported `"walk"` so two walks in one chain are
-	 * distinguishable; `ConfigSource.match` identifies the matching candidate
-	 * more precisely still.
-	 */
+  * Ascends from `cwd` (or the process cwd) toward `stopAt`, resolving the
+  * first `subpaths/filename` combination found at each level.
+  *
+  * **Details**
+  *
+  * `filenames` replaces `filename` with a per-directory candidate list: every
+  * name is probed at one ancestor before the walk ascends, so a child's
+  * second candidate still beats a parent's first. Registering one resolver
+  * per filename cannot do this — the chain runs a resolver to the filesystem
+  * root before starting the next.
+  *
+  * `name` overrides the reported `"walk"` so two walks in one chain are
+  * distinguishable; `ConfigSource.match` identifies the matching candidate
+  * more precisely still.
+  */
 	static readonly upwardWalk = upwardWalk;
 
 	/**

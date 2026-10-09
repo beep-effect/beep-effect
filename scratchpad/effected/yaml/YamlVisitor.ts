@@ -101,7 +101,8 @@ export const YamlVisitorEvent = Data.taggedEnum<YamlVisitorEvent>();
  * pairs, scalars, aliases, comments, directives and recovered errors — in
  * document order. Not instantiable.
  *
- * @example
+ * **Example** (Collect YAML mapping keys and scalar values)
+ *
  * ```ts
  * import { YamlVisitor, YamlVisitorEvent } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -122,23 +123,24 @@ export class YamlVisitor {
 	private constructor() {}
 
 	/**
-	 * Create a lazy `Stream` of `YamlVisitorEvent` from YAML text, in document
-	 * order. Multi-document streams (separated by `---`) produce a separate
-	 * `DocumentStart`/`DocumentEnd` pair per document. Events are produced on
-	 * demand, so combining with `Stream.take` allows efficient partial scans
-	 * of large documents without materializing the whole event sequence.
-	 *
-	 * @remarks
-	 * Infallible at the type level: diagnostics recorded while composing
-	 * (fatal or not, including an exceeded `maxAliasCount`, recorded as
-	 * `AliasCountExceeded`) surface as `Error` events inside the stream rather
-	 * than failing it.
-	 *
-	 * @param text - The YAML source to visit.
-	 * @param options - Optional {@link YamlParseOptions} controlling composition.
-	 * @returns A lazy `Stream` of `YamlVisitorEvent`, infallible at the type
-	 *   level.
-	 */
+  * Create a lazy `Stream` of `YamlVisitorEvent` from YAML text, in document
+  * order. Multi-document streams (separated by `---`) produce a separate
+  * `DocumentStart`/`DocumentEnd` pair per document. Events are produced on
+  * demand, so combining with `Stream.take` allows efficient partial scans
+  * of large documents without materializing the whole event sequence.
+  *
+  * **Details**
+  *
+  * Infallible at the type level: diagnostics recorded while composing
+  * (fatal or not, including an exceeded `maxAliasCount`, recorded as
+  * `AliasCountExceeded`) surface as `Error` events inside the stream rather
+  * than failing it.
+  *
+  * @param text - The YAML source to visit.
+  * @param options - Optional {@link YamlParseOptions} controlling composition.
+  * @returns A lazy `Stream` of `YamlVisitorEvent`, infallible at the type
+  *   level.
+  */
 	static visit(text: string, options?: YamlParseOptions): Stream.Stream<YamlVisitorEvent> {
 		return Stream.fromIterable(visitGen(text, options));
 	}

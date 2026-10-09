@@ -33,7 +33,8 @@ const EMPTY_MANIFEST: Readonly<Record<string, unknown>> = R.fromEntries([]);
 /**
  * The `publishConfig` fields workspace tooling reads.
  *
- * @remarks
+ * **Details**
+ *
  * Deliberately narrow. `@effected/package-json` models `publishConfig` as an
  * open `Record<string, unknown>` for round-trip fidelity, which preserves every
  * key but types none of them; this is the typed projection of the handful that
@@ -68,7 +69,8 @@ const DependencyMap = S.Record(S.String, S.String).pipe(
 /**
  * The result of comparing two {@link WorkspacePackage} dependency snapshots.
  *
- * @remarks
+ * **Details**
+ *
  * Comparison runs across all four dependency kinds combined, so a dependency
  * that moves between kinds at the same version does not appear in the diff.
  *
@@ -87,7 +89,8 @@ export interface DependencyDiff {
  * Raised when a workspace member's `package.json` cannot be read or decoded
  * into the strict `@effected/package-json` `Package` model.
  *
- * @remarks
+ * **Details**
+ *
  * Discovery itself never raises this — it uses the tolerant projection. Only
  * `WorkspacePackage.manifest` does, so opting into the strict model is an
  * explicit, individually recoverable step.
@@ -112,11 +115,13 @@ export class WorkspaceManifestError extends S.TaggedError<WorkspaceManifestError
  * A single package inside a workspace: the discovery-relevant slice of its
  * `package.json` plus its filesystem location.
  *
- * @remarks
+ * **Details**
+ *
  * Produced by `WorkspaceDiscovery` for every directory the `packages:` patterns
  * enumerate. The root package is always present with `relativePath` `"."`.
  *
- * @example
+ * **Example** (Construct and inspect a workspace package)
+ *
  * ```ts
  * import { WorkspacePackage } from "./index.ts";
  *
@@ -140,22 +145,23 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 	/** The package name. */
 	name: S.NonEmptyString.annotateKey({ description: "The package name." }),
 	/**
-	 * The raw `version` string — deliberately not semver-validated — or absent
-	 * when the manifest declares none.
-	 *
-	 * @remarks
-	 * pnpm accepts a version-less private package, and a private monorepo root
-	 * without a `version` is the ordinary shape, so discovery carries the field
-	 * exactly as the manifest has it: a non-empty string when present, verbatim
-	 * and un-validated, absent when the key is absent — never a `"0.0.0"`
-	 * placeholder and never a present `undefined` key. **Only ABSENCE is
-	 * tolerated**: a `version` that is present but not a string, or present and
-	 * `""`, fails discovery as `invalidShape` on both surfaces. `""` in
-	 * particular is not a pnpm shape and would resolve `workspace:^` to a bare
-	 * `"^"`.
-	 * Anything that needs a concrete version (`WorkspaceResolver.versionOf`,
-	 * a release tag) answers the absence itself rather than inventing one.
-	 */
+  * The raw `version` string — deliberately not semver-validated — or absent
+  * when the manifest declares none.
+  *
+  * **Gotchas**
+  *
+  * pnpm accepts a version-less private package, and a private monorepo root
+  * without a `version` is the ordinary shape, so discovery carries the field
+  * exactly as the manifest has it: a non-empty string when present, verbatim
+  * and un-validated, absent when the key is absent — never a `"0.0.0"`
+  * placeholder and never a present `undefined` key. **Only ABSENCE is
+  * tolerated**: a `version` that is present but not a string, or present and
+  * `""`, fails discovery as `invalidShape` on both surfaces. `""` in
+  * particular is not a pnpm shape and would resolve `workspace:^` to a bare
+  * `"^"`.
+  * Anything that needs a concrete version (`WorkspaceResolver.versionOf`,
+  * a release tag) answers the absence itself rather than inventing one.
+  */
 	version: S.optionalKey(S.String).annotateKey({ description: "The raw `version` string — deliberately not semver-validated — or absent when the manifest declares none." }),
 	/** Absolute path to the package directory. */
 	path: S.NonEmptyString.annotateKey({ description: "Absolute path to the package directory." }),
@@ -164,15 +170,16 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 	/** POSIX path relative to the workspace root; `"."` for the root package. */
 	relativePath: S.String.annotateKey({ description: "POSIX path relative to the workspace root; `\".\"` for the root package." }),
 	/**
-	 * Absolute path to the workspace root this package was discovered under.
-	 *
-	 * @remarks
-	 * Carried, not derived: `WorkspaceDiscovery` resolves the root before
-	 * enumerating, so every package arrives with it and consumers need no
-	 * per-package root arithmetic over `relativePath`.
-	 *
-	 * For the root package this equals `path`, and `relativePath` is `"."`.
-	 */
+  * Absolute path to the workspace root this package was discovered under.
+  *
+  * **Details**
+  *
+  * Carried, not derived: `WorkspaceDiscovery` resolves the root before
+  * enumerating, so every package arrives with it and consumers need no
+  * per-package root arithmetic over `relativePath`.
+  *
+  * For the root package this equals `path`, and `relativePath` is `"."`.
+  */
 	workspaceRoot: S.NonEmptyString.annotateKey({ description: "Absolute path to the workspace root this package was discovered under." }),
 	/** Whether the package is marked private. */
 	private: S.Boolean.pipe(
@@ -190,17 +197,18 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 	/** The `publishConfig` block, when present. */
 	publishConfig: S.optionalKey(PublishConfig).annotateKey({ description: "The `publishConfig` block, when present." }),
 	/**
-	 * The package's `package.json` as read — tolerant access to every field
-	 * outside the typed discovery slice (`scripts`, `exports`, …) without a
-	 * second file read.
-	 *
-	 * @remarks
-	 * Values are `unknown` and exactly what discovery parsed; nothing here is
-	 * validated beyond being a record. For the strict typed model use
-	 * `manifest()`, which deliberately **re-reads** the file — a point-in-time
-	 * refresh this captured record cannot provide. Defaults to `{}` for
-	 * values constructed or decoded without the field.
-	 */
+  * The package's `package.json` as read — tolerant access to every field
+  * outside the typed discovery slice (`scripts`, `exports`, …) without a
+  * second file read.
+  *
+  * **Details**
+  *
+  * Values are `unknown` and exactly what discovery parsed; nothing here is
+  * validated beyond being a record. For the strict typed model use
+  * `manifest()`, which deliberately **re-reads** the file — a point-in-time
+  * refresh this captured record cannot provide. Defaults to `{}` for
+  * values constructed or decoded without the field.
+  */
 	manifestRecord: S.Record(S.String, S.Unknown).pipe(
 		S.withDecodingDefaultKey(Effect.succeed(EMPTY_MANIFEST)),
 		S.withConstructorDefault(Effect.succeed(EMPTY_MANIFEST)),
@@ -229,13 +237,14 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 	}
 
 	/**
-	 * Every dependency, merged across the four kinds.
-	 *
-	 * @remarks
-	 * Precedence on a name declared in several kinds runs
-	 * `dependencies` \> `devDependencies` \> `peerDependencies` \>
-	 * `optionalDependencies`.
-	 */
+  * Every dependency, merged across the four kinds.
+  *
+  * **Details**
+  *
+  * Precedence on a name declared in several kinds runs
+  * `dependencies` \> `devDependencies` \> `peerDependencies` \>
+  * `optionalDependencies`.
+  */
 	get allDependencies(): Record<string, string> {
 		return R.fromEntries([
 			...R.toEntries(this.optionalDependencies),
@@ -285,19 +294,20 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 	}
 
 	/**
-	 * Whether any dependency name (across all four kinds) matches the glob
-	 * `pattern`, using `@effected/glob`.
-	 *
-	 * @remarks
-	 * A `GlobPattern` is total and free to test. A `string` is compiled on every
-	 * call and an **uncompilable** literal throws: a glob written into a call
-	 * site is developer wiring, not untrusted input, so it belongs in the defect
-	 * channel rather than widening the typed channel every caller must branch
-	 * on. Compile once with `GlobPattern.compile` and pass the result when
-	 * testing many packages.
-	 *
-	 * @param pattern - A compiled pattern, or a source string to compile.
-	 */
+  * Whether any dependency name (across all four kinds) matches the glob
+  * `pattern`, using `@effected/glob`.
+  *
+  * **Gotchas**
+  *
+  * A `GlobPattern` is total and free to test. A `string` is compiled on every
+  * call and an **uncompilable** literal throws: a glob written into a call
+  * site is developer wiring, not untrusted input, so it belongs in the defect
+  * channel rather than widening the typed channel every caller must branch
+  * on. Compile once with `GlobPattern.compile` and pass the result when
+  * testing many packages.
+  *
+  * @param pattern - A compiled pattern, or a source string to compile.
+  */
 	matchesDependency(pattern: GlobPattern | string): boolean {
 		const compiled = P.isString(pattern) ? GlobPattern.make({ source: pattern }) : pattern;
 		return R.keys(this.allDependencies).some((dependency) => compiled.matches(dependency));
@@ -344,14 +354,15 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 	}
 
 	/**
-	 * Read and decode this package's `package.json` into the strict
-	 * `@effected/package-json` `Package` model — the bridge from the
-	 * tolerant discovery projection to the fully typed manifest.
-	 *
-	 * @remarks
-	 * Fails with {@link WorkspaceManifestError} (`kind: "read"` or `"decode"`) and
-	 * requires core `FileSystem`.
-	 */
+  * Read and decode this package's `package.json` into the strict
+  * `@effected/package-json` `Package` model — the bridge from the
+  * tolerant discovery projection to the fully typed manifest.
+  *
+  * **Details**
+  *
+  * Fails with {@link WorkspaceManifestError} (`kind: "read"` or `"decode"`) and
+  * requires core `FileSystem`.
+  */
 	static readonly manifest = Effect.fn("WorkspacePackage.manifest")(function* (self: WorkspacePackage) {
 		const fs = yield* FileSystem.FileSystem;
 		const content = yield* fs

@@ -13,7 +13,8 @@ const $I = $ScratchpadId.create("effected/xdg/Xdg");
 /**
  * The operating system the path decisions are taken against.
  *
- * @remarks
+ * **Details**
+ *
  * The members are Node's `process.platform` values, modeled as a schema rather
  * than borrowed from the ambient `NodeJS.Platform` type so the package's public
  * surface names nothing it does not own.
@@ -51,7 +52,8 @@ const detectPlatform = (): XdgPlatform => {
 /**
  * The platform every native-directory decision is taken against.
  *
- * @remarks
+ * **Details**
+ *
  * A `Context.Reference`, not a global read. It
  * defaults to `process.platform`, so production behaviour is what you expect;
  * a test pins macOS or Windows semantics with
@@ -68,7 +70,8 @@ export const CurrentPlatform: Context.Reference<XdgPlatform> = Context.Reference
 /**
  * Indicates that the environment cannot satisfy XDG directory resolution.
  *
- * @remarks
+ * **Details**
+ *
  * Raised only for `HOME`: every other XDG variable is optional by construction,
  * and its absence is a resolved default rather than a failure. `cause` carries
  * the underlying `ConfigError` structurally.
@@ -89,7 +92,8 @@ export class XdgEnvError extends S.TaggedError<XdgEnvError>($I`XdgEnvError`)("Xd
 /**
  * The XDG Base Directory environment, resolved.
  *
- * @remarks
+ * **Details**
+ *
  * Every field but `home` is optional because the corresponding variable is:
  * `Schema.optionalKey`, so an unset variable is an **absent key** and the read
  * is `paths.configHome ?? fallback`.
@@ -127,7 +131,8 @@ export class XdgPaths extends S.Class<XdgPaths>($I`XdgPaths`)({
 /**
  * Split a `PATH`-style variable, dropping empty entries.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Per the XDG spec, an unset **or empty** variable takes the default — so
  * `XDG_CONFIG_DIRS=""` is not "no system directories", it is `/etc/xdg`.
  */
@@ -140,7 +145,8 @@ const splitDirs = (raw: string | undefined, fallback: ReadonlyArray<string>): Re
 /**
  * XDG Base Directory environment resolution.
  *
- * @remarks
+ * **Details**
+ *
  * The service's shape **is** {@link XdgPaths}: the environment is read once, at
  * layer construction, and the service is the resolved value. `yield* Xdg` gives
  * you a record of strings, and the only failure — an unset `HOME` — happens
@@ -150,13 +156,14 @@ const splitDirs = (raw: string | undefined, fallback: ReadonlyArray<string>): Re
  */
 export class Xdg extends Context.Service<Xdg, XdgPaths>()($I`Xdg`) {
 	/**
-	 * Read the XDG environment through Effect's `Config`.
-	 *
-	 * @remarks
-	 * Reads from the ambient `ConfigProvider`, which defaults to `process.env`.
-	 * A test drives it with `ConfigProvider.layer(ConfigProvider.fromUnknown({…}))`
-	 * and never mutates the real environment.
-	 */
+  * Read the XDG environment through Effect's `Config`.
+  *
+  * **Details**
+  *
+  * Reads from the ambient `ConfigProvider`, which defaults to `process.env`.
+  * A test drives it with `ConfigProvider.layer(ConfigProvider.fromUnknown({…}))`
+  * and never mutates the real environment.
+  */
 	static readonly layer: Layer.Layer<Xdg, XdgEnvError> = Layer.effect(
 		Xdg,
 		Effect.gen(function* () {
@@ -209,26 +216,28 @@ export class Xdg extends Context.Service<Xdg, XdgPaths>()($I`Xdg`) {
 	);
 
 	/**
-	 * Serve fixed paths instead of reading the environment.
-	 *
-	 * @remarks
-	 * The test layer, and the escape hatch for an application that resolves its
-	 * environment some other way. It needs no filesystem.
-	 *
-	 * @example
-	 * ```ts
-	 * import { Xdg, XdgPaths } from "./index.ts";
-	 *
-	 * const TestXdg = Xdg.layerFrom(
-	 * 	XdgPaths.make({
-	 * 		home: "/home/test",
-	 * 		configHome: "/home/test/.config",
-	 * 		configDirs: ["/etc/xdg"],
-	 * 		dataDirs: ["/usr/local/share", "/usr/share"],
-	 * 	}),
-	 * );
-	 * ```
-	 */
+  * Serve fixed paths instead of reading the environment.
+  *
+  * **Details**
+  *
+  * The test layer, and the escape hatch for an application that resolves its
+  * environment some other way. It needs no filesystem.
+  *
+  * **Example** (Provide fixed XDG paths for tests)
+  *
+  * ```ts
+  * import { Xdg, XdgPaths } from "./index.ts";
+  *
+  * const TestXdg = Xdg.layerFrom(
+  * 	XdgPaths.make({
+  * 		home: "/home/test",
+  * 		configHome: "/home/test/.config",
+  * 		configDirs: ["/etc/xdg"],
+  * 		dataDirs: ["/usr/local/share", "/usr/share"],
+  * 	}),
+  * );
+  * ```
+  */
 	static layerFrom(paths: XdgPaths): Layer.Layer<Xdg> {
 		return Layer.succeed(Xdg, paths);
 	}

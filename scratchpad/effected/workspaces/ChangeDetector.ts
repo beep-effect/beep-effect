@@ -28,7 +28,8 @@ const $I = $ScratchpadId.create("effected/workspaces/ChangeDetector");
 /**
  * Which git refs to compare, and whether to fold in the working tree.
  *
- * @example
+ * **Example** (Configure default and branch comparison refs)
+ *
  * ```ts
  * import { ChangeDetectionOptions } from "./index.ts";
  *
@@ -74,7 +75,8 @@ export class ChangeDetectionOptions extends S.Class<ChangeDetectionOptions>($I`C
  * git's own typed failures — the wrapper for "detection has no ground to stand
  * on".
  *
- * @remarks
+ * **Details**
+ *
  * A git command that merely *fails* surfaces as one of `@effected/git`'s typed
  * errors ({@link ChangeDetectionFailure} carries `GitCommandError`,
  * `NotARepositoryError` and `UnknownRefError`) rather than being flattened into
@@ -97,7 +99,8 @@ export class ChangeDetectionError extends S.TaggedError<ChangeDetectionError>($I
 /**
  * Every failure the change-detection methods can surface.
  *
- * @remarks
+ * **Details**
+ *
  * `@effected/git`'s typed errors surface directly alongside
  * {@link ChangeDetectionError} and the discovery failures — a git command that
  * fails is reported as git classified it (`NotARepositoryError` for a
@@ -136,11 +139,13 @@ export interface ChangeDetectorShape {
 /**
  * Detects which workspace packages a git range touches.
  *
- * @remarks
+ * **Details**
+ *
  * Three depths on one service, cheapest first — raw file paths, the packages
  * owning them, and the transitive blast radius through the dependency graph.
  *
- * @example
+ * **Example** (Find packages affected since origin/main)
+ *
  * ```ts
  * import { ChangeDetectionOptions, ChangeDetector } from "./index.ts";
  * import * as Effect from "effect/Effect";

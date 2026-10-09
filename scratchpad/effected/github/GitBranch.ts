@@ -41,7 +41,8 @@ export type BranchOutcome = "created" | "reset";
 /**
  * Branch refs in GitHub's Git Database API.
  *
- * @remarks
+ * **Details**
+ *
  * **Not local git.** Despite the name this is `POST /repos/…/git/refs` and
  * friends — no subprocess, no working tree, no checkout. `@effected/git` is the
  * package that runs git.
@@ -54,7 +55,8 @@ export interface GitBranchShape {
   /**
    * Point `name` at `sha`, creating it if needed.
    *
-   * @remarks
+   * **Gotchas**
+   *
    * **One call, one intent.** Creating a branch that may already exist needs no
    * `exists` check, no catch and no second attempt: this creates the ref, and
    * when GitHub answers `alreadyExists` it resets the ref to `sha`. It is one
@@ -88,7 +90,8 @@ export interface GitBranchShape {
    * Create a branch **linked to an issue**, as the GitHub UI's "create a branch"
    * button does.
    *
-   * @remarks
+   * **Details**
+   *
    * The one operation in this package with **no REST equivalent** — GitHub
    * exposes `createLinkedBranch` only through GraphQL, which is why the document
    * is owned here rather than left in a consumer. A linked branch shows up on the
@@ -107,12 +110,14 @@ export interface GitBranchShape {
  * Create, move, read and delete branch refs through GitHub's Git Database API,
  * with an `upsert` that needs no existence check.
  *
- * @remarks
+ * **Details**
+ *
  * Provide it with {@link GitBranch.layer}, which needs a `GitHubClient`; each
  * method also needs a `Repo` in `R`. Branch names are accepted as `main`,
  * `heads/main` or `refs/heads/main`.
  *
- * @example
+ * **Example** (Create or reset a branch to a commit)
+ *
  * ```ts
  * import { GitBranch } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -130,7 +135,8 @@ export class GitBranch extends Context.Service<GitBranch, GitBranchShape>()($I`G
   /**
    * The live service, built over a `GitHubClient`.
    *
-   * @remarks
+   * **Gotchas**
+   *
    * The callback is written `(client) => make(client)` rather than passed as
    * `make` directly, and that is load-bearing: a static initializer runs while
    * the module body is still evaluating, so naming a `const` declared further
@@ -167,7 +173,8 @@ const unstubbed = (member: string): never => {
 /**
  * `main`, `refs/heads/main` and `heads/main` all name the same branch.
  *
- * @remarks
+ * **Details**
+ *
  * GitHub's own API is inconsistent here — creation wants the full
  * `refs/heads/x`, every other operation wants `heads/x` — so callers routinely
  * pass whichever they last saw. Normalizing once is cheaper than documenting it
@@ -186,7 +193,8 @@ const rejectEmpty = (operation: string, name: string): Effect.Effect<string, Git
  * Every method resolves {@link Repo} per call rather than once at layer
  * construction.
  *
- * @remarks
+ * **Details**
+ *
  * This is what makes `Repo.provide(other)` mean something. Capturing the
  * coordinate when the layer is built would give each method `R = never` — the
  * house pattern for a stable dependency — but it would also make a scoped

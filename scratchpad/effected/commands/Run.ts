@@ -26,7 +26,8 @@ class EmptyJsonLineError extends S.TaggedError<EmptyJsonLineError>($I`EmptyJsonL
 /**
  * Default ceiling on captured bytes per stream (16 MiB).
  *
- * @remarks
+ * **Gotchas**
+ *
  * Collecting a child's output without a bound is a memory-exhaustion vector.
  * Output genuinely larger than this belongs on {@link Run.stream}, which never
  * accumulates.
@@ -64,7 +65,8 @@ const ExitCode = S.Int.pipe($I.annoteSchema("ExitCode", { description: "An integ
 /**
  * Policy for one run.
  *
- * @remarks
+ * **Details**
+ *
  * Deliberately narrow. Working directory, environment, stdin, shell mode and
  * kill signals are all `ChildProcess.CommandOptions` fields with core
  * combinators (`ChildProcess.setCwd`, `ChildProcess.setEnv`) — this package
@@ -78,24 +80,26 @@ const ExitCode = S.Int.pipe($I.annoteSchema("ExitCode", { description: "An integ
  */
 export const RunOptions = S.Struct({
 	/**
-	 * Ceiling for the whole run.
-	 *
-	 * @remarks
-	 * **There is no default.** A package-manager install and a `git rev-parse`
-	 * cannot share one, so an unset `timeout` means no ceiling. When set, expiry
-	 * closes the run's scope (killing the child) and fails with
-	 * {@link CommandFailedError} of kind `"timeout"` rather than core's
-	 * `TimeoutError`, so a caller's error channel stays this package's taxonomy.
-	 */
+  * Ceiling for the whole run.
+  *
+  * **Details**
+  *
+  * **There is no default.** A package-manager install and a `git rev-parse`
+  * cannot share one, so an unset `timeout` means no ceiling. When set, expiry
+  * closes the run's scope (killing the child) and fails with
+  * {@link CommandFailedError} of kind `"timeout"` rather than core's
+  * `TimeoutError`, so a caller's error channel stays this package's taxonomy.
+  */
 	timeout: S.optional(DurationInput).annotateKey({ description: "Optional ceiling for the whole run." }),
 	/**
-	 * Values scrubbed from captured output and from any error this run raises.
-	 *
-	 * @remarks
-	 * Matching is by exact value, so a secret is removed wherever it appears —
-	 * whichever flag carried it, and inside a larger string. The flag heuristic
-	 * in {@link Redaction.scrubArgs} runs in addition, never instead.
-	 */
+  * Values scrubbed from captured output and from any error this run raises.
+  *
+  * **Details**
+  *
+  * Matching is by exact value, so a secret is removed wherever it appears —
+  * whichever flag carried it, and inside a larger string. The flag heuristic
+  * in {@link Redaction.scrubArgs} runs in addition, never instead.
+  */
 	redact: S.String.pipe(S.Redacted, S.Array, S.optional).annotateKey({ description: "Secret values scrubbed from output and errors." }),
 	/** Per-stream captured-byte ceiling. Defaults to {@link DEFAULT_MAX_OUTPUT_BYTES}. */
 	maxOutputBytes: S.optional(PolicyNumber).annotateKey({ description: "Optional per-stream byte ceiling." }),
@@ -153,7 +157,8 @@ const tail = (text: string): string => {
 /**
  * A command that could not be run, or that ran and failed.
  *
- * @remarks
+ * **Details**
+ *
  * `kind` is the routing surface, never the message: `"nonZero"` (the process
  * ran and exited non-zero), `"spawn"` (it never started — the executable is
  * missing, or the platform refused), `"timeout"` (a caller-supplied ceiling
@@ -257,7 +262,8 @@ export class CommandFailedError extends S.TaggedError<CommandFailedError>($I`Com
 /**
  * A command ran, but its output could not be used.
  *
- * @remarks
+ * **Details**
+ *
  * Separate from {@link CommandFailedError} because the process itself
  * succeeded: `"notJson"` (stdout is not JSON), `"schema"` (it is JSON but does
  * not decode), `"tooLarge"` (capture exceeded its byte budget). Keeping the two
@@ -529,7 +535,8 @@ const extendEnv: {
 /**
  * Structured running of core `ChildProcess.Command` values.
  *
- * @remarks
+ * **Details**
+ *
  * These are free functions over core's contract, **not** a service: core's
  * `ChildProcessSpawner` already is the subprocess service, and wrapping it in a
  * second one is the re-declaration this package exists not to repeat. Tests
@@ -550,7 +557,8 @@ const extendEnv: {
  * error. Parse that kind of output from the untrimmed `stdout` of
  * {@link Run.collect}'s {@link CommandOutput} instead.
  *
- * @example
+ * **Example** (Read the Git revision and check for changes)
+ *
  * ```ts
  * import { Run } from "./index.ts";
  * import { NodeServices } from "@effect/platform-node";
@@ -572,142 +580,149 @@ export class Run {
 	private constructor() {}
 
 	/**
-	 * Spawns `command`, collects stdout and stderr concurrently, and resolves
-	 * with the {@link CommandOutput} once the process exits.
-	 *
-	 * @remarks
-	 * A non-zero exit is a *result* here, not a failure — see {@link Run}'s
-	 * remarks for the split against {@link Run.text}, {@link Run.lines} and
-	 * {@link Run.json}.
-	 *
-	 * The error union is honest but wider than any one configuration can fire:
-	 * which arms are reachable depends on the options passed. For a call with
-	 * no options, exactly two failure modes exist —
-	 *
-	 * - {@link CommandFailedError} of kind `"spawn"`: the process never started
-	 *   (executable missing, platform refused), **or** the platform failed while
-	 *   reading a stream or awaiting the exit — this arm absorbs every
-	 *   `PlatformError`, not only spawn-time ones.
-	 * - {@link CommandOutputError} of kind `"tooLarge"`: captured output
-	 *   exceeded {@link RunOptions.maxOutputBytes} (default
-	 *   {@link DEFAULT_MAX_OUTPUT_BYTES}).
-	 *
-	 * Setting {@link RunOptions.timeout} adds a third arm: kind `"timeout"`.
-	 * No configuration makes this combinator fail with kind `"nonZero"` — a
-	 * non-zero exit is a result — and kinds `"notJson"` / `"schema"` are
-	 * exclusive to {@link Run.json} and {@link Run.jsonLine}. A catch written
-	 * against an unconfigured call therefore needs only the two arms above;
-	 * handling the full union there is defensive, not required.
-	 */
+  * Spawns `command`, collects stdout and stderr concurrently, and resolves
+  * with the {@link CommandOutput} once the process exits.
+  *
+  * **Details**
+  *
+  * A non-zero exit is a *result* here, not a failure — see {@link Run}'s
+  * remarks for the split against {@link Run.text}, {@link Run.lines} and
+  * {@link Run.json}.
+  *
+  * The error union is honest but wider than any one configuration can fire:
+  * which arms are reachable depends on the options passed. For a call with
+  * no options, exactly two failure modes exist —
+  *
+  * - {@link CommandFailedError} of kind `"spawn"`: the process never started
+  *   (executable missing, platform refused), **or** the platform failed while
+  *   reading a stream or awaiting the exit — this arm absorbs every
+  *   `PlatformError`, not only spawn-time ones.
+  * - {@link CommandOutputError} of kind `"tooLarge"`: captured output
+  *   exceeded {@link RunOptions.maxOutputBytes} (default
+  *   {@link DEFAULT_MAX_OUTPUT_BYTES}).
+  *
+  * Setting {@link RunOptions.timeout} adds a third arm: kind `"timeout"`.
+  * No configuration makes this combinator fail with kind `"nonZero"` — a
+  * non-zero exit is a result — and kinds `"notJson"` / `"schema"` are
+  * exclusive to {@link Run.json} and {@link Run.jsonLine}. A catch written
+  * against an unconfigured call therefore needs only the two arms above;
+  * handling the full union there is defensive, not required.
+  */
 	static readonly collect = collect;
 
 	/**
-	 * Like {@link Run.collect}, but also tees each stream to the `Stdio` in `R`
-	 * as it arrives, for a caller that wants live output alongside the captured
-	 * {@link CommandOutput}.
-	 *
-	 * @remarks
-	 * Reachability of the error arms is exactly {@link Run.collect}'s, but the
-	 * tee adds a second *source* for kind `"spawn"`: a failing `Stdio` sink
-	 * (EPIPE when the host's own stdout is a closed pipe) is classified there
-	 * too, even though the child started and ran.
-	 */
+  * Like {@link Run.collect}, but also tees each stream to the `Stdio` in `R`
+  * as it arrives, for a caller that wants live output alongside the captured
+  * {@link CommandOutput}.
+  *
+  * **Gotchas**
+  *
+  * Reachability of the error arms is exactly {@link Run.collect}'s, but the
+  * tee adds a second *source* for kind `"spawn"`: a failing `Stdio` sink
+  * (EPIPE when the host's own stdout is a closed pipe) is classified there
+  * too, even though the child started and ran.
+  */
 	static readonly collectTee = collectTee;
 
 	/**
-	 * Runs `command` and resolves with trimmed stdout on a zero exit.
-	 *
-	 * @remarks
-	 * A non-zero exit is a typed failure here — {@link CommandFailedError} —
-	 * unlike {@link Run.collect}, {@link Run.exitCode} and {@link Run.succeeds},
-	 * which treat it as a result.
-	 *
-	 * The trim strips **leading and trailing whitespace**, not just the trailing
-	 * newline. For parse-sensitive output where leading whitespace is data
-	 * (`git status --porcelain`, whose first entry's status column it would
-	 * silently eat), use {@link Run.collect} and read its {@link CommandOutput}'s
-	 * untrimmed `stdout` instead.
-	 */
+  * Runs `command` and resolves with trimmed stdout on a zero exit.
+  *
+  * **Gotchas**
+  *
+  * A non-zero exit is a typed failure here — {@link CommandFailedError} —
+  * unlike {@link Run.collect}, {@link Run.exitCode} and {@link Run.succeeds},
+  * which treat it as a result.
+  *
+  * The trim strips **leading and trailing whitespace**, not just the trailing
+  * newline. For parse-sensitive output where leading whitespace is data
+  * (`git status --porcelain`, whose first entry's status column it would
+  * silently eat), use {@link Run.collect} and read its {@link CommandOutput}'s
+  * untrimmed `stdout` instead.
+  */
 	static readonly text = text;
 
 	/**
-	 * Runs `command` and resolves with stdout split into trimmed, non-empty
-	 * lines on a zero exit.
-	 *
-	 * @remarks
-	 * A non-zero exit is a typed failure here — {@link CommandFailedError} —
-	 * matching {@link Run.text} and {@link Run.json}.
-	 */
+  * Runs `command` and resolves with stdout split into trimmed, non-empty
+  * lines on a zero exit.
+  *
+  * **Details**
+  *
+  * A non-zero exit is a typed failure here — {@link CommandFailedError} —
+  * matching {@link Run.text} and {@link Run.json}.
+  */
 	static readonly lines = lines;
 
 	/**
-	 * Runs `command`, parses stdout as JSON and decodes it against `schema` on
-	 * a zero exit.
-	 *
-	 * @remarks
-	 * Fails with {@link CommandOutputError} when stdout is not JSON or does not
-	 * decode; a non-zero exit fails with {@link CommandFailedError}, matching
-	 * {@link Run.text} and {@link Run.lines}.
-	 *
-	 * This parses the **whole** of stdout and requires a zero exit. For a
-	 * protocol payload located by scanning stdout lines from the end — tolerant
-	 * of noise around it and of a non-zero exit — use {@link Run.jsonLine}
-	 * instead.
-	 */
+  * Runs `command`, parses stdout as JSON and decodes it against `schema` on
+  * a zero exit.
+  *
+  * **Details**
+  *
+  * Fails with {@link CommandOutputError} when stdout is not JSON or does not
+  * decode; a non-zero exit fails with {@link CommandFailedError}, matching
+  * {@link Run.text} and {@link Run.lines}.
+  *
+  * This parses the **whole** of stdout and requires a zero exit. For a
+  * protocol payload located by scanning stdout lines from the end — tolerant
+  * of noise around it and of a non-zero exit — use {@link Run.jsonLine}
+  * instead.
+  */
 	static readonly json = json;
 
 	/**
-	 * Runs `command` and, **scanning stdout lines from the end**, resolves with
-	 * the first line that both parses as JSON and decodes against `schema` —
-	 * the framing variant of {@link Run.json}, for a child that reports through
-	 * a single JSON protocol payload near the end of its output.
-	 *
-	 * @remarks
-	 * The framing tolerates noise on **both sides** of the payload: noise before
-	 * it (a subprocess-loaded hook's own `console.log`, a tool's warnings) and
-	 * noise after it (a hook logging from `process.on("exit", ...)` fires after
-	 * the payload has flushed). Lines are split on
-	 * `\r?\n`, whitespace-only lines are dropped, and the scan runs from the last
-	 * line backwards until one decodes. The tolerance is positional, not
-	 * volumetric: the whole of stdout is still captured under
-	 * {@link RunOptions.maxOutputBytes} (default
-	 * {@link DEFAULT_MAX_OUTPUT_BYTES}, 16 MiB), so a child whose noise exceeds
-	 * the ceiling fails typed as `"tooLarge"` before any line is examined —
-	 * raise the ceiling for a child known to be loud in volume.
-	 *
-	 * The scan's consequence: when **multiple** lines decode under `schema`, the
-	 * **last** one wins. A child must therefore never emit two schema-valid
-	 * lines, and a consumer schema should be shaped so an accidental log line
-	 * cannot satisfy it — a discriminated envelope with a required literal field
-	 * (`ok: true | false`, the shape `@effected/workspaces`' `ReplayPayload`
-	 * uses) rather than a permissive record a stray `console.log(someObject)`
-	 * might match.
-	 *
-	 * Unlike {@link Run.json}, this parses **regardless of the exit code** — a
-	 * deliberate posture, not an oversight. A protocol payload discriminates
-	 * success in-band (its own `ok` field, its own error shape), so the payload
-	 * outranks the exit code: a child that crashes *after* flushing its payload
-	 * still reported, and a caller that wants exit-code semantics has
-	 * {@link Run.json}. When no line decodes anywhere, the typed
-	 * {@link CommandOutputError} carries the exit code and both captured streams
-	 * (redacted) as context, so the failure is diagnosable without re-running.
-	 * Its `kind` preserves the near-miss diagnostic: `"schema"` when at least
-	 * one line parsed as JSON but none decoded — with the **last parseable
-	 * line's** decode failure as `cause`, that line being the most probable
-	 * intended payload — and `"notJson"` only when no non-empty line was JSON at
-	 * all (carrying the last non-empty line's parse error). A spawn failure or
-	 * an opted-in timeout still fails with {@link CommandFailedError}.
-	 */
+  * Runs `command` and, **scanning stdout lines from the end**, resolves with
+  * the first line that both parses as JSON and decodes against `schema` —
+  * the framing variant of {@link Run.json}, for a child that reports through
+  * a single JSON protocol payload near the end of its output.
+  *
+  * **Details**
+  *
+  * The framing tolerates noise on **both sides** of the payload: noise before
+  * it (a subprocess-loaded hook's own `console.log`, a tool's warnings) and
+  * noise after it (a hook logging from `process.on("exit", ...)` fires after
+  * the payload has flushed). Lines are split on
+  * `\r?\n`, whitespace-only lines are dropped, and the scan runs from the last
+  * line backwards until one decodes. The tolerance is positional, not
+  * volumetric: the whole of stdout is still captured under
+  * {@link RunOptions.maxOutputBytes} (default
+  * {@link DEFAULT_MAX_OUTPUT_BYTES}, 16 MiB), so a child whose noise exceeds
+  * the ceiling fails typed as `"tooLarge"` before any line is examined —
+  * raise the ceiling for a child known to be loud in volume.
+  *
+  * The scan's consequence: when **multiple** lines decode under `schema`, the
+  * **last** one wins. A child must therefore never emit two schema-valid
+  * lines, and a consumer schema should be shaped so an accidental log line
+  * cannot satisfy it — a discriminated envelope with a required literal field
+  * (`ok: true | false`, the shape `@effected/workspaces`' `ReplayPayload`
+  * uses) rather than a permissive record a stray `console.log(someObject)`
+  * might match.
+  *
+  * Unlike {@link Run.json}, this parses **regardless of the exit code** — a
+  * deliberate posture, not an oversight. A protocol payload discriminates
+  * success in-band (its own `ok` field, its own error shape), so the payload
+  * outranks the exit code: a child that crashes *after* flushing its payload
+  * still reported, and a caller that wants exit-code semantics has
+  * {@link Run.json}. When no line decodes anywhere, the typed
+  * {@link CommandOutputError} carries the exit code and both captured streams
+  * (redacted) as context, so the failure is diagnosable without re-running.
+  * Its `kind` preserves the near-miss diagnostic: `"schema"` when at least
+  * one line parsed as JSON but none decoded — with the **last parseable
+  * line's** decode failure as `cause`, that line being the most probable
+  * intended payload — and `"notJson"` only when no non-empty line was JSON at
+  * all (carrying the last non-empty line's parse error). A spawn failure or
+  * an opted-in timeout still fails with {@link CommandFailedError}.
+  */
 	static readonly jsonLine = jsonLine;
 
 	/**
-	 * Runs `command` and resolves with its exit code alone.
-	 *
-	 * @remarks
-	 * A non-zero exit is a *result* here, not a failure — see {@link Run}'s
-	 * remarks for the split against {@link Run.text}, {@link Run.lines} and
-	 * {@link Run.json}.
-	 */
+  * Runs `command` and resolves with its exit code alone.
+  *
+  * **Details**
+  *
+  * A non-zero exit is a *result* here, not a failure — see {@link Run}'s
+  * remarks for the split against {@link Run.text}, {@link Run.lines} and
+  * {@link Run.json}.
+  */
 	static readonly exitCode = exitCode;
 
 	/**
@@ -720,40 +735,42 @@ export class Run {
 	static readonly stream = stream;
 
 	/**
-	 * Spawns `command` and resolves with its pid without waiting for exit.
-	 *
-	 * @remarks
-	 * Unrefs the child **before** this scope closes, so it survives the
-	 * caller's scope closing — the Node backend's release skips the kill for an
-	 * unref'd child, and reversing that order kills it with the scope instead.
-	 * Fails with {@link CommandFailedError} if the process never starts.
-	 */
+  * Spawns `command` and resolves with its pid without waiting for exit.
+  *
+  * **Gotchas**
+  *
+  * Unrefs the child **before** this scope closes, so it survives the
+  * caller's scope closing — the Node backend's release skips the kill for an
+  * unref'd child, and reversing that order kills it with the scope instead.
+  * Fails with {@link CommandFailedError} if the process never starts.
+  */
 	static readonly detach = detach;
 
 	/**
-	 * Adds environment variables to a command WITHOUT losing the parent
-	 * environment: merges `env` over any existing command environment (new values
-	 * win, matching core's `ChildProcess.setEnv`) and sets `extendEnv: true`.
-	 *
-	 * @remarks
-	 * This combinator exists because of a core trap: `ChildProcess.setEnv` merges
-	 * into `options.env` but never sets `extendEnv`, and the Node spawner resolves
-	 * the child environment as `extendEnv ? { ...process.env, ...env } : env` — so
-	 * a command built with bare `setEnv({ SOME_VAR: x })` spawns a child whose
-	 * ENTIRE environment is that one variable: no `PATH`, no `HOME`. The failure is
-	 * silent at the type level and surfaces as "spawned tool cannot find its own
-	 * binary" at runtime.
-	 *
-	 * Deliberately forces `extendEnv: true` even where construction set it `false`
-	 * — inheriting the parent environment is this combinator's entire purpose. A
-	 * caller who wants a hermetic environment uses core's `setEnv` or construction
-	 * options (`ChildProcess.make(cmd, args, { env, extendEnv: false })`) directly.
-	 *
-	 * For a pipeline, applies to every command in the pipeline (mirroring core's
-	 * `setEnv`), preserving the pipe's own options. Composes core's public
-	 * vocabulary (`ChildProcess.make`, `ChildProcess.pipeTo`) — it re-declares
-	 * nothing.
-	 */
+  * Adds environment variables to a command WITHOUT losing the parent
+  * environment: merges `env` over any existing command environment (new values
+  * win, matching core's `ChildProcess.setEnv`) and sets `extendEnv: true`.
+  *
+  * **Gotchas**
+  *
+  * This combinator exists because of a core trap: `ChildProcess.setEnv` merges
+  * into `options.env` but never sets `extendEnv`, and the Node spawner resolves
+  * the child environment as `extendEnv ? { ...process.env, ...env } : env` — so
+  * a command built with bare `setEnv({ SOME_VAR: x })` spawns a child whose
+  * ENTIRE environment is that one variable: no `PATH`, no `HOME`. The failure is
+  * silent at the type level and surfaces as "spawned tool cannot find its own
+  * binary" at runtime.
+  *
+  * Deliberately forces `extendEnv: true` even where construction set it `false`
+  * — inheriting the parent environment is this combinator's entire purpose. A
+  * caller who wants a hermetic environment uses core's `setEnv` or construction
+  * options (`ChildProcess.make(cmd, args, { env, extendEnv: false })`) directly.
+  *
+  * For a pipeline, applies to every command in the pipeline (mirroring core's
+  * `setEnv`), preserving the pipe's own options. Composes core's public
+  * vocabulary (`ChildProcess.make`, `ChildProcess.pipeTo`) — it re-declares
+  * nothing.
+  */
 	static readonly extendEnv = extendEnv;
 
 	/** Default ceiling on captured bytes per stream. See {@link DEFAULT_MAX_OUTPUT_BYTES}. */

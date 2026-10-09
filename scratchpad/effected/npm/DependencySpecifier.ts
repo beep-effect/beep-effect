@@ -248,22 +248,23 @@ export class WorkspaceSpecifier extends S.TaggedClass<WorkspaceSpecifier>($I`Wor
 	range: S.String.annotateKey({ description: "The part after `workspace:` (e.g. `*`, `^1.2.3`, or an alias form)." }),
 }, $I.annote("WorkspaceSpecifier", { description: "A `workspace:` reference. `range` carries the part after `workspace:` — a range modifier (`*`, `^`, `~`), a concrete range, or an alias form." })) {
 	/**
-	 * The pnpm publish-time projection of this specifier against a concrete
-	 * workspace version: `*` (or an empty range) becomes `version`, `~` becomes
-	 * `~version`, `^` becomes `^version`, and a pinned range passes through
-	 * unchanged. The alias form (`workspace:<name>@<range>`) becomes pnpm's
-	 * publish-time aliased dependency `npm:<name>@<projected>`, with the range
-	 * modifier projected the same way — `version` must then be the TARGET
-	 * package's version (see `DependencySpecifier.workspaceTargetOf`).
-	 *
-	 * @remarks
-	 * The same projection as `DependencySpecifier.resolveWorkspace`, applied to
-	 * this instance's already-extracted `range`; the two share one internal
-	 * implementation.
-	 *
-	 * @param version - The concrete version of the workspace package the
-	 *   specifier points at (the alias target's version for the alias form).
-	 */
+  * The pnpm publish-time projection of this specifier against a concrete
+  * workspace version: `*` (or an empty range) becomes `version`, `~` becomes
+  * `~version`, `^` becomes `^version`, and a pinned range passes through
+  * unchanged. The alias form (`workspace:<name>@<range>`) becomes pnpm's
+  * publish-time aliased dependency `npm:<name>@<projected>`, with the range
+  * modifier projected the same way — `version` must then be the TARGET
+  * package's version (see `DependencySpecifier.workspaceTargetOf`).
+  *
+  * **Details**
+  *
+  * The same projection as `DependencySpecifier.resolveWorkspace`, applied to
+  * this instance's already-extracted `range`; the two share one internal
+  * implementation.
+  *
+  * @param version - The concrete version of the workspace package the
+  *   specifier points at (the alias target's version for the alias form).
+  */
 	resolve(version: string): string {
 		return projectWorkspaceRange(this.range, version);
 	}
@@ -383,7 +384,8 @@ const DependencySpecifierBase: Omit<S.Opaque<DependencySpecifierBrand, typeof br
  * schema for a specifier field and reach for the statics to inspect a raw
  * string.
  *
- * @example
+ * **Example** (Classify and project dependency specifiers)
+ *
  * ```ts
  * import { DependencySpecifier } from "./index.ts";
  * import * as S from "effect/Schema";

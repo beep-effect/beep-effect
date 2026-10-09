@@ -14,7 +14,8 @@ const Json = S.fromJsonString(S.Unknown);
 /**
  * Raised when the runner environment does not say what an action needs.
  *
- * @remarks
+ * **Details**
+ *
  * Two reasons, and the distinction is actionable: `missing` means the variable
  * is absent or empty (the workflow did not grant something, or the action is
  * running outside Actions); `malformed` means it is present but unusable (a
@@ -53,20 +54,21 @@ export class GitHubContext extends S.Class<GitHubContext>($I`GitHubContext`)({
 	/** The short ref, e.g. `main`. */
 	refName: S.String.annotateKey({ description: "The short ref, e.g. `main`." }),
 	/**
-	 * The source branch of the pull request, when the event has one.
-	 *
-	 * @remarks
-	 * `GITHUB_HEAD_REF` is only set for `pull_request` events — and on every
-	 * other event the runner does not merely omit it, it may write the **empty
-	 * string**, which a raw `process.env` read happily reports as present. That
-	 * trap is encoded in the type: absent and `""` both decode to
-	 * `Option.none()`, so a consumer cannot build a cache key segment out of an
-	 * empty branch name by accident. For "the branch a human means", use
-	 * {@link GitHubContext.branch}, which owns the fallback to `refName`.
-	 *
-	 * The encoded form is `string | null` rather than a serialized `Option`, so
-	 * an encoded context stays plain JSON.
-	 */
+  * The source branch of the pull request, when the event has one.
+  *
+  * **Gotchas**
+  *
+  * `GITHUB_HEAD_REF` is only set for `pull_request` events — and on every
+  * other event the runner does not merely omit it, it may write the **empty
+  * string**, which a raw `process.env` read happily reports as present. That
+  * trap is encoded in the type: absent and `""` both decode to
+  * `Option.none()`, so a consumer cannot build a cache key segment out of an
+  * empty branch name by accident. For "the branch a human means", use
+  * {@link GitHubContext.branch}, which owns the fallback to `refName`.
+  *
+  * The encoded form is `string | null` rather than a serialized `Option`, so
+  * an encoded context stays plain JSON.
+  */
 	headRef: S.OptionFromNullOr(S.String).annotateKey({ description: "The source branch of the pull request, when the event has one." }),
 	/** The commit SHA that triggered the workflow. */
 	sha: S.String.annotateKey({ description: "The commit SHA that triggered the workflow." }),
@@ -92,16 +94,17 @@ export class GitHubContext extends S.Class<GitHubContext>($I`GitHubContext`)({
 	workspace: S.String.annotateKey({ description: "The default working directory on the runner for steps." }),
 }, $I.annote("GitHubContext", { description: "The workflow's GitHub context, projected from the `GITHUB_*` variables." })) {
 	/**
-	 * The branch a human means: `headRef` when present (a pull request, where
-	 * `refName` is the useless `123/merge`), otherwise `refName`.
-	 *
-	 * @remarks
-	 * This is the universal branch-scoped-cache-key fallback chain, written
-	 * once. On a `push` or any other non-PR event `headRef` is `Option.none()`
-	 * — including when the runner wrote it as the empty string — so the answer
-	 * is the short ref. Note that on a tag push `refName` names the tag, not a
-	 * branch; a consumer that must distinguish still has the full `ref`.
-	 */
+  * The branch a human means: `headRef` when present (a pull request, where
+  * `refName` is the useless `123/merge`), otherwise `refName`.
+  *
+  * **Details**
+  *
+  * This is the universal branch-scoped-cache-key fallback chain, written
+  * once. On a `push` or any other non-PR event `headRef` is `Option.none()`
+  * — including when the runner wrote it as the empty string — so the answer
+  * is the short ref. Note that on a tag push `refName` names the tag, not a
+  * branch; a consumer that must distinguish still has the full `ref`.
+  */
 	get branch(): string {
 		return O.getOrElse(this.headRef, () => this.refName);
 	}
@@ -128,7 +131,8 @@ export class RunnerContext extends S.Class<RunnerContext>($I`RunnerContext`)({
 /**
  * Environment overrides layered on top of the seeded snapshot.
  *
- * @remarks
+ * **Details**
+ *
  * A `Context.Reference` rather than a mutable global: overrides are
  * **fiber-local**, so two concurrent fibers can override the same variable
  * without seeing each other, and nothing needs restoring afterwards. This is
@@ -158,26 +162,28 @@ export interface ActionEnvironmentShape {
 	/** Whether the runner is in step-debug mode. */
 	readonly isDebug: Effect.Effect<boolean>;
 	/**
-	 * The webhook event payload.
-	 *
-	 * @remarks
-	 * `R` is `never`: the layer resolves `FileSystem` once at construction, so
-	 * a caller never re-injects one to keep its own requirements clean.
-	 */
+  * The webhook event payload.
+  *
+  * **Details**
+  *
+  * `R` is `never`: the layer resolves `FileSystem` once at construction, so
+  * a caller never re-injects one to keep its own requirements clean.
+  */
 	readonly payload: Effect.Effect<unknown, ActionEnvironmentError>;
 	/**
-	 * Run an effect with environment overrides applied.
-	 *
-	 * @remarks
-	 * Fiber-local and parallel-safe — `process.env` is never mutated, so
-	 * concurrent callers cannot corrupt each other and there is nothing to
-	 * restore. Overrides **merge** with any enclosing `withEnv`.
-	 *
-	 * The trade, stated: a variable exported mid-run by
-	 * `ActionOutputs.exportVariable` is not observed here, because the snapshot
-	 * is taken once. That matches GitHub's own model, where `exportVariable`
-	 * targets *subsequent* steps rather than the running one.
-	 */
+  * Run an effect with environment overrides applied.
+  *
+  * **Details**
+  *
+  * Fiber-local and parallel-safe — `process.env` is never mutated, so
+  * concurrent callers cannot corrupt each other and there is nothing to
+  * restore. Overrides **merge** with any enclosing `withEnv`.
+  *
+  * The trade, stated: a variable exported mid-run by
+  * `ActionOutputs.exportVariable` is not observed here, because the snapshot
+  * is taken once. That matches GitHub's own model, where `exportVariable`
+  * targets *subsequent* steps rather than the running one.
+  */
 	readonly withEnv: <A, E, R>(
 		overrides: Readonly<Record<string, string>>,
 		effect: Effect.Effect<A, E, R>,
@@ -304,13 +310,15 @@ const TEST_DEFAULTS: Readonly<Record<string, string>> = {
 /**
  * The runner environment an action is executing inside.
  *
- * @remarks
+ * **Details**
+ *
  * The single reader of `process.env` in this package. Everything else — inputs,
  * outputs, state, the token bridge — goes through a service rather than
  * reaching for a global, which is what makes them all testable without
  * mutating the test process.
  *
- * @example
+ * **Example** (Identify a workflow run by repository and run ID)
+ *
  * ```ts
  * import { ActionEnvironment } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -337,59 +345,62 @@ export class ActionEnvironment extends Context.Service<ActionEnvironment, Action
 	);
 
 	/**
-	 * Seeded from an explicit record.
-	 *
-	 * @remarks
-	 * A parameterized layer factory mints a fresh reference per call and layers
-	 * memoize by reference — bind it to a `const` rather than calling it at each
-	 * composition site.
-	 */
+  * Seeded from an explicit record.
+  *
+  * **Gotchas**
+  *
+  * A parameterized layer factory mints a fresh reference per call and layers
+  * memoize by reference — bind it to a `const` rather than calling it at each
+  * composition site.
+  */
 	static readonly layerFrom = (
 		env: Readonly<Record<string, string>>,
 	): Layer.Layer<ActionEnvironment, never, FileSystem.FileSystem> => Layer.effect(ActionEnvironment, make(env));
 
 	/**
-	 * A test double seeded with a complete `GITHUB_*` / `RUNNER_*` block.
-	 *
-	 * @remarks
-	 * **A recorded exception to the die-on-unstubbed rule.** Every other service
-	 * in this package dies when a suite calls something it did not stub, because
-	 * a plausible default hides a real gap. Here the opposite is true: the context
-	 * variables have one obviously-correct shape, and requiring each suite to
-	 * restate them would duplicate a byte-identical block in every suite.
-	 * Overrides merge on top.
-	 *
-	 * The optional second argument serves {@link ActionEnvironmentShape.payload}
-	 * **directly**, replacing the `GITHUB_EVENT_PATH` read rather than seeding a
-	 * path and a file behind it. That is the only route to a payload through the
-	 * standard double: `TEST_DEFAULTS` deliberately omits `GITHUB_EVENT_PATH`, so
-	 * an unserved payload fails typed and names the variable — the die-on-
-	 * unstubbed posture the rest of this package keeps.
-	 *
-	 * `undefined` means *not served*, so a suite cannot arrange `undefined` as
-	 * the payload itself. A webhook payload is always a JSON object; the case
-	 * does not arise, and reserving the sentinel keeps the argument optional.
-	 *
-	 * When a suite wants the **real read path** rather than a served value —
-	 * exercising the actual `GITHUB_EVENT_PATH` read-and-parse — this member is
-	 * the seam: it leaves `FileSystem` in `R` precisely so the suite chooses
-	 * the filesystem. Compose it with `@effected/memfs`'s seeded in-memory
-	 * volume rather than a hand-rolled stub: the volume honors the whole
-	 * `FileSystem` contract, and an unseeded path fails typed `NotFound`
-	 * instead of whatever a hand stub happens to answer.
-	 *
-	 * @example
-	 * ```ts
-	 * import { ActionEnvironment } from "./index.ts";
-	 * import { MemoryFileSystem } from "../memfs/index.ts";
-	 * import * as Layer from "effect/Layer";
-	 *
-	 * const layer = Layer.effect(
-	 *   ActionEnvironment,
-	 *   ActionEnvironment.makeTest({ GITHUB_EVENT_PATH: "/event.json" }),
-	 * ).pipe(Layer.provide(MemoryFileSystem.layerWith({ "/event.json": JSON.stringify({ action: "opened" }) })));
-	 * ```
-	 */
+  * A test double seeded with a complete `GITHUB_*` / `RUNNER_*` block.
+  *
+  * **Details**
+  *
+  * **A recorded exception to the die-on-unstubbed rule.** Every other service
+  * in this package dies when a suite calls something it did not stub, because
+  * a plausible default hides a real gap. Here the opposite is true: the context
+  * variables have one obviously-correct shape, and requiring each suite to
+  * restate them would duplicate a byte-identical block in every suite.
+  * Overrides merge on top.
+  *
+  * The optional second argument serves {@link ActionEnvironmentShape.payload}
+  * **directly**, replacing the `GITHUB_EVENT_PATH` read rather than seeding a
+  * path and a file behind it. That is the only route to a payload through the
+  * standard double: `TEST_DEFAULTS` deliberately omits `GITHUB_EVENT_PATH`, so
+  * an unserved payload fails typed and names the variable — the die-on-
+  * unstubbed posture the rest of this package keeps.
+  *
+  * `undefined` means *not served*, so a suite cannot arrange `undefined` as
+  * the payload itself. A webhook payload is always a JSON object; the case
+  * does not arise, and reserving the sentinel keeps the argument optional.
+  *
+  * When a suite wants the **real read path** rather than a served value —
+  * exercising the actual `GITHUB_EVENT_PATH` read-and-parse — this member is
+  * the seam: it leaves `FileSystem` in `R` precisely so the suite chooses
+  * the filesystem. Compose it with `@effected/memfs`'s seeded in-memory
+  * volume rather than a hand-rolled stub: the volume honors the whole
+  * `FileSystem` contract, and an unseeded path fails typed `NotFound`
+  * instead of whatever a hand stub happens to answer.
+  *
+  * **Example** (Read an event payload from an in-memory filesystem)
+  *
+  * ```ts
+  * import { ActionEnvironment } from "./index.ts";
+  * import { MemoryFileSystem } from "../memfs/index.ts";
+  * import * as Layer from "effect/Layer";
+  *
+  * const layer = Layer.effect(
+  *   ActionEnvironment,
+  *   ActionEnvironment.makeTest({ GITHUB_EVENT_PATH: "/event.json" }),
+  * ).pipe(Layer.provide(MemoryFileSystem.layerWith({ "/event.json": JSON.stringify({ action: "opened" }) })));
+  * ```
+  */
 	static readonly makeTest = (
 		overrides: Readonly<Record<string, string>> = {},
 		payload?: unknown,
@@ -399,28 +410,30 @@ export class ActionEnvironment extends Context.Service<ActionEnvironment, Action
 		);
 
 	/**
-	 * {@link ActionEnvironment.makeTest} behind a layer, with `FileSystem` stubbed
-	 * out.
-	 *
-	 * @remarks
-	 * The stub is why the payload has to be served here rather than through the
-	 * filesystem: `make` captures the filesystem at construction, so seeding
-	 * `GITHUB_EVENT_PATH` through `overrides` would send the read to a noop
-	 * filesystem and fail. Pass the payload as the second argument instead —
-	 * or, for a suite that wants the real read path over a full filesystem,
-	 * compose {@link ActionEnvironment.makeTest} with `@effected/memfs`'s
-	 * seeded volume; the recipe is on that member.
-	 *
-	 * @example
-	 * ```ts
-	 * import { ActionEnvironment } from "./index.ts";
-	 *
-	 * const layer = ActionEnvironment.layerTest(
-	 *   { GITHUB_EVENT_NAME: "pull_request" },
-	 *   { pull_request: { number: 42 } },
-	 * );
-	 * ```
-	 */
+  * {@link ActionEnvironment.makeTest} behind a layer, with `FileSystem` stubbed
+  * out.
+  *
+  * **Gotchas**
+  *
+  * The stub is why the payload has to be served here rather than through the
+  * filesystem: `make` captures the filesystem at construction, so seeding
+  * `GITHUB_EVENT_PATH` through `overrides` would send the read to a noop
+  * filesystem and fail. Pass the payload as the second argument instead —
+  * or, for a suite that wants the real read path over a full filesystem,
+  * compose {@link ActionEnvironment.makeTest} with `@effected/memfs`'s
+  * seeded volume; the recipe is on that member.
+  *
+  * **Example** (Seed a pull request environment and payload)
+  *
+  * ```ts
+  * import { ActionEnvironment } from "./index.ts";
+  *
+  * const layer = ActionEnvironment.layerTest(
+  *   { GITHUB_EVENT_NAME: "pull_request" },
+  *   { pull_request: { number: 42 } },
+  * );
+  * ```
+  */
 	static readonly layerTest = (
 		overrides: Readonly<Record<string, string>> = {},
 		payload?: unknown,

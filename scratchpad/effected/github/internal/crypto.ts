@@ -27,7 +27,8 @@ const utf8 = new TextEncoder();
  * Encrypt a secret with libsodium's sealed-box algorithm, the format GitHub's
  * secrets API requires.
  *
- * @remarks
+ * **Details**
+ *
  * A sealed box is `ephemeral_public_key (32 bytes) || ciphertext`. The sender
  * mints a throwaway keypair, derives the nonce deterministically from both
  * public keys, encrypts with `crypto_box`, and discards the ephemeral secret
@@ -58,7 +59,6 @@ const utf8 = new TextEncoder();
  * base64, as returned by GitHub's `.../secrets/public-key` endpoints.
  * @param secretValue - The plaintext to seal.
  * @returns The sealed box, base64, ready to send as `encrypted_value`.
- *
  * @internal
  */
 export const encryptSecret: {

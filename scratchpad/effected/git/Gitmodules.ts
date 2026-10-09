@@ -66,17 +66,18 @@ const decodeGitBoolean = S.decodeUnknownOption(GitBoolean);
  */
 export class GitmodulesEntry extends S.Class<GitmodulesEntry>($I`GitmodulesEntry`)({
 	/**
-	 * The submodule's logical name — the section's subsection, case-sensitive.
-	 *
-	 * @remarks
-	 * Constrained to exclude newline, carriage return and NUL: `render` quotes
-	 * and escapes header names for `"` and `\` only (git's subsection grammar
-	 * has no newline escape), so an unconstrained name could serialize a
-	 * document that does not re-parse to the same entries. The parse side can
-	 * never produce such a name — the scanner refuses a header broken across
-	 * lines — so the check bites only on hand-built entries, matching
-	 * `GitConfig.addSection`'s refusal of `[\n\r\0]` subsections.
-	 */
+  * The submodule's logical name — the section's subsection, case-sensitive.
+  *
+  * **Gotchas**
+  *
+  * Constrained to exclude newline, carriage return and NUL: `render` quotes
+  * and escapes header names for `"` and `\` only (git's subsection grammar
+  * has no newline escape), so an unconstrained name could serialize a
+  * document that does not re-parse to the same entries. The parse side can
+  * never produce such a name — the scanner refuses a header broken across
+  * lines — so the check bites only on hand-built entries, matching
+  * `GitConfig.addSection`'s refusal of `[\n\r\0]` subsections.
+  */
 	name: S.String.check(S.isPattern(/^[^\n\r\0]*$/u)).annotateKey({ description: "The submodule's logical name — the section's subsection, case-sensitive." }),
 	/** The submodule's path relative to the superproject root (`submodule.<name>.path`). */
 	path: GitmodulesValue.annotateKey({ description: "The submodule's path relative to the superproject root (`submodule.<name>.path`)." }),
@@ -161,7 +162,8 @@ const render = (fields: (typeof Gitmodules)["Encoded"]): string => {
  * The typed view over a `.gitmodules` document: the decoded submodule
  * entries, in first-appearance order.
  *
- * @remarks
+ * **Details**
+ *
  * This class is the READ side. The write side deliberately does not go
  * through it: entry-level mutations ({@link Gitmodules.setUrl} and friends)
  * take a {@link GitConfig} document and compile into its surgical edits, so
@@ -180,16 +182,17 @@ export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
 	)).annotateKey({ description: "The decoded submodule entries, in first-appearance order." }),
 }, $I.annote("Gitmodules", { description: "The typed view over a `.gitmodules` document: the decoded submodule entries, in first-appearance order." })) {
 	/**
-	 * Decodes an already-parsed git-config document into submodule entries —
-	 * the pure, synchronous primitive.
-	 *
-	 * @remarks
-	 * Sections named `submodule` (case-insensitively) with a subsection are
-	 * decoded; duplicate sections for one name merge with git's last-wins
-	 * read semantics. An entry missing `path` or `url`, or carrying an
-	 * undecodable `shallow`/`ignore`/`fetchRecurseSubmodules` value, fails
-	 * typed.
-	 */
+  * Decodes an already-parsed git-config document into submodule entries —
+  * the pure, synchronous primitive.
+  *
+  * **Details**
+  *
+  * Sections named `submodule` (case-insensitively) with a subsection are
+  * decoded; duplicate sections for one name merge with git's last-wins
+  * read semantics. An entry missing `path` or `url`, or carrying an
+  * undecodable `shallow`/`ignore`/`fetchRecurseSubmodules` value, fails
+  * typed.
+  */
 	static fromConfigResult(config: GitConfig): Result.Result<Gitmodules, GitmodulesDecodeError> {
 		interface Collected {
 			readonly name: string;
@@ -284,26 +287,28 @@ export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
 	}
 
 	/**
-	 * Parses `.gitmodules` text into the typed view.
-	 *
-	 * @remarks
-	 * Defined in terms of {@link Gitmodules.parseResult} — synchronous callers
-	 * can use that variant directly.
-	 */
+  * Parses `.gitmodules` text into the typed view.
+  *
+  * **Details**
+  *
+  * Defined in terms of {@link Gitmodules.parseResult} — synchronous callers
+  * can use that variant directly.
+  */
 	static readonly parse = Effect.fn("Gitmodules.parse")((text: string) =>
 		Effect.fromResult(Gitmodules.parseResult(text)),
 	);
 
 	/**
-	 * Renders the entries as a canonical `.gitmodules` document.
-	 *
-	 * @remarks
-	 * This is a fresh, canonical rendering — one section per entry, tabs, a
-	 * fixed field order — NOT a lossless round-trip of any source document.
-	 * To mutate an existing `.gitmodules` while preserving its formatting,
-	 * compile entry-level mutations into {@link GitConfig} edits instead
-	 * ({@link Gitmodules.setUrl} and friends).
-	 */
+  * Renders the entries as a canonical `.gitmodules` document.
+  *
+  * **Gotchas**
+  *
+  * This is a fresh, canonical rendering — one section per entry, tabs, a
+  * fixed field order — NOT a lossless round-trip of any source document.
+  * To mutate an existing `.gitmodules` while preserving its formatting,
+  * compile entry-level mutations into {@link GitConfig} edits instead
+  * ({@link Gitmodules.setUrl} and friends).
+  */
 	stringify(): string {
 		return render(this);
 	}
@@ -402,14 +407,15 @@ export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
 	}
 
 	/**
-	 * Renames the submodule's section header(s) from `oldName` to `newName`,
-	 * leaving every field line untouched.
-	 *
-	 * @remarks
-	 * This renames the `.gitmodules` section ONLY. A full submodule rename is
-	 * a multi-step sequence (worktree move, `.git/modules` move, gitdir
-	 * pointer, `core.worktree`, index restage) that belongs to the caller.
-	 */
+  * Renames the submodule's section header(s) from `oldName` to `newName`,
+  * leaving every field line untouched.
+  *
+  * **Gotchas**
+  *
+  * This renames the `.gitmodules` section ONLY. A full submodule rename is
+  * a multi-step sequence (worktree move, `.git/modules` move, gitdir
+  * pointer, `core.worktree`, index restage) that belongs to the caller.
+  */
 	static rename(config: GitConfig, oldName: string, newName: string): Result.Result<GitConfig, GitConfigEditError> {
 		return config.renameSection("submodule", oldName, "submodule", newName);
 	}

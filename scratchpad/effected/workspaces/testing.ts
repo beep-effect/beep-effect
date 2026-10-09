@@ -5,7 +5,8 @@
  * `LayerPolicy`, and `PackedInstall` proves a carrier's bins install from its
  * packed tarballs under every available package manager.
  *
- * @remarks
+ * **Details**
+ *
  * A separate subpath, never re-exported from `.`, so the main entry's
  * consumers never load a scanner, a policy decoder or package-manager
  * orchestration they do not use.

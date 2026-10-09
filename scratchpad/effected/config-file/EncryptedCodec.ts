@@ -19,7 +19,8 @@ class CiphertextTooShortError extends S.TaggedError<CiphertextTooShortError>($I`
  * Indicates that an encryption, decryption, key-derivation or base64 step
  * failed.
  *
- * @remarks
+ * **Details**
+ *
  * Its own error rather than a value on the generic `ConfigCodecError.operation`
  * union, so an encryption-only concern does not leak into every codec's error
  * type. `cause` preserves the underlying host failure structurally.
@@ -44,7 +45,8 @@ const toPublic = (failure: CryptoFailure): ConfigEncryptionError =>
 /**
  * Key source union for {@link EncryptedCodec}.
  *
- * @remarks
+ * **Details**
+ *
  * Use {@link (EncryptedCodecKey:variable).fromCryptoKey} to supply a pre-derived
  * `CryptoKey`, or {@link (EncryptedCodecKey:variable).fromPassphrase} to derive
  * one via PBKDF2 at first use.
@@ -62,32 +64,34 @@ export type EncryptedCodecKey =
  */
 export const EncryptedCodecKey = {
 	/**
-	 * Use a pre-derived `CryptoKey` effect directly.
-	 *
-	 * @remarks
-	 * The effect is resolved once per codec instance and its **success** is
-	 * reused for every encrypt/decrypt operation. A failure or an interruption
-	 * is not cached — the next operation resolves it again. Supply your own
-	 * `Effect.retry` inside this effect to bound retries; wrap it in
-	 * `Effect.cached` yourself if you want a failure to be terminal.
-	 *
-	 * A `throw` from it is a programmer bug and stays a defect; signal
-	 * recoverable failure with `Effect.fail`.
-	 */
+  * Use a pre-derived `CryptoKey` effect directly.
+  *
+  * **Details**
+  *
+  * The effect is resolved once per codec instance and its **success** is
+  * reused for every encrypt/decrypt operation. A failure or an interruption
+  * is not cached — the next operation resolves it again. Supply your own
+  * `Effect.retry` inside this effect to bound retries; wrap it in
+  * `Effect.cached` yourself if you want a failure to be terminal.
+  *
+  * A `throw` from it is a programmer bug and stays a defect; signal
+  * recoverable failure with `Effect.fail`.
+  */
 	fromCryptoKey: (key: Effect.Effect<CryptoKey, ConfigEncryptionError>): EncryptedCodecKey => ({
 		_tag: "CryptoKey",
 		key,
 	}),
 
 	/**
-	 * Derive a `CryptoKey` from a passphrase and salt via PBKDF2.
-	 *
-	 * @remarks
-	 * Derivation runs lazily on the first encrypt/decrypt call. It is resolved
-	 * once per codec instance and its **success** is reused for subsequent
-	 * operations on that instance. A failure or an interruption is not cached —
-	 * the next operation derives again.
-	 */
+  * Derive a `CryptoKey` from a passphrase and salt via PBKDF2.
+  *
+  * **Details**
+  *
+  * Derivation runs lazily on the first encrypt/decrypt call. It is resolved
+  * once per codec instance and its **success** is reused for subsequent
+  * operations on that instance. A failure or an interruption is not cached —
+  * the next operation derives again.
+  */
 	fromPassphrase: (passphrase: string, salt: Uint8Array): EncryptedCodecKey => ({
 		_tag: "Passphrase",
 		passphrase,
@@ -104,7 +108,8 @@ const keyEffect = (keySource: EncryptedCodecKey): Effect.Effect<CryptoKey, Confi
 /**
  * Wrap any {@link (ConfigCodec:interface)} with AES-GCM encryption.
  *
- * @remarks
+ * **Details**
+ *
  * `stringify` serializes with the inner codec, generates a random 12-byte IV,
  * encrypts, prepends the IV to the ciphertext and base64-encodes the result.
  * `parse` reverses that: the first 12 bytes of the decoded envelope are the IV,
@@ -115,7 +120,8 @@ const keyEffect = (keySource: EncryptedCodecKey): Effect.Effect<CryptoKey, Confi
  * flattening — the inner codec's failures stay distinguishable from
  * cryptographic ones.
  *
- * @example
+ * **Example** (Encrypt JSON configuration with a passphrase)
+ *
  * ```ts
  * import { EncryptedCodec, EncryptedCodecKey, JsonCodec } from "./index.ts";
  *

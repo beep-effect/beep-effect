@@ -81,21 +81,22 @@ export interface GitHubReleaseShape {
 		},
 	) => Effect.Effect<ReleaseInfo, GitHubError, Repo>;
 	/**
-	 * Attach a file to a release.
-	 *
-	 * @remarks
-	 * The one route in this package that is **not** in GitHub's generated
-	 * endpoint map: asset upload goes to `uploads.github.com` with a raw binary
-	 * body, and the map omits it. So it goes through `requestDecoded` with an
-	 * owned schema — the escape hatch is from the route table, never from typing.
-	 *
-	 * Being outside the map cuts the other way too: octokit has no schema
-	 * saying `name` is a **query** parameter, so the route template must carry
-	 * it (`assets{?name}`) or octokit silently drops it and GitHub answers 400
-	 * `Invalid name for request` — a hand-written route owns its query
-	 * parameters in the template, always. `label` is the endpoint's optional
-	 * display label, shown in place of the file name on the release page.
-	 */
+  * Attach a file to a release.
+  *
+  * **Gotchas**
+  *
+  * The one route in this package that is **not** in GitHub's generated
+  * endpoint map: asset upload goes to `uploads.github.com` with a raw binary
+  * body, and the map omits it. So it goes through `requestDecoded` with an
+  * owned schema — the escape hatch is from the route table, never from typing.
+  *
+  * Being outside the map cuts the other way too: octokit has no schema
+  * saying `name` is a **query** parameter, so the route template must carry
+  * it (`assets{?name}`) or octokit silently drops it and GitHub answers 400
+  * `Invalid name for request` — a hand-written route owns its query
+  * parameters in the template, always. `label` is the endpoint's optional
+  * display label, shown in place of the file name on the release page.
+  */
 	readonly uploadAsset: (
 		release: ReleaseInfo,
 		asset: {
@@ -116,11 +117,13 @@ export interface GitHubReleaseShape {
  * Create, read, list and update GitHub releases, and upload and list their
  * assets.
  *
- * @remarks
+ * **Details**
+ *
  * Provide it with {@link GitHubRelease.layer}, which needs a `GitHubClient`;
  * each method also needs a `Repo` in `R`.
  *
- * @example
+ * **Example** (Create a release with generated notes)
+ *
  * ```ts
  * import { GitHubRelease } from "./index.ts";
  * import * as Effect from "effect/Effect";

@@ -25,7 +25,8 @@ const EMPTY_IMPORTERS: ReadonlyArray<LockfileImporter> = [];
  * Failure of `Lockfile.parse`: the given content is not a valid lockfile of
  * the requested format.
  *
- * @remarks
+ * **Details**
+ *
  * - `format` — which format was being parsed.
  * - `stage` — `"syntax"` when the text itself failed to parse (YAML, JSON,
  *   JSONC), `"validation"` when the text parsed but did not have the
@@ -58,7 +59,8 @@ export class LockfileParseError extends S.TaggedError<LockfileParseError>($I`Loc
  * Failure of `Lockfile.parse`: the content parsed as text, but no single
  * lockfile document could be located in it.
  *
- * @remarks
+ * **Details**
+ *
  * `pnpm-lock.yaml` is a YAML **stream**. pnpm writes an env preamble document
  * ahead of the lockfile whenever the workspace declares `configDependencies`
  * or `devEngines.packageManager`, so the file holds two documents. The
@@ -151,7 +153,8 @@ const dispatch = (
 /**
  * The unified lockfile model all four formats normalize into.
  *
- * @remarks
+ * **Details**
+ *
  * - `format` — which lockfile format produced the data.
  * - `lockfileVersion` — the lockfile format version string.
  * - `packages` — every resolved package.
@@ -232,19 +235,20 @@ export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 	});
 
 	/**
-	 * Rewrite pnpm importer-path names to real package names — the explicit
-	 * second stage of pnpm parsing. Total and pure.
-	 *
-	 * @remarks
-	 * Workspace packages whose `relativePath` appears in `names` are renamed;
-	 * dependency edge ends are rewritten through the same map. Entries not in
-	 * the map keep their path name, and non-pnpm lockfiles are unaffected (no
-	 * key matches). Versions are not touched — pnpm workspace packages keep
-	 * `"0.0.0"` (the lockfile does not record their real versions).
-	 *
-	 * @param names - Importer path → real package name.
-	 * @returns A new {@link Lockfile} with names rewritten.
-	 */
+  * Rewrite pnpm importer-path names to real package names — the explicit
+  * second stage of pnpm parsing. Total and pure.
+  *
+  * **Details**
+  *
+  * Workspace packages whose `relativePath` appears in `names` are renamed;
+  * dependency edge ends are rewritten through the same map. Entries not in
+  * the map keep their path name, and non-pnpm lockfiles are unaffected (no
+  * key matches). Versions are not touched — pnpm workspace packages keep
+  * `"0.0.0"` (the lockfile does not record their real versions).
+  *
+  * @param names - Importer path → real package name.
+  * @returns A new {@link Lockfile} with names rewritten.
+  */
 	withImporterNames(names: ReadonlyMap<string, string>): Lockfile {
 		const packages = this.packages.map((pkg) => {
 			if (!pkg.isWorkspace || pkg.relativePath === undefined) return pkg;
@@ -331,22 +335,23 @@ export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 	}
 
 	/**
-	 * The resolved package with the given instance id, or `Option.none()` when
-	 * the lockfile records none. Backed by a lazily built index, so repeated
-	 * lookups are O(1) and a consumer that never walks edges pays nothing.
-	 *
-	 * @remarks
-	 * `ResolvedPackage.instanceId` is what a resolved edge points at, so peer and
-	 * dependency resolution is a lookup through this index rather than a scan
-	 * over `packages`.
-	 *
-	 * The index is a `Map`, so an instance id that collides with an `Object`
-	 * member name (`__proto__`, `constructor`) neither pollutes nor
-	 * false-matches, exactly as for {@link Lockfile.importer}.
-	 *
-	 * @param instanceId - The instance id to look up.
-	 * @returns The matching {@link ResolvedPackage}, or `Option.none()`.
-	 */
+  * The resolved package with the given instance id, or `Option.none()` when
+  * the lockfile records none. Backed by a lazily built index, so repeated
+  * lookups are O(1) and a consumer that never walks edges pays nothing.
+  *
+  * **Details**
+  *
+  * `ResolvedPackage.instanceId` is what a resolved edge points at, so peer and
+  * dependency resolution is a lookup through this index rather than a scan
+  * over `packages`.
+  *
+  * The index is a `Map`, so an instance id that collides with an `Object`
+  * member name (`__proto__`, `constructor`) neither pollutes nor
+  * false-matches, exactly as for {@link Lockfile.importer}.
+  *
+  * @param instanceId - The instance id to look up.
+  * @returns The matching {@link ResolvedPackage}, or `Option.none()`.
+  */
 	packageByInstanceId(instanceId: string): O.Option<ResolvedPackage> {
 		if (this.#instanceIndex === undefined) {
 			const index = MutableHashMap.empty<string, ResolvedPackage>();

@@ -55,14 +55,15 @@ export class ToolInstallerError extends S.TaggedError<ToolInstallerError>($I`Too
 	}
 
 	/**
-	 * Whether retrying could plausibly help.
-	 *
-	 * @remarks
-	 * A derived getter rather than a field, so it cannot be set inconsistently
-	 * with the status it is derived from. `408`, `429` and any `5xx` are the
-	 * server saying "later"; a `404` is it saying "never", and retrying that
-	 * three times just makes a broken url take longer to fail.
-	 */
+  * Whether retrying could plausibly help.
+  *
+  * **Details**
+  *
+  * A derived getter rather than a field, so it cannot be set inconsistently
+  * with the status it is derived from. `408`, `429` and any `5xx` are the
+  * server saying "later"; a `404` is it saying "never", and retrying that
+  * three times just makes a broken url take longer to fail.
+  */
 	get retryable(): boolean {
 		if (this.reason !== "downloadFailed") {
 			return false;
@@ -85,15 +86,16 @@ export interface ExtractOptions {
 	/** The destination. A fresh temporary directory when omitted. */
 	readonly destination?: string | undefined;
 	/**
-	 * Flags for `tar`. Defaults to `["xzf"]`, i.e. a gzipped tarball.
-	 *
-	 * @remarks
-	 * The argv is assembled as `[...flags, archive, "-C", destination]` — the
-	 * archive path is appended directly AFTER the flags, so the LAST flag must
-	 * be the one that consumes the archive operand. `["xzf"]` works because `f`
-	 * is last inside the cluster; a custom set like `["xz", "--strip=1", "-f"]`
-	 * must end the same way, deliberately rather than by ordering luck.
-	 */
+  * Flags for `tar`. Defaults to `["xzf"]`, i.e. a gzipped tarball.
+  *
+  * **Gotchas**
+  *
+  * The argv is assembled as `[...flags, archive, "-C", destination]` — the
+  * archive path is appended directly AFTER the flags, so the LAST flag must
+  * be the one that consumes the archive operand. `["xzf"]` works because `f`
+  * is last inside the cluster; a custom set like `["xz", "--strip=1", "-f"]`
+  * must end the same way, deliberately rather than by ordering luck.
+  */
 	readonly flags?: ReadonlyArray<string> | undefined;
 }
 
@@ -104,19 +106,20 @@ export interface ExtractOptions {
  */
 export interface ToolDownloadOptions {
 	/**
-	 * The overall time budget for ONE download attempt (request plus streaming
-	 * the body to disk). Defaults to five minutes.
-	 *
-	 * @remarks
-	 * The default is deliberately generous: toolchain archives run to hundreds
-	 * of megabytes, and a healthy runner connection moves tens of megabytes a
-	 * second — even a 500 MB archive on a degraded 2 MB/s link fits in five
-	 * minutes. What the budget exists for is the connection that stops moving
-	 * entirely: without it, a dead connection is a silent CI hang until the job
-	 * timeout; with it, the attempt fails typed as `downloadFailed` with no
-	 * status — which `retryable` classifies as a transport fault — and the
-	 * download's own retry policy tries again.
-	 */
+  * The overall time budget for ONE download attempt (request plus streaming
+  * the body to disk). Defaults to five minutes.
+  *
+  * **Details**
+  *
+  * The default is deliberately generous: toolchain archives run to hundreds
+  * of megabytes, and a healthy runner connection moves tens of megabytes a
+  * second — even a 500 MB archive on a degraded 2 MB/s link fits in five
+  * minutes. What the budget exists for is the connection that stops moving
+  * entirely: without it, a dead connection is a silent CI hang until the job
+  * timeout; with it, the attempt fails typed as `downloadFailed` with no
+  * status — which `retryable` classifies as a transport fault — and the
+  * download's own retry policy tries again.
+  */
 	readonly timeout?: Duration.Input | undefined;
 }
 
@@ -142,7 +145,8 @@ export interface ProvisionFileOptions {
 /**
  * Where {@link ToolInstallerShape.provisionFile} put a single-binary tool.
  *
- * @remarks
+ * **Details**
+ *
  * The same `directory`/`binDir` shape as `PackageManagerInstaller`'s
  * `CachedPackageManager`, so a consumer publishes either the same way. For a
  * single binary the two coincide: the cached directory contains exactly the
@@ -166,36 +170,38 @@ export interface ProvisionedFile {
  */
 export interface ToolInstallerShape {
 	/**
-	 * A cached tool, if this runner already has it.
-	 *
-	 * @remarks
-	 * Absent is not an error, and neither is an unreadable cache: both mean
-	 * "install it", which is the only thing a caller can do about either.
-	 *
-	 * **The tool cache is SHARED.** The hosted runner image pre-populates it and
-	 * every `setup-*` action writes into it — this package is a co-writer, not
-	 * the owner. A hit guarantees only the `<root>/<tool>/<version>/<arch>`
-	 * location contract ({@link ToolInstaller.cachePath}); the directory's
-	 * *interior* layout is whatever its writer produced, which is not
-	 * necessarily what this consumer's own `cacheDir` would have written.
-	 * Validate the layout of a foreign hit before relying on it — an
-	 * assumption from your own install path (an archive-wrapper subdirectory,
-	 * say) may not hold for a foreign entry.
-	 */
+  * A cached tool, if this runner already has it.
+  *
+  * **Gotchas**
+  *
+  * Absent is not an error, and neither is an unreadable cache: both mean
+  * "install it", which is the only thing a caller can do about either.
+  *
+  * **The tool cache is SHARED.** The hosted runner image pre-populates it and
+  * every `setup-*` action writes into it — this package is a co-writer, not
+  * the owner. A hit guarantees only the `<root>/<tool>/<version>/<arch>`
+  * location contract ({@link ToolInstaller.cachePath}); the directory's
+  * *interior* layout is whatever its writer produced, which is not
+  * necessarily what this consumer's own `cacheDir` would have written.
+  * Validate the layout of a foreign hit before relying on it — an
+  * assumption from your own install path (an archive-wrapper subdirectory,
+  * say) may not hold for a foreign entry.
+  */
 	readonly find: (tool: string, version: string) => Effect.Effect<O.Option<string>>;
 	/**
-	 * Where this installer's `cacheDir` / `cacheFile` will land `tool@version`:
-	 * the final `<root>/<tool>/<version>/<arch>`, over the root this layer
-	 * resolved at construction.
-	 *
-	 * @remarks
-	 * Pure — no IO, nothing is created — and exposed so a caller that must
-	 * write the final path INTO the staged tree before the swap (a shim that
-	 * names its own cached entry) reads the one answer `cacheDir` is about to
-	 * use, instead of deriving root and arch a second time and guarding the
-	 * two against drifting apart. {@link ToolInstaller.cachePath} is the same
-	 * layout as a static function of an explicit root.
-	 */
+  * Where this installer's `cacheDir` / `cacheFile` will land `tool@version`:
+  * the final `<root>/<tool>/<version>/<arch>`, over the root this layer
+  * resolved at construction.
+  *
+  * **Details**
+  *
+  * Pure — no IO, nothing is created — and exposed so a caller that must
+  * write the final path INTO the staged tree before the swap (a shim that
+  * names its own cached entry) reads the one answer `cacheDir` is about to
+  * use, instead of deriving root and arch a second time and guarding the
+  * two against drifting apart. {@link ToolInstaller.cachePath} is the same
+  * layout as a static function of an explicit root.
+  */
 	readonly cachePath: (tool: string, version: string) => string;
 	/** Download a url to a temporary file, retrying what is worth retrying. */
 	readonly download: (url: string, options?: ToolDownloadOptions) => Effect.Effect<string, ToolInstallerError>;
@@ -204,17 +210,18 @@ export interface ToolInstallerShape {
 	/** Extract a zip. Returns the directory its contents landed in. */
 	readonly extractZip: (archive: string, options?: ExtractOptions) => Effect.Effect<string, ToolInstallerError>;
 	/**
-	 * Install a directory into the tool cache. Returns its cached path.
-	 *
-	 * @remarks
-	 * **`source` is consumed.** On success it no longer exists at its original
-	 * path: the tree is renamed into the cache when the two share a filesystem
-	 * (`RUNNER_TEMP` and `RUNNER_TOOL_CACHE` do on hosted runners, making the
-	 * install O(1) rather than a recursive copy of the whole toolchain), and
-	 * otherwise copied and then removed. Write everything the cached entry must
-	 * contain — shims, overlaid binaries — into `source` *before* this call,
-	 * and read nothing from it afterwards.
-	 */
+  * Install a directory into the tool cache. Returns its cached path.
+  *
+  * **Gotchas**
+  *
+  * **`source` is consumed.** On success it no longer exists at its original
+  * path: the tree is renamed into the cache when the two share a filesystem
+  * (`RUNNER_TEMP` and `RUNNER_TOOL_CACHE` do on hosted runners, making the
+  * install O(1) rather than a recursive copy of the whole toolchain), and
+  * otherwise copied and then removed. Write everything the cached entry must
+  * contain — shims, overlaid binaries — into `source` *before* this call,
+  * and read nothing from it afterwards.
+  */
 	readonly cacheDir: (source: string, tool: string, version: string) => Effect.Effect<string, ToolInstallerError>;
 	/** Install a single file into the tool cache under `name`. Returns the cached directory. */
 	readonly cacheFile: (
@@ -224,23 +231,24 @@ export interface ToolInstallerShape {
 		version: string,
 	) => Effect.Effect<string, ToolInstallerError>;
 	/**
-	 * Provision a single-binary tool: the whole `find` → `download` →
-	 * chmod → `cacheFile` composition as one call.
-	 *
-	 * @remarks
-	 * The one packaged workflow among the primitives, because the single-binary
-	 * shape (biome, and every Rust/Go tool distributed as a bare executable) has
-	 * no per-tool variation left to compose: there is no archive, so no
-	 * extraction and no layout fixup. A cache hit whose entry contains the
-	 * named `binary` short-circuits; a hit *missing* it — a foreign or partial
-	 * entry, see {@link ToolInstallerShape.find}'s shared-cache warning — is
-	 * treated as a miss and reinstalled over, rather than handing back a
-	 * directory that cannot run the tool. On the install path the downloaded
-	 * file is made executable (`0o755`) BEFORE caching — skipped when
-	 * `RUNNER_OS` is Windows, where the bit does not exist — so the cache only
-	 * ever contains a runnable tool; a chmod failure is `cacheFailed` with the
-	 * file as its subject.
-	 */
+  * Provision a single-binary tool: the whole `find` → `download` →
+  * chmod → `cacheFile` composition as one call.
+  *
+  * **Details**
+  *
+  * The one packaged workflow among the primitives, because the single-binary
+  * shape (biome, and every Rust/Go tool distributed as a bare executable) has
+  * no per-tool variation left to compose: there is no archive, so no
+  * extraction and no layout fixup. A cache hit whose entry contains the
+  * named `binary` short-circuits; a hit *missing* it — a foreign or partial
+  * entry, see {@link ToolInstallerShape.find}'s shared-cache warning — is
+  * treated as a miss and reinstalled over, rather than handing back a
+  * directory that cannot run the tool. On the install path the downloaded
+  * file is made executable (`0o755`) BEFORE caching — skipped when
+  * `RUNNER_OS` is Windows, where the bit does not exist — so the cache only
+  * ever contains a runnable tool; a chmod failure is `cacheFailed` with the
+  * file as its subject.
+  */
 	readonly provisionFile: (options: ProvisionFileOptions) => Effect.Effect<ProvisionedFile, ToolInstallerError>;
 }
 
@@ -283,17 +291,18 @@ const make = Effect.gen(function* () {
 	};
 
 	/**
-	 * Run an extraction command ONCE, keeping its stderr.
-	 *
-	 * @remarks
-	 * `tar`'s exit code says only that it failed; its stderr says why, and it is
-	 * the difference between "this is not a gzip archive" and "tar is not
-	 * installed". Discarding it is what makes an extraction failure unactionable.
-	 *
-	 * **One spawn, not two — load-bearing**, and why is spelled once in
-	 * `internal/spawn.ts`: a second run fails on Windows because .NET's
-	 * `ZipFile.ExtractToDirectory` refuses to overwrite.
-	 */
+  * Run an extraction command ONCE, keeping its stderr.
+  *
+  * **Gotchas**
+  *
+  * `tar`'s exit code says only that it failed; its stderr says why, and it is
+  * the difference between "this is not a gzip archive" and "tar is not
+  * installed". Discarding it is what makes an extraction failure unactionable.
+  *
+  * **One spawn, not two — load-bearing**, and why is spelled once in
+  * `internal/spawn.ts`: a second run fails on Windows because .NET's
+  * `ZipFile.ExtractToDirectory` refuses to overwrite.
+  */
 	const extractWith = Effect.fnUntraced(function* (command: ChildProcess.Command, archive: string) {
 			const { output, code } = yield* spawnOnce(spawner, command).pipe(
 				Effect.mapError((cause) => ToolInstallerError.make({ reason: "extractFailed", subject: archive, cause })),
@@ -304,16 +313,17 @@ const make = Effect.gen(function* () {
 		});
 
 	/**
-	 * Install a staged directory into the tool cache by renaming it into place.
-	 *
-	 * @remarks
-	 * **Stage then swap**, and the reason is that the alternative is worse than a
-	 * failed install: copying straight into the cache path leaves a *partial*
-	 * tool behind when the copy fails halfway, and `find` reports a partial
-	 * directory as a hit. Every later run then uses a half-extracted toolchain
-	 * and never re-downloads it. A rename within one filesystem is atomic, so the
-	 * cache only ever contains complete tools.
-	 */
+  * Install a staged directory into the tool cache by renaming it into place.
+  *
+  * **Details**
+  *
+  * **Stage then swap**, and the reason is that the alternative is worse than a
+  * failed install: copying straight into the cache path leaves a *partial*
+  * tool behind when the copy fails halfway, and `find` reports a partial
+  * directory as a hit. Every later run then uses a half-extracted toolchain
+  * and never re-downloads it. A rename within one filesystem is atomic, so the
+  * cache only ever contains complete tools.
+  */
 	const swapIntoCache = (staging: string, tool: string, version: string): Effect.Effect<string, ToolInstallerError> =>
 		Effect.gen(function* () {
 			const destination = cachePath(tool, version);
@@ -325,21 +335,22 @@ const make = Effect.gen(function* () {
 		}).pipe(Effect.mapError((cause) => ToolInstallerError.make({ reason: "cacheFailed", subject: tool, cause })));
 
 	/**
-	 * Move a source tree into the staging directory, consuming the source.
-	 *
-	 * @remarks
-	 * A rename first: on the same filesystem it is O(1) however large the
-	 * toolchain is, where a recursive copy of a hundreds-of-MB tree is the
-	 * dominant cost of an install. The staging directory is removed before the
-	 * rename because Windows refuses to rename onto an existing directory; its
-	 * mktemp name stays reserved in practice. The copy fallback is taken ONLY
-	 * for `EXDEV` — a cross-filesystem move, the one case a rename cannot do —
-	 * and every other rename failure is reported as-is: a copy after a
-	 * permission error would turn a real failure into a slow success. The
-	 * fallback removes the source afterwards so the contract is the same on
-	 * both paths; that removal is best-effort, since the entry is already
-	 * complete and a leftover temp directory is not worth failing the install.
-	 */
+  * Move a source tree into the staging directory, consuming the source.
+  *
+  * **Details**
+  *
+  * A rename first: on the same filesystem it is O(1) however large the
+  * toolchain is, where a recursive copy of a hundreds-of-MB tree is the
+  * dominant cost of an install. The staging directory is removed before the
+  * rename because Windows refuses to rename onto an existing directory; its
+  * mktemp name stays reserved in practice. The copy fallback is taken ONLY
+  * for `EXDEV` — a cross-filesystem move, the one case a rename cannot do —
+  * and every other rename failure is reported as-is: a copy after a
+  * permission error would turn a real failure into a slow success. The
+  * fallback removes the source afterwards so the contract is the same on
+  * both paths; that removal is best-effort, since the entry is already
+  * complete and a leftover temp directory is not worth failing the install.
+  */
 	const moveIntoStaging = (source: string, staging: string): Effect.Effect<void, PlatformError.PlatformError> =>
 		fs.remove(staging, { recursive: true, force: true }).pipe(
 			Effect.flatMap(() => fs.rename(source, staging)),
@@ -515,7 +526,8 @@ const testRoot = (): string => Effect.runSync(
 /**
  * Download, extract and cache a toolchain in the runner's tool cache.
  *
- * @remarks
+ * **Details**
+ *
  * The primitives, plus exactly one packaged workflow: a consumer composes
  * `find` → `download` → `extractTar` → `cacheDir` in whatever order its tool
  * needs, because the orders genuinely differ (a tarball with a nested root
@@ -527,7 +539,8 @@ const testRoot = (): string => Effect.runSync(
  * No `@actions/tool-cache` dependency — the cache is a directory layout, and
  * this reproduces the layout rather than importing a package to compute it.
  *
- * @example
+ * **Example** (Download and cache Node on a cache miss)
+ *
  * ```ts
  * import { ToolInstaller } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -549,12 +562,13 @@ export class ToolInstaller extends Context.Service<ToolInstaller, ToolInstallerS
 	$I`ToolInstaller`,
 ) {
 	/**
-	 * The live installer, over the runner's tool cache, `HttpClient` and `tar`.
-	 *
-	 * @remarks
-	 * The cache root comes from `RUNNER_TOOL_CACHE`, resolved once at layer
-	 * construction.
-	 */
+  * The live installer, over the runner's tool cache, `HttpClient` and `tar`.
+  *
+  * **Details**
+  *
+  * The cache root comes from `RUNNER_TOOL_CACHE`, resolved once at layer
+  * construction.
+  */
 	static readonly layer: Layer.Layer<
 		ToolInstaller,
 		never,
@@ -566,16 +580,17 @@ export class ToolInstaller extends Context.Service<ToolInstaller, ToolInstallerS
 	> = Layer.effect(this, make);
 
 	/**
-	 * Where a tool lives in the cache.
-	 *
-	 * @remarks
-	 * Pure, exported and tested on its own, because the layout is a **contract
-	 * with the runner**: `<root>/<tool>/<version>/<arch>` is what the hosted
-	 * image populates and what `@actions/tool-cache` reads, so a tool cached at
-	 * any other path is invisible to every other step in the workflow. The `arch`
-	 * segment uses Node's `process.arch` spelling (`x64`) rather than the
-	 * runner's `RUNNER_ARCH` (`X64`) for the same reason.
-	 */
+  * Where a tool lives in the cache.
+  *
+  * **Details**
+  *
+  * Pure, exported and tested on its own, because the layout is a **contract
+  * with the runner**: `<root>/<tool>/<version>/<arch>` is what the hosted
+  * image populates and what `@actions/tool-cache` reads, so a tool cached at
+  * any other path is invisible to every other step in the workflow. The `arch`
+  * segment uses Node's `process.arch` spelling (`x64`) rather than the
+  * runner's `RUNNER_ARCH` (`X64`) for the same reason.
+  */
 	static readonly cachePath = (options: {
 		readonly root: string;
 		readonly tool: string;
@@ -584,18 +599,19 @@ export class ToolInstaller extends Context.Service<ToolInstaller, ToolInstallerS
 	}): string => `${options.root}/${options.tool}/${options.version}/${options.arch}`;
 
 	/**
-	 * A test double. Unstubbed members die rather than reporting a tool that is
-	 * not there.
-	 *
-	 * @remarks
-	 * `cachePath` is the one member with a default rather than a death: it is
-	 * pure and total, and a caller composing it into shim contents would
-	 * otherwise have to stub it in every test. The default is the static layout
-	 * over `RUNNER_TOOL_CACHE`, or the same off-runner root `make` resolves
-	 * (`internal/runner.ts`). **That is a read of the ambient environment**,
-	 * sanctioned here only because a double has no `ActionEnvironment` to ask,
-	 * and limited to the test double.
-	 */
+  * A test double. Unstubbed members die rather than reporting a tool that is
+  * not there.
+  *
+  * **Details**
+  *
+  * `cachePath` is the one member with a default rather than a death: it is
+  * pure and total, and a caller composing it into shim contents would
+  * otherwise have to stub it in every test. The default is the static layout
+  * over `RUNNER_TOOL_CACHE`, or the same off-runner root `make` resolves
+  * (`internal/runner.ts`). **That is a read of the ambient environment**,
+  * sanctioned here only because a double has no `ActionEnvironment` to ask,
+  * and limited to the test double.
+  */
 	static readonly makeTest = (overrides: Partial<ToolInstallerShape> = {}): ToolInstallerShape => ({
 		find: () => dies("find"),
 		cachePath: (tool, version) => ToolInstaller.cachePath({ root: testRoot(), tool, version, arch: process.arch }),

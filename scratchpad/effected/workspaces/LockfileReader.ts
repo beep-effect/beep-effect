@@ -36,7 +36,8 @@ const JsonValue = S.fromJsonString(S.Unknown);
 /**
  * Raised when the workspace's lockfile cannot be read off disk.
  *
- * @remarks
+ * **Details**
+ *
  * Parse failures are `@effected/lockfiles`' `LockfileParseError`, not this —
  * this is strictly the IO half.
  *
@@ -62,7 +63,8 @@ export class LockfileReadError extends S.TaggedError<LockfileReadError>($I`Lockf
 /**
  * Every failure the lockfile methods can surface.
  *
- * @remarks
+ * **Details**
+ *
  * Layer construction does no IO, so every member surfaces from the *methods*
  * rather than from `Layer.build`: the root cannot be found, no package manager
  * can be attributed to it (or its manifest is corrupt), its lockfile cannot be
@@ -87,15 +89,16 @@ export interface LockfileReaderShape {
 	/** The parsed lockfile, with pnpm importer paths already resolved to real names. */
 	readonly read: Effect.Effect<Lockfile, LockfileReadFailure>;
 	/**
-	 * The lockfile's record of a package, when it records one.
-	 *
-	 * @remarks
-	 * A name can resolve at **several versions** in one lockfile (two members
-	 * depending on different majors of the same package). This returns the
-	 * **first** entry in lockfile order and does not rank them. Callers
-	 * that must see every resolution should read `lockfile.packagesNamed(name)`
-	 * off `read()` directly.
-	 */
+  * The lockfile's record of a package, when it records one.
+  *
+  * **Gotchas**
+  *
+  * A name can resolve at **several versions** in one lockfile (two members
+  * depending on different majors of the same package). This returns the
+  * **first** entry in lockfile order and does not rank them. Callers
+  * that must see every resolution should read `lockfile.packagesNamed(name)`
+  * off `read()` directly.
+  */
 	readonly resolvedVersion: (packageName: string) => Effect.Effect<O.Option<ResolvedPackage>, LockfileReadFailure>;
 	/**
 	 * Whether the lockfile agrees with the workspace manifests on disk — the
@@ -119,19 +122,20 @@ export const LockfileReaderOptions = S.Struct({
 	 */
 	cwd: S.optionalKey(S.String).annotateKey({ description: "The directory to resolve the workspace root from; defaults lazily to the current directory on first use." }),
 	/**
-	 * A ceiling for the root ascent from `cwd`, passed straight through to the
-	 * `stopAt` of {@link WorkspaceRoot}'s `find`.
-	 *
-	 * @remarks
-	 * Inclusive, and resolved to an absolute path exactly as `cwd` is. When no
-	 * root is found at or below the ceiling, `read` fails with
-	 * {@link WorkspaceRootNotFoundError} carrying the resolved `stopAt` rather
-	 * than adopting an enclosing directory's workspace. Pass the same value as
-	 * {@link WorkspaceDiscoveryOptions.stopAt} so every service agrees on the
-	 * root; the `Workspaces.*` composites forward one `stopAt` to all of them.
-	 *
-	 * @defaultValue no ceiling — the ascent runs to the filesystem root.
-	 */
+  * A ceiling for the root ascent from `cwd`, passed straight through to the
+  * `stopAt` of {@link WorkspaceRoot}'s `find`.
+  *
+  * **Details**
+  *
+  * Inclusive, and resolved to an absolute path exactly as `cwd` is. When no
+  * root is found at or below the ceiling, `read` fails with
+  * {@link WorkspaceRootNotFoundError} carrying the resolved `stopAt` rather
+  * than adopting an enclosing directory's workspace. Pass the same value as
+  * {@link WorkspaceDiscoveryOptions.stopAt} so every service agrees on the
+  * root; the `Workspaces.*` composites forward one `stopAt` to all of them.
+  *
+  * @defaultValue no ceiling — the ascent runs to the filesystem root.
+  */
 	stopAt: S.optional(S.String).annotateKey({ description: "An inclusive ceiling for the workspace-root ascent; absent or undefined means no ceiling." }),
 }).pipe($I.annoteSchema("LockfileReaderOptions", { description: "Root-resolution options for the lockfile reader, leaving current-directory resolution lazy." }));
 
@@ -151,12 +155,14 @@ const unstubbed = (method: string): Effect.Effect<never> =>
 /**
  * Reads and parses the workspace's lockfile.
  *
- * @remarks
+ * **Details**
+ *
  * Layer construction is O(1). The root walk, package-manager detection, file
  * read, parse and pnpm name resolution all happen on the first method call and
  * are memoized success-only for the lifetime of the layer.
  *
- * @example
+ * **Example** (Count packages in the workspace lockfile)
+ *
  * ```ts
  * import { LockfileReader } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -291,15 +297,16 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
 	});
 
 	/**
-	 * The live layer: reads the lockfile of the detected package manager at the
-	 * workspace root.
-	 *
-	 * @remarks
-	 * Parameterized, so it mints a fresh reference per call — bind it to a
-	 * `const` and reuse it.
-	 *
-	 * @param options - Root resolution (`cwd`, `stopAt`).
-	 */
+  * The live layer: reads the lockfile of the detected package manager at the
+  * workspace root.
+  *
+  * **Gotchas**
+  *
+  * Parameterized, so it mints a fresh reference per call — bind it to a
+  * `const` and reuse it.
+  *
+  * @param options - Root resolution (`cwd`, `stopAt`).
+  */
 	static readonly layer = (
 		options?: LockfileReaderOptions,
 	): Layer.Layer<
@@ -309,45 +316,47 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
 	> => Layer.effect(LockfileReader, LockfileReader.make(options));
 
 	/**
-	 * A test double satisfying the full {@link LockfileReaderShape} with no
-	 * filesystem, root walk, or package-manager detection.
-	 *
-	 * @remarks
-	 * There is **no honest default lockfile**: an empty one that looks like a
-	 * legitimate answer is indistinguishable from "this workspace resolves
-	 * nothing" — the silent-empty failure class this package documents on the
-	 * live paths — so `read` **dies** with an instructive defect until stubbed.
-	 *
-	 * The one derivation mirrors `WorkspaceDiscovery.makeTest`'s
-	 * derived-from-the-primary rule: when a `read` override is supplied,
-	 * `resolvedVersion` answers as the live service does — the **first** entry
-	 * of `lockfile.packagesNamed(name)` in lockfile order, `Option.none()` on a
-	 * miss — so the two stay consistent by construction. `integrity` is **not**
-	 * derivable: the live method compares the lockfile against the workspace
-	 * manifests discovery enumerates, and the double has no discovery to ask, so
-	 * it dies unless stubbed.
-	 *
-	 * `refresh` defaults to `Effect.void` honestly: the live contract is "drop
-	 * the memoized read so the next call re-reads", and this double memoizes
-	 * nothing — every `read()` call re-invokes the override — so there is
-	 * nothing to drop and the no-op is truthful, the same reasoning as
-	 * `WorkspaceDiscovery.makeTest`'s `refresh`.
-	 *
-	 * @example
-	 * ```ts
-	 * import { Lockfile } from "../lockfiles/index.ts";
-	 * import { LockfileReader } from "./index.ts";
-	 * import * as Effect from "effect/Effect";
-	 *
-	 * const double = LockfileReader.makeTest({
-	 *   read:
-	 *     Effect.succeed(
-	 *       Lockfile.make({ format: "pnpm", lockfileVersion: "9.0", packages: [], workspaceDependencies: [] }),
-	 *     ),
-	 * });
-	 * // `resolvedVersion` now answers consistently from that lockfile.
-	 * ```
-	 */
+  * A test double satisfying the full {@link LockfileReaderShape} with no
+  * filesystem, root walk, or package-manager detection.
+  *
+  * **Gotchas**
+  *
+  * There is **no honest default lockfile**: an empty one that looks like a
+  * legitimate answer is indistinguishable from "this workspace resolves
+  * nothing" — the silent-empty failure class this package documents on the
+  * live paths — so `read` **dies** with an instructive defect until stubbed.
+  *
+  * The one derivation mirrors `WorkspaceDiscovery.makeTest`'s
+  * derived-from-the-primary rule: when a `read` override is supplied,
+  * `resolvedVersion` answers as the live service does — the **first** entry
+  * of `lockfile.packagesNamed(name)` in lockfile order, `Option.none()` on a
+  * miss — so the two stay consistent by construction. `integrity` is **not**
+  * derivable: the live method compares the lockfile against the workspace
+  * manifests discovery enumerates, and the double has no discovery to ask, so
+  * it dies unless stubbed.
+  *
+  * `refresh` defaults to `Effect.void` honestly: the live contract is "drop
+  * the memoized read so the next call re-reads", and this double memoizes
+  * nothing — every `read()` call re-invokes the override — so there is
+  * nothing to drop and the no-op is truthful, the same reasoning as
+  * `WorkspaceDiscovery.makeTest`'s `refresh`.
+  *
+  * **Example** (Stub a lockfile read with consistent version lookup)
+  *
+  * ```ts
+  * import { Lockfile } from "../lockfiles/index.ts";
+  * import { LockfileReader } from "./index.ts";
+  * import * as Effect from "effect/Effect";
+  *
+  * const double = LockfileReader.makeTest({
+  *   read:
+  *     Effect.succeed(
+  *       Lockfile.make({ format: "pnpm", lockfileVersion: "9.0", packages: [], workspaceDependencies: [] }),
+  *     ),
+  * });
+  * // `resolvedVersion` now answers consistently from that lockfile.
+  * ```
+  */
 	static readonly makeTest = (overrides: Partial<LockfileReaderShape> = {}): LockfileReaderShape => {
 		const read = overrides.read;
 		return {
@@ -364,22 +373,24 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
 	};
 
 	/**
-	 * The test layer: {@link LockfileReader.makeTest} behind `Layer.succeed`, so
-	 * a suite provides only the methods it exercises.
-	 *
-	 * @remarks
-	 * A parameterized layer factory mints a **fresh reference per call**, and
-	 * layers memoize by reference — bind the result to a `const` and reuse it
-	 * rather than calling `layerTest(...)` at each composition site.
-	 *
-	 * @example
-	 * ```ts
-	 * import { LockfileReader } from "./index.ts";
-	 *
-	 * const TestLockfiles = LockfileReader.layerTest();
-	 * // program.pipe(Effect.provide(TestLockfiles)) — dies loudly if touched.
-	 * ```
-	 */
+  * The test layer: {@link LockfileReader.makeTest} behind `Layer.succeed`, so
+  * a suite provides only the methods it exercises.
+  *
+  * **Gotchas**
+  *
+  * A parameterized layer factory mints a **fresh reference per call**, and
+  * layers memoize by reference — bind the result to a `const` and reuse it
+  * rather than calling `layerTest(...)` at each composition site.
+  *
+  * **Example** (Create a reusable unstubbed lockfile test layer)
+  *
+  * ```ts
+  * import { LockfileReader } from "./index.ts";
+  *
+  * const TestLockfiles = LockfileReader.layerTest();
+  * // program.pipe(Effect.provide(TestLockfiles)) — dies loudly if touched.
+  * ```
+  */
 	static readonly layerTest = (overrides: Partial<LockfileReaderShape> = {}): Layer.Layer<LockfileReader> =>
 		Layer.succeed(LockfileReader, LockfileReader.makeTest(overrides));
 }

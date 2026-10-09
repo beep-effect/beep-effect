@@ -7,7 +7,8 @@ const $I = $ScratchpadId.create("effected/lockfiles/LockfileImporter");
 /**
  * One workspace importer's declared dependencies, as the lockfile records them.
  *
- * @remarks
+ * **Details**
+ *
  * - `path` — the importer path relative to the workspace root, `"."` for the
  *   root package (never empty — a `NonEmptyString`) — the same keys as
  *   `WorkspaceDiscovery.importerMap` in

@@ -56,7 +56,8 @@ export type AppDirKind = typeof AppDirKind.Type;
 /**
  * Indicates that an application directory could not be created.
  *
- * @remarks
+ * **Details**
+ *
  * The only way `AppDirs` fails. Resolution cannot fail — it happens once, at
  * layer construction, from an environment that is already resolved — so this
  * error means exactly one thing: the `mkdir -p` did not work. `directory` says
@@ -93,23 +94,25 @@ export class ResolvedAppDirs extends S.Class<ResolvedAppDirs>($I`ResolvedAppDirs
 	/** The app's state directory. */
 	state: S.String.annotateKey({ description: "The app's state directory." }),
 	/**
-	 * The app's runtime directory.
-	 *
-	 * @remarks
-	 * Absent unless `$XDG_RUNTIME_DIR` is set or `dirs.runtime` overrides it.
-	 * There is no defensible fallback for a runtime directory — it must be
-	 * user-owned, mode 0700 and cleaned on logout — so inventing one would be a
-	 * lie, and the key is simply absent.
-	 */
+  * The app's runtime directory.
+  *
+  * **Gotchas**
+  *
+  * Absent unless `$XDG_RUNTIME_DIR` is set or `dirs.runtime` overrides it.
+  * There is no defensible fallback for a runtime directory — it must be
+  * user-owned, mode 0700 and cleaned on logout — so inventing one would be a
+  * lie, and the key is simply absent.
+  */
 	runtime: S.optionalKey(S.String).annotateKey({ description: "The app's runtime directory." }),
 	/**
-	 * Where to **look** for configuration, in priority order.
-	 *
-	 * @remarks
-	 * The app's own config directory, then each `$XDG_CONFIG_DIRS` entry
-	 * namespaced. It is what makes {@link XdgConfig.resolver} a real search
-	 * rather than a single stat.
-	 */
+  * Where to **look** for configuration, in priority order.
+  *
+  * **Details**
+  *
+  * The app's own config directory, then each `$XDG_CONFIG_DIRS` entry
+  * namespaced. It is what makes {@link XdgConfig.resolver} a real search
+  * rather than a single stat.
+  */
 	configSearchPath: S.Array(S.String).annotateKey({ description: "Where to **look** for configuration, in priority order." }),
 	/** Where to look for data files, in priority order. */
 	dataSearchPath: S.Array(S.String).annotateKey({ description: "Where to look for data files, in priority order." }),
@@ -174,29 +177,32 @@ export type AppDirOverrides = typeof AppDirOverrides.Type;
  */
 export const AppDirsOptions = S.Struct({
 	/**
-	 * The application namespace — one path component.
-	 *
-	 * @remarks
-	 * Must be non-empty and free of path separators. A namespace containing `..`
-	 * or `/` would resolve the app's directories outside `$HOME` entirely, so it
-	 * is rejected as a **defect** at layer construction: it can only come from
-	 * code, never from user input.
-	 */
+  * The application namespace — one path component.
+  *
+  * **Gotchas**
+  *
+  * Must be non-empty and free of path separators. A namespace containing `..`
+  * or `/` would resolve the app's directories outside `$HOME` entirely, so it
+  * is rejected as a **defect** at layer construction: it can only come from
+  * code, never from user input.
+  */
 	namespace: S.String.annotateKey({ description: "The application namespace — one path component, validated as a defect during layer construction." }),
 	/**
-	 * Use the OS-native directories where the platform has them. Defaults to `false`.
-	 *
-	 * @remarks
-	 * Only consulted when no XDG variable and no explicit override applies, and
-	 * only on darwin and win32 — on Linux there is nothing to override.
-	 */
+  * Use the OS-native directories where the platform has them. Defaults to `false`.
+  *
+  * **Details**
+  *
+  * Only consulted when no XDG variable and no explicit override applies, and
+  * only on darwin and win32 — on Linux there is nothing to override.
+  */
 	native: S.optionalKey(S.Boolean).annotateKey({ description: "Use the OS-native directories where the platform has them. Defaults to false." }),
 	/**
-	 * A single dot-directory under `$HOME` that all four kinds collapse to.
-	 *
-	 * @remarks
-	 * Relative to `$HOME`: `fallbackDir: ".myapp"` gives `$HOME/.myapp`.
-	 */
+  * A single dot-directory under `$HOME` that all four kinds collapse to.
+  *
+  * **Details**
+  *
+  * Relative to `$HOME`: `fallbackDir: ".myapp"` gives `$HOME/.myapp`.
+  */
 	fallbackDir: S.optionalKey(S.String).annotateKey({ description: "A single dot-directory under HOME that all four kinds collapse to." }),
 	/** Absolute per-kind overrides. */
 	dirs: S.optionalKey(AppDirOverrides).annotateKey({ description: "Absolute per-kind overrides." }),
@@ -213,7 +219,8 @@ export type AppDirsOptions = typeof AppDirsOptions.Type;
 /**
  * App-namespaced directory resolution and on-demand creation.
  *
- * @remarks
+ * **Details**
+ *
  * `dirs` is a **value**, not an `Effect`: the environment is fixed when the
  * layer is built, so resolution happens there, exactly once. Reading a path
  * cannot fail and cannot be observed to do IO. Only the `ensure*` operations
@@ -235,12 +242,13 @@ export interface AppDirsShape {
 	/** Create the state directory if it does not exist, and return it. */
 	readonly ensureState: Effect.Effect<string, AppDirsError>;
 	/**
-	 * Create the runtime directory if there is one, and return it.
-	 *
-	 * @remarks
-	 * `Option.none()` when no runtime directory is configured — nothing is created
-	 * and nothing fails.
-	 */
+  * Create the runtime directory if there is one, and return it.
+  *
+  * **Details**
+  *
+  * `Option.none()` when no runtime directory is configured — nothing is created
+  * and nothing fails.
+  */
 	readonly ensureRuntime: Effect.Effect<O.Option<string>, AppDirsError>;
 	/** Create every directory that exists in the resolution, and return them all. */
 	readonly ensure: Effect.Effect<ResolvedAppDirs, AppDirsError>;
@@ -363,12 +371,14 @@ const badNamespace = (namespace: string): AppDirsNamespaceError | undefined => {
 /**
  * App-namespaced XDG directories, with on-demand creation.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `AppDirs.layer` is a layer-**returning function**: calling it twice builds two
  * independent services. Bind its result to a const and provide that const, per
  * the layer memoization discipline.
  *
- * @example
+ * **Example** (Provide application directories and ensure the config directory)
+ *
  * ```ts
  * import { AppDirs, Xdg } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -389,14 +399,15 @@ const badNamespace = (namespace: string): AppDirsNamespaceError | undefined => {
  */
 export class AppDirs extends Context.Service<AppDirs, AppDirsShape>()($I`AppDirs`) {
 	/**
-	 * Resolve the namespace's directories against the ambient {@link Xdg}
-	 * environment and platform.
-	 *
-	 * @remarks
-	 * The error channel is `never`. The one failure that could happen during
-	 * resolution — an unset `HOME` — surfaces on {@link Xdg.layer} as an
-	 * `XdgEnvError`, before an `AppDirs` exists at all.
-	 */
+  * Resolve the namespace's directories against the ambient {@link Xdg}
+  * environment and platform.
+  *
+  * **Details**
+  *
+  * The error channel is `never`. The one failure that could happen during
+  * resolution — an unset `HOME` — surfaces on {@link Xdg.layer} as an
+  * `XdgEnvError`, before an `AppDirs` exists at all.
+  */
 	static layer(options: AppDirsOptions): Layer.Layer<AppDirs, never, Xdg | FileSystem.FileSystem | Path.Path> {
 		return Layer.effect(
 			AppDirs,

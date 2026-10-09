@@ -133,7 +133,8 @@ const restOf = (wire: { readonly [k: string]: unknown }, known: HashSet.HashSet<
 /**
  * Whether the shorthand string can still carry everything this value holds.
  *
- * @remarks
+ * **Gotchas**
+ *
  * A shorthand is only a `url` — it has no syntax for `type`, `directory` or an
  * unknown key. So a repository decoded from a string that later GAINS one of
  * those is no longer described by the wire it remembers, and replaying that
@@ -169,13 +170,15 @@ const isFaithfulBugs = (wire: { readonly [k: string]: unknown }, bugs: Bugs): bo
 /**
  * Where a package's source lives.
  *
- * @remarks
+ * **Details**
+ *
  * `url` is **verbatim** — exactly the string the manifest carried, shorthand
  * and all. Normalization is offered through {@link Repository.browseUrl} and
  * {@link Repository.gitUrl}, so reading a manifest never rewrites it and a
  * caller that wants the original still has it.
  *
- * @example
+ * **Example** (Derive a browse URL from repository shorthand)
+ *
  * ```ts
  * import { Repository } from "./index.ts";
  * import * as S from "effect/Schema";
@@ -215,53 +218,55 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
 	}
 
 	/**
-	 * The browsable URL of **this package** — {@link Repository.browseUrl}
-	 * descended into `directory` when the package is a monorepo
-	 * member.
-	 *
-	 * @remarks
-	 * Prefer this over `browseUrl` whenever the question is "where does this
-	 * package live". For a monorepo, `browseUrl` answers with the repository
-	 * root, so every member of the repository reports the same location — which
-	 * matters because that URL is exactly what a consumer (a docs site's
-	 * structured data, say) uses to tell two packages apart.
-	 *
-	 * The three outcomes are deliberately distinct:
-	 *
-	 * - **No `directory`** — the package *is* the repository root, so this is
-	 *   `browseUrl`. A correct answer, not a missing one.
-	 * - **`directory` on a host this model knows** (GitHub, GitLab, Bitbucket) —
-	 *   the descended URL.
-	 * - **`directory` on any other host** — `Option.none()`. The path convention
-	 *   for browsing a subdirectory is per-forge and cannot be guessed, and
-	 *   fabricating one would produce a URL that resolves to nothing while
-	 *   looking authoritative.
-	 *
-	 * What to do with that `none` is a policy this getter deliberately leaves to
-	 * the caller, because it depends on what is being filled in. Falling back to
-	 * {@link Repository.browseUrl} is reasonable wherever a less precise answer
-	 * beats no answer — the repository root is a *true* location for the package,
-	 * merely one that does not distinguish it from its siblings. Omit the value
-	 * instead wherever that lack of distinction is the whole point. What is never
-	 * reasonable is inventing a subdirectory path for a host this model does not
-	 * recognize, which is the case this `none` exists to prevent.
-	 *
-	 * A `directory` that escapes the repository (any `..` segment) is refused the
-	 * same way. One that resolves to the root itself (`"."`, `"/"`) is the root.
-	 *
-	 * @example
-	 * ```ts
-	 * import { Repository } from "./index.ts";
-	 * import * as S from "effect/Schema";
-	 *
-	 * const repo = S.decodeUnknownSync(Repository.FromValue)({
-	 *   url: "effected/kit",
-	 *   directory: "packages/spdx",
-	 * });
-	 * repo.directoryUrl;
-	 * // => Option.some("https://github.com/effected/kit/tree/HEAD/packages/spdx")
-	 * ```
-	 */
+  * The browsable URL of **this package** — {@link Repository.browseUrl}
+  * descended into `directory` when the package is a monorepo
+  * member.
+  *
+  * **Details**
+  *
+  * Prefer this over `browseUrl` whenever the question is "where does this
+  * package live". For a monorepo, `browseUrl` answers with the repository
+  * root, so every member of the repository reports the same location — which
+  * matters because that URL is exactly what a consumer (a docs site's
+  * structured data, say) uses to tell two packages apart.
+  *
+  * The three outcomes are deliberately distinct:
+  *
+  * - **No `directory`** — the package *is* the repository root, so this is
+  *   `browseUrl`. A correct answer, not a missing one.
+  * - **`directory` on a host this model knows** (GitHub, GitLab, Bitbucket) —
+  *   the descended URL.
+  * - **`directory` on any other host** — `Option.none()`. The path convention
+  *   for browsing a subdirectory is per-forge and cannot be guessed, and
+  *   fabricating one would produce a URL that resolves to nothing while
+  *   looking authoritative.
+  *
+  * What to do with that `none` is a policy this getter deliberately leaves to
+  * the caller, because it depends on what is being filled in. Falling back to
+  * {@link Repository.browseUrl} is reasonable wherever a less precise answer
+  * beats no answer — the repository root is a *true* location for the package,
+  * merely one that does not distinguish it from its siblings. Omit the value
+  * instead wherever that lack of distinction is the whole point. What is never
+  * reasonable is inventing a subdirectory path for a host this model does not
+  * recognize, which is the case this `none` exists to prevent.
+  *
+  * A `directory` that escapes the repository (any `..` segment) is refused the
+  * same way. One that resolves to the root itself (`"."`, `"/"`) is the root.
+  *
+  * **Example** (Browse a package directory within a monorepo)
+  *
+  * ```ts
+  * import { Repository } from "./index.ts";
+  * import * as S from "effect/Schema";
+  *
+  * const repo = S.decodeUnknownSync(Repository.FromValue)({
+  *   url: "effected/kit",
+  *   directory: "packages/spdx",
+  * });
+  * repo.directoryUrl;
+  * // => Option.some("https://github.com/effected/kit/tree/HEAD/packages/spdx")
+  * ```
+  */
 	get directoryUrl(): O.Option<string> {
 		const directory = this.directory;
 		if (directory === undefined) return this.browseUrl;
@@ -336,7 +341,8 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
 /**
  * Where to report problems with a package.
  *
- * @remarks
+ * **Details**
+ *
  * npm permits a bare URL string, or an object with `url`, `email`, or both —
  * an email-only entry is legal, which is why `url` is optional.
  *

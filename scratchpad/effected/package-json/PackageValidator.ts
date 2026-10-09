@@ -178,7 +178,8 @@ const runRules = Effect.fn("PackageValidator.validate")(function* (pkg: Package,
  * `PackageValidator.layer` for {@link defaultRules} or `PackageValidator.layerRules`
  * for a custom rule set.
  *
- * @example
+ * **Example** (Reject a package missing default validation requirements)
+ *
  * ```ts
  * import { Package, PackageValidator } from "./index.ts";
  * import * as Effect from "effect/Effect";

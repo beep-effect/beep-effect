@@ -2,7 +2,8 @@
  * Typed GitHub REST and GraphQL for Effect: a route-keyed client, one error
  * taxonomy, GitHub App auth, and one resource service per GitHub noun.
  *
- * @remarks
+ * **Details**
+ *
  * `GitHubClient.request` types both the parameters and the returned `data` from
  * the route literal. Every REST failure is a `GitHubError` whose `kind` you
  * branch on. Resource services (`GitBranch`, `GitTag`, `CheckRun`,
@@ -11,7 +12,8 @@
  * deployment environments and security settings. `GitHubApp` mints and revokes
  * installation tokens.
  *
- * @example
+ * **Example** (Read the default branch with a configured GitHub client)
+ *
  * ```ts
  * import { GitHubClient } from "./index.ts";
  * import * as Effect from "effect/Effect";

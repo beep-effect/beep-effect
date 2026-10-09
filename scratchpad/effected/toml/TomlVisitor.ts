@@ -220,7 +220,8 @@ const collectEventsOrFail = (text: string): Effect.Effect<Array<TomlVisitorEvent
  * Walks TOML text as a `Stream` of table, array-table, key-value and comment
  * events in document order, without building a value. Not instantiable.
  *
- * @example
+ * **Example** (Collect dotted key paths from TOML visitor events)
+ *
  * ```ts
  * import { TomlVisitor, TomlVisitorEvent } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -240,17 +241,18 @@ export class TomlVisitor {
 	private constructor() {}
 
 	/**
-	 * Create a `Stream` of `TomlVisitorEvent` from TOML text, in document
-	 * order. Fails the stream with {@link TomlParseError} on the first
-	 * lex/parse or semantic violation — never as an unhandled defect.
-	 *
-	 * @remarks
-	 * Construction is eager, not on-demand: the full text is parsed, walked by
-	 * `analyze` and sorted into document order up front, inside the `Effect`
-	 * `Stream.unwrap` runs to build the stream. Only enumeration of the
-	 * already-built event array is streamed — `Stream.take` still short-circuits
-	 * consumption, but it does not avoid the initial parse/analyze/sort pass.
-	 */
+  * Create a `Stream` of `TomlVisitorEvent` from TOML text, in document
+  * order. Fails the stream with {@link TomlParseError} on the first
+  * lex/parse or semantic violation — never as an unhandled defect.
+  *
+  * **Gotchas**
+  *
+  * Construction is eager, not on-demand: the full text is parsed, walked by
+  * `analyze` and sorted into document order up front, inside the `Effect`
+  * `Stream.unwrap` runs to build the stream. Only enumeration of the
+  * already-built event array is streamed — `Stream.take` still short-circuits
+  * consumption, but it does not avoid the initial parse/analyze/sort pass.
+  */
 	static visit(text: string): Stream.Stream<TomlVisitorEvent, TomlParseError> {
 		return Stream.unwrap(collectEventsOrFail(text).pipe(Effect.map(Stream.fromIterable)));
 	}

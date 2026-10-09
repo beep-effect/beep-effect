@@ -12,7 +12,8 @@ const UncaughtMode = RejectionMode.pick(["exit", "exitBeforeConnect"]);
  * The slice of the host process {@link ProcessGuard.run} uses. Node's
  * `process` satisfies it.
  *
- * @remarks
+ * **Details**
+ *
  * Structural on purpose: the guard never reads a global, so a test passes a
  * double and a front end passes `process` from its own `main`.
  *
@@ -36,7 +37,8 @@ export interface ProcessGuardHost {
 /**
  * When a stray exception or rejection ends the process.
  *
- * @remarks
+ * **Details**
+ *
  * `"exit"` exits 1 whenever it happens. `"exitBeforeConnect"` exits 1 until
  * the caller reports the server connected with
  * {@link ProcessGuardControl.markConnected}, then logs and keeps serving: a
@@ -75,7 +77,8 @@ export type ProcessGuardInjection = typeof ProcessGuardInjection.Type;
  * What {@link ProcessGuardOptions.load} is handed: the two moments only the
  * caller can see.
  *
- * @remarks
+ * **Details**
+ *
  * Plain callbacks, so a caller with no Effect runtime (a
  * `vscode-languageserver` server, a hand-written socket loop) uses them the
  * same way an Effect launcher does: an MCP launcher passes `markConnected`
@@ -86,16 +89,17 @@ export type ProcessGuardInjection = typeof ProcessGuardInjection.Type;
  */
 export interface ProcessGuardControl {
 	/**
-	 * Report the server connected: from here on `"exitBeforeConnect"` logs and
-	 * keeps going. Call it once the server is serving. Later calls do nothing.
-	 * Safe to call after `load` has resolved, which is the usual case.
-	 *
-	 * @remarks
-	 * For a server framed over stdio (MCP, LSP), "serving" is the moment its
-	 * transport is built and reading stdin, before the first request arrives:
-	 * from then on a client is attached, and a stray error should be logged,
-	 * not end the session.
-	 */
+  * Report the server connected: from here on `"exitBeforeConnect"` logs and
+  * keeps going. Call it once the server is serving. Later calls do nothing.
+  * Safe to call after `load` has resolved, which is the usual case.
+  *
+  * **Details**
+  *
+  * For a server framed over stdio (MCP, LSP), "serving" is the moment its
+  * transport is built and reading stdin, before the first request arrives:
+  * from then on a client is attached, and a stray error should be logged,
+  * not end the session.
+  */
 	readonly markConnected: () => void;
 	/**
 	 * Format every report from here on with `format`, in place of the guard's
@@ -195,7 +199,8 @@ const fallbackFormat = (error: unknown): string =>
  * Transport-neutral crash guards for a server process, installed before the
  * server's module graph loads. Imported from `@effected/engine/guard`.
  *
- * @remarks
+ * **Details**
+ *
  * {@link ProcessGuard.run} registers `uncaughtException` and
  * `unhandledRejection` listeners on `host`, then awaits `load`. It launches
  * nothing itself: `load` starts the server, over whatever transport, and
@@ -213,7 +218,8 @@ const fallbackFormat = (error: unknown): string =>
  * - Every report is one line: `<label>: uncaughtException (<origin>): …`,
  *   `<label>: unhandledRejection: …` or `<label>: startup failed: …`.
  *
- * @example
+ * **Example** (Guard a server through startup and connection)
+ *
  * ```ts
  * import { ProcessGuard } from "./guard.ts";
  *
@@ -235,17 +241,18 @@ export class ProcessGuard {
 	private constructor() {}
 
 	/**
-	 * Parse a test-only crash-injection setting into {@link ProcessGuardOptions.injectCrash}: `<at>:<kind>`, where `at`
-	 * is `"load"` or `"connected"` and `kind` is `"uncaughtException"` or `"unhandledRejection"`. Anything else, or no
-	 * value, is `undefined` (no injection), so a launcher can pass an environment variable straight through and every
-	 * launcher shares one grammar.
-	 *
-	 * @example
-	 * ```ts
-	 * ProcessGuard.parseInjectCrash("connected:unhandledRejection"); // => { at: "connected", kind: "unhandledRejection" }
-	 * ProcessGuard.parseInjectCrash("later:boom"); // => undefined
-	 * ```
-	 */
+  * Parse a test-only crash-injection setting into {@link ProcessGuardOptions.injectCrash}: `<at>:<kind>`, where `at`
+  * is `"load"` or `"connected"` and `kind` is `"uncaughtException"` or `"unhandledRejection"`. Anything else, or no
+  * value, is `undefined` (no injection), so a launcher can pass an environment variable straight through and every
+  * launcher shares one grammar.
+  *
+  * **Example** (Parse crash injection settings and reject invalid values)
+  *
+  * ```ts
+  * ProcessGuard.parseInjectCrash("connected:unhandledRejection"); // => { at: "connected", kind: "unhandledRejection" }
+  * ProcessGuard.parseInjectCrash("later:boom"); // => undefined
+  * ```
+  */
 	static readonly parseInjectCrash = (value: string | undefined): ProcessGuardInjection | undefined => {
 		if (value === undefined) return undefined;
 		const [at, kind, ...rest] = Str.split(value, ":");

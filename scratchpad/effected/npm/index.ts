@@ -98,10 +98,13 @@ export { DependencyResolutionError, WorkspaceResolver } from "./WorkspaceResolve
  * when a consumer only needs the resolver contracts to type-check while
  * resolving nothing (both `rangeOf` and `versionOf` return `Option.none()`).
  *
+ * **Details**
+ *
  * Bound to a const so it memoizes by reference — never expose it through a
  * getter, which would mint a fresh layer per access and defeat memoization.
  *
- * @example
+ * **Example** (Provide both no-op dependency resolvers)
+ *
  * ```ts
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option";

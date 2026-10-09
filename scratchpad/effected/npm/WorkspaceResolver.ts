@@ -23,6 +23,8 @@ const $I = $ScratchpadId.create("effected/npm/WorkspaceResolver");
  * unmatched specifier, which resolves to `Option.none()` instead. Both
  * {@link CatalogResolver} and {@link WorkspaceResolver} fail with it.
  *
+ * **Details**
+ *
  * One case sits outside that "mechanism only" reading and belongs here
  * deliberately: a `workspace:` specifier naming a **known member that declares
  * no `version`**. It is not an unmatched specifier — the member exists — so
@@ -39,7 +41,8 @@ const $I = $ScratchpadId.create("effected/npm/WorkspaceResolver");
  * carries no `cause`. `specifier` records the specifier string that failed to
  * resolve.
  *
- * @example
+ * **Example** (Handle workspace members without a version)
+ *
  * ```ts
  * import * as Effect from "effect/Effect";
  * import { DependencyResolutionError, WorkspaceResolver } from "./index.ts";
@@ -61,17 +64,18 @@ export class DependencyResolutionError extends S.TaggedError<DependencyResolutio
 	{
 		specifier: S.String.annotateKey({ description: "The dependency specifier that could not be resolved" }),
 		/**
-		 * Why the specifier could not be resolved.
-		 *
-		 * @remarks
-		 * - `"mechanism"` — the resolution mechanism itself failed (reading or
-		 *   assembling the workspace or its catalogs); `cause` carries the failure.
-		 * - `"no-version"` — a `workspace:` specifier names a known member whose
-		 *   manifest declares no `version`; there is no `cause`.
-		 *
-		 * Defaults to `"mechanism"` when omitted, at construction and when decoding
-		 * an error encoded before the field existed.
-		 */
+   * Why the specifier could not be resolved.
+   *
+   * **Details**
+   *
+   * - `"mechanism"` — the resolution mechanism itself failed (reading or
+   *   assembling the workspace or its catalogs); `cause` carries the failure.
+   * - `"no-version"` — a `workspace:` specifier names a known member whose
+   *   manifest declares no `version`; there is no `cause`.
+   *
+   * Defaults to `"mechanism"` when omitted, at construction and when decoding
+   * an error encoded before the field existed.
+   */
 		reason: S.Literals(["mechanism", "no-version"]).pipe(
 			S.withDecodingDefaultKey(Effect.succeed("mechanism" as const)),
 			S.withConstructorDefault(Effect.succeed("mechanism" as const)),
@@ -91,6 +95,8 @@ export class DependencyResolutionError extends S.TaggedError<DependencyResolutio
  * Contract for resolving pnpm `workspace:` dependency specifiers to concrete
  * versions.
  *
+ * **Details**
+ *
  * `versionOf` takes a workspace package name and has three outcomes:
  * `Option.some(version)` with the member's concrete version (the range
  * modifier stripped); `Option.none()` when the name is **not** a known
@@ -105,7 +111,8 @@ export class DependencyResolutionError extends S.TaggedError<DependencyResolutio
  * consumers (e.g. `@effected/workspaces`) provide a working implementation
  * at the application boundary.
  *
- * @example
+ * **Example** (Resolve a workspace version with the no-op resolver)
+ *
  * ```ts
  * import * as Effect from "effect/Effect";
  * import { WorkspaceResolver } from "./index.ts";

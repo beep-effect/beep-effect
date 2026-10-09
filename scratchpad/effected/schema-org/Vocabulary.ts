@@ -89,6 +89,8 @@ function propertyMembershipIndices(index: number): HashSet.HashSet<number> {
  * A read API over the vendored schema.org vocabulary: which terms exist, how
  * the class hierarchy runs, and which properties a type may legally carry.
  *
+ * **Details**
+ *
  * This is the same data `Conformance` validates against, exported as a
  * queryable surface so a consumer building a *different* algebra over
  * schema.org does not have to re-vendor the dataset. It is offline, pinned and
@@ -106,7 +108,8 @@ function propertyMembershipIndices(index: number): HashSet.HashSet<number> {
  * `@type` as its own terms, but they are not terms schema.org defines and this
  * package does not claim to police them.
  *
- * @example
+ * **Example** (Check inherited property legality)
+ *
  * ```ts
  * import { Vocabulary } from "./conformance-entry.ts";
  *
@@ -118,7 +121,7 @@ function propertyMembershipIndices(index: number): HashSet.HashSet<number> {
  * // => false
  * ```
  *
- * @see {@link https://schema.org/docs/schemas.html | schema.org vocabulary}
+ * @see {@link https://schema.org/docs/schemas.html | schema.org vocabulary} for the schema.org vocabulary documentation
  * @public
  */
 export class Vocabulary {
@@ -143,15 +146,16 @@ export class Vocabulary {
 	}
 
 	/**
-	 * Every supertype of `type`, transitively, **excluding `type` itself**.
-	 * Empty for an unknown type and for `Thing`, which has no supertype.
-	 *
-	 * @remarks
-	 * The hierarchy is a DAG, not a tree, so this is a set rather than a chain:
-	 * `HowToStep` is simultaneously a `ListItem`, a `CreativeWork` and an
-	 * `ItemList`, and all three arms are present here along with everything
-	 * above them.
-	 */
+  * Every supertype of `type`, transitively, **excluding `type` itself**.
+  * Empty for an unknown type and for `Thing`, which has no supertype.
+  *
+  * **Details**
+  *
+  * The hierarchy is a DAG, not a tree, so this is a set rather than a chain:
+  * `HowToStep` is simultaneously a `ListItem`, a `CreativeWork` and an
+  * `ItemList`, and all three arms are present here along with everything
+  * above them.
+  */
 	static ancestorsOf(type: string): HashSet.HashSet<string> {
 		return HashSet.fromIterable(Vocabulary.ancestorsInOrder(type));
 	}
@@ -165,14 +169,15 @@ export class Vocabulary {
 	}
 
 	/**
-	 * Every property legal on `type`, **including inherited ones**. Empty for an
-	 * unknown type.
-	 *
-	 * @remarks
-	 * Inheritance is the whole content of this answer: `SoftwareSourceCode`
-	 * declares none of `license`, `name` or `description` in its own
-	 * `domainIncludes` — they arrive from `CreativeWork` and `Thing`.
-	 */
+  * Every property legal on `type`, **including inherited ones**. Empty for an
+  * unknown type.
+  *
+  * **Details**
+  *
+  * Inheritance is the whole content of this answer: `SoftwareSourceCode`
+  * declares none of `license`, `name` or `description` in its own
+  * `domainIncludes` — they arrive from `CreativeWork` and `Thing`.
+  */
 	static propertiesOf(type: string): HashSet.HashSet<string> {
 		return HashSet.fromIterable(Vocabulary.propertiesInOrder(type));
 	}
@@ -186,21 +191,22 @@ export class Vocabulary {
 	}
 
 	/**
-	 * Whether `property` is legal on `type`: is any of the property's
-	 * `domainIncludes` entries anywhere in the type's ancestor closure?
-	 *
-	 * @remarks
-	 * Two traps live in that one sentence, and a check that misses either
-	 * rejects correct graphs. Legality is **inherited** — `license` carries
-	 * exactly one `domainIncludes` entry, `CreativeWork`, and is legal on
-	 * `SoftwareSourceCode` only through it. And a property may name **many**
-	 * domains — 392 of the 1,521 do, up to 12 — so this is set intersection,
-	 * never equality against the first entry.
-	 *
-	 * `false` when either term is unknown; ask {@link Vocabulary.hasType} or
-	 * {@link Vocabulary.hasProperty} to tell those two answers apart, which is
-	 * exactly what `Conformance` does.
-	 */
+  * Whether `property` is legal on `type`: is any of the property's
+  * `domainIncludes` entries anywhere in the type's ancestor closure?
+  *
+  * **Gotchas**
+  *
+  * Two traps live in that one sentence, and a check that misses either
+  * rejects correct graphs. Legality is **inherited** — `license` carries
+  * exactly one `domainIncludes` entry, `CreativeWork`, and is legal on
+  * `SoftwareSourceCode` only through it. And a property may name **many**
+  * domains — 392 of the 1,521 do, up to 12 — so this is set intersection,
+  * never equality against the first entry.
+  *
+  * `false` when either term is unknown; ask {@link Vocabulary.hasType} or
+  * {@link Vocabulary.hasProperty} to tell those two answers apart, which is
+  * exactly what `Conformance` does.
+  */
 	static isPropertyOn(property: string, type: string): boolean {
 		return O.match(O.all([
 			MutableHashMap.get(TYPE_INDEX, type),
@@ -212,19 +218,20 @@ export class Vocabulary {
 	}
 
 	/**
-	 * The term that supersedes `term`, when schema.org has deprecated it —
-	 * `Vocabulary.supersededBy("episodes")` is `Option.some("episode")`.
-	 * `Option.none()` for a current term and for an unknown one.
-	 *
-	 * @remarks
-	 * Deprecated terms are kept in the table and are **valid but flagged**,
-	 * never reported unknown and never rejected by default, exactly as
-	 * `@effected/spdx` treats a deprecated license id.
-	 *
-	 * One lookup covers classes and properties because the two namespaces are
-	 * disjoint in release 30.0 — every class name begins uppercase and every property
-	 * name lowercase,, and no name appears in both tables.
-	 */
+  * The term that supersedes `term`, when schema.org has deprecated it —
+  * `Vocabulary.supersededBy("episodes")` is `Option.some("episode")`.
+  * `Option.none()` for a current term and for an unknown one.
+  *
+  * **Details**
+  *
+  * Deprecated terms are kept in the table and are **valid but flagged**,
+  * never reported unknown and never rejected by default, exactly as
+  * `@effected/spdx` treats a deprecated license id.
+  *
+  * One lookup covers classes and properties because the two namespaces are
+  * disjoint in release 30.0 — every class name begins uppercase and every property
+  * name lowercase,, and no name appears in both tables.
+  */
 	static supersededBy(term: string): O.Option<string> {
 		return O.match(MutableHashMap.get(TYPE_INDEX, term), {
 			onSome: (index) => MutableHashMap.get(SUPERSEDED_TYPE_MAP, index).pipe(

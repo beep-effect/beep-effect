@@ -8,12 +8,15 @@ const $I = $ScratchpadId.create("effected/schema-org/Person");
 /**
  * A schema.org `Person` — an author, maintainer or contributor.
  *
+ * **Details**
+ *
  * Carries only `Thing`-level fields plus the two person-specific ones. The
  * `CreativeWork` vocabulary (`license`, `author`, `datePublished`, …) is
  * deliberately absent: those properties are not `domainIncludes`-legal on
  * `Person`.
  *
- * @example
+ * **Example** (Create a person with a profile URL)
+ *
  * ```ts
  * import { Person } from "./index.ts";
  *

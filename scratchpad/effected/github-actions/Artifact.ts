@@ -109,23 +109,25 @@ export type ArtifactItem = typeof ArtifactItem.Type;
  */
 export interface UploadOptions {
 	/**
-	 * How long to keep it, in days.
-	 *
-	 * @remarks
-	 * Bounded by the repository's own retention setting; omitted means the
-	 * repository default. Zero or negative fails as `invalidOptions` rather than
-	 * being silently corrected, because "delete it immediately" and "keep it for
-	 * the default period" are too far apart to guess between.
-	 */
+  * How long to keep it, in days.
+  *
+  * **Details**
+  *
+  * Bounded by the repository's own retention setting; omitted means the
+  * repository default. Zero or negative fails as `invalidOptions` rather than
+  * being silently corrected, because "delete it immediately" and "keep it for
+  * the default period" are too far apart to guess between.
+  */
 	readonly retentionDays?: number | undefined;
 	/**
-	 * The zlib level, 0–9, defaulting to 6 as `@actions/artifact` does.
-	 *
-	 * @remarks
-	 * Out-of-range values are clamped. On Windows the level maps onto .NET's
-	 * `CompressionLevel`: `0` is `NoCompression`, `1..3` `Fastest`, `4..8`
-	 * `Optimal`, `9` `SmallestSize`.
-	 */
+  * The zlib level, 0–9, defaulting to 6 as `@actions/artifact` does.
+  *
+  * **Details**
+  *
+  * Out-of-range values are clamped. On Windows the level maps onto .NET's
+  * `CompressionLevel`: `0` is `NoCompression`, `1..3` `Fastest`, `4..8`
+  * `Optimal`, `9` `SmallestSize`.
+  */
 	readonly compressionLevel?: number | undefined;
 }
 
@@ -179,14 +181,15 @@ export interface ArtifactRef {
  */
 export interface ArtifactShape {
 	/**
-	 * Zip `files` — paths under `rootDirectory` — and upload them under `name`.
-	 *
-	 * @remarks
-	 * Entries are stored relative to `rootDirectory`, so what a later download
-	 * extracts is the layout the caller meant rather than its absolute path on
-	 * whichever runner produced it. A name already used in this run is refused by
-	 * the backend: artifacts are immutable within a run.
-	 */
+  * Zip `files` — paths under `rootDirectory` — and upload them under `name`.
+  *
+  * **Details**
+  *
+  * Entries are stored relative to `rootDirectory`, so what a later download
+  * extracts is the layout the caller meant rather than its absolute path on
+  * whichever runner produced it. A name already used in this run is refused by
+  * the backend: artifacts are immutable within a run.
+  */
 	readonly upload: (
 		name: string,
 		files: ReadonlyArray<string>,
@@ -209,7 +212,8 @@ const SERVICE = "github.actions.results.api.v1.ArtifactService";
 /**
  * `CreateArtifact`'s `version` field.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `7`, read off `actions/toolkit`'s own upload path. It is a *protocol*
  * version, unrelated to the `v4` in `actions/upload-artifact@v4`, and guessing
  * it from the action's major version — which is the obvious guess — produces a
@@ -220,7 +224,8 @@ const ARTIFACT_VERSION = 7;
 /**
  * The Azure half, duplicated on purpose.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `@azure/storage-blob` may be imported here, by `ActionCache` and by
  * `BlobStore.githubCache`, and nowhere else. Hoisting these two calls into a
  * shared `internal/` helper is exactly how a heavy import leaks into the graph
@@ -351,13 +356,14 @@ const make = Effect.fn("make")(function* (
 			);
 
 		/**
-		 * The SHA-256 the backend finalizes against.
-		 *
-		 * @remarks
-		 * Over the *stored zip*, streamed rather than read: an artifact is the one
-		 * payload in this package with no upper bound on size, and a runner has
-		 * roughly seven gigabytes of memory for everything.
-		 */
+   * The SHA-256 the backend finalizes against.
+   *
+   * **Details**
+   *
+   * Over the *stored zip*, streamed rather than read: an artifact is the one
+   * payload in this package with no upper bound on size, and a runner has
+   * roughly seven gigabytes of memory for everything.
+   */
 		const digestOf = (file: string, artifact: string) =>
 			digestFileHex(fs, file, "sha256").pipe(
 				Effect.mapError((cause) => ArtifactError.make({ reason: "archiveFailed", artifact, cause })),
@@ -559,7 +565,8 @@ const dies = unstubbed("Artifact.makeTest");
 /**
  * Upload, list, download and delete GitHub Actions artifacts.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Speaks the artifact **Twirp v2** protocol at `ACTIONS_RESULTS_URL`, which
  * answers with a pre-signed Azure blob url for the zip. No `@actions/artifact`
  * dependency.
@@ -575,7 +582,8 @@ const dies = unstubbed("Artifact.makeTest");
  * run only: there is no cross-run lookup, and adding one later would be
  * additive.
  *
- * @example
+ * **Example** (Upload a build log as an artifact)
+ *
  * ```ts
  * import { Artifact } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -601,17 +609,18 @@ export class Artifact extends Context.Service<Artifact, ArtifactShape>()($I`Arti
 	> = Layer.effect(this, make(azure));
 
 	/**
-	 * The service, over a supplied transport.
-	 *
-	 * @remarks
-	 * The protocol, the zip, the digest and the conflict handling are what this
-	 * package owns; the pre-signed `PUT` is not. Supplying the transport is what
-	 * lets a test exercise all of the first group without the second.
-	 *
-	 * A parameterized layer factory mints a fresh layer per call and layers
-	 * memoize by reference — bind it to a `const` rather than calling it at each
-	 * composition site.
-	 */
+  * The service, over a supplied transport.
+  *
+  * **Details**
+  *
+  * The protocol, the zip, the digest and the conflict handling are what this
+  * package owns; the pre-signed `PUT` is not. Supplying the transport is what
+  * lets a test exercise all of the first group without the second.
+  *
+  * A parameterized layer factory mints a fresh layer per call and layers
+  * memoize by reference — bind it to a `const` rather than calling it at each
+  * composition site.
+  */
 	static readonly layerWith = (
 		transfer: FileBlobTransfer,
 	): Layer.Layer<

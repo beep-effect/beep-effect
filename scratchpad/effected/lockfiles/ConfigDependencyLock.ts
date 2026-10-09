@@ -8,7 +8,8 @@ const $I = $ScratchpadId.create("effected/lockfiles/ConfigDependencyLock");
  * recorded for it — read from the lockfile's env preamble by
  * `PnpmEnvLockfile.configDependencies`.
  *
- * @remarks
+ * **Details**
+ *
  * pnpm 11 and 12 record each `configDependencies` entry of
  * `pnpm-workspace.yaml` as the root importer's `configDependencies` in the env
  * preamble document, and its integrity in the preamble's `packages:` section.

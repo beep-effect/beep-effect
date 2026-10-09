@@ -8,7 +8,8 @@ import { screenContext } from "./ScreenContext.ts";
  * Wrap `children` in the kit's providers: the theme, the glyph set, the optional size override, and a screen's cancel
  * and defect route when it has them.
  *
- * @remarks
+ * **Details**
+ *
  * The one place a kit tree's context is built, for `CliUi.run`'s screens, a live view and the public `UiProvider`,
  * so every kit hook reads the same value under each.
  *

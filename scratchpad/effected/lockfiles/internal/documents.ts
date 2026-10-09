@@ -96,7 +96,8 @@ export type PnpmStream = typeof PnpmStream.Type;
  * `PnpmEnvLockfile` the preamble, so the two readers cannot disagree about
  * which document is which or how many a stream may carry.
  *
- * @remarks
+ * **Details**
+ *
  * pnpm 11 and 12 write `pnpm-lock.yaml` as **up to two YAML documents** when
  * the workspace declares `configDependencies` or `devEngines.packageManager`:
  * an env preamble, then the lockfile proper. The rule for telling them apart
@@ -140,7 +141,8 @@ export const splitPnpmStream = Effect.fn("splitPnpmStream")(function* (content: 
  * Select the sole document of a YAML lockfile format that defines **no**
  * document framing — yarn Berry's `yarn.lock`.
  *
- * @remarks
+ * **Details**
+ *
  * yarn never writes a multi-document `yarn.lock`, so there is no writer
  * contract to read a "main" document out of one. Rather than silently taking
  * the first document (which is what a single-document parse does, and how the

@@ -60,7 +60,8 @@ export const detectEol = (text: string): Eol => (text.includes("\r\n") ? "\r\n" 
 /**
  * Collapse CRLF to LF.
  *
- * @remarks
+ * **Details**
+ *
  * Applied to section content at parse time so that the `Section` values the
  * rest of the package compares are already canonical. Doing it here rather
  * than inside equality keeps `Equal.equals` honest for a consumer comparing
@@ -165,7 +166,8 @@ const collectHits = (text: string, dialect: SectionDialect): ReadonlyArray<Marke
 /**
  * Locate every managed section, in document order.
  *
- * @remarks
+ * **Details**
+ *
  * A bounded linear pass — no recursion, so no stack-overflow surface on
  * hostile input. Sections cannot nest: a begin marker encountered while
  * another section is open is `overlappingSections`, not an inner block.

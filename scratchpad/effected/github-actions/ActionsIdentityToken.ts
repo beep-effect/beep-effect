@@ -7,7 +7,8 @@ import { OidcTokenIssuer } from "./OidcTokenIssuer.ts";
  * Serves `@effected/sbom`'s `IdentityToken` contract from the runner's own OIDC
  * token service, so signing an SBOM inside a workflow needs no further wiring.
  *
- * @remarks
+ * **Details**
+ *
  * `@effected/sbom` declares `IdentityToken` — one method, one audience,
  * one redacted token — precisely so that signing does not drag the Actions
  * runtime into every consumer that only wants to emit an SBOM. This is the
@@ -27,7 +28,8 @@ import { OidcTokenIssuer } from "./OidcTokenIssuer.ts";
  * `reason: "unavailable"` almost always means the workflow is missing
  * `permissions: id-token: write`.
  *
- * @example
+ * **Example** (Provide runner OIDC identity to the Sigstore signer)
+ *
  * ```ts
  * import { ActionsIdentityToken, OidcTokenIssuer } from "./index.ts";
  * import { SigstoreSigner } from "../sbom/index.ts";
@@ -45,14 +47,15 @@ export class ActionsIdentityToken {
 	private constructor() {}
 
 	/**
-	 * `IdentityToken` served by the runner's OIDC token service.
-	 *
-	 * @remarks
-	 * Requires {@link OidcTokenIssuer} rather than composing
-	 * `OidcTokenIssuer.layer` in, so an action that already wired the issuer —
-	 * every action using `ActionRuntime.layer` has its requirements at hand —
-	 * does not construct a second one.
-	 */
+  * `IdentityToken` served by the runner's OIDC token service.
+  *
+  * **Details**
+  *
+  * Requires {@link OidcTokenIssuer} rather than composing
+  * `OidcTokenIssuer.layer` in, so an action that already wired the issuer —
+  * every action using `ActionRuntime.layer` has its requirements at hand —
+  * does not construct a second one.
+  */
 	static readonly layer: Layer.Layer<IdentityToken, never, OidcTokenIssuer> = Layer.effect(
 		IdentityToken,
 		Effect.map(OidcTokenIssuer, (issuer) => ({

@@ -42,7 +42,8 @@ const invalid = (input: string, message: string) => Effect.fail(new SchemaIssue.
  * A structured `packageManager` value with `name`, `version` and an optional
  * `integrity` hash.
  *
- * @remarks
+ * **Details**
+ *
  * The same `<name>@<version>[+<integrity>]` triple `@effected/npm`'s
  * `PackageManagerPin` models, in its `package.json` field form. Both share the
  * strict pieces — the version is `@effected/semver`'s
@@ -74,7 +75,8 @@ const invalid = (input: string, message: string) => Effect.fail(new SchemaIssue.
  * and simply will not be installable through the pin — which is the honest
  * relationship between a document model and a provisioning contract.
  *
- * @example
+ * **Example** (Decode a package manager pin with integrity)
+ *
  * ```ts
  * import { PackageManager } from "./index.ts";
  * import * as S from "effect/Schema";
@@ -108,18 +110,19 @@ export class PackageManager extends S.Class<PackageManager>($I`PackageManager`)(
 	integrity: S.Option(CorepackIntegrityHash).annotateKey({ description: "The optional integrity hash (e.g. `sha512.abc`): `@effected/npm`'s `CorepackIntegrityHash`, the shared restriction of the `IntegrityHash` brand to the corepack `<algo>.<hex>` form." }),
 }, $I.annote("PackageManager", { description: "A structured `packageManager` value with `name`, `version` and an optional `integrity` hash." })) {
 	/**
-	 * Schema transformation between the `"name@version+integrity"` string and a
-	 * {@link PackageManager}.
-	 *
-	 * @remarks
-	 * Decoding splits on the first `@`, then on the first `+` — which always
-	 * begins the integrity, never semver build metadata — and validates each
-	 * component: the name against the lowercase grammar, the version through
-	 * `@effected/semver`'s strict parse, the integrity through
-	 * `CorepackIntegrityHash`. Every failure is a typed decode failure naming
-	 * the component that failed. Encoding prints the canonical string, which is
-	 * byte-identical to any input this codec accepts.
-	 */
+  * Schema transformation between the `"name@version+integrity"` string and a
+  * {@link PackageManager}.
+  *
+  * **Details**
+  *
+  * Decoding splits on the first `@`, then on the first `+` — which always
+  * begins the integrity, never semver build metadata — and validates each
+  * component: the name against the lowercase grammar, the version through
+  * `@effected/semver`'s strict parse, the integrity through
+  * `CorepackIntegrityHash`. Every failure is a typed decode failure naming
+  * the component that failed. Encoding prints the canonical string, which is
+  * byte-identical to any input this codec accepts.
+  */
 	static readonly FromString: S.Codec<PackageManager, string> = S.String.pipe(
 		S.decodeTo(
 			S.instanceOf(PackageManager),

@@ -18,7 +18,8 @@ import * as O from "@beep/utils/Option";
 /**
  * Returned instead of a failure when the backend answers HTTP 409.
  *
- * @remarks
+ * **Details**
+ *
  * A conflict means "this already exists", which is a success for a save and a
  * miss for a lookup — two different answers that the *caller* has to choose
  * between, so the transport hands back a sentinel rather than deciding.
@@ -33,7 +34,8 @@ export type TwirpResult<T> = T | typeof CONFLICT;
 /**
  * Why an RPC did not produce a body.
  *
- * @remarks
+ * **Details**
+ *
  * Structural rather than a formatted string. The predecessor decided
  * retryability by testing the *message* for `"HTTP 503"` and `"ECONNRESET"`,
  * which makes a reworded message a silent policy change.
@@ -83,7 +85,8 @@ export const twirpFailureFields = (
 /**
  * Whether retrying could plausibly help.
  *
- * @remarks
+ * **Details**
+ *
  * A transport fault never completed, so nothing was observed; `408`, `429` and
  * `5xx` are the backend saying "later". Everything else — a `400`, a `403`, a
  * body that is not JSON — is the backend saying "never", and retrying it four
@@ -107,7 +110,8 @@ const RETRIES = 4;
 /**
  * A Twirp RPC: `POST <baseUrl>twirp/<service>/<method>` with a JSON body.
  *
- * @remarks
+ * **Details**
+ *
  * Retry is applied **here**, not by each caller, so no protocol can be shipped
  * without it. A non-retryable failure never sleeps, which is what keeps the
  * ordinary failure tests clock-free.
@@ -153,7 +157,8 @@ const hasField = <Key extends string>(body: object, key: Key): body is object & 
 /**
  * Read a Twirp JSON field under either spelling.
  *
- * @remarks
+ * **Details**
+ *
  * The backend is an internal GitHub protocol reverse-engineered from
  * `actions/toolkit`, and the two halves of it do not agree: protobuf JSON emits
  * `signedUploadUrl` while the cache RPCs have been observed emitting

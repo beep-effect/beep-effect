@@ -39,7 +39,8 @@ const $I = $ScratchpadId.create("effected/package-json/PackageManifest");
  * field of {@link Package} with `name` and `version` optional and
  * `packageManager` accepting the range spelling.
  *
- * @remarks
+ * **Details**
+ *
  * **Lenient about absence, strict about shape.** npm requires `name` and
  * `version` only for a package that will be published; the idiomatic private
  * workspace root (`{ "private": true, "packageManager": "pnpm@11.2.0" }`)
@@ -64,7 +65,8 @@ const $I = $ScratchpadId.create("effected/package-json/PackageManifest");
  * which never goes through a model at all. Mutation statics live on the
  * strict {@link Package}.
  *
- * @example
+ * **Example** (Decode a private workspace root with a package manager range)
+ *
  * ```ts
  * import { PackageManifest } from "./index.ts";
  * import * as Effect from "effect/Effect";

@@ -8,7 +8,8 @@ const $I = $ScratchpadId.create("effected/lockfiles/PackageManagerLock");
  * recorded for it — read from the lockfile's env preamble by
  * `PnpmEnvLockfile.packageManager`.
  *
- * @remarks
+ * **Details**
+ *
  * pnpm records the package manager a workspace declares in
  * `devEngines.packageManager` as the root importer's
  * `packageManagerDependencies` in the env preamble document, and resolves it

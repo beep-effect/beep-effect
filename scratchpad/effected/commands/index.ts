@@ -2,7 +2,8 @@
  * Structured command running and CLI tool discovery over Effect core's
  * `ChildProcessSpawner` contract.
  *
- * @remarks
+ * **Details**
+ *
  * This package owns no subprocess vocabulary and no spawner backend. Commands
  * are core `ChildProcess.Command` values, built with core's own constructors
  * and combinators; the spawner arrives through the `R` channel and the
@@ -10,7 +11,8 @@
  * adds is the *outcome* (collected output, typed failure), the *policy*
  * (timeout, redaction, transience) and the *tool* (discovery, version, source).
  *
- * @example
+ * **Example** (Resolve Biome through pnpm and run a check)
+ *
  * ```ts
  * import { LocalExec, Run, Tool, ToolDiscovery } from "./index.ts";
  * import { NodeServices } from "@effect/platform-node";

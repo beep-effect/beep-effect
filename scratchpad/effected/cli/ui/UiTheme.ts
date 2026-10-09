@@ -73,7 +73,8 @@ const useScreen = (): ScreenContextValue => {
 /**
  * The Ink `Text` props for `style` at `color`.
  *
- * @remarks
+ * **Details**
+ *
  * At `"none"` it gives no styling props at all, not even bold or dim, so a frame is escape-free by construction;
  * Ink's colour level held at 0 is the backstop. A flag set to `false` adds no prop.
  *
@@ -82,7 +83,6 @@ const useScreen = (): ScreenContextValue => {
  *
  * @param style - the resolved style
  * @param color - the stream's colour level; omitted, every prop is emitted for Ink's chalk to gate
- *
  * @public
  */
 export const inkProps: {
@@ -105,7 +105,8 @@ export const inkProps: {
 /**
  * The theme of the stream the mounted screen draws on.
  *
- * @remarks
+ * **Details**
+ *
  * A React hook: call it from a component rendered inside a `CliUi.run` screen or a `UiProvider`.
  *
  * @public
@@ -115,7 +116,8 @@ export const useTheme = (): Cli.StreamTheme => useScreen().theme;
 /**
  * The glyph set of the mounted screen, so a component draws Unicode or ASCII glyphs to match the rest of the output.
  *
- * @remarks
+ * **Details**
+ *
  * A React hook: call it from a component rendered inside a `CliUi.run` screen or a `UiProvider`.
  *
  * @public
@@ -125,7 +127,8 @@ export const useGlyphs = (): Cli.GlyphSet => useScreen().glyphs;
 /**
  * Text painted with a theme token or style, through the mounted screen's theme.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Its children are drawn as given. The kit's widgets sanitise every string they draw from data (escapes removed,
  * line breaks folded) before handing it here; text a consumer passes to `Styled`, or to Ink's own `Text`, is the
  * consumer's to sanitise, with `Fmt.sanitize`. Ink keeps the escape sequences it is handed, so text from data drawn
@@ -133,7 +136,6 @@ export const useGlyphs = (): Cli.GlyphSet => useScreen().glyphs;
  * height budget did not count.
  *
  * @param props - the token or style, and the text
- *
  * @public
  */
 export const Styled = (props: StyledProps): ReactElement => {
@@ -150,7 +152,8 @@ const known = (reported: number | undefined, fallback: number): number =>
  * The usable terminal size: the stdout Ink draws on, less one column and one row, re-read on every render and when
  * the terminal resizes; or, under a `UiProvider` given a `size`, that size less one column and one row.
  *
- * @remarks
+ * **Gotchas**
+ *
  * A width or height the stream does not report, or reports as 0 (a pty that `script` opens says `0 0`), is unknown and
  * reads as 80 columns by 24 rows, so a screen never lays itself out at width 0. This is not Ink's own fallback, which
  * first asks the process's terminal (`terminal-size`: the tty, `COLUMNS`, `tput`) and only then uses 80x24; the kit

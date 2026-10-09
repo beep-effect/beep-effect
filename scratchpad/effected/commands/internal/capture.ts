@@ -17,7 +17,8 @@ export class OutputTooLarge extends S.TaggedError<OutputTooLarge>($I`OutputTooLa
  * Collects a byte stream into a string, failing once more than `limit` bytes
  * have arrived.
  *
- * @remarks
+ * **Details**
+ *
  * The budget is enforced **during** accumulation, not after: checking the
  * length of an already-collected string would mean the memory was already
  * spent, which is the exact failure the budget exists to prevent. Counting is

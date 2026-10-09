@@ -60,23 +60,24 @@ export class ActionStateError extends S.TaggedError<ActionStateError>($I`ActionS
  */
 export interface ActionStateShape {
 	/**
-	 * Persist a value for a later phase.
-	 *
-	 * @remarks
-	 * **The schema's ENCODED form must be plain JSON** — `GITHUB_STATE` is a
-	 * text file and the value crosses it as `JSON.stringify(encoded)`. A schema
-	 * whose encoded side is a class instance (`Schema.Option`'s is an `Option`,
-	 * serialized via its `toJSON` to `{"_id":"Option",…}`) writes something no
-	 * later phase can decode; use the plain-JSON codec instead —
-	 * `Schema.OptionFromNullOr` for an optional value.
-	 *
-	 * Every save proves the rule: the encoded value is round-tripped through
-	 * `JSON.stringify`/`JSON.parse` and re-decoded, and a value that does not
-	 * survive fails HERE, typed (`reason: "notPlainJson"`, naming the key) —
-	 * rather than one phase later as a `malformed` mystery in `post` that
-	 * `main` believed it saved. Action state is small by protocol, so the
-	 * per-save round-trip costs effectively nothing.
-	 */
+  * Persist a value for a later phase.
+  *
+  * **Gotchas**
+  *
+  * **The schema's ENCODED form must be plain JSON** — `GITHUB_STATE` is a
+  * text file and the value crosses it as `JSON.stringify(encoded)`. A schema
+  * whose encoded side is a class instance (`Schema.Option`'s is an `Option`,
+  * serialized via its `toJSON` to `{"_id":"Option",…}`) writes something no
+  * later phase can decode; use the plain-JSON codec instead —
+  * `Schema.OptionFromNullOr` for an optional value.
+  *
+  * Every save proves the rule: the encoded value is round-tripped through
+  * `JSON.stringify`/`JSON.parse` and re-decoded, and a value that does not
+  * survive fails HERE, typed (`reason: "notPlainJson"`, naming the key) —
+  * rather than one phase later as a `malformed` mystery in `post` that
+  * `main` believed it saved. Action state is small by protocol, so the
+  * per-save round-trip costs effectively nothing.
+  */
 	readonly save: <A, I>(key: string, value: A, schema: S.Codec<A, I>) => Effect.Effect<void, ActionStateError>;
 	/** Read a value saved by an earlier phase. */
 	readonly get: <A, I>(key: string, schema: S.Codec<A, I>) => Effect.Effect<A, ActionStateError>;
@@ -86,13 +87,14 @@ export interface ActionStateShape {
 		schema: S.Codec<A, I>,
 	) => Effect.Effect<O.Option<A>, ActionStateError>;
 	/**
-	 * Persist a secret, masking it in the runner log first.
-	 *
-	 * @remarks
-	 * `GITHUB_STATE` is plaintext by GitHub's protocol — a `Redacted` cannot
-	 * survive that boundary by design — so masking is the only available
-	 * defense, and coupling it to the write is what makes it unforgettable.
-	 */
+  * Persist a secret, masking it in the runner log first.
+  *
+  * **Details**
+  *
+  * `GITHUB_STATE` is plaintext by GitHub's protocol — a `Redacted` cannot
+  * survive that boundary by design — so masking is the only available
+  * defense, and coupling it to the write is what makes it unforgettable.
+  */
 	readonly saveSecret: (key: string, secret: string) => Effect.Effect<void, ActionStateError>;
 }
 
@@ -169,14 +171,16 @@ const dies = unstubbed("ActionState.makeTest");
 /**
  * State that survives the `pre` → `main` → `post` phase boundary.
  *
- * @remarks
+ * **Details**
+ *
  * Each phase of an action is a **separate process**. GitHub's protocol is a
  * write-only file (`GITHUB_STATE`) whose entries the runner republishes to the
  * next phase as `STATE_<key>` environment variables — so saving and reading go
  * through different mechanisms, which is why this is a service rather than a
  * pair of helpers. Every member fails with {@link ActionStateError}.
  *
- * @example
+ * **Example** (Save and retrieve a server PID across action phases)
+ *
  * ```ts
  * import { ActionState } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -202,12 +206,13 @@ export class ActionState extends Context.Service<ActionState, ActionStateShape>(
 	$I`ActionState`,
 ) {
 	/**
-	 * The live service, writing to the runner's `GITHUB_STATE` file and reading
-	 * the `STATE_<key>` variables it republishes.
-	 *
-	 * @remarks
-	 * `ActionRuntime.layer` already provides every requirement.
-	 */
+  * The live service, writing to the runner's `GITHUB_STATE` file and reading
+  * the `STATE_<key>` variables it republishes.
+  *
+  * **Details**
+  *
+  * `ActionRuntime.layer` already provides every requirement.
+  */
 	static readonly layer: Layer.Layer<ActionState, never, ActionEnvironment | FileSystem.FileSystem | ActionOutputs> =
 		Layer.effect(this, make);
 

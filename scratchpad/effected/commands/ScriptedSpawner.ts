@@ -23,7 +23,8 @@ class ScriptedPipelineError extends S.TaggedError<ScriptedPipelineError>($I`Scri
 /**
  * One scripted outcome for a spawned command.
  *
- * @remarks
+ * **Details**
+ *
  * A completed run is an object of optional fields — `stdout` and `stderr`
  * default to empty, `exit` to `0`, so `{}` scripts a silent success. Setting
  * `hang: true` makes the handle's `exitCode` never resolve, which exercises a
@@ -93,7 +94,8 @@ const CommandOptions = S.Struct({
 /**
  * What the scripted spawner observed for one spawn, in call order.
  *
- * @remarks
+ * **Details**
+ *
  * `cwd`, `env` and `extendEnv` are conveniences lifted from `options`, which
  * carries the full `ChildProcess.CommandOptions` exactly as the spawner
  * received them. A spawn is recorded when it *runs* — a failed spawn (the
@@ -137,7 +139,8 @@ const spawnError = (tag: "NotFound" | "PermissionDenied", command: string, code:
  * A scripted `ChildProcessSpawner` test double: script each spawn's outcome,
  * read back what was spawned.
  *
- * @remarks
+ * **Details**
+ *
  * `Run` is deliberately free functions over core's `ChildProcessSpawner` —
  * there is no runner service in this package to stub, so the seam a test
  * replaces is the spawner itself. Hand-scripting core's contract means
@@ -155,7 +158,8 @@ const spawnError = (tag: "NotFound" | "PermissionDenied", command: string, code:
  * script each side separately, or run the pipeline e2e against a real
  * platform layer.
  *
- * @example
+ * **Example** (Script a Git revision lookup and inspect its spawn)
+ *
  * ```ts
  * import { Run, ScriptedSpawner } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -189,16 +193,17 @@ export class ScriptedSpawner {
 	}
 
 	/**
-	 * A scripted spawner: `script` receives the executable and argv of each
-	 * spawn and returns either a completed-run {@link ScriptResult} or a
-	 * `PlatformError` to fail the spawn with.
-	 *
-	 * @remarks
-	 * The handle a completed run serves reports `pid` `4242`, `isRunning`
-	 * `false`, and drains `stdin`; `exitCode` resolves to the scripted `exit`
-	 * (or never, under `hang: true`). Running the handle's `unref` — as
-	 * `Run.detach` does — flips the record's `unrefed` flag.
-	 */
+  * A scripted spawner: `script` receives the executable and argv of each
+  * spawn and returns either a completed-run {@link ScriptResult} or a
+  * `PlatformError` to fail the spawn with.
+  *
+  * **Details**
+  *
+  * The handle a completed run serves reports `pid` `4242`, `isRunning`
+  * `false`, and drains `stdin`; `exitCode` resolves to the scripted `exit`
+  * (or never, under `hang: true`). Running the handle's `unref` — as
+  * `Run.detach` does — flips the record's `unrefed` flag.
+  */
 	static readonly make = (script: SpawnScript): ScriptedSpawner => {
 		const spawns: Array<SpawnRecord> = [];
 		const layer = Layer.succeed(

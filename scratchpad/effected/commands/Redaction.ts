@@ -14,7 +14,8 @@ export const REDACTED = "***";
  * Argument tokens whose *following* positional (or `=`-joined value) is a
  * secret. Lowercase; matching is case-insensitive.
  *
- * @remarks
+ * **Gotchas**
+ *
  * This is the heuristic backstop, not the primary mechanism — it can only know
  * about flags someone thought to list. The primary mechanism is
  * {@link Redaction.applyArgs}, which redacts by **value**: the caller says what
@@ -42,7 +43,8 @@ const AUTH_KEY = /:(?:_authtoken|_password)$/i;
 /**
  * The distinct, non-empty secret values, longest first.
  *
- * @remarks
+ * **Gotchas**
+ *
  * Longest-first is load-bearing: redacting `"ab"` before `"abcd"` rewrites
  * `"abcd"` to `"***cd"`, leaking `"cd"` — a fragment of the longer secret.
  * Empty values are dropped because `"abc".split("").join("***")` would insert
@@ -113,7 +115,8 @@ const scrubArgs = (
 /**
  * Secret scrubbing for command arguments and captured output.
  *
- * @remarks
+ * **Details**
+ *
  * Two mechanisms, deliberately layered. {@link Redaction.apply} and
  * {@link Redaction.applyArgs} redact **by value** — the caller declares its
  * secrets as `Redacted` and every occurrence is removed wherever it appears.
@@ -126,19 +129,20 @@ export class Redaction {
 	private constructor() {}
 
 	/**
-	 * Replaces every occurrence of every secret's value in `text` with
-	 * {@link REDACTED}.
-	 *
-	 * @remarks
-	 * Exact, literal matching — no pattern compilation, no encoding-aware search. A
-	 * secret that reaches the text base64-encoded, URL-encoded, or split across a
-	 * line break is **not** found; declare the encoded form as a secret too if that
-	 * is a real risk.
-	 *
-	 * A secret composed only of the placeholder's own characters (`*`, `**`, `***`)
-	 * cannot be fully removed, because the replacement reintroduces it. That is a
-	 * documented limitation, not a defect.
-	 */
+  * Replaces every occurrence of every secret's value in `text` with
+  * {@link REDACTED}.
+  *
+  * **Gotchas**
+  *
+  * Exact, literal matching — no pattern compilation, no encoding-aware search. A
+  * secret that reaches the text base64-encoded, URL-encoded, or split across a
+  * line break is **not** found; declare the encoded form as a secret too if that
+  * is a real risk.
+  *
+  * A secret composed only of the placeholder's own characters (`*`, `**`, `***`)
+  * cannot be fully removed, because the replacement reintroduces it. That is a
+  * documented limitation, not a defect.
+  */
 	static readonly apply = apply;
 
 	/**
@@ -149,15 +153,16 @@ export class Redaction {
 	static readonly applyArgs = applyArgs;
 
 	/**
-	 * Heuristic backstop: redact any argv value that is introduced by a known
-	 * secret-bearing flag or npm auth key, in either the separated
-	 * (`--token abc`) or inline (`--token=abc`) form.
-	 *
-	 * @remarks
-	 * This catches secrets the caller forgot to declare; it cannot catch a flag
-	 * nobody listed. Prefer {@link Redaction.applyArgs} with the actual
-	 * `Redacted` values — this runs *in addition*, never instead.
-	 */
+  * Heuristic backstop: redact any argv value that is introduced by a known
+  * secret-bearing flag or npm auth key, in either the separated
+  * (`--token abc`) or inline (`--token=abc`) form.
+  *
+  * **Gotchas**
+  *
+  * This catches secrets the caller forgot to declare; it cannot catch a flag
+  * nobody listed. Prefer {@link Redaction.applyArgs} with the actual
+  * `Redacted` values — this runs *in addition*, never instead.
+  */
 	static readonly scrubArgs = scrubArgs;
 
 	/** Flags treated as secret-bearing by {@link Redaction.scrubArgs}. See {@link SECRET_FLAGS}. */

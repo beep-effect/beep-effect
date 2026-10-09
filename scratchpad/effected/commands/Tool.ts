@@ -7,7 +7,8 @@ const $I = $ScratchpadId.create("effected/commands/Tool");
 /**
  * Where a tool must be found for a resolution to succeed.
  *
- * @remarks
+ * **Details**
+ *
  * `"any"` (the default) accepts either location, preferring the project-local
  * one; `"local"` and `"global"` require that location specifically; `"both"`
  * requires the tool in both places.
@@ -27,7 +28,8 @@ export type ToolSource = typeof ToolSource.Type;
  * What to do when the global and project-local copies report different
  * versions.
  *
- * @remarks
+ * **Details**
+ *
  * `"preferLocal"` and `"preferGlobal"` pick a winner; `"fail"` refuses to
  * resolve. The fact of a mismatch is reported by `ResolvedTool.mismatch`
  * whichever policy is in force, so no separate "report only" policy exists.
@@ -52,14 +54,15 @@ export class VersionFlag extends S.TaggedClass<VersionFlag>($I`VersionFlag`)("Ve
 	/** The flag to pass, e.g. `"--version"`. Split on spaces into argv. */
 	flag: S.String.annotateKey({ description: "The flag to pass, e.g. `\"--version\"`. Split on spaces into argv." }),
 	/**
-	 * A regular-expression source whose **first capture group** is the version.
-	 *
-	 * @remarks
-	 * Omitted, the default pattern takes the first version-shaped token in the
-	 * output, which handles the common noisy forms (`Version: 2.3.1 (build …)`,
-	 * `v22.1.0`) without configuration. The pattern is developer-supplied and
-	 * therefore trusted; it is never built from a tool's output.
-	 */
+  * A regular-expression source whose **first capture group** is the version.
+  *
+  * **Details**
+  *
+  * Omitted, the default pattern takes the first version-shaped token in the
+  * output, which handles the common noisy forms (`Version: 2.3.1 (build …)`,
+  * `v22.1.0`) without configuration. The pattern is developer-supplied and
+  * therefore trusted; it is never built from a tool's output.
+  */
 	pattern: S.optionalKey(S.String).annotateKey({ description: "A regular-expression source whose **first capture group** is the version." }),
 }, $I.annote("VersionFlag", { description: "Ask the tool for its version with a flag and read the answer out of stdout." })) {}
 
@@ -85,7 +88,8 @@ export class VersionNone extends S.TaggedClass<VersionNone>($I`VersionNone`)("Ve
 /**
  * How to learn a tool's version.
  *
- * @remarks
+ * **Details**
+ *
  * A probe is plain data, so it is serializable and inspectable. A capture
  * `pattern` on {@link VersionFlag} handles unusual output formats, and the
  * default pattern handles most tools with no configuration at all.
@@ -117,15 +121,16 @@ export class Tool extends S.Class<Tool>($I`Tool`)({
 	onMismatch: MismatchPolicy.annotateKey({ description: "What to do when the two locations disagree on the version." }),
 }, $I.annote("Tool", { description: "A CLI tool to resolve, and the constraints resolution must satisfy." })) {
 	/**
-	 * Builds a `Tool` from a name, with defaults for everything else
-	 * (`--version`, `source: "any"`, `onMismatch: "preferLocal"`).
-	 *
-	 * @example
-	 * ```ts
-	 * const biome = Tool.named("biome");
-	 * const localOnly = Tool.named("biome", { source: "local" });
-	 * ```
-	 */
+  * Builds a `Tool` from a name, with defaults for everything else
+  * (`--version`, `source: "any"`, `onMismatch: "preferLocal"`).
+  *
+  * **Example** (Define Biome tools with default and local sources)
+  *
+  * ```ts
+  * const biome = Tool.named("biome");
+  * const localOnly = Tool.named("biome", { source: "local" });
+  * ```
+  */
 	static readonly named = (
 		name: string,
 		overrides?: {

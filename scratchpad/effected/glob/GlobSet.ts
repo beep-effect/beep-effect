@@ -55,7 +55,8 @@ interface Classified {
  * `patterns` — the source text of every member, preserved verbatim; the
  * classified indexes live in a private field the schema never encodes.
  *
- * @remarks
+ * **Details**
+ *
  * A member starting with `!` is an exclusion, applied after positive matching.
  * This is set-level exclusion, distinct from a single {@link GlobPattern}'s
  * whole-pattern negation.
@@ -66,7 +67,8 @@ interface Classified {
  * reads from their `enumerationPrefix`, and `crossesSegments` triggers a
  * bounded recursive descent.
  *
- * @example
+ * **Example** (Match packages while excluding a legacy package)
+ *
  * ```ts
  * import { GlobSet } from "./index.ts";
  * import * as Result from "effect/Result";
@@ -141,23 +143,24 @@ export class GlobSet extends S.Class<GlobSet>($I`GlobSet`)(
 	}
 
 	/**
-	 * Compile a pattern set, synchronously — the primitive form, mirroring
-	 * {@link GlobPattern.compileResult}. Set compilation is pure
-	 * string→predicate work with no IO and no async step, so the sync form is
-	 * the real primitive and {@link GlobSet.compile} is derived from it.
-	 *
-	 * Total: never throws for pattern input. Fails on the FIRST uncompilable
-	 * member, coming back as a `Result` failure whose {@link GlobPatternError}
-	 * names the offending source pattern in `pattern` (bang included for
-	 * exclusions).
-	 *
-	 * @remarks
-	 * For synchronous call sites that cannot host an Effect — a lint-staged
-	 * handler, a config predicate — this removes the
-	 * `Effect.runSync(Effect.result(...))` escape hatch: pair it with
-	 * `Result.isSuccess` and read `.success` directly. Effect call sites should
-	 * prefer {@link GlobSet.compile}, which carries the tracing span.
-	 */
+  * Compile a pattern set, synchronously — the primitive form, mirroring
+  * {@link GlobPattern.compileResult}. Set compilation is pure
+  * string→predicate work with no IO and no async step, so the sync form is
+  * the real primitive and {@link GlobSet.compile} is derived from it.
+  *
+  * **Details**
+  *
+  * Total: never throws for pattern input. Fails on the FIRST uncompilable
+  * member, coming back as a `Result` failure whose {@link GlobPatternError}
+  * names the offending source pattern in `pattern` (bang included for
+  * exclusions).
+  *
+  * For synchronous call sites that cannot host an Effect — a lint-staged
+  * handler, a config predicate — this removes the
+  * `Effect.runSync(Effect.result(...))` escape hatch: pair it with
+  * `Result.isSuccess` and read `.success` directly. Effect call sites should
+  * prefer {@link GlobSet.compile}, which carries the tracing span.
+  */
 	static compileResult(patterns: ReadonlyArray<string>): Result.Result<GlobSet, GlobPatternError> {
 		for (const pattern of patterns) {
 			const target = exclusionTarget(pattern) ?? pattern;

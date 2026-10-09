@@ -36,13 +36,14 @@ export class CommitSummary extends S.Class<CommitSummary>($I`CommitSummary`)({
 	/** The web URL for the commit. */
 	url: S.String.annotateKey({ description: "The web URL for the commit." }),
 	/**
-	 * The parent commit shas, in the order GitHub lists them.
-	 *
-	 * @remarks
-	 * Empty for a root commit, two or more for a merge commit. A required field,
-	 * not an optional one: every commit endpoint this package reads reports
-	 * `parents`, so "which commit(s) did this come from" never needs a raw route.
-	 */
+  * The parent commit shas, in the order GitHub lists them.
+  *
+  * **Details**
+  *
+  * Empty for a root commit, two or more for a merge commit. A required field,
+  * not an optional one: every commit endpoint this package reads reports
+  * `parents`, so "which commit(s) did this come from" never needs a raw route.
+  */
 	parents: S.Array(S.String).annotateKey({ description: "The parent commit shas, in the order GitHub lists them." }),
 }, $I.annote("CommitSummary", { description: "A commit, projected to what callers read." })) {
 	/** The message's first line. */
@@ -120,15 +121,16 @@ export interface GitHubCommitShape {
 		readonly page?: PageOptions | undefined;
 	}) => Effect.Effect<ReadonlyArray<CommitSummary>, GitHubError, Repo>;
 	/**
-	 * Compare two refs.
-	 *
-	 * @remarks
-	 * GitHub paginates this **by commit**, while the single-commit read paginates
-	 * **by file** at 300 per page — so a one-commit comparison is permanently
-	 * truncated at 300 files no matter what you pass. That is GitHub's
-	 * constraint; use {@link GitHubCommitShape.changedFiles} to page every file
-	 * of one commit.
-	 */
+  * Compare two refs.
+  *
+  * **Gotchas**
+  *
+  * GitHub paginates this **by commit**, while the single-commit read paginates
+  * **by file** at 300 per page — so a one-commit comparison is permanently
+  * truncated at 300 files no matter what you pass. That is GitHub's
+  * constraint; use {@link GitHubCommitShape.changedFiles} to page every file
+  * of one commit.
+  */
 	readonly compare: (base: string, head: string) => Effect.Effect<CommitComparison, GitHubError, Repo>;
 	/** The files one commit touched, paginated by file. */
 	readonly changedFiles: (
@@ -141,12 +143,14 @@ export interface GitHubCommitShape {
  * Read commits, compare refs and list changed files through GitHub's commits
  * API.
  *
- * @remarks
+ * **Details**
+ *
  * Provide it with {@link GitHubCommit.layer}, which needs a `GitHubClient`; each
  * method also needs a `Repo` in `R`. For commits as Git Database objects (trees,
  * parents), use `GitCommit` instead.
  *
- * @example
+ * **Example** (List changed file paths between main and feature)
+ *
  * ```ts
  * import { GitHubCommit } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -187,7 +191,8 @@ const unstubbed = (member: string): never => {
 /**
  * The minimum of a commit payload this projection reads.
  *
- * @remarks
+ * **Details**
+ *
  * `author.login` is **optional**, not required, because GitHub answers with an
  * empty object — typed `Record<string, never>` — for a commit it cannot
  * attribute to an account.

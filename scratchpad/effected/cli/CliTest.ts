@@ -69,7 +69,8 @@ const text = <E, R>(stream: Stream.Stream<Uint8Array, E, R>): Effect.Effect<stri
 /**
  * Spawn a built CLI bin hermetically and read its exit code and streams as data.
  *
- * @example
+ * **Example** (Test a built CLI version command in a sandbox)
+ *
  * ```ts
  * import * as NodeServices from "@effect/platform-node/NodeServices"
  * import { assert, it } from "@effect/vitest"
@@ -91,13 +92,14 @@ export class CliTest {
 	private constructor() {}
 
 	/**
-	 * A scoped temp directory with a fresh `HOME` and XDG tree, `NO_COLOR=1`,
-	 * and the `PATH` you pass — the host environment is never inherited.
-	 *
-	 * @remarks
-	 * Each call mints a fresh temp directory; bind the result to a `const`
-	 * within one test rather than calling this more than once per assertion.
-	 */
+  * A scoped temp directory with a fresh `HOME` and XDG tree, `NO_COLOR=1`,
+  * and the `PATH` you pass — the host environment is never inherited.
+  *
+  * **Gotchas**
+  *
+  * Each call mints a fresh temp directory; bind the result to a `const`
+  * within one test rather than calling this more than once per assertion.
+  */
 	static readonly sandbox = Effect.fn("sandbox")(function* (options: {
 		/**
 		 * The `PATH` the child sees, passed explicitly because nothing else is
@@ -121,15 +123,16 @@ export class CliTest {
 	});
 
 	/**
-	 * Run `execPath bin ...args`; a non-zero exit is returned, never failed.
-	 *
-	 * @remarks
-	 * `stdin` is never left as an inherited open pipe: when omitted or `""`
-	 * the child gets an already-ended empty input (`Stream.empty`), so a
-	 * stdin-reading bin exits instead of hanging on `effect/process`'s
-	 * default `"pipe"` stdio, which stays open until something writes to and
-	 * ends it.
-	 */
+  * Run `execPath bin ...args`; a non-zero exit is returned, never failed.
+  *
+  * **Details**
+  *
+  * `stdin` is never left as an inherited open pipe: when omitted or `""`
+  * the child gets an already-ended empty input (`Stream.empty`), so a
+  * stdin-reading bin exits instead of hanging on `effect/process`'s
+  * default `"pipe"` stdio, which stays open until something writes to and
+  * ends it.
+  */
 	static readonly run = (
 		bin: string,
 		args: ReadonlyArray<string>,

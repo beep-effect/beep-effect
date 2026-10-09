@@ -39,7 +39,8 @@ export const delimiterFor = (value: string): string => {
  * of the separators the runner's file-command parser would re-split the
  * line on.
  *
- * @remarks
+ * **Details**
+ *
  * The runner (`FileCommandManager`) locates the first `=` and the first
  * `<<` on each line and whichever comes first decides the shape: a
  * `key=value` property assignment, or a `name<<delimiter` heredoc block.

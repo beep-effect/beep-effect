@@ -221,7 +221,8 @@ const sriRestricted = S.String.pipe(
  * (`10c0/<hex>`) hash, both valid {@link (IntegrityHash:variable)} values, fails
  * this schema.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The SRI counterpart of {@link (CorepackIntegrityHash:variable)}, with the same
  * posture: it decodes to the same {@link IntegrityHashBrand} as the
  * unrestricted schema (no second brand), so a value it accepts assigns anywhere
@@ -237,7 +238,8 @@ const sriRestricted = S.String.pipe(
  * {@link InvalidSriIntegrityHashError}, which reports a failed SRI → corepack
  * conversion, not a failed decode through this schema.
  *
- * @example
+ * **Example** (Accept SRI hashes and reject corepack hashes)
+ *
  * ```ts
  * import { SriIntegrityHash } from "./index.ts";
  * import * as S from "effect/Schema";
@@ -466,6 +468,8 @@ const CorepackIntegrityHashBase: Omit<S.Opaque<IntegrityHashBrand, typeof corepa
  * (`sha224.877304e3…`). An SRI (`sha512-<base64>`) or yarn (`10c0/<hex>`) hash,
  * both valid {@link (IntegrityHash:variable)} values, fails this schema.
  *
+ * **Details**
+ *
  * The schema value also carries the SRI bridge: the `FromSri` codec decodes
  * npm's `sha512-<base64>` form (what `NpmRegistry.version()` returns, with one
  * layer of JSON quotes tolerated) into the corepack form, and `fromSri` is its
@@ -474,7 +478,6 @@ const CorepackIntegrityHashBase: Omit<S.Opaque<IntegrityHashBrand, typeof corepa
  * and sha512-only — corepack pins accept nothing weaker, so a sha256/sha1 SRI
  * hash fails typed rather than minting a pin corepack would reject.
  *
- * @remarks
  * The corepack pin tail (`<name>@<version>+<integrity>`) is the one place the
  * kit meets this form, and two schemas name it: `PackageManagerPin.integrity`
  * here and `@effected/package-json`'s `PackageManager.integrity`. Both consume
@@ -487,17 +490,8 @@ const CorepackIntegrityHashBase: Omit<S.Opaque<IntegrityHashBrand, typeof corepa
  * Reach for `IntegrityHash.isCorepack(value)` to ask the same question about a
  * raw string without decoding.
  *
- * @privateRemarks
- * Sharing is not type-enforced: a consumer that quietly reverts to a private
- * copy of the restriction compiles clean and, if the copy is faithful, passes
- * every rejection test. What sees a re-fork is **object identity**, so each
- * consumer's suite asserts its field schema IS this export
- * (`PackageManagerPin.fields.integrity.schema === CorepackIntegrityHash`, and
- * `PackageManager.fields.integrity.value === CorepackIntegrityHash` on the
- * `@effected/package-json` side), each with a control against the unrestricted
- * brand. Do not replace those with a behavioural test, which cannot fail.
+ * **Example** (Accept corepack hashes and reject SRI hashes)
  *
- * @example
  * ```ts
  * import { CorepackIntegrityHash } from "./index.ts";
  * import * as S from "effect/Schema";
@@ -509,6 +503,15 @@ const CorepackIntegrityHashBase: Omit<S.Opaque<IntegrityHashBrand, typeof corepa
  * ```
  *
  * @public
+ * @privateRemarks
+ * Sharing is not type-enforced: a consumer that quietly reverts to a private
+ * copy of the restriction compiles clean and, if the copy is faithful, passes
+ * every rejection test. What sees a re-fork is **object identity**, so each
+ * consumer's suite asserts its field schema IS this export
+ * (`PackageManagerPin.fields.integrity.schema === CorepackIntegrityHash`, and
+ * `PackageManager.fields.integrity.value === CorepackIntegrityHash` on the
+ * `@effected/package-json` side), each with a control against the unrestricted
+ * brand. Do not replace those with a behavioural test, which cannot fail.
  */
 export class CorepackIntegrityHash extends CorepackIntegrityHashBase {
     /**

@@ -59,7 +59,8 @@ const pipeAfterOddBackslashes = (text: string): boolean => {
 /**
  * Inline code: a backtick fence longer than any run inside, padded where a reader would strip or merge a space.
  *
- * @remarks
+ * **Details**
+ *
  * In a table cell a `|` is written `\|`, which GFM unescapes before it reads the code span. GFM's row scanner reads a
  * backslash and the character after it as a pair, so a `|` survives the scanner only after an odd run of backslashes,
  * and the unescape then leaves an even run: a code span in a cell cannot hold a `|` after an odd run of backslashes at
@@ -336,7 +337,8 @@ const countsMd = (walk: Walk, block: Extract<Block, { readonly _tag: "Counts" }>
 /**
  * A heading's text with any closing run of `#` escaped, so a reader does not take it for the optional closing sequence.
  *
- * @remarks
+ * **Details**
+ *
  * The text is already markdown: every backslash that came from the document was escaped as text, so a backslash can
  * never sit unescaped in front of the run.
  */

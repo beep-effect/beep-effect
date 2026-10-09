@@ -13,7 +13,8 @@ const { createHmac } = process.getBuiltinModule("node:crypto");
 /**
  * AWS Signature Version 4, for S3-compatible object stores.
  *
- * @remarks
+ * **Details**
+ *
  * **Pure**, and about a hundred lines, which is the whole argument for not
  * taking an `@aws-sdk/*` dependency to obtain it. Signing is a specified
  * algorithm over strings and HMACs; the SDK around it exists to manage
@@ -33,7 +34,8 @@ const hmac = (key: Uint8Array | string, value: string): Uint8Array =>
 /**
  * Percent-encode one path segment the way SigV4 requires.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `encodeURIComponent` leaves `!'()*` alone and AWS does not, so a key
  * containing any of them signs one string and requests another — which fails as
  * an opaque `SignatureDoesNotMatch` rather than as anything that names the
@@ -80,7 +82,8 @@ const timestamps = (now: Date): { readonly amzDate: string; readonly dateStamp: 
 /**
  * Assemble the headers that will be signed, and the canonical request over them.
  *
- * @remarks
+ * **Details**
+ *
  * Exported separately from {@link sign} so a test can pin it against AWS's
  * **own documented** canonical request rather than against this
  * implementation's output.
@@ -149,7 +152,8 @@ export const canonicalize: {
 /**
  * Derive a signing key.
  *
- * @remarks
+ * **Details**
+ *
  * Four nested HMACs over date, region, service and the literal `aws4_request`.
  * Exported so a test can reproduce AWS's documented derivation example.
  */
@@ -162,7 +166,8 @@ export const signingKey: {
 /**
  * Sign a request, returning the headers to send.
  *
- * @remarks
+ * **Details**
+ *
  * The returned record is the caller's headers **plus** everything signing added
  * — `host`, `x-amz-date`, `x-amz-content-sha256`, the optional
  * `x-amz-security-token` and `authorization` — so a caller sends exactly what

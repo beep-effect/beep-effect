@@ -6,7 +6,8 @@ const $I = $ScratchpadId.create("effected/templates/CommentStyle");
 /**
  * A comment delimiter: non-empty, and free of control characters.
  *
- * @remarks
+ * **Details**
+ *
  * Every constraint is load-bearing rather than decorative. An empty delimiter
  * would make the marker scanner match every line in a document. A delimiter
  * containing a line break would let a caller inject arbitrary lines into a
@@ -30,7 +31,8 @@ const Delimiter = S.String.check(
 /**
  * How a managed section's markers are commented out in a given file format.
  *
- * @remarks
+ * **Details**
+ *
  * A **line** style carries only a `prefix` (`#`, `//`); a **wrapped** style
  * carries a `suffix` as well (`<!--` … `-->`). The wrapped form is what makes
  * managed sections representable in Markdown, HTML and XML.
@@ -38,7 +40,8 @@ const Delimiter = S.String.check(
  * The preset set is a convenience, not a closed world: a format nobody
  * anticipated is one `CommentStyle.make({ prefix: "%" })` away.
  *
- * @example
+ * **Example** (Use preset and custom comment styles)
+ *
  * ```ts
  * import { CommentStyle } from "./index.ts";
  *
@@ -74,14 +77,15 @@ export class CommentStyle extends S.Class<CommentStyle>($I`CommentStyle`)({
 	static readonly block: CommentStyle = CommentStyle.make({ prefix: "/*", suffix: "*/" });
 
 	/**
-	 * Every preset, in the order a reader would expect: line styles first,
-	 * then wrapped.
-	 *
-	 * @remarks
-	 * A grouped static over variants of one concept that live in one module
-	 * and reach nothing heavier than each other — nothing sits behind a preset
-	 * but a two-field object, so this is not the namespace-object hazard.
-	 */
+  * Every preset, in the order a reader would expect: line styles first,
+  * then wrapped.
+  *
+  * **Details**
+  *
+  * A grouped static over variants of one concept that live in one module
+  * and reach nothing heavier than each other — nothing sits behind a preset
+  * but a two-field object, so this is not the namespace-object hazard.
+  */
 	static readonly presets: ReadonlyArray<CommentStyle> = [
 		CommentStyle.hash,
 		CommentStyle.slash,
@@ -92,15 +96,16 @@ export class CommentStyle extends S.Class<CommentStyle>($I`CommentStyle`)({
 	];
 
 	/**
-	 * A stable string identity, for keying a plain `Map`.
-	 *
-	 * @remarks
-	 * The `NUL` separator is not cosmetic: without it `{ prefix: "ab" }`
-	 * and `{ prefix: "a", suffix: "b" }` would produce the same id and two
-	 * genuinely different styles would collide in a lookup table. `NUL`
-	 * cannot occur in a delimiter, because delimiters exclude control characters,
-	 * so the encoding is unambiguous.
-	 */
+  * A stable string identity, for keying a plain `Map`.
+  *
+  * **Details**
+  *
+  * The `NUL` separator is not cosmetic: without it `{ prefix: "ab" }`
+  * and `{ prefix: "a", suffix: "b" }` would produce the same id and two
+  * genuinely different styles would collide in a lookup table. `NUL`
+  * cannot occur in a delimiter, because delimiters exclude control characters,
+  * so the encoding is unambiguous.
+  */
 	get id(): string {
 		return `${this.prefix}\u0000${this.suffix ?? ""}`;
 	}

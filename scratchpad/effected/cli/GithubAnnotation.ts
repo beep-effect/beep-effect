@@ -38,21 +38,22 @@ export class GithubAnnotation {
 	private constructor() {}
 
 	/**
-	 * Format an annotation as a workflow command: `::error title=T,file=F,line=1,endLine=2,col=3,endColumn=4::message`.
-	 *
-	 * @remarks
-	 * The message escapes `%`, CR and LF; a property value escapes those and `:` and `,`, per GitHub's
-	 * [workflow-command documentation](https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions).
-	 * The percent sign is escaped first, so an escape that was just written is never escaped again. An unescaped line
-	 * break in a message would let the text after it be read as a new command, which is why the escaping is not optional.
-	 *
-	 * A property that is not given is left out, and the properties are written in the order `title`, `file`, `line`,
-	 * `endLine`, `col`, `endColumn`, the same as `@effected/github-commands`' `WorkflowCommand`, which this renders
-	 * through.
-	 *
-	 * @param annotation - the level and the optional file, position and title
-	 * @param message - the annotation's text
-	 */
+  * Format an annotation as a workflow command: `::error title=T,file=F,line=1,endLine=2,col=3,endColumn=4::message`.
+  *
+  * **Details**
+  *
+  * The message escapes `%`, CR and LF; a property value escapes those and `:` and `,`, per GitHub's
+  * [workflow-command documentation](https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions).
+  * The percent sign is escaped first, so an escape that was just written is never escaped again. An unescaped line
+  * break in a message would let the text after it be read as a new command, which is why the escaping is not optional.
+  *
+  * A property that is not given is left out, and the properties are written in the order `title`, `file`, `line`,
+  * `endLine`, `col`, `endColumn`, the same as `@effected/github-commands`' `WorkflowCommand`, which this renders
+  * through.
+  *
+  * @param annotation - the level and the optional file, position and title
+  * @param message - the annotation's text
+  */
 	// One escaping: this renders through `WorkflowCommand`, not a copy of it.
 	static readonly format = (annotation: GithubAnnotationProperties, message: string): string => WorkflowCommand.render(
 			annotation.level,

@@ -19,7 +19,8 @@ import { twirpCall, twirpFailureFields } from "./internal/twirp.ts";
 /**
  * The `version` every entry is filed under.
  *
- * @remarks
+ * **Details**
+ *
  * The cache protocol keys an entry on `(key, version)`, and `actions/cache`
  * derives the version from the *paths* it archives. A blob store has no paths —
  * the key is caller-supplied and the payload is opaque — so the version is a
@@ -34,7 +35,8 @@ const VERSION = sha256Hex("blobstore|1.0");
 /**
  * The Azure half, ~15 lines and duplicated on purpose.
  *
- * @remarks
+ * **Gotchas**
+ *
  * `@azure/storage-blob` may be imported by this module, `ActionCache` and
  * `Artifact` and by nothing else. Hoisting these two calls into a shared
  * `internal/` helper is exactly how the import would leak into the graph of a
@@ -119,7 +121,8 @@ const make = Effect.fn("make")(function* (transfer: DataBlobTransfer) {
  * The {@link BlobStore} backend that stores blobs in the runner's own Actions
  * cache.
  *
- * @remarks
+ * **Details**
+ *
  * The Actions cache is reachable over a Twirp v2 protocol at
  * `ACTIONS_RESULTS_URL`, which answers a `CreateCacheEntry` /
  * `GetCacheEntryDownloadURL` RPC with a **pre-signed Azure blob url** — which is
@@ -139,7 +142,8 @@ const make = Effect.fn("make")(function* (transfer: DataBlobTransfer) {
  * `BlobStore.layerGitHubCache` on the service class would make `@azure/storage-blob`
  * reachable from every module that reads a blob.
  *
- * @example
+ * **Example** (Select the GitHub Actions cache blob backend)
+ *
  * ```ts
  * import { GitHubCacheBlobStore } from "./index.ts";
  *
@@ -152,32 +156,34 @@ export class GitHubCacheBlobStore {
 	private constructor() {}
 
 	/**
-	 * The backend, over the real Azure client.
-	 *
-	 * @remarks
-	 * Requires `ActionEnvironment` for `ACTIONS_RESULTS_URL` and
-	 * `ACTIONS_RUNTIME_TOKEN`; fails with `BlobStoreError` (`misconfigured`) when
-	 * either is absent.
-	 */
+  * The backend, over the real Azure client.
+  *
+  * **Details**
+  *
+  * Requires `ActionEnvironment` for `ACTIONS_RESULTS_URL` and
+  * `ACTIONS_RUNTIME_TOKEN`; fails with `BlobStoreError` (`misconfigured`) when
+  * either is absent.
+  */
 	static readonly layer: Layer.Layer<BlobStore, never, HttpClient.HttpClient | ActionEnvironment> = Layer.effect(
 		BlobStore,
 		make(azure),
 	);
 
 	/**
-	 * The backend, over a supplied transport.
-	 *
-	 * @remarks
-	 * The Twirp protocol — the RPC sequence, the conflict handling, the retry
-	 * policy, the framing — is what this package owns and what a test needs to
-	 * exercise; the Azure client is a pre-signed `PUT` that owns none of it. This
-	 * is also the seam an integration test uses to point the same protocol at a
-	 * local blob endpoint.
-	 *
-	 * A parameterized layer factory mints a fresh layer per call and layers
-	 * memoize by reference — bind it to a `const` rather than calling it at each
-	 * composition site.
-	 */
+  * The backend, over a supplied transport.
+  *
+  * **Details**
+  *
+  * The Twirp protocol — the RPC sequence, the conflict handling, the retry
+  * policy, the framing — is what this package owns and what a test needs to
+  * exercise; the Azure client is a pre-signed `PUT` that owns none of it. This
+  * is also the seam an integration test uses to point the same protocol at a
+  * local blob endpoint.
+  *
+  * A parameterized layer factory mints a fresh layer per call and layers
+  * memoize by reference — bind it to a `const` rather than calling it at each
+  * composition site.
+  */
 	static readonly layerWith = (
 		transfer: DataBlobTransfer,
 	): Layer.Layer<BlobStore, never, HttpClient.HttpClient | ActionEnvironment> =>

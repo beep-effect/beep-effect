@@ -8,7 +8,8 @@ const $I = $ScratchpadId.create("effected/cli/Cancelled");
  * A person backed out of an interactive prompt: they pressed escape, or the
  * prompt was interrupted.
  *
- * @remarks
+ * **Details**
+ *
  * Exits `130`, the conventional status for a run ended by the user, through
  * core's own `Runtime.errorExitCode` marker, so `CliRuntime.reportFailures`
  * keeps it. Its default rendering is one line, `cancelled; nothing written`,
@@ -22,13 +23,14 @@ export class Cancelled extends S.TaggedError<Cancelled>($I`Cancelled`)("Cancelle
 	reason: S.Literals(["escape", "interrupt"]).annotateKey({ description: "Whether the person pressed escape or the interactive prompt was interrupted" }),
 }, $I.annote("Cancelled", { description: "A person backed out of an interactive prompt: they pressed escape, or the prompt was interrupted." })) {
 	/**
-	 * The one line, `cancelled; nothing written`.
-	 *
-	 * @remarks
-	 * A prototype getter, not a field, so it is not part of the encoded form, equality or a JSON dump. Assigning to
-	 * it is ignored: a library that rewrites `error.message` (to prefix a context, say) must not make this error throw,
-	 * which a getter-only property does in strict mode. The line is fixed.
-	 */
+  * The one line, `cancelled; nothing written`.
+  *
+  * **Details**
+  *
+  * A prototype getter, not a field, so it is not part of the encoded form, equality or a JSON dump. Assigning to
+  * it is ignored: a library that rewrites `error.message` (to prefix a context, say) must not make this error throw,
+  * which a getter-only property does in strict mode. The line is fixed.
+  */
 	override get message(): string {
 		return "cancelled; nothing written";
 	}
@@ -38,12 +40,13 @@ export class Cancelled extends S.TaggedError<Cancelled>($I`Cancelled`)("Cancelle
 	}
 
 	/**
-	 * The process exit code: `130`.
-	 *
-	 * @remarks
-	 * A prototype getter rather than an own field, so a JSON or logger dump of the error does not carry the
-	 * runtime marker.
-	 */
+  * The process exit code: `130`.
+  *
+  * **Details**
+  *
+  * A prototype getter rather than an own field, so a JSON or logger dump of the error does not carry the
+  * runtime marker.
+  */
 	override get [Runtime.errorExitCode](): number {
 		return 130;
 	}

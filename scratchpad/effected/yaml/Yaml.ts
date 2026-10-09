@@ -56,11 +56,14 @@ const $I = $ScratchpadId.create("effected/yaml/Yaml");
  * denial-of-service guard) and `uniqueKeys` `true` (duplicate mapping keys
  * are errors).
  *
+ * **Details**
+ *
  * Construct with the validated `YamlParseOptions.make({ ... })` static — the
  * kit convention (never `new`). Call sites that take a `YamlParseOptions`
  * also accept a structurally-matching plain literal.
  *
- * @example
+ * **Example** (Parse YAML with a custom alias limit)
+ *
  * ```ts
  * import { Yaml, YamlParseOptions } from "./index.ts";
  *
@@ -83,6 +86,8 @@ export class YamlParseOptions extends S.Class<YamlParseOptions>($I`YamlParseOpti
  * `indentSequences` `false`, `quoteStyle` `"single"`, `quoteCompat` absent
  * (no dialect-compat quoting), `finalNewline` `true` and `forceDefaultStyles`
  * `false`.
+ *
+ * **Details**
  *
  * `lineWidth` controls column-based scalar folding. The default `0` (and any
  * value `<= 0`) never wraps; a positive value folds long plain, double-quoted and
@@ -113,7 +118,8 @@ export class YamlParseOptions extends S.Class<YamlParseOptions>($I`YamlParseOpti
  * the kit convention (never `new`). Call sites that take a
  * `YamlStringifyOptions` also accept a structurally-matching plain literal.
  *
- * @example
+ * **Example** (Stringify an indented mapping sequence)
+ *
  * ```ts
  * import { Yaml, YamlStringifyOptions } from "./index.ts";
  *
@@ -197,7 +203,8 @@ export class YamlStringifyOptions extends S.Class<YamlStringifyOptions>($I`YamlS
  * `code` field: read the code from the diagnostics —
  * `error.diagnostics[0].code` is the primary failure.
  *
- * @remarks
+ * **Details**
+ *
  * The `message` renders each diagnostic's position 1-based
  * (`line + 1:character + 1`) for human readers — a CLI printing this string
  * shows the line/column a person counts in their editor. The structured
@@ -458,14 +465,16 @@ export interface YamlBoundCodec<T, RD = never, RE = never> {
  * Static entry points for YAML parsing, stringification, comment stripping,
  * semantic equality and the schema factories. Not instantiable.
  *
- * @remarks
+ * **Details**
+ *
  * `parse`/`parseAll`/`stringify` and the schema factories carry real typed
  * error channels — including the hardening guards (an alias-expansion budget
  * on decode, a nesting-depth cap on encode) that keep malformed or
  * adversarial input on the typed channel instead of surfacing as an unhandled
  * defect. `stripComments`/`equals`/`equalsValue` are pure total functions.
  *
- * @example
+ * **Example** (Parse a YAML mapping in an Effect)
+ *
  * ```ts
  * import { Yaml } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -529,106 +538,111 @@ export class Yaml {
 	);
 
 	/**
-	 * Stringify a plain JavaScript value as YAML. Fails with
-	 * {@link YamlStringifyError} on circular references (`CircularReference`)
-	 * or on a value nested deeper than the stringifier's recursion budget
-	 * (`NestingDepthExceeded`) — both surface through the typed error channel
-	 * rather than as an unhandled stack-overflow defect.
-	 *
-	 * @remarks
-	 * A `"<<"` object key is emitted **quoted** (`'<<': …`). This is the
-	 * opposite of the document path ({@link YamlFormat.format} and
-	 * `YamlDocument#stringify`), which leaves a parsed plain `<<` key unquoted
-	 * so it keeps its merge-key meaning, and the asymmetry is deliberate: a
-	 * `"<<"` key on a plain JavaScript object is an ordinary string key that
-	 * never carried merge semantics, so emitting it plain would silently turn
-	 * ordinary data into a merge directive.
-	 *
-	 * @param value - The plain JavaScript value to stringify.
-	 * @param options - Optional {@link YamlStringifyOptions}; defaults apply for
-	 *   omitted fields.
-	 * @returns An `Effect` that succeeds with the YAML text, or fails with
-	 *   {@link YamlStringifyError}.
-	 */
+  * Stringify a plain JavaScript value as YAML. Fails with
+  * {@link YamlStringifyError} on circular references (`CircularReference`)
+  * or on a value nested deeper than the stringifier's recursion budget
+  * (`NestingDepthExceeded`) — both surface through the typed error channel
+  * rather than as an unhandled stack-overflow defect.
+  *
+  * **Details**
+  *
+  * A `"<<"` object key is emitted **quoted** (`'<<': …`). This is the
+  * opposite of the document path ({@link YamlFormat.format} and
+  * `YamlDocument#stringify`), which leaves a parsed plain `<<` key unquoted
+  * so it keeps its merge-key meaning, and the asymmetry is deliberate: a
+  * `"<<"` key on a plain JavaScript object is an ordinary string key that
+  * never carried merge semantics, so emitting it plain would silently turn
+  * ordinary data into a merge directive.
+  *
+  * @param value - The plain JavaScript value to stringify.
+  * @param options - Optional {@link YamlStringifyOptions}; defaults apply for
+  *   omitted fields.
+  * @returns An `Effect` that succeeds with the YAML text, or fails with
+  *   {@link YamlStringifyError}.
+  */
 	static readonly stringify = Effect.fn("Yaml.stringify")(function* (value: unknown, options?: YamlStringifyOptions) {
 		return yield* stringifyOrFail(value, options);
 	});
 
 	/**
-	 * Synchronous single-document parse, returning a `Result` instead of
-	 * an `Effect`. A pure escape hatch for config-time callers that cannot
-	 * `await` an Effect (a `vitest.config.ts` is the motivating case).
-	 *
-	 * @remarks
-	 * This is the package's single parse path. {@link Yaml.parse} is defined in
-	 * terms of it (`Effect.fromResult` behind the named span), so the two
-	 * variants cannot diverge. Reach for the `Effect` variant inside Effect
-	 * code — it carries the `Yaml.parse` tracing span — and for this one at
-	 * synchronous boundaries.
-	 *
-	 * Preserves the package contract — malformed and adversarial input fails
-	 * typed, never as a defect. Fatal diagnostics, duplicate keys and a
-	 * "billion laughs" alias-expansion blow-up all yield a `Failure` carrying a
-	 * {@link YamlParseError}; the method never throws.
-	 *
-	 * @example
-	 * ```ts
-	 * import { Yaml } from "./index.ts";
-	 * import * as Result from "effect/Result";
-	 *
-	 * const result = Yaml.parseResult("name: Alice\nage: 30");
-	 * if (Result.isSuccess(result)) {
-	 *   result.success; // { name: "Alice", age: 30 }
-	 * } else {
-	 *   result.failure; // YamlParseError
-	 * }
-	 * ```
-	 *
-	 * @public
-	 */
+  * Synchronous single-document parse, returning a `Result` instead of
+  * an `Effect`. A pure escape hatch for config-time callers that cannot
+  * `await` an Effect (a `vitest.config.ts` is the motivating case).
+  *
+  * **Details**
+  *
+  * This is the package's single parse path. {@link Yaml.parse} is defined in
+  * terms of it (`Effect.fromResult` behind the named span), so the two
+  * variants cannot diverge. Reach for the `Effect` variant inside Effect
+  * code — it carries the `Yaml.parse` tracing span — and for this one at
+  * synchronous boundaries.
+  *
+  * Preserves the package contract — malformed and adversarial input fails
+  * typed, never as a defect. Fatal diagnostics, duplicate keys and a
+  * "billion laughs" alias-expansion blow-up all yield a `Failure` carrying a
+  * {@link YamlParseError}; the method never throws.
+  *
+  * **Example** (Inspect a synchronous YAML parse result)
+  *
+  * ```ts
+  * import { Yaml } from "./index.ts";
+  * import * as Result from "effect/Result";
+  *
+  * const result = Yaml.parseResult("name: Alice\nage: 30");
+  * if (Result.isSuccess(result)) {
+  *   result.success; // { name: "Alice", age: 30 }
+  * } else {
+  *   result.failure; // YamlParseError
+  * }
+  * ```
+  *
+  * @public
+  */
 	static parseResult(text: string, options?: YamlParseOptions): Result.Result<unknown, YamlParseError> {
 		return parseResultImpl(text, options);
 	}
 
 	/**
-	 * Synchronous multi-document parse, returning a `Result` instead of an
-	 * `Effect` — the {@link Yaml.parseResult} counterpart to
-	 * {@link Yaml.parseAll}. Empty input succeeds with `[null]` (the engine
-	 * reads `""` as one empty document, exactly as {@link Yaml.parse} yields
-	 * `null` for it); a single-document stream succeeds with a one-element
-	 * array whose value is exactly what {@link Yaml.parseResult} yields.
-	 *
-	 * @remarks
-	 * This is the package's single multi-document parse path.
-	 * {@link Yaml.parseAll} is defined in terms of it (`Effect.fromResult`
-	 * behind the named span), so the two variants cannot diverge. Anchors are
-	 * document-scoped: each document's aliases resolve against its own anchor
-	 * map, never a neighbor's.
-	 *
-	 * Fails with the aggregate {@link YamlParseError} when **any** document in
-	 * the stream carries a fatal diagnostic (or a stream-level
-	 * directive-placement error), which makes it a whole-stream validity
-	 * check: a `Success` means every document parsed clean. Preserves the
-	 * package contract — malformed and adversarial input (including a
-	 * "billion laughs" alias bomb in any document) fails typed, never as a
-	 * defect; the method never throws.
-	 *
-	 * @example
-	 * ```ts
-	 * import { Yaml } from "./index.ts";
-	 * import * as Result from "effect/Result";
-	 *
-	 * // Whole-stream validity check: fails if ANY document is invalid.
-	 * const result = Yaml.parseAllResult("a: 1\n---\nb: 2\n");
-	 * if (Result.isSuccess(result)) {
-	 *   result.success; // [{ a: 1 }, { b: 2 }]
-	 * } else {
-	 *   result.failure; // YamlParseError aggregating every fatal diagnostic
-	 * }
-	 * ```
-	 *
-	 * @public
-	 */
+  * Synchronous multi-document parse, returning a `Result` instead of an
+  * `Effect` — the {@link Yaml.parseResult} counterpart to
+  * {@link Yaml.parseAll}. Empty input succeeds with `[null]` (the engine
+  * reads `""` as one empty document, exactly as {@link Yaml.parse} yields
+  * `null` for it); a single-document stream succeeds with a one-element
+  * array whose value is exactly what {@link Yaml.parseResult} yields.
+  *
+  * **Details**
+  *
+  * This is the package's single multi-document parse path.
+  * {@link Yaml.parseAll} is defined in terms of it (`Effect.fromResult`
+  * behind the named span), so the two variants cannot diverge. Anchors are
+  * document-scoped: each document's aliases resolve against its own anchor
+  * map, never a neighbor's.
+  *
+  * Fails with the aggregate {@link YamlParseError} when **any** document in
+  * the stream carries a fatal diagnostic (or a stream-level
+  * directive-placement error), which makes it a whole-stream validity
+  * check: a `Success` means every document parsed clean. Preserves the
+  * package contract — malformed and adversarial input (including a
+  * "billion laughs" alias bomb in any document) fails typed, never as a
+  * defect; the method never throws.
+  *
+  * **Example** (Validate and parse a multi-document YAML stream)
+  *
+  * ```ts
+  * import { Yaml } from "./index.ts";
+  * import * as Result from "effect/Result";
+  *
+  * // Whole-stream validity check: fails if ANY document is invalid.
+  * const result = Yaml.parseAllResult("a: 1\n---\nb: 2\n");
+  * if (Result.isSuccess(result)) {
+  *   result.success; // [{ a: 1 }, { b: 2 }]
+  * } else {
+  *   result.failure; // YamlParseError aggregating every fatal diagnostic
+  * }
+  * ```
+  *
+  * @public
+  */
 	static parseAllResult(
 		text: string,
 		options?: YamlParseOptions,
@@ -637,30 +651,33 @@ export class Yaml {
 	}
 
 	/**
-	 * Synchronous stringify, returning a `Result` instead of an `Effect`.
-	 * The pure counterpart to {@link Yaml.stringify} for config-time callers
-	 * that cannot `await`.
-	 *
-	 * Preserves the package contract — a circular reference (`CircularReference`)
-	 * or a value nested past the recursion budget (`NestingDepthExceeded`)
-	 * yields a `Failure` carrying a {@link YamlStringifyError} rather than a
-	 * thrown stack-overflow defect; the method never throws.
-	 *
-	 * @example
-	 * ```ts
-	 * import { Yaml } from "./index.ts";
-	 * import * as Result from "effect/Result";
-	 *
-	 * const result = Yaml.stringifyResult({ name: "Alice" });
-	 * if (Result.isFailure(result)) {
-	 *   result.failure; // YamlStringifyError
-	 * } else {
-	 *   result.success; // "name: Alice\n"
-	 * }
-	 * ```
-	 *
-	 * @public
-	 */
+  * Synchronous stringify, returning a `Result` instead of an `Effect`.
+  * The pure counterpart to {@link Yaml.stringify} for config-time callers
+  * that cannot `await`.
+  *
+  * **Details**
+  *
+  * Preserves the package contract — a circular reference (`CircularReference`)
+  * or a value nested past the recursion budget (`NestingDepthExceeded`)
+  * yields a `Failure` carrying a {@link YamlStringifyError} rather than a
+  * thrown stack-overflow defect; the method never throws.
+  *
+  * **Example** (Inspect a synchronous YAML stringify result)
+  *
+  * ```ts
+  * import { Yaml } from "./index.ts";
+  * import * as Result from "effect/Result";
+  *
+  * const result = Yaml.stringifyResult({ name: "Alice" });
+  * if (Result.isFailure(result)) {
+  *   result.failure; // YamlStringifyError
+  * } else {
+  *   result.success; // "name: Alice\n"
+  * }
+  * ```
+  *
+  * @public
+  */
 	static stringifyResult(value: unknown, options?: YamlStringifyOptions): Result.Result<string, YamlStringifyError> {
 		return stringifyResultImpl(value, options);
 	}
@@ -825,43 +842,45 @@ export class Yaml {
 	}
 
 	/**
-	 * Bind a target schema to the YAML codec once, yielding the composed
-	 * schema plus pre-derived `decode`/`encode` directions — the
-	 * {@link Yaml.schema} composition without the generic `Schema` machinery
-	 * at every use site. Binds the plain single-document form only: default
-	 * {@link YamlParseOptions} on decode, default stringify options on encode;
-	 * for multi-document streams compose over {@link Yaml.allFromString}
-	 * directly.
-	 *
-	 * Both directions fail with `Schema.SchemaError`, exactly as
-	 * `Schema.decodeEffect`/`Schema.encodeEffect` over {@link Yaml.schema}
-	 * would; the target's decoding/encoding service requirements flow through.
-	 *
-	 * @remarks
-	 * Schema-producing: each call composes a fresh schema and derives both
-	 * directions from it. Bind the result to a `const` — that single binding is
-	 * the point.
-	 *
-	 * @example
-	 * ```ts
-	 * import { Yaml } from "./index.ts";
-	 * import * as Effect from "effect/Effect";
-	 * import * as S from "effect/Schema";
-	 *
-	 * const Config = S.Struct({ port: S.Finite });
-	 * const config = Yaml.bind(Config);
-	 *
-	 * const program = Effect.gen(function* () {
-	 *   const value = yield* config.decode("port: 3000");
-	 *   const text = yield* config.encode(value);
-	 *   return [value, text] as const;
-	 * });
-	 * ```
-	 *
-	 * @param target - The domain schema decoded values must satisfy.
-	 * @returns A {@link YamlBoundCodec} carrying the composed schema and its
-	 *   two pre-bound directions.
-	 */
+  * Bind a target schema to the YAML codec once, yielding the composed
+  * schema plus pre-derived `decode`/`encode` directions — the
+  * {@link Yaml.schema} composition without the generic `Schema` machinery
+  * at every use site. Binds the plain single-document form only: default
+  * {@link YamlParseOptions} on decode, default stringify options on encode;
+  * for multi-document streams compose over {@link Yaml.allFromString}
+  * directly.
+  *
+  * **Details**
+  *
+  * Both directions fail with `Schema.SchemaError`, exactly as
+  * `Schema.decodeEffect`/`Schema.encodeEffect` over {@link Yaml.schema}
+  * would; the target's decoding/encoding service requirements flow through.
+  *
+  * Schema-producing: each call composes a fresh schema and derives both
+  * directions from it. Bind the result to a `const` — that single binding is
+  * the point.
+  *
+  * **Example** (Decode and encode a config with a bound YAML schema)
+  *
+  * ```ts
+  * import { Yaml } from "./index.ts";
+  * import * as Effect from "effect/Effect";
+  * import * as S from "effect/Schema";
+  *
+  * const Config = S.Struct({ port: S.Finite });
+  * const config = Yaml.bind(Config);
+  *
+  * const program = Effect.gen(function* () {
+  *   const value = yield* config.decode("port: 3000");
+  *   const text = yield* config.encode(value);
+  *   return [value, text] as const;
+  * });
+  * ```
+  *
+  * @param target - The domain schema decoded values must satisfy.
+  * @returns A {@link YamlBoundCodec} carrying the composed schema and its
+  *   two pre-bound directions.
+  */
 	static bind<T, E, RD = never, RE = never>(target: S.Codec<T, E, RD, RE>): YamlBoundCodec<T, RD, RE> {
 		const schema = Yaml.schema(target);
 		return {

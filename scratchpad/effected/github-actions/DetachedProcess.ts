@@ -60,7 +60,8 @@ export class DetachedSpawnFailedError extends S.TaggedError<DetachedSpawnFailedE
 /**
  * Raised when a non-positive pid was handed to {@link DetachedProcess.reap}.
  *
- * @remarks
+ * **Gotchas**
+ *
  * See {@link DetachedProcess.reap} for why this is the most important value in
  * the module: a non-positive pid targets a process *group*, not a process.
  *
@@ -113,7 +114,8 @@ export class DetachedNotReadyError extends S.TaggedError<DetachedNotReadyError>(
 /**
  * Anything that can go wrong spawning, awaiting or reaping a detached child.
  *
- * @remarks
+ * **Details**
+ *
  * **One class per failure, rather than one class with a `reason` field.** The
  * pid is required on the two members that report one and the path on the one
  * that does, so a value short a field is a compile error rather than a message
@@ -131,7 +133,8 @@ export type DetachedProcessError =
 /**
  * The schema a pid crosses the phase boundary through.
  *
- * @remarks
+ * **Gotchas**
+ *
  * A pid is persisted in `GITHUB_STATE` by `main` and read back by `post`, which
  * means it makes the round trip as **text**. This is the boundary check on the
  * way back in: a truncated file, an absent key or a `Number("")` all decode to
@@ -149,7 +152,8 @@ export type DetachedProcessError =
  * text file. This schema is that missing check, and it decodes to core's type so
  * the two are interchangeable.
  *
- * @example
+ * **Example** (Decode a persisted process ID before reaping)
+ *
  * ```ts
  * import { ActionState, DetachedProcess, ProcessId } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -191,45 +195,48 @@ export interface DetachedSpawnOptions {
 	/** Its arguments. */
 	readonly args?: ReadonlyArray<string> | undefined;
 	/**
-	 * Where the child's stdout and stderr go, opened for append.
-	 *
-	 * @remarks
-	 * A file **descriptor**, not a pipe. An in-process pipe would keep the parent
-	 * attached to the child and defeat the detachment, which is the upstream
-	 * limitation this module exists to work around — core's `CommandOptions.stdout`
-	 * maps to a pipe, and so do its additional fds. If core grows fd routing this
-	 * becomes a thin adapter over it.
-	 */
+  * Where the child's stdout and stderr go, opened for append.
+  *
+  * **Gotchas**
+  *
+  * A file **descriptor**, not a pipe. An in-process pipe would keep the parent
+  * attached to the child and defeat the detachment, which is the upstream
+  * limitation this module exists to work around — core's `CommandOptions.stdout`
+  * maps to a pipe, and so do its additional fds. If core grows fd routing this
+  * becomes a thin adapter over it.
+  */
 	readonly logFile: string;
 	/** The working directory. */
 	readonly cwd?: string | undefined;
 	/**
-	 * The environment the child inherits, before `env` is merged over it.
-	 *
-	 * @remarks
-	 * Defaults to the parent's `process.env` — **the one sanctioned ambient
-	 * fallback in this module**, the same class of default as
-	 * `ActionInput.provider`'s `env = process.env`, and an exception to the
-	 * package rule stated on `ChildEnv` (ambient process state is never read
-	 * behind a caller's back) precisely because passing a value here is how a
-	 * caller opts out of it. Supply it to give the child a controlled block —
-	 * a test proving exactly what a worker sees, or a worker that must not
-	 * inherit the action's secrets — remembering that a base without `PATH`
-	 * costs the child its runtime. An `undefined` value is dropped by Node's
-	 * spawn, never stringified.
-	 */
+  * The environment the child inherits, before `env` is merged over it.
+  *
+  * **Details**
+  *
+  * Defaults to the parent's `process.env` — **the one sanctioned ambient
+  * fallback in this module**, the same class of default as
+  * `ActionInput.provider`'s `env = process.env`, and an exception to the
+  * package rule stated on `ChildEnv` (ambient process state is never read
+  * behind a caller's back) precisely because passing a value here is how a
+  * caller opts out of it. Supply it to give the child a controlled block —
+  * a test proving exactly what a worker sees, or a worker that must not
+  * inherit the action's secrets — remembering that a base without `PATH`
+  * costs the child its runtime. An `undefined` value is dropped by Node's
+  * spawn, never stringified.
+  */
 	readonly base?: Readonly<Record<string, string | undefined>> | undefined;
 	/**
-	 * Environment additions.
-	 *
-	 * @remarks
-	 * **Merged over `base` (the parent's environment by default), not
-	 * substituted for it.** A bare environment costs the child `PATH`, which
-	 * usually means it cannot find its own runtime and dies before writing a
-	 * word to the log — a failure that looks like a spawn bug and is not.
-	 * Secrets belong here only via `Secret.forChildEnv`, which masks them on
-	 * the way out.
-	 */
+  * Environment additions.
+  *
+  * **Gotchas**
+  *
+  * **Merged over `base` (the parent's environment by default), not
+  * substituted for it.** A bare environment costs the child `PATH`, which
+  * usually means it cannot find its own runtime and dies before writing a
+  * word to the log — a failure that looks like a spawn bug and is not.
+  * Secrets belong here only via `Secret.forChildEnv`, which masks them on
+  * the way out.
+  */
 	readonly env?: Readonly<Record<string, string>> | undefined;
 }
 
@@ -248,7 +255,8 @@ export interface ReadinessOptions {
 /**
  * The module's operations as a value: the seam a consumer's tests inject.
  *
- * @remarks
+ * **Details**
+ *
  * `DetachedProcess` is statics on a class, deliberately — there is no scope to
  * hang a service off, because the whole point is a child that outlives the
  * process holding any handle to it. The cost of that choice is that the
@@ -285,7 +293,8 @@ const dies = unstubbed("DetachedProcess.makeTestOps");
 /**
  * A long-lived child that outlives the phase that started it.
  *
- * @remarks
+ * **Details**
+ *
  * The shape an action needs is three separate things, because the child
  * survives the process that spawned it: `main` starts it and persists the pid,
  * `main` or `post` waits on a domain predicate rather than on time, and `post`
@@ -296,7 +305,8 @@ const dies = unstubbed("DetachedProcess.makeTestOps");
  * is no `ChildProcess` to `.kill()`; there is only a number that has been
  * through a text file. See {@link DetachedProcess.reap}.
  *
- * @example
+ * **Example** (Start a detached server and await readiness)
+ *
  * ```ts
  * import { DetachedProcess } from "./index.ts";
  * import * as Effect from "effect/Effect";
@@ -318,13 +328,14 @@ export class DetachedProcess {
 	private constructor() {}
 
 	/**
-	 * Start a detached child with its output routed to a log file.
-	 *
-	 * @remarks
-	 * The parent closes its own copy of the descriptor immediately — the child
-	 * holds a duplicate, so the log keeps filling after the action's process
-	 * exits, which is the entire point.
-	 */
+  * Start a detached child with its output routed to a log file.
+  *
+  * **Details**
+  *
+  * The parent closes its own copy of the descriptor immediately — the child
+  * holds a duplicate, so the log keeps filling after the action's process
+  * exits, which is the entire point.
+  */
 	static readonly spawn = Effect.fn("DetachedProcess.spawn")(function* (options: DetachedSpawnOptions) {
 		const descriptor = yield* Effect.try({
 			try: () => openSync(options.logFile, "a"),
@@ -366,18 +377,19 @@ export class DetachedProcess {
 	});
 
 	/**
-	 * Poll a predicate until it holds.
-	 *
-	 * @remarks
-	 * A domain predicate rather than a sleep: "the server answers" is the thing
-	 * being waited for, and any fixed delay is simultaneously too long on a fast
-	 * runner and too short on a slow one.
-	 *
-	 * A probe *failure* is propagated rather than treated as "not ready" — a
-	 * probe that cannot run is a different situation from a child that is not up
-	 * yet, and silently retrying the first is how a misconfigured probe becomes a
-	 * timeout six seconds later with nothing to show for it.
-	 */
+  * Poll a predicate until it holds.
+  *
+  * **Details**
+  *
+  * A domain predicate rather than a sleep: "the server answers" is the thing
+  * being waited for, and any fixed delay is simultaneously too long on a fast
+  * runner and too short on a slow one.
+  *
+  * A probe *failure* is propagated rather than treated as "not ready" — a
+  * probe that cannot run is a different situation from a child that is not up
+  * yet, and silently retrying the first is how a misconfigured probe becomes a
+  * timeout six seconds later with nothing to show for it.
+  */
 	static readonly awaitReady = Effect.fn("DetachedProcess.awaitReady")(function* <E, R>(
 		probe: Effect.Effect<boolean, E, R>,
 		options?: ReadinessOptions,
@@ -396,30 +408,31 @@ export class DetachedProcess {
 	});
 
 	/**
-	 * A readiness probe over HTTP: `true` when a `GET` answers 2xx.
-	 *
-	 * @remarks
-	 * The probe {@link DetachedProcess.awaitReady} almost always wants: an HTTP
-	 * `GET` at a port the child is still binding, where connection-refused *is*
-	 * "not up yet". The probe's error channel must stay empty, because
-	 * `awaitReady` deliberately propagates probe failures, and a refused
-	 * connection is not a failure of the probe.
-	 *
-	 * So this probe never fails: a refused connection, any other transport
-	 * error and a non-2xx answer all collapse to `false`, leaving
-	 * `awaitReady`'s own exhaustion as the only failure left. That is a
-	 * deliberate opt-out of the propagate-probe-failures posture, and it is
-	 * only sound because every failure an HTTP readiness check can see means
-	 * the same thing here. The cost is the documented one: a *misconfigured*
-	 * probe — a typo'd port, a wrong path — is indistinguishable from a child
-	 * that never came up, and reports as {@link DetachedNotReadyError} only after
-	 * the full budget. A probe whose failures are meaningfully distinct should
-	 * stay a hand-written effect with those failures in `E`.
-	 *
-	 * The request goes through core's `HttpClient` — `Action.run` provides it
-	 * ambiently — rather than a bare `fetch`, per the package rule that
-	 * everything that *can* go through a core contract does.
-	 */
+  * A readiness probe over HTTP: `true` when a `GET` answers 2xx.
+  *
+  * **Details**
+  *
+  * The probe {@link DetachedProcess.awaitReady} almost always wants: an HTTP
+  * `GET` at a port the child is still binding, where connection-refused *is*
+  * "not up yet". The probe's error channel must stay empty, because
+  * `awaitReady` deliberately propagates probe failures, and a refused
+  * connection is not a failure of the probe.
+  *
+  * So this probe never fails: a refused connection, any other transport
+  * error and a non-2xx answer all collapse to `false`, leaving
+  * `awaitReady`'s own exhaustion as the only failure left. That is a
+  * deliberate opt-out of the propagate-probe-failures posture, and it is
+  * only sound because every failure an HTTP readiness check can see means
+  * the same thing here. The cost is the documented one: a *misconfigured*
+  * probe — a typo'd port, a wrong path — is indistinguishable from a child
+  * that never came up, and reports as {@link DetachedNotReadyError} only after
+  * the full budget. A probe whose failures are meaningfully distinct should
+  * stay a hand-written effect with those failures in `E`.
+  *
+  * The request goes through core's `HttpClient` — `Action.run` provides it
+  * ambiently — rather than a bare `fetch`, per the package rule that
+  * everything that *can* go through a core contract does.
+  */
 	static readonly httpProbe = (url: string | URL): Effect.Effect<boolean, never, HttpClient.HttpClient> =>
 		HttpClient.get(url).pipe(
 			Effect.map((response) => response.status >= 200 && response.status < 300),
@@ -427,25 +440,26 @@ export class DetachedProcess {
 		);
 
 	/**
-	 * Signal a pid that came back across the phase boundary.
-	 *
-	 * @remarks
-	 * **The guard is the reason this function exists.** `process.kill(0, …)`
-	 * signals the caller's entire process group and `process.kill(-1, …)` signals
-	 * every process the user owns — so on a GitHub runner, an unguarded reap of a
-	 * pid that decoded to `0` takes down the job that is running it. The value is
-	 * exactly the one most likely to be wrong: it is what an absent state key, a
-	 * truncated state file or a `Number("")` all produce.
-	 *
-	 * A non-positive pid therefore fails **typed and before any signal is sent**.
-	 * The parameter is a plain `number` rather than a {@link ProcessId} on purpose:
-	 * the value arrives as text from another process, so the type system stopped
-	 * applying the moment it crossed that boundary, and a guard that only a
-	 * well-typed caller can trip is not a guard.
-	 *
-	 * Returns `false` for a process that is already gone, because a `post` phase
-	 * finding its child already dead is the normal ending, not a failure.
-	 */
+  * Signal a pid that came back across the phase boundary.
+  *
+  * **Gotchas**
+  *
+  * **The guard is the reason this function exists.** `process.kill(0, …)`
+  * signals the caller's entire process group and `process.kill(-1, …)` signals
+  * every process the user owns — so on a GitHub runner, an unguarded reap of a
+  * pid that decoded to `0` takes down the job that is running it. The value is
+  * exactly the one most likely to be wrong: it is what an absent state key, a
+  * truncated state file or a `Number("")` all produce.
+  *
+  * A non-positive pid therefore fails **typed and before any signal is sent**.
+  * The parameter is a plain `number` rather than a {@link ProcessId} on purpose:
+  * the value arrives as text from another process, so the type system stopped
+  * applying the moment it crossed that boundary, and a guard that only a
+  * well-typed caller can trip is not a guard.
+  *
+  * Returns `false` for a process that is already gone, because a `post` phase
+  * finding its child already dead is the normal ending, not a failure.
+  */
 	static readonly reap = Effect.fn("DetachedProcess.reap")(function* (pid: number, signal: NodeJS.Signals = "SIGTERM") {
 		yield* Effect.annotateCurrentSpan({ pid });
 		if (!Number.isInteger(pid) || pid <= 0) {
@@ -466,13 +480,14 @@ export class DetachedProcess {
 	});
 
 	/**
-	 * The real operations: the production default for a
-	 * {@link DetachedProcessOps} parameter.
-	 *
-	 * @remarks
-	 * The members ARE the statics — same references, not wrappers — so taking
-	 * the seam costs a consumer nothing over calling the statics directly.
-	 */
+  * The real operations: the production default for a
+  * {@link DetachedProcessOps} parameter.
+  *
+  * **Details**
+  *
+  * The members ARE the statics — same references, not wrappers — so taking
+  * the seam costs a consumer nothing over calling the statics directly.
+  */
 	static readonly ops: DetachedProcessOps = {
 		spawn: DetachedProcess.spawn,
 		awaitReady: DetachedProcess.awaitReady,
@@ -480,16 +495,17 @@ export class DetachedProcess {
 	};
 
 	/**
-	 * A test double. Unstubbed members die rather than silently succeeding.
-	 *
-	 * @remarks
-	 * The package's `makeTest` convention, on the module's one non-service.
-	 * Every member a test does not stub dies loudly **naming the member**,
-	 * because silence is worse here than anywhere else in the package: a spawn
-	 * that silently "succeeds" fakes a child that does not exist, and a reap
-	 * that silently succeeds asserts nothing about the one call whose
-	 * production form signals a real pid.
-	 */
+  * A test double. Unstubbed members die rather than silently succeeding.
+  *
+  * **Details**
+  *
+  * The package's `makeTest` convention, on the module's one non-service.
+  * Every member a test does not stub dies loudly **naming the member**,
+  * because silence is worse here than anywhere else in the package: a spawn
+  * that silently "succeeds" fakes a child that does not exist, and a reap
+  * that silently succeeds asserts nothing about the one call whose
+  * production form signals a real pid.
+  */
 	static readonly makeTestOps = (overrides: Partial<DetachedProcessOps> = {}): DetachedProcessOps => ({
 		spawn: () => dies("spawn"),
 		awaitReady: () => dies("awaitReady"),

@@ -6,7 +6,8 @@ import { ConfigCodecError } from "./ConfigCodec.ts";
 /**
  * A `ConfigCodec` backed by `@effected/yaml`.
  *
- * @remarks
+ * **Details**
+ *
  * `@effected/yaml`'s input hardening — an alias-expansion budget guarding
  * against "billion laughs" alias bombs, and a collection-nesting depth cap —
  * fails through the typed error channel, so a hostile config file surfaces

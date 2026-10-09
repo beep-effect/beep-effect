@@ -361,7 +361,8 @@ export class StyleConflict extends S.Class<StyleConflict>($I`StyleConflict`)({
  * rule). Unobserved dimensions never conflict: they fall back to the base
  * config's defaults.
  *
- * @remarks
+ * **Details**
+ *
  * The `message` renders each candidate's first-seen position 1-based
  * (`line + 1:character + 1`) for human readers; the structured
  * {@link StyleVoteTally} `line`/`character` fields stay 0-based.
@@ -533,7 +534,14 @@ const runRules = (
  * fixes, and infers a lint config from the style a corpus already follows.
  * Not instantiable.
  *
- * @example
+ * **Details**
+ *
+ * Pure and synchronous throughout — the lint engine is the pure half only:
+ * strings in, diagnostics or a fixed string out. File discovery, config-file
+ * loading and autofix-to-disk belong to a consumer's tier, not here.
+ *
+ * **Example** (Find and fix YAML spacing violations)
+ *
  * ```ts
  * import { YamlLint, YamlLintConfig } from "./index.ts";
  * import * as Result from "effect/Result";
@@ -548,11 +556,6 @@ const runRules = (
  *   fixed.success; // "a: 1\nb: 2\n"
  * }
  * ```
- *
- * @remarks
- * Pure and synchronous throughout — the lint engine is the pure half only:
- * strings in, diagnostics or a fixed string out. File discovery, config-file
- * loading and autofix-to-disk belong to a consumer's tier, not here.
  *
  * @public
  */

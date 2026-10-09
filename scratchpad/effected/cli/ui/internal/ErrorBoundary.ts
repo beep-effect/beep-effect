@@ -18,7 +18,8 @@ export interface ErrorBoundaryProps {
 /**
  * The screen's error boundary: catches a render error anywhere in the screen, renders nothing, and reports it.
  *
- * @remarks
+ * **Details**
+ *
  * It sits inside Ink's own boundary, so Ink's `ErrorOverview` (which Ink writes to stdout) never renders: a probe on
  * fake streams found zero bytes of it with this boundary in place, against an `ERROR` header, a stack and a
  * screen-and-scrollback clear without it. A class over the loaded React, built on first use, because the kit holds

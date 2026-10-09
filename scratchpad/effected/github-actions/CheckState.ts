@@ -13,7 +13,8 @@ export class UnhandledCheckStateError extends S.TaggedError<UnhandledCheckStateE
 /**
  * The kit's check-state vocabulary.
  *
- * @remarks
+ * **Details**
+ *
  * Deliberately **wider than GitHub's own check-run conclusions**: `running` is
  * a first-class state rather than the absence of a conclusion, and
  * `user_interaction_required` names a release pipeline waiting on a human. A
@@ -48,7 +49,8 @@ export type CheckState = typeof CheckState.Type;
 /**
  * The check-run conclusions the kit vocabulary can produce.
  *
- * @remarks
+ * **Details**
+ *
  * A subset of GitHub's conclusion set, spelled structurally so a pure
  * vocabulary module does not put `@effected/github` — and through it the
  * octokit runtime — on its import graph. A structural assertion in the test
@@ -63,7 +65,8 @@ export type CheckRunConclusion = "success" | "failure" | "neutral" | "skipped" |
  * A `CheckState` on GitHub's check-run wire: a status, and a conclusion
  * exactly when the status is `completed`.
  *
- * @remarks
+ * **Details**
+ *
  * A discriminated union rather than two optional fields, because the wire
  * protocol's own invariant is conditional: an in-progress check run *has* no
  * conclusion, and a completed one always does.
@@ -77,7 +80,8 @@ export type CheckRunProjection =
 /**
  * Project a kit check state onto GitHub's check-run wire vocabulary.
  *
- * @remarks
+ * **Details**
+ *
  * The canonical mapping: `running` is `in_progress`; everything else is
  * `completed` with `pass → success`, `fail → failure`, `warn → neutral`
  * (GitHub has no warning conclusion, and `neutral` is its non-failing,

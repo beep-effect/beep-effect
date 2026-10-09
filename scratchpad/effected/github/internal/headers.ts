@@ -39,7 +39,8 @@ export const headerNumber: {
  * How long GitHub asked us to wait, in milliseconds, or `undefined` when it
  * did not ask.
  *
- * @remarks
+ * **Details**
+ *
  * Two mechanisms, checked in GitHub's own order of specificity:
  *
  * 1. `retry-after` — whole seconds, sent for secondary rate limits and abuse
