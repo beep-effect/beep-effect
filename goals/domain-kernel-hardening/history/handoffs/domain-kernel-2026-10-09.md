@@ -686,3 +686,54 @@ hosted-parity: test-tsgo: pass (current-base rerun); docgen local: pass (39 pack
 handoff: goals/domain-kernel-hardening/history/handoffs/domain-kernel-2026-10-09.md
 open items: Own EV002 read-back occurrence changed from v2:5ff83823f70e330d42bed4c97e89515ed5d9565d2fca4b8e0778bff03712bdbb to v2:3e723c79fb07329dc90e60e8639c2c984fdb59774bba572b66b5d3b0b89da64b at PracticeKg.projections.test.ts:2169 after the authorized parity assertion edit. Evidence and shorter PGlite lifetime are unchanged; the scanner requires explicit exception re-review. Repair needs owner regeneration of standards/effect-vitest.inventory.jsonc, outside allowed generated outputs. Inherited EV015 ContradictionDetection.golden.test.ts:126 matches origin/main byte-for-byte; the standing inherited-only publish fallback does not cover the own EV002 anchor. P0 local-shard-2d356a6720ac acknowledged --wontfix with the exact scoped reason; inbox empty. No waiver, baseline edit, push, PR2, readiness monitor or running owned unit. P1 complete locally; P2/P3 pending; lifecycle active, not completed-retained. D16 preserves external bundle schema (reverse only with qualified bundle/carry upgrade and legacy compatibility proof); D17 reuses existing nullable fixture helper (reverse with kernel rollback); D18 records this scope hold (resume with inventory ownership or owner-landed reviewed inventory). 72 mechanical sites within 90, zero slice model/behavior edits. Retained earlier decision reversals and private-workspace release table remain in SPEC/handoff. Orchestrator owns stale docs/ROADMAP.md platform re-entry bullet (~349), Parked packets row (~383), cohort prose (~406). Follow-ups: stale DomainModel.make detector and desktop migration rollout. Graft estimate: 90,578 tokens saved across four retrieval calls.
 blocked: PR2 publication requires reviewed Effect-Vitest inventory regeneration outside this lane's generated-file ownership.
+
+### Run-5 owner command capability and mandated stop
+
+Read the complete amended brief. Clean P1 branch started at a1ddd1fb14;
+`git fetch origin` then `git merge origin/main` completed cleanly at
+ae27a33c58970cfe954fec5f4c277ecf609aff63. The merge adds owner/main changes,
+including #1584/#1585; no domain-kernel packet or kernel source conflict.
+No new migration or generated desktop change. PR1 #1577 is MERGED; PR2 lookup
+returns an empty list. Forbidden alchemy/effect-workspace links remain absent.
+
+Exact owner-command output from `bun run beep lint effect-vitest --help`:
+
+```text
+DESCRIPTION
+  Verify canonical @effect/vitest usage with a syntax-only full scan
+USAGE
+  beep-cli lint effect-vitest [flags]
+FLAGS
+  --census         Write the authoritative D9 test/support census
+  --write          Refresh the full-scan detector baseline
+  --rows string    Emit schema-validated JSONL rows per owning package
+```
+
+EffectVitest.ts declares exactly those flags. EffectVitestScan.ts:416 onward
+discovers every D9 source, builds all findings and a full inventory document,
+then writes it when options.write is true. Its exception preservation requires
+matching occurrence identity; it provides no selected-row re-anchor mode.
+Consequently the owner command cannot perform the run-5 authorized bounded
+repair without wider regeneration. Following the explicit stop instruction,
+no --write, census, hand-edited inventory, new waiver, publication fallback,
+push, PR2 or readiness monitor was attempted. D19 records this determination
+and reversal; this receipt is for B (rsc-b-standards) to reconcile.
+
+All prior eleven default package proofs and local parity results are retained
+run-3/run-4 evidence, not reruns on the new main merge. No own heavy job/unit
+started this run. The current packet remains active: P0/P1 complete, P2/P3
+pending under the amended separate-wave ruling. Mechanical count remains 72;
+zero new mechanical edits, zero slice model/behavior edits. Scope stop prevents
+publication and later phase work. Graft saved approximately 35,021 tokens
+across two calls. Packet hygiene and stream checks are run before receipt commit.
+
+lane: domain-kernel
+head: ae27a33c58970cfe954fec5f4c277ecf609aff63 (exact integrated P1 head; containing follow-up commit adds receipts only)
+PR(s): PR1 #1577 MERGED | PR2 none (single-occurrence inventory refresh unavailable; run-5 mandates stop)
+package-verify: @beep/shared-domain: pass; @beep/agents-tables: pass; @beep/architecture-lab-tables: pass; @beep/documents-tables: pass; @beep/epistemic-tables: pass; @beep/workspace-tables: pass; @beep/db-admin: pass; @beep/professional-desktop: pass; @beep/repo-cli: pass; @beep/agents-server: pass; @beep/law-practice-server: pass. Retained run-3/run-4 default audit+docgen proofs; not rerun on this run's main merge.
+hosted-parity: test-tsgo: pass; docgen local: pass; jsdoc-ratchet: pass; knowledge refs: pass; fallow audit+health: pass; scoped coverage: pass. Retained run-4 local evidence, not rerun on this run's main merge; PR2 hosted checks not run because PR2 does not exist.
+handoff: goals/domain-kernel-hardening/history/handoffs/domain-kernel-2026-10-09.md
+open items: B (rsc-b-standards) must reconcile the moved admitted EV002 exception. Owner help supports only full-scan --write, prohibited by run-5; inventory untouched. D19 reversal: resume with owner-landed reviewed anchor or explicitly reconciled bounded command. Earlier D1-D18 and their reversals remain retained in SPEC/handoff; D16 preserves the external shipped bundle shape and reverses only with a qualified bundle/carry upgrade, D17 fixture helper reuse reverses with kernel rollback. Inherited EV015 attribution remains prior-run evidence, not rescanned this run. No push, PR2, own running unit or monitor. P2/P3 pending; lifecycle active. Orchestrator owns stale docs/ROADMAP.md platform re-entry bullet (~349), Parked packets row (~383), cohort prose (~406). Follow-ups: stale DomainModel.make detector and desktop migration rollout.
+blocked: owner CLI cannot re-anchor one admitted EV002 occurrence without forbidden full inventory regeneration.
+
+Run-5 receipt verification: GOAL size, jq, packet anchor scan and diff whitespace pass; reflection-artifacts blocking=0/advisory=0. Doctor blocking_new=0/blocking_inherited=0, advisories=3 (unrelated retained packets). Stream output: `- goals/domain-kernel-hardening: revision=2 tip=2@97ceca70c0e7 status=active furthest=P0 resume=P0`; no packet finding for this slug. The required completed-retained check is not claimed while P2/P3 remain pending.

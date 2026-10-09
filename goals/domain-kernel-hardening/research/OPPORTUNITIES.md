@@ -201,3 +201,7 @@ standards/effect-vitest.inventory.jsonc, outside this brief's allowed generated
 outputs. A lane-specific inventory ownership grant or owner-landed reviewed
 inventory would prevent the scope hold. No inventory refresh, layer rewrite,
 suppression or push was performed.
+
+## Run-5 bounded inventory refresh unavailable
+
+Task: re-anchor the existing PracticeKg.projections.test.ts EV002 exception through its owner command. Evidence: `bun run beep lint effect-vitest --help` exposes `--census`, `--write` ("Refresh the full-scan detector baseline"), and `--rows string`, with no occurrence/file selector. EffectVitestScan.ts writes the full discovered-source document. Run-5 permits exactly one anchor change and requires stopping if wider regeneration is necessary. Preventive improvement: an owner-supported reviewed single-occurrence re-anchor that retains reason/status and verifies unchanged counts. No inventory refresh was executed.
