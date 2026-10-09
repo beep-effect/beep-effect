@@ -174,3 +174,16 @@ The two pending final-audit/publication units were verified still pre-admission
 and cancelled at the blocked handoff. No other owner's unit or lock was touched.
 Resume those commands after the cross-lane coordination and admission capacity
 are available. Cancellation is not a proof failure or a package pass.
+
+
+## 2026-10-09: relative checkout normalization escaped absolute-only fixtures
+
+- Doing: independent C script-port review before publication.
+- Evidence: Cache joined a relative checkout with `.env`, then the contained-file
+  guard resolved that joined path against the checkout again. Intended reads,
+  backups and writes could disagree. Absolute fixture roots hid the defect.
+- Repair: resolve the checkout once at the service boundary; add a relative-root
+  regression covering the intended edit, original backup and duplicate refusal.
+- Would have prevented it: exercise supported relative CLI paths alongside
+  absolute fixture paths before package qualification. The in-flight old audit
+  was stopped and resubmitted so its proof cannot precede the repair.

@@ -61,6 +61,42 @@ it.layer(testLayer, { timeout: "30 seconds" })("cache remote-reads", (it) => {
   );
 
   it.effect(
+    "edits and backs up the intended env for relative checkout paths without creating a nested checkout",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-relative-checkout-" });
+      yield* fs.writeFileString(path.join(root, "turbo.json"), "{}");
+      const original = "PRIVATE_FIXTURE=preserved\nTURBO_TEAM=\n";
+      yield* fs.writeFileString(path.join(root, ".env"), original);
+      const relative = path.relative(path.resolve("."), root);
+      const input = CacheRemoteReadsRequest.make({
+        api: "https://cache.example.test",
+        team: "fixture",
+        tokenRef: "op://fixture/item/token",
+        replaceToken: false,
+      });
+      const reports = yield* CacheQualificationService.use((service) => service.remoteReads(relative, input));
+      const backup = A.findFirst(reports, Str.startsWith("backup:"));
+      expect(O.isSome(backup)).toBe(true);
+      if (O.isSome(backup))
+        expect(yield* fs.readFileString(path.join(root, Str.slice(8)(backup.value)))).toBe(original);
+      const next = yield* fs.readFileString(path.join(root, ".env"));
+      expect(next).toContain("PRIVATE_FIXTURE=preserved");
+      expect(next).toContain("TURBO_TEAM=fixture");
+      expect(next).toContain("TURBO_TOKEN=op://fixture/item/token");
+      expect(A.some(yield* fs.readDirectory(root), (entry) => entry === "tmp" || entry === path.basename(root))).toBe(
+        false
+      );
+      yield* fs.writeFileString(path.join(root, ".env"), "TURBO_TEAM=one\nTURBO_TEAM=two\n");
+      expect(
+        yield* CacheQualificationService.use((service) => service.remoteReads(relative, input)).pipe(Effect.isFailure)
+      ).toBe(true);
+      expect(yield* fs.readFileString(path.join(root, ".env"))).toBe("TURBO_TEAM=one\nTURBO_TEAM=two\n");
+    })
+  );
+
+  it.effect(
     "refuses whitespace/export duplicates, symlinked env files, and non-https configuration before mutation",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;

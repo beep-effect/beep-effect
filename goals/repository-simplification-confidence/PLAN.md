@@ -88,11 +88,13 @@ dated successor receipt) when it opens.
 
 ### C lane status — 2026-10-09
 
-`rsc-c-scripts`: wave 1 implemented and recovery regressions repaired; blocked
-on E workflow/Ci coordination and R24 owner audit. Focused fixtures, test-tsgo,
-package docgen and knowledge census have local passes; full package audit retry,
-scoped docgen, independent review, publication and hosted parity remain open.
-No C-owned heavy unit remains running; no PR exists. Evidence and coordination requests:
+`rsc-c-scripts`: wave 1 implemented and recovery regressions repaired. R24's
+owner audit is resolved by the orchestrator's 17:24Z ruling; draft publication is
+authorized for E's ONNX/merge-driver workflow review and Ci ordering co-sign.
+Focused fixtures, test-tsgo, package docgen and knowledge census have local passes.
+Run 3 resumes full package audit and scoped docgen through the heavy wrapper,
+then independent review and publication. The Ci group stays intact for its
+coordinated follow-up wave. Evidence:
 [`history/handoffs/rsc-c-scripts-2026-10-09.md`](history/handoffs/rsc-c-scripts-2026-10-09.md),
 [`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).
 This status does not mark the Script ports or Sensitive scripts rows accepted.

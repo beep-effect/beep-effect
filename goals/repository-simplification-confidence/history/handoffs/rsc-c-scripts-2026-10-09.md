@@ -277,3 +277,35 @@ Hosted checks not started.
 orchestrator owner/lease audit; shared ONNX declaration reconciliation;
 final full audit and scoped-docgen proof; independent pinned review;
 Yeet draft publication/ready/hosted checks; final Ci-group wave.
+
+
+## Run 3 (after crash)
+
+Resume ruling 2 resolves R24: program orchestrator (fleet role), owner of record;
+no live owner at 2026-10-09T17:24:18Z. The SPEC Decision Log now records that
+owner and preserves cloud-agent-readiness lifecycle. E reviews wave 1's ONNX
+and merge-driver workflow hunks on the draft PR; the proposed Ci ordering above
+remains the requested co-sign. The root ONNX development declaration remains
+untouched under H1 ownership. The Ci group remains intact until its coordinated
+follow-up wave.
+
+Required fetch and merge reported already up to date. Terminal Run 2 evidence
+is retained; unfinished full package verification and explicit scoped docgen
+were submitted through beep-heavy with BEEP_HEAVY_MEM=24G under S12, at most two
+C-owned heavy commands. Their logs/result files are `.beep/rsc-c-run3-*`.
+Independent read-only review uses the pinned Codex route under standing S10.
+Publication, E review and content-final status remain open at this entry.
+
+### Run 3 review repair
+
+The independent Codex review at `dc4bb81597` found one P2: relative Cache checkout
+paths were joined and then resolved a second time by contained-file guards. The
+service now resolves the checkout once, and the regression checks the intended
+`.env`, its original private backup, absence of nested directories and duplicate
+refusal. No secret value is logged. The old package unit was stopped before a
+terminal verdict; qualification was resubmitted after the repair.
+
+Explicit scoped docgen has a terminal pass (27.2 seconds, 2,324 examples) before
+this one-line path repair. Owner commands report 152 manifests, zero drift and
+zero writes; cache profile regeneration produced no tracked changes. CI=true
+knowledge refs at `dc4bb81597` exits 0 with zero live gated observations.

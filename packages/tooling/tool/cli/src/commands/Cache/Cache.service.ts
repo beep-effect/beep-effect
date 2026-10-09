@@ -683,8 +683,9 @@ const makeService = Effect.fn("CacheQualificationService.make")(function* () {
   const context = yield* Effect.context<Effect.Services<ReturnType<typeof collectCacheCensus>>>();
   return CacheQualificationService.of({
     remoteReads: Effect.fn("Cache.remoteReads")(
-      function* (root, request) {
+      function* (checkout, request) {
         const path = yield* Path.Path;
+        const root = path.resolve(checkout);
         const fs = yield* FileSystem.FileSystem;
         // Decode before creating even a missing .env; diagnostics never contain input values.
         const input = yield* S.decodeEffect(CacheRemoteReadsRequest)(request).pipe(

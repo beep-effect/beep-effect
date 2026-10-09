@@ -102,3 +102,15 @@ unused warning for shared dependency-owner reconciliation. Recovered JSDoc
 ratchet and the 17 relocated Graft cases have terminal passes. Scoped coverage
 floors remain unchanged. Full package audit and hosted proof are still pending;
 these partial passes do not close Script ports or Sensitive scripts acceptance.
+
+
+## C recovery verification update — Run 3
+
+R24 owner audit is resolved: the program orchestrator (fleet role) is owner of
+record, with no live owner at 2026-10-09T17:24:18Z. Cloud packet lifecycle is
+preserved. E will review ONNX/merge-driver workflow hunks on C's draft PR and
+co-sign the proposed Ci ordering; the original Ci group remains intact.
+Root ONNX declarations, owning dependency, override and patch remain unchanged
+under the orchestrator's H1 ownership ruling. Existing terminal proof is retained;
+full package verification and scoped docgen are rerunning only because their
+last attempts failed or lacked a terminal result. No acceptance row is closed.

@@ -708,6 +708,8 @@ without claiming completion.
 | 2026-10-09 | C adopts the operator-built heavy-budget values into existing systemd sources: MemoryHigh 48G, MemoryMax 60G, MemorySwapMax 8G, pressure limit 50 percent. | R26 default preserves the installed effective budget instead of changing workstation limits. No unit is installed or reloaded by this lane; the operator owns eventual source re-sync. A transcribes the surviving-capabilities row from C's handoff. | Revert the source change; the installed units are unchanged. |
 | 2026-10-09 | C retargets the hand-owned knowledge rewrite root script and re-records only the root cache baseline through its owner, preserving 151 prior reviews and qualification scope. | R29 reproduced: 0 blocking findings before the retarget, 27 root configuration-drift findings afterward. There is no matching rewrite Turbo task; the uncached refs-check task retains its census contract. | Revert the root retarget and re-record the preceding baseline through `beep cache baseline`. |
 
+| 2026-10-09 | C retires the superseded cloud-session setup and marks cloud-agent-readiness verification commands as history; its owner is "program orchestrator (fleet role), owner of record; no live owner at 2026-10-09T17:24:18Z". | R24 audit supplied by the orchestrator in resume ruling 2; no live session owns that packet or script. Preserve lifecycle and retain the current pre-toolchain cloud bootstrap. | Revert the C wave to restore the historical script and verification commands. |
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |
