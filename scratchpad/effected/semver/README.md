@@ -215,7 +215,25 @@ None.
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — Lab uses Effect hash collections, sorting and tagged overflow errors where upstream used native Map, Set, sort and Error. (scratchpad/test/semver/SemVer.test.ts:285,501; scratchpad/test/semver/Range.test.ts:32,408; scratchpad/test/semver/SemVer.test.ts:237)
+- **identity-keys** — Lab JSON Schema uses the composer-qualified SemVerEncoded definition key where upstream used SemVerEncoded. (scratchpad/test/semver/SemVer.test.ts:431)
+- **tagged-errors** — Lab synchronously throws a structured tagged overflow error with a serializable cause where upstream threw native Error. (scratchpad/test/semver/SemVer.test.ts:202,209,216,223,230,237,467)
+- **schema-first** — Lab shares LiteralKit operator and overflow-component domains and a schema-derived equality guard where upstream used unions and instanceof. (scratchpad/test/semver/Comparator.test.ts:142; scratchpad/test/semver/SemVer.test.ts:143,467)
+- **numeric-domains** — Lab narrows delta and error-position fields to finite numbers where upstream accepted nonfinite numbers, retaining bounded integer version components. (module suite scratchpad/test/semver/**)
+- **type-safety** — Lab uses propagated operator types, tagged-error narrowing and typed collection access where upstream used casts and unchecked indexed reads. (scratchpad/test/semver/SemVer.test.ts:237,279; scratchpad/test/semver/Range.test.ts:32; module suite scratchpad/test/semver/**)
+- **tsgo-diagnostics** — Lab exposes reusable cache query Effects and internal dual overloads where upstream exposed query thunks and fixed-arity helpers. (scratchpad/test/semver/VersionCache.test.ts:27,38,47,55,63,66,75,76,80; module suite scratchpad/test/semver/**)
+- **effect-first** — Lab uses Effect grouping, matching, predicates and traversal helpers where upstream implemented these operations manually. (scratchpad/test/semver/SemVer.test.ts:519; scratchpad/test/semver/Comparator.test.ts:65; scratchpad/test/semver/Range.test.ts:63,85,136; scratchpad/test/semver/VersionCache.test.ts:176)
+- **effect-imports** — Lab source, tests and source examples use per-module Effect imports and canonical aliases where upstream imported the root barrel. (module suite scratchpad/test/semver/**)
+- **identity-annotations** — Lab schemas, fields, literal domains and VersionCache carry composer identities and metadata where upstream used short identifiers and unannotated definitions. (scratchpad/test/semver/SemVer.test.ts:444,467; scratchpad/test/semver/Comparator.test.ts:142; module suite scratchpad/test/semver/**)
+- **upstream-bug** — Lab simplification retains the earliest equivalent branch where upstream could eliminate every equivalent branch and lose union members. (scratchpad/test/semver/Range.test.ts:259; scratchpad/test/semver/Range.test.ts:272)
+- **upstream-bug** — Lab intersection requires both operands to admit a prerelease tuple where upstream inherited permission from either operand. (scratchpad/test/semver/Range.test.ts:283; scratchpad/test/semver/Range.test.ts:296)
+- **upstream-bug** — Lab subset and simplification checks retain prerelease permissions where upstream could falsely declare containment. (scratchpad/test/semver/Range.test.ts:322)
+- **upstream-bug** — Lab intersection requires an actual admissible version witness where upstream accepted empty gaps between adjacent versions. (scratchpad/test/semver/Range.test.ts:341)
+- **upstream-bug** — Lab range sugar overflow returns typed InvalidRangeError failures where upstream threw schema validation exceptions. (scratchpad/test/semver/Range.test.ts:361)
+- **upstream-bug** — Lab encodes empty unions as an unsatisfiable expression where upstream encoded them as a wildcard that invented members. (scratchpad/test/semver/Range.test.ts:381)
+- **upstream-bug** — Lab rejects unrepresentable unrestricted empty branches during encoding where upstream silently lost prerelease members. (scratchpad/test/semver/Range.test.ts:396)
 
 ### Dependency backlog
 

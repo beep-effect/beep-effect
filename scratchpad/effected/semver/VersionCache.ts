@@ -1,5 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
-import * as Arr from "effect/Array";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -62,7 +62,7 @@ export class UnsatisfiedRangeError extends S.TaggedError<UnsatisfiedRangeError>(
 /**
  * Operations of the {@link VersionCache} service.
  *
- * Queries are lazy Effects; queries over the whole cache (`versions`,
+ * Queries read the current state on execution; whole-cache queries (`versions`,
  * `filter`) never fail and return `[]` when nothing matches, while
  * extremum and navigation operations fail typed. `next`/`prev` layer two
  * different absences deliberately: the error channel means "the pivot
@@ -110,7 +110,7 @@ const search = (arr: ReadonlyArray<SemVer>, target: SemVer): { readonly found: b
 	let hi = arr.length - 1;
 	while (lo <= hi) {
 		const mid = (lo + hi) >>> 1;
-		const cmp = Arr.getUnsafe(arr, mid).compare(target);
+		const cmp = A.getUnsafe(arr, mid).compare(target);
 		if (cmp === 0) return { found: true, index: mid };
 		if (cmp < 0) lo = mid + 1;
 		else hi = mid - 1;
@@ -120,7 +120,7 @@ const search = (arr: ReadonlyArray<SemVer>, target: SemVer): { readonly found: b
 
 const dedupeSorted = (versions: ReadonlyArray<SemVer>): ReadonlyArray<SemVer> => {
 	const sorted = SemVer.sort(versions);
-	return sorted.filter((v, i) => i === 0 || v.neq(Arr.getUnsafe(sorted, i - 1)));
+	return sorted.filter((v, i) => i === 0 || v.neq(A.getUnsafe(sorted, i - 1)));
 };
 
 /**
@@ -162,7 +162,7 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 
 			const requireNonEmpty = Effect.gen(function* () {
 				const arr = yield* Ref.get(ref);
-				if (!Arr.isReadonlyArrayNonEmpty(arr)) {
+				if (!A.isReadonlyArrayNonEmpty(arr)) {
 					return yield* EmptyCacheError.make();
 				}
 				return arr;
@@ -171,7 +171,7 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 			const resolve = Effect.fn("VersionCache.resolve")(function* (range: Range) {
 				const arr = yield* Ref.get(ref);
 				for (let i = arr.length - 1; i >= 0; i--) {
-					const version = Arr.getUnsafe(arr, i);
+					const version = A.getUnsafe(arr, i);
 					if (range.test(version)) {
 						return version;
 					}
@@ -201,17 +201,11 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 						return [...arr.slice(0, result.index), ...arr.slice(result.index + 1)];
 					}),
 
-				versions: Effect.suspend(() => Ref.get(ref)),
+				versions: Ref.get(ref),
 
-				latest: Effect.suspend(Effect.fn("VersionCache.latest")(function* () {
-					const arr = yield* requireNonEmpty;
-					return Arr.lastNonEmpty(arr);
-				})),
+				latest: Effect.map(requireNonEmpty, A.lastNonEmpty).pipe(Effect.withSpan("VersionCache.latest")),
 
-				oldest: Effect.suspend(Effect.fn("VersionCache.oldest")(function* () {
-					const arr = yield* requireNonEmpty;
-					return arr[0];
-				})),
+				oldest: Effect.map(requireNonEmpty, A.headNonEmpty).pipe(Effect.withSpan("VersionCache.oldest")),
 
 				resolve,
 
@@ -239,7 +233,7 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 					if (O.isNone(index)) {
 						return yield* VersionNotFoundError.make({ version });
 					}
-					return Arr.get(arr, index.value + 1);
+					return A.get(arr, index.value + 1);
 				}),
 
 				prev: Effect.fn("VersionCache.prev")(function* (version: SemVer) {
@@ -248,7 +242,7 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 					if (O.isNone(index)) {
 						return yield* VersionNotFoundError.make({ version });
 					}
-					return Arr.get(arr, index.value - 1);
+					return A.get(arr, index.value - 1);
 				}),
 			} satisfies VersionCacheShape;
 		}),

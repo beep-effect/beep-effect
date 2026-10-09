@@ -5,6 +5,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Comparator, InvalidComparatorError, SemVer } from "../../effected/semver/index.ts";
 
+import { ComparatorOperator } from "../../effected/semver/internal/order.ts";
+
 describe("Comparator", () => {
 	describe("parse", () => {
 		it.effect("parses operator and version", () =>
@@ -133,5 +135,19 @@ describe("Comparator", () => {
 			assert.instanceOf(result.failure, InvalidComparatorError);
 			assert.strictEqual(result.failure.input, "~>1.2.3");
 		});
+	});
+});
+
+describe("Comparator operator domain", () => {
+	it("keeps all five annotated operator literals and validates the field", () => {
+		assert.deepStrictEqual(ComparatorOperator.literals, ["=", ">", ">=", "<", "<="]);
+		assert.strictEqual(ComparatorOperator.ast.annotations?.identifier, "@beep/scratchpad/effected/semver/internal/order/ComparatorOperator");
+		for (const operator of ComparatorOperator.literals) {
+			assert.isTrue(S.is(ComparatorOperator)(operator));
+			const comparator = Comparator.make({ operator, version: SemVer.of(1, 0, 0) });
+			assert.strictEqual(comparator.operator, operator);
+		}
+		assert.isFalse(S.is(ComparatorOperator)("~"));
+		assert.isTrue(Result.isFailure(S.decodeUnknownResult(Comparator)({ operator: "~", version: SemVer.of(1, 0, 0) })));
 	});
 });

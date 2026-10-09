@@ -1,4 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Fn from "effect/Function";
 import * as Match from "effect/Match";
@@ -93,7 +94,16 @@ export class Range extends S.Class<Range>($I`Range`)({
 								),
 							);
 				},
-				encode: (parts) => Effect.succeed(formatRange(parts.sets)),
+				encode: (parts) => {
+					if (parts.sets.length === 0) return Effect.succeed("<0.0.0-0");
+					if (A.some(parts.sets, A.isReadonlyArrayEmpty)) {
+						return Effect.fail(new SchemaIssue.InvalidValue(
+							{ message: "An unrestricted empty comparator set cannot be represented by the range string grammar" },
+							parts,
+						));
+					}
+					return Effect.succeed(formatRange(parts.sets));
+				},
 			}),
 		),
 	);
@@ -130,12 +140,8 @@ export class Range extends S.Class<Range>($I`Range`)({
 		if (!result.ok) {
 			return Result.fail(InvalidRangeError.make({ input: result.input, position: result.position }));
 		}
-		return Result.succeed(
-			Range.make({
-				sets: normalizeSets(result.value).map((set) =>
-					set.map((c) => Comparator.make({ operator: c.operator, version: SemVer.make(c.version) })),
-				),
-			}),
+		return S.decodeResult(Range)({ sets: normalizeSets(result.value) }).pipe(
+			Result.mapError(() => InvalidRangeError.make({ input })),
 		);
 	}
 
@@ -270,9 +276,8 @@ export class Range extends S.Class<Range>($I`Range`)({
 
 		for (const setA of self.sets) {
 			for (const setB of that.sets) {
-				const merged = [...setA, ...setB];
-				if (isSetSatisfiable(merged)) {
-					candidates.push(merged);
+				for (const merged of intersectSets(setA, setB)) {
+					if (isSetSatisfiable(merged)) candidates.push(merged);
 				}
 			}
 		}
@@ -341,7 +346,7 @@ export class Range extends S.Class<Range>($I`Range`)({
 	 */
 	static simplify(range: Range): Range {
 		const sets = range.sets.filter((set, i) =>
-			!range.sets.some((other, j) => i !== j && isComparatorSetSubset(set, other)),
+			!range.sets.some((other, j) => i !== j && isComparatorSetSubset(set, other) && (j < i || !isComparatorSetSubset(other, set))),
 		);
 
 		if (sets.length === 0) return range;
@@ -424,40 +429,92 @@ const satisfiesSet = (version: SemVer, set: ComparatorSet): boolean => {
 
 // ── Algebra internals ────────────────────────────────────────────────────
 
-const isSetSatisfiable = (set: ComparatorSet): boolean => {
-	const lowers: Array<Comparator> = [];
-	const uppers: Array<Comparator> = [];
-	const equals: Array<Comparator> = [];
+// All tuple checks ignore build metadata and prerelease identifiers.
+const sameTuple = (a: SemVer, b: SemVer): boolean =>
+	a.major === b.major && a.minor === b.minor && a.patch === b.patch;
 
+const admitsTuple = (set: ComparatorSet, tuple: SemVer): boolean =>
+	set.length === 0 || A.some(set, (c) => c.version.isPrerelease && sameTuple(c.version, tuple));
+
+const prereleaseTuples = (set: ComparatorSet): Array<SemVer> =>
+	A.dedupeWith(A.map(A.filter(set, (c) => c.version.isPrerelease), (c) => c.version), sameTuple);
+
+// Stable tuples form a discrete, bounded lexicographic domain.
+const nextStable = (v: SemVer): O.Option<SemVer> => {
+	if (v.patch < Number.MAX_SAFE_INTEGER) return O.some(SemVer.of(v.major, v.minor, v.patch + 1));
+	if (v.minor < Number.MAX_SAFE_INTEGER) return O.some(SemVer.of(v.major, v.minor + 1, 0));
+	if (v.major < Number.MAX_SAFE_INTEGER) return O.some(SemVer.of(v.major + 1, 0, 0));
+	return O.none();
+};
+
+const stableWitness = (set: ComparatorSet): O.Option<SemVer> => {
+	let candidate = SemVer.of(0, 0, 0);
 	for (const c of set) {
-		if (c.operator === "=") equals.push(c);
-		else if (c.operator === ">" || c.operator === ">=") lowers.push(c);
-		else uppers.push(c);
+		if (c.operator !== ">" && c.operator !== ">=" && c.operator !== "=") continue;
+		let lower = O.some(SemVer.of(c.version.major, c.version.minor, c.version.patch));
+		if (c.operator === ">" && c.version.isStable) lower = nextStable(c.version);
+		if (O.isNone(lower)) return O.none();
+		if (lower.value.gt(candidate)) candidate = lower.value;
 	}
+	return satisfiesSet(candidate, set) ? O.some(candidate) : O.none();
+};
 
-	for (const eq of equals) {
-		for (const c of set) {
-			if (c === eq) continue;
-			if (!c.test(eq.version)) return false;
+// Appending numeric zero is the least prerelease strictly above a given
+// prerelease (unlike incrementing its final identifier, it skips no version).
+const prereleaseWitness = (set: ComparatorSet, tuple: SemVer): O.Option<SemVer> => {
+	let candidate = SemVer.of(tuple.major, tuple.minor, tuple.patch, [0]);
+	for (const c of set) {
+		if ((c.operator !== ">" && c.operator !== ">=" && c.operator !== "=") || !sameTuple(c.version, tuple)) continue;
+		if (c.version.isStable) return O.none();
+		const lower = c.operator === ">"
+			? SemVer.of(tuple.major, tuple.minor, tuple.patch, [...c.version.prerelease, 0])
+			: c.version;
+		if (lower.gt(candidate)) candidate = lower;
+	}
+	return satisfiesSet(candidate, set) ? O.some(candidate) : O.none();
+};
+
+const isSetSatisfiable = (set: ComparatorSet): boolean => {
+	const equality = A.findFirst(set, (c) => c.operator === "=");
+	if (O.isSome(equality)) return satisfiesSet(equality.value.version, set);
+	return O.isSome(stableWitness(set)) ||
+		A.some(prereleaseTuples(set), (tuple) => O.isSome(prereleaseWitness(set, tuple)));
+};
+
+// Project every prerelease bound onto the stable domain. The resulting
+// comparators mention no prereleases, so they grant no tuple permission.
+const stableSet = (set: ComparatorSet): O.Option<ComparatorSet> => {
+	const projected: Array<Comparator> = [];
+	for (const c of set) {
+		if (c.version.isStable) {
+			projected.push(c);
+			continue;
 		}
+		if (c.operator === "=") return O.none();
+		projected.push(Comparator.make({
+			operator: c.operator === ">" || c.operator === ">=" ? ">=" : "<",
+			version: SemVer.of(c.version.major, c.version.minor, c.version.patch),
+		}));
 	}
+	return O.some(projected);
+};
 
-	for (const lo of lowers) {
-		for (const hi of uppers) {
-			const cmp = lo.version.compare(hi.version);
-			if (lo.operator === ">=" && hi.operator === "<") {
-				if (cmp >= 0) return false;
-			} else if (lo.operator === ">=" && hi.operator === "<=") {
-				if (cmp > 0) return false;
-			} else if (lo.operator === ">" && hi.operator === "<") {
-				if (cmp >= 0) return false;
-			} else if (lo.operator === ">" && hi.operator === "<=") {
-				if (cmp >= 0) return false;
-			}
-		}
-	}
-
-	return true;
+const intersectSets = (a: ComparatorSet, b: ComparatorSet): ReadonlyArray<ComparatorSet> => {
+	if (a.length === 0) return [b];
+	if (b.length === 0) return [a];
+	const merged = [...a, ...b];
+	const tuples = prereleaseTuples(merged);
+	const permitted = A.filter(tuples, (tuple) => admitsTuple(a, tuple) && admitsTuple(b, tuple));
+	if (permitted.length === tuples.length) return [merged];
+	const stable = stableSet(merged);
+	return [
+		...O.getOrElse(O.map(stable, A.of), () => []),
+		...A.map(permitted, (tuple) => [
+			...merged,
+			Comparator.make({ operator: ">=", version: SemVer.of(tuple.major, tuple.minor, tuple.patch, [0]) }),
+			Comparator.make({ operator: "<", version: SemVer.of(tuple.major, tuple.minor, tuple.patch) }),
+		]),
+	];
 };
 
 const isComparatorImplied = (set: ComparatorSet, comp: Comparator): boolean => {
@@ -481,6 +538,12 @@ const isComparatorImplied = (set: ComparatorSet, comp: Comparator): boolean => {
 };
 
 const isComparatorSetSubset = (sub: ComparatorSet, sup: ComparatorSet): boolean => {
+	if (sup.length === 0 || !isSetSatisfiable(sub)) return true;
+	// An empty set admits all prerelease tuples; finite nonempty sets cannot.
+	if (sub.length === 0) return false;
+	for (const tuple of prereleaseTuples(sub)) {
+		if (!admitsTuple(sup, tuple) && O.isSome(prereleaseWitness(sub, tuple))) return false;
+	}
 	for (const supComp of sup) {
 		if (!isComparatorImplied(sub, supComp)) return false;
 	}

@@ -6,6 +6,7 @@ import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { formatComparator, parseComparator } from "./internal/grammar.ts";
+import { ComparatorOperator } from "./internal/order.ts";
 import { SemVer } from "./SemVer.ts";
 
 const $I = $ScratchpadId.create("effected/semver/Comparator");
@@ -56,7 +57,7 @@ export class InvalidComparatorError extends S.TaggedError<InvalidComparatorError
  */
 export class Comparator extends S.Class<Comparator>($I`Comparator`)({
 	/** The relational operator applied to `version`; a missing prefix in the source string means `=`. */
-	operator: S.Literals(["=", ">", ">=", "<", "<="]).annotateKey({ description: "The relational operator applied to `version`; a missing prefix in the source string means `=`." }),
+	operator: ComparatorOperator.annotateKey({ description: "The relational operator applied to `version`; a missing prefix in the source string means `=`." }),
 	/** The version the operator is applied against. */
 	version: SemVer.annotateKey({ description: "The version the operator is applied against." }),
 }, $I.annote("Comparator", { description: "A single version constraint: a comparison operator applied to a version. Comparator strings accept an optional operator prefix (`=`, `>`, `>=`, `<`, `<=`) followed by a complete version; a missing operator means `=`. Wildcards and range sugar are not allowed — those belong to `Range`." })) {

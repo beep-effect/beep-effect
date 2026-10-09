@@ -6,9 +6,13 @@
 // grammar, desugar and normalize pipeline and the `SemVer` class itself all
 // consume it.
 
-import * as Arr from "effect/Array";
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
+
+const $I = $ScratchpadId.create("effected/semver/internal/order");
 
 /** Structural fields of a parsed version, shared by the parser pipeline. */
 export interface VersionParts {
@@ -20,7 +24,12 @@ export interface VersionParts {
 }
 
 /** The relational operator prefix of a comparator (`=`, `>`, `>=`, `<`, `<=`). */
-export type ComparatorOperator = "=" | ">" | ">=" | "<" | "<=";
+export const ComparatorOperator = LiteralKit(["=", ">", ">=", "<", "<="]).annotate(
+	$I.annote("ComparatorOperator", {
+		description: "The five relational operators supported by SemVer comparators.",
+	}),
+);
+export type ComparatorOperator = typeof ComparatorOperator.Type;
 
 /** Structural fields of a parsed comparator. */
 export interface ComparatorParts {
@@ -63,7 +72,7 @@ export const compareParts: {
 
 	const len = Math.min(aPre.length, bPre.length);
 	for (let i = 0; i < len; i++) {
-		const cmp = comparePrereleaseIdentifier(Arr.getUnsafe(aPre, i), Arr.getUnsafe(bPre, i));
+		const cmp = comparePrereleaseIdentifier(A.getUnsafe(aPre, i), A.getUnsafe(bPre, i));
 		if (cmp !== 0) return cmp < 0 ? -1 : 1;
 	}
 
@@ -88,8 +97,8 @@ export const compareBuild: {
 
 	const len = Math.min(a.length, b.length);
 	for (let i = 0; i < len; i++) {
-		const aIdentifier = Arr.getUnsafe(a, i);
-		const bIdentifier = Arr.getUnsafe(b, i);
+		const aIdentifier = A.getUnsafe(a, i);
+		const bIdentifier = A.getUnsafe(b, i);
 		if (aIdentifier < bIdentifier) return -1;
 		if (aIdentifier > bIdentifier) return 1;
 	}

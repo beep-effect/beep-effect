@@ -2485,9 +2485,174 @@
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 0,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/semver/SemVer.test.ts:285,501; scratchpad/test/semver/Range.test.ts:32,408; scratchpad/test/semver/SemVer.test.ts:237",
+          "upstreamBehaviour": "SemVer.latestByMajor/latestByMinor use native Map; normalize.removeDuplicates uses Set; SemVer.sort/rsort and normalize.sortComparators use native array sort; bump overflow throws native Error.",
+          "labBehaviour": "Collections use MutableHashMap/MutableHashSet; sorting uses A.sort and Effect Order; overflow throws SemVerBumpOverflowError; ordering and duplicate semantics remain pinned.",
+          "reason": "native-runtime: D5 and native-runtime laws require Effect collections/helpers and prohibit native Error; the 2026-10-09 grilling ruling removes native-runtime exceptions."
+        },
+        {
+          "test": "scratchpad/test/semver/SemVer.test.ts:431",
+          "upstreamBehaviour": "JSON Schema export identifies the encoded definition as SemVerEncoded.",
+          "labBehaviour": "SemVer uses a composer-derived identifier, so the definition key is @beep/scratchpad/effected/semver/SemVer/SemVerEncoded; both pattern assertions follow that key.",
+          "reason": "identity-keys: D5 and operator step 4 require composer identities; round-1 INVENTORY.md codemod-1 requires recording the changed JSON Schema key."
+        },
+        {
+          "test": "scratchpad/test/semver/SemVer.test.ts:202,209,216,223,230,237,467",
+          "upstreamBehaviour": "SemVerBump overflow synchronously throws native Error with a component-bearing message and the schema failure as cause.",
+          "labBehaviour": "SemVer.ts throws S.TaggedError SemVerBumpOverflowError with SemVerBumpComponent and S.Defect({ includeStack: true }) cause; synchronous throwing and message text are preserved.",
+          "reason": "tagged-errors: D5, native-error law 7 and error-handling law 19 require schema-tagged errors with structured fields and serializable causes; fix-semver-g1.md:54 records the replacement."
+        },
+        {
+          "test": "scratchpad/test/semver/Comparator.test.ts:142; scratchpad/test/semver/SemVer.test.ts:143,467",
+          "upstreamBehaviour": "ComparatorOperator is a type-only union duplicated in Comparator.operator; overflow component is an inline union; SemVer equality narrows with instanceof.",
+          "labBehaviour": "internal/order.ts defines ComparatorOperator LiteralKit reused by Comparator.operator and exhaustive operatorWeight; SemVer.ts defines SemVerBumpComponent LiteralKit and uses S.is(SemVer) for equality narrowing.",
+          "reason": "schema-first: D5 and schema-first law 19 require named reusable LiteralKit domains and schema-derived guards; INVENTORY.md fable-1-8 and fix-semver-g1.md:55 ground operator consolidation."
+        },
+        {
+          "test": "module suite scratchpad/test/semver/**",
+          "upstreamBehaviour": "VersionDiff major/minor/patch deltas and optional positions on InvalidVersionError, InvalidComparatorError and InvalidRangeError use Schema.Number; version components already have integer/safe-range checks.",
+          "labBehaviour": "These fields use S.Finite and reject NaN and infinities; the shared nonNegativeInteger base also uses S.Finite without changing its existing bounded integer domain.",
+          "reason": "numeric-domains: schemaNumber diagnostics and the 2026-10-09 per-class S.Finite ruling force narrowing; INVENTORY.md codemod-2 grounds it; no dedicated nonfinite-input regression was added."
+        },
+        {
+          "test": "scratchpad/test/semver/SemVer.test.ts:237,279; scratchpad/test/semver/Range.test.ts:32; module suite scratchpad/test/semver/**",
+          "upstreamBehaviour": "desugarXRange casts its operator; grammar.parseComparatorCore casts the parsed operator; the overflow test casts its caught value to Error; bounded array/record reads have possibly undefined types.",
+          "labBehaviour": "Operator types propagate from parseOperator through desugarXRange without casts; the overflow test narrows to SemVerBumpOverflowError; bounded reads use A.getUnsafe/nonempty guards or A.get, and tests use optional access.",
+          "reason": "type-safety: D15 forbids unsafe assertions; step-2 commit 8e51302891 and INVENTORY.md reject-3 ground operator narrowing; the S0 diff shows cast removal and typed bounded access."
+        },
+        {
+          "test": "scratchpad/test/semver/VersionCache.test.ts:27,38,47,55,63,66,75,76,80; module suite scratchpad/test/semver/**",
+          "upstreamBehaviour": "VersionCache versions/latest/oldest are zero-argument Effect thunks; order comparison helpers and desugarXRange/desugarHyphen expose fixed-arity functions.",
+          "labBehaviour": "VersionCache queries are reusable Effect values with current-state reads and retained spans; internal/order.ts and internal/desugar.ts expose dual data-first/data-last overloads.",
+          "reason": "tsgo-diagnostics: TS377091 lazyEffect forces query Effect values (repair-semver.md:4-24); TS377101 missingPipeableSignature forces five internal dual wrappers (INVENTORY.md reject-3); final diff retains both shapes."
+        },
+        {
+          "test": "scratchpad/test/semver/SemVer.test.ts:519; scratchpad/test/semver/Comparator.test.ts:65; scratchpad/test/semver/Range.test.ts:63,85,136; scratchpad/test/semver/VersionCache.test.ts:176",
+          "upstreamBehaviour": "SemVer.groupBy manually mutates a record; comparator and range implication dispatch use switch; type checks use typeof; tests gather parsed versions with Effect.all over mapped Effects.",
+          "labBehaviour": "SemVer.groupBy uses A.groupBy over sorted versions; Comparator.test, Range implication and normalize.operatorWeight use exhaustive Match; type checks use Predicate; tests use Effect.forEach and cache navigation uses A.get.",
+          "reason": "effect-first: D5 and Effect-helper/terse-effect laws require available Effect helpers and exhaustive match; INVENTORY.md fable-1-9 and fix-semver-g1.md:13 ground grouping reuse."
+        },
+        {
+          "test": "module suite scratchpad/test/semver/**",
+          "upstreamBehaviour": "SemVer, Comparator, Range, VersionCache, VersionDiff and their tests import Effect modules from the root effect barrel; source examples also use barrel imports.",
+          "labBehaviour": "Source and all six test files import each module from effect/<Module>; source examples follow the same routing, with canonical A/O/P/S namespace aliases.",
+          "reason": "effect-imports: Operator step 3 and effect-imports law 1 require per-module imports; INVENTORY.md fable-1-7 and fix-semver-g1.md:11 also require canonical Array alias A."
+        },
+        {
+          "test": "scratchpad/test/semver/SemVer.test.ts:444,467; scratchpad/test/semver/Comparator.test.ts:142; module suite scratchpad/test/semver/**",
+          "upstreamBehaviour": "Schema classes/errors have short identifiers and unannotated fields; VersionCache uses @effected/semver/VersionCache; ExactVersionString/PinnableVersionString and their filters lack composer metadata.",
+          "labBehaviour": "Comparator.ts, Range.ts, SemVer.ts, VersionCache.ts, VersionDiff.ts and internal/order.ts use $ScratchpadId-derived $I identities, descriptions and field annotations; string schemas and filters have identity/title/description metadata.",
+          "reason": "identity-annotations: D5 and operator step 4 mandate @beep/identity annotations; INVENTORY.md sol-1-7 and fix-semver-g1.md:7 ground string-schema/filter metadata repairs."
+        },
+        {
+          "test": "scratchpad/test/semver/Range.test.ts:259; scratchpad/test/semver/Range.test.ts:272",
+          "upstreamBehaviour": "Range.simplify mutually removes equivalent comparator sets, losing accepted union members when another branch survives.",
+          "labBehaviour": "Range.simplify removes strict subsets and retains the earliest mutually containing branch, preserving membership and its build-metadata representative.",
+          "reason": "upstream-bug: INVENTORY.md sol-1-1 reproduced >=1.0.0 || >=1.0.0 || <0.5.0 rejecting 1.2.3 after upstream simplification; fix-semver-g1.md:48 and both added regressions pin the fix."
+        },
+        {
+          "test": "scratchpad/test/semver/Range.test.ts:283; scratchpad/test/semver/Range.test.ts:296",
+          "upstreamBehaviour": "Range intersection concatenates constraints and effectively ORs prerelease tuple permissions, accepting versions rejected by one operand.",
+          "labBehaviour": "Intersection separates stable bounds and retains a prerelease tuple only when both operands admit it, matching conjunction of operand membership.",
+          "reason": "upstream-bug: INVENTORY.md sol-1-2 reproduced >=1.0.0-alpha intersect <2.0.0 wrongly accepting 1.0.0-beta upstream; fix-semver-g1.md:49 and the counterexample/membership matrix pin the fix."
+        },
+        {
+          "test": "scratchpad/test/semver/Range.test.ts:322",
+          "upstreamBehaviour": "Range.isSubset checks comparator implication without prerelease tuple permissions and can declare false containment, causing simplify to discard valid matches.",
+          "labBehaviour": "Subset checks require superset permission for every potentially matching admitted prerelease tuple and handle unrestricted empty sets conservatively.",
+          "reason": "upstream-bug: INVENTORY.md sol-1-3 reproduced upstream isSubset(>=1.0.0-alpha <2.0.0, >=0.0.0 <2.0.0)=true although only the first accepts 1.0.0-beta; fix-semver-g1.md:50 and the regression pin the fix."
+        },
+        {
+          "test": "scratchpad/test/semver/Range.test.ts:341",
+          "upstreamBehaviour": "Range satisfiability compares endpoints as though versions were dense and returns successful intersections for adjacent-version gaps with no admissible witness.",
+          "labBehaviour": "Satisfiability requires an equality, stable or permitted prerelease witness, respecting discrete tuples and safe-integer ceilings; empty intersections fail with UnsatisfiableConstraintError.",
+          "reason": "upstream-bug: INVENTORY.md sol-1-4 reproduced upstream Success for >1.0.0 intersect <1.0.1 with no matching version; fix-semver-g1.md:51 and adjacent stable/prerelease gap regressions pin the fix."
+        },
+        {
+          "test": "scratchpad/test/semver/Range.test.ts:361",
+          "upstreamBehaviour": "Range.parseResult constructs desugared comparators with SemVer.make; incrementing sugar past the safe-integer cap throws outside Result and defects in Range.parse.",
+          "labBehaviour": "Range.parseResult validates normalized parts with S.decodeResult(Range) and maps failures to InvalidRangeError carrying the original input; Range.parse fails through its typed channel.",
+          "reason": "upstream-bug: INVENTORY.md sol-1-5 reproduced upstream schema throws for ^9007199254740991.0.0 and ~1.9007199254740991.0; fix-semver-g1.md:52 and six failing/three control inputs pin the fix."
+        },
+        {
+          "test": "scratchpad/test/semver/Range.test.ts:381",
+          "upstreamBehaviour": "Range.FromString encodes sets: [] as an empty string, which decodes as a stable wildcard and invents accepted versions.",
+          "labBehaviour": "Range.FromString encodes the empty union as <0.0.0-0, preserving empty membership on decode; Range.toString remains unchanged.",
+          "reason": "upstream-bug: INVENTORY.md sol-1-6 reproduced upstream encode/decode changing 1.0.0 membership from false to true; fix-semver-g1.md:53 and the empty-union round-trip regression pin the fix."
+        },
+        {
+          "test": "scratchpad/test/semver/Range.test.ts:396",
+          "upstreamBehaviour": "Range.FromString encodes unrestricted empty comparator sets such as sets: [[]] as an empty string, losing prerelease membership on decode.",
+          "labBehaviour": "Range.FromString rejects any empty comparator branch with SchemaIssue.InvalidValue because the range string grammar cannot represent its unrestricted membership.",
+          "reason": "upstream-bug: INVENTORY.md sol-1-6 reproduced upstream encode/decode changing 1.0.0-beta membership from true to false; fix-semver-g1.md:53 and one/multiple empty-branch regressions pin the fix."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-1 — Deferred JSDoc carrier, metadata and dependent example conversion (scratchpad/effected/semver/Comparator.ts:95,101)",
+          "reason": "jsdoc: During S2, retain prose and examples, convert carriers to titled Example and Details/Gotchas sections, add canonical category/since tags, and update the overflow example to construct the final component/cause payload."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-2 — Deferred canonical Option assertions (scratchpad/test/semver/Range.test.ts:89-91)",
+          "reason": "test: During S3, replace these with assertSome(expected payload) and assertNone from @effect/vitest/utils without changing assertion meaning."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-3 — Deferred property floor and fcRuns migration (scratchpad/test/semver/Range.test.ts:51)",
+          "reason": "test: During S3, add schema-derived round-trip and parser/formatter properties for uncovered exported surfaces, use fcRuns(n) in property registration options, retain all oracle assertions and required bug regressions."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-4 — Optional extrema and adjacent-dedupe consolidation (scratchpad/effected/semver/SemVer.ts:402-417)",
+          "reason": "effect-idiom: Consider A.max/A.min after a nonempty guard, Range extrema delegating to SemVer extrema over range.filter, and A.dedupeAdjacentWith over sorted versions, preserving equality and empty-array behavior."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-5 — Optional kits for currently anonymous literal domains (scratchpad/effected/semver/VersionDiff.ts:10,48)",
+          "reason": "schema: Consider VersionDiffType, GroupByStrategy and TruncateLevel LiteralKits where a named shared domain is useful; preserve current accepted values and signatures. Do not duplicate the required overflow-component fix."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-6 — Deferred README API-description alignment (scratchpad/effected/semver/README.md:1)",
+          "reason": "docs: During S2, add the structured overflow-error row and clarify synchronous throwing; align Version cache prose with restored upstream thunks. Keep the central Port-notes bookkeeping under codemod records below."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-7 — Optional public barrel exposure of the newly introduced overflow error (scratchpad/effected/semver/index.ts:39)",
+          "reason": "effect-idiom: Consider exporting SemVerBumpOverflowError from index.ts and switching the test import during public-surface cleanup. If published, let the central codemod record it in exportsAdded and README Added exports; do not treat that bookkeeping as a required fix."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 1,
+              "backlog": 2
+            },
+            "sol": {
+              "required": 7,
+              "backlog": 4
+            },
+            "fable": {
+              "required": 9,
+              "backlog": 6
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

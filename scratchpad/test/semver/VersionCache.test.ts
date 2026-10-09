@@ -76,6 +76,31 @@ layer(VersionCache.layer)("VersionCache", (it) => {
 				assert.strictEqual(String(yield* cache.oldest), "1.0.0");
 			}),
 		);
+
+		it.effect("query effects read current state on every execution", () =>
+			Effect.gen(function* () {
+				const cache = yield* VersionCache;
+				const { versions, latest, oldest } = cache;
+				yield* cache.load([SemVer.of(2, 0, 0)]);
+				assert.deepStrictEqual((yield* versions).map(String), ["2.0.0"]);
+				assert.strictEqual(String(yield* latest), "2.0.0");
+				assert.strictEqual(String(yield* oldest), "2.0.0");
+				yield* cache.add(SemVer.of(1, 0, 0));
+				yield* cache.add(SemVer.of(3, 0, 0));
+				assert.deepStrictEqual((yield* versions).map(String), ["1.0.0", "2.0.0", "3.0.0"]);
+				assert.strictEqual(String(yield* latest), "3.0.0");
+				assert.strictEqual(String(yield* oldest), "1.0.0");
+				yield* cache.remove(SemVer.of(1, 0, 0));
+				yield* cache.remove(SemVer.of(3, 0, 0));
+				assert.deepStrictEqual((yield* versions).map(String), ["2.0.0"]);
+				assert.strictEqual(String(yield* latest), "2.0.0");
+				assert.strictEqual(String(yield* oldest), "2.0.0");
+				yield* cache.load([]);
+				assert.deepStrictEqual(yield* versions, []);
+				assert.strictEqual((yield* Effect.flip(latest))._tag, "EmptyCacheError");
+				assert.strictEqual((yield* Effect.flip(oldest))._tag, "EmptyCacheError");
+			}),
+		);
 	});
 
 	describe("resolution", () => {

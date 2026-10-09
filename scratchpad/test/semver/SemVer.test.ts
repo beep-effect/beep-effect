@@ -2,11 +2,15 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Hash from "effect/Hash";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { InvalidVersionError, SemVer } from "../../effected/semver/index.ts";
-import { SemVerBumpOverflowError } from "../../effected/semver/SemVer.ts";
+import { SemVerBumpComponent, SemVerBumpOverflowError } from "../../effected/semver/SemVer.ts";
+
+const SemVerBumpOverflowErrorJson = S.fromJsonString(SemVerBumpOverflowError);
 
 describe("SemVer", () => {
 	describe("parse", () => {
@@ -433,5 +437,99 @@ describe("SemVer", () => {
 			);
 			assert.nestedPropertyVal(document, "definitions.@beep/scratchpad/effected/semver/SemVer/SemVerEncoded.properties.build.items.pattern", "^[0-9A-Za-z-]+$");
 		});
+	});
+});
+
+describe("SemVer round-1 regressions", () => {
+	it("annotates both string schemas and their filters without changing validation", () => {
+		for (const [name, schema, valid] of [
+			["ExactVersionString", SemVer.ExactVersionString, SemVer.isValid],
+			["PinnableVersionString", SemVer.PinnableVersionString, SemVer.isPinnable],
+		] as const) {
+			const prefix = "@beep/scratchpad/effected/semver/SemVer/";
+			assert.strictEqual(S.resolveAnnotations(schema)?.identifier, `${prefix}${name}`);
+			assert.isString(S.resolveAnnotations(schema)?.title);
+			assert.isString(S.resolveAnnotations(schema)?.description);
+			const group = schema.ast.checks?.[0];
+			if (group?._tag !== "FilterGroup") return assert.fail("expected a metadata-bearing check group");
+			const check = group.checks[0];
+			assert.strictEqual(check?.annotations?.identifier, `${prefix}${name}Check`);
+			assert.isString(check?.annotations?.title);
+			assert.isString(check?.annotations?.description);
+			for (const input of ["1.2.3", "1.2.3-alpha.0", "1.2.3+build", " 1.2.3", "1.2.3 ", "^1.2.3", "1.2", "latest", "01.2.3", ""]) {
+				const result = S.decodeResult(schema)(input);
+				assert.strictEqual(Result.isSuccess(result), valid(input), `${name}: ${input}`);
+				if (Result.isSuccess(result)) assert.strictEqual(result.success, input);
+			}
+		}
+	});
+
+	it.effect("bump overflow exposes structured components and a serializable Defect cause", () =>
+		Effect.gen(function* () {
+			assert.deepStrictEqual(SemVerBumpComponent.literals, ["major", "minor", "patch", "prerelease"]);
+			assert.strictEqual(SemVerBumpComponent.ast.annotations?.identifier, "@beep/scratchpad/effected/semver/SemVer/SemVerBumpComponent");
+			const max = Number.MAX_SAFE_INTEGER;
+			const rows = [
+				["major", () => SemVer.of(max, 0, 0).bump.major()],
+				["minor", () => SemVer.of(0, max, 0).bump.minor()],
+				["patch", () => SemVer.of(0, 0, max).bump.patch()],
+				["prerelease", () => SemVer.of(1, 0, 0, ["alpha", max]).bump.prerelease()],
+			] as const;
+			for (const [component, bump] of rows) {
+				const result = Result.try(bump);
+				if (Result.isSuccess(result)) return assert.fail("expected bump to fail");
+				const error = result.failure;
+				if (!S.is(SemVerBumpOverflowError)(error)) return assert.fail("expected a tagged overflow error");
+				assert.strictEqual(error.component, component);
+				assert.include(error.message, `bumping "${component}"`);
+				const encoded = yield* S.encodeEffect(SemVerBumpOverflowError)(error);
+				assert.strictEqual(encoded.component, component);
+				assert.isTrue(P.isObject(encoded.cause));
+				assert.property(encoded.cause, "message");
+				assert.property(encoded.cause, "stack");
+				const json = yield* S.encodeEffect(SemVerBumpOverflowErrorJson)(error);
+				const decoded = yield* S.decodeEffect(SemVerBumpOverflowErrorJson)(json);
+				assert.strictEqual(decoded.component, component);
+				assert.strictEqual(decoded.message, error.message);
+				assert.isTrue(P.isError(decoded.cause));
+				const recoded = yield* S.encodeEffect(SemVerBumpOverflowError)(decoded);
+				assert.deepStrictEqual(recoded.cause, encoded.cause);
+			}
+		}),
+	);
+
+	it("sorts into fresh arrays and keeps input order for equal precedence", () => {
+		const first = SemVer.of(1, 0, 0, [], ["z"]);
+		const second = SemVer.of(1, 0, 0, [], ["a"]);
+		const lower = SemVer.of(1, 0, 0, ["alpha"]);
+		const higher = SemVer.of(2, 0, 0);
+		const versions = [higher, first, lower, second];
+		const ascending = SemVer.sort(versions);
+		const descending = SemVer.rsort(versions);
+		assert.deepStrictEqual(ascending.map(String), ["1.0.0-alpha", "1.0.0+z", "1.0.0+a", "2.0.0"]);
+		assert.deepStrictEqual(descending.map(String), ["2.0.0", "1.0.0+z", "1.0.0+a", "1.0.0-alpha"]);
+		assert.notStrictEqual(ascending, versions);
+		assert.notStrictEqual(descending, versions);
+		assert.deepStrictEqual(versions, [higher, first, lower, second]);
+		const empty: ReadonlyArray<SemVer> = [];
+		assert.notStrictEqual(SemVer.sort(empty), empty);
+		assert.notStrictEqual(SemVer.rsort(empty), empty);
+	});
+
+	it("groupBy preserves sorted group and member order for every strategy", () => {
+		const versions = [
+			SemVer.of(2, 0, 0), SemVer.of(1, 5, 1), SemVer.of(1, 0, 0, [], ["z"]),
+			SemVer.of(1, 0, 0, ["alpha"]), SemVer.of(1, 0, 0, [], ["a"]),
+		];
+		const major = SemVer.groupBy(versions, "major");
+		assert.deepStrictEqual(R.keys(major), ["1", "2"]);
+		assert.deepStrictEqual(major["1"]?.map(String), ["1.0.0-alpha", "1.0.0+z", "1.0.0+a", "1.5.1"]);
+		for (const strategy of ["minor", "patch"] as const) {
+			const grouped = SemVer.groupBy(versions, strategy);
+			const key = strategy === "minor" ? "1.0" : "1.0.0";
+			assert.deepStrictEqual(R.keys(grouped), [key, strategy === "minor" ? "1.5" : "1.5.1", strategy === "minor" ? "2.0" : "2.0.0"]);
+			assert.deepStrictEqual(grouped[key]?.map(String), ["1.0.0-alpha", "1.0.0+z", "1.0.0+a"]);
+		}
+		assert.deepStrictEqual(SemVer.groupBy([], "major"), {});
 	});
 });

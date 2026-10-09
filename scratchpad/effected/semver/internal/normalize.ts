@@ -2,26 +2,29 @@
 // precedence, plus semantic deduplication. Comparators that differ only in
 // build metadata are duplicate constraints (SemVer §10) and collapse to one.
 
+import * as A from "effect/Array";
 import * as Match from "effect/Match";
 import * as MutableHashSet from "effect/MutableHashSet";
-import type { ComparatorParts } from "./order.ts";
+import * as Order from "effect/Order";
+import type { ComparatorOperator, ComparatorParts } from "./order.ts";
 import { compareParts } from "./order.ts";
 
-const operatorWeight = Match.type<string>().pipe(
+const operatorWeight = Match.type<ComparatorOperator>().pipe(
 	Match.when(">=", () => 0),
 	Match.when(">", () => 1),
 	Match.when("=", () => 2),
 	Match.when("<", () => 3),
 	Match.when("<=", () => 4),
-	Match.orElse(() => 5),
+	Match.exhaustive,
 );
 
+const comparatorOrder = Order.make<ComparatorParts>((a, b) => {
+	const weight = Order.Number(operatorWeight(a.operator), operatorWeight(b.operator));
+	return weight !== 0 ? weight : compareParts(a.version, b.version);
+});
+
 const sortComparators = (set: ReadonlyArray<ComparatorParts>): ReadonlyArray<ComparatorParts> =>
-	[...set].sort((a, b) => {
-		const w = operatorWeight(a.operator) - operatorWeight(b.operator);
-		if (w !== 0) return w;
-		return compareParts(a.version, b.version);
-	});
+	A.sort(set, comparatorOrder);
 
 const removeDuplicates = (set: ReadonlyArray<ComparatorParts>): ReadonlyArray<ComparatorParts> => {
 	const seen = MutableHashSet.empty<string>();

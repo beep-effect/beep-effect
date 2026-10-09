@@ -1,5 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
-import * as Arr from "effect/Array";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Fn from "effect/Function";
@@ -142,12 +143,16 @@ export class SemVer extends S.Class<SemVer>($I`SemVer`)({
 	 */
 	static readonly ExactVersionString: S.String = S.String.pipe(
 		S.check(
-			S.makeFilter((value) =>
-				SemVer.isValid(value)
-					? undefined
-					: "Expected an exact SemVer 2.0.0 version string (ranges, partial versions, dist-tags and surrounding whitespace are not valid)",
-			),
+			S.makeFilterGroup([
+				S.makeFilter((value) =>
+					SemVer.isValid(value)
+						? undefined
+						: "Expected an exact SemVer 2.0.0 version string (ranges, partial versions, dist-tags and surrounding whitespace are not valid)",
+					$I.annote("ExactVersionStringCheck", { description: "An exact SemVer 2.0.0 version string without surrounding whitespace." }),
+				),
+			]),
 		),
+		$I.annoteSchema("ExactVersionString", { description: "An exact SemVer 2.0.0 version string without surrounding whitespace." }),
 	);
 
 	/**
@@ -163,12 +168,16 @@ export class SemVer extends S.Class<SemVer>($I`SemVer`)({
 	 */
 	static readonly PinnableVersionString: S.String = S.String.pipe(
 		S.check(
-			S.makeFilter((value) =>
-				SemVer.isPinnable(value)
-					? undefined
-					: "Expected an exact SemVer version with no build metadata (ranges, partial versions, dist-tags and surrounding whitespace are not pinnable)",
-			),
+			S.makeFilterGroup([
+				S.makeFilter((value) =>
+					SemVer.isPinnable(value)
+						? undefined
+						: "Expected an exact SemVer version with no build metadata (ranges, partial versions, dist-tags and surrounding whitespace are not pinnable)",
+					$I.annote("PinnableVersionStringCheck", { description: "An exact SemVer version string without build metadata or surrounding whitespace." }),
+				),
+			]),
 		),
+		$I.annoteSchema("PinnableVersionString", { description: "An exact SemVer version string without build metadata or surrounding whitespace." }),
 	);
 
 	// ── Construction ────────────────────────────────────────────────────
@@ -390,12 +399,12 @@ export class SemVer extends S.Class<SemVer>($I`SemVer`)({
 
 	/** Sort versions ascending by SemVer precedence. Returns a new array. */
 	static sort(versions: ReadonlyArray<SemVer>): Array<SemVer> {
-		return [...versions].sort(SemVer.Order);
+		return A.sort(versions, SemVer.Order);
 	}
 
 	/** Sort versions descending by SemVer precedence. Returns a new array. */
 	static rsort(versions: ReadonlyArray<SemVer>): Array<SemVer> {
-		return [...versions].sort((a, b) => b.compare(a));
+		return A.sort(versions, Order.flip(SemVer.Order));
 	}
 
 	/** Highest version, or `Option.none()` if the array is empty. */
@@ -426,19 +435,14 @@ export class SemVer extends S.Class<SemVer>($I`SemVer`)({
 		versions: ReadonlyArray<SemVer>,
 		strategy: "major" | "minor" | "patch",
 	): Record<string, ReadonlyArray<SemVer>> {
-		const grouped: Record<string, Array<SemVer>> = {};
-		for (const version of SemVer.sort(versions)) {
-			const key = Match.value(strategy).pipe(
+		return A.groupBy(SemVer.sort(versions), (version) =>
+			Match.value(strategy).pipe(
 				Match.when("major", () => `${version.major}`),
 				Match.when("minor", () => `${version.major}.${version.minor}`),
 				Match.when("patch", () => `${version.major}.${version.minor}.${version.patch}`),
 				Match.exhaustive,
-			);
-			const group = grouped[key] ?? [];
-			group.push(version);
-			grouped[key] = group;
-		}
-		return grouped;
+			),
+		);
 	}
 
 	/** The highest version for each distinct major version, ascending. */
@@ -447,7 +451,7 @@ export class SemVer extends S.Class<SemVer>($I`SemVer`)({
 		for (const version of SemVer.sort(versions)) {
 			MutableHashMap.set(latest, version.major, version);
 		}
-		return latest.pipe(MutableHashMap.values, Arr.fromIterable);
+		return latest.pipe(MutableHashMap.values, A.fromIterable);
 	}
 
 	/** The highest version for each distinct major.minor pair, ascending. */
@@ -456,7 +460,7 @@ export class SemVer extends S.Class<SemVer>($I`SemVer`)({
 		for (const version of SemVer.sort(versions)) {
 			MutableHashMap.set(latest, `${version.major}.${version.minor}`, version);
 		}
-		return latest.pipe(MutableHashMap.values, Arr.fromIterable);
+		return latest.pipe(MutableHashMap.values, A.fromIterable);
 	}
 
 	// ── Instance: comparison ────────────────────────────────────────────
@@ -475,7 +479,7 @@ export class SemVer extends S.Class<SemVer>($I`SemVer`)({
 
 		const len = Math.min(aPre.length, bPre.length);
 		for (let i = 0; i < len; i++) {
-			const cmp = comparePrereleaseIdentifier(Arr.getUnsafe(aPre, i), Arr.getUnsafe(bPre, i));
+			const cmp = comparePrereleaseIdentifier(A.getUnsafe(aPre, i), A.getUnsafe(bPre, i));
 			if (cmp !== 0) return cmp < 0 ? -1 : 1;
 		}
 
@@ -581,6 +585,12 @@ export class SemVer extends S.Class<SemVer>($I`SemVer`)({
 // rather than a typed `Effect` failure, matching every other
 // `SemVer`/`SemVerBump` method's synchronous, non-`Effect` signature. The
 // original `SemVer.make` schema failure rides as `cause`.
+/** The component whose bump exceeded the safe-integer cap. */
+export const SemVerBumpComponent = LiteralKit(["major", "minor", "patch", "prerelease"]).annotate(
+	$I.annote("SemVerBumpComponent", { description: "The component whose bump exceeded the safe-integer cap." }),
+);
+export type SemVerBumpComponent = typeof SemVerBumpComponent.Type;
+
 /**
  * A synchronous bump exceeded the safe-integer cap. Retains the underlying
  * schema failure as its cause.
@@ -590,8 +600,8 @@ export class SemVer extends S.Class<SemVer>($I`SemVer`)({
  * ```ts
  * import { SemVerBumpOverflowError } from "./SemVer.ts";
  *
- * const error = SemVerBumpOverflowError.make({ message: "Overflow", cause: undefined });
- * error.message; // => "Overflow"
+ * const error = SemVerBumpOverflowError.make({ component: "major", cause: undefined });
+ * error.component; // => "major"
  * ```
  *
  * @category errors
@@ -599,13 +609,20 @@ export class SemVer extends S.Class<SemVer>($I`SemVer`)({
  */
 export class SemVerBumpOverflowError extends S.TaggedError<SemVerBumpOverflowError>($I`SemVerBumpOverflowError`)(
 	"SemVerBumpOverflowError",
-	{ message: S.String, cause: S.Unknown },
+	{
+		component: SemVerBumpComponent.annotateKey({ description: "The component that overflowed." }),
+		cause: S.Defect({ includeStack: true }).annotateKey({ description: "The underlying schema validation failure." }),
+	},
 	$I.annote("SemVerBumpOverflowError", { description: "A SemVer bump exceeded the safe-integer cap." }),
-) {}
+) {
+	override get message(): string {
+		return `SemVerBump invariant violated: bumping "${this.component}" would exceed Number.MAX_SAFE_INTEGER (${Number.MAX_SAFE_INTEGER})`;
+	}
+}
 
-function overflow(component: "major" | "minor" | "patch" | "prerelease", cause: unknown): never {
+function overflow(component: SemVerBumpComponent, cause: unknown): never {
 	throw SemVerBumpOverflowError.make({
-		message: `SemVerBump invariant violated: bumping "${component}" would exceed Number.MAX_SAFE_INTEGER (${Number.MAX_SAFE_INTEGER})`,
+		component,
 		cause,
 	});
 }
