@@ -26,7 +26,7 @@ import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { fixtureOcrPage, fixtureSource, readFixture, TestCrypto } from "../../use-cases/test/officeActionFixtures.ts";
+import { fixtureOcrPage, fixtureSource, fixtureText, TestCrypto } from "./officeActionFixtures.ts";
 
 const document = DocStructureDocument.make({
   documentId: "fixture",
@@ -42,11 +42,11 @@ class TestState extends Context.Service<
     readonly text: string;
     readonly originalBytes: Ref.Ref<string>;
   }
->()("OfficeActionStructureTest/State") {}
+>()("@beep/law-practice-server/test/OfficeActionStructure.test/TestState") {}
 const StateLive = Layer.effect(
   TestState,
   Effect.gen(function* () {
-    const text = yield* readFixture("oa-001.txt");
+    const text = fixtureText;
     const { verification } = yield* fixtureSource(text);
     return { text, verification, delivered: yield* Ref.make(0), originalBytes: yield* Ref.make("") };
   })

@@ -175,3 +175,14 @@
 - Repair: encode the history key through Effect and name locked/unlocked method
   functions; preserve the lock and typed storage-error boundary.
 - Prevention: run the package’s Effect diagnostic compiler before calling proof final.
+
+## 2026-10-09 — Package-local test compilation boundary
+
+- Evidence: TS6059 rejects importing another package’s TypeScript test helpers
+  outside server rootDir; deterministicKeys also names the canonical TestState key.
+- Attribution: introduced integration-test boundary.
+- Repair: keep server test builders inside its rootDir, share only the immutable
+  raw-text fixture, and use the reported canonical service key. No compiler
+  configuration or cross-package source boundary is weakened.
+- Prevention: share runtime test support through an owned test-utils API when
+  such a helper exists; broad test infrastructure consolidation is outside this lane.
