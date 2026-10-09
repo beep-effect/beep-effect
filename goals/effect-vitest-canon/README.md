@@ -1,3 +1,5 @@
+> Run 4 integration publication: [PR #1575](https://github.com/beep-effect/beep-effect/pull/1575) is ready. Full repo-cli verification and every local parity stage pass at source `4be0599a18`; final main merge `7ef36e8020` changes only exploration documents. Final inventory: 1,853 / 716 open / 1,137 exceptions. Source worktrees remain preserved. Hosted merge, separate R105 ports and R102 remediation remain open; P1/P2 active and P3 pending. Earlier proof banners describe their original snapshots.
+
 > Integration resumed, 2026-10-09: lane `rsc-v-vitest-canon` transfers the
 > unpublished continuation delta after #1506 and the six-file detector WIP onto
 > current main under Effect/Vitest 4.0.2. #1506 merged `c921d9e11d` as

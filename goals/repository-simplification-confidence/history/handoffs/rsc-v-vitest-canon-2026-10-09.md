@@ -211,3 +211,75 @@ The current linkage has 1,752 stable IDs, 65 re-anchors, 50 unmatched old and
 historical IDs; 15,513 historical IDs remain immutable. The source code and
 projection are frozen for another canonical publication retry. No final-head
 runtime/package/parity result is claimed until the collector writes it.
+
+## Run 4 final publication handoff
+
+- **Lane:** `rsc-v-vitest-canon`, branch `chore/rsc-v-vitest-canon` in
+  `effect-vitest-canon-integrate`; owning clone `beep-effect2`.
+- **Head SHA:** latest source qualification is
+  `4be0599a181c86fdf282da880dacf49bb20fb1bf`; final main merge is
+  `7ef36e8020bcabdac7f67a38af8c29170290bf58`, incorporating main
+  `35ed1b5dda91b37a251ddef652cbf95390e631e4`. The incoming GPU exploration
+  documentation changes no CLI source or gate input. All 37 reviewed source
+  digests remain unchanged. The publication successor contains this evidence
+  bundle; its exact SHA is supplied in the worker's final report.
+- **PR:** [#1575](https://github.com/beep-effect/beep-effect/pull/1575),
+  published through Yeet, ready for review and labelled `ready-for-heavy`.
+  Both actionable CodeRabbit threads were answered and resolved through
+  `yeet reply`. Separate Opus 5.5 medium review is terminal zero. The advisory
+  lifecycle harness consolidation is dispositioned in SPEC and Stage 4 for
+  reconsideration during R102. The orchestrator owns the merge gate.
+- **Package verification:** default `@beep/repo-cli` package-verify PASS
+  **781.746 s**, including audit **750.5 s** and docgen **29.6 s**. The earlier
+  package receipts remain historical. No RDF or Pacer source is included in
+  this PR. Their original preserved patch qualified RDF **12.064 s** and
+  Pacer **10.024 s**; those receipts do not qualify the repair preview or the
+  future R105 PR.
+- **Local hosted parity:** test-tsgo PASS **19.751 s**; docgen local PASS
+  **5.926 s**; jsdoc-ratchet PASS **318.955 s**; knowledge refs PASS **26.067 s**
+  with zero gated violations; Fallow audit PASS **9.285 s** and health PASS
+  **4.473 s**. Final authored documentation also passes knowledge refs with
+  zero gated violations. Changed two-file cohort: **230 cases**, Node PASS
+  **22.604 s**, Bun PASS **18.448 s**. The historical 35-file / 1,248-case
+  cohort remains explicitly bound to its recorded heads. Scoped coverage:
+  RatchetDiff lines **90%**, statements **90.9%**, branches **100%**, functions
+  **85.71%**; Research.test-kit is a pure re-export with zero executable
+  statements. No untouched floor was changed.
+- **Hosted state:** at the correction head, all completed required checks
+  passed; seven Heavy jobs remained queued. Vercel failures were build rate
+  limits and were acknowledged as environment-only. The final evidence push
+  starts a fresh hosted check/review window. Merge readiness is not inferred
+  from local proof. The worker's readiness watcher is cancelled for handoff
+  while required Heavy checks remain queued, satisfying the no-owned-running-
+  unit rule; the orchestrator resumes the gate under S11.
+- **Inventory before → after:** **1,879 / 741 open / 1,138 exceptions →
+  1,853 / 716 open / 1,137 exceptions**, generated under the 4.0.2 pin after
+  the final main merge. SHA256:
+  `c071e14c088ed76ec6e8b967595bf2d7ffb0302e1b35d8608420e94b855ab990`.
+  Ledger linkage preserves all **15,513** historical IDs; **1,752** stable
+  IDs, **65** re-anchors, **50** unmatched old and **24** unmatched new keys,
+  **1,172** historical occurrence links and **269** exact historical IDs.
+  Churn is attributed to #1552/#1555 and the current source changes;
+  unmatched keys are not counted as fixes.
+- **Disposition counts:** **5 port / 41 superseded / 0 discard worktrees**;
+  the stale Pacer changeset is separately discarded as an artifact. All
+  **17** preservation export digests were verified, including the Stage 1
+  staged/unstaged digests. Source worktrees remain untouched. The private CLI
+  changeset was archived after D landed, resolving the hosted Repo Sanity
+  failure without altering package version or policy.
+- **Handoff path:**
+  `goals/repository-simplification-confidence/history/handoffs/rsc-v-vitest-canon-2026-10-09.md`.
+  Detailed terminal results and qualification boundaries are in
+  `history/receipts/rsc-v-local-proof-results.json`,
+  `stage-4-vitest-reconciliation.md`, and `stage-5-acceptance.md`.
+- **Retirement list:** Stage 4 `#retirement` names all **46** source worktrees,
+  `inventory-next` residue and **22** remote branch candidates. The orchestrator
+  must coordinate with the live build-pipeline owner, recheck liveness/tips,
+  archive, and retire after the merges. This worker removed nothing.
+- **Open items:** orchestrator gate/merge of #1575 at the final published head;
+  R105 separate RDF/Pacer PR after that merge, with fresh typechecks, both
+  runtimes, default package verification, Fallow and independent terminal-zero
+  review; R102's **716** open rows and B's **1,137** exception review; remaining
+  timing/reference receipts, reflection and completed-retained closeout.
+  The canon goal remains active in P1/P2 with P3 pending. Recovery is revert
+  of the integration PR plus replayable preserved exports and regeneration.

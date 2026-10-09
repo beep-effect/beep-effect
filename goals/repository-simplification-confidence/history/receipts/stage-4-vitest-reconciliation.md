@@ -124,8 +124,8 @@ No second worktree is created and no other session's checkout is edited.
 
 Starting main snapshot: **1,879 total / 741 open / 1,138 exceptions** under
 Effect/Vitest **4.0.2**. Fresh final-source scan: **1,853 total / 716 open / 1,137 exceptions**.
-The generated snapshot is tied to source `66953b8bf1f5c2b9dc7cfac3805394683e87c8f5`
-and main `2eefbb64af5f1b374d1a012b879a3b747e68507e`. Thirty-five reviewed
+The generated snapshot is tied to integration snapshot `7ef36e8020bcabdac7f67a38af8c29170290bf58`
+and main `35ed1b5dda91b37a251ddef652cbf95390e631e4`. Thirty-five reviewed
 files remain byte-identical to R7; main's changeset-remedy assertion and the
 new canonical plan property have separate terminal-zero Run 4 review.
 Re-anchors from #1552 import layout and #1555 primitive pin shifts are counted
@@ -309,3 +309,21 @@ is changed. Restore the archived note only when reversing the private policy.
   over these separately qualified platform scenarios in a preservation wave.
   Reconsider the consolidation when these resource cohorts are next changed
   under R102, preserving every local path/options assertion and cause oracle.
+
+### Run 4 terminal qualification and final-main integration
+
+At `4be0599a18`: affected Node/Bun cohort 230 cases PASS (22.604 / 18.448 s),
+scan PASS 11.735 s, test-tsgo PASS 19.751 s, full repo-cli package PASS 781.746 s
+(audit 750.5 s, docgen 29.6 s), docgen local PASS 5.926 s, JSDoc ratchet PASS
+318.955 s, knowledge refs PASS 26.067 s (zero live gated observations), Fallow
+audit PASS 9.285 s and health PASS 4.473 s. The admitted collector exited.
+No partial or cancelled package attempt is counted as proof.
+
+Main `35ed1b5dda` then merged at `7ef36e8020`: seven GPU exploration documents,
+no CLI/root gate input change. All 37 Run 4 source digests still match.
+The owner scan after this merge again finds 1,853 / 716 / 1,137, with inventory
+SHA256 `c071e14c088ed76ec6e8b967595bf2d7ffb0302e1b35d8608420e94b855ab990`.
+The authored linkage names that main and integration head. PR #1575 is ready;
+its two actionable review threads were answered and resolved through Yeet.
+Full local qualification and publication are proven; hosted merge readiness
+and the fleet orchestrator's merge are separate, pending claims.
