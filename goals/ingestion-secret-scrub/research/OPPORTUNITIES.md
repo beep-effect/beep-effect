@@ -15,3 +15,9 @@
 - Attribution: introduced; direct filesystem read used despite an existing platform layer dependency.
 - Repair: `it.layer(BunFileSystem.layer)` and the Effect `FileSystem` service; no baseline refresh.
 - Prevention: use the package's existing platform test pattern for source-integrity checks.
+
+The platform-layer attempt still triggered a new informational inventory candidate.
+Final disposition: remove filesystem acquisition from the integrity test; retain pure
+schema/scanner tests and prove persisted source absence through the scanner CLI.
+The full detector reports `introduced=0` without an inventory refresh. A documented
+judgment route for new canonical platform tests would have prevented this detour.

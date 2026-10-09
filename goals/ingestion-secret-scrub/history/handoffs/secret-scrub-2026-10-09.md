@@ -53,3 +53,12 @@ Repair uses the existing Bun filesystem layer and canonical `it.layer` registrat
 No inventory suppression or dependency change. A proof-row observed acknowledgement
 was rejected because local-shard failures require a fix receipt; acknowledge with
 the signed repair commit instead. No PR has been created by the failed publication.
+
+## P0 canonical gate resolved
+
+The detector also classifies canonical platform imports as new inventory candidates.
+Final repair: fixture integrity is pure schema validation and scanner positive controls;
+source absence is checked separately by the existing scanner CLI. This removes the
+resource operation instead of hiding it or refreshing the shared baseline.
+`lint:effect-vitest`: introduced=0, pass. Integrity tests: 2/2 pass. Fixture, integrity
+test and scanner source bytes: exact-canary count 0 each, pass. Publication retry follows.
