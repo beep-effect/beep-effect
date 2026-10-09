@@ -54,7 +54,8 @@ import * as Fiber from "effect/Fiber";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
@@ -63,6 +64,7 @@ import * as TestConsole from "effect/testing/TestConsole";
 
 // The Actions jobs endpoint returns snake_case wire fields; these fixtures keep
 // them so the derivations are exercised on the shape they actually receive.
+
 const job = (overrides: Partial<CiWorkflowJob> = {}) =>
   CiWorkflowJob.make({
     completed_at: "2026-08-06T12:10:00Z",
@@ -467,7 +469,7 @@ describe("ci lane timings attempt filter", () => {
         )
       );
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
     })
   );
 
@@ -529,7 +531,7 @@ describe("ci lane timings gh api retry", () => {
       const scripted = scriptedGhSpawner([{ exitCode: 0, output: "x".repeat(512 * 1024 + 1) }]);
       const exit = yield* collectWithRetries(scripted.spawner);
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
       {
         const exitFailed = Exit.isFailure(exit);
         assertTrue(exitFailed);
@@ -544,7 +546,7 @@ describe("ci lane timings gh api retry", () => {
       const scripted = scriptedGhSpawner([{ exitCode: 1, output: "gh: Not Found (HTTP 404)" }]);
       const exit = yield* collectWithRetries(scripted.spawner);
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
       {
         const exitFailed = Exit.isFailure(exit);
         assertTrue(exitFailed);
@@ -561,7 +563,7 @@ describe("ci lane timings gh api retry", () => {
       ]);
       const exit = yield* collectWithRetries(scripted.spawner);
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
       {
         const exitFailed = Exit.isFailure(exit);
         assertTrue(exitFailed);
@@ -593,7 +595,7 @@ describe("ci lane timings gh api retry", () => {
       const scripted = scriptedGhSpawner(A.replicate(BAD_RECORD_MAC, 6));
       const exit = yield* collectWithRetries(scripted.spawner);
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
       const rendered = Exit.isFailure(exit) ? exit.cause.toString() : "";
       expect(rendered).toContain("on every one of 5 attempts");
       expect(rendered).toContain("bad record MAC");
@@ -608,7 +610,7 @@ describe("ci lane timings gh api retry", () => {
       const scripted = scriptedGhSpawner([{ exitCode: 0, output: Str.repeat(512 * 1024 + 1)("x") }]);
       const exit = yield* collectWithRetries(scripted.spawner);
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
       {
         const exitFailed = Exit.isFailure(exit);
         assertTrue(exitFailed);
@@ -635,7 +637,7 @@ describe("ci lane timings jobs pagination", () => {
       });
       const exit = yield* collectWithRetries(stalledSpawner);
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
       {
         const exitFailed = Exit.isFailure(exit);
         assertTrue(exitFailed);
@@ -1084,6 +1086,30 @@ describe("ci lane timing admission window", () => {
     })
   );
 
+  it.effect("renders an unratified version without claiming a ratified context count", () =>
+    Effect.gen(function* () {
+      const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, []);
+      const rulesetVersion = CiRulesetHistoryVersion.make({
+        version_id: 99999999,
+        updated_at: DateTime.makeUnsafe("2026-09-22T00:00:00Z"),
+      });
+      const markdown = renderCiLaneTimingWindowMarkdown({ ...report, rulesetVersion: O.some(rulesetVersion) });
+
+      expect(markdown).toContain("required contexts: 18 (expected an unratified version");
+      expect(markdown).toContain("version 99999999 effective 2026-09-22T00:00:00.000Z");
+    })
+  );
+
+  it("retains a pending job status and reports unavailable pickup timestamps", () => {
+    const row = ciLaneTimingRow(job({ conclusion: null, started_at: null, completed_at: null, status: "queued" }));
+
+    expect(row.conclusion).toBe("queued");
+    assertNone(row.durationSeconds);
+    expect(renderCiLaneTimingsSummary(ciLaneTimingsReport([row]))).toContain(
+      "no attempt-1 job carried both timestamps"
+    );
+  });
+
   it.effect("renders unavailable and passing queue tripwires", () =>
     Effect.gen(function* () {
       const emptyReport = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, []);
@@ -1156,7 +1182,7 @@ describe("ci lane timing admission window", () => {
     Effect.gen(function* () {
       const exit = yield* Effect.exit(buildCiLaneTimingWindowReport(A.append(REQUIRED_CONTEXTS, "Extra Context"), []));
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
       {
         const exitFailed = Exit.isFailure(exit);
         assertTrue(exitFailed);
@@ -1434,7 +1460,7 @@ describe("ci lane timing admission window", () => {
         collectCiLaneTimingWindow(".", windowOptions({ since: boundary, until: boundary }))
       );
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
       {
         const exitFailed = Exit.isFailure(exit);
         assertTrue(exitFailed);
@@ -1453,7 +1479,7 @@ describe("ci lane timing admission window", () => {
     return Effect.gen(function* () {
       const exit = yield* Effect.exit(collectCiLaneTimingWindow(".", windowOptions({ event: "pull_request" })));
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
       {
         const exitFailed = Exit.isFailure(exit);
         assertTrue(exitFailed);
@@ -1573,7 +1599,7 @@ describe("ci lane timing admission window", () => {
         ])
       );
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
       const rendered = Exit.isFailure(exit) ? exit.cause.toString() : "";
       expect(rendered).toContain("--until 2026-09-30T00:00:00.000Z is in the future");
       expect(rendered).toContain("Pass --preview to run a preview that is never an admission census.");
@@ -1592,7 +1618,7 @@ describe("ci lane timing admission window", () => {
         runLaneTimingsCommand(["--window", "--since", "2026-09-04T00:00:01Z", "--until", "2026-09-11T00:00:00Z"])
       );
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
       const rendered = Exit.isFailure(exit) ? exit.cause.toString() : "";
       expect(rendered).toContain("window spans 6d 23h 59m 59s, under seven days");
       expect(rendered).not.toContain("is in the future");
@@ -1732,7 +1758,7 @@ describe("ci lane timing ruleset changes inside the window", () => {
     return Effect.gen(function* () {
       const exit = yield* Effect.exit(collectCiLaneTimingWindow(".", straddlingWindowOptions()));
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
       assertTrue(
         Str.includes(
           "required contexts changed inside the window: ruleset 10240248 version 49479116 effective 2026-09-12T01:46:53.354Z (after version 48600030) removed Coverage Regression. Pass --preview to run a preview that is never an admission census."
@@ -1843,7 +1869,7 @@ describe("ci lane timing ruleset changes inside the window", () => {
         runLaneTimingsCommand(["--window", "--since", STRADDLING_SINCE, "--until", STRADDLING_UNTIL])
       );
 
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
       assertTrue(
         Str.includes("required contexts changed inside the window: ruleset 10240248 version 49479116")(
           Exit.isFailure(exit) ? exit.cause.toString() : ""

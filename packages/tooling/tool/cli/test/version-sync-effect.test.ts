@@ -31,9 +31,10 @@ import {
   VersionSyncResolution,
 } from "@beep/repo-cli/test/VersionSync";
 import { FsUtilsLive } from "@beep/repo-utils";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -54,7 +55,7 @@ const decodeUnknownJson = S.decodeEffect(S.fromJsonString(S.Unknown));
 const decodeBunVersionStateEffect = S.decodeEffect(BunVersionState);
 const encodeBunVersionStateEffect = S.encodeEffect(BunVersionState);
 
-import { FetchHttpClient } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 
 const VersionSyncTestLayer = Layer.mergeAll(
   NodeServices.layer,
@@ -65,14 +66,14 @@ const VersionSyncTestLayer = Layer.mergeAll(
   FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
 );
 
-layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
+it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect Catalog", (it) => {
   describe("resolveEffectCatalog", () => {
     it.effect(
       "detects drift for lockstep Effect packages while ignoring non-lockstep Effect tools",
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const packageJsonPath = path.join(tmpDir, "package.json");
 
         yield* fs.writeFileString(
@@ -103,8 +104,6 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
           "catalog.@effect/vitest",
         ]);
         expect(A.map(report.items, (item) => item.expected)).toEqual(["^4.0.0-beta.28", "^4.0.0-beta.28"]);
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
@@ -113,7 +112,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const packageJsonPath = path.join(tmpDir, "package.json");
 
         yield* fs.writeFileString(
@@ -135,8 +134,6 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         expect(report.items).toHaveLength(1);
         expect(report.items[0]?.field).toBe("catalog.@effect/opentelemetry");
         expect(report.items[0]?.expected).toBe("^4.0.0-beta.28");
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
   });
@@ -211,7 +208,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const packageJsonPath = path.join(tmpDir, "package.json");
 
         yield* fs.writeFileString(
@@ -236,8 +233,6 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         expect(changed).toBe(true);
         expect(decodedUpdated.catalog["@effect/opentelemetry"]).toBe("^4.0.0-beta.28");
         expect(decodedUpdated.catalog.effect).toBe("^4.0.0-beta.28");
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
   });
@@ -248,7 +243,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const workflowDir = path.join(tmpDir, ".github", "workflows");
 
         yield* fs.makeDirectory(workflowDir, { recursive: true });
@@ -279,8 +274,6 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         expect(report.status).toBe("drift");
         expect(report.items).toHaveLength(1);
         expect(report.items[0]?.expected).toBe("20.11.1");
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
@@ -289,7 +282,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const workflowDir = path.join(tmpDir, ".github", "workflows");
 
         yield* fs.makeDirectory(workflowDir, { recursive: true });
@@ -314,8 +307,6 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
 
         expect(state.workflowLocations).toHaveLength(0);
         expect(report.status).toBe("ok");
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
   });
@@ -339,7 +330,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const vercelDir = path.join(tmpDir, "apps", "oip-web");
         const digest = "2d03fb5fb83ac8b567aca0a281b2ce1a1a19d488f56c2968d88c3f25e92fe452";
 
@@ -366,8 +357,6 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         assertSome(state.vercelBuildVersion, "1.3.14");
         assertSome(state.bunArchiveSha256, digest);
         assertNone(state.expectedBunArchiveSha256);
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
@@ -376,7 +365,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
 
         yield* fs.writeFileString(path.join(tmpDir, ".bun-version"), "1.4.0\n");
         yield* fs.writeFileString(
@@ -389,8 +378,6 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         assertNone(state.vercelInstallVersion);
         assertNone(state.vercelBuildVersion);
         assertNone(state.bunArchiveSha256);
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
@@ -499,7 +486,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const vercelJsonPath = path.join(tmpDir, "vercel.json");
 
         yield* fs.writeFileString(
@@ -519,8 +506,6 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         expect(updated.installCommand).toBe('cd ../.. && npx --yes "bun@1.4.0" install --frozen-lockfile');
         expect(updated.buildCommand).toBe("cd ../.. && npx --yes bun@1.4.0 run --cwd apps/oip-web build:pwa");
         expect(updated.$schema).toBe("https://openapi.vercel.sh/vercel.json");
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
@@ -529,7 +514,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const vercelDir = path.join(tmpDir, "apps", "oip-web");
 
         yield* fs.makeDirectory(vercelDir, { recursive: true });
@@ -572,14 +557,12 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         )) as Record<string, unknown>;
         expect(updatedVercel.installCommand).toBe("npx --yes bun@1.4.0 install --frozen-lockfile");
         expect(updatedVercel.buildCommand).toBe("npx --yes bun@1.4.0 run build:pwa");
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
   });
 });
 
-layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
+it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Turbo Schema", (it) => {
   const writeTurboWorkspace = Effect.fn(function* (tmpDir: string, options: { readonly lockfile: boolean }) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
@@ -652,7 +635,7 @@ layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
       "reports drift as URL pairs for every turbo.json whose $schema is not the lockfile-resolved turbo release URL",
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         yield* writeTurboWorkspace(tmpDir, { lockfile: true });
 
         const state = yield* resolveTurboSchema(tmpDir);
@@ -687,8 +670,6 @@ layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
             "https://v2-10-14.turborepo.dev/schema.json",
           ],
         ]);
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
@@ -696,7 +677,7 @@ layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
       "falls back to the range-stripped catalog pin when bun.lock has no turbo entry",
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         yield* writeTurboWorkspace(tmpDir, { lockfile: false });
 
         const state = yield* resolveTurboSchema(tmpDir);
@@ -705,8 +686,6 @@ layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
         expect(state.installedVersion).toBe("2.10.13");
         expect(report.status).toBe("drift");
         expect(A.map(report.items, (item) => item.file)).toEqual(["turbo.json", "apps/web/turbo.json"]);
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
@@ -739,7 +718,7 @@ layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         yield* writeTurboWorkspace(tmpDir, { lockfile: true });
 
         const report = buildTurboReport(yield* resolveTurboSchema(tmpDir));
@@ -773,14 +752,12 @@ layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
 
         const rerun = buildTurboReport(yield* resolveTurboSchema(tmpDir));
         expect(rerun.status).toBe("ok");
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
   });
 });
 
-layer(VersionSyncTestLayer)("VersionSync report surface", (it) => {
+it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync report surface", (it) => {
   const driftItem = VersionDriftItem.make({
     file: "turbo.json",
     field: "$schema",
@@ -885,7 +862,7 @@ layer(VersionSyncTestLayer)("VersionSync report surface", (it) => {
   });
 });
 
-layer(VersionSyncTestLayer)("VersionSync installed tool version", (it) => {
+it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync installed tool version", (it) => {
   describe("exactVersionFromSpecifier", () => {
     it("strips range prefixes and stringifies non-string specifiers", () => {
       expect(exactVersionFromSpecifier("^2.10.13")).toBe("2.10.13");
@@ -902,7 +879,7 @@ layer(VersionSyncTestLayer)("VersionSync installed tool version", (it) => {
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
 
         yield* fs.writeFileString(
           path.join(tmpDir, "package.json"),
@@ -917,8 +894,6 @@ layer(VersionSyncTestLayer)("VersionSync installed tool version", (it) => {
         assertNone(yield* readLockfileResolvedVersion(tmpDir, "@biomejs/biome"));
         expect(yield* resolveInstalledToolVersion(tmpDir, "turbo")).toBe("2.10.13");
         expect(yield* resolveInstalledToolVersion(tmpDir, "@biomejs/biome")).toBe("");
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
@@ -927,15 +902,13 @@ layer(VersionSyncTestLayer)("VersionSync installed tool version", (it) => {
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
 
         yield* fs.writeFileString(path.join(tmpDir, "bun.lock"), "not json");
 
         const failure = yield* readLockfileResolvedVersion(tmpDir, "turbo").pipe(Effect.flip);
         expect(failure._tag).toBe("VersionSyncError");
         expect(failure.file).toBe("bun.lock");
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
   });
@@ -954,7 +927,7 @@ layer(VersionSyncTestLayer)("VersionSync installed tool version", (it) => {
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const appDir = path.join(tmpDir, "apps", "web");
 
         yield* fs.makeDirectory(appDir, { recursive: true });
@@ -968,8 +941,6 @@ layer(VersionSyncTestLayer)("VersionSync installed tool version", (it) => {
         const failure = yield* resolveTurboSchema(tmpDir).pipe(Effect.flip);
         expect(failure._tag).toBe("VersionSyncError");
         expect(failure.file).toBe("apps/web/turbo.json");
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
   });
@@ -980,7 +951,7 @@ layer(VersionSyncTestLayer)("VersionSync installed tool version", (it) => {
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tmpDir = yield* fs.makeTempDirectory();
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
         const file = path.join(tmpDir, "turbo.json");
         const url = "https://v2-10-14.turborepo.dev/schema.json";
 
@@ -989,8 +960,6 @@ layer(VersionSyncTestLayer)("VersionSync installed tool version", (it) => {
         expect(yield* updateJsoncSchemaUrl(file, url)).toBe(true);
         expect(yield* updateJsoncSchemaUrl(file, url)).toBe(false);
         expect(yield* fs.readFileString(file)).toContain("// pinned");
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
   });

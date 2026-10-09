@@ -27,6 +27,7 @@ import {
   runQualityTaskGithubCheckLaneWaves,
   runQualityTaskStreamingLaneGroup,
 } from "@beep/repo-cli/commands/Quality/Tasks";
+import { runCapturedStreams } from "@beep/repo-cli/test/Process";
 import {
   baselineEntriesLostByReplacement,
   CoverageBaselineChangeSet,
@@ -182,7 +183,8 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
@@ -586,7 +588,7 @@ const policyStepCommand = (step: QualityTaskStep) => {
 
 // A red policy run fails as one group whose failures name exactly the red planned label.
 const expectPolicyGroupFailure = (exit: Exit.Exit<unknown, unknown>, failedLabel: string): void => {
-  exit.pipe(Exit.isFailure, assertTrue);
+  assertTrue(exit._tag === "Failure");
   if (Exit.isFailure(exit)) {
     const failure = Cause.squash(exit.cause);
     expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
@@ -1411,7 +1413,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tempDir = yield* fs.makeTempDirectory();
+        const tempDir = yield* fs.makeTempDirectoryScoped();
         // The fixture stands in for `beep ci lane`: it declares one digest to the ledger the parent named.
         const manifest =
           "{\"name\": \"wrapper-lane-fixture\", \"private\": true, \"scripts\": {\"beep\": \"bun -e \\\"const fs = require('node:fs'); const path = require('node:path'); const ledger = process.env.BEEP_TURBO_LANE_LEDGER; fs.mkdirSync(path.dirname(ledger), { recursive: true }); fs.appendFileSync(ledger, JSON.stringify({ _tag: 'declared', digest: { digest: 'declared', summaryIds: ['run-1'], tasks: [{ taskId: '//#lint:typos', hash: 'h1', cacheStatus: 'HIT' }] } }) + '\\\\\\\\n'); fs.appendFileSync(ledger, JSON.stringify({ _tag: 'closed', attempted: 1 }) + '\\\\\\\\n');\\\"\"}}";
@@ -1459,7 +1461,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tempDir = yield* fs.makeTempDirectory();
+        const tempDir = yield* fs.makeTempDirectoryScoped();
         const ledger = path.join(tempDir, "lane", "ledger.jsonl");
         yield* withEnvVarEffect(
           TURBO_LANE_LEDGER_ENV,
@@ -1488,7 +1490,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tempDir = yield* fs.makeTempDirectory();
+        const tempDir = yield* fs.makeTempDirectoryScoped();
         const bin = path.join(tempDir, "bin");
         yield* fs.makeDirectory(bin, { recursive: true });
         // A stand-in Cache launcher leaves the summary its governed Turbo child would write.
@@ -1677,7 +1679,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tempDir = yield* fs.makeTempDirectory();
+        const tempDir = yield* fs.makeTempDirectoryScoped();
         const artifactPath = path.join(tempDir, "inner-lanes.ndjson");
         yield* fs.writeFileString(artifactPath, "not-json\n");
         yield* withEnvVarEffect(
@@ -1707,7 +1709,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(emitted)
         );
         expect(A.map(emittedReport.lanes, (lane) => lane.id)).toEqual(["check"]);
-        yield* fs.remove(tempDir, { recursive: true, force: true });
       }).pipe(
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
@@ -1719,7 +1720,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tempDir = yield* fs.makeTempDirectory();
+        const tempDir = yield* fs.makeTempDirectoryScoped();
         const artifactPath = path.join(tempDir, "unscoped-inner-lanes.ndjson");
         const durableReport = yield* encodeQualityTaskLaneRunReportJson(
           QualityTaskLaneRunReport.make({
@@ -1758,7 +1759,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         );
         assertNone(emittedReport.parentLaneId);
         expect(A.map(emittedReport.lanes, (lane) => lane.id)).toEqual(["check"]);
-        yield* fs.remove(tempDir, { recursive: true, force: true });
       }).pipe(
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
@@ -1770,7 +1770,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tempDir = yield* fs.makeTempDirectory();
+        const tempDir = yield* fs.makeTempDirectoryScoped();
         const missingPath = path.join(tempDir, "missing.ndjson");
         const foreignPath = path.join(tempDir, "foreign.ndjson");
         const foreignReport = yield* encodeQualityTaskLaneRunReportJson(
@@ -1812,7 +1812,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           A.every((report) => O.contains(report.parentLaneId, "full:current-parent")),
           assertTrue
         );
-        yield* fs.remove(tempDir, { recursive: true, force: true });
       }).pipe(
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
@@ -1824,7 +1823,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tempDir = yield* fs.makeTempDirectory();
+        const tempDir = yield* fs.makeTempDirectoryScoped();
         const artifactPath = path.join(tempDir, "inner-lanes.ndjson");
         const waves = [
           GithubCheckLaneWaveSpec.make({
@@ -1866,7 +1865,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             })
           )
         );
-        yield* fs.remove(tempDir, { recursive: true, force: true });
       }).pipe(
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
@@ -1878,7 +1876,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tempDir = yield* fs.makeTempDirectory();
+        const tempDir = yield* fs.makeTempDirectoryScoped();
         const artifactPath = path.join(tempDir, "streaming-inner-lanes.ndjson");
         yield* withEnvVarEffect(
           QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
@@ -1917,7 +1915,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             })
           )
         );
-        yield* fs.remove(tempDir, { recursive: true, force: true });
       }).pipe(
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
@@ -2684,9 +2681,19 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const second = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
             expect(A.map(second.report.lanes, (result) => result.status)).toEqual(["reused", "reused"]);
 
-            const originalTree = yield* runGit(tempRoot, ["rev-parse", "HEAD^{tree}"]);
+            const readTree = runCapturedStreams({
+              command: "git",
+              args: ["rev-parse", "HEAD^{tree}"],
+              cwd: tempRoot,
+              stdin: "ignore",
+            });
+            const originalTree = yield* readTree;
+            expect(originalTree.exitCode).toBe(0);
+            expect(originalTree.stdout).toMatch(/^(?:[0-9a-f]{40}|[0-9a-f]{64})\r?\n$/u);
             yield* runGit(tempRoot, ["commit", "--amend", "-m", "same tree, rewritten history"]);
-            expect(yield* runGit(tempRoot, ["rev-parse", "HEAD^{tree}"])).toBe(originalTree);
+            const rewrittenTree = yield* readTree;
+            expect(rewrittenTree.exitCode).toBe(0);
+            expect(rewrittenTree.stdout).toBe(originalTree.stdout);
 
             const rewritten = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
             expect(A.map(rewritten.report.lanes, (result) => result.status)).toEqual(["passed", "passed"]);
@@ -2932,7 +2939,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const tempDir = yield* fs.makeTempDirectory();
+        const tempDir = yield* fs.makeTempDirectoryScoped();
         const artifactPath = path.join(tempDir, "cheap-gates.ndjson");
         const laneIds = ["goals:index-check", "lint:schema-first", "lint:allowlist", "goals:doctor"];
         const result = yield* withEnvVarEffect(
@@ -2979,7 +2986,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           (line) => decodeQualityTaskLaneRunReportJson(line)
         );
         expect(A.flatMap(journaled, (report) => A.map(report.lanes, (lane) => lane.id))).toEqual(laneIds);
-        yield* fs.remove(tempDir, { recursive: true, force: true });
       }).pipe(
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
@@ -3250,9 +3256,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const repoRoot = yield* Effect.acquireRelease(fs.makeTempDirectory(), (directory) =>
-          fs.remove(directory, { recursive: true, force: true }).pipe(Effect.ignore)
-        );
+        const repoRoot = yield* fs.makeTempDirectoryScoped();
 
         yield* runGit(repoRoot, ["init"]);
         yield* runGit(repoRoot, ["config", "user.email", "quality-test@example.com"]);
@@ -4313,7 +4317,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           function* () {
             const exit = yield* Effect.exit(validateCoverageTaskArgsForTesting("/repo", ["--replace-all"]));
 
-            exit.pipe(Exit.isFailure, assertTrue);
+            assertTrue(exit._tag === "Failure");
             if (Exit.isFailure(exit)) {
               assert.include(Cause.pretty(exit.cause), "--replace-all requires --write-baseline");
             }
@@ -4376,7 +4380,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               validateCoverageTaskArgsForTesting(repoRoot, ["--write-baseline", "--filter=...@beep/repo-cli"])
             );
 
-            exit.pipe(Exit.isFailure, assertTrue);
+            assertTrue(exit._tag === "Failure");
             if (Exit.isFailure(exit)) {
               assert.include(Cause.pretty(exit.cause), "must name exact workspace packages that define coverage");
             }
@@ -4875,10 +4879,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             Effect.gen(function* () {
               const fs = yield* FileSystem.FileSystem;
               const path = yield* Path.Path;
-              const repoRoot = yield* fs.makeTempDirectory();
-              yield* Effect.addFinalizer(() =>
-                fs.remove(repoRoot, { force: true, recursive: true }).pipe(Effect.orDie)
-              );
+              const repoRoot = yield* fs.makeTempDirectoryScoped();
               const packageDir = path.join(repoRoot, "packages/existing");
               const sourcePath = path.join(packageDir, "src/Index.ts");
               const coverageDirectory = path.join(packageDir, "coverage");
@@ -7760,7 +7761,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           );
 
           expect(released).toBe(true);
-          exit.pipe(Exit.isFailure, assertTrue);
+          assertTrue(exit._tag === "Failure");
           if (Exit.isFailure(exit)) {
             const failure = Cause.squash(exit.cause);
             expect(failure).toBeInstanceOf(QualityTaskFailed);
@@ -7843,7 +7844,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             )
           );
 
-          exit.pipe(Exit.isFailure, assertTrue);
+          assertTrue(exit._tag === "Failure");
           if (Exit.isFailure(exit)) {
             const failure = Cause.squash(exit.cause);
             expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
@@ -7889,7 +7890,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           );
 
           expect(yield* fs.exists(markerPath)).toBe(true);
-          exit.pipe(Exit.isFailure, assertTrue);
+          assertTrue(exit._tag === "Failure");
           if (Exit.isFailure(exit)) {
             const failure = Cause.squash(exit.cause);
             expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
@@ -8018,7 +8019,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             Effect.exit(runQualityTaskStreamingStepGroupForTesting("test:stream", [step]))
           );
 
-          exit.pipe(Exit.isFailure, assertTrue);
+          assertTrue(exit._tag === "Failure");
           expect(yield* fs.readFileString(statePath)).toBe("3");
           expect(yield* fs.exists(path.join(process.cwd(), FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH))).toBe(false);
 
@@ -8078,7 +8079,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             Effect.exit(runQualityTask(getInvocation(["lint"])))
           );
 
-          exit.pipe(Exit.isFailure, assertTrue);
+          assertTrue(exit._tag === "Failure");
           if (Exit.isFailure(exit)) {
             const failure = Cause.squash(exit.cause);
             expect(failure).toBeInstanceOf(QualityTaskGroupFailed);

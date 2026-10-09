@@ -309,3 +309,35 @@ steps. The PR and `ready-for-heavy` label were created/applied through REST.
 The detached monitor was successfully submitted after providing the existing
 user-session runtime and D-Bus environment. Neither submission nor the label
 establishes ready state, hosted acceptance or merge.
+
+## Later main integration, 2026-10-06
+
+Main `9a42554f5516a1ff12154175069e3d3e6146d08a` was integrated locally after
+further fleet merges. The only textual conflict was the generated Effect Vitest
+baseline. An exact-ID three-way reconciliation retained both sets of decisions
+without collapsing equal occurrence hashes, then the canonical writer refreshed
+current source positions. There were no conflicting row decisions. The baseline
+is now 1,913 findings across the scanner's 1,320 files; additions outside this
+batch belong to the later-main census delta, not accepted new human-lens coverage.
+The nine test files of this PR remain unchanged by this merge. Frozen install
+passed. Local integration proof and exact-head hosted readiness remain distinct.
+PR #1507 still owns the inherited Accounts failure wave; its Check is green but
+Coverage Regression is red on Accounts and ReviewWindow rows. No coverage floor
+is changed here, and no inherited repair is duplicated.
+
+The integration at `475948805049619be09d5ce08bd784d18a64f261` passes all
+105 selected tests on actual Node 22.22.3 (36.378 seconds) and Bun 1.4.2
+(22.721 seconds), with unchanged selected source hashes. Direct test-project
+type checking passes (16.586 seconds). The first quick package check failed
+on missing declaration outputs for newly integrated PDF/drawing/OCR dependencies.
+The current transitive dependency build then passed all 39 tasks, followed by
+quick package verification (lint 3.4 seconds, check 6.0 seconds; wrapper 7.522
+seconds). The failed prerequisite attempt is retained separately. These focused
+and quick checks do not extend the earlier full-package audit to every later
+main change. The Accounts owner has since pushed a new repair head
+`35d2af1e07acb4c18998da5946518043448089a3`; its hosted run is pending.
+
+Private integration receipts are retained under
+`~/.cache/beep/effect-vitest-canon/continuation-20261006/`: the three
+`main-integration-*-receipt.json` source-bound passes, dependency-build log,
+and separate `main-integration-quick-after-build.json` and log.

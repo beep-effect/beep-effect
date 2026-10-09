@@ -1,0 +1,565 @@
+[
+  {
+    "name": "exact-negation-declared",
+    "snapshot": {
+      "beliefs": [
+        {
+          "ref": {
+            "edgeVersionId": 1,
+            "logicalKey": "1111111111111111111111111111111111111111111111111111111111111111",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "asserted",
+          "evidenceIds": [1],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "factual"
+        },
+        {
+          "ref": {
+            "edgeVersionId": 2,
+            "logicalKey": "2222222222222222222222222222222222222222222222222222222222222222",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "negated",
+          "evidenceIds": [2],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "factual"
+        }
+      ],
+      "singleValuedPredicates": ["status"]
+    },
+    "expectedCount": 1,
+    "expectedClass": "exact-negation"
+  },
+  {
+    "name": "exact-negation-undeclared",
+    "snapshot": {
+      "beliefs": [
+        {
+          "ref": {
+            "edgeVersionId": 1,
+            "logicalKey": "1111111111111111111111111111111111111111111111111111111111111111",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "asserted",
+          "evidenceIds": [1],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "factual"
+        },
+        {
+          "ref": {
+            "edgeVersionId": 2,
+            "logicalKey": "2222222222222222222222222222222222222222222222222222222222222222",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "negated",
+          "evidenceIds": [2],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "factual"
+        }
+      ],
+      "singleValuedPredicates": []
+    },
+    "expectedCount": 1,
+    "expectedClass": "exact-negation"
+  },
+  {
+    "name": "value-conflict-declared",
+    "snapshot": {
+      "beliefs": [
+        {
+          "ref": {
+            "edgeVersionId": 1,
+            "logicalKey": "1111111111111111111111111111111111111111111111111111111111111111",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "asserted",
+          "evidenceIds": [1],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "factual"
+        },
+        {
+          "ref": {
+            "edgeVersionId": 2,
+            "logicalKey": "2222222222222222222222222222222222222222222222222222222222222222",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "B",
+          "polarity": "asserted",
+          "evidenceIds": [2],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "factual"
+        }
+      ],
+      "singleValuedPredicates": ["status"]
+    },
+    "expectedCount": 1,
+    "expectedClass": "value-conflict"
+  },
+  {
+    "name": "absent-modality",
+    "snapshot": {
+      "beliefs": [
+        {
+          "ref": {
+            "edgeVersionId": 1,
+            "logicalKey": "1111111111111111111111111111111111111111111111111111111111111111",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "asserted",
+          "evidenceIds": [1],
+          "validFrom": 0,
+          "validTo": null
+        },
+        {
+          "ref": {
+            "edgeVersionId": 2,
+            "logicalKey": "2222222222222222222222222222222222222222222222222222222222222222",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "negated",
+          "evidenceIds": [2],
+          "validFrom": 0,
+          "validTo": null
+        }
+      ],
+      "singleValuedPredicates": ["status"]
+    },
+    "expectedCount": 1,
+    "expectedClass": "exact-negation"
+  },
+  {
+    "name": "different-predicate",
+    "snapshot": {
+      "beliefs": [
+        {
+          "ref": {
+            "edgeVersionId": 1,
+            "logicalKey": "1111111111111111111111111111111111111111111111111111111111111111",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "asserted",
+          "evidenceIds": [1],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "factual"
+        },
+        {
+          "ref": {
+            "edgeVersionId": 2,
+            "logicalKey": "2222222222222222222222222222222222222222222222222222222222222222",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "color",
+          "value": "A",
+          "polarity": "negated",
+          "evidenceIds": [2],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "factual"
+        }
+      ],
+      "singleValuedPredicates": ["status"]
+    },
+    "expectedCount": 0,
+    "expectedClass": "none"
+  },
+  {
+    "name": "different-modality",
+    "snapshot": {
+      "beliefs": [
+        {
+          "ref": {
+            "edgeVersionId": 1,
+            "logicalKey": "1111111111111111111111111111111111111111111111111111111111111111",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "asserted",
+          "evidenceIds": [1],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "factual"
+        },
+        {
+          "ref": {
+            "edgeVersionId": 2,
+            "logicalKey": "2222222222222222222222222222222222222222222222222222222222222222",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "negated",
+          "evidenceIds": [2],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "hypothetical"
+        }
+      ],
+      "singleValuedPredicates": ["status"]
+    },
+    "expectedCount": 0,
+    "expectedClass": "none"
+  },
+  {
+    "name": "disjoint-intervals",
+    "snapshot": {
+      "beliefs": [
+        {
+          "ref": {
+            "edgeVersionId": 1,
+            "logicalKey": "1111111111111111111111111111111111111111111111111111111111111111",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "asserted",
+          "evidenceIds": [1],
+          "validFrom": 0,
+          "validTo": 10,
+          "modality": "factual"
+        },
+        {
+          "ref": {
+            "edgeVersionId": 2,
+            "logicalKey": "2222222222222222222222222222222222222222222222222222222222222222",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "negated",
+          "evidenceIds": [2],
+          "validFrom": 10,
+          "validTo": null,
+          "modality": "factual"
+        }
+      ],
+      "singleValuedPredicates": ["status"]
+    },
+    "expectedCount": 0,
+    "expectedClass": "none"
+  },
+  {
+    "name": "multi-valued-predicate",
+    "snapshot": {
+      "beliefs": [
+        {
+          "ref": {
+            "edgeVersionId": 1,
+            "logicalKey": "1111111111111111111111111111111111111111111111111111111111111111",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "asserted",
+          "evidenceIds": [1],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "factual"
+        },
+        {
+          "ref": {
+            "edgeVersionId": 2,
+            "logicalKey": "2222222222222222222222222222222222222222222222222222222222222222",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "B",
+          "polarity": "asserted",
+          "evidenceIds": [2],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "factual"
+        }
+      ],
+      "singleValuedPredicates": []
+    },
+    "expectedCount": 0,
+    "expectedClass": "none"
+  },
+  {
+    "name": "agreement",
+    "snapshot": {
+      "beliefs": [
+        {
+          "ref": {
+            "edgeVersionId": 1,
+            "logicalKey": "1111111111111111111111111111111111111111111111111111111111111111",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "asserted",
+          "evidenceIds": [1],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "factual"
+        },
+        {
+          "ref": {
+            "edgeVersionId": 2,
+            "logicalKey": "2222222222222222222222222222222222222222222222222222222222222222",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "asserted",
+          "evidenceIds": [2],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "factual"
+        }
+      ],
+      "singleValuedPredicates": ["status"]
+    },
+    "expectedCount": 0,
+    "expectedClass": "none"
+  },
+  {
+    "name": "mixed-polarity-different-values",
+    "snapshot": {
+      "beliefs": [
+        {
+          "ref": {
+            "edgeVersionId": 1,
+            "logicalKey": "1111111111111111111111111111111111111111111111111111111111111111",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "asserted",
+          "evidenceIds": [1],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "factual"
+        },
+        {
+          "ref": {
+            "edgeVersionId": 2,
+            "logicalKey": "2222222222222222222222222222222222222222222222222222222222222222",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "B",
+          "polarity": "negated",
+          "evidenceIds": [2],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "factual"
+        }
+      ],
+      "singleValuedPredicates": ["status"]
+    },
+    "expectedCount": 0,
+    "expectedClass": "none"
+  },
+  {
+    "name": "both-negated-different-values",
+    "snapshot": {
+      "beliefs": [
+        {
+          "ref": {
+            "edgeVersionId": 1,
+            "logicalKey": "1111111111111111111111111111111111111111111111111111111111111111",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "negated",
+          "evidenceIds": [1],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "factual"
+        },
+        {
+          "ref": {
+            "edgeVersionId": 2,
+            "logicalKey": "2222222222222222222222222222222222222222222222222222222222222222",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "B",
+          "polarity": "negated",
+          "evidenceIds": [2],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "factual"
+        }
+      ],
+      "singleValuedPredicates": ["status"]
+    },
+    "expectedCount": 0,
+    "expectedClass": "none"
+  },
+  {
+    "name": "overlapping-evidence-intersection",
+    "snapshot": {
+      "beliefs": [
+        {
+          "ref": {
+            "edgeVersionId": 1,
+            "logicalKey": "1111111111111111111111111111111111111111111111111111111111111111",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "asserted",
+          "evidenceIds": [2, 1],
+          "validFrom": 5,
+          "validTo": 50,
+          "modality": "factual"
+        },
+        {
+          "ref": {
+            "edgeVersionId": 2,
+            "logicalKey": "2222222222222222222222222222222222222222222222222222222222222222",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "negated",
+          "evidenceIds": [3, 2],
+          "validFrom": 10,
+          "validTo": 30,
+          "modality": "factual"
+        }
+      ],
+      "singleValuedPredicates": ["status"]
+    },
+    "expectedCount": 1,
+    "expectedClass": "exact-negation"
+  },
+  {
+    "name": "one-absent-modality",
+    "snapshot": {
+      "beliefs": [
+        {
+          "ref": {
+            "edgeVersionId": 1,
+            "logicalKey": "1111111111111111111111111111111111111111111111111111111111111111",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "asserted",
+          "evidenceIds": [1],
+          "validFrom": 0,
+          "validTo": null
+        },
+        {
+          "ref": {
+            "edgeVersionId": 2,
+            "logicalKey": "2222222222222222222222222222222222222222222222222222222222222222",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": "A",
+          "polarity": "negated",
+          "evidenceIds": [2],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "hypothetical"
+        }
+      ],
+      "singleValuedPredicates": ["status"]
+    },
+    "expectedCount": 1,
+    "expectedClass": "exact-negation"
+  },
+  {
+    "name": "canonical-object-equality",
+    "snapshot": {
+      "beliefs": [
+        {
+          "ref": {
+            "edgeVersionId": 1,
+            "logicalKey": "1111111111111111111111111111111111111111111111111111111111111111",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": {
+            "a": 1,
+            "b": [true, null]
+          },
+          "polarity": "asserted",
+          "evidenceIds": [1],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "factual"
+        },
+        {
+          "ref": {
+            "edgeVersionId": 2,
+            "logicalKey": "2222222222222222222222222222222222222222222222222222222222222222",
+            "version": 1
+          },
+          "subject": "synthetic-subject",
+          "predicate": "status",
+          "value": {
+            "b": [true, null],
+            "a": 1
+          },
+          "polarity": "negated",
+          "evidenceIds": [2],
+          "validFrom": 0,
+          "validTo": null,
+          "modality": "factual"
+        }
+      ],
+      "singleValuedPredicates": ["status"]
+    },
+    "expectedCount": 1,
+    "expectedClass": "exact-negation"
+  }
+]

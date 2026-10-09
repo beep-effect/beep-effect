@@ -5,7 +5,7 @@
     "title": "Canonical Effect Vitest idioms",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-10-06",
+    "updated": "2026-10-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-vitest-canon",
@@ -17,7 +17,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Complete only after all packet acceptance gates and Yeet merge-ready PR evidence, an empty detector baseline, timings, and same-PR reflection/state closeout. Benjamin authorizes merges.",
+    "statement": "Complete only after all packet acceptance gates and Yeet merge-ready PR evidence, an empty detector baseline, timings, and same-PR reflection/state closeout. The fleet orchestrator owns merges at the complete gate.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [
@@ -114,8 +114,8 @@
     "P0g ratification and merge require Benjamin before P1.",
     "Backlog-first P2 is authorized by Benjamin; complete the remaining inventory delta after exhausting the existing legitimate backlog.",
     "Do not delete tests, weaken schemas, add flakyTest, alter global config/timeouts or property floors, or promote without conformance without the required user decision.",
-    "Never merge without explicit user authorization.",
+    "The fleet orchestrator owns merges at the complete gate; lane workers never merge.",
     "Do not write untouched-package coverage baselines."
   ],
-  "statusNote": "Full-goal continuation in codex/effect-vitest-canon-continuation from main 2208622aa8d0a5765769e3950c44ec9e81be9ceb. PRs #1390, #1467 and #1468 are merged; their historical migrations must not be replayed. Existing repo-cli backlog has 313 open detector and 56 actionable human rows at the continuation base; complete that backlog before current-main census delta. Installed Effect/Vitest is 4.0.1 with immutable adapter source equality verified. The 1,937-row baseline is nonempty. Current-cohort proof, complete inventory/lens reconciliation, timings, ratification and final reflection/hosted acceptance remain open. The fleet orchestrator owns merges. See history/2026-10-06-continuation-provenance.md."
+  "statusNote": "Resumed by rsc-v-vitest-canon under Effect/Vitest 4.0.2. CLI-only integration PR #1575 is published and ready. The 16 unpublished continuation commits and detector-resources WIP are preserved and reconciled after #1506; 46 source worktrees remain untouched. Final-main inventory is 1,853 findings, 716 open and 1,137 exceptions, with all 15,513 historical IDs retained. Full repo-cli verification passes at 4be0599a18 (781.746 s), every local parity stage passes, independent source review is terminal zero, and both actionable hosted threads are resolved. Main document-only merge 7ef36e8020 preserves every reviewed source hash; owner inventory and linkage regenerated. Hosted readiness and fleet merge are separate pending gates. R105 RDF/Pacer repair preview requires its separate qualified PR after integration lands. R102 continues until the open baseline is empty, timing/reference evidence is complete and same-PR reflection/state closeout meets completed-retained acceptance. The fleet orchestrator owns conditional archive and retirement; no source lane was removed."
 }

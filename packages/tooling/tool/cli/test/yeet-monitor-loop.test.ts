@@ -33,7 +33,8 @@ import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -42,6 +43,7 @@ import * as TestConsole from "effect/testing/TestConsole";
 // `gh run view --job <id> --log-failed` emits `<job>\t<step>\t<timestamp> <line>`
 // and sometimes an `##[error]` workflow-command marker. These fixtures keep that
 // decoration so the detectors are exercised on the shape they actually receive.
+
 const ghLog = (jobName: string, stepName: string, lines: ReadonlyArray<string>): string =>
   A.join(
     A.map(
@@ -482,6 +484,7 @@ interface MonitorGhScript {
   readonly rerun?: { readonly exitCode: number; readonly output: string };
   readonly runJobs: string;
   readonly runList: string;
+  readonly spawned?: Array<string>;
 }
 
 // Routes the merge loop's gh reads: `run list` for the branch, `run view 7
@@ -499,6 +502,7 @@ const monitorSpawnerLayer = (script: MonitorGhScript) =>
           return Effect.die("the merge loop never spawns a piped command");
         }
         const line = A.join([command.command, ...command.args], " ");
+        script.spawned?.push(line);
         if (Str.includes("run list")(line)) {
           return Effect.succeed(stubHandle(0, script.runList));
         }
@@ -943,8 +947,9 @@ describe("applyYeetMonitorJobDecision", () => {
     }).pipe(provideScopedLayer(spawner(0)))
   );
 
-  it.effect("prints an awaiting-log decision without executing anything", () =>
-    Effect.gen(function* () {
+  it.effect("prints an awaiting-log decision without executing anything", () => {
+    const spawned: Array<string> = [];
+    return Effect.gen(function* () {
       const plan = planYeetMonitorReruns(emptyYeetMonitorRerunBudget, "abc123", [
         YeetMonitorFailedJob.make({ databaseId: 991, logPending: true, name: "Check" }),
       ]);
@@ -953,8 +958,19 @@ describe("applyYeetMonitorJobDecision", () => {
       expect(result).toBeUndefined();
       const lines = A.map(yield* TestConsole.logLines, String);
       expect(A.some(lines, (line) => Str.includes("reclassifying next poll")(line))).toBe(true);
-    }).pipe(provideScopedLayer(spawner(1)))
-  );
+      expect(spawned).toEqual([]);
+    }).pipe(
+      provideScopedLayer(
+        monitorSpawnerLayer({
+          spawned,
+          jobLog: { exitCode: 1, output: "" },
+          rerun: { exitCode: 1, output: "run 7 cannot be rerun" },
+          runJobs: runJobsJson([]),
+          runList: runListJson([]),
+        })
+      )
+    );
+  });
 });
 
 describe("yeet monitor loop control", () => {
