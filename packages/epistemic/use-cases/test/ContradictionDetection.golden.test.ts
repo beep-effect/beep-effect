@@ -17,10 +17,10 @@ import {
 import { it } from "@beep/test-runner";
 import { productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertSuccess } from "@effect/vitest/utils";
-import * as Arbitrary from "effect/Arbitrary";
+import { assertSuccess, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
@@ -115,29 +115,22 @@ describe("Contradiction detection golden vectors", () => {
       })
     );
   }
-  it.effect(
+  it.effect.prop(
     "schema-derived values preserve negation and permutation invariants",
-    Effect.fnUntraced(function* () {
+    [S.String.check(S.isMaxLength(32))],
+    Effect.fnUntraced(function* ([value]) {
       const input = A.getUnsafe(vectors, 0).snapshot;
-      const checked = yield* Arbitrary.checkEffect(
-        Arbitrary.schema(S.String.check(S.isMaxLength(32))),
-        Effect.fnUntraced(function* (value) {
-          const snapshot = yield* S.decodeUnknownEffect(ContradictionDetectionSnapshot)({
-            ...input,
-            beliefs: A.map(input.beliefs, (belief) => ({ ...belief, value })),
-          });
-          const records = yield* detect(snapshot);
-          yield* Effect.forEach(records, conformance, { concurrency: 1 });
-          const permuted = ContradictionDetectionSnapshot.make({ ...snapshot, beliefs: A.reverse(snapshot.beliefs) });
-          return (
-            A.length(records) === 1 &&
-            (yield* encodedOutput(yield* detect(permuted))) === (yield* encodedOutput(records))
-          );
-        }),
-        { seed: 520 }
-      );
-      expect(checked._tag).toBe("Passed");
-    })
+      const snapshot = yield* S.decodeUnknownEffect(ContradictionDetectionSnapshot)({
+        ...input,
+        beliefs: A.map(input.beliefs, (belief) => ({ ...belief, value })),
+      });
+      const records = yield* detect(snapshot);
+      yield* Effect.forEach(records, conformance, { concurrency: 1 });
+      const permuted = ContradictionDetectionSnapshot.make({ ...snapshot, beliefs: A.reverse(snapshot.beliefs) });
+      expect(A.length(records)).toBe(1);
+      expect(yield* encodedOutput(yield* detect(permuted))).toBe(yield* encodedOutput(records));
+    }),
+    { arbitrary: { seed: 520 } }
   );
   it.effect(
     "groups and sorts multiple candidates independently of input order",
@@ -185,15 +178,15 @@ describe("Contradiction detection golden vectors", () => {
         { beliefs: [belief, belief], singleValuedPredicates: [] },
         { disableChecks: true }
       );
-      const result = yield* Effect.result(detect(invalid));
-      expect(Result.isFailure(result)).toBe(true);
-      if (Result.isFailure(result)) expect(result.failure._tag).toBe("ContradictionDetectionError");
+      const exit = yield* Effect.exit(detect(invalid));
+      assertTrue(Exit.isFailure(exit));
+      expect(O.getOrThrow(Exit.findErrorOption(exit))._tag).toBe("ContradictionDetectionError");
     })
   );
   it("rejects oversized assertion facts before proposing", () => {
     const input = A.getUnsafe(vectors, 0).snapshot;
     const beliefs = A.map(input.beliefs, (belief) => ({ ...belief, value: Str.repeat(65536)("x") }));
     const decoded = S.decodeUnknownResult(ContradictionDetectionSnapshot)({ ...input, beliefs });
-    expect(Result.isFailure(decoded)).toBe(true);
+    assertTrue(Result.isFailure(decoded));
   });
 });

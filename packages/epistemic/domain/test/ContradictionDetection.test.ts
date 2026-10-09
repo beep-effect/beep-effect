@@ -9,6 +9,7 @@ import {
 } from "@beep/epistemic-domain/values/ContradictionDetection";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Result from "effect/Result";
@@ -52,15 +53,15 @@ describe("Detection input bounds and content identities", () => {
       { ...belief, subject: "" },
       { ...belief, value: Str.repeat(65536)("x") },
     ])
-      expect(Result.isFailure(decode(bad))).toBe(true);
-    expect(Result.isSuccess(decode(belief))).toBe(true);
+      assertTrue(Result.isFailure(decode(bad)));
+    assertTrue(Result.isSuccess(decode(belief)));
   });
   it("rejects repeated immutable refs", () => {
-    expect(
+    assertTrue(
       Result.isFailure(
         S.decodeUnknownResult(ContradictionDetectionSnapshot)({ beliefs: [belief, belief], singleValuedPredicates: [] })
       )
-    ).toBe(true);
+    );
   });
   it("canonicalizes JSON keys and hashes losing ref plus whole assertion", () => {
     expect(canonicalDetectionJson({ b: 2, a: 1 })).toBe('{"a":1,"b":2}');
