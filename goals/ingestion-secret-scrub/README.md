@@ -34,10 +34,9 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 complete. P1 is implemented locally; the run-2 release ruling clears the
-private-changeset blocker. Final schema/file-processing/documents-server default
-proofs and hosted-parity retries are waiting for shared heavy slots. PR #1570
-remains draft at the wave-1 head. P2/P3 and content-final publication remain.
+P0 and P1 complete. All six edited-package default package proofs pass. Wave 2
+publishes the implemented canonical bank, scrub transform and real prompt gate
+to PR #1570. P2 final parity/scans and P3 completion/reflection remain.
 
 ## Latest Evidence
 
@@ -111,3 +110,17 @@ note live in the handoff and PR body. Changeset graph: pass, zero references.
 Final schema/file-processing/documents-server default proofs, test-tsgo, coverage
 and updated repo parity are queued through two owned heavy units. No canceled or
 queued command is counted as a pass. P1 remains in progress.
+
+Run-2 receipts: documents-server default package-verify, test-tsgo and scoped
+coverage pass (102 tests). Updated docgen local, regenerated JSDoc ratchet and
+Fallow audit/health pass with 0 introduced findings. Knowledge references: 0 live
+gated observations, pass. Exact-canary scan: 146 accumulated source/support/log
+surfaces, each 0. Final schema/file-processing proof remains queued.
+
+### P1 final default proofs
+
+Schema audit/docgen and file-processing audit/docgen pass on final source, as do
+their test-tsgo retries. All six edited-package default proofs are now green; the
+three unchanged consumer/domain proofs retain their verified run-1 receipts.
+Run-2 documents-server and repo parity receipts are recorded above. The remaining
+schema/file-processing coverage retry is running. P1 is complete; P2/P3 remain.

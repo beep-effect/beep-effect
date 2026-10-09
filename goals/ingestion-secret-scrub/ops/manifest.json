@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/ingestion-secret-scrub",
   "lifecycle": "active",
-  "statusNote": "P0 complete. P1 final proofs resumed under the release ruling: private-package release notes replace changesets. P2 and P3 pending.",
+  "statusNote": "P0 and P1 complete. All six edited-package default proofs pass. P2 hosted-parity and final scans are in progress; P3 pending.",
   "mission": "Deliver a pre-LLM file-processing secret scrub with one canonical pattern bank, no-secret proof, honest coverage/residue, and enforced prompt gating.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -56,7 +56,7 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",

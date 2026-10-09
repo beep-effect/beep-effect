@@ -263,3 +263,11 @@ fixtures together; the ingestion gate remains fail-closed.
 | Decision | Reason | Reversal |
 | --- | --- | --- |
 | No changesets for the six private edited workspaces; retain six release notes and the standalone Layer major compatibility note in handoff and PR body | Orchestrator resume ruling 2026-10-09 20:30Z and main PR #1566 make manifest-aware publication policy authoritative | Restore changesets only on deliberate package publication activation with a release policy |
+
+### Run 2 bounded admission retry
+
+The final schema/file-processing proof waited 30 minutes without executing its
+first command. Replace the unstarted submission once with identical commands and
+unchanged 32 GiB budget. Reason: mitigate independent-polling starvation without
+bypassing machine-wide admission. Reversal: stop the replacement and restore the
+original submission. Canceled commands provide no proof.

@@ -95,3 +95,29 @@ judgment route for new canonical platform tests would have prevented this detour
   shared policy. Reversal: resume after the brief reconciles the note requirement.
 - Prevention: invalidate or refresh active lane briefs when a shared release
   policy changes their required deliverables.
+
+## 2026-10-09 — PR text scan hit GraphQL rate limit
+
+- Work: support-evidence exact-canary scan before P1 publication.
+- Evidence: `gh pr view --json title,body` returned `API rate limit already exceeded`.
+- Attribution: environment-only shared GraphQL quota; file/log scans had zero counts,
+  but the failed PR read supplied no scan proof.
+- Repair: REST `repos/beep-effect/beep-effect/pulls/1570` returned the title/body and
+  current head; the resulting PR-text surface has exact-canary count 0.
+- Prevention: use the existing REST-first PR discovery route for text/head reads,
+  and preserve unknown review-window/thread state when GraphQL cannot read it.
+
+The GraphQL read succeeded after its quota window reset; its current PR-text
+exact-canary count is 0 as well. No credentials or approval were required.
+
+## 2026-10-09 — run 2 admission retry
+
+- Work: final schema/file-processing package proofs, test-tsgo and coverage.
+- Evidence: 30 minutes in the shared slot wrapper, no schema command log/result;
+  all four shared slot locks belong to live commands.
+- Attribution: environment-only admission delay; no package command ran.
+- Decision: replace the unstarted submission once, retaining the same commands,
+  32 GiB cap and owned-job limit. Reason: the existing polling queue can starve
+  an older submission. Reversal: stop the replacement and restore the original
+  submission; never claim a canceled job as passing.
+- Prevention: FIFO admission with durable queue position and source-bound receipts.

@@ -244,3 +244,31 @@ activates publication and its release policy. PR #1570 remains draft at wave 1.
 | `@beep/repo-ai-metrics` | Consume canonical union with existing rendering and counted proof | Stricter coverage behind unchanged export types; minor if published | Restore original bank and consumer calls |
 | `@beep/documents-server` | Scrub extracted excerpt before model construction; blocked/unknown inboxes | Major compatibility note: standalone `FilingDecisionLlmLayer` now requires `SecretScrubService`; composed `DocumentsServerLlmLayer` supplies its default | Remove gate/service wiring and restore prior Layer requirement |
 | `@beep/documents-domain` | Add `secret-scrub-blocked` inbox reason | Additive literal; minor if published | Remove reason together with gate wiring |
+
+### 2026-10-09 — run 2 partial proof receipts
+
+Documents-server default package audit/docgen, test-tsgo and scoped coverage pass
+on the final source; coverage runs 102 tests successfully. Updated local docgen,
+regenerated JSDoc ratchet and Fallow audit/health pass; Fallow introduced count is
+0. Knowledge-reference check passes with 0 live gated observations. Changeset
+graph passes with 0 references after the private-note reconciliation. The latest
+exact-canary scan covers 146 source, support and accumulated log surfaces, each
+count 0; PR text uses the REST read after an attributed GraphQL quota failure.
+The final schema/file-processing unit remains queued; no pass is inferred.
+
+The schema/file-processing unit waited 30 minutes without command execution. It
+is requeued once at the same cap and command list; the original is inactive.
+Reason and reversal are recorded in SPEC and the friction receipt. No canceled
+command is counted as passing; the replacement remains required.
+
+### 2026-10-09 — P1 final package proofs and wave 2
+
+Phase reached: P1 complete. The bounded retry gained admission; final schema and
+file-processing default package audit/docgen and test-tsgo pass. Together with
+documents-server's run-2 proof and the unchanged observability, repo-ai-metrics
+and documents-domain receipts, all six edited-package default proofs pass.
+Schema/file-processing scoped coverage is running; P2/P3 remain. Wave 2 publishes
+the complete implemented bank, scrub transform and prompt gate to draft #1570.
+The release note and its reversal are retained above; no new dependency or
+shared-policy change is made. Exact-canary scan before this update: 147 surfaces,
+each 0; rescan and commit-range gitleaks run before the implementation push.
