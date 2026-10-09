@@ -15,6 +15,7 @@ import { YeetCommandError } from "@beep/repo-cli/test/Yeet";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
 import * as Effect from "effect/Effect";
@@ -26,6 +27,7 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Arbitrary from "effect/testing/Arbitrary";
 import { temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const encode = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
@@ -175,7 +177,22 @@ const observe = Effect.fn("CompletionTest.observe")(function* (scenario: typeof 
   );
 });
 
-it.layer(NodeServices.layer)("goal completion observations and storage", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("goal completion observations and storage", (it) => {
+  it.effect.prop(
+    "preserves declaration digests across arbitrary PR-reference codec round trips",
+    [Arbitrary.schema(GoalPullRequestRef)],
+    Effect.fnUntraced(function* ([reference]) {
+      const value = yield* manifest();
+      const declared = yield* S.decodeEffect(GoalManifest)({
+        ...value,
+        completionGate: { ...value.completionGate, pullRequests: [reference] },
+      });
+      const text = yield* S.encodeEffect(S.fromJsonString(GoalManifest))(declared);
+      const decoded = yield* S.decodeEffect(S.fromJsonString(GoalManifest))(text);
+      expect(yield* goalCompletionDeclarationDigest(decoded)).toBe(yield* goalCompletionDeclarationDigest(declared));
+    }),
+    { arbitrary: { runs: 32 } }
+  );
   it.effect("decodes every live goal manifest without rewriting legacy fields", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -203,17 +220,25 @@ it.layer(NodeServices.layer)("goal completion observations and storage", (it) =>
     Effect.gen(function* () {
       const receipt = yield* observe();
       expect(receipt.outcome).toBe("verified");
-      expect(O.map(receipt.merge, (merge) => merge.method)).toEqual(O.some(O.none()));
-      expect(O.map(receipt.requiredChecks, (snapshot) => snapshot.contexts)).toEqual(O.some(["Lint"]));
-      expect(O.map(receipt.requiredChecks, (snapshot) => snapshot.sources)).toEqual(
-        O.some(["repos/{owner}/{repo}/rulesets/42/history/1"])
+      assertSome(
+        O.map(receipt.merge, (merge) => merge.method),
+        O.none()
+      );
+      assertSome(
+        O.map(receipt.requiredChecks, (snapshot) => snapshot.contexts),
+        ["Lint"]
+      );
+      assertSome(
+        O.map(receipt.requiredChecks, (snapshot) => snapshot.sources),
+        ["repos/{owner}/{repo}/rulesets/42/history/1"]
       );
     })
   );
   it.effect("recognizes a two-parent merge", () =>
     Effect.gen(function* () {
-      expect(O.map((yield* observe({ mergeParents: 2 })).merge, (merge) => merge.method)).toEqual(
-        O.some(O.some("merge"))
+      assertSome(
+        O.map((yield* observe({ mergeParents: 2 })).merge, (merge) => merge.method),
+        O.some("merge")
       );
     })
   );
@@ -246,22 +271,24 @@ it.layer(NodeServices.layer)("goal completion observations and storage", (it) =>
     Effect.gen(function* () {
       const receipt = yield* observe({ missingTimeline: true });
       expect(receipt.outcome).toBe("verified");
-      expect(
+      assertSome(
         A.findFirst(receipt.subClaims, (check) => check.ref.ref === "review-window").pipe(
           O.map((check) => check.outcome)
-        )
-      ).toEqual(O.some("unknown"));
+        ),
+        "unknown"
+      );
     })
   );
   it.effect("seven-second historical window remains unsatisfied without resetting completion", () =>
     Effect.gen(function* () {
       const receipt = yield* observe({ windowShort: true });
       expect(receipt.outcome).toBe("verified");
-      expect(
+      assertSome(
         A.findFirst(receipt.subClaims, (check) => check.ref.ref === "review-window").pipe(
           O.map((check) => check.outcome)
-        )
-      ).toEqual(O.some("unsatisfied"));
+        ),
+        "unsatisfied"
+      );
     })
   );
   it.effect("packet identity participates in declaration addressing", () =>
@@ -288,21 +315,22 @@ it.layer(NodeServices.layer)("goal completion observations and storage", (it) =>
       );
       yield* writeProjectFile(".beep/goals/completion-receipts.ndjson", `${stale}\n${correct}`);
       const io = fixtureIo(yield* S.encodeEffect(S.fromJsonString(GoalManifest))(value));
-      expect(
+      assertNone(
         yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
           Effect.provideService(GoalCompletionIo, io)
         )
-      ).toEqual(O.none());
+      );
       const fs = yield* FileSystem.FileSystem;
       yield* fs.writeFileString(".beep/goals/completion-receipts.ndjson", `${stale}\n${correct}\n`);
-      expect(
+      assertSome(
         O.map(
           yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
             Effect.provideService(GoalCompletionIo, io)
           ),
           (row) => row.outcome
-        )
-      ).toEqual(O.some("verified"));
+        ),
+        "verified"
+      );
     })
   );
   it.effect("a transient unknown refresh does not displace definite head-bound evidence", () =>
@@ -317,14 +345,15 @@ it.layer(NodeServices.layer)("goal completion observations and storage", (it) =>
       );
       yield* writeProjectFile(".beep/goals/completion-receipts.ndjson", `${correct}\n${unknown}\n`);
       const io = fixtureIo(yield* S.encodeEffect(S.fromJsonString(GoalManifest))(value));
-      expect(
+      assertSome(
         O.map(
           yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
             Effect.provideService(GoalCompletionIo, io)
           ),
           (row) => row.outcome
-        )
-      ).toEqual(O.some("verified"));
+        ),
+        "verified"
+      );
     })
   );
   it.effect("doctor online reads without creating the receipt file; explicit refresh is the writer", () =>
@@ -343,14 +372,15 @@ it.layer(NodeServices.layer)("goal completion observations and storage", (it) =>
         Effect.provideService(GoalCompletionIo, io)
       );
       expect(yield* fs.exists(".beep/goals/completion-receipts.ndjson")).toBe(true);
-      expect(
+      assertSome(
         O.map(
           yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
             Effect.provideService(GoalCompletionIo, io)
           ),
           (row) => row.outcome
-        )
-      ).toEqual(O.some("verified"));
+        ),
+        "verified"
+      );
     })
   );
   it.effect("refresh refuses a requested invalid manifest or missing final declaration", () =>

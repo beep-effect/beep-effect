@@ -283,3 +283,13 @@
   manage the submitted monitor through `yeet job` before the final handoff.
 - Prevention: help should distinguish the publish job ceiling from the
   automatically submitted monitor's lifetime, or expose a monitor ceiling.
+
+## 2026-10-09 — H2 test-law discovery during publication
+
+- Task: publish structured completion evidence after compiler, docgen and focused tests passed.
+- Evidence: cheap gates rejected two new fixture files with 15 Effect Vitest findings and
+  two schema-codec property-coverage advisories; publication stopped before push.
+- Recovery: preserve fixture assertions with canonical Option helpers, bound the platform
+  test layer, and add schema-derived declaration properties; rerun the affected checks.
+- Prevention: run schema-first and Effect Vitest laws with new schema fixture files before
+  the final publication admission, alongside test-tsgo. No baseline refresh is needed.

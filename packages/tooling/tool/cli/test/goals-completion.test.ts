@@ -8,14 +8,17 @@ import {
   GoalManifest,
   GoalMergeMethod,
   GoalMergeResult,
+  GoalPullRequestRef,
   goalPullRequestRefs,
 } from "@beep/repo-cli/test/Goals";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Arbitrary from "effect/testing/Arbitrary";
 
 const time = DateTime.makeUnsafe("2026-10-06T00:55:25Z");
 const gate = GoalCompletionGate.make({
@@ -59,6 +62,18 @@ const fixture = () =>
   });
 
 describe("goal completion declaration", () => {
+  it.effect.prop(
+    "normalizes arbitrary explicit PR declarations without changing their roles",
+    [Arbitrary.schema(GoalPullRequestRef)],
+    Effect.fnUntraced(function* ([reference]) {
+      const manifest = yield* S.decodeEffect(GoalManifest)({
+        initiative: { id: "typed", status: "completed-retained" },
+        completionGate: { ...gate, pullRequests: [reference] },
+      });
+      expect(goalPullRequestRefs(manifest)).toEqual([reference]);
+    }),
+    { arbitrary: { runs: 32 } }
+  );
   it.effect("leaves packets without PR declarations on the legacy citation path", () =>
     Effect.gen(function* () {
       const manifest = yield* S.decodeEffect(GoalManifest)({
@@ -137,8 +152,11 @@ describe("pure goal completion resolver", () => {
       const text = yield* S.encodeEffect(S.fromJsonString(GoalCompletionReceipt))(receipt);
       const decoded = yield* S.decodeEffect(S.fromJsonString(GoalCompletionReceipt))(text);
       expect(decoded.outcome).toBe("verified");
-      expect(decoded.acceptedHead).toEqual(O.some("accepted-head"));
-      expect(O.map(decoded.merge, (merge) => merge.method)).toEqual(O.some(O.some("squash")));
+      assertSome(decoded.acceptedHead, "accepted-head");
+      assertSome(
+        O.map(decoded.merge, (merge) => merge.method),
+        O.some("squash")
+      );
     })
   );
 
@@ -146,7 +164,10 @@ describe("pure goal completion resolver", () => {
     Effect.gen(function* () {
       const receipt = yield* GoalCompletionVerifier.resolve(fixture());
       expect(receipt.outcome).toBe("verified");
-      expect(O.map(receipt.merge, (merge) => merge.method)).toEqual(O.some(O.some("squash")));
+      assertSome(
+        O.map(receipt.merge, (merge) => merge.method),
+        O.some("squash")
+      );
     })
   );
   for (const method of GoalMergeMethod.literals) {
