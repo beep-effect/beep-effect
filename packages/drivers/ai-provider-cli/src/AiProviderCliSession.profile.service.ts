@@ -4,7 +4,8 @@
  * @since 0.0.0
  */
 import { Errors as AcpErrors } from "@beep/acp";
-import { Sha256HexFromBytes } from "@beep/schema";
+import { $AiProviderCliId } from "@beep/identity";
+import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -14,6 +15,30 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ManagedSessionError } from "./AiProviderCliSession.errors.ts";
 import type { ManagedLaunchProfile } from "./AiProviderCliSession.models.ts";
+
+const $I = $AiProviderCliId.create("AiProviderCliSession.profile.service");
+const ProtocolJson = S.fromJsonString(S.Unknown).annotate(
+  $I.annote("ProtocolJson", { description: "Serialized native protocol payload without provider-specific decoding." })
+);
+const encodeProtocolJson = S.encodeEffect(ProtocolJson);
+const ForbiddenEnvironmentKey = LiteralKit([
+  "OPENAI_API_KEY",
+  "OPENAI_BASE_URL",
+  "ANTHROPIC_API_KEY",
+  "ANTHROPIC_AUTH_TOKEN",
+  "ANTHROPIC_BASE_URL",
+  "CLAUDE_CODE_USE_BEDROCK",
+  "CLAUDE_CODE_USE_VERTEX",
+  "CLAUDE_CODE_USE_FOUNDRY",
+  "XAI_API_KEY",
+  "GROK_API_KEY",
+  "GROK_BASE_URL",
+]).annotate(
+  $I.annote("ForbiddenEnvironmentKey", {
+    description: "Environment selectors excluded from approved subscription launches.",
+  })
+);
+const forbiddenEnvironmentKey = S.is(ForbiddenEnvironmentKey);
 
 /**
  * Constructs typed managed-session errors from a safe operation, reason and message.
@@ -70,9 +95,7 @@ export const transportFailure = (operation: string) =>
  * @category encoding
  * @since 0.0.0
  */
-export const encodeJson = Effect.fn("ManagedSession.encodeJson")((input: unknown) =>
-  S.encodeEffect(S.fromJsonString(S.Unknown))(input)
-);
+export const encodeJson = Effect.fn("ManagedSession.encodeJson")((input: unknown) => encodeProtocolJson(input));
 
 /**
  * Exclusively writes an owned Codex configuration with explicit policy and scoped MCP servers.
@@ -248,21 +271,7 @@ export const validateProfile = Effect.fn("ManagedSession.validateProfile")(funct
       "Explicit absolute workspace and distinct owned HOME are required"
     );
   }
-  const forbiddenEnvironmentKey = S.is(
-    S.Literals([
-      "OPENAI_API_KEY",
-      "OPENAI_BASE_URL",
-      "ANTHROPIC_API_KEY",
-      "ANTHROPIC_AUTH_TOKEN",
-      "ANTHROPIC_BASE_URL",
-      "CLAUDE_CODE_USE_BEDROCK",
-      "CLAUDE_CODE_USE_VERTEX",
-      "CLAUDE_CODE_USE_FOUNDRY",
-      "XAI_API_KEY",
-      "GROK_API_KEY",
-      "GROK_BASE_URL",
-    ])
-  );
+
   if (A.some(R.keys(profile.env), forbiddenEnvironmentKey))
     return yield* failure.make(
       "open",

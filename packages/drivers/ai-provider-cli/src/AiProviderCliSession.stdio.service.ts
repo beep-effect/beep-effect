@@ -4,6 +4,7 @@
  * @since 0.0.0
  */
 import { Client as AcpClient, Errors as AcpErrors } from "@beep/acp";
+import { $AiProviderCliId } from "@beep/identity";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
@@ -44,6 +45,16 @@ import type {
   ManagedSessionSteering,
 } from "./AiProviderCliSession.models.ts";
 import type { ManagedSession } from "./AiProviderCliSession.service.ts";
+
+const $I = $AiProviderCliId.create("AiProviderCliSession.stdio.service");
+const OfferedTool = S.Struct({ tool_name: S.String }).annotate(
+  $I.annote("OfferedTool", { description: "Partial native permission request carrying the offered tool name." })
+);
+const SteeredTurn = S.Struct({ turnId: S.NonEmptyString }).annotate(
+  $I.annote("SteeredTurn", { description: "Native steering receipt identifying the accepted active turn." })
+);
+const decodeOfferedTool = S.decodeUnknownOption(OfferedTool);
+const decodeSteeredTurn = S.decodeUnknownEffect(SteeredTurn);
 
 /**
  * Opens a scoped native stdio session with bounded requests and turn correlation.
@@ -109,9 +120,9 @@ export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
   const publish = (kind: ManagedSessionEvent["kind"], payload: unknown) =>
     PubSub.publish(events, ManagedSessionEvent.make({ kind, payload })).pipe(Effect.asVoid);
   yield* client.handleUnknownExtRequest(() => Effect.fail(AcpClientError()));
-  yield* client.handleRequestPermission((request) =>
-    Effect.gen(function* () {
-      const tool = S.decodeUnknownOption(S.Struct({ tool_name: S.String }))(request.toolCall.rawInput);
+  yield* client.handleRequestPermission(
+    Effect.fnUntraced(function* (request) {
+      const tool = decodeOfferedTool(request.toolCall.rawInput);
       const allowedNames = MessagingToolName.literals;
       const offered = A.findFirst(request.options, (option) => option.kind === "allow_once");
       if (
@@ -129,8 +140,8 @@ export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
     })
   );
   let sessionId = "";
-  yield* client.handleSessionUpdate((payload) =>
-    Effect.gen(function* () {
+  yield* client.handleSessionUpdate(
+    Effect.fnUntraced(function* (payload) {
       const text = S.decodeUnknownOption(AcpText)(payload);
       if (O.isSome(text) && text.value.sessionId === sessionId) yield* appendText(text.value.update.content.text);
       yield* publish("update", { sessionId });
@@ -167,15 +178,19 @@ export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
     if (O.isNone(turn)) return yield* bufferCompletion(complete, pending.value);
     if (turn.value === complete.turn.id) yield* Deferred.succeed(pending.value, complete.turn.status);
   });
-  yield* client.handleExtNotification("item/completed", S.Unknown, (payload) =>
-    Effect.gen(function* () {
+  yield* client.handleExtNotification(
+    "item/completed",
+    S.Unknown,
+    Effect.fnUntraced(function* (payload) {
       const item = S.decodeUnknownOption(CodexItem)(payload);
       if (O.isSome(item)) yield* receiveItem(item.value);
       yield* publish("update", { sessionId });
     })
   );
-  yield* client.handleExtNotification("turn/completed", S.Unknown, (payload) =>
-    Effect.gen(function* () {
+  yield* client.handleExtNotification(
+    "turn/completed",
+    S.Unknown,
+    Effect.fnUntraced(function* (payload) {
       const complete = S.decodeUnknownOption(CodexComplete)(payload);
       if (O.isSome(complete)) yield* receiveCompletion(complete.value);
       yield* publish("update", { sessionId });
@@ -354,7 +369,7 @@ export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
         threadId: sessionId,
         expectedTurnId: steering.expectedTurnId,
         input: [{ type: "text", text: steering.message.text, text_elements: [] }],
-      }).pipe(Effect.flatMap(S.decodeUnknownEffect(S.Struct({ turnId: S.NonEmptyString }))), transportFailure("steer"));
+      }).pipe(Effect.flatMap(decodeSteeredTurn), transportFailure("steer"));
       if (response.turnId !== steering.expectedTurnId)
         return yield* failure.make("steer", "policy-mismatch", "Provider steering response changed turn identity");
     }),

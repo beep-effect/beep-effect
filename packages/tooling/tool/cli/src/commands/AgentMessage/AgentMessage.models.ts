@@ -63,7 +63,9 @@ export const Provider = LiteralKit(["codex", "claude", "grok", "cursor", "inject
   })
 );
 
-/** Provider that owns a registered endpoint; injected is reserved for deterministic tests.
+/**
+ * Provider that owns a registered endpoint; injected is reserved for deterministic tests.
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -88,7 +90,9 @@ export const Capability = LiteralKit(["send", "reply", "busyFollowup", "interrup
   $I.annoteSchema("Capability", { description: "Operation whose behavior was checked on an endpoint transport." })
 );
 
-/** Operation whose behavior was checked on an endpoint transport.
+/**
+ * Operation whose behavior was checked on an endpoint transport.
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -116,7 +120,9 @@ export const EvidenceDisposition = LiteralKit(["advertised", "verified", "unveri
   })
 );
 
-/** Capability evidence: advertised means handshake support without context-consumption proof; verified requires observed operation evidence.
+/**
+ * Capability evidence: advertised means handshake support without context-consumption proof; verified requires observed operation evidence.
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -151,7 +157,9 @@ export const ReceiptStatus = LiteralKit([
   })
 );
 
-/** Durable lifecycle fact; delivered requires adapter confirmation and ambiguous forbids blind retry.
+/**
+ * Durable lifecycle fact; delivered requires adapter confirmation and ambiguous forbids blind retry.
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -188,7 +196,9 @@ export const RouterErrorCode = LiteralKit([
   })
 );
 
-/** Failure classification for transactional routing and enrollment checks.
+/**
+ * Failure classification for transactional routing and enrollment checks.
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -307,7 +317,9 @@ export const EndpointHostMode = LiteralKit(["managed-process", "native-app", "br
   })
 );
 
-/** Surface derived from its runtime schema.
+/**
+ * Surface derived from its runtime schema.
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -410,7 +422,9 @@ export const MessageTarget = LiteralKit(["direct", "role"])
     })
   );
 
-/** Destination derived from its runtime schema.
+/**
+ * Destination derived from its runtime schema.
+ *
  * @category type-level
  * @since 0.0.0
  */

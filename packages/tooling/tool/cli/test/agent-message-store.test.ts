@@ -5,12 +5,12 @@ import {
   Envelope,
   LaunchGrant,
   makeAgentMessageRouter,
+  makeAgentMessageSqliteClient,
   makeAgentMessageStore,
   RouterError,
 } from "@beep/repo-cli/test/AgentMessage";
 import { it } from "@beep/test-runner";
-import { BunServices } from "@effect/platform-bun";
-import * as SqliteClient from "@effect/sql-sqlite-bun/SqliteClient";
+import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -91,11 +91,8 @@ const fixture = Effect.fnUntraced(function* <T, E, R>(
   yield* fs.makeDirectory(cache, { recursive: true, mode: 0o700 });
   const directory = yield* fs.makeTempDirectoryScoped({ directory: cache, prefix: "store-" });
   const filename = path.join(directory, "messages.sqlite");
-  const client = yield* SqliteClient.make({ filename, busyTimeout: "50 millis" });
-  const store = yield* makeAgentMessageStore(maxPending).pipe(
-    Effect.provideService(SqliteClient.SqliteClient, client),
-    Effect.provideService(SqlClient.SqlClient, client)
-  );
+  const client = yield* makeAgentMessageSqliteClient(filename, "50 millis");
+  const store = yield* makeAgentMessageStore(maxPending).pipe(Effect.provideService(SqlClient.SqlClient, client));
   yield* store.register(yield* binding("a"));
   yield* store.register(yield* binding("b"));
   return yield* run(store, filename);
@@ -135,7 +132,7 @@ const processFixture = Effect.fn("AgentMessageTest.processFixture")(function* (
   return { child, wait };
 });
 
-it.layer(Layer.mergeAll(BunServices.layer, Reactivity.layer), { timeout: "10 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 seconds" })(
   "AgentMessage transactional delivery",
   (it) => {
     it.effect("acceptance retries preserve receipt and cannot reset persisted grant budget", () =>
@@ -185,7 +182,7 @@ it.layer(Layer.mergeAll(BunServices.layer, Reactivity.layer), { timeout: "10 sec
           yield* store.accept(envelope("m1"), 100);
           yield* store.accept(envelope("m2"), 100);
           const claimed = O.getOrThrow(yield* store.claimNext("b", "b-owner", 101, 201));
-          const contenderClient = yield* SqliteClient.make({ filename, busyTimeout: "50 millis" });
+          const contenderClient = yield* makeAgentMessageSqliteClient(filename, "50 millis");
           const contender = yield* makeAgentMessageStore().pipe(
             Effect.provideService(SqlClient.SqlClient, contenderClient)
           );
@@ -231,7 +228,7 @@ it.layer(Layer.mergeAll(BunServices.layer, Reactivity.layer), { timeout: "10 sec
           const seen: string[] = [];
           const request = envelope("request");
           const accepted = yield* store.accept(request, 100);
-          const client = yield* SqliteClient.make({ filename });
+          const client = yield* makeAgentMessageSqliteClient(filename);
           const reopened = yield* makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client));
           const router = yield* makeAgentMessageRouter.pipe(
             Effect.provideService(AgentMessageStore, reopened),
@@ -296,7 +293,7 @@ it.layer(Layer.mergeAll(BunServices.layer, Reactivity.layer), { timeout: "10 sec
           expect((yield* Effect.flip(process.child.exitCode)).reason.cause).toMatchObject({
             message: expect.stringContaining("SIGKILL"),
           });
-          const client = yield* SqliteClient.make({ filename });
+          const client = yield* makeAgentMessageSqliteClient(filename);
           const reopened = yield* makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client));
           const accepted = yield* reopened.accept(envelope("crash"), 101);
           expect(accepted.status).toBe("accepted");
@@ -316,7 +313,7 @@ it.layer(Layer.mergeAll(BunServices.layer, Reactivity.layer), { timeout: "10 sec
           expect((yield* Effect.flip(process.child.exitCode)).reason.cause).toMatchObject({
             message: expect.stringContaining("SIGKILL"),
           });
-          const client = yield* SqliteClient.make({ filename });
+          const client = yield* makeAgentMessageSqliteClient(filename);
           const reopened = yield* makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client));
           expect(yield* reopened.recover(202)).toBe(1);
           expect(A.map(yield* reopened.receipts("crash"), (receipt) => receipt.status)).toEqual([
@@ -466,7 +463,7 @@ it.layer(Layer.mergeAll(BunServices.layer, Reactivity.layer), { timeout: "10 sec
     it.effect("unknown future schema refuses initialization without changing its version rows", () =>
       fixture((_store, filename) =>
         Effect.gen(function* () {
-          const client = yield* SqliteClient.make({ filename });
+          const client = yield* makeAgentMessageSqliteClient(filename);
           yield* client`DROP TABLE agent_message_meta`;
           yield* client`CREATE TABLE agent_message_meta (version INTEGER PRIMARY KEY)`;
           yield* client`INSERT INTO agent_message_meta (version) VALUES (2)`;
@@ -583,7 +580,7 @@ it.layer(Layer.mergeAll(BunServices.layer, Reactivity.layer), { timeout: "10 sec
             const accepted = yield* router.accept(request, 100);
             expect((yield* router.accept(request, 100)).sequence).toBe(accepted.sequence);
             yield* router.dispatchOne("b", "b-owner", 101, 201, () => Effect.succeed(102));
-            const client = yield* SqliteClient.make({ filename });
+            const client = yield* makeAgentMessageSqliteClient(filename);
             const reopened = yield* makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client));
             expect(yield* reopened.recover(110)).toBe(1);
             const latest = O.getOrThrow(A.last(yield* reopened.receipts("drop-ack")));
@@ -604,7 +601,7 @@ it.layer(Layer.mergeAll(BunServices.layer, Reactivity.layer), { timeout: "10 sec
           const initial = yield* store.subscribe("watch").pipe(Stream.take(1), Stream.runCollect, TestClock.withLive);
           expect(A.map(initial, (receipt) => receipt.sequence)).toEqual([accepted.sequence]);
           yield* store.claimNext("b", "b-owner", 101, 201);
-          const client = yield* SqliteClient.make({ filename });
+          const client = yield* makeAgentMessageSqliteClient(filename);
           const reopened = yield* makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client));
           const next = yield* reopened
             .subscribe("watch", accepted.sequence)
@@ -618,7 +615,7 @@ it.layer(Layer.mergeAll(BunServices.layer, Reactivity.layer), { timeout: "10 sec
     it.effect("storage diagnostics expose typed classification without stored payload or SQL text", () =>
       fixture((store, filename) =>
         Effect.gen(function* () {
-          const client = yield* SqliteClient.make({ filename });
+          const client = yield* makeAgentMessageSqliteClient(filename);
           yield* client`UPDATE agent_message_endpoints SET payload = ${"secret-synthetic-invalid-json"} WHERE id = 'a'`;
           const decode = yield* Effect.flip(store.endpoint("a"));
           expect(decode.code).toBe("storage");
@@ -682,7 +679,7 @@ it.layer(Layer.mergeAll(BunServices.layer, Reactivity.layer), { timeout: "10 sec
         const filename = path.join(directory, "original.sqlite");
         yield* Effect.scoped(
           Effect.gen(function* () {
-            const client = yield* SqliteClient.make({ filename });
+            const client = yield* makeAgentMessageSqliteClient(filename);
             const store = yield* makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client));
             yield* store.register(yield* binding("a"));
             yield* store.register(yield* binding("b"));
@@ -707,7 +704,7 @@ it.layer(Layer.mergeAll(BunServices.layer, Reactivity.layer), { timeout: "10 sec
             }
           })
         );
-        const client = yield* SqliteClient.make({ filename: path.join(restored, "messages.sqlite") });
+        const client = yield* makeAgentMessageSqliteClient(path.join(restored, "messages.sqlite"));
         const store = yield* makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client));
         expect(A.map(yield* store.inbox("b"), (message) => message.messageId)).toEqual(["pending-backup"]);
         expect((yield* store.acceptWithGrant(envelope("pending-backup"), "grant-a", 101)).status).toBe("accepted");

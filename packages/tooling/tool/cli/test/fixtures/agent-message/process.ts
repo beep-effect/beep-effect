@@ -1,7 +1,6 @@
 /** Synthetic process-crash boundary; no providers, credentials or tools. */
-import { Envelope, makeAgentMessageStore } from "@beep/repo-cli/commands/AgentMessage";
-import { BunServices } from "@effect/platform-bun";
-import * as SqliteClient from "@effect/sql-sqlite-bun/SqliteClient";
+import { Envelope, makeAgentMessageSqliteClient, makeAgentMessageStore } from "@beep/repo-cli/test/AgentMessage";
+import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -18,7 +17,7 @@ const program = Effect.scoped(
     const filename = yield* Config.String("BEEP_MESSAGE_FIXTURE_DATABASE");
     const checkpoint = yield* Config.String("BEEP_MESSAGE_FIXTURE_CHECKPOINT");
     const stage = yield* Config.String("BEEP_MESSAGE_FIXTURE_STAGE");
-    const client = yield* SqliteClient.make({ filename, busyTimeout: "100 millis" });
+    const client = yield* makeAgentMessageSqliteClient(filename, "100 millis");
     const store = yield* makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client));
     const fs = yield* FileSystem.FileSystem;
     if (stage === "accept") {
@@ -30,8 +29,15 @@ const program = Effect.scoped(
       const claim = yield* store.claimNext("b", "b-owner", 101, 201);
       yield* fs.writeFileString(checkpoint, O.isSome(claim) ? "claimed" : "none", { mode: 0o600 });
     }
-    yield* Effect.never;
+    return yield* Effect.never;
   })
 );
 
-await Effect.runPromise(program.pipe(Effect.provide(Layer.mergeAll(BunServices.layer, Reactivity.layer))));
+const main = Effect.scoped(
+  Layer.mergeAll(NodeServices.layer, Reactivity.layer).pipe(
+    Layer.build,
+    Effect.flatMap((context) => program.pipe(Effect.provide(context)))
+  )
+);
+
+NodeRuntime.runMain(main);

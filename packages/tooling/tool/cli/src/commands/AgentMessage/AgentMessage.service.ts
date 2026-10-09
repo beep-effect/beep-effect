@@ -1,4 +1,6 @@
-/** Provider-neutral delivery orchestration over committed store claims.
+/**
+ * Provider-neutral delivery orchestration over committed store claims.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -14,7 +16,8 @@ import type { AgentMessageStoreShape } from "./AgentMessage.store.ts";
 
 const $I = $RepoCliId.create("commands/AgentMessage/AgentMessage.service");
 
-/** Native endpoint port, with context receipt distinguished from socket acceptance.
+/**
+ * Native endpoint port, with context receipt distinguished from socket acceptance.
  * **Details**
  * Delivered requires adapter confirmation of destination context receipt. Failed
  * means rejection before submission. Once submission may have occurred, return
@@ -26,6 +29,7 @@ const $I = $RepoCliId.create("commands/AgentMessage/AgentMessage.service");
  * import * as Layer from "effect/Layer"
  * const layer = Layer.succeed(EndpointDispatch, { submit: () => Effect.succeed("delivered") })
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -36,13 +40,15 @@ export class EndpointDispatch extends Context.Service<
   }
 >()($I`EndpointDispatch`) {}
 
-/** Router operations preserve all store methods and add scoped delivery.
+/**
+ * Router operations preserve all store methods and add scoped delivery.
  * **Example** (Inspect queued mail)
  * ```ts
  * import { AgentMessageRouter } from "@beep/repo-cli/commands/AgentMessage"
  * import * as Effect from "effect/Effect"
  * const program = Effect.gen(function* () { return yield* (yield* AgentMessageRouter).inbox("peer") })
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -56,12 +62,14 @@ export interface AgentMessageRouterShape extends AgentMessageStoreShape {
   ) => Effect.Effect<O.Option<Receipt>, RouterError>;
 }
 
-/** Context service for the local managed message router.
+/**
+ * Context service for the local managed message router.
  * **Example** (Request the router)
  * ```ts
  * import { AgentMessageRouter } from "@beep/repo-cli/commands/AgentMessage"
  * const service = AgentMessageRouter
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -69,7 +77,8 @@ export class AgentMessageRouter extends Context.Service<AgentMessageRouter, Agen
   $I`AgentMessageRouter`
 ) {}
 
-/** Compose durable claims and an injected native endpoint submission port.
+/**
+ * Compose durable claims and an injected native endpoint submission port.
  * **Details**
  * Claim commits before the external call. No SQL transaction spans provider
  * work. Cancellation or a defect leaves the persisted claim for conservative
@@ -79,6 +88,7 @@ export class AgentMessageRouter extends Context.Service<AgentMessageRouter, Agen
  * import { makeAgentMessageRouter } from "@beep/repo-cli/commands/AgentMessage"
  * const router = makeAgentMessageRouter
  * ```
+ *
  * @returns Router requiring an injected store and endpoint port.
  * @category constructors
  * @since 0.0.0

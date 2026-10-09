@@ -153,3 +153,48 @@ private disposable database and synthetic scope finalizer, with no model calls.
   before authoring annotations.
 - Disposition: replace `operations` with canonical `processes`; exact metadata
   check and quick package verification pass. No runtime control flow changed.
+
+## 2026-10-09 — Hosted policy exceeds package lint and metadata checks
+
+- Work: close PR #1571 at head `6aaa7f3` after the Docgen correction.
+- Evidence: hosted Lint Policy rejected eleven inline schema compilations,
+  fifteen callback forms returning `Effect.gen`, forty JSDoc warnings, and the
+  SQLite process fixture outside ESLint's TypeScript project. These findings
+  are in the new messaging/provider files; they are introduced, not inherited.
+- Attribution: package lint/type checking and Docgen metadata/example checks
+  do not cover every root-config Oxlint rule, package law, root JSDoc rule or
+  deprecated-API project-service requirement exercised by the hosted policy lane.
+- Prevention: run the specific root-config checks over new source and fixtures,
+  including fresh package laws and both ESLint profiles, before publication.
+  Retain hosted policy as the final gate; a narrower green proof is not parity.
+- Disposition: repair schema construction, callback forms, documentation and
+  fixture project membership in one wave without suppressions or weaker gates.
+  Record focused proof against the resulting source in a supplemental receipt.
+
+## 2026-10-09 — Scanner images were throttled before execution
+
+- Work: final-head hosted Secret Scanning and SAST for PR #1571.
+- Evidence: both scanner image pulls failed with Docker Hub's unauthenticated
+  pull-rate-limit diagnostic and exit 125, before scanner execution. GitHub
+  rejected individual job reruns while their parent workflow was still running.
+- Attribution: environment-only acquisition failure, not a passed scan or a
+  source finding. The hosted success requirement remains in force.
+- Prevention: share an authenticated or cached scanner-image acquisition route
+  through a separately reviewed infrastructure change using existing capacity.
+- Disposition: retain the failure logs, wait for the parent workflow to settle,
+  and retry only failed jobs on the current head. A newer repair head supersedes
+  those retries; do not rerun an obsolete commit or waive the scanners.
+
+## 2026-10-09 — Bun unit proof missed Node coverage collection
+
+- Work: current-head hosted coverage for PR #1571 after Bun unit suites passed.
+- Evidence: sixteen CLI suites failed during collection with the default ESM
+  loader rejecting the `bun:` protocol. The other 280 suites ran; this was an
+  import failure before coverage comparison, not a measured threshold regression.
+- Attribution: the messaging command introduces eager Bun-specific SQLite
+  imports into the CLI command graph consumed by Node coverage workers.
+- Prevention: prove importability and the actual storage path in both the Bun
+  unit runtime and Node coverage runtime, retaining real SQL tests rather than
+  excluding suites or mocking away the platform dependency.
+- Disposition: repair the platform boundary, reproduce focused Node coverage,
+  and rerun the affected Bun regressions before the combined corrective push.

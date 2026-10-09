@@ -12,6 +12,10 @@ const Frame = S.Struct({ type: S.String, message: S.optionalKey(S.Struct({ conte
 const encode = S.encodeEffect(S.fromJsonString(S.Unknown));
 const Startup = S.Struct({ restricted: S.Literal(true), safeMode: S.Literal(false), settingSources: S.Literal("") });
 const Settings = S.Struct({ claudeMdExcludes: S.Tuple([S.Literal("**")]), autoMemoryEnabled: S.Literal(false) });
+const JsonSettings = S.fromJsonString(Settings);
+const JsonFrame = S.fromJsonString(Frame);
+const decodeSettings = S.decodeUnknownEffect(JsonSettings);
+const decodeFrame = S.decodeEffect(JsonFrame);
 const program = Effect.gen(function* () {
   const mode = yield* Config.String("FIXTURE_MODE").pipe(Config.withDefault("echo"));
   const stdio = yield* Stdio.Stdio;
@@ -21,9 +25,7 @@ const program = Effect.gen(function* () {
     safeMode: process.argv.includes("--safe-mode"),
     settingSources: process.argv[process.argv.indexOf("--setting-sources") + 1],
   }).pipe(Effect.orDie);
-  yield* S.decodeUnknownEffect(S.fromJsonString(Settings))(process.argv[process.argv.indexOf("--settings") + 1]).pipe(
-    Effect.orDie
-  );
+  yield* decodeSettings(process.argv[process.argv.indexOf("--settings") + 1]).pipe(Effect.orDie);
   const emit = (value: unknown) =>
     encode(value).pipe(Effect.flatMap((line) => Stream.make(`${line}\n`).pipe(Stream.run(stdio.stdout()))));
   yield* stdio.stdin.pipe(
@@ -31,7 +33,7 @@ const program = Effect.gen(function* () {
     Stream.splitLines,
     Stream.runForEach((line) =>
       Effect.gen(function* () {
-        const frame = yield* S.decodeEffect(S.fromJsonString(Frame))(line);
+        const frame = yield* decodeFrame(line);
         if (frame.type === "control_request") {
           yield* emit({
             type: "control_response",

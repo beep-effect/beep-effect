@@ -6,7 +6,7 @@
  */
 
 export * from "./AgentMessage.command.ts";
-export * from "./AgentMessage.layer.ts";
+export { agentMessageStoreLayer, requirePrivateAgentPath } from "./AgentMessage.layer.ts";
 export * from "./AgentMessage.models.ts";
 export * from "./AgentMessage.runtime.ts";
 export * from "./AgentMessage.service.ts";

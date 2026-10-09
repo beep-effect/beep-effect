@@ -63,6 +63,7 @@ const retryMailboxLock = <A, R>(operation: Effect.Effect<A, RouterError, R>) =>
  * const loop = runAgentMessageDispatchLoop("peer", "owned-worker")
  * console.log(Effect.isEffect(loop)) // true
  * ```
+ *
  * @internal
  * @category processes
  * @since 0.0.0

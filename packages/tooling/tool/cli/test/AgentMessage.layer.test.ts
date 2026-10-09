@@ -1,6 +1,6 @@
 import { AgentMessageStore, agentMessageStoreLayer, requirePrivateAgentPath } from "@beep/repo-cli/test/AgentMessage";
 import { it } from "@beep/test-runner";
-import { BunServices } from "@effect/platform-bun";
+import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -13,7 +13,7 @@ const query = Effect.fn("AgentMessageLayerTest.query")(function* (directory: str
     return yield* (yield* AgentMessageStore).endpoints;
   }).pipe(Effect.provide(context));
 });
-it.layer(BunServices.layer, { timeout: "30 seconds" })("AgentMessage private filesystem boundary", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("AgentMessage private filesystem boundary", (it) => {
   it.effect("opens real private SQLite and preserves private state modes", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

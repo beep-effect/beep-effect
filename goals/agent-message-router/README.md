@@ -94,6 +94,10 @@ is not automatically promoted to the integrated final head.
 
 ## Gated follow-ups
 
+The [policy and portability repair receipt](research/POLICY-AND-PORTABILITY-REPAIR.md)
+records the later root-policy fixes and real Node/Bun SQLite regression proof.
+Original live provider receipts remain bound to their captured source snapshots.
+
 `agent-existing-session-enrollment` remains queued for exact native app/host enrollment,
 UI continuity and permission proof; `agent-browser-session-bridge` remains queued for
 a production local browser driver and unattended authenticated enrollment;

@@ -1,4 +1,6 @@
-/** Transactional local messaging state, independent of provider execution.
+/**
+ * Transactional local messaging state, independent of provider execution.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -90,13 +92,15 @@ const storageError = (cause: unknown) =>
     Match.orElse(() => error("storage", "Agent message storage operation failed."))
   );
 
-/** Operations whose state changes are committed before their results are returned.
+/**
+ * Operations whose state changes are committed before their results are returned.
  * **Example** (Read durable inbox)
  * ```ts
  * import { AgentMessageStore } from "@beep/repo-cli/commands/AgentMessage"
  * import * as Effect from "effect/Effect"
  * const program = Effect.gen(function* () { return yield* (yield* AgentMessageStore).inbox("peer") })
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -144,12 +148,14 @@ export interface AgentMessageStoreShape {
   readonly validateGrant: (grantId: string, now: number) => Effect.Effect<LaunchGrant, RouterError>;
 }
 
-/** Context service for the durable local message store.
+/**
+ * Context service for the durable local message store.
  * **Example** (Request the store)
  * ```ts
  * import { AgentMessageStore } from "@beep/repo-cli/commands/AgentMessage"
  * const service = AgentMessageStore
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -157,16 +163,20 @@ export class AgentMessageStore extends Context.Service<AgentMessageStore, AgentM
   $I`AgentMessageStore`
 ) {}
 
-/** Initialize a file-backed store on the supplied SQLite client.
+/**
+ * Initialize a file-backed store on the supplied SQLite client.
  * **Details**
  * The caller owns the restricted state directory and scoped SQL layer. Claims are
  * never reset for retry after expiry: their external outcome is ambiguous.
  * **Example** (Construct store with a bounded queue)
  * ```ts
  * import { makeAgentMessageStore } from "@beep/repo-cli/commands/AgentMessage"
+ * import * as Effect from "effect/Effect"
  * const store = makeAgentMessageStore(1000)
+ * console.log(Effect.isEffect(store)) // true
  * ```
- * @param maxPending Maximum accepted or claimed messages retained in the dispatch queue.
+ *
+ * @param maxPending - Maximum accepted or claimed messages retained in the dispatch queue.
  * @returns A store using the injected SQL client.
  * @category constructors
  * @since 0.0.0

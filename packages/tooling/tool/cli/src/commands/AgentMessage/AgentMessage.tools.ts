@@ -147,10 +147,13 @@ export const AgentMessageToolkit = Toolkit.make(sendTool, replyTool, inboxTool, 
  *
  * ```ts
  * import { agentMessageHandlersLayer } from "@beep/repo-cli/commands/AgentMessage"
+ * import * as Layer from "effect/Layer"
  * const handlers = agentMessageHandlersLayer("owned-grant")
- * void handlers
+ * console.log(Layer.isLayer(handlers)) // true
  * ```
  *
+ * @param grantId - Persisted host-issued grant checked for every tool invocation.
+ * @returns Tool handlers constrained to the grant's current identity and message budget.
  * @category layers
  * @since 0.0.0
  */
@@ -254,10 +257,13 @@ export const agentMessageHandlersLayer = (grantId: string) =>
  *
  * ```ts
  * import { agentMessageMcpLayer } from "@beep/repo-cli/commands/AgentMessage"
+ * import * as Layer from "effect/Layer"
  * const server = agentMessageMcpLayer("owned-grant")
- * void server
+ * console.log(Layer.isLayer(server)) // true
  * ```
  *
+ * @param grantId - Persisted host-issued grant binding this MCP connection's authority.
+ * @returns A stdio MCP server layer exposing only the six scoped messaging tools.
  * @category layers
  * @since 0.0.0
  */

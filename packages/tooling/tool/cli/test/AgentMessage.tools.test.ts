@@ -14,7 +14,7 @@ import {
 } from "@beep/repo-cli/test/AgentMessage";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { BunServices } from "@effect/platform-bun";
+import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import * as Utils from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -103,7 +103,7 @@ const fixture = Effect.fn("AgentMessageToolsTest.fixture")(function* <A, E>(
   }).pipe(Effect.provide(context));
 });
 
-it.layer(BunServices.layer, { timeout: "30 seconds" })("AgentMessage enrollment tool boundary", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("AgentMessage enrollment tool boundary", (it) => {
   it.effect.prop(
     "schema-derived caller identities cannot override host sender authority while body and conversation survive",
     [Arbitrary.schema(Envelope)],

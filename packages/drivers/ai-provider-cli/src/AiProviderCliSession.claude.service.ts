@@ -3,6 +3,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { $AiProviderCliId } from "@beep/identity";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as Deferred from "effect/Deferred";
@@ -35,6 +36,14 @@ import {
 import type { ManagedSessionError } from "./AiProviderCliSession.errors.ts";
 import type { ManagedLaunchProfile, ManagedSessionMessage } from "./AiProviderCliSession.models.ts";
 import type { ManagedSession } from "./AiProviderCliSession.service.ts";
+
+const $I = $AiProviderCliId.create("AiProviderCliSession.claude.service");
+const InitializationNotice = S.Struct({ subtype: S.Literal("init") }).annotate(
+  $I.annote("InitializationNotice", {
+    description: "Partial Claude initialization notice used to detect rejected readback.",
+  })
+);
+const isInitializationNotice = S.is(InitializationNotice);
 
 /**
  * Opens a scoped Claude stream with isolated settings and explicit messaging tools.
@@ -169,7 +178,7 @@ export const openClaude = Effect.fn("AiProviderCliSession.openClaude")(function*
   const verifyInitialization = Effect.fn("ManagedClaude.verifyInitialization")(function* (payload: unknown) {
     const init = S.decodeUnknownOption(ClaudeInit)(payload);
     if (O.isSome(init) && init.value.session_id === sessionId) return yield* Ref.set(verified, true);
-    if (S.is(S.Struct({ subtype: S.Literal("init") }))(payload))
+    if (isInitializationNotice(payload))
       yield* failPending(
         failure.make("prompt", "policy-mismatch", "Claude runtime model or permission readback failed")
       );

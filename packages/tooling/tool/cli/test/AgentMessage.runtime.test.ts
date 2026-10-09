@@ -7,9 +7,9 @@ import {
   RouterError,
   runAgentMessageDispatchLoop,
 } from "@beep/repo-cli/commands/AgentMessage";
+import { makeAgentMessageSqliteClient } from "@beep/repo-cli/test/AgentMessage";
 import { it } from "@beep/test-runner";
-import { BunServices } from "@effect/platform-bun";
-import * as Sqlite from "@effect/sql-sqlite-bun/SqliteClient";
+import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as Clock from "effect/Clock";
@@ -46,7 +46,7 @@ const fixture = Effect.fnUntraced(function* <A, E, R>(
   yield* fs.makeDirectory(cache, { recursive: true, mode: 0o700 });
   const directory = yield* fs.makeTempDirectoryScoped({ directory: cache, prefix: "runtime-" });
   const filename = path.join(directory, "messages.sqlite");
-  const client = yield* Sqlite.make({ filename, busyTimeout: Duration.millis(50) });
+  const client = yield* makeAgentMessageSqliteClient(filename, Duration.millis(50));
   const store = yield* makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client));
   yield* Effect.forEach(["sender", "target"], (endpointId) =>
     S.decodeEffect(EndpointBinding)({
@@ -91,7 +91,7 @@ const fixture = Effect.fnUntraced(function* <A, E, R>(
   return yield* run(store, filename);
 });
 
-it.layer(Layer.mergeAll(BunServices.layer, Reactivity.layer), { timeout: "10 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 seconds" })(
   "Managed mailbox resilience",
   (it) => {
     it.effect("retries recover, claim and completion without resubmitting a consumed prompt", () =>
