@@ -300,8 +300,11 @@ codec only with an equivalent schema-derived non-empty representation.
 
 Build the detector Layer in each test's existing scope and provide its Context
 from the existing detection helper. Standard it.effect owns the per-test
-TestClock, so purity vectors advance isolated clocks. Both package tsgo and
-Effect/Vitest full-scan lint pass, unlike Layer-provide function pipelines.
+TestClock, so purity vectors advance isolated clocks. Package tsgo and runtime
+goldens pass. Plain Effect/Vitest lint rejects
+this candidate with ten EV002 call-site findings and one EV003 wrapper finding.
+The successful rows export is not a lint pass. This decision remains an
+unqualified candidate at the repeated-blocker stop.
 Reversal: an equivalent scoped test entrypoint that passes both gates and
 preserves per-test clock ownership. Detection production semantics are unchanged.
 

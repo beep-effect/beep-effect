@@ -116,3 +116,15 @@ but strictEffectProvide still rejects its placement. Scoped Layer.build plus
 Context provision in the existing helper passes both audits and full-scan lint.
 Prevention: document a canonical scoped test Context pattern that preserves
 per-test TestClock isolation and passes both compiler and syntax diagnostics.
+
+
+## 2026-10-09 — Lint row export mistaken for enforcement
+
+While qualifying the scoped detector test helper, `beep lint effect-vitest
+--rows` exited 0 while exporting eleven new findings. This was incorrectly
+recorded as a lint pass; the second Yeet publication still failed the plain
+Effect/Vitest gate before pushing. Evidence: run-3 publish-final.log, EV003 at
+helper line 36 and ten EV002 detect call sites. An explicit export-only status
+or separate check/export command would have prevented this false proof claim.
+The claim is corrected in P2 and the handoff; no lint suppression or baseline
+refresh. The brief's repeated-blocker stop ends this run.

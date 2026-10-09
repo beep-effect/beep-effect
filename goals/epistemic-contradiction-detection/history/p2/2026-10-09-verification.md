@@ -273,3 +273,28 @@ Final source/test qualification at `29d4438941`:
   their passing proof/coverage trees; only test Context construction changed.
 - Fresh coverage receipt remains 100% for all touched executable source files;
   tests are outside source-counter scope. No coverage baseline change.
+
+
+## Run-3 repeated publication gate stop — correction
+
+The preceding full-scan lint pass claim is withdrawn. `--rows` exports findings
+and exits 0; it is not a successful lint check. Plain lint and the second
+publication at `d6480c05dc92bbadd8a3923923a000158fea7d9b` report eleven new
+major/open findings: EV003 at golden test helper line 36, and EV002 at detect
+call sites 85, 103, 128, 133, 146, 150, 169, 180, 188 and 202. The row export is
+`.beep/detection-proof/run3/vitest-scoped-rows/beep_epistemic-use-cases.jsonl`;
+the enforcing gate log is `.beep/detection-proof/run3/publish-final.log`.
+Both run-3 publication attempts exited 1 before push. All fifteen other cheap
+lanes pass on the second attempt. PR #1572 remains OPEN/draft at hosted head
+`a7271fb15ebf3c0b2bbf19d483979552b42eab00`; no final-head hosted claim is made.
+
+The scoped Context helper passes package audit/docgen and runtime tests, but
+is not qualified against the root syntax gate. Package receipts remain valid
+for their respective unchanged trees; production source coverage remains valid.
+The brief's repeated-blocker stop applies. New inbox row
+`local-shard-7ff8583abdaa` is acknowledged as tracked wontfix-at-stop, not green.
+Lifecycle returned to active through `beep goals set-status`; P0/P1 complete,
+P2/P3 in-progress, P4 pending. Reflection retained as attempted artifact.
+No new readiness monitor was started. All six owned heavy units are inactive/
+dead with MainPID 0; the queued use-cases unit was stopped before fallback.
+No suppression, lint baseline refresh, PR merge or lane retirement occurred.
