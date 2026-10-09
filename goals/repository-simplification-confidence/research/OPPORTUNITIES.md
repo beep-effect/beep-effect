@@ -199,3 +199,14 @@
   about 1.3 seconds across two minutes, with zero hard-cap/OOM events. Stopped
   the lane-owned unit (publish exit 130); remote #1562 stayed at 8fe6d27057.
   A serial preflight or an orchestrator-approved throttle adjustment is needed.
+
+## 2026-10-09 — H1 publish monitor ceiling flag
+
+- Task: publish the addressed H1 review wave with a bounded monitor.
+- Evidence: `yeet publish --job-max-runtime "3 minutes"` exits before any
+  publication step with `--job-max-runtime requires --detach`; the help lists
+  the flag on publish but its bound applies to detached command jobs.
+- Recovery: remove the incompatible flag and publish the same staged wave;
+  manage the submitted monitor through `yeet job` before the final handoff.
+- Prevention: help should distinguish the publish job ceiling from the
+  automatically submitted monitor's lifetime, or expose a monitor ceiling.

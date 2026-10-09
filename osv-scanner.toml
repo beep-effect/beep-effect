@@ -43,7 +43,7 @@ version = "4.2.0"
 ecosystem = "npm"
 ignore = true
 effectiveUntil = 2026-10-30T00:00:00Z
-reason = "GHSA-ch52-4w7c-c8xp. Consumer/owner: @beep/infra, Pulumi -> npm tooling -> make-fetch-happen. 4.3.0 still serves a private security-zeroed entry under max-stale in the H1 behavioral proof; upstream kornelski/http-cache-semantics#56. Exit: fixed release passes that proof and OSV, or dependency path is removed. Recheck by 2026-10-30; receipt: stage-4-h1-catalog.md#osv-exceptions."
+reason = "GHSA-ch52-4w7c-c8xp. Consumer/owner: @beep/infra, Pulumi -> npm tooling -> make-fetch-happen. 4.3.0 reuses a stored public no-cache response under max-stale through make-fetch-happen without required revalidation in the corrected H1 proof; upstream kornelski/http-cache-semantics#56. Exit: fixed release passes that proof and OSV, or dependency path is removed. Recheck by 2026-10-30; receipt: stage-4-h1-catalog.md#osv-exceptions."
 
 # GHSA-hp3w-g68c-fv3c has no patched release as of 2026-10-05. The only
 # lockfile parent of sprintf-js is argparse 1.0.10, used by the mammoth and

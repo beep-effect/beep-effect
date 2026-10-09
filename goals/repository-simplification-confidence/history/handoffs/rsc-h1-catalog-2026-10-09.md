@@ -212,3 +212,52 @@ open items: publication blocked in policy preflight by memory throttling; local 
 - Report-only commit preserves this terminal state; it is not a second
   published wording wave. Reversal: revert the report-only commit; dependency
   state and OSV exceptions are unchanged.
+
+## Run 4 (after crash)
+
+lane: rsc-h1-catalog
+head: 61ed31ebc8 (report base; final publication SHA is recorded in the final line after publication)
+PR: #1562 (wave 1 OSV: #1562; tsgo ratchet: SPEC Decision Log row "H1 tsgo ratchet deferral")
+package-verify: not applicable (no workspace package edited)
+hosted-parity: test-tsgo: pass (saved terminal result); docgen local: pass (saved noop); jsdoc-ratchet: pass (saved); knowledge refs: fail (saved inherited SPEC observation, shared repair owner); fallow audit+health: pass (saved); coverage read: pass (no measured source touched); Security (OSV): pass at earlier proved heads, final exact-head hosted result pending
+handoff: goals/repository-simplification-confidence/history/handoffs/rsc-h1-catalog-2026-10-09.md
+open items: three OSV holds renewed through 2026-10-30 with fixed-release/cache-path-proof or dependency-removal exits; inherited knowledge-reference red routed to orchestrator under S11; A Knip merge precedes catalog/register; compatibility waves and explicit tsgo deferral remain owned by H1; no effected-port notification pending for this wave.
+
+- Read the full brief, H1 and standing rulings, existing handoff and terminal
+  result envelopes. All prior monitors are terminal. No passed heavy gate
+  rerun. Fetched and merged main: already current with #1564 and #1565.
+- Verified the lane has MemoryHigh=24G / MemoryMax=28G (S12); publication
+  uses admitted `beep-heavy` with BEEP_HEAVY_MEM=24G and TURBO_CONCURRENCY=4.
+  No cap is raised by this worker.
+- Live review differs from the resume ruling's description: thread
+  PRRT_kwDOPbO_N86q4Ea8 concerns invalid cache-path evidence, not whitespace.
+  Corrected the receipt and exception reason: withdrew the non-storable
+  private-response probe, then proved persisted-entry reuse through installed
+  make-fetch-happen with trial HTTP cache 4.3.0. The replacement public
+  no-cache response is shared-cache-storable; one cache entry persists, but
+  max-stale yields one origin hit and identical bodies rather than mandatory
+  revalidation. Expected regression assertion exits 1. Fixture closes the
+  server and deletes its cache; manifests and lockfile remain untouched.
+- Removed the two blank separators from the census table for thread
+  PRRT_kwDOPbO_N86q4EbK. Decision Log thread PRRT_kwDOPbO_N86q3zPQ already
+  has reply 4232578076 and is resolved; its correction is retained.
+- Publish these fixes, main integration and recovery evidence as one addressed
+  wave. Reply/resolve both open threads through Yeet after pushing. #1562
+  stays READY. The orchestrator owns its armed S11 merge gate and retirement.
+- Later H1 waves remain blocked by the declared prior-wave/A merge sequence.
+  This is a final OSV-wave handoff, not full H1 acceptance. Reversal remains
+  revert of #1562; no new package, lockfile, detector or generated-file delta.
+
+Run 4 pre-publication observations:
+
+- Old published head `8fe6d27057` has hosted Security success (job
+  113930883472). Read completed Lint Policy job 113931687672 and Coverage
+  Regression job 113931687343 directly through the per-job logs API.
+- Coverage red is `EffectImports.ts`: functions 89.34 < 90.17,
+  lines 92.36 < 92.52, statements 92.02 < 92.13. H1 edits no source;
+  route to the orchestrator's consolidated S11 repair, without weakening
+  the coverage baseline. Knowledge refs is the Lint Policy failing step;
+  the log is retained under `.beep/rsc-h1/run4-oldhead-lint.log`.
+- `--job-max-runtime` on attached publish was rejected before publication;
+  recorded the friction immediately and removed the incompatible flag.
+  The corrected command is the same addressed wave, still on admission.

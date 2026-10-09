@@ -13,7 +13,7 @@ A final report/main-sync push requires a new exact-head hosted result.
 | Package / advisory | Consumer and owner | Attempt to remove or force fixed version | Exit condition | Last checked / evidence command |
 | --- | --- | --- | --- | --- |
 | braces 3.0.3 / GHSA-vfj7-8cjw-p6xm | `@beep/storybook`: shadcn -> fast-glob -> micromatch | npm latest remains 3.0.3; no fixed npm release. Removing the dependency path would remove live shadcn tooling, outside H1's locked retirements. | Published fixed braces version passes install, Storybook tooling and OSV, or the shadcn path is removed. Recheck before 2026-10-30. | 2026-10-09; `bun pm why braces`; GET npm registry braces; POST OSV query npm/braces@3.0.3 returned GHSA-vfj7-8cjw-p6xm. |
-| http-cache-semantics 4.2.0 / GHSA-ch52-4w7c-c8xp | `@beep/infra`: Pulumi -> npm tooling -> make-fetch-happen | Trial root override 4.3.0, `bun install`, OSV query clean; behavioral proof below failed, so override and lockfile were restored. Pulumi remains live. | A fixed release passes private-cache/max-stale proof, install and OSV, or the Pulumi/npm install dependency path is removed. Recheck before 2026-10-30. | 2026-10-09; `bun pm why http-cache-semantics`; GET npm registry; POST OSV query npm/http-cache-semantics@4.3.0 returned no advisories; `node` behavioral proof exited 1. |
+| http-cache-semantics 4.2.0 / GHSA-ch52-4w7c-c8xp | `@beep/infra`: Pulumi -> npm tooling -> make-fetch-happen | Trial root override 4.3.0, `bun install`, OSV query clean; replacement cache-path proof below fails revalidation, so the trial remains rejected and override/lockfile remain restored. Pulumi remains live. | A fixed release passes the storable-response/no-cache/max-stale cache-path proof, install and OSV, or the Pulumi/npm install dependency path is removed. Recheck before 2026-10-30. | 2026-10-09; `bun pm why http-cache-semantics`; GET npm registry; POST OSV query npm/http-cache-semantics@4.3.0 returned no advisories; `node` behavioral proof exited 1. |
 | sprintf-js 1.0.3 / GHSA-hp3w-g68c-fv3c | `@beep/doc-text`: mammoth -> argparse; `@beep/repo-docgen`: markdown-toc -> remarkable -> argparse | npm latest 1.1.3 is also affected. Both parents retain argparse 1.0.10. Removing the paths would remove live document conversion/docgen. | Published fixed sprintf-js passes document/docgen consumers and OSV, or both argparse paths are removed. Recheck before 2026-10-30. | 2026-10-09; `bun pm why sprintf-js`; GET npm registry; POST OSV query npm/sprintf-js@1.0.3 returned GHSA-hp3w-g68c-fv3c. |
 
 Source advisories and upstream issues:
@@ -24,35 +24,61 @@ Source advisories and upstream issues:
 [sprintf advisory](https://github.com/advisories/GHSA-hp3w-g68c-fv3c),
 [sprintf issue](https://github.com/alexei/sprintf.js/issues/237).
 
-HTTP cache behavioral proof, run against the installed trial 4.3.0:
+HTTP cache review correction (Run 4): the original direct `CachePolicy`
+probe used a `private` response with `storable=false`. That result did not
+prove reuse through the consumer cache path and is withdrawn as a reason to
+reject 4.3.0. The replacement uses a response that is storable with the default
+shared policy: `public, no-cache, max-age=3600`. `no-cache` permits storage but
+requires validation before reuse. Installed `make-fetch-happen@15.0.6` uses
+`shared:false` (`lib/cache/policy.js:7`); the proof preserves that consumer
+configuration and also checks that the response is shared-cache-storable.
+
+Downloaded the published `http-cache-semantics@4.3.0` tarball into the ignored
+`.beep/rsc-h1/http-cache-4.3.0/` directory, without changing manifests,
+lockfile or installed dependencies. Before loading `make-fetch-happen`, the
+fixture replaces only its process-local resolved `http-cache-semantics` export
+with the trial module. The fixture server returns a different synthetic body
+on every origin request. Both fetches drain the body; `cacache.ls(cachePath)`
+confirms one persisted entry after the first request. The second request adds
+`Cache-Control: max-stale=999999` and must reach the origin because the stored
+response carries `no-cache`.
+
+Commands: download `https://registry.npmjs.org/http-cache-semantics/-/http-cache-semantics-4.3.0.tgz`,
+extract under `.beep/rsc-h1/http-cache-4.3.0/`, then
+`node .beep/rsc-h1/cache-path-proof.cjs`. Core of the synthetic fixture:
 
 ```js
-const CachePolicy = require("http-cache-semantics");
-const assert = require("node:assert/strict");
-const request = {
-  url: "https://registry.example/package",
-  method: "GET",
-  headers: { host: "registry.example" }
-};
-const policy = new CachePolicy(request, {
+const installedPath = require.resolve("http-cache-semantics");
+require(installedPath);
+const TrialPolicy = require("./http-cache-4.3.0/package");
+require.cache[installedPath].exports = TrialPolicy;
+const fetch = require("make-fetch-happen");
+const cacache = require("cacache");
+// Fixture origin sends public, no-cache, max-age=3600 with a fresh body per hit.
+const sharedPolicy = new TrialPolicy({ url, method: "GET", headers: {} }, {
   status: 200,
-  headers: {
-    "cache-control": "private, max-age=3600",
-    "set-cookie": "synthetic=1"
-  }
+  headers: { "cache-control": "public, no-cache, max-age=3600" }
 });
-const result = policy.evaluateRequest({
-  ...request,
-  headers: { ...request.headers, "cache-control": "max-stale=999999" }
-});
-assert.equal(result.response, undefined);
+assert.equal(sharedPolicy.storable(), true);
+const first = await (await fetch(url, { cachePath, retry: 0 })).text();
+assert.equal(Object.keys(await cacache.ls(cachePath)).length, 1);
+const second = await (await fetch(url, {
+  cachePath, retry: 0, headers: { "cache-control": "max-stale=999999" }
+})).text();
+assert.equal(originHits, 2, "no-cache must revalidate before reuse");
+assert.notEqual(first, second);
 ```
 
-Output: `storable=false cached-response=true`; assertion failed because
-`result.response` included the synthetic cookie. This exercises the advisory's
-security-zeroed entry reuse; it does not claim that make-fetch-happen stores
-private responses. Renewal retains the tooling-only boundary already reviewed.
-OSV's version range excludes 4.3.0, but that alone does not establish repair.
+Terminal result (exit 1): `version=4.3.0 sharedStorable=true cacheEntries=1
+originHits=1 first=synthetic-response-1 second=synthetic-response-1`;
+`no-cache must revalidate before reuse: 1 !== 2`. The fixture closes its server
+and deletes its cache in `finally`. This proves a stored response bypasses
+required validation through the consumer's cache path. It does not prove
+cross-user credential exposure or assert that OSV's advisory range includes
+4.3.0. The renewal keeps its existing advisory id, consumer boundary and
+upstream issue while requiring this cache-path regression to pass for exit.
+Full ignored fixture and output: `.beep/rsc-h1/cache-path-proof.cjs` and
+`.beep/rsc-h1/cache-path-proof.log`.
 
 Repository source search over packages, apps, infra and scripts found no direct
 sprintf-js, argparse or HTTP cache imports. Installed argparse's formatter uses
@@ -78,8 +104,6 @@ rerun the full census at the post-A catalog wave head before removing anything.
 
 | Candidate | Manifest / override result | Import result | Generator/config/script result | Disposition |
 | --- | --- | --- | --- | --- |
-
-
 | `@google-cloud/pubsub` | `scratchpad/package.json:dependencies` | `scratchpad/effect-ontology/Service/PubSubClient.ts`, `scratchpad/effect-ontology/Runtime/EventBroadcastRouter.ts` | none | retain: effect-ontology retirement exit |
 | `@google-cloud/storage` | `scratchpad/package.json:dependencies` | `scratchpad/effect-ontology/Service/Storage.ts` | none | retain: effect-ontology retirement exit |
 | `@xenova/transformers` | `scratchpad/package.json:dependencies` | `scratchpad/effect-ontology/Service/NomicNlp.ts` | none | retain: effect-ontology retirement exit |
@@ -121,7 +145,7 @@ required exception metadata.
 
 ## Compatibility proofs
 
-HTTP cache trial above failed; renewed. Other met exits run in their own PR
+Replacement HTTP cache consumer-path trial above failed required revalidation; renewed. Other met exits run in their own PR
 following the catalog/register wave (R74).
 
 ## Syncpack
