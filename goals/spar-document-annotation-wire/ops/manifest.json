@@ -11,7 +11,7 @@
   "packetPath": "goals/spar-document-annotation-wire",
   "lifecycle": "active",
   "mission": "Generate pinned SPAR terms and ship typed OA/PROV document annotations plus the Md-to-DOCO section fold.",
-  "statusNote": "Graduated third from document-structure-ontologies.",
+  "statusNote": "Blocked at P3: RDF-to-Md dependency requires out-of-scope generated boundaries and reviewed cache-policy synchronization. No PR was pushed.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
