@@ -28,6 +28,7 @@ const $I = $RepoCliId.create("commands/Cache/Cache.schemas");
  * import { CacheRemoteReadsRequest } from "@beep/repo-cli/commands/Cache"
  * CacheRemoteReadsRequest.make({ api: "https://cache.example.test", team: "fixture", tokenRef: "op://vault/item/field", replaceToken: false }).replaceToken // => false
  * ```
+ *
  * @category models
  * @since 0.0.0
  */

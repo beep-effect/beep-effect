@@ -32,7 +32,7 @@ const run = Effect.fn("RetainedScriptAdaptersTest.run")(function* (
   return { exitCode, stdout, stderr };
 }, Effect.scoped);
 
-it.layer(NodeServices.layer)("retained install and pre-runtime adapters", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pre-runtime adapters", (it) => {
   it.effect("keeps compiler originals and unrelated files while removing only rotations and patched leftovers", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

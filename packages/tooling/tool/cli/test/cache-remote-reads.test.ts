@@ -6,18 +6,17 @@ import {
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
+import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { expect } from "vitest";
 
 const platform = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
 const testLayer = CacheQualificationLive.pipe(Layer.provideMerge(platform));
@@ -47,10 +46,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("cache remote-reads", (it) => {
       );
       const original = yield* fs.readFileString(path.join(root, ".env"));
       const changed = yield* run;
-      const backup = A.findFirst(changed, Str.startsWith("backup:"));
-      expect(O.isSome(backup)).toBe(true);
-      if (O.isSome(backup))
-        expect(yield* fs.readFileString(path.join(root, Str.slice(8)(backup.value)))).toBe(original);
+      const backup = yield* Effect.fromOption(A.findFirst(changed, Str.startsWith("backup:")));
+      expect(yield* fs.readFileString(path.join(root, Str.slice(8)(backup)))).toBe(original);
       const next = yield* fs.readFileString(path.join(root, ".env"));
       expect(next).toContain('PRIVATE_FIXTURE="keep me"');
       expect(next).toContain('TURBO_API="https://preserved.example.test"');
@@ -77,10 +74,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("cache remote-reads", (it) => {
         replaceToken: false,
       });
       const reports = yield* CacheQualificationService.use((service) => service.remoteReads(relative, input));
-      const backup = A.findFirst(reports, Str.startsWith("backup:"));
-      expect(O.isSome(backup)).toBe(true);
-      if (O.isSome(backup))
-        expect(yield* fs.readFileString(path.join(root, Str.slice(8)(backup.value)))).toBe(original);
+      const backup = yield* Effect.fromOption(A.findFirst(reports, Str.startsWith("backup:")));
+      expect(yield* fs.readFileString(path.join(root, Str.slice(8)(backup)))).toBe(original);
       const next = yield* fs.readFileString(path.join(root, ".env"));
       expect(next).toContain("PRIVATE_FIXTURE=preserved");
       expect(next).toContain("TURBO_TEAM=fixture");

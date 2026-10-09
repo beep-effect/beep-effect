@@ -86,6 +86,7 @@ import type { KnowledgeInlineSpan, KnowledgeRefsReport, KnowledgeTreeOracle } fr
 import type { KnowledgeCommandProbeResult, KnowledgeRewriteRule } from "./Knowledge.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Knowledge/Knowledge.service");
+const KnowledgeRewriteRulesJson = S.fromJsonString(KnowledgeRewriteRules);
 
 /**
  * Everything the reference census may read from one Git tree.
@@ -1769,7 +1770,7 @@ export const rewriteKnowledgeReferences = Effect.fn("Knowledge.rewriteReferences
     const path = yield* Path.Path;
     const fs = yield* FileSystem.FileSystem;
     const rulesText = yield* fs.readFileString(path.join(root, "scripts", "knowledge-refs-rewrite.rules.json"));
-    const input = yield* S.decodeEffect(S.fromJsonString(KnowledgeRewriteRules))(rulesText);
+    const input = yield* S.decodeEffect(KnowledgeRewriteRulesJson)(rulesText);
     const grouped = A.reduce(
       input.rules,
       HashMap.empty<string, ReadonlyArray<KnowledgeRewriteRule>>(),

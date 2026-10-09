@@ -201,3 +201,21 @@ are available. Cancellation is not a proof failure or a package pass.
   is admission, not a failed source proof. No other lane's process is stopped.
 - Would have prevented it: a serialized publication window or admission with
   an observable fair queue and a bounded waiting receipt.
+
+
+## 2026-10-09: full policy proof exposes exception-admission gap
+
+- Doing: root-input changed-scope policy proof after package audit/docgen passed.
+- Evidence: medium policy reports 17 new Effect Vitest occurrences, two lossless
+  StructWithRest schema findings, one property advisory and four JSDoc spacing
+  warnings. The state phase also catches 12 inline schema compilation errors.
+- Repairs: canonical assertions/imports and hook timeouts, compiled schema hoists,
+  JSDoc spacing, and schema-derived synthetic identity/extension property coverage.
+- Boundary: Accounts must preserve arbitrary future wire fields; OS symlink,
+  permission, external process and installed-Graft fixtures require real runtime
+  boundaries. Existing reviewed exceptions establish the precedent. Both scanner
+  owner commands preserve existing exceptions but offer no operation to admit
+  newly reviewed reasons. Generated inventories cannot be hand-authored here.
+- Would have prevented it: reviewed-exception admission with exact current
+  occurrence identities and evidence, owned by B/V; root policy before relying
+  on package audit as comprehensive lint evidence.

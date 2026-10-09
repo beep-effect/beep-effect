@@ -12,6 +12,8 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 
+const KnowledgeRewriteRulesJson = S.fromJsonString(KnowledgeRewriteRules);
+
 const fixture = Effect.fn("KnowledgeRewriteTest.fixture")(function* (rules: ReadonlyArray<KnowledgeRewriteRule>) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -20,14 +22,14 @@ const fixture = Effect.fn("KnowledgeRewriteTest.fixture")(function* (rules: Read
   const rulesFile = path.join(root, "scripts", "knowledge-refs-rewrite.rules.json");
   yield* fs.writeFileString(
     rulesFile,
-    yield* S.encodeEffect(S.fromJsonString(KnowledgeRewriteRules))(
+    yield* S.encodeEffect(KnowledgeRewriteRulesJson)(
       KnowledgeRewriteRules.make({ schemaVersion: "knowledge-refs-rewrite/v1", rules })
     )
   );
   return { fs, path, root, rulesFile };
 });
 
-it.layer(NodeServices.layer)("knowledge refs rewrite", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("knowledge refs rewrite", (it) => {
   it.effect(
     "reports exact sequential counts, leaves dry runs untouched, and is idempotent",
     Effect.fnUntraced(function* () {

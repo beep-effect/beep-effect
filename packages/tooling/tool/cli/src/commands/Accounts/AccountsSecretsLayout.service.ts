@@ -72,6 +72,9 @@ const unprefixed: Readonly<Record<string, typeof Prefix.Type>> = {
   SPOTIFY_CLIENT_SECRET: "SOCIAL",
   X_API_BEARER_TOKEN: "SOCIAL",
 };
+const AccountsSecretsItemJson = S.fromJsonString(AccountsSecretsItem);
+const AccountsSecretFieldsJson = AccountsSecretField.pipe(S.Array, S.fromJsonString);
+
 const isNote = (field: AccountsSecretField) => field.id === "notesPlain" || O.contains("NOTES")(field.purpose);
 const error = (message: string) => AccountsError.make({ reason: "decode", message });
 const fieldOrder = Order.mapInput(
@@ -106,7 +109,7 @@ export const secretsLayoutIdentity = Effect.fn("Accounts.secretsLayoutIdentity")
     ),
     (field) => ({ ...field, section: O.none() })
   );
-  const text = yield* S.encodeEffect(AccountsSecretField.pipe(S.Array, S.fromJsonString))(stable);
+  const text = yield* S.encodeEffect(AccountsSecretFieldsJson)(stable);
   return yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(text));
 });
 
@@ -215,7 +218,7 @@ const make = Effect.fn("AccountsSecretsLayout.make")(function* () {
             message: "op item get failed; op-doctor ran once. Secret operation stopped.",
           });
         }
-        const item = yield* S.decodeEffect(S.fromJsonString(AccountsSecretsItem))(read.value.stdout).pipe(
+        const item = yield* S.decodeEffect(AccountsSecretsItemJson)(read.value.stdout).pipe(
           Effect.mapError(() => error("Cannot decode item metadata; no values were rendered."))
         );
         const laid = yield* layoutSecretsItem(item);
@@ -235,7 +238,7 @@ const make = Effect.fn("AccountsSecretsLayout.make")(function* () {
             ),
             summary,
           ];
-        const text = yield* S.encodeEffect(S.fromJsonString(AccountsSecretsItem))(laid);
+        const text = yield* S.encodeEffect(AccountsSecretsItemJson)(laid);
         const edited = yield* Effect.scoped(
           Effect.gen(function* () {
             const handle = yield* ChildProcess.make(
@@ -261,7 +264,7 @@ const make = Effect.fn("AccountsSecretsLayout.make")(function* () {
             message: "op item edit failed; op-doctor ran once. Secret operation stopped.",
           });
         }
-        const confirmed = yield* S.decodeEffect(S.fromJsonString(AccountsSecretsItem))(edited.value.output).pipe(
+        const confirmed = yield* S.decodeEffect(AccountsSecretsItemJson)(edited.value.output).pipe(
           Effect.mapError(() => error("Cannot decode item-edit confirmation; no values were rendered."))
         );
         return [`written version ${O.getOrElse(confirmed.version, () => 0)}: ${summary}`];

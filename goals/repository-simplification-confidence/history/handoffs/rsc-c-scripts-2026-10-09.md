@@ -340,3 +340,34 @@ Draft publication and the unfinished `beep lint policy --base origin/main` are
 queued through beep-heavy; no PR exists yet. E's workflow review and Ci co-sign
 remain external dependencies. The caller census, root-input inventory and
 terminal independent review stay preserved. No running unit is abandoned.
+
+### Run 3 policy findings and owner boundary
+
+The local changed-scope policy proof exposes introduced findings despite the
+full package audit/docgen pass: 17 test-policy occurrences, two lossless wire
+schema candidates, a property-test advisory, four JSDoc spacing warnings and
+12 inline schema compilation errors. The direct fixes are canonical assertion
+imports, explicit layer timeouts, failure-on-missing backup unwrapping, schema
+codec hoists, spacing and schema-derived synthetic metadata/identity coverage.
+Post-fix qualification remains required.
+
+Reviewed boundary exceptions remain a B/V inventory-owner dependency. Accounts'
+StructWithRest preserves unknown item/field metadata and cannot become a closed
+Class without violating the lossless contract (existing Lexical wire exceptions
+are the precedent). Real filesystem, symlink, subprocess and installed-Graft
+fixtures require occurrence-specific reasons. `lint schema-first --write` and
+`lint effect-vitest --write` preserve old exceptions but cannot accept new
+reviewed reasons. No unexplained baseline capture or hand-authored generated
+inventory was made. The orchestrator should route explicit admission capability
+or an authorable-exception-metadata ruling to B/V. Row emission is queued.
+
+State policy separately reports 40 introduced broken tracked-path observations
+for the removed names, including the locked routing table and explicitly
+historical packet references; zero live gated reference observations still
+passes. This is a semantic-delta/history contract gap requiring disposition;
+none is silently waived. The old live-caller census excludes packet history and
+therefore does not establish a semantic-delta pass.
+
+Publication was stopped while still waiting for admission (over 20 minutes),
+before a publish command, push or PR existed, to keep the wave fully addressed.
+The policy proof is still running its final phase; no terminal pass is claimed.

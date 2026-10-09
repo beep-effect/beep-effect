@@ -24,6 +24,7 @@ const $I = $RepoCliId.create("commands/Knowledge/Knowledge.schemas");
  * import * as O from "effect/Option"
  * KnowledgeRewriteRule.make({ path: "docs/example.md", find: "old", replace: "new", count: 1, note: O.none() }).count // => 1
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -48,6 +49,7 @@ export class KnowledgeRewriteRule extends S.Class<KnowledgeRewriteRule>($I`Knowl
  * import * as S from "effect/Schema"
  * Effect.isEffect(S.decodeUnknownEffect(KnowledgeRewriteRules)({ schemaVersion: "knowledge-refs-rewrite/v1", rules: [] })) // => true
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -66,6 +68,7 @@ export class KnowledgeRewriteRules extends S.Class<KnowledgeRewriteRules>($I`Kno
  * import { KnowledgeRewriteReport } from "@beep/repo-cli/commands/Knowledge"
  * KnowledgeRewriteReport.make({ applied: 0, skipped: 2, failures: [], dryRun: true }).applied // => 0
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
