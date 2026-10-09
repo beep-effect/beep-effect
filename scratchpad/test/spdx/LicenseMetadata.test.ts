@@ -1,5 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import { DEPRECATED_LICENSE_IDS, LICENSE_IDS } from "../../effected/spdx/internal/licenseIds.ts";
 import { LICENSE_META } from "../../effected/spdx/internal/licenseMeta.ts";
@@ -7,9 +9,9 @@ import { License } from "../../effected/spdx/License.ts";
 
 describe("License metadata", () => {
 	it("covers every cataloged id, active and deprecated", () => {
-		assert.strictEqual(LICENSE_META.size, LICENSE_IDS.size + DEPRECATED_LICENSE_IDS.size);
-		for (const id of LICENSE_IDS) assert.isTrue(LICENSE_META.has(id), `missing metadata for ${id}`);
-		for (const id of DEPRECATED_LICENSE_IDS) assert.isTrue(LICENSE_META.has(id), `missing metadata for ${id}`);
+		assert.strictEqual(HashMap.size(LICENSE_META), HashSet.size(LICENSE_IDS) + HashSet.size(DEPRECATED_LICENSE_IDS));
+		for (const id of LICENSE_IDS) assert.isTrue(HashMap.has(LICENSE_META, id), `missing metadata for ${id}`);
+		for (const id of DEPRECATED_LICENSE_IDS) assert.isTrue(HashMap.has(LICENSE_META, id), `missing metadata for ${id}`);
 	});
 
 	it.effect("carries reference url, name and both approval flags for a known license", () =>

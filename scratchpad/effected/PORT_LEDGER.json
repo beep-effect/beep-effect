@@ -2757,9 +2757,120 @@
         }
       ],
       "fixturesBytes": 0,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/spdx/License.test.ts:83; scratchpad/test/spdx/LicenseMetadata.test.ts:11; scratchpad/test/spdx/data.test.ts:7; scratchpad/test/spdx/SpdxExpression.test.ts:307",
+          "upstreamBehaviour": "License.catalog, LicenseException.catalog and internal LICENSE_META are native ReadonlyMap values; active/deprecated license and exception ids are native ReadonlySet values. SpdxExpression.licensesOf deduplicates string ids with native Set; catalogs and id sets iterate in insertion order.",
+          "labBehaviour": "License.ts and LicenseException.ts catalogs and internal/licenseMeta.ts LICENSE_META use HashMap with Option lookups; internal/licenseIds.ts and internal/exceptions.ts expose four HashSets. SpdxExpression.licensesOf uses MutableHashSet. Ordered data arrays and first-appearance license order remain; HashMap/HashSet iteration has no insertion-order guarantee. Tests use Effect lookup, membership and size helpers.",
+          "reason": "native-runtime: D5 and law 6 require Effect hash collections; the 2026-10-09 grilling ruling permits public collection API changes and empties the native-runtime allowlist. Inventory r1 and fix-spdx-g1.md require genuine HashMap/HashSet values rather than native-shaped backing facades."
+        },
+        {
+          "test": "scratchpad/test/spdx/License.test.ts:23; scratchpad/test/spdx/License.test.ts:48; scratchpad/test/spdx/License.test.ts:63",
+          "upstreamBehaviour": "License.isLicenseRef and License.parseResult separately test LICENSE_REF_PATTERN directly; no schema represents the shared LicenseRef/DocumentRef grammar.",
+          "labBehaviour": "License.ts defines a local branded LicenseRefId string schema using S.isPattern with the same regex, and reuses its derived S.is guard in isLicenseRef and parseResult. License.id remains S.String, and public signatures, accepted references and malformed-reference failures stay unchanged.",
+          "reason": "schema-first: laws 17 and 18 and EF-12b/EF-35 require shared domain constraints and guards to derive from schemas; inventory r4 and fix-spdx-g1.md record the LicenseRefId repair."
+        },
+        {
+          "test": "scratchpad/test/spdx/SpdxExpression.test.ts:219; scratchpad/test/spdx/SpdxExpression.test.ts:271; scratchpad/test/spdx/SpdxExpression.test.ts:152; scratchpad/test/spdx/LicenseMetadata.test.ts:11",
+          "upstreamBehaviour": "internal/licenseMeta.ts casts metadata tuples to LicenseMetaEntry; collapse tests cast Result.Success and Option.Some. AndNode/OrNode recursive suspensions use S.Codec<SpdxExpression>, incorrectly declaring encoded children as decoded class instances.",
+          "labBehaviour": "Metadata row callbacks declare readonly tuple return types, and collapse tests use assertTrue narrowing without casts. All four AndNode/OrNode suspensions specify S.Codec<SpdxExpression, SpdxNode>; FromString encoder derives its input from SpdxExpressionUnion.Encoded, matching the existing tagged POJO wire representation.",
+          "reason": "type-safety: D15 forbids unsafe assertions; explicit tuple types and checked narrowing replace them. Inventory r5 and fix-spdx-g2.md:5 correct the inherited recursive encoded-type contract under Effect SCHEMA.md without changing runtime encoding or rewriting tests."
+        },
+        {
+          "test": "scratchpad/test/spdx/License.test.ts:37; scratchpad/test/spdx/LicenseException.test.ts:16; scratchpad/test/spdx/SpdxExpression.test.ts:120; scratchpad/test/spdx/SpdxExpression.test.ts:133; scratchpad/test/spdx/SpdxExpression.test.ts:165; scratchpad/test/spdx/SpdxExpression.test.ts:207",
+          "upstreamBehaviour": "License, LicenseException and SpdxExpression construct InvalidSpdxExpressionError with new. String-codec tests use decodeUnknownEffect for known string inputs, and the WITH test narrows with instanceof WithExceptionNode.",
+          "labBehaviour": "The three parseResult paths construct InvalidSpdxExpressionError with .make. Known-string codec tests use S.decodeEffect, and the WITH test narrows through S.is(WithExceptionNode); typed error payloads, canonical strings and assertions remain unchanged.",
+          "reason": "tsgo-diagnostics: step-2 @effect/tsgo quick fixes enforce newSchemaClass, typed schema decoding and schema-derived narrowing. Commit 7f67982f77c57d9a8bbc2e6a06b5ef03a5790224 records these exact replacements; S0-to-working-tree diff retains them."
+        },
+        {
+          "test": "scratchpad/test/spdx/SpdxExpression.test.ts:127; scratchpad/test/spdx/SpdxExpression.test.ts:152; scratchpad/test/spdx/SpdxExpression.test.ts:229; scratchpad/test/spdx/SpdxExpression.test.ts:279; scratchpad/test/spdx/SpdxExpression.test.ts:298",
+          "upstreamBehaviour": "SpdxExpression.ts serialize, materialize, collectLicenses and primaryLicense dispatch with native switch statements. Metadata rows use native array.map, and metadata access uses undefined checks and optional native-map lookup.",
+          "labBehaviour": "The four walkers use module-scope exhaustive Match.type matchers, retaining bytes, handlers, the collector accumulator and left-to-right traversal. internal/licenseMeta.ts uses A.map; License.ts metadata getters use O.map/O.exists over HashMap lookups, preserving missing-id results and approval flags.",
+          "reason": "effect-first: law 11 prohibits native switch dispatch, and helper laws prefer Effect modules. Inventory r2 and fix-spdx-g2.md:1 require hoisted exhaustive matchers to repair the measured port-introduced allocation regression without changing upstream results; D11 does not authorize the optional pure-walker rewrite."
+        },
+        {
+          "test": "module suite scratchpad/test/spdx/**",
+          "upstreamBehaviour": "License.ts, LicenseException.ts, SpdxExpression.ts and their tests import multiple modules from the root effect barrel; public JSDoc examples in those files and index.ts do the same.",
+          "labBehaviour": "Runtime, type and test imports use dedicated effect/Module paths, including Effect, Option, Result, Schema and Arbitrary; corresponding JSDoc examples in License.ts, LicenseException.ts, SpdxExpression.ts and index.ts use dedicated paths too.",
+          "reason": "effect-imports: law 2 and AGENTS.md prohibit the root effect barrel in source, tests and examples. Step-3 commit e8f75881080b97c4cb0dc25d1e5d4389fbeb7226 and mechanical-law commit 03bf79d41ba2628a1b026a0db3046e20ca45f203 record the per-module import replacements."
+        },
+        {
+          "test": "module suite scratchpad/test/spdx/**",
+          "upstreamBehaviour": "License and LicenseException use plain class identifiers; InvalidSpdxExpressionError and the five AST tagged classes have no composer-derived identity. Class fields, SpdxExpressionUnion and FromString lack the lab identity annotations.",
+          "labBehaviour": "License.ts, LicenseException.ts and SpdxExpression.ts create $ScratchpadId composers; License, LicenseException, InvalidSpdxExpressionError and five AST classes use $I identifiers and annotations, with field descriptions. SpdxExpressionUnion and FromString receive distinct $I.annoteSchema metadata; parse and wire shapes remain unchanged.",
+          "reason": "identity-annotations: operator revision step 4, D5 and EF-12 require @beep/identity composer annotations. Inventory r3 and fix-spdx-g2.md:3,7 supply the union/codec repair; the report label identity-keys denotes annotation work here, not an identity-keyed collection rewrite."
+        },
+        {
+          "test": "scratchpad/test/spdx/oracle.int.test.ts:43; scratchpad/test/spdx/spdx-expression-parse.d.ts:1",
+          "upstreamBehaviour": "The pinned upstream package supplies types/spdx-expression-parse.d.ts as an ambient type shim for its untyped CommonJS differential oracle; the S0 source/test copy lacks that types-directory declaration in the lab test graph.",
+          "labBehaviour": "A test-local scratchpad/test/spdx/spdx-expression-parse.d.ts declares the oracle module and its default parse(string): unknown export, enabling the existing lab oracle tests to type-check. The upstream explanatory header is absent and remains backlog b7; oracle throw/no-throw assertions are unchanged.",
+          "reason": "test-environment: D9 preserves the upstream oracle while adapting its ambient declaration to the lab source/test layout. Step-2 commit 7cf8a7636e179a9de5555c95c15f3afc6da1f33c adds this shim; inventory b7 confirms the upstream types-directory origin and tracks the lost header."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b1 — README adaptation, dataset attribution and dependency-backlog prose are incomplete. (scratchpad/effected/spdx/README.md:3-48,92-168)",
+          "reason": "docs: At S2, adapt four Port notes subsections, pin upstream version/commit, preserve LICENSE and dataset notices, remove release boilerplate, use lab/module imports and reconcile generator/data/dependency backlog."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b2 — Exported documentation retains upstream carriers and lacks canonical tags/examples. (scratchpad/effected/spdx/License.ts:62,138)",
+          "reason": "jsdoc: At S2, convert legacy carriers to titled Example and Details/Gotchas, retain prose, add meaningful examples, canonical category and since 0.0.0, and correct codec serializer documentation."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b3 — Schema round-trip property coverage and configurable property run counts are incomplete. (scratchpad/test/spdx/SpdxExpression.test.ts:207)",
+          "reason": "test: At S3, add supported fcRuns registration and own-schema Arbitrary.schema codec properties while retaining the constrained expression generator, oracle suite and upstream assertions."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b4 — Option, Result and Exit assertions have not migrated to the Vitest assertion canon. (scratchpad/test/spdx/SpdxExpression.test.ts:111,187,198,226-257,294)",
+          "reason": "test: At S3, migrate Option, Result and Exit assertions to @effect/vitest/utils helpers with expected payloads/causes and unchanged field checks."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b5 — A pure license walker is proposed as an optional simplification. (scratchpad/effected/spdx/SpdxExpression.ts:270-286,314-323)",
+          "reason": "effect-idiom: Optional follow-up: evaluate a pure walker and explicit id deduplication against oracle results, first-appearance ordering and allocation cost; keep this discretionary rewrite out of required r2."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b6 — Runtime schema-description prose contains a TSDoc selector artifact. (scratchpad/effected/spdx/SpdxExpression.ts:120,138)",
+          "reason": "schema: Replace the TSDoc selector artifact (SpdxExpression:type) with SpdxExpression in both runtime annotation descriptions as documentation cleanup."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b7 — The upstream differential-oracle shim explanation was dropped. (scratchpad/test/spdx/spdx-expression-parse.d.ts:1)",
+          "reason": "docs: At S2, restore the four-line upstream explanatory header above the oracle ambient declaration."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 1,
+              "backlog": 3
+            },
+            "sol": {
+              "required": 3,
+              "backlog": 3
+            },
+            "fable": {
+              "required": 8,
+              "backlog": 6
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

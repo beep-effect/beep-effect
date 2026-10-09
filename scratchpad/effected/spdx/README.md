@@ -163,7 +163,16 @@ None.
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — The lab replaces native catalogs/id sets with HashMap/HashSet and license deduplication with MutableHashSet, using Option lookups while retaining ordered datasets and first-appearance license order. (scratchpad/test/spdx/License.test.ts:83; scratchpad/test/spdx/LicenseMetadata.test.ts:11; scratchpad/test/spdx/data.test.ts:7; scratchpad/test/spdx/SpdxExpression.test.ts:307)
+- **schema-first** — The lab derives LicenseRef validation from a branded schema using the upstream regex instead of separate direct regex guards. (scratchpad/test/spdx/License.test.ts:23; scratchpad/test/spdx/License.test.ts:48; scratchpad/test/spdx/License.test.ts:63)
+- **type-safety** — The lab replaces tuple and test casts with checked types/narrowing and declares recursive encoded children as tagged POJOs instead of decoded class instances. (scratchpad/test/spdx/SpdxExpression.test.ts:219; scratchpad/test/spdx/SpdxExpression.test.ts:271; scratchpad/test/spdx/SpdxExpression.test.ts:152; scratchpad/test/spdx/LicenseMetadata.test.ts:11)
+- **tsgo-diagnostics** — The lab uses schema .make, typed string decoding and schema-derived test guards instead of new error construction, unknown-input decoding and instanceof narrowing. (scratchpad/test/spdx/License.test.ts:37; scratchpad/test/spdx/LicenseException.test.ts:16; scratchpad/test/spdx/SpdxExpression.test.ts:120; scratchpad/test/spdx/SpdxExpression.test.ts:133; scratchpad/test/spdx/SpdxExpression.test.ts:165; scratchpad/test/spdx/SpdxExpression.test.ts:207)
+- **effect-first** — The lab uses hoisted exhaustive Effect matchers and Array/Option helpers instead of upstream switches and native metadata mapping/lookup checks. (scratchpad/test/spdx/SpdxExpression.test.ts:127; scratchpad/test/spdx/SpdxExpression.test.ts:152; scratchpad/test/spdx/SpdxExpression.test.ts:229; scratchpad/test/spdx/SpdxExpression.test.ts:279; scratchpad/test/spdx/SpdxExpression.test.ts:298)
+- **effect-imports** — The lab source, tests and JSDoc examples import dedicated effect/Module paths instead of the upstream effect barrel. (module suite scratchpad/test/spdx/**)
+- **identity-annotations** — The lab adds composer-derived identifiers, field descriptions and schema metadata to the upstream classes, AST union and string codec. (module suite scratchpad/test/spdx/**)
+- **test-environment** — The lab supplies the upstream oracle ambient declaration beside the lab tests instead of relying on the upstream types-directory layout. (scratchpad/test/spdx/oracle.int.test.ts:43; scratchpad/test/spdx/spdx-expression-parse.d.ts:1)
 
 ### Dependency backlog
 

@@ -1,10 +1,12 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as MutableHashMap from "effect/MutableHashMap";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { DEPRECATED_LICENSE_IDS, LICENSE_IDS } from "./internal/licenseIds.ts";
+import { ACTIVE_LICENSE_IDS, DEPRECATED_LICENSE_ID_LIST, DEPRECATED_LICENSE_IDS } from "./internal/licenseIds.ts";
 import { LICENSE_META, META_FLAG_FSF_LIBRE, META_FLAG_OSI_APPROVED } from "./internal/licenseMeta.ts";
 
 const $I = $ScratchpadId.create("effected/spdx/License");
@@ -42,6 +44,20 @@ export class InvalidSpdxExpressionError extends S.TaggedError<InvalidSpdxExpress
 // The pattern is anchored and lookahead-free so it stays cheap and its inverse
 // (a malformed ref) fails to match and surfaces as a typed error, not a throw.
 const LICENSE_REF_PATTERN = /^(?:DocumentRef-[A-Za-z0-9.-]+:)?LicenseRef-[A-Za-z0-9.-]+$/;
+const LicenseRefId = S.String.check(
+	S.isPattern(
+		LICENSE_REF_PATTERN,
+		$I.annote("LicenseRefIdPattern", {
+			description: "An SPDX LicenseRef identifier with an optional DocumentRef scope and nonempty idstrings.",
+		}),
+	),
+).pipe(
+	S.brand("LicenseRefId"),
+	$I.annoteSchema("LicenseRefId", {
+		description: "A well-formed SPDX LicenseRef identifier, optionally scoped by a DocumentRef identifier.",
+	}),
+);
+const isLicenseRefId = S.is(LicenseRefId);
 
 /**
  * A validated SPDX license identifier: an Effect `Schema.Class` whose `id` is
@@ -96,13 +112,16 @@ export class License extends S.Class<License>($I`License`)({
 	 * once from the vendored datasets at module load; references are not
 	 * catalog members.
 	 */
-	static readonly catalog: ReadonlyMap<string, License> = (() => {
-		const map = MutableHashMap.empty<string, License>();
-		for (const id of LICENSE_IDS) MutableHashMap.set(map, id, License.make({ id, deprecated: false }));
-		for (const id of DEPRECATED_LICENSE_IDS) MutableHashMap.set(map, id, License.make({ id, deprecated: true }));
-		// Primitive string keys retain the native ReadonlyMap API and catalog order.
-		return map.backing;
-	})();
+	static readonly catalog: HashMap.HashMap<string, License> = HashMap.fromIterable([
+		...A.map(ACTIVE_LICENSE_IDS, (id): readonly [string, License] => [
+			id,
+			License.make({ id, deprecated: false }),
+		]),
+		...A.map(DEPRECATED_LICENSE_ID_LIST, (id): readonly [string, License] => [
+			id,
+			License.make({ id, deprecated: true }),
+		]),
+	]);
 
 	/**
 	 * Whether `id` is a recognized SPDX license identifier — active or
@@ -110,12 +129,12 @@ export class License extends S.Class<License>($I`License`)({
 	 * catalog member and returns `false`.
 	 */
 	static isKnownId(id: string): boolean {
-		return License.catalog.has(id);
+		return HashMap.has(License.catalog, id);
 	}
 
 	/** Whether `id` is specifically a deprecated SPDX license identifier. */
 	static isDeprecatedId(id: string): boolean {
-		return DEPRECATED_LICENSE_IDS.has(id);
+		return HashSet.has(DEPRECATED_LICENSE_IDS, id);
 	}
 
 	/**
@@ -124,7 +143,7 @@ export class License extends S.Class<License>($I`License`)({
 	 * predicate the expression parser consults.
 	 */
 	static isLicenseRef(id: string): boolean {
-		return LICENSE_REF_PATTERN.test(id);
+		return isLicenseRefId(id);
 	}
 
 	// ── Construction ────────────────────────────────────────────────────
@@ -146,9 +165,9 @@ export class License extends S.Class<License>($I`License`)({
 	 * failing with {@link InvalidSpdxExpressionError}.
 	 */
 	static parseResult(id: string): Result.Result<License, InvalidSpdxExpressionError> {
-		const known = License.catalog.get(id);
-		if (known !== undefined) return Result.succeed(known);
-		if (LICENSE_REF_PATTERN.test(id)) return Result.succeed(License.make({ id, deprecated: false }));
+		const known = HashMap.get(License.catalog, id);
+		if (O.isSome(known)) return Result.succeed(known.value);
+		if (isLicenseRefId(id)) return Result.succeed(License.make({ id, deprecated: false }));
 		return Result.fail(InvalidSpdxExpressionError.make({ input: id }));
 	}
 
@@ -208,7 +227,7 @@ export class License extends S.Class<License>($I`License`)({
 		// Templated rather than vendored: every upstream entry's `reference` is
 		// exactly this form, and lib/scripts/generate-data.ts asserts that for every
 		// id on regeneration, so the template is a checked invariant.
-		return LICENSE_META.has(this.id) ? O.some(`https://spdx.org/licenses/${this.id}.html`) : O.none();
+		return HashMap.has(LICENSE_META, this.id) ? O.some(`https://spdx.org/licenses/${this.id}.html`) : O.none();
 	}
 
 	/**
@@ -217,8 +236,7 @@ export class License extends S.Class<License>($I`License`)({
 	 * every `LicenseRef-`/`DocumentRef-` reference.
 	 */
 	get name(): O.Option<string> {
-		const meta = LICENSE_META.get(this.id);
-		return meta === undefined ? O.none() : O.some(meta[1]);
+		return O.map(HashMap.get(LICENSE_META, this.id), (meta) => meta[1]);
 	}
 
 	/**
@@ -227,7 +245,7 @@ export class License extends S.Class<License>($I`License`)({
 	 * the absence of a catalog entry is never "approved".
 	 */
 	get osiApproved(): boolean {
-		return ((LICENSE_META.get(this.id)?.[2] ?? 0) & META_FLAG_OSI_APPROVED) !== 0;
+		return O.exists(HashMap.get(LICENSE_META, this.id), (meta) => (meta[2] & META_FLAG_OSI_APPROVED) !== 0);
 	}
 
 	/**
@@ -240,7 +258,7 @@ export class License extends S.Class<License>($I`License`)({
 	 * FSF-libre and not OSI-approved. Never derive one flag from the other.
 	 */
 	get fsfLibre(): boolean {
-		return ((LICENSE_META.get(this.id)?.[2] ?? 0) & META_FLAG_FSF_LIBRE) !== 0;
+		return O.exists(HashMap.get(LICENSE_META, this.id), (meta) => (meta[2] & META_FLAG_FSF_LIBRE) !== 0);
 	}
 
 	// ── Display ─────────────────────────────────────────────────────────

@@ -1,6 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import { InvalidSpdxExpressionError, License } from "../../effected/spdx/License.ts";
 
@@ -79,9 +81,9 @@ describe("License", () => {
 		assert.isTrue(gpl.deprecated);
 	});
 	it("catalog holds resolved license domain objects", () => {
-		const mit = License.catalog.get("MIT");
+		const mit = O.getOrUndefined(HashMap.get(License.catalog, "MIT"));
 		assert.isDefined(mit);
 		assert.strictEqual(mit?.id, "MIT");
-		assert.strictEqual(License.catalog.get("GPL-3.0")?.deprecated, true);
+		assert.strictEqual(O.getOrUndefined(HashMap.get(License.catalog, "GPL-3.0"))?.deprecated, true);
 	});
 });

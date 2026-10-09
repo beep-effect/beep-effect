@@ -33,8 +33,8 @@ type SpdxNode =
  * both route through it, so the instance method and
  * {@link (SpdxExpression:variable).FromString}'s encode can never drift.
  */
-function serialize(node: SpdxNode): string {
-	return Match.valueTags(node, {
+const serialize: (node: SpdxNode) => string = Match.type<SpdxNode>().pipe(
+	Match.tagsExhaustive({
 		License: (node) => (node.plus ? `${node.id}+` : node.id),
 		LicenseRef: (node) => {
 			const prefix = node.documentRef !== undefined ? `DocumentRef-${node.documentRef}:` : "";
@@ -43,8 +43,8 @@ function serialize(node: SpdxNode): string {
 		WithException: (node) => `${serialize(node.license)} WITH ${node.exception}`,
 		And: (node) => `(${serialize(node.left)} AND ${serialize(node.right)})`,
 		Or: (node) => `(${serialize(node.left)} OR ${serialize(node.right)})`,
-	});
-}
+	}),
+);
 
 /**
  * A simple-license leaf of an SPDX expression: a license identifier with the
@@ -114,9 +114,9 @@ export class WithExceptionNode extends S.TaggedClass<WithExceptionNode>($I`WithE
  */
 export class AndNode extends S.TaggedClass<AndNode>($I`AndNode`)("And", {
 	/** The left operand. */
-	left: S.suspend((): S.Codec<SpdxExpression> => SpdxExpressionUnion).annotateKey({ description: "The left operand." }),
+	left: S.suspend((): S.Codec<SpdxExpression, SpdxNode> => SpdxExpressionUnion).annotateKey({ description: "The left operand." }),
 	/** The right operand. */
-	right: S.suspend((): S.Codec<SpdxExpression> => SpdxExpressionUnion).annotateKey({ description: "The right operand." }),
+	right: S.suspend((): S.Codec<SpdxExpression, SpdxNode> => SpdxExpressionUnion).annotateKey({ description: "The right operand." }),
 }, $I.annote("AndNode", { description: "The conjunction (`AND`) of two sub-expressions. Recursive: its children are any (SpdxExpression:type), expressed via `Schema.suspend`." })) {
 	/** The canonical, fully-parenthesized string form `(left AND right)`. */
 	override toString(): string {
@@ -132,9 +132,9 @@ export class AndNode extends S.TaggedClass<AndNode>($I`AndNode`)("And", {
  */
 export class OrNode extends S.TaggedClass<OrNode>($I`OrNode`)("Or", {
 	/** The left operand. */
-	left: S.suspend((): S.Codec<SpdxExpression> => SpdxExpressionUnion).annotateKey({ description: "The left operand." }),
+	left: S.suspend((): S.Codec<SpdxExpression, SpdxNode> => SpdxExpressionUnion).annotateKey({ description: "The left operand." }),
 	/** The right operand. */
-	right: S.suspend((): S.Codec<SpdxExpression> => SpdxExpressionUnion).annotateKey({ description: "The right operand." }),
+	right: S.suspend((): S.Codec<SpdxExpression, SpdxNode> => SpdxExpressionUnion).annotateKey({ description: "The right operand." }),
 }, $I.annote("OrNode", { description: "The disjunction (`OR`) of two sub-expressions. Recursive: its children are any (SpdxExpression:type), expressed via `Schema.suspend`." })) {
 	/** The canonical, fully-parenthesized string form `(left OR right)`. */
 	override toString(): string {
@@ -154,7 +154,11 @@ export type SpdxExpression = LicenseNode | LicenseRefNode | WithExceptionNode | 
 // The union schema. Declared after the member classes it names, and referenced
 // from `AndNode`/`OrNode` only through a `Schema.suspend` thunk, so no member's
 // static initializer touches it before it is defined.
-const SpdxExpressionUnion = S.Union([LicenseNode, LicenseRefNode, WithExceptionNode, AndNode, OrNode]);
+const SpdxExpressionUnion = S.Union([LicenseNode, LicenseRefNode, WithExceptionNode, AndNode, OrNode]).pipe(
+	$I.annoteSchema("SpdxExpressionUnion", {
+		description: "The recursive SPDX expression AST: decoded schema-class license, reference, exception, conjunction and disjunction nodes, encoded as structurally equivalent tagged POJOs. Direct AST decoding has no string-parser depth cap.",
+	}),
+);
 
 // Materialize a raw simple-expression leaf — the shape a `WITH` clause binds
 // to — into its typed node. The `licenseRef` arm uses a conditional spread:
@@ -171,20 +175,18 @@ function materializeSimple(raw: RawSimpleLicense): LicenseNode | LicenseRefNode 
 // only over a tree the parser already bounded to MAX_NESTING_DEPTH, so it
 // cannot overflow. `.make` validates each node; construction is linear in the
 // node count on this Schema class family.
-function materialize(raw: RawExpression): SpdxExpression {
-	return Match.value(raw).pipe(
-		Match.discriminatorsExhaustive("kind")({
-			license: materializeSimple,
-			licenseRef: materializeSimple,
-			with: (raw) => WithExceptionNode.make({
-				license: materializeSimple(raw.license),
-				exception: raw.exception,
-			}),
-			and: (raw) => AndNode.make({ left: materialize(raw.left), right: materialize(raw.right) }),
-			or: (raw) => OrNode.make({ left: materialize(raw.left), right: materialize(raw.right) }),
+const materialize: (raw: RawExpression) => SpdxExpression = Match.type<RawExpression>().pipe(
+	Match.discriminatorsExhaustive("kind")({
+		license: materializeSimple,
+		licenseRef: materializeSimple,
+		with: (raw) => WithExceptionNode.make({
+			license: materializeSimple(raw.license),
+			exception: raw.exception,
 		}),
-	);
-}
+		and: (raw) => AndNode.make({ left: materialize(raw.left), right: materialize(raw.right) }),
+		or: (raw) => OrNode.make({ left: materialize(raw.left), right: materialize(raw.right) }),
+	}),
+);
 
 /**
  * Validate and parse an SPDX license expression synchronously, returning a
@@ -248,9 +250,12 @@ const FromString: S.Codec<SpdxExpression, string> = S.String.pipe(
 			// `.toString()` on it would hit `Object.prototype.toString`. The
 			// structural `serialize` walks that POJO by `_tag`, the same routine the
 			// instance `toString` uses, so encode round-trips to canonical form.
-			encode: (expression: SpdxExpression) => Effect.succeed(serialize(expression)),
+			encode: (expression: typeof SpdxExpressionUnion.Encoded) => Effect.succeed(serialize(expression)),
 		}),
 	),
+	$I.annoteSchema("FromString", {
+		description: "An SPDX string codec that decodes syntactically and catalog-valid expressions through the depth-bounded parser into schema-class AST nodes, rejects invalid input, and encodes the canonical fully-parenthesized expression string.",
+	}),
 );
 
 /**
@@ -267,23 +272,30 @@ const licenseOfLeaf = (leaf: LicenseNode | LicenseRefNode): O.Option<License> =>
 	Result.getSuccess(License.parseResult(leaf._tag === "License" ? leaf.id : serialize(leaf)));
 
 /** Append every license leaf, left to right, skipping ids that do not resolve. */
-const collectLicenses = (expr: SpdxExpression, into: Array<License>): void => {
-	Match.value(expr).pipe(
-		Match.tag("License", "LicenseRef", (expr) => {
+const collectLicenses: (expr: SpdxExpression) => (into: Array<License>) => void = Match.type<SpdxExpression>().pipe(
+	Match.tagsExhaustive({
+		License: (expr) => (into: Array<License>) => {
 			const license = licenseOfLeaf(expr);
 			if (O.isSome(license)) into.push(license.value);
-		}),
-		Match.tag("WithException", (expr) => {
+		},
+		LicenseRef: (expr) => (into: Array<License>) => {
+			const license = licenseOfLeaf(expr);
+			if (O.isSome(license)) into.push(license.value);
+		},
+		WithException: (expr) => (into: Array<License>) => {
 			// The exception qualifies the license; the license is what is carried.
-			collectLicenses(expr.license, into);
-		}),
-		Match.tag("And", "Or", (expr) => {
-			collectLicenses(expr.left, into);
-			collectLicenses(expr.right, into);
-		}),
-		Match.exhaustive,
-	);
-};
+			collectLicenses(expr.license)(into);
+		},
+		And: (expr) => (into: Array<License>) => {
+			collectLicenses(expr.left)(into);
+			collectLicenses(expr.right)(into);
+		},
+		Or: (expr) => (into: Array<License>) => {
+			collectLicenses(expr.left)(into);
+			collectLicenses(expr.right)(into);
+		},
+	}),
+);
 
 /**
  * Every license named by an expression, in the order it is written, without
@@ -313,7 +325,7 @@ const collectLicenses = (expr: SpdxExpression, into: Array<License>): void => {
  */
 const licensesOf = (expr: SpdxExpression): ReadonlyArray<License> => {
 	const collected: Array<License> = [];
-	collectLicenses(expr, collected);
+	collectLicenses(expr)(collected);
 	const seen = MutableHashSet.empty<string>();
 	return collected.filter((license) => {
 		if (MutableHashSet.has(seen, license.id)) return false;
@@ -357,14 +369,15 @@ const licensesOf = (expr: SpdxExpression): ReadonlyArray<License> => {
  * @param expr - the expression to read
  * @returns the primary license, or none when the expression has no single one
  */
-const primaryLicense = (expr: SpdxExpression): O.Option<License> =>
-	Match.valueTags(expr, {
+const primaryLicense: (expr: SpdxExpression) => O.Option<License> = Match.type<SpdxExpression>().pipe(
+	Match.tagsExhaustive({
 		License: licenseOfLeaf,
 		LicenseRef: licenseOfLeaf,
 		WithException: (expr) => licenseOfLeaf(expr.license),
 		Or: (expr) => primaryLicense(expr.left),
 		And: O.none,
-	});
+	}),
+);
 
 /**
  * The SPDX license-expression facade: the AST union schema plus the parse,

@@ -1,9 +1,12 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as MutableHashMap from "effect/MutableHashMap";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { DEPRECATED_EXCEPTION_IDS, EXCEPTION_IDS } from "./internal/exceptions.ts";
+import { ACTIVE_EXCEPTION_IDS, DEPRECATED_EXCEPTION_ID_LIST, DEPRECATED_EXCEPTION_IDS } from "./internal/exceptions.ts";
 import { InvalidSpdxExpressionError } from "./License.ts";
 
 const $I = $ScratchpadId.create("effected/spdx/LicenseException");
@@ -50,25 +53,28 @@ export class LicenseException extends S.Class<LicenseException>($I`LicenseExcept
 	 * {@link LicenseException} domain objects for every active and deprecated
 	 * id. Built once from the vendored datasets at module load.
 	 */
-	static readonly catalog: ReadonlyMap<string, LicenseException> = (() => {
-		const map = MutableHashMap.empty<string, LicenseException>();
-		for (const id of EXCEPTION_IDS) MutableHashMap.set(map, id, LicenseException.make({ id, deprecated: false }));
-		for (const id of DEPRECATED_EXCEPTION_IDS) MutableHashMap.set(map, id, LicenseException.make({ id, deprecated: true }));
-		// Primitive string keys retain the native ReadonlyMap API and catalog order.
-		return map.backing;
-	})();
+	static readonly catalog: HashMap.HashMap<string, LicenseException> = HashMap.fromIterable([
+		...A.map(ACTIVE_EXCEPTION_IDS, (id): readonly [string, LicenseException] => [
+			id,
+			LicenseException.make({ id, deprecated: false }),
+		]),
+		...A.map(DEPRECATED_EXCEPTION_ID_LIST, (id): readonly [string, LicenseException] => [
+			id,
+			LicenseException.make({ id, deprecated: true }),
+		]),
+	]);
 
 	/**
 	 * Whether `id` is a recognized SPDX exception identifier — active or
 	 * deprecated.
 	 */
 	static isKnownId(id: string): boolean {
-		return LicenseException.catalog.has(id);
+		return HashMap.has(LicenseException.catalog, id);
 	}
 
 	/** Whether `id` is specifically a deprecated SPDX exception identifier. */
 	static isDeprecatedId(id: string): boolean {
-		return DEPRECATED_EXCEPTION_IDS.has(id);
+		return HashSet.has(DEPRECATED_EXCEPTION_IDS, id);
 	}
 
 	// ── Construction ────────────────────────────────────────────────────
@@ -89,8 +95,8 @@ export class LicenseException extends S.Class<LicenseException>($I`LicenseExcept
 	 * or failing with {@link InvalidSpdxExpressionError}.
 	 */
 	static parseResult(id: string): Result.Result<LicenseException, InvalidSpdxExpressionError> {
-		const known = LicenseException.catalog.get(id);
-		if (known !== undefined) return Result.succeed(known);
+		const known = HashMap.get(LicenseException.catalog, id);
+		if (O.isSome(known)) return Result.succeed(known.value);
 		return Result.fail(InvalidSpdxExpressionError.make({ input: id }));
 	}
 
