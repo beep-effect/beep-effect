@@ -186,6 +186,7 @@ const fixture = Effect.fn("CacheDispatchTest.fixture")(function* (
   const layer = Layer.succeed(
     CacheQualificationService,
     CacheQualificationService.of({
+      remoteReads: Effect.fn("CacheQualificationService.remoteReads")(() => Effect.die("Unexpected remote-read setup")),
       audit: Effect.fn("CacheDispatchTest.audit")(() => Effect.succeed(report)),
       inspect: Effect.fn("CacheDispatchTest.inspect")(() => Effect.succeed(store)),
       fingerprint: Effect.fn("CacheDispatchTest.fingerprint")(function* (_root, computation) {

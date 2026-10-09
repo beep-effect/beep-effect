@@ -53,6 +53,7 @@ export {
   makeKnowledgeFindingId,
   makeKnowledgeTreeOracle,
   resolveKnowledgeProbePolicy,
+  rewriteKnowledgeReferences,
   scanKnowledgePair,
 } from "./Knowledge.service.ts";
 /**

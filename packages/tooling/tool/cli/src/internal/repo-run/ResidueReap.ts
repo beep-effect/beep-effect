@@ -1,18 +1,23 @@
 /**
- * Conservative janitor for bounded, explicitly owned home-residue classes.
+ * Conservative janitor for bounded home residue and owner-verified checkout archives.
  *
  * Discovery is closed over Codex session files, Codex worktree directories,
  * each checkout's Turbo cache entries, Turbo run summaries, and interrupted
  * merged-preview worktrees, the shared Turbo cache, retained qualification
  * dependency views, and non-durable top-level beep cache directories. Every
  * removal is age-, size-, or retention-gated and revalidated immediately before
- * mutation; recursive idleness scans, pid probes, and Linux cwd probes fail
+ * mutation. Checkout QA, qualification, generated output, jobs, ledgers and PID
+ * records use persisted v3 reports and inode-bound archive intents under
+ * `.beep/residue-reap/<run-id>/`; resume reconciles interruptions and restore
+ * returns preserved data. Fleet checkout archives require a run from their owner.
+ * Recursive idleness scans, pid probes, and Linux cwd probes fail
  * closed.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as O from "@beep/utils/Option";
@@ -20,11 +25,14 @@ import * as A from "effect/Array";
 import * as BI from "effect/BigInt";
 import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as N from "effect/Number";
 import * as Order from "effect/Order";
@@ -33,17 +41,26 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { ReplyDrafts } from "../../commands/Yeet/internal/Reply.schemas.ts";
+import { withJournalFileLock } from "./AdmissionJournal.ts";
 import {
+  BoundMoveOutcome,
   directoryIdentity,
   openDirectoryHandle,
   removeThroughDirectoryHandle,
+  renameBoundEntry,
   sameDirectoryIdentity,
+  syncDirectoryHandle,
   unlinkBoundFile,
 } from "./DirectoryHandle.ts";
 import { isRegisteredWorktree, removeGitWorktree } from "./GitWorktree.ts";
-import { runRepoCommandCapture } from "./RepoRun.executor.ts";
+import { publishJournalTextAtomically } from "./JournalFile.ts";
+import { invokerAncestryPids, ProcessAttachmentKind, scanProcessAttachments } from "./ProcessAttachment.ts";
+import { runRepoCommandCapture, runRepoCommandCaptureRaw } from "./RepoRun.executor.ts";
 import {
   QualificationViewReceipt,
+  ResidueArchiveError,
+  ResidueArchiveIntent,
   ResidueReapAction,
   ResidueReapAgeDays,
   ResidueReapByteCap,
@@ -52,12 +69,15 @@ import {
   ResidueReapHomeRoot,
   ResidueReapKeepCount,
   ResidueReapReport,
+  ResidueRetentionRuling,
 } from "./ResidueReap.schemas.ts";
-import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
 import type * as Scope from "effect/Scope";
-import type { BoundRemovalOutcome, DirectoryIdentity } from "./DirectoryHandle.ts";
+import type { BoundRemovalOutcome, DirectoryHandleError, DirectoryIdentity } from "./DirectoryHandle.ts";
+import type { QualitySchedulerError } from "./QualityScheduler.schemas.ts";
 import type { ResidueReapSkipReason } from "./ResidueReap.schemas.ts";
+
+const $I = $RepoCliId.create("internal/repo-run/ResidueReap");
 
 const decodeResidueReapAgeDays = S.decodeEffect(ResidueReapAgeDays);
 const decodeResidueReapHomeRoot = S.decodeEffect(ResidueReapHomeRoot);
@@ -101,6 +121,7 @@ const DurableBeepCacheName = LiteralKit([
   "codex-security",
   "effect-vitest-canon",
   "boolean-creep",
+  "rsc",
 ]);
 const isDurableBeepCacheName = S.is(DurableBeepCacheName);
 const ProcPidName = S.String.check(S.isPattern(/^[0-9]+$/u));
@@ -108,7 +129,22 @@ const isProcPidName = S.is(ProcPidName);
 const MergedPreviewName = S.String.check(S.isPattern(/^merged-preview-[0-9]+$/u));
 const isMergedPreviewName = S.is(MergedPreviewName);
 // Classes whose candidates live inside one checkout; that checkout is their apply boundary.
-const RepoScopedResidueClass = LiteralKit(["turbo-cache", "turbo-runs", "merged-preview"]);
+const CheckoutResidueClass = LiteralKit([
+  "checkout-qa",
+  "checkout-qualification",
+  "checkout-generated",
+  "checkout-jobs",
+  "checkout-ledgers",
+  "checkout-pids",
+  "checkout-material",
+]);
+const isCheckoutResidueClass = S.is(CheckoutResidueClass);
+const RepoScopedResidueClass = LiteralKit([
+  "turbo-cache",
+  "turbo-runs",
+  "merged-preview",
+  ...CheckoutResidueClass.literals,
+]);
 const isRepoScopedResidueClass = S.is(RepoScopedResidueClass);
 
 type CwdProbe = (candidatePath: string) => Effect.Effect<O.Option<boolean>, never, FileSystem.FileSystem | Path.Path>;
@@ -459,7 +495,10 @@ const canonicalDirectory = Effect.fnUntraced(function* (
 
 const cwdWithin = (path: Path.Path, candidatePath: string, cwd: string): boolean => {
   const relative = path.relative(candidatePath, cwd);
-  return Str.isEmpty(relative) || (!path.isAbsolute(relative) && !Str.startsWith(`..${path.sep}`)(relative));
+  return (
+    Str.isEmpty(relative) ||
+    (!path.isAbsolute(relative) && !Str.Equivalence(relative, "..") && !Str.startsWith(`..${path.sep}`)(relative))
+  );
 };
 
 const procCwdProbe = Effect.fnUntraced(function* (
@@ -474,9 +513,13 @@ const procCwdProbe = Effect.fnUntraced(function* (
   if (Result.isFailure(listing) || O.isNone(resolvedCandidate)) {
     return O.none();
   }
+  const ancestry = yield* invokerAncestryPids();
   const cwds = A.getSomes(
     yield* Effect.forEach(
-      A.filter(listing.success, isProcPidName),
+      A.filter(
+        listing.success,
+        (pid) => isProcPidName(pid) && O.exists(N.parse(pid), (parsed) => !HashSet.has(ancestry, parsed))
+      ),
       Effect.fnUntraced(function* (pid) {
         return yield* fs.readLink(path.join(PROC_ROOT, pid, "cwd")).pipe(Effect.option);
       }),
@@ -522,7 +565,7 @@ const gitCleanSkip = Effect.fnUntraced(function* (
     (marker) =>
       runRepoCommandCapture(
         "git",
-        ["status", "--porcelain", "--untracked-files=all", "--ignore-submodules=none"],
+        ["--no-optional-locks", "status", "--porcelain", "--untracked-files=all", "--ignore-submodules=none"],
         marker
       ).pipe(Effect.option),
     { concurrency: 2 }
@@ -1244,6 +1287,7 @@ const reassessCandidate = Effect.fnUntraced(function* (
     return pathChanged(assessed);
   }
   const rechecked = yield* Match.value(assessed.reapClass).pipe(
+    Match.when(isCheckoutResidueClass, () => assessCheckoutResidue(assessed, policy)),
     Match.when("codex-sessions", () => reassessSessionFile(assessed, policy.nowMillis, policy.maxAgeDays)),
     Match.when("turbo-cache", () =>
       reassessTurboEntry(assessed, policy.nowMillis, policy.turboMaxAgeDays, policy.entryCap, policy.cwdProbe)
@@ -1269,7 +1313,10 @@ const reassessCandidate = Effect.fnUntraced(function* (
   // discovery context, so it carries over for the removal and the report.
   return ResidueReapCandidate.make({
     ...rechecked,
-    ...O.getSomesStruct({ checkoutRoot: O.fromUndefinedOr(assessed.checkoutRoot) }),
+    ...O.getSomesStruct({
+      checkoutRoot: O.fromUndefinedOr(assessed.checkoutRoot),
+      recoveryDestination: O.fromUndefinedOr(assessed.recoveryDestination),
+    }),
   });
 });
 
@@ -1351,15 +1398,128 @@ const removeResolvedCandidate = Effect.fnUntraced(function* (
     : yield* removeThroughDirectoryHandle(handle.value, candidate.path);
 });
 
+const publishSyncedArchiveIntent = Effect.fnUntraced(function* (
+  intent: ResidueArchiveIntent,
+  journalPath: string,
+  phase: ResidueArchiveIntent["phase"],
+  label: string
+) {
+  const path = yield* Path.Path;
+  const archive = yield* ResidueArchive;
+  yield* syncDirectory(path.dirname(intent.source));
+  yield* syncDirectory(path.dirname(intent.destination));
+  yield* archive.publish(journalPath, yield* encodeIntent(ResidueArchiveIntent.make({ ...intent, phase })), label);
+});
+
+// Processes follow moved inodes. A refused rollback remains journaled for restore.
+const fenceArchiveMove = Effect.fnUntraced(function* (intent: ResidueArchiveIntent, journalPath: string) {
+  const archive = yield* ResidueArchive;
+  const path = yield* Path.Path;
+  // Reuse the Worktree retirement fence's attachment scanner after rename:
+  // processes follow the inode, so no live writer can hide behind the old path.
+  const attachments = yield* scanProcessAttachments({
+    directory: intent.destination,
+    kinds: ProcessAttachmentKind.literals,
+  });
+  if (O.isNone(attachments) || A.isReadonlyArrayNonEmpty(attachments.value)) {
+    const rolledBack = yield* archive.move(intent.destination, intent.source, intent).pipe(Effect.scoped);
+    const restored = BoundMoveOutcome.is.moved(rolledBack) || BoundMoveOutcome.is["moved-unsynced"](rolledBack);
+    if (restored) {
+      yield* syncDirectory(path.dirname(intent.source));
+      yield* syncDirectory(path.dirname(intent.destination));
+    }
+    yield* archive.publish(
+      journalPath,
+      yield* encodeIntent(ResidueArchiveIntent.make({ ...intent, phase: restored ? "restored" : "fenced-live" })),
+      "residue live fence refusal"
+    );
+    return yield* ResidueArchiveError.make({
+      message: `Archive has a live or unknown writer; rollback outcome: ${rolledBack}`,
+      skipReason: "lock-held",
+    });
+  }
+});
+
+const reportedCandidate = (assessed: ResidueReapCandidate) => (candidate: ResidueReapCandidate) =>
+  ResidueReapCandidate.make({ ...candidate, root: assessed.root, path: assessed.path });
+const skippedAppliedCandidate =
+  (assessed: ResidueReapCandidate, rechecked: ResidueReapCandidate) =>
+  (skipReason: ResidueReapSkipReason, warning: string): AppliedCandidate => ({
+    candidate: reportedCandidate(assessed)(ResidueReapCandidate.make({ ...rechecked, action: "skip", skipReason })),
+    reaped: false,
+    reclaimedBytes: 0,
+    warnings: [warning],
+  });
+
+const archiveCandidate = Effect.fnUntraced(function* (
+  assessed: ResidueReapCandidate,
+  resolved: ResolvedApplyTarget,
+  rechecked: ResidueReapCandidate,
+  checkpoint: (phase: "intent" | "moved") => Effect.Effect<void>
+) {
+  const reported = reportedCandidate(assessed);
+  const skipped = skippedAppliedCandidate(assessed, rechecked);
+  const archive = yield* ResidueArchive;
+  const destination = O.fromUndefinedOr(assessed.recoveryDestination);
+  if (O.isNone(destination)) return skipped("path-changed", `${assessed.path}: archive destination missing.`);
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const archiveParent = yield* fs.realPath(path.dirname(destination.value)).pipe(Effect.option);
+  if (O.isNone(archiveParent)) return skipped("path-changed", `${assessed.path}: archive parent disappeared.`);
+  const resolvedDestination = path.join(archiveParent.value, path.basename(destination.value));
+  const journalPath = `${resolvedDestination}.intent.json`;
+  const intent = ResidueArchiveIntent.make({
+    source: rechecked.path,
+    lexicalSource: assessed.path,
+    destination: resolvedDestination,
+    dev: resolved.identity.dev,
+    ino: resolved.identity.ino,
+    phase: "intent",
+  });
+  const result = yield* Effect.result(
+    Effect.gen(function* () {
+      yield* archive.publish(journalPath, yield* encodeIntent(intent), "residue archive intent");
+      yield* checkpoint("intent");
+      const moved = yield* archive.move(intent.source, intent.destination, resolved.identity).pipe(Effect.scoped);
+      if (!BoundMoveOutcome.is.moved(moved) && !BoundMoveOutcome.is["moved-unsynced"](moved))
+        return yield* ResidueArchiveError.make({
+          message: `Archive move refused: ${moved}`,
+          skipReason: BoundMoveOutcome.is["identity-changed"](moved) ? "path-changed" : "removal-failed",
+        });
+      yield* fenceArchiveMove(intent, journalPath);
+      yield* publishSyncedArchiveIntent(intent, journalPath, "moved", "residue archive move");
+      yield* checkpoint("moved");
+      return true;
+    })
+  );
+  if (Result.isFailure(result)) {
+    const journal = yield* fs.readFileString(journalPath).pipe(Effect.flatMap(decodeIntent), Effect.option);
+    const phase = O.match(journal, { onNone: () => "unpublished", onSome: (row) => row.phase });
+    return skipped(
+      isResidueArchiveError(result.failure) ? optionOr(result.failure.skipReason, "removal-failed") : "removal-failed",
+      `${assessed.path}: ${result.failure.message}; phase=${phase}; intent=${journalPath}; resume or restore this run.`
+    );
+  }
+  // Archive movement frees no filesystem blocks. Attribute moved bytes separately
+  // via the candidate metadata; reclaimedBytes remains zero until an owner purges.
+  return {
+    candidate: reported(ResidueReapCandidate.make({ ...rechecked, recoveryDestination: destination.value })),
+    reaped: true,
+    reclaimedBytes: 0,
+    warnings: [],
+  };
+});
+
 const applyCandidate = Effect.fnUntraced(function* (
   assessed: ResidueReapCandidate,
   outerBoundary: O.Option<string>,
-  policy: ReapPolicy
-): Effect.fn.Return<AppliedCandidate, never, DiscoveryRequirements> {
+  policy: ReapPolicy,
+  checkpoint: (phase: "intent" | "moved") => Effect.Effect<void>
+): Effect.fn.Return<AppliedCandidate, never, DiscoveryRequirements | ResidueArchive> {
+  if (ResidueReapAction.is.skip(assessed.action)) return unapplied(assessed);
   // Reports keep speaking the operator's lexical path even though the checks and the
   // removal below run on the resolved one.
-  const reported = (candidate: ResidueReapCandidate): ResidueReapCandidate =>
-    ResidueReapCandidate.make({ ...candidate, root: assessed.root, path: assessed.path });
+  const reported = reportedCandidate(assessed);
   const resolved = yield* resolveApplyTarget(assessed, outerBoundary);
   if (O.isNone(resolved)) {
     return {
@@ -1375,17 +1535,13 @@ const applyCandidate = Effect.fnUntraced(function* (
       candidate: reported(rechecked),
       reaped: false,
       reclaimedBytes: 0,
-      warnings: Str.Equivalence(assessed.action, "skip")
-        ? A.empty()
-        : [`Skipped ${assessed.path}: eligibility changed before removal.`],
+      warnings: [`Skipped ${assessed.path}: eligibility changed before removal.`],
     };
   }
-  const skipped = (skipReason: ResidueReapSkipReason, warning: string): AppliedCandidate => ({
-    candidate: reported(ResidueReapCandidate.make({ ...rechecked, action: "skip", skipReason })),
-    reaped: false,
-    reclaimedBytes: 0,
-    warnings: [warning],
-  });
+  const skipped = skippedAppliedCandidate(assessed, rechecked);
+  if (ResidueReapAction.is["archive-move"](rechecked.action)) {
+    return yield* archiveCandidate(assessed, resolved.value, rechecked, checkpoint);
+  }
   const outcome = yield* removeResolvedCandidate(rechecked, resolved.value.identity).pipe(Effect.scoped);
   return Match.value(outcome).pipe(
     Match.when("removed", () => ({
@@ -1431,6 +1587,584 @@ const distinctCheckoutRoots = Effect.fnUntraced(function* (
   );
 });
 
+// Checkout liveness is deliberately conservative: seven days of newest .beep
+// writes count as live. Retention/journal writes themselves do not renew activity.
+const CHECKOUT_LIVE_DAYS = 7;
+const BookkeepingDirectory = LiteralKit(["residue-reap", "retention"]);
+const CheckoutContainer = LiteralKit(["qa", "qualification", "ci"]);
+const NonTerminalState = LiteralKit(["active", "paused", "unknown", "unverified"]);
+const isBookkeepingDirectory = S.is(BookkeepingDirectory);
+const isCheckoutContainer = S.is(CheckoutContainer);
+const isNonTerminalState = S.is(NonTerminalState);
+const decodeRuling = S.decodeEffect(S.fromJsonString(ResidueRetentionRuling));
+const rulingEquivalent = S.toEquivalence(ResidueRetentionRuling);
+const decodeDrafts = S.decodeEffect(S.fromJsonString(ReplyDrafts));
+const decodeLegacyEmptyDrafts = S.decodeEffect(
+  S.fromJsonString(S.Union([S.Array(S.Never), S.Record(S.String, S.Never)]))
+);
+
+const ProtectedResidueName = LiteralKit([
+  "inbox",
+  "reply-drafts.json",
+  "packets",
+  "lane-proofs.json",
+  "proof-ledger.ndjson",
+  "residue-reap",
+  "retention",
+]);
+const isProtectedResidueName = S.is(ProtectedResidueName);
+const decodeRulings = S.decodeEffect(S.fromJsonString(S.Array(ResidueRetentionRuling)));
+const encodeIntent = S.encodeEffect(S.fromJsonString(ResidueArchiveIntent));
+const isResidueArchiveError = S.is(ResidueArchiveError);
+const decodeIntent = S.decodeEffect(S.fromJsonString(ResidueArchiveIntent));
+const encodeReport = S.encodeEffect(S.fromJsonString(ResidueReapReport));
+const decodeReport = S.decodeEffect(S.fromJsonString(ResidueReapReport));
+
+const syncDirectory = (directory: string) => Effect.scoped(syncDirectoryHandle(directory));
+const publishArchiveText = Effect.fnUntraced(function* (target: string, content: string, label: string) {
+  const path = yield* Path.Path;
+  yield* publishJournalTextAtomically(target, content, label);
+  // Unlike general journals, archive intents require this sync to succeed before
+  // the source inode can move. Failure leaves the original source untouched.
+  yield* syncDirectory(path.dirname(target));
+});
+const ensureArchiveDirectories = Effect.fnUntraced(function* (checkout: string, runId?: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const realCheckout = yield* fs.realPath(checkout);
+  const dirs = [path.join(realCheckout, ".beep"), path.join(realCheckout, ".beep", "residue-reap")];
+  const all = O.match(O.fromUndefinedOr(runId), {
+    onNone: () => dirs,
+    onSome: (id) =>
+      A.appendAll(dirs, [
+        path.join(realCheckout, ".beep", "residue-reap", id),
+        path.join(realCheckout, ".beep", "residue-reap", id, "archive"),
+      ]),
+  });
+  yield* Effect.forEach(
+    all,
+    Effect.fnUntraced(function* (dir) {
+      if (O.isSome(yield* fs.readLink(dir).pipe(Effect.option)))
+        return yield* ResidueArchiveError.make({ message: "Archive directory is a symlink" });
+      if (!(yield* fs.exists(dir)))
+        yield* fs.makeDirectory(dir).pipe(
+          Effect.catchIf(
+            (error) => Str.Equivalence(error.reason._tag, "AlreadyExists"),
+            () => Effect.void
+          )
+        );
+      if (O.isSome(yield* fs.readLink(dir).pipe(Effect.option)))
+        return yield* ResidueArchiveError.make({ message: "Archive directory became a symlink" });
+      if (O.isNone(yield* canonicalDirectory(realCheckout, dir)))
+        return yield* ResidueArchiveError.make({ message: "Archive directory escaped checkout" });
+      yield* syncDirectory(dir);
+      yield* syncDirectory(path.dirname(dir));
+    }),
+    { discard: true }
+  );
+});
+
+// The service contract separates durable publication from the inode-bound fence.
+// Tests inject checkpoints, never weaker production liveness decisions.
+class ResidueArchive extends Context.Service<
+  ResidueArchive,
+  {
+    readonly publish: (
+      target: string,
+      content: string,
+      label: string
+    ) => Effect.Effect<void, QualitySchedulerError | DirectoryHandleError>;
+    readonly move: (
+      source: string,
+      destination: string,
+      expected: DirectoryIdentity
+    ) => Effect.Effect<BoundMoveOutcome, never, Scope.Scope>;
+  }
+>()($I`ResidueArchive`) {}
+const makeResidueArchive = Effect.fnUntraced(function* () {
+  const path = yield* Path.Path;
+  const fs = yield* FileSystem.FileSystem;
+  const crypto = yield* Crypto.Crypto;
+  return ResidueArchive.of({
+    publish: Effect.fn("ResidueArchive.publish")((target: string, content: string, label: string) =>
+      publishArchiveText(target, content, label).pipe(
+        Effect.provideService(Path.Path, path),
+        Effect.provideService(FileSystem.FileSystem, fs),
+        Effect.provideService(Crypto.Crypto, crypto)
+      )
+    ),
+    move: Effect.fn("ResidueArchive.move")((source: string, destination: string, expected: DirectoryIdentity) =>
+      renameBoundEntry(source, destination, expected).pipe(Effect.provideService(Path.Path, path))
+    ),
+  });
+});
+
+const classifyCheckoutName = (name: string): ResidueReapClass =>
+  Match.value(name).pipe(
+    Match.when("qa", () => CheckoutResidueClass.Enum["checkout-qa"]),
+    Match.when(Str.startsWith("qualification"), () => CheckoutResidueClass.Enum["checkout-qualification"]),
+    Match.when("ci", () => CheckoutResidueClass.Enum["checkout-generated"]),
+    Match.when("yeet", () => CheckoutResidueClass.Enum["checkout-jobs"]),
+    Match.when(Str.includes("worktree"), () => CheckoutResidueClass.Enum["checkout-ledgers"]),
+    Match.whenOr("run", Str.endsWith(".pid"), () => CheckoutResidueClass.Enum["checkout-pids"]),
+    Match.orElse(() => CheckoutResidueClass.Enum["checkout-material"])
+  );
+
+const readRuling = Effect.fnUntraced(function* (entry: ResidueReapCandidate) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const checkout = optionOr(entry.checkoutRoot, path.dirname(entry.root));
+  const realRoot = yield* fs.realPath(checkout).pipe(Effect.option);
+  const realTarget = yield* fs.realPath(entry.path).pipe(Effect.option);
+  if (O.isNone(realRoot) || O.isNone(realTarget)) return O.none<ResidueRetentionRuling>();
+  const realCheckout = realRoot.value;
+  const realEntry = realTarget.value;
+  const content = yield* fs
+    .readFileString(path.join(realCheckout, ".beep", "retention", `${entry.reapClass}.json`))
+    .pipe(Effect.option);
+  if (O.isNone(content)) return O.none<ResidueRetentionRuling>();
+  const rulings = yield* decodeRulings(content.value).pipe(Effect.option);
+  return O.flatMap(
+    rulings,
+    A.findFirst((ruling) => Str.Equivalence(ruling.path, path.relative(realCheckout, realEntry)))
+  );
+});
+
+// Index relative citations across all authored evidence roots. A failed listing or
+// read fails the assessment closed, rather than treating an unreadable index as empty.
+const citationSkip = Effect.fnUntraced(function* (checkout: string, candidatePath: string, authority: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const realRoot = yield* fs.realPath(checkout).pipe(Effect.option);
+  const realTarget = yield* fs.realPath(candidatePath).pipe(Effect.option);
+  if (O.isNone(realRoot) || O.isNone(realTarget)) return O.some<ResidueReapSkipReason>("path-changed");
+  const relative = path.relative(realRoot.value, realTarget.value);
+  const listing = yield* runRepoCommandCaptureRaw(
+    "git",
+    [
+      "ls-files",
+      "-s",
+      "-z",
+      "--",
+      "goals",
+      "explorations",
+      "research",
+      "harness-ledger",
+      "standards",
+      "docs",
+      ".patterns",
+      "AGENTS.md",
+    ],
+    checkout
+  ).pipe(Effect.option);
+  if (O.isNone(listing) || !N.Equivalence(listing.value.exitCode, 0) || listing.value.truncated)
+    return O.some<ResidueReapSkipReason>("census-failed");
+  const names = A.filter(
+    A.getSomes(
+      A.map(Str.split("\0")(listing.value.output), (record) =>
+        O.flatMap(Str.match(/^100(?:644|755) [a-f0-9]+ [0-3]\t([\s\S]+)$/u)(record), (match) => A.get(match, 1))
+      )
+    ),
+    (name) => !Str.Equivalence(name, authority)
+  );
+  const documents = yield* Effect.forEach(
+    names,
+    (name) => fs.readFileString(path.join(checkout, name)).pipe(Effect.option),
+    { concurrency: 8 }
+  );
+  if (A.some(documents, O.isNone)) return O.some<ResidueReapSkipReason>("census-failed");
+  // A citation to a parent protects descendants, and a descendant citation protects
+  // the container. Match .beep-relative tails even when a receipt names another clone.
+  const cited = A.some(A.getSomes(documents), (text) => {
+    if (Str.includes(relative)(text)) return true;
+    const references = O.getOrElse(Str.match(/\.beep\/[^\s"\x27`<>[\]()]+/gu)(text), () => A.empty<string>());
+    return A.some(references, (reference) => {
+      const ref = Str.replace(/[.,;:)/-]+$/u, "")(reference);
+      return (
+        Str.Equivalence(ref, relative) || Str.startsWith(`${ref}/`)(relative) || Str.startsWith(`${relative}/`)(ref)
+      );
+    });
+  });
+  return cited ? O.some<ResidueReapSkipReason>("evidence-referenced") : O.none<ResidueReapSkipReason>();
+});
+
+// Traversal state is internal and never serialized; each entry is charged before probing.
+type CheckoutEntryLocation = {
+  readonly beep: string;
+  readonly name: string;
+  readonly realEntry: string;
+};
+type CheckoutScan = {
+  readonly beneath: Array<string>;
+  readonly pending: Array<string>;
+  opaque: HashSet.HashSet<string>;
+};
+const checkScanCap = (scan: CheckoutScan, cap: number) =>
+  N.isGreaterThan(A.length(scan.beneath), cap) ? Effect.fail<ResidueReapSkipReason>("census-overflow") : Effect.void;
+
+const visitCheckoutDirectory = Effect.fnUntraced(function* (
+  scan: CheckoutScan,
+  location: CheckoutEntryLocation,
+  cap: number
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const { beep, name, realEntry } = location;
+  const absolute = path.join(beep, name);
+  const marker = yield* fs.exists(path.join(absolute, ".git")).pipe(Effect.option);
+  if (O.isNone(marker)) return yield* Effect.fail<ResidueReapSkipReason>("stat-failed");
+  const embedded = marker.value;
+  if (embedded && !Str.Equivalence(absolute, realEntry) && cwdWithin(path, absolute, realEntry))
+    return yield* Effect.fail<ResidueReapSkipReason>("protected-name");
+  const outside = !cwdWithin(path, realEntry, absolute);
+  if (!outside || (!Str.Equivalence(path.basename(name), "node_modules") && !embedded)) {
+    scan.pending.push(name);
+    return;
+  }
+  scan.opaque = HashSet.add(scan.opaque, name);
+  if (!embedded) return;
+  const gitMarker = path.join(name, ".git");
+  scan.beneath.push(gitMarker);
+  scan.opaque = HashSet.add(scan.opaque, gitMarker);
+  yield* checkScanCap(scan, cap);
+});
+
+const visitCheckoutEntry = Effect.fnUntraced(function* (
+  scan: CheckoutScan,
+  location: CheckoutEntryLocation,
+  cap: number
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  scan.beneath.push(location.name);
+  yield* checkScanCap(scan, cap);
+  const absolute = path.join(location.beep, location.name);
+  if (O.isSome(yield* fs.readLink(absolute).pipe(Effect.option))) return;
+  const info = yield* fs.stat(absolute).pipe(Effect.option);
+  if (O.isNone(info)) return yield* Effect.fail<ResidueReapSkipReason>("stat-failed");
+  if (Str.Equivalence(info.value.type, "Directory")) yield* visitCheckoutDirectory(scan, location, cap);
+});
+
+const visitCheckoutChildren = Effect.fnUntraced(function* (
+  scan: CheckoutScan,
+  location: { readonly beep: string; readonly parent: string; readonly realEntry: string },
+  cap: number
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const listing = yield* fs.readDirectory(path.join(location.beep, location.parent)).pipe(Effect.option);
+  if (O.isNone(listing)) return yield* Effect.fail<ResidueReapSkipReason>("census-failed");
+  for (const child of listing.value) {
+    if (Str.isEmpty(location.parent) && isBookkeepingDirectory(child)) continue;
+    yield* visitCheckoutEntry(scan, { ...location, name: path.join(location.parent, child) }, cap);
+  }
+});
+
+const scanCheckoutEntries = Effect.fnUntraced(function* (beep: string, realEntry: string, cap: number) {
+  const scan: CheckoutScan = { beneath: [], pending: [""], opaque: HashSet.empty() };
+  while (A.isReadonlyArrayNonEmpty(scan.pending)) {
+    const parent = scan.pending.pop() ?? "";
+    yield* visitCheckoutChildren(scan, { beep, realEntry, parent }, cap);
+  }
+  return scan;
+});
+
+const checkoutLockSkip = Effect.fnUntraced(function* (checkout: string, absolute: string) {
+  const holder = yield* runRepoCommandCapture("fuser", ["-s", "--", absolute], checkout).pipe(Effect.option);
+  if (O.isNone(holder) || N.isGreaterThan(holder.value.exitCode, 1))
+    return O.some<ResidueReapSkipReason>("process-probe-failed");
+  return N.Equivalence(holder.value.exitCode, 0) ? O.some<ResidueReapSkipReason>("lock-held") : O.none();
+});
+const checkoutPidSkip = Effect.fnUntraced(function* (absolute: string, policy: ReapPolicy) {
+  const fs = yield* FileSystem.FileSystem;
+  const pid = yield* fs.readFileString(absolute).pipe(Effect.option);
+  if (O.isNone(pid) || !isProcPidName(Str.trim(pid.value)))
+    return O.some<ResidueReapSkipReason>("process-probe-failed");
+  const alive = yield* policy.pidProbe(Str.trim(pid.value));
+  if (O.isNone(alive)) return O.some<ResidueReapSkipReason>("process-probe-failed");
+  return alive.value ? O.some<ResidueReapSkipReason>("pid-alive") : O.none();
+});
+const checkoutProcessFileSkip = Effect.fnUntraced(function* (checkout: string, name: string, policy: ReapPolicy) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const absolute = path.join(checkout, ".beep", name);
+  if (O.isSome(yield* fs.readLink(absolute).pipe(Effect.option))) return O.none<ResidueReapSkipReason>();
+  if (Str.endsWith(".lock")(name)) return yield* checkoutLockSkip(checkout, absolute);
+  if (Str.endsWith(".pid")(name) || Str.Equivalence(path.basename(name), "pid"))
+    return yield* checkoutPidSkip(absolute, policy);
+  return O.none<ResidueReapSkipReason>();
+});
+const checkoutDraftSkip = Effect.fnUntraced(function* (beep: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const drafts = path.join(beep, "yeet", "reply-drafts.json");
+  if (!(yield* fs.exists(drafts).pipe(Effect.orElseSucceed(() => true)))) return O.none<ResidueReapSkipReason>();
+  const text = yield* fs.readFileString(drafts).pipe(Effect.option);
+  if (O.isNone(text)) return O.some<ResidueReapSkipReason>("draft-unresolved");
+  const decoded = yield* decodeDrafts(text.value).pipe(Effect.option);
+  const legacy = yield* decodeLegacyEmptyDrafts(text.value).pipe(Effect.option);
+  return !O.exists(decoded, (document) => A.isReadonlyArrayEmpty(document.drafts)) && O.isNone(legacy)
+    ? O.some<ResidueReapSkipReason>("draft-unresolved")
+    : O.none();
+});
+const checkoutAttachmentSkip = Effect.fnUntraced(function* (entry: string) {
+  const holders = yield* scanProcessAttachments({ directory: entry, kinds: ProcessAttachmentKind.literals });
+  if (O.isNone(holders)) return O.some<ResidueReapSkipReason>("process-probe-failed");
+  return A.isReadonlyArrayNonEmpty(holders.value) ? O.some<ResidueReapSkipReason>("lock-held") : O.none();
+});
+const checkoutWriteSkip = Effect.fnUntraced(function* (
+  beep: string,
+  scan: CheckoutScan,
+  policy: ReapPolicy,
+  name: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const absolute = path.join(beep, name);
+  if (O.isSome(yield* fs.readLink(absolute).pipe(Effect.option))) return O.none<ResidueReapSkipReason>();
+  const info = yield* fs.stat(absolute).pipe(Effect.option);
+  if (O.isNone(info) || O.isNone(mtimeMillis(info.value))) return O.some<ResidueReapSkipReason>("stat-failed");
+  const operationalWrite = !Str.Equivalence(info.value.type, "Directory") || HashSet.has(scan.opaque, name);
+  return operationalWrite &&
+    O.exists(mtimeMillis(info.value), (time) => ageDays(policy.nowMillis, time) < CHECKOUT_LIVE_DAYS)
+    ? O.some<ResidueReapSkipReason>("checkout-recent-write")
+    : O.none();
+});
+const firstSafetySkip = Effect.fnUntraced(function* <E, R>(
+  probes: ReadonlyArray<Effect.Effect<O.Option<ResidueReapSkipReason>, E, R>>
+) {
+  for (const probe of probes) {
+    const skip = yield* probe;
+    if (O.isSome(skip)) return skip;
+  }
+  return O.none<ResidueReapSkipReason>();
+});
+const checkoutSafetySkip = Effect.fnUntraced(function* (
+  entry: ResidueReapCandidate,
+  policy: ReapPolicy,
+  authority: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* fs.realPath(optionOr(entry.checkoutRoot, path.dirname(entry.root))).pipe(Effect.option);
+  const realEntry = yield* fs.realPath(entry.path).pipe(Effect.option);
+  if (O.isNone(root) || O.isNone(realEntry)) return O.some<ResidueReapSkipReason>("path-changed");
+  const checkout = root.value;
+  const beep = path.join(checkout, ".beep");
+  const scanned = yield* scanCheckoutEntries(beep, realEntry.value, policy.entryCap).pipe(Effect.result);
+  if (Result.isFailure(scanned)) return O.some(scanned.failure);
+  const scan = scanned.success;
+  const protectedChild = A.some(
+    scan.beneath,
+    (name) =>
+      cwdWithin(path, realEntry.value, path.join(beep, name)) &&
+      A.some(Str.split(path.sep)(name), isProtectedResidueName)
+  );
+  if (protectedChild) return O.some<ResidueReapSkipReason>("protected-name");
+  return yield* firstSafetySkip([
+    ...A.map(scan.beneath, (name) => checkoutProcessFileSkip(checkout, name, policy)),
+    checkoutDraftSkip(beep),
+    checkoutAttachmentSkip(entry.path),
+    directoryLivenessSkip(checkout, policy.cwdProbe),
+    gitCleanSkip([checkout]),
+    ...A.map(scan.beneath, (name) => checkoutWriteSkip(beep, scan, policy, name)),
+    citationSkip(checkout, entry.path, authority),
+  ]);
+});
+
+const parseCapturedBytes = (
+  capture: O.Option<{ readonly exitCode: number; readonly output: string }>,
+  pattern: RegExp
+): O.Option<number> =>
+  O.flatMap(capture, (result) =>
+    N.Equivalence(result.exitCode, 0)
+      ? O.flatMap(Str.match(pattern)(result.output), (match) => O.flatMap(A.get(match, 1), N.parse))
+      : O.none()
+  );
+const measureCheckoutResidue = Effect.fnUntraced(function* (entry: ResidueReapCandidate) {
+  const apparent = yield* runRepoCommandCapture(
+    "du",
+    ["-B1", "--apparent-size", "-s", "--", entry.path],
+    optionOr(entry.checkoutRoot, entry.root)
+  ).pipe(Effect.option);
+  const apparentBytes = parseCapturedBytes(apparent, /^\s*(\d+)/u);
+  const btrfs = yield* runRepoCommandCapture(
+    "btrfs",
+    ["filesystem", "du", "--raw", "-s", entry.path],
+    optionOr(entry.checkoutRoot, entry.root)
+  ).pipe(Effect.option);
+  const exclusive = parseCapturedBytes(btrfs, /\n\s*\d+\s+(\d+)\s+\d+\s/u);
+  return { apparentBytes, exclusive };
+});
+const checkoutAuthoritySkip = Effect.fnUntraced(function* (
+  entry: ResidueReapCandidate,
+  ruling: ResidueRetentionRuling
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const checkout = optionOr(entry.checkoutRoot, path.dirname(entry.root));
+  if (
+    !pathIsStrictlyWithin(path, checkout, path.resolve(checkout, ruling.evidence)) ||
+    !Str.Equivalence(ruling.evidence, path.relative(checkout, path.resolve(checkout, ruling.evidence))) ||
+    O.isSome(yield* fs.readLink(path.join(checkout, ruling.evidence)).pipe(Effect.option))
+  )
+    return O.some<ResidueReapSkipReason>("owner-ruling-required");
+  const proof = yield* runRepoCommandCapture(
+    "git",
+    ["--literal-pathspecs", "ls-files", "--error-unmatch", "--", ruling.evidence],
+    checkout
+  ).pipe(Effect.option);
+  if (!O.exists(proof, (capture) => N.Equivalence(capture.exitCode, 0) && !capture.truncated))
+    return O.some<ResidueReapSkipReason>("terminal-state-unverified");
+  const proofText = yield* fs.readFileString(path.join(checkout, ruling.evidence)).pipe(Effect.option);
+  const proved = O.isSome(proofText)
+    ? yield* decodeRuling(proofText.value).pipe(Effect.option)
+    : O.none<ResidueRetentionRuling>();
+  if (!O.exists(proved, (receipt) => rulingEquivalent(ruling, receipt)))
+    return O.some<ResidueReapSkipReason>("terminal-state-unverified");
+  return O.none<ResidueReapSkipReason>();
+});
+const nestedCheckoutSkip = Effect.fnUntraced(function* (checkout: string, marker: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const dotgit = yield* fs.stat(path.join(marker, ".git")).pipe(Effect.option);
+  const registered = yield* isRegisteredWorktree(checkout, marker);
+  if (O.isNone(registered)) return O.some<ResidueReapSkipReason>("git-probe-failed");
+  if (O.exists(dotgit, (stat) => Str.Equivalence(stat.type, "File")) || registered.value)
+    return O.some<ResidueReapSkipReason>("protected-name");
+  const linked = yield* runRepoCommandCapture(
+    "git",
+    ["--no-optional-locks", "worktree", "list", "--porcelain"],
+    marker
+  ).pipe(Effect.option);
+  if (O.isNone(linked) || !N.Equivalence(linked.value.exitCode, 0) || linked.value.truncated)
+    return O.some<ResidueReapSkipReason>("git-probe-failed");
+  if (N.isGreaterThan(A.length(A.filter(Str.split("\n")(linked.value.output), Str.startsWith("worktree "))), 1))
+    return O.some<ResidueReapSkipReason>("protected-name");
+  return O.none<ResidueReapSkipReason>();
+});
+
+const checkoutResidueMetadata = Effect.fnUntraced(function* (entry: ResidueReapCandidate, policy: ReapPolicy) {
+  const fs = yield* FileSystem.FileSystem;
+  const ruling = yield* readRuling(entry);
+  const info = yield* fs.stat(entry.path).pipe(Effect.option);
+  const tree = O.exists(info, (stat) => Str.Equivalence(stat.type, "Directory"))
+    ? yield* censusDirectory(entry.path, policy.entryCap)
+    : emptyCensus();
+  const bytes = O.isSome(info) && Str.Equivalence(info.value.type, "File") ? bytesFromInfo(info.value) : tree.bytes;
+  const { apparentBytes, exclusive } = yield* measureCheckoutResidue(entry);
+  const enriched = ResidueReapCandidate.make({
+    ...entry,
+    bytes: O.getOrElse(apparentBytes, () => bytes),
+    ...O.getSomesStruct({ bytesExclusive: exclusive }),
+    owner: O.match(ruling, { onNone: () => "owner-unverified", onSome: (r) => r.owner }),
+    terminalState: O.match(ruling, { onNone: () => "unverified", onSome: (r) => r.state }),
+    retentionReason: O.match(ruling, { onNone: () => "owner-ruling-required", onSome: (r) => r.reason }),
+  });
+  return { ruling, info, tree, enriched };
+});
+const checkoutDispositionSkip = (entry: ResidueReapCandidate, ruling: ResidueRetentionRuling) => {
+  if (Str.Equivalence(ruling.disposition, "retain") || Str.Equivalence(entry.reapClass, "checkout-material"))
+    return O.some<ResidueReapSkipReason>("owner-ruling-required");
+  return isNonTerminalState(ruling.state) ? O.some<ResidueReapSkipReason>("terminal-state-unverified") : O.none();
+};
+
+const assessCheckoutResidue = Effect.fnUntraced(function* (entry: ResidueReapCandidate, policy: ReapPolicy) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const { ruling, info, tree, enriched } = yield* checkoutResidueMetadata(entry, policy);
+  const skip = (reason: ResidueReapSkipReason) =>
+    ResidueReapCandidate.make({ ...enriched, action: "skip", skipReason: reason });
+  if (O.isNone(info)) return skip("stat-failed");
+  if (O.isSome(yield* fs.readLink(entry.path).pipe(Effect.option))) return skip("path-changed");
+  if (O.isSome(tree.skipReason)) return skip(tree.skipReason.value);
+  if (O.isNone(ruling)) return skip("owner-ruling-required");
+  const checkout = optionOr(entry.checkoutRoot, path.dirname(entry.root));
+  const eligibility = yield* firstSafetySkip([
+    Effect.succeed(checkoutDispositionSkip(entry, ruling.value)),
+    checkoutAuthoritySkip(entry, ruling.value),
+    gitCleanSkip(tree.gitMarkers),
+    ...A.map(tree.gitMarkers, (marker) => nestedCheckoutSkip(checkout, marker)),
+    checkoutSafetySkip(enriched, policy, ruling.value.evidence),
+  ]);
+  if (O.isSome(eligibility)) return skip(eligibility.value);
+  const newest = O.orElse(tree.newestFileMillis, () => O.flatMap(info, mtimeMillis));
+  if (O.isNone(newest) || ageDays(policy.nowMillis, newest.value) < policy.maxAgeDays) return skip("too-young");
+  return ResidueReapCandidate.make({
+    ...enriched,
+    ageDays: ageDays(policy.nowMillis, newest.value),
+    action: "archive-move",
+    mtimeMillis: newest.value,
+  });
+});
+
+const unreadCheckoutContainer = Effect.fnUntraced(function* (
+  checkout: string,
+  root: string,
+  target: string,
+  reapClass: ResidueReapClass
+) {
+  const fs = yield* FileSystem.FileSystem;
+  if (!(yield* fs.exists(target).pipe(Effect.orElseSucceed(() => true)))) return A.empty<ResidueReapCandidate>();
+  return [candidate(root, target, reapClass, "skip", { skipReason: "census-failed", checkoutRoot: checkout })];
+});
+const checkoutContainerCandidates = Effect.fnUntraced(function* (
+  checkout: string,
+  root: string,
+  name: string,
+  policy: ReapPolicy
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const reapClass = classifyCheckoutName(name);
+  const top = path.join(root, name);
+  const scoped = isCheckoutContainer(name)
+    ? O.some(top)
+    : Str.Equivalence(name, "yeet")
+      ? O.some(path.join(top, "jobs"))
+      : O.none<string>();
+  const nested = O.isSome(scoped)
+    ? yield* fs.readDirectory(scoped.value).pipe(Effect.option)
+    : O.none<ReadonlyArray<string>>();
+  if (O.isSome(scoped) && O.isNone(nested))
+    return yield* unreadCheckoutContainer(checkout, root, scoped.value, reapClass);
+  const targets = O.isSome(nested)
+    ? A.map(nested.value, (child) =>
+        path.join(
+          O.getOrElse(scoped, () => top),
+          child
+        )
+      )
+    : [top];
+  return yield* Effect.forEach(
+    targets,
+    (target) => assessCheckoutResidue(candidate(root, target, reapClass, "skip", { checkoutRoot: checkout }), policy),
+    { concurrency: 1 }
+  );
+});
+
+const checkoutResidueCandidates = Effect.fnUntraced(function* (
+  checkout: string,
+  includes: (reapClass: ResidueReapClass) => boolean,
+  policy: ReapPolicy
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = path.join(checkout, ".beep");
+  if (!(yield* fs.exists(root).pipe(Effect.orElseSucceed(() => false)))) return A.empty<ResidueReapCandidate>();
+  const listing = yield* fs.readDirectory(root).pipe(Effect.option);
+  if (O.isNone(listing)) {
+    const reapClass = A.findFirst(CheckoutResidueClass.literals, includes);
+    return O.isSome(reapClass) ? yield* unreadCheckoutContainer(checkout, root, root, reapClass.value) : A.empty();
+  }
+  const groups = yield* Effect.forEach(
+    A.filter(listing.value, (name) => !isProtectedResidueName(name) && includes(classifyCheckoutName(name))),
+    (name) => checkoutContainerCandidates(checkout, root, name, policy),
+    { concurrency: 1 }
+  );
+  return A.flatten(groups);
+});
+
 const repoScopedCandidates = Effect.fnUntraced(function* (
   checkoutRoot: string,
   includes: (reapClass: ResidueReapClass) => boolean,
@@ -1445,13 +2179,17 @@ const repoScopedCandidates = Effect.fnUntraced(function* (
   const previews = includes("merged-preview")
     ? yield* mergedPreviewCandidates(checkoutRoot, policy)
     : A.empty<ResidueReapCandidate>();
-  return A.map(A.appendAll(A.appendAll(turbo, runs), previews), (entry) =>
+  const checkout = yield* checkoutResidueCandidates(checkoutRoot, includes, policy);
+  return A.map(A.appendAll(A.appendAll(A.appendAll(turbo, runs), previews), checkout), (entry) =>
     ResidueReapCandidate.make({ ...entry, checkoutRoot })
   );
 });
 
 type ResidueReapOptions = {
   readonly apply?: boolean;
+  readonly resume?: string;
+  readonly restore?: string;
+  readonly archiveCheckpoint?: (phase: "intent" | "moved") => Effect.Effect<void>;
   readonly censusEntryCap?: number;
   readonly checkoutRoots?: ReadonlyArray<string>;
   readonly classes?: ReadonlyArray<ResidueReapClass>;
@@ -1472,6 +2210,7 @@ type ResidueReapOptions = {
 
 // Internal resolved run settings (never decoded or serialized).
 type ResidueReapSettings = {
+  readonly runId: string;
   readonly beepCacheRoot: string;
   readonly checkoutRoots: ReadonlyArray<string>;
   readonly classes: ReadonlyArray<ResidueReapClass>;
@@ -1538,6 +2277,7 @@ const resolveSettings = Effect.fnUntraced(function* (options: ResidueReapOptions
     ),
   };
   return {
+    runId: yield* (yield* Crypto.Crypto).randomUUIDv4,
     beepCacheRoot,
     checkoutRoots: yield* distinctCheckoutRoots(nonEmptyOr(options.checkoutRoots, [repoRoot])),
     classes: nonEmptyOr(options.classes, ResidueReapClass.literals),
@@ -1669,23 +2409,391 @@ const outerBoundaryFor = Effect.fnUntraced(function* (
 const applyResidue = (
   settings: ResidueReapSettings,
   candidates: ReadonlyArray<ResidueReapCandidate>,
-  apply: boolean
-): Effect.Effect<ReadonlyArray<AppliedCandidate>, never, DiscoveryRequirements> =>
+  apply: boolean,
+  checkpoint: (phase: "intent" | "moved") => Effect.Effect<void>
+): Effect.Effect<ReadonlyArray<AppliedCandidate>, never, DiscoveryRequirements | ResidueArchive> =>
   apply
     ? Effect.forEach(
         candidates,
         Effect.fnUntraced(function* (entry) {
-          return yield* applyCandidate(entry, yield* outerBoundaryFor(settings, entry), settings.policy);
+          return yield* applyCandidate(entry, yield* outerBoundaryFor(settings, entry), settings.policy, checkpoint);
         }),
         { concurrency: 1 }
       )
     : Effect.succeed(A.map(candidates, unapplied));
+
+const runDirectory = (path: Path.Path, checkout: string, runId: string): string =>
+  path.join(checkout, ".beep", "residue-reap", runId);
+const isRunId = S.is(S.String.check(S.isPattern(/^[a-f0-9-]{36}$/u)));
+
+type RecoveryRun = {
+  readonly settings: ResidueReapSettings;
+  readonly root: string;
+  readonly report: ResidueReapReport;
+  readonly restore: boolean;
+};
+type RecoveryIntent = RecoveryRun & {
+  readonly entry: ResidueReapCandidate;
+  readonly intent: ResidueArchiveIntent;
+  readonly destination: string;
+  readonly journalPath: string;
+  readonly realOwner: string;
+};
+const recoveryRefusal = (message: string, skipReason: ResidueReapSkipReason = "removal-failed") =>
+  ResidueArchiveError.make({ message, skipReason });
+const restoreArchivedIntent = Effect.fnUntraced(function* (context: RecoveryIntent) {
+  const { entry, intent, journalPath } = context;
+  const fs = yield* FileSystem.FileSystem;
+  const archive = yield* ResidueArchive;
+  const refuse = recoveryRefusal;
+  if (yield* fs.exists(intent.source)) return yield* refuse("Restore refuses an occupied source", "path-changed");
+  const moved = yield* archive.move(intent.destination, intent.source, intent).pipe(Effect.scoped);
+  if (!BoundMoveOutcome.is.moved(moved) && !BoundMoveOutcome.is["moved-unsynced"](moved))
+    return yield* refuse(
+      `Restore failed: ${moved}; archive intent retained`,
+      BoundMoveOutcome.is["identity-changed"](moved) || BoundMoveOutcome.is["destination-occupied"](moved)
+        ? "path-changed"
+        : "removal-failed"
+    );
+  yield* publishSyncedArchiveIntent(intent, journalPath, "restored", "residue archive restore");
+  return unapplied(ResidueReapCandidate.make({ ...entry, action: "skip", retentionReason: "restored from archive" }));
+});
+const reconcileArchivedIntent = Effect.fnUntraced(function* (context: RecoveryIntent) {
+  const { entry, intent, destination, journalPath } = context;
+  const archive = yield* ResidueArchive;
+  const refuse = recoveryRefusal;
+  const holders = yield* scanProcessAttachments({
+    directory: intent.destination,
+    kinds: ProcessAttachmentKind.literals,
+  });
+  if (O.isNone(holders) || A.isReadonlyArrayNonEmpty(holders.value)) {
+    yield* archive.publish(
+      journalPath,
+      yield* encodeIntent(ResidueArchiveIntent.make({ ...intent, phase: "fenced-live" })),
+      "live archive preserved"
+    );
+    return yield* refuse("Archived inode has live or unknown writers; preserved for restore", "lock-held");
+  }
+  yield* publishSyncedArchiveIntent(intent, journalPath, "moved", "reconciled residue archive move");
+  return unapplied(ResidueReapCandidate.make({ ...entry, action: "archive-move", recoveryDestination: destination }));
+});
+const reconcileSourceIntent = Effect.fnUntraced(function* (context: RecoveryIntent) {
+  const { entry, intent, journalPath, realOwner, settings, restore } = context;
+  const archive = yield* ResidueArchive;
+  if (restore) {
+    yield* archive.publish(
+      journalPath,
+      yield* encodeIntent(ResidueArchiveIntent.make({ ...intent, phase: "restored" })),
+      "reconciled residue restore"
+    );
+    return unapplied(ResidueReapCandidate.make({ ...entry, action: "skip", retentionReason: "source retained" }));
+  }
+  return yield* applyCandidate(entry, O.some(realOwner), settings.policy, () => Effect.void);
+});
+const archivePhaseSkip = ({ entry, intent, restore }: RecoveryIntent): O.Option<AppliedCandidate> => {
+  if (Str.Equivalence(intent.phase, "restored"))
+    return O.some(
+      unapplied(
+        ResidueReapCandidate.make({
+          ...entry,
+          action: "skip",
+          retentionReason: "already restored; resume never rearchives",
+        })
+      )
+    );
+  if (!restore && Str.Equivalence(intent.phase, "fenced-live"))
+    return O.some(
+      unapplied(
+        ResidueReapCandidate.make({
+          ...entry,
+          action: "skip",
+          skipReason: "lock-held",
+          retentionReason: "fenced-live; restore or start a new run",
+        })
+      )
+    );
+  return O.none();
+};
+const recoverArchiveIntent = Effect.fnUntraced(function* (context: RecoveryIntent) {
+  const { intent, restore } = context;
+  const fs = yield* FileSystem.FileSystem;
+  const refuse = recoveryRefusal;
+  const retained = archivePhaseSkip(context);
+  if (O.isSome(retained)) return retained.value;
+  const identityAt = Effect.fnUntraced(function* (target: string) {
+    if (O.isSome(yield* fs.readLink(target).pipe(Effect.option))) return false;
+    return O.exists(O.flatMap(yield* fs.stat(target).pipe(Effect.option), directoryIdentity), (identity) =>
+      sameDirectoryIdentity(identity, intent)
+    );
+  });
+  const sourceMatches = yield* identityAt(intent.source);
+  const archived = yield* identityAt(intent.destination);
+  if (restore && archived) return yield* restoreArchivedIntent(context);
+  if (archived && !(yield* fs.exists(intent.source))) return yield* reconcileArchivedIntent(context);
+  if (sourceMatches && !(yield* fs.exists(intent.destination))) return yield* reconcileSourceIntent(context);
+  return yield* refuse("Archive source or destination identity changed; manual recovery required", "path-changed");
+});
+const resolveRecoveryAddresses = Effect.fnUntraced(function* (
+  entry: ResidueReapCandidate,
+  owner: string,
+  destination: string,
+  context: RecoveryRun
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const report = context.report;
+  const refuse = recoveryRefusal;
+  const boundary = yield* fs.realPath(path.join(owner, ".beep"));
+  const sourceParent = path.dirname(entry.path);
+  const resolvedParent = yield* fs
+    .realPath(sourceParent)
+    .pipe(
+      Effect.mapError(() =>
+        refuse(
+          `Source parent ${sourceParent} is unavailable; ensure it exists and is accessible before recovery`,
+          "path-changed"
+        )
+      )
+    );
+  const resolvedSource = path.join(resolvedParent, path.basename(entry.path));
+  const resolvedDestination = path.join(yield* fs.realPath(path.dirname(destination)), path.basename(destination));
+  if (
+    !A.contains(report.checkoutRoots, owner) ||
+    !pathIsStrictlyWithin(path, boundary, resolvedSource) ||
+    cwdWithin(path, path.join(boundary, "residue-reap"), resolvedSource)
+  )
+    return yield* refuse("Archive source boundary mismatch", "path-changed");
+  return { resolvedSource, resolvedDestination };
+});
+type RecoveryRow = {
+  readonly candidate: ResidueReapCandidate;
+  readonly warnings: ReadonlyArray<string>;
+  readonly refused: boolean;
+};
+const assertIntentBinding = (
+  intent: ResidueArchiveIntent,
+  addresses: Effect.Success<ReturnType<typeof resolveRecoveryAddresses>>,
+  lexicalSource: string
+) =>
+  !Str.Equivalence(intent.lexicalSource, lexicalSource) ||
+  !Str.Equivalence(intent.source, addresses.resolvedSource) ||
+  !Str.Equivalence(intent.destination, addresses.resolvedDestination)
+    ? Effect.fail(recoveryRefusal("Archive intent boundary mismatch", "path-changed"))
+    : Effect.void;
+const recoverArchiveEntry = Effect.fnUntraced(function* (
+  entry: ResidueReapCandidate,
+  index: number,
+  context: RecoveryRun
+) {
+  const { settings, root } = context;
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  if (!isCheckoutResidueClass(entry.reapClass))
+    return unapplied(
+      ResidueReapCandidate.make({
+        ...entry,
+        action: "skip",
+        retentionReason: "class does not use archive recovery",
+      })
+    );
+  const destination = path.join(root, "archive", `${index}`);
+  const journalPath = `${destination}.intent.json`;
+  const hasIntent = yield* fs.exists(journalPath);
+  if (!hasIntent && (context.restore || !ResidueReapAction.is["archive-move"](entry.action)))
+    return unapplied(ResidueReapCandidate.make({ ...entry, action: "skip" }));
+  const owner = optionOr(entry.checkoutRoot, settings.repoRoot);
+  const realOwner = yield* fs.realPath(owner);
+  if (!Str.Equivalence(realOwner, yield* fs.realPath(settings.repoRoot)))
+    return unapplied(
+      ResidueReapCandidate.make({
+        ...entry,
+        action: "skip",
+        skipReason: "foreign-owner",
+        retentionReason: "fleet observation only; recover from the owning checkout",
+      })
+    );
+  if (!hasIntent) return yield* applyCandidate(entry, O.some(realOwner), settings.policy, () => Effect.void);
+  const addresses = yield* resolveRecoveryAddresses(entry, owner, destination, context);
+  const intent = yield* decodeIntent(yield* fs.readFileString(journalPath));
+  yield* assertIntentBinding(intent, addresses, entry.path);
+  return yield* recoverArchiveIntent({ ...context, entry, intent, destination, journalPath, realOwner });
+});
+
+const recoverArchiveRun = Effect.fnUntraced(function* (settings: ResidueReapSettings, runId: string, restore: boolean) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const archive = yield* ResidueArchive;
+  const refuse = recoveryRefusal;
+  if (!isRunId(runId)) return yield* refuse("Invalid residue archive run id");
+  const root = runDirectory(path, settings.repoRoot, runId);
+  if (!(yield* fs.exists(path.join(root, "plan.json"))))
+    return yield* refuse("Archive plan.json does not exist; recovery creates no run");
+  yield* ensureArchiveDirectories(settings.repoRoot, runId);
+  const report = yield* decodeReport(yield* fs.readFileString(path.join(root, "plan.json")));
+  if (!Str.Equivalence(report.repoRoot, settings.repoRoot) || !Str.Equivalence(optionOr(report.runId, ""), runId))
+    return yield* refuse("Archive report owner mismatch");
+  const rows: ReadonlyArray<RecoveryRow> = yield* Effect.forEach(
+    report.candidates,
+    Effect.fnUntraced(function* (entry, index) {
+      const operation = recoverArchiveEntry(entry, index, { settings, root, report, restore });
+      const result = yield* Effect.result(operation);
+      return Result.isSuccess(result)
+        ? { ...result.success, refused: false }
+        : {
+            candidate: ResidueReapCandidate.make({
+              ...entry,
+              action: "skip",
+              skipReason: isResidueArchiveError(result.failure)
+                ? optionOr(result.failure.skipReason, "removal-failed")
+                : "removal-failed",
+            }),
+            warnings: [`${entry.path}: ${result.failure.message}`],
+            refused: true,
+          };
+    }),
+    { concurrency: 1 }
+  );
+  const warnings = A.flatMap(rows, (row) => row.warnings);
+  const refusalWarnings = A.flatMap(rows, (row) => (row.refused ? row.warnings : []));
+  const crypto = yield* Crypto.Crypto;
+  const recoveryPath = path.join(root, `recovery-${yield* crypto.randomUUIDv4}.json`);
+  const result = ResidueReapReport.make({
+    ...report,
+    reportPath: recoveryPath,
+    applied: true,
+    mode: restore ? "restore" : "resume",
+    candidates: A.map(rows, (row) => row.candidate),
+    reapedCount: A.length(A.filter(rows, (row) => ResidueReapAction.is["archive-move"](row.candidate.action))),
+    reclaimedBytes: 0,
+    warnings: A.appendAll(report.warnings, warnings),
+  });
+  yield* archive.publish(recoveryPath, yield* encodeReport(result), "residue recovery report");
+  if (A.isReadonlyArrayNonEmpty(refusalWarnings)) return yield* refuse(A.join(refusalWarnings, "\n"));
+  return result;
+});
+
+const withArchiveLocks = Effect.fnUntraced(function* <A, E, R>(
+  settings: ResidueReapSettings,
+  effect: Effect.Effect<A, E, R>
+) {
+  const path = yield* Path.Path;
+  yield* ensureArchiveDirectories(settings.repoRoot);
+  // Serialize only the invoking owner's archives; foreign fleet roots are read-only.
+  return yield* withJournalFileLock(
+    path.join(settings.repoRoot, ".beep", "residue-reap", "archive.lock"),
+    () => effect
+  );
+});
+
+const requestedArchiveRecovery = Effect.fnUntraced(function* (
+  settings: ResidueReapSettings,
+  options: ResidueReapOptions
+) {
+  const resume = O.fromUndefinedOr(options.resume);
+  const restore = O.fromUndefinedOr(options.restore);
+  if (O.isSome(resume) || O.isSome(restore)) {
+    if (O.isSome(resume) && O.isSome(restore))
+      return yield* ResidueArchiveError.make({ message: "Choose resume or restore, not both" });
+    const id = O.getOrElse(
+      O.orElse(restore, () => resume),
+      () => ""
+    );
+    if (!isRunId(id)) return yield* ResidueArchiveError.make({ message: "Invalid residue archive run id" });
+    return O.some(yield* recoverArchiveRun(settings, id, O.isSome(restore)));
+  }
+  return O.none<ResidueReapReport>();
+});
+
+const executeResidueReap = Effect.fnUntraced(function* (settings: ResidueReapSettings, options: ResidueReapOptions) {
+  const apply = optionOr(options.apply, false);
+  const path = yield* Path.Path;
+  const fs = yield* FileSystem.FileSystem;
+  const archive = yield* ResidueArchive;
+  const beepRoot = path.join(settings.repoRoot, ".beep");
+  if (O.isSome(yield* fs.readLink(beepRoot).pipe(Effect.option)))
+    return yield* ResidueArchiveError.make({ message: "Checkout .beep is a symlink" });
+  const recovery = yield* requestedArchiveRecovery(settings, options);
+  if (O.isSome(recovery)) return recovery.value;
+  const found = yield* discoverResidue(settings);
+  const runRoot = runDirectory(path, settings.repoRoot, settings.runId);
+  const reportPath = path.join(runRoot, "report.json");
+  const ownerRoot = yield* fs.realPath(settings.repoRoot);
+  const candidates = yield* Effect.forEach(
+    found.candidates,
+    Effect.fnUntraced(function* (entry, index) {
+      if (!isCheckoutResidueClass(entry.reapClass)) return entry;
+      const owner = yield* fs.realPath(optionOr(entry.checkoutRoot, settings.repoRoot));
+      if (!Str.Equivalence(owner, ownerRoot))
+        return ResidueReapCandidate.make({
+          ...entry,
+          action: "skip",
+          skipReason: "foreign-owner",
+          retentionReason: "fleet observation only; archive from the owning checkout",
+        });
+      return ResidueReapCandidate.make({ ...entry, recoveryDestination: path.join(runRoot, "archive", `${index}`) });
+    })
+  );
+  const scannedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  const makeReport = (outcomes: ReadonlyArray<AppliedCandidate>, applied: boolean) =>
+    ResidueReapReport.make({
+      runId: settings.runId,
+      reportPath,
+      scannedAt,
+      homeRoot: settings.homeRoot,
+      repoRoot: settings.repoRoot,
+      maxAgeDays: settings.policy.maxAgeDays,
+      turboMaxAgeDays: settings.policy.turboMaxAgeDays,
+      turboRunsMaxAgeDays: settings.policy.turboRunsMaxAgeDays,
+      sharedTurboCacheRoot: settings.sharedTurboCacheRoot,
+      sharedTurboMaxAgeDays: settings.sharedTurboMaxAgeDays,
+      sharedTurboMaxBytes: settings.sharedTurboMaxBytes,
+      qualificationViewsKeep: settings.policy.qualificationViewsKeep,
+      fleet: optionOr(options.fleet, false),
+      checkoutRoots: settings.checkoutRoots,
+      applied,
+      mode: applied ? "apply" : "dry-run",
+      classes: settings.classes,
+      candidates: A.map(outcomes, (outcome) => outcome.candidate),
+      reapedCount: A.length(A.filter(outcomes, (outcome) => outcome.reaped)),
+      reclaimedBytes: A.reduce(outcomes, 0, (total, outcome) => total + outcome.reclaimedBytes),
+      warnings: A.appendAll(
+        found.warnings,
+        A.flatMap(outcomes, (outcome) => outcome.warnings)
+      ),
+    });
+  yield* ensureArchiveDirectories(settings.repoRoot, settings.runId);
+  // Persist the complete dry run before mutation: kill after the first intent still
+  // leaves a readable source/destination plan for every row.
+  const dryRun = makeReport(A.map(candidates, unapplied), false);
+  yield* archive.publish(path.join(runRoot, "plan.json"), yield* encodeReport(dryRun), "residue immutable plan");
+  if (!apply) {
+    yield* archive.publish(reportPath, yield* encodeReport(dryRun), "residue dry-run report");
+    return dryRun;
+  }
+  const outcomes = yield* applyResidue(
+    settings,
+    candidates,
+    true,
+    optionOr(options.archiveCheckpoint, () => Effect.void)
+  );
+  const report = makeReport(outcomes, true);
+  yield* archive.publish(reportPath, yield* encodeReport(report), "residue applied report");
+  return report;
+});
 
 /**
  * Discover bounded home residue, classify it with complete safety evidence,
  * and optionally remove eligible entries.
  *
  * **Details**
+ *
+ * Checkout archive classes persist ownership, terminal state, safety decisions and
+ * recovery destinations in immutable `.beep/residue-reap/<run-id>/plan.json` and
+ * the initial `report.json`, including dry runs. `resume` reconciles durable intents;
+ * `restore` returns archived inodes. Each recovery writes `recovery-<uuid>.json`.
+ * Fleet discovery observes other owners; checkout archives apply only in the
+ * invoking owner checkout. Run reports and archives remain durable until a separate
+ * owner retention decision authorizes their retirement.
  *
  * Repository-scoped classes (`turbo-cache`, `turbo-runs`, `merged-preview`)
  * are discovered in every checkout named by `checkoutRoots` (deduplicated by
@@ -1716,31 +2824,14 @@ const applyResidue = (
  */
 export const runResidueReap = Effect.fn("ResidueReap.runResidueReap")(function* (options: ResidueReapOptions = {}) {
   const settings = yield* resolveSettings(options);
-  const apply = optionOr(options.apply, false);
-  const found = yield* discoverResidue(settings);
-  const outcomes = yield* applyResidue(settings, found.candidates, apply);
-  const scannedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  return ResidueReapReport.make({
-    scannedAt,
-    homeRoot: settings.homeRoot,
-    repoRoot: settings.repoRoot,
-    maxAgeDays: settings.policy.maxAgeDays,
-    turboMaxAgeDays: settings.policy.turboMaxAgeDays,
-    turboRunsMaxAgeDays: settings.policy.turboRunsMaxAgeDays,
-    sharedTurboCacheRoot: settings.sharedTurboCacheRoot,
-    sharedTurboMaxAgeDays: settings.sharedTurboMaxAgeDays,
-    sharedTurboMaxBytes: settings.sharedTurboMaxBytes,
-    qualificationViewsKeep: settings.policy.qualificationViewsKeep,
-    fleet: optionOr(options.fleet, false),
-    checkoutRoots: settings.checkoutRoots,
-    applied: apply,
-    classes: settings.classes,
-    candidates: A.map(outcomes, (outcome) => outcome.candidate),
-    reapedCount: A.length(A.filter(outcomes, (outcome) => outcome.reaped)),
-    reclaimedBytes: A.reduce(outcomes, 0, (total, outcome) => total + outcome.reclaimedBytes),
-    warnings: A.appendAll(
-      found.warnings,
-      A.flatMap(outcomes, (outcome) => outcome.warnings)
-    ),
-  });
+  const archive = yield* makeResidueArchive();
+  const operation = executeResidueReap(settings, options);
+  const mutate =
+    optionOr(options.apply, false) ||
+    O.isSome(O.fromUndefinedOr(options.resume)) ||
+    O.isSome(O.fromUndefinedOr(options.restore));
+  return yield* (mutate ? withArchiveLocks(settings, operation) : operation).pipe(
+    Effect.scoped,
+    Effect.provideService(ResidueArchive, archive)
+  );
 });

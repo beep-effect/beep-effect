@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import { installRegenerateMergeDriver } from "@beep/repo-cli/commands/Worktree";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
@@ -10,18 +11,31 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
+import * as Stream from "effect/Stream";
 
 const sourceRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 const driverPath = `${sourceRoot}scripts/regenerate-merge-driver.sh`;
-const setupPath = `${sourceRoot}scripts/setup-regenerate-merge-driver.sh`;
 const mergeDriverScenario = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-regenerate-driver-" });
-  const git = (args: ReadonlyArray<string>) =>
-    Bun.spawnSync({ cmd: ["git", ...args], cwd: root, stderr: "pipe", stdout: "pipe" });
-  expect(git(["init"]).exitCode).toBe(0);
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  const run = Effect.fnUntraced(function* (command: string, args: ReadonlyArray<string>) {
+    const handle = yield* spawner.spawn(ChildProcess.make(command, args, { cwd: root }));
+    return yield* Effect.all(
+      [
+        handle.exitCode,
+        handle.stdout.pipe(Stream.decodeText, Stream.mkString),
+        handle.stderr.pipe(Stream.decodeText, Stream.mkString),
+      ],
+      { concurrency: 3 }
+    );
+  });
+  const [initialized] = yield* run("git", ["init"]);
+  expect(initialized).toBe(0);
 
   const ancestor = path.join(root, "ancestor");
   const current = path.join(root, "current");
@@ -29,35 +43,22 @@ const mergeDriverScenario = Effect.fnUntraced(function* () {
   yield* fs.writeFileString(ancestor, "ancestor\n");
   yield* fs.writeFileString(current, "current\n");
   yield* fs.writeFileString(other, "other\n");
-  const generated = Bun.spawnSync({
-    cmd: [driverPath, ancestor, current, other, "tsconfig.json"],
-    cwd: root,
-    stderr: "pipe",
-    stdout: "pipe",
-  });
-  expect(generated.exitCode).not.toBe(0);
-  expect(generated.stderr.toString()).toContain("left tsconfig.json conflicted");
+  const [generated, , generatedStderr] = yield* run(driverPath, [ancestor, current, other, "tsconfig.json"]);
+  expect(generated).not.toBe(0);
+  expect(generatedStderr).toContain("left tsconfig.json conflicted");
   expect(yield* fs.readFileString(current)).toBe("current\n");
 
-  const refused = Bun.spawnSync({
-    cmd: [driverPath, ancestor, current, other, "bun.lock"],
-    cwd: root,
-    stderr: "pipe",
-    stdout: "pipe",
-  });
-  expect(refused.exitCode).not.toBe(0);
-  expect(refused.stderr.toString()).toContain("refused non-projection path: bun.lock");
+  const [refused, , refusedStderr] = yield* run(driverPath, [ancestor, current, other, "bun.lock"]);
+  expect(refused).not.toBe(0);
+  expect(refusedStderr).toContain("refused non-projection path: bun.lock");
 
-  const installed = Bun.spawnSync({
-    cmd: [setupPath, root],
-    cwd: root,
-    stderr: "pipe",
-    stdout: "pipe",
-  });
-  expect(installed.exitCode, installed.stderr.toString()).toBe(0);
-  const configured = git(["config", "--local", "--get", "merge.regenerate.driver"]);
-  expect(configured.exitCode).toBe(0);
-  expect(configured.stdout.toString()).toContain("scripts/regenerate-merge-driver.sh");
+  yield* fs.makeDirectory(path.join(root, "scripts"));
+  yield* fs.copyFile(driverPath, path.join(root, "scripts", "regenerate-merge-driver.sh"));
+  yield* installRegenerateMergeDriver(root);
+  yield* installRegenerateMergeDriver(root);
+  const [configured, configuredStdout] = yield* run("git", ["config", "--local", "--get", "merge.regenerate.driver"]);
+  expect(configured).toBe(0);
+  expect(configuredStdout).toContain("scripts/regenerate-merge-driver.sh");
 });
 
 it.layer(NodeServices.layer, { timeout: "5 seconds" })("regenerate merge driver", (it) => {

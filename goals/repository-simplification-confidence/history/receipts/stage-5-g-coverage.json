@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "59e5cf879f1796dfec00d14ba6545e5c79154eeb",
+  "startedUtc": "2026-10-09T20:54:25Z",
+  "completedUtc": "2026-10-09T20:54:49Z",
+  "scope": "55 retention tests; two baseline files; percentage and uncovered count read, not full repository ratchet",
+  "baseline": "standards/coverage.regression-baseline.jsonc",
+  "rows": [
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+      "current": {
+        "lines": 100.0,
+        "statements": 100.0,
+        "functions": 100,
+        "branches": 100
+      },
+      "uncovered": {
+        "lines": 0,
+        "statements": 0,
+        "functions": 0,
+        "branches": 0
+      },
+      "baseline": {
+        "lines": 100,
+        "statements": 100,
+        "branches": 100,
+        "functions": 100,
+        "uncovered": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
+      },
+      "regressedMetrics": [],
+      "increasedUncovered": []
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
+      "current": {
+        "lines": 91.01,
+        "statements": 88.3,
+        "functions": 87.66,
+        "branches": 78.6
+      },
+      "uncovered": {
+        "lines": 103,
+        "statements": 147,
+        "functions": 38,
+        "branches": 132
+      },
+      "baseline": {
+        "lines": 86.85,
+        "statements": 85.07,
+        "branches": 76.92,
+        "functions": 84.52,
+        "uncovered": {
+          "lines": 41,
+          "statements": 50,
+          "branches": 42,
+          "functions": 13
+        }
+      },
+      "regressedMetrics": [],
+      "increasedUncovered": ["lines", "statements", "functions", "branches"]
+    }
+  ]
+}

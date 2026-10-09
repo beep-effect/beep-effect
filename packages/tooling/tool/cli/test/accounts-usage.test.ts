@@ -879,7 +879,7 @@ describe("accounts command", () => {
   it("registers the status subcommand", () => {
     expect(accountsCommand.name).toBe("accounts");
     expect(A.flatMap(accountsCommand.subcommands, (group) => A.map(group.commands, (command) => command.name))).toEqual(
-      ["status"]
+      ["status", "secrets-layout"]
     );
   });
 });
