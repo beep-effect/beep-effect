@@ -41,7 +41,8 @@ const contextOf = (theme: Cli.StreamTheme, width: number, neutralize: boolean): 
 
 /** The document's lines as the kit's own renderer lays them out: plain at colour `none`, painted otherwise. */
 const linesOf = (doc: Cli.Document | Cli.Block, ctx: Cli.RenderContext): ReadonlyArray<string> => {
-	const document: Cli.Document = Array.isArray(doc) ? doc : [doc as Cli.Block];
+	const isDocument = (value: Cli.Document | Cli.Block): value is Cli.Document => Array.isArray(value);
+	const document: Cli.Document = isDocument(doc) ? doc : [doc];
 	const text = ctx.color === "none" ? Render.plain(document, ctx) : Render.ansi(document, ctx);
 	return text === "" ? [] : text.split("\n");
 };
@@ -57,7 +58,11 @@ const docView: () => FunctionComponent<DocViewProps> = fromReact((react) => {
 		const neutralize = screen?.neutralizeWorkflowCommands === true;
 		if (given === undefined && theme === undefined) throw new Error(OUTSIDE);
 		const ctx = react.useMemo(
-			() => given ?? contextOf(theme as Cli.StreamTheme, columns, neutralize),
+			() => {
+				if (given !== undefined) return given;
+				if (theme === undefined) throw new Error(OUTSIDE);
+				return contextOf(theme, columns, neutralize);
+			},
 			[given, theme, columns, neutralize],
 		);
 		// Laid out once per document and context: a live view's tick redraws with the same document.
@@ -74,7 +79,7 @@ const docView: () => FunctionComponent<DocViewProps> = fromReact((react) => {
 		);
 	};
 	View.displayName = "CliUiDocView";
-	return react.memo(View) as unknown as FunctionComponent<DocViewProps>;
+	return react.memo(View);
 });
 
 /**

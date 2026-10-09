@@ -26,7 +26,7 @@ const assertNeutralised = (line: string, label: string): void => {
 
 const run = Effect.fn("run")(function* (effect: Effect.Effect<void, never, CliTheme | Audience>, audience: AudienceKind) {
 		const lines: Array<string> = [];
-		const double: Console.Console = Object.assign(Object.create(console) as Console.Console, {
+		const double: Console.Console = Object.assign(Object.create(console), {
 			log: (...args: ReadonlyArray<unknown>) => lines.push(args.map(String).join(" ")),
 			error: (...args: ReadonlyArray<unknown>) => lines.push(args.map(String).join(" ")),
 		});

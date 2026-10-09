@@ -1,4 +1,6 @@
 // @effect-diagnostics strictEffectProvide:skip-file
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";
 import type { Audience } from "../../effected/env/index.ts";
 import { TerminalEnv } from "../../effected/env/index.ts";
@@ -18,7 +20,7 @@ const ESC = String.fromCharCode(0x1b);
 const capturing = () => {
 	const out: string[] = [];
 	const err: string[] = [];
-	const double: Console.Console = Object.assign(Object.create(console) as Console.Console, {
+	const double: Console.Console = Object.assign(Object.create(console), {
 		log: (...args: ReadonlyArray<unknown>) => out.push(args.map(String).join(" ")),
 		error: (...args: ReadonlyArray<unknown>) => err.push(args.map(String).join(" ")),
 	});
@@ -33,7 +35,7 @@ const records = Effect.gen(function* () {
 });
 
 const levelsOf = (lines: ReadonlyArray<string>): ReadonlyArray<string> =>
-	lines.filter((line) => line.startsWith("{")).map((line) => (JSON.parse(line) as { level: string }).level);
+	lines.filter((line) => line.startsWith("{")).map((line) => Result.getOrThrow(S.decodeResult(LogLevelRecord)(line)).level);
 
 /** Run `program` under a layer that needs nothing, with an optional env var and a captured Console. */
 const run = Effect.fn("run")(function* (layer: Layer.Layer<never>, env: Record<string, string> = {}, program: typeof records = records) {
@@ -200,3 +202,5 @@ describe("CliLog.layer requirements follow the fixed format", () => {
 		assert.isDefined(alsoNeedsSomething);
 	});
 });
+
+const LogLevelRecord = S.fromJsonString(S.Struct({ level: S.String }));

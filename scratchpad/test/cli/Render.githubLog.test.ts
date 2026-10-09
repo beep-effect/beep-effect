@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";
@@ -304,7 +305,7 @@ describe("Render.githubLog: annotations (okfit's trial)", () => {
 			const at = pair.indexOf("=");
 			properties[pair.slice(0, at)] = property(pair.slice(at + 1));
 		}
-		return { level: match[1], properties, message: data(match[3] as string) };
+		return { level: match[1], properties, message: data(A.getUnsafe(match, 3)) };
 	};
 	const commands = (text: string): ReadonlyArray<string> => text.split(LINE_BREAK).filter(isCommand);
 

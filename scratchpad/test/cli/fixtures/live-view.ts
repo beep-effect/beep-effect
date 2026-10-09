@@ -9,8 +9,11 @@ export interface SyncState {
 	readonly done: number;
 }
 
-(globalThis as { liveViewLoads?: number }).liveViewLoads =
-	((globalThis as { liveViewLoads?: number }).liveViewLoads ?? 0) + 1;
+declare global {
+	var liveViewLoads: number | undefined;
+}
+
+globalThis.liveViewLoads = (globalThis.liveViewLoads ?? 0) + 1;
 
 const view: {
 	(frame: number): (state: SyncState) => ReactElement;

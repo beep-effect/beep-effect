@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import type { Document, Inline } from "../Doc.ts";
 import type { RenderContext } from "../Render.ts";
@@ -18,17 +19,17 @@ export const plainInline: {
 	const out: Array<Span> = [];
 	let i = 0;
 	while (i < flat.length) {
-		const link = (flat[i] as Span).link;
+		const link = (A.getUnsafe(flat, i)).link;
 		let label = "";
 		do {
-			const span = flat[i] as Span;
+			const span = A.getUnsafe(flat, i);
 			label += span.text;
 			out.push({ text: span.code === true ? `\`${span.text}\`` : span.text });
 			i++;
-		} while (link !== undefined && i < flat.length && (flat[i] as Span).link === link);
+		} while (link !== undefined && i < flat.length && (A.getUnsafe(flat, i)).link === link);
 		if (link !== undefined) {
 			const target = targetText(link, ctx);
-			if (showsSuffix((flat[i - 1] as Span).suffix, label, target)) out.push({ text: ` (${target})` });
+			if (showsSuffix((A.getUnsafe(flat, i - 1)).suffix, label, target)) out.push({ text: ` (${target})` });
 		}
 	}
 	return out;

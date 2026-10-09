@@ -44,7 +44,7 @@ describe("CliExit", () => {
 					const defect = Cause.squash(exit.cause);
 					assert.instanceOf(defect, Error);
 					assert.strictEqual(
-						(defect as Error).message,
+						defect.message,
 						`CliExit.set: exit code must be an integer 0..255, received ${bad}`,
 					);
 				}

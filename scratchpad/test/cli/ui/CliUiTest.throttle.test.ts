@@ -11,7 +11,7 @@ import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
 import type { Ev, State } from "../helpers/live.ts";
 import { End, Start, frameOf, reduce } from "../helpers/live.ts";
 
-const { mounts } = vi.hoisted(() => ({ mounts: [] as Array<{ readonly maxFps?: number; readonly debug?: boolean }> }));
+const { mounts } = vi.hoisted(() => ({ mounts: Array<{ readonly maxFps?: number; readonly debug?: boolean }>() }));
 vi.mock("ink", async (importOriginal) => {
 	const ink = await importOriginal<typeof import("ink")>();
 	return {
@@ -23,7 +23,7 @@ vi.mock("ink", async (importOriginal) => {
 				...("debug" in recorded && recorded.debug !== undefined ? { debug: recorded.debug } : {}),
 			});
 			return ink.render(tree, options);
-		}) as typeof ink.render,
+		}),
 	};
 });
 
@@ -32,7 +32,7 @@ describe("the harness's production path is not throttled to Ink's 30 fps", () =>
 		Effect.gen(function* () {
 			const before = mounts.length;
 			const view = yield* CliUiTest.live({
-				initial: { run: 0, last: "idle", seen: [] } as State,
+				initial: { run: 0, last: "idle", seen: [] } satisfies State,
 				reduce,
 				render: frameOf,
 				isStart: (event: Ev) => event._tag === "Start",

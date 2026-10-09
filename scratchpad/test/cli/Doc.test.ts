@@ -283,8 +283,11 @@ describe("Doc.counts", () => {
 		assert.isTrue(deepFrozen(node));
 		assert.notStrictEqual(node.counters[0]?.status.def, live, "the node does not share the vocabulary's entry");
 		assert.isFalse(Object.isFrozen(live), "the live entry is untouched");
+		const definition = node.counters[0]?.status.def;
+		assert.isDefined(definition);
+		const mutable: { rank: number } = definition;
 		assert.throws(() => {
-			(node.counters[0]?.status.def as { rank: number }).rank = 0;
+			mutable.rank = 0;
 		}, TypeError);
 		assert.strictEqual(Status.core.def("failure").rank, 90);
 	});

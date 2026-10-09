@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import type * as CauseType from "effect/Cause";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
@@ -88,7 +89,7 @@ const MAX_DEPTH = 8;
 const MAX_SPANS = 32;
 
 const hasCliDoc = (value: unknown): value is CliDocSource =>
-	typeof value === "object" && value !== null && typeof (value as Partial<CliDocSource>)[CliDoc] === "function";
+	typeof value === "object" && value !== null && CliDoc in value && typeof value[CliDoc] === "function";
 
 // String(value) can throw for an object with no prototype or a hostile toString, and says only "[object Object]" for
 // a plain failure value: such a value with a string message is that message.
@@ -96,7 +97,7 @@ const describe = (value: unknown): string => {
 	try {
 		const text = String(value);
 		if (text !== "[object Object]") return text;
-		const message = (value as { readonly message?: unknown } | null)?.message;
+		const message = typeof value === "object" && value !== null && "message" in value ? value.message : undefined;
 		return typeof message === "string" ? message : text;
 	} catch {
 		return "[unprintable value]";
@@ -107,7 +108,7 @@ const firstLine = (text: string): string => text.split(/\r\n|\r|\n/, 1)[0] ?? ""
 
 const tagOf = (value: unknown): string | undefined => {
 	if (typeof value !== "object" || value === null) return undefined;
-	const tag = (value as { readonly _tag?: unknown })._tag;
+	const tag = "_tag" in value ? value._tag : undefined;
 	return typeof tag === "string" ? tag : undefined;
 };
 
@@ -120,8 +121,8 @@ const failureBlocks = (message: string): ReadonlyArray<Block> => {
 /** The issue of a schema failure: the value itself, or the `issue` an error carries. */
 const issueOf = (error: unknown): unknown => {
 	if (SchemaIssue.isIssue(error)) return error;
-	if (typeof error === "object" && error !== null) {
-		const issue = (error as { readonly issue?: unknown }).issue;
+	if (typeof error === "object" && error !== null && "issue" in error) {
+		const issue = error.issue;
 		if (SchemaIssue.isIssue(issue)) return issue;
 	}
 	return undefined;
@@ -131,8 +132,8 @@ const schemaBlocks = (error: unknown): ReadonlyArray<Block> | undefined => {
 	const entries = issueEntries(issueOf(error));
 	if (entries.length === 0) return undefined;
 	const header =
-		typeof error === "object" && error !== null && !SchemaIssue.isIssue(error)
-			? firstLine(describe((error as { readonly message?: unknown }).message ?? ""))
+		typeof error === "object" && error !== null && !SchemaIssue.isIssue(error) && "message" in error
+			? firstLine(describe(error.message ?? ""))
 			: "";
 	const label: Array<InlineOf<"Text"> | InlineOf<"StatusMark"> | string> = [
 		Doc.status(Status.core, "failure"),
@@ -257,8 +258,8 @@ const causeTree = (defect: Error): Block | undefined => {
 	if (chain.length === 0) return undefined;
 	const nest = (index: number): TreeInput =>
 		index === chain.length - 1
-			? { label: chain[index] as string }
-			: { label: chain[index] as string, children: [nest(index + 1)] };
+			? { label: A.getUnsafe(chain, index) }
+			: { label: A.getUnsafe(chain, index), children: [nest(index + 1)] };
 	return Doc.tree({ label: firstLine(describe(defect)), children: [nest(0)] });
 };
 

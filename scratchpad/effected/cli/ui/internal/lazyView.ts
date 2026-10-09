@@ -1,3 +1,4 @@
+import * as P from "effect/Predicate";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import type { ReactElement } from "react";
@@ -11,10 +12,6 @@ const NOT_LOADED =
 /** A live view's drawing: the state and the frame index to a React element. */
 type LiveRender<S> = (state: S, frame: number) => ReactElement;
 
-interface Lazy {
-	readonly [LOAD]?: () => Promise<unknown>;
-}
-
 const kindOf = (value: unknown): string =>
 	value === null ? "null" : Array.isArray(value) ? "an array" : typeof value === "object" ? "an object" : typeof value;
 
@@ -27,8 +24,8 @@ const NO_VIEW = (resolved: unknown): string => {
 	}
 	const named = Object.keys(resolved).filter((key) => key !== "default");
 	const exports = named.length === 0 ? "" : ` (it exports ${named.join(", ")})`;
-	const received = Object.hasOwn(resolved, "default")
-		? `a module whose default export is ${kindOf((resolved as { readonly default: unknown }).default)}, not a function${exports}; a CommonJS module imported as ESM nests it one level deeper, as default.default`
+	const received = Object.hasOwn(resolved, "default") && "default" in resolved
+		? `a module whose default export is ${kindOf(resolved.default)}, not a function${exports}; a CommonJS module imported as ESM nests it one level deeper, as default.default`
 		: `a module with no default export${exports}; resolve to the export itself, as .then((module) => module.name)`;
 	return `@effected/cli/ui: CliUi.lazyView's load resolved to ${received}. Expected ${EXPECTED}`;
 };
@@ -46,11 +43,11 @@ export class LazyViewShapeError extends Data.TaggedError("LazyViewShapeError")<{
 
 /** The view `load` resolved to: the value itself when it is a function (a `default` property on it is ignored), else
  * its `default` when that is a function; anything else throws, saying what it got. */
-const pick = (resolved: unknown): ((state: never, frame: number) => ReactElement) => {
-	if (typeof resolved === "function") return resolved as (state: never, frame: number) => ReactElement;
+const pick = <S>(resolved: LiveRender<S> | { readonly default: LiveRender<S> }): LiveRender<S> => {
+	if (typeof resolved === "function") return resolved;
 	if (typeof resolved === "object" && resolved !== null) {
-		const fallback = (resolved as { readonly default?: unknown }).default;
-		if (typeof fallback === "function") return fallback as (state: never, frame: number) => ReactElement;
+		const fallback = resolved.default;
+		if (typeof fallback === "function") return fallback;
 	}
 	throw new LazyViewShapeError(NO_VIEW(resolved));
 };
@@ -72,8 +69,8 @@ export const lazyView = <S>(
 		pending ??= load().then(
 			// A load that resolved to no view rejects here and STAYS rejected: the module is what it is, so every later
 			// run gets the same error object, and the live view warns about it once.
-			(resolved: unknown) => {
-				loaded = pick(resolved) as LiveRender<S>;
+			(resolved) => {
+				loaded = pick(resolved);
 			},
 			(error: unknown) => {
 				// An import that failed (a network blip, a chunk not yet written) is the next run's to try again.
@@ -100,8 +97,14 @@ class LazyViewLoadError extends Data.TaggedError("LazyViewLoadError")<{ readonly
  * @internal
  */
 export const loadView = (render: unknown): Effect.Effect<void, LazyViewLoadError> => {
-	const ensure = (render as Lazy)[LOAD];
+	const ensure = P.hasProperty(render, LOAD) ? render[LOAD] : undefined;
 	return ensure === undefined
 		? Effect.void
-		: Effect.asVoid(Effect.tryPromise({ try: ensure, catch: (cause) => new LazyViewLoadError({ cause }) }));
+		: Effect.asVoid(Effect.tryPromise({
+			try: () => {
+				if (typeof ensure !== "function") throw new TypeError("lazy view loader is not a function");
+				return Promise.resolve(ensure());
+			},
+			catch: (cause) => new LazyViewLoadError({ cause }),
+		}));
 };

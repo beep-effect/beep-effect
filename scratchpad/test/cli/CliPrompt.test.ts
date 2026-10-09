@@ -18,7 +18,7 @@ import { TestTerminal } from "../../effected/cli/testing.ts";
 const capturing = () => {
 	const out: string[] = [];
 	const err: string[] = [];
-	const double: Console.Console = Object.assign(Object.create(console) as Console.Console, {
+	const double: Console.Console = Object.assign(Object.create(console), {
 		log: (...args: ReadonlyArray<unknown>) => out.push(args.map(String).join(" ")),
 		error: (...args: ReadonlyArray<unknown>) => err.push(args.map(String).join(" ")),
 	});

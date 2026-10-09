@@ -102,8 +102,9 @@ export const scanAudience = (argv: ReadonlyArray<string>): AudienceTally => {
 			continue;
 		}
 
-		if (name.startsWith("no-") && isBoolean(name.slice(3))) {
-			booleans[name.slice(3) as "human" | "agent" | "ci"].push(false);
+		const negated = name.slice(3);
+		if (name.startsWith("no-") && isBoolean(negated)) {
+			booleans[negated].push(false);
 		}
 	}
 

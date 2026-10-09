@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 // @effect-diagnostics strictEffectProvide:skip-file
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
@@ -19,7 +20,7 @@ const Json = S.fromJsonString(S.Unknown);
 const capturing = () => {
 	const out: string[] = [];
 	const err: string[] = [];
-	const double: Console.Console = Object.assign(Object.create(console) as Console.Console, {
+	const double: Console.Console = Object.assign(Object.create(console), {
 		log: (...args: ReadonlyArray<unknown>) => out.push(args.map(String).join(" ")),
 		error: (...args: ReadonlyArray<unknown>) => err.push(args.map(String).join(" ")),
 	});
@@ -111,7 +112,7 @@ describe("CliRuntime.main: the log level applies while the platform builds", () 
 			assert.deepStrictEqual(out, []);
 			const records = err.filter((line) => line.includes("migration ran"));
 			assert.lengthOf(records, 1, Result.getOrThrow(S.encodeUnknownResult(Json)(err)));
-			const record = Result.getOrThrow(S.decodeResult(Json)(records[0] as string)) as { readonly level: string; readonly message: unknown };
+			const record = Result.getOrThrow(S.decodeResult(LogRecord)(A.getUnsafe(records, 0)));
 			assert.strictEqual(record.level, "DEBUG");
 			assert.strictEqual(record.message, "migration ran");
 		}),
@@ -171,7 +172,7 @@ describe("CliRuntime.main: format auto decides the build-time lines from env and
 			assert.deepStrictEqual(out, []);
 			const built = err.find((line) => line.includes("migration ran"));
 			assert.isDefined(built, Result.getOrThrow(S.encodeUnknownResult(Json)(err)));
-			return { err, built: built as string };
+			return { err, built };
 		});
 
 	it.effect("AI_AGENT: every stderr line is NDJSON, build-time and runtime alike", () =>
@@ -366,7 +367,7 @@ describe("CliRuntime.main: the audience-override warning is written exactly once
 			Effect.gen(function* () {
 				const err = yield* run({ ...AGENT, TOOL_AUDIENCE: "bogus" }, { plainLogger });
 				assert.lengthOf(err, 1, Result.getOrThrow(S.encodeUnknownResult(Json)(err)));
-				assert.isTrue(isJson(err[0] as string), err[0]);
+				assert.isTrue(isJson(A.getUnsafe(err, 0)), err[0]);
 				assert.include(err[0], "TOOL_AUDIENCE=bogus");
 			}),
 		);
@@ -375,7 +376,7 @@ describe("CliRuntime.main: the audience-override warning is written exactly once
 			Effect.gen(function* () {
 				const err = yield* run({ TOOL_AUDIENCE: "bogus" }, { plainLogger });
 				assert.lengthOf(err, 1, Result.getOrThrow(S.encodeUnknownResult(Json)(err)));
-				assert.isFalse(isJson(err[0] as string), err[0]);
+				assert.isFalse(isJson(A.getUnsafe(err, 0)), err[0]);
 				assert.include(err[0], "TOOL_AUDIENCE=bogus");
 			}),
 		);
@@ -386,7 +387,7 @@ describe("CliRuntime.main: the audience-override warning is written exactly once
 			const err = yield* run({ ...AGENT, TOOL_AUDIENCE: "bogus" }, { level: "Debug" });
 			const warnings = err.filter((line) => line.includes("TOOL_AUDIENCE=bogus"));
 			assert.lengthOf(warnings, 1, Result.getOrThrow(S.encodeUnknownResult(Json)(err)));
-			assert.isTrue(isJson(warnings[0] as string), warnings[0]);
+			assert.isTrue(isJson(A.getUnsafe(warnings, 0)), warnings[0]);
 		}),
 	);
 
@@ -466,3 +467,5 @@ describe("CliRuntime.main: only the env build is pinned to stderr; the platform'
 		}),
 	);
 });
+
+const LogRecord = S.fromJsonString(S.Struct({ level: S.String, message: S.Unknown }));

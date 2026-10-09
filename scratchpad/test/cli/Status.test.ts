@@ -22,7 +22,7 @@ describe("Status.core", () => {
 		const results: Array<"success" | "skip" | "failure"> = ["success", "failure", "skip"];
 		const worst: O.Option<CoreStatusName> = Status.core.worstOption(results);
 		assert.deepStrictEqual(worst, O.some("failure"));
-		const none: O.Option<CoreStatusName> = Status.core.worstOption([] as Array<"success">);
+		const none: O.Option<CoreStatusName> = Status.core.worstOption(Array<"success">());
 		assert.deepStrictEqual(none, O.none());
 	});
 

@@ -24,7 +24,7 @@ const { gate, loads } = vi.hoisted(() => {
 	const opened = new Promise<void>((resolve) => {
 		open = resolve;
 	});
-	return { gate: { open: () => open(), opened }, loads: [] as Array<string> };
+	return { gate: { open: () => open(), opened }, loads: Array<string>() };
 });
 vi.mock("ink", async (importOriginal) => {
 	loads.push("ink");

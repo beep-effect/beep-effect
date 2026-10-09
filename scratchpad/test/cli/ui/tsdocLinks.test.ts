@@ -53,7 +53,7 @@ describe("TSDoc links in the ui sources", () => {
 	const root = new Set(entryExports("index.ts"));
 
 	it("name an export of ./ui or ./ui/testing bare, a root export package-qualified, or a known external", () => {
-		const files = (readdirSync(SRC, { recursive: true }) as ReadonlyArray<string>)
+		const files = (readdirSync(SRC, { recursive: true, encoding: "utf8" }))
 			.map((file) => file.split(sep).join("/"))
 			.filter((file) => file.endsWith(".ts") && /^ui(?:\.ts$|-testing\.ts$|\/)/.test(file));
 		assert.include(files, "ui/CliUi.ts", "the walk read the ui tree");

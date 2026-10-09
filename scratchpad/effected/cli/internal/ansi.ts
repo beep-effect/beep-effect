@@ -3,7 +3,7 @@ import type { ColorLevel } from "../../env/index.ts";
 import type { NamedColor, Style } from "../Token.ts";
 
 /** Foreground SGR parameter for each named colour: 30 to 37, then 90 to 97. */
-const NAMED: Readonly<Record<NamedColor, number>> = {
+const NAMED: Readonly<Record<string, number | undefined>> = {
 	black: 30,
 	red: 31,
 	green: 32,
@@ -21,7 +21,7 @@ const NAMED: Readonly<Record<NamedColor, number>> = {
 	cyanBright: 96,
 	whiteBright: 97,
 	gray: 90,
-};
+} satisfies Record<NamedColor, number>;
 
 /** The 16 ANSI colours as xterm draws them, in SGR order (0 to 7, then bright 8 to 15), for the basic fallback. */
 const PALETTE16: ReadonlyArray<readonly [number, number, number]> = [
@@ -54,7 +54,11 @@ type Rgb = readonly [number, number, number];
 export const parseHex = (hex: string): Rgb | undefined => {
 	const short = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(hex);
 	if (short !== null) {
-		return [short[1], short[2], short[3]].map((c) => Number.parseInt((c ?? "0").repeat(2), 16)) as unknown as Rgb;
+		return [
+			Number.parseInt((short[1] ?? "0").repeat(2), 16),
+			Number.parseInt((short[2] ?? "0").repeat(2), 16),
+			Number.parseInt((short[3] ?? "0").repeat(2), 16),
+		];
 	}
 	const long = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
 	if (long === null) return undefined;
@@ -106,7 +110,7 @@ const nearest16 = (rgb: Rgb): number => {
 const foreground = (fg: NonNullable<Style["fg"]>, level: ColorLevel): string | undefined => {
 	if (level === "none") return undefined;
 	// A name that is not a colour is ignored, as a malformed hex is, rather than printing `undefined` into an escape.
-	if (!fg.startsWith("#")) return Object.hasOwn(NAMED, fg) ? String(NAMED[fg as NamedColor]) : undefined;
+	if (!fg.startsWith("#")) return Object.hasOwn(NAMED, fg) ? String(NAMED[fg]) : undefined;
 	const rgb = parseHex(fg);
 	if (rgb === undefined) return undefined;
 	if (level === "truecolor") return `38;2;${rgb[0]};${rgb[1]};${rgb[2]}`;

@@ -1,3 +1,7 @@
+import * as Layer from "effect/Layer";
+import { NodeServices } from "@effect/platform-node";
+import type * as Terminal from "effect/Terminal";
+import type { CliError, Command } from "effect/cli";
 // @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file globalTimers:skip-file
 import * as Clock from "effect/Clock";
 import { assert, describe, it } from "@effect/vitest";
@@ -121,7 +125,7 @@ describe("CliUi.run", () => {
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const value = yield* runOn(fake, (control) =>
-				createElement(OnMount, { onMount: () => control.resolve([] as ReadonlyArray<string>) }),
+				createElement(OnMount, { onMount: () => control.resolve(Array<string>()) }),
 			);
 			assert.deepStrictEqual(value, []);
 		}),
@@ -547,16 +551,13 @@ describe("clear: a resolved screen can erase its last frame (production path)", 
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const { screen, resolve } = resolvable();
-			// Core types a fallback for its parse environment; run directly, this one reads only the streams, theme and
-			// interactivity provided here, so it is run as a plain effect.
-			const fallback = CliUi.fallback(screen, { flag: "count", clear: true }) as unknown as Effect.Effect<
-				unknown,
-				Cancelled | NotInteractive
-			>;
+			// The fallback declares core's parse environment; provide the platform while driving its screen directly.
+			const fallback: Effect.Effect<unknown, CliError.CliError | Terminal.QuitError, Command.Environment> =
+				CliUi.fallback(screen, { flag: "count", clear: true });
 			const run = fallback.pipe(
 				Effect.provideService(UiStreams, fake.streams),
 				Effect.provideService(CliInteractive, true),
-				Effect.provide(CliTheme.layerTest()),
+				Effect.provide(Layer.mergeAll(CliTheme.layerTest(), NodeServices.layer)),
 			);
 			assert.deepStrictEqual(yield* drawThenResolve(fake, run, resolve), []);
 		}),

@@ -284,8 +284,8 @@ export const live = <E, S>(
 		const bridge = yield* makeInkConsole;
 		const inbox = yield* Queue.unbounded<Message<E, S>>();
 		const source = options.events;
-		const stream = Stream.isStream(source) ? (source as Stream.Stream<E>) : undefined;
-		const subscription = stream === undefined ? (source as PubSub.Subscription<E>) : undefined;
+		const stream = "~effect/Stream" in source ? source : undefined;
+		const subscription = "~effect/Stream" in source ? undefined : source;
 
 		let state = options.initial;
 		let run: Run<S> | undefined;
@@ -776,9 +776,9 @@ export const live = <E, S>(
 						// A stream that dies tells the controller, which would otherwise wait for an event that never comes.
 						Effect.catchCauseIf((cause) => !Cause.hasInterruptsOnly(cause), (cause) => Queue.offer(inbox, { _tag: "Died", cause })),
 					)
-				: Effect.gen(function* () {
+				: subscription === undefined ? Effect.void : Effect.gen(function* () {
 						let ended = false;
-						while (!ended) ended = yield* subscriptionStep(source as PubSub.Subscription<E>);
+						while (!ended) ended = yield* subscriptionStep(subscription);
 						yield* Queue.offer(inbox, { _tag: "Ended" });
 					});
 		// Started at once, so its first pull (which subscribes a PubSub-backed stream) happens before `live` returns.

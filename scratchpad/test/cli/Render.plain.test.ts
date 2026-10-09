@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";
@@ -873,7 +874,7 @@ describe("Render.plain: diffText in a compact list item (A5)", () => {
 			const out = yield* plain(failure(Doc.diffText(`${long}\n- 1`, { truncate: true })), { width: 20 });
 			const lines = out.split("\n");
 			assert.strictEqual(lines[1], `  + ${"x".repeat(15)}…`);
-			assert.strictEqual(displayWidth(lines[1] as string), 20);
+			assert.strictEqual(displayWidth(A.getUnsafe(lines, 1)), 20);
 			assert.strictEqual(lines[2], "  - 1");
 			const untruncated = yield* plain(failure(Doc.diffText(`${long}\n- 1`)), { width: 20 });
 			assert.strictEqual(untruncated.split("\n")[1], `  ${long}`, "control: without truncate the line is whole");

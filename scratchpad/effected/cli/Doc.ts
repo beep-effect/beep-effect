@@ -500,10 +500,10 @@ export class Doc {
 	 * @param options - `suffix`, whether the target follows the label where the link cannot be followed
 	 */
 	static link(target: LinkTarget | undefined, label: string | Inline, options?: LinkOptions): Inline;
-	static link(target: LinkTarget | undefined, label?: InlineInput, options?: LinkOptions): Inline {
-		if (target === undefined) return typeof label === "string" ? text(label) : (label as Inline);
+	static link(target: LinkTarget | undefined, label?: InlineInput, options?: LinkOptions): InlineInput | undefined {
+		if (target === undefined) return typeof label === "string" ? text(label) : label;
 		const fallback = "url" in target ? target.url : target.file;
-		return freeze({
+		return freeze<InlineOf<"Link">>({
 			_tag: "Link",
 			target: freeze({ ...target }),
 			label: inlines(label ?? fallback),

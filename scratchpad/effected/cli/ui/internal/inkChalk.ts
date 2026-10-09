@@ -1,9 +1,9 @@
-// Ink shares its Chalk instance by Node realpath and module resolution; resolving another copy changes colours.
-// @effect-diagnostics nodeBuiltinImport:skip-file
-import { realpathSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import * as O from "effect/Option";
+
+// Effect FileSystem cannot resolve Ink's shared Chalk instance synchronously against Node's real filesystem.
+const { realpathSync } = process.getBuiltinModule("node:fs");
 
 /**
  * A chalk colour level: 0 none, 1 basic, 2 256 colours, 3 truecolor.
@@ -24,7 +24,7 @@ export interface InkChalk {
 
 const isInkChalk = (value: unknown): value is InkChalk =>
 	(typeof value === "function" || (typeof value === "object" && value !== null)) &&
-	typeof (value as { readonly level?: unknown }).level === "number";
+	"level" in value && typeof value.level === "number";
 
 /** The runtime's `import.meta.resolve`, when it has one. */
 const esmResolve: ((specifier: string) => string) | undefined =

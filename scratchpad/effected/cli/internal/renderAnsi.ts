@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import type { Document, Inline } from "../Doc.ts";
 import type { RenderContext } from "../Render.ts";
@@ -19,17 +20,17 @@ const inline = (inlines: ReadonlyArray<Inline>, ctx: RenderContext): ReadonlyArr
 	const out: Array<Span> = [];
 	let i = 0;
 	while (i < flat.length) {
-		const link = (flat[i] as Span).link;
+		const link = (A.getUnsafe(flat, i)).link;
 		let label = "";
 		do {
-			const span = flat[i] as Span;
+			const span = A.getUnsafe(flat, i);
 			label += span.text;
 			out.push(span.code === true && span.token === undefined ? { ...span, token: "accent" } : span);
 			i++;
-		} while (link !== undefined && i < flat.length && (flat[i] as Span).link === link);
+		} while (link !== undefined && i < flat.length && (A.getUnsafe(flat, i)).link === link);
 		if (link !== undefined && ctx.link(link, label) === label) {
 			const target = targetText(link, ctx);
-			if (showsSuffix((flat[i - 1] as Span).suffix, label, target)) out.push({ text: ` (${target})`, token: "muted" });
+			if (showsSuffix((A.getUnsafe(flat, i - 1)).suffix, label, target)) out.push({ text: ` (${target})`, token: "muted" });
 		}
 	}
 	return out;

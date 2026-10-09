@@ -1,3 +1,4 @@
+import * as R from "effect/Record";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Schedule from "effect/Schedule";
@@ -328,9 +329,9 @@ const TOKENS: ReadonlyArray<TokenName> = [
 ];
 
 /** The marker palette: token N (1-based) paints in `#0000NN`, so a frame decodes back to the token. */
-const MARKER_STYLES: Record<TokenName, Style> = Object.fromEntries(
-	TOKENS.map((token, index) => [token, { fg: `#0000${(index + 1).toString(16).padStart(2, "0")}` }]),
-) as Record<TokenName, Style>;
+const MARKER_STYLES: Record<TokenName, Style> = R.fromEntries(
+	TOKENS.map((token, index): [TokenName, Style] => [token, { fg: `#0000${(index + 1).toString(16).padStart(2, "0")}` }]),
+);
 
 const TOKEN_BY_BLUE = new Map(TOKENS.map((token, index) => [index + 1, token] as const));
 
@@ -505,8 +506,8 @@ const bytesOf = (key: KeyName | { readonly char: string }, method: "press" | "ch
 
 /** A `Cancelled` from the root entrypoint, matched by shape: this entry may carry its own copy of the class. */
 const cancelledReason = (value: unknown): "escape" | "interrupt" | undefined => {
-	if (typeof value !== "object" || value === null) return undefined;
-	const { _tag, reason } = value as { readonly _tag?: unknown; readonly reason?: unknown };
+	if (typeof value !== "object" || value === null || !("_tag" in value) || !("reason" in value)) return undefined;
+	const { _tag, reason } = value;
 	return _tag === "Cancelled" && (reason === "escape" || reason === "interrupt") ? reason : undefined;
 };
 
@@ -796,7 +797,7 @@ const capturingConsole = (ambient: Console.Console) => {
 			sink.push(`${args.map((arg) => Inspectable.toStringUnknown(arg, 0)).join(" ")}\n`);
 		};
 	// Over the ambient Console, so every method this does not keep still behaves as it did.
-	const writer: Console.Console = Object.assign(Object.create(ambient) as Console.Console, {
+	const writer: Console.Console = Object.assign(Object.create(ambient), {
 		log: line(out),
 		info: line(out),
 		debug: line(out),

@@ -224,7 +224,7 @@ export class CliAudience {
 	>) => {
 		// `provide` is applied here, so there is one wiring and conflict detection cannot be dropped by omission.
 		const core = CommandModule.runWith(
-			CliAudience.provide(command as unknown as Command.Command<Name, AudienceFlagInput & Input, ContextInput, E, R>),
+			CliAudience.provide<Name, AudienceFlagInput & Input, ContextInput, E, R>(command),
 			config,
 		);
 		return (argv) => {
@@ -234,7 +234,7 @@ export class CliAudience {
 			if (kind === undefined) return run;
 			const withAudience = conflict
 				? run
-				: (Effect.provideService(run, Audience, { kind, source: "flag" }) as typeof run);
+				: Effect.provideService(run, Audience, { kind, source: "flag" });
 			return Effect.gen(function* () {
 				const current = yield* CliInteractive;
 				const ambient = yield* CliConfig.CliConfig;
@@ -256,7 +256,7 @@ export class CliAudience {
 					? [...ambient.builtIns, GlobalFlag.Wizard]
 					: ambient.builtIns.filter((flag) => flag !== GlobalFlag.Wizard);
 				return yield* Effect.provideService(decided, CliConfig.CliConfig, CliConfig.make({ builtIns }));
-			}) as typeof run;
+			});
 		};
 	};
 

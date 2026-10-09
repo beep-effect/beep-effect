@@ -30,7 +30,7 @@ const parsedBy = Effect.fn("parsedBy")(function* (argv: ReadonlyArray<string>) {
 		);
 		yield* Command.runWith(root, { version: "1" })(argv).pipe(
 			Effect.ignore,
-			Effect.provideService(Console.Console, { ...console, log: () => undefined, error: () => undefined } as never),
+			Effect.provideService(Console.Console, { ...console, log: () => undefined, error: () => undefined }),
 		);
 		return seen;
 	}, Effect.provide(NodeServices.layer));

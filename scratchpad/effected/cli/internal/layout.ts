@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import type { Inline, LinkTarget } from "../Doc.ts";
 import { sanitize } from "../Fmt.ts";
@@ -128,7 +129,7 @@ const spansFromCells = (cells: ReadonlyArray<Cell>): ReadonlyArray<Span> => {
 	let current: Cell["span"] | undefined;
 	for (const cell of cells) {
 		if (cell.span === current) {
-			const last = out[out.length - 1] as Span;
+			const last = A.getUnsafe(out, out.length - 1);
 			out[out.length - 1] = { ...last, text: last.text + cell.grapheme };
 		} else {
 			current = cell.span;
@@ -175,7 +176,7 @@ export const truncateSpans: {
 	const last = out[out.length - 1];
 	if (last === undefined) {
 		// Nothing but the marker fits: it stands for the whole label, so it keeps the first span's style and link.
-		const first = spans[0] as Span;
+		const first = A.getUnsafe(spans, 0);
 		return [
 			{
 				text: ellipsis,
@@ -211,15 +212,15 @@ export const paintSpans: {
 	let out = "";
 	let i = 0;
 	while (i < spans.length) {
-		const start = spans[i] as Span;
+		const start = A.getUnsafe(spans, i);
 		let run = paint(start);
 		i++;
 		if (start.link === undefined) {
 			out += run;
 			continue;
 		}
-		while (i < spans.length && (spans[i] as Span).link === start.link) {
-			run += paint(spans[i] as Span);
+		while (i < spans.length && (A.getUnsafe(spans, i)).link === start.link) {
+			run += paint(A.getUnsafe(spans, i));
 			i++;
 		}
 		out += ctx.link(start.link, run);
@@ -277,19 +278,19 @@ export const wrapSpans: {
 
 	let i = 0;
 	while (i < cells.length) {
-		if (isLineBreak((cells[i] as Cell).grapheme)) {
+		if (isLineBreak((A.getUnsafe(cells, i)).grapheme)) {
 			flush();
 			keepLeading = true;
 			i++;
 			continue;
 		}
 		const spaces: Array<Cell> = [];
-		while (i < cells.length && (cells[i] as Cell).grapheme === " ") spaces.push(cells[i++] as Cell);
+		while (i < cells.length && (A.getUnsafe(cells, i)).grapheme === " ") spaces.push(A.getUnsafe(cells, i++));
 		const word: Array<Cell> = [];
 		while (i < cells.length) {
-			const { grapheme } = cells[i] as Cell;
+			const { grapheme } = A.getUnsafe(cells, i);
 			if (grapheme === " " || isLineBreak(grapheme)) break;
-			word.push(cells[i++] as Cell);
+			word.push(A.getUnsafe(cells, i++));
 		}
 		if (word.length === 0) continue;
 

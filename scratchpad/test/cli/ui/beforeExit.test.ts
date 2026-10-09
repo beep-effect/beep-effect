@@ -30,7 +30,7 @@ describe("Ink's beforeExit listener", () => {
 			yield* Effect.scoped(
 				Effect.gen(function* () {
 					const view = yield* CliUiTest.live({
-						initial: { run: 0, last: "idle", seen: [] } as State,
+						initial: { run: 0, last: "idle", seen: [] } satisfies State,
 						reduce,
 						render: (state: State) => createElement(Text, null, `RUN ${state.run}`),
 						isStart: (event: Ev) => event._tag === "Start",

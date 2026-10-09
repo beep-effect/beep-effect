@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 // @effect-diagnostics strictEffectProvide:skip-file
 import * as Data from "effect/Data";
 import { NodeServices } from "@effect/platform-node";
@@ -16,7 +17,7 @@ import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
 import * as Terminal from "effect/Terminal";
 import { Command } from "effect/cli";
-import type { Block, Document, RenderContext } from "../../effected/cli/index.ts";
+import type { Block, Document } from "../../effected/cli/index.ts";
 import {
 	Cancelled,
 	CliAudience,
@@ -97,7 +98,7 @@ describe("CliFailure.toDoc: a typed failure", () => {
 	});
 
 	it("a failure that cannot be stringified is still one line, never a throw", () => {
-		const hostile = Object.create(null) as object;
+		const hostile: object = Object.create(null);
 		const doc = CliFailure.toDoc(Cause.fail(hostile));
 		assert.isAbove(plain(doc).length, 0);
 	});
@@ -139,7 +140,10 @@ describe("CliFailure.toDoc: who writes the document", () => {
 	});
 
 	it("the per-tag render map is honoured, and [CliDoc] still beats it", () => {
-		const render = { Boom: (error: unknown) => [Doc.paragraph(`custom for ${(error as Boom).message}`)] };
+		const render = { Boom: (error: unknown) => {
+			assert.instanceOf(error, Boom);
+			return [Doc.paragraph(`custom for ${error.message}`)];
+		} };
 		assert.strictEqual(plain(CliFailure.toDoc(Cause.fail(new Boom("x")), { render })), "custom for x");
 		assert.notInclude(
 			plain(CliFailure.toDoc(Cause.fail(new Mine("m")), { render: { Mine: () => [Doc.paragraph("map")] } })),
@@ -161,7 +165,9 @@ describe("CliFailure.toDoc: a schema failure", () => {
 	const failureOf = (input: unknown): { readonly issue: unknown } => {
 		const exit = decode(input);
 		if (!Exit.isFailure(exit)) throw new Error("expected a failure");
-		return (exit.cause.reasons[0] as unknown as { readonly error: { readonly issue: unknown } }).error;
+		const reason = A.getUnsafe(exit.cause.reasons, 0);
+		if (Cause.isFailReason(reason)) return reason.error;
+		return assert.fail("expected a typed failure");
 	};
 
 	it("is a Tree, in which every rejected value of today's renderer appears with its path", () => {
@@ -215,11 +221,11 @@ describe("CliFailure.toDoc: a defect", () => {
 		assert.include(text, `no user frames (${INTERNAL_FRAMES.length} internal frames hidden)`);
 		const stack = doc.find((block) => block._tag === "Collapsible");
 		assert.isDefined(stack);
-		assert.isAbove((stack as { readonly body: ReadonlyArray<unknown> }).body.length, 0);
+		assert.isAbove(stack.body.length, 0);
 	});
 
 	it("a single hidden frame is counted as one", () => {
-		const text = plain(CliFailure.toDoc(Cause.die(errorWithStack("boom", [INTERNAL_FRAMES[0] as string]))));
+		const text = plain(CliFailure.toDoc(Cause.die(errorWithStack("boom", [A.getUnsafe(INTERNAL_FRAMES, 0)]))));
 		assert.include(text, "no user frames (1 internal frames hidden)");
 	});
 
@@ -275,7 +281,7 @@ describe("CliFailure.toDoc: a defect", () => {
 	it("a cyclic cause chain ends", () => {
 		const a = new Error("a");
 		const b = new Error("b", { cause: a });
-		(a as { cause?: unknown }).cause = b;
+		a.cause = b;
 		assert.include(plain(CliFailure.toDoc(Cause.die(a))), "b");
 	});
 
@@ -308,7 +314,7 @@ describe("CliFailure.toDoc: the span path", () => {
 			const exit = yield* Effect.exit(spanned);
 			if (!Exit.isFailure(exit)) throw new Error("expected a failure");
 			const frame = Context.getOrUndefined(
-				Cause.reasonAnnotations(exit.cause.reasons[0] as Cause.Reason<unknown>),
+				Cause.reasonAnnotations(A.getUnsafe(exit.cause.reasons, 0)),
 				Cause.StackTrace,
 			);
 			const names: Array<string> = [];
@@ -401,7 +407,7 @@ describe("CliRuntime: the default failure path", () => {
 	const capturing = () => {
 		const err: string[] = [];
 		const out: string[] = [];
-		const double: Console.Console = Object.assign(Object.create(console) as Console.Console, {
+		const double: Console.Console = Object.assign(Object.create(console), {
 			log: (...args: ReadonlyArray<unknown>) => out.push(args.map(String).join(" ")),
 			error: (...args: ReadonlyArray<unknown>) => err.push(args.map(String).join(" ")),
 		});
@@ -472,7 +478,7 @@ describe("CliRuntime: the default failure path", () => {
 			// V8 names the thunk's own frame by Effect's method alias; the frame is still the program's.
 			const first = /\((.*CliFailure\.test\.ts:\d+:\d+)\)/.exec(thrown?.stack ?? "")?.[1];
 			assert.isDefined(first, "control: V8 put the thunk's frame on the stack");
-			assert.include(text, first as string);
+			assert.include(text, first);
 		}),
 	);
 
@@ -630,8 +636,6 @@ describe("CliRuntime.defaultRender", () => {
 		]);
 	});
 });
-
-void ({} as RenderContext);
 
 describe("CliFailure.toDoc: third-party frames (A3)", () => {
 	const THIRD_PARTY = [

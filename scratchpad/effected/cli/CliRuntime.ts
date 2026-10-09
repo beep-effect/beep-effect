@@ -1,4 +1,3 @@
-import type { Audience, TerminalEnv } from "../env/index.ts";
 import { CommandNeutralizer } from "../github-commands/index.ts";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
@@ -380,7 +379,7 @@ export class CliRuntime {
 				Effect.catchCause((cause: Cause.Cause<E>): Effect.Effect<A, Error> => {
 					// An interrupt is not a failure anyone wants rendered, and the default
 					// teardown already maps an interrupt-only cause to 130.
-					if (Cause.hasInterruptsOnly(cause)) return Effect.failCause(cause as Cause.Cause<never>);
+					if (Cause.hasInterruptsOnly(cause)) return Effect.failCause(Cause.fromReasons(cause.reasons.filter(Cause.isInterruptReason)));
 
 					const error = Cause.squash(cause);
 
@@ -533,11 +532,7 @@ export class CliRuntime {
 				: // The logger needs Audience and TerminalEnv, so it is built over the env layer; the same layer is provided
 					// again inside failure reporting, where a failure to build it is reported. If it cannot be built here, fall
 					// back to the plain CliLogger so that report has a logger.
-					(
-						CliLog.layer as (
-							options: CliLogOptions | CliLogFileOptions,
-						) => Layer.Layer<never, never, Audience | TerminalEnv | FileSystem.FileSystem | Path.Path>
-					)(envLog).pipe(
+					("file" in envLog ? CliLog.layer(envLog) : CliLog.layer(envLog)).pipe(
 						Layer.provide(env),
 						// The platform and env builds log too (an invalid audience override warns, a platform may log while it
 						// builds): build them UNDER a CliLogger, never beside it, or those lines go through Effect's default

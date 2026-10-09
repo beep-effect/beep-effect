@@ -1,4 +1,5 @@
 // @effect-diagnostics strictEffectProvide:skip-file
+import * as R from "effect/Record";
 import { assert, describe, it } from "@effect/vitest";
 import type { ColorLevel } from "../../../effected/env/index.ts";
 import type * as Scope from "effect/Scope";
@@ -50,7 +51,7 @@ const consumerText: Effect.Effect<string> = Effect.map(loadInk, ({ ink, react })
 describe("the Ink bridge", () => {
 	it("maps each colour level to its chalk level", () => {
 		const levels: Record<ColorLevel, ChalkLevel> = { none: 0, basic: 1, "256": 2, truecolor: 3 };
-		for (const [colour, level] of Object.entries(levels)) assert.strictEqual(levelOf(colour as ColorLevel), level);
+		for (const [colour, level] of R.toEntries(levels)) assert.strictEqual(levelOf(colour), level);
 	});
 
 	it.effect("control: with Ink's chalk at level 3, as FORCE_COLOR=3 leaves it, a raw red bold Text carries SGR", () =>

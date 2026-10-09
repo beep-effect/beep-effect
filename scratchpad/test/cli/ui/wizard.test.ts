@@ -50,8 +50,8 @@ const init = Command.make("init", {}, () =>
 		const profile = yield* CliUi.prompt(
 			Select.screen({
 				message: "Profile",
-				choices: PROFILES.map((value) => ({ label: value, value: value as string })),
-				initial: PROFILES.indexOf(found.profile as (typeof PROFILES)[number]),
+				choices: PROFILES.map((value) => ({ label: value, value: value })),
+				initial: PROFILES.findIndex((profile) => profile === found.profile),
 			}),
 			{ otherwise: found.profile },
 		);
@@ -61,8 +61,8 @@ const init = Command.make("init", {}, () =>
 		const location = yield* CliUi.prompt(
 			Select.screen({
 				message: "Config location",
-				choices: LOCATIONS.map((value) => ({ label: value, value: value as string })),
-				initial: LOCATIONS.indexOf(found.location as (typeof LOCATIONS)[number]),
+				choices: LOCATIONS.map((value) => ({ label: value, value: value })),
+				initial: LOCATIONS.findIndex((location) => location === found.location),
 			}),
 			{ otherwise: found.location },
 		);

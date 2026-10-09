@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";
@@ -24,7 +25,7 @@ const PATH = "/logs/diagnostics.ndjson";
 const capturing = () => {
 	const out: string[] = [];
 	const err: string[] = [];
-	const double: Console.Console = Object.assign(Object.create(console) as Console.Console, {
+	const double: Console.Console = Object.assign(Object.create(console), {
 		log: (...args: ReadonlyArray<unknown>) => out.push(args.map(String).join(" ")),
 		error: (...args: ReadonlyArray<unknown>) => err.push(args.map(String).join(" ")),
 	});
@@ -175,7 +176,7 @@ describe("CliLog.layer file option", () => {
 		const failureLines = (err: ReadonlyArray<string>) => {
 			const at = err.findIndex((entry) => entry.startsWith("diagnostics log file"));
 			assert.isAtLeast(at, 0, `control: the failure line was printed\n${err.join("\n")}`);
-			return lines([err[at] as string]);
+			return lines([A.getUnsafe(err, at)]);
 		};
 
 		for (const ci of ["github-actions", undefined] as const) {

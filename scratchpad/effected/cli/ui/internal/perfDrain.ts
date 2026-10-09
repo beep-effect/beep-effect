@@ -34,6 +34,6 @@ export const resolveDrain = (mode: boolean | "auto"): Effect.Effect<boolean> =>
  */
 export const drainPerformance = (drain: boolean): void => {
 	if (!drain) return;
-	const timing = globalThis.performance as Partial<Pick<Performance, "clearMeasures">> | undefined;
+	const timing = globalThis.performance;
 	timing?.clearMeasures?.();
 };

@@ -167,7 +167,7 @@ const keyOfCharacter = (character: string): UiKey | undefined => {
 };
 
 /** Ink's key flags for plain typed text: none set. */
-const PLAIN = {
+const PLAIN: Parameters<typeof UiKey.fromInk>[1] = {
 	upArrow: false,
 	downArrow: false,
 	leftArrow: false,
@@ -188,7 +188,7 @@ const PLAIN = {
 	hyper: false,
 	capsLock: false,
 	numLock: false,
-} as Parameters<typeof UiKey.fromInk>[1];
+};
 
 /**
  * The keys in one Ink input. Ink hands text read in one go to `useInput` as one string with no key flag (`"yy"`, or

@@ -53,5 +53,5 @@ export class ConfigIssueRenderer {
 	 * reason a program dies.
 	 */
 	static readonly render = (error: ConfigValidationError): ReadonlyArray<string> =>
-		formatIssue((error as { readonly issue?: unknown } | null)?.issue);
+		formatIssue(error?.issue);
 }

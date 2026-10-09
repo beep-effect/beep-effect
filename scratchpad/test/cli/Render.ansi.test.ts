@@ -1,5 +1,6 @@
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
+import * as R from "effect/Record";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -169,8 +170,8 @@ describe("Render.ansi: which token paints what (decoded, never raw bytes)", () =
 				warning: "warning",
 				caution: "error",
 			} as const;
-			for (const [kind, token] of Object.entries(expected)) {
-				const [line] = yield* tokensOf([Doc.callout(kind as keyof typeof expected, [Doc.paragraph("text")])]);
+			for (const [kind, token] of R.toEntries(expected)) {
+				const [line] = yield* tokensOf([Doc.callout(kind, [Doc.paragraph("text")])]);
 				assert.deepStrictEqual(line, [
 					[token, `${kind.toUpperCase()}:`],
 					[undefined, " text"],

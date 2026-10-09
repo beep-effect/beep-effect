@@ -138,7 +138,7 @@ export const capturing = (): { readonly console: Console.Console; readonly lines
 	const keep = (...args: ReadonlyArray<unknown>): void => {
 		lines.push(args.map(String).join(" "));
 	};
-	const console = Object.assign(Object.create(globalThis.console) as Console.Console, {
+	const console = Object.assign(Object.create(globalThis.console), {
 		log: keep,
 		info: keep,
 		warn: keep,

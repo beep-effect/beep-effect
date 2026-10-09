@@ -65,7 +65,7 @@ describe("CliUi.map", () => {
 			yield* handle.press("escape");
 			const error = yield* Effect.flip(handle.result);
 			assert.instanceOf(error, Cancelled);
-			assert.strictEqual((error as Cancelled).reason, "escape");
+			assert.strictEqual(error.reason, "escape");
 		}).pipe(Effect.scoped),
 	);
 

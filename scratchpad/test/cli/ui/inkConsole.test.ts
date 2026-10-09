@@ -52,29 +52,29 @@ const recordingConsole = (): { readonly console: Console.Console; readonly calls
 	const record = (name: string) => (): void => {
 		calls.push(name);
 	};
-	const names = [
-		"assert",
-		"clear",
-		"count",
-		"countReset",
-		"debug",
-		"dir",
-		"dirxml",
-		"error",
-		"group",
-		"groupCollapsed",
-		"groupEnd",
-		"info",
-		"log",
-		"table",
-		"time",
-		"timeEnd",
-		"timeLog",
-		"trace",
-		"warn",
-	];
+
 	return {
-		console: Object.fromEntries(names.map((name) => [name, record(name)])) as unknown as Console.Console,
+		console: {
+			assert: record("assert"),
+			clear: record("clear"),
+			count: record("count"),
+			countReset: record("countReset"),
+			debug: record("debug"),
+			dir: record("dir"),
+			dirxml: record("dirxml"),
+			error: record("error"),
+			group: record("group"),
+			groupCollapsed: record("groupCollapsed"),
+			groupEnd: record("groupEnd"),
+			info: record("info"),
+			log: record("log"),
+			table: record("table"),
+			time: record("time"),
+			timeEnd: record("timeEnd"),
+			timeLog: record("timeLog"),
+			trace: record("trace"),
+			warn: record("warn"),
+		},
 		calls,
 	};
 };

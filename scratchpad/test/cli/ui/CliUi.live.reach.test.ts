@@ -17,7 +17,7 @@ import type { LiveOptions } from "../../../effected/cli/ui.ts";
 import { CliUi, UiStreams } from "../../../effected/cli/ui.ts";
 import type { SyncState } from "../fixtures/live-view.ts";
 
-const { loads } = vi.hoisted(() => ({ loads: [] as Array<string> }));
+const { loads } = vi.hoisted(() => ({ loads: Array<string>() }));
 vi.mock("ink", async (importOriginal) => {
 	loads.push("ink");
 	return await importOriginal();
@@ -27,7 +27,7 @@ vi.mock("react", async (importOriginal) => {
 	return await importOriginal();
 });
 
-const viewLoads = (): number => (globalThis as { liveViewLoads?: number }).liveViewLoads ?? 0;
+const viewLoads = (): number => globalThis.liveViewLoads ?? 0;
 
 type Ev = "start" | "item" | "end";
 
@@ -58,7 +58,7 @@ const tool = (withFinal: boolean) =>
 const run = Effect.fn("run")(function* (argv: ReadonlyArray<string>, withFinal: boolean) {
 		const fake = makeFakeStreams({ columns: 80, rows: 24 });
 		const help: Array<string> = [];
-		const console: Console.Console = Object.assign(Object.create(globalThis.console) as Console.Console, {
+		const console: Console.Console = Object.assign(Object.create(globalThis.console), {
 			log: (...args: ReadonlyArray<unknown>) => help.push(args.map(String).join(" ")),
 		});
 		yield* Command.runWith(tool(withFinal), { version: "1.0.0" })(argv).pipe(

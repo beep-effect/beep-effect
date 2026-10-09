@@ -412,7 +412,7 @@ const agentReduce = (state: AgentState, event: AgentEvent): AgentState => {
 };
 const agentView = (events: ReadonlyArray<AgentEvent>, begins?: LiveOptions<AgentEvent, AgentState>["begins"]) => ({
 	events: Stream.fromIterable(events).pipe(Stream.rechunk(1)),
-	initial: { phase: "idle", seen: 0 } as AgentState,
+	initial: { phase: "idle", seen: 0 } satisfies AgentState,
 	reduce: agentReduce,
 	render: (state: AgentState) => createElement(Text, null, `${state.phase} after ${state.seen}`),
 	isStart: (event: AgentEvent) => event._tag === "RunStarted",

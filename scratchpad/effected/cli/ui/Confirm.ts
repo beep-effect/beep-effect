@@ -140,10 +140,13 @@ const step = <K extends string>(state: ConfirmState<K>, action: ConfirmAction): 
 	}
 };
 
-const result = <K extends string>(state: ConfirmState<K>): ConfirmResult<K> => ({
-	confirmed: state.confirmed,
-	toggles: Object.fromEntries(state.toggles.map((toggle) => [toggle.key, toggle.value])) as Partial<Record<K, boolean>>,
-});
+const result = <K extends string>(state: ConfirmState<K>): ConfirmResult<K> => {
+	const toggles: Partial<Record<K, boolean>> = {};
+	for (const toggle of state.toggles) {
+		Object.defineProperty(toggles, toggle.key, { value: toggle.value, enumerable: true, configurable: true, writable: true });
+	}
+	return { confirmed: state.confirmed, toggles };
+};
 
 /** The bindings; with no toggles the row and toggle keys stay bound (they do nothing) but leave the help line. */
 const bindings = (toggles: boolean): KeyTable<ConfirmAction> =>
@@ -258,7 +261,7 @@ export class Confirm {
 			else setState((current) => step(current, action));
 		});
 		const toggleRows: ReadonlyArray<ViewportRow> = state.toggles.map((toggle) => ({ _tag: "Item", key: toggle.key }));
-		const numberOf = new Map(state.toggles.map((toggle, index) => [toggle.key as string, index]));
+		const numberOf: ReadonlyMap<string, number> = new Map(state.toggles.map((toggle, index) => [toggle.key, index]));
 		const ellipsis = { ellipsis: glyphs.ellipsis };
 		const lead = state.row === 0 ? glyphs.arrow : " ".repeat(Fmt.width(glyphs.arrow));
 		const answer = (label: string, chosen: boolean): ReactElement =>

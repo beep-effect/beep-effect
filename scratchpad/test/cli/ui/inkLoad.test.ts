@@ -4,7 +4,7 @@ import * as Effect from "effect/Effect";
 import { vi } from "vitest";
 
 // Each factory records that its package was loaded, then hands back the real module.
-const { loads } = vi.hoisted(() => ({ loads: [] as Array<string> }));
+const { loads } = vi.hoisted(() => ({ loads: Array<string>() }));
 vi.mock("ink", async (importOriginal) => {
 	loads.push("ink");
 	return await importOriginal();

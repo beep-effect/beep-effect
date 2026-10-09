@@ -17,7 +17,7 @@ const Json = S.fromJsonString(S.Unknown);
 const ESC = String.fromCharCode(0x1b);
 
 const base = {
-	initial: { run: 0, last: "idle", seen: [] } as State,
+	initial: { run: 0, last: "idle", seen: [] } satisfies State,
 	reduce,
 	render: frameOf,
 	isStart: (event: Ev) => event._tag === "Start",
@@ -33,7 +33,7 @@ const twoRuns = [Start, tick(1), End, Start, tick(2), End];
 /** A Console that keeps every line, where the default logger writes a warning. */
 const capturing = () => {
 	const lines: Array<string> = [];
-	const double: Console.Console = Object.assign(Object.create(console) as Console.Console, {
+	const double: Console.Console = Object.assign(Object.create(console), {
 		log: (...args: ReadonlyArray<unknown>) => lines.push(args.map(String).join(" ")),
 		error: (...args: ReadonlyArray<unknown>) => lines.push(args.map(String).join(" ")),
 		warn: (...args: ReadonlyArray<unknown>) => lines.push(args.map(String).join(" ")),

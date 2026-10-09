@@ -19,7 +19,7 @@ const ZWSP = String.fromCodePoint(0x200b);
 const capturing = () => {
 	const out: string[] = [];
 	const err: string[] = [];
-	const double: Console.Console = Object.assign(Object.create(console) as Console.Console, {
+	const double: Console.Console = Object.assign(Object.create(console), {
 		log: (...args: ReadonlyArray<unknown>) => out.push(args.map(String).join(" ")),
 		error: (...args: ReadonlyArray<unknown>) => err.push(args.map(String).join(" ")),
 	});
@@ -50,7 +50,7 @@ const diagnostics = Effect.fn("diagnostics")(function* (program: Effect.Effect<v
 			Effect.provide(
 				CliLog.layer({ format, level: "Debug", plainLogger: false }).pipe(
 					Layer.provide(Layer.mergeAll(terminal, Audience.layerTest(audience))),
-				) as Layer.Layer<never>,
+				),
 			),
 			Effect.provideService(Console.Console, double),
 		);
@@ -166,7 +166,7 @@ describe("CliLog's pretty line sanitises and neutralizes", () => {
 });
 
 describe("CliLog's NDJSON: a runner can read ##[ out of a JSON string too", () => {
-	const parsed = (line: string) => JSON.parse(line) as { message: unknown };
+	const parsed = (line: string) => Result.getOrThrow(S.decodeResult(MessageRecord)(line));
 
 	it.effect("under Actions no NDJSON line is a command, and the message decodes back to exactly what was logged", () =>
 		Effect.gen(function* () {
@@ -198,3 +198,5 @@ describe("CliLog's NDJSON: a runner can read ##[ out of a JSON string too", () =
 		}),
 	);
 });
+
+const MessageRecord = S.fromJsonString(S.Struct({ message: S.Unknown }));

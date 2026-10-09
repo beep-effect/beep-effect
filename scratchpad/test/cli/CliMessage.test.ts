@@ -14,7 +14,7 @@ import { commandLines } from "./helpers/runnerCommands.ts";
 const capturing = () => {
 	const out: string[] = [];
 	const err: string[] = [];
-	const console_: Console.Console = Object.assign(Object.create(console) as Console.Console, {
+	const console_: Console.Console = Object.assign(Object.create(console), {
 		log: (...args: ReadonlyArray<unknown>) => out.push(args.map(String).join(" ")),
 		error: (...args: ReadonlyArray<unknown>) => err.push(args.map(String).join(" ")),
 	});

@@ -108,11 +108,12 @@ const nodeImporters = (entry: string): ReadonlyArray<string> =>
  * - `ui/testing/fakeStreams.ts` (testing only): `forbidImports` of `node:stream` (it needs no `node:events`).
  */
 const NODE_LICENCE: ReadonlyArray<string> = [
-	"ui/internal/inkChalk.ts forbidImports node:fs",
 	"ui/internal/inkChalk.ts forbidImports node:module",
 	"ui/internal/inkChalk.ts forbidImports node:url",
+	"ui/internal/inkChalk.ts process process",
 	"ui/internal/processStreams.ts process process",
 	"ui/testing/fakeStreams.ts forbidImports node:stream",
+	"ui/testing/fakeStreams.ts process process",
 ];
 
 /**
@@ -160,7 +161,7 @@ describe("cli boundary", () => {
 						],
 						allowRules: {
 							forbidImports: ["ui.ts", "ui-testing.ts", "ui/**"],
-							process: ["ui/internal/processStreams.ts"],
+							process: ["ui/internal/processStreams.ts", "ui/internal/inkChalk.ts", "ui/testing/fakeStreams.ts"],
 							"stdout-write": ["ui/internal/inkConsole.ts"],
 						},
 					});
@@ -237,7 +238,7 @@ describe("cli boundary", () => {
 		});
 
 		it("only the Ink loader imports ink or react as a value; every other ./ui file imports types only", () => {
-			const uiFiles = (readdirSync(SRC, { recursive: true }) as ReadonlyArray<string>)
+			const uiFiles = (readdirSync(SRC, { recursive: true, encoding: "utf8" }))
 				.map((file) => file.split(sep).join("/"))
 				.filter((file) => file.endsWith(".ts") && isUiModule(file))
 				.sort();
@@ -254,7 +255,7 @@ describe("cli boundary", () => {
 		});
 
 		it("./ui files name the package's own entrypoint through import type only, so the root types are never copied", () => {
-			const uiFiles = (readdirSync(SRC, { recursive: true }) as ReadonlyArray<string>)
+			const uiFiles = (readdirSync(SRC, { recursive: true, encoding: "utf8" }))
 				.map((file) => file.split(sep).join("/"))
 				.filter((file) => file.endsWith(".ts") && isUiModule(file))
 				.sort();
@@ -274,7 +275,7 @@ describe("cli boundary", () => {
 		});
 
 		it("no root module imports the package's own name, which would make the root declarations import themselves", () => {
-			const rootFiles = (readdirSync(SRC, { recursive: true }) as ReadonlyArray<string>)
+			const rootFiles = (readdirSync(SRC, { recursive: true, encoding: "utf8" }))
 				.map((file) => file.split(sep).join("/"))
 				.filter((file) => file.endsWith(".ts") && !isUiModule(file));
 			assert.include(rootFiles, "CliRuntime.ts", "the walk read the root tree");

@@ -94,7 +94,7 @@ describe("DocView", () => {
 			const frame = yield* handle.frame;
 			assert.isDefined(seen);
 			const expected = CliUiTest.styled(
-				Render.ansi(sample, contextFrom(seen?.theme as StreamTheme, seen?.columns ?? 0)),
+				Render.ansi(sample, contextFrom(seen.theme, seen?.columns ?? 0)),
 			);
 			assert.strictEqual(trimmed(frame), trimmed(expected));
 			assert.include(frame, "[success]", "control: the marker palette painted a token");
@@ -190,7 +190,7 @@ describe("DocView inside a live view (okf/decisions/live-height-clamp-not-width.
 		Doc.lines(Array.from({ length: 200 }, (_, index) => [Doc.text(`row ${index}`)])),
 	];
 	const viewOf = (render: (state: State, frame: number) => ReactElement) => ({
-		initial: { run: 0, last: "idle", seen: [] } as State,
+		initial: { run: 0, last: "idle", seen: [] } satisfies State,
 		reduce,
 		render,
 		isStart: (event: Ev) => event._tag === "Start",

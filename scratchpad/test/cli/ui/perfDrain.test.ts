@@ -12,7 +12,7 @@ import { makeFakeStreams } from "../../../effected/cli/ui/testing/fakeStreams.ts
 // worker's does not, so without this the leak never happens here and the control below could not fail. Installed
 // before Ink, and so React, is imported.
 vi.hoisted(() => {
-	const target = console as { timeStamp?: (label?: string) => void };
+	const target = console;
 	if (typeof target.timeStamp !== "function") target.timeStamp = () => undefined;
 });
 

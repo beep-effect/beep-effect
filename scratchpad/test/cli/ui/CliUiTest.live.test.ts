@@ -13,7 +13,7 @@ import { End, Start, capturing, reduce, tick, warningsIn } from "../helpers/live
 // React's development build records user-timing entries only when `console.timeStamp` is a function, checked once as
 // it loads; a Vitest worker's console lacks it, so the drain behaviour below could not fail without this.
 vi.hoisted(() => {
-	const target = console as { timeStamp?: (label?: string) => void };
+	const target = console;
 	if (typeof target.timeStamp !== "function") target.timeStamp = () => undefined;
 });
 
@@ -29,7 +29,7 @@ const withFrame = (state: State, frame: number): ReactElement =>
 	);
 
 const viewOptions = {
-	initial: { run: 0, last: "idle", seen: [] } as State,
+	initial: { run: 0, last: "idle", seen: [] } satisfies State,
 	reduce,
 	render: withFrame,
 	isStart: (event: Ev) => event._tag === "Start",

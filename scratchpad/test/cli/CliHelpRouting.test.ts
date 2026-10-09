@@ -1,5 +1,6 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { NodeServices } from "@effect/platform-node";
+import * as Context from "effect/Context";
 import { assert, describe, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
@@ -25,7 +26,7 @@ const capturing = () => {
 		(stream === "out" ? out : err).push(line);
 		seq.push([stream, line]);
 	};
-	const double: Console.Console = Object.assign(Object.create(console) as Console.Console, {
+	const double: Console.Console = Object.assign(Object.create(console), {
 		log: (...args: ReadonlyArray<unknown>) => record("out", args.map(String).join(" ")),
 		error: (...args: ReadonlyArray<unknown>) => record("err", args.map(String).join(" ")),
 		warn: (...args: ReadonlyArray<unknown>) => record("err", `warn:${args.map(String).join(" ")}`),
@@ -164,7 +165,7 @@ describe("CliRuntime.main helpOnUsageError", () => {
 				const { double, seq } = capturing();
 				const program = Effect.gen(function* () {
 					const formatter = yield* CliOutput.Formatter;
-					const help = formatter.formatHelpDoc({ description: "", usage: "USAGE x", flags: [], args: [] } as never);
+					const help = formatter.formatHelpDoc({ description: "", usage: "USAGE x", flags: [], args: [], annotations: Context.empty() });
 					const errors = formatter.formatErrors([CliError.UserError.make({ cause: "bad flag" })]);
 					yield* body({ help, errors });
 				});

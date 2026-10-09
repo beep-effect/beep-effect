@@ -41,9 +41,7 @@ const throwingThunk: Screen<never> = () => {
  * A thunk compiled with classic JSX where `React` is not in scope: `<Text>x</Text>` became `React.createElement(Text,
  * null, "x")`, and evaluating it throws a `ReferenceError`, as vitest-agent's tsx repro does.
  */
-const classicJsx = new Function("Text", 'return React.createElement(Text, null, "x");') as (
-	text: unknown,
-) => ReactElement;
+const classicJsx = new Function("Text", 'return React.createElement(Text, null, "x");');
 const classicJsxThunk: Screen<never> = () => classicJsx(Text);
 
 /** Every read and send of a screen, each run to its exit. */

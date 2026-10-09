@@ -55,7 +55,9 @@ describe("CliUiTest.session", () => {
 			const session = yield* CliUiTest.session();
 			const exit = yield* Effect.exit(session.next({ contains: "Profile" }));
 			if (Exit.isFailure(exit)) {
-				const message = String((Cause.squash(exit.cause) as Error).message);
+				const defect = Cause.squash(exit.cause);
+				assert.instanceOf(defect, Error);
+				const message = String(defect.message);
 				assert.include(message, "screen 1");
 				assert.include(message, '"Profile"');
 				assert.include(message, "0 mounted");
@@ -72,7 +74,9 @@ describe("CliUiTest.session", () => {
 			yield* Effect.forkScoped(CliUi.run(profile).pipe(Effect.provide(session.layer)));
 			const exit = yield* Effect.exit(session.next({ contains: "Config location" }));
 			if (Exit.isFailure(exit)) {
-				const message = String((Cause.squash(exit.cause) as Error).message);
+				const defect = Cause.squash(exit.cause);
+				assert.instanceOf(defect, Error);
+				const message = String(defect.message);
 				assert.include(message, '"Config location"');
 				assert.include(message, "1 mounted");
 			} else {
@@ -116,7 +120,9 @@ describe("CliUiTest.session carry-ins", () => {
 			for (const send of [first.press("down"), first.type("x"), first.chunk("down", "up")]) {
 				const exit = yield* Effect.exit(send);
 				if (Exit.isFailure(exit)) {
-					assert.include(String((Cause.squash(exit.cause) as Error).message), "has ended");
+					const defect = Cause.squash(exit.cause);
+					assert.instanceOf(defect, Error);
+					assert.include(String(defect.message), "has ended");
 				} else {
 					assert.fail("expected a defect: the screen had ended");
 				}

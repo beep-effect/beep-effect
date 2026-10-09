@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import type { ReactElement } from "react";
 import { inkModules } from "./internal/ink.ts";
 import { KeyTable } from "./KeyTable.ts";
@@ -242,7 +243,7 @@ export class Viewport {
 			ink.Box,
 			{ flexDirection: "column", width: size.columns },
 			...lines.map((index) => {
-				const row = props.rows[index] as ViewportRow;
+				const row = A.getUnsafe(props.rows, index);
 				return react.createElement(
 					ink.Box,
 					{

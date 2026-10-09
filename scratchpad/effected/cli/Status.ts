@@ -48,10 +48,10 @@ export type CoreStatusName = "success" | "failure" | "warning" | "info" | "skip"
  * @public
  */
 export class Status<Names extends string> {
-	private readonly defs: Readonly<Record<Names, StatusDef>>;
+	private readonly defs: Readonly<Record<Names | CoreStatusName, StatusDef>>;
 
 	// An explicit field, not a parameter property, so the source runs under Node's plain type stripping.
-	private constructor(defs: Readonly<Record<Names, StatusDef>>) {
+	private constructor(defs: Readonly<Record<Names | CoreStatusName, StatusDef>>) {
 		this.defs = defs;
 	}
 
@@ -85,9 +85,7 @@ export class Status<Names extends string> {
 	 * @param extra - the statuses to add, by name
 	 */
 	extend<const Extra extends Record<string, StatusDef>>(extra: Extra): Status<Names | (keyof Extra & string)> {
-		return new Status<Names | (keyof Extra & string)>({ ...this.defs, ...extra } as Readonly<
-			Record<Names | (keyof Extra & string), StatusDef>
-		>);
+		return new Status<Names | (keyof Extra & string)>({ ...this.defs, ...extra });
 	}
 
 	/**
@@ -99,7 +97,7 @@ export class Status<Names extends string> {
 	 *
 	 * @param name - a name in this vocabulary
 	 */
-	def(name: Names): StatusDef {
+	def(name: Names | CoreStatusName): StatusDef {
 		if (!Object.hasOwn(this.defs, name)) {
 			throw new Error(`Unknown status "${name}"; this vocabulary has: ${Object.keys(this.defs).join(", ")}`);
 		}

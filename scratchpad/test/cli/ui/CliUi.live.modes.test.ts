@@ -120,7 +120,7 @@ describe("CliUi.live: a render that fails degrades the run, unmounting before it
 			const log = capturing();
 			const timeline: Array<string> = [];
 			const keep = log.console.warn;
-			const console = Object.assign(Object.create(log.console) as Console.Console, {
+			const console: Console.Console = Object.assign(Object.create(log.console), {
 				log: (...args: ReadonlyArray<unknown>) => {
 					timeline.push("log");
 					keep(...args);
@@ -223,7 +223,7 @@ describe("CliUi.live: a render that fails degrades the run, unmounting before it
 				const log = capturing();
 				const timeline: Array<string> = [];
 				const keep = log.console.warn;
-				const console = Object.assign(Object.create(log.console) as Console.Console, {
+				const console: Console.Console = Object.assign(Object.create(log.console), {
 					log: (...args: ReadonlyArray<unknown>) => {
 						timeline.push("log");
 						keep(...args);

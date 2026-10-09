@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import { assert, describe, it } from "@effect/vitest";
 import { WorkflowCommand } from "../../effected/github-commands/index.ts";
 import type { GithubAnnotationProperties } from "../../effected/cli/index.ts";
@@ -34,7 +35,7 @@ const decode = (command: string) => {
 		const at = pair.indexOf("=");
 		properties[pair.slice(0, at)] = unescapeProperty(pair.slice(at + 1));
 	}
-	return { level: match[1], properties, message: unescapeData(match[3] as string) };
+	return { level: match[1], properties, message: unescapeData(A.getUnsafe(match, 3)) };
 };
 
 const ALPHABET = ["%", "\r", "\n", ":", ",", "=", "x", " ", "2", "5", "A", "0", "D", "C", "3"];

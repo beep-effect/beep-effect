@@ -6,7 +6,7 @@ import { TerminalEnv } from "../../effected/env/index.ts";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import { Prompt } from "effect/cli";
-import type { Style, TokenName } from "../../effected/cli/index.ts";
+import type { NamedColor, Style, TokenName } from "../../effected/cli/index.ts";
 import { CliTheme, Status, Token } from "../../effected/cli/index.ts";
 
 const Json = S.fromJsonString(S.Unknown);
@@ -188,7 +188,7 @@ describe("CliTheme.forStream", () => {
 });
 
 /** The SGR parameters of a painted token, decoded without the kit's own colour table: what a terminal would show. */
-const NAMES: Readonly<Record<number, string>> = {
+const NAMES: Readonly<Record<number, NamedColor | undefined>> = {
 	30: "black",
 	31: "red",
 	32: "green",
@@ -210,7 +210,7 @@ const NAMES: Readonly<Record<number, string>> = {
 const ESC = String.fromCharCode(0x1b);
 
 const decode = (painted: string): Style => {
-	const style: { fg?: string; bold?: boolean; dim?: boolean; italic?: boolean; underline?: boolean } = {};
+	const style: { -readonly [K in keyof Style]: Style[K] } = {};
 	const opens = [...painted.matchAll(new RegExp(`${ESC}\\[([0-9;]+)m`, "g"))].map((match) => match[1] ?? "");
 	for (const params of opens) {
 		const parts = params.split(";").map(Number);
@@ -226,7 +226,7 @@ const decode = (painted: string): Style => {
 			else if (NAMES[code] !== undefined) style.fg = NAMES[code];
 		}
 	}
-	return style as Style;
+	return style;
 };
 
 const tokenNames: ReadonlyArray<TokenName> = [

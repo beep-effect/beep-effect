@@ -1,7 +1,7 @@
-// Ink requires Node stream events, raw-mode methods and write-callback barriers in these terminal fakes.
-// @effect-diagnostics nodeBuiltinImport:skip-file
-import { PassThrough, Writable } from "node:stream";
 import type { UiStreamsShape } from "../UiStreams.ts";
+
+// Effect Stream cannot provide Ink's Node stream events, raw-mode methods and write-callback barriers.
+const { PassThrough, Writable } = process.getBuiltinModule("node:stream");
 
 /**
  * Options for {@link makeFakeStreams}.
@@ -44,7 +44,7 @@ const capture = (
 	rows: number,
 	both: Array<string>,
 	onWrite?: (chunk: string) => void,
-): { readonly stream: Writable; readonly text: () => string } => {
+): { readonly stream: import("node:stream").Writable; readonly text: () => string } => {
 	const chunks: Array<string> = [];
 	const stream = new Writable({
 		write(chunk: Buffer | string, _encoding, callback) {
@@ -91,8 +91,8 @@ export const makeFakeStreams = (options: FakeStreamsOptions = {}): FakeStreams =
 		// The fakes carry every member Ink reads; Node's tty stream types also demand a file descriptor they cannot have.
 		streams: {
 			stdin: stdin as unknown as NodeJS.ReadStream,
-			stdout: stdout.stream as unknown as NodeJS.WriteStream,
-			stderr: stderr.stream as unknown as NodeJS.WriteStream,
+			stdout: stdout.stream as NodeJS.WriteStream,
+			stderr: stderr.stream as NodeJS.WriteStream,
 		},
 		rawModes,
 		stdout: stdout.text,

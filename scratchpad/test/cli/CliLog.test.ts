@@ -30,7 +30,7 @@ const ENV = "VITEST_REPORTER_LOG_LEVEL";
 const capturing = () => {
 	const out: string[] = [];
 	const err: string[] = [];
-	const double: Console.Console = Object.assign(Object.create(console) as Console.Console, {
+	const double: Console.Console = Object.assign(Object.create(console), {
 		log: (...args: ReadonlyArray<unknown>) => out.push(args.map(String).join(" ")),
 		error: (...args: ReadonlyArray<unknown>) => err.push(args.map(String).join(" ")),
 	});
@@ -572,7 +572,7 @@ type Same<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 
 
 describe("CliLog.layer requirements per overload", () => {
 	it("each overload's R, and an optional file keeps FileSystem and Path in R", () => {
-		const maybe = undefined as CliLogFile | undefined;
+		const maybe: CliLogFile | undefined = undefined;
 		type Fs = FileSystem.FileSystem | Path.Path;
 		const checks: ReadonlyArray<boolean> = [
 			true satisfies Same<RIn<ReturnType<typeof jsonNoFile>>, never>,
@@ -590,11 +590,11 @@ describe("CliLog.layer requirements per overload", () => {
 
 const jsonNoFile = () => CliLog.layer({ format: "json" });
 const jsonFile = CliLog.layer({ format: "json", file: { path: "/x.ndjson" } });
-const jsonMaybe = () => CliLog.layer({ format: "json", file: undefined as CliLogFile | undefined });
+const jsonMaybe = (file: CliLogFile | undefined = undefined) => CliLog.layer({ format: "json", file });
 const prettyNoFile = () => CliLog.layer({ format: "pretty" });
-const prettyMaybe = () => CliLog.layer({ format: "pretty", file: undefined as CliLogFile | undefined });
+const prettyMaybe = (file: CliLogFile | undefined = undefined) => CliLog.layer({ format: "pretty", file });
 const autoNoFile = () => CliLog.layer({});
-const autoMaybe = () => CliLog.layer({ file: undefined as CliLogFile | undefined });
+const autoMaybe = (file: CliLogFile | undefined = undefined) => CliLog.layer({ file });
 
 describe("CliLog.layer's own plain CliLogger neutralizes as its sink does", () => {
 	it.effect("with the default plainLogger, a host-built layer over Actions writes no command on either line", () =>

@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import type { Block, Document, Inline, LinkTarget } from "../Doc.ts";
 import { Fmt, sanitize } from "../Fmt.ts";
@@ -54,7 +55,7 @@ export const showsSuffix: {
 export const trimLine = (line: Line): Line => {
 	const out = [...line];
 	while (out.length > 0) {
-		const last = out[out.length - 1] as Span;
+		const last = A.getUnsafe(out, out.length - 1);
 		if (last.hold === true) break;
 		const trimmed = last.text.trimEnd();
 		if (trimmed === "") {
@@ -125,9 +126,9 @@ const shrink = (widths: Array<number>, limit: number): void => {
 	const total = (): number => widths.reduce((sum, w) => sum + w, 0) + gaps;
 	while (total() > limit) {
 		let widest = 0;
-		for (let i = 1; i < widths.length; i++) if ((widths[i] as number) > (widths[widest] as number)) widest = i;
+		for (let i = 1; i < widths.length; i++) if ((A.getUnsafe(widths, i)) > (A.getUnsafe(widths, widest))) widest = i;
 		if ((widths[widest] ?? 0) <= 1) return;
-		widths[widest] = (widths[widest] as number) - 1;
+		widths[widest] = (A.getUnsafe(widths, widest)) - 1;
 	}
 };
 
@@ -201,7 +202,7 @@ const tableLines = (
 		trimLine(
 			joinCells(
 				row.map((cell, index) => {
-					const columnWidth = widths[index] as number;
+					const columnWidth = A.getUnsafe(widths, index);
 					const cut = widthOf(cell) > columnWidth ? truncateSpans(cell, columnWidth, walk.ctx.glyphs.ellipsis) : cell;
 					return pad(cut, columnWidth, block.columns[index]?.align ?? "left");
 				}),
@@ -222,7 +223,7 @@ const tableLines = (
 			trimLine(
 				joinCells(
 					row.map((cell, index) => {
-						const columnWidth = widths[index] as number;
+						const columnWidth = A.getUnsafe(widths, index);
 						const cut = widthOf(cell) > columnWidth ? truncateSpans(cell, columnWidth, walk.ctx.glyphs.ellipsis) : cell;
 						return pad(cut, columnWidth, block.columns[index]?.align ?? "left");
 					}),

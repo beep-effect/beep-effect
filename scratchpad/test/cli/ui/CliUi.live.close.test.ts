@@ -70,7 +70,8 @@ describe("LiveHandle.close with a subscription", () => {
 			handle = yield* liveOn(fake, options);
 			yield* PubSub.publish(pubsub, Start);
 			yield* until(() => closing !== undefined);
-			yield* Fiber.join(closing as unknown as Fiber.Fiber<void>).pipe(Effect.timeout("2 seconds"));
+			assert.isDefined(closing);
+			yield* Fiber.join(closing).pipe(Effect.timeout("2 seconds"));
 			assert.deepStrictEqual((yield* handle.state).seen, seenOf(7));
 			assert.deepStrictEqual(screenAfter(fake.stdout()), ["RUN 1", "tick 7"]);
 		}).pipe(Effect.scoped),

@@ -14,7 +14,7 @@ import { Cancelled, CliRuntime, NotInteractive } from "../../effected/cli/index.
 const capturing = () => {
 	const out: string[] = [];
 	const err: string[] = [];
-	const double: Console.Console = Object.assign(Object.create(console) as Console.Console, {
+	const double: Console.Console = Object.assign(Object.create(console), {
 		log: (...args: ReadonlyArray<unknown>) => out.push(args.map(String).join(" ")),
 		error: (...args: ReadonlyArray<unknown>) => err.push(args.map(String).join(" ")),
 	});
@@ -94,7 +94,7 @@ describe("a library that rewrites error.message cannot make these errors throw",
 	});
 
 	it("a wrapper that sets message on a copy of the error keeps working", () => {
-		const wrapped = Object.assign(Object.create(Cancelled.make({ reason: "interrupt" })), { message: "x" }) as Cancelled;
+		const wrapped: Cancelled = Object.assign(Object.create(Cancelled.make({ reason: "interrupt" })), { message: "x" });
 		assert.strictEqual(wrapped.message, "cancelled; nothing written");
 	});
 });

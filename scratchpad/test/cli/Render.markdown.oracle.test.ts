@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";
@@ -25,7 +26,7 @@ interface N {
 const render = (doc: ReadonlyArray<Block>, overrides: Partial<RenderContext> = {}) =>
 	Effect.map(contextOf(overrides), (ctx) => Render.markdown(doc, ctx));
 
-const parse = (markdown: string) => Effect.map(Markdown.parse(markdown), (root) => root as unknown as N);
+const parse = (markdown: string) => Effect.map(Markdown.parse(markdown), (root) => root);
 
 /** Render then parse: the tree of what a GFM reader sees. */
 const treeOf = (doc: ReadonlyArray<Block>, overrides: Partial<RenderContext> = {}) =>
@@ -45,7 +46,7 @@ const descendantTypes = (n: N): ReadonlyArray<string> => [n.type, ...kids(n).fla
 const tableOf = (root: N): N => {
 	const table = kids(root).find((c) => c.type === "table");
 	assert.isDefined(table, "the output has a table");
-	return table as N;
+	return table;
 };
 
 const cellTexts = (table: N): ReadonlyArray<ReadonlyArray<string>> =>
@@ -68,7 +69,7 @@ describe("Render.markdown: headings and paragraphs", () => {
 			const titles = ["C#", "a #", "a ##", "a\\#", "a\\\\#", "a\\ #", "#", "\\##", "x `#`#"];
 			const root = yield* treeOf([
 				...titles.map((title) => Doc.heading(2, title)),
-				Doc.section(titles[3] as string, [Doc.paragraph("body")]),
+				Doc.section(A.getUnsafe(titles, 3), [Doc.paragraph("body")]),
 			]);
 			const headings = kids(root).filter((n) => n.type === "heading");
 			assert.deepStrictEqual(headings.map(textOf), [...titles, titles[3]]);
@@ -123,13 +124,14 @@ describe("Render.markdown: headings and paragraphs", () => {
 				),
 			]);
 			const [p] = kids(root);
+			assert.isDefined(p);
 			assert.deepStrictEqual(
 				kids(p).map((c) => c.type),
 				["text", "inlineCode", "text", "link"],
 			);
 			assert.strictEqual(kids(p)[1]?.value, "pnpm test");
 			assert.strictEqual(kids(p)[3]?.url, "https://example.test/x");
-			assert.strictEqual(textOf(kids(p)[3] as N), "the docs");
+			assert.strictEqual(textOf(A.getUnsafe(kids(p), 3)), "the docs");
 		}),
 	);
 
@@ -139,8 +141,9 @@ describe("Render.markdown: headings and paragraphs", () => {
 			const root = yield* treeOf([Doc.paragraph(text)]);
 			assert.strictEqual(kids(root).length, 1);
 			const [p] = kids(root);
-			assert.deepStrictEqual([...new Set(descendantTypes(p as N))].sort(), ["paragraph", "text"]);
-			assert.strictEqual(textOf(p as N), text);
+			assert.isDefined(p);
+			assert.deepStrictEqual([...new Set(descendantTypes(p))].sort(), ["paragraph", "text"]);
+			assert.strictEqual(textOf(p), text);
 		}),
 	);
 
@@ -172,7 +175,7 @@ describe("Render.markdown: headings and paragraphs", () => {
 						["paragraph", "paragraph"],
 						Result.getOrThrow(S.encodeUnknownResult(Json)(line)),
 					);
-					assert.strictEqual(textOf(kids(root)[0] as N), line.trimStart(), Result.getOrThrow(S.encodeUnknownResult(Json)(line)));
+					assert.strictEqual(textOf(A.getUnsafe(kids(root), 0)), line.trimStart(), Result.getOrThrow(S.encodeUnknownResult(Json)(line)));
 				}
 				const two = yield* treeOf([Doc.paragraph("first\n---\nsecond\n===")]);
 				assert.deepStrictEqual(
@@ -207,14 +210,14 @@ describe("Render.markdown: headings and paragraphs", () => {
 					["paragraph"],
 					Result.getOrThrow(S.encodeUnknownResult(Json)(line)),
 				);
-				assert.strictEqual(textOf(kids(alone)[0] as N), line.trim(), Result.getOrThrow(S.encodeUnknownResult(Json)(line)));
+				assert.strictEqual(textOf(A.getUnsafe(kids(alone), 0)), line.trim(), Result.getOrThrow(S.encodeUnknownResult(Json)(line)));
 				const after = yield* treeOf([Doc.paragraph(`a\n${line}`)]);
 				assert.deepStrictEqual(
 					kids(after).map((n) => n.type),
 					["paragraph"],
 					`after: ${Result.getOrThrow(S.encodeUnknownResult(Json)(line))}`,
 				);
-				assert.strictEqual(textOf(kids(after)[0] as N), `a\n${line.trim()}`, `after: ${Result.getOrThrow(S.encodeUnknownResult(Json)(line))}`);
+				assert.strictEqual(textOf(A.getUnsafe(kids(after), 0)), `a\n${line.trim()}`, `after: ${Result.getOrThrow(S.encodeUnknownResult(Json)(line))}`);
 			}
 		}),
 	);
@@ -243,7 +246,7 @@ describe("Render.markdown: headings and paragraphs", () => {
 						failures.push(`${JSON.stringify(text)}: parse failed`);
 						return;
 					}
-					const node = parsed.success as unknown as N;
+					const node = parsed.success;
 					const ok = kids(node).length === 1 && kids(node)[0]?.type === "paragraph" && textOf(node) === expected;
 					if (!ok && failures.length < 5)
 						failures.push(`${JSON.stringify(text)} -> ${JSON.stringify(kids(node).map((n) => n.type))}`);
@@ -276,8 +279,9 @@ describe("Render.markdown: headings and paragraphs", () => {
 					"see https://evil.test/x and http://a.test and HTTPS://B.TEST and ftp://files.test/x and FTP://Y.TEST and git+ssh://h/r and www.evil.test and WWW.X.TEST now";
 				const root = yield* treeOf([Doc.paragraph(text)]);
 				const [p] = kids(root);
-				assert.deepStrictEqual([...new Set(descendantTypes(p as N))].sort(), ["paragraph", "text"]);
-				assert.strictEqual(textOf(p as N), text);
+			assert.isDefined(p);
+				assert.deepStrictEqual([...new Set(descendantTypes(p))].sort(), ["paragraph", "text"]);
+				assert.strictEqual(textOf(p), text);
 			}),
 	);
 
@@ -558,7 +562,7 @@ describe("Render.markdown: tables", () => {
 				["table", "paragraph"],
 			);
 			assert.strictEqual(kids(tableOf(root)).length, 2);
-			assert.strictEqual(textOf(kids(root)[1] as N), "… 2 more (see `tool`)");
+			assert.strictEqual(textOf(A.getUnsafe(kids(root), 1)), "… 2 more (see `tool`)");
 		}),
 	);
 });
@@ -683,14 +687,14 @@ describe("Render.markdown: code, diff, collapsible and callout", () => {
 					["paragraph", "code"],
 					kind,
 				);
-				assert.strictEqual(textOf(kids(quote)[0] as N), `[!${kind.toUpperCase()}]\ncareful x`, kind);
+				assert.strictEqual(textOf(A.getUnsafe(kids(quote), 0)), `[!${kind.toUpperCase()}]\ncareful x`, kind);
 			}
 			const empty = yield* treeOf([Doc.callout("note", []), Doc.paragraph("after")]);
 			assert.deepStrictEqual(
 				kids(empty).map((n) => n.type),
 				["blockquote", "paragraph"],
 			);
-			assert.strictEqual(textOf(kids(kids(empty)[0])[0] as N), "[!NOTE]");
+			assert.strictEqual(textOf(A.getUnsafe(kids(kids(empty)[0]), 0)), "[!NOTE]");
 		}),
 	);
 });
@@ -711,7 +715,7 @@ describe("Render.markdown: links", () => {
 				const link = kids(kids(root)[0]).find((n) => n.type === "link");
 				assert.isDefined(link, url);
 				assert.strictEqual(link?.url, url, url);
-				assert.strictEqual(textOf(link as N), "the [label]", url);
+				assert.strictEqual(textOf(link), "the [label]", url);
 			}
 		}),
 	);
@@ -743,7 +747,7 @@ describe("Render.markdown: links", () => {
 					[["link", url.replaceAll("|", "%7C").replaceAll("`", "%60"), "l"]],
 					url,
 				);
-				assert.strictEqual(textOf(cells[1] as N), "z", url);
+				assert.strictEqual(textOf(A.getUnsafe(cells, 1)), "z", url);
 			});
 		}),
 	);
@@ -758,10 +762,10 @@ describe("Render.markdown: links", () => {
 				"vbscript:x",
 			]) {
 				const root = yield* treeOf([Doc.paragraph(Doc.link({ url }, "click"))]);
-				const types = descendantTypes(kids(root)[0] as N);
+				const types = descendantTypes(A.getUnsafe(kids(root), 0));
 				assert.notInclude(types, "link", url);
 				assert.include(types, "inlineCode", url);
-				assert.strictEqual(textOf(kids(root)[0] as N), `click (${url.replace(/\s+/g, " ")})`);
+				assert.strictEqual(textOf(A.getUnsafe(kids(root), 0)), `click (${url.replace(/\s+/g, " ")})`);
 			}
 		}),
 	);
@@ -799,8 +803,8 @@ describe("Render.markdown: links", () => {
 					"  \u0001javascript:alert(1)",
 				]) {
 					const root = yield* treeOf([Doc.paragraph(Doc.link({ url }, "click"))]);
-					assert.notInclude(descendantTypes(kids(root)[0] as N), "link", Result.getOrThrow(S.encodeUnknownResult(Json)(url)));
-					assert.include(descendantTypes(kids(root)[0] as N), "inlineCode", Result.getOrThrow(S.encodeUnknownResult(Json)(url)));
+					assert.notInclude(descendantTypes(A.getUnsafe(kids(root), 0)), "link", Result.getOrThrow(S.encodeUnknownResult(Json)(url)));
+					assert.include(descendantTypes(A.getUnsafe(kids(root), 0)), "inlineCode", Result.getOrThrow(S.encodeUnknownResult(Json)(url)));
 				}
 			}),
 	);
@@ -830,12 +834,13 @@ describe("Render.markdown: links", () => {
 				});
 				const link = kids(kids(abs)[0]).find((n) => n.type === "link");
 				assert.strictEqual(link?.url, "file:///repo/my%20dir/a.ts");
-				assert.strictEqual(textOf(link as N), "a.ts");
+				assert.isDefined(link);
+				assert.strictEqual(textOf(link), "a.ts");
 				const rel = yield* treeOf([Doc.paragraph(Doc.link({ file: "src/a.ts", line: 3, col: 4 }, "a.ts"))], {
 					displayPath,
 				});
 				const parts = kids(kids(rel)[0]);
-				assert.notInclude(descendantTypes(kids(rel)[0] as N), "link");
+				assert.notInclude(descendantTypes(A.getUnsafe(kids(rel), 0)), "link");
 				assert.deepStrictEqual(
 					parts.map((n) => [n.type, n.value]),
 					[
@@ -850,7 +855,7 @@ describe("Render.markdown: links", () => {
 	it.effect("a link whose label is its target shows it once", () =>
 		Effect.gen(function* () {
 			const root = yield* treeOf([Doc.paragraph(Doc.link({ file: "src/a.ts", line: 3 }, "src/a.ts:3"))]);
-			assert.strictEqual(textOf(kids(root)[0] as N), "src/a.ts:3");
+			assert.strictEqual(textOf(A.getUnsafe(kids(root), 0)), "src/a.ts:3");
 		}),
 	);
 });
@@ -866,7 +871,7 @@ describe("Render.markdown: lists, trees and counts", () => {
 			assert.strictEqual(list?.type, "list");
 			assert.strictEqual(list?.ordered, false);
 			assert.strictEqual(kids(list).length, 3);
-			assert.strictEqual(textOf(kids(kids(list)[0])[0] as N), "one two");
+			assert.strictEqual(textOf(A.getUnsafe(kids(kids(list)[0]), 0)), "one two");
 			assert.strictEqual(kids(kids(list)[1])[0]?.type, "list");
 			assert.strictEqual(kids(kids(list)[2])[0]?.type, "code");
 
@@ -876,13 +881,13 @@ describe("Render.markdown: lists, trees and counts", () => {
 				["list", "paragraph"],
 			);
 			assert.strictEqual(kids(kids(capped)[0]).length, 2);
-			assert.strictEqual(textOf(kids(capped)[1] as N), "… 1 more");
+			assert.strictEqual(textOf(A.getUnsafe(kids(capped), 1)), "… 1 more");
 			const ascii = yield* treeOf([Doc.list(items, { cap: 0 })], { glyphs: Glyphs.ascii });
 			assert.deepStrictEqual(
 				kids(ascii).map((n) => n.type),
 				["paragraph"],
 			);
-			assert.strictEqual(textOf(kids(ascii)[0] as N), "... 3 more");
+			assert.strictEqual(textOf(A.getUnsafe(kids(ascii), 0)), "... 3 more");
 		}),
 	);
 
@@ -901,11 +906,11 @@ describe("Render.markdown: lists, trees and counts", () => {
 			assert.strictEqual(kids(kids(root)[0])[0]?.type, "inlineCode");
 			const top = kids(kids(root)[1]);
 			assert.deepStrictEqual(
-				top.map((item) => textOf(kids(item)[0] as N)),
+				top.map((item) => textOf(A.getUnsafe(kids(item), 0))),
 				["a", "b"],
 			);
 			assert.deepStrictEqual(
-				kids(kids(top[0])[1]).map((item) => textOf(kids(item)[0] as N)),
+				kids(kids(top[0])[1]).map((item) => textOf(A.getUnsafe(kids(item), 0))),
 				["a1", "a2"],
 			);
 			const lone = yield* treeOf([Doc.tree({ label: "only" })]);
@@ -931,7 +936,7 @@ describe("Render.markdown: lists, trees and counts", () => {
 				kids(root).map((n) => n.type),
 				["paragraph"],
 			);
-			assert.strictEqual(textOf(kids(root)[0] as N), "Widgets: 3/4 passed, 1 failed (1 flaky) (1.2s)");
+			assert.strictEqual(textOf(A.getUnsafe(kids(root), 0)), "Widgets: 3/4 passed, 1 failed (1 flaky) (1.2s)");
 		}),
 	);
 
@@ -1025,7 +1030,7 @@ describe("Render.markdown: lists, trees and counts", () => {
 							Result.getOrThrow(S.encodeUnknownResult(Json)(label)),
 						);
 					}
-					assert.strictEqual(textOf(items[0] as N), `${label.trimStart()}: 1`, Result.getOrThrow(S.encodeUnknownResult(Json)(label)));
+					assert.strictEqual(textOf(A.getUnsafe(items, 0)), `${label.trimStart()}: 1`, Result.getOrThrow(S.encodeUnknownResult(Json)(label)));
 				}
 			}),
 	);
@@ -1047,21 +1052,21 @@ describe("Render.markdown: lists, trees and counts", () => {
 	it.effect("a status glyph from the context's glyph set, including the bracketed ASCII one, stays text", () =>
 		Effect.gen(function* () {
 			const unicode = yield* treeOf([Doc.paragraph(Doc.status(Status.core, "failure"), " bad")]);
-			assert.strictEqual(textOf(kids(unicode)[0] as N), "✗ bad");
+			assert.strictEqual(textOf(A.getUnsafe(kids(unicode), 0)), "✗ bad");
 			const ascii = yield* treeOf([Doc.paragraph(Doc.status(Status.core, "failure"), " bad")], {
 				glyphs: Glyphs.ascii,
 			});
-			assert.strictEqual(textOf(kids(ascii)[0] as N), "[FAIL] bad");
-			assert.notInclude(descendantTypes(kids(ascii)[0] as N), "linkReference");
+			assert.strictEqual(textOf(A.getUnsafe(kids(ascii), 0)), "[FAIL] bad");
+			assert.notInclude(descendantTypes(A.getUnsafe(kids(ascii), 0)), "linkReference");
 		}),
 	);
 
 	it.effect("a path joins with the audience's separator", () =>
 		Effect.gen(function* () {
 			const human = yield* treeOf([Doc.paragraph(Doc.path("a", "b"))]);
-			assert.strictEqual(textOf(kids(human)[0] as N), "a › b");
+			assert.strictEqual(textOf(A.getUnsafe(kids(human), 0)), "a › b");
 			const agent = yield* treeOf([Doc.paragraph(Doc.path("a", "b"))], { audience: "agent" });
-			assert.strictEqual(textOf(kids(agent)[0] as N), "a > b");
+			assert.strictEqual(textOf(A.getUnsafe(kids(agent), 0)), "a > b");
 		}),
 	);
 });
@@ -1188,8 +1193,8 @@ describe("Render.markdown: reporter blocks (parsed back)", () => {
 			const paragraph = kids(root)[0];
 			const types = kids(paragraph).map((n) => n.type);
 			assert.deepStrictEqual(types.slice(0, 4), ["text", "strong", "text", "emphasis"]);
-			assert.strictEqual(textOf(kids(paragraph)[1] as N), "To*tal");
-			assert.strictEqual(textOf(kids(paragraph)[3] as N), "x_y");
+			assert.strictEqual(textOf(A.getUnsafe(kids(paragraph), 1)), "To*tal");
+			assert.strictEqual(textOf(A.getUnsafe(kids(paragraph), 3)), "x_y");
 			assert.include(descendantTypes(root).slice(6), "strong", "spaces at a run's edge stay outside its markers");
 		}),
 	);
@@ -1325,7 +1330,7 @@ describe("Render.markdown: emphasis, list caps, counts headers, link fallbacks a
 				Doc.list([annotation, Doc.paragraph("a"), Doc.paragraph("b"), Doc.paragraph("c")], { cap: 2 }),
 			]);
 			assert.lengthOf(kids(kids(root)[0]), 2, "two items shown");
-			assert.strictEqual(textOf(kids(root)[1] as N), "… 1 more");
+			assert.strictEqual(textOf(A.getUnsafe(kids(root), 1)), "… 1 more");
 		}),
 	);
 
@@ -1354,8 +1359,8 @@ describe("Render.markdown: emphasis, list caps, counts headers, link fallbacks a
 				(cells[0] ?? []).every((cell) => cell !== ""),
 				"no empty header",
 			);
-			assert.strictEqual(textOf(kids(root)[0] as N), "Widgets");
-			assert.strictEqual(textOf(kids(root)[2] as N), "(1 flaky) across 3 files");
+			assert.strictEqual(textOf(A.getUnsafe(kids(root), 0)), "Widgets");
+			assert.strictEqual(textOf(A.getUnsafe(kids(root), 2)), "(1 flaky) across 3 files");
 		}),
 	);
 

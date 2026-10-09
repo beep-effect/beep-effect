@@ -570,8 +570,7 @@ export class CliLog {
 				O.isSome(audience) ? audience.value.kind : undefined,
 			);
 			const line = `${indentOf(options?.indent)}${theme.status(vocab, name, sanitize(text))}`;
-			// Every vocabulary is built from Status.core, so both names are there; the cast only widens the name.
-			const core = vocab as unknown as Status<"warning" | "failure">;
+			const core = vocab;
 			const rank = vocab.def(name).rank;
 			const level: LogLevel.Severity =
 				options?.level ??

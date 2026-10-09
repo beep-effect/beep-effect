@@ -65,8 +65,7 @@ export class CliMessage {
 
 			// The stream first, then the line painted with THAT stream's colour: a redirected stderr is not coloured
 			// because stdout is.
-			// Every vocabulary is built from Status.core, so "warning" is always there; the cast only widens the name.
-			const warning = (vocab as unknown as Status<"warning">).def("warning").rank;
+			const warning = vocab.def("warning").rank;
 			const stream = options?.stream ?? (def.rank >= warning ? "stderr" : "stdout");
 			const streamTheme = theme.forStream(stream);
 

@@ -90,7 +90,7 @@ describe("under GitHub Actions no format emits a line the runner would read as a
 					for (const format of ["auto", ...formats] as const) {
 						for (const stream of ["stdout", "stderr"] as const) {
 							const written: Array<string> = [];
-							const double = Object.assign(Object.create(console) as Console.Console, {
+							const double = Object.assign(Object.create(console), {
 								log: (...args: ReadonlyArray<unknown>) => written.push(args.map(String).join(" ")),
 								error: (...args: ReadonlyArray<unknown>) => written.push(args.map(String).join(" ")),
 							});
@@ -207,7 +207,7 @@ describe("the default failure report", () => {
 
 	const report = Effect.fn("report")(function* (env: Record<string, string>, message: string, withEnv: boolean = true) {
 			const err: Array<string> = [];
-			const double = Object.assign(Object.create(console) as Console.Console, {
+			const double = Object.assign(Object.create(console), {
 				log: () => undefined,
 				error: (...args: ReadonlyArray<unknown>) => err.push(args.map(String).join(" ")),
 			});

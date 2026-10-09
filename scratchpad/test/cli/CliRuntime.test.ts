@@ -20,7 +20,7 @@ class TestError extends Data.TaggedError("TestError")<{ readonly message: string
 const capturing = (): { readonly console: Console.Console; readonly out: string[]; readonly err: string[] } => {
 	const out: string[] = [];
 	const err: string[] = [];
-	const console_: Console.Console = Object.assign(Object.create(console) as Console.Console, {
+	const console_: Console.Console = Object.assign(Object.create(console), {
 		log: (...args: ReadonlyArray<unknown>) => out.push(args.map(String).join(" ")),
 		error: (...args: ReadonlyArray<unknown>) => err.push(args.map(String).join(" ")),
 	});
@@ -100,12 +100,12 @@ describe("CliRuntime.reportFailures", () => {
 			const kept = yield* run(Effect.fail(explicitlyOne), { exitCode: 7 });
 			const defaulted = yield* run(Effect.fail(unmarked), { exitCode: 7 });
 
-			const codeOf = (exit: Exit.Exit<never, Error>): number => exit.pipe(failureOf, Runtime.getErrorExitCode);
+			const codeOf = <A>(exit: Exit.Exit<A, Error>): number => exit.pipe(failureOf, Runtime.getErrorExitCode);
 
 			// `getErrorExitCode` answers 1 for both an error marked 1 and an unmarked
 			// one, so reading it alone would let the option override a deliberate 1.
-			assert.strictEqual(codeOf(kept.exit as Exit.Exit<never, Error>), 1);
-			assert.strictEqual(codeOf(defaulted.exit as Exit.Exit<never, Error>), 7);
+			assert.strictEqual(codeOf(kept.exit), 1);
+			assert.strictEqual(codeOf(defaulted.exit), 7);
 		}),
 	);
 

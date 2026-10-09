@@ -23,7 +23,7 @@ const renderer =
 const run = Effect.fn("run")(function*<A, E> (program: Effect.Effect<A, E>) {
 		const seen: Array<FailureDetails> = [];
 		const err: string[] = [];
-		const double: Console.Console = Object.assign(Object.create(console) as Console.Console, {
+		const double: Console.Console = Object.assign(Object.create(console), {
 			log: () => undefined,
 			error: (...args: ReadonlyArray<unknown>) => err.push(args.map(String).join(" ")),
 		});

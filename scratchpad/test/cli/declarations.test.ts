@@ -1,3 +1,6 @@
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 // @effect-diagnostics nodeBuiltinImport:skip-file asyncFunction:skip-file
 import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
@@ -534,10 +537,7 @@ describe("the published manifest", () => {
 	it("declares every type package ui.d.ts imports as an optional peer, beside the runtime peers it types", () => {
 		const ui = readFileSync(join(BUILT, "pkg", "ui.d.ts"), "utf8");
 		assert.match(ui, /from "react"/, "the control: ui.d.ts names React's types");
-		const manifest = JSON.parse(readFileSync(join(BUILT, "pkg", "package.json"), "utf8")) as {
-			readonly peerDependencies?: Record<string, string>;
-			readonly peerDependenciesMeta?: Record<string, { readonly optional?: boolean }>;
-		};
+		const manifest = Result.getOrThrow(S.decodeResult(Manifest)(readFileSync(join(BUILT, "pkg", "package.json"), "utf8")));
 		// React ships no types, so without @types/react a consumer under skipLibCheck silently gets any for every view.
 		assert.strictEqual(manifest.peerDependencies?.["@types/react"], manifest.peerDependencies?.react);
 		assert.isTrue(manifest.peerDependenciesMeta?.["@types/react"]?.optional === true, "optional, as react is");
@@ -554,8 +554,10 @@ describe("the reviewed ./ui and ./ui/testing surfaces", () => {
 	});
 
 	it("each built module exports exactly the reviewed values", async () => {
-		const ui = (await import(join(BUILT, "pkg", "ui.js"))) as Record<string, unknown>;
-		const testing = (await import(join(BUILT, "pkg", "ui-testing.js"))) as Record<string, unknown>;
+		const ui: unknown = await import(join(BUILT, "pkg", "ui.js"));
+		assert(P.isObjectKeyword(ui));
+		const testing: unknown = await import(join(BUILT, "pkg", "ui-testing.js"));
+		assert(P.isObjectKeyword(testing));
 		assert.deepStrictEqual(Object.keys(ui).sort(), UI_VALUES);
 		assert.deepStrictEqual(Object.keys(testing).sort(), ["CliUiTest"]);
 	});
@@ -583,3 +585,8 @@ describe("the reviewed ./ui and ./ui/testing surfaces", () => {
 		}
 	});
 });
+
+const Manifest = S.fromJsonString(S.Struct({
+	peerDependencies: S.optionalKey(S.Record(S.String, S.String)),
+	peerDependenciesMeta: S.optionalKey(S.Record(S.String, S.Struct({ optional: S.optionalKey(S.Boolean) }))),
+}));

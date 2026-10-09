@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import type { Block, Document, Inline, LinkTarget } from "../Doc.ts";
 import { Fmt, sanitize } from "../Fmt.ts";
@@ -37,7 +38,7 @@ const escapeLineStart = (line: string): string => {
 	if (/^[-+=]/.test(line)) return `\\${line}`;
 	if (/^#{1,6}(?:\s|$)/.test(line)) return `\\${line}`;
 	const ordered = /^(\d{1,9})([.)])(?:\s|$)/.exec(line);
-	if (ordered !== null) return `${ordered[1]}\\${line.slice((ordered[1] as string).length)}`;
+	if (ordered !== null) return `${ordered[1]}\\${line.slice((A.getUnsafe(ordered, 1)).length)}`;
 	return line;
 };
 
@@ -133,17 +134,17 @@ const emphasized = (spans: ReadonlyArray<Span>, mode: Mode): string => {
 	let out = "";
 	let i = 0;
 	while (i < spans.length) {
-		const strong = (spans[i] as Span).strong === true;
-		const em = (spans[i] as Span).em === true;
+		const strong = (A.getUnsafe(spans, i)).strong === true;
+		const em = (A.getUnsafe(spans, i)).em === true;
 		let body = "";
 		do {
-			const span = spans[i] as Span;
+			const span = A.getUnsafe(spans, i);
 			body += span.code === true ? codeSpan(span.text, mode) : textPiece(span.text, mode);
 			i++;
 		} while (
 			i < spans.length &&
-			((spans[i] as Span).strong === true) === strong &&
-			((spans[i] as Span).em === true) === em
+			((A.getUnsafe(spans, i)).strong === true) === strong &&
+			((A.getUnsafe(spans, i)).em === true) === em
 		);
 		const lead = /^\s*/.exec(body)?.[0] ?? "";
 		const core = body.slice(lead.length).trimEnd();
@@ -165,10 +166,10 @@ const inlineMd = (inlines: ReadonlyArray<Inline>, ctx: RenderContext, mode: Mode
 	let i = 0;
 	while (i < flat.length) {
 		// A run of spans sharing one link (or none): its label is marked up as a whole, so emphasis spans the run.
-		const link = (flat[i] as Span).link;
+		const link = (A.getUnsafe(flat, i)).link;
 		const start = i;
 		do i++;
-		while (i < flat.length && (flat[i] as Span).link === link);
+		while (i < flat.length && (A.getUnsafe(flat, i)).link === link);
 		const run = flat.slice(start, i);
 		const label = emphasized(run, mode);
 		if (link === undefined) {
@@ -179,7 +180,7 @@ const inlineMd = (inlines: ReadonlyArray<Inline>, ctx: RenderContext, mode: Mode
 		const url = linkUrl(link, ctx);
 		const target = targetText(link, ctx);
 		if (url !== undefined) out += `[${label}](${destination(url)})`;
-		else out += showsSuffix((flat[i - 1] as Span).suffix, raw, target) ? `${label} (${codeSpan(target, mode)})` : label;
+		else out += showsSuffix((A.getUnsafe(flat, i - 1)).suffix, raw, target) ? `${label} (${codeSpan(target, mode)})` : label;
 	}
 	return out;
 };

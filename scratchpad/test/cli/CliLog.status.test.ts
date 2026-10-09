@@ -18,7 +18,7 @@ const capture = Effect.fn("capture")(function* (effect: Effect.Effect<void, neve
 		const out: Array<string> = [];
 		const err: Array<string> = [];
 		const levels: Array<LogLevel.LogLevel> = [];
-		const double: Console.Console = Object.assign(Object.create(console) as Console.Console, {
+		const double: Console.Console = Object.assign(Object.create(console), {
 			log: (...args: ReadonlyArray<unknown>) => out.push(args.map(String).join(" ")),
 			error: (...args: ReadonlyArray<unknown>) => err.push(args.map(String).join(" ")),
 		});

@@ -282,7 +282,7 @@ describe("CliRuntime.main's env.spans", () => {
 
 	const runTool = Effect.fn("runTool")(function* (spans: "app" | "all" | "off" | undefined, render?: (error: unknown, details: FailureDetails) => ReadonlyArray<string>, appModule?: string, variable?: { readonly spansEnvVar: string; readonly value?: string }, log?: CliLogOptions, extraEnv: Record<string, string> = {}) {
 			const err: Array<string> = [];
-			const double: Console.Console = Object.assign(Object.create(console) as Console.Console, {
+			const double: Console.Console = Object.assign(Object.create(console), {
 				log: () => undefined,
 				error: (...args: ReadonlyArray<unknown>) => err.push(args.map(String).join(" ")),
 			});

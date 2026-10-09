@@ -43,7 +43,8 @@ export const sgrProblems = (text: string): ReadonlyArray<string> => {
 		if (param === "" || param === "0") {
 			active.clear();
 		} else if (param in closes) {
-			const kind = closes[param] as string;
+			const kind = closes[param];
+			if (kind === undefined) continue;
 			if (!active.delete(kind)) problems.push(`stray closer ${param}`);
 		} else if (param === "1" || param === "2") active.add("weight");
 		else if (param === "3") active.add("italic");

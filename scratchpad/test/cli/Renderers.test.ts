@@ -11,7 +11,7 @@ const issueFrom = <A, I>(schema: S.Codec<A, I>, input: unknown): unknown => {
 		S.decodeUnknownEffect(schema)(input, { onExcessProperty: "error", errors: "all" }).pipe(Effect.result),
 	);
 	if (Result.isSuccess(result)) throw new Error("expected the decode to fail");
-	return (result.failure as { readonly issue: unknown }).issue;
+	return result.failure.issue;
 };
 
 const Config = S.Struct({
