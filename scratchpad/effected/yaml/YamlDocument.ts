@@ -16,6 +16,7 @@ import { YamlParseError, YamlStringifyError } from "./Yaml.ts";
 import { YamlDiagnostic } from "./YamlDiagnostic.ts";
 import type { YamlNode as YamlNodeType } from "./YamlNode.ts";
 import { YamlNode } from "./YamlNode.ts";
+import { dual } from "effect/Function";
 
 /**
  * A YAML directive appearing before a document (e.g. `%YAML 1.2` or
@@ -263,8 +264,15 @@ const toStringifyInput = (options?: YamlStringifyOptions) =>
  *
  * @internal
  */
-export function documentFromRaw(raw: RawYamlDocument, text: string): YamlDocument {
+export function documentFromRaw(raw: RawYamlDocument, text: string): YamlDocument;
+export function documentFromRaw(text: string): (raw: RawYamlDocument) => YamlDocument;
+export function documentFromRaw(...args: [raw: RawYamlDocument, text: string] | [text: string]): YamlDocument | ((raw: RawYamlDocument) => YamlDocument) {
+	return dual<
+		(...args: [raw: RawYamlDocument, text: string] | [text: string]) => YamlDocument | ((raw: RawYamlDocument) => YamlDocument),
+		(raw: RawYamlDocument, text: string) => YamlDocument
+	>(2, function documentFromRaw(raw: RawYamlDocument, text: string): YamlDocument {
 	return fromRawDocument(raw, text);
+})(...args);
 }
 
 /** Materialize a raw engine document into the public class. */

@@ -1,6 +1,8 @@
 // Deep structural equality for plain JavaScript values — the primitive
 // behind the facade's semantic `equals`/`equalsValue` statics.
 
+import { dual } from "effect/Function";
+
 /**
  * Deep-compare two plain JS values for structural equality.
  * Object key order is ignored (recursively at all nesting levels).
@@ -12,7 +14,13 @@
  * of keys and recursively compares values by key, matching YAML's semantics
  * where mapping key order is not significant.
  */
-export function deepEqual(a: unknown, b: unknown): boolean {
+export function deepEqual(a: unknown, b: unknown): boolean;
+export function deepEqual(b: unknown): (a: unknown) => boolean;
+export function deepEqual(...args: [a: unknown, b: unknown] | [b: unknown]): boolean | ((a: unknown) => boolean) {
+	return dual<
+		(...args: [a: unknown, b: unknown] | [b: unknown]) => boolean | ((a: unknown) => boolean),
+		(a: unknown, b: unknown) => boolean
+	>(2, function deepEqual(a: unknown, b: unknown): boolean {
 	if (a === b) return true;
 
 	// Handle NaN (NaN !== NaN but should be considered equal)
@@ -47,4 +55,5 @@ export function deepEqual(a: unknown, b: unknown): boolean {
 	}
 
 	return false;
+})(...args);
 }

@@ -803,8 +803,7 @@ export class Yaml {
 						Yaml.parseAll(input, options).pipe(
 							Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }, input)),
 						),
-					encode: (values: ReadonlyArray<unknown>) =>
-						Effect.gen(function* () {
+					encode: Effect.fn("encode")(function* (values: ReadonlyArray<unknown>) {
 							if (values.length === 0) return "";
 							const parts: Array<string> = [];
 							for (let index = 0; index < values.length; index++) {

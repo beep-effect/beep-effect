@@ -170,7 +170,7 @@ export function loadAllTestCases(): TestCase[] {
 
 		// Try loading directly from this directory (flat test)
 		const flat = loadFromDir(dir, entry.name);
-		if (flat) {
+		if ((flat !== null)) {
 			cases.push(flat);
 			continue;
 		}
@@ -181,7 +181,7 @@ export function loadAllTestCases(): TestCase[] {
 			if (!sub.isDirectory()) continue;
 			const subDir = join(dir, sub.name);
 			const subCase = loadFromDir(subDir, `${entry.name}/${sub.name}`);
-			if (subCase) {
+			if ((subCase !== null)) {
 				cases.push(subCase);
 			}
 		}

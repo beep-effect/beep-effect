@@ -7,6 +7,7 @@ import type { CstNode } from "../cst.ts";
 import type { RawDiagnostic } from "../diagnostics.ts";
 import type { ParseOptionsInput } from "../options.ts";
 import type { EscapedComment } from "./comments.ts";
+import { dual } from "effect/Function";
 
 // ---------------------------------------------------------------------------
 // Line/column computation
@@ -35,7 +36,13 @@ export function getLineStarts(text: string): ReadonlyArray<number> {
  * occupies no column, matching the lexer and `columnAt`, so a
  * diagnostic's `character` behind a BOM equals the BOM-less document's.
  */
-export function lineCol(text: string, offset: number): { line: number; column: number } {
+export function lineCol(text: string, offset: number): { line: number; column: number };
+export function lineCol(offset: number): (text: string) => { line: number; column: number };
+export function lineCol(...args: [text: string, offset: number] | [offset: number]): { line: number; column: number } | ((text: string) => { line: number; column: number }) {
+	return dual<
+		(...args: [text: string, offset: number] | [offset: number]) => { line: number; column: number } | ((text: string) => { line: number; column: number }),
+		(text: string, offset: number) => { line: number; column: number }
+	>(2, function lineCol(text: string, offset: number): { line: number; column: number } {
 	const starts = getLineStarts(text);
 	const pos = Math.min(Math.max(offset, 0), text.length);
 	// Binary search for the greatest line start <= pos.
@@ -52,28 +59,43 @@ export function lineCol(text: string, offset: number): { line: number; column: n
 	const lineStart = starts[lo] as number;
 	const bom = text[lineStart] === "\uFEFF" && pos > lineStart ? 1 : 0;
 	return { line: lo, column: pos - lineStart - bom };
+})(...args);
 }
 
 /**
  * Returns true if offsetA and offsetB are on the same source line (no newline between them).
  */
-export function sameLine(text: string, offsetA: number, offsetB: number): boolean {
+export function sameLine(text: string, offsetA: number, offsetB: number): boolean;
+export function sameLine(offsetA: number, offsetB: number): (text: string) => boolean;
+export function sameLine(...args: [text: string, offsetA: number, offsetB: number] | [offsetA: number, offsetB: number]): boolean | ((text: string) => boolean) {
+	return dual<
+		(...args: [text: string, offsetA: number, offsetB: number] | [offsetA: number, offsetB: number]) => boolean | ((text: string) => boolean),
+		(text: string, offsetA: number, offsetB: number) => boolean
+	>(3, function sameLine(text: string, offsetA: number, offsetB: number): boolean {
 	const lo = Math.min(offsetA, offsetB);
 	const hi = Math.max(offsetA, offsetB);
 	for (let i = lo; i < hi && i < text.length; i++) {
 		if (text[i] === "\n") return false;
 	}
 	return true;
+})(...args);
 }
 
 /** Returns true if there is non-whitespace content before `offset` on the same line. */
-export function hasNonWhitespaceBeforeOnLine(text: string, offset: number): boolean {
+export function hasNonWhitespaceBeforeOnLine(text: string, offset: number): boolean;
+export function hasNonWhitespaceBeforeOnLine(offset: number): (text: string) => boolean;
+export function hasNonWhitespaceBeforeOnLine(...args: [text: string, offset: number] | [offset: number]): boolean | ((text: string) => boolean) {
+	return dual<
+		(...args: [text: string, offset: number] | [offset: number]) => boolean | ((text: string) => boolean),
+		(text: string, offset: number) => boolean
+	>(2, function hasNonWhitespaceBeforeOnLine(text: string, offset: number): boolean {
 	for (let i = offset - 1; i >= 0; i--) {
 		const ch = text[i];
 		if (ch === "\n" || ch === "\r") return false;
 		if (ch !== " " && ch !== "\t") return true;
 	}
 	return false; // start of string
+})(...args);
 }
 
 /**
@@ -82,12 +104,19 @@ export function hasNonWhitespaceBeforeOnLine(text: string, offset: number): bool
  * line when properties (tag/anchor) precede the actual content scalar —
  * the indent is the leftmost column on the line, not the scalar's column.
  */
-export function lineIndentColumn(text: string, offset: number): number {
+export function lineIndentColumn(text: string, offset: number): number;
+export function lineIndentColumn(offset: number): (text: string) => number;
+export function lineIndentColumn(...args: [text: string, offset: number] | [offset: number]): number | ((text: string) => number) {
+	return dual<
+		(...args: [text: string, offset: number] | [offset: number]) => number | ((text: string) => number),
+		(text: string, offset: number) => number
+	>(2, function lineIndentColumn(text: string, offset: number): number {
 	let lineStart = offset;
 	while (lineStart > 0 && text[lineStart - 1] !== "\n") lineStart--;
 	let i = lineStart;
 	while (i < text.length && (text[i] === " " || text[i] === "\t")) i++;
 	return i - lineStart;
+})(...args);
 }
 
 // ---------------------------------------------------------------------------
@@ -171,7 +200,13 @@ export interface ComposerState {
 	readonly escapedComments: Array<EscapedComment>;
 }
 
-export function createState(text: string, flow: FlowComposers, options?: ParseOptionsInput): ComposerState {
+export function createState(text: string, flow: FlowComposers, options?: ParseOptionsInput): ComposerState;
+export function createState(flow: FlowComposers, options?: ParseOptionsInput): (text: string) => ComposerState;
+export function createState(...args: [text: string, flow: FlowComposers, options?: ParseOptionsInput | undefined] | [flow: FlowComposers, options?: ParseOptionsInput | undefined]): ComposerState | ((text: string) => ComposerState) {
+	return dual<
+		(...args: [text: string, flow: FlowComposers, options?: ParseOptionsInput | undefined] | [flow: FlowComposers, options?: ParseOptionsInput | undefined]) => ComposerState | ((text: string) => ComposerState),
+		(text: string, flow: FlowComposers, options?: ParseOptionsInput) => ComposerState
+	>((args) => typeof args[0] === "string", function createState(text: string, flow: FlowComposers, options?: ParseOptionsInput): ComposerState {
 	return {
 		text,
 		anchors: new Map(),
@@ -188,6 +223,7 @@ export function createState(text: string, flow: FlowComposers, options?: ParseOp
 		depth: 0,
 		escapedComments: [],
 	};
+})(...args);
 }
 
 /**
@@ -206,7 +242,13 @@ export const MAX_NESTING_DEPTH = 256;
  * exhausted; the caller must then return a leaf placeholder instead of
  * recursing. Balance every `true` return with {@link exitNesting}.
  */
-export function enterNesting(state: ComposerState, cst: CstNode): boolean {
+export function enterNesting(state: ComposerState, cst: CstNode): boolean;
+export function enterNesting(cst: CstNode): (state: ComposerState) => boolean;
+export function enterNesting(...args: [state: ComposerState, cst: CstNode] | [cst: CstNode]): boolean | ((state: ComposerState) => boolean) {
+	return dual<
+		(...args: [state: ComposerState, cst: CstNode] | [cst: CstNode]) => boolean | ((state: ComposerState) => boolean),
+		(state: ComposerState, cst: CstNode) => boolean
+	>(2, function enterNesting(state: ComposerState, cst: CstNode): boolean {
 	if (state.depth >= MAX_NESTING_DEPTH) {
 		if (!state.errors.some((e) => e.code === "NestingDepthExceeded")) {
 			state.errors.push({
@@ -220,6 +262,7 @@ export function enterNesting(state: ComposerState, cst: CstNode): boolean {
 	}
 	state.depth++;
 	return true;
+})(...args);
 }
 
 /** Leave one collection-nesting level. */

@@ -14,6 +14,8 @@ import {
 	YamlStringifyOptions,
 } from "../../effected/yaml/index.ts";
 
+const JsonString = Schema.fromJsonString(Schema.String);
+
 describe("Yaml", () => {
 	describe("parse", () => {
 		it.effect("parses mappings, sequences and scalars", () =>
@@ -38,12 +40,13 @@ describe("Yaml", () => {
 
 		it.effect("fails with an aggregate YamlParseError carrying positioned diagnostics", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(Yaml.parse("a: *missing"));
+				const error = yield* Effect.matchEffect(Yaml.parse("a: *missing"), { onFailure: Effect.succeed, onSuccess: Effect.die });
 				assert.instanceOf(error, YamlParseError);
 				assert.strictEqual(error._tag, "YamlParseError");
 				assert.isAbove(error.diagnostics.length, 0);
 				assert.strictEqual(error.input, "a: *missing");
 				const d = error.diagnostics[0];
+				assert.ok(d !== undefined);
 				assert.strictEqual(d.code, "UndefinedAlias");
 				assert.strictEqual(d.line, 0);
 				assert.isAtLeast(d.character, 0);
@@ -53,23 +56,27 @@ describe("Yaml", () => {
 
 		it.effect("renders the message position 1-based while the diagnostic fields stay 0-based", () =>
 			Effect.gen(function* () {
-				const e = yield* Effect.flip(Yaml.parse("a: *missing"));
-				assert.strictEqual(e.diagnostics[0].code, "UndefinedAlias");
-				assert.strictEqual(e.diagnostics[0].line, 0);
-				assert.strictEqual(e.diagnostics[0].character, 3);
+				const e = yield* Effect.matchEffect(Yaml.parse("a: *missing"), { onFailure: Effect.succeed, onSuccess: Effect.die });
+				const d = e.diagnostics[0];
+				assert.ok(d !== undefined);
+				assert.strictEqual(d.code, "UndefinedAlias");
+				assert.strictEqual(d.line, 0);
+				assert.strictEqual(d.character, 3);
 				assert.include(e.message, "UndefinedAlias at 1:4");
 				assert.notInclude(e.message, "at 0:3");
-				const dup = yield* Effect.flip(Yaml.parse("a: 1\na: 2"));
-				assert.strictEqual(dup.diagnostics[0].code, "DuplicateKey");
-				assert.strictEqual(dup.diagnostics[0].line, 1);
-				assert.strictEqual(dup.diagnostics[0].character, 0);
+				const dup = yield* Effect.matchEffect(Yaml.parse("a: 1\na: 2"), { onFailure: Effect.succeed, onSuccess: Effect.die });
+				const duplicate = dup.diagnostics[0];
+				assert.ok(duplicate !== undefined);
+				assert.strictEqual(duplicate.code, "DuplicateKey");
+				assert.strictEqual(duplicate.line, 1);
+				assert.strictEqual(duplicate.character, 0);
 				assert.include(dup.message, "DuplicateKey at 2:1");
 			}),
 		);
 
 		it.effect("promotes duplicate keys to failure under the default uniqueKeys", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(Yaml.parse("a: 1\na: 2"));
+				const error = yield* Effect.matchEffect(Yaml.parse("a: 1\na: 2"), { onFailure: Effect.succeed, onSuccess: Effect.die });
 				assert.isTrue(error.diagnostics.some((d) => d.code === "DuplicateKey"));
 				const value = yield* Yaml.parse("a: 1\na: 2", { uniqueKeys: false });
 				assert.deepStrictEqual(value, { a: 2 });
@@ -173,7 +180,7 @@ describe("Yaml", () => {
 			for (const [label, doc] of rejects) {
 				it.effect(`rejects ${label}`, () =>
 					Effect.gen(function* () {
-						const error = yield* Effect.flip(Yaml.parse(doc));
+						const error = yield* Effect.matchEffect(Yaml.parse(doc), { onFailure: Effect.succeed, onSuccess: Effect.die });
 						assert.isTrue(
 							error.diagnostics.some((d) => d.code === "DuplicateKey"),
 							doc,
@@ -212,7 +219,7 @@ describe("Yaml", () => {
 
 		it.effect("rejects trailing top-level content after the document value", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(Yaml.parse("a: 1\nb"));
+				const error = yield* Effect.matchEffect(Yaml.parse("a: 1\nb"), { onFailure: Effect.succeed, onSuccess: Effect.die });
 				assert.isTrue(error.diagnostics.some((d) => d.code === "UnexpectedToken"));
 			}),
 		);
@@ -220,7 +227,7 @@ describe("Yaml", () => {
 		it.effect("enforces the maxAliasCount DoS guard", () =>
 			Effect.gen(function* () {
 				const text = `x: &a 1\n${Array.from({ length: 5 }, (_, i) => `k${i}: *a`).join("\n")}`;
-				const error = yield* Effect.flip(Yaml.parse(text, { maxAliasCount: 3 }));
+				const error = yield* Effect.matchEffect(Yaml.parse(text, { maxAliasCount: 3 }), { onFailure: Effect.succeed, onSuccess: Effect.die });
 				assert.isTrue(error.diagnostics.some((d) => d.code === "AliasCountExceeded"));
 			}),
 		);
@@ -896,7 +903,7 @@ describe("Yaml", () => {
 						const scalar = text.slice("key: ".length).trimEnd();
 						assert.ok(
 							scalar.startsWith('"') || scalar.startsWith("'"),
-							`expected a quoted scalar for ${label}, got plain: ${JSON.stringify(scalar)}`,
+							`expected a quoted scalar for ${label}, got plain: ${(yield* Schema.encodeEffect(JsonString)(scalar))}`,
 						);
 						assert.deepStrictEqual(yield* Yaml.parse(text), { key: value });
 					}),
@@ -909,7 +916,7 @@ describe("Yaml", () => {
 					// plain path. Block scalars can carry tabs and must keep doing so.
 					const value = { key: "line one\n\tindented line\n" };
 					const text = yield* Yaml.stringify(value);
-					assert.ok(text.includes("|"), `expected a block scalar, got: ${JSON.stringify(text)}`);
+					assert.ok(text.includes("|"), `expected a block scalar, got: ${(yield* Schema.encodeEffect(JsonString)(text))}`);
 					assert.deepStrictEqual(yield* Yaml.parse(text), value);
 				}),
 			);
@@ -1186,9 +1193,9 @@ describe("Yaml", () => {
 
 		it.effect("rejects unescaped C0 control characters in scalars", () =>
 			Effect.gen(function* () {
-				const plain = yield* Effect.flip(Yaml.parse(`a: x${String.fromCharCode(7)}y`));
+				const plain = yield* Effect.matchEffect(Yaml.parse(`a: x${String.fromCharCode(7)}y`), { onFailure: Effect.succeed, onSuccess: Effect.die });
 				assert.isTrue(plain.diagnostics.some((d) => d.code === "UnexpectedCharacter"));
-				const quoted = yield* Effect.flip(Yaml.parse(`a: "x${String.fromCharCode(7)}y"`));
+				const quoted = yield* Effect.matchEffect(Yaml.parse(`a: "x${String.fromCharCode(7)}y"`), { onFailure: Effect.succeed, onSuccess: Effect.die });
 				assert.isTrue(quoted.diagnostics.some((d) => d.code === "UnexpectedCharacter"));
 			}),
 		);
@@ -1205,7 +1212,7 @@ describe("Yaml", () => {
 				// The largest valid Unicode code point is U+10FFFF; \U00110000 is one
 				// past it. It must surface as a YamlParseError, not a RangeError defect
 				// from String.fromCodePoint escaping the typed error channel.
-				const error = yield* Effect.flip(Yaml.parse('"\\U00110000"'));
+				const error = yield* Effect.matchEffect(Yaml.parse('"\\U00110000"'), { onFailure: Effect.succeed, onSuccess: Effect.die });
 				assert.strictEqual(error._tag, "YamlParseError");
 				const valid = yield* Yaml.parse('"\\U0001F600"');
 				assert.strictEqual(valid, "😀");
@@ -1215,7 +1222,7 @@ describe("Yaml", () => {
 		it.effect("deeply nested flow collections fail with NestingDepthExceeded, not a stack overflow", () =>
 			Effect.gen(function* () {
 				const n = 5000;
-				const error = yield* Effect.flip(Yaml.parse(`${"[".repeat(n)}1${"]".repeat(n)}`));
+				const error = yield* Effect.matchEffect(Yaml.parse(`${"[".repeat(n)}1${"]".repeat(n)}`), { onFailure: Effect.succeed, onSuccess: Effect.die });
 				assert.isTrue(error.diagnostics.some((d) => d.code === "NestingDepthExceeded"));
 			}),
 		);
@@ -1224,7 +1231,7 @@ describe("Yaml", () => {
 			Effect.gen(function* () {
 				let text = "";
 				for (let i = 0; i < 4000; i++) text += `${" ".repeat(i)}k:\n`;
-				const error = yield* Effect.flip(Yaml.parse(text));
+				const error = yield* Effect.matchEffect(Yaml.parse(text), { onFailure: Effect.succeed, onSuccess: Effect.die });
 				assert.isTrue(error.diagnostics.some((d) => d.code === "NestingDepthExceeded"));
 			}),
 		);
@@ -1275,7 +1282,7 @@ describe("Yaml", () => {
 	});
 
 	describe("schema pipeline", () => {
-		const Config = Schema.Struct({ host: Schema.String, port: Schema.Number });
+		const Config = Schema.Struct({ host: Schema.String, port: Schema.Finite });
 
 		it.effect("YamlFromString decodes YAML to unknown", () =>
 			Effect.gen(function* () {
@@ -1313,14 +1320,14 @@ describe("Yaml", () => {
 
 		it.effect("boundary: Yaml.parse yields YamlParseError, never SchemaError", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(Yaml.parse("a: *missing"));
+				const error = yield* Effect.matchEffect(Yaml.parse("a: *missing"), { onFailure: Effect.succeed, onSuccess: Effect.die });
 				assert.strictEqual(error._tag, "YamlParseError");
 			}),
 		);
 
 		it.effect("schema decode surfaces a SchemaError carrying the aggregate parse message", () =>
 			Effect.gen(function* () {
-				const error = yield* Effect.flip(Schema.decodeEffect(Yaml.YamlFromString)("a: *missing"));
+				const error = yield* Effect.matchEffect(Schema.decodeEffect(Yaml.YamlFromString)("a: *missing"), { onFailure: Effect.succeed, onSuccess: Effect.die });
 				assert.strictEqual(error._tag, "SchemaError");
 				assert.include(String(error), "YAML parse failed");
 			}),
@@ -1328,7 +1335,7 @@ describe("Yaml", () => {
 	});
 
 	describe("bind", () => {
-		const Config = Schema.Struct({ host: Schema.String, port: Schema.Number });
+		const Config = Schema.Struct({ host: Schema.String, port: Schema.Finite });
 		const config = Yaml.bind(Config);
 
 		it.effect("decode parses YAML straight into a validated domain value", () =>

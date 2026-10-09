@@ -140,7 +140,6 @@ describe("YamlLint.resolveStrict", () => {
 		const resolved = YamlLint.inferStrict("a: 'x'\nb: \"y\"\n", YamlLint.builtins);
 		if (Result.isSuccess(resolved)) {
 			assert.fail("a mixed-quote corpus must not resolve strictly");
-			return;
 		}
 		const conflict = resolved.failure.conflicts.find((c) => c.rule === "quoted-strings" && c.dimension === "quoteType");
 		const double = conflict?.candidates.find((c) => c.value === "double");

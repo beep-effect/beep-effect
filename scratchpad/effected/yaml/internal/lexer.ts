@@ -1154,11 +1154,11 @@ export function createScanner(text: string): YamlScanner {
 		// Document markers (only at column 0)
 		if (col === 0 && ch === "-" && peek(1) === "-" && peek(2) === "-") {
 			const marker = scanDocumentStartOrEnd();
-			if (marker) return marker;
+			if ((marker !== null)) return marker;
 		}
 		if (col === 0 && ch === "." && peek(1) === "." && peek(2) === ".") {
 			const marker = scanDocumentStartOrEnd();
-			if (marker) return marker;
+			if ((marker !== null)) return marker;
 		}
 
 		// Directive (only at column 0 outside flow context)

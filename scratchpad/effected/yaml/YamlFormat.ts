@@ -16,7 +16,7 @@
 // violation, not a user-facing error, and is left to surface as an uncaught
 // defect.
 
-import { Effect, Schema } from "effect";
+import { Data, Effect, Schema } from "effect";
 import { EMPTY_DOCUMENT, composeAllDocuments, composeFirstDocumentCounted } from "./internal/composer/document.ts";
 import { MAX_NESTING_DEPTH } from "./internal/composer/state.ts";
 import type { RawDiagnostic } from "./internal/diagnostics.ts";
@@ -126,7 +126,7 @@ export class YamlModificationError extends Schema.TaggedError<YamlModificationEr
  * Thrown by the pure AST-navigation helpers on a structural mismatch.
  * `modify` catches this and materializes {@link YamlModificationError}.
  */
-class ModifyFailure extends Error {
+class ModifyFailure extends Data.TaggedError("ModifyFailure")<{
 	readonly code:
 		| "EmptyDocument"
 		| "PathNotFound"
@@ -134,14 +134,13 @@ class ModifyFailure extends Error {
 		| "NotNavigable"
 		| "CircularReference"
 		| "NestingDepthExceeded";
+	readonly message: string;
 	readonly offset: number;
 	readonly length: number;
+}> {
 	constructor(code: ModifyFailure["code"], message: string, offset: number, length: number) {
-		super(message);
+		super({ code, message, offset, length });
 		this.name = "ModifyFailure";
-		this.code = code;
-		this.offset = offset;
-		this.length = length;
 	}
 }
 
@@ -687,7 +686,7 @@ function tryRegionalScalarEdit(
 	// error, so bail out to the existing compose → replace → re-stringify path.
 	if (
 		options?.defaultScalarStyle !== undefined ||
-		options?.forceDefaultStyles ||
+		(options?.forceDefaultStyles === true) ||
 		options?.sortKeys === true ||
 		options?.indent !== undefined ||
 		options?.indentSequences !== undefined ||
@@ -983,21 +982,21 @@ export class YamlFormat {
 			return regional.map((e) => YamlEdit.make(e)) as ReadonlyArray<YamlEdit>;
 		}
 
-		let newContents: YamlNode | null;
-		try {
-			newContents = modifyDocument(doc, path, value);
-		} catch (err) {
-			if (!(err instanceof ModifyFailure)) throw err;
-			return yield* YamlModificationError.make({
-				path,
-				diagnostics: [
-					YamlDiagnostic.fromRaw(
-						{ code: err.code, message: err.message, offset: err.offset, length: err.length },
-						text,
-					),
-				],
-			});
-		}
+		const newContents = yield* Effect.try({
+			try: () => modifyDocument(doc, path, value),
+			catch: (err) => {
+				if (!(err instanceof ModifyFailure)) throw err;
+				return YamlModificationError.make({
+					path,
+					diagnostics: [
+						YamlDiagnostic.fromRaw(
+							{ code: err.code, message: err.message, offset: err.offset, length: err.length },
+							text,
+						),
+					],
+				});
+			},
+		});
 
 		const outputDoc: RawYamlDocument = { ...doc, contents: newContents };
 		const formatted = stringifyDocument(outputDoc, toStringifyInput(options));

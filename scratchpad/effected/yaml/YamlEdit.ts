@@ -72,7 +72,9 @@ export class YamlEdit extends Schema.Class<YamlEdit>("YamlEdit")({
 		const sorted = [...edits].sort((a, b) => b.offset - a.offset);
 		for (let i = 0; i + 1 < sorted.length; i++) {
 			const upper = sorted[i];
+			if (upper === undefined) throw new TypeError("Missing upper");
 			const lower = sorted[i + 1];
+			if (lower === undefined) throw new TypeError("Missing lower");
 			if (lower.offset + lower.length > upper.offset) {
 				throw new Error(
 					`YamlEdit.applyAll received overlapping edits at offsets ${lower.offset} and ${upper.offset} — overlapping edits are a programmer error`,

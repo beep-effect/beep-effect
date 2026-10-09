@@ -50,6 +50,7 @@ import {
 	sameLine,
 } from "./state.ts";
 import * as Schema from "effect/Schema";
+import { dual } from "effect/Function";
 
 // ---------------------------------------------------------------------------
 // Compose block map
@@ -64,12 +65,13 @@ import * as Schema from "effect/Schema";
  * The first key is external (sibling before block-map in document/parent).
  * Subsequent keys are inside the block-map children.
  */
-export function composeBlockMap(
-	blockMapCst: CstNode,
-	state: ComposerState,
-	externalFirstKey?: YamlNode,
-	meta?: NodeMeta,
-): YamlMap {
+export function composeBlockMap(blockMapCst: CstNode, state: ComposerState, externalFirstKey?: YamlNode, meta?: NodeMeta): YamlMap;
+export function composeBlockMap(state: ComposerState, externalFirstKey?: YamlNode, meta?: NodeMeta): (blockMapCst: CstNode) => YamlMap;
+export function composeBlockMap(...args: [blockMapCst: CstNode, state: ComposerState, externalFirstKey?: YamlNode | undefined, meta?: NodeMeta | undefined] | [state: ComposerState, externalFirstKey?: YamlNode | undefined, meta?: NodeMeta | undefined]): YamlMap | ((blockMapCst: CstNode) => YamlMap) {
+	return dual<
+		(...args: [blockMapCst: CstNode, state: ComposerState, externalFirstKey?: YamlNode | undefined, meta?: NodeMeta | undefined] | [state: ComposerState, externalFirstKey?: YamlNode | undefined, meta?: NodeMeta | undefined]) => YamlMap | ((blockMapCst: CstNode) => YamlMap),
+		(blockMapCst: CstNode, state: ComposerState, externalFirstKey?: YamlNode, meta?: NodeMeta) => YamlMap
+	>((args) => args[0] !== undefined && "type" in args[0], function composeBlockMap(blockMapCst: CstNode, state: ComposerState, externalFirstKey?: YamlNode, meta?: NodeMeta): YamlMap {
 	// Nesting-depth guard: unbounded recursion is a stack-overflow DoS vector.
 	if (!enterNesting(state, blockMapCst)) {
 		return YamlMap.make({ items: [], style: "block", offset: blockMapCst.offset, length: blockMapCst.length });
@@ -79,6 +81,7 @@ export function composeBlockMap(
 	} finally {
 		exitNesting(state);
 	}
+})(...args);
 }
 
 function composeBlockMapInner(
@@ -97,12 +100,12 @@ function composeBlockMapInner(
 	// larger column, but the property column is what matters for validating
 	// continuation-line indentation.
 	const extKeyOffset =
-		externalFirstKey && "offset" in externalFirstKey ? (externalFirstKey as YamlScalar).offset : undefined;
+		(externalFirstKey !== undefined) && "offset" in externalFirstKey ? (externalFirstKey as YamlScalar).offset : undefined;
 	const extKeyCol = extKeyOffset !== undefined ? lineIndentColumn(state.text, extKeyOffset) : undefined;
 	const items = flattenBlockMapChildren(children, state, extKeyCol, extKeyOffset);
 
 	// If there's an external first key, prepend it
-	if (externalFirstKey) {
+	if ((externalFirstKey !== undefined)) {
 		items.unshift({ kind: "key", node: externalFirstKey });
 	}
 
@@ -112,7 +115,7 @@ function composeBlockMapInner(
 	if (state.options.uniqueKeys) checkDuplicateKeys(pairs, state);
 	checkMultilineImplicitKeys(pairs, state);
 
-	const offset = externalFirstKey
+	const offset = (externalFirstKey !== undefined)
 		? "offset" in externalFirstKey
 			? (externalFirstKey as YamlScalar).offset
 			: blockMapCst.offset
@@ -141,7 +144,7 @@ function composeBlockMapInner(
 		...(mapComment !== undefined ? { comment: mapComment } : {}),
 	});
 
-	if (meta?.anchor) registerAnchor(map, meta.anchor, state, offset);
+	if ((meta?.anchor !== undefined && meta?.anchor !== "")) registerAnchor(map, meta.anchor, state, offset);
 	return map;
 }
 
@@ -203,12 +206,13 @@ export interface SemanticItem {
 	offset?: number;
 }
 
-export function flattenBlockMapChildren(
-	children: readonly CstNode[],
-	state: ComposerState,
-	externalKeyColumn?: number,
-	externalKeyOffset?: number,
-): SemanticItem[] {
+export function flattenBlockMapChildren(children: readonly CstNode[], state: ComposerState, externalKeyColumn?: number, externalKeyOffset?: number): SemanticItem[];
+export function flattenBlockMapChildren(state: ComposerState, externalKeyColumn?: number, externalKeyOffset?: number): (children: readonly CstNode[]) => SemanticItem[];
+export function flattenBlockMapChildren(...args: [children: readonly CstNode[], state: ComposerState, externalKeyColumn?: number | undefined, externalKeyOffset?: number | undefined] | [state: ComposerState, externalKeyColumn?: number | undefined, externalKeyOffset?: number | undefined]): SemanticItem[] | ((children: readonly CstNode[]) => SemanticItem[]) {
+	return dual<
+		(...args: [children: readonly CstNode[], state: ComposerState, externalKeyColumn?: number | undefined, externalKeyOffset?: number | undefined] | [state: ComposerState, externalKeyColumn?: number | undefined, externalKeyOffset?: number | undefined]) => SemanticItem[] | ((children: readonly CstNode[]) => SemanticItem[]),
+		(children: readonly CstNode[], state: ComposerState, externalKeyColumn?: number, externalKeyOffset?: number) => SemanticItem[]
+	>((args) => Array.isArray(args[0]), function flattenBlockMapChildren(children: readonly CstNode[], state: ComposerState, externalKeyColumn?: number, externalKeyOffset?: number): SemanticItem[] {
 	const items: SemanticItem[] = [];
 	let pendingMeta: NodeMeta = {};
 	// Outer meta: anchor/tag that came BEFORE a newline in value position. Applies
@@ -299,7 +303,7 @@ export function flattenBlockMapChildren(
 
 	for (let i = 0; i < children.length; i++) {
 		const child = children[i];
-		if (!child) continue;
+		if (child === undefined) continue;
 
 		if (child.type === "error") {
 			state.errors.push({
@@ -336,8 +340,8 @@ export function flattenBlockMapChildren(
 					const innerTrailing = buildPairs(innerItems, innerPairs, state.text);
 					const firstC = findFirstContent(sliceChildren);
 					const lastC = findLastContent(sliceChildren);
-					const innerOffset = firstC ? firstC.offset : child.offset;
-					const innerEnd = lastC ? lastC.offset + lastC.length : child.offset + child.length;
+					const innerOffset = (firstC !== undefined) ? firstC.offset : child.offset;
+					const innerEnd = (lastC !== undefined) ? lastC.offset + lastC.length : child.offset + child.length;
 					const innerMap = YamlMap.make({
 						items: innerPairs,
 						style: "block" as CollectionStyle,
@@ -370,7 +374,7 @@ export function flattenBlockMapChildren(
 						...(flushMeta.tag !== undefined ? { tag: flushMeta.tag } : {}),
 						...(flushMeta.anchor !== undefined ? { anchor: flushMeta.anchor } : {}),
 					});
-					if (flushMeta.anchor) registerAnchor(scalar, flushMeta.anchor, state, child.offset);
+					if ((flushMeta.anchor !== undefined && flushMeta.anchor !== "")) registerAnchor(scalar, flushMeta.anchor, state, child.offset);
 					resetAllMeta();
 					pushNode(scalar);
 				}
@@ -472,7 +476,7 @@ export function flattenBlockMapChildren(
 						...(flushMeta.tag !== undefined ? { tag: flushMeta.tag } : {}),
 						...(flushMeta.anchor !== undefined ? { anchor: flushMeta.anchor } : {}),
 					});
-					if (flushMeta.anchor) registerAnchor(scalar, flushMeta.anchor, state, child.offset);
+					if ((flushMeta.anchor !== undefined && flushMeta.anchor !== "")) registerAnchor(scalar, flushMeta.anchor, state, child.offset);
 					resetAllMeta();
 					pushNode(scalar);
 				}
@@ -548,7 +552,7 @@ export function flattenBlockMapChildren(
 				let explicitKeyCol = -1;
 				for (let p = i - 1; p >= 0; p--) {
 					const prev = children[p];
-					if (!prev) continue;
+					if (prev === undefined) continue;
 					if (prev.type === "whitespace" && prev.source === "?") {
 						explicitKeyCol = lineCol(state.text, prev.offset).column;
 						isExplicitKey = true;
@@ -564,7 +568,7 @@ export function flattenBlockMapChildren(
 					let sawNl = false;
 					for (let j = i + 1; j < children.length; j++) {
 						const c = children[j];
-						if (!c) continue;
+						if (c === undefined) continue;
 						if (c.type === "newline") {
 							sawNl = true;
 							continue;
@@ -590,7 +594,7 @@ export function flattenBlockMapChildren(
 						...(keyMeta.tag !== undefined ? { tag: keyMeta.tag } : {}),
 						...(keyMeta.anchor !== undefined ? { anchor: keyMeta.anchor } : {}),
 					});
-					if (keyMeta.anchor) registerAnchor(scalar, keyMeta.anchor, state, child.offset);
+					if ((keyMeta.anchor !== undefined && keyMeta.anchor !== "")) registerAnchor(scalar, keyMeta.anchor, state, child.offset);
 					resetAllMeta();
 					pushNode(scalar, child.offset);
 					i = keyNextIdx - 1;
@@ -624,7 +628,7 @@ export function flattenBlockMapChildren(
 						let precededByIndicator = false;
 						for (let p = i - 1; p >= 0; p--) {
 							const prev = children[p];
-							if (!prev) continue;
+							if (prev === undefined) continue;
 							if (prev.type === "whitespace" && (prev.source === "-" || prev.source === "?")) {
 								precededByIndicator = true;
 								break;
@@ -674,7 +678,7 @@ export function flattenBlockMapChildren(
 					...(plainMeta.anchor !== undefined ? { anchor: plainMeta.anchor } : {}),
 					...(needsRaw ? { raw: value } : {}),
 				});
-				if (plainMeta.anchor) registerAnchor(scalar, plainMeta.anchor, state, child.offset);
+				if ((plainMeta.anchor !== undefined && plainMeta.anchor !== "")) registerAnchor(scalar, plainMeta.anchor, state, child.offset);
 				resetAllMeta();
 				pushNode(scalar, child.offset);
 				// After a truly MULTILINE plain scalar in value position (partsCount > 1
@@ -684,7 +688,7 @@ export function flattenBlockMapChildren(
 				// at the parent mapping level (valid, e.g. 4CQQ).
 				if (isValuePosition && partsCount > 1) {
 					const stoppedAtContent = findNextContentInList(children, nextIdx);
-					if (stoppedAtContent) {
+					if ((stoppedAtContent !== null)) {
 						const sn = stoppedAtContent.node;
 						const valueCol = lineCol(state.text, child.offset).column;
 						const nextCol = lineCol(state.text, sn.offset).column;
@@ -778,7 +782,7 @@ export function flattenBlockMapChildren(
 					...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
 					...(pendingMeta.anchor !== undefined ? { anchor: pendingMeta.anchor } : {}),
 				});
-				if (pendingMeta.anchor) registerAnchor(emptyKey, pendingMeta.anchor, state, child.offset);
+				if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(emptyKey, pendingMeta.anchor, state, child.offset);
 				const outerOnlyMeta = hasMeta(outerMeta) ? outerMeta : undefined;
 				const map = composeBlockMap(child, state, emptyKey, outerOnlyMeta);
 				resetAllMeta();
@@ -853,10 +857,11 @@ export function flattenBlockMapChildren(
 			...(trailingMeta.tag !== undefined ? { tag: trailingMeta.tag } : {}),
 			...(trailingMeta.anchor !== undefined ? { anchor: trailingMeta.anchor } : {}),
 		});
-		if (trailingMeta.anchor) registerAnchor(scalar, trailingMeta.anchor, state, 0);
+		if ((trailingMeta.anchor !== undefined && trailingMeta.anchor !== "")) registerAnchor(scalar, trailingMeta.anchor, state, 0);
 		items.push({ kind: "node", node: scalar });
 	}
 	return items;
+})(...args);
 }
 
 /**
@@ -873,12 +878,13 @@ export function flattenBlockMapChildren(
  * after the last pair are returned so the caller can attach them as the
  * containing collection's trailing `comment`.
  */
-export function buildPairs(
-	items: SemanticItem[],
-	pairs: YamlPair[],
-	text: string,
-	escaped?: Array<EscapedComment>,
-): string | undefined {
+export function buildPairs(items: SemanticItem[], pairs: YamlPair[], text: string, escaped?: Array<EscapedComment>): string | undefined;
+export function buildPairs(pairs: YamlPair[], text: string, escaped?: Array<EscapedComment>): (items: SemanticItem[]) => string | undefined;
+export function buildPairs(...args: [items: SemanticItem[], pairs: YamlPair[], text: string, escaped?: Array<EscapedComment> | undefined] | [pairs: YamlPair[], text: string, escaped?: Array<EscapedComment> | undefined]): string | undefined | ((items: SemanticItem[]) => string | undefined) {
+	return dual<
+		(...args: [items: SemanticItem[], pairs: YamlPair[], text: string, escaped?: Array<EscapedComment> | undefined] | [pairs: YamlPair[], text: string, escaped?: Array<EscapedComment> | undefined]) => string | undefined | ((items: SemanticItem[]) => string | undefined),
+		(items: SemanticItem[], pairs: YamlPair[], text: string, escaped?: Array<EscapedComment>) => string | undefined
+	>((args) => Array.isArray(args[1]), function buildPairs(items: SemanticItem[], pairs: YamlPair[], text: string, escaped?: Array<EscapedComment>): string | undefined {
 	let i = 0;
 	// Forward-attribution state: own-line comment parts and blank-line flag
 	// pending for the NEXT pair. Parts keep their offsets so the terminal
@@ -966,7 +972,7 @@ export function buildPairs(
 
 	while (i < items.length) {
 		const item = items[i];
-		if (!item) {
+		if (item === undefined) {
 			i++;
 			continue;
 		}
@@ -985,7 +991,7 @@ export function buildPairs(
 				// to the node that owns that line — the value when there is one,
 				// otherwise the key (divergence 1 in comments.ts).
 				const last = pairs[pairs.length - 1];
-				if (last) {
+				if ((last !== undefined)) {
 					pairs[pairs.length - 1] = withTrailingComment(last, cText);
 				}
 			} else {
@@ -1024,10 +1030,10 @@ export function buildPairs(
 				offset: valueSepOffset,
 				length: 0,
 			});
-			if (valueNode) {
+			if ((valueNode !== null)) {
 				pairs.push(pushPair(YamlPair.make({ key: nullKey, value: valueNode.node ?? null }), pendingFields, undefined));
 				i = valueNode.nextIdx;
-				lastEnd = valueNode.node ? nodeEnd(valueNode.node) : valueSepOffset + 1;
+				lastEnd = (valueNode.node !== null) ? nodeEnd(valueNode.node) : valueSepOffset + 1;
 				lastNode = valueNode.node ?? undefined;
 			} else {
 				pairs.push(pushPair(YamlPair.make({ key: nullKey, value: null }), pendingFields, undefined));
@@ -1040,15 +1046,15 @@ export function buildPairs(
 			let keyNode = item.node;
 			i++;
 			// For explicit key markers (? in flow), consume the next node as the key
-			if (item.kind === "key" && !keyNode) {
+			if (item.kind === "key" && keyNode === undefined) {
 				while (i < items.length && items[i]?.kind === "comment") i++;
 				if (i < items.length && items[i]?.kind === "node") {
 					keyNode = items[i]?.node;
 					i++;
 				}
 			}
-			if (keyNode) noteContentColumn(keyNode.offset);
-			const pendingFields = takePendingFields(keyNode ? keyNode.offset : -1);
+			if ((keyNode !== undefined)) noteContentColumn(keyNode.offset);
+			const pendingFields = takePendingFields((keyNode !== undefined) ? keyNode.offset : -1);
 			// Comments between key and value-sep (e.g., ? key # comment\n: value)
 			// attach to the pair's trailing comment — they have no own construct
 			// in the pair model.
@@ -1062,10 +1068,10 @@ export function buildPairs(
 				keyNode ?? YamlScalar.make({ value: null, style: "plain" as ScalarStyle, offset: 0, length: 0 });
 			// Look for value-sep
 			if (i < items.length && items[i]?.kind === "value-sep") {
-				const sepOffset = items[i]?.offset ?? (keyNode ? nodeEnd(keyNode) : 0);
+				const sepOffset = items[i]?.offset ?? ((keyNode !== undefined) ? nodeEnd(keyNode) : 0);
 				i++; // skip value-sep
 				const valueResult = consumeValueNode(items, i, text, sepOffset);
-				if (valueResult) {
+				if ((valueResult !== null)) {
 					// Comments between the `:` and the value: same-line comments
 					// are the pair's trailing comment; own-line comments lead the
 					// value node.
@@ -1088,7 +1094,7 @@ export function buildPairs(
 						),
 					);
 					i = valueResult.nextIdx;
-					lastEnd = valNode ? nodeEnd(valNode) : sepOffset + 1;
+					lastEnd = (valNode !== null) ? nodeEnd(valNode) : sepOffset + 1;
 					lastNode = valNode ?? undefined;
 				} else {
 					pairs.push(pushPair(YamlPair.make({ key: keyOrNull(), value: null }), pendingFields, pairTrailing));
@@ -1098,8 +1104,8 @@ export function buildPairs(
 			} else {
 				// Key with no value
 				pairs.push(pushPair(YamlPair.make({ key: keyOrNull(), value: null }), pendingFields, pairTrailing));
-				lastEnd = keyNode ? nodeEnd(keyNode) : lastEnd;
-				if (keyNode) lastNode = keyNode;
+				lastEnd = (keyNode !== undefined) ? nodeEnd(keyNode) : lastEnd;
+				if ((keyNode !== undefined)) lastNode = keyNode;
 			}
 			continue;
 		}
@@ -1137,6 +1143,7 @@ export function buildPairs(
 		return withLeadingBlank(kept);
 	}
 	return withLeadingBlank(pending);
+})(...args);
 }
 
 /**
@@ -1197,7 +1204,7 @@ function consumeValueNode(
 	let firstOwnLineIdx = -1;
 	while (i < items.length) {
 		const item = items[i];
-		if (!item) break;
+		if (item === undefined) break;
 		if (item.kind === "comment") {
 			const cText = item.comment ?? "";
 			if (item.offset !== undefined && sameLineSpan(text, sepOffset, item.offset)) {
@@ -1255,7 +1262,7 @@ function consumeValueNodeForNullKey(
 	let firstOwnLineIdx = -1;
 	while (i < items.length) {
 		const item = items[i];
-		if (!item) break;
+		if (item === undefined) break;
 		if (item.kind === "comment") {
 			if (firstOwnLineIdx < 0 && item.offset !== undefined && !sameLineSpan(text, valueSepOffset, item.offset)) {
 				firstOwnLineIdx = i;
@@ -1267,7 +1274,7 @@ function consumeValueNodeForNullKey(
 			if (i + 1 < items.length && items[i + 1]?.kind === "value-sep") {
 				// Check if the candidate node is on a different line from the
 				// null key's value-sep. Only refuse to consume cross-line nodes.
-				const nodeOffset = item.node && "offset" in item.node ? (item.node as YamlScalar).offset : 0;
+				const nodeOffset = (item.node !== undefined) && "offset" in item.node ? (item.node as YamlScalar).offset : 0;
 				const hasNewline = text.slice(valueSepOffset, nodeOffset).includes("\n");
 				if (hasNewline) {
 					// Cross-line: this node is a key for the next pair, not our value.
@@ -1293,7 +1300,13 @@ function consumeValueNodeForNullKey(
  * are distinguished by their type prefix, so `1` (int) never collides with
  * `"1"` (string) or `true`.
  */
-export function keyIdentity(key: YamlScalar, text: string): string {
+export function keyIdentity(key: YamlScalar, text: string): string;
+export function keyIdentity(text: string): (key: YamlScalar) => string;
+export function keyIdentity(...args: [key: YamlScalar, text: string] | [text: string]): string | ((key: YamlScalar) => string) {
+	return dual<
+		(...args: [key: YamlScalar, text: string] | [text: string]) => string | ((key: YamlScalar) => string),
+		(key: YamlScalar, text: string) => string
+	>(2, function keyIdentity(key: YamlScalar, text: string): string {
 	const v = key.value;
 	if (v === null) return "null";
 	switch (typeof v) {
@@ -1315,9 +1328,16 @@ export function keyIdentity(key: YamlScalar, text: string): string {
 		default:
 			return `o:${String(v)}`;
 	}
+})(...args);
 }
 
-export function checkDuplicateKeys(pairs: YamlPair[], state: ComposerState): void {
+export function checkDuplicateKeys(pairs: YamlPair[], state: ComposerState): void;
+export function checkDuplicateKeys(state: ComposerState): (pairs: YamlPair[]) => void;
+export function checkDuplicateKeys(...args: [pairs: YamlPair[], state: ComposerState] | [state: ComposerState]): void | ((pairs: YamlPair[]) => void) {
+	return dual<
+		(...args: [pairs: YamlPair[], state: ComposerState] | [state: ComposerState]) => void | ((pairs: YamlPair[]) => void),
+		(pairs: YamlPair[], state: ComposerState) => void
+	>(2, function checkDuplicateKeys(pairs: YamlPair[], state: ComposerState): void {
 	const seen = new Set<string>();
 	for (const pair of pairs) {
 		if (Schema.is(YamlScalar)(pair.key)) {
@@ -1333,6 +1353,7 @@ export function checkDuplicateKeys(pairs: YamlPair[], state: ComposerState): voi
 			seen.add(id);
 		}
 	}
+})(...args);
 }
 
 /**
@@ -1354,12 +1375,12 @@ function scanExplicitKeyShape(
 	text: string,
 ): { kind: "terminated"; matchIdx: number } | { kind: "inline-implicit-map"; endIdx: number } | { kind: "simple" } {
 	const qChild = children[qIdx];
-	const qLine = qChild ? lineCol(text, qChild.offset).line : -1;
+	const qLine = (qChild !== undefined) ? lineCol(text, qChild.offset).line : -1;
 	let inlineColonOnQLine = false;
 	let endIdx = children.length;
 	for (let j = qIdx + 1; j < children.length; j++) {
 		const c = children[j];
-		if (!c) continue;
+		if (c === undefined) continue;
 		if (c.type === "whitespace" && c.source === ":") {
 			const cCol = lineCol(text, c.offset).column;
 			if (cCol === qCol) {
@@ -1420,11 +1441,13 @@ function wasIntroducedByExplicitKeyIndicator(text: string, offset: number): bool
  * Validate that implicit mapping keys do not span multiple lines.
  * YAML 1.2 §7.4.2 requires implicit keys to fit on a single line.
  */
-export function checkMultilineImplicitKeys(
-	pairs: readonly YamlPair[],
-	state: ComposerState,
-	items?: readonly SemanticItem[],
-): void {
+export function checkMultilineImplicitKeys(pairs: readonly YamlPair[], state: ComposerState, items?: readonly SemanticItem[]): void;
+export function checkMultilineImplicitKeys(state: ComposerState, items?: readonly SemanticItem[]): (pairs: readonly YamlPair[]) => void;
+export function checkMultilineImplicitKeys(...args: [pairs: readonly YamlPair[], state: ComposerState, items?: readonly SemanticItem[] | undefined] | [state: ComposerState, items?: readonly SemanticItem[] | undefined]): void | ((pairs: readonly YamlPair[]) => void) {
+	return dual<
+		(...args: [pairs: readonly YamlPair[], state: ComposerState, items?: readonly SemanticItem[] | undefined] | [state: ComposerState, items?: readonly SemanticItem[] | undefined]) => void | ((pairs: readonly YamlPair[]) => void),
+		(pairs: readonly YamlPair[], state: ComposerState, items?: readonly SemanticItem[]) => void
+	>((args) => Array.isArray(args[0]), function checkMultilineImplicitKeys(pairs: readonly YamlPair[], state: ComposerState, items?: readonly SemanticItem[]): void {
 	// Check quoted scalar keys for newlines — quoted scalars (single/double)
 	// have CST spans that include the newline when they span multiple lines.
 	// Only check quoted styles; plain scalars in block context have single-line
@@ -1467,10 +1490,10 @@ export function checkMultilineImplicitKeys(
 	}
 
 	// In flow context, also check if key and value-sep (:) are on different lines
-	if (!items) return;
+	if (items === undefined) return;
 	for (let i = 0; i < items.length; i++) {
 		const item = items[i];
-		if (!item) continue;
+		if (item === undefined) continue;
 		if (item.kind !== "node" && item.kind !== "key") continue;
 		const node = item.node;
 		if (node?._tag !== "YamlScalar" || node.length === 0) continue;
@@ -1490,6 +1513,7 @@ export function checkMultilineImplicitKeys(
 			});
 		}
 	}
+})(...args);
 }
 
 /**
@@ -1498,16 +1522,17 @@ export function checkMultilineImplicitKeys(
  * Skips if the next non-trivia content is a ":" (value-sep), since that means
  * this node is actually a key, not a value.
  */
-export function checkTrailingContentOnSameLine(
-	children: readonly CstNode[],
-	startIdx: number,
-	valueNode: CstNode,
-	state: ComposerState,
-): void {
+export function checkTrailingContentOnSameLine(children: readonly CstNode[], startIdx: number, valueNode: CstNode, state: ComposerState): void;
+export function checkTrailingContentOnSameLine(startIdx: number, valueNode: CstNode, state: ComposerState): (children: readonly CstNode[]) => void;
+export function checkTrailingContentOnSameLine(...args: [children: readonly CstNode[], startIdx: number, valueNode: CstNode, state: ComposerState] | [startIdx: number, valueNode: CstNode, state: ComposerState]): void | ((children: readonly CstNode[]) => void) {
+	return dual<
+		(...args: [children: readonly CstNode[], startIdx: number, valueNode: CstNode, state: ComposerState] | [startIdx: number, valueNode: CstNode, state: ComposerState]) => void | ((children: readonly CstNode[]) => void),
+		(children: readonly CstNode[], startIdx: number, valueNode: CstNode, state: ComposerState) => void
+	>(4, function checkTrailingContentOnSameLine(children: readonly CstNode[], startIdx: number, valueNode: CstNode, state: ComposerState): void {
 	const valueEnd = valueNode.offset + valueNode.length;
 	for (let j = startIdx; j < children.length; j++) {
 		const next = children[j];
-		if (!next) continue;
+		if (next === undefined) continue;
 		if (next.type === "newline") break;
 		if (next.type === "comment") break; // comments are allowed
 		if (next.type === "whitespace") {
@@ -1525,6 +1550,7 @@ export function checkTrailingContentOnSameLine(
 		}
 		break;
 	}
+})(...args);
 }
 
 /**
@@ -1619,7 +1645,7 @@ function validateNoTabAfterContinuationValueSep(
 	let sawTab = false;
 	for (let j = idx + 1; j < children.length; j++) {
 		const c = children[j];
-		if (!c) continue;
+		if (c === undefined) continue;
 		if (c.type === "newline") return;
 		if (c.type === "whitespace") {
 			if (c.source.includes("\t")) sawTab = true;
@@ -1647,7 +1673,7 @@ function validateNoTabAfterContinuationValueSep(
 function precededByExplicitKeyMarker(children: readonly CstNode[], idx: number): boolean {
 	for (let j = idx - 1; j >= 0; j--) {
 		const c = children[j];
-		if (!c) continue;
+		if (c === undefined) continue;
 		if (c.type === "whitespace" || c.type === "newline" || c.type === "comment") continue;
 		if (c.type === "block-seq" && c.length === 0) return true;
 		if (c.type === "block-map" && c.source.trimEnd() === "?") return true;
@@ -1690,7 +1716,13 @@ function validatePropertyContinuationColumn(
 // Compose block seq
 // ---------------------------------------------------------------------------
 
-export function composeBlockSeq(cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlSeq {
+export function composeBlockSeq(cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlSeq;
+export function composeBlockSeq(state: ComposerState, meta?: NodeMeta): (cst: CstNode) => YamlSeq;
+export function composeBlockSeq(...args: [cst: CstNode, state: ComposerState, meta?: NodeMeta | undefined] | [state: ComposerState, meta?: NodeMeta | undefined]): YamlSeq | ((cst: CstNode) => YamlSeq) {
+	return dual<
+		(...args: [cst: CstNode, state: ComposerState, meta?: NodeMeta | undefined] | [state: ComposerState, meta?: NodeMeta | undefined]) => YamlSeq | ((cst: CstNode) => YamlSeq),
+		(cst: CstNode, state: ComposerState, meta?: NodeMeta) => YamlSeq
+	>((args) => args[0] !== undefined && "type" in args[0], function composeBlockSeq(cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlSeq {
 	// Nesting-depth guard: unbounded recursion is a stack-overflow DoS vector.
 	if (!enterNesting(state, cst)) {
 		return YamlSeq.make({ items: [], style: "block", offset: cst.offset, length: cst.length });
@@ -1700,6 +1732,7 @@ export function composeBlockSeq(cst: CstNode, state: ComposerState, meta?: NodeM
 	} finally {
 		exitNesting(state);
 	}
+})(...args);
 }
 
 function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlSeq {
@@ -1787,7 +1820,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 
 	for (let ci = 0; ci < children.length; ci++) {
 		const child = children[ci];
-		if (!child) continue;
+		if (child === undefined) continue;
 		if (child.type === "newline") {
 			if (hasMeta(pendingMeta)) sawNewlineSincePending = true;
 			continue;
@@ -1796,7 +1829,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 			const cText = rawCommentText(child.source);
 			if (rawItems.length > 0 && !isOwnLineAt(state.text, child.offset)) {
 				const prev = rawItems[rawItems.length - 1];
-				if (prev) rawItems[rawItems.length - 1] = withCommentFields(prev, { comment: cText });
+				if ((prev !== undefined)) rawItems[rawItems.length - 1] = withCommentFields(prev, { comment: cText });
 			} else {
 				acceptOwnLineComment(cText, child.offset);
 			}
@@ -1817,7 +1850,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 						...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
 						...(pendingMeta.anchor !== undefined ? { anchor: pendingMeta.anchor } : {}),
 					});
-					if (pendingMeta.anchor) registerAnchor(emptyScalar, pendingMeta.anchor, state, child.offset);
+					if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(emptyScalar, pendingMeta.anchor, state, child.offset);
 					pendingMeta = {};
 					items.push(emptyScalar);
 				}
@@ -1847,7 +1880,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 			// the first key of an implicit mapping (e.g., "- name: value")
 			const nextSig = findNextSignificantChild(children, ci + 1, true);
 			const nextSigChild = nextSig !== null ? children[nextSig] : undefined;
-			if (nextSig !== null && nextSigChild && nextSigChild.type === "block-map") {
+			if (nextSig !== null && (nextSigChild !== undefined) && nextSigChild.type === "block-map") {
 				// When pending meta is separated from the implicit-map's first key
 				// by a newline, the meta applies to the OUTER collection (the map),
 				// not to the inner key. Example: `- !!map\n  key: value` — `!!map`
@@ -1889,7 +1922,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 						...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
 						...(pendingMeta.anchor !== undefined ? { anchor: pendingMeta.anchor } : {}),
 					});
-					if (pendingMeta.anchor) registerAnchor(scalar, pendingMeta.anchor, state, child.offset);
+					if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(scalar, pendingMeta.anchor, state, child.offset);
 					pendingMeta = {};
 					sawEntry = false;
 					items.push(scalar);
@@ -1926,7 +1959,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 					...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
 					...(pendingMeta.anchor !== undefined ? { anchor: pendingMeta.anchor } : {}),
 				});
-				if (pendingMeta.anchor) registerAnchor(emptyKey, pendingMeta.anchor, state, child.offset);
+				if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(emptyKey, pendingMeta.anchor, state, child.offset);
 				pendingMeta = {};
 				sawNewlineSincePending = false;
 				const map = composeBlockMap(child, state, emptyKey, undefined);
@@ -1989,7 +2022,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 			...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
 			...(pendingMeta.anchor !== undefined ? { anchor: pendingMeta.anchor } : {}),
 		});
-		if (pendingMeta.anchor) registerAnchor(scalar, pendingMeta.anchor, state, 0);
+		if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(scalar, pendingMeta.anchor, state, 0);
 		items.push(scalar);
 	}
 
@@ -2043,7 +2076,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 		...(seqComment !== undefined ? { comment: seqComment } : {}),
 	});
 
-	if (meta?.anchor) registerAnchor(seq, meta.anchor, state, cst.offset);
+	if ((meta?.anchor !== undefined && meta?.anchor !== "")) registerAnchor(seq, meta.anchor, state, cst.offset);
 	return seq;
 }
 
@@ -2055,14 +2088,13 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
  * Compose a block map from flat document children (no block-map wrapper node).
  * This happens in multi-document scenarios where the parser doesn't create a block-map node.
  */
-export function composeFlatBlockMap(
-	children: readonly CstNode[],
-	startIdx: number,
-	parentCst: CstNode,
-	state: ComposerState,
-	externalFirstKey: YamlNode,
-	meta?: NodeMeta,
-): YamlMap {
+export function composeFlatBlockMap(children: readonly CstNode[], startIdx: number, parentCst: CstNode, state: ComposerState, externalFirstKey: YamlNode, meta?: NodeMeta): YamlMap;
+export function composeFlatBlockMap(startIdx: number, parentCst: CstNode, state: ComposerState, externalFirstKey: YamlNode, meta?: NodeMeta): (children: readonly CstNode[]) => YamlMap;
+export function composeFlatBlockMap(...args: [children: readonly CstNode[], startIdx: number, parentCst: CstNode, state: ComposerState, externalFirstKey: YamlNode, meta?: NodeMeta | undefined] | [startIdx: number, parentCst: CstNode, state: ComposerState, externalFirstKey: YamlNode, meta?: NodeMeta | undefined]): YamlMap | ((children: readonly CstNode[]) => YamlMap) {
+	return dual<
+		(...args: [children: readonly CstNode[], startIdx: number, parentCst: CstNode, state: ComposerState, externalFirstKey: YamlNode, meta?: NodeMeta | undefined] | [startIdx: number, parentCst: CstNode, state: ComposerState, externalFirstKey: YamlNode, meta?: NodeMeta | undefined]) => YamlMap | ((children: readonly CstNode[]) => YamlMap),
+		(children: readonly CstNode[], startIdx: number, parentCst: CstNode, state: ComposerState, externalFirstKey: YamlNode, meta?: NodeMeta) => YamlMap
+	>((args) => Array.isArray(args[0]), function composeFlatBlockMap(children: readonly CstNode[], startIdx: number, parentCst: CstNode, state: ComposerState, externalFirstKey: YamlNode, meta?: NodeMeta): YamlMap {
 	// Collect the remaining children into semantic items
 	const remainingChildren = children.slice(startIdx);
 	const items = flattenBlockMapChildren(remainingChildren, state);
@@ -2098,6 +2130,7 @@ export function composeFlatBlockMap(
 		...(mapComment !== undefined ? { comment: mapComment } : {}),
 	});
 
-	if (meta?.anchor) registerAnchor(map, meta.anchor, state, offset);
+	if ((meta?.anchor !== undefined && meta?.anchor !== "")) registerAnchor(map, meta.anchor, state, offset);
 	return map;
+})(...args);
 }

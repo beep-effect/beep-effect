@@ -32,6 +32,7 @@ import type { ComposerState, FlowComposers, NodeMeta } from "./state.ts";
 import { clearMeta, commentProps, createState, hasMeta, sameLine } from "./state.ts";
 import { parseDirective, validateTagHandlesInDocument } from "./tags.ts";
 import * as Schema from "effect/Schema";
+import { dual } from "effect/Function";
 
 /** The flow-composer dispatch wired into every state this module creates. */
 const FLOW: FlowComposers = { composeFlowMap, composeFlowSeq };
@@ -54,7 +55,7 @@ function validateAnchorTagNotFollowedBySeqDashOnSameLine(
 ): void {
 	for (let j = idx + 1; j < children.length; j++) {
 		const c = children[j];
-		if (!c) continue;
+		if (c === undefined) continue;
 		if (c.type === "newline") return; // ok — anchor on its own line
 		if (c.type === "whitespace") {
 			// Structural indicators ("-", ":", "?", "---", "...") are typed as
@@ -93,7 +94,7 @@ function checkDocumentMarkerSameLine(
 ): void {
 	for (let i = 0; i < children.length; i++) {
 		const child = children[i];
-		if (!child) continue;
+		if (child === undefined) continue;
 		// Document markers appear as "whitespace"-typed CST nodes with source "---" or "..."
 		if (child.type !== "whitespace") continue;
 		const src = child.source;
@@ -104,7 +105,7 @@ function checkDocumentMarkerSameLine(
 		let found = false;
 		for (let j = i + 1; j < children.length; j++) {
 			const next = children[j];
-			if (!next) continue;
+			if (next === undefined) continue;
 			if (next.type === "newline") break;
 			if (next.type === "whitespace" && next.source.trim() === "") continue;
 			if (next.type === "comment") break; // comments are allowed after ...
@@ -122,9 +123,9 @@ function checkDocumentMarkerSameLine(
 		}
 
 		// For "..." at end of document, check first content of next document
-		if (!found && nextDocChildren) {
+		if (!found && (nextDocChildren !== undefined)) {
 			for (const next of nextDocChildren) {
-				if (!next) continue;
+				if (next === undefined) continue;
 				if (next.type === "newline") break;
 				if (next.type === "whitespace" && next.source.trim() === "") continue;
 				if (sameLine(state.text, child.offset, next.offset)) {
@@ -155,7 +156,7 @@ function checkTrailingContentAfterDocValue(
 ): void {
 	for (let j = startIdx; j < children.length; j++) {
 		const next = children[j];
-		if (!next) continue;
+		if (next === undefined) continue;
 		if (next.type === "newline" || next.type === "comment") continue;
 		if (next.type === "whitespace") {
 			// Document markers (---, ...) are OK
@@ -205,12 +206,13 @@ function checkTrailingContentAfterDocValue(
 // Compose document
 // ---------------------------------------------------------------------------
 
-export function composeDocument(
-	cst: CstNode,
-	state: ComposerState,
-	hasSubsequentDocuments = false,
-	nextDocCst?: CstNode,
-): RawYamlDocument {
+export function composeDocument(cst: CstNode, state: ComposerState, hasSubsequentDocuments?: boolean, nextDocCst?: CstNode): RawYamlDocument;
+export function composeDocument(state: ComposerState, hasSubsequentDocuments?: boolean, nextDocCst?: CstNode): (cst: CstNode) => RawYamlDocument;
+export function composeDocument(...args: [cst: CstNode, state: ComposerState, hasSubsequentDocuments?: boolean | undefined, nextDocCst?: CstNode | undefined] | [state: ComposerState, hasSubsequentDocuments?: boolean | undefined, nextDocCst?: CstNode | undefined]): RawYamlDocument | ((cst: CstNode) => RawYamlDocument) {
+	return dual<
+		(...args: [cst: CstNode, state: ComposerState, hasSubsequentDocuments?: boolean | undefined, nextDocCst?: CstNode | undefined] | [state: ComposerState, hasSubsequentDocuments?: boolean | undefined, nextDocCst?: CstNode | undefined]) => RawYamlDocument | ((cst: CstNode) => RawYamlDocument),
+		(cst: CstNode, state: ComposerState, hasSubsequentDocuments?: boolean, nextDocCst?: CstNode) => RawYamlDocument
+	>((args) => args[0] !== undefined && "type" in args[0], function composeDocument(cst: CstNode, state: ComposerState, hasSubsequentDocuments = false, nextDocCst?: CstNode): RawYamlDocument {
 	// Hardening: unescaped C0 control characters (other than tab/LF/CR) are
 	// not c-printable (YAML 1.2 §5.1) and are invalid anywhere in the stream.
 	// Escaped forms in double-quoted scalars never appear raw in the source,
@@ -276,7 +278,7 @@ export function composeDocument(
 
 	while (i < children.length) {
 		const child = children[i];
-		if (!child) {
+		if (child === undefined) {
 			i++;
 			continue;
 		}
@@ -284,13 +286,13 @@ export function composeDocument(
 		// Directives
 		if (child.type === "directive") {
 			const directive = parseDirective(child.source);
-			if (directive) {
+			if ((directive !== null)) {
 				directives.push(directive);
 				// Populate tag map from %TAG directives
 				if (directive.name === "TAG" && directive.parameters.length >= 2) {
 					const handle = directive.parameters[0];
 					const prefix = directive.parameters[1];
-					if (handle && prefix) {
+					if ((handle !== undefined && handle !== "") && (prefix !== undefined && prefix !== "")) {
 						state.tagMap.set(handle, prefix);
 					}
 				}
@@ -397,13 +399,13 @@ export function composeDocument(
 		if (child.type === "flow-scalar" || child.type === "block-scalar") {
 			// Check if next meaningful child is a block-map (this scalar is a key)
 			const nextContent = findNextContentChild(children, i + 1);
-			if (nextContent && nextContent.type === "block-map") {
+			if ((nextContent !== null) && nextContent.type === "block-map") {
 				// A mapping cannot start on the `---` line. The `---` directive end
 				// is followed by a single value (or anchor+value), but a mapping
 				// pattern (key:) on the same line as `---` is malformed (9KBC, CXX2).
 				if (hasDocStart) {
 					const docStartChild = children.find((c) => c.type === "whitespace" && c.source === "---");
-					if (docStartChild && sameLine(state.text, docStartChild.offset, child.offset)) {
+					if ((docStartChild !== undefined) && sameLine(state.text, docStartChild.offset, child.offset)) {
 						state.errors.push({
 							code: "UnexpectedToken",
 							message: "Mapping cannot start on document-start (---) line",
@@ -483,7 +485,7 @@ export function composeDocument(
 					...(combined.tag !== undefined ? { tag: combined.tag } : {}),
 					...(combined.anchor !== undefined ? { anchor: combined.anchor } : {}),
 				});
-				if (combined.anchor) registerAnchor(contents, combined.anchor, state, child.offset);
+				if ((combined.anchor !== undefined && combined.anchor !== "")) registerAnchor(contents, combined.anchor, state, child.offset);
 				clearMeta(meta);
 				clearMeta(outerMeta);
 				sawNewlineSinceMeta = false;
@@ -491,7 +493,7 @@ export function composeDocument(
 				// content forms a mapping, that mapping is trailing garbage (2CMS).
 				if (partsCount > 1) {
 					const nextContent2 = findNextContentChild(children, nextIdx);
-					if (nextContent2) {
+					if ((nextContent2 !== null)) {
 						const isTrailing =
 							(nextContent2.type === "flow-scalar" &&
 								hasValueSepAfter(children, indexOfChild(children, nextContent2) + 1)) ||
@@ -567,7 +569,7 @@ export function composeDocument(
 
 		if (child.type === "flow-map") {
 			const nextAfterFlowMap0 = findNextContentChild(children, i + 1);
-			const flowIsKey = !!nextAfterFlowMap0 && nextAfterFlowMap0.type === "block-map";
+			const flowIsKey = nextAfterFlowMap0 !== null && nextAfterFlowMap0.type === "block-map";
 			let flowMeta: NodeMeta | undefined;
 			let mapMeta: NodeMeta | undefined;
 			if (flowIsKey && hasMeta(outerMeta)) {
@@ -584,7 +586,7 @@ export function composeDocument(
 			clearMeta(outerMeta);
 			sawNewlineSinceMeta = false;
 			i++;
-			if (flowIsKey && nextAfterFlowMap0) {
+			if (flowIsKey && (nextAfterFlowMap0 !== null)) {
 				const map = composeBlockMap(nextAfterFlowMap0, state, flowMap, mapMeta);
 				contents = map;
 				while (i < children.length && children[i] !== nextAfterFlowMap0) i++;
@@ -598,7 +600,7 @@ export function composeDocument(
 
 		if (child.type === "flow-seq") {
 			const nextAfterFlowSeq0 = findNextContentChild(children, i + 1);
-			const flowIsKey = !!nextAfterFlowSeq0 && nextAfterFlowSeq0.type === "block-map";
+			const flowIsKey = nextAfterFlowSeq0 !== null && nextAfterFlowSeq0.type === "block-map";
 			let flowMeta: NodeMeta | undefined;
 			let mapMeta: NodeMeta | undefined;
 			if (flowIsKey && hasMeta(outerMeta)) {
@@ -617,7 +619,7 @@ export function composeDocument(
 			i++;
 			// Check if flow collection is a mapping key (followed by block-map with ":")
 			const nextAfterFlowSeq = findNextContentChild(children, i);
-			if (nextAfterFlowSeq && nextAfterFlowSeq.type === "block-map") {
+			if ((nextAfterFlowSeq !== null) && nextAfterFlowSeq.type === "block-map") {
 				// Flow seq is a key — compose the block-map with this as the first key
 				const map = composeBlockMap(nextAfterFlowSeq, state, flowSeq, mapMeta);
 				contents = map;
@@ -657,7 +659,7 @@ export function composeDocument(
 	let hasDocStartTab = false;
 	for (let ci = 0; ci < children.length; ci++) {
 		const c = children[ci];
-		if (c && c.type === "whitespace" && c.source === "---") {
+		if ((c !== undefined) && c.type === "whitespace" && c.source === "---") {
 			const after = state.text[c.offset + c.length];
 			if (after === "\t") hasDocStartTab = true;
 			break;
@@ -740,6 +742,7 @@ export function composeDocument(
 		...(headerForDocument !== undefined ? { commentBefore: headerForDocument } : {}),
 		...(documentCommentAfter !== undefined ? { comment: documentCommentAfter } : {}),
 	};
+})(...args);
 }
 
 // ---------------------------------------------------------------------------
@@ -875,9 +878,9 @@ function validateDirectives(
 				});
 			}
 			// Recursively check for directives inside content nodes (e.g. block-map)
-			if (hasContent && child.children) {
+			if (hasContent && (child.children !== undefined)) {
 				const nested = findNestedDirective(child);
-				if (nested) {
+				if ((nested !== null)) {
 					state.errors.push({
 						code: "InvalidDirective",
 						message: "Directive after content requires a document-end marker (...) first",
@@ -893,10 +896,10 @@ function validateDirectives(
 /** Recursively find the first directive node within a CST subtree. */
 function findNestedDirective(node: CstNode): CstNode | null {
 	if (node.type === "directive") return node;
-	if (node.children) {
+	if ((node.children !== undefined)) {
 		for (const child of node.children) {
 			const found = findNestedDirective(child);
-			if (found) return found;
+			if ((found !== null)) return found;
 		}
 	}
 	return null;
@@ -910,10 +913,16 @@ function findNestedDirective(node: CstNode): CstNode | null {
  * CST document node after the first: if it contains directives, the
  * preceding document must have ended with `...`.
  */
-export function validateCrossDocumentDirectives(cstNodes: readonly CstNode[], state: ComposerState): void {
+export function validateCrossDocumentDirectives(cstNodes: readonly CstNode[], state: ComposerState): void;
+export function validateCrossDocumentDirectives(state: ComposerState): (cstNodes: readonly CstNode[]) => void;
+export function validateCrossDocumentDirectives(...args: [cstNodes: readonly CstNode[], state: ComposerState] | [state: ComposerState]): void | ((cstNodes: readonly CstNode[]) => void) {
+	return dual<
+		(...args: [cstNodes: readonly CstNode[], state: ComposerState] | [state: ComposerState]) => void | ((cstNodes: readonly CstNode[]) => void),
+		(cstNodes: readonly CstNode[], state: ComposerState) => void
+	>(2, function validateCrossDocumentDirectives(cstNodes: readonly CstNode[], state: ComposerState): void {
 	for (let docIdx = 1; docIdx < cstNodes.length; docIdx++) {
 		const cst = cstNodes[docIdx];
-		if (!cst) continue;
+		if (cst === undefined) continue;
 		const children = cst.children ?? [];
 
 		// QLJ7: directives are local to a single document. Subsequent
@@ -929,12 +938,12 @@ export function validateCrossDocumentDirectives(cstNodes: readonly CstNode[], st
 
 		// Check if the previous document ended with "..."
 		const prevCst = cstNodes[docIdx - 1];
-		if (!prevCst) continue;
+		if (prevCst === undefined) continue;
 		const prevChildren = prevCst.children ?? [];
 		let prevEndedWithDocEnd = false;
 		for (let i = prevChildren.length - 1; i >= 0; i--) {
 			const c = prevChildren[i];
-			if (!c) continue;
+			if (c === undefined) continue;
 			// Document-end markers are stored as whitespace type with source "..."
 			if (c.source === "...") {
 				prevEndedWithDocEnd = true;
@@ -959,6 +968,7 @@ export function validateCrossDocumentDirectives(cstNodes: readonly CstNode[], st
 			}
 		}
 	}
+})(...args);
 }
 
 // ---------------------------------------------------------------------------
@@ -1075,8 +1085,15 @@ export const EMPTY_DOCUMENT: RawYamlDocument = {
  * Cross-document directive-placement errors are validated into the same
  * state and therefore appear in the returned document's `errors`.
  */
-export function composeFirstDocument(text: string, options?: ParseOptionsInput): RawYamlDocument {
+export function composeFirstDocument(text: string, options?: ParseOptionsInput): RawYamlDocument;
+export function composeFirstDocument(options?: ParseOptionsInput): (text: string) => RawYamlDocument;
+export function composeFirstDocument(...args: [text: string, options?: ParseOptionsInput | undefined] | [options?: ParseOptionsInput | undefined]): RawYamlDocument | ((text: string) => RawYamlDocument) {
+	return dual<
+		(...args: [text: string, options?: ParseOptionsInput | undefined] | [options?: ParseOptionsInput | undefined]) => RawYamlDocument | ((text: string) => RawYamlDocument),
+		(text: string, options?: ParseOptionsInput) => RawYamlDocument
+	>((args) => typeof args[0] === "string", function composeFirstDocument(text: string, options?: ParseOptionsInput): RawYamlDocument {
 	return composeFirstDocumentCounted(text, options).document;
+})(...args);
 }
 
 /**
@@ -1087,10 +1104,13 @@ export function composeFirstDocument(text: string, options?: ParseOptionsInput):
  * must refuse multi-document input (the `YamlFormat` single-document
  * contract) read `documentCount` instead of re-parsing.
  */
-export function composeFirstDocumentCounted(
-	text: string,
-	options?: ParseOptionsInput,
-): { readonly document: RawYamlDocument; readonly documentCount: number } {
+export function composeFirstDocumentCounted(text: string, options?: ParseOptionsInput): { readonly document: RawYamlDocument; readonly documentCount: number };
+export function composeFirstDocumentCounted(options?: ParseOptionsInput): (text: string) => { readonly document: RawYamlDocument; readonly documentCount: number };
+export function composeFirstDocumentCounted(...args: [text: string, options?: ParseOptionsInput | undefined] | [options?: ParseOptionsInput | undefined]): { readonly document: RawYamlDocument; readonly documentCount: number } | ((text: string) => { readonly document: RawYamlDocument; readonly documentCount: number }) {
+	return dual<
+		(...args: [text: string, options?: ParseOptionsInput | undefined] | [options?: ParseOptionsInput | undefined]) => { readonly document: RawYamlDocument; readonly documentCount: number } | ((text: string) => { readonly document: RawYamlDocument; readonly documentCount: number }),
+		(text: string, options?: ParseOptionsInput) => { readonly document: RawYamlDocument; readonly documentCount: number }
+	>((args) => typeof args[0] === "string", function composeFirstDocumentCounted(text: string, options?: ParseOptionsInput): { readonly document: RawYamlDocument; readonly documentCount: number } {
 	const cstNodes = parseCSTAll(text);
 	const state = createState(text, FLOW, options);
 
@@ -1098,12 +1118,13 @@ export function composeFirstDocumentCounted(
 	validateCrossDocumentDirectives(cstNodes, state);
 
 	const doc = cstNodes[0];
-	if (!doc) {
+	if (doc === undefined) {
 		return { document: EMPTY_DOCUMENT, documentCount: 0 };
 	}
 
 	const result = composeDocument(doc, state, cstNodes.length > 1, cstNodes[1]);
 	return { document: decorateDocumentSourceMultiline(result, text), documentCount: cstNodes.length };
+})(...args);
 }
 
 /**
@@ -1112,10 +1133,13 @@ export function composeFirstDocumentCounted(
  * cross-document directive validation runs in its own state whose errors
  * are returned unfiltered as `streamErrors` (the facade applies its filter).
  */
-export function composeAllDocuments(
-	text: string,
-	options?: ParseOptionsInput,
-): { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> } {
+export function composeAllDocuments(text: string, options?: ParseOptionsInput): { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> };
+export function composeAllDocuments(options?: ParseOptionsInput): (text: string) => { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> };
+export function composeAllDocuments(...args: [text: string, options?: ParseOptionsInput | undefined] | [options?: ParseOptionsInput | undefined]): { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> } | ((text: string) => { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> }) {
+	return dual<
+		(...args: [text: string, options?: ParseOptionsInput | undefined] | [options?: ParseOptionsInput | undefined]) => { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> } | ((text: string) => { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> }),
+		(text: string, options?: ParseOptionsInput) => { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> }
+	>((args) => typeof args[0] === "string", function composeAllDocuments(text: string, options?: ParseOptionsInput): { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> } {
 	const cstNodes = parseCSTAll(text);
 	const documents: RawYamlDocument[] = [];
 
@@ -1125,13 +1149,14 @@ export function composeAllDocuments(
 
 	for (let i = 0; i < cstNodes.length; i++) {
 		const cst = cstNodes[i];
-		if (!cst) continue;
+		if (cst === undefined) continue;
 		const state = createState(text, FLOW, options);
 		const doc = composeDocument(cst, state, i < cstNodes.length - 1, cstNodes[i + 1]);
 		documents.push(decorateDocumentSourceMultiline(doc, text));
 	}
 
 	return { documents, streamErrors: crossDocState.errors };
+})(...args);
 }
 
 /**

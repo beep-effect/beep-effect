@@ -7,8 +7,9 @@
 // relationships are expressed via `items`/`key`/`value`, and the recursive
 // types are handled with `Schema.suspend`.
 
-import { Option, Schema } from "effect";
+import { Data, Option, Schema } from "effect";
 import type { YamlPath } from "./YamlEdit.ts";
+import { dual } from "effect/Function";
 
 /**
  * YAML scalar presentation styles.
@@ -409,7 +410,7 @@ function findByPath(root: YamlNode, path: YamlPath): Option.Option<YamlNode> {
 			const pair: YamlPair | undefined = current.items.find(
 				(p: YamlPair) => Schema.is(YamlScalar)(p.key) && typeof p.key.value === "string" && p.key.value === segment,
 			);
-			if (!pair || pair.value === null) {
+			if (pair === undefined || pair.value === null) {
 				return Option.none();
 			}
 			current = pair.value;
@@ -535,9 +536,9 @@ function setOwnProperty(obj: Record<string, unknown>, key: string, value: unknow
  * catches it and materializes a fatal `AliasCountExceeded` `YamlParseError`
  * (or, for `Yaml.equals`, treats the input as malformed).
  */
-export class AliasExpansionBudgetExceeded extends Error {
+export class AliasExpansionBudgetExceeded extends Data.TaggedError("AliasExpansionBudgetExceeded")<{ readonly message: string }> {
 	constructor(limit: number) {
-		super(`Alias expansion exceeded budget of ${limit} nodes`);
+		super({ message: `Alias expansion exceeded budget of ${limit} nodes` });
 		this.name = "AliasExpansionBudgetExceeded";
 	}
 }
@@ -578,8 +579,15 @@ function defaultBudget(): ExpansionBudget {
  * {@link AliasExpansionBudgetExceeded} when the cap is exceeded. Not
  * re-exported from the package entry point.
  */
-export function nodeToJsValue(node: YamlNode | null, anchors: Map<string, YamlNode>, maxAliasCount: number): unknown {
+export function nodeToJsValue(node: YamlNode | null, anchors: Map<string, YamlNode>, maxAliasCount: number): unknown;
+export function nodeToJsValue(anchors: Map<string, YamlNode>, maxAliasCount: number): (node: YamlNode | null) => unknown;
+export function nodeToJsValue(...args: [node: YamlNode | null, anchors: Map<string, YamlNode>, maxAliasCount: number] | [anchors: Map<string, YamlNode>, maxAliasCount: number]): unknown | ((node: YamlNode | null) => unknown) {
+	return dual<
+		(...args: [node: YamlNode | null, anchors: Map<string, YamlNode>, maxAliasCount: number] | [anchors: Map<string, YamlNode>, maxAliasCount: number]) => unknown | ((node: YamlNode | null) => unknown),
+		(node: YamlNode | null, anchors: Map<string, YamlNode>, maxAliasCount: number) => unknown
+	>(3, function nodeToJsValue(node: YamlNode | null, anchors: Map<string, YamlNode>, maxAliasCount: number): unknown {
 	return nodeToValue(node, anchors, { count: 0, limit: aliasExpansionLimit(maxAliasCount) });
+})(...args);
 }
 
 function nodeToValue(

@@ -62,7 +62,7 @@ function deepEqual(a: unknown, b: unknown): boolean {
 describe("yaml-test-suite compliance", () => {
 	for (const tc of allCases) {
 		// Skip entirely if in SKIP map
-		if (SKIP[tc.id]) {
+		if ((SKIP[tc.id] !== undefined && SKIP[tc.id] !== "")) {
 			it.skip(`[${tc.id}] ${tc.name} (SKIP: ${SKIP[tc.id]})`, () => {});
 			continue;
 		}

@@ -86,8 +86,8 @@ describe("YamlTokens", () => {
 	describe("YamlToken schema", () => {
 		it("decodes and re-encodes through the class codec", () => {
 			const token = YamlToken.make({ kind: "scalar", text: "a", offset: 0, length: 1, line: 0, character: 0 });
-			const encoded = Schema.encodeSync(YamlToken)(token);
-			const decoded = Schema.decodeSync(YamlToken)(encoded);
+			const encoded = Result.getOrThrow(Schema.encodeResult(YamlToken)(token));
+			const decoded = Result.getOrThrow(Schema.decodeResult(YamlToken)(encoded));
 			assert.deepStrictEqual(decoded, token);
 		});
 	});

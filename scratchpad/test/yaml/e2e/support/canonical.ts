@@ -9,6 +9,7 @@
 import type { RawYamlDocument } from "../../../../effected/yaml/internal/raw-document.ts";
 import { YamlMap, YamlScalar, YamlSeq } from "../../../../effected/yaml/YamlNode.ts";
 import * as Schema from "effect/Schema";
+import { dual } from "effect/Function";
 
 /** Render a string as a YAML double-quoted single-line scalar. */
 function renderDoubleQuoted(s: string): string {
@@ -32,7 +33,13 @@ function renderDoubleQuoted(s: string): string {
  * differs from a direct `stringifyDocument` in several cases. See the inline
  * fixture-ID comments for the specific shapes.
  */
-export function applySingleDocCanonical(output: string, doc: RawYamlDocument, source: string): string {
+export function applySingleDocCanonical(output: string, doc: RawYamlDocument, source: string): string;
+export function applySingleDocCanonical(doc: RawYamlDocument, source: string): (output: string) => string;
+export function applySingleDocCanonical(...args: [output: string, doc: RawYamlDocument, source: string] | [doc: RawYamlDocument, source: string]): string | ((output: string) => string) {
+	return dual<
+		(...args: [output: string, doc: RawYamlDocument, source: string] | [doc: RawYamlDocument, source: string]) => string | ((output: string) => string),
+		(output: string, doc: RawYamlDocument, source: string) => string
+	>(3, function applySingleDocCanonical(output: string, doc: RawYamlDocument, source: string): string {
 	const root = doc.contents;
 
 	// 2LFX: scalar root with reserved (non-YAML/TAG) directives, where the source
@@ -43,8 +50,8 @@ export function applySingleDocCanonical(output: string, doc: RawYamlDocument, so
 	// (rather than a space) before the scalar body.
 	if (
 		Schema.is(YamlScalar)(root) &&
-		!root.tag &&
-		!root.anchor &&
+		!((root.tag !== undefined && root.tag !== "")) &&
+		!((root.anchor !== undefined && root.anchor !== "")) &&
 		doc.hasDocumentStart &&
 		hasReservedDirective(doc) &&
 		hadDocStartOnOwnLine(source) &&
@@ -157,12 +164,19 @@ export function applySingleDocCanonical(output: string, doc: RawYamlDocument, so
 	if (typeof val !== "string" || !val.includes("\n")) return output;
 	if (firstAfter !== "'" && firstAfter !== '"') return output;
 	return output.slice(4);
+})(...args);
 }
 
 /**
  * Apply canonical multi-doc conventions on top of the joined per-doc output.
  */
-export function applyMultiDocCanonical(output: string, docs: ReadonlyArray<RawYamlDocument>): string {
+export function applyMultiDocCanonical(output: string, docs: ReadonlyArray<RawYamlDocument>): string;
+export function applyMultiDocCanonical(docs: ReadonlyArray<RawYamlDocument>): (output: string) => string;
+export function applyMultiDocCanonical(...args: [output: string, docs: ReadonlyArray<RawYamlDocument>] | [docs: ReadonlyArray<RawYamlDocument>]): string | ((output: string) => string) {
+	return dual<
+		(...args: [output: string, docs: ReadonlyArray<RawYamlDocument>] | [docs: ReadonlyArray<RawYamlDocument>]) => string | ((output: string) => string),
+		(output: string, docs: ReadonlyArray<RawYamlDocument>) => string
+	>(2, function applyMultiDocCanonical(output: string, docs: ReadonlyArray<RawYamlDocument>): string {
 	let result = output;
 
 	// 6WLZ: multi-doc stream where every doc has explicit `---` AND at least
@@ -177,11 +191,11 @@ export function applyMultiDocCanonical(output: string, docs: ReadonlyArray<RawYa
 		docs.some((d) => d.directives.some((dir) => dir.name === "TAG" && dir.parameters[0] === "!"))
 	) {
 		const segments = splitMultiDocOutput(result, docs);
-		if (segments) {
+		if ((segments !== null)) {
 			result = segments
 				.map((segment, idx) => {
 					const doc = docs[idx];
-					if (!doc || doc.contents === null) return segment;
+					if (doc === undefined || doc.contents === null) return segment;
 					return splitDocStartFromTaggedScalar(segment);
 				})
 				.join("");
@@ -196,7 +210,7 @@ export function applyMultiDocCanonical(output: string, docs: ReadonlyArray<RawYa
 	if (docs.length >= 2) {
 		const last = docs[docs.length - 1];
 		if (
-			last &&
+			(last !== undefined) &&
 			last.contents === null &&
 			last.hasDocumentStart &&
 			!last.hasDocumentEnd &&
@@ -208,6 +222,7 @@ export function applyMultiDocCanonical(output: string, docs: ReadonlyArray<RawYa
 	}
 
 	return result;
+})(...args);
 }
 
 /**
@@ -220,7 +235,7 @@ function splitMultiDocOutput(output: string, docs: ReadonlyArray<RawYamlDocument
 	let pos = 0;
 	for (let i = 0; i < docs.length; i++) {
 		const doc = docs[i];
-		if (!doc) return null;
+		if (doc === undefined) return null;
 		const isLast = i === docs.length - 1;
 		if (isLast) {
 			segments.push(output.slice(pos));
@@ -242,12 +257,12 @@ function splitMultiDocOutput(output: string, docs: ReadonlyArray<RawYamlDocument
  */
 function splitDocStartFromTaggedScalar(segment: string): string {
 	const verbatimMatch = segment.match(/^(---) (!<[^>]+>) (.*)$/m);
-	if (verbatimMatch) {
+	if ((verbatimMatch !== null)) {
 		const [whole, dashes, tag, rest] = verbatimMatch;
 		return segment.replace(whole as string, `${dashes} ${tag}\n${rest}`);
 	}
 	const shorthandMatch = segment.match(/^(---) (![^ \n]+) (.*)$/m);
-	if (shorthandMatch) {
+	if ((shorthandMatch !== null)) {
 		const [whole, dashes, tag, rest] = shorthandMatch;
 		return segment.replace(whole as string, `${dashes}\n${tag} ${rest}`);
 	}

@@ -10,13 +10,15 @@
 
 import { readFileSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Result, Stream } from "effect";
+import { Effect, Schema, Result, Stream } from "effect";
 import { Yaml, YamlDocument, YamlFormat, YamlMap, YamlScalar, YamlSeq, YamlVisitor } from "../../effected/yaml/index.ts";
 
 const firstMap = (doc: YamlDocument): YamlMap => {
 	assert.instanceOf(doc.contents, YamlMap);
 	return doc.contents as YamlMap;
 };
+
+const JsonString = Schema.fromJsonString(Schema.String);
 
 describe("comment fidelity (#127)", () => {
 	describe("composer attribution", () => {
@@ -102,7 +104,7 @@ describe("comment fidelity (#127)", () => {
 				assert.strictEqual(pair?.key.comment, " kc");
 				assert.strictEqual(pair?.value?.comment, " vc");
 				const out = yield* doc.stringify();
-				assert.strictEqual((out.match(/#/g) ?? []).length, 2, `a comment was dropped: ${JSON.stringify(out)}`);
+				assert.strictEqual((out.match(/#/g) ?? []).length, 2, `a comment was dropped: ${(yield* Schema.encodeEffect(JsonString)(out))}`);
 				assert.strictEqual(YamlFormat.formatToString(out), out);
 			}),
 		);
@@ -233,8 +235,7 @@ describe("comment fidelity (#127)", () => {
 	});
 
 	describe("stringifier emission", () => {
-		const roundtrips = (source: string, options?: { readonly indentSequences?: boolean }) =>
-			Effect.gen(function* () {
+		const roundtrips = Effect.fn("roundtrips")(function* (source: string, options?: { readonly indentSequences?: boolean }) {
 				const doc = yield* YamlDocument.parse(source);
 				const out = yield* doc.stringify(options);
 				assert.strictEqual(out, source);

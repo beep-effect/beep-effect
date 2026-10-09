@@ -22,17 +22,17 @@ import {
 import type { StringifyOptionsInput } from "./options.ts";
 import type { RawDirective, RawYamlDocument } from "./raw-document.ts";
 import * as Schema from "effect/Schema";
+import { Data } from "effect";
+import { dual } from "effect/Function";
 
 /**
  * Thrown by the stringifier on its failure paths (circular references). The
  * facade catches this and materializes the public stringify error.
  */
-export class StringifyFailure extends Error {
-	readonly reason: string;
+export class StringifyFailure extends Data.TaggedError("StringifyFailure")<{ readonly message: string; readonly reason: string }> {
 	constructor(reason: string) {
-		super(reason);
+		super({ message: reason, reason });
 		this.name = "StringifyFailure";
-		this.reason = reason;
 	}
 }
 
@@ -45,9 +45,9 @@ export class StringifyFailure extends Error {
  * failure on the typed error channel — the stringify mirror of the composer's
  * nesting-depth guard.
  */
-export class StringifyDepthExceeded extends Error {
+export class StringifyDepthExceeded extends Data.TaggedError("StringifyDepthExceeded")<{ readonly message: string }> {
 	constructor() {
-		super(`Nesting depth exceeded maximum of ${MAX_NESTING_DEPTH}`);
+		super({ message: `Nesting depth exceeded maximum of ${MAX_NESTING_DEPTH}` });
 		this.name = "StringifyDepthExceeded";
 	}
 }
@@ -222,6 +222,7 @@ function requiresQuoting(s: string, ignoreType = false, quoteCompat?: QuoteCompa
 	if (!ignoreType && quoteCompat === "yaml-1.1" && wouldBeResolved11(s)) return true;
 	// Starts with whitespace (space/tab)
 	const first = s[0];
+	if (first === undefined) throw new TypeError("Missing first");
 	if (first === " " || first === "\t") return true;
 	// Check leading indicator characters
 	if (first !== undefined && INDICATOR_CHARS.has(first)) {
@@ -242,6 +243,7 @@ function requiresQuoting(s: string, ignoreType = false, quoteCompat?: QuoteCompa
 	if (s.includes(" #") || s.includes("\t#")) return true;
 	// Ends with whitespace (space/tab) — plain scalars lose trailing whitespace
 	const last = s[s.length - 1];
+	if (last === undefined) throw new TypeError("Missing last");
 	if (last === " " || last === "\t") return true;
 	// C0 control characters require quoting. `isControlChar` deliberately
 	// excludes TAB (0x09) and CR (0x0D) for its other callers — the block-scalar
@@ -279,7 +281,13 @@ function hasNonAscii(s: string): boolean {
  * (or `\UXXXXXXXX` for supplementary plane) and C0 control characters use
  * named escapes where YAML 1.2 defines them (`\b`, `\0`, `\a`, `\v`, `\e`).
  */
-export function renderDoubleQuoted(s: string, canonical = false): string {
+export function renderDoubleQuoted(s: string, canonical?: boolean): string;
+export function renderDoubleQuoted(canonical?: boolean): (s: string) => string;
+export function renderDoubleQuoted(...args: [s: string, canonical?: boolean | undefined] | [canonical?: boolean | undefined]): string | ((s: string) => string) {
+	return dual<
+		(...args: [s: string, canonical?: boolean | undefined] | [canonical?: boolean | undefined]) => string | ((s: string) => string),
+		(s: string, canonical?: boolean) => string
+	>((args) => typeof args[0] === "string", function renderDoubleQuoted(s: string, canonical: boolean = false): string {
 	let escaped = s
 		.replace(/\\/g, "\\\\")
 		.replace(/"/g, '\\"')
@@ -325,6 +333,7 @@ export function renderDoubleQuoted(s: string, canonical = false): string {
 	}
 	escaped = result;
 	return `"${escaped}"`;
+})(...args);
 }
 
 /**
@@ -351,7 +360,7 @@ function renderString(
 	style: ScalarStyle,
 	indent: string,
 	ignoreType = false,
-	canonical = false,
+	canonical: boolean = false,
 	explicitChomp?: "strip" | "clip" | "keep",
 	parentPosition?: "block-map-value" | "block-seq-item",
 	quoteStyle: QuoteStyle = "single",
@@ -466,8 +475,9 @@ function renderString(
  */
 function endsWithKeepChomp(rendered: string): boolean {
 	const match = rendered.match(/[|>][1-9]?[+-]?$|[|>][1-9]?[+-]?(?=\n)/g);
-	if (!match) return false;
+	if (match === null) return false;
 	const last = match[match.length - 1];
+	if (last === undefined) throw new TypeError("Missing last");
 	return last.includes("+");
 }
 
@@ -663,13 +673,16 @@ function stringifyArrayLines(arr: unknown[], ctx: StringifyContext, depth: numbe
 		} else {
 			// First line of a block scalar goes on the same line as `-`
 			const first = itemLines[0];
+			if (first === undefined) throw new TypeError("Missing first");
 			// Block scalars (`|`/`>`) and folded/multi-line string scalars (plain or
 			// double-quoted, whose continuation lines already carry their indent)
 			// put the first line inline after `-` and emit continuations as-is.
 			if (first.startsWith("|") || first.startsWith(">") || typeof item === "string") {
 				lines.push(`- ${first}`);
 				for (let i = 1; i < itemLines.length; i++) {
-					lines.push(itemLines[i]);
+					const entry1 = itemLines[i];
+					if (entry1 === undefined) throw new TypeError("Missing array entry");
+					lines.push(entry1);
 				}
 			} else {
 				// Nested mapping or sequence — indent continuation lines by one level
@@ -758,14 +771,18 @@ function stringifyObjectLines(obj: Record<string, unknown>, ctx: StringifyContex
 		// reach the explicit-key branch (see the node-path complex-key branch).
 		if (keyStr.length > IMPLICIT_KEY_MAX_LENGTH) {
 			lines.push(`? ${keyStr}`);
+			const entry2 = valLines[0];
+			if (entry2 === undefined) throw new TypeError("Missing array entry");
 			if (valLines.length === 1) {
 				lines.push(`: ${valLines[0]}`);
-			} else if (valLines[0].startsWith("|") || valLines[0].startsWith(">") || typeof val === "string") {
+			} else if (entry2.startsWith("|") || entry2.startsWith(">") || typeof val === "string") {
 				// Block scalar header or folded/multi-line string scalar:
 				// continuation lines already carry their own indent.
 				lines.push(`: ${valLines[0]}`);
 				for (let i = 1; i < valLines.length; i++) {
-					lines.push(valLines[i]);
+					const line = valLines[i];
+					if (line === undefined) throw new TypeError("Missing value line");
+					lines.push(line);
 				}
 			} else {
 				// Nested block collection — compact notation: first line on the
@@ -773,7 +790,9 @@ function stringifyObjectLines(obj: Record<string, unknown>, ctx: StringifyContex
 				// (structural, never ctx.indent).
 				lines.push(`: ${valLines[0]}`);
 				for (let i = 1; i < valLines.length; i++) {
-					lines.push(valLines[i] === "" ? valLines[i] : `${EXPLICIT_COMPACT_PAD}${valLines[i]}`);
+					const line = valLines[i];
+					if (line === undefined) throw new TypeError("Missing value line");
+					lines.push(line === "" ? line : `${EXPLICIT_COMPACT_PAD}${line}`);
 				}
 			}
 			continue;
@@ -784,13 +803,16 @@ function stringifyObjectLines(obj: Record<string, unknown>, ctx: StringifyContex
 			lines.push(`${keyStr}: ${valLines[0]}`);
 		} else {
 			const first = valLines[0];
+			if (first === undefined) throw new TypeError("Missing first");
 			if (first.startsWith("|") || first.startsWith(">") || typeof val === "string") {
 				// Block scalar header, or a folded/multi-line string scalar (plain or
 				// double-quoted, continuation lines already indented): first line on
 				// the key line, continuation lines emitted as-is.
 				lines.push(`${keyStr}: ${first}`);
 				for (let i = 1; i < valLines.length; i++) {
-					lines.push(valLines[i]);
+					const entry5 = valLines[i];
+					if (entry5 === undefined) throw new TypeError("Missing array entry");
+					lines.push(entry5);
 				}
 			} else if (Array.isArray(val) && val.length > 0) {
 				// Block sequence as mapping value: compact notation (no extra indent)
@@ -828,7 +850,11 @@ function buildTagMap(directives: ReadonlyArray<RawDirective>): Map<string, strin
 	const map = new Map<string, string>();
 	for (const d of directives) {
 		if (d.name === "TAG" && d.parameters.length >= 2) {
-			map.set(d.parameters[0], d.parameters[1]);
+			const entry6 = d.parameters[0];
+			if (entry6 === undefined) throw new TypeError("Missing array entry");
+			const entry7 = d.parameters[1];
+			if (entry7 === undefined) throw new TypeError("Missing array entry");
+			map.set(entry6, entry7);
 		}
 	}
 	return map;
@@ -861,7 +887,7 @@ function normalizeTag(tag: string, tagMap: Map<string, string>): string {
 	// Secondary handle: !!suffix
 	if (tag.startsWith("!!")) {
 		const customPrefix = tagMap.get("!!");
-		if (customPrefix && customPrefix !== YAML_TAG_PREFIX) {
+		if ((customPrefix !== undefined && customPrefix !== "") && customPrefix !== YAML_TAG_PREFIX) {
 			// !! was redefined to non-standard prefix — expand to verbatim
 			return `!<${customPrefix}${tag.slice(2)}>`;
 		}
@@ -871,11 +897,12 @@ function normalizeTag(tag: string, tagMap: Map<string, string>): string {
 
 	// Named handle: !name!suffix
 	const namedMatch = tag.match(/^(![\w-]*!)(.*)$/);
-	if (namedMatch) {
+	if ((namedMatch !== null)) {
 		const handle = namedMatch[1];
+		if (handle === undefined) throw new TypeError("Missing tag handle");
 		const suffix = namedMatch[2] ?? "";
 		const prefix = tagMap.get(handle);
-		if (prefix) {
+		if ((prefix !== undefined && prefix !== "")) {
 			const uri = prefix + suffix;
 			// Check if resolved URI is a standard YAML tag
 			if (uri.startsWith(YAML_TAG_PREFIX)) {
@@ -889,7 +916,7 @@ function normalizeTag(tag: string, tagMap: Map<string, string>): string {
 	// Primary handle: !suffix (non-empty suffix)
 	if (tag.startsWith("!") && tag.length > 1 && !tag.startsWith("!!")) {
 		const prefix = tagMap.get("!");
-		if (prefix) {
+		if ((prefix !== undefined && prefix !== "")) {
 			const uri = prefix + tag.slice(1);
 			// Check if resolved URI is a standard YAML tag
 			if (uri.startsWith(YAML_TAG_PREFIX)) {
@@ -912,7 +939,7 @@ function normalizeNodeTags(node: YamlNode, tagMap: Map<string, string>): YamlNod
 		return YamlScalar.make({
 			value: node.value,
 			style: node.style,
-			...(node.tag ? { tag: normalizeTag(node.tag, tagMap) } : {}),
+			...((node.tag !== undefined && node.tag !== "") ? { tag: normalizeTag(node.tag, tagMap) } : {}),
 			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
 			...(node.commentBefore !== undefined ? { commentBefore: node.commentBefore } : {}),
 			...(node.comment !== undefined ? { comment: node.comment } : {}),
@@ -931,11 +958,11 @@ function normalizeNodeTags(node: YamlNode, tagMap: Map<string, string>): YamlNod
 				(pair) =>
 					YamlPair.make({
 						key: normalizeNodeTags(pair.key, tagMap),
-						value: pair.value ? normalizeNodeTags(pair.value, tagMap) : null,
+						value: (pair.value !== null) ? normalizeNodeTags(pair.value, tagMap) : null,
 					}),
 			),
 			style: node.style,
-			...(node.tag ? { tag: normalizeTag(node.tag, tagMap) } : {}),
+			...((node.tag !== undefined && node.tag !== "") ? { tag: normalizeTag(node.tag, tagMap) } : {}),
 			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
 			...(node.commentBefore !== undefined ? { commentBefore: node.commentBefore } : {}),
 			...(node.comment !== undefined ? { comment: node.comment } : {}),
@@ -949,7 +976,7 @@ function normalizeNodeTags(node: YamlNode, tagMap: Map<string, string>): YamlNod
 		return YamlSeq.make({
 			items: node.items.map((item) => normalizeNodeTags(item, tagMap)),
 			style: node.style,
-			...(node.tag ? { tag: normalizeTag(node.tag, tagMap) } : {}),
+			...((node.tag !== undefined && node.tag !== "") ? { tag: normalizeTag(node.tag, tagMap) } : {}),
 			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
 			...(node.commentBefore !== undefined ? { commentBefore: node.commentBefore } : {}),
 			...(node.comment !== undefined ? { comment: node.comment } : {}),
@@ -991,7 +1018,7 @@ export function stripNodeComments(node: YamlNode): YamlNode {
 				(pair) =>
 					YamlPair.make({
 						key: stripNodeComments(pair.key),
-						value: pair.value ? stripNodeComments(pair.value) : null,
+						value: (pair.value !== null) ? stripNodeComments(pair.value) : null,
 					}),
 			),
 			style: node.style,
@@ -1062,10 +1089,10 @@ function stringifyScalarNodeLines(node: YamlScalar, ctx: StringifyContext): stri
 
 	// Empty scalar (zero-length in source) with tag or anchor: render just tag/anchor
 	const isEmpty = node.length === 0 && (val === null || val === undefined || val === "");
-	if (isEmpty && (node.tag || node.anchor)) {
+	if (isEmpty && ((node.tag !== undefined && node.tag !== "") || (node.anchor !== undefined && node.anchor !== ""))) {
 		const parts: string[] = [];
-		if (node.tag) parts.push(node.tag);
-		if (node.anchor) parts.push(`&${node.anchor}`);
+		if ((node.tag !== undefined && node.tag !== "")) parts.push(node.tag);
+		if ((node.anchor !== undefined && node.anchor !== "")) parts.push(`&${node.anchor}`);
 		return [parts.join(" ")];
 	}
 
@@ -1090,7 +1117,7 @@ function stringifyScalarNodeLines(node: YamlScalar, ctx: StringifyContext): stri
 			val,
 			style,
 			" ".repeat(ctx.indent),
-			!!node.tag,
+			!!((node.tag !== undefined && node.tag !== "")),
 			ctx.forceDefaultStyles,
 			node.chomp,
 			ctx.parentPosition,
@@ -1104,10 +1131,10 @@ function stringifyScalarNodeLines(node: YamlScalar, ctx: StringifyContext): stri
 		lines = [renderDoubleQuoted(String(val))];
 	}
 	// Prepend tag first, then anchor, so the final output reads &anchor !!tag value
-	if (node.tag) {
+	if ((node.tag !== undefined && node.tag !== "")) {
 		lines[0] = `${node.tag} ${lines[0]}`;
 	}
-	if (node.anchor) {
+	if ((node.anchor !== undefined && node.anchor !== "")) {
 		lines[0] = `&${node.anchor} ${lines[0]}`;
 	}
 	return lines;
@@ -1280,7 +1307,7 @@ function pushExplicitKeyValueLines(
 	depth: number,
 	pad: string,
 ): number {
-	if (!valNode) {
+	if (valNode === null) {
 		lines.push(":");
 		return lines.length - 1;
 	}
@@ -1304,6 +1331,7 @@ function pushExplicitKeyValueLines(
 		return lines.length - 1;
 	}
 	const first = valLines[0];
+	if (first === undefined) throw new TypeError("Missing first");
 	// Detect block scalar headers and multi-line quoted scalars,
 	// either bare or after an optional `&anchor` / `!tag` prefix.
 	const firstStripped = stripScalarMetadataPrefix(first);
@@ -1314,7 +1342,9 @@ function pushExplicitKeyValueLines(
 		const headerIdx = lines.length;
 		lines.push(`: ${first}`);
 		for (let v = 1; v < valLines.length; v++) {
-			lines.push(valLines[v]);
+			const entry8 = valLines[v];
+			if (entry8 === undefined) throw new TypeError("Missing array entry");
+			lines.push(entry8);
 		}
 		// A block scalar's header line, or a multi-line quoted scalar's closing
 		// line, is where this entry's trailing comment belongs — the caller owns
@@ -1372,7 +1402,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 	if (items.length === 0) {
 		let line = "{}";
 		const emptyPrefix = buildMetadataPrefix(node.tag, node.anchor);
-		if (emptyPrefix) line = `${emptyPrefix} ${line}`;
+		if ((emptyPrefix !== undefined && emptyPrefix !== "")) line = `${emptyPrefix} ${line}`;
 		return [line];
 	}
 
@@ -1393,7 +1423,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 			// Comment-carrying flow mapping: one entry per line (multi-line
 			// flow layout), so a `#` comment cannot swallow the closing brace.
 			const flowPad = " ".repeat(ctx.indent);
-			const flowLines: string[] = [flowPrefix ? `${flowPrefix} {` : "{"];
+			const flowLines: string[] = [(flowPrefix !== undefined && flowPrefix !== "") ? `${flowPrefix} {` : "{"];
 			for (let fi = 0; fi < items.length; fi++) {
 				const pair = items[fi] as YamlPair;
 				if (pairSpaceBefore(pair) === true) flowLines.push("");
@@ -1403,8 +1433,8 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 					// would emit a whitespace-only line.
 					for (const cl of commentBlockLines(flowLeading)) flowLines.push(cl === "" ? "" : `${flowPad}${cl}`);
 				}
-				const keyStr = pair.key ? stringifyMappingKeyLines(pair.key, flowCtx, depth + 1).join(" ") : "null";
-				const valStr = pair.value ? stringifyNodeLines(pair.value, flowCtx, depth + 1).join(" ") : "null";
+				const keyStr = (pair.key !== undefined) ? stringifyMappingKeyLines(pair.key, flowCtx, depth + 1).join(" ") : "null";
+				const valStr = (pair.value !== null) ? stringifyNodeLines(pair.value, flowCtx, depth + 1).join(" ") : "null";
 				const comma = fi < items.length - 1 ? "," : "";
 				const flowTrailing = pairTrailing(pair);
 				const trailing = flowTrailing !== undefined ? renderTrailingComment(flowTrailing) : "";
@@ -1417,12 +1447,12 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 			return flowLines;
 		}
 		const pairs = items.map((pair) => {
-			const keyStr = pair.key ? stringifyMappingKeyLines(pair.key, flowCtx, depth + 1).join(" ") : "null";
-			const valStr = pair.value ? stringifyNodeLines(pair.value, flowCtx, depth + 1).join(" ") : "null";
+			const keyStr = (pair.key !== undefined) ? stringifyMappingKeyLines(pair.key, flowCtx, depth + 1).join(" ") : "null";
+			const valStr = (pair.value !== null) ? stringifyNodeLines(pair.value, flowCtx, depth + 1).join(" ") : "null";
 			return `${keyStr}: ${valStr}`;
 		});
 		let line = `{${pairs.join(", ")}}`;
-		if (flowPrefix) line = `${flowPrefix} ${line}`;
+		if ((flowPrefix !== undefined && flowPrefix !== "")) line = `${flowPrefix} ${line}`;
 		return [line];
 	}
 
@@ -1482,7 +1512,9 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 			// pad is needed. Otherwise pad continuation lines two columns to
 			// align with the first line after `? ` (structural, never
 			// ctx.indent — see EXPLICIT_COMPACT_PAD).
-			const firstTokens = keyLines[0].trim().split(/\s+/).filter(Boolean);
+			const entry9 = keyLines[0];
+			if (entry9 === undefined) throw new TypeError("Missing array entry");
+			const firstTokens = entry9.trim().split(/\s+/).filter(Boolean);
 			const firstIsMetaOnly =
 				firstTokens.length > 0 && firstTokens.every((t) => t.startsWith("&") || t.startsWith("!"));
 			const keyIsBlockScalar =
@@ -1523,7 +1555,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 		) {
 			resolvedKeyStr = pair.key.value;
 		} else {
-			resolvedKeyStr = pair.key ? stringifyMappingKeyLines(pair.key, ctx, depth + 1).join(" ") : "null";
+			resolvedKeyStr = (pair.key !== undefined) ? stringifyMappingKeyLines(pair.key, ctx, depth + 1).join(" ") : "null";
 		}
 		const keyStr = resolvedKeyStr;
 		// Rendered key past the implicit-key limit: spill to explicit-key form
@@ -1547,7 +1579,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 			(pair.key.anchor !== undefined || pair.key.tag !== undefined);
 		const sep = Schema.is(YamlAlias)(pair.key) || keyIsAnchoredOrTaggedEmpty ? " :" : ":";
 		const valNode = pair.value;
-		if (!valNode) {
+		if (valNode === null) {
 			// 4ABK: when the document ROOT is a multi-line flow map AND the
 			// pair has a non-empty plain key, emit `key: null` rather than
 			// `key:` so the null is unambiguous in canonical (block) form.
@@ -1580,8 +1612,8 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 			// scalar bodies) are never padded — no trailing whitespace.
 			// If seq has metadata (anchor/tag), place it on the key line
 			const seqMeta = buildMetadataPrefix(valNode.tag, valNode.anchor);
-			const startIdx = seqMeta ? 1 : 0; // skip metadata line if present
-			lines.push(seqMeta ? `${keyStr}${sep} ${seqMeta}` : `${keyStr}${sep}`);
+			const startIdx = (seqMeta !== undefined && seqMeta !== "") ? 1 : 0; // skip metadata line if present
+			lines.push((seqMeta !== undefined && seqMeta !== "") ? `${keyStr}${sep} ${seqMeta}` : `${keyStr}${sep}`);
 			appendTrailing(lines.length - 1, entryTrailing(pair, ctx));
 			if (valLeading !== undefined) {
 				// The sequence's own leading comment sits at the items' indent.
@@ -1591,6 +1623,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 			}
 			for (let i = startIdx; i < valLines.length; i++) {
 				const vl = valLines[i];
+				if (vl === undefined) throw new TypeError("Missing value line");
 				lines.push(ctx.indentSequences && vl !== "" ? `${pad}${vl}` : vl);
 			}
 		} else if (
@@ -1600,8 +1633,8 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 		) {
 			// Non-empty block mapping as value: put on next line with indent
 			const mapMeta = buildMetadataPrefix(valNode.tag, valNode.anchor);
-			const startIdx = mapMeta ? 1 : 0;
-			lines.push(mapMeta ? `${keyStr}${sep} ${mapMeta}` : `${keyStr}${sep}`);
+			const startIdx = (mapMeta !== undefined && mapMeta !== "") ? 1 : 0;
+			lines.push((mapMeta !== undefined && mapMeta !== "") ? `${keyStr}${sep} ${mapMeta}` : `${keyStr}${sep}`);
 			appendTrailing(lines.length - 1, entryTrailing(pair, ctx));
 			if (valLeading !== undefined) {
 				for (const cl of commentBlockLines(valLeading)) lines.push(`${pad}${cl}`);
@@ -1633,6 +1666,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 			appendTrailing(lines.length - 1, entryTrailing(pair, ctx));
 		} else {
 			const first = valLines[0];
+			if (first === undefined) throw new TypeError("Missing first");
 			// Detect block scalar headers and multi-line quoted scalars after the
 			// optional `&anchor` / `!tag` prefix that the scalar renderer may add.
 			const firstStripped = stripScalarMetadataPrefix(first);
@@ -1649,7 +1683,9 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 					const spilledIdx = lines.length;
 					lines.push(`${pad}${first}`);
 					for (let i = 1; i < valLines.length; i++) {
-						lines.push(valLines[i]);
+						const entry10 = valLines[i];
+						if (entry10 === undefined) throw new TypeError("Missing array entry");
+						lines.push(entry10);
 					}
 					appendTrailing(isBlockScalarHeader ? spilledIdx : lines.length - 1, entryTrailing(pair, ctx));
 					continue;
@@ -1666,7 +1702,9 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 					const spilledIdx = lines.length;
 					lines.push(`${pad}${first}`);
 					for (let i = 1; i < valLines.length; i++) {
-						lines.push(valLines[i]);
+						const entry11 = valLines[i];
+						if (entry11 === undefined) throw new TypeError("Missing array entry");
+						lines.push(entry11);
 					}
 					appendTrailing(spilledIdx, scalarComment);
 					continue;
@@ -1674,7 +1712,9 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 				const headerIdx = lines.length;
 				lines.push(`${keyStr}${sep} ${first}`);
 				for (let i = 1; i < valLines.length; i++) {
-					lines.push(valLines[i]);
+					const entry12 = valLines[i];
+					if (entry12 === undefined) throw new TypeError("Missing array entry");
+					lines.push(entry12);
 				}
 				// The entry's trailing comment goes on the line its VALUE ends on:
 				// for a block scalar that is the header line (`key: | # c`, the one
@@ -1691,7 +1731,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 					(ctx.forceDefaultStyles ? ctx.defaultCollectionStyle : (valNode.style ?? ctx.defaultCollectionStyle)) ===
 						"block";
 				const mapMeta = isBlockMapValue ? buildMetadataPrefix(valNode.tag, valNode.anchor) : undefined;
-				if (mapMeta) {
+				if ((mapMeta !== undefined && mapMeta !== "")) {
 					// Place metadata on key line, skip metadata line in valLines
 					lines.push(`${keyStr}${sep} ${mapMeta}`);
 					appendTrailing(lines.length - 1, entryTrailing(pair, ctx));
@@ -1718,7 +1758,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 	}
 	// Anchor/tag on block collections: place on own line before content
 	const prefix = buildMetadataPrefix(node.tag, node.anchor);
-	if (prefix) {
+	if ((prefix !== undefined && prefix !== "")) {
 		lines.unshift(prefix);
 	}
 	return lines;
@@ -1729,11 +1769,11 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
  * Returns the combined prefix or undefined if neither is present.
  */
 function buildMetadataPrefix(tag: string | undefined, anchor: string | undefined): string | undefined {
-	if (!tag && !anchor) return undefined;
+	if (!((tag !== undefined && tag !== "")) && !((anchor !== undefined && anchor !== ""))) return undefined;
 	// Canonical ordering: &anchor !!tag (anchor before tag)
 	const parts: string[] = [];
-	if (anchor) parts.push(`&${anchor}`);
-	if (tag) parts.push(tag);
+	if ((anchor !== undefined && anchor !== "")) parts.push(`&${anchor}`);
+	if ((tag !== undefined && tag !== "")) parts.push(tag);
 	return parts.join(" ");
 }
 
@@ -1769,7 +1809,7 @@ function stringifySeqNodeLines(node: YamlSeq, ctx: StringifyContext, depth: numb
 	if (items.length === 0) {
 		let line = "[]";
 		const emptyPrefix = buildMetadataPrefix(node.tag, node.anchor);
-		if (emptyPrefix) line = `${emptyPrefix} ${line}`;
+		if ((emptyPrefix !== undefined && emptyPrefix !== "")) line = `${emptyPrefix} ${line}`;
 		return [line];
 	}
 
@@ -1797,7 +1837,7 @@ function stringifySeqNodeLines(node: YamlSeq, ctx: StringifyContext, depth: numb
 			// Comment-carrying flow sequence: one entry per line (multi-line
 			// flow layout), so a `#` comment cannot swallow the closing bracket.
 			const flowPad = " ".repeat(ctx.indent);
-			const flowLines: string[] = [flowPrefix ? `${flowPrefix} [` : "["];
+			const flowLines: string[] = [(flowPrefix !== undefined && flowPrefix !== "") ? `${flowPrefix} [` : "["];
 			for (let fi = 0; fi < items.length; fi++) {
 				const item = items[fi] as YamlNode;
 				const fields = itemFields(item);
@@ -1820,7 +1860,7 @@ function stringifySeqNodeLines(node: YamlSeq, ctx: StringifyContext, depth: numb
 		}
 		const parts = items.map((item) => stringifyNodeLines(item, flowCtx, depth + 1).join(" "));
 		let line = `[${parts.join(", ")}]`;
-		if (flowPrefix) line = `${flowPrefix} ${line}`;
+		if ((flowPrefix !== undefined && flowPrefix !== "")) line = `${flowPrefix} ${line}`;
 		return [line];
 	}
 
@@ -1846,6 +1886,7 @@ function stringifySeqNodeLines(node: YamlSeq, ctx: StringifyContext, depth: numb
 			appendItemTrailing(lines.length - 1);
 		} else {
 			const first = itemLines[0];
+			if (first === undefined) throw new TypeError("Missing first");
 			// Block scalar headers and multi-line quoted scalars (when the item is
 			// itself a YamlScalar) place their first line inline after `- `, with
 			// continuation lines emitted as-is. Detection allows an optional
@@ -1859,7 +1900,9 @@ function stringifySeqNodeLines(node: YamlSeq, ctx: StringifyContext, depth: numb
 				const headerIdx = lines.length;
 				lines.push(`- ${first}`);
 				for (let i = 1; i < itemLines.length; i++) {
-					lines.push(itemLines[i]);
+					const entry13 = itemLines[i];
+					if (entry13 === undefined) throw new TypeError("Missing array entry");
+					lines.push(entry13);
 				}
 				// A block scalar's HEADER line legally carries the item's
 				// trailing comment (`- | # c`); a multi-line quoted scalar closes
@@ -1883,7 +1926,7 @@ function stringifySeqNodeLines(node: YamlSeq, ctx: StringifyContext, depth: numb
 	}
 	// Anchor/tag on block sequences: place on own line before content
 	const prefix = buildMetadataPrefix(node.tag, node.anchor);
-	if (prefix) {
+	if ((prefix !== undefined && prefix !== "")) {
 		lines.unshift(prefix);
 	}
 	return lines;
@@ -1914,7 +1957,13 @@ export function stringifyValue(value: unknown, options?: StringifyOptionsInput):
  * nodes use their `style` field (`"block"` or `"flow"`). Nodes without an
  * explicit style fall back to the defaults in `options`.
  */
-export function stringifyDocument(doc: RawYamlDocument, options?: StringifyOptionsInput): string {
+export function stringifyDocument(doc: RawYamlDocument, options?: StringifyOptionsInput): string;
+export function stringifyDocument(options?: StringifyOptionsInput): (doc: RawYamlDocument) => string;
+export function stringifyDocument(...args: [doc: RawYamlDocument, options?: StringifyOptionsInput | undefined] | [options?: StringifyOptionsInput | undefined]): string | ((doc: RawYamlDocument) => string) {
+	return dual<
+		(...args: [doc: RawYamlDocument, options?: StringifyOptionsInput | undefined] | [options?: StringifyOptionsInput | undefined]) => string | ((doc: RawYamlDocument) => string),
+		(doc: RawYamlDocument, options?: StringifyOptionsInput) => string
+	>((args) => args.length >= 2 || (args[0] !== undefined && "contents" in args[0]), function stringifyDocument(doc: RawYamlDocument, options?: StringifyOptionsInput): string {
 	const ctx = createContext(options);
 	const finalNewline = options?.finalNewline ?? true;
 
@@ -1923,7 +1972,7 @@ export function stringifyDocument(doc: RawYamlDocument, options?: StringifyOptio
 	const docCommentRaw = ctx.forceDefaultStyles ? undefined : doc.commentBefore;
 	// Multi-line document comments render one `# ` line per stored line.
 	const docComment = docCommentRaw !== undefined ? commentBlockLines(docCommentRaw).join("\n") : undefined;
-	if (ctx.forceDefaultStyles && contents) {
+	if (ctx.forceDefaultStyles && (contents !== null)) {
 		contents = stripNodeComments(contents);
 		const tagMap = buildTagMap(doc.directives);
 		contents = normalizeNodeTags(contents, tagMap);
@@ -1983,12 +2032,7 @@ export function stringifyDocument(doc: RawYamlDocument, options?: StringifyOptio
 	//   isn't absorbed into the scalar value.
 	const needsTerminatorForKeepChomp = ctx.forceDefaultStyles && endsWithKeepChomp(result);
 	const needsTerminatorForAnchoredPlainScalar =
-		ctx.forceDefaultStyles &&
-		doc.hasDocumentStart &&
-		Schema.is(YamlScalar)(contents) &&
-		contents.style === "plain" &&
-		contents.anchor !== undefined &&
-		!contents.tag;
+		ctx.forceDefaultStyles && doc.hasDocumentStart && Schema.is(YamlScalar)(contents) && contents.style === "plain" && contents.anchor !== undefined && !((contents.tag !== undefined && contents.tag !== ""));
 	// XLQ9: a multi-line plain scalar root whose folded value contains
 	// a `%`-introduced directive-like substring (e.g. "scalar %YAML 1.2")
 	// needs `...` so a follow-on parser cannot re-interpret the trailing
@@ -2044,16 +2088,16 @@ export function stringifyDocument(doc: RawYamlDocument, options?: StringifyOptio
 			: "";
 
 	if (doc.hasDocumentStart) {
-		const rootTag = contents && "tag" in contents ? contents.tag : undefined;
-		const rootAnchor = contents && "anchor" in contents ? contents.anchor : undefined;
+		const rootTag = (contents !== undefined) && "tag" in contents ? contents.tag : undefined;
+		const rootAnchor = (contents !== undefined) && "anchor" in contents ? contents.anchor : undefined;
 		const isCollection = Schema.is(YamlMap)(contents) || Schema.is(YamlSeq)(contents);
 		const isScalar = Schema.is(YamlScalar)(contents);
 
-		if (rootTag || rootAnchor) {
+		if ((rootTag !== undefined && rootTag !== "") || (rootAnchor !== undefined && rootAnchor !== "")) {
 			// Build metadata prefix — canonical ordering: &anchor !!tag
 			const metaParts: string[] = [];
-			if (rootAnchor) metaParts.push(`&${rootAnchor}`);
-			if (rootTag) metaParts.push(rootTag);
+			if ((rootAnchor !== undefined && rootAnchor !== "")) metaParts.push(`&${rootAnchor}`);
+			if ((rootTag !== undefined && rootTag !== "")) metaParts.push(rootTag);
 			const metaStr = metaParts.join(" ");
 
 			// Strip tag/anchor prefix from body (already prepended by stringifyNodeLines)
@@ -2070,16 +2114,17 @@ export function stringifyDocument(doc: RawYamlDocument, options?: StringifyOptio
 			const docStart = `--- ${metaStr}`;
 			const sep = isCollection ? "\n" : " ";
 			const metaBody = rootLeading === "" ? `${sep}${bodyClean}` : `\n${rootLeading}${bodyClean}`;
-			return docComment ? `${docComment}\n${docStart}${metaBody}${docEnd}` : `${docStart}${metaBody}${docEnd}`;
+			return (docComment !== undefined && docComment !== "") ? `${docComment}\n${docStart}${metaBody}${docEnd}` : `${docStart}${metaBody}${docEnd}`;
 		}
 
 		// No tag/anchor — inline scalars after ---
 		if (isScalar && rootLeading === "") {
-			return docComment ? `${docComment}\n--- ${body}${docEnd}` : `--- ${body}${docEnd}`;
+			return (docComment !== undefined && docComment !== "") ? `${docComment}\n--- ${body}${docEnd}` : `--- ${body}${docEnd}`;
 		}
 		const afterMarker = `---\n${rootLeading}${body}${docEnd}`;
-		return docComment ? `${docComment}\n${afterMarker}` : afterMarker;
+		return (docComment !== undefined && docComment !== "") ? `${docComment}\n${afterMarker}` : afterMarker;
 	}
 	const plain = `${rootLeading}${body}${docEnd}`;
-	return docComment ? `${docComment}\n${plain}` : plain;
+	return (docComment !== undefined && docComment !== "") ? `${docComment}\n${plain}` : plain;
+})(...args);
 }

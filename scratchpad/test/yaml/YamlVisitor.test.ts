@@ -26,7 +26,7 @@ describe("YamlVisitor", () => {
 				const events = yield* Stream.runCollect(YamlVisitor.visit("a:\n  b: 42\n"));
 				const scalar = events.find((e) => YamlVisitorEvent.$is("Scalar")(e) && e.value === 42);
 				assert.isDefined(scalar);
-				assert.deepStrictEqual(scalar && "path" in scalar ? [...scalar.path] : undefined, ["a", "b"]);
+				assert.deepStrictEqual((scalar !== undefined) && "path" in scalar ? [...scalar.path] : undefined, ["a", "b"]);
 			}),
 		);
 
