@@ -49,11 +49,7 @@ const validateHistory = Effect.fn("OfficeActionStructureStore.validateHistory")(
  *
  * ```ts
  * import { officeActionStructureFileStore } from "@beep/law-practice-server/OfficeActionStructure"
- * import * as HashMap from "effect/HashMap";
-import * as HashSet from "effect/HashSet";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { DocStructureRuleFamily } from "@beep/law-practice-domain";
-import * as Layer from "effect/Layer"
+ * import * as Layer from "effect/Layer"
  * const layer = officeActionStructureFileStore("history/oa-attempts.jsonl")
  * console.log(Layer.isLayer(layer)) // true
  * ```
