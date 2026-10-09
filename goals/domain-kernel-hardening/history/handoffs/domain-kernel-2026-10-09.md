@@ -595,3 +595,58 @@ against coverage-summary.json: no percentage/count regression. The export-only
 entity/index.ts has zero totals; CoverageRegression.ts:1066-1069 normalizes that
 to HUNDRED_PERCENTAGE, matching its baseline. No baseline was edited. Coverage
 batch is terminal; parity batch has now started test-tsgo.
+
+### Run-4 parity and current-base attribution
+
+Test-tsgo, docgen local (39 package tasks, 38 canonical aggregations),
+jsdoc-ratchet and knowledge refs pass. Fallow dead-code passes; audit and health
+fail two introduced complexity findings in EpistemicTables.test.ts UsageRecord
+generators (CC 11, estimated CRAP 37.1). D17 replaces only the new pair's inline
+nullish defaults with the file's existing absentAsNull helper. This preserves
+the migrated row contract; no new helper/behavior/assertion, suppression or
+baseline change. Retained mechanical-site count remains 72, below 90.
+The repaired epistemic package and Fallow results are pending.
+
+Committed D16 at 6cb9b8d369. Both PR-1 superset checks passed again; merged
+origin/main #1575 and #1572 cleanly. No packet conflict, shared-domain/schema
+change or new migration. The merge rides the future publish push. New CLI tests
+and root tsconfig from #1575 justify fresh test-tsgo and repo-cli package proof;
+those are pending rather than claimed on the new base.
+
+### Run-4 D17 repair proven
+
+Fresh @beep/epistemic-tables default package verification passes (audit 9.7s,
+docgen 4.0s). Fallow lane rerun passes: audit, health and dead-code all exit 0
+with zero blocking findings. The pair's defaults reuse an existing helper; no
+assertion was removed and no baseline/suppression was added. Current-base
+test-tsgo is finishing; current-base repo-cli package verification is pending.
+
+### Run-4 P1 qualification complete
+
+Fresh current-base repo-cli default package-verify passes (audit 901.3s, docgen
+29.3s); current-base test-tsgo passes. All own heavy units are terminal.
+All eleven edited private packages have passing default proofs: shared-domain,
+agents-tables, architecture-lab-tables, documents-tables, epistemic-tables,
+workspace-tables, db-admin, professional-desktop, repo-cli, agents-server,
+law-practice-server. The refreshed epistemic, law-practice and CLI proofs above
+cover this run's changes; other source surfaces retain their run-3 proofs.
+
+Local hosted-parity set: test-tsgo pass; docgen local pass; jsdoc-ratchet pass;
+CI=true knowledge refs --check pass (zero live gated observations); Fallow
+audit+health+dead-code pass after D17; scoped coverage pass against every
+existing entity baseline row, with zero uncovered executable units. Six-server
+gate passes; 64 explicit in-process migration-replay tests from run 3 remain
+valid because the migration chain is unchanged. Migration is 52 nullable
+ADD COLUMN statements in 26 tables; desktop bundle remains owner-generated.
+
+P1 is complete; P2/P3 remain pending, lifecycle active, under the run-2 amended
+separate-wave ruling. No completion transition or reflection is claimed in P1.
+The mechanical count remains 72 (71 retained sites plus one two-table parity
+assertion block); D16's external marker is separately authorized. Zero slice
+model/behavior edits. D16/D17 reversals are in SPEC; D10 private release policy
+and D11 proof-manifest reversals remain unchanged. No push budget used yet.
+
+Orchestrator still owns stale ROADMAP platform re-entry bullet (~349), Parked
+packets row (~383), and cohort prose (~406). Follow-ups: stale DomainModel.make
+detector and the desktop release applying the migration on installs.
+Graft estimate: 76,761 tokens saved across three retrieval calls this run.

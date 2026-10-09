@@ -88,18 +88,18 @@ the first packet that actually consumes them (see the exploration MAP).
 
 ## Acceptance Criteria
 
-- [ ] `EntityKit.auditColumns`, `ProductEntity.fields` and every audited kit include
+- [x] `EntityKit.auditColumns`, `ProductEntity.fields` and every audited kit include
       `deletedAt` + `deletedByPrincipal` (Principal-typed, nullable→`null`), with
       null/populated decode, encode and schema-derived property tests.
 - [x] `@beep/schema/DomainModel` is retired by #720 and its changeset; no product
       entity references it.
-- [ ] The `.errors.ts` convention is demonstrated in the kernel and the existing
+- [x] The `.errors.ts` convention is demonstrated in the kernel and the existing
       TaggedError equivalence regression stays green.
-- [ ] The generated migration contains only `ADD COLUMN` for the two nullable
+- [x] The generated migration contains only `ADD COLUMN` for the two nullable
       soft-delete columns, and `migrations:check` plus desktop `codegen:check` pass.
-- [ ] `bun run check`, `bun run test`, `bun run docgen`, `bun run lint` pass for the
+- [x] `bun run check`, `bun run test`, `bun run docgen`, `bun run lint` pass for the
       touched packages; schema-first + schema-topology lint stay green.
-- [ ] No unrelated refactors or formatting churn; no slice-entity edits.
+- [x] No unrelated refactors or formatting churn; no slice-entity edits.
 
 ## Verification Matrix
 
@@ -144,3 +144,4 @@ the first packet that actually consumes them (see the exploration MAP).
 | 2026-10-09 | D14: Add the nullable column pair to the isolated ProviderInstance PGlite table fixture; final mechanical count is 71, below 90. | Four introduced integration failures share a hand-created table lacking both columns while the inherited Drizzle table now projects them. This is a mechanical fixture-column definition only; no repository or slice behavior changes. | Remove the two test DDL columns together with the kernel rollback. |
 | 2026-10-09 | D15: Stop before editing production PracticeKg.claims.ts table DDL or carry projections; no P1 publication or phase completion. | The exact server gate has one introduced law-practice failure: bundle-owned candidate/evidence CREATE TABLE definitions lack both columns, while their current Drizzle declarations include them. Production KG DDL/carry surfaces are outside this lane's converter/test-fixture ownership. | Resume on an explicit scope reconciliation or an owner-landed fix on main, then rerun qualification; alternatively revert the kernel fields and generated migration/bundle. |
 | 2026-10-09 | D16: Run-4 ruling declares bundle-backed claims/evidence tables external physical schemas. practiceKgClaimsPhysicalColumns explicitly excludes only deletedAt/deletedByPrincipal from their column contract; CREATE, insert, carry SQL and shipped bundle bytes remain unchanged. Repo-owned tables still receive the additive migration. | The shipped practice-kg bundle is independently versioned outside db-admin. Exact parity must compare its external contract, not the current repo migration schema; no slice model/behavior edit is needed. | Remove the external marker only with a separately qualified bundle migration and carry upgrade; retain legacy-bundle load/serve proof. |
+| 2026-10-09 | D17: Reuse the existing absentAsNull fixture helper for the two new soft-delete insert fields in EpistemicTables.test.ts. | Inlining two additional nullish branches raised two existing UsageRecord test generators from CC 9 to 11 (estimated CRAP 37.1), failing Fallow audit and health. The existing helper preserves the same nullable row contract and brings both generators back below the limit; no new helper, assertion, behavior or slice edit. | Restore the inline nullable expressions only with the kernel rollback or an independently qualified fixture contract. |

@@ -175,3 +175,14 @@ Struct.omit after reading its installed signature and the local reference.
 This was introduced by this run, not a bundle-schema failure. Checking the
 installed helper surface before the edit would have prevented the failed gate
 and re-admission delay. Reversal: revert the marker; no package pin changes.
+
+## Run 4: compiler compatibility missed complexity from inline nullish defaults
+
+Fallow audit/health failed two UsageRecord test generators in
+EpistemicTables.test.ts: CC 11, estimated CRAP 37.1. The migration-following
+fixture repair added two inline nullish defaults to functions already near the
+limit. Reused the file's existing absentAsNull helper for only the new pair;
+no behavior, assertion or slice model changed. A mechanical fixture recipe that
+uses existing nullable-row helpers would have prevented this introduced red.
+Reversal: restore inline defaults with kernel rollback. No suppression or
+baseline edit was made.

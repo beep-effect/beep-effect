@@ -42,8 +42,8 @@ const absentAsNull = <A>(value: A | null | undefined): A | null => value ?? null
 
 const edgeVersionRow = (insert: EdgeVersion.EdgeVersionInsert, id: number): EdgeVersion.EdgeVersionRow => ({
   ...insert,
-  deletedAt: insert.deletedAt ?? null,
-  deletedByPrincipal: insert.deletedByPrincipal ?? null,
+  deletedAt: absentAsNull(insert.deletedAt),
+  deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
   id,
   evidenceScope: absentAsNull(insert.evidenceScope),
   expiredAt: absentAsNull(insert.expiredAt),
@@ -409,8 +409,8 @@ describe("EpistemicTables", () => {
       const decoded = yield* Effect.fromResult(
         UsageRecord.fromUsageRecordRow({
           ...insert,
-          deletedAt: insert.deletedAt ?? null,
-          deletedByPrincipal: insert.deletedByPrincipal ?? null,
+          deletedAt: absentAsNull(insert.deletedAt),
+          deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
           id: 10,
           // $inferInsert types the nullable columns as optional (number | null |
           // undefined); the select-row converter expects number | null, so resolve
@@ -448,8 +448,8 @@ describe("EpistemicTables", () => {
       const decoded = yield* Effect.fromResult(
         CandidateClaim.fromCandidateClaimRow({
           ...insert,
-          deletedAt: insert.deletedAt ?? null,
-          deletedByPrincipal: insert.deletedByPrincipal ?? null,
+          deletedAt: absentAsNull(insert.deletedAt),
+          deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
           id: 10,
         })
       );
@@ -479,8 +479,8 @@ describe("EpistemicTables", () => {
       const decoded = yield* Effect.fromResult(
         Evidence.fromEvidenceRow({
           ...insert,
-          deletedAt: insert.deletedAt ?? null,
-          deletedByPrincipal: insert.deletedByPrincipal ?? null,
+          deletedAt: absentAsNull(insert.deletedAt),
+          deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
           id: 10,
         })
       );
@@ -497,8 +497,8 @@ describe("EpistemicTables", () => {
       const insert = yield* Effect.fromResult(Evidence.toEvidenceInsert(evidence));
       const legacyRow = {
         ...insert,
-        deletedAt: insert.deletedAt ?? null,
-        deletedByPrincipal: insert.deletedByPrincipal ?? null,
+        deletedAt: absentAsNull(insert.deletedAt),
+        deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
         id: 10,
         span: {
           ...insert.span,
@@ -528,8 +528,8 @@ describe("EpistemicTables", () => {
       const quote = Str.repeat(EVIDENCE_SPAN_QUOTE_MAX_LENGTH + 1)("a");
       const legacyRow = {
         ...insert,
-        deletedAt: insert.deletedAt ?? null,
-        deletedByPrincipal: insert.deletedByPrincipal ?? null,
+        deletedAt: absentAsNull(insert.deletedAt),
+        deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
         id: 10,
         span: {
           ...insert.span,
@@ -673,8 +673,8 @@ describe("EpistemicTables", () => {
       const decoded = yield* Effect.fromResult(
         ClaimDisposition.fromClaimDispositionRow({
           ...insert,
-          deletedAt: insert.deletedAt ?? null,
-          deletedByPrincipal: insert.deletedByPrincipal ?? null,
+          deletedAt: absentAsNull(insert.deletedAt),
+          deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
           id: 10,
         })
       );
@@ -692,8 +692,8 @@ describe("EpistemicTables", () => {
       const decoded = yield* Effect.fromResult(
         UsageRecord.fromUsageRecordRow({
           ...insert,
-          deletedAt: insert.deletedAt ?? null,
-          deletedByPrincipal: insert.deletedByPrincipal ?? null,
+          deletedAt: absentAsNull(insert.deletedAt),
+          deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
           id: record.id,
           activityId: insert.activityId ?? null,
           costUsdApproxMicros: insert.costUsdApproxMicros ?? null,
