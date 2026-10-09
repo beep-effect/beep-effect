@@ -325,3 +325,13 @@ same G-inherited process environment and executable, succeeded at 261 roots;
 all successful probes observed `~/.cache/beep/turbo`. One root returned an
 error. This verifies that route only; other harness child environments and
 workstation-wide read-only remote posture remain separate acceptance claims.
+
+### G sixth-review correction
+
+The sixth independent source review confirmed prior safety fixes and left two
+low findings in outcome classification and documentation/style. Apply now maps
+writer fences to lock-held and identity refusals to path-changed, matching
+recovery. Opaque-leaf membership uses Effect HashSet rather than linear array
+lookups, failed ancestor probes name stat-failed, and restore/report wording
+names the actual operation. The next source review and admitted runtime gates
+remain required before final.

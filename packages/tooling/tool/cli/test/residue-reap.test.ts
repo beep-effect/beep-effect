@@ -1642,6 +1642,7 @@ describe("checkout retention archives", () => {
             }),
         }).pipe(Effect.provideService(ProcessTable, table));
         expect(applied.reapedCount).toBe(0);
+        expect(candidateByPath(applied, fixture.target).skipReason).toBe("lock-held");
         expect(A.join(applied.warnings, " ")).toContain("phase=fenced-live");
         const runRoot = path.dirname(O.getOrThrow(O.fromUndefinedOr(applied.reportPath)));
         expect(yield* fs.readFileString(path.join(runRoot, "archive", "0", "payload.txt"))).toBe(

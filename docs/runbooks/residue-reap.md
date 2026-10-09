@@ -73,7 +73,7 @@ scanner checks the fenced inode for writers; a failed rollback retains a
 The immutable `plan.json` is synced before the first source move. `report.json`
 records the initial dry run or completed apply and is preserved. Recovery reads
 the original plan plus intent journals and writes a new `recovery-<uuid>.json`
-after row processing begins, including row failures. Missing, malformed or
+after all rows are processed, including row failures. Missing, malformed or
 owner-mismatched plans are refused before a recovery receipt is created. It processes every row and persists
 errors as warnings before reporting a failure. It reconciles an intent whose inode has already moved, rechecks an
 unmoved row before resuming, and never rearchives a row marked `restored`.

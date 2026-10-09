@@ -1457,7 +1457,10 @@ const applyCandidate = Effect.fnUntraced(function* (
           .move(intent.source, intent.destination, resolved.value.identity)
           .pipe(Effect.scoped);
         if (!BoundMoveOutcome.is.moved(moved) && !BoundMoveOutcome.is["moved-unsynced"](moved))
-          return yield* ResidueArchiveError.make({ message: `Archive move refused: ${moved}` });
+          return yield* ResidueArchiveError.make({
+            message: `Archive move refused: ${moved}`,
+            skipReason: BoundMoveOutcome.is["identity-changed"](moved) ? "path-changed" : "removal-failed",
+          });
         // Reuse the Worktree retirement fence's attachment scanner after rename:
         // processes follow the inode, so no live writer can hide behind the old path.
         const attachments = yield* scanProcessAttachments({
@@ -1480,6 +1483,7 @@ const applyCandidate = Effect.fnUntraced(function* (
           );
           return yield* ResidueArchiveError.make({
             message: `Archive has a live or unknown writer; rollback outcome: ${rolledBack}`,
+            skipReason: "lock-held",
           });
         }
         yield* syncDirectory(path.dirname(intent.source));
@@ -1497,7 +1501,9 @@ const applyCandidate = Effect.fnUntraced(function* (
       const journal = yield* fs.readFileString(journalPath).pipe(Effect.flatMap(decodeIntent), Effect.option);
       const phase = O.match(journal, { onNone: () => "unpublished", onSome: (row) => row.phase });
       return skipped(
-        "removal-failed",
+        isResidueArchiveError(result.failure)
+          ? optionOr(result.failure.skipReason, "removal-failed")
+          : "removal-failed",
         `${result.failure.message}; phase=${phase}; intent=${journalPath}; resume or restore this run.`
       );
     }
@@ -1646,7 +1652,7 @@ class ResidueArchive extends Context.Service<
       source: string,
       destination: string,
       expected: DirectoryIdentity
-    ) => Effect.Effect<Effect.Success<ReturnType<typeof renameBoundEntry>>, never, Scope.Scope>;
+    ) => Effect.Effect<BoundMoveOutcome, never, Scope.Scope>;
   }
 >()($I`ResidueArchive`) {}
 const makeResidueArchive = Effect.fnUntraced(function* () {
@@ -1770,7 +1776,7 @@ const checkoutSafetySkip = Effect.fnUntraced(function* (
   // Prune durable archive/ruling bookkeeping before traversing or charging the cap.
   const pending = [""];
   const beneath: Array<string> = [];
-  const opaque: Array<string> = [];
+  let opaque = HashSet.empty<string>();
   while (A.isReadonlyArrayNonEmpty(pending)) {
     const parent = pending.pop() ?? "";
     const listing = yield* fs.readDirectory(path.join(beep, parent)).pipe(Effect.option);
@@ -1779,21 +1785,23 @@ const checkoutSafetySkip = Effect.fnUntraced(function* (
       if (Str.isEmpty(parent) && isBookkeepingDirectory(child)) continue;
       const name = path.join(parent, child);
       beneath.push(name);
-      if (A.length(beneath) > policy.entryCap) return O.some<ResidueReapSkipReason>("census-overflow");
+      if (N.greaterThan(A.length(beneath), policy.entryCap)) return O.some<ResidueReapSkipReason>("census-overflow");
       const absolute = path.join(beep, name);
       if (O.isSome(yield* fs.readLink(absolute).pipe(Effect.option))) continue;
       const info = yield* fs.stat(absolute).pipe(Effect.option);
       if (O.isNone(info)) return O.some<ResidueReapSkipReason>("stat-failed");
       if (Str.Equivalence(info.value.type, "Directory")) {
-        const embedded = yield* fs.exists(path.join(absolute, ".git")).pipe(Effect.orElseSucceed(() => true));
+        const markerExists = yield* fs.exists(path.join(absolute, ".git")).pipe(Effect.option);
+        if (O.isNone(markerExists)) return O.some<ResidueReapSkipReason>("stat-failed");
+        const embedded = markerExists.value;
         if (embedded && !Str.Equivalence(absolute, realEntry.value) && cwdWithin(path, absolute, realEntry.value))
           return O.some<ResidueReapSkipReason>("protected-name");
         if (!cwdWithin(path, realEntry.value, absolute) && (Str.Equivalence(child, "node_modules") || embedded)) {
-          opaque.push(name);
+          opaque = HashSet.add(opaque, name);
           if (embedded) {
             const marker = path.join(name, ".git");
             beneath.push(marker);
-            opaque.push(marker);
+            opaque = HashSet.add(opaque, marker);
             if (N.greaterThan(A.length(beneath), policy.entryCap))
               return O.some<ResidueReapSkipReason>("census-overflow");
           }
@@ -1846,7 +1854,7 @@ const checkoutSafetySkip = Effect.fnUntraced(function* (
     const info = yield* fs.stat(path.join(beep, name)).pipe(Effect.option);
     if (O.isNone(info) || O.isNone(mtimeMillis(info.value))) return O.some<ResidueReapSkipReason>("stat-failed");
     if (
-      (!Str.Equivalence(info.value.type, "Directory") || A.contains(opaque, name)) &&
+      (!Str.Equivalence(info.value.type, "Directory") || HashSet.has(opaque, name)) &&
       O.exists(mtimeMillis(info.value), (time) => ageDays(policy.nowMillis, time) < CHECKOUT_LIVE_DAYS)
     )
       return O.some<ResidueReapSkipReason>("checkout-recent-write");
@@ -2349,10 +2357,16 @@ const recoverArchiveRun = Effect.fnUntraced(function* (settings: ResidueReapSett
         const sourceMatches = yield* identityAt(intent.source);
         const archived = yield* identityAt(intent.destination);
         if (restore && archived) {
-          if (yield* fs.exists(intent.source)) return yield* refuse("Restore refuses an occupied source");
+          if (yield* fs.exists(intent.source))
+            return yield* refuse("Restore refuses an occupied source", "path-changed");
           const moved = yield* archive.move(intent.destination, intent.source, intent).pipe(Effect.scoped);
           if (!BoundMoveOutcome.is.moved(moved) && !BoundMoveOutcome.is["moved-unsynced"](moved))
-            return yield* refuse("Restore failed; archive intent retained");
+            return yield* refuse(
+              `Restore failed: ${moved}; archive intent retained`,
+              BoundMoveOutcome.is["identity-changed"](moved) || BoundMoveOutcome.is["destination-occupied"](moved)
+                ? "path-changed"
+                : "removal-failed"
+            );
           yield* syncDirectory(path.dirname(intent.source));
           yield* syncDirectory(path.dirname(intent.destination));
           yield* archive.publish(
