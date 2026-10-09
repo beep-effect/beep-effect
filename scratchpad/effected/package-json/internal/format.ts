@@ -1,5 +1,9 @@
 import { dual } from "effect/Function";
 import * as A from "effect/Array";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 
 // Pure package.json serialization helpers: canonical top-level key ordering
@@ -132,7 +136,7 @@ const KEY_ORDER: ReadonlyArray<string> = [
 	"pnpm",
 ];
 
-const KEY_INDEX = new Map(KEY_ORDER.map((k, i) => [k, i] as const));
+const KEY_INDEX = HashMap.fromIterable(A.map(KEY_ORDER, (k, i) => [k, i] as const));
 
 /**
  * Deterministic, locale-independent string comparison by code unit. A bare
@@ -150,7 +154,7 @@ const byCodePoint = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 
  * and `bin` identically; its `scripts` sort is a grouped sort that agrees with
  * plain code-unit order except for `pre*`/`post*` script pairing.
  */
-const SORTED_MAP_KEYS: ReadonlySet<string> = new Set([
+const SORTED_MAP_KEYS = HashSet.make(
 	"dependencies",
 	"devDependencies",
 	"peerDependencies",
@@ -159,7 +163,7 @@ const SORTED_MAP_KEYS: ReadonlySet<string> = new Set([
 	"scripts",
 	"engines",
 	"bin",
-]);
+);
 
 /** Alphabetize the entries of a plain-object map field. */
 const sortMapEntries = (value: Record<string, unknown>): Record<string, unknown> => {
@@ -171,7 +175,7 @@ const sortMapEntries = (value: Record<string, unknown>): Record<string, unknown>
 };
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
-	value !== null && typeof value === "object" && !A.isArray(value);
+	P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
 
 /**
  * Order top-level keys canonically (known keys by {@link KEY_ORDER}, then
@@ -184,7 +188,7 @@ export const sortKeys = (obj: Record<string, unknown>): Record<string, unknown> 
 	const restPrivate: Array<[string, unknown]> = [];
 
 	for (const key of R.keys(obj)) {
-		const index = KEY_INDEX.get(key);
+		const index = O.getOrUndefined(HashMap.get(KEY_INDEX, key));
 		if (index !== undefined) known.push([key, obj[key], index]);
 		else if (key.startsWith("_")) restPrivate.push([key, obj[key]]);
 		else restPublic.push([key, obj[key]]);
@@ -196,7 +200,7 @@ export const sortKeys = (obj: Record<string, unknown>): Record<string, unknown> 
 
 	const result: Record<string, unknown> = {};
 	for (const [key, value] of [...known, ...restPublic, ...restPrivate]) {
-		result[key] = SORTED_MAP_KEYS.has(key) && isPlainObject(value) ? sortMapEntries(value) : value;
+		result[key] = HashSet.has(SORTED_MAP_KEYS, key) && isPlainObject(value) ? sortMapEntries(value) : value;
 	}
 	return result;
 };

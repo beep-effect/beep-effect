@@ -1,5 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
+import * as Match from "effect/Match";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -54,14 +55,11 @@ export class UnresolvedEntryPointError extends S.TaggedError<UnresolvedEntryPoin
 	}, $I.annote("UnresolvedEntryPointError", { description: "Raised when a manifest resolves no root entry point." }),
 ) {
 	override get message(): string {
-		switch (this.reason) {
-			case "noRootExport":
-				return 'The manifest\'s "exports" declares subpaths but no "." entry, so it has no root entry point';
-			case "noConditionMatched":
-				return `The manifest's "exports" matched none of the conditions ${JSON.stringify(this.conditions ?? [])}`;
-			default:
-				return 'The manifest\'s "exports" uses a form this resolver does not implement';
-		}
+		return Match.value(this.reason).pipe(
+			Match.when("noRootExport", () => 'The manifest\'s "exports" declares subpaths but no "." entry, so it has no root entry point'),
+			Match.when("noConditionMatched", () => `The manifest's "exports" matched none of the conditions ${JSON.stringify(this.conditions ?? [])}`),
+			Match.orElse(() => 'The manifest\'s "exports" uses a form this resolver does not implement'),
+		);
 	}
 }
 
@@ -87,7 +85,7 @@ const DEFAULT_CONDITIONS: ReadonlyArray<string> = ["import", "default"];
 
 /** A plain object — not an array, not `null`. */
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
-	typeof value === "object" && value !== null && !A.isArray(value);
+	P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
 
 /**
  * Is this `exports` object a conditions map rather than a subpath map?

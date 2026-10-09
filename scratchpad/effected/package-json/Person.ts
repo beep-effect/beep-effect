@@ -14,6 +14,7 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
@@ -57,7 +58,7 @@ const rememberWire = (person: Person, wire: PersonWire): Person => {
 	return person;
 };
 
-const KNOWN_KEYS: ReadonlySet<string> = new Set(["name", "email", "url"]);
+const KNOWN_KEYS = HashSet.make("name", "email", "url");
 
 // Structural comparison over arbitrary JSON `rest` values. `Equal.equals` is
 // reference equality on plain objects, so it cannot serve here; the stored rest
@@ -118,7 +119,7 @@ const decodePersonFields = S.decodeUnknownEffect(PersonFields);
 const restOf = (raw: { readonly [k: string]: unknown }): Record<string, unknown> => {
 	const rest: Record<string, unknown> = {};
 	for (const [key, value] of R.toEntries(raw)) {
-		if (!KNOWN_KEYS.has(key)) rest[key] = value;
+		if (!HashSet.has(KNOWN_KEYS, key)) rest[key] = value;
 	}
 	return rest;
 };

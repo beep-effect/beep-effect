@@ -15,6 +15,8 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as O from "effect/Option";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as P from "effect/Predicate";
@@ -23,7 +25,7 @@ import * as R from "effect/Record";
 const $I = $ScratchpadId.create("effected/package-json/Repository");
 
 /** The shorthand hosts npm resolves without a scheme. */
-const SHORTHAND_HOSTS: ReadonlyMap<string, string> = new Map([
+const SHORTHAND_HOSTS = HashMap.fromIterable([
 	["github", "https://github.com"],
 	["gitlab", "https://gitlab.com"],
 	["bitbucket", "https://bitbucket.org"],
@@ -43,7 +45,7 @@ const SCP_LIKE = /^(?:([\w.-]+)@)?([\w.-]+):(.+)$/;
  * rather than a branch name because the default branch is not knowable from a
  * manifest, and every one of these hosts resolves `HEAD` to it.
  */
-const DIRECTORY_PATHS: ReadonlyMap<string, string> = new Map([
+const DIRECTORY_PATHS = HashMap.fromIterable([
 	["github.com", "tree/HEAD"],
 	// GitLab routes repository browsing under `/-/` to keep it clear of group
 	// and project namespaces, which can otherwise collide with `tree`.
@@ -72,7 +74,7 @@ const browseUrlOf = (raw: string): O.Option<string> => {
 		const [, scheme, rest] = prefixed;
 		// `gist:id` resolves to a different host than the code-forge shorthands.
 		if (scheme === "gist") return O.some(`https://gist.github.com/${stripGitSuffix(rest ?? "")}`);
-		const host = SHORTHAND_HOSTS.get(scheme ?? "");
+		const host = O.getOrUndefined(HashMap.get(SHORTHAND_HOSTS, scheme ?? ""));
 		if (host !== undefined) return O.some(`${host}/${stripGitSuffix(rest ?? "")}`);
 	}
 
@@ -106,8 +108,8 @@ type FieldWire = string | { readonly [k: string]: unknown };
 const repositoryWires = new WeakMap<Repository, FieldWire>();
 const bugsWires = new WeakMap<Bugs, FieldWire>();
 
-const KNOWN_REPOSITORY_KEYS: ReadonlySet<string> = new Set(["type", "url", "directory"]);
-const KNOWN_BUGS_KEYS: ReadonlySet<string> = new Set(["url", "email"]);
+const KNOWN_REPOSITORY_KEYS = HashSet.make("type", "url", "directory");
+const KNOWN_BUGS_KEYS = HashSet.make("url", "email");
 
 // A remembered OBJECT wire is replayed only while it still describes the value
 // faithfully — the same discipline `Person` already applies, and for the same
@@ -117,10 +119,10 @@ const KNOWN_BUGS_KEYS: ReadonlySet<string> = new Set(["url", "email"]);
 const sameRest = (a: unknown, b: unknown): boolean => JSON.stringify(a ?? {}) === JSON.stringify(b ?? {});
 
 /** The keys of `wire` outside the documented set, which is what `rest` holds. */
-const restOf = (wire: { readonly [k: string]: unknown }, known: ReadonlySet<string>): Record<string, unknown> => {
+const restOf = (wire: { readonly [k: string]: unknown }, known: HashSet.HashSet<string>): Record<string, unknown> => {
 	const rest: Record<string, unknown> = {};
 	for (const [key, value] of R.toEntries(wire)) {
-		if (!known.has(key)) rest[key] = value;
+		if (!HashSet.has(known, key)) rest[key] = value;
 	}
 	return rest;
 };
@@ -269,7 +271,7 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
 
 		return O.flatMap(this.browseUrl, (url) => {
 			const host = /^https:\/\/([^/]+)/.exec(url)?.[1];
-			const path = host === undefined ? undefined : DIRECTORY_PATHS.get(host);
+			const path = host === undefined ? undefined : O.getOrUndefined(HashMap.get(DIRECTORY_PATHS, host));
 			if (path === undefined) return O.none();
 			return O.some(`${url}/${path}/${segments.map((segment) => encodeURIComponent(segment)).join("/")}`);
 		});
@@ -295,7 +297,7 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
 					}
 					const rest: Record<string, unknown> = {};
 					for (const [key, value] of R.toEntries(input)) {
-						if (!KNOWN_REPOSITORY_KEYS.has(key)) rest[key] = value;
+						if (!HashSet.has(KNOWN_REPOSITORY_KEYS, key)) rest[key] = value;
 					}
 					const repository = Repository.make({
 						url: P.isString(input.url) ? input.url : "",
@@ -358,7 +360,7 @@ export class Bugs extends S.Class<Bugs>($I`Bugs`)({
 					}
 					const rest: Record<string, unknown> = {};
 					for (const [key, value] of R.toEntries(input)) {
-						if (!KNOWN_BUGS_KEYS.has(key)) rest[key] = value;
+						if (!HashSet.has(KNOWN_BUGS_KEYS, key)) rest[key] = value;
 					}
 					const bugs = Bugs.make({
 						...(P.isString(input.url) && { url: input.url }),

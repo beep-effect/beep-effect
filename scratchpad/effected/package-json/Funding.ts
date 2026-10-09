@@ -28,6 +28,7 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import type * as SchemaIssue from "effect/SchemaIssue";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as P from "effect/Predicate";
@@ -51,7 +52,7 @@ const entryWires = new WeakMap<Funding, EntryWire>();
  */
 const bareEntries = new WeakSet<Funding>();
 
-const KNOWN_FUNDING_KEYS: ReadonlySet<string> = new Set(["type", "url"]);
+const KNOWN_FUNDING_KEYS = HashSet.make("type", "url");
 
 // Validated by the same route `Person.schema` uses: the struct produces the
 // issue tree, so a missing or non-string `url` reads exactly as it would from
@@ -66,7 +67,7 @@ const decodeFundingFields = S.decodeUnknownEffect(FundingFields);
 const restOf = (raw: { readonly [k: string]: unknown }): Record<string, unknown> => {
 	const rest: Record<string, unknown> = {};
 	for (const [key, value] of R.toEntries(raw)) {
-		if (!KNOWN_FUNDING_KEYS.has(key)) rest[key] = value;
+		if (!HashSet.has(KNOWN_FUNDING_KEYS, key)) rest[key] = value;
 	}
 	return rest;
 };

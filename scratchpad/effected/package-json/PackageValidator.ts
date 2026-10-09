@@ -4,6 +4,7 @@
 // set) and the genuinely-parameterized `PackageValidator.layerRules` factory.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
@@ -102,7 +103,7 @@ const notPrivate: ValidationRule = {
 
 const anyDependencyMatches = (pkg: Package, predicate: (specifier: string) => boolean): boolean =>
 	[pkg.dependencies, pkg.devDependencies, pkg.peerDependencies, pkg.optionalDependencies].some((map) =>
-		Array.from(HashMap.values(map)).some(predicate),
+		map.pipe(HashMap.values, A.fromIterable, A.some(predicate)),
 	);
 
 /**

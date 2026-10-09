@@ -8,6 +8,8 @@
 // Private implementation module — never re-exported from `index.ts`.
 
 import * as S from "effect/Schema";
+import * as A from "effect/Array";
+import * as HashSet from "effect/HashSet";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as R from "effect/Record";
 
@@ -22,7 +24,7 @@ const RawJson = S.Record(S.String, S.Unknown);
 export const makeWire = <Self, RD = never, RE = never>(
 	Class: S.Codec<Self, unknown, RD, RE> & { readonly fields: Record<string, unknown> },
 ): S.Codec<Self, { readonly [k: string]: unknown }, RD, RE> => {
-	const knownKeys = new Set(R.keys(Class.fields).filter((k) => k !== "rest"));
+	const knownKeys = HashSet.fromIterable(A.filter(R.keys(Class.fields), (k) => k !== "rest"));
 	return RawJson.pipe(
 		S.decode(
 			SchemaTransformation.transform({
@@ -33,24 +35,23 @@ export const makeWire = <Self, RD = never, RE = never>(
 					// carrying an own `__proto__` key would both pollute the record and
 					// lose the key on encode. Known keys come from `Class.fields` and
 					// cannot collide with `__proto__`.
-					const rest: Record<string, unknown> = Object.create(null);
+					const rest: Record<string, unknown> = { __proto__: null };
 					for (const [key, value] of R.toEntries(raw)) {
-						if (knownKeys.has(key)) known[key] = value;
+						if (HashSet.has(knownKeys, key)) known[key] = value;
 						else rest[key] = value;
 					}
 					// Spread uses define-own-property semantics, so an own `__proto__`
 					// data key survives into the encode side untouched.
 					return { ...known, rest };
 				},
-				encode: (encoded: Record<string, unknown>) => {
+				encode: (encoded: Record<string, unknown> & { readonly rest?: Record<string, unknown> }) => {
 					const { rest, ...known } = encoded;
 					// Typed fields win on a key collision: a hand-built instance whose
 					// `rest` smuggles a known key (including an .extend()ed subclass
 					// field — this is the one shared wire implementation behind
 					// `Package.schema`, `Package.wireFor` and `PackageManifest.schema`)
 					// must not shadow the typed member on the wire.
-					const flattened: Record<string, unknown> = Object.create(null);
-					return { ...Object.assign(flattened, rest ?? {}, known) };
+					return { ...rest, ...known };
 				},
 			}),
 		),

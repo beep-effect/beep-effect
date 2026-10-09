@@ -18,6 +18,8 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { ExportsField, PackageDecodeError, PublishConfigField } from "./Package.ts";
@@ -67,7 +69,7 @@ const StringOrRecord = S.Union([S.String, UnknownRecord]);
 const isString = (value: unknown): value is string => P.isString(value);
 const isBoolean = (value: unknown): value is boolean => P.isBoolean(value);
 const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
-	typeof value === "object" && value !== null && !A.isArray(value);
+	P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
 const isStringRecord = (value: unknown): value is Record<string, string> =>
 	isPlainRecord(value) && R.values(value).every(isString);
 const isStringArray = (value: unknown): value is ReadonlyArray<string> => A.isArray(value) && value.every(isString);
@@ -88,7 +90,7 @@ const recordGuard: FieldGuard = { expected: "an object", test: isPlainRecord };
 
 // A Map, not a plain object: a manifest key like `"toString"` or
 // `"constructor"` must miss, not hit `Object.prototype`.
-const FIELD_GUARDS: ReadonlyMap<string, FieldGuard> = new Map<string, FieldGuard>([
+const FIELD_GUARDS = HashMap.fromIterable<string, FieldGuard>([
 	["name", stringGuard],
 	["version", stringGuard],
 	["description", stringGuard],
@@ -135,10 +137,10 @@ const sift = (raw: Record<string, unknown>): LenientManifest => {
 	// Null-prototype for the same reason as the strict wire transform: an own
 	// `__proto__` key on a plain object would mutate the prototype instead of
 	// storing data.
-	const rest: Record<string, unknown> = Object.create(null);
+	const rest: Record<string, unknown> = { __proto__: null };
 	const issues: Array<LenientFieldIssue> = [];
 	for (const [key, value] of R.toEntries(raw)) {
-		const guard = FIELD_GUARDS.get(key);
+		const guard = O.getOrUndefined(HashMap.get(FIELD_GUARDS, key));
 		if (guard === undefined) {
 			rest[key] = value;
 		} else if (guard.test(value)) {

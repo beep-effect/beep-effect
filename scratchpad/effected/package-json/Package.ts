@@ -15,6 +15,7 @@ import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Pipeable from "effect/Pipeable";
 import * as Result from "effect/Result";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { Dependency } from "./Dependency.ts";
@@ -36,8 +37,8 @@ const $I = $ScratchpadId.create("effected/package-json/Package");
 // fields directly for ordinary use.
 
 const toHashMap = SchemaTransformation.transform({
-	decode: (record: { readonly [x: string]: string }) => HashMap.fromIterable(Object.entries(record)),
-	encode: (map: HashMap.HashMap<string, string>) => Object.fromEntries(HashMap.toEntries(map)),
+	decode: (record: { readonly [x: string]: string }) => HashMap.fromIterable(R.toEntries(record)),
+	encode: (map: HashMap.HashMap<string, string>) => map.pipe(HashMap.toEntries, R.fromEntries),
 });
 
 /**

@@ -24,6 +24,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { detectIndent, renderJson, resolveIndent, sortKeys } from "./internal/format.ts";
 import * as A from "effect/Array";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/package-json/PackageJsonFormat");
 
@@ -85,7 +86,7 @@ export interface PackageFormatTextOptions {
 }
 
 const isJsonObject = (value: unknown): value is Record<string, unknown> =>
-	typeof value === "object" && value !== null && !A.isArray(value);
+	P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
 
 /**
  * Indicates that a surgical modification could not be applied: the value on
