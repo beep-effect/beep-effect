@@ -343,10 +343,11 @@ describe("HookPulseV1", () => {
   it.effect("rejects calendar rollover in refusal and switch transition timestamps", () =>
     Effect.sync(() => {
       A.forEach(["2026-02-30T00:00:00Z", "2026-08-01T24:00:00Z"], (ts) => {
-        assertTrue(
-          Result.isFailure(S.decodeUnknownResult(HookPulseRefusal)({ ts, agentKind: "claude-code", reason: "timeout" }))
+        S.decodeResult(HookPulseRefusal)({ ts, agentKind: "claude-code", reason: "timeout" }).pipe(
+          Result.isFailure,
+          assertTrue
         );
-        assertTrue(Result.isFailure(S.decodeUnknownResult(HookPulseSwitchTransition)({ ts, action: "arm" })));
+        S.decodeResult(HookPulseSwitchTransition)({ ts, action: "arm" }).pipe(Result.isFailure, assertTrue);
       });
     })
   );

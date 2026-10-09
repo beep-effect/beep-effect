@@ -222,46 +222,44 @@ type WriterOptions = {
   readonly executablePath?: string;
 };
 
-const writerEnvironment = (stateHome: string, evidenceRoot: string, options: WriterOptions) => {
-  return {
-    HOME: stateHome,
-    XDG_STATE_HOME: stateHome,
-    // The writer reads `$PWD` as its `fallbackCwd`, and `cwd` above does not rewrite
-    // the inherited `PWD` — bash would correct it at startup, but the correction is
-    // not this test's to assume now that the environment is inherited rather than
-    // rebuilt.
-    PWD: repoRoot,
-    // Empty values fall through to the writer's own `:-` defaults, so ambient
-    // developer configuration cannot change what this test asserts. Clearing
-    // BEEP_AGENT_EVIDENCE_ROOT exercises the XDG_STATE_HOME fallback rung of
-    // the precedence chain and must resolve to the same place.
-    BEEP_AGENT_EVIDENCE_ROOT: options.viaXdgFallback === true ? "" : evidenceRoot,
-    BEEP_HOOK_PULSE_DISARM_SENTINEL: "",
-    // The production fallback is now the post-baseline notifier revision.
-    // Legacy writer fixtures pin log-only explicitly so their assertion stays
-    // about projection semantics rather than the current intervention state.
-    BEEP_HOOK_PULSE_NOTIFIER_REV: "log-only-0",
-    BEEP_HOOK_PULSE_INSTRUMENT_CLASS: "",
-    // Cleared unless a case sets it, so an ambient adapter value cannot retag rows;
-    // empty falls through to the writer's `claude-code` default.
-    BEEP_HOOK_PULSE_AGENT_KIND: options.agentKind ?? "",
-    // The Cursor adapter caps the writer at 3 s. Measured 2026-09-16: at load average ~300
-    // the cap killed the writer and this suite saw no row, so the conformance run lifts it.
-    BEEP_CURSOR_HOOK_PULSE_WRITER_CAP: "60s",
-    BEEP_HOOK_PULSE_WRITER_CAP: options.writerCap ?? "60s",
-    BEEP_HOOK_PULSE_STAMP_CAP: options.stampCap ?? "60s",
-    // Both salt rungs are cleared unless a case sets one, so a developer who
-    // exports a real ai-metrics salt cannot change what these digests are.
-    // Cleared, they exercise the insecure-default fallback that keeps an
-    // unconfigured clone byte-identical to `hashPrivateIdentifier(value, O.none())`.
-    // The second rung is settable so the codec-parity cases can prove both
-    // halves walk the *same* chain rather than only its first link.
-    BEEP_HOOK_PULSE_HASH_SALT: options.hashSalt ?? "",
-    BEEP_AI_METRICS_HASH_SALT: options.aiMetricsHashSalt ?? "",
-    BEEP_HOOK_PULSE_ATTEMPT_UTC: options.attemptUtc ?? "",
-    ...(options.executablePath ? { PATH: options.executablePath } : {}),
-  };
-};
+const writerEnvironment = (stateHome: string, evidenceRoot: string, options: WriterOptions) => ({
+  HOME: stateHome,
+  XDG_STATE_HOME: stateHome,
+  // The writer reads `$PWD` as its `fallbackCwd`, and `cwd` above does not rewrite
+  // the inherited `PWD` — bash would correct it at startup, but the correction is
+  // not this test's to assume now that the environment is inherited rather than
+  // rebuilt.
+  PWD: repoRoot,
+  // Empty values fall through to the writer's own `:-` defaults, so ambient
+  // developer configuration cannot change what this test asserts. Clearing
+  // BEEP_AGENT_EVIDENCE_ROOT exercises the XDG_STATE_HOME fallback rung of
+  // the precedence chain and must resolve to the same place.
+  BEEP_AGENT_EVIDENCE_ROOT: options.viaXdgFallback === true ? "" : evidenceRoot,
+  BEEP_HOOK_PULSE_DISARM_SENTINEL: "",
+  // The production fallback is now the post-baseline notifier revision.
+  // Legacy writer fixtures pin log-only explicitly so their assertion stays
+  // about projection semantics rather than the current intervention state.
+  BEEP_HOOK_PULSE_NOTIFIER_REV: "log-only-0",
+  BEEP_HOOK_PULSE_INSTRUMENT_CLASS: "",
+  // Cleared unless a case sets it, so an ambient adapter value cannot retag rows;
+  // empty falls through to the writer's `claude-code` default.
+  BEEP_HOOK_PULSE_AGENT_KIND: options.agentKind ?? "",
+  // The Cursor adapter caps the writer at 3 s. Measured 2026-09-16: at load average ~300
+  // the cap killed the writer and this suite saw no row, so the conformance run lifts it.
+  BEEP_CURSOR_HOOK_PULSE_WRITER_CAP: "60s",
+  BEEP_HOOK_PULSE_WRITER_CAP: options.writerCap ?? "60s",
+  BEEP_HOOK_PULSE_STAMP_CAP: options.stampCap ?? "60s",
+  // Both salt rungs are cleared unless a case sets one, so a developer who
+  // exports a real ai-metrics salt cannot change what these digests are.
+  // Cleared, they exercise the insecure-default fallback that keeps an
+  // unconfigured clone byte-identical to `hashPrivateIdentifier(value, O.none())`.
+  // The second rung is settable so the codec-parity cases can prove both
+  // halves walk the *same* chain rather than only its first link.
+  BEEP_HOOK_PULSE_HASH_SALT: options.hashSalt ?? "",
+  BEEP_AI_METRICS_HASH_SALT: options.aiMetricsHashSalt ?? "",
+  BEEP_HOOK_PULSE_ATTEMPT_UTC: options.attemptUtc ?? "",
+  ...(options.executablePath !== undefined ? { PATH: options.executablePath } : {}),
+});
 
 const runWriter = Effect.fnUntraced(function* (stdin: string, options: WriterOptions = {}) {
   const fs = yield* FileSystem.FileSystem;
@@ -290,7 +288,7 @@ const runWriter = Effect.fnUntraced(function* (stdin: string, options: WriterOpt
   // repo's `nodeBuiltinImport` law names as the replacement for `node:child_process`.
   const handle = yield* ChildProcess.make(
     options.writerPath ?? writerPath,
-    options.writerArgs ?? (options.registeredEvent ? ["--event", options.registeredEvent] : []),
+    options.writerArgs ?? (options.registeredEvent !== undefined ? ["--event", options.registeredEvent] : []),
     {
       cwd: repoRoot,
       // Inherited, not restated. The writer shells out to `jq`, `sha256sum`, `date`, and
@@ -1284,11 +1282,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse writer confo
     Effect.gen(function* () {
       const invalid = yield* runWriter("", { writerArgs: ["--refuse", "timeout"], attemptUtc: "2026-02-30T00:00:00Z" });
       expect(invalid.refusals).toHaveLength(1);
-      const row = yield* S.decodeEffect(S.fromJsonString(HookPulseRefusal))(invalid.refusals[0]);
+      const row = yield* S.decodeEffect(S.fromJsonString(HookPulseRefusal))(A.getUnsafe(invalid.refusals, 0));
       expect(DateTime.formatIso(row.ts)).not.toBe("2026-03-02T00:00:00.000Z");
       const valid = yield* runWriter("", { writerArgs: ["--refuse", "timeout"], attemptUtc: "2026-08-01T23:59:59Z" });
       expect(valid.refusalFiles).toEqual(["hook-pulse-refusals-2026-08-01.ndjson"]);
-      const validRow = yield* S.decodeEffect(S.fromJsonString(HookPulseRefusal))(valid.refusals[0]);
+      const validRow = yield* S.decodeEffect(S.fromJsonString(HookPulseRefusal))(A.getUnsafe(valid.refusals, 0));
       expect(DateTime.formatIso(validRow.ts)).toBe("2026-08-01T23:59:59.000Z");
     })
   );
