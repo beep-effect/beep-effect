@@ -9,6 +9,7 @@
 // the four `kind` values say which step failed, so no cause-chain flattening
 // into a message string is needed.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { bundleToJSON } from "@sigstore/bundle";
 import type { IdentityProvider, Signer, Witness } from "@sigstore/sign";
 import { DSSEBundleBuilder, FulcioSigner, RekorWitness } from "@sigstore/sign";
@@ -22,6 +23,8 @@ import type { IdentityTokenShape } from "./IdentityToken.ts";
 import { IdentityToken } from "./IdentityToken.ts";
 import type { InTotoStatement } from "./InTotoStatement.ts";
 import { IN_TOTO_PAYLOAD_TYPE, SigstoreBundle } from "./SigstoreBundle.ts";
+
+const $I = $ScratchpadId.create("effected/sbom/SigstoreSigner");
 
 /**
  * The OIDC audience Sigstore's certificate authority requires.
@@ -41,7 +44,7 @@ export const SIGSTORE_OIDC_AUDIENCE = "sigstore" as const;
  *
  * @public
  */
-export const SigningErrorKind = S.Literals(["identity", "certificate", "transparencyLog", "bundle"]);
+export const SigningErrorKind = S.Literals(["identity", "certificate", "transparencyLog", "bundle"]).pipe($I.annoteSchema("SigningErrorKind", { description: "Which step of signing failed." }));
 
 /**
  * The decoded type of {@link (SigningErrorKind:variable)}.
@@ -61,12 +64,12 @@ export type SigningErrorKind = typeof SigningErrorKind.Type;
  *
  * @public
  */
-export class SigningError extends S.TaggedError<SigningError>()("SigningError", {
+export class SigningError extends S.TaggedError<SigningError>($I`SigningError`)("SigningError", {
 	/** Which step failed. */
-	kind: SigningErrorKind,
+	kind: SigningErrorKind.annotateKey({ description: "Which step failed." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("SigningError", { description: "Raised when a statement cannot be signed." })) {
 	override get message(): string {
 		return `Failed to sign the statement (${this.kind})`;
 	}
@@ -204,7 +207,7 @@ const unstubbed = (): never => {
  * @public
  */
 export class SigstoreSigner extends Context.Service<SigstoreSigner, SigstoreSignerShape>()(
-	"@beep/scratchpad/effected/sbom/SigstoreSigner",
+	$I`SigstoreSigner`,
 ) {
 	/** Signing against the public-good Fulcio and Rekor instances. */
 	static readonly layer: Layer.Layer<SigstoreSigner, never, IdentityToken> = Layer.effect(

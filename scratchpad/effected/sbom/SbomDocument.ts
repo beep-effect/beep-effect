@@ -8,8 +8,11 @@
 // 1.6 ONLY. There is no 1.5 path, no dual-emission branch and no version
 // option.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { License, isValidExpression } from "../spdx/index.ts";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/sbom/SbomDocument");
 
 /** The BOM format discriminator. CycloneDX requires this exact string. */
 export const BOM_FORMAT = "CycloneDX" as const;
@@ -27,7 +30,7 @@ export const SPEC_VERSION = "1.6" as const;
  *
  * @public
  */
-export const ComponentType = S.Literals(["library", "application", "framework"]);
+export const ComponentType = S.Literals(["library", "application", "framework"]).pipe($I.annoteSchema("ComponentType", { description: "The CycloneDX component types this package emits." }));
 
 /**
  * The decoded type of {@link (ComponentType:variable)}.
@@ -46,7 +49,7 @@ export type ComponentType = typeof ComponentType.Type;
  *
  * @public
  */
-export const ExternalReferenceType = S.Literals(["vcs", "issue-tracker", "website", "documentation"]);
+export const ExternalReferenceType = S.Literals(["vcs", "issue-tracker", "website", "documentation"]).pipe($I.annoteSchema("ExternalReferenceType", { description: "An external reference's kind." }));
 
 /**
  * The decoded type of {@link (ExternalReferenceType:variable)}.
@@ -60,26 +63,26 @@ export type ExternalReferenceType = typeof ExternalReferenceType.Type;
  *
  * @public
  */
-export class ExternalReference extends S.Class<ExternalReference>("ExternalReference")({
+export class ExternalReference extends S.Class<ExternalReference>($I`ExternalReference`)({
 	/** The reference kind. */
-	type: ExternalReferenceType,
+	type: ExternalReferenceType.annotateKey({ description: "The reference kind." }),
 	/** The URL it points at, passed through exactly as supplied. */
-	url: S.String,
-}) {}
+	url: S.String.annotateKey({ description: "The URL it points at, passed through exactly as supplied." }),
+}, $I.annote("ExternalReference", { description: "A link from a component to something outside the BOM." })) {}
 
 /**
  * A point of contact — a person at a supplier, or an author of the BOM.
  *
  * @public
  */
-export class Contact extends S.Class<Contact>("Contact")({
+export class Contact extends S.Class<Contact>($I`Contact`)({
 	/** The contact's name. */
-	name: S.optionalKey(S.String),
+	name: S.optionalKey(S.String).annotateKey({ description: "The contact's name." }),
 	/** Their email address. */
-	email: S.optionalKey(S.String),
+	email: S.optionalKey(S.String).annotateKey({ description: "Their email address." }),
 	/** Their telephone number. */
-	phone: S.optionalKey(S.String),
-}) {}
+	phone: S.optionalKey(S.String).annotateKey({ description: "Their telephone number." }),
+}, $I.annote("Contact", { description: "A point of contact — a person at a supplier, or an author of the BOM." })) {}
 
 /**
  * The organization that supplied a component.
@@ -90,14 +93,14 @@ export class Contact extends S.Class<Contact>("Contact")({
  *
  * @public
  */
-export class Supplier extends S.Class<Supplier>("Supplier")({
+export class Supplier extends S.Class<Supplier>($I`Supplier`)({
 	/** The supplier organization's name. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "The supplier organization's name." }),
 	/** Its URLs. */
-	url: S.String.pipe(S.Array, S.optionalKey),
+	url: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "Its URLs." }),
 	/** Its points of contact. */
-	contact: Contact.pipe(S.Array, S.optionalKey),
-}) {}
+	contact: Contact.pipe(S.Array, S.optionalKey).annotateKey({ description: "Its points of contact." }),
+}, $I.annote("Supplier", { description: "The organization that supplied a component." })) {}
 
 /**
  * One component in the BOM — the root, or a dependency.
@@ -109,48 +112,48 @@ export class Supplier extends S.Class<Supplier>("Supplier")({
  *
  * @public
  */
-export class Component extends S.Class<Component>("Component")({
+export class Component extends S.Class<Component>($I`Component`)({
 	/** What kind of component this is. */
-	type: ComponentType,
+	type: ComponentType.annotateKey({ description: "What kind of component this is." }),
 	/** The component's name — NTIA minimum element 2. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "The component's name — NTIA minimum element 2." }),
 	/** Its version — NTIA minimum element 3. */
-	version: S.optionalKey(S.String),
+	version: S.optionalKey(S.String).annotateKey({ description: "Its version — NTIA minimum element 3." }),
 	/** The package URL uniquely identifying it — NTIA minimum element 4. */
-	purl: S.optionalKey(S.String),
+	purl: S.optionalKey(S.String).annotateKey({ description: "The package URL uniquely identifying it — NTIA minimum element 4." }),
 	/** The identifier other parts of the document reference it by. */
-	bomRef: S.optionalKey(S.String),
+	bomRef: S.optionalKey(S.String).annotateKey({ description: "The identifier other parts of the document reference it by." }),
 	/** A short description. */
-	description: S.optionalKey(S.String),
+	description: S.optionalKey(S.String).annotateKey({ description: "A short description." }),
 	/** SPDX license identifiers or expressions. */
-	licenses: S.String.pipe(S.Array, S.optionalKey),
+	licenses: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "SPDX license identifiers or expressions." }),
 	/** Links out of the BOM. */
-	externalReferences: ExternalReference.pipe(S.Array, S.optionalKey),
+	externalReferences: ExternalReference.pipe(S.Array, S.optionalKey).annotateKey({ description: "Links out of the BOM." }),
 	/** Discovery keywords — CycloneDX 1.6's `tags`, from the manifest's `keywords`. */
-	tags: S.String.pipe(S.Array, S.optionalKey),
+	tags: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "Discovery keywords — CycloneDX 1.6's `tags`, from the manifest's `keywords`." }),
 	/** The component's authors. */
-	authors: Contact.pipe(S.Array, S.optionalKey),
+	authors: Contact.pipe(S.Array, S.optionalKey).annotateKey({ description: "The component's authors." }),
 	/** The entity that published it. */
-	publisher: S.optionalKey(S.String),
+	publisher: S.optionalKey(S.String).annotateKey({ description: "The entity that published it." }),
 	/** A copyright statement. */
-	copyright: S.optionalKey(S.String),
-}) {}
+	copyright: S.optionalKey(S.String).annotateKey({ description: "A copyright statement." }),
+}, $I.annote("Component", { description: "One component in the BOM — the root, or a dependency." })) {}
 
 /**
  * Document-level metadata: who made the BOM, when, and about what.
  *
  * @public
  */
-export class SbomMetadata extends S.Class<SbomMetadata>("SbomMetadata")({
+export class SbomMetadata extends S.Class<SbomMetadata>($I`SbomMetadata`)({
 	/** When the BOM was assembled — NTIA minimum element 7. */
-	timestamp: S.optionalKey(S.String),
+	timestamp: S.optionalKey(S.String).annotateKey({ description: "When the BOM was assembled — NTIA minimum element 7." }),
 	/** Who created the BOM — NTIA minimum element 6. */
-	authors: Contact.pipe(S.Array, S.optionalKey),
+	authors: Contact.pipe(S.Array, S.optionalKey).annotateKey({ description: "Who created the BOM — NTIA minimum element 6." }),
 	/** The component the BOM describes. */
-	component: S.optionalKey(Component),
+	component: S.optionalKey(Component).annotateKey({ description: "The component the BOM describes." }),
 	/** Who supplied that component — NTIA minimum element 1. */
-	supplier: S.optionalKey(Supplier),
-}) {}
+	supplier: S.optionalKey(Supplier).annotateKey({ description: "Who supplied that component — NTIA minimum element 1." }),
+}, $I.annote("SbomMetadata", { description: "Document-level metadata: who made the BOM, when, and about what." })) {}
 
 /**
  * A CycloneDX 1.6 bill of materials.
@@ -162,18 +165,18 @@ export class SbomMetadata extends S.Class<SbomMetadata>("SbomMetadata")({
  *
  * @public
  */
-export class SbomDocument extends S.Class<SbomDocument>("SbomDocument")({
+export class SbomDocument extends S.Class<SbomDocument>($I`SbomDocument`)({
 	/** Always `"CycloneDX"`. */
-	bomFormat: S.Literal(BOM_FORMAT),
+	bomFormat: S.Literal(BOM_FORMAT).annotateKey({ description: "Always `\"CycloneDX\"`." }),
 	/** Always `"1.6"`. */
-	specVersion: S.Literal(SPEC_VERSION),
+	specVersion: S.Literal(SPEC_VERSION).annotateKey({ description: "Always `\"1.6\"`." }),
 	/** The document revision, `1` for a freshly assembled BOM. */
-	version: S.Finite,
+	version: S.Finite.annotateKey({ description: "The document revision, `1` for a freshly assembled BOM." }),
 	/** Document metadata. */
-	metadata: S.optionalKey(SbomMetadata),
+	metadata: S.optionalKey(SbomMetadata).annotateKey({ description: "Document metadata." }),
 	/** The components the BOM describes, sorted by name. */
-	components: S.Array(Component),
-}) {}
+	components: S.Array(Component).annotateKey({ description: "The components the BOM describes, sorted by name." }),
+}, $I.annote("SbomDocument", { description: "A CycloneDX 1.6 bill of materials." })) {}
 
 /** Drop absent keys so the emitted JSON omits them rather than carrying nulls. */
 const compact = <T extends Record<string, unknown>>(value: T): Record<string, unknown> => {

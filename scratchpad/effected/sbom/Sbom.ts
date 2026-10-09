@@ -4,11 +4,14 @@
 // there is no third-party serializer whose failure they would need to surface.
 // Only `write` has an error channel, and it is the filesystem's.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import type { Component } from "./SbomDocument.ts";
 import { BOM_FORMAT, SPEC_VERSION, SbomDocument, SbomMetadata, documentJson } from "./SbomDocument.ts";
+
+const $I = $ScratchpadId.create("effected/sbom/Sbom");
 
 /**
  * Input to {@link Sbom.generate}.
@@ -43,12 +46,12 @@ export interface SbomJsonOptions {
  *
  * @public
  */
-export class SbomWriteError extends S.TaggedError<SbomWriteError>()("SbomWriteError", {
+export class SbomWriteError extends S.TaggedError<SbomWriteError>($I`SbomWriteError`)("SbomWriteError", {
 	/** The path that could not be written. */
-	path: S.String,
+	path: S.String.annotateKey({ description: "The path that could not be written." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("SbomWriteError", { description: "Raised when a BOM cannot be written to disk." })) {
 	override get message(): string {
 		return `Failed to write the SBOM to ${this.path}`;
 	}

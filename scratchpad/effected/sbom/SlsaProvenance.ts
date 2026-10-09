@@ -15,8 +15,11 @@
 // `attestProvenance`, because a verifier must see the same structure whichever
 // path produced the attestation.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import type { PredicateType } from "./InTotoStatement.ts";
+
+const $I = $ScratchpadId.create("effected/sbom/SlsaProvenance");
 
 /**
  * The SLSA Provenance v1 predicate type URI.
@@ -44,9 +47,9 @@ export const GITHUB_BUILD_TYPE = "https://actions.github.io/buildtypes/workflow/
  *
  * @public
  */
-export class SlsaBuildDefinition extends S.Class<SlsaBuildDefinition>("SlsaBuildDefinition")({
+export class SlsaBuildDefinition extends S.Class<SlsaBuildDefinition>($I`SlsaBuildDefinition`)({
 	/** The build type URI — {@link GITHUB_BUILD_TYPE} for an Actions workflow. */
-	buildType: S.String,
+	buildType: S.String.annotateKey({ description: "The build type URI — GITHUB_BUILD_TYPE for an Actions workflow." }),
 	/** Parameters an external party controls: for Actions, the workflow itself. */
 	externalParameters: S.Struct({
 		/** The workflow the build ran. */
@@ -58,7 +61,7 @@ export class SlsaBuildDefinition extends S.Class<SlsaBuildDefinition>("SlsaBuild
 			/** The workflow file's path within the repository. */
 			path: S.String,
 		}),
-	}),
+	}).annotateKey({ description: "Parameters an external party controls: for Actions, the workflow itself." }),
 	/** Parameters the build platform controls. */
 	internalParameters: S.Struct({
 		/** The Actions-specific half, spelled in the claim names the platform uses. */
@@ -72,7 +75,7 @@ export class SlsaBuildDefinition extends S.Class<SlsaBuildDefinition>("SlsaBuild
 			/** `github-hosted` or `self-hosted`. */
 			runner_environment: S.String,
 		}),
-	}),
+	}).annotateKey({ description: "Parameters the build platform controls." }),
 	/** The artifacts the build consumed — for Actions, the commit it built. */
 	resolvedDependencies: S.Array(
 		S.Struct({
@@ -81,26 +84,26 @@ export class SlsaBuildDefinition extends S.Class<SlsaBuildDefinition>("SlsaBuild
 			/** Algorithm to digest; `gitCommit` for a repository. */
 			digest: S.Record(S.String, S.String),
 		}),
-	),
-}) {}
+	).annotateKey({ description: "The artifacts the build consumed — for Actions, the commit it built." }),
+}, $I.annote("SlsaBuildDefinition", { description: "How the build was invoked, and what it was invoked from." })) {}
 
 /**
  * Who ran the build, and the record of that run.
  *
  * @public
  */
-export class SlsaRunDetails extends S.Class<SlsaRunDetails>("SlsaRunDetails")({
+export class SlsaRunDetails extends S.Class<SlsaRunDetails>($I`SlsaRunDetails`)({
 	/** The build platform's identity. */
 	builder: S.Struct({
 		/** A URI identifying the builder — the reusable workflow, for Actions. */
 		id: S.String,
-	}),
+	}).annotateKey({ description: "The build platform's identity." }),
 	/** Metadata about this particular run. */
 	metadata: S.Struct({
 		/** A URI locating the run that produced the artifact. */
 		invocationId: S.String,
-	}),
-}) {}
+	}).annotateKey({ description: "Metadata about this particular run." }),
+}, $I.annote("SlsaRunDetails", { description: "Who ran the build, and the record of that run." })) {}
 
 /**
  * The claims and runner facts a GitHub Actions provenance predicate is built
@@ -178,12 +181,12 @@ const workflowPathOf = (input: GitHubWorkflowProvenance): string =>
  *
  * @public
  */
-export class SlsaProvenance extends S.Class<SlsaProvenance>("SlsaProvenance")({
+export class SlsaProvenance extends S.Class<SlsaProvenance>($I`SlsaProvenance`)({
 	/** What was built, and from what. */
-	buildDefinition: SlsaBuildDefinition,
+	buildDefinition: SlsaBuildDefinition.annotateKey({ description: "What was built, and from what." }),
 	/** Who built it, and when. */
-	runDetails: SlsaRunDetails,
-}) {
+	runDetails: SlsaRunDetails.annotateKey({ description: "Who built it, and when." }),
+}, $I.annote("SlsaProvenance", { description: "A SLSA Provenance v1 predicate." })) {
 	/** The predicate type URI a statement carrying this must declare. */
 	static readonly predicateType: PredicateType = SLSA_PROVENANCE_V1;
 

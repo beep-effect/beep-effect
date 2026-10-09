@@ -6,7 +6,10 @@
 // the shape. The media-type constants are therefore written out rather than
 // re-exported from `@sigstore/bundle`.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/sbom/SigstoreBundle");
 
 /**
  * The Sigstore bundle media type this package produces.
@@ -44,11 +47,11 @@ export const IN_TOTO_PAYLOAD_TYPE = "application/vnd.in-toto+json" as const;
  *
  * @public
  */
-export class SigstoreBundle extends S.Class<SigstoreBundle>("SigstoreBundle")({
+export class SigstoreBundle extends S.Class<SigstoreBundle>($I`SigstoreBundle`)({
 	/** The bundle's media type, usually {@link SIGSTORE_BUNDLE_V0_3_MEDIA_TYPE}. */
-	mediaType: S.String,
+	mediaType: S.String.annotateKey({ description: "The bundle's media type, usually SIGSTORE_BUNDLE_V0_3_MEDIA_TYPE." }),
 	/** The certificate and transparency-log entries a verifier checks. */
-	verificationMaterial: S.Unknown,
+	verificationMaterial: S.Unknown.annotateKey({ description: "The certificate and transparency-log entries a verifier checks." }),
 	/** The signed DSSE envelope carrying the statement. */
-	dsseEnvelope: S.Unknown,
-}) {}
+	dsseEnvelope: S.Unknown.annotateKey({ description: "The signed DSSE envelope carrying the statement." }),
+}, $I.annote("SigstoreBundle", { description: "A signed Sigstore bundle: the wire form of an attestation." })) {}

@@ -6,10 +6,13 @@
 // loading Fulcio's transport. It is also what lets a caller build, inspect and
 // serialize a statement in a test with no layers at all.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Brand from "effect/Brand";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/sbom/InTotoStatement");
 
 /**
  * The in-toto Statement v1 type URI, stamped onto every statement this package
@@ -47,12 +50,12 @@ export type PredicateType = string;
  *
  * @public
  */
-export class InvalidSha256DigestError extends S.TaggedError<InvalidSha256DigestError>()(
+export class InvalidSha256DigestError extends S.TaggedError<InvalidSha256DigestError>($I`InvalidSha256DigestError`)(
 	"InvalidSha256DigestError",
 	{
 		/** The offending input, preserved verbatim. */
-		input: S.String,
-	},
+		input: S.String.annotateKey({ description: "The offending input, preserved verbatim." }),
+	}, $I.annote("InvalidSha256DigestError", { description: "Raised when a string is not a SHA-256 digest." }),
 ) {
 	override get message(): string {
 		return `Invalid SHA-256 digest "${this.input}": expected 64 hexadecimal characters`;
@@ -127,12 +130,12 @@ export type Sha256Digest = string & Brand.Brand<"Sha256Digest">;
  *
  * @public
  */
-export class InTotoSubject extends S.Class<InTotoSubject>("InTotoSubject")({
+export class InTotoSubject extends S.Class<InTotoSubject>($I`InTotoSubject`)({
 	/** How the subject is identified — a purl for an npm package. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "How the subject is identified — a purl for an npm package." }),
 	/** Algorithm to hex digest. */
-	digest: S.Record(S.String, S.String),
-}) {
+	digest: S.Record(S.String, S.String).annotateKey({ description: "Algorithm to hex digest." }),
+}, $I.annote("InTotoSubject", { description: "A content-addressed artifact an attestation is about." })) {
 	/**
 	 * A subject identified by a SHA-256 digest.
 	 *
@@ -213,16 +216,16 @@ export interface InTotoSubjectInput {
  *
  * @public
  */
-export class InTotoStatement extends S.Class<InTotoStatement>("InTotoStatement")({
+export class InTotoStatement extends S.Class<InTotoStatement>($I`InTotoStatement`)({
 	/** Always the in-toto Statement v1 URI. */
-	_type: S.Literal(IN_TOTO_STATEMENT_V1),
+	_type: S.Literal(IN_TOTO_STATEMENT_V1).annotateKey({ description: "Always the in-toto Statement v1 URI." }),
 	/** The artifacts attested. */
-	subject: S.Array(InTotoSubject),
+	subject: S.Array(InTotoSubject).annotateKey({ description: "The artifacts attested." }),
 	/** What is being asserted about them. */
-	predicateType: S.String,
+	predicateType: S.String.annotateKey({ description: "What is being asserted about them." }),
 	/** The assertion body. */
-	predicate: S.Unknown,
-}) {
+	predicate: S.Unknown.annotateKey({ description: "The assertion body." }),
+}, $I.annote("InTotoStatement", { description: "An in-toto Statement v1." })) {
 	/** A statement over any number of subjects. **Total.** */
 	static of(input: InTotoStatementInput): InTotoStatement {
 		return InTotoStatement.make({

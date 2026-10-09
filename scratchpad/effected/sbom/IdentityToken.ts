@@ -13,11 +13,14 @@
 // (`ActionsIdentityToken.layer`, over its `OidcTokenIssuer`), and a consumer
 // already holding a token uses `IdentityToken.layerStatic`.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/sbom/IdentityToken");
 
 /**
  * Raised when an identity token cannot be obtained.
@@ -29,12 +32,12 @@ import * as S from "effect/Schema";
  *
  * @public
  */
-export class IdentityTokenError extends S.TaggedError<IdentityTokenError>()("IdentityTokenError", {
+export class IdentityTokenError extends S.TaggedError<IdentityTokenError>($I`IdentityTokenError`)("IdentityTokenError", {
 	/** The audience the token was requested for. */
-	audience: S.String,
+	audience: S.String.annotateKey({ description: "The audience the token was requested for." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("IdentityTokenError", { description: "Raised when an identity token cannot be obtained." })) {
 	override get message(): string {
 		return `Could not obtain an identity token for the "${this.audience}" audience`;
 	}
@@ -81,7 +84,7 @@ const TEST_TOKEN = "test-identity-token";
  * @public
  */
 export class IdentityToken extends Context.Service<IdentityToken, IdentityTokenShape>()(
-	"@beep/scratchpad/effected/sbom/IdentityToken",
+	$I`IdentityToken`,
 ) {
 	/**
 	 * A layer answering with a token the caller already holds.

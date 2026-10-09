@@ -14,8 +14,11 @@
 //
 // @see https://www.ntia.gov/files/ntia/publications/sbom_minimum_elements_report.pdf
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import type { SbomDocument } from "./SbomDocument.ts";
+
+const $I = $ScratchpadId.create("effected/sbom/NtiaReport");
 
 /**
  * The seven NTIA minimum elements, by stable identifier.
@@ -34,7 +37,7 @@ export const NtiaElementId = S.Literals([
 	"dependencyRelationship",
 	"sbomAuthor",
 	"timestamp",
-]);
+]).pipe($I.annoteSchema("NtiaElementId", { description: "The seven NTIA minimum elements, by stable identifier." }));
 
 /**
  * The decoded type of {@link (NtiaElementId:variable)}.
@@ -48,14 +51,14 @@ export type NtiaElementId = typeof NtiaElementId.Type;
  *
  * @public
  */
-export class NtiaElement extends S.Class<NtiaElement>("NtiaElement")({
+export class NtiaElement extends S.Class<NtiaElement>($I`NtiaElement`)({
 	/** Which element this is. */
-	id: NtiaElementId,
+	id: NtiaElementId.annotateKey({ description: "Which element this is." }),
 	/** Whether the document satisfies it. */
-	satisfied: S.Boolean,
+	satisfied: S.Boolean.annotateKey({ description: "Whether the document satisfies it." }),
 	/** The value that satisfied it, when one did. */
-	value: S.optionalKey(S.String),
-}) {}
+	value: S.optionalKey(S.String).annotateKey({ description: "The value that satisfied it, when one did." }),
+}, $I.annote("NtiaElement", { description: "One element's verdict." })) {}
 
 const element = (id: NtiaElementId, value: string | undefined): NtiaElement =>
 	NtiaElement.make({
@@ -154,10 +157,10 @@ const timestamp = (document: SbomDocument): NtiaElement => {
  *
  * @public
  */
-export class NtiaReport extends S.Class<NtiaReport>("NtiaReport")({
+export class NtiaReport extends S.Class<NtiaReport>($I`NtiaReport`)({
 	/** One verdict per element, in the published order. */
-	elements: S.Array(NtiaElement),
-}) {
+	elements: S.Array(NtiaElement).annotateKey({ description: "One verdict per element, in the published order." }),
+}, $I.annote("NtiaReport", { description: "A document's standing against the NTIA minimum elements." })) {
 	/** Whether every element is satisfied. */
 	get compliant(): boolean {
 		return this.elements.every((entry) => entry.satisfied);
