@@ -56,3 +56,13 @@
   refresh or policy suppression.
 - Prevention: use direct Effect Vitest imports for new tests, and include fixture
   packages in changeset admission even when production exports are unchanged.
+
+## 2026-10-09 — Fixture audit API repair
+
+- Evidence: package audit rejected a Node filesystem import, an untyped JSON
+  decoder, and two String.includes calls with the wrong argument order.
+- Attribution: introduced fixture test only.
+- Repair: Effect FileSystem with the Bun platform layer, decodeEffect for JSON
+  strings, and the curried String helper. Platform test dependency and lockfile
+  regenerated through bun install.
+- Prevention: check the Effect v4 declarations before adapting native helpers.

@@ -1,6 +1,7 @@
-import { readFile } from "node:fs/promises";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -28,7 +29,9 @@ const Fixture = S.Struct({
   outcome: Outcome,
 });
 const read = (name: string) =>
-  Effect.tryPromise(() => readFile(new URL(`./fixtures/office-action-structure/${name}`, import.meta.url), "utf8"));
+  Effect.flatMap(FileSystem.FileSystem, (fs) =>
+    fs.readFileString(new URL(`./fixtures/office-action-structure/${name}`, import.meta.url).pathname)
+  );
 
 describe("office-action fixture truth", () => {
   it.effect("decodes the reconciled inventory and retains exact source quotes", () =>
@@ -37,13 +40,13 @@ describe("office-action fixture truth", () => {
       const rows = Str.split(Str.trimEnd(jsonl), "\n");
       expect(rows).toHaveLength(34);
       for (const line of rows) {
-        const fixture = yield* S.decodeUnknownEffect(S.fromJsonString(Fixture))(line);
+        const fixture = yield* S.decodeEffect(S.fromJsonString(Fixture))(line);
         const text = yield* read(`${fixture.id}.txt`);
         if (fixture.outcome.status === "recognized") {
-          expect(Str.includes(text, fixture.outcome.finalityQuote)).toBe(true);
-          expect(Str.includes(text, fixture.outcome.periodQuote)).toBe(true);
+          expect(Str.includes(fixture.outcome.finalityQuote)(text)).toBe(true);
+          expect(Str.includes(fixture.outcome.periodQuote)(text)).toBe(true);
         }
       }
-    })
+    }).pipe(Effect.provide(BunFileSystem.layer))
   );
 });
