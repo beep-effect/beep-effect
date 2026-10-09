@@ -12,7 +12,7 @@
   "packetPath": "goals/practice-m365-contacts",
   "lifecycle": "active",
   "mission": "Add the confidential-client auth lane and contacts write verbs to @beep/m365, then seed the attorney's contact folder from the salvaged CSVs with dedup and rollback tags",
-  "statusNote": "PR 1 implementation and offline census recorded; package qualification in progress. Route A grant follows orchestrator merge; no live calls yet.",
+  "statusNote": "PR 1 implementation and offline evidence recorded; qualification blocked by repeating shared heavy admission starvation. Repaired replacement gates did not execute. No PR or live calls yet.",
   "blockedBy": [],
   "executionCapable": true,
   "reflectionRequired": true,

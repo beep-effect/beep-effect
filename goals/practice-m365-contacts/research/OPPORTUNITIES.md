@@ -65,3 +65,17 @@
   never attributed to other lanes.
 - Prevention: qualify the application service contract with the strict compiler
   immediately after wiring it, before constructing the operational runbook.
+
+- The repaired driver gate then remained unexecuted for over 50 minutes while
+  shared slots turned over. Replaced only that queued command with a bounded
+  driver-and-parity batch to avoid another admission cycle per short gate.
+  The cancelled waiter's result is explicitly false; a successful systemd stop
+  must never be read as a successful quality command.
+
+- Terminal blocker: after the wrapper refresh, waiter restarts and bounded
+  batching, the repaired driver and application qualifications still did not
+  acquire a slot despite repeated turnover. At one inspection there were 22
+  waiters for four slots. Stopped only this lane's two unstarted waiters under
+  the brief's repeating-blocker condition; both terminal results are explicitly
+  `cancelled-before-gate`, `passed: false`. No home configuration, cap or other
+  lane was changed. Prevention: fair queued admission rather than lock polling.

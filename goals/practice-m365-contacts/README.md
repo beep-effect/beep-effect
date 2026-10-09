@@ -38,8 +38,9 @@ Use this command for execution-capable sessions:
 P0/P1/P2 in progress. Route A consumes the existing certificate registration.
 The orchestrator adds the attorney-only RBAC contacts grant after PR 1 merges.
 The driver, private seeding app and grant/reversal runbook are implemented;
-package qualification and synthetic fixtures remain in progress. No live call
-or mailbox write has run.
+qualification is blocked by repeating shared heavy admission starvation after
+waiter restarts and batching. The repaired replacement gates did not execute.
+No live call or mailbox write has run. The handoff records the resume order.
 
 ## Latest Evidence
 
