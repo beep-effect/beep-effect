@@ -1,0 +1,107 @@
+{
+  "schema": "beep.research.run/v0",
+  "date": "2026-10-09",
+  "status": "partial",
+  "window": {
+    "start": "2026-10-08T08:30:00-05:00",
+    "end": "2026-10-09T08:45:00-05:00",
+    "label": "America/Chicago",
+    "approx_hours": 24.25,
+    "sunday_weekly": false,
+    "note": "Friday, no weekly consolidation"
+  },
+  "prior": {
+    "lastSuccessfulPacket": "research/2026-10-08",
+    "lastSuccessfulPr": 1551,
+    "lastSuccessfulRun": "2026-10-08T08:30:00-05:00",
+    "mergedAt": "2026-10-09T03:33:04Z",
+    "mergeCommit": "8a5ba57c"
+  },
+  "counts": {
+    "total": 28,
+    "window_new": 24,
+    "refute": 4,
+    "by_axis": {
+      "law": 8,
+      "effect": 9,
+      "agents": 11
+    }
+  },
+  "novelty": {
+    "unique_claim_urls": 28,
+    "exclusion_url_collisions": 3,
+    "exclusion_collision_pct": 10.7,
+    "collision_urls": [
+      "https://github.com/Effect-TS/effect/pull/8924",
+      "https://www.npmjs.com/package/@rocicorp/zero",
+      "https://techcrunch.com/2026/10/08/google-releases-a-new-local-first-granola-competitor/"
+    ],
+    "collision_ids": ["f-eff-02", "f-eff-06", "f-eff-07"],
+    "tombstone_collisions": [],
+    "window_new": 24,
+    "window_new_collision_pct": 12.5,
+    "exclusion_digest_size": 40,
+    "note": "Prelude gate: 3/28 = 10.7%. All three are moved deltas (Effect MCP HTTP follow-ons to the 2026-10-08 McpServer.layerHttp claim, Zero 1.10.0 stable extending the canary watch, Google AI Edge Foresight extending EmbeddingGemma 2). Exclusion digest was the 40 claims in research/2026-10-08 plus ledger tombstones and excluded-packets. No tombstone collision. Under 40%; no self-reject."
+  },
+  "quotaPools": {
+    "search": "web+arxiv-list-new+cursor-github+github-rest-unauth+npm-registry",
+    "x": "x-namespace (search worked)",
+    "verify": "none (no blinded local verifier in this harness)",
+    "writer": "hosted-search-writer",
+    "publisher": "cursor-cloud-agent"
+  },
+  "frictions": [
+    {
+      "source": "arxiv-export-api",
+      "error": "empty-or-timeout",
+      "detail": "arXiv export API returned empty/timeout; arXiv /list/new pages were used instead."
+    },
+    {
+      "source": "gh-cli-box",
+      "tools": ["gh"],
+      "error": "http-401",
+      "detail": "Box gh CLI returned 401; GitHub reads used the cursor-github connector and unauthenticated GitHub REST."
+    }
+  ],
+  "capabilities": {
+    "cursor-github": "ok",
+    "github-rest-unauth": "ok",
+    "registry.npmjs.org": "ok",
+    "arxiv-export-api": "timeout",
+    "arxiv-list-new": "ok",
+    "x-connector": "ok",
+    "gh-cli": "http-401",
+    "blinded-verifier": "unavailable"
+  },
+  "resume_cursor": {
+    "arxiv": "2610.12361",
+    "watch": [
+      "effect main past 4.0.2 (DNS, MCP subscriptions, cluster shutdown, JSON Schema bounds)",
+      "python-sdk #3485 merge",
+      "Zero canary.34 / head channel after 1.10.0 stable",
+      "LAB-AA checker pin",
+      "USA Today v OpenAI SDNY 1:26-cv-08892"
+    ]
+  },
+  "headline_deltas": [
+    "Harvey LAB-AA v1.1 hallucination gate; scores fall to single digits",
+    "Harvey x LexisNexis Motion to Dismiss workflow",
+    "USA Today sues OpenAI (SDNY, >$250M)",
+    "Effect main: DNS, MCP subscriptions, cluster shutdown (unreleased past 4.0.2)",
+    "Zero 1.10.0 stable; Google AI Edge Foresight on EmbeddingGemma 2",
+    "Claude Code 2.1.295 fail-closed hooks; skill copy-network and PyCache papers"
+  ],
+  "blinding": {
+    "cloned": false,
+    "opened_pr": false,
+    "wrote_explorations_inbox": false,
+    "wrote_goals": false,
+    "stage": "writer"
+  },
+  "publisher": {
+    "agent": "cursor-cloud-agent",
+    "pr": 1559,
+    "branch": "research/2026-10-09"
+  },
+  "written_at": "2026-10-09T08:55:00-05:00"
+}
