@@ -1,8 +1,8 @@
 // Exact declaration excerpts from packages/effect/src/Logger.ts at
-// @effect/vitest@4.0.1 (MIT; see ../LICENSE).
-// Pinned full-file SHA-256: 5184062ff0eb45729442c53f7bfd8f6a7f771be5cac051db0360543fe652dd16
+// @effect/vitest@4.0.2 (MIT; see ../LICENSE).
+// Pinned full-file SHA-256: df5873f80a7df745aa9774c16573f7c0b753f70a611bedb6a4044b8819f4bfe2
 
-// @effect-vitest-anchor Logger.consolePretty 801 807
+// @effect-vitest-anchor Logger.consolePretty 823 829
 export const consolePretty: (
   options?: {
     readonly colors?: "auto" | boolean | undefined
@@ -11,7 +11,7 @@ export const consolePretty: (
   }
 ) => Logger<unknown, void> = effect.consolePretty
 
-// @effect-vitest-anchor Logger.layer 1027 1049
+// @effect-vitest-anchor Logger.layer 1056 1078
 export const layer = <
   const Loggers extends ReadonlyArray<Logger<unknown, unknown> | Effect.Effect<Logger<unknown, unknown>, any, any>>
 >(

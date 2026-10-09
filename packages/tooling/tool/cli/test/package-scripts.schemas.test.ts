@@ -102,7 +102,7 @@ describe("canonical package scripts schemas", () => {
         );
       }
       expect(TaskScriptName.literals).toHaveLength(17);
-      expect(implScriptDefaults).toHaveLength(54);
+      expect(implScriptDefaults).toHaveLength(55);
     })
   );
   it.effect(

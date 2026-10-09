@@ -97,7 +97,10 @@ describe("package scripts policy", () => {
           expect(record["beep:build"]).toBe("owned build");
           expect(record["beep:custom"]).toBe("owned extra");
           expect(record.dev).toBe("owned dev");
-          expect(record.coverage).toBe("custom coverage");
+          expect(record.coverage).toBe(kind === "infra" ? "bun run beep:coverage" : "custom coverage");
+          if (kind === "infra") {
+            expect(record["beep:coverage"]).toBe("custom coverage");
+          }
           if (kind !== "infra") expect(record["test:integration:parallel"]).toBe("bun run beep:test:integration");
           expect(record["lint:laws"]).toBe("beep-cli lint laws --package .");
           expect(record["lint:deprecated-apis"]).toBe("beep-cli lint deprecated-apis --package .");

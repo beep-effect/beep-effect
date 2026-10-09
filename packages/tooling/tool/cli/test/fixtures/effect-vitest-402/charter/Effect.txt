@@ -1,8 +1,8 @@
 // Exact declaration excerpts from packages/effect/src/Effect.ts at
-// @effect/vitest@4.0.1 (MIT; see ../LICENSE).
-// Pinned full-file SHA-256: f0fabfcbd1caaab692733fb75e7be231229b63332aa6eaf08d73f4692a1e6745
+// @effect/vitest@4.0.2 (MIT; see ../LICENSE).
+// Pinned full-file SHA-256: 63c616372b464de80ceb0f49824b647f76c2137ef4434903f819bb8c04b34c3d
 
-// @effect-vitest-anchor Effect.timeoutOrElse 4640 4652
+// @effect-vitest-anchor Effect.timeoutOrElse 4744 4756
 export const timeoutOrElse: {
   <A2, E2, R2>(options: {
     readonly duration: Duration.Input
@@ -17,7 +17,7 @@ export const timeoutOrElse: {
   ): Effect<A | A2, E | E2, R | R2>
 } = internal.timeoutOrElse
 
-// @effect-vitest-anchor Effect.raceFirst 4903 4921
+// @effect-vitest-anchor Effect.raceFirst 5014 5032
 export const raceFirst: {
   <A2, E2, R2>(
     that: Effect<A2, E2, R2>,
@@ -38,15 +38,15 @@ export const raceFirst: {
   ): Effect<A | A2, E | E2, R | R2>
 } = internal.raceFirst
 
-// @effect-vitest-anchor Effect.scopedWith 6519 6521
+// @effect-vitest-anchor Effect.scopedWith 6662 6664
 export const scopedWith: <A, E, R>(
   f: (scope: Scope) => Effect<A, E, R>
 ) => Effect<A, E, R> = internal.scopedWith
 
-// @effect-vitest-anchor Effect.fnUntraced 13556 13556
+// @effect-vitest-anchor Effect.fnUntraced 13770 13770
 export const fnUntraced: fn.Untraced = internal.fnUntraced
 
-// @effect-vitest-anchor Effect.annotateLogs 14022 14054
+// @effect-vitest-anchor Effect.annotateLogs 14248 14280
 export const annotateLogs: {
   (
     key: string,
