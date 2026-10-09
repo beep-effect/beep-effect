@@ -122,32 +122,68 @@ seed implementation without replacing that doctrine.
 | 2026-07-14 | Streaming is deferred; future `Partial` is presentation-only and non-authoritative, while `Complete` is schema-backed, span-preserving, and means extraction finished, not admitted. | [`Q7 LOCKED`](../../explorations/deterministic-doc-structure-extraction/DECISIONS.md#2026-07-14--q7-locked-is-streaming-in-scope), [`Streaming DEFERRED`](../../explorations/deterministic-doc-structure-extraction/DECISIONS.md#2026-07-14--deferred-streaming-follow-on) |
 | 2026-07-14 | V1 uses typed abstention; calibration/cascade waits for labeled per-family outcomes and a local privilege-approved path, and no-match never escalates. | [`Q8 LOCKED`](../../explorations/deterministic-doc-structure-extraction/DECISIONS.md#2026-07-14--q8-locked-what-is-the-cascade-policy), [`Calibration DEFERRED`](../../explorations/deterministic-doc-structure-extraction/DECISIONS.md#2026-07-14--deferred-calibration-spike) |
 
+| 2026-10-09 (a) | `SourceTextIdentity` realizes `VersionedSourceArtifactIdentity`: artifact id → `sourceRef`; immutable content digest → `sourceDigest`; source version → digest plus `extractor.version` and `normalizationVersion`; document id → law-practice `documentId`; raw-text reference → `locator` plus `textDigest`, resolved into `VerifiedSourceText`. Carry explicit `documentId` and `sourceVersion` on candidates because the substrate lacks those independent fields. Reason: reuse the proved contract without changing provenance. Reversal: adapt a future dedicated substrate identity and bump the candidate schema version. | Brief step 2a; #871; #1415 |
+| 2026-10-09 (b) | Positive-eligible modalities are born-digital UTF-8 payloads and qualified embedded PDF text with pinned extractor/version/flags, real embedded fonts, no OCR producer and no full-page image with invisible text. OCR/layout defaults to `low-quality-source`; public form language is a separate modality. Reason: diagnostics do not authorize coordinates. Reversal: when file-processing supplies coordinate mapping and authorizing quality, admit that modality under a new rule version, relabel and rerun floors. | Brief steps 2b and 3; constraint 6 |
+| 2026-10-09 (c) | This packet owns a use-case evidence port and server docketing adapter; the patent spine consumes it later. Reason: the spine is pending and depends on this packet. Reversal: the spine replaces the adapter while retaining the port. | Brief step 2c |
+| 2026-10-09 (e) | Add the server provenance dependency if imported, regenerate the lockfile with `bun install`, and regenerate generated files only through owner commands. Reason: AGENTS Autonomy rank 2 overrides GOAL rank 6 for these additive supporting changes. Reversal: remove the dependency, rerun install, and regenerate from main. | Brief step 2e; Source Hierarchy |
+| 2026-10-09 (f) | Repo-quality proof comprises three package-verifies, hosted-parity gates, and final-head hosted required checks. Reason: hosted CI is authoritative and full Yeet verification is on-demand. Reversal: run detached `yeet verify`, wait for its job and archive final-head proof in `history/p2/`. | Brief step 2f; AGENTS Quality Operator |
+
+| 2026-10-09 (g) | ODP reference probe and driver retrieval worked; all 16 retrieved official actions were image-only (no fonts, page separators only), so zero were positive-eligible. Credential-free official MPEP §§706.07 and 710 were accessible and supply public-form-language fallback fixtures, reported separately from real-OA performance. No client source was accessed; unqualified originals remain private and confer no authority. Reason: preserve the direct-text and no-OCR-engine constraints rather than guess scanned finality. Reversal: add qualified real-OA fixtures when a source works, rerun per-modality floors, and bump the rule version if recognition changes. | Brief step 3; private diagnostics; official USPTO MPEP |
+
+| 2026-10-09 (d) | Attempted the ruled V1 substitute: blind B ran first outside the repo read-only with command audits, but both permitted outputs failed JSON parsing and are void; B labels are unavailable. All fixtures are listed on the non-blocking attorney sheet. Reason: candidates would be evidence inputs only, and AGENTS Autonomy rank 2 permits the post-hoc spot-check default. P0 nevertheless remains pending because the valid dual-label floor proof is unavailable; this row does not assert constraint 3 or AC 1 is satisfied. Reversal: relabel affected fixtures, rerun a valid independent B procedure and recompute stored vectors; a rule change uses v2 with append-only supersession and replayable v1. | Brief steps 4–5; corpus stop condition; `history/p0/2026-10-09-label-reconciliation.md` |
+
+| 2026-10-09 Run 2 (d) | Third blind run passes the repaired audit: 34 valid labels, allowlisted items, local scripts, A hash frozen and unchanged; zero discarded tracing lines. Atomic agreement 33/34; all differences reconciled by truth rules. Constraint 3 and AC 1 use the ruled substitute under AGENTS Autonomy rank 2: exact anchors plus independent text labels; official codes cross-check only the 16 excluded image-only originals. The attorney sheet is post-hoc and non-blocking. Reason: candidates are evidence inputs only. Reversal: if a spot-check or audit disagrees, void affected labels, repeat independent labeling, and recompute floors; rule changes ship as v2 with append-only supersession and replayable v1. | Run 2 ruling; `history/p0/2026-10-09-label-reconciliation.md` |
+| 2026-10-09 Run 2 (g) | No text-qualified real-OA positives were available on 2026-10-09; floors measured on public MPEP form language (32 fixtures), with one OCR and one layout fixture closed. Reason: explicit orchestrator ruling permits retained-inventory floors without weakening exact source. Reversal: add qualified real-OA fixtures and rerun per-modality floors; version any recognition change. | Run 2 ruling; `history/p0/2026-10-09-floor-vectors.json` |
+
+| 2026-10-09 (h) | Retain attempt chains under expected source scope plus document id, including cross-scope failures; actual source identity stays separately recorded. Typed OCR diagnostics are persisted and replayed, and opaque proof classes use the existing named typed base pattern. Reason: match the substrate’s authorized-matter history, preserve quality closure across restart and emit portable declarations. Reversal: a future explicit matter/history adapter may replace the store key under a new attempt schema version while preserving immutable v1 receipts and replay. | P1/P2 focused server proof; VerifiedSpan history contract |
+
+| 2026-10-09 (i) | Cancel the obsolete P0 Heavy Admit run after confirming its immutable fixture-only head, because the implemented P1/P2 head needs a new run and old queued jobs consume runners. Reason: AGENTS Quality Operator directs cancellation for lanes that must rerun; no old-head green claim is made. Reversal: rerun the immutable old-head workflow if historical comparison is needed, while publication schedules the successor head. | PR #1573 P0 Heavy Admit; wave 2 exact-head proof |
+
+| 2026-10-09 (i supplement) | Stop the automatic P0 readiness monitor after its checks settle on the superseded draft head. Reason: final readiness must be bound to the final wave, and the old observer cannot satisfy that proof. Reversal: resubmit a readiness monitor; P3 explicitly submits the required 90-minute final-head job. | P0 detached monitor terminal receipt; brief P3 Mechanics |
+
+| 2026-10-09 (j) | Keep deterministic test builders inside each package’s compiler boundary and share raw fixture data only. Reason: importing TypeScript test helpers across rootDir fails the canonical compiler; no reusable crypto/identity fixture service exists in the test-utils surface. Reversal: consolidate through an owner-added test-utils API and migrate local builders, without widening package compiler roots. | Server TS6059 and deterministicKeys diagnostics; P2 package proof |
+| 2026-10-09 (k) | Record release notes without changesets for all three private packages, under main #1566 and the orchestrator standing ruling. Additive APIs would warrant minor releases if published; no existing public API breaks require a major release. Reversal: remove these handoff notes and add owner-generated changesets if the packages become published. | Handoff release-note table; removed only four lane-authored changesets. |
+| 2026-10-09 (l) | Run `docgen:local --full` after the scoped command requires full proof for owner-generated root paths and the regenerated lockfile. Reason: honor the owner command’s global-input gate without bypassing it. Reversal: rerun the original scoped command after those inputs no longer differ, retaining both results as evidence. | P2 docgen preflight log; package docgen proofs. |
+| 2026-10-09 (m) | Schema-valid JSON-safe attempt encoding is an invariant; encoder failure becomes a defect. Read, decode, initialization, lock and append failures remain typed storage errors. Reason: the validated receipt contains only finite data, strings and schema-backed collections; a fabricated invalid instance is outside the typed port. Reversal: introduce a typed encoding failure with a real failing fixture if a future receipt codec adds fallible transforms. | P2 uncovered encoder callback; receipt schema and storage tests. |
+| 2026-10-09 (n) | Re-record only the server cache baseline subject through `beep cache baseline --request` for the added provenance edges. Reason: existing reviewed configuration drifted; this changes no cache flag, command, input/output pattern, environment key, qualification scope or remote authority. Reversal: remove the additive dependency, regenerate its lockfile/projections and re-record the resulting subject. | `history/p2/2026-10-09-cache-review.md`; cache policy reports zero blocking findings. |
+
+| 2026-10-09 (o) | Use the explicit inherited publish-fence fallback after collected gates pass 15 lanes and refuse only the unchanged main EV015. Reason: the orchestrator standing ruling authorizes a named commit and direct push, while S11 centralizes inherited repair. No gate, inventory or unowned source is changed. Reversal: return to ordinary Yeet publication after the main repair lands; the published commit remains reviewable. | Wave-2 third refusal; inherited publish-fence ruling 22:01Z; PR #1573. |
+
 ## Acceptance Criteria
 
-- [ ] P0 records an attorney-reviewed, license-safe fixture inventory covering
+- [x] P0 records an attorney-reviewed, license-safe fixture inventory covering
       the required real-OA positives, hostile negatives, duplicates, drift,
       malformed/unsupported, Unicode/straddle, and quality/OCR-lineage cases.
-- [ ] P0 records rule-family/version identity, replay/migration/supersession
+      Evidence: via ruled substitute, Decision Log 2026-10-09 Run 2; history/p0/2026-10-09-label-reconciliation.md.
+- [x] P0 records rule-family/version identity, replay/migration/supersession
       semantics, regex-family provenance/license/parity entries, and labeled
       precision/abstention floors before P1 begins.
-- [ ] P1 begins only after the substrate P0/P1 contract proof is available and
+      Evidence: history/p0/2026-10-09-floor-vectors.json; research/SOURCES.md; history/p2/2026-10-09-verification.md.
+- [x] P1 begins only after the substrate P0/P1 contract proof is available and
       uses its source identity, canonical half-open UTF-16, ambiguity, drift,
       straddle, and exact raw-slice behavior without weakening it.
-- [ ] Exactly one supported paired match emits one
+      Evidence: Decision Log (a); substrate #871 and #1415; history/p2/2026-10-09-verification.md.
+- [x] Exactly one supported paired match emits one
       `OfficeActionFinalityCandidate` (`FINAL | NON-FINAL`) and one
       `ShortenedStatutoryPeriodCandidate`, both schema-backed with verified
       anchors, rule-family id/version, source identity, and branded confidence.
-- [ ] Missing, duplicate/ambiguous, unsupported, uncovered, or low-quality input
+      Evidence: history/p2/2026-10-09-verification.md: focused domain/use-case and all-fixture proof.
+- [x] Missing, duplicate/ambiguous, unsupported, uncovered, or low-quality input
       emits no candidate and the matching typed abstention; stale, malformed,
       or raw-slice-invalid input fails closed through the verified-span contract.
-- [ ] Persisted candidates retain source identity/digest/version, raw evidence,
+      Evidence: history/p2/2026-10-09-verification.md: closed outcomes, drift and exact-slice tests.
+- [x] Persisted candidates retain source identity/digest/version, raw evidence,
       rule identity/version, replay/supersession history, and typed outcomes
       across restart without reinterpretation under a newer rule.
-- [ ] The `law-docketing-patent-spine` intake seam consumes the two candidate
+      Evidence: history/p2/2026-10-09-verification.md: Layer restart and independent disk replay.
+- [x] The `law-docketing-patent-spine` intake seam consumes the two candidate
       variants without treating extraction as admission or attorney approval.
-- [ ] Focused package/fixture/integration tests, repo gates, reflection lint,
+      Evidence: Decision Log (c); history/p2/2026-10-09-verification.md: evidence-only test consumer.
+- [x] Focused package/fixture/integration tests, repo gates, reflection lint,
       and Yeet PR-to-mergeable proof pass.
-- [ ] No unrelated refactors or formatting churn.
+      Evidence: history/p2/2026-10-09-verification.md; history/reflections/2026-10-09-codex.md; PR #1573 under S11 and Decision Log (o), inherited reds explicitly retained.
+- [x] No unrelated refactors or formatting churn.
+      Evidence: PR #1573 scoped diff; Decision Log (e) owner-generated supporting projections.
 
 ## Verification Matrix
 
@@ -183,3 +219,4 @@ seed implementation without replacing that doctrine.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | None | N/A | N/A | N/A | N/A |
+

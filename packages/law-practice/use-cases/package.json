@@ -50,6 +50,7 @@
     "./PatentClaimCandidate": "./src/PatentClaimCandidate/index.ts",
     "./test": "./src/test.ts",
     "./internal/*": null,
+    "./OfficeActionStructure": "./src/OfficeActionStructure/index.ts",
     "./package.json": "./package.json"
   },
   "files": [

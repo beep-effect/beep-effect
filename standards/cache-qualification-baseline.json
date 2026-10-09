@@ -546,11 +546,11 @@
       }
     },
     "@beep/law-practice-server": {
-      "reviewer": "Claude Fable 5.1 (practice-document-identification, feat/practice-identify)",
-      "reason": "Accept the seven @beep/practice-identify computations added by the new apps/practice-identify workspace and the four @beep/law-practice-server computations whose configuration drifts from the slice's new dependency edges and tsconfig includes; no command text, output, environment key or cache flag changes, and no qualification is granted.",
+      "reviewer": "Codex oa-slice worker",
+      "reason": "Re-record the direct provenance dependency digest for the server; commands, inputs, outputs, environment and cache flags retain their reviewed posture; no qualification promotion.",
       "basis": {
-        "path": "goals/practice-document-identification/research/cache-baseline-review.md",
-        "sha256": "cb96273cd7cdeedf54c0a7ee8d7efbdb150f58ad6f7a55557414d2df4432eb15"
+        "path": "goals/law-doc-structure-oa-slice/history/p2/2026-10-09-cache-review.md",
+        "sha256": "b73ef298caaa8a25ef7793cbda148d82c4e11a1183986ff53151eeb69a4f4903"
       }
     },
     "@beep/law-practice-tables": {
@@ -47461,6 +47461,7 @@
           "@beep/nlp#audit",
           "@beep/pglite#audit",
           "@beep/postgres#audit",
+          "@beep/provenance#audit",
           "@beep/schema#audit",
           "@beep/shared-domain#audit",
           "@beep/shared-use-cases#audit",
@@ -47548,6 +47549,7 @@
           "@beep/nlp#build",
           "@beep/pglite#build",
           "@beep/postgres#build",
+          "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/shared-use-cases#build",
@@ -47622,6 +47624,7 @@
           "@beep/nlp#build",
           "@beep/pglite#build",
           "@beep/postgres#build",
+          "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/shared-use-cases#build",
@@ -47683,6 +47686,7 @@
           "@beep/nlp#build",
           "@beep/pglite#build",
           "@beep/postgres#build",
+          "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/shared-use-cases#build",
@@ -47831,6 +47835,7 @@
           "@beep/nlp#transit",
           "@beep/pglite#transit",
           "@beep/postgres#transit",
+          "@beep/provenance#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
           "@beep/shared-use-cases#transit",
@@ -48063,6 +48068,7 @@
           "@beep/nlp#transit",
           "@beep/pglite#transit",
           "@beep/postgres#transit",
+          "@beep/provenance#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
           "@beep/shared-use-cases#transit",
@@ -48130,6 +48136,7 @@
           "@beep/nlp#transit",
           "@beep/pglite#transit",
           "@beep/postgres#transit",
+          "@beep/provenance#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
           "@beep/shared-use-cases#transit",
