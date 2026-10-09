@@ -1602,6 +1602,32 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("checkout retention arch
     )
   );
 
+  it.effect("archives and restores a clean unlinked repository directly inside a candidate", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const nested = yield* makeEmbeddedRepo(fixture.target);
+              yield* fs.writeFileString(path.join(nested, "tracked.txt"), "nested payload");
+              yield* runFixtureCommand(nested, "git", ["add", "."]);
+              yield* runFixtureCommand(nested, "git", ["commit", "--quiet", "-m", "clean nested"]);
+              yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
+              const applied = yield* runResidueReap({ ...fixture, apply: true });
+              expect(candidateByPath(applied, fixture.target).applied).toBe(true);
+              expect(yield* fs.exists(fixture.target)).toBe(false);
+              yield* runResidueReap({ ...fixture, restore: O.getOrThrow(O.fromUndefinedOr(applied.runId)) });
+              expect(yield* fs.readFileString(path.join(nested, "tracked.txt"))).toBe("nested payload");
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
   it.effect("keeps linked nested clones and dirty nested worktrees intact", () =>
     Effect.acquireUseRelease(
       makeTempDirectory,

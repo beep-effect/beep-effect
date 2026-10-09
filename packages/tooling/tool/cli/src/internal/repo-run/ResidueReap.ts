@@ -495,7 +495,10 @@ const canonicalDirectory = Effect.fnUntraced(function* (
 
 const cwdWithin = (path: Path.Path, candidatePath: string, cwd: string): boolean => {
   const relative = path.relative(candidatePath, cwd);
-  return Str.isEmpty(relative) || (!path.isAbsolute(relative) && !Str.startsWith(`..${path.sep}`)(relative));
+  return (
+    Str.isEmpty(relative) ||
+    (!path.isAbsolute(relative) && !Str.Equivalence(relative, "..") && !Str.startsWith(`..${path.sep}`)(relative))
+  );
 };
 
 const procCwdProbe = Effect.fnUntraced(function* (

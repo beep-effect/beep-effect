@@ -761,3 +761,6 @@ without claiming completion.
   preserve dirty and linked nested worktrees.
 
 - G qualification remediation (`d881c6e2e0`, followed by the refactor at `bc0591bbb1`): use the installed/reference Effect comparison export, canonicalize archive directory parents before fsync, add schema-derived property coverage, and separate ordered safety probes and recovery stages. Reason: admitted runtime and cheap-gate findings contradicted source-only confidence. Reversal: revert the source commits while preserving every existing archive plan, intent and payload; receipts continue to distinguish source review from runtime proof. No allowlist or complexity-baseline exception was added.
+
+- G merged D's private-package release policy before final qualification. Removed the new `@beep/repo-cli` patch note because its manifest is private and the landed graph guard rejects private notes. The earlier real note remains recoverable from `6fe896fad6`; restoring it requires reverting D's policy first.
+- G round-twelve review corrected direct-parent containment in cwd checks, with a clean direct-child repository archive/restore regression. Reason: the former boundary over-retained eligible derivatives. Reversal: revert this source commit; immutable archives and restore remain intact.
