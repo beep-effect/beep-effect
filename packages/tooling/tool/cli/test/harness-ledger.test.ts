@@ -841,6 +841,32 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
+  it.effect("a same-client refusal excludes an otherwise qualifying session", () =>
+    Effect.gen(function* () {
+      const root = yield* makeRepo();
+      const current = yield* repoHarnessHash(root);
+      const stateDir = yield* makeHookStateDir("harness-refused-");
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      yield* writeShard(stateDir, "2026-10-09", sessionA, [
+        yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
+        yield* pulse(sessionA, "2026-10-09T10:01:00Z", O.none()),
+      ]);
+      yield* fs.writeFileString(
+        path.join(path.dirname(stateDir), "hook-pulse-refusals-fixture.ndjson"),
+        '{"ts":"2026-10-09T10:00:30Z","agentKind":"claude-code","reason":"timeout"}\n'
+      );
+      const ledger = yield* HarnessLedgerService;
+      const report = yield* ledger.pruneProposals(
+        HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1 })
+      );
+      expect(report.sessionsObserved).toBe(0);
+      expect(report.sessionsSkippedRefused).toBe(1);
+      expect(report.windowFull).toBe(false);
+      expect(report.written).toBe(false);
+    })
+  );
+
   it.effect("unknown-role rows on the root transcript cannot supply activity", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();

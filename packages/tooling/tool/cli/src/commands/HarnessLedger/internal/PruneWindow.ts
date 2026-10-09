@@ -164,6 +164,8 @@ type ShardScan = {
   readonly openDisarmSince: O.Option<number>;
   readonly provenDisarmed: boolean;
   readonly writerRefusalsTotal: number;
+  readonly refusalRows: ReadonlyArray<HookPulseRefusal>;
+  readonly refusalUndecodableLines: number;
   readonly refusalsByAgentKind: ObservedSessionWindow["refusalsByAgentKind"];
 };
 
@@ -271,6 +273,15 @@ const windowReport = (
           onSome: (start) => tally.maxTs >= DateTime.toEpochMillis(DateTime.makeUnsafe(start)),
         })
     );
+  const overlapsRefusal = (tally: SessionTally) =>
+    scan.refusalUndecodableLines > 0 ||
+    A.some(
+      scan.refusalRows,
+      (row) =>
+        (row.agentKind === "unknown" || row.agentKind === tally.agentKind) &&
+        DateTime.toEpochMillis(row.ts) >= tally.minTs &&
+        DateTime.toEpochMillis(row.ts) <= tally.maxTs
+    );
   // Group once: summaries and root selection never scan the complete history
   // from inside a per-transcript predicate.
   const groups = A.groupBy(ranked, (tally) => tally.parent);
@@ -316,7 +327,8 @@ const windowReport = (
         parentRegime(tally) === "in-regime" &&
         !parentSummary(tally).unknownStart &&
         active(tally) &&
-        !overlapsDisarm(parentSummary(tally))
+        !overlapsDisarm(parentSummary(tally)) &&
+        !overlapsRefusal(parentSummary(tally))
     ),
     A.map(parentSummary),
     A.sort(byNewestFirst)
@@ -344,6 +356,7 @@ const windowReport = (
       scan.provenDisarmed ? O.some(HookPulseClientCoverage.Enum.disabled) : O.none()
     ),
     sessionsSkippedDisarmed: A.length(A.filter(selectedGrouped, overlapsDisarm)),
+    sessionsSkippedRefused: A.length(A.filter(selectedGrouped, overlapsRefusal)),
     sessionsBelowActivityFloor: A.length(
       A.filter(
         selectedGrouped,
@@ -370,6 +383,7 @@ const readRefusals = Effect.fn("HarnessLedger.readRefusals")(function* (root: st
   const path = yield* Path.Path;
   let refusalUndecodableLines = 0;
   let writerRefusalsTotal = 0;
+  const refusalRows = A.empty<HookPulseRefusal>();
   const refusalsByAgentKind = { "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 };
   for (const name of A.filter(yield* listDirectorySorted(root), (name) =>
     /^hook-pulse-refusals-.*\.ndjson$/.test(name)
@@ -384,12 +398,13 @@ const readRefusals = Effect.fn("HarnessLedger.readRefusals")(function* (root: st
         },
         onSuccess: (row) => {
           writerRefusalsTotal += 1;
+          refusalRows.push(row);
           if (isSupportedAgentKind(row.agentKind)) refusalsByAgentKind[row.agentKind] += 1;
         },
       });
     }
   }
-  return { refusalUndecodableLines, writerRefusalsTotal, refusalsByAgentKind };
+  return { refusalUndecodableLines, writerRefusalsTotal, refusalsByAgentKind, refusalRows };
 });
 
 /**
@@ -451,7 +466,7 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
         O.map((value) => DateTime.toEpochMillis(DateTime.makeUnsafe(value.disarmedAt)))
       );
   const openDisarm = O.getOrElse(sentinelPresent, () => true) || malformedWindows;
-  const { refusalUndecodableLines, writerRefusalsTotal, refusalsByAgentKind } = yield* readRefusals(root);
+  const { refusalUndecodableLines, writerRefusalsTotal, refusalsByAgentKind, refusalRows } = yield* readRefusals(root);
   const scan: ShardScan = {
     stateDir,
     tallies: MutableHashMap.empty(),
@@ -463,6 +478,8 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
     provenDisarmed: O.getOrElse(sentinelPresent, () => false),
     writerRefusalsTotal,
     refusalsByAgentKind,
+    refusalRows,
+    refusalUndecodableLines,
   };
   yield* Effect.forEach(names, (name) => readShard(scan, name), { discard: true });
   return windowReport(scan, scan.tallies, window, harnessHash, agentKind);

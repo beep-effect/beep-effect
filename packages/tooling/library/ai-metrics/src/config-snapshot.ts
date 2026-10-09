@@ -798,9 +798,19 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
   // worse than truncation: both are session-scope paths, so losing them silently changes the
   // session/baseline split and corrupts `sessionHash` rather than merely shrinking the snapshot.
   yield* walk(repoRoot, 0, isAgentDocName);
-  yield* Effect.forEach(CONFIG_ROOTS, (rootName) => walk(pathApi.join(repoRoot, rootName), 0, () => true), {
-    discard: true,
-  });
+  yield* Effect.forEach(
+    CONFIG_ROOTS,
+    Effect.fnUntraced(function* (rootName) {
+      const dirPath = pathApi.join(repoRoot, rootName);
+      if (yield* isNestedGitRoot({ dirPath, scanRoot: repoRoot })) {
+        return yield* Ref.update(excludedRef, (paths) =>
+          A.append(paths, normalizeRepoPath(pathApi, repoRoot, dirPath))
+        );
+      }
+      return yield* walk(dirPath, 0, () => true);
+    }),
+    { discard: true }
+  );
 
   yield* walk(pathApi.join(repoRoot, ".mcp.json"), 0, () => true);
   const walked = yield* Ref.get(pathsRef);

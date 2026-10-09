@@ -175,7 +175,7 @@ const readStampGaps = Effect.fnUntraced(function* (evidenceRoot: string) {
   for (const name of A.filter(files, Str.startsWith("hook-pulse-refusals-"))) {
     const text = yield* fs.readFileString(path.join(evidenceRoot, name));
     for (const line of A.filter(Str.split(text, "\n"), Str.isNonEmpty)) {
-      const refusal = yield* HookPulseRefusal.decodeJsonEffect(line);
+      const refusal = yield* S.decodeUnknownEffect(S.fromJsonString(HookPulseRefusal))(line);
       const at = O.some(DateTime.toEpochMillis(refusal.ts));
       gaps.push(
         SessionStampGap.make({
@@ -197,10 +197,10 @@ const recordAvoidsStampGaps = (
     const relevant = A.filter(known, (gap) => O.isNone(gap.client) || O.contains(gap.client, client));
     if (A.isReadonlyArrayEmpty(relevant)) return true;
     const sanitized = record.privacy.sanitized;
-    const times = A.getSomes(A.map(sanitized.turns, (turn) => O.flatMap(turn.timestamp, timestampEpoch)));
-    const start = O.flatMap(sanitized.session.startedAt, timestampEpoch);
-    if (O.isNone(start) || A.isReadonlyArrayEmpty(times)) return false;
-    const end = A.reduce(times, start.value, Math.max);
+    const start = O.flatMap(sanitized.firstTimestamp, timestampEpoch);
+    const last = O.flatMap(sanitized.lastTimestamp, timestampEpoch);
+    if (O.isNone(start) || O.isNone(last) || last.value < start.value) return false;
+    const end = last.value;
     return A.every(
       relevant,
       (gap) => O.exists(gap.end, (last) => last < start.value) || O.exists(gap.start, (first) => first > end)

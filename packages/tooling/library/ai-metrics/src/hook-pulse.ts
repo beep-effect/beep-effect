@@ -1138,8 +1138,7 @@ const isSha256Hex = S.is(Sha256Hex);
  * ```ts
  * import { hookPulseHashSalt } from "@beep/repo-ai-metrics"
  * import * as ConfigProvider from "effect/ConfigProvider";
- * import * as DateTime from "effect/DateTime";
-import * as Effect from "effect/Effect";
+ * import * as Effect from "effect/Effect";
  * const pinned = Effect.provideService(
  *   hookPulseHashSalt,
  *   ConfigProvider.ConfigProvider,

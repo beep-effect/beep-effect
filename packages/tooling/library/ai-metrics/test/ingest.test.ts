@@ -54,6 +54,8 @@ import {
   forwarderRunResultToJson,
   forwarderTimerPlanToJson,
   generateAiMetricsWeeklyReport,
+  HookPulseDisarmWindow,
+  HookPulseRefusal,
   HookPulseV1,
   HookPulseV1FromRawEvent,
   hashPrivateIdentifier,
@@ -132,6 +134,8 @@ const ForwarderStampScenario = LiteralKit([
   "mismatch",
   "corrupt",
   "unreadable",
+  "refused",
+  "disarmed",
 ]);
 
 const encodeUnknownJsonEffect = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
@@ -734,6 +738,8 @@ it.layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
                 mismatch: () => [start, tool],
                 corrupt: () => [start, tool],
                 unreadable: () => [start, tool],
+                refused: () => [start, tool],
+                disarmed: () => [start, tool],
               });
               yield* writeText(
                 path.join(hookDir, "fixture.ndjson"),
@@ -741,6 +747,30 @@ it.layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
               );
               if (scenario === "corrupt") yield* writeText(path.join(hookDir, "bad.ndjson"), "not JSON\n");
               if (scenario === "unreadable") yield* fs.makeDirectory(path.join(hookDir, "bad.ndjson"));
+              if (scenario === "refused")
+                yield* writeText(
+                  path.join(hookRoot, "hook-pulse-refusals-fixture.ndjson"),
+                  yield* S.encodeEffect(S.fromJsonString(HookPulseRefusal))(
+                    HookPulseRefusal.make({
+                      ts: DateTime.makeUnsafe("2026-10-09T10:00:30Z"),
+                      agentKind: "codex-cli",
+                      reason: "timeout",
+                    })
+                  )
+                );
+              if (scenario === "disarmed")
+                yield* writeText(
+                  path.join(hookRoot, "hook-pulse-disarm-windows.ndjson"),
+                  yield* HookPulseDisarmWindow.encodeJsonEffect(
+                    HookPulseDisarmWindow.make({
+                      disarmedAt: O.some("2026-10-09T10:00:30Z"),
+                      rearmedAt: "2026-10-09T10:00:45Z",
+                      reason: O.none(),
+                      evidenceTier: "unknown",
+                      schemaVersion: "hook-pulse-disarm-window/v1",
+                    })
+                  )
+                );
               yield* runAiMetricsForwarder(
                 AiMetricsForwarderInput.make({
                   homeDir,
