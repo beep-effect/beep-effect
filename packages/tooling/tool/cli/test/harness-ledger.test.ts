@@ -1012,10 +1012,21 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       );
       expect(report.sessionsObserved).toBe(0);
       expect(report.sessionsSkippedDisarmed).toBe(1);
+      yield* fs.writeFileString(
+        path.join(evidenceRoot, "hook-pulse-disarm-windows.ndjson"),
+        yield* HookPulseDisarmWindow.encodeJsonEffect(
+          HookPulseDisarmWindow.make({ ...gap, disarmedAt: O.none(), rearmedAt: "2026-10-09T09:59:00Z" })
+        )
+      );
+      const afterRearm = yield* ledger.pruneProposals(
+        HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1 })
+      );
+      expect(afterRearm.sessionsObserved).toBe(1);
+      expect(afterRearm.sessionsSkippedDisarmed).toBe(0);
     }).pipe(Effect.scoped)
   );
 
-  it.effect("reconciliation includes all nested child transcripts", () =>
+  it.effect("reconciliation resolves relative roots and stops symlink cycles", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -1036,7 +1047,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
         yield* pulse(identity, "2026-10-09T10:01:00Z", O.none()),
       ]);
       const ledger = yield* HarnessLedgerService;
-      const report = yield* ledger.reconcile(stateDir, transcriptDir, "claude-code");
+      yield* fs.symlink(transcriptDir, path.join(nested, "loop"));
+      const report = yield* ledger.reconcile(stateDir, path.relative(".", transcriptDir), "claude-code");
       expect(report.transcriptToolEvents).toBe(2);
       expect(report.hookedToolEvents).toBe(2);
       expect(report.ratio).toStrictEqual(O.some(1));
