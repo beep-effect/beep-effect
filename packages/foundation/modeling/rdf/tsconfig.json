@@ -8,6 +8,7 @@
     "rootDir": "src"
   },
   "references": [
+    { "path": "../md/tsconfig.json" },
     {
       "path": "../identity/tsconfig.json"
     },

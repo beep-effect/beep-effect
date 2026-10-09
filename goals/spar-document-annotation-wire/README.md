@@ -19,8 +19,8 @@ annotation wire shape, including the Md-to-DOCO section fold.
 
 ## Current Phase
 
-P0 Research: pin exact artifacts/licenses/terms and freeze the annotation and
-section-fold fixtures.
+P1 Implement: acquisition pins, licenses and synthetic fixtures are frozen
+in SPEC D9–D15 and the Pinned acquisition ledger.
 
 ## Read This First
 
