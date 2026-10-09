@@ -105,3 +105,20 @@ relative to its base `4e82f6d942`; the baseline is also unchanged on current
 main. This lane does not lower their floors or repair their unrelated code.
 Main advanced during the proof, including global inputs. Integrate the newer
 base and replay with PR-base framing before attributing the final-head gate.
+
+## 2026-10-09 — New main inherits cheap-gate reds that block XML publication
+
+After integrating `cb64e0484f` and re-running both package verifiers green,
+`bun run beep yeet publish --message "fix(schema): use a reserved text-node key in the XML reader"`
+created local commit `0b96e712b7` but exited 1 before any push.
+`lint:schema-first` reported three missing inventory entries: exported
+`AccountsSecretField` and `AccountsSecretsItem` structs, plus the
+`ci-runner-security.test.ts` schema-codec advisory. `lint:effect-vitest`
+reported 13 new findings across seven upstream files. None of these files
+is changed by this lane relative to integrated base `cb64e0484f`.
+The root packet identifies `schema-first-policy`; the full cheap-gate log
+contains both red lanes. Fix these once on main and merge that fix into the
+dependent lanes, as the Quality Operator law requires. This lane does not
+refresh unrelated baselines, waive gates, or copy upstream repairs.
+The remaining owned parity batch was stopped after the hard publication
+blocker was attributed; its partial full-docgen replay is not a green proof.

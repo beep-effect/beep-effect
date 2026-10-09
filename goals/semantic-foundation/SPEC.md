@@ -171,3 +171,9 @@ cannot widen non-goals without a dated `SPEC.md` change.
   published-schema premise is stale. A staged patch changeset failed the
   changeset graph guard, so remove it and list the packages in the PR body.
   Publication activation requires its own release-policy decision.
+
+- Block XML publication on inherited cheap-gate reds from integrated base
+  `cb64e0484f`; retain the local source and handoff commits and route the
+  unrelated repairs to the orchestrator for one main PR. Resume by merging
+  the main repair and retrying Yeet; no gate waiver or unrelated inventory
+  refresh is introduced by this lane.

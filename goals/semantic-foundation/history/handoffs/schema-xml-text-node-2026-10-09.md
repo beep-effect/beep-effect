@@ -28,3 +28,18 @@ The initial canonical full docgen passed. Initial CLI coverage passed all
 ledger records the exact drops. New main was integrated and both package
 verifiers passed again before publication. The final-head parity replay and
 PR state are recorded in the orchestrator report.
+
+Publication is blocked before push. After base `cb64e0484f` was integrated,
+full schema verification passed (audit 11.4s, docgen 4.2s), and full CLI
+verification passed (audit 883.8s, docgen 26.5s). Test-tsgo passed again.
+Yeet cheap gates failed on inherited Accounts schema inventory/candidates
+and 13 Effect Vitest findings in seven unchanged upstream files. No PR was
+created; the source and handoff remain committed locally. The cheap-gate P0
+is acknowledged as out of this lane's repair scope, without a gate waiver.
+The orchestrator must land the inherited repair on main, then resume this
+lane by merging main and retrying Yeet. No S13 final marker is emitted.
+The original full docgen, JSDoc ratchet, knowledge refs, Fallow audit/health,
+and schema coverage passed; initial CLI coverage passed all tests but had
+unrelated floor drops recorded in the ledger. Post-integration full docgen
+was stopped, and subsequent parity commands were not run. Nothing is merged
+or retired. Semantic-m2m3 owns the IPC fixture rerun after integration.
