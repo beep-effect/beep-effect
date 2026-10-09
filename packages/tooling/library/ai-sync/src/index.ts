@@ -29,7 +29,7 @@ export const VERSION = "0.0.0" as const;
  *
  * ```ts
  * import * as NodeServices from "@effect/platform-node/NodeServices"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { checkGeneratedArtifacts } from "@beep/ai-sync"
  *
  * const program = checkGeneratedArtifacts().pipe(
@@ -117,7 +117,7 @@ export * from "./transforms.ts";
  *
  * ```ts
  * import * as NodeServices from "@effect/platform-node/NodeServices"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { validateRepoConfig } from "@beep/ai-sync"
  *
  * const program = validateRepoConfig({

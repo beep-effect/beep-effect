@@ -4,8 +4,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Config, Effect, Path } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { LibraryError } from "./Library.errors.ts";
 
 /**

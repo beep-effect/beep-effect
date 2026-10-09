@@ -5,10 +5,13 @@
  * @since 0.0.0
  */
 
-import { Effect, HashMap, HashSet, Order, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { AdmissionPriority, AdmissionWorkKind, PolicyDecodeError, ScheduleProposal, ScheduleStep } from "./Schemas.ts";
 import type { AdmissionPolicyParams, PendingRequest, ProjectionInput } from "./Schemas.ts";
@@ -181,8 +184,7 @@ const admitInto =
  *   ProjectionInput,
  *   emptyTokenLedger
  * } from "@/projection/Schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const policy = AdmissionPolicyParams.make({

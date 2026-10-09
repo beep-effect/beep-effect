@@ -6,8 +6,12 @@ import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, vi } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect, Layer, Order, Path, pipe } from "effect";
+import * as Effect from "effect/Effect";
 import * as Fs from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 
 // Build a TestLayer that provides FsUtils AND also passes through FileSystem/Path
 // so tests can use them directly (e.g. for makeTempDirectory)

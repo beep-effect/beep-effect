@@ -40,11 +40,14 @@ import { fcRuns } from "@beep/test-utils";
 import { Str } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
-import { Chunk, Effect, Exit, Schema } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as Chunk from "effect/Chunk";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
+import * as Schema from "effect/Schema";
 import type { PatternElement } from "@beep/nlp/Core/index";
 
 const decodeBracketStringToEntityPatternElement = Schema.decodeEffect(BracketStringToEntityPatternElement);

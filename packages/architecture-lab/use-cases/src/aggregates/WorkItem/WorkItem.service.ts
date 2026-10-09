@@ -8,7 +8,9 @@
 
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import { A } from "@beep/utils";
-import { Effect, Match, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import {
   WORK_ITEM_ACTION_UNAVAILABLE_REASON,
@@ -125,7 +127,7 @@ const mutateStoredWorkItem = (
  *   makeWorkItemUseCases,
  *   type WorkItemRepositoryShape
  * } from "@beep/architecture-lab-use-cases/aggregates/WorkItem/server"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *

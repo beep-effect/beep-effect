@@ -26,12 +26,15 @@ import {
   SheetSetApproval,
 } from "@beep/technical-drawing";
 import { A, O } from "@beep/utils";
-import { Effect, Layer, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import type { M365Error } from "@beep/m365";
 import type { OcctError } from "@beep/occt";
 import type { Camera, ModelSpec, ShadingPlan } from "@beep/technical-drawing";
-import type { FileSystem, Path } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { ChildProcessSpawner } from "effect/process";
 
 const engineFromOcct = Effect.fn("DrawingsLayer.engineFromOcct")(function* () {

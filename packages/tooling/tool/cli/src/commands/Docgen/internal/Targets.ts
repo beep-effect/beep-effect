@@ -9,8 +9,9 @@ import { verifyDocgenProofManifest } from "@beep/repo-docgen/ProofManifest";
 import { DomainError } from "@beep/repo-utils";
 import { A, Text } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, FileSystem, flow } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow } from "effect/Function";
 import { analyzeDocgenQuality, resolveDocgenQualityTargets } from "./Quality.ts";
 import { decodeDocgenQualityReportForWorkerEval, qualityWorkerEvalSourcePacketLimit } from "./QualityWorkerEval.ts";
 import {
@@ -26,7 +27,7 @@ import {
  *
  * ```ts
  * import { resolveGenerateTargets } from "@beep/repo-cli/commands/Docgen/internal/Targets"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = resolveGenerateTargets(O.none()).pipe(Effect.map((targets) => targets.length))
@@ -63,7 +64,7 @@ export const resolveGenerateTargets = Effect.fn("Docgen.resolveGenerateTargets")
  *
  * ```ts
  * import { resolveAnalyzeTargets } from "@beep/repo-cli/commands/Docgen/internal/Targets"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = resolveAnalyzeTargets(O.none()).pipe(Effect.map((targets) => targets.length))
@@ -92,7 +93,7 @@ export const resolveAnalyzeTargets = Effect.fn("Docgen.resolveAnalyzeTargets")(f
  *
  * ```ts
  * import { resolvePackageSelector } from "@beep/repo-cli/commands/Docgen/internal/Targets"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = resolvePackageSelector(O.some("@beep/schema"), O.some("@beep/schema"))
@@ -175,8 +176,7 @@ export const qualityReportHasBlockingFindings = (report: {
  *
  * ```ts
  * import { verifyDocgenCheckProofManifests } from "@beep/repo-cli/commands/Docgen/internal/Targets"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = verifyDocgenCheckProofManifests([])
  * console.log(Effect.isEffect(program))
  * ```
@@ -251,7 +251,7 @@ export const targetHasCurrentDocgenProofManifest: {
  *
  * ```ts
  * import { resolveQualityWorkerEvalSource } from "@beep/repo-cli/commands/Docgen/internal/Targets"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = resolveQualityWorkerEvalSource({

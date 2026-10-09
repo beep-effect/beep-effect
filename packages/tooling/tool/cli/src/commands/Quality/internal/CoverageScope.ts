@@ -7,16 +7,20 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import { Effect, MutableHashMap, MutableHashSet, Order, Path, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
 import { globMatches } from "../../../internal/GlobPattern.ts";
 import { QualityTaskConfigurationError } from "../Quality.errors.ts";
 import { discoverWorkspacePackages } from "./QualityArtifactSupport.ts";
-import type { FileSystem } from "effect";
+import type * as FileSystem from "effect/FileSystem";
 import type { PackageJson } from "./QualityArtifactSupport.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/CoverageScope");
@@ -353,8 +357,7 @@ const workspaceDependencyNames = (
  *
  * ```ts
  * import { workspaceCoverageScopeOwners } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(workspaceCoverageScopeOwners(process.cwd()))) // true
  * ```
  *
@@ -1322,8 +1325,7 @@ export const planCoverageAffectedScopeWithBaseline: {
  *
  * ```ts
  * import { planWorkspaceCoverageAffectedScope } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(planWorkspaceCoverageAffectedScope(process.cwd(), []))) // true
  * ```
  *

@@ -7,9 +7,13 @@
 
 import { $SkillContractId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { DateTime, Duration, Number as Num, Predicate, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Num from "effect/Number";
+import * as Predicate from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { EvidenceReceipt, EvidenceSubject } from "./EvidenceReceipt.ts";
 import { EvidencePredicateType, IsoDateTimeString } from "./Gate.ts";
 

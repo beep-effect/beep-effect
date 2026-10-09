@@ -25,7 +25,7 @@ An exact-path configuration banned both tested barrels (`sandbox/biome-path-rest
 
   ! Import each binding from its effect/<Module> path.
 
-  > 1 │ import { Effect, Schema as S, pipe, type Scope } from "effect";
+  > 1 │ import { Effect, Schema as S, pipe, type Scope } from "<legacy-effect-barrel>";
       │                                                       ^^^^^^^^
 
 .beep/research/per-module-imports/sandbox/restricted-imports.ts:2:40 lint/style/noRestrictedImports
@@ -43,28 +43,28 @@ Distinct binding guidance also works, but through repeated `patterns` entries ra
 
   ! Use `import * as Effect from "effect/Effect"`.
 
-  > 1 │ import { Effect, Schema as S, pipe, type Scope } from "effect";
+  > 1 │ import { Effect, Schema as S, pipe, type Scope } from "<legacy-effect-barrel>";
       │          ^^^^^^
 
 .beep/research/per-module-imports/sandbox/restricted-imports.ts:1:18 lint/style/noRestrictedImports
 
   ! Use `import * as S from "effect/Schema"`.
 
-  > 1 │ import { Effect, Schema as S, pipe, type Scope } from "effect";
+  > 1 │ import { Effect, Schema as S, pipe, type Scope } from "<legacy-effect-barrel>";
       │                  ^^^^^^
 
 .beep/research/per-module-imports/sandbox/restricted-imports.ts:1:31 lint/style/noRestrictedImports
 
   ! Use a named import from `effect/Function`.
 
-  > 1 │ import { Effect, Schema as S, pipe, type Scope } from "effect";
+  > 1 │ import { Effect, Schema as S, pipe, type Scope } from "<legacy-effect-barrel>";
       │                               ^^^^
 
 .beep/research/per-module-imports/sandbox/restricted-imports.ts:1:42 lint/style/noRestrictedImports
 
   ! Use a type import from `effect/Scope`.
 
-  > 1 │ import { Effect, Schema as S, pipe, type Scope } from "effect";
+  > 1 │ import { Effect, Schema as S, pipe, type Scope } from "<legacy-effect-barrel>";
       │                                          ^^^^^
 
 .beep/research/per-module-imports/sandbox/restricted-imports.ts:2:13 lint/style/noRestrictedImports
@@ -107,7 +107,7 @@ Found 2 warnings.
 
 Therefore do not combine both forms in production. The simpler choice is one path-level message per barrel plus a generated, linked mapping document. If inline per-name guidance is worth the larger config, generate only the binding patterns and add a separate mapping-coverage check; otherwise a newly introduced or missed export can evade enforcement.
 
-The exact-path rule also covered all additional module-loading forms I tested: a static re-export from `"effect"`, dynamic `import("effect")`, and `require("@beep/utils")` produced three warnings in one file. This is broader than a declaration-only custom fixer and is another reason to keep native Biome as the permanent gate. The one-shot transform should inventory those forms separately because a binding-to-module rewrite is not necessarily defined for dynamic or whole-package loads.
+The exact-path rule also covered all additional module-loading forms I tested: a static re-export from `"effect"`, dynamic `import("<legacy-effect-barrel>")`, and `require("@beep/utils")` produced three warnings in one file. This is broader than a declaration-only custom fixer and is another reason to keep native Biome as the permanent gate. The one-shot transform should inventory those forms separately because a binding-to-module rewrite is not necessarily defined for dynamic or whole-package loads.
 
 ### GritQL plugins: rewrites work when attached to a diagnostic
 
@@ -200,7 +200,7 @@ single:
 import * as Effect from "effect/Effect"
 
 mixed:
-import { Effect, Schema as S } from "effect";
+import { Effect, Schema as S } from "<legacy-effect-barrel>";
 ```
 
 This is not proof that a larger Grit program cannot handle mixed declarations. It is proof that the attractive one-rule-per-binding sketch is insufficient: the match/replacement unit is the import declaration, and production rules must reconstruct the unmatched specifiers or transform a captured list. That moves the design toward a generated rule program plus collision handling rather than a small declarative plugin.
@@ -266,10 +266,10 @@ This is compact enough for a package-family rollout: one canonical restriction t
 
 ```text
 .beep/research/per-module-imports/sandbox/restricted-imports.ts
-  1:10  warning  'Effect' import from 'effect' is restricted. Use `import * as Effect from "effect/Effect"`          no-restricted-imports
-  1:18  warning  'Schema' import from 'effect' is restricted. Use `import * as S from "effect/Schema"`               no-restricted-imports
-  1:31  warning  'pipe' import from 'effect' is restricted. Use a named import from `effect/Function`                no-restricted-imports
-  1:37  warning  'Scope' import from 'effect' is restricted. Use a type import from `effect/Scope`                   no-restricted-imports
+  1:10  warning  'Effect' import from '<legacy-effect-barrel>' is restricted. Use `import * as Effect from "effect/Effect"`          no-restricted-imports
+  1:18  warning  'Schema' import from '<legacy-effect-barrel>' is restricted. Use `import * as S from "effect/Schema"`               no-restricted-imports
+  1:31  warning  'pipe' import from '<legacy-effect-barrel>' is restricted. Use a named import from `effect/Function`                no-restricted-imports
+  1:37  warning  'Scope' import from '<legacy-effect-barrel>' is restricted. Use a type import from `effect/Scope`                   no-restricted-imports
   2:1   warning  '@beep/utils' import is restricted from being used. Use a per-module `@beep/utils/<Module>` import  no-restricted-imports
 
 ✖ 5 problems (0 errors, 5 warnings)
@@ -355,10 +355,10 @@ The current ownership rule is narrow: Biome remains the primary linter, native o
 **Executed result.** The installed schema exposes ESLint-compatible `paths`, `patterns`, `importNames`, `allowImportNames`, type-import controls, and custom messages (`node_modules/oxlint/configuration_schema.json:15447-15476`, `node_modules/oxlint/configuration_schema.json:18810-18880`). The sandbox run handled aliased, ordinary, and type-only imports and allowed repeated path entries with per-binding messages:
 
 ```text
-.beep/research/per-module-imports/sandbox/restricted-imports.ts:1:10: warning eslint(no-restricted-imports): 'Effect' import from 'effect' is restricted. help: Use `import * as Effect from "effect/Effect"`.
-.beep/research/per-module-imports/sandbox/restricted-imports.ts:1:18: warning eslint(no-restricted-imports): 'Schema' import from 'effect' is restricted. help: Use `import * as S from "effect/Schema"`.
-.beep/research/per-module-imports/sandbox/restricted-imports.ts:1:31: warning eslint(no-restricted-imports): 'pipe' import from 'effect' is restricted. help: Use a named import from `effect/Function`.
-.beep/research/per-module-imports/sandbox/restricted-imports.ts:1:42: warning eslint(no-restricted-imports): 'Scope' import from 'effect' is restricted. help: Use a type import from `effect/Scope`.
+.beep/research/per-module-imports/sandbox/restricted-imports.ts:1:10: warning eslint(no-restricted-imports): 'Effect' import from '<legacy-effect-barrel>' is restricted. help: Use `import * as Effect from "effect/Effect"`.
+.beep/research/per-module-imports/sandbox/restricted-imports.ts:1:18: warning eslint(no-restricted-imports): 'Schema' import from '<legacy-effect-barrel>' is restricted. help: Use `import * as S from "effect/Schema"`.
+.beep/research/per-module-imports/sandbox/restricted-imports.ts:1:31: warning eslint(no-restricted-imports): 'pipe' import from '<legacy-effect-barrel>' is restricted. help: Use a named import from `effect/Function`.
+.beep/research/per-module-imports/sandbox/restricted-imports.ts:1:42: warning eslint(no-restricted-imports): 'Scope' import from '<legacy-effect-barrel>' is restricted. help: Use a type import from `effect/Scope`.
 .beep/research/per-module-imports/sandbox/restricted-imports.ts:2:1: warning eslint(no-restricted-imports): '@beep/utils' import is restricted from being used. help: Use a per-module `@beep/utils/<Module>` import.
 oxlint_check_exit=0
 ```
@@ -451,7 +451,7 @@ The repository already depends on ts-morph 28 (`package.json:213`) and already h
 
 ```diff
 -import { A, P, thunkFalse } from "@beep/utils";
--import { Cause, flow, pipe, Result } from "effect";
+-import { Cause, flow, pipe, Result } from "<legacy-effect-barrel>";
 -
 +import * as A from "@beep/utils/Array";
 +import * as P from "@beep/utils/Predicate";
@@ -462,7 +462,7 @@ The repository already depends on ts-morph 28 (`package.json:213`) and already h
 ```
 
 ```diff
--import { Effect as Fx, pipe as p, type Scope } from "effect";
+-import { Effect as Fx, pipe as p, type Scope } from "<legacy-effect-barrel>";
 -import { P as Pred } from "@beep/utils";
 -
 +import * as Fx from "effect/Effect";
@@ -509,7 +509,7 @@ No `ast-grep` or `sg` executable is on the current PATH, and neither the root ma
 
 Documentation shows that ast-grep can rewrite a matched node with `--rewrite` or a YAML `fix`, and its experimental `rewriters` transformation can apply different sub-rules within a captured list ([rewrite guide](https://ast-grep.github.io/guide/rewrite-code), [rewriter guide](https://ast-grep.github.io/guide/rewrite/rewriter)). It also states that an ordinary fix replaces one target node at a time, with range expansion available for list delimiters ([fix reference](https://ast-grep.github.io/reference/yaml/fix)).
 
-That is enough to express a single exact transformation such as `import { Effect } from "effect"` to a namespace import, just as the executed Grit probe did. It is not a natural data-driven solution for this census. The destination is a lookup keyed by both source package and imported binding; mixed declarations must fan out into multiple statements; named imports must be regrouped; existing destination imports are elsewhere in the program; and collisions require whole-file state. YAML would need generated rewriters for every mapped binding plus a complex whole-declaration reconstruction, using an experimental feature. A JavaScript ast-grep API program could manage the state, but at that point it has no decisive advantage over the installed ts-morph API and incumbent command scaffold.
+That is enough to express a single exact transformation such as `import { Effect } from "<legacy-effect-barrel>"` to a namespace import, just as the executed Grit probe did. It is not a natural data-driven solution for this census. The destination is a lookup keyed by both source package and imported binding; mixed declarations must fan out into multiple statements; named imports must be regrouped; existing destination imports are elsewhere in the program; and collisions require whole-file state. YAML would need generated rewriters for every mapped binding plus a complex whole-declaration reconstruction, using an experimental feature. A JavaScript ast-grep API program could manage the state, but at that point it has no decisive advantage over the installed ts-morph API and incumbent command scaffold.
 
 Verdict: do not add ast-grep for this packet. Reconsider only if the census collapses to a handful of uniform whole-declaration patterns or a generated-rule proof handles the hardest mixed/collision fixtures substantially more simply than ts-morph.
 

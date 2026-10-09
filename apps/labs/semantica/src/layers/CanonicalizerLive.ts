@@ -7,7 +7,9 @@ import {
   verifyTextAnchor,
 } from "@beep/provenance";
 import { PosixPath, Sha256HexFromBytes } from "@beep/schema";
-import { Crypto, Effect, Layer } from "effect";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { AnchorRejected } from "@/schema/Errors";
 import { Canonicalizer } from "@/services/Canonicalizer";
@@ -66,8 +68,7 @@ const makeCanonicalizer = Effect.gen(function* () {
  *
  * ```ts
  * import { CanonicalizerLive } from "@/layers/CanonicalizerLive"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(CanonicalizerLive)) // true
  * ```
  *

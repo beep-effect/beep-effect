@@ -7,7 +7,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("values/StructuredDate/StructuredDate.model");

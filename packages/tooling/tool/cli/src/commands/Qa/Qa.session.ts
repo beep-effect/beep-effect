@@ -14,8 +14,10 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { ActionEvent, decodeActionEventJson, RoundNumber, SessionId, SessionStore } from "@beep/qa-capture";
 import { LiteralKit } from "@beep/schema";
 import { A, O, Str, thunkEmptyReadonlyRecord } from "@beep/utils";
-import { Effect, FileSystem, flow, Path, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { LABS_WORKSPACE_ROOT } from "../../internal/cli/Labs/index.ts";
 import { runCaptured } from "../../internal/process/index.ts";
@@ -52,8 +54,8 @@ export const PORTLESS_PORT = 1355;
  *
  * ```ts
  * import { qaRootPath } from "@beep/repo-cli/commands/Qa/Qa.session"
- * import { Effect, Path } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Path from "effect/Path";
  * const program = Effect.map(Effect.service(Path.Path), (path) => qaRootPath(path, "/repo"))
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -182,8 +184,7 @@ export const portlessUrlForApp = (target: AppHostTarget): string =>
  *
  * ```ts
  * import { resolveAppHostTarget } from "@beep/repo-cli/commands/Qa/Qa.session"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(resolveAppHostTarget("/repo", "storybook"))) // true
  * ```
  *
@@ -300,7 +301,7 @@ export class CaptureTargetRequest extends S.Class<CaptureTargetRequest>($I`Captu
  *
  * ```ts
  * import { CaptureTargetRequest, resolveCaptureTarget } from "@beep/repo-cli/commands/Qa/Qa.session"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = resolveCaptureTarget("/repo", CaptureTargetRequest.make({ app: O.some("storybook"), url: O.none() }))
@@ -361,7 +362,7 @@ const roundOrDiscovered = (
  *
  * ```ts
  * import { resolveRound } from "@beep/repo-cli/commands/Qa/Qa.session"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = resolveRound("/repo/.beep/qa", O.some(3))
@@ -394,7 +395,7 @@ export const resolveRound = Effect.fn("QaSession.resolveRound")(function* (
  *
  * ```ts
  * import { resolveExistingRound } from "@beep/repo-cli/commands/Qa/Qa.session"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = resolveExistingRound("/repo/.beep/qa", O.none())
@@ -470,8 +471,7 @@ export class QaEventLog extends S.Class<QaEventLog>($I`QaEventLog`)(
  *
  * ```ts
  * import { readEventLog } from "@beep/repo-cli/commands/Qa/Qa.session"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = readEventLog("/repo/.beep/qa/round-1/events.ndjson")
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -551,8 +551,7 @@ export class CommitProvenance extends S.Class<CommitProvenance>($I`CommitProvena
  *
  * ```ts
  * import { readCommitProvenance } from "@beep/repo-cli/commands/Qa/Qa.session"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readCommitProvenance("/repo"))) // true
  * ```
  *
@@ -595,8 +594,7 @@ const toolVersion = (tool: string, output: O.Option<string>): R.ReadonlyRecord<s
  *
  * ```ts
  * import { collectToolVersions } from "@beep/repo-cli/commands/Qa/Qa.session"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(collectToolVersions())) // true
  * ```
  *
@@ -649,8 +647,8 @@ export const makeSessionId: {
  * ```ts
  * import { RoundLayout } from "@beep/qa-capture"
  * import { recordHintPath } from "@beep/repo-cli/commands/Qa/Qa.session"
- * import { Effect, Path } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Path from "effect/Path";
  * const program = Effect.gen(function* () {
  *   const path = yield* Path.Path
  *   const layout = RoundLayout.make({
@@ -692,8 +690,7 @@ const decodeUnknownRecordHintJson = S.decodeUnknownEffect(RecordHintJson);
  *
  * ```ts
  * import { readRecordStartHint } from "@beep/repo-cli/commands/Qa/Qa.session"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readRecordStartHint("/repo/.beep/qa/round-1/video/record-hint.json"))) // true
  * ```
  *
@@ -718,8 +715,7 @@ export const readRecordStartHint = Effect.fn("QaSession.readRecordStartHint")(fu
  *
  * ```ts
  * import { writeRecordStartHint } from "@beep/repo-cli/commands/Qa/Qa.session"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = writeRecordStartHint("/repo/.beep/qa/round-1/video/record-hint.json", 1754000000000)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -752,8 +748,7 @@ export const writeRecordStartHint = Effect.fn("QaSession.writeRecordStartHint")(
  *
  * ```ts
  * import { discoverRecordedVideo } from "@beep/repo-cli/commands/Qa/Qa.session"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(discoverRecordedVideo("/repo/.beep/qa/round-1/video"))) // true
  * ```
  *

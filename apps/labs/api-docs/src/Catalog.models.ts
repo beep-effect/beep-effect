@@ -8,8 +8,9 @@
 import { $ApiDocsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { Data, Tuple } from "effect";
+import * as Data from "effect/Data";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import type { SpecDialect } from "@beep/codegen-kit/CodegenKit.models";
 import type { HttpApi, HttpApiGroup } from "effect/http-api";
 

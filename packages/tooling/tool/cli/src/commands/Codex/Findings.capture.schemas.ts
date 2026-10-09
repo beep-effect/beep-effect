@@ -659,8 +659,7 @@ const CodexCaptureFindingListChecks = S.makeFilterGroup([
  *
  * ```ts
  * import { decodeCodexFindingsCapturePayload } from "@beep/repo-cli/commands/Codex/Findings.capture.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = decodeCodexFindingsCapturePayload({
  *   schemaVersion: "codex-findings-capture/v1",
  *   capture: {
@@ -726,8 +725,7 @@ export class CodexFindingsCapturePayload extends S.Class<CodexFindingsCapturePay
  *
  * ```ts
  * import { decodeCodexFindingsCapturePayload } from "@beep/repo-cli/commands/Codex/Findings.capture.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = decodeCodexFindingsCapturePayload({ schemaVersion: "codex-findings-capture/v99" }).pipe(
  *   Effect.map(() => "accepted"),
  *   Effect.orElseSucceed(() => "rejected")

@@ -10,7 +10,7 @@ import { DetectionResult, FileProcessingOperationError } from "@beep/file-proces
 import { classifySourceFormat, FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { TIKA_ENGINE_NAME } from "./Tika.config.ts";
 import { TIKA_SCAFFOLD_ENGINE_UNAVAILABLE_MESSAGE, tikaOperationError } from "./Tika.error-translation.ts";
 import { makeTikaError } from "./Tika.errors.ts";

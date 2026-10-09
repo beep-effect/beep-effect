@@ -6,8 +6,9 @@
  */
 
 import { A, thunkFalse } from "@beep/utils";
-import { identity, pipe, Result } from "effect";
+import { identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import {
   ALLOWLIST_PATH,
   areLookupKeysEquivalent,

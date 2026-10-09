@@ -1,6 +1,7 @@
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Stream from "effect/Stream";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { BackpressureConfig, withBackpressure } from "../../Cluster/BackpressureHandler.ts";

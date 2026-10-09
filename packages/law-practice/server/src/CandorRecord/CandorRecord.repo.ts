@@ -32,11 +32,12 @@ import {
 } from "@beep/law-practice-use-cases/CandorRecord";
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, asc, eq } from "drizzle-orm";
-import { Effect, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import { pipe } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { makeRowDecoders, sortByIdAscending } from "../internal/RepoSupport.ts";
 import type { CandorDisposition, IdsSubmissionFact, PatentCitationEvent } from "@beep/law-practice-domain";
@@ -136,7 +137,7 @@ const filedUnder = <
  * import { CandorFilingScope } from "@beep/law-practice-use-cases/CandorPolicy"
  * import * as Shared from "@beep/shared-domain/identity/Shared"
  * import { makeInMemoryCandorRecordRepository } from "@beep/law-practice-server/CandorRecord"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -225,8 +226,7 @@ export const makeInMemoryCandorRecordRepository = Effect.fn("CandorRecord.makeIn
  *
  * ```ts
  * import { makeCandorRecordRepository } from "@beep/law-practice-server/CandorRecord"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = makeCandorRecordRepository().pipe(
  *   Effect.map((repository) => typeof repository.recordEvent === "function")
  * )

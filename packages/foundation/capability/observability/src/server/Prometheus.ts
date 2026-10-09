@@ -5,9 +5,11 @@
  * @since 0.0.0
  */
 import { A, Str } from "@beep/utils";
-import { Effect, flow, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as HttpRouter from "effect/http/HttpRouter";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as Layer from "effect/Layer";
 import * as PrometheusMetrics from "effect/observability/PrometheusMetrics";
 import * as P from "effect/Predicate";
 

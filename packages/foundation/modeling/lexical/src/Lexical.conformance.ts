@@ -7,10 +7,10 @@
 
 import { $LexicalSchemaId } from "@beep/identity/packages";
 import * as Conformance from "@beep/schema/Conformance";
-import { pipe, Result } from "effect";
 import * as A from "effect/Array";
-import { constant } from "effect/Function";
+import { constant, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { BeepLexicalConformanceAnnotation } from "./internal/conformance/Lexical.conformance-registry.ts";
 import {

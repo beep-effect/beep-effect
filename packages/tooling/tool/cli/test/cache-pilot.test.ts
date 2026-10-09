@@ -3,7 +3,7 @@ import { extractCachePilotLog, extractCacheSignedPilotLog } from "@beep/repo-cli
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

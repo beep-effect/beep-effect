@@ -17,27 +17,23 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { thunk0, thunkEmptyStr, thunkFalse } from "@beep/utils";
-import {
-  Cause,
-  Console,
-  Context,
-  DateTime,
-  Duration,
-  Effect,
-  FileSystem,
-  flow,
-  Layer,
-  Match,
-  Order,
-  Path,
-  pipe,
-} from "effect";
 import * as A from "effect/Array";
-import { constTrue, dual, identity } from "effect/Function";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { constTrue, dual, flow, identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -829,7 +825,7 @@ const makeYeetEconomicsSource: Effect.Effect<
  *
  * ```ts
  * import { EconomicsScopeRequest, YeetEconomicsSource } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = Effect.gen(function* () {
@@ -1323,7 +1319,7 @@ const dataQuality = (
  *
  * ```ts
  * import { buildYeetEconomicsReport, EconomicsScope } from "@beep/repo-cli/test/Yeet"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  *
  * const report = buildYeetEconomicsReport(
@@ -1450,7 +1446,7 @@ const scopeLine = (report: YeetEconomicsReport): string =>
  *
  * ```ts
  * import { buildYeetEconomicsReport, EconomicsScope, renderYeetEconomicsReport } from "@beep/repo-cli/test/Yeet"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  *
  * const text = renderYeetEconomicsReport(
@@ -1522,7 +1518,7 @@ export const renderYeetEconomicsReport = (report: YeetEconomicsReport): string =
  *   EconomicsScope,
  *   renderYeetEconomicsCloseoutSummary,
  * } from "@beep/repo-cli/test/Yeet"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  *
  * const lines = renderYeetEconomicsCloseoutSummary(
@@ -1599,7 +1595,7 @@ const isNoRunsDirectory = (error: YeetEconomicsError): boolean =>
  *
  * ```ts
  * import { runYeetEconomics, YeetEconomicsOptions } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const run = runYeetEconomics(YeetEconomicsOptions.make({ json: false, branch: O.none(), fleet: false }))
@@ -1647,7 +1643,7 @@ export const runYeetEconomics = Effect.fn("Yeet.runEconomics")(function* (
  *
  * ```ts
  * import { runYeetEconomicsCommand } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * console.log(Effect.isEffect(runYeetEconomicsCommand({ json: true, branch: O.none(), fleet: false }))) // true
@@ -1683,7 +1679,7 @@ const firstLine = (text: string): string => A.headNonEmpty(Str.split(text, "\n")
  *
  * ```ts
  * import { printYeetEconomicsCloseoutSummary } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const summary = printYeetEconomicsCloseoutSummary("/repo", "main", ".beep/yeet", O.some("attempt-1"))

@@ -4,10 +4,18 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { FsUtils, GlobOptions } from "@beep/repo-utils/FsUtils";
 import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A, Str } from "@beep/utils";
-import { Console, Effect, Equal, FileSystem, HashMap, Inspectable, MutableHashMap, Order, Path } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Inspectable from "effect/Inspectable";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { Project } from "ts-morph";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
@@ -49,8 +57,7 @@ const decodeEffectVitestPackageMetadata = S.decodeEffect(EffectVitestPackageMeta
  *
  * ```ts import.meta.vitest name="Build the version guard"
  * import { verifyEffectVitestPin } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * import { readEffectVitestPrimitiveGraph } from "@beep/repo-cli/commands/Lint"
  *
  * const program = readEffectVitestPrimitiveGraph(process.cwd()).pipe(
@@ -131,8 +138,7 @@ export const countEffectVitestSourceLines = (text: string): number =>
  *
  * ```ts import.meta.vitest name="Discover files beneath a repository root"
  * import { discoverEffectVitestSourcePaths } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = discoverEffectVitestSourcePaths(process.cwd())
  * Effect.isEffect(program) // => true
  * ```
@@ -390,7 +396,7 @@ const reportMembership = Effect.fnUntraced(function* (
  *
  * ```ts import.meta.vitest name="Build the default ratchet effect"
  * import { EffectVitestLintOptions, runEffectVitestLint } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const options = EffectVitestLintOptions.make({ census: false, write: false, rows: O.none() })

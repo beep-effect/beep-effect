@@ -6,8 +6,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Context } from "effect";
-import type { Effect } from "effect";
+import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
 import type { PreservationArchiveIoError } from "../Corpus.errors.ts";
 import type {
   CapacityMeasurement,

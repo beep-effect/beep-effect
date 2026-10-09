@@ -24,26 +24,23 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
-import {
-  Cause,
-  Effect,
-  Exit,
-  FileSystem,
-  flow,
-  Layer,
-  Match,
-  Path,
-  PlatformError,
-  pipe,
-  Ref,
-  Result,
-  Sink,
-  Stream,
-} from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
 const temporaryFixture = FileSystem.FileSystem.use((fs) =>

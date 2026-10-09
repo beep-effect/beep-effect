@@ -9,10 +9,12 @@ import { hostname, userInfo } from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
 import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { LiteralKit } from "@beep/schema";
-import { Effect, FileSystem, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import { flow } from "effect/Function";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { repoRunArtifactId, repoRunSafeArtifactName } from "../../../internal/repo-run/RepoRunArtifacts.ts";
@@ -168,7 +170,7 @@ const proofCoordinatorDirectoryName = Effect.fnUntraced(function* () {
  * **Example** (Share a coordinator across checkouts)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { proofCoordinatorLockPath } from "@beep/repo-cli/test/Yeet"
  *
  * const lock = proofCoordinatorLockPath("git@github.com:acme/repo.git").pipe(
@@ -201,8 +203,7 @@ export const proofCoordinatorLockPath = Effect.fn("Yeet.proofCoordinatorLockPath
  * ```ts
  * import { runIdForContext } from "@beep/repo-cli/commands/Yeet/internal/ArtifactPaths"
  * import { RepoRunContext } from "@beep/repo-cli/internal/repo-run"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const context = RepoRunContext.make({
  *   base: "origin/main",
  *   branch: "feature/status-work",
@@ -234,8 +235,7 @@ export const runIdForContext = (context: RepoRunContext) =>
  *
  * ```ts
  * import { artifactDirForContext } from "@beep/repo-cli/commands/Yeet/internal/ArtifactPaths"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(artifactDirForContext)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -404,8 +404,7 @@ const owningCloneRoot = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { resolveProofLedgerLocation } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(resolveProofLedgerLocation("/repo"))) // true
  * ```
  *
@@ -444,8 +443,7 @@ export const resolveProofLedgerLocation = Effect.fn("Yeet.resolveProofLedgerLoca
  *
  * ```ts
  * import { proofLedgerPathForCheckout } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(proofLedgerPathForCheckout("/repo"))) // true
  * ```
  *
@@ -467,8 +465,7 @@ export const proofLedgerPathForCheckout = Effect.fn("Yeet.proofLedgerPathForChec
  *
  * ```ts
  * import { runArtifactPathForContext } from "@beep/repo-cli/commands/Yeet/internal/ArtifactPaths"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(runArtifactPathForContext)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -496,8 +493,7 @@ export const runArtifactPathForContext = Effect.fn("Yeet.runArtifactPathForConte
  *
  * ```ts
  * import { runStatePathForContext } from "@beep/repo-cli/commands/Yeet/internal/ArtifactPaths"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(runStatePathForContext)
  * console.log(Effect.isEffect(program)) // true
  * ```

@@ -30,7 +30,10 @@ import {
   SkillContractId,
 } from "@beep/skill-contract";
 import { A } from "@beep/utils";
-import { DateTime, Effect, HashSet, Result } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { CitedArtifactExistsGate, CitedArtifactExistsVerdict } from "./CitedArtifactExistsGate.ts";
 import { decodeQaInventory, QaInventory } from "./Inventory.schemas.ts";
@@ -163,8 +166,7 @@ export const CitedEventIdExistsGate = alwaysBlockingGate(citedEventIdExistsGateI
  *
  * ```ts
  * import { CitedEventIdExistsInput, evaluateCitedEventIdExists } from "@beep/repo-cli/commands/Qa"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = evaluateCitedEventIdExists(
  *   CitedEventIdExistsInput.make({ citedEventIds: [4, 7], knownEventIds: [4] })
  * )
@@ -299,8 +301,7 @@ const roundNumberEquivalence = S.toEquivalence(RoundNumber);
  *
  * ```ts
  * import { DeclaredRoundCoherentInput, evaluateDeclaredRoundCoherent } from "@beep/repo-cli/commands/Qa"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = evaluateDeclaredRoundCoherent(
  *   DeclaredRoundCoherentInput.make({ declaredRound: 1, requestedRound: 1 })
  * )
@@ -693,8 +694,7 @@ const outputDecodeDenial = (
  *   JudgeOutputInventoryDecodesInput,
  *   evaluateJudgeOutputInventoryDecodes
  * } from "@beep/repo-cli/commands/Qa"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = evaluateJudgeOutputInventoryDecodes(
  *   JudgeOutputInventoryDecodesInput.make({ candidate: "{}" })
  * )

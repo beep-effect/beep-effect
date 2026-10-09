@@ -16,8 +16,8 @@ import {
 } from "@beep/repo-cli/commands/Ci";
 import { GithubCheckLaneSpec, githubCheckLanesForModeForTesting, QualityTaskStep } from "@beep/repo-cli/test/Quality";
 import { CacheEvidenceReference } from "@beep/repo-configs/cache";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const Step = QualityTaskStep;

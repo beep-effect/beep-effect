@@ -8,8 +8,9 @@
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { HashSet, pipe } from "effect";
 import * as A from "effect/Array";
+import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

@@ -17,8 +17,10 @@ import {
   resolvePracticeKgCorrespondent,
 } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
-import { Context, Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as R from "effect/Record";

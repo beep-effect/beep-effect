@@ -20,7 +20,6 @@
  * @since 0.0.0
  */
 
-import { Cause, Context, Effect, Layer, Result, Stream } from "effect";
 import * as A from "effect/Array";
 import * as AiError from "effect/ai/AiError";
 import {
@@ -35,14 +34,20 @@ import {
 import * as McpServer from "effect/ai/McpServer";
 import * as AiTool from "effect/ai/Tool";
 import * as Toolkit from "effect/ai/Toolkit";
+import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as ErrorReporter from "effect/ErrorReporter";
 import { dual } from "effect/Function";
 import { Headers, HttpServerRequest } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as References from "effect/References";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { ToolHandlerPayload, translateApiKeyRequired } from "./ApiKeyRequired.ts";
 import { CurrentMcpCaller, CurrentMcpDispatchAnchor, McpCallerIdentity } from "./McpCaller.ts";
@@ -76,7 +81,7 @@ export const defaultSanitizedSpanKeys: ReadonlyArray<string> = ["parameters"];
  * **Example** (Wrap tracer suppressing keys)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { sanitizeTracerAttributes } from "@beep/mcp-kit"
  *
  * const program = Effect.gen(function* () {
@@ -170,7 +175,7 @@ export const sanitizeTracerAttributes: {
  * **Example** (Run under sanitized span)
  *
  * ```ts import.meta.vitest name="Run under sanitized span"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { withSanitizedToolSpan } from "@beep/mcp-kit"
  *
  * const program = withSanitizedToolSpan(Effect.annotateCurrentSpan({ parameters: { secret: "x" } }), "mcp.tool.call")
@@ -579,7 +584,8 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
  * **Example** (Register sanitized toolkit)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { sanitizedToolkit } from "@beep/mcp-kit"
  * import { Tool, Toolkit } from "effect/ai"
  * import * as S from "effect/Schema"

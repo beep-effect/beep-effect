@@ -17,9 +17,12 @@
 
 import { AiToolError } from "@beep/nlp-processing/Tools";
 import * as O from "@beep/utils/Option";
-import { Data, Effect, Result, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Data from "effect/Data";
+import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
+import * as Stream from "effect/Stream";
 import * as DatasetLoader from "./Streaming/DatasetLoader.ts";
 import * as Jsonl from "./Streaming/Jsonl.ts";
 import * as Pipeline from "./Streaming/Pipeline.ts";
@@ -86,7 +89,7 @@ const compileRegex = (pattern: string, flags: string): Effect.Effect<RegExp, Inv
  * **Example** (Provide with Node layers)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
  * import * as NodePath from "@effect/platform-node/NodePath"
  * import { StreamingToolkitHandlersLive } from "@beep/nlp-mcp/StreamingHandlers"

@@ -7,7 +7,9 @@
  */
 
 import { A } from "@beep/utils";
-import { Effect, FileSystem, Order } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Order from "effect/Order";
 import { HarnessLedgerIoError } from "../HarnessLedger.errors.ts";
 
 /**

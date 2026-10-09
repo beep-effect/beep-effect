@@ -1,6 +1,7 @@
 import { WinkLayerAllLive } from "@beep/wink/Wink.layer";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { EmbeddingService } from "../../Service/Embedding.ts";

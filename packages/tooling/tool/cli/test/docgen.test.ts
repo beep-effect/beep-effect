@@ -48,29 +48,27 @@ import { A, O, Str } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import {
-  Cause,
-  ConfigProvider,
-  Console,
-  Duration,
-  Effect,
-  Exit,
-  FileSystem,
-  Layer,
-  Match,
-  Path,
-  pipe,
-  Ref,
-  Runtime,
-  Sink,
-  Stream,
-} from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
 import { Command } from "effect/cli";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Ref from "effect/Ref";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
 import type {
   DocgenQualityPackageReport,
@@ -1863,7 +1861,7 @@ export const ProofFixture = 1;
  *
  * @example
  * \`\`\`ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = Effect.gen(function* () {
  *
@@ -2079,7 +2077,7 @@ export const ChatSchema = { fields: { id: "string" } };
  *
  * @example
  * \`\`\`ts
- * import { Equal } from "effect"
+ * import * as Equal from "effect/Equal"
  * import { parseValue } from "@beep/schema"
  * const result = parseValue(" hello ")
  * void result

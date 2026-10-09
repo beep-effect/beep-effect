@@ -15,14 +15,15 @@ import {
   PracticeKgGraphToolRow,
 } from "@beep/law-practice-use-cases/server";
 import { SchemaUtils } from "@beep/schema";
-import { Effect, flow, Layer } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, flow } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { DuckDbConnectionOptions } from "@beep/duckdb";
-import type { Path } from "effect";
+import type * as Path from "effect/Path";
 import type * as AST from "effect/SchemaAST";
 
 const $I = $LawPracticeServerId.create("PracticeKg.rows");
@@ -261,7 +262,7 @@ const provideScopedLayer =
  *
  * ```ts
  * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { withDuckDb } from "../../src/PracticeKg.rows.ts"
  *
  * const program = Effect.gen(function* () {
@@ -314,8 +315,7 @@ export const stripPrefix = (prefix: string) =>
  *
  * ```ts
  * import { decodePracticeKgGraphRows } from "@beep/law-practice-server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(decodePracticeKgGraphRows([]))) // true
  * ```
  *
@@ -333,8 +333,7 @@ export const decodePracticeKgGraphRows: {
  *
  * ```ts
  * import { decodePracticeKgFamilyRows } from "@beep/law-practice-server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(decodePracticeKgFamilyRows([]))) // true
  * ```
  *
@@ -354,8 +353,7 @@ export const decodePracticeKgFamilyRows: {
  *
  * ```ts
  * import { decodePracticeKgDocumentRows } from "@beep/law-practice-server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(decodePracticeKgDocumentRows([]))) // true
  * ```
  *
@@ -375,8 +373,7 @@ export const decodePracticeKgDocumentRows: {
  *
  * ```ts
  * import { decodePracticeKgEmailRows } from "@beep/law-practice-server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(decodePracticeKgEmailRows([]))) // true
  * ```
  *
@@ -394,8 +391,7 @@ export const decodePracticeKgEmailRows: {
  *
  * ```ts
  * import { decodePracticeKgCandidateClaimRows } from "@beep/law-practice-server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(decodePracticeKgCandidateClaimRows([]))) // true
  * ```
  *

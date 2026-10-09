@@ -13,7 +13,12 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { HashMap, MutableHashMap, MutableHashSet, Order, Tuple, Effect } from "effect";
+import * as HashMap from "effect/HashMap";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Order from "effect/Order";
+import * as Tuple from "effect/Tuple";
+import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";

@@ -26,9 +26,11 @@ import { MailTaggingPortError, MailTaggingStateError, MatterDirectory } from "@b
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf } from "@effect/vitest/utils";
-import { Effect, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import { oneRun, Platform, serviceOf, temporaryDirectory, writeText } from "./MailTagging.adapters.fixture.ts";
 import type { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";

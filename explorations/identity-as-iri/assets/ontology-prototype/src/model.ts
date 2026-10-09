@@ -8,8 +8,8 @@ import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { XSD_ANY_URI, XSD_BOOLEAN, XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
-import { pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 

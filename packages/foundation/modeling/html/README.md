@@ -72,8 +72,7 @@ import {
 } from "@beep/html"
 import { P } from "@beep/html/Html.model"
 import { Text } from "@beep/html/Html.nodes"
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 const root = HtmlFragment.make({
   children: [
     P.make({ children: [Text.make({ value: "Hello <world>" })] })

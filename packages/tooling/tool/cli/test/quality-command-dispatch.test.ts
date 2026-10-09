@@ -6,10 +6,16 @@ import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Console, Effect, Exit, FileSystem, Layer, Sink, Stream } from "effect";
+import * as Console from "effect/Console";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
 
 const FixedMemoryStatsLayer = Layer.succeed(

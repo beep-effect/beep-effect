@@ -135,8 +135,7 @@ export const Catalog: ReadonlyArray<CatalogEntry> = [
  * ```ts
  * import { resolveCatalogSpecPath } from "@beep/api-docs/src/Catalog"
  * import * as BunServices from "@effect/platform-bun/BunServices"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = resolveCatalogSpecPath("packages/drivers/govinfo/openapi.json").pipe(
  *   Effect.provide(BunServices.layer)
  * )

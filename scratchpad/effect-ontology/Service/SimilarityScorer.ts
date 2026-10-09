@@ -13,7 +13,11 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Cache, Context, Duration, Effect, Layer } from "effect";
+import * as Cache from "effect/Cache";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { Entity, Relation } from "../Domain/Model/Entity.ts";
@@ -67,7 +71,7 @@ export class SimilarityResult extends S.Class<SimilarityResult>($I`SimilarityRes
  * **Example** (Read cache size from Default)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { SimilarityScorer } from "@effect-ontology/Service/SimilarityScorer"
  *
  * const program = Effect.gen(function* () {

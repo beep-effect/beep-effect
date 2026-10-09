@@ -11,7 +11,9 @@
 
 import { $QaCaptureId } from "@beep/identity/packages";
 import { A, O } from "@beep/utils";
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { QaCaptureError } from "./QaCapture.errors.ts";
 
 const $I = $QaCaptureId.create("Witness.service");
@@ -57,7 +59,7 @@ const bundleWitness: Effect.Effect<string, QaCaptureError> = Effect.tryPromise({
  *
  * ```ts
  * import type { WitnessShape } from "@beep/qa-capture"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const service: WitnessShape = { script: Effect.succeed("(()=>{})();") }
  * console.log(service)
  * ```

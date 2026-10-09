@@ -11,7 +11,7 @@
  * @since 0.0.0
  */
 import { A, P, R } from "@beep/utils";
-import { Order } from "effect";
+import * as Order from "effect/Order";
 
 const isScalar: P.Predicate<unknown> = P.some([P.isNull, P.isNumber, P.isBoolean, P.isString]);
 

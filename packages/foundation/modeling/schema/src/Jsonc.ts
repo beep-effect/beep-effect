@@ -7,8 +7,11 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
-import { Effect, flow, pipe, SchemaIssue, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as jsonc from "jsonc-parser";
 
 const $I = $SchemaId.create("Jsonc");
@@ -77,7 +80,7 @@ const decodeJsoncUnknown = Effect.fn("Jsonc.decodeJsoncUnknown")(function* (cont
  * **Example** (Decode JSONC text to unknown)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { JsoncTextToUnknown } from "@beep/schema/Jsonc"
  *
@@ -117,7 +120,7 @@ const decodeUnknownJsoncTextToUnknown = S.decodeUnknownEffect(JsoncTextToUnknown
  * **Example** (Decode JSONC into schema)
  *
  * ```ts import.meta.vitest name="Decode JSONC into schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { decodeJsoncTextAs } from "@beep/schema/Jsonc"
  *

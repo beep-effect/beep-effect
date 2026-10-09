@@ -10,11 +10,14 @@
 import { $PracticeKgMcpId } from "@beep/identity/packages";
 import { PracticeKgToolkit } from "@beep/law-practice-server";
 import * as OptionUtils from "@beep/utils/Option";
-import { Effect, FileSystem, Match, Path } from "effect";
 import * as A from "effect/Array";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
+import * as FileSystem from "effect/FileSystem";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

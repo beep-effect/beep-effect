@@ -3,7 +3,7 @@ import { FlightRecordCompositionInput, FlightRecordCompositionInputArbitrary } f
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 
 const isFlightRecordCompositionInput = S.is(FlightRecordCompositionInput);

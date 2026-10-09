@@ -2,7 +2,9 @@ import { CyclicDependencyError, computeTransitiveClosure, detectCycles, topologi
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { Effect, HashMap, HashSet } from "effect";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";

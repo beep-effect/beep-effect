@@ -30,7 +30,7 @@ const $I = $RepoCliId.create("internal/schema/Uuid");
  *
  * ```ts
  * import { UUID } from "@beep/repo-cli/test/SharedInternals"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const attemptId = Effect.runSync(S.decodeUnknownEffect(UUID)(" 550e8400-e29b-41d4-a716-446655440000 "))

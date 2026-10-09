@@ -20,16 +20,22 @@ import { $M365Id } from "@beep/identity";
 import { LiteralKit, URLStr } from "@beep/schema";
 import { addDays } from "@beep/schema/LocalDate";
 import { getSomesStruct } from "@beep/utils/Option";
-import { Config, Context, Duration, Effect, flow, HashSet, Layer, pipe, SchemaGetter } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
-import { constTrue, dual } from "effect/Function";
+import { constTrue, dual, flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
 import { M365Auth } from "./M365.auth.ts";
 import { M365ConfigInput, resolveM365Config } from "./M365.config.ts";
@@ -3021,8 +3027,7 @@ export class M365 extends Context.Service<M365, M365Shape>()($I`M365`) {
    *
    * ```ts
    * import { M365, M365AppOnlyConfigInput, M365ClientSecretCredential } from "@beep/m365"
-   * import { Redacted } from "effect"
-   *
+   * import * as Redacted from "effect/Redacted";
    * const layer = M365.makeAppOnlyLayer(
    *   M365AppOnlyConfigInput.make({
    *     clientId: "client-id",
@@ -3068,8 +3073,7 @@ export class M365 extends Context.Service<M365, M365Shape>()($I`M365`) {
    *
    * ```ts
    * import { M365, M365AppOnlyConfigInput, M365CertificateCredential } from "@beep/m365"
-   * import { Redacted } from "effect"
-   *
+   * import * as Redacted from "effect/Redacted";
    * const layer = M365.makeAppOnlyLiveLayer(
    *   M365AppOnlyConfigInput.make({
    *     clientId: "client-id",

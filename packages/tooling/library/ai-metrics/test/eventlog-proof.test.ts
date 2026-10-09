@@ -1,10 +1,13 @@
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect, Layer, Ref, Schema } from "effect";
+import * as Effect from "effect/Effect";
 import * as EventGroup from "effect/eventlog/EventGroup";
 import * as EventJournal from "effect/eventlog/EventJournal";
 import * as EventLog from "effect/eventlog/EventLog";
 import * as EventLogEncryption from "effect/eventlog/EventLogEncryption";
+import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
+import * as Schema from "effect/Schema";
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>

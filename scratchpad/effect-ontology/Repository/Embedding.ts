@@ -20,7 +20,9 @@ import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -467,8 +469,7 @@ interface EmbeddingRepositoryShape {
  *
  * ```ts
  * import { EmbeddingEntityType, EmbeddingRepository } from "@effect-ontology/Repository/Embedding"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const similar = Effect.gen(function* () {
  *   const embeddings = yield* EmbeddingRepository
  *   return yield* embeddings.findSimilar(

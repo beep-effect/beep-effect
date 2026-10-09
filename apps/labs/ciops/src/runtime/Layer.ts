@@ -6,8 +6,9 @@
  */
 
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
 import { HttpApiBuilder } from "effect/http-api";
+import * as Layer from "effect/Layer";
 import { Api, Health } from "../Api.ts";
 
 const handlers = HttpApiBuilder.group(Api, "ciops", (group) =>
@@ -21,8 +22,7 @@ const handlers = HttpApiBuilder.group(Api, "ciops", (group) =>
  *
  * ```ts
  * import { ApiLive } from "@/runtime/Layer"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(ApiLive)) // true
  * ```
  *

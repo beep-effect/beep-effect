@@ -14,7 +14,7 @@
  */
 
 import { $RepoUtilsId } from "@beep/identity";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import { constant } from "effect/Function";
 import * as O from "effect/Option";
 
@@ -87,8 +87,7 @@ export const currentHostArchitecture: string = O.getOrElse(hostArchitecture, con
  *
  * ```ts
  * import { HostProcessPlatform } from "@beep/utils/HostProcess"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const platform = Effect.runSync(HostProcessPlatform)
  * console.log(typeof platform) // "string"
  * ```
@@ -112,8 +111,7 @@ export const HostProcessPlatform = Context.Reference<string>($I`HostProcessPlatf
  *
  * ```ts
  * import { HostProcessArchitecture } from "@beep/utils/HostProcess"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const architecture = Effect.runSync(HostProcessArchitecture)
  * console.log(typeof architecture) // "string"
  * ```

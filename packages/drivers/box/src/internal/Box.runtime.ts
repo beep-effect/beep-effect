@@ -1,10 +1,10 @@
 import { A, P, Struct } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { BoxError } from "../Box.errors.ts";
-import type { Exit } from "effect";
+import type * as Exit from "effect/Exit";
 import type { BoxMethodName } from "../_generated/Box.models.gen.ts";
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> => {

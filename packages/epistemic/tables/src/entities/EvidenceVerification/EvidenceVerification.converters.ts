@@ -6,10 +6,12 @@
  */
 import { EvidenceVerification, hasValidManifestationKey } from "@beep/epistemic-domain/entities/EvidenceVerification";
 import { EvidenceSpan } from "@beep/epistemic-domain/values/EvidenceSpan";
-import { DateTime, Result, SchemaIssue } from "effect";
+import * as DateTime from "effect/DateTime";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 import type { Evidence } from "@beep/epistemic-domain/entities/Evidence";
 import type { Table } from "./EvidenceVerification.table.ts";
 

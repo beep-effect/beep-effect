@@ -24,7 +24,12 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { GitHubClient, GraphQLDocument } from "@effected/github";
-import { Console, Context, DateTime, Duration, Effect, Layer } from "effect";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { graphqlErrorToGitHubError } from "./GithubGraphql.ts";
 import type { GitHubError } from "@effected/github";
@@ -48,8 +53,7 @@ export const GraphqlBudgetSource = LiteralKit(["graphql-probe", "rest-fallback"]
  *
  * ```ts
  * import { GraphqlBudgetSnapshot } from "@beep/repo-cli/test/SharedInternals"
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const snapshot = GraphqlBudgetSnapshot.make({
  *   remaining: 3,
  *   resetAt: DateTime.makeUnsafe("2026-10-06T17:29:00Z"),
@@ -143,8 +147,7 @@ export class GraphqlBudgetDecisionInput extends S.Class<GraphqlBudgetDecisionInp
  *   GraphqlBudgetPolicy,
  *   GraphqlBudgetSnapshot
  * } from "@beep/repo-cli/test/SharedInternals"
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const now = DateTime.makeUnsafe("2026-10-06T17:19:00Z")
  * const snapshot = GraphqlBudgetSnapshot.make({
  *   remaining: 0,
@@ -180,8 +183,7 @@ export const decideGraphqlBudget = ({ snapshot, policy, now }: GraphqlBudgetDeci
  *
  * ```ts
  * import { GraphqlBudgetExhausted } from "@beep/repo-cli/test/SharedInternals"
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const error = GraphqlBudgetExhausted.make({
  *   operation: "markPullRequestReadyForReview",
  *   remaining: 0,
@@ -246,8 +248,7 @@ export interface GraphqlBudgetShape {
  *
  * ```ts
  * import { GraphqlBudget, GraphqlBudgetPolicy } from "@beep/repo-cli/test/SharedInternals"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const budget = yield* GraphqlBudget
  *   return yield* budget.guard("example", GraphqlBudgetPolicy.noWait)(Effect.succeed("ran"))

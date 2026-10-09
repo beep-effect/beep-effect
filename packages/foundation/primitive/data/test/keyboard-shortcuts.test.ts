@@ -17,7 +17,7 @@ import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse } from "@effect/vitest/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as Str from "effect/String";
 
 const valueSet = <A extends string>(values: ReadonlyArray<A>): ReadonlySet<A> => new Set(values);

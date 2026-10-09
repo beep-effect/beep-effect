@@ -8,8 +8,10 @@
 import { LangExtractError } from "@beep/langextract/Extraction";
 import { thunkEffectSucceed } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Config, Effect, Layer } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
 import { LangExtractRemotePolicy } from "./Service.service.ts";
 import type { LangExtractRequest } from "@beep/langextract/Extraction";
 import type { LangExtractRemotePolicyShape } from "./Service.service.ts";
@@ -24,8 +26,7 @@ import type { LangExtractRemotePolicyShape } from "./Service.service.ts";
  * import { allowRemoteExtractionPolicy } from "@beep/langextract/Service"
  * import { ExtractionTarget } from "@beep/langextract/Target"
  * import { DocumentId } from "@beep/nlp/Core"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const request = LangExtractRequest.make({
  *   documentId: DocumentId.make("doc-1"),
  *   targets: [ExtractionTarget.make({ kind: "entity", name: "person" })],
@@ -100,7 +101,7 @@ export const remoteExtractionPolicyFromConfig = Layer.effect(
  * import { ensureRemoteExtractionAllowed } from "@beep/langextract/Service"
  * import { ExtractionTarget } from "@beep/langextract/Target"
  * import { DocumentId } from "@beep/nlp/Core"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const request = LangExtractRequest.make({

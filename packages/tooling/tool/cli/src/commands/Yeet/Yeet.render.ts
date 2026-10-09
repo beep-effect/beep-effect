@@ -6,10 +6,10 @@
  */
 
 import { Md } from "@beep/md";
-import { Order } from "effect";
 import * as A from "effect/Array";
 import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Str from "effect/String";
 import type { RenderError } from "@beep/md";
 import type { Document } from "@beep/md/Md.model";

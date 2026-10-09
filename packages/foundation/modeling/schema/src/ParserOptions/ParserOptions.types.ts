@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $SchemaId } from "@beep/identity";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import { Fn } from "../Fn/index.ts";
 

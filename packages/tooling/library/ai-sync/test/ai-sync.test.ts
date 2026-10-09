@@ -38,12 +38,17 @@ import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { NodeServices } from "@effect/platform-node";
 import { assert, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit, FileSystem, Layer, Path, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
 import { HttpClient, HttpClientResponse } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 
 const decodeStructInlineSchemaJson = S.decodeEffect(

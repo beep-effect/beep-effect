@@ -19,10 +19,16 @@ import { assertSome } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { and, eq, gt, isNull, lte, or, sql } from "drizzle-orm";
 import { bigint, jsonb, pgTable, serial, text, uniqueIndex } from "drizzle-orm/pg-core";
-import { Data, Effect, FileSystem, flow, Layer, Order, Path, pipe } from "effect";
 import * as Crypto from "effect/Crypto";
+import * as Data from "effect/Data";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 

@@ -10,11 +10,19 @@ import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { VideoFileExtension } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Cause, Context, Effect, Exit, FileSystem, Layer, Order, Path, pipe, Terminal } from "effect";
-import { dual, flow } from "effect/Function";
+import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Terminal from "effect/Terminal";
 import { ImageCommandError } from "./Image.errors.ts";
 import { makeExtractFramesEvents } from "./Image.progress.ts";
 import {
@@ -84,8 +92,7 @@ export interface ImageCommandServiceShape {
  *
  * ```ts
  * import { ImageCommandService } from "@beep/repo-cli/commands/Image"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.service(ImageCommandService)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -296,8 +303,7 @@ const makeImageCommandService = Effect.fn("ImageCommandService.make")(function* 
  *
  * ```ts
  * import { ImageCommandServiceLive } from "@beep/repo-cli/commands/Image"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(ImageCommandServiceLive)) // true
  * ```
  *
@@ -314,8 +320,7 @@ export const ImageCommandServiceLive: Layer.Layer<ImageCommandService, never, Im
  *
  * ```ts
  * import { extractFrames } from "@beep/repo-cli/commands/Image"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(extractFrames)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -339,8 +344,7 @@ export const extractFrames = Effect.fn("Image.extractFrames")(function* (
  *
  * ```ts
  * import { extractFramesDir } from "@beep/repo-cli/commands/Image"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(extractFramesDir)
  * console.log(Effect.isEffect(program)) // true
  * ```

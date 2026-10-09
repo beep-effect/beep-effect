@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { HashSet } from "effect";
+import * as HashSet from "effect/HashSet";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { LiteralKit } from "../LiteralKit/index.ts";

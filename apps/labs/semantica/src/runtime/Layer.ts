@@ -2,8 +2,10 @@ import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { makeOpenAiEmbeddingModelLive } from "@beep/openai";
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, Layer, Logger } from "effect";
+import * as Effect from "effect/Effect";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import { CorpusManifestBuilderLive } from "@/corpus/ManifestBuilder";
 import { F1CatalogLive } from "@/fixtures/F1";
 import { CanaryC0Live } from "@/layers/CanaryC0Live";
@@ -107,8 +109,7 @@ const C2CanaryLive = CanaryC2Live.pipe(
  *
  * ```ts
  * import { RuntimeLayer } from "@/runtime/Layer"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(RuntimeLayer)) // true
  * ```
  *

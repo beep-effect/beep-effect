@@ -36,7 +36,7 @@ export const ConnectorAccountId = make("connector_account", {
  * **Example** (Decode ConnectorAccountId with Schema)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ConnectorAccountId } from "@beep/shared-domain/identity/Shared"
  * import * as S from "effect/Schema"
  *

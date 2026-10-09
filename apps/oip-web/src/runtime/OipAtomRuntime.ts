@@ -8,7 +8,7 @@
 "use client";
 
 import * as BrowserHttpClient from "@effect/platform-browser/BrowserHttpClient";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { Atom } from "effect/reactivity";
 
 const oipAtomRuntimeFactory = Atom.context({

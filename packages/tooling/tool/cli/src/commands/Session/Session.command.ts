@@ -4,10 +4,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Console, Effect } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -92,7 +93,7 @@ export const renderSessionRow = (row: SessionLedgerRow): string =>
     [
       `- ${row.state} ${row.lane} (${row.branch}${O.match(row.pr, { onNone: () => "", onSome: (pr) => `, PR #${pr}` })}) ${DateTime.formatIso(row.recordedAt)} by ${row.harness}${O.match(row.role, { onNone: () => "", onSome: (role) => ` [${role}]` })}`,
       `  next: ${row.next}`,
-      ...O.match(row.summary, { onNone: () => A.empty<string>(), onSome: (summary) => [`  summary: ${summary}`] }),
+      ...O.match(row.summary, { onNone: A.empty<string>, onSome: (summary) => [`  summary: ${summary}`] }),
       `  checkout: ${row.checkout}`,
     ],
     "\n"

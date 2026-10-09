@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 
-import { Order } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as Num from "effect/Number";
+import * as Order from "effect/Order";
 import type * as O from "effect/Option";
 
 /**

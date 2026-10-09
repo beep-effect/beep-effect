@@ -18,8 +18,10 @@
  */
 
 import { A, O, pipe, Str } from "@beep/utils";
-import { Console, DateTime, Effect } from "effect";
+import * as Console from "effect/Console";
 import { Argument, Command, Flag } from "effect/cli";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { GoalStatusInputError } from "./Goals.errors.ts";

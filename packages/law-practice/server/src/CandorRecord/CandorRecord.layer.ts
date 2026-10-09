@@ -7,7 +7,7 @@
  */
 
 import { CandorRecordRepository } from "@beep/law-practice-use-cases/CandorRecord";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { makeCandorRecordRepository, makeInMemoryCandorRecordRepository } from "./CandorRecord.repo.ts";
 import type { PostgresDrizzle } from "@beep/postgres";
 
@@ -24,8 +24,7 @@ import type { PostgresDrizzle } from "@beep/postgres";
  * ```ts
  * import { CandorRecordRepositoryInMemory } from "@beep/law-practice-server/CandorRecord"
  * import { CandorRecordReaderFromRepository } from "@beep/law-practice-use-cases/CandorRecord"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const reader = CandorRecordReaderFromRepository.pipe(Layer.provide(CandorRecordRepositoryInMemory))
  * console.log(Layer.isLayer(reader)) // true
  * ```
@@ -51,8 +50,7 @@ export const CandorRecordRepositoryInMemory: Layer.Layer<CandorRecordRepository>
  *
  * ```ts
  * import { CandorRecordRepositoryLive } from "@beep/law-practice-server/CandorRecord"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(CandorRecordRepositoryLive)) // true
  * ```
  *

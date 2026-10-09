@@ -7,8 +7,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Effect, Match } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -107,7 +108,8 @@ const NamedResult = S.Struct({ type: S.Literal("tool_result"), tool_use_id: S.St
  * **Example** (Preserve native provider event envelopes)
  * ```ts
  * import { decodeProviderEvents } from "@beep/repo-cli/test/ResearchLibrary"
- * import { Effect, Match } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Match from "effect/Match";
  * console.log(Effect.runSync(decodeProviderEvents('{"type":"tool_use","id":"call-1"}')).length) // 1
  * ```
  *
@@ -196,7 +198,8 @@ const grokXQualificationValid = (events: ReadonlyArray<unknown>) => {
  * **Example** (Reject installation-only evidence)
  * ```ts
  * import { validateProviderQualification } from "@beep/repo-cli/test/ResearchLibrary"
- * import { Effect, Match } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Match from "effect/Match";
  * console.log(Effect.runSync(validateProviderQualification("alphaxiv", []))) // false
  * ```
  *

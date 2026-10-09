@@ -180,7 +180,7 @@ export * as PatternOntology from "./PatternOntology/index.ts";
  * **Example** (Decode port from string)
  *
  * ```ts import.meta.vitest name="Decode port from string"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { PortFromString } from "@beep/schema"
  *

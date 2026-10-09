@@ -6,7 +6,7 @@ import {
 } from "@beep/test-utils/ConformanceLedger";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 

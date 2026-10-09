@@ -7,7 +7,7 @@
  */
 
 import { ClaimDispositionRepository } from "@beep/epistemic-use-cases/ClaimDisposition";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import {
   makeDrizzleClaimDispositionRepository,
   makeInMemoryClaimDispositionRepository,

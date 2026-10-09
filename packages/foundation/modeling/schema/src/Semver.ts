@@ -4,7 +4,7 @@
  * **Example** (Decode and format version)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { Semver, SemverFromString } from "@beep/schema/Semver"
  *
@@ -22,12 +22,16 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Effect, flow, Match, Number as N, pipe, SchemaGetter, SchemaIssue } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as SchemaIssue from "effect/SchemaIssue";
 import * as Str from "effect/String";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
 import type * as Ordering from "effect/Ordering";
@@ -624,7 +628,7 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
  * **Example** (Decode SemVer string codec)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { Semver, SemverFromString } from "@beep/schema/Semver"
  *

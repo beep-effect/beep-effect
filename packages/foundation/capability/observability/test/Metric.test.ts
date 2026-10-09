@@ -10,8 +10,12 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertDefined, assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, Equal, Exit, Metric } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Exit from "effect/Exit";
+import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 

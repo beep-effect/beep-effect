@@ -10,7 +10,7 @@ import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { ActFrameElementRef } from "../../values/ActFrameElementRef/index.ts";
 import { ConstitutionOutcome } from "../../values/ConstitutionOutcome/index.ts";

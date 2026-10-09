@@ -32,10 +32,12 @@ import {
 } from "@beep/law-practice-use-cases/LegalPositionRecord";
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, asc, eq } from "drizzle-orm";
-import { Effect, pipe, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import { pipe } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
 import { makeRowDecoders, sortByIdAscending } from "../internal/RepoSupport.ts";
 import type {
   ActFrame,
@@ -162,8 +164,7 @@ const citingFrame = <
  * import { makeInMemoryLegalPositionRecordRepository } from "@beep/law-practice-server/LegalPositionRecord"
  * import { LegalPositionRecordScope } from "@beep/law-practice-use-cases/LegalPositionRecord"
  * import * as Shared from "@beep/shared-domain/identity/Shared"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const repository = yield* makeInMemoryLegalPositionRecordRepository()
  *   return yield* repository.listRelators(
@@ -246,8 +247,7 @@ export const makeInMemoryLegalPositionRecordRepository = Effect.fn("LegalPositio
  *
  * ```ts
  * import { makeLegalPositionRecordRepository } from "@beep/law-practice-server/LegalPositionRecord"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = makeLegalPositionRecordRepository().pipe(
  *   Effect.map((repository) => typeof repository.recordRelator === "function")
  * )

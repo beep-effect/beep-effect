@@ -7,8 +7,8 @@
 
 import { $WinkId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { Inspectable } from "effect";
 import { dual } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";

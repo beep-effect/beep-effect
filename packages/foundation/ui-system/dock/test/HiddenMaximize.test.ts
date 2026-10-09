@@ -26,8 +26,8 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { envelope, groupOne, groupTwo, panelOne, panelThree, panelTwo, splitOne } from "./Fixtures.ts";
 import type { DockChanged, DockMutationOutcome } from "@beep/dock";

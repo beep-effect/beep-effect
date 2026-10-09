@@ -6,8 +6,8 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { getColumns, getTableName } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const decodeWorkerId = S.decodeUnknownEffect(ArchitectureLabIdentity.WorkerId);

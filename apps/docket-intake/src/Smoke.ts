@@ -20,9 +20,11 @@ import {
   m365AllDayWindow,
 } from "@beep/m365";
 import { addDays } from "@beep/schema/LocalDate";
-import { Console, DateTime, Effect } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";

@@ -8,7 +8,11 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { getSomesStruct } from "@beep/utils/Option";
-import { Context, Duration, Effect, Fiber, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -85,7 +89,7 @@ const StageTimeoutInvariantCheck = S.makeFilter(
  * **Example** (Create a stage-timeout policy)
  *
  * ```ts
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { StageTimeoutConfig } from "@effect-ontology/Service/LlmControl/StageTimeout"
  *
  * const config = StageTimeoutConfig.make({
@@ -114,7 +118,7 @@ export class StageTimeoutConfig extends S.Class<StageTimeoutConfig>($I`StageTime
  * **Example** (Type a stage-timeout input)
  *
  * ```ts
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import type { StageTimeoutConfigInput } from "@effect-ontology/Service/LlmControl/StageTimeout"
  *
  * const input: StageTimeoutConfigInput = {
@@ -153,7 +157,7 @@ const STAGE_TIMEOUTS: Record<TimedStage, StageTimeoutConfig> = {
  * **Example** (Construct a stage timeout)
  *
  * ```ts
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { TimeoutError } from "@effect-ontology/Service/LlmControl/StageTimeout"
  *
  * const error = TimeoutError.make({ stage: "chunking", timeout: Duration.seconds(5) })
@@ -176,22 +180,22 @@ export class TimeoutError extends S.TaggedError<TimeoutError>($I`TimeoutError`)(
   static readonly is = S.is(this);
 
   /**
-   * Human-readable stage deadline diagnostic.
-   *
-   * **Example** (Read a stage timeout message)
-   *
-   * ```ts
-   * import { Duration } from "effect"
-   * import { TimeoutError } from "@effect-ontology/Service/LlmControl/StageTimeout"
-   *
-   * const error = TimeoutError.make({ stage: "chunking", timeout: Duration.seconds(5) })
-   * console.log(error.message)
-   * ```
-   *
-   * @returns A stable diagnostic derived from the stage and hard deadline.
-   * @category errors
-   * @since 0.0.0
-   */
+     * Human-readable stage deadline diagnostic.
+     *
+     * **Example** (Read a stage timeout message)
+     *
+     * ```ts
+     * import * as Duration from "effect/Duration";
+     * import { TimeoutError } from "@effect-ontology/Service/LlmControl/StageTimeout"
+     *
+     * const error = TimeoutError.make({ stage: "chunking", timeout: Duration.seconds(5) })
+     * console.log(error.message)
+     * ```
+     *
+     * @returns A stable diagnostic derived from the stage and hard deadline.
+     * @category errors
+     * @since 0.0.0
+     */
   override get message(): string {
     return `Stage "${this.stage}" timed out after ${Duration.format(this.timeout)}`;
   }
@@ -219,7 +223,7 @@ type StageTimeoutServiceShape = {
  * **Example** (Access the stage-timeout service)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { StageTimeoutService } from "@effect-ontology/Service/LlmControl/StageTimeout"
  *
  * const program = Effect.gen(function* () {
@@ -270,8 +274,8 @@ const makeStageTimeoutService = (
  * **Example** (Inspect the live layer)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { Effect } from "effect"
+ * import * as Layer from "effect/Layer";
+ * import * as Effect from "effect/Effect";
  * import { StageTimeoutService, StageTimeoutServiceLive } from "@effect-ontology/Service/LlmControl/StageTimeout"
  *
  * const program = Effect.gen(function* () {
@@ -293,7 +297,7 @@ export const StageTimeoutServiceLive = Layer.succeed(StageTimeoutService, makeSt
  * **Example** (Override one stage for a test)
  *
  * ```ts
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { StageTimeoutServiceTest } from "@effect-ontology/Service/LlmControl/StageTimeout"
  *
  * const layer = StageTimeoutServiceTest({

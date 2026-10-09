@@ -15,8 +15,12 @@ import {
   GateVerdict,
 } from "@beep/skill-contract";
 import { A, O } from "@beep/utils";
-import { DateTime, Effect, FileSystem, HashSet, Path } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { QaJudgeGateId } from "./QaJudgeGateId.ts";
 import type { GateEvaluator } from "@beep/skill-contract";
@@ -219,8 +223,7 @@ const deniedReason =
  *   CitedArtifactExistsInput,
  *   evaluateCitedArtifactExists
  * } from "@beep/repo-cli/commands/Qa/CitedArtifactExistsGate"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = evaluateCitedArtifactExists(
  *   CitedArtifactExistsInput.make({ citedPaths: [], roundRoot: "/tmp/round-1" })
  * )

@@ -9,8 +9,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect, Layer, Queue, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Queue from "effect/Queue";
+import * as Stream from "effect/Stream";
 import { decodeLines, layerProtocolNdjson } from "./client.ts";
 import type { PlatformError } from "effect/PlatformError";
 import type * as ChildProcess from "effect/process/ChildProcess";

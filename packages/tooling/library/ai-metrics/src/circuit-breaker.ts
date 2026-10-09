@@ -7,7 +7,9 @@
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, Number as Num, Order } from "effect";
+import * as Effect from "effect/Effect";
+import * as Num from "effect/Number";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { PosInt } from "./internal/PosInt.ts";
 

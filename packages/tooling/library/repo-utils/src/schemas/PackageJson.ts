@@ -11,14 +11,18 @@
 
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { EmailString, LiteralKit } from "@beep/schema";
-import { Effect, FileSystem, pipe, Result, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { NoSuchFileError } from "../errors/index.ts";
 import { jsonStringifyPretty } from "../JsonUtils.ts";
-import type { Exit } from "effect";
+import type * as Exit from "effect/Exit";
 import type { DomainError } from "../errors/index.ts";
 
 const $I = $RepoUtilsId.create("schemas/PackageJson");
@@ -1746,7 +1750,7 @@ export const decodePackageJsonExit: (input: unknown) => Exit.Exit<PackageJson.Ty
  * **Example** (Decode with Effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodePackageJsonEffect } from "@beep/repo-utils/schemas/PackageJson"
  * const packageJson = Effect.runSync(
  *   decodePackageJsonEffect({
@@ -1779,7 +1783,7 @@ export const decodePackageJsonEffect: (input: unknown) => Effect.Effect<PackageJ
  * **Example** (Encode package.json Effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { encodePackageJsonEffect } from "@beep/repo-utils/schemas/PackageJson"
  * const encoded = Effect.runSync(
  *   encodePackageJsonEffect({
@@ -1811,7 +1815,7 @@ export const encodePackageJsonEffect: (input: unknown) => Effect.Effect<PackageJ
  * **Example** (Encode to JSON string)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { encodePackageJsonToJsonEffect } from "@beep/repo-utils/schemas/PackageJson"
  * const json = Effect.runSync(
  *   encodePackageJsonToJsonEffect({
@@ -1846,7 +1850,7 @@ export const encodePackageJsonToJsonEffect: (input: unknown) => Effect.Effect<st
  * **Example** (Pretty-print package.json)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { encodePackageJsonPrettyEffect } from "@beep/repo-utils/schemas/PackageJson"
  * const pretty = Effect.runSync(
  *   encodePackageJsonPrettyEffect({
@@ -1886,7 +1890,7 @@ const decodeUnknownFromJsonString = S.decodeUnknownEffect(S.fromJsonString(S.Unk
  * **Example** (Read package.json from disk)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { readPackageJsonFile } from "@beep/repo-utils/schemas/PackageJson"
  *
  * const program = readPackageJsonFile("packages/example/package.json")

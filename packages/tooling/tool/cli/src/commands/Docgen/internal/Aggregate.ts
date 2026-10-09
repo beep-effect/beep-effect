@@ -9,7 +9,12 @@ import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, FileSystem, MutableHashSet, Order, Path, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import { generateDocsIndexContent } from "../Docgen.render.ts";
 import { byDocsOutputPathAscending, DocgenAggregateResult } from "../Docgen.schemas.ts";
@@ -131,8 +136,7 @@ const cleanAggregateDestination = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { aggregateGeneratedDocs } from "@beep/repo-cli/commands/Docgen/internal/Aggregate"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = aggregateGeneratedDocs({ package: "packages/tooling/tool/cli" })
  * console.log(Effect.isEffect(program))
  * ```

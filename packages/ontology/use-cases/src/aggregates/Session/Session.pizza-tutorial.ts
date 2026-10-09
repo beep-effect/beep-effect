@@ -12,7 +12,7 @@ import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL, RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { A } from "@beep/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 
 const PIZZA_NS = "https://beep.example/ontology/tutorial/pizza#" as const;
 const RDFS_SUB_CLASS_OF = makeNamedNode(`${RDFS_NAMESPACE}subClassOf`);

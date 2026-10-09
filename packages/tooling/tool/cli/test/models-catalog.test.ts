@@ -18,9 +18,14 @@ import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { assertNone, assertSome, strictEqual } from "@effect/vitest/utils";
-import { Effect, FileSystem, HashMap, Layer, Option as O, Path } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { FixtureCatalogSources, readFixtureLayers } from "./helpers/models-fixtures.ts";
 

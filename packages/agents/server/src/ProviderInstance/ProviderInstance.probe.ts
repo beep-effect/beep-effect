@@ -8,7 +8,9 @@
 import * as Domain from "@beep/agents-domain/entities/ProviderInstance";
 import { ProviderProbe, ProviderProbeUnavailable } from "@beep/agents-use-cases/server";
 import { AiProviderCli, AiProviderCliHome } from "@beep/ai-provider-cli";
-import { DateTime, Effect, Match } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import type { AiProviderCliAuthSnapshot, AiProviderCliError } from "@beep/ai-provider-cli";
 

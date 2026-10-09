@@ -11,9 +11,12 @@
 
 import { A, O } from "@beep/utils";
 import { thunkEmptyStr } from "@beep/utils/thunk";
-import { Function as Fn, Match, pipe, Struct } from "effect";
+import * as Fn from "effect/Function";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import { application as _application } from "./application.ts";
 import { audio as _audio } from "./audio.ts";
 import { image as _image } from "./image.ts";

@@ -6,10 +6,11 @@
  */
 
 import { observeWorkflow, redactCauseSummary, summarizeCause, trackDuration } from "@beep/observability";
-import { Effect, Metric } from "effect";
+import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
+import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
-import type { Cause } from "effect";
+import type * as Cause from "effect/Cause";
 
 const packageAttributes = {
   package: "@beep/nlp",
@@ -62,7 +63,7 @@ const causeLogAttributes = <E>(cause: Cause.Cause<E>): Record<string, string> =>
  * **Example** (Annotate span then succeed)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { annotateNlpSpan } from "./observability"
  *
  * const program = annotateNlpSpan({ operation: "example" }).pipe(
@@ -84,7 +85,7 @@ export const annotateNlpSpan = (attributes: Record<string, string>): Effect.Effe
  * **Example** (Observe workflow around effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { observeNlpWorkflow } from "./observability"
  *
  * const program = Effect.succeed("ok").pipe(
@@ -129,7 +130,7 @@ export const observeNlpWorkflow: {
  * **Example** (Track duration of effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { trackNlpDuration } from "./observability"
  *
  * const program = Effect.succeed("ok").pipe(
@@ -197,7 +198,7 @@ export const recordNlpCacheLookup: {
  * **Example** (Record backend fallback event)
  *
  * ```ts
- * import { Cause } from "effect"
+ * import * as Cause from "effect/Cause";
  * import { recordNlpBackendFallback } from "./observability"
  *
  * const program = recordNlpBackendFallback(Cause.fail("primary failed"), {
@@ -239,7 +240,7 @@ export const recordNlpBackendFallback: {
  * **Example** (Record failure with cause)
  *
  * ```ts
- * import { Cause } from "effect"
+ * import * as Cause from "effect/Cause";
  * import { recordNlpFailure } from "./observability"
  *
  * const program = recordNlpFailure(Cause.fail("failed"), {

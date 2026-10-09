@@ -10,7 +10,9 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, thunkFalse } from "@beep/utils";
-import { Effect, FileSystem, HashSet } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("internal/cli/Labs/RetiredPackages");

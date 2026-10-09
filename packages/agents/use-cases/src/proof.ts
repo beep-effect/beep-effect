@@ -34,8 +34,7 @@ export {
  * ```ts
  * import { makeInMemoryProfessionalRuntimeSdk } from "@beep/agents-use-cases/proof"
  * import { PromotionGateVerdict } from "@beep/shared-use-cases/PromotionGate"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const sdk = makeInMemoryProfessionalRuntimeSdk({
  *   fixtures: [],
  *   promotionGate: { evaluate: () => Effect.succeed(PromotionGateVerdict.cases.clear.make({})) }
@@ -54,8 +53,7 @@ export { makeInMemoryProfessionalRuntimeSdk } from "./processes/ProfessionalRunt
  *
  * ```ts
  * import { RuntimeFixtureInput, runRuntimeFixture } from "@beep/agents-use-cases/proof"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const fixture = RuntimeFixtureInput.make({
  *   body: [
  *     "[span:law-email-001-s2] We need help preparing a provisional patent application.",

@@ -5,9 +5,13 @@
  * @since 0.0.0
  */
 
-import { Console, DateTime, Effect, Match, Result } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runToExit } from "../../../internal/process/StepExec.ts";
@@ -80,7 +84,7 @@ const stagePathspecs = (checkIgnoreExit: number): Effect.Effect<ReadonlyArray<st
  * **Example** (Commit vault git changes)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { commitVault } from "@beep/repo-cli/commands/Research/internal/Daily"
  *
  * // Stage and commit the research vault; provide the process spawner to run it.
@@ -144,7 +148,7 @@ export const commitVault = Effect.fn("Research.commitVault")(function* (
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { dailyImpl } from "@beep/repo-cli/commands/Research/internal/Daily"
  * import { ResearchDailyOptions } from "@beep/repo-cli/commands/Research"
  *

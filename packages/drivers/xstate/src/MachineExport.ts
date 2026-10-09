@@ -7,7 +7,8 @@
  */
 
 import { $XstateId } from "@beep/identity/packages";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import { serializeMachine } from "xstate";
 import { MachineExportError } from "./Xstate.errors.ts";

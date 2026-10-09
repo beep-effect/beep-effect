@@ -7,9 +7,11 @@
 
 import { $UsptoId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
-import { Effect, identity, SchemaTransformation } from "effect";
 import * as Bool from "effect/Boolean";
+import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 
 const $I = $UsptoId.create("Uspto.config");
@@ -59,7 +61,7 @@ const UsptoApiUrl = S.String.pipe(
  * **Example** (Create config with redacted key)
  *
  * ```ts
- * import { Redacted } from "effect"
+ * import * as Redacted from "effect/Redacted";
  * import { UsptoConfigInput } from "@beep/uspto"
  *
  * const config = UsptoConfigInput.make({ apiKey: Redacted.make("test-key") })

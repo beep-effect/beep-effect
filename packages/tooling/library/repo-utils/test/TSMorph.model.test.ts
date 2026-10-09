@@ -58,8 +58,10 @@ import { fcRuns } from "@beep/test-utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit, Option as O } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Project } from "ts-morph";
 

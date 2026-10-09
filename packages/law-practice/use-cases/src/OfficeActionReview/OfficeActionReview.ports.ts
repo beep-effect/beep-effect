@@ -15,7 +15,8 @@ import { OperationId, SourceArtifact } from "@beep/file-processing/Artifact";
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { LangExtractError } from "@beep/langextract/Extraction";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { IrToLawExtractionError } from "../IrToLaw/index.ts";
 import { PosInt } from "../internal/PosInt.ts";
@@ -35,7 +36,7 @@ const officeActionReviewInputEntitySeedDefault = PosInt.make(1);
  * import { ArtifactId, ArtifactLocator, ContentDigest, OperationId, SourceArtifact } from "@beep/file-processing/Artifact"
  * import { OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview"
  * import { PosixPath } from "@beep/schema/PosixPath"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const digestHex = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -193,8 +194,7 @@ export type OfficeActionReviewError = typeof OfficeActionReviewError.Type;
  * ```ts
  * import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw"
  * import type { OfficeActionReviewShape } from "@beep/law-practice-use-cases/OfficeActionReview"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const review: OfficeActionReviewShape["review"] = () =>
  *   Effect.fail(
  *     IrToLawExtractionError.fromReason("required-extraction-missing", {
@@ -229,8 +229,7 @@ export interface OfficeActionReviewShape {
  * import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw"
  * import { OfficeActionReview } from "@beep/law-practice-use-cases/OfficeActionReview"
  * import type { OfficeActionReviewShape } from "@beep/law-practice-use-cases/OfficeActionReview"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const shape: OfficeActionReviewShape = {
  *   extractCandidate: () => Effect.never,
  *   review: () =>

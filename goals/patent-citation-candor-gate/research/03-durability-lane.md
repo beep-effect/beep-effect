@@ -558,7 +558,10 @@ import {
 import { PostgresDrizzle } from "@beep/postgres";
 import { A, O } from "@beep/utils";
 import { asc, eq } from "drizzle-orm";
-import { Effect, Equal, pipe, Ref } from "effect";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Ref from "effect/Ref";
+import { pipe } from "effect/Function";
 import type { ClaimDisposition } from "@beep/epistemic-domain/entities/ClaimDisposition";
 import type { ClaimDispositionOperation } from "@beep/epistemic-use-cases/ClaimDisposition";
 
@@ -644,7 +647,7 @@ export const makeDrizzleClaimDispositionRepository = Effect.fn("Epistemic.ClaimD
 
 ```ts
 import { ClaimDispositionRepository } from "@beep/epistemic-use-cases/ClaimDisposition";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import {
   makeDrizzleClaimDispositionRepository,
   makeInMemoryClaimDispositionRepository,
@@ -691,8 +694,9 @@ import {
 import { IrToLaw, makeIrToLaw } from "@beep/law-practice-use-cases/IrToLaw";
 import { makeOfficeActionReview, OfficeActionReview } from "@beep/law-practice-use-cases/OfficeActionReview";
 import { TikaFileProcessingEngine } from "@beep/tika";
-import { Effect, Layer } from "effect";
-import type { Config } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import type * as Config from "effect/Config";
 import type * as Crypto from "effect/Crypto";
 import type * as LanguageModel from "effect/unstable/ai/LanguageModel";
 
@@ -821,13 +825,13 @@ with `CandorRecordReadReason = LiteralKit(["events-unavailable", "dispositions-u
  */
 
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import type {
   ExecutionDecisionRecord,
   ExecutionOutcomeRecord,
   ExecutionRunKey,
 } from "@beep/epistemic-domain/values/ExecutionRecord";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import type { ExecutionLedgerError, ExecutionLedgerUnavailable } from "./ExecutionLedger.errors.ts";
 
 const $I = $EpistemicUseCasesId.create("ExecutionLedger/ExecutionLedger.ports");
@@ -891,7 +895,8 @@ import {
 import { PostgresDrizzle, PostgresError } from "@beep/postgres";
 import { A, O } from "@beep/utils";
 import { and, asc, eq, isNull } from "drizzle-orm";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import type { ExecutionLedgerError, ExecutionLedgerOperation } from "@beep/epistemic-use-cases/ExecutionLedger";
 
 const decisionTable = DbSchema.executionDecision;
@@ -1090,13 +1095,12 @@ export const executionOutcomeTable = pgTable(EXECUTION_OUTCOME_TABLE_NAME, {
 
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { ClaimDisposition } from "@beep/epistemic-domain/entities/ClaimDisposition";
 import type * as Epistemic from "@beep/shared-domain/identity/Epistemic";
-import type { Effect } from "effect";
-
+import type * as Effect from "effect/Effect";
 const $I = $EpistemicUseCasesId.create("ClaimDisposition/ClaimDisposition.ports");
 ```
 
@@ -1442,8 +1446,8 @@ Config it reads — `packages/_internal/db-admin/drizzle.config.ts` VERBATIM:
 
 ```ts
 import { defineConfig } from "drizzle-kit";
-import { Config, Effect } from "effect";
-
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 const databaseUrl = Effect.runSync(
   Config.string("BEEP_TEST_DATABASE_URL").pipe(
     Config.withDefault("postgres://postgres:postgres@127.0.0.1:5432/postgres")
@@ -1658,7 +1662,7 @@ table names; `EpistemicExecutionLedgerMigrationTarget` sets
 **(3) `packages/_internal/db-admin/src/targets.ts` — the registry.** VERBATIM `:9-57`:
 
 ```ts
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { ArchitectureLabMigrationTarget } from "./migrations/ArchitectureLab.ts";
 import { DocumentsSyncMigrationTarget } from "./migrations/DocumentsSync.ts";
 import { EpistemicContradictionTriageMigrationTarget } from "./migrations/EpistemicContradictionTriage.ts";
@@ -1927,7 +1931,10 @@ import { makePgliteIntegrationGate, makePgliteSqlTestLayer, TestDatabaseInfo } f
 import { A } from "@beep/utils";
 import { describe, expect, layer } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
-import { Effect, Layer, Order, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 

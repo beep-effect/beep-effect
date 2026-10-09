@@ -6,17 +6,21 @@
  */
 
 import { $UtilsId } from "@beep/identity/packages";
-import { Context, Effect, flow, Layer, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import picomatch from "picomatch";
 import { readdirSync, statSync } from "./FileSystem.ts";
 import * as Path from "./Path.ts";
 import { thunk } from "./thunk.ts";
-import type { PlatformError } from "effect";
+import type * as PlatformError from "effect/PlatformError";
 
 const $I = $UtilsId.create("Glob");
 
@@ -233,7 +237,7 @@ const normalizeGlobErrorCause = (cause: GlobErrorCauseInput): GlobError["cause"]
  * **Example** (Run glob via service)
  *
  * ```ts import.meta.vitest name="Run glob via service"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Glob, layer } from "@beep/utils/Glob"
  *
  * const program = Effect.gen(function* () {
@@ -257,7 +261,7 @@ export interface Glob {
  * **Example** (Access Glob service tag)
  *
  * ```ts import.meta.vitest name="Access Glob service tag"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Glob, layer } from "@beep/utils/Glob"
  *
  * const program = Effect.gen(function* () {
@@ -533,7 +537,7 @@ const makeGlob = Effect.fn("Glob.glob")(function* (
  * **Example** (Provide Glob Effect layer)
  *
  * ```ts import.meta.vitest name="Provide Glob Effect layer"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Glob, layer } from "@beep/utils/Glob"
  *
  * const program = Effect.provide(

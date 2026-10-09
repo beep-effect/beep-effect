@@ -1,7 +1,11 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as Bool from "effect/Boolean";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { GOLD_SUBSETS, proposeGold } from "@/canary/Gold";
 import { RelationPreviewOptions, runRelationPreview } from "@/canary/RelationPreview";

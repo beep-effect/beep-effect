@@ -18,11 +18,12 @@
  * @since 0.0.0
  */
 
-import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
 import { decideSourceAuthMount, SourceAuthDecision } from "./SourceAuth.ts";
-import type { Config } from "effect";
+import type * as Config from "effect/Config";
 import type { SourceAuthRegistration } from "./SourceAuth.ts";
 
 /**
@@ -32,7 +33,7 @@ import type { SourceAuthRegistration } from "./SourceAuth.ts";
  * **Example** (Construct GatedLayer entry)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import type { GatedLayer } from "@beep/mcp-kit"
  * import { SourceAuthRegistration } from "@beep/mcp-kit"
  *
@@ -68,7 +69,7 @@ export interface GatedLayer<ROut, E, RIn> {
  * **Example** (Create entry with gatedLayer)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import * as O from "effect/Option"
  * import { gatedLayer, SourceAuthRegistration } from "@beep/mcp-kit"
  *
@@ -112,7 +113,8 @@ export const gatedLayer: {
  * **Example** (Compose hard-gated layers)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import * as O from "effect/Option"
  * import { composeGatedLayers, gatedLayer, SourceAuthRegistration } from "@beep/mcp-kit"
  *

@@ -18,7 +18,9 @@
 
 import { $NlpProcessingId } from "@beep/identity";
 import { A } from "@beep/utils";
-import { Cache, Duration, Effect } from "effect";
+import * as Cache from "effect/Cache";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import { dual, flow } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Obs from "../internal/observability.ts";
@@ -90,7 +92,7 @@ const cachedGet = <A, E, R>(
  * **Example** (Primary secondary fallback composition)
  *
  * ```ts import.meta.vitest name="Primary secondary fallback composition"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { withFallback } from "@beep/nlp-processing/Backend/Composition"
  * import { notSupported } from "@beep/nlp-processing/Backend/NLPBackend"
  * import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend"
@@ -206,7 +208,7 @@ const cachingOptionsTimeToLiveDefault = Duration.minutes(10);
  *
  * ```ts import.meta.vitest name="Caching options capacity TTL"
  * import * as S from "effect/Schema"
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import type { CachingOptions } from "@beep/nlp-processing/Backend/Composition"
  *
  * const PosInt = S.Int.check(S.isGreaterThan(0))
@@ -247,7 +249,7 @@ export class CachingOptions extends S.Class<CachingOptions>($I`CachingOptions`)(
  *
  * ```ts import.meta.vitest name="Memoized backend tokenize cache"
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { withCaching } from "@beep/nlp-processing/Backend/Composition"
  * import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend"
  *
@@ -366,7 +368,7 @@ export const withCaching = Effect.fn("withCaching")(function* (
  * **Example** (Select backend by capability)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { selectByCapability } from "@beep/nlp-processing/Backend/Composition"
  * import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend"

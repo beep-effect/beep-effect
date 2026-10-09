@@ -1,7 +1,9 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { IRI } from "@beep/rdf";
 import { assert, describe, it } from "@effect/vitest";
-import { ConfigProvider, Effect, Layer } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { isRdfStore, RdfBuilder, rdfStoreApplyRules, rdfStoreSize, rdfStoreToDataset } from "../../Service/Rdf.ts";
 import * as S from "effect/Schema";
 

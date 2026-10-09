@@ -42,12 +42,16 @@ import {
 } from "@beep/uspto-mcp";
 import { assert, describe } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { ConfigProvider, Effect, Equal, Layer, Redacted } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import { McpServerClient } from "effect/ai/McpSchema";
 import * as McpServer from "effect/ai/McpServer";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 

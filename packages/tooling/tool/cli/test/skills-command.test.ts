@@ -3,9 +3,12 @@ import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as TestConsole from "effect/testing/TestConsole";
 
 const runSkillsCommand = Command.runWith(skillsCommand, { version: "0.0.0" });

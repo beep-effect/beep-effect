@@ -31,8 +31,13 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodePath, NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
-import { Console, Context, Effect, FileSystem, Layer, Path } from "effect";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { Project } from "ts-morph";
 

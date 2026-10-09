@@ -43,7 +43,7 @@ const Fixed64BigInt = S.BigInt.check(Fixed64Range);
  * **Example** (Decode fixed64 from string)
  *
  * ```ts import.meta.vitest name="Decode fixed64 from string"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { Fixed64 } from "@beep/schema/Fixed64"
  *

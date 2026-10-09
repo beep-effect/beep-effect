@@ -8,7 +8,7 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission
 
-Migrate the repo from barrel imports (`import { Effect } from "effect"`,
+Migrate the repo from barrel imports (`import { Effect } from "<legacy-effect-barrel>"`,
 `import { P } from "@beep/utils"`) to per-module imports (`import * as Effect
 from "effect/Effect"`, `import * as P from "@beep/utils/Predicate"`), enforce
 the convention with the incumbent toolchain (Biome `noRestrictedImports`

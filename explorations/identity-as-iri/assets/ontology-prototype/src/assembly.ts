@@ -1,9 +1,11 @@
-import { Effect, pipe, SchemaAST } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import * as Str from "effect/String";
 import { classLabel, draftMetadataComment, keyLeafTermName, predicateLabel } from "./annotations.js";
 import {

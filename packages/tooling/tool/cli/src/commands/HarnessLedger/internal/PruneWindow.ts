@@ -10,11 +10,16 @@
 import { contextSurfaceId, HookPulseV1 } from "@beep/repo-ai-metrics";
 import { LiteralKit } from "@beep/schema";
 import { A, O, pipe, Str } from "@beep/utils";
-import { DateTime, Effect, FileSystem, Order, Path, Result } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as F from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { HarnessLedgerIoError } from "../HarnessLedger.errors.ts";
 import { ObservedSessionWindow, PrunableSurfaceKind, PruneSurfaceCandidate } from "../HarnessLedger.schemas.ts";

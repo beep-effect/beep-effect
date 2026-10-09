@@ -6,8 +6,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeJson = S.decodeUnknownResult(S.fromJsonString(S.Unknown));

@@ -14,7 +14,9 @@ import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { PostgresDrizzle } from "@beep/postgres";
 import { getSomesStruct } from "@beep/utils/Option";
-import { Context, DateTime, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Layer from "effect/Layer";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import { dual } from "effect/Function";
@@ -26,7 +28,7 @@ import { normalizeDrizzleError } from "../Utils/Sql.ts";
 const $I = $ScratchpadId.create("effect-ontology/Repository/Article");
 
 import { and, count, desc, eq, gte, isNotNull, isNull, like, lte } from "drizzle-orm";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import type { ArticleInsertRow, ArticleRow } from "./schema.ts";
 import { Articles, articles } from "./schema.ts";
 
@@ -177,8 +179,7 @@ interface ArticleRepositoryShape {
  *
  * ```ts
  * import { ArticleRepository } from "@effect-ontology/Repository/Article"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const inspectPeople = Effect.gen(function* () {
  *   const articles = yield* ArticleRepository
  *   const total = yield* articles.countArticles({ ontologyId: "people" })

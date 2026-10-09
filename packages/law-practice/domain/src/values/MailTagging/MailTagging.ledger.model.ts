@@ -11,7 +11,7 @@ import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {

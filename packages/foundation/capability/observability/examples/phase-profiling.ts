@@ -1,5 +1,6 @@
 import { profilePhase } from "@beep/observability";
-import { Effect, Metric } from "effect";
+import * as Effect from "effect/Effect";
+import * as Metric from "effect/Metric";
 
 const started = Metric.counter("example_phase_started_total");
 const completed = Metric.counter("example_phase_completed_total");

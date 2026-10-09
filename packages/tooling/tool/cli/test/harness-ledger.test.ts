@@ -24,9 +24,14 @@ import { Sha256Hex } from "@beep/schema";
 import { A, pipe, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { DateTime, Effect, FileSystem, Layer, Path, Result } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import type { HarnessLedgerPruneReport } from "@beep/repo-cli/commands/HarnessLedger";
 
 const TestLayer = HarnessLedgerServiceLive.pipe(Layer.provideMerge(NodeServices.layer));

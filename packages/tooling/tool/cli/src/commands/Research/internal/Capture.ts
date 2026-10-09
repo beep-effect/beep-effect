@@ -7,8 +7,12 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { Firecrawl, FirecrawlScrapePayload } from "@beep/firecrawl";
-import { Console, DateTime, Effect, Layer, Path } from "effect";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import { ResearchCommandError } from "../Research.errors.ts";
@@ -69,7 +73,7 @@ const documentTitle = (success: FirecrawlScrapeSuccess): O.Option<string> =>
  * **Example** (Capture tagged URL card)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { captureUrlImpl } from "@beep/repo-cli/commands/Research/internal/Capture"
  * import { ResearchCaptureOptions } from "@beep/repo-cli/commands/Research"
  *

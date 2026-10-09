@@ -7,7 +7,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Effect, HashMap } from "effect";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import { FsUtils } from "./FsUtils.ts";
 import { resolveWorkspaceDirs } from "./Workspaces.ts";
 import type { DomainError, NoSuchFileError } from "./errors/index.ts";
@@ -36,7 +37,7 @@ const IGNORED_TSCONFIG_DIRS = ["**/ci-runners/sdks/**"];
  * **Example** (Collect workspace tsconfig paths)
  *
  * ```typescript
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { collectTsConfigPaths } from "@beep/repo-utils/TsConfig"
  *
  * const program = collectTsConfigPaths(".")

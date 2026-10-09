@@ -5,11 +5,12 @@
  * @since 0.0.0
  */
 import { $RepoDocgenId } from "@beep/identity/packages";
-import { Effect, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Domain from "./Domain.ts";
 import { readDecodedJsonFile } from "./internal/JsonFile.ts";
-import type { FileSystem } from "effect";
+import type * as FileSystem from "effect/FileSystem";
 
 const $I = $RepoDocgenId.create("Version");
 
@@ -28,7 +29,7 @@ const decodePackageManifestVersion = S.decodeUnknownEffect(S.fromJsonString(Pack
  *
  * ```ts
  * import { BunServices } from "@effect/platform-bun"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { readModuleVersion } from "../../src/Version.ts"
  *
  * const version = await Effect.runPromise(

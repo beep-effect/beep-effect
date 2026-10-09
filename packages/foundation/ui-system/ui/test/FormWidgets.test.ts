@@ -4,7 +4,7 @@ import { findCountryOption, isCountryCode } from "@beep/ui/components/country-se
 import { formatPhoneDraft, isValidPhoneNumberE164, parsePhoneDraft } from "@beep/ui/components/phone-input";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 
 describe("@beep/ui form widget helpers", () => {

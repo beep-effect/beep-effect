@@ -13,7 +13,7 @@ import {
   CacheTaskConfiguration,
 } from "@beep/repo-configs/cache";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { CacheCensusEntrypointReview } from "./Cache.entrypoints.schemas.ts";
@@ -232,8 +232,7 @@ const isCacheCommandError = S.is(CacheCommandError);
  *
  * ```ts
  * import { CacheDashboardReportJson } from "@beep/repo-cli/commands/Cache"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(CacheDashboardReportJson.decode("{}"))) // true
  * ```
  *
@@ -249,8 +248,7 @@ export const CacheDashboardReportJson = JsonStringCodec(CacheDashboardReport);
  *
  * ```ts
  * import { CacheWarmReceiptJson } from "@beep/repo-cli/commands/Cache"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(CacheWarmReceiptJson.decode("{}"))) // true
  * ```
  *

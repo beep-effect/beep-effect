@@ -1,7 +1,9 @@
 import { collectTypeScriptFiles } from "@beep/repo-cli/test/Lint";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
-import { Effect, FileSystem, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 
 layer(NodeServices.layer)("Lint security", (it) => {
   describe("collectTypeScriptFiles", () => {

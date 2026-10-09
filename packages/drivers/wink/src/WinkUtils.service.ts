@@ -9,8 +9,11 @@ import { createRequire } from "node:module";
 import { $WinkId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Context, Effect, Inspectable, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -307,7 +310,7 @@ const makeWinkUtils = Effect.gen(function* () {
  * **Example** (Remove HTML tags)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { WinkUtils, WinkUtilsLive } from "@beep/wink"
  *
  * const cleanup = Effect.gen(function* () {
@@ -329,7 +332,7 @@ export class WinkUtils extends Context.Service<WinkUtils, WinkUtilsShape>()($I`W
  * **Example** (Bag of n-grams)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { WinkUtils, WinkUtilsLive } from "@beep/wink"
  *
  * const ngrams = Effect.gen(function* () {

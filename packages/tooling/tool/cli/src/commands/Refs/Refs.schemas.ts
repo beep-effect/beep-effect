@@ -6,8 +6,8 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import { SystemdUnitPath } from "../../internal/systemd/index.ts";
@@ -85,7 +85,7 @@ export class ReferenceMember extends S.Class<ReferenceMember>($I`ReferenceMember
    * **Example** (Decode a member)
    * ```ts
    * import { ReferenceMember } from "@beep/repo-cli/commands/Refs"
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * Effect.isEffect(ReferenceMember.decode({ name: "effect", url: "upstream", tier: "deep" })) // => true
    * ```
    *
@@ -139,7 +139,7 @@ export class ReferenceWorkspaceManifest extends S.Class<ReferenceWorkspaceManife
    * **Example** (Use the compiled decoding codec)
    * ```ts
    * import { ReferenceWorkspaceManifest } from "@beep/repo-cli/commands/Refs"
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * Effect.isEffect(ReferenceWorkspaceManifest.decode({ schemaVersion: "beep-references/v1", theme: "effect", rootDefault: "$HOME/refs", workspaceLink: ".repos/effect-workspace", members: [] })) // => true
    * ```
    *
@@ -156,7 +156,7 @@ export class ReferenceWorkspaceManifest extends S.Class<ReferenceWorkspaceManife
    * **Example** (Use the compiled encoding codec)
    * ```ts
    * import { ReferenceWorkspaceManifest } from "@beep/repo-cli/commands/Refs"
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * const encoded = ReferenceWorkspaceManifest.decodeJson("{}").pipe(Effect.flatMap(ReferenceWorkspaceManifest.encodeJson))
    * Effect.isEffect(encoded) // => true
    * ```
@@ -172,7 +172,7 @@ export class ReferenceWorkspaceManifest extends S.Class<ReferenceWorkspaceManife
    * **Example** (Prepare strict JSON decoding)
    * ```ts
    * import { ReferenceWorkspaceManifest } from "@beep/repo-cli/commands/Refs"
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * Effect.isEffect(ReferenceWorkspaceManifest.decodeJson("{}")) // => true
    * ```
    *
@@ -393,7 +393,7 @@ export class RefsRefreshStatus extends S.Class<RefsRefreshStatus>($I`RefsRefresh
    * **Example** (Use the compiled decoding codec)
    * ```ts
    * import { RefsRefreshStatus } from "@beep/repo-cli/commands/Refs"
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * Effect.isEffect(RefsRefreshStatus.decodeJson("{}")) // => true
    * ```
    *
@@ -408,7 +408,7 @@ export class RefsRefreshStatus extends S.Class<RefsRefreshStatus>($I`RefsRefresh
    * **Example** (Use the compiled encoding codec)
    * ```ts
    * import { RefsRefreshStatus } from "@beep/repo-cli/commands/Refs"
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * const encoded = RefsRefreshStatus.decodeJson("{}").pipe(Effect.flatMap(RefsRefreshStatus.encodeJson))
    * Effect.isEffect(encoded) // => true
    * ```
@@ -447,7 +447,7 @@ export class RefsTimerOptions extends S.Class<RefsTimerOptions>($I`RefsTimerOpti
    * **Example** (Use the compiled decoding codec)
    * ```ts
    * import { RefsTimerOptions } from "@beep/repo-cli/commands/Refs"
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * Effect.isEffect(RefsTimerOptions.decode({ owner: "/checkout", root: "/refs", home: "/home/op", calendar: "*-*-* 03:30:00", bunPath: "/usr/bin/bun" })) // => true
    * ```
    *

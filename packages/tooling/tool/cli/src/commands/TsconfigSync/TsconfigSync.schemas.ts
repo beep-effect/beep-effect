@@ -8,11 +8,12 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Order, pipe, Tuple } from "effect";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import type * as Ordering from "effect/Ordering";
 
 const $I = $RepoCliId.create("commands/TsconfigSync/TsconfigSync.schemas");
@@ -271,8 +272,7 @@ export const stringArrayEquivalence: {
  *
  * ```ts
  * import { byStringAscending } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
- * import { Order } from "effect"
- *
+ * import * as Order from "effect/Order";
  * console.log(Order.isLessThan(byStringAscending)("a", "b")) // true
  * ```
  *

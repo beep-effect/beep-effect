@@ -8,10 +8,14 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Config, Effect, flow, MutableHashMap, Order, pipe, Redacted } from "effect";
-import { constant } from "effect/Function";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import { constant, flow, pipe } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import {
   fetchSource,

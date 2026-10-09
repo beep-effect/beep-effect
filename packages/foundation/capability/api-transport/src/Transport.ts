@@ -20,12 +20,16 @@
 import { $ApiTransportId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
-import { Effect, Number as N, Redacted, Ref, Schedule } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as N from "effect/Number";
 import * as P from "effect/Predicate";
 import * as RateLimiter from "effect/persistence/RateLimiter";
+import * as Redacted from "effect/Redacted";
+import * as Ref from "effect/Ref";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type * as Duration from "effect/Duration";
@@ -322,7 +326,7 @@ export class ApiTransportOptions extends S.Class<ApiTransportOptions>($I`ApiTran
  * **Example** (Read rate-limit from transport)
  *
  * ```ts import.meta.vitest name="Read rate-limit from transport"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as RateLimiter from "effect/persistence/RateLimiter"
  * import { ApiAuth, type ApiTransport, makeApiTransport } from "@beep/api-transport"
  *
@@ -363,7 +367,7 @@ export interface ApiTransport {
  * **Example** (Build transport transformClient)
  *
  * ```ts import.meta.vitest name="Build transport transformClient"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as RateLimiter from "effect/persistence/RateLimiter"
  * import { ApiAuth, makeApiTransport } from "@beep/api-transport"
  *

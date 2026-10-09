@@ -16,8 +16,9 @@
  */
 
 import { DuckDb } from "@beep/duckdb";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
 import type { DuckDbConnectionOptions } from "@beep/duckdb";
 
 /**
@@ -35,8 +36,7 @@ import type { DuckDbConnectionOptions } from "@beep/duckdb";
  * ```ts
  * import { withDuckDb } from "@beep/repo-cli/internal/duckdb"
  * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const rows = Effect.gen(function* () {
  *   const duckdb = yield* DuckDb
  *   return yield* duckdb.query("SELECT 1 AS ok")

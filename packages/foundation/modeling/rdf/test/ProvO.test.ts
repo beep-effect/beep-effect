@@ -26,9 +26,13 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { DateTime, Effect, Exit, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeUnknown = <Schema extends S.ConstraintDecoder<unknown, never>>(schema: Schema) =>

@@ -10,9 +10,13 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { $PracticeKgMcpId } from "@beep/identity/packages";
 import { buildPracticeKgBundle, PracticeKgOptions, PracticeKgToolkit } from "@beep/law-practice-server";
-import { Effect, FileSystem, flow, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -167,8 +171,7 @@ const makeCatalog = Effect.fn("PracticeKgSmoke.makeCatalog")(function* (database
  *
  * ```ts
  * import { makePracticeKgSmokeBundle } from "../../src/smoke.ts"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const building = makePracticeKgSmokeBundle("/work/practice-kg-smoke")
  * console.log(Effect.isEffect(building)) // true
  * ```

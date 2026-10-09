@@ -22,9 +22,15 @@ import { LiteralKit } from "@beep/schema";
 import { today } from "@beep/schema/LocalDate";
 import { A, Str, Text, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Console, DateTime, Effect, FileSystem, flow, HashSet, Match, Path, pipe } from "effect";
+import * as Console from "effect/Console";
 import { Argument, Command, Flag } from "effect/cli";
-import { dual } from "effect/Function";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -95,8 +101,7 @@ const templateDirCandidates = (baseDir: string, path: Path.Path): ReadonlyArray<
  *
  * ```ts
  * import { resolveCreatePackageTemplateDir } from "@beep/repo-cli/commands/CreatePackage"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(resolveCreatePackageTemplateDir)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -1110,8 +1115,7 @@ const refreshBunLockfile = Effect.fn("CreatePackage.refreshBunLockfile")(functio
  * ```ts
  * import { createPackageCommand } from "@beep/repo-cli/commands/CreatePackage"
  * import { Command } from "effect/cli"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const run = Command.run(createPackageCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```

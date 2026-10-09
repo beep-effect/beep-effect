@@ -1,8 +1,15 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { Context, Effect, Equal, FileSystem, HashSet, Layer, Number as N, Path } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ByteDrift, ByteExpectation, verifyByteExpectations } from "@/corpus/ByteWitness";
@@ -488,8 +495,7 @@ export interface F1CatalogShape {
  *
  * ```ts
  * import { F1Catalog } from "@/fixtures/F1"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const load = F1Catalog.pipe(Effect.flatMap((catalog) => catalog.load))
  * console.log(Effect.isEffect(load)) // true
  * ```
@@ -581,8 +587,7 @@ const makeF1Catalog = Effect.gen(function* () {
  *
  * ```ts
  * import { F1CatalogLive } from "@/fixtures/F1"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(F1CatalogLive)) // true
  * ```
  *

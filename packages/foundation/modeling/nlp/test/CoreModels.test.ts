@@ -8,8 +8,10 @@ import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Chunk, Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Chunk from "effect/Chunk";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 

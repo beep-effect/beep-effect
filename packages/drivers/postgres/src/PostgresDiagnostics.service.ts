@@ -7,15 +7,17 @@
 
 import colors from "@beep/colors";
 import { A, Str } from "@beep/utils";
-import { Cause, Console, flow, pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
+import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import { format } from "sql-formatter";
 import { isCause, isObject, readCauseReasons, safeBoolean } from "./internal/PostgresDiagnosticGuards.ts";
 import { PostgresError } from "./Postgres.errors.ts";
 import type { Colors } from "@beep/colors";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 
 const SqlKeywordValues = [
   "select",
@@ -298,7 +300,7 @@ const normalizePostgresError = (error: unknown): PostgresError => {
  * **Example** (Format SQL with parameters)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { formatSql } from "@beep/postgres"
  *
  * const sql = formatSql("select * from users where id = $1", [1])
@@ -424,7 +426,7 @@ export const formatPostgresError: PostgresErrorFormatter = formatPostgresErrorWi
  * **Example** (Log error via Effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { logPostgresError, PostgresError } from "@beep/postgres"
  *
  * const program = logPostgresError(PostgresError.fromUnknown("query", new Error("failed")))

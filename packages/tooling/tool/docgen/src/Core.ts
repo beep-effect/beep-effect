@@ -12,9 +12,15 @@ import { $RepoDocgenId } from "@beep/identity/packages";
 import { encodeTSConfigPrettyEffect, FsUtils } from "@beep/repo-utils";
 import { A, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import markdownToc from "@effect/markdown-toc";
-import { Effect, FileSystem, flow, HashSet, Order, Path, pipe, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Checker from "./Checker.ts";
 import * as Configuration from "./Configuration.ts";
 import * as Domain from "./Domain.ts";
@@ -821,7 +827,7 @@ const writeMarkdown = Effect.fn("writeMarkdown")(function* (files: ReadonlyArray
  * **Example** (Attach error logging to the workflow)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { program } from "@beep/repo-docgen/Core"
  *
  * const logged = program.pipe(

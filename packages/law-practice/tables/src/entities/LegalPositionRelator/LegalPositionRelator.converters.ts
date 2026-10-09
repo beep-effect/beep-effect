@@ -6,7 +6,7 @@
  */
 
 import { LegalPositionRelator } from "@beep/law-practice-domain/entities/LegalPositionRelator";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { Table } from "./LegalPositionRelator.table.ts";
 
@@ -68,8 +68,7 @@ const encodeLegalPositionRelator = S.encodeResult(LegalPositionRelator);
  *   fromLegalPositionRelatorRow,
  *   toLegalPositionRelatorInsert
  * } from "@beep/law-practice-tables/entities/LegalPositionRelator"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const insert = Result.flatMap(fromLegalPositionRelatorRow({}), toLegalPositionRelatorInsert)
  * console.log(Result.isFailure(insert)) // true
  * ```
@@ -106,8 +105,7 @@ export const toLegalPositionRelatorInsert = (
  *
  * ```ts
  * import { fromLegalPositionRelatorRow } from "@beep/law-practice-tables/entities/LegalPositionRelator"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * console.log(Result.isFailure(fromLegalPositionRelatorRow({}))) // true
  * ```
  *

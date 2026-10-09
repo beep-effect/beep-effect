@@ -58,7 +58,7 @@ rejects the transition. Both can be tested without booting any Layer.
 ````ts
 import { describe, expect, it } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as Cause from "effect/Cause";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
@@ -138,7 +138,7 @@ and `MembershipRepository` (persistence port). The revoke test stubs both:
 ````ts
 import { expect, layer } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as Cause from "effect/Cause";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
@@ -231,8 +231,8 @@ slice provides:
 ````ts
 // packages/iam/use-cases/test/MembershipRepository.contract.ts
 import { layer } from "@effect/vitest";
+import * as Effect from "effect/Effect";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect } from "effect";
 import type * as Layer from "effect/Layer";
 import { MembershipRepository } from "@beep/iam-use-cases/server";
 import { activeMembership } from "@beep/iam-use-cases/test";

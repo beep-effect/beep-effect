@@ -24,7 +24,7 @@
 import { $EditorId } from "@beep/identity";
 import { ElementFormat } from "@beep/lexical-schema";
 import { DecoratorBlockNode } from "@lexical/react/LexicalDecoratorBlockNode";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { CodeBlockView } from "./code-block-view.tsx";
 import type { EditorConfig, ElementFormatType, LexicalEditor, NodeKey, SerializedLexicalNode } from "lexical";

@@ -16,8 +16,11 @@
 import { ExtractClipRequest, FFmpeg, ProbeRegionLuminanceRequest } from "@beep/ffmpeg";
 import { $QaCaptureId } from "@beep/identity/packages";
 import { A, O } from "@beep/utils";
-import { Context, Effect, Layer, Order, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { BeaconEvent, EpochMilliseconds } from "./ActionEvent.models.ts";
 import { ClockSync } from "./QaCapture.models.ts";
@@ -322,7 +325,7 @@ export class CorrelateClockRequest extends S.Class<CorrelateClockRequest>($I`Cor
  *
  * ```ts
  * import type { ClockCorrelatorShape } from "@beep/qa-capture"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const service: ClockCorrelatorShape = { correlate: () => Effect.die("not implemented") }
  * console.log(service)
  * ```

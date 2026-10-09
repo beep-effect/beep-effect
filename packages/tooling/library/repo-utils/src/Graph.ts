@@ -10,8 +10,13 @@
  * @since 0.0.0
  */
 import { A } from "@beep/utils";
-import { Effect, Graph as G, HashMap, HashSet, MutableHashMap, MutableHashSet, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as G from "effect/Graph";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { CyclicDependencyError } from "./errors/index.ts";
@@ -87,7 +92,9 @@ const fromAdjacencyList = (
  * **Example** (Sort two-package dependency graph)
  *
  * ```typescript
- * import { Effect, HashMap, HashSet } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as HashMap from "effect/HashMap";
+ * import * as HashSet from "effect/HashSet";
  * import { topologicalSort } from "@beep/repo-utils/Graph"
  *
  * const adj = HashMap.make(["app", HashSet.make("lib")], ["lib", HashSet.empty<string>()])
@@ -163,7 +170,9 @@ const cyclePathFromComponent = (
  * **Example** (Detect cycles on acyclic graph)
  *
  * ```typescript
- * import { Effect, HashMap, HashSet } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as HashMap from "effect/HashMap";
+ * import * as HashSet from "effect/HashSet";
  * import { detectCycles } from "@beep/repo-utils/Graph"
  *
  * const adj = HashMap.make(["app", HashSet.make("lib")], ["lib", HashSet.empty<string>()])
@@ -270,7 +279,9 @@ const buildCyclePath = (
  * **Example** (Transitive deps of one package)
  *
  * ```typescript
- * import { Effect, HashMap, HashSet } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as HashMap from "effect/HashMap";
+ * import * as HashSet from "effect/HashSet";
  * import { computeTransitiveClosure } from "@beep/repo-utils/Graph"
  *
  * const adj = HashMap.make(["app", HashSet.make("lib")], ["lib", HashSet.empty<string>()])

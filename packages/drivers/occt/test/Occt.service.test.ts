@@ -4,8 +4,11 @@ import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone } from "@effect/vitest/utils";
-import { Effect, Layer, Order, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 
 // A 40 × 30 × 20 box with an off-centre wedge on top, so no two principal
 // views coincide and the top/bottom distinction is observable.

@@ -16,8 +16,9 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -234,7 +235,7 @@ export const titleFromMessage = firstNonEmptyLine;
  *
  * ```ts
  * import { resolvePullRequestTitle, RepoRunContext } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const context = RepoRunContext.make({

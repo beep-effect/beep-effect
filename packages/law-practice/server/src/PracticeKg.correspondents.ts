@@ -22,9 +22,15 @@ import {
   resolvePracticeKgCorrespondent,
 } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
-import { Effect, FileSystem, flow, HashSet, MutableHashMap, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -601,7 +607,7 @@ const readMessage = Effect.fn("PracticeKg.readEmailMessage")(function* (source: 
  * **Example** (Read email headers)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { PracticeKgEmailMessagesInput, readPracticeKgEmailMessages } from "@beep/law-practice-server"
  *
  * const messages = readPracticeKgEmailMessages(
@@ -923,7 +929,7 @@ const insertAddress = "INSERT INTO contact_addresses VALUES ($1, $2, $3, $4, $5,
  * **Example** (Write empty tables)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { PracticeKgCorrespondentTables, writePracticeKgCorrespondentTables } from "@beep/law-practice-server"
  *
  * const write = writePracticeKgCorrespondentTables("/bundle/practice.duckdb")(
@@ -1037,7 +1043,7 @@ const decodePracticeAddress = S.decodeUnknownEffect(S.NonEmptyArray(S.Struct({ p
  * **Example** (Read a header entry)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { parsePracticeKgCorrespondentAddress } from "@beep/law-practice-server"
  *
  * Effect.runPromise(parsePracticeKgCorrespondentAddress("Pat Example <Pat@Example.com>")).then(console.log)
@@ -1084,7 +1090,7 @@ export const parsePracticeKgCorrespondentAddress = (
  *
  * ```ts
  * import { PracticeKgCorrespondentLookupRequest } from "@beep/law-practice-use-cases/server"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { lookupPracticeKgCorrespondents } from "@beep/law-practice-server"
  *
  * const lookup = lookupPracticeKgCorrespondents(PracticeKgCorrespondentLookupRequest.make({ address: "pat@example.com" }))

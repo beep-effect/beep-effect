@@ -21,8 +21,15 @@ import { VENICE_CHAT_MODEL, VeniceAI, VeniceAiLanguageModel } from "@beep/venice
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Config, DateTime, Effect, FileSystem, Layer, Match, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { strToU8 } from "fflate";

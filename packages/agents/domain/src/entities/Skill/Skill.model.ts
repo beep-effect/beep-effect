@@ -7,8 +7,9 @@
 import { $AgentsDomainId } from "@beep/identity/packages";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Agents from "@beep/shared-domain/identity/Agents";
-import { Effect, Struct } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import { SkillFixtureKey, SkillName } from "../Fixture.values.ts";
 
 const $I = $AgentsDomainId.create("entities/Skill/Skill.model");
@@ -74,7 +75,7 @@ export class Skill extends ProductEntity.Entity<Skill>()(Agents.SkillId)(
  *
  * ```ts
  * import { SkillFrontmatter } from "@beep/agents-domain/entities/Skill"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {

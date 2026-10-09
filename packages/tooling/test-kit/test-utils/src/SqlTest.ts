@@ -11,9 +11,18 @@ import { O, Str } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { Config, Context, Duration, Effect, FileSystem, Layer, Path, pipe, Redacted, Schedule } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as Redacted from "effect/Redacted";
 import * as Reactivity from "effect/reactivity/Reactivity";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import type * as PgClient from "@effect/sql-pg/PgClient";
@@ -1034,7 +1043,7 @@ const waitForPgliteHostReadiness = Effect.fn("SqlTest.waitForPgliteHostReadiness
  *
  * ```ts
  * import { makePgliteTestcontainerResource } from "@beep/test-utils"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const program = Effect.scoped(makePgliteTestcontainerResource())
  * console.log(program)
  * ```

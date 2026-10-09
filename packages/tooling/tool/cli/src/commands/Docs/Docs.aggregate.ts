@@ -11,8 +11,9 @@
 import { DomainError } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Console, Effect } from "effect";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { aggregateGeneratedDocs } from "../Docgen/internal/Operations.ts";
 

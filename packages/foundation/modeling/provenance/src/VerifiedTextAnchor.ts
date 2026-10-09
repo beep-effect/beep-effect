@@ -6,7 +6,7 @@
  */
 import { $ProvenanceId } from "@beep/identity/packages";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -461,7 +461,7 @@ export const VerifiedTextAnchor = S.declare<VerifiedTextAnchor>(VerifiedTextAnch
  * ```ts
  * import * as S from "effect/Schema"
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import {
  *   SourceTextDigest,
  *   SourceTextExtractor,
@@ -535,7 +535,7 @@ export const toTextAnchorVerificationReceipt = (verified: VerifiedTextAnchor): T
  *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import {
  *   SourceTextDigest,
  *   SourceTextExtractor,
@@ -662,7 +662,7 @@ export const verifyTextAnchorAgainstVerifiedSource = Effect.fn("VerifiedTextAnch
  * ```ts
  * import * as S from "effect/Schema"
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import {
  *   SourceTextDigest,
  *   SourceTextExtractor,

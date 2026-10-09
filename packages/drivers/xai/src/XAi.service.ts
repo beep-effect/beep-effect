@@ -8,13 +8,21 @@
 import { $XaiId } from "@beep/identity";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Config, Context, Effect, flow, Layer, Match, pipe, Queue, Redacted, Stream } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as P from "effect/Predicate";
+import * as Queue from "effect/Queue";
 import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import WebSocket from "ws";
 import { XAI_API_URL, XAI_MANAGEMENT_API_URL, XAI_WEBSOCKET_URL, XAiConfigInput } from "./XAi.config.ts";
 import { XAiError } from "./XAi.errors.ts";
@@ -88,7 +96,7 @@ export type XAiWebSocketEndpointMethodName = Extract<
  * **Example** (Return NoBody response Effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import type { XAiEndpointMethod } from "@beep/xai"
  * import { XAiNoBodyResponse } from "@beep/xai"
  *
@@ -114,7 +122,7 @@ export type XAiEndpointMethod = (request?: XAiRequestOptions) => Effect.Effect<X
  * **Example** (Create empty stream method)
  *
  * ```ts
- * import { Stream } from "effect"
+ * import * as Stream from "effect/Stream";
  * import type { XAiStreamMethod } from "@beep/xai"
  *
  * const stream: XAiStreamMethod = () => Stream.empty
@@ -156,7 +164,8 @@ export interface XAiWebSocketSession {
  * **Example** (Open session and send text)
  *
  * ```ts
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * import type { XAiWebSocketMethod } from "@beep/xai"
  *
  * const connect: XAiWebSocketMethod = () =>
@@ -1012,7 +1021,7 @@ const makeService = (client: HttpClient.HttpClient, config: ResolvedXAiConfig): 
  * **Example** (Call listModels via service)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { XAi } from "@beep/xai"
  *
  * const program = Effect.gen(function* () {
@@ -1031,7 +1040,7 @@ export class XAi extends Context.Service<XAi, XAiShape>()($I`XAi`) {
    * **Example** (Build layer from config)
    *
    * ```ts
-   * import { Redacted } from "effect"
+   * import * as Redacted from "effect/Redacted";
    * import * as O from "effect/Option"
    * import { XAi, XAiConfigInput } from "@beep/xai"
    *

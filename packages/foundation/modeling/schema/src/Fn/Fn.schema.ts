@@ -11,9 +11,13 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Cause, Effect, Result, SchemaIssue, SchemaParser } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaParser from "effect/SchemaParser";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { alwaysEquivalent } from "../SchemaUtils/toEquivalence.ts";
 

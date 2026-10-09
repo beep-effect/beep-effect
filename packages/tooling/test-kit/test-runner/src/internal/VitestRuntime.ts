@@ -1,8 +1,8 @@
 import { it } from "@effect/vitest";
-import { Predicate as P } from "effect";
+import * as P from "effect/Predicate";
 import { instrumentMethods } from "./VitestInstrumentation.ts";
 import type { TestFunction, TestOptions, Vitest } from "@effect/vitest";
-import type { Clock } from "effect";
+import type * as Clock from "effect/Clock";
 
 type TestCollectorOptions = Omit<TestOptions, "shuffle">;
 

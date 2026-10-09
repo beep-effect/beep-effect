@@ -8,9 +8,11 @@
 
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { flow, Match, pipe, Result } from "effect";
+import { flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { toAsciiLowerCase } from "./Html.foreign.ts";
@@ -28,7 +30,7 @@ const htmlMimeTypePattern =
  *
  * ```ts import.meta.vitest name="Decode a MIME type"
  * import { HtmlMimeType } from "@beep/html"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * Result.isSuccess(S.decodeResult(HtmlMimeType)("application/json")) // => true
@@ -122,7 +124,7 @@ const isJavaScriptMimeTypeEssenceMatch = flow(toAsciiLowerCase, isJavaScriptMime
  *
  * ```ts import.meta.vitest name="Decode a script data-block MIME type"
  * import { ScriptDataBlockMimeType } from "@beep/html"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * Result.isSuccess(S.decodeResult(ScriptDataBlockMimeType)("application/ld+json")) // => true
@@ -271,8 +273,7 @@ const resolveExplicitScriptType = (value: string): Result.Result<ScriptState, In
  * ```ts import.meta.vitest name="Resolve a missing script type"
  * import { resolveScriptState } from "@beep/html"
  * import { Script } from "@beep/html/Html.model"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const result = resolveScriptState(Script.make({ content: "" }))
  * Result.isSuccess(result) && result.success.state === "classic" // => true
  * ```

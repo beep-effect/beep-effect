@@ -10,7 +10,7 @@ import { YouTubeNode as YouTubeNodeSchema } from "@beep/lexical-schema";
 import { O } from "@beep/utils";
 import { BlockWithAlignableContents } from "@lexical/react/LexicalBlockWithAlignableContents";
 import { DecoratorBlockNode } from "@lexical/react/LexicalDecoratorBlockNode";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { YOUTUBE_EMBED_SANDBOX, YouTubeEmbed, youtubeEmbedUrl, youtubeWatchUrl } from "./youtube-embed.tsx";
 import type {

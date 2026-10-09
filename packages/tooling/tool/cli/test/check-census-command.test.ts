@@ -12,9 +12,13 @@ import {
 import { FsUtilsLive } from "@beep/repo-utils";
 import { expect, it } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, Exit, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";

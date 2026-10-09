@@ -14,8 +14,9 @@
 import { $Graph3dId } from "@beep/identity/packages";
 import { Fn } from "@beep/schema";
 import { O, P } from "@beep/utils";
-import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import { Graph3DDriverError } from "./Graph3D.errors.ts";
 import { Graph3DProjection } from "./Graph3D.projection.ts";
@@ -980,8 +981,7 @@ const mountRenderer = (
  *
  * ```ts
  * import { Graph3DProjection, renderGraph3D } from "@beep/graph-3d/browser"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const projection = Graph3DProjection.make({
  *   nodeCount: 2,
  *   edgeCount: 1,

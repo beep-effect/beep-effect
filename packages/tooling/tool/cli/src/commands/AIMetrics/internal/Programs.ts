@@ -98,24 +98,21 @@ import {
 } from "@beep/repo-ai-metrics";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import {
-  Clock,
-  Config,
-  ConfigProvider,
-  Console,
-  DateTime,
-  Duration,
-  Effect,
-  Exit,
-  FileSystem,
-  flow,
-  Layer,
-  Match,
-  Order,
-  Path,
-  pipe,
-  Redacted,
-} from "effect";
+import * as Clock from "effect/Clock";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import { aiMetricsDataRootEnvVar } from "../../../internal/cli/Flags.ts";
 import { printLines } from "../../../internal/cli/Printer.ts";
@@ -283,8 +280,7 @@ const requireAbsoluteDataRoot = (path: string) =>
  * import { AiMetricsDeployTarget } from "@beep/repo-ai-metrics"
  * import { resolveDataRoot } from "@beep/repo-cli/commands/AIMetrics/internal/Programs"
  * import * as O from "@beep/utils/Option"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = resolveDataRoot(O.some("/srv/store"), AiMetricsDeployTarget.Enum.local)
  *
  * console.log(Effect.isEffect(program)) // true

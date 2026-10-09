@@ -5,8 +5,10 @@
  * @since 0.0.0
  */
 
-import { flow, SchemaGetter, SchemaTransformation } from "effect";
+import { flow } from "effect/Function";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { HexColor, hexToRgbValue, NormalizeHexColor, rgbToHexValue } from "./Color.hex.ts";
 import { OklchColor, OklchInput, oklchToRgbValue, rgbToOklchValue } from "./Color.oklch.ts";
 import { Rgb, RgbInput } from "./Color.rgb.ts";

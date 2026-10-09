@@ -25,10 +25,16 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import { assertInstanceOf, assertNone, assertSome } from "@effect/vitest/utils";
 import { GitHubClient, GitHubError, GitHubGraphQLError, Repo, RepoRef } from "@effected/github";
-import { ConfigProvider, DateTime, Duration, Effect, Fiber, Layer, Ref } from "effect";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 

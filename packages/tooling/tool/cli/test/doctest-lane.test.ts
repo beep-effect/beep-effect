@@ -4,9 +4,14 @@ import { FsUtils, FsUtilsLive, findRepoRoot, readPackageJsonFile, resolveWorkspa
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Console, Effect, FileSystem, HashMap, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 // vitest 5: `resolveConfig` returns Vite's ResolvedConfig; the `test` key is a module augmentation from "vitest/config".

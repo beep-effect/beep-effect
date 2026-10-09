@@ -2,7 +2,7 @@
 
 import { GenerateConfig, runGenerateCli } from "@beep/codegen-kit";
 import * as OpenApiPatch from "@effect/openapi-generator/OpenApiPatch";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import openApiPatchInput from "../openapi.patch.json" with { type: "json" };

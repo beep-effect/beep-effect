@@ -1,6 +1,12 @@
-import { Effect, Equal, HashMap, HashSet, Layer, Match, Order } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Str from "effect/String";
 import { ReasoningFailed } from "@/schema/Errors";
 import {
@@ -305,8 +311,7 @@ const makeReasoner = Effect.fn("Reasoner.make")(function* () {
  *
  * ```ts
  * import { ReasonerLive } from "@/layers/ReasonerLive"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(ReasonerLive)) // true
  * ```
  *

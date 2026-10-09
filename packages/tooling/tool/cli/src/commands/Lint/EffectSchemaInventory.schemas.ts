@@ -9,7 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import type * as O from "effect/Option";
 import type * as AST from "effect/SchemaAST";
 

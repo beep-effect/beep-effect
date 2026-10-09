@@ -5,9 +5,14 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { DateTime, Effect, FileSystem, Match, Path } from "effect";
+
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -57,7 +62,7 @@ const repositoryParts = (url: string) =>
  * ```ts
  * import { acquireLibraryGithub } from "@beep/repo-cli/test/ResearchLibrary"
  * import { classifyLibraryReference } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const acquisition = classifyLibraryReference("https://github.com/Effect-TS/effect", "report").pipe(Effect.flatMap((source) => acquireLibraryGithub("/library", source, "captures/example")))
  * console.log(Effect.isEffect(acquisition))
  * ```

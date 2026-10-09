@@ -9,9 +9,15 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
-import { Duration, Effect, FileSystem, Inspectable, Layer, Path, pipe } from "effect";
 import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { OutputBound, runCapturedStreams } from "../../../internal/process/StepExec.ts";
@@ -206,8 +212,7 @@ const makeEffectSchemaInventorySource = Effect.fn("EffectSchemaInventorySource.m
  *
  * ```ts
  * import { EffectSchemaInventorySource } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = EffectSchemaInventorySource.use((source) => source.readPin)
  * console.log(Effect.isEffect(program)) // true
  * ```

@@ -8,7 +8,7 @@
 
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Worker } from "./Worker.model.ts";
 import type { Principal } from "@beep/shared-domain/entity/Principal";

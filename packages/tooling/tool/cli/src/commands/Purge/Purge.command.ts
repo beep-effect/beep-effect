@@ -9,9 +9,14 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { DomainError, findRepoRoot, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Console, Effect, FileSystem, MutableHashSet, Number as Num, Path } from "effect";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Num from "effect/Number";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("purge");

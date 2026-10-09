@@ -14,9 +14,14 @@ import {
   makeDocketFileStoreLayer,
 } from "@beep/law-practice-server/DocketIntake";
 import { DocketIntakeError, DocketPollOptions } from "@beep/law-practice-use-cases/DocketIntake";
-import { Console, DateTime, Duration, Effect, Layer, Schedule } from "effect";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { DocketIntakeAppConfigFromEnv } from "./Config.ts";
 import { DocketCycleReport, pollCycle, pollOnSchedule, seedCursor } from "./Cycle.ts";
@@ -27,8 +32,9 @@ import { DocketRunSelector, listRuns, undoDryRun, undoRun } from "./Undo.ts";
 import type { DocketIntakeJournal } from "@beep/law-practice-server/DocketIntake";
 import type { DocketIntake, DocketIntakeStore } from "@beep/law-practice-use-cases/DocketIntake";
 import type { M365 } from "@beep/m365";
-import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { DocketIntakeAppConfig } from "./Config.ts";
 import type { DocketDryRunRecorder } from "./DryRun.ts";
 

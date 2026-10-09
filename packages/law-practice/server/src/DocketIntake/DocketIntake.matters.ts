@@ -25,10 +25,15 @@ import {
   PracticeKgMatterMatchedOn,
 } from "@beep/law-practice-use-cases/server";
 import { SchemaUtils } from "@beep/schema";
-import { Context, Effect, FileSystem, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { constFalse } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PracticeKgBundle, PracticeKgBundleContext } from "../PracticeKg.host.ts";
@@ -188,8 +193,7 @@ const mentionsFailed = () => DocketIntakeError.make({ cause: "practice-kg-mentio
  * ```ts
  * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
  * import { DocketMatterMentionsLive } from "@beep/law-practice-server/DocketIntake";
- * import { Layer } from "effect";
- *
+ * import * as Layer from "effect/Layer";
  * const mentions = DocketMatterMentionsLive.pipe(
  *   Layer.provide(
  *     DuckDb.makeNodeLayer(
@@ -407,8 +411,7 @@ const makeLookup = (kg: typeof PracticeKgMatterLookup.Service, mentions: DocketM
  *
  * ```ts
  * import { DocketMatterLookupPracticeKg } from "@beep/law-practice-server/DocketIntake";
- * import { Layer } from "effect";
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(DocketMatterLookupPracticeKg));
  * ```
  *
@@ -531,8 +534,7 @@ export class DocketKgBundle extends S.Class<DocketKgBundle>($I`DocketKgBundle`)(
  *
  * ```ts
  * import { DocketKgBundleOptions, openDocketKgBundle } from "@beep/law-practice-server/DocketIntake";
- * import { Effect } from "effect";
- *
+ * import * as Effect from "effect/Effect";
  * const checked = openDocketKgBundle(DocketKgBundleOptions.make({ bundleDir: "bundle" }));
  * console.log(Effect.isEffect(checked));
  * ```
@@ -594,8 +596,7 @@ export const openDocketKgBundle = Effect.fn("DocketMatterLookup.openBundle")(fun
  *
  * ```ts
  * import { DocketKgBundleOptions, makeDocketMatterLookupLayer } from "@beep/law-practice-server/DocketIntake";
- * import { Layer } from "effect";
- *
+ * import * as Layer from "effect/Layer";
  * const lookup = makeDocketMatterLookupLayer(DocketKgBundleOptions.make({ bundleDir: "bundle" }));
  * console.log(Layer.isLayer(lookup));
  * ```

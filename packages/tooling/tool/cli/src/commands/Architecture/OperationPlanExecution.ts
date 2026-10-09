@@ -9,8 +9,11 @@
 import { DomainError } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
-import { Effect, FileSystem, Match, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Path from "effect/Path";
 import {
   ArchitectureOperationCheck,
   OperationPlanApplyResult,
@@ -170,8 +173,7 @@ const applyEnsureAbsentPathOperation = Effect.fn("Architecture.applyEnsureAbsent
  *   makeCanonicalSliceOperationPlan,
  * } from "@beep/repo-cli/commands/Architecture/index"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = checkCanonicalSliceOperationPlan("/workspace/beep-effect", makeCanonicalSliceOperationPlan())
  * Effect.runPromise(program.pipe(Effect.provide(NodeServices.layer))).then((result) => console.log(result.idempotent))
  * ```
@@ -268,8 +270,7 @@ export const checkCanonicalSliceOperationPlan: {
  *   makeCanonicalSliceOperationPlan,
  * } from "@beep/repo-cli/commands/Architecture/index"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = applyCanonicalSliceOperationPlan("/workspace/beep-effect", makeCanonicalSliceOperationPlan())
  * Effect.runPromise(program.pipe(Effect.provide(NodeServices.layer))).then((result) => console.log(result.writtenPaths.length))
  * ```

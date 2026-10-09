@@ -36,7 +36,7 @@ export const ServiceAccountId = make("service_account", {
  * **Example** (Decode ServiceAccountId with Schema)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ServiceAccountId } from "@beep/shared-domain/identity/Shared"
  * import * as S from "effect/Schema"
  *

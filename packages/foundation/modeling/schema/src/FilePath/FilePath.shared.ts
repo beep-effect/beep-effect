@@ -6,7 +6,8 @@
  */
 import { $SchemaId } from "@beep/identity/packages";
 import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
-import { flow, Match } from "effect";
+import { flow } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 
 /**

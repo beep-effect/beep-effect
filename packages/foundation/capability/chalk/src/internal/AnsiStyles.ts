@@ -7,8 +7,8 @@
 
 import { $ChalkId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import { flow, Match, pipe } from "effect";
-import { dual } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";

@@ -8,8 +8,10 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Effect, Match, Order } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import type * as Ordering from "effect/Ordering";
 

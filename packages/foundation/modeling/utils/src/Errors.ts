@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 
@@ -15,7 +15,7 @@ import * as P from "effect/Predicate";
  *
  * ```ts
  * import { Err } from "@beep/utils";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * class CommandError {
  *   readonly cause: unknown;
@@ -67,7 +67,8 @@ const isErrorBuilderFromInput = <Input, Error>(
  *
  * ```ts
  * import { Err } from "@beep/utils";
- * import { Effect, pipe } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import { pipe } from "effect/Function";
  *
  * class CommandError {
  *   readonly cause: unknown;
@@ -123,8 +124,8 @@ export const mapCauseError = <Error, Args extends Array<unknown>>(
  *
  * ```ts
  * import { Err } from "@beep/utils";
- * import { Effect, pipe } from "effect";
- * import { dual } from "effect/Function";
+ * import * as Effect from "effect/Effect";
+ * import { dual, pipe } from "effect/Function";
  *
  * class ExitError {
  *   readonly exitCode: number;

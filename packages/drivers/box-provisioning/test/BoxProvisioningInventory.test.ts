@@ -4,7 +4,10 @@ import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit, Layer, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { desiredFixture } from "./fixtures.ts";
 

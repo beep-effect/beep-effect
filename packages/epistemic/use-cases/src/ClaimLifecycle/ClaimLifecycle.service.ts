@@ -12,7 +12,8 @@
 import * as DomainCandidateClaim from "@beep/epistemic-domain/entities/CandidateClaim";
 import { ClaimGateResult, ClaimInvalidTransition } from "@beep/epistemic-domain/values";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 
 const $I = $EpistemicUseCasesId.create("ClaimLifecycle/ClaimLifecycle.service");
 
@@ -23,7 +24,7 @@ const $I = $EpistemicUseCasesId.create("ClaimLifecycle/ClaimLifecycle.service");
  *
  * ```ts
  * import { strictEqual } from "node:assert"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import type { ClaimTransitionShape } from "@beep/epistemic-use-cases/ClaimLifecycle"
  *
  * const shape: ClaimTransitionShape = {
@@ -50,7 +51,7 @@ export interface ClaimTransitionShape {
  *
  * ```ts
  * import { strictEqual } from "node:assert"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ClaimTransition } from "@beep/epistemic-use-cases/ClaimLifecycle"
  *
  * const hasAdvance = Effect.runSync(
@@ -86,7 +87,7 @@ export class ClaimTransition extends Context.Service<ClaimTransition, ClaimTrans
  * import { strictEqual } from "node:assert"
  * import { CandidateClaim, ClaimGateResult } from "@beep/epistemic-domain"
  * import { makeClaimTransition } from "@beep/epistemic-use-cases/ClaimLifecycle"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const claim = S.decodeUnknownSync(CandidateClaim)({

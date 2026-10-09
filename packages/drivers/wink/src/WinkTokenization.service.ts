@@ -11,9 +11,15 @@ import { Sentence, SentenceIndex } from "@beep/nlp/Core/Sentence";
 import { CharPosition, Token, TokenIndex } from "@beep/nlp/Core/Token";
 import { Tokenization, TokenizationError } from "@beep/nlp-processing/Core";
 import { A, thunkEmptyStr, thunkUndefined } from "@beep/utils";
-import { Chunk, Clock, Effect, Layer, pipe, Ref, Result } from "effect";
+import * as Chunk from "effect/Chunk";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { WinkEngine, WinkEngineLive } from "./Wink.service.ts";
 import { observeWinkWorkflow, textLengthAttribute } from "./WinkObservability.ts";
@@ -353,7 +359,8 @@ const makeWinkTokenization = Effect.gen(function* () {
  * **Example** (Providing wink tokenization layer)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { Tokenization } from "@beep/nlp-processing/Core"
  * import { WinkEngineLive } from "@beep/wink"
  * import { WinkTokenization } from "@beep/wink"
@@ -379,7 +386,7 @@ export const WinkTokenization = Layer.effect(Tokenization, makeWinkTokenization)
  * **Example** (Using live wink tokenization)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Tokenization } from "@beep/nlp-processing/Core"
  * import { WinkTokenizationLive } from "@beep/wink"
  *

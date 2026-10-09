@@ -417,8 +417,7 @@ export class CodexFindingsIngestOptions extends S.Class<CodexFindingsIngestOptio
  *
  * ```ts
  * import { decodeCodexFindingsIngestOptions } from "@beep/repo-cli/commands/Codex/Findings.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = decodeCodexFindingsIngestOptions({ slug: "../../etc" }).pipe(
  *   Effect.map(() => "accepted"),
  *   Effect.orElseSucceed(() => "rejected")

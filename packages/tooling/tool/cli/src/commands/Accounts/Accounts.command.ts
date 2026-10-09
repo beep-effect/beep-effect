@@ -4,9 +4,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Console, DateTime, Effect } from "effect";
+
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";

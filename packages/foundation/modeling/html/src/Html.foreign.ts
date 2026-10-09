@@ -16,13 +16,13 @@
  */
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
-import { flow, Tuple } from "effect";
 import * as Eq from "effect/Equal";
-import { dual } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { ForeignElementName } from "./Html.attributes.ts";
 import {
   MATHML_ATTRIBUTE_NAME_ADJUSTMENTS,

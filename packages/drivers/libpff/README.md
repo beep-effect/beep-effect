@@ -12,8 +12,7 @@ bun add @beep/libpff
 
 ```ts
 import { makePffexportFileProcessingEngine, PffexportEngineConfig } from "@beep/libpff"
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 const engine = Effect.gen(function* () {
   return yield* makePffexportFileProcessingEngine(
     PffexportEngineConfig.make({ exportRoot: "/tmp/pst-out" })

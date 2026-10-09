@@ -6,9 +6,9 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Tuple } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 
 const $I = $LawPracticeDomainId.create("values/LegalActContent/LegalActContent.model");
 

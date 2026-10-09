@@ -8,9 +8,9 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
-import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Eq from "effect/Equal";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));

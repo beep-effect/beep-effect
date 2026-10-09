@@ -8,9 +8,10 @@
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { KgAttributionSource, PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { flow, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 

@@ -1,8 +1,8 @@
 import * as Subject from "@beep/test-utils/MemoryFileSystem";
 import { describe, it } from "@effect/vitest";
 import { assertFalse, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Fs from "effect/FileSystem";
 import * as O from "effect/Option";

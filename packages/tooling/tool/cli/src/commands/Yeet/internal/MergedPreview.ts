@@ -37,10 +37,13 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Console, Effect, Match, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { RepoRunContext, removeGitWorktree, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
@@ -496,7 +499,7 @@ const removeMergePreviewWorktree = Effect.fn("Yeet.removeMergePreviewWorktree")(
  * **Example** (Materialize a preview through the test seam)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { createYeetMergePreview, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -602,7 +605,7 @@ export const createYeetMergePreview = Effect.fn("Yeet.createYeetMergePreview")(f
  * **Example** (Install into a preview through the test seam)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { installYeetMergePreview, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -659,7 +662,7 @@ export const installYeetMergePreview = Effect.fn("Yeet.installYeetMergePreview")
  * **Example** (Use a preview through the test seam)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { RepoRunContext, withYeetMergePreview } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({

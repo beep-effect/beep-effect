@@ -10,11 +10,16 @@ import { verifyDocgenProofManifest } from "@beep/repo-docgen/ProofManifest";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Console, Duration, Effect, flow, HashSet, Order, pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import * as Console from "effect/Console";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { isCi, isCiSync, readTurboCacheEnvironment } from "../../../internal/cli/EnvConfig.ts";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
@@ -32,8 +37,9 @@ import {
 } from "./Operations.ts";
 import type { DocgenProofManifestVerification } from "@beep/repo-docgen/ProofManifest";
 import type { FsUtils, NoSuchFileError } from "@beep/repo-utils";
-import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import type { DocgenConfigDocument, DocgenPackageAnalysis, DocgenWorkspacePackage } from "./Operations.ts";
@@ -1110,8 +1116,7 @@ const runStepWithStallWatchdog = Effect.fn("DocgenLocal.runStepWithStallWatchdog
  *
  * ```ts
  * import { runDocgenStepWithStallWatchdogForTesting } from "@beep/repo-cli/test/Docgen"
- * import { Duration } from "effect"
- *
+ * import * as Duration from "effect/Duration";
  * const step = runDocgenStepWithStallWatchdogForTesting("probe", "true", [], "/repo", {
  *   first: Duration.seconds(5),
  *   retry: Duration.seconds(5)
@@ -1261,8 +1266,8 @@ export const selectDocgenLocalPackagesForTesting: {
  *
  * ```ts
  * import { docgenLocalTurboArgsForTesting } from "@beep/repo-cli/commands/Docgen/internal/Local"
- * import { ConfigProvider, Effect } from "effect"
- *
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Effect from "effect/Effect";
  * const args = docgenLocalTurboArgsForTesting([
  *   { name: "@beep/schema", path: "packages/foundation/modeling/schema", reasons: [] }
  * ], 1).pipe(Effect.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({}))))
@@ -1325,7 +1330,7 @@ const buildDocgenLocalPlanWithRepoRoot = Effect.fn("DocgenLocal.buildDocgenLocal
  *
  * ```ts
  * import { buildDocgenLocalPlan } from "@beep/repo-cli/commands/Docgen/internal/Local"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = buildDocgenLocalPlan({
@@ -1393,7 +1398,7 @@ const executeDocgenLocalPlan = Effect.fn("DocgenLocal.executeDocgenLocalPlan")(f
  *
  * ```ts
  * import { runDocgenLocal } from "@beep/repo-cli/commands/Docgen/internal/Local"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = runDocgenLocal({

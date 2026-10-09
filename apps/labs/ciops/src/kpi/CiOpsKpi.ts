@@ -14,11 +14,17 @@
 
 import { $CiopsId } from "@beep/identity/packages";
 import { Sha256Hex } from "@beep/schema/Sha256";
-import { Context, DateTime, Effect, Equal, FileSystem, Layer, Order } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { changeEventLedgerSha256, changeEventTable } from "./ChangeEvents.ts";
@@ -116,8 +122,8 @@ const probesNotImplemented = Effect.fn("CiOpsKpi.probes")(function* (): Effect.f
  *
  * ```ts
  * import { CiOpsKpi, CiOpsKpiNotImplemented } from "@/kpi/CiOpsKpi"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const program = Effect.flatMap(CiOpsKpi, (service) => Effect.succeed(service.read))
  * console.log(Layer.isLayer(CiOpsKpiNotImplemented)) // true
  * console.log(Effect.isEffect(Effect.provide(program, CiOpsKpiNotImplemented))) // true
@@ -301,7 +307,7 @@ const makeLive = (fs: FileSystem.FileSystem, crypto: Crypto.Crypto) => {
  * **Example** (Provide the live layer)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { CiOpsKpiLive } from "@/kpi/CiOpsKpi"
  *
  * console.log(Layer.isLayer(CiOpsKpiLive)) // true

@@ -11,9 +11,12 @@
 
 import { platform, tmpdir } from "node:os";
 import * as O from "@beep/utils/Option";
-import { DateTime, Effect, flow, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import { flow, pipe } from "effect/Function";
+import * as N from "effect/Number";
 import * as Str from "effect/String";
 import { configStringOption } from "../cli/EnvConfig.ts";
 import { runRepoCommandCapture } from "./RepoRun.executor.ts";

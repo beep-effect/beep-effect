@@ -6,8 +6,8 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { Order } from "effect";
 import { dual } from "effect/Function";
+import * as Order from "effect/Order";
 import type * as O from "effect/Option";
 import type { SchemaParityCodemodEdit } from "./SchemaParityCodemod.schemas.ts";
 

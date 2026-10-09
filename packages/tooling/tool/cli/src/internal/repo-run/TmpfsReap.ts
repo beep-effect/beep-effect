@@ -17,8 +17,16 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { ByteSize, Clock, DateTime, Duration, Effect, FileSystem, Number as N, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as ByteSize from "effect/ByteSize";
+import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as N from "effect/Number";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { WORKTREES_ROOT_SUFFIX } from "../../commands/Worktree/Worktree.constants.ts";
@@ -1209,8 +1217,7 @@ const resolveTmpfsRoots = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { runTmpfsReap } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runTmpfsReap())) // true
  * ```
  *

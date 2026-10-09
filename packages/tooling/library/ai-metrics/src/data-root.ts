@@ -8,10 +8,12 @@
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { FilePath, Fn, LiteralKit, SchemaUtils, WindowsDrivePath, WindowsUncPath } from "@beep/schema";
 import { Str } from "@beep/utils";
-import { Effect, pipe, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { AiMetricsDeployTarget } from "./models.ts";
 
 const $I = $RepoAiMetricsId.create("data-root");
@@ -478,8 +480,7 @@ export const resolveAiMetricsDataRoot = (input: AiMetricsDataRootInput): O.Optio
  *
  * ```ts
  * import { requireAbsoluteAiMetricsDataRoot } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.flip(requireAbsoluteAiMetricsDataRoot(".beep/ai-metrics"))
  *
  * console.log(Effect.runSync(program)._tag) // AiMetricsDataRootError

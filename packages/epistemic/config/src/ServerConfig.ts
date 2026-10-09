@@ -13,7 +13,9 @@
 
 import { PolicyRevision, SinkDestination } from "@beep/epistemic-domain/values/ExecutionGrant";
 import { $EpistemicConfigId } from "@beep/identity/packages";
-import { Config, Context, Result } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const $I = $EpistemicConfigId.create("ServerConfig");
@@ -50,8 +52,8 @@ export const defaultPolicyRevision = Result.getOrThrow(S.decodeResult(PolicyRevi
  *
  * ```ts
  * import { EpistemicDestinationAllowlistConfig } from "@beep/epistemic-config/server"
- * import { ConfigProvider, Effect } from "effect"
- *
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Effect from "effect/Effect";
  * const program = EpistemicDestinationAllowlistConfig.pipe(
  *   Effect.provide(
  *     ConfigProvider.layer(
@@ -80,8 +82,8 @@ export const EpistemicDestinationAllowlistConfig = Config.Array(
  *
  * ```ts
  * import { EpistemicPolicyRevisionConfig } from "@beep/epistemic-config/server"
- * import { ConfigProvider, Effect } from "effect"
- *
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Effect from "effect/Effect";
  * const program = EpistemicPolicyRevisionConfig.pipe(
  *   Effect.provide(
  *     ConfigProvider.layer(
@@ -163,8 +165,7 @@ export type EpistemicConfigShape = EpistemicServerConfig;
  *
  * ```ts
  * import { EpistemicConfig } from "@beep/epistemic-config/server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const allowlist = EpistemicConfig.pipe(
  *   Effect.map((config) => config.destinationAllowlist)
  * )

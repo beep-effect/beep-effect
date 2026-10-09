@@ -13,9 +13,11 @@ import {
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
-import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import type { ProcessTableShape } from "@beep/repo-cli/test/RepoRun";
 
 // The tree a fence sees on a Claude desktop workstation: the user manager (50)

@@ -25,9 +25,10 @@ import {
 import { IrToLaw, makeIrToLaw } from "@beep/law-practice-use-cases/IrToLaw";
 import { makeOfficeActionReview, OfficeActionReview } from "@beep/law-practice-use-cases/OfficeActionReview";
 import { TikaFileProcessingEngine } from "@beep/tika";
-import { Effect, Layer } from "effect";
-import type { Config } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import type * as LanguageModel from "effect/ai/LanguageModel";
+import type * as Config from "effect/Config";
 import type * as Crypto from "effect/Crypto";
 
 const IrToLawLayer = Layer.succeed(IrToLaw, IrToLaw.of(makeIrToLaw()));

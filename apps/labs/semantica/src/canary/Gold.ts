@@ -2,13 +2,21 @@ import { $SemanticaId } from "@beep/identity/packages";
 import { TextAnchor } from "@beep/provenance";
 import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Console, Effect, FileSystem, Number as N, Order, Path, Result, Struct, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
+import * as Tuple from "effect/Tuple";
 import { CorpusPaperId } from "@/corpus/Manifest";
 import { makeGoldPrompt } from "@/gold/Prompts";
 import { loadDocumentSelection } from "@/layers/DocumentSourceLive";
@@ -30,7 +38,7 @@ import { Canonicalizer } from "@/services/Canonicalizer";
 import { DocumentSelection, DocumentSource } from "@/services/DocumentSource";
 import { ActiveModelIdentity } from "@/services/LanguageModel";
 import { Parser } from "@/services/Parser";
-import type { Crypto } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { CorpusManifest } from "@/corpus/Manifest";
 import type { CorpusManifestBuilder } from "@/corpus/ManifestBuilder";
 import type { F1Catalog } from "@/fixtures/F1";
@@ -708,7 +716,7 @@ const proposeJob = Effect.fn("Gold.proposeJob")(function* (
  *
  * ```ts
  * import { proposeGold } from "@/canary/Gold"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const proposal = proposeGold({

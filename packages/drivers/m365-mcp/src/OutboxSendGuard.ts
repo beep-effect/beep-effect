@@ -16,10 +16,10 @@
 import { $M365McpId } from "@beep/identity/packages";
 import { GraphMessage } from "@beep/m365";
 import { LiteralKit } from "@beep/schema";
-import { flow, Order, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { OutboxAttachmentDigest } from "./OutboxAttachmentSource.ts";

@@ -4,13 +4,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect, Match, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import { renderCompletedProgress, renderInitialProgress, renderProgressBar } from "./Image.render.ts";
 import type { FFmpegEvent } from "@beep/ffmpeg";
-import type { Terminal } from "effect";
-
+import type * as Terminal from "effect/Terminal";
 /**
  * Render one FFmpeg event through the terminal service.
  *

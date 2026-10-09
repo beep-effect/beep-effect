@@ -7,9 +7,10 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import { Match, Order, pipe } from "effect";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import {
   BorderDetectionMaxScanPercentage,

@@ -11,7 +11,12 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Clock, Context, Effect, Layer, Ref, Semaphore } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
+import * as Semaphore from "effect/Semaphore";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Milliseconds } from "../Domain/Error/Base.ts";
@@ -146,7 +151,7 @@ export interface EmbeddingRateLimiterMethods {
  * **Example** (Acquire a no-op permit)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EmbeddingRateLimiter, EmbeddingRateLimiterNoop } from "@effect-ontology/Service/EmbeddingRateLimiter"
  *
  * const metrics = Effect.runSync(
@@ -173,7 +178,7 @@ export class EmbeddingRateLimiter extends Context.Service<EmbeddingRateLimiter, 
  * **Example** (Count one acquired request)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import {
  *   EmbeddingRateLimiter,
  *   EmbeddingRateLimiterConfig,
@@ -258,7 +263,7 @@ export const makeEmbeddingRateLimiter = (config: EmbeddingRateLimiterConfig): La
  * **Example** (Acquire under Voyage limits)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EmbeddingRateLimiter, EmbeddingRateLimiterVoyage } from "@effect-ontology/Service/EmbeddingRateLimiter"
  *
  * const metrics = Effect.runSync(
@@ -283,7 +288,7 @@ export const EmbeddingRateLimiterVoyage = makeEmbeddingRateLimiter(VOYAGE_RATE_L
  * **Example** (Acquire under local limits)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EmbeddingRateLimiter, EmbeddingRateLimiterLocal } from "@effect-ontology/Service/EmbeddingRateLimiter"
  *
  * const metrics = Effect.runSync(
@@ -308,7 +313,7 @@ export const EmbeddingRateLimiterLocal = makeEmbeddingRateLimiter(LOCAL_RATE_LIM
  * **Example** (Observe unchanged metrics)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EmbeddingRateLimiter, EmbeddingRateLimiterNoop } from "@effect-ontology/Service/EmbeddingRateLimiter"
  *
  * const metrics = Effect.runSync(

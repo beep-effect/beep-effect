@@ -9,12 +9,13 @@ import { $PracticeMailTaggingId } from "@beep/identity/packages";
 import { MailTaggingPortFailure } from "@beep/law-practice-use-cases/MailTagging";
 import { M365ErrorReason } from "@beep/m365";
 import { LiteralKit } from "@beep/schema";
-import { Match, Runtime } from "effect";
+import * as Match from "effect/Match";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import type { BoxError } from "@beep/box";
 import type { MailTaggingPortError, MailTaggingStateError } from "@beep/law-practice-use-cases/MailTagging";
 import type { M365Error } from "@beep/m365";
-import type { Config } from "effect";
+import type * as Config from "effect/Config";
 
 const $I = $PracticeMailTaggingId.create("PracticeMailTagging.errors");
 

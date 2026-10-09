@@ -50,10 +50,15 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect } from "@effect/vitest";
-import { Context, Effect, FileSystem, Layer, Path, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Ref from "effect/Ref";
 import * as Str from "effect/String";
 
 const $I = $LawPracticeServerId.create("test/MailTagging.layers.test");

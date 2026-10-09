@@ -5,11 +5,14 @@
  * @since 0.0.0
  */
 
-import { Effect, Exit, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import { PathSafetyError } from "./PathSafety.errors.ts";
 import type { PlatformError } from "effect/PlatformError";
@@ -28,8 +31,8 @@ import type { PlatformError } from "effect/PlatformError";
  * ```ts
  * import * as BunPath from "@effect/platform-bun/BunPath"
  * import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety"
- * import { Effect, Path } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Path from "effect/Path";
  * const program = Effect.gen(function* () {
  *   const path = yield* Path.Path
  *   return isResolvedPathWithinRoot(path, {
@@ -87,8 +90,8 @@ const canonicalizeRoot = (fs: FileSystem.FileSystem, root: string, candidate: st
  * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
  * import * as BunPath from "@effect/platform-bun/BunPath"
  * import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const program = resolvePathWithinRoot({ root: ".", candidate: "README.md" }).pipe(
  *   Effect.map((resolved) => resolved.endsWith("README.md")),
  *   Effect.provide(Layer.mergeAll(BunFileSystem.layer, BunPath.layer))
@@ -208,8 +211,9 @@ const resolveCandidateWithinCanonicalRoot: (
  * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
  * import * as BunPath from "@effect/platform-bun/BunPath"
  * import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety"
- * import { Effect, FileSystem, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as FileSystem from "effect/FileSystem";
+ * import * as Layer from "effect/Layer";
  * const program = Effect.gen(function* () {
  *   const fs = yield* FileSystem.FileSystem
  *   const canonicalRoot = yield* fs.realPath(".")
@@ -324,8 +328,9 @@ const writeWithinCanonicalRootAtomically: (
  * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
  * import * as BunPath from "@effect/platform-bun/BunPath"
  * import { writeFileWithinCanonicalRootAtomically } from "@beep/file-processing/PathSafety"
- * import { Effect, FileSystem, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as FileSystem from "effect/FileSystem";
+ * import * as Layer from "effect/Layer";
  * const program = Effect.gen(function* () {
  *   const fs = yield* FileSystem.FileSystem
  *   const canonicalRoot = yield* fs.realPath(".")
@@ -382,8 +387,8 @@ export const writeFileWithinCanonicalRootAtomically: (options: {
  * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
  * import * as BunPath from "@effect/platform-bun/BunPath"
  * import { writeFileWithinRootAtomically } from "@beep/file-processing/PathSafety"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const program = writeFileWithinRootAtomically({
  *   root: ".",
  *   candidate: "artifacts/report.txt",

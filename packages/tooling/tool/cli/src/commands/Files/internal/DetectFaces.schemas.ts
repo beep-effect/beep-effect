@@ -8,7 +8,7 @@
 import { FaceDetection, FaceDetectionConfidence, FaceDetectionPercentage } from "@beep/face-detection";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";

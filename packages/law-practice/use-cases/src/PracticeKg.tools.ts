@@ -23,8 +23,8 @@ import {
   FourHintAnnotations,
 } from "@beep/mcp-kit";
 import { LiteralKit } from "@beep/schema";
-import { Effect } from "effect";
 import { Tool } from "effect/ai";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { PosInt } from "./internal/PosInt.ts";
 import { PracticeKgCorrespondentRowResolution } from "./PracticeKg.correspondent-lookup.ts";

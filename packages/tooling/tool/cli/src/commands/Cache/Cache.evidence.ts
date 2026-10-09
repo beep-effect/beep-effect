@@ -5,7 +5,8 @@
  * @since 0.0.0
  */
 import { Sha256HexFromBytes } from "@beep/schema";
-import { Effect, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";

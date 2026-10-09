@@ -21,12 +21,19 @@ import {
 } from "@beep/phoenix";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
-import { DateTime, Duration, Effect, FileSystem, flow, HashMap, Match, Path, pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as Match from "effect/Match";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { AiMetricsDeployTarget, CountRow } from "./models.ts";
 import type { PhoenixError, PhoenixShape } from "@beep/phoenix";
@@ -2968,8 +2975,7 @@ const buildJsdocWorkerSection = Effect.fn("AiMetrics.agentEffectiveness.buildJsd
  *
  * ```ts
  * import { AgentEffectivenessDoctorInput, makeAgentEffectivenessDoctorReport } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const dataRoot = "/home/dev/.local/state/beep/ai-metrics"
  *
  * const status = makeAgentEffectivenessDoctorReport(
@@ -3332,8 +3338,7 @@ const queryAnnotationRows = Effect.fn("AiMetrics.agentEffectiveness.queryAnnotat
  *   AgentEffectivenessDoctorInput,
  *   makeAgentEffectivenessAnnotationPlan
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const dataRoot = "/home/dev/.local/state/beep/ai-metrics"
  *
  * const annotationCount = makeAgentEffectivenessAnnotationPlan(
@@ -3570,8 +3575,7 @@ const jsdocWorkerDataset = (doctor: AgentEffectivenessDoctorReport): AgentEffect
  *   makeAgentEffectivenessDatasetBundle,
  *   makeAgentEffectivenessDoctorReport
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const dataRoot = "/home/dev/.local/state/beep/ai-metrics"
  *
  * const datasetCount = makeAgentEffectivenessDoctorReport(
@@ -3940,8 +3944,7 @@ const datasetCheckFailurePolicy = (dryRun: boolean): AgentEffectivenessMutationP
  *   AgentEffectivenessPhoenixSyncInput,
  *   syncAgentEffectivenessPhoenix
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const annotationPlan = AgentEffectivenessAnnotationPlanInput.make({
  *   doctor: AgentEffectivenessDoctorInput.make({
  *     dataRoot: "/home/dev/.local/state/beep/ai-metrics"
@@ -4300,8 +4303,7 @@ const duplicateAnnotationIdFindings = (
  *   makeAgentEffectivenessAnnotationCheckReport,
  *   makeAgentEffectivenessAnnotationPlan
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const status = makeAgentEffectivenessAnnotationPlan(
  *   AgentEffectivenessAnnotationPlanInput.make({
  *     doctor: AgentEffectivenessDoctorInput.make({
@@ -4364,8 +4366,7 @@ export const makeAgentEffectivenessAnnotationCheckReport: (
  *   agentEffectivenessDoctorReportToJson,
  *   makeAgentEffectivenessDoctorReport
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const dataRoot = "/home/dev/.local/state/beep/ai-metrics"
  *
  * const hasSchemaVersion = makeAgentEffectivenessDoctorReport(
@@ -4414,8 +4415,7 @@ export const agentEffectivenessDoctorReportToJson: (
  *   agentEffectivenessAnnotationPlanToJson,
  *   makeAgentEffectivenessAnnotationPlan
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const hasMutationPolicy = makeAgentEffectivenessAnnotationPlan(
  *   AgentEffectivenessAnnotationPlanInput.make({
  *     doctor: AgentEffectivenessDoctorInput.make({
@@ -4458,8 +4458,7 @@ export const agentEffectivenessAnnotationPlanToJson: (
  *   AgentEffectivenessAnnotationCheckReport,
  *   agentEffectivenessAnnotationCheckReportToJson
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const report = AgentEffectivenessAnnotationCheckReport.make({
  *   annotationCount: 0,
  *   findings: [],
@@ -4502,8 +4501,7 @@ export const agentEffectivenessAnnotationCheckReportToJson: (
  *   AgentEffectivenessDatasetBundle,
  *   agentEffectivenessDatasetBundleToJson
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const bundle = AgentEffectivenessDatasetBundle.make({
  *   datasets: [],
  *   generatedAt: "2026-05-20T00:00:00.000Z",
@@ -4544,8 +4542,7 @@ export const agentEffectivenessDatasetBundleToJson: (
  *   agentEffectivenessPromptBundleToJson,
  *   makeAgentEffectivenessPromptBundle
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const bundle = makeAgentEffectivenessPromptBundle("2026-05-20T00:00:00.000Z")
  *
  * Effect.runPromise(agentEffectivenessPromptBundleToJson(bundle)).then((json: string) =>
@@ -4582,8 +4579,7 @@ export const agentEffectivenessPromptBundleToJson: (
  *   agentEffectivenessExperimentBundleToJson,
  *   makeAgentEffectivenessExperimentBundle
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const datasetBundle = AgentEffectivenessDatasetBundle.make({
  *   datasets: [],
  *   generatedAt: "2026-05-20T00:00:00.000Z",
@@ -4625,8 +4621,7 @@ export const agentEffectivenessExperimentBundleToJson: (
  *   AgentEffectivenessPhoenixSyncResult,
  *   agentEffectivenessPhoenixSyncResultToJson
  * } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const result = AgentEffectivenessPhoenixSyncResult.make({
  *   annotationCount: 0,
  *   datasetCount: 0,

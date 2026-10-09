@@ -5,7 +5,10 @@
  * @since 0.0.0
  */
 import { Sha256HexFromBytes } from "@beep/schema";
-import { Config, Effect, FileSystem, Path } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import {

@@ -4,9 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect, Layer } from "effect";
-
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 /**
  * Provide a pure stub layer to an effect inside a scoped lifetime.
  *
@@ -25,7 +24,9 @@ import { Effect, Layer } from "effect";
  *
  * ```ts
  * import { provideScopedLayer } from "@beep/test-utils"
- * import { Context, Effect, Layer } from "effect"
+ * import * as Context from "effect/Context";
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  *
  * class Greeting extends Context.Service<Greeting, { readonly message: string }>()(
  *   "@beep/test-utils/examples/Layer/Greeting"

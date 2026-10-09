@@ -7,8 +7,13 @@ import { fcRuns } from "@beep/test-utils";
 import { makeTikaAppFileProcessingEngine, TikaAppEngineConfig, TikaContentText } from "@beep/tika";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
-import { Effect, FileSystem, Logger, Path, References, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Logger from "effect/Logger";
+import * as Path from "effect/Path";
+import * as References from "effect/References";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { FileFormatFamily } from "@beep/file-processing/Strategy";
 

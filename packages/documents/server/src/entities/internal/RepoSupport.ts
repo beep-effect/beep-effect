@@ -18,8 +18,10 @@
  */
 
 import { A, N } from "@beep/utils";
-import { Effect, HashMap, Order, Ref } from "effect";
-
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Order from "effect/Order";
+import * as Ref from "effect/Ref";
 /**
  * System-principal audit stamp for rows the repository writes on the
  * application's behalf (there is no acting user for a runtime-initiated sync).
@@ -90,8 +92,8 @@ export const byIdAscending = <T extends { readonly id: number }>(): Order.Order<
  *
  * ```ts
  * import { makeEntityStore } from "@beep/documents-server/entities/internal/RepoSupport"
- * import { Effect, HashMap } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as HashMap from "effect/HashMap";
  * const program = Effect.gen(function* () {
  *   const { snapshot } = yield* makeEntityStore(HashMap.empty<number, { readonly id: number }>())
  *   return yield* snapshot

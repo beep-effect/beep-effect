@@ -14,8 +14,9 @@ Loaded on demand from `effect-first-development/SKILL.md`. Repository laws win o
 ### 18) Retry + timeout modeling
 
 ```ts
-import { Duration, Effect, Schedule } from "effect"
-
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Schedule from "effect/Schedule";
 const resilient = task.pipe(
   Effect.retry(Schedule.recurs(3)),
   Effect.timeoutOption(Duration.seconds(5))
@@ -25,8 +26,8 @@ const resilient = task.pipe(
 ### 19) Structured concurrency + bounded parallelism
 
 ```ts
-import { Effect, Fiber } from "effect"
-
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 const runWorkers = Effect.fn("Workers.run")(function* (jobs: ReadonlyArray<Job>) {
   const fiber = yield* Effect.forkChild(backgroundHeartbeat)
   const results = yield* Effect.forEach(jobs, runJob, { concurrency: 8 })
@@ -38,8 +39,8 @@ const runWorkers = Effect.fn("Workers.run")(function* (jobs: ReadonlyArray<Job>)
 ### 20) Config + secret redaction
 
 ```ts
-import { Config, Effect } from "effect"
-
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 const loadSettings = Effect.fn("Settings.load")(function* () {
   const port = yield* Config.int("PORT")
   const apiKey = yield* Config.redacted("API_KEY")
@@ -54,7 +55,7 @@ const loadSettings = Effect.fn("Settings.load")(function* () {
 ### 21) Precise recovery by tag
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option"
 
 const findUserOptional = (id: string) =>
@@ -67,8 +68,7 @@ const findUserOptional = (id: string) =>
 ### 22) Expected failures vs defects
 
 ```ts
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 const process = Effect.fn("Process.run")(function* (input: Input) {
   if (input.value.length === 0) {
     return yield* Effect.fail(new ValidationError({ message: "value must be non-empty" }))
@@ -85,8 +85,8 @@ const process = Effect.fn("Process.run")(function* (input: Input) {
 ### 23) Layer isolation when sharing is unsafe
 
 ```ts
-import { Effect, Layer } from "effect"
-
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 const isolatedProgram = program.pipe(
   Effect.provide(Layer.fresh(AppLayer), { local: true })
 )

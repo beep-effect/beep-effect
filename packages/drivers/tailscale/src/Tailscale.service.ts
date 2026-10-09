@@ -5,13 +5,16 @@
  * @since 0.0.0
  */
 
-import { Duration, Effect, flow, Number as N, pipe, Stream } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
 import { HttpClient, HttpClientRequest } from "effect/http";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import {
   DEFAULT_TAILSCALE_SERVE_PORT,
@@ -60,8 +63,7 @@ const tailnetIpv4AddressOption = O.liftPredicate(S.is(TailnetIpv4Address));
  *
  * ```ts
  * import { parseTailscaleMagicDnsName } from "@beep/tailscale/Tailscale.service"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * Effect.runPromise(parseTailscaleMagicDnsName('{"Self":{"DNSName":"host.tail.ts.net."}}'))
  *   .then(console.log)
  * ```
@@ -101,8 +103,7 @@ export const isTailscaleIpv4Address: (address: string) => address is TailnetIpv4
  *
  * ```ts
  * import { parseTailscaleStatus } from "@beep/tailscale/Tailscale.service"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const json = '{"Self":{"TailscaleIPs":["100.100.100.100"]}}'
  * Effect.runPromise(parseTailscaleStatus(json)).then(console.log)
  * ```
@@ -137,8 +138,7 @@ export const parseTailscaleStatus = Effect.fn("Tailscale.parseStatus")((rawStatu
  *
  * ```ts
  * import { readTailscaleStatus } from "@beep/tailscale/Tailscale.service"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const magicDnsName = readTailscaleStatus.pipe(
  *   Effect.map((status) => status.magicDnsName)
  * )

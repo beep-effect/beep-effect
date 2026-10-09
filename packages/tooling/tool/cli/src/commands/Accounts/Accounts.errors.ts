@@ -6,7 +6,7 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Runtime } from "effect";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Accounts/Accounts.errors");

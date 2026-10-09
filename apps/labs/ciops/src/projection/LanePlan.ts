@@ -6,9 +6,14 @@
  */
 
 import { $CiopsId } from "@beep/identity/packages";
-import { Effect, Graph, HashSet, MutableHashMap, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Graph from "effect/Graph";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CyclicPlanError, GateOrderHandoffView, HandoffDecodeError, LanePlanProposal, LaneStep } from "./Schemas.ts";
@@ -67,8 +72,7 @@ const decodeHandoffViewText = S.decodeUnknownEffect(S.fromJsonString(GateOrderHa
  *
  * ```ts
  * import { decodeHandoffView } from "@/projection/LanePlan"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const text = JSON.stringify({
  *   schemaVersion: "gate-order-handoff/v1",
  *   scope: "pre-push:non-main",
@@ -213,8 +217,7 @@ const requireRankAgreement = Effect.fnUntraced(function* (
  * import * as S from "effect/Schema"
  * import { planLanes, rankChain } from "@/projection/LanePlan"
  * import { HandoffLane } from "@/projection/Schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const lanes = [
  *   HandoffLane.make({ rank: S.Natural.make(1), laneId: "quality:secrets", declarationIndex: S.Natural.make(0) }),
  *   HandoffLane.make({ rank: S.Natural.make(0), laneId: "fallow:audit", declarationIndex: S.Natural.make(1) })
@@ -254,8 +257,7 @@ export const planLanes = Effect.fn("LanePlan.planLanes")(function* (
  * import { Sha256Hex } from "@beep/schema/Sha256"
  * import { planHandoffView } from "@/projection/LanePlan"
  * import { GateOrderHandoffRef, GateOrderHandoffView, HandoffLane, PlanEpisodeInput } from "@/projection/Schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const input = PlanEpisodeInput.make({
  *   episodeId: "lane-plan-episode-1",
  *   repoRoot: ".",

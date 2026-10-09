@@ -9,7 +9,7 @@
 import { it } from "@beep/test-runner";
 import { describe } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 
 describe("@beep/practice-kg-mcp entrypoints", () => {

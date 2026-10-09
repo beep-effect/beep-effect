@@ -7,7 +7,7 @@
  */
 
 import { $OpenaiId } from "@beep/identity/packages";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { PosInt } from "./internal/PosInt.ts";
 import type { OpenAiEmbeddingModel, OpenAiLanguageModel } from "@effect/ai-openai";

@@ -15,7 +15,14 @@ import { NlpToolkit } from "@beep/nlp-processing/Tools/NlpToolkit";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str, thunk0, thunkEmptyReadonlyArray, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Chunk, Clock, Effect, flow, Inspectable, identity, Layer, Match, Order, pipe } from "effect";
+import * as Chunk from "effect/Chunk";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import { flow, identity, pipe } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -355,7 +362,7 @@ type WinkNlpToolkitLiveError = typeof WinkNlpToolkitLiveError.Type;
  * **Example** (Provide layer to export tools)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { WinkNlpToolkitLive } from "@beep/wink"
  * import { exportTools } from "@beep/nlp-processing/Tools/ToolExport"
  *

@@ -8,7 +8,7 @@
 import { $LibpffId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, Str } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -159,7 +159,7 @@ export class LibpffError extends S.TaggedError<LibpffError>($I`LibpffError`)(
  * **Example** (Create typed technical error)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { LibpffErrorOptions, makeLibpffError } from "@beep/libpff"
  *
  * const error = makeLibpffError("engine-unavailable")

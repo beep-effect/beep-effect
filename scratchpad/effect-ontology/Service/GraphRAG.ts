@@ -8,7 +8,15 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { Context, Effect, HashMap, HashSet, Inspectable, Layer, Match, Number as Num, Order as Ord } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Num from "effect/Number";
+import * as Ord from "effect/Order";
 import * as A from "effect/Array";
 import type { TimeoutError } from "effect/Cause";
 import { dual, pipe } from "effect/Function";
@@ -1008,7 +1016,7 @@ const mapGenerationError =
  * **Example** (Access the GraphRAG service tag)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { GraphRAG, GraphRAGDefault } from "@effect-ontology/Service/GraphRAG"
  *
  * const program = Effect.gen(function* () {
@@ -1275,8 +1283,8 @@ ${stepsDescription}`,
  * **Example** (Compose the live GraphRAG layer)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { Effect } from "effect"
+ * import * as Layer from "effect/Layer";
+ * import * as Effect from "effect/Effect";
  * import { GraphRAG, GraphRAGDefault } from "@effect-ontology/Service/GraphRAG"
  *
  * const program = Effect.gen(function* () {

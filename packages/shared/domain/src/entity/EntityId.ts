@@ -8,9 +8,10 @@
 import { $SharedDomainId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { Str } from "@beep/utils";
-import { Effect, pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { PosInt } from "../internal/PosInt.ts";
 import type { IdentityComposer } from "@beep/identity";
@@ -72,7 +73,7 @@ const EntityIdDescription = S.NonEmptyString.pipe(
  * **Example** (Decode entity id value)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EntityIdValue } from "@beep/shared-domain/entity/EntityId"
  * import * as S from "effect/Schema"
  *

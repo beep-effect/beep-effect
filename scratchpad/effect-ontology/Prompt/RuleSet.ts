@@ -7,10 +7,13 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { HashMap, Match, pipe, Tuple, Effect } from "effect";
+import * as HashMap from "effect/HashMap";
+import * as Match from "effect/Match";
+import * as Tuple from "effect/Tuple";
+import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
-import { flow } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -311,7 +314,7 @@ class RelationRuleSet extends RuleSetBase.extend<RelationRuleSet>($I`RelationRul
  * **Example** (Construct a mention rule set)
  *
  * ```ts
- * import { HashMap } from "effect"
+ * import * as HashMap from "effect/HashMap";
  * import { AllowedIriSet, RuleSet } from "@effect-ontology/Prompt/RuleSet"
  *
  * const ruleSet = RuleSet.cases.mention.make({

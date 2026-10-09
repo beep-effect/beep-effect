@@ -15,8 +15,8 @@ import { BrowserSafeUrlPolicySpec, sanitizeUrlDestinationWithPolicy } from "@bee
 // cspell:word youtu
 import * as Md from "@beep/md/Md.model";
 import { A, O, Str, thunkEmptyStr } from "@beep/utils";
-import { flow, Match } from "effect";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 
 const wwwPrefix = /^www\./u;

@@ -6,7 +6,10 @@
  */
 
 import { $RepoUtilsId } from "@beep/identity";
-import { Context, Effect, Layer, Random } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Random from "effect/Random";
 
 const $I = $RepoUtilsId.create("Random");
 

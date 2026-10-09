@@ -6,9 +6,11 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { P } from "@beep/utils";
-import { Context, Effect, Result } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
 import { OpaqueDefect } from "../schema/OpaqueDefect.ts";
@@ -109,8 +111,7 @@ export const DEFAULT_JSON_PRETTY_MAX_LENGTH = 500_000;
  *
  * ```ts
  * import { CommandJsonOutput, printCommandJson } from "@beep/repo-cli/internal/cli/Json"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const chunks: Array<string> = []
  * const program = printCommandJson({ ok: true }).pipe(
  *   Effect.provideService(
@@ -171,7 +172,7 @@ export class CliJsonError extends S.TaggedError<CliJsonError>($I`CliJsonError`)(
  * **Example** (Encode a payload and tag the failure)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { CliJsonError, encodeCommandJson } from "@beep/repo-cli/internal/cli/Json"
  *
  * const encoded = Effect.runSync(

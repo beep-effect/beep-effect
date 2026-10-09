@@ -16,7 +16,11 @@ import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Context, Effect, HashMap, Layer, MutableHashMap } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -244,8 +248,8 @@ export class CrossBatchResolverConfig extends S.Class<CrossBatchResolverConfig>(
  * **Example** (Inspect the default resolver layer)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { Effect } from "effect"
+ * import * as Layer from "effect/Layer";
+ * import * as Effect from "effect/Effect";
  * import { CrossBatchEntityResolver } from "@effect-ontology/Service/CrossBatchEntityResolver"
  *
  * const program = Effect.gen(function* () {
@@ -592,8 +596,8 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
  * **Example** (Recognize the live resolver layer)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { Effect } from "effect"
+ * import * as Layer from "effect/Layer";
+ * import * as Effect from "effect/Effect";
  * import { CrossBatchEntityResolver, CrossBatchEntityResolverLive } from "@effect-ontology/Service/CrossBatchEntityResolver"
  *
  * const program = Effect.gen(function* () {

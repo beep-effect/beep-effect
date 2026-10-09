@@ -17,8 +17,14 @@ import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
 import { assertTrue, strictEqual } from "@effect/vitest/utils";
-import { Arbitrary, Effect, FileSystem, HashMap, Number as Num, Path, Schema } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Schema from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
 import type { PropertySignature } from "ts-morph";
 

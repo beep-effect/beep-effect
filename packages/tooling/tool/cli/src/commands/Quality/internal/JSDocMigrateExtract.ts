@@ -8,11 +8,16 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
-import { Console, Effect, FileSystem, MutableHashMap, MutableHashSet, Path } from "effect";
+import * as Console from "effect/Console";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { Node } from "ts-morph";
 import { writeArtifact } from "../../../internal/artifacts/index.ts";
@@ -81,7 +86,7 @@ export type JSDocMigrateScannedBlock = typeof JSDocMigrateScannedBlock.Type;
  * ```ts
  * import { jsdocMigrateSourceHash } from "@beep/repo-cli/test/Quality"
  * import { NodeCrypto } from "@effect/platform-node"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as Str from "effect/String"
  *
  * const program = jsdocMigrateSourceHash("/** Doc. *" + "/").pipe(
@@ -289,14 +294,14 @@ const extractRecordsForFile = (filePath: string, sourceText: string) =>
  * ```ts
  * import { jsdocMigrateExtractRecordsForFile } from "@beep/repo-cli/test/Quality"
  * import { NodeCrypto } from "@effect/platform-node"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const source = [
  *   "/**",
  *   " * Lead.",
  *   " *",
  *   " * @example",
- *   " * ```ts",
+ *   " *
+ * ```ts",
  *   " * const a = 1",
  *   " * ```",
  *   " *" + "/",
@@ -341,8 +346,7 @@ export const jsdocMigrateExtractRecordsForFile: {
  *
  * ```ts
  * import { listJSDocMigrateCorpusFiles } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = listJSDocMigrateCorpusFiles("/repo")
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -402,8 +406,7 @@ export class RunJSDocMigrateExtractOptions extends S.Class<RunJSDocMigrateExtrac
  *
  * ```ts
  * import { readJSDocMigrateSourceText } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = readJSDocMigrateSourceText("/repo", "packages/x/src/a.ts")
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -458,8 +461,7 @@ const readCorpusFileRecords = Effect.fn("JSDocMigrateExtract.readCorpusFileRecor
  *
  * ```ts
  * import { runJSDocMigrateExtract, RunJSDocMigrateExtractOptions } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = runJSDocMigrateExtract(RunJSDocMigrateExtractOptions.make({}))
  * console.log(Effect.isEffect(program)) // true
  * ```

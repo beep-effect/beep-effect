@@ -16,10 +16,14 @@ import {
 import { makeNamedNode } from "@beep/rdf/Rdf";
 import { XSD_ANY_URI, XSD_BOOLEAN, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Exit, pipe, Result } from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const { Ont, $I } = Ontology.create({

@@ -12,7 +12,7 @@ import { DocketCategory, DocketDueDate, DocketResponsePeriod } from "@beep/law-p
 import { LiteralKit } from "@beep/schema";
 import { LocalDateFromString } from "@beep/schema/LocalDate";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import {
   DeterministicCheck,

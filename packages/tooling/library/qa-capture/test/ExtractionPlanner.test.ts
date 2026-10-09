@@ -27,8 +27,8 @@ import { fcRuns } from "@beep/test-utils";
 import { A, O } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import type { ActionEvent, ExtractionPlan } from "@beep/qa-capture";
 

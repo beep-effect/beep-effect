@@ -3,9 +3,10 @@ import { Cuid, CuidSeed, CuidState, cuid, sha512 } from "@beep/schema/Cuid";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
-import { Effect, Layer } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 
 const encodeCuidEffect = S.encodeEffect(Cuid);

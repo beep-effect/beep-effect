@@ -22,9 +22,14 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { ClockSync, END_SEEK_GUARD_SECONDS, epochToVideoSeconds, SessionStore } from "@beep/qa-capture";
 import { LiteralKit } from "@beep/schema";
 import { A, O, Str, thunkEmptyReadonlyArray, thunkEmptyStr } from "@beep/utils";
-import { Effect, FileSystem, Match, Number as N, Order, Path, pipe } from "effect";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
-import { dual } from "effect/Function";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as N from "effect/Number";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { QaCommandError } from "./Qa.errors.ts";
@@ -385,8 +390,7 @@ const decodeUnknownLegacyManifestJson = S.decodeUnknownEffect(LegacyManifestJson
  * **Example** (Usage)
  * ```ts
  * import { readLegacyManifest } from "@beep/repo-cli/commands/Qa/JudgePack"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readLegacyManifest("/repo/.beep/qa/round-1/manifest.json"))) // true
  * ```
  *
@@ -866,7 +870,7 @@ const requireClockSync = (manifest: SessionManifest): Effect.Effect<ClockSync, Q
  * ```ts
  * import { runQaJudgePack } from "@beep/repo-cli/commands/Qa/JudgePack"
  * import { QaJudgePackOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const options = QaJudgePackOptions.make({ round: 3, surface: O.none() })

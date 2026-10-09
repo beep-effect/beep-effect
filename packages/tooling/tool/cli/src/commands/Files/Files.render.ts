@@ -7,8 +7,12 @@
 
 import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson";
 import { A } from "@beep/utils";
-import { Console, Effect, FileSystem, Path, pipe } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { FilesCommandError, formatPlatformError } from "./Files.errors.ts";
 import {
   ArchivePoorCandidatesManifest,

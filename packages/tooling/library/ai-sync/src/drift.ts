@@ -5,9 +5,12 @@
  * @since 0.0.0
  */
 
-import { Effect, FileSystem, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { GENERATED_TIER_ONE_SOURCE_METADATA } from "./_generated/source-metadata.gen.ts";
 import {
   fetchSourceText,
@@ -38,7 +41,7 @@ const readPackageFile = Effect.fn("AiSync.readPackageFile")(function* (relativeP
  * **Example** (Decode committed source metadata)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { getGeneratedSourceMetadata } from "@beep/ai-sync"
  *
  * Effect.runPromise(getGeneratedSourceMetadata()).then((sources) =>
@@ -69,7 +72,7 @@ export const getGeneratedSourceMetadata = Effect.fn("AiSync.getGeneratedSourceMe
  *
  * ```ts
  * import * as NodeServices from "@effect/platform-node/NodeServices"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { checkGeneratedArtifacts } from "@beep/ai-sync"
  *
  * const program = checkGeneratedArtifacts().pipe(
@@ -133,7 +136,7 @@ export const checkGeneratedArtifacts = Effect.fn("AiSync.checkGeneratedArtifacts
  * **Example** (Compare sources with fetcher)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { AiSyncContentHash, AiSyncSourceId, AiSyncSourceMetadata, AiSyncSourceUrl, checkSourceDriftWithFetcher } from "@beep/ai-sync"
  * import * as O from "effect/Option"
  *
@@ -194,7 +197,8 @@ export const checkSourceDriftWithFetcher = <R>(options: {
  *
  * ```ts
  * import * as NodeServices from "@effect/platform-node/NodeServices"
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { checkStrictDrift } from "@beep/ai-sync"
  * import { AiSyncHttpLayer } from "@beep/ai-sync/generator"
  *
@@ -227,7 +231,8 @@ export const checkStrictDrift = Effect.fn("AiSync.checkStrictDrift")(function* (
  *
  * ```ts
  * import * as NodeServices from "@effect/platform-node/NodeServices"
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { assertNoStrictDrift } from "@beep/ai-sync"
  * import { AiSyncHttpLayer } from "@beep/ai-sync/generator"
  *

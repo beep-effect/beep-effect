@@ -9,8 +9,10 @@ import { CurrentMcpDispatchAnchor, McpCallerIdentity, McpDispatchAnchor } from "
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit, Layer } from "effect";
 import * as McpServer from "effect/ai/McpServer";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FixtureRegistrationsLive } from "./fixtures/FixtureHost.ts";

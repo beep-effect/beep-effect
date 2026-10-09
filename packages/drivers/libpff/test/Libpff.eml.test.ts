@@ -10,8 +10,8 @@ import { it } from "@beep/test-runner";
 import { O } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
-import { Result } from "effect";
 import * as Base64 from "effect/encoding/Base64";
+import * as Result from "effect/Result";
 
 const octets = (value: string): number => new TextEncoder().encode(value).length;
 

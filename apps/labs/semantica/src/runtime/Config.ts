@@ -2,8 +2,11 @@ import { ANTHROPIC_DEFAULT_MODEL } from "@beep/anthropic";
 import { $SemanticaId } from "@beep/identity/packages";
 import { OPENAI_DEFAULT_EMBEDDING_MODEL, OPENAI_EMBEDDING_MODEL_ENV } from "@beep/openai";
 import { LiteralKit } from "@beep/schema";
-import { Config, Context, Duration, Layer } from "effect";
 import * as Bool from "effect/Boolean";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { PosInt } from "../schema/PosInt.ts";
 
@@ -70,8 +73,7 @@ class LabConfigValue extends S.Class<LabConfigValue>($I`LabConfigValue`)(
  *
  * ```ts
  * import { LabConfig } from "@/runtime/Config"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const readOffline = LabConfig.pipe(Effect.map((config) => config.offline))
  * console.log(Effect.isEffect(readOffline)) // true
  * ```
@@ -124,8 +126,7 @@ const labConfig = Config.all({
  *
  * ```ts
  * import { LabConfigLive } from "@/runtime/Config"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(LabConfigLive)) // true
  * ```
  *

@@ -10,7 +10,11 @@ import { makeOntologyConfigTest, makeOntologyMcpConfigTest } from "@beep/ontolog
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { Cause, ConfigProvider, Effect, Exit, Layer } from "effect";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
 
 const configLayer = (configuration: Readonly<Record<string, string>>) =>
   OntologyConfigLive.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(configuration))));

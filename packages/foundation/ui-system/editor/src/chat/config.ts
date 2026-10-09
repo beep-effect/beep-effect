@@ -19,7 +19,9 @@ import { $EditorId } from "@beep/identity";
 import { DOMReactNode } from "@beep/schema/DomReactNode";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A, P } from "@beep/utils";
-import { Effect, MutableHashSet, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { SerializedEditorState } from "@beep/lexical-schema";
 import type { LexicalEditor } from "lexical";
@@ -220,7 +222,7 @@ const uniqueSlashItemKeys = S.makeFilter<ReadonlyArray<SlashItem>>(
  *
  * ```ts import.meta.vitest name="Decode slash items array"
  * import { SlashItem, SlashItems } from "@beep/editor/chat/config"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const items = S.decodeUnknownResult(SlashItems)([
@@ -319,7 +321,7 @@ const uniqueMentionOptionIds = S.makeFilter<ReadonlyArray<MentionOption>>(
  *
  * ```ts import.meta.vitest name="Decode mention options array"
  * import { MentionOptions } from "@beep/editor/chat/config"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const options = S.decodeUnknownResult(MentionOptions)([{ id: "ada", label: "Ada" }])

@@ -2,7 +2,7 @@ import { BoxError } from "@beep/box";
 import { it } from "@beep/test-runner";
 import { describe } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 
 const sameBoxError = S.toEquivalence(BoxError);

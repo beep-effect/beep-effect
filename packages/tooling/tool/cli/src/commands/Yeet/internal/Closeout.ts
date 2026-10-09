@@ -7,8 +7,8 @@
 // cspell:ignore greptileai
 
 import { O } from "@beep/utils";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Str from "effect/String";
 import { normalizedTokens } from "../../../internal/cli/Flags.ts";
@@ -33,8 +33,9 @@ import {
 } from "./closeout/GreptileSignal.ts";
 import { closeoutWritePlan } from "./closeout/WritePlan.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
-import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrCloseoutWriteAction } from "./closeout/Closeout.schemas.ts";
@@ -279,8 +280,7 @@ export const yeetAutomaticCloseoutOptions: PrCloseoutOptions = PrCloseoutOptions
  *
  * ```ts
  * import { RepoRunContext, runYeetAutomaticCloseout } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const context = RepoRunContext.make({
  *   base: "origin/main",
  *   branch: "feature/settle",

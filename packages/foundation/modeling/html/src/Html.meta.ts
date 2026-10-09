@@ -9,8 +9,9 @@
  */
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { flow, Result } from "effect";
+import { flow } from "effect/Function";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 // WHATWG's tokenizer-lowercased attribute and event names are normative.
@@ -1409,7 +1410,7 @@ export const HtmlBooleanAttributeName = LiteralKit([
  *
  * ```ts import.meta.vitest name="Decode a boolean attribute name"
  * import { HtmlBooleanAttributeName } from "@beep/html/Html.meta"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(HtmlBooleanAttributeName)("disabled")

@@ -3,9 +3,17 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it as loggerSubjectIt } from "@effect/vitest";
 import { assertDefined, assertNone, assertTrue } from "@effect/vitest/utils";
-import { Cause, Context, Effect, Equal, Exit, Layer, Logger, Metric, References } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
+import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
+import * as References from "effect/References";
 import * as S from "effect/Schema";
 
 const decodePhaseProfileOption = S.decodeOption(PhaseProfile);

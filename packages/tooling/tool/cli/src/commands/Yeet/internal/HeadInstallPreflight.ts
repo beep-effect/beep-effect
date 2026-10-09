@@ -11,8 +11,11 @@
  */
 
 import { O } from "@beep/utils";
-import { Console, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import {
   commandTextForStep,
   RepoStepRunResult,

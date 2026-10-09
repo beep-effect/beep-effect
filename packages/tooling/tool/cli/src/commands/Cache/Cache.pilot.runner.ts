@@ -8,9 +8,12 @@
 import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { CacheClientPin } from "@beep/repo-configs/cache";
 import { Sha256HexFromBytes } from "@beep/schema";
-import { Duration, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
@@ -127,7 +130,9 @@ export const runCacheSignedPilotExperiment = Effect.fn("CachePilot.signedExperim
         const worker = `import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { BunRuntime } from "@effect/platform-bun";
-import { Effect, FileSystem, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { CacheSignedPilotRequest, CacheSignedPilotReceipt, runCacheSignedPilotWorker } from ${module};
 import { CacheQualificationLive } from ${service};

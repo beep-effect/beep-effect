@@ -5,7 +5,8 @@ Effect-based monorepo utilities for repository analysis and workspace management
 ## Quick Start
 
 ```typescript
-import { Effect, Option } from "effect"
+import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import { NodeFileSystem, NodePath } from "@effect/platform-node"
 import {
   FsUtils, FsUtilsLive, findRepoRoot, resolveWorkspaceDirs,

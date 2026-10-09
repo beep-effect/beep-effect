@@ -14,9 +14,9 @@ import * as SharedEpistemic from "@beep/shared-domain/identity/Epistemic";
 import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeUnknownEvidenceVerificationResult = S.decodeUnknownResult(EvidenceVerification);

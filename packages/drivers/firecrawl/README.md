@@ -12,8 +12,7 @@ bun add @beep/firecrawl
 
 ```ts
 import { Firecrawl, FirecrawlScrapePayload } from "@beep/firecrawl"
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 const program = Effect.gen(function* () {
   const firecrawl = yield* Firecrawl
   return yield* firecrawl.scrape(

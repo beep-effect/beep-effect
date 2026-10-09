@@ -6,8 +6,10 @@
  */
 
 import { OpenAiClient, OpenAiEmbeddingModel, OpenAiLanguageModel } from "@effect/ai-openai";
-import { Config, Effect, Layer } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import { FetchHttpClient } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import {
   OPENAI_API_KEY_ENV,
@@ -27,7 +29,7 @@ import {
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { makeOpenAiLanguageModelLayer, OpenAiLanguageModelOptions, OpenAiLive } from "@beep/openai"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as LanguageModel from "effect/ai/LanguageModel"
  *
  * const program = LanguageModel.LanguageModel.pipe(
@@ -120,7 +122,7 @@ export const makeOpenAiEmbeddingModelLayer = (options: OpenAiEmbeddingModelOptio
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { OpenAiLanguageModelLive } from "@beep/openai"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as LanguageModel from "effect/ai/LanguageModel"
  *
  * const program = LanguageModel.LanguageModel.pipe(Effect.provide(OpenAiLanguageModelLive))
@@ -160,7 +162,7 @@ const decodeEmbeddingModelOptions = S.decodeUnknownEffect(OpenAiEmbeddingModelOp
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { makeOpenAiEmbeddingModelLive } from "@beep/openai"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as EmbeddingModel from "effect/ai/EmbeddingModel"
  *
  * const layer = makeOpenAiEmbeddingModelLive(1536)

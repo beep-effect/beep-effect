@@ -12,7 +12,9 @@ import {
   reviewStatusFor,
 } from "@beep/epistemic-domain/values/ClaimEvidenceReview";
 import { VerifyTextAnchorInput, verifyTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
-import { DateTime, Effect, flow } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { ApproveClaimEvidence, ExplainClaimEvidence } from "./ClaimEvidenceReview.commands.ts";
@@ -37,8 +39,7 @@ const snapshotApproval = flow(S.encodeEffect(ApproveJson), Effect.flatMap(S.deco
  *
  * ```ts
  * import { explainClaimEvidence, type ExplainClaimEvidence } from "@beep/epistemic-use-cases/ClaimEvidenceReview"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const sourceStatus = (command: ExplainClaimEvidence) =>
  *   explainClaimEvidence(command).pipe(Effect.map((explanation) => explanation.verification._tag))
  * console.log(typeof sourceStatus) // function
@@ -87,8 +88,7 @@ export const explainClaimEvidence = Effect.fn("ClaimEvidenceReview.explain")(fun
  *
  * ```ts
  * import { approveClaimEvidence, type ApproveClaimEvidence } from "@beep/epistemic-use-cases/ClaimEvidenceReview"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const reviewedSubject = (command: ApproveClaimEvidence) =>
  *   approveClaimEvidence(command).pipe(Effect.map((review) => review.basis.subject))
  * console.log(typeof reviewedSubject) // function

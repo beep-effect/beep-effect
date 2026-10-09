@@ -8,8 +8,11 @@
 import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { resolveWorkspaceDirs } from "@beep/repo-utils/Workspaces";
 import { A, Str } from "@beep/utils";
-import { Effect, HashMap, Order, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 
 type WorkspaceOwnerFallback = {
   readonly prefix: string;
@@ -34,7 +37,7 @@ const byWorkspacePathLengthDescending: Order.Order<readonly [string, string]> = 
  * **Example** (Create workspace owner resolver)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { createWorkspaceOwnerResolver } from "@beep/repo-cli/internal/tsmorph/OwnerResolver"
  *
  * const program = createWorkspaceOwnerResolver({

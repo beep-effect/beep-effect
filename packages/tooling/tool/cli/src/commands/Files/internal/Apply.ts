@@ -6,8 +6,13 @@
  */
 
 import { A } from "@beep/utils";
-import { Effect, FileSystem, HashMap, HashSet, Path, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import {
   bytesEqual,
@@ -34,9 +39,9 @@ import {
   NormalizeSkippedEntry,
 } from "../Files.schemas.ts";
 import { cropImageBordersToTemp, normalizeImageToTemp, stripMetadataToTemp } from "./MediaExec.ts";
-import type { Terminal } from "effect";
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
+import type * as Terminal from "effect/Terminal";
 import type {
   ArchivePoorCandidatesPlan,
   CreateCaptionFilesPlan,

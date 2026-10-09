@@ -1,7 +1,8 @@
 import { $OntologyId } from "@beep/identity/packages";
 import { NamedNode } from "@beep/rdf/Rdf";
-import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";

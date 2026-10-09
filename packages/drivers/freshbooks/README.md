@@ -12,8 +12,9 @@ bun add @beep/freshbooks
 
 ```ts
 import { Freshbooks, FreshbooksConfigInput, FreshbooksTokenStore } from "@beep/freshbooks"
-import { Effect, Layer, Redacted } from "effect"
-
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 // Credentials resolve from the recorded 1Password references at runtime.
 const layer = Freshbooks.makeLayer(
   FreshbooksConfigInput.make({

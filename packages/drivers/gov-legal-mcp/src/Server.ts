@@ -13,8 +13,8 @@ import { Ecfr } from "@beep/ecfr";
 import { Govinfo } from "@beep/govinfo";
 import { $GovLegalMcpId } from "@beep/identity/packages";
 import { composeGatedLayers, gatedLayer, handshakeMcpProtocols, sanitizedToolkit } from "@beep/mcp-kit";
-import { Layer } from "effect";
 import * as McpServer from "effect/ai/McpServer";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { EcfrToolkitHandlersLive, GovinfoToolkitHandlersLive } from "./Handlers.ts";
 import { EcfrSourceAuthRegistration, GovinfoSourceAuthRegistration } from "./SourceAuth.ts";
@@ -129,7 +129,7 @@ export const GovLegalMcpRegistrationsLive: Layer.Layer<
  * **Example** (Building stdio MCP layer)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import * as NodeStdio from "@effect/platform-node/NodeStdio"
  * import { GovLegalMcpServerConfig, makeServerLayer } from "@beep/gov-legal-mcp/Server"
  *

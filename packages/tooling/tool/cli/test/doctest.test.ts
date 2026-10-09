@@ -13,9 +13,14 @@ import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
 const encoder = new TextEncoder();

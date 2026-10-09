@@ -14,7 +14,13 @@
 
 import { AnthropicClient } from "@effect/ai-anthropic";
 import { OpenAiClient } from "@effect/ai-openai";
-import { Clock, DateTime, Duration, Effect, Layer, Ref, Stream } from "effect";
+import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
+import * as Stream from "effect/Stream";
 import * as O from "effect/Option";
 import { AiError } from "effect/ai";
 import * as RateLimiter from "effect/persistence/RateLimiter";

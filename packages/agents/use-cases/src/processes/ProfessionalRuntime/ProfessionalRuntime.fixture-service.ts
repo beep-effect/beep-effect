@@ -7,8 +7,12 @@
 
 import { PromotionGateRequest, PromotionGateVerdict, PromotionTenantRef } from "@beep/shared-use-cases/PromotionGate";
 import { A } from "@beep/utils";
-import { Effect, flow, HashMap, HashSet, Result } from "effect";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { RuntimeScope } from "./ProfessionalRuntime.contracts.ts";
 import {
@@ -248,8 +252,7 @@ const requirePromotionClear = Effect.fn("agents.professional_runtime.require_pro
  * } from "@beep/agents-use-cases/proof"
  * import { GetContextPacket, RuntimeScope } from "@beep/agents-use-cases/public"
  * import { PromotionGateVerdict } from "@beep/shared-use-cases/PromotionGate"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const fixture = RuntimeFixtureInput.make({
  *   body: [
  *     "[span:law-email-001-s2] We need help preparing a provisional patent application.",

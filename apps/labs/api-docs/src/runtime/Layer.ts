@@ -7,9 +7,10 @@
 
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
 import { HttpRouter } from "effect/http";
 import { HttpApiBuilder } from "effect/http-api";
+import * as Layer from "effect/Layer";
 import { Api, Health } from "../Api.ts";
 import { CatalogRoutes } from "../Docs.routes.ts";
 
@@ -30,8 +31,7 @@ const CatalogLive = CatalogRoutes.pipe(HttpRouter.provideRequest(BunServices.lay
  *
  * ```ts
  * import { ApiLive } from "@beep/api-docs/src/runtime/Layer"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(ApiLive)) // true
  * ```
  *

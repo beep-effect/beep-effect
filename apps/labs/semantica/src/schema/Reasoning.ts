@@ -1,9 +1,12 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { Equal, identity, Result, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as Equal from "effect/Equal";
+import { identity } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { contentDigestSync, digestOmittingSync } from "@/schema/Digest";
 import { ExtractOutcome } from "@/schema/Evidence";
 import { InferenceEventId, StatementId } from "@/schema/Ids";
@@ -259,8 +262,7 @@ export class RdfStatement extends S.Class<RdfStatement>($I`RdfStatement`)(
  *
  * ```ts
  * import { makeRdfStatement, RdfTriple } from "@/schema/Reasoning"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const result = makeRdfStatement(RdfTriple.make({ subject: "<urn:s>", predicate: "<urn:p>", object: "<urn:o>" }))
  * console.log(Result.isSuccess(result)) // true
  * ```

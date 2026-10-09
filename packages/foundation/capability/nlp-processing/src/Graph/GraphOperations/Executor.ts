@@ -26,8 +26,15 @@
 
 import { $NlpProcessingId } from "@beep/identity";
 import { A, dual, flow, P } from "@beep/utils";
-import { Clock, Context, Duration, Effect, Layer, Match, Number as N, Result } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Obs from "../../internal/observability.ts";
 import { getChildren, toArray } from "../EffectGraph.ts";
@@ -493,7 +500,7 @@ const makeGraphExecutor = Effect.succeed(
  * **Example** (Estimate cost with layer)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { GraphExecutorLive } from "@beep/nlp-processing/Graph/GraphOperations/Executor"
  * import { empty } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { identity } from "@beep/nlp-processing/Graph/GraphOperations/Operation"
@@ -526,7 +533,7 @@ export const GraphExecutorLive: Layer.Layer<GraphExecutor> = Layer.effect(GraphE
  * **Example** (Validate with test layer)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { GraphExecutorTest } from "@beep/nlp-processing/Graph/GraphOperations/Executor"
  * import { empty } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { identity } from "@beep/nlp-processing/Graph/GraphOperations/Operation"

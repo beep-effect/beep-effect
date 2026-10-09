@@ -13,10 +13,14 @@
 
 import { $NlpMcpId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { Effect, Order, pipe, Random, Result, Stream } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as Order from "effect/Order";
+import * as Random from "effect/Random";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { streamLines } from "./TextStream.ts";
 import type * as FileSystem from "effect/FileSystem";

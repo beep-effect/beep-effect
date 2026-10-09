@@ -3,10 +3,12 @@ import { AgentTurnKernel, TurnGenerationError } from "@beep/agents-use-cases/pub
 import { it } from "@beep/test-runner";
 import { beforeEach, describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
-import { Effect, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import { AiError } from "effect/ai";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
+import * as Stream from "effect/Stream";
 import { vi } from "vitest";
 import type { Response } from "effect/ai";
 
@@ -29,29 +31,34 @@ const providerState = vi.hoisted(
 );
 
 vi.mock("@beep/anthropic", (importOriginal) =>
-  import("effect").then((effect) =>
-    effect.Effect.runPromise(
-      effect.Effect.gen(function* () {
-        const actual = yield* effect.Effect.tryPromise(() => importOriginal<typeof import("@beep/anthropic")>());
-        const languageModel = yield* effect.Effect.tryPromise(() => import("effect/ai/LanguageModel"));
-        const response = yield* effect.Effect.tryPromise(() => import("effect/ai/Response"));
-        const TestLanguageModel = effect.Layer.effect(
+  Promise.all([
+    import("effect/Effect"),
+    import("effect/ExecutionPlan"),
+    import("effect/Layer"),
+    import("effect/Stream"),
+  ]).then(([Effect, ExecutionPlan, Layer, Stream]) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const actual = yield* Effect.tryPromise(() => importOriginal<typeof import("@beep/anthropic")>());
+        const languageModel = yield* Effect.tryPromise(() => import("effect/ai/LanguageModel"));
+        const response = yield* Effect.tryPromise(() => import("effect/ai/Response"));
+        const TestLanguageModel = Layer.effect(
           languageModel.LanguageModel,
           languageModel.make({
-            generateText: () => effect.Effect.die("unexpected non-streaming provider call"),
+            generateText: () => Effect.die("unexpected non-streaming provider call"),
             streamText: () =>
               providerState.providerError === undefined
-                ? effect.Stream.fromIterable(providerState.parts)
-                : effect.Stream.fail(providerState.providerError),
+                ? Stream.fromIterable(providerState.parts)
+                : Stream.fail(providerState.providerError),
           })
         );
 
         return {
           ...actual,
-          AnthropicTurnPlan: effect.ExecutionPlan.make({ provide: TestLanguageModel }),
+          AnthropicTurnPlan: ExecutionPlan.make({ provide: TestLanguageModel }),
           generateAnthropicToolJson: () =>
             providerState.repairError === undefined
-              ? effect.Effect.succeed(
+              ? Effect.succeed(
                   actual.AnthropicToolJsonResponse.make({
                     paramsJson: providerState.repairJson,
                     usage: response.Usage.make({
@@ -69,7 +76,7 @@ vi.mock("@beep/anthropic", (importOriginal) =>
                     }),
                   })
                 )
-              : effect.Effect.fail(
+              : Effect.fail(
                   actual.RepairError.make({
                     message: providerState.repairError,
                     operation: "generate_tool_json",

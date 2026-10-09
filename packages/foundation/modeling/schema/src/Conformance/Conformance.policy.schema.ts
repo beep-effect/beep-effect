@@ -5,8 +5,8 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Tuple } from "effect";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import { RequirementStrength } from "./Conformance.invariant.schema.ts";
 
@@ -61,7 +61,7 @@ class LosslessPolicy extends S.Class<LosslessPolicy>($I`LosslessPolicy`)(
  * **Example** (Decode a strict policy)
  *
  * ```ts import.meta.vitest name="Decode a strict policy"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { Policy } from "@beep/schema/Conformance"
  *

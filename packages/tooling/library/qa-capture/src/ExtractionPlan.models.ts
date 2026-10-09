@@ -12,7 +12,7 @@
 import { ExtractClipRequest, ExtractFramesAtRequest, RenderContactSheetRequest, RenderGifRequest } from "@beep/ffmpeg";
 import { $QaCaptureId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { DurationMilliseconds, EpochMilliseconds, SequenceNumber } from "./ActionEvent.models.ts";

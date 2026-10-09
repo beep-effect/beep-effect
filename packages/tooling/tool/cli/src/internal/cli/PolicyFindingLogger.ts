@@ -1,6 +1,8 @@
 import { thunkEmptyStr } from "@beep/utils";
-import { Console, Effect, SchemaGetter } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as SchemaGetter from "effect/SchemaGetter";
 
 const stringifyJsonLine = SchemaGetter.stringifyJson({ space: 0 });
 
@@ -10,8 +12,7 @@ const stringifyJsonLine = SchemaGetter.stringifyJson({ space: 0 });
  * **Example** (Construct finding logger)
  *
  * ```ts
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const logger = makePolicyFindingLogger({
  *   issuePrefix: "[example:issue] ",
  *   encode: (finding: { readonly message: string }) => Effect.succeed(finding),

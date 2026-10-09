@@ -5,8 +5,8 @@
  * @packageDocumentation
  */
 import { A, Str } from "@beep/utils";
-import { flow, Order } from "effect";
-import { dual } from "effect/Function";
+import { dual, flow } from "effect/Function";
+import * as Order from "effect/Order";
 
 const stringEquals: {
   (left: string, right: string): boolean;

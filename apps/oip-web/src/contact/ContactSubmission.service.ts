@@ -15,8 +15,11 @@ import {
 import { $OipWebId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, O } from "@beep/utils";
-import { Clock, Effect, Layer, pipe } from "effect";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { makeRedactedConfigOptionReader, makeTextConfigOptionReader } from "../runtime/OipRuntimeConfig.ts";
 import { ContactSubmissionResponse, decodeContactSubmission } from "./ContactSubmission.model.ts";
@@ -267,7 +270,7 @@ const contactResponseForError = (_error: ContactSubmissionError): ContactSubmiss
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { submitContact } from "@beep/oip-web/contact"
  *
  * const program = submitContact({

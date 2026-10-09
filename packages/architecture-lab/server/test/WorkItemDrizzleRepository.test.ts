@@ -4,7 +4,9 @@ import { toWorkItemInsert } from "@beep/architecture-lab-tables/aggregates/WorkI
 import { PostgresDrizzle } from "@beep/postgres";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { DateTime, Effect, Option as O } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { PostgresDrizzleDatabase } from "@beep/postgres";
 

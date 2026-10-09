@@ -40,9 +40,12 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Console, DateTime, Effect, Match, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -73,8 +76,9 @@ import {
 } from "./MonitorComments.ts";
 import { dispatchYeetCheckFailure } from "./Remediation.ts";
 import { YeetWatchCheck, YeetWatchThread, yeetWatchThreadOutstanding } from "./WatchStream.ts";
-import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetCommandError } from "../Yeet.errors.ts";

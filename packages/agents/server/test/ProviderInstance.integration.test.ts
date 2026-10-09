@@ -39,9 +39,11 @@ import * as HostPath from "@beep/utils/Path";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
 import { sql } from "drizzle-orm";
-import { Effect, Layer, Ref } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import type { AiProviderCliRunner } from "@beep/ai-provider-cli";
 

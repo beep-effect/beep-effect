@@ -8,9 +8,13 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { DomainError } from "@beep/repo-utils";
 import { Str, thunkEmptyRecord, thunkEmptyStr } from "@beep/utils";
-import { Context, Effect, FileSystem, flow, identity, SchemaTransformation } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import Handlebars from "handlebars";
 
 const $I = $RepoCliId.create("commands/CreatePackage/TemplateService");
@@ -158,8 +162,7 @@ export type TemplateServiceShape = {
  *
  * ```ts
  * import { TemplateService } from "@beep/repo-cli/commands/CreatePackage"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.service(TemplateService)
  * console.log(Effect.isEffect(program)) // true
  * ```

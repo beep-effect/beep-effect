@@ -27,7 +27,10 @@
 
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, O, pipe, thunkEmptyStr } from "@beep/utils";
-import { Effect, FileSystem, Path, SchemaGetter } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
+import * as SchemaGetter from "effect/SchemaGetter";
 import type * as S from "effect/Schema";
 
 const stringifyJsonPretty = SchemaGetter.stringifyJson({ space: 2 });
@@ -45,7 +48,7 @@ const stringifyJsonPretty = SchemaGetter.stringifyJson({ space: 2 });
  * **Example** (Trailing newline on JSONC)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { formatJsonc } from "@beep/repo-cli/test/Artifacts"
  *
  * const text = Effect.runSync(formatJsonc({ schema_version: 1 }))
@@ -75,7 +78,7 @@ export const formatJsonc = Effect.fn("ArtifactIo.formatJsonc")(function* (value:
  * **Example** (Read artifact with schema)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { readArtifact } from "@beep/repo-cli/test/Artifacts"
  *
@@ -120,7 +123,7 @@ export const readArtifact = Effect.fn("ArtifactIo.readArtifact")(function* <Sche
  * **Example** (Write header and body)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { writeArtifact } from "@beep/repo-cli/test/Artifacts"
  *
  * class WriteError extends Error {}

@@ -4,8 +4,11 @@ import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, FileSystem, Option, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 import { GProjectionExpectation } from "@/schema/Projection";
 

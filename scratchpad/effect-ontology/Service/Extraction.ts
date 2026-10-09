@@ -13,7 +13,14 @@ import * as Crypto from "effect/Crypto";
 
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { Chunk, Context, Effect, Inspectable, Layer, Match, MutableHashMap, Result } from "effect";
+import * as Chunk from "effect/Chunk";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Result from "effect/Result";
 import * as A from "effect/Array";
 import { flow } from "effect/Function";
 import * as O from "effect/Option";
@@ -79,7 +86,8 @@ const isAttributeValue = (value: unknown): value is string | number | boolean =>
  * **Example** (Inspect entity extractor)
  *
  * ```ts
- * import { Chunk, Effect } from "effect"
+ * import * as Chunk from "effect/Chunk";
+ * import * as Effect from "effect/Effect";
  * import { EntityExtractor } from "@effect-ontology/Service/Extraction"
  *
  * const program = Effect.gen(function* () {
@@ -317,7 +325,8 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
  * **Example** (Inspect mention extractor)
  *
  * ```ts
- * import { Chunk, Effect } from "effect"
+ * import * as Chunk from "effect/Chunk";
+ * import * as Effect from "effect/Effect";
  * import { MentionExtractor } from "@effect-ontology/Service/Extraction"
  *
  * const program = Effect.gen(function* () {
@@ -422,7 +431,8 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
  * **Example** (Inspect relation extractor)
  *
  * ```ts
- * import { Chunk, Effect } from "effect"
+ * import * as Chunk from "effect/Chunk";
+ * import * as Effect from "effect/Effect";
  * import { RelationExtractor } from "@effect-ontology/Service/Extraction"
  *
  * const program = Effect.gen(function* () {

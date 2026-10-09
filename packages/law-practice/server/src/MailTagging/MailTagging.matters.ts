@@ -22,10 +22,12 @@ import {
 } from "@beep/law-practice-domain/values/MailTagging";
 import { MailTaggingPortError, MatterDirectory, MatterDirectoryShape } from "@beep/law-practice-use-cases/MailTagging";
 import { EmailString } from "@beep/schema/Email";
-import { Effect, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -37,7 +39,7 @@ import {
 } from "./MailTagging.correspondents.ts";
 import { MailTaggingStateLocation } from "./MailTagging.state.ts";
 import type { MailTaggingStateError } from "@beep/law-practice-use-cases/MailTagging";
-import type { FileSystem } from "effect";
+import type * as FileSystem from "effect/FileSystem";
 
 const $I = $LawPracticeServerId.create("MailTagging/MailTagging.matters");
 

@@ -6,7 +6,9 @@
  */
 
 import { A, dual, O, P, Str } from "@beep/utils";
-import { Effect, flow, Order, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import { extractArchiveTextEntries } from "../internal/FreeLawProject.ts";
 import {

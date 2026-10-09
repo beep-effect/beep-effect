@@ -7,10 +7,12 @@
 
 import { $AiSyncId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { Effect, flow, identity, SchemaTransformation } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { flow, identity } from "effect/Function";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 import {
   ClaudeMcpJson,
@@ -74,7 +76,7 @@ export type AgentInstructionDocument = typeof AgentInstructionDocument.Type;
  * **Example** (Decode normalized document with Effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { NormalizedAgentInstructionDocument } from "@beep/ai-sync"
  * import * as S from "effect/Schema"
  *

@@ -3,9 +3,11 @@ import { Port, PortFromString } from "@beep/schema/Port";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
 import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 

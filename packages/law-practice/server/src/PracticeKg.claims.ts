@@ -26,11 +26,15 @@ import { OfficeActionReview, OfficeActionReviewInput } from "@beep/law-practice-
 import { PatentClaimCandidateInput, patentClaimCandidateFrom } from "@beep/law-practice-use-cases/PatentClaimCandidate";
 import { SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { Effect, FileSystem, Order, Path, Result } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
 import { constFalse } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { SqlClient as SqlClientService } from "effect/sql/SqlClient";
@@ -337,8 +341,7 @@ const persistCandidate = Effect.fn("PracticeKgClaims.persistCandidate")(function
  * **Example** (Usage)
  * ```ts
  * import { PracticeKgClaimsOptions, runPracticeKgClaimsBatch } from "@beep/law-practice-server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = runPracticeKgClaimsBatch(
  *   PracticeKgClaimsOptions.make({ bundleOut: "/bundle", inputs: "/oa-text" })
  * )
@@ -732,8 +735,7 @@ const carryFailure =
  *
  * ```ts
  * import { readPracticeKgClaimsCarry } from "@beep/law-practice-server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readPracticeKgClaimsCarry)) // true
  * ```
  *
@@ -772,8 +774,7 @@ export const readPracticeKgClaimsCarry: Effect.Effect<
  *   PracticeKgClaimsCarryWrite,
  *   writePracticeKgClaimsCarry
  * } from "@beep/law-practice-server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const write = writePracticeKgClaimsCarry(
  *   PracticeKgClaimsCarryWrite.make({
  *     bundleOut: "/corpus/staging/practice-kg-bundle",

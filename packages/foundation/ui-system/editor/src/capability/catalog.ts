@@ -4,8 +4,7 @@
  * @packageDocumentation \@beep/editor/capability/catalog
  * @since 0.0.0
  */
-
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { CapabilityCatalog } from "./schemas.ts";
 
@@ -79,8 +78,7 @@ const decodeCatalog = S.decodeUnknownResult(CapabilityCatalog);
  *
  * ```ts import.meta.vitest name="Inspect the catalog"
  * import { editorCapabilityCatalog } from "@beep/editor/capability/catalog"
- * import { Array as A } from "effect"
- *
+ * import * as A from "effect/Array";
  * A.length(editorCapabilityCatalog) > 0 // => true
  * ```
  *

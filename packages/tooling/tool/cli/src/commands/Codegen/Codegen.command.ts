@@ -12,13 +12,20 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { FsUtils } from "@beep/repo-utils";
 import { A, Str, Text, thunkFalse, thunkUndefined } from "@beep/utils";
-import { Console, Effect, FileSystem, HashMap, Path, pipe, Result, SchemaTransformation } from "effect";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { printLines } from "../../internal/cli/Printer.ts";
-import type { Order } from "effect";
+import type * as Order from "effect/Order";
 
 const $I = $RepoCliId.create("commands/Codegen/Codegen.command");
 

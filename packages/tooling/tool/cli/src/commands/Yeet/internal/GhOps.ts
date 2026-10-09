@@ -27,11 +27,17 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { GitHubClient } from "@effected/github";
-import { Console, DateTime, Duration, Effect, Layer, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
@@ -562,7 +568,7 @@ export const layerYeetGh = ({ tokenRef }: YeetGhCommonOptions) =>
  * ```ts
  * import { GithubRest } from "@beep/repo-cli/test/SharedInternals"
  * import { withYeetGh } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = withYeetGh(O.none())(
@@ -598,8 +604,7 @@ export const withYeetGh =
  *
  * ```ts
  * import { flipPullRequestReady } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(flipPullRequestReady(42))) // true
  * ```
  *
@@ -855,8 +860,7 @@ export const runYeetGhPrReady = (
  * ```ts
  * import { GraphqlBudgetPolicy } from "@beep/repo-cli/test/SharedInternals"
  * import { markPullRequestReady } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(markPullRequestReady("PR_kw", GraphqlBudgetPolicy.noWait))) // true
  * ```
  *

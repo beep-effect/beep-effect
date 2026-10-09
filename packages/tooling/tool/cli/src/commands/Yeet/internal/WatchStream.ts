@@ -32,10 +32,14 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { DateTime, Effect, flow, HashMap, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { YeetCheckOutcome, YeetSettleReason } from "./CheckOutcome.ts";
@@ -954,8 +958,7 @@ const encodeWatchEvent = S.encodeUnknownEffect(S.fromJsonString(YeetWatchEvent))
  *
  * ```ts
  * import { renderYeetWatchEventLine, YeetHeadChanged } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const line = renderYeetWatchEventLine(YeetHeadChanged.make({ at: "2026-08-17T00:00:00Z", from: "aaa", to: "bbb" }))
  *
  * console.log(Effect.isEffect(line)) // true

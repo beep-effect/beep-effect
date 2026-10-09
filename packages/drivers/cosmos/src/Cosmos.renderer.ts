@@ -9,7 +9,10 @@
 import { $CosmosId } from "@beep/identity/packages";
 import { Fn, HexColor } from "@beep/schema";
 import { A, O, P } from "@beep/utils";
-import { Duration, Effect, Match, pipe } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import { CosmosBackend, probeWebGl2, selectCosmosBackend } from "./Cosmos.backend.ts";
 import { CosmosDriverError } from "./Cosmos.errors.ts";
@@ -720,8 +723,7 @@ const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (
  *
  * ```ts
  * import { CosmosGraphProjection, renderCosmosGraph } from "@beep/cosmos"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const projection = CosmosGraphProjection.make({
  *   nodeCount: 1,
  *   edgeCount: 0,

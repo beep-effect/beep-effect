@@ -6,8 +6,10 @@
  */
 
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, Layer, Logger } from "effect";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import { makeCommand } from "./Commands.ts";
 import { liveWiring } from "./runtime/Layer.ts";
 

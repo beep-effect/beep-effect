@@ -79,29 +79,27 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
-import {
-  Clock,
-  ConfigProvider,
-  Console,
-  Deferred,
-  Duration,
-  Effect,
-  Fiber,
-  FileSystem,
-  Layer,
-  Order,
-  Path,
-  pipe,
-  Ref,
-  Schedule,
-} from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
 import * as Crypto from "effect/Crypto";
 import { Command } from "effect/cli";
+import * as Deferred from "effect/Deferred";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as Base64Url from "effect/encoding/Base64Url";
 import * as Hex from "effect/encoding/Hex";
+import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
+import * as Ref from "effect/Ref";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";

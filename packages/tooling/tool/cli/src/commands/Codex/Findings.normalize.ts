@@ -10,8 +10,10 @@
  */
 
 import { A, O, Str } from "@beep/utils";
-import { Effect, HashMap, Order } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import {
   CodexFindingId,
@@ -234,8 +236,7 @@ const highestReservedOrdinal = (priorIds: HashMap.HashMap<string, string>): numb
  *
  * ```ts
  * import { priorIdsOfEntries } from "@beep/repo-cli/commands/Codex/Findings.normalize"
- * import { HashMap } from "effect"
- *
+ * import * as HashMap from "effect/HashMap";
  * const priorIds = priorIdsOfEntries([{ id: "CSF-004", codexId: "abc" }])
  *
  * console.log(HashMap.size(priorIds)) // 1
@@ -279,8 +280,7 @@ export const priorIdsOfEntries = (
  * ```ts
  * import { planPacket } from "@beep/repo-cli/commands/Codex/Findings.normalize"
  * import { CodexCaptureMeta, CodexFindingsCapturePayload } from "@beep/repo-cli/commands/Codex/Findings.capture.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const payload = CodexFindingsCapturePayload.make({
  *   schemaVersion: "codex-findings-capture/v1",
  *   capture: CodexCaptureMeta.make({

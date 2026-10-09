@@ -13,8 +13,11 @@ import {
   PracticeKgMcpServerConfig,
 } from "@beep/law-practice-server";
 import * as OptionUtils from "@beep/utils/Option";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { PracticeKgHostError } from "../PracticeKgMcp.errors.ts";
 import { PRACTICE_KG_EXTENSION_VERSION } from "../Version.ts";
@@ -43,8 +46,7 @@ export { PracticeKgHostError } from "../PracticeKgMcp.errors.ts";
  *
  * ```ts
  * import { loadPracticeKgBundleContext } from "../../src/runtime/Host.ts"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const loading = loadPracticeKgBundleContext("/bundle")
  * console.log(Effect.isEffect(loading))
  * ```

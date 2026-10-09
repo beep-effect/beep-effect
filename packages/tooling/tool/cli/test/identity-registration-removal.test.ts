@@ -13,7 +13,12 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, flow, Layer, Path, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { withTempWorkingDirectory } from "./support/CommandTest.ts";
 

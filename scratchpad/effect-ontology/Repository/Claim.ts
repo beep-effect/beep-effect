@@ -13,7 +13,9 @@
 
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Equal, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Equal from "effect/Equal";
+import * as Layer from "effect/Layer";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -23,7 +25,8 @@ const $I = $ScratchpadId.create("effect-ontology/Repository/Claim");
 
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, count, desc, eq, isNull, or } from "drizzle-orm";
-import { DateTime, Effect } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import { normalizeDrizzleError } from "../Utils/Sql.ts";
 import { canonicalConflictPair, detectConflictKind } from "./Conflict.ts";
@@ -280,8 +283,7 @@ interface ClaimRepositoryShape {
  *
  * ```ts
  * import { ClaimFilter, ClaimRepository } from "@effect-ontology/Repository/Claim"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const countClaims = Effect.gen(function* () {
  *   const claims = yield* ClaimRepository
  *   return yield* claims.countClaims(ClaimFilter.make({ ontologyId: "people" }))

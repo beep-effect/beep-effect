@@ -7,7 +7,7 @@
  */
 
 import { VaultSyncEngine } from "@beep/documents-use-cases/aggregates/Sync/server";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { DocumentsServerLayer, DocumentsServerLlmLayer } from "./aggregates/Document/index.ts";
 import { DmsMirrorFixtureLayer, makeVaultSyncEngine, VaultSyncConfigLayer } from "./aggregates/Sync/index.ts";
 import {

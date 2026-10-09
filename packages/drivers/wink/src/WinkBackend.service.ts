@@ -25,7 +25,9 @@
 import * as Schema from "@beep/nlp/Graph/Schema";
 import { NLPBackend, notSupported, operationError } from "@beep/nlp-processing/Backend/NLPBackend";
 import { A } from "@beep/utils";
-import { Clock, Effect, Layer } from "effect";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { WinkEngine } from "./Wink.service.ts";
@@ -145,7 +147,8 @@ const makeWinkBackend = Effect.gen(function* () {
  * **Example** (Providing WinkBackendLive layer)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { NLPBackend } from "@beep/nlp-processing/Backend/NLPBackend"
  * import { WinkBackendLive, WinkEngineLive } from "@beep/wink"
  *

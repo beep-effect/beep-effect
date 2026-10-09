@@ -4,8 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect, FileSystem } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import { applyJsoncModification } from "../../../../internal/cli/Jsonc.ts";
 import { VersionSyncError } from "../../VersionSync.schemas.ts";

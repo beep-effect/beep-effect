@@ -34,11 +34,13 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect, Layer, Ref } from "effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import { mailboxUserId, makeM365Stub, serviceOf, wellKnownFolders } from "./MailTagging.adapters.fixture.ts";
 import type { MailEnvelope } from "@beep/law-practice-domain/values/MailTagging";
 import type { M365Shape } from "@beep/m365";

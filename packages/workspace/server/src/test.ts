@@ -5,8 +5,7 @@
  * @category testing
  * @since 0.0.0
  */
-
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { ThreadStoreInMemoryLayer } from "./aggregates/Thread/index.ts";
 import {
   InMemoryState,

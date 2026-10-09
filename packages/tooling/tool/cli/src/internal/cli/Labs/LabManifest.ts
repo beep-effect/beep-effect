@@ -14,7 +14,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { LocalDateFromString } from "@beep/schema/LocalDate";
 import * as S from "effect/Schema";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 
 const $I = $RepoCliId.create("internal/cli/Labs/LabManifest");
 

@@ -16,8 +16,9 @@
  * @since 0.0.0
  */
 
-import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import { runRepoCommandCapture } from "../repo-run/index.ts";
 import type * as Crypto from "effect/Crypto";
@@ -76,8 +77,7 @@ export interface GhOutputOptions<E> {
  *
  * ```ts
  * import { ghOutput } from "@beep/repo-cli/internal/github"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = ghOutput({
  *   args: ["pr", "view", "--json", "number,headRefName,state"],
  *   cwd: process.cwd(),
@@ -144,7 +144,7 @@ export const cursorArgs = (cursor: O.Option<string>): ReadonlyArray<string> =>
  *
  * ```ts
  * import { GhPageInfo, nextCursor } from "@beep/repo-cli/internal/github"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const done = nextCursor({
@@ -201,7 +201,7 @@ export interface GhGraphqlPageOptions<E> {
  *
  * ```ts
  * import { ghGraphqlPage } from "@beep/repo-cli/internal/github"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = ghGraphqlPage({
@@ -282,7 +282,7 @@ export interface CollectTruncatableThreadPagesOptions<T extends GhTruncatableThr
  *
  * ```ts
  * import { collectTruncatableThreadPages, GhPageInfo } from "@beep/repo-cli/internal/github"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = collectTruncatableThreadPages({

@@ -8,8 +8,11 @@
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { Heading, Ol, renderPlainTextBlock } from "@beep/md";
 import { LiteralKit } from "@beep/schema";
-import { Effect, flow, Match, Number as Num, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -479,8 +482,7 @@ const claimsFromDraft = Effect.fn("PatentDocument.claimsFromDraft")(function* (
  * ```ts
  * import { Md } from "@beep/md"
  * import { normalizePatentApplicationDocument } from "@beep/law-practice-domain/values/PatentDocument"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const source = Md.make([
  *   Md.h1("TITLE OF THE INVENTION"),
  *   Md.p("Sensor system"),

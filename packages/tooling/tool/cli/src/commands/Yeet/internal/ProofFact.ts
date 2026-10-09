@@ -439,7 +439,7 @@ export type ProofReuseDecision = typeof ProofReuseDecision.Type;
  *
  * ```ts
  * import { ProofLedgerFactRow } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const decode = S.decodeUnknownEffect(S.fromJsonString(ProofLedgerFactRow))

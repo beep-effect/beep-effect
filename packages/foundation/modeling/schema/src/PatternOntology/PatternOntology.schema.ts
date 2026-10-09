@@ -19,9 +19,9 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { MutableHashSet, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";

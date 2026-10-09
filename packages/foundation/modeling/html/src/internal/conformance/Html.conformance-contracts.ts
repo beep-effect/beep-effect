@@ -9,7 +9,7 @@
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";

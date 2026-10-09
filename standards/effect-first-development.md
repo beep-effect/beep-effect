@@ -48,7 +48,7 @@ Use three layers:
 Example:
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option"
 import * as S from "effect/Schema"
 import { $PackageNameId } from "@beep/identity/packages"
@@ -83,7 +83,7 @@ const requireEnv = (key: string) =>
 Example:
 
 ```ts
-import { pipe } from "effect"
+import { pipe } from "effect/Function";
 import * as O from "effect/Option"
 
 const toDisplayName = (rawName: string | null | undefined) =>
@@ -111,7 +111,7 @@ Example:
 
 ```ts
 import { $PackageNameId } from "@beep/identity/packages"
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema"
 
 const $I = $PackageNameId.create("relative/path/to/file/from/package/src")
@@ -160,7 +160,7 @@ export const decodeCreateTaskInput = (input: unknown) =>
 Example:
 
 ```ts
-import { pipe } from "effect"
+import { pipe } from "effect/Function";
 import * as A from "effect/Array"
 import * as O from "effect/Option"
 
@@ -187,7 +187,7 @@ const findActiveEmail = (users: ReadonlyArray<{ readonly active: boolean; readon
 Example:
 
 ```ts
-import { Match } from "effect"
+import * as Match from "effect/Match";
 import * as A from "effect/Array"
 
 type SyncPhase = "idle" | "running" | "failed"
@@ -224,8 +224,7 @@ Example:
 
 ```ts
 import { $PackageNameId } from "@beep/identity/packages"
-import { Context } from "effect"
-
+import * as Context from "effect/Context";
 const $I = $PackageNameId.create("relative/path/to/file/from/package/src")
 
 export class MyService extends Context.Service<MyService, {
@@ -318,7 +317,7 @@ Example:
 ```ts
 import { LiteralKit } from "@beep/schema"
 import { $PackageNameId } from "@beep/identity/packages"
-import { Tuple } from "effect"
+import * as Tuple from "effect/Tuple";
 import * as S from "effect/Schema"
 
 const $I = $PackageNameId.create("relative/path/to/file/from/package/src")
@@ -377,7 +376,7 @@ export const InternalJobEvent = S.TaggedUnion({
 Example:
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema"
 
 export const loadUser = Effect.fn("User.load")(function* (userId: string) {
@@ -402,7 +401,7 @@ const parseInternal = Effect.fnUntraced(function* (input: string) {
 Example:
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as Metric from "effect/Metric"
 
 const durationMs = Metric.histogram("workflow_duration_ms", {
@@ -430,8 +429,8 @@ const workflow = Effect.fn("Workflow.run")(function* (requestId: string) {
 Example:
 
 ```ts
-import { Duration, Effect } from "effect"
-
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 const timeout = Duration.seconds(30)
 const pollInterval = Duration.millis(250)
 
@@ -474,9 +473,7 @@ export class AccountInput extends S.Class<AccountInput>($I`AccountInput`)({
 Example:
 
 ```ts
-import { dual } from "effect/Function"
-import { pipe } from "effect"
-
+import { dual, pipe } from "effect/Function"
 export const addPrefix: {
   (prefix: string): (self: string) => string
   (self: string, prefix: string): string
@@ -499,7 +496,7 @@ Example:
 
 ```ts
 import { $PackageNameId } from "@beep/identity/packages"
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema"
 
 const $I = $PackageNameId.create("relative/path/to/file/from/package/src")
@@ -553,8 +550,7 @@ If agent instruction surfaces changed, also run:
 Example:
 
 ```ts
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 export const runJob = Effect.fn("Job.run")(function* (id: string) {
   return { id }
 })
@@ -572,8 +568,7 @@ export const runJob = Effect.fn("Job.run")(function* (id: string) {
 Example:
 
 ```ts
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 const fetchText = (url: string) =>
   Effect.tryPromise({
     try: () => fetch(url).then((response) => response.text()),
@@ -602,8 +597,7 @@ const fetchText = (url: string) =>
 Example:
 
 ```ts
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 const insertDisposition = Effect.fnUntraced(function* (disposition: CandorDisposition) {
   const row = yield* Effect.fromResult(toCandorDispositionInsert(disposition))
   return yield* write(row)
@@ -620,8 +614,7 @@ const insertDisposition = Effect.fnUntraced(function* (disposition: CandorDispos
 Example:
 
 ```ts
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 const withConnection = <A, E, R>(
   use: (conn: Connection) => Effect.Effect<A, E, R>
 ) =>
@@ -642,8 +635,8 @@ const withConnection = <A, E, R>(
 Example:
 
 ```ts
-import { Effect, Schedule } from "effect"
-
+import * as Effect from "effect/Effect";
+import * as Schedule from "effect/Schedule";
 const resilientFetch = fetchRemote.pipe(
   Effect.retry(Schedule.recurs(3))
 )
@@ -659,8 +652,8 @@ const resilientFetch = fetchRemote.pipe(
 Example:
 
 ```ts
-import { Duration, Effect } from "effect"
-
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 const lookupCachedOnTimeout = slowLookup.pipe(
   Effect.timeoutOrElse({
     duration: Duration.seconds(2),
@@ -679,8 +672,8 @@ const lookupCachedOnTimeout = slowLookup.pipe(
 Example:
 
 ```ts
-import { Effect, Fiber } from "effect"
-
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 const runWithHeartbeat = Effect.fn("Worker.run")(function* () {
   const heartbeat = yield* Effect.forkChild(heartbeatLoop)
   const result = yield* doWork
@@ -699,8 +692,7 @@ const runWithHeartbeat = Effect.fn("Worker.run")(function* () {
 Example:
 
 ```ts
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 const hydrateUsers = (ids: ReadonlyArray<string>) =>
   Effect.forEach(ids, fetchUser, { concurrency: 8 })
 ```
@@ -715,8 +707,8 @@ const hydrateUsers = (ids: ReadonlyArray<string>) =>
 Example:
 
 ```ts
-import { Config, Effect } from "effect"
-
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 const loadPort = Effect.fn("Config.loadPort")(function* () {
   return yield* Config.int("PORT")
 })
@@ -732,8 +724,8 @@ const loadPort = Effect.fn("Config.loadPort")(function* () {
 Example:
 
 ```ts
-import { Config, Effect } from "effect"
-
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 const loadApiKey = Effect.fn("Config.loadApiKey")(function* () {
   const apiKey = yield* Config.redacted("API_KEY")
   yield* Effect.logDebug(`apiKey=${String(apiKey)}`)
@@ -750,7 +742,7 @@ const loadApiKey = Effect.fn("Config.loadApiKey")(function* () {
 Example:
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option"
 
 const findUserOptional = (id: string) =>
@@ -770,8 +762,7 @@ const findUserOptional = (id: string) =>
 Example:
 
 ```ts
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 const validateInput = Effect.fn("Input.validate")(function* (value: string) {
   if (value.length === 0) {
     return yield* Effect.fail(new ValidationError({ message: "value must be non-empty" }))
@@ -795,8 +786,8 @@ const validateInput = Effect.fn("Input.validate")(function* (value: string) {
 Example:
 
 ```ts
-import { Effect, Layer } from "effect"
-
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 const runIsolated = program.pipe(
   Effect.provide(Layer.fresh(AppLayer), { local: true })
 )
@@ -886,7 +877,8 @@ Example:
 ```ts
 import { LiteralKit } from "@beep/schema"
 import { $PackageNameId } from "@beep/identity/packages"
-import { Match, pipe } from "effect"
+import * as Match from "effect/Match";
+import { pipe } from "effect/Function";
 import * as F from "effect/Function"
 import * as A from "effect/Array"
 import * as P from "effect/Predicate"
@@ -1019,7 +1011,7 @@ const arraysEqual = (left: ReadonlyArray<string>, right: ReadonlyArray<string>) 
 Example:
 
 ```ts
-import { SchemaTransformation } from "effect"
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as S from "effect/Schema"
 import * as Str from "effect/String"
 
@@ -1043,7 +1035,7 @@ const NativePathToPosixPath = S.String.pipe(
 Example:
 
 ```ts
-import { Order } from "effect"
+import * as Order from "effect/Order";
 import * as A from "effect/Array"
 
 const byName = Order.mapInput(Order.String, (item: { readonly name: string }) => item.name)
@@ -1058,7 +1050,7 @@ const sorted = A.sort(items, byName)
 Example:
 
 ```ts
-import { SchemaTransformation } from "effect"
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as S from "effect/Schema"
 
 const UnknownToString = S.Unknown.pipe(
@@ -1102,7 +1094,7 @@ explicitly in their fields.
 ### Template: Safe nullable boundary conversion
 
 ```ts
-import { pipe } from "effect"
+import { pipe } from "effect/Function";
 import * as O from "effect/Option"
 
 const fromNullableName = (name: string | null | undefined) =>
@@ -1158,7 +1150,7 @@ export class UserProfile extends S.Class<UserProfile>($I`UserProfile`)(
 ### Template: Match, LiteralKit([/* ... */]).$match or effect/Schema TaggedUnion over switch
 
 ```ts
-import { Match } from "effect"
+import * as Match from "effect/Match";
 import * as A from "effect/Array"
 import { LiteralKit } from "@beep/schema";
 
@@ -1224,8 +1216,7 @@ const matchTaggedUnion = MyTaggedUnion.match({
 ### Template: Effect-returning function constructor
 
 ```ts
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 export const runTask = Effect.fn("Task.run")(function* (taskId: string) {
   yield* Effect.logInfo("run task", taskId)
   return taskId
@@ -1278,8 +1269,7 @@ export const encodePayloadJson = S.encodeUnknownEffect(PayloadJson)
 ### Template: Runtime boundary execution
 
 ```ts
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 export const buildReport = Effect.fn("Report.build")(function* () {
   return "ok"
 })
@@ -1291,8 +1281,7 @@ export const buildReport = Effect.fn("Report.build")(function* () {
 ### Template: Scoped resource helper
 
 ```ts
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 export const withResource = <A, E, R>(
   use: (resource: Resource) => Effect.Effect<A, E, R>
 ) =>
@@ -1306,8 +1295,9 @@ export const withResource = <A, E, R>(
 ### Template: Retry + timeout
 
 ```ts
-import { Duration, Effect, Schedule } from "effect"
-
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Schedule from "effect/Schedule";
 export const resilientTask = task.pipe(
   Effect.retry(Schedule.recurs(3)),
   Effect.timeoutOption(Duration.seconds(5))
@@ -1317,8 +1307,8 @@ export const resilientTask = task.pipe(
 ### Template: Config + redacted secret
 
 ```ts
-import { Config, Effect } from "effect"
-
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 export const loadConfig = Effect.fn("Config.load")(function* () {
   const port = yield* Config.int("PORT")
   const apiKey = yield* Config.redacted("API_KEY")
@@ -1329,8 +1319,8 @@ export const loadConfig = Effect.fn("Config.load")(function* () {
 ### Template: Isolated layer provide
 
 ```ts
-import { Effect, Layer } from "effect"
-
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 export const runIsolated = program.pipe(
   Effect.provide(Layer.fresh(AppLayer), { local: true })
 )

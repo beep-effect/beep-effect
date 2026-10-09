@@ -6,7 +6,8 @@
  */
 
 import { Str } from "@beep/utils";
-import { Effect, FileSystem } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import { VersionSyncError } from "../../VersionSync.schemas.ts";
 

@@ -8,7 +8,7 @@ import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 
 describe("@beep/ffmpeg optional clip duration and frame width bounds", () => {

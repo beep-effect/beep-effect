@@ -12,8 +12,8 @@
 
 import { $OpenclawId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

@@ -25,9 +25,9 @@ import type { ImportDeclaration, SourceFile } from "ts-morph";
  *
  * const sourceFile = new Project({ useInMemoryFileSystem: true }).createSourceFile(
  *   "/a.ts",
- *   'import { Effect } from "effect";\nimport type { Layer } from "effect";\n'
+ *   'import * as Effect from "effect/Effect";\nimport type * as Layer from "effect/Layer";\n'
  * )
- * console.log(schemaParityCodemodValueImports(sourceFile, "effect").length) // 1
+ * console.log(schemaParityCodemodValueImports(sourceFile, "effect/Effect").length) // 1
  * ```
  *
  * @category utilities

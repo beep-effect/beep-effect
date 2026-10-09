@@ -10,7 +10,13 @@ import { IRI } from "@beep/rdf";
 import { XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Config, ConfigProvider, Context, Duration, Effect, Layer, Redacted } from "effect";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { RetryPolicy } from "./Retry.ts";
@@ -410,7 +416,7 @@ export class AppConfig extends S.Class<AppConfig>($I`AppConfig`)(
  * **Example** (Inspect the default LLM deadline)
  *
  * ```ts
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
  * console.log(Duration.toSeconds(DEFAULT_CONFIG.llm.retryPolicy.attemptTimeout)) // 60
@@ -655,7 +661,8 @@ const makeConfigService = Effect.gen(function* () {
  * **Example** (Read the configured LLM model)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
  * const model = Effect.runSync(
@@ -678,7 +685,7 @@ export class ConfigService extends Context.Service<ConfigService, AppConfig>()($
  * **Example** (Provide live config and read the LLM model)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ConfigService, ConfigServiceDefault } from "@effect-ontology/Service/Config"
  *
  * const model = Effect.runSync(
@@ -701,7 +708,7 @@ export const ConfigServiceDefault = Layer.effect(ConfigService, makeConfigServic
  * **Example** (Provide configuration overrides)
  *
  * ```ts
- * import { ConfigProvider } from "effect"
+ * import * as ConfigProvider from "effect/ConfigProvider";
  * import { makeConfigServiceLayer } from "@effect-ontology/Service/Config"
  *
  * const provider = ConfigProvider.fromUnknown({ LLM_MODEL: "claude-haiku-4-5" })

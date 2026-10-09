@@ -7,8 +7,11 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoCliId } from "@beep/identity/packages";
-import { Console, DateTime, Effect, Path } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ResearchCommandError } from "../Research.errors.ts";
@@ -48,7 +51,7 @@ const wikilinkFor = (cardPath: string, title: string | null): string => {
  * **Example** (Write vault digest note)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { digestImpl } from "@beep/repo-cli/commands/Research/internal/Digest"
  * import { ResearchDigestOptions } from "@beep/repo-cli/commands/Research"
  *

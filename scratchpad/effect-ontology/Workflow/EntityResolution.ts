@@ -12,7 +12,9 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Effect, MutableHashMap, MutableHashSet } from "effect";
+import * as Effect from "effect/Effect";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -200,7 +202,7 @@ const mergeEntityCluster = (
  *
  * ```ts
  * import { IRI } from "@beep/rdf"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Entity, KnowledgeGraph } from "@effect-ontology/Model/Entity"
  * import { EntityId } from "@effect-ontology/Model/shared"
  * import { resolveEntities } from "@effect-ontology/Workflow/EntityResolution"

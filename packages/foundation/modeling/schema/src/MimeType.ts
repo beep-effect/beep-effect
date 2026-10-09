@@ -16,7 +16,8 @@ import {
 } from "@beep/data/MimeTypes";
 import { $SchemaId } from "@beep/identity/packages";
 import { A, Struct } from "@beep/utils";
-import { Function as Fn, flow, pipe } from "effect";
+import * as Fn from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import { LiteralKit } from "./LiteralKit/index.ts";
 import type { LiteralKit as LiteralKitSchema } from "./LiteralKit/index.ts";
 

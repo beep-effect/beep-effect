@@ -12,7 +12,8 @@ import { DmsProvider, RemoteItemId, SyncItemKind, VaultRelPath } from "@beep/doc
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type * as O from "effect/Option";
 
@@ -334,7 +335,7 @@ export class ListSyncItemsByWorkspaceInput extends S.Class<ListSyncItemsByWorksp
  *   type SyncItemRepositoryShape
  * } from "@beep/documents-use-cases/entities/SyncItem/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
@@ -385,7 +386,7 @@ export interface SyncItemRepositoryShape {
  *   SyncItemRepositoryUnavailable,
  *   type SyncItemRepositoryShape
  * } from "@beep/documents-use-cases/entities/SyncItem/server"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const repository: SyncItemRepositoryShape = {

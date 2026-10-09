@@ -7,8 +7,7 @@
  */
 
 import { A, O, Str } from "@beep/utils";
-import { pipe } from "effect";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as R from "effect/Record";
 
 /**

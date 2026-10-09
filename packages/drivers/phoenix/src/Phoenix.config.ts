@@ -7,9 +7,10 @@
 
 import { $PhoenixId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
-import { Effect, SchemaGetter } from "effect";
+import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
 
 const $I = $PhoenixId.create("Phoenix.config");
@@ -60,7 +61,7 @@ const phoenixConfigInputHeadersDefault = R.empty();
  * **Example** (Create config with make)
  *
  * ```ts
- * import { Redacted } from "effect"
+ * import * as Redacted from "effect/Redacted";
  * import * as O from "effect/Option"
  * import { PhoenixConfigInput } from "@beep/phoenix"
  *

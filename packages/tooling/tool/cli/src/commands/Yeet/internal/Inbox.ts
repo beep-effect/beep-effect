@@ -41,11 +41,15 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, FileSystem, Match, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { appendContainedFileString, readContainedFileStringNoFollow } from "../../../internal/cli/FsGuards.ts";
@@ -177,8 +181,7 @@ export class YeetFailureCapsule extends S.Class<YeetFailureCapsule>($I`YeetFailu
  *
  * ```ts
  * import { YeetCheckFailedRow, YeetFailureCapsule, yeetInboxRowId } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const capsule = YeetFailureCapsule.make({
  *   bucket: "fail",
  *   headSha: "abc123",
@@ -800,8 +803,8 @@ export class YeetPrMergeReadyCapsule extends S.Class<YeetPrMergeReadyCapsule>($I
  *   headSha: "abc123", prNumber: 1144, url: null, readyAt: "2026-09-16T00:12:00.000Z",
  *   pushedAt: null, settledAt: null, closeoutAt: null, pushToReadyMs: null
  * })
- * import { Effect } from "effect"
  *
+ * import * as Effect from "effect/Effect";
  * const program = yeetPrMergeReadyRowId(capsule).pipe(
  *   Effect.map((id) =>
  *     YeetPrMergeReadyRow.make({
@@ -866,7 +869,7 @@ export class YeetProofJobFinishedRow extends S.Class<YeetProofJobFinishedRow>($I
  * ```ts
  * import { yeetProofJobRowId } from "@beep/repo-cli/test/Yeet"
  * import { UUID } from "@beep/repo-cli/test/SharedInternals"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * const jobId = Effect.runSync(S.decodeEffect(UUID)("0f5c9a3e-6d3b-4c1e-9a8f-2b7d1c4e5a60"))
  * console.log(yeetProofJobRowId({ jobId }).startsWith("proof-job-")) // true
@@ -1192,8 +1195,7 @@ const yeetInboxIdentityId = Effect.fnUntraced(function* (label: string, parts: R
  *
  * ```ts
  * import { yeetInboxRowId } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.all([
  *   yeetInboxRowId({ headSha: "abc123", lane: "Check / Coverage", prNumber: 751 }),
  *   yeetInboxRowId({ headSha: "abc123", lane: "Check / Coverage", prNumber: 751 }),
@@ -1216,8 +1218,7 @@ export const yeetInboxRowId = (capsule: Pick<YeetFailureCapsule, "headSha" | "la
  *
  * ```ts
  * import { yeetSiblingCollisionRowId } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.all([
  *   yeetSiblingCollisionRowId({
  *     contendedPaths: ["b.ts", "a.ts"], ownerCheckout: "/fleet/a", siblingCheckout: "/fleet/b"
@@ -1248,9 +1249,7 @@ export const yeetSiblingCollisionRowId = (capsule: YeetSiblingCollisionCapsule) 
  *
  * ```ts
  * import { yeetReviewThreadRowId } from "@beep/repo-cli/test/Yeet"
- *
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = yeetReviewThreadRowId({ headSha: "abc123", prNumber: 900, threadId: "PRRT_abc" })
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -1270,9 +1269,7 @@ export const yeetReviewThreadRowId = (capsule: Pick<YeetReviewThreadCapsule, "he
  *
  * ```ts
  * import { yeetBaseDriftRowId } from "@beep/repo-cli/test/Yeet"
- *
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = yeetBaseDriftRowId({ base: "origin/main", headSha: "abc123", prNumber: 900 })
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -1361,9 +1358,7 @@ export const yeetPrCommentRowId = (capsule: Pick<YeetPrCommentCapsule, "commentI
  *
  * ```ts
  * import { yeetLocalShardFailedRowId } from "@beep/repo-cli/test/Yeet"
- *
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = yeetLocalShardFailedRowId({ command: "bun run check", headSha: "abc123", shard: "Check" })
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -1389,9 +1384,7 @@ export const yeetLocalShardFailedRowId = (
  *
  * ```ts
  * import { yeetPrMergeReadyRowId } from "@beep/repo-cli/test/Yeet"
- *
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = yeetPrMergeReadyRowId({ headSha: "abc123", prNumber: 1144 }).pipe(
  *   Effect.map((id) => id.startsWith("pr-merge-ready-"))
  * )
@@ -1466,8 +1459,8 @@ export const yeetInboxRowPrNumber = (row: YeetInboxRow): O.Option<number> =>
  *   bucket: "fail", headSha: "abc123", lane: "Check", link: null,
  *   observedAt: "2026-08-27T00:00:00Z", prNumber: 900, state: "FAILURE", workflow: null
  * })
- * import { Effect } from "effect"
  *
+ * import * as Effect from "effect/Effect";
  * const program = yeetInboxRowId(capsule).pipe(
  *   Effect.flatMap((id) => {
  *     const row = YeetCheckFailedRow.make({
@@ -1609,8 +1602,7 @@ export class YeetInboxPaths extends S.Class<YeetInboxPaths>($I`YeetInboxPaths`)(
  *
  * ```ts
  * import { yeetInboxPaths } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(yeetInboxPaths("/repo"))) // true
  * ```
  *
@@ -1744,8 +1736,7 @@ rm -f -- "$incoming"
  *
  * ```ts
  * import { yeetInboxAckPath } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(yeetInboxAckPath("/repo", "lane-abc"))) // true
  * ```
  *
@@ -1794,8 +1785,7 @@ export const YeetInboxRowJson = JsonStringCodec(YeetInboxRow);
  *
  * ```ts
  * import { renderYeetInboxRowLine, YeetCheckFailedRow, YeetFailureCapsule } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const row = YeetCheckFailedRow.make({
  *   capsule: YeetFailureCapsule.make({
  *     bucket: "fail",
@@ -1840,8 +1830,7 @@ export const renderYeetInboxRowLine = (row: YeetInboxRow): Effect.Effect<string,
  *
  * ```ts
  * import { appendYeetInboxRow, YeetCheckFailedRow, YeetFailureCapsule } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const row = YeetCheckFailedRow.make({
  *   capsule: YeetFailureCapsule.make({
  *     bucket: "fail",
@@ -1905,8 +1894,7 @@ export const appendYeetInboxRow = Effect.fn("Yeet.appendYeetInboxRow")(function*
  *
  * ```ts
  * import { appendYeetInboxRowOnce, YeetBaseDriftCapsule, YeetBaseDriftRow, yeetBaseDriftRowId } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const capsule = YeetBaseDriftCapsule.make({ base: "origin/main", headSha: "abc123", prNumber: 900 })
  * const row = YeetBaseDriftRow.make({
  *   capsule, checkout: "/repo", id: yeetBaseDriftRowId(capsule), severity: "P2", ts: "2026-08-27T00:00:00Z"

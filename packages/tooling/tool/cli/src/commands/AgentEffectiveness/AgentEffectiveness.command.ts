@@ -32,11 +32,16 @@ import {
   syncAgentEffectivenessPhoenix,
 } from "@beep/repo-ai-metrics";
 import { A } from "@beep/utils";
-import { Config, Console, DateTime, Effect, flow, Layer, Path, pipe } from "effect";
+import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
-import { dual } from "effect/Function";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { aiMetricsDataRootFlag as dataRootFlag, jsonFlag } from "../../internal/cli/Flags.ts";
@@ -54,8 +59,8 @@ import type {
   AgentEffectivenessPhoenixSyncResult,
   AgentEffectivenessPromptBundle,
 } from "@beep/repo-ai-metrics";
-import type { Scope } from "effect";
 import type { HttpClient } from "effect/http";
+import type * as Scope from "effect/Scope";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/AgentEffectiveness.command");
 
@@ -690,7 +695,7 @@ const evalsCommand = Command.make("evals", {}, () =>
  *
  * ```ts
  * import { agentEffectivenessCommand } from "@beep/repo-cli/commands/AgentEffectiveness/index"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Command } from "effect/cli"
  *
  * const run = Command.run(agentEffectivenessCommand, { version: "0.0.0" })

@@ -4,7 +4,7 @@ import {
   layerProtobuf,
   OtlpPacketLab,
 } from "@beep/observability/experimental/server";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 
 void layerJson;
 void layerProtobuf;

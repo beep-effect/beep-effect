@@ -7,9 +7,11 @@
 
 import { $XaiId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Effect, pipe, Tuple } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 
 const $I = $XaiId.create("XAi.models");
 const XAiSseEventIndex = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(

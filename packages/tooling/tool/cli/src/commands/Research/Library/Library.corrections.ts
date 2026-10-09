@@ -5,8 +5,9 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { DateTime, Effect } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { encodeLibraryJson, saveLibraryText } from "./Library.adapter.ts";
@@ -58,7 +59,7 @@ export class LibraryCaptureCorrection extends S.Class<LibraryCaptureCorrection>(
  * ```ts
  * import { correctLibraryCaptures } from "@beep/repo-cli/test/ResearchLibrary"
  * import { withCatalog } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const correction = withCatalog("/library", (catalog) => correctLibraryCaptures("/library", catalog))
  * console.log(Effect.isEffect(correction))
  * ```

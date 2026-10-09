@@ -1,7 +1,7 @@
 import { decodeTomlTextWith, decodeYamlTextWith } from "@beep/repo-cli/test/SharedInternals";
 import { describe, it } from "@effect/vitest";
 import { assertTrue, deepStrictEqual } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 

@@ -6,8 +6,12 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { Config, Effect, FileSystem, flow, Path, pipe } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { imageSizeFromFile } from "image-size/fromFile";
 import sharp from "sharp";
 import { runCapturedStreams } from "../../../internal/process/StepExec.ts";

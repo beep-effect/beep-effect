@@ -9,10 +9,19 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Console, Context, DateTime, Duration, Effect, FileSystem, Layer, Path, pipe, Schedule } from "effect";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as YAML from "yaml";
 import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
@@ -200,8 +209,7 @@ export interface RunnersServiceShape {
  *
  * ```ts
  * import { RunnersService } from "@beep/repo-cli/commands/Runners"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Effect.service(RunnersService))) // true
  * ```
  *

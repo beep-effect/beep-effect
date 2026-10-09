@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $ProfessionalDesktopId.create("transport/SidecarTransport");

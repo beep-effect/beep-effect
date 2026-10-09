@@ -43,25 +43,23 @@ import { A, N, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import {
-  Cause,
-  ConfigProvider,
-  Console,
-  Context,
-  Data,
-  Effect,
-  Exit,
-  FileSystem,
-  Layer,
-  Order,
-  Path,
-  pipe,
-} from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import { Command } from "effect/cli";
+import * as Data from "effect/Data";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";

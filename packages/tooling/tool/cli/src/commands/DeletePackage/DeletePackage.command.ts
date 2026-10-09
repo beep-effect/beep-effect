@@ -10,9 +10,14 @@ import { DomainError, decodePackageJsonEffect, findRepoRoot, resolveWorkspaceDir
 import { normalizePath } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { A, Str, thunkFalse } from "@beep/utils";
-import { Config, Console, Effect, FileSystem, Path, pipe } from "effect";
+import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import { Argument, Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
@@ -368,8 +373,7 @@ const pruneChangesetFile = Effect.fn("DeletePackage.pruneChangesetFile")(functio
  *
  * ```ts
  * import { rewritePendingChangesets } from "@beep/repo-cli/commands/DeletePackage"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = rewritePendingChangesets("/repo", "@beep/probe", "labs-exempt")
  * console.log(Effect.isEffect(program)) // true
  * ```

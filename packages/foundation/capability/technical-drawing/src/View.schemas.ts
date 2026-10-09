@@ -9,7 +9,8 @@
 import { $TechnicalDrawingId } from "@beep/identity/packages";
 import { EmailString, Fn, LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import { BoundingBox, Camera, ModelSpec } from "./Geometry.schemas.ts";
 import type { Vec3 } from "./Geometry.schemas.ts";

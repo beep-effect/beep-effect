@@ -5,9 +5,15 @@
  * @since 0.0.0
  */
 
-import { Console, DateTime, Effect, FileSystem, MutableHashMap, MutableHashSet, Path } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ResearchCommandError } from "../Research.errors.ts";
@@ -108,7 +114,7 @@ const historyStubCard = Effect.fnUntraced(function* (
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { historySiftImpl } from "@beep/repo-cli/commands/Research/internal/HistorySift"
  * import { ResearchHistorySiftOptions } from "@beep/repo-cli/commands/Research"
  *

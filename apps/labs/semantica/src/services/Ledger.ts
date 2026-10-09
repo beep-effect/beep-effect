@@ -1,7 +1,7 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { Context } from "effect";
-import type { Effect } from "effect";
+import * as Context from "effect/Context";
 import type * as A from "effect/Array";
+import type * as Effect from "effect/Effect";
 import type * as O from "effect/Option";
 import type { SourceDocument } from "@/schema/Document";
 import type { LedgerFailed } from "@/schema/Errors";
@@ -41,8 +41,7 @@ interface LedgerShape {
  *
  * ```ts
  * import { Ledger } from "@/services/Ledger"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Ledger.pipe(Effect.map((service) => typeof service.read))
  * console.log(Effect.isEffect(program)) // true
  * ```

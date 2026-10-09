@@ -6,7 +6,9 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 
 const readFixture = Effect.fnUntraced(function* (name: string) {

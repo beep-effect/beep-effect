@@ -6,7 +6,8 @@ import {
 import { it } from "@beep/test-runner";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
-import { Effect, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as Path from "effect/Path";
 
 const labOwner = CoverageScopeOwner.make({
   packageName: "@beep/lab-demo",

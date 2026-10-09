@@ -7,9 +7,9 @@
 import { FsUtils } from "@beep/repo-utils/FsUtils";
 import { TSMorphService, TsMorphProjectInspectionRequest } from "@beep/repo-utils/TSMorph/index";
 import { normalizePath } from "@beep/schema";
-import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -64,7 +64,7 @@ export const resolveLawsPackageScope = Effect.fn("LawsPackage.resolveScope")(fun
  *
  * **Example** (Compose a package scan)
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { resolveLawsPackageScope, scanLawsPackage } from "@beep/repo-cli/commands/Laws/LawsPackage"
  * console.log(resolveLawsPackageScope("/repo", "packages/demo").pipe(Effect.flatMap(scanLawsPackage)))
  * ```

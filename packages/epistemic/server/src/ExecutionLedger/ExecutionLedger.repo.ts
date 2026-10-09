@@ -28,7 +28,9 @@ import {
 import { PostgresDrizzle, PostgresError } from "@beep/postgres";
 import { A, O } from "@beep/utils";
 import { and, asc, eq, isNull } from "drizzle-orm";
-import { Effect, pipe, Result } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import type { ExecutionLedgerError, ExecutionLedgerOperation } from "@beep/epistemic-use-cases/ExecutionLedger";
 
 const decisionTable = DbSchema.executionDecision;
@@ -74,8 +76,7 @@ const readUnavailable =
  *
  * ```ts
  * import { makeDrizzleExecutionLedger } from "@beep/epistemic-server/ExecutionLedger"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(makeDrizzleExecutionLedger()))
  * ```
  *

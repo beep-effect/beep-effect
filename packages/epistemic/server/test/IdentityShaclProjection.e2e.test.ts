@@ -13,8 +13,9 @@ import {
 import { ShaclValidationRequest, ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
-import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 

@@ -6,9 +6,12 @@
  */
 
 import { A, O, pipe, Str } from "@beep/utils";
-import { MutableHashMap, MutableHashSet, Order, Result } from "effect";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { applyJsoncModification } from "../../../internal/cli/Jsonc.ts";
 import { GoalManifest, GoalManifestSchemaVersion, isGoalStatus } from "../Goals.schemas.ts";

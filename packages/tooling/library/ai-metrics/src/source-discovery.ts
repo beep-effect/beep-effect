@@ -9,8 +9,14 @@ import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Clock, Effect, FileSystem, flow, Order, Path, pipe, Stream } from "effect";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { fileSizeBytes, modifiedAtMillis } from "./internal/file-info.ts";
 import { collectJsonlFiles, statOption } from "./internal/jsonl-discovery.ts";
 import { normalizedRelativePath, resolveTranscriptSourceRoots, transcriptLines } from "./internal/transcript-utils.ts";
@@ -623,7 +629,7 @@ const discoverOpenClawSource = Effect.fn("AiMetrics.discoverOpenClawSource")(fun
  * ```ts
  * import { AiMetricsSourceDiscoveryInput, discoverAiMetricsSources } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * const program = discoverAiMetricsSources(
  *   AiMetricsSourceDiscoveryInput.make({
@@ -692,8 +698,7 @@ export const discoverAiMetricsSources = Effect.fn("AiMetrics.discoverAiMetricsSo
  *
  * ```ts
  * import { AiMetricsSourceDiscoveryResult, sourceDiscoveryToJson } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const json = Effect.runPromise(
  *   sourceDiscoveryToJson(
  *     AiMetricsSourceDiscoveryResult.make({

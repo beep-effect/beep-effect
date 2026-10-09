@@ -12,8 +12,14 @@ import { $RepoUtilsId } from "@beep/identity/packages";
 import { A, P, thunkFalse } from "@beep/utils";
 import { Glob as SharedGlob, layer as SharedGlobLayer } from "@beep/utils/Glob";
 import * as O from "@beep/utils/Option";
-import { Context, Effect, FileSystem, Layer, MutableHashSet, Order, Path } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { DomainError, NoSuchFileError } from "./errors/index.ts";
 import { jsonStringifyPretty } from "./JsonUtils.ts";
@@ -162,7 +168,7 @@ export interface FsUtilsShape {
  * **Example** (Yielding FsUtils service)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { FsUtils } from "@beep/repo-utils/FsUtils"
  * const program = Effect.gen(function* () {
  *   const fsUtils = yield* FsUtils
@@ -183,7 +189,7 @@ export class FsUtils extends Context.Service<FsUtils, FsUtilsShape>()($I`FsUtils
  * **Example** (Providing FsUtilsLive layer)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { FsUtilsLive } from "@beep/repo-utils/FsUtils"
  * const layer = Layer.provideMerge(FsUtilsLive, Layer.empty)
  * console.log(layer)
@@ -412,7 +418,7 @@ const includeAllFiles = (_filePath: string, _name: string): boolean => true;
  * **Example** (Walking for TypeScript files)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { walkFiles } from "@beep/repo-utils/FsUtils"
  *
  * const program = walkFiles("packages/example/src", {
@@ -515,7 +521,7 @@ export const walkFiles: {
  * **Example** (Checking path existence safely)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { exists } from "@beep/repo-utils/FsUtils"
  *
  * const program = exists("package.json")
@@ -549,7 +555,8 @@ export const exists: (filePath: string) => Effect.Effect<boolean, never, FileSys
  * **Example** (Finding package dir with fallback)
  *
  * ```ts
- * import { Effect, pipe } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import { pipe } from "effect/Function";
  * import * as O from "effect/Option"
  * import { findNearestPackageDir } from "@beep/repo-utils/FsUtils"
  *

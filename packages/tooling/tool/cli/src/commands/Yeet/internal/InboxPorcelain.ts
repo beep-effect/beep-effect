@@ -25,9 +25,11 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { Console, DateTime, Effect, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -52,8 +54,9 @@ import {
   yeetInboxRowIsObserved,
 } from "./Inbox.ts";
 import { loadYeetInboxView, YeetInboxView, YeetInboxViewJson } from "./InboxView.ts";
-import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { YeetAckResolution, YeetAckState } from "./Ack.ts";
 import type { YeetInboxRow, YeetInboxSeverity } from "./Inbox.ts";
 import type { YeetInboxEntry } from "./InboxView.ts";
@@ -242,8 +245,7 @@ export const renderYeetInboxView = (view: YeetInboxView): string => {
  *
  * ```ts
  * import { parseYeetAckResolution } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const resolution = Effect.runSync(
  *   parseYeetAckResolution({
  *     actor: "", environmentOnly: false, expiresAt: "", fixSha: "2817f28",
@@ -387,8 +389,7 @@ export class YeetInboxAckReport extends S.Class<YeetInboxAckReport>($I`YeetInbox
  *
  * ```ts
  * import { ackYeetInboxRow, YeetAckFixResolution } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const resolution = YeetAckFixResolution.make({ sha: "2817f28" })
  * console.log(Effect.isEffect(ackYeetInboxRow("/repo", "coverage-abc", resolution, "2026-08-17T00:00:00Z"))) // true
  * ```
@@ -444,8 +445,7 @@ export const ackYeetInboxRow = Effect.fn("Yeet.ackYeetInboxRow")(function* (
  *
  * ```ts
  * import { appendYeetInboxRowFromText } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(appendYeetInboxRowFromText("/repo", "{}"))) // true
  * ```
  *
@@ -493,8 +493,7 @@ const readYeetInboxStdin = (fromStdin: boolean): Effect.Effect<string, YeetComma
  *
  * ```ts
  * import { renderYeetInboxListOutput, YeetInboxView } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const view = YeetInboxView.make({ entries: [], skippedLines: 0, unreadable: false })
  * const output = renderYeetInboxListOutput(view, { json: false, severity: "all", unacked: false })
  * console.log(Effect.runSync(output)) // "[yeet] inbox: 0 row(s), 0 unacked, 0 skipped line(s)"
@@ -530,8 +529,7 @@ export const renderYeetInboxListOutput = Effect.fn("Yeet.renderYeetInboxListOutp
  *
  * ```ts
  * import { runYeetInboxList } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = runYeetInboxList({ json: false, severity: "all", unacked: false })
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -556,8 +554,7 @@ export const runYeetInboxList = Effect.fn("Yeet.runInboxListCommand")(function* 
  *
  * ```ts
  * import { runYeetInboxAck } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = runYeetInboxAck({
  *   actor: "", expiresAt: "", fixSha: "2817f28", id: "coverage-abc", reason: "", shard: "",
  *   threadUrl: "", waive: false, wontfix: false
@@ -590,8 +587,7 @@ export const runYeetInboxAck = Effect.fn("Yeet.runInboxAckCommand")(function* (
  *
  * ```ts
  * import { runYeetInboxAppend } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = runYeetInboxAppend({ fromStdin: false })
  * console.log(Effect.isEffect(program)) // true
  * ```

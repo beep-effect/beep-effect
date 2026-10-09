@@ -16,10 +16,19 @@
 
 import { $M365McpId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Context, Crypto, DateTime, Effect, FileSystem, Layer, Order, Path, pipe, Semaphore } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
 import { emptyByDefault } from "./internal/OutboxFields.ts";
 import { OutboxAttachmentDigest } from "./OutboxAttachmentSource.ts";
@@ -99,8 +108,7 @@ const addresses = (description: string) => S.Array(S.String).annotateKey({ descr
  *
  * ```ts
  * import { OutboxDraftCreatedRecord } from "@beep/m365-mcp/OutboxAuditLog"
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const record = OutboxDraftCreatedRecord.make({
  *   at: DateTime.makeUnsafe("2030-01-15T00:00:00Z"),
  *   attachments: [],
@@ -139,8 +147,7 @@ export class OutboxDraftCreatedRecord extends S.TaggedClass<OutboxDraftCreatedRe
  *
  * ```ts
  * import { OutboxDraftDeletedRecord } from "@beep/m365-mcp/OutboxAuditLog"
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const record = OutboxDraftDeletedRecord.make({
  *   at: DateTime.makeUnsafe("2030-01-15T00:00:00Z"),
  *   auditId: "audit-2",
@@ -169,8 +176,7 @@ export class OutboxDraftDeletedRecord extends S.TaggedClass<OutboxDraftDeletedRe
  *
  * ```ts
  * import { OutboxSendIntentRecord } from "@beep/m365-mcp/OutboxAuditLog"
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const record = OutboxSendIntentRecord.make({
  *   at: DateTime.makeUnsafe("2030-01-15T00:00:00Z"),
  *   attachments: [],
@@ -213,8 +219,7 @@ export class OutboxSendIntentRecord extends S.TaggedClass<OutboxSendIntentRecord
  *
  * ```ts
  * import { OutboxSendOutcomeRecord } from "@beep/m365-mcp/OutboxAuditLog"
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const record = OutboxSendOutcomeRecord.make({
  *   at: DateTime.makeUnsafe("2030-01-15T00:00:00Z"),
  *   auditId: "audit-4",
@@ -257,8 +262,7 @@ export class OutboxSendOutcomeRecord extends S.TaggedClass<OutboxSendOutcomeReco
  *
  * ```ts
  * import { OutboxEventCreatedRecord } from "@beep/m365-mcp/OutboxAuditLog"
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const record = OutboxEventCreatedRecord.make({
  *   at: DateTime.makeUnsafe("2030-01-15T00:00:00Z"),
  *   auditId: "audit-5",
@@ -289,8 +293,7 @@ export class OutboxEventCreatedRecord extends S.TaggedClass<OutboxEventCreatedRe
  *
  * ```ts
  * import { OutboxEventUpdatedRecord } from "@beep/m365-mcp/OutboxAuditLog"
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const record = OutboxEventUpdatedRecord.make({
  *   at: DateTime.makeUnsafe("2030-01-15T00:00:00Z"),
  *   auditId: "audit-6",
@@ -322,8 +325,7 @@ export class OutboxEventUpdatedRecord extends S.TaggedClass<OutboxEventUpdatedRe
  *
  * ```ts
  * import { OutboxAuditRecord, OutboxDraftDeletedRecord } from "@beep/m365-mcp/OutboxAuditLog"
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const record = OutboxDraftDeletedRecord.make({
  *   at: DateTime.makeUnsafe("2030-01-15T00:00:00Z"),
  *   auditId: "audit-2",
@@ -454,8 +456,8 @@ export type OutboxAuditIdsShape = {
  *
  * ```ts
  * import { OutboxAuditIds } from "@beep/m365-mcp/OutboxAuditLog"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const layer = Layer.succeed(OutboxAuditIds, OutboxAuditIds.of({ next: Effect.succeed("audit-1") }))
  * console.log(Layer.isLayer(layer))
  * // true
@@ -472,8 +474,7 @@ export class OutboxAuditIds extends Context.Service<OutboxAuditIds, OutboxAuditI
    *
    * ```ts
    * import { OutboxAuditIds } from "@beep/m365-mcp/OutboxAuditLog"
-   * import { Layer } from "effect"
-   *
+   * import * as Layer from "effect/Layer";
    * console.log(Layer.isLayer(OutboxAuditIds.layer))
    * // true
    * ```
@@ -530,8 +531,7 @@ const failure = (reason: OutboxAuditErrorReason, message: string) => (): OutboxA
  *
  * ```ts
  * import { OutboxDraftDeletedRecord, outboxAuditFileName } from "@beep/m365-mcp/OutboxAuditLog"
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const record = OutboxDraftDeletedRecord.make({
  *   at: DateTime.makeUnsafe("2030-01-15T00:00:00Z"),
  *   auditId: "audit-2",
@@ -616,8 +616,7 @@ const makeLog = Effect.fnUntraced(function* (directory: string) {
  *
  * ```ts
  * import { OutboxAuditLog } from "@beep/m365-mcp/OutboxAuditLog"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const layer = OutboxAuditLog.layer("/var/lib/outbox/audit")
  * console.log(Layer.isLayer(layer))
  * // true
@@ -643,8 +642,7 @@ export class OutboxAuditLog extends Context.Service<OutboxAuditLog, OutboxAuditL
    *
    * ```ts
    * import { OutboxAuditLog } from "@beep/m365-mcp/OutboxAuditLog"
-   * import { Layer } from "effect"
-   *
+   * import * as Layer from "effect/Layer";
    * const layer = OutboxAuditLog.layer("/var/lib/outbox/audit")
    * console.log(Layer.isLayer(layer))
    * // true

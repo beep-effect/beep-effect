@@ -27,9 +27,14 @@ import {
   recordCachePolicyBaseline,
 } from "@beep/repo-configs/cache";
 import { Sha256HexFromBytes } from "@beep/schema";
-import { Context, Effect, FileSystem, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as Rec from "effect/Record";
 import * as R from "effect/Result";
 import * as S from "effect/Schema";

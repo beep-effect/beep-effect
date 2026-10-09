@@ -8,9 +8,12 @@
 import { $RdfId } from "@beep/identity/packages";
 import { A, R, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, Match, Order, pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { IRI } from "./Iri.ts";
 import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata/index.ts";

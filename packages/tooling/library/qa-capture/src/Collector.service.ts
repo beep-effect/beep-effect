@@ -15,9 +15,20 @@
 import { $QaCaptureId } from "@beep/identity/packages";
 import { A, O, Str } from "@beep/utils";
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
-import { Clock, Context, Deferred, Effect, Fiber, FileSystem, Layer, Match, Path, pipe, Queue, Ref } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import { HttpRouter, HttpServer } from "effect/http";
 import { HttpApiBuilder } from "effect/http-api";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Path from "effect/Path";
+import * as Queue from "effect/Queue";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { decodeActionEventJson, encodeActionEventJson, MarkerEvent } from "./ActionEvent.models.ts";
 import { CollectorHealth, EventsAccepted, MarkAccepted, QaCollectorApi, StopAccepted } from "./Collector.api.ts";
@@ -30,7 +41,8 @@ import {
   SessionId,
 } from "./QaCapture.models.ts";
 import { Witness } from "./Witness.service.ts";
-import type { Cause, Scope } from "effect";
+import type * as Cause from "effect/Cause";
+import type * as Scope from "effect/Scope";
 import type { ActionEvent } from "./ActionEvent.models.ts";
 
 const $I = $QaCaptureId.create("Collector.service");
@@ -233,7 +245,7 @@ export interface CollectorRunning {
  *
  * ```ts
  * import type { CollectorShape } from "@beep/qa-capture"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const service: CollectorShape = { serve: () => Effect.die("not implemented") }
  * console.log(service)
  * ```

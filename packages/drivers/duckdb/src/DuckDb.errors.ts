@@ -14,7 +14,7 @@
 import { $DuckdbId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -153,8 +153,7 @@ export class DuckDbErrorFromUnknownOptions extends S.Class<DuckDbErrorFromUnknow
  *
  * ```ts
  * import { DuckDbError } from "@beep/duckdb"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const failing = Effect.fail(DuckDbError.make({
  *   message: "DuckDB query failed.",
  *   operation: "query"

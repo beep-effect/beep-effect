@@ -1,10 +1,14 @@
 import { $RepoConfigsId } from "@beep/identity";
 import { NativePathToPosixPath } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Effect, flow, Inspectable, pipe, Result, SchemaIssue, SchemaTransformation } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { parse, printParseErrorCode } from "jsonc-parser";
 import { PosixPath } from "../../eslint/Shared.ts";
 import type { ParseError } from "jsonc-parser";

@@ -4,7 +4,7 @@ import { generateSyntheticGraph3DProjection, SyntheticGraph3DOptions } from "@be
 import { Graph3DRenderOptions, renderGraph3D } from "@beep/graph-3d/browser";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { userEvent } from "vitest/browser";
 
 const mountContainer = (): HTMLDivElement => {

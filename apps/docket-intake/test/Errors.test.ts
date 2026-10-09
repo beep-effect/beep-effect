@@ -3,8 +3,8 @@
  */
 import { DocketIntakeError } from "@beep/law-practice-use-cases/DocketIntake";
 import { describe, expect, it } from "@effect/vitest";
-import { Runtime } from "effect";
 import * as A from "effect/Array";
+import * as Runtime from "effect/Runtime";
 import { DocketIntakeCommandError, docketIntakeExitCode } from "@/Errors";
 
 describe("@beep/docket-intake command failures", () => {

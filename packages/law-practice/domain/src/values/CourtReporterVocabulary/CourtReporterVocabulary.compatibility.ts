@@ -6,9 +6,9 @@
  */
 
 import { A, O } from "@beep/utils";
-import { Order, pipe } from "effect";
 import * as Eq from "effect/Equal";
-import { dual, flow } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import {
   ArtifactCompatibilityPolicy,

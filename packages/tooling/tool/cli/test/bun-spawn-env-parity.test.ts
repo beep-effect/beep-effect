@@ -3,8 +3,11 @@ import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
-import { Config, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 

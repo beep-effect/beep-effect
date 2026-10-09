@@ -10,7 +10,7 @@
  * **Example** (Classify and summarize cause)
  *
  * ```ts import.meta.vitest name="Classify and summarize cause"
- * import { Cause } from "effect"
+ * import * as Cause from "effect/Cause";
  * import { classifyCause, summarizeCause } from "@beep/observability"
  *
  * const cause = Cause.fail(new Error("boom"))
@@ -27,10 +27,14 @@
 import { $ObservabilityId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Cause, Exit, flow, Match, Number as N, pipe, Struct } from "effect";
-import { constant, dual } from "effect/Function";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
+import { constant, dual, flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import { decodeNonNegativeInt } from "./internal/decode.ts";
 
 const $I = $ObservabilityId.create("CauseDiagnostics");
@@ -45,7 +49,7 @@ const $I = $ObservabilityId.create("CauseDiagnostics");
  * **Example** (Classify causes for schema values)
  *
  * ```ts import.meta.vitest name="Classify causes for schema values"
- * import { Cause } from "effect"
+ * import * as Cause from "effect/Cause";
  * import { classifyCause } from "@beep/observability"
  *
  * classifyCause(Cause.empty) // => "empty"
@@ -85,7 +89,7 @@ export type CauseClassification = typeof CauseClassification.Type;
  * **Example** (Read success exit outcome)
  *
  * ```ts import.meta.vitest name="Read success exit outcome"
- * import { Exit } from "effect"
+ * import * as Exit from "effect/Exit";
  * import { summarizeExit } from "@beep/observability"
  *
  * const outcome = summarizeExit(Exit.succeed("ok")).outcome
@@ -148,7 +152,7 @@ export class CauseFingerprint extends S.Class<CauseFingerprint>($I`CauseFingerpr
  * **Example** (Summarize cause field counts)
  *
  * ```ts import.meta.vitest name="Summarize cause field counts"
- * import { Cause } from "effect"
+ * import * as Cause from "effect/Cause";
  * import { summarizeCause } from "@beep/observability"
  *
  * const summary = summarizeCause(Cause.fail(new Error("timeout")))
@@ -208,7 +212,8 @@ export type CauseSummary = typeof CauseSummary.Type;
  * **Example** (Build success and failure summaries)
  *
  * ```ts import.meta.vitest name="Build success and failure summaries"
- * import { Exit, Cause } from "effect"
+ * import * as Exit from "effect/Exit";
+ * import * as Cause from "effect/Cause";
  * import { summarizeExit } from "@beep/observability"
  *
  * const success = summarizeExit(Exit.succeed(42))
@@ -258,7 +263,7 @@ const ObservedExitSummaryTagged = CauseClassification.toTaggedUnion("classificat
  * **Example** (Decode observed exit summary)
  *
  * ```ts import.meta.vitest name="Decode observed exit summary"
- * import { Exit } from "effect"
+ * import * as Exit from "effect/Exit";
  * import * as S from "effect/Schema"
  * import { ObservedExitSummary, summarizeExit } from "@beep/observability"
  *
@@ -409,7 +414,7 @@ const classifyReasonCounts = flow(
  * **Example** (Classify causes by reason makeup)
  *
  * ```ts import.meta.vitest name="Classify causes by reason makeup"
- * import { Cause } from "effect"
+ * import * as Cause from "effect/Cause";
  * import { classifyCause } from "@beep/observability"
  *
  * classifyCause(Cause.empty) // => "empty"
@@ -433,7 +438,7 @@ export const classifyCause = flow(summarizeReasonCounts, classifyReasonCounts);
  * **Example** (Fingerprint failed cause)
  *
  * ```ts import.meta.vitest name="Fingerprint failed cause"
- * import { Cause } from "effect"
+ * import * as Cause from "effect/Cause";
  * import { fingerprintCause } from "@beep/observability"
  *
  * const fp = fingerprintCause(Cause.fail(new Error("connection refused")))
@@ -455,7 +460,7 @@ export const fingerprintCause = (cause: Cause.Cause<unknown>): CauseFingerprint 
  * **Example** (Summarize failed cause fields)
  *
  * ```ts import.meta.vitest name="Summarize failed cause fields"
- * import { Cause } from "effect"
+ * import * as Cause from "effect/Cause";
  * import { summarizeCause } from "@beep/observability"
  *
  * const summary = summarizeCause(Cause.fail(new Error("timeout")))
@@ -506,7 +511,7 @@ export const summarizeCause = (cause: Cause.Cause<unknown>): CauseSummary => {
  * **Example** (Summarize success and failed exits)
  *
  * ```ts import.meta.vitest name="Summarize success and failed exits"
- * import { Exit } from "effect"
+ * import * as Exit from "effect/Exit";
  * import { summarizeExit } from "@beep/observability"
  *
  * const ok = summarizeExit(Exit.succeed("done"))
@@ -565,7 +570,7 @@ export const summarizeExit = <A, E>(exit: Exit.Exit<A, E>): ObservedExitSummary 
  * **Example** (Render compact cause string)
  *
  * ```typescript
- * import { Cause } from "effect"
+ * import * as Cause from "effect/Cause";
  * import { renderObservedCause } from "@beep/observability"
  *
  * const rendered = renderObservedCause(Cause.fail(new Error("boom")))

@@ -7,7 +7,9 @@
  */
 
 import { A, O } from "@beep/utils";
-import { MutableHashMap, Order, pipe } from "effect";
+import { pipe } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Order from "effect/Order";
 import { PDFArray, PDFDict, PDFName, PDFRef } from "pdf-lib";
 import { PageSize, PdfFont, PdfStructure } from "../PdfTools.models.ts";
 import type { PDFDocument } from "pdf-lib";

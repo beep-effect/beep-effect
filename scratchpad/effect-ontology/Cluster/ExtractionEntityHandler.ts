@@ -16,19 +16,17 @@ import { $ScratchpadId } from "@beep/identity";
 import { Percentage } from "@beep/schema/Percentage";
 import type { UnitInterval } from "@beep/schema/UnitInterval";
 import { thunk0 } from "@beep/utils/thunk";
-import {
-  Chunk,
-  DateTime,
-  Deferred,
-  Duration,
-  Effect,
-  HashMap,
-  HashSet,
-  Inspectable,
-  Random,
-  Ref,
-  Stream,
-} from "effect";
+import * as Chunk from "effect/Chunk";
+import * as DateTime from "effect/DateTime";
+import * as Deferred from "effect/Deferred";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Inspectable from "effect/Inspectable";
+import * as Random from "effect/Random";
+import * as Ref from "effect/Ref";
+import * as Stream from "effect/Stream";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -515,7 +513,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
  * **Example** (Wire the handler beside sqlite Cluster storage)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { ExtractionEntityHandlerLayer } from "@effect-ontology/Cluster/ExtractionEntityHandler"
  * import { ClusterSqliteLive } from "@effect-ontology/Runtime/ClusterRuntime"
  *

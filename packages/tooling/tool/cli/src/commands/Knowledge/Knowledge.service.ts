@@ -9,9 +9,18 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { sanitizeSensitiveText } from "@beep/observability";
 import { findRepoRoot } from "@beep/repo-utils";
 import { Str } from "@beep/utils";
-import { Context, Effect, FileSystem, HashSet, Layer, Match, MutableHashMap, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -252,8 +261,7 @@ export interface KnowledgeServiceShape {
  *
  * ```ts
  * import { KnowledgeService } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const introducedCount = Effect.gen(function* () {
  *   const knowledge = yield* KnowledgeService
  *   const report = yield* knowledge.semanticDelta("origin/main")
@@ -289,8 +297,7 @@ const sha256 = (bytes: Uint8Array) => knowledgeSha256Hex(bytes, SEMANTIC_DELTA_D
  *
  * ```ts
  * import { makeKnowledgeFindingId } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const findingId = makeKnowledgeFindingId(
  *   "broken-tracked-path",
  *   "base:CLAUDE.md",
@@ -842,7 +849,8 @@ const findingOrder = Order.mapInput(Order.String, (finding: KnowledgeFinding) =>
  * ```ts
  * import { KnowledgeIndexBytes } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
  * import { scanKnowledgePair } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
- * import { Effect, HashSet } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as HashSet from "effect/HashSet";
  * import type { KnowledgeArchiveOracle } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
  *
  * const emptyArchive: KnowledgeArchiveOracle = {
@@ -1021,8 +1029,7 @@ const readGitRefNames = Effect.fn("Knowledge.readGitRefNames")(function* (repoRo
  *
  * ```ts
  * import { guardKnowledgeCloneAttributes } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(guardKnowledgeCloneAttributes("/repo"))) // true
  * ```
  *
@@ -1059,7 +1066,9 @@ const PORTFOLIO_INDEX_MODULE = "packages/tooling/tool/cli/src/commands/Goals/Por
  */
 const commandProbeSource = (rootCommandModule: string, inputPath: string): string => `
 import { BunRuntime, BunServices } from "@effect/platform-bun"
-import { Console, Effect, Result } from "effect"
+import * as Console from "effect/Console"
+import * as Effect from "effect/Effect"
+import * as Result from "effect/Result"
 import { Command } from "effect/cli"
 import { rootCommand } from ${JSON.stringify(rootCommandModule)}
 
@@ -1116,7 +1125,7 @@ BunRuntime.runMain(program.pipe(Effect.provide(BunServices.layer)))
  */
 const indexProbeSource = (portfolioIndexModule: string): string => `
 import { BunRuntime, BunServices } from "@effect/platform-bun"
-import { Effect } from "effect"
+import * as Effect from "effect/Effect"
 import { buildPortfolioIndexContent } from ${JSON.stringify(portfolioIndexModule)}
 const program = Effect.flatMap(buildPortfolioIndexContent("."), (content) => Effect.sync(() => process.stdout.write(content)))
 BunRuntime.runMain(program.pipe(Effect.provide(BunServices.layer)))
@@ -1508,8 +1517,7 @@ const readHeadRepository = Effect.fn("Knowledge.readHeadRepository")(function* (
  *
  * ```ts
  * import { resolveKnowledgeProbePolicy } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const policy = resolveKnowledgeProbePolicy({ GITHUB_EVENT_NAME: "push" })
  *
  * console.log(Effect.isEffect(policy)) // true
@@ -1635,8 +1643,7 @@ const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRe
  *
  * ```ts
  * import { makeKnowledgeTreeOracle } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Effect.scoped(makeKnowledgeTreeOracle("HEAD")))) // true
  * ```
  *
@@ -1716,8 +1723,7 @@ const makeKnowledgeService = Effect.fn("KnowledgeService.make")(function* () {
  *
  * ```ts
  * import { KnowledgeService, KnowledgeServiceLive } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const scan = Effect.gen(function* () {
  *   const knowledge = yield* KnowledgeService
  *   return yield* knowledge.semanticDelta("origin/main")

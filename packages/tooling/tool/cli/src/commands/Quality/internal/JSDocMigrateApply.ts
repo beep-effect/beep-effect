@@ -8,9 +8,16 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str, thunkFalse } from "@beep/utils";
-import { Console, DateTime, Effect, FileSystem, MutableHashMap, MutableHashSet, Order, Path } from "effect";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { formatJsonc, writeArtifact } from "../../../internal/artifacts/index.ts";
 import { runCaptured } from "../../../internal/process/index.ts";
@@ -223,7 +230,7 @@ interface MigratedOrphanPartition {
  * **Example** (Tolerate a migrated block)
  *
  * ```ts
- * import { MutableHashMap } from "effect"
+ * import * as MutableHashMap from "effect/MutableHashMap";
  * import { partitionMigratedOrphans } from "@beep/repo-cli/test/Quality"
  *
  * const blocks = MutableHashMap.make([
@@ -570,8 +577,7 @@ const blockOutcome = (
  *
  * ```ts
  * import { runJSDocMigrateApply, RunJSDocMigrateApplyOptions } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = runJSDocMigrateApply(RunJSDocMigrateApplyOptions.make({ dryRun: true, syntheticTitles: true }))
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -756,8 +762,7 @@ export class RunJSDocMigrateVerifyOptions extends S.Class<RunJSDocMigrateVerifyO
  *
  * ```ts
  * import { runJSDocMigrateVerify, RunJSDocMigrateVerifyOptions } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = runJSDocMigrateVerify(RunJSDocMigrateVerifyOptions.make({}))
  * console.log(Effect.isEffect(program)) // true
  * ```

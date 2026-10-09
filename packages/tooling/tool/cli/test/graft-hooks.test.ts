@@ -1,10 +1,15 @@
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { Effect, FileSystem, flow, Path, Result, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
+import * as Path from "effect/Path";
 import { ChildProcess } from "effect/process";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 
 const helpers = fileURLToPath(new URL("../../../../../.claude/helpers/", import.meta.url));
 

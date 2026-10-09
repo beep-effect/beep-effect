@@ -5,8 +5,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { CandorRecordReadError } from "../CandorPolicy/CandorPolicy.errors.ts";
 import { CandorRecordReader, CandorRecordReaderShape } from "../CandorPolicy/CandorPolicy.ports.ts";
 import { CandorRecordRepository } from "./CandorRecord.ports.ts";
@@ -53,8 +53,7 @@ const readerFromRepository = (repository: CandorRecordRepositoryShape): CandorRe
  *
  * ```ts
  * import { CandorRecordReaderFromRepository } from "@beep/law-practice-use-cases/CandorRecord"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(CandorRecordReaderFromRepository)) // true
  * ```
  *

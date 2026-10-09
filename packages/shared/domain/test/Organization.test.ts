@@ -4,7 +4,8 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 

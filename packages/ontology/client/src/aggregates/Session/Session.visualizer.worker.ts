@@ -15,7 +15,7 @@ import {
   WorkerCommand,
   WorkerResult,
 } from "@beep/ontology-use-cases/aggregates/Session/worker";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 
 // The boundary is a structured clone, not a channel that carries types, so both
 // ends speak the ENCODED form. See the codecs in Session.worker-protocol.ts for

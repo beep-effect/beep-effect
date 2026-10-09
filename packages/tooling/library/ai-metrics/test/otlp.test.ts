@@ -1,7 +1,7 @@
 import { AiMetricsOtlpSpanProjection } from "@beep/repo-ai-metrics/otlp";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 

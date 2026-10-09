@@ -6,9 +6,12 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Crypto, Effect, SchemaGetter, SchemaIssue } from "effect";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as SchemaIssue from "effect/SchemaIssue";
 
 const $I = $SchemaId.create("Sha256");
 
@@ -96,7 +99,7 @@ export type Sha256Hex = typeof Sha256Hex.Type;
  *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { Sha256HexFromBytes } from "@beep/schema/Sha256"
  *
@@ -126,7 +129,7 @@ export const Sha256HexFromBytes = S.Uint8Array.pipe(
  *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { Sha256HexFromBytes } from "@beep/schema/Sha256"
  *
@@ -149,7 +152,7 @@ export type Sha256HexFromBytes = typeof Sha256HexFromBytes.Type;
  *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { Sha256HexFromHexBytes } from "@beep/schema/Sha256"
  *
@@ -176,7 +179,7 @@ export const Sha256HexFromHexBytes = S.Uint8ArrayFromHex.pipe(
  *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { Sha256HexFromHexBytes } from "@beep/schema/Sha256"
  *

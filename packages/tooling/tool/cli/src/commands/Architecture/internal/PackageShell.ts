@@ -7,8 +7,7 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { identity } from "effect";
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
 import {
   ArchitecturePackageRole,
   ArchitecturePlanTarget,

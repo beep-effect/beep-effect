@@ -2,7 +2,9 @@ import { NoNativeRuntimeRulesOptions, runNoNativeRuntimeRules } from "@beep/repo
 import { makeSchemaFirstProject } from "@beep/repo-cli/test/Lint";
 import { A } from "@beep/utils";
 import { expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import {
   NodeTestLayer,
   withTempWorkingDirectory,

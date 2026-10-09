@@ -18,8 +18,10 @@
  */
 
 import { A, O, pipe } from "@beep/utils";
-import { Effect, MutableHashMap, Order } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -464,8 +466,7 @@ const encodePacketTrace = S.encodeUnknownEffect(PacketTraceProjection);
  *
  * ```ts
  * import { foldPacketEvents, projectPacketTrace, renderPacketTraceFile } from "@beep/repo-cli/test/Goals"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const trace = projectPacketTrace(foldPacketEvents({ packet: "demo", root: "goals", events: [] }), [])
  * console.log(Effect.isEffect(renderPacketTraceFile(trace))) // true
  * ```
@@ -614,8 +615,7 @@ const innermostPlannableFork = (
  *
  * ```ts
  * import { planForkRepair } from "@beep/repo-cli/test/Goals"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = planForkRepair({ packet: "demo", root: "goals", events: [] })
  * console.log(Effect.isEffect(program)) // true
  * ```

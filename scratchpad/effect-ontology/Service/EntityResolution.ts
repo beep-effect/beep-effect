@@ -10,7 +10,9 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as A from "effect/Array";
 import { KnowledgeGraph } from "../Domain/Model/Entity.ts";
 import type { EntityResolutionConfig } from "../Domain/Model/EntityResolution.ts";
@@ -53,7 +55,7 @@ const makeEntityResolutionService = Effect.gen(function* () {
  * **Example** (Compose resolve against Default)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
  * import { EntityResolutionConfig } from "@effect-ontology/Model/EntityResolution"
  * import { EntityResolutionService } from "@effect-ontology/Service/EntityResolution"

@@ -44,7 +44,7 @@ Scheduler journal tests now include enqueue/withdrawal events, v3 attribution an
 
 The CI security provider remains `provideScopedLayer(NodeServices.layer)` while its test changes from workflow-YAML assertions to isolated job-environment scenarios. Other introduced contexts cover CLI scaffolding, projections, scheduler compatibility, artifact generation, worktree removal, and filesystem conformance/characterization. Exact labels, candidate expressions, helper contexts and source edits are in the ledgers.
 
-Of 164 introduced rows, 75 occur in added census paths, 83 in added named contexts, three in exact new expression hunks, and three require explicit context analysis: a new malformed-worktree `it.live`; an unchanged raw Vitest import newly accompanied by `import { pipe } from "effect"`; and an additional Freshbooks `layer(AuthLayer(expiredToken))` invocation for cancellation/persistence behavior. The last case increases the exact invocation count by one; it is not justified merely by file movement.
+Of 164 introduced rows, 75 occur in added census paths, 83 in added named contexts, three in exact new expression hunks, and three require explicit context analysis: a new malformed-worktree `it.live`; an unchanged raw Vitest import newly accompanied by `import { pipe } from "<legacy-effect-barrel>"`; and an additional Freshbooks `layer(AuthLayer(expiredToken))` invocation for cancellation/persistence behavior. The last case increases the exact invocation count by one; it is not justified merely by file movement.
 
 ## Census and evidence limits
 

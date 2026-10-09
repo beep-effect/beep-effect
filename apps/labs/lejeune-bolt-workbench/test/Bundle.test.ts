@@ -5,9 +5,10 @@ import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
-import { Effect, Layer } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -69,7 +70,7 @@ const isFrozenSourceHash = S.is(FrozenSourceHash);
 
 import { it } from "@beep/test-runner";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import type {
   IsoDate as IsoDateValue,
   IsoTimestamp as IsoTimestampValue,

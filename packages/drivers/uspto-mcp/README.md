@@ -30,7 +30,7 @@ Register the stdio entrypoint with an MCP client, pointing it at `bin.ts` via
 `bun run`:
 
 ```ts
-import { Layer } from "effect"
+import * as Layer from "effect/Layer";
 import { makeServerLayer, UsptoMcpServerConfig } from "@beep/uspto-mcp/Server"
 import * as NodeStdio from "@effect/platform-node/NodeStdio"
 

@@ -8,8 +8,11 @@
 
 import { $RdfId } from "@beep/identity/packages";
 import * as O from "@beep/utils/Option";
-import { Effect, pipe, Result, SchemaGetter } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import {
   EvidenceAnchor,
   EvidenceSelector,

@@ -4,8 +4,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect, TxQueue, TxRef } from "effect";
+import * as Effect from "effect/Effect";
+import * as TxQueue from "effect/TxQueue";
+import * as TxRef from "effect/TxRef";
 import type * as Scope from "effect/Scope";
 
 /**
@@ -14,7 +15,7 @@ import type * as Scope from "effect/Scope";
  * **Example** (Define drainable worker shape)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import type { DrainableWorker } from "@beep/utils/DrainableWorker"
  *
  * const worker: DrainableWorker<string> = {
@@ -53,7 +54,8 @@ export interface DrainableWorker<A> {
  * **Example** (Process items with drainable worker)
  *
  * ```ts
- * import { Effect, Ref } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Ref from "effect/Ref";
  * import { makeDrainableWorker } from "@beep/utils/DrainableWorker"
  *
  * const program = Effect.scoped(

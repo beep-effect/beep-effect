@@ -5,8 +5,7 @@
  * @packageDocumentation
  * @since 0.1.0
  */
-
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 import { $RunpodId } from "@beep/identity";

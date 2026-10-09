@@ -2,9 +2,11 @@
 import { CacheEvidenceReference } from "@beep/repo-configs/cache";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { NodeCrypto } from "@effect/platform-node";
-import { Console, Effect, Order } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import * as Yaml from "effect/encoding/Yaml";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 
 // Boundary schemas retain every YAML field. The version-pinning resolver's

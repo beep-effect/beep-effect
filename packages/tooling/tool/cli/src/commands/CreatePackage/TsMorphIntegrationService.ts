@@ -8,8 +8,11 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Context, Effect, flow, Tuple } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import type { DomainError } from "@beep/repo-utils";
 
 const $I = $RepoCliId.create("commands/CreatePackage/TsMorphIntegrationService");
@@ -277,8 +280,7 @@ export type TsMorphIntegrationServiceShape = {
  *
  * ```ts
  * import { TsMorphIntegrationService } from "@beep/repo-cli/commands/CreatePackage"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.service(TsMorphIntegrationService)
  * console.log(Effect.isEffect(program)) // true
  * ```

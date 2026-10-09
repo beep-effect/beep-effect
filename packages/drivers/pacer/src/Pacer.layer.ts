@@ -8,8 +8,8 @@
  * @since 0.0.0
  */
 
-import { Layer } from "effect";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
 import { PacerAuth, PacerSession } from "./PacerAuth.service.ts";
 import { PclClient } from "./PclClient.service.ts";
 import type * as HttpClient from "effect/http/HttpClient";

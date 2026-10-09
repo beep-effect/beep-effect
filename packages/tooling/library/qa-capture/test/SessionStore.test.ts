@@ -4,7 +4,11 @@ import { O } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
-import { Effect, Equal, FileSystem, Layer, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 
 const TestLayer = Layer.mergeAll(SessionStore.layer.pipe(Layer.provide(NodeServices.layer)), NodeServices.layer);
 

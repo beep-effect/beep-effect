@@ -7,9 +7,11 @@
 
 import { $SanityId } from "@beep/identity";
 import { Str } from "@beep/utils";
-import { Effect, identity, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 const $I = $SanityId.create("Sanity.config");
 

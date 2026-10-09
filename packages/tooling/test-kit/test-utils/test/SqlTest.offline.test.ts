@@ -12,8 +12,15 @@ import {
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, vi } from "@effect/vitest";
-import { Cause, Clock, ConfigProvider, Duration, Effect, Exit, Fiber, Queue } from "effect";
+import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
+import * as Queue from "effect/Queue";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
 

@@ -16,7 +16,7 @@
 
 import { escapeMarkdownText } from "@beep/md/Md.escape";
 import { A, O } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import { CodexFindingSeverity } from "./Findings.capture.schemas.ts";
 import { CodexFindingsIngestError } from "./Findings.errors.ts";

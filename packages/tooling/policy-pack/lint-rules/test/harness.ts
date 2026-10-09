@@ -14,7 +14,9 @@
  * registry through the `@beep/lint-rules` alias.
  */
 import { rulePath } from "@beep/lint-rules";
-import { Effect, FileSystem, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { encodeConfig, jsonReportParser, validateLinterProcess } from "./codec.ts";
 import type { RuleName } from "@beep/lint-rules";

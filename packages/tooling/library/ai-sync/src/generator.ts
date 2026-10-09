@@ -6,10 +6,15 @@
  */
 
 import * as O from "@beep/utils/Option";
-import { Console, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/http";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import { AiSyncContentHash, AiSyncError, AiSyncSourceMetadata } from "./models.ts";
 import { TIER_ONE_SOURCES } from "./source-map.ts";
 
@@ -356,7 +361,7 @@ const renderSchemasFile = (): string =>
  * **Example** (Hash an agent instruction body)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { hashSourceText } from "@beep/ai-sync/generator"
  *
  * Effect.runPromise(hashSourceText("agent instructions")).then((hash) =>
@@ -391,7 +396,7 @@ export const hashSourceText: (value: string) => Effect.Effect<AiSyncContentHash,
  * **Example** (Fetch a pinned Codex config source)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { AiSyncSourceId, AiSyncSourceMetadata, AiSyncSourceUrl } from "@beep/ai-sync"
  * import { AiSyncHttpLayer, fetchSourceText } from "@beep/ai-sync/generator"
  *
@@ -489,7 +494,8 @@ export const renderGeneratedSchemas = renderSchemasFile;
  *
  * ```ts
  * import * as NodeServices from "@effect/platform-node/NodeServices"
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { AiSyncHttpLayer, generateAiSyncArtifacts } from "@beep/ai-sync/generator"
  *
  * const RuntimeLayer = Layer.mergeAll(NodeServices.layer, AiSyncHttpLayer)

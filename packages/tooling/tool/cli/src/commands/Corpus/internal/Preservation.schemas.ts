@@ -15,8 +15,9 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { Fn, LiteralKit, Sha256Hex } from "@beep/schema";
-import { Effect, Tuple } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { CorpusProvenanceRecord } from "./Salvage.schemas.ts";
 
@@ -618,8 +619,7 @@ export class ArchiveWriterPayloadSyncHookInput extends S.Class<ArchiveWriterPayl
  *
  * ```ts
  * import { ArchiveWriterLiveOptions } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const options = ArchiveWriterLiveOptions.make({
  *   afterPayloadSync: () => Effect.void
  * })

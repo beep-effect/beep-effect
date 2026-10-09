@@ -16,7 +16,10 @@ import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Percentage } from "@beep/schema/Percentage";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { DateTime, Duration, Effect, pipe } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ExtractionRunId, UUID } from "../Domain/Identity.ts";
@@ -1927,7 +1930,7 @@ const backpressureConfigDetailedEventSampleRateDefault = UnitInterval.make(0.1);
  *
  * ```ts
  * import { BackpressureConfig } from "@effect-ontology/Contract/ProgressStreaming"
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import * as S from "effect/Schema"
  *
  * const config = S.decodeSync(BackpressureConfig)({

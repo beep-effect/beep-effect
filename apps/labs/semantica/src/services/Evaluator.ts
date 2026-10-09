@@ -1,6 +1,7 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { Context } from "effect";
-import type { Crypto, Effect } from "effect";
+import * as Context from "effect/Context";
+import type * as Crypto from "effect/Crypto";
+import type * as Effect from "effect/Effect";
 import type { GoldUnavailable, ReportInvalid } from "@/schema/Errors";
 import type { EvalReport, EvalRun } from "@/schema/Eval";
 import type { ExtractOutcome } from "@/schema/Evidence";
@@ -29,8 +30,7 @@ interface EvaluatorShape {
  *
  * ```ts
  * import { Evaluator } from "@/services/Evaluator"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Evaluator.pipe(Effect.map((service) => typeof service.score))
  * console.log(Effect.isEffect(program)) // true
  * ```

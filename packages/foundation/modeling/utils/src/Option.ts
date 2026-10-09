@@ -37,7 +37,7 @@ type GetSomesStruct<Self extends OptionStruct> = Simplify<
  * **Example** (Get path as Option)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { O } from "@beep/utils"
  *
  * const user: { readonly name: string; readonly age: number | null } = {

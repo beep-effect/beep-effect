@@ -4,8 +4,9 @@
  * @since 0.0.0
  * @packageDocumentation
  */
-
-import { Config, Effect, pipe } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import { headers } from "next/headers";
 import { connection } from "next/server";

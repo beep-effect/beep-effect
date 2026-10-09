@@ -13,7 +13,9 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, MimeType, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Match, Number as N, Effect } from "effect";
+import * as Match from "effect/Match";
+import * as N from "effect/Number";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { BatchId, DocumentId, GcsUri, Namespace, OntologyVersion } from "../Identity.ts";
 import * as A from "effect/Array";

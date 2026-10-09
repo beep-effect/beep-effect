@@ -1,8 +1,12 @@
 import * as Rdf from "@beep/rdf/Rdf";
 import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/services/sparql-query";
-import { Duration, Effect, Layer, Match, Order } from "effect";
 import * as A from "effect/Array";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { canonicalJson } from "@/corpus/Canonical";
@@ -152,8 +156,7 @@ const makeRdfProjection = Effect.fn("RdfProjection.make")(function* () {
  *
  * ```ts
  * import { RdfProjectionLive } from "@/layers/RdfProjectionLive"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(RdfProjectionLive)) // true
  * ```
  *

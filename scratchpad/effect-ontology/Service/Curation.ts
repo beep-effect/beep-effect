@@ -16,8 +16,12 @@ import { flow } from "effect/Function";
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import type { Stream } from "effect";
-import { Context, DateTime, Effect, Layer, Match } from "effect";
+import type * as Stream from "effect/Stream";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -109,7 +113,7 @@ export class CurationResult extends S.Class<CurationResult>($I`CurationResult`)(
  * **Example** (Compose a curation action)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { CurationService } from "@effect-ontology/Service/Curation"
  *
  * const program = Effect.gen(function* () {

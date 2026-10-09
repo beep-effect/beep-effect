@@ -11,8 +11,8 @@ import {
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe } from "@effect/vitest";
-import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const documentTiers = defineFieldTiers({

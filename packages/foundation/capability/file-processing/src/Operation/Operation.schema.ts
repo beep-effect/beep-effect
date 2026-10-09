@@ -20,7 +20,7 @@ const $I = $FileProcessingId.create("Operation");
  *
  * ```ts
  * import { DetectFileOperation } from "@beep/file-processing/Operation"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(DetectFileOperation)({
@@ -64,7 +64,7 @@ export class DetectFileOperation extends S.Class<DetectFileOperation>($I`DetectF
  *
  * ```ts
  * import { DetectionResult } from "@beep/file-processing/Operation"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(DetectionResult)({
@@ -101,7 +101,7 @@ export class DetectionResult extends S.Class<DetectionResult>($I`DetectionResult
  *
  * ```ts
  * import { ExtractFileOperation } from "@beep/file-processing/Operation"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(ExtractFileOperation)({
@@ -148,7 +148,7 @@ export class ExtractFileOperation extends S.Class<ExtractFileOperation>($I`Extra
  *
  * ```ts
  * import { ExportArchiveOperation } from "@beep/file-processing/Operation"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(ExportArchiveOperation)({
@@ -194,7 +194,7 @@ export class ExportArchiveOperation extends S.Class<ExportArchiveOperation>($I`E
  *
  * ```ts
  * import { ProcessFileOperation } from "@beep/file-processing/Operation"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(ProcessFileOperation)({

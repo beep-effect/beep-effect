@@ -18,7 +18,9 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
 
 const TREE_SHA = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
 const BASE_SHA = "1111111111111111111111111111111111111111";

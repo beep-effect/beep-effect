@@ -1,7 +1,9 @@
 import { IRI } from "@beep/rdf";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, HashMap, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { EmbeddingError } from "../../Domain/Error/Embedding.ts";
 import { Entity } from "../../Domain/Model/Entity.ts";

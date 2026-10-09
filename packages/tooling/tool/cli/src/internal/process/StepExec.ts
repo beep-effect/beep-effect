@@ -26,13 +26,16 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { thunkEmptyStr } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Context, Duration, Effect, pipe, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
-import { dual } from "effect/Function";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as P from "effect/Predicate";
 import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { JsonStringCodec } from "../schema/JsonCodec.ts";
 import { PosInt } from "../schema/PosInt.ts";
@@ -368,8 +371,7 @@ export const boundedChunkReducer =
  *
  * ```ts
  * import { collectBoundedText, repoRunOutputBound } from "@beep/repo-cli/test/Process"
- * import { Stream } from "effect"
- *
+ * import * as Stream from "effect/Stream";
  * const fold = collectBoundedText(repoRunOutputBound)
  * console.log(fold(Stream.make(new TextEncoder().encode("hi"))))
  * ```
@@ -401,8 +403,7 @@ export const collectBoundedText =
  *
  * ```ts
  * import { collectText } from "@beep/repo-cli/test/Process"
- * import { Stream } from "effect"
- *
+ * import * as Stream from "effect/Stream";
  * console.log(collectText(Stream.make(new TextEncoder().encode("hi"))))
  * ```
  *
@@ -860,8 +861,7 @@ const interruptTimedOutCapture = (
  *
  * ```ts
  * import { settleCapturedStepForTesting } from "@beep/repo-cli/test/Process"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const settled = settleCapturedStepForTesting({
  *   captured: { text: "", truncated: false },
  *   commandLine: "echo ok",
@@ -1287,8 +1287,7 @@ export const runToExit = Effect.fn("StepExec.runToExit")(function* (
  *
  * ```ts
  * import { ensureZeroExit, runCaptured } from "@beep/repo-cli/test/Process"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const proven = runCaptured({ command: "git", args: ["status"] }).pipe(
  *   Effect.flatMap(ensureZeroExit((exitCode) => new Error(`git failed (${exitCode})`)))
  * )

@@ -4,8 +4,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Duration, Effect, Schedule } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Schedule from "effect/Schedule";
 import { SqlClient } from "effect/sql";
 import { migrateOnBoot } from "./MigrationRunner.ts";
 

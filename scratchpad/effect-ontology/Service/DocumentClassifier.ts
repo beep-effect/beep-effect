@@ -13,7 +13,11 @@ import * as Crypto from "effect/Crypto";
 
 import { $ScratchpadId } from "@beep/identity";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Context, Effect, Inspectable, Layer, MutableHashMap } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -381,7 +385,7 @@ export const defaultClassification: DocumentClassification = {
  * **Example** (Classify a document preview)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { DocumentClassifier } from "@effect-ontology/Service/DocumentClassifier"
  *

@@ -16,9 +16,12 @@ import {
   OntologyFileStoreError,
   ReadOntologyFileResult,
 } from "@beep/ontology-use-cases/aggregates/Session";
-import { Effect, FileSystem, Path, PlatformError } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { ReadOntologyFileRequest, WriteOntologyFileRequest } from "@beep/ontology-use-cases/aggregates/Session";
@@ -208,8 +211,7 @@ const resolveWritePath = (
  * ```ts
  * import { OntologyConfig, OntologyServerConfig } from "@beep/ontology-config/server"
  * import { makeFileSystemOntologyFileStore } from "@beep/ontology-server/aggregates/Session"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = makeFileSystemOntologyFileStore().pipe(
  *   Effect.provideService(
  *     OntologyConfig,

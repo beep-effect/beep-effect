@@ -17,7 +17,7 @@
  */
 
 import { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { ExecutionRecordConverterError } from "./ExecutionRecord.errors.ts";
 import type { executionDecisionTable, executionOutcomeTable } from "./ExecutionRecord.table.ts";

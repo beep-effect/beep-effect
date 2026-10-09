@@ -4,9 +4,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Config, Console, Effect, Path } from "effect";
+
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import { Argument, Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Path from "effect/Path";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { acquireLibrary } from "./Library.acquire.ts";
 import { LibraryError } from "./Library.errors.ts";
@@ -100,7 +104,7 @@ const importResult = Command.make(
  * **Example** (Prepare the process failure gate)
  * ```ts
  * import { runLibraryVerificationCommand } from "@beep/repo-cli/test/ResearchLibrary"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runLibraryVerificationCommand("/library")))
  * ```
  *

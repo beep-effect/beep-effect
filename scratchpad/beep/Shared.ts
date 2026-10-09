@@ -6,8 +6,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import * as S from "effect/Schema";
 import { Model, pg } from "./Kit.ts";
-import { Effect } from "effect";
-
+import * as Effect from "effect/Effect";
 const $I = $ScratchpadId.create("beep/Shared");
 
 /**

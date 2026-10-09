@@ -12,8 +12,17 @@ import {
 } from "@beep/test-utils";
 import { A, O } from "@beep/utils";
 import { beforeAll, describe, expect } from "@effect/vitest";
-import { Cause, Console, Context, Duration, Effect, Exit, Layer, pipe, Schedule, Scope } from "effect";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
+import * as Scope from "effect/Scope";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
 import type { SqlTestHooks } from "@beep/test-utils";

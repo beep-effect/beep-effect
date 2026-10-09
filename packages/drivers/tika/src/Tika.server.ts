@@ -13,11 +13,15 @@ import { ExtractionResult } from "@beep/file-processing/Extraction";
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
 import { A, O } from "@beep/utils";
-import { Config, Effect, flow, Order, pipe, Stream } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import {
   BEEP_TIKA_BASE_URL_ENV,
@@ -149,8 +153,7 @@ const configFromEnvironment: Effect.Effect<TikaServerEngineConfig, TikaError> = 
  *
  * ```ts
  * import { makeTikaServerFileProcessingEngine, TikaServerEngineConfig } from "@beep/tika"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const engine = yield* makeTikaServerFileProcessingEngine(TikaServerEngineConfig.make({}))
  *   return engine.descriptor.engine
@@ -299,8 +302,7 @@ export const makeTikaServerFileProcessingEngine = Effect.fn("Tika.makeTikaServer
  *
  * ```ts
  * import { makeTikaServerFileProcessingEngineFromEnv } from "@beep/tika"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = makeTikaServerFileProcessingEngineFromEnv()
  *
  * console.log(Effect.isEffect(program)) // true

@@ -28,9 +28,11 @@ import {
 } from "@beep/law-practice-use-cases/server";
 import { estimateJsonSize, FieldTierName, projectFieldTier, toColumnarEnvelope } from "@beep/mcp-kit";
 import * as O from "@beep/utils/Option";
-import { Effect, Path, Result } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { SqlClient as SqlClientService } from "effect/sql/SqlClient";
 import { lookupPracticeKgCorrespondents } from "./PracticeKg.correspondents.ts";
@@ -268,8 +270,7 @@ const queryPglite = <A>(
  * **Example** (Usage)
  * ```ts
  * import { PracticeKgToolkitHandlersLive } from "@beep/law-practice-server"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(PracticeKgToolkitHandlersLive))
  * ```
  *

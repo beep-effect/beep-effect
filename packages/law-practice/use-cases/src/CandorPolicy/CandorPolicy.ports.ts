@@ -9,7 +9,7 @@
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { CandorDisposition, PatentCitationEvent } from "@beep/law-practice-domain";
 import { Fn } from "@beep/schema";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import * as S from "effect/Schema";
 import { EffectOutput } from "../internal/effectOutput.ts";
 import { CandorFilingScope } from "./CandorPolicy.values.ts";
@@ -85,8 +85,7 @@ export class CandorRecordSnapshot extends S.Class<CandorRecordSnapshot>($I`Cando
  *
  * ```ts
  * import { CandorRecordReaderShape, CandorRecordSnapshot } from "@beep/law-practice-use-cases/CandorPolicy"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const reader = CandorRecordReaderShape.make({
  *   snapshotForFiling: () => Effect.succeed(
  *     CandorRecordSnapshot.make({ dispositions: [], events: [] })
@@ -129,8 +128,7 @@ export class CandorRecordReaderShape extends S.Class<CandorRecordReaderShape>($I
  * import { CandorFilingScope } from "@beep/law-practice-use-cases/CandorPolicy"
  * import { CitingApplicationIdentity, UsptoNormalizedApplicationNumber } from "@beep/law-practice-domain"
  * import * as Shared from "@beep/shared-domain/identity/Shared"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const reader = yield* CandorRecordReader
  *   return yield* reader.snapshotForFiling(
@@ -187,8 +185,7 @@ export class CandorRecordReader extends Context.Service<CandorRecordReader, Cand
  * import { CandorFilingScope } from "@beep/law-practice-use-cases/CandorPolicy"
  * import { CitingApplicationIdentity, UsptoNormalizedApplicationNumber } from "@beep/law-practice-domain"
  * import * as Shared from "@beep/shared-domain/identity/Shared"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const scope = CandorFilingScope.make({
  *   citingApplication: CitingApplicationIdentity.make({
  *     applicationNumber: UsptoNormalizedApplicationNumber.make("16138242"),
@@ -242,8 +239,7 @@ export class CandorPolicyShape extends S.Class<CandorPolicyShape>($I`CandorPolic
  * import { CandorFilingScope } from "@beep/law-practice-use-cases/CandorPolicy"
  * import { CitingApplicationIdentity, UsptoNormalizedApplicationNumber } from "@beep/law-practice-domain"
  * import * as Shared from "@beep/shared-domain/identity/Shared"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const scope = CandorFilingScope.make({
  *   citingApplication: CitingApplicationIdentity.make({
  *     applicationNumber: UsptoNormalizedApplicationNumber.make("16138242"),

@@ -19,10 +19,15 @@ import { UnitInterval } from "@beep/nlp/Handoff";
 import { NLPService } from "@beep/nlp-processing/NLPService";
 import { TextAnchor } from "@beep/provenance";
 import { Sha256HexFromBytes } from "@beep/schema";
-import { Effect, HashMap, Layer, Number as N, Order, Result } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { LabConfig } from "@/runtime/Config";
@@ -165,8 +170,7 @@ const HostedExtractionCandidateDescriptor = S.Struct({
  *
  * ```ts
  * import { HOSTED_EXTRACTION_ARTIFACT_HASH } from "@/layers/ExtractorLive"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * Effect.runPromise(HOSTED_EXTRACTION_ARTIFACT_HASH).then((hash) => console.log(hash.length)) // 64
  * ```
  *
@@ -761,8 +765,7 @@ const makePatternExtractor = Effect.gen(function* () {
  *
  * ```ts
  * import { HostedExtractorLive } from "@/layers/ExtractorLive"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(HostedExtractorLive)) // true
  * ```
  *
@@ -779,8 +782,7 @@ export const HostedExtractorLive = Layer.effect(HostedExtractor, makeHostedExtra
  *
  * ```ts
  * import { HostedLangExtractLive } from "@/layers/ExtractorLive"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(HostedLangExtractLive)) // true
  * ```
  *
@@ -805,8 +807,7 @@ export const HostedLangExtractLive = HostedExtractorLive.pipe(
  *
  * ```ts
  * import { PatternExtractorLive } from "@/layers/ExtractorLive"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(PatternExtractorLive)) // true
  * ```
  *

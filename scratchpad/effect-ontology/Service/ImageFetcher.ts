@@ -13,7 +13,12 @@ import { flow } from "effect/Function";
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Duration, Effect, Layer, Schedule, Stream } from "effect";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Schedule from "effect/Schedule";
+import * as Stream from "effect/Stream";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -257,7 +262,7 @@ const inferContentTypeFromUrl = (url: string): string | undefined => {
  * **Example** (Inspect image fetcher)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ImageFetcher } from "@effect-ontology/Service/ImageFetcher"
  *
  * const program = Effect.gen(function* () {

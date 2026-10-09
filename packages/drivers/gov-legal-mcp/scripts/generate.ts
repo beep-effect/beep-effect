@@ -11,7 +11,10 @@ import { ProductionToolNameCollisionReport, renderToolNameCollisionReport } from
 import { $GovLegalMcpId } from "@beep/identity/packages";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 
 const encodeUnknownJsonEffect = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));

@@ -18,9 +18,10 @@ import {
 } from "@beep/ui/components/combobox";
 import { getCountryDataList } from "countries-list";
 import * as FlagIcons from "country-flag-icons/react/3x2";
-import { Order, pipe } from "effect";
 import * as A from "effect/Array";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { cn } from "../lib/index.ts";

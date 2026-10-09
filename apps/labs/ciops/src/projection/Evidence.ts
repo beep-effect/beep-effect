@@ -9,12 +9,16 @@
 import { $CiopsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
-import { Console, DateTime, Effect, FileSystem, HashMap } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -203,7 +207,7 @@ const conflictingModes = (writeScript: EvidenceWriteScript) =>
  * **Example** (Default to check mode)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeEvidenceMode } from "@/projection/Evidence"
  *
  * console.log(Effect.runSync(decodeEvidenceMode(["bun", "script.ts"], "evidence:s7:write"))) // "check"
@@ -295,7 +299,7 @@ export class EvidenceRun extends S.Class<EvidenceRun>($I`EvidenceRun`)(
  * **Example** (Validate without writing)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EvidencePaths, generateReplayEvidence } from "@/projection/Evidence"
  *
  * const program = generateReplayEvidence("check", EvidencePaths.make({
@@ -971,7 +975,7 @@ export const renderLiveReplayEvidence: {
  * **Example** (Build a check run)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { generateLiveReplayEvidence } from "@/projection/Evidence"
  * import type { LiveEvidencePaths } from "@/projection/Evidence"
  * import type { ReplayWindow } from "@/projection/Replay"

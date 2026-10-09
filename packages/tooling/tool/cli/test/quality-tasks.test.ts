@@ -165,35 +165,31 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, describe, expect, vi } from "@effect/vitest";
 import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
-import {
-  Cause,
-  ConfigProvider,
-  Console,
-  Crypto,
-  DateTime,
-  Effect,
-  Exit,
-  Fiber,
-  FileSystem,
-  Inspectable,
-  identity,
-  Layer,
-  Match,
-  Order,
-  Path,
-  PlatformError,
-  pipe,
-  Sink,
-  Stream,
-} from "effect";
 import * as Arbitrary from "effect/Arbitrary";
-import { flow } from "effect/Function";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
+import { flow, identity, pipe } from "effect/Function";
 import * as HM from "effect/HashMap";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";

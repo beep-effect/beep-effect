@@ -37,10 +37,13 @@ import * as Str from "@beep/utils/Str";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect } from "@effect/vitest";
-import { Crypto, Effect, pipe, Result } from "effect";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import { pipe } from "effect/Function";
 import * as P from "effect/Predicate";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 

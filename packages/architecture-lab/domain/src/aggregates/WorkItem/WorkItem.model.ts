@@ -8,7 +8,7 @@
 
 import { $ArchitectureLabDomainId } from "@beep/identity/packages";
 import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { defaultWorkPriority, WorkPriority } from "../../values/WorkPriority/index.ts";
@@ -211,7 +211,7 @@ const requireTransition = (
  * ```ts
  * import { CreateWorkItemInput, WorkItemId, assign, create } from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
@@ -258,7 +258,7 @@ export const assign = Effect.fn("WorkItem.assign")(function* (workItem: WorkItem
  *
  * ```ts
  * import { CreateWorkItemInput, WorkItemId, complete, create } from "@beep/architecture-lab-domain/aggregates/WorkItem"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const completed = Effect.runSync(
@@ -302,7 +302,7 @@ export const complete = Effect.fn("WorkItem.complete")(function* (workItem: Work
  *
  * ```ts
  * import { CreateWorkItemInput, WorkItemId, complete, create, reopen } from "@beep/architecture-lab-domain/aggregates/WorkItem"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
@@ -346,7 +346,7 @@ export const reopen = Effect.fn("WorkItem.reopen")(function* (workItem: WorkItem
  *
  * ```ts
  * import { CreateWorkItemInput, WorkItemId, archive, create } from "@beep/architecture-lab-domain/aggregates/WorkItem"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const archived = Effect.runSync(

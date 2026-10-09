@@ -6,8 +6,9 @@
  */
 
 import { IdentityRegistry } from "@beep/identity";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
 import { datasetToEntries } from "./IdentityRdfBinding.ts";
 import type { IdentityRegistryConflictError } from "@beep/identity";
 import type { Dataset } from "@beep/rdf/Rdf";

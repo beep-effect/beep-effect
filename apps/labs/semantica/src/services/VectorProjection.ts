@@ -1,6 +1,6 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { Context } from "effect";
-import type { Effect } from "effect";
+import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
 import type { ProjectionFailed } from "@/schema/Errors";
 import type { EmbeddingVector, KnnQueryResult } from "@/schema/Projection";
 
@@ -19,8 +19,7 @@ interface VectorProjectionShape {
  *
  * ```ts
  * import { VectorProjection } from "@/services/VectorProjection"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = VectorProjection.pipe(Effect.map((service) => typeof service.rebuild))
  * console.log(Effect.isEffect(program)) // true
  * ```

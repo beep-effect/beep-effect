@@ -12,11 +12,13 @@
 import { $MdId } from "@beep/identity";
 import { Markdown, SchemaUtils } from "@beep/schema";
 import { A, Html, Str, thunkEmptyStr } from "@beep/utils";
-import { Match, Number as N, SchemaTransformation } from "effect";
 import { dual, flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { CodeFenceLanguage } from "./Md.model.ts";
 
 const $I = $MdId.create("Md.escape");
@@ -143,7 +145,7 @@ export class AllowListUrlPolicySpec extends S.TaggedClass<AllowListUrlPolicySpec
  *
  * ```ts import.meta.vitest name="Decode allow-list policy"
  * import { UrlPolicySpec } from "@beep/md/Md.escape"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const policy = S.decodeUnknownResult(UrlPolicySpec)({ _tag: "AllowList", schemes: [" HTTPS: "] })

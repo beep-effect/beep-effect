@@ -15,7 +15,9 @@ import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Context, Effect, flow, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -26,7 +28,7 @@ const $I = $ScratchpadId.create("effect-ontology/Repository/EntityRegistry");
 
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, sql as drizzleSql, eq, inArray } from "drizzle-orm";
-import { dual } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import { SqlClient } from "effect/sql";
 import { formatPgVector, normalizeDrizzleError } from "../Utils/Sql.ts";
 import { tokenizeMentionForBlocking } from "../Utils/Text.ts";
@@ -437,8 +439,7 @@ interface EntityRegistryRepositoryShape {
  *
  * ```ts
  * import { EntityRegistryRepository } from "@effect-ontology/Repository/EntityRegistry"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const inspectRegistry = Effect.gen(function* () {
  *   const registry = yield* EntityRegistryRepository
  *   const stats = yield* registry.getStats("people")

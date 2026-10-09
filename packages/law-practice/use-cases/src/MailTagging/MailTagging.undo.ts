@@ -7,9 +7,9 @@
  */
 
 import { TaggingMode, TaggingUndoReport, TagUndoEntry } from "@beep/law-practice-domain/values/MailTagging";
-import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { activeTagEntriesOfRun } from "./MailTagging.ledger.ts";
 import { Mailbox, MailTaggingUndoShape, TagLedger } from "./MailTagging.ports.ts";

@@ -19,21 +19,20 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import {
-  Cause,
-  Clock,
-  Context,
-  DateTime,
-  Effect,
-  Exit,
-  Hash,
-  Inspectable,
-  Layer,
-  Match,
-  Order,
-  Ref,
-  Schedule, Result,
-} from "effect";
+import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Hash from "effect/Hash";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Order from "effect/Order";
+import * as Ref from "effect/Ref";
+import * as Schedule from "effect/Schedule";
+import * as Result from "effect/Result";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -193,7 +192,7 @@ type PipelineStage = typeof PipelineStage.Type;
  * **Example** (Compose a start call)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { WorkflowOrchestrator, WorkflowOrchestratorLive } from "@effect-ontology/Service/WorkflowOrchestrator"
  *
  * const program = Effect.gen(function* () {
@@ -324,7 +323,7 @@ const pollResultToBatchState = Match.type<Workflow.Result<BatchState, AnyWorkflo
  * **Example** (Compose a poll)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { pollToBatchState } from "@effect-ontology/Service/WorkflowOrchestrator"
  *
  * const program = pollToBatchState("batch-deadbeefcafe")
@@ -366,7 +365,7 @@ export const pollToBatchState = Effect.fn("WorkflowOrchestrator.pollToBatchState
  * **Example** (Register the workflow with the engine)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { BatchExtractionWorkflowLayer, WorkflowOrchestratorLive } from "@effect-ontology/Service/WorkflowOrchestrator"
  *
  * const layer = Layer.merge(WorkflowOrchestratorLive, BatchExtractionWorkflowLayer)
@@ -1076,7 +1075,7 @@ export interface WorkflowOrchestratorMethods {
  * **Example** (Poll through the orchestrator)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { WorkflowOrchestrator, WorkflowOrchestratorLive } from "@effect-ontology/Service/WorkflowOrchestrator"
  *
  * const program = Effect.gen(function* () {
@@ -1108,7 +1107,7 @@ export class WorkflowOrchestrator extends Context.Service<WorkflowOrchestrator, 
  * **Example** (Construct the orchestrator)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { makeWorkflowOrchestrator } from "@effect-ontology/Service/WorkflowOrchestrator"
  *
  * const program = Effect.gen(function* () {
@@ -1164,7 +1163,7 @@ export const makeWorkflowOrchestrator = Effect.fn("WorkflowOrchestrator.make")(f
  * **Example** (Provide the live orchestrator)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { WorkflowOrchestrator, WorkflowOrchestratorLive } from "@effect-ontology/Service/WorkflowOrchestrator"
  *
  * const program = Effect.gen(function* () {
@@ -1197,7 +1196,7 @@ export const WorkflowOrchestratorLive = Layer.effect(WorkflowOrchestrator, makeW
  * **Example** (Merge orchestrator and workflow registration)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { WorkflowOrchestrator, WorkflowOrchestratorFullLive } from "@effect-ontology/Service/WorkflowOrchestrator"
  *
  * const program = Effect.gen(function* () {

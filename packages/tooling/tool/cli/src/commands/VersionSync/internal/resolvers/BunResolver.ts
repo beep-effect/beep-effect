@@ -11,11 +11,14 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Str } from "@beep/utils";
-import { Effect, FileSystem, identity, Order, Path, pipe } from "effect";
 import * as Bool from "effect/Boolean";
-import { constant, dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { constant, dual, identity, pipe } from "effect/Function";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import {

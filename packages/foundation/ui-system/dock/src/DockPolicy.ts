@@ -6,10 +6,11 @@
  */
 
 import { thunkEffectVoid } from "@beep/utils";
-import { Effect, Layer, pipe } from "effect";
 import * as Bool from "effect/Boolean";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { DockCommand } from "./Dock.commands.ts";
@@ -30,8 +31,7 @@ import type { DockWorkspace as DockWorkspaceType } from "./Dock.tree.ts";
  * ```ts
  * import { ApiCommandOrigin, ClearWorkspaceCommand, CommandId, DockCommandEnvelope, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView } from "@beep/dock"
  * import type { DockCommandPolicy } from "@beep/dock"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const allow: DockCommandPolicy = () => Effect.void
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })
@@ -103,8 +103,7 @@ const rejectNoDropReference = (
  *
  * ```ts
  * import { ApiCommandOrigin, CommandId, DockCommandEnvelope, GroupId, GroupMetadata, OpenPanelCommand, Panel, PanelId, PopulatedWorkspace, TabPlacement, TabsNode, TextPanelView, lockedGroupsPolicy } from "@beep/dock"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const groupId = GroupId.make("group-one")
  * const openPanel = (id: string) => Panel.make({ id: PanelId.make(id), title: id, view: TextPanelView.make({ text: id }) })
  * const workspace = PopulatedWorkspace.make({
@@ -181,8 +180,7 @@ export const lockedGroupsPolicy: DualDockCommandPolicy = dual(
  *
  * ```ts
  * import { ApiCommandOrigin, CommandId, DockCommandEnvelope, DockEngine, GroupId, GroupMetadata, OpenPanelCommand, Panel, PanelId, PopulatedWorkspace, TabPlacement, TabsNode, TextPanelView, lockedGroupsPolicy, makePolicyDockEngineLayer } from "@beep/dock"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const groupId = GroupId.make("group-one")
  * const openPanel = (id: string) => Panel.make({ id: PanelId.make(id), title: id, view: TextPanelView.make({ text: id }) })
  * const workspace = PopulatedWorkspace.make({

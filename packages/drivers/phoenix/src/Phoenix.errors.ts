@@ -9,9 +9,9 @@ import { $PhoenixId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { thunkUndefined } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Result } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const $I = $PhoenixId.create("Phoenix.errors");

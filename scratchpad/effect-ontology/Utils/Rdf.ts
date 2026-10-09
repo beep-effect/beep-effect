@@ -12,8 +12,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { dual2 } from "./Dual.ts";
 import * as S from "effect/Schema";
-import { Result } from "effect";
-
+import * as Result from "effect/Result";
 /**
  * Concatenates a namespace and local identifier, then validates the result as
  * an IRI.

@@ -5,8 +5,10 @@ import { FileSystem, Path } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, Option, pipe } from "effect";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
 
 const NFS: typeof import("node:fs") = createRequire(import.meta.url)("node:fs");

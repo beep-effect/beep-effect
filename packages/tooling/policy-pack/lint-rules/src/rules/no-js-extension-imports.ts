@@ -8,8 +8,8 @@
 import { FileSystem, Str } from "@beep/utils";
 import { fromFileUrl, toFileUrl } from "@beep/utils/NodeUrl";
 import { defineRule } from "@oxlint/plugins";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import type { ESTree } from "@oxlint/plugins";

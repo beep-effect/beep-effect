@@ -1,7 +1,13 @@
 import { A, dual } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { Cause, Effect, Exit, FileSystem, Layer, Path, Runtime } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Runtime from "effect/Runtime";
 import { expect } from "vitest";
 
 export const NodeTestLayer = Layer.mergeAll(NodeServices.layer);
@@ -45,7 +51,8 @@ export const permutedDirectoryReadsFileSystem: {
  * **Example** (A directory owned by one test)
  *
  * ```ts
- * import { Effect, FileSystem } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as FileSystem from "effect/FileSystem";
  * import { temporaryWorkingDirectory } from "./CommandTest.ts"
  *
  * const writeFixture = Effect.gen(function* () {

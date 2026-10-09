@@ -19,7 +19,10 @@ import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
-import { Context, Effect, Layer, pipe } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import type { FFmpegShape } from "@beep/ffmpeg";
 
 const T0 = 1753838000000;

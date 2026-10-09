@@ -3,9 +3,14 @@ import * as Domain from "@beep/repo-docgen/Domain";
 import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, flow, Layer, Path, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const isDomainDocgenError = S.is(Domain.DocgenError);

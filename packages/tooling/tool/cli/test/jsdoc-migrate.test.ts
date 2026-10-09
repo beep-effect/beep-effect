@@ -21,7 +21,10 @@ import {
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit, MutableHashMap, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeUnknownJSDocMigrateProxyUrl = S.decodeUnknownEffect(JSDocMigrateProxyUrl);

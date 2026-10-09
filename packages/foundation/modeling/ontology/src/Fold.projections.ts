@@ -11,10 +11,11 @@
 
 import { CoreVocab, contractOption, prefixedNameOrIri } from "@beep/identity";
 import { O as OU } from "@beep/utils";
-import { flow, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
@@ -214,7 +215,7 @@ const prefixTerm = (iri: string): JsonLdTerm => ({ "@id": iri, "@prefix": true }
  * ```ts
  * import { make } from "@beep/identity"
  * import { fold, toContext } from "@beep/ontology"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const $I = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" }).$BeepId.create("patent")
@@ -367,7 +368,7 @@ const predicateNode = (assembled: AssembledClass, predicate: AssembledPredicate)
  * ```ts
  * import { make } from "@beep/identity"
  * import { fold, toJsonLd } from "@beep/ontology"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const $I = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" }).$BeepId.create("patent")
@@ -610,7 +611,7 @@ const prefixDefinitions = (ontology: AssembledOntology): ReadonlyArray<readonly 
  * ```ts
  * import { make } from "@beep/identity"
  * import { fold, toTurtle } from "@beep/ontology"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const $I = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" }).$BeepId.create("patent")

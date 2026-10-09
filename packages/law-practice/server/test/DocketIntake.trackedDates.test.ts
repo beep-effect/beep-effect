@@ -8,8 +8,10 @@ import { it } from "@beep/test-runner";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import type { TrackedDate } from "@beep/law-practice-use-cases/DocketIntake";
 
 const SHEET_PATH = "/fixture/docket-sheet.csv";

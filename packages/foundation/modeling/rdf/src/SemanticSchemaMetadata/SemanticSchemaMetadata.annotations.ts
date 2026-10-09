@@ -7,9 +7,11 @@
 
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A } from "@beep/utils";
-import { pipe, Result, SchemaIssue, SchemaParser } from "effect";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaParser from "effect/SchemaParser";
 import { SemanticSchemaMetadata } from "./SemanticSchemaMetadata.schema.ts";
 import type { O } from "@beep/utils";
 
@@ -48,8 +50,7 @@ declare module "effect/Schema" {
  *
  * ```ts import.meta.vitest name="Inspect invalid semantic metadata"
  * import { makeSemanticSchemaMetadataResult } from "@beep/rdf/SemanticSchemaMetadata"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const result = makeSemanticSchemaMetadataResult({ kind: "unknown" })
  * Result.isFailure(result) // => true
  * ```
@@ -146,7 +147,7 @@ const annotationTraversalError = (): S.SchemaError =>
  *
  * ```ts import.meta.vitest name="Collect an empty semantic metadata Result"
  * import { collectSemanticSchemaMetadataResult } from "@beep/rdf/SemanticSchemaMetadata"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const result = collectSemanticSchemaMetadataResult(S.Array(S.String))
@@ -205,7 +206,7 @@ export const collectSemanticSchemaMetadata = (schema: S.Top): ReadonlyArray<Sema
  *
  * ```ts import.meta.vitest name="Read a missing semantic metadata Result"
  * import { getSemanticSchemaMetadataResult } from "@beep/rdf/SemanticSchemaMetadata"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *

@@ -19,10 +19,12 @@
 import { $NlpProcessingId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Context, Inspectable, pipe, Struct } from "effect";
-import { dual } from "effect/Function";
+import * as Context from "effect/Context";
+import { dual, pipe } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import type * as GraphSchema from "@beep/nlp/Graph/Schema";
 import type * as Effect from "effect/Effect";
 
@@ -301,7 +303,7 @@ export class BackendCapabilities extends S.Class<BackendCapabilities>($I`Backend
  * **Example** (Implement minimal backend shape)
  *
  * ```ts import.meta.vitest name="Implement minimal backend shape"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend"
  *
  * const backend: NLPBackendShape = {
@@ -376,7 +378,7 @@ export class NLPBackend extends Context.Service<NLPBackend, NLPBackendShape>()($
  * **Example** (Check single capability support)
  *
  * ```ts import.meta.vitest name="Check single capability support"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { supportsCapability } from "@beep/nlp-processing/Backend/NLPBackend"
  * import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend"
  *
@@ -421,7 +423,7 @@ export const supportsCapability: {
  * **Example** (List supported capability keys)
  *
  * ```ts import.meta.vitest name="List supported capability keys"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { getSupportedCapabilities } from "@beep/nlp-processing/Backend/NLPBackend"
  * import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend"
  *
@@ -470,7 +472,7 @@ export const getSupportedCapabilities = (backend: NLPBackendShape): ReadonlyArra
  * **Example** (Build not-supported failure)
  *
  * ```ts import.meta.vitest name="Build not-supported failure"
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { notSupported } from "@beep/nlp-processing/Backend/NLPBackend"
  *
  * const error = notSupported("minimal", "dependencyParsing")

@@ -7,7 +7,8 @@ import {
 } from "@beep/observability";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Cause, Exit } from "effect";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
 
 class TestCauseError extends S.TaggedError<TestCauseError>()("TestCauseError", {

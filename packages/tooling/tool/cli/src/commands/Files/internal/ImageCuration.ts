@@ -13,9 +13,17 @@ import {
   withDetector,
 } from "@beep/face-detection";
 import { A, Str } from "@beep/utils";
-import { Console, Crypto, Effect, FileSystem, MutableHashMap, MutableHashSet, Order, Path, pipe } from "effect";
+import * as Console from "effect/Console";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import sharp from "sharp";
 import { concatBytes } from "../../../internal/cli/Bytes.ts";
@@ -44,8 +52,8 @@ import {
 } from "./ImageCuration.schemas.ts";
 import { FileSha256Hash } from "./Media.schemas.ts";
 import type { LoadedFaceDetector } from "@beep/face-detection";
-import type { Terminal } from "effect";
 import type { ChildProcessSpawner } from "effect/process";
+import type * as Terminal from "effect/Terminal";
 import type { StagedFileCommitRecord } from "./FileTransaction.ts";
 import type { ImageAuditOptions } from "./ImageAudit.schemas.ts";
 import type {

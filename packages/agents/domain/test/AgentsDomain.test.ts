@@ -25,14 +25,16 @@ import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, FileSystem, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import type { PlatformError } from "effect";
+import type * as PlatformError from "effect/PlatformError";
 
 const decodeAgentMode = S.decodeEffect(AgentMode);
 const decodeRootAssistantBlock = S.decodeUnknownEffect(RootAssistantBlock);

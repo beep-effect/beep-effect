@@ -14,8 +14,10 @@
 
 import { $CiopsId } from "@beep/identity/packages";
 import { BunRuntime, BunServices } from "@effect/platform-bun";
-import { Effect, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { EvidenceMode } from "../projection/Evidence.ts";
 import { CiOpsKpiLive } from "./CiOpsKpi.ts";
@@ -63,7 +65,7 @@ const ioFailure = (operation: string, path: string) =>
  * **Example** (Check nothing)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { syncKpiArtifacts } from "@/kpi/Script"
  *
  * const program = syncKpiArtifacts("check", ".", "evidence:kpi:write", [])

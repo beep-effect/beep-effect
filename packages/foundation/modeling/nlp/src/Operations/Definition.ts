@@ -28,7 +28,7 @@ import type * as S from "effect/Schema";
  * **Example** (Define string length operation)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import type { OperationDefinition } from "@beep/nlp/Operations/Definition"
  *
@@ -61,7 +61,7 @@ export interface OperationDefinition<A, B, R = never, E = never> {
  * **Example** (Extract operation input type)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import type { OperationDefinition, OperationInput } from "@beep/nlp/Operations/Definition"
  *
@@ -88,7 +88,7 @@ export type OperationInput<D extends OperationDefinition<unknown, unknown, unkno
  * **Example** (Extract operation output type)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import type { OperationDefinition, OperationOutput } from "@beep/nlp/Operations/Definition"
  *

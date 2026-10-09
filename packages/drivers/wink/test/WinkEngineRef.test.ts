@@ -11,8 +11,10 @@ import {
 } from "@beep/wink";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
-import { Effect, Layer, Ref } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 
 const WinkEngineRefBundleLive = WinkEngineRefLive.pipe(Layer.provideMerge(WinkEngineLive));
 

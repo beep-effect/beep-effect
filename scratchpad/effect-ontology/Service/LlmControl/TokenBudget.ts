@@ -19,7 +19,10 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Context, Effect, Layer, Ref } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/LlmControl/TokenBudget");
@@ -118,8 +121,8 @@ const STAGE_ALLOCATIONS: Record<BudgetedStage, number> = {
  * **Example** (Inspect the token-budget layer)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { Effect } from "effect"
+ * import * as Layer from "effect/Layer";
+ * import * as Effect from "effect/Effect";
  * import { TokenBudgetService, TokenBudgetServiceLive } from "@effect-ontology/Service/LlmControl/TokenBudget"
  *
  * const program = Effect.gen(function* () {
@@ -247,7 +250,7 @@ const make = Effect.fn("TokenBudgetService.make")(function* (initialTotal: numbe
  * **Example** (Inspect token budget service live)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { TokenBudgetService, TokenBudgetServiceLive } from "@effect-ontology/Service/LlmControl/TokenBudget"
  *
  * const program = Effect.gen(function* () {
@@ -269,7 +272,7 @@ export const TokenBudgetServiceLive = Layer.effect(TokenBudgetService, make());
  * **Example** (Inspect token budget service test)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { TokenBudgetService, TokenBudgetServiceTest } from "@effect-ontology/Service/LlmControl/TokenBudget"
  *
  * const program = Effect.gen(function* () {

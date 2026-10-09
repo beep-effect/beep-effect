@@ -8,9 +8,13 @@
 import { PathSafety } from "@beep/file-processing";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
-import { Context, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { FlightRecord, FlightRecordWriteEvent, FlightRecordWriteEventJson } from "./flight-record.ts";
 import { IngestEnumeration, IngestManifest } from "./ingest-manifest.ts";
@@ -207,8 +211,7 @@ export class TelemetryV2IngestWriteResult extends S.Class<TelemetryV2IngestWrite
  *
  * ```ts
  * import { TelemetryV2Store } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const store = yield* TelemetryV2Store
  *   return store
@@ -430,7 +433,7 @@ const makeTelemetryV2Store = Effect.fnUntraced(function* (dataRoot: AiMetricsAbs
  *
  * ```ts
  * import { AiMetricsAbsoluteDataRoot, TelemetryV2Store } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const root = Effect.runSync(S.decodeEffect(AiMetricsAbsoluteDataRoot)("/var/lib/beep/ai-metrics"))
@@ -449,7 +452,7 @@ export class TelemetryV2Store extends Context.Service<TelemetryV2Store, Telemetr
    *
    * ```ts
    * import { AiMetricsAbsoluteDataRoot, TelemetryV2Store } from "@beep/repo-ai-metrics"
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * import * as S from "effect/Schema"
    *
    * const root = Effect.runSync(S.decodeEffect(AiMetricsAbsoluteDataRoot)("/var/lib/beep/ai-metrics"))

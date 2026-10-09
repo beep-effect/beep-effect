@@ -6,7 +6,8 @@
  */
 
 import { A } from "@beep/utils";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import { stringify as stringifyYaml } from "yaml";
 import { AiMetricsInstallConfigurationError } from "./install.ts";
@@ -29,8 +30,7 @@ const phoenixService = (spec: AiMetricsInstallSpec): O.Option<AiMetricsServiceSp
  *
  * ```ts
  * import { makeAiMetricsInstallSpec, renderAiMetricsLocalPhoenixCompose } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const spec = yield* makeAiMetricsInstallSpec()
  *   return yield* renderAiMetricsLocalPhoenixCompose(spec)

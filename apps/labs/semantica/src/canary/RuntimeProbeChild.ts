@@ -2,8 +2,10 @@
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { LiteralKit } from "@beep/schema";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, Layer, Result } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { LedgerLive } from "@/layers/LedgerLive";
 import { RdfProjectionLive } from "@/layers/RdfProjectionLive";

@@ -9,7 +9,7 @@ import { $ChalkId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import type { LiteralKit as LiteralKitSchema } from "@beep/schema";
-import type { SchemaAST } from "effect";
+import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $ChalkId.create("Domain");
 

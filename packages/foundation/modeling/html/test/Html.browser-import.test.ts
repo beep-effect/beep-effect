@@ -1,6 +1,6 @@
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 
 const packageRoot = new URL("..", import.meta.url).pathname;
 

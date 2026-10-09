@@ -17,11 +17,11 @@
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { Claim, Distinction, OfficeAction, PriorArtReference, Rejection } from "@beep/law-practice-domain";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { GroundedExtraction } from "@beep/langextract/Extraction";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import type { IrToLawExtractionError } from "./IrToLaw.errors.ts";
 
 const $I = $LawPracticeUseCasesId.create("IrToLaw/IrToLaw.ports");
@@ -129,8 +129,8 @@ export class LawEntities extends LawEntitiesBase {}
  *
  * ```ts
  * import { IrToLawExtractionError, IrToLawShape } from "@beep/law-practice-use-cases/IrToLaw"
- * import { Effect, Exit } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Exit from "effect/Exit";
  * const shape = IrToLawShape.make({
  *   toLaw: () =>
  *     Effect.fail(
@@ -165,8 +165,8 @@ export class IrToLawShape extends S.Class<IrToLawShape>($I`IrToLawShape`)(
  *
  * ```ts
  * import { IrToLaw, IrToLawExtractionError, IrToLawShape } from "@beep/law-practice-use-cases/IrToLaw"
- * import { Effect, Exit } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Exit from "effect/Exit";
  * const fakeMapper = IrToLawShape.make({
  *   toLaw: () =>
  *     Effect.fail(

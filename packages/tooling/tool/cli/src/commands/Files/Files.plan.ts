@@ -7,8 +7,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import { HashSet, pipe } from "effect";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
@@ -20,7 +20,7 @@ import {
   SortableFile,
   StripMetadataPlanEntry,
 } from "./Files.schemas.ts";
-import type { Path } from "effect";
+import type * as Path from "effect/Path";
 import type {
   BorderSide,
   DetectBordersEntry,
@@ -179,7 +179,7 @@ export const selectedCanonicalPathSet = (plan: ReadonlyArray<RenamePlanEntry>): 
  * **Example** (Unique normalize target name)
  *
  * ```ts
- * import { HashSet } from "effect"
+ * import * as HashSet from "effect/HashSet";
  * import { uniqueNormalizeTargetName } from "../../src/commands/Files/Files.plan.ts"
  *
  * const targetName = uniqueNormalizeTargetName("image", "png", HashSet.empty())
@@ -214,7 +214,7 @@ export const uniqueNormalizeTargetName: {
  * **Example** (Unique archive target name)
  *
  * ```ts
- * import { HashSet } from "effect"
+ * import * as HashSet from "effect/HashSet";
  * import { uniqueArchiveTargetName } from "../../src/commands/Files/Files.plan.ts"
  *
  * const targetName = uniqueArchiveTargetName("image", ".jpg", HashSet.empty())

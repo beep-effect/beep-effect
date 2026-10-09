@@ -6,7 +6,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { captureUrlImpl } from "./internal/Capture.ts";
 import { cognifyImpl } from "./internal/Cognify.ts";
 import { dailyImpl } from "./internal/Daily.ts";
@@ -16,9 +18,10 @@ import { notionPullImpl } from "./internal/NotionPullRun.ts";
 import { repoCardImpl } from "./internal/RepoCardRun.ts";
 import { statusImpl } from "./internal/Status.ts";
 import { resolveVaultRoot } from "./internal/Vault.ts";
-import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
 import type * as HttpClient from "effect/http/HttpClient";
+import type * as Path from "effect/Path";
 import type { ChildProcessSpawner } from "effect/process";
 import type { ResearchCommandError } from "./Research.errors.ts";
 import type {
@@ -49,8 +52,7 @@ const $I = $RepoCliId.create("commands/Research/Research.service");
  *
  * ```ts
  * import type { ResearchCommandServiceRequirements } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program: Effect.Effect<void, never, ResearchCommandServiceRequirements> = Effect.void
  * console.log(program.pipe !== undefined)
  * ```
@@ -149,8 +151,7 @@ export interface ResearchCommandServiceShape {
  *
  * ```ts
  * import { ResearchCommandService, ResearchStatusOptions } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.map(ResearchCommandService, (service) =>
  *   service.status(ResearchStatusOptions.make({ vaultRoot: "/home/user/knowledge" }))
  * )
@@ -245,8 +246,7 @@ export const resolveResearchVaultRoot = resolveVaultRoot;
  *
  * ```ts
  * import { captureResearchUrl, ResearchCaptureOptions } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const options = ResearchCaptureOptions.make({
  *   tags: [],
  *   url: "https://example.com/post",
@@ -276,8 +276,7 @@ export const captureResearchUrl = Effect.fn("Research.captureResearchUrl")(funct
  *
  * ```ts
  * import { researchStatus, ResearchStatusOptions } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const options = ResearchStatusOptions.make({ vaultRoot: "/home/user/knowledge" })
  * const total = researchStatus(options).pipe(Effect.map((summary) => summary.totalCards))
  * console.log(total.pipe !== undefined) // true
@@ -303,8 +302,7 @@ export const researchStatus = Effect.fn("Research.researchStatus")(function* (
  *
  * ```ts
  * import { cognifyResearchCards, ResearchCognifyOptions } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const options = ResearchCognifyOptions.make({ dryRun: true, vaultRoot: "/home/user/knowledge" })
  * const pushed = cognifyResearchCards(options).pipe(Effect.map((summary) => summary.cardsPushed))
  * console.log(pushed.pipe !== undefined) // true
@@ -332,8 +330,7 @@ export const cognifyResearchCards = Effect.fn("Research.cognifyResearchCards")(f
  * ```ts
  * import * as S from "effect/Schema"
  * import { runResearchDaily, ResearchDailyOptions } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const options = ResearchDailyOptions.make({
  *   browser: "all",
  *   commit: false,
@@ -364,8 +361,7 @@ export const runResearchDaily = Effect.fn("Research.runResearchDaily")(function*
  *
  * ```ts
  * import { writeResearchDigest, ResearchDigestOptions } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const options = ResearchDigestOptions.make({ vaultRoot: "/home/user/knowledge" })
  * const digestPath = writeResearchDigest(options).pipe(Effect.map((summary) => summary.digestPath))
  * console.log(digestPath.pipe !== undefined) // true
@@ -392,8 +388,7 @@ export const writeResearchDigest = Effect.fn("Research.writeResearchDigest")(fun
  * ```ts
  * import * as S from "effect/Schema"
  * import { siftResearchHistory, ResearchHistorySiftOptions } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const options = ResearchHistorySiftOptions.make({
  *   browser: "all",
  *   sinceDays: S.Natural.make(7),
@@ -423,8 +418,7 @@ export const siftResearchHistory = Effect.fn("Research.siftResearchHistory")(fun
  *
  * ```ts
  * import { writeResearchRepoCards, ResearchRepoCardOptions } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const options = ResearchRepoCardOptions.make({
  *   force: false,
  *   includeStars: false,
@@ -455,8 +449,7 @@ export const writeResearchRepoCards = Effect.fn("Research.writeResearchRepoCards
  *
  * ```ts
  * import { pullResearchNotionLinks, ResearchNotionPullOptions } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const options = ResearchNotionPullOptions.make({ database: "Awesome X Posts", vaultRoot: "/home/user/knowledge" })
  * const written = pullResearchNotionLinks(options).pipe(Effect.map((summary) => summary.cardsWritten))
  * console.log(written.pipe !== undefined) // true

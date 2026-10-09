@@ -9,9 +9,12 @@ import { ExtractionResult } from "@beep/file-processing/Extraction";
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { $TikaId } from "@beep/identity";
 import { O } from "@beep/utils";
-import { Effect, FileSystem, Path, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { PosInt } from "./internal/PosInt.ts";
 import { tikaOperationError } from "./Tika.error-translation.ts";
 import { makeTikaError } from "./Tika.errors.ts";
@@ -77,8 +80,7 @@ export class TikaAppEngineConfig extends S.Class<TikaAppEngineConfig>($I`TikaApp
  * **Example** (Usage)
  * ```ts
  * import { makeTikaAppFileProcessingEngine, TikaAppEngineConfig } from "@beep/tika"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const engine = yield* makeTikaAppFileProcessingEngine(
  *     TikaAppEngineConfig.make({ jarPath: "/opt/tika/tika-app.jar" })

@@ -33,8 +33,7 @@ material for capability, fixture, and security comparison only.
 
 ```typescript
 import { Md } from "@beep/md"
-import { Result } from "effect"
-
+import * as Result from "effect/Result";
 const document = Md.make([Md.h1`Hello`, Md.p`World`])
 const markdown = Md.render(document)
 

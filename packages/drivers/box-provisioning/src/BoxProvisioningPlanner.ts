@@ -8,10 +8,18 @@
 import { $BoxProvisioningId } from "@beep/identity";
 import { Sha256Hex } from "@beep/schema";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
-import { Context, Effect, Equal, Layer, Match, MutableHashMap, MutableHashSet, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import { BoxProvisioningSchemaError } from "./BoxProvisioningErrors.ts";
 import {
@@ -733,8 +741,7 @@ export interface BoxProvisioningPlannerShape {
  *
  * ```ts
  * import { BoxProvisioningPlanner } from "@beep/box-provisioning/BoxProvisioningPlanner"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const planner = yield* BoxProvisioningPlanner
  *   return planner.plan

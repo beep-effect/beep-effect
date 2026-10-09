@@ -17,8 +17,9 @@
  */
 
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
 
 /**
  * Resolve the derived DuckDB database path under an AI metrics data root.
@@ -67,8 +68,7 @@ export const aiMetricsDerivedDuckDbPath = (dataRoot: string): string => `${dataR
  * ```ts
  * import { DuckDb } from "@beep/duckdb"
  * import { aiMetricsDerivedDuckDbPath, withAiMetricsDuckDb } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const rowCount = Effect.gen(function* () {
  *   const duckdb = yield* DuckDb
  *   const rows = yield* duckdb.query("SELECT count(*) AS n FROM ai_metrics_ingest_runs")

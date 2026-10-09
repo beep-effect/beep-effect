@@ -44,12 +44,19 @@ import {
   deepStrictEqual,
   strictEqual,
 } from "@effect/vitest/utils";
-import { DateTime, Effect, Exit, Fiber, Layer, pipe, Sink, Stream } from "effect";
 import * as Crypto from "effect/Crypto";
 import { Command } from "effect/cli";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 

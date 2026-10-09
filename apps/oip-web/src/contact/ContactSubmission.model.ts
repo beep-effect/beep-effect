@@ -9,9 +9,12 @@ import { $OipWebId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, pipe, Result, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 const $I = $OipWebId.create("contact/ContactSubmission.model");
 
@@ -149,7 +152,7 @@ export type ContactResponseMessage = typeof ContactResponseMessage.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeContactSubmission } from "@beep/oip-web/contact"
  *
  * const program = decodeContactSubmission({
@@ -288,7 +291,7 @@ const contactSubmissionPayloadFallback = (formData: FormData): ContactSubmission
  * **Example** (Effectfully converting FormData)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { contactSubmissionPayloadFromFormDataEffect } from "@beep/oip-web/contact"
  *
  * const formData = new FormData()
@@ -371,7 +374,7 @@ export class ContactSubmissionResponse extends S.Class<ContactSubmissionResponse
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeContactSubmission } from "@beep/oip-web/contact"
  *
  * const program = decodeContactSubmission({

@@ -8,8 +8,11 @@
 
 import { HarnessLedgerRow } from "@beep/repo-ai-metrics";
 import { A, pipe, Str } from "@beep/utils";
-import { DateTime, Effect, FileSystem, Path } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { HarnessLedgerBusyError, HarnessLedgerIoError } from "../HarnessLedger.errors.ts";
 import { listDirectorySorted } from "./Fs.ts";

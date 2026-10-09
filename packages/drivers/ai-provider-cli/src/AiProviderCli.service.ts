@@ -6,12 +6,18 @@
  */
 
 import { $AiProviderCliId } from "@beep/identity";
-import { Context, Effect, Layer, Match, Result, Stream, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { AiProviderCliError } from "./AiProviderCli.errors.ts";
 import {
   AiProviderCliAuthProbe,
@@ -45,7 +51,7 @@ const $I = $AiProviderCliId.create("AiProviderCli.service");
  * **Example** (Mock runner returning stdout)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { AiProviderCliProcessResult, type AiProviderCliRunner } from "@beep/ai-provider-cli"
  *
  * const runner: AiProviderCliRunner = (request) =>
@@ -291,7 +297,7 @@ const makeService = (paths: AiProviderCliPaths, runner: AiProviderCliRunner): Ai
  * **Example** (checkAuth with injected runner)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { AiProviderCli, AiProviderCliProcessResult, type AiProviderCliRunner } from "@beep/ai-provider-cli"
  *
  * const runner: AiProviderCliRunner = (request) =>
@@ -360,7 +366,7 @@ export class AiProviderCli extends Context.Service<AiProviderCli, AiProviderCliS
    * **Example** (Injected runner test layer)
    *
    * ```ts
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * import { AiProviderCli, AiProviderCliProcessResult, type AiProviderCliRunner } from "@beep/ai-provider-cli"
    *
    * const runner: AiProviderCliRunner = (request) =>

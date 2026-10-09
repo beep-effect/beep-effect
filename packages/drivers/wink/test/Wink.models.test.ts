@@ -4,10 +4,11 @@ import { WinkStringArray as WinkStringArrayFromRoot } from "@beep/wink";
 import { WinkStringArray } from "@beep/wink/Wink.models";
 import { describe, expect } from "@effect/vitest";
 import { assertSuccess, assertTrue } from "@effect/vitest/utils";
-import { pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeWinkStringArrayResult = S.decodeResult(WinkStringArray);

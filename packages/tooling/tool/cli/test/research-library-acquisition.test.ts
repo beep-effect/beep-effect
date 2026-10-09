@@ -30,9 +30,13 @@ import {
 } from "@beep/repo-cli/test/ResearchLibrary";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it, vi } from "@effect/vitest";
-import { Config, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 
 const LibraryImportPayloadJson = S.fromJsonString(LibraryImportPayload);

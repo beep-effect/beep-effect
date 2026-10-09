@@ -17,7 +17,7 @@ import {
 } from "@beep/repo-cli/test/Goals";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { parse } from "jsonc-parser";

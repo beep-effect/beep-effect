@@ -22,9 +22,13 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { Config, Console, Effect, FileSystem, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -352,8 +356,7 @@ const requestRerun = Effect.fn("Ci.rerunRunnerLoss.requestRerun")(function* (
  *
  * ```ts
  * import { CiRerunRunnerLossInput, runCiRerunRunnerLoss } from "@beep/repo-cli/commands/Ci"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = runCiRerunRunnerLoss(CiRerunRunnerLossInput.make({ runId: 1, dryRun: true, cwd: "." }))
  * console.log(Effect.isEffect(program)) // true
  * ```

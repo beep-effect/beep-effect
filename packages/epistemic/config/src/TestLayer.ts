@@ -22,8 +22,10 @@ import {
   SinkDestination,
 } from "@beep/epistemic-domain/values/ExecutionGrant";
 import { addGrant, emptyDraftGrantSet, freezeGrantSet } from "@beep/epistemic-domain/values/GrantSet";
-import { DateTime, Layer, Result } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import { defaultPolicyRevision, EpistemicConfig, EpistemicServerConfig } from "./ServerConfig.ts";
 import type { FrozenGrantSet } from "@beep/epistemic-domain/values/GrantSet";
 
@@ -67,8 +69,7 @@ export const fixtureDeniedDestination = SinkDestination.make("https://attacker.e
  *
  * ```ts
  * import { fixtureFrozenAt } from "@beep/epistemic-config/test"
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * console.log(DateTime.toEpochMillis(fixtureFrozenAt)) // 0
  * ```
  *
@@ -139,8 +140,7 @@ export const testEpistemicConfig = EpistemicServerConfig.make({
  *
  * ```ts
  * import { makeEpistemicConfigTest, testEpistemicConfig } from "@beep/epistemic-config/test"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(makeEpistemicConfigTest(testEpistemicConfig))) // true
  * ```
  *
@@ -156,8 +156,7 @@ export const makeEpistemicConfigTest = (config: EpistemicServerConfig) => Layer.
  *
  * ```ts
  * import { EpistemicConfigTest } from "@beep/epistemic-config/test"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(EpistemicConfigTest)) // true
  * ```
  *

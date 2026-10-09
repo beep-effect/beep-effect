@@ -8,7 +8,9 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf/Iri";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { PrimaryKey, Result, Effect } from "effect";
+import * as PrimaryKey from "effect/PrimaryKey";
+import * as Result from "effect/Result";
+import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
@@ -215,26 +217,26 @@ export class OntologyRef extends S.Class<OntologyRef>($I`OntologyRef`)(
   })
 ) {
   /**
-   * Effect primary key for identity-aware collections.
-   *
-   * **Example** (Build a stable primary key)
-   *
-   * ```ts
-   * import { PrimaryKey } from "effect"
-   * import * as O from "effect/Option"
-   * import * as S from "effect/Schema"
-   * import { OntologyRef } from "@effect-ontology/Model/Ontology"
-   *
-   * const ref = S.decodeUnknownOption(OntologyRef)({
-   *   namespace: "legal",
-   *   name: "claims",
-   *   contentHash: "a".repeat(64)
-   * })
-   * console.log(O.map(ref, (value) => value[PrimaryKey.symbol]()))
-   * ```
-   *
-   * @returns Stable namespace, name, and full-content-hash identity.
-   */
+     * Effect primary key for identity-aware collections.
+     *
+     * **Example** (Build a stable primary key)
+     *
+     * ```ts
+     * import * as PrimaryKey from "effect/PrimaryKey";
+     * import * as O from "effect/Option"
+     * import * as S from "effect/Schema"
+     * import { OntologyRef } from "@effect-ontology/Model/Ontology"
+     *
+     * const ref = S.decodeUnknownOption(OntologyRef)({
+     *   namespace: "legal",
+     *   name: "claims",
+     *   contentHash: "a".repeat(64)
+     * })
+     * console.log(O.map(ref, (value) => value[PrimaryKey.symbol]()))
+     * ```
+     *
+     * @returns Stable namespace, name, and full-content-hash identity.
+     */
   [PrimaryKey.symbol](): string {
     return `${this.namespace}:${this.name}@${this.contentHash}`;
   }

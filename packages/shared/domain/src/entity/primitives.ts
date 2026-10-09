@@ -46,7 +46,7 @@ const StableToken = S.NonEmptyString.check(
  * **Example** (Decode SHA-256 hex digest)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Sha256 } from "@beep/shared-domain/entity/primitives"
  * import { Str } from "@beep/utils"
  * import * as S from "effect/Schema"
@@ -86,7 +86,7 @@ export type Sha256 = Sha256HexType;
  * **Example** (Decode base64url signature)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Ed25519Signature } from "@beep/shared-domain/entity/primitives"
  * import * as S from "effect/Schema"
  *
@@ -130,7 +130,7 @@ export type Ed25519Signature = typeof Ed25519Signature.Type;
  * **Example** (Decode encryption key id)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EncryptionKeyId } from "@beep/shared-domain/entity/primitives"
  * import * as S from "effect/Schema"
  *
@@ -174,7 +174,7 @@ export type EncryptionKeyId = typeof EncryptionKeyId.Type;
  * **Example** (Decode hybrid logical clock)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { HybridLogicalClock } from "@beep/shared-domain/entity/primitives"
  * import * as S from "effect/Schema"
  *
@@ -218,7 +218,7 @@ export type HybridLogicalClock = typeof HybridLogicalClock.Type;
  * **Example** (Decode vector clock map)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { VectorClock } from "@beep/shared-domain/entity/primitives"
  * import * as S from "effect/Schema"
  *

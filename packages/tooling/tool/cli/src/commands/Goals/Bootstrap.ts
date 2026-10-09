@@ -13,10 +13,12 @@
  * @since 0.0.0
  */
 
-import { Console, DateTime, Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
-import { dual } from "effect/Function";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

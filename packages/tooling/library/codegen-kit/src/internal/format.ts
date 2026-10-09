@@ -1,5 +1,8 @@
-import { Effect, FileSystem, Path, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { CodegenFormatError } from "../CodegenKit.errors.ts";
 

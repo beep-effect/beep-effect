@@ -8,7 +8,7 @@
 
 import { A, Str } from "@beep/utils";
 import { ArrowRightIcon, CalendarIcon, CheckIcon, InfoIcon, WarningCircleIcon } from "@phosphor-icons/react";
-import { DateTime } from "effect";
+import * as DateTime from "effect/DateTime";
 import { formatShortDate, toUtcDateTime } from "../lib/date-time.ts";
 import { cn } from "../lib/index.ts";
 import type { CSSProperties } from "react";

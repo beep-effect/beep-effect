@@ -2,9 +2,13 @@ import { $SemanticaId } from "@beep/identity/packages";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Crypto, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import {
   F1Fixture,

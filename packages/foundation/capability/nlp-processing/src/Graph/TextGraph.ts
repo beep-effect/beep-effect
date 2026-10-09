@@ -21,8 +21,12 @@
 import { $NlpProcessingId } from "@beep/identity";
 import { TextEdge, TextNode } from "@beep/nlp/Graph/Schema";
 import { A, O as OptionUtils, P } from "@beep/utils";
-import { Clock, Effect, Graph, MutableHashMap, MutableHashSet } from "effect";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Graph from "effect/Graph";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Tok from "../Core/Tokenization.ts";
@@ -129,7 +133,7 @@ export const empty = (): TextGraph => Graph.directed<TextNode, TextEdge>();
  * **Example** (Create singleton document graph)
  *
  * ```ts import.meta.vitest name="Create singleton document graph"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { nodeCount, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
@@ -164,7 +168,8 @@ export const singleton: {
  * **Example** (Document with sentence children)
  *
  * ```ts import.meta.vitest name="Document with sentence children"
- * import { Chunk, Effect } from "effect"
+ * import * as Chunk from "effect/Chunk";
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { Document as NLPDocument, DocumentId } from "@beep/nlp/Core/Document"
  * import { Sentence, SentenceIndex } from "@beep/nlp/Core/Sentence"
@@ -257,7 +262,7 @@ export const fromDocument = Effect.fn("fromDocument")(function* (
  * **Example** (Add child under root)
  *
  * ```ts import.meta.vitest name="Add child under root"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { addChildren, getRoots, nodeCount, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  * import { TextNode } from "@beep/nlp/Graph/Schema"
  * import * as A from "effect/Array"
@@ -332,7 +337,8 @@ export const addChildren: {
  * **Example** (Tokenize sentence into tokens)
  *
  * ```ts import.meta.vitest name="Tokenize sentence into tokens"
- * import { Chunk, Effect } from "effect"
+ * import * as Chunk from "effect/Chunk";
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { Document as NLPDocument, DocumentId } from "@beep/nlp/Core/Document"
  * import { CharPosition, Token, TokenIndex } from "@beep/nlp/Core/Token"
@@ -481,7 +487,7 @@ const rebuild = (
  * **Example** (Map nodes to uppercase)
  *
  * ```ts import.meta.vitest name="Map nodes to uppercase"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { mapNodes, singleton, toArray } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
@@ -504,7 +510,7 @@ export const mapNodes: {
  * **Example** (Filter nodes by type)
  *
  * ```ts import.meta.vitest name="Filter nodes by type"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { filterNodes, nodeCount, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
@@ -539,7 +545,8 @@ const isTraversalDataFirst = (args: IArguments): boolean =>
  * **Example** (Depth-first walk values)
  *
  * ```ts import.meta.vitest name="Depth-first walk values"
- * import { Effect, Graph } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Graph from "effect/Graph";
  * import { dfs, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
@@ -564,7 +571,8 @@ export const dfs: {
  * **Example** (Breadth-first walk values)
  *
  * ```ts import.meta.vitest name="Breadth-first walk values"
- * import { Effect, Graph } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Graph from "effect/Graph";
  * import { bfs, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
@@ -589,7 +597,8 @@ export const bfs: {
  * **Example** (Topological walk values)
  *
  * ```ts import.meta.vitest name="Topological walk values"
- * import { Effect, Graph } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Graph from "effect/Graph";
  * import { singleton, topo } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
@@ -607,7 +616,7 @@ export const topo = (graph: TextGraph): Graph.NodeWalker<TextNode> => Graph.topo
  * **Example** (Collect nodes into array)
  *
  * ```ts import.meta.vitest name="Collect nodes into array"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { singleton, toArray } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * toArray(Effect.runSync(singleton("Hello.", "document"))).length // => 1
@@ -661,7 +670,7 @@ export const edgeCount = (graph: TextGraph): number => Graph.edgeCount(graph);
  * **Example** (Find nodes by document type)
  *
  * ```ts import.meta.vitest name="Find nodes by document type"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { findNodesByType, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * const graph = Effect.runSync(singleton("Hello.", "document"))
@@ -686,7 +695,7 @@ export const findNodesByType: {
  * **Example** (Get roots of singleton)
  *
  * ```ts import.meta.vitest name="Get roots of singleton"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { getRoots, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * getRoots(Effect.runSync(singleton("Hello.", "document"))).length // => 1
@@ -704,7 +713,7 @@ export const getRoots = (graph: TextGraph): ReadonlyArray<Graph.NodeIndex> =>
  * **Example** (Get leaves of singleton)
  *
  * ```ts import.meta.vitest name="Get leaves of singleton"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { getLeaves, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * getLeaves(Effect.runSync(singleton("Hello.", "document"))).length // => 1
@@ -722,7 +731,7 @@ export const getLeaves = (graph: TextGraph): ReadonlyArray<Graph.NodeIndex> =>
  * **Example** (Children of document root)
  *
  * ```ts import.meta.vitest name="Children of document root"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { getChildren, getRoots, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  * import * as A from "effect/Array"
  * import * as O from "effect/Option"
@@ -814,7 +823,7 @@ export const toMermaid = (graph: TextGraph): string =>
  * **Example** (Show singleton tree string)
  *
  * ```ts import.meta.vitest name="Show singleton tree string"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { show, singleton } from "@beep/nlp-processing/Graph/TextGraph"
  *
  * show(Effect.runSync(singleton("Hello.", "document"))) // => "[node] document: Hello."

@@ -9,9 +9,10 @@ import { $LangExtractId } from "@beep/identity";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
-import { Effect, Match } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import { MAX_EXTRACTION_CANDIDATES } from "./Extraction.config.ts";
 import { LangExtractError } from "./Extraction.errors.ts";
@@ -79,8 +80,7 @@ const stripJsonFence = (text: string): string => {
  *
  * ```ts
  * import { parseModelOutput } from "@beep/langextract/Extraction"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = parseModelOutput('{"extractions":[{"label":"person","text":"Ada Lovelace"}]}')
  * Effect.runPromise(program).then(console.log)
  * ```

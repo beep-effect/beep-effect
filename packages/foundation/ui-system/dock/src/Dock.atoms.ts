@@ -4,8 +4,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Context, Effect, Layer, Logger } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";
 import type {
   DockAtomFeedEntry,
@@ -36,8 +39,8 @@ import type { DockEngine } from "./DockEngine.service.ts";
  *
  * ```ts
  * import { DockAtomObservabilityLive } from "@beep/dock"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const status = Effect.runSync(
  *   Layer.build(DockAtomObservabilityLive).pipe(Effect.as("observability-ready"), Effect.scoped)
  * )
@@ -188,8 +191,8 @@ interface DockAtomsSessionEffect<E> extends ReturnType<typeof makeDockAtomsWithI
  *
  * ```ts
  * import { DockEngineLive, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeDockAtomsWith, makeDockSnapshotStoreMemory } from "@beep/dock"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })
  * const groupCount = await Effect.runPromise(
@@ -222,8 +225,7 @@ export const makeDockAtomsWith: {
  *
  * ```ts
  * import { GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeDockAtoms } from "@beep/dock"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })
  * const panelCount = await Effect.runPromise(

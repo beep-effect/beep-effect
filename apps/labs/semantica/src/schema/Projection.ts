@@ -1,8 +1,10 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { Equal, identity, Result } from "effect";
 import * as A from "effect/Array";
+import * as Equal from "effect/Equal";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CorpusPaperId } from "@/corpus/Manifest";

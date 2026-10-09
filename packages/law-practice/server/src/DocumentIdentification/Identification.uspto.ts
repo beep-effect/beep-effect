@@ -10,8 +10,9 @@ import {
   UsptoRecordLookupShape,
 } from "@beep/law-practice-use-cases/DocumentIdentification";
 import { Uspto } from "@beep/uspto";
-import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import type { UsptoApplicationMetadata, UsptoError } from "@beep/uspto";

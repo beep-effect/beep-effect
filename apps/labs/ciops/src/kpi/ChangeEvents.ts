@@ -17,7 +17,7 @@
  */
 
 import { Sha256Hex } from "@beep/schema/Sha256";
-import { DateTime } from "effect";
+import * as DateTime from "effect/DateTime";
 import { ChangeEventRow } from "./Schemas.ts";
 import type * as A from "effect/Array";
 import type { ChangeEventId, ChangeEventSeries, GitCommitSha } from "./Schemas.ts";

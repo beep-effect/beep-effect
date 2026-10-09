@@ -5,9 +5,11 @@ import { OWLClass } from "@beep/ontology/Ontology.models";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue, strictEqual } from "@effect/vitest/utils";
-import { Effect, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import type { AssembledClass, AssembledPredicate, Triple } from "@beep/ontology";
 

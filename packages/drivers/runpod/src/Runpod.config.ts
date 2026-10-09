@@ -7,9 +7,10 @@
 
 import { $RunpodId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
-import { Effect, SchemaGetter } from "effect";
+import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
 
 const $I = $RunpodId.create("Runpod.config");

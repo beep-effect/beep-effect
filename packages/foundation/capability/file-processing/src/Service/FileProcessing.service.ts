@@ -7,7 +7,8 @@
 
 import { $FileProcessingId } from "@beep/identity";
 import { A, O } from "@beep/utils";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import type * as Crypto from "effect/Crypto";
 import type { FileProcessingFailureRecord, SourceProcessingRecord } from "../Extraction/Extraction.manifest.ts";
 import type { ArchiveExportResult, ExtractionResult, ProcessFileResult } from "../Extraction/Extraction.schema.ts";
@@ -85,8 +86,7 @@ export type FileProcessingServiceShape = {
  * import { FileProcessingService } from "@beep/file-processing/Service"
  * import { makeFileProcessingServiceLayer } from "@beep/file-processing/Service"
  * import { TestFileProcessingEngine } from "@beep/file-processing/test"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = FileProcessingService.pipe(
  *   Effect.map((service) => typeof service.process),
  *   Effect.provide(makeFileProcessingServiceLayer([TestFileProcessingEngine])),
@@ -143,7 +143,7 @@ export const collectSourceOutcomeRecords = (
  * import { TestFileProcessingEngine } from "@beep/file-processing/test"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -196,7 +196,7 @@ export const detectFile = Effect.fn("FileProcessing.detectFile")(function* (
  * import { TestFileProcessingEngine } from "@beep/file-processing/test"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -250,7 +250,7 @@ export const extractFile = Effect.fn("FileProcessing.extractFile")(function* (
  * import { TestFileProcessingEngine } from "@beep/file-processing/test"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -303,7 +303,7 @@ export const exportArchive = Effect.fn("FileProcessing.exportArchive")(function*
  * import { TestFileProcessingEngine } from "@beep/file-processing/test"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {

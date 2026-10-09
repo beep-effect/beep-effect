@@ -13,7 +13,12 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { Percentage } from "@beep/schema/Percentage";
-import { Context, DateTime, Effect, Layer, Order, Random } from "effect";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
+import * as Random from "effect/Random";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -258,7 +263,7 @@ const encodeWikidataLink = S.encodeEffect(WikidataLinkJson);
  * **Example** (Inspect reconciliation service)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ReconciliationService } from "@effect-ontology/Service/ReconciliationService"
  *
  * const program = Effect.gen(function* () {

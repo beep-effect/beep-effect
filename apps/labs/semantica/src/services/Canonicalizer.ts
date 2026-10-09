@@ -1,7 +1,7 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import type { TextAnchor, TextAnchorVerificationReceipt } from "@beep/provenance";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import type { SourceDocument } from "@/schema/Document";
 import type { AnchorRejected } from "@/schema/Errors";
 import type { CanonicalText, ParseOutcome } from "@/schema/Text";
@@ -32,8 +32,7 @@ export interface CanonicalizerShape {
  *
  * ```ts
  * import { Canonicalizer } from "@/services/Canonicalizer"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Canonicalizer)) // true
  * ```
  *

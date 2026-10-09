@@ -2,7 +2,8 @@ import { isOnePasswordReference, OnePasswordReference } from "@beep/shared-domai
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
 
 const decodeOnePasswordReference = S.decodeUnknownEffect(OnePasswordReference);

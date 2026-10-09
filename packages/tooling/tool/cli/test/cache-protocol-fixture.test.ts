@@ -7,9 +7,11 @@ import {
 import { NodeCrypto } from "@effect/platform-node";
 import { expect, it, vi } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue, notDeepStrictEqual } from "@effect/vitest/utils";
-import { Effect, Layer, Match } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { FetchHttpClient, Headers, HttpClient, HttpClientRequest } from "effect/http";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";

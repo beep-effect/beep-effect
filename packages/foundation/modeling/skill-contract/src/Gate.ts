@@ -7,15 +7,17 @@
 
 import { $SkillContractId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { DateTime, HashSet, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { SchemaReference } from "./SchemaReference.ts";
 import type { LiteralKit as LiteralKitSchema } from "@beep/schema/LiteralKit";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 
 const $I = $SkillContractId.create("Gate");
 

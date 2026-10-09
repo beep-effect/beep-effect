@@ -11,7 +11,8 @@
  */
 
 import { $McpKitId } from "@beep/identity/packages";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -65,7 +66,7 @@ export class McpCallerIdentity extends S.Class<McpCallerIdentity>($I`McpCallerId
  *
  * ```ts
  * import { CurrentMcpCaller } from "@beep/mcp-kit"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.runSync(CurrentMcpCaller))
  * ```
  *

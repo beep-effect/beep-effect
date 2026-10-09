@@ -11,12 +11,16 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/CachedArticle");
 
-import { Cache, Data, Duration, Effect } from "effect";
+import * as Cache from "effect/Cache";
+import * as Data from "effect/Data";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import type { ArticleId } from "./Article.ts";
@@ -59,8 +63,7 @@ interface CachedArticleRepositoryShape extends Context.Service.Shape<typeof Arti
  *
  * ```ts
  * import { CachedArticleRepository } from "@effect-ontology/Repository/CachedArticle"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const inspectCache = Effect.gen(function* () {
  *   const articles = yield* CachedArticleRepository
  *   const before = yield* articles.cacheStats

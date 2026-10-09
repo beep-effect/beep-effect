@@ -28,8 +28,11 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { normalizePath } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, O, pipe, R, Str, thunkFalse } from "@beep/utils";
-import { Effect, FileSystem, flow, MutableHashSet, Path } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow } from "effect/Function";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("internal/quality/TestTypecheckCoverage");
@@ -126,8 +129,8 @@ export class TestTypecheckCoverage extends S.Class<TestTypecheckCoverage>($I`Tes
  *
  * ```ts
  * import { pathExists } from "@beep/repo-cli/test/SharedInternals"
- * import { Effect, FileSystem } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as FileSystem from "effect/FileSystem";
  * const program = Effect.gen(function* () {
  *   const fs = yield* FileSystem.FileSystem
  *   return yield* pathExists(fs, "/repo/tsconfig.json")
@@ -157,8 +160,8 @@ export const pathExists: {
  *
  * ```ts
  * import { readOptionalText } from "@beep/repo-cli/test/SharedInternals"
- * import { Effect, FileSystem } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as FileSystem from "effect/FileSystem";
  * const program = Effect.gen(function* () {
  *   const fs = yield* FileSystem.FileSystem
  *   return yield* readOptionalText(fs, "/repo/tsconfig.json")
@@ -188,8 +191,8 @@ export const readOptionalText: {
  *
  * ```ts
  * import { pathTypeOf } from "@beep/repo-cli/test/SharedInternals"
- * import { Effect, FileSystem } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as FileSystem from "effect/FileSystem";
  * const program = Effect.gen(function* () {
  *   const fs = yield* FileSystem.FileSystem
  *   return yield* pathTypeOf(fs, "/repo/packages")
@@ -219,8 +222,8 @@ export const pathTypeOf: {
  *
  * ```ts
  * import { isDirectoryPath } from "@beep/repo-cli/test/SharedInternals"
- * import { Effect, FileSystem } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as FileSystem from "effect/FileSystem";
  * const program = Effect.gen(function* () {
  *   const fs = yield* FileSystem.FileSystem
  *   return yield* isDirectoryPath(fs, "/repo/packages")
@@ -504,8 +507,7 @@ const packageLocalReferenceConfigs = Effect.fn("TestTypecheckCoverage.packageLoc
  *
  * ```ts
  * import { uncoveredTestSources } from "@beep/repo-cli/test/SharedInternals"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = uncoveredTestSources(
  *   "/repo/packages/example",
  *   ["/repo/packages/example/tsconfig.json"],
@@ -588,8 +590,7 @@ export const uncoveredTestSources = Effect.fn("TestTypecheckCoverage.uncoveredTe
  *
  * ```ts
  * import { checkScriptTestTypecheckCoverage } from "@beep/repo-cli/test/SharedInternals"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = checkScriptTestTypecheckCoverage(
  *   "/repo/packages/example",
  *   { check: "tsgo -p tsconfig.check.json" },

@@ -6,7 +6,8 @@ import { Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect, FileSystem } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 
 const docsEslintConfigPath = fileURLToPath(new URL("../src/eslint/DocsESLintConfig.ts", import.meta.url));
 const requireCategoryTagRulePath = fileURLToPath(new URL("../src/eslint/RequireCategoryTagRule.ts", import.meta.url));

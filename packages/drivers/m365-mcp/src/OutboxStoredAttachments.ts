@@ -22,9 +22,11 @@ import {
   M365ListMessageAttachmentsRequest,
 } from "@beep/m365";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { Crypto, Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { OutboxAttachmentDigest } from "./OutboxAttachmentSource.ts";
@@ -195,8 +197,7 @@ const reportedBytes = A.reduce(0, (total: number, attachment: GraphAttachment) =
  *
  * ```ts
  * import { OutboxStoredAttachmentsRequest, readStoredAttachments } from "@beep/m365-mcp/OutboxStoredAttachments"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = readStoredAttachments(
  *   OutboxStoredAttachmentsRequest.make({
  *     draftId: "message-id",

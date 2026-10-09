@@ -13,8 +13,10 @@
 
 import { SessionStore } from "@beep/qa-capture";
 import { A } from "@beep/utils";
-import { Effect, FileSystem, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { encodeQaInventory } from "./Inventory.schemas.ts";
@@ -77,8 +79,8 @@ export const INVENTORY_MARKDOWN_FILE = "inventory.md";
  * ```ts
  * import { RoundLayout } from "@beep/qa-capture"
  * import { inventoryJsonPath } from "@beep/repo-cli/commands/Qa/JudgeIngest"
- * import { Effect, Path } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Path from "effect/Path";
  * const program = Effect.gen(function* () {
  *   const path = yield* Path.Path
  *   const layout = RoundLayout.make({
@@ -112,8 +114,7 @@ export const inventoryJsonPath: {
  *
  * ```ts
  * import { parseJudgeOutput } from "@beep/repo-cli/commands/Qa/JudgeIngest"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(parseJudgeOutput("no json here"))) // true
  * ```
  *
@@ -155,8 +156,7 @@ export const parseJudgeOutput = Effect.fn("QaJudgeIngest.parseJudgeOutput")(func
  * ```ts
  * import { runQaJudgeIngest } from "@beep/repo-cli/commands/Qa/JudgeIngest"
  * import { QaJudgeIngestOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const options = QaJudgeIngestOptions.make({ from: "judge-stdout.txt", round: 3 })
  * console.log(Effect.isEffect(runQaJudgeIngest("/repo", options))) // true
  * ```

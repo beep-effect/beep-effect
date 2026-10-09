@@ -1,7 +1,7 @@
 import { detectEngineProfile, PretextCapture, PretextCaptureLive, PretextCaptureRequest } from "@beep/pretext/browser";
 import { it } from "@beep/test-runner";
 import { describe, expect, vi } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 

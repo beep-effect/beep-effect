@@ -12,7 +12,11 @@ import { FileProcessingOperationError, ProcessFileOperation } from "@beep/file-p
 import { FileProcessingService } from "@beep/file-processing/Service";
 import { $DocumentsServerId } from "@beep/identity/packages";
 import { A, O } from "@beep/utils";
-import { Cause, Context, Effect, flow, Layer, pipe } from "effect";
+import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FilingDecisionLlmConfig } from "./FilingDecisionLlm.config.ts";
@@ -57,7 +61,7 @@ export class FilingTextExtractionInput extends S.Class<FilingTextExtractionInput
  *
  * ```ts
  * import type { FilingTextExtractionShape } from "@beep/documents-server/aggregates/Document"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const service: FilingTextExtractionShape = { extract: () => Effect.succeed(O.none()) }

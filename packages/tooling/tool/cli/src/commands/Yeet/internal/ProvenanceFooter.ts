@@ -11,10 +11,18 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Cause, Console, DateTime, Effect, Exit, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
@@ -34,7 +42,7 @@ import {
 } from "./Provenance.ts";
 import { makePrSessionRegistryLive } from "./PrSessionRegistry.ts";
 import type { DomainError } from "@beep/repo-utils";
-import type { Crypto } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrNumber, PrProvenanceRole } from "./Provenance.ts";
@@ -198,7 +206,7 @@ class GhPrBodySnapshot extends S.Class<GhPrBodySnapshot>($I`GhPrBodySnapshot`)(
  *
  * ```ts
  * import { PrBodyEdit } from "@beep/repo-cli/test/Yeet"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  *
  * const edit = PrBodyEdit.make({
@@ -524,7 +532,7 @@ export class PrSessionRecordingResult extends S.Class<PrSessionRecordingResult>(
  * **Example** (Preserve a successful mirror after append failure)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { persistPrSessionRecord, PrRepository } from "@beep/repo-cli/test/Yeet"
  *
  * const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" })
@@ -569,8 +577,7 @@ export const persistPrSessionRecord = Effect.fn("ProvenanceFooter.persistRecord"
  *
  * ```ts
  * import { detectPrRepository } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const detection = detectPrRepository("/worktrees/beep-effect10")
  * console.log(Effect.isEffect(detection)) // true
  * ```
@@ -604,7 +611,7 @@ export const detectPrRepository = Effect.fn("ProvenanceFooter.detectRepository")
  *   PrRepository,
  *   RepoRunContext,
  * } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const context = RepoRunContext.make({
@@ -667,7 +674,7 @@ export const makeCurrentPrSessionRecord = Effect.fn("ProvenanceFooter.makeRecord
  *
  * ```ts
  * import { recordCurrentPrSession, RepoRunContext } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const context = RepoRunContext.make({
@@ -742,8 +749,7 @@ export const recordCurrentPrSession = Effect.fn("ProvenanceFooter.recordCurrentS
  *   PrRepository,
  *   RepoRunContext,
  * } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const context = RepoRunContext.make({
  *   base: "origin/main",
  *   branch: "feat/yeet-pr-resume-footer",
@@ -829,8 +835,7 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
  *
  * ```ts
  * import { recordMonitoredPrSession, RepoRunContext } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const context = RepoRunContext.make({
  *   base: "origin/main", branch: "feat/footer", cwd: ".", head: "HEAD",
  *   originalArgv: [], packetDir: ".beep/yeet", repoRoot: ".",

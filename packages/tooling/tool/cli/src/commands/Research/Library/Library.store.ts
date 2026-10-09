@@ -4,11 +4,14 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Effect, FileSystem, Path } from "effect";
+
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { LibraryError } from "./Library.errors.ts";
@@ -430,7 +433,7 @@ const migrateCatalogIdentities = Effect.fn("ResearchLibrary.migrateCatalogIdenti
  * **Example** (Preserve the catalog)
  * ```ts
  * import { withCatalog } from "@beep/repo-cli/commands/Research"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * console.log(withCatalog("/library", Effect.succeed).pipe !== undefined)
  * ```
  *

@@ -8,7 +8,7 @@
 import { ExtractFramesResult, PositiveFrameRate } from "@beep/ffmpeg";
 import { $RepoCliId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -294,8 +294,7 @@ export class ExtractFramesDirResult extends S.Class<ExtractFramesDirResult>($I`E
  *
  * ```ts
  * import { decodeExtractFramesOptions } from "@beep/repo-cli/commands/Image"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(decodeExtractFramesOptions)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -315,8 +314,7 @@ export const decodeExtractFramesOptions: {
  *
  * ```ts
  * import { decodeExtractFramesDirOptions } from "@beep/repo-cli/commands/Image"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(decodeExtractFramesDirOptions)
  * console.log(Effect.isEffect(program)) // true
  * ```

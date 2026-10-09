@@ -11,11 +11,14 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Duration, HashMap, Layer } from "effect";
-
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 const $I = $ScratchpadId.create("effect-ontology/Telemetry/Metrics");
 
-import { Effect, Ref } from "effect";
+import * as Effect from "effect/Effect";
+import * as Ref from "effect/Ref";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -28,8 +31,7 @@ import * as Str from "effect/String";
  * ```ts
  * import * as S from "effect/Schema"
  * import { ExtractionMetrics } from "@effect-ontology/Telemetry/Metrics"
- * import { Duration } from "effect"
- *
+ * import * as Duration from "effect/Duration";
  * const metrics = ExtractionMetrics.make({
  *   duration: Duration.millis(120),
  *   entityCount: S.Natural.make(3),
@@ -66,8 +68,7 @@ export class ExtractionMetrics extends S.Class<ExtractionMetrics>($I`ExtractionM
  * ```ts
  * import * as S from "effect/Schema"
  * import { LlmCallMetrics } from "@effect-ontology/Telemetry/Metrics"
- * import { Duration } from "effect"
- *
+ * import * as Duration from "effect/Duration";
  * const metrics = LlmCallMetrics.make({
  *   provider: "anthropic",
  *   model: "claude-sonnet-4-5",
@@ -105,8 +106,7 @@ export class LlmCallMetrics extends S.Class<LlmCallMetrics>($I`LlmCallMetrics`)(
  * ```ts
  * import * as S from "effect/Schema"
  * import { EmbeddingCacheMetrics } from "@effect-ontology/Telemetry/Metrics"
- * import { Duration } from "effect"
- *
+ * import * as Duration from "effect/Duration";
  * const metrics = EmbeddingCacheMetrics.make({
  *   hits: S.Natural.make(9),
  *   misses: S.Natural.make(1),
@@ -188,8 +188,8 @@ const initialState: MetricsState = {
  * ```ts
  * import * as S from "effect/Schema"
  * import { ExtractionMetrics, MetricsService } from "@effect-ontology/Telemetry/Metrics"
- * import { Duration, Effect } from "effect"
- *
+ * import * as Duration from "effect/Duration";
+ * import * as Effect from "effect/Effect";
  * const scrape = Effect.gen(function* () {
  *   const metrics = yield* MetricsService
  *   yield* metrics.recordExtraction(

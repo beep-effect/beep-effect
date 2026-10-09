@@ -8,7 +8,7 @@
 import { $CosmosId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { P } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 

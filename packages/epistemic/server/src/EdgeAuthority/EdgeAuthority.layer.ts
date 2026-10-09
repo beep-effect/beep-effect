@@ -7,7 +7,7 @@
  */
 
 import { EdgeAuthorityRepository } from "@beep/epistemic-use-cases/EdgeAuthority";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { makeDrizzleEdgeAuthorityRepository } from "./EdgeAuthority.repo.ts";
 import type { PostgresDrizzle } from "@beep/postgres";
 

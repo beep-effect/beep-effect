@@ -2,7 +2,8 @@ import { runTerseEffectRules, TerseEffectRulesOptions } from "@beep/repo-cli/tes
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { Console, Effect } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import * as TestConsole from "effect/testing/TestConsole";
 import {
   NodeTestLayer,

@@ -17,9 +17,12 @@ import {
 import { ReactContextInvariantError, ReactContextInvariantOptions } from "@beep/ui/lib/react-invariant";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
-import { Effect, Equal, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeBoundaryParams = S.decodeEffect(BoundaryParams);

@@ -13,7 +13,13 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Context, Duration, Effect, Fiber, Layer, Schedule, Stream } from "effect";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
+import * as Schedule from "effect/Schedule";
+import * as Stream from "effect/Stream";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
 import { EventBusService } from "../Service/EventBus.ts";
@@ -59,7 +65,8 @@ const $I = $ScratchpadId.create("effect-ontology/Runtime/EventBridge");
  * **Example** (Yield the start handle)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { EventBridgeService } from "@effect-ontology/Runtime/EventBridge"
  *
  * const TestBridge = Layer.mock(EventBridgeService, {

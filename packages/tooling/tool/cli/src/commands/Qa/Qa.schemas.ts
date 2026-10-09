@@ -13,7 +13,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { CaptureLane, CollectorBindPort, ExtractionRuleSet, RoundNumber } from "@beep/qa-capture";
 import { SchemaUtils } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type * as AST from "effect/SchemaAST";
@@ -332,8 +332,7 @@ export class QaJudgeLintOptions extends S.Class<QaJudgeLintOptions>($I`QaJudgeLi
  *
  * ```ts
  * import { decodeQaRecordOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(decodeQaRecordOptions({}))) // true
  * ```
  *
@@ -352,8 +351,7 @@ export const decodeQaRecordOptions: {
  *
  * ```ts
  * import { decodeQaExtractOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(decodeQaExtractOptions({}))) // true
  * ```
  *
@@ -372,8 +370,7 @@ export const decodeQaExtractOptions: {
  *
  * ```ts
  * import { decodeQaReportOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(decodeQaReportOptions({}))) // true
  * ```
  *
@@ -392,8 +389,7 @@ export const decodeQaReportOptions: {
  *
  * ```ts
  * import { decodeQaMarkOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(decodeQaMarkOptions({}))) // true
  * ```
  *
@@ -412,8 +408,7 @@ export const decodeQaMarkOptions: {
  *
  * ```ts
  * import { decodeQaJudgePackOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(decodeQaJudgePackOptions({}))) // true
  * ```
  *
@@ -432,8 +427,7 @@ export const decodeQaJudgePackOptions: {
  *
  * ```ts
  * import { decodeQaJudgeIngestOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(decodeQaJudgeIngestOptions({}))) // true
  * ```
  *
@@ -452,8 +446,7 @@ export const decodeQaJudgeIngestOptions: {
  *
  * ```ts
  * import { decodeQaJudgeLintOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(decodeQaJudgeLintOptions({}))) // true
  * ```
  *

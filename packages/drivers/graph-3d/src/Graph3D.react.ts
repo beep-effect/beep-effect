@@ -10,8 +10,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { useEffect, useRef, useState } from "react";
 import { Graph3DRenderOptions, renderGraph3D } from "./Graph3D.renderer.ts";
 import type * as React from "react";

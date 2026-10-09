@@ -9,7 +9,8 @@ import { $SemanticWebId } from "@beep/identity/packages";
 import { Dataset } from "@beep/rdf/Rdf";
 import { makeSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $SemanticWebId.create("services/canonicalization");
@@ -313,7 +314,7 @@ export interface CanonicalizationServiceShape {
  *
  * ```ts
  * import { strictEqual } from "node:assert"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import {
  *   CanonicalDatasetResult,

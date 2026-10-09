@@ -14,8 +14,9 @@ import {
 import { it } from "@beep/test-runner";
 import { beforeEach, describe, expect, vi } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Console, Effect } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
 import * as Str from "effect/String";

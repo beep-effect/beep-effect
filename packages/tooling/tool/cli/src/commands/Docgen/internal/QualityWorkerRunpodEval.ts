@@ -25,10 +25,18 @@ import {
 } from "@beep/runpod";
 import { LiteralKit } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { Console, Duration, Effect, flow, Layer, Order, pipe, Ref, Result, Schedule } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -1193,7 +1201,7 @@ export const runDocgenQualityWorkerRunpodEval = Effect.fn(
  * **Example** (Serialize report to JSON)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { DocgenQualityWorkerEvalReport } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  * import {
  *   DocgenQualityWorkerRunpodEvalReport,

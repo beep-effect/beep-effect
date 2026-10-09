@@ -8,11 +8,18 @@
 import { $AcpId } from "@beep/identity";
 import { A, thunkEffectVoid } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Context, Effect, flow, HashMap, HashSet, Layer, Ref, Stdio } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
 import * as RpcClient from "effect/rpc/RpcClient";
 import * as RpcMessage from "effect/rpc/RpcMessage";
 import * as RpcServer from "effect/rpc/RpcServer";
 import * as S from "effect/Schema";
+import * as Stdio from "effect/Stdio";
 import { AGENT_METHODS, CLIENT_METHODS } from "./_generated/meta.gen.ts";
 import * as AcpSchema from "./_generated/schema.gen.ts";
 import * as AcpError from "./Acp.errors.ts";
@@ -206,7 +213,7 @@ export interface AcpAgentShape extends AcpProtocol.AcpExtensionRegistrars {
  * **Example** (Effect service for agent)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { AcpAgent } from "@beep/acp/agent"
  *
  * const program = Effect.service(AcpAgent).pipe(

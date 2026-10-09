@@ -23,7 +23,7 @@ import {
   TaggingPolicy,
   TaggingRunId,
 } from "@beep/law-practice-domain/values/MailTagging";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as S from "effect/Schema";
 import { PosInt } from "../internal/PosInt.ts";

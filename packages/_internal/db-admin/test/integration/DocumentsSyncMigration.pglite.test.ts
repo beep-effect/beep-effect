@@ -20,8 +20,11 @@ import {
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
-import { Effect, Layer, pipe, Result } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();

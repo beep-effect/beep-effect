@@ -7,7 +7,7 @@ import {
 } from "@beep/utils/HostProcess";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 

@@ -9,9 +9,10 @@
  */
 
 import { thunkEmptyStr } from "@beep/utils";
-import { Effect, SchemaGetter } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import { DomainError } from "./errors/index.ts";
 
 const decodeJsonEffect = S.decodeEffect(S.fromJsonString(S.Unknown));
@@ -27,7 +28,7 @@ const compactGetter = SchemaGetter.stringifyJson();
  * **Example** (Map pretty JSON length)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { jsonStringifyPretty } from "@beep/repo-utils/JsonUtils"
  * const program = Effect.map(jsonStringifyPretty({ ok: true }), (json) => json.length)
  * console.log(program)
@@ -53,7 +54,7 @@ export const jsonStringifyPretty: (value: unknown) => Effect.Effect<string, Doma
  * **Example** (Map compact JSON length)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { jsonStringifyCompact } from "@beep/repo-utils/JsonUtils"
  * const program = Effect.map(jsonStringifyCompact({ ok: true }), (json) => json.length)
  * console.log(program)
@@ -80,7 +81,7 @@ export const jsonStringifyCompact: (value: unknown) => Effect.Effect<string, Dom
  * **Example** (Map parsed value type)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { jsonParse } from "@beep/repo-utils/JsonUtils"
  * const program = Effect.map(jsonParse("{\"ok\":true}"), (value) => typeof value)
  * console.log(program)

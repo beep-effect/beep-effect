@@ -16,8 +16,8 @@ import { parseJsonLdOntology, projectJsonLdOntology } from "./projections/jsonld
 import { projectMarkdown } from "./projections/markdown.js";
 import { projectTurtle } from "./projections/turtle.js";
 import { makeReferenceTarget, normalizeIriInput, normalizeTermNameInput } from "./references.js";
-import type { Effect } from "effect";
 import type * as A from "effect/Array";
+import type * as Effect from "effect/Effect";
 import type * as S from "effect/Schema";
 import type {
   OntologyClassAnnotationInput,

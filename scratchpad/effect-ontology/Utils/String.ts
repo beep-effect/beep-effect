@@ -12,7 +12,7 @@
  * @since 0.0.0
  */
 import * as Str from "@beep/utils/Str";
-import { HashSet } from "effect";
+import * as HashSet from "effect/HashSet";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
 

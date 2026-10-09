@@ -1,10 +1,15 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
-import { Console, DateTime, Duration, Effect, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
-import { constFalse, constTrue, dual } from "effect/Function";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { constFalse, constTrue, dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
@@ -33,7 +38,8 @@ import {
 } from "./ProofFact.ts";
 import { ProofLedger } from "./ProofLedger.ts";
 import { captureRepoCommandStrict, readYeetChangedPathsStrict } from "./Settle.ts";
-import type { Crypto, Path } from "effect";
+import type * as Crypto from "effect/Crypto";
+import type * as Path from "effect/Path";
 import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import type { QualityTaskLaneRun, QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
@@ -631,8 +637,7 @@ const readChangedPackages = Effect.fn("Yeet.ProofShadow.readChangedPackages")(fu
  *
  * ```ts
  * import { changedPackagesForAttempt, RepoRunContext } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const context = RepoRunContext.make({
  *   base: "origin/main",
  *   branch: "feature/tripwire",
@@ -957,8 +962,7 @@ const isTripwireMiss = (row: ProofLedgerShadowRow): boolean =>
  *
  * ```ts
  * import { ProofChangedPackagesKnown, recordProofShadowForAttempt } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const facts = {
  *   attemptId: "attempt-1",
  *   runId: "run-1",
@@ -1339,8 +1343,7 @@ export class YeetProofReportOptions extends S.Class<YeetProofReportOptions>($I`Y
  *
  * ```ts
  * import { runYeetProofReportCommand } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runYeetProofReportCommand({ json: true }))) // true
  * ```
  *
@@ -1373,8 +1376,7 @@ const locateRepoRoot: Effect.Effect<string, YeetCommandError, FileSystem.FileSys
  *
  * ```ts
  * import { loadProofShadowReport } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(loadProofShadowReport("/repo"))) // true
  * ```
  *
@@ -1414,8 +1416,7 @@ export const loadProofShadowReport = Effect.fn("Yeet.loadProofShadowReport")(fun
  *
  * ```ts
  * import { runYeetProofReport, YeetProofReportOptions } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runYeetProofReport(YeetProofReportOptions.make({ json: false })))) // true
  * ```
  *

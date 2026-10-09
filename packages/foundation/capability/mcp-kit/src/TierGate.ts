@@ -23,10 +23,15 @@
 
 import { $McpKitId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Cause, Context, Data, DateTime, Effect, Exit } from "effect";
 import * as A from "effect/Array";
 import * as McpSchema from "effect/ai/McpSchema";
 import * as AiTool from "effect/ai/Tool";
+import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
+import * as Data from "effect/Data";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type * as O from "effect/Option";
@@ -297,7 +302,7 @@ export interface ToolCallRequest {
  *
  * ```ts
  * import { strictEqual } from "node:assert"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import type { TierGateShape } from "@beep/mcp-kit"
  * import { TierGateAuditRecord, TierGateVerdict } from "@beep/mcp-kit"
@@ -334,7 +339,7 @@ export interface TierGateShape {
  *
  * ```ts
  * import { strictEqual } from "node:assert"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { TierGate, TierGateAuditRecord, TierGateVerdict } from "@beep/mcp-kit"
  *
@@ -442,7 +447,7 @@ const auditReason = (approved: boolean, destructive: boolean, readOnly: boolean)
  * **Example** (Refuse unapproved destructive tool)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { Tool } from "effect/ai"
  * import { fromApprovedToolsPolicy } from "@beep/mcp-kit"
@@ -573,7 +578,7 @@ const settlementOf = <A, E>(exit: Exit.Exit<A, E>): TierGateSettlement => {
  * **Example** (Refuse gated dispatch)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { Tool } from "effect/ai"
  * import { dispatchWithTierGate, fromApprovedToolsPolicy, TierGate } from "@beep/mcp-kit"

@@ -7,7 +7,7 @@
 
 import { $DocketIntakeId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Runtime } from "effect";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import type { DocketIntakeError } from "@beep/law-practice-use-cases/DocketIntake";
 

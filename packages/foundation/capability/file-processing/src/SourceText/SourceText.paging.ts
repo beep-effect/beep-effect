@@ -5,9 +5,10 @@
  * @since 0.0.0
  */
 
-import { Effect, Number as N } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Effect from "effect/Effect";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -103,8 +104,7 @@ const sourceTextPageFromBounds = Effect.fn("SourceText.pageFromBounds")(function
  * ```ts import.meta.vitest name="Load first page"
  * import type { ResolvedSourceText } from "@beep/file-processing/SourceText"
  * import { pageSourceText } from "@beep/file-processing/SourceText"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const loadFirstPage = (source: ResolvedSourceText) =>
  *   Effect.runPromise(pageSourceText(source, 0))
  *
@@ -143,8 +143,7 @@ export const pageSourceText = Effect.fn("SourceText.pageSourceText")(function* (
  *   pageSourceTextContainingOffset
  * } from "@beep/file-processing/SourceText"
  * import type { ResolvedSourceText } from "@beep/file-processing/SourceText"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const loadPageContaining = (source: ResolvedSourceText, offset: number) =>
  *   Effect.runPromise(
  *     pageSourceTextContainingOffset(source, offset)

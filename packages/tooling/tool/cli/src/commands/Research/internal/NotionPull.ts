@@ -12,13 +12,17 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { O as OptionUtils } from "@beep/utils";
-import { Config, Effect, FileSystem, Redacted, Result } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ResearchCommandError } from "../Research.errors.ts";

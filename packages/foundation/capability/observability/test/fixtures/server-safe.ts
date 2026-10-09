@@ -9,8 +9,10 @@ import {
   observeHttpApiHandler,
   ServerObservabilityConfig,
 } from "@beep/observability/server";
-import { Cause, Effect, Metric } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
 import { HttpApiSchema } from "effect/http-api";
+import * as Metric from "effect/Metric";
 import * as S from "effect/Schema";
 
 const loggingConfig = LoggingConfig.make({

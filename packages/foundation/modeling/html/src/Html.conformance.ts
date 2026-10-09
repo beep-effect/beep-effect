@@ -16,11 +16,14 @@ import { color as parseCssColor } from "@csstools/css-color-parser";
 import { isWhiteSpaceOrCommentNode, parseListOfComponentValues } from "@csstools/css-parser-algorithms";
 import { tokenize as tokenizeCss } from "@csstools/css-tokenizer";
 import { isMediaQueryInvalid, parse as parseMediaQueryList } from "@csstools/media-query-list-parser";
-import { Effect, flow, Match, Number as N, pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 // The package root initializes Node WebIDL wrappers. These pure subpaths keep
@@ -159,7 +162,7 @@ const issueConformantHtml = (root: HtmlRoot.Type): ConformantHtmlValue => {
  * ```ts import.meta.vitest name="Check a conformance proof"
  * import { conform, ConformantHtml, conformantRoot } from "@beep/html/Html.conformance"
  * import { Fragment } from "@beep/html/Html.model"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const proof = Effect.runSync(conform(Fragment.make({ children: [] })))
@@ -204,7 +207,7 @@ export type ConformantHtml = typeof ConformantHtml.Type;
  *
  * ```ts import.meta.vitest name="Check a conformance-proven node"
  * import { conform, ConformantHtmlNode, Fragment } from "@beep/html"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const proof = Effect.runSync(conform(Fragment.make({ children: [] })))
@@ -2250,8 +2253,7 @@ export const inspectConformance = (root: HtmlRoot.Type): ReadonlyArray<HtmlConfo
  * ```ts import.meta.vitest name="Call conform"
  * import { conform, conformantRoot } from "@beep/html/Html.conformance"
  * import { Fragment } from "@beep/html/Html.model"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = conform(Fragment.make({ children: [] })).pipe(
  *   Effect.map((value) => conformantRoot(value)._tag)
  * )
@@ -2285,8 +2287,7 @@ export const conform = Effect.fn("Html.conform")(function* (root: HtmlRoot.Type)
  * ```ts import.meta.vitest name="Call conformantRoot"
  * import { conform, conformantRoot } from "@beep/html/Html.conformance"
  * import { Fragment } from "@beep/html/Html.model"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = conform(Fragment.make({ children: [] })).pipe(
  *   Effect.map(conformantRoot)
  * )

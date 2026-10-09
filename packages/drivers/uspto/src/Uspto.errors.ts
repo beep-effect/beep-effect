@@ -8,7 +8,7 @@
 import { $UsptoId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -138,7 +138,7 @@ export class UsptoError extends S.TaggedError<UsptoError>($I`UsptoError`)(
  * **Example** (Make response-decoding error)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { makeUsptoError } from "@beep/uspto"
  *
  * const error = makeUsptoError("response-decoding")

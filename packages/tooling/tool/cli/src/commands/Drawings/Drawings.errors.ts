@@ -64,8 +64,7 @@ export class DrawingsCommandError extends S.TaggedError<DrawingsCommandError>($I
    *
    * ```ts
    * import { DrawingsCommandError } from "@beep/repo-cli/commands/Drawings"
-   * import { Effect } from "effect"
-   *
+   * import * as Effect from "effect/Effect";
    * console.log(Effect.isEffect(Effect.fail("x").pipe(DrawingsCommandError.mapError("failed"))))
    * ```
    *

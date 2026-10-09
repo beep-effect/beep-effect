@@ -6,19 +6,22 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Effect, flow, Result, SchemaGetter, SchemaIssue } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as SchemaIssue from "effect/SchemaIssue";
 import {
   getGlobalMarkdownRuntime,
   loadMarkdownGfmModule,
   loadMarkdownModule,
   makeParseMarkdownForSchema,
 } from "./internal/markdown.ts";
-import type { SchemaAST } from "effect";
 import type * as R from "effect/Record";
+import type * as SchemaAST from "effect/SchemaAST";
 import type { MarkdownParseResult } from "./internal/markdown.ts";
 
 const decodeUnknownString = S.decodeUnknownEffect(S.String);
@@ -166,7 +169,7 @@ export type Markdown = typeof Markdown.Type;
  * **Example** (Render Markdown to HTML)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { MarkdownTextToHtml } from "@beep/schema/Markdown"
  *
@@ -202,7 +205,7 @@ export const MarkdownTextToHtml = (options?: MarkdownRenderOptions) => {
  * **Example** (Decode Markdown through schema)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { decodeMarkdownTextAs } from "@beep/schema/Markdown"
  *

@@ -6,7 +6,8 @@
  */
 
 import { A, O, Str } from "@beep/utils";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as R from "effect/Record";
 import { Parser } from "tar";
 import { SyncDataToTsError } from "../SyncDataToTs.errors.ts";
@@ -158,7 +159,7 @@ export const renderUnknownJsonModule = (options: {
  * @since 0.0.0
  */
 
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeJson = S.decodeUnknownResult(S.fromJsonString(S.Unknown));

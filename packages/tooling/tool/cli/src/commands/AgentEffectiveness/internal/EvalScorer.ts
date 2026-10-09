@@ -8,9 +8,14 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A } from "@beep/utils";
-import { Console, Duration, Effect, FileSystem, Order, Path, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Console from "effect/Console";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.ts";
 import {

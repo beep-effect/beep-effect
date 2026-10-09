@@ -2,7 +2,8 @@ import { fileURLToPath } from "node:url";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 
 const identityRegistrationPath = fileURLToPath(
   new URL("../src/commands/CreatePackage/internal/IdentityRegistration.ts", import.meta.url)

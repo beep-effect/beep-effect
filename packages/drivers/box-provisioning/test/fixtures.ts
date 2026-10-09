@@ -22,8 +22,8 @@ import {
 import { HttpsUrl } from "@beep/schema";
 import { sha1 } from "@noble/hashes/legacy.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { pipe } from "effect";
 import * as A from "effect/Array";
+import { pipe } from "effect/Function";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 

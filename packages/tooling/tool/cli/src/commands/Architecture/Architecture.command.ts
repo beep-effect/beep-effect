@@ -8,8 +8,10 @@
 
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { A, Text } from "@beep/utils";
-import { Console, Effect, FileSystem } from "effect";
+import * as Console from "effect/Console";
 import { Argument, Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { printLines } from "../../internal/cli/Printer.ts";

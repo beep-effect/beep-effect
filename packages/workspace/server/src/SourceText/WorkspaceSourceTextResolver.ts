@@ -23,8 +23,13 @@ import { Sha256HexFromBytes } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { O } from "@beep/utils";
 import * as WorkspaceUseCases from "@beep/workspace-use-cases/server";
-import { Cache, Effect, FileSystem, Layer, Match, Path } from "effect";
+import * as Cache from "effect/Cache";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { FileProcessingServiceShape } from "@beep/file-processing/Service";
@@ -321,8 +326,7 @@ export const makeWorkspaceSourceTextResolver = Effect.fnUntraced(function* () {
  * ```ts
  * import { WorkspaceSourceTextResolverLayer } from "@beep/workspace-server/SourceText"
  * import { SourceTextResolver } from "@beep/file-processing/SourceText"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const resolverProgram = SourceTextResolver.pipe(
  *   Effect.provide(WorkspaceSourceTextResolverLayer)
  * )

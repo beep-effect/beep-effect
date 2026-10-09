@@ -11,7 +11,9 @@
  */
 
 import { BunRuntime, BunServices } from "@effect/platform-bun";
-import { Config, Effect, Layer } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { Command } from "effect/cli";
 import { FetchHttpClient } from "effect/http";

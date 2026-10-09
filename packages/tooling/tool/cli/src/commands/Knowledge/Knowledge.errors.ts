@@ -60,8 +60,8 @@ export const KNOWLEDGE_HISTORY_REMEDIATION =
  *
  * ```ts
  * import { KnowledgeOperationalError } from "@beep/repo-cli/commands/Knowledge/Knowledge.errors"
- * import { Effect, Result } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Result from "effect/Result";
  * const scan = Effect.fail(KnowledgeOperationalError.make({ message: "git archive failed." }))
  * const outcome = Effect.runSync(Effect.result(scan))
  *
@@ -118,8 +118,8 @@ export class KnowledgeOperationalError extends S.TaggedError<KnowledgeOperationa
    *
    * ```ts
    * import { KnowledgeOperationalError } from "@beep/repo-cli/commands/Knowledge/Knowledge.errors"
-   * import { Effect, pipe } from "effect"
-   *
+   * import * as Effect from "effect/Effect";
+   * import { pipe } from "effect/Function";
    * const failure = pipe(
    *   Effect.fail(new Error("spawn git ENOENT")),
    *   KnowledgeOperationalError.mapError("Failed to spawn git."),

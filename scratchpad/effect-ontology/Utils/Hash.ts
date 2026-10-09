@@ -11,7 +11,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as Crypto from "effect/Crypto";
 import * as Hex from "effect/encoding/Hex";
 import * as S from "effect/Schema";
@@ -57,8 +57,7 @@ export class HashingError extends S.TaggedError<HashingError>($I`HashingError`)(
  *
  * ```ts
  * import { sha256, sha256SyncFull } from "@effect-ontology/Utils/Hash"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const hex = (yield* sha256("ada lovelace"))
  *   console.log(hex.length) // 64
@@ -90,8 +89,7 @@ export const sha256 = Effect.fn("Hash.sha256")(function* (input: string) {
  *
  * ```ts
  * import { hashEmbeddingKey, hashEmbeddingKeySync } from "@effect-ontology/Utils/Hash"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const hex = (yield* hashEmbeddingKey("Ada Lovelace", "search_document"))
  *   console.log(hex === (yield* hashEmbeddingKeySync("Ada Lovelace", "search_document"))) // true
@@ -122,8 +120,7 @@ export const hashEmbeddingKey = dual2(
  *
  * ```ts
  * import { sha256Sync, sha256SyncFull } from "@effect-ontology/Utils/Hash"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const full = yield* sha256SyncFull("ada lovelace")
  *   console.log(full.length) // 64
@@ -152,8 +149,7 @@ export const sha256SyncFull = sha256;
  *
  * ```ts
  * import { sha256Sync, sha256SyncFull } from "@effect-ontology/Utils/Hash"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const truncated = yield* sha256Sync("ada lovelace")
  *   console.log(truncated.length) // 16
@@ -179,8 +175,7 @@ export const sha256Sync = Effect.fn("Hash.sha256Sync")(function* (input: string)
  *
  * ```ts
  * import { hashEmbeddingKeySync, sha256SyncFull } from "@effect-ontology/Utils/Hash"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const hex = yield* hashEmbeddingKeySync("Ada Lovelace", "search_query")
  *   console.log(hex === (yield* sha256SyncFull("Ada Lovelace::search_query"))) // true
@@ -221,8 +216,7 @@ export interface EmbeddingKeyMetadata {
  *
  * ```ts
  * import { hashVersionedEmbeddingKey, hashVersionedEmbeddingKeySync } from "@effect-ontology/Utils/Hash"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const metadata = { providerId: "nomic", modelId: "nomic-embed-text-v1.5", dimension: 768 }
  *   const hex = (yield*
@@ -255,8 +249,7 @@ export const hashVersionedEmbeddingKey = dual3(
  *
  * ```ts
  * import { hashVersionedEmbeddingKeySync, sha256SyncFull } from "@effect-ontology/Utils/Hash"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const metadata = { providerId: "voyage", modelId: "voyage-3", dimension: 1024 }
  *   const hex = yield* hashVersionedEmbeddingKeySync("Ada Lovelace", "search_query", metadata)
@@ -278,8 +271,7 @@ export const hashVersionedEmbeddingKeySync = hashVersionedEmbeddingKey;
  *
  * ```ts
  * import { sha256Bytes, sha256BytesSync } from "@effect-ontology/Utils/Hash"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const bytes = new TextEncoder().encode("ada")
  *   const hex = (yield* sha256Bytes(bytes))
@@ -315,8 +307,7 @@ export const sha256Bytes = Effect.fn("Hash.sha256Bytes")(function* (bytes: Buffe
  *
  * ```ts
  * import { sha256BytesSync } from "@effect-ontology/Utils/Hash"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const hex = yield* sha256BytesSync(new TextEncoder().encode("ada"))
  *   console.log(hex.length) // 64

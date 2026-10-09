@@ -8,13 +8,18 @@ import {
 import { $SemanticaId } from "@beep/identity/packages";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { XAi, XAiLanguageModel } from "@beep/xai";
-import { Config, Crypto, Effect, Layer, Result, Stream } from "effect";
 import * as A from "effect/Array";
 import * as AiError from "effect/ai/AiError";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Response from "effect/ai/Response";
+import * as Config from "effect/Config";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { LabConfig, RuntimeMode } from "@/runtime/Config";
 import { contentDigest, sha256TextSync } from "@/schema/Digest";
@@ -134,8 +139,7 @@ const lookupCachedResponse = Effect.fn("LanguageModelCache.lookupCachedResponse"
  *
  * ```ts
  * import { replayGenerateText } from "@/layers/LanguageModelLive"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(replayGenerateText("cached prompt"))) // true
  * ```
  *
@@ -254,7 +258,9 @@ const makeReplayAdapter = makeGenerateTextAdapter(replayGenerateText);
  *
  * ```ts
  * import { CachingLanguageModelLive } from "@/layers/LanguageModelLive"
- * import { Effect, Layer, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
+ * import * as Stream from "effect/Stream";
  * import * as LanguageModel from "effect/ai/LanguageModel"
  *
  * const inner = Layer.succeed(LanguageModel.LanguageModel, LanguageModel.make({
@@ -279,8 +285,7 @@ export const CachingLanguageModelLive = <E, R>(
  *
  * ```ts
  * import { ReplayLanguageModelLive } from "@/layers/LanguageModelLive"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(ReplayLanguageModelLive)) // true
  * ```
  *
@@ -304,7 +309,9 @@ export const ReplayLanguageModelLive: Layer.Layer<
  *
  * ```ts
  * import { LanguageModelRuntimeLive } from "@/layers/LanguageModelLive"
- * import { Effect, Layer, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
+ * import * as Stream from "effect/Stream";
  * import * as LanguageModel from "effect/ai/LanguageModel"
  *
  * const live = Layer.effect(LanguageModel.LanguageModel, LanguageModel.make({
@@ -338,8 +345,7 @@ export const LanguageModelRuntimeLive = <E, R>(live: Layer.Layer<LanguageModel.L
  * import { ActiveModelIdentityLive } from "@/layers/LanguageModelLive"
  * import { ModelIdentity } from "@/schema/Model"
  * import { Sha256Hex } from "@beep/schema"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const identity = ModelIdentity.make({
  *   artifactHash: Sha256Hex.make("0".repeat(64)),
  *   name: "stub-20260826",
@@ -409,7 +415,7 @@ const makeModelIdentity = (
  * ```ts
  * import { AnthropicExtractionModelIdentity } from "@/layers/LanguageModelLive"
  * import { Sha256Hex } from "@beep/schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as Str from "effect/String"
  *
  * const identity = Effect.runSync(AnthropicExtractionModelIdentity({
@@ -434,8 +440,7 @@ export const AnthropicExtractionModelIdentity = (options: {
  *
  * ```ts
  * import { XAiGoldProviderLive } from "@/layers/LanguageModelLive"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(XAiGoldProviderLive("grok-4-20260826"))) // true
  * ```
  *
@@ -452,8 +457,7 @@ export const XAiGoldProviderLive = (model: string) => XAiLanguageModel.layer({ m
  * ```ts
  * import { XAiGoldModelIdentityLive } from "@/layers/LanguageModelLive"
  * import { Sha256Hex } from "@beep/schema"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const layer = XAiGoldModelIdentityLive({
  *   artifactHash: Sha256Hex.make("0".repeat(64)),
  *   model: "grok-4-20260826"
@@ -485,8 +489,7 @@ export const XAiGoldModelIdentityLive = (options: {
  *
  * ```ts
  * import { AnthropicExtractionProviderLive } from "@/layers/LanguageModelLive"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(AnthropicExtractionProviderLive)) // true
  * ```
  *
@@ -509,8 +512,7 @@ export const AnthropicExtractionProviderLive = Layer.unwrap(
  * ```ts
  * import { XAiGoldLanguageModelLive } from "@/layers/LanguageModelLive"
  * import { Sha256Hex } from "@beep/schema"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const layer = XAiGoldLanguageModelLive({
  *   artifactHash: Sha256Hex.make("0".repeat(64)),
  *   model: "grok-4-20260826"
@@ -540,8 +542,7 @@ export const XAiGoldLanguageModelLive = (options: {
  * ```ts
  * import { AnthropicExtractionLanguageModelLive } from "@/layers/LanguageModelLive"
  * import { Sha256Hex } from "@beep/schema"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const layer = AnthropicExtractionLanguageModelLive(Sha256Hex.make("0".repeat(64)))
  * console.log(Layer.isLayer(layer)) // true
  * ```

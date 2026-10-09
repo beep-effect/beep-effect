@@ -7,19 +7,25 @@
 
 import { $RunpodId } from "@beep/identity";
 import { A, O, Str } from "@beep/utils";
-import { Config, Context, Effect, Layer, Match, pipe, Result, SchemaGetter } from "effect";
-import { dual } from "effect/Function";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import * as G from "./_generated/Runpod.operations.gen.ts";
 import { RUNPOD_API_URL, RunpodConfigInput, RunpodConfigUrl } from "./Runpod.config.ts";
 import { RunpodError, RunpodHttpStatusCode } from "./Runpod.errors.ts";
-import type { Redacted } from "effect";
 import type * as HttpClientResponse from "effect/http/HttpClientResponse";
+import type * as Redacted from "effect/Redacted";
 
 const $I = $RunpodId.create("Runpod.service");
 const normalizeRawPath = (path: string): string => (Str.startsWith("/")(path) ? path : `/${path}`);

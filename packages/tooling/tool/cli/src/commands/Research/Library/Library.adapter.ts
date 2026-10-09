@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { OutputBound, runCapturedStreams } from "../../../internal/process/StepExec.ts";
@@ -47,7 +47,7 @@ export class LibraryAdapterResult extends S.Class<LibraryAdapterResult>($I`Libra
  * **Example** (Prepare a bounded version probe)
  * ```ts
  * import { runLibraryCommand } from "@beep/repo-cli/test/ResearchLibrary"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(runLibraryCommand("/library", "git", ["--version"])))
  * ```
  *
@@ -119,7 +119,7 @@ export const sanitizeLibraryDiagnostic = (text: string) =>
  * **Example** (Prepare immutable text evidence)
  * ```ts
  * import { saveLibraryText } from "@beep/repo-cli/test/ResearchLibrary"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(saveLibraryText("/library", "receipts/probe.txt", "probe completed", "text/plain", "qualification-probe")))
  * ```
  *
@@ -143,7 +143,7 @@ export const saveLibraryText = Effect.fn("Library.saveText")(function* (
  * **Example** (Decode an external JSON boundary)
  * ```ts
  * import { decodeLibraryJson } from "@beep/repo-cli/test/ResearchLibrary"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * console.log(Effect.isEffect(decodeLibraryJson(S.Struct({complete: S.Boolean}))('{"complete":true}')))
  * ```
@@ -169,7 +169,7 @@ export const decodeLibraryJson = <A, I>(schema: S.Codec<A, I>) => {
  * **Example** (Encode a structured receipt)
  * ```ts
  * import { encodeLibraryJson } from "@beep/repo-cli/test/ResearchLibrary"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.runSync(encodeLibraryJson({complete: false})))
  * ```
  *

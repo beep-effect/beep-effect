@@ -6,7 +6,8 @@
  */
 import { $RdfId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import { Number as N, pipe } from "effect";
+import { pipe } from "effect/Function";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { SCHEMA_ORG_NAMESPACE } from "./Vocab/generated/SchemaOrg.terms.ts";

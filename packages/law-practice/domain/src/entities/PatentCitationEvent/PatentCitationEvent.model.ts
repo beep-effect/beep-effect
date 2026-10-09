@@ -8,7 +8,7 @@ import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { CitingApplicationIdentity } from "../../values/CitingApplicationIdentity/index.ts";
 import { ObservationVersionRef } from "../../values/ObservationVersionRef/index.ts";

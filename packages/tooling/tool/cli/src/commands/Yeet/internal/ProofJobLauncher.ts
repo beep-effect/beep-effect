@@ -7,23 +7,21 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import {
-  ConfigProvider,
-  Console,
-  Context,
-  Crypto,
-  DateTime,
-  Duration,
-  Effect,
-  Equal,
-  FileSystem,
-  HashSet,
-  Order,
-  Path,
-} from "effect";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
 import { constant } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -772,8 +770,7 @@ export class ProofJobLauncher extends Context.Service<ProofJobLauncher, ProofJob
  *
  * ```ts
  * import { updateProofJobBookkeeping } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = updateProofJobBookkeeping("/repo", () => Effect.void)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -851,8 +848,7 @@ export const readCurrentProofJobRecord = Effect.fn("Yeet.readCurrentProofJobReco
  *
  * ```ts
  * import { reportProofJobCommand } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = reportProofJobCommand("/repo", Effect.void)
  * console.log(Effect.isEffect(program)) // true
  * ```

@@ -16,8 +16,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { GitHubClient, GitHubError, GraphQLDocument, Repo } from "@effected/github";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { GitHubGraphQLError } from "@effected/github";
@@ -166,8 +166,7 @@ const MAX_THREAD_PAGES = 20;
  *
  * ```ts
  * import { readGithubReviewThreads } from "@beep/repo-cli/test/SharedInternals"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readGithubReviewThreads(1))) // true
  * ```
  *

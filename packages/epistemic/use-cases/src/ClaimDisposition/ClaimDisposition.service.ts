@@ -21,9 +21,11 @@ import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import { SourceKind } from "@beep/shared-domain/entity/SourceKind";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
-import { Context, DateTime, Effect, flow } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { dual, flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -195,7 +197,7 @@ export class ClaimGateOutcome extends S.Class<ClaimGateOutcome>($I`ClaimGateOutc
  * ```ts
  * import { ClaimGateOutcome } from "@beep/epistemic-use-cases/ClaimDisposition"
  * import type { ClaimGateOutcomeResolverShape } from "@beep/epistemic-use-cases/ClaimDisposition"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const shape: ClaimGateOutcomeResolverShape = {
@@ -221,7 +223,7 @@ export interface ClaimGateOutcomeResolverShape {
  *
  * ```ts
  * import { ClaimGateOutcome, ClaimGateOutcomeResolver } from "@beep/epistemic-use-cases/ClaimDisposition"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = Effect.gen(function* () {
@@ -284,7 +286,7 @@ const buildRejection = (
  * ```ts
  * import { ClaimGateOutcomeInput, makeClaimGateOutcomeResolver } from "@beep/epistemic-use-cases/ClaimDisposition"
  * import { makeClaimTransition } from "@beep/epistemic-use-cases/ClaimLifecycle"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const resolver = makeClaimGateOutcomeResolver(

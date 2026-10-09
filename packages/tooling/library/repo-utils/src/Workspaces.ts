@@ -10,16 +10,17 @@
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { normalizePath } from "@beep/schema";
 import { A, Str, thunkEffectSucceedNull } from "@beep/utils";
-import { Effect, HashMap, pipe } from "effect";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { DomainError } from "./errors/index.ts";
 import { FsUtils } from "./FsUtils.ts";
 import { decodePackageJsonEffect, PackageJson, readPackageJsonFile } from "./schemas/PackageJson.ts";
-import type { FileSystem } from "effect";
+import type * as FileSystem from "effect/FileSystem";
 import type { NoSuchFileError } from "./errors/index.ts";
 import type { Workspaces as PackageJsonWorkspaces } from "./schemas/PackageJson.ts";
 
@@ -105,7 +106,7 @@ const isContainedCanonicalPath: {
  * **Example** (Resolve root workspace directories)
  *
  * ```typescript
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { resolveWorkspaceDirs } from "@beep/repo-utils/Workspaces"
  *
  * const program = resolveWorkspaceDirs(".")
@@ -210,7 +211,7 @@ export const resolveWorkspaceDirs: (
  * **Example** (Look up package directory)
  *
  * ```typescript
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { getWorkspaceDir } from "@beep/repo-utils/Workspaces"
  *
@@ -288,7 +289,7 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
  * **Example** (Count resolved workspace packages)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as HashMap from "effect/HashMap"
  * import { resolveWorkspacePackages } from "@beep/repo-utils/Workspaces"
  *

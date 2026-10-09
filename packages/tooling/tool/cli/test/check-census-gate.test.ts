@@ -29,9 +29,13 @@ import {
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { describe, expect, it } from "@effect/vitest";
 import { assertInstanceOf, assertSome } from "@effect/vitest/utils";
-import { Effect, FileSystem, HashMap, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import type { CheckCensusTargets } from "@beep/repo-cli/test/Quality";
 

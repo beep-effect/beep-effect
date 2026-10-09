@@ -5,8 +5,9 @@
  * @since 0.0.0
  */
 
-import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PosInt } from "./PosInt.ts";
@@ -69,7 +70,7 @@ const decodePriority = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { decodeAdmissionPolicyParams } from "@/projection/AboxPolicy"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as Result from "effect/Result"
  *
  * const result = Effect.runSync(Effect.result(decodeAdmissionPolicyParams("ciops:partial")))

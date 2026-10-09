@@ -1,8 +1,12 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { DateTime, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import type { PDFFont, PDFPage } from "pdf-lib";
@@ -181,8 +185,7 @@ const findXrefOffset = (bytes: Uint8Array): number => {
  *
  * ```ts
  * import { generateF1Pdfs } from "../scripts/generate-f1-pdfs"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(generateF1Pdfs("/tmp/f1"))) // true
  * ```
  *

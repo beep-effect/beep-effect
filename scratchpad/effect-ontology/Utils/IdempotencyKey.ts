@@ -15,9 +15,11 @@
 import { $ScratchpadId } from "@beep/identity";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as Struct from "@beep/utils/Struct";
-import { Effect, Inspectable, Order, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as Inspectable from "effect/Inspectable";
+import * as Order from "effect/Order";
 import * as A from "effect/Array";
-import { flow } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -115,8 +117,7 @@ export const normalizeText = flow(
  * ```ts
  * import { ExtractionParams, hashParams } from "@effect-ontology/Utils/IdempotencyKey"
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const empty = ExtractionParams.make({})
  *   const withTemp = yield* S.decodeEffect(ExtractionParams)({ temperature: 0.1 })
@@ -156,8 +157,7 @@ export const hashParams = Effect.fn("IdempotencyKey.hashParams")(function* (para
  *
  * ```ts
  * import { computeOntologyVersion } from "@effect-ontology/Utils/IdempotencyKey"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const version = yield* computeOntologyVersion("@prefix foaf: <http://xmlns.com/foaf/0.1/> .")
  *   console.log(version.length) // 16
@@ -188,8 +188,7 @@ export const computeOntologyVersion = sha256Sync;
  * ```ts
  * import { computeIdempotencyKey, ExtractionParams } from "@effect-ontology/Utils/IdempotencyKey"
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const params = yield* S.decodeEffect(ExtractionParams)({ temperature: 0.1 })
  *   const key = yield* computeIdempotencyKey("John works at Apple.", "foaf", "abc123", params)
@@ -227,8 +226,7 @@ export const computeIdempotencyKey = dual4(
  * ```ts
  * import { computeIdempotencyKey, computeIdempotencyKeyEffect, ExtractionParams } from "@effect-ontology/Utils/IdempotencyKey"
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const params = yield* S.decodeEffect(ExtractionParams)({ temperature: 0.1 })
  *   const originalKey = yield* computeIdempotencyKey("Ada works at Apple.", "foaf", "abc123", params)
@@ -256,8 +254,7 @@ export const computeIdempotencyKeyEffect = computeIdempotencyKey;
  * ```ts
  * import { computeIdempotencyKey, ExtractionParams, isValidIdempotencyKey } from "@effect-ontology/Utils/IdempotencyKey"
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const key = yield* computeIdempotencyKey(
  *     "Ada works at Apple.",
@@ -285,8 +282,7 @@ export const isValidIdempotencyKey = S.is(IdempotencyKey);
  * ```ts
  * import { computeIdempotencyKey, ExtractionParams, parseIdempotencyKey } from "@effect-ontology/Utils/IdempotencyKey"
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const key = yield* computeIdempotencyKey(
  *     "Ada works at Apple.",
@@ -317,8 +313,7 @@ export const parseIdempotencyKey = (input: unknown) => S.decodeUnknownEffect(Ide
  * ```ts
  * import { computeIdempotencyKey, ExtractionParams, shortKey } from "@effect-ontology/Utils/IdempotencyKey"
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const key = yield* computeIdempotencyKey(
  *     "Ada works at Apple.",
@@ -346,8 +341,7 @@ export const shortKey: (key: IdempotencyKey) => string = Str.slice(0, 12);
  * ```ts
  * import { computeIdempotencyKey, ExtractionParams, formatKeyForLog, shortKey } from "@effect-ontology/Utils/IdempotencyKey"
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const key = yield* computeIdempotencyKey(
  *     "Ada works at Apple.",

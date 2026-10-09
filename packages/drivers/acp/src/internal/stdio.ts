@@ -1,6 +1,8 @@
-import { Effect, Sink, Stdio } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Sink from "effect/Sink";
+import * as Stdio from "effect/Stdio";
 import * as AcpError from "../Acp.errors.ts";
 import type { ChildProcessSpawner } from "effect/process";
 

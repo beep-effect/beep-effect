@@ -6,8 +6,8 @@
  */
 
 import { $SharedDomainId } from "@beep/identity";
-import { pipe } from "effect";
 import * as A from "effect/Array";
+import { pipe } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

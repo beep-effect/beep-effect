@@ -31,9 +31,12 @@ import {
   isMediaQueryWithoutType,
   parseFromTokens as parseMediaQueryListFromTokens,
 } from "@csstools/media-query-list-parser";
-import { flow, Match, Number as N, pipe, Result } from "effect";
 import * as A from "effect/Array";
+import { flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { toAsciiLowerCase } from "./Html.foreign.ts";
@@ -193,8 +196,7 @@ type SourceSizeIssueCode = typeof SourceSizeIssueCode.Type;
  *
  * ```ts
  * import { inspectSourceSizeList } from "@beep/html/Html.source-size"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const result = inspectSourceSizeList("10%")
  * if (Result.isFailure(result)) console.log(result.failure[0]?.code)
  * ```
@@ -226,8 +228,7 @@ export class SourceSizeIssue extends S.Class<SourceSizeIssue>($I`SourceSizeIssue
  *
  * ```ts
  * import { inspectSourceSizeList } from "@beep/html/Html.source-size"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const result = inspectSourceSizeList("auto, 100vw")
  * if (Result.isSuccess(result)) console.log(result.success.usesAuto) // true
  * ```
@@ -817,8 +818,7 @@ const inspectSourceSizeEntries = (
  *
  * ```ts import.meta.vitest name="Accept a media-condition sizes list"
  * import { inspectSourceSizeList } from "@beep/html/Html.source-size"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const result = inspectSourceSizeList("(max-width: 30em) 100vw, 50vw")
  * Result.isSuccess(result) // => true
  * ```

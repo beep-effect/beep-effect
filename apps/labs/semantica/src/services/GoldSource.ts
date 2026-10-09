@@ -1,6 +1,6 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { Context } from "effect";
-import type { Effect } from "effect";
+import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
 import type { CorpusPaperId } from "@/corpus/Manifest";
 import type { GoldUnavailable } from "@/schema/Errors";
 import type { GoldFile } from "@/schema/Gold";
@@ -28,8 +28,7 @@ interface GoldSourceShape {
  *
  * ```ts
  * import { GoldSource } from "@/services/GoldSource"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = GoldSource.pipe(Effect.map((service) => typeof service.load))
  * console.log(Effect.isEffect(program)) // true
  * ```

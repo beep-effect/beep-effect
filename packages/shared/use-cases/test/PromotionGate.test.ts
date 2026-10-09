@@ -8,9 +8,10 @@ import {
 import { PromotionGate } from "@beep/shared-use-cases/server";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import { describe, expect, expectTypeOf, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import type { Brand } from "effect";
+import type * as Brand from "effect/Brand";
 
 const isPromotionBlockReason2 = S.is(PromotionBlockReason);
 const decodePromotionBlockReason = S.decodeUnknownResult(PromotionBlockReason);

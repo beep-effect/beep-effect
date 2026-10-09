@@ -7,10 +7,10 @@
  * report schema — both live here so neither harness re-implements the codec boilerplate.
  */
 
-import { flow, Result } from "effect";
 import * as Effect from "effect/Effect";
-import { dual } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 

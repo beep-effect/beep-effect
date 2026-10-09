@@ -7,7 +7,8 @@
 
 import { $NlpProcessingId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type { Document, DocumentId } from "@beep/nlp/Core/Document";
 import type { Sentence } from "@beep/nlp/Core/Sentence";
@@ -73,7 +74,8 @@ export class Tokenization extends Context.Service<Tokenization, TokenizationShap
  * **Example** (Provide mock tokenize service)
  *
  * ```ts
- * import { Chunk, Effect } from "effect"
+ * import * as Chunk from "effect/Chunk";
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { Document, DocumentId } from "@beep/nlp/Core/Document"
  * import { Tokenization, tokenize } from "@beep/nlp-processing/Core/Tokenization"
@@ -111,7 +113,8 @@ export const tokenize = Effect.fn("Nlp.Core.Tokenization.tokenize")(function* (t
  * **Example** (Provide mock sentences service)
  *
  * ```ts
- * import { Chunk, Effect } from "effect"
+ * import * as Chunk from "effect/Chunk";
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { Document, DocumentId } from "@beep/nlp/Core/Document"
  * import { Tokenization, sentences } from "@beep/nlp-processing/Core/Tokenization"
@@ -149,7 +152,8 @@ export const sentences = Effect.fn("Nlp.Core.Tokenization.sentences")(function* 
  * **Example** (Build document with mock)
  *
  * ```ts import.meta.vitest name="Build document with mock"
- * import { Chunk, Effect } from "effect"
+ * import * as Chunk from "effect/Chunk";
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { Document, DocumentId } from "@beep/nlp/Core/Document"
  * import { Tokenization, tokenizeToDocument } from "@beep/nlp-processing/Core/Tokenization"
@@ -193,7 +197,8 @@ export const tokenizeToDocument = Effect.fn("Nlp.Core.Tokenization.tokenizeToDoc
  * **Example** (Count tokens with mock)
  *
  * ```ts import.meta.vitest name="Count tokens with mock"
- * import { Chunk, Effect } from "effect"
+ * import * as Chunk from "effect/Chunk";
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { Document, DocumentId } from "@beep/nlp/Core/Document"
  * import { Tokenization, tokenCount } from "@beep/nlp-processing/Core/Tokenization"

@@ -6,9 +6,13 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Console, Effect, pipe, Ref, Result } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhPrView, ghOutput } from "../../../internal/github/index.ts";
@@ -31,8 +35,9 @@ import {
   YeetPullRequestTitleSyncStatus,
 } from "./PullRequestTitle.ts";
 import { YeetExecutedStep } from "./Verdict.ts";
-import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { ChildProcessSpawner } from "effect/process";
 import type { GhCommandFailure } from "../../../internal/github/index.ts";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
@@ -125,7 +130,7 @@ const ghPullRequestViewFailure = (failure: GhCommandFailure): YeetCommandError =
  * **Example** (Map current branch PR number)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { RepoRunContext, runGhPullRequestView } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -181,7 +186,7 @@ export const runGhPullRequestView = Effect.fn("Yeet.runGhPullRequestView")(funct
  * **Example** (Check open PR option tag)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { findOpenPullRequest, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -249,7 +254,8 @@ const branchCommitRange = Effect.fn("Yeet.branchCommitRange")(function* (
  * **Example** (Build body with recorder)
  *
  * ```ts
- * import { Effect, Ref } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Ref from "effect/Ref";
  * import { buildPrBody, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -341,7 +347,8 @@ interface EnsurePullRequestDependencies {
  * **Example** (Record successful PR create)
  *
  * ```ts
- * import { Effect, Ref } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Ref from "effect/Ref";
  * import * as O from "effect/Option"
  * import { recordPrCreateLane, RepoPlanStep } from "@beep/repo-cli/test/Yeet"
  *
@@ -403,7 +410,8 @@ export const recordPrCreateLane = Effect.fn("Yeet.recordPrCreateLane")(function*
  * **Example** (Record a skipped stamp)
  *
  * ```ts
- * import { Effect, Ref } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Ref from "effect/Ref";
  * import * as O from "effect/Option"
  * import { ProvenanceStampOutcome, recordPrProvenanceStampLane } from "@beep/repo-cli/test/Yeet"
  *
@@ -725,7 +733,8 @@ const reuseExistingPullRequest = Effect.fn("Yeet.reuseExistingPullRequest")(func
  * **Example** (Ensure PR when missing)
  *
  * ```ts
- * import { Effect, Ref } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Ref from "effect/Ref";
  * import * as O from "effect/Option"
  * import { ensurePullRequest, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
@@ -856,7 +865,8 @@ const branchChangedPaths = (context: RepoRunContext) =>
  *
  * ```ts
  * import { applyHeavyAdmissionLabel, RepoRunContext, YeetEnsuredPullRequest } from "@beep/repo-cli/test/Yeet"
- * import { Effect, Ref } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Ref from "effect/Ref";
  * import * as O from "effect/Option"
  *
  * const context = RepoRunContext.make({
@@ -933,7 +943,7 @@ export const applyHeavyAdmissionLabel = Effect.fn("Yeet.applyHeavyAdmissionLabel
  * **Example** (Validate matching open PR)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { RepoRunContext, validateOpenPullRequest } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({

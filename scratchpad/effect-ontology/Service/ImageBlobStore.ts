@@ -12,8 +12,13 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { getSomesStruct } from "@beep/utils/Option";
-import type { Duration } from "effect";
-import { Context, DateTime, Effect, Layer, MutableHashSet, Result } from "effect";
+import type * as Duration from "effect/Duration";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Result from "effect/Result";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import type { PlatformError, SystemError } from "effect/PlatformError";
@@ -113,7 +118,7 @@ export interface ImageBlobStoreService {
  * **Example** (Inspect image blob store)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ImageBlobStore } from "@effect-ontology/Service/ImageBlobStore"
  *
  * const program = Effect.gen(function* () {

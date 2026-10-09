@@ -17,10 +17,12 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
-import { Effect, flow, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as PlatformError from "effect/PlatformError";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeTextAnchorVerificationReceipt = S.decodeEffect(TextAnchorVerificationReceipt);

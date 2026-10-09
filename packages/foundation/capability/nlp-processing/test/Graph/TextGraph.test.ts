@@ -1,7 +1,8 @@
 import { bfs, dfs, singleton, toArray } from "@beep/nlp-processing/Graph/TextGraph";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect, Graph } from "effect";
+import * as Effect from "effect/Effect";
+import * as Graph from "effect/Graph";
 
 describe("TextGraph traversal", () => {
   it.effect(

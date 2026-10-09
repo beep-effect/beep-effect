@@ -29,8 +29,8 @@
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { OptionInjectionError } from "./errors/OptionInjectionError.ts";

@@ -35,7 +35,7 @@ import { Switch } from "@beep/ui/components/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@beep/ui/components/tooltip";
 import { O, Str } from "@beep/utils";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import { AsyncResult } from "effect/reactivity";
 import * as S from "effect/Schema";
 import { valueFromEvent } from "./Session.workbench.shared.ts";

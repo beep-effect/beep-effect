@@ -4,9 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Cause, Schedule } from "effect";
-
+import * as Cause from "effect/Cause";
+import * as Schedule from "effect/Schedule";
 /**
  * Jittered exponential retry schedule used by durable ontology activities.
  *
@@ -24,8 +23,10 @@ import { Cause, Schedule } from "effect";
  *
  * ```ts
  * import { activityRetryPolicy } from "@effect-ontology/Utils/Activity"
- * import { Cause, Effect, Exit, Schedule } from "effect"
- *
+ * import * as Cause from "effect/Cause";
+ * import * as Effect from "effect/Effect";
+ * import * as Exit from "effect/Exit";
+ * import * as Schedule from "effect/Schedule";
  * const retriesInterrupt = Effect.runSync(
  *   Effect.gen(function* () {
  *     const step = yield* Schedule.toStep(activityRetryPolicy)

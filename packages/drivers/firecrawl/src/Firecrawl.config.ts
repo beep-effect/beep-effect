@@ -7,8 +7,10 @@
 
 import { $FirecrawlId } from "@beep/identity/packages";
 import { URLStr } from "@beep/schema/URL";
-import { Effect, identity, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 
 const $I = $FirecrawlId.create("Firecrawl.config");
@@ -110,7 +112,7 @@ export const FIRECRAWL_API_URL = "https://api.firecrawl.dev";
  * **Example** (Make config with API key)
  *
  * ```ts
- * import { Redacted } from "effect"
+ * import * as Redacted from "effect/Redacted";
  * import { FirecrawlConfigInput } from "@beep/firecrawl"
  *
  * const config = FirecrawlConfigInput.make({

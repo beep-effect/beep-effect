@@ -11,7 +11,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@beep/ui/components/too
 import { Str } from "@beep/utils";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { ArrowSquareOutIcon, InfoIcon } from "@phosphor-icons/react";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { Atom } from "effect/reactivity";

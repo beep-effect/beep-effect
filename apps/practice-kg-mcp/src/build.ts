@@ -10,9 +10,12 @@ import { buildPracticeKgBundle, PracticeKgOptions, PracticeKgRunLabel } from "@b
 import * as OptionUtils from "@beep/utils/Option";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, FileSystem, Layer, Path } from "effect";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { makePracticeKgBuildLayer } from "./runtime/index.ts";
 

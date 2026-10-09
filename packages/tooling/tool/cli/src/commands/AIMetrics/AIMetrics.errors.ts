@@ -19,7 +19,8 @@ import {
   AiMetricsSourceDiscoveryError,
 } from "@beep/repo-ai-metrics";
 import { Err } from "@beep/utils";
-import { Effect, Runtime } from "effect";
+import * as Effect from "effect/Effect";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
@@ -150,8 +151,7 @@ export type AiMetricsProgramError = typeof AiMetricsProgramError.Type;
  *
  * ```ts
  * import { runAiMetricsProgram } from "@beep/repo-cli/commands/AIMetrics/AIMetrics.errors"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = runAiMetricsProgram(Effect.succeed("rendered"))
  * console.log(program.pipe !== undefined) // true
  * ```

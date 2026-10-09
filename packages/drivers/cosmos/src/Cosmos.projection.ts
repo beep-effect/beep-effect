@@ -7,7 +7,7 @@
 
 import { $CosmosId } from "@beep/identity/packages";
 import { Float32Arr } from "@beep/schema/Float32Array";
-import { Number as N } from "effect";
+import * as N from "effect/Number";
 import * as S from "effect/Schema";
 
 const $I = $CosmosId.create("Cosmos.projection");

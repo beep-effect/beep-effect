@@ -8,8 +8,10 @@ import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
 import { assertFalse, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
-import { Effect, FileSystem, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 
 const row = EffectVitestFinding.make({
   id: "EV001:packages/example/test/a.test.ts:1:runSync@0#1",

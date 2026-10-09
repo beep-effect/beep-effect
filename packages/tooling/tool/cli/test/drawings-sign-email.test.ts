@@ -3,7 +3,9 @@ import { MailReaderFromM365 } from "@beep/repo-cli/commands/Drawings";
 import { approvalStatement, EmailAddress, MailReader, Sha256Hex, verifyConfirmation } from "@beep/technical-drawing";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect, Layer, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const sheetSet = Sha256Hex.make("8d5be0c406afacf451f01d2343597810bc62dfee8f0f95bf001bf057bb894029");

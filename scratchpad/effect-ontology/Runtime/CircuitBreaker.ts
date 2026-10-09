@@ -17,7 +17,11 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Clock, Duration, Effect, Number as N, Ref } from "effect";
+import * as Clock from "effect/Clock";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as N from "effect/Number";
+import * as Ref from "effect/Ref";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CircuitOpenError } from "../Domain/Error/Circuit.ts";
@@ -75,7 +79,7 @@ const circuitBreakerConfigSuccessThresholdDefault = PosInt.make(2);
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { CircuitBreakerConfig } from "@effect-ontology/Runtime/CircuitBreaker"
  *
  * const PosInt = S.Int.check(S.isGreaterThan(0))
@@ -149,7 +153,8 @@ class CircuitBreakerState extends S.Class<CircuitBreakerState>($I`CircuitBreaker
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Duration, Effect } from "effect"
+ * import * as Duration from "effect/Duration";
+ * import * as Effect from "effect/Effect";
  * import { makeCircuitBreaker } from "@effect-ontology/Runtime/CircuitBreaker"
  *
  * const PosInt = S.Int.check(S.isGreaterThan(0))

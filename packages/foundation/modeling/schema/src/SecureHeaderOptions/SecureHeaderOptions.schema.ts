@@ -7,7 +7,8 @@
 
 import { $SchemaId } from "@beep/identity";
 import { A } from "@beep/utils";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
@@ -153,7 +154,7 @@ const resolveHeaders = Effect.fnUntraced(function* (
  * **Example** (Create headers record object)
  *
  * ```ts import.meta.vitest name="Create headers record object"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { createHeadersObject } from "@beep/schema/SecureHeaderOptions"
  *
  * const headers = Effect.runSync(createHeadersObject({ nosniff: "nosniff" }))
@@ -185,7 +186,7 @@ export const createHeadersObject = Effect.fn("SecureHeaderOptions.createHeadersO
  * **Example** (Create SecureHeaderEntry array)
  *
  * ```ts import.meta.vitest name="Create SecureHeaderEntry array"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { createSecureHeaders } from "@beep/schema/SecureHeaderOptions"
  *
  * const headers = Effect.runSync(createSecureHeaders({ nosniff: "nosniff" }))

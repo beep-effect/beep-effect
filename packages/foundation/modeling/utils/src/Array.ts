@@ -117,7 +117,7 @@ function asNonEmptyReadonlyArray<T>(out: ReadonlyArray<T>): A.NonEmptyReadonlyAr
  * **Example** (Data-first and data-last map)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { A } from "@beep/utils"
  *
  * const items: A.NonEmptyReadonlyArray<number> = [1, 2, 3]
@@ -156,7 +156,7 @@ export const mapNonEmpty: {
  * **Example** (Data-first and data-last flatMap)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { A } from "@beep/utils"
  *
  * const items: A.NonEmptyReadonlyArray<number> = [1, 2, 3]
@@ -197,7 +197,7 @@ export const flatMapNonEmpty: {
  * **Example** (Readonly data-first and data-last)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { A } from "@beep/utils"
  *
  * const items: A.NonEmptyReadonlyArray<string> = ["a", "b", "c"]
@@ -236,7 +236,7 @@ export const mapNonEmptyReadonly: {
  * **Example** (Readonly flatMap both styles)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { A } from "@beep/utils"
  *
  * const items: A.NonEmptyReadonlyArray<string> = ["hi", "bye"]
@@ -308,7 +308,7 @@ const optionFromNativeIndex = (index: number): O.Option<number> => (index === -1
  * **Example** (Find index with Option)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { A, O } from "@beep/utils"
  *
  * const index = pipe(["alpha", "beta"], A.indexOf("beta"))
@@ -340,7 +340,7 @@ export const indexOf: IndexLookupSignature = dual(
  * **Example** (Find last index with Option)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { A, O } from "@beep/utils"
  *
  * const index = pipe(["a", "b", "a"], A.lastIndexOf("a"))
@@ -373,7 +373,7 @@ export const lastIndexOf: IndexLookupSignature = dual(
  * **Example** (Slice with options object)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { A } from "@beep/utils"
  *
  * const middle = pipe([1, 2, 3, 4], A.slice({ start: 1, end: 3 }))

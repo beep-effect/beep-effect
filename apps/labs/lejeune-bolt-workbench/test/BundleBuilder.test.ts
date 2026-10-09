@@ -5,10 +5,18 @@ import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
-import { DateTime, Deferred, Effect, Exit, Fiber, FileSystem, Layer, Path, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
@@ -39,7 +47,7 @@ const encodeMutableReviewLedgerResult = S.encodeResult(MutableReviewLedger);
 
 import { it } from "@beep/test-runner";
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import {
   BundleBuildInput,
   buildBundle,

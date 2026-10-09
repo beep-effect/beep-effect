@@ -7,7 +7,8 @@ import {
 import { decodePackageJson } from "@beep/repo-utils/schemas/PackageJson";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect, HashSet } from "effect";
+import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 

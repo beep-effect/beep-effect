@@ -28,12 +28,19 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Config, Console, DateTime, Effect, FileSystem, HashSet, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
-import { dual } from "effect/Function";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
@@ -417,8 +424,7 @@ export const decideYeetPrWaveOwner: {
  *
  * ```ts
  * import { probeYeetPrWaveOwner } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(probeYeetPrWaveOwner([], "/sessions", "/proc"))) // true
  * ```
  *
@@ -455,8 +461,7 @@ export const probeYeetPrWaveOwner = Effect.fn("YeetWaveNotifier.probeOwner")(fun
  *
  * ```ts
  * import { yeetPrWaveKey } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(yeetPrWaveKey(7, "abc1234", ["lint-abc"], ""))) // true
  * ```
  *

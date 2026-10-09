@@ -21,7 +21,7 @@ const FileSizeByte = LiteralKit(["b", "B"]);
  * **Example** (Decode mb file suffix)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { FileSizeSuffix } from "@beep/repo-configs/next/models/Shared.schema"
  * const program = S.decodeUnknownEffect(FileSizeSuffix)("mb")
@@ -75,7 +75,7 @@ const SizeLimitText = S.TemplateLiteral([S.Finite, FileSizeSuffix]).check(
  * **Example** (Decode 2mb size limit)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { SizeLimit } from "@beep/repo-configs/next/models/Shared.schema"
  * const program = S.decodeUnknownEffect(SizeLimit)("2mb")

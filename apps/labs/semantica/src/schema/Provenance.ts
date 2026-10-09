@@ -1,9 +1,11 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { SourceTextExtractor } from "@beep/provenance";
 import { LiteralKit } from "@beep/schema";
-import { identity, Result, Tuple } from "effect";
+import { identity } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { DegradedKind } from "@/schema/Degraded";
 import { contentDigestSync } from "@/schema/Digest";
 import { BatchId, ChunkId, ClaimId, DocumentId, ProvenanceEventId } from "@/schema/Ids";

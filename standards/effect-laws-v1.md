@@ -10,7 +10,7 @@ Compact, enforceable laws for this codebase. Keep agent-facing files terse; keep
    - `import * as P from "effect/Predicate"`
    - `import * as R from "effect/Record"`
    - `import * as S from "effect/Schema"`
-2. For other stable helper/data modules, prefer dedicated namespace imports (`effect/String` as `Str`, `effect/Equal` as `Eq`, `effect/Boolean` as `Bool`, etc.); reserve root `effect` imports for core combinators/types such as `Effect`, `Match`, `pipe`, and `flow`.
+2. Import every Effect module from its dedicated path (`effect/Effect`, `effect/Match`, `effect/String` as `Str`, etc.). Import `pipe`, `flow`, and `identity` from `effect/Function`. The root `effect` barrel is not used, including in JSDoc and Markdown examples.
 3. `effect/*` imports are allowed when needed.
 4. No `any`, type assertions, `@ts-ignore`, or non-null assertions.
 5. No runtime `typeof ... === ...`; use `effect/Predicate` guards.

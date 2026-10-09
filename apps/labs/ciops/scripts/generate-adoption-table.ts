@@ -1,9 +1,13 @@
 import { $CiopsId } from "@beep/identity/packages";
-import { Console, Effect, HashMap, Ref, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import { ChildProcess } from "effect/process";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { CiOpsKpi } from "@/kpi/CiOpsKpi";
 import { kpiWindows } from "@/kpi/Fold";

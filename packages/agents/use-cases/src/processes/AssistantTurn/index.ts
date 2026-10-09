@@ -47,8 +47,8 @@ export * from "./AssistantTurn.errors.ts";
  * ```ts
  * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
  * import { FixtureTurnKernel } from "@beep/agents-use-cases/proof"
- * import { Effect, Stream } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * const program = Effect.gen(function* () {
  *   const kernel = yield* AgentTurnKernel
  *   return yield* Stream.runCollect(kernel.streamTurn([{ role: "user", text: "ping" }]))

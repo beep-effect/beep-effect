@@ -6,7 +6,7 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { createHeadlessEditor } from "@lexical/headless";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 
 const withNodeContext = (assertions: () => void): void => {
   const editor = createHeadlessEditor({

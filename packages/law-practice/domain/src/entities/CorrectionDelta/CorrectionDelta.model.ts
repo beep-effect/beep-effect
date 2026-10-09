@@ -8,7 +8,7 @@ import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import {
   CandidateRouting,

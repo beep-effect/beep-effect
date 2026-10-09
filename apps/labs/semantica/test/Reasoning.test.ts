@@ -3,11 +3,18 @@
 import { Sha256Hex } from "@beep/schema";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
-import { Effect, Exit, FileSystem, HashSet, Layer, Path, Result, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { ReasonerLive } from "@/layers/ReasonerLive";
 import { sha256TextSync } from "@/schema/Digest";
@@ -25,7 +32,7 @@ const isSha256Hex = S.is(Sha256Hex);
 
 import { it } from "@beep/test-runner";
 import { assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import { Reasoner } from "@/services/Reasoner";
 
 const statement = (subject: string, predicate: string, object: string) =>

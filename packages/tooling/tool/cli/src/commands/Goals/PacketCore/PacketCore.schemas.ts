@@ -19,7 +19,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Goals/PacketCore/PacketCore.schemas");
@@ -931,8 +931,7 @@ export class PacketEvent extends S.Class<PacketEvent>($I`PacketEvent`)(
  *
  * ```ts
  * import { decodePacketEvent } from "@beep/repo-cli/test/Goals"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(decodePacketEvent({})))
  * ```
  *
@@ -1397,8 +1396,7 @@ export class PacketTraceProjection extends S.Class<PacketTraceProjection>($I`Pac
  *
  * ```ts
  * import { decodePacketTraceProjection } from "@beep/repo-cli/test/Goals"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(decodePacketTraceProjection({})))
  * ```
  *

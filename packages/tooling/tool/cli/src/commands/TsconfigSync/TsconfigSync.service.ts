@@ -7,15 +7,17 @@
 
 import { buildRepoDependencyIndex, detectCycles } from "@beep/repo-utils";
 import { A } from "@beep/utils";
-import { Effect, HashMap } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import { TsconfigSyncCycleError, TsconfigSyncDriftError } from "./TsconfigSync.errors.ts";
 import { TsconfigSyncPlan } from "./TsconfigSync.plan.ts";
 import { TsconfigSyncRender } from "./TsconfigSync.render.ts";
 import { TsconfigSyncModeMatch, TsconfigSyncResult, tsconfigSyncModeEquivalence } from "./TsconfigSync.schemas.ts";
 import type { CyclicDependencyError, DomainError, FsUtils, NoSuchFileError } from "@beep/repo-utils";
-import type { FileSystem, Path } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import type { TsconfigSyncFilterError } from "./TsconfigSync.errors.ts";
 import type { PlannedFileChange, TsconfigSyncRunOptions } from "./TsconfigSync.schemas.ts";
@@ -65,7 +67,7 @@ export type TsconfigSyncError =
  *
  * ```ts
  * import { syncTsconfigAtRoot, TsconfigSyncRunOptions } from "@beep/repo-cli/commands/TsconfigSync"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const options = S.decodeUnknownSync(TsconfigSyncRunOptions)({ mode: "check", verbose: false })

@@ -1,7 +1,9 @@
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
-import { Config, Effect, Layer } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import { HttpRouter } from "effect/http";
+import * as Layer from "effect/Layer";
 import { ApiLive } from "./runtime/Layer.ts";
 
 // Portless injects PORT for ciops.labs.beep.localhost; the 8787 fallback

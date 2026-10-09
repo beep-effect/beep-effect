@@ -10,7 +10,8 @@
  */
 
 import { Str } from "@beep/utils";
-import { Effect, FileSystem } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { applyJsoncModification } from "../../../../internal/cli/Jsonc.ts";
 import { VersionSyncError } from "../../VersionSync.schemas.ts";
 
@@ -21,8 +22,7 @@ import { VersionSyncError } from "../../VersionSync.schemas.ts";
  *
  * ```ts
  * import { updateJsoncSchemaUrl } from "@beep/repo-cli/commands/VersionSync/internal/updaters/JsoncSchemaUpdater"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = updateJsoncSchemaUrl("/repo/turbo.json", "https://v2-10-13.turborepo.dev/schema.json")
  * console.log(Effect.isEffect(program)) // true
  * ```

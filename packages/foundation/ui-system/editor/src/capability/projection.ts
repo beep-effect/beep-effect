@@ -7,7 +7,7 @@
 
 import { $EditorId } from "@beep/identity";
 import { A, dual, O, Str } from "@beep/utils";
-import { Equal } from "effect";
+import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
 import { SlashItem } from "../chat/config.ts";
 import { CommandId, KeyChord, Modifier, Platform as PlatformSchema } from "./schemas.ts";
@@ -24,8 +24,7 @@ const $I = $EditorId.create("capability/projection");
  * ```ts import.meta.vitest name="Create an unbound help row"
  * import { ShortcutHelpEntry } from "@beep/editor/capability/projection"
  * import { CommandId } from "@beep/editor/capability/schemas"
- * import { Option } from "effect"
- *
+ * import * as Option from "effect/Option";
  * const entry = ShortcutHelpEntry.make({
  *   commandId: CommandId.make("format.bold"), label: "Bold", helpText: "Toggle bold.",
  *   chord: Option.none()

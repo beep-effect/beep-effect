@@ -6,8 +6,8 @@
  */
 
 import { $PandocAstId } from "@beep/identity";
-import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import {
@@ -3327,7 +3327,7 @@ export const PandocTablePayload = PandocTablePayloadShape.pipe(
  *
  * ```ts import.meta.vitest name="Decoding table payload"
  * import { PandocTablePayload } from "@beep/pandoc-ast/Pandoc.model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownResult(PandocTablePayload)([
@@ -3690,7 +3690,7 @@ export declare namespace PandocBlock {
  * **Example** (Decoding meta list value)
  *
  * ```ts import.meta.vitest name="Decoding meta list value"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { PandocMetaValue } from "@beep/pandoc-ast/Pandoc.model"
  *
@@ -4269,7 +4269,7 @@ export type PandocMetaValueEncoded = typeof PandocMetaValue.Encoded;
  * **Example** (Decoding document metadata)
  *
  * ```ts import.meta.vitest name="Decoding document metadata"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { MetaString, PandocMeta } from "@beep/pandoc-ast/Pandoc.model"
  *

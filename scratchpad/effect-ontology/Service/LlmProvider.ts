@@ -12,7 +12,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Schedule } from "effect";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/LlmProvider");
@@ -82,7 +82,8 @@ export type LlmProvider = typeof LlmProvider.Type;
  * **Example** (Configure an Anthropic model)
  *
  * ```ts
- * import { Duration, Schedule } from "effect"
+ * import * as Duration from "effect/Duration";
+ * import * as Schedule from "effect/Schedule";
  * import { LlmProviderParams } from "@effect-ontology/Service/LlmProvider"
  *
  * const config = LlmProviderParams.make({

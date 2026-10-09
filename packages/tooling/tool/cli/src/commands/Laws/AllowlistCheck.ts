@@ -11,9 +11,15 @@ import { buildAllowlistSnapshotModuleFromJsoncText } from "@beep/repo-configs/in
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Console, Effect, FileSystem, HashSet, Path, pipe, Result } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { parse } from "jsonc-parser";
 import { Project } from "ts-morph";

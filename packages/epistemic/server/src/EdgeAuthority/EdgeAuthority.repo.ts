@@ -42,9 +42,15 @@ import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { A, N, O } from "@beep/utils";
 import { and, eq, gt, isNull, lte, or } from "drizzle-orm";
-import { DateTime, Effect, Equal, Match, Order, pipe, Result, Semaphore } from "effect";
-import { dual } from "effect/Function";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import { PosInt } from "../internal/PosInt.ts";
 import type { LogicalEdgeKey } from "@beep/epistemic-domain/values";
 import type { EdgeVersionRow } from "@beep/epistemic-tables/entities/EdgeVersion";
@@ -394,8 +400,7 @@ export const supersedeEdgeFactInTransaction: SupersedeEdgeFactInTransaction = du
  *
  * ```ts
  * import { makeDrizzleEdgeAuthorityRepository } from "@beep/epistemic-server/EdgeAuthority"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = makeDrizzleEdgeAuthorityRepository().pipe(
  *   Effect.map((repository) => typeof repository.supersede === "function")
  * )

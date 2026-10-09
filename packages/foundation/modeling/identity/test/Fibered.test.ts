@@ -2,9 +2,9 @@ import { fcRuns } from "@beep/fc-runs";
 import { Fibered } from "@beep/identity";
 import { it } from "@beep/test-runner";
 import { describe, expect, expectTypeOf } from "@effect/vitest";
-import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const Base = S.Literals(["text", "count", "flag"]);

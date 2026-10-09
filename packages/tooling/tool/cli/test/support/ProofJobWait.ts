@@ -11,7 +11,11 @@
  */
 
 import { assertInclude } from "@effect/vitest/utils";
-import { Clock, Deferred, Duration, Effect, Fiber } from "effect";
+import * as Clock from "effect/Clock";
+import * as Deferred from "effect/Deferred";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as TestClock from "effect/testing/TestClock";

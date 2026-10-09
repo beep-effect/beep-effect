@@ -6,8 +6,8 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { SchemaTransformation as ST } from "effect";
 import * as S from "effect/Schema";
+import * as ST from "effect/SchemaTransformation";
 
 const $I = $SchemaId.create("Port");
 
@@ -55,7 +55,7 @@ const PortDecimalString = S.String.check(
  * **Example** (Decode HTTPS port number)
  *
  * ```ts import.meta.vitest name="Decode HTTPS port number"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { Port } from "@beep/schema/Port"
  *
@@ -108,7 +108,7 @@ export type Port = typeof Port.Type;
  * **Example** (Decode decimal port string)
  *
  * ```ts import.meta.vitest name="Decode decimal port string"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { PortFromString } from "@beep/schema/Port"
  *
@@ -133,7 +133,7 @@ export const PortFromString = PortDecimalString.pipe(
  * **Example** (Decoded string as Port type)
  *
  * ```ts import.meta.vitest name="Decoded string as Port type"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { Port, PortFromString } from "@beep/schema/Port"
  * import type { PortFromString as PortFromStringValue } from "@beep/schema/Port"

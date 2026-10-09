@@ -6,9 +6,9 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { SchemaTransformation } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 const $I = $SchemaId.create("internal/ProtobufNumber");
 

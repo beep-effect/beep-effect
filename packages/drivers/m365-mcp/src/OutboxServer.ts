@@ -13,16 +13,18 @@
 
 import { M365 } from "@beep/m365";
 import { sanitizedToolkit } from "@beep/mcp-kit";
-import { Layer } from "effect";
 import * as McpServer from "effect/ai/McpServer";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
 import { m365McpProtocols } from "./internal/McpProtocols.ts";
 import { OutboxAttachmentSource } from "./OutboxAttachmentSource.ts";
 import { OutboxAuditIds, OutboxAuditLog } from "./OutboxAuditLog.ts";
 import { makeOutboxToolkitHandlers, OutboxHandlerSettings } from "./OutboxHandlers.ts";
 import { OutboxToolkit } from "./OutboxTools.ts";
 import type { M365Error } from "@beep/m365";
-import type { Crypto, FileSystem, Path } from "effect";
+import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { Stdio } from "effect/Stdio";
 import type { OutboxAttachmentError } from "./OutboxAttachmentSource.ts";
 import type { OutboxAuditError } from "./OutboxAuditLog.ts";
@@ -55,8 +57,7 @@ export const M365_OUTBOX_MCP_INSTRUCTIONS =
  *
  * ```ts
  * import type { OutboxServices } from "@beep/m365-mcp/OutboxServer"
- * import type { Layer } from "effect"
- *
+ * import type * as Layer from "effect/Layer";
  * const describe = (layer: Layer.Layer<OutboxServices>) => layer
  * console.log(describe)
  * ```
@@ -75,8 +76,7 @@ export type OutboxServices = M365 | OutboxAttachmentSource | OutboxAuditLog;
  * ```ts
  * import { OutboxHandlerSettings } from "@beep/m365-mcp/OutboxHandlers"
  * import { makeOutboxRegistrations } from "@beep/m365-mcp/OutboxServer"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const settings = OutboxHandlerSettings.make({ mailbox: "mailbox@example.test" })
  * console.log(Layer.isLayer(makeOutboxRegistrations(settings)))
  * // true
@@ -107,8 +107,7 @@ export const makeOutboxRegistrations = (
  * import { M365McpServerConfig } from "@beep/m365-mcp"
  * import { OutboxHandlerSettings } from "@beep/m365-mcp/OutboxHandlers"
  * import { makeOutboxServerLayer } from "@beep/m365-mcp/OutboxServer"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const layer = makeOutboxServerLayer(
  *   M365McpServerConfig.make({ name: "beep-m365-outbox", version: "0.1.0" }),
  *   OutboxHandlerSettings.make({ mailbox: "mailbox@example.test" })

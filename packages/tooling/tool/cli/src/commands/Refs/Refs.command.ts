@@ -4,9 +4,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Config, Console, Effect } from "effect";
+
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";

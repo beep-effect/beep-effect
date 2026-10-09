@@ -17,8 +17,11 @@ import * as WorkItemUseCaseServer from "@beep/architecture-lab-use-cases/server"
 import { PostgresDrizzle } from "@beep/postgres";
 import { A } from "@beep/utils";
 import { eq } from "drizzle-orm";
-import { Effect, HashMap, pipe, Ref } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import type * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import type { PostgresDrizzleDatabase } from "@beep/postgres";
 
@@ -45,7 +48,7 @@ const getStoredWorkItem = Effect.fn("ArchitectureLab.WorkItemRepository.getStore
  * import { ArchitectureLabConfigTest } from "@beep/architecture-lab-config/test"
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { makeInMemoryWorkItemRepository } from "@beep/architecture-lab-server/aggregates/WorkItem"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
@@ -154,8 +157,7 @@ const getDrizzleWorkItem = Effect.fn("ArchitectureLab.WorkItemRepository.getDriz
  *
  * ```ts
  * import { makeDrizzleWorkItemRepository } from "@beep/architecture-lab-server/aggregates/WorkItem"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = makeDrizzleWorkItemRepository().pipe(
  *   Effect.flatMap((repository) => repository.list),
  *   Effect.catchTag("WorkItemRepositoryUnavailable", (error) => Effect.succeed([error.reason]))
@@ -231,8 +233,7 @@ export const makeDrizzleWorkItemRepository = Effect.fn("ArchitectureLab.WorkItem
  * ```ts
  * import { ArchitectureLabConfigTest } from "@beep/architecture-lab-config/test"
  * import { makeWorkItemRepository } from "@beep/architecture-lab-server/aggregates/WorkItem"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = makeWorkItemRepository().pipe(
  *   Effect.flatMap((repository) => repository.list),
  *   Effect.map((items) => items.length),

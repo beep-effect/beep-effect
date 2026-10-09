@@ -6,7 +6,7 @@
  */
 
 import { PowerExercise } from "@beep/law-practice-domain/entities/PowerExercise";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { Table } from "./PowerExercise.table.ts";
 
@@ -68,8 +68,7 @@ const encodePowerExercise = S.encodeResult(PowerExercise);
  *   fromPowerExerciseRow,
  *   toPowerExerciseInsert
  * } from "@beep/law-practice-tables/entities/PowerExercise"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const insert = Result.flatMap(fromPowerExerciseRow({}), toPowerExerciseInsert)
  * console.log(Result.isFailure(insert)) // true
  * ```
@@ -104,8 +103,7 @@ export const toPowerExerciseInsert = (exercise: PowerExercise): Result.Result<Po
  *
  * ```ts
  * import { fromPowerExerciseRow } from "@beep/law-practice-tables/entities/PowerExercise"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * console.log(Result.isFailure(fromPowerExerciseRow({}))) // true
  * ```
  *

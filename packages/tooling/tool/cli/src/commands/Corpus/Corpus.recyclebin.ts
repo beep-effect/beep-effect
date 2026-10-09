@@ -6,8 +6,13 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { DateTime, Effect, Match, MutableHashMap, Order, pipe } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { CorpusCommandError } from "./Corpus.errors.ts";
 import { RecycleBinOriginal, RecycleBinPairedEntry, RecycleBinPairing } from "./Corpus.schemas.ts";
@@ -80,8 +85,7 @@ const v2Path = (bytes: Uint8Array, view: DataView): Effect.Effect<string, Corpus
  *
  * ```ts
  * import { parseRecycleBinMetadata } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const path = "C:\\Clients\\spec.docx"
  * const bytes = new Uint8Array(28 + (path.length + 1) * 2)
  * const view = new DataView(bytes.buffer)

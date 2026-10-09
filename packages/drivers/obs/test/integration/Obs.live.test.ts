@@ -2,7 +2,9 @@ import { Obs, ObsProtocol } from "@beep/obs";
 import { it } from "@beep/test-runner";
 import { O, P, Str } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { Config, Effect, Layer } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { Socket } from "effect/socket";
 
 const OBS_WEBSOCKET_URL = "ws://127.0.0.1:4455";

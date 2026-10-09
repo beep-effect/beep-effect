@@ -9,8 +9,17 @@ import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Clock, Duration, Effect, FileSystem, MutableHashMap, Order, Path, pipe, Random, Schedule } from "effect";
+import * as Clock from "effect/Clock";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
+import * as Random from "effect/Random";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { AiMetricsTranscriptSource } from "./models.ts";
 import {
@@ -19,7 +28,7 @@ import {
   hashPublicTextSha256,
   resolveAiMetricsHashSaltStatus,
 } from "./privacy.ts";
-import type { PlatformError } from "effect";
+import type * as PlatformError from "effect/PlatformError";
 
 const $I = $RepoAiMetricsId.create("identity-registry");
 
@@ -520,8 +529,7 @@ const resolveRevision = Effect.fn("AiMetrics.identityRegistry.resolveRevision")(
  * ```ts
  * import { isNestedGitRoot } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = isNestedGitRoot({
  *   dirPath: "/work/repo/.claude/worktrees/wt1",
  *   scanRoot: "/work/repo"
@@ -575,8 +583,7 @@ export const isNestedGitRoot: (args: {
  * ```ts
  * import { AiMetricsCanonicalRootInput, makeAiMetricsCanonicalRoot } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = makeAiMetricsCanonicalRoot(
  *   AiMetricsCanonicalRootInput.make({ hashSalt: "salt", rootPath: "/work/repo" })
  * ).pipe(Effect.provide(NodeServices.layer))
@@ -727,8 +734,7 @@ const withRegistryLock = <A, E, R>(
  * ```ts
  * import { readAiMetricsIdentityRegistry } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = readAiMetricsIdentityRegistry(
  *   "/home/dev/.local/state/beep/ai-metrics"
  * ).pipe(Effect.provide(NodeServices.layer))
@@ -790,8 +796,7 @@ const legacyRegistryAllSaltedIdentitiesMatch = (
  *
  * ```ts
  * import { AiMetricsIdentityRegistry, identityRegistryToJson } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const json = Effect.runSync(
  *   identityRegistryToJson(
  *     AiMetricsIdentityRegistry.make({
@@ -954,8 +959,7 @@ const mergeAndPersistRegistry = Effect.fnUntraced(function* (args: {
  *   upsertAiMetricsIdentityRegistry
  * } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = upsertAiMetricsIdentityRegistry(
  *   AiMetricsIdentityRegistryUpsertInput.make({
  *     dataRoot: "/home/dev/.local/state/beep/ai-metrics",

@@ -11,27 +11,23 @@ import { LiteralKit } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { HUNDRED as HUNDRED_PERCENTAGE, Percentage, ZERO as ZERO_PERCENTAGE } from "@beep/schema/Percentage";
 import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
-import {
-  Console,
-  DateTime,
-  Effect,
-  FileSystem,
-  flow,
-  HashSet,
-  Inspectable,
-  Match,
-  MutableHashMap,
-  Order,
-  Path,
-  pipe,
-  Tuple,
-} from "effect";
 import * as Bool from "effect/Boolean";
-import { dual } from "effect/Function";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Inspectable from "effect/Inspectable";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { formatJsonc, readArtifact, writeArtifact } from "../../../internal/artifacts/index.ts";
 import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
 import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
@@ -1239,8 +1235,7 @@ const readCoverageSummary = Effect.fn("CoverageRegression.readCoverageSummary")(
  * ```ts
  * import { coveragePackageBaselineFromSummaryForTesting } from "@beep/repo-cli/test/Quality"
  * import * as NodePath from "@effect/platform-node/NodePath"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const covered = { covered: 1, pct: 100, skipped: 0, total: 1 }
  * const summaryText = JSON.stringify({
  *   total: { branches: covered, functions: covered, lines: covered, statements: covered },
@@ -1766,8 +1761,7 @@ export const coverageBaselineRowDelta: {
  *
  * ```ts
  * import { coverageBaselineRowDeltaFromBase } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(coverageBaselineRowDeltaFromBase(process.cwd(), "origin/main"))) // true
  * ```
  *
@@ -1842,7 +1836,7 @@ export const coverageBaselineWriterChangedFiles: (changedFiles: ReadonlyArray<st
  *
  * ```ts
  * import { coverageBaselineChangeSetFromChangedFiles } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(coverageBaselineChangeSetFromChangedFiles("/repo", [], "test"))) // true
  * ```
  *
@@ -2115,8 +2109,7 @@ const readComparisonBaseline = Effect.fn("CoverageRegression.readComparisonBasel
  *
  * ```ts
  * import { readCoverageComparisonBaselineForTesting } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readCoverageComparisonBaselineForTesting("/repo"))) // true
  * ```
  *
@@ -2458,8 +2451,7 @@ export const coverageBaselineWriteReport: {
  *
  * ```ts
  * import { writeCoverageRegressionBaseline } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const write = writeCoverageRegressionBaseline("/repo", false)
  * console.log(Effect.isEffect(write)) // true
  * ```
@@ -2598,8 +2590,7 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
  *
  * ```ts
  * import { subtractPackageFromCoverageRegressionBaseline } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = subtractPackageFromCoverageRegressionBaseline("/repo", "@beep/retired-driver")
  * console.log(Effect.isEffect(program)) // true
  * ```

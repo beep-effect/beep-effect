@@ -21,10 +21,15 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Console, Duration, Effect, Match, pipe, Runtime } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -36,8 +41,9 @@ import { ProofJobLauncher } from "./ProofJobLauncher.ts";
 import { YEET_REVIEW_WINDOW_DEFAULT } from "./ReviewWindow.ts";
 import { collectYeetStatus, YeetStatusRemote } from "./Status.ts";
 import { mergeReadyCriterionHolds, YeetMergeReady } from "./Verdict.ts";
-import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetReadyOptions } from "../Yeet.schemas.ts";

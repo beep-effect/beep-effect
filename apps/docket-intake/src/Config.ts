@@ -8,7 +8,8 @@
 import { $DocketIntakeId } from "@beep/identity/packages";
 import { DocketReviewConfig, ReviewMaxRounds } from "@beep/law-practice-use-cases/DocketIntake";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Config, Effect } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $DocketIntakeId.create("Config");

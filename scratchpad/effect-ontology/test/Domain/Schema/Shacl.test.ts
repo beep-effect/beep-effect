@@ -5,7 +5,7 @@ import {
   ShaclValidationViolation,
 } from "@beep/semantic-web/services/shacl-validation";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";

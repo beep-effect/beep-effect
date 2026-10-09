@@ -17,10 +17,17 @@ import {
   DocketPollReport,
 } from "@beep/law-practice-use-cases/DocketIntake";
 import { LiteralKit } from "@beep/schema";
-import { Context, DateTime, Effect, FileSystem, Layer, Order, Path, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { DocketCalendarEntry, DocketWrittenEntry } from "@beep/law-practice-use-cases/DocketIntake";
@@ -87,8 +94,7 @@ const compactInstant = Str.replace(/[-:.]/g, "");
  *
  * ```ts
  * import { makeDocketRunId } from "@beep/law-practice-server/DocketIntake";
- * import { DateTime } from "effect";
- *
+ * import * as DateTime from "effect/DateTime";
  * console.log(makeDocketRunId(DateTime.makeUnsafe("2030-01-09T10:00:00.123Z"))); // run-20300109T100000123Z
  * ```
  *
@@ -165,7 +171,7 @@ const optionalKey = <Value extends S.Top>(value: Value, description: string) =>
  *
  * ```ts
  * import { DocketJournalEntry, DocketRunId } from "@beep/law-practice-server/DocketIntake";
- * import { DateTime } from "effect";
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option";
  *
  * const line = DocketJournalEntry.make({
@@ -606,7 +612,7 @@ export const summarizeDocketRuns = (entries: ReadonlyArray<DocketJournalEntry>):
  *
  * ```ts
  * import { DocketJournalEntry, DocketRunId, latestDocketRun } from "@beep/law-practice-server/DocketIntake";
- * import { DateTime } from "effect";
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option";
  *
  * const line = (runId: string) =>

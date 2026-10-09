@@ -2,11 +2,14 @@
 // is async, so this config-time scan uses the synchronous Node builtins. This file is one of the
 // three declared directive exemptions in `beep quality tsgo-rules` (Quality.command.ts).
 // @effect-diagnostics nodeBuiltinImport:skip-file
+
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { A, P, Str, Struct } from "@beep/utils";
 import * as Doctest from "@effect/doctest/Plugin";
-import { Config, Effect, pipe } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import generatedAliasPaths from "./vitest.aliases.generated.json" with { type: "json" };

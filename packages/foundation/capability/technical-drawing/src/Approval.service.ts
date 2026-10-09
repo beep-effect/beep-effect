@@ -8,7 +8,14 @@
 
 import { $TechnicalDrawingId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
-import { Context, DateTime, Effect, FileSystem, Layer, Path, pipe, Result } from "effect";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { verifyConfirmation } from "./Approval.rules.ts";
 import { ApprovalRecord, approvalStatement, EmailAddress, PdfConfirmation } from "./Approval.schemas.ts";
@@ -111,8 +118,7 @@ export class SignRequest extends S.Class<SignRequest>($I`SignRequest`)(
  *
  * ```ts
  * import type { SheetSetApprovalShape } from "@beep/technical-drawing"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const service: SheetSetApprovalShape = {
  *   statement: () => Effect.die("not implemented"),
  *   sign: () => Effect.die("not implemented")

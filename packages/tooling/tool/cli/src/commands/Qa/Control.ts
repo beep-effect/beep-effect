@@ -12,7 +12,7 @@
 
 import { MarkAccepted, SessionStore } from "@beep/qa-capture";
 import { O } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { HttpBody, HttpClient, HttpClientResponse } from "effect/http";
 import * as S from "effect/Schema";
 import { QaCommandError } from "./Qa.errors.ts";
@@ -31,8 +31,7 @@ const encodeMarkPayloadJson = S.encodeEffect(MarkPayloadJson);
  *
  * ```ts
  * import { requireLiveHandle } from "@beep/repo-cli/commands/Qa/Control"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(requireLiveHandle("/repo/.beep/qa"))) // true
  * ```
  *
@@ -78,8 +77,7 @@ const postToCollector = Effect.fn("QaControl.postToCollector")(function* (
  *
  * ```ts
  * import { stopLiveSession } from "@beep/repo-cli/commands/Qa/Control"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(stopLiveSession("/repo/.beep/qa"))) // true
  * ```
  *
@@ -106,7 +104,7 @@ export const stopLiveSession = Effect.fn("QaControl.stopLiveSession")(function* 
  *
  * ```ts
  * import { markLiveSession } from "@beep/repo-cli/commands/Qa/Control"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * console.log(Effect.isEffect(markLiveSession("/repo/.beep/qa", "gesture:sash-drag", O.none()))) // true

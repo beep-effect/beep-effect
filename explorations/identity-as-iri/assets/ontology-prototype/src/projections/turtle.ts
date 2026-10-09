@@ -1,7 +1,6 @@
 // cspell:words SKOS DCTERMS skos dcterms
-import { flow, pipe } from "effect";
 import * as A from "effect/Array";
-import { constant } from "effect/Function";
+import { constant, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import {

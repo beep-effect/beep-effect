@@ -23,7 +23,7 @@ const childText = (children: ReadonlyArray<LexicalNode.Type>): string => A.join(
  * **Example** (Linebreak node to newline)
  *
  * ```ts import.meta.vitest name="Linebreak node to newline"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { LexicalNode } from "@beep/lexical-schema/Lexical.model"
  * import { nodeToPlainText } from "@beep/lexical-schema/Lexical.behavior"
@@ -60,7 +60,7 @@ export const nodeToPlainText: (node: LexicalNode.Type) => string = LexicalNode.m
  * **Example** (Empty editor state text)
  *
  * ```ts import.meta.vitest name="Empty editor state text"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { SerializedEditorState } from "@beep/lexical-schema/Lexical.model"
  * import { editorStateToPlainText } from "@beep/lexical-schema/Lexical.behavior"

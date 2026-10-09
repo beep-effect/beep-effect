@@ -14,9 +14,15 @@ import { DomainError } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Duration, Effect, FileSystem, Match, Order, Path, pipe, Result } from "effect";
-import { dual, flow } from "effect/Function";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -500,8 +506,7 @@ export class DocgenQualityWorkerEvalRunnerInput extends S.Class<DocgenQualityWor
  *
  * ```ts
  * import type { DocgenQualityWorkerEvalRunner } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const runner: DocgenQualityWorkerEvalRunner = (input) =>
  *   Effect.succeed({ finalResponse: JSON.stringify({ model: input.model }) })
  * const result = Effect.runSync(
@@ -1125,7 +1130,7 @@ const recommendationForSummary = (summary: DocgenQualityWorkerEvalSummary): stri
  * **Example** (Decode quality report JSON)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeDocgenQualityReportForWorkerEval } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * const qualityReportJson = JSON.stringify({
@@ -1215,7 +1220,7 @@ export const defaultQualityWorkerEvalReasoningEffort = (): DocgenQualityWorkerEv
  * **Example** (Build worker eval report)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import {
  *   analyzeDocgenQualityWorkerEval,
  *   decodeDocgenQualityReportForWorkerEval
@@ -1335,7 +1340,7 @@ export const analyzeDocgenQualityWorkerEval = Effect.fn("DocgenQualityWorkerEval
  * **Example** (Render report as JSON)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import {
  *   analyzeDocgenQualityWorkerEval,
  *   decodeDocgenQualityReportForWorkerEval,

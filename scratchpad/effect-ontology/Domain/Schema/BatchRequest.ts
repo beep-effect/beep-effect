@@ -14,8 +14,7 @@ import { MimeType } from "@beep/schema";
 import * as S from "effect/Schema";
 import { BatchId, DocumentId, GcsUri, Namespace, OntologyName, OntologyVersion } from "../Identity.ts";
 import { defaultPreprocessingOptions, PreprocessingOptions } from "./DocumentMetadata.ts";
-import { Effect } from "effect";
-
+import * as Effect from "effect/Effect";
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/BatchRequest");
 
 /**

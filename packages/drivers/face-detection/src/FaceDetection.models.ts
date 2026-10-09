@@ -6,9 +6,10 @@
  */
 
 import { $FaceDetectionId } from "@beep/identity/packages";
-import { identity, SchemaTransformation } from "effect";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 const $I = $FaceDetectionId.create("FaceDetection.models");
 
@@ -129,7 +130,7 @@ export type FaceDetectionConfidence = typeof FaceDetectionConfidence.Type;
  * **Example** (Decode raw confidence score)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { RawFaceDetectionConfidence } from "@beep/face-detection/FaceDetection.models"
  *
@@ -597,7 +598,7 @@ export class FaceDetectionResult extends S.Class<FaceDetectionResult>($I`FaceDet
  * **Example** (Decode model config)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeFaceDetectionModelConfig } from "@beep/face-detection/FaceDetection.models"
  *
  * const config = Effect.runSync(
@@ -620,7 +621,7 @@ export const decodeFaceDetectionModelConfig: (
  * **Example** (Decode image request)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeFaceDetectionImageRequest } from "@beep/face-detection/FaceDetection.models"
  *
  * const request = Effect.runSync(

@@ -13,8 +13,15 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { Effect, FileSystem, HashMap, HashSet, Inspectable, Order, Path, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Inspectable from "effect/Inspectable";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import { ts } from "ts-morph";
 import { writeArtifact } from "../../../internal/artifacts/index.ts";
@@ -414,7 +421,7 @@ const renderPromptWith = Effect.fnUntraced(function* (input: PromptInput, graftS
  *   EffectSchemaInventoryRow,
  *   renderEffectSchemaInventoryPrompt
  * } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const pin = "df77fff9396fe31de72d1947ecb5b74f8cee89e1"
@@ -465,8 +472,7 @@ const isPromptFor =
  *
  * ```ts
  * import { checkEffectSchemaInventoryPrompts } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(checkEffectSchemaInventoryPrompts(process.cwd(), "df77fff9396fe31de72d1947ecb5b74f8cee89e1", [], []))) // true
  * ```
  *
@@ -547,7 +553,7 @@ export const checkEffectSchemaInventoryPrompts = Effect.fn("EffectSchemaInventor
  *
  * ```ts
  * import { generateEffectSchemaInventoryPrompt } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * console.log(Effect.isEffect(generateEffectSchemaInventoryPrompt(process.cwd(), "effect/SchemaIssue", O.none()))) // true

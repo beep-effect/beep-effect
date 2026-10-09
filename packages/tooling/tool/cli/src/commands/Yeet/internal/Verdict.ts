@@ -11,10 +11,11 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { O } from "@beep/utils";
-import { Effect, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { dual, identity, pipe } from "effect/Function";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { commandTextForStep, RepoPlanStep, RepoStepRunResult } from "../../../internal/repo-run/RepoRun.models.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { UUID } from "../../../internal/schema/Uuid.ts";
@@ -670,7 +671,7 @@ export class YeetVerdict extends S.Class<YeetVerdict>($I`YeetVerdict`)(
  *
  * ```ts
  * import { YeetVerdict, YeetVerdictJson } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const verdict = YeetVerdict.make({

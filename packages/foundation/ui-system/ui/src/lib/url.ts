@@ -15,7 +15,8 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { flow, Match } from "effect";
+import { flow } from "effect/Function";
+import * as Match from "effect/Match";
 import * as P from "effect/Predicate";
 
 const unsafeHrefProtocolPattern = /^(?:javascript|vbscript|data):/i;

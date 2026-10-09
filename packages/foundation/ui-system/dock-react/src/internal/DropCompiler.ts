@@ -15,10 +15,13 @@ import {
   TabsNode,
   TopLeftAnchoredBox,
 } from "@beep/dock";
-import { Match, MutableHashMap, Number as N, Order, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { commandCounter } from "./AdapterState.ts";

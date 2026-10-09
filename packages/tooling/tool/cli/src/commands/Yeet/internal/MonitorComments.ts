@@ -21,10 +21,18 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Console, DateTime, Duration, Effect, FileSystem, Match, Order, pipe, Ref, Result } from "effect";
 import * as A from "effect/Array";
-import { dual, flow } from "effect/Function";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhActor } from "../../../internal/github/index.ts";
@@ -35,8 +43,8 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
 import { parseYeetReviewBodySignal, YeetReviewBodySignal, YeetReviewBodySignalInput } from "./ReviewBodySignal.ts";
-import type { Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as Path from "effect/Path";
 import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
@@ -529,8 +537,7 @@ const isYeetMonitorCommentStateV1 = S.is(YeetMonitorCommentStateV1);
  *
  * ```ts
  * import { YeetMonitorCommentCursor, YeetMonitorCommentState, YeetMonitorCommentStateJson, YeetMonitorCommentWatermark } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const cursor = YeetMonitorCommentCursor.make({ createdAt: "2026-08-16T12:00:00.000Z", id: 44 })
  * const state = YeetMonitorCommentState.make({
  *   schemaVersion: "yeet-monitor-comments/v2",
@@ -636,8 +643,7 @@ export const yeetMonitorCommentStateFileName = (consumer: YeetMonitorCommentCons
  *
  * ```ts
  * import { yeetMonitorCommentStatePath } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Effect.succeed(yeetMonitorCommentStatePath))) // true
  * ```
  *
@@ -1152,8 +1158,7 @@ const nextCursor = (cursor: YeetMonitorCommentCursor, comments: ReadonlyArray<Ye
  *
  * ```ts
  * import { loadYeetMonitorCommentWatermark } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Effect.succeed(loadYeetMonitorCommentWatermark))) // true
  * ```
  *
@@ -1268,8 +1273,7 @@ const persistCommentState = (
  *
  * ```ts
  * import { collectNewYeetMonitorComments } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Effect.succeed(collectNewYeetMonitorComments))) // true
  * ```
  *
@@ -1339,8 +1343,7 @@ export const collectNewYeetMonitorComments = Effect.fn("YeetMonitor.collectNewCo
  *
  * ```ts
  * import { acknowledgeYeetMonitorComments } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Effect.succeed(acknowledgeYeetMonitorComments))) // true
  * ```
  *
@@ -1534,8 +1537,7 @@ const seedCommentWatermark = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { openYeetMonitorCommentStream } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Effect.succeed(openYeetMonitorCommentStream))) // true
  * ```
  *
@@ -1597,8 +1599,7 @@ export const openYeetMonitorCommentStream = Effect.fn("YeetMonitor.openCommentSt
  *
  * ```ts
  * import { runYeetPullRequestCommentMonitor, RepoRunContext } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const context = RepoRunContext.make({
  *   base: "origin/main",
  *   branch: "feature/comments",
@@ -1749,8 +1750,7 @@ export const renderYeetMonitorCommentReplayFailure = (reason: string): string =>
  *
  * ```ts
  * import { replayYeetMonitorComments } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Effect.succeed(replayYeetMonitorComments))) // true
  * ```
  *

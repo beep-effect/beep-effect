@@ -7,26 +7,23 @@ import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as NodeStream from "@effect/platform-node-shared/NodeStream";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import {
-  Cause,
-  ConfigProvider,
-  Effect,
-  Layer as EffectLayer,
-  Equal,
-  Exit,
-  Fiber,
-  pipe,
-  Redacted,
-  Result,
-  Stream,
-} from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import { constVoid } from "effect/Function";
+import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import { constVoid, pipe } from "effect/Function";
+import * as EffectLayer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 
 const decodeBBoxCcgConfig = S.decodeEffect(B.BoxCcgConfig);
 const decodeBEventEventTypeField = S.decodeEffect(B.EventEventTypeField);

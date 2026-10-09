@@ -6,9 +6,16 @@
  */
 import { $ObservabilityId } from "@beep/identity/packages";
 import { A, thunk0 } from "@beep/utils";
-import { Clock, Context, Effect, HashMap, Layer, Match, MutableRef, Queue } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
 import * as DevToolsServer from "effect/devtools/DevToolsServer";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
+import * as Queue from "effect/Queue";
 import * as S from "effect/Schema";
 import * as SocketServer from "effect/socket/SocketServer";
 import { decodeNonNegativeInt } from "../../internal/decode.ts";
@@ -58,7 +65,7 @@ export class DevToolsSnapshot extends S.Class<DevToolsSnapshot>($I`DevToolsSnaps
  * **Example** (Yield relay snapshot)
  *
  * ```typescript
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { DevToolsRelayService } from "@beep/observability/experimental/server"
  *
  * const program = Effect.gen(function* () {
@@ -106,7 +113,7 @@ const toSpanKey = (span: Pick<DevToolsSchema.Span, "traceId" | "spanId">): strin
  * **Example** (Layer effect constructor)
  *
  * ```typescript
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { DevToolsRelayService, makeDevToolsRelayService } from "@beep/observability/experimental/server"
  * import * as SocketServer from "effect/socket/SocketServer"
  *
@@ -212,7 +219,7 @@ const pipeAppendLimited = <A>(values: ReadonlyArray<A>, value: A): ReadonlyArray
  * **Example** (Provide relay server layer)
  *
  * ```typescript
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { DevToolsRelayService, layerDevToolsRelayServer } from "@beep/observability/experimental/server"
  *
  * const snapshot = Effect.gen(function* () {

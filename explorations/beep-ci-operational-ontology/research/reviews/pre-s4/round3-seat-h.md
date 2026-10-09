@@ -268,7 +268,8 @@ $ bun - <<'TS'
 import { mkdtempSync, rmSync } from "node:fs";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { AdmissionConfig, AdmissionRequest, admissionStatus, admissionTokenWeight, MemoryStats, noAdmissionOriginGate, withQualityAdmission } from "./packages/tooling/tool/cli/src/internal/repo-run/index.ts";
 const runtimeDir = mkdtempSync("/tmp/seat-h-handoff-");
 process.env.XDG_RUNTIME_DIR = runtimeDir;
@@ -369,7 +370,10 @@ $ bun - <<'TS'
 import { mkdtempSync, rmSync } from "node:fs";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { Deferred, Effect, Fiber, Layer } from "effect";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
 import { AdmissionConfig, AdmissionRequest, admissionStatus, admissionTokenWeight, MemoryStats, noAdmissionOriginGate, withQualityAdmission } from "./packages/tooling/tool/cli/src/internal/repo-run/index.ts";
 const runtimeDir = mkdtempSync("/tmp/seat-h-aging-"); process.env.XDG_RUNTIME_DIR = runtimeDir;
 const config = AdmissionConfig.make({ heartbeatSeconds: 0.01, progressSeconds: 10, publishAgingSeconds: 0.02 });

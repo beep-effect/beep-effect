@@ -7,12 +7,17 @@
 
 import { $PracticeMailTaggingId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Context, Effect, FileSystem, Layer, Path, Runtime } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PracticeMailTaggingError } from "./PracticeMailTagging.errors.ts";

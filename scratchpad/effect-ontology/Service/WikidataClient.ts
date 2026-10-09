@@ -14,7 +14,14 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { Percentage } from "@beep/schema/Percentage";
-import { Clock, Context, Duration, Effect, Layer, Order, Ref, Semaphore } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
+import * as Ref from "effect/Ref";
+import * as Semaphore from "effect/Semaphore";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -74,7 +81,7 @@ export class WikidataApiError extends S.TaggedError<WikidataApiError>($I`Wikidat
  * **Example** (Inspect wikidata rate limit error)
  *
  * ```ts
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { WikidataRateLimitError } from "@effect-ontology/Service/WikidataClient"
  *
  * const error = WikidataRateLimitError.make({
@@ -393,7 +400,7 @@ const WIKIDATA_API_URL = "https://www.wikidata.org/w/api.php";
  * **Example** (Search Wikidata entities)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { WikidataClient } from "@effect-ontology/Service/WikidataClient"
  *
  * const program = Effect.gen(function* () {
