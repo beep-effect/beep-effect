@@ -275,7 +275,7 @@ const windowReport = (
   const roots = R.map(groups, (group) =>
     pipe(
       A.filter(group, (tally) => tally.primary && !tally.child),
-      A.sort(Order.struct({ minTs: Order.Number, key: Order.String })),
+      A.sort(Order.Struct({ minTs: Order.Number, key: Order.String })),
       A.head
     )
   );

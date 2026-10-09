@@ -740,14 +740,14 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
         yield* pulse(sessionD, "2026-09-26T08:00:00.000Z", O.none()),
       ]);
       yield* writeShard(stateDir, "2026-09-20", sessionB, [
-        yield* sessionStart(sessionB, "2026-09-20T08:00:00.000Z", current),
         yield* pulse(sessionB, "2026-09-20T08:05:00.000Z", O.some(betaId)),
       ]);
       // Spread across two days: every shard of a visited session is read.
       yield* writeShard(stateDir, "2026-09-19", sessionB, [
+        yield* sessionStart(sessionB, "2026-09-19T23:58:00.000Z", current),
         yield* pulse(sessionB, "2026-09-19T23:59:00.000Z", O.none()),
       ]);
-      // Older than the day before the window filled: never read.
+      // Older than the window: still read to detect mixed parent histories.
       yield* writeShard(stateDir, "2026-09-10", sessionA, [
         yield* sessionStart(sessionA, "2026-09-10T08:00:00.000Z", current),
       ]);
