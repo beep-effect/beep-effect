@@ -81,7 +81,7 @@ const skipLauncherOptions = (
 const compilerArguments = (words: ReadonlyArray<string>): O.Option<ReadonlyArray<string>> => {
   // Shell compounds and substitutions can span separators before launcher parsing.
   // Keep those forms on the conservative lexical path regardless of the outer command.
-  if (A.some(words, (word) => /[`()]/u.test(word))) return O.none();
+  if (A.some(words, (word) => /[`()<>]/u.test(word))) return O.none();
   let index = 0;
   const packageOptions = ["-p", "--package", "--cache", "--registry", "--userconfig", "--prefix"];
   const directoryOptions = ["-C", "--dir", "--cwd", "--filter", "--filter-prod", "-F"];
@@ -145,7 +145,7 @@ const usesSubgraphBuilder = (script: string): boolean => {
         const text = A.join(words, " ");
         return (
           /(?:^|[\s/"'(`])(?:tsc|tsgo)(?=\s|["')`]|$)/u.test(text) &&
-          /(?:^|[\s"'])(?:-b|--build|--force)(?=\s|["')`]|$)/u.test(text)
+          /(?:^|[\s"'])(?:-b|--build|--force)(?=\s|["')`<>]|$)/u.test(text)
         );
       },
       onSome: (arguments_) => {
@@ -285,6 +285,9 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
         "(cd packages/foo && tsc --force)",
         "X=$(cd packages/foo && tsc --force)",
         "X=$(cd packages/foo && tsc -b)",
+        "tsc --force>build.log",
+        "tsgo --build>&2",
+        "tsc --force<input.txt",
         "bunx --bun --no-install tsgo --build",
         "bunx --package typescript tsc -b",
         "bunx -p typescript tsc --force",
