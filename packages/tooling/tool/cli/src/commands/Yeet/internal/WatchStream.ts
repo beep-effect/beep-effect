@@ -392,6 +392,10 @@ export class YeetWatchSnapshot extends S.Class<YeetWatchSnapshot>($I`YeetWatchSn
     settle: YeetSettleVerdict.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     checks: S.Array(YeetWatchCheck),
     headSha: S.NonEmptyString,
+    isCrossRepository: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     mergeable: S.String,
     mergeStateStatus: S.String.pipe(S.withConstructorDefault(Effect.succeed("UNKNOWN"))),
     prNumber: S.Finite,

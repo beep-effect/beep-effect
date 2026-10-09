@@ -2074,6 +2074,9 @@
       ],
       "@beep/repo-cli/commands/AgentMessage": [
         "./packages/tooling/tool/cli/src/commands/AgentMessage/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ContradictionDetection": [
+        "./packages/epistemic/domain/src/values/ContradictionDetection/index.ts"
       ]
     }
   }

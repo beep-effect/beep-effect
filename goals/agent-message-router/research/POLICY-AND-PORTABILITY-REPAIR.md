@@ -48,6 +48,22 @@ These are source-bound local checks, not proof of the subsequent integrated
 commit's hosted readiness, merge, or native Desktop attachment. Any later main
 integration retains its own final-head checks and review-window requirement.
 
+## Main integration
+
+Integration of main `7336224f34` preserves all 1,853 incoming test-policy
+inventory records and all 60 reviewed exceptions introduced by this lane.
+Source review reconciled exactly five owned fingerprints: four real platform
+service imports now use `NodeServices`, and the stopped-writer backup scope
+uses the runtime-selected SQLite factory. Their real filesystem, process and
+SQLite resource reasons remain applicable. No unrelated inventory judgment
+changed.
+
+The default Effect-Vitest gate reports one inherited EV015 finding from
+`ContradictionDetection.golden.test.ts`. The originating packet records pending
+B admission, and the shared session ledger identifies the existing owner repair.
+Publication remains blocked until that repair lands on main and this lane
+integrates it. This receipt does not claim that the integrated tree is green.
+
 ## Source anchors
 
 SHA-256 values for the portability boundary and command refactor:

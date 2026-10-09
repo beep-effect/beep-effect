@@ -198,3 +198,21 @@ private disposable database and synthetic scope finalizer, with no model calls.
   excluding suites or mocking away the platform dependency.
 - Disposition: repair the platform boundary, reproduce focused Node coverage,
   and rerun the affected Bun regressions before the combined corrective push.
+
+## 2026-10-09 — Main integration inherited a pending test-policy finding
+
+- Work: integrate current main before publishing the policy and SQLite repair.
+- Evidence: main `7336224f34` adds one unbaselined EV015 finding in
+  `ContradictionDetection.golden.test.ts`. Its own handoff records pending B
+  admission; the shared session ledger also names the existing orchestrator
+  repair as the blocker for other lanes. This lane's five changed fingerprints
+  come from the reviewed Node platform and SQLite factory substitutions.
+- Attribution: the contradiction detector finding is inherited. The five owned
+  fingerprints require source-reviewed reconciliation, preserving incoming
+  main inventory records and their existing judgments.
+- Prevention: close test-policy admission in the originating PR before dependent
+  lanes integrate it, or publish the owner repair once on main with an explicit
+  unblock receipt.
+- Disposition: reconcile only the five owned records and report the inherited
+  blocker through the shared session ledger. Retain the existing owner's repair
+  path; do not duplicate that fix or waive the publication gate in this lane.
