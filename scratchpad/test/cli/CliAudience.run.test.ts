@@ -1,4 +1,6 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
+import { Schema } from "effect";
+import { Result } from "effect";
 // The audience flag must be known BEFORE core parses, because a fallback prompt fires during the parse: core parses
 // the root flags into a local context (Command.ts:922-925) and only wraps the subcommand HANDLER with what
 // `provideEffect` resolves (Command.ts:941), so the prompt in `sub.parse` (Param.ts:1478-1485) cannot see them.
@@ -10,6 +12,8 @@ import { Cause, ConfigProvider, Console, Effect, Exit, Layer, Runtime } from "ef
 import { CliConfig, Command, Flag, GlobalFlag, Prompt } from "effect/cli";
 import { CliAudience, CliInteractive, CliPrompt, CliRuntime } from "../../effected/cli/index.ts";
 import { TestTerminal } from "../../effected/cli/testing.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 const capturing = () => {
 	const out: string[] = [];
@@ -46,8 +50,7 @@ const init = Command.make("init", { profile }, ({ profile }) =>
 const root = Command.make("tool").pipe(Command.withSharedFlags(CliAudience.flags()), Command.withSubcommands([init]));
 
 /** A human on a terminal (interactive), with keys waiting that "down, enter" would answer the prompt with. */
-const run = (argv: ReadonlyArray<string>, via: "runWith" | "core" = "runWith", gateWizard = false) =>
-	Effect.gen(function* () {
+const run = Effect.fn("run")(function* (argv: ReadonlyArray<string>, via: "runWith" | "core" = "runWith", gateWizard: boolean = false) {
 		const terminal = yield* TestTerminal.make();
 		yield* terminal.input([{ name: "down" }, { name: "enter" }]);
 		const { double, out, err } = capturing();
@@ -210,8 +213,7 @@ describe("CliAudience: a flag decides CliInteractive from the TTY facts", () => 
 		readonly env?: Record<string, string>;
 	}
 
-	const runUnder = (facts: Facts, argv: ReadonlyArray<string>, options: RunUnderOptions = {}) =>
-		Effect.gen(function* () {
+	const runUnder = Effect.fn("runUnder")(function* (facts: Facts, argv: ReadonlyArray<string>, options: RunUnderOptions = {}) {
 			const { via = "runWith", gateWizard = false, endInput = false, builtIns, innerBuiltIns, env = {} } = options;
 			const terminal = yield* TestTerminal.make();
 			yield* terminal.input([{ name: "down" }, { name: "enter" }]);
@@ -262,8 +264,8 @@ describe("CliAudience: a flag decides CliInteractive from the TTY facts", () => 
 				{ ...agentOnTtys, stdin: false, stdout: false },
 			]) {
 				const { out, reads } = yield* runUnder(facts, ["--human", "init"]);
-				assert.deepStrictEqual(out, ["profile=x audience=human/flag"], JSON.stringify(facts));
-				assert.deepStrictEqual(reads, QUIET, JSON.stringify(facts));
+				assert.deepStrictEqual(out, ["profile=x audience=human/flag"], Result.getOrThrow(Schema.encodeUnknownResult(Json)(facts)));
+				assert.deepStrictEqual(reads, QUIET, Result.getOrThrow(Schema.encodeUnknownResult(Json)(facts)));
 			}
 		}),
 	);

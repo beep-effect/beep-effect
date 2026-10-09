@@ -411,8 +411,7 @@ const agentView = (events: ReadonlyArray<AgentEvent>, begins?: LiveOptions<Agent
 	isTerminal: (event: AgentEvent) => event._tag === "RunFinished",
 	...(begins === undefined ? {} : { begins }),
 });
-const runAgent = (options: LiveOptions<AgentEvent, AgentState>) =>
-	Effect.gen(function* () {
+const runAgent = Effect.fn("runAgent")(function* (options: LiveOptions<AgentEvent, AgentState>) {
 		const fake = makeFakeStreams({ columns: 40, rows: 20 });
 		let mounts = 0;
 		const handle = yield* CliUi.live(options).pipe(
@@ -423,7 +422,7 @@ const runAgent = (options: LiveOptions<AgentEvent, AgentState>) =>
 		);
 		yield* handle.done.pipe(Effect.timeout("2 seconds"));
 		return { mounts, shown: screenAfter(fake.stdout()) };
-	}).pipe(Effect.scoped);
+	}, Effect.scoped);
 
 describe("CliUi.live: what begins a run", () => {
 	it.live("by default, events after the terminal event (coverage, thresholds) never mount a second run", () =>

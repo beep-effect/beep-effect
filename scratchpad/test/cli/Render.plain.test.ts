@@ -1,3 +1,5 @@
+import { Schema } from "effect";
+import { Result } from "effect";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
 import type { Block, RenderContext } from "../../effected/cli/index.ts";
@@ -5,6 +7,8 @@ import { Doc, Glyphs, Render, Status } from "../../effected/cli/index.ts";
 import { displayWidth } from "../../effected/cli/internal/displayWidth.ts";
 import { ESC, composite } from "./helpers/hostileDoc.ts";
 import { contextOf } from "./helpers/renderContext.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 const plain = (doc: ReadonlyArray<Block>, overrides: Partial<RenderContext> = {}) =>
 	Effect.map(contextOf(overrides), (ctx) => Render.plain(doc, ctx));
@@ -580,11 +584,11 @@ describe("Render.plain: Counts", () => {
 			for (const label of ["a\r\nb", "a\rb", "a\nb", "\r::x", "x\n# h", "x\n---"]) {
 				const flat = label.replace(/\r\n|\r|\n/g, " ");
 				const inline = yield* linesOf([Doc.counts({ counters: [counter(label)], layout: "inline" })]);
-				assert.deepStrictEqual(inline, [`1/1 ${flat}`], JSON.stringify(label));
+				assert.deepStrictEqual(inline, [`1/1 ${flat}`], Result.getOrThrow(Schema.encodeUnknownResult(Json)(label)));
 				const row = yield* linesOf([Doc.counts({ counters: [counter(label)], layout: "row" })]);
-				assert.deepStrictEqual(row, [`1/1 ${flat}`], JSON.stringify(label));
+				assert.deepStrictEqual(row, [`1/1 ${flat}`], Result.getOrThrow(Schema.encodeUnknownResult(Json)(label)));
 				const columns = yield* linesOf([Doc.counts({ counters: [counter(label)], layout: "columns" })]);
-				assert.deepStrictEqual(columns, [`${flat}  1`], JSON.stringify(label));
+				assert.deepStrictEqual(columns, [`${flat}  1`], Result.getOrThrow(Schema.encodeUnknownResult(Json)(label)));
 			}
 		}),
 	);

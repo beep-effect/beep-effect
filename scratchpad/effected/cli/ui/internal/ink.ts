@@ -1,3 +1,5 @@
+import { Data } from "effect";
+import { dual } from "effect/Function";
 import type { ColorLevel } from "../../../env/index.ts";
 import type { Scope } from "effect";
 import { Effect, Option } from "effect";
@@ -5,6 +7,11 @@ import type * as Ink from "ink";
 import type React from "react";
 import type { ChalkLevel, InkChalk } from "./inkChalk.ts";
 import { inkChalk } from "./inkChalk.ts";
+
+class TestError extends Data.TaggedError("TestError")<{ readonly message: string; readonly cause?: unknown }> {
+	override readonly name = "Error";
+	constructor(message: string, options?: { readonly cause?: unknown }) { super({ message, ...options }); }
+}
 
 /**
  * The loaded optional peers: Ink's module and React.
@@ -28,10 +35,7 @@ const UNRESOLVED_CHALK =
 let modules: InkModules | undefined;
 let loading: Promise<InkModules> | undefined;
 
-const importPeers = async (): Promise<InkModules> => {
-	const [ink, react] = await Promise.all([import("ink"), import("react")]);
-	return { ink, react: react.default };
-};
+const importPeers = (): Promise<InkModules> => Promise.all([import("ink"), import("react")]).then(([ink, react]) => ({ ink, react: react.default }));
 
 /**
  * Load `ink` and `react`, once. The only runtime access the kit has to either package: nothing imports a value
@@ -50,7 +54,7 @@ export const loadInk: Effect.Effect<InkModules> = Effect.suspend(() => {
 			loading ??= importPeers();
 			return loading;
 		},
-		catch: (cause) => new Error(MISSING_PEERS, { cause }),
+		catch: (cause) => new TestError(MISSING_PEERS, { cause }),
 	}).pipe(
 		Effect.tap((loaded) =>
 			Effect.sync(() => {
@@ -122,7 +126,10 @@ let warned = false;
  *
  * @internal
  */
-export const holdChalkLevel = (
+export const holdChalkLevel: {
+	(colour: ColorLevel): (found: Option.Option<InkChalk>) => Effect.Effect<void, never, Scope.Scope>;
+	(found: Option.Option<InkChalk>, colour: ColorLevel): Effect.Effect<void, never, Scope.Scope>;
+} = dual(2, (
 	found: Option.Option<InkChalk>,
 	colour: ColorLevel,
 ): Effect.Effect<void, never, Scope.Scope> =>
@@ -147,7 +154,7 @@ export const holdChalkLevel = (
 						}),
 				),
 			),
-	});
+	}));
 
 /**
  * Set Ink's colour level from the stream's `ColorLevel` for the enclosing scope, on Ink's own chalk. The level is process-global while held: the last screen

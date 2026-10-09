@@ -1,3 +1,4 @@
+import { Context } from "effect";
 // LiveHandle.close and a PubSub subscription as `events`: the kit ends a view cleanly, folding the tail of a run that
 // was published but not yet pulled.
 import { assert, describe, it } from "@effect/vitest";
@@ -55,7 +56,7 @@ describe("LiveHandle.close with a subscription", () => {
 				reduce: (state, event) => {
 					if (event._tag === "Start" && handle !== undefined) {
 						for (const next of runOf(7).slice(1)) PubSub.publishUnsafe(pubsub, next);
-						closing = Effect.runFork(handle.close);
+						closing = Effect.runForkWith(Context.empty())(handle.close);
 					}
 					return reduce(state, event);
 				},
@@ -212,7 +213,7 @@ describe("a subscription whose PubSub is ended with PubSub.end (review I1)", () 
 			const handle = yield* liveOn(fake, optionsOf(subscription), { interactive: false });
 			yield* PubSub.publishAll(pubsub, runOf(2));
 			// The view has taken both and is waiting again when the PubSub ends.
-			yield* until(() => Effect.runSync(handle.state).seen.length === 3);
+			yield* until(() => Effect.runSyncWith(Context.empty())(handle.state).seen.length === 3);
 			yield* PubSub.end(pubsub, End);
 			yield* handle.done.pipe(Effect.timeout("2 seconds"));
 			assert.deepStrictEqual((yield* handle.state).seen, [...seenOf(2), "End"]);

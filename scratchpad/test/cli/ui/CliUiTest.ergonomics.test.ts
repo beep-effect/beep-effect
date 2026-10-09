@@ -1,4 +1,5 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
+import { Data } from "effect";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Config, ConfigProvider, Console, Effect, Exit, Fiber, MutableRef, Option } from "effect";
@@ -7,6 +8,11 @@ import { Cancelled, CliExit } from "../../../effected/cli/index.ts";
 import type { KeyName } from "../../../effected/cli/ui.ts";
 import { CliUi, Select, TextInput } from "../../../effected/cli/ui.ts";
 import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
+
+class TestError extends Data.TaggedError("TestError")<{ readonly message: string; readonly cause?: unknown }> {
+	override readonly name = "Error";
+	constructor(message: string, options?: { readonly cause?: unknown }) { super({ message, ...options }); }
+}
 
 const defectMessage = (exit: Exit.Exit<unknown, unknown>): string => {
 	if (Exit.isSuccess(exit)) return "";
@@ -64,7 +70,7 @@ describe("CliUiTest.cancelReason (O2b)", () => {
 
 	it("is None for a success, another failure, or an interrupt", () => {
 		assert.deepStrictEqual(CliUiTest.cancelReason(Exit.succeed(1)), Option.none());
-		assert.deepStrictEqual(CliUiTest.cancelReason(Exit.fail(new Error("boom"))), Option.none());
+		assert.deepStrictEqual(CliUiTest.cancelReason(Exit.fail(new TestError("boom"))), Option.none());
 		assert.deepStrictEqual(CliUiTest.cancelReason(Cause.die("x")), Option.none());
 		assert.deepStrictEqual(CliUiTest.cancelReason(Cause.interrupt()), Option.none());
 	});

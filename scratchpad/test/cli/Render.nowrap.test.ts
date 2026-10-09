@@ -35,8 +35,7 @@ const env = (audience: AudienceKind, isTerminal: boolean, color: "none" | "truec
 	);
 };
 
-const printed = (doc: Parameters<typeof Doc.print>[0], audience: AudienceKind, isTerminal: boolean) =>
-	Effect.gen(function* () {
+const printed = Effect.fn("printed")(function* (doc: Parameters<typeof Doc.print>[0], audience: AudienceKind, isTerminal: boolean) {
 		const out: Array<string> = [];
 		const double: Console.Console = Object.assign(Object.create(console) as Console.Console, {
 			log: (...args: ReadonlyArray<unknown>) => out.push(args.map(String).join(" ")),

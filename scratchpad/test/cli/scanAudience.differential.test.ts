@@ -1,4 +1,6 @@
 // @effect-diagnostics strictEffectProvide:skip-file
+import { Schema } from "effect";
+import { Result } from "effect";
 // scanAudience reads argv by hand, mirroring core's lexer. This differential test is what pins that mirror: it runs
 // core's REAL parser over a set of edge argvs, reads the parsed audience flags back out, and requires the scan to
 // agree. A change in core's lexer or boolean spellings fails here instead of silently drifting.
@@ -10,9 +12,10 @@ import { CliAudience } from "../../effected/cli/index.ts";
 import type { AudienceFlagValues } from "../../effected/cli/internal/scanAudience.ts";
 import { scanAudience, tallyAudience } from "../../effected/cli/internal/scanAudience.ts";
 
+const Json = Schema.fromJsonString(Schema.Unknown);
+
 /** Parse `argv` with core and return the audience flags it saw, or `undefined` when core rejects the argv. */
-const parsedBy = (argv: ReadonlyArray<string>) =>
-	Effect.gen(function* () {
+const parsedBy = Effect.fn("parsedBy")(function* (argv: ReadonlyArray<string>) {
 		let seen: AudienceFlagValues | undefined;
 		const sub = Command.make("init", { rest: Argument.String("rest").pipe(Argument.atLeast(0)) }, () => Effect.void);
 		const root = Command.make("tool").pipe(
@@ -25,11 +28,11 @@ const parsedBy = (argv: ReadonlyArray<string>) =>
 			),
 		);
 		yield* Command.runWith(root, { version: "1" })(argv).pipe(
-			Effect.catch(() => Effect.void),
+			Effect.ignore,
 			Effect.provideService(Console.Console, { ...console, log: () => undefined, error: () => undefined } as never),
 		);
 		return seen;
-	}).pipe(Effect.provide(NodeServices.layer));
+	}, Effect.provide(NodeServices.layer));
 
 const accepted: ReadonlyArray<ReadonlyArray<string>> = [
 	["init"],
@@ -78,9 +81,9 @@ describe("scanAudience agrees with core's parser", () => {
 			Effect.gen(function* () {
 				const parsed = yield* parsedBy(argv);
 				// Every argv in this list is one core parses, so a rejection here is itself a finding.
-				assert.isDefined(parsed, `core rejected ${JSON.stringify(argv)}`);
+				assert.isDefined(parsed, `core rejected ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(argv))}`);
 				if (parsed === undefined) return;
-				assert.deepStrictEqual(scanAudience(argv), tallyAudience(parsed), JSON.stringify(parsed));
+				assert.deepStrictEqual(scanAudience(argv), tallyAudience(parsed), Result.getOrThrow(Schema.encodeUnknownResult(Json)(parsed)));
 			}),
 		);
 	}

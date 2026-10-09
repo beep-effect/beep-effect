@@ -1,9 +1,13 @@
+import { Schema } from "effect";
+import { Result } from "effect";
 import { assert, describe, it } from "@effect/vitest";
 import { Audience, CurrentRuntimeEnv, TerminalEnv } from "../../effected/env/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { ConfigProvider, Console, Effect, Exit, Fiber, Layer, Option, PlatformError, Scope } from "effect";
 import { TestClock } from "effect/testing";
 import { CliLog } from "../../effected/cli/index.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 const LEVEL_ENV = "TOOL_LOG_LEVEL";
 const FILE_ENV = "TOOL_LOG_FILE";
@@ -28,7 +32,7 @@ const deny = PlatformError.systemError({
 });
 
 /** Run `body` with the file sink built over a memfs volume, in a scope the test closes itself. */
-const harness = (options: {
+const harness = Effect.fn("harness")(function* (options: {
 	readonly file: { readonly envVar: string } | { readonly path: string };
 	readonly env?: Record<string, string>;
 	readonly failFirstAppend?: boolean;
@@ -39,8 +43,7 @@ const harness = (options: {
 			? F
 			: never
 		: never;
-}) =>
-	Effect.gen(function* () {
+}) {
 		const faults =
 			options.faults ??
 			(options.failFirstAppend === true ? { writeFileString: MemoryFileSystem.failTimes(1, deny) } : undefined);
@@ -87,8 +90,9 @@ describe("CliLog.layer file option", () => {
 	it("requires FileSystem and Path only when a file is given", () => {
 		const without: Layer.Layer<never, never, Audience | TerminalEnv> = CliLog.layer({ envVar: LEVEL_ENV });
 		assert.isDefined(without);
-		// @ts-expect-error a layer with a file option needs FileSystem and Path, which the narrower type does not allow
-		const narrowed: Layer.Layer<never, never, Audience | TerminalEnv> = CliLog.layer({ file: { path: PATH } });
+		const narrowed = CliLog.layer({ file: { path: PATH } });
+		const assignable: typeof narrowed extends Layer.Layer<never, never, Audience | TerminalEnv> ? true : false = false;
+		assert.isFalse(assignable);
 		assert.isDefined(narrowed);
 	});
 
@@ -182,7 +186,7 @@ describe("CliLog.layer file option", () => {
 						while (plain(h.err).length === 0 && spins++ < 1000) yield* Effect.yieldNow;
 						yield* h.close;
 						const printed = failureLines(h.err);
-						for (const line of printed) assert.notInclude(line, ESC, JSON.stringify(line));
+						for (const line of printed) assert.notInclude(line, ESC, Result.getOrThrow(Schema.encodeUnknownResult(Json)(line)));
 						const commands = printed.filter((line) => /^[\s\u0085]*::/.test(line) || line.includes("##["));
 						if (ci === "github-actions") assert.deepStrictEqual(commands, []);
 						else assert.isAbove(commands.length, 0, "control: outside Actions the text is not neutralized");

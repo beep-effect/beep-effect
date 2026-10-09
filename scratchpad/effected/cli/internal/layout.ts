@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 import type { Inline, LinkTarget } from "../Doc.ts";
 import { sanitize } from "../Fmt.ts";
 import type { RenderContext } from "../Render.ts";
@@ -92,8 +93,11 @@ const spansOf = (inline: Inline, ctx: RenderContext): ReadonlyArray<Span> => {
  *
  * @internal
  */
-export const flatten = (inlines: ReadonlyArray<Inline>, ctx: RenderContext): ReadonlyArray<Span> =>
-	inlines.flatMap((inline) => spansOf(inline, ctx)).filter((span) => span.text !== "");
+export const flatten: {
+	(ctx: RenderContext): (inlines: ReadonlyArray<Inline>) => ReadonlyArray<Span>;
+	(inlines: ReadonlyArray<Inline>, ctx: RenderContext): ReadonlyArray<Span>;
+} = dual(2, (inlines: ReadonlyArray<Inline>, ctx: RenderContext): ReadonlyArray<Span> =>
+	inlines.flatMap((inline) => spansOf(inline, ctx)).filter((span) => span.text !== ""));
 
 /**
  * The display width of spans in terminal columns.
@@ -146,7 +150,10 @@ const spansFromCells = (cells: ReadonlyArray<Cell>): ReadonlyArray<Span> => {
  *
  * @internal
  */
-export const truncateSpans = (spans: ReadonlyArray<Span>, width: number, ellipsis: string): ReadonlyArray<Span> => {
+export const truncateSpans: {
+	(width: number, ellipsis: string): (spans: ReadonlyArray<Span>) => ReadonlyArray<Span>;
+	(spans: ReadonlyArray<Span>, width: number, ellipsis: string): ReadonlyArray<Span>;
+} = dual(3, (spans: ReadonlyArray<Span>, width: number, ellipsis: string): ReadonlyArray<Span> => {
 	const limit = Number.isNaN(width) ? 0 : Math.floor(width);
 	if (limit <= 0) return [];
 	if (widthOf(spans) <= limit) return spans;
@@ -181,7 +188,7 @@ export const truncateSpans = (spans: ReadonlyArray<Span>, width: number, ellipsi
 		return [...out, { text: ellipsis, ...(last.link === undefined ? {} : { link: last.link }) }];
 	}
 	return [...out.slice(0, -1), { ...last, text: last.text + ellipsis }];
-};
+});
 
 /**
  * Paint spans, then link them: the string a terminal shows.
@@ -192,7 +199,10 @@ export const truncateSpans = (spans: ReadonlyArray<Span>, width: number, ellipsi
  *
  * @internal
  */
-export const paintSpans = (spans: ReadonlyArray<Span>, ctx: RenderContext): string => {
+export const paintSpans: {
+	(ctx: RenderContext): (spans: ReadonlyArray<Span>) => string;
+	(spans: ReadonlyArray<Span>, ctx: RenderContext): string;
+} = dual(2, (spans: ReadonlyArray<Span>, ctx: RenderContext): string => {
 	const paint = (span: Span): string => {
 		const toned = span.token === undefined ? span.text : ctx.paint(span.token, span.text);
 		const bold = span.strong === true ? ctx.paint({ bold: true }, toned) : toned;
@@ -215,7 +225,7 @@ export const paintSpans = (spans: ReadonlyArray<Span>, ctx: RenderContext): stri
 		out += ctx.link(start.link, run);
 	}
 	return out;
-};
+});
 
 const isLineBreak = (grapheme: string): boolean => grapheme === "\n" || grapheme === "\r\n" || grapheme === "\r";
 
@@ -245,7 +255,10 @@ export interface WrapOptions {
  *
  * @internal
  */
-export const wrapSpans = (
+export const wrapSpans: {
+	(width: number, options?: WrapOptions): (spans: ReadonlyArray<Span>) => ReadonlyArray<ReadonlyArray<Span>>;
+	(spans: ReadonlyArray<Span>, width: number, options?: WrapOptions): ReadonlyArray<ReadonlyArray<Span>>;
+} = dual((args) => Array.isArray(args[0]), (
 	spans: ReadonlyArray<Span>,
 	width: number,
 	options?: WrapOptions,
@@ -308,4 +321,4 @@ export const wrapSpans = (
 	}
 	if (line.length > 0 || lines.length === 0) flush();
 	return lines.map(spansFromCells);
-};
+});

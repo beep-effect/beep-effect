@@ -11,8 +11,7 @@ const BEL = String.fromCharCode(7);
 /** An injection attempt: repaint, a hyperlink, and a cursor move, in the text a program logs. */
 const HOSTILE = `boom ${ESC}[31mred${ESC}[0m ${ESC}]8;;https://evil.example${BEL}click${ESC}]8;;${BEL} ${ESC}[2A`;
 
-const capture = (effect: Effect.Effect<void, never, CliTheme>, audience: AudienceKind | undefined) =>
-	Effect.gen(function* () {
+const capture = Effect.fn("capture")(function* (effect: Effect.Effect<void, never, CliTheme>, audience: AudienceKind | undefined) {
 		const out: Array<string> = [];
 		const err: Array<string> = [];
 		const levels: Array<LogLevel.LogLevel> = [];

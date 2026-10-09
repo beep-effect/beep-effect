@@ -18,8 +18,7 @@ const capturing = () => {
 };
 
 /** A real two-subcommand program; the handler records the `Audience` it observes. */
-const run = (argv: ReadonlyArray<string>, options?: { readonly hidden?: boolean }) =>
-	Effect.gen(function* () {
+const run = Effect.fn("run")(function* (argv: ReadonlyArray<string>, options?: { readonly hidden?: boolean }) {
 		const { double, out, err } = capturing();
 		const seen: AudienceShape[] = [];
 		const verify = Command.make("verify", { target: Argument.String("target") }, () =>
@@ -160,8 +159,7 @@ describe("CliAudience", () => {
 
 describe("CliAudience and CliInteractive", () => {
 	/** The interactivity the handler sees, given the ambient value the env layer decided. */
-	const observe = (argv: ReadonlyArray<string>, ambient: boolean) =>
-		Effect.gen(function* () {
+	const observe = Effect.fn("observe")(function* (argv: ReadonlyArray<string>, ambient: boolean) {
 			const { double } = capturing();
 			const seen: boolean[] = [];
 			const verify = Command.make("verify", { target: Argument.String("target") }, () =>

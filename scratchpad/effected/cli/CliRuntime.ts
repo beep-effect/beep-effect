@@ -513,7 +513,7 @@ export class CliRuntime {
 	static main<A, E, R, RP, EP>(
 		program: Effect.Effect<A, E, R>,
 		options: MainOptions<RP, EP>,
-	): Effect.Effect<void, Error, unknown> {
+	): Effect.Effect<void, Error, Exclude<Exclude<R, CliExit>, RP> | Exclude<Stdio.Stdio | Terminal.Terminal | FileSystem.FileSystem | Path.Path, RP>> {
 		// Bound once, so the logger and the program below share one build of it (layers memoize by reference).
 		const env = options.env === undefined ? undefined : CliEnv.layer(options.env);
 		const envLog = options.env?.log;
@@ -589,14 +589,14 @@ export class CliRuntime {
 					new Error(`CliRuntime.main: CliExit code must be an integer 0..255, received ${code}`),
 				);
 			}
-			if (code !== 0) return yield* Effect.fail(new ExitRequested(code));
+			if (code !== 0) return yield* new ExitRequested(code);
 		}).pipe(
-			Effect.provide(CliExit.layer),
-			Effect.provide(inside),
-			Effect.provide(options.platform),
+			(self) => Effect.scopedWith((scope) => Effect.flatMap(Layer.buildWithScope(CliExit.layer, scope), (context) => Effect.provideContext(self, context))),
+			(self) => Effect.scopedWith((scope) => Effect.flatMap(Layer.buildWithScope(inside, scope), (context) => Effect.provideContext(self, context))),
+			(self) => Effect.scopedWith((scope) => Effect.flatMap(Layer.buildWithScope(options.platform, scope), (context) => Effect.provideContext(self, context))),
 			CliRuntime.reportFailures(options),
-			Effect.provide(logger),
-		) as Effect.Effect<void, Error, unknown>;
+			(self) => Effect.scopedWith((scope) => Effect.flatMap(Layer.buildWithScope(logger, scope), (context) => Effect.provideContext(self, context))),
+		);
 		// One cell per run, outside failure reporting, which the environment layer fills from inside it.
 		return Effect.suspend(() =>
 			Effect.provideService(run, FailureTargetCell, MutableRef.make<FailureTarget | undefined>(undefined)),

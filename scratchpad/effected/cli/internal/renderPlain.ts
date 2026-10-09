@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 import type { Document, Inline } from "../Doc.ts";
 import type { RenderContext } from "../Render.ts";
 import type { Span } from "./layout.ts";
@@ -9,7 +10,10 @@ import { renderDocLines, showsSuffix, targetText } from "./renderDoc.ts";
  * Inline content as spans of plain text: code in backticks, and a link as its label followed by its target in
  * parentheses unless the label already is the target. Tokens and links are dropped, as plain text has neither.
  */
-export const plainInline = (inlines: ReadonlyArray<Inline>, ctx: RenderContext): ReadonlyArray<Span> => {
+export const plainInline: {
+	(ctx: RenderContext): (inlines: ReadonlyArray<Inline>) => ReadonlyArray<Span>;
+	(inlines: ReadonlyArray<Inline>, ctx: RenderContext): ReadonlyArray<Span>;
+} = dual(2, (inlines: ReadonlyArray<Inline>, ctx: RenderContext): ReadonlyArray<Span> => {
 	const flat = flatten(inlines, ctx);
 	const out: Array<Span> = [];
 	let i = 0;
@@ -28,7 +32,7 @@ export const plainInline = (inlines: ReadonlyArray<Inline>, ctx: RenderContext):
 		}
 	}
 	return out;
-};
+});
 
 const plain: Flavour = {
 	inline: plainInline,
@@ -40,14 +44,20 @@ const plain: Flavour = {
  *
  * @internal
  */
-export const renderPlainLines = (doc: Document, ctx: RenderContext): ReadonlyArray<string> =>
+export const renderPlainLines: {
+	(ctx: RenderContext): (doc: Document) => ReadonlyArray<string>;
+	(doc: Document, ctx: RenderContext): ReadonlyArray<string>;
+} = dual(2, (doc: Document, ctx: RenderContext): ReadonlyArray<string> =>
 	// Plain text is for agents whatever the context says, so the path separator is always the agent one, and the
 	// context's paint and link are never reached: a span's token and link are dropped when its line is finished.
-	renderDocLines(doc, { ...ctx, audience: "agent" }, plain);
+	renderDocLines(doc, { ...ctx, audience: "agent" }, plain));
 
 /**
  * Render a document as plain text for an agent: no escape sequences, no decoration.
  *
  * @internal
  */
-export const renderPlain = (doc: Document, ctx: RenderContext): string => renderPlainLines(doc, ctx).join("\n");
+export const renderPlain: {
+	(ctx: RenderContext): (doc: Document) => string;
+	(doc: Document, ctx: RenderContext): string;
+} = dual(2, (doc: Document, ctx: RenderContext): string => renderPlainLines(doc, ctx).join("\n"));

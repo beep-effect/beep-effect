@@ -109,17 +109,15 @@ describe("CliUiTest.live: vitest-agent's eight behaviours", () => {
 		}).pipe(Effect.scoped),
 	);
 
-	it.effect("4. React's user-timing entries are drained after every render; without the drain they pile up", () =>
-		Effect.gen(function* () {
-			const measures = (drainPerformance: boolean) =>
-				Effect.gen(function* () {
+	it.effect("4. React's user-timing entries are drained after every render; without the drain they pile up", () => Effect.gen(function* () {
+			const measures = Effect.fn("measures")(function* (drainPerformance: boolean) {
 					performance.clearMeasures();
 					const view = yield* CliUiTest.live({ ...viewOptions, drainPerformance });
 					yield* view.publish(Start);
 					for (let index = 1; index <= 10; index++) yield* view.publish(tick(index));
 					yield* view.advance("400 millis");
 					return performance.getEntriesByType("measure").length;
-				}).pipe(Effect.scoped);
+				}, Effect.scoped);
 			const undrained = yield* measures(false);
 			const drained = yield* measures(true);
 			// React records a render's passive effects after the commit the drain follows, so up to one render's worth

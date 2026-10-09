@@ -53,9 +53,8 @@ export class GithubAnnotation {
 	 * @param annotation - the level and the optional file, position and title
 	 * @param message - the annotation's text
 	 */
-	static readonly format = (annotation: GithubAnnotationProperties, message: string): string => {
-		// One escaping: this renders through `WorkflowCommand`, not a copy of it.
-		return WorkflowCommand.render(
+	// One escaping: this renders through `WorkflowCommand`, not a copy of it.
+	static readonly format = (annotation: GithubAnnotationProperties, message: string): string => WorkflowCommand.render(
 			annotation.level,
 			{
 				title: annotation.title,
@@ -67,5 +66,4 @@ export class GithubAnnotation {
 			},
 			message,
 		);
-	};
 }

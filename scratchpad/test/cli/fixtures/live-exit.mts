@@ -4,11 +4,11 @@
 import { Effect, Queue, Stream } from "effect";
 import { Text } from "ink";
 import { createElement } from "react";
-import { CliInteractive, CliTheme } from "../../src/index.js";
-import { makeFakeStreams } from "../../src/ui/testing/fakeStreams.js";
+import { CliInteractive, CliTheme } from "../../src/index.ts";
+import { makeFakeStreams } from "../../src/ui/testing/fakeStreams.ts";
 // The live module and the streams reference, not the ./ui barrel: the live view needs nothing more.
-import { live } from "../../src/ui/CliUiLive.js";
-import { UiStreams } from "../../src/ui/UiStreams.js";
+import { live } from "../../src/ui/CliUiLive.ts";
+import { UiStreams } from "../../src/ui/UiStreams.ts";
 
 const fake = makeFakeStreams({ columns: 40, rows: 10 });
 const frames = new Set<number>();

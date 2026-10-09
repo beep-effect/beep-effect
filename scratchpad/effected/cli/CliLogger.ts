@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 import { CommandNeutralizer } from "../github-commands/index.ts";
 import type { Fiber, Layer } from "effect";
 import { Console, LogLevel, Logger, References } from "effect";
@@ -119,7 +120,10 @@ export class CliLogger {
  *
  * @internal
  */
-export const makeCliLogger = (
+export const makeCliLogger: {
+	(options?: CliLoggerOptions, underActions?: (fiber: Fiber.Fiber<unknown, unknown>) => boolean): Logger.Logger<unknown, void>;
+	(underActions?: (fiber: Fiber.Fiber<unknown, unknown>) => boolean): (options?: CliLoggerOptions) => Logger.Logger<unknown, void>;
+} = dual((args) => typeof args[0] !== "function", (
 	options: CliLoggerOptions = {},
 	underActions: (fiber: Fiber.Fiber<unknown, unknown>) => boolean = underActionsIn,
 ): Logger.Logger<unknown, void> => {
@@ -156,4 +160,4 @@ export const makeCliLogger = (
 				: render(sanitizeParts(message));
 		write(underActions(fiber) ? CommandNeutralizer.text(rendered) : rendered);
 	});
-};
+});

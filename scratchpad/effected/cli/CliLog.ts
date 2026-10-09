@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 import type { AudienceKind, RuntimeEnv } from "../env/index.ts";
 import { Audience, CurrentRuntimeEnv, TerminalEnv } from "../env/index.ts";
 import { CommandNeutralizer } from "../github-commands/index.ts";
@@ -608,11 +609,9 @@ const buildTimeAudience = (
 	// A conflict is core's usage error later; until then the environment decides, as it does at runtime.
 	if (!conflict && flagged !== undefined) return Effect.succeed(flagged);
 	return Effect.map(Audience, (audience) => audience.kind).pipe(
-		Effect.provide(
-			Audience.layer(audienceEnvVar === undefined ? undefined : { envVar: audienceEnvVar }).pipe(
+		(self) => Effect.scopedWith((scope) => Effect.flatMap(Layer.buildWithScope(Audience.layer(audienceEnvVar === undefined ? undefined : { envVar: audienceEnvVar }).pipe(
 				Layer.provide(Layer.succeed(CurrentRuntimeEnv, detected)),
-			),
-		),
+			), scope), (context) => Effect.provideContext(self, context))),
 		Effect.provideService(Logger.CurrentLoggers, new Set<Logger.Logger<unknown, unknown>>()),
 	);
 };
@@ -625,7 +624,7 @@ const buildTimeDecision = (
 	Effect.gen(function* () {
 		// No CurrentRuntimeEnv exists while the platform builds: detect it here, from the environment alone, so the
 		// build-time lines are neutralized under GitHub Actions as the program's are; `runtimeEnv` wins when given.
-		const detected: RuntimeEnv = yield* Effect.provide(CurrentRuntimeEnv, CurrentRuntimeEnv.layer);
+		const detected: RuntimeEnv = yield* Effect.scopedWith((scope) => Effect.flatMap(Layer.buildWithScope(CurrentRuntimeEnv.layer, scope), (context) => Effect.provideContext(CurrentRuntimeEnv, context)));
 		const format = options.format ?? "auto";
 		const ndjson =
 			format === "json" ||
@@ -647,7 +646,10 @@ const buildTimeDecision = (
  *
  * @internal
  */
-export const platformLogLayer = (
+export const platformLogLayer: {
+	(audienceEnvVar?: string | undefined): (options: CliLogOptions | CliLogFileOptions) => Layer.Layer<never>;
+	(options: CliLogOptions | CliLogFileOptions, audienceEnvVar?: string | undefined): Layer.Layer<never>;
+} = dual((args) => typeof args[0] === "object" && args[0] !== null, (
 	options: CliLogOptions | CliLogFileOptions,
 	audienceEnvVar?: string | undefined,
 ): Layer.Layer<never> =>
@@ -674,7 +676,7 @@ export const platformLogLayer = (
 				LogLevel.isLessThan(level, ambient) ? Layer.succeed(References.MinimumLogLevel, level) : Layer.empty,
 			);
 		}),
-	);
+	));
 
 /**
  * The logger `CliRuntime.main` builds the environment layer under: one line per record, in the build-time format.
@@ -690,7 +692,10 @@ export const platformLogLayer = (
  *
  * @internal
  */
-export const envBuildLogLayer = (
+export const envBuildLogLayer: {
+	(audienceEnvVar?: string | undefined): (options: CliLogOptions | CliLogFileOptions) => Layer.Layer<never>;
+	(options: CliLogOptions | CliLogFileOptions, audienceEnvVar?: string | undefined): Layer.Layer<never>;
+} = dual((args) => typeof args[0] === "object" && args[0] !== null, (
 	options: CliLogOptions | CliLogFileOptions,
 	audienceEnvVar?: string | undefined,
 ): Layer.Layer<never> =>
@@ -709,4 +714,4 @@ export const envBuildLogLayer = (
 				}),
 			]);
 		}),
-	);
+	));

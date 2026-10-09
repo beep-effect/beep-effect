@@ -37,8 +37,7 @@ describe("a missing optional peer in an interactive run", () => {
 	};
 
 	/** Die with the peers message, never fall back to `otherwise`: an installation error must not pass as a default. */
-	const diesNamingPeers = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-		Effect.gen(function* () {
+	const diesNamingPeers = Effect.fn("diesNamingPeers")(function*<A, E, R> (effect: Effect.Effect<A, E, R>) {
 			const exit = yield* Effect.exit(effect);
 			if (Exit.isFailure(exit)) {
 				assert.isFalse(Cause.hasFails(exit.cause), "a missing peer is not a typed failure");

@@ -1,4 +1,5 @@
 // @effect-diagnostics strictEffectProvide:skip-file
+import { Data } from "effect";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import type { AudienceKind, StreamEnv } from "../../effected/env/index.ts";
@@ -46,10 +47,10 @@ const contextFor = (
 
 const plain = (doc: Document, audience: AudienceKind = "agent"): string => Render.plain(doc, contextFor(audience));
 
-class Boom extends Error {
-	readonly _tag = "Boom";
+class Boom extends Data.TaggedError("Boom")<{ readonly message: string }> {
+
 	constructor(message: string) {
-		super(message);
+		super({ message: message });
 		this.name = "Boom";
 	}
 }
@@ -100,7 +101,10 @@ describe("CliFailure.toDoc: a typed failure", () => {
 });
 
 describe("CliFailure.toDoc: who writes the document", () => {
-	class Mine extends Error {
+	class Mine extends Data.TaggedError("Mine")<{ readonly message: string }> {
+	override readonly name = "Error";
+	constructor(message = "") { super({ message }); }
+
 		[CliDoc](): Document {
 			return [Doc.heading(2, "my own"), Doc.paragraph("with a body")];
 		}
@@ -113,7 +117,10 @@ describe("CliFailure.toDoc: who writes the document", () => {
 	});
 
 	it("a throwing [CliDoc] falls back to the generic line", () => {
-		class Bad extends Error {
+		class Bad extends Data.TaggedError("Bad")<{ readonly message: string }> {
+	override readonly name = "Error";
+	constructor(message = "") { super({ message }); }
+
 			[CliDoc](): Document {
 				throw new Error("nope");
 			}
@@ -393,13 +400,7 @@ describe("CliRuntime: the default failure path", () => {
 		return { double, err, out };
 	};
 
-	const runMain = <E>(
-		program: Effect.Effect<void, E>,
-		env: Record<string, string>,
-		tty: boolean,
-		options: object = {},
-	) =>
-		Effect.gen(function* () {
+	const runMain = Effect.fnUntraced(function*<E>(program: Effect.Effect<void, E>, env: Record<string, string>, tty: boolean, options: object = {}) {
 			const { double, err, out } = capturing();
 			const exit = yield* CliRuntime.main(program, { platform: platform(tty), env: {}, ...options }).pipe(
 				Effect.exit,
@@ -529,10 +530,8 @@ describe("CliRuntime: the default failure path", () => {
 		}),
 	);
 
-	it.effect("an audience flag decides the report's audience, and --log-level none does not silence the report", () =>
-		Effect.gen(function* () {
-			const runTool = (argv: ReadonlyArray<string>, env: Record<string, string> = { TERM: "xterm-256color" }) =>
-				Effect.gen(function* () {
+	it.effect("an audience flag decides the report's audience, and --log-level none does not silence the report", () => Effect.gen(function* () {
+			const runTool = Effect.fn("runTool")(function* (argv: ReadonlyArray<string>, env: Record<string, string> = { TERM: "xterm-256color" }) {
 					const { double, err } = capturing();
 					const tool = Command.make("tool").pipe(
 						Command.withSharedFlags(CliAudience.flags()),
@@ -573,10 +572,8 @@ describe("CliRuntime: the default failure path", () => {
 		}),
 	);
 
-	it.effect('--agent rewrites the report target and keeps stackFrames: "all"', () =>
-		Effect.gen(function* () {
-			const runTool = (stackFrames: "app" | "all") =>
-				Effect.gen(function* () {
+	it.effect('--agent rewrites the report target and keeps stackFrames: "all"', () => Effect.gen(function* () {
+			const runTool = Effect.fn("runTool")(function* (stackFrames: "app" | "all") {
 					const { double, err } = capturing();
 					const vendorDefect = Effect.suspend(() => {
 						const error = new Error("kaboom");

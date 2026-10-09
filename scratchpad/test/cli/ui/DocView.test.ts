@@ -247,14 +247,13 @@ describe("DocView inside a live view (okf/decisions/live-height-clamp-not-width.
 describe("DocView and the live view under GitHub Actions: no workflow command from data", () => {
 	const actions = CurrentRuntimeEnv.layerTest({ ci: Option.some("github-actions") });
 	const injected = [Doc.lines([[Doc.text("::error::injected from test data")], [Doc.text("a ##[warning]legacy one")]])];
-	const printed = (render: () => ReactElement, underActions: boolean) =>
-		Effect.gen(function* () {
+	const printed = Effect.fn("printed")(function* (render: () => ReactElement, underActions: boolean) {
 			const fake = makeFakeStreams({ columns: 80, rows: 20 });
 			const live = liveOn(fake, optionsOf(Stream.fromIterable([Start, End]), { render }), { interactive: false });
 			const handle = yield* underActions ? live.pipe(Effect.provide(actions)) : live;
 			yield* handle.done.pipe(Effect.timeout("2 seconds"));
 			return fake.stdout();
-		}).pipe(Effect.scoped);
+		}, Effect.scoped);
 
 	it.live("an owned live view's printed DocView: the runner reads no command in it", () =>
 		Effect.gen(function* () {

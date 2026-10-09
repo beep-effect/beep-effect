@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 import { CommandNeutralizer, WorkflowCommand } from "../../github-commands/index.ts";
 import type { Block, Document } from "../Doc.ts";
 import { sanitize } from "../Fmt.ts";
@@ -53,5 +54,8 @@ const blockLines = (block: Block, ctx: RenderContext): ReadonlyArray<string> => 
  *
  * @internal
  */
-export const renderGithubLog = (doc: Document, ctx: RenderContext): string =>
-	doc.flatMap((block) => blockLines(block, ctx)).join("\n");
+export const renderGithubLog: {
+	(ctx: RenderContext): (doc: Document) => string;
+	(doc: Document, ctx: RenderContext): string;
+} = dual(2, (doc: Document, ctx: RenderContext): string =>
+	doc.flatMap((block) => blockLines(block, ctx)).join("\n"));

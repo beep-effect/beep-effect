@@ -34,8 +34,7 @@ const onTerminals =
 			Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ TERM: term })),
 		);
 
-const liveUnder = (term: string, fake: FakeStreams) =>
-	Effect.gen(function* () {
+const liveUnder = Effect.fn("liveUnder")(function* (term: string, fake: FakeStreams) {
 		const handle = yield* CliUi.live(optionsOf(Stream.fromIterable([Start, tick(1), tick(2), End]))).pipe(
 			Effect.provideService(UiStreams, fake.streams),
 			Effect.provide(CliTheme.layerTest()),
@@ -43,7 +42,7 @@ const liveUnder = (term: string, fake: FakeStreams) =>
 		);
 		yield* handle.done.pipe(Effect.timeout("2 seconds"));
 		return fake.stdout();
-	}).pipe(Effect.scoped);
+	}, Effect.scoped);
 
 describe("TERM=dumb is not interactive", () => {
 	it.live("a live view on a dumb TTY prints its final frame once: no synchronized output, no cursor-up", () =>

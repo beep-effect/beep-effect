@@ -1,7 +1,8 @@
 // @effect-diagnostics strictEffectProvide:skip-file
+import { dual } from "effect/Function";
 // Shared by the CliUi.live tests: a small event model, its fold and frame, and the fake-terminal runner.
-import type { Cause, PubSub, Stream } from "effect";
-import { Console, Effect, Option, Queue, Schedule } from "effect";
+import type { Cause, PubSub } from "effect";
+import { Console, Effect, Option, Queue, Schedule, Stream } from "effect";
 import { Box, Text } from "ink";
 import type { ReactElement } from "react";
 import { createElement, useEffect } from "react";
@@ -29,7 +30,10 @@ export interface State {
 	readonly seen: ReadonlyArray<string>;
 }
 
-export const reduce = (state: State, event: Ev): State => {
+export const reduce: {
+	(event: Ev): (state: State) => State;
+	(state: State, event: Ev): State;
+} = dual(2, (state: State, event: Ev): State => {
 	const seen = [...state.seen, event._tag === "Tick" ? `tick ${event.n}` : event._tag];
 	switch (event._tag) {
 		case "Start":
@@ -39,7 +43,7 @@ export const reduce = (state: State, event: Ev): State => {
 		case "End":
 			return { ...state, last: "ended", seen };
 	}
-};
+});
 
 export const frameOf = (state: State): ReactElement =>
 	createElement(
@@ -49,7 +53,10 @@ export const frameOf = (state: State): ReactElement =>
 		createElement(Text, null, state.last),
 	);
 
-export const optionsOf = (
+export const optionsOf: {
+	(extra?: Partial<LiveOptions<Ev, State>>): (events: Stream.Stream<Ev> | PubSub.Subscription<Ev>) => LiveOptions<Ev, State>;
+	(events: Stream.Stream<Ev> | PubSub.Subscription<Ev>, extra?: Partial<LiveOptions<Ev, State>>): LiveOptions<Ev, State>;
+} = dual((args) => typeof args[0] === "object" && args[0] !== null && ("subscription" in args[0] || Stream.isStream(args[0])), (
 	events: Stream.Stream<Ev> | PubSub.Subscription<Ev>,
 	extra: Partial<LiveOptions<Ev, State>> = {},
 ): LiveOptions<Ev, State> => ({
@@ -60,7 +67,7 @@ export const optionsOf = (
 	isStart: (event) => event._tag === "Start",
 	isTerminal: (event) => event._tag === "End",
 	...extra,
-});
+}));
 
 /** How a test runs `CliUi.live`: interactive unless told otherwise, at colour `color`, with optional hooks. */
 export interface LiveSettings {
@@ -73,7 +80,10 @@ export interface LiveSettings {
 }
 
 /** `CliUi.live` on fake streams, interactive unless told otherwise, at colour `color`. */
-export const liveOn = (fake: FakeStreams, options: LiveOptions<Ev, State>, settings: LiveSettings = {}) => {
+export const liveOn: {
+	(options: LiveOptions<Ev, State>, settings?: LiveSettings): (fake: FakeStreams) => Effect.Effect<import("../../../effected/cli/ui.ts").LiveHandle<State>, never, import("effect/Scope").Scope>;
+	(fake: FakeStreams, options: LiveOptions<Ev, State>, settings?: LiveSettings): Effect.Effect<import("../../../effected/cli/ui.ts").LiveHandle<State>, never, import("effect/Scope").Scope>;
+} = dual((args) => typeof args[0] === "object" && args[0] !== null && "streams" in args[0], (fake: FakeStreams, options: LiveOptions<Ev, State>, settings: LiveSettings = {}) => {
 	const viewed = CliUi.live(options).pipe(
 		Effect.provideService(UiStreams, fake.streams),
 		Effect.provideService(CliInteractive, settings.interactive ?? true),
@@ -85,7 +95,7 @@ export const liveOn = (fake: FakeStreams, options: LiveOptions<Ev, State>, setti
 	const logged =
 		settings.console === undefined ? viewed : Effect.provideService(viewed, Console.Console, settings.console);
 	return logged.pipe(Effect.provide(CliTheme.layerTest({ color: settings.color ?? "none" })));
-};
+});
 
 /** Wait, in real time, until `ready` holds; dies after two seconds. */
 export const until = (ready: () => boolean): Effect.Effect<void> =>
@@ -114,7 +124,7 @@ export const chalk: Effect.Effect<InkChalk> = Effect.flatMap(
 	Option.match({ onNone: () => Effect.die(new Error("Ink's chalk did not resolve")), onSome: Effect.succeed }),
 );
 
-export const queueOf = () => Queue.unbounded<Ev, Cause.Done>();
+export const queueOf = Effect.fnUntraced(function* () { return yield* Queue.unbounded<Ev, Cause.Done>(); });
 
 /** An ambient `Console` that keeps every line, so a test reads what the default logger wrote. */
 export const capturing = (): { readonly console: Console.Console; readonly lines: Array<string> } => {

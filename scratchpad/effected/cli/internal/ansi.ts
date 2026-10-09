@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 import type { ColorLevel } from "../../env/index.ts";
 import type { NamedColor, Style } from "../Token.ts";
 
@@ -138,20 +139,26 @@ const wraps = (style: Style, level: ColorLevel): ReadonlyArray<Wrap> => {
  * inside `text` is followed by the opener again, so a painted span nested in a painted span leaves the outer
  * style in force for the text after it.
  */
-export const paintStyle = (style: Style, level: ColorLevel, text: string): string => {
+export const paintStyle: {
+	(level: ColorLevel, text: string): (style: Style) => string;
+	(style: Style, level: ColorLevel, text: string): string;
+} = dual(3, (style: Style, level: ColorLevel, text: string): string => {
 	if (level === "none" || text === "") return text;
 	let out = text;
 	for (const { open, close } of wraps(style, level)) {
 		out = `${open}${out.replaceAll(close, `${close}${open}`)}${close}`;
 	}
 	return out;
-};
+});
 
 /** The raw opening SGR sequence of a style at a level, `""` at `none` or for a style that paints nothing. */
-export const openSequence = (style: Style, level: ColorLevel): string =>
+export const openSequence: {
+	(level: ColorLevel): (style: Style) => string;
+	(style: Style, level: ColorLevel): string;
+} = dual(2, (style: Style, level: ColorLevel): string =>
 	level === "none"
 		? ""
 		: wraps(style, level)
 				.toReversed()
 				.map((wrap) => wrap.open)
-				.join("");
+				.join(""));

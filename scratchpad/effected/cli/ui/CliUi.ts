@@ -154,7 +154,7 @@ const mount = <A>(
 				Deferred.doneUnsafe(result, Exit.fail(Cancelled.make({ reason })));
 			},
 		};
-		const element = yield* Effect.promise(async () => screen(control));
+		const element = yield* Effect.promise(() => Promise.resolve(screen(control)));
 		const die = (error: unknown): void => {
 			// Recorded even when the result is already settled: a crash in the same tick as a cancel or a resolve wins.
 			if (crash.current === undefined) crash.current = { defect: error };
@@ -188,21 +188,17 @@ const mount = <A>(
 				}),
 			),
 			(instance) =>
-				Effect.promise(async () => {
+				Effect.promise(() => {
 					// Erases the last frame and marks it written, so the unmount's final render draws nothing over it.
 					if (clear) instance.clear();
 					// Taken before `unmount()`, which removes the `beforeExit` listener this registers; taken after, the listener
 					// would outlive the instance and hold it, one more per screen.
 					const exited = instance.waitUntilExit();
 					instance.unmount();
-					await exited.catch(() => undefined);
+					return exited.then(() => undefined, () => undefined);
 				}),
 		);
-		const exited: Effect.Effect<A, Cli.Cancelled> = Effect.tryPromise({
-			try: () => instance.waitUntilExit(),
-			catch: (cause) => cause,
-		}).pipe(
-			Effect.orDie,
+		const exited: Effect.Effect<A, Cli.Cancelled> = Effect.promise(() => instance.waitUntilExit()).pipe(
 			Effect.flatMap(() =>
 				Effect.flatMap(Deferred.isDone(result), (done) =>
 					done ? Deferred.await(result) : Effect.die(new Error(SCREEN_EXITED)),
@@ -494,8 +490,7 @@ export class CliUi {
 			return yield* CliUi.run(screen, options.clear === true ? { clear: true } : undefined).pipe(
 				Effect.provideService(CliTheme, theme.value),
 				Effect.map((answer) => Prompt.succeed(answer)),
-				Effect.catchTag("Cancelled", (cancelled) => Effect.die(cancelled)),
-				Effect.catchTag("NotInteractive", () => answerWithoutPerson(options)),
+				Effect.catchTags({ Cancelled: Effect.die, NotInteractive: () => answerWithoutPerson(options) }),
 			);
 		});
 	};
@@ -508,8 +503,7 @@ export class CliUi {
 	 */
 	static readonly lazy =
 		<A>(load: () => Promise<{ readonly default: Screen<A> }>): Screen<A> =>
-		async (control) =>
-			(await load()).default(control);
+		(control) => load().then((module) => module.default(control));
 
 	/**
 	 * A live view's `render` whose module is loaded only when a run first draws it, so importing the command that uses

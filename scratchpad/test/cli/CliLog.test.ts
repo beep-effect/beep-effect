@@ -1,4 +1,5 @@
 // @effect-diagnostics strictEffectProvide:skip-file
+import { Data } from "effect";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import type { AudienceKind } from "../../effected/env/index.ts";
@@ -9,6 +10,11 @@ import { Command } from "effect/cli";
 import type { CliLogFile, CliLoggerOptions } from "../../effected/cli/index.ts";
 import { CliLog, CliLogger, CliRuntime } from "../../effected/cli/index.ts";
 import { LINE_BREAK, isCommand } from "./helpers/runnerCommands.ts";
+
+class TestError extends Data.TaggedError("TestError")<{ readonly message: string; readonly cause?: unknown }> {
+	override readonly name = "Error";
+	constructor(message: string, options?: { readonly cause?: unknown }) { super({ message, ...options }); }
+}
 
 const ENV = "VITEST_REPORTER_LOG_LEVEL";
 
@@ -46,8 +52,7 @@ const diagnostics = (setup: Setup = {}) =>
 		),
 	);
 
-const capture = (program: Effect.Effect<void>, setup: Setup = {}) =>
-	Effect.gen(function* () {
+const capture = Effect.fn("capture")(function* (program: Effect.Effect<void>, setup: Setup = {}) {
 		const { double, out, err } = capturing();
 		yield* program.pipe(
 			Effect.provide(diagnostics(setup)),
@@ -280,19 +285,14 @@ describe("CliLog.component", () => {
 });
 
 describe("CliLog owns the logger set", () => {
-	const boom = Command.make("boom", {}, () => Effect.fail(new Error("boom")));
+	const boom = Command.make("boom", {}, () => Effect.fail(new TestError("boom")));
 	const inside = Command.make("inside", {}, () => Effect.logDebug("inside"));
 	const app = Command.make("tool").pipe(Command.withSubcommands([boom, inside]));
 
 	const inputs = Layer.mergeAll(Audience.layerTest("agent"), TerminalEnv.layerTest());
 	const diagnostic = () => CliLog.layer({ envVar: ENV }).pipe(Layer.provide(inputs));
 
-	const runMain = (
-		argv: ReadonlyArray<string>,
-		env: Record<string, string> = {},
-		logger: Layer.Layer<never> = diagnostic(),
-	) =>
-		Effect.gen(function* () {
+	const runMain = Effect.fnUntraced(function* (argv: ReadonlyArray<string>, env: Record<string, string> = {}, logger: Layer.Layer<never> = diagnostic()) {
 			const { double, out, err } = capturing();
 			const exit = yield* CliRuntime.main(Command.runWith(app, { version: "1.0.0" })(argv), {
 				platform: NodeServices.layer,
@@ -489,8 +489,7 @@ describe("CliLog.layer under GitHub Actions captured when it was built", () => {
 			...(neutralize === undefined ? {} : { neutralize }),
 		}).pipe(Layer.provide(CurrentRuntimeEnv.layerTest({ ci: Option.some("github-actions") })));
 	const commands = (lines: ReadonlyArray<string>) => lines.flatMap((line) => line.split(LINE_BREAK)).filter(isCommand);
-	const written = (layer: Layer.Layer<never>) =>
-		Effect.gen(function* () {
+	const written = Effect.fn("written")(function* (layer: Layer.Layer<never>) {
 			const { double, err } = capturing();
 			yield* hostile.pipe(Effect.provide(layer), Effect.provideService(Console.Console, double));
 			return err;
@@ -520,8 +519,7 @@ describe("CliLog.layer's runtimeEnv option (A9)", () => {
 	const commands = (lines: ReadonlyArray<string>) => lines.flatMap((line) => line.split(LINE_BREAK)).filter(isCommand);
 	const actions = RuntimeEnv.fromRecord({ GITHUB_ACTIONS: "true" });
 	const local = RuntimeEnv.fromRecord({});
-	const written = (layer: Layer.Layer<never>, inFiber?: RuntimeEnv) =>
-		Effect.gen(function* () {
+	const written = Effect.fn("written")(function* (layer: Layer.Layer<never>, inFiber?: RuntimeEnv) {
 			const { double, err } = capturing();
 			const program = inFiber === undefined ? hostile : Effect.provideService(hostile, CurrentRuntimeEnv, inFiber);
 			yield* program.pipe(Effect.provide(layer), Effect.provideService(Console.Console, double));

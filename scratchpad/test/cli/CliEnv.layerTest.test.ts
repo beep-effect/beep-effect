@@ -77,9 +77,7 @@ describe("CliEnv.layerTest", () => {
 				Audience.layerTest("human"),
 			);
 			const ambient = yield* Effect.provide(
-				Effect.gen(function* () {
-					return yield* CliInteractive;
-				}),
+				CliInteractive,
 				CliInteractive.layer.pipe(Layer.provide(facts)),
 			).pipe(host({ TERM: "dumb" }));
 			assert.isFalse(ambient, "control: the host's dumb TERM is visible to an ambient read");
@@ -100,9 +98,7 @@ describe("CliEnv.layerTest", () => {
 			const seen = yield* under({ columns: 60, color: "truecolor" });
 			assert.deepStrictEqual([seen.width, seen.color, seen.stderrColor], [60, "truecolor", "truecolor"]);
 			const theme = yield* Effect.provide(
-				Effect.gen(function* () {
-					return yield* CliTheme;
-				}),
+				CliTheme,
 				CliEnv.layerTest({ color: "truecolor" }),
 			);
 			assert.notStrictEqual(theme.paint("accent", "x"), "x", "the theme paints at truecolor");

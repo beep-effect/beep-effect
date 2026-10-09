@@ -40,7 +40,7 @@ export class Cancelled extends Schema.TaggedError<Cancelled>()("Cancelled", {
 	 * A prototype getter rather than an own field, so a JSON or logger dump of the error does not carry the
 	 * runtime marker.
 	 */
-	get [Runtime.errorExitCode](): number {
+	override get [Runtime.errorExitCode](): number {
 		return 130;
 	}
 }

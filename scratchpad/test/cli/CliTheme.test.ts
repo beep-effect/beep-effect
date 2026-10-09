@@ -1,10 +1,14 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
+import { Schema } from "effect";
+import { Result } from "effect";
 import { assert, describe, it } from "@effect/vitest";
 import { TerminalEnv } from "../../effected/env/index.ts";
 import { ConfigProvider, Effect } from "effect";
 import { Prompt } from "effect/cli";
 import type { Style, TokenName } from "../../effected/cli/index.ts";
 import { CliTheme, Status, Token } from "../../effected/cli/index.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 const env = (color: "none" | "basic" | "256" | "truecolor") => TerminalEnv.layerTest({ stdout: { color } });
 
@@ -120,9 +124,7 @@ describe("CliTheme.status", () => {
 
 describe("CliTheme.promptTheme", () => {
 	const promptThemeUnder = (color: "none" | "basic", glyphs: "unicode" | "ascii" = "unicode") =>
-		Effect.gen(function* () {
-			return yield* Prompt.Theme;
-		}).pipe(Effect.provide(CliTheme.promptTheme), Effect.provide(CliTheme.layerTest({ color, glyphs })));
+		Prompt.Theme.pipe(Effect.provide(CliTheme.promptTheme), Effect.provide(CliTheme.layerTest({ color, glyphs })));
 
 	it.effect("has empty colour fields when colour is none", () =>
 		Effect.gen(function* () {
@@ -245,7 +247,7 @@ describe("Token.resolve agrees with what CliTheme.paint renders", () => {
 				const resolved = Token.resolve(token);
 				const painted = theme.paint(token, "x");
 				// Without the name-to-number table the default styles are all named colours and attributes.
-				assert.deepStrictEqual(decode(painted), { ...resolved }, `${token}: ${JSON.stringify(painted)}`);
+				assert.deepStrictEqual(decode(painted), { ...resolved }, `${token}: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(painted))}`);
 			}
 		}).pipe(Effect.provide(CliTheme.layerTest({ color: "basic" }))),
 	);

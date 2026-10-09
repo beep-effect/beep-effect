@@ -37,16 +37,11 @@ const app = (fallback: Flag.Flag<string>) =>
 const withPrompt = (options?: { readonly otherwise?: string }) =>
 	Flag.String("profile").pipe(Flag.withFallbackPrompt(CliPrompt.fallback(select, { flag: "profile", ...options })));
 
-const run = (
-	root: ReturnType<typeof app>,
-	argv: ReadonlyArray<string>,
-	options: {
+const run = Effect.fn("run")(function* (root: ReturnType<typeof app>, argv: ReadonlyArray<string>, options: {
 		readonly interactive: boolean | Layer.Layer<never>;
 		readonly terminal: TestTerminalHandle;
 		readonly gate?: boolean;
-	},
-) =>
-	Effect.gen(function* () {
+	}) {
 		const { double, out, err } = capturing();
 		const interactive =
 			typeof options.interactive === "boolean" ? CliInteractive.layerTest(options.interactive) : options.interactive;
@@ -197,9 +192,7 @@ describe("CliPrompt.fallback otherwise", () => {
 
 describe("CliPrompt.gateTerminal", () => {
 	const gated = (interactive: boolean, terminal: TestTerminalHandle) =>
-		Effect.gen(function* () {
-			return yield* Terminal.Terminal;
-		}).pipe(
+		Terminal.Terminal.pipe(
 			Effect.provide(CliPrompt.gateTerminal.pipe(Layer.provide(terminal.layer))),
 			Effect.provide(CliInteractive.layerTest(interactive)),
 		);

@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 import type { ReactElement, ReactNode } from "react";
 import { inkModules } from "./ink.ts";
 import type { ScreenContextValue } from "./ScreenContext.ts";
@@ -13,5 +14,8 @@ import { screenContext } from "./ScreenContext.ts";
  *
  * @internal
  */
-export const uiProviders = (value: ScreenContextValue, children: ReactNode): ReactElement =>
-	inkModules().react.createElement(screenContext().Provider, { value, children });
+export const uiProviders: {
+	(children: ReactNode): (value: ScreenContextValue) => ReactElement;
+	(value: ScreenContextValue, children: ReactNode): ReactElement;
+} = dual(2, (value: ScreenContextValue, children: ReactNode): ReactElement =>
+	inkModules().react.createElement(screenContext().Provider, { value, children }));

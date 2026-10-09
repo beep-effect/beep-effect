@@ -1,4 +1,5 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
+import { Data } from "effect";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Audience, CurrentRuntimeEnv, TerminalEnv } from "../../effected/env/index.ts";
@@ -8,6 +9,11 @@ import { CliConfig, Command, GlobalFlag, Prompt } from "effect/cli";
 import type { CliEnvOptions } from "../../effected/cli/index.ts";
 import { CliEnv, CliInteractive, CliLinks, CliRuntime, CliTheme } from "../../effected/cli/index.ts";
 import { TestTerminal } from "../../effected/cli/testing.ts";
+
+class TestError extends Data.TaggedError("TestError")<{ readonly message: string; readonly cause?: unknown }> {
+	override readonly name = "Error";
+	constructor(message: string, options?: { readonly cause?: unknown }) { super({ message, ...options }); }
+}
 
 const capturing = () => {
 	const out: string[] = [];
@@ -89,8 +95,7 @@ describe("CliEnv.layer", () => {
 });
 
 describe("CliRuntime.main with the env option", () => {
-	const observe = (program: Effect.Effect<void, never, CliTheme | Audience | TerminalEnv>) =>
-		Effect.gen(function* () {
+	const observe = Effect.fn("observe")(function* (program: Effect.Effect<void, never, CliTheme | Audience | TerminalEnv>) {
 			const { double, out, err } = capturing();
 			const exit = yield* CliRuntime.main(program, { platform: TTY, env: {} }).pipe(
 				Effect.exit,
@@ -188,7 +193,7 @@ describe("CliRuntime.main with the env option", () => {
 				const exit = yield* CliRuntime.main(
 					Effect.gen(function* () {
 						yield* Effect.logDebug("inside");
-						return yield* Effect.fail(new Error("boom"));
+						return yield* new TestError("boom");
 					}),
 					{ platform: TTY, env: { log: { envVar: "TOOL_LOG" } } },
 				).pipe(
@@ -239,11 +244,9 @@ describe("CliRuntime.main with the env option", () => {
 		}),
 	);
 
-	it.effect("help text follows the same colour decision as the env: FORCE_COLOR colours it over a pipe", () =>
-		Effect.gen(function* () {
+	it.effect("help text follows the same colour decision as the env: FORCE_COLOR colours it over a pipe", () => Effect.gen(function* () {
 			const app = Command.make("tool").pipe(Command.withSubcommands([Command.make("run", {}, () => Effect.void)]));
-			const helpUnder = (env: Record<string, string>) =>
-				Effect.gen(function* () {
+			const helpUnder = Effect.fn("helpUnder")(function* (env: Record<string, string>) {
 					const { double, out } = capturing();
 					yield* CliRuntime.main(Command.runWith(app, { version: "1.0.0" })(["--help"]), {
 						platform: Layer.mergeAll(NodeServices.layer, PIPED),
@@ -298,11 +301,9 @@ describe("CliRuntime.main with the env option", () => {
 		}),
 	);
 
-	it.effect("installs the wizard gate: --wizard is absent from --help when the run is not interactive", () =>
-		Effect.gen(function* () {
+	it.effect("installs the wizard gate: --wizard is absent from --help when the run is not interactive", () => Effect.gen(function* () {
 			const app = Command.make("tool").pipe(Command.withSubcommands([Command.make("run", {}, () => Effect.void)]));
-			const helpOn = (io: Layer.Layer<Stdio.Stdio | Terminal.Terminal>) =>
-				Effect.gen(function* () {
+			const helpOn = Effect.fn("helpOn")(function* (io: Layer.Layer<Stdio.Stdio | Terminal.Terminal>) {
 					const { double, out } = capturing();
 					yield* CliRuntime.main(Command.runWith(app, { version: "1.0.0" })(["--help"]), {
 						platform: Layer.mergeAll(NodeServices.layer, io),
@@ -324,9 +325,7 @@ describe("CliRuntime.main with the env option", () => {
 			const handle = MemoryFileSystem.makeSync();
 			const { double } = capturing();
 			yield* CliRuntime.main(
-				Effect.gen(function* () {
-					yield* Effect.logDebug("recorded");
-				}),
+				Effect.asVoid(Effect.logDebug("recorded")),
 				{
 					platform: Layer.mergeAll(TTY, handle.layer),
 					env: { log: { envVar: "TOOL_LOG", file: { path: "/logs/tool.ndjson" } } },
@@ -421,10 +420,8 @@ describe("CliRuntime.main with the env option", () => {
 		}),
 	);
 
-	it.effect("installs the theme bridge: core prompts follow the terminal's colour under env", () =>
-		Effect.gen(function* () {
-			const themeUnder = (env: Record<string, string>, io: Layer.Layer<Stdio.Stdio | Terminal.Terminal>) =>
-				Effect.gen(function* () {
+	it.effect("installs the theme bridge: core prompts follow the terminal's colour under env", () => Effect.gen(function* () {
+			const themeUnder = Effect.fn("themeUnder")(function* (env: Record<string, string>, io: Layer.Layer<Stdio.Stdio | Terminal.Terminal>) {
 					const { double } = capturing();
 					let primary: string | undefined;
 					yield* CliRuntime.main(
@@ -492,8 +489,9 @@ describe("CliRuntime.main with the env option", () => {
 	it("a CliEnvOptions-typed env, which may carry a file sink, requires FileSystem and Path from the platform", () => {
 		const env: CliEnvOptions = { log: { envVar: "TOOL_LOG", file: { path: "/x" } } };
 		const program = CliRuntime.main(Effect.void, { platform: TTY, env });
-		// @ts-expect-error the widened env may carry log.file, so FileSystem | Path stay required (a silent drop before)
-		const narrowed: Effect.Effect<void, Error, Stdio.Stdio | Terminal.Terminal> = program;
+		const assignable: typeof program extends Effect.Effect<void, Error, Stdio.Stdio | Terminal.Terminal> ? true : false = false;
+		assert.isFalse(assignable);
+		const narrowed = program;
 		assert.isDefined(narrowed);
 		// A literal env with no file stays free of them.
 		const plain = CliRuntime.main(Effect.void, { platform: TTY, env: { log: { envVar: "TOOL_LOG" } } });
@@ -502,9 +500,7 @@ describe("CliRuntime.main with the env option", () => {
 	});
 
 	it("CliLinks is one of the env services: a program that reads it needs nothing more from the platform", () => {
-		const program = Effect.gen(function* () {
-			yield* CliLinks;
-		});
+		const program = Effect.asVoid(CliLinks);
 		const main = CliRuntime.main(program, { platform: TTY, env: { editorLinks: "off" } });
 		const ok: Effect.Effect<void, Error, never> = main;
 		assert.isDefined(ok);

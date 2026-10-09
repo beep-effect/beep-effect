@@ -1,6 +1,8 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file asyncFunction:skip-file globalTimers:skip-file newPromise:skip-file
+import { Schema } from "effect";
+import { Result } from "effect";
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Fiber, Layer, Option } from "effect";
+import { Cause, Effect, Exit, Fiber, Option } from "effect";
 import { Text } from "ink";
 import type { ReactElement } from "react";
 import { createElement, useContext, useEffect, useState } from "react";
@@ -10,6 +12,8 @@ import type { Screen } from "../../../effected/cli/ui.ts";
 import { CliUi, KeyTable, useKeys } from "../../../effected/cli/ui.ts";
 import type { CliUiTestScreen } from "../../../effected/cli/ui-testing.ts";
 import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 const messageOf = (exit: Exit.Exit<unknown, unknown>): string => {
 	if (Exit.isSuccess(exit)) return "<succeeded>";
@@ -248,11 +252,11 @@ describe("a crash and an interrupt, and the cause run keeps", () => {
 				: [];
 			assert.isTrue(
 				defects.some((defect) => defect.includes("crashed with the cancel")),
-				`the recorded crash is kept: ${JSON.stringify(defects)}`,
+				`the recorded crash is kept: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(defects))}`,
 			);
 			assert.isTrue(
 				defects.some((defect) => defect.includes("finalizer failed")),
-				`the finalizer's defect is kept: ${JSON.stringify(defects)}`,
+				`the finalizer's defect is kept: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(defects))}`,
 			);
 			assert.isTrue(Option.isNone(CliUiTest.cancelReason(exit)), "a crash beats the cancel in the same tick");
 		}).pipe(Effect.scoped, Effect.timeout("2 seconds")),
@@ -263,13 +267,11 @@ describe("a crash and an interrupt, and the cause run keeps", () => {
 			const session = yield* CliUiTest.session();
 			const fiber = yield* Effect.forkScoped(
 				CliUi.run(() => createElement(Boom)).pipe(
-					Effect.provide(
-						Layer.succeed(UiRenderOptions, {
+					Effect.provideService(UiRenderOptions, {
 							onUnmount: () => {
 								throw new Error("finalizer failed");
 							},
-						}),
-					),
+					}),
 					Effect.provide(session.layer),
 				),
 			);
@@ -280,11 +282,11 @@ describe("a crash and an interrupt, and the cause run keeps", () => {
 			assert.strictEqual(
 				defects.filter((defect) => defect.includes("component crashed")).length,
 				1,
-				`the crash once, never doubled: ${JSON.stringify(defects)}`,
+				`the crash once, never doubled: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(defects))}`,
 			);
 			assert.isTrue(
 				defects.some((defect) => defect.includes("finalizer failed")),
-				JSON.stringify(defects),
+				Result.getOrThrow(Schema.encodeUnknownResult(Json)(defects)),
 			);
 		}).pipe(Effect.scoped, Effect.timeout("2 seconds")),
 	);

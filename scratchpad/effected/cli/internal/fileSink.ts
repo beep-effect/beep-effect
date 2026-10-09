@@ -24,12 +24,7 @@ const CLOSE_TIMEOUT = "2 seconds";
  *
  * @internal
  */
-export const makeFileSink = (
-	path: string,
-	installed: LogLevel.LogLevel,
-	underActions: (fiber: Fiber.Fiber<unknown, unknown>) => boolean,
-): Effect.Effect<Logger.Logger<unknown, void>, never, FileSystem.FileSystem | Path.Path | Scope.Scope> =>
-	Effect.gen(function* () {
+export const makeFileSink = Effect.fn("append")(function* (path: string, installed: LogLevel.LogLevel, underActions: (fiber: Fiber.Fiber<unknown, unknown>) => boolean): Effect.fn.Return<Logger.Logger<unknown, void>, never, FileSystem.FileSystem | Path.Path | Scope.Scope> {
 		const fs = yield* FileSystem.FileSystem;
 		const location = yield* Path.Path;
 		const queue = yield* Queue.unbounded<string, Cause.Done>();
@@ -37,8 +32,7 @@ export const makeFileSink = (
 
 		// The parent directory is made once, before the first append; a failure there disables the sink like any other.
 		let directoryMade = false;
-		const append = (lines: ReadonlyArray<string>) =>
-			Effect.gen(function* () {
+		const append = Effect.fn("append")(function* (lines: ReadonlyArray<string>) {
 				if (!directoryMade) {
 					yield* fs.makeDirectory(location.dirname(path), { recursive: true });
 					directoryMade = true;

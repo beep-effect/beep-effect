@@ -1,3 +1,5 @@
+import { Schema } from "effect";
+import { Result } from "effect";
 import { assert, describe, it } from "@effect/vitest";
 import { Console, Effect } from "effect";
 import type { Instance } from "ink";
@@ -12,6 +14,8 @@ import { makeFakeStreams } from "../../../effected/cli/ui/testing/fakeStreams.ts
 import { screenAfter } from "../../../effected/cli/ui/testing/terminalModel.ts";
 import type { UiStreamsShape } from "../../../effected/cli/ui.ts";
 import { UiStreams } from "../../../effected/cli/ui.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 /** A two-row frame, so a torn repaint shows as a stranded header. */
 const frame = (tick: number): ReactElement =>
@@ -78,11 +82,7 @@ const LOGS = [1, 2, 3, 4, 5].flatMap((index) => [`out line ${index}`, `err line 
 const FINAL = ["LIVE HEADER", "tick 5"];
 
 /** A live frame rerendered five times, with a stdout and a stderr line written after each rerender by `write`. */
-const run = (
-	write: (bridge: InkConsole, streams: UiStreamsShape, index: number) => void,
-	ambient: Console.Console = recordingConsole().console,
-) =>
-	Effect.gen(function* () {
+const run = Effect.fn("run")(function* (write: (bridge: InkConsole, streams: UiStreamsShape, index: number) => void, ambient: Console.Console = recordingConsole().console) {
 		yield* loadInk;
 		const { fake, streams } = terminal();
 		const bridge = yield* makeInkConsole.pipe(
@@ -122,7 +122,7 @@ describe("the console bridge writes above a live Ink frame (production path; okf
 			// Torn: the repaint erases lines it did not write, so log lines go missing or a stale header stays behind.
 			const missing = LOGS.filter((line) => !shown.includes(line));
 			const headers = shown.filter((line) => line === "LIVE HEADER").length;
-			assert.isTrue(missing.length > 0 || headers > 1, `torn: ${JSON.stringify(shown)}`);
+			assert.isTrue(missing.length > 0 || headers > 1, `torn: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(shown))}`);
 		}),
 	);
 
@@ -213,7 +213,7 @@ describe("the console bridge writes above a live Ink frame (production path; okf
 			const shown = screenAfter(fake.stdout());
 			const at = shown.indexOf("out line 3");
 			const added = shown.slice(shown.indexOf("err line 3") + 1, shown.indexOf("out line 4"));
-			assert.isAbove(at, -1, `the run wrote: ${JSON.stringify(shown)}`);
+			assert.isAbove(at, -1, `the run wrote: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(shown))}`);
 			assert.deepStrictEqual(added.slice(0, 11), [
 				"| (index) | name | n |",
 				"| 0       | a    | 1 |",

@@ -1,4 +1,6 @@
 // @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
+import { Schema } from "effect";
+import { Result } from "effect";
 import { assert, describe, it } from "@effect/vitest";
 import { Audience } from "../../../effected/env/index.ts";
 import { Console, Effect } from "effect";
@@ -8,6 +10,8 @@ import { CliUi } from "../../../effected/cli/ui.ts";
 import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
 import type { Ev, State } from "../helpers/live.ts";
 import { End, Start, frameOf, reduce, tick } from "../helpers/live.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 const ESC = String.fromCharCode(0x1b);
 
@@ -235,7 +239,7 @@ describe("CliUi.lazyView", () => {
 			assert.include(yield* view.plainFrame, "RUN 1");
 			assert.isTrue(
 				seen.some(([run, frame]) => run === 1 && frame === 3),
-				`the tick's frame index reached the view: ${JSON.stringify(seen)}`,
+				`the tick's frame index reached the view: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(seen))}`,
 			);
 			yield* view.publish(End);
 			yield* view.end;
@@ -266,8 +270,7 @@ describe("CliUi.lazyView", () => {
 	);
 
 	/** Two runs of a lazy view whose loader answers `answers[attempt]`; what it drew, warned and how often it loaded. */
-	const twoRunsOf = (answers: ReadonlyArray<() => unknown>) =>
-		Effect.gen(function* () {
+	const twoRunsOf = Effect.fn("twoRunsOf")(function* (answers: ReadonlyArray<() => unknown>) {
 			const { double, lines } = capturing();
 			let attempts = 0;
 			const render = CliUi.lazyView<State>(async () => {

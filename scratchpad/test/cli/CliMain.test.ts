@@ -1,8 +1,18 @@
+import { Data } from "effect";
+import { Schema } from "effect";
+import { Result } from "effect";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Console, Context, Effect, Exit, Layer, MutableRef, Runtime } from "effect";
 import { CliError, Command } from "effect/cli";
 import { CliExit, CliRuntime } from "../../effected/cli/index.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
+
+class TestError extends Data.TaggedError("TestError")<{ readonly message: string; readonly cause?: unknown }> {
+	override readonly name = "Error";
+	constructor(message: string, options?: { readonly cause?: unknown }) { super({ message, ...options }); }
+}
 
 class Platform extends Context.Service<Platform, { readonly name: string }>()("@beep/scratchpad/test/cli/CliMain.test/Platform") {}
 
@@ -65,10 +75,8 @@ describe("CliRuntime.main", () => {
 	it.effect("a platform layer that fails to build renders one line on stderr with the fallback code", () =>
 		Effect.gen(function* () {
 			const { double, out, err } = capturing();
-			const broken = Layer.effect(Platform, Effect.fail(new Error("HOME is not set")));
-			const program = Effect.gen(function* () {
-				yield* Platform;
-			});
+			const broken = Layer.effect(Platform, Effect.fail(new TestError("HOME is not set")));
+			const program = Effect.asVoid(Platform);
 			const exit = yield* CliRuntime.main(program, { platform: broken, exitCode: 3 }).pipe(
 				Effect.exit,
 				Effect.provideService(Console.Console, double),
@@ -83,7 +91,7 @@ describe("CliRuntime.main", () => {
 	it.effect("the default logger is installed outermost: a failure lands on stderr", () =>
 		Effect.gen(function* () {
 			const { double, out, err } = capturing();
-			yield* CliRuntime.main(Effect.fail(new Error("boom")), { platform: Layer.empty }).pipe(
+			yield* CliRuntime.main(Effect.fail(new TestError("boom")), { platform: Layer.empty }).pipe(
 				Effect.exit,
 				Effect.provideService(Console.Console, double),
 			);
@@ -121,7 +129,7 @@ describe("CliRuntime.main", () => {
 			const { double } = capturing();
 			const program = Effect.gen(function* () {
 				yield* CliExit.set(2);
-				return yield* Effect.fail(new Error("boom"));
+				return yield* new TestError("boom");
 			});
 			const exit = yield* CliRuntime.main(program, { platform: Layer.empty, exitCode: 5 }).pipe(
 				Effect.exit,
@@ -145,7 +153,7 @@ describe("CliRuntime.main and a UserError raised through Command.runWith", () =>
 			const exit = yield* CliRuntime.main(Command.runWith(deploy, { version: "1.0.0" })([]), {
 				platform: NodeServices.layer,
 			}).pipe(Effect.exit, Effect.provideService(Console.Console, double));
-			assert.strictEqual(err.length, 1, `expected one stderr entry, got ${JSON.stringify(err)}`);
+			assert.strictEqual(err.length, 1, `expected one stderr entry, got ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(err))}`);
 			assert.include(err[0], "unknown target: moon");
 			assert.deepStrictEqual(out, []);
 			assert.strictEqual(codeOf(exit), 64);
@@ -163,7 +171,7 @@ describe("CliRuntime.main and a UserError raised through Command.runWith", () =>
 			const exit = yield* CliRuntime.main(Command.runWith(deploy, { version: "1.0.0", renderErrors: false })([]), {
 				platform: NodeServices.layer,
 			}).pipe(Effect.exit, Effect.provideService(Console.Console, double));
-			assert.strictEqual(err.length, 1, `expected one stderr entry, got ${JSON.stringify(err)}`);
+			assert.strictEqual(err.length, 1, `expected one stderr entry, got ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(err))}`);
 			// Rendered here like any other failure, so it takes the fallback exit
 			// code, not the usage code.
 			assert.strictEqual(codeOf(exit), 1);
@@ -187,7 +195,7 @@ describe("CliRuntime.main and a UserError raised through Command.runWith", () =>
 			const exit = yield* CliRuntime.main(Command.runWith(marked, { version: "1.0.0" })([]), {
 				platform: NodeServices.layer,
 			}).pipe(Effect.exit, Effect.provideService(Console.Console, double));
-			assert.strictEqual(err.length, 1, `expected one stderr entry, got ${JSON.stringify(err)}`);
+			assert.strictEqual(err.length, 1, `expected one stderr entry, got ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(err))}`);
 			assert.strictEqual(codeOf(exit), 3);
 		}),
 	);
@@ -198,7 +206,7 @@ describe("CliRuntime.main and --log-level", () => {
 	// record against MinimumLogLevel BEFORE any logger runs, so a flag value of `none` silences every Effect.log*
 	// call made inside the handler. The failure report is written by reportFailures AFTER the handler's scope
 	// has closed, so it must still reach stderr, and the exit code must still be right.
-	const boom = Command.make("boom", {}, () => Effect.fail(new Error("boom")));
+	const boom = Command.make("boom", {}, () => Effect.fail(new TestError("boom")));
 	const app = Command.make("tool").pipe(Command.withSubcommands([boom]));
 
 	for (const level of ["none", "all", "debug"]) {
@@ -222,12 +230,10 @@ describe("CliRuntime.main and --log-level", () => {
 
 	// The positive control for the tests above: the flag really does silence logging INSIDE the handler, so the
 	// failure report surviving is the runtime's doing and not a flag that never took effect.
-	it.effect("control: --log-level none silences Effect.logError inside the handler, --log-level error does not", () =>
-		Effect.gen(function* () {
+	it.effect("control: --log-level none silences Effect.logError inside the handler, --log-level error does not", () => Effect.gen(function* () {
 			const noisy = Command.make("noisy", {}, () => Effect.logError("inside"));
 			const root = Command.make("tool").pipe(Command.withSubcommands([noisy]));
-			const run = (level: string) =>
-				Effect.gen(function* () {
+			const run = Effect.fn("run")(function* (level: string) {
 					const { double, err } = capturing();
 					yield* CliRuntime.main(Command.runWith(root, { version: "1.0.0" })(["--log-level", level, "noisy"]), {
 						platform: NodeServices.layer,

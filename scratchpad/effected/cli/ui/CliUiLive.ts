@@ -14,6 +14,7 @@ import {
 	PubSub,
 	Pull,
 	Queue,
+	Result,
 	Schedule,
 	Scheduler,
 	Scope,
@@ -319,7 +320,7 @@ export const live = <E, S>(
 			Effect.suspend(() => {
 				const current = run;
 				run = undefined;
-				return current === undefined ? Effect.succeed(undefined) : Effect.as(unmount(current), current);
+				return current === undefined ? Effect.as(Effect.void, undefined) : Effect.as(unmount(current), current);
 			}),
 		);
 
@@ -416,10 +417,10 @@ export const live = <E, S>(
 		/** A run's `final` document, printed as `Doc.print` would, to the view's stdout; never Ink. */
 		const printFinal = (current: Run<S>, final: (state: S) => Cli.Document): Effect.Effect<void> =>
 			Effect.gen(function* () {
-				const built = yield* Effect.exit(Effect.try({ try: () => final(state), catch: (error) => error }));
-				if (Exit.isFailure(built)) return yield* warnOnce(current, Cause.squash(built.cause));
+				const built = Result.try(() => final(state));
+				if (Result.isFailure(built)) return yield* warnOnce(current, built.failure);
 				const ctx = yield* finalContext;
-				const text = Render[yield* autoFormat(ctx.audience)](built.value, ctx);
+				const text = Render[yield* autoFormat(ctx.audience)](built.success, ctx);
 				if (text !== "") bridge.print(text);
 			});
 
@@ -500,7 +501,7 @@ export const live = <E, S>(
 							return instance;
 						}),
 						(instance) =>
-							Effect.promise(async () => {
+							Effect.promise(() => {
 								// Ink drops a hook write once it has unmounted: the console goes back to the streams first.
 								bridge.detach();
 								// Taken before `unmount()`, which removes the `beforeExit` listener this registers; taken after, the
@@ -509,7 +510,7 @@ export const live = <E, S>(
 								// Ink's own unmount commits the last frame to the terminal; `clear()` is never called.
 								instance.unmount();
 								drainPerformance(drain);
-								await exited.catch(() => undefined);
+								return exited.then(() => undefined, () => undefined);
 							}),
 					);
 					// The tick, in the run's scope: interrupted with the run, so no timer outlives it.
@@ -542,9 +543,7 @@ export const live = <E, S>(
 				);
 				yield* checkFailure;
 			}).pipe(
-				Effect.catchCause((cause) =>
-					Cause.hasInterruptsOnly(cause) ? Effect.failCause(cause) : degrade(current, Cause.squash(cause)),
-				),
+				Effect.catchCauseIf((cause) => !Cause.hasInterruptsOnly(cause), (cause) => degrade(current, Cause.squash(cause))),
 			);
 
 		/**
@@ -618,15 +617,13 @@ export const live = <E, S>(
 			Effect.gen(function* () {
 				let dirty = false;
 				for (const event of chunk) {
-					const folded = yield* Effect.try({ try: () => options.reduce(state, event), catch: (error) => error }).pipe(
-						// A reducer that throws: unmount first, then the drain dies with the error.
-						Effect.catch((error) =>
-							Effect.andThen(
-								Effect.suspend(() => (run === undefined ? Effect.void : unmount(run))),
-								Effect.die(error),
-							),
-						),
-					);
+					const reduced = Result.try(() => options.reduce(state, event));
+					// A reducer that throws: unmount first, then the drain dies with the error.
+					if (Result.isFailure(reduced)) {
+						yield* Effect.suspend(() => (run === undefined ? Effect.void : unmount(run)));
+						return yield* Effect.die(reduced.failure);
+					}
+					const folded = reduced.success;
 					const before = state;
 					if (run?.degraded === true && options.isStart(event)) {
 						// A start during a run that degraded ends it, keeping what it left on the terminal (or printing it, at
@@ -751,7 +748,7 @@ export const live = <E, S>(
 					return restore(PubSub.takeAll(sub)).pipe(
 						// A take the shutdown interrupted ends the events; an interrupt of this fiber (`close`) stays one.
 						Effect.catchCause((cause) =>
-							Option.isNone(PubSub.remainingUnsafe(sub)) ? Effect.succeed(undefined) : Effect.failCause(cause),
+							Option.isNone(PubSub.remainingUnsafe(sub)) ? Effect.void : Effect.failCause(cause),
 						),
 						Effect.flatMap((chunk) => {
 							if (chunk === undefined) return Effect.succeed(true);
@@ -779,9 +776,7 @@ export const live = <E, S>(
 					).pipe(
 						Pull.catchDone(() => Queue.offer(inbox, { _tag: "Ended" })),
 						// A stream that dies tells the controller, which would otherwise wait for an event that never comes.
-						Effect.catchCause((cause) =>
-							Cause.hasInterruptsOnly(cause) ? Effect.failCause(cause) : Queue.offer(inbox, { _tag: "Died", cause }),
-						),
+						Effect.catchCauseIf((cause) => !Cause.hasInterruptsOnly(cause), (cause) => Queue.offer(inbox, { _tag: "Died", cause })),
 					)
 				: Effect.gen(function* () {
 						let ended = false;

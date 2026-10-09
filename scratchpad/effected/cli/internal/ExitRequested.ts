@@ -1,3 +1,4 @@
+import { Data } from "effect";
 import { Runtime } from "effect";
 
 /**
@@ -7,12 +8,12 @@ import { Runtime } from "effect";
  *
  * @internal
  */
-export class ExitRequested extends Error {
-	readonly [Runtime.errorReported] = false;
-	readonly [Runtime.errorExitCode]: number;
+export class ExitRequested extends Data.TaggedError("ExitRequested")<{ readonly message: string }> {
+	override readonly [Runtime.errorReported] = false;
+	override readonly [Runtime.errorExitCode]: number;
 
 	constructor(code: number) {
-		super(`exit ${code}`);
+		super({ message: `exit ${code}` });
 		this.name = "ExitRequested";
 		this[Runtime.errorExitCode] = code;
 	}

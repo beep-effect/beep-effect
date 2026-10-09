@@ -1,4 +1,7 @@
 // @effect-diagnostics strictEffectProvide:skip-file
+import { Data } from "effect";
+import { Schema } from "effect";
+import { Result } from "effect";
 import { assert, describe, it } from "@effect/vitest";
 import type { AudienceKind } from "../../effected/env/index.ts";
 import { Audience, CurrentRuntimeEnv, TerminalEnv } from "../../effected/env/index.ts";
@@ -7,6 +10,13 @@ import { Cause, ConfigProvider, Console, Effect, Layer, Option, Stdio, Terminal 
 import type { Document } from "../../effected/cli/index.ts";
 import { CliFailure, CliLinks, CliRuntime, CliTheme, Doc, Render } from "../../effected/cli/index.ts";
 import { commandLines } from "./helpers/runnerCommands.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
+
+class TestError extends Data.TaggedError("TestError")<{ readonly message: string; readonly cause?: unknown }> {
+	override readonly name = "Error";
+	constructor(message: string, options?: { readonly cause?: unknown }) { super({ message, ...options }); }
+}
 
 const ZWSP = String.fromCodePoint(0x200b);
 const ESC = String.fromCharCode(0x1b);
@@ -188,14 +198,13 @@ describe("the default failure report", () => {
 		),
 	);
 
-	const report = (env: Record<string, string>, message: string, withEnv = true) =>
-		Effect.gen(function* () {
+	const report = Effect.fn("report")(function* (env: Record<string, string>, message: string, withEnv: boolean = true) {
 			const err: Array<string> = [];
 			const double = Object.assign(Object.create(console) as Console.Console, {
 				log: () => undefined,
 				error: (...args: ReadonlyArray<unknown>) => err.push(args.map(String).join(" ")),
 			});
-			const program = Effect.suspend(() => Effect.fail(new Error(message)));
+			const program = Effect.suspend(() => Effect.fail(new TestError(message)));
 			yield* (
 				withEnv ? CliRuntime.main(program, { platform, env: {} }) : CliRuntime.main(program, { platform: Layer.empty })
 			).pipe(
@@ -215,7 +224,7 @@ describe("the default failure report", () => {
 			]) {
 				for (const message of HOSTILE) {
 					const err = yield* report(env, message);
-					assert.deepStrictEqual(commandLines(err.join("\n")), [], `${JSON.stringify(env)} ${JSON.stringify(message)}`);
+					assert.deepStrictEqual(commandLines(err.join("\n")), [], `${Result.getOrThrow(Schema.encodeUnknownResult(Json)(env))} ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(message))}`);
 					assert.isAbove(err.length, 0);
 				}
 			}
@@ -226,7 +235,7 @@ describe("the default failure report", () => {
 		Effect.gen(function* () {
 			for (const message of HOSTILE) {
 				const err = yield* report({ GITHUB_ACTIONS: "true" }, message, false);
-				assert.deepStrictEqual(commandLines(err.join("\n")), [], JSON.stringify(message));
+				assert.deepStrictEqual(commandLines(err.join("\n")), [], Result.getOrThrow(Schema.encodeUnknownResult(Json)(message)));
 			}
 		}),
 	);

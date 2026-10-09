@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 import type { Block, Document, Inline, LinkTarget } from "../Doc.ts";
 import { Fmt, sanitize } from "../Fmt.ts";
 import type { RenderContext } from "../Render.ts";
@@ -496,5 +497,8 @@ const blockMd = (walk: Walk, block: Block, depth: number, compact = false): Line
  *
  * @internal
  */
-export const renderMarkdown = (doc: Document, ctx: RenderContext): string =>
-	joinBlocks(doc.map((block) => blockMd({ ctx }, block, 0))).join("\n");
+export const renderMarkdown: {
+	(ctx: RenderContext): (doc: Document) => string;
+	(doc: Document, ctx: RenderContext): string;
+} = dual(2, (doc: Document, ctx: RenderContext): string =>
+	joinBlocks(doc.map((block) => blockMd({ ctx }, block, 0))).join("\n"));

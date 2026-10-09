@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 import { Context, LogLevel, Logger, References } from "effect";
 
 /**
@@ -19,11 +20,14 @@ export const Level: Context.Reference<LogLevel.LogLevel> = Context.Reference<Log
  *
  * @internal
  */
-export const passes = (record: Logger.Options<unknown>, installed: LogLevel.LogLevel): boolean => {
+export const passes: {
+	(installed: LogLevel.LogLevel): (record: Logger.Options<unknown>) => boolean;
+	(record: Logger.Options<unknown>, installed: LogLevel.LogLevel): boolean;
+} = dual(2, (record: Logger.Options<unknown>, installed: LogLevel.LogLevel): boolean => {
 	const current = record.fiber.getRef(References.MinimumLogLevel);
 	const threshold = current === installed ? record.fiber.getRef(Level) : current;
 	return LogLevel.isGreaterThanOrEqualTo(record.logLevel, threshold);
-};
+});
 
 /**
  * The NDJSON line for a record, the one shape every diagnostics sink writes.

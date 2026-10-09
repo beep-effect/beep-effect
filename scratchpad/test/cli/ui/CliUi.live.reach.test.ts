@@ -52,8 +52,7 @@ const tool = (withFinal: boolean) =>
 	);
 
 /** Run argv with an agent's environment (not interactive) on fake streams; what reached the view's stdout. */
-const run = (argv: ReadonlyArray<string>, withFinal: boolean) =>
-	Effect.gen(function* () {
+const run = Effect.fn("run")(function* (argv: ReadonlyArray<string>, withFinal: boolean) {
 		const fake = makeFakeStreams({ columns: 80, rows: 24 });
 		const help: Array<string> = [];
 		const console: Console.Console = Object.assign(Object.create(globalThis.console) as Console.Console, {

@@ -1,3 +1,5 @@
+import { Schema } from "effect";
+import { Result } from "effect";
 import { assert, describe, it } from "@effect/vitest";
 import { Markdown } from "../../effected/markdown/index.ts";
 import { Effect } from "effect";
@@ -5,6 +7,8 @@ import type { Block, RenderContext } from "../../effected/cli/index.ts";
 import { Doc, Glyphs, Render, Status } from "../../effected/cli/index.ts";
 import { ESC, composite } from "./helpers/hostileDoc.ts";
 import { contextOf } from "./helpers/renderContext.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 /** The parts of a parsed node these tests read; the parser is the oracle, so nothing here renders. */
 interface N {
@@ -166,9 +170,9 @@ describe("Render.markdown: headings and paragraphs", () => {
 					assert.deepStrictEqual(
 						kids(root).map((n) => n.type),
 						["paragraph", "paragraph"],
-						JSON.stringify(line),
+						Result.getOrThrow(Schema.encodeUnknownResult(Json)(line)),
 					);
-					assert.strictEqual(textOf(kids(root)[0] as N), line.trimStart(), JSON.stringify(line));
+					assert.strictEqual(textOf(kids(root)[0] as N), line.trimStart(), Result.getOrThrow(Schema.encodeUnknownResult(Json)(line)));
 				}
 				const two = yield* treeOf([Doc.paragraph("first\n---\nsecond\n===")]);
 				assert.deepStrictEqual(
@@ -201,16 +205,16 @@ describe("Render.markdown: headings and paragraphs", () => {
 				assert.deepStrictEqual(
 					kids(alone).map((n) => n.type),
 					["paragraph"],
-					JSON.stringify(line),
+					Result.getOrThrow(Schema.encodeUnknownResult(Json)(line)),
 				);
-				assert.strictEqual(textOf(kids(alone)[0] as N), line.trim(), JSON.stringify(line));
+				assert.strictEqual(textOf(kids(alone)[0] as N), line.trim(), Result.getOrThrow(Schema.encodeUnknownResult(Json)(line)));
 				const after = yield* treeOf([Doc.paragraph(`a\n${line}`)]);
 				assert.deepStrictEqual(
 					kids(after).map((n) => n.type),
 					["paragraph"],
-					`after: ${JSON.stringify(line)}`,
+					`after: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(line))}`,
 				);
-				assert.strictEqual(textOf(kids(after)[0] as N), `a\n${line.trim()}`, `after: ${JSON.stringify(line)}`);
+				assert.strictEqual(textOf(kids(after)[0] as N), `a\n${line.trim()}`, `after: ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(line))}`);
 			}
 		}),
 	);
@@ -327,7 +331,7 @@ describe("Render.markdown: headings and paragraphs", () => {
 						[...types].every((t) => ["root", "paragraph", "text", "break"].includes(t)) &&
 						textOf(root) === expected;
 					if (!ok && failures.length < 5)
-						failures.push(`${JSON.stringify(text)} -> ${JSON.stringify([...types])} ${JSON.stringify(textOf(root))}`);
+						failures.push(`${Result.getOrThrow(Schema.encodeUnknownResult(Json)(text))} -> ${Result.getOrThrow(Schema.encodeUnknownResult(Json)([...types]))} ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(textOf(root)))}`);
 				}
 				assert.isAbove(cases, 10_000, "the enumeration ran");
 				assert.deepStrictEqual(failures, []);
@@ -578,10 +582,10 @@ describe("Render.markdown: code, diff, collapsible and callout", () => {
 				assert.deepStrictEqual(
 					kids(root).map((n) => n.type),
 					["code"],
-					JSON.stringify(text),
+					Result.getOrThrow(Schema.encodeUnknownResult(Json)(text)),
 				);
 				assert.strictEqual(kids(root)[0]?.lang, "ts");
-				assert.strictEqual(fenceValue(kids(root)[0]), text.replace(/\t/g, " "), JSON.stringify(text));
+				assert.strictEqual(fenceValue(kids(root)[0]), text.replace(/\t/g, " "), Result.getOrThrow(Schema.encodeUnknownResult(Json)(text)));
 			}
 			const noLang = yield* treeOf([Doc.codeBlock("x")]);
 			assert.isTrue(kids(noLang)[0]?.lang === null || kids(noLang)[0]?.lang === undefined);
@@ -783,8 +787,8 @@ describe("Render.markdown: links", () => {
 					const links = [...descendants(root)].filter((n) => n.type === "link");
 					for (const link of links) {
 						// A link that is emitted decodes to exactly the URL text that was given, so the check saw what a reader sees.
-						assert.strictEqual(link.url, url.replace(/[\r\n]/g, "").trim(), JSON.stringify(url));
-						assert.notMatch(link.url ?? "", /^\s*j\s*a\s*v\s*a\s*s\s*c\s*r\s*i\s*p\s*t\s*:/i, JSON.stringify(url));
+						assert.strictEqual(link.url, url.replace(/[\r\n]/g, "").trim(), Result.getOrThrow(Schema.encodeUnknownResult(Json)(url)));
+						assert.notMatch(link.url ?? "", /^\s*j\s*a\s*v\s*a\s*s\s*c\s*r\s*i\s*p\s*t\s*:/i, Result.getOrThrow(Schema.encodeUnknownResult(Json)(url)));
 					}
 				}
 				// The ones that spell a dangerous scheme once whitespace, a control character or a line break is gone are not links.
@@ -795,8 +799,8 @@ describe("Render.markdown: links", () => {
 					"  \u0001javascript:alert(1)",
 				]) {
 					const root = yield* treeOf([Doc.paragraph(Doc.link({ url }, "click"))]);
-					assert.notInclude(descendantTypes(kids(root)[0] as N), "link", JSON.stringify(url));
-					assert.include(descendantTypes(kids(root)[0] as N), "inlineCode", JSON.stringify(url));
+					assert.notInclude(descendantTypes(kids(root)[0] as N), "link", Result.getOrThrow(Schema.encodeUnknownResult(Json)(url)));
+					assert.include(descendantTypes(kids(root)[0] as N), "inlineCode", Result.getOrThrow(Schema.encodeUnknownResult(Json)(url)));
 				}
 			}),
 	);
@@ -939,22 +943,22 @@ describe("Render.markdown: lists, trees and counts", () => {
 				assert.deepStrictEqual(
 					kids(inline).map((n) => n.type),
 					["paragraph"],
-					`inline ${JSON.stringify(label)}`,
+					`inline ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(label))}`,
 				);
 				const columns = yield* treeOf([Doc.counts({ counters: [counter(label)], layout: "columns" })]);
 				assert.deepStrictEqual(
 					kids(columns).map((n) => n.type),
 					["list"],
-					`columns ${JSON.stringify(label)}`,
+					`columns ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(label))}`,
 				);
-				assert.strictEqual(kids(kids(columns)[0]).length, 1, `columns ${JSON.stringify(label)}: one item`);
+				assert.strictEqual(kids(kids(columns)[0]).length, 1, `columns ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(label))}: one item`);
 				const row = yield* treeOf([Doc.counts({ counters: [counter(label)], layout: "row" })]);
 				assert.deepStrictEqual(
 					kids(row).map((n) => n.type),
 					["table"],
-					`row ${JSON.stringify(label)}`,
+					`row ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(label))}`,
 				);
-				assert.strictEqual(kids(tableOf(row)).length, 2, `row ${JSON.stringify(label)}: a header and one row`);
+				assert.strictEqual(kids(tableOf(row)).length, 2, `row ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(label))}: a header and one row`);
 			}
 		}),
 	);
@@ -1005,23 +1009,23 @@ describe("Render.markdown: lists, trees and counts", () => {
 					assert.deepStrictEqual(
 						kids(root).map((n) => n.type),
 						["list"],
-						JSON.stringify(label),
+						Result.getOrThrow(Schema.encodeUnknownResult(Json)(label)),
 					);
 					const items = kids(kids(root)[0]);
-					assert.strictEqual(items.length, 2, `${JSON.stringify(label)}: two items`);
+					assert.strictEqual(items.length, 2, `${Result.getOrThrow(Schema.encodeUnknownResult(Json)(label))}: two items`);
 					for (const item of items) {
 						assert.deepStrictEqual(
 							kids(item).map((n) => n.type),
 							["paragraph"],
-							`${JSON.stringify(label)}: an item is one paragraph`,
+							`${Result.getOrThrow(Schema.encodeUnknownResult(Json)(label))}: an item is one paragraph`,
 						);
 						assert.deepStrictEqual(
 							[...new Set(descendantTypes(item))].sort(),
 							["listItem", "paragraph", "text"],
-							JSON.stringify(label),
+							Result.getOrThrow(Schema.encodeUnknownResult(Json)(label)),
 						);
 					}
-					assert.strictEqual(textOf(items[0] as N), `${label.trimStart()}: 1`, JSON.stringify(label));
+					assert.strictEqual(textOf(items[0] as N), `${label.trimStart()}: 1`, Result.getOrThrow(Schema.encodeUnknownResult(Json)(label)));
 				}
 			}),
 	);
@@ -1097,7 +1101,7 @@ describe("Render.markdown: no ANSI, and a hostile document stays inside its own 
 				.map((n) => n.value);
 			assert.isTrue(
 				htmls.every((h) => /^(<details( open)?><summary>[^<]*<\/summary>|<\/details>)$/.test(h ?? "")),
-				JSON.stringify(htmls),
+				Result.getOrThrow(Schema.encodeUnknownResult(Json)(htmls)),
 			);
 			for (const link of [...descendants(root)].filter((n) => n.type === "link")) {
 				assert.match(

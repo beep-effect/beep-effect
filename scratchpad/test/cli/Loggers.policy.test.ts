@@ -1,9 +1,13 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
+import { Schema } from "effect";
+import { Result } from "effect";
 import { assert, describe, it } from "@effect/vitest";
 import { Audience, CurrentRuntimeEnv, TerminalEnv } from "../../effected/env/index.ts";
 import { Console, Effect, Layer, Option } from "effect";
 import { CliLog, CliLogger } from "../../effected/cli/index.ts";
 import { commandLines, isCommand } from "./helpers/runnerCommands.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 const ESC = String.fromCharCode(0x1b);
 const BEL = String.fromCharCode(7);
@@ -24,8 +28,7 @@ type Ci = "github-actions" | "generic" | "absent";
 const runtime = (ci: Ci) => (ci === "absent" ? Layer.empty : CurrentRuntimeEnv.layerTest({ ci: Option.some(ci) }));
 
 /** Run `program` under the plain CliLogger and a captured Console, with an optional CurrentRuntimeEnv. */
-const plain = (program: Effect.Effect<void>, ci: Ci = "absent", options: Parameters<typeof CliLogger.layer>[0] = {}) =>
-	Effect.gen(function* () {
+const plain = Effect.fn("plain")(function* (program: Effect.Effect<void>, ci: Ci = "absent", options: Parameters<typeof CliLogger.layer>[0] = {}) {
 		const { double, err } = capturing();
 		yield* program.pipe(
 			Effect.provide(runtime(ci)),
@@ -36,13 +39,7 @@ const plain = (program: Effect.Effect<void>, ci: Ci = "absent", options: Paramet
 	});
 
 /** The same under CliLog with a fixed format, level Debug, and the audience and terminal given. */
-const diagnostics = (
-	program: Effect.Effect<void>,
-	format: "json" | "pretty",
-	ci: Ci,
-	audience: "human" | "agent" = "human",
-) =>
-	Effect.gen(function* () {
+const diagnostics = Effect.fn("diagnostics")(function* (program: Effect.Effect<void>, format: "json" | "pretty", ci: Ci, audience: "human" | "agent" = "human") {
 		const { double, err } = capturing();
 		const terminal = TerminalEnv.layerTest({ stderr: { isTerminal: true, color: "truecolor" } });
 		yield* program.pipe(
@@ -82,7 +79,7 @@ describe("CliLogger sanitises and, under GitHub Actions, neutralizes", () => {
 				"b\r\n  ##[stop-commands]t",
 			]) {
 				const err = yield* plain(Effect.logError(text), "github-actions");
-				assert.deepStrictEqual(commandLines(err.join("\n")), [], JSON.stringify(text));
+				assert.deepStrictEqual(commandLines(err.join("\n")), [], Result.getOrThrow(Schema.encodeUnknownResult(Json)(text)));
 				assert.isAbove(err.length, 0);
 			}
 		}),
@@ -150,7 +147,7 @@ describe("CliLog's pretty line sanitises and neutralizes", () => {
 		Effect.gen(function* () {
 			for (const text of [HOSTILE, "x\n::error::y", "prefix ##[error]y", "a\r\n::add-mask::z"]) {
 				const err = yield* diagnostics(Effect.logError(text), "pretty", "github-actions");
-				assert.deepStrictEqual(commandLines(err.join("\n")), [], JSON.stringify(text));
+				assert.deepStrictEqual(commandLines(err.join("\n")), [], Result.getOrThrow(Schema.encodeUnknownResult(Json)(text)));
 				assert.isAbove(err.length, 0);
 			}
 		}),
@@ -173,7 +170,7 @@ describe("CliLog's NDJSON: a runner can read ##[ out of a JSON string too", () =
 			for (const text of ["prefix ##[add-mask]secret", "x\n::error::y ##[stop-commands]t", "a ##[b] c ##[d]"]) {
 				const err = yield* diagnostics(Effect.logError(text), "json", "github-actions");
 				const lines = err.filter((line) => line.startsWith("{"));
-				assert.strictEqual(lines.length, 1, JSON.stringify(err));
+				assert.strictEqual(lines.length, 1, Result.getOrThrow(Schema.encodeUnknownResult(Json)(err)));
 				assert.isFalse(isCommand(lines[0] ?? ""), `the legacy parser finds ##[ anywhere: ${lines[0]}`);
 				assert.strictEqual(parsed(lines[0] ?? "").message, text, "lossless: the JSON decodes to the same text");
 			}

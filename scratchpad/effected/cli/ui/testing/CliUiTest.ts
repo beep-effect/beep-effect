@@ -1,10 +1,11 @@
+import { Clock, Duration, Schedule } from "effect";
 // Root and ./ui types are named through the package's own name, so the emitted ui-testing.d.ts imports them rather
 // than carrying copies a consumer's own layers and screens could not satisfy.
 import type * as Cli from "../../index.ts";
 import type { KeyName, LiveHandle, LiveOptions, Screen, ScreenControl } from "../../ui.ts";
 import type { ColorLevel } from "../../../env/index.ts";
 import { TerminalEnv } from "../../../env/index.ts";
-import type { Duration, Scope } from "effect";
+import type { Scope } from "effect";
 import { Cause, Console, Effect, Exit, Fiber, Inspectable, Layer, Option, Queue, Stream } from "effect";
 import { TestClock } from "effect/testing";
 import type { ReactElement } from "react";
@@ -441,16 +442,11 @@ const MARKUP = new RegExp(`\\[(${TOKENS.join("|")})\\][\\s\\S]*?\\[/\\1\\]|\\[(?
 
 /** Run `register`'s check on native timers, which a `TestClock` cannot hold, until it says done. */
 const realTime = (poll: () => boolean): Effect.Effect<void> =>
-	Effect.callback<void>((resume) => {
-		if (poll()) return resume(Effect.void);
-		const timer = setInterval(() => {
-			if (poll()) {
-				clearInterval(timer);
-				resume(Effect.void);
-			}
-		}, 2);
-		return Effect.sync(() => clearInterval(timer));
-	});
+	Effect.sync(poll).pipe(
+		Effect.repeat({ until: (done) => done, schedule: Schedule.fixed("2 millis") }),
+		Effect.asVoid,
+		Effect.provideService(Clock.Clock, Clock.Clock.defaultValue()),
+	);
 
 /**
  * Resume once every timer already due by the wall clock has run.
@@ -461,22 +457,15 @@ const realTime = (poll: () => boolean): Effect.Effect<void> =>
  * `setImmediate` runs in the check phase, after the loop has refreshed its time; a zero-delay timer set there comes due
  * after every timer already overdue, so the next timers phase runs them first.
  */
-const afterDueTimers: Effect.Effect<void> = Effect.callback<void>((resume) => {
-	let timer: ReturnType<typeof setTimeout> | undefined;
-	let after: ReturnType<typeof setImmediate> | undefined;
-	const immediate = setImmediate(() => {
-		timer = setTimeout(() => {
-			// One more check phase: work a due timer scheduled there (React's scheduler runs on `setImmediate` in Node,
-			// so an update a timer makes can commit, and Ink write its frame, only then) runs before the resume.
-			after = setImmediate(() => resume(Effect.void));
-		}, 0);
-	});
-	return Effect.sync(() => {
-		clearImmediate(immediate);
-		if (timer !== undefined) clearTimeout(timer);
-		if (after !== undefined) clearImmediate(after);
-	});
+const checkPhase: Effect.Effect<void> = Effect.callback<void>((resume) => {
+	const immediate = setImmediate(() => resume(Effect.void));
+	return Effect.sync(() => clearImmediate(immediate));
 });
+
+const afterDueTimers: Effect.Effect<void> = Effect.andThen(
+	checkPhase,
+	Effect.andThen(Clock.Clock.defaultValue().sleep(Duration.millis(1)), checkPhase),
+);
 
 const QUIET_MS = 50;
 const TRAILING_QUIET_MS = 8;
@@ -557,7 +546,7 @@ const makeTerminal = (
 		columns,
 		rows,
 		onStdoutWrite: (chunk) => {
-			lastWrite = Date.now();
+			lastWrite = Clock.Clock.defaultValue().currentTimeMillisUnsafe();
 			const current = captures.at(-1);
 			// An ended capture takes no more frames: a write after its unmount (a log line, a printed frame) is not one.
 			if (!frameDue || current === undefined || current.ended) return;
@@ -624,7 +613,7 @@ const makeTerminal = (
 			const pastLimit = (now: number): boolean => firstFrameAt !== undefined && now - firstFrameAt >= limitMs;
 			const quiet = realTime(() => {
 				if (ended()) return true;
-				const now = Date.now();
+				const now = Clock.Clock.defaultValue().currentTimeMillisUnsafe();
 				if (raws().length > before) {
 					firstFrameAt ??= now;
 					return now - lastWrite >= TRAILING_QUIET_MS || pastLimit(now);
@@ -637,7 +626,7 @@ const makeTerminal = (
 			const confirmed: Effect.Effect<void> = Effect.flatMap(quiet, () => {
 				const seen = lastWrite;
 				return Effect.flatMap(afterDueTimers, () =>
-					lastWrite === seen || ended() || pastLimit(Date.now()) ? Effect.void : confirmed,
+					lastWrite === seen || ended() || pastLimit(Clock.Clock.defaultValue().currentTimeMillisUnsafe()) ? Effect.void : confirmed,
 				);
 			});
 			return confirmed;
@@ -670,9 +659,9 @@ const makeTerminal = (
 				if (ended()) return Effect.die(new Error(SCREEN_ENDED));
 				const before = raws().length;
 				fake.input(bytes);
-				const sent = Date.now();
-				const flushed = flushMs === 0 ? Effect.void : realTime(() => Date.now() - sent >= flushMs);
-				return Effect.andThen(flushed, after(before, Date.now()));
+				const sent = Clock.Clock.defaultValue().currentTimeMillisUnsafe();
+				const flushed = flushMs === 0 ? Effect.void : realTime(() => Clock.Clock.defaultValue().currentTimeMillisUnsafe() - sent >= flushMs);
+				return Effect.andThen(flushed, after(before, Clock.Clock.defaultValue().currentTimeMillisUnsafe()));
 			});
 		const handle: CliUiTestScreen = {
 			press: (...keys) =>
@@ -696,7 +685,7 @@ const makeTerminal = (
 				surfaced(
 					Effect.suspend(() => {
 						const before = raws().length;
-						const since = Date.now();
+						const since = Clock.Clock.defaultValue().currentTimeMillisUnsafe();
 						fake.resize(nextColumns, nextRows);
 						return after(before, since);
 					}),
@@ -718,8 +707,7 @@ const makeTerminal = (
  * ended, or 2 s have passed. A crash surfaces on every read and send, as on a session's screen; with `refusal`, so does
  * a run refused as not interactive, for a view, which has no `result` to carry it.
  */
-const mount = <A>(screen: Screen<A>, options: CliUiTestOptions, refusal: boolean) =>
-	Effect.gen(function* () {
+const mount = Effect.fn("mount")(function*<A> (screen: Screen<A>, options: CliUiTestOptions, refusal: boolean) {
 		const terminal = makeTerminal(options);
 		let ended = false;
 		// How the run ended when it failed or died (a crash, `NotInteractive`), never for the scope's own interrupt nor a
@@ -727,14 +715,13 @@ const mount = <A>(screen: Screen<A>, options: CliUiTestOptions, refusal: boolean
 		let failure: Cause.Cause<unknown> | undefined;
 		const slot = holderSlot();
 		let control: ScreenControl<A> | undefined;
-		const held: Screen<A> = async (given) => {
+		const held: Screen<A> = (given) => {
 			control = given;
-			const initial = await screen(given);
-			return inkModules().react.createElement(holder(), { initial, bind: slot.bind });
+			return Promise.resolve(screen(given)).then((initial) => inkModules().react.createElement(holder(), { initial, bind: slot.bind }));
 		};
 		const fiber = yield* Effect.forkScoped(
 			CliUi.run(held).pipe(
-				Effect.provide(terminal.layer),
+				(self) => Effect.scopedWith((scope) => Effect.flatMap(Layer.buildWithScope(terminal.layer, scope), (context) => Effect.provideContext(self, context))),
 				Effect.onExit((exit) =>
 					Effect.sync(() => {
 						ended = true;
@@ -756,27 +743,27 @@ const mount = <A>(screen: Screen<A>, options: CliUiTestOptions, refusal: boolean
 			() => ended,
 			refusal ? () => failure : undefined,
 		);
-		const mountedBy = Date.now() + MOUNT_LIMIT_MS;
-		yield* realTime(() => raws().length > 0 || ended || Date.now() >= mountedBy);
-		yield* after(0, Date.now());
+		const mountedBy = Clock.Clock.defaultValue().currentTimeMillisUnsafe() + MOUNT_LIMIT_MS;
+		yield* realTime(() => raws().length > 0 || ended || Clock.Clock.defaultValue().currentTimeMillisUnsafe() >= mountedBy);
+		yield* after(0, Clock.Clock.defaultValue().currentTimeMillisUnsafe());
 		const swapTo = (next: Screen<A>): Effect.Effect<void> =>
 			Effect.gen(function* () {
 				// Bounded like the first frame: a handle queued behind another screen may never mount here.
-				const mountedBy = Date.now() + MOUNT_LIMIT_MS;
-				yield* realTime(() => slot.isBound() || ended || Date.now() >= mountedBy);
+				const mountedBy = Clock.Clock.defaultValue().currentTimeMillisUnsafe() + MOUNT_LIMIT_MS;
+				yield* realTime(() => slot.isBound() || ended || Clock.Clock.defaultValue().currentTimeMillisUnsafe() >= mountedBy);
 				if (ended) return yield* Effect.die(new Error(RERENDER_AFTER_END));
 				if (!slot.isBound() || control === undefined) {
 					return yield* Effect.die(new Error(RERENDER_BEFORE_MOUNT));
 				}
 				const given = control;
-				const element = yield* Effect.promise(async () => next(given));
+				const element = yield* Effect.promise(() => Promise.resolve(next(given)));
 				const before = raws().length;
-				const since = Date.now();
+				const since = Clock.Clock.defaultValue().currentTimeMillisUnsafe();
 				// The screen ended while the element was built (unbound: it is unmounting). Wait for the end to be
 				// recorded, so a screen that crashed reports its crash rather than having ended.
 				if (ended || !slot.swap(element)) {
-					const endedBy = Date.now() + MOUNT_LIMIT_MS;
-					yield* realTime(() => ended || Date.now() >= endedBy);
+					const endedBy = Clock.Clock.defaultValue().currentTimeMillisUnsafe() + MOUNT_LIMIT_MS;
+					yield* realTime(() => ended || Clock.Clock.defaultValue().currentTimeMillisUnsafe() >= endedBy);
 					return yield* surfaced(Effect.die(new Error(RERENDER_AFTER_END)));
 				}
 				yield* after(before, since);
@@ -988,8 +975,8 @@ export class CliUiTest {
 						contains === undefined
 							? raws().length > 0
 							: raws().some((raw) => raw.replace(ESCAPES, "").includes(contains));
-					const by = Date.now() + MOUNT_LIMIT_MS;
-					yield* realTime(() => shows() || capture()?.ended === true || Date.now() >= by);
+					const by = Clock.Clock.defaultValue().currentTimeMillisUnsafe() + MOUNT_LIMIT_MS;
+					yield* realTime(() => shows() || capture()?.ended === true || Clock.Clock.defaultValue().currentTimeMillisUnsafe() >= by);
 					// A screen that crashed dies with its crash, whatever `next` waited for.
 					yield* surfaced(Effect.void);
 					if (!shows()) {
@@ -1001,7 +988,7 @@ export class CliUiTest {
 									: "it did not within 2 s";
 						return yield* Effect.die(new Error(NEXT_DIED(index, contains, terminal.captures.length, why)));
 					}
-					yield* after(0, Date.now());
+					yield* after(0, Clock.Clock.defaultValue().currentTimeMillisUnsafe());
 					return handle;
 				});
 			return {
@@ -1089,13 +1076,13 @@ export class CliUiTest {
 			);
 			const queue = yield* Queue.unbounded<E, Cause.Done>();
 			const handle = yield* CliUi.live<E, S>({ ...view, events: Stream.fromQueue(queue) }).pipe(
-				Effect.provide(terminal.layer),
+				(self) => Effect.scopedWith((scope) => Effect.flatMap(Layer.buildWithScope(terminal.layer, scope), (context) => Effect.provideContext(self, context))),
 			);
 			const raws = (): ReadonlyArray<string> => terminal.captures.flatMap((capture) => capture.raws);
 			const settled = <X>(effect: Effect.Effect<X>): Effect.Effect<void> =>
 				Effect.suspend(() => {
 					const before = raws().length;
-					const since = Date.now();
+					const since = Clock.Clock.defaultValue().currentTimeMillisUnsafe();
 					return Effect.andThen(
 						effect,
 						terminal.settle(raws, () => false, before, since),

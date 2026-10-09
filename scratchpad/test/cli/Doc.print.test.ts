@@ -48,8 +48,7 @@ const layers = (setup: Setup) => {
 };
 
 /** Run an effect needing the render services, with a captured Console. */
-const under = <A>(setup: Setup, effect: Effect.Effect<A, never, CliTheme | TerminalEnv | Audience | CliLinks>) =>
-	Effect.gen(function* () {
+const under = Effect.fn("under")(function*<A> (setup: Setup, effect: Effect.Effect<A, never, CliTheme | TerminalEnv | Audience | CliLinks>) {
 		const { double, out, err } = capturing();
 		const value = yield* effect.pipe(Effect.provide(layers(setup)), Effect.provideService(Console.Console, double));
 		return { value, out, err };

@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 import type * as Cli from "../index.ts";
 import { Option } from "effect";
 import { graphemes } from "../internal/displayWidth.ts";
@@ -232,7 +233,10 @@ const keysOf = (input: string, key: Parameters<typeof UiKey.fromInk>[1]): Readon
  *
  * @public
  */
-export const useKeys = <Action>(
+export const useKeys: {
+	<Action>(dispatch: (action: Action) => void, options?: UseKeysOptions): (table: KeyTable<Action>) => void;
+	<Action>(table: KeyTable<Action>, dispatch: (action: Action) => void, options?: UseKeysOptions): void;
+} = dual((args) => typeof args[0] !== "function", <Action>(
 	table: KeyTable<Action>,
 	dispatch: (action: Action) => void,
 	options: UseKeysOptions = {},
@@ -247,4 +251,4 @@ export const useKeys = <Action>(
 		}),
 		{ isActive: options.isActive ?? true },
 	);
-};
+});

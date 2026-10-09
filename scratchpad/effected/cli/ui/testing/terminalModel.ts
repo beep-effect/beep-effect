@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 const ESC = String.fromCharCode(0x1b);
 
 /**
@@ -17,7 +18,10 @@ const ESC = String.fromCharCode(0x1b);
  *
  * @internal
  */
-export const screenAfter = (written: string, rows?: number): ReadonlyArray<string> => {
+export const screenAfter: {
+	(rows?: number): (written: string) => ReadonlyArray<string>;
+	(written: string, rows?: number): ReadonlyArray<string>;
+} = dual((args) => typeof args[0] === "string", (written: string, rows?: number): ReadonlyArray<string> => {
 	const lines: Array<string> = [""];
 	let row = 0;
 	let column = 0;
@@ -47,11 +51,11 @@ export const screenAfter = (written: string, rows?: number): ReadonlyArray<strin
 			row = Math.max(0, row - top);
 			if (lines.length === 0) lines.push("");
 		} else if (command === "H") {
-			const [line, col] = params === "" ? [1, 1] : params.split(";").map((part) => Number(part === "" ? 1 : part));
+			const [line, col] = params === undefined || params === "" ? [1, 1] : params.split(";").map((part) => Number(part === "" ? 1 : part));
 			row = screenTop() + (line ?? 1) - 1;
 			column = (col ?? 1) - 1;
 			while (lines.length <= row) lines.push("");
 		}
 	}
 	return lines.map((line) => line.trimEnd()).filter((line) => line !== "");
-};
+});

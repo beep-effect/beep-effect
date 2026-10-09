@@ -17,18 +17,14 @@ const capturing = () => {
 	return { console: console_, out, err };
 };
 
-const run = (
-	program: Effect.Effect<void, never, CliTheme | Audience>,
-	options: {
+const run = Effect.fn("run")(function* (program: Effect.Effect<void, never, CliTheme | Audience>, options: {
 		readonly audience?: AudienceKind;
 		readonly color?: "none" | "basic" | "truecolor";
 		readonly stderrColor?: "none" | "basic" | "truecolor";
 		readonly glyphs?: "unicode" | "ascii";
 		/** Provide `CurrentRuntimeEnv` with this CI; omitted, the service is not in the environment at all. */
 		readonly ci?: "github-actions" | "generic" | "none";
-	} = {},
-) =>
-	Effect.gen(function* () {
+	} = {}) {
 		const { console: double, out, err } = capturing();
 		yield* program.pipe(
 			Effect.provide(

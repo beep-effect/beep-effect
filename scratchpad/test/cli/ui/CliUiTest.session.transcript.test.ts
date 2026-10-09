@@ -135,15 +135,13 @@ const profile = Select.screen({
 	],
 });
 
-const pick = (clear: boolean) =>
-	Effect.gen(function* () {
+const pick = Effect.fn("pick")(function* (clear: boolean) {
 		const chosen = yield* CliUi.run(profile, clear ? { clear: true } : undefined);
 		yield* Console.log(chosen);
 	});
 
 describe("CliUiTest.session with renderPath: production", () => {
-	const answered = (clear: boolean) =>
-		Effect.gen(function* () {
+	const answered = Effect.fn("answered")(function* (clear: boolean) {
 			const session = yield* CliUiTest.session({ renderPath: "production", color: "none" });
 			const fiber = yield* Effect.forkScoped(pick(clear).pipe(Effect.provide(session.layer)));
 			const screen = yield* session.next({ contains: "Profile" });
@@ -152,7 +150,7 @@ describe("CliUiTest.session with renderPath: production", () => {
 			yield* Fiber.join(fiber);
 			assert.strictEqual(yield* session.stdout, "library\n");
 			return { transcript: yield* session.transcript, written: yield* session.written };
-		}).pipe(Effect.scoped);
+		}, Effect.scoped);
 
 	it.effect("a screen run with clear: true leaves nothing on the terminal", () =>
 		Effect.gen(function* () {

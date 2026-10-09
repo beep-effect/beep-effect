@@ -1,7 +1,8 @@
+import { dual } from "effect/Function";
 import type { AudienceShape } from "../../env/index.ts";
 import { Audience, TerminalEnv } from "../../env/index.ts";
 import { CommandNeutralizer } from "../../github-commands/index.ts";
-import type { Cause } from "effect";
+import { Cause } from "effect";
 import { Config, Context, Effect, MutableRef, Option } from "effect";
 import { CliFailure } from "../CliFailure.ts";
 import { CliLinks } from "../CliLinks.ts";
@@ -115,7 +116,10 @@ const build = (audience?: AudienceShape, settings: FailureSettings = {}): Effect
  *
  * @internal
  */
-export const refreshFailureTarget = (audience?: AudienceShape, settings?: FailureSettings): Effect.Effect<void> =>
+export const refreshFailureTarget: {
+	(audience?: AudienceShape, settings?: FailureSettings): Effect.Effect<void>;
+	(settings?: FailureSettings): (audience?: AudienceShape) => Effect.Effect<void>;
+} = dual((args) => args.length === 0 || args.length >= 2 || args[0] === undefined || "kind" in args[0], (audience?: AudienceShape, settings?: FailureSettings): Effect.Effect<void> =>
 	Effect.gen(function* () {
 		const cell = yield* FailureTargetCell;
 		if (cell === undefined) return;
@@ -131,7 +135,7 @@ export const refreshFailureTarget = (audience?: AudienceShape, settings?: Failur
 			},
 		);
 		if (target !== undefined) MutableRef.set(cell, target);
-	});
+	}));
 
 /**
  * The target a report is rendered with: the cell, else the services in context, else the plain fallback.
@@ -168,10 +172,13 @@ const withoutStatus = (doc: Document): Document =>
  *
  * @internal
  */
-export const linesOf = (
+export const linesOf: {
+	(target: FailureTarget, status?: boolean, spans?: "app" | "all" | "off" | undefined): (cause: Cause.Cause<unknown>) => ReadonlyArray<string>;
+	(cause: Cause.Cause<unknown>, target: FailureTarget, status?: boolean, spans?: "app" | "all" | "off" | undefined): ReadonlyArray<string>;
+} = dual((args) => Cause.isCause(args[0]), (
 	cause: Cause.Cause<unknown>,
 	target: FailureTarget,
-	status = true,
+	status: boolean = true,
 	spans: "app" | "all" | "off" | undefined = target.spans,
 ): ReadonlyArray<string> => {
 	const full = CliFailure.toDoc(cause, {
@@ -183,7 +190,7 @@ export const linesOf = (
 	const doc = status ? full : withoutStatus(full);
 	const text = Render[target.format](doc, target.ctx);
 	return text === "" ? [] : text.split("\n");
-};
+});
 
 /**
  * A consumer `render`'s lines, made safe: neutralized under GitHub Actions, and stripped of escapes for an agent.
@@ -214,11 +221,14 @@ export const guardConsumerLines = (lines: ReadonlyArray<string>): Effect.Effect<
  *
  * @internal
  */
-export const plainFailureLines = (
+export const plainFailureLines: {
+	(status?: boolean, spans?: "app" | "all" | "off"): (cause: Cause.Cause<unknown>) => ReadonlyArray<string>;
+	(cause: Cause.Cause<unknown>, status?: boolean, spans?: "app" | "all" | "off"): ReadonlyArray<string>;
+} = dual((args) => Cause.isCause(args[0]), (
 	cause: Cause.Cause<unknown>,
 	status = true,
 	spans?: "app" | "all" | "off",
-): ReadonlyArray<string> => linesOf(cause, fallbackTarget, status, spans);
+): ReadonlyArray<string> => linesOf(cause, fallbackTarget, status, spans));
 
 const SPAN_SETTINGS: ReadonlyArray<"app" | "all" | "off"> = ["app", "all", "off"];
 
@@ -229,7 +239,10 @@ const SPAN_SETTINGS: ReadonlyArray<"app" | "all" | "off"> = ["app", "all", "off"
  *
  * @internal
  */
-export const readSpans = (
+export const readSpans: {
+	(envVar: string | undefined): (explicit: "app" | "all" | "off" | undefined) => Effect.Effect<{ readonly spans: "app" | "all" | "off" | undefined; readonly invalid: string | undefined }>;
+	(explicit: "app" | "all" | "off" | undefined, envVar: string | undefined): Effect.Effect<{ readonly spans: "app" | "all" | "off" | undefined; readonly invalid: string | undefined }>;
+} = dual(2, (
 	explicit: "app" | "all" | "off" | undefined,
 	envVar: string | undefined,
 ): Effect.Effect<{ readonly spans: "app" | "all" | "off" | undefined; readonly invalid: string | undefined }> =>
@@ -245,4 +258,4 @@ export const readSpans = (
 			spans: undefined,
 			invalid: `${envVar}=${raw.value} is not a span setting (${SPAN_SETTINGS.join("|")}); ignoring it`,
 		};
-	});
+	}));

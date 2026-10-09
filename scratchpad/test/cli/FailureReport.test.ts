@@ -1,4 +1,7 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
+import { Data } from "effect";
+import { Schema } from "effect";
+import { Result } from "effect";
 import { assert, describe, it } from "@effect/vitest";
 import type { AudienceKind } from "../../effected/env/index.ts";
 import { Audience, TerminalEnv } from "../../effected/env/index.ts";
@@ -6,6 +9,13 @@ import { Cause, ConfigProvider, Console, Effect, Exit, Layer, Option, Stdio, Ter
 import type { Document, FailureDetails, ReportFailuresOptions } from "../../effected/cli/index.ts";
 import { CliDoc, CliLinks, CliLogger, CliRuntime, CliTheme, Doc, Render } from "../../effected/cli/index.ts";
 import { commandLines } from "./helpers/runnerCommands.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
+
+class TestError extends Data.TaggedError("TestError")<{ readonly message: string; readonly cause?: unknown }> {
+	override readonly name = "Error";
+	constructor(message: string, options?: { readonly cause?: unknown }) { super({ message, ...options }); }
+}
 
 const ESC = String.fromCharCode(0x1b);
 
@@ -56,7 +66,10 @@ const layers = (audience: AudienceKind) => {
 
 describe("the report's last resort keeps the output policy", () => {
 	/** A document whose block the renderer has no case for: the walker throws on it. */
-	class Broken extends Error {
+	class Broken extends Data.TaggedError("Broken")<{ readonly message: string }> {
+	override readonly name = "Error";
+	constructor(message = "") { super({ message }); }
+
 		[CliDoc](): Document {
 			return [{ _tag: "NotABlock" } as never];
 		}
@@ -84,11 +97,11 @@ describe("the report's last resort keeps the output policy", () => {
 					Effect.provideService(Console.Console, double),
 				);
 				const text = err.join("\n");
-				assert.isAbove(err.length, 0, JSON.stringify(env));
-				assert.notInclude(text, ESC, JSON.stringify(env));
-				assert.notInclude(text, "\u0007", JSON.stringify(env));
-				assert.notInclude(text, "evil", JSON.stringify(env));
-				assert.deepStrictEqual(commandLines(text), [], JSON.stringify(env));
+				assert.isAbove(err.length, 0, Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
+				assert.notInclude(text, ESC, Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
+				assert.notInclude(text, "\u0007", Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
+				assert.notInclude(text, "evil", Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
+				assert.deepStrictEqual(commandLines(text), [], Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
 				assert.include(text, "injected", "the text itself is kept");
 			}
 		}),
@@ -101,8 +114,7 @@ describe("Doc.print forwards displayPath and width", () => {
 		Doc.paragraph(Array.from({ length: 30 }, (_, i) => `word${i}`).join(" ")),
 	];
 
-	const print = (audience: AudienceKind, options: Parameters<typeof Doc.print>[1]) =>
-		Effect.gen(function* () {
+	const print = Effect.fn("print")(function* (audience: AudienceKind, options: Parameters<typeof Doc.print>[1]) {
 			const { double, out } = capturing();
 			yield* Doc.print(doc, options).pipe(
 				Effect.provide(layers(audience)),
@@ -145,8 +157,8 @@ describe("main's env.displayPath is the default report's path display", () => {
 					Effect.provideService(Console.Console, double),
 				);
 				const text = err.join("\n");
-				assert.include(text, "src/run.ts:3:4", JSON.stringify(env));
-				assert.notInclude(text, "/repo/", JSON.stringify(env));
+				assert.include(text, "src/run.ts:3:4", Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
+				assert.notInclude(text, "/repo/", Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
 			}
 			const { double, err } = capturing();
 			yield* CliRuntime.main(dying("kaboom"), { platform, env: {} }).pipe(
@@ -177,10 +189,9 @@ describe("a consumer render's output is untrusted text", () => {
 	];
 	const render = () => PROBE;
 
-	const reportWith = (env: Record<string, string>, options: { readonly env?: boolean } = {}) =>
-		Effect.gen(function* () {
+	const reportWith = Effect.fn("reportWith")(function* (env: Record<string, string>, options: { readonly env?: boolean } = {}) {
 			const { double, err } = capturing();
-			const program = Effect.suspend(() => Effect.fail(new Error("x")));
+			const program = Effect.suspend(() => Effect.fail(new TestError("x")));
 			yield* (
 				options.env === false
 					? CliRuntime.main(program, { platform: Layer.empty, render })
@@ -201,7 +212,7 @@ describe("a consumer render's output is untrusted text", () => {
 				{ GITHUB_ACTIONS: "true" },
 			]) {
 				const err = yield* reportWith(env);
-				assert.deepStrictEqual(commandLines(err.join("\n")), [], JSON.stringify(env));
+				assert.deepStrictEqual(commandLines(err.join("\n")), [], Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
 				assert.isAbove(err.length, 0);
 				assert.include(err.join("\n"), "secret", "the text itself is kept");
 			}
@@ -229,9 +240,9 @@ describe("a consumer render's output is untrusted text", () => {
 				for (const env of [{ GITHUB_ACTIONS: "true" }, { TEST_AUDIENCE: "ci" }, { CI: "true", TEST_AUDIENCE: "ci" }]) {
 					const err = yield* reportWith(env);
 					const text = err.join("\n");
-					assert.notInclude(text, ESC, JSON.stringify(env));
-					assert.notInclude(text, BEL, JSON.stringify(env));
-					assert.notInclude(text, "evil", JSON.stringify(env));
+					assert.notInclude(text, ESC, Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
+					assert.notInclude(text, BEL, Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
+					assert.notInclude(text, "evil", Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
 					assert.include(text, "red", "the text itself is kept");
 					if (env.GITHUB_ACTIONS !== undefined) assert.deepStrictEqual(commandLines(text), [], "and still neutralized");
 				}
@@ -270,7 +281,7 @@ describe("a consumer render's output is untrusted text", () => {
 		Effect.gen(function* () {
 			const { double, err } = capturing();
 			yield* CliRuntime.main(
-				Effect.suspend(() => Effect.fail(new Error("x"))),
+				Effect.suspend(() => Effect.fail(new TestError("x"))),
 				{
 					platform,
 					env: {},
@@ -288,8 +299,7 @@ describe("a consumer render's output is untrusted text", () => {
 
 describe("a delegating render gets the default report", () => {
 	const human = ConfigProvider.fromUnknown({ TERM: "xterm-256color", FORCE_COLOR: "3" });
-	const report = (render?: NonNullable<ReportFailuresOptions["render"]>) =>
-		Effect.gen(function* () {
+	const report = Effect.fn("report")(function* (render?: NonNullable<ReportFailuresOptions["render"]>) {
 			const { double, err } = capturing();
 			yield* CliRuntime.main(dying("kaboom"), {
 				platform,
@@ -329,8 +339,7 @@ describe("a delegating render gets the default report", () => {
 });
 
 describe("details.lines: the run's report, with or without its status (A2)", () => {
-	const run = (env: Record<string, string>, render: NonNullable<ReportFailuresOptions["render"]>) =>
-		Effect.gen(function* () {
+	const run = Effect.fn("run")(function* (env: Record<string, string>, render: NonNullable<ReportFailuresOptions["render"]>) {
 			const { double, err } = capturing();
 			yield* CliRuntime.main(dying("kaboom"), {
 				platform,
@@ -395,8 +404,7 @@ describe("main's env.stackFrames (A3)", () => {
 		error.stack = `Error: kaboom\n    at run (${USER}:3:4)\n    at vendor (${VENDOR}:7:8)`;
 		return Effect.die(error);
 	});
-	const run = (stackFrames: "app" | "all" | undefined, render?: NonNullable<ReportFailuresOptions["render"]>) =>
-		Effect.gen(function* () {
+	const run = Effect.fn("run")(function* (stackFrames: "app" | "all" | undefined, render?: NonNullable<ReportFailuresOptions["render"]>) {
 			const { double, err } = capturing();
 			yield* CliRuntime.main(dyingThroughVendor, {
 				platform,
@@ -455,7 +463,7 @@ describe("a report target that cannot be built falls back to plain", () => {
 					Audience.layerTest("human"),
 					CliLinks.layerTest("off"),
 				);
-				const exit = yield* Effect.fail(new Error("disk full")).pipe(
+				const exit = yield* Effect.fail(new TestError("disk full")).pipe(
 					CliRuntime.reportFailures(),
 					Effect.provide(services),
 					Effect.provide(CliLogger.layer()),

@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 import type { AudienceKind, ColorLevel } from "../env/index.ts";
 import { TerminalEnv } from "../env/index.ts";
 import { Config, Context, Effect, Layer, Option } from "effect";
@@ -90,7 +91,10 @@ export interface CliThemeTestOptions {
  *
  * @internal
  */
-export const streamThemeAt = (
+export const streamThemeAt: {
+	(glyphs: GlyphSet, color: ColorLevel): (resolve: (token: TokenName | Style) => Style) => StreamTheme;
+	(resolve: (token: TokenName | Style) => Style, glyphs: GlyphSet, color: ColorLevel): StreamTheme;
+} = dual(3, (
 	resolve: (token: TokenName | Style) => Style,
 	glyphs: GlyphSet,
 	color: ColorLevel,
@@ -108,7 +112,7 @@ export const streamThemeAt = (
 			return text === undefined || text === "" ? glyph : `${glyph} ${text}`;
 		},
 	};
-};
+});
 
 /** The audience rule, shared by `CliTheme.forAudience` and the class's own docs. */
 const forAudience = (theme: StreamTheme, audience: AudienceKind | undefined): StreamTheme =>

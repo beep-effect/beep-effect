@@ -66,15 +66,17 @@ export const resolveInkEntry = (resolve: ((specifier: string) => string) | undef
  *
  * @internal
  */
-export const inkChalk = async (
+export const inkChalk = (
 	inkEntryOf: () => string = () => resolveInkEntry(),
 ): Promise<Option.Option<InkChalk>> => {
 	try {
 		const inkEntry = inkEntryOf();
 		const chalkPath = realpathSync(createRequire(inkEntry).resolve("chalk"));
-		const chalk: { readonly default?: unknown } = await import(/* @vite-ignore */ pathToFileURL(chalkPath).href);
-		return isInkChalk(chalk.default) ? Option.some(chalk.default) : Option.none();
+		return import(/* @vite-ignore */ pathToFileURL(chalkPath).href).then(
+			(chalk: { readonly default?: unknown }) => isInkChalk(chalk.default) ? Option.some(chalk.default) : Option.none(),
+			() => Option.none(),
+		);
 	} catch {
-		return Option.none();
+		return Promise.resolve(Option.none());
 	}
 };

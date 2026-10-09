@@ -303,8 +303,7 @@ describe("Viewport.View under CliUiTest", () => {
 });
 
 /** Run `screen` on the production render path: fake TTY streams, interactive, Ink's ordinary (non-debug) output. */
-const production = (screen: Screen<never>, keys: ReadonlyArray<string>) =>
-	Effect.gen(function* () {
+const production = Effect.fn("production")(function* (screen: Screen<never>, keys: ReadonlyArray<string>) {
 		const fake = makeFakeStreams({ columns: 40, rows: 10 });
 		const fiber = yield* Effect.forkChild(
 			CliUi.run(screen).pipe(

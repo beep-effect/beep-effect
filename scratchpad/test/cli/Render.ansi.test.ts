@@ -1,3 +1,5 @@
+import { Schema } from "effect";
+import { Result } from "effect";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
 import type { Block, CliLinksShape, RenderContext } from "../../effected/cli/index.ts";
@@ -6,6 +8,8 @@ import { displayWidth, stripAnsi } from "../../effected/cli/internal/displayWidt
 import { composite } from "./helpers/hostileDoc.ts";
 import { contextOf, decodeTokens, link, linksOf, sgrProblems, tokenPaint } from "./helpers/renderContext.ts";
 import { LINE_BREAK, isCommand } from "./helpers/runnerCommands.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 const ansi = (doc: ReadonlyArray<Block>, overrides: Partial<RenderContext> = {}) =>
 	Effect.map(contextOf(overrides), (ctx) => Render.ansi(doc, ctx));
@@ -391,8 +395,8 @@ describe("Render.ansi: layout under colour (paint after cut)", () => {
 						Doc.counts({ counters: [Doc.counter(Status.core, "failure", { key: "f", label, n: 1 })], layout }),
 					];
 					const a = yield* ansi(doc, OFF);
-					assert.notMatch(a, /[\r\n]/, `${layout} ${JSON.stringify(label)}: one line`);
-					assert.strictEqual(a, yield* plain(doc, OFF), `${layout} ${JSON.stringify(label)}`);
+					assert.notMatch(a, /[\r\n]/, `${layout} ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(label))}: one line`);
+					assert.strictEqual(a, yield* plain(doc, OFF), `${layout} ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(label))}`);
 				}
 			}
 		}),
@@ -411,7 +415,7 @@ describe("Render.ansi: layout under colour (paint after cut)", () => {
 			assert.strictEqual(out, "docs (https://example.test/ab)");
 			assert.isTrue(
 				seen.every((url) => url === "https://example.test/ab"),
-				JSON.stringify(seen),
+				Result.getOrThrow(Schema.encodeUnknownResult(Json)(seen)),
 			);
 		}),
 	);

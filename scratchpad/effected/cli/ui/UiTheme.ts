@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 import type * as Cli from "../index.ts";
 import type { ColorLevel } from "../../env/index.ts";
 import type { ReactElement, ReactNode } from "react";
@@ -70,7 +71,10 @@ const useScreen = (): ScreenContextValue => {
  *
  * @public
  */
-export const inkProps = (style: Cli.Style, color?: ColorLevel): InkTextProps =>
+export const inkProps: {
+	(color?: ColorLevel): (style: Cli.Style) => InkTextProps;
+	(style: Cli.Style, color?: ColorLevel): InkTextProps;
+} = dual((args) => typeof args[0] === "object" && args[0] !== null, (style: Cli.Style, color?: ColorLevel): InkTextProps =>
 	color === "none"
 		? {}
 		: {
@@ -79,7 +83,7 @@ export const inkProps = (style: Cli.Style, color?: ColorLevel): InkTextProps =>
 				...(style.dim === true ? { dimColor: true } : {}),
 				...(style.italic === true ? { italic: true } : {}),
 				...(style.underline === true ? { underline: true } : {}),
-			};
+			});
 
 /**
  * The theme of the stream the mounted screen draws on.

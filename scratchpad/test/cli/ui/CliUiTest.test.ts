@@ -1,4 +1,5 @@
 // @effect-diagnostics globalTimers:skip-file
+import { Clock } from "effect";
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Effect, Exit, Schema } from "effect";
 import { Text, useInput } from "ink";
@@ -200,8 +201,8 @@ describe("CliUiTest.render", () => {
 					// A loaded machine: the loop is blocked for 30 ms just after the harness starts polling, so its next
 					// quiet poll and this reaction's timer are both overdue when it wakes, the poll due first.
 					setTimeout(() => {
-						const until = Date.now() + 30;
-						while (Date.now() < until) {
+						const until = Clock.Clock.defaultValue().currentTimeMillisUnsafe() + 30;
+						while (Clock.Clock.defaultValue().currentTimeMillisUnsafe() < until) {
 							// busy
 						}
 					}, 1);
@@ -234,10 +235,10 @@ describe("CliUiTest.render", () => {
 				return createElement(Text, null, `count:${count}`);
 			};
 			const handle = yield* CliUiTest.render(showing(() => createElement(Restless)));
-			const started = Date.now();
+			const started = Clock.Clock.defaultValue().currentTimeMillisUnsafe();
 			yield* handle.type("x").pipe(Effect.timeout("2 seconds"));
 			assert.isBelow(
-				Date.now() - started,
+				Clock.Clock.defaultValue().currentTimeMillisUnsafe() - started,
 				500,
 				"a key press waits at most about its limit, not until the screen rests",
 			);

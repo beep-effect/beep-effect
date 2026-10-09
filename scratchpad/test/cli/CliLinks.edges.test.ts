@@ -1,4 +1,6 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
+import { Schema } from "effect";
+import { Result } from "effect";
 import { assert, describe, it } from "@effect/vitest";
 import { CurrentRuntimeEnv } from "../../effected/env/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
@@ -6,6 +8,8 @@ import { ConfigProvider, Effect, Layer, Logger, Option, Path } from "effect";
 import type { CliLinksShape, EditorLinks, LinkTarget } from "../../effected/cli/index.ts";
 import { CliLinks, Doc, Render } from "../../effected/cli/index.ts";
 import { contextOf } from "./helpers/renderContext.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 const ESC = String.fromCharCode(0x1b);
 const BEL = String.fromCharCode(7);
@@ -34,9 +38,7 @@ const links = (
 			),
 		),
 	);
-	return Effect.gen(function* () {
-		return yield* CliLinks;
-	}).pipe(
+	return CliLinks.pipe(
 		Effect.provide(layer),
 		Effect.provide(warnings(sink)),
 		Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)),
@@ -44,9 +46,7 @@ const links = (
 };
 
 const fixed = (mode: "vscode" | "file" | "off") =>
-	Effect.gen(function* () {
-		return yield* CliLinks;
-	}).pipe(Effect.provide(CliLinks.layerTest(mode)));
+	CliLinks.pipe(Effect.provide(CliLinks.layerTest(mode)));
 
 describe("a UNC path has no link target, never a link to a file that does not exist", () => {
 	const UNC = ["\\\\server\\share\\a.ts", "//server/share/a.ts", "\\\\?\\C:\\x.ts", "//host/x"];
@@ -196,7 +196,7 @@ describe("an invalid editor-links value is warned about once, like the audience 
 			for (const env of [{ TOOL_EDITOR_LINKS: "FILE" }, {}, { TOOL_EDITOR_LINKS: "" }]) {
 				const sink: Array<string> = [];
 				yield* links({ envVar: "TOOL_EDITOR_LINKS" }, env, sink);
-				assert.deepStrictEqual(sink, [], JSON.stringify(env));
+				assert.deepStrictEqual(sink, [], Result.getOrThrow(Schema.encodeUnknownResult(Json)(env)));
 			}
 		}),
 	);

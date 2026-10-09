@@ -30,8 +30,7 @@ const levelsOf = (lines: ReadonlyArray<string>): ReadonlyArray<string> =>
 	lines.filter((line) => line.startsWith("{")).map((line) => (JSON.parse(line) as { level: string }).level);
 
 /** Run `program` under a layer that needs nothing, with an optional env var and a captured Console. */
-const run = (layer: Layer.Layer<never>, env: Record<string, string> = {}, program = records) =>
-	Effect.gen(function* () {
+const run = Effect.fn("run")(function* (layer: Layer.Layer<never>, env: Record<string, string> = {}, program: typeof records = records) {
 		const { double, out, err } = capturing();
 		yield* program.pipe(
 			Effect.provide(layer),
@@ -185,10 +184,12 @@ describe("CliLog.layer requirements follow the fixed format", () => {
 	});
 
 	it("negative control: a fixed json layer is NOT assignable where a requirement is unmet, and auto is not requirement-free", () => {
-		// @ts-expect-error auto reads the audience and the terminal, so its requirement is not empty
-		const needsNothing: Layer.Layer<never, never, never> = CliLog.layer({ format: "auto" });
-		// @ts-expect-error pretty reads the terminal, so its requirement is not empty
-		const alsoNeedsSomething: Layer.Layer<never, never, never> = CliLog.layer({ format: "pretty" });
+		const needsNothing = CliLog.layer({ format: "auto" });
+		const autoAssignable: typeof needsNothing extends Layer.Layer<never, never, never> ? true : false = false;
+		assert.isFalse(autoAssignable);
+		const alsoNeedsSomething = CliLog.layer({ format: "pretty" });
+		const prettyAssignable: typeof alsoNeedsSomething extends Layer.Layer<never, never, never> ? true : false = false;
+		assert.isFalse(prettyAssignable);
 		assert.isDefined(needsNothing);
 		assert.isDefined(alsoNeedsSomething);
 	});

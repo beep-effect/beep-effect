@@ -1,3 +1,4 @@
+import { Clock } from "effect";
 import type { Console } from "effect";
 import { Effect, Inspectable } from "effect";
 import type { FunctionComponent, ReactNode } from "react";
@@ -66,7 +67,7 @@ const tableOf = (data: unknown, properties?: ReadonlyArray<string>): string => {
 };
 
 /** Milliseconds now, for `time`; the platform clock when there is one. */
-const now = (): number => globalThis.performance?.now() ?? Date.now();
+const now = (): number => globalThis.performance?.now() ?? Clock.Clock.defaultValue().currentTimeMillisUnsafe();
 
 /**
  * Build an `InkConsole` over `UiStreams`.

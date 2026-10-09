@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 import type { Document, Inline } from "../Doc.ts";
 import type { RenderContext } from "../Render.ts";
 import type { Span } from "./layout.ts";
@@ -45,4 +46,7 @@ const ansi: Flavour = {
  *
  * @internal
  */
-export const renderAnsi = (doc: Document, ctx: RenderContext): string => renderDoc(doc, ctx, ansi);
+export const renderAnsi: {
+	(ctx: RenderContext): (doc: Document) => string;
+	(doc: Document, ctx: RenderContext): string;
+} = dual(2, (doc: Document, ctx: RenderContext): string => renderDoc(doc, ctx, ansi));

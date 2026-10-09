@@ -1,3 +1,4 @@
+import { Data } from "effect";
 import { Effect } from "effect";
 import type { ReactElement } from "react";
 
@@ -38,7 +39,10 @@ const NO_VIEW = (resolved: unknown): string => {
  *
  * @internal
  */
-export class LazyViewShapeError extends Error {}
+export class LazyViewShapeError extends Data.TaggedError("LazyViewShapeError")<{ readonly message: string }> {
+	override readonly name = "Error";
+	constructor(message = "") { super({ message }); }
+}
 
 /** The view `load` resolved to: the value itself when it is a function (a `default` property on it is ignored), else
  * its `default` when that is a function; anything else throws, saying what it got. */

@@ -161,19 +161,15 @@ const build = (options: CliLinksOptions, ambient: Ambient): Effect.Effect<CliLin
 			return cwd === undefined ? undefined : path.resolve(cwd, file);
 		};
 
-		const mode: "vscode" | "file" | "off" =
-			setting !== "auto"
-				? setting
-				: Option.exists(runtime.terminal, (terminal) => terminal.name === "vscode")
-					? "vscode"
-					: yield* Effect.gen(function* () {
-							if (Option.isNone(ambient.fs) || path === undefined || cwd === undefined) return "file" as const;
-							const root = yield* findRoot(ambient.fs.value, path, cwd);
-							const base = Option.getOrElse(root, () => cwd);
-							return (yield* isDirectory(ambient.fs.value, path.join(base, ".vscode")))
-								? ("vscode" as const)
-								: ("file" as const);
-						});
+		let mode: "vscode" | "file" | "off";
+		if (setting !== "auto") mode = setting;
+		else if (Option.exists(runtime.terminal, (terminal) => terminal.name === "vscode")) mode = "vscode";
+		else if (Option.isNone(ambient.fs) || path === undefined || cwd === undefined) mode = "file";
+		else {
+			const root = yield* findRoot(ambient.fs.value, path, cwd);
+			const base = Option.getOrElse(root, () => cwd);
+			mode = (yield* isDirectory(ambient.fs.value, path.join(base, ".vscode"))) ? "vscode" : "file";
+		}
 		return { mode, target: makeTarget(mode, absolute) };
 	});
 

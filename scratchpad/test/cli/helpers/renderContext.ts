@@ -1,4 +1,5 @@
 // @effect-diagnostics strictEffectProvide:skip-file
+import { dual } from "effect/Function";
 import { Effect } from "effect";
 import type { RenderContext } from "../../../effected/cli/index.ts";
 import { CliTheme } from "../../../effected/cli/index.ts";
@@ -10,8 +11,11 @@ const OSC8 = /\u001B\]8;[^;\u0007\u001B]*;([^\u0007\u001B]*)(?:\u0007|\u001B\\)/
 const SGR = /\u001B\[([0-9;]*)m/g;
 
 /** A link stub: a fixed OSC 8 wrapper. The real policy arrives with CliLinks. */
-export const link = (target: { readonly url: string } | { readonly file: string }, label: string): string =>
-	`\u001B]8;;${"url" in target ? target.url : `file://${target.file}`}\u0007${label}\u001B]8;;\u0007`;
+export const link: {
+	(label: string): (target: { readonly url: string } | { readonly file: string }) => string;
+	(target: { readonly url: string } | { readonly file: string }, label: string): string;
+} = dual(2, (target: { readonly url: string } | { readonly file: string }, label: string): string =>
+	`\u001B]8;;${"url" in target ? target.url : `file://${target.file}`}\u0007${label}\u001B]8;;\u0007`);
 
 export const contextOf = (overrides: Partial<RenderContext> = {}): Effect.Effect<RenderContext> =>
 	Effect.gen(function* () {
@@ -90,8 +94,11 @@ const TOKEN_IDS: Readonly<Record<string, number>> = {
  * A `paint` that marks text with its token name, so a test can decode SGR back to tokens without pinning what a
  * real theme emits. A style object is marked `style`.
  */
-export const tokenPaint = (token: string | object, text: string): string =>
-	`\u001B[38;5;${typeof token === "string" ? (TOKEN_IDS[token] ?? 99) : 100}m${text}\u001B[39m`;
+export const tokenPaint: {
+	(text: string): (token: string | object) => string;
+	(token: string | object, text: string): string;
+} = dual(2, (token: string | object, text: string): string =>
+	`\u001B[38;5;${typeof token === "string" ? (TOKEN_IDS[token] ?? 99) : 100}m${text}\u001B[39m`);
 
 // biome-ignore lint/suspicious/noControlCharactersInRegex: decoding SGR
 const TOKEN_RUN = /\u001B\[38;5;(\d+)m([^\u001B]*)\u001B\[39m/g;

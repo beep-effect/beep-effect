@@ -1,4 +1,5 @@
 // @effect-diagnostics strictEffectProvide:skip-file
+import { Data } from "effect";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
@@ -6,6 +7,11 @@ import { Cause, ConfigProvider, Console, Context, Effect, Exit, Layer, Path, Std
 import { Command } from "effect/cli";
 import type { CliFailureOptions, CliLogOptions, FailureDetails } from "../../effected/cli/index.ts";
 import { CliAudience, CliFailure, CliRuntime, Render } from "../../effected/cli/index.ts";
+
+class TestError extends Data.TaggedError("TestError")<{ readonly message: string; readonly cause?: unknown }> {
+	override readonly name = "Error";
+	constructor(message: string, options?: { readonly cause?: unknown }) { super({ message, ...options }); }
+}
 
 interface Frame {
 	readonly name: string;
@@ -111,9 +117,7 @@ describe("CliFailure.toDoc: the span trail", () => {
 
 	it.effect("a real Effect.fn defined in this repository is the program's, so the default keeps it", () =>
 		Effect.gen(function* () {
-			const load = Effect.fn("load")(function* () {
-				return yield* Effect.fail(new Error("nope"));
-			});
+			const load = Effect.fn("load")(function* () { return yield* new TestError("nope"); });
 			const exit = yield* Effect.exit(load());
 			if (!Exit.isFailure(exit)) throw new Error("expected a failure");
 			const text = Render.plain(CliFailure.toDoc(exit.cause), Render.contextOf({ audience: "agent" }));
@@ -267,15 +271,7 @@ describe("CliRuntime.main's env.spans", () => {
 		),
 	);
 
-	const runTool = (
-		spans: "app" | "all" | "off" | undefined,
-		render?: (error: unknown, details: FailureDetails) => ReadonlyArray<string>,
-		appModule?: string,
-		variable?: { readonly spansEnvVar: string; readonly value?: string },
-		log?: CliLogOptions,
-		extraEnv: Record<string, string> = {},
-	) =>
-		Effect.gen(function* () {
+	const runTool = Effect.fn("runTool")(function* (spans: "app" | "all" | "off" | undefined, render?: (error: unknown, details: FailureDetails) => ReadonlyArray<string>, appModule?: string, variable?: { readonly spansEnvVar: string; readonly value?: string }, log?: CliLogOptions, extraEnv: Record<string, string> = {}) {
 			const err: Array<string> = [];
 			const double: Console.Console = Object.assign(Object.create(console) as Console.Console, {
 				log: () => undefined,

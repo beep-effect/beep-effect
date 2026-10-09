@@ -39,11 +39,7 @@ const themeLayer = CliTheme.layer({ tokens: { accent: { fg: "#123456" } }, glyph
 const ACCENT = "\u001b[38;2;18;52;86m";
 
 /** Mount `tree` with Ink's own `render` on fake streams, in debug mode, unmount it, and return stdout and the exit. */
-const mountPlain = (
-	tree: ReactNode,
-	size: { readonly columns: number; readonly rows: number } = { columns: 80, rows: 24 },
-) =>
-	Effect.gen(function* () {
+const mountPlain = Effect.fn("mountPlain")(function* (tree: ReactNode, size: { readonly columns: number; readonly rows: number } = { columns: 80, rows: 24 }) {
 		const fake = makeFakeStreams(size);
 		const instance = render(tree, {
 			stdin: fake.streams.stdin,

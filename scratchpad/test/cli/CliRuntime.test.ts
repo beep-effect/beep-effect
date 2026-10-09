@@ -1,10 +1,16 @@
 // @effect-diagnostics strictEffectProvide:skip-file
+import { Data } from "effect";
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Console, Effect, Exit, Runtime } from "effect";
 import { CliError } from "effect/cli";
 import { CliLogger } from "../../effected/cli/CliLogger.ts";
 import { CliRuntime } from "../../effected/cli/CliRuntime.ts";
 import { ExitRequested } from "../../effected/cli/internal/ExitRequested.ts";
+
+class TestError extends Data.TaggedError("TestError")<{ readonly message: string; readonly cause?: unknown }> {
+	override readonly name = "Error";
+	constructor(message: string, options?: { readonly cause?: unknown }) { super({ message, ...options }); }
+}
 
 const capturing = (): { readonly console: Console.Console; readonly out: string[]; readonly err: string[] } => {
 	const out: string[] = [];
@@ -39,7 +45,7 @@ const failureOf = <A>(exit: Exit.Exit<A, Error>): unknown =>
 describe("CliRuntime.reportFailures", () => {
 	it.effect("reports through the program's own logger, on stderr", () =>
 		Effect.gen(function* () {
-			const { out, err, exit } = yield* run(Effect.fail(new Error("boom")));
+			const { out, err, exit } = yield* run(Effect.fail(new TestError("boom")));
 
 			assert.deepStrictEqual(err, ["[FAIL] Error: boom"]);
 			// The bug this exists to prevent is the report landing on stdout.
@@ -50,14 +56,14 @@ describe("CliRuntime.reportFailures", () => {
 
 	it.effect("re-fails rather than swallowing, so a broken run cannot exit zero", () =>
 		Effect.gen(function* () {
-			const { exit } = yield* run(Effect.fail(new Error("boom")));
+			const { exit } = yield* run(Effect.fail(new TestError("boom")));
 			assert.strictEqual(Exit.isSuccess(exit), false);
 		}),
 	);
 
 	it.effect("marks the error so the runtime does NOT report it a second time", () =>
 		Effect.gen(function* () {
-			const { exit } = yield* run(Effect.fail(new Error("boom")));
+			const { exit } = yield* run(Effect.fail(new TestError("boom")));
 			const error = failureOf(exit);
 
 			// Read through core's own getter, not our property. The polarity is
@@ -100,7 +106,7 @@ describe("CliRuntime.reportFailures", () => {
 
 	it.effect("renders several lines when the renderer returns several", () =>
 		Effect.gen(function* () {
-			const { err } = yield* run(Effect.fail(new Error("bad config")), {
+			const { err } = yield* run(Effect.fail(new TestError("bad config")), {
 				render: (error) => [String(error), "  unknown key at groups.g.rulesetz"],
 			});
 
@@ -144,7 +150,7 @@ describe("CliRuntime.reportFailures", () => {
 		Effect.gen(function* () {
 			const flags: Array<[unknown, boolean]> = [];
 			const typed = new Error("typed");
-			yield* run(Effect.failCause(Cause.combine(Cause.die(new Error("bug")), Cause.fail(typed))), {
+			yield* run(Effect.failCause(Cause.combine(Cause.die(new TestError("bug")), Cause.fail(typed))), {
 				render: (error, { isDefect }) => {
 					flags.push([error, isDefect]);
 					return String(error);
@@ -226,11 +232,12 @@ describe("CliRuntime.reportFailures and ShowHelp", () => {
 
 describe("CliRuntime.reported", () => {
 	/** A stand-in for the typed errors a CLI fails with (issue #717). */
-	class GateError extends Error {
-		readonly _tag = "GateError";
+	class GateError extends Data.TaggedError("GateError")<{ readonly message: string }> {
+	override readonly name = "Error";
+
 		readonly count: number;
 		constructor(count: number) {
-			super(`gate: ${count} over budget`);
+			super({ message: `gate: ${count} over budget` });
 			this.count = count;
 		}
 	}

@@ -1,3 +1,4 @@
+import { Result } from "effect";
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Console, Effect, Equal, Exit, Layer, Runtime, Schema } from "effect";
 import { Cancelled, CliRuntime, NotInteractive } from "../../effected/cli/index.ts";
@@ -12,8 +13,7 @@ const capturing = () => {
 	return { double, out, err };
 };
 
-const run = <E>(failure: E, render?: (error: unknown) => string) =>
-	Effect.gen(function* () {
+const run = Effect.fn("run")(function*<E> (failure: E, render?: (error: unknown) => string) {
 		const { double, out, err } = capturing();
 		const exit = yield* CliRuntime.main(Effect.fail(failure), { platform: Layer.empty, render }).pipe(
 			Effect.exit,
@@ -55,7 +55,7 @@ describe("Cancelled", () => {
 	});
 
 	it("a decoded instance keeps its exit code, and two equal ones are equal", () => {
-		const decoded = Schema.decodeSync(Cancelled)({ _tag: "Cancelled", reason: "interrupt" });
+		const decoded = Result.getOrThrow(Schema.decodeResult(Cancelled)({ _tag: "Cancelled", reason: "interrupt" }));
 		assert.strictEqual(Runtime.getErrorExitCode(decoded), 130);
 		assert.isTrue(Equal.equals(Cancelled.make({ reason: "escape" }), Cancelled.make({ reason: "escape" })));
 		assert.isFalse(Equal.equals(Cancelled.make({ reason: "escape" }), Cancelled.make({ reason: "interrupt" })));
@@ -65,10 +65,10 @@ describe("Cancelled", () => {
 		const a = Cancelled.make({ reason: "escape" });
 		assert.strictEqual(a._tag, "Cancelled");
 		assert.strictEqual(a.reason, "escape");
-		assert.deepStrictEqual(Schema.encodeSync(Cancelled)(a), { _tag: "Cancelled", reason: "escape" });
+		assert.deepStrictEqual(Result.getOrThrow(Schema.encodeResult(Cancelled)(a)), { _tag: "Cancelled", reason: "escape" });
 		assert.isTrue(a instanceof Error);
 		assert.strictEqual(Runtime.getErrorExitCode(a), 130);
-		assert.throws(() => Schema.decodeUnknownSync(Cancelled)({ _tag: "Cancelled", reason: "nope" }));
+		assert.throws(() => Result.getOrThrow(Schema.decodeUnknownResult(Cancelled)({ _tag: "Cancelled", reason: "nope" })));
 	});
 });
 
@@ -110,9 +110,9 @@ describe("the fixed lines are the errors' own message", () => {
 	});
 
 	it("a decoded instance has the message too, and it is not part of the encoded form or equality", () => {
-		const decoded = Schema.decodeSync(Cancelled)({ _tag: "Cancelled", reason: "escape" });
+		const decoded = Result.getOrThrow(Schema.decodeResult(Cancelled)({ _tag: "Cancelled", reason: "escape" }));
 		assert.strictEqual(decoded.message, CANCELLED);
-		assert.deepStrictEqual(Schema.encodeSync(Cancelled)(decoded), { _tag: "Cancelled", reason: "escape" });
+		assert.deepStrictEqual(Result.getOrThrow(Schema.encodeResult(Cancelled)(decoded)), { _tag: "Cancelled", reason: "escape" });
 		assert.notInclude(JSON.stringify(decoded), CANCELLED);
 		assert.isTrue(Equal.equals(decoded, Cancelled.make({ reason: "escape" })));
 		assert.notInclude(Object.keys(NotInteractive.make()).join(","), "message");
@@ -149,7 +149,7 @@ describe("NotInteractive", () => {
 	it("is a tagged error with no fields", () => {
 		const e = NotInteractive.make();
 		assert.strictEqual(e._tag, "NotInteractive");
-		assert.deepStrictEqual(Schema.encodeSync(NotInteractive)(e), { _tag: "NotInteractive" });
+		assert.deepStrictEqual(Result.getOrThrow(Schema.encodeResult(NotInteractive)(e)), { _tag: "NotInteractive" });
 	});
 });
 
@@ -167,14 +167,12 @@ describe("CliRuntime.defaultRender", () => {
 		assert.deepStrictEqual(CliRuntime.defaultRender("plain", details), ["[FAIL] plain"]);
 	});
 
-	it.effect("a consumer render can hand the two prompt failures back and keep its own line for the rest", () =>
-		Effect.gen(function* () {
+	it.effect("a consumer render can hand the two prompt failures back and keep its own line for the rest", () => Effect.gen(function* () {
 			const render = (error: unknown, d: { readonly cause: Cause.Cause<unknown>; readonly isDefect: boolean }) =>
 				Schema.is(Cancelled)(error) || Schema.is(NotInteractive)(error)
 					? CliRuntime.defaultRender(error, d)
 					: `tool: ${String(error)}`;
-			const run2 = <E>(failure: E) =>
-				Effect.gen(function* () {
+			const run2 = Effect.fn("run2")(function*<E> (failure: E) {
 					const { double, err } = capturing();
 					yield* CliRuntime.main(Effect.fail(failure), { platform: Layer.empty, render }).pipe(
 						Effect.exit,

@@ -1,4 +1,6 @@
 // @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
+import { Schema } from "effect";
+import { Result } from "effect";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, ConfigProvider, Console, Effect, Exit, Fiber, Layer, Runtime, Stdio, Terminal } from "effect";
@@ -9,6 +11,8 @@ import { TestTerminal } from "../../../effected/cli/testing.ts";
 import { CliUi, Select, TextInput } from "../../../effected/cli/ui.ts";
 import type { CliUiTestSession } from "../../../effected/cli/ui-testing.ts";
 import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 // Count loads of the peers through the kit's one loader, without changing what it does.
 const { loads } = vi.hoisted(() => ({ loads: { count: 0 } }));
@@ -53,7 +57,7 @@ const init = Command.make("init", {}, () =>
 			}),
 			{ otherwise: found.location },
 		);
-		yield* Console.log(JSON.stringify({ profile, dir, location }));
+		yield* Console.log(Result.getOrThrow(Schema.encodeUnknownResult(Json)({ profile, dir, location })));
 	}),
 );
 
@@ -61,8 +65,7 @@ const exitCode = (exit: Exit.Exit<unknown, unknown>): number =>
 	Exit.isFailure(exit) ? Runtime.getErrorExitCode(Cause.squash(exit.cause)) : 0;
 
 /** okfit's init through `CliRuntime.main`, under a session: its streams, theme, interactivity and console. */
-const run = (session: CliUiTestSession) =>
-	Effect.gen(function* () {
+const run = Effect.fn("run")(function* (session: CliUiTestSession) {
 		const terminal = yield* TestTerminal.make();
 		return yield* CliRuntime.main(Command.runWith(init, { version: "1.0.0" })([]), {
 			platform: Layer.mergeAll(NodeServices.layer, CliPrompt.gateTerminal.pipe(Layer.provide(terminal.layer))),
@@ -84,7 +87,7 @@ describe("okfit's init wizard through CliUi.prompt, driven by CliUiTest.session"
 			assert.strictEqual(yield* Fiber.join(program), 0, yield* session.stderr);
 			assert.strictEqual(
 				yield* session.stdout,
-				`${JSON.stringify({ profile: "software-project", dir: "docs/okf2", location: ".config/okfit.toml" })}\n`,
+				`${Result.getOrThrow(Schema.encodeUnknownResult(Json)({ profile: "software-project", dir: "docs/okf2", location: ".config/okfit.toml" }))}\n`,
 			);
 			assert.strictEqual(yield* session.mounts, 3);
 		}).pipe(Effect.scoped),
@@ -95,7 +98,7 @@ describe("okfit's init wizard through CliUi.prompt, driven by CliUiTest.session"
 			const before = loads.count;
 			const session = yield* CliUiTest.session({ interactive: false });
 			assert.strictEqual(yield* run(session), 0);
-			assert.strictEqual(yield* session.stdout, `${JSON.stringify(yield* discover)}\n`);
+			assert.strictEqual(yield* session.stdout, `${Result.getOrThrow(Schema.encodeUnknownResult(Json)(yield* discover))}\n`);
 			assert.strictEqual(yield* session.mounts, 0);
 			assert.strictEqual(loads.count, before);
 		}).pipe(Effect.scoped),
@@ -154,7 +157,7 @@ describe("CliUi.prompt under okfit's production wiring (CliRuntime.main with env
 			yield* (yield* session.next({ contains: "Bundle directory" })).press("enter");
 			yield* (yield* session.next({ contains: "Config location" })).press("enter");
 			assert.strictEqual(yield* Fiber.join(program), 0, yield* session.stderr);
-			assert.strictEqual(yield* session.stdout, `${JSON.stringify(yield* discover)}\n`);
+			assert.strictEqual(yield* session.stdout, `${Result.getOrThrow(Schema.encodeUnknownResult(Json)(yield* discover))}\n`);
 		}).pipe(Effect.scoped),
 	);
 
@@ -163,7 +166,7 @@ describe("CliUi.prompt under okfit's production wiring (CliRuntime.main with env
 			const before = loads.count;
 			const session = yield* CliUiTest.session();
 			assert.strictEqual(yield* production(session, false), 0, yield* session.stderr);
-			assert.strictEqual(yield* session.stdout, `${JSON.stringify(yield* discover)}\n`);
+			assert.strictEqual(yield* session.stdout, `${Result.getOrThrow(Schema.encodeUnknownResult(Json)(yield* discover))}\n`);
 			assert.strictEqual(yield* session.mounts, 0);
 			assert.strictEqual(loads.count, before);
 		}).pipe(Effect.scoped),

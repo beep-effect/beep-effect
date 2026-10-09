@@ -1,3 +1,5 @@
+import { Schema } from "effect";
+import { Result } from "effect";
 import { assert, describe, it } from "@effect/vitest";
 import { CommandNeutralizer } from "../../effected/github-commands/index.ts";
 import { Effect } from "effect";
@@ -6,6 +8,8 @@ import { Doc, Render, Status } from "../../effected/cli/index.ts";
 import { ESC, composite } from "./helpers/hostileDoc.ts";
 import { contextOf } from "./helpers/renderContext.ts";
 import { LINE_BREAK, isCommand } from "./helpers/runnerCommands.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 const log = (doc: ReadonlyArray<Block>, overrides: Partial<RenderContext> = {}) =>
 	Effect.map(contextOf(overrides), (ctx) => Render.githubLog(doc, ctx));
@@ -187,7 +191,7 @@ describe("Render.githubLog: document text cannot become a workflow command", () 
 			const commands = out.split(LINE_BREAK).filter(isCommand);
 			assert.isTrue(
 				commands.every((line) => /^::(group::|endgroup::)/.test(line)),
-				JSON.stringify(commands),
+				Result.getOrThrow(Schema.encodeUnknownResult(Json)(commands)),
 			);
 		}),
 	);
@@ -215,8 +219,8 @@ describe("Render.githubLog: document text cannot become a workflow command", () 
 							layout,
 						});
 						const out = yield* linesOf([counts]);
-						assert.deepStrictEqual(out.filter(isCommand), [], `${layout} ${JSON.stringify(label)}`);
-						assert.strictEqual(out.length, 1, `${layout} ${JSON.stringify(label)}: one line`);
+						assert.deepStrictEqual(out.filter(isCommand), [], `${layout} ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(label))}`);
+						assert.strictEqual(out.length, 1, `${layout} ${Result.getOrThrow(Schema.encodeUnknownResult(Json)(label))}: one line`);
 					}
 				}
 			}),

@@ -11,9 +11,7 @@ const decide = (
 	stdoutIsTerminal: boolean,
 	env: Record<string, string> = {},
 ) =>
-	Effect.gen(function* () {
-		return yield* CliInteractive;
-	}).pipe(
+	CliInteractive.pipe(
 		Effect.provide(
 			CliInteractive.layer.pipe(
 				Layer.provide(
@@ -60,9 +58,7 @@ describe("CliInteractive.layer", () => {
 });
 
 describe("CliInteractive.unless", () => {
-	const read = Effect.gen(function* () {
-		return yield* CliInteractive;
-	});
+	const read = CliInteractive;
 
 	it.effect("unless(true) turns an interactive scope off", () =>
 		Effect.gen(function* () {
@@ -94,7 +90,7 @@ describe("CliInteractive.unless", () => {
 
 	it.effect("narrowing nests: an inner unless(false) cannot undo an outer unless(true)", () =>
 		Effect.gen(function* () {
-			assert.strictEqual(yield* CliInteractive.unless(true)(CliInteractive.unless(false)(read)), false);
+			assert.strictEqual(yield* read.pipe(CliInteractive.unless(false), CliInteractive.unless(true)), false);
 		}).pipe(Effect.provide(CliInteractive.layerTest(true))),
 	);
 

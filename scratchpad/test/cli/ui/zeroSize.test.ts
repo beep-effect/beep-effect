@@ -19,8 +19,7 @@ const sections: ReadonlyArray<MultiSelectSection<string>> = [
 ];
 
 /** A MultiSelect on the production render path (Ink's ordinary output) over fake TTY streams of the given size. */
-const drawn = (columns: number, rows: number) =>
-	Effect.gen(function* () {
+const drawn = Effect.fn("drawn")(function* (columns: number, rows: number) {
 		const fake = makeFakeStreams({ columns, rows });
 		const fiber = yield* Effect.forkChild(
 			CliUi.run(MultiSelect.screen({ message: "Attest which?", sections })).pipe(

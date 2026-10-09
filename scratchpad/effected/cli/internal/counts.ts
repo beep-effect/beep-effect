@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 import type { BlockOf, Counter, Inline } from "../Doc.ts";
 import { Fmt } from "../Fmt.ts";
 
@@ -8,8 +9,11 @@ import { Fmt } from "../Fmt.ts";
  *
  * @internal
  */
-export const counterLabel = (counter: Counter, count: number = counter.n): string =>
-	typeof counter.label === "string" ? counter.label : count === 1 ? counter.label.one : counter.label.other;
+export const counterLabel: {
+	(count?: number): (counter: Counter) => string;
+	(counter: Counter, count?: number): string;
+} = dual((args) => typeof args[0] === "object" && args[0] !== null, (counter: Counter, count: number = counter.n): string =>
+	typeof counter.label === "string" ? counter.label : count === 1 ? counter.label.one : counter.label.other);
 
 /**
  * The label a counter's column is headed with in a `CountsTable`: its one label, or its plural form, since a column

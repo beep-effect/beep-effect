@@ -220,12 +220,10 @@ describe("Tabs.View drawing", () => {
 		}).pipe(Effect.scoped),
 	);
 
-	it.effect("tabs wider than a 20-column terminal stay on one line around the active tab", () =>
-		Effect.gen(function* () {
+	it.effect("tabs wider than a 20-column terminal stay on one line around the active tab", () => Effect.gen(function* () {
 			const many = Array.from({ length: 6 }, (_, index) => ({ name: `t${index}`, label: `Section ${index}` }));
 			const handle = yield* CliUiTest.render(hosting({ tabs: many }, []), { columns: 20, color: "none" });
-			const check = (expected: string) =>
-				Effect.gen(function* () {
+			const check = Effect.fn("check")(function* (expected: string) {
 					const lines = (yield* handle.plainFrame).trimEnd().split("\n");
 					assert.lengthOf(lines, 1, lines.join(" / "));
 					assert.isAtMost(Fmt.width(lines[0] ?? ""), 19, lines[0]);
@@ -311,8 +309,7 @@ describe("Tabs.View at colour none", () => {
 });
 
 /** Mount a screen on fake streams through `CliUi.run`, send `chunk` as ONE stdin write, and wait for `calls`. */
-const oneChunk = (screen: Screen<never>, chunk: string, settled: () => boolean) =>
-	Effect.gen(function* () {
+const oneChunk = Effect.fn("oneChunk")(function* (screen: Screen<never>, chunk: string, settled: () => boolean) {
 		const fake = makeFakeStreams();
 		const fiber = yield* Effect.forkChild(
 			CliUi.run(screen).pipe(
@@ -369,10 +366,8 @@ describe("Tabs input in one chunk", () => {
 });
 
 describe("Tabs input", () => {
-	it.live("adds no keypress or data listener, and no second readable listener, to stdin", () =>
-		Effect.gen(function* () {
-			const listeners = (screen: Screen<never>) =>
-				Effect.gen(function* () {
+	it.live("adds no keypress or data listener, and no second readable listener, to stdin", () => Effect.gen(function* () {
+			const listeners = Effect.fn("listeners")(function* (screen: Screen<never>) {
 					const fake = makeFakeStreams();
 					const stdin = fake.streams.stdin;
 					const fiber = yield* Effect.forkChild(

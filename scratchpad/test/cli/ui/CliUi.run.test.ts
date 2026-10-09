@@ -1,4 +1,5 @@
 // @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file globalTimers:skip-file
+import { Clock } from "effect";
 import { assert, describe, it } from "@effect/vitest";
 import type { Scope } from "effect";
 import { Cause, Effect, Exit, Fiber, Option, Schedule, Schema } from "effect";
@@ -137,10 +138,10 @@ describe("CliUi.run", () => {
 			const fake = makeFakeStreams();
 			const fiber = yield* Effect.forkChild(runOn(fake, idle));
 			yield* until(() => fake.rawModes.includes(true));
-			const pressed = Date.now();
+			const pressed = Clock.Clock.defaultValue().currentTimeMillisUnsafe();
 			fake.input(ESC);
 			const error = yield* Effect.flip(Fiber.join(fiber));
-			assert.isAtLeast(Date.now() - pressed, 15, "Ink holds a lone ESC for its flush before reporting it");
+			assert.isAtLeast(Clock.Clock.defaultValue().currentTimeMillisUnsafe() - pressed, 15, "Ink holds a lone ESC for its flush before reporting it");
 			assert.instanceOf(error, Cancelled);
 			assert.strictEqual(Schema.is(Cancelled)(error) ? error.reason : undefined, "escape");
 		}),
@@ -173,7 +174,7 @@ describe("CliUi.run", () => {
 			const before = loads.count;
 			let built = false;
 			const error = yield* Effect.flip(
-				CliUi.run(() => {
+				CliUi.run<never>(() => {
 					built = true;
 					return createElement(Text, null, "never");
 				}).pipe(
@@ -451,8 +452,7 @@ describe("a throwing input handler is a defect, never an uncaught exception or a
 
 describe("a widget's text from data cannot push the frame past the terminal (production path)", () => {
 	const WIPE = new RegExp(`${ESC}\\[[23]J`);
-	const pick = (detail: string) =>
-		Effect.gen(function* () {
+	const pick = Effect.fn("pick")(function* (detail: string) {
 			const fake = makeFakeStreams({ columns: 40, rows: 10 });
 			const choices = Array.from({ length: 30 }, (_, index) => ({ label: `choice ${index}`, value: index, detail }));
 			const fiber = yield* Effect.forkChild(runOn(fake, Select.screen({ message: "Pick one", choices })));
@@ -493,11 +493,11 @@ describe("clear: a resolved screen can erase its last frame (production path)", 
 			resolve: () => control?.resolve(7),
 		};
 	};
-	const drawThenResolve = (
+	const drawThenResolve = <A, E>(
 		fake: FakeStreams,
-		run: Effect.Effect<unknown, unknown>,
+		run: Effect.Effect<A, E>,
 		resolve: () => void,
-	): Effect.Effect<ReadonlyArray<string>, unknown> =>
+	): Effect.Effect<ReadonlyArray<string>, E> =>
 		Effect.gen(function* () {
 			const fiber = yield* Effect.forkChild(run);
 			yield* until(() => fake.stdout().includes(FRAME));
@@ -545,7 +545,7 @@ describe("clear: a resolved screen can erase its last frame (production path)", 
 			// interactivity provided here, so it is run as a plain effect.
 			const fallback = CliUi.fallback(screen, { flag: "count", clear: true }) as unknown as Effect.Effect<
 				unknown,
-				unknown
+				Cancelled | NotInteractive
 			>;
 			const run = fallback.pipe(
 				Effect.provideService(UiStreams, fake.streams),

@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 import type { Block, Document, Inline, LinkTarget } from "../Doc.ts";
 import { Fmt, sanitize } from "../Fmt.ts";
 import type { RenderContext } from "../Render.ts";
@@ -29,19 +30,25 @@ const span = (text: string, token?: Tone): Span => (token === undefined ? { text
 const textOf = (line: Line): string => line.map((s) => s.text).join("");
 
 /** A link target as plain text: the URL, or `path:line:col` through `displayPath`; a column needs a line. */
-export const targetText = (target: LinkTarget, ctx: RenderContext): string => {
+export const targetText: {
+	(ctx: RenderContext): (target: LinkTarget) => string;
+	(target: LinkTarget, ctx: RenderContext): string;
+} = dual(2, (target: LinkTarget, ctx: RenderContext): string => {
 	if ("url" in target) return sanitize(target.url);
 	const path = sanitize(ctx.displayPath(target.file));
 	if (target.line === undefined) return path;
 	return target.col === undefined ? `${path}:${target.line}` : `${path}:${target.line}:${target.col}`;
-};
+});
 
 /**
  * Whether a link's target follows its label where the link cannot be followed: the link's own `suffix` when it set one,
  * otherwise only when the label is not already the target's display form.
  */
-export const showsSuffix = (suffix: boolean | undefined, label: string, target: string): boolean =>
-	suffix ?? label !== target;
+export const showsSuffix: {
+	(label: string, target: string): (suffix: boolean | undefined) => boolean;
+	(suffix: boolean | undefined, label: string, target: string): boolean;
+} = dual(3, (suffix: boolean | undefined, label: string, target: string): boolean =>
+	suffix ?? label !== target);
 
 /** Drop trailing spaces, and any span they empty, so a line never ends in padding. */
 export const trimLine = (line: Line): Line => {
@@ -439,16 +446,22 @@ const blockLines = (walk: Walk, block: Block, width: number, compact = false): R
  *
  * @internal
  */
-export const renderDocLines = (doc: Document, ctx: RenderContext, flavour: Flavour): ReadonlyArray<string> => {
+export const renderDocLines: {
+	(ctx: RenderContext, flavour: Flavour): (doc: Document) => ReadonlyArray<string>;
+	(doc: Document, ctx: RenderContext, flavour: Flavour): ReadonlyArray<string>;
+} = dual(3, (doc: Document, ctx: RenderContext, flavour: Flavour): ReadonlyArray<string> => {
 	const width = Number.isNaN(ctx.width) ? 80 : Math.max(1, ctx.width);
 	const walk: Walk = { ctx, flavour };
 	return doc.flatMap((block) => blockLines(walk, block, width)).map((line) => flavour.finish(trimLine(line), ctx));
-};
+});
 
 /**
  * Render a document to lines of text in the given flavour.
  *
  * @internal
  */
-export const renderDoc = (doc: Document, ctx: RenderContext, flavour: Flavour): string =>
-	renderDocLines(doc, ctx, flavour).join("\n");
+export const renderDoc: {
+	(ctx: RenderContext, flavour: Flavour): (doc: Document) => string;
+	(doc: Document, ctx: RenderContext, flavour: Flavour): string;
+} = dual(3, (doc: Document, ctx: RenderContext, flavour: Flavour): string =>
+	renderDocLines(doc, ctx, flavour).join("\n"));

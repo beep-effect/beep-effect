@@ -1,4 +1,6 @@
 // @effect-diagnostics strictEffectProvide:skip-file
+import { Schema } from "effect";
+import { Result } from "effect";
 import { assert, describe, it } from "@effect/vitest";
 import { CurrentRuntimeEnv } from "../../effected/env/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
@@ -6,6 +8,8 @@ import { ConfigProvider, Effect, Layer, Option, Path } from "effect";
 import type { CliLinksShape, EditorLinks } from "../../effected/cli/index.ts";
 import { CliLinks } from "../../effected/cli/index.ts";
 import { linksOf } from "./helpers/renderContext.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 const dir = MemoryFileSystem.directory();
 const file = MemoryFileSystem.file("");
@@ -31,9 +35,7 @@ const links = (setup: Setup): Effect.Effect<CliLinksShape> => {
 	const layer = CliLinks.layer(setup.options).pipe(
 		Layer.provide(Layer.mergeAll(MemoryFileSystem.layerWith(setup.seed ?? {}), Path.layer, runtime)),
 	);
-	return Effect.gen(function* () {
-		return yield* CliLinks;
-	}).pipe(
+	return CliLinks.pipe(
 		Effect.provide(layer),
 		Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(setup.env ?? {})),
 	);
@@ -263,9 +265,7 @@ describe("CliLinks: the target of a link", () => {
 			}
 			assert.deepStrictEqual(file.target({ file: "C:\\my dir\\a#b.ts" }), Option.some("file:///C:/my%20dir/a%23b.ts"));
 			// The same through layerTest, which has no filesystem and no Path.
-			const test = yield* Effect.gen(function* () {
-				return yield* CliLinks;
-			}).pipe(Effect.provide(CliLinks.layerTest("file")));
+			const test = yield* CliLinks.pipe(Effect.provide(CliLinks.layerTest("file")));
 			assert.deepStrictEqual(test.target({ file: "D:\\a\\b.ts" }), Option.some("file:///D:/a/b.ts"));
 			// A drive-relative path ("C:x.ts") is not absolute, so it has no link without a Path to resolve it.
 			assert.deepStrictEqual(test.target({ file: "C:x.ts" }), Option.none());
@@ -275,14 +275,10 @@ describe("CliLinks: the target of a link", () => {
 	it.effect("layerTest fixes the mode without a filesystem", () =>
 		Effect.gen(function* () {
 			for (const mode of ["vscode", "file", "off"] as const) {
-				const l = yield* Effect.gen(function* () {
-					return yield* CliLinks;
-				}).pipe(Effect.provide(CliLinks.layerTest(mode)));
+				const l = yield* CliLinks.pipe(Effect.provide(CliLinks.layerTest(mode)));
 				assert.strictEqual(l.mode, mode);
 			}
-			const v = yield* Effect.gen(function* () {
-				return yield* CliLinks;
-			}).pipe(Effect.provide(CliLinks.layerTest("vscode")));
+			const v = yield* CliLinks.pipe(Effect.provide(CliLinks.layerTest("vscode")));
 			assert.deepStrictEqual(v.target({ file: "/a/b.ts", line: 1 }), Option.some("vscode://file/a/b.ts:1"));
 			assert.deepStrictEqual(
 				v.target({ file: "relative.ts" }),
@@ -366,12 +362,10 @@ describe("CliLinks.linker: the RenderContext.link policy", () => {
 					"ftp://files.test/x",
 					"ssh://host/repo",
 				]) {
-					assert.strictEqual(human({ url }, "label"), "label", JSON.stringify(url));
+					assert.strictEqual(human({ url }, "label"), "label", Result.getOrThrow(Schema.encodeUnknownResult(Json)(url)));
 				}
 				// The service itself has no target for one either, so no other caller of `target` gets one.
-				const l = yield* Effect.gen(function* () {
-					return yield* CliLinks;
-				}).pipe(Effect.provide(CliLinks.layerTest("vscode")));
+				const l = yield* CliLinks.pipe(Effect.provide(CliLinks.layerTest("vscode")));
 				assert.deepStrictEqual(l.target({ url: "javascript:alert(1)" }), Option.none());
 				assert.deepStrictEqual(l.target({ url: "data:text/html,x" }), Option.none());
 			}),
@@ -392,7 +386,7 @@ describe("CliLinks.linker: the RenderContext.link policy", () => {
 				"#fragment",
 				"relative/path.html",
 			]) {
-				assert.strictEqual(linksOf(human({ url }, "label")).pairs, 1, JSON.stringify(url));
+				assert.strictEqual(linksOf(human({ url }, "label")).pairs, 1, Result.getOrThrow(Schema.encodeUnknownResult(Json)(url)));
 			}
 		}),
 	);
@@ -425,13 +419,13 @@ describe("CliLinks.linker: the RenderContext.link policy", () => {
 			];
 			for (const out of outs) {
 				const links = linksOf(out);
-				assert.strictEqual(links.pairs, 1, JSON.stringify(out));
-				assert.isTrue(links.balanced, JSON.stringify(out));
+				assert.strictEqual(links.pairs, 1, Result.getOrThrow(Schema.encodeUnknownResult(Json)(out)));
+				assert.isTrue(links.balanced, Result.getOrThrow(Schema.encodeUnknownResult(Json)(out)));
 				assert.strictEqual(links.wrapped, "label");
 				// Four ESC in all: the open and close sequences' introducer and ST each. Nothing else.
-				assert.strictEqual(out.split("\u001B").length - 1, 4, JSON.stringify(out));
+				assert.strictEqual(out.split("\u001B").length - 1, 4, Result.getOrThrow(Schema.encodeUnknownResult(Json)(out)));
 				// biome-ignore lint/suspicious/noControlCharactersInRegex: asserting their absence is the point
-				assert.notMatch(out.replace(/\u001B\]8;;|\u001B\\/g, ""), /[\u0000-\u001F\u007F-\u009F]/, JSON.stringify(out));
+				assert.notMatch(out.replace(/\u001B\]8;;|\u001B\\/g, ""), /[\u0000-\u001F\u007F-\u009F]/, Result.getOrThrow(Schema.encodeUnknownResult(Json)(out)));
 			}
 		}),
 	);

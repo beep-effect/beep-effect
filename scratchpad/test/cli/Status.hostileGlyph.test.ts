@@ -21,8 +21,7 @@ const assertNeutralised = (line: string, label: string): void => {
 	assert.notInclude(line, "evil.example", `${label}: no hyperlink target`);
 };
 
-const run = (effect: Effect.Effect<void, never, CliTheme | Audience>, audience: AudienceKind) =>
-	Effect.gen(function* () {
+const run = Effect.fn("run")(function* (effect: Effect.Effect<void, never, CliTheme | Audience>, audience: AudienceKind) {
 		const lines: Array<string> = [];
 		const double: Console.Console = Object.assign(Object.create(console) as Console.Console, {
 			log: (...args: ReadonlyArray<unknown>) => lines.push(args.map(String).join(" ")),

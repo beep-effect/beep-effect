@@ -31,12 +31,7 @@ const capturing = () => {
 const codeOf = (exit: Exit.Exit<unknown, unknown>): number =>
 	Exit.isFailure(exit) ? Runtime.getErrorExitCode(Cause.squash(exit.cause)) : 0;
 
-const run = (
-	args: ReadonlyArray<string>,
-	helpOnUsageError?: "stdout" | "stderr",
-	platform: Layer.Layer<NodeServices.NodeServices> = NodeServices.layer,
-) =>
-	Effect.gen(function* () {
+const run = Effect.fn("run")(function* (args: ReadonlyArray<string>, helpOnUsageError?: "stdout" | "stderr", platform: Layer.Layer<NodeServices.NodeServices> = NodeServices.layer) {
 		const { double, out, err } = capturing();
 		const exit = yield* CliRuntime.main(Command.runWith(app, { version: "1.0.0" })(args), {
 			platform,

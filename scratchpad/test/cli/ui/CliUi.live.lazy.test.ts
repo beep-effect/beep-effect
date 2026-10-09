@@ -1,4 +1,5 @@
 // @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file newPromise:skip-file
+import { Context } from "effect";
 // CliUi.live hands its handle back without loading Ink: a run's first mount loads it, so a
 // host holds the handle, and can close it, before Ink has resolved. No static ink or react import here: the mock
 // below gates Ink's load, and a static import would open it.
@@ -89,7 +90,7 @@ describe("CliUi.live before Ink has loaded", () => {
 			const pubsub = yield* PubSub.unbounded<Ev>();
 			const subscription = yield* PubSub.subscribe(pubsub).pipe(Scope.provide(scope));
 			// A host outside Effect (a reporter's plugin hook) can hold the handle synchronously.
-			const handle = Effect.runSync(liveOn(fake, optionsOf(subscription)).pipe(Scope.provide(scope)));
+			const handle = Effect.runSyncWith(Context.empty())(liveOn(fake, optionsOf(subscription)).pipe(Scope.provide(scope)));
 			assert.deepStrictEqual(loads, [], "still nothing loading");
 			yield* handle.close.pipe(Effect.ensuring(Scope.close(scope, Exit.void)), Effect.timeout("1 second"));
 			assert.deepStrictEqual(loads, []);

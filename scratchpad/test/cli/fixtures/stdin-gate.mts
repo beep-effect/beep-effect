@@ -4,7 +4,7 @@
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { Console, Effect, Stdio, Stream } from "effect";
 import { Command, Flag, Prompt } from "effect/cli";
-import { CliPrompt, CliRuntime } from "../../src/index.js";
+import { CliPrompt, CliRuntime } from "../../src/index.ts";
 
 const profile = Flag.String("profile").pipe(
 	Flag.withFallbackPrompt(

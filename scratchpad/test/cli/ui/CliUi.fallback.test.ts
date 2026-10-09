@@ -154,8 +154,10 @@ describe("CliUi.fallback", () => {
 				Effect.gen(function* () {
 					const fallback = CliUi.fallback(profile, { flag: "profile", otherwise: "library" });
 					const effect = Prompt.isPrompt(fallback) ? Effect.die("a bare prompt") : fallback;
-					yield* effect;
-					yield* effect;
+					const first = yield* effect;
+					const second = yield* effect;
+					void first;
+					void second;
 				}).pipe(
 					Effect.provide(NodeServices.layer),
 					Effect.provide(CliInteractive.layerTest(interactive)),
