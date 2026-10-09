@@ -5724,16 +5724,275 @@
       "wave": 4,
       "position": 2,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "drivers",
       "upstreamPaths": {
         "src": "packages/sbom/src",
         "test": "packages/sbom/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "CYCLONEDX_BOM_PREDICATE",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "Component",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ComponentInput",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ComponentType",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Contact",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CopyrightYears",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ExternalReference",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ExternalReferenceType",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GITHUB_BUILD_TYPE",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "GitHubWorkflowProvenance",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "IN_TOTO_PAYLOAD_TYPE",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "IN_TOTO_STATEMENT_V1",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "IdentityToken",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "IdentityTokenError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "IdentityTokenShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "InTotoStatement",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InTotoStatementInput",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "InTotoSubject",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InTotoSubjectInput",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "InvalidSha256DigestError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "NtiaElement",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "NtiaElementId",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "NtiaReport",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Package",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Person",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PredicateType",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Repository",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SIGSTORE_BUNDLE_V0_3_MEDIA_TYPE",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "SIGSTORE_OIDC_AUDIENCE",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "SLSA_PROVENANCE_V1",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "Sbom",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SbomDocument",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SbomInput",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "SbomJsonOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "SbomMetadata",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SbomMetadataOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "SbomMetadataSource",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SbomWriteError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Sha256Digest",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SigningError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SigningErrorKind",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SigstoreBundle",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SigstoreSigner",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SigstoreSignerOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "SigstoreSignerShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "SlsaBuildDefinition",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SlsaProvenance",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SlsaRunDetails",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Supplier",
+          "kind": "both",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
-      "newDeps": [],
-      "fixturesBytes": 0,
+      "newDeps": [
+        {
+          "name": "@sigstore/bundle",
+          "kind": "runtime",
+          "spec": "^5.0.0",
+          "replacement": null
+        },
+        {
+          "name": "@sigstore/sign",
+          "kind": "runtime",
+          "spec": "^5.0.0",
+          "replacement": null
+        }
+      ],
+      "fixturesBytes": 267129,
       "deviations": [],
       "backlog": [],
       "reviewRounds": [],

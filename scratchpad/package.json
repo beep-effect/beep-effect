@@ -57,6 +57,8 @@
     "@octokit/core": "^7.0.6",
     "@octokit/plugin-paginate-rest": "^16.0.0",
     "@octokit/types": "^18.0.0",
+    "@sigstore/bundle": "^5.0.0",
+    "@sigstore/sign": "^5.0.0",
     "@xenova/transformers": "catalog:",
     "@zip.js/zip.js": "catalog:",
     "blakejs": "1.2.1",
