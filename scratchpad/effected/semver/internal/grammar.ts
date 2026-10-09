@@ -300,7 +300,7 @@ const parsePartial = (s: ParserState): PartialParts => {
 	return { major, minor, patch, prerelease, build };
 };
 
-const parseOperator = (s: ParserState): string | null => {
+const parseOperator = (s: ParserState): ComparatorOperator | null => {
 	const ch = peek(s);
 	if (ch === ">") {
 		advance(s);
@@ -526,7 +526,7 @@ const parseComparatorCore = (s: ParserState): ComparatorParts => {
 	}
 
 	return {
-		operator: (operator ?? "=") as ComparatorOperator,
+		operator: operator ?? "=",
 		version: { major, minor, patch, prerelease, build },
 	};
 };

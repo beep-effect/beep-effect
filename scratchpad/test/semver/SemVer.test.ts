@@ -235,7 +235,7 @@ describe("SemVer", () => {
 				assert.fail("expected bump.major() to throw");
 			} catch (e) {
 				assert.instanceOf(e, Error);
-				assert.isDefined((e as Error).cause);
+				assert.isDefined(e.cause);
 			}
 		});
 
