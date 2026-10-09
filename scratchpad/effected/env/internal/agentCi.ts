@@ -1,8 +1,23 @@
 // Agent and CI detection from a pure env record. The agent table is transcribed, in order, from std-env 4.3.0
 // (dist/index.mjs); CI detection is deliberately narrower than std-env's provider table.
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import type { Env } from "./types.ts";
 import * as P from "effect/Predicate";
+
+const $I = $ScratchpadId.create("effected/env/internal/agentCi");
+
+const CiNameBase = LiteralKit(["github-actions", "generic"]);
+
+/** The CI providers the environment detector names. */
+export const CiName = CiNameBase.annotate({
+	...$I.annote("CiName", { description: "GitHub Actions for its explicit provider signal, or generic for any other CI signal." }),
+	message: `Expected ${A.join(A.map(CiNameBase.literals, (name) => `"${name}"`), " | ")}`,
+});
+
+export type CiName = typeof CiName.Type;
 
 type AgentRule =
 	| readonly [name: string, keys: ReadonlyArray<string>]
@@ -77,7 +92,7 @@ const isFalsy = (value: string | undefined): boolean =>
  *
  * @internal
  */
-export const detectCi = (env: Env): O.Option<"github-actions" | "generic"> => {
+export const detectCi = (env: Env): O.Option<CiName> => {
 	if (!isFalsy(env.GITHUB_ACTIONS)) return O.some("github-actions");
 	if (!isFalsy(env.CI) || !isFalsy(env.CONTINUOUS_INTEGRATION)) return O.some("generic");
 	return O.none();

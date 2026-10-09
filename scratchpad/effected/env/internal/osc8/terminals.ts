@@ -1,53 +1,62 @@
 // Ported from std-osc8 v0.2.0 (MIT, C. Spencer Beggs), src/terminals.ts. Pure: no process reads.
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as S from "effect/Schema";
 import type { Env } from "../types.ts";
 import { parseKonsoleVersion, parseVteVersion } from "./semver.ts";
 
+const $I = $ScratchpadId.create("effected/env/internal/osc8/terminals");
+
 /** The detected terminal program: one literal per allowlist entry. */
-export type KnownTerminal =
-	| "iTerm.app"
-	| "WezTerm"
-	| "kitty"
-	| "Apple_Terminal"
-	| "vscode"
-	| "Hyper"
-	| "mintty"
-	| "WindowsTerminal"
-	| "Konsole"
-	| "VTE"
-	| "Alacritty"
-	| "Ghostty"
-	| "JediTerm"
-	| "Tabby"
-	| "Foot"
-	| "Rio"
-	| "Contour"
-	| "ConEmu"
-	| "WarpTerminal"
-	| "WaveTerminal"
-	| "Terminology";
+export const KnownTerminal = LiteralKit([
+	"iTerm.app",
+	"WezTerm",
+	"kitty",
+	"Apple_Terminal",
+	"vscode",
+	"Hyper",
+	"mintty",
+	"WindowsTerminal",
+	"Konsole",
+	"VTE",
+	"Alacritty",
+	"Ghostty",
+	"JediTerm",
+	"Tabby",
+	"Foot",
+	"Rio",
+	"Contour",
+	"ConEmu",
+	"WarpTerminal",
+	"WaveTerminal",
+	"Terminology",
+]).annotate($I.annote("KnownTerminal", { description: "The detected terminal program: one literal per allowlist entry." }));
+export type KnownTerminal = typeof KnownTerminal.Type;
 
 /**
  * Sub-feature capabilities of the detected terminal. When the terminal is
  * unknown or unsupported, all fields are `false`.
  */
-export interface Osc8Capabilities {
+export const Osc8Capabilities = S.Struct({
 	/** Terminal supports `id=` / `key=value` params. */
-	readonly params: boolean;
+	params: S.Boolean.pipe($I.annoteKey("Osc8Capabilities.params", { description: "Terminal supports `id=` / `key=value` params." })),
 	/** Terminal renders `file://` URLs. */
-	readonly fileUrls: boolean;
+	fileUrls: S.Boolean.pipe($I.annoteKey("Osc8Capabilities.fileUrls", { description: "Terminal renders `file://` URLs." })),
 	/** When true, `file://` URLs misbehave over SSH/remote sessions. */
-	readonly fileUrlsRemoteUnsafe: boolean;
-}
+	fileUrlsRemoteUnsafe: S.Boolean.pipe($I.annoteKey("Osc8Capabilities.fileUrlsRemoteUnsafe", { description: "When true, `file://` URLs misbehave over SSH/remote sessions." })),
+}).annotate($I.annote("Osc8Capabilities", { description: "Sub-feature capabilities of the detected terminal. When the terminal is unknown or unsupported, all fields are false." }));
+export type Osc8Capabilities = typeof Osc8Capabilities.Type;
 
 /**
  * Result of identifying a terminal from an env snapshot.
  */
-export interface IdentifyResult {
+export const IdentifyResult = S.Struct({
 	/** Detected version, if available. */
-	readonly version: string | null;
+	version: S.NullOr(S.String).pipe($I.annoteKey("IdentifyResult.version", { description: "Detected version, if available." })),
 	/** The raw env value used to identify the terminal. */
-	readonly rawIdentifier: string;
-}
+	rawIdentifier: S.String.pipe($I.annoteKey("IdentifyResult.rawIdentifier", { description: "The raw env value used to identify the terminal." })),
+}).annotate($I.annote("IdentifyResult", { description: "Result of identifying a terminal from an env snapshot." }));
+export type IdentifyResult = typeof IdentifyResult.Type;
 
 /**
  * One row in the allowlist.

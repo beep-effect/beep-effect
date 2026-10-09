@@ -122,7 +122,16 @@ None.
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — The lab uses Effect HashMap, HashSet, Array.dedupe and Record helpers where upstream uses native collections and Object record operations, preserving detection and filtering results (scratchpad/test/env/colorDepth.test.ts:71,81; scratchpad/test/env/osc8.env.test.ts:28,47; scratchpad/test/env/envRecord.test.ts:6; scratchpad/test/env/RuntimeEnv.test.ts:197).
+- **schema-first** — The lab derives literal domains, guards and pure payload types from LiteralKit and S.Struct schemas where upstream uses handwritten unions and interfaces, preserving wire and plain-object values (module suite scratchpad/test/env/**; scratchpad/test/env/Audience.test.ts:42; scratchpad/test/env/RuntimeEnv.test.ts:71,87,99,107,119).
+- **type-safety** — The lab narrows provider sources and accepted literals without the unsafe casts used upstream (scratchpad/test/env/EnvOverride.test.ts:83,155; scratchpad/test/env/RuntimeEnv.test.ts:218).
+- **tsgo-diagnostics** — The lab adds dual APIs and requires explicit specifications in direct envIsTruthy calls where upstream accepts an omitted specification, with codec tests using Result-based schema calls (scratchpad/test/env/osc8.env.test.ts:6,15,29,32,35,40; scratchpad/test/env/colorDepth.test.ts; scratchpad/test/env/osc8.detect.test.ts; scratchpad/test/env/osc8.semver.test.ts; scratchpad/test/env/RuntimeEnv.test.ts:71,87,99,107,119,163).
+- **effect-first** — The lab uses named Effect.fn wrappers, matchers and Effect helpers where upstream uses Effect.gen wrappers, switches and native or trivial helper forms (scratchpad/test/env/EnvOverride.test.ts; scratchpad/test/env/TerminalEnv.test.ts; scratchpad/test/env/Audience.test.ts; scratchpad/test/env/osc8.detect.test.ts; module suite scratchpad/test/env/**).
+- **effect-imports** — The lab source, affected tests and source examples use dedicated effect/* imports and canonical aliases where upstream uses the root effect barrel (module suite scratchpad/test/env/**).
+- **identity-annotations** — The lab supplies composer-based service keys, schema and field identities and re-keyed test services where upstream uses @effected identifiers and unannotated payloads (module suite scratchpad/test/env/**; scratchpad/test/env/RuntimeEnv.test.ts:218,219,220).
+- **test-environment** — The lab source-scanning tests resolve scratchpad/effected/env paths where the inherited upstream paths target ../src (scratchpad/test/env/purity.test.ts:9; scratchpad/test/env/agentCi.test.ts:93,103; scratchpad/test/env/colorDepth.test.ts:175; scratchpad/test/env/osc8.terminals.test.ts:196).
 
 ### Dependency backlog
 

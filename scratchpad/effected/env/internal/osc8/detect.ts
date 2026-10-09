@@ -1,6 +1,8 @@
 // Ported from std-osc8 v0.2.0 (MIT, C. Spencer Beggs), src/detect.ts. Pure: no process reads.
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as O from "effect/Option";
-import * as Match from "effect/Match";
+import * as S from "effect/Schema";
 import { dual } from "effect/Function";
 import type { Env } from "../types.ts";
 import { envIsTruthy } from "./env.ts";
@@ -10,17 +12,21 @@ import { NO_CAPS, lookupTerminal } from "./terminals.ts";
 import type { WrapperInfo } from "./wrappers.ts";
 import { detectWrapper } from "./wrappers.ts";
 
+const $I = $ScratchpadId.create("effected/env/internal/osc8/detect");
+
 /** Why detection produced its verdict. The discriminator on {@link Osc8Info}. */
-export type Osc8Reason =
-	| "force-env"
-	| "no-hyperlink-env"
-	| "no-color-env"
-	| "not-a-tty"
-	| "wrapper-strips"
-	| "terminal-known-supported"
-	| "terminal-known-unsupported"
-	| "terminal-known-too-old"
-	| "terminal-unknown";
+export const Osc8Reason = LiteralKit([
+	"force-env",
+	"no-hyperlink-env",
+	"no-color-env",
+	"not-a-tty",
+	"wrapper-strips",
+	"terminal-known-supported",
+	"terminal-known-unsupported",
+	"terminal-known-too-old",
+	"terminal-unknown",
+]).annotate($I.annote("Osc8Reason", { description: "Why detection produced its verdict. The discriminator on Osc8Info." }));
+export type Osc8Reason = typeof Osc8Reason.Type;
 
 /** The full diagnostic record {@link detect} produces. */
 export interface Osc8Info {
@@ -54,29 +60,29 @@ export interface Osc8Info {
  * Input to the pure {@link detect} function. Snapshot of the relevant slice of
  * `process` at one moment.
  */
-export interface ProcessSnapshot {
-	readonly env: Env;
-	readonly isStdoutTTY: boolean;
-	readonly isStderrTTY: boolean;
-}
+export const ProcessSnapshot = S.Struct({
+	env: S.Record(S.String, S.UndefinedOr(S.String)).pipe($I.annoteKey("ProcessSnapshot.env", { description: "Environment variable names mapped to strings or undefined." })),
+	isStdoutTTY: S.Boolean.pipe($I.annoteKey("ProcessSnapshot.isStdoutTTY", { description: "Whether stdout is a TTY at detection time." })),
+	isStderrTTY: S.Boolean.pipe($I.annoteKey("ProcessSnapshot.isStderrTTY", { description: "Whether stderr is a TTY at detection time." })),
+}).annotate($I.annote("ProcessSnapshot", { description: "Input to the pure detect function: a snapshot of the relevant process state." }));
+export type ProcessSnapshot = typeof ProcessSnapshot.Type;
 
 const explanationFor = (
 	reason: Osc8Reason,
 	terminal: KnownTerminal | null,
 	terminalVersion: string | null,
 	wrapper: WrapperInfo | null,
-): string => Match.value(reason).pipe(
-	Match.when("force-env", () => "FORCE_HYPERLINK env var is set"),
-	Match.when("no-hyperlink-env", () => "NO_HYPERLINK env var is set"),
-	Match.when("no-color-env", () => "NO_COLOR env var is set"),
-	Match.when("not-a-tty", () => "stdout is not a TTY"),
-	Match.when("wrapper-strips", () => `inside ${wrapper?.name ?? "wrapper"}; passthrough not verifiable without subprocess`),
-	Match.when("terminal-known-supported", () => `detected ${terminal}${terminalVersion !== null && terminalVersion !== "" ? ` ${terminalVersion}` : ""}`),
-	Match.when("terminal-known-unsupported", () => `detected ${terminal}; terminal does not support OSC8`),
-	Match.when("terminal-known-too-old", () => `detected ${terminal} ${terminalVersion ?? ""}; below minimum version`),
-	Match.when("terminal-unknown", () => "no identifying signal matched"),
-	Match.exhaustive,
-);
+): string => Osc8Reason.$match(reason, {
+	"force-env": () => "FORCE_HYPERLINK env var is set",
+	"no-hyperlink-env": () => "NO_HYPERLINK env var is set",
+	"no-color-env": () => "NO_COLOR env var is set",
+	"not-a-tty": () => "stdout is not a TTY",
+	"wrapper-strips": () => `inside ${wrapper?.name ?? "wrapper"}; passthrough not verifiable without subprocess`,
+	"terminal-known-supported": () => `detected ${terminal}${terminalVersion !== null && terminalVersion !== "" ? ` ${terminalVersion}` : ""}`,
+	"terminal-known-unsupported": () => `detected ${terminal}; terminal does not support OSC8`,
+	"terminal-known-too-old": () => `detected ${terminal} ${terminalVersion ?? ""}; below minimum version`,
+	"terminal-unknown": () => "no identifying signal matched",
+});
 
 /** Outcome of running the precedence gate for a single stream's TTY state. */
 interface Gate {
@@ -121,8 +127,8 @@ export const detect = (snap: ProcessSnapshot): Osc8Info => {
 	const { env, isStdoutTTY, isStderrTTY } = snap;
 	const wrapper = detectWrapper(env);
 
-	const force = envIsTruthy(env.FORCE_HYPERLINK);
-	const noHyperlink = envIsTruthy(env.NO_HYPERLINK);
+	const force = envIsTruthy(env.FORCE_HYPERLINK, "default");
+	const noHyperlink = envIsTruthy(env.NO_HYPERLINK, "default");
 	const noColor = envIsTruthy(env.NO_COLOR, "no-color");
 
 	const match: TerminalMatch | null = lookupTerminal(env);
@@ -157,11 +163,15 @@ export const detect = (snap: ProcessSnapshot): Osc8Info => {
 };
 
 /** The projection of {@link Osc8Info} the package surfaces: per-stream verdicts plus the identified terminal. */
-export interface Osc8Detection {
-	readonly stdout: boolean;
-	readonly stderr: boolean;
-	readonly terminal: O.Option<{ readonly name: string; readonly version: O.Option<string> }>;
-}
+export const Osc8Detection = S.Struct({
+	stdout: S.Boolean.pipe($I.annoteKey("Osc8Detection.stdout", { description: "Final OSC8 verdict for stdout." })),
+	stderr: S.Boolean.pipe($I.annoteKey("Osc8Detection.stderr", { description: "Final OSC8 verdict for stderr." })),
+	terminal: S.Option(S.Struct({
+		name: S.String.pipe($I.annoteKey("Osc8Detection.terminal.name", { description: "The identified terminal program." })),
+		version: S.Option(S.String).pipe($I.annoteKey("Osc8Detection.terminal.version", { description: "The terminal version, when available." })),
+	}).annotate($I.annote("Osc8Detection.terminal", { description: "The identified terminal program and optional version." }))).pipe($I.annoteKey("Osc8Detection.terminal", { description: "The identified terminal, when available." })),
+}).annotate($I.annote("Osc8Detection", { description: "Per-stream OSC8 verdicts plus the identified terminal." }));
+export type Osc8Detection = typeof Osc8Detection.Type;
 
 /**
  * Project {@link detect} onto {@link Osc8Detection}: `supported` becomes

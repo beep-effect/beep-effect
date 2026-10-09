@@ -4384,9 +4384,150 @@
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 0,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/env/colorDepth.test.ts:71,81; scratchpad/test/env/osc8.env.test.ts:28,47; scratchpad/test/env/envRecord.test.ts:6; scratchpad/test/env/RuntimeEnv.test.ts:197",
+          "upstreamBehaviour": "internal/colorDepth.ts uses a native Map for TERM_ENVS; osc8/env.ts uses a native Set for DEFAULT_FALSY; keys.ts deduplicates with Set; envRecord.ts normalizes and builds records with Object.entries/fromEntries.",
+          "labBehaviour": "TERM_ENVS uses HashMap with Option lookup; DEFAULT_FALSY uses HashSet; allKeys uses Array.dedupe; normalizeEnv/readEnv use Record.toEntries/fromEntries. String membership, key order, empty-value filtering and ordinary record results are preserved.",
+          "reason": "native-runtime: native Set/Map/Object collection operations must use Effect modules; D5 and the 2026-10-09 grilling ruling require replacements without a scratchpad/effected allowlist exception."
+        },
+        {
+          "test": "module suite scratchpad/test/env/**; scratchpad/test/env/Audience.test.ts:42; scratchpad/test/env/RuntimeEnv.test.ts:71,87,99,107,119",
+          "upstreamBehaviour": "AudienceKind, audience source, CiName, ColorLevel, KnownTerminal, Osc8Reason and TruthySpec are handwritten literal unions; StreamEnv, Osc8Capabilities, IdentifyResult, WrapperInfo, ProcessSnapshot and Osc8Detection are interfaces; RuntimeEnv embeds an anonymous terminal Struct and repeated CI literals.",
+          "labBehaviour": "LiteralKits define the named domains; S.Struct defines the six payloads and DetectedTerminal, with derived types. RuntimeEnv reuses CiName and DetectedTerminal; Audience uses S.is and kit literals; explanations use Osc8Reason.$match. Plain objects, wire strings, Option/null defaults and accepted column numbers remain unchanged.",
+          "reason": "schema-first: D5/D11 require schemas to own pure data, named LiteralKit domains and schema-derived guards; round-1 env-1 through env-7 and env-9 through env-12 require these models while preserving upstream values."
+        },
+        {
+          "test": "scratchpad/test/env/EnvOverride.test.ts:83,155; scratchpad/test/env/RuntimeEnv.test.ts:218",
+          "upstreamBehaviour": "EnvOverride casts source to inspect load and casts a matched string to the accepted literal union; CurrentRuntimeEnv.layerFrom casts source to either a ConfigProvider or an environment record.",
+          "labBehaviour": "EnvOverride and RuntimeEnv use Predicate.isFunction in typed isProvider guards; readResult retains M[AudienceKind][number] in its accepts array, so a found literal needs no cast. Record/provider dispatch and dynamic record reads are preserved.",
+          "reason": "type-safety: D15 prohibits unsafe assertions; the step-2 cast-removal commit replaces provider and accepted-literal casts with narrowing, without weakening the accepted-literal type tests."
+        },
+        {
+          "test": "scratchpad/test/env/osc8.env.test.ts:6,15,29,32,35,40; scratchpad/test/env/colorDepth.test.ts; scratchpad/test/env/osc8.detect.test.ts; scratchpad/test/env/osc8.semver.test.ts; scratchpad/test/env/RuntimeEnv.test.ts:71,87,99,107,119,163",
+          "upstreamBehaviour": "colorDepth, detectOsc8 and compareSemver are data-first functions; envIsTruthy(value, spec?) returns a boolean even with one argument. RuntimeEnv codec tests use synchronous Schema.decodeSync/encodeSync calls.",
+          "labBehaviour": "colorDepth, detectOsc8 and compareSemver use dual overloads. envIsTruthy uses dual(2): direct calls require value and spec or undefined; zero/one-argument calls return predicates. detect passes default explicitly and tests pin both forms. Codec tests unwrap decodeResult/encodeResult with Result.getOrThrow.",
+          "reason": "tsgo-diagnostics: operator step 2 requires clearing @effect/tsgo diagnostics; repair-env.md:4,15 records TS377101 missingPipeableSignature forcing explicit-spec direct and callable pipeable forms, superseding the earlier plain-signature restoration."
+        },
+        {
+          "test": "scratchpad/test/env/EnvOverride.test.ts; scratchpad/test/env/TerminalEnv.test.ts; scratchpad/test/env/Audience.test.ts; scratchpad/test/env/osc8.detect.test.ts; module suite scratchpad/test/env/**",
+          "upstreamBehaviour": "EnvOverride.read/readResult and TerminalEnv.snapshot/colorLevel wrap Effect.gen; switches choose color levels and OSC8 explanations; native typeof/string helpers and trivial Option-producing or service-yielding callbacks are used.",
+          "labBehaviour": "The four effectful functions use named Effect.fn wrappers. Match and Osc8Reason.$match replace switches; Predicate, String and Array helpers supply equivalent operations; O.none/Effect.succeedNone and direct service references replace trivial wrappers. Existing precedence, warning text and projected values are retained.",
+          "reason": "effect-first: D5 and the beep-laws wave require Effect.fn, match helpers and terse Effect-native helper forms; EF-14 and the effect-fn/terse-effect laws force these structural changes."
+        },
+        {
+          "test": "module suite scratchpad/test/env/**",
+          "upstreamBehaviour": "Audience, EnvOverride, RuntimeEnv, TerminalEnv, agentCi, envRecord and OSC8 detection import named modules from the root effect barrel; test files and source JSDoc examples use that barrel too.",
+          "labBehaviour": "Source, affected tests and source JSDoc examples import Effect modules from effect/<Module>, using namespace aliases including O and S; dual/pipe come from effect/Function. Root README examples remain deferred round-1 backlog.",
+          "reason": "effect-imports: operator step 3 and effect-laws-v1 laws 1/2 require dedicated effect/* imports and the canonical S namespace; round-1 env-8 corrects the surviving Schema alias."
+        },
+        {
+          "test": "module suite scratchpad/test/env/**; scratchpad/test/env/RuntimeEnv.test.ts:218,219,220",
+          "upstreamBehaviour": "Audience, CurrentRuntimeEnv and TerminalEnv use @effected/env service keys; RuntimeEnv uses an @effected/env schema identifier. Nested schemas and fields lack composer identity metadata; First/Second test services use test/First and test/Second.",
+          "labBehaviour": "$ScratchpadId-created $I supplies the three service keys, RuntimeEnv identifier and annotations for its fields, DetectedTerminal, all added LiteralKits and payload schemas, including StreamColumns and nested OSC8 terminal fields. Test services use @beep/scratchpad/test/env/RuntimeEnv.test/First and /Second.",
+          "reason": "identity-annotations: operator step 4 requires @beep/identity composer identities on every schema, service and field; round-1 codemod-1 and env-7 require recording the changed identifiers and schema metadata."
+        },
+        {
+          "test": "scratchpad/test/env/purity.test.ts:9; scratchpad/test/env/agentCi.test.ts:93,103; scratchpad/test/env/colorDepth.test.ts:175; scratchpad/test/env/osc8.terminals.test.ts:196",
+          "upstreamBehaviour": "Purity scans resolve ../src beside the relocated tests; agentCiKeys, colorKeys and terminalKeys source scans resolve ../src/internal or ../src/internal/osc8, which do not identify the lab source tree.",
+          "labBehaviour": "Purity scans resolve scratchpad/effected/env; key-inventory tests resolve its internal and internal/osc8 directories. Existing scanner controls, read-key inventories and source boundary assertions are retained.",
+          "reason": "test-environment: D9 and the 2026-10-09 environment ruling require retargeting inherited source-scanning tests to the lab layout; the step-2 layout commit repairs their paths rather than waiving the tests."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "backlog-1 — Deferred JSDoc conversion (scratchpad/effected/env/Audience.ts:50)",
+          "reason": "jsdoc: In S2 convert all carried prose to Details/Gotchas/titled Examples, add canonical category and since 0.0.0, restore useful links and supply compiling examples without dropping upstream explanations or example bodies."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-2 — README root-barrel examples (scratchpad/effected/env/README.md:46)",
+          "reason": "docs: During S2 rewrite examples to dedicated namespace imports and O references while preserving example behavior."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-3 — Option assertion canon (scratchpad/test/env/RuntimeEnv.test.ts:21)",
+          "reason": "test: In S3 migrate Option assertions to assertSome/assertNone from @effect/vitest/utils and retain ordinary assertions for plain values."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "backlog-4 — Layer test canon and diagnostic suppressions (scratchpad/test/env/Audience.test.ts:1)",
+          "reason": "test: In S3 move effectful/scoped setups to it.layer, preserving intentional memoization tests and pure stubs; remove the provide suppressions the migration makes unnecessary. Retain justified source-scanner, process mutation and dynamic-import diagnostic exceptions with reasons, and preserve all assertions."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-5 — RuntimeEnv generated round-trip properties (scratchpad/test/env/RuntimeEnv.test.ts:71)",
+          "reason": "test: In S3 retain the frozen-wire tests and add it.effect.prop round-trip coverage with Arbitrary.schema(RuntimeEnv), fcRuns and success/equivalence assertions."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-6 — Duplicate ConfigSource guards (scratchpad/effected/env/RuntimeEnv.ts:16)",
+          "reason": "effect-idiom: In a later consolidation, extract internal/configSource.ts with ConfigSource and the shared isProvider and use them in both modules; preserve dynamic record/provider reads."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-7 — Tracing names and private snapshot tracing (scratchpad/effected/env/EnvOverride.ts:62)",
+          "reason": "effect-idiom: Consider owner-qualified public span names and fnUntraced for snapshot after assessing trace consumers; preserve functional behavior."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-8 — Repeated environment presence checks (scratchpad/effected/env/internal/colorDepth.ts:57)",
+          "reason": "effect-idiom: Consider one internal/types.ts isSet guard and replace equivalent copies after checking exact semantics; preserve empty-string and undefined behavior and do not introduce trimming."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-9 — Optional color matcher representation (scratchpad/effected/env/internal/colorDepth.ts:99)",
+          "reason": "effect-idiom: Consider Match.option plus O.isSome while preserving all fall-through/colorDepth behavior."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-10 — Duplicate Stdio and Terminal imports (scratchpad/effected/env/TerminalEnv.ts:2)",
+          "reason": "effect-idiom: Delete the duplicate type namespace imports and use Stdio.Stdio/Terminal.Terminal in the existing type positions."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-11 — Formatting and import-order drift (scratchpad/effected/env/RuntimeEnv.ts:51)",
+          "reason": "effect-idiom: Apply the repository formatter in the scheduled editing wave or wrap the field annotations and sort the cited imports."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-12 — Missing stage commit references (scratchpad/effected/PORT_LEDGER.json)",
+          "reason": "docs: In central ledger closeout, verify the module's actual stage commits and backfill their references; do not invent SHAs or treat report notes as commit proof."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 8,
+              "backlog": 2
+            },
+            "sol": {
+              "required": 4,
+              "backlog": 5
+            },
+            "fable": {
+              "required": 3,
+              "backlog": 10
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

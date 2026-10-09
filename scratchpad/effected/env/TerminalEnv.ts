@@ -5,9 +5,11 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
 import * as Terminal from "effect/Terminal";
-import type { ColorLevel } from "./ColorLevel.ts";
+import { ColorLevel } from "./ColorLevel.ts";
 import { colorDepth, colorKeys } from "./internal/colorDepth.ts";
 import { readEnv } from "./internal/envRecord.ts";
 import { allKeys } from "./internal/keys.ts";
@@ -20,11 +22,11 @@ const $I = $ScratchpadId.create("effected/env/TerminalEnv");
  *
  * @public
  */
-export interface StreamEnv {
+export const StreamEnv = S.Struct({
 	/** Whether the stream is attached to a terminal. */
-	readonly isTerminal: boolean;
+	isTerminal: S.Boolean.pipe($I.annoteKey("StreamEnv.isTerminal", { description: "Whether the stream is attached to a terminal." })),
 	/** The colour level: `none` unless the stream is a terminal or `FORCE_COLOR` says otherwise. */
-	readonly color: ColorLevel;
+	color: ColorLevel.pipe($I.annoteKey("StreamEnv.color", { description: "The colour level: none unless the stream is a terminal or FORCE_COLOR says otherwise." })),
 	/**
 	 * Whether the terminal can render OSC 8 hyperlinks on this stream.
 	 *
@@ -36,15 +38,19 @@ export interface StreamEnv {
 	 * This is terminal capability only and does not consider the audience. Turning links off for an agent audience
 	 * is applied by `@effected/cli`, where the audience is known.
 	 */
-	readonly hyperlinks: boolean;
+	hyperlinks: S.Boolean.pipe($I.annoteKey("StreamEnv.hyperlinks", { description: "Whether the terminal can render OSC 8 hyperlinks on this stream." })),
 	/**
 	 * The terminal width in columns, or `None` when it is unknown.
 	 *
 	 * @remarks
 	 * Core's `Terminal` exposes one width, so `stderr.columns` reports stdout's width.
 	 */
-	readonly columns: O.Option<number>;
-}
+	columns: S.Option(S.declare(P.isNumber, $I.annote("StreamColumns", {
+		description: "A stream column number, retaining the full JavaScript number domain accepted by stream snapshots.",
+	}))).pipe($I.annoteKey("StreamEnv.columns", { description: "The terminal width in columns, or None when it is unknown." })),
+}).annotate($I.annote("StreamEnv", { description: "What one output stream can do: terminal attachment, colour, hyperlinks and optional columns." }));
+
+export type StreamEnv = typeof StreamEnv.Type;
 
 /**
  * The options {@link TerminalEnv.layer} takes.

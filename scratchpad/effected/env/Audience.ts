@@ -1,9 +1,13 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { RuntimeEnv } from "./RuntimeEnv.ts";
 import { CurrentRuntimeEnv } from "./RuntimeEnv.ts";
 
@@ -14,7 +18,20 @@ const $I = $ScratchpadId.create("effected/env/Audience");
  *
  * @public
  */
-export type AudienceKind = "human" | "agent" | "ci";
+export const AudienceKind = LiteralKit(["human", "agent", "ci"]).annotate(
+	$I.annote("AudienceKind", { description: "Who the output is for: a person at a terminal, an AI agent, or a CI job." }),
+);
+
+export type AudienceKind = typeof AudienceKind.Type;
+
+/** What decided the audience: an environment override, detection, or a flag. */
+export const AudienceSource = LiteralKit(["override", "detected", "flag"]).annotate(
+	$I.annote("AudienceSource", { description: "What decided the audience: an environment override, detection, or a flag." }),
+);
+
+export type AudienceSource = typeof AudienceSource.Type;
+
+const isAudienceKind = S.is(AudienceKind);
 
 /**
  * The shape of the {@link Audience} service: one immutable value.
@@ -29,7 +46,7 @@ export interface AudienceShape {
 	 * `override` or `detected`; `flag` is for a layer stacked on top (a CLI's `--audience` flag re-provides
 	 * `Audience`), which lets its own consumers tell what spoke last.
 	 */
-	readonly source: "override" | "detected" | "flag";
+	readonly source: AudienceSource;
 }
 
 /**
@@ -41,8 +58,6 @@ export interface AudienceOptions {
 	/** The environment variable that overrides detection; without it the audience is always detected. */
 	readonly envVar?: string;
 }
-
-const KINDS: ReadonlyArray<AudienceKind> = ["human", "agent", "ci"];
 
 /**
  * Who the output is for, decided once.
@@ -96,11 +111,10 @@ export class Audience extends Context.Service<Audience, AudienceShape>()($I`Audi
 				const raw = yield* Config.option(Config.String(envVar)).pipe(Effect.orElseSucceed(O.none<string>));
 				if (O.isNone(raw) || raw.value === "") return detected;
 
-				const value = raw.value.toLowerCase();
-				const kind = KINDS.find((candidate) => candidate === value);
-				if (kind !== undefined) return { kind, source: "override" } satisfies AudienceShape;
+				const value = Str.toLowerCase(raw.value);
+				if (isAudienceKind(value)) return { kind: value, source: "override" } satisfies AudienceShape;
 
-				yield* Effect.logWarning(`${envVar}=${raw.value} is not one of ${KINDS.join("|")}; ignoring it`);
+				yield* Effect.logWarning(`${envVar}=${raw.value} is not one of ${A.join(AudienceKind.literals, "|")}; ignoring it`);
 				return detected;
 			}),
 		);

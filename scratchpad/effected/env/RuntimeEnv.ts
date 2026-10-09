@@ -5,8 +5,8 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Schema from "effect/Schema";
-import { detectAgent, detectCi } from "./internal/agentCi.ts";
+import * as S from "effect/Schema";
+import { CiName, detectAgent, detectCi } from "./internal/agentCi.ts";
 import { normalizeEnv, readEnv } from "./internal/envRecord.ts";
 import { allKeys } from "./internal/keys.ts";
 import { detectOsc8 } from "./internal/osc8/detect.ts";
@@ -21,8 +21,8 @@ const isProvider = (
  * An `Option` field that encodes `None` as `null` and decodes when its key is absent, so a persisted snapshot keeps
  * decoding after a field is added.
  */
-const optionField = <S extends Schema.Constraint>(schema: S) =>
-	Schema.OptionFromNullOr(schema).pipe(Schema.withDecodingDefaultTypeKey(Effect.succeedNone));
+const optionField = <Field extends S.Constraint>(schema: Field) =>
+	S.OptionFromNullOr(schema).pipe(S.withDecodingDefaultTypeKey(Effect.succeedNone));
 
 /**
  * The CI providers a {@link RuntimeEnv} names: `github-actions` when `GITHUB_ACTIONS` is set, `generic` for any other
@@ -30,7 +30,14 @@ const optionField = <S extends Schema.Constraint>(schema: S) =>
  *
  * @public
  */
-export type CiName = "github-actions" | "generic";
+export { CiName };
+
+const DetectedTerminal = S.Struct({
+	name: S.String.pipe($I.annoteKey("DetectedTerminal.name", { description: "The identified terminal program." })),
+	version: optionField(S.String).pipe(
+		$I.annoteKey("DetectedTerminal.version", { description: "The terminal version when it exposes one, or `None`." }),
+	),
+}).annotate($I.annote("DetectedTerminal", { description: "The identified terminal program and its optional version." }));
 
 /**
  * A snapshot of who is running the program: the agent, the CI, and the terminal.
@@ -43,16 +50,22 @@ export type CiName = "github-actions" | "generic";
  *
  * @public
  */
-export class RuntimeEnv extends Schema.Class<RuntimeEnv>($I`RuntimeEnv`)({
+export class RuntimeEnv extends S.Class<RuntimeEnv>($I`RuntimeEnv`)({
 	/**
 	 * The AI agent running the process, as its family (`claude` for Claude Code, whatever `AI_AGENT` says it is
 	 * beyond that), or `None`.
 	 */
-	agent: optionField(Schema.String).annotateKey({ description: "The AI agent running the process, as its family (`claude` for Claude Code, whatever `AI_AGENT` says it is beyond that), or `None`." }),
+	agent: optionField(S.String).pipe($I.annoteKey("RuntimeEnv.agent", {
+		description: "The AI agent running the process, as its family (`claude` for Claude Code, whatever `AI_AGENT` says it is beyond that), or `None`.",
+	})),
 	/** The CI the process runs in: {@link CiName}, so a consumer can match it exhaustively, or `None`. */
-	ci: optionField(Schema.Literals(["github-actions", "generic"])).annotateKey({ description: "The CI the process runs in: CiName, so a consumer can match it exhaustively, or `None`." }),
+	ci: optionField(CiName).pipe($I.annoteKey("RuntimeEnv.ci", {
+		description: "The CI the process runs in: CiName, so a consumer can match it exhaustively, or `None`.",
+	})),
 	/** The identified terminal program and its version when it exposes one, or `None`. */
-	terminal: optionField(Schema.Struct({ name: Schema.String, version: optionField(Schema.String) })).annotateKey({ description: "The identified terminal program and its version when it exposes one, or `None`." }),
+	terminal: optionField(DetectedTerminal).pipe($I.annoteKey("RuntimeEnv.terminal", {
+		description: "The identified terminal program and its version when it exposes one, or `None`.",
+	})),
 }, $I.annote("RuntimeEnv", { description: "A snapshot of who is running the program: the agent, the CI, and the terminal." })) {
 	/**
 	 * The snapshot of an environment record, as a pure function: no `Config`, no `process`, no service.
@@ -85,7 +98,7 @@ export interface RuntimeEnvOverrides {
 	/** Replaces the detected CI. */
 	readonly ci?: O.Option<CiName>;
 	/** Replaces the detected terminal. */
-	readonly terminal?: O.Option<{ readonly name: string; readonly version: O.Option<string> }>;
+	readonly terminal?: O.Option<typeof DetectedTerminal.Type>;
 }
 
 /**
