@@ -79,6 +79,9 @@ const skipLauncherOptions = (
 };
 
 const compilerArguments = (words: ReadonlyArray<string>): O.Option<ReadonlyArray<string>> => {
+  // Shell substitutions can run before any launcher or compiler sees its operands.
+  // Keep those forms on the conservative lexical path regardless of the outer command.
+  if (A.some(words, (word) => /\$\(|`/u.test(word))) return O.none();
   let index = 0;
   const packageOptions = ["-p", "--package", "--cache", "--registry", "--userconfig", "--prefix"];
   const directoryOptions = ["-C", "--dir", "--cwd", "--filter", "--filter-prod", "-F"];
@@ -121,9 +124,7 @@ const compilerArguments = (words: ReadonlyArray<string>): O.Option<ReadonlyArray
         if (subcommand === "run") return O.some(words.length);
         return launcher === "pnpm" ? O.some(start) : O.none<number>();
       }),
-      Match.when(Match.is("echo", "printf"), () =>
-        A.some(A.drop(words, index), (word) => /\$\(|`/u.test(word)) ? O.none<number>() : O.some(words.length)
-      ),
+      Match.when(Match.is("echo", "printf"), () => O.some(words.length)),
       // Unknown prefixes remain subject to the conservative lexical tripwire.
       Match.orElse(() => O.none<number>())
     );
@@ -278,6 +279,9 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
         'echo "$(tsc -b .)"',
         "X=$(tsc -b .)",
         "echo `tsc -b .`",
+        'pnpm run build "$(tsc -b .)"',
+        'npm run build "$(tsc -b .)"',
+        'tsc -- "$(tsc -b .)"',
         "bunx --bun --no-install tsgo --build",
         "bunx --package typescript tsc -b",
         "bunx -p typescript tsc --force",
