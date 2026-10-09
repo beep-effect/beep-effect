@@ -99,11 +99,12 @@ it.layer(TestCrypto, { timeout: "10 seconds" })("office-action exact paired extr
           span: { start: anchor.startChar, end: anchor.endChar },
         });
       const period = candidate("shortened-statutory-period", raw.periodAnchor);
-      const encodedFinality = yield* S.encodeEffect(GroundedExtraction)(
+      const encodedFinality = yield* S.encodeEffect(GroundedExtraction.cases.match_exact)(
         candidate("action-finality", raw.finalityAnchor)
       );
       const reversed = yield* S.decodeEffect(GroundedExtraction)({
         ...encodedFinality,
+        alignmentStatus: "match_exact",
         span: { start: raw.finalityAnchor.endChar, end: raw.finalityAnchor.startChar },
       }).pipe(Effect.flip);
       expect(reversed._tag).toBe("SchemaError");

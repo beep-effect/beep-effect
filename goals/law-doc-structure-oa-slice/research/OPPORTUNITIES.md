@@ -147,3 +147,13 @@
 - Attribution: introduced field-schema annotation, not an inherited API failure.
 - Repair: use the live Effect v4 `$Array` interface for the OCR page schema.
 - Prevention: check constructor and interface names independently in declarations.
+
+## 2026-10-09 — Typed test decoder inputs
+
+- Evidence: package test typecheck rejected an encoded extraction union spread
+  with a span and an iterator index passed as decoder parse options. Runtime
+  focused tests alone had not exposed either type error.
+- Attribution: introduced tests and fixture helper.
+- Repair: state the exact-alignment discriminator on the deliberately inverted
+  decoder input; pass only the JSON line to the fixture decoder.
+- Prevention: retain package test typechecking alongside the focused runtime loop.

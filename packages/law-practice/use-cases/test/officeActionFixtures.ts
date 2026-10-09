@@ -16,9 +16,13 @@ export const readFixture = (name: string) =>
   Effect.fromOption(HashMap.get(fixtureTexts, name), () => `Missing fixture: ${name}`);
 export const fixtureInventory = Effect.gen(function* () {
   const text = yield* readFixture("labels.jsonl");
-  return yield* Effect.forEach(Str.split(Str.trimEnd(text), "\n"), S.decodeEffect(S.fromJsonString(Fixture)), {
-    concurrency: 1,
-  });
+  return yield* Effect.forEach(
+    Str.split(Str.trimEnd(text), "\n"),
+    (line) => S.decodeEffect(S.fromJsonString(Fixture))(line),
+    {
+      concurrency: 1,
+    }
+  );
 });
 export const TestCrypto = Layer.succeed(
   Crypto.Crypto,
