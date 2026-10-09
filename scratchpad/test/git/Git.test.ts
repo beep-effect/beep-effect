@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -12,6 +11,7 @@ import * as Result from "effect/Result";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as S from "effect/Schema";
+import * as Tracer from "effect/Tracer";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { TestClock } from "effect/testing";
 import {
@@ -49,12 +49,20 @@ const cwd = "/repo";
  * runner would silently change the spawn environment of every test in this
  * file.
  */
+const provideGit = (
+  spawner: Layer.Layer<ChildProcessSpawner.ChildProcessSpawner>,
+  provider: ConfigProvider.ConfigProvider = ConfigProvider.fromEnvRecord({}),
+) => <A, E>(program: Effect.Effect<A, E, Git>) =>
+  Effect.scopedWith((scope) => Effect.flatMap(
+    Layer.buildWithScope(
+      Git.layer.pipe(Layer.provideMerge(Layer.mergeAll(spawner, ConfigProvider.layer(provider)))),
+      scope,
+    ),
+    (context) => Effect.provideContext(program, context),
+  ));
+
 const run = <A, E>(program: Effect.Effect<A, E, Git>, byArgs: (args: ReadonlyArray<string>) => ScriptResult) =>
-	program.pipe(
-		Effect.provide(Git.layer),
-		Effect.provide(scripted(withoutSshProbe(byArgs))),
-		Effect.provide(ConfigProvider.layer(ConfigProvider.fromEnvRecord({}))),
-	);
+  program.pipe(provideGit(scripted(withoutSshProbe(byArgs))));
 
 /**
  * The config keys a network-touching member probes before its own invocation,
@@ -90,6 +98,30 @@ const withoutSshProbe =
 		isSshProbe(args) ? { exit: 1 } : byArgs(args);
 
 describe("Git", () => {
+	it.effect("keeps public method spans without private helper child spans", () =>
+		Effect.gen(function* () {
+			const spans: Array<Tracer.NativeSpan> = [];
+			const tracer = Tracer.make({
+				span(options) {
+					const span = new Tracer.NativeSpan(options);
+					spans.push(span);
+					return span;
+				},
+			});
+			const program = Effect.gen(function* () {
+				const git = yield* Git;
+				yield* git.configSet(cwd, "a.b", "value");
+				yield* git.configGetAll(cwd, "a.b");
+				yield* git.untrackedFiles(cwd);
+				yield* git.lsRemote(cwd, "ssh://git@example.invalid/x.git");
+			});
+			yield* run(program, () => ({ stdout: "", exit: 0 })).pipe(Effect.withTracer(tracer));
+			assert.deepStrictEqual(spans.map((span) => span.name), [
+				"Git.configSet", "Git.configGetAll", "Git.untrackedFiles", "Git.lsRemote",
+			]);
+		}),
+	);
+
 	describe("show", () => {
 		it.effect("returns Option.some(contents) on a successful run — happy path", () =>
 			Effect.gen(function* () {
@@ -2785,6 +2817,28 @@ describe("Git — remaining tiers (round 2)", () => {
 			}),
 		);
 
+		it.effect("configGetAll preserves a single explicitly empty value", () =>
+			Effect.gen(function* () {
+				const listing = Effect.gen(function* () {
+					const git = yield* Git;
+					return yield* git.configGetAll(cwd, "a.b");
+				});
+				const values = yield* run(listing, () => ({ stdout: "\0", exit: 0 }));
+				assert.deepStrictEqual(values, [""]);
+			}),
+		);
+
+		it.effect("configGetAll preserves empty values and their positions among nonempty values", () =>
+			Effect.gen(function* () {
+				const listing = Effect.gen(function* () {
+					const git = yield* Git;
+					return yield* git.configGetAll(cwd, "a.b");
+				});
+				const values = yield* run(listing, () => ({ stdout: "\0one\0\0", exit: 0 }));
+				assert.deepStrictEqual(values, ["", "one", ""]);
+			}),
+		);
+
 		it.effect("configUnset of a never-set key fails loudly (git exits 5, silently)", () =>
 			Effect.gen(function* () {
 				const program = Effect.gen(function* () {
@@ -3032,9 +3086,7 @@ describe("Git — remaining tiers (round 2)", () => {
 						? yield* git.revParse(cwd, "HEAD")
 						: yield* git.lsRemote(cwd, "ssh://git@example.invalid/x.git");
 				}).pipe(
-					Effect.provide(Git.layer),
-					Effect.provide(recording),
-					Effect.provide(ConfigProvider.layer(ConfigProvider.fromEnvRecord(options.env ?? {}))),
+					provideGit(recording, ConfigProvider.fromEnvRecord(options.env ?? {})),
 				);
 				assert.isTrue(seen.length > 0);
 				const last = seen[seen.length - 1];
@@ -3249,7 +3301,7 @@ describe("Git — remaining tiers (round 2)", () => {
 				yield* Effect.gen(function* () {
 					const git = yield* Git;
 					return yield* git.lsRemote(cwd, "ssh://git@example.invalid/x.git");
-				}).pipe(Effect.provide(Git.layer), Effect.provide(recording), Effect.provide(ConfigProvider.layer(failing)));
+				}).pipe(provideGit(recording, failing));
 				// An unreadable provider is answered with the pin that cannot hang.
 				assert.strictEqual(captured?.env?.GIT_SSH_COMMAND, "ssh -o BatchMode=yes");
 			}),
@@ -3312,9 +3364,7 @@ describe("Git — remaining tiers (round 2)", () => {
 						const git = yield* Git;
 						return yield* member.call(git);
 					}).pipe(
-						Effect.provide(Git.layer),
-						Effect.provide(recording),
-						Effect.provide(ConfigProvider.layer(ConfigProvider.fromEnvRecord({}))),
+						provideGit(recording),
 						Effect.catchCause(() => Effect.void),
 					);
 					const invocation = seen.find((spawn) => !isSshProbe(spawn.args));
@@ -3341,9 +3391,7 @@ describe("Git — remaining tiers (round 2)", () => {
 					yield* git.lsRemote(cwd, "ssh://git@example.invalid/x.git");
 					yield* git.lsRemote(cwd, "ssh://git@example.invalid/x.git");
 				}).pipe(
-					Effect.provide(Git.layer),
-					Effect.provide(scripted(withoutSshProbe(() => ({ stdout: "abc123\n" })))),
-					Effect.provide(ConfigProvider.layer(counting)),
+					provideGit(scripted(withoutSshProbe(() => ({ stdout: "abc123\n" }))), counting),
 				);
 				assert.strictEqual(reads, 1);
 			}),

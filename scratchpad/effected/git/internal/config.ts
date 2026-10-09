@@ -11,7 +11,7 @@
 // - `[section]` and `[section "subsection"]` headers; section and variable
 //   names are case-insensitive, quoted subsection names are case-SENSITIVE.
 // - The deprecated dotted form `[section.subsection]` splits at the FIRST
-//   dot and compares its subsection case-insensitively (git lowercases it).
+//   dot and lowercases its subsection before case-sensitive comparisons.
 // - Variable names start with a letter and contain letters, digits and `-`.
 // - A bare `key` line (no `=`) is git's boolean-true shorthand.
 // - Values: unquoted trailing whitespace is discarded, internal whitespace
@@ -19,16 +19,25 @@
 //   recognized escapes; a backslash at end of line continues the value onto
 //   the next line; `#` and `;` start a comment outside quotes.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as O from "@beep/utils/Option";
 import { dual } from "effect/Function";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
-/** The diagnostic vocabulary the scanner can emit. */
-export type RawDiagnosticCode =
-	| "invalidSectionHeader"
-	| "invalidKey"
-	| "invalidLine"
-	| "unterminatedQuote"
-	| "invalidEscape"
-	| "unexpectedCharacter";
+const $I = $ScratchpadId.create("effected/git/internal/config");
+
+/** The shared diagnostic vocabulary emitted by the scanner.
+ * @category Models
+ * @since 0.0.0
+ */
+export const GitConfigDiagnosticCode = LiteralKit([
+	"invalidSectionHeader", "invalidKey", "invalidLine", "unterminatedQuote", "invalidEscape", "unexpectedCharacter",
+]).annotate($I.annote("GitConfigDiagnosticCode", { description: "The diagnostic codes emitted by the git-config scanner." }));
+
+/** The scanner's schema-derived diagnostic code type. */
+export type RawDiagnosticCode = typeof GitConfigDiagnosticCode.Type;
 
 /** One raw scanner diagnostic, positions in character offsets. */
 export interface RawDiagnostic {
@@ -44,7 +53,7 @@ export interface RawEntry {
 	readonly key: string;
 	/** The decoded value; `undefined` for the bare boolean-true shorthand. */
 	readonly value: string | undefined;
-	/** Offset of the entry's line start (including leading whitespace). */
+	/** Offset of the entry span, including indentation; inline spans start just after `]`. */
 	readonly offset: number;
 	/** Length through the final line's newline (for whole-line removal). */
 	readonly length: number;
@@ -62,7 +71,7 @@ export interface RawSection {
 	readonly name: string;
 	/** The decoded subsection name, when present. */
 	readonly subsection: string | undefined;
-	/** True when the subsection came from the deprecated dotted form and compares case-insensitively. */
+	/** True when the subsection came from the deprecated dotted form (already lowercased). */
 	readonly fold: boolean;
 	/** Offset of the header's line start. */
 	readonly offset: number;
@@ -99,11 +108,24 @@ const isWs = (ch: string | undefined): boolean => ch === " " || ch === "\t";
 const isNameChar = (ch: string): boolean => /[A-Za-z0-9.-]/.test(ch);
 const isKeyChar = (ch: string): boolean => /[A-Za-z0-9-]/.test(ch);
 
+const GitKey = S.String.check(S.isPattern(/^[A-Za-z][A-Za-z0-9-]*$/)).annotate(
+	$I.annote("GitKey", { description: "A Git variable name: a letter followed by letters, digits or hyphens." }),
+);
+
 /** git variable names: a letter, then letters/digits/`-`. */
-export const isValidKey = (key: string): boolean => /^[A-Za-z][A-Za-z0-9-]*$/.test(key);
+export const isValidKey = S.is(GitKey);
+
+const GitSectionName = S.String.check(S.isPattern(/^[A-Za-z0-9.-]+$/)).annotate(
+	$I.annote("GitSectionName", { description: "A Git section name containing letters, digits, hyphens or dots." }),
+);
 
 /** git section names: letters, digits, `-` and `.`. */
-export const isValidSectionName = (name: string): boolean => /^[A-Za-z0-9.-]+$/.test(name);
+export const isValidSectionName = S.is(GitSectionName);
+
+/** A carriage return ends a line only before LF or at the end of the source. */
+const isLineEnd = (text: string, offset: number): boolean =>
+	offset >= text.length || text[offset] === "\n" ||
+	(text[offset] === "\r" && (text[offset + 1] === "\n" || offset + 1 === text.length));
 
 /** Advances past the current line's newline (handles `\r\n`, `\n` and EOF). */
 const skipToLineEnd = (text: string, from: number): number => {
@@ -140,10 +162,15 @@ export const scan = (text: string): RawParse => {
 
 	while (offset < len) {
 		const lineStart = offset;
-		let i = offset;
+		let i = offset === 0 && text[0] === "\uFEFF" ? 1 : offset;
 		while (isWs(text[i])) i += 1;
 		const ch = text[i];
-		if (i >= len || ch === "\n" || ch === "\r" || ch === "#" || ch === ";") {
+		if (ch === "\r" && !isLineEnd(text, i)) {
+			diagnostics.push({ code: "invalidLine", message: "unexpected text after carriage return", offset: i, length: skipToLineEnd(text, i) - i });
+			offset = skipToLineEnd(text, i);
+			continue;
+		}
+		if (isLineEnd(text, i) || ch === "#" || ch === ";") {
 			offset = skipToLineEnd(text, i);
 			continue;
 		}
@@ -152,7 +179,7 @@ export const scan = (text: string): RawParse => {
 			offset = header.next;
 			if (header.section !== undefined) {
 				closeSection(lineStart);
-				sections.push({ ...header.section, bodyStart: header.next, contentEnd: -1, entries: [] });
+				sections.push({ ...header.section, bodyStart: header.next, contentEnd: -1, entries: header.entry === undefined ? [] : [header.entry] });
 			}
 			continue;
 		}
@@ -177,6 +204,7 @@ export const scan = (text: string): RawParse => {
 };
 
 interface HeaderScan {
+	readonly entry?: RawEntry;
 	readonly section: Omit<MutableSection, "bodyStart" | "contentEnd" | "entries"> | undefined;
 	readonly next: number;
 }
@@ -242,24 +270,27 @@ const scanHeader = (
 	if (text[i] !== "]") return fail("expected ']' to close the section header");
 	const bracketLength = i - bracketOffset + 1;
 	i += 1;
+	const entryStart = i;
 	while (isWs(text[i])) i += 1;
 	const trailing = text[i];
-	if (i < len && trailing !== "\n" && trailing !== "\r" && trailing !== "#" && trailing !== ";") {
-		return fail("unexpected text after the section header");
-	}
+	if (trailing === "\r" && !isLineEnd(text, i)) return fail("unexpected text after carriage return");
 	let fold = false;
 	if (!quoted && name.includes(".")) {
 		// The deprecated [section.subsection] form: split at the FIRST dot;
-		// this form's subsection compares case-insensitively (git lowercases it).
+		// git lowercases this form's subsection before case-sensitive comparisons.
 		const dot = name.indexOf(".");
-		subsection = name.slice(dot + 1);
+		subsection = Str.toLowerCase(name.slice(dot + 1));
 		name = name.slice(0, dot);
 		fold = true;
 		if (name === "" || subsection === "") return fail("malformed dotted section header");
 	}
+	const inline = !isLineEnd(text, i) && trailing !== "#" && trailing !== ";"
+		? scanEntry(text, entryStart, i, diagnostics)
+		: undefined;
 	return {
 		section: { name, subsection, fold, offset: lineStart, bracketOffset, bracketLength },
-		next: skipToLineEnd(text, i),
+		...O.getSomesStruct({ entry: O.fromUndefinedOr(inline?.entry) }),
+		next: inline === undefined ? skipToLineEnd(text, i) : inline.next,
 	};
 };
 
@@ -286,7 +317,7 @@ const scanEntry = (text: string, lineStart: number, keyStart: number, diagnostic
 	const keyEnd = i;
 	while (isWs(text[i])) i += 1;
 	const after = text[i];
-	if (i >= len || after === "\n" || after === "\r" || after === "#" || after === ";") {
+	if (isLineEnd(text, i) || after === "#" || after === ";") {
 		// Bare `key` — git's boolean-true shorthand.
 		const next = skipToLineEnd(text, i);
 		return {
@@ -413,9 +444,7 @@ export const matchesSection: {
 	if (section.name.toLowerCase() !== name.toLowerCase()) return false;
 	if (subsection === undefined) return section.subsection === undefined;
 	if (section.subsection === undefined) return false;
-	return section.fold
-		? section.subsection.toLowerCase() === subsection.toLowerCase()
-		: section.subsection === subsection;
+	return section.subsection === subsection;
 });
 
 /** Does `entry` carry `key` (variable names compare case-insensitively)? */

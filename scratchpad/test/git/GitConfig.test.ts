@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import type { GitConfigParseError } from "../../effected/git/GitConfig.ts";
+import { isValidKey, isValidSectionName } from "../../effected/git/internal/config.ts";
 import { GitConfig, GitConfigEditError } from "../../effected/git/GitConfig.ts";
 
 /** Unwraps a successful Result or fails the test with the failure's message. */
@@ -58,11 +59,11 @@ const corpus: ReadonlyArray<CorpusCase> = [
 		],
 	},
 	{
-		name: "deprecated dotted subsection compares case-insensitively",
+		name: "deprecated dotted subsection lowercases before case-sensitive lookup",
 		text: "[branch.Master]\n\tremote = origin\n",
 		lookups: [
 			["branch", "master", "remote", ["origin"]],
-			["Branch", "MASTER", "remote", ["origin"]],
+			["Branch", "MASTER", "remote", []],
 		],
 	},
 	{
@@ -473,5 +474,97 @@ describe("GitConfig", () => {
 			const bogus = GitConfig.make({ text: "[unclosed\n", sections: [] });
 			assert.throws(() => bogus.get("a", undefined, "k"), /invariant/);
 		});
+	});
+});
+
+
+describe("GitConfig round-1 scanner regressions", () => {
+	it("inline declarations have entry spans separate from the header", () => {
+		for (const text of ['[CoRe]bare=false # keep\nother=v\n', '[CoRe] \tbare=false # keep\r\nother=v\r\n']) {
+			const doc = parse(text);
+			assert.strictEqual(doc.stringify(), text);
+			assert.deepStrictEqual(doc.get("core", undefined, "bare"), O.some("false"));
+			const entry = doc.sections[0]?.entries[0];
+			assert.strictEqual(entry?.offset, text.indexOf("]") + 1);
+			assert.strictEqual(entry?.length, text.indexOf("\n") + 1 - (text.indexOf("]") + 1));
+			assert.strictEqual(ok(doc.set("core", undefined, "bare", "true")).stringify(), text.replace("false", "true"));
+			const newline = text.includes("\r\n") ? "\r\n" : "\n";
+			assert.strictEqual(ok(doc.unset("core", undefined, "bare")).stringify(), `[CoRe]${newline}other=v${newline}`);
+			assert.strictEqual(ok(doc.unsetAll("core", undefined, "bare")).stringify(), `[CoRe]${newline}other=v${newline}`);
+		}
+	});
+
+	it("inline bare keys, continuations and EOF declarations support surgical edits", () => {
+		const bare = parse("[core] bare # keep\nother=v\n");
+		assert.deepStrictEqual(bare.get("core", undefined, "bare"), O.some("true"));
+		assert.strictEqual(ok(bare.set("core", undefined, "bare", "false")).stringify(), "[core] bare = false # keep\nother=v\n");
+		assert.strictEqual(ok(bare.append("core", undefined, "bare", "false")).stringify(), "[core] bare # keep\n bare = false\nother=v\n");
+		const continued = parse("[core] key=one\\\ntwo # keep\nother=v\n");
+		assert.deepStrictEqual(continued.get("core", undefined, "key"), O.some("onetwo"));
+		assert.strictEqual(ok(continued.set("core", undefined, "key", "three")).stringify(), "[core] key=three # keep\nother=v\n");
+		assert.strictEqual(ok(continued.unset("core", undefined, "key")).stringify(), "[core]\nother=v\n");
+		const eof = parse("[core]bare=false");
+		assert.strictEqual(ok(eof.unset("core", undefined, "bare")).stringify(), "[core]");
+		assert.strictEqual(ok(eof.append("core", undefined, "bare", "true")).stringify(), "[core]bare=false\nbare = true\n");
+		const repeated = parse("[core]bare=false\nbare=true\n[core]bare=false\n");
+		assert.strictEqual(ok(repeated.unsetAll("core", undefined, "bare")).stringify(), "[core]\n[core]\n");
+	});
+
+	it("dotted and quoted subsection cases merge only at their decoded names", () => {
+		const text = '[branch.Master]\nremote=one\n[branch "master"]\nremote=two\n[branch "Master"]\nremote=three\n';
+		const doc = parse(text);
+		assert.strictEqual(doc.sections[0]?.subsection, "master");
+		assert.deepStrictEqual(doc.getAll("branch", "master", "remote"), ["one", "two"]);
+		assert.deepStrictEqual(doc.getAll("branch", "Master", "remote"), ["three"]);
+		assert.deepStrictEqual(doc.getAll("branch", "MASTER", "remote"), []);
+		assert.strictEqual(doc.stringify(), text);
+	});
+
+	it("nonterminal carriage returns diagnose line, header and bare-key suffixes", () => {
+		for (const text of ["[core]\n\rbad@line\n", "[core]\nbare\rjunk\n", "[core]\rjunk\n"]) {
+			const error = failure(text);
+			assert.strictEqual(error.diagnostics.length, 1);
+			assert.strictEqual(error.diagnostics[0]?.code, text.startsWith("[core]\r") ? "invalidSectionHeader" : "invalidLine");
+		}
+	});
+
+	it("CRLF and allowed terminal CR boundaries retain their original text", () => {
+		for (const text of ["[core]\r\nbare\r\n", "[core]\r", "[core]\nbare\r", "[core]\n\r"]) {
+			assert.strictEqual(parse(text).stringify(), text);
+		}
+	});
+
+	it("only the initial BOM is accepted, preserving absolute spans and edit bytes", () => {
+		const text = "\uFEFF[core]bare=false\nother=v\n";
+		const doc = parse(text);
+		assert.strictEqual(doc.stringify(), text);
+		assert.strictEqual(doc.sections[0]?.offset, 0);
+		assert.strictEqual(doc.sections[0]?.entries[0]?.offset, 7);
+		assert.strictEqual(doc.sections[0]?.entries[1]?.offset, text.indexOf("other"));
+		assert.deepStrictEqual(doc.get("core", undefined, "bare"), O.some("false"));
+		assert.strictEqual(ok(doc.set("core", undefined, "bare", "true")).stringify(), text.replace("false", "true"));
+		assert.strictEqual(ok(doc.unset("core", undefined, "bare")).stringify(), "\uFEFF[core]\nother=v\n");
+		const bad = failure("\uFEFF[core]\n1bad=v\n");
+		assert.strictEqual(bad.diagnostics[0]?.offset, 8);
+		assert.strictEqual(bad.diagnostics[0]?.line, 1);
+		assert.strictEqual(bad.diagnostics[0]?.character, 0);
+		assert.strictEqual(failure("[core]\n\uFEFFbare=false\n").diagnostics[0]?.code, "invalidKey");
+		assert.strictEqual(failure("\uFEFF\uFEFF[core]\n").diagnostics[0]?.code, "invalidKey");
+	});
+
+	it("schema-derived key and section guards retain their exact boundaries", () => {
+		for (const key of ["a", "Z", "a0", "a--", "Key-2"]) assert.isTrue(isValidKey(key), key);
+		for (const key of ["", "0a", "-a", "a.b", "a_", "a b", "é", "a\n", "a\nb", "a\0"]) assert.isFalse(isValidKey(key), key);
+		for (const name of ["a", "0", "-", ".", "a.b", "0-a.B"]) assert.isTrue(isValidSectionName(name), name);
+		for (const name of ["", "a_b", "a b", "é", "a\n", "a\nb", "a\0"]) assert.isFalse(isValidSectionName(name), name);
+		const doc = parse("[a]\nk=v\n");
+		const keyError = doc.set("a", undefined, "a_", "v");
+		const keyFailed = Result.isFailure(keyError);
+		assertTrue(keyFailed);
+		assert.strictEqual(keyError.failure.reason, "invalidKey");
+		const sectionError = doc.addSection("a_b", undefined);
+		const sectionFailed = Result.isFailure(sectionError);
+		assertTrue(sectionFailed);
+		assert.strictEqual(sectionError.failure.reason, "invalidSectionName");
 	});
 });

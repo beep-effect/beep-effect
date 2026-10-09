@@ -12,6 +12,7 @@ import type {
 } from "./internal/config.ts";
 import {
   applySplice,
+  GitConfigDiagnosticCode,
   isValidKey,
   isValidSectionName,
   matchesKey,
@@ -38,14 +39,7 @@ const $I = $ScratchpadId.create("effected/git/GitConfig");
  */
 export class GitConfigDiagnostic extends S.Class<GitConfigDiagnostic>($I`GitConfigDiagnostic`)({
   /** What kind of malformation this is. */
-  code: S.Literals([
-    "invalidSectionHeader",
-    "invalidKey",
-    "invalidLine",
-    "unterminatedQuote",
-    "invalidEscape",
-    "unexpectedCharacter",
-  ]).annotateKey({ description: "What kind of malformation this is." }),
+  code: GitConfigDiagnosticCode.annotateKey({ description: "What kind of malformation this is." }),
   /** A human-readable description of the problem. */
   message: S.String.annotateKey({ description: "A human-readable description of the problem." }),
   /** The character offset where the problem starts. */
@@ -141,8 +135,8 @@ export class GitConfigEntry extends S.Class<GitConfigEntry>($I`GitConfigEntry`)(
   key: S.String.annotateKey({ description: "The variable name, raw spelling preserved (names compare case-insensitively)." }),
   /** The decoded value; absent for the bare boolean-true shorthand. */
   value: S.optionalKey(S.String).annotateKey({ description: "The decoded value; absent for the bare boolean-true shorthand." }),
-  /** Character offset of the entry's line start. */
-  offset: S.Finite.annotateKey({ description: "Character offset of the entry's line start." }),
+  /** Character offset of the entry span (after `]` for an inline declaration). */
+  offset: S.Finite.annotateKey({ description: "Character offset of the entry span (after `]` for an inline declaration)." }),
   /** Length through the entry's final newline (continuation lines included). */
   length: S.Finite.annotateKey({ description: "Length through the entry's final newline (continuation lines included)." }),
 }, $I.annote("GitConfigEntry", { description: "One variable line of a git-config document." })) {
@@ -154,8 +148,8 @@ export class GitConfigEntry extends S.Class<GitConfigEntry>($I`GitConfigEntry`)(
  * @remarks
  * `name` preserves the raw spelling (section names compare
  * case-insensitively); `subsection` is the decoded subsection name, which
- * compares case-SENSITIVELY for the quoted form and case-insensitively for
- * the deprecated `[section.subsection]` dotted form. The span runs from the
+ * compares case-SENSITIVELY; the deprecated `[section.subsection]` dotted
+ * form lowercases the subsection while scanning. The span runs from the
  * header's line start to the next section header (or the end of the text),
  * so trailing comments and blank lines belong to the section above them.
  *
@@ -312,7 +306,7 @@ const appendAtEof = (text: string, content: string): string =>
  *
  * Semantics are git-config's, not generic INI: section and variable names
  * compare case-insensitively, quoted subsection names case-sensitively (the
- * deprecated `[a.b]` dotted form case-insensitively), keys may be
+ * deprecated `[a.b]` dotted form lowercases its subsection on read), keys may be
  * multi-valued (`getAll`/`append`), a bare `key` line is boolean true, and
  * `include`/`includeIf` directives are surfaced by {@link GitConfig.includes}
  * but never resolved.
@@ -499,7 +493,7 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
       rebuild(applySplice(this.text, {
         offset: found.entry.offset,
         length: found.entry.length,
-        content: "",
+        content: removalSuffix(this.text, found.section, found.entry),
       })),
     );
   }
@@ -515,7 +509,7 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
         if (matchesKey(entry, key)) targets.push({
           offset: entry.offset,
           length: entry.length,
-          content: "",
+          content: removalSuffix(this.text, candidate, entry),
         });
       }
     }
@@ -665,3 +659,11 @@ const insertEntry = (
  * the edit engine and dies as a defect.
  */
 const rebuild = (text: string): GitConfig => fromRaw(text, reparse(text));
+
+/** Retains a header-line entry's line ending when removing its entry span. */
+const removalSuffix = (text: string, section: RawSection, entry: RawEntry): string => {
+  if (entry.offset <= section.bracketOffset || entry.offset >= section.bodyStart) return "";
+  const end = entry.offset + entry.length;
+  if (text[end - 1] === "\n") return text[end - 2] === "\r" ? "\r\n" : "\n";
+  return text[end - 1] === "\r" ? "\r" : "";
+};

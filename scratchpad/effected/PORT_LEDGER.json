@@ -4964,9 +4964,204 @@
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 1891,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/git/Git.test.ts:341,3128,3236; scratchpad/test/git/Gitmodules.test.ts:41,102,110; scratchpad/test/git/GitTestDouble.test.ts:46",
+          "upstreamBehaviour": "Git.ts uses native Set for OPENSSH_VARIANTS and workingChanges deduplication; Gitmodules.fromConfigResult uses native Maps for byName and fields; GitTestDouble enumerates Object.keys; invariant and unstubbed defects use native Error.",
+          "labBehaviour": "OPENSSH_VARIANTS uses HashSet, workingChanges uses Array.dedupe, Gitmodules collection uses MutableHashMap, and test-double enumeration uses Record.keys; native source defects become schema tagged errors, preserving messages, path order and last-wins merging.",
+          "reason": "native-runtime: Effect laws 6/7 prohibit native collections, Object helpers and native Error; inventory git-c4 and git-c3 consolidate these replacements; Git has no native-runtime allowlist sites."
+        },
+        {
+          "test": "scratchpad/test/git/GitTestDouble.test.ts:23,37,46; scratchpad/test/git/GitConfig.test.ts:473",
+          "upstreamBehaviour": "Git.makeTest unstubbed calls die with native Error, and GitConfig.reparse throws native Error when hand-built text violates its invariant.",
+          "labBehaviour": "Git.ts exports NotStubbedError and unstubbed calls die with that schema tagged error; GitConfig.ts throws its module-local GitConfigInvariantError with the original invariant message; existing domain error tags remain unchanged.",
+          "reason": "tagged-errors: Effect law 7 requires schema tagged errors; inventory git-c3 identifies both native-error replacements and the retargeted GitTestDouble assertion."
+        },
+        {
+          "test": "scratchpad/test/git/GitCommand.test.ts:706; scratchpad/test/git/GitConfig.test.ts:555; scratchpad/test/git/Gitmodules.test.ts:396; module suite scratchpad/test/git/**",
+          "upstreamBehaviour": "Classified/ClassifyKind and GitConfigScope are handwritten types; name-status, porcelain and ignore domains use inline literals or duplicate lists; diagnostic codes are a type union, key/section guards are regex predicates, and commonDir diagnostics call JSON.stringify.",
+          "labBehaviour": "Git.ts derives Classified from S.TaggedUnion and classification/status domains from LiteralKit; GitCommand exports runtime GitConfigScope; Gitmodules shares SubmoduleIgnore and a GitBoolean codec; internal/config exports GitConfigDiagnosticCode and derives guards with S.is; commonDir uses S.fromJsonString.",
+          "reason": "schema-first: D5, Effect laws 17/19 and EF-3 require executable named domains, schema-derived guards and JSON codecs; inventory git-r3/r4/r5/r9/r17/r18/r20 and git-x1; added runtime exports are captured here as shapes, without editing exportsAdded."
+        },
+        {
+          "test": "module suite scratchpad/test/git/**; scratchpad/test/git/GitConfig.test.ts:200,291; scratchpad/test/git/Git.test.ts",
+          "upstreamBehaviour": "GitCommandError.exitCode, LsFilesEntry.stage and GitConfig diagnostic/entry/section numeric spans use Schema.Number, accepting NaN and infinities.",
+          "labBehaviour": "Git.ts uses S.Finite for exitCode and stage; GitConfig.ts uses S.Finite for diagnostic offset/length/line/character and entry/section offset/length, rejecting nonfinite construction inputs while retaining finite values, including fractional or negative spans.",
+          "reason": "numeric-domains: schemaNumber diagnostics and the 2026-10-09 per-class numeric-domain bookkeeping ruling force S.Finite; inventory git-c2. Existing upstream assertions needed no retargeting; git-b8 leaves extra integer/nonnegative refinements deferred."
+        },
+        {
+          "test": "scratchpad/test/git/GitConfig.test.ts:10,19,455; scratchpad/test/git/GitTestDouble.test.ts:46; scratchpad/test/git/Gitmodules.test.ts:124,135; module suite scratchpad/test/git/**",
+          "upstreamBehaviour": "Git.ts casts parsed tree kinds, signature/status codes and ref object types; internal/config.ts casts indexed characters; GitConfig.ts casts line-index entries; tests cast Result variants, defects, error unions and method keys/call signatures.",
+          "labBehaviour": "Parsed class inputs use S.Struct(fields) assertions; scanner characters use charAt; the line index has a nonempty tuple type and checked access; tests narrow Results/errors, and GitTestDouble uses a typed calls record with Record.keys; intermediate diagnostic directives are absent.",
+          "reason": "type-safety: D15 prohibits unsafe casts, non-null assertions and suppression directives; the S0 diff grounds cast removals, and fix-git-g1.md:6,12,21,31 records removal of intermediate test directives after real diagnostic repairs."
+        },
+        {
+          "test": "scratchpad/test/git/Git.test.ts:52; scratchpad/test/git/GitLog.test.ts:20; scratchpad/test/git/run.test.ts:13; module suite scratchpad/test/git/**",
+          "upstreamBehaviour": "internal/config exports only data-first matchesSection, matchesKey, serializeHeader, applySplice and sectionIndent; schema errors are constructed with new; test helpers chain Effect.provide calls and apply Layers directly.",
+          "labBehaviour": "The five internal helpers expose dual data-first/data-last overloads; existing schema error construction uses .make; Git/GitLog/run test provisioning composes Layers, builds them in one scope and supplies the resulting Context.",
+          "reason": "tsgo-diagnostics: @effect/tsgo missingPipeableSignature, newSchemaClass, strictEffectProvide and multipleEffectProvide force these API/call shapes; fix-git-g1.md:6,12-13,21-22,31-38 records actual provisioning repairs without directives."
+        },
+        {
+          "test": "scratchpad/test/git/Git.test.ts:101; scratchpad/test/git/run.test.ts:24,33,44,53,61,72; module suite scratchpad/test/git/**",
+          "upstreamBehaviour": "Private Git helpers and runCollected wrap Effect.gen; service methods dispatch classifications with switch; optional fields use conditional spreads; helpers use native predicates and nested Effect helper calls.",
+          "labBehaviour": "resolveSshEnv, runForNetwork, collectPaths, runVoid, runParsed and runCollected use Effect.fnUntraced; runCollected retains Effect.scoped; classification dispatch uses Match, optionals use Option.getSomesStruct, and Effect helpers use pipe/helper forms; public method spans and concurrent stream collection remain.",
+          "reason": "effect-first: Effect-first development requires Effect.fn/fnUntraced, Match and Effect-native helpers; fix-git-g1.md:7-8,14 and inventory git-r7/r8 require private helpers to remain untraced; the tracer regression pins the four public spans."
+        },
+        {
+          "test": "module suite scratchpad/test/git/**",
+          "upstreamBehaviour": "Git.ts, GitCommand.ts, GitConfig.ts, Gitmodules.ts, internal/run.ts and the unit/integration tests import Effect modules from the root effect barrel, including JSDoc examples.",
+          "labBehaviour": "Root barrel imports are split into effect/Effect, effect/Schema, effect/Context, effect/Layer and other module paths throughout source, tests and examples; effect/process imports retain their upstream subpath.",
+          "reason": "effect-imports: AGENTS.md requires per-module effect/* imports; effected-port step 3, the S0 diff and fix-git-g1.md:46/fix-git-g2.md:41 ground the import graph conversion."
+        },
+        {
+          "test": "scratchpad/test/git/Gitmodules.test.ts:290,294; scratchpad/test/git/GitCommand.test.ts:706; module suite scratchpad/test/git/**",
+          "upstreamBehaviour": "Schema classes use short identifiers such as GitmodulesEntry, Git uses Context key @effected/git/Git, and schema fields/named internal domains have no @beep/identity annotations; JSON Schema definitions use GitmodulesEntryEncoded.",
+          "labBehaviour": "Git.ts, GitCommand.ts, GitConfig.ts, Gitmodules.ts and internal/config.ts use module-local $ScratchpadId/$I identities and description annotations; the Git service key and schema identifiers are lab namespaced, and the JSON Schema assertion follows the new GitmodulesEntryEncoded definition key.",
+          "reason": "identity-annotations: Port step 4 requires @beep/identity $I annotations; inventory git-c1 and fix-git-g1.md:42 identify schema/service identity metadata, not reference-identity collection rewrites; central-notes.md:10 pins the LiteralKit subpath import."
+        },
+        {
+          "test": "scratchpad/test/git/Git.test.ts:2820,2831",
+          "upstreamBehaviour": "configGetAll filters every empty NUL-delimited token, returning [] for a single empty configured value and [one] for empty/one/empty.",
+          "labBehaviour": "Git.ts parseConfigGetAll discards only the final terminator, returning one empty value or empty/one/empty in order; a silent exit 1 still represents an unset key as [].",
+          "reason": "upstream-bug: fix-git-g1.md:40 and round-1/part-1/sol.md:4 report Git stdout NUL/one/NUL/NUL and the same faulty result in the pinned upstream oracle; the added single-empty and mixed-empty regressions reproduce the loss."
+        },
+        {
+          "test": "scratchpad/test/git/GitLog.test.ts:111; scratchpad/test/git/GitCommand.test.ts:307,304,320,336; scratchpad/test/git/GitLog.test.ts:40,244",
+          "upstreamBehaviour": "GitCommand.log emits %x1e record openers and parseLog splits all stdout at the record-separator byte, failing valid paths such as left\\x1eright.txt.",
+          "labBehaviour": "GitCommand.log emits %x00 openers; parseLog consumes five positional header fields and nonempty pathname tokens, preserving record-separator bytes, empty author fields, leading pathname newlines and pathless commits across boundaries.",
+          "reason": "upstream-bug: fix-git-g1.md:41 and round-1/part-1/sol.md:11 report the pinned upstream scripted-spawner probe failing with fewer header fields; the added pathname regression pins byte fidelity, and existing framing/argv fixtures are retargeted."
+        },
+        {
+          "test": "scratchpad/test/git/Gitmodules.test.ts:303,316",
+          "upstreamBehaviour": "GitmodulesEntry accepts NUL-containing path, url, branch and update strings, and FromString encoding emits git-config text its own decoder rejects.",
+          "labBehaviour": "GitmodulesValue rejects NUL in all four fields at construction, typed decode and codec encoding; valid escaped values round-trip and optional branch/update keys retain their omission semantics.",
+          "reason": "upstream-bug: fix-git-g2.md:31 reports reproductions for all four fields; round-1/part-2/sol.md:4 independently records construction/encoding success followed by decode failure in both lab and pinned upstream for path/branch."
+        },
+        {
+          "test": "scratchpad/test/git/Gitmodules.test.ts:331,343; scratchpad/test/git/Gitmodules.test.ts:102",
+          "upstreamBehaviour": "A valid typed Gitmodules can contain two entries named a; encoding and decoding merge them into one last-wins entry and silently lose data.",
+          "labBehaviour": "Gitmodules.entries requires unique case-sensitive names during construction, decode and encoding; Alpha/alpha remain distinct and ordered, while duplicate sections in incoming text still merge last-wins.",
+          "reason": "upstream-bug: fix-git-g2.md:32 and round-1/part-2/sol.md:11 report the pinned upstream round-trip changing two typed entries into one; the new rejection and case-distinct fidelity tests pin both boundaries."
+        },
+        {
+          "test": "scratchpad/test/git/GitConfig.test.ts:62,66,513; scratchpad/test/git/Gitmodules.test.ts:354",
+          "upstreamBehaviour": "The scanner retains Master from [branch.Master] and matches deprecated dotted subsections case-insensitively, accepting MASTER lookups and splitting differently cased dotted submodules.",
+          "labBehaviour": "Dotted subsection names lowercase during scanning and compare case-sensitively with decoded quoted names; source bytes stay unchanged, matching logical submodule sections merge last-wins, and case-distinct quoted names remain separate.",
+          "reason": "upstream-bug: fix-git-g2.md:33 and round-1/part-2/sol.md:18 report Git returning origin only for branch.master.remote and the pinned upstream falsely failing mixed-case submodules with missingUrl; existing MASTER expectations are retargeted."
+        },
+        {
+          "test": "scratchpad/test/git/GitConfig.test.ts:482,497",
+          "upstreamBehaviour": "GitConfig rejects a variable declaration after the closing section-header bracket, including [core]bare=false.",
+          "labBehaviour": "The scanner accepts inline declarations with entry spans starting after ]; GitConfig set/append/unset/unsetAll handle bare keys, continuations, EOF and LF/CRLF without removing the header or its retained line ending.",
+          "reason": "upstream-bug: fix-git-g2.md:34 and round-1/part-2/sol.md:25 report Git accepting an inline declaration while pinned upstream returns invalidSectionHeader; added parsing and surgical-edit regressions pin valid syntax and byte preservation."
+        },
+        {
+          "test": "scratchpad/test/git/Gitmodules.test.ts:365,384",
+          "upstreamBehaviour": "shallow and fetchRecurseSubmodules accept boolean words, bare keys and only the numeric spellings 0/1, rejecting valid Git integer boolean values such as 2.",
+          "labBehaviour": "Both fields share GitBoolean, accepting signed decimal/octal/hexadecimal integers and k/m/g suffixes within signed 32-bit bounds; zero is false and nonzero true, malformed numbers/overflow still fail, and on-demand remains supported.",
+          "reason": "upstream-bug: fix-git-g2.md:35 and round-1/part-2/sol.md:32 report Git --bool accepting 2, -1, +1, 0x10 and 00 while pinned upstream rejects 2 in both fields; the new accepted/rejected numeric cases pin conversion and bounds."
+        },
+        {
+          "test": "scratchpad/test/git/GitConfig.test.ts:523,531",
+          "upstreamBehaviour": "The scanner treats any carriage return at line, header or bare-key boundaries as a line ending, accepting malformed line/bare-key suffixes and silently discarding following text.",
+          "labBehaviour": "Nonterminal CR suffixes at those boundaries produce diagnostics; CRLF and permitted terminal CR remain lossless. The header case [core]\\rjunk is also rejected, although Git accepts it as an inline declaration.",
+          "reason": "upstream-bug: fix-git-g2.md:36 and round-1/part-2/sol.md:39 reproduce upstream accepting two malformed line/bare-key inputs Git rejects with exit 128; header rejection is explicitly required by git-r15, not demonstrated as a Git defect, and the report discloses Git accepts that header variant."
+        },
+        {
+          "test": "scratchpad/test/git/GitConfig.test.ts:537",
+          "upstreamBehaviour": "GitConfig rejects a leading U+FEFF BOM before an otherwise valid section, reporting an invalid key and a variable before any section.",
+          "labBehaviour": "The scanner skips U+FEFF only at source offset zero while preserving the original text and absolute offsets; surgical edits retain the BOM, and repeated/noninitial BOMs remain rejected.",
+          "reason": "upstream-bug: fix-git-g2.md:37 and round-1/part-2/sol.md:46 report Git accepting BOM-prefixed configuration while the pinned upstream returns Failure; the added regression pins parse/stringify, offsets, edits and noninitial rejection."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "git-b1 — Convert documentation to the S2 grammar (scratchpad/effected/git/Git.ts:232)",
+          "reason": "jsdoc: During S2 preserve prose/examples, convert legacy carriers to titled Example and Details/Gotchas sections, add category/since and compilable imports from the owning lab export."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "git-b2 — Measure repeated parser validation (scratchpad/effected/git/Git.ts:659,917,947,952,1193)",
+          "reason": "perf: Consider one typed decode or proven check-disabled make, preserving failures; measure before making the constant-factor validation cost required."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "git-b3 — Consolidate optional-field assembly (scratchpad/effected/git/Git.ts:1276)",
+          "reason": "effect-idiom: Consolidate each constructor group into one Option.getSomesStruct and use Option.fromNullable for the error-value spread, preserving omitted keys."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "git-b4 — Reuse unexpected-classification handlers (scratchpad/effected/git/Git.ts:1520–3247)",
+          "reason": "effect-idiom: Consider one method-parameterized unexpected-classification helper preserving every existing defect message."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "git-b5 — Repair comment attachment and duplication (scratchpad/effected/git/Git.ts:1569,2013,2399,2546,2556)",
+          "reason": "docs: Move comments above their owning properties and keep one copy of shared explanatory text without losing upstream meaning."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "git-b6 — Remove false vendor attribution notices (scratchpad/effected/git/README.md:170)",
+          "reason": "docs: Central/S2 work removes false attribution bullets and tightens the runner vendor-notice matcher; runner and Port notes are outside local required repair ownership."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "git-b7 — Adapt README to the lab module (scratchpad/effected/git/README.md:3,10,34)",
+          "reason": "docs: Adapt badges/install/examples to the lab during S2, preserve substantive prose and use @beep/scratchpad/effected/git/index imports; central bookkeeping owns Port notes."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "git-b8 — Justify integer and nonnegative span refinements (scratchpad/effected/git/GitConfig.ts:52,145,170)",
+          "reason": "schema: Consider nonnegative integer refinements only after a qualifying forced law or verified upstream bug; do not fold optional acceptance narrowing into S.Finite bookkeeping."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "git-b9 — Apply S3 assertion canon and schema properties (scratchpad/test/git/GitConfig.test.ts:10)",
+          "reason": "test: During S3 migrate assertion/test carriers to canon and add Arbitrary.schema codec properties with fcRuns(n), preserving all upstream tests."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "git-b10 — Shorten available success mapping (scratchpad/effected/git/internal/run.ts:68)",
+          "reason": "effect-idiom: Use Effect.as(true) when otherwise touching available, retaining false on spawn failure."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "git-b11 — Integrate the directive scan in central tooling (scratchpad/effected/runner (directive-scan integration))",
+          "reason": "tsgo: Central tooling integrates the existing directive scan into the lab gate; no broad exemption without a binding ruling; git-r6 separately repairs local test directives."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 0,
+              "backlog": 2
+            },
+            "sol": {
+              "required": 12,
+              "backlog": 2
+            },
+            "fable": {
+              "required": 8,
+              "backlog": 19
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

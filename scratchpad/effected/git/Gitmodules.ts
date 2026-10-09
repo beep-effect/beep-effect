@@ -1,4 +1,8 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
+import * as N from "effect/Number";
+import * as Str from "effect/String";
 import * as Effect from "effect/Effect";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as Result from "effect/Result";
@@ -11,6 +15,48 @@ import { serializeHeader, serializeValue } from "./internal/config.ts";
 import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/git/Gitmodules");
+
+/** A value that can be rendered and scanned without a NUL-byte diagnostic. */
+const GitmodulesValue = S.String.check(S.isPattern(/^[^\0]*$/u)).annotate(
+	$I.annote("GitmodulesValue", { description: "A NUL-free git-config field value." }),
+);
+
+/** Git's case-folded submodule status-ignore policies. */
+const SubmoduleIgnore = LiteralKit(["all", "dirty", "untracked", "none"]).annotate(
+	$I.annote("SubmoduleIgnore", { description: "The supported submodule status-ignore policies." }),
+);
+const isSubmoduleIgnore = S.is(SubmoduleIgnore);
+
+/** Git's base-zero integer syntax, with an optional binary size suffix. */
+const GitIntegerText = S.String.check(S.isPattern(/^[ \t\n\r\v\f]*[+-]?(?:0[xX][0-9a-fA-F]+|0[0-7]*|[1-9][0-9]*)[kKmMgG]?$/)).annotate(
+	$I.annote("GitIntegerText", { description: "A signed decimal, octal or hexadecimal Git integer, optionally suffixed by k, m or g." }),
+);
+const isGitIntegerText = S.is(GitIntegerText);
+
+/** Git boolean text and bare keys, encoded canonically as true or false. */
+const GitBoolean = S.UndefinedOr(S.String).pipe(
+	S.decodeTo(S.Boolean, SchemaTransformation.transformEffect<boolean, string | undefined>({
+		decode: Effect.fn("GitBoolean.decode")((value: string | undefined): Effect.Effect<boolean, SchemaIssue.Issue> => {
+			if (value === undefined) return Effect.succeed(true);
+			const folded = Str.toLowerCase(value);
+			if (A.contains(["true", "yes", "on"], folded)) return Effect.succeed(true);
+			if (A.contains(["", "false", "no", "off"], folded)) return Effect.succeed(false);
+			const invalid = () => Effect.fail(new SchemaIssue.InvalidValue({ message: "Expected a Git boolean or a signed 32-bit Git integer" }, value));
+			if (!isGitIntegerText(value)) return invalid();
+			const integer = Str.replace(/^[+-]/, "")(Str.trimStart(folded));
+			const suffix = integer[integer.length - 1];
+			const multiplier = suffix === "k" ? 1024 : suffix === "m" ? 1048576 : suffix === "g" ? 1073741824 : 1;
+			const digits = multiplier === 1 ? integer : Str.slice(0, -1)(integer);
+			const normalized = /^0[0-7]+$/.test(digits) ? `0o${digits}` : digits;
+			const parsed = N.parse(normalized);
+			if (O.isNone(parsed)) return invalid();
+			const signed = parsed.value * multiplier * (Str.startsWith("-")(Str.trimStart(folded)) ? -1 : 1);
+			return signed < -2147483648 || signed > 2147483647 ? invalid() : Effect.succeed(signed !== 0);
+		}),
+		encode: (value) => Effect.succeed(value ? "true" : "false"),
+	})),
+).annotate($I.annote("GitBoolean", { description: "Git boolean words, integer spellings and bare-key semantics." }));
+const decodeGitBoolean = S.decodeUnknownOption(GitBoolean);
 
 /**
  * One `[submodule "<name>"]` entry of a `.gitmodules` document, decoded into
@@ -33,11 +79,11 @@ export class GitmodulesEntry extends S.Class<GitmodulesEntry>($I`GitmodulesEntry
 	 */
 	name: S.String.check(S.isPattern(/^[^\n\r\0]*$/u)).annotateKey({ description: "The submodule's logical name — the section's subsection, case-sensitive." }),
 	/** The submodule's path relative to the superproject root (`submodule.<name>.path`). */
-	path: S.String.annotateKey({ description: "The submodule's path relative to the superproject root (`submodule.<name>.path`)." }),
+	path: GitmodulesValue.annotateKey({ description: "The submodule's path relative to the superproject root (`submodule.<name>.path`)." }),
 	/** The submodule's remote URL (`submodule.<name>.url`). */
-	url: S.String.annotateKey({ description: "The submodule's remote URL (`submodule.<name>.url`)." }),
+	url: GitmodulesValue.annotateKey({ description: "The submodule's remote URL (`submodule.<name>.url`)." }),
 	/** The branch the submodule tracks (`submodule.<name>.branch`), when recorded. */
-	branch: S.optionalKey(S.String).annotateKey({ description: "The branch the submodule tracks (`submodule.<name>.branch`), when recorded." }),
+	branch: S.optionalKey(GitmodulesValue).annotateKey({ description: "The branch the submodule tracks (`submodule.<name>.branch`), when recorded." }),
 	/** Whether the submodule clones shallow (`submodule.<name>.shallow`), when recorded. */
 	shallow: S.optionalKey(S.Boolean).annotateKey({ description: "Whether the submodule clones shallow (`submodule.<name>.shallow`), when recorded." }),
 	/**
@@ -46,9 +92,9 @@ export class GitmodulesEntry extends S.Class<GitmodulesEntry>($I`GitmodulesEntry
 	 * accepts arbitrary `!command` values, so a literal union would reject
 	 * valid documents.
 	 */
-	update: S.optionalKey(S.String).annotateKey({ description: "The update strategy (`submodule.<name>.update`), when recorded. Kept as a raw string deliberately: beyond `checkout`/`rebase`/`merge`/`none` git accepts arbitrary `!command` values, so a literal union would reject valid documents." }),
+	update: S.optionalKey(GitmodulesValue).annotateKey({ description: "The update strategy (`submodule.<name>.update`), when recorded. Kept as a raw string deliberately: beyond `checkout`/`rebase`/`merge`/`none` git accepts arbitrary `!command` values, so a literal union would reject valid documents." }),
 	/** The status-ignore policy (`submodule.<name>.ignore`), when recorded. */
-	ignore: S.optionalKey(S.Literals(["all", "dirty", "untracked", "none"])).annotateKey({ description: "The status-ignore policy (`submodule.<name>.ignore`), when recorded." }),
+	ignore: S.optionalKey(SubmoduleIgnore).annotateKey({ description: "The status-ignore policy (`submodule.<name>.ignore`), when recorded." }),
 	/** Whether fetch recurses into the submodule (`submodule.<name>.fetchRecurseSubmodules`), when recorded. */
 	fetchRecurseSubmodules: S.optionalKey(S.Union([S.Boolean, S.Literal("on-demand")])).annotateKey({ description: "Whether fetch recurses into the submodule (`submodule.<name>.fetchRecurseSubmodules`), when recorded." }),
 }, $I.annote("GitmodulesEntry", { description: "One `[submodule \"<name>\"]` entry of a `.gitmodules` document, decoded into typed fields." })) {}
@@ -85,17 +131,6 @@ export class GitmodulesDecodeError extends S.TaggedError<GitmodulesDecodeError>(
  * @public
  */
 export type GitmodulesParseError = GitConfigParseError | GitmodulesDecodeError;
-
-/** git's boolean vocabulary. `undefined` (a bare key) is boolean true. */
-const parseBool = (value: string | undefined): boolean | undefined => {
-	if (value === undefined) return true;
-	const folded = value.toLowerCase();
-	if (folded === "true" || folded === "yes" || folded === "on" || folded === "1") return true;
-	if (folded === "" || folded === "false" || folded === "no" || folded === "off" || folded === "0") return false;
-	return undefined;
-};
-
-const IGNORE_VALUES = ["all", "dirty", "untracked", "none"] as const;
 
 /**
  * Renders entry fields as a canonical `.gitmodules` document — shared by the
@@ -139,7 +174,10 @@ const render = (fields: (typeof Gitmodules)["Encoded"]): string => {
  */
 export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
 	/** The decoded submodule entries, in first-appearance order. */
-	entries: S.Array(GitmodulesEntry).annotateKey({ description: "The decoded submodule entries, in first-appearance order." }),
+	entries: S.Array(GitmodulesEntry).check(S.makeFilter(
+		(entries) => A.dedupe(A.map(entries, (entry) => entry.name)).length === entries.length,
+		$I.annote("UniqueSubmoduleNames", { title: "Unique submodule names", description: "Submodule entries must have distinct case-sensitive names." }),
+	)).annotateKey({ description: "The decoded submodule entries, in first-appearance order." }),
 }, $I.annote("Gitmodules", { description: "The typed view over a `.gitmodules` document: the decoded submodule entries, in first-appearance order." })) {
 	/**
 	 * Decodes an already-parsed git-config document into submodule entries —
@@ -195,17 +233,17 @@ export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
 			let shallow: boolean | undefined;
 			const shallowRaw = raw("shallow");
 			if (shallowRaw !== undefined) {
-				shallow = parseBool(shallowRaw ?? undefined);
-				if (shallow === undefined) return Result.fail(invalid("shallow", shallowRaw));
+				const decoded = decodeGitBoolean(shallowRaw ?? undefined);
+				if (O.isNone(decoded)) return Result.fail(invalid("shallow", shallowRaw));
+				shallow = decoded.value;
 			}
 			let ignore: GitmodulesEntry["ignore"];
 			const ignoreRaw = raw("ignore");
 			if (ignoreRaw !== undefined) {
 				if (ignoreRaw === null) return Result.fail(invalid("ignore", ignoreRaw));
 				const folded = ignoreRaw.toLowerCase();
-				const matched = IGNORE_VALUES.find((candidate) => candidate === folded);
-				if (matched === undefined) return Result.fail(invalid("ignore", ignoreRaw));
-				ignore = matched;
+				if (!isSubmoduleIgnore(folded)) return Result.fail(invalid("ignore", ignoreRaw));
+				ignore = folded;
 			}
 			let fetchRecurse: GitmodulesEntry["fetchRecurseSubmodules"];
 			const fetchRaw = raw("fetchrecursesubmodules");
@@ -213,8 +251,9 @@ export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
 				if (fetchRaw !== null && fetchRaw.toLowerCase() === "on-demand") {
 					fetchRecurse = "on-demand";
 				} else {
-					fetchRecurse = parseBool(fetchRaw ?? undefined);
-					if (fetchRecurse === undefined) return Result.fail(invalid("fetchRecurseSubmodules", fetchRaw));
+					const decoded = decodeGitBoolean(fetchRaw ?? undefined);
+					if (O.isNone(decoded)) return Result.fail(invalid("fetchRecurseSubmodules", fetchRaw));
+					fetchRecurse = decoded.value;
 				}
 			}
 			entries.push(

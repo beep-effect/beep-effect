@@ -1,7 +1,11 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as O from "@beep/utils/Option";
 import * as Stream from "effect/Stream";
 import { ChildProcess } from "effect/process";
 import * as P from "effect/Predicate";
+
+const $I = $ScratchpadId.create("effected/git/GitCommand");
 
 /**
  * A pure `git` invocation: the spawnable command plus the diagnostic argv the
@@ -265,14 +269,14 @@ const commonDir = (): GitInvocation => git(["rev-parse", "--path-format=absolute
 const commitInfo = (ref = "HEAD"): GitInvocation => git(["log", "-1", "--format=%H%x00%G?%x00%B", ref]);
 
 /**
- * The `git log` record format: a `\x1e` record opener followed by the five
+ * The `git log` record format: a NUL record opener followed by the five
  * NUL-joined header fields the log listing decodes.
  *
- * `--name-only` output carries no other unambiguous record boundary — a
- * commit's path lines and the next commit's header are both just bytes — so
- * the separator is emitted by the format itself rather than inferred.
+ * Paths are nonempty and cannot contain NUL, so the empty token emitted
+ * before a header is an unambiguous boundary outside the pathname space.
+ * The five header tokens are read by position before parsing path tokens.
  */
-const LOG_FORMAT = "--format=%x1e%H%x00%aI%x00%cI%x00%an%x00%ae";
+const LOG_FORMAT = "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae";
 
 // Implementation of GitCommand.log; the public contract lives on the static.
 const log = (
@@ -305,7 +309,10 @@ const log = (
  *
  * @public
  */
-export type GitConfigScope = "local" | "global" | "system" | "worktree";
+export const GitConfigScope = LiteralKit(["local", "global", "system", "worktree"]).annotate(
+  $I.annote("GitConfigScope", { description: "Which Git configuration file a read is scoped to." }),
+);
+export type GitConfigScope = typeof GitConfigScope.Type;
 
 /** The scope flag, or nothing for the merged read. */
 const scopeArgs = (scope: GitConfigScope | undefined): ReadonlyArray<string> =>
@@ -922,7 +929,7 @@ export class GitCommand {
 	static readonly commitInfo = commitInfo;
 
 	/**
-	 * `git log -z --format=%x1e%H%x00%aI%x00%cI%x00%an%x00%ae --name-only` —
+	 * `git log -z --format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae --name-only` —
 	 * a commit listing carrying each commit's sha, both ISO dates, its author
 	 * identity and the paths it touched. Four optional flags follow, in this
 	 * order: `--follow`, `--diff-merges=first-parent`, `--max-count=N`, then
@@ -935,9 +942,9 @@ export class GitCommand {
 	 * a space, a quote or a newline comes back verbatim and `core.quotePath`
 	 * never enters the picture.
 	 *
-	 * `%x1e` opens every record because `--name-only` output has no other
-	 * unambiguous record boundary. Each record is then
-	 * `<sha>\0<authoredAt>\0<committedAt>\0<authorName>\0<authorEmail>\0`
+	 * `%x00` opens every record with an empty NUL token, which a pathname
+	 * cannot contain. Each record is then
+	 * `\0<sha>\0<authoredAt>\0<committedAt>\0<authorName>\0<authorEmail>\0`
 	 * followed, when the commit touched anything, by `\n` and one
 	 * NUL-terminated path per changed file.
 	 *

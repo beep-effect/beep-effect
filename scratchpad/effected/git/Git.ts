@@ -1,4 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
@@ -12,6 +13,7 @@ import * as O from "@beep/utils/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import type { GitConfigScope, GitInvocation } from "./GitCommand.ts";
 import { GitCommand } from "./GitCommand.ts";
@@ -392,6 +394,21 @@ export class LsTreeEntry extends S.Class<LsTreeEntry>($I`LsTreeEntry`)({
 }, $I.annote("LsTreeEntry", { description: "One entry of a `git ls-tree` listing." })) {
 }
 
+const NameStatusCode = LiteralKit([
+  "added",
+  "modified",
+  "deleted",
+  "renamed",
+  "copied",
+  "typeChanged",
+  "unmerged",
+  "unknown",
+  "broken",
+]).annotate(
+  $I.annote("NameStatusCode", { description: "The decoded change kinds in a name-status listing." }),
+);
+type NameStatusCode = typeof NameStatusCode.Type;
+
 /**
  * One entry of a `git diff --name-status` listing.
  *
@@ -409,17 +426,7 @@ export class NameStatusEntry extends S.Class<NameStatusEntry>($I`NameStatusEntry
    * to `"typeChanged"` and `B` to `"broken"` — this package's spelling, not
    * porcelain's `"typechange"`.
    */
-  status: S.Literals([
-    "added",
-    "modified",
-    "deleted",
-    "renamed",
-    "copied",
-    "typeChanged",
-    "unmerged",
-    "unknown",
-    "broken",
-  ]).annotateKey({ description: "The change kind, decoded from git's one-letter status code. `T` decodes to `\"typeChanged\"` and `B` to `\"broken\"` — this package's spelling, not porcelain's `\"typechange\"`." }),
+  status: NameStatusCode.annotateKey({ description: "The change kind, decoded from git's one-letter status code. `T` decodes to `\"typeChanged\"` and `B` to `\"broken\"` — this package's spelling, not porcelain's `\"typechange\"`." }),
   /** The entry's path — for a rename or copy, the NEW path. */
   path: S.String.annotateKey({ description: "The entry's path — for a rename or copy, the NEW path." }),
   /** The pre-rename/pre-copy path; present only for renamed/copied entries. */
@@ -432,16 +439,18 @@ export class NameStatusEntry extends S.Class<NameStatusEntry>($I`NameStatusEntry
  * git's stderr taxonomy. Never leaked outside this module — every `Git`
  * method maps it to its own public return type.
  */
-type Classified =
-  | { readonly _tag: "success"; readonly output: string }
-  | { readonly _tag: "absent" }
-  | { readonly _tag: "refMissing" }
-  | { readonly _tag: "notARepository" }
-  | { readonly _tag: "unknownRef" }
-  | { readonly _tag: "nonFastForward" }
-  | { readonly _tag: "mergeConflict" }
-  | { readonly _tag: "dirtyWorktree" }
-  | { readonly _tag: "failure"; readonly error: GitCommandError };
+const Classified = S.TaggedUnion({
+  success: { output: S.String.annotateKey({ description: "The completed run's stdout." }) },
+  absent: {},
+  refMissing: {},
+  notARepository: {},
+  unknownRef: {},
+  nonFastForward: {},
+  mergeConflict: {},
+  dirtyWorktree: {},
+  failure: { error: GitCommandError.annotateKey({ description: "The classified command failure." }) },
+}).annotate($I.annote("Classified", { description: "The private outcome of classifying a Git run." }));
+type Classified = typeof Classified.Type;
 
 /**
  * Which method-specific classification rows apply on top of the shared
@@ -452,15 +461,10 @@ type Classified =
  * dirty-worktree and merge-conflict rows, `"log"` enables the unborn-HEAD
  * degrade, `"generic"` enables none of them.
  */
-type ClassifyKind =
-  "show"
-  | "refExists"
-  | "quiet"
-  | "noSuchRemote"
-  | "push"
-  | "merge"
-  | "log"
-  | "generic";
+const ClassifyKind = LiteralKit([
+  "show", "refExists", "quiet", "noSuchRemote", "push", "merge", "log", "generic",
+]).annotate($I.annote("ClassifyKind", { description: "The method-specific Git classification taxonomy." }));
+type ClassifyKind = typeof ClassifyKind.Type;
 
 const NOT_A_REPOSITORY = "not a git repository";
 // Unanchored substring matching against LC_ALL=C-pinned phrases: a path or ref
@@ -637,6 +641,13 @@ const runClassified = (
 const parseNulSeparated = (output: string): ReadonlyArray<string> =>
   output.split("\0").filter((entry) => entry.length > 0);
 
+/** Config values may be empty; only the final NUL terminator is discarded. */
+const parseConfigGetAll = (output: string): ReadonlyArray<string> => {
+  if (output === "") return [];
+  const tokens = Str.split(output, "\0");
+  return Str.endsWith("\0")(output) ? A.dropRight(tokens, 1) : tokens;
+};
+
 const lsTreeInput = S.Struct(LsTreeEntry.fields);
 
 /**
@@ -661,7 +672,7 @@ const parseLsTree = (output: string): ReadonlyArray<LsTreeEntry> =>
   });
 
 /** git's one-letter name-status codes, score digits stripped (`R100` → `R`). */
-const NAME_STATUS_CODES: Record<string, NameStatusEntry["status"] | undefined> = {
+const NAME_STATUS_CODES: Record<string, NameStatusCode | undefined> = {
   A: "added",
   B: "broken",
   C: "copied",
@@ -762,31 +773,36 @@ export class CommitLogEntry extends S.Class<CommitLogEntry>($I`CommitLogEntry`)(
 }, $I.annote("CommitLogEntry", { description: "One commit of a `git log` listing, with the paths that commit touched." })) {
 }
 
-/** The `\x1e` byte every `git log` record opens with (`GitCommand.log`'s `%x1e`). */
-const LOG_RECORD_SEPARATOR = "\x1e";
+/** A record opens with an empty NUL token, which cannot be a pathname. */
+const LOG_RECORD_SEPARATOR = "\0";
 
 /**
  * Parses `GitCommand.log`'s output. Unlike this package's other parsers this
  * one can FAIL: the two dates have to decode, and a header that does not carry
  * its five fields cannot be answered with a plausible-looking entry.
  *
- * The probed byte shape per record (git 2.54, `-z`) is
- * `\x1e<sha>\0<%aI>\0<%cI>\0<%an>\0<%ae>\0` followed, only when the commit
- * touched something, by `\n` and one NUL-terminated path each. Splitting a
- * record on `\0` therefore yields the five header fields, then one token per
- * path (the FIRST of which carries git's `\n` separator ahead of the path
- * itself), then one empty token left by the final NUL. Empty output is the
- * empty log — a pathspec no commit touched exits 0 with nothing on stdout.
+ * Each record opens with NUL, followed by five NUL-terminated header fields.
+ * Only when the commit touched something, git adds `\n` and one
+ * NUL-terminated path each. The next empty token opens the next record;
+ * pathnames cannot be empty or contain NUL. Header fields are read by position
+ * so empty author fields are preserved. Only the first path loses git's one
+ * separator newline; every other pathname byte, including `\x1e`, survives.
+ * Empty stdout is an empty log, as for a pathspec no commit touched.
  */
 const parseLog = (output: string): Result.Result<ReadonlyArray<CommitLogEntry>, string> => {
   if (output === "") return Result.succeed([]);
-  if (!output.startsWith(LOG_RECORD_SEPARATOR)) {
+  if (!Str.startsWith(LOG_RECORD_SEPARATOR)(output)) {
     return Result.fail("log output did not open with a record separator");
   }
+  const tokens = Str.split(output, "\0");
   const entries: Array<CommitLogEntry> = [];
-  for (const record of output.split(LOG_RECORD_SEPARATOR).slice(1)) {
-    const tokens = record.split("\0");
-    const [sha, authoredAtIso, committedAtIso, authorName, authorEmail] = tokens;
+  let index = 1;
+  while (index < tokens.length) {
+    const sha = tokens[index];
+    const authoredAtIso = tokens[index + 1];
+    const committedAtIso = tokens[index + 2];
+    const authorName = tokens[index + 3];
+    const authorEmail = tokens[index + 4];
     if (
       sha === undefined ||
       authoredAtIso === undefined ||
@@ -801,29 +817,32 @@ const parseLog = (output: string): Result.Result<ReadonlyArray<CommitLogEntry>, 
     if (O.isNone(authoredAt) || O.isNone(committedAt)) {
       return Result.fail(`a log record carried an undecodable date ("${authoredAtIso}", "${committedAtIso}")`);
     }
-    const rest = tokens.slice(5);
-    // The record's final NUL leaves one empty trailing token; dropping it is
-    // what distinguishes "no paths" from "one empty path".
-    if (rest[rest.length - 1] === "") rest.pop();
-    entries.push(
-      CommitLogEntry.make({
-        sha,
-        authoredAt: authoredAt.value,
-        committedAt: committedAt.value,
-        authorName,
-        authorEmail,
-        // Only the first path token carries the `\n` git prints between the
-        // format output and the diff, and exactly one byte of it is git's:
-        // a path may itself legally begin with a newline.
-        paths: rest.map((path, index) => (index === 0 && path.startsWith("\n") ? path.slice(1) : path)),
-      }),
-    );
+    index += 5;
+    const paths: Array<string> = [];
+    while (index < tokens.length) {
+      const path = tokens[index] ?? "";
+      if (path === "") break;
+      paths.push(paths.length === 0 && Str.startsWith("\n")(path) ? Str.slice(1)(path) : path);
+      index += 1;
+    }
+    // Consume either the next record's opener or the final terminator token.
+    index += 1;
+    entries.push(CommitLogEntry.make({
+      sha,
+      authoredAt: authoredAt.value,
+      committedAt: committedAt.value,
+      authorName,
+      authorEmail,
+      paths,
+    }));
   }
   return Result.succeed(entries);
 };
 
 /** One two-letter porcelain v1 status axis code. */
-const porcelainCode = S.Literals([" ", "M", "T", "A", "D", "R", "C", "U", "?", "!"]);
+const porcelainCode = LiteralKit([" ", "M", "T", "A", "D", "R", "C", "U", "?", "!"]).annotate(
+  $I.annote("PorcelainCode", { description: "One porcelain v1 status axis code." }),
+);
 
 /**
  * Options for {@link StatusEntry.toLine} / {@link StatusEntry.format}: how a
@@ -1469,7 +1488,7 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
    * config read needs no ssh, and routing them through the network path would
    * recurse.
    */
-  const resolveSshEnv = Effect.fn("resolveSshEnv")(function* (cwd: string) {
+  const resolveSshEnv = Effect.fnUntraced(function* (cwd: string) {
     const [fromConfig, variantFromConfig] = yield* Effect.all(
       [
         O.isSome(ssh.command) ? Effect.succeed("") : readConfig(cwd, "core.sshCommand"),
@@ -1506,7 +1525,7 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
    * `BASE_ENV` alone — a member that never invokes ssh has no business
    * pinning an ssh command, and would pay the config read for nothing.
    */
-  const runForNetwork = Effect.fn("runForNetwork")(function* (invocation: GitInvocation, cwd: string, kind: ClassifyKind) {
+  const runForNetwork = Effect.fnUntraced(function* (invocation: GitInvocation, cwd: string, kind: ClassifyKind) {
     const env = yield* resolveSshEnv(cwd);
     return yield* runClassified(invocation, cwd, kind, env).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
@@ -1673,7 +1692,7 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
   // classifies through the shared path. No ref is involved, so `unknownRef`
   // cannot arise in practice — it is handled defensively to keep the match
   // exhaustive and the error channel uniform with the ref-taking methods.
-  const collectPaths = Effect.fn("collectPaths")(function* (method: string, invocation: GitInvocation, cwd: string) {
+  const collectPaths = Effect.fnUntraced(function* (method: string, invocation: GitInvocation, cwd: string) {
     const classified = yield* runFor(invocation, cwd, "generic");
     const unexpected = (classified: Classified) =>
       Effect.die(`${method}: unexpected classification "${classified._tag}"`);
@@ -2857,7 +2876,7 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
   // Runs a void-returning invocation and classifies through the shared path,
   // mapping `unknownRef` to the given ref label — the shared shape of every
   // mutating method with no method-specific classification rows.
-  const runVoid = Effect.fn("runVoid")(function* (method: string, invocation: GitInvocation, cwd: string, refLabel: string) {
+  const runVoid = Effect.fnUntraced(function* (method: string, invocation: GitInvocation, cwd: string, refLabel: string) {
     const classified = yield* runFor(invocation, cwd, "generic");
     const unexpected = (classified: Classified) =>
       Effect.die(`${method}: unexpected classification "${classified._tag}"`);
@@ -2884,7 +2903,7 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
   // `absent` handles the `"quiet"` kind's silent-exit-1 degrade (an unset
   // config key, a no-paths-ignored check-ignore run); for kinds that cannot
   // produce it the arm falls to the defensive default die.
-  const runParsed = Effect.fn("runParsed")(function* <A>(
+  const runParsed = Effect.fnUntraced(function* <A>(
     method: string,
     invocation: GitInvocation,
     cwd: string,
@@ -3301,7 +3320,7 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       cwd,
       key,
       "quiet",
-      parseNulSeparated,
+      parseConfigGetAll,
       () => [],
     );
   });

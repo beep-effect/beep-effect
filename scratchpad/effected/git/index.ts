@@ -32,7 +32,7 @@ export {
 	UnknownRefError,
 	WorktreeEntry,
 } from "./Git.ts";
-export { GitCommand, type GitConfigScope, type GitInvocation } from "./GitCommand.ts";
+export { GitCommand, GitConfigScope, type GitInvocation } from "./GitCommand.ts";
 export {
 	GitConfig,
 	GitConfigDiagnostic,

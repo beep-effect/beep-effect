@@ -297,3 +297,107 @@ describe("Gitmodules", () => {
 		});
 	});
 });
+
+
+describe("Gitmodules round-1 codec regressions", () => {
+	it.effect("NUL-containing field values fail construction, typed decode and codec encode", () =>
+		Effect.gen(function* () {
+			for (const field of ["path", "url", "branch", "update"]) {
+				const fields = { name: "a", path: "p", url: "u", [field]: "bad\0value" };
+				assert.throws(() => GitmodulesEntry.make(fields), /Schema validation failed/, field);
+				const decoded = yield* Effect.result(S.decodeEffect(GitmodulesEntry)(fields));
+				assert.isTrue(Result.isFailure(decoded), field);
+				const encoded = yield* Effect.result(S.encodeUnknownEffect(Gitmodules.FromString)({ entries: [fields] }));
+				assert.isTrue(Result.isFailure(encoded), field);
+			}
+		}),
+	);
+
+	it.effect("NUL-free escaped fields round-trip and absent optionals stay absent", () =>
+		Effect.gen(function* () {
+			const value = ' spaced\t"quoted" \\ slash\nline ';
+			const modules = Gitmodules.make({ entries: [
+				GitmodulesEntry.make({ name: "a", path: value, url: value, branch: value, update: value }),
+				GitmodulesEntry.make({ name: "b", path: "p", url: "u" }),
+			] });
+			const encoded = yield* S.encodeEffect(Gitmodules.FromString)(modules);
+			const decoded = yield* S.decodeEffect(Gitmodules.FromString)(encoded);
+			assert.deepStrictEqual(decoded, modules);
+			assert.isFalse(Object.hasOwn(decoded.entries[1] ?? {}, "branch"));
+			assert.isFalse(Object.hasOwn(decoded.entries[1] ?? {}, "update"));
+		}),
+	);
+
+	it.effect("duplicate typed names fail construction, decoding and encoding", () =>
+		Effect.gen(function* () {
+			const entries = [
+				GitmodulesEntry.make({ name: "a", path: "first", url: "u" }),
+				GitmodulesEntry.make({ name: "a", path: "second", url: "v" }),
+			];
+			assert.throws(() => Gitmodules.make({ entries }));
+			assert.isTrue(Result.isFailure(yield* Effect.result(S.decodeEffect(Gitmodules)({ entries }))));
+			assert.isTrue(Result.isFailure(yield* Effect.result(S.encodeUnknownEffect(Gitmodules.FromString)({ entries }))));
+		}),
+	);
+
+	it.effect("case-distinct typed names retain order and all fields on round-trip", () =>
+		Effect.gen(function* () {
+			const modules = Gitmodules.make({ entries: [
+				GitmodulesEntry.make({ name: "Alpha", path: "first", url: "u" }),
+				GitmodulesEntry.make({ name: "alpha", path: "second", url: "v" }),
+			] });
+			const text = yield* S.encodeEffect(Gitmodules.FromString)(modules);
+			assert.deepStrictEqual(yield* S.decodeEffect(Gitmodules.FromString)(text), modules);
+		}),
+	);
+
+	it("dotted names lowercase before last-wins merging with quoted names", () => {
+		const modules = ok(Gitmodules.parseResult(
+			'[submodule.AlPhA]\npath=first\nurl=u\n[submodule "alpha"]\npath=second\n[submodule "Alpha"]\npath=third\nurl=v\n',
+		));
+		assert.deepStrictEqual(modules.entries, [
+			GitmodulesEntry.make({ name: "alpha", path: "second", url: "u" }),
+			GitmodulesEntry.make({ name: "Alpha", path: "third", url: "v" }),
+		]);
+		assert.deepStrictEqual(ok(Gitmodules.parseResult(modules.stringify())), modules);
+	});
+
+	it("both boolean fields accept Git integer syntax, word aliases and bare keys", () => {
+		const cases: ReadonlyArray<readonly [string | undefined, boolean]> = [
+			[undefined, true], ["", false], ["TRUE", true], ["YES", true], ["on", true],
+			["false", false], ["NO", false], ["off", false], ["2", true], ["-1", true],
+			["+1", true], ["0x10", true], ["0X10", true], ["-0x10", true], ["+0x10", true],
+			["00", false], ["+00", false], ["010", true], ["0", false], ["-0", false],
+			["1k", true], ["1M", true], ["1g", true], ["0K", false], ["-2g", true],
+			["2147483647", true], ["-2147483648", true], ['" \t2"', true],
+		];
+		for (const field of ["shallow", "fetchRecurseSubmodules"] as const) {
+			for (const [value, expected] of cases) {
+				const line = value === undefined ? field : `${field}=${value}`;
+				const modules = ok(Gitmodules.parseResult(`[submodule "a"]\npath=p\nurl=u\n${line}\n`));
+				assert.strictEqual(modules.entries[0]?.[field], expected, line);
+				assert.deepStrictEqual(ok(Gitmodules.parseResult(modules.stringify())), modules, line);
+			}
+		}
+	});
+
+	it("both boolean fields reject malformed numbers and signed 32-bit overflow", () => {
+		for (const field of ["shallow", "fetchRecurseSubmodules"]) {
+			for (const value of ["08", "0x", "1.0", "1e2", "1_0", "2junk", "1kb", "2147483648", "-2147483649", "2g", '"2 "']) {
+				const error = decodeFailure(`[submodule "a"]\npath=p\nurl=u\n${field}=${value}\n`);
+				assert.strictEqual(error._tag, "GitmodulesDecodeError");
+				if (error._tag !== "GitmodulesDecodeError") assert.fail("expected field decode error");
+				assert.strictEqual(error.reason, "invalidValue");
+				assert.strictEqual(error.field, field);
+			}
+		}
+	});
+
+	it("the ignore schema and decoder share every accepted case-folded policy", () => {
+		for (const ignore of ["all", "dirty", "untracked", "none"] as const) {
+			const modules = ok(Gitmodules.parseResult(`[submodule "a"]\npath=p\nurl=u\nignore=${ignore.toUpperCase()}\n`));
+			assert.strictEqual(modules.entries[0]?.ignore, ignore);
+			assert.deepStrictEqual(modules.entries[0], GitmodulesEntry.make({ name: "a", path: "p", url: "u", ignore }));
+		}
+	});
+});

@@ -1,6 +1,7 @@
 import type * as PlatformError from "effect/PlatformError";
 import * as Effect from "effect/Effect";
 import * as Stream from "effect/Stream";
+import type * as Scope from "effect/Scope";
 import type { ChildProcess } from "effect/process";
 import { ChildProcessSpawner } from "effect/process";
 
@@ -26,34 +27,34 @@ export interface Collected {
  * and the sequential reader that would drain it is still waiting on the
  * *other* stream to finish first.
  */
-export const runCollected = (
-	command: ChildProcess.Command,
-): Effect.Effect<Collected, PlatformError.PlatformError, ChildProcessSpawner.ChildProcessSpawner> =>
-	Effect.scoped(
-		Effect.gen(function* () {
-			const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-			const handle = yield* spawner.spawn(command);
-			// { concurrency: "unbounded" } is load-bearing: collecting these three
-			// sequentially would deadlock the moment a real OS pipe buffer fills
-			// (upstream git blocks writing while nothing drains it, and the
-			// sequential reader that would drain it is still waiting on the other
-			// stream). No mock test can regress this — it needs a real pipe. The
-			// regression guard is the dedicated "runCollected drains stdout and
-			// stderr concurrently under simultaneous backpressure on both pipes"
-			// test in __test__/integration/Git.int.test.ts (G5) — it puts pressure
-			// on BOTH pipes at once, which is what actually discriminates this
-			// option; a large-output-on-one-stream case does not.
-			const [stdout, stderr, exitCode] = yield* Effect.all(
-				[
-					handle.stdout.pipe(Stream.decodeText, Stream.mkString),
-					handle.stderr.pipe(Stream.decodeText, Stream.mkString),
-					handle.exitCode,
-				],
-				{ concurrency: "unbounded" },
-			);
-			return { stdout, stderr, exitCode: Number(exitCode) };
-		}),
-	);
+export const runCollected = Effect.fnUntraced(
+	function* (
+		command: ChildProcess.Command,
+	): Effect.fn.Return<Collected, PlatformError.PlatformError, ChildProcessSpawner.ChildProcessSpawner | Scope.Scope> {
+		const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+		const handle = yield* spawner.spawn(command);
+		// { concurrency: "unbounded" } is load-bearing: collecting these three
+		// sequentially would deadlock the moment a real OS pipe buffer fills
+		// (upstream git blocks writing while nothing drains it, and the
+		// sequential reader that would drain it is still waiting on the other
+		// stream). No mock test can regress this — it needs a real pipe. The
+		// regression guard is the dedicated "runCollected drains stdout and
+		// stderr concurrently under simultaneous backpressure on both pipes"
+		// test in __test__/integration/Git.int.test.ts (G5) — it puts pressure
+		// on BOTH pipes at once, which is what actually discriminates this
+		// option; a large-output-on-one-stream case does not.
+		const [stdout, stderr, exitCode] = yield* Effect.all(
+			[
+				handle.stdout.pipe(Stream.decodeText, Stream.mkString),
+				handle.stderr.pipe(Stream.decodeText, Stream.mkString),
+				handle.exitCode,
+			],
+			{ concurrency: "unbounded" },
+		);
+		return { stdout, stderr, exitCode: Number(exitCode) };
+	},
+	Effect.scoped,
+);
 
 /**
  * Whether `command` can be run at all — any COMPLETED run, regardless of exit

@@ -1,10 +1,12 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Stream from "effect/Stream";
+import * as S from "effect/Schema";
 import { ChildProcess } from "effect/process";
 
 import type { GitInvocation } from "../../effected/git/GitCommand.ts";
-import { GitCommand } from "../../effected/git/GitCommand.ts";
+import { GitCommand, GitConfigScope } from "../../effected/git/GitCommand.ts";
+import * as GitModule from "../../effected/git/index.ts";
 
 /**
  * Asserts the argv/env/extendEnv/no-cwd shape shared by every `GitCommand`
@@ -299,7 +301,14 @@ describe("GitCommand", () => {
 	});
 
 	it("log builds the -z record format with --name-only and no pathspec by default", () => {
-		assertGitCommand(GitCommand.log(), ["log", "-z", "--format=%x1e%H%x00%aI%x00%cI%x00%an%x00%ae", "--name-only"]);
+		assertGitCommand(GitCommand.log(), ["log", "-z", "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae", "--name-only"]);
+	});
+
+	it("log NUL-frames headers while passing record-separator bytes through in pathspecs", () => {
+		assertGitCommand(GitCommand.log(["left\x1eright.txt"]), [
+			"log", "-z", "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae", "--name-only",
+			"--", "left\x1eright.txt",
+		]);
 	});
 
 	it("log puts every flag before the `--` pathspec separator", () => {
@@ -308,7 +317,7 @@ describe("GitCommand", () => {
 		assertGitCommand(GitCommand.log(["src/Git.ts"], true, 5, true), [
 			"log",
 			"-z",
-			"--format=%x1e%H%x00%aI%x00%cI%x00%an%x00%ae",
+			"--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae",
 			"--name-only",
 			"--follow",
 			"--diff-merges=first-parent",
@@ -324,7 +333,7 @@ describe("GitCommand", () => {
 		assertGitCommand(GitCommand.log([], false, 0), [
 			"log",
 			"-z",
-			"--format=%x1e%H%x00%aI%x00%cI%x00%an%x00%ae",
+			"--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae",
 			"--name-only",
 			"--max-count=0",
 		]);
@@ -692,6 +701,17 @@ describe("GitCommand", () => {
 				"-z",
 				"submodule.a.url",
 			]);
+		});
+
+		it("GitConfigScope exposes exactly the four scope literals and preserves their argv", () => {
+			assert.strictEqual(GitModule.GitConfigScope, GitConfigScope);
+			assert.deepStrictEqual(GitConfigScope.literals, ["local", "global", "system", "worktree"]);
+			for (const scope of GitConfigScope.literals) {
+				assert.isTrue(S.is(GitConfigScope)(scope));
+				assertGitCommand(GitCommand.configGet("user.name", scope), ["config", `--${scope}`, "--get", "user.name"]);
+				assertGitCommand(GitCommand.configList(undefined, scope), ["config", `--${scope}`, "--list", "-z"]);
+			}
+			assert.isFalse(S.is(GitConfigScope)("merged"));
 		});
 
 		it("configUnset picks --unset or --unset-all", () => {

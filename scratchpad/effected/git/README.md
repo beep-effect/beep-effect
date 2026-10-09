@@ -176,7 +176,26 @@ None.
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — HashSet, Array.dedupe, MutableHashMap, Record.keys and schema errors replace upstream native collections, Object.keys and source Error construction while preserving ordering and messages. (scratchpad/test/git/Git.test.ts:341,3128,3236; scratchpad/test/git/Gitmodules.test.ts:41,102,110; scratchpad/test/git/GitTestDouble.test.ts:46)
+- **tagged-errors** — NotStubbedError and GitConfigInvariantError replace upstream native defects, keeping the original messages and failure channels. (scratchpad/test/git/GitTestDouble.test.ts:23,37,46; scratchpad/test/git/GitConfig.test.ts:473)
+- **schema-first** — Schema-derived unions, LiteralKit domains, guards and codecs replace upstream handwritten or duplicated domains and native JSON encoding, including runtime GitConfigScope. (scratchpad/test/git/GitCommand.test.ts:706; scratchpad/test/git/GitConfig.test.ts:555; scratchpad/test/git/Gitmodules.test.ts:396; module suite scratchpad/test/git/**)
+- **numeric-domains** — S.Finite replaces upstream Schema.Number for exit codes, index stages and configuration spans, narrowing nonfinite inputs without adding integer or nonnegative refinements. (module suite scratchpad/test/git/**; scratchpad/test/git/GitConfig.test.ts:200,291; scratchpad/test/git/Git.test.ts)
+- **type-safety** — Schema assertions, checked indexing and typed test calls replace upstream casts, and the fix wave removes intermediate diagnostic suppressions. (scratchpad/test/git/GitConfig.test.ts:10,19,455; scratchpad/test/git/GitTestDouble.test.ts:46; scratchpad/test/git/Gitmodules.test.ts:124,135; module suite scratchpad/test/git/**)
+- **tsgo-diagnostics** — Dual overloads, schema .make construction and scoped Context provisioning replace upstream data-first-only helpers, new error construction and chained Layer provisioning. (scratchpad/test/git/Git.test.ts:52; scratchpad/test/git/GitLog.test.ts:20; scratchpad/test/git/run.test.ts:13; module suite scratchpad/test/git/**)
+- **effect-first** — Effect.fnUntraced, Match and Effect-native helpers replace upstream generator wrappers, switches and conditional optional-field assembly while keeping public spans and collection scope. (scratchpad/test/git/Git.test.ts:101; scratchpad/test/git/run.test.ts:24,33,44,53,61,72; module suite scratchpad/test/git/**)
+- **effect-imports** — Per-module effect/* imports replace upstream root effect imports across source, tests and examples. (module suite scratchpad/test/git/**)
+- **identity-annotations** — Lab $I identifiers and annotations replace upstream short schema identifiers and the @effected service key, with the JSON Schema definition assertion retargeted. (scratchpad/test/git/Gitmodules.test.ts:290,294; scratchpad/test/git/GitCommand.test.ts:706; module suite scratchpad/test/git/**)
+- **upstream-bug** — configGetAll preserves explicit empty values and their positions instead of upstream token filtering. (scratchpad/test/git/Git.test.ts:2820,2831)
+- **upstream-bug** — NUL-framed positional log parsing preserves path bytes and commit boundaries that upstream record-separator splitting corrupts. (scratchpad/test/git/GitLog.test.ts:111; scratchpad/test/git/GitCommand.test.ts:307,304,320,336; scratchpad/test/git/GitLog.test.ts:40,244)
+- **upstream-bug** — NUL-free field schemas reject models upstream accepts but cannot serialize into decodable git-config. (scratchpad/test/git/Gitmodules.test.ts:303,316)
+- **upstream-bug** — Unique typed submodule names prevent upstream round-trip data loss while preserving incoming duplicate-section merging. (scratchpad/test/git/Gitmodules.test.ts:331,343; scratchpad/test/git/Gitmodules.test.ts:102)
+- **upstream-bug** — Dotted subsection decoding and lookup follow Git casing semantics instead of upstream case-insensitive matching. (scratchpad/test/git/GitConfig.test.ts:62,66,513; scratchpad/test/git/Gitmodules.test.ts:354)
+- **upstream-bug** — Inline section-header declarations and surgical edits work where upstream rejects valid Git configuration. (scratchpad/test/git/GitConfig.test.ts:482,497)
+- **upstream-bug** — Both submodule boolean fields accept Git integer syntax upstream rejects while retaining word, bare-key and on-demand semantics. (scratchpad/test/git/Gitmodules.test.ts:365,384)
+- **upstream-bug** — Nonterminal CR suffixes are diagnosed instead of upstream silent truncation, including a review-required header rejection stricter than Git itself. (scratchpad/test/git/GitConfig.test.ts:523,531)
+- **upstream-bug** — Initial BOM-prefixed configuration parses and retains byte/offset fidelity where upstream rejects it. (scratchpad/test/git/GitConfig.test.ts:537)
 
 ### Dependency backlog
 

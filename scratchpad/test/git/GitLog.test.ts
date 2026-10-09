@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 // The `Git.log` unit suite: argv routing, the record parser's byte shape, the
 // unborn-HEAD degrade, and the two pre-spawn refusals. Every case here scripts
 // the spawner — `__test__/integration/GitSurface.int.test.ts` is where `log`
@@ -8,6 +7,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import type { GitShape } from "../../effected/git/Git.ts";
@@ -18,7 +18,10 @@ import { scripted } from "./fixtures.ts";
 const cwd = "/repo";
 
 const run = <A, E>(program: Effect.Effect<A, E, Git>, byArgs: (args: ReadonlyArray<string>) => ScriptResult) =>
-	program.pipe(Effect.provide(Git.layer), Effect.provide(scripted(byArgs)));
+	Effect.scopedWith((scope) => Effect.flatMap(
+    Layer.buildWithScope(Git.layer.pipe(Layer.provide(scripted(byArgs))), scope),
+    (context) => Effect.provideContext(program, context),
+  ));
 
 const log = Effect.fn("log")(function* (options?: Parameters<GitShape["log"]>[1]) {
 		const git = yield* Git;
@@ -34,7 +37,7 @@ const record = (
 	authorEmail: string,
 	paths: ReadonlyArray<string>,
 ): string => {
-	const header = `\x1e${[sha, authoredAt, committedAt, authorName, authorEmail].join("\0")}\0`;
+	const header = `\0${[sha, authoredAt, committedAt, authorName, authorEmail].join("\0")}\0`;
 	return paths.length === 0 ? header : `${header}\n${paths.join("\0")}\0`;
 };
 
@@ -102,6 +105,22 @@ describe("Git.log", () => {
 				}),
 			);
 			assert.deepStrictEqual(entries[0]?.paths, ['\nnl "quoted" name.txt', "a b.txt"]);
+		}),
+	);
+
+	it.effect("preserves record-separator bytes in first and later paths across commit boundaries", () =>
+		Effect.gen(function* () {
+			const paths = ["left\x1eright.txt", "\x1e", "\n\x1eleading.txt", SHA_B];
+			const entries = yield* run(log(), () => ({
+				stdout:
+					record(SHA_A, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z", "Ada\x1eLovelace", "", paths) +
+					record(SHA_B, "2026-01-02T00:00:00Z", "2026-01-02T00:00:00Z", "", "ada@example.com", []) +
+					record(SHA_A, "2026-01-03T00:00:00Z", "2026-01-03T00:00:00Z", "Ada", "ada@example.com", ["last\x1epath"]),
+			}));
+			assert.deepStrictEqual(entries.map((entry) => entry.paths), [paths, [], ["last\x1epath"]]);
+			assert.strictEqual(entries[0]?.authorName, "Ada\x1eLovelace");
+			assert.strictEqual(entries[0]?.authorEmail, "");
+			assert.strictEqual(entries[1]?.authorName, "");
 		}),
 	);
 
@@ -222,7 +241,7 @@ describe("Git.log", () => {
 			assert.deepStrictEqual(seen, [
 				"log",
 				"-z",
-				"--format=%x1e%H%x00%aI%x00%cI%x00%an%x00%ae",
+				"--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae",
 				"--name-only",
 				"--follow",
 				"--diff-merges=first-parent",
