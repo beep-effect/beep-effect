@@ -378,3 +378,12 @@ admitted collector's Node/Bun/typecheck passes remain recorded for the direct
 variant; its running package stage was stopped without a terminal result before
 changing source. A canonical-property example in the schema-first repair
 message would have prevented the cross-detector round trip.
+
+### V private release note missed by cheap publication gates
+
+Hosted Repo Sanity job 113997596244 rejects V's pre-D repo-cli changeset:
+`private workspaces must not accumulate release notes`. Main's D policy had
+landed, but cheap `changeset-status` only skipped the private workspace and
+passed; graph validation runs separately in hosted Repo Sanity. Archived the
+exact old note and removed the `.changeset` file. Including the cheap graph
+validation alongside status would prevent this introduced hosted failure.

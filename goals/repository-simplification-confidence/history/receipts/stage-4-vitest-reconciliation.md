@@ -282,3 +282,12 @@ owner scan at `66953b8bf1` is 1,853 / 716 / 1,137; the temporary direct-property
 EV007 row is absent. The authored linkage includes all 15,513 immutable
 historical IDs and the current inventory digest. New full package/parity proof
 remains queued and is not inferred from the earlier passing source snapshot.
+
+### Post-D private changeset policy
+
+D's policy is present on merged main `2eefbb64af`. Hosted Repo Sanity job
+113997596244 rejected this lane's pre-policy repo-cli patch note as a forbidden
+private-workspace changeset. The lane note is removed from `.changeset` and
+its exact bytes remain in `rsc-v-retired-private-changeset.md`, SHA256
+`c130e6f5a0dd1d3b0b8b2c807fd0bdc4ac2bf4e5b81215d698fe6f40ff2cbe07`. No package version or release policy
+is changed. Restore the archived note only when reversing the private policy.
