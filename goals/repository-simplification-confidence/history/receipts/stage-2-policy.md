@@ -43,8 +43,10 @@ The orchestrator records the post-merge SHA here (R34).
 
 ## Validation
 
-Pending implementation and hosted evidence. Package gates and scoped coverage
-will be recorded in the lane handoff. No versions are intentionally changed.
+Implementation committed at `ec2080bb68`, with review repairs through
+`106bd48a2d`. Focused/heavy tests, package verification, hosted parity and
+coverage are pending admission (see lane handoff). The package-version diff
+from the reset parent is empty. Hosted evidence remains pending.
 
 Full-directory recovery restores the historical config and README as well as
 notes. Revert the reset policy PR (including the graph guard) with this rollback;

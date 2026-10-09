@@ -1,5 +1,5 @@
 lane: rsc-d-release
-head: pending reset commit   PR: pending
+head: 106bd48a2d74a78d1537fc6730002a5ead4b1dc3 (implementation head; later receipt-only commits follow)   PR: pending
 retired: 939 notes; parent da1a85157d7c8cc6b72fe43f12d01389db811ce9; tree d839776128c29c6c4cc7c2937329942d873b973c
 package-verify: @beep/repo-cli pending admission
 hosted-parity: test-tsgo / docgen local / jsdoc-ratchet / knowledge refs / fallow / coverage -> pending
@@ -11,7 +11,8 @@ open: GitHub Packages blocked by missing read:packages; external local consumer 
 Census committed first (`da1a85157d`), with per-workspace npm results and the
 61,378-manifest unbounded local consumer census. Reset parent and tree are in
 `standards/changesets.reset-baseline.json`; retirement removes all 939 pending
-Markdown notes except README in one commit with the gate and policy change.
+Markdown notes except README in one commit with the gate and policy change (`ec2080bb68`); subsequent review
+fixes preserve the one-commit retirement.
 Package manifests and all versions remain unchanged; 60 changelogs retained.
 No version command was run. `@beep/repo-cli` is private and already ignored;
 this PR establishes D policy and adds no changeset.
