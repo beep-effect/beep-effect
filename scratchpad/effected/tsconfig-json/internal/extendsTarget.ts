@@ -18,6 +18,7 @@ import type * as PlatformError from "effect/PlatformError";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Path from "effect/Path";
 import { dual } from "effect/Function";
 
@@ -56,11 +57,11 @@ const substituteWildcard = (value: unknown, captured: string, depth: number): un
 	if (depth > MAX_EXPORTS_DEPTH) return null;
 	if (typeof value === "string") return value.replace(/\*/g, captured);
 	if (Array.isArray(value)) return value.map((entry) => substituteWildcard(entry, captured, depth + 1));
-	if (typeof value === "object" && value !== null) {
-		const result = Object.create(null) as Record<string, unknown>;
+	if (P.isObject(value)) {
+		const result: Record<string, unknown> = { __proto__: null };
 		for (const key of Object.keys(value)) {
 			if (DUNDER_KEYS.has(key) || !Object.hasOwn(value, key)) continue;
-			result[key] = substituteWildcard((value as Record<string, unknown>)[key], captured, depth + 1);
+			result[key] = substituteWildcard(value[key], captured, depth + 1);
 		}
 		return result;
 	}
@@ -71,8 +72,8 @@ const substituteWildcard = (value: unknown, captured: string, depth: number): un
 const matchExportKey = (exports: unknown, subpath: string): unknown => {
 	if (typeof exports === "string") return subpath === "." ? exports : undefined;
 	if (Array.isArray(exports)) return subpath === "." ? exports : undefined;
-	if (typeof exports !== "object" || exports === null) return undefined;
-	const obj = exports as Record<string, unknown>;
+	if (!P.isObject(exports)) return undefined;
+	const obj = exports;
 	const keys = Object.keys(obj);
 	// An object whose keys all start with "." is a subpath map; otherwise it is a
 	// root-level condition object (sugar for the "." target).
@@ -110,8 +111,8 @@ const resolveConditionValue = (value: unknown, depth: number): string | undefine
 		}
 		return undefined;
 	}
-	if (typeof value === "object" && value !== null) {
-		const obj = value as Record<string, unknown>;
+	if (P.isObject(value)) {
+		const obj = value;
 		for (const key of Object.keys(obj)) {
 			if (DUNDER_KEYS.has(key) || !Object.hasOwn(obj, key)) continue;
 			if (CONDITIONS.has(key) || key === "default") {
@@ -158,9 +159,7 @@ const readManifest = (
 		const parsed = yield* Effect.option(Jsonc.parse(text));
 		if (O.isNone(parsed)) return {};
 		const value = parsed.value;
-		return typeof value === "object" && value !== null && !Array.isArray(value)
-			? (value as Record<string, unknown>)
-			: {};
+		return P.isObject(value) ? value : {};
 	});
 
 /** Read an own property of an untrusted record, guarding dunder keys and inherited members. */

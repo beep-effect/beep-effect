@@ -27,7 +27,7 @@ describe("CompilerOptionsFromProgrammatic", () => {
 		it.effect(`decodes ${key}: ${numeric} to "${canonical}"`, () =>
 			Effect.gen(function* () {
 				const decoded = yield* decode({ [key]: numeric });
-				assert.strictEqual((decoded as Record<string, unknown>)[key], canonical);
+				assert.strictEqual(decoded[key], canonical);
 			}),
 		);
 	}

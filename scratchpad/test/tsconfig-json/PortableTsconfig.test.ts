@@ -6,9 +6,9 @@ import type { ResolvedTsconfig } from "../../effected/tsconfig-json/ResolvedTsco
 // A "full option zoo" compilerOptions object: at least one representative from
 // every R1 category (enum, live boolean, dead boolean, deprecated boolean,
 // path string, path list, plain string, string list, record, object list,
-// number), plus an unknown passthrough key. Cast through `unknown` because the
-// literal intentionally carries dead/unknown keys the schema types don't know.
-const fullOptionZoo = {
+// number), plus an unknown passthrough key. The index signature admits the
+// dead/unknown keys alongside the precisely typed known options.
+const fullOptionZoo: CompilerOptions.Type = {
 	// enum family — preserved
 	target: "es2022",
 	module: "nodenext",
@@ -56,7 +56,7 @@ const fullOptionZoo = {
 	charset: "utf8",
 	// unknown passthrough — DROPPED (allow-list, not deny-list)
 	someFutureOption: 42,
-} as unknown as CompilerOptions.Type;
+};
 
 describe("PortableTsconfig.make — from a bare CompilerOptions.Type", () => {
 	it("stamps $schema and forces composite:false, noEmit:true", () => {
@@ -154,7 +154,7 @@ describe("PortableTsconfig.make — from a bare CompilerOptions.Type", () => {
 	});
 
 	it("an empty compilerOptions still yields the forced flags and $schema", () => {
-		const portable = PortableTsconfig.make({} as CompilerOptions.Type);
+		const portable = PortableTsconfig.make({});
 		assert.deepStrictEqual(portable, {
 			$schema: "https://json.schemastore.org/tsconfig",
 			compilerOptions: { composite: false, noEmit: true },
@@ -168,11 +168,11 @@ describe("PortableTsconfig.make — from a bare CompilerOptions.Type", () => {
 		// .compilerOptions off it, throwing a TypeError. The extendedPaths check
 		// closes that hole: this bag has no array extendedPaths, so it is filtered
 		// as bare options, not thrown on.
-		const hostile = {
+		const hostile: CompilerOptions.Type = {
 			strict: true,
 			target: "es2022",
 			configPath: "/not/actually/a/ResolvedTsconfig",
-		} as unknown as CompilerOptions.Type;
+		};
 		const portable = PortableTsconfig.make(hostile);
 		assert.strictEqual(portable.compilerOptions.strict, true);
 		assert.strictEqual(portable.compilerOptions.target, "es2022");
@@ -187,12 +187,12 @@ describe("PortableTsconfig.make — from a bare CompilerOptions.Type", () => {
 		// indexing the undefined input.compilerOptions. The discrimination is now
 		// total: no compilerOptions object means the bag is filtered as bare
 		// options — sane filtering, no throw.
-		const craftedBoth = {
+		const craftedBoth: CompilerOptions.Type = {
 			strict: true,
 			target: "es2022",
 			configPath: "/still/not/a/ResolvedTsconfig",
 			extendedPaths: [],
-		} as unknown as CompilerOptions.Type;
+		};
 		const portable = PortableTsconfig.make(craftedBoth);
 		assert.strictEqual(portable.compilerOptions.strict, true);
 		assert.strictEqual(portable.compilerOptions.target, "es2022");
@@ -234,14 +234,14 @@ describe("PortableTsconfig.make — the includeTypes opt-in", () => {
 	});
 
 	it("omits the key entirely when the source declared no `types`", () => {
-		const { compilerOptions } = PortableTsconfig.make({ strict: true } as CompilerOptions.Type, {
+		const { compilerOptions } = PortableTsconfig.make({ strict: true }, {
 			includeTypes: true,
 		});
 		assert.isFalse("types" in compilerOptions);
 	});
 
 	it("preserves an empty `types: []` — a deliberate opt-out of automatic @types inclusion", () => {
-		const { compilerOptions } = PortableTsconfig.make({ types: [] } as unknown as CompilerOptions.Type, {
+		const { compilerOptions } = PortableTsconfig.make({ types: [] }, {
 			includeTypes: true,
 		});
 		assert.deepStrictEqual(compilerOptions.types, []);

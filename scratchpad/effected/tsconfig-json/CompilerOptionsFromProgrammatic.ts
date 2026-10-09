@@ -26,7 +26,9 @@
 // runtime while `TsEnumCodec` type-imports it back — a conceptual inversion and
 // a `noImportCycles` risk. This module imports both; nothing imports it.
 
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as SchemaParser from "effect/SchemaParser";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { CompilerOptions } from "./CompilerOptions.ts";
 import { TsEnumCodec } from "./TsEnumCodec.ts";
@@ -43,20 +45,6 @@ import { TsEnumCodec } from "./TsEnumCodec.ts";
 export interface ProgrammaticRecord {
 	readonly [key: string]: unknown;
 }
-
-// `TsEnumCodec.decodeCompilerOptions` returns the wide `Record<string, unknown>`
-// (an unmappable numeric passes through as a number). The assertion here claims
-// nothing: the value is handed straight to `CompilerOptions`'s own decode, which
-// validates every typed field — a surviving numeric fails there, typed.
-const normalizeIn = (input: ProgrammaticRecord): typeof CompilerOptions.Encoded =>
-	TsEnumCodec.decodeCompilerOptions(input) as typeof CompilerOptions.Encoded;
-
-// The mirror assertion, and equally narrow: a value reaching encode was produced
-// by `CompilerOptions`'s own encoder from a valid `CompilerOptions.Type`, so each
-// enum family already holds a canonical spelling the codec's tables cover — the
-// encoded type merely widens those literal unions back to `string`.
-const encodeOut = (encoded: typeof CompilerOptions.Encoded): ProgrammaticRecord =>
-	TsEnumCodec.encodeCompilerOptions(encoded as CompilerOptions.Type);
 
 /**
  * A codec between the **programmatic** `compilerOptions` shape TypeScript's own
@@ -100,9 +88,12 @@ export const CompilerOptionsFromProgrammatic: S.Codec<typeof CompilerOptions.Typ
 	S.Record(S.String, S.Unknown).pipe(
 		S.decodeTo(
 			CompilerOptions,
-			SchemaTransformation.transform({
-				decode: normalizeIn,
-				encode: encodeOut,
+			SchemaTransformation.transformEffect({
+				decode: (input) => Effect.succeed(TsEnumCodec.decodeCompilerOptions(input)),
+				encode: (input, options) =>
+					SchemaParser.decodeEffect(CompilerOptions)(input, options).pipe(
+						Effect.map(TsEnumCodec.encodeCompilerOptions),
+					),
 			}),
 		),
 	);

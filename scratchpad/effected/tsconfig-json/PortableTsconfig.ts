@@ -24,6 +24,7 @@
 // exists and why it does not default on. (Virtual TypeScript environments lost
 // their Node globals when `types` was left unclassified.)
 
+import * as P from "effect/Predicate";
 import type { CompilerOptions } from "./CompilerOptions.ts";
 import type { ResolvedTsconfig } from "./ResolvedTsconfig.ts";
 
@@ -177,10 +178,9 @@ const OPT_IN_TYPES_OPTION = "types";
  * is filtered, which is the safe outcome.)
  */
 const isResolvedTsconfig = (input: ResolvedTsconfig | CompilerOptions.Type): input is ResolvedTsconfig =>
-	typeof (input as { readonly configPath?: unknown }).configPath === "string" &&
-	Array.isArray((input as { readonly extendedPaths?: unknown }).extendedPaths) &&
-	typeof (input as { readonly compilerOptions?: unknown }).compilerOptions === "object" &&
-	(input as { readonly compilerOptions?: unknown }).compilerOptions !== null;
+	P.isString(input.configPath) &&
+	Array.isArray(input.extendedPaths) &&
+	P.isObjectOrArray(input.compilerOptions);
 
 // ── The filter ────────────────────────────────────────────────────────────
 

@@ -4,6 +4,8 @@ import { assert, describe, it, layer } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import * as Effect from "effect/Effect";
 import * as PlatformError from "effect/PlatformError";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { TsconfigExtendsError, TsconfigLoader } from "../../effected/tsconfig-json/TsconfigLoader.ts";
 import type { SyncFileSystem, TsconfigLoaderSyncOptions } from "../../effected/tsconfig-json/TsconfigLoaderSync.ts";
 import { TsconfigLoaderSync } from "../../effected/tsconfig-json/TsconfigLoaderSync.ts";
@@ -92,19 +94,23 @@ describe("TsconfigLoaderSync.resolve", () => {
 	it("throws the wrapped PlatformError for a missing file", () => {
 		const thrown = capture(() => TsconfigLoaderSync.resolve("/proj/absent.json", posixOptions(tree())));
 		assert.instanceOf(thrown, PlatformError.PlatformError);
-		const error = thrown as PlatformError.PlatformError;
+		if (!PlatformError.isPlatformError(thrown)) return assert.fail("expected PlatformError");
+		const error = thrown;
 		assert.strictEqual(error.reason._tag, "Unknown");
 		assert.strictEqual(error.reason.module, "FileSystem");
 		assert.strictEqual(error.reason.method, "readFileString");
 		// The original throw rides as the cause: the volume's own ENOENT, not a fabricated one.
-		assert.strictEqual((error.reason.cause as NodeJS.ErrnoException).code, "ENOENT");
+		const cause = error.reason.cause;
+		if (!P.hasProperty(cause, "code")) return assert.fail("expected errno cause");
+		assert.strictEqual(cause.code, "ENOENT");
 	});
 
 	it("throws the typed TsconfigExtendsError on a cycle", () => {
 		const files = tree(["/proj/a.json", `{ "extends": "./b.json" }`], ["/proj/b.json", `{ "extends": "./a.json" }`]);
 		const thrown = capture(() => TsconfigLoaderSync.resolve("/proj/a.json", posixOptions(files)));
 		assert.instanceOf(thrown, TsconfigExtendsError);
-		assert.strictEqual((thrown as TsconfigExtendsError).reason, "cycle");
+		if (!S.is(TsconfigExtendsError)(thrown)) return assert.fail("expected TsconfigExtendsError");
+		assert.strictEqual(thrown.reason, "cycle");
 	});
 });
 

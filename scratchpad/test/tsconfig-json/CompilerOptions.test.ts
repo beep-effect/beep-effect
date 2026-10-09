@@ -55,7 +55,7 @@ describe("CompilerOptions", () => {
 			assert.strictEqual(decoded.futureOption, 42);
 
 			const encoded = yield* S.encodeUnknownEffect(CompilerOptions)(decoded);
-			assert.strictEqual((encoded as Record<string, unknown>).futureOption, 42);
+			assert.strictEqual(encoded.futureOption, 42);
 		}),
 	);
 
@@ -80,7 +80,8 @@ describe("CompilerOptions", () => {
 				plugins: [{ name: "x", extra: 1 }],
 			});
 			assert.strictEqual(decoded.plugins?.[0]?.name, "x");
-			const plugin = decoded.plugins?.[0] as unknown as Record<string, unknown>;
+			const plugin = decoded.plugins?.[0];
+			assert.isDefined(plugin);
 			assert.strictEqual(plugin.extra, 1);
 		}),
 	);

@@ -99,11 +99,11 @@ const isAbsolutePath = (p: string): boolean => p.startsWith("/") || p.startsWith
  * `__proto__` key is written as data rather than triggering the prototype
  * setter. Preserves every own key (forward tolerance) without pollution.
  */
-const rebuildRecord = (
-	source: Record<string, unknown>,
-	mapValue: (key: string, value: unknown) => unknown,
-): Record<string, unknown> => {
-	const out: Record<string, unknown> = {};
+const rebuildRecord = <Value>(
+	source: Record<string, Value>,
+	mapValue: (key: string, value: Value | undefined) => Value | undefined,
+): Record<string, Value> => {
+	const out: Record<string, Value> = {};
 	for (const key of Object.keys(source)) {
 		Object.defineProperty(out, key, {
 			value: mapValue(key, source[key]),
@@ -143,7 +143,7 @@ const transformCompilerOptionPaths = (
 	transform: (value: string) => string,
 	includePathsValues: boolean,
 ): CompilerOptions.Type => {
-	const out: Record<string, unknown> = { ...co };
+	const out: { -readonly [Key in keyof CompilerOptions.Type]: CompilerOptions.Type[Key] } = { ...co };
 	for (const key of PATH_STRING_KEYS) {
 		const value = out[key];
 		if (typeof value === "string") out[key] = transform(value);
@@ -155,12 +155,12 @@ const transformCompilerOptionPaths = (
 	if (includePathsValues) {
 		const paths = out.paths;
 		if (paths !== null && typeof paths === "object") {
-			out.paths = rebuildRecord(paths as Record<string, unknown>, (_key, arr) =>
+			out.paths = rebuildRecord(paths, (_key, arr) =>
 				Array.isArray(arr) ? arr.map((entry) => (typeof entry === "string" ? transform(entry) : entry)) : arr,
 			);
 		}
 	}
-	return out as CompilerOptions.Type;
+	return out;
 };
 
 // Implementation of ResolvedTsconfig.absolutize; the public contract lives on the static.
@@ -309,14 +309,14 @@ const substituteWatchExcludes = (
 	substitute: (value: string) => string,
 ): WatchOptions.Type | undefined => {
 	if (wo === undefined) return undefined;
-	const out: Record<string, unknown> = { ...wo };
+	const out: { -readonly [Key in keyof WatchOptions.Type]: WatchOptions.Type[Key] } = { ...wo };
 	for (const key of ["excludeDirectories", "excludeFiles"] as const) {
 		const value = out[key];
 		if (Array.isArray(value)) {
 			out[key] = value.map((entry) => (typeof entry === "string" ? substitute(entry) : entry));
 		}
 	}
-	return out as WatchOptions.Type;
+	return out;
 };
 
 // Implementation of ResolvedTsconfig.substituteConfigDir; the public contract lives on the static.

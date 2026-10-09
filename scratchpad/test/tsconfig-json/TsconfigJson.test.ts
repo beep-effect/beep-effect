@@ -72,8 +72,8 @@ describe("TsconfigJsonFromString", () => {
 			assert.strictEqual(decoded.watchOptions?.synchronousWatchDirectory, true);
 			assert.strictEqual(decoded.typeAcquisition?.enable, false);
 			assert.strictEqual(decoded.compileOnSave, false);
-			assert.deepStrictEqual((decoded as Record<string, unknown>)["ts-node"], { esm: true });
-			assert.deepStrictEqual((decoded as Record<string, unknown>).buildOptions, { verbose: true });
+			assert.deepStrictEqual(decoded["ts-node"], { esm: true });
+			assert.deepStrictEqual(decoded.buildOptions, { verbose: true });
 		}),
 	);
 
@@ -111,12 +111,12 @@ describe("TsconfigJsonFromString", () => {
 			const decoded = yield* S.decodeEffect(TsconfigJsonFromString)(
 				`{ "ts-node": { "esm": true }, "buildOptions": { "verbose": true }, "$schema": "x" }`,
 			);
-			assert.deepStrictEqual((decoded as Record<string, unknown>)["ts-node"], { esm: true });
-			assert.deepStrictEqual((decoded as Record<string, unknown>).buildOptions, { verbose: true });
+			assert.deepStrictEqual(decoded["ts-node"], { esm: true });
+			assert.deepStrictEqual(decoded.buildOptions, { verbose: true });
 
 			const encoded = yield* S.encodeUnknownEffect(TsconfigJson)(decoded);
-			assert.deepStrictEqual((encoded as Record<string, unknown>)["ts-node"], { esm: true });
-			assert.deepStrictEqual((encoded as Record<string, unknown>).buildOptions, { verbose: true });
+			assert.deepStrictEqual(encoded["ts-node"], { esm: true });
+			assert.deepStrictEqual(encoded.buildOptions, { verbose: true });
 		}),
 	);
 });
@@ -133,7 +133,7 @@ describe("Reference", () => {
 		Effect.gen(function* () {
 			const decoded = yield* S.decodeEffect(Reference)({ path: "../a", circular: true });
 			assert.strictEqual(decoded.path, "../a");
-			assert.strictEqual((decoded as unknown as Record<string, unknown>).circular, true);
+			assert.strictEqual(decoded.circular, true);
 		}),
 	);
 });
@@ -155,7 +155,7 @@ describe("WatchOptions", () => {
 	it.effect("passes phantom keys through", () =>
 		Effect.gen(function* () {
 			const decoded = yield* S.decodeEffect(WatchOptions)({ force: true });
-			assert.strictEqual((decoded as unknown as Record<string, unknown>).force, true);
+			assert.strictEqual(decoded.force, true);
 		}),
 	);
 });
@@ -174,7 +174,7 @@ describe("TypeAcquisition", () => {
 			assert.deepStrictEqual(decoded.include, ["jquery"]);
 			assert.deepStrictEqual(decoded.exclude, ["lodash"]);
 			assert.strictEqual(decoded.disableFilenameBasedTypeAcquisition, true);
-			assert.strictEqual((decoded as unknown as Record<string, unknown>).futureField, 1);
+			assert.strictEqual(decoded.futureField, 1);
 		}),
 	);
 });

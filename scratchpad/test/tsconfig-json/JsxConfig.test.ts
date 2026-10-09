@@ -6,7 +6,7 @@ import { JsxConfig } from "../../effected/tsconfig-json/JsxConfig.ts";
 /** Unwrap a `Some`, failing the test on `None`. */
 const expectSome = (result: O.Option<JsxConfig>): JsxConfig => {
 	assert.isTrue(O.isSome(result), "expected Some(JsxConfig)");
-	return (result as O.Some<JsxConfig>).value;
+	return O.getOrThrow(result);
 };
 
 describe("JsxConfig.fromCompilerOptions", () => {
