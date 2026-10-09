@@ -356,3 +356,11 @@ are available. Cancellation is not a proof failure or a package pass.
   each compiler to emit its own loader; both modes are now explicit gates
   before the next full package audit. A package/docgen module-mode matrix
   would have prevented the second failed preflight.
+
+- C Run 4 admission friction: normal `beep-heavy ... yeet publish` and the
+  dual-module package proof wait more than ten minutes while read-only lock
+  inspection observes ownership rotating to other live test jobs. No stale
+  owner is proven, so no other job is touched. A FIFO admission queue and a
+  bounded cheap-publication lane would prevent starvation without weakening
+  the three-slot resource limit. The wrapper and workstation are outside C's
+  ownership; this is a follow-up receipt, not an unreviewed scheduler change.
