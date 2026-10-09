@@ -182,7 +182,7 @@ Brief ranges: A 1.14 to 1.38 s, B 0.65 to 0.88 s, C 1.34 s, D 0.64 to 0.70 s.
 - `generator: "oxc"` fails with 93 isolated-declarations errors (TS9010, TS9021) on inferred `const` schemas and `S.Class` extends.
 - D output is chunked, not per-module, with no maps and no JSDoc. The dts pass costs as much as a full emit.
 - tsdown drops two modules, turns `export * as X` into runtime `__exportAll` objects and emits 15 fewer `.d.ts`.
-- Verdict: no bundler beats B. The only real saving is removing Babel (~0.45 s, ~35-40% of A). Dropping Babel loses 1,808 markers across 114 files.
+- Verdict: ordering B ≈ D < A ≈ C in both batches. B and D are within noise of each other: batch 1 favours D (0.64 s vs 0.88 s), batch 2 favours B (0.65 s vs 0.70 s). tsdown (C) is slower than B in both batches. The A-to-B saving is 0.49-0.50 s (36-43%) and comes from dropping Babel, which loses 1,808 markers across 114 files.
 
 ## 2026-10-09: Constraints surfaced
 

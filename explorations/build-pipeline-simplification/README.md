@@ -20,9 +20,11 @@ under `research/deep-research/` says: keep tsgo emitting, bundle only what ships
 
 Align round 1: does the operator accept the two-tier framing now that both
 experiments agree with it (Bun 1.4.2 builds effect-drizzle correctly, bun#18008
-still live; no bundler beats effect-tsgo emit on `@beep/schema`, Babel is the
+still live; no bundler beats effect-tsgo emit on `@beep/schema` by more than
+run-to-run noise, Babel is the
 only pure-annotation source)? And the SchemaCompiler dispute: which mechanism or
-numbers support larger wins than the +2 KB / 1.2x-1.5x on file?
+numbers support larger wins than the +2 KB AOT / +7 KB JIT over an 18 KB
+baseline, and 1.2x-1.5x on S.Class rows, that are on file?
 
 ## Read This First
 
