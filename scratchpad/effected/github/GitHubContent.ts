@@ -1,7 +1,9 @@
-import { Context, Effect, Layer, Option } from "effect";
+import { Context, Effect, Layer, Option, Schema } from "effect";
 import { GitHubClient } from "./GitHubClient.ts";
 import { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
+
+const JsonValue = Schema.fromJsonString(Schema.String);
 
 /**
  * Read a text file out of a repository at a ref.
@@ -105,7 +107,7 @@ const make = (client: GitHubClient["Service"]): GitHubContentShape => {
 				GitHubError.rejected(
 					"GitHubContent.getFile",
 					422,
-					`${path} came back with encoding ${JSON.stringify(content.encoding)} — it is probably too large for the contents API`,
+					`${path} came back with encoding ${(yield* Schema.encodeEffect(JsonValue)(content.encoding).pipe(Effect.orDie))} — it is probably too large for the contents API`,
 				);
 		}
 		return Buffer.from(content.content.replace(/\s/g, ""), "base64").toString("utf8");

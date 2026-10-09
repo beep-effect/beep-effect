@@ -1,4 +1,4 @@
-import { Cause, Context, Effect, Exit, Layer, Ref, Schema } from "effect";
+import { Cause, Context, DateTime, Effect, Exit, Layer, Ref, Schema } from "effect";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { numericId } from "./internal/ids.ts";
@@ -358,7 +358,7 @@ const make = (client: GitHubClient["Service"]): CheckRunShape => {
       name,
       head_sha: headSha,
       status: "in_progress",
-      started_at: new Date().toISOString(),
+      started_at: DateTime.formatIso(yield* DateTime.now),
     });
     return refOf(created);
   });
@@ -376,7 +376,7 @@ const make = (client: GitHubClient["Service"]): CheckRunShape => {
       check_run_id: id,
       status: "completed",
       conclusion,
-      completed_at: new Date().toISOString(),
+      completed_at: DateTime.formatIso(yield* DateTime.now),
       ...(output !== undefined ? { output: wireOutput(output) } : {}),
     });
   });

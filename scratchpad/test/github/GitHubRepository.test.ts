@@ -10,12 +10,11 @@ import { Repo, RepoRef } from "../../effected/github/Repo.ts";
  * A wrong-but-valid route literal typechecks, so every method asserts the route
  * it hits AND the parameters it sends.
  */
-const run = <A, E>(
+const run = Effect.fn("run")(function*<A, E>(
 	effect: Effect.Effect<A, E, GitHubRepository | GitHubClient | Repo>,
 	request: Record<string, unknown> = {},
 	graphql: Record<string, unknown> = {},
-) =>
-	Effect.gen(function* () {
+) {
 		const requested: RecordedCall[] = [];
 		const value = yield* effect.pipe(
 			Effect.provide(GitHubRepository.layer),

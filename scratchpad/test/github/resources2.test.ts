@@ -16,13 +16,17 @@ import type { Reply } from "./fixtures.ts";
 import { linkNext } from "./fixtures.ts";
 import { harness } from "./harness.ts";
 
-const drive = <I, S, A, E>(
+const JsonCheckOutput = Schema.fromJsonString(Schema.Struct({ conclusion: Schema.optionalKey(Schema.String), output: Schema.Struct({ title: Schema.String, summary: Schema.String }) }));
+const JsonObject = Schema.fromJsonString(Schema.Record(Schema.String, Schema.Unknown));
+const JsonComment = Schema.fromJsonString(Schema.Struct({ body: Schema.String }));
+const JsonGraphQL = Schema.fromJsonString(Schema.Struct({ query: Schema.String, variables: Schema.Unknown }));
+
+const drive = Effect.fn("drive")(function*<I, S, A, E>(
 	replies: ReadonlyArray<Reply>,
 	service: { readonly layer: Layer.Layer<I, never, GitHubClient> },
 	tag: Effect.Effect<S, never, I>,
 	use: (resource: S) => Effect.Effect<A, E, Repo>,
-) =>
-	Effect.gen(function* () {
+) {
 		const { script, base } = harness(replies);
 		const value = yield* Effect.provide(Effect.flatMap(tag, use), service.layer.pipe(Layer.provideMerge(base)));
 		return { value, script };
@@ -112,7 +116,7 @@ describe("CheckRun", () => {
 				CheckRun,
 				(check) => check.update(1, CheckRunOutput.make({ title: "t", summary: "x".repeat(70_000) })),
 			);
-			const body = JSON.parse(script.calls[0]?.body ?? "{}");
+			const body = (yield* Schema.decodeEffect(JsonCheckOutput)(script.calls[0]?.body ?? "{}"));
 			assert.isAtMost(Buffer.byteLength(body.output.summary, "utf8"), CheckRunOutput.LIMIT_BYTES);
 		}),
 	);
@@ -129,7 +133,7 @@ describe("CheckRun", () => {
 				(check) => check.withCheckRun("build", "sha", (id) => Effect.succeed(id * 2)),
 			);
 			assert.strictEqual(value, 14);
-			assert.strictEqual(JSON.parse(script.calls[1]?.body ?? "{}").conclusion, "success");
+			assert.strictEqual((yield* Schema.decodeEffect(JsonObject)(script.calls[1]?.body ?? "{}")).conclusion, "success");
 		}),
 	);
 
@@ -146,7 +150,7 @@ describe("CheckRun", () => {
 				),
 			);
 			assert.strictEqual(error, "boom");
-			assert.strictEqual(JSON.parse(script.calls[1]?.body ?? "{}").conclusion, "failure");
+			assert.strictEqual((yield* Schema.decodeEffect(JsonObject)(script.calls[1]?.body ?? "{}")).conclusion, "failure");
 		}),
 	);
 
@@ -177,7 +181,7 @@ describe("CheckRun", () => {
 			yield* Fiber.interrupt(fiber);
 
 			assert.lengthOf(script.calls, 2, "the run was concluded rather than left in_progress");
-			const body = JSON.parse(script.calls[1]?.body ?? "{}");
+			const body = (yield* Schema.decodeEffect(JsonObject)(script.calls[1]?.body ?? "{}"));
 			assert.strictEqual(body.conclusion, "cancelled");
 			assert.strictEqual(body.status, "completed");
 		}),
@@ -204,7 +208,7 @@ describe("CheckRun", () => {
 			);
 			assert.strictEqual(value, 14, "`use`'s own value is untouched by concluding");
 			assert.lengthOf(script.calls, 2, "concluded exactly once — recorded, then written by the finalizer");
-			assert.strictEqual(JSON.parse(script.calls[1]?.body ?? "{}").conclusion, "neutral");
+			assert.strictEqual((yield* Schema.decodeEffect(JsonObject)(script.calls[1]?.body ?? "{}")).conclusion, "neutral");
 		}),
 	);
 
@@ -225,7 +229,7 @@ describe("CheckRun", () => {
 				),
 				CheckRun.layer.pipe(Layer.provideMerge(base)),
 			);
-			const body = JSON.parse(script.calls[1]?.body ?? "{}");
+			const body = (yield* Schema.decodeEffect(JsonCheckOutput)(script.calls[1]?.body ?? "{}"));
 			assert.strictEqual(body.conclusion, "action_required");
 			assert.strictEqual(body.output.title, "Needs a maintainer");
 			assert.strictEqual(body.output.summary, "Two advisory warnings.");
@@ -252,7 +256,7 @@ describe("CheckRun", () => {
 				),
 			);
 			assert.strictEqual(error, "boom", "the failure still propagates");
-			assert.strictEqual(JSON.parse(script.calls[1]?.body ?? "{}").conclusion, "skipped");
+			assert.strictEqual((yield* Schema.decodeEffect(JsonObject)(script.calls[1]?.body ?? "{}")).conclusion, "skipped");
 		}),
 	);
 
@@ -272,7 +276,7 @@ describe("CheckRun", () => {
 								// waits to be torn down. The interrupt must not overwrite it.
 								yield* conclude("timed_out");
 								yield* started.open;
-								yield* Effect.never;
+								return yield* Effect.never;
 							}),
 						),
 					),
@@ -281,7 +285,7 @@ describe("CheckRun", () => {
 			);
 			yield* started.await;
 			yield* Fiber.interrupt(fiber);
-			assert.strictEqual(JSON.parse(script.calls[1]?.body ?? "{}").conclusion, "timed_out");
+			assert.strictEqual((yield* Schema.decodeEffect(JsonObject)(script.calls[1]?.body ?? "{}")).conclusion, "timed_out");
 		}),
 	);
 
@@ -300,7 +304,7 @@ describe("CheckRun", () => {
 				CheckRun.layer.pipe(Layer.provideMerge(base)),
 			);
 			assert.lengthOf(script.calls, 2, "two conclude calls still produce ONE completion");
-			assert.strictEqual(JSON.parse(script.calls[1]?.body ?? "{}").conclusion, "failure");
+			assert.strictEqual((yield* Schema.decodeEffect(JsonObject)(script.calls[1]?.body ?? "{}")).conclusion, "failure");
 		}),
 	);
 
@@ -321,7 +325,7 @@ describe("CheckRun", () => {
 				),
 			);
 			assert.isTrue(Exit.isFailure(exit));
-			assert.strictEqual(JSON.parse(script.calls[1]?.body ?? "{}").conclusion, "failure");
+			assert.strictEqual((yield* Schema.decodeEffect(JsonObject)(script.calls[1]?.body ?? "{}")).conclusion, "failure");
 		}),
 	);
 });
@@ -379,7 +383,7 @@ describe("PullRequestComment", () => {
 				(comments) => comments.upsert(5, marker, "the body"),
 			);
 			assert.strictEqual(script.calls[1]?.method, "POST");
-			assert.include(JSON.parse(script.calls[1]?.body ?? "{}").body, marker.html);
+			assert.include((yield* Schema.decodeEffect(JsonComment)(script.calls[1]?.body ?? "{}")).body, marker.html);
 		}),
 	);
 
@@ -587,7 +591,7 @@ describe("PullRequest", () => {
 			const { script } = yield* drive([{ status: 200, body: { data: {} } }], PullRequest, PullRequest, (pulls) =>
 				pulls.setAutoMerge(info, "squash"),
 			);
-			const body = JSON.parse(script.calls[0]?.body ?? "{}");
+			const body = (yield* Schema.decodeEffect(JsonGraphQL)(script.calls[0]?.body ?? "{}"));
 			assert.include(body.query, "enablePullRequestAutoMerge");
 			// GraphQL spells the methods in capitals; REST does not.
 			assert.deepStrictEqual(body.variables, { pullRequestId: "PR_3", mergeMethod: "SQUASH" });
@@ -599,7 +603,7 @@ describe("PullRequest", () => {
 			const { script } = yield* drive([{ status: 200, body: { data: {} } }], PullRequest, PullRequest, (pulls) =>
 				pulls.setAutoMerge(info, "off"),
 			);
-			const body = JSON.parse(script.calls[0]?.body ?? "{}");
+			const body = (yield* Schema.decodeEffect(JsonGraphQL)(script.calls[0]?.body ?? "{}"));
 			assert.include(body.query, "disablePullRequestAutoMerge");
 			assert.deepStrictEqual(body.variables, { pullRequestId: "PR_3" });
 		}),
@@ -645,10 +649,11 @@ describe("GitHubIssue REST", () => {
 				(issues) => issues.close(169, "not_planned"),
 			);
 			const call = script.calls[0];
+			assert.isDefined(call);
 			assert.strictEqual(call?.method, "PATCH");
 			assert.strictEqual(call.path, "/repos/acme/widget/issues/169");
 			assert.strictEqual(call.headers["x-github-api-version"], PINNED);
-			const body = JSON.parse(call.body ?? "{}") as Record<string, unknown>;
+			const body = (yield* Schema.decodeEffect(JsonObject)(call.body ?? "{}"));
 			assert.strictEqual(body.state, "closed");
 			assert.strictEqual(body.state_reason, "not_planned");
 		}),
@@ -662,7 +667,7 @@ describe("GitHubIssue REST", () => {
 				GitHubIssue,
 				(issues) => issues.close(169),
 			);
-			const body = JSON.parse(script.calls[0]?.body ?? "{}") as Record<string, unknown>;
+			const body = (yield* Schema.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}"));
 			assert.strictEqual(body.state, "closed");
 			assert.notProperty(body, "state_reason");
 			// The version header does not leak into the body as a parameter.
@@ -688,10 +693,11 @@ describe("GitHubIssue REST", () => {
 			);
 			assert.strictEqual(value, 77);
 			const call = script.calls[0];
+			assert.isDefined(call);
 			assert.strictEqual(call?.method, "POST");
 			assert.strictEqual(call.path, "/repos/acme/widget/issues/169/comments");
 			assert.strictEqual(call.headers["x-github-api-version"], PINNED);
-			assert.strictEqual((JSON.parse(call.body ?? "{}") as Record<string, unknown>).body, "done");
+			assert.strictEqual(((yield* Schema.decodeEffect(JsonObject)(call.body ?? "{}"))).body, "done");
 		}),
 	);
 
@@ -753,11 +759,12 @@ describe("GitHubIssue.commentOnce", () => {
 			assert.isTrue(value.wrote);
 			assert.strictEqual(value.comment.id, 9);
 			const post = script.calls[1];
+			assert.isDefined(post);
 			assert.strictEqual(post?.method, "POST");
 			assert.strictEqual(post.path, "/repos/acme/widget/issues/5/comments");
 			// The exact `upsert` spelling, so either member's comment is findable
 			// by the other's marker check.
-			const sent = (JSON.parse(post.body ?? "{}") as Record<string, unknown>).body;
+			const sent = ((yield* Schema.decodeEffect(JsonObject)(post.body ?? "{}"))).body;
 			assert.strictEqual(sent, `the body\n\n${marker.html}`);
 			// The pinned api-version rides on the read AND the write.
 			for (const call of script.calls) {

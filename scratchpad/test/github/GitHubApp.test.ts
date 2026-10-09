@@ -198,11 +198,9 @@ describe("GitHubApp.revoke and scopedToken", () => {
 
 	it.effect("a failed revoke does not fail the scope", () =>
 		withApp([tokenReply(), { status: 500, body: { message: "boom" } }], (app) =>
-			Effect.gen(function* () {
-				// Best-effort by design: a token GitHub would not revoke expires on its
-				// own within the hour, and failing the caller's program over it is worse.
-				yield* Effect.scoped(app.scopedToken({ ...CREDENTIALS, installationId: 42 }));
-			}),
+			// Best-effort by design: a token GitHub would not revoke expires on its
+			// own within the hour, and failing the caller's program over it is worse.
+			Effect.asVoid(Effect.scoped(app.scopedToken({ ...CREDENTIALS, installationId: 42 }))),
 		),
 	);
 });

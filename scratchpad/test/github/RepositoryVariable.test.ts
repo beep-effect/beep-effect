@@ -7,12 +7,11 @@ import { GitHubError } from "../../effected/github/GitHubError.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
 import { RepositoryVariable } from "../../effected/github/RepositoryVariable.ts";
 
-const run = <A, E>(
+const run = Effect.fn("run")(function*<A, E>(
 	effect: Effect.Effect<A, E, RepositoryVariable | GitHubClient | Repo>,
 	request: Record<string, unknown>,
 	paginate: Record<string, ReadonlyArray<unknown>> = {},
-) =>
-	Effect.gen(function* () {
+) {
 		const requested: RecordedCall[] = [];
 		const value = yield* effect.pipe(
 			Effect.provide(RepositoryVariable.layer),

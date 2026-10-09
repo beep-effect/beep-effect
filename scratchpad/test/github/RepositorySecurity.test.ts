@@ -6,11 +6,10 @@ import { GitHubClient, GitHubError } from "../../effected/github/index.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
 import { RepositorySecurity } from "../../effected/github/RepositorySecurity.ts";
 
-const run = <A, E>(
+const run = Effect.fn("run")(function*<A, E>(
 	effect: Effect.Effect<A, E, RepositorySecurity | GitHubClient | Repo>,
 	request: Record<string, unknown>,
-) =>
-	Effect.gen(function* () {
+) {
 		const requested: RecordedCall[] = [];
 		const value = yield* effect.pipe(
 			Effect.provide(RepositorySecurity.layer),

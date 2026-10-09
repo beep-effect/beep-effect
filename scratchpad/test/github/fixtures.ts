@@ -71,8 +71,12 @@ const toResponse = (reply: Reply, url: string): Response => {
 export const scriptedFetch = (replies: ReadonlyArray<Reply>): ScriptedFetch => {
 	const calls: Array<Recorded> = [];
 	let index = 0;
-	const fetch: typeof globalThis.fetch = async (input, init) => {
-		const request = new Request(input as URL | globalThis.Request | string, init);
+	const fetch = Object.assign(async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
+		const request = input instanceof URL
+			? new Request(input.href, init)
+			: typeof input === "string"
+				? new Request(input, init)
+				: new Request(input, init);
 		calls.push({
 			url: request.url,
 			path: decodeURIComponent(new URL(request.url).pathname),
@@ -86,7 +90,7 @@ export const scriptedFetch = (replies: ReadonlyArray<Reply>): ScriptedFetch => {
 			throw new DOMException("aborted", "AbortError");
 		}
 		return toResponse(reply, request.url);
-	};
+	}, { preconnect: globalThis.fetch.preconnect });
 	return {
 		fetch,
 		calls,

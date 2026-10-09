@@ -1,10 +1,13 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Schema } from "effect";
 import { ArtifactMetadata, StorageRecordInput } from "../../effected/github/ArtifactMetadata.ts";
 import { GitBranch } from "../../effected/github/GitBranch.ts";
 import { TokenPermissions } from "../../effected/github/TokenPermissions.ts";
 import { harness } from "./harness.ts";
+
+const JsonObject = Schema.fromJsonString(Schema.Record(Schema.String, Schema.Unknown));
+const JsonGraphQL = Schema.fromJsonString(Schema.Struct({ query: Schema.String, variables: Schema.Unknown }));
 
 describe("TokenPermissions", () => {
 	const granted = TokenPermissions.fromGitHub({ contents: "write", metadata: "read", issues: "admin" });
@@ -112,7 +115,7 @@ describe("ArtifactMetadata", () => {
 			// The organization comes from Repo's owner, like every other resource —
 			// not from a positional argument.
 			assert.include(script.calls[0]?.path ?? "", "/orgs/acme/artifacts/metadata/storage-record");
-			const body = JSON.parse(script.calls[0]?.body ?? "{}");
+			const body = (yield* Schema.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}"));
 			assert.deepStrictEqual(body, {
 				name: "libfoo-1.2.3",
 				digest: "sha256:abc",
@@ -141,7 +144,7 @@ describe("GitBranch.createLinked", () => {
 				),
 				GitBranch.layer.pipe(Layer.provideMerge(base)),
 			);
-			const body = JSON.parse(script.calls[0]?.body ?? "{}");
+			const body = (yield* Schema.decodeEffect(JsonGraphQL)(script.calls[0]?.body ?? "{}"));
 			assert.include(body.query, "createLinkedBranch");
 			assert.deepStrictEqual(body.variables, {
 				issueId: "I_1",

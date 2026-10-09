@@ -1,6 +1,6 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer, Option } from "effect";
+import { Effect, Layer, Option, Schema } from "effect";
 import { FileContent, FileDeletion, GitCommit } from "../../effected/github/GitCommit.ts";
 import type { GitHubClient } from "../../effected/github/GitHubClient.ts";
 import { GitHubCommit } from "../../effected/github/GitHubCommit.ts";
@@ -13,6 +13,8 @@ import type { Reply } from "./fixtures.ts";
 import { linkNext } from "./fixtures.ts";
 import { harness } from "./harness.ts";
 
+const JsonObject = Schema.fromJsonString(Schema.Record(Schema.String, Schema.Unknown));
+
 /**
  * Run a resource against scripted HTTP, handing back the value and the recording.
  *
@@ -21,13 +23,12 @@ import { harness } from "./harness.ts";
  * nothing else, and its methods need a `Repo` — so one helper serves them all
  * with no casts.
  */
-const drive = <I, S, A, E>(
+const drive = Effect.fn("drive")(function*<I, S, A, E>(
 	replies: ReadonlyArray<Reply>,
 	service: { readonly layer: Layer.Layer<I, never, GitHubClient> },
 	tag: Effect.Effect<S, never, I>,
 	use: (resource: S) => Effect.Effect<A, E, Repo>,
-) =>
-	Effect.gen(function* () {
+) {
 		const { script, base } = harness(replies);
 		const value = yield* Effect.provide(Effect.flatMap(tag, use), service.layer.pipe(Layer.provideMerge(base)));
 		return { value, script };
@@ -61,7 +62,7 @@ describe("GitCommit", () => {
 					baseTree: "t1",
 				}),
 			);
-			const body = JSON.parse(script.calls[0]?.body ?? "{}");
+			const body = (yield* Schema.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}"));
 			assert.strictEqual(body.base_tree, "t1");
 			assert.deepStrictEqual(body.tree, [
 				{ path: "a.txt", mode: "100644", type: "blob", content: "hello" },
@@ -92,11 +93,11 @@ describe("GitCommit", () => {
 					}),
 			);
 			assert.strictEqual(value, "newcommit");
-			assert.strictEqual(JSON.parse(script.calls[2]?.body ?? "{}").base_tree, "headtree");
-			assert.deepStrictEqual(JSON.parse(script.calls[3]?.body ?? "{}").parents, ["head"]);
+			assert.strictEqual((yield* Schema.decodeEffect(JsonObject)(script.calls[2]?.body ?? "{}")).base_tree, "headtree");
+			assert.deepStrictEqual((yield* Schema.decodeEffect(JsonObject)(script.calls[3]?.body ?? "{}")).parents, ["head"]);
 			// Not forced: a branch that moved underneath you is a conflict worth
 			// hearing about.
-			assert.deepStrictEqual(JSON.parse(script.calls[4]?.body ?? "{}"), { sha: "newcommit", force: false });
+			assert.deepStrictEqual((yield* Schema.decodeEffect(JsonObject)(script.calls[4]?.body ?? "{}")), { sha: "newcommit", force: false });
 		}),
 	);
 });
@@ -290,7 +291,7 @@ describe("GitHubRepository", () => {
 				repo.updateSettings({ allow_auto_merge: false }),
 			);
 			assert.strictEqual(script.calls[0]?.method, "PATCH");
-			assert.deepStrictEqual(JSON.parse(script.calls[0]?.body ?? "{}"), { allow_auto_merge: false });
+			assert.deepStrictEqual((yield* Schema.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}")), { allow_auto_merge: false });
 		}),
 	);
 });

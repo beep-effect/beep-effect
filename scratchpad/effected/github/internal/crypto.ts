@@ -1,5 +1,6 @@
 import blakejs from "blakejs";
 import { Result } from "effect";
+import { dual } from "effect/Function";
 import * as Base64 from "effect/encoding/Base64";
 import type * as EncodingError from "effect/encoding/EncodingError";
 import nacl from "tweetnacl";
@@ -60,7 +61,10 @@ const utf8 = new TextEncoder();
  *
  * @internal
  */
-export const encryptSecret = (
+export const encryptSecret: {
+	(publicKey: string, secretValue: string): Result.Result<string, EncodingError.EncodingError>;
+	(secretValue: string): (publicKey: string) => Result.Result<string, EncodingError.EncodingError>;
+} = dual(2, (
 	publicKey: string,
 	secretValue: string,
 ): Result.Result<string, EncodingError.EncodingError> =>
@@ -79,4 +83,4 @@ export const encryptSecret = (
 		sealed.set(ciphertext, ephemeralKeyPair.publicKey.length);
 
 		return Base64.encode(sealed);
-	});
+	}));

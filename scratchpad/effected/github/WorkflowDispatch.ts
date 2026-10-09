@@ -1,5 +1,5 @@
 import {
-  Clock,
+  DateTime,
   Context,
   Duration,
   Effect,
@@ -267,7 +267,7 @@ const make = (client: GitHubClient["Service"]): WorkflowDispatchShape => {
       // GitHub answers a dispatch with 204 and no run id, so the run has to be
       // found by when it was created. `dispatchedAt` is read before the
       // dispatch so a run created in the same second is not missed.
-      const dispatchedAt = new Date(yield* Clock.currentTimeMillis).toISOString();
+      const dispatchedAt = DateTime.formatIso(yield* DateTime.now);
       yield* dispatch(workflow, ref, options?.inputs);
 
       const findRun = Effect.gen(function* () {

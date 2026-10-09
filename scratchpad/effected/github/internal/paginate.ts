@@ -1,4 +1,5 @@
 import { Effect, Option, Stream } from "effect";
+import { dual } from "effect/Function";
 import type { GitHubError } from "../GitHubError.ts";
 
 /**
@@ -34,7 +35,10 @@ export interface PageSource<A> {
  *
  * @internal
  */
-export const paginate = <A>(
+export const paginate: {
+	<A>(openSource: () => PageSource<A>, maxPages: number | undefined): Stream.Stream<A, GitHubError>;
+	(maxPages: number | undefined): <A>(openSource: () => PageSource<A>) => Stream.Stream<A, GitHubError>;
+} = dual(2, <A>(
 	openSource: () => PageSource<A>,
 	maxPages: number | undefined,
 ): Stream.Stream<A, GitHubError> =>
@@ -50,7 +54,7 @@ export const paginate = <A>(
 				return [page.value, exhausted ? Option.none<number>() : Option.some(taken)] as const;
 			}),
 		);
-	});
+	}));
 
 /**
  * A {@link PageSource} over an already-collected array, sliced into pages.
@@ -63,7 +67,10 @@ export const paginate = <A>(
  *
  * @internal
  */
-export const fromArray = <A>(items: ReadonlyArray<A>, perPage: number): PageSource<A> => {
+export const fromArray: {
+	<A>(items: ReadonlyArray<A>, perPage: number): PageSource<A>;
+	(perPage: number): <A>(items: ReadonlyArray<A>) => PageSource<A>;
+} = dual(2, <A>(items: ReadonlyArray<A>, perPage: number): PageSource<A> => {
 	let offset = 0;
 	let finished = false;
 	return {
@@ -76,4 +83,4 @@ export const fromArray = <A>(items: ReadonlyArray<A>, perPage: number): PageSour
 			return page.length === 0 ? Option.none() : Option.some(page);
 		}),
 	};
-};
+});

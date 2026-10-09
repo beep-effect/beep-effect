@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/core";
 import { composePaginateRest } from "@octokit/plugin-paginate-rest";
 import type { OctokitResponse } from "@octokit/types";
-import { Clock, Effect, Option, Redacted, Ref } from "effect";
+import { Clock, Data, Effect, Option, Redacted, Ref } from "effect";
 import { GitHubError, readRateLimitHeaders } from "../GitHubError.ts";
 import { GitHubGraphQLError } from "../GraphQL.ts";
 import type { RetryPolicy, RetryableFailure } from "../Resilience.ts";
@@ -55,6 +55,8 @@ export interface Transport {
 	/** The most recent rate-limit headers seen, if any. */
 	readonly rateLimit: Effect.Effect<Option.Option<RateLimitSnapshot>>;
 }
+
+class TransportFailure extends Data.TaggedError("TransportFailure")<{ readonly error: unknown }> {}
 
 const SILENT_LOG = {
 	debug: () => {},
@@ -117,8 +119,8 @@ export const makeTransport = (options: TransportOptions): Effect.Effect<Transpor
 			call: (signal: AbortSignal) => Promise<A>,
 			classify: (error: unknown, nowMillis: number) => E,
 		): Effect.Effect<A, E> =>
-			Effect.tryPromise({ try: call, catch: (error) => error }).pipe(
-				Effect.catch((error) =>
+			Effect.tryPromise({ try: call, catch: (error) => new TransportFailure({ error }) }).pipe(
+				Effect.catch(({ error }) =>
 					Effect.gen(function* () {
 						const now = yield* Clock.currentTimeMillis;
 						yield* record(readThrownHeaders(error));

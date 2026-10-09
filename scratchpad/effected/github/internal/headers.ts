@@ -1,3 +1,5 @@
+import { Function } from "effect";
+
 // Reading GitHub's response headers.
 //
 // octokit hands headers back as a plain object whose values may be `string`,
@@ -5,7 +7,10 @@
 // is defensive about both. Header names are already lowercased by octokit.
 
 /** A header's value as a string, when it is present and non-empty. */
-export const headerString = (
+export const headerString: {
+	(headers: Readonly<Record<string, unknown>> | undefined, name: string): string | undefined;
+	(name: string): (headers: Readonly<Record<string, unknown>> | undefined) => string | undefined;
+} = Function.dual(2, (
 	headers: Readonly<Record<string, unknown>> | undefined,
 	name: string,
 ): string | undefined => {
@@ -13,10 +18,13 @@ export const headerString = (
 	if (typeof value === "string") return value.length > 0 ? value : undefined;
 	if (typeof value === "number") return String(value);
 	return undefined;
-};
+});
 
 /** A header's value as a finite integer, when it parses as one. */
-export const headerNumber = (
+export const headerNumber: {
+	(headers: Readonly<Record<string, unknown>> | undefined, name: string): number | undefined;
+	(name: string): (headers: Readonly<Record<string, unknown>> | undefined) => number | undefined;
+} = Function.dual(2, (
 	headers: Readonly<Record<string, unknown>> | undefined,
 	name: string,
 ): number | undefined => {
@@ -24,7 +32,7 @@ export const headerNumber = (
 	if (raw === undefined) return undefined;
 	const parsed = Number(raw);
 	return Number.isFinite(parsed) ? Math.trunc(parsed) : undefined;
-};
+});
 
 /**
  * How long GitHub asked us to wait, in milliseconds, or `undefined` when it
@@ -44,7 +52,10 @@ export const headerNumber = (
  * `nowMillis` is a parameter rather than a `Date.now()` read so this stays pure
  * and so a test can pin it.
  */
-export const retryAfterMillisFrom = (
+export const retryAfterMillisFrom: {
+	(headers: Readonly<Record<string, unknown>> | undefined, nowMillis: number): number | undefined;
+	(nowMillis: number): (headers: Readonly<Record<string, unknown>> | undefined) => number | undefined;
+} = Function.dual(2, (
 	headers: Readonly<Record<string, unknown>> | undefined,
 	nowMillis: number,
 ): number | undefined => {
@@ -58,4 +69,4 @@ export const retryAfterMillisFrom = (
 		return Math.max(0, reset * 1000 - nowMillis);
 	}
 	return undefined;
-};
+});

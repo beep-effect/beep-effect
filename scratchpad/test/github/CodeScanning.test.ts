@@ -6,11 +6,10 @@ import type { RecordedCall } from "../../effected/github/GitHubClient.ts";
 import { GitHubClient } from "../../effected/github/GitHubClient.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
 
-const run = <A, E>(
+const run = Effect.fn("run")(function*<A, E>(
 	effect: Effect.Effect<A, E, CodeScanning | GitHubClient | Repo>,
 	fixtures: Record<string, unknown>,
-) =>
-	Effect.gen(function* () {
+) {
 		const requested: RecordedCall[] = [];
 		const value = yield* effect.pipe(
 			Effect.provide(CodeScanning.layer),

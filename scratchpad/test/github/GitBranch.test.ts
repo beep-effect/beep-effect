@@ -1,10 +1,12 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer, Option } from "effect";
+import { Effect, Layer, Option, Schema } from "effect";
 import { GitBranch } from "../../effected/github/GitBranch.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
 import type { Reply } from "./fixtures.ts";
 import { harness } from "./harness.ts";
+
+const JsonObject = Schema.fromJsonString(Schema.Record(Schema.String, Schema.Unknown));
 
 const ref = (sha: string): Reply => ({ status: 200, body: { ref: "refs/heads/x", object: { sha, type: "commit" } } });
 const notFound: Reply = { status: 404, body: { message: "Not Found" } };
@@ -13,8 +15,7 @@ const alreadyExists: Reply = {
 	body: { message: "Reference already exists", errors: [{ message: "Reference already exists" }] },
 };
 
-const run = <A, E>(replies: ReadonlyArray<Reply>, use: (branch: GitBranch["Service"]) => Effect.Effect<A, E, Repo>) =>
-	Effect.gen(function* () {
+const run = Effect.fn("run")(function*<A, E>(replies: ReadonlyArray<Reply>, use: (branch: GitBranch["Service"]) => Effect.Effect<A, E, Repo>) {
 		const { script, base } = harness(replies);
 		const value = yield* Effect.provide(Effect.flatMap(GitBranch, use), GitBranch.layer.pipe(Layer.provideMerge(base)));
 		return { value, script };
@@ -26,7 +27,7 @@ describe("GitBranch.create", () => {
 			const { script } = yield* run([{ status: 201, body: {} }], (branch) => branch.create("release/1.2", "abc"));
 			assert.strictEqual(script.calls[0]?.method, "POST");
 			assert.include(script.calls[0]?.path ?? "", "/repos/acme/widget/git/refs");
-			assert.deepStrictEqual(JSON.parse(script.calls[0]?.body ?? "{}"), {
+			assert.deepStrictEqual((yield* Schema.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}")), {
 				ref: "refs/heads/release/1.2",
 				sha: "abc",
 			});
@@ -38,7 +39,7 @@ describe("GitBranch.create", () => {
 			// GitHub's own API is inconsistent about this, so callers pass whichever
 			// form they last saw.
 			const { script } = yield* run([{ status: 201, body: {} }], (branch) => branch.create("refs/heads/main", "abc"));
-			assert.strictEqual(JSON.parse(script.calls[0]?.body ?? "{}").ref, "refs/heads/main");
+			assert.strictEqual((yield* Schema.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}")).ref, "refs/heads/main");
 		}),
 	);
 
@@ -91,7 +92,7 @@ describe("GitBranch.upsert", () => {
 			assert.include(script.calls[1]?.path ?? "", "/git/refs/heads/main");
 			// Reset, not "proceed": a creator that rooted the branch somewhere else
 			// is corrected rather than inherited.
-			assert.deepStrictEqual(JSON.parse(script.calls[1]?.body ?? "{}"), { sha: "abc", force: true });
+			assert.deepStrictEqual((yield* Schema.decodeEffect(JsonObject)(script.calls[1]?.body ?? "{}")), { sha: "abc", force: true });
 		}),
 	);
 

@@ -1,17 +1,18 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import type { RecordedCall } from "../../effected/github/GitHubClient.ts";
 import { GitHubClient } from "../../effected/github/GitHubClient.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
 import { Ruleset } from "../../effected/github/Ruleset.ts";
 
-const run = <A, E>(
+const JsonValue = Schema.fromJsonString(Schema.Unknown);
+
+const run = Effect.fn("run")(function*<A, E>(
 	effect: Effect.Effect<A, E, Ruleset | GitHubClient | Repo>,
 	fixtures: Record<string, unknown>,
 	paginate: Record<string, ReadonlyArray<unknown>> = {},
-) =>
-	Effect.gen(function* () {
+) {
 		const requested: RecordedCall[] = [];
 		const value = yield* effect.pipe(
 			Effect.provide(Ruleset.layer),
@@ -64,7 +65,7 @@ describe("Ruleset.upsert", () => {
 				requested.some((call) => call.route.includes("{ruleset_id}")),
 				false,
 			);
-			assert.notInclude(JSON.stringify(requested), '"ruleset_id":7');
+			assert.notInclude((yield* Schema.encodeEffect(JsonValue)(requested)), '"ruleset_id":7');
 		}),
 	);
 
@@ -173,8 +174,8 @@ describe("Ruleset bypass-actor lookups", () => {
 				{ "GET /orgs/{org}/organization-roles": { roles: [{ id: 5, name: "other" }] } },
 			).pipe(Effect.exit);
 
-			assert.include(JSON.stringify(exit), "available: other");
-			assert.include(JSON.stringify(exit), "missing");
+			assert.include((yield* Schema.encodeEffect(JsonValue)(exit)), "available: other");
+			assert.include((yield* Schema.encodeEffect(JsonValue)(exit)), "missing");
 		}),
 	);
 
@@ -185,7 +186,7 @@ describe("Ruleset bypass-actor lookups", () => {
 				{ "GET /orgs/{org}/organization-roles": {} },
 			).pipe(Effect.exit);
 
-			assert.include(JSON.stringify(exit), "available: none");
+			assert.include((yield* Schema.encodeEffect(JsonValue)(exit)), "available: none");
 		}),
 	);
 });
