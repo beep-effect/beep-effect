@@ -4259,9 +4259,13 @@ const renderResidueSection = ([label, candidates]: ResidueSection): ReadonlyArra
 ];
 
 const renderResidueReportLines = (report: ResidueReapReport): ReadonlyArray<string> => [
-  report.applied
-    ? "RESIDUE REAP APPLY — removed only old, revalidated entries from closed home-residue classes"
-    : "RESIDUE REAP DRY RUN — nothing will be removed; pass --apply to reap eligible entries",
+  O.match(O.fromUndefinedOr(report.mode), {
+    onSome: (mode) => `RESIDUE REAP ${Str.toUpperCase(Str.replaceAll("-", " ")(mode))}`,
+    onNone: () =>
+      report.applied
+        ? "RESIDUE REAP APPLY — removed only old, revalidated entries from closed home-residue classes"
+        : "RESIDUE REAP DRY RUN — nothing will be removed; pass --apply to reap eligible entries",
+  }),
   `home root: ${report.homeRoot}`,
   `repo root: ${report.repoRoot}`,
   `checkouts: ${A.length(report.checkoutRoots)}${report.fleet ? " (fleet)" : ""}`,

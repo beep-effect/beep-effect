@@ -20,6 +20,7 @@ const ResidueTerminalState = LiteralKit([
   "unverified",
 ]);
 const ResidueDisposition = LiteralKit(["regenerable", "redundant", "retain"]);
+const ResidueReapMode = LiteralKit(["dry-run", "apply", "resume", "restore"]);
 const ResidueArchivePhase = LiteralKit(["intent", "moved", "restored", "fenced-live"]);
 
 /**
@@ -428,6 +429,7 @@ export class ResidueReapReport extends S.Class<ResidueReapReport>($I`ResidueReap
     fleet: S.Boolean,
     checkoutRoots: S.Array(S.String),
     applied: S.Boolean,
+    mode: S.optional(ResidueReapMode),
     classes: S.Array(ResidueReapClass),
     candidates: S.Array(ResidueReapCandidate),
     reapedCount: S.Int,

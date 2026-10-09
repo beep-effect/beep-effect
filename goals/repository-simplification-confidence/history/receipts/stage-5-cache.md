@@ -121,3 +121,15 @@ retains explicit environment overrides, backs up its owned file under
 Shell syntax validation passed. It has **not** been applied to the workstation.
 The F-owned Codex cache writable-root change and shared root-script routing
 remain with `rsc-f-agents` and `rsc-shared`, respectively.
+
+## Current-process effective-path inventory
+
+At `2026-10-09T18:37Z`, the same Turbo executable ran `turbo config` with the
+G worker's inherited environment from 262 fleet checkout roots. 261 config
+probes succeeded, all with effective `~/.cache/beep/turbo`; one root returned
+an error. Only cache path/API/team/environment metadata was retained privately;
+raw config output and credentials were not printed or committed. This is a
+current-process route inventory, not proof of other harness child environments
+or workstation-wide remote posture. It changes no checkout configuration.
+The home proposal also passed synthetic dry-run, repeated-apply/idempotence,
+backup, unowned-field and symlink-refusal checks; actual home files are unchanged.

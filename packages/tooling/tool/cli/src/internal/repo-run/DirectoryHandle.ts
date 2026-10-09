@@ -464,12 +464,25 @@ export const BoundMoveOutcome = LiteralKit([
   "destination-occupied",
   "identity-changed",
   "move-failed",
-]);
+]).pipe(
+  $I.annoteSchema("BoundMoveOutcome", {
+    description: "Inode-bound archive move outcome, including destination and durability refusals.",
+  })
+);
+
+/**
+ * Outcome family of inode-bound archive moves.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BoundMoveOutcome = typeof BoundMoveOutcome.Type;
 
 /**
  * Fence an assessed inode into a same-filesystem archive and sync both parents.
  *
  * **Details**
+ *
  * Both parent directories are held by descriptor. The destination must be absent
  * and on the source device. No recursive deletion occurs. Callers must serialize
  * archive writers and fsync their intent before invoking this operation. A sync
@@ -497,7 +510,7 @@ export const renameBoundEntry = Effect.fnUntraced(function* (
   source: string,
   destination: string,
   expected: DirectoryIdentity
-): Effect.fn.Return<typeof BoundMoveOutcome.Type, never, Path.Path | Scope.Scope> {
+): Effect.fn.Return<BoundMoveOutcome, never, Path.Path | Scope.Scope> {
   const path = yield* Path.Path;
   const fs = nodeFs();
   const sourceParent = yield* openDirectoryHandle(path.dirname(source));

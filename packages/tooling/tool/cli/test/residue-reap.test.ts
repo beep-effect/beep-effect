@@ -70,7 +70,7 @@ const touchTreeDaysAgo = Effect.fn("ResidueReapTest.touchTreeDaysAgo")(function*
   target: string,
   daysAgo: number
 ) {
-  yield* runFixtureCommand(root, "find", [target, "-exec", "touch", "-d", fixtureTimestamp(daysAgo), "{}", "+"]);
+  yield* runFixtureCommand(root, "find", [target, "-exec", "touch", "-h", "-d", fixtureTimestamp(daysAgo), "{}", "+"]);
 });
 
 const makeEmbeddedRepo = Effect.fn("ResidueReapTest.makeEmbeddedRepo")(function* (worktreeRoot: string) {
@@ -1465,6 +1465,7 @@ describe("checkout retention archives", () => {
         expect(yield* fs.readFileString(path.join(fixture.target, "payload.txt"))).toBe("preserve these bytes");
         const resumed = yield* runResidueReap({ ...fixture, resume: O.getOrThrow(O.fromUndefinedOr(applied.runId)) });
         expect(resumed.reapedCount).toBe(0);
+        expect(resumed.mode).toBe("resume");
         expect(yield* fs.exists(fixture.target)).toBe(true);
         expect(yield* fs.readFileString(path.join(runRoot, "plan.json"))).toBe(originalPlan);
         expect(yield* fs.readFileString(path.join(runRoot, "report.json"))).toBe(originalReport);
@@ -1592,7 +1593,13 @@ describe("checkout retention archives", () => {
         yield* Effect.forEach(A.range(1, 40), (i) => fs.writeFileString(path.join(deps, `${i}.pid`), "vendored"));
         yield* fs.symlink(path.join(fixture.homeRoot, "absent"), path.join(fixture.repoRoot, ".beep", "dangling"));
         yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
+        expect(yield* fs.exists(path.join(fixture.homeRoot, "absent"))).toBe(false);
+        const outside = path.join(fixture.homeRoot, "outside-protected");
+        yield* fs.makeDirectory(outside);
+        yield* fs.writeFileString(path.join(outside, "proof-ledger.ndjson"), "outside proof");
+        yield* fs.symlink(outside, path.join(fixture.repoRoot, ".beep", "outside-reference"));
         const report = yield* runResidueReap({ ...fixture, censusEntryCap: 20, apply: true });
+        expect(yield* fs.readFileString(path.join(outside, "proof-ledger.ndjson"))).toBe("outside proof");
         expect(candidateByPath(report, fixture.target).action).toBe("archive-move");
         expect(yield* fs.exists(deps)).toBe(true);
       })
@@ -1776,6 +1783,35 @@ describe("checkout retention archives", () => {
         const report = yield* runResidueReap({ ...fixture, apply: true });
         expect(report.reapedCount).toBe(1);
         expect(yield* fs.readLink(path.join(fixture.repoRoot, "standards", "dangling-link"))).toBe("absent-document");
+      })
+    )
+  );
+
+  it.effect("protects candidates inside an embedded checkout ancestor", () =>
+    withRetentionFixture((fixture) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const ci = path.join(fixture.repoRoot, ".beep", "ci");
+        yield* runFixtureCommand(ci, "git", ["init", "--quiet", "-b", "main"]);
+        yield* fs.writeFileString(path.join(fixture.target, "proof-ledger.ndjson"), "ancestor proof");
+        yield* runFixtureCommand(ci, "git", ["add", "."]);
+        yield* runFixtureCommand(ci, "git", [
+          "-c",
+          "user.name=Fixture",
+          "-c",
+          "user.email=fixture@example.invalid",
+          "-c",
+          "commit.gpgsign=false",
+          "commit",
+          "--quiet",
+          "-m",
+          "ancestor",
+        ]);
+        yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
+        const report = yield* runResidueReap({ ...fixture, apply: true });
+        expect(candidateByPath(report, fixture.target).skipReason).toBe("protected-name");
+        expect(yield* fs.readFileString(path.join(fixture.target, "proof-ledger.ndjson"))).toBe("ancestor proof");
       })
     )
   );

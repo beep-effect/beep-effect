@@ -102,3 +102,9 @@ A `fenced-live` intent is preserved on resume and requires explicit restore;
 resume never ratifies new writer output by an attachment scan alone. Opacity
 applies only to sibling trees: a candidate's own descendants are fully checked
 for protected state and PID records under the census cap.
+
+Report `mode` distinguishes `dry-run`, `apply`, `resume` and `restore`; recovery
+requests are mutation operations even when a row is retained. Git status and
+worktree-list probes disable optional locks so observation cannot refresh the
+index and make the janitor's own activity delay cleanup. A candidate inside an
+embedded checkout ancestor is protected rather than archived as a partial clone.

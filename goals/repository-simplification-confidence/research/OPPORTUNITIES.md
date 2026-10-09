@@ -311,3 +311,17 @@ non-regular tracked entries, and refusal reports retain typed skip causes.
 Additional fixtures cover embedded proof, fenced-live resume, tracked links and
 explicit foreign-owner classification. Earlier rounds are preserved privately;
 terminal zero-findings is still a required independent result.
+
+### G fifth-review correction and effective-path inventory
+
+The fifth review left four low findings: embedded ancestor opacity, Git probe
+index refreshes, a fixture that followed its dangling link during backdating,
+and report vocabulary/shape cleanup. Embedded ancestors are now protected,
+Git probes disable optional locks, fixture backdating uses no-follow touch,
+and recovery mode is explicit. Source-only review is not runtime proof.
+
+A read-only `turbo config` inventory at 262 known checkout roots, using the
+same G-inherited process environment and executable, succeeded at 261 roots;
+all successful probes observed `~/.cache/beep/turbo`. One root returned an
+error. This verifies that route only; other harness child environments and
+workstation-wide read-only remote posture remain separate acceptance claims.
