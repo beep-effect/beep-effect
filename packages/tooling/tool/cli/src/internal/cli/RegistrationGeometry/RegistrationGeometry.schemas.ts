@@ -131,10 +131,10 @@ export class AuthoredReferenceSurface extends S.Class<AuthoredReferenceSurface>(
   })
 ) {}
 
-export const DeletionNotePolicy = LiteralKit(["emit-empty-note", "labs-exempt"]).pipe(
+export const DeletionNotePolicy = LiteralKit(["emit-empty-note", "labs-exempt", "private-exempt"]).pipe(
   $I.annoteSchema("DeletionNotePolicy", {
     description:
-      "Whether deleting this package emits the canonical `{}` deletion changeset or is ceremony-exempt by labs path.",
+      "Whether deleting this package emits the canonical `{}` deletion changeset or is ceremony-exempt by private manifest or labs path.",
   })
 );
 export type DeletionNotePolicy = typeof DeletionNotePolicy.Type;
