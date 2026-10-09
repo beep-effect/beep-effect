@@ -1,0 +1,20 @@
+{
+  "review": {
+    "reviewer": "Codex practice-m365-contacts",
+    "reason": "Review seven generated private service-app tasks; preserve all other subjects and grant no qualification.",
+    "basis": {
+      "path": "goals/practice-m365-contacts/research/cache-baseline-review.md",
+      "sha256": "6a8cb63e3d4fe1087ee1ebecc56b6bd3a7f67412be3a89a983faf7279eccbd95"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "subjects": ["@beep/practice-m365-contacts"],
+  "previous": "9fa1b263a9e91fbe945f7b7cc527964f4c1ba1eb9c8cb963120f03b9a490f41c"
+}

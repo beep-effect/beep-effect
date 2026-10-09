@@ -40057,6 +40057,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The audit-timestamp regression is the only test in its independent fresh Cuid layer block. It owns its deterministic TestClock and advances one minute between creation and rename. All exact createdAt/updatedAt assertions remain; no other test or forked task shares this block clock."
+    },
+    {
+      "id": "EV010:apps/practice-m365-contacts/test/Contacts.test.ts:12:@effect/platform-bun/BunServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/practice-m365-contacts",
+      "file": "apps/practice-m365-contacts/test/Contacts.test.ts",
+      "line": 12,
+      "endLine": 12,
+      "symbol": "@effect/platform-bun/BunServices",
+      "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as BunServices from \"@effect/platform-bun/BunServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Native file modes, exclusive writer locks, durable journal readback, malformed on-disk journals and private JSONL export publication are the subjects. BunServices supplies FileSystem, Path and Crypto through the harness-owned scoped layer with a five-second acquisition budget. MemoryFileSystem would replace the tested operating-system permissions and lock behavior."
     }
   ]
 }
