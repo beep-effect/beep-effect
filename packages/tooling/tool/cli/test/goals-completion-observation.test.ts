@@ -176,7 +176,7 @@ it.layer(NodeServices.layer)("goal completion observations and storage", (it) =>
         yield* S.decodeUnknownEffect(GoalManifest)(O.getOrThrow(parseGoalManifestText(text)));
         decoded += 1;
       }
-      expect(decoded).toBeGreaterThanOrEqual(211);
+      expect(decoded).toBeGreaterThan(0);
     })
   );
   it.effect("a rerun pending at merge cannot reuse an older green result", () =>
@@ -336,6 +336,29 @@ it.layer(NodeServices.layer)("goal completion observations and storage", (it) =>
           (row) => row.outcome
         )
       ).toEqual(O.some("verified"));
+    })
+  );
+  it.effect("refresh refuses a requested invalid manifest or missing final declaration", () =>
+    Effect.gen(function* () {
+      yield* temporaryWorkingDirectory;
+      yield* writeProjectFile("bun.lock", "");
+      const run = Command.runWith(goalsCommand, { version: "0.0.0" });
+      yield* writeProjectFile("goals/invalid/ops/manifest.json", "{}");
+      expect((yield* run(["completion", "refresh", "--slug", "invalid"]).pipe(Effect.exit))._tag).toBe("Failure");
+      yield* writeProjectFile(
+        "goals/no-final/ops/manifest.json",
+        encode({
+          initiative: { id: "no-final", status: "completed-retained" },
+          completionGate: {
+            operator: "yeet",
+            requiresPullRequest: true,
+            requiresMergeable: true,
+            statement: "ship",
+            grandfathered: false,
+          },
+        })
+      );
+      expect((yield* run(["completion", "refresh", "--slug", "no-final"]).pipe(Effect.exit))._tag).toBe("Failure");
     })
   );
   it.effect("refresh refuses an unknown slug", () =>

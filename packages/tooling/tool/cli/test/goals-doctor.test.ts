@@ -1,6 +1,7 @@
 import { lintCommand } from "@beep/repo-cli";
 import {
   classifyGoalDoctorFindings,
+  GoalCompletionIo,
   GoalDoctorFinding,
   goalsCommand,
   PacketEventStoreLive,
@@ -121,6 +122,52 @@ const writeBaseline = (keys: ReadonlyArray<string>) =>
   );
 
 it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", (it) => {
+  it.effect("offline legacy citations remain the fallback while typed declarations are unknown", () =>
+    Effect.gen(function* () {
+      yield* temporaryWorkingDirectory;
+      yield* runGit(["init", "-b", "main"]);
+      yield* runGit(["config", "user.name", "Fixture"]);
+      yield* runGit(["config", "user.email", "fixture@example.invalid"]);
+      for (const slug of ["legacy", "typed"]) {
+        yield* writeProjectFile(
+          `goals/${slug}/ops/manifest.json`,
+          `${encodeJson({
+            initiative: { id: slug, status: "completed-retained" },
+            lifecycle: "completed-retained",
+            completionGate: {
+              ...COMPLETION_GATE,
+              ...(slug === "typed" ? { pullRequests: [{ number: 7, role: "final" }] } : {}),
+            },
+            ...(slug === "legacy" ? { mergedPullRequest: 7 } : {}),
+          })}\n`
+        );
+        yield* writeProjectFile(`goals/${slug}/README.md`, `# ${slug}\n\nLifecycle: \`completed-retained\`\n`);
+      }
+      yield* writeBaseline([]);
+      yield* runGit(["add", "."]);
+      yield* runGit(["commit", "-m", "chore: seed fixtures"]);
+      let networkReads = 0;
+      const output = yield* captureOutput(
+        runGoalsCommand(["doctor"]).pipe(
+          Effect.provideService(
+            GoalCompletionIo,
+            GoalCompletionIo.of({
+              git: () => Effect.succeed("git@github.com:example/repo.git"),
+              github: () =>
+                Effect.sync(() => {
+                  networkReads += 1;
+                  throw new Error("offline network read");
+                }),
+            })
+          )
+        )
+      );
+      expect(networkReads).toBe(0);
+      expect(output).toContain("legacy [completion-gate-unsatisfied]");
+      expect(output).not.toContain("legacy [completion-gate-unknown]");
+      expect(output).toContain("typed [completion-gate-unknown]");
+    })
+  );
   it.effect(
     "ignores hidden editor directories under goals",
     () =>

@@ -745,18 +745,32 @@ export const storedGoalCompletion = Effect.fn("Goals.Completion.stored")(functio
 
 const refresh = Effect.fn("Goals.Completion.refresh")(function* (slug: O.Option<string>) {
   const root = yield* findRepoRoot();
-  const records = yield* listGoalPackets();
+  const records = yield* listGoalPackets(root);
   const location = yield* receiptLocation(root);
   if (O.exists(slug, (value) => !A.some(records, (record) => record.slug === value)))
     return yield* YeetCommandError.make({ message: "Requested goal packet does not exist" });
   for (const record of records) {
     if (O.exists(slug, (value) => value !== record.slug)) continue;
     const parsed = O.flatMap(O.fromUndefinedOr(record.manifestText), parseGoalManifestText);
-    if (O.isNone(parsed)) continue;
+    if (O.isNone(parsed)) {
+      if (O.isSome(slug))
+        return yield* YeetCommandError.make({ message: "Requested goal manifest is missing or invalid" });
+      continue;
+    }
     const manifest = yield* S.decodeUnknownEffect(GoalManifest)(parsed.value).pipe(Effect.option);
-    if (O.isNone(manifest)) continue;
+    if (O.isNone(manifest)) {
+      if (O.isSome(slug)) return yield* YeetCommandError.make({ message: "Requested goal manifest cannot decode" });
+      continue;
+    }
     const final = A.findFirst(goalPullRequestRefs(manifest.value), (ref) => ref.role === "final");
-    if (O.isNone(final) || manifest.value.completionGate.grandfathered) continue;
+    if (manifest.value.completionGate.grandfathered) {
+      if (O.isSome(slug)) yield* Console.log(`[goals:completion] ${record.slug}: grandfathered (no receipt needed)`);
+      continue;
+    }
+    if (O.isNone(final)) {
+      if (O.isSome(slug)) return yield* YeetCommandError.make({ message: "Requested goal has no final pull request" });
+      continue;
+    }
     const receipt = yield* observeGoalCompletion(root, record.slug, manifest.value, final.value);
     if (O.isNone(receipt.merge)) {
       yield* Console.log(

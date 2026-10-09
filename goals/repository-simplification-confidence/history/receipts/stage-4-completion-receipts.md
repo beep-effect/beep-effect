@@ -64,7 +64,10 @@ blocking_resolved=0, advisories=3; all three were completion-gate-unsatisfied.
 After, offline without clone receipts: packets=211, blocking_new=0, advisories=3;
 the three typed packets are completion-gate-unknown. Legacy packets retain their
 offline fallback. Read-only live observations verify all three PR-merge parts.
-Final online fleet command results are recorded in the handoff. Post-merge refresh
+The final online fleet command reports packets=211, blocking_new=0,
+blocking_inherited=0, baseline_resolved=0, advisories=19. All three targeted
+packets are absent from that advisory list; 19 legacy packets have unknown
+historical evidence. Post-merge refresh
 remains pending the orchestrator's merge.
 
 ## Known advisories
