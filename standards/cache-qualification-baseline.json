@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "rsc-c-scripts",
-      "reason": "Retarget the reviewed knowledge rewrite root script to typed ownership; root-only configuration change, no qualification grant.",
+      "reviewer": "Claude Opus 5.5 (effected-port publish, @lab/effected)",
+      "reason": "Record the reviewed legacy posture after the scratchpad manifest gained the effected-port runner scripts and kit dependencies (@beep/scratchpad#docgen scripts digest and dependency set) and three no-emit apps declared build.outputs [] in their own turbo.json; no command, input, env or cache flag changes, and no qualification is granted. The root subject moves only through bun.lock gaining the kit dependencies.",
       "basis": {
-        "path": "goals/repository-simplification-confidence/history/receipts/rsc-c-root-script-review-2026-10-09.md",
-        "sha256": "b6864efac83c1a57535952f2023dd94a33fb5b0b8338d591f16c716e90c169e9"
+        "path": "scratchpad/effected/CACHE_BASELINE_REVIEW.md",
+        "sha256": "3b23b12d2fbf1b1ee75930868cb7f0e54435e605868d354648b3f3280d9fb80f"
       }
     },
     "@beep/acp": {
@@ -282,11 +282,11 @@
       }
     },
     "@beep/docket-intake": {
-      "reviewer": "practice-docket-intake slice 3",
-      "reason": "Record the new @beep/docket-intake service app tasks and the @beep/m365 dependency edge on @beep/law-practice-server; commands, inputs, outputs and cache settings are otherwise unchanged and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-port publish, @lab/effected)",
+      "reason": "Record the reviewed legacy posture after the scratchpad manifest gained the effected-port runner scripts and kit dependencies (@beep/scratchpad#docgen scripts digest and dependency set) and three no-emit apps declared build.outputs [] in their own turbo.json; no command, input, env or cache flag changes, and no qualification is granted. The root subject moves only through bun.lock gaining the kit dependencies.",
       "basis": {
-        "path": "goals/practice-docket-intake/research/cache-baseline-review.md",
-        "sha256": "d5f84fdc2d92b106d3ba5d2ff9cb1d6e501675152a572b7a05188ba895d5a0f2"
+        "path": "scratchpad/effected/CACHE_BASELINE_REVIEW.md",
+        "sha256": "3b23b12d2fbf1b1ee75930868cb7f0e54435e605868d354648b3f3280d9fb80f"
       }
     },
     "@beep/documents-domain": {
@@ -850,11 +850,11 @@
       }
     },
     "@beep/practice-identify": {
-      "reviewer": "Claude Fable 5.1 (practice-document-identification, feat/practice-identify)",
-      "reason": "Accept the seven @beep/practice-identify computations added by the new apps/practice-identify workspace and the four @beep/law-practice-server computations whose configuration drifts from the slice's new dependency edges and tsconfig includes; no command text, output, environment key or cache flag changes, and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-port publish, @lab/effected)",
+      "reason": "Record the reviewed legacy posture after the scratchpad manifest gained the effected-port runner scripts and kit dependencies (@beep/scratchpad#docgen scripts digest and dependency set) and three no-emit apps declared build.outputs [] in their own turbo.json; no command, input, env or cache flag changes, and no qualification is granted. The root subject moves only through bun.lock gaining the kit dependencies.",
       "basis": {
-        "path": "goals/practice-document-identification/research/cache-baseline-review.md",
-        "sha256": "cb96273cd7cdeedf54c0a7ee8d7efbdb150f58ad6f7a55557414d2df4432eb15"
+        "path": "scratchpad/effected/CACHE_BASELINE_REVIEW.md",
+        "sha256": "3b23b12d2fbf1b1ee75930868cb7f0e54435e605868d354648b3f3280d9fb80f"
       }
     },
     "@beep/practice-kg-mcp": {
@@ -866,11 +866,11 @@
       }
     },
     "@beep/practice-mail-tagging": {
-      "reviewer": "Claude Opus 5.5 (practice-mail-tagging PR 3, feat/practice-mail-service)",
-      "reason": "Accept the seven @beep/practice-mail-tagging computations added by the new apps/practice-mail-tagging workspace; no existing computation changes its command text, input, output, environment key, dependency edge or cache flag, and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-port publish, @lab/effected)",
+      "reason": "Record the reviewed legacy posture after the scratchpad manifest gained the effected-port runner scripts and kit dependencies (@beep/scratchpad#docgen scripts digest and dependency set) and three no-emit apps declared build.outputs [] in their own turbo.json; no command, input, env or cache flag changes, and no qualification is granted. The root subject moves only through bun.lock gaining the kit dependencies.",
       "basis": {
-        "path": "goals/practice-mail-tagging/research/entrypoint-cache-baseline-review.md",
-        "sha256": "a07e3f22e79f068723e525728df4ac0ba457148af37110b949483ff0c9d2f11c"
+        "path": "scratchpad/effected/CACHE_BASELINE_REVIEW.md",
+        "sha256": "3b23b12d2fbf1b1ee75930868cb7f0e54435e605868d354648b3f3280d9fb80f"
       }
     },
     "@beep/pretext": {
@@ -986,11 +986,11 @@
       }
     },
     "@beep/scratchpad": {
-      "reviewer": "Claude Fable 5.1 (cache baseline merge-friendly lane, fix/cache-baseline-merge-friendly)",
-      "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-port publish, @lab/effected)",
+      "reason": "Record the reviewed legacy posture after the scratchpad manifest gained the effected-port runner scripts and kit dependencies (@beep/scratchpad#docgen scripts digest and dependency set) and three no-emit apps declared build.outputs [] in their own turbo.json; no command, input, env or cache flag changes, and no qualification is granted. The root subject moves only through bun.lock gaining the kit dependencies.",
       "basis": {
-        "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
+        "path": "scratchpad/effected/CACHE_BASELINE_REVIEW.md",
+        "sha256": "3b23b12d2fbf1b1ee75930868cb7f0e54435e605868d354648b3f3280d9fb80f"
       }
     },
     "@beep/semantic-web": {
@@ -25280,20 +25280,7 @@
           ],
           "env": [],
           "passThroughEnv": [],
-          "outputs": [
-            "!**/.turbo/**",
-            "!.next/cache/**",
-            "**/node_modules/.tmp/*.tsbuildinfo",
-            ".expo/**",
-            ".next/**",
-            ".output/**",
-            ".vercel/output/**",
-            "_next/**",
-            "build/**",
-            "dist/**",
-            "next-env.d.ts",
-            "storybook-static/**"
-          ],
+          "outputs": [],
           "dependsOn": [
             "^build"
           ],
@@ -73346,20 +73333,7 @@
           ],
           "env": [],
           "passThroughEnv": [],
-          "outputs": [
-            "!**/.turbo/**",
-            "!.next/cache/**",
-            "**/node_modules/.tmp/*.tsbuildinfo",
-            ".expo/**",
-            ".next/**",
-            ".output/**",
-            ".vercel/output/**",
-            "_next/**",
-            "build/**",
-            "dist/**",
-            "next-env.d.ts",
-            "storybook-static/**"
-          ],
+          "outputs": [],
           "dependsOn": [
             "^build"
           ],
@@ -74515,20 +74489,7 @@
           ],
           "env": [],
           "passThroughEnv": [],
-          "outputs": [
-            "!**/.turbo/**",
-            "!.next/cache/**",
-            "**/node_modules/.tmp/*.tsbuildinfo",
-            ".expo/**",
-            ".next/**",
-            ".output/**",
-            ".vercel/output/**",
-            "_next/**",
-            "build/**",
-            "dist/**",
-            "next-env.d.ts",
-            "storybook-static/**"
-          ],
+          "outputs": [],
           "dependsOn": [
             "^build"
           ],
@@ -85261,7 +85222,7 @@
       {
         "computation": "@beep/scratchpad#docgen",
         "command": "bunx --bun --no-install docgen",
-        "commandDigest": "fa9935f309335d7c75aa0f0119df11d7e4e64c9898ade0228378e99f28cac7cc",
+        "commandDigest": "7c65739629fe9ada5fb33619c1bb00a245cdc1d0ddac6d8ab7648db091c16de9",
         "dependencies": [
           "@beep/repo-docgen#transit",
           "@beep/scratchpad#transit"
@@ -104128,6 +104089,10 @@
     ],
     "sources": [
       {
+        "path": "apps/docket-intake/turbo.json",
+        "sha256": "d5f16e7a6d5ebcb86f356dcce5e0065c2433bc1f27508eb1458bd064bc3275e2"
+      },
+      {
         "path": "apps/labs/api-docs/turbo.json",
         "sha256": "d5f16e7a6d5ebcb86f356dcce5e0065c2433bc1f27508eb1458bd064bc3275e2"
       },
@@ -104138,6 +104103,14 @@
       {
         "path": "apps/oip-web/turbo.json",
         "sha256": "b1c0d578b89ab92501afc05c40f386547e3a14b1321ead29d4945df01b5b4e58"
+      },
+      {
+        "path": "apps/practice-identify/turbo.json",
+        "sha256": "d5f16e7a6d5ebcb86f356dcce5e0065c2433bc1f27508eb1458bd064bc3275e2"
+      },
+      {
+        "path": "apps/practice-mail-tagging/turbo.json",
+        "sha256": "d5f16e7a6d5ebcb86f356dcce5e0065c2433bc1f27508eb1458bd064bc3275e2"
       },
       {
         "path": "apps/professional-desktop/turbo.json",

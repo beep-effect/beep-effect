@@ -6015,6 +6015,27 @@
       "status": "open"
     },
     {
+      "id": "EV002:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:75:provide@55#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/setup-effect-ref.test.ts",
+      "line": 75,
+      "endLine": 75,
+      "symbol": "provide",
+      "occurrence": "v2:e1d472e6a2ce089671ff0f2c8a539b15d9da5bc0e90f8efbb4922291a5020e91",
+      "class": "unresolved-layer-provide",
+      "evidence": "Effect.provide(context)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV002:packages/tooling/tool/cli/test/step-git-exec.test.ts:240:provideScopedLayer@8#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -14033,6 +14054,111 @@
       "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. This inner scope releases the real listening socket before the next assertion verifies that reading the same URL fails. The outer test scope would close too late to test release. Keep the shorter scope."
     },
     {
+      "id": "EV004:packages/tooling/tool/cli/test/cache-remote-reads.test.ts:145:scoped@28#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-remote-reads.test.ts",
+      "line": 145,
+      "endLine": 173,
+      "symbol": "scoped",
+      "occurrence": "v2:4a0004d513e98391dc696e9c5c4c09acfe5715422da64263d96a7b0c83301d01",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const handle = yield* ChildProcess.make( \"bun\", [setupScriptPath, \"cache\", \"remote-reads\", \"--checkout\", repoRoot], { cwd: tempDir, env: { PATH: ambientPath, T",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/cache-remote-reads.test.ts:207:scoped@28#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-remote-reads.test.ts",
+      "line": 207,
+      "endLine": 236,
+      "symbol": "scoped",
+      "occurrence": "v2:13230fe38c4ee2796aae76cd75538d21d378e844a3c08e270eb069792e6fe6c5",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const handle = yield* ChildProcess.make( \"bun\", [setupScriptPath, \"cache\", \"remote-reads\", \"--checkout\", repoRoot], { cwd: tempDir, env: { PATH: ambientPath, T",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/cache-remote-reads.test.ts:267:scoped@28#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-remote-reads.test.ts",
+      "line": 267,
+      "endLine": 296,
+      "symbol": "scoped",
+      "occurrence": "v2:a02d552e818dd3c9f30681756935f9aa753a7ad49f1ec9e262e125aa89c8a23b",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const handle = yield* ChildProcess.make( \"bun\", [setupScriptPath, \"cache\", \"remote-reads\", \"--checkout\", repoRoot], { cwd: tempDir, env: { PATH: ambientPath, T",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/cache-remote-reads.test.ts:326:scoped@28#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-remote-reads.test.ts",
+      "line": 326,
+      "endLine": 351,
+      "symbol": "scoped",
+      "occurrence": "v2:c7736fc650ca42fd00150a383a4bfa5141e76ee35e03242b385532e917c88081",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const handle = yield* ChildProcess.make( \"bun\", [setupScriptPath, \"cache\", \"remote-reads\", \"--checkout\", repoRoot], { cwd: tempDir, env: { PATH: ambientPath, T",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/cache-remote-reads.test.ts:379:scoped@28#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-remote-reads.test.ts",
+      "line": 379,
+      "endLine": 403,
+      "symbol": "scoped",
+      "occurrence": "v2:93aaf2bc5f2ee47cbdee44b29f558f12b750ef91c5cb16f0ddbf10654945f74d",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const handle = yield* ChildProcess.make( \"bun\", [setupScriptPath, \"cache\", \"remote-reads\", \"--checkout\", repoRoot], { cwd: tempDir, env: { PATH: ambientPath, T",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV004:packages/tooling/tool/cli/test/check-census.test.ts:145:scoped@6#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -14751,13 +14877,13 @@
       "reason": "The inner scope deliberately closes fixture acquisition before observing its Exit and verifying root deletion. It is the cleanup subject, not a redundant whole-test scope. Four controls assert the exact package/labs injection stage, typed failure or interrupt-only Cause, and absence of the allocated root after scope closure. Delaying finalization to test end would invalidate these observations. See research/cli-continuation-nine-proof.md."
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/regenerate-merge-driver.test.ts:130:scoped@10#1",
+      "id": "EV004:packages/tooling/tool/cli/test/regenerate-merge-driver.test.ts:131:scoped@10#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/regenerate-merge-driver.test.ts",
-      "line": 130,
-      "endLine": 130,
+      "line": 131,
+      "endLine": 131,
       "symbol": "scoped",
       "occurrence": "v2:2621c586d7c30e35eb81094d1023b10aa70ab75a6456230621e43a54b2db81b8",
       "class": "inner-helper-scope-lifetime-review",
@@ -15046,17 +15172,17 @@
       "reason": "The it.layer block shares one NodeServices/TestConsole build (only the test Scope is fresh per test); neither case asserts TestConsole lines because captureOutput swaps Console; withScratchCheckout keeps its own shorter scope for native Git clone/worktree cleanup."
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:187:scoped@28#1",
+      "id": "EV004:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:80:scoped@12#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/setup-effect-ref.test.ts",
-      "line": 187,
-      "endLine": 211,
+      "line": 80,
+      "endLine": 80,
       "symbol": "scoped",
-      "occurrence": "v2:23fb15f3a9a8a6fa0f1641121f973604b93ba40c5a54497bfe0dc886747a4aca",
-      "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const handle = yield* ChildProcess.make(\"bash\", [setupScriptPath, repoRoot], { cwd: tempDir, env: { PATH: ambientPath, TURBO_API: \"https://replacement.example.",
+      "occurrence": "v2:e1d472e6a2ce089671ff0f2c8a539b15d9da5bc0e90f8efbb4922291a5020e91",
+      "class": "inner-helper-scope-lifetime-review",
+      "evidence": "Effect.scoped",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
@@ -15064,96 +15190,7 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Preserve deliberate shorter child scope. Each child exit and streams joined before scope release, then assertions inspect files; loop case runs child repeatedly with Effect.fn Effect.scoped. Verified on committed source 457e1ead916b457f7071c3e4554d5e1355cca3a3: Node22 and Bun each passed all 2,287 CLI tests including the 198 selected cases; full CLI package audit (657.2s) and docgen (21.5s) passed. See research/cli-nine-applied-scope-proof.md. Original evidence and IDs retained."
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:247:scoped@28#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/setup-effect-ref.test.ts",
-      "line": 247,
-      "endLine": 272,
-      "symbol": "scoped",
-      "occurrence": "v2:7051dd7508f796fda3788d2abdcadcdc364d53fb0d8bb09910bd2607b0b01f82",
-      "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const handle = yield* ChildProcess.make(\"bash\", [setupScriptPath, repoRoot], { cwd: tempDir, env: { PATH: ambientPath, TURBO_API: \"https://replacement.example.",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Preserve deliberate shorter child scope. Each child exit and streams joined before scope release, then assertions inspect files; loop case runs child repeatedly with Effect.fn Effect.scoped. Verified on committed source 457e1ead916b457f7071c3e4554d5e1355cca3a3: Node22 and Bun each passed all 2,287 CLI tests including the 198 selected cases; full CLI package audit (657.2s) and docgen (21.5s) passed. See research/cli-nine-applied-scope-proof.md. Original evidence and IDs retained."
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:305:scoped@28#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/setup-effect-ref.test.ts",
-      "line": 305,
-      "endLine": 330,
-      "symbol": "scoped",
-      "occurrence": "v2:7c22775c7b994f0f45026f34d65911925bcc848f621b347ecb3b515a708478f2",
-      "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const handle = yield* ChildProcess.make(\"bash\", [setupScriptPath, repoRoot], { cwd: tempDir, env: { PATH: ambientPath, TURBO_API: \"https://replacement.example.",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Preserve deliberate shorter child scope. Each child exit and streams joined before scope release, then assertions inspect files; loop case runs child repeatedly with Effect.fn Effect.scoped. Verified on committed source 457e1ead916b457f7071c3e4554d5e1355cca3a3: Node22 and Bun each passed all 2,287 CLI tests including the 198 selected cases; full CLI package audit (657.2s) and docgen (21.5s) passed. See research/cli-nine-applied-scope-proof.md. Original evidence and IDs retained."
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:362:scoped@28#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/setup-effect-ref.test.ts",
-      "line": 362,
-      "endLine": 383,
-      "symbol": "scoped",
-      "occurrence": "v2:b159a876ff1892a7d919356c0255a1165c22ff17cb225daf226483d428461922",
-      "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const handle = yield* ChildProcess.make(\"bash\", [setupScriptPath, repoRoot], { cwd: tempDir, env: { PATH: ambientPath, TURBO_API: \"https://replacement.example.",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Preserve deliberate shorter child scope. Each child exit and streams joined before scope release, then assertions inspect files; loop case runs child repeatedly with Effect.fn Effect.scoped. Verified on committed source 457e1ead916b457f7071c3e4554d5e1355cca3a3: Node22 and Bun each passed all 2,287 CLI tests including the 198 selected cases; full CLI package audit (657.2s) and docgen (21.5s) passed. See research/cli-nine-applied-scope-proof.md. Original evidence and IDs retained."
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:415:scoped@28#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/setup-effect-ref.test.ts",
-      "line": 415,
-      "endLine": 435,
-      "symbol": "scoped",
-      "occurrence": "v2:7d195abbea899ec8a35a7ecc21a314dc2c6e3e6da6031670208394326db19418",
-      "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const handle = yield* ChildProcess.make(\"bash\", [setupScriptPath, repoRoot], { cwd: tempDir, env: { PATH: ambientPath, TURBO_API: \"https://replacement.example.",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Preserve deliberate shorter child scope. Each child exit and streams joined before scope release, then assertions inspect files; loop case runs child repeatedly with Effect.fn Effect.scoped. Verified on committed source 457e1ead916b457f7071c3e4554d5e1355cca3a3: Node22 and Bun each passed all 2,287 CLI tests including the 198 selected cases; full CLI package audit (657.2s) and docgen (21.5s) passed. See research/cli-nine-applied-scope-proof.md. Original evidence and IDs retained."
+      "status": "open"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/skills-command.test.ts:305:scoped@28#1",
@@ -19498,13 +19535,13 @@
       "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. The inner property deliberately exercises generated runtime drift against the same authenticated store and before/after ledger snapshots, restoring those snapshots for each case before checking unchanged bytes. The surrounding transaction also tests promotion, configuration mutations and revocation. Keep fcRuns(10), seed/shrinking and the explicit Passed assertion rather than rebuilding the transaction per sample. The 400-run integration check passes with the explicit test layer."
     },
     {
-      "id": "EV007:packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts:816:checkEffect@28#1",
+      "id": "EV007:packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts:817:checkEffect@28#1",
       "lens": "detector",
       "ruleId": "EV007",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
-      "line": 816,
-      "endLine": 824,
+      "line": 817,
+      "endLine": 825,
       "symbol": "checkEffect",
       "occurrence": "v2:b4676505188054835da45cb79999d264d600b62cc8a1604d2d06951ca251a662",
       "class": "direct-arbitrary-check",
@@ -24285,6 +24322,27 @@
       "reason": "Retained native worker fixture boundary: spawned Vitest consumes actual files and output/abort/report evidence is retained before scoped directory deletion. Emulator would erase worker/process subject."
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/accounts-secrets-layout.test.ts:3:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/accounts-secrets-layout.test.ts",
+      "line": 3,
+      "endLine": 3,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/accounts-usage.test.ts:42:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -24778,6 +24836,27 @@
       "status": "open"
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/cache-remote-reads.test.ts:8:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-remote-reads.test.ts",
+      "line": 8,
+      "endLine": 8,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/cache-runtime.test.ts:24:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -25013,13 +25092,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/ci-runner-security.test.ts:5:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/ci-runner-security.test.ts:12:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
-      "line": 5,
-      "endLine": 5,
+      "line": 12,
+      "endLine": 12,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -25755,6 +25834,27 @@
       "status": "open"
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/fixtures/graft/crux-batches.test.js:5:node:fs@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/fixtures/graft/crux-batches.test.js",
+      "line": 5,
+      "endLine": 5,
+      "symbol": "node:fs",
+      "occurrence": "v2:5e8b0f6a604fef97ee19eeecbacb62226c37cb36467d729b5760ad441ce7d311",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import { realpathSync } from \"node:fs\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/frozen-grant-set.test.ts:5:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -26148,6 +26248,27 @@
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/knowledge-refs-rewrite.test.ts:7:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/knowledge-refs-rewrite.test.ts",
+      "line": 7,
+      "endLine": 7,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
       },
       "severity": "info",
       "confidence": 0.55,
@@ -27133,13 +27254,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/regenerate-merge-driver.test.ts:3:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/regenerate-merge-driver.test.ts:4:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/regenerate-merge-driver.test.ts",
-      "line": 3,
-      "endLine": 3,
+      "line": 4,
+      "endLine": 4,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -27347,13 +27468,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/residue-reap.test.ts:9:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/residue-reap.test.ts:12:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/residue-reap.test.ts",
-      "line": 9,
-      "endLine": 9,
+      "line": 12,
+      "endLine": 12,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -27397,6 +27518,27 @@
       "file": "packages/tooling/tool/cli/test/restoration-transformations-coverage.test.ts",
       "line": 26,
       "endLine": 26,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/retained-script-adapters.test.ts:2:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/retained-script-adapters.test.ts",
+      "line": 2,
+      "endLine": 2,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -27601,13 +27743,13 @@
       "reason": "NodeServices is required for native git subprocesses, linked worktrees, chmod/stat, and real path semantics in this suite. MemoryFileSystem would change the command subject."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:2:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:3:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/setup-effect-ref.test.ts",
-      "line": 2,
-      "endLine": 2,
+      "line": 3,
+      "endLine": 3,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -29383,27 +29525,6 @@
       "occurrence": "v2:ea7fb1bde4d0aef3fb678e6c26bd4f9fc29a713bd6885bf86ff75de251396f78",
       "class": "plain-vitest-with-effect",
       "evidence": "import { describe, expect } from \"vitest\";",
-      "replacement": {
-        "primitive": "module.@effect/vitest",
-        "sketch": "module.@effect/vitest: Use for plain-vitest-with-effect candidates that need the Effect-aware package entry point; the pinned peer export-star boundary covers Vitest names without pretending they are declared here."
-      },
-      "severity": "minor",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV011:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:9:vitest-import@0#1",
-      "lens": "detector",
-      "ruleId": "EV011",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/setup-effect-ref.test.ts",
-      "line": 9,
-      "endLine": 9,
-      "symbol": "vitest-import",
-      "occurrence": "v2:c0e8a40aee09cf60dd02fc44613c5f4fe3cb535180b0aaeb08ff84bfbcb4fc18",
-      "class": "plain-vitest-with-effect",
-      "evidence": "import { expect } from \"vitest\";",
       "replacement": {
         "primitive": "module.@effect/vitest",
         "sketch": "module.@effect/vitest: Use for plain-vitest-with-effect candidates that need the Effect-aware package entry point; the pinned peer export-star boundary covers Vitest names without pretending they are declared here."
