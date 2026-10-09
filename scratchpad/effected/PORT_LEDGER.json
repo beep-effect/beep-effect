@@ -8734,9 +8734,168 @@
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 0,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/config-file/ConfigMigration.test.ts:43; scratchpad/test/config-file/MergeStrategy.test.ts:132,171,209",
+          "upstreamBehaviour": "ConfigMigration uses native subtraction-comparator sort; deepMerge uses Set, Object.create/keys/hasOwn; ConfigFile.testLayer uses Object.entries/keys; crypto.toBase64 uses Array.from; merge fixtures construct native Dates.",
+          "labBehaviour": "A.sort with Order.Number groups pending versions as [1,2,2,Infinity,Infinity] rather than [1,2,Infinity,2,Infinity] when NaN occurs; deepMerge uses an explicit key guard, prototype-preserving literal and R.keys/has; testLayer uses R.toEntries/keys; crypto uses A helpers; Date fixtures use DateTime.",
+          "reason": "native-runtime: Short law 10 and EF-38 require Effect collection helpers; the 2026-10-09 grilling ruling removes native-runtime exceptions. fix-config-file-g1.md:11 verifies the NaN-dependent ordering change; __proto__ filtering and atomic Date behavior remain covered."
+        },
+        {
+          "test": "scratchpad/test/config-file/ConfigMigration.test.ts:111,295; scratchpad/test/config-file/EncryptedCodec.test.ts:72,83",
+          "upstreamBehaviour": "The default version reader fails with native Error causes for nonobjects or missing numeric versions; short encrypted envelopes carry new Error(\"Ciphertext too short to contain IV\") inside ConfigEncryptionError.",
+          "labBehaviour": "ConfigMigration.VersionAccessError and EncryptedCodec.CiphertextTooShortError are S.TaggedError classes with _tag and composed identities. VersionAccessError retains name=\"Error\"; the ciphertext cause has its tagged identity. Messages, read-version/decrypt phases and typed failure routing remain.",
+          "reason": "tagged-errors: Short law 7 and global-error-in-effect-failure require schema-tagged errors instead of native Error construction; the grilling ruling accepts the forced representation changes. INVENTORY.md codemod and rejected grok-1-4 records distinguish these from behavioral bugs."
+        },
+        {
+          "test": "scratchpad/test/config-file/JsonCodec.test.ts:28,40; scratchpad/test/config-file/JsoncCodec.test.ts:59; scratchpad/test/config-file/ConfigCodecPath.test.ts:53; scratchpad/test/config-file/EncryptedCodec.test.ts:133; scratchpad/test/config-file/ConfigMigration.test.ts:123",
+          "upstreamBehaviour": "JsonCodec directly parses/stringifies JSON and preserves SyntaxError/TypeError causes; JsoncCodec directly stringifies JSON and preserves TypeError. Both serializers succeed with undefined for a top-level undefined. withCodecPath recognizes errors using instanceof.",
+          "labBehaviour": "JsonCodec uses S.fromJsonString(S.Unknown); JsoncCodec uses Jsonc.stringify. Their causes become SchemaError and JsoncStringifyError respectively, and top-level undefined fails. ConfigResolver workspace detection and JSON test fixtures use schema codecs; withCodecPath and failure assertions use S.is guards.",
+          "reason": "schema-first: EF-3/EF-19 and prefer-schema-over-json require schema JSON boundaries; schema-first guidance requires schema-derived guards. sol.md:11 and fable.md:4,11 provide differential probes; the round-1 inventory rejects native JSON restoration and assigns these forced differences to the codemod."
+        },
+        {
+          "test": "scratchpad/test/config-file/ConfigFile.test.ts:18; scratchpad/test/config-file/ConfigFileEncode.test.ts:35; scratchpad/test/config-file/ConfigProvider.test.ts:18; scratchpad/test/config-file/MergeStrategy.test.ts:152,184",
+          "upstreamBehaviour": "ConfigFile, ConfigEvent, ConfigProvider, key-typing, encode/read/write, integration and merge test schemas use Schema.Number for ports and nested numeric fields; examples also use Schema.Number.",
+          "labBehaviour": "Those fixture and example fields use S.Finite, restricting them to finite numbers. ConfigMigrationError.version instead uses S.declare(P.isNumber), so migration versions still admit Infinity and NaN; the earlier production S.Finite restriction was removed.",
+          "reason": "numeric-domains: The schemaNumber diagnostic and the operator systemic numeric-domain recording ruling force explicit finite fixture/example domains. fix-config-file-g1.md:2,10 restores the migration numeric domain; do not claim ConfigMigrationError rejects non-finite versions in the final tree."
+        },
+        {
+          "test": "scratchpad/test/config-file/ConfigFileEncode.test.ts:103; scratchpad/test/config-file/ConfigEvent.test.ts:310; scratchpad/test/config-file/ConfigMigration.test.ts:194; scratchpad/test/config-file/MergeStrategy.test.ts:158,182",
+          "upstreamBehaviour": "ConfigFile casts codec errors and nonempty sources; MergeStrategy casts merge operands and its result; VersionAccess casts raw documents; tests cast failures, payloads, file text and deliberately invalid inputs.",
+          "labBehaviour": "ConfigFile uses explicit error unions and A.isArrayNonEmpty; MergeStrategy folds a typed reversed nonempty source array with object guards and a generic deepMerge overload; VersionAccess uses property/type guards and spread-compatible cases. Tests narrow values, with wrong-input casts isolated in deliberatelyInvalid.ts.",
+          "reason": "type-safety: D15 bans unsafe assertions; the 2026-10-09 operator ruling permits only the named deliberatelyInvalid<T> test helper for intentional wrong-input casts. Runtime spread cases and merge identity tests retain upstream expectations; this record does not claim diagnostic directives were removed."
+        },
+        {
+          "test": "module suite scratchpad/test/config-file/**",
+          "upstreamBehaviour": "EncryptedCodec, layerConfigProvider, canMerge/deepMerge and crypto deriveKey/toBase64/decrypt/encrypt expose only uncurried calls; schemas are constructed with new; the WiderFile test key is a short literal; migration errors use Schema.Number.",
+          "labBehaviour": "These APIs add dual data-first/data-last overloads, including predicate-based optional-argument dispatch for layerConfigProvider; schema construction uses .make; WiderFile has a deterministic lab key; migration error versions use S.declare(P.isNumber). Generic migration error types preserve the typed seam.",
+          "reason": "tsgo-diagnostics: @effect/tsgo missingPipeableSignature, newSchemaClass, deterministic-keys and schemaNumber diagnostics force these shapes under operator step 2. ConfigMigration numeric compatibility is documented in fix-config-file-g1.md:10; the final API retains existing data-first calls."
+        },
+        {
+          "test": "module suite scratchpad/test/config-file/**",
+          "upstreamBehaviour": "ConfigMigration.parse and EncryptedCodec.parse/stringify return Effect.gen through plain callbacks; ConfigFile internal merge/encode/write/save/event helpers and ConfigResolver root predicates return Effect.gen; resolver absorption uses catch plus succeed.",
+          "labBehaviour": "Codec callbacks use Effect.fn; ConfigFile internals and root predicates use Effect.fnUntraced, preserving their untraced emission/probe behavior. Resolver absorption uses Effect.orElseSucceed; tests use direct succeedNone/succeedSome and catchTags helpers; key derivation chains its WebCrypto promises.",
+          "reason": "effect-first: EF-14, effect-fn and terse-effect require reusable Effect wrappers and equivalent native Effect helpers. fix-config-file-g3.md:2,5 and g4.md:1,4 restore upstream internal tracing; bare public codec span naming remains optional backlog, not a separate unforced deviation."
+        },
+        {
+          "test": "module suite scratchpad/test/config-file/**",
+          "upstreamBehaviour": "Source, tests and source JSDoc examples import Effect modules through the root effect barrel.",
+          "labBehaviour": "Source, tests and updated source examples import each Effect module from effect/<Module>, with A/O/P/R/S aliases and dual from effect/Function; ConfigFile now uses S. The README examples remain deferred documentation backlog.",
+          "reason": "effect-imports: Short laws 1-2 and operator step 3 require per-module effect/* imports and canonical aliases; fix-config-file-g3.md:1 repairs the Schema alias missed by the import gate. This class covers the source/test graph, not unfinished README adaptation."
+        },
+        {
+          "test": "module suite scratchpad/test/config-file/**",
+          "upstreamBehaviour": "ConfigCodecError, ConfigFile errors, ConfigMigrationError, ConfigEncryptionError and ConfigEvent use absent or short schema identities and unannotated fields; ConfigEvents uses @effected/config-file/ConfigEvents as its Context key.",
+          "labBehaviour": "ConfigCodec, ConfigEvent, ConfigFile, ConfigMigration and EncryptedCodec derive $I from $ScratchpadId; schema/error identities, descriptions and annotated fields use $I.annote/annoteSchema and annotateKey; ConfigEvents uses $I`ConfigEvents`. Error rendering reflects composed identities, except explicit compatibility names.",
+          "reason": "identity-annotations: Operator step 4 requires @beep/identity-derived schema and Context.Service keys and annotations; fable.md:18 documents the composed error-rendering and service-key differences. This is identity metadata/key composition, not an identity-keyed collection rewrite."
+        },
+        {
+          "test": "scratchpad/test/config-file/MergeStrategy.test.ts:48,71",
+          "upstreamBehaviour": "deepMerge filters constructor and prototype from both source and target, so schema-valid documents with required own fields merge to values outside their declared schema and lose higher/lower-priority data.",
+          "labBehaviour": "Both deepMerge copy loops preserve own constructor/prototype data fields, including nested fields and fields supplied only by the lower-priority source; higher-priority conflicts still win and __proto__ remains filtered.",
+          "reason": "upstream-bug: sol.md:18 reproduces the defect in the pinned oracle and port: decoded constructor/prototype/port documents produce only {\"port\":3} and fail S.is(schema). fix-config-file-g2.md:8 and the added schema-validity regressions verify the field-preserving repair; an S0-versus-lab read-only probe confirms it."
+        },
+        {
+          "test": "scratchpad/test/config-file/MergeStrategy.test.ts:95",
+          "upstreamBehaviour": "deepMerge reads result[key] before its own-property check; a lower-priority own field absent from the target can invoke an inherited getter and throw instead of copying its data.",
+          "labBehaviour": "deepMerge checks R.has before reading existing target values and defines absent source keys as own data properties, avoiding inherited getters/setters while preserving the document prototype.",
+          "reason": "upstream-bug: fix-config-file-g2.md:1,6,8 identifies and tests the ownership-before-read repair. A read-only S0/lab probe with an inherited throwing field getter and a lower own data field gives upstream getterCalls=1 and a throw versus lab getterCalls=0, own field=\"own data\" and preserved class identity; test:95 pins the same accessor-safe copying pattern."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-5 — Legacy documentation carriers, incomplete examples and missing metadata await S2. (scratchpad/effected/config-file/ConfigFile.ts:862)",
+          "reason": "jsdoc: During S2, convert carriers to titled Example/Details sections, supply complete bindings, and add canonical categories and @since 0.0.0 while preserving upstream prose."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-6 — Effectful test layers are provided per test instead of owned by it.layer. (scratchpad/test/config-file/ConfigFile.test.ts:41)",
+          "reason": "test: During S3, migrate to isolated it.layer blocks, retaining distinct filesystem seeds and fault configurations."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-7 — Outcome assertions manually inspect Result/Exit/Option/Cause wrappers. (scratchpad/test/config-file/ConfigEvent.test.ts:72)",
+          "reason": "test: During S3, use Effect.exit and the relevant @effect/vitest/utils outcome helpers while retaining typed-failure-versus-defect checks."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-8 — Generated schema/codec/parser properties are absent. (scratchpad/test/config-file/JsonCodec.test.ts:21)",
+          "reason": "test: During S3, add schema-generated round trips and parser/formatter fidelity/idempotence properties over supported domains using canonical APIs and fcRuns; keep upstream example suites."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-7 — VersionAccessError has an enumerable native-name compatibility override. (scratchpad/effected/config-file/ConfigMigration.ts:66)",
+          "reason": "effect-idiom: The proposed deletion of both overrides is optional backlog only: first establish a law or verified upstream bug authorizing the resulting Error.name/rendering deviation under section 14. Until then keep the upstream-compatible name; central codemod handles the forced constructor/tag substitution."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-8 — The public migration codec has a bare parse span name. (scratchpad/effected/config-file/ConfigMigration.ts:121)",
+          "reason": "effect-idiom: Consider qualifying the wrapper as Effect.fn(\"ConfigMigration.parse\") in later trace-name cleanup, preserving its behavior."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-15 — Encrypted codec span names are bare parse/stringify. (scratchpad/effected/config-file/EncryptedCodec.ts:154)",
+          "reason": "effect-idiom: Consider Effect.fn(\"EncryptedCodec.parse\") and Effect.fn(\"EncryptedCodec.stringify\") during later trace-name cleanup."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-10 — Implementation generics are erased by the public make signature. (scratchpad/effected/config-file/ConfigMigration.ts:114)",
+          "reason": "type-safety: Consider removing the dead implementation/interface generics if the green diagnostics permit it, or exposing them on make when a concrete consumer requires the inference."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-11 — MergeStrategy repeats object checks to satisfy type narrowing. (scratchpad/effected/config-file/MergeStrategy.ts:85)",
+          "reason": "effect-idiom: Consider a reusable pair refinement or exported isRecordLike guard and update the merge call together if that produces a proven equivalent, shorter typed form."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-12 — Inline event fields and the short-ciphertext message lack descriptions. (scratchpad/effected/config-file/ConfigEvent.ts:44)",
+          "reason": "schema: During S2, add annotateKey descriptions from the carried field comments to those event fields and CiphertextTooShortError.message."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-13 — The internal crypto module lost its upstream lead documentation. (scratchpad/effected/config-file/internal/crypto.ts:1)",
+          "reason": "docs: During S2, restore the entire upstream lead prose and @internal marker, converting its @remarks carrier to Details without dropping content."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-14 — README adaptation and its import examples are unfinished. (scratchpad/effected/config-file/README.md:3)",
+          "reason": "docs: During S2, remove the specified badges/Install/stability material and rewrite examples to lab paths and dedicated Effect module imports. Leave README Port notes bookkeeping to the central codemod."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 4,
+              "backlog": 1
+            },
+            "sol": {
+              "required": 4,
+              "backlog": 4
+            },
+            "fable": {
+              "required": 7,
+              "backlog": 8
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

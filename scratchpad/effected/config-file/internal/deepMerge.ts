@@ -1,6 +1,5 @@
 import { dual } from "effect/Function";
 import * as A from "effect/Array";
-import * as HashSet from "effect/HashSet";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 /**
@@ -44,8 +43,6 @@ export const canMerge: {
 } = dual(2, (a: unknown, b: unknown): boolean =>
 	isRecordLike(a) && isRecordLike(b) && Object.getPrototypeOf(a) === Object.getPrototypeOf(b));
 
-const FORBIDDEN = HashSet.make("__proto__", "constructor", "prototype");
-
 /**
  * Recursively merge `source` into `target`; keys already present on `target`
  * win. Nested plain objects merge; every other value is atomic.
@@ -71,24 +68,26 @@ function mergeRecords(
 	source: Record<string, unknown>,
 ): Record<string, unknown> {
 	const result: Record<string, unknown> = { __proto__: Object.getPrototypeOf(target) };
-	// `target`'s keys must be filtered too, and copied as data properties. A bare
-	// assignment uses [[Set]] semantics, so an own `__proto__` key on the
+	// Own keys are copied as data properties, including constructor/prototype.
+	// A bare assignment uses [[Set]] semantics, so an own `__proto__` key on the
 	// higher-priority document would reach `Object.prototype`'s inherited accessor
 	// and reassign `result`'s prototype to attacker-controlled data — defeating
-	// FORBIDDEN and the prototype we just installed. `Object.assign` and `result[k] = v`
+	// the prototype we just installed. `Object.assign` and `result[k] = v`
 	// both do this; `defineProperty` does not.
 	for (const key of R.keys(target)) {
-		if (HashSet.has(FORBIDDEN, key)) continue;
+		if (key === "__proto__") continue;
 		define(result, key, target[key]);
 	}
 	for (const key of R.keys(source)) {
-		if (HashSet.has(FORBIDDEN, key)) continue;
+		if (key === "__proto__") continue;
 		const sourceValue = source[key];
-		const targetValue = result[key];
-		if (R.has(result, key) && isPlainObject(targetValue) && isPlainObject(sourceValue)) {
-			define(result, key, deepMerge(targetValue, sourceValue));
-		} else if (!R.has(result, key)) {
+		if (!R.has(result, key)) {
 			define(result, key, sourceValue);
+		} else {
+			const targetValue = result[key];
+			if (isPlainObject(targetValue) && isPlainObject(sourceValue)) {
+				define(result, key, deepMerge(targetValue, sourceValue));
+			}
 		}
 	}
 	return result;

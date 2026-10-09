@@ -9,7 +9,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PubSub from "effect/PubSub";
-import * as Schema from "effect/Schema";
+import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import type { ConfigCodec } from "./ConfigCodec.ts";
 import { ConfigCodecError } from "./ConfigCodec.ts";
@@ -32,9 +32,9 @@ const $I = $ScratchpadId.create("effected/config-file/ConfigFile");
  *
  * @public
  */
-export class ConfigFileNotFoundError extends Schema.TaggedError<ConfigFileNotFoundError>($I`ConfigFileNotFoundError`)("ConfigFileNotFoundError", {
+export class ConfigFileNotFoundError extends S.TaggedError<ConfigFileNotFoundError>($I`ConfigFileNotFoundError`)("ConfigFileNotFoundError", {
 	/** The names of the resolvers that were probed, in order. */
-	searched: Schema.Array(Schema.String).annotateKey({ description: "The names of the resolvers that were probed, in order." }),
+	searched: S.Array(S.String).annotateKey({ description: "The names of the resolvers that were probed, in order." }),
 	/**
 	 * The candidate paths the chain actually checked on disk, in probe order
 	 * across every resolver — the failure-path mirror of {@link ConfigMatch}.
@@ -46,7 +46,7 @@ export class ConfigFileNotFoundError extends Schema.TaggedError<ConfigFileNotFou
 	 * can be shorter than the true search (or empty for a fully hand-rolled
 	 * chain) — `searched` remains the complete resolver list either way.
 	 */
-	candidates: Schema.Array(Schema.String).annotateKey({ description: "The candidate paths the chain actually checked on disk, in probe order across every resolver — the failure-path mirror of ConfigMatch." }),
+	candidates: S.Array(S.String).annotateKey({ description: "The candidate paths the chain actually checked on disk, in probe order across every resolver — the failure-path mirror of ConfigMatch." }),
 }, $I.annote("ConfigFileNotFoundError", { description: "Indicates that the resolver chain produced no configuration source." })) {
 	override get message(): string {
 		const count = this.candidates.length;
@@ -64,11 +64,11 @@ export class ConfigFileNotFoundError extends Schema.TaggedError<ConfigFileNotFou
  *
  * @public
  */
-export class ConfigFileReadError extends Schema.TaggedError<ConfigFileReadError>($I`ConfigFileReadError`)("ConfigFileReadError", {
+export class ConfigFileReadError extends S.TaggedError<ConfigFileReadError>($I`ConfigFileReadError`)("ConfigFileReadError", {
 	/** The path that could not be read. */
-	path: Schema.String.annotateKey({ description: "The path that could not be read." }),
+	path: S.String.annotateKey({ description: "The path that could not be read." }),
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
+	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("ConfigFileReadError", { description: "Indicates that a config file could not be read from the filesystem." })) {
 	override get message(): string {
 		return `Failed to read config file at "${this.path}"`;
@@ -80,11 +80,11 @@ export class ConfigFileReadError extends Schema.TaggedError<ConfigFileReadError>
  *
  * @public
  */
-export class ConfigFileWriteError extends Schema.TaggedError<ConfigFileWriteError>($I`ConfigFileWriteError`)("ConfigFileWriteError", {
+export class ConfigFileWriteError extends S.TaggedError<ConfigFileWriteError>($I`ConfigFileWriteError`)("ConfigFileWriteError", {
 	/** The path that could not be written. */
-	path: Schema.String.annotateKey({ description: "The path that could not be written." }),
+	path: S.String.annotateKey({ description: "The path that could not be written." }),
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
+	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("ConfigFileWriteError", { description: "Indicates that a config file could not be written to the filesystem." })) {
 	override get message(): string {
 		return `Failed to write config file at "${this.path}"`;
@@ -105,7 +105,7 @@ export class ConfigFileWriteError extends Schema.TaggedError<ConfigFileWriteErro
  *
  * @public
  */
-export class ConfigDefaultPathMissingError extends Schema.TaggedError<ConfigDefaultPathMissingError>($I`ConfigDefaultPathMissingError`)(
+export class ConfigDefaultPathMissingError extends S.TaggedError<ConfigDefaultPathMissingError>($I`ConfigDefaultPathMissingError`)(
 	"ConfigDefaultPathMissingError",
 	{}, $I.annote("ConfigDefaultPathMissingError", { description: "Indicates that ConfigFileShape.save or ConfigFileShape.update was called on a service configured without a `defaultPath`." }),
 ) {
@@ -126,11 +126,11 @@ export class ConfigDefaultPathMissingError extends Schema.TaggedError<ConfigDefa
  *
  * @public
  */
-export class ConfigValidationError extends Schema.TaggedError<ConfigValidationError>($I`ConfigValidationError`)("ConfigValidationError", {
+export class ConfigValidationError extends S.TaggedError<ConfigValidationError>($I`ConfigValidationError`)("ConfigValidationError", {
 	/** The offending file, absent when `validate` was called on an in-memory value. */
-	path: Schema.Option(Schema.String).annotateKey({ description: "The offending file, absent when `validate` was called on an in-memory value." }),
+	path: S.Option(S.String).annotateKey({ description: "The offending file, absent when `validate` was called on an in-memory value." }),
 	/** The structured schema issue. Never a string. */
-	issue: Schema.Defect().annotateKey({ description: "The structured schema issue. Never a string." }),
+	issue: S.Defect().annotateKey({ description: "The structured schema issue. Never a string." }),
 }, $I.annote("ConfigValidationError", { description: "Indicates that parsed config content did not satisfy the schema, or that a caller-supplied `validate` rejected it." })) {
 	override get message(): string {
 		const at = O.match(this.path, { onNone: () => "", onSome: (p) => ` at "${p}"` });
@@ -301,12 +301,12 @@ export interface ConfigFileOptions<A, I, RR> {
 	 * The schema every discovered document is decoded through.
 	 *
 	 * @remarks
-	 * `Schema.Codec<A, I>` rather than the one-parameter `Schema.Schema<A>`,
+	 * `S.Codec<A, I>` rather than the one-parameter `S.Schema<A>`,
 	 * because the encoded form `I` matters on the write path. Its decoding and
 	 * encoding service channels default to `never`, keeping `decode` free of
 	 * requirements.
 	 */
-	readonly schema: Schema.Codec<A, I>;
+	readonly schema: S.Codec<A, I>;
 	/** How file content becomes an unknown document, and back. */
 	readonly codec: ConfigCodec;
 	/** The resolver chain, in priority order. */
@@ -328,7 +328,7 @@ export interface ConfigFileOptions<A, I, RR> {
 	 * It cannot be expressed with {@link ConfigFileOptions.validate}: that runs
 	 * on the *decoded* value, by which point the excess keys are already gone.
 	 *
-	 * Keys covered by a `Schema.StructWithRest` rest are not excess, so a schema
+	 * Keys covered by a `S.StructWithRest` rest are not excess, so a schema
 	 * that deliberately admits a pass-through section keeps working under
 	 * `"error"`.
 	 *
@@ -380,7 +380,7 @@ const Service =
  * codec error constructed here.
  */
 const withCodecPath = <E>(error: E, target: string): E | ConfigCodecError =>
-	Schema.is(ConfigCodecError)(error) && error.path === undefined
+	S.is(ConfigCodecError)(error) && error.path === undefined
 		? ConfigCodecError.make({
 				codec: error.codec,
 				operation: error.operation,
@@ -427,7 +427,7 @@ const makeImpl = <A, I, RR>(
 					Effect.flatMap(
 						O.match({
 							onNone: () => Effect.void,
-							onSome: Effect.fn("onSome")(function* (svc) {
+							onSome: Effect.fnUntraced(function* (svc) {
 									const timestamp = yield* DateTime.now;
 									yield* PubSub.publish(svc.events, ConfigEvent.make({ timestamp, event: payload }));
 								}),
@@ -443,7 +443,7 @@ const makeImpl = <A, I, RR>(
 		sources.map((s) => ({ path: s.path, resolver: s.resolver }));
 
 	const decode = (parsed: unknown, at: O.Option<string>): Effect.Effect<A, ConfigValidationError> =>
-		Schema.decodeUnknownEffect(options.schema)(parsed, options.parseOptions).pipe(
+		S.decodeUnknownEffect(options.schema)(parsed, options.parseOptions).pipe(
 			// Normalize the schema failure at the boundary. Never leak SchemaError
 			// deeper, never stringify it — carry its structured issue tree instead.
 			Effect.catchTag("SchemaError", (error) =>
@@ -566,7 +566,7 @@ const makeImpl = <A, I, RR>(
 		encodeOptions?: ConfigEncodeOptions,
 	) => Effect.Effect<string, ConfigEncodeError> =
 		Effect.fnUntraced(function* (value: A, target: O.Option<string>, encodeOptions?: ConfigEncodeOptions) {
-			const encoded = yield* Schema.encodeEffect(options.schema)(value).pipe(
+			const encoded = yield* S.encodeEffect(options.schema)(value).pipe(
 				// Same normalization as `decode`: carry the structured issue, never stringify.
 				Effect.catchTag("SchemaError", (error) =>
 					Effect.fail(ConfigValidationError.make({ path: target, issue: error.issue })),
@@ -732,7 +732,7 @@ const layer = <Self, A, I, RR = never, S extends ConfigFileShape<A> = ConfigFile
  */
 export interface ConfigFileTestOptions<A, I> {
 	/** The schema every seeded document is decoded through. */
-	readonly schema: Schema.Codec<A, I>;
+	readonly schema: S.Codec<A, I>;
 	/** How file content becomes an unknown document, and back. */
 	readonly codec: ConfigCodec;
 	/** How several discovered sources become one value. */
@@ -802,7 +802,7 @@ const testLayer = <Self, A, I, S extends ConfigFileShape<A> = ConfigFileShape<A>
  */
 export interface ConfigReadOptions<A, I> {
 	/** The schema the document is decoded through. */
-	readonly schema: Schema.Codec<A, I>;
+	readonly schema: S.Codec<A, I>;
 	/**
 	 * How file content becomes an unknown document.
 	 *
@@ -838,7 +838,7 @@ const read = <A, I>(
 
 		const parsed = yield* options.codec.parse(raw).pipe(Effect.mapError((error) => withCodecPath(error, path)));
 
-		return yield* Schema.decodeUnknownEffect(options.schema)(parsed, options.parseOptions).pipe(
+		return yield* S.decodeUnknownEffect(options.schema)(parsed, options.parseOptions).pipe(
 			// The same boundary normalization the service performs: never leak a
 			// SchemaError outward, and carry its issue tree rather than a string.
 			Effect.catchTag("SchemaError", (error) =>

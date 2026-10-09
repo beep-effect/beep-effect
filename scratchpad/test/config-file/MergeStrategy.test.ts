@@ -2,6 +2,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import type { ConfigSource } from "../../effected/config-file/MergeStrategy.ts";
@@ -41,6 +42,74 @@ describe("MergeStrategy.layeredMerge", () => {
 			const strategy = MergeStrategy.layeredMerge<Record<string, unknown>>();
 			const value = yield* strategy.resolve([src("/a", "walk", { port: 1 })]);
 			assert.deepStrictEqual(value, { port: 1 });
+		}),
+	);
+
+	it.effect("preserves validated own constructor and prototype fields, including nested fields", () =>
+		Effect.gen(function* () {
+			const Fields = S.Struct({ constructor: S.String, prototype: S.String });
+			const Document = S.Struct({ constructor: S.String, prototype: S.String, port: S.Finite, section: Fields });
+			const higher = yield* S.decodeEffect(Document)({
+				constructor: "higher constructor", prototype: "higher prototype", port: 3,
+				section: { constructor: "higher nested constructor", prototype: "higher nested prototype" },
+			});
+			const lower = yield* S.decodeEffect(Document)({
+				constructor: "lower constructor", prototype: "lower prototype", port: 9,
+				section: { constructor: "lower nested constructor", prototype: "lower nested prototype" },
+			});
+			const strategy = MergeStrategy.layeredMerge<typeof Document.Type>();
+			const value = yield* strategy.resolve([src("/a", "walk", higher), src("/etc", "system", lower)]);
+			assert.isTrue(S.is(Document)(value));
+			assert.deepStrictEqual(value, higher);
+			assert.isTrue(R.has(value, "constructor"));
+			assert.isTrue(R.has(value, "prototype"));
+			assert.isTrue(R.has(value.section, "constructor"));
+			assert.isTrue(R.has(value.section, "prototype"));
+		}),
+	);
+
+	it.effect("copies lower-priority own constructor and prototype fields absent from the higher source", () =>
+		Effect.gen(function* () {
+			const Fields = S.Struct({ constructor: S.String, prototype: S.String });
+			const Document = S.Struct({
+				constructor: S.String, prototype: S.String, port: S.Finite, section: Fields,
+			});
+			const higher = { port: 3, section: { constructor: "higher" } };
+			const lower = {
+				constructor: "lower constructor", prototype: "lower prototype", port: 9, section: { prototype: "lower" },
+			};
+			const strategy = MergeStrategy.layeredMerge<Record<string, unknown>>();
+			const value = yield* strategy.resolve([src("/a", "walk", higher), src("/etc", "system", lower)]);
+			if (!S.is(Document)(value)) return assert.fail("merged fields must be schema-valid");
+			assert.deepStrictEqual(value, {
+				constructor: "lower constructor", prototype: "lower prototype", port: 3,
+				section: { constructor: "higher", prototype: "lower" },
+			});
+			assert.isTrue(R.has(value, "constructor"));
+			assert.isTrue(R.has(value, "prototype"));
+			assert.isTrue(R.has(value.section, "constructor"));
+			assert.isTrue(R.has(value.section, "prototype"));
+		}),
+	);
+
+	it.effect("copies own data fields without invoking inherited getters or setters", () =>
+		Effect.gen(function* () {
+			class Document {
+				get prototype(): string {
+					return assert.fail("must not read an inherited getter");
+				}
+				set prototype(_value: string) {
+					assert.fail("must not invoke an inherited setter");
+				}
+			}
+			const higher = new Document();
+			const lower = new Document();
+			Object.defineProperty(lower, "prototype", { value: "own data", enumerable: true });
+			const strategy = MergeStrategy.layeredMerge<Document>();
+			const value = yield* strategy.resolve([src("/a", "walk", higher), src("/etc", "system", lower)]);
+			assert.instanceOf(value, Document);
+			assert.isTrue(R.has(value, "prototype"));
+			assert.strictEqual(value.prototype, "own data");
 		}),
 	);
 

@@ -5,8 +5,7 @@ import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import type { VersionAccess } from "../../effected/config-file/ConfigMigration.ts";
-import { ConfigMigration, ConfigMigrationError } from "../../effected/config-file/ConfigMigration.ts";
+import { ConfigMigration, ConfigMigrationError, VersionAccess } from "../../effected/config-file/ConfigMigration.ts";
 import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
 
 const bump = (version: number, name: string, fn: (raw: Record<string, unknown>) => Record<string, unknown>) => ({
@@ -38,6 +37,55 @@ describe("ConfigMigration.make", () => {
 			});
 			const parsed = yield* codec.parse(`{"version":2,"a":1}`);
 			assert.deepStrictEqual(parsed, { version: 2, a: 1 });
+		}),
+	);
+
+	it.effect("keeps equal-version steps stable while ordering all pending numeric versions", () =>
+		Effect.gen(function* () {
+			const seen: Array<string> = [];
+			const migrations = [
+				{ version: Infinity, name: "infinity-first" },
+				{ version: 2, name: "two-first" },
+				{ version: NaN, name: "nan" },
+				{ version: -Infinity, name: "negative-infinity" },
+				{ version: 1, name: "one" },
+				{ version: 2, name: "two-second" },
+				{ version: Infinity, name: "infinity-second" },
+			];
+			const codec = ConfigMigration.make({
+				codec: JsonCodec,
+				migrations: migrations.map(({ version, name }) => ({
+					version,
+					name,
+					up: (raw: unknown) => {
+						seen.push(name);
+						return Effect.succeed(raw);
+					},
+				})),
+			});
+			assert.deepStrictEqual(yield* codec.parse(`{"version":0}`), { version: Infinity });
+			assert.deepStrictEqual(seen, ["one", "two-first", "two-second", "infinity-first", "infinity-second"]);
+			assert.deepStrictEqual(migrations.map(({ name }) => name), [
+				"infinity-first", "two-first", "nan", "negative-infinity", "one", "two-second", "infinity-second",
+			]);
+		}),
+	);
+
+	it.effect("preserves typed failure and cause identity when an Infinity migration fails", () =>
+		Effect.gen(function* () {
+			const boom = new Error("non-finite step failed");
+			const codec = ConfigMigration.make({
+				codec: JsonCodec,
+				migrations: [{ version: Infinity, name: "infinity-fails", up: () => Effect.fail(boom) }],
+			});
+			const error = yield* codec.parse(`{"version":0}`).pipe(Effect.asVoid, Effect.flip);
+			assert.instanceOf(error, ConfigMigrationError);
+			assert.isTrue(S.is(ConfigMigrationError)(error));
+			assert.strictEqual(error._tag, "ConfigMigrationError");
+			assert.strictEqual(error.version, Infinity);
+			assert.strictEqual(error.name, "infinity-fails");
+			assert.strictEqual(error.phase, "apply");
+			assert.strictEqual(error.cause, boom);
 		}),
 	);
 
@@ -138,6 +186,33 @@ describe("ConfigMigration.make", () => {
 			const cause = Exit.getCause(exit);
 			assert.isTrue(O.isSome(cause));
 			if (O.isSome(cause)) assert.isTrue(Cause.hasDies(cause.value));
+		}),
+	);
+});
+
+describe("VersionAccess.default.set", () => {
+	it.effect("preserves own-property spread semantics, including empty strings and UTF-16 indices", () =>
+		Effect.gen(function* () {
+			const callable = () => undefined;
+			callable.value = "kept";
+			const key = Symbol("own-key");
+			const cases: ReadonlyArray<readonly [unknown, unknown]> = [
+				["", { version: 2 }],
+				["ab", { 0: "a", 1: "b", version: 2 }],
+				["\uD83D\uDE00", { 0: "\uD83D", 1: "\uDE00", version: 2 }],
+				[{ value: "kept", version: 1, [key]: true }, { value: "kept", version: 2, [key]: true }],
+				[["kept"], { 0: "kept", version: 2 }],
+				[callable, { value: "kept", version: 2 }],
+				[Symbol("primitive"), { version: 2 }],
+				[1n, { version: 2 }],
+				[1, { version: 2 }],
+				[true, { version: 2 }],
+				[null, { version: 2 }],
+				[undefined, { version: 2 }],
+			];
+			for (const [raw, expected] of cases) {
+				assert.deepStrictEqual(yield* VersionAccess.default.set(raw, 2), expected);
+			}
 		}),
 	);
 });

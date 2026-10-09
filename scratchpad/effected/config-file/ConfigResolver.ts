@@ -340,7 +340,7 @@ const rootAnchored = (
 const isGitRoot: (
 	dir: string,
 ) => Effect.Effect<boolean, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> =
-	Effect.fn("isGitRoot")(function* (dir: string) {
+	Effect.fnUntraced(function* (dir: string) {
 		const fs = yield* FileSystem.FileSystem;
 		const path = yield* Path.Path;
 		return yield* fs.exists(path.join(dir, ".git"));
@@ -350,7 +350,7 @@ const isGitRoot: (
 const isWorkspaceRoot: (
 	dir: string,
 ) => Effect.Effect<boolean, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> =
-	Effect.fn("isWorkspaceRoot")(function* (dir: string) {
+	Effect.fnUntraced(function* (dir: string) {
 		const fs = yield* FileSystem.FileSystem;
 		const path = yield* Path.Path;
 		if (yield* fs.exists(path.join(dir, "pnpm-workspace.yaml"))) return true;

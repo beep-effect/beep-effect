@@ -1,5 +1,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -19,7 +21,7 @@ const $I = $ScratchpadId.create("effected/config-file/ConfigMigration");
  */
 export class ConfigMigrationError extends S.TaggedError<ConfigMigrationError>($I`ConfigMigrationError`)("ConfigMigrationError", {
 	/** The target version of the step that failed. `0` when reading the version failed. */
-	version: S.Finite.annotateKey({ description: "The target version of the step that failed. `0` when reading the version failed." }),
+	version: S.declare(P.isNumber).annotateKey({ description: "The target version of the step that failed. `0` when reading the version failed." }),
 	/** The name of the step that failed; empty when reading the version failed. */
 	name: S.String.annotateKey({ description: "The name of the step that failed; empty when reading the version failed." }),
 	/** Which stage of a migration step failed. */
@@ -74,7 +76,7 @@ const defaultVersionAccess = {
 			? Effect.succeed(version)
 			: Effect.fail(VersionAccessError.make({ message: "version field is missing or not a number" }));
 	},
-	set: (raw: unknown, version: number) => Effect.succeed({ ...(P.isObjectKeyword(raw) ? raw : P.isString(raw) ? Str.split(raw, "") : {}), version }),
+	set: (raw: unknown, version: number) => Effect.succeed({ ...(P.isObjectKeyword(raw) ? raw : P.isString(raw) && Str.isNonEmpty(raw) ? Str.split(raw, "") : {}), version }),
 };
 
 /** Reads and writes a top-level `version` field. @public */
@@ -113,7 +115,7 @@ const runPhase = <A, E>(
 // Implementation of ConfigMigration.make; the public contract lives on the static.
 const make: (options: ConfigMigrationOptions) => ConfigCodec<ConfigCodecError | ConfigMigrationError> = <EM, EV>(options: ConfigMigrationOptions<EM, EV>): ConfigCodec<ConfigCodecError | ConfigMigrationError> => {
 	const access = options.versionAccess ?? VersionAccess.default;
-	const sorted = [...options.migrations].sort((a, b) => a.version - b.version);
+	const sorted = A.sort(options.migrations, Order.mapInput(Order.Number, (migration: ConfigFileMigration<EM>) => migration.version));
 
 	return {
 		name: options.codec.name,

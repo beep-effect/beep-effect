@@ -245,7 +245,19 @@ None.
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — The lab uses Effect Record, Array, Order and DateTime helpers instead of native runtime operations, including a recorded change to migration ordering around NaN. (scratchpad/test/config-file/ConfigMigration.test.ts:43; scratchpad/test/config-file/MergeStrategy.test.ts:132,171,209)
+- **tagged-errors** — The lab uses schema-tagged version-access and short-ciphertext causes instead of native Error causes while preserving their messages and failure phases. (scratchpad/test/config-file/ConfigMigration.test.ts:111,295; scratchpad/test/config-file/EncryptedCodec.test.ts:72,83)
+- **schema-first** — The lab uses schema JSON boundaries and schema-derived error guards, changing native JSON causes and rejecting top-level undefined serialization. (scratchpad/test/config-file/JsonCodec.test.ts:28,40; scratchpad/test/config-file/JsoncCodec.test.ts:59; scratchpad/test/config-file/ConfigCodecPath.test.ts:53; scratchpad/test/config-file/EncryptedCodec.test.ts:133; scratchpad/test/config-file/ConfigMigration.test.ts:123)
+- **numeric-domains** — The lab gives numeric test fixtures and examples finite domains instead of Schema.Number while retaining the upstream numeric domain for migration errors. (scratchpad/test/config-file/ConfigFile.test.ts:18; scratchpad/test/config-file/ConfigFileEncode.test.ts:35; scratchpad/test/config-file/ConfigProvider.test.ts:18; scratchpad/test/config-file/MergeStrategy.test.ts:152,184)
+- **type-safety** — The lab replaces unsafe casts with typed unions, nonempty-array and value guards, routing intentional wrong-input tests through the sanctioned helper. (scratchpad/test/config-file/ConfigFileEncode.test.ts:103; scratchpad/test/config-file/ConfigEvent.test.ts:310; scratchpad/test/config-file/ConfigMigration.test.ts:194; scratchpad/test/config-file/MergeStrategy.test.ts:158,182)
+- **tsgo-diagnostics** — The lab adds pipeable overloads, schema .make construction, deterministic test keys and a diagnostic-compatible migration version schema to the upstream API shapes. (module suite scratchpad/test/config-file/**)
+- **effect-first** — The lab wraps reusable generators with Effect.fn or Effect.fnUntraced and uses direct Effect helpers instead of the upstream callback shapes. (module suite scratchpad/test/config-file/**)
+- **effect-imports** — The lab source and tests use dedicated effect/* imports and canonical aliases instead of the upstream root barrel imports. (module suite scratchpad/test/config-file/**)
+- **identity-annotations** — The lab uses composed @beep/identity schema and service identities plus annotations instead of upstream short identities and bare fields. (module suite scratchpad/test/config-file/**)
+- **upstream-bug** — The lab preserves valid own constructor/prototype fields that upstream deepMerge deletes, maintaining schema validity and source priority. (scratchpad/test/config-file/MergeStrategy.test.ts:48,71)
+- **upstream-bug** — The lab checks ownership before reading merge fields, preventing inherited accessor calls that can make the upstream merge throw. (scratchpad/test/config-file/MergeStrategy.test.ts:95)
 
 ### Dependency backlog
 
