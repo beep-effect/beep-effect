@@ -112,7 +112,7 @@ Basis: autonomy charter and corpus-ingestion run-order authorization; operator r
 
 **Question:** Validator score shape?
 
-**Answer:** The field remains named validatorScore for consumer continuity but contains Option<ValidatorAssessment>: conforms Boolean from the actual complete SHACL report, severityCounts with Natural info/warning/violation counts, immutable report reference/digest, shapes digest/version, validator engine/version and claim/data snapshot basis. Counts cover the full retained report; per-claim witnesses remain addressable. A partial run, crash or unavailable validator is None/unavailable, not a nonconformance result.
+**Answer:** The field remains named validatorScore for consumer continuity but contains Option<ValidatorAssessment>: conforms Boolean from the actual complete SHACL report, severityCounts with Natural info/warning/violation counts plus customSeverityCounts, a map from each nonstandard severity IRI to its Natural count, immutable report reference/digest, shapes digest/version, validator engine/version and claim/data snapshot basis. Counts cover the full retained report; per-claim witnesses remain addressable. A partial run, crash or unavailable validator is None/unavailable, not a nonconformance result.
 
 **Rationale:** Recommended: structured evidence over a scalar. Reject a normalized conformance percentage, count-derived probability and confusing the paper graph-validator plausibility with SHACL. Preserve actual sh:conforms; admission policy may interpret severities separately and must not rewrite report semantics. ClaimGateResult alone lacks full report provenance, so this envelope is NET-NEW.
 
@@ -161,7 +161,7 @@ its absence reason in the claim's signal provenance. No field is silently omitte
 | sourceTrust | Option<SourceTrustAssessmentRef> (NET-NEW); referenced SourceTrustAssessment.value uses @beep/schema/UnitInterval | Source-policy assessment before extraction or later scoped reassessment | Policy assessor principal/activity, policy version, source identity/version and predicate/domain/jurisdiction/time scope | None + not-assessed/unavailable/not-applicable/legacy-unknown; no origin-based default | Append assessment; claim pins id/version; supersede through a new event | uncalibrated policy-heuristic by default; calibrated only with declared evaluation target/method/version/artifact/population | NET-NEW; no source trust field in inspected surfaces |
 | sourceAssertionConfidence | Option<SourceAssertionAssessment> (NET-NEW); value uses @beep/schema/UnitInterval | Read the source's declared assertion certainty for this claim | Source author/statement provenance plus measuring producer/activity, method/rubric version and cited expression/span basis | None when source supplies no quantifiable confidence; hedging stays in evidence unless a versioned rubric applies | Append, supersede; never substitute extractor belief | uncalibrated source-declared or rubric-derived; calibrated variant needs evidence and raw-input reference | NET-NEW; no source-assertion field in inspected surfaces |
 | extractorConfidence | Option<ExtractorAssessment> (NET-NEW envelope); value uses @beep/schema/UnitInterval | Claim extraction; later calibration produces a new assessment | Extraction activity, provider/model revision, prompt digest, configuration version, exact claim/span/text basis; reader input provenance | None if producer supplies none; Some(0) only if assessed zero; required legacy span confidence does not justify fabricated metadata | Append, supersede; preserve raw assessment and basis | uncalibrated raw-self-report unless independently calibrated for declared target/population | ExtractionCandidate.confidence/GroundedExtraction.confidence, EvidenceSpan.confidence, NLP Relation.confidence only with matching basis/semantics; no fuzzy similarity mapping |
-| validatorScore | Option<ValidatorAssessment> (NET-NEW), structured conforms Boolean + severityCounts Natural + reportRef/digest | Complete symbolic validation of pinned claim/data snapshot | Validator activity/engine version, shapes version/digest, data/basis digest, report artifact identity | None/unavailable for failure or incomplete run; never substitute false or zero | Append complete reports; supersede on data/shape/engine drift | not-applicable: deterministic constraint conformance, no probability | ClaimGateResult + ClaimGateViolation severity/focus/path/message supply partial adapters; full report/version envelope NET-NEW |
+| validatorScore | Option<ValidatorAssessment> (NET-NEW), structured conforms Boolean + severityCounts {info/warning/violation: Natural, customSeverityCounts: map<severity IRI, Natural>} + reportRef/digest | Complete symbolic validation of pinned claim/data snapshot | Validator activity/engine version, shapes version/digest, data/basis digest, report artifact identity | None/unavailable for failure or incomplete run; never substitute false or zero | Append complete reports; supersede on data/shape/engine drift | not-applicable: deterministic constraint conformance, no probability | ClaimGateResult + ClaimGateViolation severity/focus/path/message supply partial adapters; full report/version envelope NET-NEW |
 | reviewerDisposition | Option<ReviewerAssessment> (NET-NEW envelope); ReviewerDisposition uses NET-NEW named LiteralKit accepted/rejected/abstained | Human review of exact evidence basis | UserPrincipal reviewer, review policy version, reviewedAt, reason and ClaimEvidenceBasis reference/digest; existing disposition reference when justified | None/not-assessed means pending; abstained is Some; stale approval retains accepted history but loses current applicability | Append human decisions; supersede, never erase; staleness derived | not-applicable: decision rather than probability | Current verified ClaimEvidenceReview -> accepted; ClaimDisposition active/rejected/superseded is gate/lifecycle state, never automatic human review |
 
 ### Invariants
@@ -185,7 +185,9 @@ its absence reason in the claim's signal provenance. No field is silently omitte
    lineage is explicit, provenance-bearing and revisable.
 7. validatorScore preserves the complete report's raw conforms and all result
    severities. severityCounts covers info/warning/violation; custom severity IRIs
-   are retained with counts in a keyed extension, never dropped or mapped to zero.
+   are retained in severityCounts.customSeverityCounts, keyed by their full severity
+   IRI with Natural counts, never dropped or mapped to zero. Standard severity
+   results populate their named count only; custom results populate the map only.
    Per-claim results reference their witnesses in the report. Admission policy is
    separately versioned and cannot relabel raw conformance.
 8. A human decision binds its exact basis. Pending and stale are applicability
@@ -227,3 +229,21 @@ are scoped G3 work, not claims of proof made here.
 **Reversal:** Reopen with a dated decision when that trigger fires or supersede
 the field set before scaffold if consumer requirements change. Do not decompose,
 graduate or create a goal packet in this lane.
+
+## 2026-10-09 — Review round 1: custom severity count contract
+
+**Question:** Can the v1 table alone lead G3 to discard custom SHACL severities?
+
+**Answer:** The validatorScore type cell and round-3 answer now explicitly include
+severityCounts.customSeverityCounts, keyed by full nonstandard severity IRI with
+Natural counts. Standard results count only in info/warning/violation; custom
+results count only in the map. Every complete-report result is retained once.
+
+**Rationale:** Recommended: make the already ratified invariant 7 visible in the
+consumer's table. Reject a closed three-key shape or dropping custom results.
+This clarification changes no signal meaning and does not change contract v1.
+The reviewer raised this P2 on PR #1567, DECISIONS table line 164.
+
+**Reversal:** Supersede the count representation with a later dated contract
+before G3 scaffold; after freeze, migrate it while retaining all raw report
+results and severity IRIs.

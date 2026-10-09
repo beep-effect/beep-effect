@@ -97,3 +97,15 @@ hosted-parity: test-tsgo: not run (docs-only, no TS or package touched); docgen 
 handoff: explorations/evidence-source-policy-calibration/history/handoffs/evidence-policy-2026-10-09.md
 open items: orchestrator owns merge under S11 and inherited-red consolidation; worker awaits bounded readiness monitor and leaves no owned running gates at final; no unresolved field-design questions; G3 implements/calibrates/tests v1; every autonomy decision has its reversal in DECISIONS (supersede before scaffold, semantic migration after freeze); packet parked at shape, reopen at decompose when oppold-corpus-semantic-ingestion-v2 is scaffolded
 final 2998bfa697bb
+
+## Review round 1 — custom severities
+
+A human P2 thread on PR #1567 noted that the validatorScore table cell and the
+round-3 answer could be read as closed three-key counts despite invariant 7.
+The clarification explicitly names severityCounts.customSeverityCounts in both
+places and defines full-IRI keys, Natural counts and no double counting with
+standard severities. The dated decision records its reversal. All review-round
+1 findings are addressed in one clarification wave; no schema/code changed.
+The Yeet reply will link the published fix and resolve the thread. The prior
+report remains a snapshot of the head it names, not a claim that review stayed
+empty forever. Final PR tip and terminal readiness are in the worker report.
