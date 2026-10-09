@@ -1,7 +1,7 @@
 // @effect-diagnostics asyncFunction:skip-file globalTimers:skip-file newPromise:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import * as S from "effect/Schema";
-import type { ProcessGuardHost, ProcessGuardOptions, ProcessGuardPolicy } from "../../effected/engine/guard.ts";
+import type { ProcessGuardHost, ProcessGuardOptions } from "../../effected/engine/guard.ts";
 import { ProcessGuard } from "../../effected/engine/guard.ts";
 
 // Compile-time: Node's own `process` satisfies the guard's structural host.
@@ -22,23 +22,37 @@ class ExitCalled extends S.TaggedError<ExitCalled>()("ExitCalled", {
 
 /** A host double: listeners are called by the test, exit throws so nothing after it runs. */
 const fakeHost = () => {
-	const listeners: Record<string, (...args: ReadonlyArray<unknown>) => void> = {};
+	const listeners: {
+		uncaughtException?: (error: Error, origin: string) => void;
+		unhandledRejection?: (reason: unknown) => void;
+	} = {};
 	const stderr: Array<string> = [];
 	const exits: Array<number | undefined> = [];
 	const host: ProcessGuardHost = {
-		on: (event: string, listener: (...args: ReadonlyArray<unknown>) => void) => {
-			listeners[event] = listener;
+		on: (...[event, listener]:
+			| [event: "uncaughtException", listener: (error: Error, origin: string) => void]
+			| [event: "unhandledRejection", listener: (reason: unknown) => void]) => {
+			if (event === "uncaughtException") listeners.uncaughtException = listener;
+			else listeners.unhandledRejection = listener;
 		},
-		emit: (event: string, ...args: ReadonlyArray<unknown>) => listeners[event]?.(...args),
+		emit: (...[event, value, detail]:
+			| [event: "uncaughtException", error: Error, origin: "uncaughtException" | "unhandledRejection"]
+			| [event: "unhandledRejection", reason: unknown, promise: Promise<unknown>]) => {
+			if (event === "uncaughtException") listeners.uncaughtException?.(value, detail);
+			else listeners.unhandledRejection?.(value);
+		},
 		stderr: { write: (chunk: string) => stderr.push(chunk) },
 		exit: (code?: number): never => {
 			exits.push(code);
 			throw ExitCalled.make({ code });
 		},
-	} as ProcessGuardHost;
-	const fire = (event: "uncaughtException" | "unhandledRejection", value: unknown) => {
+	};
+	const fire = (...[event, value]:
+		| [event: "uncaughtException", value: Error]
+		| [event: "unhandledRejection", value: unknown]) => {
 		try {
-			listeners[event]?.(value, "uncaughtException");
+			if (event === "uncaughtException") listeners.uncaughtException?.(value, "uncaughtException");
+			else listeners.unhandledRejection?.(value);
 		} catch (error) {
 			if (!S.is(ExitCalled)(error)) throw error;
 		}
@@ -248,7 +262,7 @@ describe("ProcessGuard.run", () => {
 		{ kind: "unhandledRejection", policy: { onUncaught: "exit", onRejection: "log" } },
 	] as const;
 	for (const { kind, policy } of injected) {
-		const mode = kind === "uncaughtException" ? policy.onUncaught : (policy as ProcessGuardPolicy).onRejection;
+		const mode = kind === "uncaughtException" ? policy.onUncaught : "onRejection" in policy ? policy.onRejection : undefined;
 		const exitsAtLoad = mode !== "log";
 		const exitsConnected = mode === "exit";
 

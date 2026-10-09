@@ -1,5 +1,3 @@
-// These process guards install and inject native crashes before Effect loads, preserving host uncaught-error timing.
-// @effect-diagnostics asyncFunction:skip-file newPromise:skip-file globalTimers:skip-file
 // No imports at all: this module is evaluated before anything a crash guard
 // protects, so it must not load `effect` or any other package at runtime.
 
@@ -117,7 +115,7 @@ export interface ProcessGuardOptions {
 	 * For a test of the guards themselves: raise one stray `kind` at `at`, so
 	 * both halves of a policy can be driven end to end in a real process.
 	 *
-	 * @remarks
+	 * **Details**
 	 * - `"load"` raises it once both listeners are installed and before
 	 *   `load` is called, then waits for the guard to handle it: `load` is
 	 *   not called until the listener has run. If a test double's `exit`
@@ -133,13 +131,13 @@ export interface ProcessGuardOptions {
 	 *   there is dropped.
 	 *
 	 * **The `"connected"` report is asynchronous.** It is raised on a later
-	 * tick, a `setTimeout(0)` after `markConnected`, so it can land after the
+	 * tick, a `setImmediate` after `markConnected`, so it can land after the
 	 * first responses the server sends: a test that reads stderr once, right
 	 * after its first response, can see nothing. Wait for the report (with
 	 * `McpProcess.stderrUntil` from `@effected/mcp/testing`, for an MCP
 	 * server) rather than reading it once.
 	 *
-	 * Either is raised only through `host.emit`, on a `setTimeout(0)` tick,
+	 * Either is raised only through `host.emit`, on a `setImmediate` tick,
 	 * never as a real throw or rejection, so the guard's listeners handle it
 	 * the same way under the real `process` and under a test double. Under
 	 * `process`, every listener registered for the event sees it, not only
@@ -240,75 +238,91 @@ export class ProcessGuard {
 	};
 
 	/** Install the guards, then run `load`. Resolves once `load` has resolved. */
-	static readonly run = async (options: ProcessGuardOptions): Promise<void> => {
-		const { host, label } = options;
-		const onUncaught = options.policy?.onUncaught ?? "exit";
-		const onRejection = options.policy?.onRejection ?? "exit";
-		let connected = false;
-		let format = fallbackFormat;
-		const describe = (error: unknown): string => {
-			try {
-				return format(error);
-			} catch {
+	static readonly run = (options: ProcessGuardOptions): Promise<void> => {
+		// A plain function over an explicit chain, with an async function's contract: everything up to the first wait
+		// runs on the caller's tick, and a throw anywhere becomes a rejection, never a synchronous throw.
+		try {
+			const { host, label } = options;
+			const onUncaught = options.policy?.onUncaught ?? "exit";
+			const onRejection = options.policy?.onRejection ?? "exit";
+			let connected = false;
+			let format = fallbackFormat;
+			const describe = (error: unknown): string => {
 				try {
-					return fallbackFormat(error);
+					return format(error);
 				} catch {
-					return "<unformattable error value>";
+					try {
+						return fallbackFormat(error);
+					} catch {
+						return "<unformattable error value>";
+					}
 				}
-			}
-		};
-		const exits = (mode: "exit" | "exitBeforeConnect" | "log"): boolean =>
-			mode === "exit" || (mode === "exitBeforeConnect" && !connected);
+			};
+			const exits = (mode: "exit" | "exitBeforeConnect" | "log"): boolean =>
+				mode === "exit" || (mode === "exitBeforeConnect" && !connected);
 
-		host.on("uncaughtException", (error, origin) => {
-			host.stderr.write(`${label}: uncaughtException (${origin}): ${describe(error)}\n`);
-			if (exits(onUncaught)) host.exit(1);
-		});
-		host.on("unhandledRejection", (reason) => {
-			host.stderr.write(`${label}: unhandledRejection: ${describe(reason)}\n`);
-			if (exits(onRejection)) host.exit(1);
-		});
+			host.on("uncaughtException", (error, origin) => {
+				host.stderr.write(`${label}: uncaughtException (${origin}): ${describe(error)}\n`);
+				if (exits(onUncaught)) host.exit(1);
+			});
+			host.on("unhandledRejection", (reason) => {
+				host.stderr.write(`${label}: unhandledRejection: ${describe(reason)}\n`);
+				if (exits(onRejection)) host.exit(1);
+			});
 
-		const inject = options.injectCrash;
-		const injectKind = isInjectedKind(inject?.kind) ? inject.kind : undefined;
-		if (inject?.at === "load" && injectKind !== undefined) {
-			// Settled either way, so a host whose exit throws can never leave `run` waiting.
-			await new Promise<void>((resolve, reject) => {
-				setTimeout(() => {
+			const inject = options.injectCrash;
+			const injectKind = isInjectedKind(inject?.kind) ? inject.kind : undefined;
+
+			const control: ProcessGuardControl = {
+				markConnected: () => {
+					if (connected) return;
+					connected = true;
+					if (inject?.at === "connected" && injectKind !== undefined) {
+						setImmediate(() => {
+							try {
+								emitInjected(host, injectKind);
+							} catch {
+								// Only a test double's `exit` throws here; a real one never returns.
+							}
+						});
+					}
+				},
+				useFormat: (next) => {
+					format = next;
+				},
+			};
+
+			const startupFailed = (error: unknown): void => {
+				host.stderr.write(`${label}: startup failed: ${describe(error)}\n`);
+				host.exit(1);
+			};
+			const start = (): Promise<void> => {
+				let loading: Promise<unknown>;
+				try {
+					loading = Promise.resolve(options.load(control));
+				} catch (error) {
+					startupFailed(error);
+					return Promise.resolve();
+				}
+				return loading.then(() => undefined, startupFailed);
+			};
+
+			if (inject?.at === "load" && injectKind !== undefined) {
+				// Settled either way, so a host whose exit throws can never leave `run` waiting.
+				const injected = Promise.withResolvers<void>();
+				setImmediate(() => {
 					try {
 						emitInjected(host, injectKind);
-						resolve();
+						injected.resolve();
 					} catch (error) {
-						reject(error);
+						injected.reject(error);
 					}
-				}, 0);
-			});
-		}
-
-		const control: ProcessGuardControl = {
-			markConnected: () => {
-				if (connected) return;
-				connected = true;
-				if (inject?.at === "connected" && injectKind !== undefined) {
-					setTimeout(() => {
-						try {
-							emitInjected(host, injectKind);
-						} catch {
-							// Only a test double's `exit` throws here; a real one never returns.
-						}
-					}, 0);
-				}
-			},
-			useFormat: (next) => {
-				format = next;
-			},
-		};
-
-		try {
-			await options.load(control);
+				});
+				return injected.promise.then(start);
+			}
+			return start();
 		} catch (error) {
-			host.stderr.write(`${label}: startup failed: ${describe(error)}\n`);
-			host.exit(1);
+			return Promise.reject(error);
 		}
 	};
 }
