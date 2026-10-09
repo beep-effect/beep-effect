@@ -113,3 +113,16 @@
   fixture response constructor. No suppressions or baseline edits.
 - Prevention: run fallow after the initial schema/service implementation rather
   than after the broad dependent docgen proof.
+
+## 2026-10-09 — publish catches integration policies after package qualification
+
+- Activity: first PR 1 publish; nothing pushed on refusal.
+- Evidence: cache-policy flagged seven new-app tasks; goals doctor rejected
+  phase token `done`; effect-vitest found eleven introduced fixture judgments.
+  Schema-first also flagged two untouched Accounts schemas; thirteen Vitest
+  findings are in untouched main files, attributed for S11.
+- Remediation: canonical `complete`, scoped app-only cache review via the owner,
+  harness-owned filesystem layer, bounded fixture hook budgets and canonical
+  Option assertion. Native filesystem judgment records why real permissions,
+  lock and export behavior need the platform layer; inherited rows stay open.
+- Prevention: run cheap policy integration before long dependent docgen closure.

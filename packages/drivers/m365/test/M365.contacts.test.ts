@@ -142,7 +142,7 @@ describe("contact verbs", () => {
   for (const appOnly of [false, true]) {
     const userId = appOnly ? O.some("fixture-mailbox") : O.none();
     const route = appOnly ? `${base}/users/fixture-mailbox` : `${base}/me`;
-    it.layer(layer(appOnly))((it) => {
+    it.layer(layer(appOnly), { timeout: "5 seconds" })((it) => {
       it.effect(
         `creates and deletes contacts and folders on ${appOnly ? "app-only" : "delegated"}`,
         Effect.fnUntraced(function* () {
@@ -195,7 +195,7 @@ describe("contact verbs", () => {
       );
     });
 
-    it.layer(layer(appOnly))((it) => {
+    it.layer(layer(appOnly), { timeout: "5 seconds" })((it) => {
       it.effect(
         `lists default, folder and child resources on ${appOnly ? "app-only" : "delegated"}`,
         Effect.fnUntraced(function* () {
@@ -230,7 +230,7 @@ describe("contact verbs", () => {
       [503, false, "ambiguous write"],
       [200, true, "ambiguous write"],
     ] satisfies ReadonlyArray<readonly [number, boolean, string]>) {
-      it.layer(layer(appOnly, status, transport, 3))((it) => {
+      it.layer(layer(appOnly, status, transport, 3), { timeout: "5 seconds" })((it) => {
         it.effect(
           `never replays ${appOnly ? "app-only" : "delegated"} contact POST after ${reason} ${status}`,
           Effect.fnUntraced(function* () {
@@ -245,7 +245,7 @@ describe("contact verbs", () => {
       });
     }
   }
-  it.layer(layer(true))((it) => {
+  it.layer(layer(true), { timeout: "5 seconds" })((it) => {
     it.effect(
       "accepts same-mailbox continuation with equivalent path encoding",
       Effect.fnUntraced(function* () {
@@ -261,7 +261,7 @@ describe("contact verbs", () => {
       })
     );
   });
-  it.layer(layer(true))((it) => {
+  it.layer(layer(true), { timeout: "5 seconds" })((it) => {
     it.effect(
       "refuses all app-only /me addressing and cross-mailbox pagination",
       Effect.fnUntraced(function* () {

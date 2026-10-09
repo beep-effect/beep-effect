@@ -185,6 +185,20 @@ This spec binds to them without restating.
   could repeat between sessions. Reversal: remove the override only if the
   live test runner always supplies the wall clock.
 
+- **2026-10-09 qualification integration:** the manifest encodes completed
+  phases as `complete`, the canonical `GoalPhaseStatus` token. The brief's
+  prose `done` means the same state; no goal schema changes are needed.
+  Reversal: migrate the token only if the canonical schema changes.
+- **2026-10-09 new-app cache review:** record the seven generated app tasks
+  through `beep cache baseline` with a review restricted to this app, preserving
+  every other subject and granting no cache qualification. Reversal: delete the
+  app with its owner command and re-record its removal.
+- **2026-10-09 native filesystem review:** filesystem mode, writer-lock and
+  private export tests retain real FileSystem/Path/Crypto under `it.layer`.
+  Record only that EV010 judgment through the inventory owner writer; do not
+  baseline inherited findings. Reversal: remove the review if the tests stop
+  exercising native filesystem behavior.
+
 ## Acceptance Criteria
 
 - [x] Either auth lane injects into the unchanged REST service boundary in

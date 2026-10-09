@@ -11,6 +11,7 @@ import {
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -59,22 +60,22 @@ const stored = (id: string, name: string, address: string, marker: O.Option<stri
 const empty = MailboxInventory.make({ folders: [], contacts: [] });
 const csv = "First Name,Last Name,Company,E-mail Address\nFixture,Person,Fixture company,person@example.test\n";
 
-const withFiles = <A, E, R>(program: (root: string) => Effect.Effect<A, E, R>) =>
-  Effect.scoped(
-    BunServices.layer.pipe(
-      Layer.build,
-      Effect.flatMap((context) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const base = yield* path.fromFileUrl(new URL("../../../.beep/m365-contacts/tests", import.meta.url));
-          yield* fs.makeDirectory(base, { recursive: true, mode: 0o700 });
-          const root = yield* fs.makeTempDirectoryScoped({ directory: base, prefix: "contacts-" });
-          return yield* program(root);
-        }).pipe(Effect.provideContext(context))
-      )
-    )
-  );
+const withFiles = Effect.fnUntraced(function* <A, E, R>(program: (root: string) => Effect.Effect<A, E, R>) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const base = yield* path.fromFileUrl(new URL("../../../.beep/m365-contacts/tests", import.meta.url));
+  yield* fs.makeDirectory(base, { recursive: true, mode: 0o700 });
+  const root = yield* fs.makeTempDirectoryScoped({ directory: base, prefix: "contacts-" });
+  return yield* program(root);
+});
+
+const withWriterLock = Effect.fnUntraced(function* <A, E, R>(
+  state: Effect.Success<ReturnType<typeof makeContactsState>>,
+  program: Effect.Effect<A, E, R>
+) {
+  yield* state.lock;
+  return yield* program;
+}, Effect.scoped);
 
 const overJob = Effect.fn("overJob")(function* <A, E>(
   root: string,
@@ -206,215 +207,222 @@ describe("contact seeding", () => {
     const plan = planContacts([source], 0, inventoryOf([stored("other", "Other fixture", "info@example.test")]), []);
     expect(reportPlan("fixture-run", plan.rows, 0).Create).toBe(1);
   });
-  it.effect("deduplicates source bytes and rejects VCF outside census", () =>
-    withFiles(
-      Effect.fnUntraced(function* (root) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const one = path.join(root, "one.csv");
-        const two = path.join(root, "two.csv");
-        const vcf = path.join(root, "fixture.vcf");
-        yield* fs.writeFileString(one, csv);
-        yield* fs.writeFileString(two, csv);
-        yield* fs.writeFileString(
-          vcf,
-          "BEGIN:VCARD\nVERSION:4.0\nFN:Fixture Person\nEMAIL:person@example.test\nEND:VCARD\n"
-        );
-        const census = yield* loadContacts(ContactInputs.make({ csv: [one, two], vcf: [vcf] }), true);
-        expect(census.contacts).toHaveLength(1);
-        expect(O.getOrThrow(census.census)).toMatchObject({ csvNormalized: 1, vcfCards: 1, vcfOverlap: 1, vcfOnly: 0 });
-        expect(O.getOrThrow(census.census).csvInputs[0]?.inputsSharingHash).toBe(2);
-        expect(yield* Effect.flip(loadContacts(ContactInputs.make({ csv: [one], vcf: [vcf] }), false))).toMatchObject({
-          reason: "input",
-        });
-      })
-    )
-  );
-  it.effect("applies once, records marker/version, plans zero creates and supports both undo dry runs", () =>
-    withFiles(
-      Effect.fnUntraced(function* (root) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const input = path.join(root, "fixture.csv");
-        yield* fs.writeFileString(input, csv);
-        const inputs = ContactInputs.make({ csv: [input], vcf: [] });
-        const run = yield* overJob(
-          root,
-          empty,
-          ContactSeeding.use(
-            Effect.fnUntraced(function* (job) {
-              const applied = yield* job.apply(inputs, true);
-              expect(applied.created).toBe(1);
-              expect(yield* job.dryRun(inputs, false, false)).toMatchObject({ Create: 0, SkipAlreadySeeded: 1 });
-              const second = yield* job.apply(inputs, true);
-              expect(second.created).toBe(0);
-              expect(yield* job.undo(O.some(applied.runId), false, true, false)).toMatchObject({
-                deleted: 1,
-                edited: 0,
-              });
-              expect(yield* job.undo(O.none(), true, true, false)).toMatchObject({ deleted: 1 });
-              yield* job.undo(O.some(applied.runId), false, false, true);
-              return applied;
-            })
-          )
-        );
-        expect(run.created).toBe(1);
-        expect(run.deleted).toHaveLength(1);
-        expect(run.inventory.contacts).toHaveLength(0);
-        expect(run.inventory.folders).toHaveLength(0);
-        expect(run.journals[0]?.contacts).toHaveLength(1);
-      })
-    )
-  );
-  it.effect("per-run undo preserves a changed contact and category undo reports it", () =>
-    withFiles(
-      Effect.fnUntraced(function* (root) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const source = contactOf();
-        const journal = RunJournal.make({
-          runId: "fixture-run",
-          folderCreated: false,
-          contacts: [CreatedContact.make({ sourceKey: source.contactId, contactId: "edited", changeKey: "version-1" })],
-        });
-        yield* fs.makeDirectory(path.join(root, "state"));
-        yield* fs.writeFileString(
-          path.join(root, "state", "fixture-run.json"),
-          yield* S.encodeEffect(S.fromJsonString(RunJournal))(journal)
-        );
-        const edited = GraphContact.make({
-          ...stored("edited", "Edited fixture", "edited@example.test", O.some(journal.runId)),
-          changeKey: O.some("version-2"),
-        });
-        const result = yield* overJob(
-          root,
-          inventoryOf([edited]),
-          ContactSeeding.use(
-            Effect.fnUntraced(function* (job) {
-              expect(yield* job.undo(O.some(journal.runId), false, true, false)).toMatchObject({
-                deleted: 0,
-                edited: 1,
-              });
-              expect(yield* job.undo(O.none(), true, true, false)).toMatchObject({ deleted: 1, edited: 1 });
-              expect(yield* job.undo(O.some(journal.runId), false, false, true)).toMatchObject({
-                deleted: 0,
-                edited: 1,
-              });
-            })
-          )
-        );
-        expect(result.deleted).toHaveLength(0);
-        expect(result.inventory.contacts).toHaveLength(1);
-      })
-    )
-  );
-  it.effect("refuses untracked tagged contacts and unconfirmed apply before writes", () =>
-    withFiles(
-      Effect.fnUntraced(function* (root) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const input = path.join(root, "fixture.csv");
-        yield* fs.writeFileString(input, csv);
-        const inputs = ContactInputs.make({ csv: [input], vcf: [] });
-        const run = yield* overJob(
-          root,
-          inventoryOf([stored("untracked", "Other fixture", "other@example.test", O.some("unknown-run"))]),
-          ContactSeeding.use(
-            Effect.fnUntraced(function* (job) {
-              expect(yield* Effect.flip(job.apply(inputs, false))).toMatchObject({ reason: "confirmation" });
-              expect(yield* Effect.flip(job.apply(inputs, true))).toMatchObject({ reason: "untracked-tagged" });
-            })
-          )
-        );
-        expect(run.created).toBe(0);
-        expect(run.journals).toHaveLength(0);
-      })
-    )
-  );
-  it.effect("reconciles an ambiguous create by marker and stops without replay", () =>
-    withFiles(
-      Effect.fnUntraced(function* (root) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const input = path.join(root, "fixture.csv");
-        yield* fs.writeFileString(input, csv);
-        const run = yield* overJob(
-          root,
-          empty,
-          ContactSeeding.use((job) => Effect.flip(job.apply(ContactInputs.make({ csv: [input], vcf: [] }), true))),
-          true
-        );
-        expect(run.result).toMatchObject({ reason: "ambiguous-write" });
-        expect(run.created).toBe(1);
-        expect(run.journals[0]?.pendingSourceKey).toEqual(O.none());
-        expect(run.journals[0]?.contacts).toHaveLength(1);
-      })
-    )
-  );
-  it.effect("exports full private Graph JSON once with restrictive permissions and refuses checkout paths", () =>
-    withFiles(
-      Effect.fnUntraced(function* (root) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const wire = { id: "fixture-id", personalNotes: "Synthetic preserved field" };
-        const inventory = inventoryOf([GraphContact.make({ id: "fixture-id", rawJson: O.some(wire) })]);
-        const out = path.join(root, "export", "contacts.jsonl");
-        const run = yield* overJob(
-          root,
-          inventory,
-          ContactSeeding.use(
-            Effect.fnUntraced(function* (job) {
-              const receipt = yield* job.export(out);
-              expect(receipt.count).toBe(1);
-              expect(receipt.sha256).toHaveLength(64);
-              const content = yield* S.decodeEffect(S.fromJsonString(S.Record(S.String, S.Unknown)))(
-                yield* fs.readFileString(out)
-              );
-              expect(content).toMatchObject(wire);
-              expect((yield* fs.stat(out)).mode & 0o777).toBe(0o600);
-              expect((yield* fs.stat(path.dirname(out))).mode & 0o777).toBe(0o700);
-              expect(yield* Effect.flip(job.export(out))).toMatchObject({ reason: "unsafe-export" });
-              expect(yield* Effect.flip(job.export(path.join(root, "checkout", "bad.jsonl")))).toMatchObject({
-                reason: "unsafe-export",
-              });
-              return receipt;
-            })
-          )
-        );
-        expect(run.created).toBe(0);
-      })
-    )
-  );
-  it.effect("category undo reports a missing edit baseline without claiming a confirmed edit", () =>
-    withFiles(
-      Effect.fnUntraced(function* (root) {
-        const marked = stored("untracked", "Fixture", "fixture@example.test", O.some("missing-journal"));
-        const result = yield* overJob(
-          root,
-          inventoryOf([marked]),
-          ContactSeeding.use((job) => job.undo(O.none(), true, true, false))
-        );
-        expect(result.result).toMatchObject({ deleted: 1, edited: 0, unverifiable: 1 });
-        expect(result.deleted).toHaveLength(0);
-      })
-    )
-  );
-  it.effect("locks writers exclusively and validates malformed journals", () =>
-    withFiles(
-      Effect.fnUntraced(function* (root) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const state = yield* makeContactsState(path.join(root, "state"));
-        yield* Effect.scoped(
-          Effect.gen(function* () {
-            yield* state.lock;
-            expect(yield* state.lock.pipe(Effect.scoped, Effect.flip)).toMatchObject({ reason: "locked" });
-          })
-        );
-        yield* Effect.scoped(state.lock);
-        yield* fs.writeFileString(path.join(root, "state", "bad.json"), "not-json");
-        expect(yield* Effect.flip(state.journals)).toMatchObject({ reason: "state" });
-      })
-    )
-  );
+  it.layer(BunServices.layer, { timeout: "5 seconds" })((it) => {
+    it.effect("deduplicates source bytes and rejects VCF outside census", () =>
+      withFiles(
+        Effect.fnUntraced(function* (root) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const one = path.join(root, "one.csv");
+          const two = path.join(root, "two.csv");
+          const vcf = path.join(root, "fixture.vcf");
+          yield* fs.writeFileString(one, csv);
+          yield* fs.writeFileString(two, csv);
+          yield* fs.writeFileString(
+            vcf,
+            "BEGIN:VCARD\nVERSION:4.0\nFN:Fixture Person\nEMAIL:person@example.test\nEND:VCARD\n"
+          );
+          const census = yield* loadContacts(ContactInputs.make({ csv: [one, two], vcf: [vcf] }), true);
+          expect(census.contacts).toHaveLength(1);
+          expect(O.getOrThrow(census.census)).toMatchObject({
+            csvNormalized: 1,
+            vcfCards: 1,
+            vcfOverlap: 1,
+            vcfOnly: 0,
+          });
+          expect(O.getOrThrow(census.census).csvInputs[0]?.inputsSharingHash).toBe(2);
+          expect(yield* Effect.flip(loadContacts(ContactInputs.make({ csv: [one], vcf: [vcf] }), false))).toMatchObject(
+            {
+              reason: "input",
+            }
+          );
+        })
+      )
+    );
+    it.effect("applies once, records marker/version, plans zero creates and supports both undo dry runs", () =>
+      withFiles(
+        Effect.fnUntraced(function* (root) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const input = path.join(root, "fixture.csv");
+          yield* fs.writeFileString(input, csv);
+          const inputs = ContactInputs.make({ csv: [input], vcf: [] });
+          const run = yield* overJob(
+            root,
+            empty,
+            ContactSeeding.use(
+              Effect.fnUntraced(function* (job) {
+                const applied = yield* job.apply(inputs, true);
+                expect(applied.created).toBe(1);
+                expect(yield* job.dryRun(inputs, false, false)).toMatchObject({ Create: 0, SkipAlreadySeeded: 1 });
+                const second = yield* job.apply(inputs, true);
+                expect(second.created).toBe(0);
+                expect(yield* job.undo(O.some(applied.runId), false, true, false)).toMatchObject({
+                  deleted: 1,
+                  edited: 0,
+                });
+                expect(yield* job.undo(O.none(), true, true, false)).toMatchObject({ deleted: 1 });
+                yield* job.undo(O.some(applied.runId), false, false, true);
+                return applied;
+              })
+            )
+          );
+          expect(run.created).toBe(1);
+          expect(run.deleted).toHaveLength(1);
+          expect(run.inventory.contacts).toHaveLength(0);
+          expect(run.inventory.folders).toHaveLength(0);
+          expect(run.journals[0]?.contacts).toHaveLength(1);
+        })
+      )
+    );
+    it.effect("per-run undo preserves a changed contact and category undo reports it", () =>
+      withFiles(
+        Effect.fnUntraced(function* (root) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const source = contactOf();
+          const journal = RunJournal.make({
+            runId: "fixture-run",
+            folderCreated: false,
+            contacts: [
+              CreatedContact.make({ sourceKey: source.contactId, contactId: "edited", changeKey: "version-1" }),
+            ],
+          });
+          yield* fs.makeDirectory(path.join(root, "state"));
+          yield* fs.writeFileString(
+            path.join(root, "state", "fixture-run.json"),
+            yield* S.encodeEffect(S.fromJsonString(RunJournal))(journal)
+          );
+          const edited = GraphContact.make({
+            ...stored("edited", "Edited fixture", "edited@example.test", O.some(journal.runId)),
+            changeKey: O.some("version-2"),
+          });
+          const result = yield* overJob(
+            root,
+            inventoryOf([edited]),
+            ContactSeeding.use(
+              Effect.fnUntraced(function* (job) {
+                expect(yield* job.undo(O.some(journal.runId), false, true, false)).toMatchObject({
+                  deleted: 0,
+                  edited: 1,
+                });
+                expect(yield* job.undo(O.none(), true, true, false)).toMatchObject({ deleted: 1, edited: 1 });
+                expect(yield* job.undo(O.some(journal.runId), false, false, true)).toMatchObject({
+                  deleted: 0,
+                  edited: 1,
+                });
+              })
+            )
+          );
+          expect(result.deleted).toHaveLength(0);
+          expect(result.inventory.contacts).toHaveLength(1);
+        })
+      )
+    );
+    it.effect("refuses untracked tagged contacts and unconfirmed apply before writes", () =>
+      withFiles(
+        Effect.fnUntraced(function* (root) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const input = path.join(root, "fixture.csv");
+          yield* fs.writeFileString(input, csv);
+          const inputs = ContactInputs.make({ csv: [input], vcf: [] });
+          const run = yield* overJob(
+            root,
+            inventoryOf([stored("untracked", "Other fixture", "other@example.test", O.some("unknown-run"))]),
+            ContactSeeding.use(
+              Effect.fnUntraced(function* (job) {
+                expect(yield* Effect.flip(job.apply(inputs, false))).toMatchObject({ reason: "confirmation" });
+                expect(yield* Effect.flip(job.apply(inputs, true))).toMatchObject({ reason: "untracked-tagged" });
+              })
+            )
+          );
+          expect(run.created).toBe(0);
+          expect(run.journals).toHaveLength(0);
+        })
+      )
+    );
+    it.effect("reconciles an ambiguous create by marker and stops without replay", () =>
+      withFiles(
+        Effect.fnUntraced(function* (root) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const input = path.join(root, "fixture.csv");
+          yield* fs.writeFileString(input, csv);
+          const run = yield* overJob(
+            root,
+            empty,
+            ContactSeeding.use((job) => Effect.flip(job.apply(ContactInputs.make({ csv: [input], vcf: [] }), true))),
+            true
+          );
+          expect(run.result).toMatchObject({ reason: "ambiguous-write" });
+          expect(run.created).toBe(1);
+          assertNone(O.getOrThrow(A.head(run.journals)).pendingSourceKey);
+          expect(run.journals[0]?.contacts).toHaveLength(1);
+        })
+      )
+    );
+    it.effect("exports full private Graph JSON once with restrictive permissions and refuses checkout paths", () =>
+      withFiles(
+        Effect.fnUntraced(function* (root) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const wire = { id: "fixture-id", personalNotes: "Synthetic preserved field" };
+          const inventory = inventoryOf([GraphContact.make({ id: "fixture-id", rawJson: O.some(wire) })]);
+          const out = path.join(root, "export", "contacts.jsonl");
+          const run = yield* overJob(
+            root,
+            inventory,
+            ContactSeeding.use(
+              Effect.fnUntraced(function* (job) {
+                const receipt = yield* job.export(out);
+                expect(receipt.count).toBe(1);
+                expect(receipt.sha256).toHaveLength(64);
+                const content = yield* S.decodeEffect(S.fromJsonString(S.Record(S.String, S.Unknown)))(
+                  yield* fs.readFileString(out)
+                );
+                expect(content).toMatchObject(wire);
+                expect((yield* fs.stat(out)).mode & 0o777).toBe(0o600);
+                expect((yield* fs.stat(path.dirname(out))).mode & 0o777).toBe(0o700);
+                expect(yield* Effect.flip(job.export(out))).toMatchObject({ reason: "unsafe-export" });
+                expect(yield* Effect.flip(job.export(path.join(root, "checkout", "bad.jsonl")))).toMatchObject({
+                  reason: "unsafe-export",
+                });
+                return receipt;
+              })
+            )
+          );
+          expect(run.created).toBe(0);
+        })
+      )
+    );
+    it.effect("category undo reports a missing edit baseline without claiming a confirmed edit", () =>
+      withFiles(
+        Effect.fnUntraced(function* (root) {
+          const marked = stored("untracked", "Fixture", "fixture@example.test", O.some("missing-journal"));
+          const result = yield* overJob(
+            root,
+            inventoryOf([marked]),
+            ContactSeeding.use((job) => job.undo(O.none(), true, true, false))
+          );
+          expect(result.result).toMatchObject({ deleted: 1, edited: 0, unverifiable: 1 });
+          expect(result.deleted).toHaveLength(0);
+        })
+      )
+    );
+    it.effect("locks writers exclusively and validates malformed journals", () =>
+      withFiles(
+        Effect.fnUntraced(function* (root) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const state = yield* makeContactsState(path.join(root, "state"));
+          const blocked = yield* withWriterLock(state, state.lock.pipe(Effect.flip));
+          expect(blocked).toMatchObject({ reason: "locked" });
+          yield* withWriterLock(state, Effect.void);
+          yield* fs.writeFileString(path.join(root, "state", "bad.json"), "not-json");
+          expect(yield* Effect.flip(state.journals)).toMatchObject({ reason: "state" });
+        })
+      )
+    );
+  });
 });
