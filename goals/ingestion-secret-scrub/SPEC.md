@@ -147,9 +147,11 @@ not replacement doctrine.
       sanitized/non-secret diagnostics.
 - [x] A clean fixture with known coverage demonstrates `safeForPrompt: true`
       and reaches that same prompt boundary using sanitized text only.
-- [x] Retention proof enforces transient raw deletion on success or within 7
-      days, scrub proof deletion within 30 days unless pinned, and audit-record
-      deletion within 12 months.
+- [x] Retention proof covers eligibility only: a pure purge decision marks
+      transient raw text eligible on success or within 7 days, scrub proof
+      within 30 days unless pinned, and audit records within 12 months. Storage
+      deletion itself is not enforced in this packet; it belongs to the
+      persistence owner's packet (Decision Log, retention row).
 - [ ] Focused tests, repo gates, reflection lint, and Yeet PR-to-mergeable proof
       pass with no unrelated refactors or formatting churn.
 
