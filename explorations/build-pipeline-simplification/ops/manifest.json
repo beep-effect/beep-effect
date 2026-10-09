@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "build-pipeline-simplification",
+    "title": "Build Pipeline Simplification",
+    "status": "active",
+    "stage": "capture",
+    "openQuestions": [
+      "Does the operator accept the deep-research framing (declaration pipeline; no bun build for libraries; two-tier tsgo + tsdown-for-public shape) before research formalises the inventory?",
+      "SchemaCompiler: operator believes bundle-size and runtime wins are larger than the report records (+2 KB AOT / +7 KB JIT over baseline; 1.2x-1.5x on S.Class rows). Which mechanism or newer numbers support that, and does it change the per-app-vs-per-library placement?"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-10-09",
+    "updated": "2026-10-09"
+  }
+}
