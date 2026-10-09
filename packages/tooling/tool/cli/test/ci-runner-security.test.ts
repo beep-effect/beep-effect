@@ -257,13 +257,12 @@ const assertTurboJobSetup = (jobs: WorkflowJobs, jobId: string, appSecrets: bool
   assert.strictEqual(inputs["turbo-api"], "${{ vars.TURBO_API }}", jobId);
   assert.strictEqual(inputs["turbo-team"], "${{ vars.TURBO_TEAM }}", jobId);
   assert.isUndefined(inputs["repository-secrets"], jobId);
-  for (const [input, name] of TURBO_SECRET_INPUTS) {
-    assert.strictEqual(
-      inputs[input],
-      jobId === "verify" && name === "TURBO_TOKEN" ? MATRIX_WRITE_TOKEN : secretReference(name),
-      `${jobId} ${input}`
-    );
-  }
+  assert.strictEqual(
+    inputs["turbo-token"],
+    jobId === "verify" ? MATRIX_WRITE_TOKEN : secretReference("TURBO_TOKEN"),
+    `${jobId} turbo-token`
+  );
+  assert.strictEqual(inputs["turbo-read-token"], secretReference("TURBO_READ_TOKEN"), `${jobId} turbo-read-token`);
   for (const [input, name] of APP_SECRET_INPUTS) {
     assert.strictEqual(inputs[input], appSecrets ? secretReference(name) : undefined, `${jobId} ${input}`);
   }

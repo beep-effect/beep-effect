@@ -721,3 +721,7 @@ The Ci group port keeps change-profile classification available before runtime i
 ### 2026-10-09 — E admitted publication memory envelope
 
 Use the wrapper's supported per-command 24 GiB cap for the E publication retry after the default 16 GiB unit was OOM-killed during cheap gates. Reason: the exact unit journal establishes cap exhaustion rather than a source verdict, and available memory supports the bounded retry. Admission and the two-job E limit remain in force. Reverse by allowing that transient unit to exit or stopping it, then omit the override; no global wrapper configuration changes.
+
+### 2026-10-09 — E publication follows S12 amendment
+
+The 24 GiB retry was also cap-killed. Use the orchestrator-owned wrapper floor and concurrency defaults in S12 for the next admitted publication attempt; E does not alter global limits. Reason: repeated unit OOM evidence requires a bounded resource/fan-out correction before publication can yield a verdict. Reversal remains terminating the transient job; the orchestrator owns any rollback of its shared wrapper configuration.
