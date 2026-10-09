@@ -160,6 +160,8 @@ describe("yeet packet issue lane record", () => {
     const cheap = rawIssue(cheapGatesStep, cheapGatesOutput, []);
     expect(cheap).toMatchObject({ category: "changeset-policy", subCategory: "changeset-status" });
     expect(cheap.remediation).toContain(CHANGESET_HINT_PREFIX);
+    expect(cheap.remediation).toContain("publish-enabled");
+    expect(cheap.remediation).toContain("private workspaces");
   });
 
   it("names the red coverage lane instead of the passing OSV marker", () => {
