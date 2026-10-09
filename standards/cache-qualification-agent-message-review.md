@@ -62,3 +62,31 @@ owned dependency and Turbo input additions. Re-run `beep cache audit` against th
 resulting graph. Never restore an old baseline while retaining the new graph to
 hide drift, and never change the qualification ledger or widen reuse to resolve
 this configuration review.
+
+## Main integration and archival evidence preservation
+
+The 2026-10-09 integration of main's release-policy change performed a structural
+three-way baseline comparison. Main changes zero computation projections, global
+configuration or source digests relative to the merge base; it moves four review
+references to retained evidence for `@beep/occt`, `@beep/pdf-tools`,
+`@beep/repo-cli` and `@beep/technical-drawing`. The agent messaging lane changes
+exactly the nineteen computations and three subjects reviewed above. The sole
+conflict is the `@beep/repo-cli` review record, which both lanes legitimately
+superseded for different reasons.
+
+Main's archived evidence is retained at
+`goals/repository-simplification-confidence/history/receipts/d-cache-review-evidence.md`
+with SHA-256 `9b642414a6d87a7ed68955eed76fb5c9468dfe344cffe17e95167931723e510a`.
+That review only relocates prior design-figure evidence and grants no qualification.
+The structural resolution carries all four main records before the canonical
+writer re-records only the three agent messaging subjects. This current review
+therefore retains the archived `@beep/repo-cli` provenance while reviewing the
+later agent messaging dependency projection. The other three archived records
+remain byte-equivalent JSON values after the writer.
+
+The integration request's compare-and-swap digest names the structurally merged
+pre-writer baseline, rather than either parent baseline. The original prior
+baseline digest above remains historical evidence for the first refresh. Cache
+profile, epoch, qualification scope and ledger are unchanged. Reversal removes
+only the agent messaging graph additions and corresponding reviews; retain main's
+archival references and run the canonical audit against the reversed graph.

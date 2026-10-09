@@ -10,5 +10,6 @@
   "access": "restricted",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@beep/repo-cli", "@beep/repo-utils", "@beep/scratchpad"]
+  "ignore": ["@beep/repo-cli", "@beep/repo-utils", "@beep/scratchpad"],
+  "privatePackages": { "version": false, "tag": false }
 }
