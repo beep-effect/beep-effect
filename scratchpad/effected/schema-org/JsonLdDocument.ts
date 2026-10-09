@@ -1,22 +1,20 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { APIReference } from "./APIReference.ts";
 import { CreativeWork } from "./CreativeWork.ts";
-import { InvalidNodeIdError, NodeRef } from "./NodeRef.ts";
+import { InvalidNodeIdError, NodeRef, isNodeRef } from "./NodeRef.ts";
 import { Organization } from "./Organization.ts";
 import { Person } from "./Person.ts";
 import { SoftwareSourceCode } from "./SoftwareSourceCode.ts";
 import { TechArticle } from "./TechArticle.ts";
 
 const $I = $ScratchpadId.create("effected/schema-org/JsonLdDocument");
-
-// The public accessor retains the native ReadonlySet contract through its schema codec.
-const decodeStringSet = S.decodeResult(S.toCodecIso(S.ReadonlySet(S.String)));
 
 /**
  * Indicates that two nodes in one graph claim the same `@id`.
@@ -91,15 +89,34 @@ const NODE_SCHEMAS = {
 const reservedTerms = (node: JsonLdNode): MutableHashSet.MutableHashSet<string> =>
 	MutableHashSet.fromIterable(R.keys<string, unknown>(NODE_SCHEMAS[node["@type"]].fields));
 
-/** Every `@id` a node points at through a `NodeRef`, in any field. */
-const referencedIds = (node: JsonLdNode): ReadonlyArray<string> => {
-	const ids: Array<string> = [];
-	const values = R.values<string, unknown>({ ...node });
-	for (const value of values) {
-		if (S.is(NodeRef)(value)) ids.push(value["@id"]);
-		else if (A.isArray(value)) for (const item of value) if (S.is(NodeRef)(item)) ids.push(item["@id"]);
+/** The wire reference shape excludes value objects and embedded nodes. */
+const WireNodeRef = S.StructWithRest(S.Struct({ "@id": S.String.annotateKey({ description: "The identifier carried by the wire reference." }) }), [S.Record(S.String, S.Unknown)]).check(S.makeFilter(
+	(value) => R.keys(value).length === 1,
+	{
+		identifier: $I`WireNodeRefOnlyId`,
+		title: "JSON-LD reference object",
+		description: "A JSON-LD reference object contains only a string @id.",
+	},
+)).pipe($I.annoteSchema("WireNodeRef", { description: "A catch-all JSON-LD reference containing only a string @id." }));
+const isWireNodeRef = S.is(WireNodeRef);
+
+/** Node references in typed fields and catch-all fields, in property and array order. */
+export const referencesOf = (node: JsonLdNode): ReadonlyArray<readonly [property: string, id: string]> => {
+	const out: Array<readonly [string, string]> = [];
+	const { additional, ...typed } = node;
+	for (const [property, value] of R.toEntries<string, unknown>(typed)) {
+		if (isNodeRef(value)) out.push([property, value["@id"]]);
+		else if (A.isArray(value)) {
+			for (const item of value) if (isNodeRef(item)) out.push([property, item["@id"]]);
+		}
 	}
-	return ids;
+	for (const [property, value] of R.toEntries(additional ?? {})) {
+		if (isWireNodeRef(value)) out.push([property, value["@id"]]);
+		else if (A.isArray(value)) {
+			for (const item of value) if (isWireNodeRef(item)) out.push([property, item["@id"]]);
+		}
+	}
+	return out;
 };
 
 /**
@@ -198,7 +215,7 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 			if (MutableHashSet.has(seen, id)) return Result.fail(DuplicateNodeIdError.make({ id }));
 			MutableHashSet.add(seen, id);
 
-			for (const referenced of referencedIds(node)) {
+			for (const [, referenced] of referencesOf(node)) {
 				if (!NodeRef.isValidId(referenced)) return Result.fail(InvalidNodeIdError.make({ input: referenced }));
 			}
 
@@ -220,8 +237,13 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 	);
 
 	/** The `@id` of every node in the graph. */
-	get nodeIds(): ReadonlySet<string> {
-		return Result.getOrThrow(decodeStringSet(this["@graph"].map((node) => node["@id"])));
+	get nodeIds(): HashSet.HashSet<string> {
+		return HashSet.fromIterable(this.nodeIdsInOrder);
+	}
+
+	/** Node identifiers in graph insertion order, with duplicates removed. */
+	get nodeIdsInOrder(): ReadonlyArray<string> {
+		return A.dedupe(A.map(this["@graph"], (node) => node["@id"]));
 	}
 
 	/**
@@ -235,11 +257,16 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 	 */
 	get danglingReferences(): ReadonlyArray<string> {
 		const defined = this.nodeIds;
-		const dangling = MutableHashSet.empty<string>();
+		const seen = MutableHashSet.empty<string>();
+		const dangling: Array<string> = [];
 		for (const node of this["@graph"]) {
-			for (const id of referencedIds(node)) if (!defined.has(id)) MutableHashSet.add(dangling, id);
+			for (const [, id] of referencesOf(node)) {
+				if (HashSet.has(defined, id) || MutableHashSet.has(seen, id)) continue;
+				MutableHashSet.add(seen, id);
+				dangling.push(id);
+			}
 		}
-		return [...dangling];
+		return dangling;
 	}
 
 	/**

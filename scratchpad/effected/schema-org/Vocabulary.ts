@@ -1,8 +1,8 @@
+import * as A from "effect/Array";
+import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
-import * as Result from "effect/Result";
-import * as S from "effect/Schema";
 import {
 	DOMAIN_PROPERTIES,
 	PROPERTY_INDEX,
@@ -16,9 +16,6 @@ import {
 	decodeRow,
 } from "./internal/vocabulary.ts";
 
-// Public queries retain native ReadonlySet values, including their insertion order.
-const decodeStringSet = S.decodeResult(S.toCodecIso(S.ReadonlySet(S.String)));
-
 /**
  * Strict ancestors of a type index: every supertype reachable through
  * `rdfs:subClassOf`, excluding the type itself.
@@ -30,28 +27,30 @@ const decodeStringSet = S.decodeResult(S.toCodecIso(S.ReadonlySet(S.String)));
  * dropped at generation time, so a branch that left the schema namespace
  * simply terminates here while its native siblings still carry the answer.
  */
-function walkAncestors(index: number): MutableHashSet.MutableHashSet<number> {
+function walkAncestors(index: number): ReadonlyArray<number> {
+	const order: Array<number> = [];
 	const seen = MutableHashSet.empty<number>();
 	const stack = [...decodeRow(SUB_CLASS_OF[index])];
 	while (stack.length > 0) {
 		const parent = stack.pop();
 		if (parent === undefined || MutableHashSet.has(seen, parent)) continue;
 		MutableHashSet.add(seen, parent);
+		order.push(parent);
 		for (const grandparent of decodeRow(SUB_CLASS_OF[parent])) stack.push(grandparent);
 	}
-	return seen;
+	return order;
 }
 
 // Rows decode on demand and are memoized by index: a caller that asks about
 // three types never pays to decode the other 930.
-const ancestorCache: Array<MutableHashSet.MutableHashSet<number> | undefined> = new Array<MutableHashSet.MutableHashSet<number> | undefined>(
+const ancestorCache: Array<ReadonlyArray<number> | undefined> = new Array<ReadonlyArray<number> | undefined>(
 	TYPE_NAMES.length,
 );
-const propertyCache: Array<MutableHashSet.MutableHashSet<number> | undefined> = new Array<MutableHashSet.MutableHashSet<number> | undefined>(
+const propertyCache: Array<ReadonlyArray<number> | undefined> = new Array<ReadonlyArray<number> | undefined>(
 	TYPE_NAMES.length,
 );
 
-function ancestorIndices(index: number): MutableHashSet.MutableHashSet<number> {
+function ancestorIndices(index: number): ReadonlyArray<number> {
 	const cached = ancestorCache[index];
 	if (cached !== undefined) return cached;
 	const computed = walkAncestors(index);
@@ -60,23 +59,30 @@ function ancestorIndices(index: number): MutableHashSet.MutableHashSet<number> {
 }
 
 /** Every property legal on a type index: its own `domainIncludes` members unioned with every ancestor's. */
-function propertyIndices(index: number): MutableHashSet.MutableHashSet<number> {
+function propertyIndices(index: number): ReadonlyArray<number> {
 	const cached = propertyCache[index];
 	if (cached !== undefined) return cached;
-	const computed = MutableHashSet.empty<number>();
-	for (const property of decodeRow(DOMAIN_PROPERTIES[index])) MutableHashSet.add(computed, property);
-	for (const ancestor of ancestorIndices(index)) {
-		for (const property of decodeRow(DOMAIN_PROPERTIES[ancestor])) MutableHashSet.add(computed, property);
+	const computed: Array<number> = [];
+	const seen = MutableHashSet.empty<number>();
+	for (const domain of [index, ...ancestorIndices(index)]) {
+		for (const property of decodeRow(DOMAIN_PROPERTIES[domain])) {
+			if (MutableHashSet.has(seen, property)) continue;
+			MutableHashSet.add(seen, property);
+			computed.push(property);
+		}
 	}
 	propertyCache[index] = computed;
 	return computed;
 }
 
-/** Resolve a superseding index against its name table. */
-function supersedingName(index: number | undefined, names: readonly string[]): O.Option<string> {
-	if (index === undefined) return O.none();
-	const name = names[index];
-	return name === undefined ? O.none() : O.some(name);
+// Membership queries keep constant-time hashed lookup independently of public order.
+const propertyMembershipCache: Array<HashSet.HashSet<number> | undefined> = [];
+function propertyMembershipIndices(index: number): HashSet.HashSet<number> {
+	const cached = propertyMembershipCache[index];
+	if (cached !== undefined) return cached;
+	const computed = HashSet.fromIterable(propertyIndices(index));
+	propertyMembershipCache[index] = computed;
+	return computed;
 }
 
 /**
@@ -146,15 +152,16 @@ export class Vocabulary {
 	 * `ItemList`, and all three arms are present here along with everything
 	 * above them.
 	 */
-	static ancestorsOf(type: string): ReadonlySet<string> {
-		const index = O.getOrUndefined(MutableHashMap.get(TYPE_INDEX, type));
-		if (index === undefined) return Result.getOrThrow(decodeStringSet([]));
-		const out: Array<string> = [];
-		for (const ancestor of ancestorIndices(index)) {
-			const name = TYPE_NAMES[ancestor];
-			if (name !== undefined) out.push(name);
-		}
-		return Result.getOrThrow(decodeStringSet(out));
+	static ancestorsOf(type: string): HashSet.HashSet<string> {
+		return HashSet.fromIterable(Vocabulary.ancestorsInOrder(type));
+	}
+
+	/** Strict ancestors in the original depth-first discovery order. */
+	static ancestorsInOrder(type: string): ReadonlyArray<string> {
+		return O.match(MutableHashMap.get(TYPE_INDEX, type), {
+			onNone: () => [],
+			onSome: (index) => A.getSomes(A.map(ancestorIndices(index), (ancestor) => A.get(TYPE_NAMES, ancestor))),
+		});
 	}
 
 	/**
@@ -166,15 +173,16 @@ export class Vocabulary {
 	 * declares none of `license`, `name` or `description` in its own
 	 * `domainIncludes` — they arrive from `CreativeWork` and `Thing`.
 	 */
-	static propertiesOf(type: string): ReadonlySet<string> {
-		const index = O.getOrUndefined(MutableHashMap.get(TYPE_INDEX, type));
-		if (index === undefined) return Result.getOrThrow(decodeStringSet([]));
-		const out: Array<string> = [];
-		for (const property of propertyIndices(index)) {
-			const name = PROPERTY_NAMES[property];
-			if (name !== undefined) out.push(name);
-		}
-		return Result.getOrThrow(decodeStringSet(out));
+	static propertiesOf(type: string): HashSet.HashSet<string> {
+		return HashSet.fromIterable(Vocabulary.propertiesInOrder(type));
+	}
+
+	/** Legal properties in direct-domain then ancestor discovery order. */
+	static propertiesInOrder(type: string): ReadonlyArray<string> {
+		return O.match(MutableHashMap.get(TYPE_INDEX, type), {
+			onNone: () => [],
+			onSome: (index) => A.getSomes(A.map(propertyIndices(index), (property) => A.get(PROPERTY_NAMES, property))),
+		});
 	}
 
 	/**
@@ -194,10 +202,13 @@ export class Vocabulary {
 	 * exactly what `Conformance` does.
 	 */
 	static isPropertyOn(property: string, type: string): boolean {
-		const typeIdx = O.getOrUndefined(MutableHashMap.get(TYPE_INDEX, type));
-		const propertyIdx = O.getOrUndefined(MutableHashMap.get(PROPERTY_INDEX, property));
-		if (typeIdx === undefined || propertyIdx === undefined) return false;
-		return MutableHashSet.has(propertyIndices(typeIdx), propertyIdx);
+		return O.match(O.all([
+			MutableHashMap.get(TYPE_INDEX, type),
+			MutableHashMap.get(PROPERTY_INDEX, property),
+		]), {
+			onNone: () => false,
+			onSome: ([typeIdx, propertyIdx]) => HashSet.has(propertyMembershipIndices(typeIdx), propertyIdx),
+		});
 	}
 
 	/**
@@ -215,10 +226,14 @@ export class Vocabulary {
 	 * name lowercase,, and no name appears in both tables.
 	 */
 	static supersededBy(term: string): O.Option<string> {
-		const typeIdx = O.getOrUndefined(MutableHashMap.get(TYPE_INDEX, term));
-		if (typeIdx !== undefined) return supersedingName(O.getOrUndefined(MutableHashMap.get(SUPERSEDED_TYPE_MAP, typeIdx)), TYPE_NAMES);
-		const propertyIdx = O.getOrUndefined(MutableHashMap.get(PROPERTY_INDEX, term));
-		if (propertyIdx !== undefined) return supersedingName(O.getOrUndefined(MutableHashMap.get(SUPERSEDED_PROPERTY_MAP, propertyIdx)), PROPERTY_NAMES);
-		return O.none();
+		return O.match(MutableHashMap.get(TYPE_INDEX, term), {
+			onSome: (index) => MutableHashMap.get(SUPERSEDED_TYPE_MAP, index).pipe(
+				O.flatMap((superseding) => A.get(TYPE_NAMES, superseding)),
+			),
+			onNone: () => MutableHashMap.get(PROPERTY_INDEX, term).pipe(
+				O.flatMap((index) => MutableHashMap.get(SUPERSEDED_PROPERTY_MAP, index)),
+				O.flatMap((superseding) => A.get(PROPERTY_NAMES, superseding)),
+			),
+		});
 	}
 }

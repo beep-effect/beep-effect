@@ -3112,9 +3112,180 @@
         }
       ],
       "fixturesBytes": 0,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/schema-org/Vocabulary.test.ts:71,98,108,116,168; scratchpad/test/schema-org/JsonLdDocument.test.ts:308,321",
+          "upstreamBehaviour": "Vocabulary ancestor/property queries and JsonLdDocument.nodeIds return native ReadonlySet values. Vocabulary traversal, graph identity/reserved/dangling sets and internal/vocabulary.ts prefix/name/superseding indexes use native Set/Map; collectors use Object.keys/entries/values.",
+          "labBehaviour": "Vocabulary.ancestorsOf/propertiesOf and JsonLdDocument.nodeIds return Effect HashSet; ancestorsInOrder/propertiesInOrder/nodeIdsInOrder preserve the former discovery order. Internal indexes use MutableHashMap/MutableHashSet, graph membership uses Effect sets, and record enumeration uses effect/Record; dangling ids keep first-seen order.",
+          "reason": "native-runtime: Effect-laws-v1 law 6 forbids native Set/Map/Object enumeration; the 2026-10-09 public-collection ruling permits API changes but retains explicit order. Inventory req-1/codemod-2 and fix-schema-org-g1.md:44-45 cover the public and internal replacements."
+        },
+        {
+          "test": "scratchpad/test/schema-org/nodes.test.ts:171; scratchpad/test/schema-org/Conformance.test.ts:347,355; module suite scratchpad/test/schema-org/**",
+          "upstreamBehaviour": "NodeId has no same-name type and NodeRef.isValidId repeats its regexp; collectors use instanceof NodeRef. TermKind is a named Schema.Literals domain, and ConformanceOptions is a type-only interface with optional literal fields.",
+          "labBehaviour": "NodeId exports its schema-derived type; isValidId and hoisted isNodeRef derive from S.is. Conformance.ts uses LiteralKit for TermKind and three policy domains; ConformanceOptions is an annotated Struct with decoding defaults and an Encoded input type. JsonLdDocument.ts models WireNodeRef as a schema-derived guard.",
+          "reason": "schema-first: Schema-first laws 17-19 and EF-3/EF-33/EF-34 require schema-derived guards/types, named LiteralKit domains and modeled policy defaults; inventory req-3/4/7/9/10 and fix-schema-org-g1.md:3-10. Plain runtime policy callers retain upstream acceptance."
+        },
+        {
+          "test": "scratchpad/test/schema-org/JsonLdDocument.test.ts:53,67,179; scratchpad/test/schema-org/serializer.test.ts:20,92; scratchpad/test/schema-org/Conformance.test.ts:172,355",
+          "upstreamBehaviour": "JsonLdDocument.toJsonLd and Conformance.assertedTerms assert structural types. Tests cast errors, Result success values, JSON.parse output and serialized documents; the foreign-type fixture uses an inline wrong-input cast.",
+          "labBehaviour": "Production casts are removed using schema encoding and S.Json-typed records. Test error/result branches narrow before access; WireDocument/ScriptDocument guards validate wire shapes. Deliberately wrong input is isolated in scratchpad/test/schema-org/deliberatelyInvalid.ts.",
+          "reason": "type-safety: D15 forbids unsafe assertions; the 2026-10-09 operator ruling permits one deliberatelyInvalid helper per module. The S0 diff and step-2 cast-removal commit 7befabb40852dc7a668225c577b69c434d52b8f2 ground the narrowed production/test shapes."
+        },
+        {
+          "test": "module suite scratchpad/test/schema-org/**; scratchpad/test/schema-org/nodes.test.ts:150; scratchpad/test/schema-org/JsonLdDocument.test.ts:278",
+          "upstreamBehaviour": "Conformance, graph assembly and checked NodeRef construction call new on schema classes; nominal checks use instanceof, and schema encoding uses encodeSync. Tests use decodeUnknownResult even when input is already typed.",
+          "labBehaviour": "Schema class/error construction uses .make; nominal checks use schema guards, hoisted for references. JsonLdDocument.toJsonLd and schema round-trip tests use encodeResult with Result.getOrThrow; typed decode sites use decodeResult. Vocabulary/entrypoint tests retain nodeBuiltinImport skip-file headers.",
+          "reason": "tsgo-diagnostics: @effect/tsgo quick fixes require newSchemaClass/schema guards and typed schema decoders; step-2 commits 7f67982f77c57d9a8bbc2e6a06b5ef03a5790224 and 0fd1037d70d1bcec03dcb1c1ab04abf5cc3dc9af record diagnostic-forced changes, with hoisting required by inventory req-10."
+        },
+        {
+          "test": "scratchpad/test/schema-org/Vocabulary.test.ts; scratchpad/test/schema-org/Conformance.test.ts; scratchpad/test/schema-org/nodes.test.ts",
+          "upstreamBehaviour": "Vocabulary lookups branch on Map.get undefined and reconstruct Option in supersedingName. Conformance.nativeTerm uses undefined for foreign terms and validates issues with a switch. NodeRef.to uses typeof, and vocabulary row/prefix parsing uses native string methods.",
+          "labBehaviour": "Vocabulary uses Option.match/all/flatMap and Array.get while preserving type-first superseding lookup. Conformance.nativeTerm returns Option and validation uses Array.some/Match.valueTags. NodeRef.to uses Predicate.isString; internal/vocabulary.decodeRow and prefix parsing use effect/String helpers.",
+          "reason": "effect-first: EF-2/EF-5 and effect-laws-v1 law 21 require Effect-native absence, matching and helpers. Inventory req-5/6/11, fix-schema-org-g1.md:5-6, fix-schema-org-g2.md:1 and the S1 law diff ground these behavior-preserving rewrites; upstream Effect.fn wrappers remain unchanged."
+        },
+        {
+          "test": "module suite scratchpad/test/schema-org/**",
+          "upstreamBehaviour": "Public schema/node/conformance/vocabulary files and tests import Schema, Effect, Result or Option from the root effect barrel; JsonLdDocument, Conformance and index examples do likewise.",
+          "labBehaviour": "Imports in source, tests and examples address effect/Schema, effect/Effect, effect/Result, effect/Option and each other Effect module directly.",
+          "reason": "effect-imports: AGENTS.md requires per-module effect/* imports in code and examples; step 3 e8f75881080b97c4cb0dc25d1e5d4389fbeb7226 and the example rewrite in 03bf79d41ba2628a1b026a0db3046e20ca45f203 are visible in the S0 diff."
+        },
+        {
+          "test": "module suite scratchpad/test/schema-org/**",
+          "upstreamBehaviour": "Node classes, NodeRef, JsonLdDocument, conformance issues/errors and unions use plain identifiers and lack @beep/identity metadata; class-local fields and the NodeId pattern lack descriptive schema annotations.",
+          "labBehaviour": "APIReference, CreativeWork, Organization, Person, SoftwareSourceCode, TechArticle, NodeRef, JsonLdDocument and Conformance use $ScratchpadId composers, $I identifiers and annote/annoteSchema metadata; class-local fields use annotateKey. NodeId and its pattern carry identity/title/description metadata.",
+          "reason": "identity-annotations: Operator step 4 requires @beep/identity annotations; EF-12/EF-12c and law 18 require reusable filter metadata. Commit 29475d4695ebf0bbcbbb6b84d2fbd91ef375660e, inventory req-2 and fix-schema-org-g1.md:2 ground the changes; shared-field annotation gaps remain backlog-1."
+        },
+        {
+          "test": "scratchpad/test/schema-org/Vocabulary.test.ts:59",
+          "upstreamBehaviour": "The generated-table byte-budget test reads ../src/internal/vocabulary.ts relative to the upstream package test directory.",
+          "labBehaviour": "The same 60,000-to-80,000-byte assertions read ../../effected/schema-org/internal/vocabulary.ts from the lab test directory.",
+          "reason": "test-environment: D9 preserves upstream assertions while retargeting the copied test to the lab layout; the S0 diff and layout commit 808e222d79c133c41ad483c673715b9fd6012001 show this environment-only path repair."
+        },
+        {
+          "test": "scratchpad/test/schema-org/entrypoints.test.ts:36,48,61",
+          "upstreamBehaviour": "The source import walker roots at ../src and recognizes src/Vocabulary.ts and src/Conformance.ts when enforcing the separate conformance boundary.",
+          "labBehaviour": "The walker roots at ../../effected/schema-org and its boundary and positive-control patterns recognize effected/schema-org/Vocabulary.ts and Conformance.ts.",
+          "reason": "reachability: D9 requires reachability tests to inspect the lab graph; layout commit 808e222d79c133c41ad483c673715b9fd6012001 and the S0 diff retain the upstream root-entrypoint exclusion, conformance reachability and walker positive control."
+        },
+        {
+          "test": "scratchpad/test/schema-org/JsonLdDocument.test.ts:332,342",
+          "upstreamBehaviour": "buildResult validates typed NodeRef ids but ignores scalar/array @id-only objects inside additional, so a catch-all reference with has space or an empty id builds successfully.",
+          "labBehaviour": "Shared referencesOf recognizes catch-all objects containing only a string @id. buildResult rejects malformed scalar/array reference ids through InvalidNodeIdError, while non-string ids, embedded/value objects and nested objects remain excluded.",
+          "reason": "upstream-bug: Round-1 part-1/sol.md:5 reproduces successful builds with a has space catch-all id against pinned upstream af7566a9da2eff169cb74955efcc5ede1e5de9f8; inventory req-8 and fix-schema-org-g1.md:8,34 establish the repair and its pinning tests."
+        },
+        {
+          "test": "scratchpad/test/schema-org/JsonLdDocument.test.ts:321,342",
+          "upstreamBehaviour": "danglingReferences inspects only typed nominal NodeRef fields/array items and returns [] for a serialized additional.mentions reference to #missing.",
+          "labBehaviour": "danglingReferences includes scalar/array @id-only catch-all references, resolves present targets and deduplicates missing ids in first-seen order across typed and catch-all fields; embedded/value/non-reference objects are excluded.",
+          "reason": "upstream-bug: Round-1 part-1/sol.md:5 probes both pinned upstream and port: a serialized additional.mentions @id #missing produces danglingReferences []. Inventory req-8 and fix-schema-org-g1.md:33,46 ground the changed collector and regression."
+        },
+        {
+          "test": "scratchpad/test/schema-org/Conformance.test.ts:310,324,336,63",
+          "upstreamBehaviour": "Conformance.check omits catch-all references, so validateResult with danglingReferences report succeeds on a graph whose serialized catch-all points to a missing node; the sponsor fixture lacks its referenced Organization.",
+          "labBehaviour": "Conformance.check emits DanglingReference issues with original property names and node/property/array order, including foreign nodes and unchecked malformed ids; the report policy now fails these graphs. The sponsor fixture defines #acme to preserve its empty-issues assertion.",
+          "reason": "upstream-bug: Round-1 part-1/sol.md:5 reproduces no issues and Success from the enabled closure gate on pinned upstream for additional.mentions @id #missing. Inventory req-8 and fix-schema-org-g1.md:37-40 pin reporting, gating, exclusions and the adjusted sponsor fixture."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "backlog-1 — Shared field descriptions absent from schema AST (scratchpad/effected/schema-org/Thing.ts:30)",
+          "reason": "schema: At S2 add annotateKey descriptions to ThingFields, CreativeWorkFields and TechArticleFields; retain S.optional semantics."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "backlog-2 — Public export documentation needs S2 migration (scratchpad/effected/schema-org/NodeRef.ts:37,87)",
+          "reason": "jsdoc: At S2 convert examples/remarks to titled prose carriers, add category/since and meaningful compiling examples, preserving upstream prose."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-3 — Conformance entrypoint example has undeclared graph (scratchpad/effected/schema-org/conformance-entry.ts:22)",
+          "reason": "jsdoc: At S2 construct a small graph with JsonLdDocument, a node class and Result.getOrThrow before Conformance.check; convert the carrier."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-4 — Optional HasNodeId runtime schema (scratchpad/effected/schema-org/NodeRef.ts:67)",
+          "reason": "schema: If later promoted, derive HasNodeId from an annotated Struct without changing NodeRef.to and record any added schema export."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-5 — Record/reference helper consolidation (scratchpad/effected/schema-org/JsonLdDocument.ts:95,120,316)",
+          "reason": "effect-idiom: Defer R.filter, A.flatMap/filterMap/some and R.get cleanup; retain reference traversal order and req-8/req-10 semantics."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-6 — Optional Option-valued vocabulary caches (scratchpad/effected/schema-org/Vocabulary.ts:47-65)",
+          "reason": "effect-idiom: Consider MutableHashMap caches returning Option only during later cleanup; preserve lazy decoding and memoization."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-7 — S3 schema properties and vitest canon (scratchpad/test/schema-org/nodes.test.ts:171)",
+          "reason": "test: At S3 add it.effect.prop round-trip properties with Arbitrary.schema and fcRuns for every exported schema/codec and migrate tests to the canon."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "backlog-8 — Optional immutable lookup-table encapsulation (scratchpad/effected/schema-org/internal/vocabulary.ts:4580,4583,4586,4607,4610)",
+          "reason": "type-safety: Defer immutable tables or accessors until justified; retain exported names/kinds and consistently update consumers if adopted."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "backlog-9 — Internal vocabulary documentation carriers (scratchpad/effected/schema-org/internal/vocabulary.ts:33,4579-4610)",
+          "reason": "jsdoc: At S2 retain internal/empty-row prose, add titled carriers/category/since and a compiling decodeRow example; document Option lookups."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-10 — Vocabulary source header names absent lab generator (scratchpad/effected/schema-org/internal/vocabulary.ts:4-9)",
+          "reason": "docs: At S2 mark generator/data paths upstream-only at pinned af7566a9da2eff169cb74955efcc5ede1e5de9f8 and place vendoring notice above imports."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-11 — Attribution emitter omits schema.org notice (scratchpad/effected/schema-org/README.md:136-146)",
+          "reason": "docs: At S2 correct the shared attribution emitter and replace raw hits with the release-30.0 CC-BY-SA-3.0 notice and upstream generator/data location."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-12 — Optional vocabulary array-helper rewrites (scratchpad/effected/schema-org/internal/vocabulary.ts:4583,4586,4590-4593)",
+          "reason": "effect-idiom: Defer A.map rewrites; if adopted share effect/Array, retain empty-row/numeric semantics and tuple-only as const."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-13 — Catch-all upstream-bug deviation receipt (scratchpad/effected/PORT_LEDGER.json)",
+          "reason": "bug: Record the verified catch-all upstream bug centrally, citing the pinned-oracle probe and exact JsonLdDocument/Conformance regression tests."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 6,
+              "backlog": 5
+            },
+            "sol": {
+              "required": 8,
+              "backlog": 2
+            },
+            "fable": {
+              "required": 7,
+              "backlog": 12
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

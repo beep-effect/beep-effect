@@ -151,7 +151,20 @@ None.
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — The lab uses Effect hash collections and explicit order accessors where upstream used native sets/maps and their iteration order. (scratchpad/test/schema-org/Vocabulary.test.ts:71,98,108,116,168; scratchpad/test/schema-org/JsonLdDocument.test.ts:308,321)
+- **schema-first** — The lab derives identifier/reference guards and policy types from schemas and LiteralKit where upstream used parallel predicates, a named literal schema and a type-only interface. (scratchpad/test/schema-org/nodes.test.ts:171; scratchpad/test/schema-org/Conformance.test.ts:347,355; module suite scratchpad/test/schema-org/**)
+- **type-safety** — The lab replaces upstream structural/error/result casts with typed encoding and guards, routing intentional wrong-input casts through the module helper. (scratchpad/test/schema-org/JsonLdDocument.test.ts:53,67,179; scratchpad/test/schema-org/serializer.test.ts:20,92; scratchpad/test/schema-org/Conformance.test.ts:172,355)
+- **tsgo-diagnostics** — The lab uses diagnostic-required .make construction, schema guards and Result-based encoding/typed decoding instead of upstream constructors, instanceof and synchronous encoding. (module suite scratchpad/test/schema-org/**; scratchpad/test/schema-org/nodes.test.ts:150; scratchpad/test/schema-org/JsonLdDocument.test.ts:278)
+- **effect-first** — The lab carries lookup absence through Option and uses Effect matching, predicate and string helpers where upstream used nullable branches, switch and native helpers. (scratchpad/test/schema-org/Vocabulary.test.ts; scratchpad/test/schema-org/Conformance.test.ts; scratchpad/test/schema-org/nodes.test.ts)
+- **effect-imports** — The lab imports each Effect module directly in source, tests and examples where upstream used the root effect barrel. (module suite scratchpad/test/schema-org/**)
+- **identity-annotations** — The lab adds identity-composed schema/class/filter and class-local field annotations to upstream declarations without changing the NodeId pattern or message. (module suite scratchpad/test/schema-org/**)
+- **test-environment** — The lab byte-budget test reads the copied vocabulary table at its lab path while retaining upstream byte limits. (scratchpad/test/schema-org/Vocabulary.test.ts:59)
+- **reachability** — The lab reachability tests enforce upstream entrypoint boundaries against the lab source root and matching lab path patterns. (scratchpad/test/schema-org/entrypoints.test.ts:36,48,61)
+- **upstream-bug** — The lab rejects malformed catch-all reference ids during graph construction where upstream silently accepted them. (scratchpad/test/schema-org/JsonLdDocument.test.ts:332,342)
+- **upstream-bug** — The lab reports unresolved catch-all references alongside typed references where upstream omitted them from danglingReferences. (scratchpad/test/schema-org/JsonLdDocument.test.ts:321,342)
+- **upstream-bug** — The lab reports catch-all dangling-reference issues and enforces the enabled closure gate where upstream accepted the same open graph. (scratchpad/test/schema-org/Conformance.test.ts:310,324,336,63)
 
 ### Dependency backlog
 

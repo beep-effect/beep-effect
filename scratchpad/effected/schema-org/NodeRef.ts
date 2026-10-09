@@ -57,7 +57,14 @@ const NODE_ID_PATTERN = /^[^\s\p{Cc}]+$/u;
  *
  * @public
  */
-export const NodeId = S.String.check(S.isPattern(NODE_ID_PATTERN));
+export const NodeId = S.String.check(S.isPattern(NODE_ID_PATTERN, {
+	identifier: $I`NodeIdPattern`,
+	title: "JSON-LD node identifier pattern",
+	description: "A non-empty string without whitespace or control characters.",
+})).pipe($I.annoteSchema("NodeId", { description: "A JSON-LD node identifier without whitespace or control characters." }));
+
+/** The string accepted by the NodeId schema. */
+export type NodeId = typeof NodeId.Type;
 
 /**
  * Anything carrying an `@id`. Every node class in this package satisfies it.
@@ -139,7 +146,8 @@ export class NodeRef extends S.Class<NodeRef>($I`NodeRef`)({
 	 * Whether a string is usable as an `@id`: non-empty, no whitespace, no
 	 * control characters.
 	 */
-	static isValidId(id: string): boolean {
-		return NODE_ID_PATTERN.test(id);
-	}
+	static readonly isValidId: (id: string) => boolean = S.is(NodeId);
 }
+
+/** The shared nominal guard for typed node references. */
+export const isNodeRef = S.is(NodeRef);

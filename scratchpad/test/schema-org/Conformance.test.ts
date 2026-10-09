@@ -5,6 +5,7 @@ import * as S from "effect/Schema";
 import { APIReference } from "../../effected/schema-org/APIReference.ts";
 import {
 	Conformance,
+	ConformanceOptions,
 	DanglingReference,
 	DeprecatedProperty,
 	NonConformantGraphError,
@@ -65,6 +66,7 @@ describe("Conformance.check", () => {
 		const graph = graphOf(
 			CreativeWork.make({ "@id": PKG, additional: { sponsor: { "@id": "https://example.com/#acme" } } }),
 			Organization.make({ "@id": `${PKG}-org`, additional: { sponsor: { "@id": "https://example.com/#acme" } } }),
+			Organization.make({ "@id": "https://example.com/#acme" }),
 		);
 		assert.deepStrictEqual(Conformance.check(graph), []);
 	});
@@ -301,4 +303,63 @@ describe("self-conformance", () => {
 			assert.deepStrictEqual(illegal, []);
 		});
 	}
+});
+
+
+describe("Conformance catch-all references", () => {
+	it("reports scalar, array and repeated references with their originating properties in node order", () => {
+		const graph = graphOf(CreativeWork.make({ "@id": PKG, additional: {
+			sponsor: { "@id": "#first" },
+			citation: [{ "@id": "#second" }, { "@id": "#first" }, { "@id": "#present" }],
+		} }), Person.make({ "@id": "#present" }));
+		assert.deepStrictEqual(Conformance.check(graph), [
+			DanglingReference.make({ nodeId: PKG, nodeType: "CreativeWork", property: "sponsor", reference: "#first" }),
+			DanglingReference.make({ nodeId: PKG, nodeType: "CreativeWork", property: "citation", reference: "#second" }),
+			DanglingReference.make({ nodeId: PKG, nodeType: "CreativeWork", property: "citation", reference: "#first" }),
+		]);
+		assert.isTrue(Result.isSuccess(Conformance.validateResult(graph)));
+		assert.isTrue(Result.isFailure(Conformance.validateResult(graph, { danglingReferences: "report" })));
+	});
+
+	it("ignores non-reference shapes and still reports malformed string ids on unchecked graphs", () => {
+		const graph = graphOf(CreativeWork.make({ "@id": PKG, additional: { citation: [
+			{ "@id": 42 }, { "@id": null }, {},
+			{ "@id": "#embedded", name: "node" },
+			{ "@value": "value", "@id": "#value" },
+			{ "@id": "bad id" },
+		] } }));
+		assert.deepStrictEqual(Conformance.check(graph), [
+			DanglingReference.make({ nodeId: PKG, nodeType: "CreativeWork", property: "citation", reference: "bad id" }),
+		]);
+	});
+
+	it("checks references on foreign nodes and preserves written property names", () => {
+		const node = CreativeWork.make({ "@id": PKG, additional: { "gs1:sponsor": { "@id": "#missing" } } });
+		const graph = graphOf(node);
+		deliberatelyInvalid<{ "@type": string }>(node)["@type"] = "gs1:Product";
+		assert.deepStrictEqual(Conformance.check(graph), [
+			DanglingReference.make({ nodeId: PKG, nodeType: "gs1:Product", property: "gs1:sponsor", reference: "#missing" }),
+		]);
+	});
+});
+
+describe("ConformanceOptions schema and compatible runtime input", () => {
+	it("decodes omitted and explicitly undefined policies to safe defaults", () => {
+		for (const input of [{}, { unknownTerms: undefined, deprecations: undefined, danglingReferences: undefined }]) {
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(ConformanceOptions)(input)), {
+				unknownTerms: "report", deprecations: "ignore", danglingReferences: "ignore",
+			});
+		}
+	});
+
+	it("preserves plain callers and non-failing out-of-union runtime policies", () => {
+		const graph = graphOf(SoftwareSourceCode.make({ "@id": PKG, author: [NodeRef.to("#missing")], additional: { notATerm: "x", runtime: "node" } }));
+		assert.isTrue(Result.isSuccess(Conformance.validateResult(graph, { unknownTerms: undefined, deprecations: undefined, danglingReferences: undefined })));
+		assert.isTrue(Result.isSuccess(Conformance.validateResult(graph, deliberatelyInvalid<ConformanceOptions>({
+			unknownTerms: "other", deprecations: "other", danglingReferences: "other",
+		}))));
+		assert.isTrue(Result.isFailure(Conformance.validateResult(graph, deliberatelyInvalid<ConformanceOptions>({
+			unknownTerms: "fail", deprecations: "other", danglingReferences: "other",
+		}))));
+	});
 });

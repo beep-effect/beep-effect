@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
 import * as O from "effect/Option";
+import * as HashSet from "effect/HashSet";
 import {
 	DOMAIN_PROPERTIES,
 	PROPERTY_NAMES,
@@ -67,6 +68,19 @@ describe("the generated vocabulary table", () => {
 });
 
 describe("Vocabulary", () => {
+	it("returns Effect HashSets and exposes the original discovery order separately", () => {
+		assert.isTrue(HashSet.isHashSet(Vocabulary.ancestorsOf("APIReference")));
+		assert.isTrue(HashSet.isHashSet(Vocabulary.propertiesOf("SoftwareSourceCode")));
+		assert.isTrue(HashSet.isHashSet(Vocabulary.ancestorsOf("NotAThing")));
+		assert.deepStrictEqual(Vocabulary.ancestorsInOrder("APIReference"), ["TechArticle", "Article", "CreativeWork", "Thing"]);
+		assert.deepStrictEqual(Vocabulary.ancestorsInOrder("HowToStep"), ["ListItem", "Intangible", "Thing", "ItemList", "CreativeWork"]);
+		assert.deepStrictEqual(Vocabulary.propertiesInOrder("SoftwareSourceCode").slice(0, 8), [
+			"codeRepository", "codeSampleType", "programmingLanguage", "runtime", "runtimePlatform", "sampleType", "targetProduct", "about",
+		]);
+		assert.deepStrictEqual(Vocabulary.ancestorsInOrder("NotAThing"), []);
+		assert.deepStrictEqual(Vocabulary.propertiesInOrder("NotAThing"), []);
+	});
+
 	it("reports the release it was generated from", () => {
 		assert.strictEqual(Vocabulary.version, "30.0");
 	});
@@ -84,28 +98,28 @@ describe("Vocabulary", () => {
 	it("resolves the ancestor closure transitively, excluding the type itself", () => {
 		const ancestors = Vocabulary.ancestorsOf("APIReference");
 		assert.deepStrictEqual([...ancestors].sort(), ["Article", "CreativeWork", "TechArticle", "Thing"]);
-		assert.isFalse(ancestors.has("APIReference"));
-		assert.strictEqual(Vocabulary.ancestorsOf("Thing").size, 0);
-		assert.strictEqual(Vocabulary.ancestorsOf("NotAThing").size, 0);
+		assert.isFalse(HashSet.has(ancestors, "APIReference"));
+		assert.strictEqual(HashSet.size(Vocabulary.ancestorsOf("Thing")), 0);
+		assert.strictEqual(HashSet.size(Vocabulary.ancestorsOf("NotAThing")), 0);
 	});
 
 	it("unions every arm of a multi-parent class", () => {
 		// HowToStep is a ListItem AND a CreativeWork AND an ItemList; a
 		// parent-chain walk would return only the first arm's ancestors.
 		const ancestors = Vocabulary.ancestorsOf("HowToStep");
-		assert.isTrue(ancestors.has("ListItem"));
-		assert.isTrue(ancestors.has("CreativeWork"));
-		assert.isTrue(ancestors.has("ItemList"));
+		assert.isTrue(HashSet.has(ancestors, "ListItem"));
+		assert.isTrue(HashSet.has(ancestors, "CreativeWork"));
+		assert.isTrue(HashSet.has(ancestors, "ItemList"));
 	});
 
 	it("terminates a branch at a foreign parent without losing its native sibling", () => {
 		// Certification's parents are fibo-fnd-arr-doc:Certificate AND CreativeWork.
 		const ancestors = Vocabulary.ancestorsOf("Certification");
-		assert.isTrue(ancestors.has("CreativeWork"));
-		assert.isTrue(ancestors.has("Thing"));
+		assert.isTrue(HashSet.has(ancestors, "CreativeWork"));
+		assert.isTrue(HashSet.has(ancestors, "Thing"));
 		assert.isFalse([...ancestors].some((name) => name.includes(":")));
 		// DataType's only parent is rdfs:Class — the walk terminates with nothing.
-		assert.strictEqual(Vocabulary.ancestorsOf("DataType").size, 0);
+		assert.strictEqual(HashSet.size(Vocabulary.ancestorsOf("DataType")), 0);
 		assert.isTrue(Vocabulary.hasType("DataType"));
 	});
 
@@ -153,11 +167,11 @@ describe("Vocabulary", () => {
 
 	it("lists the properties of a type, inherited ones included", () => {
 		const properties = Vocabulary.propertiesOf("SoftwareSourceCode");
-		assert.isTrue(properties.has("codeRepository")); // its own
-		assert.isTrue(properties.has("license")); // CreativeWork's
-		assert.isTrue(properties.has("name")); // Thing's
-		assert.isFalse(properties.has("softwareVersion"));
-		assert.strictEqual(Vocabulary.propertiesOf("NotAThing").size, 0);
+		assert.isTrue(HashSet.has(properties, "codeRepository")); // its own
+		assert.isTrue(HashSet.has(properties, "license")); // CreativeWork's
+		assert.isTrue(HashSet.has(properties, "name")); // Thing's
+		assert.isFalse(HashSet.has(properties, "softwareVersion"));
+		assert.strictEqual(HashSet.size(Vocabulary.propertiesOf("NotAThing")), 0);
 	});
 
 	it("flags a deprecated term with its successor rather than rejecting it", () => {

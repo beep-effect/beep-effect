@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { APIReference } from "../../effected/schema-org/APIReference.ts";
@@ -299,5 +300,55 @@ describe("JsonLdDocument — the decode direction is unimplemented, and the asym
 			Result.getOrThrow(S.encodeResult(JsonLdDocument)(graph)),
 			"the wire form flattens; the structural form nests",
 		);
+	});
+});
+
+
+describe("JsonLdDocument catch-all references and collection order", () => {
+	it("returns an Effect HashSet and keeps node insertion order separately", () => {
+		const graph = Result.getOrThrow(JsonLdDocument.buildResult([
+			Person.make({ "@id": ALICE }),
+			SoftwareSourceCode.make({ "@id": PKG }),
+			TechArticle.make({ "@id": DOC }),
+		]));
+		assert.isTrue(HashSet.isHashSet(graph.nodeIds));
+		assert.strictEqual(HashSet.size(graph.nodeIds), 3);
+		assert.isTrue(HashSet.has(graph.nodeIds, ALICE));
+		assert.isFalse(HashSet.has(graph.nodeIds, API));
+		assert.deepStrictEqual(graph.nodeIdsInOrder, [ALICE, PKG, DOC]);
+	});
+
+	it("discovers scalar and array catch-all references, resolves present ids and deduplicates in first-seen order", () => {
+		const graph = Result.getOrThrow(JsonLdDocument.buildResult([
+			TechArticle.make({ "@id": DOC, author: [NodeRef.to(API)], additional: {
+				sponsor: { "@id": ALICE },
+				citation: [{ "@id": PKG }, { "@id": API }, { "@id": ALICE }, { "@id": "#last" }],
+			} }),
+			Person.make({ "@id": ALICE }),
+		]));
+		assert.deepStrictEqual(graph.danglingReferences, [API, PKG, "#last"]);
+	});
+
+	it("validates malformed string ids in scalar and array catch-all references through the identity error channel", () => {
+		for (const reference of [{ "@id": "bad id" }, [{ "@id": "" }], [{ "@id": "#ok" }, { "@id": "bad id" }]]) {
+			const built = JsonLdDocument.buildResult([TechArticle.make({ "@id": DOC, additional: { citation: reference } })]);
+			assert.isTrue(Result.isFailure(built));
+			if (Result.isFailure(built)) {
+				assert.instanceOf(built.failure, InvalidNodeIdError);
+			}
+		}
+	});
+
+	it("keeps malformed reference shapes, value objects, embedded nodes and nested objects out of reference discovery", () => {
+		const graph = Result.getOrThrow(JsonLdDocument.buildResult([
+			TechArticle.make({ "@id": DOC, additional: { citation: [
+				{ "@id": 42 }, { "@id": null }, {}, "#text",
+				{ "@value": "literal", "@id": "bad id" },
+				{ "@id": "bad id", "@type": "Person" },
+				{ "@id": "bad id", name: "embedded" },
+				{ nested: { "@id": "bad id" } },
+			] } }),
+		]));
+		assert.deepStrictEqual(graph.danglingReferences, []);
 	});
 });

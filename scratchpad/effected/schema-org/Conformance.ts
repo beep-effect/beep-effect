@@ -1,15 +1,17 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { FOREIGN_PREFIX_SET } from "./internal/vocabulary.ts";
-import type { JsonLdDocument, JsonLdNode } from "./JsonLdDocument.ts";
-import { NodeRef } from "./NodeRef.ts";
+import { type JsonLdDocument, type JsonLdNode, referencesOf } from "./JsonLdDocument.ts";
 import { Vocabulary } from "./Vocabulary.ts";
 
 const $I = $ScratchpadId.create("effected/schema-org/Conformance");
@@ -19,7 +21,7 @@ const $I = $ScratchpadId.create("effected/schema-org/Conformance");
  *
  * @public
  */
-export const TermKind = S.Literals(["type", "property"]).pipe($I.annoteSchema("TermKind", { description: "Which kind of term a UnknownTerm issue is about." }));
+export const TermKind = LiteralKit(["type", "property"]).pipe($I.annoteSchema("TermKind", { description: "Which kind of term a UnknownTerm issue is about." }));
 
 /**
  * Which kind of term a {@link UnknownTerm} issue is about.
@@ -203,6 +205,16 @@ export class NonConformantGraphError extends S.TaggedError<NonConformantGraphErr
 	}
 }
 
+const UnknownTermPolicy = LiteralKit(["report", "fail"]).pipe(
+	$I.annoteSchema("UnknownTermPolicy", { description: "Whether unknown terms fail the gate." }),
+);
+const DeprecationPolicy = LiteralKit(["ignore", "report"]).pipe(
+	$I.annoteSchema("DeprecationPolicy", { description: "Whether deprecated terms fail the gate." }),
+);
+const DanglingReferencePolicy = LiteralKit(["ignore", "report"]).pipe(
+	$I.annoteSchema("DanglingReferencePolicy", { description: "Whether dangling references fail the gate." }),
+);
+
 /**
  * Which issue kinds fail {@link Conformance.validateResult}.
  *
@@ -211,31 +223,40 @@ export class NonConformantGraphError extends S.TaggedError<NonConformantGraphErr
  *
  * @public
  */
-export interface ConformanceOptions {
+export const ConformanceOptions = S.Struct({
 	/**
 	 * `"report"` (the default) surfaces an {@link UnknownTerm} without failing;
 	 * `"fail"` is strict mode, for a closed-world caller who controls every
 	 * term in their graph and wants an invented one to break the build.
 	 */
-	readonly unknownTerms?: "report" | "fail";
+	unknownTerms: UnknownTermPolicy.pipe(
+		S.withDecodingDefault(Effect.succeed(UnknownTermPolicy.Enum.report)),
+	).annotateKey({ description: "Unknown-term gate policy; defaults to report." }),
 	/**
 	 * `"ignore"` (the default) keeps {@link DeprecatedType} and
 	 * {@link DeprecatedProperty} out of the gate; `"report"` makes them fail it.
 	 */
-	readonly deprecations?: "ignore" | "report";
+	deprecations: DeprecationPolicy.pipe(
+		S.withDecodingDefault(Effect.succeed(DeprecationPolicy.Enum.ignore)),
+	).annotateKey({ description: "Deprecation gate policy; defaults to ignore." }),
 	/**
 	 * `"ignore"` (the default) keeps {@link DanglingReference} out of the gate;
 	 * `"report"` makes an open graph fail, which is what a consumer whose graph
 	 * is meant to be closed wants.
 	 */
-	readonly danglingReferences?: "ignore" | "report";
-}
+	danglingReferences: DanglingReferencePolicy.pipe(
+		S.withDecodingDefault(Effect.succeed(DanglingReferencePolicy.Enum.ignore)),
+	).annotateKey({ description: "Graph-closure gate policy; defaults to ignore." }),
+}).pipe($I.annoteSchema("ConformanceOptions", { description: "Optional gate policies with safe defaults when decoded." }));
+
+/** Plain-object policy input, including omitted and explicitly undefined fields. */
+export type ConformanceOptions = typeof ConformanceOptions.Encoded;
 
 /** The `@context` prefix for schema.org's own terms. */
 const SCHEMA_PREFIX = "schema:";
 
 /**
- * Resolve a written term to the schema.org term it asserts, or `undefined`
+ * Resolve a written term to the schema.org term it asserts, or `Option.none()`
  * when it belongs to a vocabulary this package does not police.
  *
  * Four cases, and the two middle ones are each a way to get this silently
@@ -258,13 +279,12 @@ const SCHEMA_PREFIX = "schema:";
  *   document itself rather than a hand-kept list, so a new alignment
  *   vocabulary becomes recognized exactly when schema.org declares it.
  */
-function nativeTerm(term: string): string | undefined {
-	if (term.startsWith(SCHEMA_PREFIX)) return term.slice(SCHEMA_PREFIX.length);
-	const colon = term.indexOf(":");
-	if (colon === -1) return term;
-	// A declared foreign prefix is not ours to judge; an undeclared one is
-	// returned whole, so it falls through to the unknown-term branch.
-	return MutableHashSet.has(FOREIGN_PREFIX_SET, term.slice(0, colon)) ? undefined : term;
+function nativeTerm(term: string): O.Option<string> {
+	if (Str.startsWith(SCHEMA_PREFIX)(term)) return O.some(Str.slice(SCHEMA_PREFIX.length)(term));
+	return O.match(Str.indexOf(":")(term), {
+		onNone: () => O.some(term),
+		onSome: (colon) => MutableHashSet.has(FOREIGN_PREFIX_SET, Str.slice(0, colon)(term)) ? O.none() : O.some(term),
+	});
 }
 
 /** The terms a node actually asserts: its typed fields plus its flattened catch-all, minus the JSON-LD keywords. */
@@ -277,19 +297,6 @@ function assertedTerms(node: JsonLdNode): ReadonlyArray<string> {
 	}
 	for (const term of R.keys(additional ?? {})) terms.push(term);
 	return terms;
-}
-
-/** Every `NodeRef` a node holds, paired with the property it sits in. */
-function referencesOf(node: JsonLdNode): ReadonlyArray<readonly [property: string, id: string]> {
-	const out: Array<readonly [string, string]> = [];
-	const entries = R.toEntries<string, unknown>({ ...node });
-	for (const [property, value] of entries) {
-		if (S.is(NodeRef)(value)) out.push([property, value["@id"]]);
-		else if (A.isArray(value)) {
-			for (const item of value) if (S.is(NodeRef)(item)) out.push([property, item["@id"]]);
-		}
-	}
-	return out;
 }
 
 /**
@@ -366,39 +373,37 @@ export class Conformance {
 			// properties hanging off it — there is no schema.org type to check
 			// them against. References are still checked: graph closure is a
 			// question about this document, not about a vocabulary.
-			const typeTerm = nativeTerm(nodeType);
-			const typeKnown = typeTerm !== undefined && Vocabulary.hasType(typeTerm);
-
-			if (typeTerm !== undefined) {
-				if (!typeKnown) {
-					issues.push(UnknownTerm.make({ nodeId, nodeType, term: nodeType, kind: "type" }));
-				} else {
-					const superseded = Vocabulary.supersededBy(typeTerm);
-					if (O.isSome(superseded)) {
-						issues.push(DeprecatedType.make({ nodeId, nodeType, supersededBy: superseded.value }));
+			O.match(nativeTerm(nodeType), {
+				onNone: () => {},
+				onSome: (typeTerm) => {
+					const typeKnown = Vocabulary.hasType(typeTerm);
+					if (!typeKnown) {
+						issues.push(UnknownTerm.make({ nodeId, nodeType, term: nodeType, kind: TermKind.Enum.type }));
+					} else {
+						O.map(Vocabulary.supersededBy(typeTerm), (supersededBy) => {
+							issues.push(DeprecatedType.make({ nodeId, nodeType, supersededBy }));
+						});
 					}
-				}
-			}
-
-			for (const written of typeTerm === undefined ? [] : assertedTerms(node)) {
-				const term = nativeTerm(written);
-				if (term === undefined) continue;
-				if (!Vocabulary.hasProperty(term)) {
-					issues.push(UnknownTerm.make({ nodeId, nodeType, term: written, kind: "property" }));
-					continue;
-				}
-				if (typeKnown && typeTerm !== undefined && !Vocabulary.isPropertyOn(term, typeTerm)) {
-					issues.push(PropertyNotOnType.make({ nodeId, nodeType, property: written }));
-					continue;
-				}
-				const superseded = Vocabulary.supersededBy(term);
-				if (O.isSome(superseded)) {
-					issues.push(DeprecatedProperty.make({ nodeId, nodeType, property: written, supersededBy: superseded.value }));
-				}
-			}
+					for (const written of assertedTerms(node)) {
+						O.flatMap(nativeTerm(written), (term) => {
+							if (!Vocabulary.hasProperty(term)) {
+								issues.push(UnknownTerm.make({ nodeId, nodeType, term: written, kind: TermKind.Enum.property }));
+								return O.none();
+							}
+							if (typeKnown && !Vocabulary.isPropertyOn(term, typeTerm)) {
+								issues.push(PropertyNotOnType.make({ nodeId, nodeType, property: written }));
+								return O.none();
+							}
+							return O.map(Vocabulary.supersededBy(term), (supersededBy) => {
+								issues.push(DeprecatedProperty.make({ nodeId, nodeType, property: written, supersededBy }));
+							});
+						});
+					}
+				},
+			});
 
 			for (const [property, reference] of referencesOf(node)) {
-				if (!defined.has(reference)) {
+				if (!HashSet.has(defined, reference)) {
 					issues.push(DanglingReference.make({ nodeId, nodeType, property, reference }));
 				}
 			}
@@ -428,7 +433,7 @@ export class Conformance {
 		const danglingReferences = options?.danglingReferences ?? "ignore";
 
 		const issues = Conformance.check(graph);
-		const fails = issues.some((issue) => Match.valueTags(issue, {
+		const fails = A.some(issues, (issue) => Match.valueTags(issue, {
 			PropertyNotOnType: () => true,
 			UnknownTerm: () => unknownTerms === "fail",
 			DeprecatedType: () => deprecations === "report",
