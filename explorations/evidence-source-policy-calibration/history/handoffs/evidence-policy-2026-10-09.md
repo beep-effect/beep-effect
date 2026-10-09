@@ -62,3 +62,23 @@ knowledge findings for the committed documentation wave; inherited findings
 remain inherited. The primary-source researcher reviewed BRIEF, RESEARCH and
 DECISIONS and returned zero actionable findings, limited to those documents
 and the seven fetched sources, not an independent corpus/code inventory audit.
+
+## Publication receipt and orchestrator report
+
+Yeet publish passed the collected cheap gates and frozen head-install preflight,
+pushed aef52e1c5965e0af31ce9b21c2b24330384c2eae and created
+[PR #1567](https://github.com/beep-effect/beep-effect/pull/1567).
+`bun run beep yeet ready` flipped it ready for review. The explicitly bounded
+3h until-ready monitor replaces the automatically submitted unbounded monitor;
+the duplicate was cancelled. Worker-owned gates must settle before yielding.
+This receipt is appended after publication, so its containing commit follows
+the exact documentation head named in the report below. The orchestrator's
+live PR head is authoritative for the report-only follow-up commit.
+
+lane: evidence-policy
+head: aef52e1c5965e0af31ce9b21c2b24330384c2eae (qualified documentation head before this appended publication receipt)
+PR(s): #1567 OPEN, ready for review
+package-verify: none edited
+hosted-parity: test-tsgo: not run (docs-only, no TS or package touched); docgen local: not run (docs-only, no TS or package touched); jsdoc-ratchet: not run as a standalone parity proof (docs-only, no TS or package touched); knowledge refs: fail, one inherited gated example in repository-simplification SPEC line 374, no lane gated findings; fallow audit+health: not run as a standalone package parity proof (docs-only, no TS or package touched); scoped coverage: not run (docs-only, no TS or package touched); explore atlas --check: pass; explore --check: pass, zero findings; typos: pass; knowledge semantic-delta: pass, introduced 0, unchanged 510; Yeet cheap gates and frozen install: pass
+handoff: explorations/evidence-source-policy-calibration/history/handoffs/evidence-policy-2026-10-09.md
+open items: orchestrator merges under S11 and consolidates inherited reds; no blocking field-design questions; v1 decisions ratified under autonomy with per-decision reversals in DECISIONS, supersede before G3 scaffold or migrate after freeze; park reversal is reopen at decompose when G3 is scaffolded; G3 implements/evaluates the contract; readiness monitor must settle before worker final
