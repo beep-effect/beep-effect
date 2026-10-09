@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -12,22 +13,24 @@ import { paginate } from "./internal/paginate.ts";
 import { Repo } from "./Repo.ts";
 import type { PageOptions } from "./Rest.ts";
 
+const $I = $ScratchpadId.create("effected/github/GitHubCommit");
+
 /**
  * A commit, projected to what callers read.
  *
  * @public
  */
-export class CommitSummary extends S.Class<CommitSummary>("CommitSummary")({
+export class CommitSummary extends S.Class<CommitSummary>($I`CommitSummary`)({
 	/** The commit sha. */
-	sha: S.String,
+	sha: S.String.annotateKey({ description: "The commit sha." }),
 	/** The full commit message, untrimmed — this package does not decide what "the message" means. */
-	message: S.String,
+	message: S.String.annotateKey({ description: "The full commit message, untrimmed — this package does not decide what \"the message\" means." }),
 	/** The author's name as git recorded it, or `"Unknown"` when GitHub reports none. */
-	author: S.String,
+	author: S.String.annotateKey({ description: "The author's name as git recorded it, or `\"Unknown\"` when GitHub reports none." }),
 	/** The GitHub login of the authoring account, when GitHub could attribute one. */
-	authorLogin: S.optionalKey(S.String),
+	authorLogin: S.optionalKey(S.String).annotateKey({ description: "The GitHub login of the authoring account, when GitHub could attribute one." }),
 	/** The web URL for the commit. */
-	url: S.String,
+	url: S.String.annotateKey({ description: "The web URL for the commit." }),
 	/**
 	 * The parent commit shas, in the order GitHub lists them.
 	 *
@@ -36,8 +39,8 @@ export class CommitSummary extends S.Class<CommitSummary>("CommitSummary")({
 	 * not an optional one: every commit endpoint this package reads reports
 	 * `parents`, so "which commit(s) did this come from" never needs a raw route.
 	 */
-	parents: S.Array(S.String),
-}) {
+	parents: S.Array(S.String).annotateKey({ description: "The parent commit shas, in the order GitHub lists them." }),
+}, $I.annote("CommitSummary", { description: "A commit, projected to what callers read." })) {
 	/** The message's first line. */
 	get subject(): string {
 		return this.message.split("\n", 1)[0] ?? "";
@@ -57,43 +60,43 @@ export const FileStatus = S.Literals([
 	"copied",
 	"changed",
 	"unchanged",
-]);
+]).pipe($I.annoteSchema("FileStatus", { description: "How a file changed in a commit or a comparison." }));
 
 /**
  * One changed file.
  *
  * @public
  */
-export class CommitFile extends S.Class<CommitFile>("CommitFile")({
+export class CommitFile extends S.Class<CommitFile>($I`CommitFile`)({
 	/** Repository-relative path, after any rename. */
-	path: S.String,
+	path: S.String.annotateKey({ description: "Repository-relative path, after any rename." }),
 	/** What happened to it. */
-	status: FileStatus,
+	status: FileStatus.annotateKey({ description: "What happened to it." }),
 	/** Lines added. */
-	additions: S.Int,
+	additions: S.Int.annotateKey({ description: "Lines added." }),
 	/** Lines removed. */
-	deletions: S.Int,
+	deletions: S.Int.annotateKey({ description: "Lines removed." }),
 	/** The path before a rename or copy. */
-	previousPath: S.optionalKey(S.String),
-}) {}
+	previousPath: S.optionalKey(S.String).annotateKey({ description: "The path before a rename or copy." }),
+}, $I.annote("CommitFile", { description: "One changed file." })) {}
 
 /**
  * The result of comparing two refs.
  *
  * @public
  */
-export class CommitComparison extends S.Class<CommitComparison>("CommitComparison")({
+export class CommitComparison extends S.Class<CommitComparison>($I`CommitComparison`)({
 	/** How head relates to base. */
-	status: S.Literals(["diverged", "ahead", "behind", "identical"]),
+	status: S.Literals(["diverged", "ahead", "behind", "identical"]).annotateKey({ description: "How head relates to base." }),
 	/** Commits head has that base does not. */
-	aheadBy: S.Int,
+	aheadBy: S.Int.annotateKey({ description: "Commits head has that base does not." }),
 	/** Commits base has that head does not. */
-	behindBy: S.Int,
+	behindBy: S.Int.annotateKey({ description: "Commits base has that head does not." }),
 	/** The commits in the range. */
-	commits: S.Array(CommitSummary),
+	commits: S.Array(CommitSummary).annotateKey({ description: "The commits in the range." }),
 	/** The files that differ, subject to GitHub's own 300-file cap on this endpoint. */
-	files: S.Array(CommitFile),
-}) {}
+	files: S.Array(CommitFile).annotateKey({ description: "The files that differ, subject to GitHub's own 300-file cap on this endpoint." }),
+}, $I.annote("CommitComparison", { description: "The result of comparing two refs." })) {}
 
 /**
  * Read commits, list them, compare two refs and list the files a commit touched.
@@ -150,7 +153,7 @@ export interface GitHubCommitShape {
  *
  * @public
  */
-export class GitHubCommit extends Context.Service<GitHubCommit, GitHubCommitShape>()("@beep/scratchpad/effected/github/GitHubCommit") {
+export class GitHubCommit extends Context.Service<GitHubCommit, GitHubCommitShape>()($I`GitHubCommit`) {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<GitHubCommit, never, GitHubClient> = Layer.effect(
 		this,

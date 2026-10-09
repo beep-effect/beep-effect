@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -8,6 +9,8 @@ import { GitHubError } from "./GitHubError.ts";
 import type { GitHubGraphQLError } from "./GraphQL.ts";
 import { GraphQLDocument } from "./GraphQL.ts";
 import { Repo } from "./Repo.ts";
+
+const $I = $ScratchpadId.create("effected/github/GitBranch");
 
 const CreateLinkedBranch = GraphQLDocument.make({
   name: "createLinkedBranch",
@@ -119,7 +122,7 @@ export interface GitBranchShape {
  *
  * @public
  */
-export class GitBranch extends Context.Service<GitBranch, GitBranchShape>()("@beep/scratchpad/effected/github/GitBranch") {
+export class GitBranch extends Context.Service<GitBranch, GitBranchShape>()($I`GitBranch`) {
   /**
    * The live service, built over a `GitHubClient`.
    *

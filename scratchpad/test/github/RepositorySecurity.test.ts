@@ -1,14 +1,15 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import type { RecordedCall } from "../../effected/github/index.ts";
+import * as Result from "effect/Result";
+import type { GitHubFixtures, RecordedCall } from "../../effected/github/index.ts";
 import { GitHubClient, GitHubError } from "../../effected/github/index.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
 import { RepositorySecurity } from "../../effected/github/RepositorySecurity.ts";
 
 const run = Effect.fn("run")(function*<A, E>(
 	effect: Effect.Effect<A, E, RepositorySecurity | GitHubClient | Repo>,
-	request: Record<string, unknown>,
+	request: NonNullable<GitHubFixtures["request"]>,
 ) {
 		const requested: RecordedCall[] = [];
 		const value = yield* effect.pipe(
@@ -32,14 +33,14 @@ describe("RepositorySecurity setters", () => {
 				// The HTTP verb IS the value; there is no body either way.
 				const on = yield* run(
 					Effect.flatMap(RepositorySecurity, (s) => s[setter](true)),
-					{ [`PUT /repos/{owner}/{repo}/${segment}`]: {} },
+					{ [`PUT /repos/{owner}/{repo}/${segment}`]: Result.succeed("") },
 				);
 				assert.strictEqual(on.requested[0]?.route, `PUT /repos/{owner}/{repo}/${segment}`);
 				assert.deepStrictEqual(on.requested[0]?.params, { owner: "acme", repo: "widget" });
 
 				const off = yield* run(
 					Effect.flatMap(RepositorySecurity, (s) => s[setter](false)),
-					{ [`DELETE /repos/{owner}/{repo}/${segment}`]: {} },
+					{ [`DELETE /repos/{owner}/{repo}/${segment}`]: Result.succeed("") },
 				);
 				assert.strictEqual(off.requested[0]?.route, `DELETE /repos/{owner}/{repo}/${segment}`);
 				assert.deepStrictEqual(off.requested[0]?.params, { owner: "acme", repo: "widget" });
@@ -53,7 +54,7 @@ describe("RepositorySecurity.vulnerabilityAlerts", () => {
 		Effect.gen(function* () {
 			const { value, requested } = yield* run(
 				Effect.flatMap(RepositorySecurity, (s) => s.vulnerabilityAlerts),
-				{ "GET /repos/{owner}/{repo}/vulnerability-alerts": {} },
+				{ "GET /repos/{owner}/{repo}/vulnerability-alerts": Result.succeed("") },
 			);
 
 			// 204, no payload — enabled is the ABSENCE of a 404.
@@ -67,7 +68,7 @@ describe("RepositorySecurity.vulnerabilityAlerts", () => {
 			const { value } = yield* run(
 				Effect.flatMap(RepositorySecurity, (s) => s.vulnerabilityAlerts),
 				{
-					"GET /repos/{owner}/{repo}/vulnerability-alerts": GitHubError.notFound("test", "vulnerability alerts"),
+					"GET /repos/{owner}/{repo}/vulnerability-alerts": Result.fail(GitHubError.notFound("test", "vulnerability alerts")),
 				},
 			);
 
@@ -83,12 +84,12 @@ describe("RepositorySecurity.vulnerabilityAlerts", () => {
 					// A mis-scoped token is not "disabled". A blanket catch here would
 					// report a permissions problem as a feature being off, and the sync
 					// that follows would try to turn it "on" forever.
-					"GET /repos/{owner}/{repo}/vulnerability-alerts": GitHubError.make({
+					"GET /repos/{owner}/{repo}/vulnerability-alerts": Result.fail(GitHubError.make({
 						kind: "unauthorized",
 						operation: "test",
 						reason: "the token lacks the required scope",
 						status: 403,
-					}),
+					})),
 				},
 			).pipe(Effect.flip);
 
@@ -115,20 +116,20 @@ describe("RepositorySecurity flag reads", () => {
 				// uniformly.
 				const on = yield* run(
 					Effect.flatMap(RepositorySecurity, (s) => s[method]),
-					{ [`GET /repos/{owner}/{repo}/${segment}`]: { enabled: true } },
+					{ [`GET /repos/{owner}/{repo}/${segment}`]: Result.succeed({ enabled: true }) },
 				);
 				assert.strictEqual(on.value, true);
 
 				const off = yield* run(
 					Effect.flatMap(RepositorySecurity, (s) => s[method]),
-					{ [`GET /repos/{owner}/{repo}/${segment}`]: { enabled: false } },
+					{ [`GET /repos/{owner}/{repo}/${segment}`]: Result.succeed({ enabled: false }) },
 				);
 				assert.strictEqual(off.value, false);
 
 				// A response with no flag at all is not "enabled".
 				const missing = yield* run(
 					Effect.flatMap(RepositorySecurity, (s) => s[method]),
-					{ [`GET /repos/{owner}/{repo}/${segment}`]: {} },
+					{ [`GET /repos/{owner}/{repo}/${segment}`]: Result.succeed({}) },
 				);
 				assert.strictEqual(missing.value, false);
 			}),

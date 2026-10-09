@@ -1,9 +1,12 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
+
+const $I = $ScratchpadId.create("effected/github/RepositorySecurity");
 
 /**
  * Read and toggle the three repository security features that have their own
@@ -73,7 +76,7 @@ export interface RepositorySecurityShape {
  * @public
  */
 export class RepositorySecurity extends Context.Service<RepositorySecurity, RepositorySecurityShape>()(
-  "@beep/scratchpad/effected/github/RepositorySecurity",
+  $I`RepositorySecurity`,
 ) {
   /**
    * The live service, built over a `GitHubClient`.

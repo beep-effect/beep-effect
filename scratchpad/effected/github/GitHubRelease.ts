@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -8,37 +9,39 @@ import { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
 import type { PageOptions } from "./Rest.ts";
 
+const $I = $ScratchpadId.create("effected/github/GitHubRelease");
+
 /**
  * A release, projected to the fields callers read.
  *
  * @public
  */
-export class ReleaseInfo extends S.Class<ReleaseInfo>("ReleaseInfo")({
-	id: S.Int,
-	tag: S.String,
-	name: S.String,
-	body: S.String,
-	draft: S.Boolean,
-	prerelease: S.Boolean,
+export class ReleaseInfo extends S.Class<ReleaseInfo>($I`ReleaseInfo`)({
+	id: S.Int.annotateKey({ description: "GitHub's identifier for updating the release and uploading or listing its assets" }),
+	tag: S.String.annotateKey({ description: "The Git tag associated with the release, used to look it up" }),
+	name: S.String.annotateKey({ description: "The release's display heading, or an empty string when GitHub leaves it unset" }),
+	body: S.String.annotateKey({ description: "The release's description, or an empty string when GitHub leaves it unset" }),
+	draft: S.Boolean.annotateKey({ description: "Whether GitHub marks the release as a draft" }),
+	prerelease: S.Boolean.annotateKey({ description: "Whether GitHub marks the release as a prerelease" }),
 	/** The web URL. */
-	url: S.String,
+	url: S.String.annotateKey({ description: "The web URL." }),
 	/** The templated upload endpoint GitHub hands back for assets. */
-	uploadUrl: S.String,
-}) {}
+	uploadUrl: S.String.annotateKey({ description: "The templated upload endpoint GitHub hands back for assets." }),
+}, $I.annote("ReleaseInfo", { description: "A release, projected to the fields callers read." })) {}
 
 /**
  * A file attached to a release.
  *
  * @public
  */
-export class ReleaseAsset extends S.Class<ReleaseAsset>("ReleaseAsset")({
-	id: S.Int,
-	name: S.String,
+export class ReleaseAsset extends S.Class<ReleaseAsset>($I`ReleaseAsset`)({
+	id: S.Int.annotateKey({ description: "GitHub's identifier for the file attached to the release" }),
+	name: S.String.annotateKey({ description: "The attached file's filename as reported by GitHub" }),
 	/** The browser download URL. */
-	url: S.String,
+	url: S.String.annotateKey({ description: "The browser download URL." }),
 	/** Size in bytes. */
-	size: S.Int,
-}) {}
+	size: S.Int.annotateKey({ description: "Size in bytes." }),
+}, $I.annote("ReleaseAsset", { description: "A file attached to a release." })) {}
 
 /**
  * Create, read, list and update releases, and upload and list their assets.
@@ -128,7 +131,7 @@ export interface GitHubReleaseShape {
  * @public
  */
 export class GitHubRelease extends Context.Service<GitHubRelease, GitHubReleaseShape>()(
-	"@beep/scratchpad/effected/github/GitHubRelease",
+	$I`GitHubRelease`,
 ) {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<GitHubRelease, never, GitHubClient> = Layer.effect(

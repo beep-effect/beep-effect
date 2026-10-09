@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Scope from "effect/Scope";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -19,6 +20,8 @@ import { GitHubGraphQLError } from "./GraphQL.ts";
 import { numericId } from "./internal/ids.ts";
 import type { RetryPolicy } from "./Resilience.ts";
 
+const $I = $ScratchpadId.create("effected/github/GitHubApp");
+
 /**
  * A GitHub App call failed.
  *
@@ -30,14 +33,14 @@ import type { RetryPolicy } from "./Resilience.ts";
  *
  * @public
  */
-export class GitHubAppError extends S.TaggedError<GitHubAppError>()("GitHubAppError", {
+export class GitHubAppError extends S.TaggedError<GitHubAppError>($I`GitHubAppError`)("GitHubAppError", {
 	/** Which step failed. */
-	kind: S.Literals(["jwt", "token", "revoke", "identity", "installation"]),
+	kind: S.Literals(["jwt", "token", "revoke", "identity", "installation"]).annotateKey({ description: "Which step failed." }),
 	/** Human-readable cause. */
-	reason: S.String,
+	reason: S.String.annotateKey({ description: "Human-readable cause." }),
 	/** The underlying failure, when there is one. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, when there is one." }),
+}, $I.annote("GitHubAppError", { description: "A GitHub App call failed." })) {
 	override get message(): string {
 		return `GitHub App ${this.kind} failed: ${this.reason}`;
 	}
@@ -107,22 +110,22 @@ export interface TokenRequest extends AppCredentials {
  *
  * @public
  */
-export class InstallationToken extends S.Class<InstallationToken>("InstallationToken")({
+export class InstallationToken extends S.Class<InstallationToken>($I`InstallationToken`)({
 	/** The token. Decodes to `Redacted`, encodes back to the raw string. */
-	token: S.RedactedFromValue(S.String),
+	token: S.RedactedFromValue(S.String).annotateKey({ description: "The token. Decodes to `Redacted`, encodes back to the raw string." }),
 	/** When GitHub will stop accepting it — about an hour out. */
-	expiresAt: S.DateTimeUtcFromString,
+	expiresAt: S.DateTimeUtcFromString.annotateKey({ description: "When GitHub will stop accepting it — about an hour out." }),
 	/** The installation it is scoped to. */
-	installationId: S.Int,
+	installationId: S.Int.annotateKey({ description: "The installation it is scoped to." }),
 	/** The permissions GitHub actually granted, which may be narrower than requested. */
-	permissions: S.Record(S.String, S.String),
+	permissions: S.Record(S.String, S.String).annotateKey({ description: "The permissions GitHub actually granted, which may be narrower than requested." }),
 	/** The app's slug, when identity was resolved. */
-	appSlug: S.optionalKey(S.String),
+	appSlug: S.optionalKey(S.String).annotateKey({ description: "The app's slug, when identity was resolved." }),
 	/** The app's bot user id, when identity was resolved. */
-	appUserId: S.optionalKey(S.Int),
+	appUserId: S.optionalKey(S.Int).annotateKey({ description: "The app's bot user id, when identity was resolved." }),
 	/** The app's display name, when identity was resolved. */
-	appName: S.optionalKey(S.String),
-}) {
+	appName: S.optionalKey(S.String).annotateKey({ description: "The app's display name, when identity was resolved." }),
+}, $I.annote("InstallationToken", { description: "An installation access token and what GitHub said about it." })) {
 	/**
 	 * Whether this token is spent, `skew` before its stated expiry.
 	 *
@@ -159,12 +162,12 @@ const DEFAULT_SKEW = Duration.seconds(60);
  *
  * @public
  */
-export class BotIdentity extends S.Class<BotIdentity>("BotIdentity")({
+export class BotIdentity extends S.Class<BotIdentity>($I`BotIdentity`)({
 	/** The git author/committer name, e.g. `"my-app[bot]"`. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "The git author/committer name, e.g. `\"my-app[bot]\"`." }),
 	/** The no-reply address GitHub attributes to that account. */
-	email: S.String,
-}) {
+	email: S.String.annotateKey({ description: "The no-reply address GitHub attributes to that account." }),
+}, $I.annote("BotIdentity", { description: "Who a bot commits as." })) {
 	/** The identity for an app, given whatever of its identity is known. */
 	static forApp(source: { readonly appSlug: string; readonly appUserId?: number | undefined }): BotIdentity {
 		const name = `${source.appSlug}[bot]`;
@@ -206,14 +209,14 @@ export class BotIdentity extends S.Class<BotIdentity>("BotIdentity")({
  *
  * @public
  */
-export class AppIdentity extends S.Class<AppIdentity>("AppIdentity")({
+export class AppIdentity extends S.Class<AppIdentity>($I`AppIdentity`)({
 	/** The URL slug, e.g. `"my-app"`. */
-	slug: S.String,
+	slug: S.String.annotateKey({ description: "The URL slug, e.g. `\"my-app\"`." }),
 	/** The display name. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "The display name." }),
 	/** The bot user's numeric id, when it could be resolved. */
-	userId: S.optionalKey(S.Int),
-}) {
+	userId: S.optionalKey(S.Int).annotateKey({ description: "The bot user's numeric id, when it could be resolved." }),
+}, $I.annote("AppIdentity", { description: "What GitHub knows about the app itself." })) {
 	/** The committer identity for this app. */
 	botIdentity(): BotIdentity {
 		return BotIdentity.forApp({
@@ -228,12 +231,12 @@ export class AppIdentity extends S.Class<AppIdentity>("AppIdentity")({
  *
  * @public
  */
-export class Installation extends S.Class<Installation>("Installation")({
+export class Installation extends S.Class<Installation>($I`Installation`)({
 	/** The installation id, which is what a token is minted against. */
-	id: S.Int,
+	id: S.Int.annotateKey({ description: "The installation id, which is what a token is minted against." }),
 	/** The account the app is installed on, when GitHub reported one. */
-	account: S.optionalKey(S.String),
-}) {}
+	account: S.optionalKey(S.String).annotateKey({ description: "The account the app is installed on, when GitHub reported one." }),
+}, $I.annote("Installation", { description: "One installation of the app." })) {}
 
 /**
  * Transport settings for the app's own API calls.
@@ -293,7 +296,7 @@ export interface GitHubAppOptions {
  *
  * @public
  */
-export class GitHubApp extends Context.Service<GitHubApp, GitHubAppShape>()("@beep/scratchpad/effected/github/GitHubApp") {
+export class GitHubApp extends Context.Service<GitHubApp, GitHubAppShape>()($I`GitHubApp`) {
 	/** The default transport. Bind it once; layers are memoized by reference. */
 	static readonly layer: Layer.Layer<GitHubApp> = Layer.effect(this, makeApp({}));
 

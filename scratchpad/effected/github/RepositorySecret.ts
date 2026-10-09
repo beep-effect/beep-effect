@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -7,6 +8,8 @@ import { GitHubClient } from "./GitHubClient.ts";
 import { GitHubError } from "./GitHubError.ts";
 import { encryptSecret } from "./internal/crypto.ts";
 import { Repo } from "./Repo.ts";
+
+const $I = $ScratchpadId.create("effected/github/RepositorySecret");
 
 /**
  * Which secret store an operation acts on.
@@ -122,7 +125,7 @@ const ROUTES = {
  * @public
  */
 export class RepositorySecret extends Context.Service<RepositorySecret, RepositorySecretShape>()(
-  "@beep/scratchpad/effected/github/RepositorySecret",
+  $I`RepositorySecret`,
 ) {
   /**
    * The live service, built over a `GitHubClient`.

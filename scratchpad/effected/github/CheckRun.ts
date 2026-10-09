@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -11,6 +12,8 @@ import type { GitHubError } from "./GitHubError.ts";
 import { numericId } from "./internal/ids.ts";
 import { Repo } from "./Repo.ts";
 
+const $I = $ScratchpadId.create("effected/github/CheckRun");
+
 /** How a check run finished. @public */
 export const CheckConclusion = S.Literals([
   "success",
@@ -20,27 +23,27 @@ export const CheckConclusion = S.Literals([
   "timed_out",
   "action_required",
   "skipped",
-]);
+]).pipe($I.annoteSchema("CheckConclusion", { description: "How a check run finished." }));
 
 /** How serious an annotation is. @public */
-export const AnnotationLevel = S.Literals(["notice", "warning", "failure"]);
+export const AnnotationLevel = S.Literals(["notice", "warning", "failure"]).pipe($I.annoteSchema("AnnotationLevel", { description: "How serious an annotation is." }));
 
 /**
  * One annotation on a check run.
  *
  * @public
  */
-export class Annotation extends S.Class<Annotation>("Annotation")({
+export class Annotation extends S.Class<Annotation>($I`Annotation`)({
   /** Repository-relative path. */
-  path: S.String,
+  path: S.String.annotateKey({ description: "Repository-relative path." }),
   /** First line of the range, 1-based. */
-  startLine: S.Int,
+  startLine: S.Int.annotateKey({ description: "First line of the range, 1-based." }),
   /** Last line of the range, 1-based. */
-  endLine: S.Int,
-  level: AnnotationLevel,
-  message: S.String,
-  title: S.optionalKey(S.String),
-}) {
+  endLine: S.Int.annotateKey({ description: "Last line of the range, 1-based." }),
+  level: AnnotationLevel.annotateKey({ description: "How serious the annotated finding is: `notice`, `warning` or `failure`" }),
+  message: S.String.annotateKey({ description: "The explanation GitHub displays for the annotated line range" }),
+  title: S.optionalKey(S.String).annotateKey({ description: "An optional heading GitHub displays for the annotated finding" }),
+}, $I.annote("Annotation", { description: "One annotation on a check run." })) {
 }
 
 /**
@@ -55,15 +58,15 @@ export class Annotation extends S.Class<Annotation>("Annotation")({
  *
  * @public
  */
-export class CheckRunOutput extends S.Class<CheckRunOutput>("CheckRunOutput")({
-  title: S.String,
+export class CheckRunOutput extends S.Class<CheckRunOutput>($I`CheckRunOutput`)({
+  title: S.String.annotateKey({ description: "The heading GitHub displays above the check run's summary" }),
   /** Markdown shown under the title. Capped at 65535 **bytes**. */
-  summary: S.String,
+  summary: S.String.annotateKey({ description: "Markdown shown under the title. Capped at 65535 **bytes**." }),
   /** Longer markdown. Capped at 65535 **bytes**. */
-  text: S.optionalKey(S.String),
+  text: S.optionalKey(S.String).annotateKey({ description: "Longer markdown. Capped at 65535 **bytes**." }),
   /** At most 50 per request; the rest are dropped by {@link CheckRunOutput.truncated}. */
-  annotations: Annotation.pipe(S.Array, S.optionalKey),
-}) {
+  annotations: Annotation.pipe(S.Array, S.optionalKey).annotateKey({ description: "At most 50 per request; the rest are dropped by CheckRunOutput.truncated." }),
+}, $I.annote("CheckRunOutput", { description: "A check run's rendered output." })) {
   /** GitHub's cap on `summary` and `text`, in UTF-8 bytes. */
   static readonly LIMIT_BYTES = 65_535;
   /** GitHub's cap on annotations per request. */
@@ -111,13 +114,13 @@ const capBytes = (value: string): string => {
  *
  * @public
  */
-export class CheckRunRef extends S.Class<CheckRunRef>("CheckRunRef")({
-  id: S.Int,
-  name: S.String,
+export class CheckRunRef extends S.Class<CheckRunRef>($I`CheckRunRef`)({
+  id: S.Int.annotateKey({ description: "GitHub's identifier for reading, updating and concluding this check run" }),
+  name: S.String.annotateKey({ description: "The label supplied when the check run was created, as reported by GitHub" }),
   /** The web URL. */
-  url: S.String,
-  status: S.String,
-}) {
+  url: S.String.annotateKey({ description: "The web URL." }),
+  status: S.String.annotateKey({ description: "The check run's execution status as reported by GitHub" }),
+}, $I.annote("CheckRunRef", { description: "A check run as GitHub reports it." })) {
 }
 
 /**
@@ -229,7 +232,7 @@ export interface CheckRunShape {
  *
  * @public
  */
-export class CheckRun extends Context.Service<CheckRun, CheckRunShape>()("@beep/scratchpad/effected/github/CheckRun") {
+export class CheckRun extends Context.Service<CheckRun, CheckRunShape>()($I`CheckRun`) {
   /** The live service, built over a `GitHubClient`. */
   static readonly layer: Layer.Layer<CheckRun, never, GitHubClient> = Layer.effect(
     this,

@@ -1,6 +1,9 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { PaginatingEndpoints } from "@octokit/plugin-paginate-rest";
 import type { Endpoints, RequestHeaders } from "@octokit/types";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/github/Rest");
 
 /**
  * Every REST route GitHub documents, as a `"<METHOD> <path>"` literal — for
@@ -59,11 +62,14 @@ export type Params<R extends Route> = Endpoints[R]["parameters"] & RequestExtras
 export type Response<R extends Route> = Endpoints[R]["response"];
 
 /**
- * The `data` payload `Route` returns.
+ * The `data` payload `Route` returns. Octokit returns an empty string for
+ * bodyless responses; OpenAPI describes their absent content as `never`.
  *
  * @public
  */
-export type Data<R extends Route> = Endpoints[R]["response"]["data"];
+export type Data<R extends Route> = [Endpoints[R]["response"]["data"]] extends [never]
+	? ""
+	: Endpoints[R]["response"]["data"];
 
 /**
  * The subset of routes that paginate.
@@ -113,12 +119,12 @@ export type Item<R extends PaginatingRoute> =
  *
  * @public
  */
-export class PageOptions extends S.Class<PageOptions>("PageOptions")({
+export class PageOptions extends S.Class<PageOptions>($I`PageOptions`)({
 	/** Items requested per page. GitHub's ceiling is 100. */
-	perPage: S.optionalKey(S.Int.check(S.isBetween({ minimum: 1, maximum: 100 }))),
+	perPage: S.optionalKey(S.Int.check(S.isBetween({ minimum: 1, maximum: 100 }))).annotateKey({ description: "Items requested per page. GitHub's ceiling is 100." }),
 	/** Stop after this many pages. Absent means "until GitHub stops". */
-	maxPages: S.optionalKey(S.Int.check(S.isGreaterThan(0))),
-}) {
+	maxPages: S.optionalKey(S.Int.check(S.isGreaterThan(0))).annotateKey({ description: "Stop after this many pages. Absent means \"until GitHub stops\"." }),
+}, $I.annote("PageOptions", { description: "How far a paginated read should go." })) {
 	/** Reads every page, 100 at a time — GitHub's maximum page size. */
 	static readonly all: PageOptions = PageOptions.make({ perPage: 100 });
 

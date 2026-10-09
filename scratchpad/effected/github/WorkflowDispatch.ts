@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as DateTime from "effect/DateTime";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -12,21 +13,23 @@ import { numericId } from "./internal/ids.ts";
 import { Repo } from "./Repo.ts";
 import { PageOptions } from "./Rest.ts";
 
+const $I = $ScratchpadId.create("effected/github/WorkflowDispatch");
+
 /**
  * Where a workflow run has got to.
  *
  * @public
  */
-export class WorkflowRunStatus extends S.Class<WorkflowRunStatus>("WorkflowRunStatus")({
+export class WorkflowRunStatus extends S.Class<WorkflowRunStatus>($I`WorkflowRunStatus`)({
   /** The run's numeric id. */
-  id: S.Int,
+  id: S.Int.annotateKey({ description: "The run's numeric id." }),
   /** `queued`, `in_progress`, `completed`, … */
-  status: S.String,
+  status: S.String.annotateKey({ description: "`queued`, `in_progress`, `completed`, …" }),
   /** Set once `status` is `completed`. */
-  conclusion: S.optionalKey(S.String),
+  conclusion: S.optionalKey(S.String).annotateKey({ description: "Set once `status` is `completed`." }),
   /** The run's web URL. */
-  url: S.String,
-}) {
+  url: S.String.annotateKey({ description: "The run's web URL." }),
+}, $I.annote("WorkflowRunStatus", { description: "Where a workflow run has got to." })) {
   /** Has the run finished, whatever the outcome? */
   get isDone(): boolean {
     return this.status === "completed";
@@ -148,7 +151,7 @@ export interface WorkflowDispatchShape {
  * @public
  */
 export class WorkflowDispatch extends Context.Service<WorkflowDispatch, WorkflowDispatchShape>()(
-  "@beep/scratchpad/effected/github/WorkflowDispatch",
+  $I`WorkflowDispatch`,
 ) {
   /** The live service, built over a `GitHubClient`. */
   static readonly layer: Layer.Layer<WorkflowDispatch, never, GitHubClient> = Layer.effect(

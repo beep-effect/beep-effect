@@ -1,10 +1,12 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import { secretFixture } from "./fixtures.ts";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Base64 from "effect/encoding/Base64";
-import type { RecordedCall } from "../../effected/github/GitHubClient.ts";
+import type { GitHubFixtures, RecordedCall } from "../../effected/github/GitHubClient.ts";
 import { GitHubClient } from "../../effected/github/GitHubClient.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
 import type { SecretScope } from "../../effected/github/RepositorySecret.ts";
@@ -17,8 +19,8 @@ const PUBLIC_KEY = { key: Base64.encode(new Uint8Array(32).fill(7)), key_id: "ke
 
 const run = Effect.fn("run")(function*<A, E>(
 	effect: Effect.Effect<A, E, RepositorySecret | GitHubClient | Repo>,
-	request: Record<string, unknown>,
-	paginate: Record<string, ReadonlyArray<unknown>> = {},
+	request: NonNullable<GitHubFixtures["request"]>,
+	paginate: NonNullable<GitHubFixtures["paginate"]> = {},
 ) {
 		const requested: RecordedCall[] = [];
 		const value = yield* effect.pipe(
@@ -38,8 +40,8 @@ describe("RepositorySecret, per store", () => {
 				const { requested, routes } = yield* run(
 					Effect.flatMap(RepositorySecret, (s) => s.set("TOKEN", Redacted.make("plaintext"), scope)),
 					{
-						[`GET /repos/{owner}/{repo}/${scope}/secrets/public-key`]: PUBLIC_KEY,
-						[`PUT /repos/{owner}/{repo}/${scope}/secrets/{secret_name}`]: {},
+						[`GET /repos/{owner}/{repo}/${scope}/secrets/public-key`]: Result.succeed(PUBLIC_KEY),
+						[`PUT /repos/{owner}/{repo}/${scope}/secrets/{secret_name}`]: Result.succeed(""),
 					},
 				);
 
@@ -65,7 +67,7 @@ describe("RepositorySecret, per store", () => {
 				const { value, requested } = yield* run(
 					Effect.flatMap(RepositorySecret, (s) => s.list(scope)),
 					{},
-					{ [`GET /repos/{owner}/{repo}/${scope}/secrets`]: [{ name: "A" }, { name: "B" }] },
+					{ [`GET /repos/{owner}/{repo}/${scope}/secrets`]: Result.succeed([secretFixture({ name: "A" }), secretFixture({ name: "B" })]) },
 				);
 
 				assert.deepStrictEqual(value, [{ name: "A" }, { name: "B" }]);
@@ -77,7 +79,7 @@ describe("RepositorySecret, per store", () => {
 			Effect.gen(function* () {
 				const { requested } = yield* run(
 					Effect.flatMap(RepositorySecret, (s) => s.delete("TOKEN", scope)),
-					{ [`DELETE /repos/{owner}/{repo}/${scope}/secrets/{secret_name}`]: {} },
+					{ [`DELETE /repos/{owner}/{repo}/${scope}/secrets/{secret_name}`]: Result.succeed("") },
 				);
 
 				assert.strictEqual(requested[0]?.route, `DELETE /repos/{owner}/{repo}/${scope}/secrets/{secret_name}`);
@@ -91,7 +93,7 @@ describe("RepositorySecret, per store", () => {
 			const { requested } = yield* run(
 				Effect.flatMap(RepositorySecret, (s) => s.list()),
 				{},
-				{ "GET /repos/{owner}/{repo}/actions/secrets": [] },
+				{ "GET /repos/{owner}/{repo}/actions/secrets": Result.succeed([]) },
 			);
 
 			assert.strictEqual(requested[0]?.route, "GET /repos/{owner}/{repo}/actions/secrets");
@@ -105,8 +107,8 @@ describe("RepositorySecret, per environment", () => {
 			const { requested, routes } = yield* run(
 				Effect.flatMap(RepositorySecret, (s) => s.setForEnvironment("prod", "TOKEN", Redacted.make("plaintext"))),
 				{
-					"GET /repos/{owner}/{repo}/environments/{environment_name}/secrets/public-key": PUBLIC_KEY,
-					"PUT /repos/{owner}/{repo}/environments/{environment_name}/secrets/{secret_name}": {},
+					"GET /repos/{owner}/{repo}/environments/{environment_name}/secrets/public-key": Result.succeed(PUBLIC_KEY),
+					"PUT /repos/{owner}/{repo}/environments/{environment_name}/secrets/{secret_name}": Result.succeed({}),
 				},
 			);
 
@@ -125,14 +127,14 @@ describe("RepositorySecret, per environment", () => {
 			const listed = yield* run(
 				Effect.flatMap(RepositorySecret, (s) => s.listForEnvironment("prod")),
 				{},
-				{ "GET /repos/{owner}/{repo}/environments/{environment_name}/secrets": [{ name: "A" }] },
+				{ "GET /repos/{owner}/{repo}/environments/{environment_name}/secrets": Result.succeed([secretFixture({ name: "A" })]) },
 			);
 			assert.deepStrictEqual(listed.value, [{ name: "A" }]);
 			assert.deepStrictEqual(listed.requested[0]?.params, { owner: "acme", repo: "widget", environment_name: "prod" });
 
 			const deleted = yield* run(
 				Effect.flatMap(RepositorySecret, (s) => s.deleteForEnvironment("prod", "TOKEN")),
-				{ "DELETE /repos/{owner}/{repo}/environments/{environment_name}/secrets/{secret_name}": {} },
+				{ "DELETE /repos/{owner}/{repo}/environments/{environment_name}/secrets/{secret_name}": Result.succeed("") },
 			);
 			assert.deepStrictEqual(deleted.requested[0]?.params, {
 				owner: "acme",
@@ -152,7 +154,7 @@ describe("RepositorySecret, when the public key is unusable", () => {
 				{
 					// Garbage from the API is INPUT, so it fails typed. A throw here
 					// would be a defect escaping from the secrets path.
-					"GET /repos/{owner}/{repo}/actions/secrets/public-key": { key: "!!! not base64 !!!", key_id: "k" },
+					"GET /repos/{owner}/{repo}/actions/secrets/public-key": Result.succeed({ key: "!!! not base64 !!!", key_id: "k" }),
 				},
 			).pipe(Effect.exit);
 

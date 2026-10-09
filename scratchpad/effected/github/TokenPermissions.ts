@@ -1,12 +1,15 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/github/TokenPermissions");
 
 /**
  * How much access a permission grants.
  *
  * @public
  */
-export const PermissionLevel = S.Literals(["read", "write", "admin"]);
+export const PermissionLevel = S.Literals(["read", "write", "admin"]).pipe($I.annoteSchema("PermissionLevel", { description: "How much access a permission grants." }));
 
 /** How much access a permission grants. @public */
 export type PermissionLevel = (typeof PermissionLevel.literals)[number];
@@ -19,14 +22,14 @@ const RANK: Record<PermissionLevel, number> = { read: 1, write: 2, admin: 3 };
  *
  * @public
  */
-export class PermissionGap extends S.Class<PermissionGap>("PermissionGap")({
+export class PermissionGap extends S.Class<PermissionGap>($I`PermissionGap`)({
   /** The permission's name, e.g. `"contents"`. */
-  permission: S.String,
+  permission: S.String.annotateKey({ description: "The permission's name, e.g. `\"contents\"`." }),
   /** What was asked for. */
-  required: PermissionLevel,
+  required: PermissionLevel.annotateKey({ description: "What was asked for." }),
   /** What the token has, when it has any at all. */
-  granted: S.optionalKey(PermissionLevel),
-}) {
+  granted: S.optionalKey(PermissionLevel).annotateKey({ description: "What the token has, when it has any at all." }),
+}, $I.annote("PermissionGap", { description: "A permission the token does not have enough of." })) {
 }
 
 /**
@@ -34,14 +37,14 @@ export class PermissionGap extends S.Class<PermissionGap>("PermissionGap")({
  *
  * @public
  */
-export class ExtraPermission extends S.Class<ExtraPermission>("ExtraPermission")({
+export class ExtraPermission extends S.Class<ExtraPermission>($I`ExtraPermission`)({
   /** The permission's name, e.g. `"contents"`. */
-  permission: S.String,
+  permission: S.String.annotateKey({ description: "The permission's name, e.g. `\"contents\"`." }),
   /** What the token has. */
-  granted: PermissionLevel,
+  granted: PermissionLevel.annotateKey({ description: "What the token has." }),
   /** What was asked for, when anything was. */
-  required: S.optionalKey(PermissionLevel),
-}) {
+  required: S.optionalKey(PermissionLevel).annotateKey({ description: "What was asked for, when anything was." }),
+}, $I.annote("ExtraPermission", { description: "A permission the token has and did not need." })) {
 }
 
 /**
@@ -49,12 +52,12 @@ export class ExtraPermission extends S.Class<ExtraPermission>("ExtraPermission")
  *
  * @public
  */
-export class PermissionResult extends S.Class<PermissionResult>("PermissionResult")({
+export class PermissionResult extends S.Class<PermissionResult>($I`PermissionResult`)({
   /** Permissions that are missing or too weak. */
-  missing: S.Array(PermissionGap),
+  missing: S.Array(PermissionGap).annotateKey({ description: "Permissions that are missing or too weak." }),
   /** Permissions granted beyond what was asked for. */
-  extra: S.Array(ExtraPermission),
-}) {
+  extra: S.Array(ExtraPermission).annotateKey({ description: "Permissions granted beyond what was asked for." }),
+}, $I.annote("PermissionResult", { description: "What comparing a token's permissions against a requirement found." })) {
   /** Nothing missing. */
   get satisfied(): boolean {
     return this.missing.length === 0;
@@ -71,12 +74,12 @@ export class PermissionResult extends S.Class<PermissionResult>("PermissionResul
  *
  * @public
  */
-export class TokenPermissionError extends S.TaggedError<TokenPermissionError>()("TokenPermissionError", {
+export class TokenPermissionError extends S.TaggedError<TokenPermissionError>($I`TokenPermissionError`)("TokenPermissionError", {
   /** Which assertion failed. */
-  kind: S.Literals(["insufficient", "excess"]),
+  kind: S.Literals(["insufficient", "excess"]).annotateKey({ description: "Which assertion failed." }),
   /** The comparison that produced it. */
-  result: PermissionResult,
-}) {
+  result: PermissionResult.annotateKey({ description: "The comparison that produced it." }),
+}, $I.annote("TokenPermissionError", { description: "A token asked for access it does not have, or has access it did not ask for." })) {
   override get message(): string {
     return this.kind === "insufficient"
       ? `token is missing ${this.result.missing.map((gap) => `${gap.permission}:${gap.required}`).join(", ")}`
@@ -110,10 +113,10 @@ export class TokenPermissionError extends S.TaggedError<TokenPermissionError>()(
  *
  * @public
  */
-export class TokenPermissions extends S.Class<TokenPermissions>("TokenPermissions")({
+export class TokenPermissions extends S.Class<TokenPermissions>($I`TokenPermissions`)({
   /** Permission name to level. */
-  granted: S.Record(S.String, PermissionLevel),
-}) {
+  granted: S.Record(S.String, PermissionLevel).annotateKey({ description: "Permission name to level." }),
+}, $I.annote("TokenPermissions", { description: "The permissions a token was granted, and what they satisfy." })) {
   /**
    * Read GitHub's permission map, ignoring anything unrecognized.
    *

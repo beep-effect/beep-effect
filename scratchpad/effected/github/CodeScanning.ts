@@ -1,9 +1,12 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
+
+const $I = $ScratchpadId.create("effected/github/CodeScanning");
 
 /**
  * A CodeQL default-setup configuration.
@@ -77,7 +80,7 @@ export interface CodeScanningShape {
  *
  * @public
  */
-export class CodeScanning extends Context.Service<CodeScanning, CodeScanningShape>()("@beep/scratchpad/effected/github/CodeScanning") {
+export class CodeScanning extends Context.Service<CodeScanning, CodeScanningShape>()($I`CodeScanning`) {
 	/**
 	 * The live service, built over a `GitHubClient`.
 	 *

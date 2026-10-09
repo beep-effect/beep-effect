@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -5,6 +6,8 @@ import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
+
+const $I = $ScratchpadId.create("effected/github/Attestation");
 
 /**
  * The api-version this surface pins.
@@ -22,24 +25,24 @@ const API_VERSION = "2026-03-10";
  *
  * @public
  */
-export class AttestationRecord extends S.Class<AttestationRecord>("AttestationRecord")({
+export class AttestationRecord extends S.Class<AttestationRecord>($I`AttestationRecord`)({
 	/** GitHub's id for it, when the response carried one. */
-	id: S.optionalKey(S.Int),
+	id: S.optionalKey(S.Int).annotateKey({ description: "GitHub's id for it, when the response carried one." }),
 	/** Where a human can look at it. */
-	url: S.String,
-}) {}
+	url: S.String.annotateKey({ description: "Where a human can look at it." }),
+}, $I.annote("AttestationRecord", { description: "A stored attestation." })) {}
 
 /**
  * One entry from an attestation listing.
  *
  * @public
  */
-export class AttestationListEntry extends S.Class<AttestationListEntry>("AttestationListEntry")({
+export class AttestationListEntry extends S.Class<AttestationListEntry>($I`AttestationListEntry`)({
 	/** Where the bundle lives. */
-	url: S.String,
+	url: S.String.annotateKey({ description: "Where the bundle lives." }),
 	/** The in-toto predicate type, when the listing reported one. */
-	predicateType: S.optionalKey(S.String),
-}) {}
+	predicateType: S.optionalKey(S.String).annotateKey({ description: "The in-toto predicate type, when the listing reported one." }),
+}, $I.annote("AttestationListEntry", { description: "One entry from an attestation listing." })) {}
 
 const UploadResponse = S.Struct({ id: S.optionalKey(S.Int) });
 
@@ -88,7 +91,7 @@ export interface AttestationShape {
  *
  * @public
  */
-export class Attestation extends Context.Service<Attestation, AttestationShape>()("@beep/scratchpad/effected/github/Attestation") {
+export class Attestation extends Context.Service<Attestation, AttestationShape>()($I`Attestation`) {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<Attestation, never, GitHubClient> = Layer.effect(
 		this,

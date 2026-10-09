@@ -1,9 +1,12 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
+
+const $I = $ScratchpadId.create("effected/github/DeploymentEnvironment");
 
 /**
  * A deployment environment, as listing returns it.
@@ -71,7 +74,7 @@ export interface DeploymentEnvironmentShape {
  * @public
  */
 export class DeploymentEnvironment extends Context.Service<DeploymentEnvironment, DeploymentEnvironmentShape>()(
-	"@beep/scratchpad/effected/github/DeploymentEnvironment",
+	$I`DeploymentEnvironment`,
 ) {
 	/**
 	 * The live service, built over a `GitHubClient`.

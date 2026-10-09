@@ -1,19 +1,22 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { retryAfterMillisFrom } from "./internal/headers.ts";
+
+const $I = $ScratchpadId.create("effected/github/GraphQL");
 
 /**
  * One entry from a GraphQL response's `errors` array.
  *
  * @public
  */
-export class GraphQLErrorEntry extends S.Class<GraphQLErrorEntry>("GraphQLErrorEntry")({
+export class GraphQLErrorEntry extends S.Class<GraphQLErrorEntry>($I`GraphQLErrorEntry`)({
   /** GitHub's prose. */
-  message: S.String,
+  message: S.String.annotateKey({ description: "GitHub's prose." }),
   /** GitHub's own classification, e.g. `"NOT_FOUND"` or `"FORBIDDEN"`. */
-  type: S.optionalKey(S.String),
-}) {
+  type: S.optionalKey(S.String).annotateKey({ description: "GitHub's own classification, e.g. `\"NOT_FOUND\"` or `\"FORBIDDEN\"`." }),
+}, $I.annote("GraphQLErrorEntry", { description: "One entry from a GraphQL response's `errors` array." })) {
 }
 
 /**
@@ -26,7 +29,7 @@ export class GraphQLErrorEntry extends S.Class<GraphQLErrorEntry>("GraphQLErrorE
  *
  * @public
  */
-export class GitHubGraphQLError extends S.TaggedError<GitHubGraphQLError>()("GitHubGraphQLError", {
+export class GitHubGraphQLError extends S.TaggedError<GitHubGraphQLError>($I`GitHubGraphQLError`)("GitHubGraphQLError", {
   /**
    * Structural routing, mirroring `GitHubError`'s.
    *
@@ -43,18 +46,18 @@ export class GitHubGraphQLError extends S.TaggedError<GitHubGraphQLError>()("Git
     "rateLimited",
     "transport",
     "decode",
-  ]),
+  ]).annotateKey({ description: "Structural routing, mirroring `GitHubError`'s." }),
   /** The document's name, e.g. `"linkedIssues"` — never the literal `"graphql"`. */
-  operation: S.String,
+  operation: S.String.annotateKey({ description: "The document's name, e.g. `\"linkedIssues\"` — never the literal `\"graphql\"`." }),
   /** Human-readable cause, for logs. */
-  reason: S.String,
+  reason: S.String.annotateKey({ description: "Human-readable cause, for logs." }),
   /** Everything GitHub reported, in order. */
-  errors: S.Array(GraphQLErrorEntry),
+  errors: S.Array(GraphQLErrorEntry).annotateKey({ description: "Everything GitHub reported, in order." }),
   /** A server-advised delay in milliseconds, read only by the retry schedule. */
-  retryAfterMillis: S.optionalKey(S.Int),
+  retryAfterMillis: S.optionalKey(S.Int).annotateKey({ description: "A server-advised delay in milliseconds, read only by the retry schedule." }),
   /** The underlying throwable, when one exists. */
-  cause: S.optionalKey(S.Defect()),
-}) {
+  cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying throwable, when one exists." }),
+}, $I.annote("GitHubGraphQLError", { description: "A GraphQL call failed." })) {
   override get message(): string {
     return `${this.operation} failed: ${this.reason}`;
   }

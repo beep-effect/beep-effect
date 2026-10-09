@@ -162,12 +162,12 @@ describe("bundle reachability", () => {
 		// generated route map is likewise types. Leaning on them costs zero runtime
 		// bytes, which is why this package types every endpoint rather than none.
 		const reachable = reachableBareImports("Rest.ts");
-		assert.deepStrictEqual([...reachable].sort(), ["effect"]);
+		assert.deepStrictEqual([...reachable].sort(), ["@beep/identity/packages", "effect"]);
 	});
 
 	it("the pure classes reach nothing but effect", () => {
 		for (const entry of ["Resilience.ts", "GraphQL.ts"]) {
-			assert.deepStrictEqual([...reachableBareImports(entry)].sort(), ["effect"], entry);
+			assert.deepStrictEqual([...reachableBareImports(entry)].sort(), ["@beep/identity/packages", "effect"], entry);
 		}
 	});
 

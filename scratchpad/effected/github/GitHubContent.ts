@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -6,6 +7,8 @@ import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
+
+const $I = $ScratchpadId.create("effected/github/GitHubContent");
 
 const JsonValue = S.fromJsonString(S.String);
 
@@ -58,7 +61,7 @@ export interface GitHubContentShape {
  * @public
  */
 export class GitHubContent extends Context.Service<GitHubContent, GitHubContentShape>()(
-	"@beep/scratchpad/effected/github/GitHubContent",
+	$I`GitHubContent`,
 ) {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<GitHubContent, never, GitHubClient> = Layer.effect(

@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { SemVer } from "../semver/index.ts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -11,6 +12,8 @@ import { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
 import type { PageOptions } from "./Rest.ts";
 
+const $I = $ScratchpadId.create("effected/github/GitTag");
+
 /** How many annotated-tag dereferences to follow before giving up. */
 const MAX_TAG_PEEL = 5;
 
@@ -19,26 +22,26 @@ const MAX_TAG_PEEL = 5;
  *
  * @public
  */
-export class TagRef extends S.Class<TagRef>("TagRef")({
+export class TagRef extends S.Class<TagRef>($I`TagRef`)({
 	/** The tag name, without `refs/tags/`. */
-	tag: S.NonEmptyString,
+	tag: S.NonEmptyString.annotateKey({ description: "The tag name, without `refs/tags/`." }),
 	/** The **commit** sha, with annotated tags already dereferenced. */
-	sha: S.String,
-}) {}
+	sha: S.String.annotateKey({ description: "The **commit** sha, with annotated tags already dereferenced." }),
+}, $I.annote("TagRef", { description: "A tag and the commit it ultimately points at." })) {}
 
 /**
  * A tag whose name carries a version.
  *
  * @public
  */
-export class SemverTag extends S.Class<SemverTag>("SemverTag")({
+export class SemverTag extends S.Class<SemverTag>($I`SemverTag`)({
 	/** The tag name as GitHub has it. */
-	tag: S.NonEmptyString,
+	tag: S.NonEmptyString.annotateKey({ description: "The tag name as GitHub has it." }),
 	/** The commit sha. */
-	sha: S.String,
+	sha: S.String.annotateKey({ description: "The commit sha." }),
 	/** The version read out of the name. */
-	version: SemVer,
-}) {}
+	version: SemVer.annotateKey({ description: "The version read out of the name." }),
+}, $I.annote("SemverTag", { description: "A tag whose name carries a version." })) {}
 
 /**
  * Read a version out of a tag name.
@@ -144,7 +147,7 @@ export interface GitTagShape {
  *
  * @public
  */
-export class GitTag extends Context.Service<GitTag, GitTagShape>()("@beep/scratchpad/effected/github/GitTag") {
+export class GitTag extends Context.Service<GitTag, GitTagShape>()($I`GitTag`) {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<GitTag, never, GitHubClient> = Layer.effect(
 		this,

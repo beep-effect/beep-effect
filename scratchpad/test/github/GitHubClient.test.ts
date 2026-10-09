@@ -3,6 +3,8 @@ import { assert, describe, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import { pullFixture, repositoryFixture } from "./fixtures.ts";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
@@ -543,7 +545,7 @@ describe("GitHubClient.makeTest", () => {
 		Effect.gen(function* () {
 			const fixture = yield* GitHubClient.pipe(
 				Effect.provide(GitHubClient.layerFixture({
-					request: { "GET /repos/{owner}/{repo}": { default_branch: "trunk" } },
+					request: { "GET /repos/{owner}/{repo}": Result.succeed(repositoryFixture({ default_branch: "trunk" })) },
 				})),
 			);
 			const double = GitHubClient.makeTest({ request: fixture.request });
@@ -573,7 +575,7 @@ describe("GitHubClient.layerFixture", () => {
 			const requested: Array<RecordedCall> = [];
 			const items = Array.from({ length: 250 }, (_, index) => ({ number: index }));
 			const layer = GitHubClient.layerFixture({
-				paginate: { "GET /repos/{owner}/{repo}/pulls": items },
+				paginate: { "GET /repos/{owner}/{repo}/pulls": Result.succeed(items.map(pullFixture)) },
 				requested,
 			});
 			const pulls = yield* Effect.provide(
@@ -607,7 +609,7 @@ describe("GitHubClient.layerFixture", () => {
 			// about them — the gap that made a consumer hand-roll its own harness.
 			const requested: Array<RecordedCall> = [];
 			const layer = GitHubClient.layerFixture({
-				request: { "GET /repos/{owner}/{repo}": { default_branch: "main" } },
+				request: { "GET /repos/{owner}/{repo}": Result.succeed(repositoryFixture({ default_branch: "main" })) },
 				requested,
 			});
 			yield* Effect.provide(
@@ -629,7 +631,7 @@ describe("GitHubClient.layerFixture", () => {
 	it.effect("answers a recorded single request", () =>
 		Effect.gen(function* () {
 			const layer = GitHubClient.layerFixture({
-				request: { "GET /repos/{owner}/{repo}": { default_branch: "main" } },
+				request: { "GET /repos/{owner}/{repo}": Result.succeed(repositoryFixture({ default_branch: "main" })) },
 			});
 			const repo = yield* Effect.provide(
 				Effect.flatMap(GitHubClient, (client) =>
@@ -707,7 +709,7 @@ describe("GitHubClient.layerFixture", () => {
 						client.paginate("GET /repos/{owner}/{repo}/pulls", { owner: "o", repo: "r" }),
 					),
 					GitHubClient.layerFixture({
-						paginate: { "GET /repos/{owner}/{repo}/pulls": GitHubError.notFound("read", "pulls") },
+						paginate: { "GET /repos/{owner}/{repo}/pulls": Result.fail(GitHubError.notFound("read", "pulls")) },
 						requested,
 					}),
 				),
@@ -730,7 +732,7 @@ describe("GitHubClient.layerFixture", () => {
 						client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" }),
 					),
 					GitHubClient.layerFixture({
-						request: { "GET /repos/{owner}/{repo}": GitHubError.notFound("read", "repo o/r") },
+						request: { "GET /repos/{owner}/{repo}": Result.fail(GitHubError.notFound("read", "repo o/r")) },
 					}),
 				),
 			);

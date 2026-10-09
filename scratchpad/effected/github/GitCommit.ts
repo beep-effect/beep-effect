@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -6,43 +7,45 @@ import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
 
+const $I = $ScratchpadId.create("effected/github/GitCommit");
+
 /**
  * A blob's file mode, as the Git Database API spells it.
  *
  * @public
  */
-export const FileMode = S.Literals(["100644", "100755", "120000"]);
+export const FileMode = S.Literals(["100644", "100755", "120000"]).pipe($I.annoteSchema("FileMode", { description: "A blob's file mode, as the Git Database API spells it." }));
 
 /**
  * A file to write in a commit.
  *
  * @public
  */
-export class FileContent extends S.TaggedClass<FileContent>()("FileContent", {
+export class FileContent extends S.TaggedClass<FileContent>($I`FileContent`)("FileContent", {
 	/** Repository-relative path. */
-	path: S.NonEmptyString,
+	path: S.NonEmptyString.annotateKey({ description: "Repository-relative path." }),
 	/** The file's new contents. */
-	content: S.String,
+	content: S.String.annotateKey({ description: "The file's new contents." }),
 	/** Defaults to a regular file. */
-	mode: S.optionalKey(FileMode),
-}) {}
+	mode: S.optionalKey(FileMode).annotateKey({ description: "Defaults to a regular file." }),
+}, $I.annote("FileContent", { description: "A file to write in a commit." })) {}
 
 /**
  * A file to remove in a commit.
  *
  * @public
  */
-export class FileDeletion extends S.TaggedClass<FileDeletion>()("FileDeletion", {
+export class FileDeletion extends S.TaggedClass<FileDeletion>($I`FileDeletion`)("FileDeletion", {
 	/** Repository-relative path. */
-	path: S.NonEmptyString,
-}) {}
+	path: S.NonEmptyString.annotateKey({ description: "Repository-relative path." }),
+}, $I.annote("FileDeletion", { description: "A file to remove in a commit." })) {}
 
 /**
  * One change in a commit.
  *
  * @public
  */
-export const FileChange = S.Union([FileContent, FileDeletion]);
+export const FileChange = S.Union([FileContent, FileDeletion]).pipe($I.annoteSchema("FileChange", { description: "One change in a commit." }));
 
 /** One change in a commit. @public */
 export type FileChange = FileContent | FileDeletion;
@@ -56,14 +59,14 @@ export type FileChange = FileContent | FileDeletion;
  *
  * @public
  */
-export class CommitRef extends S.Class<CommitRef>("CommitRef")({
+export class CommitRef extends S.Class<CommitRef>($I`CommitRef`)({
 	/** The commit's own sha. */
-	sha: S.String,
+	sha: S.String.annotateKey({ description: "The commit's own sha." }),
 	/** The tree the commit points at — what `baseTree` wants. */
-	treeSha: S.String,
+	treeSha: S.String.annotateKey({ description: "The tree the commit points at — what `baseTree` wants." }),
 	/** Parent commit shas, in order. */
-	parents: S.Array(S.String),
-}) {}
+	parents: S.Array(S.String).annotateKey({ description: "Parent commit shas, in order." }),
+}, $I.annote("CommitRef", { description: "A commit, projected to the three fields callers actually use." })) {}
 
 /**
  * Commits and trees in GitHub's Git Database API.
@@ -137,7 +140,7 @@ export interface GitCommitShape {
  *
  * @public
  */
-export class GitCommit extends Context.Service<GitCommit, GitCommitShape>()("@beep/scratchpad/effected/github/GitCommit") {
+export class GitCommit extends Context.Service<GitCommit, GitCommitShape>()($I`GitCommit`) {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<GitCommit, never, GitHubClient> = Layer.effect(
 		this,

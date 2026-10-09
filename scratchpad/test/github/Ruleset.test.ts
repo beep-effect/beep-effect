@@ -1,18 +1,20 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import { listedRulesetFixture, rulesetFixture, teamFixture } from "./fixtures.ts";
 import * as S from "effect/Schema";
-import type { RecordedCall } from "../../effected/github/GitHubClient.ts";
+import type { GitHubFixtures, RecordedCall } from "../../effected/github/GitHubClient.ts";
 import { GitHubClient } from "../../effected/github/GitHubClient.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
-import { Ruleset } from "../../effected/github/Ruleset.ts";
+import { Ruleset, RulesetPayload } from "../../effected/github/Ruleset.ts";
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
 const run = Effect.fn("run")(function*<A, E>(
 	effect: Effect.Effect<A, E, Ruleset | GitHubClient | Repo>,
-	fixtures: Record<string, unknown>,
-	paginate: Record<string, ReadonlyArray<unknown>> = {},
+	fixtures: NonNullable<GitHubFixtures["request"]>,
+	paginate: NonNullable<GitHubFixtures["paginate"]> = {},
 ) {
 		const requested: RecordedCall[] = [];
 		const value = yield* effect.pipe(
@@ -23,7 +25,7 @@ const run = Effect.fn("run")(function*<A, E>(
 		return { value, requested };
 	});
 
-const PAYLOAD = { name: "main", target: "branch", enforcement: "active" };
+const PAYLOAD = RulesetPayload.make({ name: "main", target: "branch", enforcement: "active" });
 
 describe("Ruleset.upsert", () => {
 	it.effect("PUTs against a ruleset the repository owns", () =>
@@ -31,9 +33,9 @@ describe("Ruleset.upsert", () => {
 			const { requested } = yield* run(
 				Effect.flatMap(Ruleset, (r) => r.upsert(PAYLOAD)),
 				{
-					"PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}": {},
+					"PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}": Result.succeed(rulesetFixture({})),
 				},
-				{ "GET /repos/{owner}/{repo}/rulesets": [{ id: 99, name: "main", source_type: "Repository" }] },
+				{ "GET /repos/{owner}/{repo}/rulesets": Result.succeed([listedRulesetFixture({ id: 99, name: "main", source_type: "Repository" })]) },
 			);
 
 			assert.deepStrictEqual(
@@ -52,9 +54,9 @@ describe("Ruleset.upsert", () => {
 					// The repository's listing includes the org's. Matching on name
 					// alone would PUT at id 7 and rewrite policy for every repository
 					// the organization owns.
-					"POST /repos/{owner}/{repo}/rulesets": {},
+					"POST /repos/{owner}/{repo}/rulesets": Result.succeed(rulesetFixture({})),
 				},
-				{ "GET /repos/{owner}/{repo}/rulesets": [{ id: 7, name: "main", source_type: "Organization" }] },
+				{ "GET /repos/{owner}/{repo}/rulesets": Result.succeed([listedRulesetFixture({ id: 7, name: "main", source_type: "Organization" })]) },
 			);
 
 			assert.deepStrictEqual(
@@ -75,13 +77,10 @@ describe("Ruleset.upsert", () => {
 			const { requested } = yield* run(
 				Effect.flatMap(Ruleset, (r) => r.upsert(PAYLOAD)),
 				{
-					"PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}": {},
+					"PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}": Result.succeed(rulesetFixture({})),
 				},
 				{
-					"GET /repos/{owner}/{repo}/rulesets": [
-						{ id: 7, name: "main", source_type: "Organization" },
-						{ id: 99, name: "main", source_type: "Repository" },
-					],
+					"GET /repos/{owner}/{repo}/rulesets": Result.succeed([listedRulesetFixture({ id: 7, name: "main", source_type: "Organization" }), listedRulesetFixture({ id: 99, name: "main", source_type: "Repository" })]),
 				},
 			);
 
@@ -95,8 +94,8 @@ describe("Ruleset.upsert", () => {
 		Effect.gen(function* () {
 			const { requested } = yield* run(
 				Effect.flatMap(Ruleset, (r) => r.upsert(PAYLOAD)),
-				{ "POST /repos/{owner}/{repo}/rulesets": {} },
-				{ "GET /repos/{owner}/{repo}/rulesets": [] },
+				{ "POST /repos/{owner}/{repo}/rulesets": Result.succeed(rulesetFixture({})) },
+				{ "GET /repos/{owner}/{repo}/rulesets": Result.succeed([]) },
 			);
 
 			assert.deepStrictEqual(requested[1]?.params, {
@@ -117,10 +116,7 @@ describe("Ruleset.list and delete", () => {
 				Effect.flatMap(Ruleset, (r) => r.list),
 				{},
 				{
-					"GET /repos/{owner}/{repo}/rulesets": [
-						{ id: 1, name: "own", source_type: "Repository" },
-						{ id: 2, name: "inherited", source_type: "Organization" },
-					],
+					"GET /repos/{owner}/{repo}/rulesets": Result.succeed([listedRulesetFixture({ id: 1, name: "own", source_type: "Repository" }), listedRulesetFixture({ id: 2, name: "inherited", source_type: "Organization" })]),
 				},
 			);
 
@@ -135,7 +131,7 @@ describe("Ruleset.list and delete", () => {
 		Effect.gen(function* () {
 			const { requested } = yield* run(
 				Effect.flatMap(Ruleset, (r) => r.delete(99)),
-				{ "DELETE /repos/{owner}/{repo}/rulesets/{ruleset_id}": {} },
+				{ "DELETE /repos/{owner}/{repo}/rulesets/{ruleset_id}": Result.succeed("") },
 			);
 
 			assert.deepStrictEqual(requested[0]?.params, { owner: "acme", repo: "widget", ruleset_id: 99 });
@@ -148,7 +144,7 @@ describe("Ruleset bypass-actor lookups", () => {
 		Effect.gen(function* () {
 			const { value, requested } = yield* run(
 				Effect.flatMap(Ruleset, (r) => r.teamId("platform")),
-				{ "GET /orgs/{org}/teams/{team_slug}": { id: 4242 } },
+				{ "GET /orgs/{org}/teams/{team_slug}": Result.succeed(teamFixture({ id: 4242 })) },
 			);
 
 			assert.strictEqual(value, 4242);
@@ -160,7 +156,7 @@ describe("Ruleset bypass-actor lookups", () => {
 		Effect.gen(function* () {
 			const { value, requested } = yield* run(
 				Effect.flatMap(Ruleset, (r) => r.roleId("security_manager")),
-				{ "GET /orgs/{org}/organization-roles": { roles: [{ id: 5, name: "security_manager" }] } },
+				{ "GET /orgs/{org}/organization-roles": Result.succeed({ roles: [{ id: 5, name: "security_manager", permissions: [], organization: null, created_at: "", updated_at: "" }] }) },
 			);
 
 			assert.strictEqual(value, 5);
@@ -172,7 +168,7 @@ describe("Ruleset bypass-actor lookups", () => {
 		Effect.gen(function* () {
 			const exit = yield* run(
 				Effect.flatMap(Ruleset, (r) => r.roleId("missing")),
-				{ "GET /orgs/{org}/organization-roles": { roles: [{ id: 5, name: "other" }] } },
+				{ "GET /orgs/{org}/organization-roles": Result.succeed({ roles: [{ id: 5, name: "other", permissions: [], organization: null, created_at: "", updated_at: "" }] }) },
 			).pipe(Effect.exit);
 
 			assert.include((yield* S.encodeEffect(JsonValue)(exit)), "available: other");
@@ -184,7 +180,7 @@ describe("Ruleset bypass-actor lookups", () => {
 		Effect.gen(function* () {
 			const exit = yield* run(
 				Effect.flatMap(Ruleset, (r) => r.roleId("missing")),
-				{ "GET /orgs/{org}/organization-roles": {} },
+				{ "GET /orgs/{org}/organization-roles": Result.succeed({}) },
 			).pipe(Effect.exit);
 
 			assert.include((yield* S.encodeEffect(JsonValue)(exit)), "available: none");

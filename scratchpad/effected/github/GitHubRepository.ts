@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -9,6 +10,8 @@ import type { GitHubGraphQLError } from "./GraphQL.ts";
 import { GraphQLDocument } from "./GraphQL.ts";
 import { Repo } from "./Repo.ts";
 import type * as Rest from "./Rest.ts";
+
+const $I = $ScratchpadId.create("effected/github/GitHubRepository");
 
 /**
  * Everything GitHub reports about a repository.
@@ -372,7 +375,7 @@ export interface GitHubRepositoryShape {
  * @public
  */
 export class GitHubRepository extends Context.Service<GitHubRepository, GitHubRepositoryShape>()(
-	"@beep/scratchpad/effected/github/GitHubRepository",
+	$I`GitHubRepository`,
 ) {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<GitHubRepository, never, GitHubClient> = Layer.effect(

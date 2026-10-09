@@ -271,15 +271,20 @@ const TestBranches = GitBranch.layerTest({
 `GitHubClient.layerFixture(fixtures)` is the one recorded-response double that pages for real: it builds a `PageSource` over the recorded array and hands it to the same pagination engine the live client uses, so a truncation path behaves identically under test and in production. Three things about its contract are worth knowing before you write against it:
 
 ```ts
-import { GitHubClient, GitHubError } from "@effected/github";
+import { GitHubClient, GitHubError, type GitHubFixtures } from "@effected/github";
+import * as Result from "effect/Result";
 
-const fixtures = {
+const fixtures: GitHubFixtures = {
   request: {
-    "GET /repos/{owner}/{repo}": { default_branch: "main" },
-    // A recorded GitHubError *is* the response: this route fails with it.
-    "PATCH /repos/{owner}/{repo}": GitHubError.notFound("updateSettings", "repo"),
+    "GET /repos/{owner}/{repo}/languages": Result.succeed({ TypeScript: 12000 }),
+    // A recorded Result failure answers this route with a typed error.
+    "PATCH /repos/{owner}/{repo}": Result.fail(GitHubError.notFound("updateSettings", "repo")),
   },
-  paginate: { "GET /repos/{owner}/{repo}/rulesets": [{ id: 1, name: "main", source_type: "Repository" }] },
+  paginate: {
+    "GET /repos/{owner}/{repo}/rulesets": Result.succeed([
+      { id: 1, name: "main", enforcement: "active", source_type: "Repository" },
+    ]),
+  },
   requested: [], // filled in as the test runs
 };
 
@@ -287,8 +292,8 @@ const TestClient = GitHubClient.layerFixture(fixtures);
 // A route with no entry above DIES naming itself, rather than failing typed.
 ```
 
-- **An unstubbed route dies by default.** A missing fixture is test wiring rather than a domain outcome, and a typed failure is only loud in code that does not catch — a program handling `GitHubError` per resource turns a missing stub into a different execution path, and the assertions then fail for reasons that name no fixture. `unstubbed: "fail"` fails the route with a typed not-found instead, and `"empty"` serves an empty value for a suite whose subject is decisions rather than endpoints.
-- **A recorded `GitHubError` value is the response.** That is how a suite stubs a 404, a 422 or a rate limit deliberately. Leaning on a route's absence says only "unwired"; a recorded error says which route fails and why.
+- **An unstubbed route dies by default.** A missing fixture is test wiring rather than a domain outcome, and a typed failure is only loud in code that does not catch — a program handling `GitHubError` per resource turns a missing stub into a different execution path, and the assertions then fail for reasons that name no fixture. `unstubbed: "fail"` fails the route with a typed not-found instead, and `"empty"` returns no items for pagination but a typed not-found for a missing single request.
+- **A recorded `Result.fail(GitHubError)` is the response.** That is how a suite stubs a 404, a 422 or a rate limit deliberately. Leaning on a route's absence says only "unwired"; a recorded error says which route fails and why.
 - **`fixtures.requested` records every call.** Each `RecordedCall` carries the `kind` of surface used, the `route` (the document name for `graphql`), the `params` the call was made with, and `perPage` for a paginated read. Params are what let a test assert what a method *sent*, which is the question any normalising write turns on.
 
 ## Features
@@ -338,3 +343,5 @@ None.
 ### Dependency backlog
 
 None.
+
+Fixture successes must contain complete response values for their route. Use `Result.succeed("")` for a bodyless response, matching Octokit's runtime. Raw payloads for `requestDecoded` belong in `fixtures.requestDecoded`; the supplied schema checks them, while GraphQL continues to use `fixtures.graphql`.

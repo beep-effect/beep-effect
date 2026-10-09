@@ -1,14 +1,15 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 import { CodeScanning } from "../../effected/github/CodeScanning.ts";
-import type { RecordedCall } from "../../effected/github/GitHubClient.ts";
+import type { GitHubFixtures, RecordedCall } from "../../effected/github/GitHubClient.ts";
 import { GitHubClient } from "../../effected/github/GitHubClient.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
 
 const run = Effect.fn("run")(function*<A, E>(
 	effect: Effect.Effect<A, E, CodeScanning | GitHubClient | Repo>,
-	fixtures: Record<string, unknown>,
+	fixtures: NonNullable<GitHubFixtures["request"]>,
 ) {
 		const requested: RecordedCall[] = [];
 		const value = yield* effect.pipe(
@@ -24,7 +25,7 @@ describe("CodeScanning", () => {
 		Effect.gen(function* () {
 			const { requested } = yield* run(
 				Effect.flatMap(CodeScanning, (cs) => cs.configure({ state: "configured", languages: ["go"] })),
-				{ "PATCH /repos/{owner}/{repo}/code-scanning/default-setup": {} },
+				{ "PATCH /repos/{owner}/{repo}/code-scanning/default-setup": Result.succeed({}) },
 			);
 
 			assert.deepStrictEqual(requested, [
@@ -50,7 +51,7 @@ describe("CodeScanning", () => {
 						runner_label: "big",
 					}),
 				),
-				{ "PATCH /repos/{owner}/{repo}/code-scanning/default-setup": {} },
+				{ "PATCH /repos/{owner}/{repo}/code-scanning/default-setup": Result.succeed({}) },
 			);
 
 			assert.deepStrictEqual(requested[0]?.params, {
@@ -70,7 +71,7 @@ describe("CodeScanning", () => {
 		Effect.gen(function* () {
 			const { value, requested } = yield* run(
 				Effect.flatMap(CodeScanning, (cs) => cs.languages),
-				{ "GET /repos/{owner}/{repo}/languages": { TypeScript: 12000, Go: 300 } },
+				{ "GET /repos/{owner}/{repo}/languages": Result.succeed({ TypeScript: 12000, Go: 300 }) },
 			);
 
 			assert.deepStrictEqual(value, ["TypeScript", "Go"]);
@@ -90,7 +91,7 @@ describe("CodeScanning", () => {
 			}).pipe(
 				Effect.provide(CodeScanning.layer),
 				Effect.provide(
-					GitHubClient.layerFixture({ request: { "GET /repos/{owner}/{repo}/languages": {} }, requested }),
+					GitHubClient.layerFixture({ request: { "GET /repos/{owner}/{repo}/languages": Result.succeed({}) }, requested }),
 				),
 				Effect.provide(Repo.layer(RepoRef.make({ owner: "acme", repo: "widget" }))),
 			);

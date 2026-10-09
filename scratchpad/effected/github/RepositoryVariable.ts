@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -5,6 +6,8 @@ import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
 import type * as Rest from "./Rest.ts";
+
+const $I = $ScratchpadId.create("effected/github/RepositoryVariable");
 
 /**
  * A variable's name and value, as listing returns it.
@@ -103,7 +106,7 @@ export interface RepositoryVariableShape {
  * @public
  */
 export class RepositoryVariable extends Context.Service<RepositoryVariable, RepositoryVariableShape>()(
-  "@beep/scratchpad/effected/github/RepositoryVariable",
+  $I`RepositoryVariable`,
 ) {
   /**
    * The live service, built over a `GitHubClient`.
@@ -172,7 +175,7 @@ const make = (client: GitHubClient["Service"]): RepositoryVariableShape => {
         repo,
         name,
         value,
-      });
+      }).pipe(Effect.asVoid);
     }
 
     yield* client.request("POST /repos/{owner}/{repo}/actions/variables", {
@@ -245,7 +248,7 @@ const make = (client: GitHubClient["Service"]): RepositoryVariableShape => {
         environment_name: environment,
         name,
         value,
-      });
+      }).pipe(Effect.asVoid);
 
     }
 

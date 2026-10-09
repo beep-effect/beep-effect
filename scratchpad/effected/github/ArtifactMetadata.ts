@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -5,6 +6,8 @@ import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
+
+const $I = $ScratchpadId.create("effected/github/ArtifactMetadata");
 
 /**
  * What to record about a published artifact.
@@ -14,20 +17,20 @@ import { Repo } from "./Repo.ts";
  *
  * @public
  */
-export class StorageRecordInput extends S.Class<StorageRecordInput>("StorageRecordInput")({
+export class StorageRecordInput extends S.Class<StorageRecordInput>($I`StorageRecordInput`)({
 	/** The artifact's package URL (purl). */
-	name: S.NonEmptyString,
+	name: S.NonEmptyString.annotateKey({ description: "The artifact's package URL (purl)." }),
 	/** Its content digest, as `algorithm:hex`. */
-	digest: S.NonEmptyString,
+	digest: S.NonEmptyString.annotateKey({ description: "Its content digest, as `algorithm:hex`." }),
 	/** The registry's base URL. */
-	registryUrl: S.NonEmptyString,
+	registryUrl: S.NonEmptyString.annotateKey({ description: "The registry's base URL." }),
 	/** The repository name **within the registry**. */
-	repository: S.NonEmptyString,
+	repository: S.NonEmptyString.annotateKey({ description: "The repository name **within the registry**." }),
 	/** Where the artifact is stored, when there is a direct URL. */
-	artifactUrl: S.optionalKey(S.String),
+	artifactUrl: S.optionalKey(S.String).annotateKey({ description: "Where the artifact is stored, when there is a direct URL." }),
 	/** The artifact's path within the registry, when there is one. */
-	path: S.optionalKey(S.String),
-}) {}
+	path: S.optionalKey(S.String).annotateKey({ description: "The artifact's path within the registry, when there is one." }),
+}, $I.annote("StorageRecordInput", { description: "What to record about a published artifact." })) {}
 
 /**
  * Organization-level artifact metadata.
@@ -55,7 +58,7 @@ export interface ArtifactMetadataShape {
  * @public
  */
 export class ArtifactMetadata extends Context.Service<ArtifactMetadata, ArtifactMetadataShape>()(
-	"@beep/scratchpad/effected/github/ArtifactMetadata",
+	$I`ArtifactMetadata`,
 ) {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<ArtifactMetadata, never, GitHubClient> = Layer.effect(

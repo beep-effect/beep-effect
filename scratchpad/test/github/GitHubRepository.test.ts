@@ -1,7 +1,9 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import type { RecordedCall } from "../../effected/github/GitHubClient.ts";
+import * as Result from "effect/Result";
+import { repositoryFixture, userFixture } from "./fixtures.ts";
+import type { GitHubFixtures, RecordedCall } from "../../effected/github/GitHubClient.ts";
 import { GitHubClient } from "../../effected/github/GitHubClient.ts";
 import { GitHubRepository, repositoryPatch, transformSecurityAndAnalysis } from "../../effected/github/GitHubRepository.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
@@ -12,7 +14,7 @@ import { Repo, RepoRef } from "../../effected/github/Repo.ts";
  */
 const run = Effect.fn("run")(function*<A, E>(
 	effect: Effect.Effect<A, E, GitHubRepository | GitHubClient | Repo>,
-	request: Record<string, unknown> = {},
+	request: NonNullable<GitHubFixtures["request"]> = {},
 	graphql: Record<string, unknown> = {},
 ) {
 		const requested: RecordedCall[] = [];
@@ -32,14 +34,14 @@ describe("GitHubRepository reads", () => {
 		Effect.gen(function* () {
 			const branch = yield* run(
 				Effect.flatMap(GitHubRepository, (r) => r.defaultBranch),
-				{ "GET /repos/{owner}/{repo}": REPO },
+				{ "GET /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) },
 			);
 			assert.strictEqual(branch.value, "main");
 			assert.deepStrictEqual(branch.requested[0]?.params, { owner: "acme", repo: "widget" });
 
 			const node = yield* run(
 				Effect.flatMap(GitHubRepository, (r) => r.nodeId),
-				{ "GET /repos/{owner}/{repo}": REPO },
+				{ "GET /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) },
 			);
 			assert.strictEqual(node.value, "R_node123");
 		}),
@@ -49,7 +51,7 @@ describe("GitHubRepository reads", () => {
 		Effect.gen(function* () {
 			const org = yield* run(
 				Effect.flatMap(GitHubRepository, (r) => r.ownerType),
-				{ "GET /users/{username}": { type: "Organization" } },
+				{ "GET /users/{username}": Result.succeed(userFixture({ type: "Organization" })) },
 			);
 			assert.strictEqual(org.value, "Organization");
 			assert.strictEqual(org.requested[0]?.route, "GET /users/{username}");
@@ -58,7 +60,7 @@ describe("GitHubRepository reads", () => {
 			// Anything that is not an organization is a User, including a Bot.
 			const bot = yield* run(
 				Effect.flatMap(GitHubRepository, (r) => r.ownerType),
-				{ "GET /users/{username}": { type: "Bot" } },
+				{ "GET /users/{username}": Result.succeed(userFixture({ type: "Bot" })) },
 			);
 			assert.strictEqual(bot.value, "User");
 		}),
@@ -70,7 +72,7 @@ describe("GitHubRepository.updateSettings", () => {
 		Effect.gen(function* () {
 			const { requested } = yield* run(
 				Effect.flatMap(GitHubRepository, (r) => r.updateSettings({ has_issues: true })),
-				{ "PATCH /repos/{owner}/{repo}": REPO },
+				{ "PATCH /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) },
 			);
 
 			assert.strictEqual(requested[0]?.route, "PATCH /repos/{owner}/{repo}");
@@ -89,7 +91,7 @@ describe("GitHubRepository.updateSettings", () => {
 				Effect.flatMap(GitHubRepository, (r) =>
 					r.updateSettings({ security_and_analysis: { advanced_security: { status: "enabled" } } }),
 				),
-				{ "PATCH /repos/{owner}/{repo}": REPO },
+				{ "PATCH /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) },
 			);
 			assert.deepStrictEqual(requested[0]?.params.security_and_analysis, {
 				advanced_security: { status: "enabled" },
@@ -119,7 +121,7 @@ describe("GitHubRepository.updateSettings", () => {
 						},
 					}),
 				),
-				{ "PATCH /repos/{owner}/{repo}": REPO },
+				{ "PATCH /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) },
 			);
 
 			// The user-facing shape is not the API's shape.
@@ -141,7 +143,7 @@ describe("GitHubRepository.updateSettings", () => {
 						squash_merge_commit_message: "BLANK",
 					}),
 				),
-				{ "PATCH /repos/{owner}/{repo}": REPO },
+				{ "PATCH /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) },
 			);
 
 			// GitHub answers 422 for title/message config on a strategy being turned
@@ -161,7 +163,7 @@ describe("GitHubRepository.updateSettings", () => {
 				Effect.flatMap(GitHubRepository, (r) =>
 					r.updateSettings({ allow_merge_commit: true, merge_commit_title: "PR_TITLE" }),
 				),
-				{ "PATCH /repos/{owner}/{repo}": REPO },
+				{ "PATCH /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) },
 			);
 
 			// The discriminating case: dropping unconditionally would silently stop
@@ -176,7 +178,7 @@ describe("GitHubRepository.applySettings", () => {
 		Effect.gen(function* () {
 			const { requested, routes } = yield* run(
 				Effect.flatMap(GitHubRepository, (r) => r.applySettings({ has_issues: true, has_wiki: false })),
-				{ "PATCH /repos/{owner}/{repo}": REPO },
+				{ "PATCH /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) },
 			);
 
 			assert.deepStrictEqual(requested[0]?.params, {
@@ -200,7 +202,7 @@ describe("GitHubRepository.applySettings", () => {
 				Effect.flatMap(GitHubRepository, (r) =>
 					r.applySettings({ has_sponsorships: true, has_pull_requests: false, has_discussions: true }),
 				),
-				{ "GET /repos/{owner}/{repo}": REPO },
+				{ "GET /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) },
 				UPDATE_REPOSITORY,
 			);
 
@@ -234,7 +236,7 @@ describe("GitHubRepository.applySettings", () => {
 		Effect.gen(function* () {
 			const { requested } = yield* run(
 				Effect.flatMap(GitHubRepository, (r) => r.applySettings({ has_issues: true, has_sponsorships: true })),
-				{ "GET /repos/{owner}/{repo}": REPO, "PATCH /repos/{owner}/{repo}": REPO },
+				{ "GET /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)), "PATCH /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) },
 				UPDATE_REPOSITORY,
 			);
 
@@ -255,7 +257,7 @@ describe("GitHubRepository.applySettings", () => {
 				Effect.flatMap(GitHubRepository, (r) =>
 					r.applySettings({ security_and_analysis: { secret_scanning: "enabled" } }),
 				),
-				{ "PATCH /repos/{owner}/{repo}": REPO },
+				{ "PATCH /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) },
 			);
 
 			// A caller must not get a different shape depending on which of the two
@@ -311,7 +313,7 @@ describe("GitHubRepository.applySettings reporting", () => {
 						has_issues: true,
 					}),
 				),
-				{ "PATCH /repos/{owner}/{repo}": REPO },
+				{ "PATCH /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) },
 			);
 
 			assert.deepStrictEqual([...value.rest].sort(), ["allow_merge_commit", "has_issues"]);
@@ -332,7 +334,7 @@ describe("GitHubRepository.applySettings reporting", () => {
 			// AppliedSettings exists to prevent, so it must not happen here.
 			const { value, requested } = yield* run(
 				Effect.flatMap(GitHubRepository, (r) => r.applySettings({ security_and_analysis: 42 })),
-				{ "PATCH /repos/{owner}/{repo}": REPO },
+				{ "PATCH /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) },
 			);
 			assert.deepStrictEqual([...value.rest], []);
 			assert.lengthOf(requested, 0, "no request should have been made at all");
@@ -343,7 +345,7 @@ describe("GitHubRepository.applySettings reporting", () => {
 		Effect.gen(function* () {
 			const { value } = yield* run(
 				Effect.flatMap(GitHubRepository, (r) => r.applySettings({ has_sponsorships: true })),
-				{ "GET /repos/{owner}/{repo}": REPO },
+				{ "GET /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) },
 				UPDATE_REPOSITORY,
 			);
 			// `has_sponsorships`, not `hasSponsorshipsEnabled`: the audience is a

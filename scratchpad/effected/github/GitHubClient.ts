@@ -1,9 +1,11 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Redacted from "effect/Redacted";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { GitHubError } from "./GitHubError.ts";
@@ -15,6 +17,8 @@ import type { RateLimitSnapshot } from "./Resilience.ts";
 import { RetryPolicy } from "./Resilience.ts";
 import type * as Rest from "./Rest.ts";
 import type { PageOptions } from "./Rest.ts";
+
+const $I = $ScratchpadId.create("effected/github/GitHubClient");
 
 /** GitHub's own maximum page size, and the default this package requests. */
 const DEFAULT_PER_PAGE = 100;
@@ -38,7 +42,7 @@ export interface GitHubClientShape {
 	 * @example
 	 * ```ts
 	 * import { GitHubClient } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * const defaultBranch = Effect.gen(function* () {
 	 *   const client = yield* GitHubClient;
@@ -162,26 +166,30 @@ export interface RecordedCall {
  */
 export interface GitHubFixtures {
 	/**
-	 * Keyed by route; the value is the `data` payload a request answers with.
+	 * Keyed by route; each success contains that route's complete `data` payload.
 	 *
-	 * @remarks
-	 * A recorded **`GitHubError` is the response**: the call fails with it. That
+	 * **Details**
+	 * A recorded `Result.fail(GitHubError)` is the response: the call fails with it. This
 	 * is how a suite stubs a 404 (or a rate-limit, or a 422) deliberately,
 	 * rather than relying on a route's absence to produce one — absence is a
 	 * wiring mistake and {@link GitHubFixtures.unstubbed} treats it as such.
 	 */
-	readonly request?: Readonly<Record<string, unknown>> | undefined;
+	readonly request?: { readonly [R in Rest.Route]?: Result.Result<Rest.Data<R>, GitHubError> } | undefined;
 	/**
-	 * Keyed by route; the value is the whole collection, paged on demand — or a
-	 * `GitHubError` the paginated read fails with.
+	 * Keyed by route; each success contains the whole collection, paged on demand, or a
+	 * `Result.fail(GitHubError)` the paginated read fails with.
 	 */
-	readonly paginate?: Readonly<Record<string, ReadonlyArray<unknown> | GitHubError>> | undefined;
+	readonly paginate?: {
+		readonly [R in Rest.PaginatingRoute]?: Result.Result<ReadonlyArray<Rest.Item<R>>, GitHubError>;
+	} | undefined;
+	/** Raw responses for schema-decoded routes, keyed by route. */
+	readonly requestDecoded?: Readonly<Record<string, unknown>> | undefined;
 	/** Keyed by document name; the value is the raw payload to decode. */
 	readonly graphql?: Readonly<Record<string, unknown>> | undefined;
 	/**
 	 * What a route with **no fixture entry** does. Defaults to `"die"`.
 	 *
-	 * @remarks
+	 * **Details**
 	 * A missing fixture is a **test wiring** mistake, not a condition the code
 	 * under test should handle, so the default kills the fiber rather than
 	 * entering the error channel — the same treatment an absent `graphql`
@@ -195,11 +203,11 @@ export interface GitHubFixtures {
 	 *
 	 * - `"die"` — defect naming the route. Loud in every consumer.
 	 * - `"fail"` — fail with `GitHubError.notFound`. Rarely what you want, since
-	 *   a recorded `GitHubError` value stubs a failure explicitly:
-	 *   `{ "GET /repos/{owner}/{repo}": GitHubError.notFound("read", "repo") }`
+	 *   a recorded failure stubs an error explicitly:
+	 *   `{ "GET /repos/{owner}/{repo}": Result.fail(GitHubError.notFound("read", "repo")) }`
 	 *   says which route fails and why, where absence says only "unwired".
-	 * - `"empty"` — serve `{}` for a request and no items for a paginated read.
-	 *   For a suite whose subject is decisions rather than endpoints.
+	 * - `"empty"` — serve no items for a paginated read. Single requests fail
+	 *   with `GitHubError.notFound`: no value is empty for every response type.
 	 *
 	 * `graphql` ignores this and always dies: its payload is decoded against the
 	 * document's schema, so there is no empty value that would satisfy it.
@@ -248,7 +256,8 @@ const unstubbed = (member: string): never => {
  * @example
  * ```ts
  * import { GitHubClient } from "./index.ts";
- * import { Effect, Redacted } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as Redacted from "effect/Redacted";
  *
  * const program = Effect.gen(function* () {
  *   const client = yield* GitHubClient;
@@ -265,7 +274,7 @@ const unstubbed = (member: string): never => {
  *
  * @public
  */
-export class GitHubClient extends Context.Service<GitHubClient, GitHubClientShape>()("@beep/scratchpad/effected/github/GitHubClient") {
+export class GitHubClient extends Context.Service<GitHubClient, GitHubClientShape>()($I`GitHubClient`) {
 	/**
 	 * A client authenticated with a token you already hold.
 	 *
@@ -449,10 +458,8 @@ const makeFixture = (fixtures: GitHubFixtures): GitHubClientShape => {
 		const perPage = perPageOf(options);
 		requested?.push({ kind: "paginate", route, params: { ..._params }, perPage });
 
-		const recorded = fixtures.paginate?.[route];
-		if (S.is(GitHubError)(recorded)) return Stream.fail(recorded);
-		const items = recorded;
-		if (items === undefined) {
+		const recorded: Result.Result<ReadonlyArray<Rest.Item<R>>, GitHubError> | undefined = fixtures.paginate?.[route];
+		if (recorded === undefined) {
 			switch (fixtures.unstubbed ?? "die") {
 				case "fail":
 					return Stream.fail(GitHubError.notFound("GitHubClient.paginate", `fixture for ${route}`));
@@ -462,16 +469,16 @@ const makeFixture = (fixtures: GitHubFixtures): GitHubClientShape => {
 					return Stream.die(new Error(`GitHubClient.paginate: no fixture for ${route}`));
 			}
 		}
-		return paginate<Rest.Item<R>>(() => fromArray(items as ReadonlyArray<Rest.Item<R>>, perPage), options?.maxPages);
+		if (Result.isFailure(recorded)) return Stream.fail(recorded.failure);
+		return paginate<Rest.Item<R>>(() => fromArray(recorded.success, perPage), options?.maxPages);
 	};
 
 	// A missing fixture is wiring, not a domain condition — see `unstubbed`.
-	const missing = <A>(method: string, route: string): Effect.Effect<A, GitHubError> => {
+	const missing = (method: string, route: string): Effect.Effect<never, GitHubError> => {
 		switch (fixtures.unstubbed ?? "die") {
 			case "fail":
-				return Effect.fail(GitHubError.notFound(method, `fixture for ${route}`));
 			case "empty":
-				return Effect.succeed({} as A);
+				return Effect.fail(GitHubError.notFound(method, `fixture for ${route}`));
 			default:
 				return Effect.die(new Error(`${method}: no fixture for ${route}`));
 		}
@@ -480,16 +487,16 @@ const makeFixture = (fixtures: GitHubFixtures): GitHubClientShape => {
 	return {
 		request: <R extends Rest.Route>(route: R, params: Rest.Params<R>) => {
 			requested?.push({ kind: "request", route, params: { ...params } });
-			const data = fixtures.request?.[route];
-			if (data === undefined) return missing<Rest.Data<R>>("GitHubClient.request", route);
-			// A recorded GitHubError IS the response: this is how a suite stubs a
+			const data: Result.Result<Rest.Data<R>, GitHubError> | undefined = fixtures.request?.[route];
+			if (data === undefined) return missing("GitHubClient.request", route);
+			// A recorded Result failure is the response: this is how a suite stubs a
 			// 404 deliberately, rather than relying on a route's absence.
-			return S.is(GitHubError)(data) ? Effect.fail(data) : Effect.succeed(data as Rest.Data<R>);
+			return Effect.fromResult(data);
 		},
 		requestDecoded: <A, I>(route: string, params: Record<string, unknown>, schema: S.Codec<A, I>) => {
 			requested?.push({ kind: "requestDecoded", route, params });
-			const data = fixtures.request?.[route];
-			if (data === undefined) return missing<A>("GitHubClient.requestDecoded", route);
+			const data = fixtures.requestDecoded?.[route];
+			if (data === undefined) return missing("GitHubClient.requestDecoded", route);
 			if (S.is(GitHubError)(data)) return Effect.fail(data);
 			return S.decodeUnknownEffect(schema)(data).pipe(
 				Effect.catchTag("SchemaError", (error) =>

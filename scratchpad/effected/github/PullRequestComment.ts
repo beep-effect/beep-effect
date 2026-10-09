@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -9,6 +10,8 @@ import { numericId } from "./internal/ids.ts";
 import { Repo } from "./Repo.ts";
 import type { PageOptions } from "./Rest.ts";
 
+const $I = $ScratchpadId.create("effected/github/PullRequestComment");
+
 /**
  * The hidden marker that makes a comment findable again.
  *
@@ -19,12 +22,12 @@ import type { PageOptions } from "./Rest.ts";
  *
  * @public
  */
-export class CommentMarker extends S.Class<CommentMarker>("CommentMarker")({
+export class CommentMarker extends S.Class<CommentMarker>($I`CommentMarker`)({
 	/** Whose comments these are, e.g. your action's name. */
-	namespace: S.NonEmptyString,
+	namespace: S.NonEmptyString.annotateKey({ description: "Whose comments these are, e.g. your action's name." }),
 	/** Which comment, within that namespace. */
-	key: S.NonEmptyString,
-}) {
+	key: S.NonEmptyString.annotateKey({ description: "Which comment, within that namespace." }),
+}, $I.annote("CommentMarker", { description: "The hidden marker that makes a comment findable again." })) {
 	/** The HTML comment appended to a body so the comment can be found again. */
 	get html(): string {
 		return `<!-- ${this.namespace}:${this.key} -->`;
@@ -41,11 +44,11 @@ export class CommentMarker extends S.Class<CommentMarker>("CommentMarker")({
  *
  * @public
  */
-export class CommentRecord extends S.Class<CommentRecord>("CommentRecord")({
-	id: S.Int,
-	body: S.String,
-	url: S.String,
-}) {}
+export class CommentRecord extends S.Class<CommentRecord>($I`CommentRecord`)({
+	id: S.Int.annotateKey({ description: "GitHub-assigned comment identifier used to update or delete the comment" }),
+	body: S.String.annotateKey({ description: "Comment text returned by GitHub, including any hidden marker, or empty when GitHub supplies none" }),
+	url: S.String.annotateKey({ description: "Web URL for viewing the comment on GitHub" }),
+}, $I.annote("CommentRecord", { description: "A comment this package wrote or found: its id, body and web URL." })) {}
 
 /**
  * Post, update, find and delete comments on a pull request or issue, including
@@ -109,7 +112,7 @@ export interface PullRequestCommentShape {
  * @public
  */
 export class PullRequestComment extends Context.Service<PullRequestComment, PullRequestCommentShape>()(
-	"@beep/scratchpad/effected/github/PullRequestComment",
+	$I`PullRequestComment`,
 ) {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<PullRequestComment, never, GitHubClient> = Layer.effect(

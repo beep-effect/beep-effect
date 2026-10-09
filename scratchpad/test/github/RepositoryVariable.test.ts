@@ -1,7 +1,9 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import type { RecordedCall } from "../../effected/github/GitHubClient.ts";
+import * as Result from "effect/Result";
+import { variableFixture } from "./fixtures.ts";
+import type { GitHubFixtures, RecordedCall } from "../../effected/github/GitHubClient.ts";
 import { GitHubClient } from "../../effected/github/GitHubClient.ts";
 import { GitHubError } from "../../effected/github/GitHubError.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
@@ -9,8 +11,8 @@ import { RepositoryVariable } from "../../effected/github/RepositoryVariable.ts"
 
 const run = Effect.fn("run")(function*<A, E>(
 	effect: Effect.Effect<A, E, RepositoryVariable | GitHubClient | Repo>,
-	request: Record<string, unknown>,
-	paginate: Record<string, ReadonlyArray<unknown>> = {},
+	request: NonNullable<GitHubFixtures["request"]>,
+	paginate: NonNullable<GitHubFixtures["paginate"]> = {},
 ) {
 		const requested: RecordedCall[] = [];
 		const value = yield* effect.pipe(
@@ -27,8 +29,8 @@ describe("RepositoryVariable.set", () => {
 			const { requested, routes } = yield* run(
 				Effect.flatMap(RepositoryVariable, (v) => v.set("NODE_ENV", "production")),
 				{
-					"GET /repos/{owner}/{repo}/actions/variables/{name}": { name: "NODE_ENV", value: "old" },
-					"PATCH /repos/{owner}/{repo}/actions/variables/{name}": {},
+					"GET /repos/{owner}/{repo}/actions/variables/{name}": Result.succeed(variableFixture({ name: "NODE_ENV", value: "old" })),
+					"PATCH /repos/{owner}/{repo}/actions/variables/{name}": Result.succeed(""),
 				},
 			);
 
@@ -54,8 +56,8 @@ describe("RepositoryVariable.set", () => {
 				{
 					// Absent is a 404 from GitHub, stubbed as the response rather than
 					// by leaving the route unwired — absence would mean "unstubbed".
-					"GET /repos/{owner}/{repo}/actions/variables/{name}": GitHubError.notFound("read", "NODE_ENV"),
-					"POST /repos/{owner}/{repo}/actions/variables": {},
+					"GET /repos/{owner}/{repo}/actions/variables/{name}": Result.fail(GitHubError.notFound("read", "NODE_ENV")),
+					"POST /repos/{owner}/{repo}/actions/variables": Result.succeed({}),
 				},
 			);
 
@@ -81,8 +83,8 @@ describe("RepositoryVariable.set", () => {
 			const { requested, routes } = yield* run(
 				Effect.flatMap(RepositoryVariable, (v) => v.set("NODE", "x")),
 				{
-					"GET /repos/{owner}/{repo}/actions/variables/{name}": GitHubError.notFound("read", "NODE"),
-					"POST /repos/{owner}/{repo}/actions/variables": {},
+					"GET /repos/{owner}/{repo}/actions/variables/{name}": Result.fail(GitHubError.notFound("read", "NODE")),
+					"POST /repos/{owner}/{repo}/actions/variables": Result.succeed({}),
 				},
 			);
 
@@ -99,10 +101,7 @@ describe("RepositoryVariable.list and delete", () => {
 				Effect.flatMap(RepositoryVariable, (v) => v.list),
 				{},
 				{
-					"GET /repos/{owner}/{repo}/actions/variables": [
-						{ name: "A", value: "1" },
-						{ name: "B", value: "2" },
-					],
+					"GET /repos/{owner}/{repo}/actions/variables": Result.succeed([variableFixture({ name: "A", value: "1" }), variableFixture({ name: "B", value: "2" })]),
 				},
 			);
 
@@ -119,7 +118,7 @@ describe("RepositoryVariable.list and delete", () => {
 		Effect.gen(function* () {
 			const { requested } = yield* run(
 				Effect.flatMap(RepositoryVariable, (v) => v.delete("NODE_ENV")),
-				{ "DELETE /repos/{owner}/{repo}/actions/variables/{name}": {} },
+				{ "DELETE /repos/{owner}/{repo}/actions/variables/{name}": Result.succeed("") },
 			);
 
 			assert.deepStrictEqual(requested[0]?.params, { owner: "acme", repo: "widget", name: "NODE_ENV" });
@@ -141,7 +140,7 @@ describe("RepositoryVariable pagination", () => {
 			const { value } = yield* run(
 				Effect.flatMap(RepositoryVariable, (v) => v.list),
 				{},
-				{ "GET /repos/{owner}/{repo}/actions/variables": many },
+				{ "GET /repos/{owner}/{repo}/actions/variables": Result.succeed(many.map(variableFixture)) },
 			);
 			assert.lengthOf(value, 60);
 			assert.strictEqual(value[59]?.name, "VAR_59");
@@ -155,11 +154,11 @@ describe("RepositoryVariable, per environment", () => {
 			const updated = yield* run(
 				Effect.flatMap(RepositoryVariable, (v) => v.setForEnvironment("prod", "LEVEL", "high")),
 				{
-					"GET /repos/{owner}/{repo}/environments/{environment_name}/variables/{name}": {
+					"GET /repos/{owner}/{repo}/environments/{environment_name}/variables/{name}": Result.succeed(variableFixture({
 						name: "LEVEL",
 						value: "low",
-					},
-					"PATCH /repos/{owner}/{repo}/environments/{environment_name}/variables/{name}": {},
+					})),
+					"PATCH /repos/{owner}/{repo}/environments/{environment_name}/variables/{name}": Result.succeed(""),
 				},
 			);
 			assert.deepStrictEqual(updated.requested[1]?.params, {
@@ -173,11 +172,11 @@ describe("RepositoryVariable, per environment", () => {
 			const created = yield* run(
 				Effect.flatMap(RepositoryVariable, (v) => v.setForEnvironment("prod", "LEVEL", "high")),
 				{
-					"GET /repos/{owner}/{repo}/environments/{environment_name}/variables/{name}": GitHubError.notFound(
+					"GET /repos/{owner}/{repo}/environments/{environment_name}/variables/{name}": Result.fail(GitHubError.notFound(
 						"read",
 						"LEVEL",
-					),
-					"POST /repos/{owner}/{repo}/environments/{environment_name}/variables": {},
+					)),
+					"POST /repos/{owner}/{repo}/environments/{environment_name}/variables": Result.succeed({}),
 				},
 			);
 			assert.strictEqual(
@@ -199,13 +198,13 @@ describe("RepositoryVariable, per environment", () => {
 			const listed = yield* run(
 				Effect.flatMap(RepositoryVariable, (v) => v.listForEnvironment("prod")),
 				{},
-				{ "GET /repos/{owner}/{repo}/environments/{environment_name}/variables": [{ name: "LEVEL", value: "high" }] },
+				{ "GET /repos/{owner}/{repo}/environments/{environment_name}/variables": Result.succeed([variableFixture({ name: "LEVEL", value: "high" })]) },
 			);
 			assert.deepStrictEqual(listed.value, [{ name: "LEVEL", value: "high" }]);
 
 			const deleted = yield* run(
 				Effect.flatMap(RepositoryVariable, (v) => v.deleteForEnvironment("prod", "LEVEL")),
-				{ "DELETE /repos/{owner}/{repo}/environments/{environment_name}/variables/{name}": {} },
+				{ "DELETE /repos/{owner}/{repo}/environments/{environment_name}/variables/{name}": Result.succeed("") },
 			);
 			assert.deepStrictEqual(deleted.requested[0]?.params, {
 				owner: "acme",

@@ -1,6 +1,9 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { headerNumber, headerString, retryAfterMillisFrom } from "./internal/headers.ts";
+
+const $I = $ScratchpadId.create("effected/github/GitHubError");
 
 /**
  * Why a GitHub call failed, as a value you can branch on.
@@ -27,7 +30,7 @@ export const GitHubErrorKind = S.Literals([
 	"transport",
 	/** A response arrived but did not match the schema it was decoded against. */
 	"decode",
-]);
+]).pipe($I.annoteSchema("GitHubErrorKind", { description: "Why a GitHub call failed, as a value you can branch on." }));
 
 /**
  * The validation codes GitHub documents for a 422's `errors[].code`.
@@ -58,7 +61,7 @@ export const GitHubValidationCode = S.Literals([
 	"unprocessable",
 	/** No fixed meaning: read the entry's `message`. */
 	"custom",
-]);
+]).pipe($I.annoteSchema("GitHubValidationCode", { description: "The validation codes GitHub documents for a 422's `errors[].code`." }));
 
 /**
  * One entry from a failed response's `data.errors` array, as GitHub sent it.
@@ -73,16 +76,16 @@ export const GitHubValidationCode = S.Literals([
  *
  * @public
  */
-export class GitHubValidationEntry extends S.Class<GitHubValidationEntry>("GitHubValidationEntry")({
+export class GitHubValidationEntry extends S.Class<GitHubValidationEntry>($I`GitHubValidationEntry`)({
 	/** The resource type GitHub validated, e.g. `"Release"`. */
-	resource: S.optionalKey(S.String),
+	resource: S.optionalKey(S.String).annotateKey({ description: "The resource type GitHub validated, e.g. `\"Release\"`." }),
 	/** The parameter at fault, e.g. `"tag_name"`. */
-	field: S.optionalKey(S.String),
+	field: S.optionalKey(S.String).annotateKey({ description: "The parameter at fault, e.g. `\"tag_name\"`." }),
 	/** GitHub's validation code — one of {@link GitHubValidationCode} when documented. */
-	code: S.optionalKey(S.String),
+	code: S.optionalKey(S.String).annotateKey({ description: "GitHub's validation code — one of GitHubValidationCode when documented." }),
 	/** GitHub's prose, when it sent any. */
-	message: S.optionalKey(S.String),
-}) {}
+	message: S.optionalKey(S.String).annotateKey({ description: "GitHub's prose, when it sent any." }),
+}, $I.annote("GitHubValidationEntry", { description: "One entry from a failed response's `data.errors` array, as GitHub sent it." })) {}
 
 /**
  * Every REST failure this package produces, from every resource.
@@ -94,15 +97,15 @@ export class GitHubValidationEntry extends S.Class<GitHubValidationEntry>("GitHu
  *
  * @public
  */
-export class GitHubError extends S.TaggedError<GitHubError>()("GitHubError", {
+export class GitHubError extends S.TaggedError<GitHubError>($I`GitHubError`)("GitHubError", {
 	/** Structural routing. Branch on this, never on the rendered message. */
-	kind: GitHubErrorKind,
+	kind: GitHubErrorKind.annotateKey({ description: "Structural routing. Branch on this, never on the rendered message." }),
 	/** What was attempted: a resource method (`"GitBranch.upsert"`) or a raw route. */
-	operation: S.String,
+	operation: S.String.annotateKey({ description: "What was attempted: a resource method (`\"GitBranch.upsert\"`) or a raw route." }),
 	/** Human-readable cause, for logs and messages. Never a routing surface. */
-	reason: S.String,
+	reason: S.String.annotateKey({ description: "Human-readable cause, for logs and messages. Never a routing surface." }),
 	/** GitHub's HTTP status, when the request reached GitHub at all. */
-	status: S.optionalKey(S.Int),
+	status: S.optionalKey(S.Int).annotateKey({ description: "GitHub's HTTP status, when the request reached GitHub at all." }),
 	/**
 	 * A server-advised delay before retrying, in milliseconds.
 	 *
@@ -112,7 +115,7 @@ export class GitHubError extends S.TaggedError<GitHubError>()("GitHubError", {
 	 * information for a caller. Whether a failure is worth retrying at all is the
 	 * derived `retryable` getter.
 	 */
-	retryAfterMillis: S.optionalKey(S.Int),
+	retryAfterMillis: S.optionalKey(S.Int).annotateKey({ description: "A server-advised delay before retrying, in milliseconds." }),
 	/**
 	 * GitHub's validation entries, when the failed response carried any.
 	 *
@@ -121,10 +124,10 @@ export class GitHubError extends S.TaggedError<GitHubError>()("GitHubError", {
 	 * rather than on `reason`. Absent when GitHub sent no `errors` array — some
 	 * 422s ("Update is not a fast forward") are prose only.
 	 */
-	validation: GitHubValidationEntry.pipe(S.Array, S.optionalKey),
+	validation: GitHubValidationEntry.pipe(S.Array, S.optionalKey).annotateKey({ description: "GitHub's validation entries, when the failed response carried any." }),
 	/** The underlying throwable, when one exists. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying throwable, when one exists." }),
+}, $I.annote("GitHubError", { description: "Every REST failure this package produces, from every resource." })) {
 	/** `"GitBranch.upsert failed (422): Reference already exists"`. */
 	override get message(): string {
 		return this.status === undefined

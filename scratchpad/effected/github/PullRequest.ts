@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -13,8 +14,10 @@ import { GraphQLDocument } from "./GraphQL.ts";
 import { Repo } from "./Repo.ts";
 import { PageOptions } from "./Rest.ts";
 
+const $I = $ScratchpadId.create("effected/github/PullRequest");
+
 /** How a pull request is merged. @public */
-export const MergeMethod = S.Literals(["merge", "squash", "rebase"]);
+export const MergeMethod = S.Literals(["merge", "squash", "rebase"]).pipe($I.annoteSchema("MergeMethod", { description: "How a pull request is merged." }));
 
 /**
  * A pull request, projected to what callers read.
@@ -27,25 +30,25 @@ export const MergeMethod = S.Literals(["merge", "squash", "rebase"]);
  *
  * @public
  */
-export class PullRequestInfo extends S.Class<PullRequestInfo>("PullRequestInfo")({
+export class PullRequestInfo extends S.Class<PullRequestInfo>($I`PullRequestInfo`)({
 	/** The number in `#123`. */
-	number: S.Int,
+	number: S.Int.annotateKey({ description: "The number in `#123`." }),
 	/** The GraphQL node id, which the auto-merge mutations need. */
-	nodeId: S.String,
+	nodeId: S.String.annotateKey({ description: "The GraphQL node id, which the auto-merge mutations need." }),
 	/** The web URL. */
-	url: S.String,
-	title: S.String,
-	state: S.Literals(["open", "closed"]),
+	url: S.String.annotateKey({ description: "The web URL." }),
+	title: S.String.annotateKey({ description: "The pull request's heading as reported by GitHub" }),
+	state: S.Literals(["open", "closed"]).annotateKey({ description: "Whether the pull request is `open` or `closed`, with merge status reported separately" }),
 	/** The source branch name. */
-	head: S.String,
+	head: S.String.annotateKey({ description: "The source branch name." }),
 	/** The sha the source branch pointed at when GitHub answered. */
-	headSha: S.String,
+	headSha: S.String.annotateKey({ description: "The sha the source branch pointed at when GitHub answered." }),
 	/** The target branch name. */
-	base: S.String,
+	base: S.String.annotateKey({ description: "The target branch name." }),
 	/** The sha the target branch pointed at when GitHub answered — the commit the pull request branches from. */
-	baseSha: S.String,
-	draft: S.Boolean,
-	merged: S.Boolean,
+	baseSha: S.String.annotateKey({ description: "The sha the target branch pointed at when GitHub answered — the commit the pull request branches from." }),
+	draft: S.Boolean.annotateKey({ description: "Whether GitHub marks the pull request as a draft, defaulting to false when omitted" }),
+	merged: S.Boolean.annotateKey({ description: "Whether the pull request merged, using GitHub's explicit flag or, when absent, the presence of a merge timestamp" }),
 	/**
 	 * When it merged, if it did.
 	 *
@@ -54,12 +57,12 @@ export class PullRequestInfo extends S.Class<PullRequestInfo>("PullRequestInfo")
 	 * fact GitHub always reports, so modelling it as "maybe absent" would be
 	 * modelling a gap in our fixtures rather than a gap in the domain.
 	 */
-	mergedAt: S.Option(S.DateTimeUtcFromString),
+	mergedAt: S.Option(S.DateTimeUtcFromString).annotateKey({ description: "When it merged, if it did." }),
 	/** The description, when GitHub sent one. */
-	body: S.optionalKey(S.String),
+	body: S.optionalKey(S.String).annotateKey({ description: "The description, when GitHub sent one." }),
 	/** The merge commit, once there is one. */
-	mergeCommitSha: S.optionalKey(S.String),
-}) {}
+	mergeCommitSha: S.optionalKey(S.String).annotateKey({ description: "The merge commit, once there is one." }),
+}, $I.annote("PullRequestInfo", { description: "A pull request, projected to what callers read." })) {}
 
 /**
  * What {@link PullRequestShape.upsert} did.
@@ -243,7 +246,7 @@ export interface PullRequestShape {
  *
  * @public
  */
-export class PullRequest extends Context.Service<PullRequest, PullRequestShape>()("@beep/scratchpad/effected/github/PullRequest") {
+export class PullRequest extends Context.Service<PullRequest, PullRequestShape>()($I`PullRequest`) {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<PullRequest, never, GitHubClient> = Layer.effect(
 		this,

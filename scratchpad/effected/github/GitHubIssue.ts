@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -12,33 +13,35 @@ import { CommentRecord } from "./PullRequestComment.ts";
 import { Repo } from "./Repo.ts";
 import type { PageOptions } from "./Rest.ts";
 
+const $I = $ScratchpadId.create("effected/github/GitHubIssue");
+
 /**
  * An issue, projected to what callers read.
  *
  * @public
  */
-export class IssueInfo extends S.Class<IssueInfo>("IssueInfo")({
-	number: S.Int,
-	title: S.String,
-	state: S.Literals(["open", "closed"]),
+export class IssueInfo extends S.Class<IssueInfo>($I`IssueInfo`)({
+	number: S.Int.annotateKey({ description: "The issue's repository-local number, used to read, close and comment on it" }),
+	title: S.String.annotateKey({ description: "The issue's heading as reported by GitHub" }),
+	state: S.Literals(["open", "closed"]).annotateKey({ description: "Whether the issue is `open` or `closed`" }),
 	/** Label names, normalized from GitHub's `string | { name }` union. */
-	labels: S.Array(S.String),
-	url: S.String,
+	labels: S.Array(S.String).annotateKey({ description: "Label names, normalized from GitHub's `string | { name }` union." }),
+	url: S.String.annotateKey({ description: "The web URL of the issue on GitHub" }),
 	/** The GraphQL node id. */
-	nodeId: S.String,
-}) {}
+	nodeId: S.String.annotateKey({ description: "The GraphQL node id." }),
+}, $I.annote("IssueInfo", { description: "An issue, projected to what callers read." })) {}
 
 /**
  * An issue a pull request closes.
  *
  * @public
  */
-export class LinkedIssue extends S.Class<LinkedIssue>("LinkedIssue")({
-	number: S.Int,
-	title: S.String,
-	state: S.String,
-	url: S.String,
-	nodeId: S.String,
+export class LinkedIssue extends S.Class<LinkedIssue>($I`LinkedIssue`)({
+	number: S.Int.annotateKey({ description: "The repository-local number of an issue the pull request closes" }),
+	title: S.String.annotateKey({ description: "The heading of an issue the pull request closes, as reported by GitHub" }),
+	state: S.String.annotateKey({ description: "The linked issue's state as returned by GitHub's GraphQL closing references, without normalization" }),
+	url: S.String.annotateKey({ description: "The web URL of an issue the pull request closes" }),
+	nodeId: S.String.annotateKey({ description: "GitHub's GraphQL node identifier for an issue the pull request closes" }),
 	/**
 	 * Whether a human wrote the link, rather than GitHub inferring it from the
 	 * branch or commit messages.
@@ -47,8 +50,8 @@ export class LinkedIssue extends S.Class<LinkedIssue>("LinkedIssue")({
 	 * Resolved by querying the pull request's closing references twice, once with
 	 * `userLinkedOnly`, and marking the issues present in the second result.
 	 */
-	userLinked: S.Boolean,
-}) {}
+	userLinked: S.Boolean.annotateKey({ description: "Whether a human wrote the link, rather than GitHub inferring it from the branch or commit messages." }),
+}, $I.annote("LinkedIssue", { description: "An issue a pull request closes." })) {}
 
 /**
  * What {@link GitHubIssueShape.commentOnce} found or wrote.
@@ -60,12 +63,12 @@ export class LinkedIssue extends S.Class<LinkedIssue>("LinkedIssue")({
  *
  * @public
  */
-export class CommentOnceResult extends S.Class<CommentOnceResult>("CommentOnceResult")({
+export class CommentOnceResult extends S.Class<CommentOnceResult>($I`CommentOnceResult`)({
 	/** Did this call post the comment (`true`), or find it already there (`false`)? */
-	wrote: S.Boolean,
+	wrote: S.Boolean.annotateKey({ description: "Did this call post the comment (`true`), or find it already there (`false`)?" }),
 	/** The marked comment — the one created, or the one that made us skip. */
-	comment: CommentRecord,
-}) {}
+	comment: CommentRecord.annotateKey({ description: "The marked comment — the one created, or the one that made us skip." }),
+}, $I.annote("CommentOnceResult", { description: "What GitHubIssueShape.commentOnce found or wrote." })) {}
 
 const IssueNodes = S.Struct({
 	id: S.String,
@@ -234,7 +237,7 @@ export interface GitHubIssueShape {
  *
  * @public
  */
-export class GitHubIssue extends Context.Service<GitHubIssue, GitHubIssueShape>()("@beep/scratchpad/effected/github/GitHubIssue") {
+export class GitHubIssue extends Context.Service<GitHubIssue, GitHubIssueShape>()($I`GitHubIssue`) {
 	/** The live service, built over a `GitHubClient`. */
 	static readonly layer: Layer.Layer<GitHubIssue, never, GitHubClient> = Layer.effect(
 		this,

@@ -149,7 +149,7 @@ export type {
 	Route as RestRoute,
 } from "./Rest.ts";
 export { PageOptions } from "./Rest.ts";
-export { Ruleset, type RulesetInfo, type RulesetPayload, type RulesetShape } from "./Ruleset.ts";
+export { Ruleset, type RulesetInfo, RulesetPayload, type RulesetShape } from "./Ruleset.ts";
 export {
 	ExtraPermission,
 	PermissionGap,

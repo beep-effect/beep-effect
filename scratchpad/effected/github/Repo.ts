@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -5,15 +6,17 @@ import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const $I = $ScratchpadId.create("effected/github/Repo");
+
 /**
  * A repository slug was not `owner/repo`.
  *
  * @public
  */
-export class InvalidRepoRefError extends S.TaggedError<InvalidRepoRefError>()("InvalidRepoRefError", {
+export class InvalidRepoRefError extends S.TaggedError<InvalidRepoRefError>($I`InvalidRepoRefError`)("InvalidRepoRefError", {
 	/** What was handed in. */
-	input: S.String,
-}) {
+	input: S.String.annotateKey({ description: "What was handed in." }),
+}, $I.annote("InvalidRepoRefError", { description: "A repository slug was not `owner/repo`." })) {
 	override get message(): string {
 		return `not an owner/repo slug: ${JSON.stringify(this.input)}`;
 	}
@@ -24,12 +27,12 @@ export class InvalidRepoRefError extends S.TaggedError<InvalidRepoRefError>()("I
  *
  * @public
  */
-export class RepoRef extends S.Class<RepoRef>("RepoRef")({
+export class RepoRef extends S.Class<RepoRef>($I`RepoRef`)({
 	/** The user or organization. */
-	owner: S.NonEmptyString,
+	owner: S.NonEmptyString.annotateKey({ description: "The user or organization." }),
 	/** The repository name, without the owner. */
-	repo: S.NonEmptyString,
-}) {
+	repo: S.NonEmptyString.annotateKey({ description: "The repository name, without the owner." }),
+}, $I.annote("RepoRef", { description: "Which repository an operation acts on." })) {
 	/**
 	 * Parse `"owner/repo"`, synchronously.
 	 *
@@ -89,7 +92,7 @@ export class RepoRef extends S.Class<RepoRef>("RepoRef")({
  *
  * @public
  */
-export class Repo extends Context.Service<Repo, RepoRef>()("@beep/scratchpad/effected/github/Repo") {
+export class Repo extends Context.Service<Repo, RepoRef>()($I`Repo`) {
 	/** The repository, as a value you already have. */
 	static readonly layer = (ref: RepoRef): Layer.Layer<Repo> => Layer.succeed(Repo, ref);
 
