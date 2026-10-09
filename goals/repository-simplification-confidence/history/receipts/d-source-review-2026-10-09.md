@@ -78,3 +78,23 @@ and equality of every non-review field and all remaining reviews. The request
 names exactly those four subjects and grants no qualification. Full PR revert
 restores references and notes together; isolated reversal requires the old
 evidence file too. No writes or heavy commands were performed by the reviewer.
+
+## Final main integration and documentation review
+
+At base `2cf3724e93f8d482049f6d75e1d102ff724f98cb`, the same separate Codex
+reviewer returned **zero actionable P0–P3 findings** after three documentation
+provenance/format findings were corrected. It verified the post-baseline
+accounts note is byte-identical to main parent `51740fd5e6` (SHA-256
+`0abfde051ec060931faecc4f7d3ea9e9e8c9151ea5bae6a566e892d90c320651`), the
+original reset baseline is immutable, and recovery and inherited coverage
+attribution are coherent. It verified the monitor's terminal record and the
+pre-refresh versus final-head proof boundaries. Final admitted executions
+were still pending at this review; it does not attest their execution.
+No writes or heavy commands were performed by the reviewer.
+
+After final executions completed, the reviewer re-read the staged wave and
+terminal result files: **zero actionable P0–P3 findings**. It confirmed every
+listed exit 0, the 316-test/10-file coverage log and regenerated measurements,
+and the full-versus-quick, local-versus-hosted, and snapshot-versus-final
+boundaries. This closes the source/evidence wave; it does not attest final-head
+hosted success, elapsed review window or merge readiness.

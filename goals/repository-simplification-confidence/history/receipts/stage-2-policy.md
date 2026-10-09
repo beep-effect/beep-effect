@@ -69,8 +69,16 @@ Yeet exposed four cache-baseline review references to a retired note.
 [Historical evidence](d-cache-review-evidence.md) preserves the original bytes
 and digest; `beep cache baseline --request` moved only the four reviews,
 with every non-review field unchanged and no qualification granted.
-The publication retry follows the evidence repair and an environment-only
-16 GiB unit OOM; hosted run/PR evidence is collected after publication.
+PR [#1566](https://github.com/beep-effect/beep-effect/pull/1566) is published
+and ready with `ready-for-heavy`. Yeet cheap gates and frozen install pass.
+[Hosted Check](https://github.com/beep-effect/beep-effect/actions/runs/37966763979)
+was running at the first publication read of snapshot `749ce0758c`; final hosted success and the
+review window are not claimed. Both memory-capped attempts ended before
+publication; serial execution of the same Effect-import/schema-first gate tasks
+passed and warmed their ordinary caches before canonical publication.
+The orchestrator owns the S11 merge gate and shared policy integration; lane
+monitor units are cancelled at handoff to satisfy the crash-resume no-live-unit
+rule. Post-merge SHA remains R34; E fills in the pending E-09 anchor (R35).
 See the [source review](d-source-review-2026-10-09.md) and
 [lane handoff](../handoffs/rsc-d-release-2026-10-09.md).
 
@@ -78,3 +86,19 @@ Full-directory recovery restores historical config and README as well as notes.
 Pair it with a revert of the reset policy PR (including the graph guard);
 restoring private notes alone fails the current guard. `ls-tree` and `git show`
 inspect history without altering the checkout.
+
+### Final main refresh
+
+Main #1563 added one private repo-cli note after the original 939-note reset.
+D preserves its exact bytes in `d-post-baseline-accounts-note.md` and removes
+it from pending notes under the manifest-aware policy. The original reset
+provenance and versions remain unchanged. Hosted snapshot coverage failed
+only the inherited, main-identical `EffectImports.ts` floor; the handoff
+records the exact job and values for S11 consolidated remediation.
+
+Final main-refresh local execution: quick package lint/check, bounded docgen,
+knowledge references, test-tsgo, JSDoc ratchet, Fallow audit/health, and scoped
+coverage all exited 0 through beep-heavy. Coverage passed 316 tests in 10 files;
+`d-coverage-snapshot.json` records the final refreshed source snapshot and
+retains the narrow-cohort floor limitation. The earlier full package audit
+remains the full D implementation proof; the final package check is quick.

@@ -3,10 +3,10 @@
  *
  * **Details**
  *
- * Lab apps under `apps/labs/**` are changeset-ceremony exempt. Every other
- * change set is enforced in-process: each changed, versioned, non-ignored
- * product workspace must be named by a changeset added in the merge-base
- * range. The wrapper never delegates to the stock changesets CLI.
+ * Lab apps under `apps/labs/**` and private workspaces are changeset-ceremony
+ * exempt. Each changed, versioned, publish-enabled, non-ignored product
+ * workspace must be named by a changeset added in the merge-base range.
+ * The wrapper never delegates to the stock changesets CLI.
  *
  * @packageDocumentation
  * @since 0.0.0

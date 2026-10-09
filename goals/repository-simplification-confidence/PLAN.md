@@ -299,7 +299,8 @@ bun run beep quality package-verify <@beep/package>
 D census committed before retirement at `da1a85157d`; one-commit reset at
 `ec2080bb68`, with subsequent review repairs on this branch. Run 2 resumed
 after the workstation crash, merged main and the authorized inherited
-knowledge repair, and is collecting admitted package/parity proof. Independent
+knowledge repair, and completed admitted package/parity proof. PR #1566 is ready; hosted evidence
+and the S11 review/merge gate remain with the orchestrator. Independent
 source/scope review at `3897314253` returned zero actionable findings.
 See `history/handoffs/rsc-d-release-2026-10-09.md` for current terminal results.
 GitHub Packages lacks read:packages; desktop verification remains E-owned.

@@ -1,10 +1,10 @@
 lane: rsc-d-release
-head: 3897314253436345cfd578c5a7735884b1992c81 (Run 2 source-review snapshot)   PR: pending publication
-retired: 939 notes; parent da1a85157d7c8cc6b72fe43f12d01389db811ce9; tree d839776128c29c6c4cc7c2937329942d873b973c
-package-verify: @beep/repo-cli pass; Run 2 terminal exit=0 (audit 740.7s, docgen 24.5s)
-hosted-parity: test-tsgo pass / docgen local pass / jsdoc-ratchet pass / knowledge refs pass / fallow audit+health pass / coverage pass (serial 316/316 tests)
+head: 749ce0758cf6940d206e584f9ac1a0f46ba81f1e (published source/evidence snapshot; final documentation/report commit follows)   PR: #1566
+retired: 939 baseline notes; parent da1a85157d7c8cc6b72fe43f12d01389db811ce9; tree d839776128c29c6c4cc7c2937329942d873b973c; plus 1 later private note archived from main #1563
+package-verify: @beep/repo-cli pass (full D audit/docgen before refresh; final refresh quick lint/check pass)
+hosted-parity: test-tsgo pass / docgen local pass / jsdoc-ratchet pass / knowledge refs pass / fallow audit+health pass / coverage pass (316/316 scoped tests; cohort limitation below)
 handoff: goals/repository-simplification-confidence/history/handoffs/rsc-d-release-2026-10-09.md
-open: GitHub Packages lacks read:packages; local consumer census negative, remote mirrors/deploys not establishable; E-09 pending E-owned citation (R35); AGENTS.md exact replacement awaits rsc-shared (R33); publication retry follows repaired evidence reference and unit OOM
+open: GitHub Packages externally blocked (read:packages absent); local external-consumer scan negative, remote mirrors/deploys not establishable; E-09 citation pending E-owned receipt (R35); exact AGENTS.md replacement below for rsc-shared (R33); rsc-shared policy and cache-baseline review; hosted checks/review window pending at orchestrator gate (S11); lane never merges
 
 ## Run 1 report (historical; superseded by Run 2)
 
@@ -175,3 +175,64 @@ reference to a retired note. Exact original bytes/digest were preserved in
 only four baseline reviews, keeping every non-review payload field identical.
 This shared baseline hunk also needs rsc-shared review. Retrying publication
 through admission at a 24 GiB cap; no machine-wide capacity or slot change.
+
+## Run 2 publication and orchestrator handoff
+
+PR [#1566](https://github.com/beep-effect/beep-effect/pull/1566) published through
+Yeet at `749ce0758cf6940d206e584f9ac1a0f46ba81f1e`, then marked ready with
+`beep yeet ready`; it carries `ready-for-heavy`. Yeet cheap gates and frozen
+head-install preflight passed. The final documentation/report wave follows this snapshot;
+its exact final SHA is delivered in the lane's terminal report.
+
+The first remote read had zero unresolved threads, zero failing checks, and
+pending/running hosted checks.
+[Check run](https://github.com/beep-effect/beep-effect/actions/runs/37966763979)
+and [Heavy Admit](https://github.com/beep-effect/beep-effect/actions/runs/37966779900)
+are hosted evidence at the publication snapshot, not green/final-head claims.
+The 20-minute review window begins at the later of ready and final push.
+The orchestrator re-reads threads and applies S11 at its merge gate; no lane
+merge or retirement was attempted.
+
+The two memory-capped publication attempts ended at 16 and 24 GiB. Running
+`lint:effect-imports` and `lint:schema-first` individually at Turbo concurrency 1
+through beep-heavy passed both and populated their normal task caches; the
+canonical publisher then passed every gate. No scanner, gate or admission slot
+was disabled. D-owned executable source and tests are unchanged since the terminal Run 2 executions;
+those earlier proofs cover the pre-final-main-refresh snapshot, while the refresh
+incorporates substantive inherited accounts and security changes.
+the final wave clarifies the module JSDoc exemption paragraph and updates
+evidence/reports. Quick package, bounded docgen and knowledge checks cover
+that documentation wave separately.
+
+Under the crash-resume ruling, the lane must not exit with units it started
+running. Its detached readiness monitor is cancelled at handoff with a terminal
+job record; this is not merge-readiness proof. The orchestrator owns continued
+hosted polling and the S11 gate, including the shared AGENTS.md policy edit
+above, review of `.changeset/config.json`, retired registry and generated
+cache-baseline review relocation. Cancellation affects only lane-owned monitor
+units, not hosted CI or other sessions.
+
+Final local checks after the main refresh all exited 0: quick package lint/check,
+bounded docgen, knowledge references, test-tsgo, JSDoc ratchet, Fallow audit and
+health, and scoped coverage (10 files, 316 tests). Each ran serially through
+beep-heavy; terminal rows are in `.beep/rsc-d-final-doc-results.txt` and
+`.beep/rsc-d-final-parity-parity-results.txt`. The admitted unit exited 0. Scoped coverage remains a read of the touched files; the narrow
+IssueClassification cohort does not claim the broader repository floor.
+No changeset is added: repo-cli is private and already ignored, and this PR
+lands the D policy. Post-merge SHA recording remains R34; E-09 remains R35.
+
+## Final main refresh and hosted attribution
+
+Merged main `36027982f2` (accounts #1563 and OSV #1562) at `2cf3724e93`.
+The only packet conflict was append-only friction evidence; both sides survive.
+Main added one private repo-cli pending note after the 939-note reset. Its exact
+bytes are archived at `history/receipts/d-post-baseline-accounts-note.md`, outside
+`.changeset`; no version or original reset-baseline count changes.
+
+The publication-snapshot hosted checks passed except Coverage Regression
+([job](https://github.com/beep-effect/beep-effect/actions/runs/37966779900/job/113943662347)).
+Its exact log reports only `EffectImports.ts`: functions 89.34 < 90.17,
+lines 92.36 < 92.52, statements 92.02 < 92.13. That file is byte-identical
+to main; it came from the inherited #1564 repair, not D. S11 routes that
+red to the orchestrator consolidated fix. Zero review threads at this read.
+These are publication-snapshot results, not the later final head.

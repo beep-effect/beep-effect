@@ -1,7 +1,7 @@
 {
-  "cohort": "10 test files, 316 tests passed; Run 2 serial V8 coverage read",
+  "cohort": "10 test files, 316 tests passed; final main-refresh serial V8 coverage read",
   "scopeNote": "Scoped cohort, not full package/repository floor proof. Seven measured files meet every baseline metric. IssueClassification lines/statements/functions are below the broader baseline in this narrow cohort; the D hunk changes only remediation text and its assertions, not executable branches.",
-  "executionSourceSnapshot": "ea71d45b542c8a120960289a47688cff229fe125",
+  "executionSourceSnapshot": "2cf3724e93f8d482049f6d75e1d102ff724f98cb",
   "rows": [
     {
       "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",

@@ -279,3 +279,9 @@
   manage the submitted monitor through `yeet job` before the final handoff.
 - Prevention: help should distinguish the publish job ceiling from the
   automatically submitted monitor's lifetime, or expose a monitor ceiling.
+
+- Final documentation verification remained queued across heavy-slot holder
+  turnovers (`beep-heavy: all 3 slots busy, waiting`). The wrapper polls locks
+  rather than keeping an ordered ticket queue, so closeout admission has
+  unpredictable wait time. A fair queue with observable position would prevent
+  this delay; this lane does not alter the workstation wrapper or other jobs.

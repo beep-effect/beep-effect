@@ -91,5 +91,6 @@ D latest evidence: [release policy and census](history/receipts/stage-2-policy.m
 and [Run 2 lane handoff](history/handoffs/rsc-d-release-2026-10-09.md).
 The census preceded the committed 939-note reset. Crash resumption merged the
 owner's inherited repairs; independent source/scope review has zero actionable
-findings. Admitted verification and publication are in progress. E owns desktop
+findings. Local package/parity proof passes; PR #1566 is ready for the orchestrator gate.
+Hosted success is pending. E owns desktop
 verification; GitHub Packages census remains externally blocked on token scope.
