@@ -50,13 +50,21 @@ export const delimiterFor = (value: string): string => {
 export const isUsableName = (name: string): boolean =>
 	name !== "" && !/[\r\n]/.test(name) && !name.includes("=") && !name.includes("<<") && !name.endsWith("<");
 
+const renderHeredocBlock = (name: string, value: string): string => {
+	const delimiter = delimiterFor(value);
+	return `${name}<<${delimiter}\n${value}\n${delimiter}\n`;
+};
+
 /**
  * One heredoc block, ready to append. The caller has checked the name with
  * {@link isUsableName}.
  *
  * @internal
  */
-export const heredocBlock = (name: string, value: string): string => {
-	const delimiter = delimiterFor(value);
-	return `${name}<<${delimiter}\n${value}\n${delimiter}\n`;
-};
+export function heredocBlock(value: string): (name: string) => string;
+export function heredocBlock(name: string, value: string): string;
+// Written out by arity instead of with `dual`: this file must reach no package at all
+// (the reachability test asserts an empty import list), and `dual` would be an import.
+export function heredocBlock(first: string, second?: string): string | ((name: string) => string) {
+	return second === undefined ? (name: string) => renderHeredocBlock(name, first) : renderHeredocBlock(first, second);
+}
