@@ -138,3 +138,9 @@
   row is unchanged on origin/main; its owner/orchestrator must fix it once on
   main, then D merges main. A literal-path-aware prohibition rule and a
   portable command lookup in the inherited runbook would prevent these reds.
+
+- D expanded coverage cohort found one old Yeet assertion still expecting the
+  all-package patch remedy (315/316 passed). Updated the assertion to the new
+  publish-enabled/private-exempt policy and queued the same cohort again.
+  Searching the old user-facing remedy string in tests at edit time would
+  prevent this stale contract assertion.
