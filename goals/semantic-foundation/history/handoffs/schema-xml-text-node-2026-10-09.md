@@ -22,3 +22,9 @@ Receipts are retained in `.beep/schema-xml-text-node/`.
 
 The orchestrator owns merge and retirement. Final PR, head, and review state are
 in its gate report; this worker never merges or retires the lane.
+
+The initial canonical full docgen passed. Initial CLI coverage passed all
+5,834 tests (5 skipped), but its ratchet failed on three untouched files; the
+ledger records the exact drops. New main was integrated and both package
+verifiers passed again before publication. The final-head parity replay and
+PR state are recorded in the orchestrator report.
