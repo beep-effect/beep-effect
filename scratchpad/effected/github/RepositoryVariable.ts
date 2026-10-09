@@ -4,6 +4,7 @@ import * as Layer from "effect/Layer";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
+import type * as Rest from "./Rest.ts";
 
 /**
  * A variable's name and value, as listing returns it.
@@ -148,8 +149,8 @@ const make = (client: GitHubClient["Service"]): RepositoryVariableShape => {
    * which a blanket "treat any error as absent" would destroy, turning a
    * permissions problem into a spurious create.
    */
-  const exists = (route: "GET /repos/{owner}/{repo}/actions/variables/{name}", params: Record<string, unknown>) =>
-    client.request(route, params as never).pipe(
+  const exists = (route: "GET /repos/{owner}/{repo}/actions/variables/{name}", params: Rest.Params<"GET /repos/{owner}/{repo}/actions/variables/{name}">) =>
+    client.request(route, params).pipe(
       Effect.as(true),
       Effect.catchIf(
         (error) => error.kind === "notFound",

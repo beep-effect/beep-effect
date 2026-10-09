@@ -1,6 +1,7 @@
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
@@ -84,11 +85,7 @@ export const repositoryPatch = (draft: RepositoryPatchDraft): RepositoryPatch =>
 	for (const [key, value] of Object.entries(draft)) {
 		if (value !== undefined) out[key] = value;
 	}
-	// The one cast, owned here rather than at every call site: `out` holds a
-	// subset of `draft`'s keys with every `undefined` removed, which is exactly
-	// what `RepositoryPatch` describes and what TypeScript cannot narrow to
-	// through `Object.entries`.
-	return out as RepositoryPatch;
+	return out;
 };
 
 /**
@@ -142,8 +139,8 @@ export const GRAPHQL_ONLY_SETTINGS: Readonly<Record<string, string>> = {
 
 /** `{ status: "enabled" | "disabled" }` — the form GitHub accepts and the type declares. */
 const isStatusObject = (raw: unknown): raw is { readonly status: "enabled" | "disabled" } => {
-	if (raw === null || typeof raw !== "object") return false;
-	const status = (raw as { readonly status?: unknown }).status;
+	if (!P.isObjectOrArray(raw) || !P.hasProperty(raw, "status")) return false;
+	const status = raw.status;
 	return status === "enabled" || status === "disabled";
 };
 
@@ -170,9 +167,9 @@ const isStatusObject = (raw: unknown): raw is { readonly status: "enabled" | "di
  * @public
  */
 export const transformSecurityAndAnalysis = (value: unknown): Record<string, unknown> | undefined => {
-	if (value === null || typeof value !== "object") return undefined;
+	if (!P.isObjectOrArray(value)) return undefined;
 
-	const input = value as Record<string, unknown>;
+	const input = value;
 	const out: Record<string, unknown> = {};
 
 	for (const [key, raw] of Object.entries(input)) {
@@ -239,7 +236,7 @@ const DEPENDENT_MERGE_KEYS = {
  * not get a different `security_and_analysis` shape depending on which one they
  * reached for.
  */
-const preparePatch = (patch: RepositoryPatch): RepositoryPatch => {
+const preparePatch = (patch: Record<string, unknown>): Record<string, unknown> => {
 	const out: Record<string, unknown> = { ...patch };
 
 	const securityAndAnalysis = transformSecurityAndAnalysis(out.security_and_analysis);
@@ -255,7 +252,7 @@ const preparePatch = (patch: RepositoryPatch): RepositoryPatch => {
 		}
 	}
 
-	return out as RepositoryPatch;
+	return out;
 };
 
 /**
@@ -421,7 +418,7 @@ const make = (client: GitHubClient["Service"]): GitHubRepositoryShape => {
 		updateSettings: Effect.fn("GitHubRepository.updateSettings")(function* (patch: RepositoryPatch) {
 			const { owner, repo } = yield* Repo;
 			yield* Effect.annotateCurrentSpan({ owner, repo, fields: Object.keys(patch).length });
-			return yield* client.request("PATCH /repos/{owner}/{repo}", { ...preparePatch(patch), owner, repo });
+			return yield* client.request("PATCH /repos/{owner}/{repo}", { ...preparePatch({ ...patch }), owner, repo });
 		}),
 		defaultBranch: Effect.map(settings, (repository) => repository.default_branch),
 		nodeId: Effect.map(settings, (repository) => repository.node_id),
@@ -453,7 +450,7 @@ const make = (client: GitHubClient["Service"]): GitHubRepositoryShape => {
 			// Prepared ONCE, and the report is taken from the result: reporting
 			// `rest` here would name fields that preparation then drops, which is a
 			// dry run that lies in the direction of looking successful.
-			const prepared = preparePatch(rest as RepositoryPatch);
+			const prepared = preparePatch(rest);
 			// Gate on the PREPARED body, never the raw keys. Preparation can drop
 			// every key it was given — a `security_and_analysis` block whose fields
 			// are all unrecognised normalises to nothing — and gating on `rest`
@@ -463,13 +460,11 @@ const make = (client: GitHubClient["Service"]): GitHubRepositoryShape => {
 			const restKeys = Object.keys(prepared);
 
 			if (restKeys.length > 0) {
-				// The map is open by design, so it cannot be narrowed to the route's
-				// generated parameter type. The cast is on the BODY, never the route.
 				yield* client.request("PATCH /repos/{owner}/{repo}", {
 					...prepared,
 					owner,
 					repo,
-				} as Rest.Params<"PATCH /repos/{owner}/{repo}">);
+				});
 			}
 
 			if (Object.keys(graphql).length > 0) {

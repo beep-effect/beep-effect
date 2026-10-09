@@ -41,7 +41,7 @@ describe("encryptSecret", () => {
 		const opened = nacl.box.open(ciphertext, nonce, ephemeralPublicKey, recipient.secretKey);
 
 		assert.isNotNull(opened);
-		assert.strictEqual(new TextDecoder().decode(opened as Uint8Array), "hunter2");
+		assert.strictEqual(new TextDecoder().decode(opened), "hunter2");
 	});
 
 	it("puts the ephemeral public key in the first 32 bytes", () => {

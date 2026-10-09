@@ -541,11 +541,14 @@ describe("GitHubClient.layerFromConfig", () => {
 describe("GitHubClient.makeTest", () => {
 	it.effect("answers a stubbed member", () =>
 		Effect.gen(function* () {
-			const double = GitHubClient.makeTest({
-				request: () => Effect.succeed({ default_branch: "trunk" } as never),
-			});
+			const fixture = yield* GitHubClient.pipe(
+				Effect.provide(GitHubClient.layerFixture({
+					request: { "GET /repos/{owner}/{repo}": { default_branch: "trunk" } },
+				})),
+			);
+			const double = GitHubClient.makeTest({ request: fixture.request });
 			const repo = yield* double.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" });
-			assert.strictEqual((repo as { default_branch: string }).default_branch, "trunk");
+			assert.strictEqual(repo.default_branch, "trunk");
 		}),
 	);
 

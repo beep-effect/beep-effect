@@ -368,7 +368,7 @@ export const makeClientShape = (
 			params: Rest.Params<R>,
 		) {
 			yield* Effect.annotateCurrentSpan({ route });
-			const response = yield* transport.request<Rest.Data<R>>(route, route, params as Record<string, unknown>);
+			const response = yield* transport.request<Rest.Data<R>>(route, route, { ...params });
 			return response.data;
 		});
 
@@ -395,7 +395,7 @@ export const makeClientShape = (
 				() =>
 					transport.pageSource<Rest.Item<R>>(route, route, {
 						per_page: perPageOf(options),
-						...(params as Record<string, unknown>),
+						...params,
 					}),
 				options?.maxPages,
 			);
@@ -447,7 +447,7 @@ const makeFixture = (fixtures: GitHubFixtures): GitHubClientShape => {
 		// "paginate was never called" from "paginate was called and failed" —
 		// which is the one case the error-as-response fixture exists to confirm.
 		const perPage = perPageOf(options);
-		requested?.push({ kind: "paginate", route, params: _params as Record<string, unknown>, perPage });
+		requested?.push({ kind: "paginate", route, params: { ..._params }, perPage });
 
 		const recorded = fixtures.paginate?.[route];
 		if (S.is(GitHubError)(recorded)) return Stream.fail(recorded);
@@ -457,7 +457,7 @@ const makeFixture = (fixtures: GitHubFixtures): GitHubClientShape => {
 				case "fail":
 					return Stream.fail(GitHubError.notFound("GitHubClient.paginate", `fixture for ${route}`));
 				case "empty":
-					return Stream.empty as Stream.Stream<Rest.Item<R>, GitHubError>;
+					return Stream.empty;
 				default:
 					return Stream.die(new Error(`GitHubClient.paginate: no fixture for ${route}`));
 			}
@@ -479,7 +479,7 @@ const makeFixture = (fixtures: GitHubFixtures): GitHubClientShape => {
 
 	return {
 		request: <R extends Rest.Route>(route: R, params: Rest.Params<R>) => {
-			requested?.push({ kind: "request", route, params: params as Record<string, unknown> });
+			requested?.push({ kind: "request", route, params: { ...params } });
 			const data = fixtures.request?.[route];
 			if (data === undefined) return missing<Rest.Data<R>>("GitHubClient.request", route);
 			// A recorded GitHubError IS the response: this is how a suite stubs a

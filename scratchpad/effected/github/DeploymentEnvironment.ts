@@ -4,7 +4,6 @@ import * as Layer from "effect/Layer";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
-import type * as Rest from "./Rest.ts";
 
 /**
  * A deployment environment, as listing returns it.
@@ -114,9 +113,6 @@ const make = (client: GitHubClient["Service"]): DeploymentEnvironmentShape => {
 		yield* Effect.annotateCurrentSpan({ owner, repo, environment: name });
 
 		yield* client.request("PUT /repos/{owner}/{repo}/environments/{environment_name}", {
-			// An open record by design, so it cannot be narrowed to the route's
-			// parameter union. The cast is on the BODY, never the route literal.
-			//
 			// It spreads FIRST so the coordinates below stay authoritative: a caller
 			// key named `owner`, `repo` or `environment_name` would otherwise
 			// silently retarget the request at a different repository, with no
@@ -125,7 +121,7 @@ const make = (client: GitHubClient["Service"]): DeploymentEnvironmentShape => {
 			owner,
 			repo,
 			environment_name: name,
-		} as Rest.Params<"PUT /repos/{owner}/{repo}/environments/{environment_name}">);
+		});
 	});
 
 	const list = Effect.suspend(Effect.fn("DeploymentEnvironment.list")(function* () {

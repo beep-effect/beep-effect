@@ -1,6 +1,7 @@
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as P from "effect/Predicate";
 import { GitHubClient } from "./GitHubClient.ts";
 import { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
@@ -84,14 +85,6 @@ export interface RulesetShape {
   readonly teamId: (slug: string) => Effect.Effect<number, GitHubError, Repo>;
   /** An organization role's numeric id, for a bypass actor. */
   readonly roleId: (name: string) => Effect.Effect<number, GitHubError, Repo>;
-}
-
-/** The organization-roles response, which the generated route types do not describe. */
-interface OrganizationRoles {
-  readonly roles?: ReadonlyArray<{
-    readonly id: number;
-    readonly name: string
-  }>;
 }
 
 /**
@@ -261,7 +254,7 @@ const make = (client: GitHubClient["Service"]): RulesetShape => {
     yield* Effect.annotateCurrentSpan({ org: owner, role: name });
 
     const data = yield* client.request("GET /orgs/{org}/organization-roles", { org: owner });
-    const roles = (data as OrganizationRoles).roles ?? [];
+    const roles = data.roles ?? [];
     const role = roles.find((candidate) => candidate.name === name);
 
     if (role === undefined) {
@@ -273,6 +266,10 @@ const make = (client: GitHubClient["Service"]): RulesetShape => {
         "Ruleset.roleId",
         `organization role '${name}' in '${owner}' (available: ${available || "none"})`,
       );
+    }
+
+    if (!P.isNumber(role.id)) {
+      return yield* GitHubError.decode("Ruleset.roleId", "organization role id was not a number");
     }
 
     return role.id;

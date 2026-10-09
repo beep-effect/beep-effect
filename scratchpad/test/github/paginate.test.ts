@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
@@ -12,7 +13,7 @@ const recordedPages = <A>(pages: ReadonlyArray<ReadonlyArray<A>>, calls: Ref.Ref
 	let index = 0;
 	return {
 		next: Ref.update(calls, (n) => n + 1).pipe(
-			Effect.map(() => (index < pages.length ? O.some(pages[index++] as ReadonlyArray<A>) : O.none())),
+			Effect.map(() => (index < pages.length ? A.get(pages, index++) : O.none())),
 		),
 	};
 };

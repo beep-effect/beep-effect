@@ -5,6 +5,7 @@ import * as Clock from "effect/Clock";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import { GitHubError, readRateLimitHeaders } from "../GitHubError.ts";
@@ -151,7 +152,7 @@ export const makeTransport = (options: TransportOptions): Effect.Effect<Transpor
 			withRetry(
 				operation,
 				attempt(
-					(signal) => octokit.request(route, withSignal(params, signal)) as Promise<OctokitResponse<A>>,
+					(signal): Promise<OctokitResponse<A>> => octokit.request<string>(route, withSignal(params, signal)),
 					(error, now) => GitHubError.fromOctokit(operation, error, now),
 				).pipe(Effect.tap((response) => record(response.headers))),
 			);
@@ -164,7 +165,8 @@ export const makeTransport = (options: TransportOptions): Effect.Effect<Transpor
 			// carries the compare endpoint's `total_commits` continuation, the
 			// search-shaped `{ total_count, items }` normalization, and the
 			// empty-repository 409 that GitHub answers commit listings with.
-			const iterator = composePaginateRest.iterator(octokit, route, params)[Symbol.asyncIterator]();
+			const pages: AsyncIterable<OctokitResponse<ReadonlyArray<A>>> = composePaginateRest.iterator(octokit, route, params);
+			const iterator = pages[Symbol.asyncIterator]();
 			let finished = false;
 			return {
 				next: Effect.suspend(() =>
@@ -181,7 +183,7 @@ export const makeTransport = (options: TransportOptions): Effect.Effect<Transpor
 											finished = true;
 											return Effect.succeed(O.none<ReadonlyArray<A>>());
 										}
-										const response = result.value as OctokitResponse<ReadonlyArray<A>>;
+										const response = result.value;
 										return record(response.headers).pipe(Effect.as(O.some(response.data)));
 									}),
 								),
@@ -210,9 +212,11 @@ const withSignal = (params: Record<string, unknown>, signal: AbortSignal): Recor
 
 /** Response headers off a throwable, when it carried any. */
 const readThrownHeaders = (error: unknown): Record<string, unknown> | undefined => {
-	if (typeof error !== "object" || error === null) return undefined;
-	const response = (error as Record<string, unknown>).response;
-	if (typeof response !== "object" || response === null) return undefined;
-	const headers = (response as Record<string, unknown>).headers;
-	return typeof headers === "object" && headers !== null ? (headers as Record<string, unknown>) : undefined;
+	if (!P.isObjectOrArray(error) || !P.hasProperty(error, "response")) return undefined;
+	const response = error.response;
+	if (!P.isObjectOrArray(response) || !P.hasProperty(response, "headers")) return undefined;
+	const headers = response.headers;
+	return isRecord(headers) ? headers : undefined;
 };
+
+const isRecord = (value: unknown): value is Record<string, unknown> => P.isObjectOrArray(value);

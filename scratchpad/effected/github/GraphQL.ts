@@ -1,4 +1,5 @@
 import type * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { retryAfterMillisFrom } from "./internal/headers.ts";
 
@@ -85,7 +86,7 @@ export class GitHubGraphQLError extends S.TaggedError<GitHubGraphQLError>()("Git
    * classes live in packages this one does not declare.
    */
   static fromThrowable(operation: string, error: unknown, nowMillis: number): GitHubGraphQLError {
-    const record = typeof error === "object" && error !== null ? (error as Record<string, unknown>) : undefined;
+    const record = asRecord(error);
     const status = typeof record?.status === "number" ? record.status : undefined;
     const headers = asRecord(record?.headers) ?? asRecord(asRecord(record?.response)?.headers);
     const entries = readEntries(record?.errors);
@@ -107,8 +108,10 @@ export class GitHubGraphQLError extends S.TaggedError<GitHubGraphQLError>()("Git
   }
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> => P.isObjectOrArray(value);
+
 const asRecord = (value: unknown): Record<string, unknown> | undefined =>
-  typeof value === "object" && value !== null ? (value as Record<string, unknown>) : undefined;
+  isRecord(value) ? value : undefined;
 
 const readEntries = (value: unknown): ReadonlyArray<GraphQLErrorEntry> => {
   if (!Array.isArray(value)) return [];

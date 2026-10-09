@@ -3,6 +3,8 @@ import { readFileSync, readdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 
 /**
  * The tree-shaking invariant, as a test rather than a promise.
@@ -26,6 +28,12 @@ import { assert, describe, it } from "@effect/vitest";
  */
 
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "effected", "github");
+
+const PackageManifest = S.fromJsonString(S.Struct({
+	sideEffects: S.optionalKey(S.Unknown),
+	dependencies: S.optionalKey(S.Record(S.String, S.String)),
+	peerDependencies: S.optionalKey(S.Record(S.String, S.String)),
+}));
 
 /** Every `from "..."` specifier in a module, ignoring type-only imports. */
 const runtimeSpecifiers = (source: string): ReadonlyArray<string> => {
@@ -166,9 +174,9 @@ describe("bundle reachability", () => {
 	it("the package declares itself side-effect free", () => {
 		// The other half of the mechanism: without this a bundler must assume
 		// evaluating an unreferenced module matters, and keeps it.
-		const manifest = JSON.parse(readFileSync(resolve(SRC, "..", "package.json"), "utf8")) as {
-			sideEffects?: unknown;
-		};
+		const manifest = Result.getOrThrow(
+			S.decodeResult(PackageManifest)(readFileSync(resolve(SRC, "..", "package.json"), "utf8")),
+		);
 		assert.strictEqual(manifest.sideEffects, false);
 	});
 
@@ -217,10 +225,9 @@ describe("bundle reachability", () => {
 		// A package you import but do not declare is how a peer closure rots; the
 		// classifier in GitHubError reads octokit's throwables structurally rather
 		// than importing `@octokit/request-error` for exactly this reason.
-		const manifest = JSON.parse(readFileSync(resolve(SRC, "..", "package.json"), "utf8")) as {
-			dependencies?: Record<string, string>;
-			peerDependencies?: Record<string, string>;
-		};
+		const manifest = Result.getOrThrow(
+			S.decodeResult(PackageManifest)(readFileSync(resolve(SRC, "..", "package.json"), "utf8")),
+		);
 		const declared = new Set([
 			...Object.keys(manifest.dependencies ?? {}),
 			...Object.keys(manifest.peerDependencies ?? {}),

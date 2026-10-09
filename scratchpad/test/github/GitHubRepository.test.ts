@@ -112,12 +112,12 @@ describe("GitHubRepository.updateSettings", () => {
 		Effect.gen(function* () {
 			const { requested } = yield* run(
 				Effect.flatMap(GitHubRepository, (r) =>
-					r.updateSettings({
+					r.applySettings({
 						security_and_analysis: {
 							secret_scanning: "enabled",
 							delegated_bypass_reviewers: [{ reviewer_id: 7 }],
 						},
-					} as never),
+					}),
 				),
 				{ "PATCH /repos/{owner}/{repo}": REPO },
 			);
@@ -139,7 +139,7 @@ describe("GitHubRepository.updateSettings", () => {
 						merge_commit_title: "PR_TITLE",
 						allow_squash_merge: false,
 						squash_merge_commit_message: "BLANK",
-					} as never),
+					}),
 				),
 				{ "PATCH /repos/{owner}/{repo}": REPO },
 			);
@@ -159,7 +159,7 @@ describe("GitHubRepository.updateSettings", () => {
 		Effect.gen(function* () {
 			const { requested } = yield* run(
 				Effect.flatMap(GitHubRepository, (r) =>
-					r.updateSettings({ allow_merge_commit: true, merge_commit_title: "PR_TITLE" } as never),
+					r.updateSettings({ allow_merge_commit: true, merge_commit_title: "PR_TITLE" }),
 				),
 				{ "PATCH /repos/{owner}/{repo}": REPO },
 			);

@@ -2,6 +2,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { GitHubClient } from "./GitHubClient.ts";
@@ -218,13 +219,16 @@ export interface RawFile {
  * `PullRequest.listFiles`; not re-exported from the package entrypoint.
  */
 export const fileOf = (raw: RawFile): CommitFile =>
-	CommitFile.make({
-		path: raw.filename,
-		status: raw.status as CommitFile["status"],
-		additions: raw.additions,
-		deletions: raw.deletions,
-		...(raw.previous_filename !== undefined ? { previousPath: raw.previous_filename } : {}),
-	});
+	Result.getOrThrowWith(
+		S.decodeUnknownResult(CommitFile)({
+			path: raw.filename,
+			status: raw.status,
+			additions: raw.additions,
+			deletions: raw.deletions,
+			...(raw.previous_filename !== undefined ? { previousPath: raw.previous_filename } : {}),
+		}),
+		(error) => new Error("Schema validation failed", { cause: error.issue }),
+	);
 
 const make = (client: GitHubClient["Service"]): GitHubCommitShape => ({
 	get: Effect.fn("GitHubCommit.get")(function* (ref: string) {

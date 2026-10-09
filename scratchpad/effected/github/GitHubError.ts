@@ -1,3 +1,4 @@
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { headerNumber, headerString, retryAfterMillisFrom } from "./internal/headers.ts";
 
@@ -269,10 +270,10 @@ interface Throwable {
  * stable and public.
  */
 const readThrowable = (error: unknown): Throwable => {
-	if (typeof error !== "object" || error === null) {
+	if (!isRecord(error)) {
 		return { status: undefined, headers: undefined, reason: String(error), validation: [] };
 	}
-	const record = error as Record<string, unknown>;
+	const record = error;
 	const response = asRecord(record.response);
 	const headers = asRecord(response?.headers);
 	const data = asRecord(response?.data);
@@ -284,8 +285,10 @@ const readThrowable = (error: unknown): Throwable => {
 	};
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> => P.isObjectOrArray(value);
+
 const asRecord = (value: unknown): Record<string, unknown> | undefined =>
-	typeof value === "object" && value !== null ? (value as Record<string, unknown>) : undefined;
+	isRecord(value) ? value : undefined;
 
 /**
  * GitHub answers some requests with an HTML error page whose body becomes a

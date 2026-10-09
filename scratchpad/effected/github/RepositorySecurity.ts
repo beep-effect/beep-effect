@@ -29,11 +29,6 @@ export interface RepositorySecurityShape {
   readonly setPrivateVulnerabilityReporting: (enabled: boolean) => Effect.Effect<void, GitHubError, Repo>;
 }
 
-/** What the automated-fixes and private-reporting reads answer with. */
-interface EnabledFlag {
-  readonly enabled?: boolean;
-}
-
 /**
  * Read and toggle Dependabot alerts, Dependabot security fixes and private
  * vulnerability reporting.
@@ -155,7 +150,7 @@ const make = (client: GitHubClient["Service"]): RepositorySecurityShape => {
       owner,
       repo,
     });
-    return Boolean((data as EnabledFlag).enabled);
+    return Boolean(data.enabled);
   }));
 
   const setAutomatedSecurityFixes = Effect.fn("RepositorySecurity.setAutomatedSecurityFixes")(function* (
@@ -181,7 +176,7 @@ const make = (client: GitHubClient["Service"]): RepositorySecurityShape => {
       owner,
       repo,
     });
-    return Boolean((data as EnabledFlag).enabled);
+    return Boolean(data.enabled);
   }));
 
   const setPrivateVulnerabilityReporting = Effect.fn("RepositorySecurity.setPrivateVulnerabilityReporting")(function* (

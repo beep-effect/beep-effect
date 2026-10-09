@@ -147,7 +147,7 @@ const make = (client: GitHubClient["Service"]): AttestationShape => ({
 			.pipe(
 				Effect.catchIf(
 					(error) => error.kind === "notFound" || (error.status === 422 && error.kind === "rejected"),
-					() => Effect.succeed({ attestations: [] as ReadonlyArray<never> }),
+					() => Effect.succeed({ attestations: [] }),
 				),
 			);
 		return (listed.attestations ?? []).flatMap((entry) => {

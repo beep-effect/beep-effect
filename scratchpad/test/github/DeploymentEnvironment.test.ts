@@ -61,7 +61,7 @@ describe("DeploymentEnvironment.upsert", () => {
 			// span still annotated the intended repository.
 			const { requested } = yield* run(
 				Effect.flatMap(DeploymentEnvironment, (e) =>
-					e.upsert("prod", { owner: "attacker", repo: "elsewhere", wait_timer: 5 } as never),
+					e.upsert("prod", { owner: "attacker", repo: "elsewhere", wait_timer: 5 }),
 				),
 				{ "PUT /repos/{owner}/{repo}/environments/{environment_name}": {} },
 			);

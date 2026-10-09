@@ -47,9 +47,9 @@ export const paginate: {
 	Stream.suspend(() => {
 		const source = openSource();
 		return Stream.paginate(0, (pagesTaken: number) =>
-			Effect.map(source.next, (page) => {
+			Effect.map(source.next, (page): readonly [ReadonlyArray<A>, O.Option<number>] => {
 				if (O.isNone(page)) {
-					return [[] as ReadonlyArray<A>, O.none<number>()] as const;
+					return [[], O.none<number>()] as const;
 				}
 				const taken = pagesTaken + 1;
 				const exhausted = maxPages !== undefined && taken >= maxPages;

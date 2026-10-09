@@ -4,7 +4,6 @@ import * as Layer from "effect/Layer";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
-import type * as Rest from "./Rest.ts";
 
 /**
  * A CodeQL default-setup configuration.
@@ -140,18 +139,20 @@ const make = (client: GitHubClient["Service"]): CodeScanningShape => {
 		// rather than leaving them alone.
 		const body: Record<string, unknown> = {};
 		for (const key of SETUP_KEYS) {
-			const value = setup[key];
-			if (value !== undefined) body[key] = key === "languages" ? [...(value as ReadonlyArray<string>)] : value;
+			if (key === "languages") {
+				const languages = setup.languages;
+				if (languages !== undefined) body[key] = [...languages];
+			} else {
+				const value = setup[key];
+				if (value !== undefined) body[key] = value;
+			}
 		}
 
 		yield* client.request("PATCH /repos/{owner}/{repo}/code-scanning/default-setup", {
 			owner,
 			repo,
-			// Assembled key-by-key above, so it cannot be narrowed to the route's
-			// parameter union at compile time. The cast is on the BODY, never the
-			// route literal.
 			...body,
-		} as Rest.Params<"PATCH /repos/{owner}/{repo}/code-scanning/default-setup">);
+		});
 	});
 
 	const languages = Effect.suspend(Effect.fn("CodeScanning.languages")(function* () {

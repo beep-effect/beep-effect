@@ -6,6 +6,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
@@ -516,9 +517,9 @@ function makeApp(options: GitHubAppOptions): Effect.Effect<GitHubAppShape> {
 
 /** GitHub's permission values are strings; anything else is not a permission. */
 const normalizePermissions = (raw: unknown): Record<string, string> => {
-	if (typeof raw !== "object" || raw === null) return {};
+	if (!P.isObjectOrArray(raw)) return {};
 	const out: Record<string, string> = {};
-	for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+	for (const [key, value] of Object.entries(raw)) {
 		if (typeof value === "string") out[key] = value;
 	}
 	return out;
