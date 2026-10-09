@@ -1,4 +1,5 @@
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import type { ClosingKeyword } from "./IssueReferences.ts";
 import { CLOSING_KEYWORDS } from "./IssueReferences.ts";
 
@@ -85,13 +86,13 @@ export interface ReferenceList {
 }
 
 /**
- * Both keyword tables ARE the exported constants — membership sets built from
+ * Both keyword tables ARE the exported constants — membership guards built from
  * them once — so the constants and the grammar cannot drift.
  */
-const ALL_KEYWORDS: ReadonlySet<string> = new Set([...CLOSING_KEYWORDS, ...REFERENCE_KEYWORDS]);
+const isReferenceKeyword = S.is(S.Literals([...CLOSING_KEYWORDS, ...REFERENCE_KEYWORDS]));
 
-/** Membership test for reporting `closing`, widened once so no call casts. */
-const CLOSING_SET: ReadonlySet<string> = new Set(CLOSING_KEYWORDS);
+/** Membership test for reporting `closing` and narrowing closing-only results. */
+const isClosingKeyword = S.is(S.Literals(CLOSING_KEYWORDS));
 
 const HASH = 0x23; // #
 const COLON = 0x3a; // :
@@ -224,7 +225,7 @@ export const parseReferenceList = (line: string): O.Option<ReferenceList> => {
 	while (letters < trimmed.length && isAsciiLetter(trimmed.charCodeAt(letters))) letters += 1;
 	if (letters === 0) return O.none();
 	const keyword = trimmed.slice(0, letters).toLowerCase();
-	if (!ALL_KEYWORDS.has(keyword)) return O.none();
+	if (!isReferenceKeyword(keyword)) return O.none();
 	let cursor = letters;
 	if (trimmed.charCodeAt(cursor) === COLON) cursor += 1;
 	const afterWhitespace = skipSpaceTab(trimmed, cursor);
@@ -232,8 +233,8 @@ export const parseReferenceList = (line: string): O.Option<ReferenceList> => {
 	const issueNumbers = parseItems(trimmed, afterWhitespace);
 	if (issueNumbers === undefined) return O.none();
 	return O.some({
-		keyword: keyword as ClosingKeyword | ReferenceKeyword,
-		closing: CLOSING_SET.has(keyword),
+		keyword,
+		closing: isClosingKeyword(keyword),
 		issueNumbers,
 	});
 };
@@ -285,9 +286,8 @@ export const collectReferenceLists = (text: string): ReadonlyArray<ReferenceList
  */
 export const parseClosingList = (line: string): O.Option<ClosingList> =>
 	O.flatMap(parseReferenceList(line), (list) =>
-		list.closing
-			? // Safe: `closing` is exactly membership in CLOSING_KEYWORDS.
-				O.some({ keyword: list.keyword as ClosingKeyword, issueNumbers: list.issueNumbers })
+		isClosingKeyword(list.keyword)
+			? O.some({ keyword: list.keyword, issueNumbers: list.issueNumbers })
 			: O.none(),
 	);
 
@@ -427,7 +427,7 @@ export const harvestReferenceLists = (text: string): ReadonlyArray<HarvestedRefe
 			continue;
 		}
 		const keyword = text.slice(runStart, runEnd).toLowerCase();
-		if (!ALL_KEYWORDS.has(keyword)) {
+		if (!isReferenceKeyword(keyword)) {
 			index = runEnd;
 			continue;
 		}
@@ -468,8 +468,8 @@ export const harvestReferenceLists = (text: string): ReadonlyArray<HarvestedRefe
 			continue;
 		}
 		lists.push({
-			keyword: keyword as ClosingKeyword | ReferenceKeyword,
-			closing: CLOSING_SET.has(keyword),
+			keyword,
+			closing: isClosingKeyword(keyword),
 			issueNumbers,
 			start: runStart,
 			end,

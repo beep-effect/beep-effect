@@ -1,4 +1,5 @@
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 
 // GitHub's closing-keyword issue-reference grammar, as pure functions.
 //
@@ -48,6 +49,8 @@ export const CLOSING_KEYWORDS = [
  * @public
  */
 export type ClosingKeyword = (typeof CLOSING_KEYWORDS)[number];
+
+const isClosingKeyword = S.is(S.Literals(CLOSING_KEYWORDS));
 
 /**
  * One closing reference found in prose by {@link harvestIssueReferences}.
@@ -141,9 +144,11 @@ export const harvestIssueReferences = (text: string): ReadonlyArray<IssueReferen
 	for (const match of text.matchAll(INLINE_PATTERN)) {
 		const issueNumber = safeIssueNumber(match[2] ?? "");
 		if (issueNumber === undefined) continue;
+		const keyword = (match[1] ?? "").toLowerCase();
+		if (!isClosingKeyword(keyword)) continue;
 		references.push({
 			issueNumber,
-			keyword: (match[1] ?? "").toLowerCase() as ClosingKeyword,
+			keyword,
 			start: match.index,
 			end: match.index + match[0].length,
 		});
@@ -177,7 +182,9 @@ export const parseBareLineReference = (line: string): O.Option<BareLineReference
 	if (match === null) return O.none();
 	const issueNumber = safeIssueNumber(match[2] ?? "");
 	if (issueNumber === undefined) return O.none();
-	return O.some({ issueNumber, keyword: (match[1] ?? "").toLowerCase() as ClosingKeyword });
+	const keyword = (match[1] ?? "").toLowerCase();
+	if (!isClosingKeyword(keyword)) return O.none();
+	return O.some({ issueNumber, keyword });
 };
 
 /**
