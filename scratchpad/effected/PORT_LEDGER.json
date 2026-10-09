@@ -12245,9 +12245,252 @@
         }
       ],
       "fixturesBytes": 6211,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/cli/Doc.test.ts:277; Doc.counter.plural.test.ts:84; Glyphs.test.ts:38; Token.test.ts:27; Status.test.ts:91; ui/MultiSelect.test.ts; CliHelpRouting.test.ts; ui/inkChalk.test.ts:17; ui/CliUiTest.ergonomics.test.ts:182",
+          "upstreamBehaviour": "Doc, Glyphs, Token and Status freeze nodes, arrays or shared defaults; logging, UI selection, issue trees and helpers use native Set/Map/Object methods; testing uses Date.now, prototype Console wrappers and cast Node streams; inkChalk returns a Promise using node:fs.realpathSync.",
+          "labBehaviour": "Readonly unfrozen copies/shared defaults replace frozen values; HashSet/MutableHashSet/HashMap/MutableHashMap, Record and Clock helpers replace native operations; HelpRouting/CliUiTest explicitly delegate Console methods; fakeStreams implements TTY members; inkChalk and its cached bridge use FileSystem Effects; MultiSelect.chosen is HashSet with document-order selection.",
+          "reason": "native-runtime: Native-runtime law and later 2026-10-09 grilling remove allowlisted native collections, Object.freeze, prototype wrappers and direct filesystem access; freeze tests now pin content, copies and identity. Main sites: Doc, Glyphs, Token, Status, CliLog/CliRuntime, internal/format/HelpRouting, MultiSelect, CliUiTest/fakeStreams and inkChalk."
+        },
+        {
+          "test": "scratchpad/test/cli/CliFailure.test.ts:288; scratchpad/test/cli/ui/CliUi.live.lazy.test.ts:34; module suite scratchpad/test/cli/**",
+          "upstreamBehaviour": "CliFailure tracks ancestor objects in an identity Set; CliUiLive remembers warned LazyViewShapeError objects in a Set; Context services/references such as UiStreams and UiRenderOptions use @effected/cli string keys.",
+          "labBehaviour": "CliFailure scans an ancestor array with ===; owned LazyViewShapeError instances carry stable symbol ids used by CliUiLive MutableHashMap; UiStreams, UiRenderOptions, CliExit, CliTheme and CliInteractive use composer-derived Context keys; distinct equal-looking errors and once-per-cached-error warnings remain distinct.",
+          "reason": "identity-keys: Later 2026-10-09 identity-structure ruling requires ancestor stacks and owned primitive ids instead of global reference marking; step-4 identity routing also changes Context keys (round-1 codemod-6). Each structure preserves its identity semantics."
+        },
+        {
+          "test": "scratchpad/test/cli/Cancelled.test.ts:72; scratchpad/test/cli/CliRuntime.test.ts:223; scratchpad/test/cli/ui/inkMissing.test.ts:26; scratchpad/test/cli/ui/CliUi.live.lazy.test.ts:34,57; module suite scratchpad/test/cli/**",
+          "upstreamBehaviour": "Cancelled/NotInteractive are upstream schema errors without identity identifiers; other CLI/UI failures use native Error subclasses or raw unknown loader failures, with positional constructors, native display names and stacks.",
+          "labBehaviour": "Identity-backed S.TaggedError classes and .make payloads cover ExitRequested, InvalidExitCodeError, AudienceConflictError, CliRuntimeError, UnknownStatusError, UI invariant errors, MissingInkPeersError and lazy-view errors; loader rejections carry the original cause; existing cancellation tags remain; composed names, own fields and stack capture can differ.",
+          "reason": "tagged-errors: Schema-backed typed-error law and diagnostic typed failures; round-1 codemod-1 and cli-3/4/21/22. Constructors, tags, names, own properties and .make stack differences are forced; lazy shape errors retain Error display name, cached identity and retryable rejection causes."
+        },
+        {
+          "test": "scratchpad/test/cli/Doc.test.ts:7; scratchpad/test/cli/ui/keys.test.ts:30,38,46; scratchpad/test/cli/Token.test.ts; scratchpad/test/cli/Status.test.ts; scratchpad/test/cli/scanAudience.differential.test.ts",
+          "upstreamBehaviour": "Doc AST payloads and recursive variants, Style, NamedColor, TokenName, CoreStatusName, KeyName and UiKey are handwritten types/unions; span settings and scanAudience duplicate literals and manual guards.",
+          "labBehaviour": "Doc defines annotated recursive structural schemas, including Inline/Block/LinkTarget/TreeNode/Column/Counter; Token Style and UiKeyPayload have runtime schemas; LiteralKit owns color, token, status, key and span domains; scanAudience derives guards from the sibling AudienceKind schema; plain payloads, literal order and byte mappings are preserved.",
+          "reason": "schema-first: Schema-first domain ownership, named LiteralKit domains and schema-derived guards; cli-5/6/7/8/14/20 require runtime models instead of erased contracts. These introduce executable schema/domain values while retaining constructor shapes and optional fields."
+        },
+        {
+          "test": "scratchpad/test/cli/Doc.test.ts:7 (schema-valid constructor results); scratchpad/test/cli/CliRuntime.test.ts:223 (ExitRequested payload); module suite scratchpad/test/cli/**",
+          "upstreamBehaviour": "Doc numeric fields are TypeScript numbers with no runtime model schema; ExitRequested accepts an unvalidated numeric constructor argument.",
+          "labBehaviour": "S.Finite models Doc status rank, source positions, counts, caps, durations and indentation, including annotation options; ExitRequested.code is an annotated S.Finite field. Doc constructors retain numeric inputs without adding decode boundaries; schema validation rejects non-finite modeled values.",
+          "reason": "numeric-domains: schemaNumber diagnostic and finite-domain ruling (fix-cli-g3.md:40, fix-cli-g1.md:13); numeric schemas must use finite refinements instead of unconstrained numbers. Existing Doc constructor behavior is retained outside validation."
+        },
+        {
+          "test": "scratchpad/test/cli/deliberatelyInvalid.ts; scratchpad/test/cli/CliAudience.run.test.ts; scratchpad/test/cli/Status.test.ts:69; scratchpad/test/cli/ui/fakeStreams.regressions.test.ts:6,71; module suite scratchpad/test/cli/**",
+          "upstreamBehaviour": "CliAudience/CliRuntime, Status, ANSI parsing, DocView, lazy loaders and fake streams use casts; tests cast malformed inputs and schema failures, assert globals and coerce stream/context shapes.",
+          "labBehaviour": "Explicit generics, Predicate/schema narrowing, typed tuples, structural Console/TTY implementations and declared globals replace unsafe casts; Status.def accepts Names | CoreStatusName; wrong-input tests route through the module deliberatelyInvalid helper, retaining the one allowed cast.",
+          "reason": "type-safety: D15 bans unsafe casts, non-null assertions and TypeScript suppression directives; the 2026-10-09 operator exception centralizes intentional invalid-input casts. Round-1 codemod-3/5 records Status widening and cast-free stream representation."
+        },
+        {
+          "test": "scratchpad/test/cli/CliLogger.test.ts:44; scratchpad/test/cli/CliTheme.test.ts; scratchpad/test/cli/ui/UiTheme.test.ts; scratchpad/test/cli/ui/keys.test.ts:177; scratchpad/test/cli/ui/CliUi.run.test.ts:290; module suite scratchpad/test/cli/**",
+          "upstreamBehaviour": "makeCliLogger, streamThemeAt, ANSI helpers, inkProps, useKeys and screenAfter expose data-first arrows; UI lazy wrappers use async; scoped platform/logger provisioning uses Effect.provide; polling helpers use native timers.",
+          "labBehaviour": "dual overloads add data-last forms, with makeCliLogger requiring an action for currying; Promise.try preserves immediate lazy invocation and rejected synchronous exceptions; schema-aware matching, explicit scoped layer/context provisioning and Clock sleeps replace diagnosed shapes; Doc.Block carries an explicit S.Codec<Block> annotation.",
+          "reason": "tsgo-diagnostics: @effect/tsgo missingPipeableSignature, asyncFunction, instanceOfSchema, strictEffectProvide/multipleEffectProvide, globalTimers and schemaStructWithTag force API/control shapes; TS7056 forces the Block codec annotation. Reviewed overloads and timer/layer rewrites are structural forced changes, not separate upstream bugs."
+        },
+        {
+          "test": "scratchpad/test/cli/CliLog.file.test.ts:100; scratchpad/test/cli/CliRuntime.test.ts; scratchpad/test/cli/ui/CliUi.fallback.test.ts; module suite scratchpad/test/cli/**",
+          "upstreamBehaviour": "CliExit.set, CliPrompt.fallback, CliLog readLevel/status/build-time decisions, fileSink construction/append, CliLinks, Doc/Render and UI/testing helpers wrap Effect.gen in plain functions; layer provisioning and logger sets use direct provides.",
+          "labBehaviour": "Effect.fn/Effect.fnUntraced wrap effectful helpers, adding tracing where named; fileSink spans distinguish makeFileSink from append and fallback retains Effect.withSpan; Logger.layer and scopedWith/buildWithScope/provideContext preserve scoped logger routing; Effect Match/Predicate/Array/Record helpers replace equivalent native/control forms.",
+          "reason": "effect-first: Effect-fn, terse-effect and Effect-first laws; round-1 codemod-2/4 centralizes traced helpers and ordered scoped provisioning, including observable tracer/report trails. Later operator ruling prescribes Logger.layer provisioning; cli-10/24 repair incorrect span/helper shapes."
+        },
+        {
+          "test": "module suite scratchpad/test/cli/**",
+          "upstreamBehaviour": "CLI production files, tests and JSDoc examples import grouped modules and types from the root effect barrel.",
+          "labBehaviour": "Production/test imports and carried examples name effect/Effect, effect/Schema, effect/Context, effect/Function and other per-module paths; module aliases replace root destructuring while effect/cli remains its existing dedicated API path.",
+          "reason": "effect-imports: Step 3 and effect-imports law require per-module effect/* imports instead of the root effect barrel; applied across CLI source, fixtures, tests and examples without changing the imported APIs."
+        },
+        {
+          "test": "module suite scratchpad/test/cli/**; scratchpad/test/cli/Cancelled.test.ts:72; scratchpad/test/cli/ui/keys.test.ts:30",
+          "upstreamBehaviour": "CLI schema errors, model types and Context keys lack @beep/identity $I metadata; existing cancellation schemas use their short upstream identifiers.",
+          "labBehaviour": "$ScratchpadId.create supplies local $I identifiers and schema/field descriptions for Cancelled/NotInteractive, CLI/UI errors, Doc models, Token/Status/UiKey domains and SpanSetting; services/references use composer identities; model and error schemas carry identity-backed annotations.",
+          "reason": "identity-annotations: Step 4 @beep/identity annotation requirement, cli-3 metadata repairs and cli-5/6/7/8/20 schema ownership; composed identifiers and descriptions establish canonical schema identity rather than preserving upstream short identifiers."
+        },
+        {
+          "test": "scratchpad/test/cli/declarations.test.ts (12 removed gates); scratchpad/test/cli/CliStdin.test.ts; scratchpad/test/cli/ui/CliUi.live.exit.test.ts; scratchpad/test/cli/ui/CliUiTest.serializer.test.ts",
+          "upstreamBehaviour": "Tests assume upstream src/.js fixture paths, root serializer registration and bundled dist declarations/runtime exports; declarations.test.ts runs 12 rolled-up declaration and API Extractor gates.",
+          "labBehaviour": "Fixtures import scratchpad/effected/cli TypeScript sources; shared lab config registers ui-testing-serializer.ts; declarations.test.ts is deleted under the build-tools ruling, so its 12 bundled declaration/API Extractor gates no longer run; cli remains in the port.",
+          "reason": "test-environment: D9 environment retargeting and 2026-10-09 Build tools ruling explicitly delete the bundler-dependent declaration suite; later grilling authorizes lab fixture/config repair. central-notes.md:8-9 supersedes the temporary CLI build-helper proposal; no maxWorkers cap was adopted."
+        },
+        {
+          "test": "scratchpad/test/cli/boundary.test.ts:271; scratchpad/test/cli/entrypoints.test.ts:29; scratchpad/test/cli/ui/CliUi.live.reach.test.ts",
+          "upstreamBehaviour": "Boundary/entrypoint walkers assume upstream src and package-name self references; licences name node:fs for inkChalk and node:stream for fake streams; UI root types are checked through @effected/cli.",
+          "labBehaviour": "Walkers scan scratchpad/effected/cli, exclude generated dist and recognize relative type-only root references while retaining value-import mutation controls; licences name @effect/platform-node/NodeFileSystem and fake-stream builtin lookup; reachability predicates match lab paths and per-module Effect imports.",
+          "reason": "reachability: D9 lab reachability retargeting, step-3 effect/* graph and native-runtime boundary replacement; env-cli.md:40, round-1 codemod-5 and fix-cli-g8.md:18-20. Tests retain source-only scans, lazy-peer boundaries and controls under the new import representation."
+        },
+        {
+          "test": "scratchpad/test/cli/CliLog.options.test.ts:64",
+          "upstreamBehaviour": "readLevel indexes LEVELS directly, accepting inherited constructor and __proto__ as a function/object level instead of rejecting them; the upstream probe emits diagnostics without an invalid-level warning.",
+          "labBehaviour": "readLevel normalizes the key, requires an own LEVELS property, then warns once and uses None for inherited property names, producing no diagnostic records or stdout.",
+          "reason": "upstream-bug: Verified pinned-oracle differential probe in round-1 INVENTORY.md cli-2; fix-cli-g2.md:16 records both new regressions failing before R.has was added and passing afterward."
+        },
+        {
+          "test": "scratchpad/test/cli/TestTerminal.regressions.test.ts:6",
+          "upstreamBehaviour": "After TestTerminal.end, attempted input/type offers increment offered even when the queue rejects them, so reads.keys becomes 2 with pending 0 and no reader.",
+          "labBehaviour": "offered increments after Queue.offerAll by inputs.length minus unaccepted.length; rejected post-end input/type keeps keys, lines, subscriptions and pending input at zero.",
+          "reason": "upstream-bug: Verified upstream Node probe in round-1 INVENTORY.md cli-9 and fix-cli-g5.md:5 reproduced reads={keys:2,lines:0,subscriptions:0}, pending=0; the new no-reader regression failed before the fix."
+        },
+        {
+          "test": "scratchpad/test/cli/ui/Select.test.ts:20",
+          "upstreamBehaviour": "Negative or above-bound Select.init initial indices bypass both enabled-choice searches and fall back to disabled choice zero, preventing submission despite an enabled choice.",
+          "labBehaviour": "Select.init clamps the starting index to the choices bounds, searches forward then backward and selects an enabled choice for negative, equal-to-length and far-above-bound inputs.",
+          "reason": "upstream-bug: Pinned-oracle differential probe in round-1 INVENTORY.md cli-12 returned disabled cursor 0 for -1, 2 and 99; fix-cli-g9.md:10 records the added regression reproducing the failure before clamping."
+        },
+        {
+          "test": "scratchpad/test/cli/Render.plain.test.ts:23; scratchpad/test/cli/Render.ansi.test.ts:37; scratchpad/test/cli/Render.githubLog.test.ts:23",
+          "upstreamBehaviour": "Verbatim text is trimmed through trimLine, dropping trailing spaces and indentation on whitespace-only lines; the pinned plain renderer returns two spaces plus x followed by a newline for text x plus two spaces, newline, two spaces at indent 2.",
+          "labBehaviour": "Verbatim spans use hold: true, preserving content spaces and whitespace-only indentation through plain, ANSI and GitHub-log trimming at top level and inside lists, even at width 1.",
+          "reason": "upstream-bug: Pinned-oracle probe in round-1 INVENTORY.md cli-13 reproduces violation of Doc.verbatim exact-line contract; fix-cli-g6.md:8 records all three new whitespace-fidelity cases failing before the span fix."
+        },
+        {
+          "test": "scratchpad/test/cli/ui/widgetText.test.ts:73,98",
+          "upstreamBehaviour": "TextInput renders raw unmasked value segments, allowing an initial ANSI/OSC/newline value to inject styling and physical rows even with color none.",
+          "labBehaviour": "Both display segments pass through lineText before width measurement and rendering, removing escapes and folding newlines while retaining original editing offsets, stored values, validation and submission.",
+          "reason": "upstream-bug: Pinned-oracle production rendering probe in round-1 INVENTORY.md cli-17 reproduced raw styled multiline output; fix-cli-g9.md:11 records both hostile-value regressions failing before display sanitization."
+        },
+        {
+          "test": "scratchpad/test/cli/ui/Viewport.test.ts:335",
+          "upstreamBehaviour": "Viewport sets outer and row Box widths from the terminal-size hook, so an 80-to-20-column resize first repaints a stale 79-cell row and only then a 19-cell row.",
+          "labBehaviour": "The outer layout reserves one column with marginRight: 1 and clipped rows stretch within the current layout, making every resize repaint exactly 19 cells at 20 columns.",
+          "reason": "upstream-bug: Pinned-oracle production-path session probe in round-1 INVENTORY.md cli-18 captured 79 then 19 cells; fix-cli-g9.md:12 records the new immediate-repaint regression failing before the width removal."
+        },
+        {
+          "test": "scratchpad/test/cli/ui/CliUiTest.session.transcript.test.ts:106",
+          "upstreamBehaviour": "screenAfter consumes BEL-terminated OSC sequences only; ST-terminated OSC 8 hyperlinks appear in transcripts as protocol text and destination bytes instead of just their label.",
+          "labBehaviour": "The OSC matcher accepts BEL or ST terminators; combined, stdout and stderr transcripts show only the hyperlink label while raw written output keeps the original bytes.",
+          "reason": "upstream-bug: Pinned-oracle differential probe in round-1 INVENTORY.md cli-19 produced protocol text for an ST-terminated link; fix-cli-g10.md:19 records the verified defect and its BEL/ST transcript pin."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-1 — Deferred JSDoc carriers, metadata and public Examples across all four parts. (scratchpad/effected/cli/**/*.ts (all four BRIEF.md focus lists))",
+          "reason": "jsdoc: During S2 convert JSDoc carriers to titled Example and Details/Gotchas, preserve bodies, add category/since metadata and validate example imports and compilation."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-2 — ConfigIssueRenderer's example has no configFile producer. (scratchpad/effected/cli/ConfigIssueRenderer.ts:26)",
+          "reason": "jsdoc: Define or import a typed configFile producer before catchTag while preserving the example issue-rendering behavior."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-3 — Deferred canonical lifecycle for effectful test setup and scoped platform layers. (scratchpad/test/cli/CliFailure.test.ts:57,164)",
+          "reason": "test: During S3 return Effects from CliFailure helpers and use it.effect/it.layer for scoped platform setup, preserving assertions and resources."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-4 — Cancelled lacks the deferred schema round-trip property. (scratchpad/test/cli/Cancelled.test.ts:66)",
+          "reason": "test: Add an fcRuns schema-derived Cancelled encode/decode equality property preserving exit codes and existing fixed assertions."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-5 — Viewport properties use raw run counts. (scratchpad/test/cli/ui/Viewport.test.ts:54)",
+          "reason": "test: Use fcRuns(400) for both Viewport properties while preserving size and behavior."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-6 — CliLog.layer union narrowing uses identical branches. (scratchpad/effected/cli/CliRuntime.ts:546)",
+          "reason": "type-safety: Add a CliLog.layer overload accepting the options union and replace identical union-narrowing branches with one call."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-7 — CliLog.status retains a redundant vocab alias. (scratchpad/effected/cli/CliLog.ts:575)",
+          "reason": "effect-idiom: Delete the redundant core alias and read vocab.def directly."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-8 — README attribution contains pasted search fragments. (scratchpad/effected/cli/README.md:226)",
+          "reason": "docs: During S2 remove pasted README attribution fragments or replace them with meaningful provenance."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-9 — Serializer example and entrypoint prose retain upstream package paths. (scratchpad/effected/cli/ui-testing-serializer.ts:13)",
+          "reason": "docs: During S2 retarget serializer examples and entrypoint prose to lab modules without changing example bodies."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-10 — The shared Vitest config does not register the lab serializer. (scratchpad/vitest.effected.config.ts)",
+          "reason": "test: Register the lab serializer in the shared Vitest config and rerun the environment-bound serializer test; config remains centrally owned."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-11 — Unused Biome suppression comments remain. (scratchpad/effected/cli/internal/displayWidth.ts:6)",
+          "reason": "docs: Drop unused Biome comments or replace them with a real oxlint directive if that rule becomes enabled."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-12 — Per-call Match cases allocate closures and matchers on render/live paths. (scratchpad/effected/cli/internal/renderDoc.ts:376)",
+          "reason": "perf: Hoist render/live Match handlers outside per-call paths or retain upstream switches; performance improvement is unmeasured."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-13 — CliUiLive hard-codes the Stream TypeId and uses undefined sentinels. (scratchpad/effected/cli/ui/CliUiLive.ts:295)",
+          "reason": "effect-idiom: Use Stream.isStream once and build stream/subscription branches without undefined sentinels or an unreachable third pump branch."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-14 — CliUiLive redundantly maps Effect.void to undefined. (scratchpad/effected/cli/ui/CliUiLive.ts:329)",
+          "reason": "effect-idiom: Map the conditional unmount-or-void effect to current once, retaining the same result type."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-15 — Several optional-field objects spread one getSomesStruct per field. (scratchpad/effected/cli/internal/renderGithubLog.ts:17-22)",
+          "reason": "effect-idiom: Collapse adjacent single-field getSomesStruct calls into one call per object, preserving absent-field semantics."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-16 — CliUiTest repeats the default Clock read at many sites. (scratchpad/effected/cli/ui/testing/CliUiTest.ts:573,640,653,686-688,712,770-789,999-1012,1105)",
+          "reason": "effect-idiom: Optionally consolidate repeated default Clock reads into a shared thunk while retaining live wall-clock semantics."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-17 — Lazy-view loader branch may be unreachable for owned handles. (scratchpad/effected/cli/ui/internal/lazyView.ts:126)",
+          "reason": "test: Narrow the lazy-loader property once and drop the inner impossible throw only after accounting for externally supplied Symbol.for handles."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-18 — File-wide test diagnostic exceptions hide future occurrences. (scratchpad/test/cli/ui/CliUi.run.test.ts:1)",
+          "reason": "test: During S3 narrow file-wide diagnostic headers to next-line exceptions required by Vitest and migrate remaining timers/promises to Effect."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 17,
+              "backlog": 3
+            },
+            "sol": {
+              "required": 17,
+              "backlog": 9
+            },
+            "fable": {
+              "required": 20,
+              "backlog": 24
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,
