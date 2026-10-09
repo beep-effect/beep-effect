@@ -3,7 +3,7 @@ import type * as Effect from "effect/Effect";
 import * as Context from "effect/Context";
 import * as Eff from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { ChildProcess } from "effect/process";
 
@@ -224,7 +224,7 @@ export class LocalExec extends Context.Service<LocalExec, LocalExecShape>()($I`L
 				prefix,
 				dlxPrefix,
 				scriptPrefix,
-				...(options?.directory === undefined ? {} : { directory: options.directory }),
+				...O.getSomesStruct({ directory: O.fromUndefinedOr(options?.directory) }),
 			}),
 		);
 	};

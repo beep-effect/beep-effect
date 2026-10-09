@@ -1,3 +1,6 @@
+import * as A from "effect/Array";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Order from "effect/Order";
 import * as Redacted from "effect/Redacted";
 
 /**
@@ -19,7 +22,7 @@ export const REDACTED = "***";
  *
  * @public
  */
-export const SECRET_FLAGS: ReadonlySet<string> = new Set([
+export const SECRET_FLAGS: MutableHashSet.MutableHashSet<string> = MutableHashSet.fromIterable([
 	"--access-token",
 	"--api-key",
 	"--auth",
@@ -46,7 +49,10 @@ const AUTH_KEY = /:(?:_authtoken|_password)$/i;
  * the placeholder between every character.
  */
 const prepare = (secrets: ReadonlyArray<Redacted.Redacted<string>>): ReadonlyArray<string> =>
-	[...new Set(secrets.map(Redacted.value))].filter((value) => value.length > 0).sort((a, b) => b.length - a.length);
+	A.sort(
+		A.filter(A.dedupe(A.map(secrets, Redacted.value)), (value) => value.length > 0),
+		Order.mapInput(Order.flip(Order.Number), (value: string) => value.length),
+	);
 
 /** Replaces each prepared value with {@link REDACTED}, literally (never as a pattern). */
 const replaceAll = (text: string, values: ReadonlyArray<string>): string => {
@@ -74,9 +80,9 @@ const applyArgs = (
 };
 
 /** Whether `name` introduces a credential value. */
-const isSecretName = (name: string, extra: ReadonlySet<string>): boolean => {
+const isSecretName = (name: string, extra: MutableHashSet.MutableHashSet<string>): boolean => {
 	const lower = name.toLowerCase();
-	return SECRET_FLAGS.has(lower) || extra.has(lower) || AUTH_KEY.test(name);
+	return MutableHashSet.has(SECRET_FLAGS, lower) || MutableHashSet.has(extra, lower) || AUTH_KEY.test(name);
 };
 
 // Implementation of Redaction.scrubArgs; the public contract lives on the static.
@@ -84,7 +90,7 @@ const scrubArgs = (
 	args: ReadonlyArray<string>,
 	options?: { readonly flags?: ReadonlyArray<string> | undefined },
 ): ReadonlyArray<string> => {
-	const extra = new Set((options?.flags ?? []).map((flag) => flag.toLowerCase()));
+	const extra = MutableHashSet.fromIterable((options?.flags ?? []).map((flag) => flag.toLowerCase()));
 	const out: Array<string> = [];
 	for (let index = 0; index < args.length; index++) {
 		const arg = args[index] ?? "";

@@ -14,6 +14,13 @@ import { REDACTED, Redaction } from "./Redaction.ts";
 
 const $I = $ScratchpadId.create("effected/commands/Run");
 
+/** Captured stdout contained no candidate JSON line. */
+class EmptyJsonLineError extends S.TaggedError<EmptyJsonLineError>($I`EmptyJsonLineError`)(
+	"EmptyJsonLineError",
+	{ message: S.String },
+	$I.annote("EmptyJsonLineError", { description: "Captured stdout contained no non-empty line to decode as JSON." }),
+) {}
+
 /**
  * Default ceiling on captured bytes per stream (16 MiB).
  *
@@ -408,7 +415,7 @@ const jsonLine = Effect.fn("Run.jsonLine")(function* <A, I>(
 		return yield* CommandOutputError.make({
 				kind: "notJson",
 				command: described.command,
-				cause: new Error("stdout carried no non-empty line"),
+				cause: EmptyJsonLineError.make({ message: "stdout carried no non-empty line" }),
 				...context,
 			});
 	}

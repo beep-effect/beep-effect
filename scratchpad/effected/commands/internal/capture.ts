@@ -31,11 +31,9 @@ export class OutputTooLarge extends Data.TaggedError("OutputTooLarge")<{
 export const collectBounded: {
 	(limit: number): (stream: Stream.Stream<Uint8Array, PlatformError.PlatformError>) => Effect.Effect<string, PlatformError.PlatformError | OutputTooLarge>;
 	(stream: Stream.Stream<Uint8Array, PlatformError.PlatformError>, limit: number): Effect.Effect<string, PlatformError.PlatformError | OutputTooLarge>;
-} = dual(2, (
-	stream: Stream.Stream<Uint8Array, PlatformError.PlatformError>,
-	limit: number,
-): Effect.Effect<string, PlatformError.PlatformError | OutputTooLarge> =>
-	Effect.gen(function* () {
+} = dual(
+	2,
+	Effect.fnUntraced(function* (stream: Stream.Stream<Uint8Array, PlatformError.PlatformError>, limit: number) {
 		const seen = yield* Ref.make(0);
 		const bounded = Stream.mapEffect(stream, (chunk) =>
 			Effect.flatMap(
@@ -44,4 +42,5 @@ export const collectBounded: {
 			),
 		);
 		return yield* bounded.pipe(Stream.decodeText, Stream.mkString);
-	}));
+	}),
+);

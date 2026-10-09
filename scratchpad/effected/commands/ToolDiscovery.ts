@@ -17,6 +17,13 @@ import { VersionProbe } from "./Tool.ts";
 
 const $I = $ScratchpadId.create("effected/commands/ToolDiscovery");
 
+/** An unstubbed test-double member was exercised. */
+class ToolDiscoveryUnstubbedError extends S.TaggedError<ToolDiscoveryUnstubbedError>($I`ToolDiscoveryUnstubbedError`)(
+	"ToolDiscoveryUnstubbedError",
+	{ message: S.String },
+	$I.annote("ToolDiscoveryUnstubbedError", { description: "An unstubbed tool-discovery test-double member was exercised." }),
+) {}
+
 /** How many tools' probe evidence to remember. */
 const CACHE_CAPACITY = 256;
 
@@ -191,7 +198,7 @@ const extractVersion = (probe: VersionProbe, stdout: string): O.Option<string> =
 	try {
 		let current: unknown = JSON.parse(stdout);
 		for (const key of probe.path.split(".")) {
-			if (current === null || typeof current !== "object" || !P.hasProperty(current, key)) return O.none();
+			if (!P.isObjectKeyword(current) || P.isFunction(current) || !P.hasProperty(current, key)) return O.none();
 			current = current[key];
 		}
 		return P.isString(current) ? O.some(current) : O.none();
@@ -255,16 +262,15 @@ const make = Effect.fnUntraced(function* () {
 	// FAILED lookup for the entry's lifetime, so one
 	// transient probe failure would mark a tool permanently absent.
 	const cache = yield* Cache.makeWith(
-		(key: EvidenceKey) =>
-			Effect.gen(function* () {
-				const context = yield* local.context;
-				const args = probeArgs(key.probe);
-				const globalProbe = yield* probeLocation(ChildProcess.make(key.name, args), key.probe);
-				const localProbe = O.isNone(context)
-					? { found: false, version: O.none<string>() }
-					: yield* probeLocation(context.value.apply(ChildProcess.make(key.name, args)), key.probe);
-				return { global: globalProbe, local: localProbe, context } satisfies Evidence;
-			}),
+		Effect.fnUntraced(function* (key: EvidenceKey) {
+			const context = yield* local.context;
+			const args = probeArgs(key.probe);
+			const globalProbe = yield* probeLocation(ChildProcess.make(key.name, args), key.probe);
+			const localProbe = O.isNone(context)
+				? { found: false, version: O.none<string>() }
+				: yield* probeLocation(context.value.apply(ChildProcess.make(key.name, args)), key.probe);
+			return { global: globalProbe, local: localProbe, context } satisfies Evidence;
+		}),
 		{
 			capacity: CACHE_CAPACITY,
 			// Only a POSITIVE result is worth remembering. Two distinct traps sit
@@ -373,9 +379,9 @@ const make = Effect.fnUntraced(function* () {
 /** The default for an unstubbed {@link ToolDiscovery.makeTest} member. */
 const notStubbed = (method: string) => () =>
 	Effect.die(
-		new Error(
-			`ToolDiscovery.makeTest: ${method}() was called but not stubbed — no honest default exists for a test double; pass a \`${method}\` override.`,
-		),
+		ToolDiscoveryUnstubbedError.make({
+			message: `ToolDiscovery.makeTest: ${method}() was called but not stubbed — no honest default exists for a test double; pass a \`${method}\` override.`,
+		}),
 	);
 
 /**
@@ -442,7 +448,9 @@ export class ToolDiscovery extends Context.Service<ToolDiscovery, ToolDiscoveryS
 		isAvailable: notStubbed("isAvailable"),
 		invalidate: notStubbed("invalidate"),
 		invalidateAll: Effect.die(
-			new Error("ToolDiscovery.makeTest: invalidateAll was used but not stubbed — pass an `invalidateAll` override."),
+			ToolDiscoveryUnstubbedError.make({
+				message: "ToolDiscovery.makeTest: invalidateAll was used but not stubbed — pass an `invalidateAll` override.",
+			}),
 		),
 		...overrides,
 	});

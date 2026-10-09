@@ -1,9 +1,20 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
+import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+
+const $I = $ScratchpadId.create("effected/commands/ScriptedSpawner");
+
+/** A pipeline reached a test double that only scripts standard commands. */
+class ScriptedPipelineError extends S.TaggedError<ScriptedPipelineError>($I`ScriptedPipelineError`)(
+	"ScriptedPipelineError",
+	{ message: S.String },
+	$I.annote("ScriptedPipelineError", { description: "A piped command reached the standard-command-only scripted spawner." }),
+) {}
 
 /**
  * One scripted outcome for a spawned command.
@@ -146,9 +157,9 @@ export class ScriptedSpawner {
 			ChildProcessSpawner.make((command) => {
 				if (!ChildProcess.isStandardCommand(command)) {
 					return Effect.die(
-						new Error(
-							"ScriptedSpawner scripts standard commands only — a piped command (ChildProcess.pipeTo) reached the spawner. Script each side separately, or run the pipeline e2e against a real platform layer.",
-						),
+						ScriptedPipelineError.make({
+							message: "ScriptedSpawner scripts standard commands only — a piped command (ChildProcess.pipeTo) reached the spawner. Script each side separately, or run the pipeline e2e against a real platform layer.",
+						}),
 					);
 				}
 				return Effect.suspend(() => {
