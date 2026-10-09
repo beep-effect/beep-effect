@@ -79,9 +79,6 @@ const skipLauncherOptions = (
 };
 
 const compilerArguments = (words: ReadonlyArray<string>): O.Option<ReadonlyArray<string>> => {
-  // Shell compounds and substitutions can span separators before launcher parsing.
-  // Keep those forms on the conservative lexical path regardless of the outer command.
-  if (A.some(words, (word) => /[`()<>]/u.test(word))) return O.none();
   let index = 0;
   const packageOptions = ["-p", "--package", "--cache", "--registry", "--userconfig", "--prefix"];
   const directoryOptions = ["-C", "--dir", "--cwd", "--filter", "--filter-prod", "-F"];
@@ -134,20 +131,21 @@ const compilerArguments = (words: ReadonlyArray<string>): O.Option<ReadonlyArray
   return O.some([]);
 };
 
+const containsCompilerBuildTokens = (text: string): boolean =>
+  /(?:^|[\s/"'=(`])(?:tsc|tsgo)(?=\s|["')`]|$)/u.test(text) &&
+  /(?:^|[\s"'=])(?:-b|--build|--force)(?=\s|["')`<>\\;&|]|$)/u.test(text);
+
 // Known launchers distinguish executable arguments from their own option values.
 // Unknown prefixes remain review candidates when compiler/build tokens occur,
 // including nested shell strings. This guard does not evaluate shell programs.
 const usesSubgraphBuilder = (script: string): boolean => {
+  // These shell forms can evaluate across command separators. Keep their whole
+  // text on the conservative tripwire instead of classifying fragments as inert.
+  if (/[\\`()<>$]/u.test(script)) return containsCompilerBuildTokens(script);
   const tokens = Str.matchAll(/(?:[^\s"'\\;&|]+|"(?:\\.|[^"\\])*"|'[^']*'|\\[\s\S])+|[;&|\n]+/g)(script);
   const commandUsesBuild = (words: ReadonlyArray<string>): boolean =>
     O.match(compilerArguments(words), {
-      onNone: () => {
-        const text = A.join(words, " ");
-        return (
-          /(?:^|[\s/"'(`])(?:tsc|tsgo)(?=\s|["')`]|$)/u.test(text) &&
-          /(?:^|[\s"'])(?:-b|--build|--force)(?=\s|["')`<>]|$)/u.test(text)
-        );
-      },
+      onNone: () => containsCompilerBuildTokens(A.join(words, " ")),
       onSome: (arguments_) => {
         for (const argument of arguments_) {
           const word = Str.replace(/^(["'])([\s\S]*)\1$/, "$2")(argument);
@@ -288,6 +286,10 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
         "tsc --force>build.log",
         "tsgo --build>&2",
         "tsc --force<input.txt",
+        "tsc --force\\\n",
+        "tsc $'--force'",
+        "FLAGS=--force; tsc $FLAGS",
+        "COMPILER='tsc '; $COMPILER --force",
         "bunx --bun --no-install tsgo --build",
         "bunx --package typescript tsc -b",
         "bunx -p typescript tsc --force",
