@@ -1,0 +1,52 @@
+lockfileVersion: '9.0'
+
+# HAND-AUTHORED. Two skews at once: @effected/commands (kit) and semver (not
+# kit). The NON-kit @savvy-web/silk-effects is what pulls the stale commands
+# copy, so filtering it out of the report must not filter it out of the walk.
+
+importers:
+
+  .:
+    dependencies:
+      '@effected/workspaces':
+        specifier: ^0.10.1
+        version: 0.10.1
+      '@savvy-web/silk-effects':
+        specifier: ^6.0.4
+        version: 6.0.4
+      semver:
+        specifier: ^7.7.1
+        version: 7.7.1
+
+packages:
+
+  '@effected/commands@0.2.1': {}
+
+  '@effected/commands@0.3.1': {}
+
+  '@effected/workspaces@0.10.1': {}
+
+  '@savvy-web/silk-effects@6.0.4': {}
+
+  semver@7.6.0: {}
+
+  semver@7.7.1: {}
+
+snapshots:
+
+  '@effected/commands@0.2.1': {}
+
+  '@effected/commands@0.3.1': {}
+
+  '@effected/workspaces@0.10.1':
+    dependencies:
+      '@effected/commands': 0.3.1
+
+  '@savvy-web/silk-effects@6.0.4':
+    dependencies:
+      '@effected/commands': 0.2.1
+      semver: 7.6.0
+
+  semver@7.6.0: {}
+
+  semver@7.7.1: {}

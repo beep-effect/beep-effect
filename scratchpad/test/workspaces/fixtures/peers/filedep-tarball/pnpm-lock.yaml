@@ -1,0 +1,58 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: false
+  excludeLinksFromLockfile: false
+
+importers:
+
+  packages/host:
+    dependencies:
+      react:
+        specifier: file:../../vendor/react-18.3.1.tgz
+        version: file:vendor/react-18.3.1.tgz
+      react-dom:
+        specifier: 18.3.1
+        version: 18.3.1(react@file:vendor/react-18.3.1.tgz)
+
+packages:
+
+  js-tokens@4.0.0:
+    resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
+
+  loose-envify@1.4.0:
+    resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
+    hasBin: true
+
+  react-dom@18.3.1:
+    resolution: {integrity: sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==}
+    version: 18.3.1
+    peerDependencies:
+      react: ^18.3.1
+
+  react@file:vendor/react-18.3.1.tgz:
+    resolution: {integrity: sha512-k4qpk7wPOhi8mVSRTDvHx5Y+QBMEQ2uOIE/nHaJvubBh0EhacNICQZrqJ+ytMpPi06KdaYFOVHiQXxsSsa/T6A==, tarball: file:vendor/react-18.3.1.tgz}
+    version: 18.3.1
+
+  scheduler@0.23.2:
+    resolution: {integrity: sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==}
+
+snapshots:
+
+  js-tokens@4.0.0: {}
+
+  loose-envify@1.4.0:
+    dependencies:
+      js-tokens: 4.0.0
+
+  react-dom@18.3.1(react@file:vendor/react-18.3.1.tgz):
+    dependencies:
+      loose-envify: 1.4.0
+      react: file:vendor/react-18.3.1.tgz
+      scheduler: 0.23.2
+
+  react@file:vendor/react-18.3.1.tgz: {}
+
+  scheduler@0.23.2:
+    dependencies:
+      loose-envify: 1.4.0

@@ -1,0 +1,637 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as R from "effect/Record";
+
+const $I = $ScratchpadId.create("effected/github-actions/ActionEnvironment");
+
+const Json = S.fromJsonString(S.Unknown);
+
+/**
+ * Raised when the runner environment does not say what an action needs.
+ *
+ * **Details**
+ *
+ * Two reasons, and the distinction is actionable: `missing` means the variable
+ * is absent or empty (the workflow did not grant something, or the action is
+ * running outside Actions); `malformed` means it is present but unusable (a
+ * non-numeric run id, an unparseable event payload). The first is usually a
+ * workflow fix, the second usually a bug report.
+ *
+ * **Example** (Explain a missing runner variable)
+ *
+ * ```ts
+ * import { ActionEnvironmentError } from "@beep/scratchpad/effected/github-actions/ActionEnvironment";
+ *
+ * const error = ActionEnvironmentError.make({ reason: "missing", name: "GITHUB_REPOSITORY" });
+ * console.log(error.message) // Required environment variable "GITHUB_REPOSITORY" is not set
+ * ```
+ *
+ * @public
+ * @category errors
+ * @since 0.0.0
+ */
+export class ActionEnvironmentError extends S.TaggedError<ActionEnvironmentError>($I`ActionEnvironmentError`)("ActionEnvironmentError", {
+	/**
+	 * `missing` — absent or empty; `malformed` — present but unusable.
+	 * @since 0.0.0
+	 */
+	reason: S.Literals(["missing", "malformed"]).annotateKey({ description: "`missing` — absent or empty; `malformed` — present but unusable." }),
+	/**
+	 * The environment variable involved.
+	 * @since 0.0.0
+	 */
+	name: S.String.annotateKey({ description: "The environment variable involved." }),
+	/**
+	 * What was wrong, when the reason is `malformed`.
+	 * @since 0.0.0
+	 */
+	detail: S.optionalKey(S.String).annotateKey({ description: "What was wrong, when the reason is `malformed`." }),
+}, $I.annote("ActionEnvironmentError", { description: "Raised when the runner environment does not say what an action needs." })) {
+	/**
+	 * Explains the failure reason with the available diagnostic fields.
+	 *
+	 * **Example** (Explain a missing runner variable)
+	 *
+	 * ```ts
+	 * import { ActionEnvironmentError } from "@beep/scratchpad/effected/github-actions/ActionEnvironment";
+	 *
+	 * const error = ActionEnvironmentError.make({ reason: "missing", name: "GITHUB_REPOSITORY" });
+	 * console.log(error.message) // Required environment variable "GITHUB_REPOSITORY" is not set
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
+	override get message(): string {
+		return this.reason === "missing"
+			? `Required environment variable "${this.name}" is not set`
+			: `Environment variable "${this.name}" is malformed${this.detail === undefined ? "" : `: ${this.detail}`}`;
+	}
+}
+
+/**
+ * The workflow's GitHub context, projected from the `GITHUB_*` variables.
+ *
+ * **Example** (Read a seeded workflow context)
+ *
+ * ```ts
+ * import { ActionEnvironment } from "@beep/scratchpad/effected/github-actions/ActionEnvironment";
+ * import * as Effect from "effect/Effect";
+ *
+ * const program = Effect.flatMap(ActionEnvironment, (env) => env.github);
+ * const context = Effect.runSync(Effect.provide(program, ActionEnvironment.layerTest()));
+ * console.log(context.repository) // acme/example
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export class GitHubContext extends S.Class<GitHubContext>($I`GitHubContext`)({
+	/**
+	 * `owner/repo`.
+	 * @since 0.0.0
+	 */
+	repository: S.String.annotateKey({ description: "`owner/repo`." }),
+	/**
+	 * The repository owner's login.
+	 * @since 0.0.0
+	 */
+	repositoryOwner: S.String.annotateKey({ description: "The repository owner's login." }),
+	/**
+	 * The full ref, e.g. `refs/heads/main`.
+	 * @since 0.0.0
+	 */
+	ref: S.String.annotateKey({ description: "The full ref, e.g. `refs/heads/main`." }),
+	/**
+	 * The short ref, e.g. `main`.
+	 * @since 0.0.0
+	 */
+	refName: S.String.annotateKey({ description: "The short ref, e.g. `main`." }),
+	/**
+	 * The source branch of the pull request, when the event has one.
+	 *
+	 * **Gotchas**
+	 *
+	 * `GITHUB_HEAD_REF` is only set for `pull_request` events — and on every
+	 * other event the runner does not merely omit it, it may write the **empty
+	 * string**, which a raw `process.env` read happily reports as present. That
+	 * trap is encoded in the type: absent and `""` both decode to
+	 * `Option.none()`, so a consumer cannot build a cache key segment out of an
+	 * empty branch name by accident. For "the branch a human means", use
+	 * {@link GitHubContext.branch}, which owns the fallback to `refName`.
+	 *
+	 * The encoded form is `string | null` rather than a serialized `Option`, so
+	 * an encoded context stays plain JSON.
+	 * @since 0.0.0
+	 */
+	headRef: S.OptionFromNullOr(S.String).annotateKey({ description: "The source branch of the pull request, when the event has one." }),
+	/**
+	 * The commit SHA that triggered the workflow.
+	 * @since 0.0.0
+	 */
+	sha: S.String.annotateKey({ description: "The commit SHA that triggered the workflow." }),
+	/**
+	 * The workflow's name.
+	 * @since 0.0.0
+	 */
+	workflow: S.String.annotateKey({ description: "The workflow's name." }),
+	/**
+	 * The current job's id.
+	 * @since 0.0.0
+	 */
+	job: S.String.annotateKey({ description: "The current job's id." }),
+	/**
+	 * The run's unique number, decoded from `GITHUB_RUN_ID`.
+	 * @since 0.0.0
+	 */
+	runId: S.Finite.annotateKey({ description: "The run's unique number, decoded from `GITHUB_RUN_ID`." }),
+	/**
+	 * The attempt number of this run, starting at 1.
+	 * @since 0.0.0
+	 */
+	runAttempt: S.Finite.annotateKey({ description: "The attempt number of this run, starting at 1." }),
+	/**
+	 * The name of the event that triggered the workflow, e.g. `push`.
+	 * @since 0.0.0
+	 */
+	eventName: S.String.annotateKey({ description: "The name of the event that triggered the workflow, e.g. `push`." }),
+	/**
+	 * The login of the user that triggered the run.
+	 * @since 0.0.0
+	 */
+	actor: S.String.annotateKey({ description: "The login of the user that triggered the run." }),
+	/**
+	 * The GitHub server URL, e.g. `https://github.com`.
+	 * @since 0.0.0
+	 */
+	serverUrl: S.String.annotateKey({ description: "The GitHub server URL, e.g. `https://github.com`." }),
+	/**
+	 * The REST API URL, e.g. `https://api.github.com`.
+	 * @since 0.0.0
+	 */
+	apiUrl: S.String.annotateKey({ description: "The REST API URL, e.g. `https://api.github.com`." }),
+	/**
+	 * The GraphQL API URL.
+	 * @since 0.0.0
+	 */
+	graphqlUrl: S.String.annotateKey({ description: "The GraphQL API URL." }),
+	/**
+	 * The default working directory on the runner for steps.
+	 * @since 0.0.0
+	 */
+	workspace: S.String.annotateKey({ description: "The default working directory on the runner for steps." }),
+}, $I.annote("GitHubContext", { description: "The workflow's GitHub context, projected from the `GITHUB_*` variables." })) {
+	/**
+	 * The branch a human means: `headRef` when present (a pull request, where
+	 * `refName` is the useless `123/merge`), otherwise `refName`.
+	 *
+	 * **Details**
+	 *
+	 * This is the universal branch-scoped-cache-key fallback chain, written
+	 * once. On a `push` or any other non-PR event `headRef` is `Option.none()`
+	 * — including when the runner wrote it as the empty string — so the answer
+	 * is the short ref. Note that on a tag push `refName` names the tag, not a
+	 * branch; a consumer that must distinguish still has the full `ref`.
+	 *
+	 * **Example** (Use the source branch on a pull request)
+	 *
+	 * ```ts
+	 * import { ActionEnvironment } from "@beep/scratchpad/effected/github-actions/ActionEnvironment";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.flatMap(ActionEnvironment, (env) => env.github);
+	 * const testLayer = ActionEnvironment.layerTest({ GITHUB_HEAD_REF: "feature", GITHUB_REF_NAME: "123/merge" });
+	 * const context = Effect.runSync(Effect.provide(program, testLayer));
+	 * console.log(context.branch) // feature
+	 * ```
+	 * @category getters
+	 * @since 0.0.0
+	 */
+	get branch(): string {
+		return O.getOrElse(this.headRef, () => this.refName);
+	}
+}
+
+/**
+ * The runner's own context, projected from the `RUNNER_*` variables.
+ *
+ * **Example** (Construct a runner context)
+ *
+ * ```ts
+ * import { RunnerContext } from "@beep/scratchpad/effected/github-actions/ActionEnvironment";
+ *
+ * const runner = RunnerContext.make({
+ *   os: "Linux", arch: "X64", name: "runner", temp: "/tmp", toolCache: "/opt/hostedtoolcache",
+ * });
+ * console.log(runner.os) // Linux
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export class RunnerContext extends S.Class<RunnerContext>($I`RunnerContext`)({
+	/**
+	 * The runner's operating system: `Linux`, `Windows` or `macOS`.
+	 * @since 0.0.0
+	 */
+	os: S.String.annotateKey({ description: "The runner's operating system: `Linux`, `Windows` or `macOS`." }),
+	/**
+	 * The runner's architecture, e.g. `X64` or `ARM64`.
+	 * @since 0.0.0
+	 */
+	arch: S.String.annotateKey({ description: "The runner's architecture, e.g. `X64` or `ARM64`." }),
+	/**
+	 * The runner's name.
+	 * @since 0.0.0
+	 */
+	name: S.String.annotateKey({ description: "The runner's name." }),
+	/**
+	 * A scratch directory emptied between jobs.
+	 * @since 0.0.0
+	 */
+	temp: S.String.annotateKey({ description: "A scratch directory emptied between jobs." }),
+	/**
+	 * Where `ToolInstaller` caches toolchains.
+	 * @since 0.0.0
+	 */
+	toolCache: S.String.annotateKey({ description: "Where `ToolInstaller` caches toolchains." }),
+}, $I.annote("RunnerContext", { description: "The runner's own context, projected from the `RUNNER_*` variables." })) {}
+
+/**
+ * Environment overrides layered on top of the seeded snapshot.
+ *
+ * **Details**
+ *
+ * A `Context.Reference` rather than a mutable global: overrides are
+ * **fiber-local**, so two concurrent fibers can override the same variable
+ * without seeing each other, and nothing needs restoring afterwards. This is
+ * what makes {@link ActionEnvironmentShape.withEnv} parallel-safe.
+ *
+ * @internal
+ */
+const EnvOverrides = Context.Reference<Readonly<Record<string, string>>>($I`EnvOverrides`, {
+	defaultValue: () => ({}),
+});
+
+/**
+ * The members of the {@link ActionEnvironment} service: variable lookup, the
+ * `GITHUB_*` and `RUNNER_*` contexts, the event payload and scoped overrides.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export interface ActionEnvironmentShape {
+	/**
+	 * A required variable. Absent or empty fails typed.
+	 * @since 0.0.0
+	 */
+	readonly get: (name: string) => Effect.Effect<string, ActionEnvironmentError>;
+	/**
+	 * An optional variable. Empty reads as absent, as the runner treats it.
+	 * @since 0.0.0
+	 */
+	readonly getOptional: (name: string) => Effect.Effect<O.Option<string>>;
+	/**
+	 * The `GITHUB_*` context.
+	 * @since 0.0.0
+	 */
+	readonly github: Effect.Effect<GitHubContext, ActionEnvironmentError>;
+	/**
+	 * The `RUNNER_*` context.
+	 * @since 0.0.0
+	 */
+	readonly runner: Effect.Effect<RunnerContext, ActionEnvironmentError>;
+	/**
+	 * Whether the runner is in step-debug mode.
+	 * @since 0.0.0
+	 */
+	readonly isDebug: Effect.Effect<boolean>;
+	/**
+	 * The webhook event payload.
+	 *
+	 * **Details**
+	 *
+	 * `R` is `never`: the layer resolves `FileSystem` once at construction, so
+	 * a caller never re-injects one to keep its own requirements clean.
+	 * @since 0.0.0
+	 */
+	readonly payload: Effect.Effect<unknown, ActionEnvironmentError>;
+	/**
+	 * Run an effect with environment overrides applied.
+	 *
+	 * **Details**
+	 *
+	 * Fiber-local and parallel-safe — `process.env` is never mutated, so
+	 * concurrent callers cannot corrupt each other and there is nothing to
+	 * restore. Overrides **merge** with any enclosing `withEnv`.
+	 *
+	 * The trade, stated: a variable exported mid-run by
+	 * `ActionOutputs.exportVariable` is not observed here, because the snapshot
+	 * is taken once. That matches GitHub's own model, where `exportVariable`
+	 * targets *subsequent* steps rather than the running one.
+	 * @since 0.0.0
+	 */
+	readonly withEnv: <A, E, R>(
+		overrides: Readonly<Record<string, string>>,
+		effect: Effect.Effect<A, E, R>,
+	) => Effect.Effect<A, E, R>;
+}
+
+const numeric = (name: string, raw: string): Effect.Effect<number, ActionEnvironmentError> => {
+	const parsed = Number(raw);
+	return Number.isFinite(parsed)
+		? Effect.succeed(parsed)
+		: Effect.fail(ActionEnvironmentError.make({ reason: "malformed", name, detail: `expected a number, got "${raw}"` }));
+};
+
+const make = Effect.fn("make")(function* (base: Readonly<Record<string, string | undefined>>) {
+		const fs = yield* FileSystem.FileSystem;
+
+		const lookup = (name: string): Effect.Effect<O.Option<string>> =>
+			Effect.map(EnvOverrides, (overrides) => {
+				const value = O.getOrUndefined(R.get(overrides, name)) ?? O.getOrUndefined(R.get(base, name));
+				// The runner sets absent inputs to the empty string; treating "" as
+				// present would make every unset optional input look supplied.
+				return value === undefined || value === "" ? O.none() : O.some(value);
+			});
+
+		const get = (name: string): Effect.Effect<string, ActionEnvironmentError> =>
+			Effect.flatMap(lookup(name), (found) =>
+				Effect.fromOption(found, () => ActionEnvironmentError.make({ reason: "missing", name })),
+			);
+
+		return {
+			get,
+			getOptional: lookup,
+			isDebug: Effect.map(lookup("RUNNER_DEBUG"), (value) => O.isSome(value) && value.value === "1"),
+
+			github: Effect.map(
+				Effect.all({
+					repository: get("GITHUB_REPOSITORY"),
+					repositoryOwner: get("GITHUB_REPOSITORY_OWNER"),
+					ref: get("GITHUB_REF"),
+					refName: get("GITHUB_REF_NAME"),
+					// GITHUB_HEAD_REF is absent outside pull requests — and the runner may
+					// write it as the empty string, which `lookup` already reads as absent.
+					headRef: lookup("GITHUB_HEAD_REF"),
+					sha: get("GITHUB_SHA"),
+					workflow: get("GITHUB_WORKFLOW"),
+					job: get("GITHUB_JOB"),
+					runId: Effect.flatMap(get("GITHUB_RUN_ID"), (raw) => numeric("GITHUB_RUN_ID", raw)),
+					runAttempt: Effect.flatMap(get("GITHUB_RUN_ATTEMPT"), (raw) => numeric("GITHUB_RUN_ATTEMPT", raw)),
+					eventName: get("GITHUB_EVENT_NAME"),
+					actor: get("GITHUB_ACTOR"),
+					serverUrl: get("GITHUB_SERVER_URL"),
+					apiUrl: get("GITHUB_API_URL"),
+					graphqlUrl: get("GITHUB_GRAPHQL_URL"),
+					workspace: get("GITHUB_WORKSPACE"),
+				}),
+				(fields) => GitHubContext.make(fields),
+			),
+
+			runner: Effect.map(
+				Effect.all({
+					os: get("RUNNER_OS"),
+					arch: get("RUNNER_ARCH"),
+					name: get("RUNNER_NAME"),
+					temp: get("RUNNER_TEMP"),
+					toolCache: get("RUNNER_TOOL_CACHE"),
+				}),
+				(fields) => RunnerContext.make(fields),
+			),
+
+			payload: Effect.gen(function* () {
+				const path = yield* get("GITHUB_EVENT_PATH");
+				const raw = yield* fs.readFileString(path).pipe(
+					Effect.mapError(
+						(cause) =>
+							ActionEnvironmentError.make({
+								reason: "malformed",
+								name: "GITHUB_EVENT_PATH",
+								detail: `could not read "${path}": ${String(cause)}`,
+							}),
+					),
+				);
+				return yield* S.decodeEffect(Json)(raw).pipe(
+					Effect.mapError((cause) =>
+						ActionEnvironmentError.make({
+							reason: "malformed",
+							name: "GITHUB_EVENT_PATH",
+							detail: `not valid JSON: ${String(cause)}`,
+						}),
+					),
+				);
+			}),
+
+			withEnv: (overrides, effect) =>
+				Effect.flatMap(EnvOverrides, (current) =>
+					Effect.provideService(effect, EnvOverrides, { ...current, ...overrides }),
+				),
+		} satisfies ActionEnvironmentShape;
+	});
+
+/**
+ * The `GITHUB_*` / `RUNNER_*` block a test double seeds so suites do not restate it.
+ */
+const TEST_DEFAULTS: Readonly<Record<string, string>> = {
+	GITHUB_REPOSITORY: "acme/example",
+	GITHUB_REPOSITORY_OWNER: "acme",
+	GITHUB_REF: "refs/heads/main",
+	GITHUB_REF_NAME: "main",
+	GITHUB_SHA: "0000000000000000000000000000000000000000",
+	GITHUB_WORKFLOW: "test",
+	GITHUB_JOB: "test",
+	GITHUB_RUN_ID: "1",
+	GITHUB_RUN_ATTEMPT: "1",
+	GITHUB_EVENT_NAME: "push",
+	GITHUB_ACTOR: "tester",
+	GITHUB_SERVER_URL: "https://github.com",
+	GITHUB_API_URL: "https://api.github.com",
+	GITHUB_GRAPHQL_URL: "https://api.github.com/graphql",
+	GITHUB_WORKSPACE: "/workspace",
+	RUNNER_OS: "Linux",
+	RUNNER_ARCH: "X64",
+	RUNNER_NAME: "test-runner",
+	RUNNER_TEMP: "/tmp",
+	RUNNER_TOOL_CACHE: "/opt/hostedtoolcache",
+};
+
+/**
+ * The runner environment an action is executing inside.
+ *
+ * **Details**
+ *
+ * The single reader of `process.env` in this package. Everything else — inputs,
+ * outputs, state, the token bridge — goes through a service rather than
+ * reaching for a global, which is what makes them all testable without
+ * mutating the test process.
+ *
+ * **Example** (Identify a workflow run by repository and run ID)
+ *
+ * ```ts
+ * import { ActionEnvironment } from "@beep/scratchpad/effected/github-actions/ActionEnvironment";
+ * import * as Effect from "effect/Effect";
+ *
+ * const program = Effect.gen(function* () {
+ *   const env = yield* ActionEnvironment;
+ *   const { repository, runId } = yield* env.github;
+ *   return `${repository}#${runId}`;
+ * });
+ * console.log(Effect.runSync(Effect.provide(program, ActionEnvironment.layerTest()))) // acme/example#1
+ * ```
+ *
+ * @public
+ * @category services
+ * @since 0.0.0
+ */
+export class ActionEnvironment extends Context.Service<ActionEnvironment, ActionEnvironmentShape>()(
+	$I`ActionEnvironment`,
+) {
+	/**
+	 * Seeded from `process.env`, once, at layer construction.
+	 *
+	 * **Example** (Select the runner environment snapshot layer)
+	 *
+	 * ```ts
+	 * import { ActionEnvironment } from "@beep/scratchpad/effected/github-actions/ActionEnvironment";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(ActionEnvironment.layer)) // true
+	 * ```
+	 * @category layers
+	 * @since 0.0.0
+	 */
+	static readonly layer: Layer.Layer<ActionEnvironment, never, FileSystem.FileSystem> = Layer.effect(
+		this,
+		Effect.flatMap(
+			Effect.sync(() => ({ ...process.env })),
+			make,
+		),
+	);
+
+	/**
+	 * Seeded from an explicit record.
+	 *
+	 * **Gotchas**
+	 *
+	 * A parameterized layer factory mints a fresh reference per call and layers
+	 * memoize by reference — bind it to a `const` rather than calling it at each
+	 * composition site.
+	 *
+	 * **Example** (Bind an explicit environment snapshot)
+	 *
+	 * ```ts
+	 * import { ActionEnvironment } from "@beep/scratchpad/effected/github-actions/ActionEnvironment";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * const environmentLayer = ActionEnvironment.layerFrom({ GITHUB_REPOSITORY: "acme/example" });
+	 * console.log(Layer.isLayer(environmentLayer)) // true
+	 * ```
+	 * @category layers
+	 * @since 0.0.0
+	 */
+	static readonly layerFrom = (
+		env: Readonly<Record<string, string>>,
+	): Layer.Layer<ActionEnvironment, never, FileSystem.FileSystem> => Layer.effect(ActionEnvironment, make(env));
+
+	/**
+	 * A test double seeded with a complete `GITHUB_*` / `RUNNER_*` block.
+	 *
+	 * **Details**
+	 *
+	 * **A recorded exception to the die-on-unstubbed rule.** Every other service
+	 * in this package dies when a suite calls something it did not stub, because
+	 * a plausible default hides a real gap. Here the opposite is true: the context
+	 * variables have one obviously-correct shape, and requiring each suite to
+	 * restate them would duplicate a byte-identical block in every suite.
+	 * Overrides merge on top.
+	 *
+	 * The optional second argument serves {@link ActionEnvironmentShape.payload}
+	 * **directly**, replacing the `GITHUB_EVENT_PATH` read rather than seeding a
+	 * path and a file behind it. That is the only route to a payload through the
+	 * standard double: `TEST_DEFAULTS` deliberately omits `GITHUB_EVENT_PATH`, so
+	 * an unserved payload fails typed and names the variable — the die-on-
+	 * unstubbed posture the rest of this package keeps.
+	 *
+	 * `undefined` means *not served*, so a suite cannot arrange `undefined` as
+	 * the payload itself. A webhook payload is always a JSON object; the case
+	 * does not arise, and reserving the sentinel keeps the argument optional.
+	 *
+	 * When a suite wants the **real read path** rather than a served value —
+	 * exercising the actual `GITHUB_EVENT_PATH` read-and-parse — this member is
+	 * the seam: it leaves `FileSystem` in `R` precisely so the suite chooses
+	 * the filesystem. Compose it with `@effected/memfs`'s seeded in-memory
+	 * volume rather than a hand-rolled stub: the volume honors the whole
+	 * `FileSystem` contract, and an unseeded path fails typed `NotFound`
+	 * instead of whatever a hand stub happens to answer.
+	 *
+	 * **Example** (Read an event payload from an in-memory filesystem)
+	 *
+	 * ```ts
+	 * import { ActionEnvironment } from "@beep/scratchpad/effected/github-actions/ActionEnvironment";
+	 * import { MemoryFileSystem } from "@beep/scratchpad/effected/memfs/MemoryFileSystem";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * const environmentLayer = Layer.effect(
+	 *   ActionEnvironment,
+	 *   ActionEnvironment.makeTest({ GITHUB_EVENT_PATH: "/event.json" }),
+	 * ).pipe(Layer.provide(MemoryFileSystem.layerWith({ "/event.json": JSON.stringify({ action: "opened" }) })));
+	 * console.log(Layer.isLayer(environmentLayer)) // true
+	 * ```
+	 * @category constructors
+	 * @since 0.0.0
+	 */
+	static readonly makeTest = (
+		overrides: Readonly<Record<string, string>> = {},
+		payload?: unknown,
+	): Effect.Effect<ActionEnvironmentShape, never, FileSystem.FileSystem> =>
+		Effect.map(make({ ...TEST_DEFAULTS, ...overrides }), (shape) =>
+			payload === undefined ? shape : { ...shape, payload: Effect.succeed(payload) },
+		);
+
+	/**
+	 * {@link ActionEnvironment.makeTest} behind a layer, with `FileSystem` stubbed
+	 * out.
+	 *
+	 * **Gotchas**
+	 *
+	 * The stub is why the payload has to be served here rather than through the
+	 * filesystem: `make` captures the filesystem at construction, so seeding
+	 * `GITHUB_EVENT_PATH` through `overrides` would send the read to a noop
+	 * filesystem and fail. Pass the payload as the second argument instead —
+	 * or, for a suite that wants the real read path over a full filesystem,
+	 * compose {@link ActionEnvironment.makeTest} with `@effected/memfs`'s
+	 * seeded volume; the recipe is on that member.
+	 *
+	 * **Example** (Seed a pull request environment and payload)
+	 *
+	 * ```ts
+	 * import { ActionEnvironment } from "@beep/scratchpad/effected/github-actions/ActionEnvironment";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const testLayer = ActionEnvironment.layerTest(
+	 *   { GITHUB_EVENT_NAME: "pull_request" },
+	 *   { pull_request: { number: 42 } },
+	 * );
+	 * const program = Effect.flatMap(ActionEnvironment, (env) => env.get("GITHUB_EVENT_NAME"));
+	 * console.log(Effect.runSync(Effect.provide(program, testLayer))) // pull_request
+	 * ```
+	 * @category layers
+	 * @since 0.0.0
+	 */
+	static readonly layerTest = (
+		overrides: Readonly<Record<string, string>> = {},
+		payload?: unknown,
+	): Layer.Layer<ActionEnvironment> =>
+		Layer.effect(ActionEnvironment, ActionEnvironment.makeTest(overrides, payload)).pipe(
+			Layer.provide(FileSystem.layerNoop({})),
+		);
+}

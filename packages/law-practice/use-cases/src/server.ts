@@ -54,6 +54,8 @@ export * as MailTagging from "./MailTagging/index.ts";
  * @since 0.0.0
  */
 export * as OfficeActionReview from "./OfficeActionReview/index.ts";
+/** Atomic office-action evidence exports. @category services @since 0.0.0 */
+export * as OfficeActionStructure from "./OfficeActionStructure/index.ts";
 /**
  * Typed patent-claim candidate mapping exports.
  *

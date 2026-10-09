@@ -1,0 +1,474 @@
+import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as O from "effect/Option";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
+import {
+	ClosingList,
+	HarvestedReferenceList,
+	ListKeyword,
+	REFERENCE_KEYWORDS,
+	ReferenceKeyword,
+	ReferenceList,
+	collectReferenceLists,
+	harvestReferenceLists,
+	parseClosingList,
+	parseClosingLists,
+	parseReferenceList,
+	parseReferenceLists,
+} from "../../effected/github-references/ClosingList.ts";
+import { CLOSING_KEYWORDS } from "../../effected/github-references/IssueReferences.ts";
+
+const isHarvestedReferenceLists = S.is(S.Array(HarvestedReferenceList));
+
+// Pure functions get pure tests, with no layer at all.
+
+const capitalized = (word: string): string => word.charAt(0).toUpperCase() + word.slice(1);
+
+describe("ClosingList.parseClosingList", () => {
+	it("exports exactly the three reference keywords", () => {
+		assert.deepStrictEqual([...REFERENCE_KEYWORDS], ["ref", "refs", "references"]);
+	});
+
+	it("accepts every closing keyword, with and without the colon", () => {
+		for (const keyword of CLOSING_KEYWORDS) {
+			for (const line of [`${keyword} #7`, `${keyword}: #7`]) {
+				const parsed = parseClosingList(line);
+				assert.doesNotThrow(() => assertSome(parsed, O.getOrThrow(parsed)), line);
+				const list = O.getOrThrow(parsed);
+				assert.strictEqual(list.keyword, keyword, line);
+				assert.deepStrictEqual([...list.issueNumbers], [7], line);
+			}
+		}
+	});
+
+	it("lowercases the keyword to canonical form, whatever the case", () => {
+		for (const line of ["CLOSES: #1, #2", "Closes: #1, #2", "cLoSeS #1, #2"]) {
+			const list = O.getOrThrow(parseClosingList(line));
+			assert.strictEqual(list.keyword, "closes", line);
+			assert.deepStrictEqual([...list.issueNumbers], [1, 2], line);
+		}
+	});
+
+	it("parses a comma list, an and list, the Oxford comma, and a mix", () => {
+		const cases: ReadonlyArray<readonly [string, ReadonlyArray<number>]> = [
+			["Closes: #1, #2, #3", [1, 2, 3]],
+			["Closes #1 and #2", [1, 2]],
+			["Closes: #1, #2, and #3", [1, 2, 3]],
+			["fixes #1, #2 and #3", [1, 2, 3]],
+		];
+		for (const [line, expected] of cases) {
+			const parsed = parseClosingList(line);
+			assert.doesNotThrow(() => assertSome(parsed, O.getOrThrow(parsed)), line);
+			assert.deepStrictEqual([...O.getOrThrow(parsed).issueNumbers], expected, line);
+		}
+	});
+
+	it("keeps duplicates, in line order — dedup is the caller's business", () => {
+		const list = O.getOrThrow(parseClosingList("closes #1, #1, and #2"));
+		assert.deepStrictEqual([...list.issueNumbers], [1, 1, 2]);
+	});
+
+	it("trims surrounding whitespace before parsing", () => {
+		const list = O.getOrThrow(parseClosingList("   Closes: #12, #13\t "));
+		assert.deepStrictEqual([...list.issueNumbers], [12, 13]);
+	});
+
+	it("rejects everything that is not exactly one whole-line list", () => {
+		const negatives = [
+			"Closes: 123", // the # is mandatory
+			"closes #1 because reasons", // trailing prose after the list
+			"see closes #1", // leading prose
+			"closes #1, #2 done", // trailing prose after a longer list
+			"closes #1, and", // Oxford comma with no final item
+			"closes #1 and", // dangling and
+			"closes #1,", // dangling comma
+			"closes:#1", // colon without the mandatory space
+			"closes#1", // no separator at all
+			"closes", // keyword without a list
+			"closes\n#1", // an embedded newline means this was never one line
+			"closes #1,\n#2", // ...even between items
+			"closes #1 android #2", // and must stand alone
+			"closes owner/repo#3", // cross-repo is out of scope
+			"#1, #2", // no keyword
+			"", // an empty line carries nothing
+			"complete garbage", // not the grammar at all
+		];
+		for (const line of negatives) assert.doesNotThrow(() => assertNone(parseClosingList(line)), line);
+	});
+
+	it("rejects the WHOLE line when any item exceeds Number.MAX_SAFE_INTEGER", () => {
+		// Contrast the harvest dialect, which skips the one bad match: a list is
+		// a single claim about a set of issues, and a partial list misrepresents.
+		assertNone(parseClosingList("closes #1, #9007199254740993, #2"));
+		assertNone(parseClosingList("closes #9007199254740993"));
+	});
+
+	it("keeps Number.MAX_SAFE_INTEGER itself — the guard is strict, not fuzzy", () => {
+		const list = O.getOrThrow(parseClosingList(`closes #${Number.MAX_SAFE_INTEGER}`));
+		assert.deepStrictEqual([...list.issueNumbers], [Number.MAX_SAFE_INTEGER]);
+	});
+
+	it("returns none for a Refs line — reference keywords are not closing", () => {
+		for (const keyword of REFERENCE_KEYWORDS) {
+			assert.doesNotThrow(() => assertNone(parseClosingList(`${keyword}: #1, #2`)), keyword);
+		}
+	});
+
+	it("keeps the separator case-sensitive while the keyword is not", () => {
+		// The keyword head lowercases; the `and` separator is grammar, not prose.
+		const parsed = parseClosingList("CLOSES #1 and #2");
+		assertSome(parsed, O.getOrThrow(parsed));
+		assertNone(parseClosingList("closes #1 AND #2"));
+		assertNone(parseClosingList("closes #1, And #2"));
+	});
+
+	it("stays linear on hostile input — long runs of tabs and huge lists", () => {
+		// The scan is a single pass with no regex engine behind it; these would
+		// hang a backtracking list pattern and must simply answer, fast.
+		const tabs = "\t".repeat(100_000);
+		assertNone(parseClosingList(`closes${tabs}x`));
+		assertNone(parseClosingList(`closes #1,${tabs}and#2`));
+		assertNone(parseClosingList(`closes #1${tabs}x`));
+		const wide = `closes ${Array.from({ length: 5_000 }, (_, index) => `#${index + 1}`).join(", ")}`;
+		const list = O.getOrThrow(parseClosingList(wide));
+		assert.strictEqual(list.issueNumbers.length, 5_000);
+		assert.strictEqual(list.issueNumbers[4_999], 5_000);
+	});
+});
+
+describe("ClosingList.review regressions", () => {
+	it("keeps the reference and combined kits in tuple order", () => {
+		assert.strictEqual(REFERENCE_KEYWORDS, ReferenceKeyword.literals);
+		assert.deepStrictEqual(R.values(ReferenceKeyword.Enum), [...REFERENCE_KEYWORDS]);
+		assert.deepStrictEqual(ListKeyword.literals, [...CLOSING_KEYWORDS, ...REFERENCE_KEYWORDS]);
+		assert.deepStrictEqual(R.values(ListKeyword.Enum), [...ListKeyword.literals]);
+		for (const keyword of ListKeyword.literals) {
+			assert.isTrue(S.is(ListKeyword)(keyword));
+			assertSome(R.get<string, ListKeyword>(ListKeyword.Enum, keyword), keyword);
+			assert.strictEqual(S.is(ReferenceKeyword)(keyword), R.has<string, ReferenceKeyword>(ReferenceKeyword.Enum, keyword));
+		}
+	});
+
+	it("validates the unchanged plain list results with shared fields and safe integers", () => {
+		const closing = O.getOrThrow(parseClosingList("Closes #1, #1 and #2"));
+		assert.deepStrictEqual(closing, { keyword: "closes", issueNumbers: [1, 1, 2] });
+		assert.isTrue(S.is(ClosingList)(closing));
+		const reference = O.getOrThrow(parseReferenceList("Refs: #7, #8"));
+		assert.deepStrictEqual(reference, { keyword: "refs", closing: false, issueNumbers: [7, 8] });
+		assert.isTrue(S.is(ReferenceList)(reference));
+		const harvested = harvestReferenceLists("see refs #7, #8");
+		assert.deepStrictEqual(harvested, [{ keyword: "refs", closing: false, issueNumbers: [7, 8], start: 4, end: 15 }]);
+		assert.isTrue(isHarvestedReferenceLists(harvested));
+		assert.strictEqual(HarvestedReferenceList.fields.keyword, ReferenceList.fields.keyword);
+		assert.strictEqual(HarvestedReferenceList.fields.closing, ReferenceList.fields.closing);
+		assert.strictEqual(HarvestedReferenceList.fields.issueNumbers, ReferenceList.fields.issueNumbers);
+		for (const issueNumber of [0.5, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1]) {
+			assert.isFalse(S.is(ClosingList)({ ...closing, issueNumbers: [issueNumber] }));
+			assert.isFalse(S.is(ReferenceList)({ ...reference, issueNumbers: [issueNumber] }));
+			assert.isFalse(S.is(HarvestedReferenceList)({ ...reference, issueNumbers: [issueNumber], start: 4, end: 15 }));
+		}
+		assert.isFalse(S.is(ClosingList)({ ...closing, keyword: "refs" }));
+		assert.isFalse(S.is(ReferenceList)({ ...reference, keyword: "reference" }));
+		assert.isFalse(S.is(ReferenceList)({ ...reference, closing: "false" }));
+		assert.isFalse(S.is(HarvestedReferenceList)({ ...reference, start: 0.5, end: 15 }));
+		assert.isFalse(S.is(HarvestedReferenceList)({ ...reference, start: 4, end: Number.POSITIVE_INFINITY }));
+	});
+
+	it("rejects invalid keywords and prototype names without harvesting them", () => {
+		for (const keyword of ["nope", "xfixes", "reference", "constructor", "toString", "hasOwnProperty", "__proto__", "valueOf"]) {
+			assert.isFalse(S.is(ListKeyword)(keyword), keyword);
+			assert.isFalse(S.is(ReferenceKeyword)(keyword), keyword);
+			assert.doesNotThrow(() => assertNone(R.get<string, ListKeyword>(ListKeyword.Enum, keyword)), keyword);
+			assert.doesNotThrow(() => assertNone(R.get<string, ReferenceKeyword>(ReferenceKeyword.Enum, keyword)), keyword);
+			assert.doesNotThrow(() => assertNone(parseReferenceList(`${keyword}: #1, #2`)), keyword);
+			assert.doesNotThrow(() => assertNone(parseClosingList(`${keyword} #1, #2`)), keyword);
+			assert.deepStrictEqual(harvestReferenceLists(`${keyword} #1, #2`), [], keyword);
+		}
+	});
+
+	it("resumes after malformed and unsafe candidates at the previous scan boundaries", () => {
+		const cases: ReadonlyArray<readonly [string, Array<[string, Array<number>, string]>]> = [
+			["closes #oops and refs #2", [["refs", [2], "refs #2"]]],
+			["closes #1, #oops and refs #2", [["closes", [1], "closes #1"], ["refs", [2], "refs #2"]]],
+			["closes #9007199254740993 and refs #2", [["refs", [2], "refs #2"]]],
+			["closes #1, #9007199254740993, #8 and fixes #3", [["fixes", [3], "fixes #3"]]],
+		];
+		for (const [text, expected] of cases) {
+			assert.doesNotThrow(() => assertNone(parseReferenceList(text)), text);
+			assert.doesNotThrow(() => assertNone(parseClosingList(text)), text);
+			assert.deepStrictEqual(
+				harvestReferenceLists(text).map((list) => [list.keyword, [...list.issueNumbers], text.slice(list.start, list.end)]),
+				expected,
+				text,
+			);
+		}
+		assert.deepStrictEqual(parseReferenceLists("closes #oops\nrefs #1, #9007199254740993\nFiXeS #0003"), [
+			{ keyword: "fixes", closing: true, issueNumbers: [3] },
+		]);
+	});
+
+	it("preserves mixed case, CRLF and Unicode whitespace across line and inline postures", () => {
+		const text = "\u00a0cLoSeS:\t#1,\t#2\u2003\r\n\u2003ReFs #3\u00a0\r\nFiXeS\u00a0#4\r\n";
+		assert.deepStrictEqual(parseReferenceLists(text), [
+			{ keyword: "closes", closing: true, issueNumbers: [1, 2] },
+			{ keyword: "refs", closing: false, issueNumbers: [3] },
+		]);
+		assert.deepStrictEqual(parseClosingLists(text), [{ keyword: "closes", issueNumbers: [1, 2] }]);
+		assert.deepStrictEqual(collectReferenceLists(text), [
+			{ keyword: "closes", closing: true, issueNumbers: [1, 2] },
+			{ keyword: "refs", closing: false, issueNumbers: [3] },
+			{ keyword: "fixes", closing: true, issueNumbers: [4] },
+		]);
+		const refsStart = text.indexOf("ReFs");
+		const fixesStart = text.indexOf("FiXeS");
+		assert.deepStrictEqual(harvestReferenceLists(text), [
+			{ keyword: "refs", closing: false, issueNumbers: [3], start: refsStart, end: refsStart + "ReFs #3".length },
+			{ keyword: "fixes", closing: true, issueNumbers: [4], start: fixesStart, end: fixesStart + "FiXeS\u00a0#4".length },
+		]);
+	});
+});
+
+describe("ClosingList.parseReferenceList", () => {
+	it("accepts a reference-keyword line and reports closing: false", () => {
+		for (const keyword of REFERENCE_KEYWORDS) {
+			for (const line of [`${keyword} #7`, `${keyword}: #7, #8`, `${capitalized(keyword)}: #7`]) {
+				const parsed = parseReferenceList(line);
+				assert.doesNotThrow(() => assertSome(parsed, O.getOrThrow(parsed)), line);
+				const list = O.getOrThrow(parsed);
+				assert.strictEqual(list.keyword, keyword, line);
+				assert.isFalse(list.closing, line);
+			}
+		}
+	});
+
+	it("accepts every closing keyword too, and reports closing: true", () => {
+		for (const keyword of CLOSING_KEYWORDS) {
+			const list = O.getOrThrow(parseReferenceList(`${keyword}: #1 and #2`));
+			assert.strictEqual(list.keyword, keyword);
+			assert.isTrue(list.closing);
+			assert.deepStrictEqual([...list.issueNumbers], [1, 2]);
+		}
+	});
+
+	it("shares the closing dialect's rejections", () => {
+		const negatives = [
+			"refs: 123", // the # is mandatory
+			"refs #1 trailing", // trailing prose
+			"refs\n#1", // embedded newline
+			"refs #9007199254740993", // unsafe integer rejects the whole line
+			"reference #1", // not a listed keyword spelling
+			"", // an empty line carries nothing
+		];
+		for (const line of negatives) assert.doesNotThrow(() => assertNone(parseReferenceList(line)), line);
+	});
+});
+
+describe("ClosingList.parseReferenceLists", () => {
+	it("collects the accepted lines in order, skipping the rejecting ones", () => {
+		const text = ["Closes: #1, #2", "prose between the lists", "Refs: #3 and #4", "closes #5 trailing", ""].join("\n");
+		assert.deepStrictEqual(parseReferenceLists(text), [
+			{ keyword: "closes", closing: true, issueNumbers: [1, 2] },
+			{ keyword: "refs", closing: false, issueNumbers: [3, 4] },
+		]);
+	});
+
+	it("handles CRLF input — the per-line trim absorbs the carriage return", () => {
+		assert.deepStrictEqual(parseReferenceLists("Closes: #1\r\nRefs: #2\r\n"), [
+			{ keyword: "closes", closing: true, issueNumbers: [1] },
+			{ keyword: "refs", closing: false, issueNumbers: [2] },
+		]);
+	});
+
+	it("returns an empty array for empty text and for text with no lists", () => {
+		assert.deepStrictEqual(parseReferenceLists(""), []);
+		assert.deepStrictEqual(parseReferenceLists("just prose\nacross lines"), []);
+	});
+});
+
+describe("ClosingList.parseClosingLists", () => {
+	it("is the closing-only view: a Refs line contributes nothing", () => {
+		const text = ["Closes: #1, #2", "Refs: #3", "Fixed #4"].join("\n");
+		assert.deepStrictEqual(parseClosingLists(text), [
+			{ keyword: "closes", issueNumbers: [1, 2] },
+			{ keyword: "fixed", issueNumbers: [4] },
+		]);
+	});
+
+	it("handles CRLF input and empty text", () => {
+		assert.deepStrictEqual(parseClosingLists("closes #1\r\nfixes #2"), [
+			{ keyword: "closes", issueNumbers: [1] },
+			{ keyword: "fixes", issueNumbers: [2] },
+		]);
+		assert.deepStrictEqual(parseClosingLists(""), []);
+	});
+});
+
+describe("ClosingList.harvestReferenceLists", () => {
+	it("harvests two lists with different keywords from one line, offsets exact", () => {
+		const text = "Closes #123, Fixes #456";
+		const found = harvestReferenceLists(text);
+		// `, Fixes` fails as a separator continuation because what follows the
+		// comma is not `#`, so this is two single-item lists, not one of three.
+		assert.deepStrictEqual(
+			found.map((list) => ({ keyword: list.keyword, closing: list.closing, issueNumbers: [...list.issueNumbers] })),
+			[
+				{ keyword: "closes", closing: true, issueNumbers: [123] },
+				{ keyword: "fixes", closing: true, issueNumbers: [456] },
+			],
+		);
+		assert.strictEqual(text.slice(found[0]?.start, found[0]?.end), "Closes #123");
+		assert.strictEqual(text.slice(found[1]?.start, found[1]?.end), "Fixes #456");
+	});
+
+	it("ends a list at its last item when a separator leads to a new keyword", () => {
+		const text = "Closes #1, #2 and fixes #3";
+		const found = harvestReferenceLists(text);
+		assert.deepStrictEqual(
+			found.map((list) => ({ keyword: list.keyword, issueNumbers: [...list.issueNumbers] })),
+			[
+				{ keyword: "closes", issueNumbers: [1, 2] },
+				{ keyword: "fixes", issueNumbers: [3] },
+			],
+		);
+		assert.strictEqual(text.slice(found[0]?.start, found[0]?.end), "Closes #1, #2");
+		assert.strictEqual(text.slice(found[1]?.start, found[1]?.end), "fixes #3");
+	});
+
+	it("reports a reference-keyword list with closing: false", () => {
+		const found = harvestReferenceLists("see refs #4, #5 and #6 for background");
+		assert.lengthOf(found, 1);
+		assert.strictEqual(found[0]?.keyword, "refs");
+		assert.isFalse(found[0]?.closing);
+		assert.deepStrictEqual([...(found[0]?.issueNumbers ?? [])], [4, 5, 6]);
+	});
+
+	it("parses the comma, and, and Oxford separators inside one candidate", () => {
+		const found = harvestReferenceLists("This resolves #1, #2, and #3 at last");
+		assert.lengthOf(found, 1);
+		assert.deepStrictEqual([...(found[0]?.issueNumbers ?? [])], [1, 2, 3]);
+	});
+
+	it("lowercases the keyword to canonical form and keeps duplicates", () => {
+		const found = harvestReferenceLists("CLOSES #1, #1 and #2");
+		assert.strictEqual(found[0]?.keyword, "closes");
+		assert.deepStrictEqual([...(found[0]?.issueNumbers ?? [])], [1, 1, 2]);
+	});
+
+	it("crosses a newline between keyword and first item, but never inside a list", () => {
+		// The keyword→first-item gap mirrors the inline dialect's \s+ ...
+		const gapped = harvestReferenceLists("closes\n#1, #2");
+		assert.deepStrictEqual([...(gapped[0]?.issueNumbers ?? [])], [1, 2]);
+		// ...while list continuation stays [ \t]-only: a later line makes its
+		// own claims, so the newline ends the list at #1.
+		const split = harvestReferenceLists("closes #1,\n#2");
+		assert.lengthOf(split, 1);
+		assert.deepStrictEqual([...(split[0]?.issueNumbers ?? [])], [1]);
+	});
+
+	it("holds word boundaries on both sides of the keyword", () => {
+		for (const text of ["recloses #1", "1closes #1", "_closes #1", "closes2 #1", "closes_ #1"]) {
+			assert.deepStrictEqual(harvestReferenceLists(text), [], text);
+		}
+	});
+
+	it("rejects the colon inline — the colon spelling belongs to the line dialects", () => {
+		// The same contrast harvestIssueReferences pins: GitHub's prose scanner
+		// does not read `closes: #1`, but the whole-line dialects do.
+		assert.deepStrictEqual(harvestReferenceLists("closes: #1"), []);
+		const reference = parseReferenceList("closes: #1");
+		const closing = parseClosingList("closes: #1");
+		assertSome(reference, O.getOrThrow(reference));
+		assertSome(closing, O.getOrThrow(closing));
+	});
+
+	it("requires whitespace between keyword and first item", () => {
+		assert.deepStrictEqual(harvestReferenceLists("closes#1"), []);
+	});
+
+	it("skips the WHOLE candidate on an unsafe item, then keeps scanning", () => {
+		// Never a partial list — the same reasoning as parseReferenceList — but
+		// prose after the poisoned candidate still gets harvested.
+		const found = harvestReferenceLists("closes #1, #9007199254740993 and fixes #2");
+		assert.deepStrictEqual(
+			found.map((list) => ({ keyword: list.keyword, issueNumbers: [...list.issueNumbers] })),
+			[{ keyword: "fixes", issueNumbers: [2] }],
+		);
+		assert.deepStrictEqual(harvestReferenceLists("closes #9007199254740993"), []);
+	});
+
+	it("keeps Number.MAX_SAFE_INTEGER itself — the guard is strict, not fuzzy", () => {
+		const found = harvestReferenceLists(`closes #${Number.MAX_SAFE_INTEGER}`);
+		assert.deepStrictEqual([...(found[0]?.issueNumbers ?? [])], [Number.MAX_SAFE_INTEGER]);
+	});
+
+	it("keeps the separator case-sensitive while the keyword is not", () => {
+		const found = harvestReferenceLists("closes #1 AND #2");
+		assert.lengthOf(found, 1);
+		assert.deepStrictEqual([...(found[0]?.issueNumbers ?? [])], [1]);
+	});
+
+	it("yields nothing from prose with no references, and from empty text", () => {
+		assert.deepStrictEqual(harvestReferenceLists(""), []);
+		assert.deepStrictEqual(harvestReferenceLists("nothing to see here, honestly"), []);
+		assert.deepStrictEqual(harvestReferenceLists("the fix closed the gap"), []);
+	});
+
+	it("stays linear on hostile input — long runs of tabs and newlines", () => {
+		// Same posture as the whole-line parsers: a single pass with no regex
+		// engine behind it must simply answer, fast.
+		const tabs = "\t".repeat(100_000);
+		const newlines = "\n".repeat(100_000);
+		assert.deepStrictEqual(harvestReferenceLists(`closes${tabs}x`), []);
+		const gapped = harvestReferenceLists(`closes${newlines}#1`);
+		assert.deepStrictEqual([...(gapped[0]?.issueNumbers ?? [])], [1]);
+		const dangling = harvestReferenceLists(`closes #1,${tabs}and#2`);
+		assert.lengthOf(dangling, 1);
+		assert.deepStrictEqual([...(dangling[0]?.issueNumbers ?? [])], [1]);
+	});
+});
+
+describe("ClosingList.collectReferenceLists", () => {
+	it("collects a colon trailer line the inline harvest cannot see", () => {
+		const lists = collectReferenceLists("Closes: #1, #2");
+		assert.lengthOf(lists, 1);
+		assert.deepStrictEqual([...(lists[0]?.issueNumbers ?? [])], [1, 2]);
+		assert.isTrue(lists[0]?.closing);
+	});
+
+	it("harvests prose lines that are not whole-line lists", () => {
+		const lists = collectReferenceLists("merged after review; closes #7, #8 and refs #9");
+		assert.deepStrictEqual(
+			lists.map((list) => [list.keyword, [...list.issueNumbers]]),
+			[
+				["closes", [7, 8]],
+				["refs", [9]],
+			],
+		);
+	});
+
+	it("never counts a colon-less trailer line once per posture", () => {
+		// The line parses whole-line AND would harvest inline; preference means one list.
+		const lists = collectReferenceLists("closes #1, #2");
+		assert.lengthOf(lists, 1);
+	});
+
+	it("interleaves both postures across lines, in document order, with no offsets", () => {
+		const text = ["Fixes: #10", "prose mentioning closes #11 and refs #12, #13", "", "not grammar at all"].join("\n");
+		const lists = collectReferenceLists(text);
+		assert.deepStrictEqual(
+			lists.map((list) => [list.keyword, list.closing, [...list.issueNumbers]]),
+			[
+				["fixes", true, [10]],
+				["closes", true, [11]],
+				["refs", false, [12, 13]],
+			],
+		);
+		for (const list of lists) assert.isFalse("start" in list);
+	});
+
+	it("returns an empty array for empty or referenceless text", () => {
+		assert.deepStrictEqual([...collectReferenceLists("")], []);
+		assert.deepStrictEqual([...collectReferenceLists("no references here\nnor here")], []);
+	});
+});

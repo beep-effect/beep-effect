@@ -1,0 +1,39 @@
+lockfileVersion: '9.0'
+
+# HAND-AUTHORED. The graph from issue #298: two copies of @effected/commands,
+# one held by an untouched @effected/npm, the other by the bumped workspaces.
+
+importers:
+
+  .:
+    dependencies:
+      '@effected/npm':
+        specifier: ^0.8.2
+        version: 0.8.2
+      '@effected/workspaces':
+        specifier: ^0.10.1
+        version: 0.10.1
+
+packages:
+
+  '@effected/commands@0.2.1': {}
+
+  '@effected/commands@0.3.1': {}
+
+  '@effected/npm@0.8.2': {}
+
+  '@effected/workspaces@0.10.1': {}
+
+snapshots:
+
+  '@effected/commands@0.2.1': {}
+
+  '@effected/commands@0.3.1': {}
+
+  '@effected/npm@0.8.2':
+    dependencies:
+      '@effected/commands': 0.2.1
+
+  '@effected/workspaces@0.10.1':
+    dependencies:
+      '@effected/commands': 0.3.1

@@ -1,0 +1,395 @@
+{
+  "module": "github-actions",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/github-actions/ActionEnvironment.ts",
+        "scratchpad/effected/github-actions/ActionInput.ts",
+        "scratchpad/effected/github-actions/ActionState.ts",
+        "scratchpad/effected/github-actions/Artifact.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/ActionEnvironment.test.ts",
+        "scratchpad/test/github-actions/ActionInput.test.ts",
+        "scratchpad/test/github-actions/ActionState.test.ts",
+        "scratchpad/test/github-actions/Artifact.test.ts"
+      ],
+      "findings": [
+        "r2",
+        "r3",
+        "r4",
+        "r5",
+        "r6",
+        "r7",
+        "r8"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/github-actions/BlobEnvelope.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/BlobEnvelope.test.ts"
+      ],
+      "findings": [
+        "r1"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/github-actions/BlobStore.ts",
+        "scratchpad/effected/github-actions/internal/sigv4.ts",
+        "scratchpad/effected/github-actions/CacheKey.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/BlobStore.test.ts",
+        "scratchpad/test/github-actions/sigv4.test.ts",
+        "scratchpad/test/github-actions/CacheKey.test.ts"
+      ],
+      "findings": [
+        "r9",
+        "r10",
+        "r16",
+        "r17",
+        "r18"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/github-actions/CheckDocument.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/CheckDocument.test.ts"
+      ],
+      "findings": [
+        "r11",
+        "r28",
+        "allow-2"
+      ]
+    },
+    {
+      "id": "g5",
+      "files": [
+        "scratchpad/effected/github-actions/ManagedDocument.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/ManagedDocument.test.ts"
+      ],
+      "findings": [
+        "r12"
+      ]
+    },
+    {
+      "id": "g6",
+      "files": [
+        "scratchpad/effected/github-actions/CheckState.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/CheckState.test.ts"
+      ],
+      "findings": [
+        "r13"
+      ]
+    },
+    {
+      "id": "g7",
+      "files": [
+        "scratchpad/effected/github-actions/DetachedProcess.ts",
+        "scratchpad/effected/github-actions/internal/ieeeNumber.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/DetachedProcess.test.ts"
+      ],
+      "findings": [
+        "r14",
+        "r23"
+      ]
+    },
+    {
+      "id": "g8",
+      "files": [
+        "scratchpad/effected/github-actions/GitHubMarkdown.ts",
+        "scratchpad/effected/github-actions/OidcTokenIssuer.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/GitHubMarkdown.test.ts",
+        "scratchpad/test/github-actions/OidcTokenIssuer.test.ts"
+      ],
+      "findings": [
+        "r15",
+        "r19"
+      ]
+    },
+    {
+      "id": "g9",
+      "files": [
+        "scratchpad/effected/github-actions/index.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/Exports.test.ts"
+      ],
+      "findings": [
+        "r20"
+      ]
+    },
+    {
+      "id": "g10",
+      "files": [
+        "scratchpad/effected/github-actions/PackageManagerInstaller.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/PackageManagerInstaller.test.ts"
+      ],
+      "findings": [
+        "r21"
+      ]
+    },
+    {
+      "id": "g11",
+      "files": [
+        "scratchpad/effected/github-actions/internal/runnerFile.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/runnerFile.test.ts"
+      ],
+      "findings": [
+        "r22"
+      ]
+    },
+    {
+      "id": "g12",
+      "files": [],
+      "tests": [
+        "scratchpad/test/github-actions/ambientReads.test.ts"
+      ],
+      "findings": [
+        "r24"
+      ]
+    },
+    {
+      "id": "g13",
+      "files": [],
+      "tests": [
+        "scratchpad/test/github-actions/reachability.test.ts"
+      ],
+      "findings": [
+        "r25"
+      ]
+    },
+    {
+      "id": "g14",
+      "files": [
+        "scratchpad/effected/github-actions/internal/fsProbe.ts",
+        "scratchpad/effected/github-actions/internal/actionsResults.ts",
+        "scratchpad/effected/github-actions/internal/twirp.ts",
+        "scratchpad/effected/github-actions/Action.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "r26"
+      ]
+    },
+    {
+      "id": "g15",
+      "files": [
+        "scratchpad/effected/github-actions/ActionLogger.ts",
+        "scratchpad/effected/github-actions/GitHubToken.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/ActionLogger.test.ts",
+        "scratchpad/test/github-actions/ActionLogger.neutralize.test.ts",
+        "scratchpad/test/github-actions/GitHubToken.test.ts"
+      ],
+      "findings": [
+        "r27",
+        "allow-1"
+      ]
+    }
+  ],
+  "findings": {
+    "r1": {
+      "file": "scratchpad/effected/github-actions/BlobEnvelope.ts",
+      "class": "bug",
+      "summary": "Buffer decoding violates the envelope body-copy guarantee",
+      "fix": "Copy the body without invoking the input's overridden slice, e.g. Uint8Array.from(bytes.subarray(HEADER_BYTES + metaLength)). Add the Buffer-input ownership regression to BlobEnvelope.test.ts. The verified upstream bug is recorded centrally."
+    },
+    "r2": {
+      "file": "scratchpad/effected/github-actions/ActionInput.ts",
+      "class": "bug",
+      "summary": "Accepted __proto__ input pair disappears",
+      "fix": "Use R.assignProperty for accepted keys and preserve the plain-record public shape. Add an own-property/fidelity regression for __proto__ to ActionInput.test.ts. Record the verified upstream bug centrally."
+    },
+    "r3": {
+      "file": "scratchpad/effected/github-actions/ActionEnvironment.ts",
+      "class": "type-safety",
+      "summary": "Environment lookups inherit functions and shadow configured strings",
+      "fix": "Use own-property R.get lookups for both overrides and base, followed by O.getOrUndefined and the existing nullish fallback/empty-string rule. Add absent and configured prototype-name cases to ActionEnvironment.test.ts. Record the verified upstream bug centrally."
+    },
+    "r4": {
+      "file": "scratchpad/effected/github-actions/Artifact.ts",
+      "class": "schema",
+      "summary": "Malformed artifact response numbers cross the boundary as NaN",
+      "fix": "Define an identity-annotated ArtifactItem runtime schema with finite id/size, derive its type, and decode normalized rows. Map invalid rows to the existing ArtifactError malformed-response policy, retaining both response spellings. Add malformed numeric-row regressions to Artifact.test.ts. Record the verified upstream bug centrally."
+    },
+    "r5": {
+      "file": "scratchpad/effected/github-actions/ActionEnvironment.ts",
+      "class": "effect-idiom",
+      "summary": "ActionEnvironment throws codec Results only to catch them",
+      "fix": "Use S.decodeEffect(Json)(raw) with Effect.mapError to ActionEnvironmentError. Preserve reason/name and the existing detail text using String(cause), rather than changing it again via cause.message. Retain the malformed-payload regression; the law-forced diagnostic-text bookkeeping is c4."
+    },
+    "r6": {
+      "file": "scratchpad/effected/github-actions/ActionInput.ts",
+      "class": "effect-idiom",
+      "summary": "ActionInput uses throwing Result unwraps for control flow",
+      "fix": "Branch on Result.isFailure in the deliberately synchronous Config.mapEffect callbacks, or use Effect codecs with mapError. Preserve the existing list/schema failure messages and policies and retain focused ActionInput.test.ts regressions. Do not restore JSON.parse."
+    },
+    "r7": {
+      "file": "scratchpad/effected/github-actions/ActionState.ts",
+      "class": "effect-idiom",
+      "summary": "ActionState serialization bypasses the typed Effect channel",
+      "fix": "Use S.encodeEffect/S.decodeEffect with mapError to the existing notPlainJson policy in save; serialize within the Effect channel before write in saveSecret, preserving writeFailed, masking and write ordering. Retain ActionState.test.ts assertions; drop throwing Result unwraps."
+    },
+    "r8": {
+      "file": "scratchpad/effected/github-actions/Artifact.ts",
+      "class": "effect-idiom",
+      "summary": "Artifact invalidOptions quoting unwraps a Result by throwing",
+      "fix": "Yield S.encodeEffect(Json)(unrepresentable) with Effect.orDie for total string encoding, then construct the unchanged invalidOptions detail. Retain the line-break-path regression in Artifact.test.ts."
+    },
+    "r9": {
+      "file": "scratchpad/effected/github-actions/BlobStore.ts",
+      "class": "bug",
+      "summary": "S3 object-path encoding and normalization break signatures and alias keys",
+      "fix": "Join bucket/prefix/key without collapsing slash runs in the key. Percent-encode each raw path segment for the outgoing URL; pass the raw path to signing. Canonicalize only the initial slash, preserving empty interior/trailing segments and encoding each segment once. Add #, ?, %, repeated/trailing-slash and distinct-key regressions in BlobStore.test.ts and new sigv4.test.ts. Record the verified upstream bugs centrally."
+    },
+    "r10": {
+      "file": "scratchpad/effected/github-actions/CacheKey.ts",
+      "class": "bug",
+      "summary": "Literal cache includes wrongly reject names beginning with two dots",
+      "fix": "Reject exactly the parent component or a parent component plus the platform separator, retaining the absolute-path guard. Add ..lock literal/wildcard consistency regressions in CacheKey.test.ts. Record the verified upstream bug centrally."
+    },
+    "r11": {
+      "file": "scratchpad/effected/github-actions/CheckDocument.ts",
+      "class": "bug",
+      "summary": "Stamp runId ordering loses large-integer precision",
+      "fix": "Compare decimal integer runId strings without lossy Number conversion, retaining existing fallback behavior for other spellings. Add adjacent large-integer ordering cases in both directions to CheckDocument.test.ts. Record the verified upstream bug centrally."
+    },
+    "r12": {
+      "file": "scratchpad/effected/github-actions/ManagedDocument.ts",
+      "class": "bug",
+      "summary": "Sentinel adoption deletes unmanaged document bytes",
+      "fix": "Append the missing sentinel without stripping existing trailing newline runs or replacing whitespace-only content. Insert only a necessary separator. Add no-region preservation regressions to ManagedDocument.test.ts. Record the verified upstream bug centrally."
+    },
+    "r13": {
+      "file": "scratchpad/effected/github-actions/CheckState.ts",
+      "class": "schema",
+      "summary": "Named CheckState domain must use LiteralKit",
+      "fix": "Use LiteralKit with all seven literals, the identity annotation and derived type, retaining annotateKey/literals support and projection behavior. Retain CheckState.test.ts vocabulary and projection assertions; existing CheckDocument consumers need no source edit."
+    },
+    "r14": {
+      "file": "scratchpad/effected/github-actions/DetachedProcess.ts",
+      "class": "schema",
+      "summary": "ProcessId schema and reusable filter lack canonical metadata",
+      "fix": "Add canonical $I annotations to the exported ProcessId schema and identifier/title/description metadata to its reusable filter, preserving its user-facing error string. Remove the redundant finite check only while preserving failure-order equivalence. Retain ProcessId tests in DetachedProcess.test.ts."
+    },
+    "r15": {
+      "file": "scratchpad/effected/github-actions/GitHubMarkdown.ts",
+      "class": "law",
+      "summary": "GitHubMarkdown violates the S namespace alias law",
+      "fix": "Rename effect/Schema to S and update Schema.* references, renaming the conflicting generic parameter if needed. Keep SchemaAST unchanged. The effect-imports gate rewrites paths but preserves aliases, so the reports demonstrate a gate miss."
+    },
+    "r16": {
+      "file": "scratchpad/effected/github-actions/BlobStore.ts",
+      "class": "effect-idiom",
+      "summary": "S3 signing bypasses the Effect Clock",
+      "fix": "Read DateTime.now inside send and thread that UTC time into request/sign instead of DateTime.nowUnsafe. Preserve live-Clock signature bytes and add a TestClock signing-date regression to BlobStore.test.ts; introduce no native Date constructor."
+    },
+    "r17": {
+      "file": "scratchpad/effected/github-actions/CacheKey.ts",
+      "class": "law",
+      "summary": "Native string sorting survives the scanner",
+      "fix": "Replace all three native sorts with A.sort(Order.String). Preserve deterministic code-unit order and CacheKey.test.ts digest/match ordering plus canonical-header/signature assertions in sigv4.test.ts. The signing file shares r9 ownership."
+    },
+    "r18": {
+      "file": "scratchpad/effected/github-actions/CacheKey.ts",
+      "class": "schema",
+      "summary": "CacheKey reusable constraints lack identity metadata",
+      "fix": "Add identity-derived identifier/title/description metadata to the Segments and cross-field restore-depth filters, retaining their messages and grammar. Retain CacheKey.test.ts JSON Schema path assertions; forced key bookkeeping is central."
+    },
+    "r19": {
+      "file": "scratchpad/effected/github-actions/GitHubMarkdown.ts",
+      "class": "effect-idiom",
+      "summary": "Production identity lambdas duplicate Result.getOrThrow",
+      "fix": "Use Result.getOrThrow instead of the three getOrThrowWith((error) => error) forms, preserving the existing synchronous boundary behavior. The green terse-effect gate misses this concrete form. Test-only occurrences stay deferred to S3."
+    },
+    "r20": {
+      "file": "scratchpad/effected/github-actions/index.ts",
+      "class": "law",
+      "summary": "Added public tagged errors are missing from the barrel",
+      "fix": "Re-export the five already-exported error classes beside their owning APIs in index.ts, retaining names/value kinds. Add a module-local Exports.test.ts entrypoint assertion. Leave exportsAdded and Port notes to the codemod, and JSDoc/cause coverage to S2/S3."
+    },
+    "r21": {
+      "file": "scratchpad/effected/github-actions/PackageManagerInstaller.ts",
+      "class": "bug",
+      "summary": "Installer bin names escape the shim directory",
+      "fix": "Validate every bin name and resolved shim destination before any shim write; reject a path escaping .bin with the existing layoutUnexpected error. Retain target validation and add an escaping-bin-name regression to PackageManagerInstaller.test.ts. Record the verified upstream bug centrally."
+    },
+    "r22": {
+      "file": "scratchpad/effected/github-actions/internal/runnerFile.ts",
+      "class": "perf",
+      "summary": "Runner-file delimiter selection has quadratic complexity",
+      "fix": "Scan base-delimiter occurrences and their following underscore runs once; return one more underscore than the maximum run, or the unchanged base when absent. Preserve delimiters for multiple/embedded occurrences. Add behavioral and long-run regressions in new runnerFile.test.ts and keep runnerFile.ts package-free."
+    },
+    "r23": {
+      "file": "scratchpad/effected/github-actions/internal/ieeeNumber.ts",
+      "class": "schema",
+      "summary": "IeeeNumber and its named literal domain lack required schema identity/kit",
+      "fix": "Retain the diagnostic-forced S.declare(P.isNumber) representation and non-finite codec behavior. Add a file-local $ScratchpadId composer and canonical IeeeNumber annotations; use an annotated LiteralKit for NonFiniteSpelling. Preserve JSON/string-tree/arbitrary links and DetachedProcess.test.ts non-finite cases. Do not replace it with bare S.Number and reintroduce schemaNumber. The property-floor portion is b3."
+    },
+    "r24": {
+      "file": "scratchpad/test/github-actions/ambientReads.test.ts",
+      "class": "law",
+      "summary": "Ambient-read test holds stale exact-line entries",
+      "fix": "Update the ActionEnvironment and PackageManagerInstaller exact-line entries to their current read spellings; remove ToolInstaller testRoot whose ambient read is gone. Retain bidirectional equality. The reported environment/import failure means this contract was not evaluated by the stated green gate. Do not edit root dependency/config files; bookkeeping is c12."
+    },
+    "r25": {
+      "file": "scratchpad/test/github-actions/reachability.test.ts",
+      "class": "test",
+      "summary": "Reachability oracle ignores getBuiltinModule runtime edges",
+      "fix": "Collect literal process.getBuiltinModule(\"node:...\") calls as runtime edges alongside static imports/exports. Restore node:crypto in all affected pinned expectations, retaining the forced Effect subpath edges and confinement assertions. Do not restore rejected static imports or add allowlist/config entries. The record portions are c9 and the contradictory alternative is x2."
+    },
+    "r26": {
+      "file": "scratchpad/effected/github-actions/internal/fsProbe.ts",
+      "class": "effect-idiom",
+      "summary": "Compound object predicate duplicates its stock equivalent",
+      "fix": "Use P.isObjectOrArray at all four P.isObjectKeyword(x) && !P.isFunction(x) sites, keeping surrounding checks and behavior. These concrete helper forms survive the green terse-effect gate."
+    },
+    "r27": {
+      "file": "scratchpad/effected/github-actions/ActionLogger.ts",
+      "class": "effect-idiom",
+      "summary": "Repeated optional-field spreads duplicate getSomesStruct",
+      "fix": "Consolidate each optional block into one O.getSomesStruct call with the same fields/options, retaining order and omission semantics. Retain ActionLogger.test.ts annotation and GitHubToken.test.ts option assertions."
+    },
+    "r28": {
+      "file": "scratchpad/effected/github-actions/CheckDocument.ts",
+      "class": "effect-idiom",
+      "summary": "CheckDocument exposes native maps via MutableHashMap.backing",
+      "fix": "Expose Effect HashMap values and stop reading MutableHashMap.backing. Carry explicit first-report order alongside the registry through checks/render snapshots; replacing a check must retain its position. Retarget CheckDocument.test.ts map reads/spreads and assert order. Record the public-collection deviation centrally."
+    },
+    "allow-1": {
+      "file": "scratchpad/effected/github-actions/ActionLogger.ts",
+      "class": "new-map-set",
+      "summary": "Replace the allowlisted Logger.CurrentLoggers native Set",
+      "fix": "Use Logger.layer through Effect.scopedWith + Layer.buildWithScope + Effect.provideContext. Preserve buffer logger composition and scope lifetime; retarget ActionLogger.test.ts logger/buffering assertions as needed. Central work removes the allowlist row and records the deviation; this group edits only module source/tests."
+    },
+    "allow-2": {
+      "file": "scratchpad/effected/github-actions/CheckDocument.ts",
+      "class": "date-static",
+      "summary": "Replace allowlisted Date.parse stamp ordering",
+      "fix": "Use DateTime.make and DateTime.Order for valid parsed stamps, retaining the existing string-order fallback for invalid inputs. Retarget/add zone-less and invalid-order cases in CheckDocument.test.ts. Central work removes the allowlist entry and records the UTC deviation; no standards file belongs to this group."
+    }
+  }
+}

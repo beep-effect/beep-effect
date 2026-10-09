@@ -393,6 +393,16 @@ const REAL_APP_DOC_TEMPLATE_PAIRS: ReadonlyArray<TemplateSpecPair> = [
 
 const CHECK_TSCONFIG_TEMPLATE_PAIR: TemplateSpecPair = ["tsconfig.check.json.hbs", "tsconfig.check.json"];
 
+// Scaffolds whose `build` is the `noEmit` check (`tsgo -p tsconfig.check.json`)
+// write nothing to disk, so they declare `build.outputs: []`; otherwise Turbo
+// warns "no output files found" on every root build.
+const NOEMIT_TURBO_TEMPLATE_PAIR: TemplateSpecPair = ["app-noemit-turbo.json.hbs", "turbo.json"];
+const NOEMIT_TURBO_TEMPLATE_SPEC = TemplateSpec.make({
+  templateName: NOEMIT_TURBO_TEMPLATE_PAIR[0],
+  outputPath: NOEMIT_TURBO_TEMPLATE_PAIR[1],
+});
+const NOEMIT_TURBO_FILE = NOEMIT_TURBO_TEMPLATE_PAIR[1];
+
 const NEXTJS_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom([
   ["app-next-tsconfig.json.hbs", "tsconfig.json"],
   CHECK_TSCONFIG_TEMPLATE_PAIR,
@@ -475,6 +485,7 @@ const SERVICE_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFro
   ["app-service-src-main.ts.hbs", "src/main.ts"],
   ["app-service-test-health.test.ts.hbs", "test/health.test.ts"],
   ["app-service-vitest.config.ts.hbs", "vitest.config.ts"],
+  NOEMIT_TURBO_TEMPLATE_PAIR,
   ...REAL_APP_DOC_TEMPLATE_PAIRS,
 ]);
 
@@ -513,7 +524,7 @@ const appTemplateSpecsFor = (shape: ScaffoldShape, kind: AppKind): ReadonlyArray
     return shape.lab ? A.append(VITE_APP_TEMPLATE_SPECS, VITE_LAB_POSTCSS_TEMPLATE_SPEC) : VITE_APP_TEMPLATE_SPECS;
   if (appKindEquivalence(kind, "service")) return SERVICE_APP_TEMPLATE_SPECS;
   if (appKindEquivalence(kind, "tauri")) return TAURI_APP_TEMPLATE_SPECS;
-  return packageTemplateSpecsFor(shape.withStoriesTsconfig);
+  return A.append(packageTemplateSpecsFor(shape.withStoriesTsconfig), NOEMIT_TURBO_TEMPLATE_SPEC);
 };
 
 const templateSpecsFor = (shape: ScaffoldShape): ReadonlyArray<TemplateSpec> =>
@@ -646,6 +657,7 @@ const SERVICE_APP_FILES = [
   "src/runtime/Layer.ts",
   "test/health.test.ts",
   "vitest.config.ts",
+  "turbo.json",
   "LICENSE",
   "README.md",
   "AGENTS.md",
@@ -663,7 +675,7 @@ const appFilesFor = (shape: ScaffoldShape, kind: AppKind): ReadonlyArray<string>
     return shape.lab ? A.append(VITE_APP_FILES, VITE_LAB_POSTCSS_FILE) : VITE_APP_FILES;
   if (appKindEquivalence(kind, "service")) return SERVICE_APP_FILES;
   if (appKindEquivalence(kind, "tauri")) return TAURI_APP_FILES;
-  return packageFilesFor(shape.withStoriesTsconfig);
+  return A.append(packageFilesFor(shape.withStoriesTsconfig), NOEMIT_TURBO_FILE);
 };
 
 const filesFor = (shape: ScaffoldShape): ReadonlyArray<string> =>

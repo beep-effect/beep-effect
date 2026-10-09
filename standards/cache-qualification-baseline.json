@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "rsc-c-scripts",
-      "reason": "Retarget the reviewed knowledge rewrite root script to typed ownership; root-only configuration change, no qualification grant.",
+      "reviewer": "Claude Opus 5.5 (effected-port publish, @lab/effected)",
+      "reason": "Record the reviewed legacy posture after the scratchpad manifest gained the effected-port runner scripts and kit dependencies (@beep/scratchpad#docgen scripts digest and dependency set) and three no-emit apps declared build.outputs [] in their own turbo.json; no command, input, env or cache flag changes, and no qualification is granted. The root subject moves only through bun.lock gaining the kit dependencies.",
       "basis": {
-        "path": "goals/repository-simplification-confidence/history/receipts/rsc-c-root-script-review-2026-10-09.md",
-        "sha256": "b6864efac83c1a57535952f2023dd94a33fb5b0b8338d591f16c716e90c169e9"
+        "path": "scratchpad/effected/CACHE_BASELINE_REVIEW.md",
+        "sha256": "3b23b12d2fbf1b1ee75930868cb7f0e54435e605868d354648b3f3280d9fb80f"
       }
     },
     "@beep/acp": {
@@ -282,11 +282,11 @@
       }
     },
     "@beep/docket-intake": {
-      "reviewer": "practice-docket-intake slice 3",
-      "reason": "Record the new @beep/docket-intake service app tasks and the @beep/m365 dependency edge on @beep/law-practice-server; commands, inputs, outputs and cache settings are otherwise unchanged and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-port publish, @lab/effected)",
+      "reason": "Record the reviewed legacy posture after the scratchpad manifest gained the effected-port runner scripts and kit dependencies (@beep/scratchpad#docgen scripts digest and dependency set) and three no-emit apps declared build.outputs [] in their own turbo.json; no command, input, env or cache flag changes, and no qualification is granted. The root subject moves only through bun.lock gaining the kit dependencies.",
       "basis": {
-        "path": "goals/practice-docket-intake/research/cache-baseline-review.md",
-        "sha256": "d5f84fdc2d92b106d3ba5d2ff9cb1d6e501675152a572b7a05188ba895d5a0f2"
+        "path": "scratchpad/effected/CACHE_BASELINE_REVIEW.md",
+        "sha256": "3b23b12d2fbf1b1ee75930868cb7f0e54435e605868d354648b3f3280d9fb80f"
       }
     },
     "@beep/documents-domain": {
@@ -546,11 +546,11 @@
       }
     },
     "@beep/law-practice-server": {
-      "reviewer": "Claude Fable 5.1 (practice-document-identification, feat/practice-identify)",
-      "reason": "Accept the seven @beep/practice-identify computations added by the new apps/practice-identify workspace and the four @beep/law-practice-server computations whose configuration drifts from the slice's new dependency edges and tsconfig includes; no command text, output, environment key or cache flag changes, and no qualification is granted.",
+      "reviewer": "Codex oa-slice worker",
+      "reason": "Re-record the direct provenance dependency digest for the server; commands, inputs, outputs, environment and cache flags retain their reviewed posture; no qualification promotion.",
       "basis": {
-        "path": "goals/practice-document-identification/research/cache-baseline-review.md",
-        "sha256": "cb96273cd7cdeedf54c0a7ee8d7efbdb150f58ad6f7a55557414d2df4432eb15"
+        "path": "goals/law-doc-structure-oa-slice/history/p2/2026-10-09-cache-review.md",
+        "sha256": "b73ef298caaa8a25ef7793cbda148d82c4e11a1183986ff53151eeb69a4f4903"
       }
     },
     "@beep/law-practice-tables": {
@@ -850,11 +850,11 @@
       }
     },
     "@beep/practice-identify": {
-      "reviewer": "Claude Fable 5.1 (practice-document-identification, feat/practice-identify)",
-      "reason": "Accept the seven @beep/practice-identify computations added by the new apps/practice-identify workspace and the four @beep/law-practice-server computations whose configuration drifts from the slice's new dependency edges and tsconfig includes; no command text, output, environment key or cache flag changes, and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-port publish, @lab/effected)",
+      "reason": "Record the reviewed legacy posture after the scratchpad manifest gained the effected-port runner scripts and kit dependencies (@beep/scratchpad#docgen scripts digest and dependency set) and three no-emit apps declared build.outputs [] in their own turbo.json; no command, input, env or cache flag changes, and no qualification is granted. The root subject moves only through bun.lock gaining the kit dependencies.",
       "basis": {
-        "path": "goals/practice-document-identification/research/cache-baseline-review.md",
-        "sha256": "cb96273cd7cdeedf54c0a7ee8d7efbdb150f58ad6f7a55557414d2df4432eb15"
+        "path": "scratchpad/effected/CACHE_BASELINE_REVIEW.md",
+        "sha256": "3b23b12d2fbf1b1ee75930868cb7f0e54435e605868d354648b3f3280d9fb80f"
       }
     },
     "@beep/practice-kg-mcp": {
@@ -865,12 +865,20 @@
         "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
-    "@beep/practice-mail-tagging": {
-      "reviewer": "Claude Opus 5.5 (practice-mail-tagging PR 3, feat/practice-mail-service)",
-      "reason": "Accept the seven @beep/practice-mail-tagging computations added by the new apps/practice-mail-tagging workspace; no existing computation changes its command text, input, output, environment key, dependency edge or cache flag, and no qualification is granted.",
+    "@beep/practice-m365-contacts": {
+      "reviewer": "Codex practice-m365-contacts",
+      "reason": "Review seven generated private service-app tasks; preserve all other subjects and grant no qualification.",
       "basis": {
-        "path": "goals/practice-mail-tagging/research/entrypoint-cache-baseline-review.md",
-        "sha256": "a07e3f22e79f068723e525728df4ac0ba457148af37110b949483ff0c9d2f11c"
+        "path": "goals/practice-m365-contacts/research/cache-baseline-review.md",
+        "sha256": "6a8cb63e3d4fe1087ee1ebecc56b6bd3a7f67412be3a89a983faf7279eccbd95"
+      }
+    },
+    "@beep/practice-mail-tagging": {
+      "reviewer": "Claude Opus 5.5 (effected-port publish, @lab/effected)",
+      "reason": "Record the reviewed legacy posture after the scratchpad manifest gained the effected-port runner scripts and kit dependencies (@beep/scratchpad#docgen scripts digest and dependency set) and three no-emit apps declared build.outputs [] in their own turbo.json; no command, input, env or cache flag changes, and no qualification is granted. The root subject moves only through bun.lock gaining the kit dependencies.",
+      "basis": {
+        "path": "scratchpad/effected/CACHE_BASELINE_REVIEW.md",
+        "sha256": "3b23b12d2fbf1b1ee75930868cb7f0e54435e605868d354648b3f3280d9fb80f"
       }
     },
     "@beep/pretext": {
@@ -986,11 +994,11 @@
       }
     },
     "@beep/scratchpad": {
-      "reviewer": "Claude Fable 5.1 (cache baseline merge-friendly lane, fix/cache-baseline-merge-friendly)",
-      "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-port publish, @lab/effected)",
+      "reason": "Record the reviewed legacy posture after the scratchpad manifest gained the effected-port runner scripts and kit dependencies (@beep/scratchpad#docgen scripts digest and dependency set) and three no-emit apps declared build.outputs [] in their own turbo.json; no command, input, env or cache flag changes, and no qualification is granted. The root subject moves only through bun.lock gaining the kit dependencies.",
       "basis": {
-        "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
+        "path": "scratchpad/effected/CACHE_BASELINE_REVIEW.md",
+        "sha256": "3b23b12d2fbf1b1ee75930868cb7f0e54435e605868d354648b3f3280d9fb80f"
       }
     },
     "@beep/semantic-web": {
@@ -25280,20 +25288,7 @@
           ],
           "env": [],
           "passThroughEnv": [],
-          "outputs": [
-            "!**/.turbo/**",
-            "!.next/cache/**",
-            "**/node_modules/.tmp/*.tsbuildinfo",
-            ".expo/**",
-            ".next/**",
-            ".output/**",
-            ".vercel/output/**",
-            "_next/**",
-            "build/**",
-            "dist/**",
-            "next-env.d.ts",
-            "storybook-static/**"
-          ],
+          "outputs": [],
           "dependsOn": [
             "^build"
           ],
@@ -47461,6 +47456,7 @@
           "@beep/nlp#audit",
           "@beep/pglite#audit",
           "@beep/postgres#audit",
+          "@beep/provenance#audit",
           "@beep/schema#audit",
           "@beep/shared-domain#audit",
           "@beep/shared-use-cases#audit",
@@ -47548,6 +47544,7 @@
           "@beep/nlp#build",
           "@beep/pglite#build",
           "@beep/postgres#build",
+          "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/shared-use-cases#build",
@@ -47622,6 +47619,7 @@
           "@beep/nlp#build",
           "@beep/pglite#build",
           "@beep/postgres#build",
+          "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/shared-use-cases#build",
@@ -47683,6 +47681,7 @@
           "@beep/nlp#build",
           "@beep/pglite#build",
           "@beep/postgres#build",
+          "@beep/provenance#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/shared-use-cases#build",
@@ -47831,6 +47830,7 @@
           "@beep/nlp#transit",
           "@beep/pglite#transit",
           "@beep/postgres#transit",
+          "@beep/provenance#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
           "@beep/shared-use-cases#transit",
@@ -48063,6 +48063,7 @@
           "@beep/nlp#transit",
           "@beep/pglite#transit",
           "@beep/postgres#transit",
+          "@beep/provenance#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
           "@beep/shared-use-cases#transit",
@@ -48130,6 +48131,7 @@
           "@beep/nlp#transit",
           "@beep/pglite#transit",
           "@beep/postgres#transit",
+          "@beep/provenance#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
           "@beep/shared-use-cases#transit",
@@ -73346,20 +73348,7 @@
           ],
           "env": [],
           "passThroughEnv": [],
-          "outputs": [
-            "!**/.turbo/**",
-            "!.next/cache/**",
-            "**/node_modules/.tmp/*.tsbuildinfo",
-            ".expo/**",
-            ".next/**",
-            ".output/**",
-            ".vercel/output/**",
-            "_next/**",
-            "build/**",
-            "dist/**",
-            "next-env.d.ts",
-            "storybook-static/**"
-          ],
+          "outputs": [],
           "dependsOn": [
             "^build"
           ],
@@ -74412,6 +74401,593 @@
         }
       },
       {
+        "computation": "@beep/practice-m365-contacts#audit",
+        "command": "bun run --if-present beep:audit",
+        "commandDigest": "b17cf9c22b7f0e937facce93ca66aa3858b833a7f99fdce4737886f758bfca67",
+        "dependencies": [
+          "@beep/identity#audit",
+          "@beep/law-practice-server#audit",
+          "@beep/law-practice-use-cases#audit",
+          "@beep/m365#audit",
+          "@beep/schema#audit",
+          "@beep/test-runner#audit"
+        ],
+        "configuration": {
+          "cache": false,
+          "inputs": [
+            "!.beep/**",
+            "!.fallow/**",
+            "../../.bun-version",
+            "../../.nvmrc",
+            "../../biome.jsonc",
+            "../../package.json",
+            "../../tsconfig.base.json",
+            "../../tsconfig.json",
+            "../../tsconfig.packages.json",
+            "../../vitest.shared.ts"
+          ],
+          "env": [
+            "ALLOWED_EMAILS",
+            "APP_ADMINS_EMAILS",
+            "AUTH_*",
+            "BEEP_TEST_*",
+            "BEEP_TIKA_*",
+            "DATABASE_URL",
+            "DATABASE_URL_UNPOOLED",
+            "EMAIL_*",
+            "LIVEBLOCKS_*",
+            "NEXT_PUBLIC_*",
+            "OAUTH_*",
+            "OPENAI_*",
+            "RESEND_*",
+            "SECURITY_*"
+          ],
+          "passThroughEnv": [],
+          "outputs": [
+            "!**/.turbo/**",
+            "!.next/cache/**",
+            "**/node_modules/.tmp/*.tsbuildinfo",
+            ".expo/**",
+            ".next/**",
+            ".output/**",
+            ".vercel/output/**",
+            "_next/**",
+            "build/**",
+            "dist/**",
+            "docs/**",
+            "next-env.d.ts"
+          ],
+          "dependsOn": [
+            "^audit"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "new-only"
+        }
+      },
+      {
+        "computation": "@beep/practice-m365-contacts#build",
+        "command": "bun run beep:build",
+        "commandDigest": "b17cf9c22b7f0e937facce93ca66aa3858b833a7f99fdce4737886f758bfca67",
+        "dependencies": [
+          "@beep/identity#build",
+          "@beep/law-practice-server#build",
+          "@beep/law-practice-use-cases#build",
+          "@beep/m365#build",
+          "@beep/schema#build",
+          "@beep/test-runner#build"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!.beep/**",
+            "!.fallow/**",
+            "../../.bun-version",
+            "../../.nvmrc",
+            "../../package.json",
+            "../../tools/tsgo-shim/package.json",
+            "../../tools/tsgo-shim/tsgo.js",
+            "../../tsconfig.base.json",
+            "../../tsconfig.json",
+            "../../tsconfig.packages.json",
+            ".env",
+            ".env.*"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [
+            "!**/.turbo/**",
+            "!.next/cache/**",
+            "**/node_modules/.tmp/*.tsbuildinfo",
+            ".expo/**",
+            ".next/**",
+            ".output/**",
+            ".vercel/output/**",
+            "_next/**",
+            "build/**",
+            "dist/**",
+            "next-env.d.ts",
+            "storybook-static/**"
+          ],
+          "dependsOn": [
+            "^build"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/practice-m365-contacts#check",
+        "command": "bun run beep:check",
+        "commandDigest": "b17cf9c22b7f0e937facce93ca66aa3858b833a7f99fdce4737886f758bfca67",
+        "dependencies": [
+          "@beep/identity#build",
+          "@beep/law-practice-server#build",
+          "@beep/law-practice-use-cases#build",
+          "@beep/m365#build",
+          "@beep/schema#build",
+          "@beep/test-runner#build"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!.beep/**",
+            "!.fallow/**",
+            "../../.bun-version",
+            "../../.nvmrc",
+            "../../package.json",
+            "../../tools/tsgo-shim/package.json",
+            "../../tools/tsgo-shim/tsgo.js",
+            "../../tsconfig.base.json",
+            "../../tsconfig.json",
+            "../../tsconfig.packages.json",
+            ".env",
+            ".env.*"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "^build"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/practice-m365-contacts#coverage",
+        "command": "bunx vitest run --coverage",
+        "commandDigest": "b17cf9c22b7f0e937facce93ca66aa3858b833a7f99fdce4737886f758bfca67",
+        "dependencies": [
+          "@beep/identity#build",
+          "@beep/law-practice-server#build",
+          "@beep/law-practice-use-cases#build",
+          "@beep/m365#build",
+          "@beep/schema#build",
+          "@beep/test-runner#build"
+        ],
+        "configuration": {
+          "cache": false,
+          "inputs": [
+            "../../.bun-version",
+            "../../.nvmrc",
+            "../../package.json",
+            "../../tsconfig.base.json",
+            "../../tsconfig.json",
+            "../../tsconfig.packages.json",
+            "../../vitest.aliases.generated.json",
+            "../../vitest.setup.ts",
+            "../../vitest.shared.ts",
+            "package.json",
+            "server/**",
+            "src-tauri/**",
+            "src/**",
+            "test/**",
+            "tsconfig*.json",
+            "vitest.config.ts",
+            "vitest.coverage.config.ts"
+          ],
+          "env": [
+            "BEEP_FC_SEED",
+            "NODE_OPTIONS",
+            "VITEST_COVERAGE_RATCHET",
+            "VITEST_COVERAGE_REPORT_ONLY"
+          ],
+          "passThroughEnv": [],
+          "outputs": [
+            "coverage/**"
+          ],
+          "dependsOn": [
+            "^build"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/practice-m365-contacts#dev",
+        "command": "portless practice-m365-contacts.beep sh -c 'bun --watch src/main.ts'",
+        "commandDigest": "b17cf9c22b7f0e937facce93ca66aa3858b833a7f99fdce4737886f758bfca67",
+        "dependencies": [
+          "@beep/identity#build",
+          "@beep/law-practice-server#build",
+          "@beep/law-practice-use-cases#build",
+          "@beep/m365#build",
+          "@beep/schema#build",
+          "@beep/test-runner#build"
+        ],
+        "configuration": {
+          "cache": false,
+          "inputs": [
+            "../../.bun-version",
+            "../../.nvmrc",
+            "../../package.json",
+            "../../tsconfig.base.json",
+            "../../tsconfig.json",
+            "../../tsconfig.packages.json"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "^build"
+          ],
+          "persistent": true,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/practice-m365-contacts#lint",
+        "command": "bun run beep:lint",
+        "commandDigest": "b17cf9c22b7f0e937facce93ca66aa3858b833a7f99fdce4737886f758bfca67",
+        "dependencies": [],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!../../tsconfig*.json",
+            "!.beep/**",
+            "!.beep/**",
+            "!.fallow/**",
+            "!.fallow/**",
+            "../../.bun-version",
+            "../../.nvmrc",
+            "../../biome.jsonc",
+            "../../package.json",
+            "../../packages/tooling/policy-pack/lint-rules/configs/**",
+            "../../packages/tooling/policy-pack/lint-rules/rules/**",
+            "../../tsconfig.base.json",
+            "../../tsconfig.json",
+            "../../tsconfig.packages.json",
+            ".env",
+            ".env.*"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/practice-m365-contacts#lint:deprecated-apis",
+        "command": "beep-cli lint deprecated-apis --package .",
+        "commandDigest": "b17cf9c22b7f0e937facce93ca66aa3858b833a7f99fdce4737886f758bfca67",
+        "dependencies": [
+          "//#lint:policy-fingerprint",
+          "@beep/identity#transit",
+          "@beep/law-practice-server#transit",
+          "@beep/law-practice-use-cases#transit",
+          "@beep/m365#transit",
+          "@beep/schema#transit",
+          "@beep/test-runner#transit"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!**/.cache/**",
+            "!**/.next/**",
+            "!**/.turbo/**",
+            "!**/coverage/**",
+            "!**/dist/**",
+            "!**/docs/**",
+            "!**/generated/**",
+            "!**/node_modules/**",
+            "!**/vendor/**",
+            "!../../**/.beep/**/package.json",
+            "!../../**/.next/**/package.json",
+            "!../../**/.turbo/**/package.json",
+            "!../../**/build/**/package.json",
+            "!../../**/coverage/**/package.json",
+            "!../../**/dist/**/package.json",
+            "!../../**/node_modules/**/package.json",
+            "!../../**/storybook-static/**/package.json",
+            "!.beep/**",
+            "!.fallow/**",
+            "!node_modules/**",
+            "**/*.{ts,tsx,js,jsx,mjs,cjs}",
+            "../../.bun-version",
+            "../../.nvmrc",
+            "../../apps/**/package.json",
+            "../../apps/**/tsconfig*.json",
+            "../../eslint.config.mjs",
+            "../../infra/**/tsconfig*.json",
+            "../../infra/package.json",
+            "../../package.json",
+            "../../packages/**/package.json",
+            "../../packages/**/tsconfig*.json",
+            "../../packages/tooling/policy-pack/repo-configs/package.json",
+            "../../packages/tooling/policy-pack/repo-configs/src/eslint/**",
+            "../../packages/tooling/policy-pack/repo-configs/src/internal/eslint/**",
+            "../../tsconfig*.json",
+            "../../tsconfig.base.json",
+            "../../tsconfig.json",
+            "../../tsconfig.packages.json",
+            ".env",
+            ".env.*",
+            "package.json",
+            "tsconfig*.json"
+          ],
+          "env": [
+            "NODE_OPTIONS"
+          ],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "//#lint:policy-fingerprint",
+            "^transit"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/practice-m365-contacts#lint:fix",
+        "command": "bun run beep:lint:fix",
+        "commandDigest": "b17cf9c22b7f0e937facce93ca66aa3858b833a7f99fdce4737886f758bfca67",
+        "dependencies": [],
+        "configuration": {
+          "cache": false,
+          "inputs": [
+            "!../../tsconfig*.json",
+            "!.beep/**",
+            "!.fallow/**",
+            "../../.bun-version",
+            "../../.nvmrc",
+            "../../biome.jsonc",
+            "../../package.json",
+            "../../tsconfig.base.json",
+            "../../tsconfig.json",
+            "../../tsconfig.packages.json"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/practice-m365-contacts#lint:jsdoc",
+        "command": "beep-cli lint jsdoc --package .",
+        "commandDigest": "b17cf9c22b7f0e937facce93ca66aa3858b833a7f99fdce4737886f758bfca67",
+        "dependencies": [
+          "//#lint:policy-fingerprint"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!**/.next/**",
+            "!**/.turbo/**",
+            "!**/coverage/**",
+            "!**/dist/**",
+            "!**/docs/**",
+            "!**/node_modules/**",
+            "!**/src-tauri/target/**",
+            "!**/storybook-static/**",
+            "!../../**/.beep/**/package.json",
+            "!../../**/.next/**/package.json",
+            "!../../**/.turbo/**/package.json",
+            "!../../**/build/**/package.json",
+            "!../../**/coverage/**/package.json",
+            "!../../**/dist/**/package.json",
+            "!../../**/node_modules/**/package.json",
+            "!../../**/storybook-static/**/package.json",
+            "!node_modules/**",
+            "**/*.{ts,tsx,js,jsx,mjs,cjs}",
+            "../../.bun-version",
+            "../../.nvmrc",
+            "../../eslint.config.mjs",
+            "../../package.json",
+            "../../packages/tooling/policy-pack/repo-configs/package.json",
+            "../../packages/tooling/policy-pack/repo-configs/src/eslint/**",
+            "../../packages/tooling/policy-pack/repo-configs/src/internal/eslint/**",
+            "../../tsconfig.base.json",
+            "../../tsconfig.json",
+            "../../tsconfig.packages.json",
+            "../../tsdoc.json",
+            ".env",
+            ".env.*",
+            "package.json"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "//#lint:policy-fingerprint"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/practice-m365-contacts#lint:laws",
+        "command": "beep-cli lint laws --package .",
+        "commandDigest": "b17cf9c22b7f0e937facce93ca66aa3858b833a7f99fdce4737886f758bfca67",
+        "dependencies": [
+          "//#lint:policy-fingerprint"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!**/.turbo/**",
+            "!**/build/**",
+            "!**/coverage/**",
+            "!**/dist/**",
+            "!**/node_modules/**",
+            "!../../**/.beep/**/package.json",
+            "!../../**/.next/**/package.json",
+            "!../../**/.turbo/**/package.json",
+            "!../../**/build/**/package.json",
+            "!../../**/coverage/**/package.json",
+            "!../../**/dist/**/package.json",
+            "!../../**/node_modules/**/package.json",
+            "!../../**/storybook-static/**/package.json",
+            "!node_modules/**",
+            "**/*.{ts,tsx}",
+            "../../.bun-version",
+            "../../.nvmrc",
+            "../../package.json",
+            "../../packages/**/package.json",
+            "../../packages/tooling/policy-pack/repo-configs/src/eslint/EffectLawsAllowlist.ts",
+            "../../packages/tooling/policy-pack/repo-configs/src/eslint/NoNativeRuntimeHotspots.ts",
+            "../../packages/tooling/policy-pack/repo-configs/src/internal/eslint/generated/EffectLawsAllowlistSnapshot.ts",
+            "../../standards/effect-laws.allowlist.jsonc",
+            "../../tsconfig*.json",
+            "../../tsconfig.base.json",
+            "../../tsconfig.json",
+            "../../tsconfig.packages.json",
+            ".env",
+            ".env.*",
+            "package.json",
+            "tsconfig*.json"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "//#lint:policy-fingerprint"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/practice-m365-contacts#package-test-typecheck",
+        "command": "beep-cli quality test-tsgo-package",
+        "commandDigest": "b17cf9c22b7f0e937facce93ca66aa3858b833a7f99fdce4737886f758bfca67",
+        "dependencies": [
+          "@beep/identity#transit",
+          "@beep/law-practice-server#transit",
+          "@beep/law-practice-use-cases#transit",
+          "@beep/m365#transit",
+          "@beep/schema#transit",
+          "@beep/test-runner#transit"
+        ],
+        "configuration": {
+          "cache": false,
+          "inputs": [
+            "../../.bun-version",
+            "../../.nvmrc",
+            "../../package.json",
+            "../../packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+            "../../packages/tooling/tool/cli/src/commands/Quality/internal/TestTsgoSyntheticConfig.ts",
+            "../../tsconfig.base.json",
+            "../../tsconfig.base.json",
+            "../../tsconfig.json",
+            "../../tsconfig.packages.json",
+            "package.json",
+            "scripts/**",
+            "server/**",
+            "src-tauri/**",
+            "src/**",
+            "test/**",
+            "tsconfig*.json"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [
+            ".turbo/package-test-typecheck-result.json"
+          ],
+          "dependsOn": [
+            "^transit"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/practice-m365-contacts#test",
+        "command": "bun run beep:test",
+        "commandDigest": "b17cf9c22b7f0e937facce93ca66aa3858b833a7f99fdce4737886f758bfca67",
+        "dependencies": [
+          "@beep/identity#transit",
+          "@beep/law-practice-server#transit",
+          "@beep/law-practice-use-cases#transit",
+          "@beep/m365#transit",
+          "@beep/schema#transit",
+          "@beep/test-runner#transit",
+          "@beep/utils#transit"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!.beep/**",
+            "!.fallow/**",
+            "../../.bun-version",
+            "../../.nvmrc",
+            "../../package.json",
+            "../../tsconfig.base.json",
+            "../../tsconfig.json",
+            "../../tsconfig.packages.json",
+            "../../vitest.aliases.generated.json",
+            "../../vitest.setup.ts",
+            "../../vitest.shared.ts",
+            ".env",
+            ".env.*"
+          ],
+          "env": [
+            "BEEP_FC_NUM_RUNS",
+            "BEEP_FC_SEED"
+          ],
+          "passThroughEnv": [
+            "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE",
+            "GITHUB_STEP_SUMMARY"
+          ],
+          "outputs": [],
+          "dependsOn": [
+            "@beep/utils#transit",
+            "^transit"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
         "computation": "@beep/practice-mail-tagging#audit",
         "command": "bun run --if-present beep:audit",
         "commandDigest": "af433eb9318f9ee254bc1ace131863f49542a253e1098a977b467a9f240e459e",
@@ -74515,20 +75091,7 @@
           ],
           "env": [],
           "passThroughEnv": [],
-          "outputs": [
-            "!**/.turbo/**",
-            "!.next/cache/**",
-            "**/node_modules/.tmp/*.tsbuildinfo",
-            ".expo/**",
-            ".next/**",
-            ".output/**",
-            ".vercel/output/**",
-            "_next/**",
-            "build/**",
-            "dist/**",
-            "next-env.d.ts",
-            "storybook-static/**"
-          ],
+          "outputs": [],
           "dependsOn": [
             "^build"
           ],
@@ -85270,7 +85833,7 @@
       {
         "computation": "@beep/scratchpad#docgen",
         "command": "bunx --bun --no-install docgen",
-        "commandDigest": "fa9935f309335d7c75aa0f0119df11d7e4e64c9898ade0228378e99f28cac7cc",
+        "commandDigest": "7c65739629fe9ada5fb33619c1bb00a245cdc1d0ddac6d8ab7648db091c16de9",
         "dependencies": [
           "@beep/repo-docgen#transit",
           "@beep/scratchpad#transit"
@@ -104137,6 +104700,10 @@
     ],
     "sources": [
       {
+        "path": "apps/docket-intake/turbo.json",
+        "sha256": "d5f16e7a6d5ebcb86f356dcce5e0065c2433bc1f27508eb1458bd064bc3275e2"
+      },
+      {
         "path": "apps/labs/api-docs/turbo.json",
         "sha256": "d5f16e7a6d5ebcb86f356dcce5e0065c2433bc1f27508eb1458bd064bc3275e2"
       },
@@ -104147,6 +104714,14 @@
       {
         "path": "apps/oip-web/turbo.json",
         "sha256": "b1c0d578b89ab92501afc05c40f386547e3a14b1321ead29d4945df01b5b4e58"
+      },
+      {
+        "path": "apps/practice-identify/turbo.json",
+        "sha256": "d5f16e7a6d5ebcb86f356dcce5e0065c2433bc1f27508eb1458bd064bc3275e2"
+      },
+      {
+        "path": "apps/practice-mail-tagging/turbo.json",
+        "sha256": "d5f16e7a6d5ebcb86f356dcce5e0065c2433bc1f27508eb1458bd064bc3275e2"
       },
       {
         "path": "apps/professional-desktop/turbo.json",

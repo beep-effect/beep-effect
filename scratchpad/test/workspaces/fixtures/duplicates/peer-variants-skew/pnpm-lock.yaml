@@ -1,0 +1,52 @@
+lockfileVersion: '9.0'
+
+# HAND-AUTHORED. `peer-variants/` plus ONE edit: a third importer takes
+# foo@2.0.0. Now foo IS a duplicate, and its 1.0.0 row carries both instances.
+
+importers:
+
+  .:
+    dependencies:
+      bar:
+        specifier: ^1.0.0
+        version: 1.0.0
+      foo:
+        specifier: ^1.0.0
+        version: 1.0.0(bar@1.0.0)
+
+  packages/other:
+    dependencies:
+      foo:
+        specifier: ^1.0.0
+        version: 1.0.0
+
+  packages/third:
+    dependencies:
+      foo:
+        specifier: ^2.0.0
+        version: 2.0.0
+
+packages:
+
+  bar@1.0.0: {}
+
+  foo@1.0.0:
+    peerDependencies:
+      bar: ^1.0.0
+    peerDependenciesMeta:
+      bar:
+        optional: true
+
+  foo@2.0.0: {}
+
+snapshots:
+
+  bar@1.0.0: {}
+
+  foo@1.0.0: {}
+
+  foo@1.0.0(bar@1.0.0):
+    dependencies:
+      bar: 1.0.0
+
+  foo@2.0.0: {}

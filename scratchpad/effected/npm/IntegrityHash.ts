@@ -1,0 +1,727 @@
+// The `IntegrityHash` brand: one concept covering the three textual integrity
+// forms the kit meets.
+//
+//   - SRI form   `<algo>-<base64>`  — lockfiles' `ResolvedPackage.integrity`
+//                                     and npm `package-lock` entries.
+//   - Corepack   `<algo>.<hex>`     — package-json's `packageManager` pin, the
+//                                     `name@version+sha512.<hex>` tail.
+//   - Yarn       `<cachekey>/<hex>` — yarn Berry `yarn.lock` `checksum` values
+//                                     (e.g. `10c0/<hex>`); a cache-versioned
+//                                     SHA-512 that does not name its algorithm.
+//
+// A branded string plus its taxonomy statics (`algorithmOf`, `isSri`,
+// `isCorepack`, `isYarnChecksum`) and a typed `decode`, mirroring
+// `DependencySpecifier`'s shape.
+//
+// `CorepackIntegrityHash` is the one narrowing the kit needs: the pin tail
+// `<name>@<version>+<integrity>` only ever carries the corepack form, and both
+// schemas that model it (`PackageManagerPin` here, `@effected/package-json`'s
+// `PackageManager`) consume that export rather than restricting the brand
+// themselves. It also carries the bridge between the two textual forms the kit
+// meets at the registry boundary: `CorepackIntegrityHash.FromSri` decodes
+// npm's SRI `sha512-<base64>` (the shape `NpmRegistry.version()` returns)
+// into the corepack `sha512.<hex>` form a `packageManager` pin carries.
+//
+// `SriIntegrityHash` is the sibling narrowing for the SRI form, for fields that
+// only ever carry `<algo>-<base64>` — `@effected/workspaces`'
+// `ConfigDependencySpec.integrity` (the legacy inline `configDependencies`
+// integrity) is its first consumer.
+
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import type * as Brand from "effect/Brand";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
+
+const $I = $ScratchpadId.create("effected/npm/IntegrityHash");
+
+/**
+ * A supported integrity hash algorithm.
+ *
+ * **Details**
+ * `sha224` appears only in the corepack form — corepack's own transparent
+ * default pins emit it (e.g. `yarn@4.x+sha224.<hex>`) — and never in SRI,
+ * whose specification names only `sha256`/`sha384`/`sha512` (plus legacy
+ * `sha1`).
+ *
+ * **Example** (Recognizing a supported integrity algorithm)
+ * ```ts
+ * import { IntegrityAlgorithm } from "@beep/scratchpad/effected/npm/IntegrityHash";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(IntegrityAlgorithm)("sha224")); // true
+ * console.log(IntegrityAlgorithm.Enum.sha512); // sha512
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const IntegrityAlgorithm = LiteralKit(["sha1", "sha224", "sha256", "sha384", "sha512"]).annotate(
+    $I.annote("IntegrityAlgorithm", { description: "The supported SRI and corepack integrity algorithm vocabulary." }),
+);
+
+/**
+ * The decoded supported integrity algorithm.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type IntegrityAlgorithm = typeof IntegrityAlgorithm.Type;
+
+const isIntegrityAlgorithm = S.is(IntegrityAlgorithm);
+
+// SRI: `<algo>-<base64>` (optional `=` padding). No sha224 — the SRI spec
+// does not include it.
+const SRI_RE = /^(sha1|sha256|sha384|sha512)-[A-Za-z0-9+/]+={0,2}$/;
+// Corepack: `<algo>.<lowercase-hex>`. sha224 is real and corepack-emitted:
+// the transparent default pin for yarn Berry hashes with it.
+const COREPACK_RE = /^(sha1|sha224|sha256|sha384|sha512)\.[0-9a-f]+$/;
+// Yarn Berry: `<cachekey>/<lowercase-hex>`, e.g. `10c0/<hex>`. The cache key is
+// a version marker (`<digits>c<digits>`), not an algorithm token.
+const YARN_RE = /^[0-9]+(c[0-9]+)?\/[0-9a-f]+$/;
+
+const SriString = S.String.annotate($I.annote("SriString", { description: "The SRI integrity string grammar, without decoding its digest." })).check(S.isPattern(SRI_RE, $I.annote("SriStringCheck", {
+    title: "SRI integrity shape", description: "An SRI algorithm followed by a base64-shaped digest.",
+    message: "Expected an SRI (<algo>-<base64>) integrity hash",
+})));
+const CorepackString = S.String.annotate($I.annote("CorepackString", { description: "The corepack integrity string grammar." })).check(S.isPattern(COREPACK_RE, $I.annote("CorepackStringCheck", {
+    title: "Corepack integrity shape", description: "A supported algorithm followed by a lowercase hexadecimal digest.",
+    message: "Expected a corepack (<algo>.<hex>) integrity hash",
+})));
+const YarnChecksumString = S.String.annotate($I.annote("YarnChecksumString", { description: "The Yarn Berry versioned checksum string grammar." })).check(S.isPattern(YARN_RE, $I.annote("YarnChecksumStringCheck", {
+    title: "Yarn checksum shape", description: "A numeric cache key followed by a lowercase hexadecimal digest.",
+})));
+const IntegrityString = S.Union([SriString, CorepackString, YarnChecksumString]).annotate(
+    $I.annote("IntegrityString", { description: "An integrity string in SRI, corepack or Yarn checksum form." }),
+);
+
+const isSri: (value: string) => boolean = S.is(SriString);
+const isCorepack: (value: string) => boolean = S.is(CorepackString);
+const isYarnChecksum: (value: string) => boolean = S.is(YarnChecksumString);
+
+/**
+ * Whether a string is a valid integrity hash in the SRI (`<algo>-<base64>`),
+ * corepack (`<algo>.<hex>`) or yarn (`<cachekey>/<hex>`) form.
+ *
+ * **Example** (Recognize the three integrity forms)
+ *
+ * ```ts
+ * import { isValidIntegrityHash } from "@beep/scratchpad/effected/npm/IntegrityHash";
+ *
+ * console.log(isValidIntegrityHash("sha512.deadbeef")); // true
+ * ```
+ *
+ * @public
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isValidIntegrityHash = S.is(IntegrityString);
+
+// The algorithm is the prefix before the first `-` (SRI) or `.` (corepack). The
+// yarn form does not name its algorithm, so it has none to read.
+const algorithmOf = (value: string): O.Option<IntegrityAlgorithm> => {
+	const prefix = isSri(value)
+		? value.slice(0, value.indexOf("-"))
+		: isCorepack(value)
+			? value.slice(0, value.indexOf("."))
+			: undefined;
+	return O.liftPredicate(isIntegrityAlgorithm)(prefix);
+};
+
+/**
+ * Indicates that a string could not be parsed as a valid integrity hash.
+ *
+ * **Details**
+ *
+ * Raised by {@link IntegrityHash.decode}. The offending string is preserved on
+ * `input`.
+ *
+ * **Example** (Preserve an invalid hash input)
+ *
+ * ```ts
+ * import { InvalidIntegrityHashError } from "@beep/scratchpad/effected/npm/IntegrityHash";
+ *
+ * const error = InvalidIntegrityHashError.make({ input: "invalid" });
+ * console.log(error.input); // invalid
+ * ```
+ *
+ * @public
+ * @category errors
+ * @since 0.0.0
+ */
+export class InvalidIntegrityHashError extends S.TaggedError<InvalidIntegrityHashError>($I`InvalidIntegrityHashError`)(
+	"InvalidIntegrityHashError",
+	{
+		/** The raw input string that failed validation. */
+		input: S.String.annotateKey({ description: "The raw input string that failed validation." }),
+	}, $I.annote("InvalidIntegrityHashError", { description: "Indicates that a string could not be parsed as a valid integrity hash." }),
+) {
+	/**
+	 * Explains the rejected integrity input and the expected format.
+	 *
+	 * **Example** (Read the validation message)
+	 *
+	 * ```ts
+	 * import { InvalidIntegrityHashError } from "@beep/scratchpad/effected/npm/IntegrityHash";
+	 *
+	 * const error = InvalidIntegrityHashError.make({ input: "invalid" });
+	 * console.log(error.message); // Invalid integrity hash "invalid": expected an SRI (<algo>-<base64>), corepack (<algo>.<hex>) or yarn (<cachekey>/<hex>) form
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
+	override get message(): string {
+		return `Invalid integrity hash "${this.input}": expected an SRI (<algo>-<base64>), corepack (<algo>.<hex>) or yarn (<cachekey>/<hex>) form`;
+	}
+}
+
+/**
+ * The branded integrity-hash type: a string {@link (IntegrityHash:variable)}
+ * validates.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type IntegrityHashBrand = string & Brand.Brand<"IntegrityHash">;
+
+const IntegrityHashCheck = S.makeFilter<string>((value) =>
+    isValidIntegrityHash(value) ? undefined : "Expected an SRI, corepack or yarn integrity hash",
+    $I.annote("IntegrityHashCheck", { title: "Integrity hash", description: "An SRI, corepack or Yarn checksum integrity string." }),
+);
+const brandedIntegrity = S.String.pipe(
+    $I.annoteSchema("IntegrityHash", { description: "A branded integrity string in SRI, corepack or Yarn checksum form." }),
+    S.check(IntegrityHashCheck),
+    S.brand("IntegrityHash"),
+);
+
+const decode = Effect.fn("IntegrityHash.decode")((input: string): Effect.Effect<IntegrityHashBrand, InvalidIntegrityHashError> =>
+    S.decodeEffect(IntegrityHash)(input).pipe(Effect.mapError(() => InvalidIntegrityHashError.make({ input }))),
+);
+
+// Widen only Opaque's unused constructor to string members: TypeScript cannot
+// extend a primitive. Its schema Type and runtime decoder remain branded strings.
+const IntegrityHashBase: Omit<S.Opaque<IntegrityHashBrand, typeof brandedIntegrity, {}>, never> &
+    (new (_: never) => Pick<IntegrityHashBrand, keyof IntegrityHashBrand>) = S.Opaque<IntegrityHashBrand>()(brandedIntegrity);
+
+/**
+ * A subresource-integrity hash, covering the SRI (`sha512-<base64>`), corepack
+ * (`sha512.<hex>`) and yarn (`10c0/<hex>`) textual forms, carrying taxonomy
+ * statics (`IntegrityHash.algorithmOf` and friends). Use it as a schema for an
+ * integrity field and reach for the statics to inspect a raw string.
+ *
+ * **Example** (Decode a corepack integrity string)
+ *
+ * ```ts
+ * import { IntegrityHash } from "@beep/scratchpad/effected/npm/IntegrityHash";
+ * import * as Effect from "effect/Effect";
+ *
+ * console.log(Effect.runSync(IntegrityHash.decode("sha512.deadbeef"))); // sha512.deadbeef
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export class IntegrityHash extends IntegrityHashBase {
+    /**
+     * Whether the hash is in SRI (`<algo>-<base64>`) form.
+     *
+     * **Example** (Check isSri)
+     *
+     * ```ts
+     * import { IntegrityHash } from "@beep/scratchpad/effected/npm/IntegrityHash";
+     *
+     * console.log(IntegrityHash.isSri("sha512-3q2+7w==")); // true
+     * ```
+     *
+     * @category predicates
+     * @since 0.0.0
+     */
+    static readonly isSri = isSri;
+    /**
+     * Whether the hash is in corepack (`<algo>.<hex>`) form.
+     *
+     * **Example** (Check isCorepack)
+     *
+     * ```ts
+     * import { IntegrityHash } from "@beep/scratchpad/effected/npm/IntegrityHash";
+     *
+     * console.log(IntegrityHash.isCorepack("sha512.deadbeef")); // true
+     * ```
+     *
+     * @category predicates
+     * @since 0.0.0
+     */
+    static readonly isCorepack = isCorepack;
+    /**
+     * Whether the hash is in yarn (`<cachekey>/<hex>`) form.
+     *
+     * **Example** (Check isYarnChecksum)
+     *
+     * ```ts
+     * import { IntegrityHash } from "@beep/scratchpad/effected/npm/IntegrityHash";
+     *
+     * console.log(IntegrityHash.isYarnChecksum("10c0/deadbeef")); // true
+     * ```
+     *
+     * @category predicates
+     * @since 0.0.0
+     */
+    static readonly isYarnChecksum = isYarnChecksum;
+    /**
+     * Whether the string is a valid integrity hash in any of the three forms.
+     *
+     * **Example** (Check isValid)
+     *
+     * ```ts
+     * import { IntegrityHash } from "@beep/scratchpad/effected/npm/IntegrityHash";
+     *
+     * console.log(IntegrityHash.isValid("sha512.deadbeef")); // true
+     * ```
+     *
+     * @category predicates
+     * @since 0.0.0
+     */
+    static readonly isValid = isValidIntegrityHash;
+    /**
+     * The algorithm prefix. `None` when the string is not a valid integrity
+     * hash, and also `None` for the yarn form, which does not name its algorithm.
+     *
+     * **Example** (Inspect an algorithm prefix)
+     *
+     * ```ts
+     * import { IntegrityHash } from "@beep/scratchpad/effected/npm/IntegrityHash";
+     * import * as O from "effect/Option";
+     *
+     * console.log(O.getOrElse(IntegrityHash.algorithmOf("sha512.deadbeef"), () => "unknown")); // sha512
+     * console.log(O.isNone(IntegrityHash.algorithmOf("10c0/deadbeef"))); // true
+     * ```
+     *
+     * @category getters
+     * @since 0.0.0
+     */
+    static readonly algorithmOf = algorithmOf;
+    /**
+     * Validate a string, failing with a typed {@link InvalidIntegrityHashError}.
+     *
+     * **Example** (Validate a branded hash)
+     *
+     * ```ts
+     * import { IntegrityHash } from "@beep/scratchpad/effected/npm/IntegrityHash";
+     * import * as Effect from "effect/Effect";
+     *
+     * console.log(Effect.runSync(IntegrityHash.decode("sha512.deadbeef"))); // sha512.deadbeef
+     * ```
+     *
+     * @category decoding
+     * @since 0.0.0
+     */
+    static readonly decode = decode;
+}
+
+const corepackRestricted = S.String.pipe(
+    $I.annoteSchema("CorepackIntegrityHash", { description: "An IntegrityHash restricted to the corepack algorithm and hexadecimal digest form." }),
+    S.check(
+        IntegrityHashCheck,
+        S.isPattern(COREPACK_RE, $I.annote("CorepackIntegrityHashCheck", {
+            title: "Corepack integrity hash", description: "An IntegrityHash restricted to the corepack algorithm and hexadecimal digest form.", message: "Expected a corepack (<algo>.<hex>) integrity hash",
+        })),
+    ),
+    S.brand("IntegrityHash"),
+);
+const sriRestricted = S.String.pipe(
+    $I.annoteSchema("SriIntegrityHash", { description: "An IntegrityHash restricted to the SRI algorithm and base64-shaped digest form." }),
+    S.check(
+        IntegrityHashCheck,
+        S.isPattern(SRI_RE, $I.annote("SriIntegrityHashCheck", {
+            title: "SRI integrity hash", description: "An IntegrityHash restricted to the SRI algorithm and base64-shaped digest form.", message: "Expected an SRI (<algo>-<base64>) integrity hash",
+        })),
+    ),
+    S.brand("IntegrityHash"),
+);
+/**
+ * A subresource-integrity hash in the SRI `<algo>-<base64>` form only —
+ * `sha512-<base64>` as pnpm and npm lockfiles record it, and as pnpm's inline
+ * `configDependencies` integrity carries it. A corepack (`sha512.<hex>`) or yarn
+ * (`10c0/<hex>`) hash, both valid {@link (IntegrityHash:variable)} values, fails
+ * this schema.
+ *
+ * **Gotchas**
+ *
+ * The SRI counterpart of {@link (CorepackIntegrityHash:variable)}, with the same
+ * posture: it decodes to the same {@link IntegrityHashBrand} as the
+ * unrestricted schema (no second brand), so a value it accepts assigns anywhere
+ * an `IntegrityHash` is expected.
+ *
+ * It validates SRI shape only: the digest is not base64-decoded or
+ * length-checked. A value this schema accepts, such as `sha512-oldHash==`, can
+ * therefore still fail `CorepackIntegrityHash.fromSri`, which decodes the
+ * digest to hex.
+ *
+ * Reach for `IntegrityHash.isSri(value)` to ask the same question about a raw
+ * string without decoding. Not to be confused with
+ * {@link InvalidSriIntegrityHashError}, which reports a failed SRI → corepack
+ * conversion, not a failed decode through this schema.
+ *
+ * **Example** (Accept SRI hashes and reject corepack hashes)
+ *
+ * ```ts
+ * import { SriIntegrityHash } from "@beep/scratchpad/effected/npm/IntegrityHash";
+ * import * as S from "effect/Schema";
+ * import * as Exit from "effect/Exit";
+ *
+ * const decode = S.decodeUnknownExit(SriIntegrityHash);
+ *
+ * console.log(Exit.isSuccess(decode("sha512-3q2+7w=="))); // true
+ * console.log(Exit.isFailure(decode("sha512.deadbeef"))); // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SriIntegrityHash = sriRestricted;
+
+/**
+ * The branded string accepted by the SRI-only integrity schema.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SriIntegrityHash = typeof SriIntegrityHash.Type;
+
+// --- The SRI → corepack bridge ---------------------------------------------
+//
+// npm's registry (and every lockfile) speaks the SRI form `sha512-<base64>`;
+// a `packageManager` pin speaks corepack's `sha512.<hex>`. The conversion is
+// mechanical — base64 → lowercase hex, `-` → `.` — but every consumer that
+// hand-rolls it re-decides the same edge cases (quoted JSON tokens, non-sha512
+// algorithms, sloppy base64), so the bridge lives here, once, as a codec.
+
+// Why this is hand-rolled rather than core's `effect/encoding/Base64`, which this package
+// already uses elsewhere (`PackageTarball`, `RegistryCredential`): the two
+// disagree in both directions, and for an integrity value the disagreement is
+// load-bearing:
+//
+//   Base64.decode("QQ==")     -> [65]
+//   Base64.decode("QR==")     -> [65]   non-zero trailing bits
+//   Base64.decode("QV==")     -> [65]   ditto
+//   Base64.decode("QQ=\r\n=") -> [65]   CRLF stripped silently
+//   Base64.decode("QQ")       -> fail  "Length must be a multiple of 4"
+//
+// Core accepts three spellings of one digest and tolerates embedded CRLF, so
+// two `integrity` strings that differ as text can decode to identical bytes —
+// precisely the ambiguity an integrity check exists to deny. Core is also
+// *stricter* where this codec is deliberately lenient: it rejects the unpadded
+// form. Neither direction is a drop-in. Do not "fix" this to `Base64`.
+//
+// Canonical base64 alphabet; index = 6-bit value.
+const BASE64_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const BASE64_INVALID = 0xff;
+const BASE64_INDEX = (() => {
+	const table = new Uint8Array("z".charCodeAt(0) + 1);
+	table.fill(BASE64_INVALID);
+	for (let index = 0; index < BASE64_ALPHABET.length; index += 1) {
+		table[BASE64_ALPHABET.charCodeAt(index)] = index;
+	}
+	return table;
+})();
+
+// Decode canonical base64 to bytes without a runtime dependency. `Buffer` is
+// Node-only AND lenient — it silently drops invalid characters and truncates —
+// and lenience is exactly what an integrity conversion must not have.
+// `undefined` for anything non-canonical: a length no base64 output has
+// (remainder 1), padding that does not match the body length, a character
+// outside the alphabet, an interior `=`, or non-zero trailing bits (a second
+// spelling of the same bytes; npm emits only the canonical one).
+const decodeBase64 = (value: string): ReadonlyArray<number> | undefined => {
+	const firstPad = value.indexOf("=");
+	const body = firstPad === -1 ? value : value.slice(0, firstPad);
+	const padding = firstPad === -1 ? "" : value.slice(firstPad);
+	if (padding !== "" && padding !== "=" && padding !== "==") return undefined;
+	const remainder = body.length % 4;
+	if (body.length === 0 || remainder === 1) return undefined;
+	if (padding.length > 0 && padding.length !== (4 - remainder) % 4) return undefined;
+	let buffer = 0;
+	let bits = 0;
+	const bytes: Array<number> = [];
+	for (let index = 0; index < body.length; index += 1) {
+		const code = body.charCodeAt(index);
+		if (code >= BASE64_INDEX.length) return undefined;
+		const sextet = BASE64_INDEX[code];
+		if (sextet === undefined || sextet === BASE64_INVALID) return undefined;
+		buffer = (buffer << 6) | sextet;
+		bits += 6;
+		if (bits >= 8) {
+			bits -= 8;
+			bytes.push((buffer >>> bits) & 0xff);
+		}
+	}
+	if ((buffer & ((1 << bits) - 1)) !== 0) return undefined;
+	return bytes;
+};
+
+// Canonical (padded) base64 of a byte sequence — the exact inverse of
+// `decodeBase64`, used by the codec's encode direction.
+const encodeBase64 = (bytes: ReadonlyArray<number>): string => {
+	let out = "";
+	for (let index = 0; index < bytes.length; index += 3) {
+		const b0 = A.getUnsafe(bytes, index);
+		const b1 = bytes[index + 1];
+		const b2 = bytes[index + 2];
+		const buffer = (b0 << 16) | ((b1 ?? 0) << 8) | (b2 ?? 0);
+		out += BASE64_ALPHABET.charAt((buffer >>> 18) & 0x3f);
+		out += BASE64_ALPHABET.charAt((buffer >>> 12) & 0x3f);
+		out += b1 === undefined ? "=" : BASE64_ALPHABET.charAt((buffer >>> 6) & 0x3f);
+		out += b2 === undefined ? "=" : BASE64_ALPHABET.charAt(buffer & 0x3f);
+	}
+	return out;
+};
+
+const hexOfBytes = (bytes: ReadonlyArray<number>): string =>
+	bytes.map((byte) => byte.toString(16).padStart(2, "0")).join("");
+
+const bytesOfHex = (hex: string): ReadonlyArray<number> => {
+	const bytes: Array<number> = [];
+	for (let index = 0; index < hex.length; index += 2) {
+		bytes.push(Number.parseInt(hex.slice(index, index + 2), 16));
+	}
+	return bytes;
+};
+
+const SHA512_SRI_PREFIX = "sha512-";
+const SHA512_COREPACK_PREFIX = "sha512.";
+// A sha512 digest is always 64 bytes. An SRI value with any other payload
+// length cannot be a sha512 digest, and converting it would mint a pin
+// corepack rejects at install time — fail typed here instead.
+const SHA512_DIGEST_BYTES = 64;
+const CorepackSha512String = S.String.annotate($I.annote("CorepackSha512String", { description: "A complete corepack SHA-512 integrity string." })).check(S.isPattern(/^sha512\.[0-9a-f]{128}$/, $I.annote("CorepackSha512StringCheck", {
+    title: "Corepack SHA-512 digest", description: "A corepack SHA-512 hash carrying exactly 128 lowercase hexadecimal digits.",
+})));
+const isCorepackSha512 = S.is(CorepackSha512String);
+
+// One layer of surrounding double quotes is tolerated and unwrapped:
+// registry-adjacent tooling sometimes hands over the raw JSON token
+// (`"sha512-…"`) rather than the decoded string.
+const unwrapJsonQuotes = (value: string): string =>
+	value.length >= 2 && value.startsWith('"') && value.endsWith('"') ? value.slice(1, -1) : value;
+
+// SRI `sha512-<base64>` → corepack `sha512.<hex>`; `undefined` when the input
+// is not a canonical sha512 SRI hash carrying a 64-byte digest. Deliberately
+// one-way: an already-corepack-form input does NOT pass through — silently
+// accepting it would let a caller feed pins back in and mask a wiring bug.
+const corepackOfSri = (input: string): string | undefined => {
+	const value = unwrapJsonQuotes(input);
+	if (!value.startsWith(SHA512_SRI_PREFIX)) return undefined;
+	const bytes = decodeBase64(value.slice(SHA512_SRI_PREFIX.length));
+	if (bytes === undefined || bytes.length !== SHA512_DIGEST_BYTES) return undefined;
+	return `${SHA512_COREPACK_PREFIX}${hexOfBytes(bytes)}`;
+};
+
+// corepack `sha512.<128-hex>` → canonical SRI `sha512-<base64>`. `undefined`
+// for the corepack forms SRI cannot carry (sha224, a truncated digest).
+const sriOfCorepack = (value: string): string | undefined =>
+	isCorepackSha512(value)
+		? `${SHA512_SRI_PREFIX}${encodeBase64(bytesOfHex(value.slice(SHA512_COREPACK_PREFIX.length)))}`
+		: undefined;
+
+// The codec: decode converts and then validates through the corepack-restricted
+// schema, so the result carries the same brand every other integrity field
+// uses; encode is the exact inverse (canonical padded base64, no re-quoting).
+const corepackFromSri: S.Codec<IntegrityHashBrand, string> = S.String.pipe(
+	S.decodeTo(
+		S.suspend(() => CorepackIntegrityHash),
+		SchemaTransformation.transformEffect<string, string>({
+			decode: (input) => {
+				const corepack = corepackOfSri(input);
+				return corepack === undefined
+					? Effect.fail(
+							new SchemaIssue.InvalidValue(
+								{ message: `Expected an SRI sha512-<base64> integrity hash carrying a 64-byte digest, got "${input}"` },
+								input,
+							),
+						)
+					: Effect.succeed(corepack);
+			},
+			encode: (value) => {
+				const sri = sriOfCorepack(value);
+				return sri === undefined
+					? Effect.fail(
+							new SchemaIssue.InvalidValue(
+								{ message: `Expected a corepack sha512.<128-hex-digit> integrity hash, got "${value}"` },
+								value,
+							),
+						)
+					: Effect.succeed(sri);
+			},
+		}),
+	),
+);
+
+/**
+ * Indicates that a string could not be converted from npm's SRI form to the
+ * corepack integrity form.
+ *
+ * **Details**
+ *
+ * Raised by {@link (CorepackIntegrityHash:variable)}'s `fromSri`. The offending
+ * string is preserved on `input`. Only a canonical `sha512-<base64>` value
+ * carrying a 64-byte digest converts — corepack pins accept nothing weaker
+ * than sha512, so a sha256/sha1 SRI hash, malformed base64, a wrong-length
+ * digest and an already-corepack-form input all raise this error.
+ *
+ * **Example** (Preserve a failed SRI conversion)
+ *
+ * ```ts
+ * import { InvalidSriIntegrityHashError } from "@beep/scratchpad/effected/npm/IntegrityHash";
+ *
+ * const error = InvalidSriIntegrityHashError.make({ input: "sha1-QQ==" });
+ * console.log(error.input); // sha1-QQ==
+ * ```
+ *
+ * @public
+ * @category errors
+ * @since 0.0.0
+ */
+export class InvalidSriIntegrityHashError extends S.TaggedError<InvalidSriIntegrityHashError>($I`InvalidSriIntegrityHashError`)(
+	"InvalidSriIntegrityHashError",
+	{
+		/** The raw input string that failed conversion. */
+		input: S.String.annotateKey({ description: "The raw input string that failed conversion." }),
+	}, $I.annote("InvalidSriIntegrityHashError", { description: "Indicates that a string could not be converted from npm's SRI form to the corepack integrity form." }),
+) {
+	/**
+	 * Explains the rejected integrity input and the expected format.
+	 *
+	 * **Example** (Read the validation message)
+	 *
+	 * ```ts
+	 * import { InvalidSriIntegrityHashError } from "@beep/scratchpad/effected/npm/IntegrityHash";
+	 *
+	 * const error = InvalidSriIntegrityHashError.make({ input: "invalid" });
+	 * console.log(error.message); // Invalid SRI integrity hash "invalid": expected a sha512-<base64> value carrying a 64-byte digest (corepack accepts only sha512)
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
+	override get message(): string {
+		return `Invalid SRI integrity hash "${this.input}": expected a sha512-<base64> value carrying a 64-byte digest (corepack accepts only sha512)`;
+	}
+}
+
+const fromSri = Effect.fn("CorepackIntegrityHash.fromSri")((input: string): Effect.Effect<IntegrityHashBrand, InvalidSriIntegrityHashError> =>
+    S.decodeEffect(CorepackIntegrityHash.FromSri)(input).pipe(Effect.mapError(() => InvalidSriIntegrityHashError.make({ input }))),
+);
+
+// Widen only Opaque's unused constructor to string members: TypeScript cannot
+// extend a primitive. Its schema Type and runtime decoder remain branded strings.
+const CorepackIntegrityHashBase: Omit<S.Opaque<IntegrityHashBrand, typeof corepackRestricted, {}>, never> &
+    (new (_: never) => Pick<IntegrityHashBrand, keyof IntegrityHashBrand>) = S.Opaque<IntegrityHashBrand>()(corepackRestricted);
+
+/**
+ * A subresource-integrity hash in the corepack `<algo>.<hex>` form only —
+ * `sha512.deadbeef`, and corepack's own sha224 default pins
+ * (`sha224.877304e3…`). An SRI (`sha512-<base64>`) or yarn (`10c0/<hex>`) hash,
+ * both valid {@link (IntegrityHash:variable)} values, fails this schema.
+ *
+ * **Details**
+ *
+ * The schema value also carries the SRI bridge: the `FromSri` codec decodes
+ * npm's `sha512-<base64>` form (what `NpmRegistry.version()` returns, with one
+ * layer of JSON quotes tolerated) into the corepack form, and `fromSri` is its
+ * `Effect` convenience, failing with a typed
+ * {@link InvalidSriIntegrityHashError}. The conversion is deliberately one-way
+ * and sha512-only — corepack pins accept nothing weaker, so a sha256/sha1 SRI
+ * hash fails typed rather than minting a pin corepack would reject.
+ *
+ * The corepack pin tail (`<name>@<version>+<integrity>`) is the one place the
+ * kit meets this form, and two schemas name it: `PackageManagerPin.integrity`
+ * here and `@effected/package-json`'s `PackageManager.integrity`. Both consume
+ * **this** schema, so a value validated by one is accepted by the other.
+ *
+ * It decodes to the same {@link IntegrityHashBrand} the unrestricted schema
+ * does, so a corepack-validated value assigns anywhere an `IntegrityHash` is
+ * expected; there is no second brand. A `Schema.check` is erased from the built
+ * type, so this schema and the unrestricted one are the same declared type.
+ * Reach for `IntegrityHash.isCorepack(value)` to ask the same question about a
+ * raw string without decoding.
+ *
+ * **Gotchas**
+ *
+ * Sharing is not type-enforced: a consumer that quietly reverts to a private
+ * copy of the restriction compiles clean and, if the copy is faithful, passes
+ * every rejection test. What sees a re-fork is **object identity**, so each
+ * consumer's suite asserts its field schema IS this export
+ * (`PackageManagerPin.fields.integrity.schema === CorepackIntegrityHash`, and
+ * `PackageManager.fields.integrity.value === CorepackIntegrityHash` on the
+ * `@effected/package-json` side), each with a control against the unrestricted
+ * brand. Do not replace those with a behavioural test, which cannot fail.
+ *
+ * **Example** (Accept corepack hashes and reject SRI hashes)
+ *
+ * ```ts
+ * import { CorepackIntegrityHash } from "@beep/scratchpad/effected/npm/IntegrityHash";
+ * import * as S from "effect/Schema";
+ * import * as Exit from "effect/Exit";
+ *
+ * const decode = S.decodeUnknownExit(CorepackIntegrityHash);
+ *
+ * console.log(Exit.isSuccess(decode("sha512.deadbeef"))); // true
+ * console.log(Exit.isFailure(decode("sha512-3q2+7w=="))); // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CorepackIntegrityHash extends CorepackIntegrityHashBase {
+    /**
+     * Codec between npm's SRI `sha512-<base64>` form (the encoded side) and the
+     * corepack `sha512.<hex>` form (the decoded side). Decoding tolerates one
+     * layer of surrounding JSON quotes and fails typed on any non-sha512
+     * algorithm, malformed base64, a digest that is not 64 bytes, and an input
+     * already in corepack form (the conversion is one-way from SRI). Encoding
+     * emits the canonical padded SRI spelling.
+     *
+     * **Example** (Decode a complete SHA-512 digest)
+     *
+     * ```ts
+     * import { CorepackIntegrityHash } from "@beep/scratchpad/effected/npm/IntegrityHash";
+     * import * as S from "effect/Schema";
+     *
+     * const sri = "sha512-" + "A".repeat(86) + "==";
+     * const hash = S.decodeUnknownSync(CorepackIntegrityHash.FromSri)(sri);
+     * console.log(hash === "sha512." + "00".repeat(64)); // true
+     * ```
+     *
+     * @category codecs
+     * @since 0.0.0
+     */
+    static readonly FromSri = corepackFromSri;
+    /**
+     * Convert npm's SRI `sha512-<base64>` form to the corepack `sha512.<hex>`
+     * form, failing with a typed {@link InvalidSriIntegrityHashError}. The
+     * `Effect` convenience over the `FromSri` codec.
+     *
+     * **Example** (Convert SRI to a corepack pin digest)
+     *
+     * ```ts
+     * import { CorepackIntegrityHash } from "@beep/scratchpad/effected/npm/IntegrityHash";
+     * import * as Effect from "effect/Effect";
+     *
+     * const sri = "sha512-" + "A".repeat(86) + "==";
+     * const hash = Effect.runSync(CorepackIntegrityHash.fromSri(sri));
+     * console.log(hash === "sha512." + "00".repeat(64)); // true
+     * ```
+     *
+     * @category decoding
+     * @since 0.0.0
+     */
+    static readonly fromSri = fromSri;
+}

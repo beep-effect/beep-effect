@@ -1,0 +1,194 @@
+[
+  {
+    "source": "USPTO public record, US government work (17 U.S.C. 105), identifiers withheld",
+    "originalSha256": "37ad364675e85fc87bbbddd9a7b3c930b38a571506fab204fa67d92d7519d152",
+    "extractedTextSha256": "ee89dced643ff39471492ff594e91d79b125828b6d956430fb40cd20ec0d96f0",
+    "modality": "ocr-derived",
+    "extractor": {
+      "name": "poppler-pdftotext",
+      "version": "26.08.0",
+      "flags": ["-layout"]
+    },
+    "redaction": "no original content committed; image-only excluded from positives"
+  },
+  {
+    "source": "USPTO public record, US government work (17 U.S.C. 105), identifiers withheld",
+    "originalSha256": "1e00683e7741ec02de365e306e5b8caffc60b006754322d33bd16ea933241438",
+    "extractedTextSha256": "bac73e8e5d0502cae3490d5e2a0617d2a437fb20599903f18494f207e4f80cdc",
+    "modality": "ocr-derived",
+    "extractor": {
+      "name": "poppler-pdftotext",
+      "version": "26.08.0",
+      "flags": ["-layout"]
+    },
+    "redaction": "no original content committed; image-only excluded from positives"
+  },
+  {
+    "source": "USPTO public record, US government work (17 U.S.C. 105), identifiers withheld",
+    "originalSha256": "d45a362f40cccf2ff8aec604802802124d6030d6ae3b1da9a5b6f45436e8e189",
+    "extractedTextSha256": "1708940227de929934e4bae47bf4a207918837bc4240070f2c6c8af5177eab17",
+    "modality": "ocr-derived",
+    "extractor": {
+      "name": "poppler-pdftotext",
+      "version": "26.08.0",
+      "flags": ["-layout"]
+    },
+    "redaction": "no original content committed; image-only excluded from positives"
+  },
+  {
+    "source": "USPTO public record, US government work (17 U.S.C. 105), identifiers withheld",
+    "originalSha256": "9aefe1d2844be89b596ae04ed9c64841863a811b8b570e67ba50721017ea8f2f",
+    "extractedTextSha256": "cb7c7f5a50363e843bf55318c122a7f82614928eb2580384dc6aca3a963ef1cd",
+    "modality": "ocr-derived",
+    "extractor": {
+      "name": "poppler-pdftotext",
+      "version": "26.08.0",
+      "flags": ["-layout"]
+    },
+    "redaction": "no original content committed; image-only excluded from positives"
+  },
+  {
+    "source": "USPTO public record, US government work (17 U.S.C. 105), identifiers withheld",
+    "originalSha256": "319cd083f068c23beb11983b5012e87ba85ec915ef8493f765dcc98141299622",
+    "extractedTextSha256": "1708940227de929934e4bae47bf4a207918837bc4240070f2c6c8af5177eab17",
+    "modality": "ocr-derived",
+    "extractor": {
+      "name": "poppler-pdftotext",
+      "version": "26.08.0",
+      "flags": ["-layout"]
+    },
+    "redaction": "no original content committed; image-only excluded from positives"
+  },
+  {
+    "source": "USPTO public record, US government work (17 U.S.C. 105), identifiers withheld",
+    "originalSha256": "0fac73cdef49c23ce014a2564a4fa6c5d289919cbba9f89f20a93a25d30980ae",
+    "extractedTextSha256": "cb7c7f5a50363e843bf55318c122a7f82614928eb2580384dc6aca3a963ef1cd",
+    "modality": "ocr-derived",
+    "extractor": {
+      "name": "poppler-pdftotext",
+      "version": "26.08.0",
+      "flags": ["-layout"]
+    },
+    "redaction": "no original content committed; image-only excluded from positives"
+  },
+  {
+    "source": "USPTO public record, US government work (17 U.S.C. 105), identifiers withheld",
+    "originalSha256": "390befa093dce84d0a267f794ffa84542b830cb9193b66629e42dc3784625ec8",
+    "extractedTextSha256": "72babeb35d543219be557f8a5a73974b98a74a4a417117e9834d70f1384497c8",
+    "modality": "ocr-derived",
+    "extractor": {
+      "name": "poppler-pdftotext",
+      "version": "26.08.0",
+      "flags": ["-layout"]
+    },
+    "redaction": "no original content committed; image-only excluded from positives"
+  },
+  {
+    "source": "USPTO public record, US government work (17 U.S.C. 105), identifiers withheld",
+    "originalSha256": "522ea12a04cf31b71740a51967f261c6025c49f87ee5c3883d97ce4454985514",
+    "extractedTextSha256": "1708940227de929934e4bae47bf4a207918837bc4240070f2c6c8af5177eab17",
+    "modality": "ocr-derived",
+    "extractor": {
+      "name": "poppler-pdftotext",
+      "version": "26.08.0",
+      "flags": ["-layout"]
+    },
+    "redaction": "no original content committed; image-only excluded from positives"
+  },
+  {
+    "source": "USPTO public record, US government work (17 U.S.C. 105), identifiers withheld",
+    "originalSha256": "750f00f9f821818838a90067705414495fa46e48e0bde228d96ffa25ad6ef0f1",
+    "extractedTextSha256": "e72539cbd2b03bb3199404142936456750f35c4c05aba2fecdc6fbcf07308bec",
+    "modality": "ocr-derived",
+    "extractor": {
+      "name": "poppler-pdftotext",
+      "version": "26.08.0",
+      "flags": ["-layout"]
+    },
+    "redaction": "no original content committed; image-only excluded from positives"
+  },
+  {
+    "source": "USPTO public record, US government work (17 U.S.C. 105), identifiers withheld",
+    "originalSha256": "29401f48af79a124a1ee620c2f0ddb7b1e62ed4ab835274caebc8c32a76c868b",
+    "extractedTextSha256": "935047c666a1db0949a1835603efa663e57981a31bd3336edad8d804c20707d5",
+    "modality": "ocr-derived",
+    "extractor": {
+      "name": "poppler-pdftotext",
+      "version": "26.08.0",
+      "flags": ["-layout"]
+    },
+    "redaction": "no original content committed; image-only excluded from positives"
+  },
+  {
+    "source": "USPTO public record, US government work (17 U.S.C. 105), identifiers withheld",
+    "originalSha256": "0f2c5efa0670d7d4b4eae76bc0312378142e5fe0b1c255390aefe1cb3c064e56",
+    "extractedTextSha256": "bac73e8e5d0502cae3490d5e2a0617d2a437fb20599903f18494f207e4f80cdc",
+    "modality": "ocr-derived",
+    "extractor": {
+      "name": "poppler-pdftotext",
+      "version": "26.08.0",
+      "flags": ["-layout"]
+    },
+    "redaction": "no original content committed; image-only excluded from positives"
+  },
+  {
+    "source": "USPTO public record, US government work (17 U.S.C. 105), identifiers withheld",
+    "originalSha256": "2311f9db1bdd31961e231eb6e7a94c745083d6d99aacffcce96d7905bf86b836",
+    "extractedTextSha256": "c7f9034fd448868f927dcf94fe314df53b524af244a01203ee2bad12dddc8386",
+    "modality": "ocr-derived",
+    "extractor": {
+      "name": "poppler-pdftotext",
+      "version": "26.08.0",
+      "flags": ["-layout"]
+    },
+    "redaction": "no original content committed; image-only excluded from positives"
+  },
+  {
+    "source": "USPTO public record, US government work (17 U.S.C. 105), identifiers withheld",
+    "originalSha256": "051019d280852dd3c9a985ade324da7137f508cb3a3020c59152eb3851ac6b71",
+    "extractedTextSha256": "859aa658314fcc519a9b7aa9096bc94316446ca5d26eb9f1a5e9369030b02c86",
+    "modality": "ocr-derived",
+    "extractor": {
+      "name": "poppler-pdftotext",
+      "version": "26.08.0",
+      "flags": ["-layout"]
+    },
+    "redaction": "no original content committed; image-only excluded from positives"
+  },
+  {
+    "source": "USPTO public record, US government work (17 U.S.C. 105), identifiers withheld",
+    "originalSha256": "0233e6e73780e47f0f679ad9845588e631af8822c667544b64388fe0f1f0efc4",
+    "extractedTextSha256": "7b2aa16484b6ad79ef5bec51da3501f5079367b625da44bf97468422d27e8e95",
+    "modality": "ocr-derived",
+    "extractor": {
+      "name": "poppler-pdftotext",
+      "version": "26.08.0",
+      "flags": ["-layout"]
+    },
+    "redaction": "no original content committed; image-only excluded from positives"
+  },
+  {
+    "source": "USPTO public record, US government work (17 U.S.C. 105), identifiers withheld",
+    "originalSha256": "a456c6c105b8110bca153239d6135e87851d69eda65c9d5fb7c36c6617ab26d1",
+    "extractedTextSha256": "935047c666a1db0949a1835603efa663e57981a31bd3336edad8d804c20707d5",
+    "modality": "ocr-derived",
+    "extractor": {
+      "name": "poppler-pdftotext",
+      "version": "26.08.0",
+      "flags": ["-layout"]
+    },
+    "redaction": "no original content committed; image-only excluded from positives"
+  },
+  {
+    "source": "USPTO public record, US government work (17 U.S.C. 105), identifiers withheld",
+    "originalSha256": "79017cfaa7cff8649449fabf6de3e2bd82cc7b9f04a4f4eb772d4856932f470c",
+    "extractedTextSha256": "bac73e8e5d0502cae3490d5e2a0617d2a437fb20599903f18494f207e4f80cdc",
+    "modality": "ocr-derived",
+    "extractor": {
+      "name": "poppler-pdftotext",
+      "version": "26.08.0",
+      "flags": ["-layout"]
+    },
+    "redaction": "no original content committed; image-only excluded from positives"
+  }
+]

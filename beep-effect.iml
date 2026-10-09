@@ -190,6 +190,7 @@
       <excludePattern pattern="coverage" />
       <excludePattern pattern="dist" />
       <excludePattern pattern="storybook-static" />
+      <excludePattern pattern="docs" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

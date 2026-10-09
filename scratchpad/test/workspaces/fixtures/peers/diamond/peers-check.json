@@ -1,0 +1,43 @@
+{
+  ".": {
+    "bad": {},
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  },
+  "packages/app": {
+    "bad": {},
+    "missing": {
+      "react": [
+        {
+          "parents": [
+            {
+              "name": "react-redux",
+              "version": "9.2.0"
+            }
+          ],
+          "optional": false,
+          "wantedRange": "^18.0 || ^19"
+        },
+        {
+          "parents": [
+            {
+              "name": "react-redux",
+              "version": "9.2.0"
+            },
+            {
+              "name": "use-sync-external-store",
+              "version": "1.2.2"
+            }
+          ],
+          "optional": false,
+          "wantedRange": "^16.8.0 || ^17.0.0 || ^18.0.0"
+        }
+      ]
+    },
+    "conflicts": [],
+    "intersections": {
+      "react": ">=18.0.0 <19.0.0-0"
+    }
+  }
+}

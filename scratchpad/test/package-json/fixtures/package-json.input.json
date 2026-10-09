@@ -1,0 +1,61 @@
+{
+	"name": "@effected/package-json",
+	"version": "0.2.0",
+	"private": true,
+	"description": "package.json parsing, editing, validation and file IO as Effect schemas.",
+	"keywords": ["package.json", "npm", "manifest", "effect", "schema", "validation", "effected"],
+	"homepage": "https://github.com/spencerbeggs/effected/tree/main/packages/package-json#readme",
+	"bugs": {
+		"url": "https://github.com/spencerbeggs/effected/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/spencerbeggs/effected.git",
+		"directory": "packages/package-json"
+	},
+	"license": "MIT",
+	"author": {
+		"name": "C. Spencer Beggs",
+		"email": "spencer@beggs.codes",
+		"url": "https://spencerbeg.gs"
+	},
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./package.json": "./package.json"
+	},
+	"scripts": {
+		"build:dev": "node savvy.build.ts --target dev",
+		"build:prod": "node savvy.build.ts --target prod",
+		"prepare": "turbo run build:dev",
+		"types:check": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@effected/npm": "workspace:*",
+		"@effected/semver": "workspace:*",
+		"spdx-expression-parse": "^4.0.0"
+	},
+	"devDependencies": {
+		"@effect/platform-node": "catalog:effect",
+		"@effect/vitest": "catalog:effect",
+		"@savvy-web/bundler": "^2.0.0",
+		"@types/node": "catalog:silk",
+		"effect": "catalog:effect",
+		"typescript": "catalog:silk"
+	},
+	"peerDependencies": {
+		"effect": "catalog:effect"
+	},
+	"engines": {
+		"node": ">=24.11.0"
+	},
+	"publishConfig": {
+		"access": "public",
+		"directory": "dist/dev/pkg",
+		"linkDirectory": true,
+		"targets": {
+			"npm": true
+		}
+	}
+}

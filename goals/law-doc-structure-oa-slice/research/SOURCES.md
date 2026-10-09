@@ -104,3 +104,18 @@
 - Streaming and calibration remain queued under Q7/Q8 and their dated deferred
   entries; their upstream source rows stay in the primary ledger, not this V1
   implementation corpus.
+
+## 6. OA slice P0 retrieval (2026-10-09)
+
+| Row | Source | License / disposition | Family / version | Parity corpus |
+| --- | --- | --- | --- | --- |
+| `mpep-706` | [Official MPEP §706.07 form paragraphs](https://www.uspto.gov/web/offices/pac/mpep/s706.html), retrieved 2026-10-09 | US government form language; clean-room rule authorship, no third-party regex port | `uspto-oa-finality-ssp` / `1` proposed | `oa-001`–`oa-012`, three form families, gamma held out |
+| `mpep-710` | [Official MPEP §710 response-period doctrine](https://www.uspto.gov/web/offices/pac/mpep/s710.html), retrieved 2026-10-09 | US government text; reference only, no deadline computation | same | period completeness and unsupported cases |
+| `constructed-form-variation` | Constructed cover-summary and hostile examples, based on public form vocabulary | Repo-authored MIT variations, explicitly synthetic; no claim to real-OA validation | same | `oa-013`–`oa-034` |
+| `odp-image-only` | USPTO public records, identifiers withheld | Retrieval succeeded; 16 image-only originals excluded from positives, no source content committed | same | source-quality diagnostics only, private ledger |
+
+The source hierarchy and license dispositions above remain unchanged. The
+exploration ledger sync is a follow-up for its owner; this lane edits only this
+packet's copy. Original-byte hashes, extracted-text hashes, retrieval dates,
+extractor identities and PDF diagnostics remain in the ignored private ledger.
+The public-form-language fallback supplies no real-OA precision claim.

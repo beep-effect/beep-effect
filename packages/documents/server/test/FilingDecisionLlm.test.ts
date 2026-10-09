@@ -9,6 +9,7 @@ import {
   FilingTextExtractionLiveLayer,
 } from "@beep/documents-server/aggregates/Document";
 import { Document } from "@beep/documents-use-cases/server";
+import { SecretScrub } from "@beep/file-processing";
 import { FileProcessingService } from "@beep/file-processing/Service";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
@@ -61,7 +62,9 @@ const makeLanguageModelLayer = (response: Effect.Effect<string>): Layer.Layer<La
   );
 
 const makeDecisionLayer = (response: Effect.Effect<string>) =>
-  FilingDecisionLlmLayer.pipe(Layer.provide(Layer.merge(TestConfigLayer, makeLanguageModelLayer(response))));
+  FilingDecisionLlmLayer.pipe(
+    Layer.provide(Layer.mergeAll(TestConfigLayer, makeLanguageModelLayer(response), SecretScrub.SecretScrubLive))
+  );
 
 const filingInput = Document.FilingDecisionInput.make({
   contentDigest: DocumentContentDigest.make("abc123"),

@@ -1,0 +1,73 @@
+{
+  "module": "walker",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/walker/Descend.ts",
+        "scratchpad/effected/walker/Expand.ts",
+        "scratchpad/effected/walker/Walker.ts",
+        "scratchpad/effected/walker/index.ts"
+      ],
+      "tests": [
+        "scratchpad/test/walker/Descend.test.ts",
+        "scratchpad/test/walker/Expand.test.ts",
+        "scratchpad/test/walker/Walker.test.ts",
+        "scratchpad/test/walker/fixtures.ts"
+      ],
+      "findings": [
+        "req-1",
+        "req-2",
+        "req-3",
+        "req-4",
+        "req-5",
+        "req-6",
+        "req-7"
+      ]
+    }
+  ],
+  "findings": {
+    "req-1": {
+      "file": "scratchpad/effected/walker/Descend.ts",
+      "class": "law",
+      "summary": "Replace the native final traversal sort with A.sort and explicit Order.String.",
+      "fix": "Import effect/Array as A and effect/Order, and replace the final sort and return with return finish(A.sort(results, Order.String)). Preserve lexical path order and the existing sorted-result assertions in Descend.test.ts."
+    },
+    "req-2": {
+      "file": "scratchpad/effected/walker/Descend.ts",
+      "class": "law",
+      "summary": "Render DescendError and GlobExpansionError messages with schema JSON codecs.",
+      "fix": "Use S.fromJsonString(S.String) with S.encodeResult and an explicit synchronous Result codec in both getters, following the existing Walker quoting implementation. Keep getters synchronous and preserve quoting, escaping, the 64-character truncation and all upstream message bytes. Retain or extend exact-message assertions in Descend.test.ts and Expand.test.ts."
+    },
+    "req-3": {
+      "file": "scratchpad/effected/walker/Descend.ts",
+      "class": "schema",
+      "summary": "Supply schemas for representable walker data models while preserving overload-only contracts.",
+      "fix": "Define identity-annotated schemas and same-name derived types for UnreadableDirectory, DescendResult, DescendFrame, AscendOptions and CompileAndExpandOptions. Use S.Struct where the existing plain object is the actual boundary result; preserve optional fields, supplied object literals, invalid-depth defects and result prototypes. Keep DescendOptions and DescendRecordOptions as the EF-33 overload-only exception, preserving their record-vs-array discriminator; CompileAndExpandOptions must continue to exclude record. Update index.ts to re-export newly introduced runtime schema values under the existing names. Preserve the overload-resolution lines and structural-result assertions in Descend.test.ts, option tests in Walker.test.ts, and compileAndExpand option tests in Expand.test.ts. Added-export bookkeeping belongs to the central codemod."
+    },
+    "req-4": {
+      "file": "scratchpad/effected/walker/Descend.ts",
+      "class": "schema",
+      "summary": "Normalize the compatible public error payload into internal tagged cases before rendering.",
+      "fix": "Preserve the public DescendError schema, reason/limit access and all upstream accepted payloads. Normalize to an internal schema-derived discriminated union before the getter branches: an unreadable case without a depth payload and a depth case carrying the cap as Option, so absent cap still renders \"the depth cap\". Use the derived match helper for rendering. Keep wrong-case public limit behavior unchanged; do not add a required-limit check or tighten public decoding. Add focused assertions in Descend.test.ts for both legacy payload combinations and unchanged messages. This narrows Sol's proposal to the cited internal-normalization rule and drops Fable's conditional public tightening."
+    },
+    "req-5": {
+      "file": "scratchpad/effected/walker/Descend.ts",
+      "class": "effect-idiom",
+      "summary": "Represent internal filesystem probe absence with Option.",
+      "fix": "Return Option from typeOf and realPathOf and consume it with Option guards/combinators at every traversal branch, including the symlink-versus-plain-directory branch. Keep stat-failure absorption, NotFound races, fail/skip/record behavior, defect propagation, ancestor-chain cycle safety and all public results unchanged. Preserve the literal, missing-base, unreadable and symlink tests in Descend.test.ts."
+    },
+    "req-6": {
+      "file": "scratchpad/effected/walker/Descend.ts",
+      "class": "schema",
+      "summary": "Name reused unreadability and error-reason domains with LiteralKit.",
+      "fix": "Introduce module-local OnUnreadable and DescendErrorReason LiteralKit domains with identity annotations, using @beep/schema and no inline as const. Derive the mode types while keeping DescendOptions limited to fail/skip and DescendRecordOptions fixed to record; use kit guards/match helpers for the mode decisions and compose the internal error cases from req-4. Preserve all three modes and the overload assertions in Descend.test.ts."
+    },
+    "req-7": {
+      "file": "scratchpad/test/walker/fixtures.ts",
+      "class": "law",
+      "summary": "Replace native sets in walker fixtures and their test call sites with Effect HashSet.",
+      "fix": "Change unreadable/vanished options to HashSet.HashSet<string>, default with HashSet.empty, query with HashSet.has, and seed from HashSet.union. Replace all four supplied new Set instances with HashSet.make. Keep fault membership, fixture trees, unreadable walk order and assertions unchanged. Use R.toEntries for the adjacent fixture Object.entries loops as part of the same local conversion; defer the independent Walker.test.ts Object.fromEntries cleanup to backlog-7. Touch fixtures.ts, Descend.test.ts and Expand.test.ts."
+    }
+  }
+}

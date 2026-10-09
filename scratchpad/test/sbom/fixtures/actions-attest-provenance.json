@@ -1,0 +1,36 @@
+{
+	"buildDefinition": {
+		"buildType": "https://actions.github.io/buildtypes/workflow/v1",
+		"externalParameters": {
+			"workflow": {
+				"ref": "refs/heads/main",
+				"repository": "https://github.com/effected/kit",
+				"path": ".github/workflows/release.yml"
+			}
+		},
+		"internalParameters": {
+			"github": {
+				"event_name": "push",
+				"repository_id": "123456",
+				"repository_owner_id": "654321",
+				"runner_environment": "github-hosted"
+			}
+		},
+		"resolvedDependencies": [
+			{
+				"uri": "git+https://github.com/effected/kit@refs/heads/main",
+				"digest": {
+					"gitCommit": "6a13657ec19f43b1d7b95c2f0a1c1e5b8d4f7a20"
+				}
+			}
+		]
+	},
+	"runDetails": {
+		"builder": {
+			"id": "https://github.com/effected/reusable/.github/workflows/publish.yml@refs/tags/v3"
+		},
+		"metadata": {
+			"invocationId": "https://github.com/effected/kit/actions/runs/42/attempts/1"
+		}
+	}
+}

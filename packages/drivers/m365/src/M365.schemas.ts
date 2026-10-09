@@ -990,3 +990,78 @@ export class GraphEvent extends S.Class<GraphEvent>($I`GraphEvent`)(
   },
   $I.annote("GraphEvent", { description: "An Outlook calendar event (read subset)." })
 ) {}
+
+/**
+ * A single-value Outlook extended property.
+ *
+ * **Example** (Construct GraphContactProperty)
+ *
+ * ```ts
+ * import { GraphContactProperty } from "@beep/m365"
+ * console.log(GraphContactProperty.make({ id: "fixture-property", value: "fixture-run" }))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class GraphContactProperty extends S.Class<GraphContactProperty>($I`GraphContactProperty`)(
+  { id: S.NonEmptyString, value: S.String },
+  $I.annote("GraphContactProperty", { description: "An Outlook application marker." })
+) {}
+
+/**
+ * A personal mailbox contact with null-safe optional Graph fields.
+ *
+ * **Example** (Construct GraphContact)
+ *
+ * ```ts
+ * import { GraphContact } from "@beep/m365"
+ * console.log(GraphContact.make({ id: "fixture-contact" }))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class GraphContact extends S.Class<GraphContact>($I`GraphContact`)(
+  {
+    rawJson: opt(S.Record(S.String, S.Unknown), "Full Graph contact JSON for private export; never logged."),
+    id: S.NonEmptyString,
+    displayName: opt(S.String, "Contact display name."),
+    givenName: opt(S.String, "Given name."),
+    surname: opt(S.String, "Surname."),
+    companyName: opt(S.String, "Company name."),
+    emailAddresses: opt(S.Array(GraphEmailAddress), "Email addresses."),
+    businessPhones: opt(S.Array(S.String), "Business phones."),
+    homePhones: opt(S.Array(S.String), "Home phones."),
+    mobilePhone: opt(S.String, "Mobile phone."),
+    categories: opt(S.Array(S.String), "Rollback category and existing categories."),
+    parentFolderId: opt(S.String, "Parent folder id."),
+    createdDateTime: opt(S.String, "Creation time."),
+    lastModifiedDateTime: opt(S.String, "Last modification time."),
+    changeKey: opt(S.String, "Optimistic concurrency version."),
+    singleValueExtendedProperties: opt(S.Array(GraphContactProperty), "Expanded application markers."),
+  },
+  $I.annote("GraphContact", { description: "A personal mailbox contact with null-safe optional Graph fields." })
+) {}
+
+/**
+ * A personal contact folder, including nested folders.
+ *
+ * **Example** (Construct GraphContactFolder)
+ *
+ * ```ts
+ * import { GraphContactFolder } from "@beep/m365"
+ * console.log(GraphContactFolder.make({ id: "fixture-folder" }))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class GraphContactFolder extends S.Class<GraphContactFolder>($I`GraphContactFolder`)(
+  {
+    id: S.NonEmptyString,
+    displayName: opt(S.String, "Folder name."),
+    parentFolderId: opt(S.String, "Parent folder id."),
+  },
+  $I.annote("GraphContactFolder", { description: "A personal contact folder, including nested folders." })
+) {}

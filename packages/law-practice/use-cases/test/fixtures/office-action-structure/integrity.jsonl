@@ -1,0 +1,4 @@
+{"id": "integrity-001", "fixture": "oa-001", "mutation": "source-version-drift", "reason": "stale-source"}
+{"id": "integrity-002", "fixture": "oa-001", "mutation": "raw-text-digest-drift", "reason": "stale-source"}
+{"id": "integrity-003", "fixture": "oa-001", "mutation": "inverted-offsets", "reason": "invalid-anchor"}
+{"id": "integrity-004", "fixture": "oa-001", "mutation": "same-width-wrong-quote", "reason": "quote-mismatch"}
