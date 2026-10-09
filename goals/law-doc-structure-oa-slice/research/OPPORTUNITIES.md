@@ -229,3 +229,9 @@
   shared `TestClock.adjust` (line 126). The lane’s test canon had zero introduced
   findings before that merge. Own source is unchanged in that package; route the
   inherited red to the S11 main repair without copying or suppressing it here.
+
+- Passing the exported schema decoder directly to `Effect.forEach` exposed its
+  optional ParseOptions argument to the numeric callback index, and violated
+  the pipeable-signature check. Export a unary `Effect.fn` decoding boundary
+  beside the schema. It drops the unrelated callback index deliberately while
+  retaining the exact fixture codec; keep API checks in package verification.

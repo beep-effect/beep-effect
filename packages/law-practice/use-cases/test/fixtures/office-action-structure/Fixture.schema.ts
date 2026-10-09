@@ -1,3 +1,4 @@
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const Outcome = S.Union([
@@ -26,4 +27,7 @@ export const Fixture = S.Struct({
 export type Fixture = typeof Fixture.Type;
 
 /** Decodes the inventory's JSON boundary with its single fixture schema. */
-export const decodeFixtureJson = S.decodeEffect(S.fromJsonString(Fixture));
+const FixtureJson = S.fromJsonString(Fixture);
+export const decodeFixtureJson = Effect.fn("OfficeActionFixture.decodeJson")((input: string) =>
+  S.decodeEffect(FixtureJson)(input)
+);
