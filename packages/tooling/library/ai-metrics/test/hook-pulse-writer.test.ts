@@ -1209,6 +1209,25 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse writer confo
     })
   );
 
+  it.effect("rejects skipped malformed Git metadata beneath an ancestor checkout through a newline path alias", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeHarnessFixtureRoot();
+      const invalidRoot = path.join(root, "broken\n");
+      yield* fs.makeDirectory(path.join(invalidRoot, ".git"), { recursive: true });
+      yield* fs.writeFileString(path.join(invalidRoot, ".git/HEAD"), "ref: refs/heads/main\n");
+      yield* fs.writeFileString(path.join(invalidRoot, "AGENTS.md"), "# nested fixture\n");
+      const aliasRoot = yield* fs.makeTempDirectoryScoped();
+      const alias = path.join(aliasRoot, "scan");
+      yield* fs.symlink(invalidRoot, alias);
+      const failure = yield* typescriptHarnessHash(alias).pipe(Effect.flip);
+      expect(failure.message).toContain("Git");
+      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(alias)));
+      assertNone((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash);
+    })
+  );
+
   it.effect("carries an operator salt into every private digest", () =>
     Effect.gen(function* () {
       // The oracle above still passes for a writer that never reads the salt
