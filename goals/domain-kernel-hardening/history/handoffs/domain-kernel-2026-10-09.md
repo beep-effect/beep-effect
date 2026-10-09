@@ -827,3 +827,59 @@ hosted-parity: test-tsgo: pass | docgen local: pass | jsdoc-ratchet: pass | know
 handoff: goals/domain-kernel-hardening/history/handoffs/domain-kernel-2026-10-09.md
 open items: B (rsc-b-standards) must reconcile the inventory refresh: 29 changed occurrence identities, 22 outside scope across 13 test files; full summary is in this handoff. D20 records the owner refresh and mandatory byte-for-byte revert; reversal is an owner-landed reviewed inventory or an explicit reconciliation of the outside-scope diff, never a hand edit. D19 remains historical. Earlier D1-D19 decisions, reversals and forced-private-package changes remain in SPEC/handoff; D16 preserves external bundle shape and reverses with a qualified bundle/carry upgrade, D17 fixture helper reuse reverses with kernel rollback. P0/P1 complete, P2/P3 pending, lifecycle active; 72 mechanical sites within 90, zero new implementation or slice model/behavior edits. No push, PR2, readiness monitor or running own heavy unit. Orchestrator owns stale docs/ROADMAP.md platform re-entry bullet (~349), Parked packets row (~383), and cohort prose (~406). Follow-ups: stale DomainModel.make detector and desktop migration rollout. Graft saved approximately 33,169 tokens across two calls.
 blocked: full owner inventory refresh changes 22 outside-scope occurrence identities; run-6 requires reverting it and reporting before PR2 publication.
+
+## Run-7 publication authorized on stale main inventory
+
+The complete amended brief is read. Clean starting head ed8e444581; PR1
+#1577 is MERGED at 78b77b1084, and no PR2 exists at initial discovery.
+Fetched origin and merged main 7929b1f529 cleanly at 9b7addb99d. Both R1
+superset checks pass: PR1 final head is an ancestor, and main's packet equals
+PR1's final packet. No packet conflict, migration change or desktop bundle
+change. Main adds CredentialPatternBank to the schema package, so the required
+kernel/schema gate is rerun through beep-heavy. Prior eleven default package
+proofs and all six parity checks remain retained run-3/run-4 evidence, not
+current-head reruns. No new implementation site; mechanical count remains 72,
+zero slice model/behavior edits. Forbidden reference links remain absent.
+
+D21 implements the 23:05Z ruling: PR2 publishes with stale main inventory;
+B owns the re-anchor/full refresh. Reversal: integrate the reviewed owner
+refresh from main and rerun the affected gate. D16-D20 remain verbatim and
+their reversals remain in SPEC. Inventory is untouched. The inherited EV015
+source is compared with origin/main before publication.
+
+For B (rsc-b-standards) to reconcile, retained run-6 occurrence comparison:
+
+| PracticeKg.projections.test.ts rule | Old line | New line | Status |
+| --- | --- | --- | --- |
+| EV002 | 2184 | 2186 | exception |
+| EV002 | 2266 | 2268 | open |
+| EV002 | 2241 | 2243 | open |
+| EV002 | 2197 | 2199 | open |
+| EV002 | 2145 | 2144 | exception |
+| EV002 | 2231 | 2233 | open |
+| EV010 | 55 | 54 | exception |
+
+All seven preserve lexical occurrence, status and any exception reason; only
+line/endLine/id anchors move. The earlier refresh also moved 22 identities
+in 13 outside-scope files and was correctly reverted. No new judgment row or
+waiver is retained. Publication uses git push plus gh pr create with
+ready-for-heavy as expressly instructed; the preceding Yeet refusal and its
+exact attribution are retained in the run-4 section above.
+
+Current R1 stream output (no packet finding for this slug):
+
+```text
+- goals/domain-kernel-hardening: revision=2 tip=2@97ceca70c0e7 status=active furthest=P0 resume=P0
+```
+
+This is honest active-state consistency, not completed-retained proof.
+P0/P1 complete, P2/P3 pending as separate later waves. Orchestrator owns
+stale ROADMAP platform re-entry bullet (~349), Parked packets row (~383),
+and cohort prose (~406). Follow-ups: stale DomainModel.make detector and the
+desktop release applying the migration.
+
+Run-7 ordered packet proof before commit: GOAL size pass (3,521 characters);
+jq pass; anchor scan pass; diff whitespace pass; reflection-artifacts
+blocking=0/advisory=0; doctor blocking_new=0/blocking_inherited=0, three
+unrelated completion advisories. ContradictionDetection golden source is
+byte-identical to origin/main; inventory has no lane diff.

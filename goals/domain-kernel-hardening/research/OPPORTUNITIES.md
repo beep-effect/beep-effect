@@ -225,3 +225,12 @@ under the run-6 ruling. Saved the generated output and diff in ignored lane
 scratch, restored the inventory byte-for-byte from HEAD, and stopped before
 publication. An owner-landed reviewed inventory or a scoped refresh mode would
 prevent this repeated cross-lane coupling. No new waiver or inventory hand edit.
+
+## Run-7 user-manager environment and inherited inventory publication
+
+The initial beep-heavy launch fails before starting a job because the shell
+lacks XDG_RUNTIME_DIR and DBUS_SESSION_BUS_ADDRESS. Retried with the existing
+user-manager environment and unchanged resource caps. A launcher exporting
+these variables would prevent this environment-only failure. The run-7 ruling
+also removes the repeated publication hold caused by stale main inventory;
+the owner refresh remains the corrective path, with no lane inventory edit.
