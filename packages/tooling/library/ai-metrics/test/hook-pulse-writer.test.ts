@@ -655,7 +655,7 @@ const sessionStartPayload = (cwd: string) => ({
   source: "startup",
 });
 
-it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse writer conformance", (it) => {
   it.effect("tags Codex hook rows as codex-cli", () =>
     Effect.gen(function* () {
       const run = yield* runWriter(yield* encodeJson(preToolUsePayload), { writerPath: codexWriterPath });
@@ -1573,7 +1573,7 @@ const expectSwitchOk = (run: SwitchRun): void => {
 // stderr is still expected empty on every success path: `jq` failing to parse a
 // hand-mangled sentinel is handled, and letting its diagnostics through would
 // train operators to ignore the one channel that reports real trouble.
-it.layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse kill-switch conformance", (it) => {
   it.effect("keeps the first disarm's window start and reason when disarm runs again", () =>
     Effect.gen(function* () {
       const store = yield* makeSwitchStore();

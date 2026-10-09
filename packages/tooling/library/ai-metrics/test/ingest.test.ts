@@ -407,7 +407,7 @@ it("rejects impossible line and measurement values at construction", () => {
   ).toThrow();
 });
 
-it.layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (it) => {
   it.effect(
     "summarizes Codex JSONL and counts rejected lines",
     Effect.fn(function* () {
@@ -669,144 +669,142 @@ it.layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
 
   it.effect(
     "binds session stamps through hook namespace, storage and OTLP without borrowing ambiguous identities",
-    () =>
-      withTempDirectory(
-        Effect.fnUntraced(function* (tmpDir) {
-          const path = yield* Path.Path;
-          const fs = yield* FileSystem.FileSystem;
-          const repoRoot = path.join(tmpDir, "repo");
-          yield* makeGitRoot(repoRoot);
-          yield* writeText(path.join(repoRoot, "AGENTS.md"), "# stamp fixture\n");
-          const stamp = Sha256Hex.make("b".repeat(64));
-          const otherStamp = Sha256Hex.make("c".repeat(64));
-          const decodePulse = S.decodeEffect(HookPulseV1FromRawEvent);
-          for (const scenario of ForwarderStampScenario.literals) {
-            const homeDir = path.join(tmpDir, scenario, "home");
-            const sourceRoot = path.join(homeDir, ".codex/sessions");
-            const sourcePath = path.join(sourceRoot, "session.jsonl");
-            const hookRoot = path.join(tmpDir, scenario, "hooks");
-            const dataRoot = path.join(tmpDir, scenario, "data");
-            const hookDir = path.join(hookRoot, "hook-events");
-            yield* fs.makeDirectory(hookDir, { recursive: true });
+    Effect.fnUntraced(function* () {
+      const path = yield* Path.Path;
+      const fs = yield* FileSystem.FileSystem;
+      const tmpDir = yield* fs.makeTempDirectoryScoped();
+      const repoRoot = path.join(tmpDir, "repo");
+      yield* makeGitRoot(repoRoot);
+      yield* writeText(path.join(repoRoot, "AGENTS.md"), "# stamp fixture\n");
+      const stamp = Sha256Hex.make("b".repeat(64));
+      const otherStamp = Sha256Hex.make("c".repeat(64));
+      const decodePulse = S.decodeEffect(HookPulseV1FromRawEvent);
+      for (const scenario of ForwarderStampScenario.literals) {
+        const homeDir = path.join(tmpDir, scenario, "home");
+        const sourceRoot = path.join(homeDir, ".codex/sessions");
+        const sourcePath = path.join(sourceRoot, "session.jsonl");
+        const hookRoot = path.join(tmpDir, scenario, "hooks");
+        const dataRoot = path.join(tmpDir, scenario, "data");
+        const hookDir = path.join(hookRoot, "hook-events");
+        yield* fs.makeDirectory(hookDir, { recursive: true });
+        yield* writeText(
+          sourcePath,
+          [
+            '{"type":"session_meta","timestamp":"2026-10-09T10:00:00Z","payload":{"id":"current"}}',
+            '{"type":"response_item","timestamp":"2026-10-09T10:01:00Z","payload":{"type":"function_call","name":"fixture","arguments":"{}"}}',
+          ].join("\n")
+        );
+        const provider = ConfigProvider.fromUnknown({
+          BEEP_HOOK_PULSE_HASH_SALT: "hook-fixture-namespace",
+          BEEP_AGENT_EVIDENCE_ROOT: hookRoot,
+        });
+        yield* Effect.gen(function* () {
+          const initial = yield* decodePulse({
+            event: {
+              hook_event_name: "SessionStart",
+              session_id: scenario === "mismatch" ? "previous" : "current",
+              transcript_path: sourcePath,
+              cwd: repoRoot,
+              source: "startup",
+            },
+            notifierRev: "fixture",
+            instrumentClass: "production",
+            agentKind: "codex-cli",
+            evidenceTier: "derived",
+            ts: "2026-10-09T10:00:00Z",
+          });
+          const start = HookPulseV1.make({
+            ...initial,
+            agentKind: "codex-cli",
+            ts: DateTime.makeUnsafe("2026-10-09T10:00:00Z"),
+            harnessHash: O.some(stamp),
+          });
+          const tool = HookPulseV1.make({
+            ...start,
+            hookEvent: "PostToolUse",
+            waitReason: "none",
+            harnessHash: O.none(),
+            sessionStartSource: O.none(),
+            ts: DateTime.makeUnsafe("2026-10-09T10:01:00Z"),
+          });
+          const rows = ForwarderStampScenario.$match(scenario, {
+            qualified: () => [start, tool],
+            mixed: () => [start, HookPulseV1.make({ ...start, harnessHash: O.some(otherStamp) })],
+            unknown: () => [HookPulseV1.make({ ...start, harnessHash: O.none() }), tool],
+            missing: () => [tool],
+            late: () => [HookPulseV1.make({ ...tool, ts: DateTime.makeUnsafe("2026-10-09T09:59:00Z") }), start],
+            reused: () => [start, HookPulseV1.make({ ...tool, sessionId: Sha256Hex.make("e".repeat(64)) })],
+            mismatch: () => [start, tool],
+            corrupt: () => [start, tool],
+            unreadable: () => [start, tool],
+            refused: () => [start, tool],
+            disarmed: () => [start, tool],
+          });
+          yield* writeText(
+            path.join(hookDir, "fixture.ndjson"),
+            (yield* Effect.forEach(rows, (row) => HookPulseV1.encodeJsonEffect(row))).join("\n")
+          );
+          if (scenario === "corrupt") yield* writeText(path.join(hookDir, "bad.ndjson"), "not JSON\n");
+          if (scenario === "unreadable") yield* fs.makeDirectory(path.join(hookDir, "bad.ndjson"));
+          if (scenario === "refused")
             yield* writeText(
-              sourcePath,
-              [
-                '{"type":"session_meta","timestamp":"2026-10-09T10:00:00Z","payload":{"id":"current"}}',
-                '{"type":"response_item","timestamp":"2026-10-09T10:01:00Z","payload":{"type":"function_call","name":"fixture","arguments":"{}"}}',
-              ].join("\n")
-            );
-            const provider = ConfigProvider.fromUnknown({
-              BEEP_HOOK_PULSE_HASH_SALT: "hook-fixture-namespace",
-              BEEP_AGENT_EVIDENCE_ROOT: hookRoot,
-            });
-            yield* Effect.gen(function* () {
-              const initial = yield* decodePulse({
-                event: {
-                  hook_event_name: "SessionStart",
-                  session_id: scenario === "mismatch" ? "previous" : "current",
-                  transcript_path: sourcePath,
-                  cwd: repoRoot,
-                  source: "startup",
-                },
-                notifierRev: "fixture",
-                instrumentClass: "production",
-                agentKind: "codex-cli",
-                evidenceTier: "derived",
-                ts: "2026-10-09T10:00:00Z",
-              });
-              const start = HookPulseV1.make({
-                ...initial,
-                agentKind: "codex-cli",
-                ts: DateTime.makeUnsafe("2026-10-09T10:00:00Z"),
-                harnessHash: O.some(stamp),
-              });
-              const tool = HookPulseV1.make({
-                ...start,
-                hookEvent: "PostToolUse",
-                waitReason: "none",
-                harnessHash: O.none(),
-                sessionStartSource: O.none(),
-                ts: DateTime.makeUnsafe("2026-10-09T10:01:00Z"),
-              });
-              const rows = ForwarderStampScenario.$match(scenario, {
-                qualified: () => [start, tool],
-                mixed: () => [start, HookPulseV1.make({ ...start, harnessHash: O.some(otherStamp) })],
-                unknown: () => [HookPulseV1.make({ ...start, harnessHash: O.none() }), tool],
-                missing: () => [tool],
-                late: () => [HookPulseV1.make({ ...tool, ts: DateTime.makeUnsafe("2026-10-09T09:59:00Z") }), start],
-                reused: () => [start, HookPulseV1.make({ ...tool, sessionId: Sha256Hex.make("e".repeat(64)) })],
-                mismatch: () => [start, tool],
-                corrupt: () => [start, tool],
-                unreadable: () => [start, tool],
-                refused: () => [start, tool],
-                disarmed: () => [start, tool],
-              });
-              yield* writeText(
-                path.join(hookDir, "fixture.ndjson"),
-                (yield* Effect.forEach(rows, (row) => HookPulseV1.encodeJsonEffect(row))).join("\n")
-              );
-              if (scenario === "corrupt") yield* writeText(path.join(hookDir, "bad.ndjson"), "not JSON\n");
-              if (scenario === "unreadable") yield* fs.makeDirectory(path.join(hookDir, "bad.ndjson"));
-              if (scenario === "refused")
-                yield* writeText(
-                  path.join(hookRoot, "hook-pulse-refusals-fixture.ndjson"),
-                  yield* S.encodeEffect(S.fromJsonString(HookPulseRefusal))(
-                    HookPulseRefusal.make({
-                      ts: DateTime.makeUnsafe("2026-10-09T10:00:30Z"),
-                      agentKind: "codex-cli",
-                      reason: "timeout",
-                    })
-                  )
-                );
-              if (scenario === "disarmed")
-                yield* writeText(
-                  path.join(hookRoot, "hook-pulse-disarm-windows.ndjson"),
-                  yield* HookPulseDisarmWindow.encodeJsonEffect(
-                    HookPulseDisarmWindow.make({
-                      disarmedAt: O.some("2026-10-09T10:00:30Z"),
-                      rearmedAt: "2026-10-09T10:00:45Z",
-                      reason: O.none(),
-                      evidenceTier: "unknown",
-                      schemaVersion: "hook-pulse-disarm-window/v1",
-                    })
-                  )
-                );
-              yield* runAiMetricsForwarder(
-                AiMetricsForwarderInput.make({
-                  homeDir,
-                  repoRoot,
-                  codexSessionsRoot: O.some(sourceRoot),
-                  claudeProjectsRoot: O.some(path.join(homeDir, "missing")),
-                  dataRoot: O.some(dataRoot),
-                  hashSalt: O.some("storage-fixture-namespace"),
-                  includeAll: true,
-                  parquetExportMode: "none",
-                  rawArchiveKey: Redacted.make(Base64.encode(new Uint8Array(32).fill(7))),
+              path.join(hookRoot, "hook-pulse-refusals-fixture.ndjson"),
+              yield* S.encodeEffect(S.fromJsonString(HookPulseRefusal))(
+                HookPulseRefusal.make({
+                  ts: DateTime.makeUnsafe("2026-10-09T10:00:30Z"),
+                  agentKind: "codex-cli",
+                  reason: "timeout",
                 })
-              );
-              const expected = scenario === "qualified" ? stamp : null;
-              const db = yield* DuckDb;
-              expect(yield* db.query("SELECT session_harness_hash AS stamp FROM ai_metrics_sessions")).toEqual([
-                { stamp: expected },
-              ]);
-              expect(yield* db.query("SELECT session_harness_hash AS stamp FROM ai_metrics_source_files")).toEqual([
-                { stamp: expected },
-              ]);
-              const projection = yield* readAiMetricsOtlpSpanProjections;
-              expect(projection.projections.length).toBeGreaterThan(0);
-              for (const span of projection.projections)
-                expect(span.attributes["ai_metrics.session_harness_hash"]).toBe(expected ?? undefined);
-            }).pipe(
-              Effect.provideService(ConfigProvider.ConfigProvider, provider),
-              provideScopedLayer(
-                DuckDb.makeNodeLayer(
-                  DuckDbConnectionOptions.make({ databasePath: path.join(dataRoot, "derived/ai-metrics.duckdb") })
-                )
               )
             );
-          }
-        })
-      )
+          if (scenario === "disarmed")
+            yield* writeText(
+              path.join(hookRoot, "hook-pulse-disarm-windows.ndjson"),
+              yield* HookPulseDisarmWindow.encodeJsonEffect(
+                HookPulseDisarmWindow.make({
+                  disarmedAt: O.some("2026-10-09T10:00:30Z"),
+                  rearmedAt: "2026-10-09T10:00:45Z",
+                  reason: O.none(),
+                  evidenceTier: "unknown",
+                  schemaVersion: "hook-pulse-disarm-window/v1",
+                })
+              )
+            );
+          yield* runAiMetricsForwarder(
+            AiMetricsForwarderInput.make({
+              homeDir,
+              repoRoot,
+              codexSessionsRoot: O.some(sourceRoot),
+              claudeProjectsRoot: O.some(path.join(homeDir, "missing")),
+              dataRoot: O.some(dataRoot),
+              hashSalt: O.some("storage-fixture-namespace"),
+              includeAll: true,
+              parquetExportMode: "none",
+              rawArchiveKey: Redacted.make(Base64.encode(new Uint8Array(32).fill(7))),
+            })
+          );
+          const expected = scenario === "qualified" ? stamp : null;
+          const db = yield* DuckDb;
+          expect(yield* db.query("SELECT session_harness_hash AS stamp FROM ai_metrics_sessions")).toEqual([
+            { stamp: expected },
+          ]);
+          expect(yield* db.query("SELECT session_harness_hash AS stamp FROM ai_metrics_source_files")).toEqual([
+            { stamp: expected },
+          ]);
+          const projection = yield* readAiMetricsOtlpSpanProjections;
+          expect(projection.projections.length).toBeGreaterThan(0);
+          for (const span of projection.projections)
+            expect(span.attributes["ai_metrics.session_harness_hash"]).toBe(expected ?? undefined);
+        }).pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, provider),
+          provideScopedLayer(
+            DuckDb.makeNodeLayer(
+              DuckDbConnectionOptions.make({ databasePath: path.join(dataRoot, "derived/ai-metrics.duckdb") })
+            )
+          )
+        );
+      }
+    })
   );
 
   it.effect(

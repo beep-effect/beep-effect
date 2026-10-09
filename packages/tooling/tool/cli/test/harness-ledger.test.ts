@@ -500,8 +500,9 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const narrow = yield* ledger.pruneProposals(HarnessLedgerPruneOptions.make({ ...options, windowSessions: 1 }));
       expect(narrow.sessionsObserved).toBe(1);
       expect(narrow.windowFull).toBe(true);
-      expect(A.last(harnessLedgerPruneReportLines(narrow, false))).toStrictEqual(
-        O.some("dry run: zero-touch candidates are advisory; transcript and surface coverage are unqualified.")
+      assertSome(
+        A.last(harnessLedgerPruneReportLines(narrow, false)),
+        "dry run: zero-touch candidates are advisory; transcript and surface coverage are unqualified."
       );
       // Only the skipped sessions newer than the window's oldest session count.
       expect([narrow.sessionsSkippedOutOfRegime, narrow.sessionsSkippedUnstamped]).toStrictEqual([1, 1]);
@@ -528,8 +529,9 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       expect(report.written).toBe(false);
       expect(report.proposals).toHaveLength(3);
       expect(yield* fs.exists(path.join(root, "harness-ledger"))).toBe(false);
-      expect(A.last(harnessLedgerPruneReportLines(report, true))).toStrictEqual(
-        O.some("nothing written: transcript and surface coverage are unqualified.")
+      assertSome(
+        A.last(harnessLedgerPruneReportLines(report, true)),
+        "nothing written: transcript and surface coverage are unqualified."
       );
     })
   );
@@ -979,11 +981,9 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       expect(report.sessionsSkippedMixedFingerprint).toBe(1);
       expect(report.sessionsObserved).toBe(0);
       expect(report.refusalsByAgentKind["claude-code"]).toBe(1);
-      expect(report.clientCoverage).toStrictEqual({
-        "claude-code": O.none(),
-        "codex-cli": O.none(),
-        "cursor-cli": O.none(),
-      });
+      assertNone(report.clientCoverage["claude-code"]);
+      assertNone(report.clientCoverage["codex-cli"]);
+      assertNone(report.clientCoverage["cursor-cli"]);
       expect(report.nonUseQualified).toBe(false);
     })
   );
