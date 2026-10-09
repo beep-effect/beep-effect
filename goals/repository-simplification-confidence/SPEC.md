@@ -750,3 +750,5 @@ without claiming completion.
   counts links without following them. A bounded mutable stack avoids
   quadratic immutable-array copies; candidate-specific Git gates still
   preserve dirty and linked nested worktrees.
+
+- G qualification remediation (`d881c6e2e0`, followed by the refactor at `bc0591bbb1`): use the installed/reference Effect comparison export, canonicalize archive directory parents before fsync, add schema-derived property coverage, and separate ordered safety probes and recovery stages. Reason: admitted runtime and cheap-gate findings contradicted source-only confidence. Reversal: revert the source commits while preserving every existing archive plan, intent and payload; receipts continue to distinguish source review from runtime proof. No allowlist or complexity-baseline exception was added.

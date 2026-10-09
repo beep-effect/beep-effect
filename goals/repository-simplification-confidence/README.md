@@ -69,7 +69,8 @@ and [lane handoff](./history/handoffs/rsc-h1-catalog-2026-10-09.md).
 and [G cache evidence](./history/receipts/stage-5-cache.md), 2026-10-09:
 2,475 v3 rows across 262 checkout roots; zero real cleanup; local cache hits
 proven. Owner-aware archive/recovery implementation is under qualification;
-remote auth and home changes remain deferred. Terminal-zero source review at `a1363f237b`; runtime qualification pending;
+remote auth and home changes remain deferred. Historical source-zero review at `a1363f237b` preceded runtime failures;
+repairs and a new source review at `bc0591bbb1` are in progress;
 [handoff](./history/handoffs/rsc-g-storage-2026-10-09.md).
 
 [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md)
