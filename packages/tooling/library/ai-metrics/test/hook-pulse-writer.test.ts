@@ -1004,7 +1004,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse writer confo
       for (const fixture of fixtures) {
         const run = yield* runWriter(yield* encodeJson(fixture.payload), {
           writerPath: fixture.writerPath,
-          registeredEvent: fixture.registeredEvent,
+          ...(fixture.registeredEvent === undefined ? {} : { registeredEvent: fixture.registeredEvent }),
         });
         expect(run.stdout).toBe(fixture.stdout);
         expect(run.rows).toHaveLength(1);
@@ -1099,7 +1099,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse writer confo
         const run = yield* runWriter("not JSON", {
           writerPath: cursorWriterPath,
           disarmSentinel: "disarmed",
-          registeredEvent,
+          ...(registeredEvent === undefined ? {} : { registeredEvent }),
         });
         expect(run.stdout).toBe(stdout);
         expect(run.rows).toHaveLength(0);
