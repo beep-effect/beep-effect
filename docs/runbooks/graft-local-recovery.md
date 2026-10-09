@@ -604,7 +604,7 @@ Apply the patch kit, then run its transport-free regression checks:
 ```sh
 scripts/graft/apply-dist-patches.sh
 scripts/graft/apply-dist-patches.sh --check
-node --test scripts/graft/crux-batches.test.js
+node --test packages/tooling/tool/cli/test/fixtures/graft/crux-batches.test.js
 ```
 
 The checks use the installed module with a fake model; they make no network or
@@ -637,7 +637,7 @@ processes have finished, then run the structural regression tests:
 ```sh
 scripts/graft/apply-dist-patches.sh
 scripts/graft/apply-dist-patches.sh --check
-node --test scripts/graft/deep-ast.test.js
+node --test packages/tooling/tool/cli/test/fixtures/graft/deep-ast.test.js
 ```
 
 The tests include a 20,000-member generated union and smaller TypeScript,

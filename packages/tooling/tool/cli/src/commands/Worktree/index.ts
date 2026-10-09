@@ -74,3 +74,4 @@ export * from "./Worktree.schemas.ts";
  * @since 0.0.0
  */
 export * from "./Worktree.service.ts";
+export { installRegenerateMergeDriver } from "./Worktree.service.ts";

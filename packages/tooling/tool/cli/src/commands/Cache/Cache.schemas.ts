@@ -21,6 +21,30 @@ import { CacheCensusEntrypointReview } from "./Cache.entrypoints.schemas.ts";
 const $I = $RepoCliId.create("commands/Cache/Cache.schemas");
 
 /**
+ * Reference-only configuration for a workstation's remote-read dotenv quad.
+ *
+ * **Example** (Select a read token reference)
+ * ```ts
+ * import { CacheRemoteReadsRequest } from "@beep/repo-cli/commands/Cache"
+ * CacheRemoteReadsRequest.make({ api: "https://cache.example.test", team: "fixture", tokenRef: "op://vault/item/field", replaceToken: false }).replaceToken // => false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CacheRemoteReadsRequest extends S.Class<CacheRemoteReadsRequest>($I`CacheRemoteReadsRequest`)(
+  {
+    api: S.NonEmptyString.check(S.isPattern(/^https:\/\/[^\s"'\r\n]+$/u)),
+    team: S.NonEmptyString.check(S.isPattern(/^[^\s"'\r\n]+$/u)),
+    tokenRef: S.NonEmptyString.check(S.isPattern(/^op:\/\/[^/\s"']+\/[^/\s"']+\/(?:[^/\s"']+\/)?[^/\s"']+$/u)),
+    replaceToken: S.Boolean,
+  },
+  $I.annote("CacheRemoteReadsRequest", {
+    description: "Unresolved secret-reference configuration; no secret read is authorized.",
+  })
+) {}
+
+/**
  * Cache posture inferred for one Turbo run.
  *
  * **Example** (Recognize a remote-eligible run)

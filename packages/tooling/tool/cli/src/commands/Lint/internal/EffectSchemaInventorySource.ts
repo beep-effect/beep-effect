@@ -121,13 +121,13 @@ const makeEffectSchemaInventorySource = Effect.fn("EffectSchemaInventorySource.m
       if (!present) {
         return yield* EffectSchemaInventoryReferenceMissingError.new(
           reference,
-          `The Effect reference clone ${reference} is missing; run scripts/setup-effect-ref.sh. The inventory never regenerates from anything else.`
+          `The Effect reference clone ${reference} is missing; run bun run beep refs provision. The inventory never regenerates from anything else.`
         );
       }
       yield* git(["rev-parse", "--git-dir"], (commandLine, detail) =>
         EffectSchemaInventoryReferenceMissingError.new(
           reference,
-          `${reference} is not a git checkout (${commandLine}: ${detail}); run scripts/setup-effect-ref.sh.`
+          `${reference} is not a git checkout (${commandLine}: ${detail}); run bun run beep refs provision.`
         )
       );
       yield* git(["cat-file", "-e", `${pin}^{commit}`], (commandLine, detail) =>

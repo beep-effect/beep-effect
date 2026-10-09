@@ -8,6 +8,7 @@
 import { CachePolicyAuditReport, CacheQualificationStore } from "@beep/repo-configs/cache";
 import { A, Str, thunk0 } from "@beep/utils";
 import * as Clock from "effect/Clock";
+import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import { Argument, Command, Flag } from "effect/cli";
 import * as DateTime from "effect/DateTime";
@@ -55,6 +56,7 @@ import {
   CacheDashboardReportJson,
   CacheLambdaSummary,
   CacheLiveIdentity,
+  CacheRemoteReadsRequest,
   CacheRunMode,
   CacheTransitionRequest,
   CacheWallTime,
@@ -891,6 +893,37 @@ const cacheExecuteCommand = Command.make(
     )
 ).pipe(Command.withDescription("Execute native Turbo inside the resolved environment with a governed runtime key"));
 
+const cacheRemoteReadsCommand = Command.make(
+  "remote-reads",
+  { checkout: Flag.String("checkout").pipe(Flag.withDefault(".")) },
+  Effect.fn("Cache.remoteReadsCommand")(function* ({ checkout }) {
+    const config = yield* Config.all({
+      api: Config.String("TURBO_API"),
+      team: Config.String("TURBO_TEAM"),
+      tokenRef: Config.String("TURBO_TOKEN_REF"),
+      replace: Config.String("TURBO_TOKEN_REPLACE").pipe(Config.withDefault("0")),
+    }).pipe(
+      Effect.mapError(() =>
+        CacheCommandError.new("Set TURBO_API, TURBO_TEAM, and TURBO_TOKEN_REF without resolving the reference.")
+      )
+    );
+    if (config.replace !== "0" && config.replace !== "1")
+      return yield* CacheCommandError.new("TURBO_TOKEN_REPLACE must be 0 or 1");
+    const input = yield* S.decodeEffect(CacheRemoteReadsRequest)({
+      ...config,
+      replaceToken: config.replace === "1",
+    }).pipe(
+      Effect.mapError(() =>
+        CacheCommandError.new(
+          "Expected https TURBO_API, a single-line TURBO_TEAM, and an op://vault/item/[section/]field reference."
+        )
+      )
+    );
+    const service = yield* CacheQualificationService;
+    yield* Console.log(A.join(yield* service.remoteReads(checkout, input), "\n"));
+  }, renderCacheFailure)
+).pipe(Command.withDescription("Back up and configure the reference-only workstation remote-read dotenv quad"));
+
 const cacheCommandDefinition = Command.make("cache", {}, () =>
   Console.log(
     "cache commands: census, audit, inspect, baseline, fingerprint, profile, activation, transition, synthetic, dependencies, pilot, pilot-signed, accept, protocol-run, protocol-review, warm, probe, dashboard, execute"
@@ -898,6 +931,7 @@ const cacheCommandDefinition = Command.make("cache", {}, () =>
 ).pipe(
   Command.withDescription("Turbo cache recovery and evidence operations"),
   Command.withSubcommands([
+    cacheRemoteReadsCommand,
     cacheExecuteCommand,
     cacheCensusCommand,
     cacheAuditCommand,

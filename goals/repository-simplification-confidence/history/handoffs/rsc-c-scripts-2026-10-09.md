@@ -1,0 +1,1042 @@
+# rsc-c-scripts handoff — 2026-10-09
+
+Status: wave 1 content-final; PR #1583 ready for review; local qualification passes.
+Hosted readiness, E co-sign and orchestrator merge remain open.
+This file is the lane's coordination channel and is updated as evidence settles.
+
+## Implemented wave
+
+Refs provisioning, Cache remote-read configuration, Knowledge exact-count rewrite,
+Worktree merge-driver setup and Accounts secret-layout administration now belong
+to existing Effect command families. Dead/superseded root entry points are removed
+and operational callers retargeted. ONNX dispatch uses the existing seven-case
+face-detection installer suite before OSV. Retained apt/compiler adapters have
+synthetic fixtures. Graft old patches retire and its two Node tests relocate.
+Systemd sources adopt the current installed budget without installing/reloading.
+
+Root `knowledge:refs-rewrite` was retargeted directly; no matching `//#` task
+existed. Root cache review is content-addressed by
+`history/receipts/rsc-c-root-script-review-2026-10-09.md`; owner regeneration kept
+151 previous reviews, qualification scope, profile and epoch. Cache audit changed
+from zero blocking findings to 27 configuration-drift findings after the edit,
+then back to zero after baseline regeneration (1325 unassessed nodes remain).
+No qualification was granted. No lockfile or compiler patch changed.
+
+## Orchestrator coordination needed
+
+- R24: supply the live owner of `cloud-agent-readiness`, or the fleet-role owner
+  of record after the required session/lease audit. C has only marked the retired
+  bootstrap checks historical; lifecycle is preserved. The owner-name Decision
+  Log row must precede final. Do not infer ownership from an old ledger row.
+- R23: E reviews the two `check.yml` hunks (ONNX and merge-driver install).
+  A owns ONNX fail-unpatched/pass-patched evidence and the Retained patches row.
+- R27: C proposes a thin pre-runtime change-profile shim; preserve existing eval
+  output and avoid admission-job latency on independent checks. Install before
+  typed job-env export, restore Turbo after export. Secrets remain explicit
+  trusted-caller workflow expressions. E must agree/review the Ci-group PR.
+  The three Ci operational scripts, workflows and Fallow exemptions remain intact;
+  this group is deliberately not partially migrated.
+- S6: serialize the shared root command, cache baseline, AGENTS and workflow edits
+  with the fleet's other waves at the merge gate. This worker does not merge.
+- Knowledge census: separately owned
+  `explorations/build-pipeline-simplification/RESEARCH.md` invocation of the
+  external heavy wrapper is an inherited blocking finding. Route to that owner;
+  C preserves its ownership boundary. C reworded the packet's workstation-home
+  example, the other inherited finding, without weakening the privacy policy.
+
+## Evidence
+
+- Required initial fetch/merge of origin/main completed; packet missing on main
+  required and received the fallback packet-branch merge. A later merge took
+  origin/main at `42720cfb66`; latest fetch/merge reported already up to date.
+- Original and new Knowledge rewrite dry-run: exit 0, 3 applied,
+  225 already-applied. Rules 0–2 remain pending skill rewrites. Rule 34's ignored
+  target is present here; a missing target remains a failure in other checkouts.
+- Refs provisioning: 2 tests passed, including all eleven manifest entries,
+  idempotence, dirty existing `.git` directory/file preservation, HOME expansion,
+  stale links and directory ownership refusal.
+- Retained adapter + Quality dispatch: 11 tests passed (2 files). Compiler
+  originals remain; numbered rotations and patched copies are pruned; no-op and
+  warning paths covered. Apt fixture preserves Ubuntu, symlink targets, nested
+  entries and unrelated files; only direct third-party source entries are removed.
+- Worktree setup and Refs refresh: 23 tests passed in the broader initial run.
+  Cache/Knowledge failures in that run were introduced use of an unavailable
+  Effect helper, since fixed. The new follow-up tests must settle before a pass
+  is claimed: Cache 7, Knowledge 4, Accounts 2 cases.
+- Owning ONNX suite: 7 tests passed. No edits to the face-detection package were
+  needed because its existing suite is the superset; A still owns patch reversal.
+- `bash -n` retained cloud/apt/merge/Graft adapters and `node --check` compiler /
+  changelog adapters passed. `systemd-analyze --user verify` source passed with
+  the inherited obsolete CPUAccounting warning. No live unit was installed.
+- Each removed operational path has zero live caller matches using the sweep's
+  hidden-file exclusions; packet/history matches retain provenance. Exact local
+  census is `.beep/rsc-c-removed-callers.txt`.
+- `beep lint package-scripts --write`: 152 manifests, 0 drifting, 0 written.
+  `beep cache profile --write` completed through the owner with no new profile diff.
+- Full CLI package verify, test-tsgo, bounded docgen, jsdoc-ratchet, Fallow audit /
+  health and Graft relocated Node tests are queued through the 3-slot heavy
+  wrapper. Lint policy is running. Terminal results and commit parity remain open.
+- Knowledge refs check at imported HEAD: 2 inherited blockers (see attribution
+  above). `CI=true` committed-head rerun remains required.
+
+## Coverage floors read
+
+Values below are existing baseline percentages, in lines / statements / branches /
+functions order. They are not new coverage results. No floor was lowered.
+
+| Touched source | Baseline floor |
+| --- | --- |
+| Cache.schemas | 100 / 100 / 100 / 100 |
+| Cache.service | 45.81 / 42.72 / 19.1 / 41.66 |
+| Cache.command | 80.76 / 79.91 / 72.52 / 70.32 |
+| Knowledge.command | 78.88 / 76.59 / 70 / 76.31 |
+| Knowledge.service | 90.27 / 90.78 / 84.84 / 88.63 |
+| Knowledge.schemas | 100 / 100 / 50 / 100 |
+| Refs.service | 95.87 / 93.36 / 79.38 / 90.74 |
+| Refs.command | 16.21 / 15.78 / 0 / 0 |
+| Worktree.service | 92.97 / 92.95 / 90.9 / 84.25 |
+| Worktree.command | 66.66 / 65.3 / 64.2 / 50.73 |
+| Lint.errors | 62.06 / 61.29 / 100 / 40 |
+| Lint/internal/EffectSchemaInventorySource | 100 / 100 / 100 / 100 |
+| Quality.command | 57.65 / 57.34 / 54.41 / 54.64 |
+| Accounts.command | 96.36 / 92.06 / 100 / 84.37 |
+
+New Accounts layout sources have no old baseline floor. Scoped read is the
+brief's requested acceptance evidence; eventual package/hosted coverage still
+must not regress. Root-input accounting for all 21 routing entries plus Graft:
+`history/receipts/stage-5-acceptance.md#script-ports`.
+
+## surviving-capabilities rows
+
+A is the sole register writer; transcribe these rows with this handoff citation.
+
+| Capability | Why retained | Current proof | Follow-up / removal condition |
+| --- | --- | --- | --- |
+| Compiler-backup pruning install adapter | Prepare cannot require an installed CLI; compiler `.original` is intentional patch provenance. | Synthetic fixtures pass: original retained, numbered/patch rotations pruned, repeat and missing-root no-op, malformed manifest warns; Node syntax passes. | A can run compiler provenance now. Retire only when the compiler owner's install contract no longer needs pruning. |
+| Pre-runtime apt-source adapter | Ubuntu acquisition happens before a repository runtime exists. | Synthetic seam tests pass, preserving ubuntu.sources, unrelated files, nested entries and symlink targets; shell syntax passes; no live apt deletion. | Typed delegation may be added after runtime, but preserve the minimal pre-runtime boundary. |
+| Git regeneration merge adapter | Git may invoke it in an incomplete merge tree with no usable CLI. | Repeated local setup and fail-closed fixture passes; shell syntax passes; adapter path unchanged. | Worktree new/prepare owns installation; clone beep-effect16's absolute setter remains valid. Read-only linked-worktree config.worktree census found no additional regenerate setters. |
+| Graft workstation patch kit | Installed external tool needs its sanctioned dist-patch/bootstrap adapter. | Current 0.21.1 retained; 0.16/0.18/0.19 retired; two Node suites relocated to CLI fixtures with fake transports, terminal rerun pending. | Retire old patches only; no fresh install, deep build or model endpoint call. |
+| Pre-runtime change-profile adapter | Workflow lane decisions precede Bun/dependencies. | Ci schema owner supplies the shared pattern JSON; typed-vs-shim fixtures cover empty, goals-only, mixed and non-PR diffs. Runtime proof is pending in Run 4. | E co-signs the CI ordering. Retire only when every caller has a runtime or consumes admission outputs. |
+| Runner-resource shutdown adapter | Stable heavy.yml older-checkout path and explicit 130/143 shutdown/status boundary. | Effect Ci owns measurements; synthetic cases cover TERM/INT/KILL, stdin and recovered periodic failure. Independent review has zero source findings at f0d88dd5bd. | Retire only when the caller runtime owns equivalent signal/stdin behavior; keep older-checkout fallback. |
+| Declarative agent-runs systemd sources | Source of record for the existing heavy-work budget. | Adopted effective 48G MemoryHigh, 60G MemoryMax, 8G MemorySwapMax and 50% pressure limit from unowned heavy-budget drift; source verify passes with inherited CPUAccounting warning. | Operator re-sync/installation is a separate follow-up. This lane makes no host unit change. |
+
+## Recovery
+
+Revert the wave's PR to restore removed implementations and callers. Root cache
+baseline must be regenerated against the restored root scripts. Cache owned-field
+writes make a private backup first; restore it to reverse a real invocation.
+No workstation state changed by this implementation or its synthetic fixtures.
+Keep the Git adapter path stable for existing absolute configurations.
+
+## Report
+
+lane: rsc-c-scripts · head: b52ef56a08183b4d97e38e0789e620e407337390 (implementation dirty)
+· PR: none (wave 1 not published)
+· package-verify: @beep/repo-cli pending (heavy admission)
+· hosted-parity: test-tsgo pending; docgen local pending; jsdoc-ratchet pending;
+knowledge refs --check fail (inherited findings; committed recheck pending);
+fallow audit+health pending; coverage read complete (existing floors only)
+· handoff: history/handoffs/rsc-c-scripts-2026-10-09.md
+· open: final Ci group / E ordering and workflow review; R24 cloud owner audit/name;
+terminal heavy proofs; introduced-helper fixture rerun; pinned independent review;
+committed-head parity; publication and orchestrator merge gate.
+
+
+## Run 2 (after crash)
+
+Recovered implementation commit `17105ac97b` with a clean worktree. Required
+fetch and merge of origin/main reported already up to date. All lane-local
+`.beep` result files and the Yeet attempt journal were inspected. The interrupted
+publish has a started attempt and no terminal verdict; no push or PR exists.
+
+Terminal recovered evidence: JSDoc ratchet passed (tracked 21, increased 0,
+zero legacy findings); relocated Graft suites passed all 17 cases. Lint-policy
+log has no final verdict. Package audit and docgen failed with introduced port
+errors; test-tsgo failed for the same errors. Fallow audit/health failed with
+Cache/Knowledge complexity findings and the root ONNX dependency becoming
+unused. Automatic docgen-local correctly refused global root-input changes.
+These failures are not crash-only and are not waived.
+
+Repairs: use typed schema decoders, the Option-compatible section selection,
+Accounts' existing test facade for compilable documentation, correct curried
+Worktree error construction, and map repo-discovery errors at the Knowledge
+service boundary. Cache backup output now includes the parent directory created
+by the Effect temporary-file API. Accounts fixture order now matches the original
+jq lexical sort (`DEV_Z` precedes `GITHUB_TOKEN` within DEV). Cache key processing
+and Knowledge per-file rewriting have smaller independent control-flow scopes.
+No secret operation or host install ran.
+
+Repaired focused suite passed 13 tests across Accounts, Cache, Knowledge. Commands
+and terminal output: `.beep/rsc-c-run2-parity.log`. Package verification and
+test-tsgo are running through beep-heavy with a 12 GB cap; terminal results
+remain required. Package-script regeneration reports 152 manifests, zero drift
+and zero writes. Existing coverage-floor read is retained without claiming new
+coverage.
+
+Coordination blockers remain R24 cloud packet owner audit, E's workflow review
+and Ci ordering agreement, plus the orchestrator's inherited knowledge-census
+repair on main. The Ci group remains intact for a coordinated follow-up wave.
+This is a recovery progress report, not final content or merge readiness.
+
+
+### Run 2 settled and integration evidence
+
+- `a85684d18a` repairs the initial source/docgen causes; both initial P0 inbox
+  rows are acknowledged with this fix SHA. Inbox reports zero unacknowledged.
+- Broadened focused fixtures: 16/16 pass across Accounts, Cache, Knowledge and
+  retained adapters. Fallow audit and health exit 0; audit still reports a
+  nonblocking introduced unused root ONNX development declaration. Shared owner
+  should reconcile that declaration/lockfile with H1; C did not add an exemption
+  or a artificial consumer. Details: `.beep/rsc-c-run2-results.txt` and logs.
+- Test-tsgo exposed additional new-fixture diagnostics after runtime tests passed.
+  Repairs use Accounts' test facade, compose Cache/FsUtils at the suite boundary,
+  preserve the lossless item return type, annotate the optional boolean parameter,
+  and use typed codecs, pipeable streams and Effect.fn service stubs. Final rerun
+  remains pending in `.beep/rsc-c-run2-tsgo-final.log`.
+- Required fetch/merge now includes main's packet squash `83d8967a03`. The
+  add/add packet conflicts were resolved structurally with `3dbf109066` as the
+  original packet base, retaining main's stage-1 receipt/status updates and C's
+  Decision Log/status/evidence. Merge commit: `b98d568561`.
+- CI=true knowledge refs check still fails with exactly one inherited live
+  observation in the separately owned build-pipeline RESEARCH document. The
+  orchestrator's repair must land on main; C preserves this ownership boundary.
+- Automatic docgen-local's full-required result is a planning refusal caused by
+  the root command change. The explicit package-scoped edit loop is now running;
+  it does not substitute for hosted full-repo docgen.
+
+
+### Run 2 regression closure
+
+Package verification settled: docgen passed in 26.7 seconds; audit failed only
+on two integration assertions (5,778 passing, 2 failing across 294 files).
+The failures were introduced by C's added Accounts subcommand and required
+merge-driver setup, not environmental. `9457ec5f23` updates the Accounts command
+inventory and the synthetic worktree's tracked adapter / Git-config capability.
+The new audit inbox row is acknowledged with that fix SHA. Regression rerun
+passes 66/66 tests across Accounts usage/layout and Worktree fleet. Test-tsgo now
+passes all 334 selected test files. Terminal statuses:
+`.beep/rsc-c-run2-audit-fixes-results.txt`.
+
+Main repairs #1564 and #1565 were merged through `29a38b8dee`; the packet stage-1
+merge remains preserved. Package-script owner regeneration again reports 152
+manifests, zero drift, zero writes. Cache profile owner regeneration produces
+no worktree diff; cache audit has zero blocking findings. No C-authored lockfile
+change was introduced; main's lockfile and CLI dependencies were integrated.
+
+The additional scoped docgen attempt has no terminal proof and must not be
+claimed passed from its typechecking progress alone. The default package docgen
+has a terminal pass. Full package audit needs its final post-fixture rerun;
+focused regression success is reported separately. Draft publication is queued
+through the heavy wrapper. This wave is still not content-final for the program:
+R24 owner audit and E's workflow review/Ci ordering remain open.
+
+
+### Run 2 stopping boundary and resume
+
+Status: blocked handoff; not content-final, not merge-ready. All three P0 rows
+are acknowledged with the source/fixture repair commits. No waiver or inherited
+red copy was introduced. After importing main's fixes, CI=true knowledge refs
+reports zero live gated observations.
+
+Both pending units were verified to still be in beep-heavy's pre-admission
+wrapper, then cancelled before admission. Neither final package rerun nor
+publication started. All units launched in Run 2 have settled or stopped;
+no C-owned heavy unit is left running. No PR exists and nothing was pushed.
+The explicit scoped-docgen attempt stopped without a terminal result and cannot
+be counted as a pass. Retain the terminal package-docgen pass and recovered
+JSDoc/Graft passes; rerun unfinished/failing gates only.
+
+Orchestrator resume actions:
+
+1. Provide R24's owner/lease audit result and route E's review of the existing
+   ONNX and merge-driver workflow hunks plus C's proposed Ci ordering. E's
+   co-sign is still required; the three original Ci operational scripts and
+   workflow/Fallow contracts remain intact for their one coordinated PR.
+2. Route the root unused ONNX development declaration to the shared dependency
+   owner with H1. Do not remove the owning package dependency, exact override,
+   installer patch or its regression. A can use C's already-passing compiler
+   adapter fixtures and surviving-capabilities rows now.
+3. Resume C under the same 12 GB wrapper cap and at most two heavy commands:
+   full package-verify, unfinished scoped docgen, owner regeneration after
+   merging any newer main; then pinned independent review and Yeet publication.
+   Keep the known 16-case and 66-case focused results, test-tsgo 334-file pass,
+   Fallow exit-0 results, zero-observation knowledge check and coverage-floor read
+   as their recorded local evidence, without claiming exact-head hosted proof.
+
+## Run 2 final report
+
+lane: rsc-c-scripts · head: 422895778cf1ba3abbbcaedc8faf2148bac74205 (work head; report-only commit follows)
+· PR: none (wave 1 unpublished; queued publish cancelled before admission)
+· package-verify: @beep/repo-cli fail(introduced integration fixtures; repaired in
+9457ec5f23; 66-case regression rerun pass; final full audit rerun not executed)
+· hosted-parity: local test-tsgo pass (334 files); package docgen pass (26.7s),
+automatic docgen local full-required and explicit scoped retry unfinished;
+jsdoc-ratchet recovered pass; CI=true knowledge refs --check pass (0 live gated
+observations); fallow audit+health exit 0 (root ONNX unused declaration still
+reported); coverage read complete (existing floors, no lowered baseline).
+Hosted checks not started.
+· handoff: history/handoffs/rsc-c-scripts-2026-10-09.md
+· open: BLOCKED on E's workflow review and Ci ordering co-sign, and R24's
+orchestrator owner/lease audit; shared ONNX declaration reconciliation;
+final full audit and scoped-docgen proof; independent pinned review;
+Yeet draft publication/ready/hosted checks; final Ci-group wave.
+
+
+## Run 3 (after crash)
+
+Resume ruling 2 resolves R24: program orchestrator (fleet role), owner of record;
+no live owner at 2026-10-09T17:24:18Z. The SPEC Decision Log now records that
+owner and preserves cloud-agent-readiness lifecycle. E reviews wave 1's ONNX
+and merge-driver workflow hunks on the draft PR; the proposed Ci ordering above
+remains the requested co-sign. The root ONNX development declaration remains
+untouched under H1 ownership. The Ci group remains intact until its coordinated
+follow-up wave.
+
+Required fetch and merge reported already up to date. Terminal Run 2 evidence
+is retained; unfinished full package verification and explicit scoped docgen
+were submitted through beep-heavy with BEEP_HEAVY_MEM=24G under S12, at most two
+C-owned heavy commands. Their logs/result files are `.beep/rsc-c-run3-*`.
+Independent read-only review uses the pinned Codex route under standing S10.
+Publication, E review and content-final status remain open at this entry.
+
+### Run 3 review repair
+
+The independent Codex review at `dc4bb81597` found one P2: relative Cache checkout
+paths were joined and then resolved a second time by contained-file guards. The
+service now resolves the checkout once, and the regression checks the intended
+`.env`, its original private backup, absence of nested directories and duplicate
+refusal. No secret value is logged. The old package unit was stopped before a
+terminal verdict; qualification was resubmitted after the repair.
+
+Explicit scoped docgen has a terminal pass (27.2 seconds, 2,324 examples) before
+this one-line path repair. Owner commands report 152 manifests, zero drift and
+zero writes; cache profile regeneration produced no tracked changes. CI=true
+knowledge refs at `dc4bb81597` exits 0 with zero live gated observations.
+
+### Run 3 independent review
+
+Pinned independent Codex review returned terminal zero actionable findings at
+`c43d86e953177c0fae7a10ec7329ca499490d370`, after the initial P2 was repaired.
+It covers the implementation review at `dc4bb81597` plus the relative-path
+repair and fixture. Read-only review did not run tests or mutate files.
+Test-tsgo passed all 334 selected files after the path repair; the first runtime
+fixture invocation selected no tests because its cwd was wrong. That invocation
+is recorded as a command failure, with the corrected package-cwd rerun pending.
+
+### Run 3 draft publication submission
+
+The corrected Cache runtime regression passes all 8 cases (15 seconds), including
+relative-checkout backup and duplicate refusal. The refreshed removed-name census
+has zero live caller matches for all 9 removed script paths, recorded in
+`.beep/rsc-c-run3-removed-callers.txt`. Full package verification is running,
+not yet a pass. Draft publication is submitted through beep-heavy under S12
+so E can review the workflow hunks; C is not declaring content-final or merging.
+
+### Run 3 full package qualification
+
+`beep quality package-verify @beep/repo-cli` has a terminal pass: audit 777.6
+seconds and docgen 25.2 seconds (`.beep/rsc-c-run3-package-final-result.txt`: 0).
+It includes the repaired Cache source and runtime fixture. The earlier interrupted
+Run 3 audit has no verdict and is superseded by this explicit rerun.
+
+Draft publication and the unfinished `beep lint policy --base origin/main` are
+queued through beep-heavy; no PR exists yet. E's workflow review and Ci co-sign
+remain external dependencies. The caller census, root-input inventory and
+terminal independent review stay preserved. No running unit is abandoned.
+
+### Run 3 policy findings and owner boundary
+
+The local changed-scope policy proof exposes introduced findings despite the
+full package audit/docgen pass: 17 test-policy occurrences, two lossless wire
+schema candidates, a property-test advisory, four JSDoc spacing warnings and
+12 inline schema compilation errors. The direct fixes are canonical assertion
+imports, explicit layer timeouts, failure-on-missing backup unwrapping, schema
+codec hoists, spacing and schema-derived synthetic metadata/identity coverage.
+Post-fix qualification remains required.
+
+Reviewed boundary exceptions remain a B/V inventory-owner dependency. Accounts'
+StructWithRest preserves unknown item/field metadata and cannot become a closed
+Class without violating the lossless contract (existing Lexical wire exceptions
+are the precedent). Real filesystem, symlink, subprocess and installed-Graft
+fixtures require occurrence-specific reasons. `lint schema-first --write` and
+`lint effect-vitest --write` preserve old exceptions but cannot accept new
+reviewed reasons. No unexplained baseline capture or hand-authored generated
+inventory was made. The orchestrator should route explicit admission capability
+or an authorable-exception-metadata ruling to B/V. Row emission is queued.
+
+State policy separately reports 40 introduced broken tracked-path observations
+for the removed names, including the locked routing table and explicitly
+historical packet references; zero live gated reference observations still
+passes. This is a semantic-delta/history contract gap requiring disposition;
+none is silently waived. The old live-caller census excludes packet history and
+therefore does not establish a semantic-delta pass.
+
+Publication was stopped while still waiting for admission (over 20 minutes),
+before a publish command, push or PR existed, to keep the wave fully addressed.
+The policy proof is still running its final phase; no terminal pass is claimed.
+
+### Run 3 blocked closeout
+
+Implementation head `aa278b7be26d83be8b98ca357018f27ba7853fc1` includes
+source-policy repairs at `cff2e5826d` and the missed live Graft skill provisioning
+reference repair at `aa278b7be2`. The pinned independent reviewer reports zero
+actionable source defects through `cff2e5826d`, incorporating the previous
+implementation and relative-Cache-path reviews. Commit hooks pass Biome,
+JSDoc, typos, secret scanning and commitlint for those repairs.
+
+The full package audit/docgen pass precedes these latest codec/test edits. It
+remains valid historical proof, not exact-head qualification. The post-repair
+fixture/test-tsgo/package-quick batch was submitted through admission and
+cancelled before it started because this lane is blocked on B/V's reviewed
+exception admission mechanism. Its result receipt explicitly records that
+cancellation. No runtime/type/package pass is claimed for the final repair head.
+The diagnostic row-emission job was likewise cancelled before admission. The
+pre-repair full policy run recorded failing light/medium/state phases and was
+stopped during the silent deprecated-API phase; it has no complete verdict.
+All own heavy units are stopped or terminal before handoff.
+
+Remaining work, in order:
+
+1. B/V supplies the owner-command path or an explicit authorable-exception
+   metadata ruling for AccountsSecretField/AccountsSecretsItem lossless wire
+   schemas and genuine platform fixtures. Emit exact test-policy rows, repair
+   any remaining avoidable fixture-layer/lifetime findings, and admit only
+   individually reviewed exceptions. No broad census acceptance is authorized.
+2. Finish introduced semantic-delta attribution: the pre-repair scan found 40
+   new broken paths. The live Graft remedy is fixed; locked routing tables and
+   historical packet facts need an explicit history-contract disposition.
+   Knowledge refs check's zero live gated observations does not prove this gate.
+3. Run the saved post-repair batch, then remaining exact-head hosted-parity
+   gates. Existing full package proof and scoped coverage reads are retained;
+   no floors were lowered and no new coverage pass is claimed.
+4. Publish the addressed wave through Yeet for E's workflow review. No push,
+   draft PR, readiness job or hosted checks were created in this run. E owns
+   the coordinated Ci wave and ordering co-sign; merge E's main once when the
+   orchestrator directs it, regenerate owners, and never merge from C.
+
+The PLAN, README and Decision Log now record this blocked qualification
+boundary. No acceptance row is closed. Graft root-query savings in this run:
+approximately 58,600 tokens across two meaningful queries.
+
+lane: rsc-c-scripts · head: aa278b7be26d83be8b98ca357018f27ba7853fc1
+(implementation head; report-only commit follows) · PR: none (wave 1 unpublished;
+wave 2 Ci pending E) · package-verify: @beep/repo-cli pass before latest repairs;
+exact-head requalification pending(owner-admission blocker) · hosted-parity:
+test-tsgo pass before latest repairs; docgen local pass; jsdoc-ratchet pass;
+knowledge refs --check pass(0 live gated); fallow audit+health pass from retained
+Run 2 receipts; coverage read complete, no floors changed; complete lint policy
+not passed · handoff: history/handoffs/rsc-c-scripts-2026-10-09.md · open: B/V
+exception admission, exact occurrence classification, semantic-delta history
+contract, post-repair verification, E workflow co-sign/Ci wave, publication and
+hosted proof.
+
+
+## Run 4 (after crash)
+
+Resume ruling 3 is applied. Required fetch/merge brought main into this lane at
+`c5787ba017`. The conflict resolution preserves both lanes' append-only friction
+receipts and main's Accounts TUI plus C's secrets-layout command. Shared owner
+regeneration reports 152 manifests, zero drift and zero writes; cache profile
+adds no tracked diff. The Fallow-input change regenerates the policy fingerprint
+through its owner. The earlier terminal passes remain revision-bound evidence.
+
+The whole Ci operational group now moves together: typed change-profile,
+job-env and runner-resources, a schema-owned shared pattern JSON, pre-runtime
+profile shim, resource shutdown adapter, coordinated install/export/restore
+ordering, and the retired job-env Fallow exemption. heavy.yml keeps its older-
+checkout resource fallback. No secret expression moves into policy tooling.
+E's co-sign remains a PR-review dependency and does not block draft publication.
+
+The independent pinned reviewer found two actionable resource-port defects:
+periodic sampler failure could disappear when a final sample recovered; Effect
+child signal termination mapped to exit 1. Repairs retain measurement-failure
+state and use a tiny shell wait boundary to preserve 128+signal. Synthetic
+fixtures add TERM/INT/KILL and recovered sampler failure, plus shared-profile
+parity for empty/goals/mixed/non-PR diffs. Review follow-up remains required.
+
+Admitted Run 4 parity initially catches introduced type/API errors and the
+expected root-input docgen full-required plan. Those source errors are repaired;
+post-repair test-tsgo and explicitly package-scoped docgen must settle before
+claiming current proof. Result/log files are `.beep/rsc-c-run4-*`. No passed old
+gate is rerun merely for a new report. At most two C-owned heavy commands run.
+
+### Reviewed-exception candidates
+
+Exact occurrence table will be appended from the post-repair scanner output.
+AccountsSecretField and AccountsSecretsItem retain lossless StructWithRest wire
+schemas (unknown item/field metadata survives identity verification), pending B
+admission. Real filesystem, symlink, subprocess and installed-Graft fixtures are
+judgment candidates; C does not write inventory/allowlist entries. Every candidate
+will name a source line, class and reason. S11 allows the attributed judgment red
+at publish and the orchestrator merge gate; this is not a blanket census waiver.
+
+
+### Run 4 occurrence-specific B admission table
+
+Scanner: `beep lint effect-vitest --rows`, exit 0; rows are diagnostic identities, not admissions. Only the following open C-owned candidates are submitted. Existing admitted rows remain untouched.
+
+| File:line | Rule / review class | Justification |
+| --- | --- | --- |
+| `packages/tooling/tool/cli/src/commands/Accounts/AccountsSecretsLayout.schemas.ts:31` | schema-first / object-struct-schema | AccountsSecretField is a lossless external wire object; arbitrary future metadata participates in identity. |
+| `packages/tooling/tool/cli/src/commands/Accounts/AccountsSecretsLayout.schemas.ts:68` | schema-first / object-struct-schema | AccountsSecretsItem must preserve unknown vault-item metadata across decode/encode. |
+| `packages/tooling/tool/cli/test/setup-effect-ref.test.ts:75` | EV002 / unresolved-layer-provide | Per-invocation fake Git/PATH/config and reference root require a freshly captured fixture context. |
+| `packages/tooling/tool/cli/test/cache-remote-reads.test.ts:145` | EV004 / shorter-scope-lifetime-review | End each subprocess/resource helper scope before examining files or beginning the next invocation. |
+| `packages/tooling/tool/cli/test/cache-remote-reads.test.ts:207` | EV004 / shorter-scope-lifetime-review | End each subprocess/resource helper scope before examining files or beginning the next invocation. |
+| `packages/tooling/tool/cli/test/cache-remote-reads.test.ts:267` | EV004 / shorter-scope-lifetime-review | End each subprocess/resource helper scope before examining files or beginning the next invocation. |
+| `packages/tooling/tool/cli/test/cache-remote-reads.test.ts:326` | EV004 / shorter-scope-lifetime-review | End each subprocess/resource helper scope before examining files or beginning the next invocation. |
+| `packages/tooling/tool/cli/test/cache-remote-reads.test.ts:379` | EV004 / shorter-scope-lifetime-review | End each subprocess/resource helper scope before examining files or beginning the next invocation. |
+| `packages/tooling/tool/cli/test/setup-effect-ref.test.ts:80` | EV004 / inner-helper-scope-lifetime-review | End each subprocess/resource helper scope before examining files or beginning the next invocation. |
+| `packages/tooling/tool/cli/test/accounts-secrets-layout.test.ts:3` | EV010 / platform-resource-provenance-review | Real platform boundary verifies subprocess, symlink, permissions and physical-file behavior; memory cannot model this subject. |
+| `packages/tooling/tool/cli/test/cache-remote-reads.test.ts:8` | EV010 / platform-resource-provenance-review | Real platform boundary verifies subprocess, symlink, permissions and physical-file behavior; memory cannot model this subject. |
+| `packages/tooling/tool/cli/test/knowledge-refs-rewrite.test.ts:7` | EV010 / platform-resource-provenance-review | Real platform boundary verifies subprocess, symlink, permissions and physical-file behavior; memory cannot model this subject. |
+| `packages/tooling/tool/cli/test/regenerate-merge-driver.test.ts:4` | EV010 / platform-resource-provenance-review | Real platform boundary verifies subprocess, symlink, permissions and physical-file behavior; memory cannot model this subject. |
+| `packages/tooling/tool/cli/test/retained-script-adapters.test.ts:2` | EV010 / platform-resource-provenance-review | Real platform boundary verifies subprocess, symlink, permissions and physical-file behavior; memory cannot model this subject. |
+
+
+### Run 4 qualification attribution and review
+
+Committed source `f0d88dd5bd998fed7505e01117ef4d131aceda6e` has terminal zero
+independent actionable source findings. The reviewer accepted all three resource
+repairs and confirmed unchanged event/credential policy. No native source dirt
+followed that review; only packet receipts changed.
+
+The initial fixture batch's two failures were introduced test-invocation errors:
+Vitest runs on Node, so process.execPath cannot launch a Bun-only CLI. The explicit
+`bun` invocation is repaired. Initial full package audit rejected the composite
+JSON input missing from the package's hand-owned include; it now explicitly includes
+`src/**/*.json`, and tsconfig-sync confirms the generated fields are in sync.
+Docgen rejected missing companion-type descriptions; all three companions now carry
+the required documentation. Their P0 inbox rows have fix-sha acknowledgments.
+
+Initial Fallow audit/health found introduced environment-selection complexity.
+The implementation now uses schema-backed selections and Match, preserving the
+mode labels and redacted entries; the scoped rerun remains queued. Fallow also
+reports the known unused root ONNX declaration after deleting its duplicate test
+consumer. Resume ruling 2 assigns that declaration to H1 and explicitly forbids
+C removing it; the declaration, owner dependency, exact override, patch and regression
+remain unchanged. The adjacent renderTurboSummary complexity body is unchanged
+from main and is inherited-adjacent. Neither attributed row justifies a new ignore.
+
+JSDoc ratchet and CI=true knowledge refs --check pass in Run 4. The latter has
+zero live gated observations. Post-repair type proof passes 334 selected files;
+the later environment simplification requires the refreshed type/fixture gate.
+Full package verification and explicit package-scoped docgen are running, not
+claimed passes. Two C-owned admitted/queued commands remain under beep-heavy.
+
+### Run 4 owner regeneration, caller census and coverage read
+
+Final fetch/merge confirms origin/main is already integrated. Owner commands
+`lint package-scripts --write`, `cache profile --write`, `goals index --write`
+and `tsconfig-sync --filter @beep/repo-cli` complete with no tracked generation
+diff; package scripts report 152 manifests, zero drift and zero writes.
+The refreshed sweep-exclusion census has zero live caller matches for all ten
+removed script paths, including `scripts/ci-job-env.mjs`; receipt
+`.beep/rsc-c-run4-removed-callers.txt`. Archived packet/research observations
+and the locked routing table remain historical under resume ruling 3.
+
+The Ci additions extend the earlier scoped coverage read. Existing baseline
+percentages (lines/statements/branches/functions) are Ci.command.ts
+83.33/84.78/51.35/80.76 and internal/cli/TurboCache.ts 100/100/100/100.
+HeavyAdmission.ts and the new CiOperational files have no existing baseline
+row. This is a baseline read, not a new coverage result; no floor is lowered.
+
+Graft usage in this run reports approximately 33,668 tokens saved across the
+two C-owned queries (1,085 + 32,583); independent reviewer usage is separate.
+
+### Run 4 compatibility qualification wave
+
+The full package gate reports audit failure (816.5s) with 5,796 passing tests
+and three profile-shim failures; docgen fails (30.0s) with TS2823 on JSON import
+attributes. These are introduced compatibility defects, repaired in
+`93f78873b87f6a8452774c0527280a60fbaa9c7e`: command-scoped pattern file/key
+environment inputs remove Node/Bun eval argv differences; plain JSON imports
+retain the same schema-owned data under the CommonJS docgen example compiler.
+Both package P0 rows carry fix-sha acknowledgments. The independent reviewer
+reports terminal zero actionable findings on that exact source commit.
+
+The refreshed set has terminal ci-fixtures=0 (24 tests), test-tsgo=0,
+fallow-audit=0 and fallow-health=0. Health has zero findings. Audit retains
+two attributed observations: the H1-owned root ONNX declaration and unchanged
+renderTurboSummary complexity. Exit 0 does not mean those observations vanish.
+No inventory/allowlist edit or floor reduction is made. Receipts:
+`.beep/rsc-c-run4-refresh-result.txt` and the matching logs.
+
+The compatibility-qualified sequence is queued through beep-heavy: explicit
+package-scoped docgen, CI fixtures under bunx --bun (the actual package audit
+runtime), then full package verification. It is a rerun, not yet a pass.
+Publication proceeds through the normal cheap-gate path while that proof
+settles; E's co-sign and hosted proof remain open.
+
+The compatible qualification sequence is admitted: package-scoped docgen
+passes, and all 24 CI fixtures pass under bunx --bun (39.21s). That directly
+exercises the previously failing pre-runtime profile shim in the package
+audit runtime. Full package verification is now running; terminal receipt
+`.beep/rsc-c-run4-compatible-result.txt` records the two completed passes.
+
+The full package compatibility rerun fails fast at NodeNext TS1543: plain JSON
+imports require attributes in that mode. `a381e32a3187c1df4edfc293d6868e7d30500c4e`
+uses typed import assignments for the same JSON owner, compatible with each
+compiler's generated loader. The package audit P0 has that fix-sha acknowledgment.
+A dual-module docgen/type/Fallow/full-package sequence is queued. The prior
+24-fixture Bun-runtime pass remains valid for the unchanged bootstrap repair.
+
+The normal publish attempt is admitted but exits before gates because newly
+written receipt edits are unstaged. No push or PR occurs. Main advanced by
+#1567 (evidence-policy documentation only); it is merged cleanly. Shared owner
+regeneration and a receipt commit make the retry a clean reviewed wave.
+Independent review is terminal zero findings on source `a381e32a31`; the main
+merge does not change that source.
+
+### Run 4 compiler-boundary correction
+
+The typed-import experiment fails docgen TS1202/TS1294. Inspection of the
+actual canonical configuration corrects the earlier CommonJS inference:
+examples use ES2022/bundler with erasableSyntaxOnly; package builds use
+NodeNext. C does not alter that centrally generated compiler policy.
+
+Source `dec7e854a06c62b1da5979c3587aeff97d454cb7` instead makes the schema module
+the sole pattern owner and generates the unchanged pre-runtime JSON via
+`beep ci patterns --write`. `beep ci patterns` checks freshness. Both commands
+pass, the JSON has no byte diff, and a CI fixture protects the projection.
+Typed guards and Heavy admission use the same schema-owned instance; the
+no-longer-needed JSON tsconfig include is removed. Independent review reports
+terminal zero actionable findings on this exact source commit.
+
+The new admitted/queued qualification sequence is
+`.beep/rsc-c-run4-projection.sh`: owner freshness, scoped docgen, test-tsgo,
+Bun-runtime CI fixtures, Fallow audit/health and full package verification.
+The earlier docgen experiments are failed/superseded evidence, not passes
+on this revision. The normal clean publish retry remains queued.
+
+C-owned Graft queries now total approximately 73,791 tokens saved
+(33,668 prior + 40,123 ownership query); reviewer queries are not included.
+
+### Run 4 current qualified wave and D integration
+
+The schema-codec source and final typed fixture repair have terminal zero
+independent findings on `e51f6ff5c3b39149e6c1fbb241e2085ef7ec89fa`. Docgen
+passes on the unchanged runtime source; the test-only typed decoder repair
+retains that pass. Current admitted qualification records owner freshness=0,
+test-tsgo=0, CI fixtures=0 and Fallow audit/health=0 in
+`.beep/rsc-c-run4-qualified-result.txt`. Full package verification is running.
+
+The publish waiter is restarted only after proving it had not admitted any
+command; it reloads the owner's current shared slot floor (four). C changes no
+cap. The admitted retry stops before push at the stale-base fence, because D's
+#1566 landed during the wait. Main is merged at `17a04eb0e5`; both append-only
+friction histories are preserved and the canonical privacy wording is retained.
+D's manifest-aware release policy now applies: C removes its private package
+changeset note instead of introducing a post-baseline private note. Shared
+package-scripts, cache profile, goals index, tsconfig and fingerprint owners
+regenerate with no tracked diff. Publication will retry from this clean base.
+
+### Run 4 terminal publication attribution
+
+Normal `beep-heavy bun run beep yeet publish --message
+'refactor(tooling): port operational scripts into Effect commands'` at
+`bc176b61face008a1e7e04f48a1b1c525f978f35` exits 1 after collecting all cheap
+lanes. Nothing is pushed and no PR is created. Verdict and exact logs are
+`.beep/yeet/runs/chore_rsc-c-scripts-809cba90d29d/verdict.json` and
+`.beep/yeet/logs/full_00-cheap-gates.log`. P0 `local-shard-3e29990ae7bb` is
+acknowledged `--wontfix` with the exact B-owner/delegated-red publication reason;
+this acknowledgment is not proof that the gate passed.
+
+| Red lane | Exact attribution / owning resolution |
+| --- | --- |
+| `lint:schema-first` | Two Accounts lossless wire candidates already enumerated for B; also the occurrence-specific golden CI projection advisory below. No inventory edit. |
+| `lint:effect-vitest` | 12 new rows across six files, all fixture-layer/scope/platform judgments. Existing table plus retained Graft fixture below; B after V owns admission. |
+| `quality:knip` | Sole regression `package.json#onnxruntime-node`; root declaration explicitly assigned to H1 in resume ruling 2. C must leave it. |
+| `fallow:audit` | Root ONNX declaration introduced by root-script deletion, owned by H1; unchanged `renderTurboSummary` complexity is inherited-adjacent. |
+| `fallow:dead-code` | Same sole root ONNX declaration; raw scanner status is 0/warn but the policy envelope enforces its baseline row and exits 1. |
+
+Additional occurrence-specific candidates for B (not broad census acceptance):
+
+| File:line | Rule / review class | Justification |
+| --- | --- | --- |
+| `packages/tooling/tool/cli/test/fixtures/graft/crux-batches.test.js:5` | EV010 / platform-filesystem-candidate | Retained external Graft adapter uses physical `realpathSync` to select installed-tool fixtures; relocated unchanged Node regression, not a new Effect-owned runtime. |
+| `packages/tooling/tool/cli/test/ci-runner-security.test.ts:64` | SFV4-arbitrary-tests / schema-policy-advisory | Golden event/credential, subprocess/signal and generated-pattern projection regressions use schema codecs at the boundary; random schema values cannot replace the exact bootstrap/action scenarios. |
+
+Passed cheap lanes: changeset-status (D's private policy), cache policy (zero
+blocking findings), goals index/doctor, atlas, config-sync, both code/Markdown
+Effect import audits, allowlist, JSDoc ratchet (zero legacy findings), and Fallow
+health (zero findings). The ordinary Fallow audit run exits 0 with two attributed
+observations; the publish `--check` variant is red as above. Local parity is
+qualified separately from hosted evidence, which cannot exist before publication.
+
+### Run 4 completed local qualification
+
+`.beep/rsc-c-run4-qualified-result.txt` is terminal with all six rows zero:
+patterns, test-tsgo, CI fixtures, Fallow audit, Fallow health, package-verify.
+Full `@beep/repo-cli` audit takes 811.4s; full package docgen takes 28.8s.
+The source repair is unchanged since `e51f6ff5c3`; D's integrated policy and
+shared-owner regeneration are preserved. Merged-main knowledge check exits 0.
+The publisher's current JSDoc ratchet passes with zero legacy findings. All
+previous compiler/shim failed experiments remain explicitly superseded above.
+No extra passing gate is rerun merely for a report-only edit.
+
+C-owned Graft reported estimates total approximately 323,583 tokens saved
+across four successful queries; independent reviewer usage is separate.
+Both owned heavy sessions have terminal status (qualification 0, publication 1).
+No job started by this worker remains running. E's co-sign, hosted proof,
+B/V exception admission and H1 root ONNX resolution remain open. The concrete
+blocker is normal Yeet's cheap-gate publication fence, not a failing runtime port.
+
+### Run 4 blocked final report
+
+lane: rsc-c-scripts · head: bc176b61face008a1e7e04f48a1b1c525f978f35
+(qualified work head; report-only commit follows) · PR: none (wave 1 normal
+Yeet publish failed before push) · package-verify: @beep/repo-cli pass
+(audit 811.4s, docgen 28.8s) · hosted-parity: test-tsgo pass (334 files);
+docgen local pass and full package docgen pass; jsdoc-ratchet pass;
+knowledge refs --check pass after main integration; fallow audit+health
+ordinary runs pass, audit retains two attributed findings and publish
+--check is red on H1 root ONNX; coverage read complete, no floor changes
+· handoff: history/handoffs/rsc-c-scripts-2026-10-09.md · open: publication
+blocked by B/V occurrence-specific policy admission and H1 root ONNX reds;
+E workflow co-sign and all hosted evidence await a PR; orchestrator must
+resolve the explicit delegated-red publication fence. No PR was pushed,
+readied or merged; no C-owned heavy command remains running.
+
+
+### Run 5 launch correction
+
+The missing-relative-brief blocker was the orchestrator's launch error; the complete brief is in the orchestrator cache and Run 6 read it in full.
+
+## Run 6 (after crash): authorized publication recovery
+
+Required fetch and merge integrated main's documentation-only GPU OCR update.
+Run 4 terminal qualification remains the verification of record:
+`.beep/rsc-c-run4-qualified-result.txt` has six zero rows (patterns, test-tsgo,
+CI fixtures, Fallow audit, Fallow health, full package verification).
+Earlier failed experiments remain superseded, not relabeled as passing.
+Resume ruling 4 assigns removal of the unused root ONNX declaration to C;
+only that declaration is removed. Catalog, exact override, owning-package
+consumer and installer patch remain intact. Install and the three requested
+policy reruns are pending. No baseline or inventory exception is added.
+
+### Run 6 lockfile notice for orchestrator (S5)
+
+The authorized root dependency removal makes the exact one-line lockfile change:
+remove `workspaces[""].devDependencies.onnxruntime-node = "catalog:"`.
+No resolved version, catalog, override or patchedDependencies entry changes.
+Before the push, S5 requires confirmation that the effected-port session has
+been notified, unless its branch has landed and S5 has ended. Please record
+that confirmation in the orchestrator rulings. Ruling 4 already authorizes
+this change and install, but this notice explicitly identifies the lockfile delta.
+
+Install exits 0. Bun reports three packages installed and retains the ONNX
+patch entry; it does not print a fresh ONNX patch-applied line for the reused
+installation. Physical installed-source verification follows rather than
+claiming that absent output. Owner regeneration reports 152 manifests,
+zero drift/writes; cache profile, goals index and CLI tsconfig remain in sync.
+The three policy reruns are queued through the canonical heavy wrapper.
+### Run 6 terminal blocked closeout
+
+Dependency repair commit: `1a0adff1e65f00a0d0934064e4d8b51a754a8829`.
+Recovery record commit: `9040f6b342` (report-only closeout commit follows).
+Current worktree is based on main `35ed1b5dda`. Root manifest/lockfile changes
+are exactly the two unused-root-dependency rows; all package pins and patches
+remain. `.beep/rsc-c-run6-light-result.txt` records install/owner/cache/knowledge
+passes; installed ONNX patch markers are 4/4. The first literal-based install
+failure is attributed and corrected, not counted as a pass.
+
+S5 confirmation is absent from the brief and RULINGS at closeout. The explicit
+lockfile notification above is the request to the orchestrator. C does not
+push pending that mandatory confirmation. No publication bypass attempt,
+PR creation, ready transition or merge occurred in this run.
+
+The three requested policy reruns remained unadmitted after approximately six
+minutes. The owned wrapper unit was stopped before any gate child launched;
+`.beep/rsc-c-run6-result.txt` records pending/cancelled-before-admission for
+all three. No terminal pass is claimed. The command script and prepared PR
+body remain in `.beep/rsc-c-run6-gates.sh` and `.beep/rsc-c-run6-pr-body.md`.
+All commands/units started by Run 6 have ended; no C-owned heavy job remains.
+
+Resume: orchestrator confirms effected-port notification (or proves S5 ended
+when that branch landed); run the saved three-gate batch through beep-heavy;
+attribute any red and preserve the B-owned judgment rows; record the results,
+commit the final receipt, then publish with `env TURBO_CONCURRENCY=2 bun run
+beep yeet publish --push-only`. If that refuses, record the refusal and use
+the explicitly authorized push/create fallback, then ready at content-final.
+E reviews workflow hunks and ordering on the PR. C never merges.
+
+The user requires work only inside the lane: no external session-ledger or
+orchestrator final-file write is performed. This handoff is the named durable
+communication surface. The final report is the requested closeout format;
+no additional operator-choice prompt overrides the worker brief.
+
+### Run 6 report
+
+lane: rsc-c-scripts · head: 9040f6b342 (recovery work head; report-only commit follows)
+· PR: none (wave 1 not pushed; S5 notification confirmation pending)
+· package-verify: @beep/repo-cli pass (retained Run 4 terminal audit 811.4s / docgen 28.8s; not rerun)
+· hosted-parity: test-tsgo pass (retained 334-file local proof); docgen local pass (retained);
+jsdoc-ratchet pass (retained); knowledge refs --check pass (Run 6: zero live gated observations);
+fallow audit+health pass (retained ordinary Run 4 runs); coverage read complete (existing floors,
+no changes). Hosted proof absent. Run 6 quality:knip / fallow:audit / fallow:dead-code policy
+reruns pending, stopped before admission; no fresh pass claimed.
+· handoff: history/handoffs/rsc-c-scripts-2026-10-09.md
+· open: S5 effected-port notification confirmation before lockfile push; the three named policy
+reruns; authorized push-only publication/ready; E workflow co-sign; B admission after V for
+2 wire-schema + 12 test judgment rows; hosted evidence and orchestrator merge gate.
+No C-owned command/unit remains running. No final marker is emitted without a content-final PR.
+
+## Run 7 (after crash): S5 cleared and policy reruns
+
+Resume ruling 5 clears S5 for the one-row lockfile delta by durable
+orchestrator notification when the effected-port session is unreachable.
+Required fetch/merge reports already up to date. The clean starting head is
+`a22fbbebdd`; Run 4 qualification and Run 6 install/owner evidence are retained.
+The three policy reruns use `.beep/rsc-c-run7-gates.sh` through `beep-heavy`,
+with Turbo concurrency 2. The first launch failed before admission because
+the user-manager environment was absent; the corrected launch is queued.
+No inventory, allowlist, floor, cap or another lane is modified.
+
+### Run 7 terminal dependency-policy evidence
+
+The corrected heavy batch ends at 2026-10-09T20:21:28Z; its wrapper exits 0.
+`.beep/rsc-c-run7-result.txt` records all three rows zero.
+
+| Command | Result | Attribution |
+| --- | --- | --- |
+| `bunx turbo run knip:check --cache=local:rw --summarize` | pass | current 41, baseline 41, introduced 0; fingerprint current |
+| `beep quality fallow audit --check --base origin/main` | pass | introduced 0; one nonblocking inherited-adjacent complexity observation |
+| `beep quality fallow dead-code --check --base origin/main` | pass | zero findings |
+
+The unused root ONNX regression is gone. Logs are
+`.beep/rsc-c-run7-knip.log`, `.beep/rsc-c-run7-fallow-audit.log` and
+`.beep/rsc-c-run7-fallow-dead-code.log`; reports are under `.beep/fallow/`.
+Run 4 six-row terminal qualification plus these three reruns is the
+verification of record under resume rulings 4/5. No passed gate is rerun.
+No C-owned heavy unit remains running. Publication and ready transition follow.
+
+### Run 7 publication refusal and authorized fallback
+
+The admitted `env TURBO_CONCURRENCY=2 beep-heavy bun run beep yeet publish
+--push-only` attempt exits 1 at 2026-10-09T20:29:35Z with the exact refusal:
+`yeet publish --push-only requires --reuse-verified.` No push occurs.
+Resume ruling 4 item 3 explicitly authorizes direct push and draft creation
+after a refusal; C uses that fallback with the same qualification evidence.
+No full-proof reuse is fabricated. The wrapper is terminal before fallback.
+
+### Run 7 PR and live gate state
+
+Fallback pushes `286290daabaf9c7693fada51bf92340ecabb932c` and creates
+[PR #1583](https://github.com/beep-effect/beep-effect/pull/1583), wave 1, with
+`ready-for-heavy`. `yeet ready` flips it ready for review. The first live
+review read has zero unresolved threads; GitHub reports `MERGEABLE` with
+no base conflict. E's co-sign is routed by the orchestrator and is not claimed.
+
+The three Vercel deployment failures link explicitly to `build-rate-limit`.
+Their inbox ids `Vercel_oip-web-fb6577d1f645`,
+`Vercel_oip-web-staging-05c591f57ba2` and `Vercel_todox-452ea435c80d`
+are acknowledged `--environment-only` with that attribution. No spending.
+
+The old Run 4 failed-publish verdict remains on disk; it does not describe
+the successful authorized fallback. No reusable full-proof manifest is
+fabricated. Timestamp-based staleness suggestions after the lockfile edit
+do not authorize baseline refreshes owned by B/V; no such files change.
+The readiness monitor is job `6f96d792-ef03-4cb0-93c4-47836eeb1732`,
+submitted detached with a two-minute maximum runtime and waited by this
+worker. Hosted checks and review-window completion are separate evidence;
+S11 delegates the merge decision and attributed-red burn-down to the fleet.
+
+### Run 7 terminal handoff
+
+Monitor job ends `terminated / timeout` at 2026-10-09T20:32:29Z; `job wait`
+exits 3. This is the explicitly bounded observation, not readiness proof.
+The proof-job inbox row is acknowledged `--observed`. Latest live status
+read has zero unresolved threads, zero failing required checks and eight
+pending required checks; three Vercel rate-limit failures are attributed
+above. CodeRabbit's draft-skip notice is informational, not an actionable
+review finding. The PR is non-draft and conflict-free. No C-owned unit or
+command remains running. The orchestrator owns continuing observation,
+E co-sign, the review window, S11 gate and eventual lane retirement.
+
+### Run 7 report
+
+lane: rsc-c-scripts · head: 286290daabaf9c7693fada51bf92340ecabb932c
+(published qualified work head; final report-only commit follows)
+· PR: #1583 (wave 1, ready for review)
+· package-verify: @beep/repo-cli pass (retained Run 4 full audit 811.4s / docgen 28.8s)
+· hosted-parity: test-tsgo pass (retained 334-file local proof); docgen local pass
+(retained); jsdoc-ratchet pass (retained); knowledge refs --check pass
+(Run 6, zero live gated); fallow audit+health pass (retained qualification),
+Run 7 audit policy pass with one nonblocking inherited complexity finding;
+coverage read complete (existing floors, no changes). Hosted checks pending;
+no hosted green or merge-ready verdict claimed. Run 7 quality:knip and
+fallow:dead-code also pass with zero introduced findings.
+· handoff: history/handoffs/rsc-c-scripts-2026-10-09.md
+· open: E workflow co-sign; B admission after V for two wire-schema and
+12 test judgment rows; hosted proof, review-window completion and orchestrator
+merge/retirement. S5 and publication are resolved. All C-owned jobs are terminal.
+
+Content is final; the receipt-only push carries this report. The lane never merges.
+
+## Run 8 main integration
+
+Read E's [co-sign](https://github.com/beep-effect/beep-effect/pull/1583#issuecomment-6088793345)
+and its committed handoff before merging `origin/main` at `df7d88aad7`.
+The six expected conflicts were resolved with E's hosted policy semantics and
+C's command structure: governance commands remain registered; docs-only Heavy
+admission excludes packages/apps/infra; Security retains its job-token permissions
+and hosted checks, caller guards and coordinated descriptors survive. ONNX still
+runs the owning-package suite before OSV and merge-driver setup before assertions.
+The composite preserves E's retired Bun dependency cache, with install before
+`beep ci job-env` before Turbo restore. All three description references are
+corrected to `beep ci job-env`. OPPORTUNITIES retains both lanes' rows in order.
+
+The independent review's P2 is accepted and repaired: the resource adapter uses
+a private temporary launch receipt to fall back directly when the CLI never
+starts the lane, while preserving a started lane's exit without repeating it.
+Two synthetic fixtures cover CLI boot failure and exactly-once execution after
+lane failure; existing stdin, signal, invalid-proc and unwritable-output fixtures
+remain. No secret input, host unit or inventory is changed.
+
+Owner regeneration: `ci patterns --write` succeeds; `lint package-scripts --write`
+reports 152 manifests / 0 drifting / 0 written; `cache profile --write` succeeds
+without a new tracked profile diff. `.beep/rsc-c-run8-gates.sh` queues only the
+five required integration checks through `beep-heavy` with Turbo concurrency 2.
+Terminal evidence will be appended before the single push. Previous terminal
+passes remain the verification of record for unaffected surfaces.
+
+### Run 8 terminal integration evidence
+
+Qualified source head: `8c00e572755d85d92c48fe5cfeb44b93fbb4b7f2`.
+The first batch's typecheck red is introduced: the new boot-failure fixture read
+PATH directly inside Effect. Its repair uses `Config.String("PATH")`; no
+suppression or policy inventory changed. Retained runtime successes and the
+three affected reruns together establish the integration proof:
+
+| Command | Terminal result / evidence |
+| --- | --- |
+| `beep quality test-tsgo` | pass, 335 files; `.beep/rsc-c-run8-repair-result.txt` |
+| CI runner-security Vitest suite | pass, all 29 cases; `.beep/rsc-c-run8-repair-fixtures.log` |
+| `beep quality package-verify @beep/repo-cli --quick` | pass, lint 3.8s / check 7.3s; `.beep/rsc-c-run8-repair-package.log` |
+| `beep quality fallow audit --check --base origin/main` | pass, introduced 0, one nonblocking inherited-adjacent complexity observation; `.beep/rsc-c-run8-fallow.log` |
+| `turbo run knip:check --cache=local:rw --summarize` | pass, current 41 / baseline 41 / introduced 0, fingerprint current; `.beep/rsc-c-run8-knip.log` |
+
+All wrappers are terminal. The original unadmitted four-slot waiter was stopped
+only after cwd/sleep-child verification because the orchestrator's live floor
+changed to five; its replacement and the repair batch both finish with exit 0.
+The complete result files are `.beep/rsc-c-run8-result.txt` (initial type red)
+and `.beep/rsc-c-run8-repair-result.txt` (three rows zero). Earlier Run 4 full
+package/docgen/parity and Run 7 policy receipts remain proof for unaffected work.
+No passed unaffected gate is repeated.
+
+Scoped coverage baseline read includes `Ci.command.ts`: lines 83.33, statements
+84.78, branches 51.35, functions 80.76. HeavyAdmission and the new CiOperational
+sources have no existing row in the current root baseline. No floor changes;
+this read is not a new full-suite coverage result.
+
+E's co-sign is addressed: descriptions corrected, merged hosted guards retained.
+The P2 resource-fallback review is answered and resolved through `beep yeet reply`;
+`.beep/yeet/reply-report.json` records `resolved` at 2026-10-09T21:15:48Z.
+The single integration publication wave uses `git push`, explicitly authorized
+by resume ruling 6 instead of rerunning Yeet's B-owned judgment fence. The final
+response supplies the receipt-only successor SHA and live GitHub mergeability.
+Hosted green, elapsed review window and generic merge readiness are not claimed.
+The orchestrator owns the gate and retirement; C never merges the PR.
+
+### Run 8 report
+
+lane: rsc-c-scripts · head: 8c00e572755d85d92c48fe5cfeb44b93fbb4b7f2
+(qualified source; receipt-only successor follows in this single push wave)
+· PR: #1583 (wave 1, ready for review)
+· package-verify: @beep/repo-cli pass (Run 8 --quick; retained Run 4 full audit/docgen)
+· hosted-parity: test-tsgo pass (335 files); docgen local pass (retained);
+jsdoc-ratchet pass (retained); knowledge refs --check pass (retained);
+fallow audit+health pass (Run 8 audit / retained health); coverage read complete,
+no floors changed. CI fixtures 29/29 and Knip zero introduced pass. These are local
+hosted-parity receipts; updated-head hosted checks remain pending.
+· handoff: history/handoffs/rsc-c-scripts-2026-10-09.md
+· open: B admission after V for the two wire-schema and twelve test judgment rows;
+updated-head hosted evidence, review window, orchestrator merge gate and retirement.
+E co-sign and the resource P2 are resolved. All C-owned units are terminal.
+
+Graft saved approximately 31,041 tokens in one retrieval this run.
+
+## Run 9 main integration
+
+Resume ruling 7 integrates V's main merge `4e82f6d942` into C's existing
+PR #1583. The four expected conflicts are resolved as instructed: SPEC and
+OPPORTUNITIES retain both parents' rows in document order; the add/add Stage 5
+receipt puts V's contribution first, followed by C under its own heading. A
+line-preservation comparison against both parents reports zero missing
+nonblank lines in all three documents (apart from the renamed C title).
+
+The merge-driver fixture keeps V's bounded `it.layer`, scoped temporary
+directory and all four failure/interruption/cleanup witnesses. C's typed
+installation runs twice against the copied stable adapter, preserving
+idempotence and fail-closed projection assertions. The portable Effect ChildProcessSpawner boundary replaces the Bun-only
+global so this fixture can run under both runtimes. No retired setup script returns.
+
+Owner regeneration: `ci patterns --write` succeeds; `lint package-scripts
+--write` reports 152 manifests, zero drifting and zero written; `cache
+profile --write` completes without a new tracked projection diff. V's
+inventory is imported verbatim from main; C authors no inventory or
+allowlist changes. Previous terminal proof remains retained for unaffected
+surfaces. The required four checks, including both merge-driver runtimes,
+are queued serially via `.beep/rsc-c-run9-gates.sh` through beep-heavy.
+The live complete GraphQL read has one resolved review thread and zero
+unresolved threads; updated-head read and publication follow qualification.
+
+### Run 9 introduced-red attribution
+
+Initial batch: both five-case merge-driver runtimes pass, all 29 CI security
+fixtures pass, test-tsgo fails on C's native child_process import. The
+quick package lint observes the intermediate file before Biome runs and
+fails on import ordering/formatting. The repair uses canonical Effect
+ChildProcessSpawner and Biome formatting; no suppression or baseline edits.
+The serial repair batch reruns both merge-driver runtimes, test-tsgo and
+package-verify --quick. Its terminal results remain required; the initial
+passes do not qualify the repaired process boundary. The lint inbox row
+will be acknowledged with the merge repair SHA.
+
+### Run 9 terminal integration evidence
+
+Qualified integration merge: `d48b1ca7404ea209288005832b419dc6fed55106`,
+with parents `100213da1d` and V main `4e82f6d942`. All required merge-affected
+checks now pass. `.beep/rsc-c-run9-repair-result.txt` records four zero rows;
+`.beep/rsc-c-run9-result.txt` retains the original introduced-red attribution
+and the unaffected CI fixture pass.
+
+| Required check | Terminal result | Evidence |
+| --- | --- | --- |
+| Merge-driver Node runner | pass, all 5 cases | `.beep/rsc-c-run9-repair-driver-node.log` |
+| Merge-driver Bun runner | pass, all 5 cases | `.beep/rsc-c-run9-repair-driver-bun.log` |
+| `beep quality test-tsgo` | pass, 335 files | `.beep/rsc-c-run9-repair-tsgo.log` |
+| CI runner-security Bun fixtures | pass, all 29 cases | `.beep/rsc-c-run9-ci.log` |
+| `beep quality package-verify @beep/repo-cli --quick` | pass, lint 7.5s / check 14.1s | `.beep/rsc-c-run9-repair-package.log` |
+
+Both admitted wrappers are terminal; no C-owned command/unit remains running.
+The lint P0 `local-shard-17edbde764d4` is acknowledged with repair SHA
+`d48b1ca740`. No policy baseline or reviewed exception was authored by C.
+Run 4 full package/docgen/parity, Run 7 dependency-policy and Run 8 Fallow/Knip
+receipts remain the verification of record for unaffected surfaces. Existing
+coverage-floor read is retained; no floor changed or new coverage result claimed.
+
+Publication is one `git push` wave after this receipt-only successor commit,
+explicitly authorized by resume ruling 7. The existing PR stays ready. A fresh
+GitHub mergeability and complete review-thread read follows the push; the
+last pre-push complete read contains one resolved thread and no unanswered
+later reviewer comment. Hosted green and elapsed review window are separate
+from these local parity passes. The orchestrator alone merges and retires C.
+
+### Run 9 report
+
+lane: rsc-c-scripts · head: d48b1ca7404ea209288005832b419dc6fed55106
+(qualified integration source; receipt-only successor is included in this push)
+· PR: #1583 (wave 1, ready for review)
+· package-verify: @beep/repo-cli pass (Run 9 --quick; retained Run 4 full audit/docgen)
+· hosted-parity: test-tsgo pass (335 files); docgen local pass (retained);
+jsdoc-ratchet pass (retained); knowledge refs --check pass (retained);
+fallow audit+health pass (retained Run 8 audit / earlier health); coverage read
+complete, no floors changed. Merge-driver Node 5/5, Bun 5/5; CI security 29/29.
+Updated-head hosted proof is not claimed.
+· handoff: history/handoffs/rsc-c-scripts-2026-10-09.md
+· open: B occurrence-specific admission after V; updated-head hosted evidence,
+review-window completion, orchestrator merge gate and retirement. All C-owned
+units are terminal. E co-sign and the resource P2 remain resolved.
+
+Graft saved approximately 35,133 tokens across two retrievals this run.
