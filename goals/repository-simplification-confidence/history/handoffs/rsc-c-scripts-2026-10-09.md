@@ -565,3 +565,23 @@ package-scoped docgen, CI fixtures under bunx --bun (the actual package audit
 runtime), then full package verification. It is a rerun, not yet a pass.
 Publication proceeds through the normal cheap-gate path while that proof
 settles; E's co-sign and hosted proof remain open.
+
+The compatible qualification sequence is admitted: package-scoped docgen
+passes, and all 24 CI fixtures pass under bunx --bun (39.21s). That directly
+exercises the previously failing pre-runtime profile shim in the package
+audit runtime. Full package verification is now running; terminal receipt
+`.beep/rsc-c-run4-compatible-result.txt` records the two completed passes.
+
+The full package compatibility rerun fails fast at NodeNext TS1543: plain JSON
+imports require attributes in that mode. `a381e32a3187c1df4edfc293d6868e7d30500c4e`
+uses typed import assignments for the same JSON owner, compatible with each
+compiler's generated loader. The package audit P0 has that fix-sha acknowledgment.
+A dual-module docgen/type/Fallow/full-package sequence is queued. The prior
+24-fixture Bun-runtime pass remains valid for the unchanged bootstrap repair.
+
+The normal publish attempt is admitted but exits before gates because newly
+written receipt edits are unstaged. No push or PR occurs. Main advanced by
+#1567 (evidence-policy documentation only); it is merged cleanly. Shared owner
+regeneration and a receipt commit make the retry a clean reviewed wave.
+Independent review is terminal zero findings on source `a381e32a31`; the main
+merge does not change that source.

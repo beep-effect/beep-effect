@@ -349,3 +349,10 @@ are available. Cancellation is not a proof failure or a package pass.
   example compiler; plain JSON imports retain the same owner data and compile
   on both paths. An early dual-runtime shim fixture and docgen module-mode
   compatibility check would have caught both before the 816.5s package audit.
+
+- C Run 4 follow-up: plain JSON imports pass CommonJS docgen but package
+  NodeNext emits TS1543. The compiler contracts conflict on import attributes.
+  Typed import assignments preserve the shared declarative owner and permit
+  each compiler to emit its own loader; both modes are now explicit gates
+  before the next full package audit. A package/docgen module-mode matrix
+  would have prevented the second failed preflight.
