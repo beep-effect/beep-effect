@@ -199,6 +199,12 @@ This spec binds to them without restating.
   baseline inherited findings. Reversal: remove the review if the tests stop
   exercising native filesystem behavior.
 
+- **2026-10-09 post-merge follow-up:** the 23:00 UTC standing ruling permits
+  a fresh follow-up for the introduced dependency-key ordering red that settled
+  after manual merge of PR 1. Sort only the manifest maps; dependency values
+  and runtime code remain unchanged. Reversal: revert the ordering-only diff.
+  Keep lifecycle active until grant/export/seeding evidence exists.
+
 ## Acceptance Criteria
 
 - [x] Either auth lane injects into the unchanged REST service boundary in
