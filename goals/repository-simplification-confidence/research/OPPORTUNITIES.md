@@ -110,3 +110,43 @@
 - Would have prevented it: a review-lens contract that separates material
   defects from wording findings up front, and a mechanical verbatim-section
   checker against the brief so copy drift is caught by a validator.
+
+### A admission environment (2026-10-09)
+
+- Task: regenerate the schema catalog and refresh the FreshBooks dependency lock through `beep-heavy`.
+- Evidence: wrapper exited 1 before executing either command: `Failed to connect to user scope bus`; runtime directory and session bus variables were absent in the worker shell.
+- Prevention: worker launcher exports the existing user-manager environment. Retry uses `/run/user/1000` and its bus, preserving admission rather than bypassing it.
+
+### A admission capacity receipt (2026-10-09)
+
+- Task: post-transfer dependency refresh and catalog/JSDoc regeneration.
+- Evidence: `beep-heavy: all 3 slots busy, waiting`; `lslocks` identified two finite proof commands and an orchestrator `gate.sh` polling loop holding a heavy slot for over two hours. Slot receipt files were empty while waiters were active.
+- Prevention: finite proofs own heavy slots; a persistent polling daemon should release admission between heavy operations. The lane leaves the existing owner's daemon untouched and keeps its commands queued.
+
+### A orphaned gate runner recovery (2026-10-09, run 2)
+
+- Task: read the resumed lane's package results before launching any duplicate gate.
+- Evidence: the package loop parent had exited; only the completed Box provisioning row remained in `package-results.tsv`. Its Box admission child and the schema writer were still queued. A background shell launched through the worker tool also exited while its user-manager child survived.
+- Recovery: terminated only A's confirmed queued children, then placed the sequential runner in `rsc-a-run2-gates.service`. It logs each command and appends terminal exit codes to `.beep/rsc-a/run2-results.tsv`. No other lane's process was stopped.
+- Prevention: launch the coordinator itself as a user service, not merely each admitted child. A polling coordinator takes no heavy slot; each finite command still uses `beep-heavy`.
+
+## 2026-10-09: inventory writer spelling selected the broad lint pipeline
+
+- Doing: regenerating the JSDoc inventory after narrowing private exports.
+- Evidence: `beep lint jsdoc-documentation --write` ran `lint:policy` and
+  failed with `Census subprocess failed or exceeded its 512 MiB capture bound`;
+  the actual owner is `beep quality jsdoc-inventory`.
+- Would have prevented it: rejecting unknown lint subcommands instead of
+  forwarding them into the root lint battery. Run 3 uses the owner command.
+
+## 2026-10-09: Knip retirement relocates shared lock hoisting
+
+- Doing: owner-generated `bun install` after removing only Knip declarations.
+- Evidence: 27 added / 128 removed lock lines; surviving `oxc-resolver` moves
+  from 11.24.2 to 11.21.2, `strip-json-comments` from 5.0.3 to 2.0.1, and
+  `@emnapi` package keys relocate. No other manifest version was changed.
+  The lane handoff records every changed/added/removed package key.
+- Would have prevented it: a lock regeneration receipt that separates
+  deleted dependency closure from shared-hoisting relocation, allowing the
+  orchestrator to approve the exact generated graph under S5 before push.
+  Publication is held as resume ruling 2 requires.

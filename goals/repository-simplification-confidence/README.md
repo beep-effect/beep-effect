@@ -59,6 +59,9 @@ nothing was adopted or discarded. P0 Research is complete.
 
 ## Latest Evidence
 
+[A lane handoff](./history/handoffs/rsc-a-retire-2026-10-09.md): run 2 clears the FreshBooks S5 notice and merges stage-1 evidence. Knip transfer proof remains queued under a durable admission runner; publication is pending (2026-10-09).
+
+
 [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md)
 (implementation head `e62411d63f`, 2026-10-09);
 [`research/sweeps/2026-10-09/README.md`](./research/sweeps/2026-10-09/README.md)
@@ -67,8 +70,8 @@ nothing was adopted or discarded. P0 Research is complete.
 
 ## Notes
 
-- Orchestrator: the program's Claude Fable orchestrator session, which commits for the
-  program; workers never commit.
+- Orchestrator: the program's coordinating session. Under standing ruling S1,
+  workers commit and publish their own lanes; the orchestrator owns the merge gate.
 - Packet lane: `rsc-packet` in the implementation clone's sibling
   `-worktrees` root, cut from `e62411d63f`; its branch name is recorded in
   `research/baseline-2026-10-09.md`.
@@ -78,3 +81,8 @@ nothing was adopted or discarded. P0 Research is complete.
 - Program review exception: every in-scope actionable finding is resolved,
   including P2 and below; the round-2 review cap does not apply (SPEC.md
   Exception Ledger).
+
+A run 3: recovered terminal transfer gates; all eleven pass. The final patched
+Knip cross-check reports the sole documented Govinfo drift oracle, and every
+transferred finding has a disposition. Knip retirement wave 1 is in local
+verification; see the lane handoff and `history/receipts/knip-cache-policy-review.md`.
