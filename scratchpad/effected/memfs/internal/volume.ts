@@ -42,12 +42,13 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as A from "effect/Array";
+import * as Order from "effect/Order";
+import * as MutableHashMap from "effect/MutableHashMap";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import type * as Cause from "effect/Cause";
-import * as Brand from "effect/Brand";
 import * as ByteSize from "effect/ByteSize";
-import * as Data from "effect/Data";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -65,7 +66,30 @@ import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/memfs/internal/volume");
 
-class VolumeInvariantError extends S.TaggedError<VolumeInvariantError>($I`VolumeInvariantError`)("VolumeInvariantError", { message: S.String }) {}
+class VolumeInvariantError extends S.TaggedError<VolumeInvariantError>($I`VolumeInvariantError`)(
+ "VolumeInvariantError",
+ { message: S.String.pipe($I.annoteKey("VolumeInvariantError.message", { description: "The violated internal volume invariant." })) },
+ $I.annoteError<VolumeInvariantError>("VolumeInvariantError", { description: "The committed volume state violates an engine invariant." }),
+) {}
+
+// localeCompare can return any negative/positive magnitude; Orders require -1/0/1.
+const LocaleNameOrder = Order.make<string>((left, right) => {
+ const compared = left.localeCompare(right);
+ return compared < 0 ? -1 : compared > 0 ? 1 : 0;
+});
+const InodeNameOrder = Order.mapInput(LocaleNameOrder, (entry: readonly [string, Inode]) => entry[0]);
+const ResolutionErrno = LiteralKit(["EISDIR", "ELOOP", "ENOTDIR"]).pipe(
+ $I.annoteSchema("ResolutionErrno", { description: "Resource errors raised during inode resolution." }),
+);
+type ResolutionErrno = typeof ResolutionErrno.Type;
+const DescriptorErrno = LiteralKit(["EBADF", "EINVAL", "EISDIR"]).pipe(
+ $I.annoteSchema("DescriptorErrno", { description: "Errors raised by descriptor operations." }),
+);
+type DescriptorErrno = typeof DescriptorErrno.Type;
+const DescriptorAccess = LiteralKit(["readable", "writable"]).pipe(
+ $I.annoteSchema("DescriptorAccess", { description: "The required descriptor access mode." }),
+);
+type DescriptorAccess = typeof DescriptorAccess.Type;
 
 const { badArgument, systemError } = PlatformErrorNs;
 type PlatformError = PlatformErrorNs.PlatformError;
@@ -92,55 +116,59 @@ const TEMP_DIR = "/tmp";
 // models
 // =============================================================================
 
-type Inode = Brand.Branded<number, "MemoryFileSystemInode">;
-
-const Inode: Brand.Constructor<Inode> = Brand.nominal<Inode>();
-
-const RootInode = Inode(1);
-
-type FileDescriptor = Brand.Branded<number, "MemoryFileSystemFileDescriptor">;
-
-const FileDescriptor: Brand.Constructor<FileDescriptor> = Brand.nominal<FileDescriptor>();
-
-interface InodeMetadata {
-	readonly ino: Inode;
-	readonly mode: number;
-	readonly uid: number;
-	readonly gid: number;
-	readonly nlink: number;
-	readonly openCount: number;
-	readonly atime: DateTime.Utc;
-	readonly mtime: DateTime.Utc;
-	readonly ctime: DateTime.Utc;
-	readonly birthtime: DateTime.Utc;
-}
-
-interface FileInode extends InodeMetadata {
-	readonly _tag: "File";
-	readonly data: Uint8Array;
-}
-
-interface DirectoryInode extends InodeMetadata {
-	readonly _tag: "Directory";
-	readonly entries: HashMap.HashMap<string, Inode>;
-}
-
-interface SymbolicLinkInode extends InodeMetadata {
-	readonly _tag: "SymbolicLink";
-	readonly target: string;
-}
-
-type InodeEntry = FileInode | DirectoryInode | SymbolicLinkInode;
-
-const InodeEntry = Data.taggedEnum<InodeEntry>();
+const Inode = S.Finite.pipe(S.brand("MemoryFileSystemInode"),
+ $I.annoteSchema("Inode", { description: "A volume inode number." }));
+type Inode = typeof Inode.Type;
+const RootInode = Inode.make(1);
+const FileDescriptor = S.Finite.pipe(S.brand("MemoryFileSystemFileDescriptor"),
+ $I.annoteSchema("FileDescriptor", { description: "A volume file descriptor number." }));
+type FileDescriptor = typeof FileDescriptor.Type;
+const InodeMetadata = S.Struct({
+ ino: Inode.pipe($I.annoteKey("InodeMetadata.ino", { description: "The inode number." })),
+ mode: S.Finite.pipe($I.annoteKey("InodeMetadata.mode", { description: "The inode mode bits." })),
+ uid: S.Finite.pipe($I.annoteKey("InodeMetadata.uid", { description: "The owning user id." })),
+ gid: S.Finite.pipe($I.annoteKey("InodeMetadata.gid", { description: "The owning group id." })),
+ nlink: S.Finite.pipe($I.annoteKey("InodeMetadata.nlink", { description: "The hard-link count." })),
+ openCount: S.Finite.pipe($I.annoteKey("InodeMetadata.openCount", { description: "The open descriptor count." })),
+ atime: S.DateTimeUtc.pipe($I.annoteKey("InodeMetadata.atime", { description: "The access time." })),
+ mtime: S.DateTimeUtc.pipe($I.annoteKey("InodeMetadata.mtime", { description: "The modification time." })),
+ ctime: S.DateTimeUtc.pipe($I.annoteKey("InodeMetadata.ctime", { description: "The metadata change time." })),
+ birthtime: S.DateTimeUtc.pipe($I.annoteKey("InodeMetadata.birthtime", { description: "The creation time." }))
+}).pipe($I.annoteSchema("InodeMetadata", { description: "The engine InodeMetadata data." }));
+type InodeMetadata = typeof InodeMetadata.Type;
+const FileInode = S.Struct({
+ _tag: S.tag("File").pipe($I.annoteKey("FileInode._tag", { description: "The inode variant." })),
+ ...InodeMetadata.fields,
+ data: S.Uint8Array.pipe($I.annoteKey("FileInode.data", { description: "The live file bytes." }))
+}).pipe($I.annoteSchema("FileInode", { description: "The engine FileInode data." }));
+type FileInode = typeof FileInode.Type;
+const DirectoryInode = S.Struct({
+ _tag: S.tag("Directory").pipe($I.annoteKey("DirectoryInode._tag", { description: "The inode variant." })),
+ ...InodeMetadata.fields,
+ entries: S.HashMap(S.String, Inode).pipe($I.annoteKey("DirectoryInode.entries", { description: "The stored directory entry names and inode numbers." }))
+}).pipe($I.annoteSchema("DirectoryInode", { description: "The engine DirectoryInode data." }));
+type DirectoryInode = typeof DirectoryInode.Type;
+const SymbolicLinkInode = S.Struct({
+ _tag: S.tag("SymbolicLink").pipe($I.annoteKey("SymbolicLinkInode._tag", { description: "The inode variant." })),
+ ...InodeMetadata.fields,
+ target: S.String.pipe($I.annoteKey("SymbolicLinkInode.target", { description: "The stored link target." }))
+}).pipe($I.annoteSchema("SymbolicLinkInode", { description: "The engine SymbolicLinkInode data." }));
+type SymbolicLinkInode = typeof SymbolicLinkInode.Type;
+const InodeEntry = S.Union([FileInode, DirectoryInode, SymbolicLinkInode]).pipe(
+ S.toTaggedUnion("_tag"), $I.annoteSchema("InodeEntry", { description: "The file, directory or symbolic-link inode." }),
+);
+type InodeEntry = typeof InodeEntry.Type;
 
 interface WatchSubscription {
+ readonly id: number;
 	readonly path: string;
 	readonly directory: boolean;
 	readonly recursive: boolean;
 	queue: Queue.Enqueue<FileSystem.WatchEvent, PlatformError | Cause.Done> | undefined;
 	readonly pending: Array<FileSystem.WatchEvent>;
 }
+
+const WatchSubscriptionOrder = Order.mapInput(Order.Number, (watcher: WatchSubscription) => watcher.id);
 
 interface TransitionResult<A> {
 	readonly state: State;
@@ -165,7 +193,8 @@ interface State {
 }
 
 interface Volume {
-	readonly watchers: Set<WatchSubscription>;
+	readonly watchers: MutableHashMap.MutableHashMap<number, WatchSubscription>;
+ readonly allocateSubscriptionId: () => number;
 	readonly withState: <A, E, R>(use: (state: State) => Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
 	readonly mutate: <A, E, R>(use: (state: State) => Effect.Effect<TransitionResult<A>, E, R>) => Effect.Effect<A, E, R>;
 	readonly mutateInterruptibly: <A, E, R>(
@@ -237,7 +266,7 @@ const permissionDenied = (method: string, path: string, description: string): Pl
 const badResource = (
 	method: string,
 	pathOrDescriptor: string | number,
-	code: "EISDIR" | "ELOOP" | "ENOTDIR",
+	code: ResolutionErrno,
 	description?: string,
 ): PlatformError => errnoError(method, pathOrDescriptor, code, description);
 
@@ -342,13 +371,13 @@ const includesWatchPath = (watchedPath: string, directory: boolean, recursive: b
 // case-insensitive volume a subscription and an event name one entry in any
 // spelling, so matching compares FOLDED paths; the delivered event keeps its own.
 const publishWatchEvents = (
-	watchers: Set<WatchSubscription>,
+	watchers: MutableHashMap.MutableHashMap<number, WatchSubscription>,
 	events: ReadonlyArray<FileSystem.WatchEvent>,
 	caseSensitive: boolean,
 ) =>
 	Effect.sync(() => {
 		const fold = caseSensitive ? (path: string) => path : (path: string) => path.toLowerCase();
-		for (const watcher of watchers) {
+		for (const watcher of A.sort(MutableHashMap.values(watchers), WatchSubscriptionOrder)) {
 			for (const event of events) {
 				if (includesWatchPath(fold(watcher.path), watcher.directory, watcher.recursive, fold(event.path))) {
 					if (watcher.queue === undefined) {
@@ -388,8 +417,7 @@ const inodeUpdateEvents = (state: State, inode: Inode): ReadonlyArray<FileSystem
 	if (inode === RootInode) return [{ _tag: "Update", path: "/" }];
 	// NOTE: An inode may be reachable through multiple hard-link aliases, each of
 	// which must receive an update event.
-	return collectInodePaths(state, inode, root)
-		.sort()
+	return A.sort(collectInodePaths(state, inode, root), Order.String)
 		.map((path) => ({ _tag: "Update", path }));
 };
 
@@ -402,7 +430,7 @@ const reclaimInode = (state: State, entry: InodeEntry): State =>
 
 const createFile = Effect.fnUntraced(function* (state: State, data: Uint8Array = new Uint8Array()) {
 	const now = yield* DateTime.now;
-	const ino = Inode(state.nextInode);
+	const ino = Inode.make(state.nextInode);
 	return [
 		{
 			...state,
@@ -410,7 +438,7 @@ const createFile = Effect.fnUntraced(function* (state: State, data: Uint8Array =
 			inodes: HashMap.set(
 				state.inodes,
 				ino,
-				InodeEntry.File({
+				InodeEntry.cases.File.make({
 					ino,
 					mode: FILE_MODE,
 					uid: DEFAULT_UID,
@@ -431,7 +459,7 @@ const createFile = Effect.fnUntraced(function* (state: State, data: Uint8Array =
 
 const createDirectory = Effect.fnUntraced(function* (state: State) {
 	const now = yield* DateTime.now;
-	const ino = Inode(state.nextInode);
+	const ino = Inode.make(state.nextInode);
 	return [
 		{
 			...state,
@@ -439,7 +467,7 @@ const createDirectory = Effect.fnUntraced(function* (state: State) {
 			inodes: HashMap.set(
 				state.inodes,
 				ino,
-				InodeEntry.Directory({
+				InodeEntry.cases.Directory.make({
 					ino,
 					mode: DIR_MODE,
 					uid: DEFAULT_UID,
@@ -460,7 +488,7 @@ const createDirectory = Effect.fnUntraced(function* (state: State) {
 
 const createSymbolicLink = Effect.fnUntraced(function* (state: State, target: string) {
 	const now = yield* DateTime.now;
-	const ino = Inode(state.nextInode);
+	const ino = Inode.make(state.nextInode);
 	return [
 		{
 			...state,
@@ -468,7 +496,7 @@ const createSymbolicLink = Effect.fnUntraced(function* (state: State, target: st
 			inodes: HashMap.set(
 				state.inodes,
 				ino,
-				InodeEntry.SymbolicLink({
+				InodeEntry.cases.SymbolicLink.make({
 					ino,
 					mode: LINK_MODE,
 					uid: DEFAULT_UID,
@@ -667,7 +695,7 @@ const openMode = (flag: FileSystem.OpenFlag): OpenMode => ({
 const descriptorError = (
 	fd: FileDescriptor,
 	method: string,
-	code: "EBADF" | "EINVAL" | "EISDIR",
+	code: DescriptorErrno,
 	description: string,
 ): PlatformError => errnoError(method, fd, code, description);
 
@@ -681,7 +709,7 @@ const getOpenFile = (
 	state: State,
 	fd: FileDescriptor,
 	method: string,
-	access?: "readable" | "writable",
+	access?: DescriptorAccess,
 ): Effect.Effect<readonly [OpenFileDescriptor, FileInode], PlatformError> =>
 	Effect.suspend(() => {
 		const descriptor = O.getOrUndefined(HashMap.get(state.descriptors, fd));
@@ -709,8 +737,8 @@ const withSystemErrorPath = (error: PlatformError, method: string, path: string)
 				description: error.reason.description,
 				syscall: error.reason.syscall,
 				cause:
-					error.reason.cause instanceof ErrnoException
-						? new ErrnoException(error.reason.cause.code, path)
+					S.is(ErrnoException)(error.reason.cause)
+						? ErrnoException.from(error.reason.cause.code, path)
 						: error.reason.cause,
 			});
 
@@ -841,7 +869,7 @@ const detachEntry: (
 	}
 	let nextState = state;
 	if (target.entry._tag === "Directory") {
-		const children = [...target.entry.entries].sort(([left], [right]) => left.localeCompare(right));
+		const children = A.sort(target.entry.entries, InodeNameOrder);
 		for (const [childName, childInode] of children) {
 			const directory = yield* getDirectory(nextState, target.entry.ino, method, path);
 			const child = yield* getInode(nextState, childInode, method, path);
@@ -936,7 +964,7 @@ const makeDirectory = (volume: Volume) =>
 						// syscall raised itself.
 						if (recursive) {
 							const cause = existing.failure.reason.cause;
-							if (!(cause instanceof ErrnoException)) {
+							if (!(S.is(ErrnoException)(cause))) {
 								return yield* withSystemErrorPath(existing.failure, method, path);
 							}
 							const final = index === pieces.length - 1;
@@ -1204,7 +1232,7 @@ const cloneInode: (
 			mode: source.mode,
 			mtime: preserveTimestamps ? source.mtime : entry.mtime,
 		});
-	return yield* InodeEntry.$match(source, {
+	return yield* InodeEntry.match(source, {
 		File: Effect.fn("File")(function* (source: FileInode) {
 				const [createdState, inode] = yield* createFile(state, source.data);
 				const nextState = applyMetadata(createdState, yield* getInode(createdState, inode, method, path));
@@ -1217,7 +1245,7 @@ const cloneInode: (
 			}),
 		Directory: Effect.fn("Directory")(function* (source: DirectoryInode) {
 				let [nextState, inode] = yield* createDirectory(state);
-				const children = [...source.entries].sort(([left], [right]) => left.localeCompare(right));
+				const children = A.sort(source.entries, InodeNameOrder);
 				for (const [name, childInode] of children) {
 					const child = yield* getInode(nextState, childInode, method, path);
 					const [clonedState, clone] = yield* cloneInode(nextState, child, context, depth + 1);
@@ -1313,7 +1341,7 @@ const copyDirectoryContents: (
 	}
 	let nextState = state;
 	const cloneContext = { method, sourcePath: path, preserveTimestamps } satisfies CloneContext;
-	const children = [...source.entries].sort(([left], [right]) => left.localeCompare(right));
+	const children = A.sort(source.entries, InodeNameOrder);
 	for (const [name, sourceInode] of children) {
 		const sourceEntry = yield* getInode(nextState, sourceInode, method, path);
 		const currentDestination = yield* getDirectory(nextState, destination.ino, method, path);
@@ -1682,7 +1710,7 @@ const openDescriptorUnlocked: (
 			entry = linkedEntry;
 		}
 
-		const fd = FileDescriptor(nextState.nextDescriptor);
+		const fd = FileDescriptor.make(nextState.nextDescriptor);
 		const descriptor: OpenFileDescriptor = {
 			fd,
 			inode: entry.ino,
@@ -2007,7 +2035,7 @@ const collectDirectoryEntries = (
 		readonly prefix: string;
 		index: number;
 	}
-	const frames: Array<Frame> = [{ names: [...HashMap.keys(directory.entries)].sort(), directory, prefix, index: 0 }];
+	const frames: Array<Frame> = [{ names: A.sort(HashMap.keys(directory.entries), Order.String), directory, prefix, index: 0 }];
 	while (frames.length > 0) {
 		const frame = frames[frames.length - 1];
 		if (frame === undefined) break;
@@ -2026,7 +2054,7 @@ const collectDirectoryEntries = (
 		const child = inode === undefined ? undefined : findInode(state, inode);
 		if (child?._tag === "Directory") {
 			frames.push({
-				names: [...HashMap.keys(child.entries)].sort(),
+				names: A.sort(HashMap.keys(child.entries), Order.String),
 				directory: child,
 				prefix: relativePath,
 				index: 0,
@@ -2337,57 +2365,60 @@ const makeTempFileScoped =
 
 const MAX_BRACE_EXPANSIONS = 256;
 
-interface GlobLiteral {
-	readonly _tag: "Literal";
-	readonly value: string;
-}
-
-interface GlobStar {
-	readonly _tag: "Star";
-}
-
-interface GlobOne {
-	readonly _tag: "One";
-}
-
-interface GlobCharacterClass {
-	readonly _tag: "CharacterClass";
-	readonly negated: boolean;
-	readonly ranges: ReadonlyArray<readonly [string, string]>;
-	readonly literals: ReadonlyArray<string>;
-}
-
-type GlobToken = GlobLiteral | GlobStar | GlobOne | GlobCharacterClass;
-
-const GlobToken = Data.taggedEnum<GlobToken>();
-
-interface GlobSegment {
-	readonly _tag: "Segment";
-	readonly tokens: ReadonlyArray<GlobToken>;
-	readonly startsWithDot: boolean;
-}
-
-interface GlobGlobstar {
-	readonly _tag: "Globstar";
-}
-
-type CompiledGlobSegment = GlobSegment | GlobGlobstar;
-
-interface CompiledGlobPattern {
-	readonly segments: ReadonlyArray<CompiledGlobSegment>;
-	readonly directoryOnly: boolean;
-}
-
-interface BraceExpansion {
-	readonly start: number;
-	readonly end: number;
-	readonly alternatives: ReadonlyArray<string>;
-}
-
-interface GlobCharacterClassAtom {
-	readonly value: string;
-	readonly escaped: boolean;
-}
+const GlobLiteral = S.Struct({
+ _tag: S.tag("Literal").pipe($I.annoteKey("GlobLiteral._tag", { description: "The glob token variant." })),
+ value: S.String.pipe($I.annoteKey("GlobLiteral.value", { description: "The literal character." }))
+}).pipe($I.annoteSchema("GlobLiteral", { description: "The engine GlobLiteral data." }));
+type GlobLiteral = typeof GlobLiteral.Type;
+const GlobStar = S.Struct({
+ _tag: S.tag("Star").pipe($I.annoteKey("GlobStar._tag", { description: "The glob token variant." }))
+}).pipe($I.annoteSchema("GlobStar", { description: "The engine GlobStar data." }));
+type GlobStar = typeof GlobStar.Type;
+const GlobOne = S.Struct({
+ _tag: S.tag("One").pipe($I.annoteKey("GlobOne._tag", { description: "The glob token variant." }))
+}).pipe($I.annoteSchema("GlobOne", { description: "The engine GlobOne data." }));
+type GlobOne = typeof GlobOne.Type;
+const GlobCharacterClass = S.Struct({
+ _tag: S.tag("CharacterClass").pipe($I.annoteKey("GlobCharacterClass._tag", { description: "The glob token variant." })),
+ negated: S.Boolean.pipe($I.annoteKey("GlobCharacterClass.negated", { description: "Whether the class is negated." })),
+ ranges: S.Array(S.Tuple([S.String, S.String])).pipe($I.annoteKey("GlobCharacterClass.ranges", { description: "The inclusive character ranges." })),
+ literals: S.Array(S.String).pipe($I.annoteKey("GlobCharacterClass.literals", { description: "The class literal characters." }))
+}).pipe($I.annoteSchema("GlobCharacterClass", { description: "The engine GlobCharacterClass data." }));
+type GlobCharacterClass = typeof GlobCharacterClass.Type;
+const GlobToken = S.Union([GlobLiteral, GlobStar, GlobOne, GlobCharacterClass]).pipe(
+ S.toTaggedUnion("_tag"), $I.annoteSchema("GlobToken", { description: "A compiled glob token." }),
+);
+type GlobToken = typeof GlobToken.Type;
+const GlobSegment = S.Struct({
+ _tag: S.tag("Segment").pipe($I.annoteKey("GlobSegment._tag", { description: "The segment variant." })),
+ tokens: S.Array(GlobToken).pipe($I.annoteKey("GlobSegment.tokens", { description: "The compiled tokens." })),
+ startsWithDot: S.Boolean.pipe($I.annoteKey("GlobSegment.startsWithDot", { description: "Whether the segment explicitly starts with a dot." }))
+}).pipe($I.annoteSchema("GlobSegment", { description: "The engine GlobSegment data." }));
+type GlobSegment = typeof GlobSegment.Type;
+const GlobGlobstar = S.Struct({
+ _tag: S.tag("Globstar").pipe($I.annoteKey("GlobGlobstar._tag", { description: "A recursive globstar segment." }))
+}).pipe($I.annoteSchema("GlobGlobstar", { description: "The engine GlobGlobstar data." }));
+type GlobGlobstar = typeof GlobGlobstar.Type;
+const CompiledGlobSegment = S.Union([GlobSegment, GlobGlobstar]).pipe(
+ S.toTaggedUnion("_tag"), $I.annoteSchema("CompiledGlobSegment", { description: "A normal or recursive glob segment." }),
+);
+type CompiledGlobSegment = typeof CompiledGlobSegment.Type;
+const CompiledGlobPattern = S.Struct({
+ segments: S.Array(CompiledGlobSegment).pipe($I.annoteKey("CompiledGlobPattern.segments", { description: "The compiled path segments." })),
+ directoryOnly: S.Boolean.pipe($I.annoteKey("CompiledGlobPattern.directoryOnly", { description: "Whether a trailing slash requires a directory." }))
+}).pipe($I.annoteSchema("CompiledGlobPattern", { description: "The engine CompiledGlobPattern data." }));
+type CompiledGlobPattern = typeof CompiledGlobPattern.Type;
+const BraceExpansion = S.Struct({
+ start: S.Finite.pipe($I.annoteKey("BraceExpansion.start", { description: "The opening brace offset." })),
+ end: S.Finite.pipe($I.annoteKey("BraceExpansion.end", { description: "The closing brace offset." })),
+ alternatives: S.Array(S.String).pipe($I.annoteKey("BraceExpansion.alternatives", { description: "The expansion alternatives." }))
+}).pipe($I.annoteSchema("BraceExpansion", { description: "The engine BraceExpansion data." }));
+type BraceExpansion = typeof BraceExpansion.Type;
+const GlobCharacterClassAtom = S.Struct({
+ value: S.String.pipe($I.annoteKey("GlobCharacterClassAtom.value", { description: "The class character." })),
+ escaped: S.Boolean.pipe($I.annoteKey("GlobCharacterClassAtom.escaped", { description: "Whether the character was escaped." }))
+}).pipe($I.annoteSchema("GlobCharacterClassAtom", { description: "The engine GlobCharacterClassAtom data." }));
+type GlobCharacterClassAtom = typeof GlobCharacterClassAtom.Type;
 
 const globSyntaxCharacters: HashSet.HashSet<string> = HashSet.make("*", "?", "[", "]", "{", "}", ",", "\\");
 
@@ -2543,7 +2574,7 @@ const parseCharacterClass = (method: string, segment: string, start: number) => 
 			literals.push(character.value);
 		}
 	}
-	return Effect.succeed([GlobToken.CharacterClass({ negated, ranges, literals }), index + 1] as const);
+	return Effect.succeed([GlobToken.cases.CharacterClass.make({ negated, ranges, literals }), index + 1] as const);
 };
 
 const parseGlobSegment = Effect.fnUntraced(function* (method: string, segment: string) {
@@ -2559,21 +2590,21 @@ const parseGlobSegment = Effect.fnUntraced(function* (method: string, segment: s
 			}
 			const value = segment.charAt(index);
 			if (HashSet.has(globSyntaxCharacters, value)) {
-				tokens.push(GlobToken.Literal({ value }));
+				tokens.push(GlobToken.cases.Literal.make({ value }));
 			} else {
-				tokens.push(GlobToken.Literal({ value: "\\" }));
+				tokens.push(GlobToken.cases.Literal.make({ value: "\\" }));
 				index -= 1;
 			}
 		} else if (character === "*") {
-			tokens.push(GlobToken.Star());
+			tokens.push(GlobToken.cases.Star.make({}));
 		} else if (character === "?") {
-			tokens.push(GlobToken.One());
+			tokens.push(GlobToken.cases.One.make({}));
 		} else if (character === "[") {
 			const parsed = yield* parseCharacterClass(method, segment, index);
 			tokens.push(parsed[0]);
 			index = parsed[1] - 1;
 		} else {
-			tokens.push(GlobToken.Literal({ value: character }));
+			tokens.push(GlobToken.cases.Literal.make({ value: character }));
 		}
 		index += 1;
 	}
@@ -2612,7 +2643,7 @@ const compileGlobPatterns = Effect.fnUntraced(function* (method: string, pattern
 // character class accepts the value in either case. Host-proven: node's
 // `fs.glob` on a folding volume matches `*.JSON` against a stored `docs.json`.
 const matchesGlobToken = (token: GlobToken, value: string, fold = false): boolean =>
-	GlobToken.$match(token, {
+	GlobToken.match(token, {
 		Literal: (token) => token.value === value || (fold && token.value.toLowerCase() === value.toLowerCase()),
 		Star: () => false,
 		One: () => true,
@@ -2717,7 +2748,7 @@ const glob = (volume: Volume) =>
 					const next = pending.pop();
 					if (next === undefined) break;
 					const [directory, parent] = next;
-					for (const name of [...HashMap.keys(directory.entries)].sort()) {
+					for (const name of A.sort(HashMap.keys(directory.entries), Order.String)) {
 						const path = [...parent, name];
 						// KIT EXTENSION (case folding): folded lookup.
 						const inode = findEntry(state, directory, name);
@@ -2731,7 +2762,7 @@ const glob = (volume: Volume) =>
 						if (entry?._tag === "Directory") pending.push([entry, path]);
 					}
 				}
-				return matches.sort();
+				return A.sort(matches, Order.String);
 			}),
 		);
 	});
@@ -2752,7 +2783,8 @@ const makeVolume = Effect.fn("makeVolume")(function* (options: EngineOptions) {
 		// NOTE: One permit covers a transition, its state assignment, and event publication;
 		// acquiring that permit remains interruptible.
 		const lock = yield* Semaphore.make(1);
-		const watchers = new Set<WatchSubscription>();
+		const watchers = MutableHashMap.empty<number, WatchSubscription>();
+ let nextSubscriptionId = 0;
 
 		let state: State = {
 			inodes: HashMap.make([
@@ -2802,7 +2834,7 @@ const makeVolume = Effect.fn("makeVolume")(function* (options: EngineOptions) {
 				),
 			);
 
-		return { currentState: () => state, mutate, mutateInterruptibly, watchers, withState } satisfies Volume;
+		return { currentState: () => state, mutate, mutateInterruptibly, watchers, withState, allocateSubscriptionId: () => nextSubscriptionId++ } satisfies Volume;
 	});
 
 // =============================================================================
@@ -2817,6 +2849,7 @@ const watch = (volume: Volume) => (path: string, options?: FileSystem.WatchOptio
 					Effect.fnUntraced(function* (state) {
 						const resolved = yield* resolve(state, path, { method: "stat" });
 						const subscription: WatchSubscription = {
+ id: volume.allocateSubscriptionId(),
 							path: resolved.path,
 							directory: resolved.entry._tag === "Directory",
 							recursive: options?.recursive === true,
@@ -2825,14 +2858,14 @@ const watch = (volume: Volume) => (path: string, options?: FileSystem.WatchOptio
 							// registration, so retain matching events across that handoff.
 							pending: [],
 						};
-						volume.watchers.add(subscription);
+						MutableHashMap.set(volume.watchers, subscription.id, subscription);
 						return subscription;
 					}),
 				),
 				(subscription) =>
 					volume.withState(() =>
 						Effect.sync(() => {
-							volume.watchers.delete(subscription);
+							MutableHashMap.remove(volume.watchers, subscription.id);
 						}),
 					),
 			),
@@ -2944,7 +2977,7 @@ const collectEntrySnapshots = (state: State): Array<VolumeEntrySnapshot> => {
 		index: number;
 	}
 	const frames: Array<Frame> = [
-		{ names: [...HashMap.keys(root.entries)].sort(), directory: root, prefix: "", index: 0 },
+		{ names: A.sort(HashMap.keys(root.entries), Order.String), directory: root, prefix: "", index: 0 },
 	];
 	while (frames.length > 0) {
 		const frame = frames[frames.length - 1];
@@ -2965,7 +2998,7 @@ const collectEntrySnapshots = (state: State): Array<VolumeEntrySnapshot> => {
 		const path = `${frame.prefix}/${name}`;
 		output.push(snapshotOf(path, entry));
 		if (entry._tag === "Directory") {
-			frames.push({ names: [...HashMap.keys(entry.entries)].sort(), directory: entry, prefix: path, index: 0 });
+			frames.push({ names: A.sort(HashMap.keys(entry.entries), Order.String), directory: entry, prefix: path, index: 0 });
 		}
 	}
 	return output;
@@ -3018,7 +3051,7 @@ export const makeInspectableWith = (options: EngineOptions): Effect.Effect<Inspe
 		},
 		list: (path) => {
 			const entry = lookupLiteral(volume.currentState(), splitComponents(path));
-			return entry?._tag === "Directory" ? [...HashMap.keys(entry.entries)].sort() : undefined;
+			return entry?._tag === "Directory" ? A.sort(HashMap.keys(entry.entries), Order.String) : undefined;
 		},
 	}));
 

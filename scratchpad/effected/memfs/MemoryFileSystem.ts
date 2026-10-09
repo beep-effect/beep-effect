@@ -13,12 +13,14 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
-import { ErrnoException, errnoError, nodeErrno } from "./internal/errno.ts";
+import { ErrnoException, errnoError, nodeErrno, type NodeErrno } from "./internal/errno.ts";
 import { wrapFaulty } from "./internal/faults.ts";
 import {
 	makePromisesFileSystem,
 	makeSyncFileSystem,
 	resolvePath,
+	Resolved,
+	StatKind,
 	runMutation,
 	runNode,
 	syscallForMethod,
@@ -48,7 +50,8 @@ const $I = $ScratchpadId.create("effected/memfs/MemoryFileSystem");
  */
 export class InvalidFaultCountError extends S.TaggedError<InvalidFaultCountError>($I`InvalidFaultCountError`)(
 	"InvalidFaultCountError",
-	{ message: S.String },
+	{ message: S.String.pipe($I.annoteKey("InvalidFaultCountError.message", { description: "The invalid failure count and its required range." })) },
+ $I.annoteError<InvalidFaultCountError>("InvalidFaultCountError", { description: "The failure count is not a non-negative integer." }),
 ) {}
 
 /**
@@ -173,14 +176,15 @@ export interface MemoryFileSystemVolume {
  *
  * @public
  */
-export interface MemoryFileSystemVolumeStat {
-	/** What lives at the path — a link is `"symlink"`, never its target's kind. */
-	readonly kind: "file" | "directory" | "symlink";
-	/** The entry's modification time as epoch milliseconds. */
-	readonly mtimeMs: number;
-	/** File byte length, symlink target UTF-8 byte length, or `0` for a directory. */
-	readonly size: number;
-}
+export const MemoryFileSystemVolumeStat = S.Struct({
+ /** What lives at the path — a link is `"symlink"`, never its target's kind. */
+ kind: StatKind.pipe($I.annoteKey("MemoryFileSystemVolumeStat.kind", { description: "The literal entry kind." })),
+ /** The entry's modification time as epoch milliseconds. */
+ mtimeMs: S.Finite.pipe($I.annoteKey("MemoryFileSystemVolumeStat.mtimeMs", { description: "The epoch-millisecond modification time." })),
+ /** File byte length, symlink target UTF-8 byte length, or `0` for a directory. */
+ size: S.Finite.pipe($I.annoteKey("MemoryFileSystemVolumeStat.size", { description: "The entry byte length." }))
+}).pipe($I.annoteSchema("MemoryFileSystemVolumeStat", { description: "The upstream MemoryFileSystemVolumeStat plain-object payload." }));
+export type MemoryFileSystemVolumeStat = typeof MemoryFileSystemVolumeStat.Type;
 
 /**
  * The error a synchronous `node:fs` call throws: an `Error` carrying `code`,
@@ -195,11 +199,7 @@ export interface MemoryFileSystemVolumeStat {
  *
  * @public
  */
-export type MemoryFileSystemErrnoError = Error & {
-	readonly code: string;
-	readonly syscall: string;
-	readonly path?: string;
-};
+export type MemoryFileSystemErrnoError = NodeErrno;
 
 /**
  * The six synchronous file operations a consumer-supplied filesystem port
@@ -466,20 +466,21 @@ export interface MemoryFileSystemPortOptions<Faults> {
  *
  * @public
  */
-export interface MemoryFileSystemSeedFile {
-	readonly _tag: "MemoryFileSystemSeedFile";
-	/** File contents; strings are UTF-8 encoded, `Uint8Array`s written verbatim. */
-	readonly content: string | Uint8Array;
-	/** Initial permission bits (defaults to the volume's `0o644`). */
-	readonly mode?: number;
-	/**
+export const MemoryFileSystemSeedFile = S.Struct({
+ _tag: S.tag("MemoryFileSystemSeedFile").pipe($I.annoteKey("MemoryFileSystemSeedFile._tag", { description: "The seed file variant." })),
+ /** File contents; strings are UTF-8 encoded, `Uint8Array`s written verbatim. */
+ content: S.Union([S.String, S.Uint8Array]).pipe($I.annoteKey("MemoryFileSystemSeedFile.content", { description: "UTF-8 text or verbatim file bytes." })),
+ /** Initial permission bits (defaults to the volume's `0o644`). */
+ mode: S.optionalKey(S.Finite).pipe($I.annoteKey("MemoryFileSystemSeedFile.mode", { description: "Initial permission bits." })),
+ /**
 	 * Initial modification time as epoch milliseconds. Defaults to the volume's
 	 * clock at seed time, which makes every seeded entry effectively
 	 * simultaneous — set this when a test needs one file to read as older than
 	 * another.
 	 */
-	readonly mtime?: number;
-}
+ mtime: S.optionalKey(S.Finite).pipe($I.annoteKey("MemoryFileSystemSeedFile.mtime", { description: "Initial epoch-millisecond modification time." }))
+}).pipe($I.annoteSchema("MemoryFileSystemSeedFile", { description: "The upstream MemoryFileSystemSeedFile plain-object payload." }));
+export type MemoryFileSystemSeedFile = typeof MemoryFileSystemSeedFile.Type;
 
 /**
  * A seed entry describing a directory — built with
@@ -488,11 +489,12 @@ export interface MemoryFileSystemSeedFile {
  *
  * @public
  */
-export interface MemoryFileSystemSeedDirectory {
-	readonly _tag: "MemoryFileSystemSeedDirectory";
-	/** Initial permission bits (defaults to the volume's `0o755`). */
-	readonly mode?: number;
-}
+export const MemoryFileSystemSeedDirectory = S.Struct({
+ _tag: S.tag("MemoryFileSystemSeedDirectory").pipe($I.annoteKey("MemoryFileSystemSeedDirectory._tag", { description: "The seed directory variant." })),
+ /** Initial permission bits (defaults to the volume's `0o755`). */
+ mode: S.optionalKey(S.Finite).pipe($I.annoteKey("MemoryFileSystemSeedDirectory.mode", { description: "Initial permission bits." }))
+}).pipe($I.annoteSchema("MemoryFileSystemSeedDirectory", { description: "The upstream MemoryFileSystemSeedDirectory plain-object payload." }));
+export type MemoryFileSystemSeedDirectory = typeof MemoryFileSystemSeedDirectory.Type;
 
 /**
  * A seed entry describing a symbolic link — built with
@@ -500,11 +502,12 @@ export interface MemoryFileSystemSeedDirectory {
  *
  * @public
  */
-export interface MemoryFileSystemSeedSymlink {
-	readonly _tag: "MemoryFileSystemSeedSymlink";
-	/** The link target, stored verbatim; it may dangle. */
-	readonly target: string;
-}
+export const MemoryFileSystemSeedSymlink = S.Struct({
+ _tag: S.tag("MemoryFileSystemSeedSymlink").pipe($I.annoteKey("MemoryFileSystemSeedSymlink._tag", { description: "The seed symlink variant." })),
+ /** The link target, stored verbatim; it may dangle. */
+ target: S.String.pipe($I.annoteKey("MemoryFileSystemSeedSymlink.target", { description: "The stored link target." }))
+}).pipe($I.annoteSchema("MemoryFileSystemSeedSymlink", { description: "The upstream MemoryFileSystemSeedSymlink plain-object payload." }));
+export type MemoryFileSystemSeedSymlink = typeof MemoryFileSystemSeedSymlink.Type;
 
 /**
  * One value in a {@link MemoryFileSystemSeed}: plain file contents
@@ -513,12 +516,10 @@ export interface MemoryFileSystemSeedSymlink {
  *
  * @public
  */
-export type MemoryFileSystemSeedEntry =
-	| string
-	| Uint8Array
-	| MemoryFileSystemSeedFile
-	| MemoryFileSystemSeedDirectory
-	| MemoryFileSystemSeedSymlink;
+export const MemoryFileSystemSeedEntry = S.Union([
+ S.String, S.Uint8Array, MemoryFileSystemSeedFile, MemoryFileSystemSeedDirectory, MemoryFileSystemSeedSymlink,
+]).pipe($I.annoteSchema("MemoryFileSystemSeedEntry", { description: "File contents or a tagged upstream seed entry." }));
+export type MemoryFileSystemSeedEntry = typeof MemoryFileSystemSeedEntry.Type;
 
 /**
  * A volume seed: absolute POSIX paths mapped to seed entries.
@@ -536,9 +537,10 @@ export type MemoryFileSystemSeedEntry =
  *
  * @public
  */
-export interface MemoryFileSystemSeed {
-	readonly [path: string]: MemoryFileSystemSeedEntry;
-}
+export const MemoryFileSystemSeed = S.Record(S.String, MemoryFileSystemSeedEntry).pipe(
+ $I.annoteSchema("MemoryFileSystemSeed", { description: "Paths mapped to seed entries in application order." }),
+);
+export type MemoryFileSystemSeed = typeof MemoryFileSystemSeed.Type;
 
 /**
  * Options shared by every seeded constructor.
@@ -746,7 +748,7 @@ const buildHandle: (
 			: raw
 					.makeDirectory(parent, { recursive: true })
 					.pipe(
-						Effect.catchIf((error) => error.reason.cause instanceof ErrnoException, () => Effect.void),
+						Effect.catchIf((error) => S.is(ErrnoException)(error.reason.cause), () => Effect.void),
 					);
 	};
 	// `mkdir` stands in for `mkdirSync(p, { recursive: true })`, whose walk
@@ -760,14 +762,16 @@ const buildHandle: (
 		raw.makeDirectory(path, { recursive: true }).pipe(
 			Effect.mapError((error) => {
 				const cause = error.reason.cause;
-				if (!(cause instanceof ErrnoException) || cause.code !== "ENOTDIR") return error;
+				if (!(S.is(ErrnoException)(cause)) || cause.code !== "ENOTDIR") return error;
 				const pieces = path.split("/");
 				for (let index = 1; index < pieces.length; index++) {
 					const prefix = pieces.slice(0, index + 1).join("/");
 					const resolved = resolvePath(volume, prefix === "" ? "/" : prefix);
-					if ("code" in resolved) {
-						return resolved.code === "ENOENT" ? errnoError("makeDirectory", path, "ENOENT", undefined) : error;
-					}
+					const failure = Resolved.match(resolved, {
+      Failure: ({ code }) => code === "ENOENT" ? errnoError("makeDirectory", path, "ENOENT", undefined) : error,
+      Success: () => undefined,
+     });
+     if (failure !== undefined) return failure;
 				}
 				return error;
 			}),

@@ -23,6 +23,10 @@ import type {
 import { fallbackErrnoForTag, nodeErrno } from "./errno.ts";
 import { assertKnownFaultKeys } from "./faults.ts";
 import * as R from "effect/Record";
+import * as A from "effect/Array";
+import * as S from "effect/Schema";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import { $ScratchpadId } from "@beep/identity/packages";
 
 // The port is defined in `stat` terms, so it FOLLOWS symbolic links — unlike
 // the literal inspection view it is built on. `MAX_LINK_HOPS` mirrors the
@@ -31,7 +35,23 @@ import * as R from "effect/Record";
 // across nested link targets terminates as ELOOP.
 const MAX_LINK_HOPS = 40;
 
-type Resolved = { readonly path: string } | { readonly code: "ENOENT" | "ENOTDIR" | "ELOOP" };
+const $I = $ScratchpadId.create("effected/memfs/internal/ports");
+const ResolutionErrno = LiteralKit(["ENOENT", "ENOTDIR", "ELOOP"]).pipe(
+ $I.annoteSchema("ResolutionErrno", { description: "Failures of component-wise path resolution." }),
+);
+export const StatKind = LiteralKit(["file", "directory", "symlink"]).pipe(
+ $I.annoteSchema("StatKind", { description: "The literal volume entry kinds." }),
+);
+export type StatKind = typeof StatKind.Type;
+const MutationMethod = LiteralKit(["writeFile", "makeDirectory", "remove", "symlink"]).pipe(
+ $I.annoteSchema("MutationMethod", { description: "The synchronous handle mutation methods." }),
+);
+type MutationMethod = typeof MutationMethod.Type;
+export const Resolved = S.TaggedUnion({
+ Success: { path: S.String.pipe($I.annoteKey("Resolved.Success.path", { description: "The resolved absolute path." })) },
+ Failure: { code: ResolutionErrno.pipe($I.annoteKey("Resolved.Failure.code", { description: "The resolution errno." })) },
+}).pipe($I.annoteSchema("Resolved", { description: "A resolved path or the exact resolution failure." }));
+type Resolved = typeof Resolved.Type;
 
 interface HopBudget {
 	hops: number;
@@ -48,7 +68,7 @@ const walk = (volume: MemoryFileSystemVolume, path: string, followFinal: boolean
 		if (part === "..") {
 			// `..` under a non-directory is ENOTDIR, as the kernel reports it.
 			const here = volume.lstat(current === "" ? "/" : current);
-			if (here !== undefined && here.kind !== "directory") return { code: "ENOTDIR" };
+			if (here !== undefined && here.kind !== "directory") return Resolved.cases.Failure.make({ code: "ENOTDIR" });
 			// Applied to the RESOLVED location, so ".." after a link ascends from
 			// the target rather than from the link's own parent.
 			current = current.slice(0, Math.max(0, current.lastIndexOf("/")));
@@ -56,23 +76,23 @@ const walk = (volume: MemoryFileSystemVolume, path: string, followFinal: boolean
 		}
 		// A component under something that is not a directory is ENOTDIR, not absence.
 		const parent = volume.lstat(current === "" ? "/" : current);
-		if (parent !== undefined && parent.kind !== "directory") return { code: "ENOTDIR" };
+		if (parent !== undefined && parent.kind !== "directory") return Resolved.cases.Failure.make({ code: "ENOTDIR" });
 		let candidate = `${current}/${part}`;
 		if (i < parts.length - 1 || followFinal) {
 			for (;;) {
 				const target = volume.readLink(candidate);
 				if (target === undefined) break;
 				budget.hops += 1;
-				if (budget.hops > MAX_LINK_HOPS) return { code: "ELOOP" };
+				if (budget.hops > MAX_LINK_HOPS) return Resolved.cases.Failure.make({ code: "ELOOP" });
 				const resolved = walk(volume, target.startsWith("/") ? target : `${current}/${target}`, true, budget);
-				if ("code" in resolved) return resolved;
+				if (Resolved.guards.Failure(resolved)) return resolved;
 				candidate = resolved.path;
 			}
 		}
-		if (volume.lstat(candidate) === undefined) return { code: "ENOENT" };
+		if (volume.lstat(candidate) === undefined) return Resolved.cases.Failure.make({ code: "ENOENT" });
 		current = candidate;
 	}
-	return { path: current === "" ? "/" : current };
+	return Resolved.cases.Success.make({ path: current === "" ? "/" : current });
 };
 
 /**
@@ -81,31 +101,36 @@ const walk = (volume: MemoryFileSystemVolume, path: string, followFinal: boolean
  * non-directory) or `ELOOP` (too many links).
  */
 export const resolvePath: {
-	(path: string, followFinal?: boolean): (volume: MemoryFileSystemVolume) => Resolved;
-	(volume: MemoryFileSystemVolume, path: string, followFinal?: boolean): Resolved;
-} = dual((args) => !P.isString(args[0]), (volume: MemoryFileSystemVolume, path: string, followFinal = true): Resolved => {
+ (path: string, followFinal?: boolean): (volume: MemoryFileSystemVolume) => Resolved;
+ (volume: MemoryFileSystemVolume, path: string, followFinal?: boolean): Resolved;
+} = dual((args) => P.isObject(args[0]), (volume: MemoryFileSystemVolume, path: string, followFinal = true): Resolved => {
 	// A trailing slash asserts "this is a directory", as on node: the final
 	// link is followed even for `lstat`, and a resolved non-directory is
 	// ENOTDIR — never the file itself (which `walk`, dropping the empty
 	// segment, would otherwise answer).
 	const trailingSlash = path.length > 1 && path.endsWith("/");
 	const r = walk(volume, path, followFinal || trailingSlash, { hops: 0 });
-	if (trailingSlash && !("code" in r) && volume.lstat(r.path)?.kind !== "directory") return { code: "ENOTDIR" };
+	if (trailingSlash && Resolved.guards.Success(r) && volume.lstat(r.path)?.kind !== "directory") return Resolved.cases.Failure.make({ code: "ENOTDIR" });
 	return r;
 });
 
 const portStats = (s: MemoryFileSystemVolumeStat): MemoryFileSystemPortStats => ({
-	isFile: () => s.kind === "file",
-	isDirectory: () => s.kind === "directory",
-	isSymbolicLink: () => s.kind === "symlink",
+	isFile: () => StatKind.is.file(s.kind),
+	isDirectory: () => StatKind.is.directory(s.kind),
+	isSymbolicLink: () => StatKind.is.symlink(s.kind),
 	mtimeMs: s.mtimeMs,
 	size: s.size,
 });
 
+const resolvedPath = (resolved: Resolved, syscall: string, path: string): string =>
+ Resolved.match(resolved, {
+  Failure: ({ code }) => { throw nodeErrno(code, syscall, path); },
+  Success: ({ path }) => path,
+ });
+
 const statOf = (volume: MemoryFileSystemVolume, path: string, syscall: "stat" | "lstat", follow: boolean) => {
-	const r = resolvePath(volume, path, follow);
-	if ("code" in r) throw nodeErrno(r.code, syscall, path);
-	const s = volume.lstat(r.path);
+	const resolved = resolvedPath(resolvePath(volume, path, follow), syscall, path);
+	const s = volume.lstat(resolved);
 	if (s === undefined) throw nodeErrno("ENOENT", syscall, path);
 	return portStats(s);
 };
@@ -130,9 +155,9 @@ const settle = <A>(f: () => A): Promise<Awaited<A>> => {
  * REJECTS — as a real `fs/promises` call does — instead of throwing.
  */
 export const withFaults: {
-	<Port extends object>(faults: Partial<Record<keyof Port, (...args: never) => unknown>> | undefined, subject: string, async?: boolean): (port: Port) => Port;
-	<Port extends object>(port: Port, faults: Partial<Record<keyof Port, (...args: never) => unknown>> | undefined, subject: string, async?: boolean): Port;
-} = dual((args) => !P.isString(args[1]), <Port extends object>(
+ <Port extends object>(faults: Partial<Record<keyof Port, (...args: never) => unknown>> | undefined, subject: string, async?: boolean): (port: Port) => Port;
+ <Port extends object>(port: Port, faults: Partial<Record<keyof Port, (...args: never) => unknown>> | undefined, subject: string, async?: boolean): Port;
+} = dual((args) => P.isString(args[1]) === false, <Port extends object>(
 	port: Port,
 	faults: Partial<Record<keyof Port, (...args: never) => unknown>> | undefined,
 	subject: string,
@@ -140,21 +165,18 @@ export const withFaults: {
 ): Port => {
 	if (faults === undefined) return port;
 	assertKnownFaultKeys(faults, port, subject);
-	const out = { ...port };
-	const entries: ReadonlyArray<readonly [string, unknown]> = R.toEntries(faults);
-	for (const [name, handler] of entries) {
-		if (!P.hasProperty(port, name)) continue;
-		const original = port[name];
-		if (!P.isFunction(handler) || !P.isFunction(original)) continue;
-		const intercept = (...args: ReadonlyArray<unknown>): unknown => {
-			const replaced: unknown = handler(...args);
-			return replaced === undefined ? original(...args) : replaced;
-		};
-		Object.defineProperty(out, name, {
-			value: async ? (...args: ReadonlyArray<unknown>) => settle(() => intercept(...args)) : intercept,
-		});
-	}
-	return out;
+ const entries: ReadonlyArray<readonly [string, unknown]> = R.toEntries(faults);
+ const intercepted = R.fromEntries(A.flatMap(entries, ([name, handler]) => {
+  if (!P.hasProperty(port, name)) return [];
+  const original = port[name];
+  if (!P.isFunction(handler) || !P.isFunction(original)) return [];
+  const intercept = (...args: ReadonlyArray<unknown>): unknown => {
+   const replaced: unknown = handler(...args);
+   return replaced === undefined ? original(...args) : replaced;
+  };
+  return [[name, async ? (...args: ReadonlyArray<unknown>) => settle(() => intercept(...args)) : intercept] as const];
+ }));
+ return { ...port, ...intercepted };
 });
 
 const decoder = new TextDecoder();
@@ -162,14 +184,13 @@ const decoder = new TextDecoder();
 // `readFileSync(path)`: the bytes of the regular file `path` resolves to, or
 // node's error — never fabricated content.
 const readBytes = (volume: MemoryFileSystemVolume, path: string): Uint8Array => {
-	const r = resolvePath(volume, path);
-	if ("code" in r) throw nodeErrno(r.code, "open", path);
-	const bytes = volume.bytes(r.path);
+	const resolved = resolvedPath(resolvePath(volume, path), "open", path);
+	const bytes = volume.bytes(resolved);
 	if (bytes === undefined) {
 		// Reading a directory as a file is EISDIR in `readFileSync`; anything
 		// else that is not a regular file is ENOTDIR. `read` works on a
 		// descriptor, so node's EISDIR carries no path.
-		throw volume.isDirectory(r.path) ? nodeErrno("EISDIR", "read", undefined) : nodeErrno("ENOTDIR", "open", path);
+		throw volume.isDirectory(resolved) ? nodeErrno("EISDIR", "read", undefined) : nodeErrno("ENOTDIR", "open", path);
 	}
 	return bytes;
 };
@@ -178,18 +199,17 @@ const readBytes = (volume: MemoryFileSystemVolume, path: string): Uint8Array => 
 // `open` for readFile (`read` when the target is a directory), `scandir` for
 // readDirectory, `stat`/`lstat` for the stat pair.
 export const makeSyncFileSystem = (volume: MemoryFileSystemVolume): MemoryFileSystemSyncFileSystem => ({
-	exists: (path) => !("code" in resolvePath(volume, path)),
+	exists: (path) => Resolved.match(resolvePath(volume, path), { Failure: () => false, Success: () => true }),
 	readFile: (path) => decoder.decode(readBytes(volume, path)),
 	readDirectory: (path) => {
-		const r = resolvePath(volume, path);
-		if ("code" in r) throw nodeErrno(r.code, "scandir", path);
-		const names = volume.readDirectory(r.path);
+		const resolved = resolvedPath(resolvePath(volume, path), "scandir", path);
+		const names = volume.readDirectory(resolved);
 		if (names === undefined) throw nodeErrno("ENOTDIR", "scandir", path);
 		return names;
 	},
 	isDirectory: (path) => {
 		const r = resolvePath(volume, path);
-		return !("code" in r) && volume.isDirectory(r.path);
+		return Resolved.match(r, { Failure: () => false, Success: ({ path }) => volume.isDirectory(path) });
 	},
 	stat: (path) => statOf(volume, path, "stat", true),
 	lstat: (path) => statOf(volume, path, "lstat", false),
@@ -210,7 +230,7 @@ export const makePromisesFileSystem = (volume: MemoryFileSystemVolume): MemoryFi
 			const names = sync.readDirectory(path);
 			if (options?.withFileTypes !== true) return names;
 			const r = resolvePath(volume, path);
-			const base = "code" in r ? path : r.path;
+			const base = Resolved.match(r, { Failure: () => path, Success: ({ path }) => path });
 			return names.map((name): MemoryFileSystemDirent => {
 				// Literal: a link is reported as a link, as `readdir` dirents do.
 				const kind = volume.lstat(`${base === "/" ? "" : base}/${name}`)?.kind;
@@ -263,8 +283,8 @@ export const syscallForMethod = (method: string): string => methodSyscall[method
  * `EINVAL`).
  */
 export const runNode: {
-	(describe: (error: PlatformError.PlatformError) => { readonly syscall: string; readonly path: string }): <A>(effect: Effect.Effect<A, PlatformError.PlatformError>) => A;
-	<A>(effect: Effect.Effect<A, PlatformError.PlatformError>, describe: (error: PlatformError.PlatformError) => { readonly syscall: string; readonly path: string }): A;
+ (describe: (error: PlatformError.PlatformError) => { readonly syscall: string; readonly path: string }): <A>(effect: Effect.Effect<A, PlatformError.PlatformError>) => A;
+ <A>(effect: Effect.Effect<A, PlatformError.PlatformError>, describe: (error: PlatformError.PlatformError) => { readonly syscall: string; readonly path: string }): A;
 } = dual(2, <A>(
 	effect: Effect.Effect<A, PlatformError.PlatformError>,
 	describe: (error: PlatformError.PlatformError) => { readonly syscall: string; readonly path: string },
@@ -286,10 +306,10 @@ export const runNode: {
 
 /** {@link runNode} for a handle mutator: node's syscall for the `FileSystem` method and the CALLER's path. */
 export const runMutation: {
-	(method: "writeFile" | "makeDirectory" | "remove" | "symlink", path: string): (effect: Effect.Effect<void, PlatformError.PlatformError>) => void;
-	(effect: Effect.Effect<void, PlatformError.PlatformError>, method: "writeFile" | "makeDirectory" | "remove" | "symlink", path: string): void;
+ (method: MutationMethod, path: string): (effect: Effect.Effect<void, PlatformError.PlatformError>) => void;
+ (effect: Effect.Effect<void, PlatformError.PlatformError>, method: MutationMethod, path: string): void;
 } = dual(3, (
 	effect: Effect.Effect<void, PlatformError.PlatformError>,
-	method: "writeFile" | "makeDirectory" | "remove" | "symlink",
+	method: MutationMethod,
 	path: string,
 ): void => runNode(effect, () => ({ syscall: syscallForMethod(method), path })));

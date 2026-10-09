@@ -105,8 +105,8 @@ const assertSystemError = (
 };
 
 export const suite: {
-	<E>(fsLayer: Layer.Layer<FileSystem.FileSystem, E>): (name: string) => void;
-	<E>(name: string, fsLayer: Layer.Layer<FileSystem.FileSystem, E>): void;
+ <E>(fsLayer: Layer.Layer<FileSystem.FileSystem, E>): (name: string) => void;
+ <E>(name: string, fsLayer: Layer.Layer<FileSystem.FileSystem, E>): void;
 } = dual(2, <E>(name: string, fsLayer: Layer.Layer<FileSystem.FileSystem, E>) =>
 	layer(fsLayer, { timeout: { seconds: 30 } })(`FileSystem (${name})`, (it) => {
 		describe("path operations", () => {

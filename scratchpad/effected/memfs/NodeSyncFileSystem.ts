@@ -32,18 +32,44 @@ type PlatformErrorType = PlatformErrorNs.PlatformError;
 
 const $I = $ScratchpadId.create("effected/memfs/NodeSyncFileSystem");
 
-class UnsafeIntegerError extends S.TaggedError<UnsafeIntegerError>($I`UnsafeIntegerError`)("UnsafeIntegerError", {
-	message: S.String,
-}) {}
+class UnsafeIntegerError extends S.TaggedError<UnsafeIntegerError>($I`UnsafeIntegerError`)(
+	"UnsafeIntegerError",
+	{
+		message: S.String.pipe($I.annoteKey("UnsafeIntegerError.message", {
+			description: "The filesystem stat field and value that exceed the safe integer range.",
+		})),
+	},
+	$I.annoteError<UnsafeIntegerError>("UnsafeIntegerError", {
+		description: "A filesystem stat value cannot be represented as a safe integer.",
+	}),
+) {}
 
-class ReadOnlyFileSystemError extends S.TaggedError<ReadOnlyFileSystemError>($I`ReadOnlyFileSystemError`)("ReadOnlyFileSystemError", {
-	message: S.String,
-}) {}
+class ReadOnlyFileSystemError extends S.TaggedError<ReadOnlyFileSystemError>($I`ReadOnlyFileSystemError`)(
+	"ReadOnlyFileSystemError",
+	{
+		message: S.String.pipe($I.annoteKey("ReadOnlyFileSystemError.message", {
+			description: "The unsupported operation requested from the read-only filesystem.",
+		})),
+	},
+	$I.annoteError<ReadOnlyFileSystemError>("ReadOnlyFileSystemError", {
+		description: "An operation is unsupported by the read-only synchronous filesystem.",
+	}),
+) {}
 
-class InvalidPathArgumentError extends S.TaggedError<InvalidPathArgumentError>($I`InvalidPathArgumentError`)("InvalidPathArgumentError", {
-	message: S.String,
-	code: S.Literal("ERR_INVALID_ARG_TYPE"),
-}) {
+class InvalidPathArgumentError extends S.TaggedError<InvalidPathArgumentError>($I`InvalidPathArgumentError`)(
+	"InvalidPathArgumentError",
+	{
+		message: S.String.pipe($I.annoteKey("InvalidPathArgumentError.message", {
+			description: "The required path argument type and the received type.",
+		})),
+		code: S.Literal("ERR_INVALID_ARG_TYPE").pipe($I.annoteKey("InvalidPathArgumentError.code", {
+			description: "The Node.js error code for an invalid path argument type.",
+		})),
+	},
+	$I.annoteError<InvalidPathArgumentError>("InvalidPathArgumentError", {
+		description: "The path argument supplied to the synchronous filesystem has an invalid type.",
+	}),
+) {
 	override readonly name = "TypeError";
 }
 

@@ -2,9 +2,11 @@
 // `makeFaulty`, `layerFaulty` and `options.faults`: handlers run first, and a
 // handler answering `undefined` delegates to the wrapped filesystem.
 
-import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
+import * as A from "effect/Array";
+import * as Order from "effect/Order";
 import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
 import * as PlatformError from "effect/PlatformError";
@@ -34,7 +36,8 @@ const $I = $ScratchpadId.create("effected/memfs/internal/faults");
  */
 export class UnknownFaultKeyError extends S.TaggedError<UnknownFaultKeyError>($I`UnknownFaultKeyError`)(
 	"UnknownFaultKeyError",
-	{ message: S.String },
+	{ message: S.String.pipe($I.annoteKey("UnknownFaultKeyError.message", { description: "The unknown fault keys and available members." })) },
+ $I.annoteError<UnknownFaultKeyError>("UnknownFaultKeyError", { description: "A fault key does not name a function-valued member." }),
 ) {}
 
 /**
@@ -44,8 +47,8 @@ export class UnknownFaultKeyError extends S.TaggedError<UnknownFaultKeyError>($I
  * construction like `failTimes`' invalid counts.
  */
 export const assertKnownFaultKeys: {
-	(target: object, subject: string): (faults: object) => void;
-	(faults: object, target: object, subject: string): void;
+ (target: object, subject: string): (faults: object) => void;
+ (faults: object, target: object, subject: string): void;
 } = dual(3, (faults: object, target: object, subject: string): void => {
 	const members = HashSet.fromIterable(
 		R.keys(target).filter((key) => P.hasProperty(target, key) && P.isFunction(target[key])),
@@ -53,14 +56,14 @@ export const assertKnownFaultKeys: {
 	const unknown = R.keys(faults).filter((key) => !HashSet.has(members, key));
 	if (unknown.length > 0) {
 		throw UnknownFaultKeyError.make({
-			message: `${subject}: unknown fault key(s) ${unknown.map((key) => `"${key}"`).join(", ")}; expected one of ${[...members].sort().join(", ")}`,
+			message: `${subject}: unknown fault key(s) ${unknown.map((key) => `"${key}"`).join(", ")}; expected one of ${A.sort(members, Order.String).join(", ")}`,
 		});
 	}
 });
 
 export const wrapFaulty: {
-	(registration: MemoryFileSystemFaults | MemoryFileSystemFaultsFactory): (base: FileSystem.FileSystem) => FileSystem.FileSystem;
-	(base: FileSystem.FileSystem, registration: MemoryFileSystemFaults | MemoryFileSystemFaultsFactory): FileSystem.FileSystem;
+ (registration: MemoryFileSystemFaults | MemoryFileSystemFaultsFactory): (base: FileSystem.FileSystem) => FileSystem.FileSystem;
+ (base: FileSystem.FileSystem, registration: MemoryFileSystemFaults | MemoryFileSystemFaultsFactory): FileSystem.FileSystem;
 } = dual(2, (
 	base: FileSystem.FileSystem,
 	registration: MemoryFileSystemFaults | MemoryFileSystemFaultsFactory,

@@ -1,0 +1,156 @@
+{
+  "module": "memfs",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/memfs/MemoryFileSystem.ts",
+        "scratchpad/effected/memfs/internal/errno.ts",
+        "scratchpad/effected/memfs/internal/volume.ts",
+        "scratchpad/effected/memfs/internal/ports.ts",
+        "scratchpad/effected/memfs/internal/faults.ts",
+        "scratchpad/effected/memfs/internal/seed.ts"
+      ],
+      "tests": [
+        "scratchpad/test/memfs/FileSystemContract.ts",
+        "scratchpad/test/memfs/ErrnoParityContract.ts",
+        "scratchpad/test/memfs/CaseInsensitiveContract.ts",
+        "scratchpad/test/memfs/helpers.ts",
+        "scratchpad/test/memfs/Handle.test.ts",
+        "scratchpad/test/memfs/Ports.test.ts",
+        "scratchpad/test/memfs/FaultInjection.test.ts",
+        "scratchpad/test/memfs/Seeding.test.ts",
+        "scratchpad/test/memfs/Volume.test.ts",
+        "scratchpad/test/memfs/WatchRecursive.test.ts",
+        "scratchpad/test/memfs/MemoryFileSystem.test.ts",
+        "scratchpad/test/memfs/MemoryFileSystem.contract.test.ts"
+      ],
+      "findings": [
+        "req-1",
+        "req-2",
+        "req-3",
+        "req-4",
+        "req-6a",
+        "req-7a",
+        "req-8",
+        "allow-1",
+        "allow-2",
+        "allow-3"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/memfs/index.ts"
+      ],
+      "tests": [
+        "scratchpad/test/memfs/Exports.test.ts"
+      ],
+      "findings": [
+        "req-5"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/memfs/internal/view.ts"
+      ],
+      "tests": [
+        "scratchpad/test/memfs/VolumePathsOrder.test.ts"
+      ],
+      "findings": [
+        "req-7b"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/memfs/NodeSyncFileSystem.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "req-6b"
+      ]
+    }
+  ],
+  "findings": {
+    "req-1": {
+      "file": "scratchpad/effected/memfs/internal/errno.ts",
+      "class": "schema",
+      "summary": "ErrnoCode is a handwritten named literal domain.",
+      "fix": "Define an identity-annotated ErrnoCode LiteralKit containing exactly the upstream codes; derive the type from it and use it in the ErrnoException code field. Preserve messages and errno mapping."
+    },
+    "req-2": {
+      "file": "scratchpad/effected/memfs/internal/errno.ts",
+      "class": "law",
+      "summary": "ErrnoException uses Data.TaggedError rather than S.TaggedError.",
+      "fix": "Replace Data.TaggedError with an identity-annotated S.TaggedError using the ErrnoCode schema, message and path fields; preserve current message formatting, displayed Error name, optional-path behavior and instanceof classification. Update errno.ts and volume.ts construction sites through a typed factory. Deviation recording belongs to codemod-1."
+    },
+    "req-3": {
+      "file": "scratchpad/effected/memfs/MemoryFileSystem.ts",
+      "class": "schema",
+      "summary": "Pure data models and internal variant domains lack executable schemas.",
+      "fix": "Introduce named identity-annotated schemas for seed entries, volume stats, inode and glob variants, deriving existing types from them. Use S.Struct where preserving upstream plain objects requires it; retain service/port interfaces. In ports.ts and volume.ts define kits for reused resolution errno, stat kind, mutation method and access domains, and a schema-backed discriminated internal Resolved result with exhaustive matching. Update its consumers in ports.ts and MemoryFileSystem.ts; keep public seed/stat payloads and behavior unchanged. Preserve the upstream test lines except where the cited law forces a change."
+    },
+    "req-4": {
+      "file": "scratchpad/effected/memfs/internal/ports.ts",
+      "class": "bug",
+      "summary": "Fault wrappers silently change member descriptors and break composition.",
+      "fix": "Build intercepted members with effect/Record.fromEntries and return an explicit spread/delegating object, preserving enumerable, writable and configurable own members and sync/Promise behavior. Avoid native reflection and assertions. Add regression assertions in Ports.test.ts for key enumeration, spread, reassignment and repeated wrapping."
+    },
+    "req-5": {
+      "file": "scratchpad/effected/memfs/index.ts",
+      "class": "law",
+      "summary": "Public fault-error classes are missing from the entry point.",
+      "fix": "Re-export InvalidFaultCountError from MemoryFileSystem.ts and UnknownFaultKeyError directly from internal/faults.ts in index.ts; no declaration move is needed. Add a barrel-import regression in a new Exports.test.ts. Leave exportsAdded and README Port notes to codemod-2."
+    },
+    "req-6a": {
+      "file": "scratchpad/effected/memfs/MemoryFileSystem.ts",
+      "class": "schema",
+      "summary": "Core tagged-error schemas omit required schema and field identity annotations.",
+      "fix": "Add the IdentityComposer annoteError annotation argument and annoteKey field annotations to these three classes. Preserve tags and runtime payloads. This is executable schema identity work under step 4, rather than the deferred JSDoc carrier pass."
+    },
+    "req-6b": {
+      "file": "scratchpad/effected/memfs/NodeSyncFileSystem.ts",
+      "class": "schema",
+      "summary": "NodeSync tagged-error schemas omit required schema and field identity annotations.",
+      "fix": "Add IdentityComposer annoteError arguments and annoteKey annotations to each message field and InvalidPathArgumentError.code. Preserve tags, name behavior and error payloads."
+    },
+    "req-7a": {
+      "file": "scratchpad/effected/memfs/internal/volume.ts",
+      "class": "law",
+      "summary": "Engine and fault-key sorting use native Array.prototype.sort.",
+      "fix": "Replace native sorts in volume.ts and faults.ts with effect/Array.sort and explicit Orders. Preserve default UTF-16 ordering with Order.string and preserve the localeCompare semantics at volume.ts:844,1220,1316 through a named normalized Order. Keep output ordering and existing upstream assertions; add targeted ordering regressions in the core group's tests where necessary."
+    },
+    "req-7b": {
+      "file": "scratchpad/effected/memfs/internal/view.ts",
+      "class": "law",
+      "summary": "Volume.paths uses native Array.prototype.sort.",
+      "fix": "Replace the final native sort with effect/Array.sort and Order.string, retaining the UTF-16 sorted-path promise. Add a focused unsorted-input paths-order regression in a new VolumePathsOrder.test.ts."
+    },
+    "req-8": {
+      "file": "scratchpad/effected/memfs/internal/errno.ts",
+      "class": "effect-idiom",
+      "summary": "Internal and test helper dual-arity rewrites were not law-forced.",
+      "fix": "Restore the pinned upstream single-signature arrow shapes and optional parameters for all listed helpers in errno.ts, seed.ts, ports.ts and faults.ts; remove rewrite-only explicit undefined arguments in volume.ts, MemoryFileSystem.ts and ports.ts. Restore upstream helper signatures and rewritten test lines in FileSystemContract.ts, ErrnoParityContract.ts, CaseInsensitiveContract.ts and helpers.ts, retaining import rewrites and law-forced Effect.fnUntraced bodies. Combine with schema/errno fixes without restoring unsafe assertions or native errors."
+    },
+    "allow-1": {
+      "file": "scratchpad/effected/memfs/internal/errno.ts",
+      "class": "law",
+      "summary": "Remove the errno native-error exception.",
+      "fix": "Replace nodeErrno's native Error with an identity-annotated S.TaggedError carrying message, code, errno, syscall and optional path; populate errno from a typed Node-compatible code-to-errno table, preserving message/code/syscall/path behavior. Retarget the two no-_tag assertions in Handle.test.ts to the new tagged representation and assert the carried fields. Keep nodeErrno's upstream single-signature shape per req-8. No standards-file edit is assigned to this group; central cleanup removes the registry entry after the site is replaced."
+    },
+    "allow-2": {
+      "file": "scratchpad/effected/memfs/internal/errno.ts",
+      "class": "law",
+      "summary": "Remove the errno Object.assign exception.",
+      "fix": "Construct the S.TaggedError fields directly, including errno, instead of mutating an Error with Object.assign; implement with allow-1 and retain path omission for descriptor syscalls. Retarget Handle.test.ts assertions with allow-1. Central cleanup owns removal of the standards allowlist entry."
+    },
+    "allow-3": {
+      "file": "scratchpad/effected/memfs/internal/volume.ts",
+      "class": "law",
+      "summary": "Replace native watcher identity sets with subscription ids and MutableHashMap.",
+      "fix": "Give each subscription a volume-owned monotonically allocated primitive id and store id-to-subscription entries in effect/MutableHashMap. Register/unregister by id and preserve independent queues, scoped cleanup and promised delivery order using explicit ordering where needed. Add regressions in WatchRecursive.test.ts for two same-path/same-option watchers and independent teardown. Central cleanup owns removal of the standards allowlist entry."
+    }
+  }
+}

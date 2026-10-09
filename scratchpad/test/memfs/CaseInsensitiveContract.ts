@@ -10,11 +10,12 @@ import { assert, describe, it } from "@effect/vitest";
 import type * as Layer from "effect/Layer";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as P from "effect/Predicate";
 
 export const caseInsensitiveSuite: {
-	<E>(layer: Layer.Layer<FileSystem.FileSystem, E>, options?: { readonly skip?: boolean }): (name: string) => ReturnType<typeof describe>;
-	<E>(name: string, layer: Layer.Layer<FileSystem.FileSystem, E>, options?: { readonly skip?: boolean }): ReturnType<typeof describe>;
-} = dual((args) => typeof args[0] === "string", <E>(
+ <E>(layer: Layer.Layer<FileSystem.FileSystem, E>, options?: { readonly skip?: boolean }): (name: string) => ReturnType<typeof describe>;
+ <E>(name: string, layer: Layer.Layer<FileSystem.FileSystem, E>, options?: { readonly skip?: boolean }): ReturnType<typeof describe>;
+} = dual((args) => P.isString(args[0]), <E>(
 	name: string,
 	layer: Layer.Layer<FileSystem.FileSystem, E>,
 	options?: { readonly skip?: boolean },

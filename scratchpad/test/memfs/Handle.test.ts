@@ -140,7 +140,10 @@ describe("MemoryFileSystem.makeSync", () => {
 		assert.strictEqual(e.syscall, "mkdir");
 		assert.strictEqual(e.path, "/a");
 		assert.notStrictEqual(e.name, "FiberFailure");
-		assert.isUndefined(e._tag);
+		assert.strictEqual(e._tag, "NodeErrno");
+		assert.strictEqual(e.name, "Error");
+		assert.strictEqual(e.errno, -17);
+		assert.strictEqual(e.message, "EEXIST: file already exists, mkdir '/a'");
 	});
 
 	it("each seed step reports node's syscall: an invalid directory mode fails in chmod", () => {
@@ -155,7 +158,10 @@ describe("MemoryFileSystem.makeSync", () => {
 		assert.strictEqual(e.syscall, "seed");
 		assert.strictEqual(e.path, "ws");
 		assert.include(String(e.message), "'ws'");
-		assert.isUndefined(e._tag);
+		assert.strictEqual(e._tag, "NodeErrno");
+		assert.strictEqual(e.name, "Error");
+		assert.strictEqual(e.errno, -22);
+		assert.strictEqual(e.message, "EINVAL: invalid argument, seed 'ws'");
 	});
 
 	it("a bad seed key is EINVAL naming the key in the path slot and the message", () => {

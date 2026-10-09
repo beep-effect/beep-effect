@@ -3,6 +3,8 @@
 // literal lookup (which also owns case folding); only `snapshot` and `paths`
 // walk the whole tree, because that is what they answer.
 
+import * as A from "effect/Array";
+import * as Order from "effect/Order";
 import type { MemoryFileSystemVolume } from "../MemoryFileSystem.ts";
 import { normalizeAbsolute } from "./seed.ts";
 import type { InspectableFileSystem } from "./volume.ts";
@@ -28,11 +30,13 @@ export const makeVolumeService = (engine: InspectableFileSystem): MemoryFileSyst
 		bytes: (path) => at(path)?.data?.slice(),
 		has: (path) => at(path) !== undefined,
 		paths: () =>
-			engine
-				.entries()
-				.filter((entry) => entry.data !== undefined)
-				.map((entry) => entry.path)
-				.sort(),
+			A.sort(
+				engine
+					.entries()
+					.filter((entry) => entry.data !== undefined)
+					.map((entry) => entry.path),
+				Order.String,
+			),
 		// Names under the MATCHED entry, so a folded query lists stored spellings.
 		readDirectory: (path) => engine.list(normalizeAbsolute(path)),
 		isDirectory: (path) => at(path)?.type === "Directory",

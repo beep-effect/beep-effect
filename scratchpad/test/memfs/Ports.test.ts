@@ -1,5 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as S from "effect/Schema";
+import * as R from "effect/Record";
+import { withFaults } from "../../effected/memfs/internal/ports.ts";
 import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
@@ -540,4 +542,47 @@ describe("MemoryFileSystem.syncFileSystem", () => {
 				}
 			}),
 	);
+});
+
+
+describe("fault wrapper member composition", () => {
+ it("keeps intercepted members enumerable, writable and configurable", () => {
+  const port: { read?: (path: string) => string; label: string } = { read: (path) => path, label: "port" };
+  const wrapped = withFaults(port,
+   { read: () => "replacement" }, "descriptor regression");
+  assert.deepStrictEqual(R.keys<string, unknown>(wrapped), ["read", "label"]);
+  assert.strictEqual({ ...wrapped }.read?.("x"), "replacement");
+  wrapped.read = () => "reassigned";
+  assert.strictEqual(wrapped.read("x"), "reassigned");
+  delete wrapped.read;
+  assert.deepStrictEqual(R.keys<string, unknown>(wrapped), ["label"]);
+  assert.strictEqual(port.read?.("original"), "original");
+ });
+
+ it("repeated wrapping and spreading preserve delegation and handler order", () => {
+  const calls: Array<string> = [];
+  const base = { read: (path: string) => { calls.push("base"); return path; } };
+  const inner = withFaults(base, { read: () => { calls.push("inner"); } }, "inner");
+  const outer = withFaults({ ...inner }, { read: () => { calls.push("outer"); } }, "outer");
+  assert.deepStrictEqual(R.keys(outer), ["read"]);
+  assert.strictEqual({ ...outer }.read("result"), "result");
+  assert.deepStrictEqual(calls, ["outer", "inner", "base"]);
+ });
+
+ it.effect("repeated async wrappers reject synchronous handler throws through Promises", () =>
+  Effect.gen(function* () {
+   const error = MemoryFileSystem.errno("EACCES", "open", "/x");
+   const base = { read: (path: string) => Promise.resolve(path) };
+   const inner = withFaults(base, { read: () => undefined }, "inner", true);
+   const outer = withFaults({ ...inner }, { read: () => { throw error; } }, "outer", true);
+   assert.deepStrictEqual(R.keys(outer), ["read"]);
+   const rejected = { ...outer }.read("/x");
+   assert.instanceOf(rejected, Promise);
+   const result = yield* Effect.promise(() => rejected.then(
+    () => assert.fail("the intercepted call must reject"),
+    (cause: unknown) => cause,
+   ));
+   assert.strictEqual(result, error);
+  }),
+ );
 });

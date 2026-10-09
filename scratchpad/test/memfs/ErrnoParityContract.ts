@@ -596,8 +596,8 @@ const assertOutcome = (exit: Exit.Exit<unknown, PlatformError.PlatformError>, ex
 };
 
 export const errnoSuite: {
-	<E>(fsLayer: Layer.Layer<FileSystem.FileSystem, E>): (implementation: Implementation) => void;
-	<E>(implementation: Implementation, fsLayer: Layer.Layer<FileSystem.FileSystem, E>): void;
+ <E>(fsLayer: Layer.Layer<FileSystem.FileSystem, E>): (implementation: Implementation) => void;
+ <E>(implementation: Implementation, fsLayer: Layer.Layer<FileSystem.FileSystem, E>): void;
 } = dual(2, <E>(implementation: Implementation, fsLayer: Layer.Layer<FileSystem.FileSystem, E>) =>
 	layer(fsLayer, { timeout: { seconds: 30 } })(`FileSystem errno parity (${implementation})`, (it) => {
 		describe("failure shape matches the node adapter", () => {

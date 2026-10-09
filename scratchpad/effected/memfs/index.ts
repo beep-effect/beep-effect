@@ -33,6 +33,7 @@
  */
 
 export {
+	InvalidFaultCountError,
 	MemoryFileSystem,
 	type MemoryFileSystemDirent,
 	type MemoryFileSystemErrnoError,
@@ -58,3 +59,4 @@ export {
 	type MemoryFileSystemVolume,
 	type MemoryFileSystemVolumeStat,
 } from "./MemoryFileSystem.ts";
+export { UnknownFaultKeyError } from "./internal/faults.ts";

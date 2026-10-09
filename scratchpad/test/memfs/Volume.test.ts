@@ -325,3 +325,34 @@ describe("engine snapshot size", () => {
 		}),
 	);
 });
+
+
+describe("engine name ordering", () => {
+ it.effect("directory and glob names retain default UTF-16 ordering", () =>
+  Effect.gen(function* () {
+   const handle = yield* MemoryFileSystem.makeHandle({ "/mixed/ä": "umlaut", "/mixed/a": "lower", "/mixed/Z": "upper" });
+   assert.deepStrictEqual(yield* handle.fileSystem.readDirectory("/mixed"), ["Z", "a", "ä"]);
+   assert.deepStrictEqual(yield* handle.fileSystem.glob("*", { root: "/mixed" }), ["Z", "a", "ä"]);
+   assert.deepStrictEqual(handle.volume.readDirectory("/mixed"), ["Z", "a", "ä"]);
+  }),
+ );
+
+ it.effect("new-tree and existing-directory copies retain localeCompare traversal order", () =>
+  Effect.gen(function* () {
+   const fs = yield* MemoryFileSystem.makeWith({ "/source/Z": "upper", "/source/ä": "umlaut", "/source/a": "lower", "/existing": MemoryFileSystem.directory() });
+   yield* fs.copy("/source", "/new");
+   yield* fs.copy("/source", "/existing", { overwrite: true });
+   // The host comparison is the pinned upstream comparator, independent of the engine Order.
+   const expected = ["Z", "ä", "a"].sort((left, right) => left.localeCompare(right));
+   for (const destination of ["/new", "/existing"]) {
+    let previous = -1;
+    for (const name of expected) {
+     const inode = (yield* fs.stat(`${destination}/${name}`)).ino;
+     if (O.isNone(inode)) return assert.fail("copied entries must carry inode numbers");
+     assert.isAbove(inode.value, previous);
+     previous = inode.value;
+    }
+   }
+  }),
+ );
+});

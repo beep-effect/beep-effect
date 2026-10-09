@@ -6,7 +6,6 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
 import * as Result from "effect/Result";
-import type { PlatformError } from "effect/PlatformError";
 import { badArgument } from "effect/PlatformError";
 import type { MemoryFileSystemOptions, MemoryFileSystemSeed, MemoryFileSystemSeedEntry } from "../MemoryFileSystem.ts";
 import * as P from "effect/Predicate";
@@ -14,10 +13,7 @@ import * as R from "effect/Record";
 
 const encoder = new TextEncoder();
 
-export const seedVolume: {
-	(seed: MemoryFileSystemSeed): (fs: FileSystem.FileSystem) => Effect.Effect<void, PlatformError>;
-	(fs: FileSystem.FileSystem, seed: MemoryFileSystemSeed): Effect.Effect<void, PlatformError>;
-} = dual(2, Effect.fnUntraced(function* (fs: FileSystem.FileSystem, seed: MemoryFileSystemSeed) {
+export const seedVolume = Effect.fnUntraced(function* (fs: FileSystem.FileSystem, seed: MemoryFileSystemSeed) {
 	for (const [path, entry] of R.toEntries(seed)) {
 		const separator = path.lastIndexOf("/");
 		const parent = separator <= 0 ? "/" : path.slice(0, separator);
@@ -59,7 +55,7 @@ export const seedVolume: {
 			MemoryFileSystemSeedSymlink: (entry) => fs.symlink(entry.target, path),
 		});
 	}
-}));
+});
 
 // Lexical-only normalization shared by the seed root and the inspection view:
 // collapses "//" and ".", applies "..", resolves relative paths from the
@@ -92,8 +88,8 @@ export interface SeedRootError {
  * error naming the offending value.
  */
 export const applyRoot: {
-	(root: string | undefined): (seed: MemoryFileSystemSeed) => Result.Result<{ readonly seed: MemoryFileSystemSeed; readonly root: string | undefined }, SeedRootError>;
-	(seed: MemoryFileSystemSeed, root: string | undefined): Result.Result<{ readonly seed: MemoryFileSystemSeed; readonly root: string | undefined }, SeedRootError>;
+ (root: string | undefined): (seed: MemoryFileSystemSeed) => Result.Result<{ readonly seed: MemoryFileSystemSeed; readonly root: string | undefined }, SeedRootError>;
+ (seed: MemoryFileSystemSeed, root: string | undefined): Result.Result<{ readonly seed: MemoryFileSystemSeed; readonly root: string | undefined }, SeedRootError>;
 } = dual(2, (
 	seed: MemoryFileSystemSeed,
 	root: string | undefined,
@@ -115,10 +111,7 @@ export const applyRoot: {
 });
 
 /** Applies the root, creates it, then seeds. A root error is a typed `BadArgument`. */
-export const seedWith: {
-	(seed: MemoryFileSystemSeed, options: MemoryFileSystemOptions | undefined): (fs: FileSystem.FileSystem) => Effect.Effect<void, PlatformError>;
-	(fs: FileSystem.FileSystem, seed: MemoryFileSystemSeed, options: MemoryFileSystemOptions | undefined): Effect.Effect<void, PlatformError>;
-} = dual(3, Effect.fnUntraced(function* (
+export const seedWith = Effect.fnUntraced(function* (
 	fs: FileSystem.FileSystem,
 	seed: MemoryFileSystemSeed,
 	options: MemoryFileSystemOptions | undefined,
@@ -131,4 +124,4 @@ export const seedWith: {
 		yield* fs.makeDirectory(applied.success.root, { recursive: true });
 	}
 	yield* seedVolume(fs, applied.success.seed);
-}));
+});

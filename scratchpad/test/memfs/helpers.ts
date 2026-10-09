@@ -1,9 +1,9 @@
 // Kit-owned test helpers shared across suites. The upstream-ported
 // MemoryFileSystem.test.ts keeps its own watch collector.
 
+import { dual } from "effect/Function";
 import { assert } from "@effect/vitest";
 import * as S from "effect/Schema";
-import { dual } from "effect/Function";
 import type * as FileSystem from "effect/FileSystem";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -13,6 +13,7 @@ import * as Stream from "effect/Stream";
 // The optional errno metadata shared by host errors, injected errors and defects.
 export const ErrnoFields = S.Struct({
 	code: S.optional(S.String),
+ errno: S.optional(S.Finite),
 	syscall: S.optional(S.String),
 	path: S.optional(S.String),
 	name: S.optional(S.String),
@@ -33,8 +34,8 @@ export const thrown = (f: () => unknown): typeof ErrnoFields.Type => {
 
 /** A typed PermissionDenied failure for a fault handler. */
 export const denied: {
-	(path: string): (method: string) => PlatformError.PlatformError;
-	(method: string, path: string): PlatformError.PlatformError;
+ (path: string): (method: string) => PlatformError.PlatformError;
+ (method: string, path: string): PlatformError.PlatformError;
 } = dual(2, (method: string, path: string): PlatformError.PlatformError =>
 	PlatformError.systemError({ _tag: "PermissionDenied", module: "FileSystem", method, pathOrDescriptor: path }));
 
