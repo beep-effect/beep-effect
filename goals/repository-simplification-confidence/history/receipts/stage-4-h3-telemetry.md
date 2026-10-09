@@ -109,7 +109,7 @@ They establish execution behavior and never fill the live window.
 
 | Workflow | Result | Boundary | UTC date |
 | --- | --- | --- | --- |
-| Claude primary and linked checkout | Each: 1 fresh startup, 1 prompt, 2 Pre, 2 Post, 1 Stop; one stamp and one skill surface | Native Opus workflow; identical indexed fixture heads produced equal stamps | 2026-10-09 |
+| Claude primary and linked checkout | Each: 1 fresh startup, 1 prompt, 2 Pre, 2 Post, 1 Stop; one stamp and one skill surface | Native Opus workflow; identical indexed fixture heads produced equal stamps | 2026-10-09T20:49:39.102Z primary; 20:11:45.702Z linked |
 | Claude project Skill, MCP and Read | 1 Skill, 1 MCP tool, 1 Read; 3 surface rows; one start stamp | Existing hook pipeline; local constant-response MCP fixture | 2026-10-09 |
 | Claude fan-out | 1 parent SessionStart; 2 Agent calls and 2 Bash posts; no extra qualifying roots | Both children pinned to Opus; parent payload namespace observed | 2026-10-09 |
 | Codex primary/linked, two sandbox modes | 4 tool workflows succeeded; zero native hook rows | Native collection remains unknown; no home trust state changed | 2026-10-09 |
@@ -138,6 +138,10 @@ candidate on demand. No capability is classified genuinely unused.
 
 ## proof
 
+Known same-client or unknown-client event-loss refusals conservatively exclude overlapping sessions through `sessionsSkippedRefused`. Forwarder stamps are withheld for overlapping refusal/disarm gaps and malformed gap evidence. Stamp-only failures remain diagnostics; a later event-loss refusal affects an open session until its durable SessionEnd. Refusal uncertainty covers the entire recorded second. A refusal can coexist a durable row; the exclusion records collection uncertainty. Claude path conventions infer ancestry only for Claude; Codex/Cursor filename spelling alone cannot qualify a root.
+
+Publication cheap gates rejected introduced test-lint and Fallow findings before any push. Source repairs consolidate failure handling, count an aliased unreadable entry once, scope resource-bearing tests, and simplify writer setup. No generated baseline was changed.
+
 Final package/parity results and final-head live census are recorded below when
 the admitted jobs complete. Coverage was read from the existing regression
 baseline for 10 touched source files; this is a baseline read, not current
@@ -154,4 +158,6 @@ remain readable; v1 observations stay outside the v2 regime. F rolls home change
 back through its backups. This lane made no home configuration change, scheduled
 no timer and performed no remote mutation.
 
-Graft queries saved approximately 157,015 source tokens across this lane's work.
+Graft queries saved approximately 217,311 source tokens across this lane's work.
+
+Current-source qualification repair (`5537f21e30`): corrupt hook evidence excludes non-use windows without erasing positive touches; shared capability counts require 30 sessions per loading harness independent of display window; canonical aliases retain all observed path hooks and conflicting identities remain unmatched. Forwarder stamps require valid ordered transcript bounds and durable terminal hooks to bound event-loss refusals. Snapshot budgets reserve root guidance/MCP files and exclude nested checkout paths before stat. Independent review and final admitted package proof remain pending; these statements are implementation evidence, not proof of a complete live window.
