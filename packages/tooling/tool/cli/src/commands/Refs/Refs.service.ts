@@ -84,7 +84,7 @@ const MemberSync = {
 const $I = $RepoCliId.create("commands/Refs/Refs.service");
 
 /**
- * Read-only planning, pull-only refresh, checkout linking, and unit rendering.
+ * Planning, missing-member provisioning, pull-only refresh, checkout linking, and unit rendering.
  *
  * @category services
  * @since 0.0.0
@@ -101,6 +101,11 @@ export interface ReferenceWorkspaceShape {
     root: string
   ) => Effect.Effect<ReadonlyArray<string>, ReferenceWorkspaceError>;
   readonly plan: (home: string, root: string) => Effect.Effect<ReadonlyArray<string>, ReferenceWorkspaceError>;
+  readonly provision: (
+    home: string,
+    checkoutRoot: string,
+    root: string
+  ) => Effect.Effect<ReadonlyArray<string>, ReferenceWorkspaceError>;
   /**
    * Pulls and rebuilds every member, then writes the receipt.
    *
@@ -337,6 +342,26 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
     });
   });
 
+  const ensureGraftExcludes = Effect.fnUntraced(function* (cwd: string) {
+    const gitDir = path.join(cwd, ".git");
+    const gitInfo = yield* fs.stat(gitDir).pipe(Effect.mapError(ioError(cwd, "Cannot inspect member Git metadata.")));
+    // A linked worktree keeps a .git file; its exclude file lives elsewhere, so skip it.
+    if (gitInfo.type !== "Directory") return;
+    const infoDir = path.join(gitDir, "info");
+    const excludeFile = path.join(infoDir, "exclude");
+    yield* fs
+      .makeDirectory(infoDir, { recursive: true })
+      .pipe(Effect.mapError(ioError(cwd, "Cannot create .git/info.")));
+    const existing = yield* fs.readFileString(excludeFile).pipe(Effect.orElseSucceed(() => ""));
+    const present = HashSet.fromIterable(Str.split(existing, "\n"));
+    const missing = A.filter(GRAFT_EXCLUDE_ENTRIES, (entry) => !HashSet.has(present, entry));
+    if (!A.isReadonlyArrayNonEmpty(missing)) return;
+    const separator = Str.isEmpty(existing) || Str.endsWith("\n")(existing) ? "" : "\n";
+    yield* fs
+      .writeFileString(excludeFile, `${existing}${separator}${A.join(missing, "\n")}\n`)
+      .pipe(Effect.mapError(ioError(cwd, "Cannot write .git/info/exclude.")));
+  });
+
   const plan: ReferenceWorkspaceShape["plan"] = Effect.fn("ReferenceWorkspace.plan")(function* (_home, root) {
     const manifest = yield* readManifest();
     const lines = yield* Effect.forEach(
@@ -371,7 +396,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       if (!(yield* fs.exists(root)))
         return yield* ReferenceWorkspaceError.make({
           path: root,
-          message: `Reference root is missing: ${root}; run scripts/setup-effect-ref.sh to provision it.`,
+          message: `Reference root is missing: ${root}; run bun run beep refs provision to provision it.`,
         });
       const repos = path.join(checkoutRoot, ".repos");
       // Never follow a redirected .repos directory when repairing its children.
@@ -406,6 +431,42 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
     )
   );
 
+  const provision: ReferenceWorkspaceShape["provision"] = Effect.fn("ReferenceWorkspace.provision")(
+    function* (home, checkoutRoot, root) {
+      const manifest = yield* readManifest();
+      // Refuse redirected links before cloning anything into the reference root.
+      if (O.isSome(yield* fs.readLink(path.join(checkoutRoot, ".repos")).pipe(Effect.option)))
+        return yield* ReferenceWorkspaceError.make({
+          path: checkoutRoot,
+          message: "Refusing a symlinked .repos directory.",
+        });
+      yield* fs.makeDirectory(root, { recursive: true });
+      const canonicalRoot = yield* fs.realPath(root);
+      const reports = yield* Effect.forEach(
+        manifest.members,
+        Effect.fnUntraced(function* (member) {
+          const memberRoot = path.join(canonicalRoot, member.name);
+          if (yield* fs.exists(path.join(memberRoot, ".git"))) return `keep ${memberRoot}; existing checkout preserved`;
+          yield* mustRun(home, canonicalRoot, "git", [
+            "clone",
+            "--quiet",
+            "--branch",
+            member.branch,
+            "--",
+            member.url,
+            memberRoot,
+          ]);
+          yield* ensureGraftExcludes(memberRoot);
+          return `cloned ${member.name}`;
+        })
+      );
+      return [...reports, ...(yield* linkInto(checkoutRoot, canonicalRoot))];
+    },
+    Effect.mapError((cause) =>
+      ReferenceWorkspaceError.is(cause) ? cause : ioError(owner, "Cannot provision reference workspace.")(cause)
+    )
+  );
+
   const refresh: ReferenceWorkspaceShape["refresh"] = Effect.fn("ReferenceWorkspace.refresh")(
     function* (home, root, jobs) {
       if (!isPositiveInteger(jobs))
@@ -425,27 +486,6 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           onNone: () => deepPlan,
           onSome: (detail) => downgradedPlan("skipped-cooldown", detail),
         });
-      });
-      const ensureGraftExcludes = Effect.fnUntraced(function* (cwd: string) {
-        const gitDir = path.join(cwd, ".git");
-        const gitInfo = yield* fs
-          .stat(gitDir)
-          .pipe(Effect.mapError(ioError(cwd, "Cannot inspect member Git metadata.")));
-        // A linked worktree keeps a .git file; its exclude file lives elsewhere, so skip it.
-        if (gitInfo.type !== "Directory") return;
-        const infoDir = path.join(gitDir, "info");
-        const excludeFile = path.join(infoDir, "exclude");
-        yield* fs
-          .makeDirectory(infoDir, { recursive: true })
-          .pipe(Effect.mapError(ioError(cwd, "Cannot create .git/info.")));
-        const existing = yield* fs.readFileString(excludeFile).pipe(Effect.orElseSucceed(() => ""));
-        const present = HashSet.fromIterable(Str.split(existing, "\n"));
-        const missing = A.filter(GRAFT_EXCLUDE_ENTRIES, (entry) => !HashSet.has(present, entry));
-        if (!A.isReadonlyArrayNonEmpty(missing)) return;
-        const separator = Str.isEmpty(existing) || Str.endsWith("\n")(existing) ? "" : "\n";
-        yield* fs
-          .writeFileString(excludeFile, `${existing}${separator}${A.join(missing, "\n")}\n`)
-          .pipe(Effect.mapError(ioError(cwd, "Cannot write .git/info/exclude.")));
       });
       let reports = HashMap.empty<string, MemberRefreshReport>();
       for (const member of manifest.members) {
@@ -733,6 +773,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
   return ReferenceWorkspace.of({
     resolveRoot,
     plan,
+    provision,
     refresh,
     linkInto,
     renderTimerUnits,

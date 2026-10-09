@@ -402,7 +402,7 @@ If you touch this, load or run this first. Do not hand-author around it.
 
 - effect v3↔v4 differences: validate against the Effect reference checkout
   (`.repos/effect`, the Effect child at `$HOME/YeeBois/references/effect/effect`),
-  never training-data priors. `scripts/setup-effect-ref.sh` provisions the
+  never training-data priors. `bun run beep refs provision` provisions the
   workspace from `scripts/references.json`; `BEEP_REFERENCES_ROOT` overrides
   its `$HOME/YeeBois/references/effect` root.
 - shadcn: editor app = app workspace, shared UI package = shared base; prefer

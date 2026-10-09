@@ -1,5 +1,9 @@
 # Cloud Agent Readiness Plan
 
+> Bootstrap history: references to `scripts/cloud-session-setup.sh` below record
+> the original 2026-10-01 acceptance. That script is retired by workstream C;
+> current bootstrap is `scripts/cloud/bootstrap.sh`. Packet lifecycle is unchanged.
+
 ## Status
 
 Status: `in-progress` — P0 and P1 complete 2026-10-01 (PR #1378); P2 is next.

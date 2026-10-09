@@ -1,5 +1,9 @@
 # GOAL: make a fresh cloud container able to install, prove, and publish
 
+> Bootstrap history: references to `scripts/cloud-session-setup.sh` below record
+> the original 2026-10-01 acceptance. That script is retired by workstream C;
+> current bootstrap is `scripts/cloud/bootstrap.sh`. Packet lifecycle is unchanged.
+
 Repo root: the current working directory — the `beep-effect` checkout you are
 running in. Do not assume an absolute path; several checkouts exist. All paths
 below are repo-relative.
