@@ -193,6 +193,18 @@ interface WriterRun {
 // exported path helpers rather than restated, so the shell writer and the
 // TypeScript reader fail this test the moment they disagree about where the
 // ledger lives.
+const readWriterLines = Effect.fnUntraced(function* (directory: string, files: ReadonlyArray<string>) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  return A.flatten(
+    yield* Effect.forEach(files, (entry) =>
+      fs
+        .readFileString(path.join(directory, entry))
+        .pipe(Effect.map((contents) => A.filter(contents.split("\n"), (line) => line.length > 0)))
+    )
+  );
+});
+
 const runWriter = Effect.fnUntraced(function* (
   stdin: string,
   options: {
@@ -203,10 +215,10 @@ const runWriter = Effect.fnUntraced(function* (
     readonly viaXdgFallback?: boolean;
     readonly writerPath?: string;
     readonly writerCap?: string;
+    readonly stampCap?: string;
   } = {}
 ) {
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const stateHome = yield* fs.makeTempDirectoryScoped({
     prefix: "beep-hook-pulse-",
   });
@@ -273,6 +285,7 @@ const runWriter = Effect.fnUntraced(function* (
       // the cap killed the writer and this suite saw no row, so the conformance run lifts it.
       BEEP_CURSOR_HOOK_PULSE_WRITER_CAP: "60s",
       BEEP_HOOK_PULSE_WRITER_CAP: options.writerCap ?? "60s",
+      BEEP_HOOK_PULSE_STAMP_CAP: options.stampCap ?? "60s",
       // Both salt rungs are cleared unless a case sets one, so a developer who
       // exports a real ai-metrics salt cannot change what these digests are.
       // Cleared, they exercise the insecure-default fallback that keeps an
@@ -304,28 +317,15 @@ const runWriter = Effect.fnUntraced(function* (
     { concurrency: "unbounded" }
   );
 
-  const storeExists = yield* fs.exists(storeDir);
-  const files = storeExists ? yield* fs.readDirectory(storeDir) : A.empty<string>();
-  const rows = yield* Effect.map(
-    Effect.forEach(files, (entry) =>
-      Effect.map(fs.readFileString(path.join(storeDir, entry)), (contents) =>
-        A.filter(contents.split("\n"), (line) => line.length > 0)
-      )
-    ),
-    A.flatten
-  );
-
-  const rootExists = yield* fs.exists(evidenceRoot);
-  const refusalFiles = rootExists
-    ? A.filter(yield* fs.readDirectory(evidenceRoot), (name) => name.startsWith("hook-pulse-refusals-"))
-    : A.empty<string>();
-  const refusals = A.flatten(
-    yield* Effect.forEach(refusalFiles, (name) =>
-      fs
-        .readFileString(path.join(evidenceRoot, name))
-        .pipe(Effect.map((text) => A.filter(text.split("\n"), (line) => line.length > 0)))
-    )
-  );
+  const files = yield* fs.readDirectory(storeDir).pipe(Effect.orElseSucceed(A.empty<string>));
+  const rows = yield* readWriterLines(storeDir, files);
+  const refusalFiles = yield* fs
+    .readDirectory(evidenceRoot)
+    .pipe(
+      Effect.orElseSucceed(A.empty<string>),
+      Effect.map(A.filter((name) => name.startsWith("hook-pulse-refusals-")))
+    );
+  const refusals = yield* readWriterLines(evidenceRoot, refusalFiles);
   return { exitCode, files, stderr, stdout, rows, refusals };
 });
 
@@ -1032,6 +1032,19 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         O.getOrThrow(A.head(run.refusals))
       );
       expect(refusal.reason).toBe("timeout");
+    })
+  );
+
+  it.effect("preserves an unstamped startup when its fingerprint deadline expires", () =>
+    Effect.gen(function* () {
+      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(repoRoot)), { stampCap: "0.001s" });
+      const row = yield* decodeHookPulseRow(expectSingleRow(run));
+      assertNone(row.harnessHash);
+      expect(run.stdout).toBe("");
+      const refusals = A.map(run.refusals, HookPulseRefusal.decodeJsonResult);
+      expect(
+        A.some(refusals, (decoded) => decoded._tag === "Success" && decoded.success.reason === "stamp-failed")
+      ).toBe(true);
     })
   );
 

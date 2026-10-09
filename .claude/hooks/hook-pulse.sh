@@ -406,25 +406,17 @@ esac
 # not a substring of the payload: a PreToolUse editing `settings.json` can carry
 # the text "SessionStart" in its tool input, and must not pay for a repo walk.
 #
-# Parity beats coverage. A missing stamp only keeps a session out of the
-# window; a wrong one silently corrupts evidence. So every case the shell
-# cannot prove it hashes exactly as TypeScript does drops the stamp, never the
-# row: no repo root, a missing tool (GNU `find -printf` included), any `find`
-# error (unreadable directory, symlink loop), a path outside printable ASCII
-# or holding a backslash (sort order and `sha256sum` escaping stop matching
-# JS), 1000 or more collected files (the `maxFiles` budget), more than 8 MiB of
-# included bytes (`maxTotalBytes`), and an awk that fails the decoder
-# self-tests. Files over 512 KiB are skipped, exactly as TypeScript skips them. Depth is mirrored by `-maxdepth 8`
-# (TypeScript collects a file at depth 8 but never reads a directory there),
-# and `-L` mirrors `stat`, which follows symlinks such as `CLAUDE.md`.
-#
-# The walk: repo-root `AGENTS.md`/`CLAUDE.md` at any depth (the TypeScript root
-# walk recurses with an agent-doc filter), plus every file under `.codex`,
-# `.claude`, `.ai`, and `.aiassistant`. Excluded directory names are pruned by
-# name, and a directory holding `.git` (a nested checkout such as
-# `.claude/worktrees/*`) drops out with everything beneath it. `find` cannot
-# prune on "has a .git child", so it reports each `.git` and awk drops the
-# files under those roots afterwards.
+# A missing stamp keeps a session out of the window. Unprovable parity drops
+# only the stamp: unavailable tools, unsupported included filenames, unreadable
+# included files, more than 1000 unique files, more than 8 MiB of included bytes,
+# or a failed UTF-8 decoder self-test. Files over 512 KiB are skipped.
+# Git checkouts enumerate indexed agent docs and all eight configuration roots,
+# plus .mcp.json and .claude/settings.local.json. Indexed candidates are checked
+# for excluded ancestors and nested Git roots without traversing ignored trees.
+# Non-Git fixtures use a bounded find walk. Agent docs have repo-relative depth 8;
+# configuration files have depth 8 relative to their configuration root.
+# A separate 2s stamp deadline leaves time to append an unstamped SessionStart
+# and a stamp-failed refusal before the writer's outer 3s deadline.
 #
 # THE NUL TRAP again: the per-scope preimage joins `path<NUL>hash` lines, so
 # the lines carry `\001` as a stand-in and `tr` swaps in the NUL inside the pipe.
@@ -553,6 +545,32 @@ END {
   }
 }
 '
+  if [ "${indexed}" = "1" ]; then
+    collected="$(
+      while IFS= read -r candidate; do
+        [ -n "${candidate}" ] || continue
+        case "${candidate}" in *[!\ -~]*|*\\*) exit 1 ;; esac
+        IFS=/ read -r -a segments <<<"${candidate}"
+        case "${segments[0]}" in
+          .codex|.claude|.ai|.aiassistant|.cursor|.agents|.junie|.grok) limit=9 ;;
+          *) limit=8 ;;
+        esac
+        [ "${#segments[@]}" -le "${limit}" ] || continue
+        skip=0; parent=""
+        for ((part=0; part<${#segments[@]}-1; part++)); do
+          segment="${segments[part]}"
+          case "${segment}" in
+            .beep|.cache|.git|.idea|.next|.repos|.turbo|.venv|build|coverage|dist|ide|logs|node_modules|outputs|projects|shell-snapshots|statsig|target|todos) skip=1; break ;;
+          esac
+          parent="${parent:+${parent}/}${segment}"
+          if [ -e "${parent}/.git" ]; then skip=1; break; fi
+        done
+        [ "${skip}" = "0" ] || continue
+        # Inspect only an indexed candidate, never its surrounding untracked tree.
+        find -L "${candidate}" -maxdepth 0 -type f -printf '%p\t%s\n' 2>/dev/null || exit 1
+      done < <(printf '%s\n' "${tracked}"; [ ! -f .claude/settings.local.json ] || printf '%s\n' .claude/settings.local.json)
+    )" || exit 1
+  else
   collected="$(
     {
       find -L . -mindepth 1 -maxdepth 8 \
@@ -567,6 +585,8 @@ END {
         fi
     } 2>/dev/null | tr '\n\000' '\001\n' | awk -F "${tab}" -v indexed="${indexed}" "${collect_program}" <(printf '%s\n' "${tracked}") -
   )" || exit 1
+
+  fi
 
   if [ -f .mcp.json ]; then
     if ! git rev-parse --git-dir >/dev/null 2>&1 || git ls-files --error-unmatch .mcp.json >/dev/null 2>&1; then
@@ -637,7 +657,8 @@ if [ "${raw_hook_event}" = "SessionStart" ]; then
   # a wrong stamp, and no stamp is the safe failure.
   find_repo_root "${raw_cwd}"
   if [ -n "${found_repo_root}" ]; then
-    harness_hash="$(harness_config_hash "${found_repo_root}")" || { harness_hash=""; refuse stamp-failed; }
+    export -f harness_config_hash
+    harness_hash="$(timeout --kill-after=0.2s "${BEEP_HOOK_PULSE_STAMP_CAP:-2s}" bash -c 'harness_config_hash "$1"' _ "${found_repo_root}")" || { harness_hash=""; refuse stamp-failed; }
   fi
 fi
 

@@ -246,3 +246,13 @@ Adding `sessionStartSource` exposed the writer conformance test's explicit field
 allowlist. The package audit rejected the omission; the allowlist and raw codec
 were aligned before the final proof. Schema-field additions should update the
 conformance contract in the same commit.
+
+### H3 final proof and bounded fingerprint collection
+
+The admitted final package audits rejected `Effect.asNone` and a nonexistent
+refusal decoder. The supported Option result and schema decoder now replace
+those calls; all three package inbox rows reference the repair commit. Validate
+new helper calls against the Effect reference and existing model surface before
+starting long package proofs. Independent review also found ignored-tree errors
+and stamp-deadline row loss: indexed candidates now avoid whole-tree traversal,
+and the fingerprint has its own shorter deadline that retains an unstamped row.

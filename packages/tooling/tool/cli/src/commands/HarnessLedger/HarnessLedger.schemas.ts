@@ -552,9 +552,10 @@ export class ObservedSessionWindow extends S.Class<ObservedSessionWindow>($I`Obs
  * harness hash; the two skip counts say how many newer sessions ran under
  * another regime or carry no stamp. `undecodableLines` counts hook-pulse lines
  * that did not decode as `HookPulseV1`; they are skipped, not fatal.
- * `windowFull` is true when `sessionsObserved` reached `windowSessions`;
+ * `windowFull` is true when `sessionsObserved` reached `windowSessions`.
  * A full window alone does not qualify non-use. Proposals remain advisory
- * and `--write` appends nothing until collection and surface coverage qualify. `alreadyProposed` counts zero-touch surfaces skipped because
+ * and `--write` currently appends nothing. `alreadyProposed` counts zero-touch
+ * surfaces skipped because
  * an open `proposed` chain already targets them, under any harness.
  * `decidedUnderHarness` counts those skipped because a chain targeting them
  * ends in a human decision (`accepted`, `rejected`, `deferred`, `waived`)

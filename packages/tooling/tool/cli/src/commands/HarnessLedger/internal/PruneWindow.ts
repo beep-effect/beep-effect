@@ -150,7 +150,7 @@ const regimeOf = (tally: SessionTally, harnessHash: HarnessHash): SessionRegime 
 const byNewestFirst = Order.flip(Order.mapInput(Order.Number, (tally: SessionTally) => tally.maxTs));
 
 // The mutable state one observation threads through its shard reads: the
-// per-session tallies and the two counters the report carries.
+// per-session tallies, collection counters and disarm provenance.
 type ShardScan = {
   readonly stateDir: string;
   readonly tallies: MutableHashMap.MutableHashMap<string, SessionTally>;

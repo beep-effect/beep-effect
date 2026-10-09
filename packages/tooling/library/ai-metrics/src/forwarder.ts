@@ -72,6 +72,48 @@ const AiMetricsForwarderTimerCommand = AiMetricsForwarderTimerCommandBase.pipe(
   })
 );
 
+type SessionStampIndex = {
+  readonly stamps: MutableHashMap.MutableHashMap<string, HashSet.HashSet<string>>;
+  readonly sessions: MutableHashMap.MutableHashMap<string, HashSet.HashSet<string>>;
+  readonly freshStarts: MutableHashMap.MutableHashMap<string, HashSet.HashSet<number>>;
+  readonly firstObserved: MutableHashMap.MutableHashMap<string, number>;
+};
+
+const collectSessionStamp = (index: SessionStampIndex, pulse: HookPulseV1): void => {
+  if (pulse.instrumentClass !== "production" || O.isNone(pulse.transcriptPath)) return;
+  const { stamps, sessions, freshStarts, firstObserved } = index;
+  const key = `${pulse.agentKind}:${pulse.transcriptPath.value}`;
+  const observedAt = DateTime.toEpochMillis(pulse.ts);
+  MutableHashMap.set(
+    firstObserved,
+    key,
+    Math.min(
+      O.getOrElse(MutableHashMap.get(firstObserved, key), () => observedAt),
+      observedAt
+    )
+  );
+  MutableHashMap.set(
+    sessions,
+    key,
+    HashSet.add(O.getOrElse(MutableHashMap.get(sessions, key), HashSet.empty<string>), pulse.sessionId)
+  );
+  if (pulse.hookEvent !== "SessionStart") return;
+  if (O.contains(pulse.sessionStartSource, "startup"))
+    MutableHashMap.set(
+      freshStarts,
+      key,
+      HashSet.add(O.getOrElse(MutableHashMap.get(freshStarts, key), HashSet.empty<number>), observedAt)
+    );
+  MutableHashMap.set(
+    stamps,
+    key,
+    HashSet.add(
+      O.getOrElse(MutableHashMap.get(stamps, key), HashSet.empty<string>),
+      O.getOrElse(pulse.harnessHash, () => "unknown")
+    )
+  );
+};
+
 /**
  * Typed failure raised anywhere inside one durable forwarder run.
  *
@@ -1111,42 +1153,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
         for (const line of Str.split(text, "\n")) {
           const row = HookPulseV1.decodeJsonResult(line);
           if (Str.isNonEmpty(line) && Result.isFailure(row)) hookCollectionComplete = false;
-          if (
-            Result.isSuccess(row) &&
-            row.success.instrumentClass === "production" &&
-            O.isSome(row.success.transcriptPath)
-          ) {
-            const key = `${row.success.agentKind}:${row.success.transcriptPath.value}`;
-            const observedAt = DateTime.toEpochMillis(row.success.ts);
-            MutableHashMap.set(
-              firstObserved,
-              key,
-              Math.min(
-                O.getOrElse(MutableHashMap.get(firstObserved, key), () => observedAt),
-                observedAt
-              )
-            );
-            MutableHashMap.set(
-              sessions,
-              key,
-              HashSet.add(O.getOrElse(MutableHashMap.get(sessions, key), HashSet.empty<string>), row.success.sessionId)
-            );
-            if (row.success.hookEvent !== "SessionStart") continue;
-            if (O.contains(row.success.sessionStartSource, "startup"))
-              MutableHashMap.set(
-                freshStarts,
-                key,
-                HashSet.add(O.getOrElse(MutableHashMap.get(freshStarts, key), HashSet.empty<number>), observedAt)
-              );
-            MutableHashMap.set(
-              stamps,
-              key,
-              HashSet.add(
-                O.getOrElse(MutableHashMap.get(stamps, key), HashSet.empty<string>),
-                O.getOrElse(row.success.harnessHash, () => "unknown")
-              )
-            );
-          }
+          if (Result.isSuccess(row)) collectSessionStamp({ stamps, sessions, freshStarts, firstObserved }, row.success);
         }
       }),
       { discard: true }
