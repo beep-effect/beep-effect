@@ -89,6 +89,23 @@ class HeldRunList extends S.Class<HeldRunList>($I`HeldRunList`)(
   $I.annote("HeldRunList", { description: "Main-push Check runs returned by the GitHub API." })
 ) {}
 
+const stringListOption = S.Array(S.String).pipe(S.decodeUnknownOption);
+const textRecordsOption = S.Array(textRecord).pipe(S.decodeUnknownOption);
+const SetupAction = S.Struct({ inputs: S.Record(S.String, S.Struct({ default: S.optionalKey(S.Unknown) })) });
+const decodeSetupAction = SetupAction.pipe(S.decodeUnknownEffect);
+const decodeWorkflowDocument = WorkflowDocument.pipe(S.decodeUnknownEffect);
+const PrFileCount = S.Struct({ changed_files: S.Int });
+const PrLabels = S.Array(S.Struct({ name: S.String }));
+const PendingDeployments = S.Array(S.Unknown);
+const decodeRulesetJson = Ruleset.pipe(S.fromJsonString, S.decodeUnknownEffect);
+const decodeEnvironmentJson = SettingsEnvironment.pipe(S.fromJsonString, S.decodeUnknownEffect);
+const decodeHeldRunsJson = HeldRunList.pipe(S.fromJsonString, S.decodeUnknownEffect);
+const decodePendingDeploymentsJson = PendingDeployments.pipe(S.fromJsonString, S.decodeUnknownEffect);
+const decodePrFileCountJson = PrFileCount.pipe(S.fromJsonString, S.decodeUnknownEffect);
+const decodePrLabelsJson = PrLabels.pipe(S.fromJsonString, S.decodeUnknownEffect);
+const snapshotJson = S.fromJsonString(S.Unknown, { space: 2 });
+const encodeSnapshotJson = snapshotJson.pipe(S.encodeUnknownEffect);
+
 interface GithubPolicyClientShape {
   readonly read: (endpoint: string, projection?: string) => Effect.Effect<string, CiCommandError>;
   readonly write: (args: ReadonlyArray<string>) => Effect.Effect<void, CiCommandError>;
@@ -117,7 +134,6 @@ const makeClient = Effect.fn("CiGovernance.makeClient")(function* (root: string)
     write: Effect.fn("GithubPolicyClient.write")((args: ReadonlyArray<string>) => execute(args).pipe(Effect.asVoid)),
   });
 });
-const decodeJson = <T extends S.Constraint>(schema: T) => S.decodeUnknownEffect(S.fromJsonString(schema));
 const strings = S.decodeUnknownOption(S.String);
 const stringAt = (record: Readonly<Record<string, unknown>>, key: string): string =>
   pipe(
@@ -193,13 +209,13 @@ export const workflowPolicyDiagnostics = Effect.fn("CiGovernance.workflowPolicyD
   file: string,
   text: string
 ) {
-  const workflow = yield* decodeYamlTextWith(S.decodeUnknownEffect(WorkflowDocument))(text).pipe(
+  const workflow = yield* decodeYamlTextWith(decodeWorkflowDocument)(text).pipe(
     CiCommandError.mapError(`Cannot parse ${file}.`)
   );
   const diagnostics = A.flatMap(jobsFor(workflow), ([id, job]) => jobWorkflowDiagnostics(file, id, job));
   const triggers = O.getOrElse(recordOption(workflow.on), () => emptyRecord);
   const push = O.flatMap(O.fromUndefinedOr(triggers.push), recordOption);
-  const branches = O.flatMap(push, (value) => S.decodeUnknownOption(S.Array(S.String))(value.branches));
+  const branches = O.flatMap(push, (value) => stringListOption(value.branches));
   if (
     O.exists(branches, A.contains("main")) &&
     workflow.concurrency !== undefined &&
@@ -225,9 +241,9 @@ export const workflowPolicyDiagnostics = Effect.fn("CiGovernance.workflowPolicyD
  * @since 0.0.0
  */
 export const setupCacheWriteDisabled = Effect.fn("CiGovernance.setupCacheWriteDisabled")(function* (text: string) {
-  const action = yield* decodeYamlTextWith(
-    S.decodeUnknownEffect(S.Struct({ inputs: S.Record(S.String, S.Struct({ default: S.optionalKey(S.Unknown) })) }))
-  )(text).pipe(CiCommandError.mapError("Cannot parse setup action."));
+  const action = yield* decodeYamlTextWith(decodeSetupAction)(text).pipe(
+    CiCommandError.mapError("Cannot parse setup action.")
+  );
   return action.inputs["cache-write"]?.default === "false";
 });
 
@@ -249,14 +265,14 @@ export const workflowJobContexts = Effect.fn("CiGovernance.workflowJobContexts")
   file: string,
   text: string
 ) {
-  const workflow = yield* decodeYamlTextWith(S.decodeUnknownEffect(WorkflowDocument))(text).pipe(
+  const workflow = yield* decodeYamlTextWith(decodeWorkflowDocument)(text).pipe(
     CiCommandError.mapError(`Cannot parse ${file}.`)
   );
   return A.flatMap(jobsFor(workflow), ([id, job]) => {
     const name = job.name ?? id;
     const include = pipe(
       O.fromUndefinedOr(job.strategy?.matrix.include),
-      O.flatMap(S.decodeUnknownOption(S.Array(textRecord))),
+      O.flatMap(textRecordsOption),
       O.getOrElse(A.empty)
     );
     const names = name === "${{ matrix.name }}" ? A.map(include, (row) => stringAt(row, "name")) : [name];
@@ -404,11 +420,11 @@ const ciRulesetCommand = Command.make(
         const client = yield* GithubPolicyClient;
         const ruleset = yield* client
           .read("repos/{owner}/{repo}/rulesets/10240248")
-          .pipe(Effect.flatMap(decodeJson(Ruleset)));
+          .pipe(Effect.flatMap(decodeRulesetJson));
         yield* checkEqual(requiredContexts(ruleset), expectedContexts());
         if (capture) {
           const now = yield* DateTime.now;
-          const text = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown, { space: 2 }))({
+          const text = yield* encodeSnapshotJson({
             schemaVersion: "branch-protection-contexts/v1",
             capturedAt: DateTime.formatIso(now),
             repository: "beep-effect/beep-effect",
@@ -436,7 +452,7 @@ const ciSettingsCommand = Command.make("settings", { check: Flag.Boolean("check"
       const client = yield* GithubPolicyClient;
       const env = yield* client
         .read("repos/{owner}/{repo}/environments/professional-desktop-release")
-        .pipe(Effect.flatMap(decodeJson(SettingsEnvironment)));
+        .pipe(Effect.flatMap(decodeEnvironmentJson));
       if (!desktopEnvironmentApproved(env))
         return yield* CiCommandError.make({
           message: "Desktop release environment requires a non-empty required_reviewers rule.",
@@ -454,14 +470,14 @@ const ciHeldGroupCommand = Command.make("held-group", {}, () =>
           "repos/{owner}/{repo}/actions/workflows/check.yml/runs?branch=main&event=push&per_page=100",
           "{workflow_runs:[.workflow_runs[]|{id,status,created_at,head_branch}]}"
         )
-        .pipe(Effect.flatMap(decodeJson(HeldRunList)));
+        .pipe(Effect.flatMap(decodeHeldRunsJson));
       const now = yield* DateTime.now;
       const held = heldGroupRunIds(runs.workflow_runs, DateTime.toEpochMillis(now));
       yield* Effect.forEach(
         held,
         (id) =>
           client.read(`repos/{owner}/{repo}/actions/runs/${id}/pending_deployments`).pipe(
-            Effect.flatMap(decodeJson(S.Array(S.Unknown))),
+            Effect.flatMap(decodePendingDeploymentsJson),
             Effect.flatMap((deployments) =>
               Console.log(`held-group: run=${id}; pending deployments=${A.length(deployments)}`)
             )
@@ -485,10 +501,10 @@ const ciPrSizeCommand = Command.make("pr-size", { number: Argument.Int("number")
       const client = yield* GithubPolicyClient;
       const pull = yield* client
         .read(`repos/{owner}/{repo}/pulls/${number}`)
-        .pipe(Effect.flatMap(decodeJson(S.Struct({ changed_files: S.Int }))));
+        .pipe(Effect.flatMap(decodePrFileCountJson));
       const labels = yield* client
         .read(`repos/{owner}/{repo}/issues/${number}/labels?per_page=100`)
-        .pipe(Effect.flatMap(decodeJson(S.Array(S.Struct({ name: S.String })))));
+        .pipe(Effect.flatMap(decodePrLabelsJson));
       const diff = prSizeLabelDiff(
         pull.changed_files,
         A.map(labels, (label) => label.name)
@@ -511,8 +527,10 @@ const ciPrSizeCommand = Command.make("pr-size", { number: Argument.Int("number")
     })
   )
 ).pipe(Command.withDescription("Replace contradictory size labels on a same-repository PR"));
-const ciWorkflowPolicyCommand = Command.make("workflow-lint", {}, () =>
-  Effect.gen(function* () {
+const ciWorkflowPolicyCommand = Command.make(
+  "workflow-lint",
+  {},
+  Effect.fn("CiGovernance.workflowLint")(function* () {
     const root = yield* findRepoRoot();
     const fs = yield* FileSystem.FileSystem;
     const files = yield* fs.readDirectory(`${root}/.github/workflows`);
