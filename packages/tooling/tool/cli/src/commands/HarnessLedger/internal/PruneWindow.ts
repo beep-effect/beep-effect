@@ -11,12 +11,13 @@ import {
   contextSurfaceId,
   HookPulseClientCoverage,
   HookPulseDisarmWindow,
+  HookPulseEvent,
   HookPulseRefusal,
   HookPulseV1,
   hashPrivateIdentifier,
   hookPulseHashSalt,
 } from "@beep/repo-ai-metrics";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, O, pipe, Str } from "@beep/utils";
 import * as Config from "effect/Config";
 import * as DateTime from "effect/DateTime";
@@ -98,6 +99,12 @@ export const enumeratePruneCandidates = Effect.fn("HarnessLedger.enumeratePruneC
   );
 });
 
+const ActivityToolEvent = HookPulseEvent.pick(["PreToolUse", "PostToolUse", "PostToolUseFailure"]);
+const TerminalToolEvent = HookPulseEvent.pick(["PostToolUse", "PostToolUseFailure"]);
+const isActivityToolEvent = S.is(ActivityToolEvent);
+const isTerminalToolEvent = S.is(TerminalToolEvent);
+const isUnknownStart = (pulse: HookPulseV1) => pulse.hookEvent === "SessionStart" && O.isNone(pulse.harnessHash);
+
 const ANY_SHARD = /^hook-pulse-.*\.ndjson$/;
 
 // Which side of the current harness a session falls on. `in-regime`: at least
@@ -178,14 +185,10 @@ const foldPulse = (tallies: ShardScan["tallies"], pulse: HookPulseV1): void => {
     ...tally,
     primary: tally.primary || O.contains(pulse.sessionRole, "primary"),
     child: tally.child || O.contains(pulse.sessionRole, "subagent"),
-    unknownStart: tally.unknownStart || (pulse.hookEvent === "SessionStart" && O.isNone(pulse.harnessHash)),
+    unknownStart: tally.unknownStart || isUnknownStart(pulse),
     minTs: Math.min(tally.minTs, ts),
     userTurns: tally.userTurns + (pulse.hookEvent === "UserPromptSubmit" ? 1 : 0),
-    toolEvents:
-      tally.toolEvents +
-      (pulse.hookEvent === "PreToolUse" || pulse.hookEvent === "PostToolUse" || pulse.hookEvent === "PostToolUseFailure"
-        ? 1
-        : 0),
+    toolEvents: tally.toolEvents + (isActivityToolEvent(pulse.hookEvent) ? 1 : 0),
     maxTs: Math.max(tally.maxTs, ts),
     surfaces: O.match(pulse.surface, {
       onNone: () => tally.surfaces,
@@ -391,6 +394,38 @@ const windowReport = (
   });
 };
 
+const readRefusals = Effect.fn("HarnessLedger.readRefusals")(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  let refusalUndecodableLines = 0;
+  let writerRefusalsTotal = 0;
+  const refusalsByAgentKind = { "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 };
+  for (const name of A.filter(yield* listDirectorySorted(root), (name) =>
+    /^hook-pulse-refusals-.*\.ndjson$/.test(name)
+  )) {
+    const text = yield* fs
+      .readFileString(path.join(root, name))
+      .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot read payload-free refusal ledger.")));
+    for (const line of A.filter(Str.split(text, "\n"), Str.isNonEmpty)) {
+      const row = HookPulseRefusal.decodeJsonResult(line);
+      if (Result.isFailure(row)) {
+        refusalUndecodableLines += 1;
+        continue;
+      }
+      writerRefusalsTotal += 1;
+      if (
+        Result.isSuccess(row) &&
+        (row.success.agentKind === "claude-code" ||
+          row.success.agentKind === "codex-cli" ||
+          row.success.agentKind === "cursor-cli")
+      ) {
+        refusalsByAgentKind[row.success.agentKind] += 1;
+      }
+    }
+  }
+  return { refusalUndecodableLines, writerRefusalsTotal, refusalsByAgentKind };
+});
+
 /**
  * Read hook-pulse shards under `stateDir` and observe the last `window`
  * sessions that ran under `harnessHash`.
@@ -437,32 +472,7 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
     A.some(A.filter(Str.split(windowsText, "\n"), Str.isNonEmpty), (line) =>
       Result.isFailure(HookPulseDisarmWindow.decodeJsonResult(line))
     );
-  let refusalUndecodableLines = 0;
-  let writerRefusalsTotal = 0;
-  const refusalsByAgentKind = { "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 };
-  for (const name of A.filter(yield* listDirectorySorted(root), (name) =>
-    /^hook-pulse-refusals-.*\.ndjson$/.test(name)
-  )) {
-    const text = yield* fs
-      .readFileString(path.join(root, name))
-      .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot read payload-free refusal ledger.")));
-    for (const line of A.filter(Str.split(text, "\n"), Str.isNonEmpty)) {
-      const row = HookPulseRefusal.decodeJsonResult(line);
-      if (Result.isFailure(row)) {
-        refusalUndecodableLines += 1;
-        continue;
-      }
-      writerRefusalsTotal += 1;
-      if (
-        Result.isSuccess(row) &&
-        (row.success.agentKind === "claude-code" ||
-          row.success.agentKind === "codex-cli" ||
-          row.success.agentKind === "cursor-cli")
-      ) {
-        refusalsByAgentKind[row.success.agentKind] += 1;
-      }
-    }
-  }
+  const { refusalUndecodableLines, writerRefusalsTotal, refusalsByAgentKind } = yield* readRefusals(root);
   const scan: ShardScan = {
     stateDir,
     tallies: MutableHashMap.empty(),
@@ -480,20 +490,167 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
 
 // Only structural metadata is decoded. Content strings never leave this reader.
 const TranscriptTool = S.Struct({ type: S.optionalKey(S.String), id: S.optionalKey(S.String) });
+const TranscriptContent = S.Array(S.Unknown);
+const isTranscriptContent = S.is(TranscriptContent);
 const TranscriptRow = S.fromJsonString(
   S.Struct({
     type: S.optionalKey(S.String),
     sessionId: S.optionalKey(S.String),
-    message: S.optionalKey(S.Struct({ content: S.optionalKey(S.Union([S.String, S.Array(S.Unknown)])) })),
+    message: S.optionalKey(S.Struct({ content: S.optionalKey(S.Union([S.String, TranscriptContent])) })),
     payload: S.optionalKey(S.Struct({ id: S.optionalKey(S.String), type: S.optionalKey(S.String) })),
   })
 );
 const decodeTranscript = S.decodeUnknownResult(TranscriptRow);
 const decodeTool = S.decodeUnknownOption(TranscriptTool);
 
+class TranscriptTally extends S.Class<TranscriptTally>("HarnessLedger.TranscriptTally")({
+  session: S.OptionFromOptionalKey(S.String),
+  calls: S.Natural,
+  undecodableLines: S.Natural,
+}) {}
+
+class TranscriptFileCounts extends S.Class<TranscriptFileCounts>("HarnessLedger.TranscriptFileCounts")({
+  sessionHash: Sha256Hex,
+  pathHash: Sha256Hex,
+  calls: S.Natural,
+  undecodableLines: S.Natural,
+}) {}
+
+const transcriptToolCount = (row: typeof TranscriptRow.Type): number => {
+  const content = row.message?.content;
+  const claude = isTranscriptContent(content)
+    ? A.length(A.filter(content, (block) => O.exists(decodeTool(block), (tool) => tool.type === "tool_use")))
+    : 0;
+  const codex =
+    row.type === "response_item" && (row.payload?.type === "function_call" || row.payload?.type === "custom_tool_call")
+      ? 1
+      : 0;
+  return claude + codex;
+};
+
+const foldTranscriptLine = (tally: TranscriptTally, line: string): TranscriptTally =>
+  Result.match(decodeTranscript(line), {
+    onFailure: () => TranscriptTally.make({ ...tally, undecodableLines: tally.undecodableLines + 1 }),
+    onSuccess: (row) =>
+      TranscriptTally.make({
+        ...tally,
+        session: O.orElse(O.fromUndefinedOr(row.sessionId), () =>
+          row.type === "session_meta"
+            ? O.orElse(O.fromUndefinedOr(row.payload?.id), () => tally.session)
+            : tally.session
+        ),
+        calls: tally.calls + transcriptToolCount(row),
+      }),
+  });
+
+const foldReconciliationHook = (
+  row: HookPulseV1,
+  agentKind: HookPulseAgentKind,
+  sessionHooks: MutableHashMap.MutableHashMap<string, number>,
+  hooks: MutableHashMap.MutableHashMap<string, number>
+): void => {
+  if (row.instrumentClass !== "production" || row.agentKind !== agentKind || !isTerminalToolEvent(row.hookEvent))
+    return;
+  MutableHashMap.set(
+    sessionHooks,
+    row.sessionId,
+    O.getOrElse(MutableHashMap.get(sessionHooks, row.sessionId), () => 0) + 1
+  );
+  O.match(row.transcriptPath, {
+    onNone: F.constVoid,
+    onSome: (key) => MutableHashMap.set(hooks, key, O.getOrElse(MutableHashMap.get(hooks, key), () => 0) + 1),
+  });
+};
+
+const readReconciliationHooks = Effect.fn("HarnessLedger.readReconciliationHooks")(function* (
+  stateDir: string,
+  agentKind: HookPulseAgentKind,
+  sessionHooks: MutableHashMap.MutableHashMap<string, number>,
+  hooks: MutableHashMap.MutableHashMap<string, number>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  let undecodableLines = 0;
+  for (const shard of A.filter(yield* listDirectorySorted(stateDir), (name) => ANY_SHARD.test(name))) {
+    const text = yield* fs
+      .readFileString(path.join(stateDir, shard))
+      .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot read reconciliation shard.")));
+    for (const line of A.filter(Str.split(text, "\n"), Str.isNonEmpty)) {
+      Result.match(HookPulseV1.decodeJsonResult(line), {
+        onFailure: () => {
+          undecodableLines += 1;
+        },
+        onSuccess: (row) => foldReconciliationHook(row, agentKind, sessionHooks, hooks),
+      });
+    }
+  }
+  return undecodableLines;
+});
+
+const reconciliationTranscriptFiles = Effect.fn("HarnessLedger.reconciliationTranscriptFiles")(function* (
+  dir: string
+): Effect.fn.Return<ReadonlyArray<string>, HarnessLedgerIoError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const entries = yield* listDirectorySorted(dir);
+  return A.flatten(
+    yield* Effect.forEach(
+      entries,
+      Effect.fnUntraced(function* (entry) {
+        const file = path.join(dir, entry);
+        const info = yield* fs
+          .stat(file)
+          .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot inspect transcript file.")));
+        if (info.type === "Directory") return yield* reconciliationTranscriptFiles(file);
+        return Str.endsWith(".jsonl")(entry) ? A.of(file) : A.empty<string>();
+      }),
+      { concurrency: 1 }
+    )
+  );
+});
+
+const ParentSessionSegment = S.String.check(S.isPattern(/^[0-9a-f-]{36}$/));
+const isParentSessionSegment = S.is(ParentSessionSegment);
+const readTranscriptCounts = Effect.fn("HarnessLedger.readTranscriptCounts")(function* (
+  file: string,
+  transcriptDir: string,
+  agentKind: HookPulseAgentKind,
+  hashSalt: O.Option<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const text = yield* fs
+    .readFileString(file)
+    .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot read transcript reconciliation file.")));
+  const tally = A.reduce(
+    A.filter(Str.split(text, "\n"), Str.isNonEmpty),
+    TranscriptTally.make({ session: O.none(), calls: 0, undecodableLines: 0 }),
+    foldTranscriptLine
+  );
+  const relative = Str.split(path.relative(transcriptDir, file), path.sep);
+  const parent =
+    agentKind === "claude-code" && A.length(relative) > 1
+      ? A.findFirst(relative, isParentSessionSegment)
+      : O.none<string>();
+  const session = O.orElse(parent, () => tally.session);
+  const sessionHash = yield* hashPrivateIdentifier(
+    O.getOrElse(session, () => file),
+    hashSalt
+  ).pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot hash transcript identity.")));
+  const pathHash = yield* hashPrivateIdentifier(file, hashSalt).pipe(
+    Effect.mapError(HarnessLedgerIoError.wrap("Cannot hash transcript path."))
+  );
+  return TranscriptFileCounts.make({
+    sessionHash,
+    pathHash,
+    calls: tally.calls,
+    undecodableLines: tally.undecodableLines,
+  });
+});
+
 /**
  * Reconcile every transcript file beneath a caller-selected root, including
- * nested Workflow and subagent files, against complete hook shards.
+ * nested Workflow and subagent files, against complete production hook shards.
  *
  * @internal
  * @category use-cases
@@ -504,109 +661,25 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
   transcriptDir: string,
   agentKind: HookPulseAgentKind
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const hashSalt = yield* hookPulseHashSalt.pipe(
     Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve reconciliation hash namespace."))
   );
   const hooks = MutableHashMap.empty<string, number>();
   const sessionHooks = MutableHashMap.empty<string, number>();
-  let undecodableLines = 0;
-  for (const shard of A.filter(yield* listDirectorySorted(stateDir), (name) => ANY_SHARD.test(name))) {
-    const text = yield* fs
-      .readFileString(path.join(stateDir, shard))
-      .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot read reconciliation shard.")));
-    for (const line of A.filter(Str.split(text, "\n"), Str.isNonEmpty)) {
-      const decoded = HookPulseV1.decodeJsonResult(line);
-      if (Result.isFailure(decoded)) {
-        undecodableLines += 1;
-        continue;
-      }
-      const row = decoded.success;
-      if (
-        row.instrumentClass !== "production" ||
-        row.agentKind !== agentKind ||
-        (row.hookEvent !== "PostToolUse" && row.hookEvent !== "PostToolUseFailure")
-      )
-        continue;
-      MutableHashMap.set(
-        sessionHooks,
-        row.sessionId,
-        O.getOrElse(MutableHashMap.get(sessionHooks, row.sessionId), () => 0) + 1
-      );
-      if (O.isSome(row.transcriptPath))
-        MutableHashMap.set(
-          hooks,
-          row.transcriptPath.value,
-          O.getOrElse(MutableHashMap.get(hooks, row.transcriptPath.value), () => 0) + 1
-        );
-    }
-  }
-  const walk = Effect.fnUntraced(function* (
-    dir: string
-  ): Effect.fn.Return<ReadonlyArray<string>, HarnessLedgerIoError, FileSystem.FileSystem | Path.Path> {
-    const entries = yield* listDirectorySorted(dir);
-    return A.flatten(
-      yield* Effect.forEach(
-        entries,
-        Effect.fnUntraced(function* (entry) {
-          const file = path.join(dir, entry);
-          const info = yield* fs
-            .stat(file)
-            .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot inspect transcript file.")));
-          if (info.type === "Directory") return yield* walk(file);
-          return Str.endsWith(".jsonl")(entry) ? A.of(file) : A.empty<string>();
-        }),
-        { concurrency: 1 }
-      )
-    );
-  });
-  const files = yield* walk(transcriptDir);
+  let undecodableLines = yield* readReconciliationHooks(stateDir, agentKind, sessionHooks, hooks);
+  const files = yield* reconciliationTranscriptFiles(transcriptDir);
   const sessions = MutableHashMap.empty<string, number>();
   const transcriptPaths = MutableHashMap.empty<string, number>();
   for (const file of files) {
-    const text = yield* fs
-      .readFileString(file)
-      .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot read transcript reconciliation file.")));
-    const relative = Str.split(path.relative(transcriptDir, file), path.sep);
-    // Claude's nested paths are <session>/subagents or <session>/workflow.
-    let session = O.none<string>();
-    let calls = 0;
-    for (const line of A.filter(Str.split(text, "\n"), Str.isNonEmpty)) {
-      const decoded = decodeTranscript(line);
-      if (Result.isFailure(decoded)) {
-        undecodableLines += 1;
-        continue;
-      }
-      const row = decoded.success;
-      if (row.type === "session_meta") session = O.fromUndefinedOr(row.payload?.id);
-      if (row.sessionId !== undefined) session = O.some(row.sessionId);
-      const content = row.message?.content;
-      if (S.is(S.Array(S.Unknown))(content)) {
-        calls += A.length(
-          A.filter(content, (block) => O.exists(decodeTool(block), (tool) => tool.type === "tool_use"))
-        );
-      }
-      if (
-        row.type === "response_item" &&
-        (row.payload?.type === "function_call" || row.payload?.type === "custom_tool_call")
-      )
-        calls += 1;
-    }
-    if (calls === 0) continue;
-    if (agentKind === "claude-code" && A.length(relative) > 1) {
-      const parent = A.findFirst(relative, (part) => /^[0-9a-f-]{36}$/.test(part));
-      session = O.orElse(parent, () => session);
-    }
-    const identity = yield* hashPrivateIdentifier(
-      O.getOrElse(session, () => file),
-      hashSalt
-    ).pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot hash transcript identity.")));
-    MutableHashMap.set(sessions, identity, O.getOrElse(MutableHashMap.get(sessions, identity), () => 0) + calls);
-    const pathHash = yield* hashPrivateIdentifier(file, hashSalt).pipe(
-      Effect.mapError(HarnessLedgerIoError.wrap("Cannot hash transcript path."))
+    const counts = yield* readTranscriptCounts(file, transcriptDir, agentKind, hashSalt);
+    undecodableLines += counts.undecodableLines;
+    if (counts.calls === 0) continue;
+    MutableHashMap.set(
+      sessions,
+      counts.sessionHash,
+      O.getOrElse(MutableHashMap.get(sessions, counts.sessionHash), () => 0) + counts.calls
     );
-    MutableHashMap.set(transcriptPaths, pathHash, calls);
+    MutableHashMap.set(transcriptPaths, counts.pathHash, counts.calls);
   }
   const counts = agentKind === "claude-code" ? sessions : transcriptPaths;
   const matchedHooks = agentKind === "claude-code" ? sessionHooks : hooks;
@@ -619,7 +692,6 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
   const sessionsWithoutHooks = A.length(
     A.filter(A.fromIterable(counts), ([key]) => !MutableHashMap.has(matchedHooks, key))
   );
-  const ratio = transcriptToolEvents > 0 ? O.some(hookedToolEvents / transcriptToolEvents) : O.none<number>();
   return HarnessTelemetryReconciliation.make({
     agentKind,
     transcriptFiles: A.length(files),
@@ -627,7 +699,7 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
     hookedToolEvents,
     sessionsWithoutHooks,
     undecodableLines,
-    ratio,
+    ratio: transcriptToolEvents > 0 ? O.some(hookedToolEvents / transcriptToolEvents) : O.none<number>(),
     qualifiedForNonUse: false,
     basis:
       agentKind === "codex-cli"
