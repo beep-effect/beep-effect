@@ -14,11 +14,19 @@ import type { GlobPattern } from "../glob/index.ts";
 import type * as PlatformError from "effect/PlatformError";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { dual } from "effect/Function";
 
 const $I = $ScratchpadId.create("effected/walker/Descend");
+
+/** Invalid descent wiring, raised as a defect rather than a recoverable failure. */
+class DescendDefect extends S.TaggedError<DescendDefect>($I`DescendDefect`)(
+	"DescendDefect",
+	{ message: S.String },
+	$I.annote("DescendDefect", { description: "Invalid downward traversal wiring." }),
+) {}
 
 /**
  * Options for `descend`.
@@ -176,7 +184,7 @@ const escapesCwd = (relative: string): boolean => {
 };
 
 /** Shared empty ancestor chain: frames under `followSymlinks: false` never consult theirs. */
-const NO_ANCESTORS: ReadonlyArray<string> = Object.freeze([]);
+const NO_ANCESTORS: ReadonlyArray<string> = [];
 
 /**
  * A directory queued for reading: its cwd-relative POSIX path, its absolute
@@ -216,9 +224,11 @@ const descendImpl: (
 
 	const maxDepth = options.maxDepth ?? 256;
 	if (!Number.isInteger(maxDepth) || maxDepth < 1) {
-		return yield* Effect.die(new Error(`Walker.descend: maxDepth must be a positive integer, received ${maxDepth}`));
+		return yield* Effect.die(
+			DescendDefect.make({ message: `Walker.descend: maxDepth must be a positive integer, received ${maxDepth}` }),
+		);
 	}
-	const prune = new Set(options.prune ?? DEFAULT_PRUNE);
+	const prune = MutableHashSet.fromIterable(options.prune ?? DEFAULT_PRUNE);
 	const onUnreadable = options.onUnreadable ?? "fail";
 	const followSymlinks = options.followSymlinks ?? false;
 	// Populated only under "record"; the wrapper decides the return shape.
@@ -348,7 +358,7 @@ const descendImpl: (
 			if (kind !== "Directory" || !deep) continue;
 			// Prune suppresses DIRECTORIES only, per the option's contract — a
 			// FILE named `.git` (a submodule or worktree gitlink) stays matchable.
-			if (prune.has(entry)) continue;
+			if (MutableHashSet.has(prune, entry)) continue;
 			// A symlinked directory is skipped unless followSymlinks asked for
 			// it; when it does, the cycle guard is `@actions/glob`'s
 			// traversalChain carried per branch: every descended directory
@@ -394,29 +404,11 @@ const descendImpl: (
 });
 
 /**
- * Expand a compiled glob pattern against the filesystem under
- * `onUnreadable: "record"`, resolving to a {@link DescendResult} — the
- * matched FILE paths relative to `cwd` (POSIX separators, sorted) plus an
- * {@link UnreadableDirectory} — path and cause — for every mid-walk
- * directory whose `readDirectory` (or, under `followSymlinks`, a symlinked
- * directory whose `realPath`) failed for a reason other than `NotFound`.
- * The walk continues past each such directory exactly as `"skip"` does; it
- * never aborts and it never discards the offending path or its cause.
- *
- * @public
- */
-export function descend(
-	options: DescendRecordOptions,
-): (pattern: GlobPattern) => Effect.Effect<DescendResult, DescendError, FileSystem.FileSystem | Path.Path>;
-export function descend(
-	pattern: GlobPattern,
-	options: DescendRecordOptions,
-): Effect.Effect<DescendResult, DescendError, FileSystem.FileSystem | Path.Path>;
-/**
  * Expand a compiled glob pattern against the filesystem, returning matching
  * FILE paths relative to `cwd` (POSIX separators), sorted by relative path.
  *
- * @remarks
+ * **Details**
+ *
  * A literal pattern (no magic, not negated) fast-paths to a single stat: the
  * result is `[source]` when it resolves to a file, `[]` otherwise — a missing
  * path is zero matches, not an error. A magic pattern walks from its literal
@@ -453,9 +445,12 @@ export function descend(
  * silently-empty result.
  *
  * Passing `onUnreadable: "record"` resolves to a {@link DescendResult}
- * instead — see that overload.
+ * instead: the matched files plus each unreadable directory and its cause.
+ * The walk continues past those directories as under "skip", retaining their
+ * failures for the caller.
  *
- * @example
+ * **Example** (Expand a compiled glob pattern)
+ *
  * ```ts
  * import { GlobPattern } from "../glob/index.ts";
  * import { descend } from "./index.ts";
@@ -470,22 +465,22 @@ export function descend(
  * ```
  *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
-export function descend(
-	pattern: GlobPattern,
-	options: DescendOptions,
-): Effect.Effect<ReadonlyArray<string>, DescendError, FileSystem.FileSystem | Path.Path>;
-export function descend(
-	options: DescendOptions,
-): (pattern: GlobPattern) => Effect.Effect<ReadonlyArray<string>, DescendError, FileSystem.FileSystem | Path.Path>;
-export function descend(
-	...args: [GlobPattern, DescendOptions | DescendRecordOptions] | [DescendOptions | DescendRecordOptions]
-):
-	| Effect.Effect<ReadonlyArray<string> | DescendResult, DescendError, FileSystem.FileSystem | Path.Path>
-	| ((pattern: GlobPattern) => Effect.Effect<ReadonlyArray<string> | DescendResult, DescendError, FileSystem.FileSystem | Path.Path>) {
-	const invoke = dual<
-		(options: DescendOptions | DescendRecordOptions) => (pattern: GlobPattern) => ReturnType<typeof descendImpl>,
-		typeof descendImpl
-	>(2, descendImpl);
-	return args.length === 1 ? invoke(args[0]) : invoke(args[0], args[1]);
-}
+export const descend: {
+	(
+		pattern: GlobPattern,
+		options: DescendRecordOptions,
+	): Effect.Effect<DescendResult, DescendError, FileSystem.FileSystem | Path.Path>;
+	(
+		pattern: GlobPattern,
+		options: DescendOptions,
+	): Effect.Effect<ReadonlyArray<string>, DescendError, FileSystem.FileSystem | Path.Path>;
+	(
+		options: DescendRecordOptions,
+	): (pattern: GlobPattern) => Effect.Effect<DescendResult, DescendError, FileSystem.FileSystem | Path.Path>;
+	(
+		options: DescendOptions,
+	): (pattern: GlobPattern) => Effect.Effect<ReadonlyArray<string>, DescendError, FileSystem.FileSystem | Path.Path>;
+} = dual(2, descendImpl);

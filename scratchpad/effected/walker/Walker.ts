@@ -1,8 +1,18 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/walker/Walker");
+
+/** Invalid traversal wiring, raised as a defect rather than a recoverable failure. */
+class WalkerDefect extends S.TaggedError<WalkerDefect>($I`WalkerDefect`)(
+	"WalkerDefect",
+	{ message: S.String },
+	$I.annote("WalkerDefect", { description: "Invalid upward traversal wiring." }),
+) {}
 
 const JsonString = S.fromJsonString(S.String);
 
@@ -63,12 +73,14 @@ export interface AscendOptions {
 }
 
 // Implementation of Walker.ascend; the public contract lives on the static.
-const ascend = (start: string, options?: AscendOptions): Effect.Effect<ReadonlyArray<string>, never, Path.Path> =>
-	Effect.gen(function* () {
+const ascend: (start: string, options?: AscendOptions) => Effect.Effect<ReadonlyArray<string>, never, Path.Path> =
+	Effect.fn("ascend")(function* (start: string, options?: AscendOptions) {
 		const path = yield* Path.Path;
 		const maxDepth = options?.maxDepth ?? 256;
 		if (!Number.isInteger(maxDepth) || maxDepth < 1) {
-			return yield* Effect.die(new Error(`Walker.ascend: maxDepth must be a positive integer, received ${maxDepth}`));
+			return yield* Effect.die(
+				WalkerDefect.make({ message: `Walker.ascend: maxDepth must be a positive integer, received ${maxDepth}` }),
+			);
 		}
 		// A relative CEILING dies, exactly as an invalid maxDepth does — same
 		// category, same construct. `start` is deliberately unconstrained: a
@@ -77,9 +89,9 @@ const ascend = (start: string, options?: AscendOptions): Effect.Effect<ReadonlyA
 			const quotedStopAt = yield* S.encodeEffect(JsonString)(options.stopAt).pipe(Effect.orDie);
 			const quotedStart = yield* S.encodeEffect(JsonString)(start).pipe(Effect.orDie);
 			return yield* Effect.die(
-				new Error(
-					`Walker.ascend: stopAt must be an absolute path, received ${quotedStopAt} (ascending from ${quotedStart})`,
-				),
+				WalkerDefect.make({
+					message: `Walker.ascend: stopAt must be an absolute path, received ${quotedStopAt} (ascending from ${quotedStart})`,
+				}),
 			);
 		}
 		// Normalize the ceiling ONCE, then compare normalized forms. Both sides go
@@ -102,12 +114,16 @@ const ascend = (start: string, options?: AscendOptions): Effect.Effect<ReadonlyA
 	});
 
 // Implementation of Walker.ascendWithin; the public contract lives on the static.
-const ascendWithin = (
+const ascendWithin: (
 	start: string,
 	ceiling: O.Option<string>,
 	options?: Pick<AscendOptions, "maxDepth">,
-): Effect.Effect<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> =>
-	Effect.gen(function* () {
+) => Effect.Effect<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> =
+	Effect.fn("ascendWithin")(function* (
+			start: string,
+			ceiling: O.Option<string>,
+			options?: Pick<AscendOptions, "maxDepth">,
+		) {
 		// Absence is explicit: `Option.none()` is the only way to ask for an
 		// unbounded walk, so a stray `undefined` cannot become one by accident.
 		if (O.isNone(ceiling)) return yield* ascend(start, options);
@@ -115,21 +131,25 @@ const ascendWithin = (
 	});
 
 // ascendWithin with a ceiling present: the lexical chain, stopped physically.
-const ascendToPhysical = (
+const ascendToPhysical: (
 	start: string,
 	ceiling: string,
 	options?: Pick<AscendOptions, "maxDepth">,
-): Effect.Effect<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> =>
-	Effect.gen(function* () {
+) => Effect.Effect<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> =
+	Effect.fn("ascendToPhysical")(function* (
+			start: string,
+			ceiling: string,
+			options?: Pick<AscendOptions, "maxDepth">,
+		) {
 		const fs = yield* FileSystem.FileSystem;
 		const path = yield* Path.Path;
 		if (!path.isAbsolute(ceiling)) {
 			const quotedCeiling = yield* S.encodeEffect(JsonString)(ceiling).pipe(Effect.orDie);
 			const quotedStart = yield* S.encodeEffect(JsonString)(start).pipe(Effect.orDie);
 			return yield* Effect.die(
-				new Error(
-					`Walker.ascendWithin: ceiling must be an absolute path, received ${quotedCeiling} (ascending from ${quotedStart})`,
-				),
+				WalkerDefect.make({
+					message: `Walker.ascendWithin: ceiling must be an absolute path, received ${quotedCeiling} (ascending from ${quotedStart})`,
+				}),
 			);
 		}
 		// The lexical pass first: a ceiling the chain already spells needs no I/O.
@@ -145,24 +165,26 @@ const ascendToPhysical = (
 	});
 
 // Implementation of Walker.firstMatch; the public contract lives on the static.
-const firstMatch = <E, R>(
+const firstMatch = Effect.fn("firstMatch")(function* <E, R>(
 	candidates: ReadonlyArray<string>,
 	predicate: (candidate: string) => Effect.Effect<boolean, E, R>,
-): Effect.Effect<O.Option<string>, never, R> =>
-	Effect.gen(function* () {
-		for (const candidate of candidates) {
-			const matched = yield* Effect.orElseSucceed(predicate(candidate), () => false);
-			if (matched) return O.some(candidate);
-		}
-		return O.none();
-	});
+) {
+	for (const candidate of candidates) {
+		const matched = yield* Effect.orElseSucceed(predicate(candidate), () => false);
+		if (matched) return O.some(candidate);
+	}
+	return O.none();
+});
 
 // Implementation of Walker.findUpward; the public contract lives on the static.
-const findUpward = (
+const findUpward: (
 	dirs: ReadonlyArray<string>,
 	candidatesFor: (dir: string) => ReadonlyArray<string>,
-): Effect.Effect<O.Option<string>, never, FileSystem.FileSystem> =>
-	Effect.gen(function* () {
+) => Effect.Effect<O.Option<string>, never, FileSystem.FileSystem> =
+	Effect.fn("findUpward")(function* (
+			dirs: ReadonlyArray<string>,
+			candidatesFor: (dir: string) => ReadonlyArray<string>,
+		) {
 		const fs = yield* FileSystem.FileSystem;
 		const candidates: Array<string> = [];
 		for (const dir of dirs) candidates.push(...candidatesFor(dir));
