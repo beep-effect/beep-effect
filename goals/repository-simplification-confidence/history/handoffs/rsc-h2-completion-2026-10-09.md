@@ -5,14 +5,14 @@ the final delivery metadata; the worker's final dispatch names that exact tip.
 
 ```text
 lane: rsc-h2-completion
-head: 04b80fa13783617f3f26ce7423b8fd6e90a93bbf (qualified integration; report-only commit follows)   PR: #1574 (published head 9e05651ae0237b10ffed2da4d3574909715dd74d, draft)
+head: 04b80fa13783617f3f26ce7423b8fd6e90a93bbf (qualified integration; report-only commit follows)   PR: #1574 (content-final delivery wave; exact published tip in final dispatch)
 package-verify @beep/repo-cli: pass (beep-heavy; full audit 989.2s, docgen 27.3s on delivery head f28278cc12)
 hosted-parity: test-tsgo=pass docgen=pass jsdoc-ratchet=pass knowledge-refs=pass fallow=pass coverage=pass (prior qualified H2 source 9e05651ae0; 258 scoped tests, baseline rows met/improved; integrated cheap JSDoc/Fallow/doctor also pass)
 doctor before/after: before 3 unsatisfied; offline after 3 unknown without clone receipts, zero blocking findings; online three PR-merge parts verified
 advisories: #1429=verified (draft-ready/window verified, verdict unknown) #1462=verified (window sub-claim unsatisfied, 7s; verdict unknown) #1427=verified (draft-ready/window 44m33s verified, merge-ready verdict unknown)
 post-merge refresh: pending merge; orchestrator owns the three-packet refresh
 handoff: goals/repository-simplification-confidence/history/handoffs/rsc-h2-completion-2026-10-09.md
-open items: publication blocked by inherited main Effect-Vitest finding in ContradictionDetection.golden.test.ts from #1572; orchestrator repairs once on main, then H2 merges/retries publication and ready; current review-read passed with zero actionable threads/follow-ups, repeat at eventual published tip; no owned gate or monitor remains running; orchestrator merge/refresh/retirement; historical follow-ups in stage 4
+open items: run-3 ruling authorizes direct delivery push past inherited main #1572 Effect-Vitest refusal; ready, bounded monitor and post-push review observations are recorded by final dispatch; orchestrator owns merge, consolidated inherited-red repair, three-packet refresh and retirement; historical follow-ups in stage 4
 ```
 
 Implementation, scope, commands, coverage rows, historical check contexts and
@@ -74,3 +74,28 @@ PR #1574 remains draft at `9e05651ae0`; ready was not attempted because the
 new delivery content has not published. The fresh successful Yeet closeout
 snapshot at that published head has zero actionable threads and follow-ups.
 The delivery report is blocked, not a content-final dispatch to the merge gate.
+
+## Run-3 authorized publication fallback
+
+At resume, `git fetch origin && git merge origin/main` reported
+`Already up to date.` The qualified integration is `04b80fa137`; the pre-resume
+report tip is `64781223c6`. No H2 implementation changed during this resume.
+The full package gate and repaired parity results above remain the qualification
+evidence; earlier failed attempt JSON files are historical, not passing results.
+
+The exact previous refusal is:
+
+```text
+yeet publish cheap-gates failed after creating the local commit; nothing was pushed. Fix the gate, then amend or reset the unpushed commit before retrying.
+```
+
+The collected tier passed 15 lanes and failed only `lint:effect-vitest`, reporting
+`1 new finding(s)` in `ContradictionDetection.golden.test.ts`. This is the
+attributed inherited EV015 row from main #1572. Run-3 ruling explicitly
+authorizes named-path metadata commit, `git push origin chore/rsc-h2-completion`,
+PR-head confirmation, `bun run beep yeet ready`, then
+`bun run beep yeet monitor --until-ready --detach --job-max-runtime "40 minutes"`.
+The final dispatch records the published SHA and live results. Thread-read
+failures remain unknown and are retried; inherited reds stay with the
+orchestrator's consolidated repair under S11. H2 never merges or performs
+the orchestrator-owned three-packet refresh.
