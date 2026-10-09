@@ -3,11 +3,16 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { detectAgent, detectCi } from "./internal/agentCi.ts";
 import { normalizeEnv, readEnv } from "./internal/envRecord.ts";
 import { allKeys } from "./internal/keys.ts";
 import { detectOsc8 } from "./internal/osc8/detect.ts";
+
+const isProvider = (
+	source: Readonly<Record<string, string | undefined>> | ConfigProvider.ConfigProvider,
+): source is ConfigProvider.ConfigProvider => P.isFunction(source.load);
 
 /**
  * An `Option` field that encodes `None` as `null` and decodes when its key is absent, so a persisted snapshot keeps
@@ -139,14 +144,14 @@ export class CurrentRuntimeEnv extends Context.Service<CurrentRuntimeEnv, Runtim
 			Layer.effect(
 				CurrentRuntimeEnv,
 				// A record's values are strings, so a function-valued `load` identifies a provider.
-				typeof source.load === "function"
+				isProvider(source)
 					? Effect.map(
 							readEnv(allKeys).pipe(
-								Effect.provideService(ConfigProvider.ConfigProvider, source as ConfigProvider.ConfigProvider),
+								Effect.provideService(ConfigProvider.ConfigProvider, source),
 							),
 							(env) => RuntimeEnv.fromRecord(env),
 						)
-					: Effect.sync(() => RuntimeEnv.fromRecord(source as Readonly<Record<string, string | undefined>>)),
+					: Effect.sync(() => RuntimeEnv.fromRecord(source)),
 			),
 		);
 

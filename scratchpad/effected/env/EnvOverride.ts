@@ -2,12 +2,13 @@ import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import type { AudienceKind } from "./Audience.ts";
 import { Audience } from "./Audience.ts";
 
 const isProvider = (
 	source: Readonly<Record<string, string | undefined>> | ConfigProvider.ConfigProvider,
-): source is ConfigProvider.ConfigProvider => typeof (source as { readonly load?: unknown }).load === "function";
+): source is ConfigProvider.ConfigProvider => P.isFunction(source.load);
 
 /**
  * Reads an environment variable that picks a mode within an audience.
@@ -89,10 +90,10 @@ export class EnvOverride {
 			if (O.isNone(raw) || raw.value === "") {
 				return { audience: kind, accepted: O.none(), rejected: O.none() };
 			}
-			const accepts: ReadonlyArray<string> = options.accepts[kind];
+			const accepts: ReadonlyArray<M[AudienceKind][number]> = options.accepts[kind];
 			const match = accepts.find((literal) => literal.toLowerCase() === raw.value.toLowerCase());
 			if (match !== undefined) {
-				return { audience: kind, accepted: O.some(match as M[AudienceKind][number]), rejected: O.none() };
+				return { audience: kind, accepted: O.some(match), rejected: O.none() };
 			}
 			return {
 				audience: kind,
