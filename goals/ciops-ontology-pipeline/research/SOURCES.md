@@ -22,7 +22,7 @@ pins this goal adds under new roots. No source is mined into this packet directl
 
 ## 2. Upstream repositories & licenses
 
-See the exploration ledger's §2. This goal takes no new upstream; `Graph` from `effect`
+See the exploration ledger's §2. This goal takes no new upstream; `Graph` from `effect/Graph`
 (W6) is validated against the Effect reference checkout (`.repos/effect`).
 
 | Repo | License | Port discipline | What we take |

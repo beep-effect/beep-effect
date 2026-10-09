@@ -99,7 +99,7 @@ exploration's 2026-10-01 graduation sitting.
 - [x] **W6 `planEpisode` body.** Done 2026-10-06: `LanePlan.ts` + `planEpisode`/`emitLanePlan`; 33 lane
       steps from the pinned handoff, 32 precedence edges, golden `lane-plan-v1.ttl`, the CQ-020 sibling
       `check-lane-plan-cq.py` PASS; lane report `p2-w6-report.md`. As specified: read `gate-order-handoff/v1` by path and sha256, build the
-      lane DAG in canonical insertion order with `Graph` from `effect`, fail with
+      lane DAG in canonical insertion order with `Graph` from `effect/Graph`, fail with
       `CyclicPlanError` on cycles, and emit the pinned handoff's lane steps (33 at
       `705f3e75…`; P2 Ruling 2 amends the earlier "32") as a `LanePlanProposal` A-Box in
       `ciops-prov:` with a disjoint provisional vocabulary (P2 Ruling 3). `schedulesWorkUnit`

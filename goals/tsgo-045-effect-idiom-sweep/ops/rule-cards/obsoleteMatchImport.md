@@ -10,6 +10,9 @@ rejects a card with any `TODO` left).
 - Message(s) as shipped in 0.45.0:
   - This module reference imports `{0}`, which is obsolete in Effect v4. In Effect v4, pattern matching is provided directly by `Match` from `effect` (or `effect/Match`). effect(obsoleteMatchImport)
 
+The line above records the compiler's message. This repository imports `Match`
+from `effect/Match`; its root `effect` barrel is not a canonical import path.
+
 ## What the compiler detects
 
 TODO: cite the detector source in the tsgo clone (`internal/rules/<file>.go:<line>`),

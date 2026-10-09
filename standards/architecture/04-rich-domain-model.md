@@ -132,9 +132,9 @@ in the requirements (`R`) channel of any Effect returned from a domain function:
 
 - `Sql` (any database client)
 - `HttpClient`
-- `FileSystem` (from `effect`)
-- `Path` (from `effect`)
-- `Terminal` (from `effect`)
+- `FileSystem` (from `effect/FileSystem`)
+- `Path` (from `effect/Path`)
+- `Terminal` (from `effect/Terminal`)
 - `ChildProcessSpawner` (from `effect/process`)
 - `Config` and `ConfigProvider`
 - Anything exported from a `packages/drivers/*` package
