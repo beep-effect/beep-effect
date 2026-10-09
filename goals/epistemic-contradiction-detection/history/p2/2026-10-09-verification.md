@@ -231,3 +231,22 @@ Full hosted-parity pipeline through beep-heavy: all pass.
 No tracked generated-doc changes and no prohibited reference links. Only
 packet evidence remains dirty. Both package sources are qualified; fresh
 scoped coverage is still queued.
+
+Pre-final main integration: `35ed1b5dda`, merge `dab4e634d5`. Only the GPU
+OCR packet's documentation changed. `git diff --stat 7bb5407631 HEAD --
+packages/epistemic/domain packages/epistemic/use-cases tsconfig.json
+vitest.aliases.generated.json` is empty: qualified package and alias trees
+are identical. Post-merge config-sync check passes; knowledge refs refreshed.
+
+Fresh coverage through beep-heavy: domain 99/99 and use-cases 70/70 tests pass.
+Every touched executable detector file is 100% for lines, statements, functions
+and branches. All 10 touched source files meet the committed baseline or the
+new-file floors; no baseline edit. Export-only barrels have zero counters;
+normalize those to 100% exactly as coveragePercentageFromCounts at
+packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts:1066-1069.
+The first scratch comparison incorrectly trusted the raw reporter's zero pct
+for zero counters; corrected to the owner rule before recording this pass.
+
+All local hosted-parity checks pass. Heavy parity and coverage units settled
+inactive/dead; the queued use-cases unit was stopped before its cgroup fallback.
+Hosted final-head checks remain authoritative and are recorded after publication.

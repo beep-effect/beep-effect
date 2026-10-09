@@ -69,3 +69,23 @@ Config-sync, tsgo-rules, root test-tsgo, JSDoc ratchet, knowledge refs and
 reflection lint pass. Knowledge refs has zero live gated observations on the
 integrated main. PR #1572 has zero review threads in the current read.
 No final package or hosted claim is made until the remaining proof settles.
+
+## Run-3 qualified closure content
+
+Domain audit/docgen pass on `7f006770b9`; use-cases audit/docgen pass on
+`7bb5407631`. Qualified package/config trees unchanged at main-integration
+head `dab4e634d5` (base `35ed1b5dda`, GPU OCR documentation only).
+Fresh coverage passes 99 domain and 70 use-cases tests; all executable detector
+files have 100% coverage across all four metrics. Zero-counter barrels use
+the owner's 100% normalization; no baseline edit. Full docgen, Fallow audit
+and health, test-tsgo, JSDoc ratchet, config-sync and knowledge refs pass.
+
+Reflection lint passes. The goals set-status owner command writes the
+completed-retained lifecycle; all PLAN/manifest phases are complete. PR #1572
+contains both classes in one PR; no cut line. Hosted checks and readiness are
+recorded after publication; merge remains the orchestrator's job under S11.
+
+Reversals unchanged: option 1 can be superseded only by a future contract owner;
+class/polarity/default/proposal semantic changes version the detector; remove
+new concept/export/barrel and rerun config-sync to withdraw the additive API.
+Private notes are removed per #1566; policy is repo-wide, no lane reversal.

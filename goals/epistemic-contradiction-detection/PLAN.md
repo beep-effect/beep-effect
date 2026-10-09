@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `in-progress`
+Status: `completed-retained`
 
 Appetite: **small** — one short PR ladder (schema → service contract → first
 slice). If the work sprawls past that, cut to the first slice rather than
@@ -16,9 +16,9 @@ does not re-earn it.
 | --- | --- | --- | --- |
 | P0 Research | complete | Confirm the shipped contract surface and settle the conflict-class seat. | The `SPEC.md` Open Contract Question is answered on the record; every `file:line` in `SPEC.md` re-verified against the live tree. |
 | P1 Implement | complete | Schema → `Context.Service` contract → implementation, in that order. | Conflict-class `LiteralKit` + snapshot input schema, then the detection service contract, then the pure implementation; the shipped `Contradiction` surfaces are unmodified. |
-| P2 Verify | in-progress | Golden vectors and fixtures prove purity and contract conformance. | Golden-vector lane green, run twice with an advanced clock producing identical output; every emitted candidate decodes against `ContradictionCandidate`; `bun run beep yeet verify` SUCCESS. |
-| P3 Yeet: PR to mergeable | in-progress | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P2 Verify | complete | Golden vectors and fixtures prove purity and contract conformance. | Golden-vector lane green, run twice with an advanced clock producing identical output; every emitted candidate decodes against `ContradictionCandidate`; `bun run beep yeet verify` SUCCESS. |
+| P3 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## P0 Research — mostly already paid
 
@@ -108,11 +108,11 @@ Before marking the packet closed (and `status` → `completed-retained`):
 
 ## Current Blockers
 
-Run-3 supersedes the prior release-policy stop: the private note is removed
-per #1566 and the encoded proposal tuple repair is committed with a regression.
-Golden tests pass 20/20 twice. Both final package proofs pass. Full docgen and Fallow pass; fresh scoped
-coverage remains queued through beep-heavy.
-PR #1572 stays draft until content is final. Merge belongs to the orchestrator.
+No local blocker. Both package audits/docgen, full hosted-parity set, golden
+vectors and fresh scoped coverage pass. PR #1572 carries both classes, reflection
+and completed-retained flip in one PR. Publish final content, mark ready and
+monitor; merge belongs to the orchestrator under S11. Hosted final-head state
+is recorded in P2 and the handoff, without equating local proof with hosted CI.
 
 Dependency status: Belief-view revision graduated on 2026-08-17 to `goals/belief-view-engine`,
 which is paused with P1 pending. Triage closed completed-retained in #1421

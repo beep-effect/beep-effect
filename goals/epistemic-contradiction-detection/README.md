@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -41,11 +41,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 and P1 complete; P2/P3 resumed under the run-3 qualification ruling.
-The private note is removed per #1566; the proposal tuple repair has a typed
-regression. Both package proofs, full docgen and Fallow pass; fresh coverage
-is queued. PR #1572 stays draft during
-qualification; the orchestrator owns its merge.
+P0-P4 complete. Both conflict classes, golden vectors, full-entity seal
+conformance, fresh package proofs, full parity and scoped coverage are qualified.
+PR #1572 carries final content and the same-PR completed-retained flip.
+Hosted checks remain authoritative; the orchestrator owns merge under S11.
 
 ## Provenance
 
@@ -72,7 +71,7 @@ Back-links, not copies:
 P0: [`contract evidence`](./history/p0/2026-10-09-contract.md).
 P1: [`implementation and alias diff`](./history/p1/2026-10-09-implementation.md).
 P2: [`verification and run-3 qualification`](./history/p2/2026-10-09-verification.md).
-Attempted closeout: [`reflection`](./history/reflections/2026-10-09-codex.md), lint pass.
+Closeout: [`reflection`](./history/reflections/2026-10-09-codex.md), lint pass.
 Handoff: [`contradiction-detect`](./history/handoffs/contradiction-detect-2026-10-09.md).
 
 ## Notes
