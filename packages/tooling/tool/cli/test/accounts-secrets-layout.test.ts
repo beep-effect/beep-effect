@@ -60,7 +60,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("accounts secrets layout
         yield* fs.chmod(path.join(bin, name), 0o755);
       }
       const cli = yield* path.fromFileUrl(new URL("../src/bin.ts", import.meta.url));
-      const run = Effect.fn("SecretsLayoutTest.run")(function* (apply: boolean, human = false) {
+      const run = Effect.fn("SecretsLayoutTest.run")(function* (apply: boolean, human: boolean) {
         const handle = yield* ChildProcess.make(
           "bun",
           [cli, "accounts", "secrets-layout", ...(apply ? ["--apply"] : [])],
@@ -83,10 +83,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("accounts secrets layout
         expect(`${stdout}${stderr}`).not.toContain("synthetic-private-note");
         return { code, stdout, stderr };
       }, Effect.scoped);
-      expect((yield* run(false)).code).toBe(0);
+      expect((yield* run(false, false)).code).toBe(0);
       expect(yield* fs.readFileString(path.join(root, "operations"))).toBe("item get\n");
       expect(yield* fs.exists(path.join(root, "edited.json"))).toBe(false);
-      expect((yield* run(true)).code).not.toBe(0);
+      expect((yield* run(true, false)).code).not.toBe(0);
       expect(yield* fs.readFileString(path.join(root, "operations"))).toBe("item get\n");
       const applied = yield* run(true, true);
       expect(applied.code, applied.stderr).toBe(0);
