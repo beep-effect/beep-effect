@@ -18,26 +18,38 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { License, isValidExpression } from "../../effected/spdx/index.ts";
 import { Component, Contact, ExternalReference, Sbom, SbomMetadata, Supplier } from "../../effected/sbom/index.ts";
 
-interface JsonSchema {
-	readonly properties?: Record<string, { readonly enum?: ReadonlyArray<string> }>;
-	readonly required?: ReadonlyArray<string>;
-	readonly oneOf?: ReadonlyArray<JsonSchema>;
-	readonly items?: ReadonlyArray<JsonSchema>;
-	readonly maxItems?: number;
-	readonly definitions: Record<string, JsonSchema>;
-}
+const RequiredProperties = S.Struct({ required: S.String.pipe(S.Array, S.optionalKey) });
+const RequiredPropertyItems = S.Array(RequiredProperties);
+const JsonDefinition = S.Struct({
+	properties: S.optionalKey(S.Record(S.String, S.Struct({ enum: S.String.pipe(S.Array, S.optionalKey) }))),
+	required: RequiredProperties.fields.required,
+	oneOf: S.Struct({
+		...RequiredProperties.fields,
+		items: S.optionalKey(S.Unknown),
+		maxItems: S.optionalKey(S.Finite),
+	}).pipe(S.Array, S.optionalKey),
+});
 
-const SCHEMA: JsonSchema = JSON.parse(
+const SCHEMA: unknown = JSON.parse(
 	readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "fixtures", "bom-1.6.SNAPSHOT.schema.json"), "utf8"),
-) as JsonSchema;
+);
+assertTrue(S.is(S.Struct({
+	...JsonDefinition.fields,
+	$id: S.optionalKey(S.String),
+	definitions: S.Record(S.String, S.Unknown),
+}))(SCHEMA));
 
-const definition = (name: string): JsonSchema => {
+const definition = (name: string): typeof JsonDefinition.Type => {
 	const found = SCHEMA.definitions[name];
 	assert.isDefined(found, `the vendored schema has no definition for ${name}`);
-	return found as JsonSchema;
+	assertTrue(S.is(JsonDefinition)(found));
+	return found;
 };
 
 /** A document exercising every field the emitter can produce. */
@@ -70,13 +82,28 @@ const fullDocument = () =>
 		}),
 	});
 
-const emitted = (): Record<string, unknown> => JSON.parse(Sbom.toJson(fullDocument()));
+const ConformanceDocument = S.Struct({
+	bomFormat: S.String,
+	metadata: S.Struct({
+		component: S.Struct({
+			type: S.String,
+			externalReferences: S.Array(S.Struct({ type: S.String })),
+		}),
+	}),
+	components: S.Array(S.Struct({ type: S.String })),
+});
+
+const emitted = (): typeof ConformanceDocument.Type => {
+	const document: unknown = JSON.parse(Sbom.toJson(fullDocument()));
+	assertTrue(S.is(ConformanceDocument)(document));
+	return document;
+};
 
 describe("CycloneDX 1.6 conformance — derived from the vendored schema", () => {
 	it("the vendored schema is the released 1.6 one", () => {
 		// Guards the oracle itself: if the fixture is swapped for another version,
 		// every assertion below silently changes meaning.
-		const id = (SCHEMA as unknown as { $id?: string }).$id;
+		const id = SCHEMA.$id;
 		assert.strictEqual(id, "http://cyclonedx.org/schema/bom-1.6.schema.json");
 	});
 
@@ -89,15 +116,15 @@ describe("CycloneDX 1.6 conformance — derived from the vendored schema", () =>
 
 	it("declares the bomFormat the schema's enum permits", () => {
 		const permitted = SCHEMA.properties?.bomFormat?.enum ?? [];
-		assert.include(permitted, emitted().bomFormat as unknown as string);
+		assert.include(permitted, emitted().bomFormat);
 	});
 
 	it("every component satisfies the component definition's required properties", () => {
 		const required = definition("component").required ?? [];
 		const document = emitted();
 		const components = [
-			(document.metadata as { component: Record<string, unknown> }).component,
-			...(document.components as unknown as ReadonlyArray<Record<string, unknown>>),
+			document.metadata.component,
+			...document.components,
 		];
 		assert.isAbove(components.length, 1);
 		for (const component of components) {
@@ -112,8 +139,8 @@ describe("CycloneDX 1.6 conformance — derived from the vendored schema", () =>
 		assert.isAbove(permitted.length, 0);
 		const document = emitted();
 		const types = [
-			(document.metadata as { component: { type: string } }).component.type,
-			...(document.components as unknown as ReadonlyArray<{ type: string }>).map((c) => c.type),
+			document.metadata.component.type,
+			...document.components.map((c) => c.type),
 		];
 		for (const type of types) {
 			assert.include(permitted, type, `${type} is not a CycloneDX component type`);
@@ -125,8 +152,7 @@ describe("CycloneDX 1.6 conformance — derived from the vendored schema", () =>
 		// to four of the specification's types, and each must really exist.
 		const permitted = definition("externalReference").properties?.type?.enum ?? [];
 		assert.isAbove(permitted.length, 40);
-		const references = (emitted().metadata as { component: { externalReferences: ReadonlyArray<{ type: string }> } })
-			.component.externalReferences;
+		const references = emitted().metadata.component.externalReferences;
 		assert.lengthOf(references, 4);
 		for (const reference of references) {
 			assert.include(permitted, reference.type, `${reference.type} is not a CycloneDX external-reference type`);
@@ -135,8 +161,7 @@ describe("CycloneDX 1.6 conformance — derived from the vendored schema", () =>
 
 	it("every external reference carries the properties the schema requires", () => {
 		const required = definition("externalReference").required ?? [];
-		const references = (emitted().metadata as { component: { externalReferences: ReadonlyArray<object> } }).component
-			.externalReferences;
+		const references = emitted().metadata.component.externalReferences;
 		for (const reference of references) {
 			for (const key of required) assert.property(reference, key);
 		}
@@ -150,13 +175,13 @@ describe("CycloneDX 1.6 conformance — derived from the vendored schema", () =>
 		const document = emitted();
 
 		const componentKeys = known("component");
-		const rootComponent = (document.metadata as { component: Record<string, unknown> }).component;
+		const rootComponent = document.metadata.component;
 		for (const key of Object.keys(rootComponent)) {
 			assert.isTrue(componentKeys.has(key), `component.${key} is not in the CycloneDX component definition`);
 		}
 
 		const metadataKeys = known("metadata");
-		for (const key of Object.keys(document.metadata as Record<string, unknown>)) {
+		for (const key of Object.keys(document.metadata)) {
 			assert.isTrue(metadataKeys.has(key), `metadata.${key} is not in the CycloneDX metadata definition`);
 		}
 
@@ -167,15 +192,20 @@ describe("CycloneDX 1.6 conformance — derived from the vendored schema", () =>
 	});
 });
 
+const LicenseDocument = S.Struct({
+	metadata: S.Struct({
+		component: S.Struct({ licenses: S.Record(S.String, S.Unknown).pipe(S.Array, S.optionalKey) }),
+	}),
+});
+
 /** The `licenses` array a single-component document emits for these license strings. */
 const licensesOf = (...licenses: ReadonlyArray<string>): ReadonlyArray<Record<string, unknown>> => {
 	const document = Sbom.generate({
 		root: Component.make({ type: "library", name: "x", licenses }),
 		components: [],
 	});
-	const emitted = JSON.parse(Sbom.toJson(document)) as {
-		metadata: { component: { licenses?: ReadonlyArray<Record<string, unknown>> } };
-	};
+	const emitted: unknown = JSON.parse(Sbom.toJson(document));
+	assertTrue(S.is(LicenseDocument)(emitted));
 	return emitted.metadata.component.licenses ?? [];
 };
 
@@ -207,7 +237,9 @@ describe("licenses — the three shapes the schema permits, chosen by @effected/
 
 		const expressionBranch = (definition("licenseChoice").oneOf ?? [])[1];
 		assert.strictEqual(expressionBranch?.maxItems, 1, "the schema's expression branch is a one-element tuple");
-		assert.deepStrictEqual(expressionBranch?.items?.[0]?.required, ["expression"]);
+		const items = expressionBranch?.items;
+		assertTrue(S.is(RequiredPropertyItems)(items));
+		assert.deepStrictEqual(items[0]?.required, ["expression"]);
 
 		const emitted = licensesOf("MIT OR Apache-2.0");
 		assert.lengthOf(emitted, 1);
@@ -235,7 +267,8 @@ describe("licenses — the three shapes the schema permits, chosen by @effected/
 	it("emits only keys the schema's license object defines", () => {
 		const known = new Set(Object.keys(definition("license").properties ?? {}));
 		for (const entry of licensesOf("MIT")) {
-			const license = entry.license as Record<string, unknown>;
+			const license = entry.license;
+			assertTrue(P.isObject(license));
 			for (const key of Object.keys(license)) {
 				assert.isTrue(known.has(key), `license.${key} is not in the CycloneDX license definition`);
 			}

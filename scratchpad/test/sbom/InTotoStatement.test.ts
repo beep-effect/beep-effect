@@ -5,6 +5,7 @@
 // live in their own module rather than inside the signer.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -18,6 +19,11 @@ import {
 } from "../../effected/sbom/index.ts";
 
 const HEX = "6a13657ec19f43b1d7b95c2f0a1c1e5b8d4f7a206a13657ec19f43b1d7b95c2f";
+
+const ProvenanceStatementJson = S.Struct({
+	predicateType: S.String,
+	predicate: S.Struct({ buildDefinition: S.Struct({ buildType: S.String }) }),
+});
 
 const digestOf = (value: string): Sha256Digest => {
 	const parsed = Sha256Digest.parseResult(value);
@@ -175,10 +181,8 @@ describe("InTotoStatement", () => {
 			predicateType: SlsaProvenance.predicateType,
 			predicate: provenance,
 		});
-		const parsed = JSON.parse(statement.toJson()) as {
-			predicateType: string;
-			predicate: { buildDefinition: { buildType: string } };
-		};
+		const parsed: unknown = JSON.parse(statement.toJson());
+		assertTrue(S.is(ProvenanceStatementJson)(parsed));
 		assert.strictEqual(parsed.predicateType, "https://slsa.dev/provenance/v1");
 		assert.strictEqual(parsed.predicate.buildDefinition.buildType, SlsaProvenance.buildType);
 	});

@@ -9,13 +9,13 @@
 // the four `kind` values say which step failed, so no cause-chain flattening
 // into a message string is needed.
 
-import type { Bundle, SerializedBundle } from "@sigstore/bundle";
 import { bundleToJSON } from "@sigstore/bundle";
 import type { IdentityProvider, Signer, Witness } from "@sigstore/sign";
 import { DSSEBundleBuilder, FulcioSigner, RekorWitness } from "@sigstore/sign";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import type { IdentityTokenShape } from "./IdentityToken.ts";
@@ -79,7 +79,7 @@ export class SigningError extends S.TaggedError<SigningError>()("SigningError", 
 // did not get built" — rather than being guessed into a step it may not belong
 // to.
 const kindOf = (cause: unknown): SigningErrorKind => {
-	const code = (cause as { readonly code?: unknown } | null)?.code;
+	const code = P.hasProperty(cause, "code") ? cause.code : undefined;
 	if (typeof code !== "string") return "bundle";
 	if (code.startsWith("IDENTITY_TOKEN_")) return "identity";
 	if (code.startsWith("CA_")) return "certificate";
@@ -158,7 +158,7 @@ const make = (identity: IdentityTokenShape, options: SigstoreSignerOptions): Sig
 
 		return yield* Effect.try({
 			try: () => {
-				const serialized = bundleToJSON(bundle as Bundle) as SerializedBundle;
+				const serialized = bundleToJSON(bundle);
 				return SigstoreBundle.make({
 					mediaType: serialized.mediaType,
 					verificationMaterial: serialized.verificationMaterial,

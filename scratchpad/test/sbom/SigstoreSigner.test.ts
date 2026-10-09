@@ -9,18 +9,22 @@
 // transparency log are.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { BUNDLE_V03_MEDIA_TYPE } from "@sigstore/bundle";
 import type { Signer, Witness } from "@sigstore/sign";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
-import type { Sha256Digest } from "../../effected/sbom/index.ts";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import {
 	IN_TOTO_PAYLOAD_TYPE,
 	IdentityToken,
 	IdentityTokenError,
 	InTotoStatement,
 	SIGSTORE_BUNDLE_V0_3_MEDIA_TYPE,
+	Sha256Digest,
 	SigningError,
 	SigstoreBundle,
 	SigstoreSigner,
@@ -30,7 +34,7 @@ const HEX = "6a13657ec19f43b1d7b95c2f0a1c1e5b8d4f7a206a13657ec19f43b1d7b95c2f";
 
 const statement = InTotoStatement.forSubject({
 	name: "pkg:npm/%40effected/sbom@0.1.0",
-	digest: HEX as Sha256Digest,
+	digest: Result.getOrThrowWith(Sha256Digest.parseResult(HEX), (error) => error),
 	predicateType: "https://example.test/predicate/v1",
 	predicate: { built: true },
 });
@@ -81,11 +85,13 @@ const CANNED_BUNDLE = SigstoreBundle.make({
 	dsseEnvelope: {},
 });
 
-interface Envelope {
-	readonly payload: string;
-	readonly payloadType: string;
-	readonly signatures: ReadonlyArray<{ readonly sig: string; readonly keyid: string }>;
-}
+const Envelope = S.Struct({
+	payload: S.String,
+	payloadType: S.String,
+	signatures: S.Array(S.Struct({ sig: S.String })),
+});
+
+const WitnessedMaterial = S.Struct({ tlogEntries: S.Array(S.Struct({ logIndex: S.String })) });
 
 const signWith = (
 	options: Parameters<typeof SigstoreSigner.layerWith>[0],
@@ -112,7 +118,8 @@ describe("SigstoreSigner.sign — the real DSSE builder", () => {
 			assert.instanceOf(bundle, SigstoreBundle);
 			assert.strictEqual(bundle.mediaType, SIGSTORE_BUNDLE_V0_3_MEDIA_TYPE);
 
-			const envelope = bundle.dsseEnvelope as Envelope;
+			const envelope = bundle.dsseEnvelope;
+			assertTrue(S.is(Envelope)(envelope));
 			assert.strictEqual(envelope.payloadType, IN_TOTO_PAYLOAD_TYPE);
 			assert.strictEqual(Buffer.from(envelope.payload, "base64").toString("utf8"), statement.toJson());
 			assert.strictEqual(Buffer.from(envelope.signatures[0]?.sig ?? "", "base64").toString("utf8"), "stub-signature");
@@ -153,7 +160,8 @@ describe("SigstoreSigner.sign — the real DSSE builder", () => {
 	it.effect("carries the witness's transparency-log entries into the verification material", () =>
 		Effect.gen(function* () {
 			const bundle = yield* signWith({ signer: stubSigner(), witnesses: [stubWitness()] });
-			const material = bundle.verificationMaterial as { readonly tlogEntries: ReadonlyArray<{ logIndex: string }> };
+			const material = bundle.verificationMaterial;
+			assertTrue(S.is(WitnessedMaterial)(material));
 			assert.lengthOf(material.tlogEntries, 1);
 			assert.strictEqual(material.tlogEntries[0]?.logIndex, "1");
 		}),
@@ -166,7 +174,8 @@ describe("SigstoreSigner.sign — the real DSSE builder", () => {
 			// an empty array. A consumer that reads `.tlogEntries.length` blindly
 			// would throw on a legitimately unwitnessed bundle.
 			const bundle = yield* signWith({ signer: stubSigner(), witnesses: [] });
-			const material = bundle.verificationMaterial as { readonly tlogEntries?: ReadonlyArray<unknown> };
+			const material = bundle.verificationMaterial;
+			assertTrue(P.isObject(material));
 			assert.isUndefined(material.tlogEntries);
 			assert.property(material, "certificate");
 		}),
@@ -242,7 +251,8 @@ describe("SigstoreSigner.sign — failures, attributed", () => {
 			});
 			const error = yield* Effect.flip(signWith({ signer: failingSigner(cause), witnesses: [] }));
 			// The predecessor flattened this into a string and lost the status code.
-			assert.strictEqual((error.cause as { statusCode?: number }).statusCode, 403);
+			assertTrue(P.hasProperty(error.cause, "statusCode"));
+			assert.strictEqual(error.cause.statusCode, 403);
 		}),
 	);
 });

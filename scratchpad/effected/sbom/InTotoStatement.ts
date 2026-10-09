@@ -83,8 +83,8 @@ interface Sha256DigestStatics {
 
 const parseResult = (value: string): Result.Result<Sha256Digest, InvalidSha256DigestError> => {
 	const normalized = normalizeDigest(value);
-	return SHA256_RE.test(normalized)
-		? Result.succeed(normalized as Sha256Digest)
+	return S.is(Sha256Digest)(normalized)
+		? Result.succeed(normalized)
 		: Result.fail(InvalidSha256DigestError.make({ input: value }));
 };
 

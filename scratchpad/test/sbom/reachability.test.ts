@@ -18,8 +18,16 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import * as S from "effect/Schema";
 
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "effected", "sbom");
+
+const Manifest = S.Struct({
+	sideEffects: S.optionalKey(S.Unknown),
+	dependencies: S.optionalKey(S.Record(S.String, S.String)),
+	peerDependencies: S.optionalKey(S.Record(S.String, S.String)),
+});
 
 /** Every `from "..."` specifier in a module, ignoring type-only imports. */
 const runtimeSpecifiers = (source: string): ReadonlyArray<string> => {
@@ -158,18 +166,15 @@ describe("bundle reachability", () => {
 	it("the package declares itself side-effect free", () => {
 		// The other half of the mechanism: without this a bundler must assume
 		// evaluating an unreferenced module matters, and keeps it.
-		const manifest = JSON.parse(readFileSync(resolve(SRC, "..", "package.json"), "utf8")) as {
-			sideEffects?: unknown;
-		};
+		const manifest: unknown = JSON.parse(readFileSync(resolve(SRC, "..", "package.json"), "utf8"));
+		assertTrue(S.is(Manifest)(manifest));
 		assert.strictEqual(manifest.sideEffects, false);
 	});
 
 	it("every runtime dependency is declared", () => {
 		// A package you import but do not declare is how a peer closure rots.
-		const manifest = JSON.parse(readFileSync(resolve(SRC, "..", "package.json"), "utf8")) as {
-			dependencies?: Record<string, string>;
-			peerDependencies?: Record<string, string>;
-		};
+		const manifest: unknown = JSON.parse(readFileSync(resolve(SRC, "..", "package.json"), "utf8"));
+		assertTrue(S.is(Manifest)(manifest));
 		const declared = new Set([
 			...Object.keys(manifest.dependencies ?? {}),
 			...Object.keys(manifest.peerDependencies ?? {}),
