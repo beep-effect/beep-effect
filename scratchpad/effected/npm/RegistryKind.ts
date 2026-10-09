@@ -1,0 +1,194 @@
+import { Schema } from "effect";
+
+/**
+ * Which well-known registry a URL points at.
+ *
+ * @remarks
+ * The distinction is behavioral, not cosmetic: npm's `--provenance` is
+ * meaningful only on the public npm registry, GitHub Packages needs classic
+ * `_authToken` auth rather than a trusted-publisher exchange, and JSR is not
+ * an npm-protocol registry at all — a JSR target must be routed away from the
+ * npm publish path entirely.
+ *
+ * @public
+ */
+export const RegistryKind = Schema.Literals(["npm", "github-packages", "jsr", "custom"]);
+
+/**
+ * The decoded type of {@link (RegistryKind:variable)}.
+ *
+ * @public
+ */
+export type RegistryKind = typeof RegistryKind.Type;
+
+/** The hostname of a registry URL, or `undefined` when it does not parse. */
+const hostnameOf = (registry: string): string | undefined => {
+	try {
+		return new URL(registry).hostname.toLowerCase();
+	} catch {
+		// A bare host (`registry.npmjs.org/`) is not a URL; try again with a
+		// scheme before giving up, because npm config values are written both ways.
+		try {
+			return new URL(`https://${registry}`).hostname.toLowerCase();
+		} catch {
+			return undefined;
+		}
+	}
+};
+
+/**
+ * Whether `hostname` is `domain` or a subdomain of it.
+ *
+ * @remarks
+ * The leading dot is load-bearing: a bare `endsWith(domain)` would classify
+ * `evil-npmjs.org` as the public npm registry, and that classification decides
+ * whether a token is sent and whether provenance is requested.
+ */
+const matchesDomain = (hostname: string | undefined, domain: string): boolean =>
+	hostname !== undefined && (hostname === domain || hostname.endsWith(`.${domain}`));
+
+/**
+ * Classify a registry URL.
+ *
+ * @remarks
+ * An absent registry classifies as `"npm"`: no registry configured means the
+ * public npm registry, which is every npm client's default and this package's
+ * {@link DEFAULT_REGISTRY}.
+ *
+ * There is **one** classification rather than a boolean per registry, so a
+ * consumer `switch`es exhaustively instead of composing booleans that can
+ * disagree or negating one to mean "everything else".
+ *
+ * @param registry - A registry URL or bare host; absent or empty means the
+ *   public npm registry.
+ * @returns The registry's kind.
+ *
+ * @example
+ * ```ts
+ * import { classifyRegistry } from "./index.ts";
+ *
+ * classifyRegistry("https://registry.npmjs.org/"); // => "npm"
+ * classifyRegistry("https://npm.pkg.github.com/"); // => "github-packages"
+ * classifyRegistry("https://npm.jsr.io/"); // => "jsr"
+ * classifyRegistry("https://registry.example.com/"); // => "custom"
+ * ```
+ *
+ * @public
+ */
+export const classifyRegistry = (registry: string | undefined): RegistryKind => {
+	if (registry === undefined || registry === "") return "npm";
+	const hostname = hostnameOf(registry);
+	if (matchesDomain(hostname, "npmjs.org")) return "npm";
+	if (matchesDomain(hostname, "pkg.github.com")) return "github-packages";
+	if (matchesDomain(hostname, "jsr.io")) return "jsr";
+	return "custom";
+};
+
+/**
+ * The host of a registry URL, for use as a label.
+ *
+ * @remarks
+ * The **port is kept**, unlike the hostname used for classification: two custom
+ * registries on the same host and different ports are different registries, and
+ * a label that collapsed them would be actively misleading in a publish report.
+ *
+ * A value that does not parse as a URL falls back to stripping the scheme and
+ * everything from the first `/`, because npm config values are written both as
+ * URLs and as bare hosts and a label must render either.
+ *
+ * @param registry - A registry URL or bare host.
+ * @returns The host portion.
+ *
+ * @public
+ */
+export const registryHost = (registry: string): string => {
+	try {
+		return new URL(registry).host;
+	} catch {
+		// Scanned rather than matched. The obvious `.replace(/\/.*$/, "")` is a
+		// polynomial-backtracking regex over a value this package does not
+		// control, and CodeQL flags it; `indexOf` is linear and says the same
+		// thing.
+		const withoutScheme = registry.startsWith("https://")
+			? registry.slice(8)
+			: registry.startsWith("http://")
+				? registry.slice(7)
+				: registry;
+		const slash = withoutScheme.indexOf("/");
+		return slash === -1 ? withoutScheme : withoutScheme.slice(0, slash);
+	}
+};
+
+/**
+ * A compact label for a registry: `npm`, `github`, `jsr`, or the host.
+ *
+ * @remarks
+ * For a log-tree row or any other place a full name would not fit. The
+ * well-known registries collapse to a short name and everything else falls back
+ * to {@link registryHost}.
+ *
+ * **This is a function over the registry string, not a `RegistryKind` lookup
+ * table**, and that is forced rather than chosen: `"custom"` has no fixed
+ * label — it renders as its own host — so a table keyed by kind cannot express
+ * the projection at all.
+ *
+ * The classification comes from {@link classifyRegistry}, so the leading-dot
+ * domain guard applies here too and a look-alike host such as
+ * `evil-npmjs.org` cannot borrow the `npm` label.
+ *
+ * **Takes a plain `string`, deliberately** — unlike
+ * {@link registryDisplayName}. Its callers always have a registry in hand, so
+ * accepting a nullish value would silently absorb a wiring mistake that the
+ * compile error currently catches. "No registry configured" is a real state
+ * only where a display name is rendered.
+ *
+ * @param registry - A registry URL or bare host.
+ * @returns The short label.
+ *
+ * @public
+ */
+export const registryShortLabel = (registry: string): string => {
+	switch (classifyRegistry(registry)) {
+		case "npm":
+			return "npm";
+		case "github-packages":
+			return "github";
+		case "jsr":
+			return "jsr";
+		default:
+			return registryHost(registry);
+	}
+};
+
+/**
+ * A human-readable display name for a registry: `npm`, `GitHub Packages`,
+ * `JSR`, or the host.
+ *
+ * @remarks
+ * The spelled-out counterpart to {@link registryShortLabel}, for prose and
+ * summaries rather than table rows. The same host fallback and the same
+ * classification guard apply.
+ *
+ * An absent or empty registry resolves to the public npm registry **explicitly**
+ * rather than by relying on `classifyRegistry("")` happening to answer `"npm"`,
+ * so the intent survives a future change to that default.
+ *
+ * @param registry - A registry URL or bare host, or nothing when none is
+ *   configured. Absent or empty means the public npm registry.
+ * @returns The display name.
+ *
+ * @public
+ */
+export const registryDisplayName = (registry: string | null | undefined): string => {
+	if (registry === null || registry === undefined || registry === "") return "npm";
+	switch (classifyRegistry(registry)) {
+		case "npm":
+			return "npm";
+		case "github-packages":
+			return "GitHub Packages";
+		case "jsr":
+			return "JSR";
+		default:
+			return registryHost(registry);
+	}
+};

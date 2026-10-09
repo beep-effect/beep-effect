@@ -2935,13 +2935,354 @@
       "wave": 2,
       "position": 2,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "drivers",
       "upstreamPaths": {
         "src": "packages/npm/src",
         "test": "packages/npm/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "BasicCredential",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CachingPackageManager",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CatalogAssemblyError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CatalogResolver",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CatalogSpecifier",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ClassifiedSpecifier",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CorepackIntegrityHash",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "DEFAULT_REGISTRY",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "Default",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "DefaultCacheDirectoryOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DependencyField",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DependencyKind",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DependencyProtocol",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DependencyResolutionError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DependencySection",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DependencySpecifier",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "DependencySpecifierBrand",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DistTagSpecifier",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DryRunOutcome",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "IntegrityAlgorithm",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "IntegrityHash",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "IntegrityHashBrand",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "InvalidDependencySpecifierError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InvalidIntegrityHashError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InvalidPackageManagerPinError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InvalidSriIntegrityHashError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Manifest",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ManifestDecodeError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "NpmExecutor",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "NpmRegistry",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "NpmRegistryShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PackOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PackageManagerCache",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageManagerPin",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageManagerPinName",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackagePublish",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackagePublishShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PackageTarball",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageTarballShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PackedTarball",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PartialReleaseAgeGate",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PublishError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PublishOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PublishOutcome",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PublishTime",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PublishedVersion",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RangeSpecifier",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RawSpecifier",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RegistryCredential",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RegistryKind",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RegistryReadError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RegistrySeed",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RegistryTarget",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ReleaseAgeGate",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SeededVersion",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "SriIntegrityHash",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "TarballError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TokenCredential",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "UnresolvedDependencyError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceResolver",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceSpecifier",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "basicCredentialFromPair",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "classifyRegistry",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "isValidDependencySpecifier",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "isValidIntegrityHash",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "registryDisplayName",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "registryHost",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "registryShortLabel",
+          "kind": "value",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 0,
