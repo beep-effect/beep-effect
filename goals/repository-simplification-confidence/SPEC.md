@@ -798,3 +798,22 @@ After D's release-policy PR #1566 lands, remove the unused `changesets/action@*`
 ### 2026-10-09 — E hosted governance job-token proof
 
 Move live ruleset, desktop settings and held-main reads from the contents-only verification matrix to the existing Security job, adding only `actions: read` there. Keep pure workflow lint in Repo Sanity. Reason: human review found the push-only Actions API calls unproven under GITHUB_TOKEN, despite successful personal-token probes. Run the hosted reads on PRs too, after dependency review, to establish that exact job-token path before merge. A held-main failure is repository-state evidence and must be attributed accordingly. Reverse the workflow/test change together; no writer credential, environment attachment or other job permission is broadened.
+
+### 2026-10-09 — G final compiler and cache output qualification
+
+- Collect refusal warnings directly from the typed recovery rows in one
+  `A.flatMap`. Reason: the compiler rejected contextual inference through the
+  nested filter; warning selection and order remain the same. Reverse this
+  expression change with its source commit; persisted archives are unaffected.
+- A clean-output cache fixture clears its owned TypeScript incremental state
+  as well as `dist`, retains an incremental-state backup, and checks required
+  public outputs plus complete SHA-256 manifests. Reason: exit 0 and a task
+  MISS did not prove healthy output when stale incremental state skipped
+  declarations and the public index. Reverse by discarding the owned fixture
+  checkout/cache; the earlier incomplete artifact remains quarantined and no
+  foreign cache or generated build script was changed. Shared owns the broader
+  generated-script/output coupling follow-up.
+- Report scoped coverage percentages and absolute uncovered counts separately.
+  Reason: percentages improved while added implementation increased absolute
+  uncovered counts; the existing baseline must not be refreshed to hide that.
+  Reversal is the receipt commit; no coverage policy or floor changed.
