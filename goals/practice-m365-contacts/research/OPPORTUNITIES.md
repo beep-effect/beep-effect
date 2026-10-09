@@ -96,3 +96,20 @@
   observation at the seeding runbook's state-directory example. Replaced it
   with `<state-home>` and the environment-variable/default description. The
   earlier inherited observation is historical; this run uses the new result.
+
+- Resume app verification reached the strict compiler after 40 successful
+  dependency tasks; three composition diagnostics remained. Fix `b19e9a1036`
+  expresses pipeable layer building and scopes the executable's runtime context.
+  Replacement proof is required; upstream success is not an app pass.
+
+## 2026-10-09 — fallow qualification of rollback branches
+
+- Activity: hosted-parity fallow audit, dead-code and health.
+- Evidence: two introduced dead export/type findings for `ContactsFailureReason`
+  and three complexity findings in undo selection and HTTP fixture generation.
+  Health itself passed.
+- Remediation: internal failure domain, side-effect-free selection and count
+  passes, explicit undo validation and empty-owned-folder cleanup, and a simpler
+  fixture response constructor. No suppressions or baseline edits.
+- Prevention: run fallow after the initial schema/service implementation rather
+  than after the broad dependent docgen proof.

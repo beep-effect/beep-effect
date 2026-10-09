@@ -35,12 +35,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0/P1/P2 in progress. Route A consumes the existing certificate registration.
-The orchestrator adds the attorney-only RBAC contacts grant after PR 1 merges.
-The driver, private seeding app and grant/reversal runbook are implemented;
-qualification is blocked by repeating shared heavy admission starvation after
-waiter restarts and batching. The repaired replacement gates did not execute.
-No live call or mailbox write has run. The handoff records the resume order.
+P1 implementation is done; P0 and P2 remain in progress. Route A consumes the
+existing certificate registration. The orchestrator adds the attorney-only RBAC
+contacts grant after PR 1 merges. All three edited-package verifications and test
+typechecks pass. Driver docgen and knowledge references pass; identity-dependent
+infra docgen has an attributed inherited third-party failure under S11. JSDoc ratchet, fallow and scoped coverage also pass. Publication is next. No live mailbox call or write has run.
 
 ## Latest Evidence
 

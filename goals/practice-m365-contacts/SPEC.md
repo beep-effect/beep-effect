@@ -187,18 +187,18 @@ This spec binds to them without restating.
 
 ## Acceptance Criteria
 
-- [ ] Either auth lane injects into the unchanged REST service boundary in
+- [x] Either auth lane injects into the unchanged REST service boundary in
       tests, and no configuration shape can mix PKCE scopes with app-only
       credentials.
-- [ ] Contact and contact-folder create/list verbs are fixture-proven for
+- [x] Contact and contact-folder create/list verbs are fixture-proven for
       both lanes (method, URL, content type, body, decoded response,
       non-retry behavior).
 - [ ] The seeding job dry-runs against the CSVs (report: creates, dedup
       skips, conflicts) before any write; the executed run
       discovers-or-creates the dedicated folder and seeds it with tagged
       contacts and a recorded rollback path.
-- [ ] `bun run beep quality package-verify @beep/m365` passes.
-- [ ] No unrelated refactors or formatting churn.
+- [x] `bun run beep quality package-verify @beep/m365` passes.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
