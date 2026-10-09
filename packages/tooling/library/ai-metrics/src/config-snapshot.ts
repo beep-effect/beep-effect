@@ -656,9 +656,12 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
     .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot detect Git snapshot enumeration.", cause)));
   if (
     gitCode !== 0 &&
-    (yield* fs
-      .exists(pathApi.join(repoRoot, ".git"))
-      .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot inspect Git snapshot metadata.", cause))))
+    A.contains(
+      yield* fs
+        .readDirectory(repoRoot)
+        .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot inspect Git snapshot metadata.", cause))),
+      ".git"
+    )
   )
     return yield* configSnapshotFailure("Git metadata exists but cannot be resolved.", gitCode);
   const tracked = yield* gitCode === 0

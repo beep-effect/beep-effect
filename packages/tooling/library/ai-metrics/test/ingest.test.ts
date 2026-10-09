@@ -136,6 +136,9 @@ const ForwarderStampScenario = LiteralKit([
   "unreadable",
   "refused",
   "disarmed",
+  "prefix",
+  "empty-sentinel",
+  "custom-sentinel",
 ]);
 
 const encodeUnknownJsonEffect = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
