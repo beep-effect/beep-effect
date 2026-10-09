@@ -1,7 +1,7 @@
 {
-  "sourceHead": "5a79cbc49a8cd76145db5ead3157f8e0dcc18242",
-  "mainHead": "51740fd5e6e1bb39fbb943137afc06c7cea1db96",
-  "inventorySha256": "0694e97b26e95f4b2b6125b0301cc4c7d015033787d6195c1465faf25283a94f",
+  "sourceHead": "66953b8bf1f5c2b9dc7cfac3805394683e87c8f5",
+  "mainHead": "2eefbb64af5f1b374d1a012b879a3b747e68507e",
+  "inventorySha256": "c071e14c088ed76ec6e8b967595bf2d7ffb0302e1b35d8608420e94b855ab990",
   "effectVitestVersion": "4.0.2",
   "historicalRowCount": 15513,
   "historicalIdsRemainImmutable": true,
@@ -17,25 +17,25 @@
     "open": 716
   },
   "lineage": {
-    "unchangedIds": 1756,
-    "reanchoredIds": 61,
+    "unchangedIds": 1752,
+    "reanchoredIds": 65,
     "unmatchedOldRows": 50,
     "unmatchedNewRows": 24,
     "liveRowsWithHistoricalOccurrenceLink": 1172,
-    "liveRowsWithExactHistoricalId": 270
+    "liveRowsWithExactHistoricalId": 269
   },
   "unmatchedOldByRule": {
     "EV002": 35,
+    "EV001": 4,
     "EV014": 9,
-    "EV003": 2,
-    "EV001": 4
+    "EV003": 2
   },
   "unmatchedNewByRule": {
     "EV004": 11,
+    "EV014": 1,
     "EV002": 10,
     "EV015": 1,
-    "EV010": 1,
-    "EV014": 1
+    "EV010": 1
   },
   "rows": [
     {
@@ -2156,31 +2156,31 @@
       "disposition": "new-live-candidate"
     },
     {
-      "liveId": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:256:provideScopedLayer@6#1",
+      "liveId": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:257:provideScopedLayer@6#1",
       "historicalIds": [],
       "mainId": null,
       "disposition": "new-live-candidate"
     },
     {
-      "liveId": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:455:provideScopedLayer@12#1",
+      "liveId": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:471:provideScopedLayer@12#1",
       "historicalIds": [],
       "mainId": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:377:provideScopedLayer@12#1",
       "disposition": "new-live-candidate"
     },
     {
-      "liveId": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:492:provideScopedLayer@12#1",
+      "liveId": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:508:provideScopedLayer@12#1",
       "historicalIds": [],
       "mainId": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:414:provideScopedLayer@12#1",
       "disposition": "new-live-candidate"
     },
     {
-      "liveId": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:555:provideScopedLayer@7#1",
+      "liveId": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:571:provideScopedLayer@7#1",
       "historicalIds": [],
       "mainId": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:477:provideScopedLayer@7#1",
       "disposition": "new-live-candidate"
     },
     {
-      "liveId": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:580:provideScopedLayer@12#1",
+      "liveId": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:596:provideScopedLayer@12#1",
       "historicalIds": [
         "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:86:provideScopedLayer@12#1"
       ],
@@ -2188,13 +2188,13 @@
       "disposition": "historical-link"
     },
     {
-      "liveId": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:614:provideScopedLayer@12#1",
+      "liveId": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:630:provideScopedLayer@12#1",
       "historicalIds": [],
       "mainId": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:536:provideScopedLayer@12#1",
       "disposition": "new-live-candidate"
     },
     {
-      "liveId": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:631:provideScopedLayer@12#1",
+      "liveId": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:647:provideScopedLayer@12#1",
       "historicalIds": [],
       "mainId": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:553:provideScopedLayer@12#1",
       "disposition": "new-live-candidate"
@@ -4100,19 +4100,19 @@
       "disposition": "new-live-candidate"
     },
     {
-      "liveId": "EV003:packages/tooling/tool/cli/test/yeet-packet-issue-lane-record.test.ts:309:withTempRepo@21#1",
+      "liveId": "EV003:packages/tooling/tool/cli/test/yeet-packet-issue-lane-record.test.ts:311:withTempRepo@21#1",
       "historicalIds": [],
       "mainId": "EV003:packages/tooling/tool/cli/test/yeet-packet-issue-lane-record.test.ts:309:withTempRepo@21#1",
       "disposition": "new-live-candidate"
     },
     {
-      "liveId": "EV003:packages/tooling/tool/cli/test/yeet-packet-issue-lane-record.test.ts:333:withTempRepo@4#1",
+      "liveId": "EV003:packages/tooling/tool/cli/test/yeet-packet-issue-lane-record.test.ts:335:withTempRepo@4#1",
       "historicalIds": [],
       "mainId": "EV003:packages/tooling/tool/cli/test/yeet-packet-issue-lane-record.test.ts:333:withTempRepo@4#1",
       "disposition": "new-live-candidate"
     },
     {
-      "liveId": "EV003:packages/tooling/tool/cli/test/yeet-packet-issue-lane-record.test.ts:380:withTempRepo@4#1",
+      "liveId": "EV003:packages/tooling/tool/cli/test/yeet-packet-issue-lane-record.test.ts:382:withTempRepo@4#1",
       "historicalIds": [],
       "mainId": "EV003:packages/tooling/tool/cli/test/yeet-packet-issue-lane-record.test.ts:380:withTempRepo@4#1",
       "disposition": "new-live-candidate"
@@ -5529,13 +5529,13 @@
       "disposition": "new-live-candidate"
     },
     {
-      "liveId": "EV005:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:610:result@28#1",
+      "liveId": "EV005:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:626:result@28#1",
       "historicalIds": [],
       "mainId": "EV005:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:532:result@28#1",
       "disposition": "new-live-candidate"
     },
     {
-      "liveId": "EV005:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:629:result@28#1",
+      "liveId": "EV005:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:645:result@28#1",
       "historicalIds": [],
       "mainId": "EV005:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:551:result@28#1",
       "disposition": "new-live-candidate"
@@ -8726,7 +8726,7 @@
       "disposition": "historical-link"
     },
     {
-      "liveId": "EV010:packages/tooling/tool/cli/test/delete-package-labs.test.ts:21:@effect/platform-node@0#1",
+      "liveId": "EV010:packages/tooling/tool/cli/test/delete-package-labs.test.ts:22:@effect/platform-node@0#1",
       "historicalIds": [
         "EV010:packages/tooling/tool/cli/test/delete-package-labs.test.ts:21:@effect/platform-node@0#1"
       ],

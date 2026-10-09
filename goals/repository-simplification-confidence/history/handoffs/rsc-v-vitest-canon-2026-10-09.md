@@ -193,3 +193,21 @@ is inferred. The lane cgroup readback is MemoryHigh 36 GiB / MemoryMax 40 GiB.
 Publication runs directly with TURBO_CONCURRENCY=2 under the explicit ruling;
 no peer job or source worktree is changed. R105 remains a follow-up after the
 integration PR merges. Final publication/ready/remote review evidence follows.
+
+### Run 4 content-final retry qualification boundary
+
+Code head `66953b8bf1f5c2b9dc7cfac3805394683e87c8f5` contains the new
+schema-generated plan serialization property. The first direct-check variant
+passed Node/Bun (230 cases, 23.604 / 19.300 s) and test-tsgo (19.950 s), but
+introduced EV007. Those results are historical to `3aa4c41ab9`. The canonical
+`it.effect.prop` registration preserves the 25-run floor, shrinking and replay;
+separate Opus 5.5 medium review is terminal zero. The unfinished direct-variant
+package stage was stopped before changing source and has no terminal result.
+The final registration's full collector is queued through beep-heavy.
+
+A fresh owner scan at the code head returns 1,853 / 716 open / 1,137 exceptions.
+The current linkage has 1,752 stable IDs, 65 re-anchors, 50 unmatched old and
+24 unmatched new occurrence keys, 1,172 live historical links and 269 exact
+historical IDs; 15,513 historical IDs remain immutable. The source code and
+projection are frozen for another canonical publication retry. No final-head
+runtime/package/parity result is claimed until the collector writes it.

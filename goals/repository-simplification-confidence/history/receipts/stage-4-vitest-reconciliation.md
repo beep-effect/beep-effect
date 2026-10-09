@@ -124,18 +124,19 @@ No second worktree is created and no other session's checkout is edited.
 
 Starting main snapshot: **1,879 total / 741 open / 1,138 exceptions** under
 Effect/Vitest **4.0.2**. Fresh final-source scan: **1,853 total / 716 open / 1,137 exceptions**.
-The generated snapshot is tied to merged source `5a79cbc49a8cd76145db5ead3157f8e0dcc18242`
-and main `51740fd5e6e1bb39fbb943137afc06c7cea1db96` (#1563). The 37 reviewed
-owned files remain byte-identical to the terminal-zero source snapshot.
+The generated snapshot is tied to source `66953b8bf1f5c2b9dc7cfac3805394683e87c8f5`
+and main `2eefbb64af5f1b374d1a012b879a3b747e68507e`. Thirty-five reviewed
+files remain byte-identical to R7; main's changeset-remedy assertion and the
+new canonical plan property have separate terminal-zero Run 4 review.
 Re-anchors from #1552 import layout and #1555 primitive pin shifts are counted
 separately from resolved semantic rows. Inventory is generated, never merged.
 
 The authored linkage record is
 `goals/effect-vitest-canon/ops/inventory/reconciliation/rsc-v-vitest-canon-2026-10-09.json`.
-All 15,513 historical IDs remain unchanged. Of current rows, 1,756 IDs are
-unchanged relative to main and 61 re-anchor; 50 old and 24 new occurrence keys
+All 15,513 historical IDs remain unchanged. Of current rows, 1,752 IDs are
+unchanged relative to main and 65 re-anchor; 50 old and 24 new occurrence keys
 are unmatched (net minus 26). 1,172 current rows link to historical occurrence
-keys, including 270 exact historical IDs. Churn includes #1552 import layout,
+keys, including 269 exact historical IDs. Churn includes #1552 import layout,
 #1555 pin movement and this integration's semantic/test changes; unmatched
 rows are not automatically treated as fixed. Human-lens statuses are preserved.
 
@@ -268,3 +269,16 @@ and no count change. This supersedes the prior generated projection for the
 serialized integration PR. Source proof results remain attributed to their
 recorded heads; main's one-line changeset-remedy assertion updates yeet.test.ts.
 The 20:30Z ruling authorizes direct capped Yeet publication for this wave.
+
+### Run 4 property and inventory final-source boundary
+
+Publication exposed a missing schema-derived property in command wiring.
+Added a generated plan print/decode property, then repaired both P3 review
+findings and registered it through `it.effect.prop` (25 runs, schema-derived
+input, complete context and lossless-step equivalence). Separate Opus 5.5
+medium re-review returned terminal zero. All 37 source files were re-hashed;
+35 match R7 and the two changed files have the new review chain. The final
+owner scan at `66953b8bf1` is 1,853 / 716 / 1,137; the temporary direct-property
+EV007 row is absent. The authored linkage includes all 15,513 immutable
+historical IDs and the current inventory digest. New full package/parity proof
+remains queued and is not inferred from the earlier passing source snapshot.
