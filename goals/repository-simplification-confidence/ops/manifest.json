@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "repository-simplification-confidence",
+    "packetId": "goal-packet/v1:5bb5449956df01568f7d856c0dba3cae08f7827c96b10a53b0bdac50743a2730",
+    "title": "Repository Simplification and Confidence",
+    "status": "active",
+    "created": "2026-10-09",
+    "updated": "2026-10-09",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/repository-simplification-confidence",
+  "lifecycle": "active",
+  "mission": "Retire tools without a demonstrated purpose, reach honest zero actionable debt, and give operational claims current evidence",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/repository-simplification-confidence/README.md",
+    "goals/repository-simplification-confidence/SPEC.md",
+    "goals/repository-simplification-confidence/PLAN.md",
+    "goals/repository-simplification-confidence/GOAL.md",
+    "goals/repository-simplification-confidence/research/SOURCES.md",
+    "goals/repository-simplification-confidence/research/BRIEF-2026-10-09.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/BRIEF-2026-10-09.md",
+    "research/baseline-2026-10-09.md",
+    "research/knip-findings-2026-10-09.md",
+    "research/OPPORTUNITIES.md",
+    "research/panel-acceptance-2026-10-09.md",
+    "research/sweeps/2026-10-09/README.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/repository-simplification-confidence/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "in-progress"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/repository-simplification-confidence/GOAL.md)\" -le 4000",
+    "jq . goals/repository-simplification-confidence/ops/manifest.json",
+    "rg -n \"repository-simplification-confidence|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/repository-simplification-confidence",
+    "git diff --check -- goals/repository-simplification-confidence",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
