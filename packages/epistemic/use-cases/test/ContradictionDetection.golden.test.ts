@@ -1,5 +1,6 @@
 import { ContradictionCandidate, hasValidSeals } from "@beep/epistemic-domain/entities/Contradiction";
 import {
+  ContradictionAssessment,
   ContradictionCandidateContent,
   contradictionCandidateDigest,
   contradictionCandidateKey,
@@ -76,6 +77,23 @@ const conformance = Effect.fnUntraced(function* (record: DetectedContradiction, 
 });
 
 describe("Contradiction detection golden vectors", () => {
+  it.effect(
+    "encodes both proposals through the shipped non-empty assessment field",
+    Effect.fnUntraced(function* () {
+      const snapshot = yield* S.decodeUnknownEffect(ContradictionDetectionSnapshot)(A.getUnsafe(vectors, 0).snapshot);
+      const record = A.getUnsafe(yield* detect(snapshot), 0);
+      const wire: typeof ContradictionAssessment.Encoded = {
+        confidence: record.assessment.confidence,
+        proposals: yield* S.encodeEffect(ContradictionAssessment.fields.proposals)(record.assessment.proposals),
+      };
+      const assessment = yield* S.decodeEffect(ContradictionAssessment)(wire);
+      expect(A.length(assessment.proposals)).toBe(2);
+      expect(A.map(assessment.proposals, (proposal) => proposal.proposalId)).toEqual(
+        A.map(record.assessment.proposals, (proposal) => proposal.proposalId)
+      );
+      assertTrue(Result.isFailure(S.decodeUnknownResult(ContradictionAssessment)({ ...wire, proposals: [] })));
+    })
+  );
   for (const [vector, index] of A.map(vectors, (vector, index) => Tuple.make(vector, index))) {
     it.effect(
       vector.name,

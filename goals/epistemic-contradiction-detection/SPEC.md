@@ -284,6 +284,18 @@ versioned entrypoint change may relocate the schemas, preserving client safety.
 Hosted Storybook separately exposed a non-empty proposals typing error at
 ContradictionDetection.layer.ts:135; it remains outstanding at the stop.
 
+### 2026-10-09 — Run-3 qualification rulings
+
+Private packages carry no changesets per #1566; reversal: none needed, the
+policy is repo-wide. The former private-package note is removed under the
+orchestrator's explicit superseding ruling.
+
+Decode the sorted proposals through the shipped assessment field's type codec,
+then encode through that same non-empty field. This preserves both proposals
+and its non-empty encoded tuple without casts. A typed wire regression checks
+both proposals survive and an empty assessment fails. Reversal: replace this
+codec only with an equivalent schema-derived non-empty representation.
+
 ## Acceptance Criteria
 
 - [ ] The conflict-class seat question above is answered on the record in
