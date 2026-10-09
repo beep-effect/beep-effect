@@ -114,3 +114,20 @@ Root ONNX declarations, owning dependency, override and patch remain unchanged
 under the orchestrator's H1 ownership ruling. Existing terminal proof is retained;
 full package verification and scoped docgen are rerunning only because their
 last attempts failed or lacked a terminal result. No acceptance row is closed.
+
+### Run 3 settled local evidence
+
+Independent review is terminal zero actionable findings at `c43d86e953`, after
+repairing the relative-checkout Cache defect. The repaired Cache suite passes
+8 cases, including intended-file editing, original-content backup and duplicate
+refusal. Test-tsgo passes all 334 selected files. Explicit package-scoped docgen
+passes (27.2 seconds); the subsequent default package docgen result remains open.
+Owner regeneration reports 152 manifests with zero drift and zero writes; cache
+profile regeneration adds no tracked changes. CI=true knowledge refs at imported
+head exits 0 with zero live gated observations. The refreshed census records
+zero live callers for all nine removed script paths.
+
+Full package qualification and draft publication are active or queued through
+the authorized heavy wrapper; terminal verdicts and E workflow review remain
+required. None of these partial results closes the coordinated Ci group or
+claims hosted readiness.
