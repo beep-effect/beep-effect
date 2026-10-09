@@ -4809,16 +4809,192 @@
       "wave": 3,
       "position": 2,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
         "src": "packages/tsconfig-json/src",
         "test": "packages/tsconfig-json/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "CompilerOptions",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CompilerOptionsFromProgrammatic",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "EnumFamily",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "FallbackPolling",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "FindNearestOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Jsx",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "JsxConfig",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Lib",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "Module",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "ModuleDetection",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "ModuleResolution",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "NewLine",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "PortableTsconfig",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PortableTsconfigOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ProgrammaticCompilerOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ProgrammaticCompilerOptionsValue",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ProgrammaticRecord",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Reference",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ResolvedTsconfig",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SyncFileSystem",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "SyncPath",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Target",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "TsEnumCodec",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TsconfigDiscovery",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TsconfigExtendsError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TsconfigJson",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TsconfigJsonFromString",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "TsconfigLoader",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TsconfigLoaderSync",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TsconfigLoaderSyncOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "TsconfigParseError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TypeAcquisition",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WatchDirectory",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "WatchFile",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "WatchOptions",
+          "kind": "both",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
       "newDeps": [],
-      "fixturesBytes": 0,
+      "fixturesBytes": 1504,
       "deviations": [],
       "backlog": [],
       "reviewRounds": [],
