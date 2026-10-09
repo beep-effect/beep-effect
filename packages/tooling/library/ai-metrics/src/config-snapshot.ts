@@ -203,19 +203,19 @@ export class AiMetricsConfigSnapshotBudget extends S.Class<AiMetricsConfigSnapsh
   $I`AiMetricsConfigSnapshotBudget`
 )(
   {
-    maxDepth: S.Finite.pipe(
+    maxDepth: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(DEFAULT_MAX_DEPTH)),
       S.withDecodingDefaultKey(Effect.succeed(DEFAULT_MAX_DEPTH))
     ),
-    maxFileBytes: S.Finite.pipe(
+    maxFileBytes: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(DEFAULT_MAX_FILE_BYTES)),
       S.withDecodingDefaultKey(Effect.succeed(DEFAULT_MAX_FILE_BYTES))
     ),
-    maxFiles: S.Finite.pipe(
+    maxFiles: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(DEFAULT_MAX_FILES)),
       S.withDecodingDefaultKey(Effect.succeed(DEFAULT_MAX_FILES))
     ),
-    maxTotalBytes: S.Finite.pipe(
+    maxTotalBytes: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(DEFAULT_MAX_TOTAL_BYTES)),
       S.withDecodingDefaultKey(Effect.succeed(DEFAULT_MAX_TOTAL_BYTES))
     ),
@@ -826,9 +826,11 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
   // exhaust the budget and starve `AGENTS.md`/`CLAUDE.md` out of the snapshot entirely. That is
   // worse than truncation: both are session-scope paths, so losing them silently changes the
   // session/baseline split and corrupts `sessionHash` rather than merely shrinking the snapshot.
-  yield* walk(pathApi.join(repoRoot, "AGENTS.md"), 0, () => true);
-  yield* walk(pathApi.join(repoRoot, "CLAUDE.md"), 0, () => true);
-  yield* walk(pathApi.join(repoRoot, ".mcp.json"), 0, () => true);
+  yield* Effect.forEach(
+    SessionScopePath.literals,
+    (relative) => walk(pathApi.join(repoRoot, relative), 0, () => true),
+    { discard: true }
+  );
   yield* walk(repoRoot, 0, isAgentDocName);
   yield* Effect.forEach(
     CONFIG_ROOTS,

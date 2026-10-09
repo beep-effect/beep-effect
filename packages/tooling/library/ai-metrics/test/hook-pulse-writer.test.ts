@@ -984,6 +984,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse writer confo
         const hook_event_name = writer === cursorWriterPath ? "sessionStart" : "SessionStart";
         const run = yield* runWriter(yield* encodeJson({ ...sessionStartPayload(root), hook_event_name }), {
           writerPath: writer,
+          registeredEvent: writer === cursorWriterPath ? "sessionStart" : undefined,
         });
         expect(run.stdout).toBe(writer === cursorWriterPath ? "{}\n" : "");
         expect(run.rows).toHaveLength(1);

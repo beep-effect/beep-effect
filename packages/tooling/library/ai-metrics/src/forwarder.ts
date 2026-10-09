@@ -211,7 +211,8 @@ const recordAvoidsStampGaps = (
   record: AiMetricsDerivedTranscriptRecord,
   client: HookPulseAgentKind,
   gaps: O.Option<ReadonlyArray<SessionStampGap>>,
-  closedAt: O.Option<number>
+  closedAt: O.Option<number>,
+  openingAt: O.Option<number>
 ): boolean =>
   O.exists(gaps, (known) => {
     const relevant = A.filter(known, (gap) => O.isNone(gap.client) || O.contains(gap.client, client));
@@ -219,11 +220,13 @@ const recordAvoidsStampGaps = (
     const start = O.flatMap(sanitized.firstTimestamp, timestampEpoch);
     const last = O.flatMap(sanitized.lastTimestamp, timestampEpoch);
     if (O.isNone(start) || O.isNone(last) || last.value < start.value) return false;
+    if (O.isNone(openingAt) || openingAt.value > start.value) return false;
+    const beginning = openingAt.value;
     const end = O.getOrElse(closedAt, () => last.value);
     return A.every(
       relevant,
       (gap) =>
-        O.exists(gap.end, (last) => last < start.value) ||
+        O.exists(gap.end, (last) => last < beginning) ||
         (gap.eventLoss
           ? O.exists(closedAt, (closed) => O.exists(gap.start, (first) => first > closed))
           : O.exists(gap.start, (first) => first > end))
@@ -1372,7 +1375,8 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
               O.exists(MutableHashMap.get(lastObserved, key), (last) => end >= last) &&
               O.exists(O.flatMap(sanitized.lastTimestamp, timestampEpoch), (last) => end >= last)
           );
-          if (!recordAvoidsStampGaps(record, agentKind, stampGaps, closedAt)) return O.none();
+          if (!recordAvoidsStampGaps(record, agentKind, stampGaps, closedAt, MutableHashMap.get(firstObserved, key)))
+            return O.none();
           return pipe(
             MutableHashMap.get(sessions, key),
             O.filter(() =>

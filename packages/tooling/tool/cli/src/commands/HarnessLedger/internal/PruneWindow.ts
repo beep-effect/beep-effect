@@ -324,7 +324,10 @@ const windowReport = (
       })
     )
   );
-  const parentSummary = (tally: SessionTally): SessionTally => O.getOrElse(R.get(summaries, tally.parent), () => tally);
+  const parentSummary = (tally: SessionTally): SessionTally => {
+    const summary = O.getOrElse(R.get(summaries, tally.parent), () => tally);
+    return { ...summary, endedAt: O.filter(summary.endedAt, (end) => end >= summary.maxTs) };
+  };
   const parentRegime = (tally: SessionTally) => regimeOf(parentSummary(tally), harnessHash);
   const active = (tally: SessionTally) => {
     const summary = parentSummary(tally);
@@ -524,6 +527,7 @@ class TranscriptFileCounts extends S.Class<TranscriptFileCounts>($I`TranscriptFi
   calls: S.Natural,
   undecodableLines: S.Natural,
   identityConflict: S.Boolean,
+  bindingHash: S.OptionFromOptionalKey(S.String),
 }) {}
 
 const transcriptToolCount = (row: typeof TranscriptRow.Type): number => {
@@ -555,29 +559,50 @@ const foldTranscriptLine = (tally: TranscriptTally, line: string): TranscriptTal
     },
   });
 
+class ReconciliationHookBinding extends S.Class<ReconciliationHookBinding>($I`ReconciliationHookBinding`)({
+  identities: S.Array(S.String),
+  count: S.Natural,
+}) {}
+
 const foldReconciliationHook = (
   row: HookPulseV1,
   agentKind: HookPulseAgentKind,
-  sessionHooks: MutableHashMap.MutableHashMap<string, number>,
+  bindings: MutableHashMap.MutableHashMap<string, ReconciliationHookBinding>,
   hooks: MutableHashMap.MutableHashMap<string, number>
 ): void => {
   if (row.instrumentClass !== "production" || row.agentKind !== agentKind || !isTerminalToolEvent(row.hookEvent))
     return;
-  MutableHashMap.set(
-    sessionHooks,
-    row.sessionId,
-    O.getOrElse(MutableHashMap.get(sessionHooks, row.sessionId), () => 0) + 1
-  );
   O.match(row.transcriptPath, {
     onNone: F.constVoid,
-    onSome: (key) => MutableHashMap.set(hooks, key, O.getOrElse(MutableHashMap.get(hooks, key), () => 0) + 1),
+    onSome: (key) => {
+      const prior = MutableHashMap.get(bindings, key);
+      MutableHashMap.set(
+        bindings,
+        key,
+        ReconciliationHookBinding.make({
+          identities: A.dedupe([
+            row.sessionId,
+            ...O.getOrElse(
+              O.map(prior, (value) => value.identities),
+              A.empty<string>
+            ),
+          ]),
+          count:
+            O.getOrElse(
+              O.map(prior, (value) => value.count),
+              () => 0
+            ) + 1,
+        })
+      );
+      MutableHashMap.set(hooks, key, O.getOrElse(MutableHashMap.get(hooks, key), () => 0) + 1);
+    },
   });
 };
 
 const readReconciliationHooks = Effect.fn("HarnessLedger.readReconciliationHooks")(function* (
   stateDir: string,
   agentKind: HookPulseAgentKind,
-  sessionHooks: MutableHashMap.MutableHashMap<string, number>,
+  bindings: MutableHashMap.MutableHashMap<string, ReconciliationHookBinding>,
   hooks: MutableHashMap.MutableHashMap<string, number>
 ) {
   const fs = yield* FileSystem.FileSystem;
@@ -592,7 +617,7 @@ const readReconciliationHooks = Effect.fn("HarnessLedger.readReconciliationHooks
         onFailure: () => {
           undecodableLines += 1;
         },
-        onSuccess: (row) => foldReconciliationHook(row, agentKind, sessionHooks, hooks),
+        onSuccess: (row) => foldReconciliationHook(row, agentKind, bindings, hooks),
       });
     }
   }
@@ -695,6 +720,9 @@ const selectTranscriptRepresentatives = Effect.fnUntraced(function* (
     });
     const hookKeys = A.dedupe([
       pathHash,
+      yield* hashPrivateIdentifier(canonical.value, hashSalt).pipe(
+        Effect.mapError(HarnessLedgerIoError.wrap("Cannot hash canonical transcript identity."))
+      ),
       ...O.getOrElse(
         O.map(prior, (old) => old.candidate.hookKeys),
         A.empty<string>
@@ -739,8 +767,13 @@ const readTranscriptCounts = Effect.fn("HarnessLedger.readTranscriptCounts")(fun
     ? Str.split(path.relative(transcriptDir, physicalFile.value), path.sep)
     : A.empty<string>();
   const parent =
-    agentKind === "claude-code" && A.length(relative) > 1
-      ? A.findFirst(relative, isParentSessionSegment)
+    agentKind === "claude-code"
+      ? A.findFirst(
+          relative,
+          (segment, index) =>
+            isParentSessionSegment(segment) &&
+            (relative[index + 1] === "subagents" || relative[index + 1] === "workflow")
+        )
       : O.none<string>();
   const session = tally.identityConflict ? O.none<string>() : O.orElse(parent, () => tally.session);
   const sessionHash = yield* hashPrivateIdentifier(
@@ -755,7 +788,14 @@ const readTranscriptCounts = Effect.fn("HarnessLedger.readTranscriptCounts")(fun
     pathHash,
     calls: tally.calls,
     undecodableLines: tally.undecodableLines + (tally.identityConflict ? 1 : 0),
-    identityConflict: tally.identityConflict,
+    identityConflict: tally.identityConflict || O.isNone(tally.session),
+    bindingHash: O.isSome(tally.session)
+      ? O.some(
+          yield* hashPrivateIdentifier(tally.session.value, hashSalt).pipe(
+            Effect.mapError(HarnessLedgerIoError.wrap("Cannot hash recorded transcript identity."))
+          )
+        )
+      : O.none(),
   });
 });
 
@@ -786,8 +826,8 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
     Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve reconciliation hash namespace."))
   );
   const hooks = MutableHashMap.empty<string, number>();
-  const sessionHooks = MutableHashMap.empty<string, number>();
-  let undecodableLines = yield* readReconciliationHooks(stateDir, agentKind, sessionHooks, hooks);
+  const bindings = MutableHashMap.empty<string, ReconciliationHookBinding>();
+  let undecodableLines = yield* readReconciliationHooks(stateDir, agentKind, bindings, hooks);
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const canonical = path.resolve(transcriptDir);
@@ -817,7 +857,21 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
     MutableHashMap.set(transcriptPaths, counts.pathHash, counts.calls);
     const hookCount = counts.identityConflict
       ? 0
-      : A.reduce(file.hookKeys, 0, (sum, key) => sum + O.getOrElse(MutableHashMap.get(hooks, key), () => 0));
+      : A.reduce(
+          file.hookKeys,
+          0,
+          (sum, key) =>
+            sum +
+            O.getOrElse(
+              O.filter(
+                MutableHashMap.get(bindings, key),
+                (binding) =>
+                  A.length(binding.identities) === 1 &&
+                  O.exists(counts.bindingHash, (identity) => A.contains(binding.identities, identity))
+              ).pipe(O.map((binding) => binding.count)),
+              () => 0
+            )
+        );
     if (hookCount > 0) {
       MutableHashMap.set(selectedPathHooks, counts.pathHash, hookCount);
       MutableHashMap.set(

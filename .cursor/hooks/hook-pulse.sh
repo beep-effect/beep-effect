@@ -25,6 +25,7 @@ answer_protocol() {
 }
 # Registered hooks pass the event as command metadata. Disarm can preserve the
 # exact protocol response without reading stdin or processing any payload.
+export BEEP_HOOK_PULSE_ATTEMPT_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 registered_event=""
 [ "${1:-}" != "--event" ] || registered_event="${2:-}"
 evidence_root="${BEEP_AGENT_EVIDENCE_ROOT:-${XDG_STATE_HOME:-${HOME:-/tmp}/.local/state}/beep/agent-evidence}"
@@ -34,13 +35,24 @@ if [ -e "${sentinel}" ]; then
   [ ! -x "${shared}" ] || BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli "${shared}" < /dev/null >/dev/null 2>&1
   exit 0
 fi
-input="$(cat)"
+if ! command -v timeout >/dev/null 2>&1; then
+  answer_protocol "${registered_event}"
+  [ ! -x "${shared}" ] || BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli "${shared}" --refuse no-timeout >/dev/null 2>&1
+  exit 0
+fi
+input_result=0
+input="$(timeout --kill-after=0.2s 0.5s cat)" || input_result=$?
+if [ "${input_result}" -ne 0 ]; then
+  answer_protocol "${registered_event}"
+  [ ! -x "${shared}" ] || BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli "${shared}" --refuse timeout >/dev/null 2>&1
+  exit 0
+fi
 event="$(printf '%s' "${input}" | jq -r '.hook_event_name // empty' 2>/dev/null || true)"
 answer_protocol "${registered_event:-${event}}"
 if [ -x "${shared}" ] && command -v jq >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1; then
   result=0
-  printf '%s' "${input}" | jq -c '
-    .hook_event_name as $e
+  printf '%s' "${input}" | jq -c --arg registered_event "${registered_event}" '
+    (.hook_event_name // $registered_event) as $e
     | .hook_event_name = ({
         "sessionStart": "SessionStart",
         "preToolUse": "PreToolUse",

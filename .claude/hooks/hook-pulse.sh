@@ -56,9 +56,13 @@ BEEP_AGENT_EVIDENCE_ROOT="${BEEP_AGENT_EVIDENCE_ROOT:-${XDG_STATE_HOME:-${HOME:-
 BEEP_HOOK_PULSE_DISARM_SENTINEL="${BEEP_HOOK_PULSE_DISARM_SENTINEL:-${BEEP_AGENT_EVIDENCE_ROOT}/hook-pulse.disarmed}"
 agent_kind="${BEEP_HOOK_PULSE_AGENT_KIND:-claude-code}"
 case "${agent_kind}" in claude-code|codex-cli|cursor-cli) ;; *) agent_kind=unknown ;; esac
+if [ "${1:-}" != "--bounded-body" ] && [ "${1:-}" != "--refuse" ]; then
+  export BEEP_HOOK_PULSE_ATTEMPT_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+fi
 refuse() {
   local reason="$1" day ts
-  day="$(date -u +%Y-%m-%d)"; ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  day="$(date -u +%Y-%m-%d)"; ts="${BEEP_HOOK_PULSE_ATTEMPT_UTC:-}"
+  [[ "${ts}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]] || ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   mkdir -p "${BEEP_AGENT_EVIDENCE_ROOT}" 2>/dev/null || return 0
   printf '{"ts":"%s","agentKind":"%s","reason":"%s"}\n' "${ts}" "${agent_kind}" "${reason}" \
     >>"${BEEP_AGENT_EVIDENCE_ROOT}/hook-pulse-refusals-${day}.ndjson" 2>/dev/null || true
