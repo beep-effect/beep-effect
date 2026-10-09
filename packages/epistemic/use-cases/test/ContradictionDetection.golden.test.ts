@@ -17,7 +17,7 @@ import {
 } from "@beep/epistemic-use-cases/server";
 import { it } from "@beep/test-runner";
 import { productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
-import { expect } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertSuccess, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -74,7 +74,7 @@ const conformance = Effect.fnUntraced(function* (record: DetectedContradiction, 
   }
 });
 
-it.layer(ContradictionDetectionLive)("Contradiction detection golden vectors", (it) => {
+describe("Contradiction detection golden vectors", () => {
   it.effect(
     "encodes both proposals through the shipped non-empty assessment field",
     Effect.fnUntraced(function* () {
@@ -90,7 +90,7 @@ it.layer(ContradictionDetectionLive)("Contradiction detection golden vectors", (
         A.map(record.assessment.proposals, (proposal) => proposal.proposalId)
       );
       S.decodeUnknownResult(ContradictionAssessment)({ ...wire, proposals: [] }).pipe(Result.isFailure, assertTrue);
-    })
+    }, Effect.provide(ContradictionDetectionLive))
   );
   for (const [vector, index] of A.map(vectors, (vector, index) => Tuple.make(vector, index))) {
     it.effect(
@@ -128,7 +128,7 @@ it.layer(ContradictionDetectionLive)("Contradiction detection golden vectors", (
           singleValuedPredicates: A.reverse(snapshot.singleValuedPredicates),
         });
         expect(yield* encodedOutput(yield* detect(permuted))).toBe(yield* encodedOutput(records));
-      })
+      }, Effect.provide(ContradictionDetectionLive))
     );
   }
   it.effect.prop(
@@ -145,7 +145,7 @@ it.layer(ContradictionDetectionLive)("Contradiction detection golden vectors", (
       const permuted = ContradictionDetectionSnapshot.make({ ...snapshot, beliefs: A.reverse(snapshot.beliefs) });
       expect(A.length(records)).toBe(1);
       expect(yield* encodedOutput(yield* detect(permuted))).toBe(yield* encodedOutput(records));
-    }),
+    }, Effect.provide(ContradictionDetectionLive)),
     { arbitrary: { seed: 520 } }
   );
   it.effect(
@@ -177,7 +177,7 @@ it.layer(ContradictionDetectionLive)("Contradiction detection golden vectors", (
           yield* detect(ContradictionDetectionSnapshot.make({ ...snapshot, beliefs: A.reverse(snapshot.beliefs) }))
         )
       ).toBe(yield* encodedOutput(records));
-    })
+    }, Effect.provide(ContradictionDetectionLive))
   );
   it.effect(
     "empty input emits nothing",
@@ -185,7 +185,7 @@ it.layer(ContradictionDetectionLive)("Contradiction detection golden vectors", (
       expect(yield* detect(ContradictionDetectionSnapshot.make({ beliefs: [], singleValuedPredicates: [] }))).toEqual(
         []
       );
-    })
+    }, Effect.provide(ContradictionDetectionLive))
   );
   it.effect(
     "returns a typed error for an invalid constructed snapshot",
@@ -199,7 +199,7 @@ it.layer(ContradictionDetectionLive)("Contradiction detection golden vectors", (
       const exit = yield* Effect.exit(detect(invalid));
       exit.pipe(Exit.isFailure, assertTrue);
       expect(exit.pipe(Exit.findErrorOption, O.getOrThrow)._tag).toBe("ContradictionDetectionError");
-    })
+    }, Effect.provide(ContradictionDetectionLive))
   );
   it("rejects oversized assertion facts before proposing", () => {
     const input = A.getUnsafe(vectors, 0).snapshot;
