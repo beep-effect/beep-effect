@@ -90,3 +90,88 @@ control for "is the gain from the GPU, or from any OCR newer than Tesseract?"
 - **The corpus is private and this repo is public.** Only counts, rates and
   timings may be recorded here.
 - **Money.** Local, open-weight engines only.
+
+
+## 2026-10-09 — Desk refresh: delivered CPU OCR and remaining GPU gaps
+
+Read-only refresh after merging main at `36027982f2`; no new benchmark,
+corpus run, download or GPU operation. The earlier measured sections remain
+historical. This section corrects the inventory and proposal against shipped
+code and recorded runs, then feeds the align ruling in `DECISIONS.md`.
+
+### What landed and what the ledger now means
+
+#1470 (`3778ac719d`) delivered the schema and `PageOcrService` under
+`packages/foundation/capability/file-processing/src/PageOcr/`. #1481
+(`2dffb2827c`) delivered `@beep/tesseract`, `@beep/poppler` and the
+`corpus extract --ocr` path. Tesseract returns mean word confidence, detects
+script, and plans installed languages while reporting missing models.
+Poppler counts through `pdfinfo` and renders individual grayscale PNG pages
+through `pdftoppm`.
+
+The as-built ledger is `CorpusPageReadRecord` / `CorpusPageFailedRecord` in
+`packages/tooling/tool/cli/src/commands/Corpus/internal/Ocr.schemas.ts`.
+`ServicePrograms.ts`, `makeExtractOcr`, writes
+`ocr/pages/<operationId>.jsonl` and
+`ocr/text/<operationId>/<page>.<engineId>.txt`. Success records carry engine,
+image digest, text digest, confidence, warnings and timing; failures have a
+page reason. Existing first text is preserved in `ocr/first-reading/` and
+composed OCR replaces `text/<operationId>.txt`, using form-feed separators.
+A future engine can add readings beside these, but is not implemented.
+SEAM-DESIGN section 5 instead proposed an `ocr/<ocrRunId>/` namespace,
+`text-readings.jsonl`, and an unchanged `text/` first reading. Do not mistake
+that proposal for the shipped layout.
+
+### Selection and image retention
+
+`usableTextBytesPerPage` is 50. `pagesToRead` checks a whole source's first
+text bytes against 50 times its page count; `readPages` then reads every
+page of a selected source. This is not class A's per-page
+`pdf:charsPerPage[i] < 50` selector. A mixed PDF can exceed the aggregate
+threshold despite scanned pages; the July census counted 39 mixed PDFs.
+Skipped/deferred and unrouted sources keep their outcome.
+
+Eligible single-frame PNG/JPEG/TIFF `image-metadata` sources with missing
+or thin first text can acquire canonical text through `--ocr`; the initial
+Tika image extraction still does not retain OCR text. Multi-frame or
+unrecognized TIFF frame counts keep their first outcome. Script detection
+on the first page selects languages for the entire source, not each page.
+
+### Recorded P9 to P11 evidence (counts, rates and timings only)
+
+- `goals/practice-kg-mcp/history/p9/2026-10-06-working-files-bundle.md`,
+  "Extraction failures" and "Fill-in bundle": 94 PDF timeouts and 3
+  Tesseract JPEG 2000 crashes; fill-in reduced timeouts to 8.
+- `goals/practice-kg-mcp/history/p10/2026-10-07-anchor-dominance-and-correspondents.md`,
+  "Still out": those 8 timeouts and crash-hit pages remained unresolved.
+- `goals/practice-kg-mcp/history/p11/2026-10-07-mail-archive-correspondents.md`,
+  "OCR re-extraction": 7,640 sources in 2 h 36 min at concurrency 8;
+  296 sources, 2,034 pages read page by page, 0 failed. Succeeded sources
+  increased from 6,380 to 6,385; 1,248 remained without an engine.
+  The bundle comparison records one docket added from newly readable OCR
+  text. `PLAN.md`, row P11, marks the phase complete.
+- `goals/practice-kg-mcp/history/reflections/2026-10-06-claude.md`,
+  "Implementation improvement opportunities", recommended re-reading
+  crash pages through the CPU per-page path. P11 is later execution
+  evidence, not an inference from the benchmark.
+
+### Inventory corrections and remaining proof boundaries
+
+The page contract/service, Tesseract engine, page rasterizer, reading ledger,
+and `@beep/openai-compat` are present on refreshed main. Tesseract and
+Poppler are **reuse**, replacing this file's earlier NOT FOUND entries.
+`@beep/llama-server-ocr` remains **NOT FOUND**. The class D full-page raster
+probe remains **NOT FOUND** in Poppler: no `pdfimages` call exists.
+Per-page low-text selection remains unbuilt as designed. The language
+inventory still reports only `afr`, `eng`, `osd`. P11 lists Arabic, Greek,
+Hebrew, Hindi, Japanese, Korean and Russian as missing; the schema also
+plans Chinese models for Han, which this inventory lacks. No models were
+installed. Missing languages are an orchestrator follow-up.
+
+#1481's "Not in this PR" excludes email attachment export and every GPU
+engine. Its "Unproven" lists real scans through the actual drivers, hosted
+Heavy lanes, and the untuned 50-bytes-per-page threshold. P11 supplies a
+real-run result for the CPU path only; it does not tune selection, measure
+accuracy, prove every format, or establish historical hosted Heavy status.
+The benchmark's PP-OCRv5 CPU control, `--psm` tuning and `tessdata_best`
+remain unmeasured. No new external claim is introduced by this refresh.
