@@ -78,6 +78,7 @@
     "@effect/vitest": "catalog:",
     "@types/n3": "catalog:",
     "@types/node": "catalog:",
+    "commonmark": "0.31.2",
     "drizzle-kit": "catalog:",
     "minimatch": "10.2.6",
     "oxc-parser": "^0.152.0",

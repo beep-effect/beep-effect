@@ -1,0 +1,43 @@
+// Ported from commonmark.js@0.31.2 (https://github.com/commonmark/commonmark.js)
+// Copyright (c) 2014-2023 John MacFarlane
+// License: BSD-2-Clause
+//
+// The fenced-code block start. The construct both code spellings share lives
+// in `code.ts`, which branches on the `isFenced` flag this start sets.
+
+import type { FenceChar } from "../../MarkdownNode.ts";
+import type { BlockStart } from "../blockTypes.ts";
+
+const reCodeFence = /^`{3,}(?!.*`)|^~{3,}/;
+
+const fenceCharOf = (char: string): FenceChar | undefined => (char === "`" || char === "~" ? char : undefined);
+
+/** The fenced-code block start: three or more backticks or tildes. */
+export const fencedCodeStart: BlockStart = {
+	name: "fencedCode",
+	trigger: (scanner) => {
+		if (scanner.indented) {
+			return 0;
+		}
+
+		const match = reCodeFence.exec(scanner.currentLine.slice(scanner.nextNonspace));
+		if (match === null) {
+			return 0;
+		}
+
+		const fenceChar = fenceCharOf(match[0].charAt(0));
+		if (fenceChar === undefined) {
+			return 0;
+		}
+
+		scanner.closeUnmatchedBlocks();
+		const container = scanner.addChild("code", scanner.nextNonspace);
+		container.data.isFenced = true;
+		container.data.fenceLength = match[0].length;
+		container.data.fenceChar = fenceChar;
+		container.data.fenceOffset = scanner.indent;
+		scanner.advanceNextNonspace();
+		scanner.advanceOffset(match[0].length, false);
+		return 2;
+	},
+};

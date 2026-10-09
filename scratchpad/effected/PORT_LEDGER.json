@@ -3300,16 +3300,599 @@
       "wave": 2,
       "position": 3,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
         "src": "packages/markdown/src",
         "test": "packages/markdown/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "Blockquote",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Break",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "BreakStyle",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "BulletChar",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Code",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CodeBlockStyle",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Definition",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Delete",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DocumentHeading",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DocumentLink",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DocumentSection",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Emphasis",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "EmphasisChar",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FenceChar",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FlowContent",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FootnoteDefinition",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FootnoteReference",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Frontmatter",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FrontmatterCodec",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "FrontmatterContent",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FrontmatterDecodeError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FrontmatterEncodeError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FrontmatterFormat",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FrontmatterFormatMismatchError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FrontmatterMissingError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FrontmatterMissingReason",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FrontmatterNewline",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FrontmatterResolveError",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "FrontmatterSchemaError",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "FrontmatterSchemaResolver",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "FrontmatterSource",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FrontmatterSourceBlock",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FrontmatterSourceSplit",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FrontmatterValidationError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "FrontmatterWriteError",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Heading",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "HeadingDepth",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "HeadingStyle",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Html",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Image",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ImageReference",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InlineCode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsonFrontmatter",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "Link",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "LinkBearingNode",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "LinkReference",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "List",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ListContent",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ListDelimiter",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ListItem",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Markdown",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownDiagnostic",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownDialect",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownDocument",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownEdit",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownFormat",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownFormattingOptions",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownFrontmatter",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownModificationError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownModificationErrorCode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownNode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownNodeOfType",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownNodeType",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownParseError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownParseErrorCode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownParseOptions",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownPath",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownRange",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownRangeLike",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownSegment",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownStringifyError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownVisitor",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MarkdownVisitorEvent",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Mdast",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MdastDecodeError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MdastNode",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MdxFlowExpression",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MdxJsxAttribute",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MdxJsxAttributeContent",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MdxJsxAttributeValueExpression",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MdxJsxExpressionAttribute",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MdxJsxFlowElement",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MdxJsxTextElement",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MdxTextExpression",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MdxjsEsm",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Paragraph",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PhrasingContent",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Point",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Position",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ReferenceType",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Root",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RowContent",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SchemaDeclaration",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SchemaDeclarationByName",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SchemaDeclarationByPath",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SchemaDeclarationByUrl",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SchemaDeclarationInline",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SchemaDeclarationInvalidError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SchemaDeclarationMissingError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SchemaNameUnknownError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SchemaResolver",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SchemaVersionUnresolvableError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SectionHeadingMatch",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "SectionQueryOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Strong",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Table",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TableAlign",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TableCell",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TableContent",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TableRow",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Text",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ThematicBreak",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ThematicBreakChar",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlFrontmatter",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "YamlFrontmatter",
+          "kind": "value",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
-      "newDeps": [],
-      "fixturesBytes": 0,
+      "newDeps": [
+        {
+          "name": "commonmark",
+          "kind": "dev",
+          "spec": "0.31.2",
+          "replacement": null
+        }
+      ],
+      "fixturesBytes": 396274,
       "deviations": [],
       "backlog": [],
       "reviewRounds": [],
