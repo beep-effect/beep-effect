@@ -180,7 +180,6 @@ const readRefusalStampGaps = Effect.fnUntraced(function* (evidenceRoot: string) 
 });
 const readStampGaps = Effect.fnUntraced(function* (evidenceRoot: string) {
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const gaps = A.empty<SessionStampGap>();
   const defaultSentinel = hookPulseDisarmSentinelPath(evidenceRoot);
   const sentinelPath = yield* Config.String("BEEP_HOOK_PULSE_DISARM_SENTINEL").pipe(
