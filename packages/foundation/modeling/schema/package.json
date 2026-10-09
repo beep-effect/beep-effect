@@ -45,6 +45,7 @@
     "micromark-extension-gfm": "catalog:"
   },
   "devDependencies": {
+    "fast-xml-builder": "catalog:",
     "@beep/fc-runs": "workspace:^",
     "@beep/test-runner": "workspace:^",
     "@effect/platform-bun": "catalog:",
