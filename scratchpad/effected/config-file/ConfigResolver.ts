@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
@@ -336,20 +337,20 @@ const rootAnchored = (
 	);
 
 /** `.git` may be a directory (a normal repo) or a file (a worktree pointing at the real repo). */
-const isGitRoot = (
+const isGitRoot: (
 	dir: string,
-): Effect.Effect<boolean, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> =>
-	Effect.gen(function* () {
+) => Effect.Effect<boolean, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> =
+	Effect.fn("isGitRoot")(function* (dir: string) {
 		const fs = yield* FileSystem.FileSystem;
 		const path = yield* Path.Path;
 		return yield* fs.exists(path.join(dir, ".git"));
 	});
 
 /** A workspace root is marked by `pnpm-workspace.yaml`, or a `package.json` with a `workspaces` field. */
-const isWorkspaceRoot = (
+const isWorkspaceRoot: (
 	dir: string,
-): Effect.Effect<boolean, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> =>
-	Effect.gen(function* () {
+) => Effect.Effect<boolean, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> =
+	Effect.fn("isWorkspaceRoot")(function* (dir: string) {
 		const fs = yield* FileSystem.FileSystem;
 		const path = yield* Path.Path;
 		if (yield* fs.exists(path.join(dir, "pnpm-workspace.yaml"))) return true;
@@ -357,7 +358,7 @@ const isWorkspaceRoot = (
 		if (yield* fs.exists(pkgPath)) {
 			const content = yield* fs.readFileString(pkgPath);
 			const pkg = S.decodeResult(JsonValue)(content);
-			if (Result.isSuccess(pkg) && typeof pkg.success === "object" && pkg.success !== null && "workspaces" in pkg.success) return true;
+			if (Result.isSuccess(pkg) && P.isObjectKeyword(pkg.success) && !P.isFunction(pkg.success) && "workspaces" in pkg.success) return true;
 		}
 		return false;
 	});

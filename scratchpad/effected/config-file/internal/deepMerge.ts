@@ -1,5 +1,7 @@
 import { dual } from "effect/Function";
 import * as A from "effect/Array";
+import * as HashSet from "effect/HashSet";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 /**
  * A true plain object: `{}` or `Object.create(null)`. Class instances, `Date`,
@@ -13,7 +15,7 @@ import * as R from "effect/Record";
  * atomic — the higher-priority source wins them whole.
  */
 export const isPlainObject = (value: unknown): value is Record<string, unknown> => {
-	if (typeof value !== "object" || value === null || A.isArray(value)) return false;
+	if (!P.isObjectKeyword(value) || P.isFunction(value) || A.isArray(value)) return false;
 	const proto = Object.getPrototypeOf(value);
 	return proto === Object.prototype || proto === null;
 };
@@ -25,7 +27,7 @@ export const isPlainObject = (value: unknown): value is Record<string, unknown> 
  * slots that a field-wise merge would destroy.
  */
 const isRecordLike = (value: unknown): value is Record<string, unknown> =>
-	typeof value === "object" && value !== null && Object.prototype.toString.call(value) === "[object Object]";
+	P.isObjectKeyword(value) && !P.isFunction(value) && Object.prototype.toString.call(value) === "[object Object]";
 
 /**
  * Two values may be merged only if both are record-like and share a prototype.
@@ -42,7 +44,7 @@ export const canMerge: {
 } = dual(2, (a: unknown, b: unknown): boolean =>
 	isRecordLike(a) && isRecordLike(b) && Object.getPrototypeOf(a) === Object.getPrototypeOf(b));
 
-const FORBIDDEN = new Set(["__proto__", "constructor", "prototype"]);
+const FORBIDDEN = HashSet.make("__proto__", "constructor", "prototype");
 
 /**
  * Recursively merge `source` into `target`; keys already present on `target`
@@ -68,7 +70,7 @@ function mergeRecords(
 	target: Record<string, unknown>,
 	source: Record<string, unknown>,
 ): Record<string, unknown> {
-	const result: Record<string, unknown> = Object.create(Object.getPrototypeOf(target));
+	const result: Record<string, unknown> = { __proto__: Object.getPrototypeOf(target) };
 	// `target`'s keys must be filtered too, and copied as data properties. A bare
 	// assignment uses [[Set]] semantics, so an own `__proto__` key on the
 	// higher-priority document would reach `Object.prototype`'s inherited accessor
@@ -76,11 +78,11 @@ function mergeRecords(
 	// FORBIDDEN and the prototype we just installed. `Object.assign` and `result[k] = v`
 	// both do this; `defineProperty` does not.
 	for (const key of R.keys(target)) {
-		if (FORBIDDEN.has(key)) continue;
+		if (HashSet.has(FORBIDDEN, key)) continue;
 		define(result, key, target[key]);
 	}
 	for (const key of R.keys(source)) {
-		if (FORBIDDEN.has(key)) continue;
+		if (HashSet.has(FORBIDDEN, key)) continue;
 		const sourceValue = source[key];
 		const targetValue = result[key];
 		if (R.has(result, key) && isPlainObject(targetValue) && isPlainObject(sourceValue)) {

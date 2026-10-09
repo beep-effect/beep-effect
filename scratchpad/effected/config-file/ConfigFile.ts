@@ -519,8 +519,8 @@ const makeImpl = <A, I, RR>(
 	 * Both events carry EVERY contributing source, because under `layeredMerge`
 	 * all of them contributed.
 	 */
-	const mergeAndEmit = (sources: NonEmptySources<A>): Effect.Effect<A> =>
-		Effect.gen(function* () {
+	const mergeAndEmit: (sources: NonEmptySources<A>) => Effect.Effect<A> =
+		Effect.fnUntraced(function* (sources: NonEmptySources<A>) {
 			const value = yield* options.strategy.resolve(sources);
 			const refs = sourceRefs(sources);
 			yield* emit({ _tag: "Resolved", sources: refs, strategy: options.strategy.name });
@@ -553,19 +553,19 @@ const makeImpl = <A, I, RR>(
 
 	/**
 	 * Schema-encode, stringify, and prepend the header. Shared by `encode`,
-	 * `write` and `save`. Not an `Effect.fn`: it is internal, and the public
+	 * `write` and `save`. Untraced: it is internal, and the public
 	 * boundaries that call it already open a span.
 	 *
 	 * `target` is the file this text is destined for, when there is one. It is
 	 * only ever used to NAME the file in an error — `encode` passes `none` and
 	 * its errors honestly carry no path.
 	 */
-	const encodeTo = (
+	const encodeTo: (
 		value: A,
 		target: O.Option<string>,
 		encodeOptions?: ConfigEncodeOptions,
-	): Effect.Effect<string, ConfigEncodeError> =>
-		Effect.gen(function* () {
+	) => Effect.Effect<string, ConfigEncodeError> =
+		Effect.fnUntraced(function* (value: A, target: O.Option<string>, encodeOptions?: ConfigEncodeOptions) {
 			const encoded = yield* Schema.encodeEffect(options.schema)(value).pipe(
 				// Same normalization as `decode`: carry the structured issue, never stringify.
 				Effect.catchTag("SchemaError", (error) =>
@@ -589,12 +589,12 @@ const makeImpl = <A, I, RR>(
 	 * event, and `encode` promises to publish nothing. A subscriber counting
 	 * failed writes must not see a dry run's codec failure.
 	 */
-	const encodeAndWrite = (
+	const encodeAndWrite: (
 		value: A,
 		target: string,
 		encodeOptions?: ConfigEncodeOptions,
-	): Effect.Effect<void, ConfigWriteError> =>
-		Effect.gen(function* () {
+	) => Effect.Effect<void, ConfigWriteError> =
+		Effect.fnUntraced(function* (value: A, target: string, encodeOptions?: ConfigEncodeOptions) {
 			const serialized = yield* encodeTo(value, O.some(target), encodeOptions).pipe(
 				Effect.tapError((error) =>
 					error._tag === "ConfigCodecError"
@@ -621,8 +621,8 @@ const makeImpl = <A, I, RR>(
 	 * emitting boundary sits in the public method, never in the shared internals
 	 * it delegates to.
 	 */
-	const saveTo = (value: A): Effect.Effect<string, ConfigSaveError> =>
-		Effect.gen(function* () {
+	const saveTo: (value: A) => Effect.Effect<string, ConfigSaveError> =
+		Effect.fnUntraced(function* (value: A) {
 			const configured = options.defaultPath;
 			if (configured === undefined) return yield* ConfigDefaultPathMissingError.make({});
 			// `defaultPath`'s requirements are `RR`, satisfied by the same context the

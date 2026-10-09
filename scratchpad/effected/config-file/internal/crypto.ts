@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 
@@ -105,7 +106,7 @@ export const toBase64: {
 			const result = new Uint8Array(resultBuf);
 			result.set(iv, 0);
 			result.set(ciphertextBytes, IV_LENGTH);
-			return btoa(Array.from(result, (b) => String.fromCharCode(b)).join(""));
+			return btoa(A.join(A.map(A.fromIterable(result), (b) => String.fromCharCode(b)), ""));
 		},
 		catch: fail("encoding"),
 	}));

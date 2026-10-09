@@ -10,6 +10,11 @@ import { IV_LENGTH, decrypt, deriveKey, encrypt, fromBase64, randomIv, toBase64 
 
 const $I = $ScratchpadId.create("effected/config-file/EncryptedCodec");
 
+/** Identifies an encrypted envelope that cannot contain both an IV and ciphertext. */
+class CiphertextTooShortError extends S.TaggedError<CiphertextTooShortError>($I`CiphertextTooShortError`)("CiphertextTooShortError", {
+	message: S.String,
+}, $I.annote("CiphertextTooShortError", { description: "The encrypted envelope is too short to contain an IV and ciphertext." })) {}
+
 /**
  * Indicates that an encryption, decryption, key-derivation or base64 step
  * failed.
@@ -120,15 +125,9 @@ const keyEffect = (keySource: EncryptedCodecKey): Effect.Effect<CryptoKey, Confi
  *
  * @public
  */
-export function EncryptedCodec(keySource: EncryptedCodecKey): <E>(inner: ConfigCodec<E>) => ConfigCodec<E | ConfigEncryptionError>;
-export function EncryptedCodec<E>(inner: ConfigCodec<E>, keySource: EncryptedCodecKey): ConfigCodec<E | ConfigEncryptionError>;
-export function EncryptedCodec<E>(...args: [EncryptedCodecKey] | [ConfigCodec<E>, EncryptedCodecKey]): ConfigCodec<E | ConfigEncryptionError> | ((inner: ConfigCodec<E>) => ConfigCodec<E | ConfigEncryptionError>) {
-	return args.length === 1 ? makeEncryptedCodec(args[0]) : makeEncryptedCodec(args[0], args[1]);
-}
-
-const makeEncryptedCodec: {
-	(keySource: EncryptedCodecKey): <E>(inner: ConfigCodec<E>) => ConfigCodec<E | ConfigEncryptionError>;
+export const EncryptedCodec: {
 	<E>(inner: ConfigCodec<E>, keySource: EncryptedCodecKey): ConfigCodec<E | ConfigEncryptionError>;
+	(keySource: EncryptedCodecKey): <E>(inner: ConfigCodec<E>) => ConfigCodec<E | ConfigEncryptionError>;
 } = dual(2, <E>(inner: ConfigCodec<E>,
 	keySource: EncryptedCodecKey,
 ): ConfigCodec<E | ConfigEncryptionError> => {
@@ -158,7 +157,7 @@ const makeEncryptedCodec: {
 				const combined = yield* Effect.mapError(fromBase64(raw), toPublic);
 
 				if (combined.length <= IV_LENGTH) {
-					return yield* ConfigEncryptionError.make({ phase: "decrypt", cause: new Error("Ciphertext too short to contain IV") });
+					return yield* ConfigEncryptionError.make({ phase: "decrypt", cause: CiphertextTooShortError.make({ message: "Ciphertext too short to contain IV" }) });
 				}
 
 				const key = yield* getKey;
