@@ -764,7 +764,7 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
       Effect.asSome,
       Effect.catchIf(
         (cause) => cause.reason._tag === "NotFound",
-        () => Effect.succeed(O.none())
+        () => Effect.succeedNone
       ),
       Effect.mapError((cause) => configSnapshotFailure("Cannot inspect fallback snapshot path.", cause))
     );

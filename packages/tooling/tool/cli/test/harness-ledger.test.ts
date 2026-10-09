@@ -466,10 +466,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       expect(dryRun.windowFull).toBe(false);
       expect(dryRun.decidedUnderHarness).toBe(0);
       expect(dryRun.proposals).toHaveLength(0);
-      assertSome(
-        A.last(harnessLedgerPruneReportLines(dryRun, false)),
-        "dry run: nothing written; partial window (2 of 5 sessions under the current harness hash), so --write would append nothing."
-      );
+      assertSome(A.last(harnessLedgerPruneReportLines(dryRun, false)), "nothing written: no fresh proposals.");
       expect(harnessLedgerPruneReportLines(dryRun, false)[0]).toContain("observed 2 (partial window) ending");
       // Dry run: nothing written, not even the ledger directory or its lock.
       expect(yield* fs.exists(path.join(root, "harness-ledger"))).toBe(false);
@@ -485,10 +482,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       expect(narrow.sessionsObserved).toBe(1);
       expect(narrow.windowFull).toBe(true);
       expect(narrow.sharedHarnessWindowFull).toBe(false);
-      assertSome(
-        A.last(harnessLedgerPruneReportLines(narrow, false)),
-        "dry run: zero-touch candidates are advisory; transcript and surface coverage are unqualified."
-      );
+      assertSome(A.last(harnessLedgerPruneReportLines(narrow, false)), "nothing written: no fresh proposals.");
       // Only the skipped sessions newer than the window's oldest session count.
       expect([narrow.sessionsSkippedOutOfRegime, narrow.sessionsSkippedUnstamped]).toStrictEqual([1, 1]);
       yield* writeShard(stateDir, "2026-09-28", sessionD, ["{not json"]);
@@ -775,8 +769,9 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
         HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1 })
       );
 
-      expect(report.sessionsObserved).toBe(1);
-      expect(report.windowEnd).toStrictEqual(O.some(DateTime.makeUnsafe("2026-09-20T08:05:00.000Z")));
+      expect(report.sessionsObserved).toBe(0);
+      expect(report.sessionsSkippedCorrupt).toBe(5);
+      assertNone(report.windowEnd);
       expect(report.sessionsSkippedOutOfRegime).toBe(1);
       expect(report.sessionsSkippedUnstamped).toBe(2);
       expect(report.shardsRead).toBe(8);
