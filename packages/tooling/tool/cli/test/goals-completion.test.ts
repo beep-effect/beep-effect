@@ -2,9 +2,11 @@ import {
   GoalAcceptanceEvidenceRef,
   GoalCompletionGate,
   GoalCompletionObservation,
+  GoalCompletionReceipt,
   GoalCompletionVerifier,
   GoalEvidenceCheck,
   GoalManifest,
+  GoalMergeMethod,
   GoalMergeResult,
   goalPullRequestRefs,
 } from "@beep/repo-cli/test/Goals";
@@ -129,6 +131,17 @@ describe("goal completion declaration", () => {
 });
 
 describe("pure goal completion resolver", () => {
+  it.effect("round-trips the persisted JSON boundary including optional head and merge facts", () =>
+    Effect.gen(function* () {
+      const receipt = yield* GoalCompletionVerifier.resolve(fixture());
+      const text = yield* S.encodeEffect(S.fromJsonString(GoalCompletionReceipt))(receipt);
+      const decoded = yield* S.decodeUnknownEffect(S.fromJsonString(GoalCompletionReceipt))(text);
+      expect(decoded.outcome).toBe("verified");
+      expect(decoded.acceptedHead).toEqual(O.some("accepted-head"));
+      expect(O.map(decoded.merge, (merge) => merge.method)).toEqual(O.some(O.some("squash")));
+    })
+  );
+
   it.effect("verifies a merged PR with no packet-name commit and a non-ancestor squash head", () =>
     Effect.gen(function* () {
       const receipt = yield* GoalCompletionVerifier.resolve(fixture());
@@ -141,11 +154,8 @@ describe("pure goal completion resolver", () => {
       Effect.gen(function* () {
         const observation = fixture();
         const merge = O.getOrThrow(observation.merge);
-        const parsed = yield* S.decodeUnknownEffect(GoalMergeResult)({
-          ...merge,
-          mergedAt: DateTime.formatIso(time),
-          method: { _tag: "Some", value: method },
-        });
+        const parsedMethod = yield* S.decodeUnknownEffect(GoalMergeMethod)(method);
+        const parsed = GoalMergeResult.make({ ...merge, method: O.some(parsedMethod) });
         expect(
           (yield* GoalCompletionVerifier.resolve(
             GoalCompletionObservation.make({ ...observation, merge: O.some(parsed) })

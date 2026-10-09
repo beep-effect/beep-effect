@@ -702,7 +702,7 @@ const completionGateAdvisories = (
     if (!GoalStatus.is["completed-retained"](manifest.initiative.status) || manifest.completionGate.grandfathered) {
       continue;
     }
-    if (A.some(goalPullRequestRefs(manifest), (ref) => ref.role === "final")) continue;
+    if (manifest.completionGate.pullRequests !== undefined) continue;
     if (!citedAnywhere(packet, subjectsText)) {
       findings = A.append(
         findings,
@@ -902,19 +902,34 @@ export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (optio
   const { observeGoalCompletion, storedGoalCompletion } = yield* Effect.promise(() => import("./Completion.ts"));
   const root = yield* findRepoRoot();
   let completionFindings = A.empty<GoalDoctorFinding>();
+  let structuredSlugs = HashSet.empty<string>();
   for (const packet of packets) {
     if (O.isNone(packet.manifest)) continue;
     const manifest = packet.manifest.value;
     if (!GoalStatus.is["completed-retained"](manifest.initiative.status) || manifest.completionGate.grandfathered)
       continue;
     const final = A.findFirst(goalPullRequestRefs(manifest), (ref) => ref.role === "final");
-    if (O.isNone(final)) continue;
+    if (O.isNone(final)) {
+      if (manifest.completionGate.pullRequests !== undefined && manifest.completionGate.requiresPullRequest)
+        completionFindings = A.append(
+          completionFindings,
+          finding(
+            packet.record.slug,
+            "completion-gate-unknown",
+            "advisory",
+            "Typed completion declaration has no final PR reference."
+          )
+        );
+      continue;
+    }
     const receipt =
       options.online === true
         ? O.some(yield* observeGoalCompletion(root, packet.record.slug, manifest, final.value))
         : yield* storedGoalCompletion(root, packet.record.slug, manifest, final.value).pipe(
             Effect.orElseSucceed(O.none)
           );
+    if (O.isNone(receipt) && manifest.completionGate.pullRequests === undefined && options.online !== true) continue;
+    structuredSlugs = HashSet.add(structuredSlugs, packet.record.slug);
     const outcome = O.isSome(receipt) ? receipt.value.outcome : "unknown";
     if (outcome !== "verified")
       completionFindings = A.append(
@@ -929,7 +944,10 @@ export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (optio
   }
   const allFindings = [
     ...A.flatMap(packets, (packet) => packet.findings),
-    ...advisoriesFromGit.findings,
+    ...A.filter(
+      advisoriesFromGit.findings,
+      (item) => item.kind !== "completion-gate-unsatisfied" || !HashSet.has(structuredSlugs, item.slug)
+    ),
     ...completionFindings,
   ];
   const blocking = A.filter(allFindings, (item) => item.severity === "blocking");

@@ -11,7 +11,6 @@ import * as Console from "effect/Console";
 import * as Context from "effect/Context";
 import { Command, Flag } from "effect/cli";
 import * as DateTime from "effect/DateTime";
-import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -22,19 +21,20 @@ import { ghOutput } from "../../internal/github/index.ts";
 import { runGitOutput } from "../../internal/repo-run/index.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { resolveProofLedgerLocation } from "../Yeet/internal/ArtifactPaths.ts";
-import { hydrateYeetReadOnlyContext } from "../Yeet/internal/Handler.ts";
 import { MergeGateCheckRun } from "../Yeet/internal/MergeGate.ts";
-import { decideYeetReviewWindow } from "../Yeet/internal/ReviewWindow.ts";
-import { readYeetRulesetRequiredContexts } from "../Yeet/internal/Settle.ts";
+import { decideYeetReviewWindow, YEET_REVIEW_WINDOW_DEFAULT } from "../Yeet/internal/ReviewWindow.ts";
+import { GhBranchRule, rulesetRequiredContextsFromRules, YeetRulesetRulesPayload } from "../Yeet/internal/Settle.ts";
 import { YeetVerdict } from "../Yeet/internal/Verdict.ts";
 import { YeetCommandError } from "../Yeet/Yeet.errors.ts";
 import {
   GoalAcceptanceEvidenceRef,
+  GoalCheckConclusion,
   GoalCompletionReceipt,
   GoalEvidenceCheck,
   GoalManifest,
   GoalMergeResult,
   GoalNonRequiredRed,
+  GoalRequiredCheckSnapshot,
   goalPullRequestRefs,
 } from "./Goals.schemas.ts";
 import { listGoalPackets, parseGoalManifestText } from "./Inventory.ts";
@@ -69,6 +69,7 @@ export class GoalCompletionObservation extends S.Class<GoalCompletionObservation
     packet: S.NonEmptyString,
     declarationDigest: S.NonEmptyString,
     acceptedDeclarationDigest: S.Option(S.NonEmptyString),
+    requiredChecks: S.Option(GoalRequiredCheckSnapshot).pipe(S.withConstructorDefault(Effect.succeedNone)),
     finalPullRequest: S.Int.check(S.isGreaterThan(0)),
     acceptedHead: S.Option(S.NonEmptyString),
     merged: S.Option(S.Boolean),
@@ -149,6 +150,7 @@ export class GoalCompletionVerifier extends Context.Service<
         packet: observation.packet,
         declarationDigest: observation.declarationDigest,
         acceptedDeclarationDigest: observation.acceptedDeclarationDigest,
+        requiredChecks: observation.requiredChecks,
         finalPullRequest: observation.finalPullRequest,
         acceptedHead: observation.acceptedHead,
         merge: observation.merge,
@@ -162,7 +164,46 @@ export class GoalCompletionVerifier extends Context.Service<
   );
 }
 
+/**
+ * Supplies read-only GitHub and git observations; fixture providers never contact the network.
+ *
+ * **Example** (Inspect the observation port)
+ *
+ * ```ts
+ * import { GoalCompletionIo } from "@beep/repo-cli/commands/Goals/Completion"
+ * console.log(typeof GoalCompletionIo.of)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class GoalCompletionIo extends Context.Service<
+  GoalCompletionIo,
+  {
+    readonly github: (root: string, args: ReadonlyArray<string>) => Effect.Effect<string, YeetCommandError>;
+    readonly git: (root: string, args: ReadonlyArray<string>) => Effect.Effect<string, YeetCommandError>;
+  }
+>()($I`GoalCompletionIo`) {}
+const readCompletionGit = Effect.fn("Goals.Completion.git")(function* (root: string, args: ReadonlyArray<string>) {
+  const io = yield* Effect.serviceOption(GoalCompletionIo);
+  return yield* O.isSome(io) ? io.value.git(root, args) : runGitOutput(root, args, gitAdapter);
+});
+const readCompletionGithub = Effect.fn("Goals.Completion.github")(function* (
+  root: string,
+  args: ReadonlyArray<string>
+) {
+  const io = yield* Effect.serviceOption(GoalCompletionIo);
+  return yield* O.isSome(io)
+    ? io.value.github(root, args)
+    : ghOutput({
+        cwd: root,
+        args,
+        label: "goal completion GitHub observation",
+        onFailure: (failure) => YeetCommandError.make({ message: `${failure.label}: ${failure._tag}` }),
+      });
+});
 const Pull = S.Struct({
+  created_at: S.DateTimeUtcFromString,
   number: S.Int,
   merged: S.Boolean,
   merged_at: S.OptionFromNullOr(S.DateTimeUtcFromString),
@@ -178,6 +219,7 @@ const Commit = S.Struct({
 const TimedCheck = S.Struct({
   ...MergeGateCheckRun.fields,
   head_sha: S.NonEmptyString,
+  started_at: S.OptionFromNullOr(S.DateTimeUtcFromString),
   completed_at: S.OptionFromNullOr(S.DateTimeUtcFromString),
 });
 const CheckPages = S.Array(S.Struct({ check_runs: S.Array(TimedCheck) }));
@@ -191,22 +233,108 @@ const readJson = Effect.fn("Goals.Completion.readJson")(function* <Sch extends S
   args: ReadonlyArray<string>,
   schema: Sch
 ) {
-  const text = yield* ghOutput({
-    cwd: root,
-    args,
-    label: "goal completion GitHub observation",
-    onFailure: (failure) => YeetCommandError.make({ message: `${failure.label}: ${failure._tag}` }),
-  });
+  const text = yield* readCompletionGithub(root, args);
   return yield* JsonStringCodec(schema)
     .decode(text)
     .pipe(Effect.mapError(() => YeetCommandError.make({ message: "Invalid goal completion GitHub payload" })));
 });
-const declarationDigest = Effect.fn("Goals.Completion.declarationDigest")(function* (manifest: GoalManifest) {
+const RulesetList = S.Struct({
+  id: S.Int,
+  source_type: S.String,
+  created_at: S.optionalKey(S.DateTimeUtcFromString),
+}).pipe(S.Array, S.Array);
+const RulesetHistory = S.Struct({ version_id: S.Int, updated_at: S.DateTimeUtcFromString }).pipe(S.Array, S.Array);
+const RulesetVersion = S.Struct({
+  state: S.Struct({
+    enforcement: S.String,
+    target: S.String,
+    conditions: S.Struct({ ref_name: S.Struct({ include: S.Array(S.String), exclude: S.Array(S.String) }) }),
+    rules: S.Array(GhBranchRule),
+  }),
+});
+const readHistoricalRequiredChecks = Effect.fn("Goals.Completion.historicalRequiredChecks")(function* (
+  root: string,
+  base: string,
+  mergedAt: DateTime.Utc
+) {
+  const inventory = A.flatten(
+    yield* readJson(
+      root,
+      ["api", "repos/{owner}/{repo}/rulesets?per_page=100&includes_parents=true", "--paginate", "--slurp"],
+      RulesetList
+    )
+  );
+  let contexts = A.empty<string>();
+  let sources = A.empty<string>();
+  for (const ruleset of inventory) {
+    if (ruleset.source_type !== "Repository")
+      return yield* YeetCommandError.make({
+        message: "Inherited ruleset history is unavailable through the repository-only adapter",
+      });
+    const history = A.flatten(
+      yield* readJson(
+        root,
+        ["api", `repos/{owner}/{repo}/rulesets/${ruleset.id}/history?per_page=100`, "--paginate", "--slurp"],
+        RulesetHistory
+      )
+    );
+    const version = A.reduce(
+      A.filter(history, (row) => DateTime.toEpochMillis(row.updated_at) <= DateTime.toEpochMillis(mergedAt)),
+      O.none<(typeof RulesetHistory.Type)[number][number]>(),
+      (found, row) =>
+        O.isNone(found) || DateTime.isGreaterThan(row.updated_at, found.value.updated_at) ? O.some(row) : found
+    );
+    if (O.isNone(version)) {
+      if (ruleset.created_at !== undefined && DateTime.isGreaterThan(ruleset.created_at, mergedAt)) continue;
+      return yield* YeetCommandError.make({ message: "No historical ruleset version covers this merge" });
+    }
+    const source = `repos/{owner}/{repo}/rulesets/${ruleset.id}/history/${version.value.version_id}`;
+    const { state } = yield* readJson(root, ["api", source], RulesetVersion);
+    if (state.enforcement !== "active" || state.target !== "branch") continue;
+    // The program's historical default branch is main. Unsupported globs stay unknown.
+    const matches = (pattern: string): boolean =>
+      pattern === "~ALL" || (pattern === "~DEFAULT_BRANCH" && base === "main") || pattern === `refs/heads/${base}`;
+    if (
+      A.some([...state.conditions.ref_name.include, ...state.conditions.ref_name.exclude], (pattern) =>
+        Str.includes("*")(pattern)
+      )
+    )
+      return yield* YeetCommandError.make({
+        message: "Historical ruleset glob requires an independently evaluated branch snapshot",
+      });
+    if (!A.some(state.conditions.ref_name.include, matches) || A.some(state.conditions.ref_name.exclude, matches))
+      continue;
+    const folded = rulesetRequiredContextsFromRules(
+      YeetRulesetRulesPayload.make({ base, readAt: DateTime.formatIso(mergedAt), rules: state.rules })
+    );
+    contexts = A.dedupe(A.appendAll(contexts, folded.contexts));
+    sources = A.append(sources, source);
+  }
+  if (A.isReadonlyArrayEmpty(sources))
+    return yield* YeetCommandError.make({ message: "No historical applicable ruleset observed" });
+  return GoalRequiredCheckSnapshot.make({ contexts, sources, effectiveAt: mergedAt });
+});
+/**
+ * Digests the decoded completion declaration, initiative identity and packet identity canonically.
+ *
+ * **Example** (Inspect the digest operation)
+ *
+ * ```ts
+ * import { goalCompletionDeclarationDigest } from "@beep/repo-cli/commands/Goals/Completion"
+ * console.log(typeof goalCompletionDeclarationDigest)
+ * ```
+ *
+ * @category encoding
+ * @since 0.0.0
+ */
+export const goalCompletionDeclarationDigest = Effect.fn("Goals.Completion.declarationDigest")(function* (
+  manifest: GoalManifest
+) {
   const gate = yield* S.encodeEffect(GoalManifest)(manifest);
   return yield* sha256Hex(
     canonicalJsonText({
       initiative: { id: manifest.initiative.id },
-      packetId: manifest.packetId,
+      packetId: manifest.initiative.packetId,
       completionGate: gate.completionGate,
       pullRequests: goalPullRequestRefs(manifest),
     })
@@ -270,7 +398,12 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
   manifest: GoalManifest,
   final: GoalPullRequestRef
 ) {
-  const digest = yield* declarationDigest(manifest);
+  const providedVerifier = yield* Effect.serviceOption(GoalCompletionVerifier);
+  const resolve = O.getOrElse(
+    O.map(providedVerifier, (verifier) => verifier.resolve),
+    () => GoalCompletionVerifier.resolve
+  );
+  const digest = yield* goalCompletionDeclarationDigest(manifest);
   const verifiedAt = yield* DateTime.now;
   const initial = GoalCompletionObservation.make({
     repository: "unobserved",
@@ -287,11 +420,11 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
     subClaims: [],
     verifiedAt,
   });
-  if (initial.grandfathered) return yield* GoalCompletionVerifier.resolve(initial);
+  if (initial.grandfathered) return yield* resolve(initial);
   const pullRead = yield* readJson(root, ["api", `repos/{owner}/{repo}/pulls/${final.number}`], Pull).pipe(
     Effect.option
   );
-  if (O.isNone(pullRead)) return yield* GoalCompletionVerifier.resolve(initial);
+  if (O.isNone(pullRead)) return yield* resolve(initial);
   const pull = pullRead.value;
   const head = pull.head.sha;
   const known = GoalCompletionObservation.make({
@@ -300,7 +433,7 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
     acceptedHead: O.some(head),
     merged: O.some(pull.merged),
   });
-  if (!pull.merged) return yield* GoalCompletionVerifier.resolve(known);
+  if (!pull.merged) return yield* resolve(known);
   const reads = yield* Effect.gen(function* () {
     const mergeSha = yield* Effect.fromOption(pull.merge_commit_sha).pipe(
       Effect.mapError(() => YeetCommandError.make({ message: "Merged PR has no merge result" }))
@@ -318,23 +451,14 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
       method: A.length(mergeCommit.parents) === 2 ? O.some("merge") : O.none(),
       baseRef: pull.base.ref,
     });
-    const acceptedText = yield* runGitOutput(
-      root,
-      ["show", `${head}:goals/${slug}/ops/manifest.json`],
-      gitAdapter
-    ).pipe(
+    const acceptedText = yield* readCompletionGit(root, ["show", `${head}:goals/${slug}/ops/manifest.json`]).pipe(
       Effect.catchTag("YeetCommandError", () =>
-        ghOutput({
-          cwd: root,
-          args: [
-            "api",
-            `repos/{owner}/{repo}/contents/goals/${slug}/ops/manifest.json?ref=${head}`,
-            "-H",
-            "Accept: application/vnd.github.raw+json",
-          ],
-          label: "accepted-head goal declaration",
-          onFailure: (failure) => YeetCommandError.make({ message: `${failure.label}: ${failure._tag}` }),
-        })
+        readCompletionGithub(root, [
+          "api",
+          `repos/{owner}/{repo}/contents/goals/${slug}/ops/manifest.json?ref=${head}`,
+          "-H",
+          "Accept: application/vnd.github.raw+json",
+        ])
       ),
       Effect.option
     );
@@ -343,18 +467,16 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
       ? yield* S.decodeUnknownEffect(GoalManifest)(acceptedParsed.value).pipe(Effect.option)
       : O.none<GoalManifest>();
     const acceptedDeclarationDigest = O.isSome(acceptedManifest)
-      ? O.some(yield* declarationDigest(acceptedManifest.value))
+      ? O.some(yield* goalCompletionDeclarationDigest(acceptedManifest.value))
       : O.none<string>();
     const pages = yield* readJson(
       root,
-      ["api", `repos/{owner}/{repo}/commits/${head}/check-runs?per_page=100`, "--paginate", "--slurp"],
+      ["api", `repos/{owner}/{repo}/commits/${head}/check-runs?per_page=100&filter=all`, "--paginate", "--slurp"],
       CheckPages
     );
     const checks = A.flatMap(pages, (page) => page.check_runs);
-    const rules = yield* readYeetRulesetRequiredContexts(
-      yield* hydrateYeetReadOnlyContext({ base: `origin/${pull.base.ref}`, head, packetDir: ".beep/yeet/packets" })
-    );
-    const required = O.map(rules, (value) => value.contexts);
+    const requiredChecks = yield* readHistoricalRequiredChecks(root, pull.base.ref, mergedAt).pipe(Effect.option);
+    const required = O.map(requiredChecks, (snapshot) => snapshot.contexts);
     const gatingOutcome = O.match(required, {
       onNone: (): GoalCompletionOutcome => "unknown",
       onSome: (contexts): GoalCompletionOutcome => {
@@ -365,7 +487,7 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
             (check) =>
               check.name === name &&
               check.head_sha === head &&
-              O.exists(check.completed_at, (time) => DateTime.toEpochMillis(time) <= DateTime.toEpochMillis(mergedAt))
+              O.exists(check.started_at, (time) => DateTime.toEpochMillis(time) <= DateTime.toEpochMillis(mergedAt))
           );
           const newest = A.reduce(matching, O.none<typeof TimedCheck.Type>(), (found, check) =>
             O.isNone(found) || check.id > found.value.id ? O.some(check) : found
@@ -373,7 +495,8 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
           return O.match(newest, {
             onNone: () => "unknown",
             onSome: (check) =>
-              check.status !== "completed"
+              check.status !== "completed" ||
+              !O.exists(check.completed_at, (time) => DateTime.toEpochMillis(time) <= DateTime.toEpochMillis(mergedAt))
                 ? "unknown"
                 : check.conclusion === "success" || check.conclusion === "neutral" || check.conclusion === "skipped"
                   ? "verified"
@@ -392,7 +515,7 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
         hostedRef,
         gatingOutcome,
         O.some(head),
-        `Required contexts observed at accepted head before merge; ${O.getOrElse(O.map(required, A.length), () => 0)} contexts. Current base ruleset read separately; unavailable history is unknown.`
+        `Required contexts observed at accepted head before merge; ${O.getOrElse(O.map(required, A.length), () => 0)} contexts. Versioned GitHub ruleset history supplies the required-context names; unavailable history is unknown.`
       )
     );
     for (const ref of manifest.completionGate.acceptanceEvidence ?? []) {
@@ -403,24 +526,46 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
           : yield* readLocalEvidence(root, ref, head)
       );
     }
-    const nonRequiredReds = A.map(
-      A.filter(
-        checks,
-        (check) => check.conclusion === "failure" && !O.exists(required, (contexts) => A.contains(contexts, check.name))
-      ),
-      (check) =>
-        GoalNonRequiredRed.make({
-          lane: check.name,
-          conclusionAtMerge: O.exists(
-            check.completed_at,
-            (time) => DateTime.toEpochMillis(time) <= DateTime.toEpochMillis(mergedAt)
-          )
-            ? "failure"
-            : "pending",
-          conclusionFinal: "failure",
-          attribution: "unknown",
-        })
-    );
+    const conclusion = (check: typeof TimedCheck.Type, atMerge: boolean): GoalCheckConclusion =>
+      atMerge &&
+      !O.exists(check.completed_at, (time) => DateTime.toEpochMillis(time) <= DateTime.toEpochMillis(mergedAt))
+        ? "pending"
+        : S.is(GoalCheckConclusion)(check.conclusion)
+          ? check.conclusion
+          : check.status === "completed"
+            ? "unknown"
+            : "pending";
+    const nonRequiredReds = O.match(required, {
+      onNone: A.empty<GoalNonRequiredRed>,
+      onSome: (contexts) =>
+        A.getSomes(
+          A.map(A.dedupe(A.map(checks, (check) => check.name)), (name) => {
+            if (A.contains(contexts, name)) return O.none<GoalNonRequiredRed>();
+            const matching = A.filter(checks, (check) => check.name === name && check.head_sha === head);
+            const final = A.reduce(matching, O.none<typeof TimedCheck.Type>(), (found, check) =>
+              O.isNone(found) || check.id > found.value.id ? O.some(check) : found
+            );
+            const beforeMerge = A.filter(matching, (check) =>
+              O.exists(check.started_at, (time) => DateTime.toEpochMillis(time) <= DateTime.toEpochMillis(mergedAt))
+            );
+            const atMerge = A.reduce(beforeMerge, O.none<typeof TimedCheck.Type>(), (found, check) =>
+              O.isNone(found) || check.id > found.value.id ? O.some(check) : found
+            );
+            if (O.isNone(final)) return O.none<GoalNonRequiredRed>();
+            const conclusionFinal = conclusion(final.value, false);
+            if (conclusionFinal === "success" || conclusionFinal === "neutral" || conclusionFinal === "skipped")
+              return O.none<GoalNonRequiredRed>();
+            return O.some(
+              GoalNonRequiredRed.make({
+                lane: name,
+                conclusionAtMerge: O.isSome(atMerge) ? conclusion(atMerge.value, true) : "unknown",
+                conclusionFinal,
+                attribution: "unknown",
+              })
+            );
+          })
+        ),
+    });
     const timeline = yield* readJson(
       root,
       ["api", `repos/{owner}/{repo}/issues/${final.number}/timeline?per_page=100`, "--paginate", "--slurp"],
@@ -458,18 +603,48 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
     const pushedAt = O.map(received, (first) =>
       A.reduce(forced, first, (left, right) => DateTime.toUtc(DateTime.max(left, right)))
     );
-    const window = O.map(O.all({ pushedAt, readyAt: lastReady }), (instants) =>
+    const readyAt = O.orElse(lastReady, () => (O.isSome(timeline) ? O.some(pull.created_at) : O.none()));
+    const window = O.map(O.all({ pushedAt, readyAt }), (instants) =>
       decideYeetReviewWindow({
         ...instants,
         now: mergedAt,
-        readyAnchor: "ready-for-review",
-        window: Duration.minutes(20),
+        readyAnchor: O.isSome(lastReady) ? "ready-for-review" : "pr-opened",
+        window: YEET_REVIEW_WINDOW_DEFAULT,
       })
     );
+    const acceptedDeclaration = O.map(acceptedManifest, (value) => ({
+      id: value.initiative.id,
+      packetId: value.initiative.packetId,
+      operator: value.completionGate.operator,
+      requiresPullRequest: value.completionGate.requiresPullRequest,
+      requiresMergeable: value.completionGate.requiresMergeable,
+      grandfathered: value.completionGate.grandfathered,
+      statement: value.completionGate.statement,
+    }));
+    const currentDeclaration = {
+      id: manifest.initiative.id,
+      packetId: manifest.initiative.packetId,
+      operator: manifest.completionGate.operator,
+      requiresPullRequest: manifest.completionGate.requiresPullRequest,
+      requiresMergeable: manifest.completionGate.requiresMergeable,
+      grandfathered: manifest.completionGate.grandfathered,
+      statement: manifest.completionGate.statement,
+    };
+    const declarationOutcome = O.match(acceptedDeclaration, {
+      onNone: (): GoalCompletionOutcome => "unknown",
+      onSome: (value): GoalCompletionOutcome =>
+        canonicalJsonText(value) === canonicalJsonText(currentDeclaration) ? "verified" : "unsatisfied",
+    });
     const subClaims = [
       evidenceCheck(
+        GoalAcceptanceEvidenceRef.make({ kind: "packet-history", ref: "accepted-declaration", gating: false }),
+        declarationOutcome,
+        O.some(head),
+        "Accepted-head declaration compared with current identity and gate, excluding retrospective PR/evidence references. Changes are historical sub-claims and never reset lifecycle."
+      ),
+      evidenceCheck(
         GoalAcceptanceEvidenceRef.make({ kind: "packet-history", ref: "draft-to-ready", gating: false }),
-        O.isNone(timeline) ? "unknown" : O.isSome(lastReady) ? "verified" : "unknown",
+        O.isNone(timeline) ? "unknown" : O.isSome(lastReady) ? "verified" : "unsatisfied",
         O.some(head),
         "ready_for_review event proves transition from draft; caller identity does not prove yeet invocation."
       ),
@@ -497,12 +672,13 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
       ...known,
       merge: O.some(merge),
       acceptedDeclarationDigest,
+      requiredChecks,
       evidence,
       nonRequiredReds,
       subClaims,
     });
   }).pipe(Effect.option);
-  return yield* GoalCompletionVerifier.resolve(O.getOrElse(reads, () => known));
+  return yield* resolve(O.getOrElse(reads, () => known));
 });
 
 const receiptLocation = Effect.fn("Goals.Completion.receiptLocation")(function* (root: string) {
@@ -530,14 +706,14 @@ export const storedGoalCompletion = Effect.fn("Goals.Completion.stored")(functio
   manifest: GoalManifest,
   final: GoalPullRequestRef
 ) {
-  const digest = yield* declarationDigest(manifest);
+  const digest = yield* goalCompletionDeclarationDigest(manifest);
   const location = yield* receiptLocation(root);
   const read = yield* readContainedFileStringNoFollow(location.ledgerRoot, location.file);
   const text = O.getOrElse(read.contents, () => "");
   const lines = Str.split(text, "\n");
   const complete = Str.endsWith("\n")(text) ? lines : A.dropRight(lines, 1);
   const receipts = A.getSomes(A.map(complete, ReceiptJson.decodeOption));
-  const remote = yield* runGitOutput(root, ["remote", "get-url", "origin"], gitAdapter).pipe(Effect.option);
+  const remote = yield* readCompletionGit(root, ["remote", "get-url", "origin"]).pipe(Effect.option);
   const repository = O.flatMap(remote, (text) =>
     O.flatMap(Str.match(/github\.com[:/]([^/\s]+\/[^/\s]+?)(?:\.git)?\s*$/u)(text), (match) => A.get(match, 1))
   );
@@ -549,7 +725,9 @@ export const storedGoalCompletion = Effect.fn("Goals.Completion.stored")(functio
       receipt.finalPullRequest === final.number &&
       O.contains(receipt.repository)(repository)
   );
-  const newest = A.reduce(matching, O.none<GoalCompletionReceipt>(), (found, receipt) =>
+  const definite = A.filter(matching, (receipt) => receipt.outcome !== "unknown");
+  const candidates = A.isReadonlyArrayNonEmpty(definite) ? definite : matching;
+  const newest = A.reduce(candidates, O.none<GoalCompletionReceipt>(), (found, receipt) =>
     O.isNone(found) || DateTime.isGreaterThan(receipt.verifiedAt, found.value.verifiedAt) ? O.some(receipt) : found
   );
   if (O.isNone(newest)) return newest;
@@ -569,6 +747,8 @@ const refresh = Effect.fn("Goals.Completion.refresh")(function* (slug: O.Option<
   const root = yield* findRepoRoot();
   const records = yield* listGoalPackets();
   const location = yield* receiptLocation(root);
+  if (O.exists(slug, (value) => !A.some(records, (record) => record.slug === value)))
+    return yield* YeetCommandError.make({ message: "Requested goal packet does not exist" });
   for (const record of records) {
     if (O.exists(slug, (value) => value !== record.slug)) continue;
     const parsed = O.flatMap(O.fromUndefinedOr(record.manifestText), parseGoalManifestText);

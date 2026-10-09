@@ -123,3 +123,15 @@
   now loads the IO adapter at execution; normalization remains in goal schemas.
 - Prevention: document the bus environment at the admission entrypoint and retain a
   CLI smoke fixture for command-family import cycles. No gate bypass or baseline write.
+
+## 2026-10-09: H2 historical coverage log is incomplete
+
+- Doing: comparing #1429 non-required coverage failures with the nearest completed
+  main ancestor before its merge-base, walking past cancelled runs.
+- Evidence: main run `37385597353`, job `112020340159`, completed at
+  `2026-10-06T00:05:53Z`; its fetched log ends during tests at `23:44:18Z`
+  and contains no terminal coverage-ratchet rows.
+- Disposition: full-lane coverage attribution is unknown; the new PatternOntology
+  row can be identified independently, but missing baseline rows cannot prove equality.
+- Would have prevented it: retained complete job logs or a separate immutable
+  coverage-row artifact linked to the job.

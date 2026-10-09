@@ -382,7 +382,7 @@ export class GoalMergeResult extends S.Class<GoalMergeResult>($I`GoalMergeResult
     mergeCommit: S.NonEmptyString,
     tree: S.NonEmptyString,
     mergedAt: S.DateTimeUtcFromString,
-    method: S.Option(GoalMergeMethod),
+    method: S.OptionFromNullOr(GoalMergeMethod),
     baseRef: S.NonEmptyString,
   },
   $I.annote("GoalMergeResult", {
@@ -407,10 +407,68 @@ export class GoalEvidenceCheck extends S.Class<GoalEvidenceCheck>($I`GoalEvidenc
   {
     ref: GoalAcceptanceEvidenceRef,
     outcome: GoalCompletionOutcome,
-    observedHead: S.Option(S.NonEmptyString),
+    observedHead: S.OptionFromNullOr(S.NonEmptyString),
     detail: S.String,
   },
   $I.annote("GoalEvidenceCheck", { description: "Records the outcome and observed head of one acceptance reference." })
+) {}
+
+/**
+ * Names check conclusions without conflating pending observations and terminal failures.
+ *
+ * **Example** (Recognize pending checks)
+ *
+ * ```ts
+ * import { GoalCheckConclusion } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ * console.log(GoalCheckConclusion.is.pending("pending"))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GoalCheckConclusion = LiteralKit([
+  "pending",
+  "success",
+  "failure",
+  "neutral",
+  "skipped",
+  "cancelled",
+  "timed_out",
+  "action_required",
+  "stale",
+  "startup_failure",
+  "unknown",
+]).pipe(
+  $I.annoteSchema("GoalCheckConclusion", {
+    description: "GitHub check conclusion or explicit pending/unknown observation.",
+  })
+);
+/**
+ * A GitHub conclusion or explicit pending/unknown observation.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GoalCheckConclusion = typeof GoalCheckConclusion.Type;
+
+/**
+ * Records the historical required contexts and the immutable GitHub ruleset versions supplying them.
+ *
+ * **Example** (Inspect required-check provenance)
+ *
+ * ```ts
+ * import { GoalRequiredCheckSnapshot } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ * console.log(GoalRequiredCheckSnapshot.fields.sources)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GoalRequiredCheckSnapshot extends S.Class<GoalRequiredCheckSnapshot>($I`GoalRequiredCheckSnapshot`)(
+  { contexts: S.Array(S.NonEmptyString), sources: S.Array(S.NonEmptyString), effectiveAt: S.DateTimeUtcFromString },
+  $I.annote("GoalRequiredCheckSnapshot", {
+    description: "Historical required-context list with source version references and merge-time applicability.",
+  })
 ) {}
 
 /**
@@ -429,8 +487,8 @@ export class GoalEvidenceCheck extends S.Class<GoalEvidenceCheck>($I`GoalEvidenc
 export class GoalNonRequiredRed extends S.Class<GoalNonRequiredRed>($I`GoalNonRequiredRed`)(
   {
     lane: S.NonEmptyString,
-    conclusionAtMerge: S.NonEmptyString,
-    conclusionFinal: S.NonEmptyString,
+    conclusionAtMerge: GoalCheckConclusion,
+    conclusionFinal: GoalCheckConclusion,
     attribution: GoalRedAttribution,
   },
   $I.annote("GoalNonRequiredRed", {
@@ -457,10 +515,14 @@ export class GoalCompletionReceipt extends S.Class<GoalCompletionReceipt>($I`Goa
     repository: S.NonEmptyString,
     packet: S.NonEmptyString,
     declarationDigest: S.NonEmptyString,
-    acceptedDeclarationDigest: S.Option(S.NonEmptyString),
+    acceptedDeclarationDigest: S.OptionFromNullOr(S.NonEmptyString),
+    requiredChecks: S.OptionFromNullOr(GoalRequiredCheckSnapshot).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.withDecodingDefault(Effect.succeed(null))
+    ),
     finalPullRequest: S.Int.check(S.isGreaterThan(0)),
-    acceptedHead: S.Option(S.NonEmptyString),
-    merge: S.Option(GoalMergeResult),
+    acceptedHead: S.OptionFromNullOr(S.NonEmptyString),
+    merge: S.OptionFromNullOr(GoalMergeResult),
     evidence: S.Array(GoalEvidenceCheck),
     nonRequiredReds: S.Array(GoalNonRequiredRed),
     subClaims: S.Array(GoalEvidenceCheck),
@@ -548,6 +610,7 @@ export class GoalCompletionGate extends S.Class<GoalCompletionGate>($I`GoalCompl
 export class GoalInitiative extends S.Class<GoalInitiative>($I`GoalInitiative`)(
   {
     id: S.String,
+    packetId: S.optionalKey(S.String),
     status: GoalStatus,
     title: S.optionalKey(S.String),
     created: S.optionalKey(S.String),
@@ -742,7 +805,6 @@ export class GoalManifest extends S.Class<GoalManifest>($I`GoalManifest`)(
     completionGate: GoalCompletionGate,
     schemaVersion: S.optionalKey(GoalManifestSchemaVersion),
     lifecycle: S.optionalKey(GoalStatus),
-    packetId: S.optionalKey(S.String),
     mergedPullRequest: S.optionalKey(S.Int.check(S.isGreaterThan(0))),
     mergedPullRequests: S.Int.check(S.isGreaterThan(0)).pipe(S.Array, S.optionalKey),
     packetPath: S.optionalKey(S.String),

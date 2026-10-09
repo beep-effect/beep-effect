@@ -59,6 +59,8 @@ nothing was adopted or discarded. P0 Research is complete.
 
 ## Latest Evidence
 
+H2 implementation and historical reconciliation: [stage-4 completion receipts](./history/receipts/stage-4-completion-receipts.md). Post-merge refresh remains a clone-scoped closeout action.
+
 [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md)
 (implementation head `e62411d63f`, 2026-10-09);
 [`research/sweeps/2026-10-09/README.md`](./research/sweeps/2026-10-09/README.md)
