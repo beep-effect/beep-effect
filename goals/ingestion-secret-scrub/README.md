@@ -34,8 +34,8 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 complete. P1 implementation is next: canonical bank, scrub transform and
-FilingDecisionLlm prompt gate.
+P0 complete. P1 implementation is in progress: the canonical bank, scrub transform
+and FilingDecisionLlm gate are implemented locally; required package proof is queued.
 
 ## Latest Evidence
 
@@ -45,8 +45,24 @@ Synthetic fixtures: 25 scrub cases and 7 old/new consumer cases. Single-file fix
 integrity: 2 tests pass. Live legacy-rendering comparison: 0 mismatches. Exact-canary
 scan of fixture/test/scanner source, inventory, friction receipt, SPEC and handoff:
 each count 0, pass. Direct fixture gitleaks scan: pass. Commit-range secrets lane
-will run after the signed wave-1 commit. Package proof remains pending; no runtime
-scrub or prompt-gate implementation is claimed.
+passed on the signed wave-1 commits. PR #1570 is draft with `ready-for-heavy`.
+
+P1 focused proof: 5 canonical-bank tests, 31 scrub/admission/retention tests,
+5 FilingDecisionLlm gate tests, 2 CauseRedaction compatibility/error tests and
+1 metrics compatibility/count test pass. Together with the 2 P0 integrity tests,
+46 focused tests pass. The gate cases cover clean, masked, blocked, unknown and
+absent excerpts; blocked and unknown make zero model calls. All captured prompts,
+logs and span attributes/failure causes contain zero tested canaries. Serialized
+scrub results and evidence contain zero tested canaries; no TextAnchor is emitted.
+The TestClock proves seven-day raw, thirty-day proof, pin/purpose decisions and
+twelve calendar months across a leap year. Persisted exact-canary scans cover six
+fixture/test sources, five focused-test output files and five packet support files:
+each count 0, pass. Package/default proof and hosted parity remain pending.
+
+First-wave hosted Check: introduced scanner error construction repaired locally
+with schema `.make`. First-wave hosted Lint Policy and local knowledge references:
+one inherited gated observation in another goal's SPEC, confirmed on `origin/main`;
+the orchestrator owns its consolidated repair. The lane changes no shared policy.
 
 ## Notes
 

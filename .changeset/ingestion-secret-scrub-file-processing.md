@@ -2,5 +2,6 @@
 "@beep/file-processing": minor
 ---
 
-Add synthetic fixture contracts for ingestion-secret-scrub credential coverage,
-non-secret evidence and prompt admission independently of action authorization.
+Add the ingestion-secret-scrub service with sanitized text, mask-only proof,
+coverage and residue status, retention decisions and prompt-admissible text.
+Prompt admission remains independent of action authorization.

@@ -14,8 +14,8 @@ describe("secret scrub P0 fixture integrity", () => {
   it("requires every scrub and consumer expectation field", () => {
     expect(A.every(secretScrubFixtures(), S.is(SecretScrubFixture))).toBe(true);
     expect(A.every(consumerRedactionFixtures(), S.is(ConsumerRedactionFixture))).toBe(true);
-    expect(A.length(secretScrubFixtures())).toBe(25);
-    expect(A.length(consumerRedactionFixtures())).toBe(7);
+    expect(A.length(secretScrubFixtures())).toBe(27);
+    expect(A.length(consumerRedactionFixtures())).toBe(8);
   });
   it("proves the exact-canary scanner detects runtime values and repeated occurrences", () => {
     const text = A.join(

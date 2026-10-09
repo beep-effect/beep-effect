@@ -83,3 +83,23 @@ This includes exports, examples, tests and internal consumers; no matched sample
 - `packages/tooling/library/ai-metrics/test/privacy.test.ts`
 - `packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts`
 - `packages/tooling/tool/cli/test/codex-findings-scan.test.ts`
+
+## P1 count correction
+
+Authorization headers also match the union assignment rule's auth fragment and colon.
+Original-input counts therefore include both categories for authorization and its nested
+scheme/provider overlap. Two P0 scrub expectations were corrected to reflect the already
+recorded independent-count policy. Metrics assignment counts increase for these colon
+inputs too; rendering remains unchanged because the assignment consumes the same value.
+
+### Implementation regression refinement
+
+Two additional synthetic fixtures cover double- and single-quoted unterminated
+assignment values. These are residue of the supported assignment grammar; ingestion
+masks the entire remaining extent and blocks admission. Legacy rendering remains
+the union rule's behavior. Final scrub fixture count: 27.
+
+The final consumer table contains eight cases, including header/assignment overlap.
+Complete header lines retain header-rendering precedence in metrics, while raw-input
+assignment and header counts remain independent. This avoids colon normalization
+bypassing full header masking. Existing metrics bearer properties pass after repair.

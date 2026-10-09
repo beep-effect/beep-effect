@@ -201,3 +201,30 @@ not replacement doctrine.
 | Mask-only evidence, original offsets, no TextAnchor emitted | Avoid key custody and quoted-match leakage; offset metadata is sufficient | Add separately authorized keyed-digest evidence |
 | Retention schema and pure purge decision; no storage adapter | Slice enforcement is 7-day raw, 30-day proof unless pinned, 12-month audit eligibility | Replace decision when persistence owner implements deletion |
 | Repo quality row maps to hosted exact-head CI plus hosted-parity set | R4; no default local full Yeet proof | Run on-demand local proof if needed |
+
+### P1 count-contract correction
+
+The union assignment rule also matches authorization headers through their auth name
+fragment and colon separator. Header and overlap fixtures therefore count both assignment
+and header categories independently, as specified by the raw-input overlap precedent.
+Reason: correct a P0 expectation omission, preserving the canonical union and metrics
+per-rule counts. Reversal: change the counting policy in a later explicit contract version;
+never silently exclude this overlap from the current bank.
+
+### Supported quoted-assignment residue
+
+An unterminated quoted value in the existing assignment grammar masks the remaining
+original extent and returns `residue: present`, even if the bare-value alternative
+also matched a prefix. Reason: text after the first word must not escape into a prompt.
+This adds no category or credential family and leaves legacy consumer replacement
+semantics unchanged. Reversal: remove the partial-form rule and its two regression
+fixtures; keep the gate fail-closed for any remaining residue.
+
+### Header overlap rendering precedence
+
+Metrics assignment rendering excludes complete canonical header lines so their
+colon and full value remain available to the header renderer. Counts still use
+original input and include independently overlapping categories. Reason: a colon
+normalization must not bypass complete header redaction or leak later words.
+Reversal: remove this canonical rendering adapter and restore the P0 metrics bank.
+This preserves existing complete-header output behind unchanged export types.

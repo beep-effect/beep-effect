@@ -77,3 +77,35 @@ schema errors must use `.make`, rather than `new`. The exact completed job log w
 read immediately, before waiting for the workflow. Repair changes only the constructor;
 no schema issue or raw input is attached to the error. This signed repair will travel
 with the complete implementation wave. P1 remains in progress.
+
+## P1 implementation and introduced proof repairs
+
+The canonical bank, scrub service, mask-only proof, retention decisions and private
+prompt capability are implemented locally. Focused proof covers 27 synthetic scrub
+fixtures, bank version/union/private grammar, prompt admission, retention and both
+legacy renderers. Exact-canary counts in serialized results/evidence and captured
+prompts/logs/span attributes/failure causes are 0. No TextAnchor is emitted.
+
+The full effect-vitest detector reports introduced=0 without a baseline refresh;
+schema-first reports no introduced or advisory finding after a schema-derived
+retention property. New JSDoc examples have canonical verified doctest markers.
+
+Default package proof began after shared-slot queueing. Documents-domain passes
+its audit and docgen; its test-tsgo and scoped coverage commands pass. Introduced
+compile failures required a literal single-key branded schema with an explicit
+export-safe type, typed `decodeOption`, and Effect-composed test encoders.
+
+The metrics property test found an introduced header-overlap rendering leak:
+normalizing an assignment-shaped header prefix could remove its colon and leave
+later credential bytes. Repair: the canonical bank's pure assignment renderer
+preserves complete header lines for the header renderer. Reason: keep the old
+header output while retaining independent raw-input category counts. Reversal:
+remove that renderer and restore the legacy metrics rule/order from the P0 base.
+No rule copy, new category or dependency is introduced. All default proofs affected
+by these repairs will be rerun before a pass is claimed or the implementation is
+published. PR #1570 remains draft; P1 remains in progress.
+
+Hosted P0 Lint Policy: inherited knowledge-reference gate in another goal's SPEC,
+confirmed on origin/main. Hosted P0 Coverage Regression: two unchanged repo-cli
+sources, outside lane ownership. Exact completed job logs were read; both rows
+carry scope/evidence acknowledgements for the orchestrator's consolidated repair.

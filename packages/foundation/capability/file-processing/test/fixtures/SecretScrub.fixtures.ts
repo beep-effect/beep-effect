@@ -78,7 +78,26 @@ export const secretScrubFixtures = () => [
   fixture("passwd", `passwd=${value()}`, "passwd=[REDACTED]", [count("secret-assignment")]),
   fixture("longest-comma", `TOKEN=${value()},suffix`, "TOKEN=[REDACTED]", [count("secret-assignment")]),
   fixture("quoted", `SECRET="${value()} spaced"`, "SECRET=[REDACTED]", [count("secret-assignment")]),
-  fixture("header", `Authorization: ${value()}`, "Authorization: [REDACTED]", [count("auth-header")]),
+  fixture(
+    "quoted-unclosed",
+    `SECRET="public ${value()}`,
+    "[REDACTED]",
+    [count("secret-assignment")],
+    "known",
+    "present"
+  ),
+  fixture(
+    "single-quoted-unclosed",
+    `TOKEN='${value()}`,
+    "[REDACTED]",
+    [count("secret-assignment")],
+    "known",
+    "present"
+  ),
+  fixture("header", `Authorization: ${value()}`, "Authorization: [REDACTED]", [
+    count("secret-assignment"),
+    count("auth-header"),
+  ]),
   fixture("cookie", `Cookie: ${value()}`, "Cookie: [REDACTED]", [count("auth-header")]),
   fixture("set-cookie", `Set-Cookie: ${value()}`, "Set-Cookie: [REDACTED]", [count("auth-header")]),
   fixture("scheme", `Basic ${value()}`, "Basic [REDACTED]", [count("bearer-token")]),
@@ -107,6 +126,7 @@ export const secretScrubFixtures = () => [
     "The keyboard and token vocabulary are public."
   ),
   fixture("overlap", `Authorization: Bearer ${provider()}`, "Authorization: [REDACTED]", [
+    count("secret-assignment"),
     count("auth-header"),
     count("bearer-token"),
     count("provider-key"),
@@ -125,6 +145,16 @@ export class ConsumerRedactionFixture extends S.Class<ConsumerRedactionFixture>(
   headerCount: S.Natural,
 }) {}
 export const consumerRedactionFixtures = () => [
+  ConsumerRedactionFixture.make({
+    id: "header-overlap-precedence",
+    text: `Authorization: Bearer ${provider()}`,
+    oldCause: "Authorization: [REDACTED]",
+    newCause: "Authorization: [REDACTED]",
+    oldMetrics: "Authorization: [REDACTED]",
+    newMetrics: "Authorization: [REDACTED]",
+    assignmentCount: 1,
+    headerCount: 1,
+  }),
   ConsumerRedactionFixture.make({
     id: "colon-fragment",
     text: `TOKEN : ${value()}`,

@@ -21,3 +21,27 @@ Final disposition: remove filesystem acquisition from the integrity test; retain
 schema/scanner tests and prove persisted source absence through the scanner CLI.
 The full detector reports `introduced=0` without an inventory refresh. A documented
 judgment route for new canonical platform tests would have prevented this detour.
+
+## 2026-10-09 — inherited knowledge-reference gate
+
+- Work: inspect the first-wave hosted Heavy / Lint Policy failure before proceeding.
+- Evidence: the exact job log identifies one live gated `external-mirror-reference`
+  observation in `goals/repository-simplification-confidence/SPEC.md:374`.
+- Attribution: inherited; that line is present on `origin/main` and this lane does not edit it.
+- Disposition: acknowledge the row with the scope/evidence receipt; the program orchestrator
+  owns the consolidated repair. No other packet or shared policy is changed here.
+- Prevention: classify policy examples as examples in the reference checker, or repair
+  the owning packet once on main so every lane inherits the same fix.
+
+## 2026-10-09 — consolidation overlap and compiler proof
+
+- Work: default consumer package audits after shared-slot admission.
+- Evidence: metrics' existing bearer property exposed header-colon normalization
+  before the header rule; new test encoders also triggered `effect(schemaSync)`.
+- Attribution: introduced. Fix the renderer's header precedence in the canonical
+  bank and compose test encoders through Effect. The prompt brand additionally
+  requires a single literal key and an explicit export-safe schema type.
+- Prevention: include header/assignment overlap in the P0 old/new renderer matrix,
+  and run the default compiler policy before interpreting runtime tests as proof.
+- Repair verification: the existing metrics property and focused gate/scrub tests
+  pass. Affected default package proofs are being rerun; no pass is inferred.

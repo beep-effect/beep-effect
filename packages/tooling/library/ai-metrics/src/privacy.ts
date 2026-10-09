@@ -7,6 +7,11 @@
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
+import {
+  countCredentialCategory,
+  replaceCredentialAssignmentsOutsideHeaders,
+  replaceCredentialCategory,
+} from "@beep/schema/CredentialPatternBank";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
@@ -66,14 +71,6 @@ export const AI_METRICS_LOCAL_INSECURE_HASH_SALT = "beep-ai-metrics-local-smoke-
 
 const normalizeHashSalt = (input: unknown): O.Option<string> =>
   O.isOption(input) ? O.filter(input, P.isString) : O.liftPredicate(input, P.isString);
-
-// These global regexes are safe for concurrent use here because matchAll and replace
-// start each string operation from index 0 even when the expression has the g flag.
-const SECRET_ASSIGNMENT_PATTERN =
-  /\b([A-Z][A-Z0-9_]*(?:API[_-]?KEY|KEY|TOKEN|SECRET|PASSWORD|PASS|PWD|AUTH|CREDENTIAL)[A-Z0-9_]*)\s*=\s*("[^"]*"|'[^']*'|[^\s;&|]+)/giu;
-const AUTH_HEADER_PATTERN = /\b(authorization|proxy-authorization)\s*:\s*([^\n\r]+)/giu;
-const BEARER_PATTERN = /\b(Bearer|Basic)\s+([A-Za-z0-9._~+/=-]{8,})/giu;
-const OPENAI_KEY_PATTERN = /\b(sk-[A-Za-z0-9_-]{8,})\b/gu;
 
 const countMatches = (pattern: RegExp, content: string): number =>
   pipe(content, Str.matchAll(pattern), A.fromIterable, A.length);
@@ -686,22 +683,18 @@ export const makeAiMetricsSourceAttribution = Effect.fn("AiMetrics.makeAiMetrics
  * @category utilities
  * @since 0.0.0
  */
-export const redactAiMetricsSensitiveText = (text: string): string =>
-  Str.replace(
-    OPENAI_KEY_PATTERN,
-    "[REDACTED_SECRET]"
-  )(
-    Str.replace(
-      BEARER_PATTERN,
-      "$1 [REDACTED]"
-    )(Str.replace(AUTH_HEADER_PATTERN, "$1: [REDACTED]")(Str.replace(SECRET_ASSIGNMENT_PATTERN, "$1=[REDACTED]")(text)))
-  );
+export const redactAiMetricsSensitiveText: (text: string) => string = flow(
+  replaceCredentialAssignmentsOutsideHeaders("$1=[REDACTED]"),
+  replaceCredentialCategory("auth-header", "$1: [REDACTED]"),
+  replaceCredentialCategory("bearer-token", "$1 [REDACTED]"),
+  replaceCredentialCategory("provider-key", "[REDACTED_SECRET]")
+);
 
 const redactionResultFor = (content: string): AiMetricsRedactionResult => {
-  const authHeaderCount = countMatches(AUTH_HEADER_PATTERN, content);
-  const bearerTokenCount = countMatches(BEARER_PATTERN, content);
-  const openAiKeyCount = countMatches(OPENAI_KEY_PATTERN, content);
-  const secretAssignmentCount = countMatches(SECRET_ASSIGNMENT_PATTERN, content);
+  const authHeaderCount = countCredentialCategory(content, "auth-header");
+  const bearerTokenCount = countCredentialCategory(content, "bearer-token");
+  const openAiKeyCount = countCredentialCategory(content, "provider-key");
+  const secretAssignmentCount = countCredentialCategory(content, "secret-assignment");
 
   return AiMetricsRedactionResult.make({
     authHeaderCount,
