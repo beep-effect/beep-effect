@@ -190,6 +190,8 @@ const fallbackReasonCases = [
 const baseEntityColumnNames = {
   createdAt: "created_at",
   createdByPrincipal: "created_by_principal",
+  deletedAt: "deleted_at",
+  deletedByPrincipal: "deleted_by_principal",
   entityType: "entity_type",
   id: "id",
   orgId: "org_id",

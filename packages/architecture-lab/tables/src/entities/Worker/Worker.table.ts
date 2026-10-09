@@ -86,7 +86,7 @@ export const WORKER_TABLE_NAME = getTableName(workerTable);
  * }
  *
  * const worker = decoded.success
- * const row = { ...toWorkerInsert(worker), id } satisfies WorkerRow
+ * const row = { ...toWorkerInsert(worker), deletedAt: null, deletedByPrincipal: null, id } satisfies WorkerRow
  *
  * console.log(row.displayName)
  * ```
@@ -210,7 +210,7 @@ export const toWorkerInsert = (worker: DomainWorker.Worker): WorkerInsert => Res
  * }
  *
  * const worker = decoded.success
- * const row = { ...toWorkerInsert(worker), id } satisfies WorkerRow
+ * const row = { ...toWorkerInsert(worker), deletedAt: null, deletedByPrincipal: null, id } satisfies WorkerRow
  *
  * const restored = fromWorkerRow(row)
  * if (restored.displayName !== "Ada Lovelace") {

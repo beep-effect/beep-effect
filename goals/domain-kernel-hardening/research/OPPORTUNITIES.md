@@ -88,3 +88,12 @@
 - Prevention: P0 compatibility measurements must include dependent docgen and
   exact-column tests, not only dependent typecheck. Measure both candidate
   encodings across that full surface before declaring a bounded migration.
+
+## 2026-10-09 — run-3 admission remains queued
+
+- Doing: qualify the authorized 70 mechanical sites through two beep-heavy batches.
+- Evidence: both wrappers reported `all 4 slots busy, waiting`; no payload log
+  existed at the first result-file poll. The wrapper emits its wait line only once.
+- Attribution: shared-capacity queue, not compiler or package failure.
+- Action: keep caps and at most two own admissions; poll result files every minute.
+- Prevention: periodic admission receipts would distinguish queued from running.

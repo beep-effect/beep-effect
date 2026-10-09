@@ -344,3 +344,37 @@ hosted-parity: test-tsgo: not run (scope stop) | docgen local: not run (scope st
 handoff: goals/domain-kernel-hardening/history/handoffs/domain-kernel-2026-10-09.md
 open items: reconcile at least 70 mechanical sites with the 40-edit stop threshold; no P1 publication or P2/P3 completion. D10 private-workspace release policy reverses by reverting amendment/implementation without changing privacy; D11 migration proof entries reverse with migration removal and bundle regeneration; D12 hold reverses on reconciled scope or measured compatible encoding. Orchestrator owns stale docs/ROADMAP.md platform re-entry bullet (~349), Parked packets row (~383), and cohort prose (~406). Follow-ups: stale DomainModel.make detector; desktop release migration rollout.
 blocked: full qualification requires at least 70 mechanical converter/fixture sites, exceeding the brief's 40-edit bound
+
+## Run 3 resume — amended 90-site mechanical bound
+
+Read the complete brief and latest ruling. Retained D12 verbatim and added D13.
+Main merge is already current; PR 1 #1577 is merged. Exactly 31 docgen row
+subjects and two column maps repaired, bringing the conservative total to 70.
+All sites are mechanical. No slice model/behavior edits. No changeset: all
+edited packages are private under D10 and #1566. No docgen fixture-update owner
+command exists; these are authored JSDoc examples compiled by package docgen.
+Two admitted batches run package verification and dependent/PGlite proofs.
+
+Additional mechanical files (31 subjects + two maps):
+
+- `packages/agents/tables/src/entities/ProviderInstance/ProviderInstance.converters.ts`
+- `packages/architecture-lab/tables/src/entities/Worker/Worker.table.ts`
+- `packages/documents/tables/src/entities/SyncConflict/SyncConflict.converters.ts`
+- `packages/documents/tables/src/entities/SyncCursor/SyncCursor.converters.ts`
+- `packages/documents/tables/src/entities/SyncItem/SyncItem.converters.ts`
+- `packages/documents/tables/src/entities/SyncOperation/SyncOperation.converters.ts`
+- `packages/epistemic/tables/src/entities/CandidateClaim/CandidateClaim.converters.ts`
+- `packages/epistemic/tables/src/entities/ClaimDisposition/ClaimDisposition.converters.ts`
+- `packages/epistemic/tables/src/entities/EdgeVersion/EdgeVersion.converters.ts`
+- `packages/epistemic/tables/src/entities/Evidence/Evidence.converters.ts`
+- `packages/epistemic/tables/src/entities/UsageRecord/UsageRecord.converters.ts`
+- `packages/epistemic/tables/test/EpistemicTables.test.ts`
+- `packages/epistemic/tables/test/EvidenceVerificationTables.test.ts`
+- `packages/workspace/tables/src/entities/Message/Message.converters.ts`
+- `packages/workspace/tables/src/entities/Thread/Thread.converters.ts`
+- `packages/workspace/tables/src/entities/Turn/Turn.converters.ts`
+- `packages/workspace/tables/src/entities/Workspace/Workspace.converters.ts`
+
+D13 reversal: revert mechanical repairs together with the kernel migration.
+ROADMAP platform re-entry bullet (~349), Parked packets row (~383), and cohort
+prose (~406) remain orchestrator-owned. No package proof result yet claimed.
