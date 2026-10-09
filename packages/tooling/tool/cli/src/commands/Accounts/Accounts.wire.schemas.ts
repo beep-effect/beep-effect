@@ -14,9 +14,14 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import { Base64Url } from "effect/encoding";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { AccountLabel, CreditBalance, UsageWindow } from "./Accounts.schemas.ts";
 
@@ -585,4 +590,116 @@ export const grokUsageWindows = (body: Uint8Array): O.Option<ReadonlyArray<Usage
         ),
       }),
     ])
+  );
+
+/**
+ * The part of the Claude CLI's config file that names the signed-in account.
+ *
+ * **Example** (Reject malformed text)
+ *
+ * ```ts
+ * import { ClaudeCliConfigJson } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(ClaudeCliConfigJson.decodeOption("not-json"))) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ClaudeCliConfig extends S.Class<ClaudeCliConfig>($I`ClaudeCliConfig`)(
+  { oauthAccount: S.Struct({ emailAddress: AccountLabel }) },
+  $I.annote("ClaudeCliConfig", { description: "The account the Claude CLI is signed in to." })
+) {}
+
+/**
+ * JSON-string codec for {@link ClaudeCliConfig}.
+ *
+ * **Example** (Read the signed-in email)
+ *
+ * ```ts
+ * import { ClaudeCliConfigJson } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * const config = ClaudeCliConfigJson.decodeOption('{"oauthAccount":{"emailAddress":"me@example.com"}}')
+ * console.log(O.map(config, (value) => value.oauthAccount.emailAddress)) // Option.some("me@example.com")
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const ClaudeCliConfigJson = JsonStringCodec(ClaudeCliConfig);
+
+/**
+ * The part of the Codex CLI's login file that names the signed-in account.
+ *
+ * **Details**
+ *
+ * Only the ID token is decoded, and only its claims are read: the email sits
+ * in the token's payload segment. The other tokens in the file are never
+ * decoded.
+ *
+ * **Example** (Reject a file without tokens)
+ *
+ * ```ts
+ * import { CodexCliAuthJson } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(CodexCliAuthJson.decodeOption("{}"))) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CodexCliAuth extends S.Class<CodexCliAuth>($I`CodexCliAuth`)(
+  { tokens: S.Struct({ id_token: S.RedactedFromValue(S.String, { label: "id_token" }) }) },
+  $I.annote("CodexCliAuth", { description: "The ID token of the account the Codex CLI is signed in to." })
+) {}
+
+/**
+ * JSON-string codec for {@link CodexCliAuth}.
+ *
+ * **Example** (Reject malformed text)
+ *
+ * ```ts
+ * import { CodexCliAuthJson } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(CodexCliAuthJson.decodeOption("not-json"))) // true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const CodexCliAuthJson = JsonStringCodec(CodexCliAuth);
+
+const IdTokenClaimsJson = JsonStringCodec(S.Struct({ email: AccountLabel }));
+
+/**
+ * Read the email claim of the Codex CLI's ID token.
+ *
+ * **Example** (Read a token without an email)
+ *
+ * ```ts
+ * import { CodexCliAuth, codexSignedInEmail } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ * import * as Redacted from "effect/Redacted"
+ *
+ * const auth = CodexCliAuth.make({ tokens: { id_token: Redacted.make("a.e30.c", { label: "id_token" }) } })
+ * console.log(O.isNone(codexSignedInEmail(auth))) // true
+ * ```
+ *
+ * @param auth - The decoded Codex login file.
+ * @returns The signed-in email, when the token carries one.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const codexSignedInEmail = (auth: CodexCliAuth): O.Option<AccountLabel> =>
+  pipe(
+    Redacted.value(auth.tokens.id_token),
+    Str.split("."),
+    A.get(1),
+    O.flatMap((segment) => Result.getSuccess(Base64Url.decodeString(segment))),
+    O.flatMap(IdTokenClaimsJson.decodeOption),
+    O.map((claims) => claims.email)
   );

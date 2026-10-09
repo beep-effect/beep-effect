@@ -24285,13 +24285,13 @@
       "reason": "Retained native worker fixture boundary: spawned Vitest consumes actual files and output/abort/report evidence is retained before scoped directory deletion. Emulator would erase worker/process subject."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/accounts-usage.test.ts:32:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/accounts-usage.test.ts:42:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/accounts-usage.test.ts",
-      "line": 32,
-      "endLine": 32,
+      "line": 42,
+      "endLine": 42,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
