@@ -53,15 +53,14 @@ describe("Detection input bounds and content identities", () => {
       { ...belief, subject: "" },
       { ...belief, value: Str.repeat(65536)("x") },
     ])
-      assertTrue(Result.isFailure(decode(bad)));
-    assertTrue(Result.isSuccess(decode(belief)));
+      decode(bad).pipe(Result.isFailure, assertTrue);
+    decode(belief).pipe(Result.isSuccess, assertTrue);
   });
   it("rejects repeated immutable refs", () => {
-    assertTrue(
-      Result.isFailure(
-        S.decodeUnknownResult(ContradictionDetectionSnapshot)({ beliefs: [belief, belief], singleValuedPredicates: [] })
-      )
-    );
+    S.decodeUnknownResult(ContradictionDetectionSnapshot)({
+      beliefs: [belief, belief],
+      singleValuedPredicates: [],
+    }).pipe(Result.isFailure, assertTrue);
   });
   it("canonicalizes JSON keys and hashes losing ref plus whole assertion", () => {
     expect(canonicalDetectionJson({ b: 2, a: 1 })).toBe('{"a":1,"b":2}');
