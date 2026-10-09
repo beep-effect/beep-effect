@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/ingestion-secret-scrub",
   "lifecycle": "active",
-  "statusNote": "P0 remains the next authorized phase: consolidate the two live redaction pattern banks and establish the synthetic fixture corpus before implementation.",
+  "statusNote": "P0 complete: bank inventory, R5 reconciliation, 25 scrub fixtures and 7 legacy-rendering fixtures; integrity and absence scans pass. P1 implementation is next.",
   "mission": "Deliver a pre-LLM file-processing secret scrub with one canonical pattern bank, no-secret proof, honest coverage/residue, and enforced prompt gating.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -51,7 +51,7 @@
     {
       "id": "P0",
       "name": "Pattern-bank consolidation audit and fixtures",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",

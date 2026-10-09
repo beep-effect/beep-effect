@@ -34,13 +34,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Pattern-bank consolidation audit: inventory and deduplicate both live
-redaction banks, choose and version one canonical bank, and establish the
-fixture corpus before implementation.
+P0 complete. P1 implementation is next: canonical bank, scrub transform and
+FilingDecisionLlm prompt gate.
 
 ## Latest Evidence
 
-Not started.
+P0 audit baseline: `36027982f2`. All declared prerequisites re-confirmed; adoption
+plan reports zero conflicts. Rule inventory and autonomy decisions are recorded.
+Synthetic fixtures: 25 scrub cases and 7 old/new consumer cases. Single-file fixture
+integrity: 2 tests pass. Live legacy-rendering comparison: 0 mismatches. Exact-canary
+scan of fixture/test/scanner source, inventory, friction receipt, SPEC and handoff:
+each count 0, pass. Direct fixture gitleaks scan: pass. Commit-range secrets lane
+will run after the signed wave-1 commit. Package proof remains pending; no runtime
+scrub or prompt-gate implementation is claimed.
 
 ## Notes
 

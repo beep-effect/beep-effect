@@ -188,3 +188,16 @@ not replacement doctrine.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | None | N/A | N/A | N/A | N/A |
+
+### 2026-10-09 — Lane decisions under the autonomy charter
+
+| Decision | Reason | Reversal |
+| --- | --- | --- |
+| `@beep/schema/CredentialPatternBank`, `credential-pattern-bank/v1` | R2; existing dependency edges and pure modeling fit | Remove module/export and restore consumers |
+| R5 union assignments and headers, longest extent, existing renderers | Preserve every existing match; metrics gains colon, fragment/digit/hyphen names, session/passwd and cookies; observability gains pass and longer comma extent; all derived redaction exports inherit this; counts and derived-UI safety change only on added matches | Restore baseline patterns and consumer calls |
+| Private tags implemented from description; no donor fetched/copied | Required category with provenance and no new dependency | Remove private-tag rule and fixtures |
+| Carried-over home paths participate in scrub clearance | Existing coverage remains enforced; no general PII claim | Exclude category from scrub under a later policy packet |
+| Branded prompt text at `FilingDecisionLlm`; blocked result inboxes | R3; one real model boundary and no authorization transitivity | Remove gate and additive inbox reason |
+| Mask-only evidence, original offsets, no TextAnchor emitted | Avoid key custody and quoted-match leakage; offset metadata is sufficient | Add separately authorized keyed-digest evidence |
+| Retention schema and pure purge decision; no storage adapter | Slice enforcement is 7-day raw, 30-day proof unless pinned, 12-month audit eligibility | Replace decision when persistence owner implements deletion |
+| Repo quality row maps to hosted exact-head CI plus hosted-parity set | R4; no default local full Yeet proof | Run on-demand local proof if needed |
