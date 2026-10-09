@@ -1022,11 +1022,10 @@ describe("pinned SPAR acquisition", () => {
           HttpClient.HttpClient,
           makeWebHandlerClient(() => new Response("altered pinned content"))
         ),
-        Effect.provide(CommandTestLayer),
         Effect.flip
       );
       expect(error._tag).toBe("SyncDataToTsError");
       expect(error.message).toContain("SHA-256 does not match");
-    })
+    }).pipe(Effect.provide(CommandTestLayer))
   );
 });

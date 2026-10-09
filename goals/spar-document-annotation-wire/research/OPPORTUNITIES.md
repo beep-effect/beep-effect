@@ -29,3 +29,25 @@ to `origin/main` and was not edited in this lane. Attribution: inherited,
 owned by the shared-main repair; this lane preserves the packet boundary.
 A preflight that identifies changed-path versus base findings would prevent
 feature lanes from rediscovering the same inherited red.
+
+## 2026-10-09 — Focused Vitest commands must use package working directories
+
+The initial focused fixture launches passed a package config from the repository
+root, where the inherited `test/**/*.test.{ts,tsx}` include found no test files.
+Attribution: the lane's command setup, not a fixture failure. Corrected launches
+enter the package directory and pass package-relative test paths. Coverage
+includes and output paths use the same package working-directory contract.
+A canonical focused-test launcher in the brief would prevent this detour.
+
+## 2026-10-09 — RDF audit test diagnostics
+
+The first RDF package audit compiled production source, then rejected four test
+lines: optional encoded context access, two unknown decoders on already typed
+encoded values, and a nested schema/arbitrary call with a pipeable form.
+The lane repaired all four in the content commit and acknowledged the audit
+inbox row with its fix SHA. Runtime source/codec probes were already green;
+package audit remains the authoritative proof of the repair.
+
+- Hosted-parity attribution: `quality test-tsgo` caught `strictEffectProvide` in the new pinned-acquisition test. The package audit had passed, but its check configuration does not cover this additional Effect test diagnostic. Moved the test layer to the outer test entry point; retain both proof lanes.
+- `docgen:local` reported `full-required` because `bun.lock` changed with the RDF-to-Md edge. Package docgen is green; the full docgen proof is now scheduled through the heavy wrapper.
+- Fallow audit reported one introduced cognitive-complexity finding in `MdSections.ts` (`nest`, score 18). Replaced the nested boundary loop with `Array.findFirstIndex`; no suppression or baseline regeneration. Health's blocking complexity finding is the same new fold hotspot, so both lanes are rerun together.

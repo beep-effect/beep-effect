@@ -229,14 +229,13 @@ const fold = (document: Document): MdSectionFold => {
       const source = sourceAt.value;
       if (Heading.is(source.node)) {
         const level = source.node.level;
-        let boundary = cursor + 1;
-        while (boundary < end) {
-          const nextAt = A.get(sources, boundary);
-          if (O.isNone(nextAt)) break;
-          const next = nextAt.value;
-          if (Heading.is(next.node) && next.node.level <= level) break;
-          boundary += 1;
-        }
+        const boundary = A.findFirstIndex(
+          A.take(A.drop(sources, cursor + 1), end - cursor - 1),
+          (next) => Heading.is(next.node) && next.node.level <= level
+        ).pipe(
+          O.map((offset) => cursor + 1 + offset),
+          O.getOrElse(() => end)
+        );
         children = A.append(
           children,
           MdSection.make({
