@@ -1,0 +1,39 @@
+# OA slice friction receipts
+
+## 2026-10-09 — Heavy launcher user bus
+
+- Task: prerequisite dependency build from the lane launcher.
+- Evidence: `beep-heavy` exited 1: `Failed to connect to user scope bus`;
+  `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS` were undefined.
+- Attribution: environment-only, before any build started.
+- Recovery: explicit existing user-session bus variables; job queued normally.
+- Prevention: export the user bus variables in the lane unit environment.
+
+## 2026-10-09 — Official OA images supply no qualified text
+
+- Task: build the non-client positive corpus through the existing USPTO driver.
+- Evidence: 16 downloads succeeded; each `pdffonts` result contained zero fonts;
+  `pdftotext -layout` emitted only page separators (6–29 characters).
+- Outcome: zero eligible real-OA positives. The brief's public-form-language
+  fallback is used; no OCR engine or guessed selected checkbox was introduced.
+- Prevention: a public born-digital sample catalog with explicit text lineage.
+
+## 2026-10-09 — Blind-label report and freeze ordering
+
+- Task: audit blind labels and freeze label A before reading B.
+- Evidence: B line 28 has a malformed JSON string. The A freeze script also
+  failed on an incorrectly named local module; a subsequent batched read exposed
+  the discarded B output before A was saved.
+- Outcome: first run void. Preserve its audit, rerun once in a fresh blind directory,
+  and freeze A before opening the second result. The provisional A judgments were
+  authored before either B result was opened, and their source remains private.
+- Prevention: make dependent audit/freeze/read steps sequential and fail closed
+  between steps; never batch a dependent labels read with its prerequisite.
+
+## 2026-10-09 — Second blind run unavailable
+
+- Evidence: fresh B report also fails JSON parsing (`Unterminated string`).
+- Outcome: both runs void; no B labels used. Per brief step 4, label A remains
+  the sole available text judgment and every fixture goes on the attorney sheet.
+  Do not repair malformed B output and treat it as a valid independent result.
+- Prevention: a model-output schema boundary with generation-time validation.

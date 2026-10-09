@@ -2,24 +2,30 @@
 
 ## Status
 
-Status: `pending`
+Status: `blocked`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | pending | With the attorney, construct a license-safe fixture corpus from real office actions; define rule-family identity, versioning, replay, migration, and supersession; set labeled per-family precision and abstention floors. This phase may run while the substrate is blocked. | The corpus covers positive pairs, hostile negatives, duplicates, drift, malformed/unsupported forms, Unicode/straddle, and quality/OCR cases; attorney disposition and license/provenance are recorded; version semantics and quantitative floors are explicit. |
-| P1 Implement | blocked | After the verified-span substrate gate clears, add the smallest schema-first `DocStructureCandidate` variants, versioned paired OA recognition, explicit `GroundedExtraction` adapter, typed abstention, persistence/replay behavior, and docketing intake adapter. | `citation-verified-span-substrate` P0/P1 has proved the anchor contract; exactly one supported pair emits two verified candidates; all other shaped states fail closed without partial authority. |
+| P1 Implement | pending | After the verified-span substrate gate clears, add the smallest schema-first `DocStructureCandidate` variants, versioned paired OA recognition, explicit `GroundedExtraction` adapter, typed abstention, persistence/replay behavior, and docketing intake adapter. | `citation-verified-span-substrate` P0/P1 has proved the anchor contract; exactly one supported pair emits two verified candidates; all other shaped states fail closed without partial authority. |
 | P2 Verify | pending | Exercise positive, hostile negative, duplicate, drift, unsupported, malformed, Unicode/straddle, low-quality/OCR-lineage, version replay, persistence, and docketing integration proof. | Every `SPEC.md` criterion and precision/abstention floor passes, or blockers are archived without weakening exact-source or fail-closed rules. |
 | P3 Close | pending | Drive the implementation PR to mergeable through Yeet, write the closeout reflection, archive proof, and synchronize packet evidence/status. | Yeet/GitHub reports the PR mergeable; a schema-valid reflection exists; README, PLAN, and manifest match the evidence. |
 
 ## Dependency Gate
 
 - P0 is intentionally executable now.
-- P1 is blocked by `goals/citation-verified-span-substrate` P0/P1. It may not
-  freeze or implement the anchor contract by inference; it must consume the
-  proved contract, including `VersionedSourceArtifactIdentity` and raw-slice
-  equality.
+- P1 substrate gate cleared by #871 and #1415. Consume `SourceTextIdentity`,
+  `VerifiedSourceText`, and `VerifiedTextAnchor` with exact raw-slice equality.
+  P0 corpus and floors must pass before implementation.
+
+## Run 1 stop receipt
+
+P0 stays pending: both blind reports failed JSON parsing and no qualified real-OA
+positive text was retrieved. The form-only inventory cannot establish valid
+dual-label floors. See `history/p0/2026-10-09-label-reconciliation.md` and
+`history/handoffs/oa-slice-2026-10-09.md`. No P1 implementation began.
 
 ## P3 Closeout Checklist
 

@@ -34,14 +34,18 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research may begin now: construct the attorney-reviewed fixture corpus,
-freeze rule-family versioning/migration semantics, and define precision floors.
-P1 remains blocked until `citation-verified-span-substrate` P0/P1 proves the
-shared verified-anchor contract.
+P0 Research stopped with its corpus and floor gate pending. The substrate gate
+is cleared through #871 and #1415. Sixteen ODP originals were image-only; the
+public-form-language fallback contains 34 research fixtures. Both permitted
+blind label reports are void, so no valid dual-label floor proof is claimed.
+P1–P3 are unstarted.
 
 ## Latest Evidence
 
-Not started.
+Run 1: dependency build passed (39 tasks); source and blind-run receipts are in
+`history/p0/2026-10-09-label-reconciliation.md`. Every fixture is on the
+non-blocking `history/p0/2026-10-09-attorney-spot-check.md`. See the handoff for
+the final package gate and exact evidence commit.
 
 ## Notes
 
