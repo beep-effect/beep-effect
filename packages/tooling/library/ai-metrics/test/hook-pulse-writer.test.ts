@@ -33,13 +33,15 @@ import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import { ChildProcess } from "effect/process";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
@@ -217,6 +219,7 @@ type WriterOptions = {
   readonly registeredEvent?: string;
   readonly writerArgs?: ReadonlyArray<string>;
   readonly attemptUtc?: string;
+  readonly executablePath?: string;
 };
 
 const writerEnvironment = (stateHome: string, evidenceRoot: string, options: WriterOptions) => {
@@ -256,6 +259,7 @@ const writerEnvironment = (stateHome: string, evidenceRoot: string, options: Wri
     BEEP_HOOK_PULSE_HASH_SALT: options.hashSalt ?? "",
     BEEP_AI_METRICS_HASH_SALT: options.aiMetricsHashSalt ?? "",
     BEEP_HOOK_PULSE_ATTEMPT_UTC: options.attemptUtc ?? "",
+    ...(options.executablePath ? { PATH: options.executablePath } : {}),
   };
 };
 
@@ -1286,6 +1290,33 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse writer confo
       expect(valid.refusalFiles).toEqual(["hook-pulse-refusals-2026-08-01.ndjson"]);
       const validRow = yield* S.decodeEffect(S.fromJsonString(HookPulseRefusal))(valid.refusals[0]);
       expect(DateTime.formatIso(validRow.ts)).toBe("2026-08-01T23:59:59.000Z");
+    })
+  );
+
+  it.effect("rejects an empty Git toplevel in both snapshot routes", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const root = yield* makeHarnessFixtureRoot();
+      const failure = yield* typescriptHarnessHash(root).pipe(
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, {
+          ...spawner,
+          string: () => Effect.succeed("\n"),
+        }),
+        Effect.flip
+      );
+      expect(failure.message).toContain("no indexed checkout root");
+      const bin = yield* fs.makeTempDirectoryScoped();
+      const git = path.join(bin, "git");
+      yield* fs.writeFileString(
+        git,
+        "#!/usr/bin/env bash\ncase \"$*\" in *--is-inside-work-tree*) printf 'true\\n';; *--show-toplevel*) printf '\\n';; esac\n"
+      );
+      yield* fs.chmod(git, 0o755);
+      const executablePath = `${bin}:${yield* Config.String("PATH")}`;
+      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(root)), { executablePath });
+      assertNone((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash);
     })
   );
 
