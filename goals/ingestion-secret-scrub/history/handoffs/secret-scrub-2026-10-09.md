@@ -150,3 +150,11 @@ that distinction using runtime-built synthetic input. Reason: avoid changing
 legacy output beyond R5 union coverage. Reversal: restore the previous adapter
 and remove that assertion; retain fail-closed ingestion. The final adapter will
 receive a package proof after the current parity job releases its owned slot.
+
+### 2026-10-09 — parser transition proof
+
+Private closing-delimiter states now use an explicit Effect Match dispatch. The
+parser retains the same complete, nested, unclosed and orphan masking behavior;
+all five canonical-bank tests pass. This addresses the introduced Fallow finding
+without suppressions or policy edits. Reversal: restore the prior transition
+block. Final compiler/package and Fallow proof remain required.

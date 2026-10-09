@@ -6,6 +6,7 @@
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -97,6 +98,13 @@ const makeMatch = (
   state: CredentialMatch["state"] = "matched"
 ) => CredentialMatch.make({ category, start, end, state, ruleVersion: "v1" });
 
+const closingPrivateMatch = (textLength: number, depth: number, start: number, end: number) =>
+  pipe(
+    Match.value(depth),
+    Match.when(0, () => O.some(makeMatch("private-tag", 0, textLength, "unresolved"))),
+    Match.when(1, () => O.some(makeMatch("private-tag", start, end))),
+    Match.orElse(() => O.none<CredentialMatch>())
+  );
 const privateMatches = (text: string, grammar: CredentialRule): ReadonlyArray<CredentialMatch> => {
   let depth = 0;
   let start = 0;
@@ -107,14 +115,10 @@ const privateMatches = (text: string, grammar: CredentialRule): ReadonlyArray<Cr
       depth += 1;
       continue;
     }
-    if (depth === 0) {
-      // An orphan delimiter leaves the private extent unknown: mask the whole input.
-      found = A.append(found, makeMatch("private-tag", 0, Str.length(text), "unresolved"));
-      continue;
-    }
-    depth -= 1;
-    if (depth === 0)
-      found = A.append(found, makeMatch("private-tag", start, offset(token) + Str.length(capture(token, 0))));
+    // A zero-depth close has no known private extent, so its match masks the input.
+    const closed = closingPrivateMatch(Str.length(text), depth, start, offset(token) + Str.length(capture(token, 0)));
+    found = O.match(closed, { onNone: () => found, onSome: (match) => A.append(found, match) });
+    depth = N.max(0, depth - 1);
   }
   if (depth > 0) found = A.append(found, makeMatch("private-tag", start, Str.length(text), "unresolved"));
   return found;
