@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Equal from "effect/Equal";
+import * as P from "effect/Predicate";
 import type { TomlSemanticErrorCodeRaw } from "../../effected/toml/internal/diagnostics.ts";
 import { isRawTomlError } from "../../effected/toml/internal/diagnostics.ts";
 import { parseExpressions } from "../../effected/toml/internal/parser.ts";
@@ -13,8 +14,12 @@ function analyzeSrc(src: string): void {
 }
 
 /** Parse and build the plain value, expecting success. */
-function build(src: string): unknown {
-	return buildValue(parseExpressions(src));
+function build(src: string): Record<string, unknown> {
+	const value = buildValue(parseExpressions(src));
+	if (!P.isObject(value)) {
+		assert.fail("expected the built TOML root to be a table");
+	}
+	return value;
 }
 
 /** Assert analysis throws a RawTomlError with `code` (and `offset`, when given). */
@@ -273,14 +278,18 @@ describe("semantic", () => {
 				},
 				products: [{ sku: 1 }, { sku: 2, color: { name: "red" } }],
 			};
-			const actual = build(src) as typeof expected;
+			const actual = build(src);
 			assert.deepStrictEqual(actual, expected);
-			assert.isTrue(Equal.equals(actual.owner.dob, TomlLocalDate.make({ year: 1979, month: 5, day: 27 })));
-			assert.strictEqual(typeof actual.owner.big, "bigint");
-			assert.strictEqual(typeof actual.owner.ratio, "number");
+			const owner = actual.owner;
+			if (!P.isObject(owner)) {
+				assert.fail("expected an owner table");
+			}
+			assert.isTrue(Equal.equals(owner.dob, TomlLocalDate.make({ year: 1979, month: 5, day: 27 })));
+			assert.strictEqual(typeof owner.big, "bigint");
+			assert.strictEqual(typeof owner.ratio, "number");
 		});
 		it("materializes the special float spellings", () => {
-			const value = build("a = inf\nb = -inf\nc = nan") as { a: number; b: number; c: number };
+			const value = build("a = inf\nb = -inf\nc = nan");
 			assert.strictEqual(value.a, Number.POSITIVE_INFINITY);
 			assert.strictEqual(value.b, Number.NEGATIVE_INFINITY);
 			assert.isTrue(Number.isNaN(value.c));
@@ -289,25 +298,29 @@ describe("semantic", () => {
 
 	describe("proto safety", () => {
 		it('sets "__proto__" as an own data property, never the prototype', () => {
-			const value = build('"__proto__" = 1') as Record<string, unknown>;
+			const value = build('"__proto__" = 1');
 			assert.isTrue(Object.hasOwn(value, "__proto__"));
 			assert.strictEqual(Object.getOwnPropertyDescriptor(value, "__proto__")?.value, 1);
 			assert.strictEqual(Object.getPrototypeOf(value), Object.prototype);
 		});
 		it('navigates dotted "__proto__" segments without polluting Object.prototype', () => {
-			const value = build('"__proto__".x = 1\n"__proto__".y = 2') as Record<string, unknown>;
+			const value = build('"__proto__".x = 1\n"__proto__".y = 2');
 			assert.isTrue(Object.hasOwn(value, "__proto__"));
 			assert.deepStrictEqual(Object.getOwnPropertyDescriptor(value, "__proto__")?.value, { x: 1, y: 2 });
 			assert.strictEqual(Object.getPrototypeOf(value), Object.prototype);
-			const probe = {} as Record<string, unknown>;
+			const probe: Record<string, unknown> = {};
 			assert.isUndefined(probe.x);
 			assert.isUndefined(probe.y);
 		});
 		it('sets "__proto__" inside inline tables as an own data property', () => {
-			const value = build('t = { "__proto__" = 1 }') as { t: Record<string, unknown> };
-			assert.isTrue(Object.hasOwn(value.t, "__proto__"));
-			assert.strictEqual(Object.getOwnPropertyDescriptor(value.t, "__proto__")?.value, 1);
-			assert.strictEqual(Object.getPrototypeOf(value.t), Object.prototype);
+			const value = build('t = { "__proto__" = 1 }');
+			const table = value.t;
+			if (!P.isObject(table)) {
+				assert.fail("expected an inline table");
+			}
+			assert.isTrue(Object.hasOwn(table, "__proto__"));
+			assert.strictEqual(Object.getOwnPropertyDescriptor(table, "__proto__")?.value, 1);
+			assert.strictEqual(Object.getPrototypeOf(table), Object.prototype);
 		});
 	});
 
@@ -384,9 +397,13 @@ describe("semantic", () => {
 		});
 		it("builds a 5000-segment dotted key without overflowing", () => {
 			const src = `${Array.from({ length: 5000 }, () => "a").join(".")} = 1`;
-			let cursor = build(src) as Record<string, unknown>;
+			let cursor = build(src);
 			for (let i = 0; i < 4999; i++) {
-				cursor = cursor.a as Record<string, unknown>;
+				const child = cursor.a;
+				if (!P.isObject(child)) {
+					assert.fail(`expected a table at depth ${i}`);
+				}
+				cursor = child;
 			}
 			assert.strictEqual(cursor.a, 1);
 		});

@@ -41,6 +41,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import { parse as oracleParse, stringify as oracleStringify } from "smol-toml";
 import { Toml } from "../../effected/toml/Toml.ts";
@@ -170,8 +171,8 @@ const canon = (value: unknown): unknown => {
 	if (Array.isArray(value)) {
 		return value.map(canon);
 	}
-	if (typeof value === "object" && value !== null) {
-		const record = value as Record<string, unknown>;
+	if (P.isObject(value)) {
+		const record = value;
 		return Object.fromEntries(Object.keys(record).map((key) => [key, canon(record[key])]));
 	}
 	return value;
@@ -326,8 +327,11 @@ describe("smol-toml differential oracle", () => {
 	it.effect("NaN round-trips through our stringify into NaN under both parsers", () =>
 		Effect.gen(function* () {
 			const text = yield* Toml.stringify({ x: Number.NaN });
-			const ours = (yield* Toml.parse(text)) as { readonly x: number };
-			const theirs = oracle(text) as { readonly x: number };
+			const ours = yield* Toml.parse(text);
+			const theirs = oracle(text);
+			if (!P.isObject(ours) || !P.isObject(theirs)) {
+				assert.fail("expected both parsers to yield tables");
+			}
 			assert.isTrue(Number.isNaN(ours.x), "our parse must yield NaN");
 			assert.isTrue(Number.isNaN(theirs.x), "the oracle's parse must yield NaN");
 		}),

@@ -985,7 +985,7 @@ export class TomlFormat {
 		});
 		return raw.map((edit) =>
 			TomlEdit.make({ offset: edit.offset, length: edit.length, content: edit.newText }),
-		) as ReadonlyArray<TomlEdit>;
+		);
 	});
 
 	/**

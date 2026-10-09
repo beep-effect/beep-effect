@@ -1,4 +1,5 @@
 import { dual } from "effect/Function";
+import * as A from "effect/Array";
 // The canonical TOML document emitter over plain JavaScript values — the
 // encode side of the value pipeline. Layout contract: within a table,
 // non-table pairs emit first (document order), then sub-tables as
@@ -268,8 +269,12 @@ const emitTable = (
 	}
 	for (const key of tables) {
 		pushHeader(lines, `[${renderHeaderPath([...headerPath, key])}]`);
+		const value = table[key];
+		if (!isPlainObject(value)) {
+			return raise("UnsupportedValue", `unsupported ${jsTypeName(value)} value at ${renderPath([...errorPath, key])}`);
+		}
 		emitTable(
-			table[key] as Record<string, unknown>,
+			value,
 			[...headerPath, key],
 			[...errorPath, key],
 			lines,
@@ -278,7 +283,10 @@ const emitTable = (
 		);
 	}
 	for (const key of arrayTables) {
-		const array = table[key] as Array<Record<string, unknown>>;
+		const array = table[key];
+		if (!A.isArray(array) || !array.every(isPlainObject)) {
+			return raise("UnsupportedValue", `unsupported ${jsTypeName(array)} value at ${renderPath([...errorPath, key])}`);
+		}
 		checkCircular(array, ancestors, [...errorPath, key]);
 		ancestors.add(array);
 		for (let index = 0; index < array.length; index++) {

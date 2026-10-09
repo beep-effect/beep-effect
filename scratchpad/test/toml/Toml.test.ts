@@ -3,9 +3,11 @@
 // bounds, integral-float-to-integer, -0.0, key quoting, canonical layout).
 
 import { assert, describe, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { renderInlineValue } from "../../effected/toml/internal/stringifyValue.ts";
 import { Toml, TomlParseError, TomlStringifyError, TomlStringifyOptions } from "../../effected/toml/Toml.ts";
@@ -18,9 +20,16 @@ describe("Toml", () => {
 				const v = yield* Toml.parse(
 					'title = "x"\n[owner]\nname = "y"\ndob = 1979-05-27\n[[srv]]\nport = 1\n[[srv]]\nport = 2\n',
 				);
-				const doc = v as Record<string, unknown>;
+				if (!P.isObject(v)) {
+					assert.fail("expected a TOML table");
+				}
+				const doc = v;
 				assert.deepStrictEqual(doc.srv, [{ port: 1 }, { port: 2 }]);
-				assert.isTrue(S.is(TomlLocalDate)((doc.owner as Record<string, unknown>).dob));
+				const owner = doc.owner;
+				if (!P.isObject(owner)) {
+					assert.fail("expected an owner table");
+				}
+				assert.isTrue(S.is(TomlLocalDate)(owner.dob));
 			}),
 		);
 
@@ -117,9 +126,16 @@ describe("Toml", () => {
 					nan: Number.NaN,
 					d: TomlLocalDate.make({ year: 2000, month: 2, day: 29 }),
 				};
-				const back = (yield* Toml.stringify(v).pipe(Effect.flatMap(Toml.parse))) as Record<string, unknown>;
+				const back = yield* Toml.stringify(v).pipe(Effect.flatMap(Toml.parse));
+				if (!P.isObject(back)) {
+					assert.fail("expected a TOML table");
+				}
 				assert.strictEqual(back["k y"], 'va"l');
-				assert.strictEqual((back.a as Array<unknown>)[1], 2n ** 60n);
+				const array = back.a;
+				if (!A.isArray(array)) {
+					assert.fail("expected an array");
+				}
+				assert.strictEqual(array[1], 2n ** 60n);
 				assert.isTrue(Number.isNaN(back.nan));
 				assert.isTrue(S.is(TomlLocalDate)(back.d));
 				assert.strictEqual(String(back.d), "2000-02-29");

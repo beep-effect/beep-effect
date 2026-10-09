@@ -346,9 +346,7 @@ export class Toml {
 	 * @returns A `Schema.Codec<T, string>` decoding TOML text straight into `T`.
 	 */
 	static schema<T, E, RD = never, RE = never>(target: S.Codec<T, E, RD, RE>): S.Codec<T, string, RD, RE> {
-		return Toml.TomlFromString.pipe(
-			S.decodeTo(target as unknown as S.Codec<T, unknown, RD, RE>),
-		) as unknown as S.Codec<T, string, RD, RE>;
+		return Toml.TomlFromString.pipe(S.decodeTo(target));
 	}
 
 	/**

@@ -11,6 +11,8 @@ import { dual } from "effect/Function";
 
 import { assert } from "@effect/vitest";
 import * as Equal from "effect/Equal";
+import * as P from "effect/Predicate";
+import * as A from "effect/Array";
 import { classifyValueToken } from "../../../effected/toml/internal/scanner.ts";
 import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } from "../../../effected/toml/TomlDateTime.ts";
 
@@ -38,10 +40,10 @@ interface TaggedLeaf {
  * objects, not raw strings.
  */
 function isTaggedLeaf(candidate: unknown): candidate is TaggedLeaf {
-	if (typeof candidate !== "object" || candidate === null || Array.isArray(candidate)) {
+	if (!P.isObject(candidate)) {
 		return false;
 	}
-	const record = candidate as Record<string, unknown>;
+	const record = candidate;
 	return (
 		Object.keys(record).length === 2 &&
 		typeof record.type === "string" &&
@@ -73,15 +75,14 @@ function assertLeaf(actual: unknown, expected: TaggedLeaf, path: string): void {
 			return;
 		}
 		case "integer": {
-			assert.isTrue(
-				typeof actual === "number" || typeof actual === "bigint",
-				`${path}: expected an integer (number | bigint), got ${typeof actual}`,
-			);
+			if (!P.isNumber(actual) && !P.isBigInt(actual)) {
+				assert.fail(`${path}: expected an integer (number | bigint), got ${typeof actual}`);
+			}
 			if (typeof actual === "number") {
 				assert.isTrue(Number.isInteger(actual), `${path}: expected an integer, got non-integral number ${actual}`);
 			}
 			assert.isTrue(
-				BigInt(expected.value) === BigInt(actual as number | bigint),
+				BigInt(expected.value) === BigInt(actual),
 				`${path}: expected integer ${expected.value}, got ${String(actual)}`,
 			);
 			return;
@@ -151,24 +152,24 @@ const assertMatchesTaggedDual: {
 		return;
 	}
 	if (Array.isArray(expected)) {
-		assert.isTrue(Array.isArray(actual), `${path}: expected an array, got ${typeof actual}`);
-		const actualArray = actual as ReadonlyArray<unknown>;
+		if (!A.isArray(actual)) {
+			assert.fail(`${path}: expected an array, got ${typeof actual}`);
+		}
+		const actualArray = actual;
 		assert.strictEqual(actualArray.length, expected.length, `${path}: array length mismatch`);
 		for (let i = 0; i < expected.length; i++) {
 			assertMatchesTagged(actualArray[i], expected[i], `${path}[${i}]`);
 		}
 		return;
 	}
-	assert.isTrue(
-		typeof expected === "object" && expected !== null,
-		`${path}: corpus expectation is not an object, array or tagged leaf`,
-	);
-	assert.isTrue(
-		typeof actual === "object" && actual !== null && !Array.isArray(actual),
-		`${path}: expected a table, got ${Array.isArray(actual) ? "array" : typeof actual}`,
-	);
-	const expectedRecord = expected as Record<string, unknown>;
-	const actualRecord = actual as Record<string, unknown>;
+	if (!P.isObject(expected)) {
+		assert.fail(`${path}: corpus expectation is not an object, array or tagged leaf`);
+	}
+	if (!P.isObject(actual)) {
+		assert.fail(`${path}: expected a table, got ${Array.isArray(actual) ? "array" : typeof actual}`);
+	}
+	const expectedRecord = expected;
+	const actualRecord = actual;
 	const expectedKeys = Object.keys(expectedRecord).sort();
 	const actualKeys = Object.keys(actualRecord).sort();
 	assert.deepStrictEqual(actualKeys, expectedKeys, `${path}: key set mismatch`);

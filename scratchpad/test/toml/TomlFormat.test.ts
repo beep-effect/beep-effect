@@ -6,6 +6,7 @@
 
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { Toml, TomlParseError } from "../../effected/toml/Toml.ts";
 import type { TomlPath } from "../../effected/toml/TomlEdit.ts";
 import { TomlFormat, TomlFormattingOptions, TomlModificationError } from "../../effected/toml/TomlFormat.ts";
@@ -24,7 +25,10 @@ const modified = Effect.fn("modified")(function* (text: string, path: TomlPath, 
 const modifyError = Effect.fn("modifyError")(function* (text: string, path: TomlPath, value: unknown) {
 		const error = yield* Effect.flip(TomlFormat.modify(text, path, value));
 		assert.instanceOf(error, TomlModificationError);
-		return error as TomlModificationError;
+		if (!S.is(TomlModificationError)(error)) {
+			assert.fail("expected a TomlModificationError");
+		}
+		return error;
 	});
 
 const IDEMPOTENCE_DOCS: ReadonlyArray<string> = [

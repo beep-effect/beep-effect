@@ -1,4 +1,5 @@
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 // The provenance state machine: every defined name records HOW it came
 // to exist (value, inline, static-array, table-explicit, table-implicit,
 // table-dotted, array-tables) and — for dotted-created tables — WHICH
@@ -311,7 +312,10 @@ const navigateOutput = (target: Record<string, unknown>, path: ReadonlyArray<str
 		if (Array.isArray(child)) {
 			child = child[child.length - 1];
 		}
-		current = child as Record<string, unknown>;
+		if (!P.isObject(child)) {
+			throw new TypeError("expected TOML output table");
+		}
+		current = child;
 	}
 	return current;
 };

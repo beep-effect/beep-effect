@@ -22,6 +22,8 @@
 
 import { assert, describe, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
+import * as P from "effect/Predicate";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
@@ -52,9 +54,18 @@ const codeOf = (error: TomlParseError): string | undefined => error.diagnostics[
 
 /** Prove Object.prototype picked up nothing from a hostile parse. */
 const assertPrototypeUnpolluted = (): void => {
-	assert.strictEqual(({} as Record<string, unknown>).x, undefined);
+	const probe: Record<string, unknown> = {};
+	assert.strictEqual(probe.x, undefined);
 	assert.isFalse(Object.hasOwn(Object.prototype, "x"));
 	assert.isFalse("x" in {});
+};
+
+/** Assert that a parsed value is a table before inspecting its properties. */
+const checkedTable = (value: unknown): Record<string, unknown> => {
+	if (!P.isObject(value)) {
+		assert.fail("expected a TOML table");
+	}
+	return value;
 };
 
 describe("hostile input", () => {
@@ -176,7 +187,11 @@ describe("hostile input", () => {
 				}
 				assert.instanceOf(die.defect, Error);
 				assert.notInstanceOf(die.defect, TomlStringifyError);
-				assert.strictEqual((die.defect as Error).message, "boom");
+				const defect = die.defect;
+				if (!(defect instanceof Error)) {
+					assert.fail("expected the getter error");
+				}
+				assert.strictEqual(defect.message, "boom");
 			}),
 		);
 
@@ -219,7 +234,10 @@ describe("hostile input", () => {
 			Effect.gen(function* () {
 				const error = yield* Effect.flip(TomlFormat.modify(bomb, ["a"], 1));
 				assert.instanceOf(error, TomlParseError);
-				assert.strictEqual(codeOf(error as TomlParseError), "NestingDepthExceeded");
+				if (!S.is(TomlParseError)(error)) {
+					assert.fail("expected a TomlParseError");
+				}
+				assert.strictEqual(codeOf(error), "NestingDepthExceeded");
 			}),
 		);
 
@@ -249,7 +267,10 @@ describe("hostile input", () => {
 					const error = yield* Effect.flip(TomlFormat.modify("a = 1\n", path, 2));
 					const elapsed = performance.now() - started;
 					assert.instanceOf(error, TomlModificationError);
-					assert.strictEqual((error as TomlModificationError).diagnostic.code, "NestingDepthExceeded");
+					if (!S.is(TomlModificationError)(error)) {
+						assert.fail("expected a TomlModificationError");
+					}
+					assert.strictEqual(error.diagnostic.code, "NestingDepthExceeded");
 					assert.isBelow(elapsed, ELAPSED_BOUND_MS);
 				}),
 			ELAPSED_BOUND_MS,
@@ -272,7 +293,7 @@ describe("hostile input", () => {
 					const doc = `${lines.join("\n")}\n`;
 					assert.isAtLeast(doc.length, 2_000_000);
 					const started = performance.now();
-					const value = (yield* Toml.parse(doc)) as Record<string, unknown>;
+					const value = checkedTable(yield* Toml.parse(doc));
 					const elapsed = performance.now() - started;
 					assert.strictEqual(Object.keys(value).length, 50_000);
 					assert.strictEqual(value.k49999, "x".repeat(28));
@@ -287,7 +308,7 @@ describe("hostile input", () => {
 				Effect.gen(function* () {
 					const payload = "x".repeat(1_048_576);
 					const started = performance.now();
-					const value = (yield* Toml.parse(`s = "${payload}"\n`)) as Record<string, unknown>;
+					const value = checkedTable(yield* Toml.parse(`s = "${payload}"\n`));
 					const elapsed = performance.now() - started;
 					assert.strictEqual(value.s, payload);
 					assert.isBelow(elapsed, ELAPSED_BOUND_MS);
@@ -312,7 +333,7 @@ describe("hostile input", () => {
 	describe("prototype pollution", () => {
 		it.effect('"__proto__ = 1" lands as an own data property', () =>
 			Effect.gen(function* () {
-				const value = (yield* Toml.parse("__proto__ = 1\n")) as Record<string, unknown>;
+				const value = checkedTable(yield* Toml.parse("__proto__ = 1\n"));
 				assert.isTrue(Object.hasOwn(value, "__proto__"));
 				assert.strictEqual(Object.getOwnPropertyDescriptor(value, "__proto__")?.value, 1);
 				assert.strictEqual(Object.getPrototypeOf(value), Object.prototype);
@@ -322,9 +343,9 @@ describe("hostile input", () => {
 
 		it.effect('"[__proto__]" defines an own table, not a prototype', () =>
 			Effect.gen(function* () {
-				const value = (yield* Toml.parse("[__proto__]\nx = 1\n")) as Record<string, unknown>;
+				const value = checkedTable(yield* Toml.parse("[__proto__]\nx = 1\n"));
 				assert.isTrue(Object.hasOwn(value, "__proto__"));
-				const table = Object.getOwnPropertyDescriptor(value, "__proto__")?.value as Record<string, unknown>;
+				const table = checkedTable(Object.getOwnPropertyDescriptor(value, "__proto__")?.value);
 				assert.isTrue(Object.hasOwn(table, "x"));
 				assert.strictEqual(table.x, 1);
 				assert.strictEqual(Object.getPrototypeOf(value), Object.prototype);
@@ -334,13 +355,19 @@ describe("hostile input", () => {
 
 		it.effect('"[[__proto__]]" defines an own array of tables', () =>
 			Effect.gen(function* () {
-				const value = (yield* Toml.parse("[[__proto__]]\nx = 1\n")) as Record<string, unknown>;
+				const value = checkedTable(yield* Toml.parse("[[__proto__]]\nx = 1\n"));
 				assert.isTrue(Object.hasOwn(value, "__proto__"));
-				const array = Object.getOwnPropertyDescriptor(value, "__proto__")?.value as Array<Record<string, unknown>>;
+				const array: unknown = Object.getOwnPropertyDescriptor(value, "__proto__")?.value;
+				if (!A.isArray(array)) {
+					assert.fail("expected an array of tables");
+				}
 				assert.isTrue(Array.isArray(array));
 				assert.strictEqual(array.length, 1);
 				const first = array[0];
 				assert.isDefined(first);
+				if (!P.isObject(first)) {
+					assert.fail("expected the first array element to be a table");
+				}
 				assert.isTrue(Object.hasOwn(first, "x"));
 				assert.strictEqual(first.x, 1);
 				assertPrototypeUnpolluted();
@@ -352,13 +379,13 @@ describe("hostile input", () => {
 				// The dotted path defines nested tables NAMED "constructor" and
 				// "prototype" — they must be own plain-object properties, never a
 				// walk up the real constructor/prototype chain.
-				const value = (yield* Toml.parse("constructor.prototype.x = 1\n")) as Record<string, unknown>;
+				const value = checkedTable(yield* Toml.parse("constructor.prototype.x = 1\n"));
 				assert.isTrue(Object.hasOwn(value, "constructor"));
-				const constructorTable = value.constructor as unknown as Record<string, unknown>;
+				const constructorTable = checkedTable(value["constructor"]);
 				assert.notStrictEqual<unknown>(constructorTable, Object);
 				assert.strictEqual(Object.getPrototypeOf(constructorTable), Object.prototype);
 				assert.isTrue(Object.hasOwn(constructorTable, "prototype"));
-				const prototypeTable = constructorTable.prototype as Record<string, unknown>;
+				const prototypeTable = checkedTable(constructorTable.prototype);
 				assert.isTrue(Object.hasOwn(prototypeTable, "x"));
 				assert.strictEqual(prototypeTable.x, 1);
 				assertPrototypeUnpolluted();
@@ -443,7 +470,7 @@ describe("hostile input", () => {
 
 		it.effect("1e400 saturates to Infinity — floats overflow legally per spec", () =>
 			Effect.gen(function* () {
-				const value = (yield* Toml.parse("a = 1e400\n")) as Record<string, unknown>;
+				const value = checkedTable(yield* Toml.parse("a = 1e400\n"));
 				assert.strictEqual(value.a, Number.POSITIVE_INFINITY);
 			}),
 		);
@@ -480,7 +507,7 @@ describe("hostile input", () => {
 		it.effect("10_000 distinct headers parse fine", () =>
 			Effect.gen(function* () {
 				const doc = `${Array.from({ length: 10_000 }, (_, i) => `[t${i}]`).join("\n")}\n`;
-				const value = (yield* Toml.parse(doc)) as Record<string, unknown>;
+				const value = checkedTable(yield* Toml.parse(doc));
 				assert.strictEqual(Object.keys(value).length, 10_000);
 				assert.deepStrictEqual(value.t9999, {});
 			}),
@@ -493,10 +520,10 @@ describe("hostile input", () => {
 				// parse and materialize a 5_001-deep table.
 				const segments = 5_001;
 				const doc = `[${Array.from({ length: segments }, () => "a").join(".")}]\n`;
-				let current = (yield* Toml.parse(doc)) as Record<string, unknown>;
+				let current = checkedTable(yield* Toml.parse(doc));
 				for (let i = 0; i < segments; i++) {
 					assert.isTrue(Object.hasOwn(current, "a"), `own property missing at depth ${i}`);
-					current = current.a as Record<string, unknown>;
+					current = checkedTable(current.a);
 				}
 				assert.deepStrictEqual(Object.keys(current), []);
 			}),
@@ -506,10 +533,10 @@ describe("hostile input", () => {
 			Effect.gen(function* () {
 				const segments = 5_001;
 				const doc = `${Array.from({ length: segments }, () => "a").join(".")} = 1\n`;
-				let current = (yield* Toml.parse(doc)) as Record<string, unknown>;
+				let current = checkedTable(yield* Toml.parse(doc));
 				for (let i = 0; i < segments - 1; i++) {
 					assert.isTrue(Object.hasOwn(current, "a"), `own property missing at depth ${i}`);
-					current = current.a as Record<string, unknown>;
+					current = checkedTable(current.a);
 				}
 				assert.strictEqual(current.a, 1);
 			}),
