@@ -20,6 +20,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Random from "effect/Random";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { isNestedGitRoot } from "./identity-registry.ts";
 import { fileSizeBytes } from "./internal/file-info.ts";
 import { statOption } from "./internal/jsonl-discovery.ts";
@@ -627,7 +628,7 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   // Non-git fixtures retain the bounded filesystem walk. A real checkout uses
   // the index, so ignored hook-state/log noise cannot split identical heads.
-  const gitCommand = ChildProcess.make("git", ["ls-files", "-z"], { cwd: repoRoot });
+  const gitCommand = ChildProcess.make("git", ["ls-files", "-z"], { cwd: repoRoot, stdout: "pipe", stderr: "ignore" });
   const tracked = yield* spawner
     .exitCode(
       ChildProcess.make("git", ["rev-parse", "--git-dir"], { cwd: repoRoot, stdout: "ignore", stderr: "ignore" })
@@ -635,13 +636,18 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
     .pipe(
       Effect.flatMap((code) =>
         code === 0
-          ? spawner
-              .string(gitCommand)
-              .pipe(
-                Effect.map((text) =>
-                  O.some<ReadonlyArray<string>>(pipe(text, Str.split("\0"), A.filter(Str.isNonEmpty)))
-                )
-              )
+          ? Effect.scoped(
+              Effect.fnUntraced(function* () {
+                const handle = yield* spawner.spawn(gitCommand);
+                const [text, status] = yield* Effect.all(
+                  [handle.stdout.pipe(Stream.decodeText, Stream.mkString), handle.exitCode],
+                  { concurrency: "unbounded" }
+                );
+                return status === 0
+                  ? O.some<ReadonlyArray<string>>(pipe(text, Str.split("\0"), A.filter(Str.isNonEmpty)))
+                  : O.none<ReadonlyArray<string>>();
+              })()
+            )
           : Effect.succeed(O.none<ReadonlyArray<string>>())
       ),
       Effect.orElseSucceed(O.none<ReadonlyArray<string>>)
@@ -658,7 +664,11 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
     });
     const local = pathApi.join(pathApi.resolve(repoRoot), ".claude/settings.local.json");
     const existing = yield* Effect.filter(
-      A.map(selected, (relative) => pathApi.join(pathApi.resolve(repoRoot), relative)),
+      pipe(
+        A.map(selected, (relative) => pathApi.join(pathApi.resolve(repoRoot), relative)),
+        A.append(local),
+        A.dedupe
+      ),
       (file) =>
         fs.stat(file).pipe(
           Effect.map((info) => info.type === "File"),
@@ -687,14 +697,7 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
       }
       return true;
     });
-    const paths = yield* Effect.filter(
-      pipe(
-        (yield* fs.exists(local).pipe(Effect.orElseSucceed(() => false))) ? A.append(existing, local) : existing,
-        A.dedupe,
-        A.sort(Order.String)
-      ),
-      outsideNestedCheckout
-    );
+    const paths = yield* Effect.filter(pipe(existing, A.dedupe, A.sort(Order.String)), outsideNestedCheckout);
     return {
       excludedNestedRootPaths: pipe(yield* Ref.get(excluded), A.dedupe, A.sort(Order.String)),
       paths: A.take(paths, budget.maxFiles),

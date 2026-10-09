@@ -525,7 +525,10 @@ export const harnessLedgerPruneReportLines: {
 export const harnessLedgerPruneProposalsCommand = Command.make(
   "prune-proposals",
   {
-    agentKind: Flag.String("agent-kind").pipe(Flag.withDefault("claude-code")),
+    agentKind: Flag.String("agent-kind").pipe(
+      Flag.withDefault("claude-code"),
+      Flag.withDescription("Client to report: claude-code, codex-cli, or cursor-cli")
+    ),
     window: Flag.Int("window").pipe(
       Flag.withDefault(30),
       Flag.withDescription("Number of most recent hook-pulse sessions under the current harness hash to observe")
@@ -538,7 +541,7 @@ export const harnessLedgerPruneProposalsCommand = Command.make(
     ),
     write: Flag.Boolean("write").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Append the fresh proposals as `proposed` ledger rows (default: dry run)")
+      Flag.withDescription("Produce advisory proposals; automatic ledger persistence remains disabled")
     ),
     model: modelFlag,
     reasoningEffort: reasoningEffortFlag,
@@ -607,9 +610,14 @@ export const harnessLedgerPruneProposalsCommand = Command.make(
 export const harnessLedgerReconcileCommand = Command.make(
   "reconcile",
   {
-    stateDir: Flag.String("state-dir"),
-    transcriptDir: Flag.String("transcript-dir"),
-    agentKind: Flag.String("agent-kind").pipe(Flag.withDefault("claude-code")),
+    stateDir: Flag.String("state-dir").pipe(Flag.withDescription("Directory containing production hook-pulse shards")),
+    transcriptDir: Flag.String("transcript-dir").pipe(
+      Flag.withDescription("Transcript root, including nested workflow and subagent files")
+    ),
+    agentKind: Flag.String("agent-kind").pipe(
+      Flag.withDefault("claude-code"),
+      Flag.withDescription("Client to report: claude-code, codex-cli, or cursor-cli")
+    ),
   },
   Effect.fn("HarnessLedger.reconcileCommand")(function* (input) {
     const kind = yield* S.decodeUnknownEffect(HookPulseAgentKind)(input.agentKind).pipe(

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # hook-pulse: appends exactly one privacy-safe `HookPulseV1` NDJSON row per
-# Claude Code hook event to the clone-independent XDG evidence store
+# supported client hook event to the clone-independent XDG evidence store
 # (goals/coding-agent-effectiveness-evidence-loop, P1 sequence-break
 # instrument). The binding contract is
 # `packages/tooling/library/ai-metrics/src/hook-pulse.ts`; the conformance test
@@ -578,7 +578,7 @@ END {
     fi
   fi
 
-  # Sorted and deduplicated by path (the two walks overlap under `.claude`),
+  # Sorted and deduplicated by path (local/index and root/config inputs overlap),
   # oversize files skipped, and the byte budget enforced over what remains.
   included="$(
     printf '%s\n' "${collected}" | sort -t "${tab}" -k1,1 -u | awk -F "${tab}" '
@@ -642,7 +642,11 @@ if [ "${raw_hook_event}" = "SessionStart" ]; then
   find_repo_root "${raw_cwd}"
   if [ -n "${found_repo_root}" ]; then
     export -f harness_config_hash
-    remaining_ms=$((2200 - ($(date +%s%3N) - writer_started_ms)))
+    stamp_now_ms="$(date +%s%3N)"
+    case "${writer_started_ms}:${stamp_now_ms}" in
+      *[!0-9:]*|:*|*:) remaining_ms=0 ;;
+      *) remaining_ms=$((2200 - (stamp_now_ms - writer_started_ms))) ;;
+    esac
     if [ "${remaining_ms}" -gt 0 ]; then
       [ "${remaining_ms}" -le 2000 ] || remaining_ms=2000
       printf -v stamp_cap '%d.%03ds' "$((remaining_ms / 1000))" "$((remaining_ms % 1000))"

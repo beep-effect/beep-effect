@@ -359,3 +359,5 @@ configured floor moved to four slots. All current lock owners were live. The
 owned publisher was stopped before it created a PR and re-submitted through the
 unchanged wrapper, without changing caps or cancelling another lane. Queue
 waiters should observe the current pool configuration or expose a refresh path.
+
+- H3 publication cheap gates rejected introduced Effect Vitest instances and reconciliation duplication/complexity. The independent review also found that sibling directory aliases counted one dangling entry twice. Consolidated fail-closed reads, deduplicated failure identities by canonical containing directory, and adopted scoped test harnesses. A final gate run after every source review wave would have exposed these before publication admission.
