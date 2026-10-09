@@ -4,6 +4,8 @@
  * a synchronous entry point, a build-script shim — yet still take
  * `FileSystem.FileSystem` from context.
  *
+ * **Details**
+ *
  * Deliberately a separate subpath (`@effected/memfs/node-sync`): the main
  * entry imports nothing from `node:*`, and this module is the one place that
  * does. Import it only where Node's filesystem is the platform you mean.
@@ -253,7 +255,7 @@ const make: FileSystem.FileSystem = FileSystem.make({
  * **Example** (Read a package manifest with Effect.runSync)
  *
  * ```ts
- * import { NodeSyncFileSystem } from "./NodeSyncFileSystem.ts";
+ * import { NodeSyncFileSystem } from "@beep/scratchpad/effected/memfs/NodeSyncFileSystem";
  * import * as Effect from "effect/Effect";
  * import * as FileSystem from "effect/FileSystem";
  *
@@ -263,19 +265,56 @@ const make: FileSystem.FileSystem = FileSystem.make({
  * });
  *
  * const text = Effect.runSync(program.pipe(Effect.provide(NodeSyncFileSystem.layer)));
+ * console.log(text.length > 0); // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class NodeSyncFileSystem {
 	/**
-	 * The filesystem itself, for code that takes a `FileSystem` argument. A
-	 * plain value (not an `Effect`, unlike `MemoryFileSystem.make`): there is no
-	 * volume to build.
+	 * Provides the filesystem itself for code that takes a `FileSystem` argument.
+	 *
+	 * **Details**
+	 *
+	 * A plain value (not an `Effect`, unlike `MemoryFileSystem.make`): there is
+	 * no volume to build.
+	 *
+	 * **Example** (Construct a synchronous file read)
+	 *
+	 * ```ts
+	 * import { NodeSyncFileSystem } from "@beep/scratchpad/effected/memfs/NodeSyncFileSystem";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = NodeSyncFileSystem.fileSystem.readFileString("package.json");
+	 * console.log(Effect.isEffect(program)); // true
+	 * ```
+	 *
+	 * @category services
+	 * @since 0.0.0
 	 */
 	static readonly fileSystem: FileSystem.FileSystem = make;
 
-	/** The filesystem as a layer providing `FileSystem.FileSystem`. */
+	/**
+	 * Provides `FileSystem.FileSystem` through a layer backed by synchronous
+	 * Node reads.
+	 *
+	 * **Example** (Provide the synchronous filesystem layer)
+	 *
+	 * ```ts
+	 * import { NodeSyncFileSystem } from "@beep/scratchpad/effected/memfs/NodeSyncFileSystem";
+	 * import * as Effect from "effect/Effect";
+	 * import * as FileSystem from "effect/FileSystem";
+	 *
+	 * const program = Effect.flatMap(FileSystem.FileSystem, (fs) => fs.readFileString("package.json"));
+	 * const text = Effect.runSync(Effect.provide(program, NodeSyncFileSystem.layer));
+	 * console.log(text.length > 0); // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<FileSystem.FileSystem> = Layer.succeed(FileSystem.FileSystem, make);
 
 	private constructor() {}

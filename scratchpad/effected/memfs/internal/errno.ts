@@ -28,13 +28,48 @@ import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/memfs/internal/errno");
 
+/**
+ * Defines the errno codes produced by the memory filesystem engine.
+ *
+ * **Example** (Validate a missing-file errno)
+ *
+ * ```ts
+ * import { ErrnoCode } from "@beep/scratchpad/effected/memfs/internal/errno";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(ErrnoCode)("ENOENT")); // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const ErrnoCode = LiteralKit([
  "EACCES", "EBADF", "EBUSY", "EEXIST", "EINVAL", "EISDIR", "ELOOP", "ENOENT",
  "ENOTDIR", "ENOTEMPTY", "EPERM", "ERR_FS_CP_DIR_TO_NON_DIR", "ERR_FS_CP_EINVAL",
  "ERR_FS_CP_NON_DIR_TO_DIR", "ERR_FS_EISDIR",
 ]).pipe($I.annoteSchema("ErrnoCode", { description: "The upstream memory filesystem errno codes." }));
+/**
+ * An errno code accepted by the memory filesystem engine.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ErrnoCode = typeof ErrnoCode.Type;
 
+/**
+ * Supplies the Node-compatible description for each supported errno code.
+ *
+ * **Example** (Look up the missing-file description)
+ *
+ * ```ts
+ * import { errnoMessages } from "@beep/scratchpad/effected/memfs/internal/errno";
+ *
+ * console.log(errnoMessages.ENOENT); // no such file or directory
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const errnoMessages: { readonly [Code in ErrnoCode]: string } = {
 	EACCES: "permission denied",
 	EBADF: "bad file descriptor",
@@ -55,6 +90,27 @@ export const errnoMessages: { readonly [Code in ErrnoCode]: string } = {
 
 // Mirrors `handleErrnoException` in @effect/platform-node-shared: only these
 // codes map to a specific tag, everything else is "Unknown".
+/**
+ * Classifies an errno code with the same system-error tag as the Node adapter.
+ *
+ * **Details**
+ *
+ * Only the codes recognized by `handleErrnoException` in
+ * `@effect/platform-node-shared` map to a specific tag; everything else is
+ * `Unknown`.
+ *
+ * **Example** (Classify missing and unmapped codes)
+ *
+ * ```ts
+ * import { errnoTag } from "@beep/scratchpad/effected/memfs/internal/errno";
+ *
+ * console.log(errnoTag("ENOENT")); // NotFound
+ * console.log(errnoTag("EINVAL")); // Unknown
+ * ```
+ *
+ * @category mapping
+ * @since 0.0.0
+ */
 export const errnoTag = Match.type<string | undefined>().pipe(
 	Match.when("ENOENT", (): SystemErrorTag => "NotFound"),
 	Match.when("EACCES", (): SystemErrorTag => "PermissionDenied"),
@@ -68,6 +124,28 @@ export const errnoTag = Match.type<string | undefined>().pipe(
 // injected fault, a model limit). NOT the inverse of `errnoTag`, which is
 // many-to-one (EISDIR/ENOTDIR/ELOOP all map to BadResource): only the three
 // tags with one obvious code get it, and everything else is `EIO`.
+/**
+ * Chooses a reportable errno for a failure that carries no errno of its own.
+ *
+ * **Details**
+ *
+ * Injected faults and model limits can lack an errno. This is not the inverse
+ * of `errnoTag`, which is many-to-one: `EISDIR`, `ENOTDIR` and `ELOOP` all map
+ * to `BadResource`. Only the three tags with one obvious code get it, and
+ * everything else is `EIO`.
+ *
+ * **Example** (Choose fallback errno codes)
+ *
+ * ```ts
+ * import { fallbackErrnoForTag } from "@beep/scratchpad/effected/memfs/internal/errno";
+ *
+ * console.log(fallbackErrnoForTag("NotFound")); // ENOENT
+ * console.log(fallbackErrnoForTag("BadResource")); // EIO
+ * ```
+ *
+ * @category mapping
+ * @since 0.0.0
+ */
 export const fallbackErrnoForTag = Match.type<string>().pipe(
 	Match.when("NotFound", () => "ENOENT"),
 	Match.when("AlreadyExists", () => "EEXIST"),
@@ -75,7 +153,22 @@ export const fallbackErrnoForTag = Match.type<string>().pipe(
 	Match.orElse(() => "EIO"),
 );
 
-/** The `cause` of an errno-backed failure: an `Error` carrying node's `code` (and `path` for path operations). */
+/**
+ * Provides the `cause` of an errno-backed failure: an `Error` carrying Node's
+ * `code` and, for path operations, `path`.
+ *
+ * **Example** (Construct a path-based errno cause)
+ *
+ * ```ts
+ * import { ErrnoException } from "@beep/scratchpad/effected/memfs/internal/errno";
+ *
+ * const error = ErrnoException.from("ENOENT", "/missing");
+ * console.log(error.message); // ENOENT: no such file or directory, '/missing'
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
 export class ErrnoException extends S.TaggedError<ErrnoException>($I`ErrnoException`)(
  "ErrnoException",
  {
@@ -85,8 +178,38 @@ export class ErrnoException extends S.TaggedError<ErrnoException>($I`ErrnoExcept
  },
  $I.annoteError<ErrnoException>("ErrnoException", { description: "The typed cause of an errno-backed platform failure." }),
 ) {
+/**
+ * Preserves Node's generic `Error` name for errno failures.
+ *
+ * **Example** (Inspect the ErrnoException error name)
+ *
+ * ```ts
+ * import { ErrnoException } from "@beep/scratchpad/effected/memfs/internal/errno";
+ *
+ * const error = ErrnoException.from("ENOENT", "/missing");
+ * console.log(error.name); // Error
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
  override readonly name = "Error";
 
+/**
+ * Builds an errno cause with a path suffix only for string path arguments.
+ *
+ * **Example** (Construct a descriptor-based errno cause)
+ *
+ * ```ts
+ * import { ErrnoException } from "@beep/scratchpad/effected/memfs/internal/errno";
+ *
+ * const error = ErrnoException.from("EBADF", 3);
+ * console.log(error.message); // EBADF: bad file descriptor
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
  static readonly from = (code: ErrnoCode, pathOrDescriptor: string | number | undefined): ErrnoException =>
  ErrnoException.make({
   message: `${code}: ${errnoMessages[code]}${P.isString(pathOrDescriptor) ? `, '${pathOrDescriptor}'` : ""}`,
@@ -98,6 +221,26 @@ export class ErrnoException extends S.TaggedError<ErrnoException>($I`ErrnoExcept
 
 // Keep description explicit (undefined when absent): three string arguments
 // would otherwise be ambiguous between direct and pipeable calls.
+/**
+ * Builds a typed filesystem platform failure while retaining its errno cause.
+ *
+ * **Details**
+ *
+ * Pass an explicit description, using `undefined` when absent. Three string
+ * arguments would otherwise be ambiguous between direct and pipeable calls.
+ *
+ * **Example** (Inspect a missing-file platform failure)
+ *
+ * ```ts
+ * import { errnoError } from "@beep/scratchpad/effected/memfs/internal/errno";
+ *
+ * const error = errnoError("readFile", "/missing", "ENOENT", undefined);
+ * console.log(error.reason._tag); // NotFound
+ * ```
+ *
+ * @category error-handling
+ * @since 0.0.0
+ */
 export const errnoError: {
  (pathOrDescriptor: string | number, code: ErrnoCode, description: string | undefined): (method: string) => PlatformError;
  (method: string, pathOrDescriptor: string | number, code: ErrnoCode, description: string | undefined): PlatformError;
@@ -120,6 +263,27 @@ const nodeErrnos: Readonly<Record<ErrnoCode | "EIO", number | undefined>> = {
  ERR_FS_CP_NON_DIR_TO_DIR: undefined, ERR_FS_EISDIR: undefined,
 };
 
+/**
+ * Represents a Node-compatible synchronous filesystem failure with syscall
+ * and optional path metadata.
+ *
+ * **Example** (Inspect a descriptor syscall failure)
+ *
+ * ```ts
+ * import { NodeErrno } from "@beep/scratchpad/effected/memfs/internal/errno";
+ *
+ * const error = NodeErrno.make({
+ *   message: "EBADF: bad file descriptor, read",
+ *   code: "EBADF",
+ *   errno: -9,
+ *   syscall: "read",
+ * });
+ * console.log(error.syscall); // read
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
 export class NodeErrno extends S.TaggedError<NodeErrno>($I`NodeErrno`)(
  "NodeErrno",
  {
@@ -131,14 +295,45 @@ export class NodeErrno extends S.TaggedError<NodeErrno>($I`NodeErrno`)(
  },
  $I.annoteError<NodeErrno>("NodeErrno", { description: "A tagged Node-compatible synchronous filesystem failure." }),
 ) {
+/**
+ * Preserves Node's generic `Error` name for errno failures.
+ *
+ * **Example** (Inspect the NodeErrno error name)
+ *
+ * ```ts
+ * import { nodeErrno } from "@beep/scratchpad/effected/memfs/internal/errno";
+ *
+ * const error = nodeErrno("EBADF", "read", undefined);
+ * console.log(error.name); // Error
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
  override readonly name = "Error";
 }
 
 /**
- * What a synchronous `node:fs` call throws: node's message format
- * (`"<CODE>: <description>, <syscall> '<path>'"`), and `code`/`syscall`/`path`
- * properties. A descriptor-based syscall (`read`) has no path, and neither does
- * its error — pass `undefined`. An unmapped code's description is `"error"`.
+ * Builds what a synchronous `node:fs` call throws: Node's message format
+ * (`"<CODE>: <description>, <syscall> '<path>'"`) and `code`/`syscall`/`path`
+ * properties.
+ *
+ * **Details**
+ *
+ * A descriptor-based syscall (`read`) has no path, and neither does its
+ * error — pass `undefined`. An unmapped code's description is `"error"`.
+ *
+ * **Example** (Format a missing-file syscall error)
+ *
+ * ```ts
+ * import { nodeErrno } from "@beep/scratchpad/effected/memfs/internal/errno";
+ *
+ * const error = nodeErrno("ENOENT", "open", "/missing");
+ * console.log(error.message); // ENOENT: no such file or directory, open '/missing'
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const nodeErrno: {
  (syscall: string, path: string | undefined): (code: string) => MemoryFileSystemErrnoError;

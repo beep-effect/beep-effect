@@ -2772,7 +2772,18 @@ const glob = (volume: Volume) =>
 // =============================================================================
 
 // KIT EXTENSION (case folding): the engine's build-time options.
-/** @internal */
+/**
+ * Fixes the engine's path-matching policy when the volume is built.
+ *
+ * **Details**
+ *
+ * `caseSensitive: false` folds path components during lookup while retaining
+ * stored entry spellings. The policy remains fixed for the volume's lifetime.
+ *
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
 export interface EngineOptions {
 	readonly caseSensitive: boolean;
 }
@@ -2921,7 +2932,29 @@ const makeReadyVolume: (options: EngineOptions) => Effect.Effect<Volume> = Effec
 	return volume;
 });
 
-/** @internal */
+/**
+ * Creates a fresh in-memory file system with case-sensitive path lookup.
+ *
+ * **Details**
+ *
+ * The initial volume contains the root directory and `/tmp`. Each execution
+ * creates independent state, file descriptors, and watch subscriptions.
+ *
+ * **Example** (Write and read text in a fresh file system)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { make } from "@beep/scratchpad/effected/memfs/internal/volume"
+ *
+ * const fileSystem = Effect.runSync(make)
+ * Effect.runSync(fileSystem.writeFileString("/note.txt", "memory"))
+ * console.log(Effect.runSync(fileSystem.readFileString("/note.txt"))) // memory
+ * ```
+ *
+ * @internal
+ * @category constructors
+ * @since 0.0.0
+ */
 export const make: Effect.Effect<FileSystem.FileSystem> = Effect.map(
 	makeReadyVolume(defaultEngineOptions),
 	toFileSystem,
@@ -2932,15 +2965,45 @@ export const make: Effect.Effect<FileSystem.FileSystem> = Effect.map(
 // followed); hard links surface once per directory entry, each path carrying
 // the same underlying data reference.
 
-/** @internal */
+/**
+ * Describes a literal directory entry and its current metadata for inspection.
+ *
+ * **Details**
+ *
+ * Symbolic links are reported as themselves and never followed. Hard links
+ * appear once per directory entry, with each path sharing the underlying data
+ * reference. Size is the file byte length, the link target's UTF-8 byte length,
+ * or zero for a directory.
+ *
+ * **Gotchas**
+ *
+ * File data is a live reference; callers must copy it before exposing or
+ * modifying bytes outside the engine.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export interface VolumeEntrySnapshot {
 	readonly path: string;
 	readonly type: "File" | "Directory" | "SymbolicLink";
-	/** The live data reference for a `File` entry (callers must copy), `undefined` otherwise. */
+	/**
+	 * The live data reference for a `File` entry (callers must copy), `undefined` otherwise.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly data: Uint8Array | undefined;
-	/** The entry's modification time as epoch milliseconds — the same clock `stat` reports. */
+	/**
+	 * The entry's modification time as epoch milliseconds — the same clock `stat` reports.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly mtime: number;
-	/** The stored target of a `SymbolicLink` entry (never resolved), `undefined` otherwise. */
+	/**
+	 * The stored target of a `SymbolicLink` entry (never resolved), `undefined` otherwise.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly target: string | undefined;
 	// KIT EXTENSION (entry size): file byte length, symlink target UTF-8 length, 0 for a directory.
 	readonly size: number;
@@ -3025,22 +3088,71 @@ const lookupLiteral = (state: State, components: ReadonlyArray<string>): InodeEn
 const splitComponents = (path: string): ReadonlyArray<string> => path.split("/").filter((part) => part.length > 0);
 // END KIT EXTENSION (inspection lookup)
 
-/** @internal */
+/**
+ * Couples the effectful file system with synchronous inspection of committed state.
+ *
+ * **Details**
+ *
+ * Inspection reads the live volume at call time rather than a copy taken at
+ * construction. Literal lookup never follows symbolic links, even in
+ * intermediate components, and applies the engine's case-folding policy.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export interface InspectableFileSystem {
 	readonly fileSystem: FileSystem.FileSystem;
-	/** Walks the volume's live state at call time — never a copy taken at build. */
+	/**
+	 * Walks the volume's live state at call time — never a copy taken at build.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly entries: () => Array<VolumeEntrySnapshot>;
 	/**
 	 * The literal entry at a lexically normalized absolute path, or `undefined`.
+	 *
+	 * **Details**
+	 *
 	 * O(depth). The snapshot's `path` is the query as given, not the stored
 	 * spelling — point queries never expose it.
+	 *
+	 * @since 0.0.0
 	 */
 	readonly lookup: (path: string) => VolumeEntrySnapshot | undefined;
-	/** The stored names inside the directory at `path`, sorted; `undefined` when it is not one. */
+	/**
+	 * The stored names inside the directory at `path`, sorted; `undefined` when it is not one.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly list: (path: string) => ReadonlyArray<string> | undefined;
 }
 
-/** @internal */
+/**
+ * Creates an independent volume with effectful operations and synchronous inspection.
+ *
+ * **Details**
+ *
+ * The root directory and `/tmp` exist initially. Inspection observes committed
+ * state without acquiring the asynchronous mutation lock; each read sees one
+ * consistent state. Lookup reports the supplied path, while directory listing
+ * preserves stored spellings and sorts them in string order.
+ *
+ * **Example** (Inspect a file through case-insensitive lookup)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { makeInspectableWith } from "@beep/scratchpad/effected/memfs/internal/volume"
+ *
+ * const engine = Effect.runSync(makeInspectableWith({ caseSensitive: false }))
+ * Effect.runSync(engine.fileSystem.writeFileString("/Note.txt", "hello"))
+ * console.log(engine.lookup("/note.txt")?.size) // 5
+ * ```
+ *
+ * @internal
+ * @category constructors
+ * @since 0.0.0
+ */
 export const makeInspectableWith = (options: EngineOptions): Effect.Effect<InspectableFileSystem> =>
 	Effect.map(makeReadyVolume(options), (volume) => ({
 		fileSystem: toFileSystem(volume),
@@ -3055,5 +3167,31 @@ export const makeInspectableWith = (options: EngineOptions): Effect.Effect<Inspe
 		},
 	}));
 
-/** @internal */
+/**
+ * Provides a fresh case-sensitive in-memory file system through the FileSystem service.
+ *
+ * **Details**
+ *
+ * The provided volume starts with the root directory and `/tmp`; operations in
+ * the same layer build share its state.
+ *
+ * **Example** (Provide the file system to a text-writing program)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as FileSystem from "effect/FileSystem"
+ * import { layer } from "@beep/scratchpad/effected/memfs/internal/volume"
+ *
+ * const program = Effect.gen(function* () {
+ *   const fileSystem = yield* FileSystem.FileSystem
+ *   yield* fileSystem.writeFileString("/message.txt", "provided")
+ *   return yield* fileSystem.readFileString("/message.txt")
+ * })
+ * console.log(await Effect.runPromise(Effect.provide(program, layer))) // provided
+ * ```
+ *
+ * @internal
+ * @category layers
+ * @since 0.0.0
+ */
 export const layer = Layer.effect(FileSystem.FileSystem, make);

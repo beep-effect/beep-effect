@@ -3,10 +3,10 @@
   "effectedCommit": "af7566a9da2eff169cb74955efcc5ede1e5de9f8",
   "startedAt": "2026-10-07T06:36:54.420Z",
   "lastCheckpoint": {
-    "module": "github-commands",
+    "module": "memfs",
     "stage": 2,
     "commit": null,
-    "at": "2026-10-09T16:02:11.694Z"
+    "at": "2026-10-09T16:17:26.260Z"
   },
   "rows": [
     {
@@ -774,7 +774,7 @@
       "module": "memfs",
       "wave": 1,
       "position": 1,
-      "stage": 1,
+      "stage": 2,
       "status": "in-progress",
       "provisionalHome": "tooling/test-kit",
       "upstreamPaths": {
@@ -1069,13 +1069,18 @@
       "commits": [
         {
           "stage": 0,
+          "sha": "7e5e2a382f77fde8b95221bdf96a977b6a7ca1ce"
+        },
+        {
+          "stage": 1,
           "sha": null
         }
       ],
       "blocked": null,
       "notes": [
         "2026-10-09T11:33:57.044Z beep laws done (four laws clean, allowlisted sites listed); S1 held by the environment-bound tests in TESTS_NOT_PASSING.md",
-        "2026-10-09T15:17:10.608Z S1: green: env-bound tests resolved per the 2026-10-09 rulings; tsgo, oxlint and the four laws clean; audit green (parity strict)"
+        "2026-10-09T15:17:10.608Z S1: green: env-bound tests resolved per the 2026-10-09 rulings; tsgo, oxlint and the four laws clean; audit green (parity strict)",
+        "2026-10-09T16:17:26.260Z S2: S2 green: docgen with all enforcement flags and the JSDoc law; carriers converted; README adapted (section 10.3)"
       ],
       "closedAt": null
     },

@@ -13,6 +13,28 @@ import * as R from "effect/Record";
 
 const encoder = new TextEncoder();
 
+/**
+ * Populates a filesystem from seed entries, creating their parent directories before writing files or links.
+ *
+ * **Details**
+ *
+ * Strings are encoded as UTF-8. File metadata is applied after writing; a supplied modification time sets both access and modification times. Directory modes are applied even when a directory already exists.
+ *
+ * **Example** (Seed a nested file)
+ *
+ * ```ts
+ * import { MemoryFileSystem } from "@beep/scratchpad/effected/memfs/MemoryFileSystem";
+ * import * as Effect from "effect/Effect";
+ * import { seedVolume } from "@beep/scratchpad/effected/memfs/internal/seed";
+ *
+ * const handle = MemoryFileSystem.makeSync();
+ * Effect.runSync(seedVolume(handle.fileSystem, { "/nested/hello.txt": "hello" }));
+ * console.log(handle.volume.text("/nested/hello.txt")) // hello
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const seedVolume = Effect.fnUntraced(function* (fs: FileSystem.FileSystem, seed: MemoryFileSystemSeed) {
 	for (const [path, entry] of R.toEntries(seed)) {
 		const separator = path.lastIndexOf("/");
@@ -61,6 +83,28 @@ export const seedVolume = Effect.fnUntraced(function* (fs: FileSystem.FileSystem
 // collapses "//" and ".", applies "..", resolves relative paths from the
 // virtual root — matching the engine's canonical "/a/b" spelling. Deliberately
 // does NOT follow symlinks.
+/**
+ * Normalizes a path lexically to the volume's canonical absolute spelling.
+ *
+ * **Details**
+ *
+ * Collapses repeated separators and `.` segments, applies `..`, and resolves relative paths from the virtual root.
+ *
+ * **Gotchas**
+ *
+ * Deliberately does not follow symbolic links.
+ *
+ * **Example** (Normalize a relative path)
+ *
+ * ```ts
+ * import { normalizeAbsolute } from "@beep/scratchpad/effected/memfs/internal/seed";
+ *
+ * console.log(normalizeAbsolute("a//b/../c")) // /a/c
+ * ```
+ *
+ * @category normalization
+ * @since 0.0.0
+ */
 export const normalizeAbsolute = (path: string): string => {
 	const segments: Array<string> = [];
 	for (const segment of path.split("/")) {
@@ -74,18 +118,40 @@ export const normalizeAbsolute = (path: string): string => {
 	return `/${segments.join("/")}`;
 };
 
-/** What was wrong with a seed's `root` or one of its keys: a description, and the offending root or key. */
+/**
+ * Describes what was wrong with a seed's `root` or one of its keys, retaining the offending root or key.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
 export interface SeedRootError {
 	readonly description: string;
 	readonly subject: string;
 }
 
 /**
- * Re-keys a seed under `root`. The root is a JOIN BASE, not a jail: a
- * relative key is joined to it lexically (as `path.posix.join` does), so a key
- * with `..` may land outside it — `root: "/ws/repo"` with `"../extra/a.ts"` is
- * `/ws/extra/a.ts`. A relative root, or an absolute key alongside a root, is an
- * error naming the offending value.
+ * Re-keys a seed under `root`.
+ *
+ * **Details**
+ *
+ * The root is a JOIN BASE, not a jail: a relative key is joined to it lexically (as `path.posix.join` does), so a key with `..` may land outside it — `root: "/ws/repo"` with `"../extra/a.ts"` is `/ws/extra/a.ts`.
+ *
+ * **Gotchas**
+ *
+ * A relative root, or an absolute key alongside a root, is an error naming the offending value.
+ *
+ * **Example** (Join a seed key outside the root)
+ *
+ * ```ts
+ * import * as Result from "effect/Result";
+ * import { applyRoot } from "@beep/scratchpad/effected/memfs/internal/seed";
+ *
+ * const applied = applyRoot({ "../extra/a.ts": "hello" }, "/ws/repo");
+ * console.log(Result.isSuccess(applied) ? applied.success.seed["/ws/extra/a.ts"] : applied.failure.subject) // hello
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const applyRoot: {
  (root: string | undefined): (seed: MemoryFileSystemSeed) => Result.Result<{ readonly seed: MemoryFileSystemSeed; readonly root: string | undefined }, SeedRootError>;
@@ -110,7 +176,28 @@ export const applyRoot: {
 	return Result.succeed({ seed: rooted, root: base });
 });
 
-/** Applies the root, creates it, then seeds. A root error is a typed `BadArgument`. */
+/**
+ * Applies the root, creates it, then seeds.
+ *
+ * **Gotchas**
+ *
+ * A root error is a typed `BadArgument`.
+ *
+ * **Example** (Seed under a newly created root)
+ *
+ * ```ts
+ * import { MemoryFileSystem } from "@beep/scratchpad/effected/memfs/MemoryFileSystem";
+ * import * as Effect from "effect/Effect";
+ * import { seedWith } from "@beep/scratchpad/effected/memfs/internal/seed";
+ *
+ * const handle = MemoryFileSystem.makeSync();
+ * Effect.runSync(seedWith(handle.fileSystem, { "hello.txt": "hello" }, { root: "/repo" }));
+ * console.log(handle.volume.text("/repo/hello.txt")) // hello
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const seedWith = Effect.fnUntraced(function* (
 	fs: FileSystem.FileSystem,
 	seed: MemoryFileSystemSeed,

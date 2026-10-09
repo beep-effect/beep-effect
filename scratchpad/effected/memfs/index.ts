@@ -3,6 +3,8 @@
  * virtual POSIX filesystem for tests and programs that need filesystem
  * behavior without host filesystem IO.
  *
+ * **Details**
+ *
  * Provide `MemoryFileSystem.layer` — or `MemoryFileSystem.layerWith` with a
  * seed describing files, directories, symlinks and initial modes — in place of
  * a host-backed filesystem, and any program requiring `FileSystem.FileSystem`

@@ -27,8 +27,10 @@ const $I = $ScratchpadId.create("effected/memfs/internal/faults");
  * **Example** (Inspect an unknown fault key)
  *
  * ```ts
+ * import { UnknownFaultKeyError } from "@beep/scratchpad/effected/memfs/internal/faults";
+ *
  * const error = UnknownFaultKeyError.make({ message: "Unknown fault key: readFileSting" });
- * console.log(error.message);
+ * console.log(error.message); // Unknown fault key: readFileSting
  * ```
  *
  * @category errors
@@ -41,10 +43,29 @@ export class UnknownFaultKeyError extends S.TaggedError<UnknownFaultKeyError>($I
 ) {}
 
 /**
- * Throws an `UnknownFaultKeyError` naming any fault key that is not a function-valued
- * member of `target`. A misspelled key would otherwise be ignored silently and
- * the test would pass without its fault ever firing — a wiring bug, surfaced at
- * construction like `failTimes`' invalid counts.
+ * Rejects a fault key that does not name a function-valued member of `target`.
+ *
+ * **Details**
+ *
+ * Throws an `UnknownFaultKeyError` naming each fault key that is not a
+ * function-valued member of `target`. A misspelled key would otherwise be
+ * ignored silently and the test would pass without its fault ever firing — a
+ * wiring bug, surfaced at construction like `failTimes`' invalid counts.
+ *
+ * **Example** (Validate a registered read fault)
+ *
+ * ```ts
+ * import { assertKnownFaultKeys } from "@beep/scratchpad/effected/memfs/internal/faults";
+ * import * as Effect from "effect/Effect";
+ *
+ * const target = { readFile: () => Effect.succeed(new Uint8Array()) };
+ * const faults = { readFile: () => undefined };
+ * assertKnownFaultKeys(faults, target, "test faults");
+ * console.log("Fault keys accepted"); // Fault keys accepted
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
  */
 export const assertKnownFaultKeys: {
  (target: object, subject: string): (faults: object) => void;
@@ -61,6 +82,32 @@ export const assertKnownFaultKeys: {
 	}
 });
 
+/**
+ * Wraps a filesystem with fault handlers that delegate to the base when they
+ * return `undefined`.
+ *
+ * **Details**
+ *
+ * Registration factories receive the base filesystem. Unknown fault keys
+ * fail at construction. Transient failure counts are armed once per wrapper
+ * and consumed when effects execute. Stream and sink handlers are consulted
+ * at call time. Derived filesystem members are rebuilt from intercepted core
+ * methods, so faults propagate to the operations that depend on them.
+ *
+ * **Example** (Construct a filesystem with a delegated read)
+ *
+ * ```ts
+ * import { wrapFaulty } from "@beep/scratchpad/effected/memfs/internal/faults";
+ * import * as Effect from "effect/Effect";
+ * import * as FileSystem from "effect/FileSystem";
+ *
+ * const fs = wrapFaulty(FileSystem.makeNoop({}), { readFile: () => undefined });
+ * console.log(Effect.isEffect(fs.readFile("/missing"))); // true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const wrapFaulty: {
  (registration: MemoryFileSystemFaults | MemoryFileSystemFaultsFactory): (base: FileSystem.FileSystem) => FileSystem.FileSystem;
  (base: FileSystem.FileSystem, registration: MemoryFileSystemFaults | MemoryFileSystemFaultsFactory): FileSystem.FileSystem;

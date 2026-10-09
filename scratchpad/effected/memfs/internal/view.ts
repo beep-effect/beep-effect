@@ -11,6 +11,37 @@ import type { InspectableFileSystem } from "./volume.ts";
 
 const decoder = new TextDecoder();
 
+/**
+ * Adapts an inspectable engine into synchronous queries of its committed volume.
+ *
+ * **Details**
+ *
+ * Point queries normalize absolute paths and use the engine's literal lookup,
+ * including its case-folding policy. Snapshots and byte reads copy file data;
+ * `paths` lists file paths in string order. Directory reads retain stored names.
+ *
+ * **Gotchas**
+ *
+ * Symbolic links are inspected literally rather than followed, including links
+ * in intermediate path components. Missing entries return `undefined` from
+ * value queries and `false` from presence predicates.
+ *
+ * **Example** (Read a file through the synchronous view)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { makeVolumeService } from "@beep/scratchpad/effected/memfs/internal/view"
+ * import { makeInspectableWith } from "@beep/scratchpad/effected/memfs/internal/volume"
+ *
+ * const engine = Effect.runSync(makeInspectableWith({ caseSensitive: true }))
+ * Effect.runSync(engine.fileSystem.writeFileString("/greeting.txt", "hello"))
+ * const view = makeVolumeService(engine)
+ * console.log(view.text("/greeting.txt")) // hello
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const makeVolumeService = (engine: InspectableFileSystem): MemoryFileSystemVolume => {
 	const at = (path: string) => engine.lookup(normalizeAbsolute(path));
 	return {

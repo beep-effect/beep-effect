@@ -39,14 +39,49 @@ const $I = $ScratchpadId.create("effected/memfs/internal/ports");
 const ResolutionErrno = LiteralKit(["ENOENT", "ENOTDIR", "ELOOP"]).pipe(
  $I.annoteSchema("ResolutionErrno", { description: "Failures of component-wise path resolution." }),
 );
+/**
+ * Recognizes the literal entry kinds reported by the volume inspection view.
+ *
+ * **Example** (Recognize a symbolic link kind)
+ *
+ * ```ts
+ * import { StatKind } from "@beep/scratchpad/effected/memfs/internal/ports";
+ *
+ * console.log(StatKind.is.symlink("symlink")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const StatKind = LiteralKit(["file", "directory", "symlink"]).pipe(
  $I.annoteSchema("StatKind", { description: "The literal volume entry kinds." }),
 );
+/**
+ * The literal kind of a file, directory, or symbolic link in the volume.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type StatKind = typeof StatKind.Type;
 const MutationMethod = LiteralKit(["writeFile", "makeDirectory", "remove", "symlink"]).pipe(
  $I.annoteSchema("MutationMethod", { description: "The synchronous handle mutation methods." }),
 );
 type MutationMethod = typeof MutationMethod.Type;
+/**
+ * Represents a resolved absolute path or the exact errno that prevented resolution.
+ *
+ * **Example** (Inspect a successful resolution)
+ *
+ * ```ts
+ * import { Resolved } from "@beep/scratchpad/effected/memfs/internal/ports";
+ *
+ * const resolved = Resolved.cases.Success.make({ path: "/hello.txt" });
+ * console.log(resolved.path) // /hello.txt
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const Resolved = S.TaggedUnion({
  Success: { path: S.String.pipe($I.annoteKey("Resolved.Success.path", { description: "The resolved absolute path." })) },
  Failure: { code: ResolutionErrno.pipe($I.annoteKey("Resolved.Failure.code", { description: "The resolution errno." })) },
@@ -96,9 +131,21 @@ const walk = (volume: MemoryFileSystemVolume, path: string, followFinal: boolean
 };
 
 /**
- * Resolves `path` the way `stat` (or, with `followFinal: false`, `lstat`) does,
- * reporting WHY it is absent: `ENOENT`, `ENOTDIR` (a component under a
- * non-directory) or `ELOOP` (too many links).
+ * Resolves `path` the way `stat` (or, with `followFinal: false`, `lstat`) does, reporting WHY it is absent: `ENOENT`, `ENOTDIR` (a component under a non-directory) or `ELOOP` (too many links).
+ *
+ * **Example** (Resolve a seeded file)
+ *
+ * ```ts
+ * import { MemoryFileSystem } from "@beep/scratchpad/effected/memfs/MemoryFileSystem";
+ * import { Resolved, resolvePath } from "@beep/scratchpad/effected/memfs/internal/ports";
+ *
+ * const handle = MemoryFileSystem.makeSync({ "/hello.txt": "hello" });
+ * const resolved = resolvePath(handle.volume, "/hello.txt");
+ * console.log(Resolved.guards.Success(resolved)) // true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const resolvePath: {
  (path: string, followFinal?: boolean): (volume: MemoryFileSystemVolume) => Resolved;
@@ -148,11 +195,27 @@ const settle = <A>(f: () => A): Promise<Awaited<A>> => {
 };
 
 /**
- * Wraps each named member of `port` so its handler runs first: a handler may
- * throw, return a replacement, or return `undefined` to delegate. An unknown
- * member name throws `UnknownFaultKeyError` at construction. With `async`, the whole
- * interception runs inside `settle`, so a handler that throws synchronously
- * REJECTS — as a real `fs/promises` call does — instead of throwing.
+ * Wraps each named member of `port` so its handler runs first: a handler may throw, return a replacement, or return `undefined` to delegate.
+ *
+ * **Details**
+ *
+ * With `async`, the whole interception runs inside `settle`, so a handler that throws synchronously REJECTS — as a real `fs/promises` call does — instead of throwing.
+ *
+ * **Gotchas**
+ *
+ * An unknown member name throws `UnknownFaultKeyError` at construction.
+ *
+ * **Example** (Replace a port result)
+ *
+ * ```ts
+ * import { withFaults } from "@beep/scratchpad/effected/memfs/internal/ports";
+ *
+ * const port = withFaults({ read: () => "original" }, { read: () => "replacement" }, "example");
+ * console.log(port.read()) // replacement
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const withFaults: {
  <Port extends object>(faults: Partial<Record<keyof Port, (...args: never) => unknown>> | undefined, subject: string, async?: boolean): (port: Port) => Port;
@@ -198,6 +261,27 @@ const readBytes = (volume: MemoryFileSystemVolume, path: string): Uint8Array => 
 // The `syscall` on each thrown error is the one node reports for the same call:
 // `open` for readFile (`read` when the target is a directory), `scandir` for
 // readDirectory, `stat`/`lstat` for the stat pair.
+/**
+ * Builds a read-only synchronous filesystem port over the volume, following symbolic links for reads and `stat`.
+ *
+ * **Details**
+ *
+ * `lstat` reports the final link itself. Resolution failures become node-shaped errors with the syscall and caller path.
+ *
+ * **Example** (Read a seeded file synchronously)
+ *
+ * ```ts
+ * import { MemoryFileSystem } from "@beep/scratchpad/effected/memfs/MemoryFileSystem";
+ * import { makeSyncFileSystem } from "@beep/scratchpad/effected/memfs/internal/ports";
+ *
+ * const handle = MemoryFileSystem.makeSync({ "/hello.txt": "hello" });
+ * const fs = makeSyncFileSystem(handle.volume);
+ * console.log(fs.readFile("/hello.txt")) // hello
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const makeSyncFileSystem = (volume: MemoryFileSystemVolume): MemoryFileSystemSyncFileSystem => ({
 	exists: (path) => Resolved.match(resolvePath(volume, path), { Failure: () => false, Success: () => true }),
 	readFile: (path) => decoder.decode(readBytes(volume, path)),
@@ -215,6 +299,28 @@ export const makeSyncFileSystem = (volume: MemoryFileSystemVolume): MemoryFileSy
 	lstat: (path) => statOf(volume, path, "lstat", false),
 });
 
+/**
+ * Builds a read-only promise-based filesystem port that rejects when volume operations fail.
+ *
+ * **Details**
+ *
+ * Reading without an encoding returns bytes. Directory entries requested with `withFileTypes` describe symbolic links literally, while `stat` follows them.
+ *
+ * **Example** (Read a seeded file with an encoding)
+ *
+ * ```ts
+ * import { MemoryFileSystem } from "@beep/scratchpad/effected/memfs/MemoryFileSystem";
+ * import { makePromisesFileSystem } from "@beep/scratchpad/effected/memfs/internal/ports";
+ *
+ * const handle = MemoryFileSystem.makeSync({ "/hello.txt": "hello" });
+ * const fs = makePromisesFileSystem(handle.volume);
+ * const text = await fs.readFile("/hello.txt", "utf8");
+ * console.log(text) // hello
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const makePromisesFileSystem = (volume: MemoryFileSystemVolume): MemoryFileSystemPromisesFileSystem => {
 	const sync = makeSyncFileSystem(volume);
 	function readdir(path: string): Promise<ReadonlyArray<string>>;
@@ -271,16 +377,45 @@ const methodSyscall: { readonly [method: string]: string | undefined } = {
 	remove: "lstat",
 };
 
-/** node's syscall for a `FileSystem` method; a method with no node twin (the seed's own `root` check) keeps its name. */
+/**
+ * Returns node's syscall for a `FileSystem` method; a method with no node twin (the seed's own `root` check) keeps its name.
+ *
+ * **Example** (Translate a removal syscall)
+ *
+ * ```ts
+ * import { syscallForMethod } from "@beep/scratchpad/effected/memfs/internal/ports";
+ *
+ * console.log(syscallForMethod("remove")) // lstat
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const syscallForMethod = (method: string): string => methodSyscall[method] ?? method;
 
 /**
- * Runs an effect synchronously. A typed `PlatformError` failure is rethrown as
- * the node-shaped error a `node:fs` call would throw (`code`, `syscall`,
- * `path`) — never a `FiberFailure` wrapper — and a defect is rethrown
- * unchanged, never converted into an errno. The code is the failure's own
- * errno when it carries one, else derived from its tag (`BadArgument` is
- * `EINVAL`).
+ * Runs an effect synchronously and translates typed `PlatformError` failures into node-shaped errors.
+ *
+ * **Details**
+ *
+ * A typed `PlatformError` failure is rethrown as the node-shaped error a `node:fs` call would throw (`code`, `syscall`, `path`) — never a `FiberFailure` wrapper. The code is the failure's own errno when it carries one, else derived from its tag (`BadArgument` is `EINVAL`).
+ *
+ * **Gotchas**
+ *
+ * A defect is rethrown unchanged, never converted into an errno.
+ *
+ * **Example** (Return a successful effect value)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import { runNode } from "@beep/scratchpad/effected/memfs/internal/ports";
+ *
+ * const value = runNode(Effect.succeed("hello"), () => ({ syscall: "open", path: "/hello.txt" }));
+ * console.log(value) // hello
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const runNode: {
  (describe: (error: PlatformError.PlatformError) => { readonly syscall: string; readonly path: string }): <A>(effect: Effect.Effect<A, PlatformError.PlatformError>) => A;
@@ -304,7 +439,22 @@ export const runNode: {
 	throw nodeErrno(code, syscall, path);
 });
 
-/** {@link runNode} for a handle mutator: node's syscall for the `FileSystem` method and the CALLER's path. */
+/**
+ * Runs a handle mutator through {@link runNode}, using node's syscall for the `FileSystem` method and the CALLER's path.
+ *
+ * **Example** (Run a successful write mutation)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import { runMutation } from "@beep/scratchpad/effected/memfs/internal/ports";
+ *
+ * const result = runMutation(Effect.void, "writeFile", "/hello.txt");
+ * console.log(result) // undefined
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const runMutation: {
  (method: MutationMethod, path: string): (effect: Effect.Effect<void, PlatformError.PlatformError>) => void;
  (effect: Effect.Effect<void, PlatformError.PlatformError>, method: MutationMethod, path: string): void;

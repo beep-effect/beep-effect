@@ -1,46 +1,15 @@
 # memfs (lab port of @effected/memfs)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Fmemfs?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/memfs)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
-
 In-memory implementation of Effect's `FileSystem` service: an isolated virtual POSIX volume — files, directories, symlinks, hard links, open descriptors, temp resources, globbing, watching — behind the standard `FileSystem.FileSystem` key. Provide `MemoryFileSystem.layer` (or `layerWith` a seed) in place of a host-backed filesystem and any program requiring `FileSystem` runs against it unchanged. The same volume is inspectable synchronously, reachable through `node:fs`-shaped sync and promises ports, and injectable with faults.
 
 The founding contract is honest absence: reading a path nothing seeded fails typed with `NotFound` — it never fabricates content.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
-
-## Install
-
-```bash
-npm install --save-dev @effected/memfs effect
-```
-
-```bash
-pnpm add -D @effected/memfs effect
-```
-
-Requires Node.js >=24.11.0. `effect` v4 is a peer dependency; the package itself adds no other runtime dependencies. A dev dependency is the usual placement, since the volume is most often a test double — install it as a regular dependency when a shipped dry-run mode runs a program against it.
-
-All `@effected/*` packages are ESM-only: the exports maps publish only `import` conditions, so `require()` — including tools that resolve in CJS mode — fails with Node's `ERR_PACKAGE_PATH_NOT_EXPORTED` rather than loading a CJS build that does not exist. Import from an ES module.
 
 ## Seeding
 
 A seed maps absolute paths to entries. Plain `string`/`Uint8Array` values are file contents; the tagged helpers let one literal describe a whole tree — empty directories, symlinks, and initial permission modes:
 
 ```ts
-import { MemoryFileSystem } from "@effected/memfs";
+import { MemoryFileSystem } from "@beep/scratchpad/effected/memfs/MemoryFileSystem";
 
 const Volume = MemoryFileSystem.layerWith({
   "/repo/package.json": `{ "name": "fixture" }`,
@@ -76,8 +45,9 @@ const Workspace = MemoryFileSystem.layerWith({ "a.json": "{}", "": MemoryFileSys
 Every memory layer — `layer`, `layerWith` and a handle's `layer` — also publishes `MemoryFileSystem.Volume`, a view over the same volume, so a test asserts on what a program *wrote* without routing every assertion back through an `Effect` read. The view is synchronous, read-only and live: it reads the volume's state at call time, so a read after a write observes the write and a removal disappears. The extra service costs nothing where only `FileSystem` is needed — a layer providing more is still assignable to `Layer<FileSystem.FileSystem>`.
 
 ```ts
-import { MemoryFileSystem } from "@effected/memfs";
-import { Effect, FileSystem } from "effect";
+import { MemoryFileSystem } from "@beep/scratchpad/effected/memfs/MemoryFileSystem";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 
 const Volume = MemoryFileSystem.layerWith({
   "/repo/package.json": `{ "name": "root" }`,
@@ -213,8 +183,10 @@ link?.isDirectory();
 Pass `faults` to a seeded constructor to get a volume whose `FileSystem` misbehaves on cue. Injection is delegate-by-default: only registered methods are intercepted, handlers receive the real call arguments, and a handler that returns `undefined` declines, letting the call reach the volume. The opposite of `FileSystem.layerNoop`'s deny-by-default. `MemoryFileSystem.Volume` inspects the raw volume beneath the faults, so a test can inject a failure and still assert on what actually landed:
 
 ```ts
-import { MemoryFileSystem } from "@effected/memfs";
-import { Effect, FileSystem, PlatformError } from "effect";
+import { MemoryFileSystem } from "@beep/scratchpad/effected/memfs/MemoryFileSystem";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as PlatformError from "effect/PlatformError";
 
 const denied = (path: string) =>
   PlatformError.systemError({ _tag: "PermissionDenied", module: "FileSystem", method: "writeFile", pathOrDescriptor: path });
@@ -317,8 +289,9 @@ memfs implements one thing: Effect's `FileSystem` service. It installs no hooks,
 `@effected/memfs/node-sync` is the one module in this package that touches the real disk, and the only one importing `node:*` — the main entry imports nothing from it. `NodeSyncFileSystem` is a read-only, synchronous `FileSystem` over `node:fs`'s sync API, for a program that must run under `Effect.runSync` — a config loader called from a synchronous entry point — yet still takes `FileSystem` from context:
 
 ```ts
-import { NodeSyncFileSystem } from "@effected/memfs/node-sync";
-import { Effect, FileSystem } from "effect";
+import { NodeSyncFileSystem } from "@beep/scratchpad/effected/memfs/NodeSyncFileSystem";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 
 const program = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
