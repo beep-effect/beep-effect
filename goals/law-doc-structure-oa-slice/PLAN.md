@@ -11,7 +11,7 @@ Status: `active`
 | P0 Research | complete | With the attorney, construct a license-safe fixture corpus from real office actions; define rule-family identity, versioning, replay, migration, and supersession; set labeled per-family precision and abstention floors. This phase may run while the substrate is blocked. | The corpus covers positive pairs, hostile negatives, duplicates, drift, malformed/unsupported forms, Unicode/straddle, and quality/OCR cases; attorney disposition and license/provenance are recorded; version semantics and quantitative floors are explicit. Attorney disposition: ruled substitute per SPEC Decision Log 2026-10-09 Run 2; post-hoc spot-check pending, non-blocking. |
 | P1 Implement | complete | After the verified-span substrate gate clears, add the smallest schema-first `DocStructureCandidate` variants, versioned paired OA recognition, explicit `GroundedExtraction` adapter, typed abstention, persistence/replay behavior, and docketing intake adapter. | `citation-verified-span-substrate` P0/P1 has proved the anchor contract; exactly one supported pair emits two verified candidates; all other shaped states fail closed without partial authority. |
 | P2 Verify | complete | Exercise positive, hostile negative, duplicate, drift, unsupported, malformed, Unicode/straddle, low-quality/OCR-lineage, version replay, persistence, and docketing integration proof. | Every `SPEC.md` criterion and precision/abstention floor passes, or blockers are archived without weakening exact-source or fail-closed rules. |
-| P3 Close | pending | Drive the implementation PR to mergeable through Yeet, write the closeout reflection, archive proof, and synchronize packet evidence/status. | Yeet/GitHub reports the PR mergeable; a schema-valid reflection exists; README, PLAN, and manifest match the evidence. |
+| P3 Close | complete | Drive the implementation PR to mergeable through Yeet, write the closeout reflection, archive proof, and synchronize packet evidence/status. | Yeet/GitHub reports the PR mergeable; a schema-valid reflection exists; README, PLAN, and manifest match the evidence. |
 
 ## Dependency Gate
 
@@ -71,4 +71,12 @@ bun run beep lint reflection-artifacts
 The implemented floor vector is `[16,16,18,0,0,34]`, with 32 candidates.
 All three package-verifies, full docgen, test-tsgo, JSDoc ratchet, knowledge refs,
 Fallow audit/health and scoped coverage pass. New source coverage is 100% in all
-four metrics. See `history/p2/2026-10-09-verification.md`; P3 remains pending.
+four metrics. See `history/p2/2026-10-09-verification.md`; P3 evidence and reflection are complete; final-head monitoring follows under S11.
+
+## P3 evidence
+
+Reflection `history/reflections/2026-10-09-codex.md` passes lint with zero
+blocking or advisory findings. PR #1573 carries the completion citation.
+Local package/parity proofs pass; the inherited main EV015 remains explicit
+under Decision (o) and S11. Hosted readiness is monitored separately and is
+never inferred from structural mergeability or local proof.

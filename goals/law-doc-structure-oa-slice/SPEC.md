@@ -151,30 +151,39 @@ seed implementation without replacing that doctrine.
 
 ## Acceptance Criteria
 
-- [ ] P0 records an attorney-reviewed, license-safe fixture inventory covering
+- [x] P0 records an attorney-reviewed, license-safe fixture inventory covering
       the required real-OA positives, hostile negatives, duplicates, drift,
       malformed/unsupported, Unicode/straddle, and quality/OCR-lineage cases.
-- [ ] P0 records rule-family/version identity, replay/migration/supersession
+      Evidence: via ruled substitute, Decision Log 2026-10-09 Run 2; history/p0/2026-10-09-label-reconciliation.md.
+- [x] P0 records rule-family/version identity, replay/migration/supersession
       semantics, regex-family provenance/license/parity entries, and labeled
       precision/abstention floors before P1 begins.
-- [ ] P1 begins only after the substrate P0/P1 contract proof is available and
+      Evidence: history/p0/2026-10-09-floor-vectors.json; research/SOURCES.md; history/p2/2026-10-09-verification.md.
+- [x] P1 begins only after the substrate P0/P1 contract proof is available and
       uses its source identity, canonical half-open UTF-16, ambiguity, drift,
       straddle, and exact raw-slice behavior without weakening it.
-- [ ] Exactly one supported paired match emits one
+      Evidence: Decision Log (a); substrate #871 and #1415; history/p2/2026-10-09-verification.md.
+- [x] Exactly one supported paired match emits one
       `OfficeActionFinalityCandidate` (`FINAL | NON-FINAL`) and one
       `ShortenedStatutoryPeriodCandidate`, both schema-backed with verified
       anchors, rule-family id/version, source identity, and branded confidence.
-- [ ] Missing, duplicate/ambiguous, unsupported, uncovered, or low-quality input
+      Evidence: history/p2/2026-10-09-verification.md: focused domain/use-case and all-fixture proof.
+- [x] Missing, duplicate/ambiguous, unsupported, uncovered, or low-quality input
       emits no candidate and the matching typed abstention; stale, malformed,
       or raw-slice-invalid input fails closed through the verified-span contract.
-- [ ] Persisted candidates retain source identity/digest/version, raw evidence,
+      Evidence: history/p2/2026-10-09-verification.md: closed outcomes, drift and exact-slice tests.
+- [x] Persisted candidates retain source identity/digest/version, raw evidence,
       rule identity/version, replay/supersession history, and typed outcomes
       across restart without reinterpretation under a newer rule.
-- [ ] The `law-docketing-patent-spine` intake seam consumes the two candidate
+      Evidence: history/p2/2026-10-09-verification.md: Layer restart and independent disk replay.
+- [x] The `law-docketing-patent-spine` intake seam consumes the two candidate
       variants without treating extraction as admission or attorney approval.
-- [ ] Focused package/fixture/integration tests, repo gates, reflection lint,
+      Evidence: Decision Log (c); history/p2/2026-10-09-verification.md: evidence-only test consumer.
+- [x] Focused package/fixture/integration tests, repo gates, reflection lint,
       and Yeet PR-to-mergeable proof pass.
-- [ ] No unrelated refactors or formatting churn.
+      Evidence: history/p2/2026-10-09-verification.md; history/reflections/2026-10-09-codex.md; PR #1573 under S11 and Decision Log (o), inherited reds explicitly retained.
+- [x] No unrelated refactors or formatting churn.
+      Evidence: PR #1573 scoped diff; Decision Log (e) owner-generated supporting projections.
 
 ## Verification Matrix
 

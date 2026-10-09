@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -34,10 +34,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0-P2 complete. The deterministic pair, grounded adapter, append-only attempt
-store, exact-source replay and evidence consumer pass the package and parity
-proofs. P3 reflection and content-final PR closeout are next. Retained-inventory
-floors use public form language; no real-OA positive performance is claimed.
+P0-P3 content complete. PR #1573 carries the versioned pair, append-only
+replay, evidence intake, reflection and completion citation. Local proofs pass;
+final-head hosted readiness is monitored under S11 with inherited reds
+explicitly attributed. Floors use public form language; no real-OA positive
+performance is claimed.
 
 ## Latest Evidence
 
@@ -52,3 +53,7 @@ the final package gate and exact evidence commit.
 This packet supplies the structure-candidate seam consumed by
 `law-docketing-patent-spine`; it does not parse citations, select PDF/OCR
 engines, stream partial results, or perform LLM-first extraction.
+
+Closeout reflection: `history/reflections/2026-10-09-codex.md` (lint 0 blocking,
+0 advisory). Publication uses the explicit inherited-only fence ruling; see
+Decision (o) and the final handoff for exact PR and monitor state.

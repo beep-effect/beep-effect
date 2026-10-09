@@ -3,15 +3,16 @@
   "initiative": {
     "id": "law-doc-structure-oa-slice",
     "title": "Law Document Structure Office-Action Slice",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-14",
     "updated": "2026-10-09",
     "packetAnchorDocument": "SPEC.md"
   },
+  "mergedPullRequest": 1573,
   "packetPath": "goals/law-doc-structure-oa-slice",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Deliver versioned deterministic office-action finality and shortened-period candidates with exact verified anchors to the patent-docketing intake seam.",
-  "statusNote": "P0-P2 complete: paired candidates, evidence intake, append-only replay, package proofs, hosted parity and scoped coverage pass. P3 closeout follows; qualified real-OA positives remain unavailable.",
+  "statusNote": "P0-P3 content complete in PR #1573: package/parity proofs, floors and reflection pass. Inherited EV015 is retained under S11; final-head readiness is monitored separately. Qualified real-OA positives remain unavailable.",
   "dependencies": ["goals/citation-verified-span-substrate"],
   "blockedBy": [],
   "executionCapable": true,
@@ -68,7 +69,7 @@
     {
       "id": "P3",
       "name": "Close: Yeet PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
