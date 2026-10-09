@@ -46,7 +46,9 @@ const secretReference = (name: string): string =>
     ? `\${{ secrets.${name} }}`
     : `\${{ github.event_name == 'push' && secrets.${name} || '' }}`;
 const secretInputLine = ([input, name]: readonly [string, string]): string => `${input}: ${secretReference(name)}`;
-const SECRET_INPUT_LINES = A.map(SECRET_INPUTS, secretInputLine);
+const MATRIX_WRITE_TOKEN =
+  "${{ github.event_name == 'push' && matrix.uses_turbo == 'true' && secrets.TURBO_TOKEN || '' }}";
+const SECRET_INPUT_LINES = [...A.map(SECRET_INPUTS, secretInputLine), `turbo-token: ${MATRIX_WRITE_TOKEN}`];
 const SECRET_REFERENCES = A.map(SECRET_INPUTS, ([, name]) => `secrets.${name}`);
 
 const WorkflowStep = S.Struct({
@@ -251,12 +253,16 @@ const turboJobTable = Effect.fnUntraced(function* (documents: {
 // application secrets only where the job is allowed them.
 const assertTurboJobSetup = (jobs: WorkflowJobs, jobId: string, appSecrets: boolean): void => {
   const inputs = setupMonorepoInputs(jobs, jobId);
-  assert.strictEqual(inputs["turbo-remote-cache"], "true", jobId);
+  assert.strictEqual(inputs["turbo-remote-cache"], jobId === "verify" ? "${{ matrix.uses_turbo }}" : "true", jobId);
   assert.strictEqual(inputs["turbo-api"], "${{ vars.TURBO_API }}", jobId);
   assert.strictEqual(inputs["turbo-team"], "${{ vars.TURBO_TEAM }}", jobId);
   assert.isUndefined(inputs["repository-secrets"], jobId);
   for (const [input, name] of TURBO_SECRET_INPUTS) {
-    assert.strictEqual(inputs[input], secretReference(name), `${jobId} ${input}`);
+    assert.strictEqual(
+      inputs[input],
+      jobId === "verify" && name === "TURBO_TOKEN" ? MATRIX_WRITE_TOKEN : secretReference(name),
+      `${jobId} ${input}`
+    );
   }
   for (const [input, name] of APP_SECRET_INPUTS) {
     assert.strictEqual(inputs[input], appSecrets ? secretReference(name) : undefined, `${jobId} ${input}`);
@@ -780,7 +786,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("CI runner security", (i
       assert.isUndefined(workflow.getIn(["jobs", "build"]));
       assert.strictEqual(
         heavyWorkflow.getIn(["jobs", "verify", "environment"]),
-        "${{ github.event_name == 'push' && 'turbo-cache-write' || null }}"
+        "${{ github.event_name == 'push' && inputs.admitted && matrix.uses_turbo == 'true' && 'turbo-cache-write' || null }}"
       );
       const buildLane = O.getOrThrowWith(
         A.findFirst(heavyMatrixLanes(heavyWorkflow), (lane) => lane.id === "build"),
@@ -1018,7 +1024,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("CI runner security", (i
       assert.lengthOf(workflow.errors, 0);
       const jobs = yield* workflowJobs(workflow);
       const setup = setupMonorepoStep(jobs, "verify");
-      assert.strictEqual(setup.with?.["turbo-remote-cache"], "true");
+      assert.strictEqual(setup.with?.["turbo-remote-cache"], "${{ matrix.uses_turbo }}");
       assert.strictEqual(setup.with?.["cache-write"], "false");
       assert.strictEqual(
         workflow.getIn(["jobs", "verify", "env", "BEEP_DOCGEN_CONCURRENCY"]),
