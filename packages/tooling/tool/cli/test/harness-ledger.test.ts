@@ -174,7 +174,7 @@ const proposePending = (repoRoot: string) =>
   );
 
 describe("harness-ledger CLI", () => {
-  it.scoped("parses edit and surface tokens", () =>
+  it.effect("parses edit and surface tokens", () =>
     Effect.gen(function* () {
       expect((yield* parseHarnessEditSpec("pending")).kind).toBe("pending");
       expect(yield* parseHarnessEditSpec("commit:489ea7c488")).toMatchObject({ kind: "commit", ref: "489ea7c488" });
@@ -188,7 +188,7 @@ describe("harness-ledger CLI", () => {
 });
 
 layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
-  it.scoped("propose appends one line that HarnessLedgerRow decodes", () =>
+  it.effect("propose appends one line that HarnessLedgerRow decodes", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();
       const row = yield* proposePending(root);
@@ -204,7 +204,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("disposition appends a chained row and refuses a superseded reference", () =>
+  it.effect("disposition appends a chained row and refuses a superseded reference", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();
       const ledger = yield* HarnessLedgerService;
@@ -256,7 +256,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("fences concurrent dispositions and releases the fence after failures", () =>
+  it.effect("fences concurrent dispositions and releases the fence after failures", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();
       const ledger = yield* HarnessLedgerService;
@@ -282,7 +282,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("fails busy on a held write fence without appending or removing the lock", () =>
+  it.effect("fails busy on a held write fence without appending or removing the lock", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();
       const ledger = yield* HarnessLedgerService;
@@ -315,7 +315,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("bare list preserves each row's model provenance but observes guidance changes", () =>
+  it.effect("bare list preserves each row's model provenance but observes guidance changes", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();
       const ledger = yield* HarnessLedgerService;
@@ -352,7 +352,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("disposition refuses a row id the ledger never recorded", () =>
+  it.effect("disposition refuses a row id the ledger never recorded", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();
       const ledger = yield* HarnessLedgerService;
@@ -373,7 +373,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("list filters chains by the month their latest row was written", () =>
+  it.effect("list filters chains by the month their latest row was written", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();
       const ledger = yield* HarnessLedgerService;
@@ -386,7 +386,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("list folds chains to their latest row and flags stale fingerprints", () =>
+  it.effect("list folds chains to their latest row and flags stale fingerprints", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();
       const ledger = yield* HarnessLedgerService;
@@ -419,7 +419,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("prune-proposals proposes zero-touch skills and MCP servers from in-regime sessions only", () =>
+  it.effect("prune-proposals proposes zero-touch skills and MCP servers from in-regime sessions only", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -508,7 +508,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("a full session window cannot write unqualified non-use proposals", () =>
+  it.effect("a full session window cannot write unqualified non-use proposals", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -534,7 +534,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("prune-proposals respects decisions under the current harness until the harness changes", () =>
+  it.effect("prune-proposals respects decisions under the current harness until the harness changes", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -618,7 +618,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("prune-proposals counts a decision under the harness it was made in, not the proposal's", () =>
+  it.effect("prune-proposals counts a decision under the harness it was made in, not the proposal's", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -669,7 +669,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("prune-proposals falls back to the fingerprint's harness for a decision row without decidedUnder", () =>
+  it.effect("prune-proposals falls back to the fingerprint's harness for a decision row without decidedUnder", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -712,7 +712,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("prune-proposals reads a shard whose name spells no calendar day instead of dying", () =>
+  it.effect("prune-proposals reads a shard whose name spells no calendar day instead of dying", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -738,7 +738,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("prune-proposals reaches an older in-regime session past newer out-of-regime days", () =>
+  it.effect("prune-proposals reaches an older in-regime session past newer out-of-regime days", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -791,7 +791,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("stamp-only sessions stay below the activity floor", () =>
+  it.effect("stamp-only sessions stay below the activity floor", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
@@ -809,7 +809,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("a child with its own session identity cannot inflate the root window", () =>
+  it.effect("a child with its own session identity cannot inflate the root window", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
@@ -841,7 +841,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("unknown-role rows on the root transcript cannot supply activity", () =>
+  it.effect("unknown-role rows on the root transcript cannot supply activity", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
@@ -864,7 +864,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("unstamped children retain observed touches through a qualified parent", () =>
+  it.effect("unstamped children retain observed touches through a qualified parent", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
@@ -890,7 +890,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("shared skills require complete windows for every loading client", () =>
+  it.effect("shared skills require complete windows for every loading client", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -915,7 +915,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("reports mixed fingerprints and payload-free refusals separately", () =>
+  it.effect("reports mixed fingerprints and payload-free refusals separately", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -962,7 +962,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("two explicitly primary transcripts sharing an identity cannot qualify", () =>
+  it.effect("two explicitly primary transcripts sharing an identity cannot qualify", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
@@ -984,7 +984,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("a resumed session without an observed fresh start cannot qualify", () =>
+  it.effect("a resumed session without an observed fresh start cannot qualify", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
@@ -1006,7 +1006,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("unknown restarts and corrupt refusal rows have explicit diagnostics", () =>
+  it.effect("unknown restarts and corrupt refusal rows have explicit diagnostics", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -1037,7 +1037,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("a session overlapping a disarm window cannot qualify", () =>
+  it.effect("a session overlapping a disarm window cannot qualify", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -1090,7 +1090,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("reconciliation resolves relative roots and stops symlink cycles", () =>
+  it.effect("reconciliation resolves relative roots and stops symlink cycles", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -1124,7 +1124,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("mixed transcript identities remain unmatched instead of assigning all calls to the last session", () =>
+  it.effect("mixed transcript identities remain unmatched instead of assigning all calls to the last session", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -1146,7 +1146,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 
-  it.scoped("prune-proposals proposes nothing when no session was observed", () =>
+  it.effect("prune-proposals proposes nothing when no session was observed", () =>
     Effect.gen(function* () {
       const root = yield* makeRepo();
       const stateDir = yield* makeHookStateDir("harness-ledger-empty-");

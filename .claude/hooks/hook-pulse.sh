@@ -727,7 +727,7 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
      (if $notificationTypeRaw == "idle_prompt" then "idle-input" else "unknown" end)
    else "none"
    end) as $waitReason
-| (if (.transcript_path? | type) == "string" then
+| (if $agentKind == "claude-code" and (.transcript_path? | type) == "string" then
      if (.transcript_path | test("(^|/)(subagents|workflow)(/|$)")) then "subagent"
      elif (.transcript_path | test("(^|/)[0-9a-f-]{36}\\.jsonl$")) then "primary"
      else null end

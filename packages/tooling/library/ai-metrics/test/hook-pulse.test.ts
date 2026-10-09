@@ -24,6 +24,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -339,8 +340,28 @@ const isHookPulseWaitReason = S.is(HookPulseWaitReason);
 describe("HookPulseV1", () => {
   it.prop(
     "round-trips disarm artifacts through their production JSON codecs",
-    [Arbitrary.schema(HookPulseDisarmSentinel), Arbitrary.schema(HookPulseDisarmWindow)],
-    ([sentinel, window]) => {
+    [
+      Arbitrary.map(
+        Arbitrary.schema(S.Struct({ start: S.DateTimeUtc, end: S.DateTimeUtc, unknown: S.Boolean, reason: S.String })),
+        ({ start, end, unknown, reason }) => {
+          const first = Math.min(DateTime.toEpochMillis(start), DateTime.toEpochMillis(end));
+          const last = Math.max(DateTime.toEpochMillis(start), DateTime.toEpochMillis(end));
+          const disarmedAt = DateTime.formatIso(DateTime.makeUnsafe(first));
+          return [
+            HookPulseDisarmSentinel.make({ disarmedAt, reason, evidenceTier: "unknown" }),
+            HookPulseDisarmWindow.make({
+              disarmedAt: unknown ? O.none() : O.some(disarmedAt),
+              rearmedAt: DateTime.formatIso(DateTime.makeUnsafe(last)),
+              reason: O.some(reason),
+              evidenceTier: "unknown",
+              schemaVersion: "hook-pulse-disarm-window/v1",
+            }),
+          ] as const;
+        }
+      ),
+    ],
+    ([pair]) => {
+      const [sentinel, window] = pair;
       const sentinelJson = Result.getOrThrow(HookPulseDisarmSentinel.encodeJsonResult(sentinel));
 
       const windowJson = Result.getOrThrow(HookPulseDisarmWindow.encodeJsonResult(window));

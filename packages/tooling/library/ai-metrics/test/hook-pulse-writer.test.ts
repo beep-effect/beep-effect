@@ -980,7 +980,7 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         assertSome(decoded.harnessHash, oracle.harnessHash);
         expect(decoded.agentKind).toBe(writer === cursorWriterPath ? "cursor-cli" : "codex-cli");
       }
-    }).pipe(Effect.scoped)
+    })
   );
 
   it.effect("preserves git stamp parity with nested docs, symlinks and unrelated quoted names", () =>
@@ -1039,7 +1039,7 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).toContain("CLAUDE.md");
       expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).toContain(".ai/config.json");
       expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).toContain(".claude/a/b/c/d/e/f/g/config.json");
-    }).pipe(Effect.scoped)
+    })
   );
 
   it.effect("records a timeout refusal before the harness deadline", () =>

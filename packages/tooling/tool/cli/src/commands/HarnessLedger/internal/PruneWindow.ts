@@ -662,7 +662,12 @@ const readTranscriptCounts = Effect.fn("HarnessLedger.readTranscriptCounts")(fun
     TranscriptTally.make({ session: O.none(), calls: 0, undecodableLines: 0 }),
     foldTranscriptLine
   );
-  const relative = Str.split(path.relative(transcriptDir, file), path.sep);
+  const physicalFile = yield* reconciliationRead(fs.realPath(file), failures, file);
+  const physicalRoot = yield* reconciliationRead(fs.realPath(transcriptDir), failures, transcriptDir);
+  const relative =
+    O.isSome(physicalFile) && O.isSome(physicalRoot)
+      ? Str.split(path.relative(physicalRoot.value, physicalFile.value), path.sep)
+      : A.empty<string>();
   const parent =
     agentKind === "claude-code" && A.length(relative) > 1
       ? A.findFirst(relative, isParentSessionSegment)
@@ -724,6 +729,7 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
     failures
   );
   const sessions = MutableHashMap.empty<string, number>();
+  const selectedSessionHooks = MutableHashMap.empty<string, number>();
   const transcriptPaths = MutableHashMap.empty<string, number>();
   for (const file of files) {
     const counts = yield* readTranscriptCounts(file, canonical, agentKind, hashSalt, failures);
@@ -735,10 +741,19 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
       O.getOrElse(MutableHashMap.get(sessions, counts.sessionHash), () => 0) + counts.calls
     );
     MutableHashMap.set(transcriptPaths, counts.pathHash, counts.calls);
+    O.match(MutableHashMap.get(hooks, counts.pathHash), {
+      onNone: F.constVoid,
+      onSome: (count) =>
+        MutableHashMap.set(
+          selectedSessionHooks,
+          counts.sessionHash,
+          O.getOrElse(MutableHashMap.get(selectedSessionHooks, counts.sessionHash), () => 0) + count
+        ),
+    });
   }
   undecodableLines += HashSet.size(yield* Ref.get(failures));
   const counts = agentKind === "claude-code" ? sessions : transcriptPaths;
-  const matchedHooks = agentKind === "claude-code" ? sessionHooks : hooks;
+  const matchedHooks = agentKind === "claude-code" ? selectedSessionHooks : hooks;
   const transcriptToolEvents = A.reduce(A.fromIterable(MutableHashMap.values(counts)), 0, (sum, count) => sum + count);
   const hookedToolEvents = A.reduce(
     A.fromIterable(counts),

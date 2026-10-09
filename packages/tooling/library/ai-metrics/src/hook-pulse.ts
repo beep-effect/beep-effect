@@ -531,7 +531,9 @@ export const HookPulseEvidenceTier = LiteralKit([
  */
 export type HookPulseEvidenceTier = typeof HookPulseEvidenceTier.Type;
 
-const HookPulseUtcTimestamp = S.String.check(S.makeFilter(flow(S.decodeOption(S.DateTimeUtcFromString), O.isSome)));
+const HookPulseUtcTimestamp = S.String.check(
+  S.makeFilter((input) => O.isSome(S.decodeOption(S.DateTimeUtcFromString)(input)))
+);
 
 /**
  * Current disarm state written by the hook-pulse operator switch.
@@ -600,11 +602,12 @@ export class HookPulseDisarmWindow extends S.Class<HookPulseDisarmWindow>($I`Hoo
   }).check(
     S.makeFilter(
       ({ disarmedAt, rearmedAt }) =>
-        O.every(
-          disarmedAt,
-          (start) =>
-            DateTime.toEpochMillis(DateTime.makeUnsafe(start)) <= DateTime.toEpochMillis(DateTime.makeUnsafe(rearmedAt))
-        ),
+        O.match(disarmedAt, {
+          onNone: () => true,
+          onSome: (start) =>
+            DateTime.toEpochMillis(DateTime.makeUnsafe(start)) <=
+            DateTime.toEpochMillis(DateTime.makeUnsafe(rearmedAt)),
+        }),
       { identifier: $I`HookPulseDisarmWindowOrder`, message: "Disarm start must not follow re-arm time." }
     )
   ),
@@ -887,14 +890,19 @@ const ChildTranscriptPath = S.String.check(S.isPattern(/(?:^|\/)(?:subagents|wor
 const PrimaryTranscriptPath = S.String.check(S.isPattern(/(?:^|\/)[0-9a-f-]{36}\.jsonl$/));
 const isChildTranscriptPath = S.is(ChildTranscriptPath);
 const isPrimaryTranscriptPath = S.is(PrimaryTranscriptPath);
-const deriveSessionRole = (transcriptPath: O.Option<string>): O.Option<AiMetricsSourceRole> =>
-  O.flatMap(transcriptPath, (file) =>
-    isChildTranscriptPath(file)
-      ? O.some(AiMetricsSourceRole.Enum.subagent)
-      : isPrimaryTranscriptPath(file)
-        ? O.some(AiMetricsSourceRole.Enum.primary)
-        : O.none()
-  );
+const deriveSessionRole = (
+  agentKind: HookPulseAgentKind,
+  transcriptPath: O.Option<string>
+): O.Option<AiMetricsSourceRole> =>
+  agentKind !== "claude-code"
+    ? O.none()
+    : O.flatMap(transcriptPath, (file) =>
+        isChildTranscriptPath(file)
+          ? O.some(AiMetricsSourceRole.Enum.subagent)
+          : isPrimaryTranscriptPath(file)
+            ? O.some(AiMetricsSourceRole.Enum.primary)
+            : O.none()
+      );
 
 // Canonical context-surface keys are `${kind}:${name}` with no trailing newline,
 // hashed UNSALTED: surfaces are public repo names, and the digest must join
@@ -1699,7 +1707,9 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
                 input.event.hook_event_name,
                 O.flatMap(input.event.source, decodeSessionStartSource)
               ),
-              sessionRole: O.orElse(input.sessionRole, () => deriveSessionRole(O.some(input.event.transcript_path))),
+              sessionRole: O.orElse(input.sessionRole, () =>
+                deriveSessionRole(input.agentKind, O.some(input.event.transcript_path))
+              ),
               harnessHash: filterHookPulseEventOwnedField(
                 HookPulseEventOwnedField.Enum.harnessHash,
                 input.event.hook_event_name,

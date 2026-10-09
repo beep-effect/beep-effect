@@ -34,7 +34,18 @@ import {
   writeAiMetricsDerivedStorage,
 } from "./derived-storage.ts";
 import { HarnessHash } from "./harness-ledger.ts";
-import { agentEvidenceRoot, HookPulseV1, hookPulseHashSalt, hookPulseLedgerDir } from "./hook-pulse.ts";
+import {
+  agentEvidenceRoot,
+  HookPulseAgentKind,
+  HookPulseDisarmSentinel,
+  HookPulseDisarmWindow,
+  HookPulseRefusal,
+  HookPulseV1,
+  hookPulseDisarmSentinelPath,
+  hookPulseDisarmWindowsPath,
+  hookPulseHashSalt,
+  hookPulseLedgerDir,
+} from "./hook-pulse.ts";
 import { AiMetricsIdentityRegistryUpsertInput, upsertAiMetricsIdentityRegistry } from "./identity-registry.ts";
 import { summarizeTranscriptText } from "./ingest.ts";
 import { AiMetricsInstallInput, makeAiMetricsInstallSpec } from "./install.ts";
@@ -75,8 +86,8 @@ const AiMetricsForwarderTimerCommand = AiMetricsForwarderTimerCommandBase.pipe(
 
 class ProcessedForwarderSource extends S.Class<ProcessedForwarderSource>($I`ProcessedForwarderSource`)({
   record: AiMetricsDerivedTranscriptRecord,
-  hookPathHash: S.toEncoded(Sha256Hex),
-  sessionIdentityHash: S.OptionFromOptionalKey(S.toEncoded(Sha256Hex)),
+  hookPathHash: Sha256Hex.pipe(S.toEncoded),
+  sessionIdentityHash: S.OptionFromOptionalKey(Sha256Hex.pipe(S.toEncoded)),
 }) {}
 
 const SessionIdentityRow = S.fromJsonString(
@@ -117,10 +128,84 @@ const readSessionIdentityHash = Effect.fnUntraced(function* (
   }
   const identity = complete && HashSet.size(identities) === 1 ? A.head(A.fromIterable(identities)) : O.none<string>();
   return yield* O.match(identity, {
-    onNone: Effect.succeedNone,
+    onNone: () => Effect.succeedNone,
     onSome: (value) => hashPrivateIdentifier(value, hashSalt).pipe(Effect.asSome),
   });
 });
+
+class SessionStampGap extends S.Class<SessionStampGap>($I`SessionStampGap`)({
+  start: S.OptionFromOptionalKey(S.Number),
+  end: S.OptionFromOptionalKey(S.Number),
+  client: S.OptionFromOptionalKey(HookPulseAgentKind),
+}) {}
+const timestampEpoch = flow(S.decodeOption(S.DateTimeUtcFromString), O.map(DateTime.toEpochMillis));
+const readOptionalEvidence = Effect.fnUntraced(function* (file: string) {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* fs
+    .readFileString(file)
+    .pipe(Effect.catch((cause) => (cause.reason._tag === "NotFound" ? Effect.succeed("") : Effect.fail(cause))));
+});
+const readStampGaps = Effect.fnUntraced(function* (evidenceRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const gaps = A.empty<SessionStampGap>();
+  const sentinelText = yield* readOptionalEvidence(hookPulseDisarmSentinelPath(evidenceRoot));
+  if (Str.isNonEmpty(sentinelText)) {
+    const sentinel = yield* HookPulseDisarmSentinel.decodeJsonEffect(sentinelText);
+    gaps.push(SessionStampGap.make({ start: timestampEpoch(sentinel.disarmedAt), end: O.none(), client: O.none() }));
+  }
+  const windows = yield* readOptionalEvidence(hookPulseDisarmWindowsPath(evidenceRoot));
+  for (const line of A.filter(Str.split(windows, "\n"), Str.isNonEmpty)) {
+    const window = yield* HookPulseDisarmWindow.decodeJsonEffect(line);
+    gaps.push(
+      SessionStampGap.make({
+        start: O.flatMap(window.disarmedAt, timestampEpoch),
+        end: timestampEpoch(window.rearmedAt),
+        client: O.none(),
+      })
+    );
+  }
+  const files = yield* fs
+    .readDirectory(evidenceRoot)
+    .pipe(
+      Effect.catch((cause) =>
+        cause.reason._tag === "NotFound" ? Effect.succeed(A.empty<string>()) : Effect.fail(cause)
+      )
+    );
+  for (const name of A.filter(files, Str.startsWith("hook-pulse-refusals-"))) {
+    const text = yield* fs.readFileString(path.join(evidenceRoot, name));
+    for (const line of A.filter(Str.split(text, "\n"), Str.isNonEmpty)) {
+      const refusal = yield* HookPulseRefusal.decodeJsonEffect(line);
+      const at = O.some(DateTime.toEpochMillis(refusal.ts));
+      gaps.push(
+        SessionStampGap.make({
+          start: at,
+          end: at,
+          client: refusal.agentKind === "unknown" ? O.none() : O.some(refusal.agentKind),
+        })
+      );
+    }
+  }
+  return gaps;
+});
+const recordAvoidsStampGaps = (
+  record: AiMetricsDerivedTranscriptRecord,
+  client: HookPulseAgentKind,
+  gaps: O.Option<ReadonlyArray<SessionStampGap>>
+): boolean =>
+  O.exists(gaps, (known) => {
+    const relevant = A.filter(known, (gap) => O.isNone(gap.client) || O.contains(gap.client, client));
+    if (A.isReadonlyArrayEmpty(relevant)) return true;
+    const sanitized = record.privacy.sanitized;
+    const times = A.getSomes(A.map(sanitized.turns, (turn) => O.flatMap(turn.timestamp, timestampEpoch)));
+    const start = O.flatMap(sanitized.session.startedAt, timestampEpoch);
+    if (O.isNone(start) || A.isReadonlyArrayEmpty(times)) return false;
+    const end = A.reduce(times, start.value, Math.max);
+    return A.every(
+      relevant,
+      (gap) => O.exists(gap.end, (last) => last < start.value) || O.exists(gap.start, (first) => first > end)
+    );
+  });
 
 type SessionStampIndex = {
   readonly stamps: MutableHashMap.MutableHashMap<string, HashSet.HashSet<string>>;
@@ -1197,6 +1282,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
       Effect.map((value) => (value === "" ? agentEvidenceRoot(stateHome) : value)),
       Effect.mapError((cause) => forwarderFailure("Cannot resolve hook evidence root.", cause))
     );
+    const stampGaps = yield* readStampGaps(evidenceRoot).pipe(Effect.option);
     const hookDir = hookPulseLedgerDir(evidenceRoot);
     const shards = yield* fs.readDirectory(hookDir).pipe(Effect.orElseSucceed(A.empty<string>));
     const stamps = MutableHashMap.empty<string, HashSet.HashSet<string>>();
@@ -1227,13 +1313,14 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
     const stampedRecords = A.map(records, ({ record, sessionIdentityHash, hookPathHash }) => {
       const sanitized = record.privacy.sanitized;
       const kind = AiMetricsTranscriptSource.$match(sanitized.sourceKind, {
-        claude: () => O.some("claude-code"),
-        codex: () => O.some("codex-cli"),
-        openclaw: () => O.none<string>(),
+        claude: () => O.some(HookPulseAgentKind.Enum["claude-code"]),
+        codex: () => O.some(HookPulseAgentKind.Enum["codex-cli"]),
+        openclaw: () => O.none<HookPulseAgentKind>(),
       });
       const sessionHarnessHash = O.flatMap(
         O.filter(kind, () => hookCollectionComplete),
         (agentKind) => {
+          if (!recordAvoidsStampGaps(record, agentKind, stampGaps)) return O.none();
           const key = `${agentKind}:${hookPathHash}`;
           return pipe(
             MutableHashMap.get(sessions, key),

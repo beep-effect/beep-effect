@@ -697,11 +697,18 @@ it.layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
             });
             yield* Effect.gen(function* () {
               const initial = yield* decodePulse({
-                hook_event_name: "SessionStart",
-                session_id: scenario === "mismatch" ? "previous" : "current",
-                transcript_path: sourcePath,
-                cwd: repoRoot,
-                source: "startup",
+                event: {
+                  hook_event_name: "SessionStart",
+                  session_id: scenario === "mismatch" ? "previous" : "current",
+                  transcript_path: sourcePath,
+                  cwd: repoRoot,
+                  source: "startup",
+                },
+                notifierRev: "fixture",
+                instrumentClass: "production",
+                agentKind: "codex-cli",
+                evidenceTier: "derived",
+                ts: "2026-10-09T10:00:00Z",
               });
               const start = HookPulseV1.make({
                 ...initial,

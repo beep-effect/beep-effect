@@ -361,3 +361,5 @@ unchanged wrapper, without changing caps or cancelling another lane. Queue
 waiters should observe the current pool configuration or expose a refresh path.
 
 - H3 publication cheap gates rejected introduced Effect Vitest instances and reconciliation duplication/complexity. The independent review also found that sibling directory aliases counted one dangling entry twice. Consolidated fail-closed reads, deduplicated failure identities by canonical containing directory, and adopted scoped test harnesses. A final gate run after every source review wave would have exposed these before publication admission.
+
+- H3's admitted final proof exposed introduced codec fixture, Option callback, timestamp-filter and installed Effect Vitest API mismatches. Repaired the actual installed v4 contracts, supplied valid ordered timestamp generators, and kept every red attributed. The next independent review found unproven client filename ancestry, collection-gap stamp binding and transcript-subtree count inflation; repaired those before any push. Schema and source checks before the long admission queue would have shortened this repair cycle.

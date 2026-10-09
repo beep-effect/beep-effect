@@ -615,12 +615,30 @@ const isSessionScopePath = S.is(SessionScopePath);
 const scopeFor = (relativePath: string): AiMetricsConfigScope =>
   isSessionScopePath(relativePath) ? AiMetricsConfigScope.Enum.session : AiMetricsConfigScope.Enum.baseline;
 
+const readTrackedSnapshotPaths = Effect.fn("AiMetrics.readTrackedSnapshotPaths")(function* (repoRoot: string) {
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  const handle = yield* spawner
+    .spawn(
+      ChildProcess.make("git", ["ls-files", "-z"], {
+        cwd: repoRoot,
+        stdout: "pipe",
+        stderr: "ignore",
+      })
+    )
+    .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot start Git index enumeration.", cause)));
+  const [text, status] = yield* Effect.all([handle.stdout.pipe(Stream.decodeText, Stream.mkString), handle.exitCode], {
+    concurrency: "unbounded",
+  }).pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot read Git snapshot index.", cause)));
+  if (status !== 0) return yield* configSnapshotFailure("Git index enumeration failed.", status);
+  return O.some<ReadonlyArray<string>>(pipe(text, Str.split("\0"), A.filter(Str.isNonEmpty)));
+});
+
 const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths")(function* (
   repoRoot: string,
   budget: AiMetricsConfigSnapshotBudget
 ): Effect.fn.Return<
   ConfigSnapshotEnumeration,
-  never,
+  AiMetricsConfigSnapshotError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
@@ -628,51 +646,48 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   // Non-git fixtures retain the bounded filesystem walk. A real checkout uses
   // the index, so ignored hook-state/log noise cannot split identical heads.
-  const gitCommand = ChildProcess.make("git", ["ls-files", "-z"], { cwd: repoRoot, stdout: "pipe", stderr: "ignore" });
-  const tracked = yield* spawner
+  const gitCode = yield* spawner
     .exitCode(
-      ChildProcess.make("git", ["rev-parse", "--git-dir"], { cwd: repoRoot, stdout: "ignore", stderr: "ignore" })
+      ChildProcess.make("git", ["rev-parse", "--git-dir"], {
+        cwd: repoRoot,
+        stdout: "ignore",
+        stderr: "ignore",
+      })
     )
-    .pipe(
-      Effect.flatMap((code) =>
-        code === 0
-          ? Effect.scoped(
-              Effect.fnUntraced(function* () {
-                const handle = yield* spawner.spawn(gitCommand);
-                const [text, status] = yield* Effect.all(
-                  [handle.stdout.pipe(Stream.decodeText, Stream.mkString), handle.exitCode],
-                  { concurrency: "unbounded" }
-                );
-                return status === 0
-                  ? O.some<ReadonlyArray<string>>(pipe(text, Str.split("\0"), A.filter(Str.isNonEmpty)))
-                  : O.none<ReadonlyArray<string>>();
-              })()
-            )
-          : Effect.succeed(O.none<ReadonlyArray<string>>())
-      ),
-      Effect.orElseSucceed(O.none<ReadonlyArray<string>>)
-    );
+    .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot detect Git snapshot enumeration.", cause)));
+  const tracked = yield* gitCode === 0
+    ? Effect.scoped(readTrackedSnapshotPaths(repoRoot))
+    : Effect.succeed(O.none<ReadonlyArray<string>>());
   if (O.isSome(tracked)) {
     const selected = A.filter(tracked.value, (relative) => {
       const parts = Str.split(relative, "/");
       const inConfigRoot = A.some(CONFIG_ROOTS, (root) => Str.startsWith(`${root}/`)(relative));
       return (
-        A.length(parts) <= budget.maxDepth + (inConfigRoot ? 1 : 0) &&
         !A.some(parts, isExcludedDirectoryName) &&
         (relative === ".mcp.json" || isAgentDocName(pathApi.basename(relative)) || inConfigRoot)
       );
     });
+    const bounded = A.filter(
+      selected,
+      (relative) =>
+        A.length(Str.split(relative, "/")) <=
+        budget.maxDepth + (A.some(CONFIG_ROOTS, (root) => Str.startsWith(`${root}/`)(relative)) ? 1 : 0)
+    );
     const local = pathApi.join(pathApi.resolve(repoRoot), ".claude/settings.local.json");
     const existing = yield* Effect.filter(
       pipe(
-        A.map(selected, (relative) => pathApi.join(pathApi.resolve(repoRoot), relative)),
+        A.map(bounded, (relative) => pathApi.join(pathApi.resolve(repoRoot), relative)),
         A.append(local),
         A.dedupe
       ),
       (file) =>
         fs.stat(file).pipe(
           Effect.map((info) => info.type === "File"),
-          Effect.orElseSucceed(() => false)
+          Effect.catch((cause) =>
+            cause.reason._tag === "NotFound"
+              ? Effect.succeed(false)
+              : Effect.fail(configSnapshotFailure("Cannot inspect indexed config snapshot file.", cause))
+          )
         )
     );
     const excluded = yield* Ref.make(A.empty<string>());
@@ -704,7 +719,9 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
       truncationReason:
         A.length(paths) > budget.maxFiles
           ? O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-files"])
-          : O.none(),
+          : A.length(bounded) < A.length(selected)
+            ? O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-depth"])
+            : O.none(),
     };
   }
   const pathsRef = yield* Ref.make(A.empty<string>());
