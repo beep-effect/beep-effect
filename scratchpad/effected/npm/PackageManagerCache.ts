@@ -135,8 +135,7 @@ const under = (home: string, windows: boolean, ...parts: ReadonlyArray<string>):
  * @category utilities
  * @since 0.0.0
  */
-export class PackageManagerCache {
-	private constructor() {}
+export abstract class PackageManagerCache {
 
 	/**
 	 * The literal schema of managers the table covers.

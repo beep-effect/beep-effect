@@ -1,6 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertExitFailure, assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { GitConfig } from "../../effected/git/GitConfig.ts";
@@ -9,16 +11,13 @@ import { Gitmodules, GitmodulesEntry } from "../../effected/git/Gitmodules.ts";
 
 /** Unwraps a successful Result or fails the test with the failure's message. */
 const ok = <A, E>(result: Result.Result<A, E>): A => {
-	if (Result.isFailure(result)) {
-		assert.fail(`expected success, got failure: ${String(result.failure)}`);
-	}
-	assert.isTrue(Result.isSuccess(result));
+	assertSuccess(result, result.pipe(Result.getSuccess, O.getOrThrow));
 	return result.success;
 };
 
 const decodeFailure = (text: string): GitmodulesParseError => {
 	const result = Gitmodules.parseResult(text);
-	assertTrue(Result.isFailure(result), "expected a decode failure");
+	assertFailure(result, result.pipe(Result.getFailure, O.getOrThrow));
 	return result.failure;
 };
 
@@ -172,8 +171,8 @@ describe("Gitmodules", () => {
 
 		it.effect("a malformed document fails schema decode", () =>
 			Effect.gen(function* () {
-				const exit = yield* Effect.result(S.decodeEffect(Gitmodules.FromString)('[submodule "a"]\n'));
-				assert.isTrue(Result.isFailure(exit));
+				const exit = yield* Effect.exit(S.decodeEffect(Gitmodules.FromString)('[submodule "a"]\n'));
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 			}),
 		);
 	});
@@ -271,10 +270,8 @@ describe("Gitmodules", () => {
 
 		it("remove of an unknown name fails typed", () => {
 			const missing = Gitmodules.remove(doc, "nope");
-			assert.isTrue(Result.isFailure(missing));
-			if (Result.isFailure(missing)) {
-				assert.strictEqual(missing.failure.reason, "missingSection");
-			}
+			assertFailure(missing, missing.pipe(Result.getFailure, O.getOrThrow));
+			assert.strictEqual(missing.failure.reason, "missingSection");
 		});
 
 		it("rename rewrites the header and leaves the body bytes alone", () => {
@@ -298,17 +295,16 @@ describe("Gitmodules", () => {
 	});
 });
 
-
 describe("Gitmodules round-1 codec regressions", () => {
 	it.effect("NUL-containing field values fail construction, typed decode and codec encode", () =>
 		Effect.gen(function* () {
 			for (const field of ["path", "url", "branch", "update"]) {
 				const fields = { name: "a", path: "p", url: "u", [field]: "bad\0value" };
 				assert.throws(() => GitmodulesEntry.make(fields), /Schema validation failed/, field);
-				const decoded = yield* Effect.result(S.decodeEffect(GitmodulesEntry)(fields));
-				assert.isTrue(Result.isFailure(decoded), field);
-				const encoded = yield* Effect.result(S.encodeUnknownEffect(Gitmodules.FromString)({ entries: [fields] }));
-				assert.isTrue(Result.isFailure(encoded), field);
+				const decoded = yield* Effect.exit(S.decodeEffect(GitmodulesEntry)(fields));
+				assertExitFailure(decoded, decoded.pipe(Exit.getCause, O.getOrThrow));
+				const encoded = yield* Effect.exit(S.encodeUnknownEffect(Gitmodules.FromString)({ entries: [fields] }));
+				assertExitFailure(encoded, encoded.pipe(Exit.getCause, O.getOrThrow));
 			}
 		}),
 	);
@@ -316,10 +312,12 @@ describe("Gitmodules round-1 codec regressions", () => {
 	it.effect("NUL-free escaped fields round-trip and absent optionals stay absent", () =>
 		Effect.gen(function* () {
 			const value = ' spaced\t"quoted" \\ slash\nline ';
-			const modules = Gitmodules.make({ entries: [
-				GitmodulesEntry.make({ name: "a", path: value, url: value, branch: value, update: value }),
-				GitmodulesEntry.make({ name: "b", path: "p", url: "u" }),
-			] });
+			const modules = Gitmodules.make({
+				entries: [
+					GitmodulesEntry.make({ name: "a", path: value, url: value, branch: value, update: value }),
+					GitmodulesEntry.make({ name: "b", path: "p", url: "u" }),
+				],
+			});
 			const encoded = yield* S.encodeEffect(Gitmodules.FromString)(modules);
 			const decoded = yield* S.decodeEffect(Gitmodules.FromString)(encoded);
 			assert.deepStrictEqual(decoded, modules);
@@ -335,26 +333,32 @@ describe("Gitmodules round-1 codec regressions", () => {
 				GitmodulesEntry.make({ name: "a", path: "second", url: "v" }),
 			];
 			assert.throws(() => Gitmodules.make({ entries }));
-			assert.isTrue(Result.isFailure(yield* Effect.result(S.decodeEffect(Gitmodules)({ entries }))));
-			assert.isTrue(Result.isFailure(yield* Effect.result(S.encodeUnknownEffect(Gitmodules.FromString)({ entries }))));
+			const decoded = yield* Effect.exit(S.decodeEffect(Gitmodules)({ entries }));
+			assertExitFailure(decoded, decoded.pipe(Exit.getCause, O.getOrThrow));
+			const encoded = yield* Effect.exit(S.encodeUnknownEffect(Gitmodules.FromString)({ entries }));
+			assertExitFailure(encoded, encoded.pipe(Exit.getCause, O.getOrThrow));
 		}),
 	);
 
 	it.effect("case-distinct typed names retain order and all fields on round-trip", () =>
 		Effect.gen(function* () {
-			const modules = Gitmodules.make({ entries: [
-				GitmodulesEntry.make({ name: "Alpha", path: "first", url: "u" }),
-				GitmodulesEntry.make({ name: "alpha", path: "second", url: "v" }),
-			] });
+			const modules = Gitmodules.make({
+				entries: [
+					GitmodulesEntry.make({ name: "Alpha", path: "first", url: "u" }),
+					GitmodulesEntry.make({ name: "alpha", path: "second", url: "v" }),
+				],
+			});
 			const text = yield* S.encodeEffect(Gitmodules.FromString)(modules);
 			assert.deepStrictEqual(yield* S.decodeEffect(Gitmodules.FromString)(text), modules);
 		}),
 	);
 
 	it("dotted names lowercase before last-wins merging with quoted names", () => {
-		const modules = ok(Gitmodules.parseResult(
-			'[submodule.AlPhA]\npath=first\nurl=u\n[submodule "alpha"]\npath=second\n[submodule "Alpha"]\npath=third\nurl=v\n',
-		));
+		const modules = ok(
+			Gitmodules.parseResult(
+				'[submodule.AlPhA]\npath=first\nurl=u\n[submodule "alpha"]\npath=second\n[submodule "Alpha"]\npath=third\nurl=v\n',
+			),
+		);
 		assert.deepStrictEqual(modules.entries, [
 			GitmodulesEntry.make({ name: "alpha", path: "second", url: "u" }),
 			GitmodulesEntry.make({ name: "Alpha", path: "third", url: "v" }),
@@ -364,12 +368,34 @@ describe("Gitmodules round-1 codec regressions", () => {
 
 	it("both boolean fields accept Git integer syntax, word aliases and bare keys", () => {
 		const cases: ReadonlyArray<readonly [string | undefined, boolean]> = [
-			[undefined, true], ["", false], ["TRUE", true], ["YES", true], ["on", true],
-			["false", false], ["NO", false], ["off", false], ["2", true], ["-1", true],
-			["+1", true], ["0x10", true], ["0X10", true], ["-0x10", true], ["+0x10", true],
-			["00", false], ["+00", false], ["010", true], ["0", false], ["-0", false],
-			["1k", true], ["1M", true], ["1g", true], ["0K", false], ["-2g", true],
-			["2147483647", true], ["-2147483648", true], ['" \t2"', true],
+			[undefined, true],
+			["", false],
+			["TRUE", true],
+			["YES", true],
+			["on", true],
+			["false", false],
+			["NO", false],
+			["off", false],
+			["2", true],
+			["-1", true],
+			["+1", true],
+			["0x10", true],
+			["0X10", true],
+			["-0x10", true],
+			["+0x10", true],
+			["00", false],
+			["+00", false],
+			["010", true],
+			["0", false],
+			["-0", false],
+			["1k", true],
+			["1M", true],
+			["1g", true],
+			["0K", false],
+			["-2g", true],
+			["2147483647", true],
+			["-2147483648", true],
+			['" \t2"', true],
 		];
 		for (const field of ["shallow", "fetchRecurseSubmodules"] as const) {
 			for (const [value, expected] of cases) {
@@ -383,7 +409,19 @@ describe("Gitmodules round-1 codec regressions", () => {
 
 	it("both boolean fields reject malformed numbers and signed 32-bit overflow", () => {
 		for (const field of ["shallow", "fetchRecurseSubmodules"]) {
-			for (const value of ["08", "0x", "1.0", "1e2", "1_0", "2junk", "1kb", "2147483648", "-2147483649", "2g", '"2 "']) {
+			for (const value of [
+				"08",
+				"0x",
+				"1.0",
+				"1e2",
+				"1_0",
+				"2junk",
+				"1kb",
+				"2147483648",
+				"-2147483649",
+				"2g",
+				'"2 "',
+			]) {
 				const error = decodeFailure(`[submodule "a"]\npath=p\nurl=u\n${field}=${value}\n`);
 				assert.strictEqual(error._tag, "GitmodulesDecodeError");
 				if (error._tag !== "GitmodulesDecodeError") assert.fail("expected field decode error");

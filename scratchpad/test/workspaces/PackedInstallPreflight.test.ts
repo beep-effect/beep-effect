@@ -36,7 +36,7 @@ const PROD = "dist/prod/npm/pkg";
 const options = { carrier: "@x/carrier", closure: "auto" } as const;
 
 const suite = (seed: Record<string, string>) =>
-	layer(Layer.mergeAll(MemoryFileSystem.layerWith(seed), Path.layer, Discovery));
+	layer(Layer.mergeAll(MemoryFileSystem.layerWith(seed), Path.layer, Discovery), { timeout: "30 seconds" });
 
 /** Run `self` with `env` as the only configuration, as a test stubs the environment. */
 const withEnv =

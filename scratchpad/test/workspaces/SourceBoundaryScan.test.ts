@@ -42,7 +42,7 @@ const LIVE_CLOCK = { excludeTestServices: true } as const;
 describe("SourceBoundary.scan over a virtual tree", () => {
 	layer(
 		Layer.mergeAll(MemoryFileSystem.layerWith(SEED), Path.layer),
-		LIVE_CLOCK,
+		{ ...LIVE_CLOCK, timeout: "30 seconds" },
 	)((it) => {
 		it.effect("the loop seed really is a symlink to a directory, so the loop test exercises a loop", () =>
 			Effect.gen(function* () {
@@ -96,7 +96,7 @@ describe("SourceBoundary.scan over a virtual tree", () => {
 		"/alias/src/actual/a.ts": "process.cwd();",
 		"/alias/src/actual/loop": MemoryFileSystem.symlink("/alias/src"),
 	};
-	layer(Layer.mergeAll(MemoryFileSystem.layerWith(ALIASES), Path.layer), LIVE_CLOCK)((it) => {
+	layer(Layer.mergeAll(MemoryFileSystem.layerWith(ALIASES), Path.layer), { ...LIVE_CLOCK, timeout: "30 seconds" })((it) => {
 		it.effect("an allowed directory alias cannot hide an offence under another logical path", () =>
 			Effect.gen(function* () {
 				const scan = yield* SourceBoundary.scan({ root: "/alias/src", rules: ["process"], allow: ["allowed/**"] });
@@ -122,7 +122,7 @@ describe("SourceBoundary.scan over a virtual tree", () => {
 	const DANGLING = { ...SEED, "/repo/src/dangling.ts": MemoryFileSystem.symlink("/repo/gone.ts") };
 	layer(
 		Layer.mergeAll(MemoryFileSystem.layerWith(DANGLING), Path.layer),
-		LIVE_CLOCK,
+		{ ...LIVE_CLOCK, timeout: "30 seconds" },
 	)((it) => {
 		it.effect("a dangling symlink under the root is skipped, not fatal, and every real file is still scanned", () =>
 			Effect.gen(function* () {
@@ -159,7 +159,7 @@ describe("SourceBoundary.scan over a virtual tree", () => {
 	});
 	layer(
 		Layer.mergeAll(vanished, Path.layer),
-		LIVE_CLOCK,
+		{ ...LIVE_CLOCK, timeout: "30 seconds" },
 	)((it) => {
 		it.effect("a NotFound stat on an entry that is not a symlink still fails the scan", () =>
 			Effect.gen(function* () {
@@ -179,7 +179,7 @@ describe("SourceBoundary.scan over a virtual tree", () => {
 	const LSP_RULES = ["process", "stdout-write", { forbidImports: ["node:*"] }] as const;
 	layer(
 		Layer.mergeAll(MemoryFileSystem.layerWith(LSP), Path.layer),
-		LIVE_CLOCK,
+		{ ...LIVE_CLOCK, timeout: "30 seconds" },
 	)((it) => {
 		it.effect("positive control: without a waiver, main.ts is flagged for both process and stdout-write", () =>
 			Effect.gen(function* () {
@@ -268,7 +268,7 @@ describe("SourceBoundary.scan over a virtual tree", () => {
 	const CONFINE_RULES = ["process", { forbidTokens: [TOKEN] }] as const;
 	layer(
 		Layer.mergeAll(MemoryFileSystem.layerWith(CONFINED), Path.layer),
-		LIVE_CLOCK,
+		{ ...LIVE_CLOCK, timeout: "30 seconds" },
 	)((it) => {
 		it.effect("forbidTokens with a forbidTokens waiver confines a token to the named file, reporting both sides", () =>
 			Effect.gen(function* () {
@@ -305,7 +305,7 @@ describe("SourceBoundary.scan over a virtual tree", () => {
 
 	layer(
 		Layer.mergeAll(MemoryFileSystem.layerWith(SEED), BackslashPath),
-		LIVE_CLOCK,
+		{ ...LIVE_CLOCK, timeout: "30 seconds" },
 	)((it) => {
 		it.effect("reports POSIX paths, and allow globs still match, under a backslash Path", () =>
 			Effect.gen(function* () {

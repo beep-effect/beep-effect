@@ -4,7 +4,7 @@ import type { Server, ServerResponse } from "node:http";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { assert, describe, it } from "@effect/vitest";
+import { assert, describe, it, vi } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -13,7 +13,8 @@ import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
-import { vi } from "vitest";
+import * as Context from "effect/Context";
+import * as Layer from "effect/Layer";
 import {
 	DetachedLogUnavailableError,
 	DetachedNotReadyError,
@@ -51,110 +52,143 @@ const alive = (pid: number): boolean => {
 	}
 };
 
-/**
- * Run an effect with `process.kill` replaced, restoring it on every exit path.
- *
- * @remarks
- * `acquireUseRelease` rather than `try`/`finally`, because a failing assertion
- * inside `Effect.gen` leaves through the error channel — and a spy on a real
- * process global that survives its own test poisons every later one, including
- * the control that proves the guard is not simply refusing everything.
- */
-const withKillSpy = <A, E>(
-	implementation: () => true,
-	use: (calls: ReadonlyArray<ReadonlyArray<unknown>>) => Effect.Effect<A, E>,
-) =>
-	Effect.acquireUseRelease(
-		Effect.sync(() => vi.spyOn(process, "kill").mockImplementation(implementation)),
-		(spy) => use(spy.mock.calls),
-		(spy) => Effect.sync(() => spy.mockRestore()),
-	);
+// process.kill is a native global seam; no Effect service is exposed for spying.
+class KillSpy extends Context.Service<KillSpy, ReturnType<typeof killSpy>>()("@beep/scratchpad/test/github-actions/DetachedProcess.test/KillSpy") {}
+const killSpy = () => vi.spyOn(process, "kill");
 
 describe("DetachedProcess", () => {
 	describe("the bare-pid guard", () => {
-		it.effect("refuses pid 0 WITHOUT signalling anything", () =>
-			// The assertion that matters is the spy, not the failure. pid 0 signals
-			// the caller's entire process group, so on a runner an unguarded reap of a
-			// state value that decoded to 0 takes down the job running it. A test that
-			// only checked the effect failed would pass against an implementation that
-			// killed the group and THEN reported an error.
-			withKillSpy(
-				() => true,
-				(calls) =>
-					Effect.gen(function* () {
-						const error = yield* Effect.flip(DetachedProcess.reap(0));
-						assert.instanceOf(error, InvalidPidError);
-						assert.lengthOf(calls, 0, "process.kill must not have been called at all");
-					}),
+		// The assertion that matters is the spy, not the failure. pid 0 signals
+		// the caller's entire process group, so on a runner an unguarded reap of a
+		// state value that decoded to 0 takes down the job running it. A test that
+		// only checked the effect failed would pass against an implementation that
+		// killed the group and THEN reported an error.
+		it.layer(
+			Layer.effect(
+				KillSpy,
+				Effect.acquireRelease(
+					Effect.sync(() => vi.spyOn(process, "kill").mockImplementation(() => true)),
+					(spy) => Effect.sync(() => spy.mockRestore()),
+				),
 			),
-		);
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("refuses pid 0 WITHOUT signalling anything", () =>
+				Effect.gen(function* () {
+					const calls = (yield* KillSpy).mock.calls;
+					const error = yield* Effect.flip(DetachedProcess.reap(0));
+					assert.instanceOf(error, InvalidPidError);
+					assert.lengthOf(calls, 0, "process.kill must not have been called at all");
+				}),
+			);
+		});
 
-		it.effect("refuses pid -1 WITHOUT signalling anything", () =>
-			// -1 is worse than 0: it signals every process the user owns.
-			withKillSpy(
-				() => true,
-				(calls) =>
-					Effect.gen(function* () {
-						const error = yield* Effect.flip(DetachedProcess.reap(-1));
-						assert.instanceOf(error, InvalidPidError);
-						assert.lengthOf(calls, 0, "process.kill must not have been called at all");
-					}),
+		it.layer(
+			Layer.effect(
+				KillSpy,
+				Effect.acquireRelease(
+					Effect.sync(() => vi.spyOn(process, "kill").mockImplementation(() => true)),
+					(spy) => Effect.sync(() => spy.mockRestore()),
+				),
 			),
-		);
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("refuses pid -1 WITHOUT signalling anything", () =>
+				Effect.gen(function* () {
+					const calls = (yield* KillSpy).mock.calls;
+					const error = yield* Effect.flip(DetachedProcess.reap(-1));
+					assert.instanceOf(error, InvalidPidError);
+					assert.lengthOf(calls, 0, "process.kill must not have been called at all");
+				}),
+			);
+		});
 
-		it.effect("refuses a non-integer pid", () =>
-			withKillSpy(
-				() => true,
-				(calls) =>
-					Effect.gen(function* () {
-						const error = yield* Effect.flip(DetachedProcess.reap(Number.NaN));
-						assert.instanceOf(error, InvalidPidError);
-						assert.lengthOf(calls, 0);
-					}),
+		it.layer(
+			Layer.effect(
+				KillSpy,
+				Effect.acquireRelease(
+					Effect.sync(() => vi.spyOn(process, "kill").mockImplementation(() => true)),
+					(spy) => Effect.sync(() => spy.mockRestore()),
+				),
 			),
-		);
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("refuses a non-integer pid", () =>
+				Effect.gen(function* () {
+					const calls = (yield* KillSpy).mock.calls;
+					const error = yield* Effect.flip(DetachedProcess.reap(Number.NaN));
+					assert.instanceOf(error, InvalidPidError);
+					assert.lengthOf(calls, 0);
+				}),
+			);
+		});
 
-		it.effect("the control: a positive pid DOES reach process.kill", () =>
-			// Without this, the three tests above pass against an implementation that
-			// never signals anything at all.
-			withKillSpy(
-				() => true,
-				(calls) =>
-					Effect.gen(function* () {
-						assert.isTrue(yield* DetachedProcess.reap(4242, "SIGTERM"));
-						assert.deepStrictEqual(calls, [[4242, "SIGTERM"]]);
-					}),
+		it.layer(
+			Layer.effect(
+				KillSpy,
+				Effect.acquireRelease(
+					Effect.sync(() => vi.spyOn(process, "kill").mockImplementation(() => true)),
+					(spy) => Effect.sync(() => spy.mockRestore()),
+				),
 			),
-		);
+			{ timeout: "30 seconds" },
+		)((it) => {
+			// The control prevents an implementation that never signals anything from passing.
+			it.effect("the control: a positive pid DOES reach process.kill", () =>
+				Effect.gen(function* () {
+					const calls = (yield* KillSpy).mock.calls;
+					assert.isTrue(yield* DetachedProcess.reap(4242, "SIGTERM"));
+					assert.deepStrictEqual(calls, [[4242, "SIGTERM"]]);
+				}),
+			);
+		});
 	});
 
 	describe("reap", () => {
-		it.effect("reports an already-dead process as false rather than failing", () =>
-			withKillSpy(
-				() => {
-					throw Object.assign(new Error("kill ESRCH"), { code: "ESRCH" });
-				},
-				() =>
-					Effect.gen(function* () {
-						// A post phase finding its child already gone is the normal ending.
-						assert.isFalse(yield* DetachedProcess.reap(4242));
-					}),
+		it.layer(
+			Layer.effect(
+				KillSpy,
+				Effect.acquireRelease(
+					Effect.sync(() =>
+						vi.spyOn(process, "kill").mockImplementation(() => {
+							throw Object.assign(new Error("kill ESRCH"), { code: "ESRCH" });
+						}),
+					),
+					(spy) => Effect.sync(() => spy.mockRestore()),
+				),
 			),
-		);
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("reports an already-dead process as false rather than failing", () =>
+				Effect.gen(function* () {
+					// A post phase finding its child already gone is the normal ending.
+					assert.isFalse(yield* DetachedProcess.reap(4242));
+				}),
+			);
+		});
 
-		it.effect("fails typed when the signal is refused", () =>
-			withKillSpy(
-				() => {
-					throw Object.assign(new Error("kill EPERM"), { code: "EPERM" });
-				},
-				() =>
-					Effect.gen(function* () {
-						const error = yield* Effect.flip(DetachedProcess.reap(4242));
-						assert.instanceOf(error, DetachedSignalFailedError);
-						assert.strictEqual(error.pid, 4242);
-					}),
+		it.layer(
+			Layer.effect(
+				KillSpy,
+				Effect.acquireRelease(
+					Effect.sync(() =>
+						vi.spyOn(process, "kill").mockImplementation(() => {
+							throw Object.assign(new Error("kill EPERM"), { code: "EPERM" });
+						}),
+					),
+					(spy) => Effect.sync(() => spy.mockRestore()),
+				),
 			),
-		);
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("fails typed when the signal is refused", () =>
+				Effect.gen(function* () {
+					const error = yield* Effect.flip(DetachedProcess.reap(4242));
+					assert.instanceOf(error, DetachedSignalFailedError);
+					assert.strictEqual(error.pid, 4242);
+				}),
+			);
+		});
 	});
 
 	describe("ProcessId", () => {
@@ -206,10 +240,10 @@ describe("DetachedProcess", () => {
 
 		it.effect("fails typed once the attempts are exhausted", () =>
 			Effect.gen(function* () {
-				const fiber = yield* DetachedProcess.awaitReady(Effect.succeed(false), { interval: "10 millis", attempts: 2 }).pipe(
-					Effect.flip,
-					Effect.forkChild,
-				);
+				const fiber = yield* DetachedProcess.awaitReady(Effect.succeed(false), {
+					interval: "10 millis",
+					attempts: 2,
+				}).pipe(Effect.flip, Effect.forkChild);
 				yield* TestClock.adjust("10 millis");
 				yield* TestClock.adjust("10 millis");
 				const error = yield* Fiber.join(fiber);
@@ -235,91 +269,110 @@ describe("DetachedProcess", () => {
 	});
 
 	describe("httpProbe", () => {
-		/** A real local server on an ephemeral port, closed on every exit path. */
-		const withServer = <A, E, R>(
-			respond: (response: ServerResponse) => void,
-			use: (url: string) => Effect.Effect<A, E, R>,
-		) =>
-			Effect.acquireUseRelease(
-				Effect.promise(
-					() =>
-						new Promise<Server>((resolve) => {
-							const server = createServer((_request, response) => respond(response));
-							server.listen(0, "127.0.0.1", () => resolve(server));
-						}),
-				),
-				(server) => {
+		class ServerUrl extends Context.Service<ServerUrl, string>()("@beep/scratchpad/test/github-actions/DetachedProcess.test/ServerUrl") {}
+		const serverLayer = (respond: (response: ServerResponse) => void) =>
+			Layer.effect(
+				ServerUrl,
+				Effect.gen(function* () {
+					const server = yield* Effect.acquireRelease(
+						Effect.promise(
+							() =>
+								new Promise<Server>((resolve) => {
+									const server = createServer((_request, response) => respond(response));
+									server.listen(0, "127.0.0.1", () => resolve(server));
+								}),
+						),
+						(server) =>
+							Effect.promise(
+								() =>
+									new Promise<void>((resolve) => {
+										server.close(() => resolve());
+									}),
+							),
+					);
 					const address = server.address();
 					if (address === null || typeof address === "string") {
 						assert.fail("expected a bound TCP address");
 					}
-					return use(`http://127.0.0.1:${address.port}/status`);
-				},
-				(server) =>
-					Effect.promise(
-						() =>
-							new Promise<void>((resolve) => {
-								server.close(() => resolve());
-							}),
-					),
+					return `http://127.0.0.1:${address.port}/status`;
+				}),
 			);
 
-		it.live("answers true for a 2xx response", () =>
-			withServer(
-				(response) => response.writeHead(200).end("ok"),
-				(url) =>
-					Effect.gen(function* () {
-						assert.isTrue(yield* DetachedProcess.httpProbe(url));
-					}),
-			).pipe(Effect.provide(FetchHttpClient.layer)),
-		);
+		it.layer(
+			Layer.mergeAll(
+				serverLayer((response) => response.writeHead(200).end("ok")),
+				FetchHttpClient.layer,
+			),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("answers true for a 2xx response", () =>
+				Effect.gen(function* () {
+					const url = yield* ServerUrl;
+					assert.isTrue(yield* DetachedProcess.httpProbe(url));
+				}),
+			);
+		});
 
-		it.live("answers false for a non-2xx response — answering is not ready", () =>
-			withServer(
-				(response) => response.writeHead(503).end("warming up"),
-				(url) =>
-					Effect.gen(function* () {
-						assert.isFalse(yield* DetachedProcess.httpProbe(url));
-					}),
-			).pipe(Effect.provide(FetchHttpClient.layer)),
-		);
+		it.layer(
+			Layer.mergeAll(
+				serverLayer((response) => response.writeHead(503).end("warming up")),
+				FetchHttpClient.layer,
+			),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("answers false for a non-2xx response — answering is not ready", () =>
+				Effect.gen(function* () {
+					const url = yield* ServerUrl;
+					assert.isFalse(yield* DetachedProcess.httpProbe(url));
+				}),
+			);
+		});
 
-		it.live("collapses a refused connection to false rather than failing", () =>
-			Effect.gen(function* () {
-				// Bind an ephemeral port and close it completely first: the port is
-				// then known-refusing without racing another process for a fixed one.
-				const port = yield* Effect.promise(
-					() =>
-						new Promise<number>((resolve) => {
-							const server = createServer();
-							server.listen(0, "127.0.0.1", () => {
-								const address = server.address();
-								if (address === null || typeof address === "string") {
-									assert.fail("expected a bound TCP address");
-								}
-								const bound = address.port;
-								server.close(() => resolve(bound));
-							});
-						}),
-				);
-				// The assertion that matters is that this line is reached at all: a
-				// probe that let the transport error through would fail the effect
-				// here instead of answering false.
-				assert.isFalse(yield* DetachedProcess.httpProbe(`http://127.0.0.1:${port}/status`));
-			}).pipe(Effect.provide(FetchHttpClient.layer)),
-		);
+		it.layer(FetchHttpClient.layer, { timeout: "30 seconds" })((it) => {
+			it.effect("collapses a refused connection to false rather than failing", () =>
+				Effect.gen(function* () {
+					// Bind an ephemeral port and close it completely first: the port is
+					// then known-refusing without racing another process for a fixed one.
+					const port = yield* Effect.promise(
+						() =>
+							new Promise<number>((resolve) => {
+								const server = createServer();
+								server.listen(0, "127.0.0.1", () => {
+									const address = server.address();
+									if (address === null || typeof address === "string") {
+										assert.fail("expected a bound TCP address");
+									}
+									const bound = address.port;
+									server.close(() => resolve(bound));
+								});
+							}),
+					);
+					// The assertion that matters is that this line is reached at all: a
+					// probe that let the transport error through would fail the effect
+					// here instead of answering false.
+					assert.isFalse(yield* DetachedProcess.httpProbe(`http://127.0.0.1:${port}/status`));
+				}),
+			);
+		});
 
-		it.live("composes with awaitReady: an answering child reports ready", () =>
-			withServer(
-				(response) => response.writeHead(200).end(),
-				(url) =>
-					DetachedProcess.awaitReady(DetachedProcess.httpProbe(url), {
+		it.layer(
+			Layer.mergeAll(
+				serverLayer((response) => response.writeHead(200).end()),
+				FetchHttpClient.layer,
+			),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("composes with awaitReady: an answering child reports ready", () =>
+				Effect.gen(function* () {
+					const url = yield* ServerUrl;
+					yield* DetachedProcess.awaitReady(DetachedProcess.httpProbe(url), {
 						// Small budget so a wrong `false` fails fast instead of in 6s.
 						interval: "10 millis",
 						attempts: 2,
-					}),
-			).pipe(Effect.provide(FetchHttpClient.layer)),
-		);
+					});
+				}),
+			);
+		});
 	});
 
 	describe("the ops seam", () => {
@@ -398,6 +451,7 @@ describe("DetachedProcess", () => {
 	});
 
 	describe("spawn", () => {
+		// Live clock required: polls native child output or process exit through real timers.
 		it.live("starts a detached child, routes its output to the log file, and survives to be reaped", () => {
 			const directory = scratch();
 			const logFile = join(directory, "child.log");
@@ -429,6 +483,7 @@ describe("DetachedProcess", () => {
 			}).pipe(Effect.ensuring(Effect.sync(() => rmSync(directory, { recursive: true, force: true }))));
 		});
 
+		// Live clock required: polls native child output or process exit through real timers.
 		it.live("a supplied base replaces the parent's environment wholesale, with env merged over it", () => {
 			const directory = scratch();
 			const logFile = join(directory, "env.log");
@@ -482,6 +537,7 @@ describe("DetachedProcess", () => {
 			);
 		});
 
+		// Live clock required: polls native child output or process exit through real timers.
 		it.live("env overrides a key the base also carries", () => {
 			const directory = scratch();
 			const logFile = join(directory, "env.log");
@@ -511,7 +567,7 @@ describe("DetachedProcess", () => {
 			}).pipe(Effect.ensuring(Effect.sync(() => rmSync(directory, { recursive: true, force: true }))));
 		});
 
-		it.live("fails typed when the command does not exist", () => {
+		it.effect("fails typed when the command does not exist", () => {
 			const directory = scratch();
 			return Effect.gen(function* () {
 				const error = yield* Effect.flip(
@@ -524,7 +580,7 @@ describe("DetachedProcess", () => {
 			}).pipe(Effect.ensuring(Effect.sync(() => rmSync(directory, { recursive: true, force: true }))));
 		});
 
-		it.live("fails typed when the log file cannot be opened", () => {
+		it.effect("fails typed when the log file cannot be opened", () => {
 			const directory = scratch();
 			return Effect.gen(function* () {
 				const error = yield* Effect.flip(

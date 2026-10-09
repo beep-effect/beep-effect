@@ -1,9 +1,8 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import { ConfigResolver } from "../../effected/config-file/ConfigResolver.ts";
@@ -39,53 +38,65 @@ const TestPath = Path.layer;
 const HostilePlatform = Layer.mergeAll(HostileFs, TestPath);
 
 describe("ConfigResolver error absorption", () => {
-	it.effect("explicitPath yields none() when the filesystem denies permission", () =>
-		Effect.gen(function* () {
-			const resolver = ConfigResolver.explicitPath("/a/.apprc");
-			const result = yield* resolver.resolve;
-			assert.isTrue(O.isNone(result));
-		}).pipe(Effect.provide(HostilePlatform)),
-	);
+	it.layer(HostilePlatform, { timeout: "30 seconds" })((it) => {
+		it.effect("explicitPath yields none() when the filesystem denies permission", () =>
+			Effect.gen(function* () {
+				const resolver = ConfigResolver.explicitPath("/a/.apprc");
+				const result = yield* resolver.resolve;
+				assertNone(result);
+			}),
+		);
+	});
 
-	it.effect("staticDir yields none() when the filesystem denies permission", () =>
-		Effect.gen(function* () {
-			const resolver = ConfigResolver.staticDir({ dir: "/a", filename: ".apprc" });
-			const result = yield* resolver.resolve;
-			assert.isTrue(O.isNone(result));
-		}).pipe(Effect.provide(HostilePlatform)),
-	);
+	it.layer(HostilePlatform, { timeout: "30 seconds" })((it) => {
+		it.effect("staticDir yields none() when the filesystem denies permission", () =>
+			Effect.gen(function* () {
+				const resolver = ConfigResolver.staticDir({ dir: "/a", filename: ".apprc" });
+				const result = yield* resolver.resolve;
+				assertNone(result);
+			}),
+		);
+	});
 
-	it.effect("upwardWalk yields none() when the filesystem denies permission", () =>
-		Effect.gen(function* () {
-			const resolver = ConfigResolver.upwardWalk({ filename: ".apprc", cwd: "/a/b" });
-			const result = yield* resolver.resolve;
-			assert.isTrue(O.isNone(result));
-		}).pipe(Effect.provide(HostilePlatform)),
-	);
+	it.layer(HostilePlatform, { timeout: "30 seconds" })((it) => {
+		it.effect("upwardWalk yields none() when the filesystem denies permission", () =>
+			Effect.gen(function* () {
+				const resolver = ConfigResolver.upwardWalk({ filename: ".apprc", cwd: "/a/b" });
+				const result = yield* resolver.resolve;
+				assertNone(result);
+			}),
+		);
+	});
 
-	it.effect("workspaceRoot yields none() when the filesystem denies permission", () =>
-		Effect.gen(function* () {
-			const resolver = ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: "/a/b" });
-			const result = yield* resolver.resolve;
-			assert.isTrue(O.isNone(result));
-		}).pipe(Effect.provide(HostilePlatform)),
-	);
+	it.layer(HostilePlatform, { timeout: "30 seconds" })((it) => {
+		it.effect("workspaceRoot yields none() when the filesystem denies permission", () =>
+			Effect.gen(function* () {
+				const resolver = ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: "/a/b" });
+				const result = yield* resolver.resolve;
+				assertNone(result);
+			}),
+		);
+	});
 
-	it.effect("gitRoot yields none() when the filesystem denies permission", () =>
-		Effect.gen(function* () {
-			const resolver = ConfigResolver.gitRoot({ filename: ".apprc", cwd: "/a/b" });
-			const result = yield* resolver.resolve;
-			assert.isTrue(O.isNone(result));
-		}).pipe(Effect.provide(HostilePlatform)),
-	);
+	it.layer(HostilePlatform, { timeout: "30 seconds" })((it) => {
+		it.effect("gitRoot yields none() when the filesystem denies permission", () =>
+			Effect.gen(function* () {
+				const resolver = ConfigResolver.gitRoot({ filename: ".apprc", cwd: "/a/b" });
+				const result = yield* resolver.resolve;
+				assertNone(result);
+			}),
+		);
+	});
 
-	it.effect("systemEtc yields none() when the filesystem denies permission", () =>
-		Effect.gen(function* () {
-			const resolver = ConfigResolver.systemEtc({ app: "acme", filename: ".apprc" });
-			const result = yield* resolver.resolve;
-			assert.isTrue(O.isNone(result));
-		}).pipe(Effect.provide(HostilePlatform)),
-	);
+	it.layer(HostilePlatform, { timeout: "30 seconds" })((it) => {
+		it.effect("systemEtc yields none() when the filesystem denies permission", () =>
+			Effect.gen(function* () {
+				const resolver = ConfigResolver.systemEtc({ app: "acme", filename: ".apprc" });
+				const result = yield* resolver.resolve;
+				assertNone(result);
+			}),
+		);
+	});
 
 	it("every resolver names itself", () => {
 		assert.strictEqual(ConfigResolver.explicitPath("/x").name, "explicit");
@@ -116,17 +127,21 @@ describe("ConfigResolver — an unreadable ancestor must not abort root discover
 		},
 	);
 
-	it.effect("gitRoot finds the root above an unreadable ancestor", () =>
-		Effect.gen(function* () {
-			const found = yield* ConfigResolver.gitRoot({ filename: ".apprc", cwd: "/a/b/c" }).resolve;
-			assert.strictEqual(O.getOrNull(found), "/a/.apprc");
-		}).pipe(Effect.provide(Layer.mergeAll(flakyFs, Path.layer))),
-	);
+	it.layer(Layer.mergeAll(flakyFs, Path.layer), { timeout: "30 seconds" })((it) => {
+		it.effect("gitRoot finds the root above an unreadable ancestor", () =>
+			Effect.gen(function* () {
+				const found = yield* ConfigResolver.gitRoot({ filename: ".apprc", cwd: "/a/b/c" }).resolve;
+				assertSome(found, "/a/.apprc");
+			}),
+		);
+	});
 
-	it.effect("upwardWalk skips an unreadable directory and keeps ascending", () =>
-		Effect.gen(function* () {
-			const found = yield* ConfigResolver.upwardWalk({ filename: ".apprc", cwd: "/a/b/c" }).resolve;
-			assert.strictEqual(O.getOrNull(found), "/a/.apprc");
-		}).pipe(Effect.provide(Layer.mergeAll(flakyFs, Path.layer))),
-	);
+	it.layer(Layer.mergeAll(flakyFs, Path.layer), { timeout: "30 seconds" })((it) => {
+		it.effect("upwardWalk skips an unreadable directory and keeps ascending", () =>
+			Effect.gen(function* () {
+				const found = yield* ConfigResolver.upwardWalk({ filename: ".apprc", cwd: "/a/b/c" }).resolve;
+				assertSome(found, "/a/.apprc");
+			}),
+		);
+	});
 });

@@ -6,6 +6,7 @@
 // literal path touches.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure } from "@effect/vitest/utils";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { Markdown } from "../../effected/markdown/Markdown.ts";
@@ -436,7 +437,7 @@ describe("Text escapeStyle: literal", () => {
 				type: "root",
 				children: [{ type: "paragraph", children: [{ type: "text", value: "x", escapeStyle: "raw" }] }],
 			});
-			assert.isTrue(Result.isFailure(result));
+			assertFailure(Result.mapError(result, () => undefined), undefined);
 		});
 
 		it("Mdast.toMdast projects escapeStyle only when present", () => {

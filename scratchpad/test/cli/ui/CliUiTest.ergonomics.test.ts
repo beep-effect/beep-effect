@@ -1,6 +1,4 @@
-// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import * as Data from "effect/Data";
-import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
@@ -11,12 +9,18 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as MutableRef from "effect/MutableRef";
-import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Stdio from "effect/Stdio";
+import * as Terminal from "effect/Terminal";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Context from "effect/Context";
+import { assertSome, assertNone } from "@effect/vitest/utils";
+import { MemoryFileSystem } from "../../../effected/memfs/index.ts";
 import { Command } from "effect/cli";
 import { Cancelled, CliExit } from "../../../effected/cli/index.ts";
 import type { KeyName } from "../../../effected/cli/ui.ts";
 import { CliUi, Select, TextInput } from "../../../effected/cli/ui.ts";
-import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
+import { CliUiTest, type CliUiTestSession } from "../../../effected/cli/ui-testing.ts";
 import { deliberatelyInvalid } from "../deliberatelyInvalid.ts";
 
 class TestError extends Data.TaggedError("TestError")<{ readonly message: string; readonly cause?: unknown }> {
@@ -31,15 +35,15 @@ const defectMessage = (exit: Exit.Exit<unknown, unknown>): string => {
 };
 
 describe("press takes characters as chunk does, and names type for a bare string (O2a)", () => {
-	it.live("press({ char }) types the character, between named keys", () =>
+	it.effect("press({ char }) types the character, between named keys", () =>
 		Effect.gen(function* () {
 			const handle = yield* CliUiTest.render(TextInput.screen({ message: "Name" }));
 			yield* handle.press({ char: "n" }, { char: "o" }, "enter");
 			assert.strictEqual(yield* handle.result, "no");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
-	it.live("a bare string that is not a key name dies naming type(...) and { char }, not a stream error", () =>
+	it.effect("a bare string that is not a key name dies naming type(...) and { char }, not a stream error", () =>
 		Effect.gen(function* () {
 			const handle = yield* CliUiTest.render(TextInput.screen({ message: "Name" }));
 			const exit = yield* Effect.exit(handle.press(deliberatelyInvalid<KeyName>("n")));
@@ -49,42 +53,48 @@ describe("press takes characters as chunk does, and names type for a bare string
 			assert.notInclude(message, "chunk");
 			const chunked = yield* Effect.exit(handle.chunk(deliberatelyInvalid<KeyName>("x")));
 			assert.include(defectMessage(chunked), 'type("x")');
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
 describe("CliUiTest.cancelReason (O2b)", () => {
-	it.live("finds a Cancelled in the typed channel of a screen's exit", () =>
+	it.effect("finds a Cancelled in the typed channel of a screen's exit", () =>
 		Effect.gen(function* () {
 			const handle = yield* CliUiTest.render(TextInput.screen({ message: "Name" }));
 			yield* handle.press("escape");
 			const exit = yield* Effect.exit(handle.result);
-			assert.deepStrictEqual(CliUiTest.cancelReason(exit), O.some("escape"));
-		}).pipe(Effect.scoped),
+			assertSome(CliUiTest.cancelReason(exit), "escape");
+		}),
 	);
 
 	it("finds one as a defect, and in a bare Cause", () => {
-		assert.deepStrictEqual(
+		assertSome(
 			CliUiTest.cancelReason(Exit.die(Cancelled.make({ reason: "interrupt" }))),
-			O.some("interrupt"),
+			"interrupt",
 		);
-		assert.deepStrictEqual(
+		assertSome(
 			CliUiTest.cancelReason(Cause.fail(Cancelled.make({ reason: "escape" }))),
-			O.some("escape"),
+			"escape",
 		);
-		assert.deepStrictEqual(
+		assertSome(
 			CliUiTest.cancelReason(Cause.die(Cancelled.make({ reason: "interrupt" }))),
-			O.some("interrupt"),
+			"interrupt",
 		);
 	});
 
 	it("is None for a success, another failure, or an interrupt", () => {
-		assert.deepStrictEqual(CliUiTest.cancelReason(Exit.succeed(1)), O.none());
-		assert.deepStrictEqual(CliUiTest.cancelReason(Exit.fail(new TestError("boom"))), O.none());
-		assert.deepStrictEqual(CliUiTest.cancelReason(Cause.die("x")), O.none());
-		assert.deepStrictEqual(CliUiTest.cancelReason(Cause.interrupt()), O.none());
+		assertNone(CliUiTest.cancelReason(Exit.succeed(1)));
+		assertNone(CliUiTest.cancelReason(Exit.fail(new TestError("boom"))));
+		assertNone(CliUiTest.cancelReason(Cause.die("x")));
+		assertNone(CliUiTest.cancelReason(Cause.interrupt()));
 	});
 });
+
+class TestSession extends Context.Service<TestSession, CliUiTestSession>()("@beep/scratchpad/test/cli/ui/CliUiTest.ergonomics.test/TestSession") {}
+
+const sessionLayer = Layer.unwrap(Effect.map(CliUiTest.session(), (session) =>
+	Layer.merge(session.layer, Layer.succeed(TestSession, session)),
+));
 
 describe("the session recipe for a whole Command handler (O2c)", () => {
 	/** A tiny command: reads HOME through Config, asks one question, records a findings code. */
@@ -105,30 +115,41 @@ describe("the session recipe for a whole Command handler (O2c)", () => {
 		}),
 	);
 
-	it.live("session.layer + CliExit.layer + a ConfigProvider for HOME, forked, then next()", () =>
-		Effect.gen(function* () {
-			const session = yield* CliUiTest.session();
-			const program = Effect.gen(function* () {
-				yield* Command.runWith(pick, { version: "1.0.0" })([]);
-				return MutableRef.get((yield* CliExit).code);
-			}).pipe(
-				Effect.provide(session.layer),
-				Effect.provide(CliExit.layer),
-				Effect.provide(NodeServices.layer),
-				Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ HOME: "/sandbox/home" })),
-			);
-			const fiber = yield* Effect.forkScoped(program);
-			const screen = yield* session.next({ contains: "Pick one" });
-			yield* screen.press("down", "enter");
-			assert.strictEqual(yield* Fiber.join(fiber), 3);
-			assert.strictEqual(yield* session.stdout, "/sandbox/home:drop\n");
-			assert.strictEqual(yield* session.mounts, 1);
-		}).pipe(Effect.scoped),
-	);
+	it.layer(Layer.mergeAll(
+		sessionLayer,
+		CliExit.layer,
+		MemoryFileSystem.layer,
+		Path.layer,
+		Stdio.layerTest({}),
+		Layer.succeed(Terminal.Terminal, Terminal.make({
+			columns: Effect.succeed(80), rows: Effect.succeed(24),
+			readInput: Effect.die("unused terminal input"), readLine: Effect.die("unused terminal line"),
+			display: () => Effect.void,
+		})),
+		Layer.mock(ChildProcessSpawner.ChildProcessSpawner, {}),
+	), { timeout: "30 seconds" })((it) => {
+		it.effect("session.layer + CliExit.layer + a ConfigProvider for HOME, forked, then next()", () =>
+			Effect.gen(function* () {
+				const session = yield* TestSession;
+				const program = Effect.gen(function* () {
+					yield* Command.runWith(pick, { version: "1.0.0" })([]);
+					return MutableRef.get((yield* CliExit).code);
+				}).pipe(
+					Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ HOME: "/sandbox/home" })),
+				);
+				const fiber = yield* Effect.forkScoped(program);
+				const screen = yield* session.next({ contains: "Pick one" });
+				yield* screen.press("down", "enter");
+				assert.strictEqual(yield* Fiber.join(fiber), 3);
+				assert.strictEqual(yield* session.stdout, "/sandbox/home:drop\n");
+				assert.strictEqual(yield* session.mounts, 1);
+			}),
+		);
+	});
 });
 
 describe("Select's highlight marker in plainFrame (O2d)", () => {
-	it.live("the arrow marks the initial index in plain text, so a test can assert it", () =>
+	it.effect("the arrow marks the initial index in plain text, so a test can assert it", () =>
 		Effect.gen(function* () {
 			const handle = yield* CliUiTest.render(
 				Select.screen({
@@ -144,7 +165,7 @@ describe("Select's highlight marker in plainFrame (O2d)", () => {
 			const lines = plain.split("\n");
 			assert.include(lines, "→ library", plain);
 			assert.include(lines, "  software-project", plain);
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
@@ -214,7 +235,7 @@ describe("CliUiTest.session ambient Console delegation", () => {
 				["groupCollapsed", ["collapsed", 4]], ["groupEnd", []], ["table", [[{ value: 1 }], ["value"]]],
 				["time", ["timer"]], ["timeEnd", ["timer"]], ["timeLog", ["timer", "elapsed", 5]],
 			]);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("resolves a replaced ambient method at call time, including a previously obtained writer", () =>
@@ -237,6 +258,6 @@ describe("CliUiTest.session ambient Console delegation", () => {
 			]);
 			assert.strictEqual(yield* session.stdout, "");
 			assert.strictEqual(yield* session.stderr, "");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });

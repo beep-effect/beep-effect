@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
@@ -91,13 +92,12 @@ describe("versionOf", () => {
 describe("closureOf", () => {
 	it("auto walks runtime edges transitively from the carrier, carrier first, through cycles, never devDependencies", () => {
 		const closure = closureOf(PACKAGES, "@x/carrier", "auto");
-		assert.isTrue(Result.isSuccess(closure));
-		if (Result.isSuccess(closure)) {
-			assert.deepStrictEqual(
-				closure.success.map((p) => p.name),
-				["@x/carrier", "@x/lib", "@x/peer", "@x/deep"],
-			);
-		}
+		assertSuccess(Result.map(closure, (packages) => packages.map((p) => p.name)), [
+			"@x/carrier",
+			"@x/lib",
+			"@x/peer",
+			"@x/deep",
+		]);
 	});
 
 	it("an explicit list is taken as given, carrier first, and an unknown name fails", () => {
@@ -228,7 +228,8 @@ describe("unresolvedSpecifiers", () => {
 			unresolvedSpecifiers(manifest),
 			Result.succeed(["dependencies.@x/lib: workspace:^", "peerDependencies.effect: catalog:effect:peers"]),
 		);
-		assert.isTrue(Result.isFailure(unresolvedSpecifiers("{ nope")));
+		const result = unresolvedSpecifiers("{ nope");
+		assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 	});
 
 	it("also lists link: and relative file: specifiers, which name a path only the workspace has", () => {
@@ -264,9 +265,12 @@ describe("readPackedManifest", () => {
 	});
 
 	it("a manifest that is not a JSON object fails", () => {
-		assert.isTrue(Result.isFailure(readPackedManifest("[]")));
-		assert.isTrue(Result.isFailure(readPackedManifest("null")));
-		assert.isTrue(Result.isFailure(readPackedManifest("{ nope")));
+		const array = readPackedManifest("[]");
+		assertFailure(array, array.pipe(Result.flip, Result.getOrThrow));
+		const nil = readPackedManifest("null");
+		assertFailure(nil, nil.pipe(Result.flip, Result.getOrThrow));
+		const malformed = readPackedManifest("{ nope");
+		assertFailure(malformed, malformed.pipe(Result.flip, Result.getOrThrow));
 	});
 });
 

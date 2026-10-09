@@ -97,8 +97,7 @@ export interface PathPrependOptions {
  * @category utilities
  * @since 0.0.0
  */
-export class ChildEnv {
-	private constructor() {}
+export abstract class ChildEnv {
 
 	/**
 	 * The key `base` spells `PATH` with — `Path` on a typical Windows block,

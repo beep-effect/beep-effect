@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as Result from "effect/Result";
@@ -44,7 +45,7 @@ describe("JsonLdDocument.buildResult — identity", () => {
 			Person.make({ "@id": ALICE, name: "Alice" }),
 		]);
 
-		assert.isTrue(Result.isSuccess(built), "a well-formed graph must build");
+		assertSuccess(Result.map(built, () => undefined), undefined);
 		const graph = Result.getOrThrow(built);
 		assert.strictEqual(graph["@graph"].length, 4);
 		assert.deepStrictEqual(graph.danglingReferences, [], "every reference resolves within the graph");
@@ -56,7 +57,7 @@ describe("JsonLdDocument.buildResult — identity", () => {
 			Organization.make({ "@id": ALICE, name: "Also Alice" }),
 		]);
 
-		assert.isTrue(Result.isFailure(built));
+		assertFailure(Result.mapError(built, () => undefined), undefined);
 		const error = Result.getFailure(built).pipe((option) => (option._tag === "Some" ? option.value : undefined));
 		assert.instanceOf(error, DuplicateNodeIdError);
 		if (!S.is(DuplicateNodeIdError)(error)) assert.fail("expected DuplicateNodeIdError");
@@ -70,7 +71,7 @@ describe("JsonLdDocument.buildResult — identity", () => {
 			SoftwareSourceCode.make({ "@id": PKG, additional: { about: "collides" } }),
 		]);
 
-		assert.isTrue(Result.isFailure(built));
+		assertFailure(Result.mapError(built, () => undefined), undefined);
 		const error = Result.getFailure(built).pipe((option) => (option._tag === "Some" ? option.value : undefined));
 		assert.instanceOf(error, ConflictingTermError);
 		if (!S.is(ConflictingTermError)(error)) assert.fail("expected ConflictingTermError");
@@ -80,7 +81,7 @@ describe("JsonLdDocument.buildResult — identity", () => {
 	it("rejects a catch-all key colliding with @id or @type", () => {
 		for (const term of ["@id", "@type"]) {
 			const built = JsonLdDocument.buildResult([Person.make({ "@id": ALICE, additional: { [term]: "x" } })]);
-			assert.isTrue(Result.isFailure(built), `${term} must not be settable through the catch-all`);
+			assertFailure(Result.mapError(built, () => undefined), undefined);
 		}
 	});
 
@@ -89,13 +90,13 @@ describe("JsonLdDocument.buildResult — identity", () => {
 			SoftwareSourceCode.make({ "@id": PKG, additional: { alternateName: "ex", codeSampleType: "full" } }),
 		]);
 
-		assert.isTrue(Result.isSuccess(built), "the catch-all is the point; unmodelled terms must pass");
+		assertSuccess(Result.map(built, () => undefined), undefined);
 	});
 
 	it("rejects a malformed @id on a node, typed rather than thrown", () => {
 		for (const id of ["", "has space", "tab\there", "null\u0000byte"]) {
 			const built = JsonLdDocument.buildResult([Person.make({ "@id": id })]);
-			assert.isTrue(Result.isFailure(built), `${JSON.stringify(id)} must not be usable as an @id`);
+			assertFailure(Result.mapError(built, () => undefined), undefined);
 			const error = Result.getFailure(built).pipe((option) => (option._tag === "Some" ? option.value : undefined));
 			assert.instanceOf(error, InvalidNodeIdError, "identity failures arrive on the error channel, never as a defect");
 		}
@@ -106,13 +107,13 @@ describe("JsonLdDocument.buildResult — identity", () => {
 			TechArticle.make({ "@id": DOC, isPartOf: [NodeRef.to("not a valid id")] }),
 		]);
 
-		assert.isTrue(Result.isFailure(built), "a reference id is held to the same rule as a node id");
+		assertFailure(Result.mapError(built, () => undefined), undefined);
 	});
 
 	it("accepts the identifier forms JSON-LD actually allows", () => {
 		for (const id of ["https://example.com/#a", "_:blank", "#fragment", "relative/path"]) {
 			const built = JsonLdDocument.buildResult([Person.make({ "@id": id })]);
-			assert.isTrue(Result.isSuccess(built), `${JSON.stringify(id)} is legal JSON-LD and must be accepted`);
+			assertSuccess(Result.map(built, () => undefined), undefined);
 		}
 	});
 });
@@ -123,7 +124,7 @@ describe("JsonLdDocument — dangling references", () => {
 			TechArticle.make({ "@id": DOC, publisher: [NodeRef.to("https://elsewhere.example/#org")] }),
 		]);
 
-		assert.isTrue(Result.isSuccess(built), "pointing at a node described on another page is legal and common");
+		assertSuccess(Result.map(built, () => undefined), undefined);
 	});
 
 	it("reports the dangling ids so a closed-world consumer can gate", () => {
@@ -267,7 +268,7 @@ describe("JsonLdDocument — the decode direction is unimplemented, and the asym
 
 		const decoded = S.decodeUnknownResult(JsonLdDocument)(graph.toJsonLd());
 
-		assert.isTrue(Result.isSuccess(decoded), "it succeeds — which is precisely the hazard");
+		assertSuccess(Result.map(decoded, () => undefined), undefined);
 		const node = Result.getOrThrow(decoded)["@graph"][0];
 		assert.isUndefined(
 			node?.additional,
@@ -282,7 +283,7 @@ describe("JsonLdDocument — the decode direction is unimplemented, and the asym
 
 		const decoded = S.encodeResult(JsonLdDocument)(graph).pipe(Result.getOrThrow, S.decodeResult(JsonLdDocument));
 
-		assert.isTrue(Result.isSuccess(decoded));
+		assertSuccess(Result.map(decoded, () => undefined), undefined);
 		assert.deepStrictEqual(
 			Result.getOrThrow(decoded)["@graph"][0]?.additional,
 			{ alternateName: "ex" },
@@ -332,7 +333,7 @@ describe("JsonLdDocument catch-all references and collection order", () => {
 	it("validates malformed string ids in scalar and array catch-all references through the identity error channel", () => {
 		for (const reference of [{ "@id": "bad id" }, [{ "@id": "" }], [{ "@id": "#ok" }, { "@id": "bad id" }]]) {
 			const built = JsonLdDocument.buildResult([TechArticle.make({ "@id": DOC, additional: { citation: reference } })]);
-			assert.isTrue(Result.isFailure(built));
+			assertFailure(Result.mapError(built, () => undefined), undefined);
 			if (Result.isFailure(built)) {
 				assert.instanceOf(built.failure, InvalidNodeIdError);
 			}

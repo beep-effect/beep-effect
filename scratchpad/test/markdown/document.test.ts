@@ -3,6 +3,10 @@
 // parity and guard-materialization contract the bare-tree facade holds.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertExitFailure, assertFailure, assertSuccess } from "@effect/vitest/utils";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
+import { identity } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Effect from "effect/Effect";
@@ -21,7 +25,7 @@ const source = ["# Title", "", "See [ref][a] and [b].", "", '[a]: /a "A"', "[B]:
 describe("MarkdownDocument.parseResult", () => {
 	it("retains the exact source it parsed", () => {
 		const result = MarkdownDocument.parseResult(source);
-		assert.isTrue(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		if (Result.isFailure(result)) return;
 		assert.strictEqual(result.success.source, source);
 	});
@@ -108,7 +112,7 @@ describe("MarkdownDocument.parseResult", () => {
 
 	it("materializes a tripped guard as a typed MarkdownParseError", () => {
 		const result = MarkdownDocument.parseResult(nestingBomb);
-		assert.isTrue(Result.isFailure(result));
+		assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 		if (Result.isSuccess(result)) return;
 		assert.strictEqual(result.failure._tag, "MarkdownParseError");
 		assert.strictEqual(result.failure.diagnostic.code, "NestingDepthExceeded");
@@ -139,12 +143,15 @@ describe("MarkdownDocument.parse", () => {
 
 	it.effect("agrees with parseResult on the failure channel", () =>
 		Effect.gen(function* () {
-			const viaEffect = yield* Effect.result(MarkdownDocument.parse(nestingBomb));
+			const viaEffect = yield* Effect.exit(MarkdownDocument.parse(nestingBomb));
 			const viaResult = MarkdownDocument.parseResult(nestingBomb);
-			assert.isTrue(Result.isFailure(viaEffect));
-			assert.isTrue(Result.isFailure(viaResult));
-			if (Result.isSuccess(viaEffect) || Result.isSuccess(viaResult)) return;
-			assert.deepStrictEqual(viaEffect.failure, viaResult.failure);
+			assertFailure(viaResult, viaResult.pipe(Result.flip, Result.getOrThrow));
+			const cause = Exit.match(viaEffect, {
+				onFailure: identity,
+				onSuccess: () => assert.fail("expected the document to fail parsing"),
+			});
+			assertExitFailure(viaEffect, cause);
+			assertSuccess(Cause.findError(cause), viaResult.failure);
 		}),
 	);
 

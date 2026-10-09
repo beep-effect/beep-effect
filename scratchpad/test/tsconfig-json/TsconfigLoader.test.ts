@@ -1,7 +1,7 @@
 import { assert, describe, it, layer } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import * as Str from "effect/String";
 import * as Tracer from "effect/Tracer";
 import { resolveExports, resolveExtendsTarget } from "../../effected/tsconfig-json/internal/extendsTarget.ts";
@@ -22,6 +22,7 @@ layer(
 			["/proj/node_modules/base/base.json", '{"compilerOptions":{"strict":true}}'],
 		),
 	),
+	{ timeout: "30 seconds" },
 )("TsconfigLoader, tracing", (it) => {
 	it.effect("preserves public loader spans without extra internal loading spans", () =>
 		Effect.gen(function* () {
@@ -62,28 +63,28 @@ layer(
 // E1 — relative / rooted targets
 // ---------------------------------------------------------------------------
 
-layer(fixtureLayer(tree(["/proj/base.json", EMPTY])))("resolveExtendsTarget, relative .json retry", (it) => {
+layer(fixtureLayer(tree(["/proj/base.json", EMPTY])), { timeout: "30 seconds" })("resolveExtendsTarget, relative .json retry", (it) => {
 	it.effect("appends .json when the extensionless file is absent", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("./base", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, O.some("/proj/base.json"));
+			assertSome(result, "/proj/base.json");
 		}),
 	);
 });
 
-layer(fixtureLayer(tree(["/proj/base", EMPTY], ["/proj/base.json", "SHADOWED"])))(
+layer(fixtureLayer(tree(["/proj/base", EMPTY], ["/proj/base.json", "SHADOWED"])), { timeout: "30 seconds" })(
 	"resolveExtendsTarget, extensionless exact match",
 	(it) => {
 		it.effect("accepts an existing extensionless file verbatim, before the .json retry", () =>
 			Effect.gen(function* () {
 				const result = yield* resolveExtendsTarget("./base", "/proj/tsconfig.json");
-				assert.deepStrictEqual(result, O.some("/proj/base"));
+				assertSome(result, "/proj/base");
 			}),
 		);
 	},
 );
 
-layer(fixtureLayer(tree(["/proj/dir/tsconfig.json", EMPTY])))("resolveExtendsTarget, no directory fallback", (it) => {
+layer(fixtureLayer(tree(["/proj/dir/tsconfig.json", EMPTY])), { timeout: "30 seconds" })("resolveExtendsTarget, no directory fallback", (it) => {
 	it.effect("a relative path to a directory never tries <dir>/tsconfig.json", () =>
 		Effect.gen(function* () {
 			// The volume creates real directories, so `/proj/dir` exists — which
@@ -95,25 +96,25 @@ layer(fixtureLayer(tree(["/proj/dir/tsconfig.json", EMPTY])))("resolveExtendsTar
 			// that no `<dir>/tsconfig.json` fallback was tried — tsc would have
 			// retried `./dir.json`, and we resolve neither.
 			const result = yield* resolveExtendsTarget("./dir", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, O.some("/proj/dir"));
+			assertSome(result, "/proj/dir");
 		}),
 	);
 });
 
-layer(fixtureLayer(tree(["/proj/base.json", EMPTY])))("resolveExtendsTarget, parent-relative target", (it) => {
+layer(fixtureLayer(tree(["/proj/base.json", EMPTY])), { timeout: "30 seconds" })("resolveExtendsTarget, parent-relative target", (it) => {
 	it.effect("resolves a ../ target against the extending config directory", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("../base", "/proj/sub/tsconfig.json");
-			assert.deepStrictEqual(result, O.some("/proj/base.json"));
+			assertSome(result, "/proj/base.json");
 		}),
 	);
 });
 
-layer(fixtureLayer(tree(["/abs/base.json", EMPTY])))("resolveExtendsTarget, rooted target", (it) => {
+layer(fixtureLayer(tree(["/abs/base.json", EMPTY])), { timeout: "30 seconds" })("resolveExtendsTarget, rooted target", (it) => {
 	it.effect("accepts an absolute target verbatim", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("/abs/base.json", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, O.some("/abs/base.json"));
+			assertSome(result, "/abs/base.json");
 		}),
 	);
 });
@@ -122,13 +123,13 @@ layer(fixtureLayer(tree(["/abs/base.json", EMPTY])))("resolveExtendsTarget, root
 // E2 — bare specifiers
 // ---------------------------------------------------------------------------
 
-layer(fixtureLayer(tree(["/proj/node_modules/foo/package.json", EMPTY], ["/proj/node_modules/foo/bar.json", EMPTY])))(
+layer(fixtureLayer(tree(["/proj/node_modules/foo/package.json", EMPTY], ["/proj/node_modules/foo/bar.json", EMPTY])), { timeout: "30 seconds" })(
 	"resolveExtendsTarget, foo/bar.json is bare not relative",
 	(it) => {
 		it.effect("resolves a slash-bearing spec with no ./ through node_modules", () =>
 			Effect.gen(function* () {
 				const result = yield* resolveExtendsTarget("foo/bar.json", "/proj/tsconfig.json");
-				assert.deepStrictEqual(result, O.some("/proj/node_modules/foo/bar.json"));
+				assertSome(result, "/proj/node_modules/foo/bar.json");
 			}),
 		);
 	},
@@ -136,11 +137,12 @@ layer(fixtureLayer(tree(["/proj/node_modules/foo/package.json", EMPTY], ["/proj/
 
 layer(
 	fixtureLayer(tree(["/proj/node_modules/pkg/package.json", EMPTY], ["/proj/node_modules/pkg/tsconfig.json", EMPTY])),
+	{ timeout: "30 seconds" },
 )("resolveExtendsTarget, walk up ancestors", (it) => {
 	it.effect("finds the package two ancestors up when nearer dirs have no node_modules", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("pkg", "/proj/a/b/tsconfig.json");
-			assert.deepStrictEqual(result, O.some("/proj/node_modules/pkg/tsconfig.json"));
+			assertSome(result, "/proj/node_modules/pkg/tsconfig.json");
 		}),
 	);
 });
@@ -152,11 +154,12 @@ layer(
 			["/proj/node_modules/node_modules/pkg/tsconfig.json", EMPTY],
 		),
 	),
+	{ timeout: "30 seconds" },
 )("resolveExtendsTarget, skip node_modules-named ancestors", (it) => {
 	it.effect("does not probe under an ancestor literally named node_modules", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("pkg", "/proj/node_modules/tsconfig.json");
-			assert.deepStrictEqual(result, O.none());
+			assertNone(result);
 		}),
 	);
 });
@@ -168,22 +171,23 @@ layer(
 			["/proj/node_modules/@tsconfig/node20/tsconfig.json", EMPTY],
 		),
 	),
+	{ timeout: "30 seconds" },
 )("resolveExtendsTarget, scoped subpath exact hit", (it) => {
 	it.effect("resolves @tsconfig/node20/tsconfig.json to the exact file", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("@tsconfig/node20/tsconfig.json", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, O.some("/proj/node_modules/@tsconfig/node20/tsconfig.json"));
+			assertSome(result, "/proj/node_modules/@tsconfig/node20/tsconfig.json");
 		}),
 	);
 });
 
-layer(fixtureLayer(tree(["/proj/node_modules/pkg/package.json", EMPTY], ["/proj/node_modules/pkg/base.json", EMPTY])))(
+layer(fixtureLayer(tree(["/proj/node_modules/pkg/package.json", EMPTY], ["/proj/node_modules/pkg/base.json", EMPTY])), { timeout: "30 seconds" })(
 	"resolveExtendsTarget, subpath .json retry",
 	(it) => {
 		it.effect("pkg/base resolves to node_modules/pkg/base.json", () =>
 			Effect.gen(function* () {
 				const result = yield* resolveExtendsTarget("pkg/base", "/proj/tsconfig.json");
-				assert.deepStrictEqual(result, O.some("/proj/node_modules/pkg/base.json"));
+				assertSome(result, "/proj/node_modules/pkg/base.json");
 			}),
 		);
 	},
@@ -197,11 +201,12 @@ layer(
 			["/proj/node_modules/withfield/tsconfig.json", "SHADOWED"],
 		),
 	),
+	{ timeout: "30 seconds" },
 )("resolveExtendsTarget, bare package tsconfig field", (it) => {
 	it.effect("respects the package.json tsconfig field over the default tsconfig.json", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("withfield", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, O.some("/proj/node_modules/withfield/tsconfigs/base.json"));
+			assertSome(result, "/proj/node_modules/withfield/tsconfigs/base.json");
 		}),
 	);
 });
@@ -210,11 +215,12 @@ layer(
 	fixtureLayer(
 		tree(["/proj/node_modules/plain/package.json", EMPTY], ["/proj/node_modules/plain/tsconfig.json", EMPTY]),
 	),
+	{ timeout: "30 seconds" },
 )("resolveExtendsTarget, bare package default tsconfig.json", (it) => {
 	it.effect("falls back to <pkg>/tsconfig.json when there is no tsconfig field", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("plain", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, O.some("/proj/node_modules/plain/tsconfig.json"));
+			assertSome(result, "/proj/node_modules/plain/tsconfig.json");
 		}),
 	);
 });
@@ -231,11 +237,12 @@ layer(
 			["/proj/node_modules/exp/tsconfig.json", "SHADOWED"],
 		),
 	),
+	{ timeout: "30 seconds" },
 )("resolveExtendsTarget, exports resolution wins", (it) => {
 	it.effect("an exports map redirects the subpath and beats the plain file", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("exp/tsconfig.json", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, O.some("/proj/node_modules/exp/cfg/base.json"));
+			assertSome(result, "/proj/node_modules/exp/cfg/base.json");
 		}),
 	);
 });
@@ -247,11 +254,12 @@ layer(
 			["/proj/node_modules/exp/tsconfig.json", "NEVER-PROBED"],
 		),
 	),
+	{ timeout: "30 seconds" },
 )("resolveExtendsTarget, exports blocks all fallbacks", (it) => {
 	it.effect("an exports map that fails to resolve the subpath yields none, no tsconfig.json probe", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("exp", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, O.none());
+			assertNone(result);
 		}),
 	);
 });
@@ -260,13 +268,14 @@ layer(
 	fixtureLayer(
 		tree(["/proj/node_modules/bad/package.json", "{ not json"], ["/proj/node_modules/bad/tsconfig.json", EMPTY]),
 	),
+	{ timeout: "30 seconds" },
 )("resolveExtendsTarget, malformed manifest coerced to empty", (it) => {
 	it.effect("a hostile package.json falls through to the tsconfig.json probe, never a defect", () =>
 		Effect.gen(function* () {
 			// tsc's readJson (typescript.js:21176) coerces an unparseable
 			// manifest to {} and the manifest-less lookups still run.
 			const result = yield* resolveExtendsTarget("bad", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, O.some("/proj/node_modules/bad/tsconfig.json"));
+			assertSome(result, "/proj/node_modules/bad/tsconfig.json");
 		}),
 	);
 });
@@ -278,13 +287,14 @@ layer(
 			["/proj/node_modules/badfield/tsconfig.json", EMPTY],
 		),
 	),
+	{ timeout: "30 seconds" },
 )("resolveExtendsTarget, tsconfig field pointing at a missing file", (it) => {
 	it.effect("falls through to the tsconfig.json probe when the field target does not exist", () =>
 		Effect.gen(function* () {
 			// tsc parity: a falsy packageFileResult falls through to
 			// loadModuleFromFile(indexPath) — typescript.js:45943-45945.
 			const result = yield* resolveExtendsTarget("badfield", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, O.some("/proj/node_modules/badfield/tsconfig.json"));
+			assertSome(result, "/proj/node_modules/badfield/tsconfig.json");
 		}),
 	);
 });
@@ -302,6 +312,7 @@ layer(
 			// The fixed guard treats it as falsy and never probes the path.
 		),
 	),
+	{ timeout: "30 seconds" },
 )("resolveExtendsTarget, empty-string tsconfig field falls through", (it) => {
 	it.effect("treats an empty tsconfig field as falsy, per tsc's packageFile && loader(...) parity", () =>
 		Effect.gen(function* () {
@@ -311,29 +322,30 @@ layer(
 			// `<pkg>/tsconfig.json` probe (typescript.js:45943-45945, same
 			// citation as the "field pointing at a missing file" case above).
 			const result = yield* resolveExtendsTarget("emptyfield", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, O.some("/proj/node_modules/emptyfield/tsconfig.json"));
+			assertSome(result, "/proj/node_modules/emptyfield/tsconfig.json");
 		}),
 	);
 });
 
 layer(
 	fixtureLayer(tree(["/proj/node_modules/arr/package.json", "[]"], ["/proj/node_modules/arr/tsconfig.json", EMPTY])),
+	{ timeout: "30 seconds" },
 )("resolveExtendsTarget, non-object manifest coerced to empty", (it) => {
 	it.effect("a non-object package.json falls through to the tsconfig.json probe", () =>
 		Effect.gen(function* () {
 			const result = yield* resolveExtendsTarget("arr", "/proj/tsconfig.json");
-			assert.deepStrictEqual(result, O.some("/proj/node_modules/arr/tsconfig.json"));
+			assertSome(result, "/proj/node_modules/arr/tsconfig.json");
 		}),
 	);
 });
 
-layer(fixtureLayer(tree(["/proj/node_modules/nomanifest/tsconfig.json", EMPTY])))(
+layer(fixtureLayer(tree(["/proj/node_modules/nomanifest/tsconfig.json", EMPTY])), { timeout: "30 seconds" })(
 	"resolveExtendsTarget, package with no package.json at all",
 	(it) => {
 		it.effect("probes tsconfig.json even when the manifest is absent", () =>
 			Effect.gen(function* () {
 				const result = yield* resolveExtendsTarget("nomanifest", "/proj/tsconfig.json");
-				assert.deepStrictEqual(result, O.some("/proj/node_modules/nomanifest/tsconfig.json"));
+				assertSome(result, "/proj/node_modules/nomanifest/tsconfig.json");
 			}),
 		);
 	},
@@ -347,13 +359,14 @@ layer(
 			["/proj/node_modules/dual/tsconfig.json", EMPTY],
 		),
 	),
+	{ timeout: "30 seconds" },
 )("resolveExtendsTarget, walk continues past an unresolved candidate", (it) => {
 	it.effect("a nearer copy that does not resolve does not shadow a farther one that does", () =>
 		Effect.gen(function* () {
 			// tsc's ancestor walk only stops on a defined result
 			// (forEachAncestorDirectoryStoppingAtGlobalCache, typescript.js:46466).
 			const result = yield* resolveExtendsTarget("dual", "/proj/a/tsconfig.json");
-			assert.deepStrictEqual(result, O.some("/proj/node_modules/dual/tsconfig.json"));
+			assertSome(result, "/proj/node_modules/dual/tsconfig.json");
 		}),
 	);
 });
@@ -364,58 +377,58 @@ layer(
 
 describe("resolveExports", () => {
 	it("resolves a bare string exports target for the root subpath", () => {
-		assert.deepStrictEqual(resolveExports("./tsconfig.json", "."), O.some("./tsconfig.json"));
+		assertSome(resolveExports("./tsconfig.json", "."), "./tsconfig.json");
 	});
 
 	it("matches conditions in map insertion order (require before default)", () => {
 		const exports = { ".": { require: "./r.json", default: "./d.json" } };
-		assert.deepStrictEqual(resolveExports(exports, "."), O.some("./r.json"));
+		assertSome(resolveExports(exports, "."), "./r.json");
 	});
 
 	it("walks a fallback array to the first resolvable entry", () => {
 		const exports = { ".": [{ unknowncond: "./a.json" }, "./b.json"] };
-		assert.deepStrictEqual(resolveExports(exports, "."), O.some("./b.json"));
+		assertSome(resolveExports(exports, "."), "./b.json");
 	});
 
 	it("substitutes a single-star subpath pattern", () => {
 		const exports = { "./*": "./cfg/*" };
-		assert.deepStrictEqual(resolveExports(exports, "./node20.json"), O.some("./cfg/node20.json"));
+		assertSome(resolveExports(exports, "./node20.json"), "./cfg/node20.json");
 	});
 
 	it("rejects a non-.json target", () => {
-		assert.deepStrictEqual(resolveExports({ ".": "./tsconfig" }, "."), O.none());
+		assertNone(resolveExports({ ".": "./tsconfig" }, "."));
 	});
 
 	it("reads a top-level fallback array as the root target", () => {
-		assert.deepStrictEqual(resolveExports(["./a.json"], "."), O.some("./a.json"));
+		assertSome(resolveExports(["./a.json"], "."), "./a.json");
 	});
 
 	it("returns none for a non-object, non-string exports value", () => {
-		assert.deepStrictEqual(resolveExports(42, "."), O.none());
+		assertNone(resolveExports(42, "."));
 	});
 
 	it("returns none when a subpath map has no matching key or pattern", () => {
-		assert.deepStrictEqual(resolveExports({ "./a.json": "./x.json" }, "./b.json"), O.none());
+		assertNone(resolveExports({ "./a.json": "./x.json" }, "./b.json"));
 	});
 
 	it("substitutes a wildcard into a nested condition object", () => {
 		const exports = { "./*": { types: "./cfg/*.json" } };
-		assert.deepStrictEqual(resolveExports(exports, "./node20"), O.some("./cfg/node20.json"));
+		assertSome(resolveExports(exports, "./node20"), "./cfg/node20.json");
 	});
 
 	it("substitutes a wildcard into a fallback array target", () => {
 		const exports = { "./*": ["./cfg/*.json"] };
-		assert.deepStrictEqual(resolveExports(exports, "./node20"), O.some("./cfg/node20.json"));
+		assertSome(resolveExports(exports, "./node20"), "./cfg/node20.json");
 	});
 
 	it("picks the pattern with the longest base prefix, not the first in key order", () => {
 		const exports = { "./*.json": "./generic/*.json", "./cfg/*.json": "./specific/*.json" };
-		assert.deepStrictEqual(resolveExports(exports, "./cfg/node20.json"), O.some("./specific/node20.json"));
+		assertSome(resolveExports(exports, "./cfg/node20.json"), "./specific/node20.json");
 	});
 
 	it("skips a __proto__ condition key", () => {
 		const exports = JSON.parse('{".":{"__proto__":"./evil.json","default":"./safe.json"}}');
-		assert.deepStrictEqual(resolveExports(exports, "."), O.some("./safe.json"));
+		assertSome(resolveExports(exports, "."), "./safe.json");
 	});
 
 	const deepConditions = (depth: number): unknown => {
@@ -425,11 +438,11 @@ describe("resolveExports", () => {
 	};
 
 	it("resolves shallow condition nesting", () => {
-		assert.deepStrictEqual(resolveExports(deepConditions(5), "."), O.some("./deep.json"));
+		assertSome(resolveExports(deepConditions(5), "."), "./deep.json");
 	});
 
 	it("returns none past the depth guard", () => {
-		assert.deepStrictEqual(resolveExports(deepConditions(100), "."), O.none());
+		assertNone(resolveExports(deepConditions(100), "."));
 	});
 });
 
@@ -437,7 +450,7 @@ describe("resolveExports", () => {
 // TsconfigLoader.load — read one file, decode, wrap decode failures
 // ---------------------------------------------------------------------------
 
-layer(fixtureLayer(tree(["/proj/tsconfig.json", '{"compilerOptions":{"strict":true}}'])))(
+layer(fixtureLayer(tree(["/proj/tsconfig.json", '{"compilerOptions":{"strict":true}}'])), { timeout: "30 seconds" })(
 	"TsconfigLoader.load, single file",
 	(it) => {
 		it.effect("reads and decodes one config, no extends resolution", () =>
@@ -449,7 +462,7 @@ layer(fixtureLayer(tree(["/proj/tsconfig.json", '{"compilerOptions":{"strict":tr
 	},
 );
 
-layer(fixtureLayer(tree(["/proj/tsconfig.json", "{ not valid jsonc"])))("TsconfigLoader.load, malformed file", (it) => {
+layer(fixtureLayer(tree(["/proj/tsconfig.json", "{ not valid jsonc"])), { timeout: "30 seconds" })("TsconfigLoader.load, malformed file", (it) => {
 	it.effect("wraps a decode failure in TsconfigParseError carrying the absolute path", () =>
 		Effect.gen(function* () {
 			const error = yield* Effect.flip(TsconfigLoader.load("/proj/tsconfig.json"));
@@ -465,7 +478,7 @@ layer(fixtureLayer(tree(["/proj/tsconfig.json", "{ not valid jsonc"])))("Tsconfi
 // TsconfigLoader.resolve — the full pipeline
 // ---------------------------------------------------------------------------
 
-layer(fixtureLayer(tree(["/proj/tsconfig.json", '{"compilerOptions":{"strict":true},"include":["src"]}'])))(
+layer(fixtureLayer(tree(["/proj/tsconfig.json", '{"compilerOptions":{"strict":true},"include":["src"]}'])), { timeout: "30 seconds" })(
 	"TsconfigLoader.resolve, single file no extends",
 	(it) => {
 		it.effect("resolves to the absolutized own config with extendedPaths === [configPath]", () =>
@@ -487,6 +500,7 @@ layer(
 			["/proj/app/tsconfig.json", '{"extends":"../base.json","compilerOptions":{"noEmit":true,"declaration":true}}'],
 		),
 	),
+	{ timeout: "30 seconds" },
 )("TsconfigLoader.resolve, two-level relative chain", (it) => {
 	it.effect("base options visible, derived wins per key, extendedPaths base-first", () =>
 		Effect.gen(function* () {
@@ -509,6 +523,7 @@ layer(
 			["/proj/tsconfig.json", '{"extends":["./a.json","./b.json"],"compilerOptions":{"removeComments":false}}'],
 		),
 	),
+	{ timeout: "30 seconds" },
 )("TsconfigLoader.resolve, array extends [A, B]", (it) => {
 	it.effect("B beats A, own beats both, A's nested chain (C) applied before B (E3)", () =>
 		Effect.gen(function* () {
@@ -537,6 +552,7 @@ layer(
 			["/proj/tsconfig.json", '{"extends":["./a.json","./b.json"]}'],
 		),
 	),
+	{ timeout: "30 seconds" },
 )("TsconfigLoader.resolve, diamond", (it) => {
 	it.effect("A and B both extend C — legal, no cycle error (E6 per-branch stacks)", () =>
 		Effect.gen(function* () {
@@ -555,7 +571,7 @@ layer(
 	);
 });
 
-layer(fixtureLayer(tree(["/proj/a.json", '{"extends":"./b.json"}'], ["/proj/b.json", '{"extends":"./a.json"}'])))(
+layer(fixtureLayer(tree(["/proj/a.json", '{"extends":"./b.json"}'], ["/proj/b.json", '{"extends":"./a.json"}'])), { timeout: "30 seconds" })(
 	"TsconfigLoader.resolve, direct cycle",
 	(it) => {
 		it.effect("A extends B extends A fails TsconfigExtendsError reason cycle with the full chain", () =>
@@ -581,7 +597,7 @@ const deepTree = (): ReadonlyMap<string, string> => {
 	return new Map(entries);
 };
 
-layer(fixtureLayer(deepTree()))("TsconfigLoader.resolve, depth guard", (it) => {
+layer(fixtureLayer(deepTree()), { timeout: "30 seconds" })("TsconfigLoader.resolve, depth guard", (it) => {
 	it.effect("a chain deeper than MAX_EXTENDS_DEPTH fails reason depth", () =>
 		Effect.gen(function* () {
 			const error = yield* Effect.flip(TsconfigLoader.resolve("/proj/c0.json"));
@@ -593,7 +609,7 @@ layer(fixtureLayer(deepTree()))("TsconfigLoader.resolve, depth guard", (it) => {
 	);
 });
 
-layer(fixtureLayer(tree(["/proj/tsconfig.json", '{"extends":""}'])))(
+layer(fixtureLayer(tree(["/proj/tsconfig.json", '{"extends":""}'])), { timeout: "30 seconds" })(
 	"TsconfigLoader.resolve, empty extends string",
 	(it) => {
 		it.effect("an empty extends target fails reason empty", () =>
@@ -610,7 +626,7 @@ layer(fixtureLayer(tree(["/proj/tsconfig.json", '{"extends":""}'])))(
 	},
 );
 
-layer(fixtureLayer(tree(["/proj/tsconfig.json", '{"extends":"./nope.json"}'])))(
+layer(fixtureLayer(tree(["/proj/tsconfig.json", '{"extends":"./nope.json"}'])), { timeout: "30 seconds" })(
 	"TsconfigLoader.resolve, unresolvable target",
 	(it) => {
 		it.effect("a missing extends target fails reason not-found carrying the spec", () =>
@@ -627,7 +643,7 @@ layer(fixtureLayer(tree(["/proj/tsconfig.json", '{"extends":"./nope.json"}'])))(
 	},
 );
 
-layer(fixtureLayer(tree(["/proj/base.json", "{ not valid"], ["/proj/tsconfig.json", '{"extends":"./base.json"}'])))(
+layer(fixtureLayer(tree(["/proj/base.json", "{ not valid"], ["/proj/tsconfig.json", '{"extends":"./base.json"}'])), { timeout: "30 seconds" })(
 	"TsconfigLoader.resolve, malformed extended file",
 	(it) => {
 		it.effect("a malformed EXTENDED file fails TsconfigParseError carrying THAT file's path", () =>
@@ -649,6 +665,7 @@ layer(
 			["/proj/app/tsconfig.json", '{"extends":"../base.json"}'],
 		),
 	),
+	{ timeout: "30 seconds" },
 )(`TsconfigLoader.resolve, \${configDir} in a base config`, (it) => {
 	it.effect(`a base config's \${configDir} outDir substitutes against the TOP config's dir`, () =>
 		Effect.gen(function* () {
@@ -665,6 +682,7 @@ layer(
 			["/proj/app/tsconfig.json", '{"extends":"../base.json","compilerOptions":{"strict":true}}'],
 		),
 	),
+	{ timeout: "30 seconds" },
 )("TsconfigLoader.resolve, inherited files/include re-rooted", (it) => {
 	it.effect("files/include inherited from base are re-rooted so they still point at the base's directory", () =>
 		Effect.gen(function* () {

@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import type { AudienceKind } from "../../effected/env/index.ts";
 import { Audience, TerminalEnv } from "../../effected/env/index.ts";
@@ -38,71 +37,80 @@ const env = (audience: AudienceKind, isTerminal: boolean, color: "none" | "truec
 	);
 };
 
-const printed = Effect.fn("printed")(function* (doc: Parameters<typeof Doc.print>[0], audience: AudienceKind, isTerminal: boolean) {
-		const out: Array<string> = [];
-		const double: Console.Console = Object.assign(Object.create(console), {
-			log: (...args: ReadonlyArray<unknown>) => out.push(args.map(String).join(" ")),
-		});
-		yield* Doc.print(doc).pipe(
-			Effect.provide(env(audience, isTerminal)),
-			Effect.provideService(Console.Console, double),
-		);
-		return out.join("\n").split("\n");
+const printed = Effect.fn("printed")(function* (doc: Parameters<typeof Doc.print>[0]) {
+	const out: Array<string> = [];
+	const double: Console.Console = Object.assign(Object.create(console), {
+		log: (...args: ReadonlyArray<unknown>) => out.push(args.map(String).join(" ")),
 	});
+	yield* Doc.print(doc).pipe(Effect.provideService(Console.Console, double));
+	return out.join("\n").split("\n");
+});
 
 describe("Render.context's width follows the stream's terminal for a human", () => {
-	it.effect("a human on a pipe gets no limit, as an agent and a CI do", () =>
-		Effect.gen(function* () {
-			for (const audience of ["human", "agent", "ci"] as const) {
-				const ctx = yield* Render.context("stdout").pipe(Effect.provide(env(audience, false)));
-				assert.strictEqual(ctx.width, Number.POSITIVE_INFINITY, audience);
-			}
-		}),
-	);
+	it.layer(env("human", false), { timeout: "30 seconds" })((it) => {
+		it.effect("a human on a pipe gets no limit, as an agent and a CI do", () =>
+			Effect.gen(function* () {
+				for (const audience of ["human", "agent", "ci"] as const) {
+					const ctx = yield* Render.context("stdout").pipe(
+						Effect.provideService(Audience, { kind: audience, source: "override" }),
+					);
+					assert.strictEqual(ctx.width, Number.POSITIVE_INFINITY, audience);
+				}
+			}),
+		);
+	});
 
-	it.effect("positive control: a human at a terminal still lays out at the terminal's width", () =>
-		Effect.gen(function* () {
-			const ctx = yield* Render.context("stdout").pipe(Effect.provide(env("human", true)));
-			assert.strictEqual(ctx.width, 40);
-			const lines = yield* printed([Doc.paragraph(PROSE)], "human", true);
-			assert.isAbove(lines.length, 1, "prose wraps at a terminal");
-		}),
-	);
+	it.layer(env("human", true), { timeout: "30 seconds" })((it) => {
+		it.effect("positive control: a human at a terminal still lays out at the terminal's width", () =>
+			Effect.gen(function* () {
+				const ctx = yield* Render.context("stdout");
+				assert.strictEqual(ctx.width, 40);
+				const lines = yield* printed([Doc.paragraph(PROSE)]);
+				assert.isAbove(lines.length, 1, "prose wraps at a terminal");
+			}),
+		);
+	});
 
-	it.effect("the width option still wins over both rules", () =>
-		Effect.gen(function* () {
-			const piped = yield* Render.context("stdout", { width: 30 }).pipe(Effect.provide(env("human", false)));
-			assert.strictEqual(piped.width, 30);
-		}),
-	);
+	it.layer(env("human", false), { timeout: "30 seconds" })((it) => {
+		it.effect("the width option still wins over both rules", () =>
+			Effect.gen(function* () {
+				const piped = yield* Render.context("stdout", { width: 30 });
+				assert.strictEqual(piped.width, 30);
+			}),
+		);
+	});
 
-	it.effect("decides per stream: a human with stdout piped and stderr at a terminal", () =>
-		Effect.gen(function* () {
-			const terminal = TerminalEnv.layerTest({
-				stdinIsTerminal: true,
-				stdout: { isTerminal: false, columns: O.some(40) },
-				stderr: { isTerminal: true, columns: O.some(40) },
-			});
-			const layer = Layer.mergeAll(
-				terminal,
-				CliTheme.layer().pipe(Layer.provide(terminal)),
-				Audience.layerTest("human"),
-				CliLinks.layerTest("off"),
-			);
-			const out = yield* Render.context("stdout").pipe(Effect.provide(layer));
-			const err = yield* Render.context("stderr").pipe(Effect.provide(layer));
-			assert.strictEqual(out.width, Number.POSITIVE_INFINITY);
-			assert.strictEqual(err.width, 40);
-		}),
+	const terminal = TerminalEnv.layerTest({
+		stdinIsTerminal: true,
+		stdout: { isTerminal: false, columns: O.some(40) },
+		stderr: { isTerminal: true, columns: O.some(40) },
+	});
+	const layer = Layer.mergeAll(
+		terminal,
+		CliTheme.layer().pipe(Layer.provide(terminal)),
+		Audience.layerTest("human"),
+		CliLinks.layerTest("off"),
 	);
+	it.layer(layer, { timeout: "30 seconds" })((it) => {
+		it.effect("decides per stream: a human with stdout piped and stderr at a terminal", () =>
+			Effect.gen(function* () {
+				const out = yield* Render.context("stdout");
+				const err = yield* Render.context("stderr");
+				assert.strictEqual(out.width, Number.POSITIVE_INFINITY);
+				assert.strictEqual(err.width, 40);
+			}),
+		);
+	});
 
-	it.effect("a piped human's finding prints on one line with its glyph", () =>
-		Effect.gen(function* () {
-			const lines = yield* printed([Doc.paragraph(...finding)], "human", false);
-			assert.lengthOf(lines, 1);
-			assert.include(lines[0], `✗ ${PATH}`);
-		}),
-	);
+	it.layer(env("human", false), { timeout: "30 seconds" })((it) => {
+		it.effect("a piped human's finding prints on one line with its glyph", () =>
+			Effect.gen(function* () {
+				const lines = yield* printed([Doc.paragraph(...finding)]);
+				assert.lengthOf(lines, 1);
+				assert.include(lines[0], `✗ ${PATH}`);
+			}),
+		);
+	});
 });
 
 describe("Doc.line with wrap: false", () => {

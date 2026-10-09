@@ -1,6 +1,7 @@
 // Trigger precedence and node materialization remain stable when the inline
 // registry uses HashMap and the materializer compiles its matcher once.
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
@@ -25,14 +26,14 @@ describe("inline dispatch", () => {
 			const registry = inlineDialect(dialect);
 			const bucket = O.getOrElse(HashMap.get(registry.byTrigger, 0x3c), () => []);
 			assert.deepStrictEqual(A.map(bucket, (construct) => construct.name), ["autolink", "rawHtml"]);
-			assert.isTrue(O.isNone(HashMap.get(registry.byTrigger, 0x61)));
+			assertNone(HashMap.get(registry.byTrigger, 0x61));
 		}
 	});
 
 	for (const { source, type } of cases) {
 		it(`materializes ${type} from ${source}`, () => {
 			const result = Markdown.parsePhrasingResult(source);
-			assert.isTrue(Result.isSuccess(result));
+			assertSuccess(Result.map(result, () => undefined), undefined);
 			if (Result.isSuccess(result)) {
 				assert.strictEqual(result.success.length, 1);
 				assert.strictEqual(result.success[0]?.type, type);
@@ -48,7 +49,7 @@ describe("inline dispatch", () => {
 			{ source: "a  \nb", style: "spaces" },
 		]) {
 			const result = Markdown.parsePhrasingResult(source);
-			assert.isTrue(Result.isSuccess(result));
+			assertSuccess(Result.map(result, () => undefined), undefined);
 			if (Result.isSuccess(result)) {
 				assert.deepStrictEqual(A.map(result.success, (node) => node.type), ["text", "break", "text"]);
 				const lineBreak = result.success[1];
@@ -60,7 +61,7 @@ describe("inline dispatch", () => {
 	it("coalesces text fallback including dangling references", () => {
 		const source = "plain ] [missing] !";
 		const result = Markdown.parsePhrasingResult(source);
-		assert.isTrue(Result.isSuccess(result));
+		assertSuccess(Result.map(result, () => undefined), undefined);
 		if (Result.isSuccess(result)) {
 			assert.strictEqual(result.success.length, 1);
 			const [text] = result.success;

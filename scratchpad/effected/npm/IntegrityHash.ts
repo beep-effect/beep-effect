@@ -30,6 +30,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import type * as Brand from "effect/Brand";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -470,7 +471,7 @@ const decodeBase64 = (value: string): ReadonlyArray<number> | undefined => {
 const encodeBase64 = (bytes: ReadonlyArray<number>): string => {
 	let out = "";
 	for (let index = 0; index < bytes.length; index += 3) {
-		const b0 = bytes[index] ?? 0;
+		const b0 = A.getUnsafe(bytes, index);
 		const b1 = bytes[index + 1];
 		const b2 = bytes[index + 2];
 		const buffer = (b0 << 16) | ((b1 ?? 0) << 8) | (b2 ?? 0);

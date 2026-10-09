@@ -1,4 +1,5 @@
 import { afterEach, assert, describe, it, vi } from "@effect/vitest";
+import { assertExitFailure, assertSome } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -84,13 +85,11 @@ describe("EncryptedCodec", () => {
 		Effect.gen(function* () {
 			const codec = EncryptedCodec(JsonCodec, key());
 			const exit = yield* Effect.exit(codec.parse(btoa("short")));
-			assert.isTrue(Exit.isFailure(exit));
 			const cause = Exit.getCause(exit);
-			assert.isTrue(O.isSome(cause));
-			if (O.isSome(cause)) {
-				assert.isTrue(Cause.hasFails(cause.value));
-				assert.isFalse(Cause.hasDies(cause.value));
-			}
+			assertSome(cause, O.getOrThrow(cause));
+			assertExitFailure(exit, cause.value);
+			assert.isTrue(Cause.hasFails(cause.value));
+			assert.isFalse(Cause.hasDies(cause.value));
 		}),
 	);
 
@@ -122,13 +121,11 @@ describe("EncryptedCodec", () => {
 			const ciphertext = yield* EncryptedCodec(JsonCodec, key()).stringify({ port: 1 });
 			const wrong = EncryptedCodec(JsonCodec, EncryptedCodecKey.fromPassphrase("wrong", salt));
 			const exit = yield* Effect.exit(wrong.parse(ciphertext));
-			assert.isTrue(Exit.isFailure(exit));
 			const cause = Exit.getCause(exit);
-			assert.isTrue(O.isSome(cause));
-			if (O.isSome(cause)) {
-				assert.isTrue(Cause.hasFails(cause.value));
-				assert.isFalse(Cause.hasDies(cause.value));
-			}
+			assertSome(cause, O.getOrThrow(cause));
+			assertExitFailure(exit, cause.value);
+			assert.isTrue(Cause.hasFails(cause.value));
+			assert.isFalse(Cause.hasDies(cause.value));
 		}),
 	);
 
@@ -258,7 +255,7 @@ describe("EncryptedCodec", () => {
 			const exit = yield* Effect.exit(
 				Effect.all([codec.stringify({ a: 1 }), Effect.fail("sibling")], { concurrency: 2 }),
 			);
-			assert.isTrue(Exit.isFailure(exit));
+			assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 
 			// The interrupt was not memoized: the codec re-resolves and still works.
 			const ciphertext = yield* codec.stringify({ port: 8080 });
@@ -298,13 +295,11 @@ describe("EncryptedCodec", () => {
 				}),
 			);
 			const exit = yield* Effect.exit(EncryptedCodec(JsonCodec, throwing).stringify({ a: 1 }));
-			assert.isTrue(Exit.isFailure(exit));
 			const cause = Exit.getCause(exit);
-			assert.isTrue(O.isSome(cause));
-			if (O.isSome(cause)) {
-				assert.isTrue(Cause.hasDies(cause.value));
-				assert.isFalse(Cause.hasFails(cause.value));
-			}
+			assertSome(cause, O.getOrThrow(cause));
+			assertExitFailure(exit, cause.value);
+			assert.isTrue(Cause.hasDies(cause.value));
+			assert.isFalse(Cause.hasFails(cause.value));
 		}),
 	);
 

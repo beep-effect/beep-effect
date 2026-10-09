@@ -9,6 +9,7 @@
 // `__test__/e2e/stringify-roundtrip.e2e.test.ts`.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -956,21 +957,21 @@ describe("Markdown.stringify", () => {
 				tree = Blockquote.make({ children: [tree], position: span() });
 			}
 			const result = Markdown.stringifyResult(rootOf(tree));
-			assert.isTrue(Result.isFailure(result));
+			assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 			if (Result.isFailure(result)) {
 				assert.instanceOf(result.failure, MarkdownStringifyError);
 				assert.strictEqual(result.failure.diagnostic.code, "NestingDepthExceeded");
 			}
 		});
 
-		it("the Effect variant agrees with the Result variant", () =>
+		it.effect("the Effect variant agrees with the Result variant", () =>
 			Effect.gen(function* () {
 				const tree = rootOf(paragraph(text("same")));
 				const fromEffect = yield* Markdown.stringify(tree);
 				assert.strictEqual(fromEffect, Result.getOrThrow(Markdown.stringifyResult(tree)));
-			}).pipe(Effect.runPromise));
+			}));
 
-		it("encode through MarkdownFromString round-trips", () => {
+		it.effect("encode through MarkdownFromString round-trips", () => {
 			const encode = S.encodeEffect(Markdown.MarkdownFromString);
 			const decode = S.decodeUnknownEffect(Markdown.MarkdownFromString);
 			return Effect.gen(function* () {
@@ -981,7 +982,7 @@ describe("Markdown.stringify", () => {
 					again.children.map((child) => child.type),
 					root.children.map((child) => child.type),
 				);
-			}).pipe(Effect.runPromise);
+			});
 		});
 	});
 });

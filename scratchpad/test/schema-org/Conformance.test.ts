@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -196,8 +197,8 @@ describe("Conformance.check", () => {
 			assert.strictEqual(issue.supersededBy, "runtimePlatform");
 		}
 		// Reported, but the default gate does not fail on it.
-		assert.isTrue(Result.isSuccess(Conformance.validateResult(graph)));
-		assert.isTrue(Result.isFailure(Conformance.validateResult(graph, { deprecations: "report" })));
+		assertSuccess(Result.map(Conformance.validateResult(graph), () => undefined), undefined);
+		assertFailure(Result.mapError(Conformance.validateResult(graph, { deprecations: "report" }), () => undefined), undefined);
 	});
 
 	it("reports a dangling reference with the property it sits in", () => {
@@ -229,27 +230,27 @@ describe("Conformance.validateResult", () => {
 
 	it("fails on a domain violation by default", () => {
 		const result = Conformance.validateResult(misplaced);
-		assert.isTrue(Result.isFailure(result));
+		assertFailure(Result.mapError(result, () => undefined), undefined);
 		const error = Result.isFailure(result) ? result.failure : undefined;
 		assert.instanceOf(error, NonConformantGraphError);
 		assert.strictEqual(error?.issues.length, 1);
 	});
 
 	it("reports an unknown term without failing, and fails it under strict mode", () => {
-		assert.isTrue(Result.isSuccess(Conformance.validateResult(invented)));
+		assertSuccess(Result.map(Conformance.validateResult(invented), () => undefined), undefined);
 		assert.strictEqual(Conformance.check(invented).length, 1, "still reported, never silently passed");
-		assert.isTrue(Result.isFailure(Conformance.validateResult(invented, { unknownTerms: "fail" })));
+		assertFailure(Result.mapError(Conformance.validateResult(invented, { unknownTerms: "fail" }), () => undefined), undefined);
 	});
 
 	it("leaves a dangling reference out of the gate until asked", () => {
-		assert.isTrue(Result.isSuccess(Conformance.validateResult(dangling)));
-		assert.isTrue(Result.isFailure(Conformance.validateResult(dangling, { danglingReferences: "report" })));
+		assertSuccess(Result.map(Conformance.validateResult(dangling), () => undefined), undefined);
+		assertFailure(Result.mapError(Conformance.validateResult(dangling, { danglingReferences: "report" }), () => undefined), undefined);
 	});
 
 	it("returns the graph itself on success", () => {
 		const clean = graphOf(SoftwareSourceCode.make({ "@id": PKG, name: "example" }));
 		const result = Conformance.validateResult(clean);
-		assert.isTrue(Result.isSuccess(result));
+		assertSuccess(Result.map(result, () => undefined), undefined);
 		if (Result.isSuccess(result)) assert.strictEqual(result.success, clean);
 	});
 
@@ -262,7 +263,7 @@ describe("Conformance.validateResult", () => {
 			}),
 		);
 		const result = Conformance.validateResult(both);
-		assert.isTrue(Result.isFailure(result));
+		assertFailure(Result.mapError(result, () => undefined), undefined);
 		const error = Result.isFailure(result) ? result.failure : undefined;
 		assert.strictEqual(error?.issues.length, 2);
 		assert.isTrue(error?.message.includes("schema.org 30.0"));
@@ -317,8 +318,8 @@ describe("Conformance catch-all references", () => {
 			DanglingReference.make({ nodeId: PKG, nodeType: "CreativeWork", property: "citation", reference: "#second" }),
 			DanglingReference.make({ nodeId: PKG, nodeType: "CreativeWork", property: "citation", reference: "#first" }),
 		]);
-		assert.isTrue(Result.isSuccess(Conformance.validateResult(graph)));
-		assert.isTrue(Result.isFailure(Conformance.validateResult(graph, { danglingReferences: "report" })));
+		assertSuccess(Result.map(Conformance.validateResult(graph), () => undefined), undefined);
+		assertFailure(Result.mapError(Conformance.validateResult(graph, { danglingReferences: "report" }), () => undefined), undefined);
 	});
 
 	it("ignores non-reference shapes and still reports malformed string ids on unchecked graphs", () => {
@@ -354,12 +355,12 @@ describe("ConformanceOptions schema and compatible runtime input", () => {
 
 	it("preserves plain callers and non-failing out-of-union runtime policies", () => {
 		const graph = graphOf(SoftwareSourceCode.make({ "@id": PKG, author: [NodeRef.to("#missing")], additional: { notATerm: "x", runtime: "node" } }));
-		assert.isTrue(Result.isSuccess(Conformance.validateResult(graph, { unknownTerms: undefined, deprecations: undefined, danglingReferences: undefined })));
-		assert.isTrue(Result.isSuccess(Conformance.validateResult(graph, deliberatelyInvalid<ConformanceOptions>({
+		assertSuccess(Result.map(Conformance.validateResult(graph, { unknownTerms: undefined, deprecations: undefined, danglingReferences: undefined }), () => undefined), undefined);
+		assertSuccess(Result.map(Conformance.validateResult(graph, deliberatelyInvalid<ConformanceOptions>({
 			unknownTerms: "other", deprecations: "other", danglingReferences: "other",
-		}))));
-		assert.isTrue(Result.isFailure(Conformance.validateResult(graph, deliberatelyInvalid<ConformanceOptions>({
+		})), () => undefined), undefined);
+		assertFailure(Result.mapError(Conformance.validateResult(graph, deliberatelyInvalid<ConformanceOptions>({
 			unknownTerms: "fail", deprecations: "other", danglingReferences: "other",
-		}))));
+		})), () => undefined), undefined);
 	});
 });

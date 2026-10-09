@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Latch from "effect/Latch";
@@ -10,9 +9,6 @@ import { ActionEnvironment, ActionLogger } from "../../effected/github-actions/i
 /** Everything written to `Console.log`, as strings, in order. */
 const lines = Effect.map(TestConsole.logLines, (captured) => captured.map(String));
 
-const live = <A, E>(program: Effect.Effect<A, E, ActionLogger>, env: Readonly<Record<string, string>> = {}) =>
-	program.pipe(Effect.provide(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest(env)))));
-
 /** The lines a single buffer flushed, between its header and its footer. */
 const bufferedFor = (label: string, captured: ReadonlyArray<string>): ReadonlyArray<string> => {
 	const start = captured.findIndex((line) => line.includes(`Buffered output for "${label}"`));
@@ -22,286 +18,342 @@ const bufferedFor = (label: string, captured: ReadonlyArray<string>): ReadonlyAr
 
 describe("ActionLogger", () => {
 	describe("groups", () => {
-		it.effect("brackets the effect with ::group:: and ::endgroup::", () =>
-			live(
-				Effect.gen(function* () {
-					const logger = yield* ActionLogger;
-					const value = yield* logger.group("install", Effect.succeed(7));
-					assert.strictEqual(value, 7);
-					const captured = yield* lines;
-					assert.deepStrictEqual(captured, ["::group::install", "::endgroup::"]);
-				}),
-			),
+		it.layer(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), { timeout: "30 seconds" })(
+			(it) => {
+				it.effect("brackets the effect with ::group:: and ::endgroup::", () =>
+					Effect.gen(function* () {
+						const logger = yield* ActionLogger;
+						const value = yield* logger.group("install", Effect.succeed(7));
+						assert.strictEqual(value, 7);
+						const captured = yield* lines;
+						assert.deepStrictEqual(captured, ["::group::install", "::endgroup::"]);
+					}),
+				);
+			},
 		);
 
-		it.effect("closes the group even when the effect fails", () =>
-			live(
-				Effect.gen(function* () {
-					const logger = yield* ActionLogger;
-					yield* Effect.flip(logger.group("install", Effect.fail("boom")));
-					const captured = yield* lines;
-					assert.strictEqual(captured.at(-1), "::endgroup::");
-				}),
-			),
+		it.layer(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), { timeout: "30 seconds" })(
+			(it) => {
+				it.effect("closes the group even when the effect fails", () =>
+					Effect.gen(function* () {
+						const logger = yield* ActionLogger;
+						yield* Effect.flip(logger.group("install", Effect.fail("boom")));
+						const captured = yield* lines;
+						assert.strictEqual(captured.at(-1), "::endgroup::");
+					}),
+				);
+			},
 		);
 
-		it.effect("escapes a group name that would otherwise inject a command", () =>
-			live(
-				Effect.gen(function* () {
-					const logger = yield* ActionLogger;
-					yield* logger.group("bad\n::error::smuggled", Effect.void);
-					const captured = yield* lines;
-					assert.strictEqual(captured[0], "::group::bad%0A::error::smuggled");
-				}),
-			),
+		it.layer(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), { timeout: "30 seconds" })(
+			(it) => {
+				it.effect("escapes a group name that would otherwise inject a command", () =>
+					Effect.gen(function* () {
+						const logger = yield* ActionLogger;
+						yield* logger.group("bad\n::error::smuggled", Effect.void);
+						const captured = yield* lines;
+						assert.strictEqual(captured[0], "::group::bad%0A::error::smuggled");
+					}),
+				);
+			},
 		);
 	});
 
 	describe("annotations", () => {
-		it.effect("emits a notice with its source annotation", () =>
-			live(
-				Effect.gen(function* () {
-					yield* (yield* ActionLogger).notice("looks odd", { file: "src/a.ts", startLine: 12 });
-					const captured = yield* lines;
-					assert.deepStrictEqual(captured, ["::notice file=src/a.ts,line=12::looks odd"]);
-				}),
-			),
+		it.layer(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), { timeout: "30 seconds" })(
+			(it) => {
+				it.effect("emits a notice with its source annotation", () =>
+					Effect.gen(function* () {
+						yield* (yield* ActionLogger).notice("looks odd", { file: "src/a.ts", startLine: 12 });
+						const captured = yield* lines;
+						assert.deepStrictEqual(captured, ["::notice file=src/a.ts,line=12::looks odd"]);
+					}),
+				);
+			},
 		);
 
-		it.effect("annotated puts file and line on a log the workflow logger renders", () =>
-			live(
+		it.layer(
+			Layer.mergeAll(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), ActionLogger.layerLogger),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("annotated puts file and line on a log the workflow logger renders", () =>
 				Effect.gen(function* () {
 					const logger = yield* ActionLogger;
 					yield* logger.annotated({ file: "src/b.ts", startLine: 3, startColumn: 5 }, Effect.logWarning("careful"));
 					const captured = yield* lines;
 					assert.deepStrictEqual(captured, ["::warning file=src/b.ts,line=3,col=5::careful"]);
 				}),
-			).pipe(Effect.provide(ActionLogger.layerLogger)),
-		);
+			);
+		});
 	});
 
 	describe("the workflow-command logger", () => {
-		const logged = Effect.fn("logged")(function*<A, E>(program: Effect.Effect<A, E>) {
-				yield* program;
-				return yield* lines;
-			}, Effect.provide(ActionLogger.layerLogger));
+		const logged = Effect.fn("logged")(function* <A, E>(program: Effect.Effect<A, E>) {
+			yield* program;
+			return yield* lines;
+		});
 
-		it.effect("maps error to ::error::", () =>
-			Effect.gen(function* () {
-				assert.deepStrictEqual(yield* logged(Effect.logError("it broke")), ["::error::it broke"]);
-			}),
-		);
+		it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
+			it.effect("maps error to ::error::", () =>
+				Effect.gen(function* () {
+					assert.deepStrictEqual(yield* logged(Effect.logError("it broke")), ["::error::it broke"]);
+				}),
+			);
+		});
 
-		it.effect("maps warning to ::warning::", () =>
-			Effect.gen(function* () {
-				assert.deepStrictEqual(yield* logged(Effect.logWarning("careful")), ["::warning::careful"]);
-			}),
-		);
+		it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
+			it.effect("maps warning to ::warning::", () =>
+				Effect.gen(function* () {
+					assert.deepStrictEqual(yield* logged(Effect.logWarning("careful")), ["::warning::careful"]);
+				}),
+			);
+		});
 
-		it.effect("maps info to plain text, with no command prefix", () =>
-			Effect.gen(function* () {
-				assert.deepStrictEqual(yield* logged(Effect.logInfo("hello")), ["hello"]);
-			}),
-		);
+		it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
+			it.effect("maps info to plain text, with no command prefix", () =>
+				Effect.gen(function* () {
+					assert.deepStrictEqual(yield* logged(Effect.logInfo("hello")), ["hello"]);
+				}),
+			);
+		});
 
-		it.effect("maps debug to ::debug::", () =>
-			Effect.gen(function* () {
-				const captured = yield* logged(
-					Effect.logDebug("noisy").pipe(Effect.provideService(References.MinimumLogLevel, "All")),
-				);
-				assert.deepStrictEqual(captured, ["::debug::noisy"]);
-			}),
-		);
+		it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
+			it.effect("maps debug to ::debug::", () =>
+				Effect.gen(function* () {
+					const captured = yield* logged(
+						Effect.logDebug("noisy").pipe(Effect.provideService(References.MinimumLogLevel, "All")),
+					);
+					assert.deepStrictEqual(captured, ["::debug::noisy"]);
+				}),
+			);
+		});
 
-		it.effect("escapes a newline so a log line cannot become a second command", () =>
-			Effect.gen(function* () {
-				assert.deepStrictEqual(yield* logged(Effect.logError("line one\n::error::smuggled")), [
-					"::error::line one%0A::error::smuggled",
-				]);
-			}),
-		);
+		it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
+			it.effect("escapes a newline so a log line cannot become a second command", () =>
+				Effect.gen(function* () {
+					assert.deepStrictEqual(yield* logged(Effect.logError("line one\n::error::smuggled")), [
+						"::error::line one%0A::error::smuggled",
+					]);
+				}),
+			);
+		});
 
-		it.effect("joins a multi-part message", () =>
-			Effect.gen(function* () {
-				assert.deepStrictEqual(yield* logged(Effect.logInfo("count", 3)), ["count 3"]);
-			}),
-		);
+		it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
+			it.effect("joins a multi-part message", () =>
+				Effect.gen(function* () {
+					assert.deepStrictEqual(yield* logged(Effect.logInfo("count", 3)), ["count 3"]);
+				}),
+			);
+		});
 	});
 
 	describe("buffering", () => {
-		it.effect("captures verbose output and flushes it when the step succeeds", () =>
-			live(
-				Effect.gen(function* () {
-					const logger = yield* ActionLogger;
-					yield* logger.withBuffer("install", Effect.logInfo("resolving").pipe(Effect.andThen(Effect.logInfo("done"))));
-					const captured = yield* lines;
-					assert.deepStrictEqual(bufferedFor("install", captured), ["resolving", "done"]);
-				}),
-			),
+		it.layer(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), { timeout: "30 seconds" })(
+			(it) => {
+				it.effect("captures verbose output and flushes it when the step succeeds", () =>
+					Effect.gen(function* () {
+						const logger = yield* ActionLogger;
+						yield* logger.withBuffer(
+							"install",
+							Effect.logInfo("resolving").pipe(Effect.andThen(Effect.logInfo("done"))),
+						);
+						const captured = yield* lines;
+						assert.deepStrictEqual(bufferedFor("install", captured), ["resolving", "done"]);
+					}),
+				);
+			},
 		);
 
-		it.effect("flushes the transcript when the step fails", () =>
-			live(
-				Effect.gen(function* () {
-					const logger = yield* ActionLogger;
-					yield* Effect.flip(
-						logger.withBuffer("install", Effect.andThen(Effect.logInfo("resolving"), Effect.fail("boom"))),
-					);
-					const captured = yield* lines;
-					assert.deepStrictEqual(bufferedFor("install", captured), ["resolving"]);
-				}),
-			),
+		it.layer(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), { timeout: "30 seconds" })(
+			(it) => {
+				it.effect("flushes the transcript when the step fails", () =>
+					Effect.gen(function* () {
+						const logger = yield* ActionLogger;
+						yield* Effect.flip(
+							logger.withBuffer("install", Effect.andThen(Effect.logInfo("resolving"), Effect.fail("boom"))),
+						);
+						const captured = yield* lines;
+						assert.deepStrictEqual(bufferedFor("install", captured), ["resolving"]);
+					}),
+				);
+			},
 		);
 
-		it.effect("onSuccess: 'discard' drops the transcript when the step succeeds", () =>
-			live(
-				Effect.gen(function* () {
-					const logger = yield* ActionLogger;
-					const value = yield* logger.withBuffer(
-						"install",
-						Effect.as(Effect.andThen(Effect.logInfo("resolving"), Effect.logInfo("done")), 7),
-						{ onSuccess: "discard" },
-					);
-					assert.strictEqual(value, 7);
-					const captured = yield* lines;
-					// A green step leaves NOTHING behind — no header, no footer, no body.
-					assert.deepStrictEqual(captured, []);
-				}),
-			),
+		it.layer(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), { timeout: "30 seconds" })(
+			(it) => {
+				it.effect("onSuccess: 'discard' drops the transcript when the step succeeds", () =>
+					Effect.gen(function* () {
+						const logger = yield* ActionLogger;
+						const value = yield* logger.withBuffer(
+							"install",
+							Effect.as(Effect.andThen(Effect.logInfo("resolving"), Effect.logInfo("done")), 7),
+							{ onSuccess: "discard" },
+						);
+						assert.strictEqual(value, 7);
+						const captured = yield* lines;
+						// A green step leaves NOTHING behind — no header, no footer, no body.
+						assert.deepStrictEqual(captured, []);
+					}),
+				);
+			},
 		);
 
-		it.effect("onSuccess: 'discard' still flushes the transcript when the step fails", () =>
-			live(
-				Effect.gen(function* () {
-					const logger = yield* ActionLogger;
-					yield* Effect.flip(
-						logger.withBuffer("install", Effect.andThen(Effect.logInfo("resolving"), Effect.fail("boom")), {
-							onSuccess: "discard",
-						}),
-					);
-					const captured = yield* lines;
-					// Discard is a statement about SUCCESS only; the failure transcript
-					// is exactly what the buffer was kept for.
-					assert.deepStrictEqual(bufferedFor("install", captured), ["resolving"]);
-				}),
-			),
+		it.layer(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), { timeout: "30 seconds" })(
+			(it) => {
+				it.effect("onSuccess: 'discard' still flushes the transcript when the step fails", () =>
+					Effect.gen(function* () {
+						const logger = yield* ActionLogger;
+						yield* Effect.flip(
+							logger.withBuffer("install", Effect.andThen(Effect.logInfo("resolving"), Effect.fail("boom")), {
+								onSuccess: "discard",
+							}),
+						);
+						const captured = yield* lines;
+						// Discard is a statement about SUCCESS only; the failure transcript
+						// is exactly what the buffer was kept for.
+						assert.deepStrictEqual(bufferedFor("install", captured), ["resolving"]);
+					}),
+				);
+			},
 		);
 
-		it.effect("onSuccess: 'flush' spelled explicitly matches the default", () =>
-			live(
-				Effect.gen(function* () {
-					const logger = yield* ActionLogger;
-					yield* logger.withBuffer("install", Effect.logInfo("resolving"), { onSuccess: "flush" });
-					const captured = yield* lines;
-					assert.deepStrictEqual(bufferedFor("install", captured), ["resolving"]);
-				}),
-			),
+		it.layer(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), { timeout: "30 seconds" })(
+			(it) => {
+				it.effect("onSuccess: 'flush' spelled explicitly matches the default", () =>
+					Effect.gen(function* () {
+						const logger = yield* ActionLogger;
+						yield* logger.withBuffer("install", Effect.logInfo("resolving"), { onSuccess: "flush" });
+						const captured = yield* lines;
+						assert.deepStrictEqual(bufferedFor("install", captured), ["resolving"]);
+					}),
+				);
+			},
 		);
 
-		it.effect("onSuccess: 'discard' does not suppress warnings, which never entered the buffer", () =>
-			live(
-				Effect.gen(function* () {
-					const logger = yield* ActionLogger;
-					yield* logger.withBuffer("install", Effect.andThen(Effect.logWarning("deprecated"), Effect.logInfo("done")), {
-						onSuccess: "discard",
-					});
-					const captured = yield* lines;
-					// The warning went out live; only the Info transcript was discarded.
-					assert.deepStrictEqual(captured, ["::warning::deprecated"]);
-				}),
-			),
+		it.layer(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), { timeout: "30 seconds" })(
+			(it) => {
+				it.effect("onSuccess: 'discard' does not suppress warnings, which never entered the buffer", () =>
+					Effect.gen(function* () {
+						const logger = yield* ActionLogger;
+						yield* logger.withBuffer(
+							"install",
+							Effect.andThen(Effect.logWarning("deprecated"), Effect.logInfo("done")),
+							{
+								onSuccess: "discard",
+							},
+						);
+						const captured = yield* lines;
+						// The warning went out live; only the Info transcript was discarded.
+						assert.deepStrictEqual(captured, ["::warning::deprecated"]);
+					}),
+				);
+			},
 		);
 
-		it.effect("passes warnings through immediately rather than burying them in the buffer", () =>
-			live(
-				Effect.gen(function* () {
-					const logger = yield* ActionLogger;
-					yield* logger.withBuffer("install", Effect.andThen(Effect.logWarning("deprecated"), Effect.logInfo("done")));
-					const captured = yield* lines;
-					// The warning is emitted before the flush header, so it is visible
-					// while the step is still running.
-					assert.strictEqual(captured[0], "::warning::deprecated");
-					assert.deepStrictEqual(bufferedFor("install", captured), ["done"]);
-				}),
-			),
+		it.layer(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), { timeout: "30 seconds" })(
+			(it) => {
+				it.effect("passes warnings through immediately rather than burying them in the buffer", () =>
+					Effect.gen(function* () {
+						const logger = yield* ActionLogger;
+						yield* logger.withBuffer(
+							"install",
+							Effect.andThen(Effect.logWarning("deprecated"), Effect.logInfo("done")),
+						);
+						const captured = yield* lines;
+						// The warning is emitted before the flush header, so it is visible
+						// while the step is still running.
+						assert.strictEqual(captured[0], "::warning::deprecated");
+						assert.deepStrictEqual(bufferedFor("install", captured), ["done"]);
+					}),
+				);
+			},
 		);
 
-		it.effect("does not buffer when the runner has step debugging enabled", () =>
-			live(
+		it.layer(
+			Layer.mergeAll(
+				ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({ RUNNER_DEBUG: "1" }))),
+				ActionLogger.layerLogger,
+			),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("does not buffer when the runner has step debugging enabled", () =>
 				Effect.gen(function* () {
 					const logger = yield* ActionLogger;
 					yield* logger.withBuffer("install", Effect.logInfo("resolving"));
 					const captured = yield* lines;
 					assert.deepStrictEqual(captured, ["resolving"]);
-				}).pipe(Effect.provide(ActionLogger.layerLogger)),
-				{ RUNNER_DEBUG: "1" },
-			),
-		);
-
-		it.effect("flushes an enclosing buffer inside the group that failed", () =>
-			live(
-				Effect.gen(function* () {
-					const logger = yield* ActionLogger;
-					yield* Effect.flip(
-						logger.withBuffer(
-							"install",
-							logger.group("resolve", Effect.andThen(Effect.logInfo("resolving"), Effect.fail("boom"))),
-						),
-					);
-					const captured = yield* lines;
-					const endGroup = captured.indexOf("::endgroup::");
-					const flushed = captured.findIndex((line) => line.includes('Buffered output for "install"'));
-					assert.isAbove(endGroup, 0, "the group must close");
-					assert.isBelow(flushed, endGroup, "the transcript belongs inside the group that failed");
-					assert.deepStrictEqual(bufferedFor("install", captured), ["resolving"]);
 				}),
-			),
-		);
+			);
+		});
 
-		it.effect("keeps concurrent buffers separate", () =>
-			live(
-				Effect.gen(function* () {
-					const logger = yield* ActionLogger;
-					// THREE latches, and the order is the whole test. A save/restore
-					// implementation over a shared "current buffer" global is LIFO-correct
-					// whenever two buffers nest, so the obvious interleaving passes for the
-					// wrong reason. This order forces LEFT TO LOG WHILE RIGHT'S BUFFER IS
-					// STILL APPLIED AND UNRESTORED — which only a fiber-local
-					// implementation survives.
-					const leftInside = yield* Latch.make();
-					const rightInside = yield* Latch.make();
-					const leftDone = yield* Latch.make();
-					yield* Effect.all(
-						[
+		it.layer(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), { timeout: "30 seconds" })(
+			(it) => {
+				it.effect("flushes an enclosing buffer inside the group that failed", () =>
+					Effect.gen(function* () {
+						const logger = yield* ActionLogger;
+						yield* Effect.flip(
 							logger.withBuffer(
-								"left",
-								Effect.gen(function* () {
-									yield* Effect.logInfo("left-first");
-									yield* leftInside.open;
-									yield* rightInside.await;
-									yield* Effect.logInfo("left-second");
-									yield* leftDone.open;
-								}),
+								"install",
+								logger.group("resolve", Effect.andThen(Effect.logInfo("resolving"), Effect.fail("boom"))),
 							),
-							Effect.gen(function* () {
-								yield* leftInside.await;
-								yield* logger.withBuffer(
-									"right",
+						);
+						const captured = yield* lines;
+						const endGroup = captured.indexOf("::endgroup::");
+						const flushed = captured.findIndex((line) => line.includes('Buffered output for "install"'));
+						assert.isAbove(endGroup, 0, "the group must close");
+						assert.isBelow(flushed, endGroup, "the transcript belongs inside the group that failed");
+						assert.deepStrictEqual(bufferedFor("install", captured), ["resolving"]);
+					}),
+				);
+			},
+		);
+
+		it.layer(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), { timeout: "30 seconds" })(
+			(it) => {
+				it.effect("keeps concurrent buffers separate", () =>
+					Effect.gen(function* () {
+						const logger = yield* ActionLogger;
+						// THREE latches, and the order is the whole test. A save/restore
+						// implementation over a shared "current buffer" global is LIFO-correct
+						// whenever two buffers nest, so the obvious interleaving passes for the
+						// wrong reason. This order forces LEFT TO LOG WHILE RIGHT'S BUFFER IS
+						// STILL APPLIED AND UNRESTORED — which only a fiber-local
+						// implementation survives.
+						const leftInside = yield* Latch.make();
+						const rightInside = yield* Latch.make();
+						const leftDone = yield* Latch.make();
+						yield* Effect.all(
+							[
+								logger.withBuffer(
+									"left",
 									Effect.gen(function* () {
-										yield* Effect.logInfo("right-only");
-										yield* rightInside.open;
-										yield* leftDone.await;
+										yield* Effect.logInfo("left-first");
+										yield* leftInside.open;
+										yield* rightInside.await;
+										yield* Effect.logInfo("left-second");
+										yield* leftDone.open;
 									}),
-								);
-							}),
-						],
-						{ concurrency: 2 },
-					);
-					const captured = yield* lines;
-					assert.deepStrictEqual(bufferedFor("left", captured), ["left-first", "left-second"]);
-					assert.deepStrictEqual(bufferedFor("right", captured), ["right-only"]);
-				}),
-			),
+								),
+								Effect.gen(function* () {
+									yield* leftInside.await;
+									yield* logger.withBuffer(
+										"right",
+										Effect.gen(function* () {
+											yield* Effect.logInfo("right-only");
+											yield* rightInside.open;
+											yield* leftDone.await;
+										}),
+									);
+								}),
+							],
+							{ concurrency: 2 },
+						);
+						const captured = yield* lines;
+						assert.deepStrictEqual(bufferedFor("left", captured), ["left-first", "left-second"]);
+						assert.deepStrictEqual(bufferedFor("right", captured), ["right-only"]);
+					}),
+				);
+			},
 		);
 	});
 
@@ -309,11 +361,12 @@ describe("ActionLogger", () => {
 		/** `withStep` renders its summary through `Effect.logInfo`, so the log-to-
 		 * workflow-command logger has to be installed for the line to be observable
 		 * — the same one `Action.run` installs. */
-		const stepped = <A, E>(program: Effect.Effect<A, E, ActionLogger>, env: Readonly<Record<string, string>> = {}) =>
-			live(program.pipe(Effect.provide(ActionLogger.layerLogger)), env);
 
-		it.effect("trades the transcript for exactly one summary line on success", () =>
-			stepped(
+		it.layer(
+			Layer.mergeAll(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), ActionLogger.layerLogger),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("trades the transcript for exactly one summary line on success", () =>
 				Effect.gen(function* () {
 					const logger = yield* ActionLogger;
 					const value = yield* logger.withStep(
@@ -326,21 +379,27 @@ describe("ActionLogger", () => {
 					// it leaves ZERO lines, which is why the recipe kept coming out wrong.
 					assert.deepStrictEqual(yield* lines, ["✅ install"]);
 				}),
-			),
-		);
+			);
+		});
 
-		it.effect("a supplied summary replaces the default line", () =>
-			stepped(
+		it.layer(
+			Layer.mergeAll(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), ActionLogger.layerLogger),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("a supplied summary replaces the default line", () =>
 				Effect.gen(function* () {
 					const logger = yield* ActionLogger;
 					yield* logger.withStep("install", Effect.logInfo("resolving"), { summary: "installed 42 packages" });
 					assert.deepStrictEqual(yield* lines, ["installed 42 packages"]);
 				}),
-			),
-		);
+			);
+		});
 
-		it.effect("emits the failure header BEFORE the transcript it announces", () =>
-			stepped(
+		it.layer(
+			Layer.mergeAll(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), ActionLogger.layerLogger),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("emits the failure header BEFORE the transcript it announces", () =>
 				Effect.gen(function* () {
 					const logger = yield* ActionLogger;
 					yield* Effect.flip(
@@ -356,11 +415,14 @@ describe("ActionLogger", () => {
 					// claim one. Mutating the `Effect.tap` to `Effect.onExit` fails here.
 					assert.isFalse(captured.includes("✅ install"));
 				}),
-			),
-		);
+			);
+		});
 
-		it.effect("the summary is never captured by the buffer it replaces", () =>
-			stepped(
+		it.layer(
+			Layer.mergeAll(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), ActionLogger.layerLogger),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("the summary is never captured by the buffer it replaces", () =>
 				Effect.gen(function* () {
 					const logger = yield* ActionLogger;
 					yield* logger.withStep("install", Effect.logInfo("resolving"));
@@ -369,21 +431,30 @@ describe("ActionLogger", () => {
 					// along with the transcript, leaving a green step with no line at all.
 					assert.deepStrictEqual(captured, ["✅ install"]);
 				}),
-			),
-		);
+			);
+		});
 
-		it.effect("warnings still go out live rather than into the discarded transcript", () =>
-			stepped(
+		it.layer(
+			Layer.mergeAll(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), ActionLogger.layerLogger),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("warnings still go out live rather than into the discarded transcript", () =>
 				Effect.gen(function* () {
 					const logger = yield* ActionLogger;
 					yield* logger.withStep("install", Effect.andThen(Effect.logWarning("deprecated"), Effect.logInfo("done")));
 					assert.deepStrictEqual(yield* lines, ["::warning::deprecated", "✅ install"]);
 				}),
-			),
-		);
+			);
+		});
 
-		it.effect("keeps the summary when step debugging turns buffering off", () =>
-			stepped(
+		it.layer(
+			Layer.mergeAll(
+				ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({ RUNNER_DEBUG: "1" }))),
+				ActionLogger.layerLogger,
+			),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("keeps the summary when step debugging turns buffering off", () =>
 				Effect.gen(function* () {
 					const logger = yield* ActionLogger;
 					yield* logger.withStep("install", Effect.logInfo("resolving"));
@@ -391,12 +462,17 @@ describe("ActionLogger", () => {
 					// for debug output has not asked to lose the line naming what passed.
 					assert.deepStrictEqual(yield* lines, ["resolving", "✅ install"]);
 				}),
-				{ RUNNER_DEBUG: "1" },
-			),
-		);
+			);
+		});
 
-		it.effect("under step debugging a FAILING step emits the header after the live transcript", () =>
-			stepped(
+		it.layer(
+			Layer.mergeAll(
+				ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({ RUNNER_DEBUG: "1" }))),
+				ActionLogger.layerLogger,
+			),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("under step debugging a FAILING step emits the header after the live transcript", () =>
 				Effect.gen(function* () {
 					const logger = yield* ActionLogger;
 					yield* Effect.flip(
@@ -412,60 +488,68 @@ describe("ActionLogger", () => {
 					// so this ordering was undocumented and unverified.
 					assert.deepStrictEqual(captured, ["resolving", "❌ install"]);
 				}),
-				{ RUNNER_DEBUG: "1" },
-			),
-		);
+			);
+		});
 
-		it.effect("the test double passes the effect through without a summary", () =>
-			Effect.gen(function* () {
-				const logger = yield* ActionLogger;
-				assert.strictEqual(yield* logger.withStep("step", Effect.succeed("value")), "value");
-				assert.deepStrictEqual(yield* lines, []);
-			}).pipe(Effect.provide(ActionLogger.layerTest())),
-		);
+		it.layer(ActionLogger.layerTest(), { timeout: "30 seconds" })((it) => {
+			it.effect("the test double passes the effect through without a summary", () =>
+				Effect.gen(function* () {
+					const logger = yield* ActionLogger;
+					assert.strictEqual(yield* logger.withStep("step", Effect.succeed("value")), "value");
+					assert.deepStrictEqual(yield* lines, []);
+				}),
+			);
+		});
 	});
 
 	describe("silence", () => {
-		it.effect("layerSilent drops log output entirely", () =>
-			Effect.gen(function* () {
-				yield* Effect.logError("would be noisy");
-				assert.deepStrictEqual(yield* lines, []);
-			}).pipe(Effect.provide(ActionLogger.layerSilent)),
-		);
+		it.layer(ActionLogger.layerSilent, { timeout: "30 seconds" })((it) => {
+			it.effect("layerSilent drops log output entirely", () =>
+				Effect.gen(function* () {
+					yield* Effect.logError("would be noisy");
+					assert.deepStrictEqual(yield* lines, []);
+				}),
+			);
+		});
 
-		it.effect("layerSilent still serves the service, passing effects through", () =>
-			Effect.gen(function* () {
-				const logger = yield* ActionLogger;
-				assert.strictEqual(yield* logger.group("quiet", Effect.succeed(1)), 1);
-				assert.deepStrictEqual(yield* lines, []);
-			}).pipe(Effect.provide(ActionLogger.layerSilent)),
-		);
+		it.layer(ActionLogger.layerSilent, { timeout: "30 seconds" })((it) => {
+			it.effect("layerSilent still serves the service, passing effects through", () =>
+				Effect.gen(function* () {
+					const logger = yield* ActionLogger;
+					assert.strictEqual(yield* logger.group("quiet", Effect.succeed(1)), 1);
+					assert.deepStrictEqual(yield* lines, []);
+				}),
+			);
+		});
 	});
 
 	describe("test double", () => {
-		it.effect("the default double is silent rather than dying", () =>
-			Effect.gen(function* () {
-				const logger = yield* ActionLogger;
-				yield* logger.notice("nothing to see");
-				assert.strictEqual(yield* logger.withBuffer("step", Effect.succeed("value")), "value");
-				assert.deepStrictEqual(yield* lines, []);
-			}).pipe(Effect.provide(ActionLogger.layerTest())),
-		);
+		it.layer(ActionLogger.layerTest(), { timeout: "30 seconds" })((it) => {
+			it.effect("the default double is silent rather than dying", () =>
+				Effect.gen(function* () {
+					const logger = yield* ActionLogger;
+					yield* logger.notice("nothing to see");
+					assert.strictEqual(yield* logger.withBuffer("step", Effect.succeed("value")), "value");
+					assert.deepStrictEqual(yield* lines, []);
+				}),
+			);
+		});
 
-		it.effect("an override wins over the silent default", () =>
-			Effect.gen(function* () {
-				const notices: Array<string> = [];
-				yield* Effect.gen(function* () {
-					yield* (yield* ActionLogger).notice("recorded");
-				}).pipe(
-					Effect.provide(
-						ActionLogger.layerTest({
-							notice: (message) => Effect.sync(() => void notices.push(message)),
-						}),
-					),
+		{
+			const notices: Array<string> = [];
+			it.layer(
+				ActionLogger.layerTest({
+					notice: (message) => Effect.sync(() => void notices.push(message)),
+				}),
+				{ timeout: "30 seconds" },
+			)((it) => {
+				it.effect("an override wins over the silent default", () =>
+					Effect.gen(function* () {
+						yield* (yield* ActionLogger).notice("recorded");
+						assert.deepStrictEqual(notices, ["recorded"]);
+					}),
 				);
-				assert.deepStrictEqual(notices, ["recorded"]);
-			}),
-		);
+			});
+		}
 	});
 });

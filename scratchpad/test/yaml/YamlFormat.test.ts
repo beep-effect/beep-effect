@@ -1,6 +1,7 @@
 // @effect-diagnostics nodeBuiltinImport:skip-file
 import { readFileSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess } from "@effect/vitest/utils";
 import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
@@ -231,7 +232,8 @@ describe("YamlFormat", () => {
 			const out = YamlFormat.formatToString(text);
 			assert.strictEqual(out, "a:\n  b: 1\ntext: |\n  ---\n  not a marker\n");
 			const parsed = Yaml.parseAllResult(out);
-			assert.isTrue(Result.isSuccess(parsed) && parsed.success.length === 1);
+			assertSuccess(parsed, Result.getOrThrow(parsed));
+			assert.strictEqual(parsed.success.length, 1);
 		});
 
 		it("a --- inside a quoted scalar is content too", () => {

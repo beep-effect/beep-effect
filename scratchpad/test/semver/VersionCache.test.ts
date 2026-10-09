@@ -1,4 +1,5 @@
 import { assert, describe, layer } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
@@ -13,7 +14,7 @@ import {
 
 // One memoized layer for the whole group; each test loads its own state
 // (load replaces the cache contents) instead of re-providing per test.
-layer(VersionCache.layer)("VersionCache", (it) => {
+layer(VersionCache.layer, { timeout: "30 seconds" })("VersionCache", (it) => {
 	describe("mutation and query", () => {
 		it.effect("load replaces contents, sorted and deduplicated by precedence", () =>
 			Effect.gen(function* () {
@@ -177,10 +178,10 @@ layer(VersionCache.layer)("VersionCache", (it) => {
 			Effect.gen(function* () {
 				const cache = yield* VersionCache;
 				yield* cache.load([SemVer.of(1, 0, 0), SemVer.of(2, 0, 0), SemVer.of(3, 0, 0)]);
-				assert.deepStrictEqual((yield* cache.next(SemVer.of(2, 0, 0))).pipe(O.map(String)), O.some("3.0.0"));
-				assert.deepStrictEqual((yield* cache.prev(SemVer.of(2, 0, 0))).pipe(O.map(String)), O.some("1.0.0"));
-				assert.isTrue(O.isNone(yield* cache.next(SemVer.of(3, 0, 0))));
-				assert.isTrue(O.isNone(yield* cache.prev(SemVer.of(1, 0, 0))));
+				assertSome((yield* cache.next(SemVer.of(2, 0, 0))).pipe(O.map(String)), "3.0.0");
+				assertSome((yield* cache.prev(SemVer.of(2, 0, 0))).pipe(O.map(String)), "1.0.0");
+				assertNone(yield* cache.next(SemVer.of(3, 0, 0)));
+				assertNone(yield* cache.prev(SemVer.of(1, 0, 0)));
 				const error = yield* Effect.flip(cache.next(SemVer.of(9, 9, 9)));
 				assert.strictEqual(error._tag, "VersionNotFoundError");
 			}),

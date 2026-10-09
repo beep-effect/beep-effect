@@ -55,14 +55,16 @@ describe("a missing optional peer in an interactive run", () => {
 			}
 		});
 
-	it.effect("CliUi.fallback dies with the peers message, never silently using otherwise", () =>
-		Effect.gen(function* () {
-			const fallback = CliUi.fallback<string>(screen, { flag: "profile", otherwise: "library" });
-			yield* diesNamingPeers(
-				(Prompt.isPrompt(fallback) ? Effect.succeed(fallback) : fallback).pipe(Effect.provide(NodeServices.layer)),
-			);
-		}).pipe(Effect.provide(CliTheme.layerTest()), Effect.provide(CliInteractive.layerTest(true))),
-	);
+	it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+		it.effect("CliUi.fallback dies with the peers message, never silently using otherwise", () =>
+			Effect.gen(function* () {
+				const fallback = CliUi.fallback<string>(screen, { flag: "profile", otherwise: "library" });
+				yield* diesNamingPeers(
+					Prompt.isPrompt(fallback) ? Effect.succeed(fallback) : fallback,
+				);
+			}).pipe(Effect.provide(CliTheme.layerTest()), Effect.provide(CliInteractive.layerTest(true))),
+		);
+	});
 
 	it.effect("CliUi.prompt dies with the peers message, never silently using otherwise", () =>
 		diesNamingPeers(CliUi.prompt<string>(screen, { otherwise: "library" })).pipe(

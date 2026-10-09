@@ -29,6 +29,7 @@
 // text containing `:` / `#` / tab, blank line before the dedent).
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import { Yaml, YamlFormat } from "../../effected/yaml/index.ts";
@@ -350,8 +351,8 @@ describe("oracle-differential (yaml@2.9.0 semantic expectations)", () => {
 			it(`meaning preservation — ${name}`, () => {
 				const before = Yaml.parseAllResult(input);
 				const after = Yaml.parseAllResult(YamlFormat.formatToString(input));
-				assert.isTrue(Result.isSuccess(before));
-				assert.isTrue(Result.isSuccess(after));
+				assertSuccess(before, Result.getOrThrow(before));
+				assertSuccess(after, Result.getOrThrow(before));
 				assert.deepStrictEqual(Result.getOrThrow(after), Result.getOrThrow(before));
 			});
 		}

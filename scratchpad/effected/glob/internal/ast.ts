@@ -179,18 +179,18 @@ const adoptionAnyMap = HashMap.fromIterable<ExtglobType, Array<ExtglobType>>([
 // the key is parent, value maps child to resulting extglob parent type
 // '@' is omitted because it's a special case. An `@` extglob with a single
 // member can always be usurped by that subpattern.
-const usurpMap = HashMap.fromIterable<ExtglobType, HashMap.HashMap<ExtglobType | null, ExtglobType | null>>([
-	["!", HashMap.fromIterable<ExtglobType | null, ExtglobType | null>([["!", "@"]])],
+const usurpMap = HashMap.fromIterable<ExtglobType, HashMap.HashMap<ExtglobType, ExtglobType>>([
+	["!", HashMap.fromIterable<ExtglobType, ExtglobType>([["!", "@"]])],
 	[
 		"?",
-		HashMap.fromIterable<ExtglobType | null, ExtglobType | null>([
+		HashMap.fromIterable<ExtglobType, ExtglobType>([
 			["*", "*"],
 			["+", "*"],
 		]),
 	],
 	[
 		"@",
-		HashMap.fromIterable<ExtglobType | null, ExtglobType | null>([
+		HashMap.fromIterable<ExtglobType, ExtglobType>([
 			["!", "!"],
 			["?", "?"],
 			["@", "@"],
@@ -200,7 +200,7 @@ const usurpMap = HashMap.fromIterable<ExtglobType, HashMap.HashMap<ExtglobType |
 	],
 	[
 		"+",
-		HashMap.fromIterable<ExtglobType | null, ExtglobType | null>([
+		HashMap.fromIterable<ExtglobType, ExtglobType>([
 			["?", "*"],
 			["*", "*"],
 		]),
@@ -656,7 +656,6 @@ export class AST {
 	 * @since 0.0.0
 	 */
 	#fillNegs() {
-		if (this !== this.#root) throw ASTError.make({ message: "should only call on root" });
 		if (this.#filledNegs) return this;
 
 		// call toString() once to fill this out
@@ -672,13 +671,12 @@ export class AST {
 			let p: AST | undefined = n;
 			let pp = p.#parent;
 			while (pp !== undefined) {
-				for (let i = p.#parentIndex + 1; pp.type === null && i < pp.#parts.length; i++) {
+				for (const source of pp.type === null ? pp.#parts.slice(p.#parentIndex + 1) : []) {
 					for (const part of n.#parts) {
 						if (P.isString(part)) {
 							throw ASTError.make({ message: "string part in extglob AST??" });
 						}
-						const source = pp.#parts[i];
-						if (source !== undefined) part.copyIn(source);
+						part.copyIn(source);
 					}
 				}
 				p = pp;
@@ -815,7 +813,7 @@ export class AST {
 		if (this.#parent?.isEnd() !== true) return false;
 		if (this.type === null) return this.#parent?.isEnd();
 		// if not root, it'll always have a parent
-		const pl = this.#parent !== undefined ? this.#parent.#parts.length : 0;
+		const pl = this.#parent.#parts.length;
 		return this.#parentIndex === pl - 1;
 	}
 
@@ -1046,9 +1044,7 @@ export class AST {
 	 * @category predicates
 	 * @since 0.0.0
 	 */
-	#canAdoptWithSpace(child?: AST | string): child is AST & {
-		type: null;
-	} {
+	#canAdoptWithSpace(child?: AST | string): O.Option<AST & { type: ExtglobType }> {
 		return this.#canAdopt(child, adoptionWithSpaceMap);
 	}
 
@@ -1070,17 +1066,15 @@ export class AST {
 	#canAdopt(
 		child?: AST | string,
 		map: HashMap.HashMap<ExtglobType, Array<ExtglobType>> = adoptionMap,
-	): child is AST & {
-		type: null;
-	} {
+	): O.Option<AST & { type: ExtglobType }> {
 		if ((child === undefined || child === "") || !P.isObjectKeyword(child) || P.isFunction(child) || child.type !== null || child.#parts.length !== 1 || this.type === null) {
-			return false;
+			return O.none();
 		}
 		const gc = child.#parts[0];
-		if ((gc === undefined || gc === "") || !P.isObjectKeyword(gc) || P.isFunction(gc) || gc.type === null) {
-			return false;
+		if (!(gc instanceof AST) || !isExtglobAST(gc)) {
+			return O.none();
 		}
-		return this.#canAdoptType(gc.type, map);
+		return this.#canAdoptType(gc.type, map) ? O.some(gc) : O.none();
 	}
 
 	/**
@@ -1118,17 +1112,13 @@ export class AST {
 	 * @since 0.0.0
 	 */
 	#adoptWithSpace(
-		child: AST & {
-			type: null;
-		},
+		gc: AST & { type: ExtglobType },
 		index: number,
 	) {
-		const gc = child.#parts[0];
-		if (!(gc instanceof AST) || !isExtglobAST(gc)) return;
 		const blank = new AST(null, gc, this.options);
 		blank.#parts.push("");
 		gc.push(blank);
-		this.#adopt(child, index);
+		this.#adopt(gc, index);
 	}
 
 	/**
@@ -1152,13 +1142,9 @@ export class AST {
 	 * @since 0.0.0
 	 */
 	#adopt(
-		child: AST & {
-			type: null;
-		},
+		gc: AST & { type: ExtglobType },
 		index: number,
 	) {
-		const gc = child.#parts[0];
-		if (!(gc instanceof AST) || !isExtglobAST(gc)) return;
 		this.#parts.splice(index, 1, ...gc.#parts);
 		for (const p of gc.#parts) {
 			if (P.isObjectKeyword(p) && !P.isFunction(p)) p.#parent = this;
@@ -1181,8 +1167,8 @@ export class AST {
 	 * @category predicates
 	 * @since 0.0.0
 	 */
-	#canUsurpType(c: string): boolean {
-		return this.type !== null && isExtglobType(c) && O.exists(HashMap.get(usurpMap, this.type), (types) => HashMap.has(types, c));
+	#canUsurpType(c: ExtglobType, parentType: ExtglobType): O.Option<ExtglobType> {
+		return O.flatMap(HashMap.get(usurpMap, parentType), (types) => HashMap.get(types, c));
 	}
 
 	/**
@@ -1200,9 +1186,7 @@ export class AST {
 	 * @category predicates
 	 * @since 0.0.0
 	 */
-	#canUsurp(child?: AST | string): child is AST & {
-		type: null;
-	} {
+	#canUsurp(child?: AST | string): O.Option<readonly [AST, ExtglobType]> {
 		if (
 			(child === undefined || child === "") ||
 			!P.isObjectKeyword(child) || P.isFunction(child) ||
@@ -1211,13 +1195,13 @@ export class AST {
 			this.type === null ||
 			this.#parts.length !== 1
 		) {
-			return false;
+			return O.none();
 		}
 		const gc = child.#parts[0];
-		if ((gc === undefined || gc === "") || !P.isObjectKeyword(gc) || P.isFunction(gc) || gc.type === null) {
-			return false;
+		if (!(gc instanceof AST) || !isExtglobAST(gc)) {
+			return O.none();
 		}
-		return this.#canUsurpType(gc.type);
+		return O.map(this.#canUsurpType(gc.type, this.type), (type): readonly [AST, ExtglobType] => [gc, type]);
 	}
 
 	/**
@@ -1240,20 +1224,14 @@ export class AST {
 	 * @category utilities
 	 * @since 0.0.0
 	 */
-	#usurp(child: AST & { type: null }) {
-		if (this.type === null) return;
-		const m = HashMap.get(usurpMap, this.type);
-		const gc = child.#parts[0];
-		if (!(gc instanceof AST) || !isExtglobAST(gc)) return;
-		const nt = O.getOrUndefined(O.flatMap(m, (types) => HashMap.get(types, gc.type)));
-		if (nt === undefined || nt === null) return;
+	#usurp(gc: AST, type: ExtglobType) {
 		this.#parts = gc.#parts;
 		for (const p of this.#parts) {
 			if (P.isObjectKeyword(p) && !P.isFunction(p)) {
 				p.#parent = this;
 			}
 		}
-		this.type = nt;
+		this.type = type;
 		this.#toString = undefined;
 		this.#emptyExt = false;
 	}
@@ -1551,15 +1529,22 @@ export class AST {
 					const c = this.#parts[i];
 					if (P.isObjectKeyword(c) && !P.isFunction(c)) {
 						c.#flatten(depth + 1);
-						if (this.#canAdopt(c)) {
+						const adopt = this.#canAdopt(c);
+						if (O.isSome(adopt)) {
 							done = false;
-							this.#adopt(c, i);
-						} else if (this.#canAdoptWithSpace(c)) {
-							done = false;
-							this.#adoptWithSpace(c, i);
-						} else if (this.#canUsurp(c)) {
-							done = false;
-							this.#usurp(c);
+							this.#adopt(adopt.value, i);
+						} else {
+							const adoptWithSpace = this.#canAdoptWithSpace(c);
+							if (O.isSome(adoptWithSpace)) {
+								done = false;
+								this.#adoptWithSpace(adoptWithSpace.value, i);
+							} else {
+								const usurp = this.#canUsurp(c);
+								if (O.isSome(usurp)) {
+									done = false;
+									this.#usurp(...usurp.value);
+								}
+							}
 						}
 					}
 				}

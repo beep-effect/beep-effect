@@ -1,22 +1,28 @@
-// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
+import { assertExitFailure } from "@effect/vitest/utils";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Redacted from "effect/Redacted";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ActionInput } from "../../effected/github-actions/index.ts";
+import * as Layer from "effect/Layer";
 
 /** Read a config against a fixed runner environment. */
 const read = <A>(config: Config.Config<A>, env: Record<string, string>) =>
-	Effect.provide(config, ActionInput.layer(env));
+	// The layer is a pure ConfigProvider stub; build it in the runner-owned scope.
+	Effect.flatMap(Layer.build(ActionInput.layer(env)), (context) => Effect.provideContext(config, context));
 
 const readOk = <A>(config: Config.Config<A>, env: Record<string, string>) => read(config, env);
 
 const readFails = <A>(config: Config.Config<A>, env: Record<string, string>) =>
 	Effect.map(Effect.exit(read(config, env)), (exit) => {
-		assert.strictEqual(exit._tag, "Failure", "expected the input to be rejected");
+		Exit.match(exit, {
+			onFailure: (cause) => assertExitFailure(exit, cause),
+			onSuccess: () => assert.fail("expected the config read to fail"),
+		});
 	});
 
 /** The rendered failure text, for asserting that an error names its offending line. */
@@ -397,11 +403,10 @@ describe("ActionInput", () => {
 		// join with "_", spaces to underscores, uppercase, and empty-is-absent.
 		it.effect("joins a nested config path with underscores", () =>
 			Effect.gen(function* () {
-				const nested = yield* Effect.provide(
-					// A two-segment path is joined before mangling, exactly as the
-					// source provider did.
+				const nested = yield* Effect.provideService(
 					Effect.map(ActionInput.string("a"), (value) => value),
-					ActionInput.layer({ INPUT_A: "v" }),
+					ConfigProvider.ConfigProvider,
+					ActionInput.provider({ INPUT_A: "v" }),
 				);
 				assert.strictEqual(nested, "v");
 			}),
@@ -429,11 +434,18 @@ describe("ActionInput", () => {
 	describe("providerOver — the runtime's default resolution", () => {
 		/** Read a bare config through the inputs-first provider over a fixed env. */
 		const readBare = <A>(config: Config.Config<A>, env: Record<string, string>) =>
-			Effect.provide(config, ConfigProvider.layer(ActionInput.providerOver(ConfigProvider.fromEnv({ env }))));
+			Effect.provideService(
+				config,
+				ConfigProvider.ConfigProvider,
+				ActionInput.providerOver(ConfigProvider.fromEnv({ env })),
+			);
 
 		const readBareFails = <A>(config: Config.Config<A>, env: Record<string, string>) =>
 			Effect.map(Effect.exit(readBare(config, env)), (exit) => {
-				assert.strictEqual(exit._tag, "Failure", "expected the bare read to miss");
+				Exit.match(exit, {
+					onFailure: (cause) => assertExitFailure(exit, cause),
+					onSuccess: () => assert.fail("expected the config read to fail"),
+				});
 			});
 
 		it.effect("resolves a bare flat name through the INPUT_ derivation first", () =>
@@ -510,17 +522,21 @@ describe("ActionInput", () => {
 			}),
 		);
 
-		it.effect("layerDefault composes over the provider explicitly installed beneath it", () =>
-			Effect.gen(function* () {
-				// How a test injects a deterministic environment without touching the
-				// process: install an ambient provider under the runtime and let
-				// layerDefault pick it up at build.
-				assert.strictEqual(yield* Config.String("dry-run"), "x");
-				assert.strictEqual(yield* Config.String("PLAIN_VAR"), "y");
-			}).pipe(
-				Effect.provide(ActionInput.layerDefault),
-				Effect.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env: { "INPUT_DRY-RUN": "x", PLAIN_VAR: "y" } }))),
+		it.layer(
+			ActionInput.layerDefault.pipe(
+				Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env: { "INPUT_DRY-RUN": "x", PLAIN_VAR: "y" } }))),
 			),
-		);
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("layerDefault composes over the provider explicitly installed beneath it", () =>
+				Effect.gen(function* () {
+					// How a test injects a deterministic environment without touching the
+					// process: install an ambient provider under the runtime and let
+					// layerDefault pick it up at build.
+					assert.strictEqual(yield* Config.String("dry-run"), "x");
+					assert.strictEqual(yield* Config.String("PLAIN_VAR"), "y");
+				}),
+			);
+		});
 	});
 });

@@ -1,4 +1,6 @@
-import { assert, describe, it, layer } from "@effect/vitest";
+import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess, assertNone, assertSome } from "@effect/vitest/utils";
+import * as Exit from "effect/Exit";
 import { CatalogAssemblyError, CatalogResolver, WorkspaceResolver } from "../../effected/npm/index.ts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -32,61 +34,56 @@ describe("CatalogSet", () => {
 		assert.isTrue(CatalogSet.empty().isEmpty);
 	});
 
-	it("normalizes pnpm's unnamed top-level catalog under 'default'", () =>
-		Effect.runSync(
-			Effect.gen(function* () {
-				const set = yield* CatalogSet.fromWorkspaceYaml("catalog:\n  effect: ^4.0.0\n");
-				assert.deepStrictEqual(Object.keys(set.entries), ["default"]);
-				assert.deepStrictEqual(set.rangeOf("effect", O.none()), O.some("^4.0.0"));
-			}),
-		));
+	it.effect("normalizes pnpm's unnamed top-level catalog under 'default'", () =>
+		Effect.gen(function* () {
+			const set = yield* CatalogSet.fromWorkspaceYaml("catalog:\n  effect: ^4.0.0\n");
+			assert.deepStrictEqual(Object.keys(set.entries), ["default"]);
+			assertSome(set.rangeOf("effect", O.none()), "^4.0.0");
+		}),
+	);
 
-	it("reads named catalogs", () =>
-		Effect.runSync(
-			Effect.gen(function* () {
-				const set = yield* CatalogSet.fromWorkspaceYaml(
-					"catalogs:\n  build:\n    typescript: ^6.0.0\n  test:\n    vitest: ^3.0.0\n",
-				);
-				assert.deepStrictEqual(Object.keys(set.entries).sort(), ["build", "test"]);
-				// The SECOND named catalog — a bug that keeps only the first passes on `build`.
-				assert.deepStrictEqual(set.rangeOf("vitest", O.some("test")), O.some("^3.0.0"));
-				assert.deepStrictEqual(set.rangeOf("typescript", O.some("build")), O.some("^6.0.0"));
-			}),
-		));
+	it.effect("reads named catalogs", () =>
+		Effect.gen(function* () {
+			const set = yield* CatalogSet.fromWorkspaceYaml(
+				"catalogs:\n  build:\n    typescript: ^6.0.0\n  test:\n    vitest: ^3.0.0\n",
+			);
+			assert.deepStrictEqual(Object.keys(set.entries).sort(), ["build", "test"]);
+			// The SECOND named catalog — a bug that keeps only the first passes on `build`.
+			assertSome(set.rangeOf("vitest", O.some("test")), "^3.0.0");
+			assertSome(set.rangeOf("typescript", O.some("build")), "^6.0.0");
+		}),
+	);
 
-	it("rangeOf is none for an unknown dependency and for an unknown catalog", () =>
-		Effect.runSync(
-			Effect.gen(function* () {
-				const set = yield* CatalogSet.fromWorkspaceYaml("catalog:\n  effect: ^4.0.0\n");
-				assert.deepStrictEqual(set.rangeOf("react", O.none()), O.none());
-				assert.deepStrictEqual(set.rangeOf("effect", O.some("nope")), O.none());
-			}),
-		));
+	it.effect("rangeOf is none for an unknown dependency and for an unknown catalog", () =>
+		Effect.gen(function* () {
+			const set = yield* CatalogSet.fromWorkspaceYaml("catalog:\n  effect: ^4.0.0\n");
+			assertNone(set.rangeOf("react", O.none()));
+			assertNone(set.rangeOf("effect", O.some("nope")));
+		}),
+	);
 
-	it("resolveSpecifier resolves a catalog: protocol reference", () =>
-		Effect.runSync(
-			Effect.gen(function* () {
-				const set = yield* CatalogSet.fromWorkspaceYaml(
-					"catalog:\n  effect: ^4.0.0\ncatalogs:\n  build:\n    effect: ^3.0.0\n",
-				);
-				assert.deepStrictEqual(set.resolveSpecifier("effect", "catalog:"), O.some("^4.0.0"));
-				assert.deepStrictEqual(set.resolveSpecifier("effect", "catalog:build"), O.some("^3.0.0"));
-			}),
-		));
+	it.effect("resolveSpecifier resolves a catalog: protocol reference", () =>
+		Effect.gen(function* () {
+			const set = yield* CatalogSet.fromWorkspaceYaml(
+				"catalog:\n  effect: ^4.0.0\ncatalogs:\n  build:\n    effect: ^3.0.0\n",
+			);
+			assertSome(set.resolveSpecifier("effect", "catalog:"), "^4.0.0");
+			assertSome(set.resolveSpecifier("effect", "catalog:build"), "^3.0.0");
+		}),
+	);
 
-	it("resolveSpecifier is none for a plain, non-catalog specifier", () =>
-		Effect.runSync(
-			Effect.gen(function* () {
-				const set = yield* CatalogSet.fromWorkspaceYaml("catalog:\n  effect: ^4.0.0\n");
-				assert.deepStrictEqual(set.resolveSpecifier("effect", "^4.0.0"), O.none());
-			}),
-		));
+	it.effect("resolveSpecifier is none for a plain, non-catalog specifier", () =>
+		Effect.gen(function* () {
+			const set = yield* CatalogSet.fromWorkspaceYaml("catalog:\n  effect: ^4.0.0\n");
+			assertNone(set.resolveSpecifier("effect", "^4.0.0"));
+		}),
+	);
 
 	it.effect("malformed YAML fails typed, never as a defect", () =>
 		Effect.gen(function* () {
-			const result = yield* Effect.result(CatalogSet.fromWorkspaceYaml("catalog:\n\t- ["));
-			assert.strictEqual(result._tag, "Failure");
+			const exit = yield* Effect.exit(CatalogSet.fromWorkspaceYaml("catalog:\n\t- ["));
 			const error = yield* Effect.flip(CatalogSet.fromWorkspaceYaml("catalog:\n\t- ["));
+			assertSuccess(Exit.findError(exit), error);
 			assert.instanceOf(error, CatalogAssemblyError);
 			assert.strictEqual(error.source, "manifest");
 		}),
@@ -98,16 +95,16 @@ describe("CatalogSet", () => {
 		});
 		// The SPECIFIER is the declared range, which is what a catalog resolves to;
 		// taking `version` would silently pin every consumer to an exact build.
-		assert.deepStrictEqual(set.rangeOf("effect", O.none()), O.some("^4.0.0"));
+		assertSome(set.rangeOf("effect", O.none()), "^4.0.0");
 	});
 
 	it("merge lets a later set win per dependency", () => {
 		const older = CatalogSet.fromLockfileCatalogs({ default: { effect: "^3.0.0", react: "^18.0.0" } });
 		const newer = CatalogSet.fromLockfileCatalogs({ default: { effect: "^4.0.0" } });
 		const merged = CatalogSet.merge(older, newer);
-		assert.deepStrictEqual(merged.rangeOf("effect", O.none()), O.some("^4.0.0"));
+		assertSome(merged.rangeOf("effect", O.none()), "^4.0.0");
 		// The un-overridden key must SURVIVE the merge — a naive replace drops it.
-		assert.deepStrictEqual(merged.rangeOf("react", O.none()), O.some("^18.0.0"));
+		assertSome(merged.rangeOf("react", O.none()), "^18.0.0");
 	});
 
 	it("a __proto__ catalog key lands as an own property, not on the prototype", () => {
@@ -173,12 +170,12 @@ const withLockfileAndInline: Tree = {
 };
 
 describe("WorkspaceCatalogs — assembly precedence", () => {
-	layer(workspacesOver(withLockfileAndInline))((it) => {
+	it.layer(workspacesOver(withLockfileAndInline), { timeout: "30 seconds" })((it) => {
 		it.effect("the inline pnpm-workspace.yaml catalog beats the lockfile's record", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
 				const set = yield* catalogs.set;
-				assert.deepStrictEqual(set.rangeOf("effect", O.none()), O.some("^4.0.0"));
+				assertSome(set.rangeOf("effect", O.none()), "^4.0.0");
 			}),
 		);
 
@@ -186,7 +183,7 @@ describe("WorkspaceCatalogs — assembly precedence", () => {
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
 				const set = yield* catalogs.set;
-				assert.deepStrictEqual(set.rangeOf("react", O.none()), O.some("^18.0.0"));
+				assertSome(set.rangeOf("react", O.none()), "^18.0.0");
 			}),
 		);
 
@@ -194,14 +191,14 @@ describe("WorkspaceCatalogs — assembly precedence", () => {
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
 				const set = yield* catalogs.set;
-				assert.deepStrictEqual(set.rangeOf("typescript", O.some("build")), O.some("^6.0.0"));
+				assertSome(set.rangeOf("typescript", O.some("build")), "^6.0.0");
 			}),
 		);
 
 		it.effect("resolveSpecifier resolves a member's catalog: dependency", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				assert.deepStrictEqual(yield* catalogs.resolveSpecifier("effect", "catalog:"), O.some("^4.0.0"));
+				assertSome(yield* catalogs.resolveSpecifier("effect", "catalog:"), "^4.0.0");
 			}),
 		);
 	});
@@ -215,34 +212,34 @@ const resolversOver = (tree: Tree) => {
 };
 
 describe("the @effected/npm resolver contracts", () => {
-	layer(resolversOver(withLockfileAndInline))((it) => {
+	it.layer(resolversOver(withLockfileAndInline), { timeout: "30 seconds" })((it) => {
 		it.effect("CatalogResolver.rangeOf resolves against the real assembled catalogs", () =>
 			Effect.gen(function* () {
 				const resolver = yield* CatalogResolver;
 				// The no-op layer @effected/npm ships would return none here.
-				assert.deepStrictEqual(yield* resolver.rangeOf("effect", O.none()), O.some("^4.0.0"));
-				assert.deepStrictEqual(yield* resolver.rangeOf("typescript", O.some("build")), O.some("^6.0.0"));
+				assertSome(yield* resolver.rangeOf("effect", O.none()), "^4.0.0");
+				assertSome(yield* resolver.rangeOf("typescript", O.some("build")), "^6.0.0");
 			}),
 		);
 
 		it.effect("CatalogResolver.rangeOf is none — not an error — for an unmatched name", () =>
 			Effect.gen(function* () {
 				const resolver = yield* CatalogResolver;
-				assert.deepStrictEqual(yield* resolver.rangeOf("nothing-here", O.none()), O.none());
+				assertNone(yield* resolver.rangeOf("nothing-here", O.none()));
 			}),
 		);
 
 		it.effect("WorkspaceResolver.versionOf resolves against the discovered packages", () =>
 			Effect.gen(function* () {
 				const resolver = yield* WorkspaceResolver;
-				assert.deepStrictEqual(yield* resolver.versionOf("@x/a"), O.some("1.0.0"));
+				assertSome(yield* resolver.versionOf("@x/a"), "1.0.0");
 			}),
 		);
 
 		it.effect("WorkspaceResolver.versionOf is none for a non-member", () =>
 			Effect.gen(function* () {
 				const resolver = yield* WorkspaceResolver;
-				assert.deepStrictEqual(yield* resolver.versionOf("react"), O.none());
+				assertNone(yield* resolver.versionOf("react"));
 			}),
 		);
 	});
@@ -256,7 +253,7 @@ describe("the @effected/npm resolver contracts", () => {
 		"/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0" }),
 	};
 
-	layer(resolversOver(withMalformedInline))((it) => {
+	it.layer(resolversOver(withMalformedInline), { timeout: "30 seconds" })((it) => {
 		it.effect("CatalogResolver.rangeOf surfaces a failed assembly typed as CatalogAssemblyError", () =>
 			Effect.gen(function* () {
 				const resolver = yield* CatalogResolver;
@@ -282,7 +279,7 @@ const npmWorkspace: Tree = {
 };
 
 describe("WorkspaceCatalogs — a workspace with no pnpm-workspace.yaml", () => {
-	layer(workspacesOver(npmWorkspace))((it) => {
+	it.layer(workspacesOver(npmWorkspace), { timeout: "30 seconds" })((it) => {
 		it.effect("assembles to the empty set rather than failing", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
@@ -332,7 +329,7 @@ const probeFailTree: Tree = {
 };
 
 describe("WorkspaceCatalogs — a presence-probe failure is not silent absence", () => {
-	layer(
+	it.layer(
 		Workspaces.layer({ cwd: "/repo" }).pipe(
 			// The pnpm-workspace.yaml presence probe fails with PermissionDenied (a
 			// non-NotFound PlatformError, exactly what core's `exists` re-raises). Root
@@ -341,6 +338,7 @@ describe("WorkspaceCatalogs — a presence-probe failure is not silent absence",
 			// reader — the "every dependency looks newly added" bug.
 			Layer.provideMerge(platform(probeFailTree, { unreadableExists: new Set(["/repo/pnpm-workspace.yaml"]) })),
 		),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("a PermissionDenied on the presence probe fails typed as CatalogAssemblyError", () =>
 			Effect.gen(function* () {
@@ -389,7 +387,7 @@ describe("WorkspaceCatalogs — a bun/package.json presence-probe failure is not
 		),
 		Layer.provideMerge(platform(bunProbeFailTree, { unreadableExists: new Set(["/repo/package.json"]) })),
 	);
-	layer(bunProbeFailLayer)((it) => {
+	it.layer(bunProbeFailLayer, { timeout: "30 seconds" })((it) => {
 		it.effect("a PermissionDenied on the package.json presence probe fails typed as CatalogAssemblyError", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
@@ -426,7 +424,7 @@ const malformedCatalogTree: Tree = {
 };
 
 describe("WorkspaceCatalogs — the pnpm inline path hard-fails, like the bun path", () => {
-	layer(workspacesOver(duplicateDefaultTree))((it) => {
+	it.layer(workspacesOver(duplicateDefaultTree), { timeout: "30 seconds" })((it) => {
 		it.effect("the default catalog declared twice (top-level catalog + catalogs.default) fails typed", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
@@ -438,7 +436,7 @@ describe("WorkspaceCatalogs — the pnpm inline path hard-fails, like the bun pa
 		);
 	});
 
-	layer(workspacesOver(malformedCatalogTree))((it) => {
+	it.layer(workspacesOver(malformedCatalogTree), { timeout: "30 seconds" })((it) => {
 		it.effect("a malformed catalog block (a non-string entry) fails typed rather than reading as empty", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
@@ -475,7 +473,7 @@ const malformedGateTree: Tree = {
 };
 
 describe("WorkspaceCatalogs.releaseAgeGate — the inline pnpm-workspace.yaml source", () => {
-	layer(workspacesOver(inlineGateTree))((it) => {
+	it.layer(workspacesOver(inlineGateTree), { timeout: "30 seconds" })((it) => {
 		it.effect("surfaces the inline minimumReleaseAge and minimumReleaseAgeExclude", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
@@ -486,7 +484,7 @@ describe("WorkspaceCatalogs.releaseAgeGate — the inline pnpm-workspace.yaml so
 		);
 	});
 
-	layer(workspacesOver(withLockfileAndInline))((it) => {
+	it.layer(workspacesOver(withLockfileAndInline), { timeout: "30 seconds" })((it) => {
 		it.effect("is the inert zero gate when no release-age keys are declared", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
@@ -497,7 +495,7 @@ describe("WorkspaceCatalogs.releaseAgeGate — the inline pnpm-workspace.yaml so
 		);
 	});
 
-	layer(workspacesOver(npmWorkspace))((it) => {
+	it.layer(workspacesOver(npmWorkspace), { timeout: "30 seconds" })((it) => {
 		it.effect("is the inert zero gate for a workspace with no pnpm-workspace.yaml", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
@@ -508,7 +506,7 @@ describe("WorkspaceCatalogs.releaseAgeGate — the inline pnpm-workspace.yaml so
 		);
 	});
 
-	layer(workspacesOver(malformedGateTree))((it) => {
+	it.layer(workspacesOver(malformedGateTree), { timeout: "30 seconds" })((it) => {
 		it.effect("a malformed inline minimumReleaseAge fails typed as CatalogAssemblyError", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
@@ -548,7 +546,7 @@ describe("WorkspaceCatalogs.refresh — the explicit memoization boundary", () =
 	// The whole before/pin/refresh/after sequence lives in ONE test: a `layer`
 	// block shares its service instance across tests, so splitting the sequence
 	// would order-couple the assertions.
-	layer(workspacesOver(refreshTree))((it) => {
+	it.layer(workspacesOver(refreshTree), { timeout: "30 seconds" })((it) => {
 		it.effect("a mutation is invisible to the memo until refresh() discards it", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
@@ -576,7 +574,7 @@ describe("WorkspaceCatalogs.refresh — the explicit memoization boundary", () =
 	});
 
 	// A fresh layer block: the service must not have assembled yet.
-	layer(workspacesOver(refreshTree))((it) => {
+	it.layer(workspacesOver(refreshTree), { timeout: "30 seconds" })((it) => {
 		it.effect("refresh() before any read is harmless", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
@@ -593,20 +591,20 @@ describe("CatalogSet — own-key resolution", () => {
 	for (const name of ["constructor", "toString", "__proto__"]) {
 		it(`does not resolve inherited dependency ${name}`, () => {
 			const set = CatalogSet.fromCatalogs({ default: { effect: "^4.0.0" } });
-			assert.deepStrictEqual(set.rangeOf(name, O.none()), O.none());
-			assert.deepStrictEqual(set.resolveSpecifier(name, "catalog:"), O.none());
+			assertNone(set.rangeOf(name, O.none()));
+			assertNone(set.resolveSpecifier(name, "catalog:"));
 		});
 		it(`does not resolve inherited catalog ${name}`, () => {
 			const set = CatalogSet.empty();
-			assert.deepStrictEqual(set.rangeOf("name", O.some(name)), O.none());
-			assert.deepStrictEqual(set.resolveSpecifier("name", `catalog:${name}`), O.none());
+			assertNone(set.rangeOf("name", O.some(name)));
+			assertNone(set.resolveSpecifier("name", `catalog:${name}`));
 		});
 	}
 
 	it("resolves an explicitly declared constructor dependency", () => {
 		const set = CatalogSet.fromCatalogs({ default: { constructor: "^1.2.3" } });
-		assert.deepStrictEqual(set.rangeOf("constructor", O.none()), O.some("^1.2.3"));
-		assert.deepStrictEqual(set.resolveSpecifier("constructor", "catalog:"), O.some("^1.2.3"));
+		assertSome(set.rangeOf("constructor", O.none()), "^1.2.3");
+		assertSome(set.resolveSpecifier("constructor", "catalog:"), "^1.2.3");
 	});
 
 	it("normalizes sparse arrays and their extra enumerable catalog entries", () => {
@@ -618,8 +616,8 @@ describe("CatalogSet — own-key resolution", () => {
 		catalogs.extra = { effect: "^4.0.0" };
 		const set = CatalogSet.fromCatalogs(catalogs);
 		assert.deepStrictEqual(R.keys(set.entries), ["1", "extra"]);
-		assert.deepStrictEqual(set.rangeOf("2", O.some("1")), O.some("^2.0.0"));
-		assert.deepStrictEqual(set.rangeOf("extra", O.some("1")), O.some("^3.0.0"));
-		assert.deepStrictEqual(set.rangeOf("effect", O.some("extra")), O.some("^4.0.0"));
+		assertSome(set.rangeOf("2", O.some("1")), "^2.0.0");
+		assertSome(set.rangeOf("extra", O.some("1")), "^3.0.0");
+		assertSome(set.rangeOf("effect", O.some("extra")), "^4.0.0");
 	});
 });

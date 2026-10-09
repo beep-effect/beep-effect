@@ -25,10 +25,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { afterAll, assert, beforeAll, describe, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as HashMap from "effect/HashMap";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import { WorkspaceSnapshots, Workspaces } from "../../../effected/workspaces/index.ts";
 
 let root: string;
@@ -84,26 +84,31 @@ afterAll(() => {
 	if (root !== undefined) rmSync(root, { recursive: true, force: true });
 });
 
+const Live = Layer.unwrap(Effect.sync(() =>
+	Workspaces.layerWithGit({ cwd: inner }).pipe(Layer.provideMerge(NodeServices.layer)),
+));
+
 describe("WorkspaceSnapshots.at — a workspace root nested inside a larger git repo", () => {
-	it.effect("reads the INNER workspace's manifest, members and catalog — not the outer root's", () => {
+	it.layer(Live, { timeout: "30 seconds" })((it) => {
 		// The layer resolves the workspace root from `inner/`; `Git` runs against
 		// the outer repo's `.git`, so `at(ref)` must `./`-anchor every read to
 		// `inner/` rather than the repo top-level.
-		const Live = Workspaces.layerWithGit({ cwd: inner }).pipe(Layer.provideMerge(NodeServices.layer));
-		return Effect.gen(function* () {
-			const snapshots = yield* WorkspaceSnapshots;
-			const snapshot = yield* snapshots.at("HEAD");
+		it.effect("reads the INNER workspace's manifest, members and catalog — not the outer root's", () =>
+			Effect.gen(function* () {
+				const snapshots = yield* WorkspaceSnapshots;
+				const snapshot = yield* snapshots.at("HEAD");
 
-			// The inner root plus both inner members — NOT `outer-root`/`@outer/a`.
-			// The un-prefixed reader collapses to just ["outer-root"].
-			const names = [...HashMap.keys(snapshot.versions)].sort();
-			assert.deepStrictEqual(names, ["@inner/a", "@inner/b", "inner-root"]);
+				// The inner root plus both inner members — NOT `outer-root`/`@outer/a`.
+				// The un-prefixed reader collapses to just ["outer-root"].
+				const names = [...HashMap.keys(snapshot.versions)].sort();
+				assert.deepStrictEqual(names, ["@inner/a", "@inner/b", "inner-root"]);
 
-			// The inner catalog. The un-prefixed reader carries the OUTER `^3.0.0`.
-			assert.deepStrictEqual(snapshot.resolve("effect", "catalog:"), O.some("^4.0.0"));
+				// The inner catalog. The un-prefixed reader carries the OUTER `^3.0.0`.
+				assertSome(snapshot.resolve("effect", "catalog:"), "^4.0.0");
 
-			// The inner workspace: specifier resolves against the inner member's version.
-			assert.deepStrictEqual(snapshot.resolve("@inner/a", "workspace:*"), O.some("1.1.0"));
-		}).pipe(Effect.provide(Live));
+				// The inner workspace: specifier resolves against the inner member's version.
+				assertSome(snapshot.resolve("@inner/a", "workspace:*"), "1.1.0");
+			}),
+		);
 	});
 });

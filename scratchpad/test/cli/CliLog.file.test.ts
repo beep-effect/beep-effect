@@ -2,6 +2,7 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";
+import { assertExitSuccess } from "@effect/vitest/utils";
 import { Audience, CurrentRuntimeEnv, TerminalEnv } from "../../effected/env/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -54,37 +55,37 @@ const harness = Effect.fn("harness")(function* (options: {
 			: never
 		: never;
 }) {
-		const faults =
-			options.faults ??
-			(options.failFirstAppend === true ? { writeFileString: MemoryFileSystem.failTimes(1, deny) } : undefined);
-		const handle = MemoryFileSystem.makeSync({}, faults === undefined ? undefined : { faults });
-		const { double, out, err } = capturing();
-		const layer = CliLog.layer({ envVar: LEVEL_ENV, file: options.file }).pipe(
-			Layer.provide(
-				Layer.mergeAll(
-					Audience.layerTest("agent"),
-					TerminalEnv.layerTest(),
-					options.ci === undefined ? Layer.empty : CurrentRuntimeEnv.layerTest({ ci: Option.some(options.ci) }),
-				),
+	const faults =
+		options.faults ??
+		(options.failFirstAppend === true ? { writeFileString: MemoryFileSystem.failTimes(1, deny) } : undefined);
+	const handle = MemoryFileSystem.makeSync({}, faults === undefined ? undefined : { faults });
+	const { double, out, err } = capturing();
+	const layer = CliLog.layer({ envVar: LEVEL_ENV, file: options.file }).pipe(
+		Layer.provide(
+			Layer.mergeAll(
+				Audience.layerTest("agent"),
+				TerminalEnv.layerTest(),
+				options.ci === undefined ? Layer.empty : CurrentRuntimeEnv.layerTest({ ci: Option.some(options.ci) }),
 			),
-			Layer.provide(handle.layer),
-		);
-		const scope = yield* Scope.make();
-		const context = yield* Layer.buildWithScope(layer, scope).pipe(
-			Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(options.env ?? {})),
-			Effect.provideService(Console.Console, double),
-		);
-		return {
-			handle,
-			out,
-			err,
-			/** Run `program` with the built loggers. */
-			log: (program: Effect.Effect<void>) =>
-				program.pipe(Effect.provideContext(context), Effect.provideService(Console.Console, double)),
-			close: Scope.close(scope, Exit.void),
-			file: () => handle.volume.text(PATH),
-		};
-	});
+		),
+		Layer.provide(handle.layer),
+	);
+	const scope = yield* Scope.make();
+	const context = yield* Layer.buildWithScope(layer, scope).pipe(
+		Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(options.env ?? {})),
+		Effect.provideService(Console.Console, double),
+	);
+	return {
+		handle,
+		out,
+		err,
+		/** Run `program` with the built loggers. */
+		log: (program: Effect.Effect<void>) =>
+			program.pipe(Effect.provideContext(context), Effect.provideService(Console.Console, double)),
+		close: Scope.close(scope, Exit.void),
+		file: () => handle.volume.text(PATH),
+	};
+});
 
 const ndjson = (lines: ReadonlyArray<string>) => lines.filter((line) => line.startsWith("{"));
 /** The sink's one error line. CliLogger's plain lines share stderr, so it is picked out by its prefix. */
@@ -216,7 +217,8 @@ describe("CliLog.layer file option", () => {
 						while (plain(h.err).length === 0 && spins++ < 1000) yield* Effect.yieldNow;
 						yield* h.close;
 						const printed = failureLines(h.err);
-						for (const line of printed) assert.notInclude(line, ESC, Result.getOrThrow(S.encodeUnknownResult(Json)(line)));
+						for (const line of printed)
+							assert.notInclude(line, ESC, Result.getOrThrow(S.encodeUnknownResult(Json)(line)));
 						const commands = printed.filter((line) => /^[\s\u0085]*::/.test(line) || line.includes("##["));
 						if (ci === "github-actions") assert.deepStrictEqual(commands, []);
 						else assert.isAbove(commands.length, 0, "control: outside Actions the text is not neutralized");
@@ -251,7 +253,7 @@ describe("CliLog.layer file option", () => {
 						}),
 					),
 				);
-				assert.isTrue(Exit.isSuccess(exit));
+				assertExitSuccess(exit, undefined);
 				yield* settle;
 				yield* h.close;
 

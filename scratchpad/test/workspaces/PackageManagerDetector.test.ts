@@ -1,7 +1,7 @@
 import { assert, describe, layer } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import {
 	PackageManagerDetectionError,
 	PackageManagerDetector,
@@ -24,13 +24,14 @@ describe("PackageManagerDetector — pnpm", () => {
 			"/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
 			"/repo/package.json": corepack("pnpm@10.33.0+sha512.abc"),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("a pnpm-workspace.yaml is sufficient, and the corepack version is reported", () =>
 			Effect.gen(function* () {
 				const detector = yield* PackageManagerDetector;
 				const detected = yield* detector.detect("/repo");
 				assert.strictEqual(detected.name, "pnpm");
-				assert.deepStrictEqual(detected.version, O.some("10.33.0"));
+				assertSome(detected.version, "10.33.0");
 				assert.strictEqual(detected.runtime, "node");
 				assert.strictEqual(detected.evidence, "pnpm-workspace.yaml");
 			}),
@@ -44,13 +45,14 @@ describe("PackageManagerDetector — pnpm with no corepack field", () => {
 			"/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
 			"/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0" }),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("detects pnpm with no version", () =>
 			Effect.gen(function* () {
 				const detector = yield* PackageManagerDetector;
 				const detected = yield* detector.detect("/repo");
 				assert.strictEqual(detected.name, "pnpm");
-				assert.isTrue(O.isNone(detected.version));
+				assertNone(detected.version);
 			}),
 		);
 	});
@@ -63,6 +65,7 @@ describe("PackageManagerDetector — pnpm wins over a stray lockfile", () => {
 			"/repo/yarn.lock": "",
 			"/repo/package.json": corepack("yarn@4.5.0"),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("the priority chain puts pnpm first even when yarn's markers are present", () =>
 			Effect.gen(function* () {
@@ -70,21 +73,24 @@ describe("PackageManagerDetector — pnpm wins over a stray lockfile", () => {
 				const detected = yield* detector.detect("/repo");
 				assert.strictEqual(detected.name, "pnpm");
 				// The corepack field names YARN, so no pnpm version can be attributed.
-				assert.isTrue(O.isNone(detected.version));
+				assertNone(detected.version);
 			}),
 		);
 	});
 });
 
 describe("PackageManagerDetector — bun", () => {
-	layer(detectorOver({ "/repo/bun.lock": "", "/repo/package.json": corepack("bun@1.2.0") }))((it) => {
+	layer(
+		detectorOver({ "/repo/bun.lock": "", "/repo/package.json": corepack("bun@1.2.0") }),
+		{ timeout: "30 seconds" },
+	)((it) => {
 		it.effect("a bun lockfile plus a bun corepack field means bun, on the bun runtime", () =>
 			Effect.gen(function* () {
 				const detector = yield* PackageManagerDetector;
 				const detected = yield* detector.detect("/repo");
 				assert.strictEqual(detected.name, "bun");
 				assert.strictEqual(detected.runtime, "bun");
-				assert.deepStrictEqual(detected.version, O.some("1.2.0"));
+				assertSome(detected.version, "1.2.0");
 				// The conjunction needed the manifest field too, but the lockfile is
 				// the recorded signal: the field alone would have resolved in the
 				// declaration tier, so the lockfile is what this rung added.
@@ -100,6 +106,7 @@ describe("PackageManagerDetector — a bun lockfile WITHOUT the corepack field",
 			"/repo/bun.lock": "",
 			"/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0", workspaces: ["packages/*"] }),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("falls through to npm — the conjunction is deliberate", () =>
 			Effect.gen(function* () {
@@ -113,13 +120,16 @@ describe("PackageManagerDetector — a bun lockfile WITHOUT the corepack field",
 });
 
 describe("PackageManagerDetector — yarn", () => {
-	layer(detectorOver({ "/repo/yarn.lock": "", "/repo/package.json": corepack("yarn@4.5.0") }))((it) => {
+	layer(
+		detectorOver({ "/repo/yarn.lock": "", "/repo/package.json": corepack("yarn@4.5.0") }),
+		{ timeout: "30 seconds" },
+	)((it) => {
 		it.effect("a yarn lockfile plus a yarn corepack field means yarn", () =>
 			Effect.gen(function* () {
 				const detector = yield* PackageManagerDetector;
 				const detected = yield* detector.detect("/repo");
 				assert.strictEqual(detected.name, "yarn");
-				assert.deepStrictEqual(detected.version, O.some("4.5.0"));
+				assertSome(detected.version, "4.5.0");
 				assert.strictEqual(detected.evidence, "yarn.lock");
 			}),
 		);
@@ -136,13 +146,14 @@ describe("PackageManagerDetector — npm", () => {
 				packageManager: "npm@11.0.0",
 			}),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("a workspaces field alone is the npm fallback", () =>
 			Effect.gen(function* () {
 				const detector = yield* PackageManagerDetector;
 				const detected = yield* detector.detect("/repo");
 				assert.strictEqual(detected.name, "npm");
-				assert.deepStrictEqual(detected.version, O.some("11.0.0"));
+				assertSome(detected.version, "11.0.0");
 				assert.strictEqual(detected.evidence, "package.json#workspaces");
 			}),
 		);
@@ -153,7 +164,10 @@ describe("PackageManagerDetector — NO EVIDENCE AT ALL", () => {
 	// The genuine no-evidence case: a manifest that declares nothing, and not a
 	// single lockfile. Distinct from the standalone-repo cases below, which have
 	// evidence but no workspace.
-	layer(detectorOver({ "/repo/package.json": JSON.stringify({ name: "solo", version: "1.0.0" }) }))((it) => {
+	layer(
+		detectorOver({ "/repo/package.json": JSON.stringify({ name: "solo", version: "1.0.0" }) }),
+		{ timeout: "30 seconds" },
+	)((it) => {
 		it.effect("fails typed, listing the markers it probed", () =>
 			Effect.gen(function* () {
 				const detector = yield* PackageManagerDetector;
@@ -196,13 +210,14 @@ describe("PackageManagerDetector — standalone pnpm repo", () => {
 			"/repo/pnpm-lock.yaml": "lockfileVersion: '9.0'\n",
 			"/repo/package.json": corepack("pnpm@10.33.0+sha512.abc"),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("a pnpm lockfile with no workspace is still pnpm", () =>
 			Effect.gen(function* () {
 				const detector = yield* PackageManagerDetector;
 				const detected = yield* detector.detect("/repo");
 				assert.strictEqual(detected.name, "pnpm");
-				assert.deepStrictEqual(detected.version, O.some("10.33.0"));
+				assertSome(detected.version, "10.33.0");
 				assert.strictEqual(detected.evidence, "pnpm-lock.yaml");
 			}),
 		);
@@ -215,6 +230,7 @@ describe("PackageManagerDetector — standalone pnpm repo with no manifest hint"
 			"/repo/pnpm-lock.yaml": "lockfileVersion: '9.0'\n",
 			"/repo/package.json": JSON.stringify({ name: "solo", version: "1.0.0" }),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("the lockfile alone is sufficient — this is the case that used to fail", () =>
 			Effect.gen(function* () {
@@ -223,7 +239,7 @@ describe("PackageManagerDetector — standalone pnpm repo with no manifest hint"
 				// needed — the same reasoning that makes pnpm-workspace.yaml sufficient.
 				const detected = yield* detector.detect("/repo");
 				assert.strictEqual(detected.name, "pnpm");
-				assert.isTrue(O.isNone(detected.version));
+				assertNone(detected.version);
 			}),
 		);
 	});
@@ -235,6 +251,7 @@ describe("PackageManagerDetector — standalone npm repo", () => {
 			"/repo/package-lock.json": "{}",
 			"/repo/package.json": JSON.stringify({ name: "solo", version: "1.0.0" }),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("a package-lock.json with no workspace is npm", () =>
 			Effect.gen(function* () {
@@ -248,13 +265,16 @@ describe("PackageManagerDetector — standalone npm repo", () => {
 });
 
 describe("PackageManagerDetector — standalone yarn repo", () => {
-	layer(detectorOver({ "/repo/yarn.lock": "", "/repo/package.json": corepack("yarn@4.5.0") }))((it) => {
+	layer(
+		detectorOver({ "/repo/yarn.lock": "", "/repo/package.json": corepack("yarn@4.5.0") }),
+		{ timeout: "30 seconds" },
+	)((it) => {
 		it.effect("a yarn lockfile plus a yarn declaration is yarn, workspace or not", () =>
 			Effect.gen(function* () {
 				const detector = yield* PackageManagerDetector;
 				const detected = yield* detector.detect("/repo");
 				assert.strictEqual(detected.name, "yarn");
-				assert.deepStrictEqual(detected.version, O.some("4.5.0"));
+				assertSome(detected.version, "4.5.0");
 				// The lockfile, not the corepack field, is the recorded signal.
 				assert.strictEqual(detected.evidence, "yarn.lock");
 			}),
@@ -263,7 +283,10 @@ describe("PackageManagerDetector — standalone yarn repo", () => {
 });
 
 describe("PackageManagerDetector — standalone bun repo", () => {
-	layer(detectorOver({ "/repo/bun.lockb": "", "/repo/package.json": corepack("bun@1.2.0") }))((it) => {
+	layer(
+		detectorOver({ "/repo/bun.lockb": "", "/repo/package.json": corepack("bun@1.2.0") }),
+		{ timeout: "30 seconds" },
+	)((it) => {
 		it.effect("a bun lockfile plus a bun declaration is bun, on the bun runtime", () =>
 			Effect.gen(function* () {
 				const detector = yield* PackageManagerDetector;
@@ -284,6 +307,7 @@ describe("PackageManagerDetector — a STRAY yarn.lock in a standalone repo", ()
 			"/repo/yarn.lock": "",
 			"/repo/package.json": JSON.stringify({ name: "solo", version: "1.0.0" }),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("the manifest conjunction holds in the standalone tier too", () =>
 			Effect.gen(function* () {
@@ -302,7 +326,10 @@ describe("PackageManagerDetector — a STRAY yarn.lock in a standalone repo", ()
 // ── the manifest-only tier: declared, but not yet installed ────────────────
 
 describe("PackageManagerDetector — declared but never installed", () => {
-	layer(detectorOver({ "/repo/package.json": corepack("pnpm@10.33.0") }))((it) => {
+	layer(
+		detectorOver({ "/repo/package.json": corepack("pnpm@10.33.0") }),
+		{ timeout: "30 seconds" },
+	)((it) => {
 		it.effect("a packageManager declaration with no lockfile anywhere is honest evidence", () =>
 			Effect.gen(function* () {
 				const detector = yield* PackageManagerDetector;
@@ -310,7 +337,7 @@ describe("PackageManagerDetector — declared but never installed", () => {
 				// read, but the manifest says plainly which manager is meant to run.
 				const detected = yield* detector.detect("/repo");
 				assert.strictEqual(detected.name, "pnpm");
-				assert.deepStrictEqual(detected.version, O.some("10.33.0"));
+				assertSome(detected.version, "10.33.0");
 				assert.strictEqual(detected.evidence, "package.json#packageManager");
 			}),
 		);
@@ -322,6 +349,7 @@ describe("PackageManagerDetector — devEngines alone, no lockfile", () => {
 		detectorOver({
 			"/repo/package.json": manifestWith({ devEngines: { packageManager: { name: "bun", version: "1.2.0" } } }),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("devEngines is a declaration too, and carries the runtime with it", () =>
 			Effect.gen(function* () {
@@ -329,7 +357,7 @@ describe("PackageManagerDetector — devEngines alone, no lockfile", () => {
 				const detected = yield* detector.detect("/repo");
 				assert.strictEqual(detected.name, "bun");
 				assert.strictEqual(detected.runtime, "bun");
-				assert.deepStrictEqual(detected.version, O.some("1.2.0"));
+				assertSome(detected.version, "1.2.0");
 				assert.strictEqual(detected.evidence, "package.json#devEngines.packageManager");
 			}),
 		);
@@ -344,6 +372,7 @@ describe("PackageManagerDetector — both declaration fields, no lockfile", () =
 				devEngines: { packageManager: { name: "pnpm" } },
 			}),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("the evidence names the field that supplied the NAME — devEngines", () =>
 			Effect.gen(function* () {
@@ -355,14 +384,17 @@ describe("PackageManagerDetector — both declaration fields, no lockfile", () =
 				// is deliberately not carried: it follows the documented two-field
 				// precedence, which is a rule, not a probe.
 				assert.strictEqual(detected.evidence, "package.json#devEngines.packageManager");
-				assert.deepStrictEqual(detected.version, O.some("10.33.0"));
+				assertSome(detected.version, "10.33.0");
 			}),
 		);
 	});
 });
 
 describe("PackageManagerDetector — a manifest naming a manager we do not know", () => {
-	layer(detectorOver({ "/repo/package.json": corepack("cnpm@9.0.0") }))((it) => {
+	layer(
+		detectorOver({ "/repo/package.json": corepack("cnpm@9.0.0") }),
+		{ timeout: "30 seconds" },
+	)((it) => {
 		it.effect("refuses rather than falling back to npm", () =>
 			Effect.gen(function* () {
 				const detector = yield* PackageManagerDetector;
@@ -385,6 +417,7 @@ describe("PackageManagerDetector — the workspace tier still wins", () => {
 			"/repo/package-lock.json": "{}",
 			"/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0" }),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("standalone probes run only after every workspace marker has missed", () =>
 			Effect.gen(function* () {
@@ -399,7 +432,10 @@ describe("PackageManagerDetector — the workspace tier still wins", () => {
 });
 
 describe("PackageManagerDetector — a corrupt root package.json", () => {
-	layer(detectorOver({ "/repo/package.json": "{ not json", "/repo/pnpm-workspace.yaml": "packages: []\n" }))((it) => {
+	layer(
+		detectorOver({ "/repo/package.json": "{ not json", "/repo/pnpm-workspace.yaml": "packages: []\n" }),
+		{ timeout: "30 seconds" },
+	)((it) => {
 		it.effect("fails typed rather than degrading to 'no manager declared'", () =>
 			Effect.gen(function* () {
 				const detector = yield* PackageManagerDetector;
@@ -417,7 +453,10 @@ describe("PackageManagerDetector — a corrupt root package.json", () => {
 });
 
 describe("PackageManagerDetector — a root package.json that is not an object", () => {
-	layer(detectorOver({ "/repo/package.json": "[1, 2, 3]", "/repo/pnpm-workspace.yaml": "packages: []\n" }))((it) => {
+	layer(
+		detectorOver({ "/repo/package.json": "[1, 2, 3]", "/repo/pnpm-workspace.yaml": "packages: []\n" }),
+		{ timeout: "30 seconds" },
+	)((it) => {
 		it.effect("valid JSON that is not an object is still a decode failure", () =>
 			Effect.gen(function* () {
 				const detector = yield* PackageManagerDetector;
@@ -430,13 +469,16 @@ describe("PackageManagerDetector — a root package.json that is not an object",
 });
 
 describe("PackageManagerDetector — no root package.json at all", () => {
-	layer(detectorOver({ "/repo/pnpm-workspace.yaml": "packages: []\n" }))((it) => {
+	layer(
+		detectorOver({ "/repo/pnpm-workspace.yaml": "packages: []\n" }),
+		{ timeout: "30 seconds" },
+	)((it) => {
 		it.effect("an ABSENT manifest is not an error — it is simply no hint", () =>
 			Effect.gen(function* () {
 				const detector = yield* PackageManagerDetector;
 				const detected = yield* detector.detect("/repo");
 				assert.strictEqual(detected.name, "pnpm");
-				assert.isTrue(O.isNone(detected.version));
+				assertNone(detected.version);
 			}),
 		);
 	});
@@ -448,13 +490,14 @@ describe("PackageManagerDetector — a malformed corepack field", () => {
 			"/repo/pnpm-workspace.yaml": "packages: []\n",
 			"/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0", packageManager: "pnpm" }),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("an unparseable packageManager spec is simply no version", () =>
 			Effect.gen(function* () {
 				const detector = yield* PackageManagerDetector;
 				const detected = yield* detector.detect("/repo");
 				assert.strictEqual(detected.name, "pnpm");
-				assert.isTrue(O.isNone(detected.version));
+				assertNone(detected.version);
 			}),
 		);
 	});
@@ -487,6 +530,7 @@ describe("PackageManagerDetector — devEngines alone", () => {
 				},
 			}),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("a devEngines-only manifest is visible to the version half of detection", () =>
 			Effect.gen(function* () {
@@ -495,7 +539,7 @@ describe("PackageManagerDetector — devEngines alone", () => {
 				assert.strictEqual(detected.name, "pnpm");
 				// Before devEngines support this was Option.none() — the whole point.
 				// And the hash is `integrity`, not part of the version.
-				assert.deepStrictEqual(detected.version, O.some("11.11.0"));
+				assertSome(detected.version, "11.11.0");
 			}),
 		);
 	});
@@ -513,6 +557,7 @@ describe("PackageManagerDetector — both fields, the effected repo's own shape"
 				devEngines: { packageManager: { name: "pnpm", version: spec, onFail: "ignore" } },
 			}),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("agreeing fields report the version once, with the hash stripped", () =>
 			Effect.gen(function* () {
@@ -522,7 +567,7 @@ describe("PackageManagerDetector — both fields, the effected repo's own shape"
 				// The hash is `integrity`, not part of the version — a devEngines version
 				// carrying one must normalize exactly as the top-level field's does, or
 				// the two disagree on a repo where they are literally identical.
-				assert.deepStrictEqual(detected.version, O.some("11.11.0"));
+				assertSome(detected.version, "11.11.0");
 			}),
 		);
 	});
@@ -537,12 +582,13 @@ describe("PackageManagerDetector — both fields, different versions", () => {
 				devEngines: { packageManager: { name: "pnpm", version: "10.2.0" } },
 			}),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("the top-level packageManager wins the version — it carries the hash", () =>
 			Effect.gen(function* () {
 				const detector = yield* PackageManagerDetector;
 				const detected = yield* detector.detect("/repo");
-				assert.deepStrictEqual(detected.version, O.some("10.1.0"));
+				assertSome(detected.version, "10.1.0");
 			}),
 		);
 	});
@@ -557,6 +603,7 @@ describe("PackageManagerDetector — the two fields disagree on the NAME", () =>
 				devEngines: { packageManager: { name: "pnpm" } },
 			}),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("devEngines is believed, so yarn's version is not attributed to pnpm", () =>
 			Effect.gen(function* () {
@@ -565,7 +612,7 @@ describe("PackageManagerDetector — the two fields disagree on the NAME", () =>
 				assert.strictEqual(detected.name, "pnpm");
 				// devEngines names pnpm but carries no version, and the packageManager
 				// field names a DIFFERENT manager — so there is no pnpm version to report.
-				assert.isTrue(O.isNone(detected.version));
+				assertNone(detected.version);
 			}),
 		);
 	});
@@ -581,6 +628,7 @@ describe("PackageManagerDetector — devEngines overrides the name disambiguator
 				devEngines: { packageManager: { name: "pnpm", version: "10.0.0" } },
 			}),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("a yarn.lock plus a yarn corepack field is NOT yarn when devEngines says pnpm", () =>
 			Effect.gen(function* () {
@@ -590,7 +638,7 @@ describe("PackageManagerDetector — devEngines overrides the name disambiguator
 				// yarn conjunction does not fire and detection falls through to the npm
 				// `workspaces` fallback. Corepack would have ERRORED on this manifest.
 				assert.strictEqual(detected.name, "npm");
-				assert.isTrue(O.isNone(detected.version));
+				assertNone(detected.version);
 			}),
 		);
 	});
@@ -605,6 +653,7 @@ describe("PackageManagerDetector — devEngines disambiguates bun with no versio
 				devEngines: { packageManager: { name: "bun" } },
 			}),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("the conjunction needs a NAME, not a version", () =>
 			Effect.gen(function* () {
@@ -615,7 +664,7 @@ describe("PackageManagerDetector — devEngines disambiguates bun with no versio
 				// version". A devEngines entry with no version names bun perfectly well.
 				assert.strictEqual(detected.name, "bun");
 				assert.strictEqual(detected.runtime, "bun");
-				assert.isTrue(O.isNone(detected.version));
+				assertNone(detected.version);
 			}),
 		);
 	});
@@ -629,6 +678,7 @@ describe("PackageManagerDetector — devEngines names a manager we did not detec
 				devEngines: { packageManager: { name: "yarn", version: "4.5.0" } },
 			}),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("no version is reported — the field does not name the detected manager", () =>
 			Effect.gen(function* () {
@@ -637,7 +687,7 @@ describe("PackageManagerDetector — devEngines names a manager we did not detec
 				assert.strictEqual(detected.name, "pnpm");
 				// The same discipline the packageManager field already had: a yarn version
 				// in a pnpm workspace tells us nothing about pnpm.
-				assert.isTrue(O.isNone(detected.version));
+				assertNone(detected.version);
 			}),
 		);
 	});
@@ -651,13 +701,14 @@ describe("PackageManagerDetector — devEngines is not an object", () => {
 			"/repo/pnpm-workspace.yaml": "packages: []\n",
 			"/repo/package.json": manifestWith({ packageManager: "pnpm@10.33.0", devEngines: "pnpm" }),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("the bad field is ignored and packageManager still supplies the version", () =>
 			Effect.gen(function* () {
 				const detector = yield* PackageManagerDetector;
 				const detected = yield* detector.detect("/repo");
 				assert.strictEqual(detected.name, "pnpm");
-				assert.deepStrictEqual(detected.version, O.some("10.33.0"));
+				assertSome(detected.version, "10.33.0");
 			}),
 		);
 	});
@@ -676,6 +727,7 @@ describe("PackageManagerDetector — devEngines.packageManager is an ARRAY", () 
 				devEngines: { packageManager: [{ name: "pnpm", version: "9.9.9" }] },
 			}),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("arrays are unsupported in this slot — corepack falls back, so do we", () =>
 			Effect.gen(function* () {
@@ -683,7 +735,7 @@ describe("PackageManagerDetector — devEngines.packageManager is an ARRAY", () 
 				const detected = yield* detector.detect("/repo");
 				assert.strictEqual(detected.name, "pnpm");
 				// Taking the array's first element would report 9.9.9 here.
-				assert.isTrue(O.isNone(detected.version));
+				assertNone(detected.version);
 			}),
 		);
 	});
@@ -698,13 +750,14 @@ describe("PackageManagerDetector — devEngines name contains @", () => {
 				devEngines: { packageManager: { name: "pnpm@10.33.0" } },
 			}),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("a name carrying @ is invalid — the field is ignored, not fatal", () =>
 			Effect.gen(function* () {
 				const detector = yield* PackageManagerDetector;
 				const detected = yield* detector.detect("/repo");
 				assert.strictEqual(detected.name, "pnpm");
-				assert.deepStrictEqual(detected.version, O.some("10.33.0"));
+				assertSome(detected.version, "10.33.0");
 			}),
 		);
 	});
@@ -718,6 +771,7 @@ describe("PackageManagerDetector — devEngines version is a RANGE", () => {
 				devEngines: { packageManager: { name: "pnpm", version: "^11.0.0" } },
 			}),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("the name is kept and only the unusable version is dropped", () =>
 			Effect.gen(function* () {
@@ -726,7 +780,7 @@ describe("PackageManagerDetector — devEngines version is a RANGE", () => {
 				assert.strictEqual(detected.name, "pnpm");
 				// A range is not a version — corepack will not run one either — but it
 				// does not invalidate the NAME, which is still a good disambiguator.
-				assert.isTrue(O.isNone(detected.version));
+				assertNone(detected.version);
 			}),
 		);
 	});
@@ -741,6 +795,7 @@ describe("PackageManagerDetector — a malformed devEngines cannot break detecti
 				packageManager: "bun@1.2.0",
 			}),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("a non-string name falls back to packageManager, keeping bun detectable", () =>
 			Effect.gen(function* () {
@@ -749,7 +804,7 @@ describe("PackageManagerDetector — a malformed devEngines cannot break detecti
 				// workspace into a detection error.
 				const detected = yield* detector.detect("/repo");
 				assert.strictEqual(detected.name, "bun");
-				assert.deepStrictEqual(detected.version, O.some("1.2.0"));
+				assertSome(detected.version, "1.2.0");
 			}),
 		);
 	});

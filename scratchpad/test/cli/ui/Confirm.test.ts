@@ -1,8 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { createElement } from "react";
 import { Cancelled, Fmt } from "../../../effected/cli/index.ts";
@@ -20,11 +20,11 @@ describe("Confirm reducer", () => {
 		assert.isFalse(Confirm.step(Confirm.step(start, "yes"), "no").confirmed);
 		assert.isTrue(Confirm.step(start, "flip").confirmed);
 		assert.isFalse(Confirm.step(Confirm.step(start, "flip"), "flip").confirmed);
-		assert.deepStrictEqual(Confirm.keys.match({ _tag: "Named", name: "left" }), O.some("flip"));
-		assert.deepStrictEqual(Confirm.keys.match({ _tag: "Named", name: "right" }), O.some("flip"));
-		assert.deepStrictEqual(Confirm.keys.match({ _tag: "Char", char: "y" }), O.some("yes"));
-		assert.deepStrictEqual(Confirm.keys.match({ _tag: "Char", char: "n" }), O.some("no"));
-		assert.deepStrictEqual(Confirm.keys.match({ _tag: "Char", char: "q" }), O.some("cancel"));
+		assertSome(Confirm.keys.match({ _tag: "Named", name: "left" }), "flip");
+		assertSome(Confirm.keys.match({ _tag: "Named", name: "right" }), "flip");
+		assertSome(Confirm.keys.match({ _tag: "Char", char: "y" }), "yes");
+		assertSome(Confirm.keys.match({ _tag: "Char", char: "n" }), "no");
+		assertSome(Confirm.keys.match({ _tag: "Char", char: "q" }), "cancel");
 	});
 
 	it("space toggles only a toggle row: on the yes/no row it changes nothing", () => {
@@ -81,7 +81,7 @@ describe("Confirm.screen under CliUiTest", () => {
 			const result = yield* handle.result;
 			assert.isFalse(result.toggles.promote);
 			assert.isTrue(result.confirmed);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("with no toggles it shows only the question, the answer and the help", () =>
@@ -99,7 +99,7 @@ describe("Confirm.screen under CliUiTest", () => {
 			// okfit's shape infers K = "promote" even with no drafts: the key is then absent, and the type says so.
 			assert.strictEqual(result.toggles.promote, undefined);
 			assert.isFalse(result.toggles.promote ?? false, "okfit reads it with ?? false");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("the chosen answer is marked without colour, and moves with y, n and the arrows", () =>
@@ -111,7 +111,7 @@ describe("Confirm.screen under CliUiTest", () => {
 			assert.include(answer(yield* handle.plainFrame), "[Yes]");
 			yield* handle.type("n");
 			assert.include(answer(yield* handle.plainFrame), "[No]");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("q cancels with escape", () =>
@@ -120,7 +120,7 @@ describe("Confirm.screen under CliUiTest", () => {
 			yield* handle.type("q");
 			const error = yield* Effect.flip(handle.result);
 			assert.strictEqual(S.is(Cancelled)(error) ? error.reason : undefined, "escape");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("the help line fits 80 columns and names y, n, space, enter and esc", () =>
@@ -130,7 +130,7 @@ describe("Confirm.screen under CliUiTest", () => {
 			assert.notInclude(help, "…", help);
 			for (const part of ["y yes", "n no", "space toggle", "enter submit", "q/esc cancel"])
 				assert.include(help, part, help);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("with no toggles the help names no row or toggle keys", () =>
@@ -141,7 +141,7 @@ describe("Confirm.screen under CliUiTest", () => {
 			assert.notInclude(help, "toggle", help);
 			for (const part of ["y yes", "n no", "←/→ flip", "enter submit", "q/esc cancel"])
 				assert.include(help, part, help);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("twenty toggles on a 10-row terminal scroll in a window that never fills the terminal", () =>
@@ -170,7 +170,7 @@ describe("Confirm.screen under CliUiTest", () => {
 			assert.strictEqual(Object.keys(result.toggles).length, 20);
 			assert.isTrue(result.toggles.t14);
 			assert.isFalse(result.toggles.t13);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("toggle rows: ASCII check glyphs, accent when highlighted, and labels cut to the width", () =>
@@ -220,7 +220,7 @@ describe("Confirm.screen under CliUiTest", () => {
 			} else {
 				assert.fail("expected a defect, but the confirm resolved");
 			}
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 

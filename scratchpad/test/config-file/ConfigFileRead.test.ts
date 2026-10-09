@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 // `ConfigFile.read` — the one-shot form: a path and a schema in one expression,
 // with no service class, no layer and no tag.
 //
@@ -15,7 +14,7 @@ import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import type * as FileSystem from "effect/FileSystem";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import { assertSome } from "@effect/vitest/utils";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
@@ -32,140 +31,162 @@ const platform = (files: Record<string, string>): Layer.Layer<FileSystem.FileSys
 	Layer.mergeAll(MemoryFileSystem.layerWith(files), Path.layer);
 
 describe("ConfigFile.read", () => {
-	it.effect("reads, decodes and validates one explicit path", () =>
-		Effect.gen(function* () {
-			const value = yield* ConfigFile.read("/app/.apprc", { schema: AppShape, codec: JsonCodec });
-			assert.strictEqual(value.port, 8080);
-			// The decoded value is a real class instance, exactly as `loadFrom` gives.
-			assert.instanceOf(value, AppShape);
-		}).pipe(Effect.provide(platform({ "/app/.apprc": `{"port":8080}` }))),
-	);
-
-	it.effect("needs no service class, no layer and no tag", () =>
-		// The whole point: this is the entire call site. Under `ConfigFile.layer`
-		// the same read costs a `ConfigFile.Service` subclass, a layer bound to a
-		// const, and a provide at the boundary.
-		Effect.gen(function* () {
-			const value = yield* ConfigFile.read("/etc/app.json", { schema: AppShape, codec: JsonCodec });
-			assert.strictEqual(value.port, 1);
-		}).pipe(Effect.provide(platform({ "/etc/app.json": `{"port":1}` }))),
-	);
-
-	it.effect("a missing file fails with ConfigFileReadError, carrying the path", () =>
-		Effect.gen(function* () {
-			const error = yield* Effect.flip(ConfigFile.read("/nope.json", { schema: AppShape, codec: JsonCodec }));
-			assert.instanceOf(error, ConfigFileReadError);
-			assert.strictEqual(error.path, "/nope.json");
-		}).pipe(Effect.provide(platform({}))),
-	);
-
-	it.effect("unparseable content fails with ConfigCodecError", () =>
-		Effect.gen(function* () {
-			const error = yield* Effect.flip(ConfigFile.read("/app/.apprc", { schema: AppShape, codec: JsonCodec }));
-			assert.instanceOf(error, ConfigCodecError);
-		}).pipe(Effect.provide(platform({ "/app/.apprc": "{ not json" }))),
-	);
-
-	it.effect("a schema mismatch fails with ConfigValidationError carrying the STRUCTURED issue", () =>
-		Effect.gen(function* () {
-			const error = yield* Effect.flip(ConfigFile.read("/app/.apprc", { schema: AppShape, codec: JsonCodec }));
-			assert.instanceOf(error, ConfigValidationError);
-			// The whole error-ladder point: the schema issue tree is carried
-			// structurally, never stringified into a `reason` field the way the old
-			// ConfigLoaderError did it.
-			assert.isDefined(error.issue);
-		}).pipe(Effect.provide(platform({ "/app/.apprc": `{"port":"nope"}` }))),
-	);
-
-	it.effect("the path is recorded on a validation failure", () =>
-		Effect.gen(function* () {
-			const error = yield* Effect.flip(ConfigFile.read("/app/.apprc", { schema: AppShape, codec: JsonCodec }));
-			assert.instanceOf(error, ConfigValidationError);
-			// `Option.some(path)` — a one-shot read always knows where it read from,
-			// unlike `validate`, which decodes an in-memory value and has no path.
-			assert.deepStrictEqual(error.path, O.some("/app/.apprc"));
-		}).pipe(Effect.provide(platform({ "/app/.apprc": `{"port":"nope"}` }))),
-	);
-
-	it.effect("the codec is an explicit argument — JSONC comments parse under JsoncCodec", () =>
-		// The codec stays a parameter rather than being inferred or defaulted, so a
-		// JSON-only consumer never references the JSONC/YAML/TOML modules and the
-		// free-standing-codec tree-shaking rule is untouched.
-		Effect.gen(function* () {
-			const value = yield* ConfigFile.read("/app/.apprc", { schema: AppShape, codec: JsoncCodec });
-			assert.strictEqual(value.port, 3000);
-		}).pipe(Effect.provide(platform({ "/app/.apprc": `{ /* the port */ "port": 3000 }` }))),
-	);
-
-	it.effect("the SAME path can be read through two different schemas", () =>
-		// The shape `ConfigFile.layer` cannot express without a second service class:
-		// schema is per CALL here, not per layer.
-		Effect.gen(function* () {
-			class NameShape extends S.Class<NameShape>("NameShape")({ name: S.String }) {}
-			const asPort = yield* ConfigFile.read("/app/.apprc", { schema: AppShape, codec: JsonCodec });
-			const asName = yield* ConfigFile.read("/app/.apprc", { schema: NameShape, codec: JsonCodec });
-			assert.strictEqual(asPort.port, 8080);
-			assert.strictEqual(asName.name, "app");
-		}).pipe(Effect.provide(platform({ "/app/.apprc": `{"port":8080,"name":"app"}` }))),
-	);
-	describe("parseOptions", () => {
-		const withExtra = { "/app/.apprc": `{"port":8080,"removedCredential":"stale"}` };
-
-		it.effect("drops unknown keys silently by default", () =>
+	it.layer(platform({ "/app/.apprc": `{"port":8080}` }), { timeout: "30 seconds" })((it) => {
+		it.effect("reads, decodes and validates one explicit path", () =>
 			Effect.gen(function* () {
 				const value = yield* ConfigFile.read("/app/.apprc", { schema: AppShape, codec: JsonCodec });
 				assert.strictEqual(value.port, 8080);
-			}).pipe(Effect.provide(platform(withExtra))),
+				// The decoded value is a real class instance, exactly as `loadFrom` gives.
+				assert.instanceOf(value, AppShape);
+			}),
 		);
+	});
 
-		it.effect("onExcessProperty error rejects a leftover field and names its path", () =>
+	it.layer(platform({ "/etc/app.json": `{"port":1}` }), { timeout: "30 seconds" })((it) => {
+		it.effect("needs no service class, no layer and no tag", () =>
+			// The whole point: this is the entire call site. Under `ConfigFile.layer`
+			// the same read costs a `ConfigFile.Service` subclass, a layer bound to a
+			// const, and a provide at the boundary.
 			Effect.gen(function* () {
-				// A config loader that silently discards part of a user's file cannot
-				// report a typo'd section, and cannot enforce a field the schema
-				// deliberately removed.
-				const error = yield* Effect.flip(
-					ConfigFile.read("/app/.apprc", {
+				const value = yield* ConfigFile.read("/etc/app.json", { schema: AppShape, codec: JsonCodec });
+				assert.strictEqual(value.port, 1);
+			}),
+		);
+	});
+
+	it.layer(platform({}), { timeout: "30 seconds" })((it) => {
+		it.effect("a missing file fails with ConfigFileReadError, carrying the path", () =>
+			Effect.gen(function* () {
+				const error = yield* Effect.flip(ConfigFile.read("/nope.json", { schema: AppShape, codec: JsonCodec }));
+				assert.instanceOf(error, ConfigFileReadError);
+				assert.strictEqual(error.path, "/nope.json");
+			}),
+		);
+	});
+
+	it.layer(platform({ "/app/.apprc": "{ not json" }), { timeout: "30 seconds" })((it) => {
+		it.effect("unparseable content fails with ConfigCodecError", () =>
+			Effect.gen(function* () {
+				const error = yield* Effect.flip(ConfigFile.read("/app/.apprc", { schema: AppShape, codec: JsonCodec }));
+				assert.instanceOf(error, ConfigCodecError);
+			}),
+		);
+	});
+
+	it.layer(platform({ "/app/.apprc": `{"port":"nope"}` }), { timeout: "30 seconds" })((it) => {
+		it.effect("a schema mismatch fails with ConfigValidationError carrying the STRUCTURED issue", () =>
+			Effect.gen(function* () {
+				const error = yield* Effect.flip(ConfigFile.read("/app/.apprc", { schema: AppShape, codec: JsonCodec }));
+				assert.instanceOf(error, ConfigValidationError);
+				// The whole error-ladder point: the schema issue tree is carried
+				// structurally, never stringified into a `reason` field the way the old
+				// ConfigLoaderError did it.
+				assert.isDefined(error.issue);
+			}),
+		);
+	});
+
+	it.layer(platform({ "/app/.apprc": `{"port":"nope"}` }), { timeout: "30 seconds" })((it) => {
+		it.effect("the path is recorded on a validation failure", () =>
+			Effect.gen(function* () {
+				const error = yield* Effect.flip(ConfigFile.read("/app/.apprc", { schema: AppShape, codec: JsonCodec }));
+				assert.instanceOf(error, ConfigValidationError);
+				// `Option.some(path)` — a one-shot read always knows where it read from,
+				// unlike `validate`, which decodes an in-memory value and has no path.
+				assertSome(error.path, "/app/.apprc");
+			}),
+		);
+	});
+
+	it.layer(platform({ "/app/.apprc": `{ /* the port */ "port": 3000 }` }), { timeout: "30 seconds" })((it) => {
+		it.effect("the codec is an explicit argument — JSONC comments parse under JsoncCodec", () =>
+			// The codec stays a parameter rather than being inferred or defaulted, so a
+			// JSON-only consumer never references the JSONC/YAML/TOML modules and the
+			// free-standing-codec tree-shaking rule is untouched.
+			Effect.gen(function* () {
+				const value = yield* ConfigFile.read("/app/.apprc", { schema: AppShape, codec: JsoncCodec });
+				assert.strictEqual(value.port, 3000);
+			}),
+		);
+	});
+
+	it.layer(platform({ "/app/.apprc": `{"port":8080,"name":"app"}` }), { timeout: "30 seconds" })((it) => {
+		it.effect("the SAME path can be read through two different schemas", () =>
+			// The shape `ConfigFile.layer` cannot express without a second service class:
+			// schema is per CALL here, not per layer.
+			Effect.gen(function* () {
+				class NameShape extends S.Class<NameShape>("NameShape")({ name: S.String }) {}
+				const asPort = yield* ConfigFile.read("/app/.apprc", { schema: AppShape, codec: JsonCodec });
+				const asName = yield* ConfigFile.read("/app/.apprc", { schema: NameShape, codec: JsonCodec });
+				assert.strictEqual(asPort.port, 8080);
+				assert.strictEqual(asName.name, "app");
+			}),
+		);
+	});
+	describe("parseOptions", () => {
+		const withExtra = { "/app/.apprc": `{"port":8080,"removedCredential":"stale"}` };
+
+		it.layer(platform(withExtra), { timeout: "30 seconds" })((it) => {
+			it.effect("drops unknown keys silently by default", () =>
+				Effect.gen(function* () {
+					const value = yield* ConfigFile.read("/app/.apprc", { schema: AppShape, codec: JsonCodec });
+					assert.strictEqual(value.port, 8080);
+				}),
+			);
+		});
+
+		it.layer(platform(withExtra), { timeout: "30 seconds" })((it) => {
+			it.effect("onExcessProperty error rejects a leftover field and names its path", () =>
+				Effect.gen(function* () {
+					// A config loader that silently discards part of a user's file cannot
+					// report a typo'd section, and cannot enforce a field the schema
+					// deliberately removed.
+					const error = yield* Effect.flip(
+						ConfigFile.read("/app/.apprc", {
+							schema: AppShape,
+							codec: JsonCodec,
+							parseOptions: { onExcessProperty: "error" },
+						}),
+					);
+					assert.instanceOf(error, ConfigValidationError);
+					assert.include(Result.getOrThrow(S.encodeResult(JsonValue)(error.issue)), "removedCredential");
+				}),
+			);
+		});
+
+		it.layer(platform({ "/app/.apprc": `{"port":8080}` }), { timeout: "30 seconds" })((it) => {
+			it.effect("onExcessProperty error leaves a clean document alone", () =>
+				Effect.gen(function* () {
+					const value = yield* ConfigFile.read("/app/.apprc", {
 						schema: AppShape,
 						codec: JsonCodec,
 						parseOptions: { onExcessProperty: "error" },
-					}),
-				);
-				assert.instanceOf(error, ConfigValidationError);
-				assert.include(Result.getOrThrow(S.encodeResult(JsonValue)(error.issue)), "removedCredential");
-			}).pipe(Effect.provide(platform(withExtra))),
-		);
+					});
+					assert.strictEqual(value.port, 8080);
+				}),
+			);
+		});
 
-		it.effect("onExcessProperty error leaves a clean document alone", () =>
-			Effect.gen(function* () {
-				const value = yield* ConfigFile.read("/app/.apprc", {
-					schema: AppShape,
-					codec: JsonCodec,
-					parseOptions: { onExcessProperty: "error" },
-				});
-				assert.strictEqual(value.port, 8080);
-			}).pipe(Effect.provide(platform({ "/app/.apprc": `{"port":8080}` }))),
-		);
-
-		it.effect("a rest switches excess checking off for its struct, not just for the keys it covers", () =>
-			Effect.gen(function* () {
-				// The half that decides whether this is usable: a schema that
-				// deliberately admits a pass-through section must keep working under
-				// "error", or strictness would break a documented feature.
-				const Passthrough = S.StructWithRest(S.Struct({ port: S.Finite }), [
-					S.Record(S.String, S.Unknown),
-				]);
-				const value = yield* ConfigFile.read("/app/.apprc", {
-					schema: Passthrough,
-					codec: JsonCodec,
-					parseOptions: { onExcessProperty: "error" },
-				});
-				assert.strictEqual(value.port, 8080);
-				// The rest is `Record(String, Unknown)`, so every key at this level is
-				// admitted — the excess pass does not run at all for a struct that
-				// owns an index signature. Measured rather than assumed: the shape
-				// suggests a rest exempts only what it covers, and it does not.
-				assert.strictEqual(value.anything, "goes");
-			}).pipe(Effect.provide(platform({ "/app/.apprc": `{"port":8080,"anything":"goes"}` }))),
-		);
+		it.layer(platform({ "/app/.apprc": `{"port":8080,"anything":"goes"}` }), { timeout: "30 seconds" })((it) => {
+			it.effect("a rest switches excess checking off for its struct, not just for the keys it covers", () =>
+				Effect.gen(function* () {
+					// The half that decides whether this is usable: a schema that
+					// deliberately admits a pass-through section must keep working under
+					// "error", or strictness would break a documented feature.
+					const Passthrough = S.StructWithRest(S.Struct({ port: S.Finite }), [S.Record(S.String, S.Unknown)]);
+					const value = yield* ConfigFile.read("/app/.apprc", {
+						schema: Passthrough,
+						codec: JsonCodec,
+						parseOptions: { onExcessProperty: "error" },
+					});
+					assert.strictEqual(value.port, 8080);
+					// The rest is `Record(String, Unknown)`, so every key at this level is
+					// admitted — the excess pass does not run at all for a struct that
+					// owns an index signature. Measured rather than assumed: the shape
+					// suggests a rest exempts only what it covers, and it does not.
+					assert.strictEqual(value.anything, "goes");
+				}),
+			);
+		});
 	});
 });

@@ -18,24 +18,26 @@ import { denied } from "./helpers.ts";
 const encoder = new TextEncoder();
 
 describe("MemoryFileSystem.layer — Volume", () => {
-	it.effect("THE INVARIANT: within one build, Volume inspects the same volume backing FileSystem", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			const volume = yield* MemoryFileSystem.Volume;
+	it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
+		it.effect("THE INVARIANT: within one build, Volume inspects the same volume backing FileSystem", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const volume = yield* MemoryFileSystem.Volume;
 
-			// A write through the FileSystem service is immediately visible to
-			// the inspection service — one underlying volume, two views.
-			yield* fs.makeDirectory("/managed", { recursive: true });
-			yield* fs.writeFileString("/managed/output.txt", "written through fs");
-			assert.strictEqual(volume.text("/managed/output.txt"), "written through fs");
-			assert.isTrue(volume.has("/managed"));
+				// A write through the FileSystem service is immediately visible to
+				// the inspection service — one underlying volume, two views.
+				yield* fs.makeDirectory("/managed", { recursive: true });
+				yield* fs.writeFileString("/managed/output.txt", "written through fs");
+				assert.strictEqual(volume.text("/managed/output.txt"), "written through fs");
+				assert.isTrue(volume.has("/managed"));
 
-			// And the view is live, not a copy taken at build: a removal shows.
-			yield* fs.remove("/managed/output.txt");
-			assert.isUndefined(volume.text("/managed/output.txt"));
-			assert.isFalse(volume.has("/managed/output.txt"));
-		}).pipe(Effect.provide(MemoryFileSystem.layer)),
-	);
+				// And the view is live, not a copy taken at build: a removal shows.
+				yield* fs.remove("/managed/output.txt");
+				assert.isUndefined(volume.text("/managed/output.txt"));
+				assert.isFalse(volume.has("/managed/output.txt"));
+			}),
+		);
+	});
 
 	it.effect("per-build semantics hold — two provides are two volumes, each pair internally consistent", () =>
 		Effect.gen(function* () {
@@ -64,104 +66,114 @@ describe("MemoryFileSystem.layerWith — Volume", () => {
 		"/repo/dangling": MemoryFileSystem.symlink("/repo/absent"),
 	});
 
-	it.effect("seed parity with layerWith — every entry kind lands, inspectable and readable", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			const volume = yield* MemoryFileSystem.Volume;
+	it.layer(Seeded, { timeout: "30 seconds" })((it) => {
+		it.effect("seed parity with layerWith — every entry kind lands, inspectable and readable", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const volume = yield* MemoryFileSystem.Volume;
 
-			// Seeded files answer through both views.
-			assert.strictEqual(volume.text("/repo/package.json"), `{ "name": "fixture" }`);
-			assert.strictEqual(yield* fs.readFileString("/repo/package.json"), `{ "name": "fixture" }`);
-			assert.strictEqual((yield* fs.stat("/repo/bin/run.sh")).mode & 0o777, 0o755);
+				// Seeded files answer through both views.
+				assert.strictEqual(volume.text("/repo/package.json"), `{ "name": "fixture" }`);
+				assert.strictEqual(yield* fs.readFileString("/repo/package.json"), `{ "name": "fixture" }`);
+				assert.strictEqual((yield* fs.stat("/repo/bin/run.sh")).mode & 0o777, 0o755);
 
-			// has(): files, directories and symlinks all count as present —
-			// the symlink itself, its target never consulted.
-			assert.isTrue(volume.has("/repo/package.json"));
-			assert.isTrue(volume.has("/repo/empty"));
-			assert.isTrue(volume.has("/repo/latest"));
-			assert.isTrue(volume.has("/repo/dangling"));
-			assert.isFalse(volume.has("/repo/absent"));
+				// has(): files, directories and symlinks all count as present —
+				// the symlink itself, its target never consulted.
+				assert.isTrue(volume.has("/repo/package.json"));
+				assert.isTrue(volume.has("/repo/empty"));
+				assert.isTrue(volume.has("/repo/latest"));
+				assert.isTrue(volume.has("/repo/dangling"));
+				assert.isFalse(volume.has("/repo/absent"));
 
-			// The literal view: a symlink has no content of its own (reading
-			// THROUGH it is the FileSystem API's job), a directory neither.
-			assert.isUndefined(volume.text("/repo/latest"));
-			assert.isUndefined(volume.bytes("/repo/empty"));
-			assert.strictEqual(yield* fs.readFileString("/repo/latest"), `{ "name": "fixture" }`);
-		}).pipe(Effect.provide(Seeded)),
-	);
+				// The literal view: a symlink has no content of its own (reading
+				// THROUGH it is the FileSystem API's job), a directory neither.
+				assert.isUndefined(volume.text("/repo/latest"));
+				assert.isUndefined(volume.bytes("/repo/empty"));
+				assert.strictEqual(yield* fs.readFileString("/repo/latest"), `{ "name": "fixture" }`);
+			}),
+		);
+	});
 
-	it.effect("snapshot and paths list regular files only — seeded AND written, sorted, no dirs or symlinks", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			const volume = yield* MemoryFileSystem.Volume;
+	it.layer(Seeded, { timeout: "30 seconds" })((it) => {
+		it.effect("snapshot and paths list regular files only — seeded AND written, sorted, no dirs or symlinks", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const volume = yield* MemoryFileSystem.Volume;
 
-			yield* fs.writeFileString("/repo/written.txt", "later");
+				yield* fs.writeFileString("/repo/written.txt", "later");
 
-			const snapshot = volume.snapshot();
-			assert.deepStrictEqual(Object.keys(snapshot).sort(), [
-				"/repo/bin/run.sh",
-				"/repo/package.json",
-				"/repo/written.txt",
-			]);
-			assert.deepStrictEqual(snapshot["/repo/written.txt"], encoder.encode("later"));
+				const snapshot = volume.snapshot();
+				assert.deepStrictEqual(Object.keys(snapshot).sort(), [
+					"/repo/bin/run.sh",
+					"/repo/package.json",
+					"/repo/written.txt",
+				]);
+				assert.deepStrictEqual(snapshot["/repo/written.txt"], encoder.encode("later"));
 
-			// paths() is exactly snapshot's key set, sorted lexicographically.
-			assert.deepStrictEqual(volume.paths(), ["/repo/bin/run.sh", "/repo/package.json", "/repo/written.txt"]);
-		}).pipe(Effect.provide(Seeded)),
-	);
+				// paths() is exactly snapshot's key set, sorted lexicographically.
+				assert.deepStrictEqual(volume.paths(), ["/repo/bin/run.sh", "/repo/package.json", "/repo/written.txt"]);
+			}),
+		);
+	});
 
-	it.effect("honest absence — undefined for absent paths, '' only for a genuinely empty file", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			const volume = yield* MemoryFileSystem.Volume;
+	it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
+		it.effect("honest absence — undefined for absent paths, '' only for a genuinely empty file", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const volume = yield* MemoryFileSystem.Volume;
 
-			// THE #249 CONTRACT, carried to the sync view: absence is undefined,
-			// never a fabricated "".
-			assert.isUndefined(volume.text("/absent/changesets/config.json"));
-			assert.isUndefined(volume.bytes("/absent.bin"));
+				// THE #249 CONTRACT, carried to the sync view: absence is undefined,
+				// never a fabricated "".
+				assert.isUndefined(volume.text("/absent/changesets/config.json"));
+				assert.isUndefined(volume.bytes("/absent.bin"));
 
-			// "" round-trips for a real empty file — distinguishable from absent.
-			yield* fs.writeFileString("/empty.txt", "");
-			assert.strictEqual(volume.text("/empty.txt"), "");
-			assert.deepStrictEqual(volume.bytes("/empty.txt"), new Uint8Array());
-		}).pipe(Effect.provide(MemoryFileSystem.layer)),
-	);
+				// "" round-trips for a real empty file — distinguishable from absent.
+				yield* fs.writeFileString("/empty.txt", "");
+				assert.strictEqual(volume.text("/empty.txt"), "");
+				assert.deepStrictEqual(volume.bytes("/empty.txt"), new Uint8Array());
+			}),
+		);
+	});
 
-	it.effect("queries normalize lexically — '//', '.', '..' and relative paths resolve, symlinks stay literal", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			const volume = yield* MemoryFileSystem.Volume;
-			yield* fs.makeDirectory("/a/b", { recursive: true });
-			yield* fs.writeFileString("/a/b/c.txt", "found");
+	it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
+		it.effect("queries normalize lexically — '//', '.', '..' and relative paths resolve, symlinks stay literal", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const volume = yield* MemoryFileSystem.Volume;
+				yield* fs.makeDirectory("/a/b", { recursive: true });
+				yield* fs.writeFileString("/a/b/c.txt", "found");
 
-			assert.strictEqual(volume.text("/a//b/./c.txt"), "found");
-			assert.strictEqual(volume.text("/a/x/../b/c.txt"), "found");
-			// Relative paths resolve from the virtual root, matching the engine.
-			assert.strictEqual(volume.text("a/b/c.txt"), "found");
-			// Symlinks stay literal — never followed, not even mid-path: the link
-			// itself is present, but nothing lives "under" it in this view.
-			yield* fs.symlink("/a/b", "/link");
-			assert.isTrue(volume.has("/link"));
-			assert.isFalse(volume.isDirectory("/link"));
-			assert.isFalse(volume.has("/link/c.txt"));
-			assert.isUndefined(volume.text("/link/c.txt"));
-			assert.isUndefined(volume.readDirectory("/link"));
-		}).pipe(Effect.provide(MemoryFileSystem.layer)),
-	);
+				assert.strictEqual(volume.text("/a//b/./c.txt"), "found");
+				assert.strictEqual(volume.text("/a/x/../b/c.txt"), "found");
+				// Relative paths resolve from the virtual root, matching the engine.
+				assert.strictEqual(volume.text("a/b/c.txt"), "found");
+				// Symlinks stay literal — never followed, not even mid-path: the link
+				// itself is present, but nothing lives "under" it in this view.
+				yield* fs.symlink("/a/b", "/link");
+				assert.isTrue(volume.has("/link"));
+				assert.isFalse(volume.isDirectory("/link"));
+				assert.isFalse(volume.has("/link/c.txt"));
+				assert.isUndefined(volume.text("/link/c.txt"));
+				assert.isUndefined(volume.readDirectory("/link"));
+			}),
+		);
+	});
 
-	it.effect("returned byte arrays are defensive copies — mutating them cannot corrupt the volume", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			const volume = yield* MemoryFileSystem.Volume;
-			yield* fs.writeFileString("/data.bin", "abc");
+	it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
+		it.effect("returned byte arrays are defensive copies — mutating them cannot corrupt the volume", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const volume = yield* MemoryFileSystem.Volume;
+				yield* fs.writeFileString("/data.bin", "abc");
 
-			const stolen = volume.bytes("/data.bin");
-			assert.isDefined(stolen);
-			stolen?.fill(0);
-			assert.strictEqual(volume.text("/data.bin"), "abc");
-			assert.strictEqual(yield* fs.readFileString("/data.bin"), "abc");
-		}).pipe(Effect.provide(MemoryFileSystem.layer)),
-	);
+				const stolen = volume.bytes("/data.bin");
+				assert.isDefined(stolen);
+				stolen?.fill(0);
+				assert.strictEqual(volume.text("/data.bin"), "abc");
+				assert.strictEqual(yield* fs.readFileString("/data.bin"), "abc");
+			}),
+		);
+	});
 
 	it.effect("a contradictory seed dies — a wiring bug, mirroring layerWith", () =>
 		Effect.gen(function* () {
@@ -177,50 +189,49 @@ describe("MemoryFileSystem.layerWith — Volume", () => {
 });
 
 describe("inspection composed under fault injection", () => {
-	it.effect("delegated writes land in the volume; a faulted write does not", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			const volume = yield* MemoryFileSystem.Volume;
+	it.layer(MemoryFileSystem.layerFaulty({
+		writeFileString: (path) =>
+			path === "/blocked.txt" ? Effect.fail(denied("writeFileString", path)) : undefined,
+	}).pipe(Layer.provideMerge(MemoryFileSystem.layerWith({ "/seed.txt": "seeded" }))), { timeout: "30 seconds" })((it) => {
+		it.effect("delegated writes land in the volume; a faulted write does not", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const volume = yield* MemoryFileSystem.Volume;
 
-			// The delegating branch really writes — the spy pattern's guarantee.
-			yield* fs.writeFileString("/allowed.txt", "landed");
-			assert.strictEqual(volume.text("/allowed.txt"), "landed");
+				// The delegating branch really writes — the spy pattern's guarantee.
+				yield* fs.writeFileString("/allowed.txt", "landed");
+				assert.strictEqual(volume.text("/allowed.txt"), "landed");
 
-			// The faulted branch fails typed AND leaves no trace in the volume.
-			const error = yield* Effect.flip(fs.writeFileString("/blocked.txt", "never"));
-			assert.strictEqual(error.reason._tag, "PermissionDenied");
-			assert.isFalse(volume.has("/blocked.txt"));
-			assert.deepStrictEqual(volume.paths(), ["/allowed.txt", "/seed.txt"]);
-		}).pipe(
-			// provideMerge: the decorated FileSystem wins the key; Volume survives.
-			Effect.provide(
-				MemoryFileSystem.layerFaulty({
-					writeFileString: (path) =>
-						path === "/blocked.txt" ? Effect.fail(denied("writeFileString", path)) : undefined,
-				}).pipe(Layer.provideMerge(MemoryFileSystem.layerWith({ "/seed.txt": "seeded" }))),
-			),
-		),
-	);
+				// The faulted branch fails typed AND leaves no trace in the volume.
+				const error = yield* Effect.flip(fs.writeFileString("/blocked.txt", "never"));
+				assert.strictEqual(error.reason._tag, "PermissionDenied");
+				assert.isFalse(volume.has("/blocked.txt"));
+				assert.deepStrictEqual(volume.paths(), ["/allowed.txt", "/seed.txt"]);
+			}),
+		);
+	});
 });
 
 describe("the templates-fixture acceptance sketch", () => {
-	it.effect("write-then-read-back assertions become vol.text(path)", () =>
-		Effect.gen(function* () {
-			// The downstream shape: code under test writes a managed file; the
-			// test asserts on final content synchronously — previously
-			// `fs.files.get(p)` on a hand-rolled Map double.
-			const fs = yield* FileSystem.FileSystem;
-			const vol = yield* MemoryFileSystem.Volume;
+	it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
+		it.effect("write-then-read-back assertions become vol.text(path)", () =>
+			Effect.gen(function* () {
+				// The downstream shape: code under test writes a managed file; the
+				// test asserts on final content synchronously — previously
+				// `fs.files.get(p)` on a hand-rolled Map double.
+				const fs = yield* FileSystem.FileSystem;
+				const vol = yield* MemoryFileSystem.Volume;
 
-			const path = "/repo/.github/workflows/release.yml";
-			yield* fs.makeDirectory("/repo/.github/workflows", { recursive: true });
-			yield* fs.writeFileString(path, "# BEGIN managed\njobs: {}\n# END managed\n");
+				const path = "/repo/.github/workflows/release.yml";
+				yield* fs.makeDirectory("/repo/.github/workflows", { recursive: true });
+				yield* fs.writeFileString(path, "# BEGIN managed\njobs: {}\n# END managed\n");
 
-			assert.strictEqual(vol.text(path), "# BEGIN managed\njobs: {}\n# END managed\n");
-			assert.isTrue(vol.has("/repo/.github"));
-			assert.deepStrictEqual(vol.paths(), [path]);
-		}).pipe(Effect.provide(MemoryFileSystem.layer)),
-	);
+				assert.strictEqual(vol.text(path), "# BEGIN managed\njobs: {}\n# END managed\n");
+				assert.isTrue(vol.has("/repo/.github"));
+				assert.deepStrictEqual(vol.paths(), [path]);
+			}),
+		);
+	});
 });
 
 // Modification time on the inspection view (effected#396 item 6): the piece a

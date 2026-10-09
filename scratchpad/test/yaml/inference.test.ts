@@ -4,6 +4,7 @@
 // type, the residual report, and the typed conflict error.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -95,7 +96,7 @@ describe("StyleEvidence — the monoid", () => {
 describe("YamlLint.resolveStrict", () => {
 	it("empty evidence resolves to the base config untouched", () => {
 		const resolved = YamlLint.resolveStrict(StyleEvidence.empty);
-		assert.isTrue(Result.isSuccess(resolved));
+		assertSuccess(resolved, Result.getOrThrow(resolved));
 		if (Result.isSuccess(resolved)) {
 			assert.deepStrictEqual(resolved.success.rules, YamlLintConfig.default.rules);
 		}
@@ -103,7 +104,7 @@ describe("YamlLint.resolveStrict", () => {
 
 	it("unanimous evidence overlays exact options onto the base", () => {
 		const resolved = YamlLint.inferStrict("a: 'x'\nb: 'y'\n", YamlLint.builtins);
-		assert.isTrue(Result.isSuccess(resolved));
+		assertSuccess(resolved, Result.getOrThrow(resolved));
 		if (Result.isSuccess(resolved)) {
 			// The observed style overrides the base default's taste call...
 			assert.deepStrictEqual(resolved.success.rules["quoted-strings"], { quoteType: "single" });
@@ -119,7 +120,7 @@ describe("YamlLint.resolveStrict", () => {
 	it("conflicting evidence fails typed, naming dimension, spellings and positions", () => {
 		const text = "a: 'x'\nb: \"y\"\n";
 		const resolved = YamlLint.inferStrict(text, YamlLint.builtins);
-		assert.isTrue(Result.isFailure(resolved), "a mixed-quote corpus must not resolve strictly");
+		assertFailure(resolved, resolved.pipe(Result.flip, Result.getOrThrow));
 		if (Result.isFailure(resolved)) {
 			assert.instanceOf(resolved.failure, YamlStyleConflictError);
 			const conflict = resolved.failure.conflicts.find(
@@ -153,7 +154,7 @@ describe("YamlLint.resolveStrict", () => {
 	it("an explicit base 'off' outranks inference", () => {
 		const base = YamlLintConfig.make({ rules: { "quoted-strings": "off" } });
 		const resolved = YamlLint.inferStrict("a: 'x'\n", YamlLint.builtins, base);
-		assert.isTrue(Result.isSuccess(resolved));
+		assertSuccess(resolved, Result.getOrThrow(resolved));
 		if (Result.isSuccess(resolved)) {
 			assert.strictEqual(resolved.success.rules["quoted-strings"], "off");
 		}
@@ -162,7 +163,7 @@ describe("YamlLint.resolveStrict", () => {
 	it("a base severity survives the overlay", () => {
 		const base = YamlLintConfig.make({ rules: { "quoted-strings": "warning" } });
 		const resolved = YamlLint.inferStrict("a: 'x'\n", YamlLint.builtins, base);
-		assert.isTrue(Result.isSuccess(resolved));
+		assertSuccess(resolved, Result.getOrThrow(resolved));
 		if (Result.isSuccess(resolved)) {
 			assert.deepStrictEqual(resolved.success.rules["quoted-strings"], { severity: "warning", quoteType: "single" });
 		}
@@ -175,7 +176,7 @@ describe("YamlLint.resolveStrict", () => {
 			infer: () => [StyleVote.make({ dimension: "style", value: "x", offset: 0, length: 0, line: 0, character: 0 })],
 		};
 		const resolved = YamlLint.inferStrict("a: 1\n", [custom], YamlLintConfig.make({ rules: {} }));
-		assert.isTrue(Result.isSuccess(resolved));
+		assertSuccess(resolved, Result.getOrThrow(resolved));
 		if (Result.isSuccess(resolved)) {
 			assert.deepStrictEqual(resolved.success.rules["my-rule"], { style: "x" });
 		}
@@ -203,7 +204,7 @@ describe("YamlLint.resolveStrict", () => {
 		assert.strictEqual(evidence.votes.length, 1);
 		assert.strictEqual(evidence.votes[0]?.value, "x");
 		const resolved = YamlLint.resolveStrict(evidence, YamlLintConfig.make({ rules: {} }));
-		assert.isTrue(Result.isSuccess(resolved));
+		assertSuccess(resolved, Result.getOrThrow(resolved));
 		if (Result.isSuccess(resolved)) {
 			assert.deepStrictEqual(resolved.success.rules["my-rule"], { style: "x" });
 		}
@@ -249,7 +250,7 @@ describe("YamlLint.resolveLenient / inferLenient", () => {
 		assert.isAbove(evidence.floors.length, 0, "the corpus must actually measure floors");
 		const base = YamlLintConfig.make({ rules: {} });
 		const strict = YamlLint.resolveStrict(evidence, base);
-		assert.isTrue(Result.isSuccess(strict));
+		assertSuccess(strict, Result.getOrThrow(strict));
 		if (Result.isSuccess(strict)) {
 			assert.isUndefined(strict.success.rules["line-length"]);
 			assert.isUndefined(strict.success.rules["empty-lines"]);

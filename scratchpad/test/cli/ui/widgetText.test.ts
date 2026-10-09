@@ -92,7 +92,7 @@ describe("widget text from data is sanitised and drawn on one line", () => {
 			yield* handle.press("enter");
 			assert.strictEqual(yield* handle.result, HOSTILE);
 			assert.deepStrictEqual(validated, [HOSTILE]);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("TextInput: hostile value segments are sanitised before scrolling around the original cursor", () =>
@@ -115,7 +115,7 @@ describe("widget text from data is sanitised and drawn on one line", () => {
 			}
 			yield* handle.press("enter");
 			assert.strictEqual(yield* handle.result, `x${initial}`);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	for (const [name, screen] of screens) {
@@ -127,7 +127,7 @@ describe("widget text from data is sanitised and drawn on one line", () => {
 				assertFolded(plain);
 				const coloured = yield* CliUiTest.render(screen, { color: "truecolor", columns: 120 });
 				assert.notInclude(yield* coloured.rawFrame, OSC8, "no hyperlink planted by data at any level");
-			}).pipe(Effect.scoped),
+			}),
 		);
 	}
 
@@ -142,6 +142,6 @@ describe("widget text from data is sanitised and drawn on one line", () => {
 			assert.include(frame, "xRED", "the validation message is shown");
 			assert.notInclude(frame, ESC);
 			assertFolded(frame);
-		}).pipe(Effect.scoped),
+		}),
 	);
 });

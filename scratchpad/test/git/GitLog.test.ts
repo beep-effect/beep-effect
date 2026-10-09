@@ -4,9 +4,11 @@
 // meets a real git binary, a real rename and a real merge.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertExitFailure } from "@effect/vitest/utils";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
@@ -181,7 +183,7 @@ describe("Git.log", () => {
 	it.effect("fails typed — never as a defect — on output it cannot parse", () =>
 		Effect.gen(function* () {
 			const exit = yield* Effect.exit(run(log(), (): ScriptResult => ({ stdout: "not a record at all\n" })));
-			assert.isTrue(Exit.isFailure(exit));
+			assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 			const error = yield* Effect.flip(run(log(), (): ScriptResult => ({ stdout: "not a record at all\n" })));
 			assert.isTrue(S.is(GitCommandError)(error));
 			assert.include(S.is(GitCommandError)(error) ? (error.detail ?? "") : "", "unparseable log output");

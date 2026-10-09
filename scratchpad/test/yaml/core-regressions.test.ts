@@ -5,7 +5,8 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { assertSuccess } from "@effect/vitest/utils";
+import { assertFailure, assertSome, assertSuccess } from "@effect/vitest/utils";
+import * as Result from "effect/Result";
 import { Yaml } from "../../effected/yaml/Yaml.ts";
 import { YamlDocument } from "../../effected/yaml/YamlDocument.ts";
 import {
@@ -129,7 +130,7 @@ describe("g1 core regressions", () => {
     lines.push("top: *a8");
     const bomb = A.join(lines, "\n");
     const result = Yaml.parseResult(bomb);
-    assert.ok(result._tag === "Failure");
+    assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
     assert.strictEqual(result.failure.diagnostics[0]?.code, "AliasCountExceeded");
     assert.strictEqual(result.failure.diagnostics[0]?.message, "Alias expansion exceeded budget of 1010000 nodes");
     assert.isFalse(Yaml.equals(bomb, bomb));
@@ -198,9 +199,9 @@ describe("g1 core regressions", () => {
       const tag = `!!${suffix}`;
       const source = `a: ${tag} 123\n`;
       const result = Yaml.parseResult(source);
-      assert.ok(result._tag === "Failure");
+      assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
       const diagnostic = A.findFirst(result.failure.diagnostics, (d) => Str.includes("Malformed percent encoding")(d.message));
-      assert.ok(O.isSome(diagnostic));
+      assertSome(diagnostic, O.getOrThrow(diagnostic));
       assert.strictEqual(diagnostic.value.offset, 3);
       assert.strictEqual(diagnostic.value.length, tag.length);
       assert.strictEqual(diagnostic.value.code, "UnresolvedTag");
@@ -220,7 +221,7 @@ describe("g1 core regressions", () => {
     assert.strictEqual(state.errors.length, 2);
     for (const offset of [3, 14]) {
       const diagnostic = A.findFirst(state.errors, (error) => error.offset === offset);
-      assert.ok(O.isSome(diagnostic));
+      assertSome(diagnostic, O.getOrThrow(diagnostic));
       assert.strictEqual(diagnostic.value.length, 3);
       assert.strictEqual(diagnostic.value.code, "UnresolvedTag");
       assert.strictEqual(diagnostic.value.message, "Malformed percent encoding in tag !!%");

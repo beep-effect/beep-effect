@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertExitFailure } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -22,7 +23,7 @@ describe("CliUiTest.view: a display-only element (A10)", () => {
 		Effect.gen(function* () {
 			const view = yield* CliUiTest.view(createElement(Status, { label: "ok" }), { glyphs: "ascii" });
 			assert.strictEqual((yield* view.frame).trim(), "[success]ascii ok[/success]");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("the marker theme, colour and size options apply as for render", () =>
@@ -36,7 +37,7 @@ describe("CliUiTest.view: a display-only element (A10)", () => {
 			assert.strictEqual((yield* view.plainFrame).trim(), "256 39");
 			yield* view.resize(60, 20);
 			assert.strictEqual((yield* view.plainFrame).trim(), "256 59");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("rerender swaps the element, keeping every frame", () =>
@@ -47,7 +48,7 @@ describe("CliUiTest.view: a display-only element (A10)", () => {
 			const frames = yield* view.frames;
 			assert.isTrue(frames.some((frame) => frame.includes("running")));
 			assert.isTrue(frames.at(-1)?.includes("done"));
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("press and type reach the element's own input handler", () =>
@@ -62,7 +63,7 @@ describe("CliUiTest.view: a display-only element (A10)", () => {
 			yield* view.press("down");
 			yield* view.chunk({ char: "c" });
 			assert.strictEqual((yield* view.plainFrame).trim(), "seen:abvc");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("closing the scope unmounts it, so the next view mounts", () =>
@@ -93,10 +94,9 @@ describe("CliUiTest.view surfaces an element that crashes or is refused", () => 
 		throw new Error("element crashed");
 	};
 
-	it.live("a throwing element: view dies with the thrown message, within 2 s", () =>
+	it.effect("a throwing element: view dies with the thrown message, within 2 s", () =>
 		Effect.gen(function* () {
 			const exit = yield* CliUiTest.view(createElement(Boom)).pipe(
-				Effect.scoped,
 				Effect.exit,
 				Effect.timeout("2 seconds"),
 			);
@@ -104,7 +104,7 @@ describe("CliUiTest.view surfaces an element that crashes or is refused", () => 
 		}),
 	);
 
-	it.live("an element that crashes after its first frame: the next read dies with its error, not SCREEN_ENDED", () =>
+	it.effect("an element that crashes after its first frame: the next read dies with its error, not SCREEN_ENDED", () =>
 		Effect.gen(function* () {
 			const Later = (props: { readonly crash: boolean }): ReactElement => {
 				if (props.crash) throw new Error("crashed on rerender");
@@ -120,33 +120,33 @@ describe("CliUiTest.view surfaces an element that crashes or is refused", () => 
 				assert.notInclude(messageOf(exit), "session.next");
 			}
 			assert.notInclude(messageOf(swapped), "session.next");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
-	it.live("interactive: false: view dies with NotInteractive's message", () =>
+	it.effect("interactive: false: view dies with NotInteractive's message", () =>
 		Effect.gen(function* () {
-			const exit = yield* CliUiTest.view(createElement(Text, null, "x"), { interactive: false }).pipe(Effect.scoped, Effect.exit);
-			assert.isTrue(Exit.isFailure(exit), "control: it did not succeed");
+			const exit = yield* CliUiTest.view(createElement(Text, null, "x"), { interactive: false }).pipe(Effect.exit);
+			assertExitFailure(exit, Exit.isFailure(exit) ? exit.cause : Cause.empty);
 			assert.notInclude(messageOf(exit), "<succeeded>");
-			assert.isTrue(Exit.isFailure(exit) && exit.cause.pipe(Cause.squash, S.is(NotInteractive)), messageOf(exit));
+			assert.isTrue(exit.cause.pipe(Cause.squash, S.is(NotInteractive)), messageOf(exit));
 		}),
 	);
 });
 
 describe("CliUiTest.view after a deliberate end", () => {
 	for (const key of ["escape", "ctrl+c"] as const) {
-		it.live(`${key}: the frames stay readable, and a key after the end dies with the ended message`, () =>
+		it.effect(`${key}: the frames stay readable, and a key after the end dies with the ended message`, () =>
 			Effect.gen(function* () {
 				const view = yield* CliUiTest.view(createElement(Status, { label: "done" }));
 				yield* view.press(key);
 				assert.include(yield* view.plainFrame, "done");
 				assert.isNotEmpty(yield* view.frames);
 				const pressed = yield* Effect.exit(view.press("enter"));
-				assert.isTrue(Exit.isFailure(pressed));
-				const message = Exit.isFailure(pressed) ? String(Cause.squash(pressed.cause)) : "";
+				assertExitFailure(pressed, Exit.isFailure(pressed) ? pressed.cause : Cause.empty);
+				const message = String(Cause.squash(pressed.cause));
 				assert.include(message, "has ended");
 				assert.notInclude(message, "cancelled");
-			}).pipe(Effect.scoped),
+			}),
 		);
 	}
 });

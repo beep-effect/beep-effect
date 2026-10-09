@@ -15,6 +15,7 @@
 // fence-closer at column zero inside the block, which the capture scanner
 // rightly treats as the closing fence — fence semantics, not a codec defect.
 
+import { fcRuns } from "@beep/fc-runs";
 import { assert, describe, it } from "@effect/vitest";
 import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
@@ -219,64 +220,57 @@ describe("frontmatter write round-trip property", () => {
 	});
 	const bodyDoc = "# Title\n\nsome *emphasis* text\n";
 
-	const insertRoundTrip = (
+	const insertRoundTrip = Effect.fn("insertRoundTrip")(function* (
 		codec: typeof YamlFrontmatter,
 		data: { readonly title: string; readonly count: number },
-	): { readonly title: string; readonly count: number } =>
-		Effect.runSync(
-			Effect.gen(function* () {
-				const document = yield* parseDoc(bodyDoc);
-				const updated = yield* MarkdownFrontmatter.setToString(Meta, codec)(document, data);
-				// The pre-existing content survives byte-identical.
-				assert.isTrue(updated.endsWith(`\n\n${bodyDoc}`));
-				const reparsed = yield* parseDoc(updated);
-				return yield* MarkdownFrontmatter.schema(Meta, codec)(reparsed);
-			}),
-		);
+	) {
+		const document = yield* parseDoc(bodyDoc);
+		const updated = yield* MarkdownFrontmatter.setToString(Meta, codec)(document, data);
+		// The pre-existing content survives byte-identical.
+		assert.isTrue(updated.endsWith(`\n\n${bodyDoc}`));
+		const reparsed = yield* parseDoc(updated);
+		return yield* MarkdownFrontmatter.schema(Meta, codec)(reparsed);
+	});
 
-	it.prop(
+	it.effect.prop(
 		"yaml: set then re-parse then decode recovers the data",
 		[MetaArb],
-		([data]) => {
-			assert.deepStrictEqual(insertRoundTrip(YamlFrontmatter, data), data);
-		},
-		{ arbitrary: { runs: 60 } },
+		([data]) => Effect.gen(function* () {
+			assert.deepStrictEqual(yield* insertRoundTrip(YamlFrontmatter, data), data);
+		}),
+		{ arbitrary: fcRuns(60) },
 	);
 
-	it.prop(
+	it.effect.prop(
 		"toml: set then re-parse then decode recovers the data",
 		[MetaArb],
-		([data]) => {
-			assert.deepStrictEqual(insertRoundTrip(TomlFrontmatter, data), data);
-		},
-		{ arbitrary: { runs: 60 } },
+		([data]) => Effect.gen(function* () {
+			assert.deepStrictEqual(yield* insertRoundTrip(TomlFrontmatter, data), data);
+		}),
+		{ arbitrary: fcRuns(60) },
 	);
 
-	it.prop(
+	it.effect.prop(
 		"json: set then re-parse then decode recovers the data",
 		[MetaArb],
-		([data]) => {
-			assert.deepStrictEqual(insertRoundTrip(JsonFrontmatter, data), data);
-		},
-		{ arbitrary: { runs: 60 } },
+		([data]) => Effect.gen(function* () {
+			assert.deepStrictEqual(yield* insertRoundTrip(JsonFrontmatter, data), data);
+		}),
+		{ arbitrary: fcRuns(60) },
 	);
 
 	const fenced = `---\ntitle: Old\ncount: 0\n---\n\n${bodyDoc}`;
-	it.prop(
+	it.effect.prop(
 		"yaml: replacing an existing block preserves the suffix byte-for-byte and recovers the data",
 		[MetaArb],
-		([data]) => {
-			const result = Effect.runSync(
-				Effect.gen(function* () {
-					const document = yield* parseDoc(fenced);
-					const updated = yield* MarkdownFrontmatter.setToString(Meta, YamlFrontmatter)(document, data);
-					assert.isTrue(updated.endsWith(`\n\n${bodyDoc}`));
-					const reparsed = yield* parseDoc(updated);
-					return yield* MarkdownFrontmatter.schema(Meta, YamlFrontmatter)(reparsed);
-				}),
-			);
+		([data]) => Effect.gen(function* () {
+			const document = yield* parseDoc(fenced);
+			const updated = yield* MarkdownFrontmatter.setToString(Meta, YamlFrontmatter)(document, data);
+			assert.isTrue(updated.endsWith(`\n\n${bodyDoc}`));
+			const reparsed = yield* parseDoc(updated);
+			const result = yield* MarkdownFrontmatter.schema(Meta, YamlFrontmatter)(reparsed);
 			assert.deepStrictEqual(result, data);
-		},
-		{ arbitrary: { runs: 60 } },
+		}),
+		{ arbitrary: fcRuns(60) },
 	);
 });

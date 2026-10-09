@@ -1,8 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Cancelled, Fmt } from "../../../effected/cli/index.ts";
 import type { SelectChoice } from "../../../effected/cli/ui.ts";
@@ -26,7 +26,7 @@ describe("Select reducer", () => {
 		for (const initial of [-1, bounded.length, 99]) {
 			const state = Select.init(bounded, { initial });
 			assert.strictEqual(state.viewport.cursor, 1);
-			assert.deepStrictEqual(Select.chosen(Select.step(state, "submit")), O.some("enabled"));
+			assertSome(Select.chosen(Select.step(state, "submit")), "enabled");
 		}
 		assert.strictEqual(Select.init(choices, { initial: -1 }).viewport.cursor, 0);
 		assert.strictEqual(Select.init(choices, { initial: 99 }).viewport.cursor, 3);
@@ -53,8 +53,8 @@ describe("Select reducer", () => {
 
 	it("submit marks the highlighted value chosen", () => {
 		const state = Select.step(Select.step(Select.init(choices), "down"), "submit");
-		assert.deepStrictEqual(Select.chosen(state), O.some("c"));
-		assert.isTrue(O.isNone(Select.chosen(Select.init(choices))), "nothing is chosen before submit");
+		assertSome(Select.chosen(state), "c");
+		assertNone(Select.chosen(Select.init(choices))); // Nothing is chosen before submit.
 	});
 
 	it("needs at least one enabled choice: none, or only disabled ones, is a programming error", () => {
@@ -63,9 +63,9 @@ describe("Select reducer", () => {
 	});
 
 	it("binds q to cancel, enter to submit, and the viewport's moves", () => {
-		assert.deepStrictEqual(Select.keys.match({ _tag: "Char", char: "q" }), O.some("cancel"));
-		assert.deepStrictEqual(Select.keys.match({ _tag: "Named", name: "enter" }), O.some("submit"));
-		assert.deepStrictEqual(Select.keys.match({ _tag: "Named", name: "pagedown" }), O.some("pagedown"));
+		assertSome(Select.keys.match({ _tag: "Char", char: "q" }), "cancel");
+		assertSome(Select.keys.match({ _tag: "Named", name: "enter" }), "submit");
+		assertSome(Select.keys.match({ _tag: "Named", name: "pagedown" }), "pagedown");
 	});
 });
 
@@ -75,7 +75,7 @@ describe("Select.screen under CliUiTest", () => {
 			const handle = yield* CliUiTest.render(Select.screen({ message: "Pick one", choices }));
 			yield* handle.press("down", "down", "enter");
 			assert.strictEqual(yield* handle.result, "d");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("draws the message, the highlighted row in accent with the arrow, and its detail muted below", () =>
@@ -89,7 +89,7 @@ describe("Select.screen under CliUiTest", () => {
 			yield* handle.press("down");
 			assert.include(yield* handle.frame, "[accent]→ gamma[/accent]");
 			assert.include(yield* handle.frame, "[muted]the third[/muted]");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a screen with no enabled choice dies with the reason", () =>
@@ -104,7 +104,7 @@ describe("Select.screen under CliUiTest", () => {
 			} else {
 				assert.fail("expected a defect, but the select resolved");
 			}
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("the help line merges q and the root's esc into one pinned q/esc cancel", () =>
@@ -127,7 +127,7 @@ describe("Select.screen under CliUiTest", () => {
 			const cut = narrow.trimEnd().split("\n").at(-1) ?? "";
 			assert.isTrue(cut.endsWith(" · q/esc cancel"), `still pinned when cut: ${cut}`);
 			assert.include(cut, "…");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("the help line fits 80 columns: page, home and end are bound but not listed", () =>
@@ -138,8 +138,8 @@ describe("Select.screen under CliUiTest", () => {
 			assert.include(help, "enter choose");
 			assert.isTrue(help.endsWith("q/esc cancel"), help);
 			assert.notInclude(help, "pgup");
-			assert.deepStrictEqual(Select.keys.match({ _tag: "Named", name: "end" }), O.some("end"), "still bound");
-		}).pipe(Effect.scoped),
+			assertSome(Select.keys.match({ _tag: "Named", name: "end" }), "end"); // Still bound.
+		}),
 	);
 
 	it.effect("q cancels with escape", () =>
@@ -149,7 +149,7 @@ describe("Select.screen under CliUiTest", () => {
 			const error = yield* Effect.flip(handle.result);
 			assert.instanceOf(error, Cancelled);
 			assert.strictEqual(S.is(Cancelled)(error) ? error.reason : undefined, "escape");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("on an 8-column terminal rows are cut with the ellipsis to 7 cells", () =>
@@ -168,7 +168,7 @@ describe("Select.screen under CliUiTest", () => {
 				lines.join(" / "),
 			);
 			for (const line of lines) assert.isAtMost(Fmt.width(line), 7, line);
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
@@ -209,7 +209,7 @@ describe("Select: a disabled choice is marked without colour", () => {
 				narrowFrame.split("\n").some((line) => line.trimEnd().endsWith("(disabled)")),
 				"the marker is kept and the label cut instead",
 			);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("with colour the muted token marks it, so the row carries no text marker", () =>
@@ -218,6 +218,6 @@ describe("Select: a disabled choice is marked without colour", () => {
 				color: "truecolor",
 			});
 			assert.notInclude(yield* coloured.frame, "(disabled)");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });

@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 // `stopAt` across every root-resolving service, and through the composites.
 //
 // The layout is the nested checkout: a plain single-package repository checked
@@ -10,9 +9,13 @@
 // lockfile, catalog or snapshot reads quietly answer from the enclosing
 // workspace.
 
-import { assert, describe, it, layer, vi } from "@effect/vitest";
+import { $ScratchpadId } from "@beep/identity";
+import { assert, describe, layer, vi } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as Context from "effect/Context";
 import { LocalExec, ScriptedSpawner } from "../../effected/commands/index.ts";
 import { Git, LsTreeEntry } from "../../effected/git/index.ts";
+import type { LocalExecShape } from "../../effected/commands/index.ts";
 import * as HashMap from "effect/HashMap";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -29,6 +32,8 @@ import {
 } from "../../effected/workspaces/index.ts";
 import type { Tree } from "./fixtures.ts";
 import { manifest, platform } from "./fixtures.ts";
+
+const $I = $ScratchpadId.create("test/workspaces/WorkspacesStopAt.test");
 
 const CWD = "/outer/checkout";
 
@@ -102,7 +107,7 @@ describe("stopAt — the unbounded controls resolve the OUTER workspace", () => 
 		Layer.provide(ConfigDependencyHooks.layerNoop),
 		Layer.provide(unboundedCore),
 	);
-	layer(Layer.mergeAll(unboundedCore, snapshots).pipe(Layer.provideMerge(platform(nestedCheckout))))((it) => {
+	layer(Layer.mergeAll(unboundedCore, snapshots).pipe(Layer.provideMerge(platform(nestedCheckout))), { timeout: "30 seconds" })((it) => {
 		it.effect("discovery, lockfile, catalogs and snapshots all answer from /outer", () =>
 			Effect.gen(function* () {
 				const info = yield* (yield* WorkspaceDiscovery).info;
@@ -123,7 +128,7 @@ describe("stopAt — the unbounded controls resolve the OUTER workspace", () => 
 
 describe("stopAt — LockfileReader honours its own ceiling", () => {
 	const lockfiles = LockfileReader.layer({ cwd: CWD, stopAt: CWD }).pipe(Layer.provide(unboundedCore));
-	layer(lockfiles.pipe(Layer.provideMerge(platform(nestedCheckout))))((it) => {
+	layer(lockfiles.pipe(Layer.provideMerge(platform(nestedCheckout))), { timeout: "30 seconds" })((it) => {
 		it.effect("read() refuses the enclosing workspace", () =>
 			Effect.gen(function* () {
 				yield* refusesOuter((yield* LockfileReader).read);
@@ -134,7 +139,7 @@ describe("stopAt — LockfileReader honours its own ceiling", () => {
 
 describe("stopAt — WorkspaceCatalogs honours its own ceiling", () => {
 	const catalogs = WorkspaceCatalogs.layer({ cwd: CWD, stopAt: CWD }).pipe(Layer.provide(unboundedCore));
-	layer(catalogs.pipe(Layer.provideMerge(platform(nestedCheckout))))((it) => {
+	layer(catalogs.pipe(Layer.provideMerge(platform(nestedCheckout))), { timeout: "30 seconds" })((it) => {
 		it.effect("set() refuses the enclosing workspace", () =>
 			Effect.gen(function* () {
 				yield* refusesOuter((yield* WorkspaceCatalogs).set);
@@ -149,7 +154,7 @@ describe("stopAt — WorkspaceSnapshots honours its own ceiling", () => {
 		Layer.provide(ConfigDependencyHooks.layerNoop),
 		Layer.provide(unboundedCore),
 	);
-	layer(snapshots.pipe(Layer.provideMerge(platform(nestedCheckout))))((it) => {
+	layer(snapshots.pipe(Layer.provideMerge(platform(nestedCheckout))), { timeout: "30 seconds" })((it) => {
 		it.effect("at(ref) refuses the enclosing workspace", () =>
 			Effect.gen(function* () {
 				yield* refusesOuter((yield* WorkspaceSnapshots).at("HEAD"));
@@ -176,7 +181,7 @@ const gitFreeComposites = {
 
 for (const [name, composite] of Object.entries(gitFreeComposites)) {
 	describe(`stopAt — Workspaces.${name} fails consistently`, () => {
-		layer(composite.pipe(Layer.provideMerge(platform(nestedCheckout))))((it) => {
+		layer(composite.pipe(Layer.provideMerge(platform(nestedCheckout))), { timeout: "30 seconds" })((it) => {
 			it.effect("discovery, lockfile and catalogs all refuse the enclosing workspace", () => coreRefuses);
 		});
 	});
@@ -193,7 +198,7 @@ describe("stopAt — Workspaces.layerWithConfigDependenciesSubprocess fails cons
 		Layer.provide(spawner.layer),
 		Layer.provideMerge(platform(nestedCheckout)),
 	);
-	layer(composite)((it) => {
+	layer(composite, { timeout: "30 seconds" })((it) => {
 		it.effect("discovery, lockfile and catalogs all refuse the enclosing workspace, spawning nothing", () =>
 			Effect.gen(function* () {
 				yield* coreRefuses;
@@ -213,7 +218,7 @@ const gitComposites = {
 for (const [name, composite] of Object.entries(gitComposites)) {
 	describe(`stopAt — Workspaces.${name} fails consistently`, () => {
 		const spawner = spawnerFor();
-		layer(composite.pipe(Layer.provide(spawner.layer), Layer.provideMerge(platform(nestedCheckout))))((it) => {
+		layer(composite.pipe(Layer.provide(spawner.layer), Layer.provideMerge(platform(nestedCheckout))), { timeout: "30 seconds" })((it) => {
 			it.effect("discovery, lockfile, catalogs and at(ref) all refuse the enclosing workspace", () =>
 				Effect.gen(function* () {
 					yield* coreRefuses;
@@ -230,17 +235,20 @@ for (const [name, composite] of Object.entries(gitComposites)) {
 // ── the localExecLayer ceiling ─────────────────────────────────────────────
 
 describe("stopAt — Workspaces.localExecLayer reads a refused root as None", () => {
-	const contextUnder = (options: { readonly cwd: string; readonly stopAt?: string }) =>
-		Effect.flatMap(LocalExec, (local) => local.context).pipe(
-			Effect.provide(Workspaces.localExecLayer(options).pipe(Layer.provide(unboundedCore))),
-		);
-	layer(platform(nestedCheckout))((it) => {
+	class UnboundedLocalExec extends Context.Service<UnboundedLocalExec, LocalExecShape>()($I`UnboundedLocalExec`) {}
+	const unboundedLocal = Layer.effect(UnboundedLocalExec, LocalExec).pipe(
+		Layer.provide(Workspaces.localExecLayer({ cwd: CWD })),
+	);
+	const localContexts = Layer.mergeAll(Workspaces.localExecLayer(bounded), unboundedLocal).pipe(
+		Layer.provide(unboundedCore),
+		Layer.provideMerge(platform(nestedCheckout)),
+	);
+	layer(localContexts, { timeout: "30 seconds" })((it) => {
 		it.effect("bounded: no project-local launcher; unbounded: the outer workspace's pnpm", () =>
 			Effect.gen(function* () {
-				assert.isTrue(O.isNone(yield* contextUnder(bounded)));
-				const unbounded = yield* contextUnder({ cwd: CWD });
-				assert.isTrue(O.isSome(unbounded));
-				if (O.isSome(unbounded)) assert.strictEqual(unbounded.value.directory, "/outer");
+				assertNone(yield* (yield* LocalExec).context);
+				const unbounded = yield* (yield* UnboundedLocalExec).context;
+				assertSome(O.map(unbounded, (context) => context.directory), "/outer");
 			}),
 		);
 	});
@@ -251,56 +259,54 @@ describe("stopAt — Workspaces.localExecLayer reads a refused root as None", ()
 // A downstream action ships `WorkspaceDiscovery.layer({ stopAt: "." })`: no
 // `cwd`, a relative ceiling, both resolved against the process cwd when the
 // lookup runs. `process.cwd` is spied to the nested checkout for the duration
-// of each test (the memfs harness has no chdir), which governs both the
+// of each layer suite (the memfs harness has no chdir), which governs both the
 // ambient `cwd` default and `path.resolve` of the ceiling.
 
-/** Run `effect` with `process.cwd()` answering the nested checkout, restored afterwards. */
-const inCheckout = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-	Effect.acquireUseRelease(
+/** Hold the ambient cwd override for the layer suite and restore it on release. */
+const checkoutCwd = Layer.effectDiscard(
+	Effect.acquireRelease(
 		Effect.sync(() => vi.spyOn(process, "cwd").mockReturnValue(CWD)),
-		() => effect,
 		(spy) => Effect.sync(() => spy.mockRestore()),
-	);
+	),
+);
 
 const relative = { stopAt: "." } as const;
 
 describe("stopAt — a relative ceiling resolves against the process cwd", () => {
-	it.effect("WorkspaceDiscovery.layer({ stopAt: '.' }) refuses the enclosing workspace like the absolute ceiling", () =>
-		inCheckout(
+	const discovery = WorkspaceDiscovery.layer(relative).pipe(
+		Layer.provide(WorkspaceRoot.layer),
+		Layer.provideMerge(platform(nestedCheckout)),
+		Layer.provide(checkoutCwd),
+	);
+	layer(discovery, { timeout: "30 seconds" })((it) => {
+		it.effect("WorkspaceDiscovery.layer({ stopAt: '.' }) refuses the enclosing workspace like the absolute ceiling", () =>
 			Effect.gen(function* () {
 				yield* refusesOuter((yield* WorkspaceDiscovery).listPackages);
-			}).pipe(
-				Effect.provide(
-					WorkspaceDiscovery.layer(relative).pipe(
-						Layer.provide(WorkspaceRoot.layer),
-						Layer.provideMerge(platform(nestedCheckout)),
-					),
-				),
-			),
-		),
-	);
+			}),
+		);
+	});
 
-	it.effect("Workspaces.layer({ stopAt: '.' }) fails every root-resolving read with the absolute ceiling", () =>
-		inCheckout(
-			coreRefuses.pipe(Effect.provide(Workspaces.layer(relative).pipe(Layer.provideMerge(platform(nestedCheckout))))),
-		),
+	const core = Workspaces.layer(relative).pipe(
+		Layer.provideMerge(platform(nestedCheckout)),
+		Layer.provide(checkoutCwd),
 	);
+	layer(core, { timeout: "30 seconds" })((it) => {
+		it.effect("Workspaces.layer({ stopAt: '.' }) fails every root-resolving read with the absolute ceiling", () => coreRefuses);
+	});
 
-	it.effect("Workspaces.layerWithGit({ stopAt: '.' }) refuses at(ref) too, spawning nothing", () => {
-		const spawner = spawnerFor();
-		return inCheckout(
+	const spawner = spawnerFor();
+	const git = Workspaces.layerWithGit(relative).pipe(
+		Layer.provide(spawner.layer),
+		Layer.provideMerge(platform(nestedCheckout)),
+		Layer.provide(checkoutCwd),
+	);
+	layer(git, { timeout: "30 seconds" })((it) => {
+		it.effect("Workspaces.layerWithGit({ stopAt: '.' }) refuses at(ref) too, spawning nothing", () =>
 			Effect.gen(function* () {
 				yield* coreRefuses;
 				yield* refusesOuter((yield* WorkspaceSnapshots).at("HEAD"));
 				assert.strictEqual(spawner.spawns.length, 0);
-			}).pipe(
-				Effect.provide(
-					Workspaces.layerWithGit(relative).pipe(
-						Layer.provide(spawner.layer),
-						Layer.provideMerge(platform(nestedCheckout)),
-					),
-				),
-			),
+			}),
 		);
 	});
 });

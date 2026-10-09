@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import { pipe } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -43,13 +44,13 @@ describe("composer review regressions", () => {
 
 	it("registers a TAG directive for scalar resolution", () => {
 		const result = Yaml.parseResult("%TAG !e! tag:yaml.org,2002:\n---\n!e!int 123\n");
-		assert.ok(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		assert.strictEqual(result.success, 123);
 	});
 
 	it("skips verbatim tag punctuation when finding a block scalar's parent", () => {
 		const result = Yaml.parseResult("outer:\n  key:\n    !<tag:yaml.org,2002:str>\n    |2\n    hello\n");
-		assert.ok(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		assert.deepStrictEqual(result.success, { outer: { key: "hello\n" } });
 	});
 
@@ -57,34 +58,36 @@ describe("composer review regressions", () => {
 		const source = "{foo: 1 bar: 2}";
 		const document = composeFirstDocument(source);
 		assert.ok(document.errors.some((error) => error.code === "MalformedFlowCollection" && error.offset === 11));
-		assert.ok(Result.isFailure(Yaml.parseResult(source)));
+		const result = Yaml.parseResult(source);
+		assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 	});
 
 	it("keeps nested collection separators and quoted or plain scalar colons scoped", () => {
 		const result = Yaml.parseResult('{foo: {bar: 2}, seq: [a: 3], quoted: "x: y", plain: http://host}');
-		assert.ok(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		assert.deepStrictEqual(result.success, { foo: { bar: 2 }, seq: [{ a: 3 }], quoted: "x: y", plain: "http://host" });
 	});
 
 	it("folds multiline flow-map values as one scalar", () => {
 		const result = Yaml.parseResult("{foo: multi\n  line}");
-		assert.ok(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		assert.deepStrictEqual(result.success, { foo: "multi line" });
 	});
 
 	it("folds multiline implicit flow-sequence mapping values as one scalar", () => {
 		const result = Yaml.parseResult("[foo: multi\n  line]");
-		assert.ok(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		assert.deepStrictEqual(result.success, [{ foo: "multi line" }]);
 	});
 
 	it("still rejects separate quoted values without a comma", () => {
-		assert.ok(Result.isFailure(Yaml.parseResult('{foo: "one" "two"}')));
+		const result = Yaml.parseResult('{foo: "one" "two"}');
+		assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 	});
 
 	it("allows a comment between a quoted flow key and its first colon", () => {
 		const result = Yaml.parseResult('{ "foo" # comment\n :bar }');
-		assert.ok(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		assert.deepStrictEqual(result.success, { foo: "bar" });
 	});
 
@@ -113,7 +116,8 @@ describe("composer review regressions", () => {
 					(error) => error.code === "InvalidDirective" && error.offset === 0 && error.length >= directive.length,
 				),
 			);
-			assert.ok(Result.isFailure(Yaml.parseResult(source)));
+			const result = Yaml.parseResult(source);
+		assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 		});
 	}
 });

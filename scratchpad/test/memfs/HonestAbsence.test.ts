@@ -27,7 +27,7 @@ describe("honest absence — the effected#249 contract", () => {
 			const statError = yield* Effect.flip(fs.stat("/absent.txt"));
 			assert.strictEqual(statError.reason._tag, "NotFound");
 
-			const openError = yield* fs.open("/absent.txt", { flag: "r" }).pipe(Effect.scoped, Effect.flip);
+			const openError = yield* fs.open("/absent.txt", { flag: "r" }).pipe(Effect.flip);
 			assert.strictEqual(openError.reason._tag, "NotFound");
 
 			// The seeded path still answers — absence is per-path, not global.

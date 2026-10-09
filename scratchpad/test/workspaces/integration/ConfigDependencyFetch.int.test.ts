@@ -20,6 +20,7 @@ import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { afterAll, assert, beforeAll, beforeEach, describe, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { CatalogAssemblyError } from "../../../effected/npm/index.ts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -180,147 +181,168 @@ const InProcess = () =>
 
 /** `at(ref)`'s failure, which must be a typed hooks-source assembly error. */
 const failureAt = Effect.fn("failureAt")(function* (ref: string) {
-		const snapshots = yield* WorkspaceSnapshots;
-		const error = yield* Effect.flip(snapshots.at(ref));
-		assert.instanceOf(error, CatalogAssemblyError);
-		assert.strictEqual(error.source, "hooks");
-		assert.strictEqual(error.path, NAME);
-		return error;
-	});
+	const snapshots = yield* WorkspaceSnapshots;
+	const error = yield* Effect.flip(snapshots.at(ref));
+	assert.instanceOf(error, CatalogAssemblyError);
+	assert.strictEqual(error.source, "hooks");
+	assert.strictEqual(error.path, NAME);
+	return error;
+});
 
 describe("effected#842 — the base side of a config-dependency bump", () => {
-	it.effect("the subprocess composite fetches the base version, verified, and the diff succeeds", () =>
-		Effect.gen(function* () {
-			const snapshots = yield* WorkspaceSnapshots;
-			const base = yield* snapshots.at("base");
-			const head = yield* snapshots.at("head");
-			// Each side replays ITS OWN pinned version: the bump is a visible row.
-			assert.deepStrictEqual(base.catalogs.rangeOf("hooked-dep", O.none()), O.some("^0.11.1"));
-			assert.deepStrictEqual(head.catalogs.rangeOf("hooked-dep", O.none()), O.some("^0.11.2"));
-			assert.deepStrictEqual(base.hookReplays, { [NAME]: "0.11.1" });
+	it.layer(Layer.unwrap(Effect.sync(Subprocess)), { timeout: "30 seconds" })((it) => {
+		it.effect("the subprocess composite fetches the base version, verified, and the diff succeeds", () =>
+			Effect.gen(function* () {
+				const snapshots = yield* WorkspaceSnapshots;
+				const base = yield* snapshots.at("base");
+				const head = yield* snapshots.at("head");
+				// Each side replays ITS OWN pinned version: the bump is a visible row.
+				assertSome(base.catalogs.rangeOf("hooked-dep", O.none()), "^0.11.1");
+				assertSome(head.catalogs.rangeOf("hooked-dep", O.none()), "^0.11.2");
+				assert.deepStrictEqual(base.hookReplays, { [NAME]: "0.11.1" });
 
-			// Exactly one fetch, pinned to the BASE lockfile's integrity, writing to
-			// the store the ladder searched (pnpm appends the `v11` itself).
-			const runs = pnpmRuns();
-			assert.strictEqual(runs.length, 1);
-			const [run] = runs;
-			assert.deepStrictEqual(run?.argv.slice(0, 2), ["install", "--frozen-lockfile"]);
-			assert.strictEqual(run?.argv[run.argv.indexOf("--store-dir") + 1], realpathSync(dirname(store)));
-			assert.include(run?.lockfile, `resolution: {integrity: "${BASE_SRI}"}`);
-			// The scratch workspace is gone.
-			const scratch = run?.argv[run.argv.indexOf("--dir") + 1] ?? "";
-			assert.isFalse(existsSync(scratch));
-			// The checkout has no `.npmrc` and no registry keys, so none are invented.
-			assert.isNull(run?.npmrc);
-			assert.notInclude(run?.workspaceYaml, "registr");
-		}).pipe(Effect.provide(Subprocess())),
-	);
-
-	it.effect("the fetch inherits the workspace's .npmrc verbatim and its registry keys", () => {
-		// A scoped registry with an env-var token and a default-registry mirror:
-		// the fetch must reach the registries `pnpm install` in the checkout would.
-		// A literal `${NPM_TOKEN}` reference, spelled so it reads as npmrc text, not a template.
-		const tokenRef = "$".concat("{NPM_TOKEN}");
-		const npmrc = `@acme:registry=https://npm.acme.example/\n//npm.acme.example/:_authToken=${tokenRef}\n`;
-		const yamlWithRegistries = [
-			workspaceYaml("0.11.2"),
-			"registry: https://mirror.example/",
-			"registries:",
-			"  '@acme': https://npm.acme.example/",
-			"",
-		].join("\n");
-		return Effect.gen(function* () {
-			writeFileSync(join(root, ".npmrc"), npmrc);
-			writeFileSync(join(root, "pnpm-workspace.yaml"), yamlWithRegistries);
-			process.env.FAKE_PNPM_EXPECT_NPMRC = npmrc;
-			const hooks = yield* ConfigDependencyHooks;
-			const lockfile = lockfileRecording("0.11.1", BASE_SRI);
-			const result = yield* hooks.inject(root, { [NAME]: "0.11.1" }, {}, undefined, { lockfile, ref: "base" });
-			assert.deepStrictEqual(result.replays, { [NAME]: { version: "0.11.1", source: "fetched" } });
-			const [run] = pnpmRuns();
-			// Byte for byte: the `${NPM_TOKEN}` reference is pnpm's to expand.
-			assert.strictEqual(run?.npmrc, npmrc);
-			assert.include(run?.workspaceYaml, 'registry: "https://mirror.example/"');
-			assert.include(run?.workspaceYaml, 'registries:\n  "@acme": "https://npm.acme.example/"');
-			// The copy goes with the scratch.
-			assert.isFalse(existsSync(run?.argv[run.argv.indexOf("--dir") + 1] ?? ""));
-		}).pipe(
-			Effect.ensuring(
-				Effect.sync(() => {
-					rmSync(join(root, ".npmrc"), { force: true });
-					writeFileSync(join(root, "pnpm-workspace.yaml"), workspaceYaml("0.11.2"));
-				}),
-			),
-			Effect.provide(ConfigDependencyHooks.layerSubprocess.pipe(Layer.provide(NodeServices.layer))),
+				// Exactly one fetch, pinned to the BASE lockfile's integrity, writing to
+				// the store the ladder searched (pnpm appends the `v11` itself).
+				const runs = pnpmRuns();
+				assert.strictEqual(runs.length, 1);
+				const [run] = runs;
+				assert.deepStrictEqual(run?.argv.slice(0, 2), ["install", "--frozen-lockfile"]);
+				assert.strictEqual(run?.argv[run.argv.indexOf("--store-dir") + 1], realpathSync(dirname(store)));
+				assert.include(run?.lockfile, `resolution: {integrity: "${BASE_SRI}"}`);
+				// The scratch workspace is gone.
+				const scratch = run?.argv[run.argv.indexOf("--dir") + 1] ?? "";
+				assert.isFalse(existsSync(scratch));
+				// The checkout has no `.npmrc` and no registry keys, so none are invented.
+				assert.isNull(run?.npmrc);
+				assert.notInclude(run?.workspaceYaml, "registr");
+			}),
 		);
 	});
 
-	it.effect("the replay records that the fetch rung answered, and the next replay finds it in the store", () =>
-		Effect.gen(function* () {
-			const hooks = yield* ConfigDependencyHooks;
-			const lockfile = lockfileRecording("0.11.1", BASE_SRI);
-			const first = yield* hooks.inject(root, { [NAME]: "0.11.1" }, {}, undefined, { lockfile, ref: "base" });
-			assert.deepStrictEqual(first.replays, { [NAME]: { version: "0.11.1", source: "fetched" } });
-			const second = yield* hooks.inject(root, { [NAME]: "0.11.1" }, {}, undefined, { lockfile, ref: "base" });
-			assert.deepStrictEqual(second.replays, { [NAME]: { version: "0.11.1", source: "store" } });
-			assert.strictEqual(pnpmRuns().length, 1);
-		}).pipe(Effect.provide(ConfigDependencyHooks.layerSubprocess.pipe(Layer.provide(NodeServices.layer)))),
-	);
+	it.layer(
+		Layer.unwrap(Effect.sync(() => ConfigDependencyHooks.layerSubprocess.pipe(Layer.provide(NodeServices.layer)))),
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("the fetch inherits the workspace's .npmrc verbatim and its registry keys", () => {
+			// A scoped registry with an env-var token and a default-registry mirror:
+			// the fetch must reach the registries `pnpm install` in the checkout would.
+			// A literal `${NPM_TOKEN}` reference, spelled so it reads as npmrc text, not a template.
+			const tokenRef = "$".concat("{NPM_TOKEN}");
+			const npmrc = `@acme:registry=https://npm.acme.example/\n//npm.acme.example/:_authToken=${tokenRef}\n`;
+			const yamlWithRegistries = [
+				workspaceYaml("0.11.2"),
+				"registry: https://mirror.example/",
+				"registries:",
+				"  '@acme': https://npm.acme.example/",
+				"",
+			].join("\n");
+			return Effect.gen(function* () {
+				writeFileSync(join(root, ".npmrc"), npmrc);
+				writeFileSync(join(root, "pnpm-workspace.yaml"), yamlWithRegistries);
+				process.env.FAKE_PNPM_EXPECT_NPMRC = npmrc;
+				const hooks = yield* ConfigDependencyHooks;
+				const lockfile = lockfileRecording("0.11.1", BASE_SRI);
+				const result = yield* hooks.inject(root, { [NAME]: "0.11.1" }, {}, undefined, { lockfile, ref: "base" });
+				assert.deepStrictEqual(result.replays, { [NAME]: { version: "0.11.1", source: "fetched" } });
+				const [run] = pnpmRuns();
+				// Byte for byte: the `${NPM_TOKEN}` reference is pnpm's to expand.
+				assert.strictEqual(run?.npmrc, npmrc);
+				assert.include(run?.workspaceYaml, 'registry: "https://mirror.example/"');
+				assert.include(run?.workspaceYaml, 'registries:\n  "@acme": "https://npm.acme.example/"');
+				// The copy goes with the scratch.
+				assert.isFalse(existsSync(run?.argv[run.argv.indexOf("--dir") + 1] ?? ""));
+			}).pipe(
+				Effect.ensuring(
+					Effect.sync(() => {
+						rmSync(join(root, ".npmrc"), { force: true });
+						writeFileSync(join(root, "pnpm-workspace.yaml"), workspaceYaml("0.11.2"));
+					}),
+				),
+			);
+		});
+	});
 
-	it.effect("a non-fetching layer fails with the distinct notInstalled reason, naming the base side", () =>
-		Effect.gen(function* () {
-			const error = yield* failureAt("base");
-			assert.strictEqual(error.reason, "notInstalled");
-			assert.include(error.message, `${NAME}@0.11.1 (declared at ref base) is not installed`);
-			assert.include(error.message, "holds version 0.11.2");
-			assert.include(error.message, "the base side of a diff across a config-dependency bump");
-			assert.include(error.message, `pnpm add --config ${NAME}@0.11.1`);
-			// The remediation names the primitive that fetches, not one composite.
-			assert.include(error.message, "This replay layer does not fetch; ConfigDependencyHooks.layerSubprocess");
-			assert.strictEqual(pnpmRuns().length, 0);
-		}).pipe(Effect.provide(InProcess())),
-	);
+	it.layer(
+		Layer.unwrap(Effect.sync(() => ConfigDependencyHooks.layerSubprocess.pipe(Layer.provide(NodeServices.layer)))),
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("the replay records that the fetch rung answered, and the next replay finds it in the store", () =>
+			Effect.gen(function* () {
+				const hooks = yield* ConfigDependencyHooks;
+				const lockfile = lockfileRecording("0.11.1", BASE_SRI);
+				const first = yield* hooks.inject(root, { [NAME]: "0.11.1" }, {}, undefined, { lockfile, ref: "base" });
+				assert.deepStrictEqual(first.replays, { [NAME]: { version: "0.11.1", source: "fetched" } });
+				const second = yield* hooks.inject(root, { [NAME]: "0.11.1" }, {}, undefined, { lockfile, ref: "base" });
+				assert.deepStrictEqual(second.replays, { [NAME]: { version: "0.11.1", source: "store" } });
+				assert.strictEqual(pnpmRuns().length, 1);
+			}),
+		);
+	});
 
-	it.effect("the legacy inline integrity alone verifies a fetch when the side has no lockfile", () =>
-		Effect.gen(function* () {
-			const snapshots = yield* WorkspaceSnapshots;
-			const snapshot = yield* snapshots.at("inline-only");
-			assert.deepStrictEqual(snapshot.catalogs.rangeOf("hooked-dep", O.none()), O.some("^0.11.1"));
-			assert.include(pnpmRuns()[0]?.lockfile, BASE_SRI);
-		}).pipe(Effect.provide(Subprocess())),
-	);
+	it.layer(Layer.unwrap(Effect.sync(InProcess)), { timeout: "30 seconds" })((it) => {
+		it.effect("a non-fetching layer fails with the distinct notInstalled reason, naming the base side", () =>
+			Effect.gen(function* () {
+				const error = yield* failureAt("base");
+				assert.strictEqual(error.reason, "notInstalled");
+				assert.include(error.message, `${NAME}@0.11.1 (declared at ref base) is not installed`);
+				assert.include(error.message, "holds version 0.11.2");
+				assert.include(error.message, "the base side of a diff across a config-dependency bump");
+				assert.include(error.message, `pnpm add --config ${NAME}@0.11.1`);
+				// The remediation names the primitive that fetches, not one composite.
+				assert.include(error.message, "This replay layer does not fetch; ConfigDependencyHooks.layerSubprocess");
+				assert.strictEqual(pnpmRuns().length, 0);
+			}),
+		);
+	});
+
+	it.layer(Layer.unwrap(Effect.sync(Subprocess)), { timeout: "30 seconds" })((it) => {
+		it.effect("the legacy inline integrity alone verifies a fetch when the side has no lockfile", () =>
+			Effect.gen(function* () {
+				const snapshots = yield* WorkspaceSnapshots;
+				const snapshot = yield* snapshots.at("inline-only");
+				assertSome(snapshot.catalogs.rangeOf("hooked-dep", O.none()), "^0.11.1");
+				assert.include(pnpmRuns()[0]?.lockfile, BASE_SRI);
+			}),
+		);
+	});
 });
 
 describe("effected#842 — the fetch is never unverified", () => {
-	it.effect("inline and lockfile integrities that disagree fail integrityMismatch, and nothing runs", () =>
-		Effect.gen(function* () {
-			const error = yield* failureAt("mismatch");
-			assert.strictEqual(error.reason, "integrityMismatch");
-			assert.include(error.message, OTHER_SRI);
-			assert.include(error.message, BASE_SRI);
-			assert.strictEqual(pnpmRuns().length, 0);
-		}).pipe(Effect.provide(Subprocess())),
-	);
+	it.layer(Layer.unwrap(Effect.sync(Subprocess)), { timeout: "30 seconds" })((it) => {
+		it.effect("inline and lockfile integrities that disagree fail integrityMismatch, and nothing runs", () =>
+			Effect.gen(function* () {
+				const error = yield* failureAt("mismatch");
+				assert.strictEqual(error.reason, "integrityMismatch");
+				assert.include(error.message, OTHER_SRI);
+				assert.include(error.message, BASE_SRI);
+				assert.strictEqual(pnpmRuns().length, 0);
+			}),
+		);
+	});
 
-	it.effect("a bare spec with no lockfile fails integrityUnavailable, and nothing runs", () =>
-		Effect.gen(function* () {
-			const error = yield* failureAt("unrecorded");
-			assert.strictEqual(error.reason, "integrityUnavailable");
-			assert.include(error.message, "ref unrecorded records no integrity");
-			assert.strictEqual(pnpmRuns().length, 0);
-		}).pipe(Effect.provide(Subprocess())),
-	);
+	it.layer(Layer.unwrap(Effect.sync(Subprocess)), { timeout: "30 seconds" })((it) => {
+		it.effect("a bare spec with no lockfile fails integrityUnavailable, and nothing runs", () =>
+			Effect.gen(function* () {
+				const error = yield* failureAt("unrecorded");
+				assert.strictEqual(error.reason, "integrityUnavailable");
+				assert.include(error.message, "ref unrecorded records no integrity");
+				assert.strictEqual(pnpmRuns().length, 0);
+			}),
+		);
+	});
 
-	it.effect("a served tarball that does not match the recorded integrity fails fetchFailed, with no replay", () =>
-		Effect.gen(function* () {
-			const error = yield* failureAt("tampered");
-			assert.strictEqual(error.reason, "fetchFailed");
-			assert.include(error.message, "ERR_PNPM_TARBALL_INTEGRITY");
-			assert.include(error.message, `pnpm add --config ${NAME}@0.11.1`);
-			// pnpm ran once, pinned to the tampered record, and installed nothing.
-			assert.strictEqual(pnpmRuns().length, 1);
-			assert.include(pnpmRuns()[0]?.lockfile, OTHER_SRI);
-			assert.isFalse(existsSync(join(store, "links", NAME, "0.11.1")));
-		}).pipe(Effect.provide(Subprocess())),
-	);
+	it.layer(Layer.unwrap(Effect.sync(Subprocess)), { timeout: "30 seconds" })((it) => {
+		it.effect("a served tarball that does not match the recorded integrity fails fetchFailed, with no replay", () =>
+			Effect.gen(function* () {
+				const error = yield* failureAt("tampered");
+				assert.strictEqual(error.reason, "fetchFailed");
+				assert.include(error.message, "ERR_PNPM_TARBALL_INTEGRITY");
+				assert.include(error.message, `pnpm add --config ${NAME}@0.11.1`);
+				// pnpm ran once, pinned to the tampered record, and installed nothing.
+				assert.strictEqual(pnpmRuns().length, 1);
+				assert.include(pnpmRuns()[0]?.lockfile, OTHER_SRI);
+				assert.isFalse(existsSync(join(store, "links", NAME, "0.11.1")));
+			}),
+		);
+	});
 });

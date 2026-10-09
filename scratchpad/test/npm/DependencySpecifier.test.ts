@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -99,26 +100,26 @@ describe("DependencySpecifier.protocolOf", () => {
 		assert.isTrue(DependencySpecifier.isRange(">=1.0.0 <2.0.0"));
 		assert.isFalse(DependencySpecifier.isRange("latest"));
 		assert.isFalse(DependencySpecifier.isRange("workspace:*"));
-		assert.isTrue(O.isSome(DependencySpecifier.parseRange("^1.0.0")));
-		assert.isTrue(O.isNone(DependencySpecifier.parseRange("latest")));
+		assertSome(DependencySpecifier.parseRange("^1.0.0"), O.getOrThrow(DependencySpecifier.parseRange("^1.0.0")));
+		assertNone(DependencySpecifier.parseRange("latest"));
 	});
 });
 
 describe("DependencySpecifier.catalogNameOf", () => {
 	it("is Some(name) for a named catalog", () => {
-		assert.deepStrictEqual(DependencySpecifier.catalogNameOf("catalog:react18"), O.some("react18"));
-		assert.deepStrictEqual(DependencySpecifier.catalogNameOf("catalog:build"), O.some("build"));
+		assertSome(DependencySpecifier.catalogNameOf("catalog:react18"), "react18");
+		assertSome(DependencySpecifier.catalogNameOf("catalog:build"), "build");
 	});
 
 	it("is None for the default catalog — bare and whitespace-only", () => {
-		assert.isTrue(O.isNone(DependencySpecifier.catalogNameOf("catalog:")));
-		assert.isTrue(O.isNone(DependencySpecifier.catalogNameOf("catalog:  ")));
+		assertNone(DependencySpecifier.catalogNameOf("catalog:"));
+		assertNone(DependencySpecifier.catalogNameOf("catalog:  "));
 	});
 
 	it("is None for non-catalog input (only meaningful when isCatalog is true)", () => {
-		assert.isTrue(O.isNone(DependencySpecifier.catalogNameOf("workspace:*")));
-		assert.isTrue(O.isNone(DependencySpecifier.catalogNameOf("^1.0.0")));
-		assert.isTrue(O.isNone(DependencySpecifier.catalogNameOf("")));
+		assertNone(DependencySpecifier.catalogNameOf("workspace:*"));
+		assertNone(DependencySpecifier.catalogNameOf("^1.0.0"));
+		assertNone(DependencySpecifier.catalogNameOf(""));
 	});
 
 	it.effect("agrees with FromString's CatalogSpecifier classification (one extraction, not two)", () =>
@@ -128,11 +129,7 @@ describe("DependencySpecifier.catalogNameOf", () => {
 				const classified = yield* decode(specifier);
 				assert.instanceOf(classified, CatalogSpecifier, specifier);
 				assert.isTrue(isCatalogSpecifier(classified));
-				assert.deepStrictEqual(
-					classified.name,
-					DependencySpecifier.catalogNameOf(specifier),
-					specifier,
-				);
+				assert.deepStrictEqual(classified.name, DependencySpecifier.catalogNameOf(specifier), specifier);
 			}
 		}),
 	);
@@ -181,18 +178,18 @@ describe("DependencySpecifier.resolveWorkspace", () => {
 
 describe("DependencySpecifier.workspaceTargetOf", () => {
 	it("extracts the target package name of an alias form", () => {
-		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("workspace:foo@*"), O.some("foo"));
-		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("workspace:foo@^1.0.0"), O.some("foo"));
-		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("workspace:@scope/foo@~"), O.some("@scope/foo"));
+		assertSome(DependencySpecifier.workspaceTargetOf("workspace:foo@*"), "foo");
+		assertSome(DependencySpecifier.workspaceTargetOf("workspace:foo@^1.0.0"), "foo");
+		assertSome(DependencySpecifier.workspaceTargetOf("workspace:@scope/foo@~"), "@scope/foo");
 	});
 
 	it("is None for the plain form and for non-workspace input", () => {
-		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("workspace:*"), O.none());
-		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("workspace:^1.0.0"), O.none());
+		assertNone(DependencySpecifier.workspaceTargetOf("workspace:*"));
+		assertNone(DependencySpecifier.workspaceTargetOf("workspace:^1.0.0"));
 		// A lone scoped name has its only `@` at index 0 — not the alias form.
-		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("workspace:@scope/foo"), O.none());
-		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("^1.0.0"), O.none());
-		assert.deepStrictEqual(DependencySpecifier.workspaceTargetOf("catalog:"), O.none());
+		assertNone(DependencySpecifier.workspaceTargetOf("workspace:@scope/foo"));
+		assertNone(DependencySpecifier.workspaceTargetOf("^1.0.0"));
+		assertNone(DependencySpecifier.workspaceTargetOf("catalog:"));
 	});
 });
 
@@ -246,13 +243,13 @@ describe("DependencySpecifier.FromString", () => {
 			assert.instanceOf(defaultCatalog, CatalogSpecifier);
 			assert.isTrue(isCatalogSpecifier(defaultCatalog));
 			assert.strictEqual(defaultCatalog._tag, "catalog");
-			assert.isTrue(O.isNone(defaultCatalog.name));
+			assertNone(defaultCatalog.name);
 			assert.strictEqual(defaultCatalog.raw, "catalog:");
 
 			const namedCatalog = yield* decode("catalog:react18");
 			assert.isTrue(isCatalogSpecifier(namedCatalog));
 			if (!isCatalogSpecifier(namedCatalog)) assert.fail("expected a CatalogSpecifier");
-			assert.deepStrictEqual(namedCatalog.name, O.some("react18"));
+			assertSome(namedCatalog.name, "react18");
 
 			const ws = yield* decode("workspace:^1.2.3");
 			assert.instanceOf(ws, WorkspaceSpecifier);

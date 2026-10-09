@@ -1,5 +1,9 @@
 import { assert, describe, it } from "@effect/vitest";
-import { JsoncParseError, JsoncStringifyError } from "../../effected/jsonc/index.ts";
+import { assertExitFailure, assertSome } from "@effect/vitest/utils";
+import {
+	JsoncParseError,
+	JsoncStringifyError,
+} from "../../effected/jsonc/index.ts";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -18,17 +22,22 @@ describe("JsoncCodec", () => {
 		}),
 	);
 
-	it.effect("wraps a jsonc parse failure as ConfigCodecError with the cause preserved structurally", () =>
-		Effect.gen(function* () {
-			const error = yield* JsoncCodec.parse("{ not jsonc").pipe(Effect.asVoid, Effect.flip);
-			assert.instanceOf(error, ConfigCodecError);
-			assert.strictEqual(error.codec, "jsonc");
-			assert.strictEqual(error.operation, "parse");
-			assert.isDefined(error.cause);
-			assert.notStrictEqual(typeof error.cause, "string");
-			// The underlying JsoncParseError survives structurally, not as prose.
-			assert.instanceOf(error.cause, JsoncParseError);
-		}),
+	it.effect(
+		"wraps a jsonc parse failure as ConfigCodecError with the cause preserved structurally",
+		() =>
+			Effect.gen(function* () {
+				const error = yield* JsoncCodec.parse("{ not jsonc").pipe(
+					Effect.asVoid,
+					Effect.flip,
+				);
+				assert.instanceOf(error, ConfigCodecError);
+				assert.strictEqual(error.codec, "jsonc");
+				assert.strictEqual(error.operation, "parse");
+				assert.isDefined(error.cause);
+				assert.notStrictEqual(typeof error.cause, "string");
+				// The underlying JsoncParseError survives structurally, not as prose.
+				assert.instanceOf(error.cause, JsoncParseError);
+			}),
 	);
 
 	it.effect("round-trips through stringify", () =>
@@ -39,33 +48,34 @@ describe("JsoncCodec", () => {
 		}),
 	);
 
-	it.effect("never dies on hostile deeply-nested input — fails through the typed channel", () =>
-		Effect.gen(function* () {
-			const depth = 5000;
-			const hostile = `${"[".repeat(depth)}1${"]".repeat(depth)}`;
-			const exit = yield* Effect.exit(JsoncCodec.parse(hostile));
-			assert.isTrue(Exit.isFailure(exit));
-			if (Exit.isFailure(exit)) {
-				const cause = Exit.getCause(exit);
-				assert.isTrue(O.isSome(cause));
-				if (O.isSome(cause)) {
-					assert.isTrue(Cause.hasFails(cause.value));
-					assert.isFalse(Cause.hasDies(cause.value));
-				}
-			}
-		}),
+	it.effect(
+		"never dies on hostile deeply-nested input — fails through the typed channel",
+		() =>
+			Effect.gen(function* () {
+				const depth = 5000;
+				const hostile = `${"[".repeat(depth)}1${"]".repeat(depth)}`;
+				const exit = yield* Effect.exit(JsoncCodec.parse(hostile));
+				const causeOption = Exit.getCause(exit);
+				const failureCause = O.getOrThrow(causeOption);
+				assertExitFailure(exit, failureCause);
+				assertSome(causeOption, failureCause);
+				assert.isTrue(Cause.hasFails(failureCause));
+				assert.isFalse(Cause.hasDies(failureCause));
+			}),
 	);
 
-	it.effect("wraps a stringify failure as ConfigCodecError with the cause preserved", () =>
-		Effect.gen(function* () {
-			const circular: Record<string, unknown> = {};
-			circular.self = circular;
-			const error = yield* Effect.flip(JsoncCodec.stringify(circular));
-			assert.instanceOf(error, ConfigCodecError);
-			assert.strictEqual(error.codec, "jsonc");
-			assert.strictEqual(error.operation, "stringify");
-			// Structural, never stringified: a string has no prototype chain to JsoncStringifyError.
-			assert.instanceOf(error.cause, JsoncStringifyError);
-		}),
+	it.effect(
+		"wraps a stringify failure as ConfigCodecError with the cause preserved",
+		() =>
+			Effect.gen(function* () {
+				const circular: Record<string, unknown> = {};
+				circular.self = circular;
+				const error = yield* Effect.flip(JsoncCodec.stringify(circular));
+				assert.instanceOf(error, ConfigCodecError);
+				assert.strictEqual(error.codec, "jsonc");
+				assert.strictEqual(error.operation, "stringify");
+				// Structural, never stringified: a string has no prototype chain to JsoncStringifyError.
+				assert.instanceOf(error.cause, JsoncStringifyError);
+			}),
 	);
 });

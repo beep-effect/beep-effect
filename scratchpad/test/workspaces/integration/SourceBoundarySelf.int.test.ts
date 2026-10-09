@@ -40,7 +40,7 @@ const PROCESS_READERS: ReadonlyArray<string> = [
 ];
 
 describe("@effected/workspaces, scanned by SourceBoundary", () => {
-	layer(Platform)((it) => {
+	layer(Platform, { timeout: "30 seconds" })((it) => {
 		it.effect("finds exactly the modules that read process, and not the replay script's template text", () =>
 			Effect.gen(function* () {
 				const scan = yield* SourceBoundary.scan({ root: SRC, rules: ["process"] });

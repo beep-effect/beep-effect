@@ -1,8 +1,9 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertExitFailure, assertFailure, assertSome, assertSuccess } from "@effect/vitest/utils";
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as HashMap from "effect/HashMap";
-import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import { InvalidSpdxExpressionError, License } from "../../effected/spdx/License.ts";
 
@@ -37,7 +38,15 @@ describe("License", () => {
 	it.effect("fails typed on an unknown id", () =>
 		Effect.gen(function* () {
 			const exit = yield* Effect.exit(License.parse("NOT-A-LICENSE"));
-			assert.isTrue(Exit.isFailure(exit));
+			const cause = exit.pipe(Exit.filterCause, Result.getOrThrow);
+			// Preserve runtime tracing metadata while checking the expected typed failure.
+			assertExitFailure(
+				exit,
+				Cause.annotate(
+					Cause.fail(InvalidSpdxExpressionError.make({ input: "NOT-A-LICENSE" })),
+					Cause.annotations(cause),
+				),
+			);
 			// the failure is the typed error, never a defect
 			const error = yield* Effect.flip(License.parse("NOT-A-LICENSE"));
 			assert.instanceOf(error, InvalidSpdxExpressionError);
@@ -48,8 +57,16 @@ describe("License", () => {
 	it.effect("rejects a malformed LicenseRef as a typed failure, never a defect", () =>
 		Effect.gen(function* () {
 			// spaces are not valid idstring characters
-			const result = yield* Effect.result(License.parse("LicenseRef-has spaces"));
-			assert.strictEqual(result._tag, "Failure");
+			const exit = yield* Effect.exit(License.parse("LicenseRef-has spaces"));
+			const cause = exit.pipe(Exit.filterCause, Result.getOrThrow);
+			// Preserve runtime tracing metadata while checking the expected typed failure.
+			assertExitFailure(
+				exit,
+				Cause.annotate(
+					Cause.fail(InvalidSpdxExpressionError.make({ input: "LicenseRef-has spaces" })),
+					Cause.annotations(cause),
+				),
+			);
 		}),
 	);
 	it("predicates read the catalog synchronously", () => {
@@ -68,9 +85,9 @@ describe("License", () => {
 	});
 	it("parseResult is the sync primitive", () => {
 		const ok = License.parseResult("MIT");
-		assert.isTrue(Result.isSuccess(ok));
+		assertSuccess(ok, License.of("MIT"));
 		const bad = License.parseResult("NOT-A-LICENSE");
-		assert.isTrue(Result.isFailure(bad));
+		assertFailure(bad, InvalidSpdxExpressionError.make({ input: "NOT-A-LICENSE" }));
 	});
 	it("of constructs from typed parts", () => {
 		const mit = License.of("MIT");
@@ -81,9 +98,11 @@ describe("License", () => {
 		assert.isTrue(gpl.deprecated);
 	});
 	it("catalog holds resolved license domain objects", () => {
-		const mit = O.getOrUndefined(HashMap.get(License.catalog, "MIT"));
-		assert.isDefined(mit);
-		assert.strictEqual(mit?.id, "MIT");
-		assert.strictEqual(O.getOrUndefined(HashMap.get(License.catalog, "GPL-3.0"))?.deprecated, true);
+		const mit = HashMap.get(License.catalog, "MIT");
+		assertSome(mit, License.of("MIT"));
+		assert.strictEqual(mit.value.id, "MIT");
+		const gpl = HashMap.get(License.catalog, "GPL-3.0");
+		assertSome(gpl, License.of("GPL-3.0", true));
+		assert.strictEqual(gpl.value.deprecated, true);
 	});
 });

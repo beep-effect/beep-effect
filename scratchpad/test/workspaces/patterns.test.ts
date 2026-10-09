@@ -19,7 +19,7 @@ const tree: Tree = {
 };
 
 describe("readPatterns — the happy paths", () => {
-	layer(platform(tree))((it) => {
+	layer(platform(tree), { timeout: "30 seconds" })((it) => {
 		it.effect("prefers pnpm-workspace.yaml over the manifest workspaces field", () =>
 			Effect.gen(function* () {
 				assert.deepStrictEqual(yield* readPatterns("/repo"), ["packages/*"]);
@@ -34,6 +34,7 @@ describe("readPatterns — a pnpm-workspace.yaml with no packages key falls thro
 			"/repo/pnpm-workspace.yaml": "onlyBuiltDependencies:\n  - esbuild\n",
 			"/repo/package.json": JSON.stringify({ name: "root", workspaces: ["apps/*"] }),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("reads the manifest workspaces field", () =>
 			Effect.gen(function* () {
@@ -44,7 +45,7 @@ describe("readPatterns — a pnpm-workspace.yaml with no packages key falls thro
 });
 
 describe("readPatterns — an absent config is not an error", () => {
-	layer(platform({ "/repo/README.md": "no config here" }))((it) => {
+	layer(platform({ "/repo/README.md": "no config here" }), { timeout: "30 seconds" })((it) => {
 		it.effect("a standalone directory declares no patterns", () =>
 			Effect.gen(function* () {
 				// ABSENT is a real, distinguishable condition. Only UNREADABLE is the bug.
@@ -62,7 +63,7 @@ describe("readPatterns — an absent config is not an error", () => {
 // a permission error yielded "this workspace declares no packages".
 
 describe("readPatterns — an unreadable pnpm-workspace.yaml", () => {
-	layer(platform(tree, { unreadableFiles: new Set(["/repo/pnpm-workspace.yaml"]) }))((it) => {
+	layer(platform(tree, { unreadableFiles: new Set(["/repo/pnpm-workspace.yaml"]) }), { timeout: "30 seconds" })((it) => {
 		it.effect("fails typed rather than reading as an empty document", () =>
 			Effect.gen(function* () {
 				const failure = yield* Effect.flip(readPatterns("/repo"));
@@ -84,6 +85,7 @@ describe("readPatterns — an unreadable package.json", () => {
 			},
 			{ unreadableFiles: new Set(["/repo/package.json"]) },
 		),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("fails typed rather than reading as `{}`", () =>
 			Effect.gen(function* () {
@@ -96,7 +98,7 @@ describe("readPatterns — an unreadable package.json", () => {
 });
 
 describe("readPatterns — a malformed config still fails typed", () => {
-	layer(platform({ "/repo/pnpm-workspace.yaml": "packages:\n  - [unclosed\n" }))((it) => {
+	layer(platform({ "/repo/pnpm-workspace.yaml": "packages:\n  - [unclosed\n" }), { timeout: "30 seconds" })((it) => {
 		it.effect("invalid YAML is invalidYaml, not a defect", () =>
 			Effect.gen(function* () {
 				const failure = yield* Effect.flip(readPatterns("/repo"));

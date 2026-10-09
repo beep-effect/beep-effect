@@ -1,8 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Cancelled, Fmt } from "../../../effected/cli/index.ts";
 import type { MultiSelectSection } from "../../../effected/cli/ui.ts";
@@ -84,11 +84,11 @@ describe("MultiSelect reducer", () => {
 
 	it("binds space, a, enter and q, and keeps page, home and end out of the help line", () => {
 		const named = (name: "space" | "enter" | "pagedown") => MultiSelect.keys.match({ _tag: "Named", name });
-		assert.deepStrictEqual(named("space"), O.some("toggle"));
-		assert.deepStrictEqual(MultiSelect.keys.match({ _tag: "Char", char: "a" }), O.some("toggleSection"));
-		assert.deepStrictEqual(named("enter"), O.some("submit"));
-		assert.deepStrictEqual(MultiSelect.keys.match({ _tag: "Char", char: "q" }), O.some("cancel"));
-		assert.deepStrictEqual(named("pagedown"), O.some("pagedown"), "bound, though not shown");
+		assertSome(named("space"), "toggle");
+		assertSome(MultiSelect.keys.match({ _tag: "Char", char: "a" }), "toggleSection");
+		assertSome(named("enter"), "submit");
+		assertSome(MultiSelect.keys.match({ _tag: "Char", char: "q" }), "cancel");
+		assertSome(named("pagedown"), "pagedown"); // Bound, though not shown.
 	});
 });
 
@@ -100,7 +100,7 @@ describe("MultiSelect.screen under CliUiTest", () => {
 			yield* handle.type("a");
 			yield* handle.press("enter");
 			assert.deepStrictEqual(yield* handle.result, ["a1", "a2", "a3"]);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("submitting with nothing selected resolves an empty list, not a cancel", () =>
@@ -109,7 +109,7 @@ describe("MultiSelect.screen under CliUiTest", () => {
 			yield* handle.press("down", "space");
 			yield* handle.press("enter");
 			assert.deepStrictEqual(yield* handle.result, []);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a screen with a repeated item key dies with the reason", () =>
@@ -135,7 +135,7 @@ describe("MultiSelect.screen under CliUiTest", () => {
 			} else {
 				assert.fail("expected a defect, but the multi-select resolved");
 			}
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("q cancels with escape", () =>
@@ -144,7 +144,7 @@ describe("MultiSelect.screen under CliUiTest", () => {
 			yield* handle.type("q");
 			const error = yield* Effect.flip(handle.result);
 			assert.strictEqual(S.is(Cancelled)(error) ? error.reason : undefined, "escape");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("draws headers, check glyphs, the highlighted row in accent and its detail muted below", () =>
@@ -199,7 +199,7 @@ describe("MultiSelect.screen under CliUiTest", () => {
 			assert.isDefined(highlighted, "the highlighted row is drawn");
 			const key = /item (\d-\d)/.exec(highlighted ?? "")?.[1];
 			assert.include(last, `detail of ${key}`, "its detail is visible below the list");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("the help line names space, a, enter and esc", () =>
@@ -210,6 +210,6 @@ describe("MultiSelect.screen under CliUiTest", () => {
 				assert.include(help, part, help);
 			}
 			assert.notInclude(help, "…", "it fits at 80 columns");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });

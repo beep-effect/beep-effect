@@ -1,11 +1,14 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import { Box, Text } from "ink";
 import type { ReactElement } from "react";
 import { createElement } from "react";
 import { vi } from "vitest";
+import { assertExitFailure, assertSuccess } from "@effect/vitest/utils";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
+import * as Result from "effect/Result";
 import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
 import type { Ev, State } from "../helpers/live.ts";
 import { End, Start, capturing, reduce, tick, warningsIn } from "../helpers/live.ts";
@@ -48,24 +51,25 @@ describe("CliUiTest.live: the harness", () => {
 			assert.notInclude(yield* view.rawFrame, `${ESC}[2K`, "a frame without Ink's erase moves");
 			yield* view.end;
 			assert.strictEqual((yield* view.handle.state).last, "tick 1");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("end ends the stream and waits for the view, dying with what it died of", () =>
 		Effect.gen(function* () {
+			const reduceError = new Error("reduce threw");
 			const view = yield* CliUiTest.live({
 				...viewOptions,
 				reduce: (state: State, event: Ev) => {
-					if (event._tag === "Tick") throw new Error("reduce threw");
+					if (event._tag === "Tick") throw reduceError;
 					return reduce(state, event);
 				},
 			});
 			yield* view.publish(Start);
 			yield* view.publish(tick(1));
 			const ended = yield* Effect.exit(view.end);
-			assert.isTrue(Exit.isFailure(ended));
+			assertSuccess(Result.map(Exit.filterCause(ended), Cause.squash), reduceError);
 			assert.include(String(ended), "reduce threw");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
@@ -80,7 +84,7 @@ describe("CliUiTest.live: vitest-agent's eight behaviours", () => {
 			yield* view.advance("160 millis");
 			yield* view.publish(Start);
 			assert.include(yield* view.plainFrame, "frame 4", "the new run starts at the clock's frame, not 0");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("2. the final frame is committed by the unmount, and nothing is cleared", () =>
@@ -91,7 +95,7 @@ describe("CliUiTest.live: vitest-agent's eight behaviours", () => {
 			yield* view.publish(End);
 			assert.strictEqual(yield* view.transcript, "RUN 1\nended frame 0");
 			yield* view.end;
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("3. a resize re-lays the frame out at the new width, leaving one copy", () =>
@@ -108,7 +112,7 @@ describe("CliUiTest.live: vitest-agent's eight behaviours", () => {
 			yield* view.publish(End);
 			const shown = (yield* view.transcript).split("\n");
 			assert.strictEqual(shown.filter((line) => line.startsWith("┌")).length, 1, shown.join("\n"));
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("4. React's user-timing entries are drained after every render; without the drain they pile up", () => Effect.gen(function* () {
@@ -147,7 +151,7 @@ describe("CliUiTest.live: vitest-agent's eight behaviours", () => {
 			assert.strictEqual(warningsIn(log.lines).length, 1, log.lines.join("\n"));
 			assert.strictEqual(yield* view.transcript, "RUN 1\ntick 1 frame 0", "the last good frame, once");
 			assert.strictEqual((yield* view.handle.state).last, "ended");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("6. watch mode: each run's frame stays, and a start mid-run redraws in place", () =>
@@ -164,7 +168,7 @@ describe("CliUiTest.live: vitest-agent's eight behaviours", () => {
 			assert.include(written, "RUN 4", "control: the raw bytes are what the view wrote");
 			assert.notInclude(written, `${ESC}[3J`, "the scrollback was never wiped");
 			assert.notInclude(written, `${ESC}[2J`, "the screen was never cleared");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("7. teardown with no terminal event: the frame stays, the tick stops, nothing more is written", () =>
@@ -224,7 +228,7 @@ describe("CliUiTest.live: what the harness can see", () => {
 			yield* view.publish(tick(1));
 			assert.include(yield* view.written, `${ESC}[3J`, "Ink wiped the scrollback");
 			assert.isFalse((yield* view.transcript).startsWith("HISTORY"), "and the transcript shows it gone");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a line logged after a run ended is not taken for a frame", () =>
@@ -238,18 +242,19 @@ describe("CliUiTest.live: what the harness can see", () => {
 			assert.deepStrictEqual(yield* view.frames, frames, "no frame was added");
 			assert.strictEqual(yield* view.plainFrame, "RUN 1\nended frame 0");
 			assert.include(yield* view.transcript, "after the run");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
 describe("CliUiTest.live: advance needs the TestClock", () => {
+	// The absence of TestClock under the live clock is the behaviour being tested.
 	it.live("under it.live, with the real clock, advance dies instead of waiting", () =>
 		Effect.gen(function* () {
 			const view = yield* CliUiTest.live(viewOptions);
 			yield* view.publish(Start);
 			const exit = yield* Effect.exit(view.advance("80 millis"));
-			assert.isTrue(Exit.isFailure(exit), "advance has no TestClock to move under it.live");
+			assertExitFailure(exit, Cause.die(new TypeError("testClock.adjust is not a function")));
 			assert.include(yield* view.plainFrame, "started", "the view itself is unaffected");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });

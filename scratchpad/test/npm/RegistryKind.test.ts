@@ -1,7 +1,12 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
-import { classifyRegistry, registryDisplayName, registryHost, registryShortLabel } from "../../effected/npm/RegistryKind.ts";
+import {
+	classifyRegistry,
+	registryDisplayName,
+	registryHost,
+	registryShortLabel,
+} from "../../effected/npm/RegistryKind.ts";
 
 describe("classifyRegistry", () => {
 	it("classifies the public npm registry, with or without a scheme or path", () => {
@@ -54,16 +59,19 @@ describe("registryHost", () => {
 		assert.strictEqual(registryHost("https://registry.example.test:4873/"), "registry.example.test:4873");
 	});
 
-	it("stays linear on a pathological path, with no regex backtracking", () => {
-		// The obvious `.replace(/\/.*$/, "")` is a polynomial-backtracking regex
-		// over a value this package does not control (registry strings come from
-		// npmrc and package.json). CodeQL flagged it on exactly this line. The
-		// scan-based form answers the same thing without the exposure.
-		const pathological = `evil.test/${"/".repeat(20000)}`;
-		const started = Effect.runSync(Clock.currentTimeMillis);
-		assert.strictEqual(registryHost(pathological), "evil.test");
-		assert.isBelow(Effect.runSync(Clock.currentTimeMillis) - started, 250, "must not backtrack");
-	});
+	// Live elapsed time detects regex backtracking; TestClock would not measure synchronous work.
+	it.live("stays linear on a pathological path, with no regex backtracking", () =>
+		Effect.gen(function* () {
+			// The obvious `.replace(/\/.*$/, "")` is a polynomial-backtracking regex
+			// over a value this package does not control (registry strings come from
+			// npmrc and package.json). CodeQL flagged it on exactly this line. The
+			// scan-based form answers the same thing without the exposure.
+			const pathological = `evil.test/${"/".repeat(20000)}`;
+			const started = yield* Clock.currentTimeMillis;
+			assert.strictEqual(registryHost(pathological), "evil.test");
+			assert.isBelow((yield* Clock.currentTimeMillis) - started, 250, "must not backtrack");
+		}),
+	);
 
 	it("strips the scheme and path from a value that does not parse as a URL", () => {
 		// npm config values are written both ways, and a bare host must still

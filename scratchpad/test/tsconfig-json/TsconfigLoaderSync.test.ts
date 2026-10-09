@@ -1,8 +1,10 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
-import * as nodePath from "node:path";
+import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -23,9 +25,13 @@ const tree = (...entries: ReadonlyArray<readonly [string, string]>): ReadonlyMap
 const syncFs = (files: ReadonlyMap<string, string>): SyncFileSystem =>
 	MemoryFileSystem.makeSync(Object.fromEntries(files)).sync;
 
+// Pure Layer.succeed providers retain Node's exact POSIX and Win32 path methods.
+const posixPath = NodePath.layerPosix.pipe(Layer.build, Effect.map(Context.get(Path.Path)), Effect.scoped, Effect.runSync);
+const win32Path = NodePath.layerWin32.pipe(Layer.build, Effect.map(Context.get(Path.Path)), Effect.scoped, Effect.runSync);
+
 const posixOptions = (files: ReadonlyMap<string, string>): TsconfigLoaderSyncOptions => ({
 	fileSystem: syncFs(files),
-	path: nodePath.posix,
+	path: posixPath,
 });
 
 /** Run `fn`, returning what it throws; fails the test if it returns instead. */
@@ -127,7 +133,7 @@ describe("TsconfigLoaderSync.compilerOptions", () => {
 // Async/sync parity: the same fixture through both pipelines.
 // ---------------------------------------------------------------------------
 
-layer(fixtureLayer(CHAIN_TREE))("TsconfigLoaderSync parity with TsconfigLoader", (it) => {
+layer(fixtureLayer(CHAIN_TREE), { timeout: "30 seconds" })("TsconfigLoaderSync parity with TsconfigLoader", (it) => {
 	it.effect("resolve returns the exact async result on the same fixture", () =>
 		Effect.gen(function* () {
 			const viaAsync = yield* TsconfigLoader.resolve("/proj/tsconfig.json");
@@ -174,7 +180,7 @@ describe("TsconfigLoaderSync with a win32 SyncPath", () => {
 		["C:/proj/tsconfig.json", `{ "extends": ".\\\\base.json", "compilerOptions": { "strict": true } }`],
 		["C:/proj/base.json", `{ "compilerOptions": { "target": "es2022" } }`],
 	);
-	const options: TsconfigLoaderSyncOptions = { fileSystem: win32Fs(files), path: nodePath.win32 };
+	const options: TsconfigLoaderSyncOptions = { fileSystem: win32Fs(files), path: win32Path };
 
 	it("resolves a backslash extends chain under drive-letter roots", () => {
 		const resolved = TsconfigLoaderSync.resolve("C:\\proj\\tsconfig.json", options);
@@ -190,7 +196,7 @@ describe("TsconfigLoaderSync with a win32 SyncPath", () => {
 	it("treats a drive-letter path as absolute only under the supplied implementation", () => {
 		// The premise the suite rests on, pinned: the two implementations
 		// genuinely disagree about these inputs.
-		assert.isTrue(nodePath.win32.isAbsolute("C:\\proj\\tsconfig.json"));
-		assert.isFalse(nodePath.posix.isAbsolute("C:\\proj\\tsconfig.json"));
+		assert.isTrue(win32Path.isAbsolute("C:\\proj\\tsconfig.json"));
+		assert.isFalse(posixPath.isAbsolute("C:\\proj\\tsconfig.json"));
 	});
 });

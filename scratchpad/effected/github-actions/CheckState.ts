@@ -140,7 +140,5 @@ export const projectCheckState = (state: CheckState): CheckRunProjection =>
 		Match.when("user_interaction_required", (): CheckRunProjection => ({ status: "completed", conclusion: "action_required" })),
 		Match.when("skipped", (): CheckRunProjection => ({ status: "completed", conclusion: "skipped" })),
 		Match.when("timeout", (): CheckRunProjection => ({ status: "completed", conclusion: "timed_out" })),
-		Match.orElse((unhandled: never) => {
-			throw UnhandledCheckStateError.make({ message: `Unhandled CheckState: ${String(unhandled)}` });
-		}),
+		Match.exhaustive,
 	);

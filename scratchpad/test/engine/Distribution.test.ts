@@ -1,5 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -48,14 +49,14 @@ describe("CurrentDistribution", () => {
 	it.effect("defaults to none when nothing provides it", () =>
 		Effect.gen(function* () {
 			const current = yield* CurrentDistribution;
-			assert.isTrue(O.isNone(current));
+			assertNone(current);
 		}),
 	);
 
 	it.effect("reads back what main provided", () =>
 		Effect.gen(function* () {
 			const current = yield* CurrentDistribution;
-			assert.deepStrictEqual(current, O.some({ name: "@okfit/plugin", version: "0.5.1" }));
+			assertSome(current, { name: "@okfit/plugin", version: "0.5.1" });
 		}).pipe(Effect.provideService(CurrentDistribution, O.some({ name: "@okfit/plugin", version: "0.5.1" }))),
 	);
 });

@@ -5,6 +5,7 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as P from "effect/Predicate";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { YamlRule } from "../../YamlLintRule.ts";
@@ -104,8 +105,7 @@ export const hyphenSpacing: YamlRule = {
 				let flowDepth = 0;
 				let relocatesCollection = false;
 				for (let followingIndex = tokenIndex + 1; followingIndex < ctx.tokens.length; followingIndex++) {
-					const following = ctx.tokens[followingIndex];
-					if (following === undefined) break;
+					const following = A.getUnsafe(ctx.tokens, followingIndex);
 					if (following.offset < j) continue;
 					if (following.line > token.line) {
 						if (following.kind === "whitespace" || following.kind === "newline" || following.kind === "comment") continue;

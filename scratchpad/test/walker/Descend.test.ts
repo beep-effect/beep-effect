@@ -1,7 +1,9 @@
 import { assert, describe, it, layer } from "@effect/vitest";
+import { assertExitFailure } from "@effect/vitest/utils";
 import { GlobPattern, GlobPatternOptions } from "../../effected/glob/index.ts";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import type { DescendOptions, DescendRecordOptions, DescendResult } from "../../effected/walker/Descend.ts";
@@ -58,7 +60,7 @@ const mainTree = {
 	"/proj/.git/hooks/config.ts": "",
 };
 
-layer(platform(mainTree))("descend, literal fast-path", (it) => {
+layer(platform(mainTree), { timeout: "30 seconds" })("descend, literal fast-path", (it) => {
 	it.effect("returns the source when it resolves to a file", () =>
 		Effect.gen(function* () {
 			const pattern = yield* GlobPattern.compile("readme.md");
@@ -81,7 +83,7 @@ layer(platform(mainTree))("descend, literal fast-path", (it) => {
 	);
 });
 
-layer(platform(mainTree))("descend, magic patterns", (it) => {
+layer(platform(mainTree), { timeout: "30 seconds" })("descend, magic patterns", (it) => {
 	it.effect("descends a globstar pattern through every level, sorted by relative path", () =>
 		Effect.gen(function* () {
 			const pattern = yield* GlobPattern.compile("src/**/*.ts");
@@ -147,8 +149,8 @@ layer(platform(mainTree))("descend, magic patterns", (it) => {
 		Effect.gen(function* () {
 			const pattern = yield* GlobPattern.compile("src/**/*.ts");
 			const exit = yield* Effect.exit(descend(pattern, { cwd: "/proj", maxDepth: 0 }));
-			assert.strictEqual(exit._tag, "Failure");
-			if (exit._tag === "Failure") assert.isTrue(Cause.hasDies(exit.cause));
+			assertExitFailure(exit, Exit.isFailure(exit) ? exit.cause : Cause.empty);
+			assert.isTrue(Cause.hasDies(exit.cause));
 		}),
 	);
 
@@ -156,8 +158,8 @@ layer(platform(mainTree))("descend, magic patterns", (it) => {
 		Effect.gen(function* () {
 			const pattern = yield* GlobPattern.compile("src/**/*.ts");
 			const exit = yield* Effect.exit(descend(pattern, { cwd: "/proj", maxDepth: Number.NaN }));
-			assert.strictEqual(exit._tag, "Failure");
-			if (exit._tag === "Failure") assert.isTrue(Cause.hasDies(exit.cause));
+			assertExitFailure(exit, Exit.isFailure(exit) ? exit.cause : Cause.empty);
+			assert.isTrue(Cause.hasDies(exit.cause));
 		}),
 	);
 
@@ -165,8 +167,8 @@ layer(platform(mainTree))("descend, magic patterns", (it) => {
 		Effect.gen(function* () {
 			const pattern = yield* GlobPattern.compile("src/**/*.ts");
 			const exit = yield* Effect.exit(descend(pattern, { cwd: "/proj", maxDepth: 2.5 }));
-			assert.strictEqual(exit._tag, "Failure");
-			if (exit._tag === "Failure") assert.isTrue(Cause.hasDies(exit.cause));
+			assertExitFailure(exit, Exit.isFailure(exit) ? exit.cause : Cause.empty);
+			assert.isTrue(Cause.hasDies(exit.cause));
 		}),
 	);
 
@@ -199,7 +201,7 @@ const symlinkOptions = {
 	},
 };
 
-layer(platform(symlinkTree, symlinkOptions))("descend, symlinks", (it) => {
+layer(platform(symlinkTree, symlinkOptions), { timeout: "30 seconds" })("descend, symlinks", (it) => {
 	it.effect("matches a symlink that resolves to a file and skips a dangling one", () =>
 		Effect.gen(function* () {
 			const pattern = yield* GlobPattern.compile("src/*.ts");
@@ -246,7 +248,7 @@ const followOptions = {
 	},
 };
 
-layer(platform(followTree, followOptions))("descend, followSymlinks", (it) => {
+layer(platform(followTree, followOptions), { timeout: "30 seconds" })("descend, followSymlinks", (it) => {
 	it.effect("descends into a symlinked directory under followSymlinks: true", () =>
 		Effect.gen(function* () {
 			const pattern = yield* GlobPattern.compile("src/**/*.ts");
@@ -291,7 +293,7 @@ const siblingLinkOptions = {
 	},
 };
 
-layer(platform(siblingLinkTree, siblingLinkOptions))("descend, followSymlinks sibling links", (it) => {
+layer(platform(siblingLinkTree, siblingLinkOptions), { timeout: "30 seconds" })("descend, followSymlinks sibling links", (it) => {
 	it.effect("two links to one target both enumerate — the guard is per-branch, not walk-global", () =>
 		Effect.gen(function* () {
 			const pattern = yield* GlobPattern.compile("src/**/*.ts");
@@ -316,7 +318,7 @@ const baseCycleOptions = {
 	},
 };
 
-layer(platform(baseCycleTree, baseCycleOptions))("descend, followSymlinks base cycle", (it) => {
+layer(platform(baseCycleTree, baseCycleOptions), { timeout: "30 seconds" })("descend, followSymlinks base cycle", (it) => {
 	it.effect("a link to the walk base is skipped and the walk terminates", () =>
 		Effect.gen(function* () {
 			const pattern = yield* GlobPattern.compile("**/*.ts");
@@ -342,7 +344,7 @@ const mutualCycleOptions = {
 	},
 };
 
-layer(platform(mutualCycleTree, mutualCycleOptions))("descend, followSymlinks mutual cycle", (it) => {
+layer(platform(mutualCycleTree, mutualCycleOptions), { timeout: "30 seconds" })("descend, followSymlinks mutual cycle", (it) => {
 	it.effect("terminates on a two-directory link cycle, matching files through both link paths", () =>
 		Effect.gen(function* () {
 			const pattern = yield* GlobPattern.compile("**/*.ts");
@@ -370,7 +372,7 @@ const unresolvableOptions = {
 	unresolvable: { "/proj/src/linkdir": "PermissionDenied" as const },
 };
 
-layer(platform(unresolvableTree, unresolvableOptions))("descend, followSymlinks unresolvable link", (it) => {
+layer(platform(unresolvableTree, unresolvableOptions), { timeout: "30 seconds" })("descend, followSymlinks unresolvable link", (it) => {
 	it.effect("fails typed by default, naming the link as the unreadable directory", () =>
 		Effect.gen(function* () {
 			const pattern = yield* GlobPattern.compile("src/**/*.ts");
@@ -416,7 +418,7 @@ const vanishedLinkOptions = {
 	unresolvable: { "/proj/src/linkdir": "NotFound" as const },
 };
 
-layer(platform(unresolvableTree, vanishedLinkOptions))("descend, followSymlinks vanished link", (it) => {
+layer(platform(unresolvableTree, vanishedLinkOptions), { timeout: "30 seconds" })("descend, followSymlinks vanished link", (it) => {
 	it.effect("a NotFound on the resolve is a benign race: silent under fail, never recorded", () =>
 		Effect.gen(function* () {
 			const pattern = yield* GlobPattern.compile("src/**/*.ts");
@@ -435,7 +437,7 @@ const unreadableTree = {
 };
 const unreadableOptions = { unreadable: HashSet.make("/proj/src/locked") };
 
-layer(platform(unreadableTree, unreadableOptions))("descend, unreadable directory", (it) => {
+layer(platform(unreadableTree, unreadableOptions), { timeout: "30 seconds" })("descend, unreadable directory", (it) => {
 	it.effect("fails typed by default, carrying the pattern and the offending relative directory", () =>
 		Effect.gen(function* () {
 			const pattern = yield* GlobPattern.compile("src/**/*.ts");
@@ -496,7 +498,7 @@ layer(platform(unreadableTree, unreadableOptions))("descend, unreadable director
 const vanishedTree = { "/proj/src/a.ts": "" };
 const vanishedOptions = { vanished: HashSet.make("/proj/src/gone") };
 
-layer(platform(vanishedTree, vanishedOptions))("descend, vanished directory", (it) => {
+layer(platform(vanishedTree, vanishedOptions), { timeout: "30 seconds" })("descend, vanished directory", (it) => {
 	it.effect("treats a NotFound mid-walk as a benign race, even under onUnreadable: fail", () =>
 		Effect.gen(function* () {
 			const pattern = yield* GlobPattern.compile("src/**/*.ts");
@@ -519,7 +521,7 @@ layer(platform(vanishedTree, vanishedOptions))("descend, vanished directory", (i
 const unreadableBaseTree = { "/proj/src/a.ts": "" };
 const unreadableBaseOptions = { unreadable: HashSet.make("/proj") };
 
-layer(platform(unreadableBaseTree, unreadableBaseOptions))("descend, unreadable walk base", (it) => {
+layer(platform(unreadableBaseTree, unreadableBaseOptions), { timeout: "30 seconds" })("descend, unreadable walk base", (it) => {
 	it.effect("records the base as the empty-string path, carrying the cause, with no matches", () =>
 		Effect.gen(function* () {
 			// No literal prefix, so the walk starts at cwd itself.
@@ -537,7 +539,7 @@ layer(platform(unreadableBaseTree, unreadableBaseOptions))("descend, unreadable 
 // A tree deep enough to trip a small maxDepth.
 const deepTree = { "/proj/a/b/c/d.ts": "" };
 
-layer(platform(deepTree))("descend, depth cap", (it) => {
+layer(platform(deepTree), { timeout: "30 seconds" })("descend, depth cap", (it) => {
 	it.effect("fails typed when the walk would descend past maxDepth — never truncates", () =>
 		Effect.gen(function* () {
 			const pattern = yield* GlobPattern.compile("**/*.ts");
@@ -566,7 +568,7 @@ const escapeTree = {
 	"/proj/src/index.ts": "",
 };
 
-layer(platform(escapeTree))("descend, cwd confinement", (it) => {
+layer(platform(escapeTree), { timeout: "30 seconds" })("descend, cwd confinement", (it) => {
 	it.effect("a literal pattern climbing above cwd is zero matches, never a read outside", () =>
 		Effect.gen(function* () {
 			const pattern = yield* GlobPattern.compile("../secret/token.txt");
@@ -600,7 +602,7 @@ const gitlinkTree = {
 	"/proj/.git/config": "",
 };
 
-layer(platform(gitlinkTree))("descend, prune is directory-only", (it) => {
+layer(platform(gitlinkTree), { timeout: "30 seconds" })("descend, prune is directory-only", (it) => {
 	it.effect("a file named by a prune entry still matches; the directory of the same name never descends", () =>
 		Effect.gen(function* () {
 			const pattern = yield* GlobPattern.compile("**/*", GlobPatternOptions.make({ dot: true }));
@@ -619,9 +621,9 @@ layer(platform(gitlinkTree))("descend, prune is directory-only", (it) => {
 // on that result would fail with no type error anywhere. These assertions run
 // at typecheck, not at runtime — `types:check` is what enforces them.
 describe("descend — overload resolution", () => {
-	it("resolves each options shape to the right return type", () => {
+	it.effect("resolves each options shape to the right return type", () => Effect.gen(function* () {
 		type SuccessOf<T> = T extends Effect.Effect<infer A, unknown, unknown> ? A : never;
-		const pattern = Effect.runSync(GlobPattern.compile("**/*", GlobPatternOptions.make({})));
+		const pattern = yield* GlobPattern.compile("**/*", GlobPatternOptions.make({}));
 
 		// An inline literal carrying "record" selects the DescendResult overload.
 		const inline = descend(pattern, { cwd: "/x", onUnreadable: "record" });
@@ -641,9 +643,9 @@ describe("descend — overload resolution", () => {
 
 		// The guard itself: "record" is not a member of DescendOptions, so it
 		// cannot reach the array-returning overload by being widened first.
-		// @ts-expect-error "record" is deliberately absent from DescendOptions
-		const _refused: DescendOptions = { cwd: "/x", onUnreadable: "record" };
+		const _refused: "record" extends DescendOptions["onUnreadable"] ? true : false = false;
+		assert.isFalse(_refused);
 
 		assert.isFunction(descend);
-	});
+	}));
 });

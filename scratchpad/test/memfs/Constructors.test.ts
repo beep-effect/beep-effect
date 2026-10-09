@@ -15,34 +15,38 @@ import { denied } from "./helpers.ts";
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 describe("every memory layer publishes Volume", () => {
-	it.effect("layer: Volume inspects the volume backing FileSystem", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			const volume = yield* MemoryFileSystem.Volume;
-			yield* fs.writeFileString("/a.txt", "written");
-			assert.strictEqual(volume.text("/a.txt"), "written");
-		}).pipe(Effect.provide(MemoryFileSystem.layer)),
-	);
-
-	it.effect("layerWith: seeded, and Volume sees both seed and writes", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			const volume = yield* MemoryFileSystem.Volume;
-			yield* fs.writeFileString("/b.txt", "b");
-			assert.deepStrictEqual(volume.paths(), ["/a.txt", "/b.txt"]);
-		}).pipe(Effect.provide(MemoryFileSystem.layerWith({ "/a.txt": "a" }))),
-	);
-
-	it.effect("a layer providing Volume is still assignable where Layer<FileSystem> is expected", () =>
-		Effect.gen(function* () {
-			const asFileSystemOnly: Layer.Layer<FileSystem.FileSystem> = MemoryFileSystem.layerWith({ "/a.txt": "a" });
-			const text = yield* Effect.gen(function* () {
+	it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
+		it.effect("layer: Volume inspects the volume backing FileSystem", () =>
+			Effect.gen(function* () {
 				const fs = yield* FileSystem.FileSystem;
-				return yield* fs.readFileString("/a.txt");
-			}).pipe(Effect.provide(asFileSystemOnly));
-			assert.strictEqual(text, "a");
-		}),
-	);
+				const volume = yield* MemoryFileSystem.Volume;
+				yield* fs.writeFileString("/a.txt", "written");
+				assert.strictEqual(volume.text("/a.txt"), "written");
+			}),
+		);
+	});
+
+	it.layer(MemoryFileSystem.layerWith({ "/a.txt": "a" }), { timeout: "30 seconds" })((it) => {
+		it.effect("layerWith: seeded, and Volume sees both seed and writes", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const volume = yield* MemoryFileSystem.Volume;
+				yield* fs.writeFileString("/b.txt", "b");
+				assert.deepStrictEqual(volume.paths(), ["/a.txt", "/b.txt"]);
+			}),
+		);
+	});
+
+	const asFileSystemOnly: Layer.Layer<FileSystem.FileSystem> = MemoryFileSystem.layerWith({ "/a.txt": "a" });
+	it.layer(asFileSystemOnly, { timeout: "30 seconds" })((it) => {
+		it.effect("a layer providing Volume is still assignable where Layer<FileSystem> is expected", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const text = yield* fs.readFileString("/a.txt");
+				assert.strictEqual(text, "a");
+			}),
+		);
+	});
 });
 
 describe("the seed is optional", () => {
@@ -56,54 +60,58 @@ describe("the seed is optional", () => {
 		}),
 	);
 
-	it.effect("layerWith(undefined, options) applies the options", () =>
-		Effect.gen(function* () {
-			const volume = yield* MemoryFileSystem.Volume;
-			assert.isTrue(volume.isDirectory("/ws"));
-		}).pipe(Effect.provide(MemoryFileSystem.layerWith(undefined, { root: "/ws" }))),
-	);
+	it.layer(MemoryFileSystem.layerWith(undefined, { root: "/ws" }), { timeout: "30 seconds" })((it) => {
+		it.effect("layerWith(undefined, options) applies the options", () =>
+			Effect.gen(function* () {
+				const volume = yield* MemoryFileSystem.Volume;
+				assert.isTrue(volume.isDirectory("/ws"));
+			}),
+		);
+	});
 });
 
 describe("options.faults", () => {
-	it.effect("layerWith: FileSystem is faulted, Volume inspects the raw volume beneath", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			const volume = yield* MemoryFileSystem.Volume;
-			yield* fs.writeFileString("/ok.txt", "ok");
-			const error = yield* Effect.flip(fs.writeFileString("/locked.txt", "x"));
-			assert.strictEqual(error.reason._tag, "PermissionDenied");
-			assert.strictEqual(volume.text("/ok.txt"), "ok");
-			assert.isUndefined(volume.text("/locked.txt"));
-			// The seed is written beneath the faults, never through them.
-			assert.strictEqual(volume.text("/locked-seed.txt"), "seeded");
-		}).pipe(
-			Effect.provide(
-				MemoryFileSystem.layerWith(
-					{ "/locked-seed.txt": "seeded" },
-					{
-						faults: {
-							writeFile: (path) => (path.startsWith("/locked") ? Effect.fail(denied("writeFile", path)) : undefined),
-						},
-					},
-				),
-			),
+	it.layer(
+		MemoryFileSystem.layerWith(
+			{ "/locked-seed.txt": "seeded" },
+			{
+				faults: {
+					writeFile: (path) => (path.startsWith("/locked") ? Effect.fail(denied("writeFile", path)) : undefined),
+				},
+			},
 		),
-	);
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("layerWith: FileSystem is faulted, Volume inspects the raw volume beneath", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const volume = yield* MemoryFileSystem.Volume;
+				yield* fs.writeFileString("/ok.txt", "ok");
+				const error = yield* Effect.flip(fs.writeFileString("/locked.txt", "x"));
+				assert.strictEqual(error.reason._tag, "PermissionDenied");
+				assert.strictEqual(volume.text("/ok.txt"), "ok");
+				assert.isUndefined(volume.text("/locked.txt"));
+				// The seed is written beneath the faults, never through them.
+				assert.strictEqual(volume.text("/locked-seed.txt"), "seeded");
+			}),
+		);
+	});
 
-	it.effect("layerWith: root and faults combine", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			const error = yield* Effect.flip(fs.readFileString("/ws/a.json"));
-			assert.strictEqual(error.reason._tag, "PermissionDenied");
-		}).pipe(
-			Effect.provide(
-				MemoryFileSystem.layerWith(
-					{ "a.json": "{}" },
-					{ root: "/ws", faults: { readFile: (path) => Effect.fail(denied("readFile", path)) } },
-				),
-			),
+	it.layer(
+		MemoryFileSystem.layerWith(
+			{ "a.json": "{}" },
+			{ root: "/ws", faults: { readFile: (path) => Effect.fail(denied("readFile", path)) } },
 		),
-	);
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("layerWith: root and faults combine", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const error = yield* Effect.flip(fs.readFileString("/ws/a.json"));
+				assert.strictEqual(error.reason._tag, "PermissionDenied");
+			}),
+		);
+	});
 
 	it.effect("makeWith: returns the faulted filesystem, transient faults armed per call", () =>
 		Effect.gen(function* () {
@@ -121,7 +129,9 @@ describe("options.faults", () => {
 			const exit = yield* Effect.exit(
 				Effect.provide(
 					Effect.void,
-					MemoryFileSystem.layerWith(undefined, { faults: deliberatelyInvalid<never>({ readFileSting: () => undefined }) }),
+					MemoryFileSystem.layerWith(undefined, {
+						faults: deliberatelyInvalid<never>({ readFileSting: () => undefined }),
+					}),
 				),
 			);
 			if (!Exit.isFailure(exit)) return assert.fail("expected the layer build to die");
@@ -146,12 +156,14 @@ describe("options.faults", () => {
 describe("MemoryFileSystem.layerWith", () => {
 	const Seeded = MemoryFileSystem.layerWith({ "/seed.txt": "seeded" });
 
-	it.effect("provides FileSystem backed by the seeded volume", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			assert.strictEqual(yield* fs.readFileString("/seed.txt"), "seeded");
-		}).pipe(Effect.provide(Seeded)),
-	);
+	it.layer(Seeded, { timeout: "30 seconds" })((it) => {
+		it.effect("provides FileSystem backed by the seeded volume", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				assert.strictEqual(yield* fs.readFileString("/seed.txt"), "seeded");
+			}),
+		);
+	});
 
 	it.effect("each provide of the layer builds an isolated volume", () =>
 		Effect.gen(function* () {

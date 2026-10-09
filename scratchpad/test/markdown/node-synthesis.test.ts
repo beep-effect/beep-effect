@@ -6,6 +6,7 @@
 // spans, so the interop corpus's exact-emission contract is untouched.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess, assertFailure } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -16,7 +17,7 @@ import { Heading, Paragraph, Point, Position, Root, Text } from "../../effected/
 
 const parseDoc = (text: string) => {
 	const result = MarkdownDocument.parseResult(text);
-	assert.isTrue(Result.isSuccess(result));
+	assertSuccess(result, Result.getOrThrow(result));
 	return Result.getOrThrow(result);
 };
 
@@ -80,7 +81,7 @@ describe("synthesized trees flow through the render surfaces", () => {
 			],
 		});
 		const rendered = Markdown.stringifyResult(root);
-		assert.isTrue(Result.isSuccess(rendered));
+		assertSuccess(rendered, Result.getOrThrow(rendered));
 		const out = Result.getOrThrow(rendered);
 		// Re-parses to the same shape — the canonical-stringify contract.
 		const reparsed = parseDoc(out);
@@ -108,7 +109,7 @@ describe("synthesized trees flow through the render surfaces", () => {
 describe("the default is make-only (controls)", () => {
 	it("decode still requires a full position", () => {
 		const decoded = S.decodeUnknownResult(Text)({ type: "text", value: "x" });
-		assert.isTrue(Result.isFailure(decoded));
+		assertFailure(decoded, decoded.pipe(Result.flip, Result.getOrThrow));
 	});
 
 	it("parsed trees still carry real spans, never the sentinel", () => {
@@ -122,7 +123,7 @@ describe("the default is make-only (controls)", () => {
 
 	it("encode of a synthesized node still emits the position", () => {
 		const encoded = S.encodeUnknownResult(Text)(Text.make({ value: "x" }));
-		assert.isTrue(Result.isSuccess(encoded));
+		assertSuccess(encoded, Result.getOrThrow(encoded));
 		const plain = Result.getOrThrow(encoded);
 		assert.deepStrictEqual(plain.position, {
 			start: { line: 1, column: 1, offset: 0 },

@@ -16,10 +16,13 @@
 
 import { dual } from "effect/Function";
 import { assert, describe, layer } from "@effect/vitest";
+import { assertExitFailure, assertExitSuccess, assertNone } from "@effect/vitest/utils";
+import * as Cause from "effect/Cause";
 import type * as Layer from "effect/Layer";
 import * as ByteSize from "effect/ByteSize";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
@@ -394,13 +397,8 @@ export const suite: {
 			it.effect("should clean up scoped temporary resources when their scope closes", () =>
 				Effect.gen(function* () {
 					const { fs, path } = yield* makeTestContext;
-					const directory = yield* Effect.scoped(
-						Effect.gen(function* () {
-							const directory = yield* fs.makeTempDirectory({ directory: path() });
-							assert.strictEqual((yield* fs.stat(directory)).type, "Directory");
-							return directory;
-						}),
-					);
+					const directory = yield* fs.makeTempDirectory({ directory: path() });
+					assert.strictEqual((yield* fs.stat(directory)).type, "Directory");
 					assert.strictEqual((yield* fs.stat(directory)).type, "Directory");
 					yield* fs.remove(directory, { recursive: true });
 
@@ -582,7 +580,7 @@ export const suite: {
 
 					const contents = yield* readAllocUpTo(file, 10);
 					assert.strictEqual(decoder.decode(contents), "abc");
-					assert.isTrue(O.isNone(yield* file.readAlloc(1)));
+					assertNone(yield* file.readAlloc(1));
 				}),
 			);
 
@@ -688,30 +686,28 @@ export const suite: {
 						const missing = path(`${flag.replace("+", "plus")}-missing.txt`);
 						yield* fs.writeFileString(existing, "seed");
 
-						const existingResult = yield* Effect.result(fs.writeFileString(existing, "x", { flag }));
+						const existingResult = yield* Effect.exit(fs.writeFileString(existing, "x", { flag }));
 						if (expectedExisting === "rejects") {
-							assert.isTrue(Result.isFailure(existingResult));
-							if (Result.isFailure(existingResult)) {
-								assertSystemError(existingResult.failure, { method: "writeFile", pathOrDescriptor: existing });
-							}
+							const error = existingResult.pipe(Exit.findError, Result.getOrThrow);
+							assertExitFailure(existingResult, Cause.fail(error));
+							assertSystemError(error, { method: "writeFile", pathOrDescriptor: existing });
 							assert.strictEqual(yield* fs.readFileString(existing), "seed");
 						} else {
-							assert.isTrue(Result.isSuccess(existingResult));
+							assertExitSuccess(existingResult, undefined);
 							assert.strictEqual(yield* fs.readFileString(existing), expectedExisting);
 						}
 
-						const missingResult = yield* Effect.result(fs.writeFileString(missing, "x", { flag }));
+						const missingResult = yield* Effect.exit(fs.writeFileString(missing, "x", { flag }));
 						if (expectedMissing === "rejects") {
-							assert.isTrue(Result.isFailure(missingResult));
-							if (Result.isFailure(missingResult)) {
-								assertSystemError(missingResult.failure, {
-									tag: "NotFound",
-									method: "writeFile",
-									pathOrDescriptor: missing,
-								});
-							}
+							const error = missingResult.pipe(Exit.findError, Result.getOrThrow);
+							assertExitFailure(missingResult, Cause.fail(error));
+							assertSystemError(error, {
+								tag: "NotFound",
+								method: "writeFile",
+								pathOrDescriptor: missing,
+							});
 						} else {
-							assert.isTrue(Result.isSuccess(missingResult));
+							assertExitSuccess(missingResult, undefined);
 							assert.strictEqual(yield* fs.readFileString(missing), expectedMissing);
 						}
 					}
@@ -1026,13 +1022,10 @@ export const suite: {
 					const failedResult = yield* Stream.make(encoder.encode("content")).pipe(
 						Stream.concat(Stream.fail("expected failure")),
 						Stream.run(trackedFs.sink(failed)),
-						Effect.result,
+						Effect.exit,
 					);
 
-					assert.isTrue(Result.isFailure(failedResult));
-					if (Result.isFailure(failedResult)) {
-						assert.strictEqual(failedResult.failure, "expected failure");
-					}
+					assertExitFailure(failedResult, Cause.fail("expected failure"));
 					assert.deepStrictEqual(yield* Ref.get(finalized), [streamed, sunk, failed]);
 				}),
 			);

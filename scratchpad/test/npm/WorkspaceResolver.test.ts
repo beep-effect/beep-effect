@@ -1,4 +1,5 @@
 import { assert, describe, it, layer } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -8,12 +9,12 @@ import { DependencyResolutionError, WorkspaceResolver } from "../../effected/npm
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 describe("WorkspaceResolver", () => {
-	layer(WorkspaceResolver.noop)("no-op default layer", (it) => {
+	layer(WorkspaceResolver.noop, { timeout: "30 seconds" })("no-op default layer", (it) => {
 		it.effect("versionOf returns none", () =>
 			Effect.gen(function* () {
 				const resolver = yield* WorkspaceResolver;
 				const version = yield* resolver.versionOf("@effected/semver");
-				assert.isTrue(O.isNone(version));
+				assertNone(version);
 			}),
 		);
 	});
@@ -36,7 +37,7 @@ describe("WorkspaceResolver", () => {
 				Effect.gen(function* () {
 					const resolver = yield* WorkspaceResolver;
 					const version = yield* resolver.versionOf("@effected/semver");
-					assert.deepStrictEqual(version, O.some("0.1.0"));
+					assertSome(version, "0.1.0");
 				}),
 			);
 
@@ -44,7 +45,7 @@ describe("WorkspaceResolver", () => {
 				Effect.gen(function* () {
 					const resolver = yield* WorkspaceResolver;
 					const version = yield* resolver.versionOf("@effected/nope");
-					assert.isTrue(O.isNone(version));
+					assertNone(version);
 				}),
 			);
 		});
@@ -141,11 +142,13 @@ describe("WorkspaceResolver", () => {
 		});
 
 		it("decodes an error encoded before reason existed as a mechanism failure", () => {
-			const decoded = Result.getOrThrow(S.decodeResult(DependencyResolutionError)({
-				_tag: "DependencyResolutionError",
-				specifier: "catalog:",
-				cause: "unresolved",
-			}));
+			const decoded = Result.getOrThrow(
+				S.decodeResult(DependencyResolutionError)({
+					_tag: "DependencyResolutionError",
+					specifier: "catalog:",
+					cause: "unresolved",
+				}),
+			);
 			assert.strictEqual(decoded.reason, "mechanism");
 		});
 	});

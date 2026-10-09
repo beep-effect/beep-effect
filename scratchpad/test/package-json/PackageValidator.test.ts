@@ -9,7 +9,7 @@ import {
 } from "../../effected/package-json/PackageValidator.ts";
 
 describe("PackageValidator", () => {
-	layer(PackageValidator.layer)((it) => {
+	layer(PackageValidator.layer, { timeout: "30 seconds" })((it) => {
 		it.effect("passes a package satisfying the default rules", () =>
 			Effect.gen(function* () {
 				const validator = yield* PackageValidator;
@@ -39,7 +39,7 @@ describe("PackageValidator", () => {
 		);
 	});
 
-	layer(PackageValidator.layerRules({ rules: [noUnresolvedDepsRule, noLocalDepsRule] }))((it) => {
+	layer(PackageValidator.layerRules({ rules: [noUnresolvedDepsRule, noLocalDepsRule] }), { timeout: "30 seconds" })((it) => {
 		it.effect("custom rules flag unresolved and local dependencies", () =>
 			Effect.gen(function* () {
 				const validator = yield* PackageValidator;

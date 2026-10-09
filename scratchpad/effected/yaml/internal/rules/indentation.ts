@@ -15,6 +15,7 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import * as A from "effect/Array";
 import type { LintContext, LintLine, YamlRule } from "../../YamlLintRule.ts";
 import { StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import { coveringToken, isScalarContinuationLine, nonNegativeIntegerOption } from "./util.ts";
@@ -115,12 +116,12 @@ const contentLines = (ctx: LintContext): ReadonlyArray<ContentLine> => {
 		if (firstChar === "#") continue; // comment lines are not block structure
 		if (firstChar === "%") continue; // directives
 		if (line.text.slice(0, indent).includes("\t")) continue; // tab indent is the parser's error
-		if ((flowDepths[line.number] ?? 0) > 0) continue; // inside a flow collection
+		if (A.getUnsafe(flowDepths, line.number) > 0) continue; // inside a flow collection
 		if (isScalarContinuationLine(ctx.tokens, line.offset, line.offset + indent)) continue; // scalar content
 		const firstToken = coveringToken(ctx.tokens, line.offset + indent);
 		if (firstToken?.kind === "document-start" || firstToken?.kind === "document-end") continue;
 		// Read significant tokens, rather than treating quoted ` # ` as a comment.
-		while (tokenIdx < ctx.tokens.length && (ctx.tokens[tokenIdx]?.offset ?? 0) < line.offset) tokenIdx++;
+		while (tokenIdx < ctx.tokens.length && A.getUnsafe(ctx.tokens, tokenIdx).offset < line.offset) tokenIdx++;
 		const indents = [indent];
 		let lastKind: string | undefined;
 		let afterEntry = false;
@@ -158,7 +159,7 @@ const isKeyThenSeqEntry = (
 	ctx: LintContext,
 	prev: ContentLine,
 	curr: ContentLine,
-	unit: number | undefined,
+	unit: number,
 ): boolean => {
 	if (curr.firstChar !== "-") return false;
 	// A leading `-` is not necessarily a sequence entry: `-5` and `--flag`
@@ -166,8 +167,8 @@ const isKeyThenSeqEntry = (
 	// line whose first content token is `block-seq-entry` is one.
 	if (coveringToken(ctx.tokens, curr.line.offset + curr.indent)?.kind !== "block-seq-entry") return false;
 	if (!prev.opensKey) return false;
-	const keyIndent = prev.indents[prev.indents.length - 1] ?? prev.indent;
-	return curr.indent === keyIndent || curr.indent === keyIndent + (unit ?? curr.indent - keyIndent);
+	const keyIndent = A.getUnsafe(prev.indents, prev.indents.length - 1);
+	return curr.indent === keyIndent || curr.indent === keyIndent + unit;
 };
 
 /**
@@ -224,7 +225,7 @@ export const indentation: YamlRule = {
 		const stack: Array<number> = [0];
 		for (const { line, indents } of content) {
 			for (const indent of indents) {
-				const top = stack[stack.length - 1] ?? 0;
+				const top = A.getUnsafe(stack, stack.length - 1);
 				if (indent > top) {
 					const delta = indent - top;
 					if (unit === undefined) {
@@ -244,7 +245,7 @@ export const indentation: YamlRule = {
 					}
 					stack.push(indent);
 				} else if (indent < top) {
-					while (stack.length > 1 && (stack[stack.length - 1] ?? 0) > indent) stack.pop();
+					while (stack.length > 1 && A.getUnsafe(stack, stack.length - 1) > indent) stack.pop();
 					// A dedent to an unknown level is a parse error — parse-validity's
 					// business, not style.
 				}
@@ -255,11 +256,10 @@ export const indentation: YamlRule = {
 		// on consecutive content-line pairs `key:` → `- item`.
 		let seqIndented = P.isBoolean(seqOpt) ? seqOpt : undefined;
 		for (let i = 1; i < content.length; i++) {
-			const prev = content[i - 1];
-			const curr = content[i];
-			if (prev === undefined || curr === undefined) continue;
-			if (!isKeyThenSeqEntry(ctx, prev, curr, unit)) continue;
-			const indented = curr.indent > (prev.indents[prev.indents.length - 1] ?? prev.indent);
+			const prev = A.getUnsafe(content, i - 1);
+			const curr = A.getUnsafe(content, i);
+			if (!isKeyThenSeqEntry(ctx, prev, curr, unit ?? 0)) continue;
+			const indented = curr.indent > A.getUnsafe(prev.indents, prev.indents.length - 1);
 			if (seqIndented === undefined) {
 				seqIndented = indented;
 			} else if (indented !== seqIndented) {
@@ -293,7 +293,7 @@ export const indentation: YamlRule = {
 		const stack: Array<number> = [0];
 		for (const { line, indents } of content) {
 			for (const indent of indents) {
-				const top = stack[stack.length - 1] ?? 0;
+				const top = A.getUnsafe(stack, stack.length - 1);
 				if (indent > top) {
 					out.push(
 						StyleVote.make({
@@ -308,20 +308,19 @@ export const indentation: YamlRule = {
 					if (unit === undefined) unit = indent - top;
 					stack.push(indent);
 				} else if (indent < top) {
-					while (stack.length > 1 && (stack[stack.length - 1] ?? 0) > indent) stack.pop();
+					while (stack.length > 1 && A.getUnsafe(stack, stack.length - 1) > indent) stack.pop();
 				}
 			}
 		}
 
 		for (let i = 1; i < content.length; i++) {
-			const prev = content[i - 1];
-			const curr = content[i];
-			if (prev === undefined || curr === undefined) continue;
-			if (!isKeyThenSeqEntry(ctx, prev, curr, unit)) continue;
+			const prev = A.getUnsafe(content, i - 1);
+			const curr = A.getUnsafe(content, i);
+			if (!isKeyThenSeqEntry(ctx, prev, curr, unit ?? 0)) continue;
 			out.push(
 				StyleVote.make({
 					dimension: "indentSequences",
-					value: curr.indent > (prev.indents[prev.indents.length - 1] ?? prev.indent),
+					value: curr.indent > A.getUnsafe(prev.indents, prev.indents.length - 1),
 					offset: curr.line.offset,
 					length: curr.indent,
 					line: curr.line.number,

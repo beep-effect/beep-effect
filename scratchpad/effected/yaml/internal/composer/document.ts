@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 // Document-level composition: the per-CST-document compose walk, directive
@@ -62,8 +63,7 @@ function validateAnchorTagNotFollowedBySeqDashOnSameLine(
 	state: ComposerState,
 ): void {
 	for (let j = idx + 1; j < children.length; j++) {
-		const c = children[j];
-		if (c === undefined) continue;
+		const c = A.getUnsafe(children, j);
 		if (c.type === "newline") return; // ok — anchor on its own line
 		if (c.type === "whitespace") {
 			// Structural indicators ("-", ":", "?", "---", "...") are typed as
@@ -103,8 +103,7 @@ function checkDocumentMarkerSameLine(
 	nextDocChildren?: readonly CstNode[],
 ): void {
 	for (let i = 0; i < children.length; i++) {
-		const child = children[i];
-		if (child === undefined) continue;
+		const child = A.getUnsafe(children, i);
 		// Document markers appear as "whitespace"-typed CST nodes with source "---" or "..."
 		if (child.type !== "whitespace") continue;
 		const src = child.source;
@@ -114,8 +113,7 @@ function checkDocumentMarkerSameLine(
 		// Find next non-whitespace, non-newline sibling in same document
 		let found = false;
 		for (let j = i + 1; j < children.length; j++) {
-			const next = children[j];
-			if (next === undefined) continue;
+			const next = A.getUnsafe(children, j);
 			if (next.type === "newline") break;
 			if (next.type === "whitespace" && next.source.trim() === "") continue;
 			if (next.type === "comment") break; // comments are allowed after ...
@@ -135,7 +133,6 @@ function checkDocumentMarkerSameLine(
 		// For "..." at end of document, check first content of next document
 		if (!found && nextDocChildren !== undefined) {
 			for (const next of nextDocChildren) {
-				if (next === undefined) continue;
 				if (next.type === "newline") break;
 				if (next.type === "whitespace" && next.source.trim() === "") continue;
 				if (sameLine(state.text, child.offset, next.offset)) {
@@ -165,8 +162,7 @@ function checkTrailingContentAfterDocValue(
 	allowMappingKey = true,
 ): void {
 	for (let j = startIdx; j < children.length; j++) {
-		const next = children[j];
-		if (next === undefined) continue;
+		const next = A.getUnsafe(children, j);
 		if (next.type === "newline" || next.type === "comment") continue;
 		if (next.type === "whitespace") {
 			// Document markers (---, ...) are OK
@@ -307,18 +303,13 @@ export const composeDocument: {
 		if (sawNewlineSinceMeta && hasMeta(meta)) {
 			if (meta.tag !== undefined) outerMeta.tag = meta.tag;
 			if (meta.anchor !== undefined) outerMeta.anchor = meta.anchor;
-			if (meta.comment !== undefined) outerMeta.comment = meta.comment;
 			clearMeta(meta);
 		}
 		sawNewlineSinceMeta = false;
 	};
 
 	while (i < children.length) {
-		const child = children[i];
-		if (child === undefined) {
-			i++;
-			continue;
-		}
+		const child = A.getUnsafe(children, i);
 
 		// Directives
 		if (child.type === "directive") {
@@ -327,11 +318,9 @@ export const composeDocument: {
 				directives.push(directive);
 				// Populate tag map from %TAG directives
 				if (directive.name === "TAG" && directive.parameters.length === 2) {
-					const handle = directive.parameters[0];
-					const prefix = directive.parameters[1];
-					if (handle !== undefined && handle !== "" && prefix !== undefined && prefix !== "") {
-						MutableHashMap.set(state.tagMap, handle, prefix);
-					}
+					const handle = A.getUnsafe(directive.parameters, 0);
+					const prefix = A.getUnsafe(directive.parameters, 1);
+					MutableHashMap.set(state.tagMap, handle, prefix);
 				}
 			}
 			i++;
@@ -461,7 +450,7 @@ export const composeDocument: {
 				let keyMeta: NodeMeta | undefined;
 				if (hasMeta(outerMeta)) {
 					mapMeta = { ...outerMeta };
-					keyMeta = hasMeta(meta) ? { ...meta } : undefined;
+					keyMeta = { ...meta };
 				} else if (hasDocStart && hasMeta(meta)) {
 					mapMeta = { ...meta };
 					keyMeta = undefined;
@@ -482,7 +471,7 @@ export const composeDocument: {
 				let keyMeta: NodeMeta | undefined;
 				if (hasMeta(outerMeta)) {
 					mapMeta = { ...outerMeta };
-					keyMeta = hasMeta(meta) ? { ...meta } : undefined;
+					keyMeta = { ...meta };
 				} else if (hasDocStart && hasMeta(meta)) {
 					mapMeta = { ...meta };
 					keyMeta = undefined;
@@ -611,7 +600,7 @@ export const composeDocument: {
 			let mapMeta: NodeMeta | undefined;
 			if (flowIsKey && hasMeta(outerMeta)) {
 				mapMeta = { ...outerMeta };
-				flowMeta = hasMeta(meta) ? { ...meta } : undefined;
+				flowMeta = { ...meta };
 			} else {
 				const combined: NodeMeta = { ...outerMeta };
 				if (meta.tag !== undefined) combined.tag = meta.tag;
@@ -623,7 +612,7 @@ export const composeDocument: {
 			clearMeta(outerMeta);
 			sawNewlineSinceMeta = false;
 			i++;
-			if (flowIsKey && nextAfterFlowMap0 !== null) {
+			if (nextAfterFlowMap0 !== null && flowIsKey) {
 				const map = composeBlockMap(nextAfterFlowMap0, state, flowMap, mapMeta);
 				contents = map;
 				while (i < children.length && children[i] !== nextAfterFlowMap0) i++;
@@ -642,7 +631,7 @@ export const composeDocument: {
 			let mapMeta: NodeMeta | undefined;
 			if (flowIsKey && hasMeta(outerMeta)) {
 				mapMeta = { ...outerMeta };
-				flowMeta = hasMeta(meta) ? { ...meta } : undefined;
+				flowMeta = { ...meta };
 			} else {
 				const combined: NodeMeta = { ...outerMeta };
 				if (meta.tag !== undefined) combined.tag = meta.tag;
@@ -670,13 +659,10 @@ export const composeDocument: {
 			continue;
 		}
 
-		if (child.type === "alias") {
-			checkAnchorOnAlias(meta, child, state);
-			contents = makeAlias(child, state);
-			i++;
-			continue;
-		}
-
+		// Every document child kind above is handled; the remaining kind is alias.
+		// CST document nodes are roots and never occur in a document's children.
+		checkAnchorOnAlias(meta, child, state);
+		contents = makeAlias(child, state);
 		i++;
 	}
 
@@ -865,7 +851,7 @@ function validateDirectives(
 				offset: child.offset,
 				length: child.length,
 			});
-		} else if (directiveName === "%YAML" && !/^\d+\.\d+$/.test(params[0] ?? "")) {
+		} else if (directiveName === "%YAML" && !/^\d+\.\d+$/.test(A.getUnsafe(params, 0))) {
 			state.errors.push({
 				code: "InvalidDirective",
 				message: "%YAML version must contain decimal major and minor numbers",
@@ -997,8 +983,7 @@ export const validateCrossDocumentDirectives: {
 	(cstNodes: readonly CstNode[], state: ComposerState): void;
 } = dual(2, (cstNodes: readonly CstNode[], state: ComposerState): void => {
 	for (let docIdx = 1; docIdx < cstNodes.length; docIdx++) {
-		const cst = cstNodes[docIdx];
-		if (cst === undefined) continue;
+		const cst = A.getUnsafe(cstNodes, docIdx);
 		const children = cst.children ?? [];
 
 		// QLJ7: directives are local to a single document. Subsequent
@@ -1013,13 +998,11 @@ export const validateCrossDocumentDirectives: {
 		if (!hasDirectives) continue;
 
 		// Check if the previous document ended with "..."
-		const prevCst = cstNodes[docIdx - 1];
-		if (prevCst === undefined) continue;
+		const prevCst = A.getUnsafe(cstNodes, docIdx - 1);
 		const prevChildren = prevCst.children ?? [];
 		let prevEndedWithDocEnd = false;
 		for (let i = prevChildren.length - 1; i >= 0; i--) {
-			const c = prevChildren[i];
-			if (c === undefined) continue;
+			const c = A.getUnsafe(prevChildren, i);
 			// Document-end markers are stored as whitespace type with source "..."
 			if (c.source === "...") {
 				prevEndedWithDocEnd = true;
@@ -1070,6 +1053,8 @@ function isSourceMultiline(text: string, offset: number, length: number): boolea
 	return false;
 }
 
+function decorateSourceMultiline(node: YamlNode, text: string): YamlNode;
+function decorateSourceMultiline(node: YamlNode | null, text: string): YamlNode | null;
 function decorateSourceMultiline(node: YamlNode | null, text: string): YamlNode | null {
 	if (node === null || isYamlAlias(node)) return node;
 	if (isYamlScalar(node)) {
@@ -1096,7 +1081,7 @@ function decorateSourceMultiline(node: YamlNode | null, text: string): YamlNode 
 	if (isYamlMap(node)) {
 		const newItems = node.items.map((pair) =>
 			YamlPair.make({
-				key: decorateSourceMultiline(pair.key, text) ?? pair.key,
+				key: decorateSourceMultiline(pair.key, text),
 				value: pair.value === null ? null : decorateSourceMultiline(pair.value, text),
 			}),
 		);
@@ -1117,8 +1102,8 @@ function decorateSourceMultiline(node: YamlNode | null, text: string): YamlNode 
 			length: node.length,
 		});
 	}
-	if (isYamlSeq(node)) {
-		const newItems = node.items.map((item) => decorateSourceMultiline(item, text) ?? item);
+	{
+		const newItems = node.items.map((item) => decorateSourceMultiline(item, text));
 		const multiline = isSourceMultiline(text, node.offset, node.length);
 		return YamlSeq.make({
 			items: newItems,
@@ -1136,7 +1121,6 @@ function decorateSourceMultiline(node: YamlNode | null, text: string): YamlNode 
 			length: node.length,
 		});
 	}
-	return node;
 }
 
 function decorateDocumentSourceMultiline(doc: RawYamlDocument, text: string): RawYamlDocument {
@@ -1250,10 +1234,8 @@ export const composeFirstDocumentCounted: {
 	// Validate cross-document directive placement
 	validateCrossDocumentDirectives(cstNodes, state);
 
-	const doc = cstNodes[0];
-	if (doc === undefined) {
-		return { document: EMPTY_DOCUMENT, documentCount: 0 };
-	}
+	// parseCSTAll always supplies at least the empty document.
+	const doc = A.getUnsafe(cstNodes, 0);
 
 	const result = composeDocument(doc, state, cstNodes.length > 1, cstNodes[1]);
 	return { document: decorateDocumentSourceMultiline(result, text), documentCount: cstNodes.length };
@@ -1294,8 +1276,7 @@ export const composeAllDocuments: {
 	validateCrossDocumentDirectives(cstNodes, crossDocState);
 
 	for (let i = 0; i < cstNodes.length; i++) {
-		const cst = cstNodes[i];
-		if (cst === undefined) continue;
+		const cst = A.getUnsafe(cstNodes, i);
 		const state = createState(text, FLOW, options);
 		const doc = composeDocument(cst, state, i < cstNodes.length - 1, cstNodes[i + 1]);
 		documents.push(decorateDocumentSourceMultiline(doc, text));
@@ -1313,8 +1294,7 @@ export const composeAllDocuments: {
  */
 function attachHeaderToFirstEntry(contents: YamlNode, header: string): YamlNode {
 	if (isYamlMap(contents) && contents.items.length > 0) {
-		const first = contents.items[0];
-		if (first === undefined) return contents;
+		const first = A.getUnsafe(contents.items, 0);
 		const items = [...contents.items];
 		items[0] = YamlPair.make({ key: withCommentFields(first.key, { commentBefore: header }), value: first.value });
 		return YamlMap.make({
@@ -1335,8 +1315,7 @@ function attachHeaderToFirstEntry(contents: YamlNode, header: string): YamlNode 
 	}
 	if (isYamlSeq(contents) && contents.items.length > 0) {
 		const items = [...contents.items];
-		const first = items[0];
-		if (first === undefined) return contents;
+		const first = A.getUnsafe(items, 0);
 		items[0] = withCommentFields(first, { commentBefore: header });
 		return YamlSeq.make({
 			items,

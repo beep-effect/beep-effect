@@ -11,6 +11,7 @@
 // diff resolved it to the same raw string, so `from !== to` was false.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Lockfile } from "../../effected/lockfiles/index.ts";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -126,22 +127,22 @@ describe("WorkspaceStateSnapshot.resolve — the hook-injected catalog fallback"
 		const from = before.resolve("effect", "catalog:effect:peers");
 		const to = after.resolve("effect", "catalog:effect:peers");
 
-		assert.deepStrictEqual(from, O.some("4.0.0-beta.99"));
-		assert.deepStrictEqual(to, O.some("4.0.0-beta.101"));
+		assertSome(from, "4.0.0-beta.99");
+		assertSome(to, "4.0.0-beta.101");
 		// The whole point: the two sides must now DIFFER, so a diff emits a row.
 		assert.notStrictEqual(O.getOrNull(from), O.getOrNull(to));
 	});
 
 	it("abstains when importers disagree rather than inventing an answer", () => {
 		const divergent = snapshot({ ".": { effect: "1.0.0" }, "packages/a": { effect: "2.0.0" } });
-		assert.isTrue(O.isNone(divergent.resolve("effect", "catalog:effect:peers")));
+		assertNone(divergent.resolve("effect", "catalog:effect:peers"));
 	});
 
 	it("leaves a plain range alone — it is already its own answer", () => {
 		// The consumer falls back to the raw specifier for these; a fallback here
 		// would replace a declared RANGE with an installed VERSION in the table.
 		const state = snapshot({ ".": { effect: "4.0.0-beta.99" } });
-		assert.isTrue(O.isNone(state.resolve("effect", "^4.0.0")));
+		assertNone(state.resolve("effect", "^4.0.0"));
 	});
 
 	it("prefers the catalog set when it can answer", () => {
@@ -150,20 +151,20 @@ describe("WorkspaceStateSnapshot.resolve — the hook-injected catalog fallback"
 			catalogs: CatalogSet.fromCatalogs({ default: { effect: "1.0.0" } }),
 			importerVersions: { ".": { effect: "9.9.9" } },
 		});
-		assert.deepStrictEqual(state.resolve("effect", "catalog:"), O.some("1.0.0"));
+		assertSome(state.resolve("effect", "catalog:"), "1.0.0");
 	});
 });
 
 describe("WorkspaceStateSnapshot.resolveIn", () => {
 	it("answers precisely where resolve must abstain", () => {
 		const divergent = snapshot({ ".": { effect: "1.0.0" }, "packages/a": { effect: "2.0.0" } });
-		assert.deepStrictEqual(divergent.resolveIn(".", "effect", "catalog:effect:peers"), O.some("1.0.0"));
-		assert.deepStrictEqual(divergent.resolveIn("packages/a", "effect", "catalog:effect:peers"), O.some("2.0.0"));
+		assertSome(divergent.resolveIn(".", "effect", "catalog:effect:peers"), "1.0.0");
+		assertSome(divergent.resolveIn("packages/a", "effect", "catalog:effect:peers"), "2.0.0");
 	});
 
 	it("answers nothing for an unknown importer", () => {
 		const state = snapshot({ ".": { effect: "1.0.0" } });
-		assert.isTrue(O.isNone(state.resolveIn("packages/nope", "effect", "catalog:effect:peers")));
+		assertNone(state.resolveIn("packages/nope", "effect", "catalog:effect:peers"));
 	});
 });
 
@@ -172,46 +173,55 @@ describe("WorkspaceStateSnapshot — wire compatibility", () => {
 		// The field is optional precisely so older serialized snapshots survive; an
 		// absent index simply makes the fallback inert, which is the behavior those
 		// values were captured under.
-		const decoded = Result.getOrThrow(S.decodeResult(WorkspaceStateSnapshot)({
-			packages: [],
-			catalogs: { entries: {} },
-		}));
-		assert.isTrue(O.isNone(decoded.resolve("effect", "catalog:effect:peers")));
+		const decoded = Result.getOrThrow(
+			S.decodeResult(WorkspaceStateSnapshot)({
+				packages: [],
+				catalogs: { entries: {} },
+			}),
+		);
+		assertNone(decoded.resolve("effect", "catalog:effect:peers"));
 	});
 });
-
 
 describe("importer versions — own-key records", () => {
 	for (const name of ["constructor", "toString", "__proto__"]) {
 		it(`does not fabricate an inherited importer ${name}`, () => {
 			const state = snapshot({ ".": { effect: "1.0.0" } });
-			assert.deepStrictEqual(state.resolveIn(name, "name", "catalog:missing"), O.none());
-			assert.deepStrictEqual(state.resolveIn(name, "effect", "catalog:missing"), O.none());
+			assertNone(state.resolveIn(name, "name", "catalog:missing"));
+			assertNone(state.resolveIn(name, "effect", "catalog:missing"));
 		});
 		it(`does not fabricate an inherited dependency ${name}`, () => {
 			const state = snapshot({ ".": { effect: "1.0.0" } });
-			assert.deepStrictEqual(state.resolveIn(".", name, "catalog:missing"), O.none());
-			assert.deepStrictEqual(state.resolve(name, "catalog:missing"), O.none());
+			assertNone(state.resolveIn(".", name, "catalog:missing"));
+			assertNone(state.resolve(name, "catalog:missing"));
 			assert.isUndefined(unanimousVersionOf({ ".": { effect: "1.0.0" } }, name));
 		});
 		it(`preserves own importer and dependency ${name}, first field wins`, () => {
-			const lockfile = Result.getOrThrow(S.decodeResult(Lockfile)({
-				format: "pnpm", lockfileVersion: "9.0", packages: [], workspaceDependencies: [],
-				importers: [
-					{ path: name, dependencies: [
-						{ name, specifier: "^1.0.0", version: "1.0.0", depType: "dependencies" },
-						{ name, specifier: "^2.0.0", version: "2.0.0", depType: "devDependencies" },
-					] },
-					{ path: "packages/z", dependencies: [] },
-					{ path: "packages/a", dependencies: [] },
-				],
-			}));
+			const lockfile = Result.getOrThrow(
+				S.decodeResult(Lockfile)({
+					format: "pnpm",
+					lockfileVersion: "9.0",
+					packages: [],
+					workspaceDependencies: [],
+					importers: [
+						{
+							path: name,
+							dependencies: [
+								{ name, specifier: "^1.0.0", version: "1.0.0", depType: "dependencies" },
+								{ name, specifier: "^2.0.0", version: "2.0.0", depType: "devDependencies" },
+							],
+						},
+						{ path: "packages/z", dependencies: [] },
+						{ path: "packages/a", dependencies: [] },
+					],
+				}),
+			);
 			const index = importerVersionsOf(lockfile);
 			assert.deepStrictEqual(R.keys(index), [name, "packages/z", "packages/a"]);
-			assert.deepStrictEqual(O.flatMap(R.get(index, name), R.get(name)), O.some("1.0.0"));
+			assertSome(O.flatMap(R.get(index, name), R.get(name)), "1.0.0");
 			assert.strictEqual(unanimousVersionOf(index, name), "1.0.0");
 			const state = snapshot(index);
-			assert.deepStrictEqual(state.resolveIn(name, name, "catalog:missing"), O.some("1.0.0"));
+			assertSome(state.resolveIn(name, name, "catalog:missing"), "1.0.0");
 		});
 	}
 });

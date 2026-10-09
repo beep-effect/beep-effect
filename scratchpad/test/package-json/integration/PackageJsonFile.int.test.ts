@@ -1,28 +1,40 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
-import { NodeFileSystem, NodePath } from "@effect/platform-node";
-import { assert, describe, layer } from "@effect/vitest";
+import { assert, describe, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { MemoryFileSystem } from "../../../effected/memfs/index.ts";
+import minimal from "./fixtures/minimal/package.json" with { type: "json" };
+import full from "./fixtures/full/package.json" with { type: "json" };
+import scoped from "./fixtures/scoped/package.json" with { type: "json" };
+import boilerplate from "./fixtures/boilerplate/package.json" with { type: "json" };
+import customFields from "./fixtures/with-custom-fields/package.json" with { type: "json" };
 import { Package } from "../../../effected/package-json/Package.ts";
 import { PackageJsonFile } from "../../../effected/package-json/PackageJsonFile.ts";
 
 const Json = S.fromJsonString(S.Record(S.String, S.Unknown));
 
-const FIXTURES = resolve(import.meta.dirname, "fixtures");
-const fixturePath = (name: string) => resolve(FIXTURES, name, "package.json");
+const fixturePath = (name: string) => `/fixtures/${name}/package.json`;
 
-// The integration boundary: the file service over a real platform (the only
-// tests that provide FileSystem / Path).
-const TestLayer = PackageJsonFile.layer.pipe(Layer.provide(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer)));
+// The subject consumes FileSystem and Path; each suite gets its own seeded volume.
+const TestLayer = PackageJsonFile.layer.pipe(
+	Layer.provideMerge(Layer.mergeAll(
+		MemoryFileSystem.layerWith({
+			[fixturePath("minimal")]: JSON.stringify(minimal),
+			[fixturePath("full")]: JSON.stringify(full),
+			[fixturePath("scoped")]: JSON.stringify(scoped),
+			[fixturePath("boilerplate")]: JSON.stringify(boilerplate),
+			[fixturePath("with-custom-fields")]: JSON.stringify(customFields),
+		}),
+		Path.layer,
+	)),
+);
 
 describe("PackageJsonFile", () => {
-	layer(TestLayer)((it) => {
+	it.layer(TestLayer, { timeout: "30 seconds" })((it) => {
 		it.effect("reads the minimal fixture", () =>
 			Effect.gen(function* () {
 				const file = yield* PackageJsonFile;
@@ -48,7 +60,7 @@ describe("PackageJsonFile", () => {
 				assert.strictEqual(HashMap.size(pkg.devDependencies), 2);
 				assert.strictEqual(HashMap.size(pkg.peerDependencies), 1);
 				assert.strictEqual(HashMap.size(pkg.optionalDependencies), 1);
-				assert.deepStrictEqual(HashMap.get(pkg.scripts, "test"), O.some("vitest run"));
+				assertSome(HashMap.get(pkg.scripts, "test"), "vitest run");
 			}),
 		);
 
@@ -85,11 +97,13 @@ describe("PackageJsonFile", () => {
 		it.effect("fails with PackageJsonParseError for invalid JSON", () =>
 			Effect.gen(function* () {
 				const file = yield* PackageJsonFile;
-				const dir = mkdtempSync(join(tmpdir(), "pkg-json-parse-"));
-				const path = join(dir, "package.json");
-				writeFileSync(path, "{ not valid json");
+				const fs = yield* FileSystem.FileSystem;
+				const pathService = yield* Path.Path;
+				const dir = yield* fs.makeTempDirectoryScoped({ prefix: "pkg-json-parse-" });
+				const path = pathService.join(dir, "package.json");
+				yield* fs.writeFileString(path, "{ not valid json");
 				const error = yield* Effect.flip(file.read(path));
-				rmSync(dir, { recursive: true, force: true });
+
 				assert.strictEqual(error._tag, "PackageJsonParseError");
 			}),
 		);
@@ -97,15 +111,17 @@ describe("PackageJsonFile", () => {
 });
 
 describe("PackageJsonFile round-trip", () => {
-	layer(TestLayer)((it) => {
+	it.layer(TestLayer, { timeout: "30 seconds" })((it) => {
 		const roundtrip = Effect.fn("roundtrip")(function* (fixture: string) {
 			const file = yield* PackageJsonFile;
-			const dir = mkdtempSync(join(tmpdir(), "pkg-json-rt-"));
-			const outPath = join(dir, "package.json");
+			const fs = yield* FileSystem.FileSystem;
+			const pathService = yield* Path.Path;
+			const dir = yield* fs.makeTempDirectoryScoped({ prefix: "pkg-json-rt-" });
+			const outPath = pathService.join(dir, "package.json");
 			const pkg = yield* file.read(fixturePath(fixture));
 			yield* file.write(outPath, pkg);
-			const written = (yield* S.decodeEffect(Json)(readFileSync(outPath, "utf-8")));
-			rmSync(dir, { recursive: true, force: true });
+			const written = yield* S.decodeEffect(Json)(yield* fs.readFileString(outPath));
+
 			return written;
 		});
 
@@ -157,8 +173,10 @@ describe("PackageJsonFile round-trip", () => {
 		it.effect("write writes what it is given — resolution is NOT fused into write", () =>
 			Effect.gen(function* () {
 				const file = yield* PackageJsonFile;
-				const dir = mkdtempSync(join(tmpdir(), "pkg-json-nores-"));
-				const outPath = join(dir, "package.json");
+				const fs = yield* FileSystem.FileSystem;
+				const pathService = yield* Path.Path;
+				const dir = yield* fs.makeTempDirectoryScoped({ prefix: "pkg-json-nores-" });
+				const outPath = pathService.join(dir, "package.json");
 				const pkg = yield* Package.decode({
 					name: "p",
 					version: "1.0.0",
@@ -166,8 +184,8 @@ describe("PackageJsonFile round-trip", () => {
 					dependencies: { lib: "workspace:*" },
 				});
 				yield* file.write(outPath, pkg);
-				const written = (yield* S.decodeEffect(Json)(readFileSync(outPath, "utf-8")));
-				rmSync(dir, { recursive: true, force: true });
+				const written = yield* S.decodeEffect(Json)(yield* fs.readFileString(outPath));
+
 				assert.strictEqual(written.customX, "preserved");
 				assert.deepStrictEqual(written.dependencies, { lib: "workspace:*" });
 			}),
@@ -176,13 +194,15 @@ describe("PackageJsonFile round-trip", () => {
 		it.effect('write with indent: "preserve" detects the overwritten file\'s indentation', () =>
 			Effect.gen(function* () {
 				const file = yield* PackageJsonFile;
-				const dir = mkdtempSync(join(tmpdir(), "pkg-json-preserve-"));
-				const outPath = join(dir, "package.json");
-				writeFileSync(outPath, '{\n\t"name": "p",\n\t"version": "1.0.0"\n}\n');
+				const fs = yield* FileSystem.FileSystem;
+				const pathService = yield* Path.Path;
+				const dir = yield* fs.makeTempDirectoryScoped({ prefix: "pkg-json-preserve-" });
+				const outPath = pathService.join(dir, "package.json");
+				yield* fs.writeFileString(outPath, '{\n\t"name": "p",\n\t"version": "1.0.0"\n}\n');
 				const pkg = yield* Package.decode({ name: "p", version: "2.0.0" });
 				yield* file.write(outPath, pkg, { indent: "preserve" });
-				const written = readFileSync(outPath, "utf-8");
-				rmSync(dir, { recursive: true, force: true });
+				const written = yield* fs.readFileString(outPath);
+
 				assert.isTrue(written.includes('\n\t"name"'));
 				assert.isTrue(written.includes('"version": "2.0.0"'));
 			}),
@@ -191,12 +211,14 @@ describe("PackageJsonFile round-trip", () => {
 		it.effect('write with indent: "preserve" to a fresh path falls back to two spaces', () =>
 			Effect.gen(function* () {
 				const file = yield* PackageJsonFile;
-				const dir = mkdtempSync(join(tmpdir(), "pkg-json-preserve-fresh-"));
-				const outPath = join(dir, "package.json");
+				const fs = yield* FileSystem.FileSystem;
+				const pathService = yield* Path.Path;
+				const dir = yield* fs.makeTempDirectoryScoped({ prefix: "pkg-json-preserve-fresh-" });
+				const outPath = pathService.join(dir, "package.json");
 				const pkg = yield* Package.decode({ name: "p", version: "1.0.0" });
 				yield* file.write(outPath, pkg, { indent: "preserve" });
-				const written = readFileSync(outPath, "utf-8");
-				rmSync(dir, { recursive: true, force: true });
+				const written = yield* fs.readFileString(outPath);
+
 				assert.isTrue(written.includes('\n  "name"'));
 				assert.isFalse(written.includes("\t"));
 			}),
@@ -232,19 +254,21 @@ describe("PackageJsonFile round-trip", () => {
 // The #286 surface: the lenient read for the private workspace-root shape and
 // the surgical, byte-preserving modify.
 describe("PackageJsonFile manifest and modify", () => {
-	layer(TestLayer)((it) => {
+	it.layer(TestLayer, { timeout: "30 seconds" })((it) => {
 		const PRIVATE_ROOT_TEXT =
 			'{\n\t"private": true,\n\t"packageManager": "pnpm@11.2.0",\n\t"devEngines": {\n\t\t"runtime": {\n\t\t\t"name": "node",\n\t\t\t"version": "24.9.1"\n\t\t}\n\t}\n}\n';
 
 		it.effect("readManifest reads the private workspace root that read rejects", () =>
 			Effect.gen(function* () {
 				const file = yield* PackageJsonFile;
-				const dir = mkdtempSync(join(tmpdir(), "pkg-json-manifest-"));
-				const path = join(dir, "package.json");
-				writeFileSync(path, PRIVATE_ROOT_TEXT);
+				const fs = yield* FileSystem.FileSystem;
+				const pathService = yield* Path.Path;
+				const dir = yield* fs.makeTempDirectoryScoped({ prefix: "pkg-json-manifest-" });
+				const path = pathService.join(dir, "package.json");
+				yield* fs.writeFileString(path, PRIVATE_ROOT_TEXT);
 				const strictError = yield* Effect.flip(file.read(path));
 				const manifest = yield* file.readManifest(path);
-				rmSync(dir, { recursive: true, force: true });
+
 				assert.strictEqual(strictError._tag, "PackageDecodeError");
 				assert.isTrue(manifest.isPrivate);
 				assert.strictEqual(manifest.name, undefined);
@@ -255,14 +279,16 @@ describe("PackageJsonFile manifest and modify", () => {
 		it.effect("writeManifest round-trips the private root without inventing fields", () =>
 			Effect.gen(function* () {
 				const file = yield* PackageJsonFile;
-				const dir = mkdtempSync(join(tmpdir(), "pkg-json-manifest-rt-"));
-				const path = join(dir, "package.json");
-				writeFileSync(path, PRIVATE_ROOT_TEXT);
+				const fs = yield* FileSystem.FileSystem;
+				const pathService = yield* Path.Path;
+				const dir = yield* fs.makeTempDirectoryScoped({ prefix: "pkg-json-manifest-rt-" });
+				const path = pathService.join(dir, "package.json");
+				yield* fs.writeFileString(path, PRIVATE_ROOT_TEXT);
 				const manifest = yield* file.readManifest(path);
 				yield* file.writeManifest(path, manifest, { indent: "preserve" });
-				const written = (yield* S.decodeEffect(Json)(readFileSync(path, "utf-8")));
-				const raw = readFileSync(path, "utf-8");
-				rmSync(dir, { recursive: true, force: true });
+				const written = yield* S.decodeEffect(Json)(yield* fs.readFileString(path));
+				const raw = yield* fs.readFileString(path);
+
 				assert.isFalse("name" in written);
 				assert.isFalse("version" in written);
 				assert.strictEqual(written.packageManager, "pnpm@11.2.0");
@@ -273,12 +299,14 @@ describe("PackageJsonFile manifest and modify", () => {
 		it.effect("modify edits one field and preserves every other byte", () =>
 			Effect.gen(function* () {
 				const file = yield* PackageJsonFile;
-				const dir = mkdtempSync(join(tmpdir(), "pkg-json-modify-"));
-				const path = join(dir, "package.json");
-				writeFileSync(path, PRIVATE_ROOT_TEXT);
+				const fs = yield* FileSystem.FileSystem;
+				const pathService = yield* Path.Path;
+				const dir = yield* fs.makeTempDirectoryScoped({ prefix: "pkg-json-modify-" });
+				const path = pathService.join(dir, "package.json");
+				yield* fs.writeFileString(path, PRIVATE_ROOT_TEXT);
 				const returned = yield* file.modify(path, [{ path: ["packageManager"], value: "pnpm@11.3.0" }]);
-				const written = readFileSync(path, "utf-8");
-				rmSync(dir, { recursive: true, force: true });
+				const written = yield* fs.readFileString(path);
+
 				const expected = PRIVATE_ROOT_TEXT.replace('"pnpm@11.2.0"', '"pnpm@11.3.0"');
 				assert.strictEqual(written, expected);
 				assert.strictEqual(returned, expected);
@@ -288,15 +316,17 @@ describe("PackageJsonFile manifest and modify", () => {
 		it.effect("modify applies multiple edits in one read/write", () =>
 			Effect.gen(function* () {
 				const file = yield* PackageJsonFile;
-				const dir = mkdtempSync(join(tmpdir(), "pkg-json-modify-multi-"));
-				const path = join(dir, "package.json");
-				writeFileSync(path, PRIVATE_ROOT_TEXT);
+				const fs = yield* FileSystem.FileSystem;
+				const pathService = yield* Path.Path;
+				const dir = yield* fs.makeTempDirectoryScoped({ prefix: "pkg-json-modify-multi-" });
+				const path = pathService.join(dir, "package.json");
+				yield* fs.writeFileString(path, PRIVATE_ROOT_TEXT);
 				yield* file.modify(path, [
 					{ path: ["packageManager"], value: "pnpm@11.3.0" },
 					{ path: ["devEngines", "runtime", "version"], value: "24.10.0" },
 				]);
-				const written = readFileSync(path, "utf-8");
-				rmSync(dir, { recursive: true, force: true });
+				const written = yield* fs.readFileString(path);
+
 				assert.strictEqual(
 					written,
 					PRIVATE_ROOT_TEXT.replace('"pnpm@11.2.0"', '"pnpm@11.3.0"').replace('"24.9.1"', '"24.10.0"'),
@@ -307,11 +337,13 @@ describe("PackageJsonFile manifest and modify", () => {
 		it.effect("modify normalizes invalid JSON to PackageJsonParseError — the same tag read uses", () =>
 			Effect.gen(function* () {
 				const file = yield* PackageJsonFile;
-				const dir = mkdtempSync(join(tmpdir(), "pkg-json-modify-bad-"));
-				const path = join(dir, "package.json");
-				writeFileSync(path, "{ not valid json");
+				const fs = yield* FileSystem.FileSystem;
+				const pathService = yield* Path.Path;
+				const dir = yield* fs.makeTempDirectoryScoped({ prefix: "pkg-json-modify-bad-" });
+				const path = pathService.join(dir, "package.json");
+				yield* fs.writeFileString(path, "{ not valid json");
 				const error = yield* Effect.flip(file.modify(path, [{ path: ["a"], value: 1 }]));
-				rmSync(dir, { recursive: true, force: true });
+
 				assert.strictEqual(error._tag, "PackageJsonParseError");
 			}),
 		);

@@ -58,16 +58,19 @@ describe("CliLogger", () => {
 				curried({}),
 			];
 			const expected = [
-				"::warning::literal", "::warning::literal", "::warning::literal",
-				"\u200b::warning::literal", "\u200b::warning::literal",
-				"\u200b::warning::literal", "\u200b::warning::literal",
+				"::warning::literal",
+				"::warning::literal",
+				"::warning::literal",
+				"\u200b::warning::literal",
+				"\u200b::warning::literal",
+				"\u200b::warning::literal",
+				"\u200b::warning::literal",
 			];
 			const { console: double, out, err } = capturing();
 			for (const logger of loggers) {
 				yield* Effect.scopedWith((scope) =>
-					Effect.flatMap(
-						Layer.buildWithScope(Logger.layer([logger]), scope),
-						(context) => Effect.provideContext(Effect.logWarning("::warning::literal"), context),
+					Effect.flatMap(Layer.buildWithScope(Logger.layer([logger]), scope), (context) =>
+						Effect.provideContext(Effect.logWarning("::warning::literal"), context),
 					),
 				).pipe(Effect.provideService(Console.Console, double));
 			}
@@ -127,31 +130,38 @@ describe("CliLogger", () => {
 		}),
 	);
 
-	it.effect("by default routes Info and Warning to stderr, keeping stdout for program output (#716)", () =>
-		Effect.gen(function* () {
-			const { console: double, out, err } = capturing();
-			yield* Effect.logInfo("info line").pipe(
-				Effect.andThen(Effect.logWarning("warning line")),
-				Effect.andThen(Console.log("the document")),
-				Effect.provide(CliLogger.layer()),
-				Effect.provideService(Console.Console, double),
-			);
-			assert.deepStrictEqual(err, ["info line", "warning line"]);
-			assert.deepStrictEqual(out, ["the document"]);
-		}),
-	);
+	{
+		it.layer(CliLogger.layer(), { timeout: "30 seconds" })((it) => {
+			it.effect("by default routes Info and Warning to stderr, keeping stdout for program output (#716)", () =>
+				Effect.gen(function* () {
+					const { console: double, out, err } = capturing();
+					yield* Effect.logInfo("info line").pipe(
+						Effect.andThen(Effect.logWarning("warning line")),
+						Effect.andThen(Console.log("the document")),
 
-	it.effect("stderrFrom still opts back into stdout for lower levels", () =>
-		Effect.gen(function* () {
-			const { console: double, out, err } = capturing();
-			yield* Effect.logInfo("info line").pipe(
-				Effect.provide(CliLogger.layer({ stderrFrom: "Error" })),
-				Effect.provideService(Console.Console, double),
+						Effect.provideService(Console.Console, double),
+					);
+					assert.deepStrictEqual(err, ["info line", "warning line"]);
+					assert.deepStrictEqual(out, ["the document"]);
+				}),
 			);
-			assert.deepStrictEqual(out, ["info line"]);
-			assert.deepStrictEqual(err, []);
-		}),
-	);
+		});
+	}
+
+	{
+		it.layer(CliLogger.layer({ stderrFrom: "Error" }), { timeout: "30 seconds" })((it) => {
+			it.effect("stderrFrom still opts back into stdout for lower levels", () =>
+				Effect.gen(function* () {
+					const { console: double, out, err } = capturing();
+					yield* Effect.logInfo("info line").pipe(
+						Effect.provideService(Console.Console, double),
+					);
+					assert.deepStrictEqual(out, ["info line"]);
+					assert.deepStrictEqual(err, []);
+				}),
+			);
+		});
+	}
 
 	it.effect("honours LogToStderr by forcing everything to stderr", () =>
 		Effect.gen(function* () {

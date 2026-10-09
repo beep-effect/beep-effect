@@ -1,11 +1,15 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 // scanAudience reads argv by hand, mirroring core's lexer. This differential test is what pins that mirror: it runs
 // core's REAL parser over a set of edge argvs, reads the parsed audience flags back out, and requires the scan to
 // agree. A change in core's lexer or boolean spellings fails here instead of silently drifting.
-import { NodeServices } from "@effect/platform-node";
-import { assert, describe, it } from "@effect/vitest";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as Stdio from "effect/Stdio";
+import * as Terminal from "effect/Terminal";
+import { ChildProcessSpawner } from "effect/process";
+import { MemoryFileSystem } from "../../effected/memfs/index.ts";
+import { assert, it } from "@effect/vitest";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import { Argument, Command } from "effect/cli";
@@ -17,23 +21,23 @@ const Json = S.fromJsonString(S.Unknown);
 
 /** Parse `argv` with core and return the audience flags it saw, or `undefined` when core rejects the argv. */
 const parsedBy = Effect.fn("parsedBy")(function* (argv: ReadonlyArray<string>) {
-		let seen: AudienceFlagValues | undefined;
-		const sub = Command.make("init", { rest: Argument.String("rest").pipe(Argument.atLeast(0)) }, () => Effect.void);
-		const root = Command.make("tool").pipe(
-			Command.withSharedFlags(CliAudience.flags()),
-			Command.withSubcommands([sub]),
-			Command.provideEffectDiscard((input) =>
-				Effect.sync(() => {
-					seen = input;
-				}),
-			),
-		);
-		yield* Command.runWith(root, { version: "1" })(argv).pipe(
-			Effect.ignore,
-			Effect.provideService(Console.Console, { ...console, log: () => undefined, error: () => undefined }),
-		);
-		return seen;
-	}, Effect.provide(NodeServices.layer));
+	let seen: AudienceFlagValues | undefined;
+	const sub = Command.make("init", { rest: Argument.String("rest").pipe(Argument.atLeast(0)) }, () => Effect.void);
+	const root = Command.make("tool").pipe(
+		Command.withSharedFlags(CliAudience.flags()),
+		Command.withSubcommands([sub]),
+		Command.provideEffectDiscard((input) =>
+			Effect.sync(() => {
+				seen = input;
+			}),
+		),
+	);
+	yield* Command.runWith(root, { version: "1" })(argv).pipe(
+		Effect.ignore,
+		Effect.provideService(Console.Console, { ...console, log: () => undefined, error: () => undefined }),
+	);
+	return seen;
+});
 
 const accepted: ReadonlyArray<ReadonlyArray<string>> = [
 	["init"],
@@ -76,7 +80,26 @@ const rejected: ReadonlyArray<readonly [ReadonlyArray<string>, ReadonlyArray<str
 	[["--AGENT", "init"], []],
 ];
 
-describe("scanAudience agrees with core's parser", () => {
+const parserServices = Layer.mergeAll(
+	MemoryFileSystem.layer,
+	Path.layer,
+	Stdio.layerTest({}),
+	Layer.succeed(
+		Terminal.Terminal,
+		Terminal.make({
+			columns: Effect.succeed(80),
+			rows: Effect.succeed(24),
+			readInput: Effect.die("unused"),
+			readLine: Effect.die("unused"),
+			display: () => Effect.void,
+		}),
+	),
+	Layer.succeed(
+		ChildProcessSpawner.ChildProcessSpawner,
+		ChildProcessSpawner.make(() => Effect.die("unused")),
+	),
+);
+it.layer(parserServices, { timeout: "30 seconds" })("scanAudience agrees with core's parser", (it) => {
 	for (const argv of accepted) {
 		it.effect(argv.join(" ") || "(no arguments)", () =>
 			Effect.gen(function* () {
@@ -84,7 +107,11 @@ describe("scanAudience agrees with core's parser", () => {
 				// Every argv in this list is one core parses, so a rejection here is itself a finding.
 				assert.isDefined(parsed, `core rejected ${Result.getOrThrow(S.encodeUnknownResult(Json)(argv))}`);
 				if (parsed === undefined) return;
-				assert.deepStrictEqual(scanAudience(argv), tallyAudience(parsed), Result.getOrThrow(S.encodeUnknownResult(Json)(parsed)));
+				assert.deepStrictEqual(
+					scanAudience(argv),
+					tallyAudience(parsed),
+					Result.getOrThrow(S.encodeUnknownResult(Json)(parsed)),
+				);
 			}),
 		);
 	}

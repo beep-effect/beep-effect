@@ -2,6 +2,7 @@
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { CurrentRuntimeEnv } from "../../effected/env/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -50,8 +51,7 @@ const links = (
 	);
 };
 
-const fixed = (mode: "vscode" | "file" | "off") =>
-	CliLinks.pipe(Effect.provide(CliLinks.layerTest(mode)));
+const fixed = (mode: "vscode" | "file" | "off") => CliLinks.pipe(Effect.provide(CliLinks.layerTest(mode)));
 
 describe("a UNC path has no link target, never a link to a file that does not exist", () => {
 	const UNC = ["\\\\server\\share\\a.ts", "//server/share/a.ts", "\\\\?\\C:\\x.ts", "//host/x"];
@@ -116,7 +116,7 @@ describe("Render.markdown builds file links with the same builder as CliLinks", 
 			const file = yield* fixed("file");
 			for (const path of paths) {
 				const url = file.target({ file: path });
-				assert.isTrue(O.isSome(url), path);
+				assertSome(url, O.getOrThrow(url));
 				const out = Render.markdown([Doc.paragraph(Doc.link({ file: path }, "label"))], ctx);
 				assert.strictEqual(out, `[label](${O.getOrThrow(url)})`, path);
 			}

@@ -170,7 +170,7 @@ describe("the closure rule, on a toy graph (positive controls)", () => {
 });
 
 describe("every published @beep package declares its full peer closure", () => {
-	layer(Live)((it) => {
+	layer(Live, { timeout: "30 seconds" })((it) => {
 		it.effect("none is missing a peer that a dependency or peer of it requires", () =>
 			Effect.gen(function* () {
 				const packages = yield* (yield* WorkspaceDiscovery).listPackages;

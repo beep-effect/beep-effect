@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -7,8 +8,9 @@ import { JsxConfig } from "../../effected/tsconfig-json/JsxConfig.ts";
 
 /** Unwrap a `Some`, failing the test on `None`. */
 const expectSome = (result: O.Option<JsxConfig>): JsxConfig => {
-	assert.isTrue(O.isSome(result), "expected Some(JsxConfig)");
-	return O.getOrThrow(result);
+	const config = O.getOrThrow(result);
+	assertSome(result, config);
+	return config;
 };
 
 describe("JsxConfig.fromCompilerOptions", () => {
@@ -33,21 +35,21 @@ describe("JsxConfig.fromCompilerOptions", () => {
 	});
 
 	it("preserve leaves JSX untransformed: nothing for a bundler to configure", () => {
-		assert.isTrue(O.isNone(JsxConfig.fromCompilerOptions({ jsx: "preserve" })));
+		assertNone(JsxConfig.fromCompilerOptions({ jsx: "preserve" }));
 	});
 
 	it("react-native leaves JSX untransformed: nothing for a bundler to configure", () => {
-		assert.isTrue(O.isNone(JsxConfig.fromCompilerOptions({ jsx: "react-native" })));
+		assertNone(JsxConfig.fromCompilerOptions({ jsx: "react-native" }));
 	});
 
 	it("an absent jsx option projects to None", () => {
-		assert.isTrue(O.isNone(JsxConfig.fromCompilerOptions({})));
+		assertNone(JsxConfig.fromCompilerOptions({}));
 	});
 });
 
 describe("JsxConfig runtime variants", () => {
 	it("rejects an automatic runtime without its required import source", () => {
-		assert.isTrue(O.isNone(S.decodeUnknownOption(JsxConfig)({ runtime: "automatic" })));
+		assertNone(S.decodeUnknownOption(JsxConfig)({ runtime: "automatic" }));
 	});
 
 	it.effect("round-trips the automatic runtime and its required import source", () =>

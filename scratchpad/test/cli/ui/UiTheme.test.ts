@@ -39,7 +39,7 @@ describe("the theme bridge under CliUiTest", () => {
 		Effect.gen(function* () {
 			const handle = yield* CliUiTest.render(() => createElement(Styled, { token: "failure" }, "x"));
 			assert.strictEqual((yield* handle.frame).trim(), "[failure]x[/failure]");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("Styled at colour none draws plain text", () =>
@@ -48,7 +48,7 @@ describe("the theme bridge under CliUiTest", () => {
 				color: "none",
 			});
 			assert.strictEqual(yield* handle.rawFrame, "x");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("useTheme and useGlyphs read the mounted screen's theme", () =>
@@ -60,7 +60,7 @@ describe("the theme bridge under CliUiTest", () => {
 			};
 			const handle = yield* CliUiTest.render(() => createElement(Probe), { color: "256", glyphs: "ascii" });
 			assert.strictEqual((yield* handle.plainFrame).trim(), "256 ascii");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("useTerminalSize is the stdout size less one, and follows a resize", () =>
@@ -73,6 +73,6 @@ describe("the theme bridge under CliUiTest", () => {
 			assert.strictEqual((yield* handle.plainFrame).trim(), "79x23");
 			yield* handle.resize(100, 30);
 			assert.strictEqual((yield* handle.plainFrame).trim(), "99x29");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });

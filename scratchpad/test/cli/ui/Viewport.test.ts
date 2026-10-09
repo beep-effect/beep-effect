@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it, vi } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
@@ -126,7 +125,7 @@ describe("Viewport.View under CliUiTest", () => {
 				lines.some((line) => line.startsWith(">")),
 				"the cursor row is visible",
 			);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("in a sectioned list, moving up inside the window moves the highlight, not the window", () =>
@@ -155,7 +154,7 @@ describe("Viewport.View under CliUiTest", () => {
 			yield* handle.press("up");
 			assert.include(yield* handle.plainFrame, "> c1", "leaving the top of the window scrolls it by one");
 			assert.notDeepEqual(unmarked(yield* handle.plainFrame), unmarked(atBottom));
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("at the end of the list, a taller terminal pulls the window back so it fills the new height", () =>
@@ -168,7 +167,7 @@ describe("Viewport.View under CliUiTest", () => {
 			assert.lengthOf(lines, 19, "the grown window is full");
 			assert.strictEqual(lines.at(-1), "> item199", "still ending on the selected last item");
 			assert.strictEqual(lines[0], "  item181");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("highlights the last item when the state's cursor runs past the rows", () =>
@@ -178,9 +177,10 @@ describe("Viewport.View under CliUiTest", () => {
 				createElement(Viewport.View, { rows, state: Viewport.init(10, 5, 9), renderRow });
 			const handle = yield* CliUiTest.render(() => createElement(Mismatched));
 			assert.include(yield* handle.plainFrame, "> item2");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
+	// The real console spy and the unadvanced timeout while React crashes require live services.
 	it.live("a repeated item key dies with the reason, before React can warn on the real stderr", () =>
 		Effect.acquireUseRelease(
 			Effect.sync(() => vi.spyOn(console, "error").mockImplementation(() => undefined)),
@@ -204,7 +204,7 @@ describe("Viewport.View under CliUiTest", () => {
 					} else {
 						assert.fail("expected a defect, but the viewport resolved");
 					}
-				}).pipe(Effect.scoped),
+				}),
 			(spy) => Effect.sync(() => spy.mockRestore()),
 		),
 	);
@@ -218,14 +218,14 @@ describe("Viewport.View under CliUiTest", () => {
 			for (const frame of frames) assert.isAtMost(lineCount(frame), 9, frame);
 			assert.notInclude(yield* handle.rawFrame, CLEAR_SCROLLBACK);
 			assert.include(yield* handle.plainFrame, "item0", "home brings the first row back");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("reserved lines come off the height", () =>
 		Effect.gen(function* () {
 			const handle = yield* CliUiTest.render(scrolling(items(200), 50, 3), { rows: 10 });
 			assert.strictEqual(lineCount(yield* handle.plainFrame), 6);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("on a 20-column terminal no line is wider than 19 cells", () =>
@@ -244,7 +244,7 @@ describe("Viewport.View under CliUiTest", () => {
 				for (const line of frame.split("\n")) assert.isAtMost(Fmt.width(line), 19, line);
 			}
 			for (const line of (yield* handle.plainFrame).split("\n")) assert.isAtMost(Fmt.width(line), 19, line);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect(
@@ -304,18 +304,19 @@ describe("Viewport.View under CliUiTest", () => {
 		Effect.gen(function* () {
 			const handle = yield* CliUiTest.render(() => createElement(KeyHelp, { tables: [Viewport.keys] }));
 			assert.include(yield* handle.plainFrame, "↑/↓ move");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
 /** Run `screen` on the production render path: fake TTY streams, interactive, Ink's ordinary (non-debug) output. */
 const production = Effect.fn("production")(function* (screen: Screen<never>, keys: ReadonlyArray<string>) {
 		const fake = makeFakeStreams({ columns: 40, rows: 10 });
+		const theme = yield* Layer.build(CliTheme.layerTest());
 		const fiber = yield* Effect.forkChild(
 			CliUi.run(screen).pipe(
 				Effect.provideService(UiStreams, fake.streams),
 				Effect.provideService(CliInteractive, true),
-				Effect.provide(CliTheme.layerTest()),
+				Effect.provideContext(theme),
 			),
 		);
 		yield* Effect.suspend(() => (fake.rawModes.includes(true) ? Effect.void : Effect.fail("not yet"))).pipe(
@@ -332,7 +333,7 @@ const production = Effect.fn("production")(function* (screen: Screen<never>, key
 	});
 
 describe("the production render path (Ink's own output, not debug frames)", () => {
-	it.live("an 80-to-20-column resize clips every repaint to the current layout", () =>
+	it.effect("an 80-to-20-column resize clips every repaint to the current layout", () =>
 		Effect.gen(function* () {
 			const session = yield* CliUiTest.session({ columns: 80, rows: 10, color: "none", renderPath: "production" });
 			const context = yield* Layer.build(session.layer);
@@ -353,9 +354,10 @@ describe("the production render path (Ink's own output, not debug frames)", () =
 				assert.strictEqual(frame, "X".repeat(19), "even the immediate Ink repaint uses the new width");
 			}
 			yield* Fiber.interrupt(fiber);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
+	// Production mounting retries on the live clock while Ink renders on native timers.
 	it.live("control: an unclamped 200-line Text on a 10-row terminal does clear the scrollback", () =>
 		Effect.gen(function* () {
 			const tall = Array.from({ length: 200 }, (_, index) => `line ${index}`).join("\n");
@@ -364,6 +366,7 @@ describe("the production render path (Ink's own output, not debug frames)", () =
 		}),
 	);
 
+	// Live sleeps between input keys let Ink process and repaint on its native timers.
 	it.live("a 200-row viewport on a 10-row terminal never clears the scrollback, through scrolling and unmount", () =>
 		Effect.gen(function* () {
 			const stdout = yield* production(scrolling(items(200), 50), ["\u001b[B", "\u001b[6~", "\u001b[6~", "\u001b[F"]);

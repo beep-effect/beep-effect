@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -12,7 +13,7 @@ describe("stringify scalability", () => {
 		const root = Root.make({ children: [Table.make({ children: A.makeBy(150_000, () => row) })] });
 		assert.isTrue(S.is(Root)(root));
 		const result = Markdown.stringifyResult(root);
-		assert.isTrue(Result.isSuccess(result));
+		assertSuccess(Result.map(result, () => undefined), undefined);
 		assert.strictEqual(Result.getOrThrow(result), "|  |\n| --- |\n" + Str.repeat(149_999)("|  |\n"));
 	});
 

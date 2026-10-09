@@ -3,6 +3,9 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
+import * as A from "effect/Array";
+import * as Result from "effect/Result";
+import * as TS from "typescript";
 
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "../../effected/engine");
 const BUILT = resolve(SRC, "dist", "dev", "pkg");
@@ -13,10 +16,25 @@ const BUILT = resolve(SRC, "dist", "dev", "pkg");
  * `import()` is not a static import, and a bare package counts.
  */
 const runtimeImportsOf = (file: string): ReadonlyArray<string> => {
-	const source = readFileSync(file, "utf8");
-	return [...source.matchAll(/^\s*(import|export)\s+(type\s+)?[^;]*?\bfrom\s+"([^"]+)"/gms)]
-		.filter((match) => match[2] === undefined)
-		.map((match) => match[3] ?? "");
+	const source = TS.createSourceFile(file, readFileSync(file, "utf8"), TS.ScriptTarget.Latest);
+	return A.filterMap(source.statements, (statement) => {
+		if (
+			TS.isImportDeclaration(statement) &&
+			statement.importClause?.isTypeOnly !== true &&
+			TS.isStringLiteral(statement.moduleSpecifier)
+		) {
+			return Result.succeed(statement.moduleSpecifier.text);
+		}
+		if (
+			TS.isExportDeclaration(statement) &&
+			statement.isTypeOnly === false &&
+			statement.moduleSpecifier !== undefined &&
+			TS.isStringLiteral(statement.moduleSpecifier)
+		) {
+			return Result.succeed(statement.moduleSpecifier.text);
+		}
+		return Result.failVoid;
+	});
 };
 
 /** Every module reachable from an entrypoint through static runtime imports, with the bare packages it loads. */

@@ -1,5 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import { assertExitFailure, assertFailure, assertSuccess } from "@effect/vitest/utils";
+import * as Cause from "effect/Cause";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { CompilerOptionsFromProgrammatic } from "../../effected/tsconfig-json/CompilerOptionsFromProgrammatic.ts";
@@ -69,22 +71,22 @@ describe("CompilerOptionsFromProgrammatic", () => {
 
 	it.effect("fails decode on a numeric with no table entry rather than passing it through", () =>
 		Effect.gen(function* () {
-			const result = yield* Effect.result(decode({ target: 9999 }));
-			assert.isTrue(Result.isFailure(result));
+			const result = yield* Effect.exit(decode({ target: 9999 }).pipe(Effect.mapError(() => "decode failed")));
+			assertExitFailure(result, Cause.fail("decode failed"));
 		}),
 	);
 
 	it.effect("fails decode on an unmappable numeric even alongside valid keys", () =>
 		Effect.gen(function* () {
-			const result = yield* Effect.result(decode({ target: 12, jsx: 9999 }));
-			assert.isTrue(Result.isFailure(result));
+			const result = yield* Effect.exit(decode({ target: 12, jsx: 9999 }).pipe(Effect.mapError(() => "decode failed")));
+			assertExitFailure(result, Cause.fail("decode failed"));
 		}),
 	);
 
 	it.effect("fails decode on a non-record input", () =>
 		Effect.gen(function* () {
-			const result = yield* Effect.result(decode("es2025"));
-			assert.isTrue(Result.isFailure(result));
+			const result = yield* Effect.exit(decode("es2025").pipe(Effect.mapError(() => "decode failed")));
+			assertExitFailure(result, Cause.fail("decode failed"));
 		}),
 	);
 
@@ -103,11 +105,10 @@ describe("CompilerOptionsFromProgrammatic", () => {
 	// programmatic spelling gets a validated result with no cast and no Effect.
 	it("decodes synchronously through Result for a non-Effect caller", () => {
 		const ok = S.decodeResult(CompilerOptionsFromProgrammatic)({ target: 12, strict: true });
-		assert.isTrue(Result.isSuccess(ok));
-		if (Result.isSuccess(ok)) assert.strictEqual(ok.success.target, "es2025");
+		assertSuccess(Result.map(ok, (options) => options.target), "es2025");
 
 		const bad = S.decodeResult(CompilerOptionsFromProgrammatic)({ target: 9999 });
-		assert.isTrue(Result.isFailure(bad));
+		assertFailure(Result.mapError(bad, () => "decode failed"), "decode failed");
 	});
 });
 

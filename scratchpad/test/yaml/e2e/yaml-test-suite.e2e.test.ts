@@ -8,9 +8,11 @@
  */
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertExitFailure, assertExitSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
-import * as Result from "effect/Result";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
 import { applyMultiDocCanonical, applySingleDocCanonical } from "./support/canonical.ts";
 import {
 	buildAnchorMap,
@@ -75,8 +77,8 @@ describe("yaml-test-suite compliance", () => {
 				// ----- Error tests: YAML should be rejected -----
 				it.effect("should reject invalid YAML", () =>
 					Effect.gen(function* () {
-						const result = yield* Effect.result(parse(tc.yaml, { uniqueKeys: false }));
-						assert.isTrue(Result.isFailure(result), `Expected parse error for ${tc.id}`);
+						const result = yield* parse(tc.yaml, { uniqueKeys: false }).pipe(Effect.asVoid, Effect.exit);
+						assertExitFailure(result, result.pipe(Exit.getCause, O.getOrThrow));
 					}),
 				);
 			} else {
@@ -85,8 +87,8 @@ describe("yaml-test-suite compliance", () => {
 				// 4a. Parse success
 				it.effect("should parse successfully", () =>
 					Effect.gen(function* () {
-						const result = yield* Effect.result(parse(tc.yaml, { uniqueKeys: false }));
-						assert.isTrue(Result.isSuccess(result), `Expected parse success for ${tc.id}`);
+						const result = yield* parse(tc.yaml, { uniqueKeys: false }).pipe(Effect.asVoid, Effect.exit);
+						assertExitSuccess(result, undefined);
 					}),
 				);
 

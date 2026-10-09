@@ -10,6 +10,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { NodeFileSystem } from "@effect/platform-node";
 import { afterAll, assert, beforeAll, describe, it } from "@effect/vitest";
+import { assertExitFailure, assertExitSuccess } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -118,8 +119,9 @@ describe("NodeSyncFileSystem agrees with NodeFileSystem", () => {
 		Effect.gen(function* () {
 			for (const options of [undefined, { recursive: true }] as const) {
 				const [a, b] = yield* both((fs) => fs.readDirectory(d, options));
-				assert.isTrue(Exit.isSuccess(a) && Exit.isSuccess(b));
-				if (Exit.isSuccess(a) && Exit.isSuccess(b)) assert.deepStrictEqual([...b.value].sort(), [...a.value].sort());
+				assertExitSuccess(a, Exit.isSuccess(a) ? a.value : undefined);
+				assertExitSuccess(b, Exit.isSuccess(b) ? b.value : undefined);
+				assert.deepStrictEqual([...b.value].sort(), [...a.value].sort());
 			}
 		}),
 	);
@@ -135,7 +137,7 @@ describe("NodeSyncFileSystem agrees with NodeFileSystem", () => {
 	it.effect("realPath through a link", () =>
 		Effect.gen(function* () {
 			const [a, b] = yield* both((fs) => fs.realPath(join(d, "to-dir", "inner.txt")));
-			assert.isTrue(Exit.isSuccess(a));
+			assertExitSuccess(a, Exit.isSuccess(a) ? a.value : undefined);
 			assert.deepStrictEqual(b, a);
 		}),
 	);
@@ -151,10 +153,12 @@ describe("NodeSyncFileSystem agrees with NodeFileSystem", () => {
 		}),
 	);
 
-	it("the fileSystem value reads directly, without a layer", () => {
-		const viaValue = Effect.runSync(NodeSyncFileSystem.fileSystem.readFileString(join(d, "f.txt")));
-		assert.strictEqual(viaValue, "hello");
-	});
+	it.effect("the fileSystem value reads directly, without a layer", () =>
+		Effect.gen(function* () {
+			const viaValue = yield* NodeSyncFileSystem.fileSystem.readFileString(join(d, "f.txt"));
+			assert.strictEqual(viaValue, "hello");
+		}),
+	);
 
 	it("runs under Effect.runSync", () => {
 		const program = Effect.gen(function* () {
@@ -164,24 +168,27 @@ describe("NodeSyncFileSystem agrees with NodeFileSystem", () => {
 		assert.strictEqual(Effect.runSync(program.pipe(Effect.provide(NodeSyncFileSystem.layer))), "hello");
 	});
 
-	for (const [member, run] of [
-		["writeFileString", (fs: FileSystem.FileSystem) => fs.writeFileString(join(d, "w.txt"), "")],
-		["makeDirectory", (fs: FileSystem.FileSystem) => fs.makeDirectory(join(d, "new"))],
-		["remove", (fs: FileSystem.FileSystem) => fs.remove(join(d, "f.txt"))],
-		["rename", (fs: FileSystem.FileSystem) => fs.rename(join(d, "f.txt"), join(d, "g.txt"))],
-		["copyFile", (fs: FileSystem.FileSystem) => fs.copyFile(join(d, "f.txt"), join(d, "g.txt"))],
-		["makeTempDirectory", (fs: FileSystem.FileSystem) => fs.makeTempDirectory()],
-	] as const) {
-		it(`${member} is a defect, not a typed failure, and touches nothing`, () => {
-			const program = Effect.gen(function* () {
-				return yield* run(yield* FileSystem.FileSystem);
-			});
-			const before = readdirSync(d).sort();
-			const exit = Effect.runSyncExit(program.pipe(Effect.provide(NodeSyncFileSystem.layer)));
-			assert.isTrue(Exit.isFailure(exit) && Cause.hasDies(exit.cause));
-			assert.isFalse(Exit.isFailure(exit) && Cause.hasFails(exit.cause));
-			assert.deepStrictEqual(readdirSync(d).sort(), before);
-			assert.strictEqual(readFileSync(join(d, "f.txt"), "utf8"), "hello");
-		});
-	}
+	it.layer(NodeSyncFileSystem.layer, { timeout: "30 seconds" })((it) => {
+		for (const [member, run] of [
+			["writeFileString", (fs: FileSystem.FileSystem) => fs.writeFileString(join(d, "w.txt"), "")],
+			["makeDirectory", (fs: FileSystem.FileSystem) => fs.makeDirectory(join(d, "new"))],
+			["remove", (fs: FileSystem.FileSystem) => fs.remove(join(d, "f.txt"))],
+			["rename", (fs: FileSystem.FileSystem) => fs.rename(join(d, "f.txt"), join(d, "g.txt"))],
+			["copyFile", (fs: FileSystem.FileSystem) => fs.copyFile(join(d, "f.txt"), join(d, "g.txt"))],
+			["makeTempDirectory", (fs: FileSystem.FileSystem) => fs.makeTempDirectory()],
+		] as const) {
+			it.effect(`${member} is a defect, not a typed failure, and touches nothing`, () => Effect.gen(function* () {
+				const program = Effect.gen(function* () {
+					return yield* run(yield* FileSystem.FileSystem);
+				});
+				const before = readdirSync(d).sort();
+				const exit = yield* Effect.exit(program);
+				assertExitFailure(exit, Exit.isFailure(exit) ? exit.cause : Cause.empty);
+				assert.isTrue(Cause.hasDies(exit.cause));
+				assert.isFalse(Cause.hasFails(exit.cause));
+				assert.deepStrictEqual(readdirSync(d).sort(), before);
+				assert.strictEqual(readFileSync(join(d, "f.txt"), "utf8"), "hello");
+			}));
+		}
+	});
 });

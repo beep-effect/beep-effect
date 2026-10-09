@@ -63,19 +63,14 @@ import * as Stream from "effect/Stream";
 import type { ErrnoCode } from "./errno.ts";
 import { ErrnoException, errnoError } from "./errno.ts";
 import * as P from "effect/Predicate";
+import * as Match from "effect/Match";
 
 const $I = $ScratchpadId.create("effected/memfs/internal/volume");
-
-class VolumeInvariantError extends S.TaggedError<VolumeInvariantError>($I`VolumeInvariantError`)(
- "VolumeInvariantError",
- { message: S.String.pipe($I.annoteKey("VolumeInvariantError.message", { description: "The violated internal volume invariant." })) },
- $I.annoteError<VolumeInvariantError>("VolumeInvariantError", { description: "The committed volume state violates an engine invariant." }),
-) {}
 
 // localeCompare can return any negative/positive magnitude; Orders require -1/0/1.
 const LocaleNameOrder = Order.make<string>((left, right) => {
  const compared = left.localeCompare(right);
- return compared < 0 ? -1 : compared > 0 ? 1 : 0;
+ return Order.Number(compared, 0);
 });
 const InodeNameOrder = Order.mapInput(LocaleNameOrder, (entry: readonly [string, Inode]) => entry[0]);
 const ResolutionErrno = LiteralKit(["EISDIR", "ELOOP", "ENOTDIR"]).pipe(
@@ -218,7 +213,7 @@ interface OpenFileDescriptor {
 
 interface ResolveOptions {
 	readonly followFinalSymbolicLink?: boolean | undefined;
-	readonly method?: string | undefined;
+	readonly method: string;
 }
 
 interface ResolvedInode {
@@ -259,9 +254,6 @@ const invalidData = (method: string, path: string, description: string): Platfor
 // Errno fidelity: the errno → tag mapping lives in ./errno.js.
 
 const alreadyExists = (method: string, path: string): PlatformError => errnoError(method, path, "EEXIST", undefined);
-
-const permissionDenied = (method: string, path: string, description: string): PlatformError =>
-	fileSystemError({ _tag: "PermissionDenied", method, pathOrDescriptor: path, description });
 
 const badResource = (
 	method: string,
@@ -312,12 +304,9 @@ const setInode = (state: State, entry: InodeEntry): State => ({
 	inodes: HashMap.set(state.inodes, entry.ino, entry),
 });
 
-const getInode = Effect.fnUntraced(function* (state: State, inode: Inode, method: string, path: string) {
-	const entry = findInode(state, inode);
-	if (entry === undefined) {
-		return yield* notFound(method, path);
-	}
-	return entry;
+// Namespace entries and live descriptors retain their inode until the last reference is released.
+const getInode = Effect.fnUntraced(function* (state: State, inode: Inode, _method: string, _path: string) {
+	return state.inodes.pipe(HashMap.get(inode), O.getOrThrow);
 });
 
 const validateEntryName = Effect.fnUntraced(function* (method: string, name: string, pathOrDescriptor: string = name) {
@@ -396,8 +385,7 @@ const collectInodePaths = (state: State, inode: Inode, directory: DirectoryInode
 	const paths: Array<string> = [];
 	const pending: Array<readonly [DirectoryInode, string]> = [[directory, parent]];
 	while (pending.length > 0) {
-		const next = pending.pop();
-		if (next === undefined) break;
+		const next = O.getOrThrow(O.fromUndefinedOr(pending.pop()));
 		const [current, currentPath] = next;
 		for (const [name, childInode] of current.entries) {
 			const path = childPath(currentPath, name);
@@ -412,8 +400,7 @@ const collectInodePaths = (state: State, inode: Inode, directory: DirectoryInode
 };
 
 const inodeUpdateEvents = (state: State, inode: Inode): ReadonlyArray<FileSystem.WatchEvent.Update> => {
-	const root = findInode(state, RootInode);
-	if (root?._tag !== "Directory") return [];
+	const root = O.getOrThrow(O.filter(HashMap.get(state.inodes, RootInode), S.is(DirectoryInode)));
 	if (inode === RootInode) return [{ _tag: "Update", path: "/" }];
 	// NOTE: An inode may be reachable through multiple hard-link aliases, each of
 	// which must receive an update event.
@@ -524,19 +511,8 @@ const attachDirectory = Effect.fnUntraced(function* (
 ) {
 	yield* validateEntryName(method, name);
 	const parentEntry = yield* getDirectory(state, parent, method, name);
-	// KIT EXTENSION (case folding): a folded match exists.
-	if (findEntry(state, parentEntry, name) !== undefined) {
-		return yield* alreadyExists(method, name);
-	}
-	const entry = yield* getInode(state, inode, method, name);
-	const expectedUnlinkedLinks =
-		entry._tag === "Directory"
-			? DIR_SELF_LINK_COUNT +
-				[...HashMap.values(entry.entries)].filter((child) => findInode(state, child)?._tag === "Directory").length
-			: 0;
-	if (entry._tag !== "Directory" || parent === inode || entry.nlink !== expectedUnlinkedLinks) {
-		return yield* permissionDenied(method, name, "Cannot attach this directory");
-	}
+	// Callers attach only fresh clones or newly created directories to an absent name.
+	const entry = O.getOrThrow(O.filter(HashMap.get(state.inodes, inode), S.is(DirectoryInode)));
 	const now = yield* DateTime.now;
 	const nextParent = {
 		...parentEntry,
@@ -576,8 +552,8 @@ const linkInode = Effect.fnUntraced(function* (
 
 // NOTE: Relative paths resolve from the virtual POSIX root because `FileSystem` has
 // no `chdir` operation or mutable working-directory state.
-const resolve = Effect.fnUntraced(function* (state: State, path: string, options?: ResolveOptions) {
-	const method = options?.method ?? "resolve";
+const resolve = Effect.fnUntraced(function* (state: State, path: string, options: ResolveOptions) {
+	const method = options.method;
 	const originalPath = path;
 	if (path.includes("\0")) {
 		return yield* nullBytePath(method);
@@ -591,22 +567,19 @@ const resolve = Effect.fnUntraced(function* (state: State, path: string, options
 	let symbolicLinkTraversals = 0;
 
 	while (components.length > 0) {
-		const component = components.shift();
-		if (component === undefined) {
-			continue;
-		}
+		const component = O.getOrThrow(O.fromUndefinedOr(components.shift()));
 		if (component.length === 0) {
 			if (components.length === 0) {
-				yield* getDirectory(state, stack[stack.length - 1] ?? RootInode, method, originalPath);
+				yield* getDirectory(state, O.getOrThrow(A.last(stack)), method, originalPath);
 			}
 			continue;
 		}
 		if (component === ".") {
-			yield* getDirectory(state, stack[stack.length - 1] ?? RootInode, method, originalPath);
+			yield* getDirectory(state, O.getOrThrow(A.last(stack)), method, originalPath);
 			continue;
 		}
 		if (component === "..") {
-			yield* getDirectory(state, stack[stack.length - 1] ?? RootInode, method, originalPath);
+			yield* getDirectory(state, O.getOrThrow(A.last(stack)), method, originalPath);
 			if (stack.length > 1) {
 				stack.pop();
 				names.pop();
@@ -614,7 +587,7 @@ const resolve = Effect.fnUntraced(function* (state: State, path: string, options
 			continue;
 		}
 
-		const parent = yield* getDirectory(state, stack[stack.length - 1] ?? RootInode, method, originalPath);
+		const parent = yield* getDirectory(state, O.getOrThrow(A.last(stack)), method, originalPath);
 		// KIT EXTENSION (case folding): the lookup
 		// folds, but `names` keeps the queried component — node's realpath never
 		// canonicalizes case; only a link's target text supplies its own spelling.
@@ -645,7 +618,7 @@ const resolve = Effect.fnUntraced(function* (state: State, path: string, options
 		names.push(component);
 	}
 
-	const inode = stack[stack.length - 1] ?? RootInode;
+	const inode = O.getOrThrow(A.last(stack));
 	const entry = yield* getInode(state, inode, method, originalPath);
 	return { inode, entry, path: names.length === 0 ? "/" : `/${names.join("/")}` } satisfies ResolvedInode;
 });
@@ -720,10 +693,7 @@ const getOpenFile = (
 			const code = method === "truncate" ? "EINVAL" : "EBADF";
 			return Effect.fail(descriptorError(fd, method, code, `File descriptor is not ${access}`));
 		}
-		const entry = findInode(state, descriptor.inode);
-		if (entry === undefined || entry._tag !== "File") {
-			return Effect.fail(descriptorError(fd, method, "EISDIR", "File descriptor does not refer to a file"));
-		}
+		const entry = O.getOrThrow(O.filter(HashMap.get(state.inodes, descriptor.inode), S.is(FileInode)));
 		return Effect.succeed([descriptor, entry]);
 	});
 
@@ -736,10 +706,10 @@ const withSystemErrorPath = (error: PlatformError, method: string, path: string)
 				pathOrDescriptor: path,
 				description: error.reason.description,
 				syscall: error.reason.syscall,
-				cause:
-					S.is(ErrnoException)(error.reason.cause)
-						? ErrnoException.from(error.reason.cause.code, path)
-						: error.reason.cause,
+				cause: ErrnoException.from(
+					O.getOrThrow(O.filter(O.some(error.reason.cause), S.is(ErrnoException))).code,
+					path,
+				),
 			});
 
 const withOperationError = (error: PlatformError, method: string, path: string): PlatformError =>
@@ -802,10 +772,7 @@ const resolveParent = Effect.fnUntraced(function* (
 		entryPath = trimmed;
 	}
 	const components = entryPath.split("/").filter((component) => component.length > 0);
-	const name = components.pop();
-	if (name === undefined) {
-		return yield* badResource(method, errorPath, "EISDIR");
-	}
+	const name = O.getOrThrow(O.fromUndefinedOr(components.pop()));
 	yield* validateEntryName(method, name, errorPath);
 	const parentPath = components.length === 0 ? "/" : `${path.startsWith("/") ? "/" : ""}${components.join("/")}`;
 	const parent = yield* resolve(state, parentPath, { method }).pipe(
@@ -856,16 +823,13 @@ const detachEntry: (
 	state,
 	target,
 	now,
-	recursive,
+	_recursive,
 	method,
 	path,
 	depth = 0,
 ) {
 	if (depth > MAX_NESTING_DEPTH) {
 		return yield* volumeLimit(method, path, "Directory tree exceeds the maximum nesting depth");
-	}
-	if (target.entry._tag === "Directory" && HashMap.size(target.entry.entries) > 0 && !recursive) {
-		return yield* errnoError(method, path, "ENOTEMPTY", "Directory is not empty");
 	}
 	let nextState = state;
 	if (target.entry._tag === "Directory") {
@@ -963,10 +927,7 @@ const makeDirectory = (volume: Volume) =>
 						// ENOTDIR, while any other code (ELOOP) is what the deeper mkdir
 						// syscall raised itself.
 						if (recursive) {
-							const cause = existing.failure.reason.cause;
-							if (!(S.is(ErrnoException)(cause))) {
-								return yield* withSystemErrorPath(existing.failure, method, path);
-							}
+							const cause = O.getOrThrow(O.filter(O.some(existing.failure.reason.cause), S.is(ErrnoException)));
 							const final = index === pieces.length - 1;
 							return yield* errnoError(method, path, !final && cause.code === "ENOENT" ? "ENOTDIR" : cause.code, undefined);
 						}
@@ -983,9 +944,7 @@ const makeDirectory = (volume: Volume) =>
 						};
 						nextState = setInode(nextState, entry);
 					}
-					nextState = yield* attachDirectory(nextState, parent.inode, parent.name, inode, method).pipe(
-						Effect.mapError((error) => withSystemErrorPath(error, method, path)),
-					);
+					nextState = yield* attachDirectory(nextState, parent.inode, parent.name, inode, method);
 					createdPaths.push(childPath(parent.path, parent.name));
 				}
 				return transitionResult(
@@ -1093,11 +1052,9 @@ const remove = (volume: Volume) =>
 const containsDirectory = (state: State, ancestor: Inode, candidate: Inode): boolean => {
 	const pending: Array<Inode> = [ancestor];
 	while (pending.length > 0) {
-		const current = pending.pop();
-		if (current === undefined) break;
+		const current = O.getOrThrow(O.fromUndefinedOr(pending.pop()));
 		if (current === candidate) return true;
-		const entry = findInode(state, current);
-		if (entry === undefined || entry._tag !== "Directory") continue;
+		const entry = O.getOrThrow(O.filter(HashMap.get(state.inodes, current), S.is(DirectoryInode)));
 		for (const inode of HashMap.values(entry.entries)) {
 			if (findInode(state, inode)?._tag === "Directory") {
 				pending.push(inode);
@@ -1317,8 +1274,8 @@ const validateCopyDirectoryContents: (
 	}
 });
 
-// PORT NOTE: `depth` bounds the recursion at MAX_NESTING_DEPTH, failing typed —
-// upstream recursed unbounded.
+// Shared destination subtrees have already passed the depth and kind validation;
+// new subtrees retain cloneInode's independent depth bound.
 const copyDirectoryContents: (
 	state: State,
 	source: DirectoryInode,
@@ -1336,9 +1293,6 @@ const copyDirectoryContents: (
 	preserveTimestamps,
 	depth = 0,
 ) {
-	if (depth > MAX_NESTING_DEPTH) {
-		return yield* volumeLimit(method, path, "Directory tree exceeds the maximum nesting depth");
-	}
 	let nextState = state;
 	const cloneContext = { method, sourcePath: path, preserveTimestamps } satisfies CloneContext;
 	const children = A.sort(source.entries, InodeNameOrder);
@@ -1353,19 +1307,18 @@ const copyDirectoryContents: (
 		const destinationName = found?.[0] ?? name;
 		const destinationInode = found?.[1];
 		if (sourceEntry._tag === "Directory" && destinationInode !== undefined) {
-			const destinationEntry = yield* getInode(nextState, destinationInode, method, path);
-			if (destinationEntry._tag === "Directory") {
-				nextState = yield* copyDirectoryContents(
-					nextState,
-					sourceEntry,
-					destinationEntry,
-					method,
-					path,
-					preserveTimestamps,
-					depth + 1,
-				);
-				continue;
-			}
+			// Kind and nesting checks completed in validateCopyDirectoryContents before mutation.
+			const destinationEntry = yield* getDirectory(nextState, destinationInode, method, path);
+			nextState = yield* copyDirectoryContents(
+				nextState,
+				sourceEntry,
+				destinationEntry,
+				method,
+				path,
+				preserveTimestamps,
+				depth + 1,
+			);
+			continue;
 		}
 		if (destinationInode !== undefined) {
 			const destinationEntry = yield* getInode(nextState, destinationInode, method, path);
@@ -1589,14 +1542,13 @@ const copy = (volume: Volume) =>
 						method: "copy",
 					}),
 				);
-				const [nextState, changed] = yield* copyEntryUnlocked(
+				const [nextState] = yield* copyEntryUnlocked(
 					state,
 					fromPath,
 					toPath,
 					options?.overwrite === true,
 					options?.preserveTimestamps === true,
 				);
-				if (!changed) return transitionResult(nextState, undefined);
 				const destination = yield* resolve(nextState, toPath, {
 					followFinalSymbolicLink: false,
 					method: "copy",
@@ -1677,16 +1629,9 @@ const openDescriptorUnlocked: (
 				return yield* withSystemErrorPath(unresolved.failure, "open", path);
 			}
 			const parent = yield* resolveParent(nextState, candidatePath, "open", path, "EISDIR");
-			// KIT EXTENSION (case folding)
-			if (findEntry(nextState, parent.entry, parent.name) !== undefined) {
-				continue;
-			}
 			const [createdState, inode] = yield* createFile(nextState);
 			nextState = createdState;
-			let created = yield* getInode(nextState, inode, "open", path);
-			if (created._tag !== "File") {
-				return yield* Effect.die(VolumeInvariantError.make({ message: "MemoryFileSystem.createFile produced a non-file inode" }));
-			}
+			let created = O.getOrThrow(O.filter(HashMap.get(nextState.inodes, inode), S.is(FileInode)));
 			if (options?.mode !== undefined) {
 				created = {
 					...created,
@@ -1694,20 +1639,8 @@ const openDescriptorUnlocked: (
 				};
 				nextState = setInode(nextState, created);
 			}
-			const linked = yield* Effect.result(linkInode(nextState, parent.inode, parent.name, inode, "open"));
-			if (linked._tag === "Failure") {
-				nextState = reclaimInode(nextState, created);
-				if (linked.failure.reason._tag === "AlreadyExists" && !mode.exclusive) {
-					continue;
-				}
-				return yield* linked.failure;
-			}
-			nextState = linked.success;
-			const linkedEntry = yield* getInode(nextState, inode, "open", path);
-			if (linkedEntry._tag !== "File") {
-				return yield* Effect.die(VolumeInvariantError.make({ message: "MemoryFileSystem.linkInode produced a non-file inode" }));
-			}
-			entry = linkedEntry;
+			nextState = yield* linkInode(nextState, parent.inode, parent.name, inode, "open");
+			entry = O.getOrThrow(O.filter(HashMap.get(nextState.inodes, inode), S.is(FileInode)));
 		}
 
 		const fd = FileDescriptor.make(nextState.nextDescriptor);
@@ -1757,21 +1690,19 @@ const openDescriptor: (
 });
 
 const closeDescriptorUnlocked = (state: State, fd: FileDescriptor): State => {
-	const descriptor = O.getOrUndefined(HashMap.get(state.descriptors, fd));
-	if (descriptor === undefined) return state;
+	const descriptor = O.getOrThrow(HashMap.get(state.descriptors, fd));
 	let nextState = {
 		...state,
 		descriptors: HashMap.remove(state.descriptors, fd),
 	};
-	const entry = findInode(nextState, descriptor.inode);
-	if (entry === undefined) return nextState;
+	const entry = O.getOrThrow(HashMap.get(nextState.inodes, descriptor.inode));
 	const nextEntry = { ...entry, openCount: entry.openCount - 1 };
 	nextState = setInode(nextState, nextEntry);
 	return reclaimInode(nextState, nextEntry);
 };
 
-// NOTE: Closing is idempotent so a scope finalizer cannot decrement an inode's
-// open-reference count more than once.
+// NOTE: Scope invokes each descriptor finalizer once, so closing decrements
+// the retained inode's open-reference count exactly once.
 const closeDescriptor = Effect.fnUntraced(function* (volume: Volume, fd: FileDescriptor) {
 	return yield* volume.mutate((state) =>
 		Effect.succeed(transitionResult(closeDescriptorUnlocked(state, fd), undefined)),
@@ -1793,9 +1724,7 @@ const fileInfo = (entry: InodeEntry): FileSystem.File.Info => ({
 	size: ByteSize.bytes(
 		entry._tag === "File"
 			? entry.data.length
-			: entry._tag === "SymbolicLink"
-				? new TextEncoder().encode(entry.target).length
-				: 0,
+			: 0,
 	),
 	blksize: O.none(),
 	blocks: O.none(),
@@ -1893,11 +1822,11 @@ const writeDescriptor = (volume: Volume, fd: FileDescriptor, buffer: Uint8Array,
 		Effect.fnUntraced(function* (state) {
 			const [nextState, written] = yield* writeDescriptorUnlocked(state, fd, buffer, method);
 			if (written === 0) return transitionResult(nextState, written);
-			const descriptor = O.getOrUndefined(HashMap.get(nextState.descriptors, fd));
+			const descriptor = O.getOrThrow(HashMap.get(nextState.descriptors, fd));
 			return transitionResult(
 				nextState,
 				written,
-				descriptor === undefined ? [] : inodeUpdateEvents(nextState, descriptor.inode),
+				inodeUpdateEvents(nextState, descriptor.inode),
 			);
 		}),
 	);
@@ -2037,21 +1966,19 @@ const collectDirectoryEntries = (
 	}
 	const frames: Array<Frame> = [{ names: A.sort(HashMap.keys(directory.entries), Order.String), directory, prefix, index: 0 }];
 	while (frames.length > 0) {
-		const frame = frames[frames.length - 1];
-		if (frame === undefined) break;
+		const frame = O.getOrThrow(A.last(frames));
 		if (frame.index >= frame.names.length) {
 			frames.pop();
 			continue;
 		}
-		const name = frame.names[frame.index];
+		const name = O.getOrThrow(A.get(frame.names, frame.index));
 		frame.index += 1;
-		if (name === undefined) continue;
 		const relativePath = frame.prefix.length === 0 ? name : `${frame.prefix}/${name}`;
 		output.push(relativePath);
 		if (!recursive) continue;
 		// KIT EXTENSION (case folding): `name` is a stored key; exact hit.
-		const inode = findEntry(state, frame.directory, name);
-		const child = inode === undefined ? undefined : findInode(state, inode);
+		const inode = O.getOrThrow(HashMap.get(frame.directory.entries, name));
+		const child = O.getOrThrow(HashMap.get(state.inodes, inode));
 		if (child?._tag === "Directory") {
 			frames.push({
 				names: A.sort(HashMap.keys(child.entries), Order.String),
@@ -2355,7 +2282,7 @@ const makeTempFileScoped =
 	}) =>
 		Effect.acquireRelease(makeTempFileWithMethod(volume, "makeTempFileScoped", options), (path) => {
 			const separator = path.lastIndexOf("/");
-			const directory = separator <= 0 ? "/" : path.slice(0, separator);
+			const directory = path.slice(0, separator);
 			return Effect.orDie(remove(volume)(directory, { recursive: true, force: true }));
 		});
 
@@ -2512,10 +2439,8 @@ const expandBraces = (method: string, pattern: string) => {
 	while (true) {
 		const index = patterns.findIndex((pattern) => findBraceExpansion(pattern) !== undefined);
 		if (index === -1) return Effect.succeed(patterns);
-		const current = patterns[index];
-		if (current === undefined) return Effect.succeed(patterns);
-		const expansion = findBraceExpansion(current);
-		if (expansion === undefined) return Effect.succeed(patterns);
+		const current = O.getOrThrow(A.get(patterns, index));
+		const expansion = O.getOrThrow(O.fromUndefinedOr(findBraceExpansion(current)));
 		if (patterns.length - 1 + expansion.alternatives.length > MAX_BRACE_EXPANSIONS) {
 			return Effect.fail(argumentError(method, `brace expansion exceeds ${MAX_BRACE_EXPANSIONS} alternatives`));
 		}
@@ -2553,8 +2478,7 @@ const parseCharacterClass = (method: string, segment: string, start: number) => 
 	const literals: Array<string> = [];
 	const ranges: Array<readonly [string, string]> = [];
 	for (let characterIndex = 0; characterIndex < characters.length; characterIndex++) {
-		const character = characters[characterIndex];
-		if (character === undefined) continue;
+		const character = O.getOrThrow(A.get(characters, characterIndex));
 		const separator = characters[characterIndex + 1];
 		const rangeEnd = characters[characterIndex + 2];
 		if (
@@ -2642,10 +2566,9 @@ const compileGlobPatterns = Effect.fnUntraced(function* (method: string, pattern
 // the way a case-insensitive regex does — a literal compares folded, and a
 // character class accepts the value in either case. Host-proven: node's
 // `fs.glob` on a folding volume matches `*.JSON` against a stored `docs.json`.
-const matchesGlobToken = (token: GlobToken, value: string, fold = false): boolean =>
-	GlobToken.match(token, {
+const matchesGlobToken = (token: Exclude<GlobToken, GlobStar>, value: string, fold = false): boolean =>
+	Match.value(token).pipe(Match.tagsExhaustive({
 		Literal: (token) => token.value === value || (fold && token.value.toLowerCase() === value.toLowerCase()),
-		Star: () => false,
 		One: () => true,
 		CharacterClass: (token) => {
 			const inClass = (candidate: string) =>
@@ -2654,7 +2577,7 @@ const matchesGlobToken = (token: GlobToken, value: string, fold = false): boolea
 			const matches = inClass(value) || (fold && (inClass(value.toLowerCase()) || inClass(value.toUpperCase())));
 			return token.negated ? !matches : matches;
 		},
-	});
+	}));
 
 // KIT EXTENSION (case folding): `fold`, see matchesGlobToken.
 const matchesGlobSegment = (pattern: GlobSegment, value: string, fold = false): boolean => {
@@ -2697,8 +2620,7 @@ const matchesGlob = (
 	let next = A.makeBy(path.length + 1, (index) => index === path.length);
 	for (let patternIndex = pattern.segments.length - 1; patternIndex >= 0; patternIndex--) {
 		const current = A.makeBy(path.length + 1, () => false);
-		const segment = pattern.segments[patternIndex];
-		if (segment === undefined) continue;
+		const segment = O.getOrThrow(A.get(pattern.segments, patternIndex));
 		if (segment._tag === "Globstar") {
 			for (let pathIndex = path.length; pathIndex >= 0; pathIndex--) {
 				current[pathIndex] =
@@ -2745,14 +2667,13 @@ const glob = (volume: Volume) =>
 				const matches: Array<string> = includes.some((pattern) => matchesGlob(pattern, [], true, fold)) ? ["."] : [];
 				const pending: Array<readonly [DirectoryInode, ReadonlyArray<string>]> = [[resolved.entry, []]];
 				while (pending.length > 0) {
-					const next = pending.pop();
-					if (next === undefined) break;
+					const next = O.getOrThrow(O.fromUndefinedOr(pending.pop()));
 					const [directory, parent] = next;
 					for (const name of A.sort(HashMap.keys(directory.entries), Order.String)) {
 						const path = [...parent, name];
 						// KIT EXTENSION (case folding): folded lookup.
-						const inode = findEntry(state, directory, name);
-						const entry = inode === undefined ? undefined : findInode(state, inode);
+						const inode = O.getOrThrow(HashMap.get(directory.entries, name));
+						const entry = O.getOrThrow(HashMap.get(state.inodes, inode));
 						const isDirectory = entry?._tag === "Directory";
 						const excluded = excludes.some((pattern) => matchesGlob(pattern, path, isDirectory, fold));
 						if (!excluded && includes.some((pattern) => matchesGlob(pattern, path, isDirectory, fold))) {
@@ -3023,10 +2944,7 @@ const snapshotOf = (path: string, entry: InodeEntry): VolumeEntrySnapshot => ({
 
 const collectEntrySnapshots = (state: State): Array<VolumeEntrySnapshot> => {
 	const output: Array<VolumeEntrySnapshot> = [];
-	const root = findInode(state, RootInode);
-	if (root === undefined || root._tag !== "Directory") {
-		return output;
-	}
+	const root = O.getOrThrow(O.filter(HashMap.get(state.inodes, RootInode), S.is(DirectoryInode)));
 	// The root itself, which the walk below never reaches — it starts FROM the
 	// root and reports descendants. Emitting it lets the inspection view answer
 	// `has`/`isDirectory`/`mtime` for "/" from real state rather than a
@@ -3043,21 +2961,16 @@ const collectEntrySnapshots = (state: State): Array<VolumeEntrySnapshot> => {
 		{ names: A.sort(HashMap.keys(root.entries), Order.String), directory: root, prefix: "", index: 0 },
 	];
 	while (frames.length > 0) {
-		const frame = frames[frames.length - 1];
-		if (frame === undefined) break;
+		const frame = O.getOrThrow(A.last(frames));
 		if (frame.index >= frame.names.length) {
 			frames.pop();
 			continue;
 		}
-		const name = frame.names[frame.index];
+		const name = O.getOrThrow(A.get(frame.names, frame.index));
 		frame.index += 1;
-		if (name === undefined) continue;
 		// KIT EXTENSION (case folding): `name` is a stored key; exact hit.
-		const inode = findEntry(state, frame.directory, name);
-		const entry = inode === undefined ? undefined : findInode(state, inode);
-		if (entry === undefined) {
-			continue;
-		}
+		const inode = O.getOrThrow(HashMap.get(frame.directory.entries, name));
+		const entry = O.getOrThrow(HashMap.get(state.inodes, inode));
 		const path = `${frame.prefix}/${name}`;
 		output.push(snapshotOf(path, entry));
 		if (entry._tag === "Directory") {

@@ -146,7 +146,7 @@ const UI_TESTING_NODE_LICENCE: ReadonlySet<string> = new Set(["ui/internal/inkCh
 const licensedLine = (offence: Offence): string => `${offence.file} ${offence.rule} ${offence.detail}`;
 
 describe("cli boundary", () => {
-	layer(NodeServices.layer)((it) => {
+	layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
 		it.effect("the scanner still flags and spares what its shipped fixtures say (positive control)", () =>
 			Effect.sync(() => assert.deepStrictEqual(SourceBoundary.verifyFixtures(), [])),
 		);

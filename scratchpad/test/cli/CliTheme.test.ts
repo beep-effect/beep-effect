@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";
@@ -8,128 +7,204 @@ import * as Effect from "effect/Effect";
 import { Prompt } from "effect/cli";
 import type { NamedColor, Style, TokenName } from "../../effected/cli/index.ts";
 import { CliTheme, Status, Token } from "../../effected/cli/index.ts";
+import * as Layer from "effect/Layer";
+import * as Context from "effect/Context";
 
 const Json = S.fromJsonString(S.Unknown);
 
 const env = (color: "none" | "basic" | "256" | "truecolor") => TerminalEnv.layerTest({ stdout: { color } });
 
 describe("CliTheme.paint", () => {
-	it.effect("returns the text unchanged at none", () =>
-		Effect.gen(function* () {
-			const theme = yield* CliTheme;
-			assert.strictEqual(theme.paint("failure", "x"), "x");
-			assert.strictEqual(theme.paint(Token.hex("#e09a4e"), "x"), "x");
-		}).pipe(Effect.provide(CliTheme.layerTest({ color: "none" }))),
-	);
-
-	it.effect("paints a token at basic, closing with its own code", () =>
-		Effect.gen(function* () {
-			const theme = yield* CliTheme;
-			assert.strictEqual(theme.paint("failure", "x"), "\x1b[31mx\x1b[39m");
-			assert.strictEqual(theme.paint("success", "x"), "\x1b[32mx\x1b[39m");
-			assert.strictEqual(theme.paint("error", "x"), "\x1b[1m\x1b[31mx\x1b[39m\x1b[22m");
-			assert.strictEqual(theme.paint("muted", "x"), "\x1b[2mx\x1b[22m");
-			assert.strictEqual(theme.paint("emphasis", "x"), "\x1b[1mx\x1b[22m");
-			assert.strictEqual(theme.paint("accent", "x"), "\x1b[36mx\x1b[39m");
-			assert.strictEqual(theme.paint("info", "x"), "\x1b[36mx\x1b[39m");
-			assert.strictEqual(theme.paint("warning", "x"), "\x1b[33mx\x1b[39m");
-		}).pipe(Effect.provide(CliTheme.layerTest({ color: "basic" }))),
-	);
-
-	it.effect("paints an explicit style with truecolor", () =>
-		Effect.gen(function* () {
-			const theme = yield* CliTheme;
-			assert.strictEqual(theme.paint(Token.hex("#e09a4e"), "x"), "\x1b[38;2;224;154;78mx\x1b[39m");
-		}).pipe(Effect.provide(CliTheme.layerTest({ color: "truecolor" }))),
-	);
-});
-
-describe("CliTheme.layer", () => {
-	it.effect("reads the colour level from TerminalEnv: none paints plain", () =>
-		Effect.gen(function* () {
-			const theme = yield* CliTheme;
-			assert.strictEqual(theme.color, "none");
-			assert.strictEqual(theme.paint("failure", "x"), "x");
-		}).pipe(Effect.provide(CliTheme.layer({ glyphs: "unicode" })), Effect.provide(env("none"))),
-	);
-
-	it.effect("reads 256 from TerminalEnv", () =>
-		Effect.gen(function* () {
-			const theme = yield* CliTheme;
-			assert.strictEqual(theme.color, "256");
-			assert.strictEqual(theme.paint(Token.hex("#ff0000"), "x"), "\x1b[38;5;196mx\x1b[39m");
-		}).pipe(Effect.provide(CliTheme.layer({ glyphs: "unicode" })), Effect.provide(env("256"))),
-	);
-
-	it.effect("token overrides replace a default and leave the rest", () =>
-		Effect.gen(function* () {
-			const theme = yield* CliTheme;
-			assert.strictEqual(theme.paint("failure", "x"), "\x1b[35mx\x1b[39m");
-			assert.strictEqual(theme.paint("success", "x"), "\x1b[32mx\x1b[39m");
-		}).pipe(
-			Effect.provide(CliTheme.layer({ glyphs: "unicode", tokens: { failure: Token.named("magenta") } })),
-			Effect.provide(env("basic")),
-		),
-	);
-
-	describe("glyphs auto", () => {
-		const glyphsUnder = (term: Record<string, string>) =>
+	it.layer(CliTheme.layerTest({ color: "none" }), { timeout: "30 seconds" })((it) => {
+		it.effect("returns the text unchanged at none", () =>
 			Effect.gen(function* () {
-				return (yield* CliTheme).glyphs.kind;
-			}).pipe(
-				Effect.provide(CliTheme.layer({ glyphs: "auto" })),
-				Effect.provide(env("none")),
-				Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(term)),
-			);
-
-		it.effect("is ascii only when TERM=dumb", () =>
-			Effect.gen(function* () {
-				assert.strictEqual(yield* glyphsUnder({ TERM: "dumb" }), "ascii");
-				assert.strictEqual(yield* glyphsUnder({ TERM: "xterm-256color" }), "unicode");
-				assert.strictEqual(yield* glyphsUnder({}), "unicode");
+				const theme = yield* CliTheme;
+				assert.strictEqual(theme.paint("failure", "x"), "x");
+				assert.strictEqual(theme.paint(Token.hex("#e09a4e"), "x"), "x");
 			}),
 		);
 	});
 
-	it.effect("explicit glyphs ignore TERM", () =>
-		Effect.gen(function* () {
-			assert.strictEqual((yield* CliTheme).glyphs.kind, "ascii");
-		}).pipe(
-			Effect.provide(CliTheme.layer({ glyphs: "ascii" })),
-			Effect.provide(env("none")),
-			Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ TERM: "xterm" })),
-		),
-	);
+	it.layer(CliTheme.layerTest({ color: "basic" }), { timeout: "30 seconds" })((it) => {
+		it.effect("paints a token at basic, closing with its own code", () =>
+			Effect.gen(function* () {
+				const theme = yield* CliTheme;
+				assert.strictEqual(theme.paint("failure", "x"), "\x1b[31mx\x1b[39m");
+				assert.strictEqual(theme.paint("success", "x"), "\x1b[32mx\x1b[39m");
+				assert.strictEqual(theme.paint("error", "x"), "\x1b[1m\x1b[31mx\x1b[39m\x1b[22m");
+				assert.strictEqual(theme.paint("muted", "x"), "\x1b[2mx\x1b[22m");
+				assert.strictEqual(theme.paint("emphasis", "x"), "\x1b[1mx\x1b[22m");
+				assert.strictEqual(theme.paint("accent", "x"), "\x1b[36mx\x1b[39m");
+				assert.strictEqual(theme.paint("info", "x"), "\x1b[36mx\x1b[39m");
+				assert.strictEqual(theme.paint("warning", "x"), "\x1b[33mx\x1b[39m");
+			}),
+		);
+	});
+
+	it.layer(CliTheme.layerTest({ color: "truecolor" }), { timeout: "30 seconds" })((it) => {
+		it.effect("paints an explicit style with truecolor", () =>
+			Effect.gen(function* () {
+				const theme = yield* CliTheme;
+				assert.strictEqual(theme.paint(Token.hex("#e09a4e"), "x"), "\x1b[38;2;224;154;78mx\x1b[39m");
+			}),
+		);
+	});
 });
 
-describe("CliTheme.status", () => {
+describe("CliTheme.layer", () => {
+	it.layer(CliTheme.layer({ glyphs: "unicode" }).pipe(Layer.provide(env("none"))), { timeout: "30 seconds" })((it) => {
+		it.effect("reads the colour level from TerminalEnv: none paints plain", () =>
+			Effect.gen(function* () {
+				const theme = yield* CliTheme;
+				assert.strictEqual(theme.color, "none");
+				assert.strictEqual(theme.paint("failure", "x"), "x");
+			}),
+		);
+	});
+
+	it.layer(CliTheme.layer({ glyphs: "unicode" }).pipe(Layer.provide(env("256"))), { timeout: "30 seconds" })((it) => {
+		it.effect("reads 256 from TerminalEnv", () =>
+			Effect.gen(function* () {
+				const theme = yield* CliTheme;
+				assert.strictEqual(theme.color, "256");
+				assert.strictEqual(theme.paint(Token.hex("#ff0000"), "x"), "\x1b[38;5;196mx\x1b[39m");
+			}),
+		);
+	});
+
+	it.layer(
+		CliTheme.layer({ glyphs: "unicode", tokens: { failure: Token.named("magenta") } }).pipe(
+			Layer.provide(env("basic")),
+		),
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("token overrides replace a default and leave the rest", () =>
+			Effect.gen(function* () {
+				const theme = yield* CliTheme;
+				assert.strictEqual(theme.paint("failure", "x"), "\x1b[35mx\x1b[39m");
+				assert.strictEqual(theme.paint("success", "x"), "\x1b[32mx\x1b[39m");
+			}),
+		);
+	});
+
+	class DumbGlyphs extends Context.Service<DumbGlyphs, string>()(
+		"@beep/scratchpad/test/cli/CliTheme.test/DumbGlyphs",
+	) {}
+	class XtermGlyphs extends Context.Service<XtermGlyphs, string>()(
+		"@beep/scratchpad/test/cli/CliTheme.test/XtermGlyphs",
+	) {}
+	class MissingGlyphs extends Context.Service<MissingGlyphs, string>()(
+		"@beep/scratchpad/test/cli/CliTheme.test/MissingGlyphs",
+	) {}
+	const glyphsLayer = <Id>(service: Context.Service<Id, string>, term: Record<string, string>) =>
+		Layer.effect(
+			service,
+			Effect.map(CliTheme, (theme) => theme.glyphs.kind),
+		).pipe(
+			Layer.provide(
+				CliTheme.layer({ glyphs: "auto" }).pipe(
+					Layer.provide(env("none")),
+					Layer.provide(Layer.succeed(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(term))),
+				),
+			),
+		);
+	it.layer(
+		Layer.mergeAll(
+			glyphsLayer(DumbGlyphs, { TERM: "dumb" }),
+			glyphsLayer(XtermGlyphs, { TERM: "xterm-256color" }),
+			glyphsLayer(MissingGlyphs, {}),
+		),
+		{ timeout: "30 seconds" },
+	)("glyphs auto", (it) => {
+		it.effect("is ascii only when TERM=dumb", () =>
+			Effect.gen(function* () {
+				assert.strictEqual(yield* DumbGlyphs, "ascii");
+				assert.strictEqual(yield* XtermGlyphs, "unicode");
+				assert.strictEqual(yield* MissingGlyphs, "unicode");
+			}),
+		);
+	});
+
+	it.layer(
+		CliTheme.layer({ glyphs: "ascii" }).pipe(
+			Layer.provide(env("none")),
+			Layer.provide(Layer.succeed(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ TERM: "xterm" }))),
+		),
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("explicit glyphs ignore TERM", () =>
+			Effect.gen(function* () {
+				assert.strictEqual((yield* CliTheme).glyphs.kind, "ascii");
+			}),
+		);
+	});
+});
+
+class UnicodeTheme extends Context.Service<UnicodeTheme, Context.Service.Shape<typeof CliTheme>>()(
+	"@beep/scratchpad/test/cli/CliTheme.test/UnicodeTheme",
+) {}
+class AsciiTheme extends Context.Service<AsciiTheme, Context.Service.Shape<typeof CliTheme>>()(
+	"@beep/scratchpad/test/cli/CliTheme.test/AsciiTheme",
+) {}
+it.layer(
+	Layer.mergeAll(
+		Layer.effect(UnicodeTheme, CliTheme).pipe(Layer.provide(CliTheme.layerTest({ color: "none", glyphs: "unicode" }))),
+		Layer.effect(AsciiTheme, CliTheme).pipe(Layer.provide(CliTheme.layerTest({ color: "none", glyphs: "ascii" }))),
+	),
+	{ timeout: "30 seconds" },
+)("CliTheme.status", (it) => {
 	it.effect("renders glyph and text at none, in unicode and in ascii", () =>
 		Effect.gen(function* () {
-			const unicode = yield* Effect.provide(CliTheme, CliTheme.layerTest({ color: "none", glyphs: "unicode" }));
-			const ascii = yield* Effect.provide(CliTheme, CliTheme.layerTest({ color: "none", glyphs: "ascii" }));
+			const unicode = yield* UnicodeTheme;
+			const ascii = yield* AsciiTheme;
 			assert.strictEqual(unicode.status(Status.core, "failure", "boom"), "✗ boom");
 			assert.strictEqual(ascii.status(Status.core, "failure", "boom"), "[FAIL] boom");
 			assert.strictEqual(unicode.status(Status.core, "success"), "✓");
 		}),
 	);
 
-	it.effect("paints the glyph with the status token, and supports an extended vocabulary", () =>
-		Effect.gen(function* () {
-			const theme = yield* CliTheme;
-			assert.strictEqual(theme.status(Status.core, "failure", "boom"), "\x1b[31m✗\x1b[39m boom");
-			const vocab = Status.extend({ timeout: { glyph: "⧖", ascii: "[time]", token: Token.hex("#e09a4e"), rank: 85 } });
-			assert.strictEqual(theme.status(vocab, "timeout", "slow"), "\x1b[38;2;224;154;78m⧖\x1b[39m slow");
-		}).pipe(Effect.provide(CliTheme.layerTest({ color: "truecolor" }))),
-	);
+	it.layer(CliTheme.layerTest({ color: "truecolor" }), { timeout: "30 seconds" })((it) => {
+		it.effect("paints the glyph with the status token, and supports an extended vocabulary", () =>
+			Effect.gen(function* () {
+				const theme = yield* CliTheme;
+				assert.strictEqual(theme.status(Status.core, "failure", "boom"), "\x1b[31m✗\x1b[39m boom");
+				const vocab = Status.extend({
+					timeout: { glyph: "⧖", ascii: "[time]", token: Token.hex("#e09a4e"), rank: 85 },
+				});
+				assert.strictEqual(theme.status(vocab, "timeout", "slow"), "\x1b[38;2;224;154;78m⧖\x1b[39m slow");
+			}),
+		);
+	});
 });
 
-describe("CliTheme.promptTheme", () => {
-	const promptThemeUnder = (color: "none" | "basic", glyphs: "unicode" | "ascii" = "unicode") =>
-		Prompt.Theme.pipe(Effect.provide(CliTheme.promptTheme), Effect.provide(CliTheme.layerTest({ color, glyphs })));
-
+class NonePrompt extends Context.Service<NonePrompt, Prompt.Theme>()(
+	"@beep/scratchpad/test/cli/CliTheme.test/NonePrompt",
+) {}
+class BasicPrompt extends Context.Service<BasicPrompt, Prompt.Theme>()(
+	"@beep/scratchpad/test/cli/CliTheme.test/BasicPrompt",
+) {}
+class AsciiPrompt extends Context.Service<AsciiPrompt, Prompt.Theme>()(
+	"@beep/scratchpad/test/cli/CliTheme.test/AsciiPrompt",
+) {}
+const promptLayer = <Id>(
+	service: Context.Service<Id, Prompt.Theme>,
+	color: "none" | "basic",
+	glyphs: "unicode" | "ascii",
+) =>
+	Layer.effect(service, Prompt.Theme).pipe(
+		Layer.provide(Layer.fresh(CliTheme.promptTheme.pipe(Layer.provide(CliTheme.layerTest({ color, glyphs }))))),
+	);
+it.layer(
+	Layer.mergeAll(
+		promptLayer(NonePrompt, "none", "unicode"),
+		promptLayer(BasicPrompt, "basic", "unicode"),
+		promptLayer(AsciiPrompt, "none", "ascii"),
+	),
+	{ timeout: "30 seconds" },
+)("CliTheme.promptTheme", (it) => {
 	it.effect("has empty colour fields when colour is none", () =>
 		Effect.gen(function* () {
-			const theme = yield* promptThemeUnder("none");
+			const theme = yield* NonePrompt;
 			for (const field of ["primaryColor", "mutedColor", "successColor", "errorColor", "submittedColor"] as const) {
 				assert.strictEqual(theme[field], "", field);
 			}
@@ -138,7 +213,7 @@ describe("CliTheme.promptTheme", () => {
 
 	it.effect("carries raw SGR openers from the tokens otherwise", () =>
 		Effect.gen(function* () {
-			const theme = yield* promptThemeUnder("basic");
+			const theme = yield* BasicPrompt;
 			assert.strictEqual(theme.primaryColor, "\x1b[36m");
 			assert.strictEqual(theme.successColor, "\x1b[32m");
 			assert.strictEqual(theme.errorColor, "\x1b[1m\x1b[31m");
@@ -148,43 +223,51 @@ describe("CliTheme.promptTheme", () => {
 
 	it.effect("takes its ellipsis from the glyph set", () =>
 		Effect.gen(function* () {
-			assert.strictEqual((yield* promptThemeUnder("none", "ascii")).ellipsis, "...");
-			assert.strictEqual((yield* promptThemeUnder("none", "unicode")).ellipsis, "…");
+			assert.strictEqual((yield* AsciiPrompt).ellipsis, "...");
+			assert.strictEqual((yield* NonePrompt).ellipsis, "…");
 		}),
 	);
 });
 
 describe("CliTheme.forStream", () => {
-	it.effect("each stream paints with its own colour level; the top-level members are the stdout ones", () =>
-		Effect.gen(function* () {
-			const theme = yield* CliTheme;
-			assert.strictEqual(theme.forStream("stdout").color, "truecolor");
-			assert.strictEqual(theme.forStream("stderr").color, "none");
-			assert.strictEqual(theme.forStream("stdout").paint("failure", "x"), "\x1b[31mx\x1b[39m");
-			assert.strictEqual(theme.forStream("stderr").paint("failure", "x"), "x");
-			assert.strictEqual(theme.forStream("stderr").sgr("failure"), "");
-			assert.strictEqual(theme.forStream("stderr").status(Status.core, "failure", "boom"), "✗ boom");
-			assert.strictEqual(theme.color, "truecolor");
-			assert.strictEqual(theme.paint("failure", "x"), theme.forStream("stdout").paint("failure", "x"));
-		}).pipe(Effect.provide(CliTheme.layerTest({ color: "truecolor", stderrColor: "none" }))),
-	);
+	it.layer(CliTheme.layerTest({ color: "truecolor", stderrColor: "none" }), { timeout: "30 seconds" })((it) => {
+		it.effect("each stream paints with its own colour level; the top-level members are the stdout ones", () =>
+			Effect.gen(function* () {
+				const theme = yield* CliTheme;
+				assert.strictEqual(theme.forStream("stdout").color, "truecolor");
+				assert.strictEqual(theme.forStream("stderr").color, "none");
+				assert.strictEqual(theme.forStream("stdout").paint("failure", "x"), "\x1b[31mx\x1b[39m");
+				assert.strictEqual(theme.forStream("stderr").paint("failure", "x"), "x");
+				assert.strictEqual(theme.forStream("stderr").sgr("failure"), "");
+				assert.strictEqual(theme.forStream("stderr").status(Status.core, "failure", "boom"), "✗ boom");
+				assert.strictEqual(theme.color, "truecolor");
+				assert.strictEqual(theme.paint("failure", "x"), theme.forStream("stdout").paint("failure", "x"));
+			}),
+		);
+	});
 
-	it.effect("layer reads stdout and stderr colour from TerminalEnv separately", () =>
-		Effect.gen(function* () {
-			const theme = yield* CliTheme;
-			assert.strictEqual(theme.forStream("stdout").color, "256");
-			assert.strictEqual(theme.forStream("stderr").color, "none");
-		}).pipe(
-			Effect.provide(CliTheme.layer({ glyphs: "unicode" })),
-			Effect.provide(TerminalEnv.layerTest({ stdout: { color: "256" }, stderr: { color: "none" } })),
+	it.layer(
+		CliTheme.layer({ glyphs: "unicode" }).pipe(
+			Layer.provide(TerminalEnv.layerTest({ stdout: { color: "256" }, stderr: { color: "none" } })),
 		),
-	);
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("layer reads stdout and stderr colour from TerminalEnv separately", () =>
+			Effect.gen(function* () {
+				const theme = yield* CliTheme;
+				assert.strictEqual(theme.forStream("stdout").color, "256");
+				assert.strictEqual(theme.forStream("stderr").color, "none");
+			}),
+		);
+	});
 
-	it.effect("layerTest gives stderr the stdout colour unless told otherwise", () =>
-		Effect.gen(function* () {
-			assert.strictEqual((yield* CliTheme).forStream("stderr").color, "basic");
-		}).pipe(Effect.provide(CliTheme.layerTest({ color: "basic" }))),
-	);
+	it.layer(CliTheme.layerTest({ color: "basic" }), { timeout: "30 seconds" })((it) => {
+		it.effect("layerTest gives stderr the stdout colour unless told otherwise", () =>
+			Effect.gen(function* () {
+				assert.strictEqual((yield* CliTheme).forStream("stderr").color, "basic");
+			}),
+		);
+	});
 });
 
 /** The SGR parameters of a painted token, decoded without the kit's own colour table: what a terminal would show. */
@@ -241,46 +324,56 @@ const tokenNames: ReadonlyArray<TokenName> = [
 ];
 
 describe("Token.resolve agrees with what CliTheme.paint renders", () => {
-	it.effect("for every token, decoding the SGR gives the resolved style (basic, default tokens)", () =>
-		Effect.gen(function* () {
-			const theme = yield* CliTheme;
-			for (const token of tokenNames) {
-				const resolved = Token.resolve(token);
-				const painted = theme.paint(token, "x");
-				// Without the name-to-number table the default styles are all named colours and attributes.
-				assert.deepStrictEqual(decode(painted), { ...resolved }, `${token}: ${Result.getOrThrow(S.encodeUnknownResult(Json)(painted))}`);
-			}
-		}).pipe(Effect.provide(CliTheme.layerTest({ color: "basic" }))),
-	);
-
-	it.effect("with overrides, StreamTheme.style is the resolved style paint uses, on both streams", () =>
-		Effect.gen(function* () {
-			const theme = yield* CliTheme;
-			const overrides = { success: { fg: "#102030", bold: true }, muted: { fg: "magentaBright" } } as const;
-			for (const stream of ["stdout", "stderr"] as const) {
-				const view = theme.forStream(stream);
+	it.layer(CliTheme.layerTest({ color: "basic" }), { timeout: "30 seconds" })((it) => {
+		it.effect("for every token, decoding the SGR gives the resolved style (basic, default tokens)", () =>
+			Effect.gen(function* () {
+				const theme = yield* CliTheme;
 				for (const token of tokenNames) {
-					const resolved = Token.resolve(token, overrides);
-					assert.deepStrictEqual(view.style(token), resolved, `${stream} ${token}`);
-					assert.deepStrictEqual(decode(view.paint(token, "x")), { ...resolved }, `${stream} ${token}`);
+					const resolved = Token.resolve(token);
+					const painted = theme.paint(token, "x");
+					// Without the name-to-number table the default styles are all named colours and attributes.
+					assert.deepStrictEqual(
+						decode(painted),
+						{ ...resolved },
+						`${token}: ${Result.getOrThrow(S.encodeUnknownResult(Json)(painted))}`,
+					);
 				}
-			}
-			const explicit: Style = { fg: "#abcdef", italic: true };
-			assert.deepStrictEqual(theme.style(explicit), explicit);
-			assert.deepStrictEqual(decode(theme.paint(explicit, "x")), explicit);
-		}).pipe(
-			Effect.provide(
-				CliTheme.layer({ tokens: { success: { fg: "#102030", bold: true }, muted: { fg: "magentaBright" } } }),
-			),
-			Effect.provide(TerminalEnv.layerTest({ stdout: { color: "truecolor" }, stderr: { color: "truecolor" } })),
-		),
-	);
+			}),
+		);
+	});
 
-	it.effect("style is independent of the colour level: none still reports the style that would be painted", () =>
-		Effect.gen(function* () {
-			const theme = yield* CliTheme;
-			assert.deepStrictEqual(theme.style("failure"), Token.defaults.failure);
-			assert.strictEqual(theme.paint("failure", "x"), "x");
-		}).pipe(Effect.provide(CliTheme.layerTest({ color: "none" }))),
-	);
+	it.layer(
+		CliTheme.layer({ tokens: { success: { fg: "#102030", bold: true }, muted: { fg: "magentaBright" } } }).pipe(
+			Layer.provide(TerminalEnv.layerTest({ stdout: { color: "truecolor" }, stderr: { color: "truecolor" } })),
+		),
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("with overrides, StreamTheme.style is the resolved style paint uses, on both streams", () =>
+			Effect.gen(function* () {
+				const theme = yield* CliTheme;
+				const overrides = { success: { fg: "#102030", bold: true }, muted: { fg: "magentaBright" } } as const;
+				for (const stream of ["stdout", "stderr"] as const) {
+					const view = theme.forStream(stream);
+					for (const token of tokenNames) {
+						const resolved = Token.resolve(token, overrides);
+						assert.deepStrictEqual(view.style(token), resolved, `${stream} ${token}`);
+						assert.deepStrictEqual(decode(view.paint(token, "x")), { ...resolved }, `${stream} ${token}`);
+					}
+				}
+				const explicit: Style = { fg: "#abcdef", italic: true };
+				assert.deepStrictEqual(theme.style(explicit), explicit);
+				assert.deepStrictEqual(decode(theme.paint(explicit, "x")), explicit);
+			}),
+		);
+	});
+
+	it.layer(CliTheme.layerTest({ color: "none" }), { timeout: "30 seconds" })((it) => {
+		it.effect("style is independent of the colour level: none still reports the style that would be painted", () =>
+			Effect.gen(function* () {
+				const theme = yield* CliTheme;
+				assert.deepStrictEqual(theme.style("failure"), Token.defaults.failure);
+				assert.strictEqual(theme.paint("failure", "x"), "x");
+			}),
+		);
+	});
 });

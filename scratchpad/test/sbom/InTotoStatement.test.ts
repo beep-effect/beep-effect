@@ -5,7 +5,7 @@
 // live in their own module rather than inside the signer.
 
 import { assert, describe, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertFailure, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -34,35 +34,38 @@ const digestOf = (value: string): Sha256Digest => {
 describe("Sha256Digest", () => {
 	it("accepts 64 lowercase hex characters", () => {
 		const parsed = Sha256Digest.parseResult(HEX);
-		assert.isTrue(Result.isSuccess(parsed));
-		assert.strictEqual(Result.isSuccess(parsed) ? parsed.success : "", HEX);
+		assertSuccess(parsed, digestOf(HEX));
+		assert.strictEqual(parsed.success, HEX);
 	});
 
 	it("strips the `sha256:` prefix a caller may have carried in", () => {
 		const parsed = Sha256Digest.parseResult(`sha256:${HEX}`);
-		assert.strictEqual(Result.isSuccess(parsed) ? parsed.success : "", HEX);
+		assertSuccess(parsed, digestOf(HEX));
+		assert.strictEqual(parsed.success, HEX);
 	});
 
 	it("normalizes uppercase hex to lowercase", () => {
 		// Both spellings name the same digest, and a subject that disagrees with a
 		// verifier on case is an attestation nobody can match.
 		const parsed = Sha256Digest.parseResult(HEX.toUpperCase());
-		assert.strictEqual(Result.isSuccess(parsed) ? parsed.success : "", HEX);
+		assertSuccess(parsed, digestOf(HEX));
+		assert.strictEqual(parsed.success, HEX);
 	});
 
 	it("rejects a digest of the wrong length", () => {
 		const parsed = Sha256Digest.parseResult(HEX.slice(0, 63));
-		assert.isTrue(Result.isFailure(parsed));
-		if (Result.isFailure(parsed)) {
-			assert.instanceOf(parsed.failure, InvalidSha256DigestError);
-			assert.strictEqual(parsed.failure.input, HEX.slice(0, 63));
-		}
+		assertFailure(parsed, InvalidSha256DigestError.make({ input: HEX.slice(0, 63) }));
+		assert.instanceOf(parsed.failure, InvalidSha256DigestError);
+		assert.strictEqual(parsed.failure.input, HEX.slice(0, 63));
 	});
 
 	it("rejects non-hex characters", () => {
 		// `g` is the discriminating character: right length, wrong alphabet.
-		assert.isTrue(Result.isFailure(Sha256Digest.parseResult(`g${HEX.slice(1)}`)));
-		assert.isTrue(Result.isFailure(Sha256Digest.parseResult("")));
+		assertFailure(
+			Sha256Digest.parseResult(`g${HEX.slice(1)}`),
+			InvalidSha256DigestError.make({ input: `g${HEX.slice(1)}` }),
+		);
+		assertFailure(Sha256Digest.parseResult(""), InvalidSha256DigestError.make({ input: "" }));
 	});
 
 	it("isValid agrees with parseResult", () => {

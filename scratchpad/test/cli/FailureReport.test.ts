@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import * as Data from "effect/Data";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
@@ -9,7 +8,7 @@ import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
+import { assertExitFailure } from "@effect/vitest/utils";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Stdio from "effect/Stdio";
@@ -23,7 +22,9 @@ const Json = S.fromJsonString(S.Unknown);
 
 class TestError extends Data.TaggedError("TestError")<{ readonly message: string; readonly cause?: unknown }> {
 	override readonly name = "Error";
-	constructor(message: string, options?: { readonly cause?: unknown }) { super({ message, ...options }); }
+	constructor(message: string, options?: { readonly cause?: unknown }) {
+		super({ message, ...options });
+	}
 }
 
 const ESC = String.fromCharCode(0x1b);
@@ -73,83 +74,89 @@ const layers = (audience: AudienceKind) => {
 	);
 };
 
-describe("the report's last resort keeps the output policy", () => {
-	/** A document whose block the renderer has no case for: the walker throws on it. */
-	class Broken extends Data.TaggedError("Broken")<{ readonly message: string }> {
-	override readonly name = "Error";
-	constructor(message = "") { super({ message }); }
+it.layer(layers("agent"), { timeout: "30 seconds" })((it) => {
+	describe("the report's last resort keeps the output policy", () => {
+		/** A document whose block the renderer has no case for: the walker throws on it. */
+		class Broken extends Data.TaggedError("Broken")<{ readonly message: string }> {
+			override readonly name = "Error";
+			constructor(message = "") {
+				super({ message });
+			}
 
-		[CliDoc](): Document {
-			return [deliberatelyInvalid<never>({ _tag: "NotABlock" })];
+			[CliDoc](): Document {
+				return [deliberatelyInvalid<never>({ _tag: "NotABlock" })];
+			}
 		}
-	}
 
-	it("control: the renderer really does throw on that document", () => {
-		const ctx = Effect.runSync(Render.context("stderr").pipe(Effect.provide(layers("agent"))));
-		assert.throws(() => Render.plain([deliberatelyInvalid<never>({ _tag: "NotABlock" })], ctx));
+		it.effect("control: the renderer really does throw on that document", () =>
+			Effect.gen(function* () {
+				const ctx = yield* Render.context("stderr");
+				assert.throws(() => Render.plain([deliberatelyInvalid<never>({ _tag: "NotABlock" })], ctx));
+			}),
+		);
+
+		it.effect("when the document cannot be rendered at all, the report is one sanitised, neutralized line", () =>
+			Effect.gen(function* () {
+				for (const env of [{ AI_AGENT: "x" }, { GITHUB_ACTIONS: "true" }, {}]) {
+					const { double, err } = capturing();
+					const message = `bad${ESC}[31m red ${ESC}]8;;http://evil\u0007x\r::error::injected\n##[add-mask]y`;
+					yield* CliRuntime.main(
+						Effect.suspend(() => Effect.fail(new Broken(message))),
+						{
+							platform,
+							env: {},
+						},
+					).pipe(
+						Effect.exit,
+						Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)),
+						Effect.provideService(Console.Console, double),
+					);
+					const text = err.join("\n");
+					assert.isAbove(err.length, 0, Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
+					assert.notInclude(text, ESC, Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
+					assert.notInclude(text, "\u0007", Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
+					assert.notInclude(text, "evil", Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
+					assert.deepStrictEqual(commandLines(text), [], Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
+					assert.include(text, "injected", "the text itself is kept");
+				}
+			}),
+		);
 	});
 
-	it.effect("when the document cannot be rendered at all, the report is one sanitised, neutralized line", () =>
-		Effect.gen(function* () {
-			for (const env of [{ AI_AGENT: "x" }, { GITHUB_ACTIONS: "true" }, {}]) {
-				const { double, err } = capturing();
-				const message = `bad${ESC}[31m red ${ESC}]8;;http://evil\u0007x\r::error::injected\n##[add-mask]y`;
-				yield* CliRuntime.main(
-					Effect.suspend(() => Effect.fail(new Broken(message))),
-					{
-						platform,
-						env: {},
-					},
-				).pipe(
-					Effect.exit,
-					Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)),
-					Effect.provideService(Console.Console, double),
-				);
-				const text = err.join("\n");
-				assert.isAbove(err.length, 0, Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
-				assert.notInclude(text, ESC, Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
-				assert.notInclude(text, "\u0007", Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
-				assert.notInclude(text, "evil", Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
-				assert.deepStrictEqual(commandLines(text), [], Result.getOrThrow(S.encodeUnknownResult(Json)(env)));
-				assert.include(text, "injected", "the text itself is kept");
-			}
-		}),
-	);
-});
+	describe("Doc.print forwards displayPath and width", () => {
+		const doc: Document = [
+			Doc.paragraph("open ", Doc.link({ file: `${USER}`, line: 3, col: 4 }, "x")),
+			Doc.paragraph(Array.from({ length: 30 }, (_, i) => `word${i}`).join(" ")),
+		];
 
-describe("Doc.print forwards displayPath and width", () => {
-	const doc: Document = [
-		Doc.paragraph("open ", Doc.link({ file: `${USER}`, line: 3, col: 4 }, "x")),
-		Doc.paragraph(Array.from({ length: 30 }, (_, i) => `word${i}`).join(" ")),
-	];
-
-	const print = Effect.fn("print")(function* (audience: AudienceKind, options: Parameters<typeof Doc.print>[1]) {
+		const print = Effect.fn("print")(function* (audience: AudienceKind, options: Parameters<typeof Doc.print>[1]) {
 			const { double, out } = capturing();
 			yield* Doc.print(doc, options).pipe(
-				Effect.provide(layers(audience)),
+				Effect.provideService(Audience, { kind: audience, source: "override" }),
 				Effect.provideService(Console.Console, double),
 			);
 			return out.join("\n");
 		});
 
-	it.effect("displayPath is applied to the link's path", () =>
-		Effect.gen(function* () {
-			const text = yield* print("agent", { displayPath: (p) => p.replace("/repo/", "") });
-			assert.include(text, "src/run.ts:3:4");
-			assert.notInclude(text, "/repo/");
-			assert.include(yield* print("agent", {}), "/repo/src/run.ts:3:4", "control: the identity without it");
-		}),
-	);
+		it.effect("displayPath is applied to the link's path", () =>
+			Effect.gen(function* () {
+				const text = yield* print("agent", { displayPath: (p) => p.replace("/repo/", "") });
+				assert.include(text, "src/run.ts:3:4");
+				assert.notInclude(text, "/repo/");
+				assert.include(yield* print("agent", {}), "/repo/src/run.ts:3:4", "control: the identity without it");
+			}),
+		);
 
-	it.effect("width is the context's, so an agent can be laid out at a width after all", () =>
-		Effect.gen(function* () {
-			const narrow = yield* print("agent", { width: 30 });
-			const longest = Math.max(...narrow.split("\n").map((line) => line.length));
-			assert.isAtMost(longest, 40);
-			const unbounded = yield* print("agent", {});
-			assert.isAbove(Math.max(...unbounded.split("\n").map((line) => line.length)), 100, "control: unbounded");
-		}),
-	);
+		it.effect("width is the context's, so an agent can be laid out at a width after all", () =>
+			Effect.gen(function* () {
+				const narrow = yield* print("agent", { width: 30 });
+				const longest = Math.max(...narrow.split("\n").map((line) => line.length));
+				assert.isAtMost(longest, 40);
+				const unbounded = yield* print("agent", {});
+				assert.isAbove(Math.max(...unbounded.split("\n").map((line) => line.length)), 100, "control: unbounded");
+			}),
+		);
+	});
 });
 
 describe("main's env.displayPath is the default report's path display", () => {
@@ -198,20 +205,23 @@ describe("a consumer render's output is untrusted text", () => {
 	];
 	const render = () => PROBE;
 
-	const reportWith = Effect.fn("reportWith")(function* (env: Record<string, string>, options: { readonly env?: boolean } = {}) {
-			const { double, err } = capturing();
-			const program = Effect.suspend(() => Effect.fail(new TestError("x")));
-			yield* (
-				options.env === false
-					? CliRuntime.main(program, { platform: Layer.empty, render })
-					: CliRuntime.main(program, { platform, env: { audienceEnvVar: "TEST_AUDIENCE" }, render })
-			).pipe(
-				Effect.exit,
-				Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)),
-				Effect.provideService(Console.Console, double),
-			);
-			return err;
-		});
+	const reportWith = Effect.fn("reportWith")(function* (
+		env: Record<string, string>,
+		options: { readonly env?: boolean } = {},
+	) {
+		const { double, err } = capturing();
+		const program = Effect.suspend(() => Effect.fail(new TestError("x")));
+		yield* (
+			options.env === false
+				? CliRuntime.main(program, { platform: Layer.empty, render })
+				: CliRuntime.main(program, { platform, env: { audienceEnvVar: "TEST_AUDIENCE" }, render })
+		).pipe(
+			Effect.exit,
+			Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)),
+			Effect.provideService(Console.Console, double),
+		);
+		return err;
+	});
 
 	it.effect("under GitHub Actions no line is a command, whatever the audience", () =>
 		Effect.gen(function* () {
@@ -309,18 +319,18 @@ describe("a consumer render's output is untrusted text", () => {
 describe("a delegating render gets the default report", () => {
 	const human = ConfigProvider.fromUnknown({ TERM: "xterm-256color", FORCE_COLOR: "3" });
 	const report = Effect.fn("report")(function* (render?: NonNullable<ReportFailuresOptions["render"]>) {
-			const { double, err } = capturing();
-			yield* CliRuntime.main(dying("kaboom"), {
-				platform,
-				env: { displayPath: (p) => p.replace("/repo/", "") },
-				...(render === undefined ? {} : { render }),
-			}).pipe(
-				Effect.exit,
-				Effect.provideService(ConfigProvider.ConfigProvider, human),
-				Effect.provideService(Console.Console, double),
-			);
-			return err;
-		});
+		const { double, err } = capturing();
+		yield* CliRuntime.main(dying("kaboom"), {
+			platform,
+			env: { displayPath: (p) => p.replace("/repo/", "") },
+			...(render === undefined ? {} : { render }),
+		}).pipe(
+			Effect.exit,
+			Effect.provideService(ConfigProvider.ConfigProvider, human),
+			Effect.provideService(Console.Console, double),
+		);
+		return err;
+	});
 
 	it.effect(
 		"details.defaultLines is the report the kit would write, painted and path-displayed: returned, it is identical",
@@ -348,19 +358,22 @@ describe("a delegating render gets the default report", () => {
 });
 
 describe("details.lines: the run's report, with or without its status (A2)", () => {
-	const run = Effect.fn("run")(function* (env: Record<string, string>, render: NonNullable<ReportFailuresOptions["render"]>) {
-			const { double, err } = capturing();
-			yield* CliRuntime.main(dying("kaboom"), {
-				platform,
-				env: { displayPath: (p) => p.replace("/repo/", "") },
-				render,
-			}).pipe(
-				Effect.exit,
-				Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)),
-				Effect.provideService(Console.Console, double),
-			);
-			return err;
-		});
+	const run = Effect.fn("run")(function* (
+		env: Record<string, string>,
+		render: NonNullable<ReportFailuresOptions["render"]>,
+	) {
+		const { double, err } = capturing();
+		yield* CliRuntime.main(dying("kaboom"), {
+			platform,
+			env: { displayPath: (p) => p.replace("/repo/", "") },
+			render,
+		}).pipe(
+			Effect.exit,
+			Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)),
+			Effect.provideService(Console.Console, double),
+		);
+		return err;
+	});
 
 	it.effect("a prefixing render keeps the run's displayPath and has no status marker", () =>
 		Effect.gen(function* () {
@@ -386,8 +399,7 @@ describe("details.lines: the run's report, with or without its status (A2)", () 
 			);
 			assert.notStrictEqual(withStatus[0], without[0], "control: the status leads lines()");
 			assert.include(without.join("\n"), "src/run.ts:3:4");
-			// biome-ignore lint/suspicious/noControlCharactersInRegex: the SGR sequences being stripped
-			const strip = (line: string | undefined) => (line ?? "").replace(/\u001b\[[0-9;]*m/g, "");
+			const strip = (line: string | undefined) => (line ?? "").replace(new RegExp(`${ESC}\\[[0-9;]*m`, "g"), "");
 			assert.strictEqual(strip(without[0]), "Error: kaboom");
 			assert.match(strip(withStatus[0]), /^\S+ Error: kaboom$/, "control: a glyph leads lines()");
 		}),
@@ -413,19 +425,22 @@ describe("main's env.stackFrames (A3)", () => {
 		error.stack = `Error: kaboom\n    at run (${USER}:3:4)\n    at vendor (${VENDOR}:7:8)`;
 		return Effect.die(error);
 	});
-	const run = Effect.fn("run")(function* (stackFrames: "app" | "all" | undefined, render?: NonNullable<ReportFailuresOptions["render"]>) {
-			const { double, err } = capturing();
-			yield* CliRuntime.main(dyingThroughVendor, {
-				platform,
-				env: { displayPath: (p) => p.replace("/repo/", ""), ...(stackFrames === undefined ? {} : { stackFrames }) },
-				...(render === undefined ? {} : { render }),
-			}).pipe(
-				Effect.exit,
-				Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ AI_AGENT: "x" })),
-				Effect.provideService(Console.Console, double),
-			);
-			return err.join("\n");
-		});
+	const run = Effect.fn("run")(function* (
+		stackFrames: "app" | "all" | undefined,
+		render?: NonNullable<ReportFailuresOptions["render"]>,
+	) {
+		const { double, err } = capturing();
+		yield* CliRuntime.main(dyingThroughVendor, {
+			platform,
+			env: { displayPath: (p) => p.replace("/repo/", ""), ...(stackFrames === undefined ? {} : { stackFrames }) },
+			...(render === undefined ? {} : { render }),
+		}).pipe(
+			Effect.exit,
+			Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ AI_AGENT: "x" })),
+			Effect.provideService(Console.Console, double),
+		);
+		return err.join("\n");
+	});
 
 	it.effect("the default report hides a node_modules frame, and shows the program's through displayPath", () =>
 		Effect.gen(function* () {
@@ -452,37 +467,38 @@ describe("main's env.stackFrames (A3)", () => {
 });
 
 describe("a report target that cannot be built falls back to plain", () => {
-	it.effect(
-		"bare reportFailures with services whose terminal width throws: the plain report, not an escaped defect",
-		() =>
-			Effect.gen(function* () {
-				const { double, err } = capturing();
-				const stream = { isTerminal: true, color: "none" as const, hyperlinks: false, columns: O.none<number>() };
-				const hostileTerminal = Layer.succeed(TerminalEnv, {
-					stdinIsTerminal: true,
-					stdout: stream,
-					stderr: stream,
-					width: () => {
-						throw new Error("width exploded");
-					},
-				});
-				const services = Layer.mergeAll(
-					hostileTerminal,
-					CliTheme.layer({ glyphs: "unicode" }).pipe(Layer.provide(TerminalEnv.layerTest())),
-					Audience.layerTest("human"),
-					CliLinks.layerTest("off"),
-				);
-				const exit = yield* Effect.fail(new TestError("disk full")).pipe(
-					CliRuntime.reportFailures(),
-					Effect.provide(services),
-					Effect.provide(CliLogger.layer()),
-					Effect.provideService(Console.Console, double),
-					Effect.exit,
-				);
-				assert.isTrue(Exit.isFailure(exit));
-				const squashed = Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined;
-				assert.include(String(squashed), "disk full", "the program's own failure, not the target's defect");
-				assert.include(err.join("\n"), "disk full");
-			}),
+	const stream = { isTerminal: true, color: "none" as const, hyperlinks: false, columns: O.none<number>() };
+	const hostileTerminal = Layer.succeed(TerminalEnv, {
+		stdinIsTerminal: true,
+		stdout: stream,
+		stderr: stream,
+		width: () => {
+			throw new Error("width exploded");
+		},
+	});
+	const services = Layer.mergeAll(
+		hostileTerminal,
+		CliTheme.layer({ glyphs: "unicode" }).pipe(Layer.provide(TerminalEnv.layerTest())),
+		Audience.layerTest("human"),
+		CliLinks.layerTest("off"),
 	);
+	it.layer(Layer.merge(services, CliLogger.layer()), { timeout: "30 seconds" })((it) => {
+		it.effect(
+			"bare reportFailures with services whose terminal width throws: the plain report, not an escaped defect",
+			() =>
+				Effect.gen(function* () {
+					const { double, err } = capturing();
+					const failure = new TestError("disk full");
+					const exit = yield* Effect.fail(failure).pipe(
+						CliRuntime.reportFailures(),
+						Effect.provideService(Console.Console, double),
+						Effect.exit,
+					);
+					assertExitFailure(exit, Cause.fail(failure));
+					const squashed = Cause.squash(exit.cause);
+					assert.include(String(squashed), "disk full", "the program's own failure, not the target's defect");
+					assert.include(err.join("\n"), "disk full");
+				}),
+		);
+	});
 });

@@ -1,4 +1,5 @@
-import { assert, describe, it, layer } from "@effect/vitest";
+import { assert, describe, it } from "@effect/vitest";
+import { assertExitFailure, assertSome } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -27,7 +28,7 @@ describe("Git.makeTest", () => {
 			// default is a defect, not a typed failure a test could swallow.
 			const double = Git.makeTest({ revParse: () => Effect.succeed("sha") });
 			const exit = yield* Effect.exit(double.status(cwd));
-			assert.isTrue(Exit.isFailure(exit));
+			assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 			if (Exit.isFailure(exit)) {
 				assert.isFalse(exit.cause.reasons.some(Cause.isFailReason));
 				assert.isTrue(Cause.hasDies(exit.cause));
@@ -133,7 +134,8 @@ describe("Git.makeTest", () => {
 				assert.isFunction(fn);
 				const effect = calls[method]();
 				const exit = yield* Effect.exit(effect);
-				assert.isTrue(Exit.isFailure(exit) && Cause.hasDies(exit.cause), `${method} should die unstubbed`);
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
+				assert.isTrue(Cause.hasDies(exit.cause), `${method} should die unstubbed`);
 			}
 		}),
 	);
@@ -151,12 +153,12 @@ const TestGit = Git.layerTest({
 });
 
 describe("Git.layerTest", () => {
-	layer(TestGit)((it) => {
+	it.layer(TestGit, { timeout: "30 seconds" })((it) => {
 		it.effect("provides the Git service with the stubbed methods answering", () =>
 			Effect.gen(function* () {
 				const git = yield* Git;
 				const shown = yield* git.show(cwd, "HEAD", "package.json");
-				assert.deepStrictEqual(shown, O.some("{}"));
+				assertSome(shown, "{}");
 				const entries = yield* git.lsTree(cwd, "HEAD");
 				assert.deepStrictEqual(
 					entries.map((entry) => entry.path),
@@ -169,8 +171,9 @@ describe("Git.layerTest", () => {
 			Effect.gen(function* () {
 				const git = yield* Git;
 				const exit = yield* Effect.exit(git.checkout(cwd, "main"));
-				assert.isTrue(Exit.isFailure(exit));
-				assert.isTrue(Exit.isFailure(exit) && Cause.hasDies(exit.cause));
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
+				assert.isTrue(Cause.hasDies(exit.cause));
 			}),
 		);
 	});

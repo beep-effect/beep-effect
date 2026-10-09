@@ -5,6 +5,7 @@ import { dual } from "effect/Function";
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
+import * as A from "effect/Array";
 import type { LintLine } from "../../YamlLintRule.ts";
 import type { YamlNode, YamlScalar } from "../../YamlNode.ts";
 import { YamlScalar as Scalar, YamlMap, YamlSeq } from "../../YamlNode.ts";
@@ -246,8 +247,7 @@ export const coveringToken: {
 	let hi = tokens.length - 1;
 	while (lo <= hi) {
 		const mid = (lo + hi) >> 1;
-		const token = tokens[mid];
-		if (token === undefined) break;
+		const token = A.getUnsafe(tokens, mid);
 		if (offset < token.offset) {
 			hi = mid - 1;
 		} else if (offset >= token.offset + token.length) {
@@ -324,8 +324,7 @@ export const positionAt: {
 	let found: LintLine | undefined;
 	while (lo <= hi) {
 		const mid = (lo + hi) >> 1;
-		const line = lines[mid];
-		if (line === undefined) break;
+		const line = A.getUnsafe(lines, mid);
 		if (line.offset <= offset) {
 			found = line;
 			lo = mid + 1;

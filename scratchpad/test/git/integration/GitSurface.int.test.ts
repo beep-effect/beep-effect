@@ -24,6 +24,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { afterAll, assert, beforeAll, describe, it } from "@effect/vitest";
+import { assertExitFailure, assertNone, assertSome, assertSuccess } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -116,7 +117,7 @@ afterAll(() => {
 	}
 });
 
-describe("Git surface — introspection repository (fixture A)", () => {
+it.layer(TestLayer, { timeout: "30 seconds" })("Git surface — introspection repository (fixture A)", (it) => {
 	let dirA: string;
 	let commit1Sha: string;
 
@@ -157,158 +158,140 @@ describe("Git surface — introspection repository (fixture A)", () => {
 	});
 
 	it.effect("nameStatus (working-tree form) reports modify, rename and add with typed statuses", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				const entries = yield* git.nameStatus(dirA, { base: "HEAD" });
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const entries = yield* git.nameStatus(dirA, { base: "HEAD" });
 
-				const modified = entries.find((entry) => entry.path === "a.txt");
-				assert.isDefined(modified);
-				assert.strictEqual(modified?.status, "modified");
+			const modified = entries.find((entry) => entry.path === "a.txt");
+			assert.isDefined(modified);
+			assert.strictEqual(modified?.status, "modified");
 
-				const renamed = entries.find((entry) => entry.path === "renamed.txt");
-				assert.isDefined(renamed);
-				assert.strictEqual(renamed?.status, "renamed");
-				assert.strictEqual(renamed?.oldPath, "sub/c.txt");
+			const renamed = entries.find((entry) => entry.path === "renamed.txt");
+			assert.isDefined(renamed);
+			assert.strictEqual(renamed?.status, "renamed");
+			assert.strictEqual(renamed?.oldPath, "sub/c.txt");
 
-				const added = entries.find((entry) => entry.path === "staged.txt");
-				assert.isDefined(added);
-				assert.strictEqual(added?.status, "added");
+			const added = entries.find((entry) => entry.path === "staged.txt");
+			assert.isDefined(added);
+			assert.strictEqual(added?.status, "added");
 
-				// untracked.txt never appears in a diff.
-				assert.isUndefined(entries.find((entry) => entry.path === "untracked.txt"));
-			}),
-		),
+			// untracked.txt never appears in a diff.
+			assert.isUndefined(entries.find((entry) => entry.path === "untracked.txt"));
+		}),
 	);
 
 	it.effect("the promoted primitives partition the working tree", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				const unstaged = yield* git.unstagedChanges(dirA);
-				const staged = yield* git.stagedChanges(dirA);
-				const untracked = yield* git.untrackedFiles(dirA);
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const unstaged = yield* git.unstagedChanges(dirA);
+			const staged = yield* git.stagedChanges(dirA);
+			const untracked = yield* git.untrackedFiles(dirA);
 
-				assert.include(unstaged, "a.txt");
-				assert.include(staged, "staged.txt");
-				// --name-only reports only the NEW path for a staged rename (unlike
-				// --name-status's three-token form, which carries the old path too) —
-				// probed against real git; "the rename pair" is visible via nameStatus
-				// above, not through this name-only primitive.
-				assert.include(staged, "renamed.txt");
-				assert.notInclude(staged, "sub/c.txt");
-				assert.deepStrictEqual(untracked, ["untracked.txt"]);
-			}),
-		),
+			assert.include(unstaged, "a.txt");
+			assert.include(staged, "staged.txt");
+			// --name-only reports only the NEW path for a staged rename (unlike
+			// --name-status's three-token form, which carries the old path too) —
+			// probed against real git; "the rename pair" is visible via nameStatus
+			// above, not through this name-only primitive.
+			assert.include(staged, "renamed.txt");
+			assert.notInclude(staged, "sub/c.txt");
+			assert.deepStrictEqual(untracked, ["untracked.txt"]);
+		}),
 	);
 
 	it.effect("status --porcelain reports the same tree with XY codes", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				const entries = yield* git.status(dirA);
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const entries = yield* git.status(dirA);
 
-				const untrackedEntry = entries.find((entry) => entry.path === "untracked.txt");
-				assert.isDefined(untrackedEntry);
-				assert.strictEqual(untrackedEntry?.x, "?");
-				assert.strictEqual(untrackedEntry?.y, "?");
+			const untrackedEntry = entries.find((entry) => entry.path === "untracked.txt");
+			assert.isDefined(untrackedEntry);
+			assert.strictEqual(untrackedEntry?.x, "?");
+			assert.strictEqual(untrackedEntry?.y, "?");
 
-				const renamedEntry = entries.find((entry) => entry.path === "renamed.txt");
-				assert.isDefined(renamedEntry);
-				assert.strictEqual(renamedEntry?.x, "R");
-				assert.strictEqual(renamedEntry?.origPath, "sub/c.txt");
-			}),
-		),
+			const renamedEntry = entries.find((entry) => entry.path === "renamed.txt");
+			assert.isDefined(renamedEntry);
+			assert.strictEqual(renamedEntry?.x, "R");
+			assert.strictEqual(renamedEntry?.origPath, "sub/c.txt");
+		}),
 	);
 
 	it.effect("lsTree with a pathspec narrows to the subtree", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				const entries = yield* git.lsTree(dirA, commit1Sha, { pathspec: ["sub"] });
-				assert.deepStrictEqual(
-					entries.map((entry) => entry.path),
-					["sub/c.txt"],
-				);
-			}),
-		),
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const entries = yield* git.lsTree(dirA, commit1Sha, { pathspec: ["sub"] });
+			assert.deepStrictEqual(
+				entries.map((entry) => entry.path),
+				["sub/c.txt"],
+			);
+		}),
 	);
 
 	it.effect("configGet reads what configSet wrote, and -f writes into an explicit file", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
+		Effect.gen(function* () {
+			const git = yield* Git;
 
-				yield* git.configSet(dirA, "test.kit", "yes");
-				assert.deepStrictEqual(yield* git.configGet(dirA, "test.kit"), O.some("yes"));
-				assert.deepStrictEqual(yield* git.configGet(dirA, "test.unset"), O.none());
+			yield* git.configSet(dirA, "test.kit", "yes");
+			assertSome(yield* git.configGet(dirA, "test.kit"), "yes");
+			assertNone(yield* git.configGet(dirA, "test.unset"));
 
-				yield* git.configSet(dirA, "submodule.x.shallow", "true", { file: "modcfg" });
-				const written = yield* runFixtureGit(dirA, ["config", "-f", "modcfg", "--get", "submodule.x.shallow"]);
-				assert.strictEqual(written.trim(), "true");
-			}),
-		),
+			yield* git.configSet(dirA, "submodule.x.shallow", "true", { file: "modcfg" });
+			const written = yield* runFixtureGit(dirA, ["config", "-f", "modcfg", "--get", "submodule.x.shallow"]);
+			assert.strictEqual(written.trim(), "true");
+		}),
 	);
 
 	it.effect("remoteUrl is none before a remote exists and some after", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				assert.deepStrictEqual(yield* git.remoteUrl(dirA), O.none());
+		Effect.gen(function* () {
+			const git = yield* Git;
+			assertNone(yield* git.remoteUrl(dirA));
 
-				yield* runFixtureGit(dirA, ["remote", "add", "origin", "https://example.com/o/r.git"]);
-				assert.deepStrictEqual(yield* git.remoteUrl(dirA), O.some("https://example.com/o/r.git"));
-			}),
-		),
+			yield* runFixtureGit(dirA, ["remote", "add", "origin", "https://example.com/o/r.git"]);
+			assertSome(yield* git.remoteUrl(dirA), "https://example.com/o/r.git");
+		}),
 	);
 
 	it.effect("defaultBranch is none until origin/HEAD is set symbolically", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				assert.deepStrictEqual(yield* git.defaultBranch(dirA), O.none());
+		Effect.gen(function* () {
+			const git = yield* Git;
+			assertNone(yield* git.defaultBranch(dirA));
 
-				yield* runFixtureGit(dirA, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
-				yield* runFixtureGit(dirA, ["symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/main"]);
+			yield* runFixtureGit(dirA, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+			yield* runFixtureGit(dirA, ["symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/main"]);
 
-				assert.deepStrictEqual(yield* git.defaultBranch(dirA), O.some("main"));
-			}),
-		),
+			assertSome(yield* git.defaultBranch(dirA), "main");
+		}),
 	);
 
 	it.effect("currentBranch names the branch, and repoRoot agrees with rev-parse", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				assert.deepStrictEqual(yield* git.currentBranch(dirA), O.some("main"));
+		Effect.gen(function* () {
+			const git = yield* Git;
+			assertSome(yield* git.currentBranch(dirA), "main");
 
-				const root = yield* git.repoRoot(dirA);
-				const expected = (yield* runFixtureGit(dirA, ["rev-parse", "--show-toplevel"])).trim();
-				assert.strictEqual(root, expected);
-			}),
-		),
+			const root = yield* git.repoRoot(dirA);
+			const expected = (yield* runFixtureGit(dirA, ["rev-parse", "--show-toplevel"])).trim();
+			assert.strictEqual(root, expected);
+		}),
 	);
 
 	it.effect("commitInfo reads HEAD's sha, N signature and exact message", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				const info = yield* git.commitInfo(dirA);
-				const sha = yield* git.revParse(dirA, "HEAD");
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const info = yield* git.commitInfo(dirA);
+			const sha = yield* git.revParse(dirA, "HEAD");
 
-				assert.strictEqual(info.sha, sha);
-				// The fixture's commits are never signed.
-				assert.strictEqual(info.signatureStatus, "N");
-				// Raw %B output is byte-identical to commitInfo's untrimmed message —
-				// a trim or mutation anywhere in the pipeline breaks this equality.
-				const expectedMessage = yield* runFixtureGit(dirA, ["log", "-1", "--format=%B"]);
-				assert.strictEqual(info.message, expectedMessage);
-			}),
-		),
+			assert.strictEqual(info.sha, sha);
+			// The fixture's commits are never signed.
+			assert.strictEqual(info.signatureStatus, "N");
+			// Raw %B output is byte-identical to commitInfo's untrimmed message —
+			// a trim or mutation anywhere in the pipeline breaks this equality.
+			const expectedMessage = yield* runFixtureGit(dirA, ["log", "-1", "--format=%B"]);
+			assert.strictEqual(info.message, expectedMessage);
+		}),
 	);
 });
 
-describe("Git surface — submodule/fetch pair (fixture B)", () => {
+it.layer(TestLayer, { timeout: "30 seconds" })("Git surface — submodule/fetch pair (fixture B)", (it) => {
 	let libDir: string;
 	let superDir: string;
 	let libTagSha: string;
@@ -359,74 +342,64 @@ describe("Git surface — submodule/fetch pair (fixture B)", () => {
 	it.effect(
 		"submoduleAdd vendors the library and add stages the result",
 		() =>
-			run(
-				Effect.gen(function* () {
-					const git = yield* Git;
-					// No depth: local-path clones ignore/warn on --depth; the depth argv
-					// is already unit-tested.
-					yield* git.submoduleAdd(superDir, { url: libDir, path: "vendor/lib" });
-					yield* assertExists(join(subDir(), "lib.txt"));
+			Effect.gen(function* () {
+				const git = yield* Git;
+				// No depth: local-path clones ignore/warn on --depth; the depth argv
+				// is already unit-tested.
+				yield* git.submoduleAdd(superDir, { url: libDir, path: "vendor/lib" });
+				yield* assertExists(join(subDir(), "lib.txt"));
 
-					yield* git.add(superDir, [".gitmodules", "vendor/lib"]);
-					const entries = yield* git.status(superDir);
+				yield* git.add(superDir, [".gitmodules", "vendor/lib"]);
+				const entries = yield* git.status(superDir);
 
-					const gitmodules = entries.find((entry) => entry.path === ".gitmodules");
-					assert.isDefined(gitmodules);
-					assert.strictEqual(gitmodules?.x, "A");
+				const gitmodules = entries.find((entry) => entry.path === ".gitmodules");
+				assert.isDefined(gitmodules);
+				assert.strictEqual(gitmodules?.x, "A");
 
-					const vendorLib = entries.find((entry) => entry.path === "vendor/lib");
-					assert.isDefined(vendorLib);
-					assert.strictEqual(vendorLib?.x, "A");
-				}),
-			),
+				const vendorLib = entries.find((entry) => entry.path === "vendor/lib");
+				assert.isDefined(vendorLib);
+				assert.strictEqual(vendorLib?.x, "A");
+			}),
 		20_000,
 	);
 
 	it.effect("fetch tag + checkout --detach pins the submodule, currentBranch reads none", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				yield* git.fetch(subDir(), { ref: "v1.0.0", tag: true });
-				yield* git.checkout(subDir(), "FETCH_HEAD", { detach: true });
+		Effect.gen(function* () {
+			const git = yield* Git;
+			yield* git.fetch(subDir(), { ref: "v1.0.0", tag: true });
+			yield* git.checkout(subDir(), "FETCH_HEAD", { detach: true });
 
-				assert.deepStrictEqual(yield* git.currentBranch(subDir()), O.none());
-				assert.strictEqual(yield* git.revParse(subDir(), "HEAD"), libTagSha);
-			}),
-		),
+			assertNone(yield* git.currentBranch(subDir()));
+			assert.strictEqual(yield* git.revParse(subDir(), "HEAD"), libTagSha);
+		}),
 	);
 
 	it.effect("fetch of a tag the remote does not have fails typed", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				const exit = yield* Effect.exit(git.fetch(subDir(), { ref: "v9.9.9", tag: true }));
-				assert.isTrue(Exit.isFailure(exit));
-				if (Exit.isFailure(exit)) {
-					// Cause.failureOption does not exist at beta.98 — findFail returns a Result.
-					const found = Cause.findFail(exit.cause);
-					assert.isTrue(Result.isSuccess(found) && S.is(UnknownRefError)(found.success.error));
-				}
-			}),
-		),
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const exit = yield* Effect.exit(git.fetch(subDir(), { ref: "v9.9.9", tag: true }));
+			assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
+			const found = Cause.findFail(exit.cause);
+			assertSuccess(found, found.pipe(Result.getSuccess, O.getOrThrow));
+			assert.isTrue(S.is(UnknownRefError)(found.success.error));
+		}),
 	);
 
 	it.effect("sparseCheckoutSet --no-cone narrows the submodule's tree", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				yield* git.sparseCheckoutSet(subDir(), ["src"], { cone: false });
-				assert.deepStrictEqual(yield* git.configGet(subDir(), "core.sparseCheckout"), O.some("true"));
-				// The narrowing must be real, not just configured: lib.txt sits at the
-				// tree root, outside the "src" pattern, so it leaves the working tree.
-				const libGone = yield* Effect.promise(() =>
-					stat(join(subDir(), "lib.txt")).then(
-						() => false,
-						() => true,
-					),
-				);
-				assert.isTrue(libGone);
-			}),
-		),
+		Effect.gen(function* () {
+			const git = yield* Git;
+			yield* git.sparseCheckoutSet(subDir(), ["src"], { cone: false });
+			assertSome(yield* git.configGet(subDir(), "core.sparseCheckout"), "true");
+			// The narrowing must be real, not just configured: lib.txt sits at the
+			// tree root, outside the "src" pattern, so it leaves the working tree.
+			const libGone = yield* Effect.promise(() =>
+				stat(join(subDir(), "lib.txt")).then(
+					() => false,
+					() => true,
+				),
+			);
+			assert.isTrue(libGone);
+		}),
 	);
 
 	describe("a fresh clone", () => {
@@ -435,7 +408,10 @@ describe("Git surface — submodule/fetch pair (fixture B)", () => {
 		beforeAll(async () => {
 			// The superproject needs a commit between add and clone so the clone
 			// has something to check out — fixture setup, so raw, not the service.
-			await runFixtureGit(superDir, ["-c", "commit.gpgsign=false", "commit", "-m", "vendor lib"]).pipe(run, Effect.runPromise);
+			await runFixtureGit(superDir, ["-c", "commit.gpgsign=false", "commit", "-m", "vendor lib"]).pipe(
+				run,
+				Effect.runPromise,
+			);
 			cloneDir = await mkdtemp(join(tmpdir(), "effected-git-surface-clone-"));
 			await runFixtureGit(tmpdir(), ["clone", superDir, cloneDir]).pipe(run, Effect.runPromise);
 			// Any clone needs protocol.file.allow set BEFORE submoduleUpdate --init too.
@@ -449,13 +425,11 @@ describe("Git surface — submodule/fetch pair (fixture B)", () => {
 		it.effect(
 			"a fresh clone materializes the submodule via submoduleUpdate --init",
 			() =>
-				run(
-					Effect.gen(function* () {
-						const git = yield* Git;
-						yield* git.submoduleUpdate(cloneDir, { init: true, paths: ["vendor/lib"] });
-						yield* assertExists(join(cloneDir, "vendor", "lib", "lib.txt"));
-					}),
-				),
+				Effect.gen(function* () {
+					const git = yield* Git;
+					yield* git.submoduleUpdate(cloneDir, { init: true, paths: ["vendor/lib"] });
+					yield* assertExists(join(cloneDir, "vendor", "lib", "lib.txt"));
+				}),
 			20_000,
 		);
 	});
@@ -467,7 +441,7 @@ describe("Git surface — submodule/fetch pair (fixture B)", () => {
 // A mock spawner can pin the parser; only real git can tell us whether
 // `--follow` actually walks the rename and whether `--diff-merges` actually
 // changes what a merge contributes.
-describe("Git.log — history repository (fixture C)", () => {
+it.layer(TestLayer, { timeout: "30 seconds" })("Git.log — history repository (fixture C)", (it) => {
 	let dirC: string;
 	let emptyDir: string;
 
@@ -518,10 +492,7 @@ describe("Git.log — history repository (fixture C)", () => {
 			// The merge conflicts on purpose; the resolution is what makes the
 			// merge commit differ from its first parent.
 			yield* runCollected(
-				ChildProcess.setCwd(
-					ChildProcess.make("git", ["merge", "side"], { env: FIXTURE_ENV, extendEnv: true }),
-					dirC,
-				),
+				ChildProcess.setCwd(ChildProcess.make("git", ["merge", "side"], { env: FIXTURE_ENV, extendEnv: true }), dirC),
 			).pipe(Effect.orDie);
 			yield* Effect.promise(() => writeFile(join(dirC, "tracked", "new.txt"), "resolved\n"));
 			yield* raw(["add", "-A"]);
@@ -537,189 +508,174 @@ describe("Git.log — history repository (fixture C)", () => {
 	});
 
 	it.effect("--follow walks a real rename; the same query without it stops at the rename", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				const followed = yield* git.log(dirC, { paths: ["tracked/new.txt"], follow: true });
-				const unfollowed = yield* git.log(dirC, { paths: ["tracked/new.txt"] });
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const followed = yield* git.log(dirC, { paths: ["tracked/new.txt"], follow: true });
+			const unfollowed = yield* git.log(dirC, { paths: ["tracked/new.txt"] });
 
-				// The discriminating pair: `--follow` reaches back past c2's rename to
-				// c1, where the blob was still tracked/old.txt. Without it, history
-				// for this path begins at the rename. Note this is NOT a
-				// longer-vs-shorter comparison — `--follow` also drops merge commits
-				// (probed against git 2.54), so the two walks are the same LENGTH here
-				// and only their contents discriminate.
-				assert.include(
-					followed.flatMap((entry) => entry.paths),
-					"tracked/old.txt",
-				);
-				assert.notInclude(
-					unfollowed.flatMap((entry) => entry.paths),
-					"tracked/old.txt",
-				);
-				// ...and the merge, present unfollowed, is gone under --follow.
-				const merged = unfollowed.find((entry) => entry.paths.length === 0);
-				assert.isDefined(merged);
-				assert.isUndefined(followed.find((entry) => entry.sha === merged?.sha));
-			}),
-		),
+			// The discriminating pair: `--follow` reaches back past c2's rename to
+			// c1, where the blob was still tracked/old.txt. Without it, history
+			// for this path begins at the rename. Note this is NOT a
+			// longer-vs-shorter comparison — `--follow` also drops merge commits
+			// (probed against git 2.54), so the two walks are the same LENGTH here
+			// and only their contents discriminate.
+			assert.include(
+				followed.flatMap((entry) => entry.paths),
+				"tracked/old.txt",
+			);
+			assert.notInclude(
+				unfollowed.flatMap((entry) => entry.paths),
+				"tracked/old.txt",
+			);
+			// ...and the merge, present unfollowed, is gone under --follow.
+			const merged = unfollowed.find((entry) => entry.paths.length === 0);
+			assert.isDefined(merged);
+			assert.isUndefined(followed.find((entry) => entry.sha === merged?.sha));
+		}),
 	);
 
 	it.effect("a pathspec scopes the walk — an off-pathspec commit never appears", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				const scoped = yield* git.log(dirC, { paths: ["other.txt"] });
-				const everything = yield* git.log(dirC);
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const scoped = yield* git.log(dirC, { paths: ["other.txt"] });
+			const everything = yield* git.log(dirC);
 
-				assert.isTrue(scoped.length < everything.length);
-				// Every scoped entry touched other.txt and nothing that is not it.
-				for (const entry of scoped) {
-					assert.deepStrictEqual(entry.paths, ["other.txt"]);
-				}
-				// The control: c2's rename IS in the unscoped walk, so the absence
-				// above is scoping rather than an empty query.
-				assert.include(
-					everything.flatMap((entry) => entry.paths),
-					"tracked/new.txt",
-				);
-			}),
-		),
+			assert.isTrue(scoped.length < everything.length);
+			// Every scoped entry touched other.txt and nothing that is not it.
+			for (const entry of scoped) {
+				assert.deepStrictEqual(entry.paths, ["other.txt"]);
+			}
+			// The control: c2's rename IS in the unscoped walk, so the absence
+			// above is scoping rather than an empty query.
+			assert.include(
+				everything.flatMap((entry) => entry.paths),
+				"tracked/new.txt",
+			);
+		}),
 	);
 
 	it.effect("firstParentDiffMerges is what gives a merge commit any paths at all", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				const plain = yield* git.log(dirC, { paths: ["tracked/new.txt"], limit: 1 });
-				const firstParent = yield* git.log(dirC, {
-					paths: ["tracked/new.txt"],
-					limit: 1,
-					firstParentDiffMerges: true,
-				});
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const plain = yield* git.log(dirC, { paths: ["tracked/new.txt"], limit: 1 });
+			const firstParent = yield* git.log(dirC, {
+				paths: ["tracked/new.txt"],
+				limit: 1,
+				firstParentDiffMerges: true,
+			});
 
-				// Same commit both times — the merge — but git omits a merge's diff by
-				// default, so the entry's path list is empty until we ask for the
-				// first-parent diff.
-				assert.strictEqual(plain[0]?.sha, firstParent[0]?.sha);
-				assert.deepStrictEqual(plain[0]?.paths, []);
-				assert.deepStrictEqual(firstParent[0]?.paths, ["tracked/new.txt"]);
-			}),
-		),
+			// Same commit both times — the merge — but git omits a merge's diff by
+			// default, so the entry's path list is empty until we ask for the
+			// first-parent diff.
+			assert.strictEqual(plain[0]?.sha, firstParent[0]?.sha);
+			assert.deepStrictEqual(plain[0]?.paths, []);
+			assert.deepStrictEqual(firstParent[0]?.paths, ["tracked/new.txt"]);
+		}),
 	);
 
 	it.effect("entries arrive newest-first with real, ordered, decoded dates", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				const entries = yield* git.log(dirC);
-				assert.isTrue(entries.length >= 5);
-				for (let index = 1; index < entries.length; index++) {
-					const newer = entries[index - 1];
-					const older = entries[index];
-					assert.isDefined(newer);
-					assert.isDefined(older);
-					if (newer === undefined || older === undefined) continue;
-					assert.isTrue(DateTime.toEpochMillis(newer.committedAt) >= DateTime.toEpochMillis(older.committedAt));
-				}
-				assert.strictEqual(entries[0]?.authorEmail, "log-integration@example.com");
-			}),
-		),
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const entries = yield* git.log(dirC);
+			assert.isTrue(entries.length >= 5);
+			for (let index = 1; index < entries.length; index++) {
+				const newer = entries[index - 1];
+				const older = entries[index];
+				assert.isDefined(newer);
+				assert.isDefined(older);
+				if (newer === undefined || older === undefined) continue;
+				assert.isTrue(DateTime.toEpochMillis(newer.committedAt) >= DateTime.toEpochMillis(older.committedAt));
+			}
+			assert.strictEqual(entries[0]?.authorEmail, "log-integration@example.com");
+		}),
 	);
 
 	it.effect("limit caps the walk, and limit 0 is the empty listing", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				assert.strictEqual((yield* git.log(dirC, { limit: 2 })).length, 2);
-				assert.deepStrictEqual(yield* git.log(dirC, { limit: 0 }), []);
-			}),
-		),
+		Effect.gen(function* () {
+			const git = yield* Git;
+			assert.strictEqual((yield* git.log(dirC, { limit: 2 })).length, 2);
+			assert.deepStrictEqual(yield* git.log(dirC, { limit: 0 }), []);
+		}),
 	);
 
 	it.effect("a path with a space comes back raw, never C-quoted", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				const entries = yield* git.log(dirC, { paths: ["a name.txt"], follow: true });
-				assert.deepStrictEqual(entries.at(-1)?.paths, ["a name.txt"]);
-			}),
-		),
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const entries = yield* git.log(dirC, { paths: ["a name.txt"], follow: true });
+			assert.deepStrictEqual(entries.at(-1)?.paths, ["a name.txt"]);
+		}),
 	);
 
 	it.effect("an unborn HEAD is the empty listing against real git, not a failure", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				assert.deepStrictEqual(yield* git.log(emptyDir), []);
-			}),
-		),
+		Effect.gen(function* () {
+			const git = yield* Git;
+			assert.deepStrictEqual(yield* git.log(emptyDir), []);
+		}),
 	);
 
 	it.effect("a directory that is not a repository still fails NotARepositoryError", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				const error = yield* Effect.flip(git.log(tmpdir()));
-				assert.isTrue(S.is(NotARepositoryError)(error));
-			}),
-		),
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const error = yield* Effect.flip(git.log(tmpdir()));
+			assert.isTrue(S.is(NotARepositoryError)(error));
+		}),
 	);
 });
 
-describe("Git surface — repository identity across worktrees (commonDir)", () => {
-	let base: string;
-	let main: string;
-	let worktree: string;
-	let linked: string;
-	let bare: string;
-	let spaced: string;
-	let outside: string;
+it.layer(TestLayer, { timeout: "30 seconds" })(
+	"Git surface — repository identity across worktrees (commonDir)",
+	(it) => {
+		let base: string;
+		let main: string;
+		let worktree: string;
+		let linked: string;
+		let bare: string;
+		let spaced: string;
+		let outside: string;
 
-	/**
-	 * A repository with a subdirectory and one linked worktree, a directory
-	 * symlink onto the repository, a bare repository, and a plain directory.
-	 * `base` is the UNRESOLVED tmpdir path, so on macOS every cwd below sits
-	 * behind the `/var` -> `/private/var` link, and `linked` adds an explicit
-	 * symlink so the same trap is exercised on Linux, whose tmpdir is real.
-	 */
-	beforeAll(async () => {
-		base = await mkdtemp(join(tmpdir(), "effected-git-common-dir-"));
-		main = join(base, "main");
-		worktree = join(base, "worktree");
-		linked = join(base, "linked");
-		bare = join(base, "bare.git");
-		spaced = join(base, "spaced.git ");
-		outside = join(base, "outside");
-		await mkdir(join(main, "sub"), { recursive: true });
-		await mkdir(outside);
-		await Effect.gen(function* () {
-			yield* runFixtureGit(main, ["-c", "init.defaultBranch=main", "init"]);
-			yield* runFixtureGit(main, [
-				"-c",
-				"user.email=git-integration@example.com",
-				"-c",
-				"user.name=Git Integration",
-				"-c",
-				"commit.gpgsign=false",
-				"commit",
-				"--allow-empty",
-				"-m",
-				"init",
-			]);
-			yield* runFixtureGit(main, ["worktree", "add", "-b", "side", worktree]);
-			yield* runFixtureGit(base, ["init", "--bare", bare]);
-			yield* runFixtureGit(base, ["init", "--bare", spaced]);
-		}).pipe(run, Effect.runPromise);
-		await symlink(main, linked, "dir");
-	});
+		/**
+		 * A repository with a subdirectory and one linked worktree, a directory
+		 * symlink onto the repository, a bare repository, and a plain directory.
+		 * `base` is the UNRESOLVED tmpdir path, so on macOS every cwd below sits
+		 * behind the `/var` -> `/private/var` link, and `linked` adds an explicit
+		 * symlink so the same trap is exercised on Linux, whose tmpdir is real.
+		 */
+		beforeAll(async () => {
+			base = await mkdtemp(join(tmpdir(), "effected-git-common-dir-"));
+			main = join(base, "main");
+			worktree = join(base, "worktree");
+			linked = join(base, "linked");
+			bare = join(base, "bare.git");
+			spaced = join(base, "spaced.git ");
+			outside = join(base, "outside");
+			await mkdir(join(main, "sub"), { recursive: true });
+			await mkdir(outside);
+			await Effect.gen(function* () {
+				yield* runFixtureGit(main, ["-c", "init.defaultBranch=main", "init"]);
+				yield* runFixtureGit(main, [
+					"-c",
+					"user.email=git-integration@example.com",
+					"-c",
+					"user.name=Git Integration",
+					"-c",
+					"commit.gpgsign=false",
+					"commit",
+					"--allow-empty",
+					"-m",
+					"init",
+				]);
+				yield* runFixtureGit(main, ["worktree", "add", "-b", "side", worktree]);
+				yield* runFixtureGit(base, ["init", "--bare", bare]);
+				yield* runFixtureGit(base, ["init", "--bare", spaced]);
+			}).pipe(run, Effect.runPromise);
+			await symlink(main, linked, "dir");
+		});
 
-	afterAll(async () => {
-		await rm(base, { recursive: true, force: true });
-	});
+		afterAll(async () => {
+			await rm(base, { recursive: true, force: true });
+		});
 
-	it.effect("answers one realpath'd directory from the checkout, a subdirectory, a worktree and a symlink", () =>
-		run(
+		it.effect("answers one realpath'd directory from the checkout, a subdirectory, a worktree and a symlink", () =>
 			Effect.gen(function* () {
 				const git = yield* Git;
 				const expected = yield* Effect.promise(() => realpath(join(main, ".git")));
@@ -727,36 +683,30 @@ describe("Git surface — repository identity across worktrees (commonDir)", () 
 					assert.strictEqual(yield* git.commonDir(cwd), expected, cwd);
 				}
 			}),
-		),
-	);
+		);
 
-	it.effect("answers the repository directory itself for a bare repository", () =>
-		run(
+		it.effect("answers the repository directory itself for a bare repository", () =>
 			Effect.gen(function* () {
 				const git = yield* Git;
 				assert.strictEqual(yield* git.commonDir(bare), yield* Effect.promise(() => realpath(bare)));
 			}),
-		),
-	);
+		);
 
-	it.effect("keeps a trailing space that belongs to the repository path", () =>
-		run(
+		it.effect("keeps a trailing space that belongs to the repository path", () =>
 			Effect.gen(function* () {
 				const git = yield* Git;
 				const answer = yield* git.commonDir(spaced);
 				assert.strictEqual(answer, yield* Effect.promise(() => realpath(spaced)));
 				assert.isTrue(answer.endsWith(" "));
 			}),
-		),
-	);
+		);
 
-	it.effect("fails NotARepositoryError outside any repository", () =>
-		run(
+		it.effect("fails NotARepositoryError outside any repository", () =>
 			Effect.gen(function* () {
 				const git = yield* Git;
 				const failure = yield* Effect.flip(git.commonDir(outside));
 				assert.instanceOf(failure, NotARepositoryError);
 			}),
-		),
-	);
-});
+		);
+	},
+);

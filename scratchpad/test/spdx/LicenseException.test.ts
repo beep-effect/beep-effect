@@ -1,4 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertExitFailure, assertFailure, assertSuccess } from "@effect/vitest/utils";
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Result from "effect/Result";
@@ -16,7 +18,15 @@ describe("LicenseException", () => {
 	it.effect("fails typed on an unknown exception", () =>
 		Effect.gen(function* () {
 			const exit = yield* Effect.exit(LicenseException.parse("Not-An-Exception"));
-			assert.isTrue(Exit.isFailure(exit));
+			const cause = exit.pipe(Exit.filterCause, Result.getOrThrow);
+			// Preserve runtime tracing metadata while checking the expected typed failure.
+			assertExitFailure(
+				exit,
+				Cause.annotate(
+					Cause.fail(InvalidSpdxExpressionError.make({ input: "Not-An-Exception" })),
+					Cause.annotations(cause),
+				),
+			);
 			// the failure is the shared typed error, never a defect
 			const error = yield* Effect.flip(LicenseException.parse("Not-An-Exception"));
 			assert.instanceOf(error, InvalidSpdxExpressionError);
@@ -26,8 +36,16 @@ describe("LicenseException", () => {
 	);
 	it.effect("rejects a LicenseRef-shaped id (exceptions require catalog membership)", () =>
 		Effect.gen(function* () {
-			const result = yield* Effect.result(LicenseException.parse("LicenseRef-Foo"));
-			assert.strictEqual(result._tag, "Failure");
+			const exit = yield* Effect.exit(LicenseException.parse("LicenseRef-Foo"));
+			const cause = exit.pipe(Exit.filterCause, Result.getOrThrow);
+			// Preserve runtime tracing metadata while checking the expected typed failure.
+			assertExitFailure(
+				exit,
+				Cause.annotate(
+					Cause.fail(InvalidSpdxExpressionError.make({ input: "LicenseRef-Foo" })),
+					Cause.annotations(cause),
+				),
+			);
 		}),
 	);
 	it("predicate reads the catalog", () => {
@@ -36,8 +54,8 @@ describe("LicenseException", () => {
 		assert.isFalse(LicenseException.isDeprecatedId("Classpath-exception-2.0"));
 	});
 	it("parseResult is the sync primitive", () => {
-		assert.isTrue(Result.isSuccess(LicenseException.parseResult("Classpath-exception-2.0")));
-		assert.isTrue(Result.isFailure(LicenseException.parseResult("Not-An-Exception")));
+		assertSuccess(LicenseException.parseResult("Classpath-exception-2.0"), LicenseException.of("Classpath-exception-2.0"));
+		assertFailure(LicenseException.parseResult("Not-An-Exception"), InvalidSpdxExpressionError.make({ input: "Not-An-Exception" }));
 	});
 	it("of constructs from typed parts", () => {
 		const e = LicenseException.of("Classpath-exception-2.0");
@@ -51,10 +69,8 @@ describe("LicenseException", () => {
 		// same error class as License, not a parallel type
 		const licErr = License.parseResult("NOT-A-LICENSE");
 		const excErr = LicenseException.parseResult("Not-An-Exception");
-		assert.isTrue(Result.isFailure(licErr));
-		assert.isTrue(Result.isFailure(excErr));
-		if (Result.isFailure(licErr) && Result.isFailure(excErr)) {
-			assert.strictEqual(licErr.failure._tag, excErr.failure._tag);
-		}
+		assertFailure(licErr, InvalidSpdxExpressionError.make({ input: "NOT-A-LICENSE" }));
+		assertFailure(excErr, InvalidSpdxExpressionError.make({ input: "Not-An-Exception" }));
+		assert.strictEqual(licErr.failure._tag, excErr.failure._tag);
 	});
 });

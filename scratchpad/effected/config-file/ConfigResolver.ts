@@ -444,7 +444,7 @@ const isWorkspaceRoot: (
 		if (yield* fs.exists(pkgPath)) {
 			const content = yield* fs.readFileString(pkgPath);
 			const pkg = S.decodeResult(JsonValue)(content);
-			if (Result.isSuccess(pkg) && P.isObjectKeyword(pkg.success) && !P.isFunction(pkg.success) && "workspaces" in pkg.success) return true;
+			if (Result.isSuccess(pkg) && P.isObjectKeyword(pkg.success) && "workspaces" in pkg.success) return true;
 		}
 		return false;
 	});

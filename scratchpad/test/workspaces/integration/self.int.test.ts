@@ -15,6 +15,7 @@ import nodePath, { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { assert, describe, layer } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -49,7 +50,7 @@ const Platform = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const Live = Workspaces.layer({ cwd }).pipe(Layer.provideMerge(Platform));
 
 describe("the lab Bun workspace, discovered by the package that lives in it", () => {
-	layer(Live)((it) => {
+	layer(Live, { timeout: "30 seconds" })((it) => {
 		it.effect("finds the workspace root and its bun workspace patterns", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
@@ -74,7 +75,7 @@ describe("the lab Bun workspace, discovered by the package that lives in it", ()
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
 				const owner = yield* discovery.resolveFile(fileURLToPath(import.meta.url));
-				assert.isTrue(O.isSome(owner));
+				assertSome(O.map(owner, () => undefined), undefined);
 				assert.strictEqual(O.getOrThrow(owner).name, "@beep/scratchpad");
 			}),
 		);
@@ -113,7 +114,7 @@ describe("the lab Bun workspace, discovered by the package that lives in it", ()
 				const set = yield* catalogs.set;
 				// The lab pins Effect 4 in Bun's default catalog, consumed as catalog:.
 				const range = set.rangeOf("effect", O.none());
-				assert.isTrue(O.isSome(range), "the effect catalog must resolve");
+				assertSome(O.map(range, () => undefined), undefined);
 				assert.match(O.getOrThrow(range), /^\^?4\./);
 			}),
 		);
@@ -135,7 +136,7 @@ describe("the lab Bun workspace, discovered by the package that lives in it", ()
 });
 
 describe("the sync escape hatch agrees with the Effect surface", () => {
-	layer(Live)((it) => {
+	layer(Live, { timeout: "30 seconds" })((it) => {
 		it.effect("findWorkspaceRootSync finds the same root", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;

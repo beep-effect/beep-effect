@@ -160,9 +160,10 @@ export const rangeOf: {
 	specifier: string,
 ): string | undefined | CatalogMisconfiguration => {
 	const catalogName = catalogNameOf(specifier);
-	if (catalogName === null) return undefined;
-	const catalog = O.flatMap(R.get<string, Catalogs[string]>(catalogs, catalogName), O.fromUndefinedOr);
-	if (O.isNone(catalog) || !R.has<string, string | undefined>(catalog.value, dependency)) return undefined;
+	if (catalogName !== null) {
+		const catalog = O.flatMap(R.get<string, Catalogs[string]>(catalogs, catalogName), O.fromUndefinedOr);
+		if (O.isNone(catalog) || !R.has<string, string | undefined>(catalog.value, dependency)) return undefined;
+	}
 	const result = resolveFromCatalog(catalogs, { alias: dependency, bareSpecifier: specifier });
 	return matchCatalogResolveResult<string | undefined | CatalogMisconfiguration>(result, {
 		found: (hit) => hit.resolution.specifier,

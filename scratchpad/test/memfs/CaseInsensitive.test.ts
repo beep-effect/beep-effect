@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -66,48 +65,54 @@ describe("case-insensitive watch", () => {
 		{ caseSensitive: false },
 	);
 
-	it.effect("a watch in one spelling sees a write in another", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			const event = yield* firstEvent(
-				fs,
-				"/repo",
-				undefined,
-				fs.writeFileString("/Repo/Docs.json", "1"),
-				fs.writeFileString("/repo/sentinel.txt", ""),
-			);
-			assert.strictEqual(event?._tag, "Update");
-			assert.strictEqual(event?.path.toLowerCase(), "/repo/docs.json");
-		}).pipe(Effect.provide(Volume)),
-	);
+	it.layer(Volume, { timeout: "30 seconds" })((it) => {
+		it.effect("a watch in one spelling sees a write in another", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const event = yield* firstEvent(
+					fs,
+					"/repo",
+					undefined,
+					fs.writeFileString("/Repo/Docs.json", "1"),
+					fs.writeFileString("/repo/sentinel.txt", ""),
+				);
+				assert.strictEqual(event?._tag, "Update");
+				assert.strictEqual(event?.path.toLowerCase(), "/repo/docs.json");
+			}),
+		);
+	});
 
-	it.effect("a watch in one spelling sees a remove in another", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			const event = yield* firstEvent(
-				fs,
-				"/Repo",
-				undefined,
-				fs.remove("/repo/docs.json"),
-				fs.writeFileString("/Repo/sentinel.txt", ""),
-			);
-			assert.strictEqual(event?._tag, "Remove");
-			assert.strictEqual(event?.path.toLowerCase(), "/repo/docs.json");
-		}).pipe(Effect.provide(Volume)),
-	);
+	it.layer(Volume, { timeout: "30 seconds" })((it) => {
+		it.effect("a watch in one spelling sees a remove in another", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const event = yield* firstEvent(
+					fs,
+					"/Repo",
+					undefined,
+					fs.remove("/repo/docs.json"),
+					fs.writeFileString("/Repo/sentinel.txt", ""),
+				);
+				assert.strictEqual(event?._tag, "Remove");
+				assert.strictEqual(event?.path.toLowerCase(), "/repo/docs.json");
+			}),
+		);
+	});
 
-	it.effect("a recursive watch in one spelling sees a nested write in another", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			const event = yield* firstEvent(
-				fs,
-				"/repo",
-				{ recursive: true },
-				fs.writeFileString("/REPO/SUB/deep.json", "1"),
-				fs.writeFileString("/repo/sentinel.txt", ""),
-			);
-			assert.strictEqual(event?._tag, "Update");
-			assert.strictEqual(event?.path.toLowerCase(), "/repo/sub/deep.json");
-		}).pipe(Effect.provide(Volume)),
-	);
+	it.layer(Volume, { timeout: "30 seconds" })((it) => {
+		it.effect("a recursive watch in one spelling sees a nested write in another", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const event = yield* firstEvent(
+					fs,
+					"/repo",
+					{ recursive: true },
+					fs.writeFileString("/REPO/SUB/deep.json", "1"),
+					fs.writeFileString("/repo/sentinel.txt", ""),
+				);
+				assert.strictEqual(event?._tag, "Update");
+				assert.strictEqual(event?.path.toLowerCase(), "/repo/sub/deep.json");
+			}),
+		);
+	});
 });

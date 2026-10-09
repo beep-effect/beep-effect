@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -86,12 +86,12 @@ describe("licenseExpressionOf — the brand/grammar seam", () => {
 	it("UNLICENSED is a legal manifest value and not an expression", () => {
 		// The whole reason this accessor exists: the brand admits it, the
 		// grammar does not, and every consumer was hand-rolling this screen.
-		assert.isTrue(O.isNone(licenseExpressionOf(brand("UNLICENSED"))));
+		assertNone(licenseExpressionOf(brand("UNLICENSED")));
 	});
 
 	it("SEE LICENSE IN <file> is likewise legal and not an expression", () => {
-		assert.isTrue(O.isNone(licenseExpressionOf(brand("SEE LICENSE IN LICENSE.txt"))));
-		assert.isTrue(O.isNone(licenseExpressionOf(brand("SEE LICENSE IN vendor/terms.md"))));
+		assertNone(licenseExpressionOf(brand("SEE LICENSE IN LICENSE.txt")));
+		assertNone(licenseExpressionOf(brand("SEE LICENSE IN vendor/terms.md")));
 	});
 
 	it("agrees with the brand: everything isValidSpdx admits either parses or is one of the two", () => {
@@ -123,7 +123,7 @@ describe("licenseExpressionOf — the brand/grammar seam", () => {
 	it("an unparseable string the brand would reject yields none rather than throwing", () => {
 		// Total by construction: a caller holding an unbranded cast still gets
 		// an answer instead of a defect.
-		assert.isTrue(O.isNone(licenseExpressionOf(deliberatelyInvalid<SpdxLicense>("MIT AND"))));
+		assertNone(licenseExpressionOf(deliberatelyInvalid<SpdxLicense>("MIT AND")));
 	});
 });
 import { $ScratchpadId } from "@beep/identity/packages";

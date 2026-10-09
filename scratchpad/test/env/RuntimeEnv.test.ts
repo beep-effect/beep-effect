@@ -1,5 +1,5 @@
-// @effect-diagnostics strictEffectProvide:skip-file processEnv:skip-file
-import { assert, describe, it } from "@effect/vitest";
+import { assert, describe, it, vi } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -15,58 +15,91 @@ const withEnv = (env: Record<string, string>) =>
 	Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env));
 
 describe("RuntimeEnv", () => {
-	it.effect("layer reads agent, CI and terminal through Config", () =>
-		Effect.gen(function* () {
-			const env = yield* CurrentRuntimeEnv;
-			assert.deepStrictEqual(env.agent, O.some("claude"));
-			assert.deepStrictEqual(env.ci, O.some("github-actions"));
-			// The name comes from the ported std-osc8 table, where iTerm's entry is named "iTerm.app".
-			const terminal = O.getOrThrow(env.terminal);
-			assert.strictEqual(terminal.name, "iTerm.app");
-			assert.deepStrictEqual(terminal.version, O.some("3.5.0"));
-		}).pipe(
-			Effect.provide(CurrentRuntimeEnv.layer),
-			withEnv({ CLAUDECODE: "1", GITHUB_ACTIONS: "true", TERM_PROGRAM: "iTerm.app", TERM_PROGRAM_VERSION: "3.5.0" }),
-		),
-	);
-
-	it.effect("empty environment → all none", () =>
-		Effect.gen(function* () {
-			const env = yield* CurrentRuntimeEnv;
-			assert.isTrue(O.isNone(env.agent) && O.isNone(env.ci) && O.isNone(env.terminal));
-		}).pipe(Effect.provide(CurrentRuntimeEnv.layer), withEnv({})),
-	);
-
-	it.effect("a terminal identified without a version has a None version", () =>
-		Effect.gen(function* () {
-			const env = yield* CurrentRuntimeEnv;
-			assert.deepStrictEqual(env.terminal, O.some({ name: "kitty", version: O.none() }));
-		}).pipe(Effect.provide(CurrentRuntimeEnv.layer), withEnv({ TERM: "xterm-kitty" })),
-	);
-
-	it.effect("layerTest overrides without touching Config", () =>
-		Effect.gen(function* () {
-			const env = yield* CurrentRuntimeEnv;
-			assert.deepStrictEqual(env.agent, O.some("codex"));
-			assert.deepStrictEqual(env.ci, O.none());
-			assert.deepStrictEqual(env.terminal, O.none());
-		}).pipe(Effect.provide(CurrentRuntimeEnv.layerTest({ agent: O.some("codex") })), withEnv({ CI: "true" })),
-	);
-
-	it.effect("a ConfigProvider whose reads fail yields an all-none snapshot", () =>
-		Effect.gen(function* () {
-			const env = yield* CurrentRuntimeEnv;
-			assert.deepStrictEqual(env.agent, O.none());
-			assert.deepStrictEqual(env.ci, O.none());
-			assert.deepStrictEqual(env.terminal, O.none());
-		}).pipe(
-			Effect.provide(CurrentRuntimeEnv.layer),
-			Effect.provideService(
-				ConfigProvider.ConfigProvider,
-				ConfigProvider.make(() => Effect.fail(new ConfigProvider.SourceError({ message: "boom" }))),
+	it.layer(
+		CurrentRuntimeEnv.layer.pipe(
+			Layer.provide(
+				ConfigProvider.layer(
+					ConfigProvider.fromUnknown({
+						CLAUDECODE: "1",
+						GITHUB_ACTIONS: "true",
+						TERM_PROGRAM: "iTerm.app",
+						TERM_PROGRAM_VERSION: "3.5.0",
+					}),
+				),
 			),
 		),
-	);
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("layer reads agent, CI and terminal through Config", () =>
+			Effect.gen(function* () {
+				const env = yield* CurrentRuntimeEnv;
+				assertSome(env.agent, "claude");
+				assertSome(env.ci, "github-actions");
+				// The name comes from the ported std-osc8 table, where iTerm's entry is named "iTerm.app".
+				const terminal = O.getOrThrow(env.terminal);
+				assert.strictEqual(terminal.name, "iTerm.app");
+				assertSome(terminal.version, "3.5.0");
+			}),
+		);
+	});
+
+	it.layer(CurrentRuntimeEnv.layer.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({})))), {
+		timeout: "30 seconds",
+	})((it) => {
+		it.effect("empty environment → all none", () =>
+			Effect.gen(function* () {
+				const env = yield* CurrentRuntimeEnv;
+				assertNone(env.agent);
+				assertNone(env.ci);
+				assertNone(env.terminal);
+			}),
+		);
+	});
+
+	it.layer(
+		CurrentRuntimeEnv.layer.pipe(
+			Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ TERM: "xterm-kitty" }))),
+		),
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("a terminal identified without a version has a None version", () =>
+			Effect.gen(function* () {
+				const env = yield* CurrentRuntimeEnv;
+				assertSome(env.terminal, { name: "kitty", version: O.none() });
+			}),
+		);
+	});
+
+	it.layer(CurrentRuntimeEnv.layerTest({ agent: O.some("codex") }), { timeout: "30 seconds" })((it) => {
+		it.effect("layerTest overrides without touching Config", () =>
+			Effect.gen(function* () {
+				const env = yield* CurrentRuntimeEnv;
+				assertSome(env.agent, "codex");
+				assertNone(env.ci);
+				assertNone(env.terminal);
+			}).pipe(withEnv({ CI: "true" })),
+		);
+	});
+
+	it.layer(
+		CurrentRuntimeEnv.layer.pipe(
+			Layer.provide(
+				ConfigProvider.layer(
+					ConfigProvider.make(() => Effect.fail(new ConfigProvider.SourceError({ message: "boom" }))),
+				),
+			),
+		),
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("a ConfigProvider whose reads fail yields an all-none snapshot", () =>
+			Effect.gen(function* () {
+				const env = yield* CurrentRuntimeEnv;
+				assertNone(env.agent);
+				assertNone(env.ci);
+				assertNone(env.terminal);
+			}),
+		);
+	});
 
 	it("round-trips through JSON text (persistable snapshot)", () => {
 		const codec = S.fromJsonString(RuntimeEnv);
@@ -86,9 +119,9 @@ describe("RuntimeEnv", () => {
 
 	it("decodes the frozen 0.1.0 wire literal", () => {
 		const decoded = Result.getOrThrow(S.decodeResult(runtimeEnvJson)(FROZEN_0_1_0));
-		assert.deepStrictEqual(decoded.agent, O.some("claude"));
-		assert.deepStrictEqual(decoded.ci, O.none());
-		assert.deepStrictEqual(decoded.terminal, O.some({ name: "iTerm.app", version: O.some("3.5.0") }));
+		assertSome(decoded.agent, "claude");
+		assertNone(decoded.ci);
+		assertSome(decoded.terminal, { name: "iTerm.app", version: O.some("3.5.0") });
 		assert.strictEqual(Result.getOrThrow(S.encodeResult(runtimeEnvJson)(decoded)), FROZEN_0_1_0);
 	});
 
@@ -98,30 +131,35 @@ describe("RuntimeEnv", () => {
 
 	it("decodes the frozen 0.1.0 wire literal that names a CI, and encodes it back identically", () => {
 		const decoded = Result.getOrThrow(S.decodeResult(runtimeEnvJson)(FROZEN_0_1_0_CI));
-		assert.deepStrictEqual(decoded.agent, O.some("codex"));
-		assert.deepStrictEqual(decoded.ci, O.some("github-actions"));
-		assert.deepStrictEqual(decoded.terminal, O.none());
+		assertSome(decoded.agent, "codex");
+		assertSome(decoded.ci, "github-actions");
+		assertNone(decoded.terminal);
 		assert.strictEqual(Result.getOrThrow(S.encodeResult(runtimeEnvJson)(decoded)), FROZEN_0_1_0_CI);
 	});
 
 	it("every field decodes when its key is absent, so an older or sparser snapshot keeps decoding", () => {
 		const codec = S.fromJsonString(RuntimeEnv);
 		const empty = Result.getOrThrow(S.decodeResult(codec)("{}"));
-		assert.deepStrictEqual([empty.agent, empty.ci, empty.terminal], [O.none(), O.none(), O.none()]);
+		assertNone(empty.agent);
+		assertNone(empty.ci);
+		assertNone(empty.terminal);
 		const partial = Result.getOrThrow(S.decodeResult(codec)('{"agent":"claude"}'));
-		assert.deepStrictEqual(partial.agent, O.some("claude"));
-		assert.deepStrictEqual(partial.ci, O.none());
-		assert.deepStrictEqual(partial.terminal, O.none());
+		assertSome(partial.agent, "claude");
+		assertNone(partial.ci);
+		assertNone(partial.terminal);
 		const noVersion = Result.getOrThrow(S.decodeResult(codec)('{"terminal":{"name":"kitty"}}'));
-		assert.deepStrictEqual(noVersion.terminal, O.some({ name: "kitty", version: O.none() }));
+		assertSome(noVersion.terminal, { name: "kitty", version: O.none() });
 	});
 
 	it("ci is the literal union github-actions | generic: both decode and encode, and anything else is rejected", () => {
 		const codec = S.fromJsonString(RuntimeEnv);
 		for (const ci of ["github-actions", "generic"] as const) {
 			const decoded = Result.getOrThrow(S.decodeResult(codec)(`{"agent":null,"ci":"${ci}","terminal":null}`));
-			assert.deepStrictEqual(decoded.ci, O.some(ci));
-			assert.strictEqual(Result.getOrThrow(S.encodeResult(codec)(decoded)), `{"agent":null,"ci":"${ci}","terminal":null}`);
+			assertSome(decoded.ci, ci);
+			assert.strictEqual(
+				Result.getOrThrow(S.encodeResult(codec)(decoded)),
+				`{"agent":null,"ci":"${ci}","terminal":null}`,
+			);
 		}
 		for (const bad of ["jenkins", "", "GITHUB-ACTIONS", "true"]) {
 			assert.throws(
@@ -154,9 +192,10 @@ describe("RuntimeEnv", () => {
 		assert.strictEqual(describeCi(O.some("github-actions")), "gha");
 		assert.strictEqual(describeCi(O.some("generic")), "ci");
 		assert.strictEqual(describeCi(O.none()), "none");
+		const rejectsUnknownCi: "jenkins" extends O.Option.Value<RuntimeEnv["ci"]> ? false : true = true;
+		assert.isTrue(rejectsUnknownCi);
 		const unknown = () =>
-			// @ts-expect-error a CI that is not one of the two names is not a RuntimeEnv
-			RuntimeEnv.make({ agent: O.none(), ci: O.some("jenkins"), terminal: O.none() });
+			Reflect.apply(RuntimeEnv.make, RuntimeEnv, [{ agent: O.none(), ci: O.some("jenkins"), terminal: O.none() }]);
 		assert.throws(unknown);
 	});
 
@@ -186,12 +225,16 @@ const RECORDS: ReadonlyArray<Record<string, string>> = [
 
 describe("RuntimeEnv.fromRecord", () => {
 	for (const record of RECORDS) {
-		it.effect(`equals what the layer reads from the same record: ${JSON.stringify(record)}`, () =>
-			Effect.gen(function* () {
-				const viaLayer = yield* CurrentRuntimeEnv;
-				assert.deepStrictEqual(RuntimeEnv.fromRecord(record), viaLayer);
-			}).pipe(Effect.provide(CurrentRuntimeEnv.layer), withEnv(record)),
-		);
+		it.layer(CurrentRuntimeEnv.layer.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(record)))), {
+			timeout: "30 seconds",
+		})((it) => {
+			it.effect(`equals what the layer reads from the same record: ${JSON.stringify(record)}`, () =>
+				Effect.gen(function* () {
+					const viaLayer = yield* CurrentRuntimeEnv;
+					assert.deepStrictEqual(RuntimeEnv.fromRecord(record), viaLayer);
+				}),
+			);
+		});
 	}
 
 	it("an empty string and an undefined value both read as unset", () => {
@@ -203,45 +246,73 @@ describe("RuntimeEnv.fromRecord", () => {
 	});
 
 	it("never reads the process environment", () => {
-		const before = process.env.CLAUDECODE;
-		process.env.CLAUDECODE = "1";
+		vi.stubEnv("CLAUDECODE", "1");
 		try {
 			assert.deepStrictEqual(RuntimeEnv.fromRecord({}), RuntimeEnv.fromRecord({}));
-			assert.isTrue(O.isNone(RuntimeEnv.fromRecord({}).agent));
+			assertNone(RuntimeEnv.fromRecord({}).agent);
 		} finally {
-			if (before === undefined) delete process.env.CLAUDECODE;
-			else process.env.CLAUDECODE = before;
+			vi.unstubAllEnvs();
 		}
 	});
 });
 
 describe("CurrentRuntimeEnv.layerFrom", () => {
 	class First extends Context.Service<First, O.Option<string>>()("@beep/scratchpad/test/env/RuntimeEnv.test/First") {}
-	class Second extends Context.Service<Second, O.Option<string>>()("@beep/scratchpad/test/env/RuntimeEnv.test/Second") {}
+	class Second extends Context.Service<Second, O.Option<string>>()(
+		"@beep/scratchpad/test/env/RuntimeEnv.test/Second",
+	) {}
 	const envOf = CurrentRuntimeEnv;
 	const agentOf = Effect.map(envOf, (env) => env.agent);
 
-	it.effect("a record source is read without the ambient provider", () =>
-		Effect.gen(function* () {
-			assert.deepStrictEqual((yield* CurrentRuntimeEnv).agent, O.none());
-		}).pipe(Effect.provide(CurrentRuntimeEnv.layerFrom({})), withEnv({ CLAUDECODE: "1" })),
-	);
+	it.layer(
+		CurrentRuntimeEnv.layerFrom({}).pipe(
+			Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ CLAUDECODE: "1" }))),
+		),
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("a record source is read without the ambient provider", () =>
+			Effect.gen(function* () {
+				assertNone((yield* CurrentRuntimeEnv).agent);
+			}),
+		);
+	});
 
-	it.effect("a ConfigProvider source is read instead of the ambient one", () =>
-		Effect.gen(function* () {
-			assert.deepStrictEqual((yield* CurrentRuntimeEnv).agent, O.some("claude"));
-		}).pipe(Effect.provide(CurrentRuntimeEnv.layerFrom(ConfigProvider.fromUnknown({ CLAUDECODE: "1" }))), withEnv({})),
-	);
+	it.layer(
+		CurrentRuntimeEnv.layerFrom(ConfigProvider.fromUnknown({ CLAUDECODE: "1" })).pipe(
+			Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({}))),
+		),
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("a ConfigProvider source is read instead of the ambient one", () =>
+			Effect.gen(function* () {
+				assertSome((yield* CurrentRuntimeEnv).agent, "claude");
+			}),
+		);
+	});
 
-	it.effect("a record source agrees with fromRecord", () =>
-		Effect.gen(function* () {
-			for (const record of RECORDS) {
-				const viaLayer = yield* envOf.pipe(Effect.provide(CurrentRuntimeEnv.layerFrom(record)));
-				assert.deepStrictEqual(viaLayer, RuntimeEnv.fromRecord(record));
-			}
-		}),
-	);
-
+	class Snapshots extends Context.Service<Snapshots, ReadonlyArray<RuntimeEnv>>()(
+		"@beep/scratchpad/test/env/RuntimeEnv.test/Snapshots",
+	) {}
+	it.layer(
+		Layer.effect(
+			Snapshots,
+			Effect.forEach(RECORDS, (record) =>
+				Layer.build(CurrentRuntimeEnv.layerFrom(record)).pipe(
+					Effect.map((context) => Context.get(context, CurrentRuntimeEnv)),
+				),
+			),
+		),
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("a record source agrees with fromRecord", () =>
+			Effect.gen(function* () {
+				const snapshots = yield* Snapshots;
+				for (const [index, record] of RECORDS.entries()) {
+					assert.deepStrictEqual(snapshots[index], RuntimeEnv.fromRecord(record));
+				}
+			}),
+		);
+	});
 	it.effect("two calls with different records in ONE graph see different values", () =>
 		Effect.gen(function* () {
 			const graph = Layer.mergeAll(
@@ -249,9 +320,9 @@ describe("CurrentRuntimeEnv.layerFrom", () => {
 				Layer.effect(Second, agentOf).pipe(Layer.provide(CurrentRuntimeEnv.layerFrom({ AI_AGENT: "codex" }))),
 			);
 			const context = yield* Layer.build(graph);
-			assert.deepStrictEqual(Context.get(context, First), O.some("claude"));
-			assert.deepStrictEqual(Context.get(context, Second), O.some("codex"));
-		}).pipe(Effect.scoped),
+			assertSome(Context.get(context, First), "claude");
+			assertSome(Context.get(context, Second), "codex");
+		}),
 	);
 
 	it.effect("control: CurrentRuntimeEnv.layer is ONE shared snapshot, so the second provider is never read", () =>
@@ -268,7 +339,7 @@ describe("CurrentRuntimeEnv.layerFrom", () => {
 			);
 			const context = yield* Layer.build(graph);
 			assert.deepStrictEqual(Context.get(context, First), Context.get(context, Second));
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("the same layerFrom value used twice in one graph is read twice: each use sees the provider as it is", () =>
@@ -295,6 +366,6 @@ describe("CurrentRuntimeEnv.layerFrom", () => {
 			});
 			yield* Layer.build(Layer.effect(First, agentOf).pipe(Layer.provide(CurrentRuntimeEnv.layerFrom(once))));
 			assert.strictEqual(reads, single * 2);
-		}).pipe(Effect.scoped),
+		}),
 	);
 });

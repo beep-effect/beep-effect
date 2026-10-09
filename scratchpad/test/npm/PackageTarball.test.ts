@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import * as Crypto from "effect/Crypto";
@@ -27,7 +26,9 @@ const liveCrypto = Layer.succeed(
 		digest: (algorithm, data) =>
 			// `data.slice()` yields a Uint8Array over a plain ArrayBuffer, which is
 			// what WebCrypto's BufferSource accepts.
-			Effect.promise(async () => new Uint8Array(await globalThis.crypto.subtle.digest(algorithm, data.slice()))),
+			Effect.promise(() =>
+				globalThis.crypto.subtle.digest(algorithm, data.slice()).then((buffer) => new Uint8Array(buffer)),
+			),
 		randomBytes: (size) => new Uint8Array(size),
 	}),
 );
@@ -63,164 +64,210 @@ const scenario = (response: { status: number; body?: Uint8Array } | "transport",
 	const layer = PackageTarball.layer.pipe(
 		Layer.provide(Layer.mergeAll(spawner.layer, MemoryFileSystem.layer, liveCrypto, http(response))),
 	);
-	const extract = Effect.fn("extract")(function* (version: PublishedVersion) {
-		const tarball = yield* PackageTarball;
-		return yield* tarball.extract(version);
-	}, Effect.scoped, Effect.provide(layer));
-	return { extract, spawns: spawner.spawns };
+	return { layer, spawns: spawner.spawns };
 };
 
-/** The typed error `extract` failed with. Fails the test if it succeeded. */
-const failure = (
-	version: PublishedVersion,
-	response: { status: number; body?: Uint8Array } | "transport",
-	tarExit = 0,
-): Effect.Effect<TarballError, string> => Effect.flip(scenario(response, tarExit).extract(version));
-
-/** The directory `extract` answered. Fails the test if it failed. */
-const success = (
-	version: PublishedVersion,
-	response: { status: number; body?: Uint8Array } | "transport",
-): Effect.Effect<string, TarballError> => scenario(response).extract(version);
+/** Extract under the layer and scope owned by this test's runner. */
+const extract = Effect.fn("extract")(function* (version: PublishedVersion) {
+	const tarball = yield* PackageTarball;
+	return yield* tarball.extract(version);
+});
 
 describe("PackageTarball", () => {
 	describe("the notFound discriminant", () => {
-		it.effect("fails notFound when the registry recorded no tarball", () =>
-			Effect.gen(function* () {
-				const error = yield* failure(published({}), { status: 200 });
-				assert.strictEqual(error.reason, "notFound");
-			}),
-		);
+		{
+			const fixture = scenario({ status: 200 });
+			it.layer(fixture.layer, { timeout: "30 seconds" })((it) => {
+				it.effect("fails notFound when the registry recorded no tarball", () =>
+					Effect.gen(function* () {
+						const error = yield* Effect.flip(extract(published({})));
+						assert.strictEqual(error.reason, "notFound");
+					}),
+				);
+			});
+		}
 
-		it.effect("reads a 404 as notFound, not as a transport failure", () =>
-			// The split the consumer asked for: "this version does not exist" must
-			// be distinguishable from "something went wrong fetching one that
-			// does", because the two warrant opposite recovery.
-			Effect.gen(function* () {
-				const error = yield* failure(published(WITH_TARBALL), { status: 404 });
-				assert.strictEqual(error.reason, "notFound");
-			}),
-		);
+		{
+			const fixture = scenario({ status: 404 });
+			it.layer(fixture.layer, { timeout: "30 seconds" })((it) => {
+				it.effect("reads a 404 as notFound, not as a transport failure", () =>
+					// The split the consumer asked for: "this version does not exist" must
+					// be distinguishable from "something went wrong fetching one that
+					// does", because the two warrant opposite recovery.
+					Effect.gen(function* () {
+						const error = yield* Effect.flip(extract(published(WITH_TARBALL)));
+						assert.strictEqual(error.reason, "notFound");
+					}),
+				);
+			});
+		}
 
-		it.effect("reads a 500 as http rather than notFound", () =>
-			Effect.gen(function* () {
-				const error = yield* failure(published(WITH_TARBALL), { status: 500 });
-				assert.strictEqual(error.reason, "http");
-				assert.strictEqual(error.status, 500);
-			}),
-		);
+		{
+			const fixture = scenario({ status: 500 });
+			it.layer(fixture.layer, { timeout: "30 seconds" })((it) => {
+				it.effect("reads a 500 as http rather than notFound", () =>
+					Effect.gen(function* () {
+						const error = yield* Effect.flip(extract(published(WITH_TARBALL)));
+						assert.strictEqual(error.reason, "http");
+						assert.strictEqual(error.status, 500);
+					}),
+				);
+			});
+		}
 
-		it.effect("reads a transport failure as http", () =>
-			Effect.gen(function* () {
-				const error = yield* failure(published(WITH_TARBALL), "transport");
-				assert.strictEqual(error.reason, "http");
-			}),
-		);
+		{
+			const fixture = scenario("transport");
+			it.layer(fixture.layer, { timeout: "30 seconds" })((it) => {
+				it.effect("reads a transport failure as http", () =>
+					Effect.gen(function* () {
+						const error = yield* Effect.flip(extract(published(WITH_TARBALL)));
+						assert.strictEqual(error.reason, "http");
+					}),
+				);
+			});
+		}
 	});
 
 	describe("integrity verification", () => {
-		it.effect("accepts bytes matching the published integrity", () =>
-			Effect.gen(function* () {
-				const directory = yield* success(published({ ...WITH_TARBALL, integrity: INTEGRITY }), { status: 200 });
-				assert.match(directory, /\/package$/);
-			}),
-		);
-
-		it.effect("fails integrityMismatch when the bytes differ, naming both hashes", () =>
-			Effect.gen(function* () {
-				const error = yield* failure(published({ ...WITH_TARBALL, integrity: INTEGRITY }), {
-					status: 200,
-					body: new TextEncoder().encode("poisoned"),
-				});
-				assert.strictEqual(error.reason, "integrityMismatch");
-				assert.strictEqual(error.expected, INTEGRITY);
-				assert.notStrictEqual(error.actual, INTEGRITY);
-			}),
-		);
-
-		it.effect("NEVER reaches tar when integrity fails — the whole point of the ordering", () =>
-			// A poisoned intermediary's bytes must not be unpacked. Asserting on
-			// the spawn log rather than on the error makes that structural: a
-			// mutant that verifies AFTER extracting still fails typed, and only
-			// this assertion catches it.
-			Effect.gen(function* () {
-				const run = scenario({ status: 200, body: new TextEncoder().encode("poisoned") });
-				yield* Effect.flip(run.extract(published({ ...WITH_TARBALL, integrity: INTEGRITY })));
-				assert.deepStrictEqual(run.spawns, []);
-			}),
-		);
-
-		it.effect("reports a digest that could not be COMPUTED as unverifiable, not as a mismatch", () =>
-			// A mismatch is a measurement: two digests exist and differ, which is what
-			// tampering looks like. A runtime refusing the algorithm (SHA-1 under a
-			// FIPS-configured Node) produces no digest at all, so nothing was
-			// compared. Reporting the second as the first routes a platform problem
-			// into tamper handling and renders "did not match (expected X, got
-			// unknown)" — evidence of an attack nobody observed. This is the same
-			// class the wave fixes in PackageManagerInstaller.
-			Effect.gen(function* () {
-				const refusingCrypto = Layer.succeed(
-					Crypto.Crypto,
-					Crypto.make({
-						digest: () =>
-							Effect.fail(
-								PlatformError.badArgument({ module: "Crypto", method: "digest", description: "algorithm refused" }),
-							),
-						randomBytes: (size) => new Uint8Array(size),
+		{
+			const fixture = scenario({ status: 200 });
+			it.layer(fixture.layer, { timeout: "30 seconds" })((it) => {
+				it.effect("accepts bytes matching the published integrity", () =>
+					Effect.gen(function* () {
+						const directory = yield* extract(published({ ...WITH_TARBALL, integrity: INTEGRITY }));
+						assert.match(directory, /\/package$/);
 					}),
 				);
-				const spawner = scripted(() => ({ exit: 0 }));
-				const layer = PackageTarball.layer.pipe(
-					Layer.provide(Layer.mergeAll(spawner.layer, MemoryFileSystem.layer, refusingCrypto, http({ status: 200 }))),
-				);
-				const error = yield* Effect.flip(
+			});
+		}
+
+		{
+			const fixture = scenario({
+				status: 200,
+				body: new TextEncoder().encode("poisoned"),
+			});
+			it.layer(fixture.layer, { timeout: "30 seconds" })((it) => {
+				it.effect("fails integrityMismatch when the bytes differ, naming both hashes", () =>
 					Effect.gen(function* () {
-						const tarball = yield* PackageTarball;
-						return yield* tarball.extract(published({ ...WITH_TARBALL, integrity: INTEGRITY }));
-					}).pipe(Effect.scoped, Effect.provide(layer)),
+						const error = yield* Effect.flip(extract(published({ ...WITH_TARBALL, integrity: INTEGRITY })));
+						assert.strictEqual(error.reason, "integrityMismatch");
+						assert.strictEqual(error.expected, INTEGRITY);
+						assert.notStrictEqual(error.actual, INTEGRITY);
+					}),
 				);
-				assert.strictEqual(error.reason, "integrityUnverifiable");
-				assert.strictEqual(error.actual, undefined, "nothing was measured, so there is no actual digest to report");
-				assert.include(error.message, "never checked");
-				assert.notInclude(error.message, "did not match");
-				assert.deepStrictEqual(spawner.spawns, [], "an unverified tarball must still never reach tar");
-			}),
-		);
+			});
+		}
 
-		it.effect("does not false-mismatch on an unpadded integrity, which the SRI grammar permits", () =>
-			// Refusing a valid tarball over base64 padding would be worse than
-			// the mismatch it imitates.
-			Effect.gen(function* () {
-				const version = published({ ...WITH_TARBALL, integrity: INTEGRITY.replace(/=+$/, "") });
-				assert.match(yield* success(version, { status: 200 }), /\/package$/);
-			}),
-		);
+		{
+			const run = scenario({ status: 200, body: new TextEncoder().encode("poisoned") });
+			it.layer(run.layer, { timeout: "30 seconds" })((it) => {
+				it.effect("NEVER reaches tar when integrity fails — the whole point of the ordering", () =>
+					// A poisoned intermediary's bytes must not be unpacked. Asserting on
+					// the spawn log rather than on the error makes that structural: a
+					// mutant that verifies AFTER extracting still fails typed, and only
+					// this assertion catches it.
+					Effect.gen(function* () {
+						yield* Effect.flip(extract(published({ ...WITH_TARBALL, integrity: INTEGRITY })));
+						assert.deepStrictEqual(run.spawns, []);
+					}),
+				);
+			});
+		}
 
-		it.effect("proceeds when the registry published no integrity at all", () =>
-			Effect.gen(function* () {
-				assert.match(yield* success(published(WITH_TARBALL), { status: 200 }), /\/package$/);
-			}),
-		);
+		{
+			const refusingCrypto = Layer.succeed(
+				Crypto.Crypto,
+				Crypto.make({
+					digest: () =>
+						Effect.fail(
+							PlatformError.badArgument({ module: "Crypto", method: "digest", description: "algorithm refused" }),
+						),
+					randomBytes: (size) => new Uint8Array(size),
+				}),
+			);
+			const spawner = scripted(() => ({ exit: 0 }));
+			const layer = PackageTarball.layer.pipe(
+				Layer.provide(Layer.mergeAll(spawner.layer, MemoryFileSystem.layer, refusingCrypto, http({ status: 200 }))),
+			);
+			it.layer(layer, { timeout: "30 seconds" })((it) => {
+				it.effect("reports a digest that could not be COMPUTED as unverifiable, not as a mismatch", () =>
+					// A mismatch is a measurement: two digests exist and differ, which is what
+					// tampering looks like. A runtime refusing the algorithm (SHA-1 under a
+					// FIPS-configured Node) produces no digest at all, so nothing was
+					// compared. Reporting the second as the first routes a platform problem
+					// into tamper handling and renders "did not match (expected X, got
+					// unknown)" — evidence of an attack nobody observed. This is the same
+					// class the wave fixes in PackageManagerInstaller.
+					Effect.gen(function* () {
+						const error = yield* Effect.flip(
+							Effect.gen(function* () {
+								const tarball = yield* PackageTarball;
+								return yield* tarball.extract(published({ ...WITH_TARBALL, integrity: INTEGRITY }));
+							}),
+						);
+						assert.strictEqual(error.reason, "integrityUnverifiable");
+						assert.strictEqual(error.actual, undefined, "nothing was measured, so there is no actual digest to report");
+						assert.include(error.message, "never checked");
+						assert.notInclude(error.message, "did not match");
+						assert.deepStrictEqual(spawner.spawns, [], "an unverified tarball must still never reach tar");
+					}),
+				);
+			});
+		}
+
+		{
+			const fixture = scenario({ status: 200 });
+			it.layer(fixture.layer, { timeout: "30 seconds" })((it) => {
+				it.effect("does not false-mismatch on an unpadded integrity, which the SRI grammar permits", () =>
+					// Refusing a valid tarball over base64 padding would be worse than
+					// the mismatch it imitates.
+					Effect.gen(function* () {
+						const version = published({ ...WITH_TARBALL, integrity: INTEGRITY.replace(/=+$/, "") });
+						assert.match(yield* extract(version), /\/package$/);
+					}),
+				);
+			});
+		}
+
+		{
+			const fixture = scenario({ status: 200 });
+			it.layer(fixture.layer, { timeout: "30 seconds" })((it) => {
+				it.effect("proceeds when the registry published no integrity at all", () =>
+					Effect.gen(function* () {
+						assert.match(yield* extract(published(WITH_TARBALL)), /\/package$/);
+					}),
+				);
+			});
+		}
 	});
 
 	describe("extraction", () => {
-		it.effect("unpacks with tar and answers the package root", () =>
-			Effect.gen(function* () {
-				const run = scenario({ status: 200 });
-				const directory = yield* run.extract(published(WITH_TARBALL));
-				assert.strictEqual(run.spawns.length, 1);
-				assert.strictEqual(run.spawns[0]?.command, "tar");
-				assert.include(run.spawns[0]?.args ?? [], "-xzf");
-				assert.match(directory, /\/package$/);
-			}),
-		);
+		{
+			const run = scenario({ status: 200 });
+			it.layer(run.layer, { timeout: "30 seconds" })((it) => {
+				it.effect("unpacks with tar and answers the package root", () =>
+					Effect.gen(function* () {
+						const directory = yield* extract(published(WITH_TARBALL));
+						assert.strictEqual(run.spawns.length, 1);
+						assert.strictEqual(run.spawns[0]?.command, "tar");
+						assert.include(run.spawns[0]?.args ?? [], "-xzf");
+						assert.match(directory, /\/package$/);
+					}),
+				);
+			});
+		}
 
-		it.effect("fails extractFailed when tar exits non-zero", () =>
-			Effect.gen(function* () {
-				const error = yield* failure(published(WITH_TARBALL), { status: 200 }, 1);
-				assert.strictEqual(error.reason, "extractFailed");
-			}),
-		);
+		{
+			const fixture = scenario({ status: 200 }, 1);
+			it.layer(fixture.layer, { timeout: "30 seconds" })((it) => {
+				it.effect("fails extractFailed when tar exits non-zero", () =>
+					Effect.gen(function* () {
+						const error = yield* Effect.flip(extract(published(WITH_TARBALL)));
+						assert.strictEqual(error.reason, "extractFailed");
+					}),
+				);
+			});
+		}
 	});
 });
 

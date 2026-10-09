@@ -3,6 +3,8 @@
 // and mtimes, directories, symlinks) and the seed options (root).
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertExitFailure } from "@effect/vitest/utils";
+import { identity } from "effect/Function";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -138,20 +140,21 @@ describe("tagged seed entries — directories, symlinks and modes", () => {
 		}),
 	);
 
-	it.effect("layerWith accepts tagged entries", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			assert.strictEqual((yield* fs.stat("/srv")).type, "Directory");
-			assert.strictEqual(yield* fs.readLink("/etc/alias"), "/srv");
-		}).pipe(
-			Effect.provide(
-				MemoryFileSystem.layerWith({
-					"/srv": MemoryFileSystem.directory(),
-					"/etc/alias": MemoryFileSystem.symlink("/srv"),
-				}),
-			),
-		),
-	);
+	it.layer(
+		MemoryFileSystem.layerWith({
+			"/srv": MemoryFileSystem.directory(),
+			"/etc/alias": MemoryFileSystem.symlink("/srv"),
+		}),
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("layerWith accepts tagged entries", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				assert.strictEqual((yield* fs.stat("/srv")).type, "Directory");
+				assert.strictEqual(yield* fs.readLink("/etc/alias"), "/srv");
+			}),
+		);
+	});
 });
 
 describe("seed options: root", () => {
@@ -202,19 +205,23 @@ describe("seed options: root", () => {
 		}),
 	);
 
-	it.effect("layerWith forwards options to the Volume", () =>
-		Effect.gen(function* () {
-			const volume = yield* MemoryFileSystem.Volume;
-			assert.deepStrictEqual(volume.paths(), ["/ws/a.txt"]);
-		}).pipe(Effect.provide(MemoryFileSystem.layerWith({ "a.txt": "x" }, { root: "/ws" }))),
-	);
+	it.layer(MemoryFileSystem.layerWith({ "a.txt": "x" }, { root: "/ws" }), { timeout: "30 seconds" })((it) => {
+		it.effect("layerWith forwards options to the Volume", () =>
+			Effect.gen(function* () {
+				const volume = yield* MemoryFileSystem.Volume;
+				assert.deepStrictEqual(volume.paths(), ["/ws/a.txt"]);
+			}),
+		);
+	});
 
-	it.effect("layerWith forwards options alongside faults", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			assert.strictEqual(yield* fs.readFileString("/ws/a.txt"), "x");
-		}).pipe(Effect.provide(MemoryFileSystem.layerWith({ "a.txt": "x" }, { root: "/ws", faults: {} }))),
-	);
+	it.layer(MemoryFileSystem.layerWith({ "a.txt": "x" }, { root: "/ws", faults: {} }), { timeout: "30 seconds" })((it) => {
+		it.effect("layerWith forwards options alongside faults", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				assert.strictEqual(yield* fs.readFileString("/ws/a.txt"), "x");
+			}),
+		);
+	});
 
 	it.effect("normalizes a root with a trailing slash or dot-dot", () =>
 		Effect.gen(function* () {
@@ -248,7 +255,12 @@ describe("seed options: root", () => {
 					MemoryFileSystem.layerWith({ "/a": "" }, { root: "/ws" }),
 				),
 			);
-			assert.isTrue(Exit.isFailure(exit) && Cause.hasDies(exit.cause));
+			const cause = Exit.match(exit, {
+				onFailure: identity,
+				onSuccess: () => assert.fail("Expected layerWith to die on a bad root"),
+			});
+			assertExitFailure(exit, cause);
+			assert.isTrue(Cause.hasDies(cause));
 		}),
 	);
 

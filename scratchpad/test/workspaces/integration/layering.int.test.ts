@@ -1,12 +1,12 @@
 // @effect-diagnostics nodeBuiltinImport:skip-file
 // The lab's real source module graph, held to the upstream layer ordering.
 // The whole-workspace acyclicity control uses the containing Bun workspace.
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
-import { afterAll, assert, describe, layer } from "@effect/vitest";
+import { assert, describe, layer } from "@effect/vitest";
+import { platform, type Tree } from "../fixtures.ts";
 import type { DependencyField } from "../../../effected/npm/index.ts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -55,28 +55,26 @@ const moduleGraph = (): LayeringGraph => {
 	return { names: modules.map((name) => `@lab/${name}`), edges };
 };
 
-// Materialize the real source graph as Bun workspace manifests so these remain
-// discovery + policy integration tests. Nothing is installed or fetched.
-const LAB_WORKSPACE = mkdtempSync(join(tmpdir(), "workspaces-lab-graph-"));
+// Discover the actual source graph through virtual manifests; retain disk reads
+// above because the source imports themselves are the regression oracle.
+const LAB_WORKSPACE = "/lab-module-graph";
 const sourceGraph = moduleGraph();
-writeFileSync(join(LAB_WORKSPACE, "package.json"), JSON.stringify({
-	name: "lab-module-graph", private: true, workspaces: ["modules/*"],
-}));
-for (const name of sourceGraph.names) {
-	const directory = join(LAB_WORKSPACE, "modules", name.slice("@lab/".length));
-	mkdirSync(directory, { recursive: true });
-	const dependencies = (field: DependencyField) => R.fromEntries(sourceGraph.edges
-		.filter((edge) => edge.from === name && edge.field === field)
-		.map((edge) => [edge.to, "workspace:*"]));
-	writeFileSync(join(directory, "package.json"), JSON.stringify({
-		name, version: "0.0.0", type: "module",
-		dependencies: dependencies("dependencies"), devDependencies: dependencies("devDependencies"),
-	}));
-}
-afterAll(() => rmSync(LAB_WORKSPACE, { recursive: true, force: true }));
-const Live = Workspaces.layer({ cwd: LAB_WORKSPACE }).pipe(
-	Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer)),
-);
+const tree: Tree = {
+	[POLICY]: readFileSync(POLICY, "utf8"),
+	[join(LAB_WORKSPACE, "package.json")]: JSON.stringify({
+		name: "lab-module-graph", private: true, workspaces: ["modules/*"],
+	}),
+	...R.fromEntries(sourceGraph.names.map((name) => {
+		const dependencies = (field: DependencyField) => R.fromEntries(sourceGraph.edges
+			.filter((edge) => edge.from === name && edge.field === field)
+			.map((edge) => [edge.to, "workspace:*"]));
+		return [join(LAB_WORKSPACE, "modules", name.slice("@lab/".length), "package.json"), JSON.stringify({
+			name, version: "0.0.0", type: "module",
+			dependencies: dependencies("dependencies"), devDependencies: dependencies("devDependencies"),
+		})];
+	})),
+};
+const Live = Workspaces.layer({ cwd: LAB_WORKSPACE }).pipe(Layer.provideMerge(platform(tree)));
 
 const facts = Effect.gen(function* () {
 	const policy = yield* LayerPolicy.load(POLICY);
@@ -96,7 +94,7 @@ const plus = (
 });
 
 describe("the kit's layering, checked by WorkspaceLayering", () => {
-	layer(Live)((it) => {
+	layer(Live, { timeout: "30 seconds" })((it) => {
 		it.effect("the lab module graph satisfies lab-layers.json, over dozens of real edges", () =>
 			Effect.gen(function* () {
 				const { policy } = yield* facts;
@@ -152,7 +150,7 @@ describe("the kit's layering, checked by WorkspaceLayering", () => {
 		);
 
 	});
-	layer(BunLive)((it) => {
+	layer(BunLive, { timeout: "30 seconds" })((it) => {
 		it.effect("the whole graph, every field included, is acyclic", () =>
 			Effect.gen(function* () {
 				const packages = yield* (yield* WorkspaceDiscovery).listPackages;

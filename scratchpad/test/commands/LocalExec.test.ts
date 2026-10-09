@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
@@ -125,7 +126,7 @@ describe("LocalExec layers", () => {
 		Effect.gen(function* () {
 			const local = yield* LocalExec;
 			const context = yield* local.context;
-			assert.isTrue(O.isNone(context));
+			assertNone(context);
 		}).pipe(withLayer(LocalExec.layerNone)),
 	);
 
@@ -162,7 +163,7 @@ describe("LocalExec layers", () => {
 	it.effect("layerTest defaults to None and accepts an override", () =>
 		Effect.gen(function* () {
 			const local = yield* LocalExec;
-			assert.isTrue(O.isNone(yield* local.context));
+			assertNone(yield* local.context);
 		}).pipe(withLayer(LocalExec.layerTest())),
 	);
 

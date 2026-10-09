@@ -1,8 +1,7 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
-import * as O from "effect/Option";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Schedule from "effect/Schedule";
 import { Text } from "ink";
 import type { ReactElement } from "react";
@@ -41,15 +40,16 @@ describe("Tabs reducer and keys", () => {
 
 	it("binds the arrows, tab and shift+tab, and plain digits with 0 as the tenth", () => {
 		const match = (key: Parameters<typeof Tabs.keys.match>[0]) => Tabs.keys.match(key);
-		assert.deepStrictEqual(match({ _tag: "Named", name: "right" }), O.some("next"));
-		assert.deepStrictEqual(match({ _tag: "Named", name: "left" }), O.some("prev"));
-		assert.deepStrictEqual(match({ _tag: "Named", name: "tab" }), O.some("next"));
-		assert.deepStrictEqual(match({ _tag: "Named", name: "shift+tab" }), O.some("prev"));
-		assert.deepStrictEqual(match({ _tag: "Char", char: "2" }), O.some({ jump: 1 }));
-		assert.deepStrictEqual(match({ _tag: "Char", char: "0" }), O.some({ jump: 9 }));
-		assert.isTrue(O.isNone(match({ _tag: "Named", name: "down" })), "↓ is a column key");
-		assert.deepStrictEqual(Tabs.columnKeys.match({ _tag: "Named", name: "down" }), O.some("next"));
-		assert.deepStrictEqual(Tabs.columnKeys.match({ _tag: "Named", name: "up" }), O.some("prev"));
+		assertSome(match({ _tag: "Named", name: "right" }), "next");
+		assertSome(match({ _tag: "Named", name: "left" }), "prev");
+		assertSome(match({ _tag: "Named", name: "tab" }), "next");
+		assertSome(match({ _tag: "Named", name: "shift+tab" }), "prev");
+		assertSome(match({ _tag: "Char", char: "2" }), { jump: 1 });
+		assertSome(match({ _tag: "Char", char: "0" }), { jump: 9 });
+		// ↓ is a column key.
+		assertNone(match({ _tag: "Named", name: "down" }));
+		assertSome(Tabs.columnKeys.match({ _tag: "Named", name: "down" }), "next");
+		assertSome(Tabs.columnKeys.match({ _tag: "Named", name: "up" }), "prev");
 	});
 });
 
@@ -70,7 +70,7 @@ describe("Tabs.View, uncontrolled", () => {
 				["alpha", 0],
 				["gamma", 2],
 			]);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("tab and shift+tab cycle while focused", () =>
@@ -82,7 +82,7 @@ describe("Tabs.View, uncontrolled", () => {
 			assert.strictEqual(active(yield* handle.frame), "Beta");
 			yield* handle.press("shift+tab", "shift+tab");
 			assert.strictEqual(active(yield* handle.frame), "Gamma");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("unfocused, keys are ignored and every tab is muted", () =>
@@ -95,7 +95,7 @@ describe("Tabs.View, uncontrolled", () => {
 			const frame = yield* handle.frame;
 			assert.notInclude(frame, "[accent]");
 			assert.include(frame, "[muted]");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
@@ -112,7 +112,7 @@ describe("Tabs.View, controlled", () => {
 			assert.strictEqual(active(yield* handle.frame), "Alpha", "still the controlled value");
 			yield* handle.rerender(hosting({ tabs: three, value: "beta" }, calls));
 			assert.strictEqual(active(yield* handle.frame), "Beta");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
@@ -147,7 +147,7 @@ describe("Tabs.View, controlled, when the parent rejects or accepts a change", (
 				["beta", 1],
 			]);
 			assert.strictEqual(active(yield* handle.frame), "Alpha");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a parent that accepts: keys in separate reads advance it", () =>
@@ -162,7 +162,7 @@ describe("Tabs.View, controlled, when the parent rejects or accepts a change", (
 				["gamma", 2],
 			]);
 			assert.strictEqual(active(yield* handle.frame), "Gamma");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a parent that accepts: two keys in one read still reach the second tab", () =>
@@ -178,7 +178,7 @@ describe("Tabs.View, controlled, when the parent rejects or accepts a change", (
 			assert.strictEqual(active(yield* handle.frame), "Gamma");
 			yield* handle.press("right");
 			assert.strictEqual(active(yield* handle.frame), "Alpha", "a later read steps from the accepted value");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
@@ -220,7 +220,7 @@ describe("Tabs.View drawing", () => {
 			);
 			yield* handle.press("down");
 			assert.strictEqual(active(yield* handle.frame), "Beta");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("tabs wider than a 20-column terminal stay on one line around the active tab", () => Effect.gen(function* () {
@@ -235,7 +235,7 @@ describe("Tabs.View drawing", () => {
 			yield* check("Section 0");
 			yield* handle.type("6");
 			yield* check("Section 5");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
@@ -274,7 +274,7 @@ describe("Tabs.View at colour none", () => {
 					.map((line) => line.trimEnd()),
 				[" Alpha", "[Beta]", " Gamma"],
 			);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("the overflow fit counts the brackets, so the row stays within the width", () =>
@@ -318,7 +318,6 @@ const oneChunk = Effect.fn("oneChunk")(function* (screen: Screen<never>, chunk: 
 			CliUi.run(screen).pipe(
 				Effect.provideService(UiStreams, fake.streams),
 				Effect.provideService(CliInteractive, true),
-				Effect.provide(CliTheme.layerTest()),
 			),
 		);
 		const until = (ready: () => boolean) =>
@@ -333,68 +332,71 @@ const oneChunk = Effect.fn("oneChunk")(function* (screen: Screen<never>, chunk: 
 		yield* Fiber.interrupt(fiber);
 	});
 
-describe("Tabs input in one chunk", () => {
-	it.live("two arrows in one stdin write move two tabs", () =>
-		Effect.gen(function* () {
-			const calls: Array<readonly [Name, number]> = [];
-			yield* oneChunk(hosting({ tabs: three }, calls), "\u001b[C\u001b[C", () => calls.length >= 3);
-			assert.deepStrictEqual(calls, [
-				["alpha", 0],
-				["beta", 1],
-				["gamma", 2],
-			]);
-		}),
-	);
+// Ink readiness is driven by native timers; keep scheduled polling on the live clock.
+it.layer(CliTheme.layerTest(), { excludeTestServices: true, timeout: "30 seconds" })((it) => {
+	describe("Tabs input in one chunk", () => {
+		it.effect("two arrows in one stdin write move two tabs", () =>
+			Effect.gen(function* () {
+				const calls: Array<readonly [Name, number]> = [];
+				yield* oneChunk(hosting({ tabs: three }, calls), "\u001b[C\u001b[C", () => calls.length >= 3);
+				assert.deepStrictEqual(calls, [
+					["alpha", 0],
+					["beta", 1],
+					["gamma", 2],
+				]);
+			}),
+		);
 
-	// Ink splits a chunk at escape sequences, never inside plain text: "\t\t" arrives as one pasted string, not as
-	// two Tab keys. So the Tab cases lead with, or are, escape sequences: Shift-Tab is `ESC [ Z`.
-	it.live("shift+tab twice, and tab then right, in one stdin write each move two tabs", () =>
-		Effect.gen(function* () {
-			const back: Array<readonly [Name, number]> = [];
-			yield* oneChunk(hosting({ tabs: three }, back), "\u001b[Z\u001b[Z", () => back.length >= 3);
-			assert.deepStrictEqual(back, [
-				["alpha", 0],
-				["gamma", 2],
-				["beta", 1],
-			]);
-			const forward: Array<readonly [Name, number]> = [];
-			yield* oneChunk(hosting({ tabs: three }, forward), "\t\u001b[C", () => forward.length >= 3);
-			assert.deepStrictEqual(forward, [
-				["alpha", 0],
-				["beta", 1],
-				["gamma", 2],
-			]);
-		}),
-	);
-});
+		// Ink splits a chunk at escape sequences, never inside plain text: "\t\t" arrives as one pasted string, not as
+		// two Tab keys. So the Tab cases lead with, or are, escape sequences: Shift-Tab is `ESC [ Z`.
+		it.effect("shift+tab twice, and tab then right, in one stdin write each move two tabs", () =>
+			Effect.gen(function* () {
+				const back: Array<readonly [Name, number]> = [];
+				yield* oneChunk(hosting({ tabs: three }, back), "\u001b[Z\u001b[Z", () => back.length >= 3);
+				assert.deepStrictEqual(back, [
+					["alpha", 0],
+					["gamma", 2],
+					["beta", 1],
+				]);
+				const forward: Array<readonly [Name, number]> = [];
+				yield* oneChunk(hosting({ tabs: three }, forward), "\t\u001b[C", () => forward.length >= 3);
+				assert.deepStrictEqual(forward, [
+					["alpha", 0],
+					["beta", 1],
+					["gamma", 2],
+				]);
+			}),
+		);
+	});
 
-describe("Tabs input", () => {
-	it.live("adds no keypress or data listener, and no second readable listener, to stdin", () => Effect.gen(function* () {
-			const listeners = Effect.fn("listeners")(function* (screen: Screen<never>) {
-					const fake = makeFakeStreams();
-					const stdin = fake.streams.stdin;
-					const fiber = yield* Effect.forkChild(
-						CliUi.run(screen).pipe(
-							Effect.provideService(UiStreams, fake.streams),
-							Effect.provideService(CliInteractive, true),
-							Effect.provide(CliTheme.layerTest()),
-						),
-					);
-					yield* Effect.suspend(() => (fake.rawModes.includes(true) ? Effect.void : Effect.fail("not yet"))).pipe(
-						Effect.retry(Schedule.spaced("5 millis")),
-						Effect.timeout("2 seconds"),
-						Effect.orDie,
-					);
-					const counts = ["keypress", "data", "readable"].map((event) => stdin.listenerCount(event));
-					yield* Fiber.interrupt(fiber);
-					return counts;
-				});
-			const baseline = yield* listeners(() => createElement(Text, null, "no tabs"));
-			const withTabs = yield* listeners(hosting({ tabs: three }, []));
-			assert.deepStrictEqual(baseline.slice(0, 2), [0, 0], "Ink itself reads through readable");
-			assert.deepStrictEqual(withTabs, baseline);
-		}),
-	);
+	describe("Tabs input", () => {
+		it.effect("adds no keypress or data listener, and no second readable listener, to stdin", () => Effect.gen(function* () {
+				const listeners = Effect.fn("listeners")(function* (screen: Screen<never>) {
+						const fake = makeFakeStreams();
+						const stdin = fake.streams.stdin;
+						const fiber = yield* Effect.forkChild(
+							CliUi.run(screen).pipe(
+								Effect.provideService(UiStreams, fake.streams),
+								Effect.provideService(CliInteractive, true),
+							),
+						);
+						yield* Effect.suspend(() => (fake.rawModes.includes(true) ? Effect.void : Effect.fail("not yet"))).pipe(
+							Effect.retry(Schedule.spaced("5 millis")),
+							Effect.timeout("2 seconds"),
+							Effect.orDie,
+						);
+						const counts = ["keypress", "data", "readable"].map((event) => stdin.listenerCount(event));
+						yield* Fiber.interrupt(fiber);
+						return counts;
+					});
+				const baseline = yield* listeners(() => createElement(Text, null, "no tabs"));
+				const withTabs = yield* listeners(hosting({ tabs: three }, []));
+				assert.deepStrictEqual(baseline.slice(0, 2), [0, 0], "Ink itself reads through readable");
+				assert.deepStrictEqual(withTabs, baseline);
+			}),
+		);
+	});
+
 });
 
 /** Unused: keeps ReactElement imported for the hosting helper's inferred types. */

@@ -1,6 +1,5 @@
-import { assert, it } from "@effect/vitest";
+import { assert, expectTypeOf, it } from "@effect/vitest";
 import * as Result from "effect/Result";
-import { expectTypeOf } from "vitest";
 import { Markdown } from "../../effected/markdown/Markdown.ts";
 import { Table, TableAlign } from "../../effected/markdown/MarkdownNode.ts";
 

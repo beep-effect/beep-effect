@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { APIReference } from "../../effected/schema-org/APIReference.ts";
@@ -137,15 +138,13 @@ describe("NodeRef", () => {
 		// Totality is the point: identity failures belong to JsonLdDocument.buildResult,
 		// where they arrive typed, not to an arbitrary call site as a throw.
 		assert.strictEqual(NodeRef.to("not valid")["@id"], "not valid");
-		assert.isTrue(
-			Result.isFailure(JsonLdDocument.buildResult([TechArticle.make({ "@id": ID, about: [NodeRef.to("not valid")] })])),
-		);
+		assertFailure(Result.mapError(JsonLdDocument.buildResult([TechArticle.make({ "@id": ID, about: [NodeRef.to("not valid")] })]), () => undefined), undefined);
 	});
 
 	it("toCheckedResult is the sync primitive and rejects a malformed id", () => {
-		assert.isTrue(Result.isSuccess(NodeRef.toCheckedResult("https://example.com/#a")));
-		assert.isTrue(Result.isFailure(NodeRef.toCheckedResult("has space")));
-		assert.isTrue(Result.isFailure(NodeRef.toCheckedResult("")));
+		assertSuccess(Result.map(NodeRef.toCheckedResult("https://example.com/#a"), () => undefined), undefined);
+		assertFailure(Result.mapError(NodeRef.toCheckedResult("has space"), () => undefined), undefined);
+		assertFailure(Result.mapError(NodeRef.toCheckedResult(""), () => undefined), undefined);
 	});
 
 	it("encodes to the {'@id'} form and nothing else", () => {

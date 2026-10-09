@@ -18,7 +18,7 @@
 
 import { readFileSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
-import { assertDefined, assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertExitSuccess, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
@@ -212,15 +212,15 @@ describe("Funding — `url` is required", () => {
 	// value.
 	it.effect("an object without a url fails to decode", () =>
 		Effect.gen(function* () {
-			const result = yield* Effect.result(decode(field, [{ type: "github" }]));
-			assert.isTrue(result._tag === "Failure");
+			const result = yield* decode(field, [{ type: "github" }]).pipe(Effect.flip, Effect.asVoid, Effect.exit);
+			assertExitSuccess(result, undefined);
 		}),
 	);
 
 	it.effect("a non-string url fails to decode", () =>
 		Effect.gen(function* () {
-			const result = yield* Effect.result(decode(field, { url: 42 }));
-			assert.isTrue(result._tag === "Failure");
+			const result = yield* decode(field, { url: 42 }).pipe(Effect.flip, Effect.asVoid, Effect.exit);
+			assertExitSuccess(result, undefined);
 		}),
 	);
 

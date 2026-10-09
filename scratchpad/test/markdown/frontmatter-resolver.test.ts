@@ -12,7 +12,9 @@
 // Error suffix; the declaration union members carry the SchemaDeclaration
 // prefix so the package index stays collision-free.
 
+import { fcRuns } from "@beep/fc-runs";
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
@@ -36,7 +38,7 @@ const BlogPost = S.Struct({ slug: S.String });
 describe("SchemaResolver.classify", () => {
 	it("classifies a string containing :// as ByUrl", () => {
 		const result = SchemaResolver.classify("https://example.com/schema.json");
-		assert.isTrue(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		if (Result.isFailure(result)) return;
 		assert.instanceOf(result.success, SchemaDeclarationByUrl);
 		assert.strictEqual(result.success.url, "https://example.com/schema.json");
@@ -45,7 +47,7 @@ describe("SchemaResolver.classify", () => {
 	it("classifies ./, ../ and / leading strings as ByPath", () => {
 		for (const path of ["./schemas/skill.json", "../shared/skill.json", "/abs/skill.json"]) {
 			const result = SchemaResolver.classify(path);
-			assert.isTrue(Result.isSuccess(result), path);
+			assertSuccess(result, Result.getOrThrow(result));
 			if (Result.isFailure(result)) return;
 			assert.instanceOf(result.success, SchemaDeclarationByPath);
 			assert.strictEqual(result.success.path, path);
@@ -55,7 +57,7 @@ describe("SchemaResolver.classify", () => {
 	it("classifies a mapping as Inline carrying the document", () => {
 		const document = { type: "object", properties: { title: { type: "string" } } };
 		const result = SchemaResolver.classify(document);
-		assert.isTrue(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		if (Result.isFailure(result)) return;
 		assert.instanceOf(result.success, SchemaDeclarationInline);
 		assert.deepStrictEqual(result.success.document, document);
@@ -63,7 +65,7 @@ describe("SchemaResolver.classify", () => {
 
 	it("classifies a bare name with no version", () => {
 		const result = SchemaResolver.classify("blog-post");
-		assert.isTrue(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		if (Result.isFailure(result)) return;
 		assert.instanceOf(result.success, SchemaDeclarationByName);
 		assert.strictEqual(result.success.name, "blog-post");
@@ -72,7 +74,7 @@ describe("SchemaResolver.classify", () => {
 
 	it("splits name and version at the last @", () => {
 		const result = SchemaResolver.classify("skill@2.1.0");
-		assert.isTrue(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		if (Result.isFailure(result)) return;
 		assert.instanceOf(result.success, SchemaDeclarationByName);
 		assert.strictEqual(result.success.name, "skill");
@@ -81,14 +83,14 @@ describe("SchemaResolver.classify", () => {
 
 	it("keeps a leading npm scope @ with the name", () => {
 		const scoped = SchemaResolver.classify("@savvy/skill@2.1.0");
-		assert.isTrue(Result.isSuccess(scoped));
+		assertSuccess(scoped, Result.getOrThrow(scoped));
 		if (Result.isFailure(scoped)) return;
 		assert.instanceOf(scoped.success, SchemaDeclarationByName);
 		assert.strictEqual(scoped.success.name, "@savvy/skill");
 		assert.strictEqual(scoped.success.version, "2.1.0");
 
 		const bare = SchemaResolver.classify("@savvy/skill");
-		assert.isTrue(Result.isSuccess(bare));
+		assertSuccess(bare, Result.getOrThrow(bare));
 		if (Result.isFailure(bare)) return;
 		assert.instanceOf(bare.success, SchemaDeclarationByName);
 		assert.strictEqual(bare.success.name, "@savvy/skill");
@@ -102,7 +104,7 @@ describe("SchemaResolver.classify", () => {
 			["skill@2.1.0", "2.1.0"],
 		] as const) {
 			const result = SchemaResolver.classify(declaration);
-			assert.isTrue(Result.isSuccess(result), declaration);
+			assertSuccess(result, Result.getOrThrow(result));
 			if (Result.isFailure(result)) return;
 			assert.instanceOf(result.success, SchemaDeclarationByName);
 			assert.strictEqual(result.success.version, version);
@@ -124,7 +126,7 @@ describe("SchemaResolver.classify", () => {
 			"a@b@c",
 		]) {
 			const result = SchemaResolver.classify(junk);
-			assert.isTrue(Result.isFailure(result), junk);
+			assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 			if (Result.isSuccess(result)) return;
 			assert.instanceOf(result.failure, SchemaDeclarationInvalidError);
 		}
@@ -133,7 +135,7 @@ describe("SchemaResolver.classify", () => {
 	it("rejects non-string non-mapping values and the empty string", () => {
 		for (const value of ["", 42, true, null, undefined, ["skill"]]) {
 			const result = SchemaResolver.classify(value);
-			assert.isTrue(Result.isFailure(result), String(value));
+			assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 			if (Result.isSuccess(result)) return;
 			assert.instanceOf(result.failure, SchemaDeclarationInvalidError);
 		}
@@ -155,7 +157,7 @@ describe("SchemaResolver.classify", () => {
 				}
 			}
 		},
-		{ arbitrary: { runs: 300 } },
+		{ arbitrary: fcRuns(300) },
 	);
 
 	const Segments = S.Array(S.Int.check(S.isBetween({ minimum: 0, maximum: 9999 }))).check(
@@ -168,7 +170,7 @@ describe("SchemaResolver.classify", () => {
 		([parts]) => {
 			const version = parts.join(".");
 			const result = SchemaResolver.classify(`skill@${version}`);
-			assert.isTrue(Result.isSuccess(result));
+			assertSuccess(result, Result.getOrThrow(result));
 			if (Result.isSuccess(result)) {
 				const declaration = result.success;
 				assert.instanceOf(declaration, SchemaDeclarationByName);
@@ -177,30 +179,30 @@ describe("SchemaResolver.classify", () => {
 				}
 			}
 			const junk = SchemaResolver.classify(`skill@${version}-beta`);
-			assert.isTrue(Result.isFailure(junk));
+			assertFailure(junk, junk.pipe(Result.flip, Result.getOrThrow));
 		},
-		{ arbitrary: { runs: 200 } },
+		{ arbitrary: fcRuns(200) },
 	);
 });
 
 describe("SchemaResolver.declarationOf", () => {
 	it("extracts and classifies the $schema key", () => {
 		const result = SchemaResolver.declarationOf({ $schema: "skill@2.1.0", title: "t" });
-		assert.isTrue(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		if (Result.isFailure(result)) return;
 		assert.instanceOf(result.success, SchemaDeclarationByName);
 	});
 
 	it("yields undefined for a missing declaration by default", () => {
 		const result = SchemaResolver.declarationOf({ title: "t" });
-		assert.isTrue(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		if (Result.isFailure(result)) return;
 		assert.isUndefined(result.success);
 	});
 
 	it("fails typed for a missing declaration under requireDeclaration", () => {
 		const result = SchemaResolver.declarationOf({ title: "t" }, { requireDeclaration: true });
-		assert.isTrue(Result.isFailure(result));
+		assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 		if (Result.isSuccess(result)) return;
 		assert.instanceOf(result.failure, SchemaDeclarationMissingError);
 	});
@@ -208,7 +210,7 @@ describe("SchemaResolver.declarationOf", () => {
 	it("treats non-mapping data as carrying no declaration", () => {
 		for (const data of [null, undefined, "title: x", 42, ["a"]]) {
 			const result = SchemaResolver.declarationOf(data);
-			assert.isTrue(Result.isSuccess(result), String(data));
+			assertSuccess(result, Result.getOrThrow(result));
 			if (Result.isFailure(result)) return;
 			assert.isUndefined(result.success);
 		}
@@ -216,7 +218,7 @@ describe("SchemaResolver.declarationOf", () => {
 
 	it("propagates an invalid declaration value as a typed error", () => {
 		const result = SchemaResolver.declarationOf({ $schema: 42 });
-		assert.isTrue(Result.isFailure(result));
+		assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 		if (Result.isSuccess(result)) return;
 		assert.instanceOf(result.failure, SchemaDeclarationInvalidError);
 	});
@@ -230,7 +232,7 @@ describe("SchemaResolver.fromRegistry", () => {
 
 	const declare = (value: string) => {
 		const result = SchemaResolver.classify(value);
-		assert.isTrue(Result.isSuccess(result), value);
+		assertSuccess(result, Result.getOrThrow(result));
 		if (Result.isFailure(result)) throw new Error("unreachable");
 		return result.success;
 	};
@@ -363,7 +365,7 @@ describe("SchemaResolver.fromRegistry", () => {
 				assert.instanceOf(failure, SchemaNameUnknownError);
 			}
 			const inline = SchemaResolver.classify({ type: "object" });
-			assert.isTrue(Result.isSuccess(inline));
+			assertSuccess(inline, Result.getOrThrow(inline));
 			if (Result.isFailure(inline)) return;
 			const failure = yield* Effect.flip(resolver.resolve(inline.success, {}));
 			assert.instanceOf(failure, SchemaNameUnknownError);

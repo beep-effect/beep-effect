@@ -82,10 +82,7 @@ function resolvePlainScalar(value: string): unknown {
 	if (INT_RE.test(value)) return safeParseInt(value, 10);
 	if (INF_RE.test(value)) return value.startsWith("-") ? -Number.POSITIVE_INFINITY : Number.POSITIVE_INFINITY;
 	if (NAN_RE.test(value)) return Number.NaN;
-	if (FLOAT_RE.test(value)) {
-		const n = Number.parseFloat(value);
-		if (!Number.isNaN(n)) return n;
-	}
+	if (FLOAT_RE.test(value)) return Number.parseFloat(value);
 	return value;
 }
 
@@ -450,8 +447,7 @@ function decodeDoubleQuoted(raw: string): string {
 export function foldFlowLines(text: string): string {
 	const lines = text.split("\n");
 	let result = "";
-	for (let i = 0; i < lines.length; i++) {
-		const line = lines[i] ?? "";
+	for (const [i, line] of lines.entries()) {
 		if (i === 0) {
 			// First line: trim trailing whitespace only
 			result += line.replace(/[ \t]+$/, "");
@@ -539,7 +535,7 @@ export const collectMultilineKey: {
 	}
 
 	if (parts.length === 1) {
-		return { value: parts[0] ?? "", nextIdx: idx };
+		return { value: first.source.trim(), nextIdx: idx };
 	}
 
 	return { value: foldFlowLines(parts.join("\n")), nextIdx: idx };
@@ -759,7 +755,7 @@ export const collectMultilinePlainScalar: {
 	}
 
 	if (parts.length === 1) {
-		return { value: parts[0] ?? "", nextIdx: idx, partsCount: 1, endOffset };
+		return { value: first.source.trim(), nextIdx: idx, partsCount: 1, endOffset };
 	}
 
 	// Apply flow folding to the collected parts
@@ -1365,12 +1361,10 @@ function decodeBlockScalar(raw: string, fullText?: string, nodeOffset?: number):
 				if (raw[j] === "\n") {
 					count++;
 					j++;
-				} else if (raw[j] === "\r") {
+				} else {
 					count++;
 					j++;
 					if (j < raw.length && raw[j] === "\n") j++;
-				} else {
-					break;
 				}
 			}
 			return "\n".repeat(count);
@@ -1427,8 +1421,7 @@ function decodeBlockScalar(raw: string, fullText?: string, nodeOffset?: number):
 		let result = "";
 		let prevMoreIndented = false;
 		let hadContent = false;
-		for (let li = 0; li < lines.length; li++) {
-			const ln = lines[li] ?? "";
+		for (const ln of lines) {
 			const isMoreIndented = ln.length > 0 && (ln[0] === " " || ln[0] === "\t");
 			if (ln === "") {
 				// Empty line — preserved as newline
@@ -1597,7 +1590,7 @@ export const makeScalar: {
 	// (number/bool/null) and the source form is not the canonical JS output —
 	// e.g. `0xFFEEBB` resolves to 16772795 but should round-trip as hex,
 	// `450.00` resolves to 450 but should keep the trailing zeros.
-	const needsRaw = style === "plain" && !P.isString(value) && value !== undefined && shouldPreserveRaw(rawValue, value);
+	const needsRaw = style === "plain" && !P.isString(value) && shouldPreserveRaw(rawValue, value);
 	const scalar = YamlScalar.make({
 		value,
 		style,

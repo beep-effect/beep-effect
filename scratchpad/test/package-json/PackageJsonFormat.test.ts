@@ -4,7 +4,7 @@
 // shape" mirror the `sort-package-json` call sites a consumer is replacing.
 
 import { assert, describe, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertExitSuccess, assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -17,13 +17,13 @@ const Json = S.fromJsonString(S.Unknown);
 
 const format = (source: string, options?: Parameters<typeof PackageJsonFormat.formatToString>[1]): string => {
 	const result = PackageJsonFormat.formatToString(source, options);
-	assertTrue(Result.isSuccess(result), "expected formatting to succeed");
+	assertSuccess(result, Result.getOrThrow(result));
 	return result.success;
 };
 
 const failure = (source: string): PackageJsonSyntaxError => {
 	const result = PackageJsonFormat.formatToString(source);
-	assertTrue(Result.isFailure(result), "expected formatting to fail");
+	assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 	return result.failure;
 };
 
@@ -124,8 +124,8 @@ describe("PackageJsonFormat.formatToString accepts any syntactically valid JSON 
 	it.effect("the strict path keeps its guarantees — this is a separate capability, not a flag", () =>
 		Effect.gen(function* () {
 			for (const input of [{ private: true }, { name: "root", workspaces: ["packages/*"] }]) {
-				const result = yield* Effect.result(Package.decode(input));
-				assert.isTrue(result._tag === "Failure", `expected ${(yield* S.encodeEffect(Json)(input))} to fail strict decode`);
+				const result = yield* Package.decode(input).pipe(Effect.flip, Effect.asVoid, Effect.exit);
+				assertExitSuccess(result, undefined);
 			}
 		}),
 	);
@@ -140,17 +140,17 @@ describe("PackageJsonFormat.formatToString canonical ordering", () => {
 		);
 	});
 
-	it("agrees with the strict path on a fully valid manifest", () => {
-		const source =
-			'{\n  "version": "1.0.0",\n  "name": "p",\n  "dependencies": {\n    "b": "1",\n    "a": "2"\n  }\n}\n';
-		const tolerant = format(source);
-		const strict = Effect.runSync(
-			Effect.map(Package.decode(JSON.parse(source)), (pkg) =>
-				pkg.toJsonString({ indent: "preserve", sourceText: source }),
-			),
-		);
-		assert.strictEqual(tolerant, strict);
-	});
+	it.effect("agrees with the strict path on a fully valid manifest", () =>
+		Effect.gen(function* () {
+			const source =
+				'{\n  "version": "1.0.0",\n  "name": "p",\n  "dependencies": {\n    "b": "1",\n    "a": "2"\n  }\n}\n';
+			const tolerant = format(source);
+			const raw = yield* S.decodeEffect(Json)(source);
+			const pkg = yield* Package.decode(raw);
+			const strict = pkg.toJsonString({ indent: "preserve", sourceText: source });
+			assert.strictEqual(tolerant, strict);
+		}),
+	);
 });
 
 describe("PackageJsonFormat.formatToString preserves what it does not format", () => {
@@ -232,9 +232,10 @@ describe("PackageJsonFormat.formatToString syntactic failures", () => {
 		}
 	});
 
-	it("lifts into an Effect through Effect.fromResult", () =>
-		assert.strictEqual(
-			PackageJsonFormat.formatToString('{"name": "p"}').pipe(Effect.fromResult, Effect.runSync),
-			'{\n  "name": "p"\n}\n',
-		));
+	it.effect("lifts into an Effect through Effect.fromResult", () =>
+		Effect.gen(function* () {
+			const formatted = yield* Effect.fromResult(PackageJsonFormat.formatToString('{"name": "p"}'));
+			assert.strictEqual(formatted, '{\n  "name": "p"\n}\n');
+		}),
+	);
 });

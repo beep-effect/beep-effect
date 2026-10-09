@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { assertSuccess } from "@effect/vitest/utils";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import { pipe } from "effect/Function";
 import * as Result from "effect/Result";
 import { resolveEntryPoint, UnresolvedEntryPointError } from "../../effected/package-json/EntryPoint.ts";
@@ -127,7 +127,7 @@ describe("resolveEntryPoint", () => {
 
 		it("carries the conditions it tried, so the message names them", () => {
 			const result = resolve({ exports: { require: "./cjs.js" } }, ["import", "node"]);
-			assert.isTrue(Result.isFailure(result));
+			assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 			if (Result.isFailure(result)) {
 				assert.deepStrictEqual([...(result.failure.conditions ?? [])], ["import", "node"]);
 				assert.include(result.failure.message, "import");

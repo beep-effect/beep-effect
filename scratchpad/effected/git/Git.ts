@@ -645,6 +645,16 @@ const ClassifyKind = LiteralKit([
 ]).annotate($I.annote("ClassifyKind", { description: "The method-specific Git classification taxonomy." }));
 type ClassifyKind = typeof ClassifyKind.Type;
 
+/** Outcomes available to each classification mode. */
+// classify only emits mode-specific outcomes after checking that exact mode.
+type ClassifiedFor<K extends ClassifyKind> = Extract<Classified, {
+  readonly _tag: "success" | "notARepository" | "unknownRef" | "failure" |
+    (K extends "show" | "quiet" | "noSuchRemote" | "log" ? "absent" : never) |
+    (K extends "refExists" ? "refMissing" : never) |
+    (K extends "push" ? "nonFastForward" : never) |
+    (K extends "merge" ? "mergeConflict" | "dirtyWorktree" : never);
+}>;
+
 const NOT_A_REPOSITORY = "not a git repository";
 // Unanchored substring matching against LC_ALL=C-pinned phrases: a path or ref
 // name that happens to literally contain one of these phrases could misclassify.
@@ -792,12 +802,18 @@ const classify = (
  * the service's members is spawned with the pins and nothing else in the
  * package needs to know they exist.
  */
-const runClassified = (
+function runClassified<K extends ClassifyKind>(
+  invocation: GitInvocation,
+  cwd: string,
+  kind: K,
+  env: Record<string, string>,
+): Effect.Effect<ClassifiedFor<K>, never, ChildProcessSpawner.ChildProcessSpawner>;
+function runClassified(
   invocation: GitInvocation,
   cwd: string,
   kind: ClassifyKind,
   env: Record<string, string>,
-): Effect.Effect<Classified, never, ChildProcessSpawner.ChildProcessSpawner> => {
+): Effect.Effect<Classified, never, ChildProcessSpawner.ChildProcessSpawner> {
   const args = invocation.redactedArgs;
   const command = ChildProcess.setEnv(ChildProcess.setCwd(invocation.command, cwd), env);
   return runCollected(command).pipe(
@@ -841,10 +857,10 @@ const lsTreeInput = S.Struct(LsTreeEntry.fields);
 const parseLsTree = (output: string): ReadonlyArray<LsTreeEntry> =>
   parseNulSeparated(output).map((entry) => {
     const tabIndex = entry.indexOf("\t");
-    const header = entry.slice(0, tabIndex).split(" ");
+    const header = Str.split(entry.slice(0, tabIndex), " ");
     const path = entry.slice(tabIndex + 1);
     const parsed = {
-      mode: header[0] ?? "",
+      mode: header[0],
       // git's own tree-entry format only ever emits these three kinds.
       type: header[1] ?? "blob",
       oid: header[2] ?? "",
@@ -878,7 +894,7 @@ const parseNameStatus = (output: string): ReadonlyArray<NameStatusEntry> => {
   const entries: Array<NameStatusEntry> = [];
   let index = 0;
   while (index < tokens.length) {
-    const code = tokens[index] ?? "";
+    const code = A.getUnsafe(tokens, index);
     if (code === "") {
       index += 1;
       continue;
@@ -1011,13 +1027,12 @@ const parseLog = (output: string): Result.Result<ReadonlyArray<CommitLogEntry>, 
   const entries: Array<CommitLogEntry> = [];
   let index = 1;
   while (index < tokens.length) {
-    const sha = tokens[index];
+    const sha = A.getUnsafe(tokens, index);
     const authoredAtIso = tokens[index + 1];
     const committedAtIso = tokens[index + 2];
     const authorName = tokens[index + 3];
     const authorEmail = tokens[index + 4];
     if (
-      sha === undefined ||
       authoredAtIso === undefined ||
       committedAtIso === undefined ||
       authorName === undefined ||
@@ -1033,7 +1048,7 @@ const parseLog = (output: string): Result.Result<ReadonlyArray<CommitLogEntry>, 
     index += 5;
     const paths: Array<string> = [];
     while (index < tokens.length) {
-      const path = tokens[index] ?? "";
+      const path = A.getUnsafe(tokens, index);
       if (path === "") break;
       paths.push(paths.length === 0 && Str.startsWith("\n")(path) ? Str.slice(1)(path) : path);
       index += 1;
@@ -1199,7 +1214,7 @@ const parseStatus = (output: string): ReadonlyArray<StatusEntry> => {
   const entries: Array<StatusEntry> = [];
   let index = 0;
   while (index < tokens.length) {
-    const token = tokens[index] ?? "";
+    const token = A.getUnsafe(tokens, index);
     if (token === "") {
       index += 1;
       continue;
@@ -1728,9 +1743,9 @@ export class LsFilesEntry extends S.Class<LsFilesEntry>($I`LsFilesEntry`)({
 const parseLsFiles = (output: string): ReadonlyArray<LsFilesEntry> =>
   parseNulSeparated(output).map((entry) => {
     const tabIndex = entry.indexOf("\t");
-    const header = entry.slice(0, tabIndex).split(" ");
+    const header = Str.split(entry.slice(0, tabIndex), " ");
     return LsFilesEntry.make({
-      mode: header[0] ?? "",
+      mode: header[0],
       oid: header[1] ?? "",
       stage: Number(header[2] ?? "0"),
       path: entry.slice(tabIndex + 1),
@@ -1831,7 +1846,7 @@ interface SshFromEnv {
 
 /** Builds the `Git.Service` shape over an already-resolved `ChildProcessSpawner`. */
 const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: SshFromEnv) => {
-  const runFor = (invocation: GitInvocation, cwd: string, kind: ClassifyKind) =>
+  const runFor = <K extends ClassifyKind>(invocation: GitInvocation, cwd: string, kind: K) =>
     runClassified(invocation, cwd, kind, BASE_ENV).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
     );
@@ -1898,7 +1913,7 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
    * `BASE_ENV` alone — a member that never invokes ssh has no business
    * pinning an ssh command, and would pay the config read for nothing.
    */
-  const runForNetwork = Effect.fnUntraced(function* (invocation: GitInvocation, cwd: string, kind: ClassifyKind) {
+  const runForNetwork = Effect.fnUntraced(function* <K extends ClassifyKind>(invocation: GitInvocation, cwd: string, kind: K) {
     const env = yield* resolveSshEnv(cwd);
     return yield* runClassified(invocation, cwd, kind, env).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
@@ -1909,17 +1924,11 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd, ref, path });
     yield* rejectOptionLikeRefs(cwd, [ref]);
     const classified = yield* runFor(GitCommand.show(ref, path), cwd, "show");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.show: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: (classified) => Effect.succeedSome(classified.output),
       absent: () => Effect.succeedNone,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () => Effect.fail(UnknownRefError.make({ ref, cwd })),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -1932,17 +1941,10 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd, ref });
     yield* rejectOptionLikeRefs(cwd, [ref]);
     const classified = yield* runFor(GitCommand.lsTree(ref, options?.pathspec ?? []), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.lsTree: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: (classified) => Effect.succeed(parseLsTree(classified.output)),
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () => Effect.fail(UnknownRefError.make({ ref, cwd })),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -1951,19 +1953,13 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd, ref });
     yield* rejectOptionLikeRefs(cwd, [ref]);
     const classified = yield* runFor(GitCommand.refExists(ref), cwd, "refExists");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.refExists: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.succeed(true),
-      absent: unexpected,
       refMissing: () => Effect.succeed(false),
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: // A ref that doesn't resolve IS the negative answer this method
         // promises — never an error, and never a defect.
         () => Effect.succeed(false),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -1972,12 +1968,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd, a, b });
     yield* rejectOptionLikeRefs(cwd, [a, b]);
     const classified = yield* runFor(GitCommand.mergeBase(a, b), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.mergeBase: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: (classified) => Effect.succeed(classified.output.trim()),
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -1986,9 +1978,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2002,12 +1991,9 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     // `Not a valid object name` stderr and stays UnknownRefError; a NOISY
     // exit 1 stays a loud GitCommandError.
     const classified = yield* runFor(GitCommand.mergeBase(a, b), cwd, "quiet");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.mergeBaseOption: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: (classified) => Effect.succeedSome(classified.output.trim()),
       absent: () => Effect.succeedNone,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -2016,9 +2002,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2040,12 +2023,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     });
     yield* rejectOptionLikeRefs(cwd, [options.base, options.head]);
     const classified = yield* runFor(GitCommand.changedFiles(options.base, options.head, relative), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.changedFiles: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: (classified) => Effect.succeed(parseNulSeparated(classified.output)),
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -2054,9 +2033,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2065,14 +2041,10 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
   // classifies through the shared path. No ref is involved, so `unknownRef`
   // cannot arise in practice — it is handled defensively to keep the match
   // exhaustive and the error channel uniform with the ref-taking methods.
-  const collectPaths = Effect.fnUntraced(function* (method: string, invocation: GitInvocation, cwd: string) {
+  const collectPaths = Effect.fnUntraced(function* (_method: string, invocation: GitInvocation, cwd: string) {
     const classified = yield* runFor(invocation, cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`${method}: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: (classified) => Effect.succeed(parseNulSeparated(classified.output)),
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -2081,9 +2053,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2146,12 +2115,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     });
     yield* rejectOptionLikeRefs(cwd, options.head === undefined ? [options.base] : [options.base, options.head]);
     const classified = yield* runFor(GitCommand.nameStatus(options.base, options.head, relative), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.nameStatus: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: (classified) => Effect.succeed(parseNameStatus(classified.output)),
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -2160,9 +2125,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2171,17 +2133,10 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd, ref });
     yield* rejectOptionLikeRefs(cwd, [ref]);
     const classified = yield* runFor(GitCommand.revParse(ref), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.revParse: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: (classified) => Effect.succeed(classified.output.trim()),
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () => Effect.fail(UnknownRefError.make({ ref, cwd })),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2195,17 +2150,10 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd, ref, detach });
     yield* rejectOptionLikeRefs(cwd, [ref]);
     const classified = yield* runFor(GitCommand.checkout(ref, detach), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.checkout: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () => Effect.fail(UnknownRefError.make({ ref, cwd })),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2227,12 +2175,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       yield* rejectOptionLikeRefs(cwd, [options.ref]);
     }
     const classified = yield* runFor(GitCommand.reset(mode, options?.ref), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.reset: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -2241,9 +2185,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2260,12 +2201,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     const ignored = options?.ignored ?? false;
     yield* Effect.annotateCurrentSpan({ cwd, directories, ignored });
     const classified = yield* runFor(GitCommand.clean(directories, ignored, options?.paths ?? []), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.clean: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -2274,9 +2211,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2303,12 +2237,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       cwd,
       "generic",
     );
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.restore: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -2317,9 +2247,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2348,12 +2275,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       cwd,
       "generic",
     );
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.branchCreate: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -2362,9 +2285,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2381,17 +2301,10 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     });
     yield* rejectOptionLikeRefs(cwd, [name]);
     const classified = yield* runFor(GitCommand.branchDelete(name, options?.force ?? false), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.branchDelete: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () => Effect.fail(UnknownRefError.make({ ref: name, cwd })),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2399,18 +2312,11 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
   const isShallow = Effect.fn("Git.isShallow")(function* (cwd: string) {
     yield* Effect.annotateCurrentSpan({ cwd });
     const classified = yield* runFor(GitCommand.isShallow(), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.isShallow: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: // rev-parse --is-shallow-repository prints exactly "true" or "false".
         (classified) => Effect.succeed(classified.output.trim() === "true"),
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () => Effect.fail(UnknownRefError.make({ ref: "HEAD", cwd })),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2423,12 +2329,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd });
     yield* rejectOptionLikeRefs(cwd, [remote]);
     const classified = yield* runForNetwork(GitCommand.fetchUnshallow(remote), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.fetchUnshallow: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -2437,9 +2339,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2483,12 +2382,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       cwd,
       "generic",
     );
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.fetch: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -2497,9 +2392,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2559,12 +2451,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       cwd,
       "generic",
     );
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.submoduleUpdate: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -2573,9 +2461,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2597,12 +2482,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       cwd,
       "generic",
     );
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.submoduleAdd: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -2611,9 +2492,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2626,12 +2504,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd, cone: options.cone });
     yield* rejectOptionLikeRefs(cwd, patterns);
     const classified = yield* runFor(GitCommand.sparseCheckoutSet(patterns, options.cone), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.sparseCheckoutSet: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -2640,9 +2514,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2666,17 +2537,10 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     // echoed into the error (the redaction policy).
     yield* rejectOptionLikeRefs(cwd, [key, ...(options?.file !== undefined ? [options.file] : [])], [value]);
     const classified = yield* runFor(GitCommand.configSet(key, value, options?.file), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.configSet: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () => Effect.fail(UnknownRefError.make({ ref: key, cwd })),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2684,12 +2548,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
   const add = Effect.fn("Git.add")(function* (cwd: string, paths: ReadonlyArray<string>) {
     yield* Effect.annotateCurrentSpan({ cwd, count: paths.length });
     const classified = yield* runFor(GitCommand.add(paths), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.add: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -2698,9 +2558,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2712,8 +2569,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd, remote });
     yield* rejectOptionLikeRefs(cwd, [remote]);
     const classified = yield* runFor(GitCommand.defaultBranch(remote), cwd, "quiet");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.defaultBranch: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: (classified) => {
         const short = classified.output.trim();
@@ -2721,7 +2576,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
         return Effect.succeedSome(short.startsWith(prefix) ? short.slice(prefix.length) : short);
       },
       absent: () => Effect.succeedNone,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -2730,9 +2584,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2740,8 +2591,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
   const currentBranch = Effect.fn("Git.currentBranch")(function* (cwd: string) {
     yield* Effect.annotateCurrentSpan({ cwd });
     const classified = yield* runFor(GitCommand.currentBranch(), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.currentBranch: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: (classified) => {
         const name = classified.output.trim();
@@ -2749,13 +2598,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
         // "no current branch" is the honest typed answer, not a fake name.
         return Effect.succeed(name === "HEAD" ? O.none() : O.some(name));
       },
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () => Effect.fail(UnknownRefError.make({ ref: "HEAD", cwd })),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2763,12 +2607,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
   const repoRoot = Effect.fn("Git.repoRoot")(function* (cwd: string) {
     yield* Effect.annotateCurrentSpan({ cwd });
     const classified = yield* runFor(GitCommand.repoRoot(), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.repoRoot: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: (classified) => Effect.succeed(classified.output.trim()),
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -2777,9 +2617,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2788,8 +2625,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd });
     const invocation = GitCommand.commonDir();
     const classified = yield* runFor(invocation, cwd, "generic");
-    const unexpected = // rev-parse --git-common-dir names no ref, so no ref-error stderr can reach here.
-      (classified: Classified) => Effect.die(`Git.commonDir: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: Effect.fnUntraced(function* (classified) {
         // Strip only git's terminating newline, never `trim`: the answer is an
@@ -2808,13 +2643,9 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
         }
         return answer;
       }),
-      absent: unexpected,
-      refMissing: unexpected,
+      unknownRef: () => Effect.die('Git.commonDir: unexpected classification "unknownRef"'),
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
-      unknownRef: unexpected,
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
+
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2831,17 +2662,11 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     });
     yield* rejectOptionLikeRefs(cwd, [key]);
     const classified = yield* runFor(GitCommand.configGet(key, options?.scope), cwd, "quiet");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.configGet: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: (classified) => Effect.succeedSome(classified.output.trim()),
       absent: () => Effect.succeedNone,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () => Effect.fail(UnknownRefError.make({ ref: key, cwd })),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2853,17 +2678,11 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd, remote });
     yield* rejectOptionLikeRefs(cwd, [remote]);
     const classified = yield* runFor(GitCommand.remoteUrl(remote), cwd, "noSuchRemote");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.remoteUrl: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: (classified) => Effect.succeedSome(classified.output.trim()),
       absent: () => Effect.succeedNone,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () => Effect.fail(UnknownRefError.make({ ref: remote, cwd })),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2873,17 +2692,10 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd, ref: target });
     yield* rejectOptionLikeRefs(cwd, [target]);
     const classified = yield* runFor(GitCommand.commitInfo(target), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.commitInfo: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: (classified) => Effect.succeed(parseCommitInfo(classified.output)),
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () => Effect.fail(UnknownRefError.make({ ref: target, cwd })),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2918,8 +2730,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
         });
     }
     const classified = yield* runFor(invocation, cwd, "log");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.log: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: Effect.fnUntraced(function* (classified) {
         const parsed = parseLog(classified.output);
@@ -2942,7 +2752,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
         const empty: ReadonlyArray<CommitLogEntry> = [];
         return Effect.succeed(empty);
       },
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () => {
         // An unborn HEAD — however this git spells it — has no history,
@@ -2952,9 +2761,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
         const empty: ReadonlyArray<CommitLogEntry> = [];
         return Effect.succeed(empty);
       },
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2962,12 +2768,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
   const status = Effect.fn("Git.status")(function* (cwd: string) {
     yield* Effect.annotateCurrentSpan({ cwd });
     const classified = yield* runFor(GitCommand.status(), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.status: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: (classified) => Effect.succeed(parseStatus(classified.output)),
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -2976,9 +2778,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -2999,12 +2798,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       cwd,
       "generic",
     );
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.submoduleStatus: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: (classified) => Effect.succeed(parseSubmoduleStatus(classified.output)),
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -3013,9 +2808,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -3026,12 +2818,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
   ) {
     yield* Effect.annotateCurrentSpan({ cwd });
     const classified = yield* runFor(GitCommand.submoduleInit(options?.paths ?? []), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.submoduleInit: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -3040,9 +2828,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -3071,12 +2856,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
         });
     }
     const classified = yield* runFor(GitCommand.submoduleDeinit(paths, all, options.force ?? false), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.submoduleDeinit: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -3085,9 +2866,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -3108,12 +2886,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       cwd,
       "generic",
     );
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.submoduleSync: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -3122,9 +2896,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -3134,17 +2905,10 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     // span annotations carry stable identifiers only (the redaction policy).
     yield* Effect.annotateCurrentSpan({ cwd, path });
     const classified = yield* runFor(GitCommand.submoduleSetUrl(path, url), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.submoduleSetUrl: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () => Effect.fail(UnknownRefError.make({ ref: path, cwd })),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -3164,12 +2928,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       yield* rejectOptionLikeRefs(cwd, [branch]);
     }
     const classified = yield* runFor(GitCommand.submoduleSetBranch(path, branch), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.submoduleSetBranch: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -3178,9 +2938,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -3191,12 +2948,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
   ) {
     yield* Effect.annotateCurrentSpan({ cwd });
     const classified = yield* runFor(GitCommand.submoduleAbsorbgitdirs(options?.paths ?? []), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.submoduleAbsorbgitdirs: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -3205,9 +2958,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -3225,12 +2975,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     // dash — the same option-injection guard as refs.
     yield* rejectOptionLikeRefs(cwd, [command]);
     const classified = yield* runFor(GitCommand.submoduleForeach(command, options?.recursive ?? false), cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.submoduleForeach: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: (classified) => Effect.succeed(classified.output),
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -3239,9 +2985,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -3249,14 +2992,10 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
   // Runs a void-returning invocation and classifies through the shared path,
   // mapping `unknownRef` to the given ref label — the shared shape of every
   // mutating method with no method-specific classification rows.
-  const runVoid = Effect.fnUntraced(function* (method: string, invocation: GitInvocation, cwd: string, refLabel: string) {
+  const runVoid = Effect.fnUntraced(function* (_method: string, invocation: GitInvocation, cwd: string, refLabel: string) {
     const classified = yield* runFor(invocation, cwd, "generic");
-    const unexpected = (classified: Classified) =>
-      Effect.die(`${method}: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -3265,40 +3004,27 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
 
   // Runs a parse-returning invocation and classifies through the shared path.
   // `absent` handles the `"quiet"` kind's silent-exit-1 degrade (an unset
-  // config key, a no-paths-ignored check-ignore run); for kinds that cannot
-  // produce it the arm falls to the defensive default die.
+  // config key, a no-paths-ignored check-ignore run).
   const runParsed = Effect.fnUntraced(function* <A>(
-    method: string,
+    _method: string,
     invocation: GitInvocation,
     cwd: string,
     refLabel: string,
-    kind: ClassifyKind,
+    kind: "generic" | "quiet",
     parse: (output: string) => A,
-    absent?: () => A,
     /** Whether this member reaches a remote and so needs the ssh pin resolved. */
     network = false,
   ) {
     const classified = yield* (network ? runForNetwork : runFor)(invocation, cwd, kind);
-    const unexpected = (classified: Classified) =>
-      Effect.die(`${method}: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: (classified) => Effect.succeed(parse(classified.output)),
-      absent: Effect.fnUntraced(function* () {
-        if (absent !== undefined) {
-          return absent();
-        }
-        return yield* Effect.die(`${method}: unexpected classification "absent"`);
-      }),
-      refMissing: unexpected,
+      absent: () => Effect.succeed(parse("")),
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -3307,9 +3033,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -3339,7 +3062,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       "ls-remote",
       "generic",
       parseLsRemote,
-      undefined,
       true,
     );
   });
@@ -3393,12 +3115,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       yield* Effect.annotateCurrentSpan({ cwd, index: options?.index ?? 0 });
       yield* rejectNonNaturalNumber(cwd, "a stash index", options?.index);
       const classified = yield* runFor(invocation(options?.index), cwd, "merge");
-      const unexpected = (classified: Classified) =>
-        Effect.die(`${method}: unexpected classification "${classified._tag}"`);
       return yield* Match.valueTags(classified, {
         success: () => Effect.void,
-        absent: unexpected,
-        refMissing: unexpected,
         notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
         unknownRef: () =>
           Effect.fail(
@@ -3407,7 +3125,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
               cwd,
             })
           ),
-        nonFastForward: unexpected,
         mergeConflict: () => Effect.fail(MergeConflictError.make({ cwd })),
         dirtyWorktree: () => Effect.fail(DirtyWorktreeError.make({ cwd })),
         failure: (classified) => Effect.fail(classified.error),
@@ -3586,12 +3303,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       cwd,
       "push",
     );
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.push: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -3607,8 +3320,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             ...O.getSomesStruct({ refspec: O.fromUndefinedOr(options?.refspec) }),
           })
         ),
-      mergeConflict: unexpected,
-      dirtyWorktree: unexpected,
       failure: (classified) => Effect.fail(classified.error),
     });
   });
@@ -3635,12 +3346,8 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       cwd,
       "merge",
     );
-    const unexpected = (classified: Classified) =>
-      Effect.die(`Git.pull: unexpected classification "${classified._tag}"`);
     return yield* Match.valueTags(classified, {
       success: () => Effect.void,
-      absent: unexpected,
-      refMissing: unexpected,
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () =>
         Effect.fail(
@@ -3649,7 +3356,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
             cwd,
           })
         ),
-      nonFastForward: unexpected,
       mergeConflict: () => Effect.fail(MergeConflictError.make({ cwd })),
       dirtyWorktree: () => Effect.fail(DirtyWorktreeError.make({ cwd })),
       failure: (classified) => Effect.fail(classified.error),
@@ -3694,7 +3400,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       key,
       "quiet",
       parseConfigGetAll,
-      () => [],
     );
   });
 
@@ -3800,7 +3505,6 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       "check-ignore",
       "quiet",
       parseNulSeparated,
-      () => [],
     );
   });
 

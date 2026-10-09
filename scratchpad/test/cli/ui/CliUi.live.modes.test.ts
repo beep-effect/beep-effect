@@ -1,5 +1,6 @@
-// @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file globalTimers:skip-file newPromise:skip-file
 import { assert, describe, it } from "@effect/vitest";
+import { assertExitFailure } from "@effect/vitest/utils";
+import * as Cause from "effect/Cause";
 import { Audience } from "../../../effected/env/index.ts";
 import type * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -34,23 +35,23 @@ import {
 
 // Count loads of the peers through the kit's one loader, without changing what it does.
 const { loads } = vi.hoisted(() => ({ loads: { count: 0 } }));
-vi.mock("../../../effected/cli/ui/internal/ink.ts", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("../../../effected/cli/ui/internal/ink.ts")>();
-	const Effect = await import("effect/Effect");
-	return {
-		...actual,
-		loadInk: Effect.suspend(() => {
-			loads.count++;
-			return actual.loadInk;
-		}),
-	};
-});
+vi.mock("../../../effected/cli/ui/internal/ink.ts", (importOriginal) =>
+	importOriginal<typeof import("../../../effected/cli/ui/internal/ink.ts")>().then((actual) =>
+		import("effect/Effect").then((Effect) => ({
+			...actual,
+			loadInk: Effect.suspend(() => {
+				loads.count++;
+				return actual.loadInk;
+			}),
+		})),
+	),
+);
 
 const ESC = String.fromCharCode(0x1b);
 
 /** Real time, which a `TestClock` does not hold: for Ink's own timers and React's commits. */
 const settle = (millis: number): Effect.Effect<void> =>
-	Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, millis)));
+	TestClock.withLive(Effect.sleep(millis));
 
 describe("CliUi.live: the tick, an Effect schedule in the run's scope", () => {
 	it.effect("each run ticks on the clock: 400 ms on the TestClock draws frames 0 through 5", () =>
@@ -75,7 +76,7 @@ describe("CliUi.live: the tick, an Effect schedule in the run's scope", () => {
 				[...new Set(frames)].sort((a, b) => a - b),
 				[0, 1, 2, 3, 4, 5],
 			);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("control: the tick stops at the terminal event, so time passing after it draws nothing", () =>
@@ -99,14 +100,14 @@ describe("CliUi.live: the tick, an Effect schedule in the run's scope", () => {
 			yield* settle(50);
 			assert.strictEqual(frames.length, drawn, "no frame after the run ended");
 			assert.deepStrictEqual([...new Set(frames)], [0]);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a tick that is not a positive number of milliseconds is a defect, before anything is pulled", () =>
 		Effect.gen(function* () {
 			for (const tickMillis of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
-				const exit = yield* liveOn(makeFakeStreams(), optionsOf(Stream.fromIterable([Start]), { tickMillis })).pipe(Effect.scoped, Effect.exit);
-				assert.isTrue(Exit.isFailure(exit), String(tickMillis));
+				const exit = yield* liveOn(makeFakeStreams(), optionsOf(Stream.fromIterable([Start]), { tickMillis })).pipe(Effect.exit);
+				assertExitFailure(exit, Exit.isFailure(exit) ? exit.cause : Cause.empty);
 				assert.include(String(exit), "tickMillis", String(tickMillis));
 			}
 		}),
@@ -150,10 +151,10 @@ describe("CliUi.live: a render that fails degrades the run, unmounting before it
 			assert.deepStrictEqual(timeline, ["unmount", "log"], "the warning is written after the unmount");
 			assert.deepStrictEqual(screenAfter(fake.stdout()), ["RUN 1", "tick 1"], "the last good frame, once");
 			assert.strictEqual(yield* mountsAndResolves(makeFakeStreams()), "mounted", "no instance or permit leaked");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
-	it.live("a render that throws before the first paint: the final frame is written once, as a string", () =>
+	it.effect("a render that throws before the first paint: the final frame is written once, as a string", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams({ columns: 40, rows: 20 });
 			const log = capturing();
@@ -164,14 +165,14 @@ describe("CliUi.live: a render that fails degrades the run, unmounting before it
 				},
 			});
 			const handle = yield* liveOn(fake, options, { console: log.console });
-			yield* handle.done.pipe(Effect.timeout("2 seconds"));
+			yield* handle.done.pipe(Effect.timeout("2 seconds"), TestClock.withLive);
 			assert.strictEqual(warningsIn(log.lines).length, 1, log.lines.join("\n"));
 			const shown = screenAfter(fake.stdout());
 			assert.deepStrictEqual(shown, ["RUN 1", "ended"]);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
-	it.live("a mount that fails degrades the same way: one warning, the fold goes on, the final frame once", () =>
+	it.effect("a mount that fails degrades the same way: one warning, the fold goes on, the final frame once", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams({ columns: 40, rows: 20 });
 			const log = capturing();
@@ -181,13 +182,13 @@ describe("CliUi.live: a render that fails degrades the run, unmounting before it
 					throw new Error("the mount failed");
 				},
 			});
-			yield* handle.done.pipe(Effect.timeout("2 seconds"));
+			yield* handle.done.pipe(Effect.timeout("2 seconds"), TestClock.withLive);
 			assert.strictEqual((yield* handle.state).last, "ended");
 			assert.strictEqual(warningsIn(log.lines).length, 1, log.lines.join("\n"));
 			assert.include(warningsIn(log.lines)[0] ?? "", "the mount failed");
 			assert.deepStrictEqual(screenAfter(fake.stdout()), ["RUN 1", "ended"]);
-			assert.strictEqual(yield* mountsAndResolves(makeFakeStreams()), "mounted");
-		}).pipe(Effect.scoped),
+			assert.strictEqual(yield* TestClock.withLive(mountsAndResolves(makeFakeStreams())), "mounted");
+		}),
 	);
 
 	it.live("a degraded run ends at its terminal event: the next run mounts and draws again", () =>
@@ -212,7 +213,7 @@ describe("CliUi.live: a render that fails degrades the run, unmounting before it
 			yield* handle.done.pipe(Effect.timeout("2 seconds"));
 			assert.deepStrictEqual(screenAfter(fake.stdout()), ["RUN 1", "tick 1", "RUN 2", "ended"]);
 			assert.strictEqual(warningsIn(log.lines).length, 1);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.live(
@@ -249,10 +250,10 @@ describe("CliUi.live: a render that fails degrades the run, unmounting before it
 				assert.deepStrictEqual(timeline, ["unmount", "log"], "the warning is written after the unmount");
 				assert.deepStrictEqual(screenAfter(fake.stdout()), ["RUN 1", "tick 2"], "the last good frame, once");
 				assert.strictEqual(yield* mountsAndResolves(makeFakeStreams()), "mounted", "no instance or permit leaked");
-			}).pipe(Effect.scoped),
+			}),
 	);
 
-	it.live("a render that throws on the terminal state, and on the last good frame after it: one warning still", () =>
+	it.effect("a render that throws on the terminal state, and on the last good frame after it: one warning still", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams({ columns: 40, rows: 20 });
 			const log = capturing();
@@ -265,15 +266,15 @@ describe("CliUi.live: a render that fails degrades the run, unmounting before it
 				},
 			});
 			const handle = yield* liveOn(fake, options, { console: log.console });
-			yield* handle.done.pipe(Effect.timeout("2 seconds"));
+			yield* handle.done.pipe(Effect.timeout("2 seconds"), TestClock.withLive);
 			assert.strictEqual(warningsIn(log.lines).length, 1, log.lines.join("\n"));
 			assert.include(warningsIn(log.lines)[0] ?? "", "every render threw");
 			// Nothing of the run is left on the terminal here, and its final frame cannot be printed: the warning claims
 			// no frame (final review N1).
 			assert.include(warningsIn(log.lines)[0] ?? "", "the live view stopped drawing this run");
 			assert.notInclude(warningsIn(log.lines)[0] ?? "", "frame", "the warning claims no frame");
-			assert.strictEqual(yield* mountsAndResolves(makeFakeStreams()), "mounted", "no instance or permit leaked");
-		}).pipe(Effect.scoped),
+			assert.strictEqual(yield* TestClock.withLive(mountsAndResolves(makeFakeStreams())), "mounted", "no instance or permit leaked");
+		}),
 	);
 
 	it.live("a start during a degraded run ends it and mounts a fresh run, with no terminal event between", () =>
@@ -302,7 +303,7 @@ describe("CliUi.live: a render that fails degrades the run, unmounting before it
 			assert.strictEqual(mounts, 2, "the start mounted a fresh run");
 			assert.deepStrictEqual(screenAfter(fake.stdout()), ["RUN 1", "tick 1", "RUN 2", "ended"]);
 			assert.strictEqual(warningsIn(log.lines).length, 1, log.lines.join("\n"));
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.live("a reduce that throws unmounts first, then done dies with the error, and the terminal is restored", () =>
@@ -326,13 +327,13 @@ describe("CliUi.live: a render that fails degrades the run, unmounting before it
 			yield* Queue.offer(queue, tick(2));
 			const exit = yield* Fiber.join(done).pipe(Effect.timeout("2 seconds"));
 			timeline.push("done");
-			assert.isTrue(Exit.isFailure(exit), "done failed");
+			assertExitFailure(exit, Exit.isFailure(exit) ? exit.cause : Cause.empty);
 			assert.include(String(exit), "reduce threw");
 			assert.deepStrictEqual(timeline, ["unmount", "done"]);
 			assert.deepStrictEqual(fake.rawModes, []);
 			assert.include(fake.stdout().slice(-64), SHOW_CURSOR);
 			assert.strictEqual(yield* mountsAndResolves(makeFakeStreams()), "mounted", "the permit was released");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
@@ -340,38 +341,38 @@ const Styledframe = (state: State): ReactElement =>
 	createElement(Styled, { token: "accent" }, `${state.last} ${"x".repeat(60)}`);
 
 describe("CliUi.live when not interactive", () => {
-	it.live("owned: the final frame is written once at the terminal event, escape-free at colour none", () =>
+	it.effect("owned: the final frame is written once at the terminal event, escape-free at colour none", () =>
 		Effect.gen(function* () {
 			loads.count = 0;
 			const fake = makeFakeStreams({ columns: 40, rows: 20 });
 			const handle = yield* liveOn(fake, optionsOf(Stream.fromIterable([Start, tick(1), End])), { interactive: false });
-			yield* handle.done.pipe(Effect.timeout("2 seconds"));
+			yield* handle.done.pipe(Effect.timeout("2 seconds"), TestClock.withLive);
 			assert.strictEqual(fake.stdout(), "RUN 1\nended\n");
 			assert.strictEqual(loads.count, 1, "Ink was loaded once, for the string");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
-	it.live("owned: a human at truecolor gets the theme's colour; at none, no escape at all", () =>
+	it.effect("owned: a human at truecolor gets the theme's colour; at none, no escape at all", () =>
 		Effect.gen(function* () {
 			const coloured = makeFakeStreams({ columns: 200, rows: 20 });
 			const human = yield* liveOn(coloured, optionsOf(Stream.fromIterable([Start, End]), { render: Styledframe }), {
 				interactive: false,
 				color: "truecolor",
 			});
-			yield* human.done.pipe(Effect.timeout("2 seconds"));
+			yield* human.done.pipe(Effect.timeout("2 seconds"), TestClock.withLive);
 			assert.include(coloured.stdout(), `${ESC}[`, "coloured for a human at truecolor");
 			const plain = makeFakeStreams({ columns: 200, rows: 20 });
 			const agent = yield* liveOn(plain, optionsOf(Stream.fromIterable([Start, End]), { render: Styledframe }), {
 				interactive: false,
 				color: "none",
 			});
-			yield* agent.done.pipe(Effect.timeout("2 seconds"));
+			yield* agent.done.pipe(Effect.timeout("2 seconds"), TestClock.withLive);
 			assert.notInclude(plain.stdout(), ESC, "escape-free at colour none");
 			assert.include(plain.stdout(), "ended");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
-	it.live("owned: laid out at the stdout width, or 80 when it reports none, and never cut in height", () =>
+	it.effect("owned: laid out at the stdout width, or 80 when it reports none, and never cut in height", () =>
 		Effect.gen(function* () {
 			const Size = (state: State): ReactElement => {
 				const Probe = (): ReactElement => {
@@ -384,7 +385,7 @@ describe("CliUi.live when not interactive", () => {
 			const first = yield* liveOn(narrow, optionsOf(Stream.fromIterable([Start, End]), { render: Size }), {
 				interactive: false,
 			});
-			yield* first.done.pipe(Effect.timeout("2 seconds"));
+			yield* first.done.pipe(Effect.timeout("2 seconds"), TestClock.withLive);
 			const lines = narrow.stdout().trimEnd().split("\n");
 			assert.include(lines[0] ?? "", "size=39");
 			assert.isTrue(
@@ -398,35 +399,35 @@ describe("CliUi.live when not interactive", () => {
 			const second = yield* liveOn(unknown, optionsOf(Stream.fromIterable([Start, End]), { render: Size }), {
 				interactive: false,
 			});
-			yield* second.done.pipe(Effect.timeout("2 seconds"));
+			yield* second.done.pipe(Effect.timeout("2 seconds"), TestClock.withLive);
 			assert.include(unknown.stdout(), "size=79");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
-	it.live("owned: a stream that ends without a terminal event still writes its frame once; each run writes one", () =>
+	it.effect("owned: a stream that ends without a terminal event still writes its frame once; each run writes one", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams({ columns: 40, rows: 20 });
 			const handle = yield* liveOn(fake, optionsOf(Stream.fromIterable([Start, tick(1), End, Start, tick(2)])), {
 				interactive: false,
 			});
-			yield* handle.done.pipe(Effect.timeout("2 seconds"));
+			yield* handle.done.pipe(Effect.timeout("2 seconds"), TestClock.withLive);
 			assert.strictEqual(fake.stdout(), "RUN 1\nended\nRUN 2\ntick 2\n");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
-	it.live("hosted: nothing is written and Ink is never loaded", () =>
+	it.effect("hosted: nothing is written and Ink is never loaded", () =>
 		Effect.gen(function* () {
 			loads.count = 0;
 			const fake = makeFakeStreams({ columns: 40, rows: 20 });
 			const handle = yield* liveOn(fake, optionsOf(Stream.fromIterable([Start, tick(1), End]), { mode: "hosted" }), {
 				interactive: false,
 			});
-			yield* handle.done.pipe(Effect.timeout("2 seconds"));
+			yield* handle.done.pipe(Effect.timeout("2 seconds"), TestClock.withLive);
 			assert.strictEqual(fake.stdout(), "");
 			assert.strictEqual(fake.stderr(), "");
 			assert.strictEqual(loads.count, 0);
 			assert.strictEqual((yield* handle.state).last, "ended", "the fold still ran");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.live("owned: no string is due until the terminal event, so Ink is not loaded before it", () =>
@@ -443,7 +444,7 @@ describe("CliUi.live when not interactive", () => {
 			yield* Queue.offer(queue, End);
 			yield* until(() => fake.stdout().includes("ended"));
 			assert.strictEqual(loads.count, 1);
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
@@ -453,29 +454,29 @@ describe("CliUi.live: a stream that dies, a fallback that throws, an agent audie
 		Stream.concat(Stream.die(new Error("the stream died"))),
 	);
 
-	it.live("a stream that dies mid-run: the run unmounts first, then done dies with the stream's defect", () =>
+	it.effect("a stream that dies mid-run: the run unmounts first, then done dies with the stream's defect", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams({ columns: 40, rows: 20 });
 			const timeline: Array<string> = [];
 			const handle = yield* liveOn(fake, optionsOf(dying), { onUnmount: () => timeline.push("unmount") });
-			const exit = yield* Effect.exit(handle.done).pipe(Effect.timeout("2 seconds"));
+			const exit = yield* Effect.exit(handle.done).pipe(Effect.timeout("2 seconds"), TestClock.withLive);
 			timeline.push("done");
-			assert.isTrue(Exit.isFailure(exit), String(exit));
+			assertExitFailure(exit, Exit.isFailure(exit) ? exit.cause : Cause.empty);
 			assert.include(String(exit), "the stream died");
 			assert.deepStrictEqual(timeline, ["unmount", "done"]);
 			assert.deepStrictEqual(fake.rawModes, []);
 			assert.include(fake.stdout().slice(-64), SHOW_CURSOR);
-			assert.strictEqual(yield* mountsAndResolves(makeFakeStreams()), "mounted", "the permit was released");
-		}).pipe(Effect.scoped),
+			assert.strictEqual(yield* TestClock.withLive(mountsAndResolves(makeFakeStreams())), "mounted", "the permit was released");
+		}),
 	);
 
-	it.live("a stream that dies when not interactive: done dies with the stream's defect too", () =>
+	it.effect("a stream that dies when not interactive: done dies with the stream's defect too", () =>
 		Effect.gen(function* () {
 			const handle = yield* liveOn(makeFakeStreams(), optionsOf(dying), { interactive: false });
-			const exit = yield* Effect.exit(handle.done).pipe(Effect.timeout("2 seconds"));
-			assert.isTrue(Exit.isFailure(exit), String(exit));
+			const exit = yield* Effect.exit(handle.done).pipe(Effect.timeout("2 seconds"), TestClock.withLive);
+			assertExitFailure(exit, Exit.isFailure(exit) ? exit.cause : Cause.empty);
 			assert.include(String(exit), "the stream died");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.live("a fallback that throws too leaves the run unpainted, so its final frame is printed as a string", () =>
@@ -504,20 +505,20 @@ describe("CliUi.live: a stream that dies, a fallback that throws, an agent audie
 			yield* handle.done.pipe(Effect.timeout("2 seconds"));
 			assert.strictEqual(warningsIn(log.lines).length, 1, log.lines.join("\n"));
 			assert.deepStrictEqual(screenAfter(fake.stdout()), ["RUN 1", "ended"], "the final frame, once");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
-	it.live("owned, not interactive, for an agent audience: escape-free even on a truecolor terminal", () =>
+	it.effect("owned, not interactive, for an agent audience: escape-free even on a truecolor terminal", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams({ columns: 200, rows: 20 });
 			const handle = yield* liveOn(fake, optionsOf(Stream.fromIterable([Start, End]), { render: Styledframe }), {
 				interactive: false,
 				color: "truecolor",
-			}).pipe(Effect.provide(Audience.layerTest("agent")));
-			yield* handle.done.pipe(Effect.timeout("2 seconds"));
+			}).pipe(Effect.provideService(Audience, Audience.of({ kind: "agent", source: "override" })));
+			yield* handle.done.pipe(Effect.timeout("2 seconds"), TestClock.withLive);
 			assert.include(fake.stdout(), "ended");
 			assert.notInclude(fake.stdout(), ESC, "no escape of any kind for an agent");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("the frame index never steps back: every frame drawn is at or after the last", () =>
@@ -544,7 +545,7 @@ describe("CliUi.live: a stream that dies, a fallback that throws, an agent audie
 			yield* settle(80);
 			const backwards = frames.filter((frame, index) => index > 0 && frame < (frames[index - 1] ?? 0));
 			assert.deepStrictEqual(backwards, [], `frames drawn: ${frames.join(",")}`);
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
@@ -574,27 +575,27 @@ describe("CliUi.live and CliUi.run for an agent: the provided theme is colourles
 	};
 	const SGR = new RegExp(`${ESC}\\[[0-9;]*m`);
 
-	it.live("an owned live view's printed frame: no escape, color=none, and the colour-none markers drawn", () =>
+	it.effect("an owned live view's printed frame: no escape, color=none, and the colour-none markers drawn", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams({ columns: 80, rows: 20 });
 			const handle = yield* liveOn(
 				fake,
 				optionsOf(Stream.fromIterable([Start, End]), { render: () => createElement(AgentProbe) }),
 				{ interactive: false, color: "truecolor" },
-			).pipe(Effect.provide(Audience.layerTest("agent")));
-			yield* handle.done.pipe(Effect.timeout("2 seconds"));
+			).pipe(Effect.provideService(Audience, Audience.of({ kind: "agent", source: "override" })));
+			yield* handle.done.pipe(Effect.timeout("2 seconds"), TestClock.withLive);
 			const written = fake.stdout();
 			assert.notInclude(written, ESC, "no escape of any kind for an agent");
 			assert.include(written, "color=none painted");
 			assert.include(written, "(disabled)", "Select's colour-none marker");
 			assert.include(written, "[Alpha]", "Tabs' colour-none brackets");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
-	it.live("a CliUi.run screen for an agent (forced interactive by the harness) gets the same colourless theme", () =>
+	it.effect("a CliUi.run screen for an agent (forced interactive by the harness) gets the same colourless theme", () =>
 		Effect.gen(function* () {
 			const handle = yield* CliUiTest.render(() => createElement(AgentProbe), { color: "truecolor" }).pipe(
-				Effect.provide(Audience.layerTest("agent")),
+				Effect.provideService(Audience, Audience.of({ kind: "agent", source: "override" })),
 			);
 			const raw = yield* handle.rawFrame;
 			assert.notMatch(raw, SGR, "no colour escape for an agent");
@@ -602,6 +603,6 @@ describe("CliUi.live and CliUi.run for an agent: the provided theme is colourles
 			assert.include(plain, "color=none painted");
 			assert.include(plain, "(disabled)");
 			assert.include(plain, "[Alpha]");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });

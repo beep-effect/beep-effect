@@ -13,6 +13,7 @@
 // here as the posture link.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Result from "effect/Result";
@@ -24,11 +25,13 @@ import { Mdast } from "../../effected/markdown/Mdast.ts";
 
 const parse = (text: string, options?: Parameters<typeof Markdown.parseResult>[1]) => {
 	const result = Markdown.parseResult(text, options);
-	assert.isTrue(Result.isSuccess(result));
+	assertSuccess(Result.map(result, () => undefined), undefined);
 	return Result.getOrThrow(result);
 };
 
-const collect = (root: Root) => MarkdownVisitor.visit(root).pipe(Stream.runCollect, Effect.runSync);
+const collect = Effect.fn("test.collect")(function* (root: Root) {
+	return yield* MarkdownVisitor.visit(root).pipe(Stream.runCollect);
+});
 
 /** A plain-mdast tree of `depth` nested blockquotes around one paragraph. */
 const deepForeignTree = (depth: number): unknown => {
@@ -45,9 +48,9 @@ const syntheticPosition = Position.make({
 });
 
 describe("MarkdownVisitor", () => {
-	it("emits the exact enter/exit sequence for a small document", () => {
+	it.effect("emits the exact enter/exit sequence for a small document", Effect.fnUntraced(function* () {
 		const root = parse("hello *world*\n");
-		const events = collect(root);
+		const events = yield* collect(root);
 		const shape = events.map((event) =>
 			event._tag === "Error" ? "Error" : `${event._tag}:${event.node.type}@${event.depth}[${event.path.join(".")}]`,
 		);
@@ -63,16 +66,16 @@ describe("MarkdownVisitor", () => {
 			"Exit:paragraph@1[0]",
 			"Exit:root@0[]",
 		]);
-	});
+	}));
 
-	it("walks an empty document as a bare root pair", () => {
-		const events = collect(parse(""));
+	it.effect("walks an empty document as a bare root pair", Effect.fnUntraced(function* () {
+		const events = yield* collect(parse(""));
 		assert.strictEqual(events.length, 2);
 		assert.strictEqual(events[0]?._tag, "Enter");
 		assert.strictEqual(events[1]?._tag, "Exit");
-	});
+	}));
 
-	it("covers gfm constructs and frontmatter in document order with balanced events", () => {
+	it.effect("covers gfm constructs and frontmatter in document order with balanced events", Effect.fnUntraced(function* () {
 		const source = [
 			"---",
 			"title: x",
@@ -91,7 +94,7 @@ describe("MarkdownVisitor", () => {
 			"",
 		].join("\n");
 		const root = parse(source, { dialect: "gfm", frontmatter: true });
-		const events = collect(root);
+		const events = yield* collect(root);
 
 		// Balanced: every Enter has a matching LIFO Exit, and no Error events.
 		const stack: Array<string> = [];
@@ -113,11 +116,11 @@ describe("MarkdownVisitor", () => {
 		for (const expected of ["heading", "listItem", "delete", "table", "tableRow", "tableCell", "footnoteReference"]) {
 			assert.include(entered, expected);
 		}
-	});
+	}));
 
-	it("reports path segments as child indexes from the root", () => {
+	it.effect("reports path segments as child indexes from the root", Effect.fnUntraced(function* () {
 		const root = parse("> - item\n");
-		const events = collect(root);
+		const events = yield* collect(root);
 		const text = events.find((event) => event._tag === "Enter" && event.node.type === "text");
 		assert.isDefined(text);
 		if (text !== undefined && text._tag === "Enter") {
@@ -125,37 +128,37 @@ describe("MarkdownVisitor", () => {
 			assert.deepStrictEqual([...text.path], [0, 0, 0, 0, 0]);
 			assert.strictEqual(text.depth, 5);
 		}
-	});
+	}));
 
-	it("terminates early under Stream.take without walking the rest", () => {
+	it.effect("terminates early under Stream.take without walking the rest", Effect.fnUntraced(function* () {
 		const root = parse("a\n\nb\n\nc\n");
-		const events = MarkdownVisitor.visit(root).pipe(Stream.take(3), Stream.runCollect, Effect.runSync);
+		const events = yield* MarkdownVisitor.visit(root).pipe(Stream.take(3), Stream.runCollect);
 		assert.strictEqual(events.length, 3);
 		assert.strictEqual(events[0]?._tag, "Enter");
-	});
+	}));
 
-	it("events are structurally equal for the same walk", () => {
+	it.effect("events are structurally equal for the same walk", Effect.fnUntraced(function* () {
 		const root = parse("hi\n");
-		const [first] = collect(root);
-		const [again] = collect(root);
+		const [first] = yield* collect(root);
+		const [again] = yield* collect(root);
 		assert.isTrue(Equal.equals(first, again));
-	});
+	}));
 
-	it("walks a tree exactly at the depth cap without an Error event", () => {
+	it.effect("walks a tree exactly at the depth cap without an Error event", Effect.fnUntraced(function* () {
 		// Root(0) + 255 blockquotes + paragraph + text: max depth 257... keep
 		// below the cap: 254 blockquotes puts text at depth 256 == cap, legal.
 		const result = Mdast.fromMdastResult(deepForeignTree(254));
-		assert.isTrue(Result.isSuccess(result));
-		const events = result.pipe(Result.getOrThrow, collect);
+		assertSuccess(Result.map(result, () => undefined), undefined);
+		const events = yield* result.pipe(Result.getOrThrow, collect);
 		assert.isFalse(events.some((event) => event._tag === "Error"));
-	});
+	}));
 
-	it("surfaces a decoded foreign tree past the cap as an Error event ending the walk", () => {
+	it.effect("surfaces a decoded foreign tree past the cap as an Error event ending the walk", Effect.fnUntraced(function* () {
 		const result = Mdast.fromMdastResult(deepForeignTree(300));
-		assert.isTrue(Result.isSuccess(result));
+		assertSuccess(Result.map(result, () => undefined), undefined);
 		const tree = Result.getOrThrow(result);
 
-		const events = collect(tree);
+		const events = yield* collect(tree);
 		const last = events[events.length - 1];
 		assert.isDefined(last);
 		assert.strictEqual(last?._tag, "Error");
@@ -166,8 +169,8 @@ describe("MarkdownVisitor", () => {
 		assert.strictEqual(events.filter((event) => event._tag === "Error").length, 1);
 
 		// Posture link: the same tree fails stringify typed, never a defect.
-		assert.isTrue(Result.isFailure(Markdown.stringifyResult(tree)));
-	});
+		assertFailure(Result.mapError(Markdown.stringifyResult(tree), () => undefined), undefined);
+	}));
 
 	it("constructs events via the taggedEnum constructors", () => {
 		const node = Text.make({ value: "x", position: syntheticPosition });
@@ -176,18 +179,18 @@ describe("MarkdownVisitor", () => {
 		assert.isTrue(MarkdownVisitorEvent.$is("Enter")(event));
 	});
 
-	it("enter and exit fire for a leaf back to back", () => {
+	it.effect("enter and exit fire for a leaf back to back", Effect.fnUntraced(function* () {
 		const paragraph = Paragraph.make({
 			children: [Text.make({ value: "x", position: syntheticPosition })],
 			position: syntheticPosition,
 		});
 		const root = Root.make({ children: [paragraph], position: syntheticPosition });
-		const events = collect(root);
+		const events = yield* collect(root);
 		const tags = events.map((event) => event._tag);
 		assert.deepStrictEqual(tags, ["Enter", "Enter", "Enter", "Exit", "Exit", "Exit"]);
-	});
+	}));
 
-	it("blockquote nesting inside the cap via make-constructed classes walks clean", () => {
+	it.effect("blockquote nesting inside the cap via make-constructed classes walks clean", Effect.fnUntraced(function* () {
 		let node: Blockquote | Paragraph = Paragraph.make({
 			children: [Text.make({ value: "x", position: syntheticPosition })],
 			position: syntheticPosition,
@@ -196,8 +199,8 @@ describe("MarkdownVisitor", () => {
 			node = Blockquote.make({ children: [node], position: syntheticPosition });
 		}
 		const root = Root.make({ children: [node], position: syntheticPosition });
-		const events = collect(root);
+		const events = yield* collect(root);
 		assert.strictEqual(events.length, 2 * (1 + 10 + 1 + 1));
 		assert.isFalse(events.some((event) => event._tag === "Error"));
-	});
+	}));
 });

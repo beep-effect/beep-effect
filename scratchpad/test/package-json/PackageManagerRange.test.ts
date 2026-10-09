@@ -6,7 +6,7 @@
 // control.
 
 import { assert, describe, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertFailure, assertNone, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -134,7 +134,7 @@ describe("PackageManagerRange.parseResult", () => {
 		];
 		for (const [input, reason] of cases) {
 			const parsed = PackageManagerRange.parseResult(input);
-			assert.isTrue(Result.isFailure(parsed), input);
+			assertFailure(parsed, parsed.pipe(Result.flip, Result.getOrThrow));
 			if (Result.isFailure(parsed)) {
 				assert.instanceOf(parsed.failure, InvalidPackageManagerRangeError);
 				assert.strictEqual(parsed.failure.reason, reason, input);
@@ -155,7 +155,7 @@ describe("PackageManagerRange.parseResult", () => {
 describe("PackageManagerRange.fromDevEngine", () => {
 	it("reads a caret range and renders it bare with the operator kept", () => {
 		const read = PackageManagerRange.fromDevEngineResult(DevEngine.make({ name: "pnpm", version: "^12.6.0" }));
-		assert.isTrue(Result.isSuccess(read));
+		assertSuccess(read, Result.getOrThrow(read));
 		if (Result.isSuccess(read)) {
 			assert.strictEqual(read.success.name, "pnpm");
 			assert.strictEqual(read.success.range, "^12.6.0");
@@ -166,7 +166,7 @@ describe("PackageManagerRange.fromDevEngine", () => {
 
 	it("drops a corepack hash from an operator range, keeping the operator", () => {
 		const read = PackageManagerRange.fromDevEngineResult(DevEngine.make({ name: "pnpm", version: `^12.6.0+${HEX}` }));
-		assert.isTrue(Result.isSuccess(read));
+		assertSuccess(read, Result.getOrThrow(read));
 		if (Result.isSuccess(read)) {
 			assert.strictEqual(read.success.range, "^12.6.0");
 			assert.deepStrictEqual(read.success.integrity, O.some(HEX));
@@ -178,7 +178,7 @@ describe("PackageManagerRange.fromDevEngine", () => {
 	it("reads an exact version with a hash and without", () => {
 		for (const version of ["12.6.0", `12.6.0+${HEX}`]) {
 			const read = PackageManagerRange.fromDevEngineResult(DevEngine.make({ name: "pnpm", version, onFail: "error" }));
-			assert.isTrue(Result.isSuccess(read), version);
+			assertSuccess(read, Result.getOrThrow(read));
 			if (Result.isSuccess(read)) {
 				assert.strictEqual(read.success.range, "12.6.0");
 				assert.isTrue(read.success.isExact);
@@ -203,8 +203,10 @@ describe("PackageManagerRange.fromDevEngine", () => {
 	it("reports name@version as the error input, and the bare name when version is absent", () => {
 		const bad = PackageManagerRange.fromDevEngineResult(DevEngine.make({ name: "pnpm", version: "12.6.0+x" }));
 		const missing = PackageManagerRange.fromDevEngineResult(DevEngine.make({ name: "pnpm" }));
-		assert.isTrue(Result.isFailure(bad) && bad.failure.input === "pnpm@12.6.0+x");
-		assert.isTrue(Result.isFailure(missing) && missing.failure.input === "pnpm");
+		assertFailure(bad, bad.pipe(Result.flip, Result.getOrThrow));
+		assert.strictEqual(bad.failure.input, "pnpm@12.6.0+x");
+		assertFailure(missing, missing.pipe(Result.flip, Result.getOrThrow));
+		assert.strictEqual(missing.failure.input, "pnpm");
 	});
 
 	it.effect("fromDevEngine fails typed through the error channel", () =>
@@ -221,11 +223,14 @@ describe("PackageManagerRange devEngines entry as a plain object", () => {
 		const raw: unknown = JSON.parse('{"name":"pnpm","version":"^12.6.0","onFail":"download"}');
 		assertTrue(S.is(DevEngineEntry)(raw));
 		const read = PackageManagerRange.fromDevEngineResult(raw);
-		assert.isTrue(Result.isSuccess(read) && read.success.range === "^12.6.0");
+		assertSuccess(read, Result.getOrThrow(read));
+		assert.strictEqual(read.success.range, "^12.6.0");
 		const missing = PackageManagerRange.fromDevEngineResult({ name: "pnpm" });
-		assert.isTrue(Result.isFailure(missing) && missing.failure.reason === "range");
+		assertFailure(missing, missing.pipe(Result.flip, Result.getOrThrow));
+		assert.strictEqual(missing.failure.reason, "range");
 		const badName = PackageManagerRange.fromDevEngineResult({ name: "PNPM", version: "12.6.0" });
-		assert.isTrue(Result.isFailure(badName) && badName.failure.reason === "name");
+		assertFailure(badName, badName.pipe(Result.flip, Result.getOrThrow));
+		assert.strictEqual(badName.failure.reason, "name");
 	});
 });
 
@@ -250,8 +255,8 @@ describe("PackageManagerRange operator, baseVersion and withVersion", () => {
 
 	it("answers none for ranges whose operator cannot be carried onto a new version", () => {
 		for (const text of [">=12.0.0 <13.0.0", "12.x", "^12", "=12.6.0", ">=12.0.0 <12.7.0 || >12.7.0 <13.0.0"]) {
-			assert.isTrue(O.isNone(range(text).operator), text);
-			assert.isTrue(O.isNone(range(text).baseVersion), text);
+			assertNone(range(text).operator);
+			assertNone(range(text).baseVersion);
 		}
 	});
 
@@ -263,7 +268,7 @@ describe("PackageManagerRange operator, baseVersion and withVersion", () => {
 			[`^12.6.0+${HEX}`, "^12.8.1"],
 		] as const) {
 			const moved = range(text).withVersionResult("12.8.1");
-			assert.isTrue(Result.isSuccess(moved), text);
+			assertSuccess(moved, Result.getOrThrow(moved));
 			if (Result.isSuccess(moved)) {
 				assert.strictEqual(moved.success.range, expected, text);
 				assert.isFalse(moved.success.hasIntegrity, text);
@@ -274,10 +279,12 @@ describe("PackageManagerRange operator, baseVersion and withVersion", () => {
 
 	it("refuses to re-anchor a compound range or onto a non-pinnable version", () => {
 		const compound = range(">=12.0.0 <13.0.0").withVersionResult("12.8.1");
-		assert.isTrue(Result.isFailure(compound) && compound.failure.reason === "range");
+		assertFailure(compound, compound.pipe(Result.flip, Result.getOrThrow));
+		assert.strictEqual(compound.failure.reason, "range");
 		for (const version of ["^12.8.1", "12", "v12.8.1", ""]) {
 			const moved = range("^12.6.0").withVersionResult(version);
-			assert.isTrue(Result.isFailure(moved) && moved.failure.reason === "range", version);
+			assertFailure(moved, moved.pipe(Result.flip, Result.getOrThrow));
+			assert.strictEqual(moved.failure.reason, "range");
 		}
 	});
 

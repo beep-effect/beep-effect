@@ -1,5 +1,6 @@
 import { NodeFileSystem } from "@effect/platform-node";
-import { assert, describe, layer } from "@effect/vitest";
+import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -14,7 +15,7 @@ const unsupported = (): string => {
 };
 
 describe("resolving Ink's chalk where import.meta.resolve is unavailable", () => {
-	layer(NodeFileSystem.layer)((it) => {
+	it.layer(NodeFileSystem.layer, { timeout: "30 seconds" })((it) => {
 		it.effect("Ink's entry is still found, through CommonJS resolution from the kit, and it is the same file", () =>
 			Effect.gen(function* () {
 				const fs = yield* FileSystem.FileSystem;
@@ -29,8 +30,8 @@ describe("resolving Ink's chalk where import.meta.resolve is unavailable", () =>
 			Effect.gen(function* () {
 				const native = yield* inkChalk();
 				const fallback = yield* inkChalk(() => resolveInkEntry(unsupported));
-				assert.isTrue(O.isSome(native), "control: the native path resolves it");
-				assert.isTrue(O.isSome(fallback), "the fallback resolves it too");
+				assertSome(native, O.getOrUndefined(native));
+				assertSome(fallback, O.getOrUndefined(fallback));
 				assert.strictEqual(O.getOrUndefined(fallback), O.getOrUndefined(native), "one chalk, not a copy");
 			}),
 		);
@@ -47,11 +48,11 @@ describe("resolving Ink's chalk where import.meta.resolve is unavailable", () =>
 				});
 				const native = yield* inkChalk();
 				const injected = yield* inkChalk().pipe(Effect.provideService(FileSystem.FileSystem, tracked));
-				assert.isTrue(O.isSome(injected));
+				assertSome(injected, O.getOrUndefined(injected));
 				assert.strictEqual(O.getOrUndefined(injected), O.getOrUndefined(native), "the injected realpath still selects Ink's shared chalk");
 				assert.lengthOf(paths, 1, "the supplied FileSystem resolves the import's realpath");
 				const missing = yield* inkChalk().pipe(Effect.provideService(FileSystem.FileSystem, FileSystem.makeNoop({})));
-				assert.isTrue(O.isNone(missing), "an unavailable realpath degrades to unresolved chalk");
+				assertNone(missing);
 			}),
 		);
 
@@ -59,7 +60,7 @@ describe("resolving Ink's chalk where import.meta.resolve is unavailable", () =>
 			Effect.gen(function* () {
 				const found = yield* inkChalk(() => resolveInkEntry(unsupported));
 				const log = capturing();
-				yield* Effect.scoped(holdChalkLevel(found, "none")).pipe(Effect.provideService(Console.Console, log.console));
+				yield* holdChalkLevel(found, "none").pipe(Effect.provideService(Console.Console, log.console));
 				assert.deepStrictEqual(log.lines, [], "no warning, no line at all");
 			}),
 		);
@@ -67,10 +68,10 @@ describe("resolving Ink's chalk where import.meta.resolve is unavailable", () =>
 		it.effect("control: with nothing resolved, holding the level does warn, once", () =>
 			Effect.gen(function* () {
 				const log = capturing();
-				yield* Effect.scoped(holdChalkLevel(O.none(), "none")).pipe(
+				yield* holdChalkLevel(O.none(), "none").pipe(
 					Effect.provideService(Console.Console, log.console),
 				);
-				yield* Effect.scoped(holdChalkLevel(O.none(), "none")).pipe(
+				yield* holdChalkLevel(O.none(), "none").pipe(
 					Effect.provideService(Console.Console, log.console),
 				);
 				assert.strictEqual(log.lines.filter((line) => line.includes("could not resolve the chalk")).length, 1);

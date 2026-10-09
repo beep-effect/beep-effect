@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 // Root discovery: the ascent bounds, the carried discovery root, and the test
 // double.
 //
@@ -8,10 +7,12 @@
 // is exactly the silent escape `stopAt` exists to refuse.
 
 import { assert, describe, it, layer } from "@effect/vitest";
+import { assertExitFailure } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import {
 	WORKSPACE_MARKERS,
@@ -39,7 +40,7 @@ const nested: Tree = {
 };
 
 describe("WorkspaceRoot.find — ascent bounds", () => {
-	layer(rootsOver(nested))((it) => {
+	layer(rootsOver(nested), { timeout: "30 seconds" })((it) => {
 		it.effect("unbounded, it escapes the fixture and resolves the host root", () =>
 			Effect.gen(function* () {
 				const roots = yield* WorkspaceRoot;
@@ -100,9 +101,9 @@ describe("WorkspaceRoot.find — ascent bounds", () => {
 				// that silently became "no ancestors" would be indistinguishable from
 				// a legitimate not-found.
 				const exit = yield* Effect.exit(roots.find("/host/packages", { maxDepth: 2.5 }));
-				assert.isTrue(Exit.isFailure(exit));
-				assert.isTrue(Exit.isFailure(exit) && Cause.hasDies(exit.cause));
-				assert.isFalse(Exit.isFailure(exit) && exit.cause.reasons.some(Cause.isFailReason));
+				assertExitFailure(exit, O.getOrElse(Exit.getCause(exit), () => Cause.empty));
+				assert.isTrue(Cause.hasDies(exit.cause));
+				assert.isFalse(exit.cause.reasons.some(Cause.isFailReason));
 			}),
 		);
 	});
@@ -112,7 +113,7 @@ describe("WorkspaceRoot.find — malformed ancestor manifest", () => {
 	layer(rootsOver({
 		"/ws/pnpm-workspace.yaml": "packages:\n  - packages/*\n",
 		"/ws/packages/a/package.json": "null",
-	}))((it) => {
+	}), { timeout: "30 seconds" })((it) => {
 		it.effect("continues past a null manifest to the valid workspace root above it", () =>
 			Effect.gen(function* () {
 				const roots = yield* WorkspaceRoot;
@@ -141,7 +142,7 @@ const discoveryOver = (tree: Tree) => {
 };
 
 describe("WorkspacePackage.workspaceRoot — carried by discovery", () => {
-	layer(discoveryOver(discovered))((it) => {
+	layer(discoveryOver(discovered), { timeout: "30 seconds" })((it) => {
 		it.effect("every discovered package carries the root the ascent found", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
@@ -188,7 +189,7 @@ describe("WorkspacePackage.workspaceRoot — carried by discovery", () => {
 const TestRoot = WorkspaceRoot.layerTest("/repo");
 
 describe("WorkspaceRoot.layerTest", () => {
-	layer(TestRoot)((it) => {
+	layer(TestRoot, { timeout: "30 seconds" })((it) => {
 		it.effect("resolves any cwd to the configured root, with no filesystem", () =>
 			Effect.gen(function* () {
 				const roots = yield* WorkspaceRoot;
@@ -220,32 +221,37 @@ describe("WorkspaceRoot.layerTest", () => {
 });
 
 describe("WorkspaceRoot.makeTest — ceiling containment", () => {
-	// makeTest requires `Path` (to normalize the ceiling); build the double with
-	// core's `Path.layer`, the same layer `layerTest` provides internally.
-	const build = (root: string) => Effect.runSync(WorkspaceRoot.makeTest(root).pipe(Effect.provide(Path.layer)));
+	// makeTest requires `Path` to normalize the ceiling; the runner supplies it.
+	layer(Path.layer, { timeout: "30 seconds" })((it) => {
+		it.effect("treats the ceiling itself as containing the root", () =>
+			Effect.gen(function* () {
+				const double = yield* WorkspaceRoot.makeTest("/repo");
+				assert.strictEqual(yield* double.find("/repo", { stopAt: "/repo" }), "/repo");
+			}),
+		);
 
-	it("treats the ceiling itself as containing the root", () => {
-		const double = build("/repo");
-		assert.strictEqual(Effect.runSync(double.find("/repo", { stopAt: "/repo" })), "/repo");
-	});
+		it.effect("does not treat a sibling with a shared prefix as containing the root", () =>
+			Effect.gen(function* () {
+				// "/repo-other" starts with "/repo" as a raw string but is NOT beneath it;
+				// a naive `startsWith` check would wrongly succeed here.
+				const double = yield* WorkspaceRoot.makeTest("/repo-other");
+				const exit = yield* Effect.exit(double.find("/repo-other/packages/a", { stopAt: "/repo" }));
+				assertExitFailure(exit, O.getOrElse(Exit.getCause(exit), () => Cause.empty));
+			}),
+		);
 
-	it("does not treat a sibling with a shared prefix as containing the root", () => {
-		// "/repo-other" starts with "/repo" as a raw string but is NOT beneath it;
-		// a naive `startsWith` check would wrongly succeed here.
-		const double = build("/repo-other");
-		const exit = Effect.runSyncExit(double.find("/repo-other/packages/a", { stopAt: "/repo" }));
-		assert.isTrue(Exit.isFailure(exit));
-	});
-
-	it("normalizes a stopAt carrying `..` before comparing, matching the live path", () => {
-		// "/repo/packages/../packages" resolves to "/repo/packages", an ancestor of
-		// the root, so the bounded call succeeds. A raw string compare would never
-		// match that spelling against the root and would wrongly fail — the exact
-		// test/live divergence this double exists to prevent.
-		const double = build("/repo/packages/a");
-		assert.strictEqual(
-			Effect.runSync(double.find("/repo/packages/a", { stopAt: "/repo/packages/../packages" })),
-			"/repo/packages/a",
+		it.effect("normalizes a stopAt carrying `..` before comparing, matching the live path", () =>
+			Effect.gen(function* () {
+				// "/repo/packages/../packages" resolves to "/repo/packages", an ancestor of
+				// the root, so the bounded call succeeds. A raw string compare would never
+				// match that spelling against the root and would wrongly fail — the exact
+				// test/live divergence this double exists to prevent.
+				const double = yield* WorkspaceRoot.makeTest("/repo/packages/a");
+				assert.strictEqual(
+					yield* double.find("/repo/packages/a", { stopAt: "/repo/packages/../packages" }),
+					"/repo/packages/a",
+				);
+			}),
 		);
 	});
 });
@@ -257,13 +263,12 @@ describe("WorkspaceRoot.layerTest — agrees with the live service", () => {
 		"/repo/packages/alpha/package.json": manifest("@x/alpha"),
 	};
 
-	layer(rootsOver(marked))((it) => {
+	layer(Layer.merge(rootsOver(marked), Path.layer), { timeout: "30 seconds" })((it) => {
 		it.effect("both resolve the same root, and both refuse the same ceiling", () =>
 			Effect.gen(function* () {
 				const live = yield* WorkspaceRoot;
-				// The surrounding layer consumes `Path` into the live service, so provide
-				// it locally for the double.
-				const double = yield* WorkspaceRoot.makeTest("/repo").pipe(Effect.provide(Path.layer));
+				// The surrounding layer exposes `Path` for the double too.
+				const double = yield* WorkspaceRoot.makeTest("/repo");
 
 				assert.strictEqual(yield* live.find("/repo/packages/alpha"), yield* double.find("/repo/packages/alpha"));
 

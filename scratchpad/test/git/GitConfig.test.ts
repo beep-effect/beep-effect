@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -12,7 +12,7 @@ const ok = <A, E>(result: Result.Result<A, E>): A => {
 	if (Result.isFailure(result)) {
 		assert.fail(`expected success, got failure: ${String(result.failure)}`);
 	}
-	assert.isTrue(Result.isSuccess(result));
+	assertSuccess(result, Result.getOrThrow(result));
 	return result.success;
 };
 
@@ -20,7 +20,7 @@ const parse = (text: string): GitConfig => ok(GitConfig.parseResult(text));
 
 const failure = (text: string): GitConfigParseError => {
 	const result = GitConfig.parseResult(text);
-	assertTrue(Result.isFailure(result), "expected a parse failure");
+	assertFailure(result, result.pipe(Result.getFailure, O.getOrThrow));
 	return result.failure;
 };
 
@@ -388,12 +388,12 @@ describe("GitConfig", () => {
 		it("unset on a missing key or section fails typed", () => {
 			const doc = parse("[a]\n\tk = v\n");
 			const missingKey = doc.unset("a", undefined, "nope");
-			assert.isTrue(Result.isFailure(missingKey));
+			assertFailure(missingKey, missingKey.pipe(Result.getFailure, O.getOrThrow));
 			if (Result.isFailure(missingKey)) {
 				assert.strictEqual(missingKey.failure.reason, "missingKey");
 			}
 			const missingSection = doc.unset("b", undefined, "k");
-			assert.isTrue(Result.isFailure(missingSection));
+			assertFailure(missingSection, missingSection.pipe(Result.getFailure, O.getOrThrow));
 			if (Result.isFailure(missingSection)) {
 				assert.strictEqual(missingSection.failure.reason, "missingSection");
 			}
@@ -441,7 +441,7 @@ describe("GitConfig", () => {
 				doc.append("x.y", undefined, "k", "v"),
 				parse("[a]\n").renameSection("a", undefined, "a.b", undefined),
 			]) {
-				assert.isTrue(Result.isFailure(attempt));
+				assertFailure(attempt, attempt.pipe(Result.getFailure, O.getOrThrow));
 				if (Result.isFailure(attempt)) {
 					assert.strictEqual(attempt.failure.reason, "invalidSectionName");
 				}
@@ -455,17 +455,16 @@ describe("GitConfig", () => {
 		it("invalid names and values are refused typed", () => {
 			const doc = parse("[a]\n\tk = v\n");
 			const badSection = doc.set("no spaces", undefined, "k", "v");
-			assert.isTrue(Result.isFailure(badSection));
+			assertFailure(badSection, badSection.pipe(Result.getFailure, O.getOrThrow));
 			if (Result.isFailure(badSection)) assert.strictEqual(badSection.failure.reason, "invalidSectionName");
 			const badKey = doc.set("a", undefined, "1bad", "v");
-			assert.isTrue(Result.isFailure(badKey));
+			assertFailure(badKey, badKey.pipe(Result.getFailure, O.getOrThrow));
 			if (Result.isFailure(badKey)) assert.strictEqual(badKey.failure.reason, "invalidKey");
 			const badSub = doc.set("a", "line\nbreak", "k", "v");
-			assert.isTrue(Result.isFailure(badSub));
+			assertFailure(badSub, badSub.pipe(Result.getFailure, O.getOrThrow));
 			if (Result.isFailure(badSub)) assert.strictEqual(badSub.failure.reason, "invalidSubsection");
 			const badValue = doc.set("a", undefined, "k", "nul\0byte");
-			const isFailure = Result.isFailure(badValue);
-			assertTrue(isFailure);
+			assertFailure(badValue, badValue.pipe(Result.getFailure, O.getOrThrow));
 			if (Result.isFailure(badValue)) assert.strictEqual(badValue.failure.reason, "invalidValue");
 			assert.instanceOf(badValue.failure, GitConfigEditError);
 		});
@@ -559,12 +558,10 @@ describe("GitConfig round-1 scanner regressions", () => {
 		for (const name of ["", "a_b", "a b", "é", "a\n", "a\nb", "a\0"]) assert.isFalse(isValidSectionName(name), name);
 		const doc = parse("[a]\nk=v\n");
 		const keyError = doc.set("a", undefined, "a_", "v");
-		const keyFailed = Result.isFailure(keyError);
-		assertTrue(keyFailed);
+		assertFailure(keyError, keyError.pipe(Result.getFailure, O.getOrThrow));
 		assert.strictEqual(keyError.failure.reason, "invalidKey");
 		const sectionError = doc.addSection("a_b", undefined);
-		const sectionFailed = Result.isFailure(sectionError);
-		assertTrue(sectionFailed);
+		assertFailure(sectionError, sectionError.pipe(Result.getFailure, O.getOrThrow));
 		assert.strictEqual(sectionError.failure.reason, "invalidSectionName");
 	});
 });

@@ -9,6 +9,7 @@
 // exactly as CommonMark says they do unless a consumer opts in.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -23,7 +24,7 @@ const withFrontmatter = MarkdownParseOptions.make({ frontmatter: true });
 /** Parse with capture enabled and return the root. */
 const parseOn = (source: string): Root => {
 	const result = Markdown.parseResult(source, withFrontmatter);
-	assert.isTrue(Result.isSuccess(result));
+	assertSuccess(result, Result.getOrThrow(result));
 	if (!Result.isSuccess(result)) {
 		throw new TypeError("unreachable: asserted success above");
 	}
@@ -45,7 +46,7 @@ describe("frontmatter capture", () => {
 	describe("the toggle", () => {
 		it("is off by default: a fence document parses as CommonMark says", () => {
 			const result = Markdown.parseResult("---\na: 1\n---\n");
-			assert.isTrue(Result.isSuccess(result));
+			assertSuccess(result, Result.getOrThrow(result));
 			if (!Result.isSuccess(result)) {
 				return;
 			}
@@ -124,7 +125,7 @@ describe("frontmatter capture", () => {
 
 		it("an unclosed fence is not frontmatter and emits no diagnostic", () => {
 			const result = MarkdownDocument.parseResult("---\na: 1\n", withFrontmatter);
-			assert.isTrue(Result.isSuccess(result));
+			assertSuccess(result, Result.getOrThrow(result));
 			if (!Result.isSuccess(result)) {
 				return;
 			}
@@ -199,7 +200,7 @@ describe("frontmatter capture", () => {
 				"---\na: 1\n---\n",
 				MarkdownParseOptions.make({ dialect: "commonmark", frontmatter: true }),
 			);
-			assert.isTrue(Result.isSuccess(commonmark));
+			assertSuccess(commonmark, Result.getOrThrow(commonmark));
 			if (!Result.isSuccess(commonmark)) {
 				return;
 			}
@@ -209,11 +210,11 @@ describe("frontmatter capture", () => {
 	});
 
 	describe("the facade and the schema", () => {
-		it("parse and parseResult agree", () => {
-			const viaEffect = Effect.runSync(Markdown.parse("---\na: 1\n---\n", withFrontmatter));
+		it.effect("parse and parseResult agree", () => Effect.gen(function* () {
+			const viaEffect = yield* Markdown.parse("---\na: 1\n---\n", withFrontmatter);
 			const viaResult = parseOn("---\na: 1\n---\n");
 			assert.deepStrictEqual(viaEffect, viaResult);
-		});
+		}));
 
 		it("a frontmatter head survives a Root decode round-trip", () => {
 			const root = parseOn("---\na: 1\n---\nrest\n");

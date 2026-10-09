@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Result from "effect/Result";
@@ -148,6 +149,7 @@ describe("Comparator operator domain", () => {
 			assert.strictEqual(comparator.operator, operator);
 		}
 		assert.isFalse(S.is(ComparatorOperator)("~"));
-		assert.isTrue(Result.isFailure(S.decodeUnknownResult(Comparator)({ operator: "~", version: SemVer.of(1, 0, 0) })));
+		const result = S.decodeUnknownResult(Comparator)({ operator: "~", version: SemVer.of(1, 0, 0) });
+		assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 	});
 });

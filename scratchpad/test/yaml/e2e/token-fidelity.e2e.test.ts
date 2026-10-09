@@ -14,6 +14,7 @@
  */
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess } from "@effect/vitest/utils";
 import * as Result from "effect/Result";
 import { YamlTokens } from "../../../effected/yaml/index.ts";
 import { parseCSTAll } from "../../../effected/yaml/internal/cst-parser.ts";
@@ -40,8 +41,7 @@ describe("token position fidelity (yaml-test-suite corpus)", () => {
 		for (const tc of allCases) {
 			const result = YamlTokens.tokenize(tc.yaml);
 			// The tokenizer is total: error-kind tokens, never a failure.
-			assert.isTrue(Result.isSuccess(result), `tokenize failed for ${tc.id}`);
-			if (!Result.isSuccess(result)) continue;
+			assertSuccess(result, Result.getOrThrow(result));
 			let cursor = 0;
 			for (const token of result.success) {
 				// Ordered and non-overlapping; any gap must be horizontal

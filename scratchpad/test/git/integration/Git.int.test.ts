@@ -30,7 +30,9 @@ import { join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { afterAll, assert, beforeAll, describe, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
+import { assertExitFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -175,7 +177,7 @@ afterAll(() => {
 	}
 });
 
-describe("Git — real repository integration", () => {
+it.layer(TestLayer, { timeout: "30 seconds" })("Git — real repository integration", (it) => {
 	let fixtureDir: string;
 	let fixture: RepoFixture;
 
@@ -189,88 +191,74 @@ describe("Git — real repository integration", () => {
 	});
 
 	it.effect("show at both commits: changed content differs", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				const atCommit1 = yield* git.show(fixture.dir, fixture.commit1, "a.txt");
-				const atCommit2 = yield* git.show(fixture.dir, fixture.commit2, "a.txt");
-				assert.deepStrictEqual(atCommit1, O.some("one\n"));
-				assert.deepStrictEqual(atCommit2, O.some("two\n"));
-				assert.notDeepEqual(atCommit1, atCommit2);
-			}),
-		),
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const atCommit1 = yield* git.show(fixture.dir, fixture.commit1, "a.txt");
+			const atCommit2 = yield* git.show(fixture.dir, fixture.commit2, "a.txt");
+			assertSome(atCommit1, "one\n");
+			assertSome(atCommit2, "two\n");
+			assert.notDeepEqual(atCommit1, atCommit2);
+		}),
 	);
 
 	it.effect("show of a file deleted at the later ref resolves Option.none", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				const beforeDeletion = yield* git.show(fixture.dir, fixture.commit1, "deleted.txt");
-				const afterDeletion = yield* git.show(fixture.dir, fixture.commit2, "deleted.txt");
-				assert.deepStrictEqual(beforeDeletion, O.some("will be deleted\n"));
-				assert.deepStrictEqual(afterDeletion, O.none());
-			}),
-		),
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const beforeDeletion = yield* git.show(fixture.dir, fixture.commit1, "deleted.txt");
+			const afterDeletion = yield* git.show(fixture.dir, fixture.commit2, "deleted.txt");
+			assertSome(beforeDeletion, "will be deleted\n");
+			assertNone(afterDeletion);
+		}),
 	);
 
 	it.effect("lsTree includes the space-path entry", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				const entries = yield* git.lsTree(fixture.dir, fixture.commit1);
-				const spaced = entries.find((entry) => entry.path === "file with space.txt");
-				assert.isDefined(spaced);
-				assert.strictEqual(spaced?.type, "blob");
-				assert.match(spaced?.oid ?? "", /^[0-9a-f]{40}$/);
-			}),
-		),
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const entries = yield* git.lsTree(fixture.dir, fixture.commit1);
+			const spaced = entries.find((entry) => entry.path === "file with space.txt");
+			assert.isDefined(spaced);
+			assert.strictEqual(spaced?.type, "blob");
+			assert.match(spaced?.oid ?? "", /^[0-9a-f]{40}$/);
+		}),
 	);
 
 	it.effect("refExists: true for the tag, false for a bogus ref", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				assert.isTrue(yield* git.refExists(fixture.dir, "v1.0.0"));
-				// ACCUMULATED OBLIGATION (G4): a real nonexistent branch must
-				// resolve Success(false), never a defect.
-				assert.isFalse(yield* git.refExists(fixture.dir, "no-such-branch"));
-			}),
-		),
+		Effect.gen(function* () {
+			const git = yield* Git;
+			assert.isTrue(yield* git.refExists(fixture.dir, "v1.0.0"));
+			// ACCUMULATED OBLIGATION (G4): a real nonexistent branch must
+			// resolve Success(false), never a defect.
+			assert.isFalse(yield* git.refExists(fixture.dir, "no-such-branch"));
+		}),
 	);
 
 	it.effect("mergeBase on branched history equals the fork-point SHA captured during setup", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				const base = yield* git.mergeBase(fixture.dir, "main", "feature/git");
-				assert.strictEqual(base, fixture.forkPoint);
-				assert.strictEqual(base, fixture.commit1);
-				// The probe sibling answers the same sha, wrapped.
-				const probed = yield* git.mergeBaseOption(fixture.dir, "main", "feature/git");
-				assert.deepStrictEqual(probed, O.some(fixture.forkPoint));
-			}),
-		),
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const base = yield* git.mergeBase(fixture.dir, "main", "feature/git");
+			assert.strictEqual(base, fixture.forkPoint);
+			assert.strictEqual(base, fixture.commit1);
+			// The probe sibling answers the same sha, wrapped.
+			const probed = yield* git.mergeBaseOption(fixture.dir, "main", "feature/git");
+			assertSome(probed, fixture.forkPoint);
+		}),
 	);
 
 	it.effect("changedFiles across the two commits names exactly the changed and deleted files", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				const changed = yield* git.changedFiles(fixture.dir, { base: fixture.commit1, head: fixture.commit2 });
-				assert.deepStrictEqual([...changed].sort(), ["a.txt", "deleted.txt"]);
-			}),
-		),
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const changed = yield* git.changedFiles(fixture.dir, { base: fixture.commit1, head: fixture.commit2 });
+			assert.deepStrictEqual([...changed].sort(), ["a.txt", "deleted.txt"]);
+		}),
 	);
 
 	it.effect("revParse of the tag resolves a 40-char SHA equal to commit2", () =>
-		run(
-			Effect.gen(function* () {
-				const git = yield* Git;
-				const resolved = yield* git.revParse(fixture.dir, "v1.0.0");
-				assert.match(resolved, /^[0-9a-f]{40}$/);
-				assert.strictEqual(resolved, fixture.commit2);
-			}),
-		),
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const resolved = yield* git.revParse(fixture.dir, "v1.0.0");
+			assert.match(resolved, /^[0-9a-f]{40}$/);
+			assert.strictEqual(resolved, fixture.commit2);
+		}),
 	);
 
 	// Pins content fidelity for a large single-stream blob (stdout only) — it
@@ -284,18 +272,16 @@ describe("Git — real repository integration", () => {
 	it.effect(
 		"show round-trips a file well over pipe-buffer size — content fidelity, not the concurrency guard",
 		() =>
-			run(
-				Effect.gen(function* () {
-					const git = yield* Git;
-					const shown = yield* git.show(fixture.dir, fixture.commit3, "big.txt");
-					assert.isTrue(O.isSome(shown));
-					const content = O.getOrThrow(shown);
-					assert.strictEqual(content.length, fixture.bigContent.length);
-					assert.strictEqual(content.slice(0, 200), fixture.bigContent.slice(0, 200));
-					assert.strictEqual(content.slice(-200), fixture.bigContent.slice(-200));
-					assert.strictEqual(content, fixture.bigContent);
-				}),
-			),
+			Effect.gen(function* () {
+				const git = yield* Git;
+				const shown = yield* git.show(fixture.dir, fixture.commit3, "big.txt");
+				assertSome(shown, fixture.bigContent);
+				const content = O.getOrThrow(shown);
+				assert.strictEqual(content.length, fixture.bigContent.length);
+				assert.strictEqual(content.slice(0, 200), fixture.bigContent.slice(0, 200));
+				assert.strictEqual(content.slice(-200), fixture.bigContent.slice(-200));
+				assert.strictEqual(content, fixture.bigContent);
+			}),
 		10_000,
 	);
 
@@ -312,21 +298,19 @@ describe("Git — real repository integration", () => {
 	it.effect(
 		"runCollected drains stdout and stderr concurrently under simultaneous backpressure on both pipes",
 		() =>
-			run(
-				Effect.gen(function* () {
-					const result = yield* runCollected(
-						ChildProcess.make("sh", [
-							"-c",
-							"head -c 2000000 /dev/zero | tr '\\0' 'e' >&2; head -c 2000000 /dev/zero | tr '\\0' 'o'",
-						]),
-					);
-					assert.strictEqual(result.exitCode, 0);
-					assert.strictEqual(result.stdout.length, 2_000_000);
-					assert.strictEqual(result.stderr.length, 2_000_000);
-					assert.strictEqual(result.stdout[0], "o");
-					assert.strictEqual(result.stderr[0], "e");
-				}),
-			),
+			Effect.gen(function* () {
+				const result = yield* runCollected(
+					ChildProcess.make("sh", [
+						"-c",
+						"head -c 2000000 /dev/zero | tr '\\0' 'e' >&2; head -c 2000000 /dev/zero | tr '\\0' 'o'",
+					]),
+				);
+				assert.strictEqual(result.exitCode, 0);
+				assert.strictEqual(result.stdout.length, 2_000_000);
+				assert.strictEqual(result.stderr.length, 2_000_000);
+				assert.strictEqual(result.stdout[0], "o");
+				assert.strictEqual(result.stderr[0], "e");
+			}),
 		15_000,
 	);
 
@@ -366,35 +350,31 @@ describe("Git — real repository integration", () => {
 		});
 
 		it.effect("relative:true reports cwd-relative paths from the repo root (--relative honored)", () =>
-			run(
-				Effect.gen(function* () {
-					const git = yield* Git;
-					const changed = yield* git.workingChanges(dirtyDir, { relative: true });
-					assert.deepStrictEqual([...changed].sort(), ["pkg/mod.txt", "staged.txt", "tracked.txt", "untracked.txt"]);
-				}),
-			),
+			Effect.gen(function* () {
+				const git = yield* Git;
+				const changed = yield* git.workingChanges(dirtyDir, { relative: true });
+				assert.deepStrictEqual([...changed].sort(), ["pkg/mod.txt", "staged.txt", "tracked.txt", "untracked.txt"]);
+			}),
 		);
 
 		it.effect(
 			"relative:false from a NESTED cwd stays repo-root-relative despite diff.relative=true (--no-relative overrides the config)",
 			() =>
-				run(
-					Effect.gen(function* () {
-						const git = yield* Git;
-						// Run from the nested `pkg/` directory with the repo's diff.relative=true
-						// in force. The explicit --no-relative keeps the DIFFS repo-root-relative
-						// AND repo-wide, so `tracked.txt` and `staged.txt` (root files) appear
-						// alongside the nested `pkg/mod.txt`, all with their repo-root spelling.
-						// Without --no-relative, the inherited diff.relative would scope the diff
-						// to `pkg/` and emit a lone cwd-relative `mod.txt`, dropping the root
-						// files — the exact desync Fix 1 prevents. (The root `untracked.txt` is
-						// absent by design: `git ls-files` is cwd-scoped, so from `pkg/` it lists
-						// no untracked files above the subtree — a property of ls-files, not the
-						// --relative flag.)
-						const changed = yield* git.workingChanges(join(dirtyDir, "pkg"), { relative: false });
-						assert.deepStrictEqual([...changed].sort(), ["pkg/mod.txt", "staged.txt", "tracked.txt"]);
-					}),
-				),
+				Effect.gen(function* () {
+					const git = yield* Git;
+					// Run from the nested `pkg/` directory with the repo's diff.relative=true
+					// in force. The explicit --no-relative keeps the DIFFS repo-root-relative
+					// AND repo-wide, so `tracked.txt` and `staged.txt` (root files) appear
+					// alongside the nested `pkg/mod.txt`, all with their repo-root spelling.
+					// Without --no-relative, the inherited diff.relative would scope the diff
+					// to `pkg/` and emit a lone cwd-relative `mod.txt`, dropping the root
+					// files — the exact desync Fix 1 prevents. (The root `untracked.txt` is
+					// absent by design: `git ls-files` is cwd-scoped, so from `pkg/` it lists
+					// no untracked files above the subtree — a property of ls-files, not the
+					// --relative flag.)
+					const changed = yield* git.workingChanges(join(dirtyDir, "pkg"), { relative: false });
+					assert.deepStrictEqual([...changed].sort(), ["pkg/mod.txt", "staged.txt", "tracked.txt"]);
+				}),
 		);
 	});
 
@@ -411,20 +391,18 @@ describe("Git — real repository integration", () => {
 		});
 
 		it.effect("checkout moves HEAD, verified via revParse", () =>
-			run(
-				Effect.gen(function* () {
-					const git = yield* Git;
-					// A fresh clone checks out the default branch (main), at commit3.
-					const before = yield* git.revParse(cloneDir, "HEAD");
-					assert.strictEqual(before, fixture.commit3);
+			Effect.gen(function* () {
+				const git = yield* Git;
+				// A fresh clone checks out the default branch (main), at commit3.
+				const before = yield* git.revParse(cloneDir, "HEAD");
+				assert.strictEqual(before, fixture.commit3);
 
-					yield* git.checkout(cloneDir, fixture.branchCommit);
+				yield* git.checkout(cloneDir, fixture.branchCommit);
 
-					const after = yield* git.revParse(cloneDir, "HEAD");
-					assert.strictEqual(after, fixture.branchCommit);
-					assert.notStrictEqual(after, before);
-				}),
-			),
+				const after = yield* git.revParse(cloneDir, "HEAD");
+				assert.strictEqual(after, fixture.branchCommit);
+				assert.notStrictEqual(after, before);
+			}),
 		);
 	});
 
@@ -440,23 +418,19 @@ describe("Git — real repository integration", () => {
 		});
 
 		it.effect("revParse fails with NotARepositoryError", () =>
-			run(
-				Effect.gen(function* () {
-					const git = yield* Git;
-					const failure = yield* Effect.flip(git.revParse(emptyDir, "HEAD"));
-					assert.instanceOf(failure, NotARepositoryError);
-				}),
-			),
+			Effect.gen(function* () {
+				const git = yield* Git;
+				const failure = yield* Effect.flip(git.revParse(emptyDir, "HEAD"));
+				assert.instanceOf(failure, NotARepositoryError);
+			}),
 		);
 
 		it.effect("refExists fails with NotARepositoryError, never silently false", () =>
-			run(
-				Effect.gen(function* () {
-					const git = yield* Git;
-					const failure = yield* Effect.flip(git.refExists(emptyDir, "HEAD"));
-					assert.instanceOf(failure, NotARepositoryError);
-				}),
-			),
+			Effect.gen(function* () {
+				const git = yield* Git;
+				const failure = yield* Effect.flip(git.refExists(emptyDir, "HEAD"));
+				assert.instanceOf(failure, NotARepositoryError);
+			}),
 		);
 	});
 
@@ -482,30 +456,37 @@ describe("Git — real repository integration", () => {
 			await rm(sshDir, { recursive: true, force: true });
 		});
 
-		it.effect("appends BatchMode to the caller's own GIT_SSH_COMMAND", () =>
-			Effect.gen(function* () {
-				// lsRemote over an ssh URL routes through GIT_SSH_COMMAND. The
-				// stand-in exits 1, so the call fails; the assertion is on the argv
-				// git handed it, not on the outcome.
-				const outcome = yield* Effect.exit(
-					Effect.gen(function* () {
-						const git = yield* Git;
-						return yield* git.lsRemote(sshDir, "ssh://git@example.invalid/repo.git");
-					}),
-				);
-				assert.strictEqual(outcome._tag, "Failure");
-				const recorded = yield* Effect.promise(() => readFile(argvLog, "utf8"));
-				const argv = recorded.split("\n").filter((line) => line !== "");
-				// The pin arrived at a REAL git, which passed it through to ssh.
-				assert.isTrue(
-					argv.some((token, index) => token === "-o" && argv[index + 1] === "BatchMode=yes"),
-					`expected "-o BatchMode=yes" in the ssh argv, got: ${yield* encodeSshArgvJson(argv)}`,
-				);
-			}).pipe(
-				Effect.provide(Git.layer),
-				Effect.provide(NodeServices.layer),
-				Effect.provide(ConfigProvider.layer(ConfigProvider.fromEnvRecord({ GIT_SSH_COMMAND: fakeSsh }))),
+		it.layer(
+			Layer.unwrap(
+				Effect.sync(() =>
+					Layer.fresh(TestLayer).pipe(
+						Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnvRecord({ GIT_SSH_COMMAND: fakeSsh }))),
+					),
+				),
 			),
-		);
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("appends BatchMode to the caller's own GIT_SSH_COMMAND", () =>
+				Effect.gen(function* () {
+					// lsRemote over an ssh URL routes through GIT_SSH_COMMAND. The
+					// stand-in exits 1, so the call fails; the assertion is on the argv
+					// git handed it, not on the outcome.
+					const outcome = yield* Effect.exit(
+						Effect.gen(function* () {
+							const git = yield* Git;
+							return yield* git.lsRemote(sshDir, "ssh://git@example.invalid/repo.git");
+						}),
+					);
+					assertExitFailure(outcome, outcome.pipe(Exit.getCause, O.getOrThrow));
+					const recorded = yield* Effect.promise(() => readFile(argvLog, "utf8"));
+					const argv = recorded.split("\n").filter((line) => line !== "");
+					// The pin arrived at a REAL git, which passed it through to ssh.
+					assert.isTrue(
+						argv.some((token, index) => token === "-o" && argv[index + 1] === "BatchMode=yes"),
+						`expected "-o BatchMode=yes" in the ssh argv, got: ${yield* encodeSshArgvJson(argv)}`,
+					);
+				}),
+			);
+		});
 	});
 });

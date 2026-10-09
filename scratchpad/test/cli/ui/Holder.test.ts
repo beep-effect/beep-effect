@@ -1,4 +1,3 @@
-// @effect-diagnostics asyncFunction:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Schedule from "effect/Schedule";
@@ -29,9 +28,9 @@ const mounted = Effect.gen(function* () {
 		exitOnCtrlC: false,
 	});
 	yield* Effect.addFinalizer(() =>
-		Effect.promise(async () => {
+		Effect.promise(() => {
 			instance.unmount();
-			await instance.waitUntilExit().catch(() => undefined);
+			return instance.waitUntilExit().catch(() => undefined);
 		}),
 	);
 	return { slot, instance };
@@ -45,7 +44,7 @@ describe("holderSlot", () => {
 			let committed = false;
 			assert.isTrue(slot.swap(createElement(Text, null, "second"), () => (committed = true)));
 			yield* until(() => committed);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.live("a swap superseded by a later one before React commits still has its waiter released", () =>
@@ -56,7 +55,7 @@ describe("holderSlot", () => {
 			slot.swap(createElement(Text, null, "third"), () => fired.push("third"));
 			yield* until(() => fired.includes("third"));
 			assert.deepStrictEqual(fired, ["second", "third"]);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.live("an unmount releases every waiting swap, and a swap after it is refused and released at once", () =>
@@ -69,6 +68,6 @@ describe("holderSlot", () => {
 			assert.deepStrictEqual(fired, ["pending"]);
 			assert.isFalse(slot.swap(createElement(Text, null, "late"), () => fired.push("late")));
 			assert.deepStrictEqual(fired, ["pending", "late"]);
-		}).pipe(Effect.scoped),
+		}),
 	);
 });

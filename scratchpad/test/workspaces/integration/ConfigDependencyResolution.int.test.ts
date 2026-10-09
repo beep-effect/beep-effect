@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 import { NodeChildProcessSpawner, NodeFileSystem, NodePath } from "@effect/platform-node";
 import { afterAll, assert, beforeAll, describe, it } from "@effect/vitest";
 import { CatalogAssemblyError } from "../../../effected/npm/index.ts";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -31,6 +32,7 @@ import {
 	storeConfigDependency,
 	writeModulesYaml,
 } from "./utils/configDependencyFixtures.ts";
+import { assertSome } from "@effect/vitest/utils";
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures");
 const SEED = { default: { effect: "^4.0.0" } } as const;
@@ -163,311 +165,361 @@ const hooked = (result: { readonly catalogs: Readonly<Record<string, Readonly<Re
 
 const ladderCases = (label: string, hooksLayer: Layer.Layer<ConfigDependencyHooks>) => {
 	describe(`${label} — resolves the DECLARED version`, () => {
-		it.effect("declared version installed under .pnpm-config → that copy runs (candidate A)", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				const result = yield* hooks.inject(root, { [NAME]: "1.0.0" }, SEED);
-				assert.strictEqual(hooked(result), "^1.0.0");
-				assert.strictEqual(result.catalogs.default?.effect, "^4.0.0");
-				assert.deepStrictEqual(result.replays, { [NAME]: { version: "1.0.0", source: "installed" } });
-			}).pipe(Effect.provide(hooksLayer)),
-		);
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect("declared version installed under .pnpm-config → that copy runs (candidate A)", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					const result = yield* hooks.inject(root, { [NAME]: "1.0.0" }, SEED);
+					assert.strictEqual(hooked(result), "^1.0.0");
+					assert.strictEqual(result.catalogs.default?.effect, "^4.0.0");
+					assert.deepStrictEqual(result.replays, { [NAME]: { version: "1.0.0", source: "installed" } });
+				}),
+			);
+		});
 
-		it.effect("a `<version>+<integrity>` spec resolves by its version part", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				const result = yield* hooks.inject(root, { [NAME]: "1.0.0+sha512-abcdef" }, SEED);
-				assert.strictEqual(hooked(result), "^1.0.0");
-			}).pipe(Effect.provide(hooksLayer)),
-		);
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect("a `<version>+<integrity>` spec resolves by its version part", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					const result = yield* hooks.inject(root, { [NAME]: "1.0.0+sha512-abcdef" }, SEED);
+					assert.strictEqual(hooked(result), "^1.0.0");
+				}),
+			);
+		});
 
-		it.effect("declared version NOT installed but in the store → the store copy runs (candidate B)", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				// `.pnpm-config` holds 1.0.0; the ref declares 2.0.0. The injected range
-				// is the STORE pnpmfile's, proving the installed one did not run.
-				const result = yield* hooks.inject(root, { [NAME]: "2.0.0+sha512-xyz" }, SEED);
-				assert.strictEqual(hooked(result), "^2.0.0");
-				// The record names the DECLARED version (integrity stripped) and the rung.
-				assert.deepStrictEqual(result.replays, { [NAME]: { version: "2.0.0", source: "store" } });
-			}).pipe(Effect.provide(hooksLayer)),
-		);
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect("declared version NOT installed but in the store → the store copy runs (candidate B)", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					// `.pnpm-config` holds 1.0.0; the ref declares 2.0.0. The injected range
+					// is the STORE pnpmfile's, proving the installed one did not run.
+					const result = yield* hooks.inject(root, { [NAME]: "2.0.0+sha512-xyz" }, SEED);
+					assert.strictEqual(hooked(result), "^2.0.0");
+					// The record names the DECLARED version (integrity stripped) and the rung.
+					assert.deepStrictEqual(result.replays, { [NAME]: { version: "2.0.0", source: "store" } });
+				}),
+			);
+		});
 
-		it.effect("a store hash directory whose manifest carries another version is not trusted", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				// Both `links/<name>/2.0.0/<hash>` entries exist; only the one whose
-				// inner package.json says 2.0.0 may run. Wrong-in-one-way: `^9.9.9`
-				// here means the ladder trusted the path.
-				const result = yield* hooks.inject(root, { [NAME]: "2.0.0" }, SEED);
-				assert.notStrictEqual(hooked(result), "^9.9.9");
-				assert.strictEqual(hooked(result), "^2.0.0");
-			}).pipe(Effect.provide(hooksLayer)),
-		);
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect("a store hash directory whose manifest carries another version is not trusted", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					// Both `links/<name>/2.0.0/<hash>` entries exist; only the one whose
+					// inner package.json says 2.0.0 may run. Wrong-in-one-way: `^9.9.9`
+					// here means the ladder trusted the path.
+					const result = yield* hooks.inject(root, { [NAME]: "2.0.0" }, SEED);
+					assert.notStrictEqual(hooked(result), "^9.9.9");
+					assert.strictEqual(hooked(result), "^2.0.0");
+				}),
+			);
+		});
 
-		it.effect("declared version installed nowhere → typed, fail-closed, naming the remediation", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				const error = yield* Effect.flip(hooks.inject(root, { [NAME]: "3.0.0+sha512-nope" }, SEED));
-				assert.instanceOf(error, CatalogAssemblyError);
-				assert.strictEqual(error.source, "hooks");
-				assert.strictEqual(error.path, NAME);
-				if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
-				const message = error.cause.message;
-				assert.include(message, `${NAME}@3.0.0`);
-				// What `.pnpm-config` holds instead.
-				assert.include(message, "version 1.0.0");
-				// Where the store was searched.
-				assert.include(message, store);
-				// And how to fix it.
-				assert.include(message, `pnpm add --config ${NAME}@3.0.0`);
-			}).pipe(Effect.provide(hooksLayer)),
-		);
-
-		it.effect("a .pnpm-config directory with no package.json is 'nothing', not a match", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				const error = yield* Effect.flip(hooks.inject(root, { [NO_MANIFEST]: "1.0.0" }, SEED));
-				assert.instanceOf(error, CatalogAssemblyError);
-				assert.strictEqual(error.path, NO_MANIFEST);
-				if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
-				assert.include(error.cause.message, "holds nothing");
-			}).pipe(Effect.provide(hooksLayer)),
-		);
-
-		it.effect("a .pnpm-config manifest with no usable version is 'a package with no version', not a match", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				// The subprocess layer would fetch, but a bare spec with no lockfile
-				// records no integrity, so it fails before any spawn — with the same
-				// not-installed diagnosis.
-				const reason = label.includes("layerSubprocess") ? "integrityUnavailable" : "notInstalled";
-				for (const name of [UNVERSIONED, EMPTY_VERSION]) {
-					const error = yield* Effect.flip(hooks.inject(root, { [name]: "1.0.0" }, SEED));
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect("declared version installed nowhere → typed, fail-closed, naming the remediation", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					const error = yield* Effect.flip(hooks.inject(root, { [NAME]: "3.0.0+sha512-nope" }, SEED));
 					assert.instanceOf(error, CatalogAssemblyError);
-					assert.strictEqual(error.path, name);
-					assert.strictEqual(error.reason, reason);
+					assert.strictEqual(error.source, "hooks");
+					assert.strictEqual(error.path, NAME);
 					if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
 					const message = error.cause.message;
-					assert.include(message, `node_modules/.pnpm-config/${name} holds a package with no version,`);
-					// No version to compare, so no "declares a different version" diagnosis.
-					assert.notInclude(message, "declares a different version");
-				}
-				// Nor does an empty declared version match an unversioned manifest.
-				const empty = yield* Effect.flip(hooks.inject(root, { [EMPTY_VERSION]: "" }, SEED));
-				assert.strictEqual(empty.reason, reason);
-			}).pipe(Effect.provide(hooksLayer)),
-		);
+					assert.include(message, `${NAME}@3.0.0`);
+					// What `.pnpm-config` holds instead.
+					assert.include(message, "version 1.0.0");
+					// Where the store was searched.
+					assert.include(message, store);
+					// And how to fix it.
+					assert.include(message, `pnpm add --config ${NAME}@3.0.0`);
+				}),
+			);
+		});
 
-		it.effect("a declared dependency that is not installed at all fails closed — never a silent skip", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				// The pre-ladder behaviour was to skip an absent directory as "no
-				// pnpmfile". A declared config dependency that cannot be found is now
-				// an error: silently skipping it is exactly how a hook-only catalog
-				// went missing on one side of a diff.
-				const error = yield* Effect.flip(hooks.inject(root, { "absent-dep": "1.0.0" }, SEED));
-				assert.instanceOf(error, CatalogAssemblyError);
-				assert.strictEqual(error.source, "hooks");
-				assert.strictEqual(error.path, "absent-dep");
-			}).pipe(Effect.provide(hooksLayer)),
-		);
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect("a .pnpm-config directory with no package.json is 'nothing', not a match", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					const error = yield* Effect.flip(hooks.inject(root, { [NO_MANIFEST]: "1.0.0" }, SEED));
+					assert.instanceOf(error, CatalogAssemblyError);
+					assert.strictEqual(error.path, NO_MANIFEST);
+					if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
+					assert.include(error.cause.message, "holds nothing");
+				}),
+			);
+		});
 
-		it.effect("the store is found through a .pnpm-config symlink's realpath when .modules.yaml is absent", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				// `linkedRoot` has no `.modules.yaml`; its only `.pnpm-config` entry is
-				// `cfg-ladder` symlinked into the fake store. Declaring a SIBLING that
-				// lives only in that store proves the store was discovered by walking
-				// the symlink up to its `links` ancestor — not by rung 1, and not by
-				// candidate A (cfg-js is not installed here at all).
-				const result = yield* hooks.inject(linkedRoot, { [JS_ONLY]: "1.0.0" }, SEED);
-				assert.strictEqual(hooked(result), "^7.0.0");
-			}).pipe(Effect.provide(hooksLayer)),
-		);
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect("a .pnpm-config manifest with no usable version is 'a package with no version', not a match", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					// The subprocess layer would fetch, but a bare spec with no lockfile
+					// records no integrity, so it fails before any spawn — with the same
+					// not-installed diagnosis.
+					const reason = label.includes("layerSubprocess") ? "integrityUnavailable" : "notInstalled";
+					for (const name of [UNVERSIONED, EMPTY_VERSION]) {
+						const error = yield* Effect.flip(hooks.inject(root, { [name]: "1.0.0" }, SEED));
+						assert.instanceOf(error, CatalogAssemblyError);
+						assert.strictEqual(error.path, name);
+						assert.strictEqual(error.reason, reason);
+						if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
+						const message = error.cause.message;
+						assert.include(message, `node_modules/.pnpm-config/${name} holds a package with no version,`);
+						// No version to compare, so no "declares a different version" diagnosis.
+						assert.notInclude(message, "declares a different version");
+					}
+					// Nor does an empty declared version match an unversioned manifest.
+					const empty = yield* Effect.flip(hooks.inject(root, { [EMPTY_VERSION]: "" }, SEED));
+					assert.strictEqual(empty.reason, reason);
+				}),
+			);
+		});
 
-		it.effect("a symlinked .pnpm-config entry at the declared version is candidate A", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				const result = yield* hooks.inject(linkedRoot, { [NAME]: "2.0.0" }, SEED);
-				assert.strictEqual(hooked(result), "^2.0.0");
-			}).pipe(Effect.provide(hooksLayer)),
-		);
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect("a declared dependency that is not installed at all fails closed — never a silent skip", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					// The pre-ladder behaviour was to skip an absent directory as "no
+					// pnpmfile". A declared config dependency that cannot be found is now
+					// an error: silently skipping it is exactly how a hook-only catalog
+					// went missing on one side of a diff.
+					const error = yield* Effect.flip(hooks.inject(root, { "absent-dep": "1.0.0" }, SEED));
+					assert.instanceOf(error, CatalogAssemblyError);
+					assert.strictEqual(error.source, "hooks");
+					assert.strictEqual(error.path, "absent-dep");
+				}),
+			);
+		});
 
-		it.effect("pnpmfile.js is accepted, after .mjs and .cjs", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				const result = yield* hooks.inject(root, { [JS_ONLY]: "1.0.0" }, SEED);
-				assert.strictEqual(hooked(result), "^7.0.0");
-			}).pipe(Effect.provide(hooksLayer)),
-		);
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect("the store is found through a .pnpm-config symlink's realpath when .modules.yaml is absent", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					// `linkedRoot` has no `.modules.yaml`; its only `.pnpm-config` entry is
+					// `cfg-ladder` symlinked into the fake store. Declaring a SIBLING that
+					// lives only in that store proves the store was discovered by walking
+					// the symlink up to its `links` ancestor — not by rung 1, and not by
+					// candidate A (cfg-js is not installed here at all).
+					const result = yield* hooks.inject(linkedRoot, { [JS_ONLY]: "1.0.0" }, SEED);
+					assert.strictEqual(hooked(result), "^7.0.0");
+				}),
+			);
+		});
 
-		it.effect("a scoped name resolves through the store's nested links directory", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				const result = yield* hooks.inject(root, { [SCOPED]: "1.0.0" }, SEED);
-				assert.strictEqual(hooked(result), "^5.0.0");
-			}).pipe(Effect.provide(hooksLayer)),
-		);
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect("a symlinked .pnpm-config entry at the declared version is candidate A", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					const result = yield* hooks.inject(linkedRoot, { [NAME]: "2.0.0" }, SEED);
+					assert.strictEqual(hooked(result), "^2.0.0");
+				}),
+			);
+		});
 
-		it.effect("a resolved dependency with no pnpmfile contributes nothing — the one legitimate skip", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				const result = yield* hooks.inject(root, { [NO_HOOK]: "2.0.0" }, SEED);
-				assert.deepStrictEqual(result, {
-					catalogs: SEED,
-					releaseAge: {},
-					peerDependencyRules: { allowedVersions: {}, ignoreMissing: [], allowAny: [] },
-					// Still RECORDED: it was resolved, it just contributed nothing.
-					replays: { [NO_HOOK]: { version: "2.0.0", source: "installed" } },
-				});
-			}).pipe(Effect.provide(hooksLayer)),
-		);
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect("pnpmfile.js is accepted, after .mjs and .cjs", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					const result = yield* hooks.inject(root, { [JS_ONLY]: "1.0.0" }, SEED);
+					assert.strictEqual(hooked(result), "^7.0.0");
+				}),
+			);
+		});
 
-		it.effect("declaration order is replay order across installed and store copies", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				// cfg-ladder@1.0.0 (installed) then cfg-js@1.0.0 (store): the later hook
-				// rewrites `hooked-dep`, last write wins — and swapping the order flips it.
-				const forward = yield* hooks.inject(root, { [NAME]: "1.0.0", [JS_ONLY]: "1.0.0" }, SEED);
-				const reverse = yield* hooks.inject(root, { [JS_ONLY]: "1.0.0", [NAME]: "1.0.0" }, SEED);
-				assert.strictEqual(hooked(forward), "^7.0.0");
-				assert.strictEqual(hooked(reverse), "^1.0.0");
-			}).pipe(Effect.provide(hooksLayer)),
-		);
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect("a scoped name resolves through the store's nested links directory", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					const result = yield* hooks.inject(root, { [SCOPED]: "1.0.0" }, SEED);
+					assert.strictEqual(hooked(result), "^5.0.0");
+				}),
+			);
+		});
 
-		it.effect("two honest store copies of one version are AMBIGUOUS → typed, naming both, replaying neither", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				const error = yield* Effect.flip(hooks.inject(root, { [AMBIGUOUS]: "1.0.0+sha512-pinned" }, SEED));
-				assert.instanceOf(error, CatalogAssemblyError);
-				assert.strictEqual(error.source, "hooks");
-				assert.strictEqual(error.path, AMBIGUOUS);
-				if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
-				const message = error.cause.message;
-				assert.include(message, "ambiguous");
-				assert.include(message, "2 copies");
-				// The store is named by its REALPATH (macOS's `/var` is `/private/var`):
-				// discovery canonicalizes spellings so one store never counts twice.
-				assert.include(message, `store at ${realpathSync(store)}`);
-				assert.include(message, "e".repeat(64));
-				assert.include(message, "f".repeat(64));
-				// The control that makes this discriminating: the SAME two-hash shape
-				// with one manifest lying (NAME@2.0.0) resolves fine — ambiguity is
-				// about two HONEST copies, not about a second directory existing.
-				const fine = yield* hooks.inject(root, { [NAME]: "2.0.0" }, SEED);
-				assert.strictEqual(hooked(fine), "^2.0.0");
-			}).pipe(Effect.provide(hooksLayer)),
-		);
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect("a resolved dependency with no pnpmfile contributes nothing — the one legitimate skip", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					const result = yield* hooks.inject(root, { [NO_HOOK]: "2.0.0" }, SEED);
+					assert.deepStrictEqual(result, {
+						catalogs: SEED,
+						releaseAge: {},
+						peerDependencyRules: { allowedVersions: {}, ignoreMissing: [], allowAny: [] },
+						// Still RECORDED: it was resolved, it just contributed nothing.
+						replays: { [NO_HOOK]: { version: "2.0.0", source: "installed" } },
+					});
+				}),
+			);
+		});
 
-		it.effect("one store reached by two spellings is ONE store — an aliased path is never 'ambiguous'", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				// aliasRoot discovers `store` twice: once through the symlink spelling
-				// in .modules.yaml (rung 1) and once through the .pnpm-config
-				// realpath (rung 2). JS_ONLY lives ONLY in that store, under exactly
-				// one honest hash — so it must resolve from the store, once.
-				const result = yield* hooks.inject(aliasRoot, { [JS_ONLY]: "1.0.0" }, SEED);
-				assert.strictEqual(hooked(result), "^7.0.0");
-				assert.deepStrictEqual(result.replays, { [JS_ONLY]: { version: "1.0.0", source: "store" } });
-			}).pipe(Effect.provide(hooksLayer)),
-		);
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect("declaration order is replay order across installed and store copies", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					// cfg-ladder@1.0.0 (installed) then cfg-js@1.0.0 (store): the later hook
+					// rewrites `hooked-dep`, last write wins — and swapping the order flips it.
+					const forward = yield* hooks.inject(root, { [NAME]: "1.0.0", [JS_ONLY]: "1.0.0" }, SEED);
+					const reverse = yield* hooks.inject(root, { [JS_ONLY]: "1.0.0", [NAME]: "1.0.0" }, SEED);
+					assert.strictEqual(hooked(forward), "^7.0.0");
+					assert.strictEqual(hooked(reverse), "^1.0.0");
+				}),
+			);
+		});
 
-		it.effect("a version held by two distinct stores resolves from the FIRST in discovery order", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				const previous = process.env.PNPM_HOME;
-				process.env.PNPM_HOME = envHome;
-				try {
-					// `root` names `store` in .modules.yaml (rung 1); $PNPM_HOME adds a
-					// second store (rung 3) that also holds TWO_STORES@1.0.0. Not
-					// ambiguous — the workspace's own store wins, and its pnpmfile ran.
-					const result = yield* hooks.inject(root, { [TWO_STORES]: "1.0.0" }, SEED);
-					assert.strictEqual(hooked(result), "^3.0.0");
-				} finally {
-					if (previous === undefined) delete process.env.PNPM_HOME;
-					else process.env.PNPM_HOME = previous;
-				}
-			}).pipe(Effect.provide(hooksLayer)),
-		);
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect("two honest store copies of one version are AMBIGUOUS → typed, naming both, replaying neither", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					const error = yield* Effect.flip(hooks.inject(root, { [AMBIGUOUS]: "1.0.0+sha512-pinned" }, SEED));
+					assert.instanceOf(error, CatalogAssemblyError);
+					assert.strictEqual(error.source, "hooks");
+					assert.strictEqual(error.path, AMBIGUOUS);
+					if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
+					const message = error.cause.message;
+					assert.include(message, "ambiguous");
+					assert.include(message, "2 copies");
+					// The store is named by its REALPATH (macOS's `/var` is `/private/var`):
+					// discovery canonicalizes spellings so one store never counts twice.
+					assert.include(message, `store at ${realpathSync(store)}`);
+					assert.include(message, "e".repeat(64));
+					assert.include(message, "f".repeat(64));
+					// The control that makes this discriminating: the SAME two-hash shape
+					// with one manifest lying (NAME@2.0.0) resolves fine — ambiguity is
+					// about two HONEST copies, not about a second directory existing.
+					const fine = yield* hooks.inject(root, { [NAME]: "2.0.0" }, SEED);
+					assert.strictEqual(hooked(fine), "^2.0.0");
+				}),
+			);
+		});
 
-		it.effect("store formats are consulted NEWEST first, numerically — v11 beats v10 beats v9", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				const previous = process.env.PNPM_HOME;
-				process.env.PNPM_HOME = envHome;
-				try {
-					// A lexical sort would put v10 first (and v9 last); the newest
-					// format must answer, or a pnpm upgrade that left the old store
-					// behind replays the stale copy.
-					const result = yield* hooks.inject(bareRoot, { [FORMATS]: "1.0.0" }, SEED);
-					assert.strictEqual(hooked(result), "^11.0.0");
-				} finally {
-					if (previous === undefined) delete process.env.PNPM_HOME;
-					else process.env.PNPM_HOME = previous;
-				}
-			}).pipe(Effect.provide(hooksLayer)),
-		);
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect("one store reached by two spellings is ONE store — an aliased path is never 'ambiguous'", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					// aliasRoot discovers `store` twice: once through the symlink spelling
+					// in .modules.yaml (rung 1) and once through the .pnpm-config
+					// realpath (rung 2). JS_ONLY lives ONLY in that store, under exactly
+					// one honest hash — so it must resolve from the store, once.
+					const result = yield* hooks.inject(aliasRoot, { [JS_ONLY]: "1.0.0" }, SEED);
+					assert.strictEqual(hooked(result), "^7.0.0");
+					assert.deepStrictEqual(result.replays, { [JS_ONLY]: { version: "1.0.0", source: "store" } });
+				}),
+			);
+		});
 
-		it.effect("rung 3: a store named only by $PNPM_HOME is found when .modules.yaml and .pnpm-config say nothing", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				const previous = process.env.PNPM_HOME;
-				process.env.PNPM_HOME = envHome;
-				try {
-					// bareRoot has no node_modules at all, so rungs 1 and 2 contribute
-					// no store; only the environment rung can answer.
-					const result = yield* hooks.inject(bareRoot, { [ENV_ONLY]: "1.0.0" }, SEED);
-					assert.strictEqual(hooked(result), "^8.0.0");
-					assert.deepStrictEqual(result.replays, { [ENV_ONLY]: { version: "1.0.0", source: "store" } });
-				} finally {
-					if (previous === undefined) delete process.env.PNPM_HOME;
-					else process.env.PNPM_HOME = previous;
-				}
-				// The control: without the variable the same declaration fails closed
-				// and the message shows the env store was NOT among those searched.
-				const error = yield* Effect.flip(hooks.inject(bareRoot, { [ENV_ONLY]: "1.0.0" }, SEED));
-				assert.instanceOf(error, CatalogAssemblyError);
-				if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
-				assert.notInclude(error.cause.message, envHome);
-			}).pipe(Effect.provide(hooksLayer)),
-		);
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect("a version held by two distinct stores resolves from the FIRST in discovery order", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					const previous = process.env.PNPM_HOME;
+					process.env.PNPM_HOME = envHome;
+					try {
+						// `root` names `store` in .modules.yaml (rung 1); $PNPM_HOME adds a
+						// second store (rung 3) that also holds TWO_STORES@1.0.0. Not
+						// ambiguous — the workspace's own store wins, and its pnpmfile ran.
+						const result = yield* hooks.inject(root, { [TWO_STORES]: "1.0.0" }, SEED);
+						assert.strictEqual(hooked(result), "^3.0.0");
+					} finally {
+						if (previous === undefined) delete process.env.PNPM_HOME;
+						else process.env.PNPM_HOME = previous;
+					}
+				}),
+			);
+		});
 
-		it.effect("a '..' segment is refused before any path is built", () =>
-			Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				const error = yield* Effect.flip(hooks.inject(bareRoot, { "../../evil": "1.0.0" }, SEED));
-				assert.instanceOf(error, CatalogAssemblyError);
-				assert.strictEqual(error.path, "../../evil");
-				if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
-				assert.include(error.cause.message, "'..' path segment");
-			}).pipe(Effect.provide(hooksLayer)),
-		);
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect("store formats are consulted NEWEST first, numerically — v11 beats v10 beats v9", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					const previous = process.env.PNPM_HOME;
+					process.env.PNPM_HOME = envHome;
+					try {
+						// A lexical sort would put v10 first (and v9 last); the newest
+						// format must answer, or a pnpm upgrade that left the old store
+						// behind replays the stale copy.
+						const result = yield* hooks.inject(bareRoot, { [FORMATS]: "1.0.0" }, SEED);
+						assert.strictEqual(hooked(result), "^11.0.0");
+					} finally {
+						if (previous === undefined) delete process.env.PNPM_HOME;
+						else process.env.PNPM_HOME = previous;
+					}
+				}),
+			);
+		});
+
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect(
+				"rung 3: a store named only by $PNPM_HOME is found when .modules.yaml and .pnpm-config say nothing",
+				() =>
+					Effect.gen(function* () {
+						const hooks = yield* ConfigDependencyHooks;
+						const previous = process.env.PNPM_HOME;
+						process.env.PNPM_HOME = envHome;
+						try {
+							// bareRoot has no node_modules at all, so rungs 1 and 2 contribute
+							// no store; only the environment rung can answer.
+							const result = yield* hooks.inject(bareRoot, { [ENV_ONLY]: "1.0.0" }, SEED);
+							assert.strictEqual(hooked(result), "^8.0.0");
+							assert.deepStrictEqual(result.replays, { [ENV_ONLY]: { version: "1.0.0", source: "store" } });
+						} finally {
+							if (previous === undefined) delete process.env.PNPM_HOME;
+							else process.env.PNPM_HOME = previous;
+						}
+						// The control: without the variable the same declaration fails closed
+						// and the message shows the env store was NOT among those searched.
+						const error = yield* Effect.flip(hooks.inject(bareRoot, { [ENV_ONLY]: "1.0.0" }, SEED));
+						assert.instanceOf(error, CatalogAssemblyError);
+						if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
+						assert.notInclude(error.cause.message, envHome);
+					}),
+			);
+		});
+
+		it.layer(hooksLayer, { timeout: "30 seconds" })((it) => {
+			it.effect("a '..' segment is refused before any path is built", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					const error = yield* Effect.flip(hooks.inject(bareRoot, { "../../evil": "1.0.0" }, SEED));
+					assert.instanceOf(error, CatalogAssemblyError);
+					assert.strictEqual(error.path, "../../evil");
+					if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
+					assert.include(error.cause.message, "'..' path segment");
+				}),
+			);
+		});
 	});
 };
 
 ladderCases("ConfigDependencyHooks.layerLive", ConfigDependencyHooks.layerLive);
 ladderCases("ConfigDependencyHooks.layerSubprocess", HooksSubprocess);
 
+class SubprocessHooks extends Context.Service<SubprocessHooks, ConfigDependencyHooks["Service"]>()(
+	"@beep/scratchpad/test/workspaces/integration/ConfigDependencyResolution.int.test/SubprocessHooks",
+) {}
+const ComparisonLayers = Layer.mergeAll(
+	ConfigDependencyHooks.layerLive,
+	Layer.effect(SubprocessHooks, ConfigDependencyHooks).pipe(Layer.provide(HooksSubprocess)),
+);
+
 describe("layerLive and layerSubprocess — the ladder is one implementation", () => {
-	it.effect("both layers produce identical injections across installed, store and skipped dependencies", () =>
-		Effect.gen(function* () {
-			const deps = { [NAME]: "2.0.0+sha512-x", [NO_HOOK]: "2.0.0", [SCOPED]: "1.0.0" };
-			const run = Effect.gen(function* () {
-				const hooks = yield* ConfigDependencyHooks;
-				return yield* hooks.inject(root, deps, SEED);
-			});
-			const live = yield* run.pipe(Effect.provide(ConfigDependencyHooks.layerLive));
-			const subprocess = yield* run.pipe(Effect.provide(HooksSubprocess));
-			assert.deepStrictEqual(subprocess, live);
-			assert.strictEqual(hooked(live), "^5.0.0");
-			assert.deepStrictEqual(live.replays, {
-				[NAME]: { version: "2.0.0", source: "store" },
-				[NO_HOOK]: { version: "2.0.0", source: "installed" },
-				[SCOPED]: { version: "1.0.0", source: "store" },
-			});
-		}),
-	);
+	it.layer(ComparisonLayers, { timeout: "30 seconds" })((it) => {
+		it.effect("both layers produce identical injections across installed, store and skipped dependencies", () =>
+			Effect.gen(function* () {
+				const deps = { [NAME]: "2.0.0+sha512-x", [NO_HOOK]: "2.0.0", [SCOPED]: "1.0.0" };
+				const liveHooks = yield* ConfigDependencyHooks;
+				const subprocessHooks = yield* SubprocessHooks;
+				const live = yield* liveHooks.inject(root, deps, SEED);
+				const subprocess = yield* subprocessHooks.inject(root, deps, SEED);
+				assert.deepStrictEqual(subprocess, live);
+				assert.strictEqual(hooked(live), "^5.0.0");
+				assert.deepStrictEqual(live.replays, {
+					[NAME]: { version: "2.0.0", source: "store" },
+					[NO_HOOK]: { version: "2.0.0", source: "installed" },
+					[SCOPED]: { version: "1.0.0", source: "store" },
+				});
+			}),
+		);
+	});
 });
 
 // ── layerFrom: the hermetic seam ────────────────────────────────────────────
@@ -476,92 +528,106 @@ describe("ConfigDependencyHooks.layerFrom — replays caller-supplied files, res
 	const ONE = join(FIXTURES, "hook-pnpmfile.mjs");
 	const TWO = join(FIXTURES, "hook-pnpmfile.cjs");
 
-	it.effect("a hit replays the mapped file for that declared version", () =>
-		Effect.gen(function* () {
-			const hooks = yield* ConfigDependencyHooks;
-			// The root is a path that does not exist: layerFrom must not look there.
-			const result = yield* hooks.inject("/nowhere/at/all", { "@scope/plugin": "1.0.0+sha512-abc" }, SEED);
-			// hook-pnpmfile.mjs injects `mjs-dep`; the .cjs would inject `hooked-dep`.
-			assert.strictEqual(result.catalogs.default?.["mjs-dep"], "^2.0.0");
-			assert.isUndefined(result.catalogs.default?.["hooked-dep"]);
-			assert.strictEqual(result.catalogs.default?.effect, "^4.0.0");
-			assert.deepStrictEqual(result.replays, { "@scope/plugin": { version: "1.0.0", source: "supplied" } });
-		}).pipe(
-			Effect.provide(ConfigDependencyHooks.layerFrom({ "@scope/plugin@1.0.0": ONE, "@scope/plugin@2.0.0": TWO })),
-		),
-	);
-
-	it.effect("two declared versions of one name map to two different files", () =>
-		Effect.gen(function* () {
-			const hooks = yield* ConfigDependencyHooks;
-			const v2 = yield* hooks.inject("/nowhere", { "@scope/plugin": "2.0.0" }, SEED);
-			assert.strictEqual(v2.catalogs.default?.["hooked-dep"], "^9.9.9");
-			assert.isUndefined(v2.catalogs.default?.["mjs-dep"]);
-		}).pipe(
-			Effect.provide(ConfigDependencyHooks.layerFrom({ "@scope/plugin@1.0.0": ONE, "@scope/plugin@2.0.0": TWO })),
-		),
-	);
-
-	it.effect("a miss fails closed with the same hooks-source shape as an uninstalled version", () =>
-		Effect.gen(function* () {
-			const hooks = yield* ConfigDependencyHooks;
-			const error = yield* Effect.flip(hooks.inject("/nowhere", { "@scope/plugin": "3.0.0" }, SEED));
-			assert.instanceOf(error, CatalogAssemblyError);
-			assert.strictEqual(error.source, "hooks");
-			assert.strictEqual(error.path, "@scope/plugin");
-			if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
-			assert.include(error.cause.message, "@scope/plugin@3.0.0");
-		}).pipe(Effect.provide(ConfigDependencyHooks.layerFrom({ "@scope/plugin@1.0.0": ONE }))),
-	);
-
-	it.effect("empty configDependencies returns the seed untouched", () =>
-		Effect.gen(function* () {
-			const hooks = yield* ConfigDependencyHooks;
-			const rules = { allowedVersions: { "a>b": "1.0.0" }, ignoreMissing: [], allowAny: [] };
-			const result = yield* hooks.inject("/nowhere", {}, SEED, rules);
-			assert.deepStrictEqual(result, { catalogs: SEED, releaseAge: {}, peerDependencyRules: rules, replays: {} });
-		}).pipe(Effect.provide(ConfigDependencyHooks.layerFrom({}))),
-	);
-
-	it.effect("a '..' segment is refused before the lookup", () =>
-		Effect.gen(function* () {
-			const hooks = yield* ConfigDependencyHooks;
-			const error = yield* Effect.flip(hooks.inject("/nowhere", { "../../evil": "1.0.0" }, SEED));
-			assert.instanceOf(error, CatalogAssemblyError);
-			assert.strictEqual(error.path, "../../evil");
-		}).pipe(Effect.provide(ConfigDependencyHooks.layerFrom({ "../../evil@1.0.0": ONE }))),
-	);
-
-	it.effect("works under a memfs FileSystem: the whole catalog path replays with no real root", () => {
-		// The point of the seam: a virtual workspace whose `pnpm-workspace.yaml`
-		// declares a config dependency, replayed through layerFrom against a real
-		// fixture file — no `.pnpm-config`, no store, no `.modules.yaml`.
-		const tree: Tree = {
-			"/repo/pnpm-workspace.yaml": [
-				"packages:",
-				"  - packages/*",
-				"catalog:",
-				"  effect: ^4.0.0",
-				"configDependencies:",
-				"  '@scope/plugin': '2.0.0+sha512-abc'",
-				"",
-			].join("\n"),
-			"/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0", private: true }),
-			"/repo/packages/a/package.json": manifest("@x/a", { dependencies: { effect: "catalog:" } }),
-		};
-		const hooks = ConfigDependencyHooks.layerFrom({ "@scope/plugin@2.0.0": TWO });
-		const core = Workspaces.layer({ cwd: "/repo" });
-		const catalogs = Layer.effect(WorkspaceCatalogs, WorkspaceCatalogs.make({ cwd: "/repo" })).pipe(
-			Layer.provide(hooks),
-			Layer.provide(core),
+	it.layer(ConfigDependencyHooks.layerFrom({ "@scope/plugin@1.0.0": ONE, "@scope/plugin@2.0.0": TWO }), {
+		timeout: "30 seconds",
+	})((it) => {
+		it.effect("a hit replays the mapped file for that declared version", () =>
+			Effect.gen(function* () {
+				const hooks = yield* ConfigDependencyHooks;
+				// The root is a path that does not exist: layerFrom must not look there.
+				const result = yield* hooks.inject("/nowhere/at/all", { "@scope/plugin": "1.0.0+sha512-abc" }, SEED);
+				// hook-pnpmfile.mjs injects `mjs-dep`; the .cjs would inject `hooked-dep`.
+				assert.strictEqual(result.catalogs.default?.["mjs-dep"], "^2.0.0");
+				assert.isUndefined(result.catalogs.default?.["hooked-dep"]);
+				assert.strictEqual(result.catalogs.default?.effect, "^4.0.0");
+				assert.deepStrictEqual(result.replays, { "@scope/plugin": { version: "1.0.0", source: "supplied" } });
+			}),
 		);
-		// Last wins in `mergeAll`: the replaying catalogs layer replaces the
-		// core's no-op one.
-		const appLayer = Layer.mergeAll(core, catalogs).pipe(Layer.provideMerge(platform(tree)));
-		return Effect.gen(function* () {
-			const set = yield* (yield* WorkspaceCatalogs).set;
-			assert.deepStrictEqual(set.rangeOf("effect", O.none()), O.some("^4.0.0"));
-			assert.deepStrictEqual(set.rangeOf("hooked-dep", O.none()), O.some("^9.9.9"));
-		}).pipe(Effect.provide(appLayer));
+	});
+
+	it.layer(ConfigDependencyHooks.layerFrom({ "@scope/plugin@1.0.0": ONE, "@scope/plugin@2.0.0": TWO }), {
+		timeout: "30 seconds",
+	})((it) => {
+		it.effect("two declared versions of one name map to two different files", () =>
+			Effect.gen(function* () {
+				const hooks = yield* ConfigDependencyHooks;
+				const v2 = yield* hooks.inject("/nowhere", { "@scope/plugin": "2.0.0" }, SEED);
+				assert.strictEqual(v2.catalogs.default?.["hooked-dep"], "^9.9.9");
+				assert.isUndefined(v2.catalogs.default?.["mjs-dep"]);
+			}),
+		);
+	});
+
+	it.layer(ConfigDependencyHooks.layerFrom({ "@scope/plugin@1.0.0": ONE }), { timeout: "30 seconds" })((it) => {
+		it.effect("a miss fails closed with the same hooks-source shape as an uninstalled version", () =>
+			Effect.gen(function* () {
+				const hooks = yield* ConfigDependencyHooks;
+				const error = yield* Effect.flip(hooks.inject("/nowhere", { "@scope/plugin": "3.0.0" }, SEED));
+				assert.instanceOf(error, CatalogAssemblyError);
+				assert.strictEqual(error.source, "hooks");
+				assert.strictEqual(error.path, "@scope/plugin");
+				if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
+				assert.include(error.cause.message, "@scope/plugin@3.0.0");
+			}),
+		);
+	});
+
+	it.layer(ConfigDependencyHooks.layerFrom({}), { timeout: "30 seconds" })((it) => {
+		it.effect("empty configDependencies returns the seed untouched", () =>
+			Effect.gen(function* () {
+				const hooks = yield* ConfigDependencyHooks;
+				const rules = { allowedVersions: { "a>b": "1.0.0" }, ignoreMissing: [], allowAny: [] };
+				const result = yield* hooks.inject("/nowhere", {}, SEED, rules);
+				assert.deepStrictEqual(result, { catalogs: SEED, releaseAge: {}, peerDependencyRules: rules, replays: {} });
+			}),
+		);
+	});
+
+	it.layer(ConfigDependencyHooks.layerFrom({ "../../evil@1.0.0": ONE }), { timeout: "30 seconds" })((it) => {
+		it.effect("a '..' segment is refused before the lookup", () =>
+			Effect.gen(function* () {
+				const hooks = yield* ConfigDependencyHooks;
+				const error = yield* Effect.flip(hooks.inject("/nowhere", { "../../evil": "1.0.0" }, SEED));
+				assert.instanceOf(error, CatalogAssemblyError);
+				assert.strictEqual(error.path, "../../evil");
+			}),
+		);
+	});
+
+	it.layer(
+		Layer.unwrap(
+			Effect.sync(() => {
+				const tree: Tree = {
+					"/repo/pnpm-workspace.yaml": [
+						"packages:",
+						"  - packages/*",
+						"catalog:",
+						"  effect: ^4.0.0",
+						"configDependencies:",
+						"  '@scope/plugin': '2.0.0+sha512-abc'",
+						"",
+					].join("\n"),
+					"/repo/package.json": '{"name":"root","version":"0.0.0","private":true}',
+					"/repo/packages/a/package.json": manifest("@x/a", { dependencies: { effect: "catalog:" } }),
+				};
+				const hooks = ConfigDependencyHooks.layerFrom({ "@scope/plugin@2.0.0": TWO });
+				const core = Workspaces.layer({ cwd: "/repo" });
+				const catalogs = Layer.effect(WorkspaceCatalogs, WorkspaceCatalogs.make({ cwd: "/repo" })).pipe(
+					Layer.provide(hooks),
+					Layer.provide(core),
+				);
+				const appLayer = Layer.mergeAll(core, catalogs).pipe(Layer.provideMerge(platform(tree)));
+				return appLayer;
+			}),
+		),
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("works under a memfs FileSystem: the whole catalog path replays with no real root", () =>
+			Effect.gen(function* () {
+				const set = yield* (yield* WorkspaceCatalogs).set;
+				assertSome(set.rangeOf("effect", O.none()), "^4.0.0");
+				assertSome(set.rangeOf("hooked-dep", O.none()), "^9.9.9");
+			}),
+		);
 	});
 });

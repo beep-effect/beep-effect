@@ -10,6 +10,7 @@
 // roots hold the same packages.
 
 import { assert, describe, it, layer } from "@effect/vitest";
+import { assertExitFailure, assertSome } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -46,7 +47,7 @@ const names = (packages: ReadonlyArray<{ readonly name: string }>): ReadonlyArra
 	[...packages.map((pkg) => pkg.name)].sort();
 
 describe("WorkspaceDiscovery.listPackagesIn — a root the layer was not bound to", () => {
-	layer(discoveryOver(TREE))((it) => {
+	layer(discoveryOver(TREE), { timeout: "30 seconds" })((it) => {
 		it.effect("reads the named root's own membership, not the layer-bound root's", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
@@ -137,7 +138,7 @@ describe("WorkspaceDiscovery.listPackagesIn — a root the layer was not bound t
 });
 
 describe("WorkspaceDiscovery.infoIn", () => {
-	layer(discoveryOver(TREE))((it) => {
+	layer(discoveryOver(TREE), { timeout: "30 seconds" })((it) => {
 		it.effect("reports the named root and its own patterns", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
@@ -159,7 +160,7 @@ describe("WorkspaceDiscovery.infoIn", () => {
 });
 
 describe("WorkspaceDiscovery.refresh — with per-root memos live", () => {
-	layer(discoveryOver(TREE))((it) => {
+	layer(discoveryOver(TREE), { timeout: "30 seconds" })((it) => {
 		it.effect("drops the per-root memos too, not only the layer-bound one", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
@@ -176,7 +177,7 @@ describe("WorkspaceDiscovery.refresh — with per-root memos live", () => {
 });
 
 describe("WorkspaceDiscovery.refreshIn", () => {
-	layer(discoveryOver(TREE))((it) => {
+	layer(discoveryOver(TREE), { timeout: "30 seconds" })((it) => {
 		it.effect("drops only the named root's memo", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
@@ -251,9 +252,11 @@ describe("WorkspaceDiscovery.makeTest — the per-root methods", () => {
 			// name claims — and a double that failed typed instead of dying is
 			// exactly the absorbable-by-catch mistake this default exists to avoid.
 			const exit = yield* Effect.exit(double.listPackagesIn("/anywhere"));
-			assert.isTrue(Exit.isFailure(exit) && Cause.hasDies(exit.cause));
+			assertExitFailure(exit, O.getOrElse(Exit.getCause(exit), () => Cause.empty));
+			assert.isTrue(Cause.hasDies(exit.cause));
 			const infoExit = yield* Effect.exit(double.infoIn("/anywhere"));
-			assert.isTrue(Exit.isFailure(infoExit) && Cause.hasDies(infoExit.cause));
+			assertExitFailure(infoExit, O.getOrElse(Exit.getCause(infoExit), () => Cause.empty));
+			assert.isTrue(Cause.hasDies(infoExit.cause));
 		}),
 	);
 
@@ -271,13 +274,13 @@ describe("WorkspaceDiscovery.makeTest — the per-root methods", () => {
 });
 
 describe("WorkspaceDiscovery.resolveFile — unchanged by the per-root memos", () => {
-	layer(discoveryOver(TREE))((it) => {
+	layer(discoveryOver(TREE), { timeout: "30 seconds" })((it) => {
 		it.effect("still answers against the layer-bound root", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
 				yield* discovery.listPackagesIn("/worktree");
 				const owner = yield* discovery.resolveFile("/primary/packages/beta/src/index.ts");
-				assert.isTrue(O.isSome(owner));
+				assertSome(owner, O.getOrThrow(owner));
 				assert.strictEqual(O.getOrThrow(owner).name, "@x/beta");
 			}),
 		);

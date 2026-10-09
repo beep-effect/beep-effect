@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -9,6 +8,7 @@ import * as Scheduler from "effect/Scheduler";
 import * as Scope from "effect/Scope";
 import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
+import * as TestClock from "effect/testing/TestClock";
 import { Box, Text, render } from "ink";
 import { createElement } from "react";
 import { CliInteractive, CliTheme } from "../../../effected/cli/index.ts";
@@ -39,7 +39,7 @@ import {
 } from "../helpers/live.ts";
 
 describe("CliUi.live: subscription and the fold", () => {
-	it.live("a PubSub-backed stream is subscribed when live returns: an event published at once is seen", () =>
+	it.effect("a PubSub-backed stream is subscribed when live returns: an event published at once is seen", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const pubsub = yield* PubSub.unbounded<Ev>();
@@ -49,12 +49,12 @@ describe("CliUi.live: subscription and the fold", () => {
 			yield* PubSub.publish(pubsub, End);
 			yield* handle.done.pipe(Effect.timeout("1 second"));
 			assert.deepStrictEqual((yield* handle.state).seen, ["tick 7", "End"]);
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
 describe("CliUi.live: when a stream is subscribed", () => {
-	it.live("a subscription made first and passed as Stream.fromSubscription sees an event published at once", () =>
+	it.effect("a subscription made first and passed as Stream.fromSubscription sees an event published at once", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const pubsub = yield* PubSub.unbounded<Ev>();
@@ -65,10 +65,10 @@ describe("CliUi.live: when a stream is subscribed", () => {
 			yield* PubSub.publish(pubsub, End);
 			yield* handle.done.pipe(Effect.timeout("1 second"));
 			assert.deepStrictEqual((yield* handle.state).seen, ["tick 7", "End"]);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
-	it.live(
+	it.effect(
 		"a stream that forks its upstream (merge) subscribes after live returns: an event published at once is lost",
 		() =>
 			Effect.gen(function* () {
@@ -80,7 +80,7 @@ describe("CliUi.live: when a stream is subscribed", () => {
 				const handle = yield* liveOn(fake, optionsOf(events), { interactive: false });
 				yield* PubSub.publish(pubsub, tick(7));
 				// By now the forked upstream has subscribed: what is published from here on is seen.
-				yield* Effect.sleep("50 millis");
+				yield* TestClock.adjust("50 millis");
 				yield* PubSub.publish(pubsub, tick(8));
 				yield* PubSub.publish(pubsub, End);
 				yield* handle.done.pipe(Effect.timeout("1 second"));
@@ -89,22 +89,22 @@ describe("CliUi.live: when a stream is subscribed", () => {
 					["tick 8", "End"],
 					"tick 7 was published before the subscribe",
 				);
-			}).pipe(Effect.scoped),
+			}),
 	);
 });
 
 describe("CliUi.live: runs on the production path", () => {
-	it.live("start, events, terminal: the final frame is committed, and the mount permit is released", () =>
+	it.effect("start, events, terminal: the final frame is committed, and the mount permit is released", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams({ columns: 40, rows: 20 });
 			const handle = yield* liveOn(fake, optionsOf(Stream.fromIterable([Start, tick(1), tick(2), End])));
 			yield* handle.done.pipe(Effect.timeout("2 seconds"));
 			assert.deepStrictEqual(screenAfter(fake.stdout()), ["RUN 1", "ended"]);
 			assert.strictEqual(yield* mountsAndResolves(makeFakeStreams()), "mounted", "a screen mounts after the run");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
-	it.live("watch mode: three runs commit three frames, a mid-run start re-renders in place, scrollback untouched", () =>
+	it.effect("watch mode: three runs commit three frames, a mid-run start re-renders in place, scrollback untouched", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams({ columns: 40, rows: 20 });
 			fake.streams.stdout.write("HISTORY\n");
@@ -129,20 +129,20 @@ describe("CliUi.live: runs on the production path", () => {
 			assert.notInclude(written, CLEAR_SCREEN);
 			assert.deepStrictEqual(screenAfter(written), ["HISTORY", "RUN 1", "ended", "RUN 2", "ended", "RUN 4", "ended"]);
 			assert.strictEqual(mounts, 3, "a start while mounted does not remount");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
-	it.live("a stream that ends mid-run commits the frame drawn so far, and done completes", () =>
+	it.effect("a stream that ends mid-run commits the frame drawn so far, and done completes", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams({ columns: 40, rows: 20 });
 			const handle = yield* liveOn(fake, optionsOf(Stream.fromIterable([Start, tick(1), tick(2)])));
 			yield* handle.done.pipe(Effect.timeout("2 seconds"));
 			assert.deepStrictEqual(screenAfter(fake.stdout()), ["RUN 1", "tick 2"]);
 			assert.strictEqual(yield* mountsAndResolves(makeFakeStreams()), "mounted", "the permit was released");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
-	it.live("by default only a start begins a run: events before it, or after a terminal event, mount nothing", () =>
+	it.effect("by default only a start begins a run: events before it, or after a terminal event, mount nothing", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams({ columns: 40, rows: 20 });
 			let mounts = 0;
@@ -155,9 +155,10 @@ describe("CliUi.live: runs on the production path", () => {
 			assert.strictEqual(mounts, 1, "one run: the events after its end are folded, never drawn");
 			assert.deepStrictEqual(screenAfter(fake.stdout()), ["RUN 1", "ended"], "one frame, the run's own");
 			assert.strictEqual((yield* handle.state).last, "tick 4", "the fold went on");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
+	// Live clock: Ink renders on the Node/React scheduler; timed waits observe its progress.
 	it.live("closing the scope mid-run unmounts: no raw mode, the cursor shown, the colour and the permit restored", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams({ columns: 40, rows: 20 });
@@ -183,7 +184,7 @@ describe("CliUi.live: runs on the production path", () => {
 		}),
 	);
 
-	it.live("a 200-row frame on a 10-row terminal is clamped, so the scrollback is never cleared", () =>
+	it.effect("a 200-row frame on a 10-row terminal is clamped, so the scrollback is never cleared", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams({ columns: 40, rows: 10 });
 			const tall = Array.from({ length: 200 }, (_, index) => `line ${index}`).join("\n");
@@ -197,10 +198,10 @@ describe("CliUi.live: runs on the production path", () => {
 			assert.notInclude(written, CLEAR_SCROLLBACK);
 			assert.notInclude(written, CLEAR_SCREEN);
 			assert.isAtMost(screenAfter(written).length, 9, "rows - 1 at most");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
-	it.live("200 separate rows on a 10-row terminal are clipped to the first ones, never squashed into a sample", () =>
+	it.effect("200 separate rows on a 10-row terminal are clipped to the first ones, never squashed into a sample", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams({ columns: 40, rows: 10 });
 			const rows = (state: State) =>
@@ -216,29 +217,32 @@ describe("CliUi.live: runs on the production path", () => {
 				"head ended",
 				...Array.from({ length: 8 }, (_, index) => `row ${index}`),
 			]);
-		}).pipe(Effect.scoped),
-	);
-
-	it.live("control: the same 200 rows rendered unclamped on a 10-row terminal do clear the scrollback", () =>
-		Effect.gen(function* () {
-			yield* CliUi.context.pipe(Effect.provide(CliTheme.layerTest()));
-			const fake = makeFakeStreams({ columns: 40, rows: 10 });
-			const tall = Array.from({ length: 200 }, (_, index) => `line ${index}`).join("\n");
-			const instance = render(createElement(Text, null, `ended\n${tall}`), {
-				stdin: fake.streams.stdin,
-				stdout: fake.streams.stdout,
-				stderr: fake.streams.stderr,
-				interactive: true,
-				patchConsole: false,
-				exitOnCtrlC: false,
-			});
-			instance.unmount();
-			yield* Effect.promise(() => instance.waitUntilExit().catch(() => undefined));
-			assert.include(fake.stdout(), CLEAR_SCROLLBACK);
 		}),
 	);
 
+	it.layer(CliTheme.layerTest(), { timeout: "30 seconds" })((it) => {
+		it.effect("control: the same 200 rows rendered unclamped on a 10-row terminal do clear the scrollback", () =>
+			Effect.gen(function* () {
+				yield* CliUi.context;
+				const fake = makeFakeStreams({ columns: 40, rows: 10 });
+				const tall = Array.from({ length: 200 }, (_, index) => `line ${index}`).join("\n");
+				const instance = render(createElement(Text, null, `ended\n${tall}`), {
+					stdin: fake.streams.stdin,
+					stdout: fake.streams.stdout,
+					stderr: fake.streams.stderr,
+					interactive: true,
+					patchConsole: false,
+					exitOnCtrlC: false,
+				});
+				instance.unmount();
+				yield* Effect.promise(() => instance.waitUntilExit().catch(() => undefined));
+				assert.include(fake.stdout(), CLEAR_SCROLLBACK);
+			}),
+		);
+	});
+
 	for (const mode of ["owned", "hosted"] as const) {
+		// Live clock: Ink renders on the Node/React scheduler; timed waits observe its progress.
 		it.live(`${mode}: no input is mounted: no stdin listener, and raw mode never entered`, () =>
 			Effect.gen(function* () {
 				const fake = makeFakeStreams({ columns: 40, rows: 20 });
@@ -252,12 +256,13 @@ describe("CliUi.live: runs on the production path", () => {
 					[0, 0, 0],
 				);
 				assert.deepStrictEqual(fake.rawModes, []);
-			}).pipe(Effect.scoped),
+			}),
 		);
 	}
 });
 
 describe("CliUi.live: closing and failing", () => {
+	// Live clock: Ink renders on the Node/React scheduler; timed waits observe its progress.
 	it.live("closing the scope stops the fold first: events queued just before the close are never folded or drawn", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams({ columns: 40, rows: 20 });
@@ -280,36 +285,38 @@ describe("CliUi.live: closing and failing", () => {
 		}),
 	);
 
-	it.live("a run still waiting for the permit when the scope closes takes nothing with it", () =>
-		Effect.gen(function* () {
-			// A screen that never ends holds the permit, so the live view's run waits for it.
-			const holding = makeFakeStreams({ columns: 40, rows: 20 });
-			const screen = yield* Effect.forkChild(
-				CliUi.run(() => createElement(Text, null, "holding the permit")).pipe(
-					Effect.provideService(UiStreams, holding.streams),
-					Effect.provideService(CliInteractive, true),
-					Effect.provide(CliTheme.layerTest()),
-				),
-			);
-			yield* until(() => holding.stdout().includes("holding the permit"));
-			const fake = makeFakeStreams({ columns: 40, rows: 20 });
-			let mounts = 0;
-			yield* Effect.scoped(
-				Effect.gen(function* () {
-					const queue = yield* queueOf();
-					yield* liveOn(fake, optionsOf(Stream.fromQueue(queue)), { onMount: () => mounts++ });
-					yield* Queue.offer(queue, Start);
-					yield* Effect.sleep("50 millis");
-				}),
-			);
-			yield* Fiber.interrupt(screen);
-			assert.strictEqual(mounts, 0, "the run never got the permit");
-			assert.strictEqual(fake.stdout(), "", "nothing drawn");
-			assert.strictEqual(yield* mountsAndResolves(makeFakeStreams()), "mounted", "no permit leaked");
-		}),
-	);
+	// Live clock: the permit contender waits alongside Ink on the Node/React scheduler.
+	it.layer(CliTheme.layerTest(), { excludeTestServices: true, timeout: "30 seconds" })((it) => {
+		it.effect("a run still waiting for the permit when the scope closes takes nothing with it", () =>
+			Effect.gen(function* () {
+				// A screen that never ends holds the permit, so the live view's run waits for it.
+				const holding = makeFakeStreams({ columns: 40, rows: 20 });
+				const screen = yield* Effect.forkChild(
+					CliUi.run(() => createElement(Text, null, "holding the permit")).pipe(
+						Effect.provideService(UiStreams, holding.streams),
+						Effect.provideService(CliInteractive, true),
+					),
+				);
+				yield* until(() => holding.stdout().includes("holding the permit"));
+				const fake = makeFakeStreams({ columns: 40, rows: 20 });
+				let mounts = 0;
+				yield* Effect.scoped(
+					Effect.gen(function* () {
+						const queue = yield* queueOf();
+						yield* liveOn(fake, optionsOf(Stream.fromQueue(queue)), { onMount: () => mounts++ });
+						yield* Queue.offer(queue, Start);
+						yield* Effect.sleep("50 millis");
+					}),
+				);
+				yield* Fiber.interrupt(screen);
+				assert.strictEqual(mounts, 0, "the run never got the permit");
+				assert.strictEqual(fake.stdout(), "", "nothing drawn");
+				assert.strictEqual(yield* mountsAndResolves(makeFakeStreams()), "mounted", "no permit leaked");
+			}),
+		);
+	});
 
-	it.live("a mount that fails partway releases its run: the mount permit is free for a CliUi.run", () =>
+	it.effect("a mount that fails partway releases its run: the mount permit is free for a CliUi.run", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams({ columns: 40, rows: 20 });
 			const log = capturing();
@@ -322,11 +329,12 @@ describe("CliUi.live: closing and failing", () => {
 			yield* Effect.exit(handle.done.pipe(Effect.timeout("1 second")));
 			assert.strictEqual(warningsIn(log.lines).length, 1, "the failure is said once, as a warning");
 			assert.strictEqual(yield* mountsAndResolves(makeFakeStreams()), "mounted", "the permit was released");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
 describe("CliUi.live: around a mounted run", () => {
+	// Live clock: Ink renders on the Node/React scheduler; timed waits observe its progress.
 	it.live("logConsole lines land above the mounted frame, and go straight to the stream once the run has ended", () =>
 		Effect.gen(function* () {
 			// One terminal, as a tty is: stderr is the same stream as stdout, so the transcript holds both in order.
@@ -351,9 +359,10 @@ describe("CliUi.live: around a mounted run", () => {
 				"ended",
 				"after the run",
 			]);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
+	// Live clock: Ink renders on the Node/React scheduler; timed waits observe its progress.
 	it.live("a CliUi.run during a mounted run waits for the run to end, then mounts", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams({ columns: 40, rows: 20 });
@@ -366,10 +375,10 @@ describe("CliUi.live: around a mounted run", () => {
 			assert.isUndefined(screen.pollUnsafe(), "the screen waits while the run holds the permit");
 			yield* Queue.offer(queue, End);
 			assert.strictEqual(yield* Fiber.join(screen), "mounted");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
-	it.live("a render that throws mid-run never hangs the drain: the fold goes on and done completes", () =>
+	it.effect("a render that throws mid-run never hangs the drain: the fold goes on and done completes", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams({ columns: 40, rows: 20 });
 			const options = optionsOf(Stream.fromIterable([Start, tick(1), tick(2), tick(3), End]), {
@@ -382,7 +391,7 @@ describe("CliUi.live: around a mounted run", () => {
 			yield* handle.done.pipe(Effect.timeout("2 seconds"));
 			assert.strictEqual((yield* handle.state).last, "ended");
 			assert.strictEqual(yield* mountsAndResolves(makeFakeStreams()), "mounted", "the run unmounted");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
@@ -420,20 +429,19 @@ const agentView = (events: ReadonlyArray<AgentEvent>, begins?: LiveOptions<Agent
 	...(begins === undefined ? {} : { begins }),
 });
 const runAgent = Effect.fn("runAgent")(function* (options: LiveOptions<AgentEvent, AgentState>) {
-		const fake = makeFakeStreams({ columns: 40, rows: 20 });
-		let mounts = 0;
-		const handle = yield* CliUi.live(options).pipe(
-			Effect.provideService(UiStreams, fake.streams),
-			Effect.provideService(CliInteractive, true),
-			Effect.provideService(UiRenderOptions, { onMount: () => mounts++ }),
-			Effect.provide(CliTheme.layerTest()),
-		);
-		yield* handle.done.pipe(Effect.timeout("2 seconds"));
-		return { mounts, shown: screenAfter(fake.stdout()) };
-	}, Effect.scoped);
+	const fake = makeFakeStreams({ columns: 40, rows: 20 });
+	let mounts = 0;
+	const handle = yield* CliUi.live(options).pipe(
+		Effect.provideService(UiStreams, fake.streams),
+		Effect.provideService(CliInteractive, true),
+		Effect.provideService(UiRenderOptions, { onMount: () => mounts++ }),
+	);
+	yield* handle.done.pipe(Effect.timeout("2 seconds"));
+	return { mounts, shown: screenAfter(fake.stdout()) };
+});
 
-describe("CliUi.live: what begins a run", () => {
-	it.live("by default, events after the terminal event (coverage, thresholds) never mount a second run", () =>
+it.layer(CliTheme.layerTest(), { timeout: "30 seconds" })("CliUi.live: what begins a run", (it) => {
+	it.effect("by default, events after the terminal event (coverage, thresholds) never mount a second run", () =>
 		Effect.gen(function* () {
 			const { mounts, shown } = yield* runAgent(
 				agentView([
@@ -449,7 +457,7 @@ describe("CliUi.live: what begins a run", () => {
 		}),
 	);
 
-	it.live("vitest-agent's begins (a start, or idle to not idle) joins a run mid-way, and not again after it ends", () =>
+	it.effect("vitest-agent's begins (a start, or idle to not idle) joins a run mid-way, and not again after it ends", () =>
 		Effect.gen(function* () {
 			const begins: LiveOptions<AgentEvent, AgentState>["begins"] = (event, before, after) =>
 				event._tag === "RunStarted" || (before.phase === "idle" && after.phase !== "idle");
@@ -470,7 +478,7 @@ describe("CliUi.live: what begins a run", () => {
 		}),
 	);
 
-	it.live("control: without begins, the same joined-mid-way stream mounts nothing at all", () =>
+	it.effect("control: without begins, the same joined-mid-way stream mounts nothing at all", () =>
 		Effect.gen(function* () {
 			const { mounts, shown } = yield* runAgent(
 				agentView([{ _tag: "Progress" }, { _tag: "Progress" }, { _tag: "RunFinished" }, { _tag: "CoverageReady" }]),
@@ -482,6 +490,7 @@ describe("CliUi.live: what begins a run", () => {
 });
 
 describe("CliUi.live: an interrupt while a run ends (final review, I1)", () => {
+	// Live clock: Ink renders on the Node/React scheduler; timed waits observe its progress.
 	it.live(
 		"closing the scope as a run ends never orphans the run: no permit or Ink instance is left behind, at any yield",
 		() =>

@@ -19,7 +19,7 @@ describe("TextInput mask", () => {
 			assert.strictEqual(valueLine(yield* handle.plainFrame), "•••••▏");
 			yield* handle.press("enter");
 			assert.strictEqual(yield* handle.result, `ab${CLUSTERS}`);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("control: without mask the same value is drawn as itself", () =>
@@ -28,7 +28,7 @@ describe("TextInput mask", () => {
 				color: "none",
 			});
 			assert.strictEqual(valueLine(yield* handle.plainFrame), "ab▏");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a typed or pasted secret never reaches any frame, and validate sees the real text", () =>
@@ -55,7 +55,7 @@ describe("TextInput mask", () => {
 				assert.notInclude(frame, "ghp_");
 				assert.notInclude(frame, "abc123");
 			}
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("the cursor moves through the real text, drawn between masks", () =>
@@ -67,7 +67,7 @@ describe("TextInput mask", () => {
 			assert.strictEqual(valueLine(yield* handle.plainFrame), "••▏•");
 			yield* handle.press("backspace", "enter");
 			assert.strictEqual(yield* handle.result, "ac");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("the masks either side of the cursor always add up to the graphemes, the cursor never inside one", () =>
@@ -83,7 +83,7 @@ describe("TextInput mask", () => {
 			assert.strictEqual(valueLine(yield* handle.plainFrame), "▏••");
 			yield* handle.press("right", "delete", "enter");
 			assert.strictEqual(yield* handle.result, "a", "delete removed the accented e whole");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a string mask is drawn as given, and true is * under ASCII glyphs", () =>
@@ -129,7 +129,7 @@ describe("TextInput mask", () => {
 			yield* handle.press("enter");
 			assert.strictEqual(yield* handle.result, "op://v/i");
 			assert.include(seen, "op://v/i", "the predicate is asked with the real value");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("once it answers true the mask latches: home and delete never redraw the rest of a token in clear", () =>
@@ -143,7 +143,7 @@ describe("TextInput mask", () => {
 			for (const frame of yield* handle.frames) assert.notInclude(frame, "SECRET");
 			yield* handle.press("enter");
 			assert.strictEqual(yield* handle.result, "hp_SECRET123", "the result is the real value");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a token pasted after an address is masked: the giveaway matches anywhere, not as a prefix", () =>
@@ -160,7 +160,7 @@ describe("TextInput mask", () => {
 				frames.some((frame) => frame.includes("SECRET")),
 				"no frame ever drew the token",
 			);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("clearing the value unlatches the mask", () =>
@@ -173,7 +173,7 @@ describe("TextInput mask", () => {
 			for (let i = 0; i < 5; i++) yield* handle.press("backspace");
 			yield* handle.type("op://a");
 			assert.strictEqual(valueLine(yield* handle.plainFrame), "op://a▏", "readable again after the clear");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a pasted token is masked from its first frame by a predicate", () =>
@@ -183,7 +183,7 @@ describe("TextInput mask", () => {
 			});
 			yield* handle.chunk({ char: "ghp_secret123" });
 			for (const frame of yield* handle.frames) assert.notInclude(frame, "ghp_");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("the placeholder still shows while the value is empty", () =>
@@ -195,6 +195,6 @@ describe("TextInput mask", () => {
 			assert.strictEqual(valueLine(yield* handle.plainFrame), "▏op://vault/item");
 			yield* handle.type("s");
 			assert.strictEqual(valueLine(yield* handle.plainFrame), "•▏");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });

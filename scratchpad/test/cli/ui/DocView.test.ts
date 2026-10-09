@@ -1,18 +1,16 @@
-// @effect-diagnostics strictEffectProvide:skip-file
-import { assert, describe, it } from "@effect/vitest";
-import { Audience, CurrentRuntimeEnv } from "../../../effected/env/index.ts";
+import { assert, describe, it, vi } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Stream from "effect/Stream";
 import { Box, Text } from "ink";
 import type { ReactElement } from "react";
 import { createElement } from "react";
-import { vi } from "vitest";
 import type { Document, RenderContext, StreamTheme } from "../../../effected/cli/index.ts";
 import { Doc, Render, Status } from "../../../effected/cli/index.ts";
 import { makeFakeStreams } from "../../../effected/cli/ui/testing/fakeStreams.ts";
 import { DocView, useTerminalSize, useTheme } from "../../../effected/cli/ui.ts";
 import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
+import { Audience, CurrentRuntimeEnv } from "../../../effected/env/index.ts";
 import type { Ev, State } from "../helpers/live.ts";
 import { End, Start, liveOn, optionsOf, reduce, tick } from "../helpers/live.ts";
 import { commandLines } from "../helpers/runnerCommands.ts";
@@ -80,7 +78,7 @@ describe("DocView", () => {
 			const plain = yield* handle.plainFrame;
 			assert.include(plain, "inside the collapsible", "a collapsible is drawn open");
 			assert.notInclude(plain, "an annotation", "an annotation is skipped");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("in colour, its token markers are exactly Render.ansi's with the screen's own theme paint", () =>
@@ -99,7 +97,7 @@ describe("DocView", () => {
 			assert.strictEqual(trimmed(frame), trimmed(expected));
 			assert.include(frame, "[success]", "control: the marker palette painted a token");
 			assert.notInclude(yield* handle.rawFrame, `${ESC}]8;`, "links are off by default: no OSC 8");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a ctx prop replaces the built context entirely: it lays out at the ctx's width", () =>
@@ -111,7 +109,7 @@ describe("DocView", () => {
 				color: "none",
 			});
 			assert.strictEqual(trimmed(yield* handle.plainFrame), trimmed(Render.plain(doc, ctx)));
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a row wider than the terminal is cut to one line, never re-wrapped by Ink", () =>
@@ -125,7 +123,7 @@ describe("DocView", () => {
 			const rows = trimmed(yield* handle.plainFrame).split("\n");
 			assert.strictEqual(rows.length, 2, rows.join("|"));
 			assert.strictEqual(rows[1], "next row");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("one block on its own is drawn as a one-block document", () =>
@@ -136,7 +134,7 @@ describe("DocView", () => {
 				trimmed(yield* handle.plainFrame),
 				trimmed(Render.plain([block], Render.contextOf({ audience: "human", width: 79 }))),
 			);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("in a parent of fixed height that clips, it shows its first rows, never a squeezed sample", () =>
@@ -152,19 +150,21 @@ describe("DocView", () => {
 				{ color: "none" },
 			);
 			assert.strictEqual(trimmed(yield* handle.plainFrame), ["row 0", "row 1", "row 2", "row 3", "row 4"].join("\n"));
-		}).pipe(Effect.scoped),
+		}),
 	);
 
-	it.effect("for an agent the screen's theme is colourless, so the frame carries no escape", () =>
-		Effect.gen(function* () {
-			const handle = yield* CliUiTest.render(() => createElement(DocView, { doc: sample }), {
-				columns: 60,
-				rows: 60,
-			}).pipe(Effect.provide(Audience.layerTest("agent")));
-			assert.notInclude(yield* handle.rawFrame, `${ESC}[3`, "no colour escape");
-			assert.include(yield* handle.plainFrame, "alpha");
-		}).pipe(Effect.scoped),
-	);
+	it.layer(Audience.layerTest("agent"), { timeout: "30 seconds" })((it) => {
+		it.effect("for an agent the screen's theme is colourless, so the frame carries no escape", () =>
+			Effect.gen(function* () {
+				const handle = yield* CliUiTest.render(() => createElement(DocView, { doc: sample }), {
+					columns: 60,
+					rows: 60,
+				});
+				assert.notInclude(yield* handle.rawFrame, `${ESC}[3`, "no colour escape");
+				assert.include(yield* handle.plainFrame, "alpha");
+			}),
+		);
+	});
 
 	it.effect("the layout runs once per document and width: a re-render with the same document does not repeat it", () =>
 		Effect.gen(function* () {
@@ -180,7 +180,7 @@ describe("DocView", () => {
 			} finally {
 				spy.mockRestore();
 			}
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
@@ -212,7 +212,7 @@ describe("DocView inside a live view (okf/decisions/live-height-clamp-not-width.
 			assert.notInclude(yield* view.written, `${ESC}[2J`);
 			assert.isAtMost((yield* view.transcript).split("\n").length, 9);
 			assert.include(yield* view.transcript, "run 1: ended");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a shrink from 60 to 40 columns re-lays the document out, and leaves one copy of it", () =>
@@ -242,52 +242,53 @@ describe("DocView inside a live view (okf/decisions/live-height-clamp-not-width.
 			const shown = (yield* view.transcript).split("\n");
 			assert.strictEqual(shown.filter((line) => line.includes("status")).length, 1, shown.join("\n"));
 			assert.notInclude(yield* view.written, `${ESC}[3J`);
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
 describe("DocView and the live view under GitHub Actions: no workflow command from data", () => {
 	const actions = CurrentRuntimeEnv.layerTest({ ci: O.some("github-actions") });
 	const injected = [Doc.lines([[Doc.text("::error::injected from test data")], [Doc.text("a ##[warning]legacy one")]])];
-	const printed = Effect.fn("printed")(function* (render: () => ReactElement, underActions: boolean) {
-			const fake = makeFakeStreams({ columns: 80, rows: 20 });
-			const live = liveOn(fake, optionsOf(Stream.fromIterable([Start, End]), { render }), { interactive: false });
-			const handle = yield* underActions ? live.pipe(Effect.provide(actions)) : live;
-			yield* handle.done.pipe(Effect.timeout("2 seconds"));
-			return fake.stdout();
-		}, Effect.scoped);
+	const printed = Effect.fn("printed")(function* (render: () => ReactElement) {
+		const fake = makeFakeStreams({ columns: 80, rows: 20 });
+		const handle = yield* liveOn(fake, optionsOf(Stream.fromIterable([Start, End]), { render }), { interactive: false });
+		yield* handle.done.pipe(Effect.timeout("2 seconds"));
+		return fake.stdout();
+	});
 
-	it.live("an owned live view's printed DocView: the runner reads no command in it", () =>
-		Effect.gen(function* () {
-			const out = yield* printed(() => createElement(DocView, { doc: injected }), true);
-			assert.include(out, "injected from test data", "control: the text is there");
-			assert.deepStrictEqual(commandLines(out), []);
-		}),
-	);
+	it.layer(actions, { timeout: "30 seconds" })((it) => {
+		it.effect("an owned live view's printed DocView: the runner reads no command in it", () =>
+			Effect.gen(function* () {
+				const out = yield* printed(() => createElement(DocView, { doc: injected }));
+				assert.include(out, "injected from test data", "control: the text is there");
+				assert.deepStrictEqual(commandLines(out), []);
+			}),
+		);
 
-	it.live("an owned live view's printed raw Text: the printed string is neutralized too", () =>
-		Effect.gen(function* () {
-			const out = yield* printed(() => createElement(Text, null, "::error::from a raw Text"), true);
-			assert.include(out, "from a raw Text");
-			assert.deepStrictEqual(commandLines(out), []);
-		}),
-	);
+		it.effect("an owned live view's printed raw Text: the printed string is neutralized too", () =>
+			Effect.gen(function* () {
+				const out = yield* printed(() => createElement(Text, null, "::error::from a raw Text"));
+				assert.include(out, "from a raw Text");
+				assert.deepStrictEqual(commandLines(out), []);
+			}),
+		);
+	});
 
-	it.live("control: off Actions the same output is left alone, so the runner oracle does see the commands", () =>
+	it.effect("control: off Actions the same output is left alone, so the runner oracle does see the commands", () =>
 		Effect.gen(function* () {
-			const out = yield* printed(() => createElement(DocView, { doc: injected }), false);
+			const out = yield* printed(() => createElement(DocView, { doc: injected }));
 			assert.deepStrictEqual(commandLines(out), ["::error::injected from test data", "a ##[warning]legacy one"]);
 		}),
 	);
 
-	it.effect("a CliUi.run screen's DocView under Actions: its frame carries no command either", () =>
-		Effect.gen(function* () {
-			const handle = yield* CliUiTest.render(() => createElement(DocView, { doc: injected }), { color: "none" }).pipe(
-				Effect.provide(actions),
-			);
-			const frame = yield* handle.plainFrame;
-			assert.include(frame, "injected from test data");
-			assert.deepStrictEqual(commandLines(frame), []);
-		}).pipe(Effect.scoped),
-	);
+	it.layer(actions, { timeout: "30 seconds" })((it) => {
+		it.effect("a CliUi.run screen's DocView under Actions: its frame carries no command either", () =>
+			Effect.gen(function* () {
+				const handle = yield* CliUiTest.render(() => createElement(DocView, { doc: injected }), { color: "none" });
+				const frame = yield* handle.plainFrame;
+				assert.include(frame, "injected from test data");
+				assert.deepStrictEqual(commandLines(frame), []);
+			}),
+		);
+	});
 });

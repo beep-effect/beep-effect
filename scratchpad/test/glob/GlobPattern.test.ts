@@ -3,6 +3,7 @@
 // options surface, the FromString codec and the escape statics.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
@@ -311,14 +312,12 @@ describe("GlobPattern.compileResult", () => {
 	it("preserves an overflowing expansion count in a synchronous typed failure", () => {
 		const source = `{1..${"9".repeat(310)}}`;
 		const result = GlobPattern.compileResult(source);
-		assert.isTrue(Result.isFailure(result));
-		if (Result.isFailure(result)) {
-			assert.instanceOf(result.failure, GlobPatternError);
-			assert.strictEqual(result.failure.pattern, source);
-			assert.strictEqual(result.failure.reason, "ExpansionBudgetExceeded");
-			assert.strictEqual(result.failure.limit, 100_000);
-			assert.strictEqual(result.failure.actual, Infinity);
-		}
+		assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
+		assert.instanceOf(result.failure, GlobPatternError);
+		assert.strictEqual(result.failure.pattern, source);
+		assert.strictEqual(result.failure.reason, "ExpansionBudgetExceeded");
+		assert.strictEqual(result.failure.limit, 100_000);
+		assert.strictEqual(result.failure.actual, Infinity);
 	});
 
 	it.effect("preserves an overflowing expansion count in the Effect failure channel", () =>
@@ -336,8 +335,7 @@ describe("GlobPattern.compileResult", () => {
 
 	it("compiles synchronously without an Effect runtime", () => {
 		const r = GlobPattern.compileResult("packages/*");
-		assert.isTrue(Result.isSuccess(r));
-		if (!Result.isSuccess(r)) return;
+		assertSuccess(r, Result.getOrThrow(r));
 		assert.strictEqual(r.success.source, "packages/*");
 		assert.isTrue(r.success.matches("packages/a"));
 		assert.isFalse(r.success.matches("packages/a/b"));
@@ -345,57 +343,59 @@ describe("GlobPattern.compileResult", () => {
 
 	it("is total: a guard trip is a Result failure, never a throw", () => {
 		const r = GlobPattern.compileResult("a".repeat(65_537));
-		assert.isTrue(Result.isFailure(r));
-		if (!Result.isFailure(r)) return;
+		assertFailure(r, r.pipe(Result.flip, Result.getOrThrow));
 		assert.instanceOf(r.failure, GlobPatternError);
 		assert.strictEqual(r.failure.reason, "PatternTooLong");
 	});
 
-	it("carries the same typed error as compile for every guard", () => {
-		for (const source of ["a".repeat(65_537), "{a,b}".repeat(17), `${"{".repeat(300)}a,b${"}".repeat(300)}`]) {
-			const sync = GlobPattern.compileResult(source);
-			const eff = GlobPattern.compile(source).pipe(Effect.result, Effect.runSync);
-			assert.isTrue(Result.isFailure(sync));
-			assert.isTrue(Result.isFailure(eff));
-			if (!Result.isFailure(sync) || !Result.isFailure(eff)) continue;
-			assert.strictEqual(sync.failure.reason, eff.failure.reason);
-			assert.strictEqual(sync.failure.limit, eff.failure.limit);
-			assert.strictEqual(sync.failure.actual, eff.failure.actual);
-		}
-	});
+	it.effect("carries the same typed error as compile for every guard", () =>
+		Effect.gen(function* () {
+			for (const source of ["a".repeat(65_537), "{a,b}".repeat(17), `${"{".repeat(300)}a,b${"}".repeat(300)}`]) {
+				const sync = GlobPattern.compileResult(source);
+				const eff = yield* Effect.flip(GlobPattern.compile(source));
+				assertFailure(sync, sync.pipe(Result.flip, Result.getOrThrow));
+				assertFailure(sync, eff);
+				assert.strictEqual(sync.failure.reason, eff.reason);
+				assert.strictEqual(sync.failure.limit, eff.limit);
+				assert.strictEqual(sync.failure.actual, eff.actual);
+			}
+		}),
+	);
 
 	// The consumer's dotfile-semantics divergence: one package compiled the same
 	// shape of pattern with `dot: true` at one call site and defaults at another,
 	// giving two glob semantics inside one package. Both spellings must agree
 	// exactly, so the sync form is never the reason the semantics drift.
-	it("honours options identically to compile: the dot divergence", () => {
-		const withDot = GlobPattern.compileResult("*", GlobPatternOptions.make({ dot: true }));
-		const withDefaults = GlobPattern.compileResult("*");
-		assert.isTrue(Result.isSuccess(withDot));
-		assert.isTrue(Result.isSuccess(withDefaults));
-		if (!Result.isSuccess(withDot) || !Result.isSuccess(withDefaults)) return;
-		assert.isTrue(withDot.success.matches(".hidden"));
-		assert.isFalse(withDefaults.success.matches(".hidden"));
+	it.effect("honours options identically to compile: the dot divergence", () =>
+		Effect.gen(function* () {
+			const withDot = GlobPattern.compileResult("*", GlobPatternOptions.make({ dot: true }));
+			const withDefaults = GlobPattern.compileResult("*");
+			assertSuccess(withDot, Result.getOrThrow(withDot));
+			assertSuccess(withDefaults, Result.getOrThrow(withDefaults));
+			assert.isTrue(withDot.success.matches(".hidden"));
+			assert.isFalse(withDefaults.success.matches(".hidden"));
 
-		const effDot = Effect.runSync(GlobPattern.compile("*", GlobPatternOptions.make({ dot: true })));
-		const effDefaults = Effect.runSync(GlobPattern.compile("*"));
-		assert.strictEqual(withDot.success.matches(".hidden"), effDot.matches(".hidden"));
-		assert.strictEqual(withDefaults.success.matches(".hidden"), effDefaults.matches(".hidden"));
-	});
+			const effDot = yield* GlobPattern.compile("*", GlobPatternOptions.make({ dot: true }));
+			const effDefaults = yield* GlobPattern.compile("*");
+			assert.strictEqual(withDot.success.matches(".hidden"), effDot.matches(".hidden"));
+			assert.strictEqual(withDefaults.success.matches(".hidden"), effDefaults.matches(".hidden"));
+		}),
+	);
 
-	it("agrees with compile on the enumerator getters", () => {
-		const sync = GlobPattern.compileResult("packages/**/*.ts");
-		const eff = Effect.runSync(GlobPattern.compile("packages/**/*.ts"));
-		assert.isTrue(Result.isSuccess(sync));
-		if (!Result.isSuccess(sync)) return;
-		assert.strictEqual(sync.success.enumerationPrefix, eff.enumerationPrefix);
-		assert.strictEqual(sync.success.crossesSegments, eff.crossesSegments);
-		assert.strictEqual(sync.success.hasMagic, eff.hasMagic);
-		assert.strictEqual(sync.success.negated, eff.negated);
-	});
+	it.effect("agrees with compile on the enumerator getters", () =>
+		Effect.gen(function* () {
+			const sync = GlobPattern.compileResult("packages/**/*.ts");
+			const eff = yield* GlobPattern.compile("packages/**/*.ts");
+			assertSuccess(sync, Result.getOrThrow(sync));
+			assert.strictEqual(sync.success.enumerationPrefix, eff.enumerationPrefix);
+			assert.strictEqual(sync.success.crossesSegments, eff.crossesSegments);
+			assert.strictEqual(sync.success.hasMagic, eff.hasMagic);
+			assert.strictEqual(sync.success.negated, eff.negated);
+		}),
+	);
 
 	it("still rejects a defaults-uncompilable pattern under permissive options", () => {
 		const r = GlobPattern.compileResult("{a,b}".repeat(17), GlobPatternOptions.make({ nobrace: true }));
-		assert.isTrue(Result.isFailure(r));
+		assertFailure(r, r.pipe(Result.flip, Result.getOrThrow));
 	});
 });

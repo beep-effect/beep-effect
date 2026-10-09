@@ -1,8 +1,12 @@
 // @effect-diagnostics nodeBuiltinImport:skip-file
 import { readFileSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
+import { assertExitFailure, assertExitSuccess, assertFailure } from "@effect/vitest/utils";
 import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import {
@@ -205,8 +209,8 @@ describe("Yaml", () => {
 			for (const [label, doc] of accepts) {
 				it.effect(`accepts ${label}`, () =>
 					Effect.gen(function* () {
-						const result = yield* Effect.result(Yaml.parse(doc));
-						assert.isTrue(result._tag === "Success", `${doc} should parse`);
+						const result = yield* Yaml.parse(doc).pipe(Effect.asVoid, Effect.exit);
+						assertExitSuccess(result, undefined);
 					}),
 				);
 			}
@@ -306,11 +310,11 @@ describe("Yaml", () => {
 		});
 
 		it("fails typed when the SECOND document carries a fatal diagnostic (whole-stream validity)", () => {
-			let result!: Result.Result<ReadonlyArray<unknown>, YamlParseError>;
+			let result: Result.Result<ReadonlyArray<unknown>, YamlParseError> = Result.succeed([]);
 			assert.doesNotThrow(() => {
 				result = Yaml.parseAllResult("a: 1\n---\nb: *missing\n");
 			});
-			assert.isTrue(Result.isFailure(result));
+			assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 			if (!Result.isFailure(result)) return;
 			assert.instanceOf(result.failure, YamlParseError);
 			assert.isTrue(result.failure.diagnostics.some((d) => d.code === "UndefinedAlias"));
@@ -361,7 +365,7 @@ describe("Yaml", () => {
 
 		it("anchors are document-scoped — an alias cannot reach a previous document's anchor", () => {
 			const result = Yaml.parseAllResult("a: &shared 1\n---\nb: *shared\n");
-			assert.isTrue(Result.isFailure(result));
+			assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 			if (!Result.isFailure(result)) return;
 			assert.isTrue(result.failure.diagnostics.some((d) => d.code === "UndefinedAlias"));
 		});
@@ -385,7 +389,7 @@ describe("Yaml", () => {
 			// input the formatter refuses as stream-fatal.
 			const misplaced = "a: 1\n%YAML 1.2\n---\nb: 2\n";
 			const result = Yaml.parseAllResult(misplaced);
-			assert.isTrue(Result.isFailure(result));
+			assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 			if (!Result.isFailure(result)) return;
 			assert.isTrue(result.failure.diagnostics.some((d) => d.code === "InvalidDirective"));
 			assert.deepStrictEqual(YamlFormat.format(misplaced), []);
@@ -422,12 +426,11 @@ describe("Yaml", () => {
 				let value: unknown = 1;
 				for (let i = 0; i < 50000; i++) value = [value];
 
-				const result = yield* Effect.result(Yaml.stringify(value));
-				if (!Result.isFailure(result)) {
-					assert.fail("a 50 000-deep acyclic value must fail, not overflow the stack");
-				}
-				assert.instanceOf(result.failure, YamlStringifyError);
-				assert.strictEqual(result.failure.diagnostics[0]?.code, "NestingDepthExceeded");
+				const result = yield* Effect.exit(Yaml.stringify(value));
+				assertExitFailure(result, result.pipe(Exit.getCause, O.getOrThrow));
+				const error = result.cause.pipe(Cause.findError, Result.getOrThrow);
+				assert.instanceOf(error, YamlStringifyError);
+				assert.strictEqual(error.diagnostics[0]?.code, "NestingDepthExceeded");
 			}),
 		);
 
@@ -1054,11 +1057,11 @@ describe("Yaml", () => {
 		);
 
 		it("parseResult returns a Failure with a typed YamlParseError on malformed input, never a throw", () => {
-			let result!: Result.Result<unknown, YamlParseError>;
+			let result: Result.Result<unknown, YamlParseError> = Result.succeed(undefined);
 			assert.doesNotThrow(() => {
 				result = Yaml.parseResult("a: *missing");
 			});
-			assert.isTrue(Result.isFailure(result));
+			assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 			if (!Result.isFailure(result)) return;
 			assert.instanceOf(result.failure, YamlParseError);
 			assert.isTrue(result.failure.diagnostics.some((d) => d.code === "UndefinedAlias"));
@@ -1078,11 +1081,11 @@ describe("Yaml", () => {
 		it("stringifyResult returns a Failure with CircularReference on a cycle, never a throw", () => {
 			const value: Record<string, unknown> = {};
 			value.self = value;
-			let result!: Result.Result<string, YamlStringifyError>;
+			let result: Result.Result<string, YamlStringifyError> = Result.succeed("");
 			assert.doesNotThrow(() => {
 				result = Yaml.stringifyResult(value);
 			});
-			assert.isTrue(Result.isFailure(result));
+			assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 			if (!Result.isFailure(result)) return;
 			assert.instanceOf(result.failure, YamlStringifyError);
 			assert.strictEqual(result.failure.diagnostics[0]?.code, "CircularReference");
@@ -1091,11 +1094,11 @@ describe("Yaml", () => {
 		it("stringifyResult surfaces a deep-nesting overflow as a typed Failure, never a stack overflow", () => {
 			let value: unknown = 1;
 			for (let i = 0; i < 50000; i++) value = [value];
-			let result!: Result.Result<string, YamlStringifyError>;
+			let result: Result.Result<string, YamlStringifyError> = Result.succeed("");
 			assert.doesNotThrow(() => {
 				result = Yaml.stringifyResult(value);
 			});
-			assert.isTrue(Result.isFailure(result));
+			assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 			if (!Result.isFailure(result)) return;
 			assert.strictEqual(result.failure.diagnostics[0]?.code, "NestingDepthExceeded");
 		});
@@ -1108,11 +1111,11 @@ describe("Yaml", () => {
 				lines.push(`a${i}: &a${i} [${Array.from({ length: width }, () => `*a${i - 1}`).join(", ")}]`);
 			}
 			lines.push(`top: *a${depth}`);
-			let result!: Result.Result<unknown, YamlParseError>;
+			let result: Result.Result<unknown, YamlParseError> = Result.succeed(undefined);
 			assert.doesNotThrow(() => {
 				result = Yaml.parseResult(lines.join("\n"));
 			});
-			assert.isTrue(Result.isFailure(result));
+			assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 			if (!Result.isFailure(result)) return;
 			assert.isTrue(result.failure.diagnostics.some((d) => d.code === "AliasCountExceeded"));
 		});
@@ -1260,12 +1263,11 @@ describe("Yaml", () => {
 				lines.push(`top: *a${depth}`);
 				const bomb = lines.join("\n");
 
-				const result = yield* Effect.result(Yaml.parse(bomb));
-				if (!Result.isFailure(result)) {
-					assert.fail("expected the alias bomb to fail, not materialize");
-				}
-				assert.instanceOf(result.failure, YamlParseError);
-				assert.isTrue(result.failure.diagnostics.some((d) => d.code === "AliasCountExceeded"));
+				const result = yield* Effect.exit(Yaml.parse(bomb));
+				assertExitFailure(result, result.pipe(Exit.getCause, O.getOrThrow));
+				const error = result.cause.pipe(Cause.findError, Result.getOrThrow);
+				assert.instanceOf(error, YamlParseError);
+				assert.isTrue(error.diagnostics.some((d) => d.code === "AliasCountExceeded"));
 			}),
 		);
 
@@ -1278,11 +1280,9 @@ describe("Yaml", () => {
 				const refs = Array.from({ length: 90 }, (_, i) => `r${i}: *n${i}`);
 				const doc = [...anchors, ...refs].join("\n");
 
-				const result = yield* Effect.result(Yaml.parse(doc));
-				if (!Result.isSuccess(result)) {
-					assert.fail("a benign alias-heavy document must not trip the expansion budget");
-				}
-				const value = result.success;
+				const result = yield* Effect.exit(Yaml.parse(doc));
+				assertExitSuccess(result, result.pipe(Exit.getSuccess, O.getOrThrow));
+				const value = result.value;
 				assert.ok(P.isObject(value));
 				assert.strictEqual(value.r0, 0);
 				assert.strictEqual(value.r89, 89);

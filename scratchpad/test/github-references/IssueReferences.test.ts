@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -94,7 +95,7 @@ describe("IssueReferences.review regressions", () => {
 		assert.deepStrictEqual(R.values(ClosingKeyword.Enum), [...CLOSING_KEYWORDS]);
 		for (const keyword of CLOSING_KEYWORDS) {
 			assert.isTrue(S.is(ClosingKeyword)(keyword));
-			assert.deepStrictEqual(R.get<string, ClosingKeyword>(ClosingKeyword.Enum, keyword), O.some(keyword));
+			assertSome(R.get<string, ClosingKeyword>(ClosingKeyword.Enum, keyword), keyword);
 		}
 	});
 
@@ -117,9 +118,9 @@ describe("IssueReferences.review regressions", () => {
 	it("rejects invalid keywords and prototype names in both parser dialects", () => {
 		for (const keyword of ["nope", "xfixes", "reference", "refs", "constructor", "toString", "hasOwnProperty", "__proto__", "valueOf"]) {
 			assert.isFalse(S.is(ClosingKeyword)(keyword), keyword);
-			assert.deepStrictEqual(R.get<string, ClosingKeyword>(ClosingKeyword.Enum, keyword), O.none(), keyword);
+			assert.doesNotThrow(() => assertNone(R.get<string, ClosingKeyword>(ClosingKeyword.Enum, keyword)), keyword);
 			assert.deepStrictEqual(harvestIssueReferences(`${keyword} #1`), [], keyword);
-			assert.deepStrictEqual(parseBareLineReference(`${keyword}: #1`), O.none(), keyword);
+			assert.doesNotThrow(() => assertNone(parseBareLineReference(`${keyword}: #1`)), keyword);
 		}
 	});
 
@@ -159,7 +160,7 @@ describe("IssueReferences.parseBareLineReference", () => {
 				`${keyword.toUpperCase()} #7`,
 			]) {
 				const parsed = parseBareLineReference(line);
-				assert.isTrue(O.isSome(parsed), line);
+				assert.doesNotThrow(() => assertSome(parsed, O.getOrThrow(parsed)), line);
 				const reference = O.getOrThrow(parsed);
 				assert.strictEqual(reference.keyword, keyword, line);
 				assert.strictEqual(reference.issueNumber, 7, line);
@@ -185,12 +186,13 @@ describe("IssueReferences.parseBareLineReference", () => {
 			"fixes\n#12", // an embedded newline means this was never one line
 			"", // an empty line carries nothing
 		];
-		for (const line of negatives) assert.isTrue(O.isNone(parseBareLineReference(line)), line);
+		for (const line of negatives) assert.doesNotThrow(() => assertNone(parseBareLineReference(line)), line);
 	});
 
 	it("rejects a number past Number.MAX_SAFE_INTEGER rather than rounding it", () => {
-		assert.isTrue(O.isNone(parseBareLineReference("fixes #9007199254740993")));
-		assert.isTrue(O.isSome(parseBareLineReference(`fixes #${Number.MAX_SAFE_INTEGER}`)));
+		assertNone(parseBareLineReference("fixes #9007199254740993"));
+		const parsed = parseBareLineReference(`fixes #${Number.MAX_SAFE_INTEGER}`);
+		assertSome(parsed, O.getOrThrow(parsed));
 	});
 });
 

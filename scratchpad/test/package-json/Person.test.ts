@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertExitSuccess, assertNone, assertTrue } from "@effect/vitest/utils";
 import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -113,7 +113,7 @@ describe("Person wire-form preservation", () => {
 			// read in, so the canonical object form wins.
 			const person = yield* S.decodeEffect(Person.FromValue)("Ann <ann@x.dev>");
 			const edited = Person.make({ ...person, email: "new@x.dev" });
-			assert.isTrue(O.isNone(Person.wireStringOf(edited)));
+			assertNone(Person.wireStringOf(edited));
 			assert.deepStrictEqual(yield* S.encodeUnknownEffect(Person.FromValue)(edited), {
 				name: "Ann",
 				email: "new@x.dev",
@@ -136,14 +136,14 @@ describe("Person wire-form preservation", () => {
 			const fromString = yield* S.decodeEffect(Person.FromValue)("Ann <ann@x.dev>");
 			const fromObject = yield* S.decodeEffect(Person.FromValue)({ name: "Ann", email: "ann@x.dev" });
 			assert.deepStrictEqual(Person.wireStringOf(fromString), O.some("Ann <ann@x.dev>"));
-			assert.isTrue(O.isNone(Person.wireStringOf(fromObject)));
+			assertNone(Person.wireStringOf(fromObject));
 		}),
 	);
 
 	it.effect("still rejects a malformed person object", () =>
 		Effect.gen(function* () {
-			const result = yield* Effect.result(S.decodeEffect(Person.FromValue)({ name: 123 }));
-			assert.isTrue(result._tag === "Failure");
+			const result = yield* S.decodeEffect(Person.FromValue)({ name: 123 }).pipe(Effect.flip, Effect.asVoid, Effect.exit);
+			assertExitSuccess(result, undefined);
 		}),
 	);
 

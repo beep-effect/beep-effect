@@ -4,6 +4,7 @@
 // contract (error-kind tokens in the success array, never a failure).
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -12,8 +13,8 @@ import { YamlToken, YamlTokens } from "../../effected/yaml/index.ts";
 
 const tokensOf = (text: string): ReadonlyArray<YamlToken> => {
 	const result = YamlTokens.tokenize(text);
-	assert.isTrue(Result.isSuccess(result));
-	return Result.isSuccess(result) ? result.success : [];
+	assertSuccess(result, Result.getOrThrow(result));
+	return result.success;
 };
 
 describe("YamlTokens", () => {
@@ -61,7 +62,7 @@ describe("YamlTokens", () => {
 			// The reserved failure channel must not fire — linting has to run on
 			// documents that do not parse (parse-validity exists for exactly that).
 			const result = YamlTokens.tokenize("a: [unclosed\n\tb:\t:");
-			assert.isTrue(Result.isSuccess(result));
+			assertSuccess(result, Result.getOrThrow(result));
 		});
 
 		it("tokenizes the empty string to an empty array", () => {

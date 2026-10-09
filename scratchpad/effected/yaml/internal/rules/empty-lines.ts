@@ -4,6 +4,7 @@
 // skipped. The fix deletes the excess lines surgically.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
 import { YamlEdit } from "../../YamlEdit.ts";
@@ -25,7 +26,8 @@ const $I = $ScratchpadId.create("effected/yaml/internal/rules/empty-lines");
  * **Example** (Decode empty-lines options)
  *
  * ```ts
- * import * as S from "effect/Schema";
+ * import * as A from "effect/Array";
+import * as S from "effect/Schema";
  * import { emptyLinesOptions } from "@beep/scratchpad/effected/yaml/internal/rules/empty-lines";
  *
  * const options = S.decodeUnknownSync(emptyLinesOptions)({ max: 1, maxStart: 0, maxEnd: 0 });
@@ -115,37 +117,35 @@ export const emptyLines: YamlRule = {
 			}
 			// A run of blank lines [i, end).
 			let end = i;
-			while (end < lines.length && (lines[end]?.text ?? "x") === "") end++;
+			while (end < lines.length && A.getUnsafe(lines, end).text === "") end++;
 			const runLength = end - i;
 			const atStart = i === 0;
 			const atEnd = end === lines.length;
 			const allowed = atStart ? maxStart : atEnd ? maxEnd : max;
 			if (runLength > allowed) {
-				const firstExcess = lines[i + allowed];
-				const lastBlank = lines[end - 1];
-				if (firstExcess !== undefined && lastBlank !== undefined) {
-					// Delete from the first excess blank line's start through the
-					// last blank line's terminator — derived from the NEXT line's
-					// offset (or the text end) so a CRLF terminator goes whole.
-					const nextLine = lines[end];
-					const deleteEnd = nextLine !== undefined ? nextLine.offset : ctx.text.length;
-					out.push(
-						YamlLintDiagnostic.make({
-							rule: "empty-lines",
-							severity: "error",
-							message: `Too many consecutive blank lines (${runLength} > ${allowed})`,
+				// The excess index is inside the scanned run: allowed < runLength.
+				const firstExcess = A.getUnsafe(lines, i + allowed);
+				// Delete from the first excess blank line's start through the
+				// last blank line's terminator — derived from the NEXT line's
+				// offset (or the text end) so a CRLF terminator goes whole.
+				const nextLine = lines[end];
+				const deleteEnd = nextLine !== undefined ? nextLine.offset : ctx.text.length;
+				out.push(
+					YamlLintDiagnostic.make({
+						rule: "empty-lines",
+						severity: "error",
+						message: `Too many consecutive blank lines (${runLength} > ${allowed})`,
+						offset: firstExcess.offset,
+						length: deleteEnd - firstExcess.offset,
+						line: firstExcess.number,
+						character: 0,
+						fix: YamlEdit.make({
 							offset: firstExcess.offset,
 							length: deleteEnd - firstExcess.offset,
-							line: firstExcess.number,
-							character: 0,
-							fix: YamlEdit.make({
-								offset: firstExcess.offset,
-								length: deleteEnd - firstExcess.offset,
-								content: "",
-							}),
+							content: "",
 						}),
-					);
-				}
+					}),
+				);
 			}
 			i = end;
 		}
@@ -168,7 +168,7 @@ export const emptyLines: YamlRule = {
 				continue;
 			}
 			let end = i;
-			while (end < lines.length && (lines[end]?.text ?? "x") === "") end++;
+			while (end < lines.length && A.getUnsafe(lines, end).text === "") end++;
 			if (i !== 0 && end !== lines.length && end - i > longest) longest = end - i;
 			i = end;
 		}

@@ -127,7 +127,7 @@ function composeBlockMapInner(
 	// larger column, but the property column is what matters for validating
 	// continuation-line indentation.
 	const extKeyOffset =
-		externalFirstKey !== undefined && "offset" in externalFirstKey ? externalFirstKey.offset : undefined;
+		externalFirstKey?.offset;
 	const extKeyCol = extKeyOffset !== undefined ? lineIndentColumn(state.text, extKeyOffset) : undefined;
 	const items = flattenBlockMapChildren(children, state, extKeyCol, extKeyOffset);
 
@@ -143,11 +143,7 @@ function composeBlockMapInner(
 	checkMultilineImplicitKeys(pairs, state);
 
 	const offset =
-		externalFirstKey !== undefined
-			? "offset" in externalFirstKey
-				? externalFirstKey.offset
-				: blockMapCst.offset
-			: blockMapCst.offset;
+		externalFirstKey?.offset ?? blockMapCst.offset;
 	const end = trimDisownedTrailingComments(
 		state.text,
 		offset,
@@ -453,16 +449,16 @@ export const flattenBlockMapChildren: {
 				// there's no matching `:` at `qCol` but there IS a `:` at a
 				// deeper column, the entire slice forms a compact inline
 				// implicit map that IS the explicit key.
-				const lookahead = scanExplicitKeyShape(children, i, qCol, state.text);
+				const lookahead = scanExplicitKeyShape(children, i, qCol, state.text, child.offset);
 				if (lookahead.kind === "inline-implicit-map") {
 					const sliceChildren = children.slice(i + 1, lookahead.endIdx);
 					const innerItems = flattenBlockMapChildren(sliceChildren, state);
 					const innerPairs: YamlPair[] = [];
 					const innerTrailing = buildPairs(innerItems, innerPairs, state.text);
-					const firstC = findFirstContent(sliceChildren);
-					const lastC = findLastContent(sliceChildren);
-					const innerOffset = firstC !== undefined ? firstC.offset : child.offset;
-					const innerEnd = lastC !== undefined ? lastC.offset + lastC.length : child.offset + child.length;
+					const firstC = O.getOrThrow(O.fromUndefinedOr(findFirstContent(sliceChildren)));
+					const lastC = O.getOrThrow(O.fromUndefinedOr(findLastContent(sliceChildren)));
+					const innerOffset = firstC.offset;
+					const innerEnd = lastC.offset + lastC.length;
 					const innerMap = YamlMap.make({
 						items: innerPairs,
 						style: "block",
@@ -1119,8 +1115,8 @@ export const buildPairs: {
 			continue;
 		}
 		if (item.kind === "comment") {
-			const cOff = item.offset ?? -1;
-			const cText = item.comment ?? "";
+			const cOff = item.offset;
+			const cText = item.comment;
 			// Own-line vs trailing is decided purely from the comment's own
 			// line (content before it or not) — span-based checks mislead when
 			// a preceding block collection's span over-extends.
@@ -1153,7 +1149,7 @@ export const buildPairs: {
 		}
 		if (item.kind === "value-sep") {
 			// value-sep without preceding key: implicit null key
-			const valueSepOffset = item.offset ?? 0;
+			const valueSepOffset = item.offset;
 			i++;
 			const pendingFields = takePendingFields(valueSepOffset);
 			// Peek ahead: if the next non-comment node is followed by a
@@ -1184,15 +1180,15 @@ export const buildPairs: {
 			}
 			continue;
 		}
-		if (item.kind === "node" || item.kind === "key") {
+		{
 			let keyNode = item.node;
 			i++;
 			// For explicit key markers (? in flow), consume the next node as the key
 			if (item.kind === "key" && keyNode === undefined) {
 				while (i < items.length && items[i]?.kind === "comment") i++;
-				if (i < items.length && items[i]?.kind === "node") {
-					const next = items[i];
-					keyNode = next?.kind === "node" ? next.node : undefined;
+				const next = items[i];
+				if (next?.kind === "node") {
+					keyNode = next.node;
 					i++;
 				}
 			}
@@ -1202,19 +1198,18 @@ export const buildPairs: {
 			// attach to the pair's trailing comment — they have no own construct
 			// in the pair model.
 			let pairTrailing: string | undefined;
-			while (i < items.length && items[i]?.kind === "comment") {
+			while (i < items.length) {
 				const commentItem = items[i];
-				const c = commentItem?.kind === "comment" ? commentItem.comment : undefined;
-				if (c !== undefined) pairTrailing = joinComments(pairTrailing, c);
+				if (commentItem?.kind !== "comment") break;
+				pairTrailing = joinComments(pairTrailing, commentItem.comment);
 				i++;
 			}
 			const keyOrNull = (): YamlNode =>
 				keyNode ?? YamlScalar.make({ value: null, style: "plain", offset: 0, length: 0 });
 			// Look for value-sep
-			if (i < items.length && items[i]?.kind === "value-sep") {
-				const separator = items[i];
-				const sepOffset =
-					separator?.kind === "value-sep" ? separator.offset : keyNode !== undefined ? nodeEnd(keyNode) : 0;
+			const separator = items[i];
+			if (separator?.kind === "value-sep") {
+				const sepOffset = separator.offset;
 				i++; // skip value-sep
 				const valueResult = consumeValueNode(items, i, text, sepOffset);
 				if (valueResult !== null) {
@@ -1255,7 +1250,6 @@ export const buildPairs: {
 			}
 			continue;
 		}
-		i++;
 	}
 	// Own-line comments after the last pair: terminal comments at (or beyond)
 	// the mapping's content column become the collection's trailing comment;
@@ -1336,7 +1330,6 @@ function consumeValueNode(
 		candidate?.kind === "node" &&
 		peek + 1 < items.length &&
 		items[peek + 1]?.kind === "value-sep" &&
-		candidate.node !== undefined &&
 		text.slice(sepOffset, candidate.node.offset).includes("\n")
 	) {
 		return null;
@@ -1351,8 +1344,8 @@ function consumeValueNode(
 		const item = items[i];
 		if (item === undefined) break;
 		if (item.kind === "comment") {
-			const cText = item.comment ?? "";
-			if (item.offset !== undefined && sameLineSpan(text, sepOffset, item.offset)) {
+			const cText = item.comment;
+			if (sameLineSpan(text, sepOffset, item.offset)) {
 				sameLineComments.push(cText);
 			} else {
 				if (firstOwnLineIdx < 0) firstOwnLineIdx = i;
@@ -1368,7 +1361,7 @@ function consumeValueNode(
 			// what lets both source shapes round-trip — a key-line comment and a
 			// comment on its own line above the value are different bytes and
 			// must stay different fields.
-			return { node: item.node ?? null, nextIdx: i + 1, sameLineComments, leadingComments };
+			return { node: item.node, nextIdx: i + 1, sameLineComments, leadingComments };
 		}
 		break;
 	}
@@ -1409,7 +1402,7 @@ function consumeValueNodeForNullKey(
 		const item = items[i];
 		if (item === undefined) break;
 		if (item.kind === "comment") {
-			if (firstOwnLineIdx < 0 && item.offset !== undefined && !sameLineSpan(text, valueSepOffset, item.offset)) {
+			if (firstOwnLineIdx < 0 && !sameLineSpan(text, valueSepOffset, item.offset)) {
 				firstOwnLineIdx = i;
 			}
 			i++;
@@ -1419,14 +1412,14 @@ function consumeValueNodeForNullKey(
 			if (i + 1 < items.length && items[i + 1]?.kind === "value-sep") {
 				// Check if the candidate node is on a different line from the
 				// null key's value-sep. Only refuse to consume cross-line nodes.
-				const nodeOffset = item.node !== undefined && "offset" in item.node ? item.node.offset : 0;
+				const nodeOffset = item.node.offset;
 				const hasNewline = text.slice(valueSepOffset, nodeOffset).includes("\n");
 				if (hasNewline) {
 					// Cross-line: this node is a key for the next pair, not our value.
 					break;
 				}
 			}
-			return { node: item.node ?? null, nextIdx: i + 1 };
+			return { node: item.node, nextIdx: i + 1 };
 		}
 		break;
 	}
@@ -1552,9 +1545,9 @@ function scanExplicitKeyShape(
 	qIdx: number,
 	qCol: number,
 	text: string,
+	qOffset: number,
 ): { kind: "terminated"; matchIdx: number } | { kind: "inline-implicit-map"; endIdx: number } | { kind: "simple" } {
-	const qChild = children[qIdx];
-	const qLine = qChild !== undefined ? lineCol(text, qChild.offset).line : -1;
+	const qLine = lineCol(text, qOffset).line;
 	let inlineColonOnQLine = false;
 	let endIdx = children.length;
 	for (let j = qIdx + 1; j < children.length; j++) {
@@ -1699,7 +1692,7 @@ export const checkMultilineImplicitKeys: {
 		let j = i + 1;
 		while (j < items.length && items[j]?.kind === "comment") j++;
 		const next = items[j];
-		if (next?.kind !== "value-sep" || next.offset === undefined) continue;
+		if (next?.kind !== "value-sep") continue;
 		const keyEndLine = lineCol(state.text, node.offset + node.length - 1).line;
 		const sepLine = lineCol(state.text, next.offset).line;
 		if (keyEndLine !== sepLine) {
@@ -2018,9 +2011,6 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 		pending.push({ text: cText, offset: cOff, blankAbove: blankAbove && pending.length > 0 });
 	};
 	const items = {
-		get length(): number {
-			return rawItems.length;
-		},
 		push(node: YamlNode): void {
 			let commentBefore = joinPending(pending);
 			if (node.length > 0 && hasBlankLineAbove(state.text, node.offset)) {
@@ -2063,9 +2053,9 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 		}
 		if (child.type === "comment") {
 			const cText = rawCommentText(child.source);
-			if (rawItems.length > 0 && !isOwnLineAt(state.text, child.offset)) {
-				const prev = rawItems[rawItems.length - 1];
-				if (prev !== undefined) rawItems[rawItems.length - 1] = withCommentFields(prev, { comment: cText });
+			if (A.isArrayNonEmpty(rawItems) && !isOwnLineAt(state.text, child.offset)) {
+				const prev = A.lastNonEmpty(rawItems);
+				rawItems[rawItems.length - 1] = withCommentFields(prev, { comment: cText });
 			} else {
 				acceptOwnLineComment(cText, child.offset);
 			}
@@ -2366,7 +2356,7 @@ export const composeFlatBlockMap: {
 	if (state.options.uniqueKeys) checkDuplicateKeys(pairs, state);
 	checkMultilineImplicitKeys(pairs, state);
 
-	const offset = "offset" in externalFirstKey ? externalFirstKey.offset : parentCst.offset;
+	const offset = externalFirstKey.offset;
 	const end = trimDisownedTrailingComments(
 		state.text,
 		offset,

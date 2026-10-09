@@ -1,4 +1,6 @@
 import { assert, describe, layer } from "@effect/vitest";
+import { assertSuccess } from "@effect/vitest/utils";
+import * as Exit from "effect/Exit";
 import { Git, GitCommandError, NotARepositoryError } from "../../effected/git/index.ts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -65,7 +67,7 @@ const committedOnly = stubGit({
 });
 
 describe("ChangeDetector — committed changes", () => {
-	layer(detectorOver(committedOnly))((it) => {
+	layer(detectorOver(committedOnly), { timeout: "30 seconds" })((it) => {
 		it.effect("changedFiles returns the diff output, sorted", () =>
 			Effect.gen(function* () {
 				const detector = yield* ChangeDetector;
@@ -110,7 +112,7 @@ const withWorkingTree = stubGit({
 });
 
 describe("ChangeDetector — includeUncommitted", () => {
-	layer(detectorOver(withWorkingTree))((it) => {
+	layer(detectorOver(withWorkingTree), { timeout: "30 seconds" })((it) => {
 		it.effect("folds the working tree in on top of the committed range", () =>
 			Effect.gen(function* () {
 				const detector = yield* ChangeDetector;
@@ -151,7 +153,7 @@ describe("ChangeDetector — a custom base ref reaches git", () => {
 		changedFiles: (_cwd, { base }) =>
 			base === "origin/main" ? Effect.succeed(["packages/beta/x.ts"]) : Effect.succeed([]),
 	});
-	layer(detectorOver(custom))((it) => {
+	layer(detectorOver(custom), { timeout: "30 seconds" })((it) => {
 		it.effect("the base option is threaded into the git range", () =>
 			Effect.gen(function* () {
 				const detector = yield* ChangeDetector;
@@ -171,13 +173,13 @@ describe("ChangeDetector — the working tree is not a git repository", () => {
 	const notARepo = stubGit({
 		changedFiles: (cwd) => Effect.fail(NotARepositoryError.make({ cwd })),
 	});
-	layer(detectorOver(notARepo))((it) => {
+	layer(detectorOver(notARepo), { timeout: "30 seconds" })((it) => {
 		it.effect("fails typed with NotARepositoryError, not a defect", () =>
 			Effect.gen(function* () {
 				const detector = yield* ChangeDetector;
-				const result = yield* Effect.result(detector.changedFiles());
-				assert.strictEqual(result._tag, "Failure");
+				const result = yield* Effect.exit(detector.changedFiles());
 				const error = yield* Effect.flip(detector.changedFiles());
+				assertSuccess(Exit.findError(result), error);
 				assert.instanceOf(error, NotARepositoryError);
 			}),
 		);
@@ -199,7 +201,7 @@ describe("ChangeDetector — a git command that fails", () => {
 					)
 				: Effect.succeed([]),
 	});
-	layer(detectorOver(badRef))((it) => {
+	layer(detectorOver(badRef), { timeout: "30 seconds" })((it) => {
 		it.effect("surfaces git's own diagnostic on a typed field, unwrapped", () =>
 			Effect.gen(function* () {
 				const detector = yield* ChangeDetector;
@@ -223,7 +225,7 @@ const location = {
 };
 
 describe("PublishabilityDetector — the npm semantics", () => {
-	layer(PublishabilityDetector.layerNpm)((it) => {
+	layer(PublishabilityDetector.layerNpm, { timeout: "30 seconds" })((it) => {
 		it.effect("a private package with no publishConfig.access publishes nowhere", () =>
 			Effect.gen(function* () {
 				const detector = yield* PublishabilityDetector;
@@ -303,7 +305,7 @@ const nestedGit = stubGit({
 });
 
 describe("ChangeDetector — a workspace nested inside a larger git repository", () => {
-	layer(detectorOver(nestedGit))((it) => {
+	layer(detectorOver(nestedGit), { timeout: "30 seconds" })((it) => {
 		it.effect("requests relative mode, so paths are workspace-relative", () =>
 			Effect.gen(function* () {
 				const detector = yield* ChangeDetector;

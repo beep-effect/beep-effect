@@ -5,6 +5,7 @@
 // path, hang, unref observation, and the loud pipeline refusal.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertExitFailure } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -137,7 +138,8 @@ describe("ScriptedSpawner.make", () => {
 			const spawner = ScriptedSpawner.make(() => ({}));
 			const piped = ChildProcess.pipeTo(cmd("producer"), cmd("consumer"));
 			const exit = yield* Effect.exit(Run.collect(piped).pipe(withLayer(spawner.layer)));
-			assert.isTrue(Exit.isFailure(exit));
+			if (Exit.isSuccess(exit)) assert.fail("expected a defect from a piped command");
+			assertExitFailure(exit, exit.cause);
 			if (Exit.isFailure(exit)) {
 				assert.isFalse(exit.cause.reasons.some(Cause.isFailReason), "must be a die, never a typed failure");
 				assert.isTrue(Cause.hasDies(exit.cause));

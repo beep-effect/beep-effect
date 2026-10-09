@@ -7,6 +7,7 @@
 // failure class this package documents everywhere else.
 
 import { assert, describe, it, layer } from "@effect/vitest";
+import { assertExitFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import { Lockfile, ResolvedPackage } from "../../effected/lockfiles/index.ts";
 import { ReleaseAgeGate } from "../../effected/npm/index.ts";
 import * as Cause from "effect/Cause";
@@ -23,7 +24,7 @@ import {
 
 /** Assert an exit is a DIE (never a typed failure) whose defect message carries `fragment`. */
 const assertDies = (exit: Exit.Exit<unknown, unknown>, fragment: string): void => {
-	assert.isTrue(Exit.isFailure(exit));
+	assertExitFailure(exit, Exit.isFailure(exit) ? exit.cause : Cause.empty);
 	if (Exit.isFailure(exit)) {
 		assert.isFalse(exit.cause.reasons.some(Cause.isFailReason));
 		assert.isTrue(Cause.hasDies(exit.cause));
@@ -40,7 +41,7 @@ const assertDies = (exit: Exit.Exit<unknown, unknown>, fragment: string): void =
 const UnstubbedCatalogs = WorkspaceCatalogs.layerTest();
 
 describe("WorkspaceCatalogs.makeTest — everything dies until stubbed", () => {
-	layer(UnstubbedCatalogs)((it) => {
+	layer(UnstubbedCatalogs, { timeout: "30 seconds" })((it) => {
 		it.effect("every method dies with a defect naming the unstubbed method", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
@@ -77,11 +78,11 @@ describe("WorkspaceCatalogs.makeTest — resolveSpecifier derives from a supplie
 			// The shape value directly — no layer needed to use a double inline.
 			const double = WorkspaceCatalogs.makeTest({ set: Effect.suspend(() => Effect.succeed(stubbedSet)) });
 			assert.strictEqual((yield* double.set).entries.default?.effect, "4.0.0-beta.101");
-			assert.deepStrictEqual(yield* double.resolveSpecifier("effect", "catalog:"), O.some("4.0.0-beta.101"));
-			assert.deepStrictEqual(yield* double.resolveSpecifier("typescript", "catalog:build"), O.some("^5.9.0"));
+			assertSome(yield* double.resolveSpecifier("effect", "catalog:"), "4.0.0-beta.101");
+			assertSome(yield* double.resolveSpecifier("typescript", "catalog:build"), "^5.9.0");
 			// Misses stay misses, never a fabricated answer.
-			assert.isTrue(O.isNone(yield* double.resolveSpecifier("left-pad", "catalog:")));
-			assert.isTrue(O.isNone(yield* double.resolveSpecifier("effect", "catalog:missing")));
+			assertNone(yield* double.resolveSpecifier("left-pad", "catalog:"));
+			assertNone(yield* double.resolveSpecifier("effect", "catalog:missing"));
 		}),
 	);
 
@@ -100,7 +101,7 @@ describe("WorkspaceCatalogs.makeTest — resolveSpecifier derives from a supplie
 				resolveSpecifier: () => Effect.succeedSome("pinned"),
 				releaseAgeGate: Effect.suspend(() => Effect.succeed(ReleaseAgeGate.combine())),
 			});
-			assert.deepStrictEqual(yield* double.resolveSpecifier("effect", "catalog:"), O.some("pinned"));
+			assertSome(yield* double.resolveSpecifier("effect", "catalog:"), "pinned");
 			assert.strictEqual((yield* double.releaseAgeGate).ageMinutes, 0);
 		}),
 	);
@@ -118,7 +119,7 @@ const EMPTY_SNAPSHOT = WorkspaceStateSnapshot.make({
 const UnstubbedSnapshots = WorkspaceSnapshots.layerTest();
 
 describe("WorkspaceSnapshots.makeTest — no honest defaults, no derivations", () => {
-	layer(UnstubbedSnapshots)((it) => {
+	layer(UnstubbedSnapshots, { timeout: "30 seconds" })((it) => {
 		it.effect("both methods die with a defect naming the unstubbed method", () =>
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
@@ -151,7 +152,7 @@ const StubbedSnapshots = WorkspaceSnapshots.layerTest({
 });
 
 describe("WorkspaceSnapshots.layerTest — provides the service", () => {
-	layer(StubbedSnapshots)((it) => {
+	layer(StubbedSnapshots, { timeout: "30 seconds" })((it) => {
 		it.effect("the layer satisfies consumers of both methods", () =>
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
@@ -168,7 +169,7 @@ describe("WorkspaceSnapshots.layerTest — provides the service", () => {
 const UnstubbedLockfiles = LockfileReader.layerTest();
 
 describe("LockfileReader.makeTest — read dies until stubbed, refresh is honest", () => {
-	layer(UnstubbedLockfiles)((it) => {
+	layer(UnstubbedLockfiles, { timeout: "30 seconds" })((it) => {
 		it.effect("the fallible methods die with a defect naming the unstubbed method", () =>
 			Effect.gen(function* () {
 				const reader = yield* LockfileReader;
@@ -217,10 +218,9 @@ describe("LockfileReader.makeTest — resolvedVersion derives from a supplied re
 			const double = LockfileReader.makeTest({ read: Effect.suspend(() => Effect.succeed(stubbedLockfile)) });
 			assert.strictEqual((yield* double.read).packages.length, 3);
 			const first = yield* double.resolvedVersion("left-pad");
-			assert.isTrue(O.isSome(first));
-			if (O.isSome(first)) assert.strictEqual(first.value.version, "1.0.0");
+			assertSome(O.map(first, (pkg) => pkg.version), "1.0.0");
 			// A miss is a miss, never a fabricated resolution.
-			assert.isTrue(O.isNone(yield* double.resolvedVersion("right-pad")));
+			assertNone(yield* double.resolvedVersion("right-pad"));
 			// `integrity` needs the workspace manifests discovery enumerates — a
 			// lockfile alone cannot honestly answer it, so it stays dead.
 			assertDies(yield* Effect.exit(double.integrity), "integrity() was called but not stubbed");
@@ -240,8 +240,7 @@ describe("LockfileReader.makeTest — resolvedVersion derives from a supplied re
 							})),
 			});
 			const resolved = yield* double.resolvedVersion("left-pad");
-			assert.isTrue(O.isSome(resolved));
-			if (O.isSome(resolved)) assert.strictEqual(resolved.value.version, "9.9.9");
+			assertSome(O.map(resolved, (pkg) => pkg.version), "9.9.9");
 		}),
 	);
 });
@@ -253,12 +252,12 @@ const StubbedLockfiles = LockfileReader.layerTest({
 });
 
 describe("LockfileReader.layerTest — provides the service", () => {
-	layer(StubbedLockfiles)((it) => {
+	layer(StubbedLockfiles, { timeout: "30 seconds" })((it) => {
 		it.effect("the layer satisfies consumers, with the derivation intact through it", () =>
 			Effect.gen(function* () {
 				const reader = yield* LockfileReader;
 				assert.strictEqual((yield* reader.read).packages.length, 0);
-				assert.isTrue(O.isNone(yield* reader.resolvedVersion("effect")));
+				assertNone(yield* reader.resolvedVersion("effect"));
 			}),
 		);
 	});

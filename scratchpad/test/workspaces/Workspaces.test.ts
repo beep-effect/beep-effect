@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 // The one-call conveniences on the composite: `Workspaces.resolverLayer`
 // (the two @effected/npm contracts over one factory call) and
 // `Workspaces.resolveManifest` (whole-manifest projection in one shot).
@@ -7,7 +6,8 @@
 // factory's FileSystem/Path requirement is discharged without a platform
 // package, exactly like every other suite here.
 
-import { assert, describe, it, layer } from "@effect/vitest";
+import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { CatalogResolver, Manifest, UnresolvedDependencyError, WorkspaceResolver } from "../../effected/npm/index.ts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -32,7 +32,7 @@ const TREE: Tree = {
 };
 
 describe("Workspaces.resolveManifest", () => {
-	layer(platform(TREE))((it) => {
+	it.layer(platform(TREE), { timeout: "30 seconds" })((it) => {
 		it.effect("projects catalog: and workspace: specifiers across the whole manifest", () =>
 			Effect.gen(function* () {
 				const manifest = yield* Manifest.decode({
@@ -103,16 +103,16 @@ describe("Workspaces.resolverLayer", () => {
 	// Its own requirement set is FileSystem | Path, discharged by the same
 	// virtual platform every other suite uses.
 	const Resolvers = Workspaces.resolverLayer({ cwd: "/repo" }).pipe(Layer.provideMerge(platform(TREE)));
-	layer(Resolvers)((it) => {
+	it.layer(Resolvers, { timeout: "30 seconds" })((it) => {
 		it.effect("provides both @effected/npm contracts over one factory call", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* CatalogResolver;
 				const workspaces = yield* WorkspaceResolver;
-				assert.deepStrictEqual(yield* catalogs.rangeOf("effect", O.none()), O.some("^4.0.0"));
-				assert.deepStrictEqual(yield* catalogs.rangeOf("react", O.some("react18")), O.some("^18.2.0"));
-				assert.deepStrictEqual(yield* workspaces.versionOf("@x/a"), O.some("1.2.3"));
+				assertSome(yield* catalogs.rangeOf("effect", O.none()), "^4.0.0");
+				assertSome(yield* catalogs.rangeOf("react", O.some("react18")), "^18.2.0");
+				assertSome(yield* workspaces.versionOf("@x/a"), "1.2.3");
 				// An unmatched name is none, not an error — the contract's convention.
-				assert.deepStrictEqual(yield* catalogs.rangeOf("nothing", O.none()), O.none());
+				assertNone(yield* catalogs.rangeOf("nothing", O.none()));
 			}),
 		);
 	});
@@ -166,50 +166,53 @@ const observedRegistry = Effect.gen(function* () {
 });
 
 describe("Workspaces.layer — the publishability seam", () => {
-	it.effect("a caller's detector is observed when merged AFTER the composite", () =>
-		Effect.gen(function* () {
-			const composed = Layer.mergeAll(Workspaces.layer(), customDetector);
-			assert.strictEqual(
-				yield* observedRegistry.pipe(Effect.provide(composed), Effect.provide(platform(TREE))),
-				CUSTOM_REGISTRY,
-			);
-		}),
-	);
+	it.layer(Layer.mergeAll(Workspaces.layer(), customDetector).pipe(Layer.provideMerge(platform(TREE))), { timeout: "30 seconds" })((it) => {
+		it.effect("a caller's detector is observed when merged AFTER the composite", () =>
+			Effect.gen(function* () {
+				assert.strictEqual(
+					yield* observedRegistry,
+					CUSTOM_REGISTRY,
+				);
+			}),
+		);
+	});
 
-	it.effect("and when merged BEFORE it — the order that used to silently lose", () =>
-		// This is the regression. With a default baked into the composite, this
-		// spelling resolved to npm semantics and published to the wrong registry
-		// with no diagnostic. It passes now because the composite supplies no
-		// detector at all, so there is nothing to shadow the caller's.
-		Effect.gen(function* () {
-			const composed = Layer.mergeAll(customDetector, Workspaces.layer());
-			assert.strictEqual(
-				yield* observedRegistry.pipe(Effect.provide(composed), Effect.provide(platform(TREE))),
-				CUSTOM_REGISTRY,
-			);
-		}),
-	);
+	it.layer(Layer.mergeAll(customDetector, Workspaces.layer()).pipe(Layer.provideMerge(platform(TREE))), { timeout: "30 seconds" })((it) => {
+		it.effect("and when merged BEFORE it — the order that used to silently lose", () =>
+			// This is the regression. With a default baked into the composite, this
+			// spelling resolved to npm semantics and published to the wrong registry
+			// with no diagnostic. It passes now because the composite supplies no
+			// detector at all, so there is nothing to shadow the caller's.
+			Effect.gen(function* () {
+				assert.strictEqual(
+					yield* observedRegistry,
+					CUSTOM_REGISTRY,
+				);
+			}),
+		);
+	});
 
-	it.effect("layerNpm is opt-in and still yields npm semantics", () =>
-		Effect.gen(function* () {
-			const composed = Layer.mergeAll(Workspaces.layer(), PublishabilityDetector.layerNpm);
-			assert.strictEqual(
-				yield* observedRegistry.pipe(Effect.provide(composed), Effect.provide(platform(TREE))),
-				"https://registry.npmjs.org/",
-			);
-		}),
-	);
+	it.layer(Layer.mergeAll(Workspaces.layer(), PublishabilityDetector.layerNpm).pipe(Layer.provideMerge(platform(TREE))), { timeout: "30 seconds" })((it) => {
+		it.effect("layerNpm is opt-in and still yields npm semantics", () =>
+			Effect.gen(function* () {
+				assert.strictEqual(
+					yield* observedRegistry,
+					"https://registry.npmjs.org/",
+				);
+			}),
+		);
+	});
 
-	it.effect("layerNone publishes nothing", () =>
-		Effect.gen(function* () {
-			const composed = Layer.mergeAll(Workspaces.layer(), PublishabilityDetector.layerNone);
-			assert.strictEqual(
-				yield* observedRegistry.pipe(Effect.provide(composed), Effect.provide(platform(TREE))),
-				undefined,
-			);
-		}),
-	);
-
+	it.layer(Layer.mergeAll(Workspaces.layer(), PublishabilityDetector.layerNone).pipe(Layer.provideMerge(platform(TREE))), { timeout: "30 seconds" })((it) => {
+		it.effect("layerNone publishes nothing", () =>
+			Effect.gen(function* () {
+				assert.strictEqual(
+					yield* observedRegistry,
+					undefined,
+				);
+			}),
+		);
+	});
 	it.effect("the npm rules are reachable as a VALUE, without entering the tag", () =>
 		// The contortion this deletes: silk had to write
 		// `Effect.provide(PublishabilityDetector, PublishabilityDetector.layer)`

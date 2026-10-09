@@ -8,8 +8,9 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
-import { assertDefined, assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertExitSuccess, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -71,13 +72,13 @@ describe("Lockfile.parse", () => {
 				// The instance-id index answers the same object a scan would, so a
 				// consumer walking resolved edges need not rebuild the map itself.
 				const byId = lockfile.packageByInstanceId(chalk[0]?.instanceId ?? "");
-				assert.isTrue(O.isSome(byId));
+				assertSome(O.map(byId, (pkg) => pkg.name), "chalk");
 				assert.strictEqual(O.getOrUndefined(byId)?.name, "chalk");
 
 				// A miss is None, not a throw and not a stray object member.
-				assert.isTrue(O.isNone(lockfile.packageByInstanceId("nope@0.0.0")));
-				assert.isTrue(O.isNone(lockfile.packageByInstanceId("__proto__")));
-				assert.isTrue(O.isNone(lockfile.packageByInstanceId("constructor")));
+				assertNone(lockfile.packageByInstanceId("nope@0.0.0"));
+				assertNone(lockfile.packageByInstanceId("__proto__"));
+				assertNone(lockfile.packageByInstanceId("constructor"));
 
 				assert.strictEqual(lockfile.workspaceDependencies.length, 1);
 				const edge = lockfile.workspaceDependencies[0];
@@ -1786,21 +1787,24 @@ describe("supported lockfile versions", () => {
 					const relative = `${format}/${entry.name}/${filename}`;
 					// `filenameFor` names the PRIMARY filename only, and `fixture()` reads
 					// eagerly — so a directory holding, say, `npm-shrinkwrap.json` instead
-					// would throw ENOENT OUTSIDE the Effect, where `Effect.result` cannot
+					// would throw ENOENT OUTSIDE the Effect, where `Effect.exit` cannot
 					// capture it and the path is lost from the message. Report it here.
 					assert.isTrue(
 						existsSync(join(formatDir, entry.name, filename)),
 						`${relative} is missing: this guard reads each format's primary filename`,
 					);
-					// Through `Effect.result` so a fixture that has aged below the gate
+					// Through `Effect.exit` so a fixture that has aged below the gate
 					// reports *which* fixture, rather than surfacing as a bare parse
 					// error with no path in it — this guard is read by whoever added
 					// the fixture that broke it.
 					const configOnly = format === "pnpm" && entry.name.startsWith(CONFIG_ONLY_FIXTURE_PREFIX);
-					const parsed = yield* Effect.result(parseFixture(relative, format, configOnly));
-					assert.isTrue(parsed._tag === "Success", `${relative} no longer parses: it may have aged below the gate`);
-					if (parsed._tag !== "Success") continue;
-					assert.isAtLeast(Number.parseFloat(parsed.success.lockfileVersion), minimum, relative);
+					const parsed = yield* parseFixture(relative, format, configOnly).pipe(
+						Effect.mapError((cause) => new Error(`${relative} no longer parses: it may have aged below the gate`, { cause })),
+						Effect.exit,
+					);
+					assertExitSuccess(parsed, Exit.isSuccess(parsed) ? parsed.value : undefined);
+					const lockfile = parsed.value;
+					assert.isAtLeast(Number.parseFloat(lockfile.lockfileVersion), minimum, relative);
 					checked.push(relative);
 					if (configOnly) checkedConfigOnly.push(relative);
 				}

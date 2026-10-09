@@ -93,7 +93,7 @@ describe("TextInput.screen under CliUiTest", () => {
 			assert.include(yield* handle.plainFrame, "quit");
 			yield* handle.press("enter");
 			assert.strictEqual(yield* handle.result, "quit");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("Esc cancels with escape", () =>
@@ -103,7 +103,7 @@ describe("TextInput.screen under CliUiTest", () => {
 			yield* handle.press("escape");
 			const error = yield* Effect.flip(handle.result);
 			assert.strictEqual(S.is(Cancelled)(error) ? error.reason : undefined, "escape");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("Ctrl-C cancels with interrupt", () =>
@@ -112,7 +112,7 @@ describe("TextInput.screen under CliUiTest", () => {
 			yield* handle.press("ctrl+c");
 			const error = yield* Effect.flip(handle.result);
 			assert.strictEqual(S.is(Cancelled)(error) ? error.reason : undefined, "interrupt");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a failing validator blocks enter and shows its message as an error", () =>
@@ -130,7 +130,7 @@ describe("TextInput.screen under CliUiTest", () => {
 			assert.notInclude(yield* handle.frame, "digits only", "editing clears the message");
 			yield* handle.press("enter");
 			assert.strictEqual(yield* handle.result, "8");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("shows the cursor with a glyph, so it stays visible at colour none", () =>
@@ -139,7 +139,7 @@ describe("TextInput.screen under CliUiTest", () => {
 			assert.include(yield* handle.rawFrame, "ab▏");
 			yield* handle.press("left");
 			assert.include(yield* handle.rawFrame, "a▏b");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a value wider than the terminal stays on one line, scrolled to keep the cursor in view", () =>
@@ -156,7 +156,7 @@ describe("TextInput.screen under CliUiTest", () => {
 			yield* handle.press("home");
 			assert.include(valueLine(yield* handle.plainFrame), "▏x", "home scrolls the window to the start");
 			assert.isAtMost(Fmt.width(valueLine(yield* handle.plainFrame)), 19);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("on a terminal narrower than the ASCII ellipsis the value line still fits", () =>
@@ -169,7 +169,7 @@ describe("TextInput.screen under CliUiTest", () => {
 			const valueLine = (yield* handle.plainFrame).split("\n")[1] ?? "";
 			assert.include(valueLine, "|", "the cursor is drawn");
 			assert.isAtMost(Fmt.width(valueLine), 3, valueLine);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a long placeholder and a long error are cut to the width, one line each", () =>
@@ -191,7 +191,7 @@ describe("TextInput.screen under CliUiTest", () => {
 			assert.include(after[2] ?? "", "an error");
 			assert.isAtMost(Fmt.width(after[2] ?? ""), 19, after[2]);
 			assert.lengthOf(after, 4, "message, value, error and help");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("shows the placeholder, muted, while the value is empty", () =>
@@ -200,7 +200,7 @@ describe("TextInput.screen under CliUiTest", () => {
 			assert.include(yield* handle.frame, "[muted]your name[/muted]");
 			yield* handle.type("x");
 			assert.notInclude(yield* handle.frame, "your name");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
@@ -210,7 +210,7 @@ describe("TextInput with text read in one go (a fast typist, a paste)", () => {
 			const handle = yield* CliUiTest.render(TextInput.screen({ message: "Name" }));
 			yield* handle.chunk({ char: "foo" }, "enter");
 			assert.strictEqual(yield* handle.result, "foo");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a backspace inside the chunk edits as it goes: ab, backspace, c, return gives ac", () =>
@@ -218,7 +218,7 @@ describe("TextInput with text read in one go (a fast typist, a paste)", () => {
 			const handle = yield* CliUiTest.render(TextInput.screen({ message: "Name" }));
 			yield* handle.chunk({ char: "ab" }, "backspace", { char: "c" }, "enter");
 			assert.strictEqual(yield* handle.result, "ac");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("text after the return is ignored, a line feed becomes a space, and a tab is dropped", () =>
@@ -226,7 +226,7 @@ describe("TextInput with text read in one go (a fast typist, a paste)", () => {
 			const handle = yield* CliUiTest.render(TextInput.screen({ message: "Name" }));
 			yield* handle.chunk({ char: "a\nb\tc" }, "enter", { char: "after" });
 			assert.strictEqual(yield* handle.result, "a bc");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("the validator still blocks a submit that arrives in the chunk", () =>
@@ -239,6 +239,6 @@ describe("TextInput with text read in one go (a fast typist, a paste)", () => {
 			yield* handle.press("backspace");
 			yield* handle.chunk({ char: "0" }, "enter");
 			assert.strictEqual(yield* handle.result, "80");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });

@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
@@ -48,7 +49,7 @@ describe("YamlNode", () => {
 		it("navigates string segments through mappings and numeric segments through sequences", () => {
 			const root = tree();
 			const port = root.find(["ports", 1]);
-			assert.isTrue(O.isSome(port));
+			assertSome(port, O.getOrThrow(port));
 			const foundPort = O.getOrThrow(port);
 			assert.ok(S.is(YamlScalar)(foundPort));
 			assert.strictEqual(foundPort.value, 8443);
@@ -56,9 +57,9 @@ describe("YamlNode", () => {
 
 		it("returns none for unresolvable segments and wrong container kinds", () => {
 			const root = tree();
-			assert.isTrue(O.isNone(root.find(["missing"])));
-			assert.isTrue(O.isNone(root.find(["host", 0])));
-			assert.isTrue(O.isNone(root.find(["ports", 5])));
+			assertNone(root.find(["missing"]));
+			assertNone(root.find(["host", 0]));
+			assertNone(root.find(["ports", 5]));
 		});
 
 		it("returns the node itself for the empty path", () => {
@@ -75,11 +76,11 @@ describe("YamlNode", () => {
 			assert.ok(S.is(YamlScalar)(host));
 			assert.strictEqual(host.value, "localhost");
 			// End offset is exclusive: offset 40 is outside the root span [0, 40).
-			assert.isTrue(O.isNone(root.findAtOffset(40)));
+			assertNone(root.findAtOffset(40));
 		});
 
 		it("returns none outside the subtree", () => {
-			assert.isTrue(O.isNone(tree().findAtOffset(99)));
+			assertNone(tree().findAtOffset(99));
 		});
 	});
 
@@ -93,7 +94,7 @@ describe("YamlNode", () => {
 
 		it("returns none for nodes outside the subtree", () => {
 			const stranger = scalar("stranger", 0, 8);
-			assert.isTrue(O.isNone(tree().pathOf(stranger)));
+			assertNone(tree().pathOf(stranger));
 		});
 	});
 

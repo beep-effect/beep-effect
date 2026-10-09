@@ -156,8 +156,7 @@ const make = Effect.fn("make")(function* (transfer: DataBlobTransfer) {
  * @category layers
  * @since 0.0.0
  */
-export class GitHubCacheBlobStore {
-	private constructor() {}
+export abstract class GitHubCacheBlobStore {
 
 	/**
 	 * The backend, over the real Azure client.

@@ -9,6 +9,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -28,7 +29,7 @@ describe("Lockfile.importers", () => {
 
 				// The root importer "." is present and declares nothing.
 				const root = lockfile.importer(".");
-				assert.isTrue(O.isSome(root));
+				assertSome(O.map(root, (importer) => importer.dependencies.length), 0);
 				assert.strictEqual(O.getOrThrow(root).dependencies.length, 0);
 
 				const core = O.getOrThrow(lockfile.importer("packages/core"));
@@ -167,7 +168,7 @@ describe("Lockfile.importers", () => {
 			Effect.gen(function* () {
 				const lockfile = yield* parseFixture("yarn/v1/yarn.lock", "yarn");
 				assert.strictEqual(lockfile.importers.length, 0);
-				assert.isTrue(O.isNone(lockfile.importer(".")));
+				assertNone(lockfile.importer("."));
 			}),
 		);
 	});
@@ -175,7 +176,7 @@ describe("Lockfile.importers", () => {
 	it.effect("importer(path) is None for an unknown path", () =>
 		Effect.gen(function* () {
 			const lockfile = yield* parseFixture("pnpm/v1/pnpm-lock.yaml", "pnpm");
-			assert.isTrue(O.isNone(lockfile.importer("packages/does-not-exist")));
+			assertNone(lockfile.importer("packages/does-not-exist"));
 		}),
 	);
 });

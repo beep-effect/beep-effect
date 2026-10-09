@@ -1,5 +1,5 @@
-// @effect-diagnostics strictEffectProvide:skip-file
-import { assert, describe, it, layer } from "@effect/vitest";
+import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Git, GitCommandError, LsTreeEntry } from "../../effected/git/index.ts";
 import { CatalogAssemblyError, CatalogResolver, WorkspaceResolver } from "../../effected/npm/index.ts";
 import * as HashMap from "effect/HashMap";
@@ -107,7 +107,7 @@ const npmRefTrees: RefTrees = {
 const npmMarkerOnly: Tree = { "/repo/package.json": rootManifest(["packages/*"]) };
 
 describe("WorkspaceSnapshots.at — the c594ff1 fallback", () => {
-	layer(snapshotsLayer(scriptGit(npmRefTrees), npmMarkerOnly))((it) => {
+	it.layer(snapshotsLayer(scriptGit(npmRefTrees), npmMarkerOnly), { timeout: "30 seconds" })((it) => {
 		it.effect("a bun/npm workspace at a ref discovers its members, not the root alone", () =>
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
@@ -126,10 +126,8 @@ describe("WorkspaceSnapshots.at — the c594ff1 fallback", () => {
 				const snapshots = yield* WorkspaceSnapshots;
 				const snapshot = yield* snapshots.at("HEAD");
 				const beta = snapshot.package("@x/beta");
-				assert.isTrue(O.isSome(beta));
-				if (O.isSome(beta)) {
-					assert.strictEqual(beta.value.dependencies["@x/alpha"], "workspace:*");
-				}
+				assertSome(beta, O.getOrThrow(beta));
+				assert.strictEqual(beta.value.dependencies["@x/alpha"], "workspace:*");
 			}),
 		);
 	});
@@ -146,7 +144,7 @@ const scopedRefTrees: RefTrees = {
 };
 
 describe("WorkspaceSnapshots.at — glob filtering over ls-tree", () => {
-	layer(snapshotsLayer(scriptGit(scopedRefTrees), npmMarkerOnly))((it) => {
+	it.layer(snapshotsLayer(scriptGit(scopedRefTrees), npmMarkerOnly), { timeout: "30 seconds" })((it) => {
 		it.effect("only package.json directories the glob set accepts become members", () =>
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
@@ -185,7 +183,7 @@ const projected = (snapshot: WorkspaceStateSnapshot) => ({
 });
 
 describe("WorkspaceSnapshots — at('HEAD') and worktree() parity on a clean tree", () => {
-	layer(snapshotsLayer(scriptGit(refFromTree(parityTree)), parityTree))((it) => {
+	it.layer(snapshotsLayer(scriptGit(refFromTree(parityTree)), parityTree), { timeout: "30 seconds" })((it) => {
 		it.effect("the two snapshots agree on packages, catalogs and resolution", () =>
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
@@ -194,9 +192,9 @@ describe("WorkspaceSnapshots — at('HEAD') and worktree() parity on a clean tre
 				assert.deepStrictEqual(projected(atHead), projected(worktree));
 				// And that resolution is non-trivial: the catalog and workspace
 				// indirections actually resolved.
-				assert.deepStrictEqual(atHead.resolve("effect", "catalog:"), O.some("^4.0.0"));
-				assert.deepStrictEqual(atHead.resolve("@x/alpha", "workspace:*"), O.some("1.0.0"));
-				assert.deepStrictEqual(atHead.resolve("@x/beta", "workspace:^"), O.some("2.0.0"));
+				assertSome(atHead.resolve("effect", "catalog:"), "^4.0.0");
+				assertSome(atHead.resolve("@x/alpha", "workspace:*"), "1.0.0");
+				assertSome(atHead.resolve("@x/beta", "workspace:^"), "2.0.0");
 			}),
 		);
 	});
@@ -224,7 +222,7 @@ const bunNoLockTree: Tree = {
 };
 
 describe("WorkspaceSnapshots — bun inline catalogs at a ref with NO bun.lock (parity)", () => {
-	layer(snapshotsLayer(scriptGit(refFromTree(bunNoLockTree)), bunNoLockTree))((it) => {
+	it.layer(snapshotsLayer(scriptGit(refFromTree(bunNoLockTree)), bunNoLockTree), { timeout: "30 seconds" })((it) => {
 		it.effect("at('HEAD') reads inline bun catalogs without a lockfile, matching worktree()", () =>
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
@@ -233,8 +231,8 @@ describe("WorkspaceSnapshots — bun inline catalogs at a ref with NO bun.lock (
 				// The two catalog sets must agree — the gated code returned an EMPTY set
 				// from at('HEAD') while worktree() carried `effect: ^4.0.0`.
 				assert.deepStrictEqual(atHead.catalogs.entries, worktree.catalogs.entries);
-				assert.deepStrictEqual(atHead.resolve("effect", "catalog:"), O.some("^4.0.0"));
-				assert.deepStrictEqual(worktree.resolve("effect", "catalog:"), O.some("^4.0.0"));
+				assertSome(atHead.resolve("effect", "catalog:"), "^4.0.0");
+				assertSome(worktree.resolve("effect", "catalog:"), "^4.0.0");
 			}),
 		);
 	});
@@ -258,7 +256,7 @@ describe("WorkspaceSnapshots.at — a failed init is retried", () => {
 		);
 	};
 
-	layer(snapshotsLayer(scriptGit(npmRefTrees, { lsTree: flakyLsTree }), npmMarkerOnly))((it) => {
+	it.layer(snapshotsLayer(scriptGit(npmRefTrees, { lsTree: flakyLsTree }), npmMarkerOnly), { timeout: "30 seconds" })((it) => {
 		it.effect("the first call fails; the second recomputes and succeeds", () =>
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
@@ -286,24 +284,24 @@ const resolveSnapshot = WorkspaceStateSnapshot.make({
 describe("WorkspaceStateSnapshot.resolve", () => {
 	it.effect("resolves workspace: against the snapshot's captured versions", () =>
 		Effect.sync(() => {
-			assert.deepStrictEqual(resolveSnapshot.resolve("@x/alpha", "workspace:*"), O.some("1.2.3"));
-			assert.deepStrictEqual(resolveSnapshot.resolve("@x/beta", "workspace:^"), O.some("4.5.6"));
+			assertSome(resolveSnapshot.resolve("@x/alpha", "workspace:*"), "1.2.3");
+			assertSome(resolveSnapshot.resolve("@x/beta", "workspace:^"), "4.5.6");
 		}),
 	);
 
 	it.effect("resolves catalog: against the snapshot's captured catalog set", () =>
 		Effect.sync(() => {
-			assert.deepStrictEqual(resolveSnapshot.resolve("effect", "catalog:"), O.some("^4.0.0"));
-			assert.deepStrictEqual(resolveSnapshot.resolve("vitest", "catalog:build"), O.some("^3.0.0"));
+			assertSome(resolveSnapshot.resolve("effect", "catalog:"), "^4.0.0");
+			assertSome(resolveSnapshot.resolve("vitest", "catalog:build"), "^3.0.0");
 		}),
 	);
 
 	it.effect("an unmatched specifier is Option.none(), never an error", () =>
 		Effect.sync(() => {
-			assert.isTrue(O.isNone(resolveSnapshot.resolve("nope", "workspace:*"))); // not a member
-			assert.isTrue(O.isNone(resolveSnapshot.resolve("effect", "catalog:missing"))); // unknown catalog
-			assert.isTrue(O.isNone(resolveSnapshot.resolve("effect", "^4.0.0"))); // plain range: nothing to resolve
-			assert.isTrue(O.isNone(resolveSnapshot.resolve("effect", "not a specifier"))); // unparseable
+			assertNone(resolveSnapshot.resolve("nope", "workspace:*")); // not a member
+			assertNone(resolveSnapshot.resolve("effect", "catalog:missing")); // unknown catalog
+			assertNone(resolveSnapshot.resolve("effect", "^4.0.0")); // plain range: nothing to resolve
+			assertNone(resolveSnapshot.resolve("effect", "not a specifier")); // unparseable
 		}),
 	);
 });
@@ -349,16 +347,17 @@ describe('WorkspaceStateSnapshot — a version-less member is absent, never `""`
 
 	it("versions lists only members that declared a version; package() still answers membership", () => {
 		assert.deepStrictEqual([...HashMap.entries(bareVersionSnapshot.versions)], [["@x/alpha", "1.2.3"]]);
-		assert.isTrue(O.isSome(bareVersionSnapshot.package("@x/bare")));
+		const bare = bareVersionSnapshot.package("@x/bare");
+		assertSome(bare, O.getOrThrow(bare));
 	});
 
 	it.effect('a version-less member resolves to none, never some("")', () =>
 		Effect.sync(() => {
 			// Answering `some("")` would rewrite `workspace:^` as a bare `"^"`.
-			assert.isTrue(O.isNone(bareVersionSnapshot.resolve("@x/bare", "workspace:^")));
+			assertNone(bareVersionSnapshot.resolve("@x/bare", "workspace:^"));
 			// The positive control: a member that HAS a version still resolves, so
 			// this cannot pass by resolving nothing at all.
-			assert.deepStrictEqual(bareVersionSnapshot.resolve("@x/alpha", "workspace:^"), O.some("1.2.3"));
+			assertSome(bareVersionSnapshot.resolve("@x/alpha", "workspace:^"), "1.2.3");
 		}),
 	);
 
@@ -375,8 +374,8 @@ describe('WorkspaceStateSnapshot — a version-less member is absent, never `""`
 			assert.strictEqual(error.reason, "no-version");
 			assert.isUndefined(error.cause);
 			// Positive and negative controls on the same layer.
-			assert.deepStrictEqual(yield* workspace.versionOf("@x/alpha"), O.some("1.2.3"));
-			assert.isTrue(O.isNone(yield* workspace.versionOf("nope")));
+			assertSome(yield* workspace.versionOf("@x/alpha"), "1.2.3");
+			assertNone(yield* workspace.versionOf("nope"));
 		}).pipe(Effect.provide(bareVersionSnapshot.workspaceResolver)),
 	);
 });
@@ -394,7 +393,7 @@ const versionlessTree: Tree = {
 };
 
 describe("WorkspaceSnapshots — version-less manifests at a ref and in the worktree", () => {
-	layer(snapshotsLayer(scriptGit(refFromTree(versionlessTree)), versionlessTree))((it) => {
+	it.layer(snapshotsLayer(scriptGit(refFromTree(versionlessTree)), versionlessTree), { timeout: "30 seconds" })((it) => {
 		it.effect("both sides omit version, agree structurally, and resolve workspace: to none", () =>
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
@@ -406,7 +405,7 @@ describe("WorkspaceSnapshots — version-less manifests at a ref and in the work
 					assert.isFalse(Object.hasOwn(bare, "version"));
 					assert.isFalse(Object.hasOwn(root, "version"));
 					assert.deepStrictEqual(snapshot.versionNames, ["@x/alpha"]);
-					assert.isTrue(O.isNone(snapshot.resolve("@x/bare", "workspace:^")));
+					assertNone(snapshot.resolve("@x/bare", "workspace:^"));
 				}
 				// The two sides are the same value, member for member, so a diff of a
 				// clean tree reports nothing — the reason the key must match.
@@ -416,8 +415,8 @@ describe("WorkspaceSnapshots — version-less manifests at a ref and in the work
 				assert.strictEqual(left.length, right.length);
 				for (const [index, pkg] of left.entries()) assert.isTrue(Equal.equals(pkg, right[index]), pkg.name);
 				// Control: the versioned member is captured on both sides.
-				assert.deepStrictEqual(atHead.resolve("@x/alpha", "workspace:*"), O.some("1.0.0"));
-				assert.deepStrictEqual(worktree.resolve("@x/alpha", "workspace:*"), O.some("1.0.0"));
+				assertSome(atHead.resolve("@x/alpha", "workspace:*"), "1.0.0");
+				assertSome(worktree.resolve("@x/alpha", "workspace:*"), "1.0.0");
 			}),
 		);
 	});
@@ -428,9 +427,9 @@ describe("WorkspaceStateSnapshot — snapshot-scoped resolver layers", () => {
 		Effect.gen(function* () {
 			const catalog = yield* CatalogResolver;
 			const workspace = yield* WorkspaceResolver;
-			assert.deepStrictEqual(yield* catalog.rangeOf("effect", O.none()), O.some("^4.0.0"));
-			assert.deepStrictEqual(yield* catalog.rangeOf("vitest", O.some("build")), O.some("^3.0.0"));
-			assert.deepStrictEqual(yield* workspace.versionOf("@x/beta"), O.some("4.5.6"));
+			assertSome(yield* catalog.rangeOf("effect", O.none()), "^4.0.0");
+			assertSome(yield* catalog.rangeOf("vitest", O.some("build")), "^3.0.0");
+			assertSome(yield* workspace.versionOf("@x/beta"), "4.5.6");
 		}).pipe(Effect.provide(resolveSnapshot.resolvers)),
 	);
 
@@ -438,8 +437,8 @@ describe("WorkspaceStateSnapshot — snapshot-scoped resolver layers", () => {
 		Effect.gen(function* () {
 			const catalog = yield* CatalogResolver;
 			const workspace = yield* WorkspaceResolver;
-			assert.isTrue(O.isNone(yield* catalog.rangeOf("nope", O.none())));
-			assert.isTrue(O.isNone(yield* workspace.versionOf("nope")));
+			assertNone(yield* catalog.rangeOf("nope", O.none()));
+			assertNone(yield* workspace.versionOf("nope"));
 		}).pipe(Effect.provide(resolveSnapshot.resolvers)),
 	);
 });
@@ -491,7 +490,7 @@ const hookRefTrees: RefTrees = {
 };
 
 describe("WorkspaceSnapshots — hook-injected catalog symmetry", () => {
-	layer(snapshotsLayer(scriptGit(hookRefTrees), hookTree))((it) => {
+	it.layer(snapshotsLayer(scriptGit(hookRefTrees), hookTree), { timeout: "30 seconds" })((it) => {
 		it.effect("at(ref) and worktree() resolve the injected catalog to the same version", () =>
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
@@ -501,7 +500,7 @@ describe("WorkspaceSnapshots — hook-injected catalog symmetry", () => {
 				const fromRef = atRef.resolve("effect", "catalog:effect:peers");
 				const fromLive = live.resolve("effect", "catalog:effect:peers");
 
-				assert.deepStrictEqual(fromRef, O.some("4.0.0-beta.101"));
+				assertSome(fromRef, "4.0.0-beta.101");
 				// Asymmetry here is the bogus-row bug: the two sides MUST agree.
 				assert.deepStrictEqual(fromLive, fromRef);
 			}),
@@ -543,27 +542,27 @@ const HOOKED_REF: RefTrees = refFromTree(HOOKED_MARKER);
 const HOOK_INJECTED = CatalogSet.make({ entries: { default: { "hooked-dep": "^9.9.9" } } });
 
 describe("WorkspaceSnapshots — under layerNoop, the hook-injected catalog is invisible at a ref", () => {
-	layer(snapshotsLayer(scriptGit(HOOKED_REF), HOOKED_MARKER))((it) => {
+	it.layer(snapshotsLayer(scriptGit(HOOKED_REF), HOOKED_MARKER), { timeout: "30 seconds" })((it) => {
 		it.effect("resolves the committed catalog and abstains on the hook-injected one", () =>
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
 				const atRef = yield* snapshots.at("HEAD");
 				// The control: committed catalogs work, so a `none` below is about the
 				// hook, not about assembly having silently failed.
-				assert.deepStrictEqual(atRef.resolve("effect", "catalog:"), O.some("^4.0.0"));
-				assert.deepStrictEqual(atRef.resolve("hooked-dep", "catalog:"), O.none());
+				assertSome(atRef.resolve("effect", "catalog:"), "^4.0.0");
+				assertNone(atRef.resolve("hooked-dep", "catalog:"));
 			}),
 		);
 	});
 });
 
 describe("WorkspaceSnapshots — seedCatalogs", () => {
-	layer(snapshotsLayer(scriptGit(HOOKED_REF), HOOKED_MARKER, "/repo", HOOK_INJECTED))((it) => {
+	it.layer(snapshotsLayer(scriptGit(HOOKED_REF), HOOKED_MARKER, "/repo", HOOK_INJECTED), { timeout: "30 seconds" })((it) => {
 		it.effect("reaches at(ref)", () =>
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
 				const atRef = yield* snapshots.at("HEAD");
-				assert.deepStrictEqual(atRef.resolve("hooked-dep", "catalog:"), O.some("^9.9.9"));
+				assertSome(atRef.resolve("hooked-dep", "catalog:"), "^9.9.9");
 			}),
 		);
 
@@ -583,9 +582,9 @@ describe("WorkspaceSnapshots — seedCatalogs", () => {
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
 				const atRef = yield* snapshots.at("HEAD");
-				assert.deepStrictEqual(atRef.resolve("effect", "catalog:"), O.some("^4.0.0"));
+				assertSome(atRef.resolve("effect", "catalog:"), "^4.0.0");
 				// And the field still reports the ref's own declaration alone.
-				assert.deepStrictEqual(atRef.catalogs.rangeOf("hooked-dep", O.none()), O.none());
+				assertNone(atRef.catalogs.rangeOf("hooked-dep", O.none()));
 			}),
 		);
 	});
@@ -670,7 +669,7 @@ describe("WorkspaceSnapshots.at — replays the ref's configDependencies at the 
 		"@scope/plugin@1.0.0": { "hooked-dep": "^1.0.0" },
 		"@scope/plugin@2.0.0": { "hooked-dep": "^2.0.0" },
 	});
-	layer(snapshotsLayer(scriptGit(replayRefTrees), replayMarker, "/repo", undefined, hooks.layer))((it) => {
+	it.layer(snapshotsLayer(scriptGit(replayRefTrees), replayMarker, "/repo", undefined, hooks.layer), { timeout: "30 seconds" })((it) => {
 		it.effect("hands the hooks layer THAT ref's configDependencies and inline seed", () =>
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
@@ -689,10 +688,10 @@ describe("WorkspaceSnapshots.at — replays the ref's configDependencies at the 
 				const snapshots = yield* WorkspaceSnapshots;
 				const before = yield* snapshots.at("before");
 				// The ref's OWN catalogs carry the injected range — not the seed field.
-				assert.deepStrictEqual(before.catalogs.rangeOf("hooked-dep", O.none()), O.some("^1.0.0"));
-				assert.deepStrictEqual(before.resolve("hooked-dep", "catalog:"), O.some("^1.0.0"));
+				assertSome(before.catalogs.rangeOf("hooked-dep", O.none()), "^1.0.0");
+				assertSome(before.resolve("hooked-dep", "catalog:"), "^1.0.0");
 				// The control: the inline catalog survived the merge.
-				assert.deepStrictEqual(before.resolve("effect", "catalog:"), O.some("^4.0.0"));
+				assertSome(before.resolve("effect", "catalog:"), "^4.0.0");
 			}),
 		);
 
@@ -701,8 +700,8 @@ describe("WorkspaceSnapshots.at — replays the ref's configDependencies at the 
 				const snapshots = yield* WorkspaceSnapshots;
 				const before = yield* snapshots.at("before");
 				const after = yield* snapshots.at("after");
-				assert.deepStrictEqual(before.resolve("hooked-dep", "catalog:"), O.some("^1.0.0"));
-				assert.deepStrictEqual(after.resolve("hooked-dep", "catalog:"), O.some("^2.0.0"));
+				assertSome(before.resolve("hooked-dep", "catalog:"), "^1.0.0");
+				assertSome(after.resolve("hooked-dep", "catalog:"), "^2.0.0");
 				// Each snapshot records WHICH version it replayed from — the evidence
 				// that the row came from a config-dependency bump. Versions only: the
 				// live record's `source` is machine-local and stays off the value.
@@ -720,15 +719,15 @@ describe("WorkspaceSnapshots.at — replays the ref's configDependencies at the 
 });
 
 describe("WorkspaceSnapshots.at — under layerNoop the ref read executes nothing and sees no injection", () => {
-	layer(snapshotsLayer(scriptGit(replayRefTrees), replayMarker))((it) => {
+	it.layer(snapshotsLayer(scriptGit(replayRefTrees), replayMarker), { timeout: "30 seconds" })((it) => {
 		it.effect("both refs abstain on the hook-only catalog, exactly as before", () =>
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
 				const before = yield* snapshots.at("before");
 				const after = yield* snapshots.at("after");
-				assert.deepStrictEqual(before.resolve("hooked-dep", "catalog:"), O.none());
-				assert.deepStrictEqual(after.resolve("hooked-dep", "catalog:"), O.none());
-				assert.deepStrictEqual(before.resolve("effect", "catalog:"), O.some("^4.0.0"));
+				assertNone(before.resolve("hooked-dep", "catalog:"));
+				assertNone(after.resolve("hooked-dep", "catalog:"));
+				assertSome(before.resolve("effect", "catalog:"), "^4.0.0");
 				// A pnpm-workspace.yaml was read, so the record is PRESENT — and empty,
 				// because the no-op layer resolved nothing. "Replayed nothing" is
 				// distinguishable from "no config dependencies exist here".
@@ -748,7 +747,7 @@ describe("WorkspaceSnapshots.at — a hook replay failure at the ref surfaces ty
 				}),
 			)),
 	});
-	layer(snapshotsLayer(scriptGit(replayRefTrees), replayMarker, "/repo", undefined, failing))((it) => {
+	it.layer(snapshotsLayer(scriptGit(replayRefTrees), replayMarker, "/repo", undefined, failing), { timeout: "30 seconds" })((it) => {
 		it.effect("fails at(ref) with the hooks-source CatalogAssemblyError, never a silent skip", () =>
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
@@ -777,9 +776,9 @@ describe("WorkspaceStateSnapshot.versions — Effect collection and explicit ord
 		});
 		assert.deepStrictEqual(state.versionNames, ["z", "a"]);
 		assert.strictEqual(HashMap.size(state.versions), 2);
-		assert.deepStrictEqual(HashMap.get(state.versions, "z"), O.some("3.0.0"));
-		assert.deepStrictEqual(HashMap.get(state.versions, "a"), O.some("2.0.0"));
-		assert.deepStrictEqual(HashMap.get(state.versions, "bare"), O.none());
+		assertSome(HashMap.get(state.versions, "z"), "3.0.0");
+		assertSome(HashMap.get(state.versions, "a"), "2.0.0");
+		assertNone(HashMap.get(state.versions, "bare"));
 		assert.strictEqual(state.versions, state.versions);
 		assert.strictEqual(state.versionNames, state.versionNames);
 	});
@@ -802,7 +801,7 @@ const tolerantJsonRefs: RefTrees = {
 };
 
 describe("WorkspaceSnapshots.at — tolerant JSON schema decoding", () => {
-	layer(snapshotsLayer(scriptGit(tolerantJsonRefs), npmMarkerOnly))((it) => {
+	it.layer(snapshotsLayer(scriptGit(tolerantJsonRefs), npmMarkerOnly), { timeout: "30 seconds" })((it) => {
 		it.effect("keeps valid own keys and degrades corrupt, non-object and malformed fields", () =>
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;

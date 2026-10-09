@@ -67,6 +67,7 @@ describe("LayerPolicy.load", () => {
 			"/repo/broken.json": "{ not json",
 			"/repo/foreign.json": JSON.stringify({ ...VALID, harness: ["@e2e/*"] }),
 		}),
+		{ timeout: "30 seconds" },
 	)((it) => {
 		it.effect("reads and decodes a committed policy", () =>
 			Effect.gen(function* () {

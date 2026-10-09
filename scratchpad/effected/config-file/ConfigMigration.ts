@@ -5,6 +5,8 @@ import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as SchemaAST from "effect/SchemaAST";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import type { ConfigCodec, ConfigCodecError } from "./ConfigCodec.ts";
 
 const $I = $ScratchpadId.create("effected/config-file/ConfigMigration");
@@ -39,7 +41,9 @@ export class ConfigMigrationError extends S.TaggedError<ConfigMigrationError>($I
 	 *
 	 * @since 0.0.0
 	 */
-	version: S.declare(P.isNumber).annotateKey({ description: "The target version of the step that failed. `0` when reading the version failed." }),
+	version: S.declare(P.isNumber).annotate({
+    toCodecArbitrary: () => new SchemaAST.Link(S.Finite.ast, SchemaTransformation.passthrough()),
+  }).annotateKey({ description: "The target version of the step that failed. `0` when reading the version failed." }),
 	/**
 	 * The name of the step that failed; empty when reading the version failed.
 	 *

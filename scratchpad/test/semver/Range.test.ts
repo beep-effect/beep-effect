@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure, assertNone, assertSome, assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -86,9 +87,9 @@ describe("Range", () => {
 			Effect.gen(function* () {
 				const versions = yield* Effect.forEach(["0.9.0", "1.0.0", "1.5.0", "1.9.9", "2.0.0"], (s) => SemVer.parse(s));
 				const range = yield* Range.parse("^1.0.0");
-				assert.deepStrictEqual(Range.maxSatisfying(versions, range).pipe(O.map(String)), O.some("1.9.9"));
-				assert.deepStrictEqual(Range.minSatisfying(versions, range).pipe(O.map(String)), O.some("1.0.0"));
-				assert.isTrue(O.isNone(Range.maxSatisfying(versions, yield* Range.parse(">=3.0.0"))));
+				assertSome(Range.maxSatisfying(versions, range).pipe(O.map(String)), "1.9.9");
+				assertSome(Range.minSatisfying(versions, range).pipe(O.map(String)), "1.0.0");
+				assertNone(Range.maxSatisfying(versions, yield* Range.parse(">=3.0.0")));
 			}),
 		);
 	});
@@ -347,8 +348,9 @@ describe("Range round-1 regressions", () => {
 			] as const) {
 				const left = yield* Range.parse(a);
 				const right = yield* Range.parse(b);
-				assert.isTrue(Result.isFailure(Range.intersectResult(left, right)));
+				const result = Range.intersectResult(left, right);
 				const error = yield* Effect.flip(Range.intersect(left, right));
+				assertFailure(result, error);
 				assert.instanceOf(error, UnsatisfiableConstraintError);
 			}
 			const pre = yield* Range.intersect(yield* Range.parse(">1.0.0-alpha"), yield* Range.parse("<1.0.0-alpha.0.0"));
@@ -373,7 +375,7 @@ describe("Range round-1 regressions", () => {
 				assert.strictEqual(error.input, input);
 			}
 			for (const input of ["9007199254740991.0.0", "^9007199254740990.0.0", "~1.9007199254740990.0"]) {
-				assert.isTrue(Result.isSuccess(Range.parseResult(input)), input);
+				assertSuccess(Range.parseResult(input), yield* Range.parse(input));
 			}
 		}),
 	);

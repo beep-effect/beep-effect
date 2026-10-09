@@ -17,6 +17,7 @@
 // treat as the closing fence — that is fence semantics, not a codec defect,
 // so the property excludes it.
 
+import { fcRuns } from "@beep/fc-runs";
 import { assert, describe, it } from "@effect/vitest";
 import { Jsonc } from "../../effected/jsonc/index.ts";
 import { Toml } from "../../effected/toml/index.ts";
@@ -227,36 +228,36 @@ describe("frontmatter round-trip property", () => {
 	const decodeVia = (
 		source: string,
 		codec: typeof YamlFrontmatter,
-	): { readonly title: string; readonly count: number } =>
-		Effect.runSync(Effect.flatMap(parseDoc(source), (document) => MarkdownFrontmatter.schema(Meta, codec)(document)));
+	) =>
+		Effect.flatMap(parseDoc(source), (document) => MarkdownFrontmatter.schema(Meta, codec)(document));
 
-	it.prop(
+	it.effect.prop(
 		"yaml: stringify, parse and decode recovers the data",
 		[MetaArb],
-		([data]) => {
-			const block = Effect.runSync(Yaml.stringify(data));
-			assert.deepStrictEqual(decodeVia(fenced("---", block, "---"), YamlFrontmatter), data);
-		},
-		{ arbitrary: { runs: 60 } },
+		([data]) => Effect.gen(function* () {
+			const block = yield* Yaml.stringify(data);
+			assert.deepStrictEqual(yield* decodeVia(fenced("---", block, "---"), YamlFrontmatter), data);
+		}),
+		{ arbitrary: fcRuns(60) },
 	);
 
-	it.prop(
+	it.effect.prop(
 		"toml: stringify, parse and decode recovers the data",
 		[MetaArb],
-		([data]) => {
-			const block = Effect.runSync(Toml.stringify(data));
-			assert.deepStrictEqual(decodeVia(fenced("+++", block, "+++"), TomlFrontmatter), data);
-		},
-		{ arbitrary: { runs: 60 } },
+		([data]) => Effect.gen(function* () {
+			const block = yield* Toml.stringify(data);
+			assert.deepStrictEqual(yield* decodeVia(fenced("+++", block, "+++"), TomlFrontmatter), data);
+		}),
+		{ arbitrary: fcRuns(60) },
 	);
 
-	it.prop(
+	it.effect.prop(
 		"json: stringify, parse and decode recovers the data",
 		[MetaArb],
-		([data]) => {
-			const block = Effect.runSync(Jsonc.stringify(data));
-			assert.deepStrictEqual(decodeVia(fenced("---json", block, "---"), JsonFrontmatter), data);
-		},
-		{ arbitrary: { runs: 60 } },
+		([data]) => Effect.gen(function* () {
+			const block = yield* Jsonc.stringify(data);
+			assert.deepStrictEqual(yield* decodeVia(fenced("---json", block, "---"), JsonFrontmatter), data);
+		}),
+		{ arbitrary: fcRuns(60) },
 	);
 });

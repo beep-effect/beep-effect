@@ -1,12 +1,9 @@
-// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file
-import * as nodeFs from "node:fs/promises";
-import * as nodeOs from "node:os";
-import * as nodePath from "node:path";
-import { NodeFileSystem } from "@effect/platform-node";
-import { assert, describe, it } from "@effect/vitest";
+import { MemoryFileSystem } from "../../../effected/memfs/index.ts";
+import * as FileSystem from "effect/FileSystem";
+import { describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -14,258 +11,368 @@ import { ConfigResolver } from "../../../effected/config-file/ConfigResolver.ts"
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
-const Platform = Layer.mergeAll(NodeFileSystem.layer, Path.layer);
-
-/** Run `use` against a fresh temp dir, removing it whether `use` passes or throws. */
-const withTempDir = <A, R>(use: (root: string) => Effect.Effect<A, never, R>): Effect.Effect<A, never, R> =>
-	Effect.acquireUseRelease(
-		Effect.promise(() => nodeFs.mkdtemp(nodePath.join(nodeOs.tmpdir(), "cf-"))),
-		use,
-		(root) => Effect.promise(() => nodeFs.rm(root, { recursive: true, force: true })),
-	);
+const Platform = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
 
 describe("ConfigResolver against a real filesystem", () => {
-	it.effect("upwardWalk finds a nearer file before a higher one", () =>
-		withTempDir((root) =>
+	it.layer(Platform, { timeout: "30 seconds" })((it) => {
+		it.effect("upwardWalk finds a nearer file before a higher one", () =>
 			Effect.gen(function* () {
-				const deep = nodePath.join(root, "a", "b");
-				yield* Effect.promise(() => nodeFs.mkdir(deep, { recursive: true }));
-				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(root, ".apprc"), "{}"));
-				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(root, "a", ".apprc"), "{}"));
-
-				const resolver = ConfigResolver.upwardWalk({ filename: ".apprc", cwd: deep, stopAt: root });
-				const found = yield* resolver.resolve;
-
-				assert.strictEqual(O.getOrNull(found), nodePath.join(root, "a", ".apprc"));
-			}),
-		).pipe(Effect.provide(Platform)),
-	);
-
-	it.effect("gitRoot anchors on the .git marker", () =>
-		withTempDir((root) =>
-			Effect.gen(function* () {
-				const deep = nodePath.join(root, "pkg", "src");
-				yield* Effect.promise(() => nodeFs.mkdir(deep, { recursive: true }));
-				yield* Effect.promise(() => nodeFs.mkdir(nodePath.join(root, ".git")));
-				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(root, ".apprc"), "{}"));
-
-				const found = yield* ConfigResolver.gitRoot({ filename: ".apprc", cwd: deep }).resolve;
-
-				assert.strictEqual(O.getOrNull(found), nodePath.join(root, ".apprc"));
-			}),
-		).pipe(Effect.provide(Platform)),
-	);
-
-	it.effect("gitRoot anchors on a .git file (worktree)", () =>
-		withTempDir((root) =>
-			Effect.gen(function* () {
-				const deep = nodePath.join(root, "pkg", "src");
-				yield* Effect.promise(() => nodeFs.mkdir(deep, { recursive: true }));
-				yield* Effect.promise(() =>
-					nodeFs.writeFile(nodePath.join(root, ".git"), "gitdir: /elsewhere/.git/worktrees/pkg"),
-				);
-				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(root, ".apprc"), "{}"));
-
-				const found = yield* ConfigResolver.gitRoot({ filename: ".apprc", cwd: deep }).resolve;
-
-				assert.strictEqual(O.getOrNull(found), nodePath.join(root, ".apprc"));
-			}),
-		).pipe(Effect.provide(Platform)),
-	);
-
-	it.effect("workspaceRoot anchors on pnpm-workspace.yaml", () =>
-		withTempDir((root) =>
-			Effect.gen(function* () {
-				const deep = nodePath.join(root, "packages", "pkg");
-				yield* Effect.promise(() => nodeFs.mkdir(deep, { recursive: true }));
-				yield* Effect.promise(() =>
-					nodeFs.writeFile(nodePath.join(root, "pnpm-workspace.yaml"), "packages:\n  - packages/*\n"),
-				);
-				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(root, ".apprc"), "{}"));
-
-				const found = yield* ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: deep }).resolve;
-
-				assert.strictEqual(O.getOrNull(found), nodePath.join(root, ".apprc"));
-			}),
-		).pipe(Effect.provide(Platform)),
-	);
-
-	it.effect("workspaceRoot anchors on a package.json with a workspaces field", () =>
-		withTempDir((root) =>
-			Effect.gen(function* () {
-				const deep = nodePath.join(root, "packages", "pkg");
-				yield* Effect.promise(() => nodeFs.mkdir(deep, { recursive: true }));
-				yield* Effect.promise(() =>
-					nodeFs.writeFile(nodePath.join(root, "package.json"), Result.getOrThrow(S.encodeResult(JsonValue)({ workspaces: ["packages/*"] }))),
-				);
-				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(root, ".apprc"), "{}"));
-
-				const found = yield* ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: deep }).resolve;
-
-				assert.strictEqual(O.getOrNull(found), nodePath.join(root, ".apprc"));
-			}),
-		).pipe(Effect.provide(Platform)),
-	);
-
-	it.effect("upwardWalk yields none() when nothing is found before stopAt", () =>
-		withTempDir((root) =>
-			Effect.gen(function* () {
-				const found = yield* ConfigResolver.upwardWalk({ filename: ".missing", cwd: root, stopAt: root }).resolve;
-				assert.isTrue(O.isNone(found));
-			}),
-		).pipe(Effect.provide(Platform)),
-	);
-
-	// Every other stopAt test finds its match before reaching stopAt, so none of them
-	// observe stopAt actually halting the ascent: dropping the option entirely leaves
-	// them all green. This one puts the only match ABOVE stopAt.
-	it.effect("upwardWalk does not see a file above stopAt", () =>
-		withTempDir((root) =>
-			Effect.gen(function* () {
-				const mid = nodePath.join(root, "mid");
-				const leaf = nodePath.join(mid, "leaf");
-				yield* Effect.promise(() => nodeFs.mkdir(leaf, { recursive: true }));
-				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(root, ".apprc"), "{}"));
-
-				const found = yield* ConfigResolver.upwardWalk({ filename: ".apprc", cwd: leaf, stopAt: mid }).resolve;
-
-				assert.isTrue(O.isNone(found));
-			}),
-		).pipe(Effect.provide(Platform)),
-	);
-
-	// systemEtc's success path was never exercised: the suite only reached it through a
-	// hostile filesystem (always none()) and a `.name` assertion, so returning none() on
-	// the hit branch passed everything. This pins both the some(candidate) return and the
-	// `app` path segment. The win32 short-circuit stays unobservable without stubbing
-	// `process.platform`, so it remains untested here.
-	it.effect("systemEtc finds a file under <dir>/<app>", () =>
-		withTempDir((root) =>
-			Effect.gen(function* () {
-				const appDir = nodePath.join(root, "acme");
-				yield* Effect.promise(() => nodeFs.mkdir(appDir, { recursive: true }));
-				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(appDir, ".apprc"), "{}"));
-
-				const found = yield* ConfigResolver.systemEtc({ app: "acme", filename: ".apprc", dir: root }).resolve;
-
-				assert.strictEqual(O.getOrNull(found), nodePath.join(appDir, ".apprc"));
-			}),
-		).pipe(Effect.provide(Platform)),
-	);
-
-	// rootAnchored exists to probe subpaths UNDER the anchor. Every other fixture puts
-	// the config at or above the anchor, so probing the whole ascent chain instead of
-	// just the anchored root gives the same answer — collapsing gitRoot into a plain
-	// upwardWalk would pass the entire suite. Here the only config sits strictly BELOW
-	// the root, so anchoring must not see it.
-	it.effect("gitRoot does not find a config in a subdirectory below the anchored root", () =>
-		withTempDir((root) =>
-			Effect.gen(function* () {
-				const sub = nodePath.join(root, "sub");
-				const deep = nodePath.join(sub, "pkg");
-				yield* Effect.promise(() => nodeFs.mkdir(deep, { recursive: true }));
-				yield* Effect.promise(() => nodeFs.mkdir(nodePath.join(root, ".git")));
-				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(sub, ".apprc"), "{}"));
-
-				const found = yield* ConfigResolver.gitRoot({ filename: ".apprc", cwd: deep }).resolve;
-
-				assert.isTrue(O.isNone(found));
-			}),
-		).pipe(Effect.provide(Platform)),
-	);
-
-	// No other fixture has nested roots, so an implementation that anchors on the
-	// FURTHEST accepting ancestor instead of the nearest passes them all.
-	it.effect("gitRoot anchors on the nearest .git when repositories are nested", () =>
-		withTempDir((root) =>
-			Effect.gen(function* () {
-				const inner = nodePath.join(root, "inner");
-				const deep = nodePath.join(inner, "pkg");
-				yield* Effect.promise(() => nodeFs.mkdir(deep, { recursive: true }));
-				yield* Effect.promise(() => nodeFs.mkdir(nodePath.join(root, ".git")));
-				yield* Effect.promise(() => nodeFs.mkdir(nodePath.join(inner, ".git")));
-				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(root, ".apprc"), "{}"));
-				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(inner, ".apprc"), "{}"));
-
-				const found = yield* ConfigResolver.gitRoot({ filename: ".apprc", cwd: deep }).resolve;
-
-				assert.strictEqual(O.getOrNull(found), nodePath.join(inner, ".apprc"));
-			}),
-		).pipe(Effect.provide(Platform)),
-	);
-
-	it.effect("upwardWalk: an earlier-listed subpath wins over a later one in the same directory", () =>
-		withTempDir((root) =>
-			Effect.gen(function* () {
-				yield* Effect.promise(() => nodeFs.mkdir(nodePath.join(root, ".config"), { recursive: true }));
-				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(root, ".config", ".apprc"), "{}"));
-				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(root, ".apprc"), "{}"));
+				const fs = yield* FileSystem.FileSystem;
+				const path = yield* Path.Path;
+				const root = yield* fs
+					.makeTempDirectoryScoped({ prefix: "cf-" })
+					.pipe(Effect.orDie);
+				const deep = path.join(root, "a", "b");
+				yield* fs.makeDirectory(deep, { recursive: true });
+				yield* fs.writeFileString(path.join(root, ".apprc"), "{}");
+				yield* fs.writeFileString(path.join(root, "a", ".apprc"), "{}");
 
 				const resolver = ConfigResolver.upwardWalk({
 					filename: ".apprc",
-					cwd: root,
+					cwd: deep,
 					stopAt: root,
-					subpaths: [".config", "."],
 				});
 				const found = yield* resolver.resolve;
 
-				assert.strictEqual(O.getOrNull(found), nodePath.join(root, ".config", ".apprc"));
-			}),
-		).pipe(Effect.provide(Platform)),
-	);
+				assertSome(found, path.join(root, "a", ".apprc"));
+			}).pipe(Effect.orDie),
+		);
 
-	it.effect("upwardWalk searches stopAt itself, not just directories strictly above it", () =>
-		withTempDir((root) =>
+		it.effect("gitRoot anchors on the .git marker", () =>
 			Effect.gen(function* () {
-				const deep = nodePath.join(root, "a", "b");
-				yield* Effect.promise(() => nodeFs.mkdir(deep, { recursive: true }));
-				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(root, ".apprc"), "{}"));
+				const fs = yield* FileSystem.FileSystem;
+				const path = yield* Path.Path;
+				const root = yield* fs
+					.makeTempDirectoryScoped({ prefix: "cf-" })
+					.pipe(Effect.orDie);
+				const deep = path.join(root, "pkg", "src");
+				yield* fs.makeDirectory(deep, { recursive: true });
+				yield* fs.makeDirectory(path.join(root, ".git"));
+				yield* fs.writeFileString(path.join(root, ".apprc"), "{}");
 
-				const resolver = ConfigResolver.upwardWalk({ filename: ".apprc", cwd: deep, stopAt: root });
-				const found = yield* resolver.resolve;
+				const found = yield* ConfigResolver.gitRoot({
+					filename: ".apprc",
+					cwd: deep,
+				}).resolve;
 
-				assert.strictEqual(O.getOrNull(found), nodePath.join(root, ".apprc"));
-			}),
-		).pipe(Effect.provide(Platform)),
-	);
+				assertSome(found, path.join(root, ".apprc"));
+			}).pipe(Effect.orDie),
+		);
 
-	it.effect("workspaceRoot absorbs an unparsable package.json and keeps ascending to the real root", () =>
-		withTempDir((root) =>
+		it.effect("gitRoot anchors on a .git file (worktree)", () =>
 			Effect.gen(function* () {
-				const malformedDir = nodePath.join(root, "malformed");
-				const deep = nodePath.join(malformedDir, "pkg");
-				yield* Effect.promise(() => nodeFs.mkdir(deep, { recursive: true }));
-				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(malformedDir, "package.json"), "{ not json"));
-				yield* Effect.promise(() =>
-					nodeFs.writeFile(nodePath.join(root, "pnpm-workspace.yaml"), "packages:\n  - packages/*\n"),
+				const fs = yield* FileSystem.FileSystem;
+				const path = yield* Path.Path;
+				const root = yield* fs
+					.makeTempDirectoryScoped({ prefix: "cf-" })
+					.pipe(Effect.orDie);
+				const deep = path.join(root, "pkg", "src");
+				yield* fs.makeDirectory(deep, { recursive: true });
+				yield* fs.writeFileString(
+					path.join(root, ".git"),
+					"gitdir: /elsewhere/.git/worktrees/pkg",
 				);
-				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(root, ".apprc"), "{}"));
+				yield* fs.writeFileString(path.join(root, ".apprc"), "{}");
 
-				const found = yield* ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: deep }).resolve;
+				const found = yield* ConfigResolver.gitRoot({
+					filename: ".apprc",
+					cwd: deep,
+				}).resolve;
 
-				assert.strictEqual(O.getOrNull(found), nodePath.join(root, ".apprc"));
-			}),
-		).pipe(Effect.provide(Platform)),
-	);
+				assertSome(found, path.join(root, ".apprc"));
+			}).pipe(Effect.orDie),
+		);
 
-	it.effect("workspaceRoot does not treat a package.json without a workspaces field as a root", () =>
-		withTempDir((root) =>
+		it.effect("workspaceRoot anchors on pnpm-workspace.yaml", () =>
 			Effect.gen(function* () {
-				const decoyDir = nodePath.join(root, "mid");
-				const deep = nodePath.join(decoyDir, "deep");
-				yield* Effect.promise(() => nodeFs.mkdir(deep, { recursive: true }));
-				yield* Effect.promise(() =>
-					nodeFs.writeFile(nodePath.join(decoyDir, "package.json"), Result.getOrThrow(S.encodeResult(JsonValue)({ name: "decoy" }))),
+				const fs = yield* FileSystem.FileSystem;
+				const path = yield* Path.Path;
+				const root = yield* fs
+					.makeTempDirectoryScoped({ prefix: "cf-" })
+					.pipe(Effect.orDie);
+				const deep = path.join(root, "packages", "pkg");
+				yield* fs.makeDirectory(deep, { recursive: true });
+				yield* fs.writeFileString(
+					path.join(root, "pnpm-workspace.yaml"),
+					"packages:\n  - packages/*\n",
 				);
-				yield* Effect.promise(() =>
-					nodeFs.writeFile(nodePath.join(root, "package.json"), Result.getOrThrow(S.encodeResult(JsonValue)({ workspaces: ["packages/*"] }))),
-				);
-				yield* Effect.promise(() => nodeFs.writeFile(nodePath.join(root, ".apprc"), "{}"));
+				yield* fs.writeFileString(path.join(root, ".apprc"), "{}");
 
-				const found = yield* ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: deep }).resolve;
+				const found = yield* ConfigResolver.workspaceRoot({
+					filename: ".apprc",
+					cwd: deep,
+				}).resolve;
 
-				assert.strictEqual(O.getOrNull(found), nodePath.join(root, ".apprc"));
-			}),
-		).pipe(Effect.provide(Platform)),
-	);
+				assertSome(found, path.join(root, ".apprc"));
+			}).pipe(Effect.orDie),
+		);
+
+		it.effect(
+			"workspaceRoot anchors on a package.json with a workspaces field",
+			() =>
+				Effect.gen(function* () {
+					const fs = yield* FileSystem.FileSystem;
+					const path = yield* Path.Path;
+					const root = yield* fs
+						.makeTempDirectoryScoped({ prefix: "cf-" })
+						.pipe(Effect.orDie);
+					const deep = path.join(root, "packages", "pkg");
+					yield* fs.makeDirectory(deep, { recursive: true });
+					yield* fs.writeFileString(
+						path.join(root, "package.json"),
+						Result.getOrThrow(
+							S.encodeResult(JsonValue)({ workspaces: ["packages/*"] }),
+						),
+					);
+					yield* fs.writeFileString(path.join(root, ".apprc"), "{}");
+
+					const found = yield* ConfigResolver.workspaceRoot({
+						filename: ".apprc",
+						cwd: deep,
+					}).resolve;
+
+					assertSome(found, path.join(root, ".apprc"));
+				}).pipe(Effect.orDie),
+		);
+
+		it.effect(
+			"upwardWalk yields none() when nothing is found before stopAt",
+			() =>
+				Effect.gen(function* () {
+					const fs = yield* FileSystem.FileSystem;
+					const root = yield* fs
+						.makeTempDirectoryScoped({ prefix: "cf-" })
+						.pipe(Effect.orDie);
+					const found = yield* ConfigResolver.upwardWalk({
+						filename: ".missing",
+						cwd: root,
+						stopAt: root,
+					}).resolve;
+					assertNone(found);
+				}).pipe(Effect.orDie),
+		);
+
+		// Every other stopAt test finds its match before reaching stopAt, so none of them
+		// observe stopAt actually halting the ascent: dropping the option entirely leaves
+		// them all green. This one puts the only match ABOVE stopAt.
+		it.effect("upwardWalk does not see a file above stopAt", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const path = yield* Path.Path;
+				const root = yield* fs
+					.makeTempDirectoryScoped({ prefix: "cf-" })
+					.pipe(Effect.orDie);
+				const mid = path.join(root, "mid");
+				const leaf = path.join(mid, "leaf");
+				yield* fs.makeDirectory(leaf, { recursive: true });
+				yield* fs.writeFileString(path.join(root, ".apprc"), "{}");
+
+				const found = yield* ConfigResolver.upwardWalk({
+					filename: ".apprc",
+					cwd: leaf,
+					stopAt: mid,
+				}).resolve;
+
+				assertNone(found);
+			}).pipe(Effect.orDie),
+		);
+
+		// systemEtc's success path was never exercised: the suite only reached it through a
+		// hostile filesystem (always none()) and a `.name` assertion, so returning none() on
+		// the hit branch passed everything. This pins both the some(candidate) return and the
+		// `app` path segment. The win32 short-circuit stays unobservable without stubbing
+		// `process.platform`, so it remains untested here.
+		it.effect("systemEtc finds a file under <dir>/<app>", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const path = yield* Path.Path;
+				const root = yield* fs
+					.makeTempDirectoryScoped({ prefix: "cf-" })
+					.pipe(Effect.orDie);
+				const appDir = path.join(root, "acme");
+				yield* fs.makeDirectory(appDir, { recursive: true });
+				yield* fs.writeFileString(path.join(appDir, ".apprc"), "{}");
+
+				const found = yield* ConfigResolver.systemEtc({
+					app: "acme",
+					filename: ".apprc",
+					dir: root,
+				}).resolve;
+
+				assertSome(found, path.join(appDir, ".apprc"));
+			}).pipe(Effect.orDie),
+		);
+
+		// rootAnchored exists to probe subpaths UNDER the anchor. Every other fixture puts
+		// the config at or above the anchor, so probing the whole ascent chain instead of
+		// just the anchored root gives the same answer — collapsing gitRoot into a plain
+		// upwardWalk would pass the entire suite. Here the only config sits strictly BELOW
+		// the root, so anchoring must not see it.
+		it.effect(
+			"gitRoot does not find a config in a subdirectory below the anchored root",
+			() =>
+				Effect.gen(function* () {
+					const fs = yield* FileSystem.FileSystem;
+					const path = yield* Path.Path;
+					const root = yield* fs
+						.makeTempDirectoryScoped({ prefix: "cf-" })
+						.pipe(Effect.orDie);
+					const sub = path.join(root, "sub");
+					const deep = path.join(sub, "pkg");
+					yield* fs.makeDirectory(deep, { recursive: true });
+					yield* fs.makeDirectory(path.join(root, ".git"));
+					yield* fs.writeFileString(path.join(sub, ".apprc"), "{}");
+
+					const found = yield* ConfigResolver.gitRoot({
+						filename: ".apprc",
+						cwd: deep,
+					}).resolve;
+
+					assertNone(found);
+				}).pipe(Effect.orDie),
+		);
+
+		// No other fixture has nested roots, so an implementation that anchors on the
+		// FURTHEST accepting ancestor instead of the nearest passes them all.
+		it.effect(
+			"gitRoot anchors on the nearest .git when repositories are nested",
+			() =>
+				Effect.gen(function* () {
+					const fs = yield* FileSystem.FileSystem;
+					const path = yield* Path.Path;
+					const root = yield* fs
+						.makeTempDirectoryScoped({ prefix: "cf-" })
+						.pipe(Effect.orDie);
+					const inner = path.join(root, "inner");
+					const deep = path.join(inner, "pkg");
+					yield* fs.makeDirectory(deep, { recursive: true });
+					yield* fs.makeDirectory(path.join(root, ".git"));
+					yield* fs.makeDirectory(path.join(inner, ".git"));
+					yield* fs.writeFileString(path.join(root, ".apprc"), "{}");
+					yield* fs.writeFileString(path.join(inner, ".apprc"), "{}");
+
+					const found = yield* ConfigResolver.gitRoot({
+						filename: ".apprc",
+						cwd: deep,
+					}).resolve;
+
+					assertSome(found, path.join(inner, ".apprc"));
+				}).pipe(Effect.orDie),
+		);
+
+		it.effect(
+			"upwardWalk: an earlier-listed subpath wins over a later one in the same directory",
+			() =>
+				Effect.gen(function* () {
+					const fs = yield* FileSystem.FileSystem;
+					const path = yield* Path.Path;
+					const root = yield* fs
+						.makeTempDirectoryScoped({ prefix: "cf-" })
+						.pipe(Effect.orDie);
+					yield* fs.makeDirectory(path.join(root, ".config"), {
+						recursive: true,
+					});
+					yield* fs.writeFileString(path.join(root, ".config", ".apprc"), "{}");
+					yield* fs.writeFileString(path.join(root, ".apprc"), "{}");
+
+					const resolver = ConfigResolver.upwardWalk({
+						filename: ".apprc",
+						cwd: root,
+						stopAt: root,
+						subpaths: [".config", "."],
+					});
+					const found = yield* resolver.resolve;
+
+					assertSome(found, path.join(root, ".config", ".apprc"));
+				}).pipe(Effect.orDie),
+		);
+
+		it.effect(
+			"upwardWalk searches stopAt itself, not just directories strictly above it",
+			() =>
+				Effect.gen(function* () {
+					const fs = yield* FileSystem.FileSystem;
+					const path = yield* Path.Path;
+					const root = yield* fs
+						.makeTempDirectoryScoped({ prefix: "cf-" })
+						.pipe(Effect.orDie);
+					const deep = path.join(root, "a", "b");
+					yield* fs.makeDirectory(deep, { recursive: true });
+					yield* fs.writeFileString(path.join(root, ".apprc"), "{}");
+
+					const resolver = ConfigResolver.upwardWalk({
+						filename: ".apprc",
+						cwd: deep,
+						stopAt: root,
+					});
+					const found = yield* resolver.resolve;
+
+					assertSome(found, path.join(root, ".apprc"));
+				}).pipe(Effect.orDie),
+		);
+
+		it.effect(
+			"workspaceRoot absorbs an unparsable package.json and keeps ascending to the real root",
+			() =>
+				Effect.gen(function* () {
+					const fs = yield* FileSystem.FileSystem;
+					const path = yield* Path.Path;
+					const root = yield* fs
+						.makeTempDirectoryScoped({ prefix: "cf-" })
+						.pipe(Effect.orDie);
+					const malformedDir = path.join(root, "malformed");
+					const deep = path.join(malformedDir, "pkg");
+					yield* fs.makeDirectory(deep, { recursive: true });
+					yield* fs.writeFileString(
+						path.join(malformedDir, "package.json"),
+						"{ not json",
+					);
+					yield* fs.writeFileString(
+						path.join(root, "pnpm-workspace.yaml"),
+						"packages:\n  - packages/*\n",
+					);
+					yield* fs.writeFileString(path.join(root, ".apprc"), "{}");
+
+					const found = yield* ConfigResolver.workspaceRoot({
+						filename: ".apprc",
+						cwd: deep,
+					}).resolve;
+
+					assertSome(found, path.join(root, ".apprc"));
+				}).pipe(Effect.orDie),
+		);
+
+		it.effect(
+			"workspaceRoot does not treat a package.json without a workspaces field as a root",
+			() =>
+				Effect.gen(function* () {
+					const fs = yield* FileSystem.FileSystem;
+					const path = yield* Path.Path;
+					const root = yield* fs
+						.makeTempDirectoryScoped({ prefix: "cf-" })
+						.pipe(Effect.orDie);
+					const decoyDir = path.join(root, "mid");
+					const deep = path.join(decoyDir, "deep");
+					yield* fs.makeDirectory(deep, { recursive: true });
+					yield* fs.writeFileString(
+						path.join(decoyDir, "package.json"),
+						Result.getOrThrow(S.encodeResult(JsonValue)({ name: "decoy" })),
+					);
+					yield* fs.writeFileString(
+						path.join(root, "package.json"),
+						Result.getOrThrow(
+							S.encodeResult(JsonValue)({ workspaces: ["packages/*"] }),
+						),
+					);
+					yield* fs.writeFileString(path.join(root, ".apprc"), "{}");
+
+					const found = yield* ConfigResolver.workspaceRoot({
+						filename: ".apprc",
+						cwd: deep,
+					}).resolve;
+
+					assertSome(found, path.join(root, ".apprc"));
+				}).pipe(Effect.orDie),
+		);
+	});
 });

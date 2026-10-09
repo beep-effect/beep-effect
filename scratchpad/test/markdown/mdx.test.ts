@@ -12,6 +12,7 @@
 // markdown inside it is ours.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as HashMap from "effect/HashMap";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
@@ -51,7 +52,7 @@ const rootOf = (...children: ReadonlyArray<Root["children"][number]>): Root => R
 
 const stringified = (root: Root): string => {
 	const result = Markdown.stringifyResult(root);
-	assert.isTrue(Result.isSuccess(result));
+	assertSuccess(Result.map(result, () => undefined), undefined);
 	return Result.isSuccess(result) ? result.success : "";
 };
 
@@ -423,7 +424,7 @@ describe("mdx nodes", () => {
 				],
 			};
 			const result = Mdast.fromMdastResult(foreign);
-			assert.isTrue(Result.isSuccess(result));
+			assertSuccess(Result.map(result, () => undefined), undefined);
 			if (Result.isSuccess(result)) {
 				const [fragment, expression, wrapper] = result.success.children;
 				assert.strictEqual(fragment?.type, "mdxJsxFlowElement");
@@ -446,12 +447,12 @@ describe("mdx nodes", () => {
 				type: "root",
 				children: [{ type: "mdxJsxFlowElement", name: 42, attributes: [], children: [] }],
 			};
-			assert.isTrue(Result.isFailure(Mdast.fromMdastResult(numericName)));
+			assertFailure(Result.mapError(Mdast.fromMdastResult(numericName), () => undefined), undefined);
 			const emptyName = {
 				type: "root",
 				children: [{ type: "mdxJsxFlowElement", name: "", attributes: [], children: [] }],
 			};
-			assert.isTrue(Result.isFailure(Mdast.fromMdastResult(emptyName)));
+			assertFailure(Result.mapError(Mdast.fromMdastResult(emptyName), () => undefined), undefined);
 		});
 
 		it("passes non-array attributes and children through so the decode fails typed", () => {
@@ -463,12 +464,12 @@ describe("mdx nodes", () => {
 				type: "root",
 				children: [{ type: "mdxJsxFlowElement", name: "x", attributes: {}, children: [] }],
 			};
-			assert.isTrue(Result.isFailure(Mdast.fromMdastResult(objectAttributes)));
+			assertFailure(Result.mapError(Mdast.fromMdastResult(objectAttributes), () => undefined), undefined);
 			const stringChildren = {
 				type: "root",
 				children: [{ type: "mdxJsxFlowElement", name: "x", attributes: [], children: "text" }],
 			};
-			assert.isTrue(Result.isFailure(Mdast.fromMdastResult(stringChildren)));
+			assertFailure(Result.mapError(Mdast.fromMdastResult(stringChildren), () => undefined), undefined);
 		});
 
 		it("round-trips project-then-admit for a tree with every MDX node type", () => {
@@ -479,7 +480,7 @@ describe("mdx nodes", () => {
 				paragraph(textElement("i", [], [text("z")]), MdxTextExpression.make({ value: "q" })),
 			);
 			const back = Mdast.fromMdastResult(Mdast.toMdast(tree));
-			assert.isTrue(Result.isSuccess(back));
+			assertSuccess(Result.map(back, () => undefined), undefined);
 			if (Result.isSuccess(back)) {
 				assert.deepStrictEqual(Mdast.toMdast(back.success), Mdast.toMdast(tree));
 				assert.strictEqual(stringified(back.success), stringified(tree));

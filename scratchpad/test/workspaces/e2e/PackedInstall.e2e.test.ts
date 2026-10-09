@@ -336,7 +336,7 @@ const assertConsumer = Effect.fn("assertConsumer")(function* (consumer: Installe
 	});
 
 describe("PackedInstall against a real fixture workspace", () => {
-	layer(Live, { excludeTestServices: true })((it) => {
+	layer(Live, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
 		it.effect("runs under bun, and every manager spawn gets the parent's context scrubbed", () =>
 			Effect.sync(() => {
 				// Positive control: the real Bun context is present in this process.
@@ -453,7 +453,7 @@ describe("PackedInstall against a real fixture workspace", () => {
 					const [yarn] = result.consumers;
 					assert.strictEqual(yarn?.manager, "yarn");
 					if (yarn !== undefined) yield* assertConsumer(yarn, result.tarballs);
-				}).pipe(Effect.timeout("100 seconds"), Effect.scoped),
+				}).pipe(Effect.timeout("100 seconds")),
 			120_000,
 		);
 
@@ -474,7 +474,7 @@ describe("PackedInstall against a real fixture workspace", () => {
 						result.consumers.map((consumer) => consumer.manager),
 						["npm"],
 					);
-				}).pipe(Effect.timeout("100 seconds"), Effect.scoped),
+				}).pipe(Effect.timeout("100 seconds")),
 			120_000,
 		);
 
@@ -528,7 +528,7 @@ describe("PackedInstall against a real fixture workspace", () => {
 							`${consumer.manager}: ${out.stderr}`,
 						);
 					}
-				}).pipe(Effect.timeout("150 seconds"), Effect.scoped),
+				}).pipe(Effect.timeout("150 seconds")),
 			180_000,
 		);
 
@@ -552,7 +552,7 @@ describe("PackedInstall against a real fixture workspace", () => {
 					assert.isFalse(out.succeeded);
 					assert.include(out.stderr, "ERR_MODULE_NOT_FOUND");
 					assert.include(out.stderr, LIB);
-				}).pipe(Effect.timeout("100 seconds"), Effect.scoped),
+				}).pipe(Effect.timeout("100 seconds")),
 			120_000,
 		);
 
@@ -614,7 +614,7 @@ describe("PackedInstall against a real fixture workspace", () => {
 						pnpm: "carrier",
 					};
 					assert.deepStrictEqual(seen, Object.fromEntries(sharedManagers.map((pm) => [pm, winner[pm]])));
-				}).pipe(Effect.timeout(SHARED_GUARDS.effect), Effect.scoped),
+				}).pipe(Effect.timeout(SHARED_GUARDS.effect)),
 			SHARED_GUARDS.vitest,
 		);
 
@@ -634,7 +634,7 @@ describe("PackedInstall against a real fixture workspace", () => {
 					);
 					assert.strictEqual(error.reason, "UnresolvedProtocol");
 					assert.include(error.message, `dependencies.${LIB}: workspace:^`);
-				}).pipe(Effect.timeout("60 seconds"), Effect.scoped),
+				}).pipe(Effect.timeout("60 seconds")),
 			90_000,
 		);
 
@@ -653,7 +653,7 @@ describe("PackedInstall against a real fixture workspace", () => {
 						}),
 					);
 					assert.deepStrictEqual([error.reason, error.manager], ["MissingBin", "npm"]);
-				}).pipe(Effect.timeout("100 seconds"), Effect.scoped),
+				}).pipe(Effect.timeout("100 seconds")),
 			120_000,
 		);
 	});
@@ -713,7 +713,7 @@ describe("PackedInstall overrides: a dependency no registry has, supplied from o
 		perConsumer: "2 minutes",
 	});
 
-	layer(LinkedLive, { excludeTestServices: true })((it) => {
+	layer(LinkedLive, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
 		it.effect.skipIf(!HAS_NPM)(
 			"the fixture really is unresolvable: without an override the install fails behind the dead proxy",
 			() =>
@@ -732,7 +732,7 @@ describe("PackedInstall overrides: a dependency no registry has, supplied from o
 					assert.deepStrictEqual([error.reason, error.manager], ["InstallFailed", CONTROL]);
 					// It failed on the external, not on something else.
 					assert.include(`${error.message}\n${error.output ?? ""}`, CONTROL === "bun" ? EXTERNAL : "timed out");
-				}).pipe(Effect.timeout(CONTROL_GUARDS.effect), Effect.scoped),
+				}).pipe(Effect.timeout(CONTROL_GUARDS.effect)),
 			CONTROL_GUARDS.vitest,
 		);
 
@@ -757,7 +757,7 @@ describe("PackedInstall overrides: a dependency no registry has, supplied from o
 					assert.deepStrictEqual(Object.keys(result.tarballs), planned, "closure names exactly what the run packed");
 					assert.strictEqual(result.tarballs[EXTERNAL], LINKED_FIXTURE.externalTarball, "a tarball is used as it is");
 					yield* assertLinked(result.consumers);
-				}).pipe(Effect.timeout(LINKED_GUARDS.effect), Effect.scoped),
+				}).pipe(Effect.timeout(LINKED_GUARDS.effect)),
 			LINKED_GUARDS.vitest,
 		);
 
@@ -779,7 +779,7 @@ describe("PackedInstall overrides: a dependency no registry has, supplied from o
 					// The directory was npm-packed into the scratch root, not used in place.
 					assert.isTrue(result.tarballs[EXTERNAL]?.startsWith(`${result.scratch}/`), result.tarballs[EXTERNAL]);
 					yield* assertLinked(result.consumers);
-				}).pipe(Effect.timeout(LINKED_GUARDS.effect), Effect.scoped),
+				}).pipe(Effect.timeout(LINKED_GUARDS.effect)),
 			LINKED_GUARDS.vitest,
 		);
 	});

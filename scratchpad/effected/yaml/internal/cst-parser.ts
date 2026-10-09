@@ -4,19 +4,11 @@
 // whitespace, comments, and structural indicators. No value interpretation
 // occurs at this stage.
 
-import { $ScratchpadId } from "@beep/identity/packages";
-import * as S from "effect/Schema";
+import * as A from "effect/Array";
 
 import type { CstNode, CstNodeType } from "./cst.ts";
 import { lexAll } from "./lexer.ts";
 import type { YamlToken, YamlTokenKind } from "./token.ts";
-
-const $I = $ScratchpadId.create("effected/yaml/internal/cst-parser");
-
-/** A defect raised when a YAML helper invariant is violated. */
-class CstParserFailure extends S.TaggedError<CstParserFailure>($I`CstParserFailure`)("CstParserFailure", {
-	message: S.String.annotateKey({ description: "The violated CST parser invariant." }),
-}, $I.annote("CstParserFailure", { description: "A thrown defect identifying a violated CST parser invariant." })) {}
 
 // ---------------------------------------------------------------------------
 // Internal parser state
@@ -48,9 +40,9 @@ function guardDepth(state: ParserState): CstNode | null {
 	const token = advance(state);
 	return {
 		type: "error",
-		source: token?.value ?? "",
-		offset: token?.offset ?? state.text.length,
-		length: token?.length ?? 0,
+		source: token.value,
+		offset: token.offset,
+		length: token.length,
 	};
 }
 
@@ -58,12 +50,13 @@ function atEnd(state: ParserState): boolean {
 	return state.pos >= state.tokens.length;
 }
 
-function peek(state: ParserState): YamlToken | undefined {
-	return state.tokens[state.pos];
+// The lexer produces a dense token array; callers establish an in-bounds position.
+function peek(state: ParserState): YamlToken {
+	return A.getUnsafe(state.tokens, state.pos);
 }
 
-function advance(state: ParserState): YamlToken | undefined {
-	const token = state.tokens[state.pos];
+function advance(state: ParserState): YamlToken {
+	const token = peek(state);
 	state.pos++;
 	return token;
 }
@@ -87,10 +80,8 @@ function makeContainerNode(type: CstNodeType, children: CstNode[], text: string)
 	if (children.length === 0) {
 		return { type, source: "", offset: 0, length: 0, children };
 	}
-	const first = children[0];
-	if (first === undefined) throw CstParserFailure.make({ message: "Missing first" });
-	const last = children[children.length - 1];
-	if (last === undefined) throw CstParserFailure.make({ message: "Missing last" });
+	const first = A.getUnsafe(children, 0);
+	const last = A.getUnsafe(children, children.length - 1);
 	const offset = first.offset;
 	const end = last.offset + last.length;
 	const source = text.slice(offset, end);
@@ -127,7 +118,7 @@ function consumeTrivia(state: ParserState): CstNode[] {
 	const nodes: CstNode[] = [];
 	while (!atEnd(state)) {
 		const token = peek(state);
-		if (token === undefined || !isTrivia(token)) break;
+		if (!isTrivia(token)) break;
 		advance(state);
 		if (token.kind === "comment") {
 			nodes.push(makeLeafNode("comment", token, state.text));
@@ -169,9 +160,8 @@ const leafNodeTypes: Readonly<Record<YamlTokenKind, CstNodeType>> = {
  * Consume a single trivia-or-content token and return it as a CST node.
  * Used for tokens that don't form higher-level structures.
  */
-function consumeLeafToken(state: ParserState): CstNode | undefined {
+function consumeLeafToken(state: ParserState): CstNode {
 	const token = peek(state);
-	if (token === undefined) return undefined;
 	advance(state);
 
 	return makeLeafNode(leafNodeTypes[token.kind], token, state.text);
@@ -196,19 +186,14 @@ function parseFlowMappingInner(state: ParserState): CstNode {
 	// Consume the opening { — typed as "whitespace" since brackets are
 	// structural punctuation, not scalar content.
 	const open = advance(state);
-	if ((open !== undefined)) {
-		children.push(makeLeafNode("whitespace", open, state.text));
-	}
+	children.push(makeLeafNode("whitespace", open, state.text));
 
 	while (!atEnd(state)) {
 		const token = peek(state);
-		if (token === undefined) break;
 
 		if (token.kind === "flow-map-end") {
 			const close = advance(state);
-			if ((close !== undefined)) {
-				children.push(makeLeafNode("whitespace", close, state.text));
-			}
+			children.push(makeLeafNode("whitespace", close, state.text));
 			break;
 		}
 
@@ -218,7 +203,7 @@ function parseFlowMappingInner(state: ParserState): CstNode {
 			children.push(parseFlowSequence(state));
 		} else {
 			const leaf = consumeLeafToken(state);
-			if ((leaf !== undefined)) children.push(leaf);
+			children.push(leaf);
 		}
 	}
 
@@ -244,19 +229,14 @@ function parseFlowSequenceInner(state: ParserState): CstNode {
 	// Consume the opening [ — typed as "whitespace" since brackets are
 	// structural punctuation, not scalar content.
 	const open = advance(state);
-	if ((open !== undefined)) {
-		children.push(makeLeafNode("whitespace", open, state.text));
-	}
+	children.push(makeLeafNode("whitespace", open, state.text));
 
 	while (!atEnd(state)) {
 		const token = peek(state);
-		if (token === undefined) break;
 
 		if (token.kind === "flow-seq-end") {
 			const close = advance(state);
-			if ((close !== undefined)) {
-				children.push(makeLeafNode("whitespace", close, state.text));
-			}
+			children.push(makeLeafNode("whitespace", close, state.text));
 			break;
 		}
 
@@ -266,7 +246,7 @@ function parseFlowSequenceInner(state: ParserState): CstNode {
 			children.push(parseFlowSequence(state));
 		} else {
 			const leaf = consumeLeafToken(state);
-			if ((leaf !== undefined)) children.push(leaf);
+			children.push(leaf);
 		}
 	}
 
@@ -279,9 +259,6 @@ function parseFlowSequenceInner(state: ParserState): CstNode {
  */
 function parseBlockScalar(state: ParserState): CstNode {
 	const token = advance(state);
-	if (token === undefined) {
-		return { type: "block-scalar", source: "", offset: 0, length: 0 };
-	}
 	// The lexer gives us a "scalar" token whose raw span in the original text
 	// covers the entire block scalar including the indicator.
 	// We use token.offset and token.length to get the raw source.
@@ -311,8 +288,7 @@ function isBlockScalarToken(state: ParserState): boolean {
  */
 function lastNonTriviaIsValueSep(children: readonly CstNode[]): boolean {
 	for (let i = children.length - 1; i >= 0; i--) {
-		const c = children[i];
-		if (c === undefined) continue;
+		const c = A.getUnsafe(children, i);
 		if (c.type === "whitespace" && c.source === ":") return true;
 		if (c.type === "newline" || c.type === "comment") continue;
 		if (c.type === "whitespace") continue;
@@ -324,21 +300,10 @@ function lastNonTriviaIsValueSep(children: readonly CstNode[]): boolean {
 	return false;
 }
 
-/**
- * Find the column of the first block-seq-entry in the token stream,
- * skipping the zero-width block-seq-start marker and any trivia.
- * Falls back to `fallback` if no entry is found.
- */
-function findFirstSeqEntryColumn(state: ParserState, fallback: number): number {
-	for (let i = state.pos; i < state.tokens.length; i++) {
-		const t = state.tokens[i];
-		if (t === undefined) break;
-		if (t.kind === "block-seq-start") continue;
-		if (isTrivia(t)) continue;
-		if (t.kind === "block-seq-entry") return t.column;
-		break;
-	}
-	return fallback;
+/** The lexer queues each sequence-start marker immediately before its entry. */
+function findFirstSeqEntryColumn(state: ParserState): number {
+	const entryIndex = state.pos + (peek(state).kind === "block-seq-start" ? 1 : 0);
+	return A.getUnsafe(state.tokens, entryIndex).column;
 }
 
 /**
@@ -360,14 +325,10 @@ function parseBlockMappingInner(state: ParserState, indent: number): CstNode {
 	let sawExplicitKey = false;
 
 	// Consume the block-map-start token
-	const startToken = peek(state);
-	if (startToken?.kind === "block-map-start") {
-		advance(state);
-	}
+	advance(state);
 
 	while (!atEnd(state)) {
 		const token = peek(state);
-		if (token === undefined) break;
 
 		// Stop conditions
 		if (isDocumentBoundary(token)) break;
@@ -401,7 +362,7 @@ function parseBlockMappingInner(state: ParserState, indent: number): CstNode {
 			if (token.column < indent && children.length > 0) break;
 			sawExplicitKey = true;
 			const leaf = consumeLeafToken(state);
-			if ((leaf !== undefined)) children.push(leaf);
+			children.push(leaf);
 			continue;
 		}
 
@@ -411,7 +372,7 @@ function parseBlockMappingInner(state: ParserState, indent: number): CstNode {
 			// (e.g. the explicit-value indicator of the parent's next entry).
 			if (token.column < indent && children.length > 0) break;
 			const leaf = consumeLeafToken(state);
-			if ((leaf !== undefined)) children.push(leaf);
+			children.push(leaf);
 			// After ":", consume the value. Pass explicitKey context so
 			// parseBlockValue knows whether inline sequences are valid.
 			children.push(...parseBlockValue(state, indent, sawExplicitKey));
@@ -430,20 +391,14 @@ function parseBlockMappingInner(state: ParserState, indent: number): CstNode {
 				continue;
 			}
 			const leaf = consumeLeafToken(state);
-			if ((leaf !== undefined)) children.push(leaf);
+			children.push(leaf);
 			continue;
 		}
 
 		// Nested block structures
 		if (token.kind === "block-map-start") {
-			if (token.column > indent) {
-				children.push(parseBlockMapping(state, token.column));
-			} else if (token.column === indent) {
-				// Same-indent: lexer re-emitted scope marker; consume and continue
-				advance(state);
-			} else {
-				break;
-			}
+			// A map scope emits its start marker once; further markers are nested.
+			children.push(parseBlockMapping(state, token.column));
 			continue;
 		}
 
@@ -455,7 +410,7 @@ function parseBlockMappingInner(state: ParserState, indent: number): CstNode {
 			// comparisons match (KK5P, M5DY, M2N8 explicit-? compact-key
 			// form). For implicit-key value position (`key: - a`), keep
 			// token.column to preserve invalid-input rejection (5U3A).
-			const seqIndent = sawExplicitKey ? findFirstSeqEntryColumn(state, token.column) : token.column;
+			const seqIndent = sawExplicitKey ? findFirstSeqEntryColumn(state) : token.column;
 			children.push(parseBlockSequence(state, seqIndent));
 			continue;
 		}
@@ -469,28 +424,23 @@ function parseBlockMappingInner(state: ParserState, indent: number): CstNode {
 				const seqChildren: CstNode[] = [];
 				while (!atEnd(state)) {
 					const seqToken = peek(state);
-					if (seqToken === undefined) break;
 					if (seqToken.kind === "block-seq-entry" && seqToken.column === indent) {
 						seqChildren.push(...consumeTrivia(state));
 						const entry = consumeLeafToken(state);
-						if ((entry !== undefined)) seqChildren.push(entry);
+						seqChildren.push(entry);
 						// Consume content after the entry dash
 						seqChildren.push(...parseSequenceEntryContent(state, indent));
-					} else if (isTrivia(seqToken)) {
-						seqChildren.push(...consumeTrivia(state));
 					} else {
 						break;
 					}
 				}
-				if (seqChildren.length > 0) {
-					children.push(makeContainerNode("block-seq", seqChildren, state.text));
-				}
+				children.push(makeContainerNode("block-seq", seqChildren, state.text));
 				continue;
 			}
 			// This entry belongs to a parent sequence, stop
 			if (token.column <= indent) break;
 			const leaf = consumeLeafToken(state);
-			if ((leaf !== undefined)) children.push(leaf);
+			children.push(leaf);
 			continue;
 		}
 
@@ -506,7 +456,7 @@ function parseBlockMappingInner(state: ParserState, indent: number): CstNode {
 
 		// Anything else: consume as leaf
 		const leaf = consumeLeafToken(state);
-		if ((leaf !== undefined)) children.push(leaf);
+		children.push(leaf);
 	}
 
 	return makeContainerNode("block-map", children, state.text);
@@ -520,7 +470,6 @@ function parseBlockValue(state: ParserState, parentIndent: number, explicitKey =
 
 	while (!atEnd(state)) {
 		const token = peek(state);
-		if (token === undefined) break;
 
 		// Consume inline whitespace ONLY — never via consumeTrivia, which
 		// would greedily swallow a trailing comment AND the newline after it,
@@ -570,7 +519,7 @@ function parseBlockValue(state: ParserState, parentIndent: number, explicitKey =
 			// The lexer's block-seq-start column may not match the entry
 			// column (it uses lineIndent from the ":" indicator). Find the
 			// actual entry column to use as the sequence indent.
-			const seqIndent = findFirstSeqEntryColumn(state, token.column);
+			const seqIndent = findFirstSeqEntryColumn(state);
 			nodes.push(parseBlockSequence(state, seqIndent));
 			break;
 		}
@@ -594,7 +543,7 @@ function parseBlockValue(state: ParserState, parentIndent: number, explicitKey =
 		// Scalar, anchor, alias, tag
 		if (token.kind === "scalar" || token.kind === "anchor" || token.kind === "alias" || token.kind === "tag") {
 			const leaf = consumeLeafToken(state);
-			if ((leaf !== undefined)) nodes.push(leaf);
+			nodes.push(leaf);
 			continue;
 		}
 
@@ -629,42 +578,25 @@ function parseBlockSequenceInner(state: ParserState, indent: number): CstNode {
 
 	while (!atEnd(state)) {
 		const token = peek(state);
-		if (token === undefined) break;
 
 		// Stop conditions
 		if (isDocumentBoundary(token)) break;
-
-		// Trivia
-		if (isTrivia(token)) {
-			children.push(...consumeTrivia(state));
-			continue;
-		}
 
 		// Sequence entry
 		if (token.kind === "block-seq-entry") {
 			if (token.column < indent) break;
 			if (token.column > indent) break;
 			const leaf = consumeLeafToken(state);
-			if ((leaf !== undefined)) children.push(leaf);
+			children.push(leaf);
 			// Parse the entry content
 			children.push(...parseSequenceEntryContent(state, indent));
 			continue;
 		}
 
-		// If we hit a map/seq start at higher indent, it's entry content
-		if (token.kind === "block-map-start" && token.column > indent) {
-			children.push(parseBlockMapping(state, token.column));
-			continue;
-		}
-
 		if (token.kind === "block-seq-start") {
-			if (token.column > indent) {
-				children.push(parseBlockSequence(state, token.column));
-			} else {
-				// Same-indent block-seq-start: the lexer re-emitted a scope
-				// marker after returning from deeper nesting. Consume and continue.
-				advance(state);
-			}
+			// Entry-content parsing already consumes deeper starts and all trivia.
+			// Only a re-emitted parent/sibling scope marker can remain here.
+			advance(state);
 			continue;
 		}
 
@@ -677,13 +609,13 @@ function parseBlockSequenceInner(state: ParserState, indent: number): CstNode {
 
 /**
  * Look ahead (without consuming) to see if a block-map-value token exists
- * before the next newline / document boundary / sequence entry at this indent.
+ * before the next newline / sequence entry at this indent.
+ * Document boundaries are line-start tokens, so their preceding newline stops the scan.
  */
 function hasImplicitMapAhead(state: ParserState, seqIndent: number): boolean {
 	let flowDepth = 0;
 	for (let i = state.pos; i < state.tokens.length; i++) {
-		const t = state.tokens[i];
-		if (t === undefined) break;
+		const t = A.getUnsafe(state.tokens, i);
 		// Track flow depth so we don't mistake a ":" inside { } or [ ] for a
 		// block mapping value indicator.
 		if (t.kind === "flow-map-start" || t.kind === "flow-seq-start") {
@@ -696,7 +628,6 @@ function hasImplicitMapAhead(state: ParserState, seqIndent: number): boolean {
 		}
 		if (flowDepth > 0) continue;
 		if (t.kind === "newline") return false;
-		if (isDocumentBoundary(t)) return false;
 		if (t.kind === "block-seq-entry" && t.column <= seqIndent) return false;
 		if (t.kind === "block-map-value") return true;
 	}
@@ -725,7 +656,6 @@ function parseSequenceEntryContent(state: ParserState, seqIndent: number): CstNo
 
 	while (!atEnd(state)) {
 		const token = peek(state);
-		if (token === undefined) break;
 
 		// Stop at document boundary
 		if (isDocumentBoundary(token)) break;
@@ -790,7 +720,7 @@ function parseSequenceEntryContent(state: ParserState, seqIndent: number): CstNo
 			// belongs to a parent scope (e.g. a sibling key in the parent mapping).
 			if (token.column <= seqIndent) break;
 			const leaf = consumeLeafToken(state);
-			if ((leaf !== undefined)) nodes.push(leaf);
+			nodes.push(leaf);
 			continue;
 		}
 
@@ -824,7 +754,6 @@ function parseImplicitBlockMappingInner(state: ParserState, seqIndent: number): 
 
 	while (!atEnd(state)) {
 		const token = peek(state);
-		if (token === undefined) break;
 
 		// Stop at document boundary
 		if (isDocumentBoundary(token)) break;
@@ -849,7 +778,7 @@ function parseImplicitBlockMappingInner(state: ParserState, seqIndent: number): 
 			// `:` of a following explicit entry), not one of our pairs.
 			if (token.column <= seqIndent && children.length > 0) break;
 			const leaf = consumeLeafToken(state);
-			if ((leaf !== undefined)) children.push(leaf);
+			children.push(leaf);
 			// After ":", consume the value
 			children.push(...parseBlockValue(state, seqIndent));
 			continue;
@@ -869,7 +798,7 @@ function parseImplicitBlockMappingInner(state: ParserState, seqIndent: number): 
 				entryIndent = token.column;
 			}
 			const leaf = consumeLeafToken(state);
-			if ((leaf !== undefined)) children.push(leaf);
+			children.push(leaf);
 			continue;
 		}
 
@@ -905,7 +834,7 @@ function parseImplicitBlockMappingInner(state: ParserState, seqIndent: number): 
 
 		// Anything else
 		const leaf = consumeLeafToken(state);
-		if ((leaf !== undefined)) children.push(leaf);
+		children.push(leaf);
 	}
 
 	return makeContainerNode("block-map", children, state.text);
@@ -920,11 +849,10 @@ function parseDocument(state: ParserState): CstNode {
 	// Consume leading directives
 	while (!atEnd(state)) {
 		const token = peek(state);
-		if (token === undefined) break;
 
 		if (token.kind === "directive") {
 			const leaf = consumeLeafToken(state);
-			if ((leaf !== undefined)) children.push(leaf);
+			children.push(leaf);
 			continue;
 		}
 
@@ -952,24 +880,22 @@ function parseDocument(state: ParserState): CstNode {
 		const token = peek(state);
 		if (token?.kind === "document-start") {
 			const leaf = consumeLeafToken(state);
-			if ((leaf !== undefined)) children.push(leaf);
+			children.push(leaf);
 		}
 	}
 
 	// Parse document content
 	while (!atEnd(state)) {
 		const token = peek(state);
-		if (token === undefined) break;
 
 		// Stop at next document boundary
 		if (token.kind === "document-start") break;
 		if (token.kind === "document-end") {
 			const leaf = consumeLeafToken(state);
-			if ((leaf !== undefined)) children.push(leaf);
+			children.push(leaf);
 			// Consume trailing trivia after document-end
 			while (!atEnd(state)) {
 				const t = peek(state);
-				if (t === undefined) break;
 				if (t.kind === "newline" || t.kind === "whitespace" || t.kind === "comment") {
 					children.push(...consumeTrivia(state));
 				} else {
@@ -1014,7 +940,7 @@ function parseDocument(state: ParserState): CstNode {
 
 		// Any other token
 		const leaf = consumeLeafToken(state);
-		if ((leaf !== undefined)) children.push(leaf);
+		children.push(leaf);
 	}
 
 	return makeContainerNode("document", children, state.text);
@@ -1025,8 +951,8 @@ function parseDocument(state: ParserState): CstNode {
  */
 function findNextNonTrivia(state: ParserState): YamlToken | undefined {
 	for (let i = state.pos; i < state.tokens.length; i++) {
-		const t = state.tokens[i];
-		if ((t !== undefined) && !isTrivia(t)) return t;
+		const t = A.getUnsafe(state.tokens, i);
+		if (!isTrivia(t)) return t;
 	}
 	return undefined;
 }
@@ -1044,7 +970,6 @@ function parseDocuments(tokens: ReadonlyArray<YamlToken>, text: string): CstNode
 	}
 
 	while (!atEnd(state)) {
-		const before = state.pos;
 		const doc = parseDocument(state);
 
 		// Skip bare document-end markers that don't contain any content.
@@ -1057,11 +982,6 @@ function parseDocuments(tokens: ReadonlyArray<YamlToken>, text: string): CstNode
 		);
 		if ((hasDocStart === true) || (hasContent === true) || documents.length === 0) {
 			documents.push(doc);
-		}
-
-		// Safety: if no progress was made, force-advance to avoid infinite loop
-		if (state.pos === before && !atEnd(state)) {
-			state.pos++;
 		}
 	}
 

@@ -110,8 +110,7 @@ const FIELD_TO_KIND = {
  * @category utilities
  * @since 0.0.0
  */
-export class DependencySection {
-	private constructor() {}
+export abstract class DependencySection {
 
 	/**
 	 * The short-kind literal schema (`prod` … `optional`).

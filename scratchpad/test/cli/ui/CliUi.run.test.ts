@@ -1,10 +1,15 @@
 import * as Layer from "effect/Layer";
-import { NodeServices } from "@effect/platform-node";
-import type * as Terminal from "effect/Terminal";
+import * as Path from "effect/Path";
+import * as Stdio from "effect/Stdio";
+import * as Terminal from "effect/Terminal";
+import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
+import { MemoryFileSystem } from "../../../effected/memfs/index.ts";
 import type { CliError, Command } from "effect/cli";
-// @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file globalTimers:skip-file
 import * as Clock from "effect/Clock";
 import { assert, describe, it } from "@effect/vitest";
+import { assertExitFailure } from "@effect/vitest/utils";
+// Vitest requires a direct vi import for its hoisted module-loader instrumentation.
+import { vi } from "vitest";
 import type * as Scope from "effect/Scope";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
@@ -16,7 +21,6 @@ import * as S from "effect/Schema";
 import { Text, useApp } from "ink";
 import type { ReactElement } from "react";
 import { createElement, useEffect, useState } from "react";
-import { vi } from "vitest";
 import { Cancelled, CliInteractive, CliTheme, NotInteractive } from "../../../effected/cli/index.ts";
 import { inkModules } from "../../../effected/cli/ui/internal/ink.ts";
 import type { ChalkLevel, InkChalk } from "../../../effected/cli/ui/internal/inkChalk.ts";
@@ -30,17 +34,18 @@ import { CliUi, KeyTable, Select, UiStreams, useKeys } from "../../../effected/c
 
 // Count loads of the peers through the kit's one loader, without changing what it does.
 const { loads } = vi.hoisted(() => ({ loads: { count: 0 } }));
-vi.mock("../../../effected/cli/ui/internal/ink.ts", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("../../../effected/cli/ui/internal/ink.ts")>();
-	const Effect = await import("effect/Effect");
-	return {
+vi.mock("../../../effected/cli/ui/internal/ink.ts", (importOriginal) =>
+	Promise.all([
+		importOriginal<typeof import("../../../effected/cli/ui/internal/ink.ts")>(),
+		import("effect/Effect"),
+	]).then(([actual, Effect]) => ({
 		...actual,
 		loadInk: Effect.suspend(() => {
 			loads.count++;
 			return actual.loadInk;
 		}),
-	};
-});
+	})),
+);
 
 const ESC = String.fromCharCode(0x1b);
 const SHOW_CURSOR = `${ESC}[?25h`;
@@ -52,12 +57,15 @@ const runOn = <A>(
 	fake: FakeStreams,
 	screen: Screen<A>,
 	options: { readonly theme?: ThemeOptions; readonly clear?: boolean } = {},
-): Effect.Effect<A, Cancelled | NotInteractive> =>
-	CliUi.run(screen, options.clear === undefined ? undefined : { clear: options.clear }).pipe(
-		Effect.provideService(UiStreams, fake.streams),
-		Effect.provideService(CliInteractive, true),
-		Effect.provide(CliTheme.layerTest(options.theme)),
-	);
+): Effect.Effect<A, Cancelled | NotInteractive, Scope.Scope> =>
+	Effect.gen(function* () {
+		const theme = yield* Layer.build(CliTheme.layerTest(options.theme));
+		return yield* CliUi.run(screen, options.clear === undefined ? undefined : { clear: options.clear }).pipe(
+			Effect.provideService(UiStreams, fake.streams),
+			Effect.provideService(CliInteractive, true),
+			Effect.provideContext(theme),
+		);
+	});
 
 /** Wait, in real time, until `ready` holds; fails the test after two seconds. */
 const until = (ready: () => boolean): Effect.Effect<void> =>
@@ -65,6 +73,17 @@ const until = (ready: () => boolean): Effect.Effect<void> =>
 		Effect.retry(Schedule.spaced("5 millis")),
 		Effect.timeout("2 seconds"),
 		Effect.orDie,
+		// Ink renders and flushes through native timers; poll against the live clock.
+		Effect.provideService(Clock.Clock, Clock.Clock.defaultValue()),
+	);
+
+/** A cancellable live-clock delay for React mount/unmount callbacks. */
+const after = (millis: number, action: () => void): (() => void) =>
+	Effect.runCallback(
+		Effect.sleep(millis).pipe(
+			Effect.andThen(Effect.sync(action)),
+			Effect.provideService(Clock.Clock, Clock.Clock.defaultValue()),
+		),
 	);
 
 /** A component that calls `onMount` once it has mounted. */
@@ -113,7 +132,7 @@ const defectOf = <A, E>(exit: Exit.Exit<A, E>): unknown => {
 };
 
 describe("CliUi.run", () => {
-	it.live("resolves with the value the screen gives", () =>
+	it.effect("resolves with the value the screen gives", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const value = yield* runOn(fake, (control) => createElement(OnMount, { onMount: () => control.resolve(42) }));
@@ -121,7 +140,7 @@ describe("CliUi.run", () => {
 		}),
 	);
 
-	it.live("resolving with an empty value is a result, not a cancel", () =>
+	it.effect("resolving with an empty value is a result, not a cancel", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const value = yield* runOn(fake, (control) =>
@@ -131,7 +150,7 @@ describe("CliUi.run", () => {
 		}),
 	);
 
-	it.live("Ctrl-C cancels with interrupt", () =>
+	it.effect("Ctrl-C cancels with interrupt", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const fiber = yield* Effect.forkChild(runOn(fake, idle));
@@ -143,6 +162,7 @@ describe("CliUi.run", () => {
 		}),
 	);
 
+	// Live clock required: this assertion measures Ink's native 20 ms ESC flush.
 	it.live("Esc cancels with escape, after Ink's real 20 ms flush", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
@@ -157,16 +177,13 @@ describe("CliUi.run", () => {
 		}),
 	);
 
-	it.live("q is not a root key: it does not cancel", () =>
+	it.effect("q is not a root key: it does not cancel", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const fiber = yield* Effect.forkChild(
 				runOn(fake, (control) => {
 					const Later = (): ReactElement => {
-						useEffect(() => {
-							const timer = setTimeout(() => control.resolve("still open"), 80);
-							return () => clearTimeout(timer);
-						}, []);
+						useEffect(() => after(80, () => control.resolve("still open")), []);
 						return createElement(Text, null, "open");
 					};
 					return createElement(Later);
@@ -178,7 +195,7 @@ describe("CliUi.run", () => {
 		}),
 	);
 
-	it.live("not interactive: fails with NotInteractive, mounts nothing and never loads Ink", () =>
+	it.effect("not interactive: fails with NotInteractive, mounts nothing and never loads Ink", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const before = loads.count;
@@ -190,7 +207,7 @@ describe("CliUi.run", () => {
 				}).pipe(
 					Effect.provideService(UiStreams, fake.streams),
 					Effect.provideService(CliInteractive, false),
-					Effect.provide(CliTheme.layerTest()),
+					Effect.provideContext(yield* Layer.build(CliTheme.layerTest())),
 				),
 			);
 			assert.instanceOf(error, NotInteractive);
@@ -204,13 +221,13 @@ describe("CliUi.run", () => {
 		}),
 	);
 
-	it.live("a component that throws on its first render is a defect, with nothing of Ink's crash screen on stdout", () =>
+	it.effect("a component that throws on its first render is a defect, with nothing of Ink's crash screen on stdout", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const Boom = (): ReactElement => {
 				throw new Error("kaboom on render");
 			};
-			const exit = yield* Effect.exit(runOn(fake, () => createElement(Boom)).pipe(Effect.timeout("2 seconds")));
+			const exit = yield* Effect.exit(runOn(fake, () => createElement(Boom)).pipe(Effect.timeout("2 seconds"), Effect.provideService(Clock.Clock, Clock.Clock.defaultValue())));
 			const defect = defectOf(exit);
 			assert.instanceOf(defect, Error);
 			assert.strictEqual(defect instanceof Error ? defect.message : "", "kaboom on render");
@@ -219,19 +236,16 @@ describe("CliUi.run", () => {
 		}),
 	);
 
-	it.live("a component that throws after mounting is a defect, raw mode ends off and the cursor is shown", () =>
+	it.effect("a component that throws after mounting is a defect, raw mode ends off and the cursor is shown", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const Later = (): ReactElement => {
 				const [boom, setBoom] = useState(false);
-				useEffect(() => {
-					const timer = setTimeout(() => setBoom(true), 30);
-					return () => clearTimeout(timer);
-				}, []);
+				useEffect(() => after(30, () => setBoom(true)), []);
 				if (boom) throw new Error("kaboom later");
 				return createElement(Text, null, "alive");
 			};
-			const exit = yield* Effect.exit(runOn(fake, () => createElement(Later)).pipe(Effect.timeout("2 seconds")));
+			const exit = yield* Effect.exit(runOn(fake, () => createElement(Later)).pipe(Effect.timeout("2 seconds"), Effect.provideService(Clock.Clock, Clock.Clock.defaultValue())));
 			const defect = defectOf(exit);
 			assert.strictEqual(defect instanceof Error ? defect.message : "", "kaboom later");
 			const stdout = fake.stdout();
@@ -245,7 +259,7 @@ describe("CliUi.run", () => {
 		}),
 	);
 
-	it.live("a screen that exits without resolving is a defect", () =>
+	it.effect("a screen that exits without resolving is a defect", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const Quit = (): ReactElement => {
@@ -258,7 +272,7 @@ describe("CliUi.run", () => {
 		}),
 	);
 
-	it.live(
+	it.effect(
 		"interrupting the fiber mid-screen unmounts it, turns raw mode off, shows the cursor and restores the level",
 		() =>
 			Effect.gen(function* () {
@@ -307,15 +321,15 @@ describe("CliUi.run", () => {
 		}),
 	);
 
-	it.live("CliUi.lazy loads the screen's module only when it mounts", () =>
+	it.effect("CliUi.lazy loads the screen's module only when it mounts", () =>
 		Effect.gen(function* () {
 			let loaded = 0;
-			const screen = CliUi.lazy(async () => {
+			const screen = CliUi.lazy(() => {
 				loaded++;
-				return {
+				return Promise.resolve({
 					default: (control: Parameters<Screen<string>>[0]) =>
 						createElement(OnMount, { onMount: () => control.resolve("lazy") }),
-				};
+				});
 			});
 			assert.strictEqual(loaded, 0, "building the screen loads nothing");
 			const fake = makeFakeStreams();
@@ -323,7 +337,7 @@ describe("CliUi.run", () => {
 				CliUi.run(screen).pipe(
 					Effect.provideService(UiStreams, fake.streams),
 					Effect.provideService(CliInteractive, false),
-					Effect.provide(CliTheme.layerTest()),
+					Effect.provideContext(yield* Layer.build(CliTheme.layerTest())),
 				),
 			);
 			assert.strictEqual(loaded, 0, "a non-interactive run loads nothing");
@@ -332,7 +346,7 @@ describe("CliUi.run", () => {
 		}),
 	);
 
-	it.live("two concurrent screens mount one after the other, and Ink's colour level ends where it began", () =>
+	it.effect("two concurrent screens mount one after the other, and Ink's colour level ends where it began", () =>
 		Effect.gen(function* () {
 			const instance = yield* forceLevel(2);
 			const fake = makeFakeStreams();
@@ -342,13 +356,10 @@ describe("CliUi.run", () => {
 				(control) => {
 					events.push(`${name} mounts`);
 					const Timed = (): ReactElement => {
-						useEffect(() => {
-							const timer = setTimeout(() => {
+						useEffect(() => after(40, () => {
 								events.push(`${name} resolves`);
 								control.resolve(name);
-							}, 40);
-							return () => clearTimeout(timer);
-						}, []);
+						}), []);
 						return createElement(Text, null, name);
 					};
 					return createElement(Timed);
@@ -379,7 +390,7 @@ describe("bracketed paste is switched off however a screen ends (production path
 	const PASTE_MODE = new RegExp(`${ESC}\\[\\?2004([hl])`, "g");
 	const lastPasteMode = (written: string): string | undefined => [...written.matchAll(PASTE_MODE)].at(-1)?.[1];
 
-	it.live("after Esc: it was on while mounted, and the last switch written turns it off", () =>
+	it.effect("after Esc: it was on while mounted, and the last switch written turns it off", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const fiber = yield* Effect.forkChild(runOn(fake, idle));
@@ -387,12 +398,18 @@ describe("bracketed paste is switched off however a screen ends (production path
 			yield* until(() => fake.stdout().includes(`${ESC}[?2004h`));
 			fake.input(ESC);
 			const exit = yield* fiber.pipe(Fiber.join, Effect.exit);
-			assert.isTrue(Exit.isFailure(exit), "Esc cancels");
+			assertExitFailure(
+				exit,
+				Exit.match(exit, {
+					onFailure: (cause) => cause,
+					onSuccess: () => assert.fail("Esc cancels"),
+				}),
+			);
 			assert.strictEqual(lastPasteMode(fake.stdout()), "l");
 		}),
 	);
 
-	it.live("after a render throws: it was on while mounted, and the last switch written turns it off", () =>
+	it.effect("after a render throws: it was on while mounted, and the last switch written turns it off", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			let explode: (() => void) | undefined;
@@ -414,7 +431,7 @@ describe("bracketed paste is switched off however a screen ends (production path
 		}),
 	);
 
-	it.live("after the fiber is interrupted: it was on while mounted, and the last switch turns it off", () =>
+	it.effect("after the fiber is interrupted: it was on while mounted, and the last switch turns it off", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const fiber = yield* Effect.forkChild(runOn(fake, idle));
@@ -433,7 +450,7 @@ describe("a throwing input handler is a defect, never an uncaught exception or a
 		assert.strictEqual(switches.at(-1)?.[1], "l", "bracketed paste ends off");
 	};
 
-	it.live("a useKeys dispatch that throws dies with the error, and the terminal is restored", () =>
+	it.effect("a useKeys dispatch that throws dies with the error, and the terminal is restored", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const table = KeyTable.make([{ keys: [{ char: "x" }], action: "x", help: "boom" }]);
@@ -444,7 +461,7 @@ describe("a throwing input handler is a defect, never an uncaught exception or a
 				return createElement(Text, null, "press x");
 			};
 			const fiber = yield* Effect.forkChild(
-				runOn(fake, () => createElement(Thrower)).pipe(Effect.timeout("2 seconds")),
+				runOn(fake, () => createElement(Thrower)).pipe(Effect.timeout("2 seconds"), Effect.provideService(Clock.Clock, Clock.Clock.defaultValue())),
 			);
 			yield* until(() => fake.stdout().includes(`${ESC}[?2004h`));
 			fake.input("x");
@@ -455,7 +472,7 @@ describe("a throwing input handler is a defect, never an uncaught exception or a
 		}),
 	);
 
-	it.live("a guarded paste handler that throws dies with the error, and the terminal is restored", () =>
+	it.effect("a guarded paste handler that throws dies with the error, and the terminal is restored", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const Thrower = (): ReactElement => {
@@ -468,7 +485,7 @@ describe("a throwing input handler is a defect, never an uncaught exception or a
 				return createElement(Text, null, "paste here");
 			};
 			const fiber = yield* Effect.forkChild(
-				runOn(fake, () => createElement(Thrower)).pipe(Effect.timeout("2 seconds")),
+				runOn(fake, () => createElement(Thrower)).pipe(Effect.timeout("2 seconds"), Effect.provideService(Clock.Clock, Clock.Clock.defaultValue())),
 			);
 			yield* until(() => fake.stdout().includes(`${ESC}[?2004h`));
 			fake.input(`${ESC}[200~pasted${ESC}[201~`);
@@ -494,14 +511,14 @@ describe("a widget's text from data cannot push the frame past the terminal (pro
 			return fake.stdout();
 		});
 
-	it.live("a one-line detail draws without wiping the screen (the control)", () =>
+	it.effect("a one-line detail draws without wiping the screen (the control)", () =>
 		Effect.gen(function* () {
 			const written = yield* pick("the detail");
 			assert.notMatch(written, WIPE);
 		}),
 	);
 
-	it.live("a two-line detail is folded onto one line, so the screen is not wiped either", () =>
+	it.effect("a two-line detail is folded onto one line, so the screen is not wiped either", () =>
 		Effect.gen(function* () {
 			const written = yield* pick("first\nsecond");
 			assert.notMatch(written, WIPE);
@@ -523,11 +540,11 @@ describe("clear: a resolved screen can erase its last frame (production path)", 
 			resolve: () => control?.resolve(7),
 		};
 	};
-	const drawThenResolve = <A, E>(
+	const drawThenResolve = <A, E, R>(
 		fake: FakeStreams,
-		run: Effect.Effect<A, E>,
+		run: Effect.Effect<A, E, R>,
 		resolve: () => void,
-	): Effect.Effect<ReadonlyArray<string>, E> =>
+	): Effect.Effect<ReadonlyArray<string>, E, R> =>
 		Effect.gen(function* () {
 			const fiber = yield* Effect.forkChild(run);
 			yield* until(() => fake.stdout().includes(FRAME));
@@ -536,7 +553,7 @@ describe("clear: a resolved screen can erase its last frame (production path)", 
 			return screenAfter(fake.stdout());
 		});
 
-	it.live("without clear the last frame stays on the terminal (the control)", () =>
+	it.effect("without clear the last frame stays on the terminal (the control)", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const { screen, resolve } = resolvable();
@@ -545,7 +562,7 @@ describe("clear: a resolved screen can erase its last frame (production path)", 
 		}),
 	);
 
-	it.live("run with clear: nothing of the frame is left once it resolves", () =>
+	it.effect("run with clear: nothing of the frame is left once it resolves", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const { screen, resolve } = resolvable();
@@ -554,32 +571,43 @@ describe("clear: a resolved screen can erase its last frame (production path)", 
 		}),
 	);
 
-	it.live("prompt with clear: nothing of the frame is left once it resolves", () =>
+	it.effect("prompt with clear: nothing of the frame is left once it resolves", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const { screen, resolve } = resolvable();
 			const run = CliUi.prompt(screen, { clear: true }).pipe(
 				Effect.provideService(UiStreams, fake.streams),
 				Effect.provideService(CliInteractive, true),
-				Effect.provide(CliTheme.layerTest()),
+				Effect.provideContext(yield* Layer.build(CliTheme.layerTest())),
 			);
 			assert.deepStrictEqual(yield* drawThenResolve(fake, run, resolve), []);
 		}),
 	);
 
-	it.live("fallback with clear: nothing of the frame is left once it resolves", () =>
-		Effect.gen(function* () {
-			const fake = makeFakeStreams();
-			const { screen, resolve } = resolvable();
-			// The fallback declares core's parse environment; provide the platform while driving its screen directly.
-			const fallback: Effect.Effect<unknown, CliError.CliError | Terminal.QuitError, Command.Environment> =
-				CliUi.fallback(screen, { flag: "count", clear: true });
-			const run = fallback.pipe(
-				Effect.provideService(UiStreams, fake.streams),
-				Effect.provideService(CliInteractive, true),
-				Effect.provide(Layer.mergeAll(CliTheme.layerTest(), NodeServices.layer)),
-			);
-			assert.deepStrictEqual(yield* drawThenResolve(fake, run, resolve), []);
-		}),
-	);
+	it.layer(
+		Layer.mergeAll(
+			MemoryFileSystem.layer,
+			Path.layer,
+			Stdio.layerTest({}),
+			Layer.mock(Terminal.Terminal, { "~effect/Terminal": "~effect/Terminal" }),
+			Layer.mock(ChildProcessSpawner, {}),
+		),
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("fallback with clear: nothing of the frame is left once it resolves", () =>
+			Effect.gen(function* () {
+				const fake = makeFakeStreams();
+				const { screen, resolve } = resolvable();
+				// Core's parse environment is declared, but this path only drives the fake screen.
+				const fallback: Effect.Effect<unknown, CliError.CliError | Terminal.QuitError, Command.Environment> =
+					CliUi.fallback(screen, { flag: "count", clear: true });
+				const run = fallback.pipe(
+					Effect.provideService(UiStreams, fake.streams),
+					Effect.provideService(CliInteractive, true),
+					Effect.provideContext(yield* Layer.build(CliTheme.layerTest())),
+				);
+				assert.deepStrictEqual(yield* drawThenResolve(fake, run, resolve), []);
+			}),
+		);
+	});
 });

@@ -4,6 +4,8 @@
 // sentinel positions, frontmatter literal mapping, and typed failure.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess, assertFailure, assertExitSuccess } from "@effect/vitest/utils";
+import * as Exit from "effect/Exit";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -15,7 +17,7 @@ const isRecord = S.is(S.Record(S.String, S.Unknown));
 
 const gfm = (text: string): Root => {
 	const parsed = Markdown.parseResult(text);
-	assert.isTrue(Result.isSuccess(parsed));
+	assertSuccess(parsed, Result.getOrThrow(parsed));
 	if (Result.isFailure(parsed)) assert.fail("expected a successful parse");
 	return parsed.success;
 };
@@ -110,7 +112,7 @@ describe("Mdast.toMdast", () => {
 			['---json\n{ "a": 1 }\n---\nbody\n', "json", '{ "a": 1 }'],
 		] as const) {
 			const parsed = Markdown.parseResult(source, MarkdownParseOptions.make({ frontmatter: true }));
-			assert.isTrue(Result.isSuccess(parsed));
+			assertSuccess(parsed, Result.getOrThrow(parsed));
 			if (Result.isSuccess(parsed)) {
 				const node = first(Mdast.toMdast(parsed.success));
 				assert.strictEqual(node.type, type);
@@ -191,14 +193,15 @@ describe("Mdast.fromMdast", () => {
 		for (const type of ["toString", "constructor", "__proto__"]) {
 			for (const input of [{ type }, { type: "root", children: [{ type }] }]) {
 				const sync = Mdast.fromMdastResult(input);
-				const effect = yield* Effect.result(Mdast.fromMdast(input));
-				assert.isTrue(Result.isFailure(sync));
-				assert.isTrue(Result.isFailure(effect));
-				if (Result.isFailure(sync) && Result.isFailure(effect)) {
+				const effect = yield* Effect.exit(Mdast.fromMdast(input));
+				assertFailure(sync, sync.pipe(Result.flip, Result.getOrThrow));
+				assertSuccess(Exit.findError(effect), sync.failure);
+				{
+					const effectError = effect.pipe(Exit.findError, Result.getOrThrow);
 					assert.instanceOf(sync.failure, MdastDecodeError);
 					assert.isDefined(sync.failure.issue);
-					assert.instanceOf(effect.failure, MdastDecodeError);
-					assert.deepStrictEqual(effect.failure.issue, sync.failure.issue);
+					assert.instanceOf(effectError, MdastDecodeError);
+					assert.deepStrictEqual(effectError.issue, sync.failure.issue);
 				}
 			}
 		}
@@ -207,7 +210,7 @@ describe("Mdast.fromMdast", () => {
 	it("round-trips a parsed tree through plain mdast, positions included", () => {
 		const root = gfm("# T\n\ntext with *emphasis* and ~~strike~~\n\n- [x] item\n");
 		const back = Mdast.fromMdastResult(Mdast.toMdast(root));
-		assert.isTrue(Result.isSuccess(back));
+		assertSuccess(back, Result.getOrThrow(back));
 		if (Result.isSuccess(back)) {
 			assert.instanceOf(back.success, Root);
 			assert.deepStrictEqual(Mdast.toMdast(back.success), Mdast.toMdast(root));
@@ -227,7 +230,7 @@ describe("Mdast.fromMdast", () => {
 				},
 			],
 		});
-		assert.isTrue(Result.isSuccess(back));
+		assertSuccess(back, Result.getOrThrow(back));
 		if (Result.isSuccess(back)) {
 			const list = back.success.children[0];
 			assert.strictEqual(list?.type, "list");
@@ -247,7 +250,7 @@ describe("Mdast.fromMdast", () => {
 			type: "root",
 			children: [{ type: "paragraph", children: [{ type: "text", value: "hi" }] }],
 		});
-		assert.isTrue(Result.isSuccess(back));
+		assertSuccess(back, Result.getOrThrow(back));
 		if (Result.isSuccess(back)) {
 			const paragraph = back.success.children[0];
 			assert.deepStrictEqual({ ...paragraph?.position.start }, { line: 1, column: 1, offset: 0 });
@@ -271,7 +274,7 @@ describe("Mdast.fromMdast", () => {
 				},
 			],
 		});
-		assert.isTrue(Result.isSuccess(back));
+		assertSuccess(back, Result.getOrThrow(back));
 		if (Result.isSuccess(back)) {
 			const paragraph = back.success.children[0];
 			assert.strictEqual(paragraph?.position.start.offset, 0);
@@ -285,7 +288,7 @@ describe("Mdast.fromMdast", () => {
 			type: "root",
 			children: [{ type: "yaml", value: "a: 1" }],
 		});
-		assert.isTrue(Result.isSuccess(back));
+		assertSuccess(back, Result.getOrThrow(back));
 		if (Result.isSuccess(back)) {
 			const node = back.success.children[0];
 			assert.instanceOf(node, Frontmatter);
@@ -301,7 +304,7 @@ describe("Mdast.fromMdast", () => {
 			type: "root",
 			children: [{ type: "code", lang: null, meta: null, value: "body" }],
 		});
-		assert.isTrue(Result.isSuccess(back));
+		assertSuccess(back, Result.getOrThrow(back));
 		if (Result.isSuccess(back)) {
 			const code = back.success.children[0];
 			assert.strictEqual(code?.type === "code" ? code.value : "", "body\n");
@@ -313,7 +316,7 @@ describe("Mdast.fromMdast", () => {
 			type: "root",
 			children: [{ type: "paragraph", data: { custom: true }, children: [{ type: "text", value: "x" }] }],
 		});
-		assert.isTrue(Result.isSuccess(back));
+		assertSuccess(back, Result.getOrThrow(back));
 		if (Result.isSuccess(back)) {
 			assert.isFalse(Object.hasOwn(firstTypedChild(back.success), "data"));
 		}
@@ -324,7 +327,7 @@ describe("Mdast.fromMdast", () => {
 			type: "root",
 			children: [{ type: "widget", value: "?" }],
 		});
-		assert.isTrue(Result.isFailure(back));
+		assertFailure(back, back.pipe(Result.flip, Result.getOrThrow));
 		if (Result.isFailure(back)) {
 			assert.instanceOf(back.failure, MdastDecodeError);
 			assert.isDefined(back.failure.issue);
@@ -333,15 +336,18 @@ describe("Mdast.fromMdast", () => {
 
 	it("fails typed on non-tree junk", () => {
 		for (const junk of [42, "root", null, { type: 7 }]) {
-			assert.isTrue(Result.isFailure(Mdast.fromMdastResult(junk)));
+			const result = Mdast.fromMdastResult(junk);
+			assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 		}
 	});
 
-	it("agrees with the Effect twin on both channels", () => {
+	it.effect("agrees with the Effect twin on both channels", () => Effect.gen(function* () {
 		const good = { type: "root", children: [] };
 		const bad = { type: "widget" };
-		assert.deepStrictEqual(Mdast.fromMdast(good).pipe(Effect.result, Effect.runSync), Mdast.fromMdastResult(good));
-		const effectFailure = Mdast.fromMdast(bad).pipe(Effect.flip, Effect.result, Effect.runSync);
-		assert.isTrue(Result.isSuccess(effectFailure));
-	});
+		const sync = Mdast.fromMdastResult(good);
+		assertSuccess(sync, Result.getOrThrow(sync));
+		assertExitSuccess(yield* Effect.exit(Mdast.fromMdast(good)), sync.success);
+		const effectFailure = yield* Effect.exit(Mdast.fromMdast(bad).pipe(Effect.flip));
+		assertExitSuccess(effectFailure, Mdast.fromMdastResult(bad).pipe(Result.flip, Result.getOrThrow));
+	}));
 });

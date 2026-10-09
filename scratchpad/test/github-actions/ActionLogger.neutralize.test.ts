@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { WorkflowCommand } from "../../effected/github-commands/index.ts";
 import * as Effect from "effect/Effect";
@@ -27,13 +26,10 @@ const HOSTILE = [
 	"fine ## heading",
 ];
 
-const live = <A, E>(program: Effect.Effect<A, E, ActionLogger>) =>
-	program.pipe(Effect.provide(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({})))));
-
-const logged = Effect.fn("logged")(function*<A, E>(program: Effect.Effect<A, E>) {
-		yield* program;
-		return yield* lines;
-	}, Effect.provide(ActionLogger.layerLogger));
+const logged = Effect.fn("logged")(function* <A, E>(program: Effect.Effect<A, E>) {
+	yield* program;
+	return yield* lines;
+});
 
 describe("ActionLogger neutralizes the plain text it writes", () => {
 	it("the oracle flags real commands and a mid-line legacy form (positive controls)", () => {
@@ -42,62 +38,82 @@ describe("ActionLogger neutralizes the plain text it writes", () => {
 	});
 
 	for (const text of HOSTILE) {
-		it.effect(`Effect.logInfo(${Result.getOrThrowWith(S.encodeResult(Json)(text), (error) => error)}) reaches stdout with no command line`, () =>
-			Effect.gen(function* () {
-				const captured = yield* logged(Effect.logInfo(text));
-				assert.deepStrictEqual(commandLines(captured.join("\n")), [], Result.getOrThrowWith(S.encodeResult(Json)(captured), (error) => error));
-				assert.isAbove(captured.length, 0);
-			}),
-		);
+		it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
+			it.effect(
+				`Effect.logInfo(${Result.getOrThrowWith(S.encodeResult(Json)(text), (error) => error)}) reaches stdout with no command line`,
+				() =>
+					Effect.gen(function* () {
+						const captured = yield* logged(Effect.logInfo(text));
+						assert.deepStrictEqual(
+							commandLines(captured.join("\n")),
+							[],
+							Result.getOrThrowWith(S.encodeResult(Json)(captured), (error) => error),
+						);
+						assert.isAbove(captured.length, 0);
+					}),
+			);
+		});
 	}
 
-	it.effect("the text is kept: only zero-width spaces are added", () =>
-		Effect.gen(function* () {
-			const captured = yield* logged(Effect.logInfo("ok\n::add-mask::x"));
-			assert.strictEqual(captured.join("\n").replaceAll(ZWSP, ""), "ok\n::add-mask::x");
-			assert.include(captured.join("\n"), ZWSP);
-		}),
-	);
+	it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
+		it.effect("the text is kept: only zero-width spaces are added", () =>
+			Effect.gen(function* () {
+				const captured = yield* logged(Effect.logInfo("ok\n::add-mask::x"));
+				assert.strictEqual(captured.join("\n").replaceAll(ZWSP, ""), "ok\n::add-mask::x");
+				assert.include(captured.join("\n"), ZWSP);
+			}),
+		);
+	});
 
-	it.effect("an ordinary line, and a bare ##, are untouched", () =>
-		Effect.gen(function* () {
-			assert.deepStrictEqual(yield* logged(Effect.logInfo("hello", 3)), ["hello 3"]);
-		}),
-	);
+	it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
+		it.effect("an ordinary line, and a bare ##, are untouched", () =>
+			Effect.gen(function* () {
+				assert.deepStrictEqual(yield* logged(Effect.logInfo("hello", 3)), ["hello 3"]);
+			}),
+		);
+	});
 
-	it.effect("a markdown heading is not a command", () =>
-		Effect.gen(function* () {
-			assert.deepStrictEqual(yield* logged(Effect.logInfo("## Heading")), ["## Heading"]);
-		}),
-	);
+	it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
+		it.effect("a markdown heading is not a command", () =>
+			Effect.gen(function* () {
+				assert.deepStrictEqual(yield* logged(Effect.logInfo("## Heading")), ["## Heading"]);
+			}),
+		);
+	});
 
-	it.effect("a hostile Error-level message is still ONE real ::error:: command, its data escaped", () =>
-		Effect.gen(function* () {
-			const captured = yield* logged(Effect.logError("x\n::error::y ##[stop-commands]z"));
-			assert.strictEqual(captured.length, 1);
-			assert.match(captured[0] ?? "", /^::error::x%0A::error::y /);
-			assert.isTrue(isCommand(captured[0] ?? ""), "the real command is a command: this layer must not defang it");
-			assert.deepStrictEqual(captured, [WorkflowCommand.error("x\n::error::y ##[stop-commands]z")]);
-		}),
-	);
+	it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
+		it.effect("a hostile Error-level message is still ONE real ::error:: command, its data escaped", () =>
+			Effect.gen(function* () {
+				const captured = yield* logged(Effect.logError("x\n::error::y ##[stop-commands]z"));
+				assert.strictEqual(captured.length, 1);
+				assert.match(captured[0] ?? "", /^::error::x%0A::error::y /);
+				assert.isTrue(isCommand(captured[0] ?? ""), "the real command is a command: this layer must not defang it");
+				assert.deepStrictEqual(captured, [WorkflowCommand.error("x\n::error::y ##[stop-commands]z")]);
+			}),
+		);
+	});
 
-	it.effect("a warning is still a real ::warning:: command", () =>
-		Effect.gen(function* () {
-			assert.deepStrictEqual(yield* logged(Effect.logWarning("careful")), [WorkflowCommand.warning("careful")]);
-		}),
-	);
+	it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
+		it.effect("a warning is still a real ::warning:: command", () =>
+			Effect.gen(function* () {
+				assert.deepStrictEqual(yield* logged(Effect.logWarning("careful")), [WorkflowCommand.warning("careful")]);
+			}),
+		);
+	});
 
-	it.effect("a debug line is still a real ::debug:: command", () =>
-		Effect.gen(function* () {
-			const debug = yield* logged(
-				Effect.logDebug("noisy").pipe(Effect.provideService(References.MinimumLogLevel, "All")),
-			);
-			assert.deepStrictEqual(debug, [WorkflowCommand.debug("noisy")]);
-		}),
-	);
+	it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
+		it.effect("a debug line is still a real ::debug:: command", () =>
+			Effect.gen(function* () {
+				const debug = yield* logged(
+					Effect.logDebug("noisy").pipe(Effect.provideService(References.MinimumLogLevel, "All")),
+				);
+				assert.deepStrictEqual(debug, [WorkflowCommand.debug("noisy")]);
+			}),
+		);
+	});
 
-	it.effect("group and notice are still real commands through ActionLogger", () =>
-		live(
+	it.layer(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), { timeout: "30 seconds" })((it) => {
+		it.effect("group and notice are still real commands through ActionLogger", () =>
 			Effect.gen(function* () {
 				const logger = yield* ActionLogger;
 				yield* logger.group("install", Effect.void);
@@ -110,13 +126,13 @@ describe("ActionLogger neutralizes the plain text it writes", () => {
 				]);
 				assert.strictEqual(commandLines(captured.join("\n")).length, 3);
 			}),
-		),
-	);
+		);
+	});
 });
 
 describe("the buffered transcript and the step line are neutralized too", () => {
-	it.effect("a flushed transcript, its header with the label, and its entries", () =>
-		live(
+	it.layer(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), { timeout: "30 seconds" })((it) => {
+		it.effect("a flushed transcript, its header with the label, and its entries", () =>
 			Effect.gen(function* () {
 				const logger = yield* ActionLogger;
 				yield* Effect.flip(
@@ -130,29 +146,39 @@ describe("the buffered transcript and the step line are neutralized too", () => 
 				assert.deepStrictEqual(commandLines(captured.join("\n")), []);
 				assert.include(captured.join("\n").replaceAll(ZWSP, ""), "resolving\n::add-mask::secret");
 			}),
-		),
-	);
+		);
+	});
 
-	it.effect("withStep's failure line carries a hostile step name safely", () =>
-		live(
+	it.layer(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), { timeout: "30 seconds" })((it) => {
+		it.effect("withStep's failure line carries a hostile step name safely", () =>
 			Effect.gen(function* () {
 				const logger = yield* ActionLogger;
 				yield* Effect.flip(logger.withStep("name\n::error::x ##[add-mask]y", Effect.fail("boom")));
 				const captured = yield* lines;
-				assert.deepStrictEqual(commandLines(captured.join("\n")), [], Result.getOrThrowWith(S.encodeResult(Json)(captured), (error) => error));
+				assert.deepStrictEqual(
+					commandLines(captured.join("\n")),
+					[],
+					Result.getOrThrowWith(S.encodeResult(Json)(captured), (error) => error),
+				);
 			}),
-		),
-	);
+		);
+	});
 });
 
 describe("a detached worker's setFailed degrades to a neutralized plain line", () => {
-	it.effect("the message cannot start a command or hold ##[", () =>
-		Effect.gen(function* () {
-			const outputs = yield* ActionOutputs;
-			yield* outputs.setFailed("bad\n::error::x ##[stop-commands]y");
-			const errors = (yield* TestConsole.errorLines).map(String);
-			assert.deepStrictEqual(commandLines(errors.join("\n")), [], Result.getOrThrowWith(S.encodeResult(Json)(errors), (error) => error));
-			assert.isAbove(errors.length, 0);
-		}).pipe(Effect.provide(ActionOutputs.layerDetached)),
-	);
+	it.layer(ActionOutputs.layerDetached, { timeout: "30 seconds" })((it) => {
+		it.effect("the message cannot start a command or hold ##[", () =>
+			Effect.gen(function* () {
+				const outputs = yield* ActionOutputs;
+				yield* outputs.setFailed("bad\n::error::x ##[stop-commands]y");
+				const errors = (yield* TestConsole.errorLines).map(String);
+				assert.deepStrictEqual(
+					commandLines(errors.join("\n")),
+					[],
+					Result.getOrThrowWith(S.encodeResult(Json)(errors), (error) => error),
+				);
+				assert.isAbove(errors.length, 0);
+			}),
+		);
+	});
 });

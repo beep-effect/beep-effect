@@ -13,6 +13,7 @@
 // string round-trips as that exact string.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -97,8 +98,8 @@ describe("Repository — git URL normalization", () => {
 			// cannot interpret is a missing answer, not a failure — the same
 			// posture the rest of the kit takes on absence.
 			const repo = yield* decode(Repository.FromValue, "not a url at all");
-			assert.isTrue(O.isNone(repo.browseUrl));
-			assert.isTrue(O.isNone(repo.gitUrl));
+			assertNone(repo.browseUrl);
+			assertNone(repo.gitUrl);
 			// The raw value is still there for a caller that knows better.
 			assert.strictEqual(repo.url, "not a url at all");
 		}),
@@ -270,14 +271,14 @@ describe("Repository — directoryUrl", () => {
 				directory: "packages/spdx",
 			});
 			assert.deepStrictEqual(repo.browseUrl, O.some("https://git.example.com/team/thing"));
-			assert.isTrue(O.isNone(repo.directoryUrl));
+			assertNone(repo.directoryUrl);
 		}),
 	);
 
 	it.effect("a gist has no subdirectories to descend into", () =>
 		Effect.gen(function* () {
 			const repo = yield* decode(Repository.FromValue, { url: "gist:abc123def", directory: "packages/spdx" });
-			assert.isTrue(O.isNone(repo.directoryUrl));
+			assertNone(repo.directoryUrl);
 		}),
 	);
 
@@ -285,7 +286,7 @@ describe("Repository — directoryUrl", () => {
 		Effect.gen(function* () {
 			for (const directory of ["../elsewhere", "packages/../../elsewhere", ".."]) {
 				const repo = yield* decode(Repository.FromValue, { url: "effected/kit", directory });
-				assert.isTrue(O.isNone(repo.directoryUrl), directory);
+				assertNone(repo.directoryUrl);
 			}
 		}),
 	);
@@ -306,7 +307,7 @@ describe("Repository — directoryUrl", () => {
 	it.effect("an uninterpretable url stays uninterpretable", () =>
 		Effect.gen(function* () {
 			const repo = yield* decode(Repository.FromValue, { url: "", directory: "packages/spdx" });
-			assert.isTrue(O.isNone(repo.directoryUrl));
+			assertNone(repo.directoryUrl);
 		}),
 	);
 
@@ -315,7 +316,7 @@ describe("Repository — directoryUrl", () => {
 			// Wire fidelity holds for the derived getters, same as browseUrl.
 			const input = { url: "effected/kit", directory: "packages/spdx" };
 			const repo = yield* decode(Repository.FromValue, input);
-			assert.isTrue(O.isSome(repo.directoryUrl));
+			assertSome(repo.directoryUrl, O.getOrThrow(repo.directoryUrl));
 			assert.deepStrictEqual(yield* encode(Repository.FromValue, repo), input);
 		}),
 	);

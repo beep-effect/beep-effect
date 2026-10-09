@@ -12,6 +12,7 @@ import { dual } from "effect/Function";
 // tested.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as Result from "effect/Result";
 import type { YamlLintRuleSetting, YamlRule } from "../../../effected/yaml/index.ts";
 import { StyleEvidence, YamlLint, YamlLintConfig, YamlLintDiagnostic } from "../../../effected/yaml/index.ts";
@@ -121,7 +122,7 @@ export const testRule: {
 				});
 				if (fixture.fixed !== undefined) {
 					const result = YamlLint.fix(fixture.input, [rule], configFor(rule, fixture.setting));
-					assert.isTrue(Result.isSuccess(result), "fix must succeed on a parseable fixture");
+					assertSuccess(result, fixture.fixed);
 					if (Result.isSuccess(result)) {
 						assert.strictEqual(result.success, fixture.fixed);
 					}
@@ -210,7 +211,7 @@ export const testRuleInference: {
 				const expectation = fixture.strict;
 				const strict = YamlLint.resolveStrict(evidence, emptyBase);
 				if (expectation.kind === "conflict") {
-					assert.isTrue(Result.isFailure(strict), "expected strict resolution to fail with a conflict");
+					assertFailure(strict, strict.pipe(Result.flip, Result.getOrThrow));
 					if (Result.isFailure(strict)) {
 						const conflict = strict.failure.conflicts.find(
 							(c) => c.rule === rule.id && c.dimension === expectation.dimension,
@@ -235,10 +236,7 @@ export const testRuleInference: {
 						}
 					}
 				} else {
-					assert.isTrue(
-						Result.isSuccess(strict),
-						Result.isFailure(strict) ? `unexpected conflict: ${strict.failure.message}` : "",
-					);
+					assertSuccess(strict, Result.getOrThrow(strict));
 					if (Result.isSuccess(strict)) {
 						if (expectation.kind === "options") {
 							assert.deepStrictEqual(strict.success.rules[rule.id], expectation.options);

@@ -2,6 +2,7 @@
 // grammar without parsing anything, and join back byte-exactly.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess } from "@effect/vitest/utils";
 import * as Result from "effect/Result";
 import { FrontmatterSource, FrontmatterSourceBlock, FrontmatterSourceSplit } from "../../effected/markdown/FrontmatterSource.ts";
 import { Markdown } from "../../effected/markdown/Markdown.ts";
@@ -89,7 +90,7 @@ describe("FrontmatterSource", () => {
 			]) {
 				const stringLevel = split(source).frontmatter;
 				const parsed = Markdown.parseResult(source, { frontmatter: true });
-				assert.isTrue(Result.isSuccess(parsed));
+				assertSuccess(parsed, Result.getOrThrow(parsed));
 				if (Result.isSuccess(parsed)) {
 					const head = parsed.success.children[0];
 					const captured = head?.type === "frontmatter" ? head : undefined;

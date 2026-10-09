@@ -7,6 +7,7 @@
 
 import { readFileSync, readdirSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { YamlRule } from "../../effected/yaml/index.ts";
@@ -50,7 +51,7 @@ describe("YamlLintConfig", () => {
 		// …and the schema decode path carries the typed error NAMING the entry.
 		const messageOf = (input: unknown): string => {
 			const r = S.decodeUnknownResult(YamlLintConfig)(input);
-			assert.isTrue(Result.isFailure(r));
+			assertFailure(r, r.pipe(Result.flip, Result.getOrThrow));
 			return Result.isFailure(r) ? r.failure.message : "";
 		};
 		assert.include(messageOf({ rules: { "parse-validity": "off" } }), 'Rule "parse-validity" is always-on');
@@ -67,7 +68,7 @@ describe("YamlLintConfig", () => {
 		// The reviewer's probe: `mxa` must not silently decode to {}.
 		assert.throws(() => YamlLintConfig.make({ rules: { "line-length": { mxa: 100 } } }));
 		const r = S.decodeResult(YamlLintConfig)({ rules: { "line-length": { mxa: 100 } } });
-		assert.isTrue(Result.isFailure(r));
+		assertFailure(r, r.pipe(Result.flip, Result.getOrThrow));
 		if (Result.isFailure(r)) {
 			assert.include(r.failure.message, "line-length");
 			assert.include(r.failure.message, "mxa");
@@ -81,7 +82,7 @@ describe("YamlLintConfig", () => {
 	it("rejects out-of-domain numeric options, naming the field", () => {
 		for (const bad of [Number.NaN, -1, 1.5]) {
 			const r = S.decodeResult(YamlLintConfig)({ rules: { "line-length": { max: bad } } });
-			assert.isTrue(Result.isFailure(r), `max: ${bad} must be rejected`);
+			assertFailure(r, r.pipe(Result.flip, Result.getOrThrow));
 			if (Result.isFailure(r)) {
 				assert.include(r.failure.message, "max");
 				assert.include(r.failure.message, "non-negative integer");
@@ -96,14 +97,14 @@ describe("YamlLintConfig", () => {
 			["indentation", "spaces"],
 		] as const) {
 			const r = S.decodeResult(YamlLintConfig)({ rules: { [rule]: { [field]: -2 } } });
-			assert.isTrue(Result.isFailure(r), `${rule}.${field}: -2 must be rejected`);
+			assertFailure(r, r.pipe(Result.flip, Result.getOrThrow));
 		}
 		// `maxSpacesAfter: 0` would make the fix delete the separation space
 		// and fuse the indicator with its content (`- item` → `-item`,
 		// `a: val` → `a:val`) — the floor is 1, not 0.
 		for (const rule of ["colon-spacing", "hyphen-spacing"] as const) {
 			const r = S.decodeResult(YamlLintConfig)({ rules: { [rule]: { maxSpacesAfter: 0 } } });
-			assert.isTrue(Result.isFailure(r), `${rule}.maxSpacesAfter: 0 must be rejected`);
+			assertFailure(r, r.pipe(Result.flip, Result.getOrThrow));
 			if (Result.isFailure(r)) {
 				assert.include(r.failure.message, "greater than or equal to 1");
 			}
@@ -112,7 +113,7 @@ describe("YamlLintConfig", () => {
 		const before0 = S.decodeResult(YamlLintConfig)({
 			rules: { "colon-spacing": { maxSpacesBefore: 0 } },
 		});
-		assert.isTrue(Result.isSuccess(before0), "colon-spacing.maxSpacesBefore: 0 must be accepted");
+		assertSuccess(before0, Result.getOrThrow(before0));
 	});
 
 	it("ships presets as statics", () => {
@@ -191,7 +192,7 @@ describe("YamlLint.fix", () => {
 
 	it("applies surgical fixes through YamlEdit.applyAll", () => {
 		const result = YamlLint.fix("a: TODO\nb: TODO\n", [todoRule], config);
-		assert.isTrue(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		if (Result.isSuccess(result)) {
 			assert.strictEqual(result.success, "a: DONE\nb: DONE\n");
 		}
@@ -199,7 +200,7 @@ describe("YamlLint.fix", () => {
 
 	it("preserves comments — the fix is surgical, never a reformat", () => {
 		const result = YamlLint.fix("# header\na: TODO # trailing\n", [todoRule], config);
-		assert.isTrue(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		if (Result.isSuccess(result)) {
 			assert.strictEqual(result.success, "# header\na: DONE # trailing\n");
 		}
@@ -232,7 +233,7 @@ describe("YamlLint.fix", () => {
 			[todoRule, rival],
 			YamlLintConfig.make({ rules: { "no-todo": "error", rival: "error" } }),
 		);
-		assert.isTrue(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		if (Result.isSuccess(result)) {
 			assert.match(result.success, /^a: (DONE|RIVAL)\n$/);
 		}
@@ -259,7 +260,7 @@ describe("YamlLint.fix", () => {
 			[insertRule("insert-a", "# A\n"), insertRule("insert-b", "# B\n")],
 			YamlLintConfig.make({ rules: { "insert-a": "error", "insert-b": "error" } }),
 		);
-		assert.isTrue(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		if (Result.isSuccess(result)) {
 			// run() orders equal positions by rule id, so insert-a wins and
 			// insert-b is dropped — never both, never in arbitrary order.
@@ -269,7 +270,7 @@ describe("YamlLint.fix", () => {
 
 	it("fails with YamlParseError on fatally-invalid input", () => {
 		const result = YamlLint.fix("a: *missing\n", [todoRule], config);
-		assert.isTrue(Result.isFailure(result));
+		assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 		if (Result.isFailure(result)) {
 			assert.instanceOf(result.failure, YamlParseError);
 		}

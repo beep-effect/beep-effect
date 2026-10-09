@@ -103,7 +103,7 @@ const run = Effect.fn("run")(function* (write: (bridge: InkConsole, streams: UiS
 	});
 
 describe("the console bridge writes above a live Ink frame (production path; okf/decisions/live-logs-through-ink.md)", () => {
-	it.live("five stdout and five stderr lines land above the frame, in order, with one frame left", () =>
+	it.effect("five stdout and five stderr lines land above the frame, in order, with one frame left", () =>
 		Effect.gen(function* () {
 			const { fake } = yield* run((bridge, _streams, index) => {
 				bridge.writer.log(`out line ${index}`);
@@ -113,7 +113,7 @@ describe("the console bridge writes above a live Ink frame (production path; okf
 		}),
 	);
 
-	it.live("control: the same lines written straight to the stream tear the frame", () =>
+	it.effect("control: the same lines written straight to the stream tear the frame", () =>
 		Effect.gen(function* () {
 			const { fake } = yield* run((_bridge, streams, index) => {
 				streams.stdout.write(`out line ${index}\n`);
@@ -127,7 +127,7 @@ describe("the console bridge writes above a live Ink frame (production path; okf
 		}),
 	);
 
-	it.live("before the bridge mounts and after detach, a line goes straight to its stream and is never dropped", () =>
+	it.effect("before the bridge mounts and after detach, a line goes straight to its stream and is never dropped", () =>
 		Effect.gen(function* () {
 			const { fake, bridge } = yield* run(() => undefined);
 			bridge.writer.log("after the unmount");
@@ -137,7 +137,7 @@ describe("the console bridge writes above a live Ink frame (production path; okf
 		}),
 	);
 
-	it.live("while mounted, a stdout line goes through Ink's stdout and a stderr line through its stderr", () =>
+	it.effect("while mounted, a stdout line goes through Ink's stdout and a stderr line through its stderr", () =>
 		Effect.gen(function* () {
 			yield* loadInk;
 			const fake = makeFakeStreams({ columns: 40, rows: 20 });
@@ -154,7 +154,7 @@ describe("the console bridge writes above a live Ink frame (production path; okf
 		}),
 	);
 
-	it.live("an unmount without a detach also goes back to the streams, so no line is dropped", () =>
+	it.effect("an unmount without a detach also goes back to the streams, so no line is dropped", () =>
 		Effect.gen(function* () {
 			yield* loadInk;
 			const { fake, streams } = terminal();
@@ -168,7 +168,7 @@ describe("the console bridge writes above a live Ink frame (production path; okf
 		}),
 	);
 
-	it.live("detach takes effect at once: a line written after it, before the unmount, goes straight to its stream", () =>
+	it.effect("detach takes effect at once: a line written after it, before the unmount, goes straight to its stream", () =>
 		Effect.gen(function* () {
 			yield* loadInk;
 			const fake = makeFakeStreams({ columns: 40, rows: 20 });
@@ -186,7 +186,7 @@ describe("the console bridge writes above a live Ink frame (production path; okf
 		}),
 	);
 
-	it.live("every Console method that writes goes above the frame: table, dir, assert, count, group, time", () =>
+	it.effect("every Console method that writes goes above the frame: table, dir, assert, count, group, time", () =>
 		Effect.gen(function* () {
 			const ambient = recordingConsole();
 			const { fake } = yield* run((bridge, _streams, index) => {
@@ -235,7 +235,7 @@ describe("the console bridge writes above a live Ink frame (production path; okf
 		}),
 	);
 
-	it.live("clear erases nothing: the history above and the frame stay", () =>
+	it.effect("clear erases nothing: the history above and the frame stay", () =>
 		Effect.gen(function* () {
 			const ambient = recordingConsole();
 			const { fake } = yield* run((bridge, _streams, index) => {
@@ -249,7 +249,7 @@ describe("the console bridge writes above a live Ink frame (production path; okf
 		}),
 	);
 
-	it.live("an Error is written with its stack, as a console writes it, not as JSON", () =>
+	it.effect("an Error is written with its stack, as a console writes it, not as JSON", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const bridge = yield* makeInkConsole.pipe(Effect.provideService(UiStreams, fake.streams));
@@ -260,7 +260,7 @@ describe("the console bridge writes above a live Ink frame (production path; okf
 		}),
 	);
 
-	it.live("with no bridge mounted at all, stdout and stderr lines reach their own streams", () =>
+	it.effect("with no bridge mounted at all, stdout and stderr lines reach their own streams", () =>
 		Effect.gen(function* () {
 			const fake = makeFakeStreams();
 			const bridge = yield* makeInkConsole.pipe(Effect.provideService(UiStreams, fake.streams));

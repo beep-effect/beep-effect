@@ -9,7 +9,10 @@
 // `hardening.test.ts` at the carrier layer.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess, assertFailure, assertExitFailure } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Exit from "effect/Exit";
+import { identity } from "effect/Function";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -43,7 +46,7 @@ const walk = (node: MarkdownNode, visit: (n: MarkdownNode) => void): void => {
 describe("Markdown.parseResult", () => {
 	it("succeeds with a Root tree", () => {
 		const result = Markdown.parseResult("# Title\n\nBody *text*.\n");
-		assert.isTrue(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		if (Result.isFailure(result)) return;
 		const root = result.success;
 		assert.instanceOf(root, Root);
@@ -56,14 +59,14 @@ describe("Markdown.parseResult", () => {
 
 	it("succeeds on the empty document", () => {
 		const result = Markdown.parseResult("");
-		assert.isTrue(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		if (Result.isFailure(result)) return;
 		assert.deepStrictEqual(result.success.children, []);
 	});
 
 	it("materializes a tripped guard as a typed MarkdownParseError", () => {
 		const result = Markdown.parseResult(nestingBomb);
-		assert.isTrue(Result.isFailure(result));
+		assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 		if (Result.isSuccess(result)) return;
 		const error = result.failure;
 		assert.instanceOf(error, MarkdownParseError);
@@ -75,7 +78,7 @@ describe("Markdown.parseResult", () => {
 		// Same typed outcome from a different throw site: the facade must not
 		// have learned only the block pass's shape of carrier.
 		const result = Markdown.parseResult(emphasisBomb);
-		assert.isTrue(Result.isFailure(result));
+		assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 		if (Result.isSuccess(result)) return;
 		assert.instanceOf(result.failure, MarkdownParseError);
 		assert.strictEqual(result.failure.diagnostic.code, "NestingDepthExceeded");
@@ -83,7 +86,7 @@ describe("Markdown.parseResult", () => {
 
 	it("derives the position of an inline-pass guard trip from its offset", () => {
 		const result = Markdown.parseResult(`para\n\n${emphasisBomb}`);
-		assert.isTrue(Result.isFailure(result));
+		assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 		if (Result.isSuccess(result)) return;
 		const { line, character, offset } = result.failure.diagnostic;
 		// Third line (zero-based 2), and the offset accounts for the two
@@ -95,7 +98,7 @@ describe("Markdown.parseResult", () => {
 
 	it("populates line and character on the guard diagnostic", () => {
 		const result = Markdown.parseResult(`a\n\n${nestingBomb}`);
-		assert.isTrue(Result.isFailure(result));
+		assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 		if (Result.isSuccess(result)) return;
 		const { offset, line, character } = result.failure.diagnostic;
 		// Derived from the offset against the source, so the trip on line 3
@@ -145,7 +148,8 @@ describe("Markdown.parseResult", () => {
 			Object.defineProperty(Paragraph, "make", { configurable: true, writable: true, value: original });
 		}
 		// And the seam really is restored — otherwise the assertion above is vacuous.
-		assert.isTrue(Result.isSuccess(Markdown.parseResult("a paragraph\n")));
+		const restored = Markdown.parseResult("a paragraph\n");
+		assertSuccess(restored, Result.getOrThrow(restored));
 	});
 });
 
@@ -155,7 +159,7 @@ describe("Markdown.parse", () => {
 			const source = "# Title\n\n- a\n- b\n\n[x]: /u\n";
 			const viaEffect = yield* Markdown.parse(source);
 			const viaResult = Markdown.parseResult(source);
-			assert.isTrue(Result.isSuccess(viaResult));
+			assertSuccess(viaResult, Result.getOrThrow(viaResult));
 			if (Result.isFailure(viaResult)) return;
 			assert.deepStrictEqual(viaEffect, viaResult.success);
 		}),
@@ -163,29 +167,30 @@ describe("Markdown.parse", () => {
 
 	it.effect("fails with the same error parseResult fails with", () =>
 		Effect.gen(function* () {
-			const viaEffect = yield* Effect.result(Markdown.parse(nestingBomb));
+			const viaEffect = yield* Effect.exit(Markdown.parse(nestingBomb));
 			const viaResult = Markdown.parseResult(nestingBomb);
-			assert.isTrue(Result.isFailure(viaEffect));
-			assert.isTrue(Result.isFailure(viaResult));
-			if (Result.isSuccess(viaEffect) || Result.isSuccess(viaResult)) return;
-			assert.deepStrictEqual(viaEffect.failure, viaResult.failure);
+			assertFailure(viaResult, viaResult.pipe(Result.flip, Result.getOrThrow));
+			assertSuccess(Exit.findError(viaEffect), viaResult.failure);
 		}),
 	);
 
 	it.effect("surfaces a non-carrier throw as a defect, not a typed failure", () =>
 		Effect.gen(function* () {
 			const original = Paragraph.make;
+			const boom = new Error("boom: a programmer error, not a carrier");
 			Object.defineProperty(Paragraph, "make", {
 				configurable: true,
 				writable: true,
 				value: () => {
-					throw new Error("boom: a programmer error, not a carrier");
+					throw boom;
 				},
 			});
 			const exit = yield* Effect.exit(Markdown.parse("a paragraph\n"));
 			Object.defineProperty(Paragraph, "make", { configurable: true, writable: true, value: original });
-			assert.isTrue(exit._tag === "Failure");
-			if (exit._tag !== "Failure") return;
+			assertExitFailure(exit, exit.pipe(Exit.match({
+				onFailure: identity,
+				onSuccess: () => assert.fail("expected the constructor throw to fail"),
+			})));
 			// A die, not a typed fail: no MarkdownParseError anywhere in the cause.
 			const rendered = String(exit.cause);
 			assert.include(rendered, "boom: a programmer error");
@@ -227,9 +232,12 @@ describe("MarkdownParseOptions", () => {
 
 	it("admits both dialect literals and rejects anything else, typed", () => {
 		const decode = S.decodeUnknownResult(MarkdownParseOptions);
-		assert.isTrue(Result.isSuccess(decode({ dialect: "gfm" })));
-		assert.isTrue(Result.isSuccess(decode({ dialect: "commonmark" })));
-		assert.isTrue(Result.isFailure(decode({ dialect: "markdown-extra" })));
+		const gfm = decode({ dialect: "gfm" });
+		const commonmark = decode({ dialect: "commonmark" });
+		const invalid = decode({ dialect: "markdown-extra" });
+		assertSuccess(gfm, Result.getOrThrow(gfm));
+		assertSuccess(commonmark, Result.getOrThrow(commonmark));
+		assertFailure(invalid, invalid.pipe(Result.flip, Result.getOrThrow));
 	});
 });
 
@@ -250,8 +258,9 @@ describe("Markdown.MarkdownFromString", () => {
 
 	it.effect("fails to decode a non-string", () =>
 		Effect.gen(function* () {
-			const result = yield* Effect.result(decode(42));
-			assert.isTrue(Result.isFailure(result));
+			const exit = yield* Effect.exit(decode(42));
+			const error = Exit.findError(exit);
+			assertSuccess(error, Result.getOrThrow(error));
 		}),
 	);
 
@@ -312,7 +321,7 @@ describe("Markdown parse invariants", () => {
 		const large = "para *em* [ref][a] `code`\n\n".repeat(20_000);
 		assert.isAbove(large.length, 500_000);
 		const result = Markdown.parseResult(large);
-		assert.isTrue(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 	});
 
 	it.prop(
@@ -351,7 +360,7 @@ describe("Markdown parse invariants", () => {
 			"",
 		].join("\n");
 		const result = Markdown.parseResult(source);
-		assert.isTrue(Result.isSuccess(result));
+		assertSuccess(result, Result.getOrThrow(result));
 		if (Result.isFailure(result)) return;
 		let count = 0;
 		walk(result.success, (node) => {

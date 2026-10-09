@@ -1345,11 +1345,8 @@ export class Minimatch {
 				nonGsParts++;
 			}
 		}
-		let i = bodySegments.length - 1;
 		const fileLength = file.length - fileTailMatch;
-		for (const b of bodySegments) {
-			const before = nonGsPartsSums[i--];
-			if (before === undefined) return false;
+		for (const [b, before] of A.zip(bodySegments, A.reverse(nonGsPartsSums))) {
 			b[1] = fileLength - (before + b[0].length);
 		}
 
@@ -1518,16 +1515,9 @@ export class Minimatch {
 			// a glob fs traversal.
 			return partial;
 		}
-		if (pi === pl) {
-			// ran out of pattern, still have file left.
-			// this is only acceptable if we're on the very last
-			// empty segment of a file with a trailing slash.
-			// a/* should match a/b/
-			return fi === fl - 1 && file[fi] === "";
-		}
-
-		// should be unreachable.
-		throw MinimatchError.make({ message: "wtf?" });
+		// The loop can only finish by exhausting file or pattern. The file
+		// cases returned above, so only a trailing empty file segment can match.
+		return fi === fl - 1 && file[fi] === "";
 	}
 
 	/**
@@ -1831,11 +1821,9 @@ export class Minimatch {
 		this.debug(this.pattern, "set", set);
 
 		// Find the basename of the path by looking for the last non-empty segment
-		let filename = ff[ff.length - 1] ?? "";
-		if (filename === "") {
-			for (let i = ff.length - 2; filename === "" && i >= 0; i--) {
-				filename = ff[i] ?? "";
-			}
+		let filename = "";
+		for (const segment of ff) {
+			if (segment !== "") filename = segment;
 		}
 
 		for (const pattern of set) {

@@ -7,6 +7,7 @@
 // directions of that rule get their own tests.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import { SemVer } from "../../effected/semver/index.ts";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
@@ -115,7 +116,7 @@ describe("PackageManagerPin rejection matrix", () => {
 				assert.strictEqual(error.reason, reason);
 				// The Result twin agrees — the two surfaces share one grammar.
 				const result = PackageManagerPin.parseResult(input);
-				assert.isTrue(Result.isFailure(result));
+				assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 			}),
 		);
 
@@ -175,7 +176,7 @@ describe("PackageManagerPin.FromString", () => {
 	it.effect("encodes a constructed pin without integrity to the bare form", () =>
 		Effect.gen(function* () {
 			const parsed = PackageManagerPin.parseResult("bun@1.3.0");
-			assert.isTrue(Result.isSuccess(parsed));
+			assertSuccess(parsed, Result.getOrThrow(parsed));
 			if (Result.isSuccess(parsed)) {
 				assert.strictEqual(yield* encode(parsed.success), "bun@1.3.0");
 			}
@@ -186,14 +187,14 @@ describe("PackageManagerPin.FromString", () => {
 describe("PackageManagerPin.parseResult", () => {
 	it("is the sync primitive: success carries the pin, failure the typed error", () => {
 		const ok = PackageManagerPin.parseResult("pnpm@11.17.0+sha512.abc");
-		assert.isTrue(Result.isSuccess(ok));
+		assertSuccess(ok, Result.getOrThrow(ok));
 		if (Result.isSuccess(ok)) {
 			assert.strictEqual(ok.success.name, "pnpm");
 			assert.strictEqual(ok.success.integrity, "sha512.abc");
 		}
 
 		const bad = PackageManagerPin.parseResult("pnpm@11");
-		assert.isTrue(Result.isFailure(bad));
+		assertFailure(bad, bad.pipe(Result.flip, Result.getOrThrow));
 		if (Result.isFailure(bad)) {
 			assert.strictEqual(bad.failure._tag, "InvalidPackageManagerPinError");
 			assert.strictEqual(bad.failure.reason, "version");
@@ -207,7 +208,8 @@ describe("PackageManagerPin.bare", () => {
 	it("renders name@version without the integrity, and equals toString for a bare pin", () => {
 		const hashed = PackageManagerPin.parseResult(`pnpm@12.6.0+sha512.${"ab".repeat(64)}`);
 		const plain = PackageManagerPin.parseResult("pnpm@12.6.0");
-		assert.isTrue(Result.isSuccess(hashed) && Result.isSuccess(plain));
+		assertSuccess(hashed, Result.getOrThrow(hashed));
+		assertSuccess(plain, Result.getOrThrow(plain));
 		if (Result.isSuccess(hashed) && Result.isSuccess(plain)) {
 			assert.strictEqual(hashed.success.bare, "pnpm@12.6.0");
 			assert.notStrictEqual(hashed.success.toString(), hashed.success.bare);

@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess, assertFailure } from "@effect/vitest/utils";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { BlobEnvelopeError } from "../../effected/github-actions/index.ts";
@@ -12,17 +13,19 @@ const bytes = (...values: ReadonlyArray<number>) => Uint8Array.from(values);
 
 const encoded = (metadata: Meta, body: Uint8Array) => {
 	const result = BlobEnvelope.encodeResult(metadata, body, Meta);
-	if (!Result.isSuccess(result)) {
-		assert.fail(`expected encode to succeed: ${result.failure._tag}`);
-	}
+	assertSuccess(
+		result,
+		Result.getOrThrowWith(result, (error) => error)
+	);
 	return result.success;
 };
 
 const failure = (input: Uint8Array): BlobEnvelopeError => {
 	const result = BlobEnvelope.decodeResult(input, Meta);
-	if (!Result.isFailure(result)) {
-		assert.fail("expected decode to fail");
-	}
+	assertFailure(
+		result,
+		Result.getOrThrowWith(Result.flip(result), (value) => value)
+	);
 	return result.failure;
 };
 
@@ -31,23 +34,28 @@ describe("BlobEnvelope", () => {
 		it("recovers metadata and body exactly", () => {
 			const body = bytes(1, 2, 3, 250, 0, 255);
 			const result = BlobEnvelope.decodeResult(encoded({ tag: "turbo", durationMs: 12 }, body), Meta);
-			if (!Result.isSuccess(result)) {
-				assert.fail("expected decode to succeed");
-			}
+			assertSuccess(
+				result,
+				Result.getOrThrowWith(result, (error) => error)
+			);
 			assert.deepStrictEqual(result.success.metadata, { tag: "turbo", durationMs: 12 });
 			assert.deepStrictEqual([...result.success.body], [...body]);
 		});
 
 		it("handles an empty body", () => {
 			const result = BlobEnvelope.decodeResult(encoded({ tag: "t", durationMs: 0 }, bytes()), Meta);
-			assert.isTrue(Result.isSuccess(result));
+			assertSuccess(
+				result,
+				Result.getOrThrowWith(result, (error) => error)
+			);
 		});
 
 		it("handles metadata containing multi-byte characters", () => {
 			const result = BlobEnvelope.decodeResult(encoded({ tag: "héllo — 🎉", durationMs: 1 }, bytes(9)), Meta);
-			if (!Result.isSuccess(result)) {
-				assert.fail("expected decode to succeed");
-			}
+			assertSuccess(
+				result,
+				Result.getOrThrowWith(result, (error) => error)
+			);
 			// The length prefix counts BYTES, not characters; a code-unit count
 			// would slice the body at the wrong offset here.
 			assert.strictEqual(result.success.metadata.tag, "héllo — 🎉");
@@ -57,9 +65,10 @@ describe("BlobEnvelope", () => {
 		it("does not alias the frame's buffer, so mutating the body is safe", () => {
 			const frame = encoded({ tag: "t", durationMs: 1 }, bytes(1, 2, 3));
 			const result = BlobEnvelope.decodeResult(frame, Meta);
-			if (!Result.isSuccess(result)) {
-				assert.fail("expected decode to succeed");
-			}
+			assertSuccess(
+				result,
+				Result.getOrThrowWith(result, (error) => error)
+			);
 			const copy = Uint8Array.from(frame);
 			result.success.body[0] = 99;
 			assert.deepStrictEqual([...frame], [...copy], "the frame must be unchanged");
@@ -68,15 +77,20 @@ describe("BlobEnvelope", () => {
 		it("copies the body of a Buffer frame without sharing ownership", () => {
 			const frame = Buffer.from(encoded({ tag: "t", durationMs: 1 }, bytes(1, 2, 3)));
 			const result = BlobEnvelope.decodeResult(frame, Meta);
-			if (!Result.isSuccess(result)) {
-				assert.fail("expected decode to succeed");
-			}
+			assertSuccess(
+				result,
+				Result.getOrThrowWith(result, (error) => error)
+			);
 			assert.deepStrictEqual([...result.success.body], [1, 2, 3]);
 			const copy = Uint8Array.from(frame);
 			result.success.body[0] = 99;
 			assert.deepStrictEqual([...frame], [...copy], "mutating the body must leave the Buffer frame unchanged");
 			frame[frame.length - 2] = 88;
-			assert.deepStrictEqual([...result.success.body], [99, 2, 3], "mutating the Buffer frame must leave the body unchanged");
+			assert.deepStrictEqual(
+				[...result.success.body],
+				[99, 2, 3],
+				"mutating the Buffer frame must leave the body unchanged"
+			);
 		});
 	});
 
@@ -112,7 +126,7 @@ describe("BlobEnvelope", () => {
 		it("reports a frame cut off inside the header", () => {
 			assert.strictEqual(
 				failure(encoded({ tag: "t", durationMs: 1 }, bytes(1)).slice(0, 6))._tag,
-				"TruncatedBlobEnvelopeError",
+				"TruncatedBlobEnvelopeError"
 			);
 		});
 
@@ -127,17 +141,19 @@ describe("BlobEnvelope", () => {
 			const Other = S.Struct({ completelyDifferent: S.Boolean });
 			const frame = encoded({ tag: "t", durationMs: 1 }, bytes(1));
 			const result = BlobEnvelope.decodeResult(frame, Other);
-			if (!Result.isFailure(result)) {
-				assert.fail("expected decode to fail");
-			}
+			assertFailure(
+				result,
+				Result.getOrThrowWith(Result.flip(result), (value) => value)
+			);
 			assert.strictEqual(result.failure._tag, "BlobMetadataDecodeError");
 		});
 
 		it("reports a value that cannot be encoded", () => {
 			const result = BlobEnvelope.encodeResult(deliberatelyInvalid<never>({ tag: 1 }), bytes(), Meta);
-			if (!Result.isFailure(result)) {
-				assert.fail("expected encode to fail");
-			}
+			assertFailure(
+				result,
+				Result.getOrThrowWith(Result.flip(result), (value) => value)
+			);
 			assert.strictEqual(result.failure._tag, "BlobMetadataEncodeError");
 		});
 	});
@@ -145,32 +161,29 @@ describe("BlobEnvelope", () => {
 	describe("properties", () => {
 		it.prop(
 			"any metadata and body round-trips",
-			[
-				S.String,
-				S.Int.check(S.isBetween({ minimum: 0, maximum: 2 ** 31 })),
-				S.Uint8Array.check(S.isMaxLength(64)),
-			],
+			[S.String, S.Int.check(S.isBetween({ minimum: 0, maximum: 2 ** 31 })), S.Uint8Array.check(S.isMaxLength(64))],
 			([tag, durationMs, body]) => {
 				const result = BlobEnvelope.decodeResult(encoded({ tag, durationMs }, body), Meta);
-				if (!Result.isSuccess(result)) {
-					assert.fail("round trip must succeed");
-				}
+				assertSuccess(
+					result,
+					Result.getOrThrowWith(result, (error) => error)
+				);
 				assert.strictEqual(result.success.metadata.tag, tag);
 				assert.strictEqual(result.success.metadata.durationMs, durationMs);
 				assert.deepStrictEqual([...result.success.body], [...body]);
 				return true;
-			},
+			}
 		);
 
-		it.prop(
-			"arbitrary bytes never throw — they fail typed",
-			[S.Uint8Array.check(S.isMaxLength(128))],
-			([input]) => {
-				// A corrupt cache entry must be a typed miss, never a defect.
-				const result = BlobEnvelope.decodeResult(input, Meta);
-				assert.isTrue(Result.isSuccess(result) || Result.isFailure(result));
-				return true;
-			},
-		);
+		it.prop("arbitrary bytes never throw — they fail typed", [S.Uint8Array.check(S.isMaxLength(128))], ([input]) => {
+			// A corrupt cache entry must be a typed miss, never a defect.
+			const result = BlobEnvelope.decodeResult(input, Meta);
+			if (Result.isSuccess(result)) {
+				assertSuccess(result, result.success);
+			} else {
+				assertFailure(result, result.failure);
+			}
+			return true;
+		});
 	});
 });

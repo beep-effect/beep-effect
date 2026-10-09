@@ -23,7 +23,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
@@ -99,7 +99,7 @@ const preamble = (options: PreambleOptions = {}): string => {
 
 const lockOf = Effect.fn("lockOf")(function*(content: string) {
 	const result = yield* PnpmEnvLockfile.packageManager(content);
-	assert.isTrue(O.isSome(result), "expected the lockfile to record a package manager");
+	assertSome(O.map(result, () => true), true);
 	return O.getOrThrow(result);
 });
 
@@ -156,7 +156,7 @@ describe("PnpmEnvLockfile.packageManager", () => {
 		it.effect("a single-document lockfile has no preamble", () =>
 			Effect.gen(function* () {
 				const result = yield* PnpmEnvLockfile.packageManager(fixture("v1"));
-				assert.isTrue(O.isNone(result));
+				assertNone(result);
 			}),
 		);
 
@@ -167,14 +167,14 @@ describe("PnpmEnvLockfile.packageManager", () => {
 				const onlyPreamble = preamble().split("\n---\n")[0] ?? "";
 				assert.include(onlyPreamble, "packageManagerDependencies");
 				const result = yield* PnpmEnvLockfile.packageManager(onlyPreamble);
-				assert.isTrue(O.isNone(result));
+				assertNone(result);
 			}),
 		);
 
 		it.effect("a preamble holding only configDependencies", () =>
 			Effect.gen(function* () {
 				const result = yield* PnpmEnvLockfile.packageManager(fixture("multidoc"));
-				assert.isTrue(O.isNone(result));
+				assertNone(result);
 			}),
 		);
 
@@ -189,14 +189,14 @@ describe("PnpmEnvLockfile.packageManager", () => {
 					].join("\n"),
 				});
 				const result = yield* PnpmEnvLockfile.packageManager(content);
-				assert.isTrue(O.isNone(result));
+				assertNone(result);
 			}),
 		);
 
 		it.effect("empty content", () =>
 			Effect.gen(function* () {
 				const result = yield* PnpmEnvLockfile.packageManager("");
-				assert.isTrue(O.isNone(result));
+				assertNone(result);
 			}),
 		);
 	});
@@ -342,7 +342,7 @@ describe("PnpmEnvLockfile.configDependencies", () => {
 					const locks = yield* PnpmEnvLockfile.configDependencies(fixture(`env-configdeps-${major}`));
 					assert.deepStrictEqual([...HashMap.keys(locks)], ["@effected/pnpm-plugin-effect"]);
 					const recorded = HashMap.get(locks, "@effected/pnpm-plugin-effect");
-					assert.isTrue(O.isSome(recorded), "expected the lockfile to record the config dependency");
+					assertSome(O.map(recorded, () => true), true);
 					const lock = O.getOrThrow(recorded);
 					assert.instanceOf(lock, ConfigDependencyLock);
 					assert.strictEqual(lock.name, "@effected/pnpm-plugin-effect");
@@ -361,7 +361,7 @@ describe("PnpmEnvLockfile.configDependencies", () => {
 					assert.deepStrictEqual([...HashMap.keys(locks)], ["@effected/pnpm-plugin-effect"]);
 					assertSome(O.map(HashMap.get(locks, "@effected/pnpm-plugin-effect"), (lock) => lock.integrity), PLUGIN_0_11_1_SRI);
 					// No devEngines, so the preamble records no package manager.
-					assert.isTrue(O.isNone(yield* PnpmEnvLockfile.packageManager(content)));
+					assertNone(yield* PnpmEnvLockfile.packageManager(content));
 				}),
 			);
 		}

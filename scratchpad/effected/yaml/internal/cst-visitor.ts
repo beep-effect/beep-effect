@@ -21,6 +21,9 @@
 // is a value when the first key is external. Compact mappings in sequences
 // contain their first key; indicators also delimit omitted values.
 
+import * as A from "effect/Array";
+import * as O from "effect/Option";
+
 import type { CstNode } from "./cst.ts";
 import { parseCSTAll } from "./cst-parser.ts";
 
@@ -29,6 +32,9 @@ import { parseCSTAll } from "./cst-parser.ts";
 // ---------------------------------------------------------------------------
 
 type Path = ReadonlyArray<string | number>;
+
+/** Normalize optional CST children without inventing sparse entries. */
+const childrenOf = (node: CstNode): ReadonlyArray<CstNode> => O.fromNullishOr(node.children).pipe(O.getOrElse(A.empty));
 
 // ---------------------------------------------------------------------------
 // Event records
@@ -312,10 +318,7 @@ function isSeqCstNode(node: CstNode): boolean {
  * scalar without intervening content nodes.
  */
 function* walkSiblings(nodes: ReadonlyArray<CstNode>, path: Path, depth: number): Generator<CstVisitorEvent> {
-	for (let i = 0; i < nodes.length; i++) {
-		const node = nodes[i];
-		if (node === undefined) continue;
-
+	for (const [i, node] of nodes.entries()) {
 		// Skip trivia
 		if (isTriviaCstNode(node)) continue;
 
@@ -358,20 +361,19 @@ function* walkSiblings(nodes: ReadonlyArray<CstNode>, path: Path, depth: number)
 			if (node.type === "block-map") {
 				// The walker derives whether the first key was a sibling or is
 				// included in this compact mapping's children.
-				yield* walkBlockMapChildren(node.children ?? [], path, depth + 1);
+				yield* walkBlockMapChildren(childrenOf(node), path, depth + 1);
 			} else {
 				// flow-map: key/value alternation starting with key
-				yield* walkFlowMapChildren(node.children ?? [], path, depth + 1);
+				yield* walkFlowMapChildren(childrenOf(node), path, depth + 1);
 			}
 			yield { _tag: "CstMapEndEvent", path, depth };
 			continue;
 		}
 
-		if (isSeqCstNode(node)) {
-			yield { _tag: "CstSeqStartEvent", path, depth, source: node.source };
-			yield* walkSiblings(node.children ?? [], path, depth + 1);
-			yield { _tag: "CstSeqEndEvent", path, depth };
-		}
+		// Every remaining parser-produced sibling is a sequence.
+		yield { _tag: "CstSeqStartEvent", path, depth, source: node.source };
+		yield* walkSiblings(childrenOf(node), path, depth + 1);
+		yield { _tag: "CstSeqEndEvent", path, depth };
 	}
 }
 
@@ -391,8 +393,8 @@ function* walkSiblings(nodes: ReadonlyArray<CstNode>, path: Path, depth: number)
  */
 function findNextContent(nodes: ReadonlyArray<CstNode>, startIdx: number): CstNode | undefined {
 	for (let i = startIdx; i < nodes.length; i++) {
-		const node = nodes[i];
-		if (node !== undefined && !isTriviaCstNode(node) && node.type !== "comment") {
+		const node = A.getUnsafe(nodes, i);
+		if (!isTriviaCstNode(node) && node.type !== "comment") {
 			return node;
 		}
 	}
@@ -402,8 +404,8 @@ function findNextContent(nodes: ReadonlyArray<CstNode>, startIdx: number): CstNo
 /** Find content or a mapping indicator, preserving entry-boundary punctuation. */
 function findMapContent(nodes: ReadonlyArray<CstNode>, startIdx: number): CstNode | undefined {
 	for (let i = startIdx; i < nodes.length; i++) {
-		const node = nodes[i];
-		if (node === undefined || node.type === "comment") continue;
+		const node = A.getUnsafe(nodes, i);
+		if (node.type === "comment") continue;
 		if (node.type === "whitespace" && (node.source === ":" || node.source === "?")) return node;
 		if (!isTriviaCstNode(node)) return node;
 	}
@@ -435,10 +437,7 @@ function* walkBlockMapChildren(
 	const firstKeyExternal = findMapContent(children, 0)?.source === ":";
 	let expectingKey = !firstKeyExternal;
 
-	for (let i = 0; i < children.length; i++) {
-		const child = children[i];
-		if (child === undefined) continue;
-
+	for (const [i, child] of children.entries()) {
 		// Always emit comments
 		if (child.type === "comment") {
 			yield { _tag: "CstCommentEvent", path, depth, source: child.source };
@@ -494,7 +493,7 @@ function* walkBlockMapChildren(
 		if (isBlockMapCstNode(child)) {
 			// Nested block-map: it's the value for the key just emitted.
 			yield { _tag: "CstMapStartEvent", path, depth, source: child.source };
-			yield* walkBlockMapChildren(child.children ?? [], path, depth + 1);
+			yield* walkBlockMapChildren(childrenOf(child), path, depth + 1);
 			yield { _tag: "CstMapEndEvent", path, depth };
 			// After a nested block-map value, next scalar is a key
 			expectingKey = true;
@@ -504,7 +503,7 @@ function* walkBlockMapChildren(
 		if (isMapCstNode(child)) {
 			// flow-map as value
 			yield { _tag: "CstMapStartEvent", path, depth, source: child.source };
-			yield* walkFlowMapChildren(child.children ?? [], path, depth + 1);
+			yield* walkFlowMapChildren(childrenOf(child), path, depth + 1);
 			yield { _tag: "CstMapEndEvent", path, depth };
 			expectingKey = true;
 			continue;
@@ -512,17 +511,15 @@ function* walkBlockMapChildren(
 
 		if (isSeqCstNode(child)) {
 			yield { _tag: "CstSeqStartEvent", path, depth, source: child.source };
-			yield* walkSiblings(child.children ?? [], path, depth + 1);
+			yield* walkSiblings(childrenOf(child), path, depth + 1);
 			yield { _tag: "CstSeqEndEvent", path, depth };
 			expectingKey = true;
 			continue;
 		}
 
-		if (child.type === "alias") {
-			yield { _tag: "CstAliasEvent", path, depth, source: child.source };
-			// Alias is a value; next scalar is a key
-			expectingKey = true;
-		}
+		// Every remaining parser-produced child is an alias value.
+		yield { _tag: "CstAliasEvent", path, depth, source: child.source };
+		expectingKey = true;
 	}
 }
 
@@ -583,11 +580,7 @@ function* walkFlowMapChildren(children: ReadonlyArray<CstNode>, path: Path, dept
 
 		if (isMapCstNode(child)) {
 			yield { _tag: "CstMapStartEvent", path, depth, source: child.source };
-			if (child.type === "block-map") {
-				yield* walkBlockMapChildren(child.children ?? [], path, depth + 1);
-			} else {
-				yield* walkFlowMapChildren(child.children ?? [], path, depth + 1);
-			}
+			yield* walkFlowMapChildren(childrenOf(child), path, depth + 1);
 			yield { _tag: "CstMapEndEvent", path, depth };
 			expectingKey = true;
 			continue;
@@ -595,16 +588,16 @@ function* walkFlowMapChildren(children: ReadonlyArray<CstNode>, path: Path, dept
 
 		if (isSeqCstNode(child)) {
 			yield { _tag: "CstSeqStartEvent", path, depth, source: child.source };
-			yield* walkSiblings(child.children ?? [], path, depth + 1);
+			yield* walkSiblings(childrenOf(child), path, depth + 1);
 			yield { _tag: "CstSeqEndEvent", path, depth };
 			expectingKey = true;
 			continue;
 		}
 
-		if (child.type === "alias") {
-			yield { _tag: "CstAliasEvent", path, depth, source: child.source };
-			expectingKey = true;
-		}
+		// Flow lexing cannot produce directive or document children.
+		// Every remaining child is an alias value.
+		yield { _tag: "CstAliasEvent", path, depth, source: child.source };
+		expectingKey = true;
 	}
 }
 
@@ -626,7 +619,7 @@ function* walkDocument(doc: CstNode): Generator<CstVisitorEvent> {
 	const depth = 0;
 
 	yield { _tag: "CstDocumentStartEvent", path, depth };
-	yield* walkSiblings(doc.children ?? [], path, depth + 1);
+	yield* walkSiblings(childrenOf(doc), path, depth + 1);
 	yield { _tag: "CstDocumentEndEvent", path, depth };
 }
 

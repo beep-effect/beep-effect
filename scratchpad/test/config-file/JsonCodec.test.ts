@@ -1,9 +1,9 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertExitFailure, assertSome, assertSuccess } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { ConfigCodecError } from "../../effected/config-file/ConfigCodec.ts";
 import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
@@ -21,7 +21,7 @@ describe("JsonCodec", () => {
 	it.effect("stringifies a value back to JSON text", () =>
 		Effect.gen(function* () {
 			const text = yield* JsonCodec.stringify({ port: 8080 });
-			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(text)), { port: 8080 });
+			assertSuccess(S.decodeResult(JsonValue)(text), { port: 8080 });
 		}),
 	);
 
@@ -50,17 +50,13 @@ describe("JsonCodec", () => {
 	it.effect("never dies — malformed input fails through the typed channel", () =>
 		Effect.gen(function* () {
 			const exit = yield* Effect.exit(JsonCodec.parse("{ not json"));
-			assert.isTrue(Exit.isFailure(exit));
+			const cause = exit.pipe(Exit.getCause, O.getOrThrow);
+			assertExitFailure(exit, cause);
+			assertSome(Exit.getCause(exit), cause);
 			// A defect would mean the parser threw instead of failing typed: assert the
 			// cause is a genuine Fail reason, not a Die reason.
-			if (Exit.isFailure(exit)) {
-				const cause = Exit.getCause(exit);
-				assert.isTrue(O.isSome(cause));
-				if (O.isSome(cause)) {
-					assert.isTrue(Cause.hasFails(cause.value));
-					assert.isFalse(Cause.hasDies(cause.value));
-				}
-			}
+			assert.isTrue(Cause.hasFails(cause));
+			assert.isFalse(Cause.hasDies(cause));
 		}),
 	);
 });

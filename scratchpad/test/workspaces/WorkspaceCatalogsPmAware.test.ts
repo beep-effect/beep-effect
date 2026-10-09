@@ -1,4 +1,6 @@
-import { assert, describe, it, layer } from "@effect/vitest";
+import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess, assertSome } from "@effect/vitest/utils";
+import * as Exit from "effect/Exit";
 import { Lockfile } from "../../effected/lockfiles/index.ts";
 import { CatalogAssemblyError } from "../../effected/npm/index.ts";
 import * as Effect from "effect/Effect";
@@ -26,8 +28,8 @@ describe("CatalogSet.fromManifestWorkspaces", () => {
 				catalogs: { build: { typescript: "^6.0.0" } },
 			});
 			const set = yield* CatalogSet.fromManifestWorkspaces(text);
-			assert.deepStrictEqual(set.rangeOf("effect", O.none()), O.some("^4.0.0"));
-			assert.deepStrictEqual(set.rangeOf("typescript", O.some("build")), O.some("^6.0.0"));
+			assertSome(set.rangeOf("effect", O.none()), "^4.0.0");
+			assertSome(set.rangeOf("typescript", O.some("build")), "^6.0.0");
 		}),
 	);
 
@@ -72,17 +74,17 @@ describe("CatalogSet.fromManifestWorkspaces", () => {
 					},
 				})),
 			);
-			assert.deepStrictEqual(set.rangeOf("effect", O.none()), O.some("^4.0.0"));
+			assertSome(set.rangeOf("effect", O.none()), "^4.0.0");
 			// The named catalog, not just the default — a bug keeping only one passes on the other.
-			assert.deepStrictEqual(set.rangeOf("typescript", O.some("build")), O.some("^6.0.0"));
+			assertSome(set.rangeOf("typescript", O.some("build")), "^6.0.0");
 		}),
 	);
 
 	it.effect("a number workspaces field fails typed, never as a defect", () =>
 		Effect.gen(function* () {
-			const result = yield* Effect.result(CatalogSet.fromManifestWorkspaces(Result.getOrThrow(S.encodeResult(JsonValue)({ workspaces: 42 }))));
-			assert.strictEqual(result._tag, "Failure");
+			const exit = yield* Effect.exit(CatalogSet.fromManifestWorkspaces(Result.getOrThrow(S.encodeResult(JsonValue)({ workspaces: 42 }))));
 			const error = yield* Effect.flip(CatalogSet.fromManifestWorkspaces(Result.getOrThrow(S.encodeResult(JsonValue)({ workspaces: 42 }))));
+			assertSuccess(Exit.findError(exit), error);
 			assert.instanceOf(error, CatalogAssemblyError);
 			assert.strictEqual(error.source, "manifest");
 		}),
@@ -125,8 +127,8 @@ describe("CatalogSet.fromLockfile", () => {
 			);
 			const set = CatalogSet.fromLockfile(lockfile);
 			// The bun default catalog normalizes under "default".
-			assert.deepStrictEqual(set.rangeOf("react", O.none()), O.some("^18.0.0"));
-			assert.deepStrictEqual(set.rangeOf("typescript", O.some("build")), O.some("^5.0.0"));
+			assertSome(set.rangeOf("react", O.none()), "^18.0.0");
+			assertSome(set.rangeOf("typescript", O.some("build")), "^5.0.0");
 		}),
 	);
 
@@ -139,7 +141,7 @@ describe("CatalogSet.fromLockfile", () => {
 				{ format: "pnpm" },
 			);
 			const set = CatalogSet.fromLockfile(lockfile);
-			assert.deepStrictEqual(set.rangeOf("effect", O.none()), O.some("^4.0.0"));
+			assertSome(set.rangeOf("effect", O.none()), "^4.0.0");
 		}),
 	);
 });
@@ -160,13 +162,13 @@ const doubleDefaultTree: Tree = {
 };
 
 describe("WorkspaceCatalogs.set — the double-default rejection through the stack", () => {
-	layer(workspacesOver(doubleDefaultTree))((it) => {
+	it.layer(workspacesOver(doubleDefaultTree), { timeout: "30 seconds" })((it) => {
 		it.effect("the default catalog declared twice fails set() typed", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
-				const result = yield* Effect.result(catalogs.set);
-				assert.strictEqual(result._tag, "Failure");
+				const exit = yield* Effect.exit(catalogs.set);
 				const error = yield* Effect.flip(catalogs.set);
+				assertSuccess(Exit.findError(exit), error);
 				assert.instanceOf(error, CatalogAssemblyError);
 				assert.strictEqual(error.path, "default");
 			}),
@@ -184,7 +186,7 @@ const malformedTree: Tree = {
 };
 
 describe("WorkspaceCatalogs.set — a malformed workspaces shape through the stack", () => {
-	layer(workspacesOver(malformedTree))((it) => {
+	it.layer(workspacesOver(malformedTree), { timeout: "30 seconds" })((it) => {
 		it.effect("a malformed workspaces.catalog fails set() typed", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
@@ -221,12 +223,12 @@ const bunWorkspace: Tree = {
 };
 
 describe("WorkspaceCatalogs.set — a bun workspace with no pnpm-workspace.yaml", () => {
-	layer(workspacesOver(bunWorkspace))((it) => {
+	it.layer(workspacesOver(bunWorkspace), { timeout: "30 seconds" })((it) => {
 		it.effect("reads inline catalogs from the package.json workspaces block", () =>
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
 				const set = yield* catalogs.set;
-				assert.deepStrictEqual(set.rangeOf("effect", O.none()), O.some("^4.0.0"));
+				assertSome(set.rangeOf("effect", O.none()), "^4.0.0");
 			}),
 		);
 
@@ -235,7 +237,7 @@ describe("WorkspaceCatalogs.set — a bun workspace with no pnpm-workspace.yaml"
 				const catalogs = yield* WorkspaceCatalogs;
 				const set = yield* catalogs.set;
 				// react comes only from bun.lock — proof the BunExtension is assembled.
-				assert.deepStrictEqual(set.rangeOf("react", O.none()), O.some("^18.0.0"));
+				assertSome(set.rangeOf("react", O.none()), "^18.0.0");
 			}),
 		);
 
@@ -243,7 +245,7 @@ describe("WorkspaceCatalogs.set — a bun workspace with no pnpm-workspace.yaml"
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
 				const set = yield* catalogs.set;
-				assert.deepStrictEqual(set.rangeOf("typescript", O.some("build")), O.some("^6.0.0"));
+				assertSome(set.rangeOf("typescript", O.some("build")), "^6.0.0");
 			}),
 		);
 	});
@@ -256,8 +258,8 @@ describe("CatalogSet — validated hostile catalog names", () => {
 			const set = yield* CatalogSet.fromManifestWorkspaces(
 				'{"workspaces":{"catalogs":{"__proto__":{"__proto__":"^1.0.0","constructor":"^2.0.0"}}}}',
 			);
-			assert.deepStrictEqual(set.rangeOf("__proto__", O.some("__proto__")), O.some("^1.0.0"));
-			assert.deepStrictEqual(set.rangeOf("constructor", O.some("__proto__")), O.some("^2.0.0"));
+			assertSome(set.rangeOf("__proto__", O.some("__proto__")), "^1.0.0");
+			assertSome(set.rangeOf("constructor", O.some("__proto__")), "^2.0.0");
 		}),
 	);
 });

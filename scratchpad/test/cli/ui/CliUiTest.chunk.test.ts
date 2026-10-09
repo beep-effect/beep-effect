@@ -1,11 +1,20 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { Text } from "ink";
 import type { ReactElement } from "react";
 import { createElement, useState } from "react";
 import { CliUi, Confirm, KeyTable, Select, TextInput, useKeys } from "../../../effected/cli/ui.ts";
-import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
+import { CliUiTest, type CliUiTestSession } from "../../../effected/cli/ui-testing.ts";
+
+class TestSession extends Context.Service<TestSession, CliUiTestSession>()(
+	"@beep/scratchpad/test/cli/ui/CliUiTest.chunk.test/TestSession",
+) {}
+
+const sessionLayer = Layer.unwrap(
+	Effect.map(CliUiTest.session(), (session) => Layer.merge(session.layer, Layer.succeed(TestSession, session))),
+);
 
 const RIGHT = KeyTable.make<"step">([{ keys: ["right"], action: "step", help: "step" }]);
 
@@ -53,15 +62,17 @@ describe("chunk: several keys in one stdin write", () => {
 		}),
 	);
 
-	it.effect("a session's screens chunk too", () =>
-		Effect.gen(function* () {
-			const session = yield* CliUiTest.session();
-			yield* Effect.forkScoped(CliUi.run(() => createElement(ClosureStepper)).pipe(Effect.provide(session.layer)));
-			const screen = yield* session.next({ contains: "count=0" });
-			yield* screen.chunk("right", "right");
-			assert.strictEqual((yield* screen.plainFrame).trim(), "count=1");
-		}).pipe(Effect.scoped),
-	);
+	it.layer(sessionLayer, { timeout: "30 seconds" })((it) => {
+		it.effect("a session's screens chunk too", () =>
+			Effect.gen(function* () {
+				const session = yield* TestSession;
+				yield* Effect.forkScoped(CliUi.run(() => createElement(ClosureStepper)));
+				const screen = yield* session.next({ contains: "count=0" });
+				yield* screen.chunk("right", "right");
+				assert.strictEqual((yield* screen.plainFrame).trim(), "count=1");
+			}),
+		);
+	});
 });
 
 const Y = KeyTable.make<"y">([{ keys: [{ char: "y" }], action: "y", help: "y" }]);
@@ -79,7 +90,7 @@ describe("chunk: coalesced characters (Ink hands one read of text to useInput as
 			const handle = yield* CliUiTest.render(() => createElement(YCounter));
 			yield* handle.chunk({ char: "y" }, { char: "y" });
 			assert.strictEqual((yield* handle.plainFrame).trim(), "y=2");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a coalesced y then return answers a Confirm yes and submits it", () =>
@@ -88,7 +99,7 @@ describe("chunk: coalesced characters (Ink hands one read of text to useInput as
 			yield* handle.chunk({ char: "y" }, "enter");
 			const result = yield* handle.result;
 			assert.isTrue(result.confirmed);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("TextInput still inserts coalesced text whole", () =>
@@ -97,7 +108,7 @@ describe("chunk: coalesced characters (Ink hands one read of text to useInput as
 			yield* handle.chunk({ char: "a" }, { char: "b" }, "space");
 			yield* handle.chunk({ char: "c" });
 			assert.include(yield* handle.plainFrame, "ab c");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
@@ -125,7 +136,7 @@ describe("useKeys splits by grapheme and compares NFC", () => {
 			const handle = yield* CliUiTest.render(() => createElement(counter(letters)));
 			yield* handle.chunk({ char: "éé" });
 			assert.strictEqual(seenOf(yield* handle.plainFrame), "é,é");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a ZWJ emoji is one key, and CR LF is one enter", () =>
@@ -133,7 +144,7 @@ describe("useKeys splits by grapheme and compares NFC", () => {
 			const handle = yield* CliUiTest.render(() => createElement(counter(letters)));
 			yield* handle.chunk({ char: "👩‍💻👩‍💻\r\n" });
 			assert.strictEqual(seenOf(yield* handle.plainFrame), "dev,dev,enter");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
@@ -154,7 +165,7 @@ describe("a bracketed paste never drives a key table", () => {
 			yield* handle.chunk(paste("q"));
 			yield* handle.press("enter");
 			assert.strictEqual(yield* handle.result, 1);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a paste of yes and a newline does not answer a Confirm", () =>
@@ -164,7 +175,7 @@ describe("a bracketed paste never drives a key table", () => {
 			assert.include(yield* handle.plainFrame, "[No]");
 			yield* handle.press("enter");
 			assert.isFalse((yield* handle.result).confirmed);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("TextInput takes a paste as text, a pasted newline as a space, and never submits on it", () =>
@@ -174,6 +185,6 @@ describe("a bracketed paste never drives a key table", () => {
 			assert.include(yield* handle.plainFrame, "a b");
 			yield* handle.press("enter");
 			assert.strictEqual(yield* handle.result, "a b ");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });

@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertExitFailure, assertSome } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -154,15 +155,13 @@ describe("ConfigMigration.make", () => {
 				],
 			});
 			const exit = yield* Effect.exit(codec.parse(`{"version":1}`));
-			assert.isTrue(Exit.isFailure(exit));
 			const cause = Exit.getCause(exit);
-			assert.isTrue(O.isSome(cause));
-			if (O.isSome(cause)) {
-				// A throw from caller-supplied migration code is a programmer bug: it stays a
-				// defect so catchTag("ConfigMigrationError") cannot silently swallow it.
-				assert.isTrue(Cause.hasDies(cause.value));
-				assert.isFalse(Cause.hasFails(cause.value));
-			}
+			assertSome(cause, O.getOrThrow(cause));
+			assertExitFailure(exit, cause.value);
+			// A throw from caller-supplied migration code is a programmer bug: it stays a
+			// defect so catchTag("ConfigMigrationError") cannot silently swallow it.
+			assert.isTrue(Cause.hasDies(cause.value));
+			assert.isFalse(Cause.hasFails(cause.value));
 		}),
 	);
 
@@ -182,10 +181,10 @@ describe("ConfigMigration.make", () => {
 				],
 			});
 			const exit = yield* Effect.exit(codec.parse(`{"version":1}`));
-			assert.isTrue(Exit.isFailure(exit));
 			const cause = Exit.getCause(exit);
-			assert.isTrue(O.isSome(cause));
-			if (O.isSome(cause)) assert.isTrue(Cause.hasDies(cause.value));
+			assertSome(cause, O.getOrThrow(cause));
+			assertExitFailure(exit, cause.value);
+			assert.isTrue(Cause.hasDies(cause.value));
 		}),
 	);
 });
@@ -361,15 +360,13 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
 				},
 			});
 			const exit = yield* Effect.exit(codec.parse(`{"meta":{"schemaVersion":1}}`));
-			assert.isTrue(Exit.isFailure(exit));
 			const cause = Exit.getCause(exit);
-			assert.isTrue(O.isSome(cause));
-			if (O.isSome(cause)) {
-				// A throw from a caller-supplied VersionAccess is a contract violation — it
-				// must NOT be laundered into ConfigMigrationError.
-				assert.isTrue(Cause.hasDies(cause.value));
-				assert.isFalse(Cause.hasFails(cause.value));
-			}
+			assertSome(cause, O.getOrThrow(cause));
+			assertExitFailure(exit, cause.value);
+			// A throw from a caller-supplied VersionAccess is a contract violation — it
+			// must NOT be laundered into ConfigMigrationError.
+			assert.isTrue(Cause.hasDies(cause.value));
+			assert.isFalse(Cause.hasFails(cause.value));
 		}),
 	);
 
@@ -387,13 +384,11 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
 				},
 			});
 			const exit = yield* Effect.exit(codec.parse(`{"meta":{"schemaVersion":1}}`));
-			assert.isTrue(Exit.isFailure(exit));
 			const cause = Exit.getCause(exit);
-			assert.isTrue(O.isSome(cause));
-			if (O.isSome(cause)) {
-				assert.isTrue(Cause.hasDies(cause.value));
-				assert.isFalse(Cause.hasFails(cause.value));
-			}
+			assertSome(cause, O.getOrThrow(cause));
+			assertExitFailure(exit, cause.value);
+			assert.isTrue(Cause.hasDies(cause.value));
+			assert.isFalse(Cause.hasFails(cause.value));
 		}),
 	);
 });

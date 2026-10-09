@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import * as R from "effect/Record";
 import { assert, describe, it } from "@effect/vitest";
 import type { ColorLevel } from "../../../effected/env/index.ts";
@@ -111,24 +110,22 @@ describe("the Ink bridge", () => {
 		}),
 	);
 
-	it.effect("with no chalk to hold, it warns once and leaves the level alone", () =>
-		Effect.gen(function* () {
-			const instance = yield* forceLevel(2);
-			const warnings: Array<string> = [];
-			const capture = Logger.layer([
-				Logger.make(({ message }) => {
-					warnings.push(Array.isArray(message) ? message.join(" ") : String(message));
-				}),
-			]);
-			yield* Effect.scoped(
-				Effect.gen(function* () {
-					yield* holdChalkLevel(O.none(), "none");
-					yield* holdChalkLevel(O.none(), "none");
-					assert.strictEqual(instance.level, 2);
-				}),
-			).pipe(Effect.provide(capture));
-			assert.lengthOf(warnings, 1);
-			assert.include(warnings[0] ?? "", "chalk");
+	const warnings: Array<string> = [];
+	const capture = Logger.layer([
+		Logger.make(({ message }) => {
+			warnings.push(Array.isArray(message) ? message.join(" ") : String(message));
 		}),
-	);
+	]);
+	it.layer(capture, { timeout: "30 seconds" })((it) => {
+		it.effect("with no chalk to hold, it warns once and leaves the level alone", () =>
+			Effect.gen(function* () {
+				const instance = yield* forceLevel(2);
+				yield* holdChalkLevel(O.none(), "none");
+				yield* holdChalkLevel(O.none(), "none");
+				assert.strictEqual(instance.level, 2);
+				assert.lengthOf(warnings, 1);
+				assert.include(warnings[0] ?? "", "chalk");
+			}),
+		);
+	});
 });

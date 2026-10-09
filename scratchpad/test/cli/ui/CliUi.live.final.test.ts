@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";
@@ -50,7 +49,7 @@ describe("CliUi.live final, when not interactive", () => {
 			yield* view.end;
 			assert.strictEqual(yield* view.transcript, "final of run 1: ended\nfinal of run 2: ended");
 			assert.notInclude(yield* view.written, "RUN 1", "no Ink frame was printed beside it");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("control: without final each run's Ink frame is printed as a string", () =>
@@ -60,7 +59,7 @@ describe("CliUi.live final, when not interactive", () => {
 			yield* view.end;
 			assert.include(yield* view.transcript, "RUN 1");
 			assert.notInclude(yield* view.transcript, "final of run");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a run the events end mid-way prints its final document at the end", () =>
@@ -70,7 +69,7 @@ describe("CliUi.live final, when not interactive", () => {
 			yield* view.publish(tick(7));
 			yield* view.end;
 			assert.strictEqual(yield* view.transcript, "final of run 1: tick 7");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("hosted prints nothing, final or not", () =>
@@ -79,13 +78,13 @@ describe("CliUi.live final, when not interactive", () => {
 			for (const event of twoRuns) yield* view.publish(event);
 			yield* view.end;
 			assert.strictEqual(yield* view.written, "");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("an agent gets the plain renderer and no escape; a person, without an audience, is painted", () =>
 		Effect.gen(function* () {
 			const agent = yield* CliUiTest.live({ ...base, final, interactive: false, color: "truecolor" }).pipe(
-				Effect.provide(Audience.layerTest("agent")),
+				Effect.provideService(Audience, Audience.of({ kind: "agent", source: "override" })),
 			);
 			for (const event of [Start, End]) yield* agent.publish(event);
 			yield* agent.end;
@@ -94,7 +93,7 @@ describe("CliUi.live final, when not interactive", () => {
 			for (const event of [Start, End]) yield* person.publish(event);
 			yield* person.end;
 			assert.include(yield* person.written, ESC, "control: the same document is painted for a person");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a final that throws degrades that run: one warning, nothing printed, the next run prints", () =>
@@ -116,7 +115,7 @@ describe("CliUi.live final, when not interactive", () => {
 				lines.filter((line) => line.includes("no document")),
 				1,
 			);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("watch mode: one handle, N runs, post-run events, gives exactly N finals, each printed once", () =>
@@ -165,7 +164,7 @@ describe("CliUi.live final, when not interactive", () => {
 			]);
 			assert.strictEqual(renders, 0, "the Ink render never ran: final replaced the string, it did not add to it");
 			assert.notInclude(yield* view.written, "RUN ");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("render passed directly, with no thunk: final still replaces the string", () =>
@@ -185,7 +184,7 @@ describe("CliUi.live final, when not interactive", () => {
 			yield* view.end;
 			assert.strictEqual(renders, 0);
 			assert.strictEqual(yield* view.transcript, "final of run 1: ended");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("an interactive run never calls final", () =>
@@ -203,7 +202,7 @@ describe("CliUi.live final, when not interactive", () => {
 			yield* view.end;
 			assert.strictEqual(calls, 0);
 			assert.include(yield* view.transcript, "RUN 1");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
@@ -225,16 +224,16 @@ describe("CliUi.lazyView", () => {
 			assert.match(yield* view.plainFrame, /^INK done 1 frame \d+$/);
 			yield* view.publish(End);
 			yield* view.end;
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("takes a promise of the view itself, as a named export, and passes it the frame index", () =>
 		Effect.gen(function* () {
 			const seen: Array<readonly [number, number]> = [];
-			const render = CliUi.lazyView<State>(async () => (state: State, frame: number) => {
+			const render = CliUi.lazyView<State>(() => Promise.resolve((state: State, frame: number) => {
 				seen.push([state.run, frame]);
 				return frameOf(state);
-			});
+			}));
 			const view = yield* CliUiTest.live({ ...base, render, color: "none" });
 			yield* view.publish(Start);
 			yield* view.advance("240 millis");
@@ -245,18 +244,18 @@ describe("CliUi.lazyView", () => {
 			);
 			yield* view.publish(End);
 			yield* view.end;
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("an import that fails degrades the run with one warning, and the next run tries again", () =>
 		Effect.gen(function* () {
 			const { double, lines } = capturing();
 			let attempts = 0;
-			const render = CliUi.lazyView<State>(async () => {
+			const render = CliUi.lazyView<State>(() => Promise.resolve().then(() => {
 				attempts++;
 				if (attempts === 1) throw new Error("module not found");
 				return { default: frameOf };
-			});
+			}));
 			const view = yield* CliUiTest.live({ ...base, render, color: "none" }).pipe(
 				Effect.provideService(Console.Console, double),
 			);
@@ -268,18 +267,18 @@ describe("CliUi.lazyView", () => {
 				1,
 			);
 			assert.include(yield* view.transcript, "RUN 2", "the second run loaded the module and drew");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	/** Two runs of a lazy view whose loader answers `answers[attempt]`; what it drew, warned and how often it loaded. */
 	const twoRunsOf = Effect.fn("twoRunsOf")(function* (answers: ReadonlyArray<() => unknown>) {
 			const { double, lines } = capturing();
 			let attempts = 0;
-			const render = CliUi.lazyView<State>(async () => {
+			const render = CliUi.lazyView<State>(() => Promise.resolve().then(() => {
 				const answer = answers[Math.min(attempts, answers.length - 1)] ?? (() => undefined);
 				attempts++;
 				return deliberatelyInvalid<typeof frameOf>(answer());
-			});
+			}));
 			const view = yield* CliUiTest.live({ ...base, render, color: "none" }).pipe(
 				Effect.provideService(Console.Console, double),
 			);
@@ -313,21 +312,21 @@ describe("CliUi.lazyView", () => {
 			const result = yield* twoRunsOf([() => ({ default: { default: frameOf } })]);
 			assertShapeError(result, "a module whose default export is an object, not a function");
 			assert.include(result.warnings[0], "default.default");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a module with a named export and no default names its exports", () =>
 		Effect.gen(function* () {
 			const result = yield* twoRunsOf([() => ({ syncView: frameOf })]);
 			assertShapeError(result, "a module with no default export (it exports syncView)");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a load that resolves to undefined (a typo'd named export) says so", () =>
 		Effect.gen(function* () {
 			const result = yield* twoRunsOf([() => undefined]);
 			assertShapeError(result, "resolved to undefined");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a view function that carries a default property is the view: the function wins", () =>
@@ -337,7 +336,7 @@ describe("CliUi.lazyView", () => {
 			assert.deepStrictEqual(result.warnings, []);
 			assert.include(result.transcript, "RUN 2");
 			assert.strictEqual(result.attempts, 1, "loaded once, then shared");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect(
@@ -348,7 +347,7 @@ describe("CliUi.lazyView", () => {
 				assert.strictEqual(result.attempts, 1, "deterministic: kept, not retried");
 				assert.lengthOf(result.warnings, 1);
 				assert.notInclude(result.transcript, "RUN 2", "contrast with the transient case below, which draws run 2");
-			}).pipe(Effect.scoped),
+			}),
 	);
 
 	it.effect("a transient import failure on run 1, then success, draws run 2", () =>
@@ -359,7 +358,7 @@ describe("CliUi.lazyView", () => {
 			]);
 			assert.strictEqual(result.attempts, 2);
 			assert.deepStrictEqual(result.transcript.split("\n"), ["RUN 1", "ended", "RUN 2", "ended"]);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("an import that keeps failing is never latched: each run loads again and warns again", () =>
@@ -372,18 +371,18 @@ describe("CliUi.lazyView", () => {
 				2,
 				"one warning a run: a transient failure is never latched",
 			);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a load that resolves to a number says what it got", () =>
 		Effect.gen(function* () {
 			const result = yield* twoRunsOf([() => 42]);
 			assertShapeError(result, "resolved to number");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it("called before its module has loaded, the render throws, naming CliUi.live", () => {
-		const render = CliUi.lazyView<State>(async () => ({ default: frameOf }));
+		const render = CliUi.lazyView<State>(() => Promise.resolve({ default: frameOf }));
 		assert.throws(() => render({ run: 0, last: "", seen: [] }, 0), /CliUi.live/);
 	});
 });

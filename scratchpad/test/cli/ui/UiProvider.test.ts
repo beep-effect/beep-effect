@@ -1,15 +1,16 @@
-// @effect-diagnostics strictEffectProvide:skip-file
-import { assert, describe, it } from "@effect/vitest";
+import { assert, it, vi } from "@effect/vitest";
+import { assertExitFailure, assertExitSuccess, assertSome } from "@effect/vitest/utils";
 import { TerminalEnv } from "../../../effected/env/index.ts";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import { identity } from "effect/Function";
+import * as TestClock from "effect/testing/TestClock";
 import { Box, Text, render, renderToString } from "ink";
 import type { ReactElement, ReactNode } from "react";
 import { createElement } from "react";
-import { vi } from "vitest";
 import { CliTheme } from "../../../effected/cli/CliTheme.ts";
 import { withInkColour } from "../../../effected/cli/ui/internal/ink.ts";
 import { useScreenCancel } from "../../../effected/cli/ui/internal/ScreenContext.ts";
@@ -78,16 +79,16 @@ const Size = (): ReactElement => {
 const provided = (value: UiContextValue, child: ReactElement): ReactElement =>
 	createElement(UiProvider, { value }, child);
 
-describe("UiProvider: the kit's hooks in a tree the kit did not mount", () => {
+it.layer(themeLayer, { timeout: "30 seconds" })("UiProvider: the kit's hooks in a tree the kit did not mount", (it) => {
 	it.effect("useTheme, useGlyphs and Styled render the theme's tokens under Ink's own render", () =>
 		Effect.gen(function* () {
 			const value = yield* CliUi.context;
 			yield* withInkColour(value.theme.color);
 			const { stdout, exit } = yield* mountPlain(provided(value, createElement(Probe)));
-			assert.isTrue(Exit.isSuccess(exit), String(exit));
+			assertExitSuccess(exit, undefined);
 			assert.include(stdout, `${ACCENT}marked`);
 			assert.include(stdout, "glyphs=ascii color=truecolor");
-		}).pipe(Effect.scoped, Effect.provide(themeLayer)),
+		}),
 	);
 
 	it.effect("control: without the provider the same component throws the outside-a-screen error", () =>
@@ -98,13 +99,13 @@ describe("UiProvider: the kit's hooks in a tree the kit did not mount", () => {
 				Effect.gen(function* () {
 					yield* CliUi.context;
 					const { exit } = yield* mountPlain(createElement(Probe));
-					assert.isTrue(Exit.isFailure(exit));
+					assertExitFailure(exit, Exit.match(exit, { onFailure: identity, onSuccess: () => Cause.empty }));
 					assert.include(String(exit), "outside a screen");
 					const reported = spy.mock.calls.map((call) => String(call[0])).join(" | ");
 					assert.strictEqual(spy.mock.calls.length, 0, `nothing reaches console.error: ${reported}`);
 				}),
 			(spy) => Effect.sync(() => spy.mockRestore()),
-		).pipe(Effect.provide(themeLayer)),
+		),
 	);
 
 	it.effect("useScreenCancel is a no-op under the provider, where there is no screen to cancel", () =>
@@ -115,13 +116,13 @@ describe("UiProvider: the kit's hooks in a tree the kit did not mount", () => {
 				return createElement(Text, null, "still here");
 			};
 			const { stdout, exit } = yield* mountPlain(provided(value, createElement(Cancels)));
-			assert.isTrue(Exit.isSuccess(exit), String(exit));
+			assertExitSuccess(exit, undefined);
 			assert.include(stdout, "still here");
-		}).pipe(Effect.provide(themeLayer)),
+		}),
 	);
 });
 
-describe("UiProvider's size override", () => {
+it.layer(themeLayer, { timeout: "30 seconds" })("UiProvider's size override", (it) => {
 	it.effect(
 		"renderToString: useTerminalSize reads the override, not process.stdout, so it agrees with Ink's layout",
 		() =>
@@ -131,7 +132,7 @@ describe("UiProvider's size override", () => {
 					columns: 30,
 				});
 				assert.strictEqual(out.trim(), "size=29x7");
-			}).pipe(Effect.provide(themeLayer)),
+			}),
 	);
 
 	it.effect("a live mount: the override wins over the stdout's size, and without it the stdout's is read", () =>
@@ -141,7 +142,7 @@ describe("UiProvider's size override", () => {
 			assert.include(overridden.stdout, "size=29x7");
 			const control = yield* mountPlain(provided(value, createElement(Size)));
 			assert.include(control.stdout, "size=79x23");
-		}).pipe(Effect.provide(themeLayer)),
+		}),
 	);
 });
 
@@ -159,10 +160,11 @@ const messageOf = (exit: Exit.Exit<unknown, unknown>): string => {
 	return error instanceof Error ? error.message : String(error);
 };
 
-describe("a UiProvider nested in a CliUi.run screen keeps the screen (review I1)", () => {
-	it.live("a throwing key handler under it is still the screen's defect, never an uncaught exception", () =>
+it.layer(themeLayer, { timeout: "30 seconds" })("a UiProvider nested in a CliUi.run screen keeps the screen (review I1)", (it) => {
+	// Ink dispatch uses native events; keep the existing watchdogs on the live clock.
+	it.effect("a throwing key handler under it is still the screen's defect, never an uncaught exception", () =>
 		Effect.gen(function* () {
-			const value = yield* CliUi.context.pipe(Effect.provide(themeLayer));
+			const value = yield* CliUi.context;
 			const handle = yield* CliUiTest.render(() =>
 				createElement(
 					UiProvider,
@@ -172,18 +174,17 @@ describe("a UiProvider nested in a CliUi.run screen keeps the screen (review I1)
 			);
 			assert.include(yield* handle.plainFrame, "armed", "control: it drew first");
 			yield* handle.press("enter");
-			const result = yield* Effect.exit(handle.result.pipe(Effect.timeout("1 second")));
-			assert.isTrue(
-				Exit.isFailure(result) && result.cause.reasons.some(Cause.isDieReason),
-				`a defect: ${messageOf(result)}`,
-			);
+			const result = yield* handle.result.pipe(Effect.timeout("1 second"), Effect.exit);
+			assertExitFailure(result, Exit.match(result, { onFailure: identity, onSuccess: () => Cause.empty }));
+			assert.isTrue(result.cause.reasons.some(Cause.isDieReason), `a defect: ${messageOf(result)}`);
 			assert.include(messageOf(result), "handler threw under a nested provider");
-		}).pipe(Effect.scoped, Effect.timeout("3 seconds")),
+		}).pipe(Effect.timeout("3 seconds"), TestClock.withLive),
 	);
 
-	it.live("Select's q under it still cancels the screen with escape", () =>
+	// Ink dispatch uses native events; keep the existing watchdogs on the live clock.
+	it.effect("Select's q under it still cancels the screen with escape", () =>
 		Effect.gen(function* () {
-			const value = yield* CliUi.context.pipe(Effect.provide(themeLayer));
+			const value = yield* CliUi.context;
 			const handle = yield* CliUiTest.render<number>((control) =>
 				createElement(
 					UiProvider,
@@ -197,20 +198,22 @@ describe("a UiProvider nested in a CliUi.run screen keeps the screen (review I1)
 			);
 			assert.include(yield* handle.plainFrame, "Pick", "control: it drew first");
 			yield* handle.press({ char: "q" });
-			const result = yield* Effect.exit(handle.result.pipe(Effect.timeout("1 second")));
-			assert.deepStrictEqual(CliUiTest.cancelReason(result), O.some("escape"), messageOf(result));
-		}).pipe(Effect.scoped, Effect.timeout("3 seconds")),
+			const result = yield* handle.result.pipe(Effect.timeout("1 second"), Effect.exit);
+			assertSome(CliUiTest.cancelReason(result), "escape");
+		}).pipe(Effect.timeout("3 seconds"), TestClock.withLive),
 	);
 });
 
-describe("UiContextValue is minted only by CliUi.context (review M1)", () => {
+it.layer(themeLayer, { timeout: "30 seconds" })("UiContextValue is minted only by CliUi.context (review M1)", (it) => {
 	it.effect("a hand-built value does not compile; a spread of a minted one does", () =>
 		Effect.gen(function* () {
 			const value = yield* CliUi.context;
-			// @ts-expect-error a value built by hand lacks the brand only CliUi.context sets
-			const forged: UiContextValue = { theme: value.theme, glyphs: value.glyphs };
+			// The conditional type must stay false: a hand-built value lacks the context brand.
+			const forged = { theme: value.theme, glyphs: value.glyphs };
+			const forgedIsContext: typeof forged extends UiContextValue ? true : false = false;
+			assert.isFalse(forgedIsContext);
 			const sized: UiContextValue = { ...value, size: { columns: 30, rows: 8 } };
 			assert.strictEqual(sized.theme, forged.theme, "both carry the same theme at runtime");
-		}).pipe(Effect.provide(themeLayer)),
+		}),
 	);
 });

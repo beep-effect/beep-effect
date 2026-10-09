@@ -5,7 +5,7 @@
 // the delegated typed failures actually surface through Lockfile.parse.
 
 import { assert, describe, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -222,7 +222,7 @@ describe("hostile input", () => {
 				assert.strictEqual(dep?.specifier.raw, "1.0.0");
 				assert.strictEqual(dep?.specifier._tag, "range");
 
-				assert.isTrue(O.isSome(lockfile.importer(".")));
+				assertSome(O.map(lockfile.importer("."), () => true), true);
 			}),
 		);
 
@@ -451,8 +451,8 @@ describe("hostile input", () => {
 				});
 				const lockfile = yield* Lockfile.parse(content, { format: "npm" });
 				// The empty-path importer is not represented; the "." root importer is.
-				assert.isTrue(O.isNone(lockfile.importer("")));
-				assert.isTrue(O.isSome(lockfile.importer(".")));
+				assertNone(lockfile.importer(""));
+				assertSome(O.map(lockfile.importer("."), () => true), true);
 			}),
 		);
 
@@ -460,8 +460,8 @@ describe("hostile input", () => {
 			Effect.gen(function* () {
 				const content = ["lockfileVersion: '9.0'", "importers:", "  '': {}", "  .: {}"].join("\n");
 				const lockfile = yield* Lockfile.parse(content, { format: "pnpm" });
-				assert.isTrue(O.isNone(lockfile.importer("")));
-				assert.isTrue(O.isSome(lockfile.importer(".")));
+				assertNone(lockfile.importer(""));
+				assertSome(O.map(lockfile.importer("."), () => true), true);
 			}),
 		);
 	});

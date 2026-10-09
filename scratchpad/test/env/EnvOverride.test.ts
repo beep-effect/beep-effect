@@ -1,5 +1,5 @@
-// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Logger from "effect/Logger";
@@ -11,7 +11,7 @@ const withEnv = (env: Record<string, string>) =>
 	Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env));
 
 const capture = (lines: Array<string>) =>
-	Logger.layer([
+	new Set([
 		Logger.make(({ message }) => {
 			lines.push(Array.isArray(message) ? message.join(" ") : String(message));
 		}),
@@ -26,22 +26,20 @@ const accepts = {
 
 const read = (env: Record<string, string>, kind: "human" | "agent" | "ci", lines: Array<string> = []) =>
 	EnvOverride.read({ envVar: "VITEST_AGENT_CONSOLE", accepts }).pipe(
-		Effect.provide(Audience.layerTest(kind)),
-		Effect.provide(capture(lines)),
+		Effect.provideService(Audience, { kind: kind, source: "override" }),
+		Effect.provideService(Logger.CurrentLoggers, capture(lines)),
 		withEnv(env),
 	);
 
 describe("EnvOverride.read", () => {
 	it.effect("a value the audience accepts is Some", () =>
-		Effect.map(read({ VITEST_AGENT_CONSOLE: "stream" }, "human"), (value) =>
-			assert.deepStrictEqual(value, O.some("stream")),
-		),
+		Effect.map(read({ VITEST_AGENT_CONSOLE: "stream" }, "human"), (value) => assertSome(value, "stream")),
 	);
 
 	it.effect("a value the audience does not accept is None, with one warning naming the accepted values", () => {
 		const lines: Array<string> = [];
 		return Effect.map(read({ VITEST_AGENT_CONSOLE: "stream" }, "agent", lines), (value) => {
-			assert.deepStrictEqual(value, O.none());
+			assertNone(value);
 			assert.lengthOf(lines, 1);
 			assert.include(lines[0] ?? "", "VITEST_AGENT_CONSOLE=stream");
 			assert.include(lines[0] ?? "", "passthrough|silent|agent");
@@ -51,7 +49,7 @@ describe("EnvOverride.read", () => {
 	it.effect("unset is None with no warning", () => {
 		const lines: Array<string> = [];
 		return Effect.map(read({}, "human", lines), (value) => {
-			assert.deepStrictEqual(value, O.none());
+			assertNone(value);
 			assert.lengthOf(lines, 0);
 		});
 	});
@@ -59,15 +57,15 @@ describe("EnvOverride.read", () => {
 	it.effect("an empty value is None with no warning, even when the provider preserves empty strings", () => {
 		const lines: Array<string> = [];
 		return EnvOverride.read({ envVar: "VITEST_AGENT_CONSOLE", accepts }).pipe(
-			Effect.provide(Audience.layerTest("human")),
-			Effect.provide(capture(lines)),
+			Effect.provideService(Audience, { kind: "human", source: "override" }),
+			Effect.provideService(Logger.CurrentLoggers, capture(lines)),
 			Effect.provideService(
 				ConfigProvider.ConfigProvider,
 				ConfigProvider.fromUnknown({ VITEST_AGENT_CONSOLE: "" }, { preserveEmptyStrings: true }),
 			),
 			Effect.tap((value) =>
 				Effect.sync(() => {
-					assert.deepStrictEqual(value, O.none());
+					assertNone(value);
 					assert.lengthOf(lines, 0);
 				}),
 			),
@@ -75,9 +73,7 @@ describe("EnvOverride.read", () => {
 	});
 
 	it.effect("matching is case-insensitive and returns the accepted literal", () =>
-		Effect.map(read({ VITEST_AGENT_CONSOLE: "CI-Annotations" }, "ci"), (value) =>
-			assert.deepStrictEqual(value, O.some("ci-annotations")),
-		),
+		Effect.map(read({ VITEST_AGENT_CONSOLE: "CI-Annotations" }, "ci"), (value) => assertSome(value, "ci-annotations")),
 	);
 
 	it("the result type narrows to the union of the accepted literals (type-level)", () => {
@@ -86,33 +82,32 @@ describe("EnvOverride.read", () => {
 		// Assignable to exactly the five literals: a `string` result would not compile here.
 		const ok: Effect.Effect<O.Option<Accepted>, never, Audience> = program;
 		// And not narrower than the union: one literal is too small.
-		// @ts-expect-error the union is wider than "stream" alone
-		const tooNarrow: Effect.Effect<O.Option<"stream">, never, Audience> = program;
+		const tooNarrow: typeof program extends Effect.Effect<O.Option<"stream">, never, Audience> ? true : false = false;
 		assert.isDefined(ok);
-		assert.isDefined(tooNarrow);
+		assert.isFalse(tooNarrow);
 	});
 });
 
 describe("EnvOverride.readResult", () => {
 	const result = (env: Record<string, string>, kind: "human" | "agent" | "ci", lines: Array<string> = []) =>
 		EnvOverride.readResult({ envVar: "VITEST_AGENT_CONSOLE", accepts }).pipe(
-			Effect.provide(Audience.layerTest(kind)),
-			Effect.provide(capture(lines)),
+			Effect.provideService(Audience, { kind: kind, source: "override" }),
+			Effect.provideService(Logger.CurrentLoggers, capture(lines)),
 			withEnv(env),
 		);
 
 	it.effect("an accepted value is accepted, with the audience, and nothing is rejected", () =>
 		Effect.map(result({ VITEST_AGENT_CONSOLE: "STREAM" }, "human"), (r) => {
 			assert.strictEqual(r.audience, "human");
-			assert.deepStrictEqual(r.accepted, O.some("stream" as const));
-			assert.deepStrictEqual(r.rejected, O.none());
+			assertSome(r.accepted, "stream" as const);
+			assertNone(r.rejected);
 		}),
 	);
 
 	it.effect("a rejected value carries the value as written, the audience and the literals it accepts", () =>
 		Effect.map(result({ VITEST_AGENT_CONSOLE: "stream" }, "agent"), (r) => {
-			assert.deepStrictEqual(r.accepted, O.none());
-			assert.deepStrictEqual(r.rejected, O.some({ value: "stream", audience: "agent", accepts: accepts.agent }));
+			assertNone(r.accepted);
+			assertSome(r.rejected, { value: "stream", audience: "agent", accepts: accepts.agent });
 			assert.strictEqual(r.audience, "agent");
 		}),
 	);
@@ -122,8 +117,8 @@ describe("EnvOverride.readResult", () => {
 			for (const env of [{}, { VITEST_AGENT_CONSOLE: "" }]) {
 				const r = yield* result(env, "ci");
 				assert.strictEqual(r.audience, "ci");
-				assert.deepStrictEqual(r.accepted, O.none());
-				assert.deepStrictEqual(r.rejected, O.none());
+				assertNone(r.accepted);
+				assertNone(r.rejected);
 			}
 		}),
 	);
@@ -155,7 +150,7 @@ describe("EnvOverride.readResult", () => {
 describe("EnvOverride.readResult with a source", () => {
 	const readFrom = (source: Readonly<Record<string, string | undefined>> | ConfigProvider.ConfigProvider) =>
 		EnvOverride.readResult({ envVar: "VITEST_AGENT_CONSOLE", accepts, source }).pipe(
-			Effect.provide(Audience.layerTest("human")),
+			Effect.provideService(Audience, { kind: "human", source: "override" }),
 			// The ambient environment says something else: a source wins over it.
 			withEnv({ VITEST_AGENT_CONSOLE: "silent" }),
 		);
@@ -163,12 +158,13 @@ describe("EnvOverride.readResult with a source", () => {
 	it.effect("a record is read fresh on every call", () =>
 		Effect.gen(function* () {
 			const env: Record<string, string | undefined> = { VITEST_AGENT_CONSOLE: "stream" };
-			assert.deepStrictEqual((yield* readFrom(env)).accepted, O.some("stream"));
+			assertSome((yield* readFrom(env)).accepted, "stream");
 			env["VITEST_AGENT_CONSOLE"] = "agent";
-			assert.deepStrictEqual((yield* readFrom(env)).accepted, O.some("agent"), "the change is seen");
+			assertSome((yield* readFrom(env)).accepted, "agent");
 			env["VITEST_AGENT_CONSOLE"] = undefined;
 			const unset = yield* readFrom(env);
-			assert.isTrue(O.isNone(unset.accepted) && O.isNone(unset.rejected), "an undefined value is unset");
+			assertNone(unset.accepted);
+			assertNone(unset.rejected);
 		}),
 	);
 
@@ -176,9 +172,9 @@ describe("EnvOverride.readResult with a source", () => {
 		Effect.gen(function* () {
 			const provider = ConfigProvider.fromUnknown({ VITEST_AGENT_CONSOLE: "bogus" });
 			const result = yield* readFrom(provider);
-			assert.deepStrictEqual(
+			assertSome(
 				O.map(result.rejected, (rejected) => rejected.value),
-				O.some("bogus"),
+				"bogus",
 			);
 		}),
 	);
@@ -186,10 +182,10 @@ describe("EnvOverride.readResult with a source", () => {
 	it.effect("control: without a source the ambient environment is read, as before", () =>
 		Effect.gen(function* () {
 			const result = yield* EnvOverride.readResult({ envVar: "VITEST_AGENT_CONSOLE", accepts }).pipe(
-				Effect.provide(Audience.layerTest("human")),
+				Effect.provideService(Audience, { kind: "human", source: "override" }),
 				withEnv({ VITEST_AGENT_CONSOLE: "silent" }),
 			);
-			assert.deepStrictEqual(result.accepted, O.some("silent"));
+			assertSome(result.accepted, "silent");
 		}),
 	);
 });
@@ -198,12 +194,12 @@ describe("EnvOverride.readResult: testing a module-level reader (A8)", () => {
 	// A host's reader, built once at module level with no `source`: each read takes the fiber's provider.
 	const consoleMode = EnvOverride.readResult({ envVar: "VITEST_AGENT_CONSOLE", accepts });
 	const under = (env: Record<string, string>) =>
-		consoleMode.pipe(Effect.provide(Audience.layerTest("human")), withEnv(env));
+		consoleMode.pipe(Effect.provideService(Audience, { kind: "human", source: "override" }), withEnv(env));
 
 	it.effect("one options object, two provided ConfigProviders: each read sees its own", () =>
 		Effect.gen(function* () {
-			assert.deepStrictEqual((yield* under({ VITEST_AGENT_CONSOLE: "stream" })).accepted, O.some("stream"));
-			assert.deepStrictEqual((yield* under({ VITEST_AGENT_CONSOLE: "silent" })).accepted, O.some("silent"));
+			assertSome((yield* under({ VITEST_AGENT_CONSOLE: "stream" })).accepted, "stream");
+			assertSome((yield* under({ VITEST_AGENT_CONSOLE: "silent" })).accepted, "silent");
 		}),
 	);
 
@@ -212,10 +208,10 @@ describe("EnvOverride.readResult: testing a module-level reader (A8)", () => {
 			const consoleModeFrom = (source: Readonly<Record<string, string | undefined>>) =>
 				EnvOverride.readResult({ envVar: "VITEST_AGENT_CONSOLE", accepts, source });
 			const result = yield* consoleModeFrom({ VITEST_AGENT_CONSOLE: "agent" }).pipe(
-				Effect.provide(Audience.layerTest("human")),
+				Effect.provideService(Audience, { kind: "human", source: "override" }),
 				withEnv({ VITEST_AGENT_CONSOLE: "silent" }),
 			);
-			assert.deepStrictEqual(result.accepted, O.some("agent"));
+			assertSome(result.accepted, "agent");
 		}),
 	);
 });

@@ -3,9 +3,11 @@
 // another is written a throttle period later, which can land after the harness's settle has already read the screen.
 // The harness raises Ink's maxFps so that cannot happen; this pins the option it mounts with, on both production paths.
 import { assert, describe, it } from "@effect/vitest";
+import * as Context from "effect/Context";
+import * as Layer from "effect/Layer";
+import { vi } from "vitest";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
-import { vi } from "vitest";
 import { CliUi, Select } from "../../../effected/cli/ui.ts";
 import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
 import type { Ev, State } from "../helpers/live.ts";
@@ -27,6 +29,18 @@ vi.mock("ink", async (importOriginal) => {
 	};
 });
 
+const screen = Select.screen({ message: "Pick", choices: [{ label: "a", value: "a" }] });
+const sessions = Effect.gen(function* () {
+	const fixtures = [];
+	for (const renderPath of ["production", "debug"] as const) {
+		const session = yield* CliUiTest.session({ renderPath, color: "none" });
+		const services = yield* Layer.build(session.layer);
+		fixtures.push({ renderPath, session, run: Effect.provide(CliUi.run(screen), services) });
+	}
+	return fixtures;
+});
+class Sessions extends Context.Service<Sessions, Effect.Success<typeof sessions>>()("@beep/scratchpad/test/cli/ui/CliUiTest.throttle.test/Sessions") {}
+
 describe("the harness's production path is not throttled to Ink's 30 fps", () => {
 	it.effect("CliUiTest.live mounts its view at 1000 fps", () =>
 		Effect.gen(function* () {
@@ -45,22 +59,22 @@ describe("the harness's production path is not throttled to Ink's 30 fps", () =>
 			const mounted = mounts.slice(before);
 			assert.isNotEmpty(mounted, "control: the wrapper saw the mount");
 			for (const mount of mounted) assert.strictEqual(mount.maxFps, 1000);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
-	it.effect("a production-path session's screens mount at 1000 fps; the debug path is unthrottled anyway", () =>
-		Effect.gen(function* () {
-			const screen = Select.screen({ message: "Pick", choices: [{ label: "a", value: "a" }] });
-			for (const renderPath of ["production", "debug"] as const) {
-				const before = mounts.length;
-				const session = yield* CliUiTest.session({ renderPath, color: "none" });
-				const fiber = yield* Effect.forkScoped(CliUi.run(screen).pipe(Effect.provide(session.layer)));
-				yield* (yield* session.next({ contains: "Pick" })).press("enter");
-				yield* Fiber.join(fiber);
-				const [mount] = mounts.slice(before);
-				assert.strictEqual(mount?.maxFps, 1000, renderPath);
-				assert.strictEqual(mount?.debug === true, renderPath === "debug", "control: the paths really differ");
-			}
-		}).pipe(Effect.scoped),
-	);
+	it.layer(Layer.effect(Sessions, sessions), { timeout: "30 seconds" })((it) => {
+		it.effect("a production-path session's screens mount at 1000 fps; the debug path is unthrottled anyway", () =>
+			Effect.gen(function* () {
+				for (const { renderPath, session, run } of yield* Sessions) {
+					const before = mounts.length;
+					const fiber = yield* Effect.forkScoped(run);
+					yield* (yield* session.next({ contains: "Pick" })).press("enter");
+					yield* Fiber.join(fiber);
+					const [mount] = mounts.slice(before);
+					assert.strictEqual(mount?.maxFps, 1000, renderPath);
+					assert.strictEqual(mount?.debug === true, renderPath === "debug", "control: the paths really differ");
+				}
+			}),
+		);
+	});
 });

@@ -1,11 +1,10 @@
 import { assert, describe, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertExitFailure, assertNone, assertSome, assertSuccess } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
-import * as Equal from "effect/Equal";
 import * as Exit from "effect/Exit";
-import * as O from "effect/Option";
+import * as Equal from "effect/Equal";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { InvalidSpdxExpressionError, License } from "../../effected/spdx/License.ts";
@@ -108,11 +107,17 @@ describe("SpdxExpression", () => {
 		it.effect(`rejects ${JSON.stringify(s)} as a typed error`, () =>
 			Effect.gen(function* () {
 				const exit = yield* Effect.exit(SpdxExpression.parse(s));
-				assert.isTrue(Exit.isFailure(exit));
-				if (Exit.isFailure(exit)) {
-					// discriminate a typed failure from a defect
-					assert.isFalse(Cause.hasDies(exit.cause));
-				}
+				const cause = exit.pipe(Exit.filterCause, Result.getOrThrow);
+				// Preserve runtime tracing metadata while checking the expected typed failure.
+				assertExitFailure(
+					exit,
+					Cause.annotate(
+						Cause.fail(InvalidSpdxExpressionError.make({ input: s })),
+						Cause.annotations(cause),
+					),
+				);
+				// discriminate a typed failure from a defect
+				assert.isFalse(Cause.hasDies(exit.cause));
 			}),
 		);
 		it(`invalidates ${JSON.stringify(s)} synchronously`, () => assert.isFalse(isValidExpression(s)));
@@ -184,21 +189,33 @@ describe("SpdxExpression", () => {
 			const deep = `${"(".repeat(5000)}MIT${")".repeat(5000)}`;
 			const exit = yield* Effect.exit(SpdxExpression.parse(deep));
 			// caps out as a typed failure, never a RangeError defect
-			assert.isTrue(Exit.isFailure(exit));
-			if (Exit.isFailure(exit)) {
-				assert.isFalse(Cause.hasDies(exit.cause));
-				assert.isTrue(Cause.hasFails(exit.cause));
-			}
+			const cause = exit.pipe(Exit.filterCause, Result.getOrThrow);
+			// Preserve runtime tracing metadata while checking the expected typed failure.
+			assertExitFailure(
+				exit,
+				Cause.annotate(
+					Cause.fail(InvalidSpdxExpressionError.make({ input: deep })),
+					Cause.annotations(cause),
+				),
+			);
+			assert.isFalse(Cause.hasDies(exit.cause));
+			assert.isTrue(Cause.hasFails(exit.cause));
 		}),
 	);
 	it.effect("caps a long AND chain as a typed failure, not a defect", () =>
 		Effect.gen(function* () {
 			const chain = Array.from({ length: 6000 }, () => "MIT").join(" AND ");
 			const exit = yield* Effect.exit(SpdxExpression.parse(chain));
-			assert.isTrue(Exit.isFailure(exit));
-			if (Exit.isFailure(exit)) {
-				assert.isFalse(Cause.hasDies(exit.cause));
-			}
+			const cause = exit.pipe(Exit.filterCause, Result.getOrThrow);
+			// Preserve runtime tracing metadata while checking the expected typed failure.
+			assertExitFailure(
+				exit,
+				Cause.annotate(
+					Cause.fail(InvalidSpdxExpressionError.make({ input: chain })),
+					Cause.annotations(cause),
+				),
+			);
+			assert.isFalse(Cause.hasDies(exit.cause));
 		}),
 	);
 	// FromString round-trips: decode∘encode is identity on generated expressions.
@@ -218,19 +235,19 @@ describe("SpdxExpression", () => {
 describe("SpdxExpression — collapsing an expression to licenses", () => {
 	const parse = (input: string) => {
 		const result = SpdxExpression.parseResult(input);
-		assertTrue(Result.isSuccess(result), input);
+		assertSuccess(result, Result.getOrThrow(result));
 		return result.success;
 	};
 
 	it("a simple license is its own primary", () => {
-		assert.deepStrictEqual(SpdxExpression.primaryLicense(parse("MIT")), O.some(License.of("MIT")));
+		assertSome(SpdxExpression.primaryLicense(parse("MIT")), License.of("MIT"));
 	});
 
 	it("OR takes the leftmost — the choice the author wrote first", () => {
-		assert.deepStrictEqual(SpdxExpression.primaryLicense(parse("MIT OR Apache-2.0")), O.some(License.of("MIT")));
-		assert.deepStrictEqual(
+		assertSome(SpdxExpression.primaryLicense(parse("MIT OR Apache-2.0")), License.of("MIT"));
+		assertSome(
 			SpdxExpression.primaryLicense(parse("(GPL-3.0-only OR MIT) OR Apache-2.0")),
-			O.some(License.of("GPL-3.0-only")),
+			License.of("GPL-3.0-only"),
 		);
 	});
 
@@ -238,40 +255,39 @@ describe("SpdxExpression — collapsing an expression to licenses", () => {
 		// The whole reason this returns an Option: a conjunction binds every
 		// term at once, so answering with one of them is a legal claim that is
 		// simply false.
-		assert.isTrue(O.isNone(SpdxExpression.primaryLicense(parse("MIT AND Apache-2.0"))));
+		assertNone(SpdxExpression.primaryLicense(parse("MIT AND Apache-2.0")));
 	});
 
 	it("an OR whose left branch is an AND has no primary either", () => {
 		// Recursion must not sidestep the AND rule by descending past it.
-		assert.isTrue(O.isNone(SpdxExpression.primaryLicense(parse("(MIT AND Apache-2.0) OR GPL-3.0-only"))));
+		assertNone(SpdxExpression.primaryLicense(parse("(MIT AND Apache-2.0) OR GPL-3.0-only")));
 	});
 
 	it("an exception qualifies its license, and the license is the primary", () => {
-		assert.deepStrictEqual(
+		assertSome(
 			SpdxExpression.primaryLicense(parse("GPL-2.0-only WITH Bison-exception-2.2")),
-			O.some(License.of("GPL-2.0-only")),
+			License.of("GPL-2.0-only"),
 		);
 	});
 
 	it("the `+` marker qualifies a catalog entry, it does not name another", () => {
-		assert.deepStrictEqual(SpdxExpression.primaryLicense(parse("AFL-2.0+")), O.some(License.of("AFL-2.0")));
+		assertSome(SpdxExpression.primaryLicense(parse("AFL-2.0+")), License.of("AFL-2.0"));
 	});
 
 	it("a LicenseRef resolves as a reference", () => {
-		assert.deepStrictEqual(
+		assertSome(
 			SpdxExpression.primaryLicense(parse("LicenseRef-Proprietary")),
-			O.some(License.of("LicenseRef-Proprietary")),
+			License.of("LicenseRef-Proprietary"),
 		);
-		assert.deepStrictEqual(
+		assertSome(
 			SpdxExpression.primaryLicense(parse("DocumentRef-spdx-tool:LicenseRef-Proprietary")),
-			O.some(License.of("DocumentRef-spdx-tool:LicenseRef-Proprietary")),
+			License.of("DocumentRef-spdx-tool:LicenseRef-Proprietary"),
 		);
 	});
 
 	it("a deprecated id keeps its deprecated flag through the collapse", () => {
 		const primary = SpdxExpression.primaryLicense(parse("GPL-3.0"));
-		const isSome = O.isSome(primary);
-		assertTrue(isSome);
+		assertSome(primary, License.of("GPL-3.0", true));
 		assert.strictEqual(primary.value.id, "GPL-3.0");
 		assert.isTrue(primary.value.deprecated);
 	});
@@ -291,7 +307,7 @@ describe("SpdxExpression — collapsing an expression to licenses", () => {
 		// The pairing the API depends on: AND yields none from one accessor and
 		// the full set from the other.
 		const expr = parse("MIT AND Apache-2.0");
-		assert.isTrue(O.isNone(SpdxExpression.primaryLicense(expr)));
+		assertNone(SpdxExpression.primaryLicense(expr));
 		assert.strictEqual(SpdxExpression.licensesOf(expr).length, 2);
 	});
 

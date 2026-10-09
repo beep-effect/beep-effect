@@ -1,6 +1,7 @@
 // Regressions for the upstream image-alt flattening bug: leaf HTML and hard
 // breaks must survive, for inline images and reference images in both dialects.
 import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess } from "@effect/vitest/utils";
 import * as Result from "effect/Result";
 import { Markdown } from "../../effected/markdown/Markdown.ts";
 
@@ -19,7 +20,7 @@ describe("image alt leaf content", () => {
 				it(`${dialect}: ${name} in ${reference ? "a reference" : "an inline"} image`, () => {
 					const markdown = reference ? `![${source}][ref]\n\n[ref]: /u\n` : `![${source}](/u)`;
 					const result = Markdown.parseResult(markdown, { dialect });
-					assert.isTrue(Result.isSuccess(result));
+					assertSuccess(Result.map(result, () => undefined), undefined);
 					if (Result.isFailure(result)) {
 						return;
 					}

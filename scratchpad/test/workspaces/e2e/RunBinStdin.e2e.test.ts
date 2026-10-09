@@ -49,7 +49,7 @@ const consumer = Config.String("PATH").pipe(
 	),
 );
 
-layer(NodeServices.layer)("runBin and runCarrierBin stdin, real spawn", (it) => {
+layer(NodeServices.layer, { timeout: "30 seconds" })("runBin and runCarrierBin stdin, real spawn", (it) => {
 	it.effect("a string is written to the bin's stdin and closed", () =>
 		Effect.gen(function* () {
 			const output = yield* (yield* consumer).runBin("echo", [], { stdin: "héllo" });

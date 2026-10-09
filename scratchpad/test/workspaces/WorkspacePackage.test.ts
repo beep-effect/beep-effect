@@ -1,6 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { GlobPattern } from "../../effected/glob/index.ts";
-import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
@@ -44,8 +44,8 @@ describe("WorkspacePackage", () => {
 	});
 
 	it("scope extracts the npm scope, or none", () => {
-		assert.deepStrictEqual(utils.scope, O.some("@my-org"));
-		assert.deepStrictEqual(WorkspacePackage.make({ name: "plain", ...base }).scope, O.none());
+		assertSome(utils.scope, "@my-org");
+		assertNone(WorkspacePackage.make({ name: "plain", ...base }).scope);
 	});
 
 	it("unscopedName strips the scope and leaves an unscoped name alone", () => {
@@ -93,9 +93,9 @@ describe("WorkspacePackage", () => {
 	});
 
 	it("dependencyVersion searches all four kinds", () => {
-		assert.deepStrictEqual(utils.dependencyVersion("effect"), O.some("^4.0.0"));
-		assert.deepStrictEqual(utils.dependencyVersion("fsevents"), O.some("^2.0.0"));
-		assert.deepStrictEqual(utils.dependencyVersion("react"), O.none());
+		assertSome(utils.dependencyVersion("effect"), "^4.0.0");
+		assertSome(utils.dependencyVersion("fsevents"), "^2.0.0");
+		assertNone(utils.dependencyVersion("react"));
 	});
 
 	// ── matchesDependency: the minimatch call site, now over @effected/glob ────
@@ -221,7 +221,7 @@ describe("WorkspacePackage.dependencyVersion — inherited names are not depende
 	// back Option.some(<Function>) and lie about its own type.
 	for (const inherited of ["constructor", "toString", "valueOf", "hasOwnProperty", "__proto__"]) {
 		it(`dependencyVersion(${JSON.stringify(inherited)}) is none`, () => {
-			assert.isTrue(O.isNone(pkg.dependencyVersion(inherited)));
+			assertNone(pkg.dependencyVersion(inherited));
 		});
 
 		it(`hasAnyDependencyOn(${JSON.stringify(inherited)}) is false`, () => {
@@ -230,7 +230,7 @@ describe("WorkspacePackage.dependencyVersion — inherited names are not depende
 	}
 
 	it("a real declared dependency still resolves", () => {
-		assert.deepStrictEqual(pkg.dependencyVersion("effect"), O.some("^4.0.0"));
+		assertSome(pkg.dependencyVersion("effect"), "^4.0.0");
 	});
 });
 
@@ -307,7 +307,7 @@ describe("WorkspacePackage — own-key records", () => {
 	it("reports a __proto__ addition as an own diff entry", () => {
 		const diff = withProto("1.0.0").dependencyDiff(bare);
 		assert.deepStrictEqual(diff.added, R.fromEntries([["__proto__", "1.0.0"]]));
-		assert.deepStrictEqual(R.get(diff.added, "__proto__"), O.some("1.0.0"));
+		assertSome(R.get(diff.added, "__proto__"), "1.0.0");
 		assert.deepStrictEqual(diff.removed, {});
 		assert.deepStrictEqual(diff.changed, {});
 	});
@@ -315,7 +315,7 @@ describe("WorkspacePackage — own-key records", () => {
 	it("reports a __proto__ removal as an own diff entry", () => {
 		const diff = bare.dependencyDiff(withProto("1.0.0"));
 		assert.deepStrictEqual(diff.removed, R.fromEntries([["__proto__", "1.0.0"]]));
-		assert.deepStrictEqual(R.get(diff.removed, "__proto__"), O.some("1.0.0"));
+		assertSome(R.get(diff.removed, "__proto__"), "1.0.0");
 		assert.deepStrictEqual(diff.added, {});
 		assert.deepStrictEqual(diff.changed, {});
 	});
@@ -323,17 +323,17 @@ describe("WorkspacePackage — own-key records", () => {
 	it("reports a __proto__ change as an own diff entry", () => {
 		const diff = withProto("2.0.0").dependencyDiff(withProto("1.0.0"));
 		assert.deepStrictEqual(diff.changed, R.fromEntries([["__proto__", { from: "1.0.0", to: "2.0.0" }]]));
-		assert.deepStrictEqual(R.get(diff.changed, "__proto__"), O.some({ from: "1.0.0", to: "2.0.0" }));
+		assertSome(R.get(diff.changed, "__proto__"), { from: "1.0.0", to: "2.0.0" });
 		assert.deepStrictEqual(diff.added, {});
 		assert.deepStrictEqual(diff.removed, {});
 	});
 
 	it("reads declared hostile keys while defaults have no own entries", () => {
 		for (const name of ["__proto__", "constructor", "toString"]) {
-			assert.deepStrictEqual(bare.dependencyVersion(name), O.none());
-			assert.deepStrictEqual(R.get(bare.manifestRecord, name), O.none());
+			assertNone(bare.dependencyVersion(name));
+			assertNone(R.get(bare.manifestRecord, name));
 			const pkg = WorkspacePackage.make({ name: "x", ...base, dependencies: R.fromEntries([[name, "1.0.0"]]) });
-			assert.deepStrictEqual(pkg.dependencyVersion(name), O.some("1.0.0"));
+			assertSome(pkg.dependencyVersion(name), "1.0.0");
 		}
 	});
 });

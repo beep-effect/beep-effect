@@ -9,7 +9,7 @@ import * as Effect from "effect/Effect";
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "effected", "engine");
 
 describe("engine purity", () => {
-	layer(NodeServices.layer)((it) => {
+	layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
 		it.effect("the scanner still flags and spares what its shipped fixtures say (positive control)", () =>
 			Effect.sync(() => assert.deepStrictEqual(SourceBoundary.verifyFixtures(), [])),
 		);

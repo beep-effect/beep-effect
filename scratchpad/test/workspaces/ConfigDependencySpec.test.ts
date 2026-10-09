@@ -5,13 +5,17 @@
 // which is why only the FIRST `+` may separate version from integrity.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure, assertNone, assertSome, assertSuccess } from "@effect/vitest/utils";
 import { IntegrityHash, SriIntegrityHash } from "../../effected/npm/index.ts";
 import { SemVer } from "../../effected/semver/index.ts";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { ConfigDependencySpec, InvalidConfigDependencySpecError } from "../../effected/workspaces/ConfigDependencySpec.ts";
+import {
+	ConfigDependencySpec,
+	InvalidConfigDependencySpecError,
+} from "../../effected/workspaces/ConfigDependencySpec.ts";
 import { lookupPnpmfiles } from "../../effected/workspaces/internal/configDependencyResolution.ts";
 
 const SRI = "sha512-m35mtvgU4nbE8ZHd4EFqKu5jJeQY0gPUYHzKTno57JT/QeHzM9RRLNQsIcG0npsFYBxJfJ1tC/NH4zEWc2gdxQ==";
@@ -25,10 +29,10 @@ const reasonOf = (input: string) => {
 describe("ConfigDependencySpec.parseResult", () => {
 	it("parses the legacy inline SRI form", () => {
 		const parsed = ConfigDependencySpec.parseResult(`0.11.1+${SRI}`);
-		assert.isTrue(Result.isSuccess(parsed));
+		assertSuccess(parsed, Result.getOrThrow(parsed));
 		if (Result.isSuccess(parsed)) {
 			assert.strictEqual(parsed.success.version.toString(), "0.11.1");
-			assert.deepStrictEqual(parsed.success.integrity, O.some(SRI));
+			assertSome<string>(parsed.success.integrity, SRI);
 			assert.isTrue(parsed.success.hasIntegrity);
 			assert.strictEqual(parsed.success.bare, "0.11.1");
 			assert.strictEqual(parsed.success.toString(), `0.11.1+${SRI}`);
@@ -37,18 +41,18 @@ describe("ConfigDependencySpec.parseResult", () => {
 
 	it("splits on the FIRST + when the SRI base64 itself contains +", () => {
 		const parsed = ConfigDependencySpec.parseResult(`0.44.0+${SRI_WITH_PLUS}`);
-		assert.isTrue(Result.isSuccess(parsed));
+		assertSuccess(parsed, Result.getOrThrow(parsed));
 		if (Result.isSuccess(parsed)) {
 			assert.strictEqual(parsed.success.bare, "0.44.0");
-			assert.deepStrictEqual(parsed.success.integrity, O.some(SRI_WITH_PLUS));
+			assertSome<string>(parsed.success.integrity, SRI_WITH_PLUS);
 		}
 	});
 
 	it("parses the bare form pnpm 11+ writes", () => {
 		const parsed = ConfigDependencySpec.parseResult("0.11.1");
-		assert.isTrue(Result.isSuccess(parsed));
+		assertSuccess(parsed, Result.getOrThrow(parsed));
 		if (Result.isSuccess(parsed)) {
-			assert.isTrue(O.isNone(parsed.success.integrity));
+			assertNone(parsed.success.integrity);
 			assert.isFalse(parsed.success.hasIntegrity);
 			assert.strictEqual(parsed.success.bare, "0.11.1");
 			assert.strictEqual(parsed.success.toString(), "0.11.1");
@@ -57,7 +61,7 @@ describe("ConfigDependencySpec.parseResult", () => {
 
 	it("accepts a prerelease version", () => {
 		const parsed = ConfigDependencySpec.parseResult(`1.0.0-rc.1+${SRI}`);
-		assert.isTrue(Result.isSuccess(parsed));
+		assertSuccess(parsed, Result.getOrThrow(parsed));
 		if (Result.isSuccess(parsed)) assert.strictEqual(parsed.success.bare, "1.0.0-rc.1");
 	});
 
@@ -83,7 +87,7 @@ describe("ConfigDependencySpec.parseResult", () => {
 
 	it("carries the input and names the failing half in the message", () => {
 		const parsed = ConfigDependencySpec.parseResult("0.11.1+garbage");
-		assert.isTrue(Result.isFailure(parsed));
+		assertFailure(parsed, parsed.pipe(Result.flip, Result.getOrThrow));
 		if (Result.isFailure(parsed)) {
 			assert.instanceOf(parsed.failure, InvalidConfigDependencySpecError);
 			assert.strictEqual(parsed.failure.input, "0.11.1+garbage");
@@ -131,9 +135,7 @@ describe("ConfigDependencySpec.FromString", () => {
 
 describe("ConfigDependencySpec construction", () => {
 	it("rejects a version carrying build metadata, which the grammar cannot encode", () => {
-		assert.throws(() =>
-			ConfigDependencySpec.make({ version: SemVer.of(1, 2, 3, [], ["build"]), integrity: O.none() }),
-		);
+		assert.throws(() => ConfigDependencySpec.make({ version: SemVer.of(1, 2, 3, [], ["build"]), integrity: O.none() }));
 	});
 });
 

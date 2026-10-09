@@ -69,27 +69,27 @@ export const parseHex = (hex: string): Rgb | undefined => {
 	const short = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(hex);
 	if (short !== null) {
 		return [
-			Number.parseInt((short[1] ?? "0").repeat(2), 16),
-			Number.parseInt((short[2] ?? "0").repeat(2), 16),
-			Number.parseInt((short[3] ?? "0").repeat(2), 16),
+			Number.parseInt(hex.charAt(1).repeat(2), 16),
+			Number.parseInt(hex.charAt(2).repeat(2), 16),
+			Number.parseInt(hex.charAt(3).repeat(2), 16),
 		];
 	}
 	const long = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
 	if (long === null) return undefined;
 	return [
-		Number.parseInt(long[1] ?? "0", 16),
-		Number.parseInt(long[2] ?? "0", 16),
-		Number.parseInt(long[3] ?? "0", 16),
+		Number.parseInt(hex.slice(1, 3), 16),
+		Number.parseInt(hex.slice(3, 5), 16),
+		Number.parseInt(hex.slice(5, 7), 16),
 	];
 };
 
 const distance = (a: Rgb, b: Rgb): number => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
 
 /** The index of the cube level nearest a channel value; the lower level wins a tie. */
-const nearestLevel = (value: number): number => {
-	let best = 0;
-	for (let i = 1; i < CUBE.length; i++) {
-		if (Math.abs((CUBE[i] ?? 0) - value) < Math.abs((CUBE[best] ?? 0) - value)) best = i;
+const nearestLevel = (value: number): readonly [number, number] => {
+	let best: readonly [number, number] = [0, CUBE[0]];
+	for (const [index, level] of CUBE.entries()) {
+		if (Math.abs(level - value) < Math.abs(best[1] - value)) best = [index, level];
 	}
 	return best;
 };
@@ -111,8 +111,8 @@ const nearestLevel = (value: number): number => {
  */
 export const nearest256 = (rgb: Rgb): number => {
 	const [r, g, b] = [nearestLevel(rgb[0]), nearestLevel(rgb[1]), nearestLevel(rgb[2])] as const;
-	const cubeIndex = 16 + 36 * r + 6 * g + b;
-	const cubeDistance = distance(rgb, [CUBE[r] ?? 0, CUBE[g] ?? 0, CUBE[b] ?? 0]);
+	const cubeIndex = 16 + 36 * r[0] + 6 * g[0] + b[0];
+	const cubeDistance = distance(rgb, [r[1], g[1], b[1]]);
 
 	const average = (rgb[0] + rgb[1] + rgb[2]) / 3;
 	const step = Math.min(23, Math.max(0, Math.round((average - 8) / 10)));
@@ -125,15 +125,19 @@ export const nearest256 = (rgb: Rgb): number => {
 /** The SGR parameter of the nearest of the 16 ANSI colours: 30 to 37 or 90 to 97. */
 const nearest16 = (rgb: Rgb): number => {
 	let best = 0;
-	for (let i = 1; i < PALETTE16.length; i++) {
-		if (distance(rgb, PALETTE16[i] ?? [0, 0, 0]) < distance(rgb, PALETTE16[best] ?? [0, 0, 0])) best = i;
+	let bestDistance = distance(rgb, [0, 0, 0]);
+	for (const [index, color] of PALETTE16.entries()) {
+		const candidateDistance = distance(rgb, color);
+		if (candidateDistance < bestDistance) {
+			best = index;
+			bestDistance = candidateDistance;
+		}
 	}
 	return best < 8 ? 30 + best : 90 + (best - 8);
 };
 
 /** The foreground SGR parameters for a colour at a level, or `undefined` for none. */
 const foreground = (fg: NonNullable<Style["fg"]>, level: ColorLevel): string | undefined => {
-	if (level === "none") return undefined;
 	// A name that is not a colour is ignored, as a malformed hex is, rather than printing `undefined` into an escape.
 	if (!fg.startsWith("#")) return R.has(NAMED, fg) ? String(NAMED[fg]) : undefined;
 	const rgb = parseHex(fg);

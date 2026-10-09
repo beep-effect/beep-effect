@@ -1,4 +1,4 @@
-// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file
+// @effect-diagnostics nodeBuiltinImport:skip-file
 // The fetch rung's guards, over the public `ScriptedSpawner` double: what the
 // rung refuses to use even when pnpm exits zero, and how a pnpm that never
 // ran is reported. The #842 scenario end to end, with real git and a fake
@@ -53,93 +53,125 @@ const packageAt = (dir: string, version: string): string => {
 	return dir;
 };
 
-const failureWith = (script: Parameters<typeof ScriptedSpawner.make>[0]) => {
-	const spawner = ScriptedSpawner.make(script);
-	return Effect.gen(function* () {
-		const hooks = yield* ConfigDependencyHooks;
-		const error = yield* Effect.flip(hooks.inject(root, { [NAME]: SPEC }, {}));
-		assert.instanceOf(error, CatalogAssemblyError);
-		assert.strictEqual(error.path, NAME);
-		// Nothing was replayed: the only spawns are pnpm's.
-		assert.isTrue(spawner.spawns.every((spawn) => spawn.command === "pnpm"));
-		return { error, spawner };
-	}).pipe(Effect.provide(ConfigDependencyHooks.layerSubprocess.pipe(Layer.provide(spawner.layer))));
-};
+const failureWith = Effect.fn("failureWith")(function* (spawner: ReturnType<typeof ScriptedSpawner.make>) {
+	const hooks = yield* ConfigDependencyHooks;
+	const error = yield* Effect.flip(hooks.inject(root, { [NAME]: SPEC }, {}));
+	assert.instanceOf(error, CatalogAssemblyError);
+	assert.strictEqual(error.path, NAME);
+	// Nothing was replayed: the only spawns are pnpm's.
+	assert.isTrue(spawner.spawns.every((spawn) => spawn.command === "pnpm"));
+	return { error, spawner };
+});
 
 describe("the fetch rung refuses what it cannot verify", () => {
-	it.effect("a pnpm that rewrites the pinned lockfile is not trusted, even on a zero exit", () =>
-		Effect.gen(function* () {
-			const { error, spawner } = yield* failureWith((_command, args) => {
-				const scratch = optionOf(args, "--dir");
-				writeFileSync(join(scratch, "pnpm-lock.yaml"), "lockfileVersion: '6.0'\n");
-				// Linked outside the store so no later test finds it there; the
-				// lockfile guard runs first either way.
-				linkScratch(args, packageAt(join(dirname(store), "rewritten", NAME), "1.0.0"));
-				return {};
-			});
-			assert.strictEqual(error.reason, "fetchFailed");
-			assert.include(error.message, "rewrote the integrity-pinned scratch lockfile");
-			assert.strictEqual(spawner.spawns.length, 1);
-		}),
-	);
+	{
+		const spawner = ScriptedSpawner.make((_command, args) => {
+			const scratch = optionOf(args, "--dir");
+			writeFileSync(join(scratch, "pnpm-lock.yaml"), "lockfileVersion: '6.0'\n");
+			// Linked outside the store so no later test finds it there; the
+			// lockfile guard runs first either way.
+			linkScratch(args, packageAt(join(dirname(store), "rewritten", NAME), "1.0.0"));
+			return {};
+		});
+		it.layer(ConfigDependencyHooks.layerSubprocess.pipe(Layer.provide(spawner.layer)), { timeout: "30 seconds" })(
+			(it) => {
+				it.effect("a pnpm that rewrites the pinned lockfile is not trusted, even on a zero exit", () =>
+					Effect.gen(function* () {
+						const { error } = yield* failureWith(spawner);
+						assert.strictEqual(error.reason, "fetchFailed");
+						assert.include(error.message, "rewrote the integrity-pinned scratch lockfile");
+						assert.strictEqual(spawner.spawns.length, 1);
+					}),
+				);
+			},
+		);
+	}
 
-	it.effect("a link that is not a store copy of the declared version is not used", () =>
-		Effect.gen(function* () {
-			const { error } = yield* failureWith((_command, args) => {
-				linkScratch(args, packageAt(join(dirname(store), "elsewhere", NAME), "1.0.0"));
-				return {};
-			});
-			assert.strictEqual(error.reason, "fetchFailed");
-			assert.include(error.message, "not a store copy of that version");
-		}),
-	);
+	{
+		const spawner = ScriptedSpawner.make((_command, args) => {
+			linkScratch(args, packageAt(join(dirname(store), "elsewhere", NAME), "1.0.0"));
+			return {};
+		});
+		it.layer(ConfigDependencyHooks.layerSubprocess.pipe(Layer.provide(spawner.layer)), { timeout: "30 seconds" })(
+			(it) => {
+				it.effect("a link that is not a store copy of the declared version is not used", () =>
+					Effect.gen(function* () {
+						const { error } = yield* failureWith(spawner);
+						assert.strictEqual(error.reason, "fetchFailed");
+						assert.include(error.message, "not a store copy of that version");
+					}),
+				);
+			},
+		);
+	}
 
-	it.effect("pnpm missing from PATH fails fetchFailed with the remediation", () =>
-		Effect.gen(function* () {
-			const { error } = yield* failureWith((command) => ScriptedSpawner.notFound(command));
-			assert.strictEqual(error.reason, "fetchFailed");
-			assert.include(error.message, `pnpm add --config ${NAME}@1.0.0`);
-			// The spawn failure stays on the cause chain beneath the diagnosis.
-			assert.instanceOf(error.cause, Error);
-			assert.isDefined(error.cause.cause);
-		}),
-	);
+	{
+		const spawner = ScriptedSpawner.make((command) => ScriptedSpawner.notFound(command));
+		it.layer(ConfigDependencyHooks.layerSubprocess.pipe(Layer.provide(spawner.layer)), { timeout: "30 seconds" })(
+			(it) => {
+				it.effect("pnpm missing from PATH fails fetchFailed with the remediation", () =>
+					Effect.gen(function* () {
+						const { error } = yield* failureWith(spawner);
+						assert.strictEqual(error.reason, "fetchFailed");
+						assert.include(error.message, `pnpm add --config ${NAME}@1.0.0`);
+						// The spawn failure stays on the cause chain beneath the diagnosis.
+						assert.instanceOf(error.cause, Error);
+						assert.isDefined(error.cause.cause);
+					}),
+				);
+			},
+		);
+	}
 
-	it.effect(
-		"an unreadable declaring-side lockfile fails every missing dependency integrityUnavailable, before any spawn",
-		() =>
-			Effect.gen(function* () {
-				const spawner = ScriptedSpawner.make(() => ({}));
-				const second = `${NAME}-second`;
-				const error = yield* Effect.gen(function* () {
-					const hooks = yield* ConfigDependencyHooks;
-					return yield* Effect.flip(
-						hooks.inject(root, { [NAME]: SPEC, [second]: SPEC }, {}, undefined, { lockfile: "a: [", ref: "broken" }),
-					);
-				}).pipe(Effect.provide(ConfigDependencyHooks.layerSubprocess.pipe(Layer.provide(spawner.layer))));
-				assert.instanceOf(error, CatalogAssemblyError);
-				assert.strictEqual(error.reason, "integrityUnavailable");
-				assert.include([NAME, second], error.path);
-				// Mapped per dependency: the message names the dependency that failed.
-				assert.include(error.message, `config dependency ${error.path}@1.0.0 must be fetched`);
-				assert.include(error.message, "the pnpm-lock.yaml of ref broken cannot be read");
-				assert.strictEqual(spawner.spawns.length, 0);
-			}),
-	);
+	{
+		const spawner = ScriptedSpawner.make(() => ({}));
+		it.layer(ConfigDependencyHooks.layerSubprocess.pipe(Layer.provide(spawner.layer)), { timeout: "30 seconds" })(
+			(it) => {
+				it.effect(
+					"an unreadable declaring-side lockfile fails every missing dependency integrityUnavailable, before any spawn",
+					() =>
+						Effect.gen(function* () {
+							const second = `${NAME}-second`;
+							const hooks = yield* ConfigDependencyHooks;
+							const error = yield* Effect.flip(
+								hooks.inject(root, { [NAME]: SPEC, [second]: SPEC }, {}, undefined, {
+									lockfile: "a: [",
+									ref: "broken",
+								}),
+							);
+							assert.instanceOf(error, CatalogAssemblyError);
+							assert.strictEqual(error.reason, "integrityUnavailable");
+							assert.include([NAME, second], error.path);
+							// Mapped per dependency: the message names the dependency that failed.
+							assert.include(error.message, `config dependency ${error.path}@1.0.0 must be fetched`);
+							assert.include(error.message, "the pnpm-lock.yaml of ref broken cannot be read");
+							assert.strictEqual(spawner.spawns.length, 0);
+						}),
+				);
+			},
+		);
+	}
 
-	it.effect("the scratch lockfile pins the declared integrity, and the scratch workspace is removed", () =>
-		Effect.gen(function* () {
-			let scratch = "";
-			let pinned = "";
-			yield* failureWith((_command, args) => {
-				scratch = optionOf(args, "--dir");
-				pinned = readFileSync(join(scratch, "pnpm-lock.yaml"), "utf8");
-				return { exit: 1, stderr: "ERR_PNPM_TARBALL_INTEGRITY" };
-			});
-			assert.include(pinned, `"${NAME}@1.0.0":\n    resolution: {integrity: "${SRI}"}`);
-			assert.throws(() => readFileSync(join(scratch, "pnpm-lock.yaml")));
-		}),
-	);
+	{
+		let scratch = "";
+		let pinned = "";
+		const spawner = ScriptedSpawner.make((_command, args) => {
+			scratch = optionOf(args, "--dir");
+			pinned = readFileSync(join(scratch, "pnpm-lock.yaml"), "utf8");
+			return { exit: 1, stderr: "ERR_PNPM_TARBALL_INTEGRITY" };
+		});
+		it.layer(ConfigDependencyHooks.layerSubprocess.pipe(Layer.provide(spawner.layer)), { timeout: "30 seconds" })(
+			(it) => {
+				it.effect("the scratch lockfile pins the declared integrity, and the scratch workspace is removed", () =>
+					Effect.gen(function* () {
+						yield* failureWith(spawner);
+						assert.include(pinned, `"${NAME}@1.0.0":\n    resolution: {integrity: "${SRI}"}`);
+						assert.throws(() => readFileSync(join(scratch, "pnpm-lock.yaml")));
+					}),
+				);
+			},
+		);
+	}
 });
 
 describe("storeDirArgument", () => {

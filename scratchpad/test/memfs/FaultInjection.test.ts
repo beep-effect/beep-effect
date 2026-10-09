@@ -8,7 +8,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
+import { assertExitFailure } from "@effect/vitest/utils";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -17,6 +17,8 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { InvalidFaultCountError } from "../../effected/memfs/MemoryFileSystem.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
+import type { MemoryFileSystemFaults, MemoryFileSystemTransientFault } from "../../effected/memfs/MemoryFileSystem.ts";
 import { denied } from "./helpers.ts";
 
 // The downstream lockdown shape: a real tree the walk must recurse into.
@@ -26,87 +28,93 @@ const tree = {
 } as const;
 
 describe("MemoryFileSystem.layerFaulty", () => {
-	it.effect("an empty fault map is a transparent passthrough over the volume", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			assert.strictEqual(yield* fs.readFileString("/repos/blocked/src/a.ts"), "export {}\n");
-			yield* fs.writeFileString("/scratch.txt", "written");
-			assert.strictEqual(yield* fs.readFileString("/scratch.txt"), "written");
-			assert.isTrue(yield* fs.exists("/repos/blocked"));
-			assert.deepStrictEqual((yield* fs.readDirectory("/repos/blocked/src")).sort(), ["a.ts", "b.ts"]);
-		}).pipe(Effect.provide(MemoryFileSystem.layerFaulty({}).pipe(Layer.provide(MemoryFileSystem.layerWith(tree))))),
-	);
+	it.layer(MemoryFileSystem.layerFaulty({}).pipe(Layer.provide(MemoryFileSystem.layerWith(tree))), {
+		timeout: "30 seconds",
+	})((it) => {
+		it.effect("an empty fault map is a transparent passthrough over the volume", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				assert.strictEqual(yield* fs.readFileString("/repos/blocked/src/a.ts"), "export {}\n");
+				yield* fs.writeFileString("/scratch.txt", "written");
+				assert.strictEqual(yield* fs.readFileString("/scratch.txt"), "written");
+				assert.isTrue(yield* fs.exists("/repos/blocked"));
+				assert.deepStrictEqual((yield* fs.readDirectory("/repos/blocked/src")).sort(), ["a.ts", "b.ts"]);
+			}),
+		);
+	});
 
-	it.effect("delegates unregistered methods to the wrapped volume over a seeded tree", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
+	it.layer(
+		MemoryFileSystem.layerWith(tree, {
+			faults: {
+				chmod: (path, mode) => (mode === 0o555 || mode === 0o444 ? Effect.fail(denied("chmod", path)) : undefined),
+			},
+		}),
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("delegates unregistered methods to the wrapped volume over a seeded tree", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
 
-			// None of these methods carry a fault handler: all must reach the volume.
-			assert.deepStrictEqual((yield* fs.readDirectory("/repos/blocked/src")).sort(), ["a.ts", "b.ts"]);
-			assert.strictEqual(yield* fs.readFileString("/repos/blocked/src/a.ts"), "export {}\n");
-			yield* fs.writeFileString("/repos/blocked/src/c.ts", "export const c = 1;\n");
-			assert.strictEqual(yield* fs.readFileString("/repos/blocked/src/c.ts"), "export const c = 1;\n");
-			assert.strictEqual((yield* fs.stat("/repos/blocked")).type, "Directory");
-		}).pipe(
-			Effect.provide(
-				MemoryFileSystem.layerWith(tree, {
-					faults: {
-						chmod: (path, mode) => (mode === 0o555 || mode === 0o444 ? Effect.fail(denied("chmod", path)) : undefined),
-					},
-				}),
-			),
-		),
-	);
+				// None of these methods carry a fault handler: all must reach the volume.
+				assert.deepStrictEqual((yield* fs.readDirectory("/repos/blocked/src")).sort(), ["a.ts", "b.ts"]);
+				assert.strictEqual(yield* fs.readFileString("/repos/blocked/src/a.ts"), "export {}\n");
+				yield* fs.writeFileString("/repos/blocked/src/c.ts", "export const c = 1;\n");
+				assert.strictEqual(yield* fs.readFileString("/repos/blocked/src/c.ts"), "export const c = 1;\n");
+				assert.strictEqual((yield* fs.stat("/repos/blocked")).type, "Directory");
+			}),
+		);
+	});
 
-	it.effect("hands the handler the real call arguments — chmod fails on 0o555/0o444, succeeds on 0o755", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
+	it.layer(
+		MemoryFileSystem.layerFaulty({
+			chmod: (path, mode) => (mode === 0o555 || mode === 0o444 ? Effect.fail(denied("chmod", path)) : undefined),
+		}).pipe(Layer.provide(MemoryFileSystem.layerWith(tree))),
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("hands the handler the real call arguments — chmod fails on 0o555/0o444, succeeds on 0o755", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
 
-			// The unlock pass (0o755) must delegate and be recorded by the volume.
-			yield* fs.chmod("/repos/blocked", 0o755);
-			assert.strictEqual((yield* fs.stat("/repos/blocked")).mode & 0o7777, 0o755);
+				// The unlock pass (0o755) must delegate and be recorded by the volume.
+				yield* fs.chmod("/repos/blocked", 0o755);
+				assert.strictEqual((yield* fs.stat("/repos/blocked")).mode & 0o7777, 0o755);
 
-			// The relock pass (0o555/0o444) must fail typed — same code path.
-			const relock = yield* Effect.flip(fs.chmod("/repos/blocked", 0o555));
-			assert.strictEqual(relock._tag, "PlatformError");
-			assert.strictEqual(relock.reason._tag, "PermissionDenied");
-			if (relock.reason._tag === "PermissionDenied") {
-				assert.strictEqual(relock.reason.method, "chmod");
-				assert.strictEqual(relock.reason.pathOrDescriptor, "/repos/blocked");
-			}
-			const relockFile = yield* Effect.flip(fs.chmod("/repos/blocked/src/a.ts", 0o444));
-			assert.strictEqual(relockFile.reason._tag, "PermissionDenied");
+				// The relock pass (0o555/0o444) must fail typed — same code path.
+				const relock = yield* Effect.flip(fs.chmod("/repos/blocked", 0o555));
+				assert.strictEqual(relock._tag, "PlatformError");
+				assert.strictEqual(relock.reason._tag, "PermissionDenied");
+				if (relock.reason._tag === "PermissionDenied") {
+					assert.strictEqual(relock.reason.method, "chmod");
+					assert.strictEqual(relock.reason.pathOrDescriptor, "/repos/blocked");
+				}
+				const relockFile = yield* Effect.flip(fs.chmod("/repos/blocked/src/a.ts", 0o444));
+				assert.strictEqual(relockFile.reason._tag, "PermissionDenied");
 
-			// The failed relock changed nothing, and delegation still works after.
-			assert.strictEqual((yield* fs.stat("/repos/blocked")).mode & 0o7777, 0o755);
-			yield* fs.chmod("/repos/blocked/src/a.ts", 0o644);
-		}).pipe(
-			// The layerFaulty ∘ Layer.provide(volume) composition from the request.
-			Effect.provide(
-				MemoryFileSystem.layerFaulty({
-					chmod: (path, mode) => (mode === 0o555 || mode === 0o444 ? Effect.fail(denied("chmod", path)) : undefined),
-				}).pipe(Layer.provide(MemoryFileSystem.layerWith(tree))),
-			),
-		),
-	);
+				// The failed relock changed nothing, and delegation still works after.
+				assert.strictEqual((yield* fs.stat("/repos/blocked")).mode & 0o7777, 0o755);
+				yield* fs.chmod("/repos/blocked/src/a.ts", 0o644);
+			}),
+		);
+	});
 
-	it.effect("a handler can key on the path, faulting one file while its siblings delegate", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			const error = yield* Effect.flip(fs.readFileString("/repos/blocked/src/a.ts"));
-			assert.strictEqual(error.reason._tag, "PermissionDenied");
-			assert.strictEqual(yield* fs.readFileString("/repos/blocked/src/b.ts"), "export {}\n");
-		}).pipe(
-			Effect.provide(
-				MemoryFileSystem.layerWith(tree, {
-					faults: {
-						readFileString: (path) =>
-							path === "/repos/blocked/src/a.ts" ? Effect.fail(denied("readFileString", path)) : undefined,
-					},
-				}),
-			),
-		),
-	);
+	it.layer(
+		MemoryFileSystem.layerWith(tree, {
+			faults: {
+				readFileString: (path) =>
+					path === "/repos/blocked/src/a.ts" ? Effect.fail(denied("readFileString", path)) : undefined,
+			},
+		}),
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("a handler can key on the path, faulting one file while its siblings delegate", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const error = yield* Effect.flip(fs.readFileString("/repos/blocked/src/a.ts"));
+				assert.strictEqual(error.reason._tag, "PermissionDenied");
+				assert.strictEqual(yield* fs.readFileString("/repos/blocked/src/b.ts"), "export {}\n");
+			}),
+		);
+	});
 
 	it.effect("a fault on a core method propagates into the members derived from it", () =>
 		Effect.gen(function* () {
@@ -203,15 +211,19 @@ describe("MemoryFileSystem.layerFaulty", () => {
 	);
 
 	it("type-enforces genuine PlatformError faults and confines failTimes to the Effect-returning methods", () => {
+		// Conditional types fail compilation if either forbidden fault becomes assignable.
+		const acceptsBareError: (() => Effect.Effect<never, Error>) extends MemoryFileSystemFaults["readFileString"]
+			? true
+			: false = false;
+		const acceptsTransientWatch: MemoryFileSystemTransientFault extends MemoryFileSystemFaults["watch"] ? true : false =
+			false;
+		assert.isFalse(acceptsBareError);
+		assert.isFalse(acceptsTransientWatch);
 		const rejectsBareError = MemoryFileSystem.layerFaulty({
-			// @ts-expect-error -- a bare Error is not a PlatformError
-			// This negative type test deliberately supplies a bare Error failure to prove the fault API rejects it.
-			// @effect-diagnostics-next-line missingEffectError:off globalErrorInEffectFailure:off
-			readFileString: () => Effect.fail(new Error("nope")),
+			readFileString: () => Effect.fail(deliberatelyInvalid<PlatformError.PlatformError>(new Error("nope"))),
 		});
 		const rejectsTransientOnLazy = MemoryFileSystem.layerFaulty({
-			// @ts-expect-error -- watch returns a Stream; a transient Effect fault cannot replace it
-			watch: MemoryFileSystem.failTimes(1, denied("watch", "/w")),
+			watch: deliberatelyInvalid<never>(MemoryFileSystem.failTimes(1, denied("watch", "/w"))),
 		});
 		assert.isDefined(rejectsBareError);
 		assert.isDefined(rejectsTransientOnLazy);
@@ -226,27 +238,28 @@ describe("MemoryFileSystem.failTimes", () => {
 		pathOrDescriptor: "/config.json",
 	});
 
-	it.effect("fails exactly N intercepted calls, then delegates to the volume", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-
-			const first = yield* Effect.flip(fs.readFileString("/config.json"));
-			assert.strictEqual(first.reason._tag, "Busy");
-			const second = yield* Effect.flip(fs.readFileString("/config.json"));
-			assert.strictEqual(second.reason._tag, "Busy");
-
-			// Third call delegates — and keeps delegating.
-			assert.strictEqual(yield* fs.readFileString("/config.json"), "{}");
-			assert.strictEqual(yield* fs.readFileString("/config.json"), "{}");
-		}).pipe(
-			Effect.provide(
-				MemoryFileSystem.layerWith(
-					{ "/config.json": "{}" },
-					{ faults: { readFileString: MemoryFileSystem.failTimes(2, busy) } },
-				),
-			),
+	it.layer(
+		MemoryFileSystem.layerWith(
+			{ "/config.json": "{}" },
+			{ faults: { readFileString: MemoryFileSystem.failTimes(2, busy) } },
 		),
-	);
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("fails exactly N intercepted calls, then delegates to the volume", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+
+				const first = yield* Effect.flip(fs.readFileString("/config.json"));
+				assert.strictEqual(first.reason._tag, "Busy");
+				const second = yield* Effect.flip(fs.readFileString("/config.json"));
+				assert.strictEqual(second.reason._tag, "Busy");
+
+				// Third call delegates — and keeps delegating.
+				assert.strictEqual(yield* fs.readFileString("/config.json"), "{}");
+				assert.strictEqual(yield* fs.readFileString("/config.json"), "{}");
+			}),
+		);
+	});
 
 	it.effect("re-arms its counter on each layer build — one bound layer const, two provides", () =>
 		Effect.gen(function* () {
@@ -271,22 +284,23 @@ describe("MemoryFileSystem.failTimes", () => {
 		}),
 	);
 
-	it.effect("counts executions, not invocations — Effect.retry attempts consume failures", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			// ONE effect value, retried: each attempt re-consults the fault, so a
-			// retry policy outlasts the transient failure window.
-			const value = yield* fs.readFileString("/config.json").pipe(Effect.retry({ times: 2 }));
-			assert.strictEqual(value, "{}");
-		}).pipe(
-			Effect.provide(
-				MemoryFileSystem.layerWith(
-					{ "/config.json": "{}" },
-					{ faults: { readFileString: MemoryFileSystem.failTimes(2, busy) } },
-				),
-			),
+	it.layer(
+		MemoryFileSystem.layerWith(
+			{ "/config.json": "{}" },
+			{ faults: { readFileString: MemoryFileSystem.failTimes(2, busy) } },
 		),
-	);
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("counts executions, not invocations — Effect.retry attempts consume failures", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				// ONE effect value, retried: each attempt re-consults the fault, so a
+				// retry policy outlasts the transient failure window.
+				const value = yield* fs.readFileString("/config.json").pipe(Effect.retry({ times: 2 }));
+				assert.strictEqual(value, "{}");
+			}),
+		);
+	});
 
 	it.effect("each makeFaulty call arms its own counter over the same base volume", () =>
 		Effect.gen(function* () {
@@ -327,22 +341,22 @@ describe("MemoryFileSystem.die", () => {
 	// a caller writes around a read cannot absorb it. A typed fault would pass
 	// through that catch, and a test written with one would pass while the real
 	// code path dies.
-	it.effect("fails the member as a defect that Effect.catch cannot absorb", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			const exit = yield* Effect.exit(
-				fs.makeDirectory("/new", { recursive: true }).pipe(Effect.ignore),
-			);
-			assert.isTrue(Exit.isFailure(exit));
-			if (Exit.isFailure(exit)) {
-				assert.isTrue(Cause.hasDies(exit.cause));
-				assert.isFalse(Cause.hasFails(exit.cause));
-				assert.strictEqual(Cause.squash(exit.cause), unstubbed);
-			}
-		}).pipe(
-			Effect.provide(MemoryFileSystem.layerWith({}, { faults: { makeDirectory: MemoryFileSystem.die(unstubbed) } })),
-		),
-	);
+	it.layer(MemoryFileSystem.layerWith({}, { faults: { makeDirectory: MemoryFileSystem.die(unstubbed) } }), {
+		timeout: "30 seconds",
+	})((it) => {
+		it.effect("fails the member as a defect that Effect.catch cannot absorb", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const exit = yield* Effect.exit(fs.makeDirectory("/new", { recursive: true }).pipe(Effect.ignore));
+				assertExitFailure(exit, Cause.die(unstubbed));
+				{
+					assert.isTrue(Cause.hasDies(exit.cause));
+					assert.isFalse(Cause.hasFails(exit.cause));
+					assert.strictEqual(Cause.squash(exit.cause), unstubbed);
+				}
+			}),
+		);
+	});
 
 	it.effect("dies with exactly the defect it was given, and leaves other members delegating", () =>
 		Effect.gen(function* () {
@@ -350,7 +364,7 @@ describe("MemoryFileSystem.die", () => {
 			const base = yield* MemoryFileSystem.makeWith(tree);
 			const fs = MemoryFileSystem.makeFaulty(base, { readDirectory: MemoryFileSystem.die(defect) });
 			const exit = yield* Effect.exit(fs.readDirectory("/repos/blocked/src"));
-			assert.isTrue(Exit.isFailure(exit) && Cause.squash(exit.cause) === defect);
+			assertExitFailure(exit, Cause.die(defect));
 			assert.strictEqual(yield* fs.readFileString("/repos/blocked/src/a.ts"), "export {}\n");
 		}),
 	);
@@ -360,25 +374,26 @@ describe("MemoryFileSystem fault factories", () => {
 	// The case-insensitive-volume workaround effected#874 describes, as the
 	// one-liner the factory form makes it: rewrite the argument, delegate to the
 	// UNFAULTED base.
-	it.effect("hands the factory the wrapped volume, so a handler can rewrite arguments and delegate", () =>
-		Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			assert.strictEqual((yield* fs.stat("/Docs.json")).type, "File");
-			assert.strictEqual(yield* fs.readFileString("/DOCS.JSON"), "{}");
-		}).pipe(
-			Effect.provide(
-				MemoryFileSystem.layerWith(
-					{ "/docs.json": "{}" },
-					{
-						faults: (base) => ({
-							stat: (path) => base.stat(path.toLowerCase()),
-							readFileString: (path, encoding) => base.readFileString(path.toLowerCase(), encoding),
-						}),
-					},
-				),
-			),
+	it.layer(
+		MemoryFileSystem.layerWith(
+			{ "/docs.json": "{}" },
+			{
+				faults: (base) => ({
+					stat: (path) => base.stat(path.toLowerCase()),
+					readFileString: (path, encoding) => base.readFileString(path.toLowerCase(), encoding),
+				}),
+			},
 		),
-	);
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("hands the factory the wrapped volume, so a handler can rewrite arguments and delegate", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				assert.strictEqual((yield* fs.stat("/Docs.json")).type, "File");
+				assert.strictEqual(yield* fs.readFileString("/DOCS.JSON"), "{}");
+			}),
+		);
+	});
 
 	it.effect("the base the factory receives is unfaulted, so delegating to it cannot recurse", () =>
 		Effect.gen(function* () {

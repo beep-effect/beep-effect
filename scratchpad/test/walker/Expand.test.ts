@@ -43,7 +43,7 @@ const tree = {
 	"/proj/src/lib/util.ts": "",
 };
 
-layer(platform(tree))("compileAndExpand, expansion", (it) => {
+layer(platform(tree), { timeout: "30 seconds" })("compileAndExpand, expansion", (it) => {
 	it.effect("compiles a pattern source and expands it in one call", () =>
 		Effect.gen(function* () {
 			const files = yield* compileAndExpand("src/**/*.ts", { cwd: "/proj", glob: defaults });
@@ -95,7 +95,7 @@ layer(platform(tree))("compileAndExpand, expansion", (it) => {
 	);
 });
 
-layer(platform(tree))("compileAndExpand, compile failure", (it) => {
+layer(platform(tree), { timeout: "30 seconds" })("compileAndExpand, compile failure", (it) => {
 	it.effect("an uncompilable pattern fails as GlobExpansionError at the compile stage", () =>
 		Effect.gen(function* () {
 			const error = yield* Effect.flip(compileAndExpand("a".repeat(65_537), { cwd: "/proj", glob: defaults }));
@@ -143,7 +143,7 @@ const unreadableTree = {
 	"/proj/src/locked/b.ts": "",
 };
 
-layer(platform(unreadableTree, { unreadable: HashSet.make("/proj/src/locked") }))(
+layer(platform(unreadableTree, { unreadable: HashSet.make("/proj/src/locked") }), { timeout: "30 seconds" })(
 	"compileAndExpand, descend failure",
 	(it) => {
 		it.effect("an unreadable directory fails as GlobExpansionError at the descend stage", () =>

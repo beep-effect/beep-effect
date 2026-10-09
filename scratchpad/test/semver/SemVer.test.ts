@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure, assertNone, assertSome, assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Hash from "effect/Hash";
@@ -270,10 +271,10 @@ describe("SemVer", () => {
 		});
 
 		it("max / min return Options", () => {
-			assert.deepStrictEqual(SemVer.max(versions).pipe(O.map(String)), O.some("2.0.0"));
-			assert.deepStrictEqual(SemVer.min(versions).pipe(O.map(String)), O.some("1.0.0-alpha"));
-			assert.isTrue(O.isNone(SemVer.max([])));
-			assert.isTrue(O.isNone(SemVer.min([])));
+			assertSome(SemVer.max(versions).pipe(O.map(String)), "2.0.0");
+			assertSome(SemVer.min(versions).pipe(O.map(String)), "1.0.0-alpha");
+			assertNone(SemVer.max([]));
+			assertNone(SemVer.min([]));
 		});
 
 		it("groupBy returns an immutable record keyed by strategy", () => {
@@ -374,7 +375,7 @@ describe("SemVer", () => {
 			// class of input — whitespace is the caller's bug to surface, never
 			// this package's to hide. A version of isValid written as a bare
 			// parseResult success check passes every other case and fails here.
-			assert.isTrue(Result.isSuccess(SemVer.parseResult(" 1.2.3")));
+			assertSuccess(SemVer.parseResult(" 1.2.3"), SemVer.of(1, 2, 3));
 			assert.isFalse(SemVer.isValid(" 1.2.3"));
 			assert.isFalse(SemVer.isValid("1.2.3 "));
 			assert.isFalse(SemVer.isValid(" 1.2.3 "));
@@ -411,9 +412,12 @@ describe("SemVer", () => {
 			}
 			// The point of the schema: a consumer struct field stays a plain string.
 			assert.strictEqual(accepted.success, "1.2.3+build.42");
-			assert.isTrue(Result.isFailure(decodeExact(" 1.2.3")), "padded input is invalid");
-			assert.isTrue(Result.isFailure(decodeExact("^1.2.3")));
-			assert.isTrue(Result.isFailure(decodeExact("latest")));
+			const padded = decodeExact(" 1.2.3");
+			assertFailure(padded, padded.pipe(Result.flip, Result.getOrThrow));
+			const range = decodeExact("^1.2.3");
+			assertFailure(range, range.pipe(Result.flip, Result.getOrThrow));
+			const tag = decodeExact("latest");
+			assertFailure(tag, tag.pipe(Result.flip, Result.getOrThrow));
 		});
 
 		it("PinnableVersionString additionally refuses build metadata", () => {
@@ -422,8 +426,10 @@ describe("SemVer", () => {
 				return assert.fail("a pinnable version string must decode");
 			}
 			assert.strictEqual(accepted.success, "10.0.0-rc.1");
-			assert.isTrue(Result.isFailure(decodePinnable("1.2.3+build.42")));
-			assert.isTrue(Result.isFailure(decodePinnable(" 1.2.3")));
+			const build = decodePinnable("1.2.3+build.42");
+			assertFailure(build, build.pipe(Result.flip, Result.getOrThrow));
+			const padded = decodePinnable(" 1.2.3");
+			assertFailure(padded, padded.pipe(Result.flip, Result.getOrThrow));
 		});
 	});
 

@@ -1,15 +1,19 @@
-// @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
+// Vitest hoists these import-lifecycle mocks only with a direct vitest mocks API import.
+import { vi } from "vitest";
 // What a command with a live view loads, run by run: React and Ink load only when something is drawn with Ink. No
 // static ink or react import here, and none of the view's module: the mocks below record each package's first load,
 // and the fixture counts its own.
-import { NodeServices } from "@effect/platform-node";
-import { assert, describe, it } from "@effect/vitest";
+import { assert, it } from "@effect/vitest";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Stream from "effect/Stream";
+import * as Path from "effect/Path";
+import * as Terminal from "effect/Terminal";
+import * as Stdio from "effect/Stdio";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import { MemoryFileSystem } from "../../../effected/memfs/index.ts";
 import { Command } from "effect/cli";
-import { vi } from "vitest";
 import type { Document } from "../../../effected/cli/index.ts";
 import { CliEnv, CliLinks, Doc } from "../../../effected/cli/index.ts";
 import { makeFakeStreams } from "../../../effected/cli/ui/testing/fakeStreams.ts";
@@ -18,13 +22,13 @@ import { CliUi, UiStreams } from "../../../effected/cli/ui.ts";
 import type { SyncState } from "../fixtures/live-view.ts";
 
 const { loads } = vi.hoisted(() => ({ loads: Array<string>() }));
-vi.mock("ink", async (importOriginal) => {
+vi.mock("ink", (importOriginal) => {
 	loads.push("ink");
-	return await importOriginal();
+	return importOriginal();
 });
-vi.mock("react", async (importOriginal) => {
+vi.mock("react", (importOriginal) => {
 	loads.push("react");
-	return await importOriginal();
+	return importOriginal();
 });
 
 const viewLoads = (): number => globalThis.liveViewLoads ?? 0;
@@ -62,15 +66,27 @@ const run = Effect.fn("run")(function* (argv: ReadonlyArray<string>, withFinal: 
 			log: (...args: ReadonlyArray<unknown>) => help.push(args.map(String).join(" ")),
 		});
 		yield* Command.runWith(tool(withFinal), { version: "1.0.0" })(argv).pipe(
-			Effect.provide(Layer.mergeAll(CliEnv.layerTest({ audience: "agent" }), CliLinks.layerTest("off"))),
 			Effect.provideService(UiStreams, fake.streams),
-			Effect.provide(NodeServices.layer),
 			Effect.provideService(Console.Console, console),
 		);
 		return { stdout: fake.stdout(), help: help.join("\n") };
 	});
 
-describe("a command with a lazy live view", () => {
+it.layer(Layer.mergeAll(
+	CliEnv.layerTest({ audience: "agent" }),
+	CliLinks.layerTest("off"),
+	Layer.mock(ChildProcessSpawner.ChildProcessSpawner, {}),
+	MemoryFileSystem.layer,
+	Path.layer,
+	Stdio.layerTest({ stdinIsTerminal: Effect.succeed(false), stdoutIsTerminal: Effect.succeed(false) }),
+	Layer.succeed(Terminal.Terminal, Terminal.make({
+		columns: Effect.succeed(80),
+		rows: Effect.succeed(24),
+		display: () => Effect.void,
+		readInput: Effect.die("unexpected terminal input"),
+		readLine: Effect.die("unexpected terminal input"),
+	})),
+), { timeout: "30 seconds" })("a command with a lazy live view", (it) => {
 	// In file order: each test needs the loads of the ones before it to have been none.
 	it.effect("--help loads neither react nor ink, nor the view's module", () =>
 		Effect.gen(function* () {

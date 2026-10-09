@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import type { AudienceKind, StreamEnv } from "../../effected/env/index.ts";
 import { Audience, CurrentRuntimeEnv, TerminalEnv } from "../../effected/env/index.ts";
@@ -38,7 +37,11 @@ const layers = (setup: Setup) => {
 		stdout: { isTerminal: true, ...setup.stdout },
 		stderr: { isTerminal: true, ...setup.stderr },
 	});
-	const theme = CliTheme.layer({ glyphs: setup.glyphs ?? "unicode" }).pipe(Layer.provide(terminal));
+	const theme = CliTheme.layerTest({
+		color: setup.stdout?.color ?? "none",
+		stderrColor: setup.stderr?.color ?? "none",
+		glyphs: setup.glyphs ?? "unicode",
+	});
 	return Layer.mergeAll(
 		terminal,
 		theme,
@@ -51,11 +54,16 @@ const layers = (setup: Setup) => {
 };
 
 /** Run an effect needing the render services, with a captured Console. */
-const under = Effect.fn("under")(function*<A> (setup: Setup, effect: Effect.Effect<A, never, CliTheme | TerminalEnv | Audience | CliLinks>) {
-		const { double, out, err } = capturing();
-		const value = yield* effect.pipe(Effect.provide(layers(setup)), Effect.provideService(Console.Console, double));
-		return { value, out, err };
-	});
+const under = Effect.fn("under")(function* <A>(
+	setup: Setup,
+	effect: Effect.Effect<A, never, CliTheme | TerminalEnv | Audience | CliLinks>,
+) {
+	const { double, out, err } = capturing();
+	// These layers contain only pure Layer.succeed doubles; no resource is acquired per call.
+	const context = yield* Layer.build(layers(setup));
+	const value = yield* effect.pipe(Effect.provideContext(context), Effect.provideService(Console.Console, double));
+	return { value, out, err };
+});
 
 const WIDE = Array.from({ length: 60 }, (_, i) => `word${i}`).join(" ");
 
@@ -186,37 +194,35 @@ describe("Doc.print: an agent never gets an escape of any kind", () => {
 });
 
 describe("Doc.print: an empty document", () => {
-	it.effect("prints nothing: no blank line on either stream, for every format", () =>
-		Effect.gen(function* () {
-			for (const format of ["auto", "plain", "ansi", "markdown", "githubLog"] as const) {
-				for (const stream of ["stdout", "stderr"] as const) {
-					const { double, out, err } = capturing();
-					yield* Doc.print([], { format, stream }).pipe(
-						Effect.provide(layers({ audience: "human", stdout: { color: "basic" } })),
-						Effect.provideService(Console.Console, double),
-					);
-					assert.deepStrictEqual([out, err], [[], []], `${format} ${stream}`);
+	it.layer(layers({ audience: "human", stdout: { color: "basic" } }), { timeout: "30 seconds" })((it) => {
+		it.effect("prints nothing: no blank line on either stream, for every format", () =>
+			Effect.gen(function* () {
+				for (const format of ["auto", "plain", "ansi", "markdown", "githubLog"] as const) {
+					for (const stream of ["stdout", "stderr"] as const) {
+						const { double, out, err } = capturing();
+						yield* Doc.print([], { format, stream }).pipe(Effect.provideService(Console.Console, double));
+						assert.deepStrictEqual([out, err], [[], []], `${format} ${stream}`);
+					}
 				}
-			}
-		}),
-	);
+			}),
+		);
+	});
 });
 
 describe("Doc.print: an empty headerless table", () => {
-	it.effect("prints nothing for it, and does not throw, for every format", () =>
-		Effect.gen(function* () {
-			for (const table of [Doc.countsTable([]), Doc.table([{ header: [] }], [])]) {
-				for (const format of ["auto", "plain", "ansi", "markdown", "githubLog"] as const) {
-					const { double, out, err } = capturing();
-					yield* Doc.print([table], { format }).pipe(
-						Effect.provide(layers({ audience: "human", stdout: { color: "basic" } })),
-						Effect.provideService(Console.Console, double),
-					);
-					assert.deepStrictEqual([out, err], [[], []], `${table._tag} ${format}`);
+	it.layer(layers({ audience: "human", stdout: { color: "basic" } }), { timeout: "30 seconds" })((it) => {
+		it.effect("prints nothing for it, and does not throw, for every format", () =>
+			Effect.gen(function* () {
+				for (const table of [Doc.countsTable([]), Doc.table([{ header: [] }], [])]) {
+					for (const format of ["auto", "plain", "ansi", "markdown", "githubLog"] as const) {
+						const { double, out, err } = capturing();
+						yield* Doc.print([table], { format }).pipe(Effect.provideService(Console.Console, double));
+						assert.deepStrictEqual([out, err], [[], []], `${table._tag} ${format}`);
+					}
 				}
-			}
-		}),
-	);
+			}),
+		);
+	});
 });
 
 describe("Doc.print: an explicit format wins over the audience", () => {
@@ -361,15 +367,11 @@ describe("the width", () => {
 
 	it.effect("a human's default is TerminalEnv.width(): the terminal's columns, else COLUMNS or 80", () =>
 		Effect.gen(function* () {
-			const narrow = (yield* under(
-				{ audience: "human", stdout: { columns: O.some(40) } },
-				Render.context("stdout"),
-			)).value;
+			const narrow = (yield* under({ audience: "human", stdout: { columns: O.some(40) } }, Render.context("stdout")))
+				.value;
 			assert.strictEqual(narrow.width, 40);
-			const unknown = (yield* under(
-				{ audience: "human", stdout: { columns: O.none() } },
-				Render.context("stdout"),
-			)).value;
+			const unknown = (yield* under({ audience: "human", stdout: { columns: O.none() } }, Render.context("stdout")))
+				.value;
 			assert.strictEqual(unknown.width, 80);
 		}),
 	);

@@ -6,6 +6,7 @@
 // stringifier's own, which is exactly what self-consistency is about.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess } from "@effect/vitest/utils";
 import * as Result from "effect/Result";
 import { StyleEvidence, Yaml, YamlLint } from "../../../effected/yaml/index.ts";
 
@@ -23,7 +24,7 @@ describe("e2e: strict inference over the stringifier's own emit (#345)", () => {
 		let evidence = StyleEvidence.empty;
 		for (const value of values) {
 			const emitted = Yaml.stringifyResult(value);
-			assert.isTrue(Result.isSuccess(emitted), "the corpus values must stringify");
+			assertSuccess(emitted, Result.getOrThrow(emitted));
 			if (Result.isSuccess(emitted)) {
 				evidence = StyleEvidence.combine(evidence, YamlLint.observe(emitted.success, YamlLint.builtins));
 			}
@@ -39,10 +40,7 @@ describe("e2e: strict inference over the stringifier's own emit (#345)", () => {
 		assert.isTrue(voted.has("document-end.present"), "corpus must produce end-marker votes");
 
 		const resolved = YamlLint.resolveStrict(evidence);
-		assert.isTrue(
-			Result.isSuccess(resolved),
-			Result.isFailure(resolved) ? `stringifier self-inconsistency: ${resolved.failure.message}` : "",
-		);
+		assertSuccess(resolved, Result.getOrThrow(resolved));
 		if (Result.isSuccess(resolved)) {
 			// The inferred config is the stringifier's own documented voice:
 			// single-quote fallback, two-space indent, unindented sequences, no

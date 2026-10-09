@@ -2,6 +2,7 @@
 // paragraph's inline content, with positions correct relative to the input.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess, assertFailure } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import { MAX_NESTING_DEPTH } from "../../effected/markdown/internal/limits.ts";
@@ -10,14 +11,14 @@ import type { PhrasingContent } from "../../effected/markdown/MarkdownNode.ts";
 
 const phrasing = (text: string, options?: Parameters<typeof Markdown.parsePhrasingResult>[1]) => {
 	const result = Markdown.parsePhrasingResult(text, options);
-	assert.isTrue(Result.isSuccess(result), `expected phrasing parse of ${JSON.stringify(text)} to succeed`);
+	assertSuccess(result, Result.getOrThrow(result));
 	return Result.isSuccess(result) ? result.success : [];
 };
 
 /** The paragraph-splice the consumer hand-rolls today, as the oracle. */
 const splicedFromFullParse = (text: string): ReadonlyArray<PhrasingContent> => {
 	const parsed = Markdown.parseResult(text);
-	assert.isTrue(Result.isSuccess(parsed));
+	assertSuccess(parsed, Result.getOrThrow(parsed));
 	if (!Result.isSuccess(parsed)) {
 		return [];
 	}
@@ -96,7 +97,7 @@ describe("Markdown.parsePhrasingResult", () => {
 	it("fails typed on a hardening-guard trip", () => {
 		const markers = "*".repeat((MAX_NESTING_DEPTH + 10) * 2);
 		const result = Markdown.parsePhrasingResult(`${markers}a${markers}`);
-		assert.isTrue(Result.isFailure(result));
+		assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
 		if (Result.isFailure(result)) {
 			assert.strictEqual(result.failure._tag, "MarkdownParseError");
 			assert.strictEqual(result.failure.diagnostic.code, "NestingDepthExceeded");

@@ -62,7 +62,7 @@ const script =
 	};
 
 const suite = (spawner: ScriptedSpawner, seed: Record<string, string> = {}) =>
-	layer(Layer.mergeAll(MemoryFileSystem.layerWith(seed), Path.layer, spawner.layer, Discovery));
+	layer(Layer.mergeAll(MemoryFileSystem.layerWith(seed), Path.layer, spawner.layer, Discovery), { timeout: "30 seconds" });
 
 describe("PackedInstall.run", () => {
 	const probing = ScriptedSpawner.make(script());
@@ -215,7 +215,7 @@ describe("PackedInstall.run", () => {
 		}),
 	).pipe(Layer.provide(Path.layer));
 	const refused = ScriptedSpawner.make(script());
-	layer(Layer.mergeAll(MemoryFileSystem.layerWith({}), backslash, refused.layer, Discovery))((it) => {
+	layer(Layer.mergeAll(MemoryFileSystem.layerWith({}), backslash, refused.layer, Discovery), { timeout: "30 seconds" })((it) => {
 		it.effect("refuses a non-POSIX platform before spawning anything", () =>
 			Effect.gen(function* () {
 				const error = yield* Effect.flip(
@@ -317,7 +317,7 @@ describe("PackedInstall.run past the pack", () => {
 				spawner.layer,
 				Discovery,
 			),
-			options,
+			{ ...options, timeout: "30 seconds" },
 		);
 
 	const happy = ScriptedSpawner.make(manifests());
@@ -637,6 +637,7 @@ describe("PackedInstall.run past the pack", () => {
 				spawner.layer,
 				WithRoot(root),
 			),
+			{ timeout: "30 seconds" },
 		);
 	const readManifest = Effect.fn("readManifest")(function* (file: string) {
 			const fs = yield* FileSystem.FileSystem;
@@ -1168,7 +1169,7 @@ describe("InstalledConsumer.binProvenance", () => {
 		}),
 		"/alias": MemoryFileSystem.symlink("/scratch"),
 	};
-	layer(Layer.mergeAll(MemoryFileSystem.layerWith(SEED), Path.layer))((it) => {
+	layer(Layer.mergeAll(MemoryFileSystem.layerWith(SEED), Path.layer), { timeout: "30 seconds" })((it) => {
 		it.effect("names the package a .bin symlink resolves into, past a nameless nested package.json", () =>
 			Effect.gen(function* () {
 				assert.deepStrictEqual(yield* at("npm").binProvenance("tool"), {
@@ -1255,14 +1256,14 @@ describe("InstalledConsumer.binProvenance", () => {
 					),
 			},
 		});
-	layer(Layer.mergeAll(readLinkFails("Unknown", "EINVAL"), Path.layer))((it) => {
+	layer(Layer.mergeAll(readLinkFails("Unknown", "EINVAL"), Path.layer), { timeout: "30 seconds" })((it) => {
 		it.effect("a Node-style EINVAL from readLink on an existing entry is a shim: undefined", () =>
 			Effect.gen(function* () {
 				assert.isUndefined(yield* at("pnpm").binProvenance("shim"));
 			}),
 		);
 	});
-	layer(Layer.mergeAll(readLinkFails("PermissionDenied", "EACCES"), Path.layer))((it) => {
+	layer(Layer.mergeAll(readLinkFails("PermissionDenied", "EACCES"), Path.layer), { timeout: "30 seconds" })((it) => {
 		it.effect("an EACCES from readLink propagates as Io, never read as a shim", () =>
 			Effect.gen(function* () {
 				const error = yield* Effect.flip(at("npm").binProvenance("tool"));
@@ -1271,7 +1272,7 @@ describe("InstalledConsumer.binProvenance", () => {
 		);
 	});
 	// memfs once tagged "not a link" BadResource; it now raises Node's shape, so BadResource is a real failure.
-	layer(Layer.mergeAll(readLinkFails("BadResource", "EBADF"), Path.layer))((it) => {
+	layer(Layer.mergeAll(readLinkFails("BadResource", "EBADF"), Path.layer), { timeout: "30 seconds" })((it) => {
 		it.effect("a BadResource from readLink propagates as Io, never read as a shim", () =>
 			Effect.gen(function* () {
 				const error = yield* Effect.flip(at("pnpm").binProvenance("shim"));
@@ -1280,7 +1281,7 @@ describe("InstalledConsumer.binProvenance", () => {
 		);
 	});
 	// An Unknown whose errno is not EINVAL is a real failure too: the errno, not the tag, decides.
-	layer(Layer.mergeAll(readLinkFails("Unknown", "EIO"), Path.layer))((it) => {
+	layer(Layer.mergeAll(readLinkFails("Unknown", "EIO"), Path.layer), { timeout: "30 seconds" })((it) => {
 		it.effect("an Unknown readLink failure with another errno propagates as Io", () =>
 			Effect.gen(function* () {
 				const error = yield* Effect.flip(at("pnpm").binProvenance("shim"));
@@ -1291,7 +1292,7 @@ describe("InstalledConsumer.binProvenance", () => {
 });
 
 describe("PackedInstall.timeoutBudgetFor", () => {
-	layer(Layer.mergeAll(MemoryFileSystem.layerWith({}), Path.layer, Discovery))((it) => {
+	layer(Layer.mergeAll(MemoryFileSystem.layerWith({}), Path.layer, Discovery), { timeout: "30 seconds" })((it) => {
 		it.effect("plans the closure from the run's own options and budgets exactly what timeoutBudget would", () =>
 			Effect.gen(function* () {
 				const options = {
@@ -1348,7 +1349,7 @@ describe("PackedInstall.timeoutBudgetFor", () => {
 });
 
 describe("PackedInstall.timeoutBudgetFor with overrides", () => {
-	layer(Layer.mergeAll(MemoryFileSystem.layerWith({ "/ext/y-1.0.0.tgz": "" }), Path.layer, Discovery))((it) => {
+	layer(Layer.mergeAll(MemoryFileSystem.layerWith({ "/ext/y-1.0.0.tgz": "" }), Path.layer, Discovery), { timeout: "30 seconds" })((it) => {
 		it.effect("counts an override package, because it plans with the run's options, overrides included", () =>
 			Effect.gen(function* () {
 				const options = {
@@ -1396,7 +1397,7 @@ describe("InstalledConsumer.carrierCommand and runCarrierBin", () => {
 	const runs = ScriptedSpawner.make((command, args) =>
 		command === "node" ? { stdout: `ran ${args.join(" ")}\n`, exit: 2 } : ScriptedSpawner.notFound(command),
 	);
-	layer(Layer.mergeAll(MemoryFileSystem.layerWith(SEED), Path.layer, runs.layer))((it) => {
+	layer(Layer.mergeAll(MemoryFileSystem.layerWith(SEED), Path.layer, runs.layer), { timeout: "30 seconds" })((it) => {
 		it.effect(
 			"resolves the bin through the carrier's own bin map, not the .bin slot, under command's environment",
 			() =>

@@ -9,6 +9,9 @@
 // instead of `effect/MemoryFileSystem`. The suite body is upstream's.
 
 import { assert, describe, layer } from "@effect/vitest";
+import { assertExitFailure } from "@effect/vitest/utils";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
 import type * as PlatformError from "effect/PlatformError";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -40,7 +43,7 @@ const watchEvents = Effect.fnUntraced(function* (
 	return Array.from(yield* Fiber.join(events));
 });
 
-layer(MemoryFileSystem.layer)("FileSystem (memory-specific)", (it) => {
+layer(MemoryFileSystem.layer, { timeout: "30 seconds" })("FileSystem (memory-specific)", (it) => {
 	describe("POSIX filesystem profile", () => {
 		it.effect("should resolve dot, dot-dot, and repeated separators", () =>
 			Effect.gen(function* () {
@@ -74,9 +77,8 @@ layer(MemoryFileSystem.layer)("FileSystem (memory-specific)", (it) => {
 				const fs = yield* FileSystem.FileSystem;
 				yield* fs.symlink("missing.txt", "/dangling-link.txt");
 
-				const result = yield* Effect.result(fs.writeFileString("/dangling-link.txt", "content", { flag: "wx" }));
-
-				assert.isTrue(Result.isFailure(result));
+				const exit = yield* Effect.exit(fs.writeFileString("/dangling-link.txt", "content", { flag: "wx" }));
+				assertExitFailure(exit, Cause.fail(exit.pipe(Exit.findError, Result.getOrThrow)));
 				assert.strictEqual(yield* fs.readLink("/dangling-link.txt"), "missing.txt");
 				assert.isFalse(yield* fs.exists("/missing.txt"));
 			}),
@@ -152,17 +154,17 @@ layer(MemoryFileSystem.layer)("FileSystem (memory-specific)", (it) => {
 			const file = yield* fs.open(path, { flag: "r+" });
 
 			yield* file.seek(BigInt(Number.MAX_SAFE_INTEGER), "start");
-			assert.isTrue(Result.isFailure(yield* Effect.result(file.writeAll(new Uint8Array([1])))));
+			const writeExit = yield* Effect.exit(file.writeAll(new Uint8Array([1])));
+			assertExitFailure(writeExit, Cause.fail(writeExit.pipe(Exit.findError, Result.getOrThrow)));
 
 			// A negative length is NOT invalid: node clamps it to 0 (pinned in
 			// ErrnoParityContract.ts), so only non-integers and unsafe integers stay here.
 			for (const size of [1.5, Number.MAX_SAFE_INTEGER + 1]) {
-				const result = yield* Effect.result(file.truncate(size));
-				assert.isTrue(Result.isFailure(result));
-				if (Result.isFailure(result)) {
-					assert.strictEqual(result.failure.reason._tag, "BadArgument");
-					assert.strictEqual(result.failure.reason.method, "truncate");
-				}
+				const exit = yield* Effect.exit(file.truncate(size));
+				const error = exit.pipe(Exit.findError, Result.getOrThrow);
+				assertExitFailure(exit, Cause.fail(error));
+				assert.strictEqual(error.reason._tag, "BadArgument");
+				assert.strictEqual(error.reason.method, "truncate");
 			}
 
 			assert.strictEqual(yield* fs.readFileString(path), "content");

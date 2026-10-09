@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertExitFailure, assertSuccess } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -746,7 +747,7 @@ describe("Git", () => {
 						return { exit: 0 };
 					}),
 				);
-				assert.isTrue(Exit.isFailure(exit));
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 				assert.isFalse(spawned);
 			}),
 		);
@@ -760,10 +761,10 @@ describe("Git", () => {
 				const exit = yield* Effect.exit(
 					run(program, () => ({ stderr: "fatal: bad revision 'nope...HEAD'\n", exit: 128 })),
 				);
-				assert.isTrue(Exit.isFailure(exit));
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 				if (Exit.isFailure(exit)) {
 					const found = Cause.findFail(exit.cause);
-					assert.isTrue(Result.isSuccess(found));
+					assertSuccess(found, Result.getOrThrow(found));
 					if (Result.isSuccess(found)) {
 						const error = found.success.error;
 						assert.instanceOf(error, UnknownRefError);
@@ -869,7 +870,7 @@ describe("Git", () => {
 					return yield* git.defaultBranch(cwd);
 				});
 				const exit = yield* Effect.exit(run(program, () => ({ stderr: "fatal: something else\n", exit: 1 })));
-				assert.isTrue(Exit.isFailure(exit));
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 			}),
 		);
 	});
@@ -1019,7 +1020,7 @@ describe("Git", () => {
 						return { exit: 0 };
 					}),
 				);
-				assert.isTrue(Exit.isFailure(exit));
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 				assert.isFalse(spawned);
 			}),
 		);
@@ -1083,7 +1084,7 @@ describe("Git", () => {
 						return { exit: 0 };
 					}),
 				);
-				assert.isTrue(Exit.isFailure(exit));
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 				assert.isFalse(spawned);
 			}),
 		);
@@ -1611,11 +1612,12 @@ describe("Git", () => {
 				const exit = yield* Effect.exit(
 					run(program, () => ({ stderr: "fatal: couldn't find remote ref refs/tags/v9.9.9\n", exit: 128 })),
 				);
-				assert.isTrue(Exit.isFailure(exit));
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 				if (Exit.isFailure(exit)) {
 					// Cause.failureOption does not exist at beta.98 — findFail returns a Result.
 					const found = Cause.findFail(exit.cause);
-					assert.isTrue(Result.isSuccess(found) && S.is(UnknownRefError)(found.success.error));
+					assertSuccess(found, Result.getOrThrow(found));
+					assert.isTrue(S.is(UnknownRefError)(found.success.error));
 				}
 			}),
 		);
@@ -1686,10 +1688,10 @@ describe("Git", () => {
 							: { stderr: "fatal: plain-attempt failed\n", exit: 128 },
 					),
 				);
-				assert.isTrue(Exit.isFailure(exit));
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 				if (Exit.isFailure(exit)) {
 					const found = Cause.findFail(exit.cause);
-					assert.isTrue(Result.isSuccess(found));
+					assertSuccess(found, Result.getOrThrow(found));
 					if (Result.isSuccess(found)) {
 						const error = found.success.error;
 						assert.instanceOf(error, GitCommandError);
@@ -1715,10 +1717,11 @@ describe("Git", () => {
 					}),
 				);
 				assert.strictEqual(spawns, 1);
-				assert.isTrue(Exit.isFailure(exit));
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 				if (Exit.isFailure(exit)) {
 					const found = Cause.findFail(exit.cause);
-					assert.isTrue(Result.isSuccess(found) && S.is(NotARepositoryError)(found.success.error));
+					assertSuccess(found, Result.getOrThrow(found));
+					assert.isTrue(S.is(NotARepositoryError)(found.success.error));
 				}
 			}),
 		);
@@ -1736,7 +1739,7 @@ describe("Git", () => {
 						return { exit: 0 };
 					}),
 				);
-				assert.isTrue(Exit.isFailure(exit));
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 				assert.isFalse(spawned);
 			}),
 		);
@@ -1751,10 +1754,10 @@ describe("Git", () => {
 					return yield* git.fetchAny(cwd, { ref: "--tags" });
 				});
 				const exit = yield* Effect.exit(run(program, () => ({ exit: 0 })));
-				assert.isTrue(Exit.isFailure(exit));
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 				if (Exit.isFailure(exit)) {
 					const found = Cause.findFail(exit.cause);
-					assert.isTrue(Result.isSuccess(found));
+					assertSuccess(found, Result.getOrThrow(found));
 					if (Result.isSuccess(found)) {
 						const error = found.success.error;
 						assert.instanceOf(error, GitCommandError);
@@ -1906,7 +1909,7 @@ describe("Git", () => {
 						return { exit: 0 };
 					}),
 				);
-				assert.isTrue(Exit.isFailure(exit));
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 				assert.isFalse(spawned);
 			}),
 		);
@@ -1937,7 +1940,7 @@ describe("Git", () => {
 						return { exit: 0 };
 					}),
 				);
-				assert.isTrue(Exit.isFailure(exit));
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 				assert.isFalse(spawned);
 			}),
 		);
@@ -1955,7 +1958,7 @@ describe("Git", () => {
 						return { exit: 0 };
 					}),
 				);
-				assert.isTrue(Exit.isFailure(exit));
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 				assert.isFalse(spawned);
 			}),
 		);
@@ -1973,7 +1976,7 @@ describe("Git", () => {
 						return { exit: 0 };
 					}),
 				);
-				assert.isTrue(Exit.isFailure(exit));
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 				assert.isFalse(spawned);
 			}),
 		);
@@ -1991,7 +1994,7 @@ describe("Git", () => {
 						return { exit: 0 };
 					}),
 				);
-				assert.isTrue(Exit.isFailure(exit));
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 				assert.isFalse(spawned);
 			}),
 		);
@@ -2009,7 +2012,7 @@ describe("Git", () => {
 						return { exit: 0 };
 					}),
 				);
-				assert.isTrue(Exit.isFailure(exit));
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 				assert.isFalse(spawned);
 			}),
 		);

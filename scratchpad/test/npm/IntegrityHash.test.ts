@@ -1,7 +1,7 @@
 import { Buffer } from "node:buffer";
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
 	CorepackIntegrityHash,
@@ -59,12 +59,12 @@ describe("IntegrityHash statics", () => {
 	});
 
 	it("extracts the algorithm from the SRI and corepack forms, none from yarn", () => {
-		assert.deepStrictEqual(IntegrityHash.algorithmOf("sha512-YWJj"), O.some("sha512"));
-		assert.deepStrictEqual(IntegrityHash.algorithmOf("sha1.abcd"), O.some("sha1"));
-		assert.deepStrictEqual(IntegrityHash.algorithmOf("sha256.deadbeef"), O.some("sha256"));
+		assertSome(IntegrityHash.algorithmOf("sha512-YWJj"), "sha512");
+		assertSome(IntegrityHash.algorithmOf("sha1.abcd"), "sha1");
+		assertSome(IntegrityHash.algorithmOf("sha256.deadbeef"), "sha256");
 		// The yarn form is a valid integrity hash but names no algorithm.
-		assert.isTrue(O.isNone(IntegrityHash.algorithmOf("10c0/deadbeef")));
-		assert.isTrue(O.isNone(IntegrityHash.algorithmOf("not-a-hash")));
+		assertNone(IntegrityHash.algorithmOf("10c0/deadbeef"));
+		assertNone(IntegrityHash.algorithmOf("not-a-hash"));
 	});
 
 	it.effect("decode returns the branded value and fails typed on garbage", () =>

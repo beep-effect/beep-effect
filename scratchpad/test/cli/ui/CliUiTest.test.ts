@@ -140,7 +140,7 @@ describe("CliUiTest.render", () => {
 			assert.isAtLeast(frames.length, 5, "a first frame, then one per key");
 			assert.strictEqual(frames[0]?.trim(), "typed:");
 			assert.strictEqual(frames.at(-1), yield* handle.frame);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("resolves through result", () =>
@@ -151,7 +151,7 @@ describe("CliUiTest.render", () => {
 			};
 			const handle = yield* CliUiTest.render<string>((control) => createElement(Done, { done: control.resolve }));
 			assert.strictEqual(yield* handle.result, "finished");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("not interactive: result fails with NotInteractive and nothing is drawn", () =>
@@ -162,7 +162,7 @@ describe("CliUiTest.render", () => {
 			);
 			assert.instanceOf(yield* Effect.flip(handle.result), NotInteractive);
 			assert.deepStrictEqual(yield* handle.frames, []);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("plainFrame is the latest frame with neither escapes nor markup", () =>
@@ -171,7 +171,7 @@ describe("CliUiTest.render", () => {
 			assert.include(yield* handle.rawFrame, ESC, "the raw frame is coloured");
 			assert.include(yield* handle.frame, "[fg:red]", "the styled frame carries markup");
 			assert.strictEqual((yield* handle.plainFrame).trim(), "raw red");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a key whose reaction renders twice, across a timer, settles on the second render", () =>
@@ -188,7 +188,7 @@ describe("CliUiTest.render", () => {
 			const handle = yield* CliUiTest.render(showing(() => createElement(Twice)));
 			yield* handle.type("x");
 			assert.strictEqual((yield* handle.frame).trim(), "phase:second");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("a reaction timer that comes due while the event loop is blocked still settles on its render", () =>
@@ -216,9 +216,10 @@ describe("CliUiTest.render", () => {
 			const handle = yield* CliUiTest.render(showing(() => createElement(Blocked)));
 			yield* handle.type("x");
 			assert.strictEqual((yield* handle.frame).trim(), "phase:second");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
+	// Live clock measures the bounded wait while setImmediate keeps the screen drawing.
 	it.live("a screen that never stops drawing still lets a key press return: the wait is bounded", () =>
 		Effect.gen(function* () {
 			const Restless = (): ReactElement => {
@@ -245,7 +246,7 @@ describe("CliUiTest.render", () => {
 				500,
 				"a key press waits at most about its limit, not until the screen rests",
 			);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("rerender swaps the screen's element in place: the new frame shows, under the same control", () =>
@@ -273,7 +274,7 @@ describe("CliUiTest.render", () => {
 			assert.lengthOf(controls, 2);
 			assert.strictEqual(controls[1], controls[0], "the new element gets the original ScreenControl");
 			assert.strictEqual(yield* handle.result, "from the second");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("rerender after the screen has ended is a defect", () =>
@@ -289,7 +290,7 @@ describe("CliUiTest.render", () => {
 			} else {
 				assert.fail("expected a defect, but the rerender succeeded");
 			}
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect(
@@ -306,7 +307,7 @@ describe("CliUiTest.render", () => {
 				} else {
 					assert.fail("expected a defect, but the rerender succeeded");
 				}
-			}).pipe(Effect.scoped),
+			}),
 		15_000,
 	);
 

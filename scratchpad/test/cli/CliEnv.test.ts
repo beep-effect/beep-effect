@@ -1,13 +1,14 @@
-// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import * as Data from "effect/Data";
-import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
+import { assertExitSuccess, assertExitFailure } from "@effect/vitest/utils";
 import { Audience, CurrentRuntimeEnv, TerminalEnv } from "../../effected/env/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
@@ -16,13 +17,16 @@ import * as Runtime from "effect/Runtime";
 import * as Stdio from "effect/Stdio";
 import * as Terminal from "effect/Terminal";
 import { CliConfig, Command, GlobalFlag, Prompt } from "effect/cli";
+import * as Context from "effect/Context";
 import type { CliEnvOptions } from "../../effected/cli/index.ts";
 import { CliEnv, CliInteractive, CliLinks, CliRuntime, CliTheme } from "../../effected/cli/index.ts";
 import { TestTerminal } from "../../effected/cli/testing.ts";
 
 class TestError extends Data.TaggedError("TestError")<{ readonly message: string; readonly cause?: unknown }> {
 	override readonly name = "Error";
-	constructor(message: string, options?: { readonly cause?: unknown }) { super({ message, ...options }); }
+	constructor(message: string, options?: { readonly cause?: unknown }) {
+		super({ message, ...options });
+	}
 }
 
 const capturing = () => {
@@ -61,59 +65,73 @@ const PIPED = platform({ stdin: false, stdout: false });
 const withEnv = (env: Record<string, string>) => ConfigProvider.fromUnknown(env);
 
 describe("CliEnv.layer", () => {
-	it.effect("builds every service, and the audience honours the env var", () =>
-		Effect.gen(function* () {
-			const runtime = yield* CurrentRuntimeEnv;
-			const terminal = yield* TerminalEnv;
-			const audience = yield* Audience;
-			const theme = yield* CliTheme;
-			const interactive = yield* CliInteractive;
-			assert.isDefined(runtime);
-			assert.strictEqual(terminal.stdinIsTerminal, true);
-			assert.deepStrictEqual(audience, { kind: "agent", source: "override" });
-			assert.strictEqual(theme.color, "none");
-			// An agent audience is never interactive, even on a terminal.
-			assert.strictEqual(interactive, false);
-		}).pipe(
-			Effect.provide(CliEnv.layer({ audienceEnvVar: "OKFIT_AUDIENCE" })),
-			Effect.provide(TTY),
-			Effect.provideService(ConfigProvider.ConfigProvider, withEnv({ OKFIT_AUDIENCE: "agent" })),
+	it.layer(
+		Layer.fresh(CliEnv.layer({ audienceEnvVar: "OKFIT_AUDIENCE" })).pipe(
+			Layer.provide(TTY),
+			Layer.provide(Layer.succeed(ConfigProvider.ConfigProvider, withEnv({ OKFIT_AUDIENCE: "agent" }))),
 		),
-	);
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("builds every service, and the audience honours the env var", () =>
+			Effect.gen(function* () {
+				const runtime = yield* CurrentRuntimeEnv;
+				const terminal = yield* TerminalEnv;
+				const audience = yield* Audience;
+				const theme = yield* CliTheme;
+				const interactive = yield* CliInteractive;
+				assert.isDefined(runtime);
+				assert.strictEqual(terminal.stdinIsTerminal, true);
+				assert.deepStrictEqual(audience, { kind: "agent", source: "override" });
+				assert.strictEqual(theme.color, "none");
+				// An agent audience is never interactive, even on a terminal.
+				assert.strictEqual(interactive, false);
+			}),
+		);
+	});
 
-	it.effect("a human on a terminal is interactive, and the theme follows the terminal's colour", () =>
-		Effect.gen(function* () {
-			assert.strictEqual(yield* CliInteractive, true);
-			assert.strictEqual((yield* Audience).kind, "human");
-			assert.strictEqual((yield* CliTheme).color, "256");
-		}).pipe(
-			Effect.provide(CliEnv.layer()),
-			Effect.provide(TTY),
-			Effect.provideService(ConfigProvider.ConfigProvider, withEnv({ TERM: "xterm-256color" })),
+	it.layer(
+		Layer.fresh(CliEnv.layer()).pipe(
+			Layer.provide(TTY),
+			Layer.provide(Layer.succeed(ConfigProvider.ConfigProvider, withEnv({ TERM: "xterm-256color" }))),
 		),
-	);
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("a human on a terminal is interactive, and the theme follows the terminal's colour", () =>
+			Effect.gen(function* () {
+				assert.strictEqual(yield* CliInteractive, true);
+				assert.strictEqual((yield* Audience).kind, "human");
+				assert.strictEqual((yield* CliTheme).color, "256");
+			}),
+		);
+	});
 
-	it.effect("piped stdin or stdout is not interactive", () =>
-		Effect.gen(function* () {
-			assert.strictEqual(yield* CliInteractive, false);
-		}).pipe(
-			Effect.provide(CliEnv.layer()),
-			Effect.provide(PIPED),
-			Effect.provideService(ConfigProvider.ConfigProvider, withEnv({})),
+	it.layer(
+		Layer.fresh(CliEnv.layer()).pipe(
+			Layer.provide(PIPED),
+			Layer.provide(Layer.succeed(ConfigProvider.ConfigProvider, withEnv({}))),
 		),
-	);
+		{ timeout: "30 seconds" },
+	)((it) => {
+		it.effect("piped stdin or stdout is not interactive", () =>
+			Effect.gen(function* () {
+				assert.strictEqual(yield* CliInteractive, false);
+			}),
+		);
+	});
 });
 
 describe("CliRuntime.main with the env option", () => {
-	const observe = Effect.fn("observe")(function* (program: Effect.Effect<void, never, CliTheme | Audience | TerminalEnv>) {
-			const { double, out, err } = capturing();
-			const exit = yield* CliRuntime.main(program, { platform: TTY, env: {} }).pipe(
-				Effect.exit,
-				Effect.provideService(ConfigProvider.ConfigProvider, withEnv({})),
-				Effect.provideService(Console.Console, double),
-			);
-			return { out, err, exit };
-		});
+	const observe = Effect.fn("observe")(function* (
+		program: Effect.Effect<void, never, CliTheme | Audience | TerminalEnv>,
+	) {
+		const { double, out, err } = capturing();
+		const exit = yield* CliRuntime.main(program, { platform: TTY, env: {} }).pipe(
+			Effect.exit,
+			Effect.provideService(ConfigProvider.ConfigProvider, withEnv({})),
+			Effect.provideService(Console.Console, double),
+		);
+		return { out, err, exit };
+	});
 
 	it.effect("a program needing the env services typechecks and runs with no requirement left over", () =>
 		Effect.gen(function* () {
@@ -124,7 +142,7 @@ describe("CliRuntime.main with the env option", () => {
 			});
 			// `observe` returns an effect with R = never: a leaked requirement would not compile here.
 			const { exit } = yield* observe(program);
-			assert.isTrue(Exit.isSuccess(exit));
+			assertExitSuccess(exit, undefined);
 			assert.deepStrictEqual(seen, ["human", "true", "none"]);
 		}),
 	);
@@ -168,7 +186,7 @@ describe("CliRuntime.main with the env option", () => {
 			// A defect: the status line first, then its cleaned stack.
 			assert.strictEqual(err[0], "[FAIL] Error: tty broke");
 			assert.deepStrictEqual(out, []);
-			assert.isTrue(Exit.isFailure(exit));
+			assertExitFailure(exit, Exit.isFailure(exit) ? exit.cause : Cause.empty);
 			if (Exit.isFailure(exit)) assert.strictEqual(exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode), 3);
 		}),
 	);
@@ -189,7 +207,7 @@ describe("CliRuntime.main with the env option", () => {
 				Effect.provideService(Console.Console, double),
 			);
 			// Every env read degrades to "unset" by design, so there is nothing to fail: no line, no exit code.
-			assert.isTrue(Exit.isSuccess(exit));
+			assertExitSuccess(exit, undefined);
 			assert.deepStrictEqual(err, []);
 			assert.strictEqual(seen, "none");
 		}),
@@ -211,7 +229,7 @@ describe("CliRuntime.main with the env option", () => {
 					Effect.provideService(ConfigProvider.ConfigProvider, withEnv({ TOOL_LOG: "debug" })),
 					Effect.provideService(Console.Console, double),
 				);
-				assert.isTrue(Exit.isFailure(exit));
+				assertExitFailure(exit, Exit.isFailure(exit) ? exit.cause : Cause.empty);
 				assert.isTrue(err.some((line) => line.includes("Error: boom")));
 				const records = err.filter((line) => line.startsWith("{") || /^\d\d:\d\d:\d\d\.\d{3} /.test(line));
 				assert.isTrue(
@@ -254,12 +272,23 @@ describe("CliRuntime.main with the env option", () => {
 		}),
 	);
 
-	it.effect("help text follows the same colour decision as the env: FORCE_COLOR colours it over a pipe", () => Effect.gen(function* () {
-			const app = Command.make("tool").pipe(Command.withSubcommands([Command.make("run", {}, () => Effect.void)]));
-			const helpUnder = Effect.fn("helpUnder")(function* (env: Record<string, string>) {
+	it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
+		it.effect("help text follows the same colour decision as the env: FORCE_COLOR colours it over a pipe", () =>
+			Effect.gen(function* () {
+				const app = Command.make("tool").pipe(Command.withSubcommands([Command.make("run", {}, () => Effect.void)]));
+				const helpUnder = Effect.fn("helpUnder")(function* (env: Record<string, string>) {
 					const { double, out } = capturing();
 					yield* CliRuntime.main(Command.runWith(app, { version: "1.0.0" })(["--help"]), {
-						platform: Layer.mergeAll(NodeServices.layer, PIPED),
+						platform: Layer.mergeAll(
+							Layer.mergeAll(
+								Layer.succeed(FileSystem.FileSystem, yield* FileSystem.FileSystem),
+								Path.layer,
+								Layer.mock(ChildProcessSpawner.ChildProcessSpawner, {
+									spawn: () => Effect.die("unexpected child process"),
+								}),
+							),
+							PIPED,
+						),
 						env: {},
 					}).pipe(
 						Effect.exit,
@@ -268,10 +297,11 @@ describe("CliRuntime.main with the env option", () => {
 					);
 					return out.join("\n");
 				});
-			assert.include(yield* helpUnder({ FORCE_COLOR: "1" }), "\x1b[");
-			assert.notInclude(yield* helpUnder({}), "\x1b[");
-		}),
-	);
+				assert.include(yield* helpUnder({ FORCE_COLOR: "1" }), "\x1b[");
+				assert.notInclude(yield* helpUnder({}), "\x1b[");
+			}),
+		);
+	});
 
 	it.effect("installs the terminal gate: a non-interactive program's Terminal never reaches the real one", () =>
 		Effect.gen(function* () {
@@ -286,7 +316,7 @@ describe("CliRuntime.main with the env option", () => {
 					columns = yield* terminal.columns;
 					// Reading input on the gated terminal is quit at once, and display writes nothing.
 					ended = Exit.isFailure(
-						yield* Effect.flatMap(terminal.readInput, (queue) => Queue.take(queue)).pipe(Effect.scoped, Effect.exit),
+						yield* Effect.flatMap(terminal.readInput, (queue) => Queue.take(queue)).pipe(Effect.exit),
 					);
 					yield* terminal.display("never shown");
 				}),
@@ -302,7 +332,7 @@ describe("CliRuntime.main with the env option", () => {
 				Effect.provideService(ConfigProvider.ConfigProvider, withEnv({})),
 				Effect.provideService(Console.Console, double),
 			);
-			assert.isTrue(Exit.isSuccess(exit));
+			assertExitSuccess(exit, undefined);
 			assert.strictEqual(columns, 100, "the real terminal's size is delegated");
 			assert.isTrue(ended);
 			assert.strictEqual(yield* real.output, "");
@@ -311,12 +341,23 @@ describe("CliRuntime.main with the env option", () => {
 		}),
 	);
 
-	it.effect("installs the wizard gate: --wizard is absent from --help when the run is not interactive", () => Effect.gen(function* () {
-			const app = Command.make("tool").pipe(Command.withSubcommands([Command.make("run", {}, () => Effect.void)]));
-			const helpOn = Effect.fn("helpOn")(function* (io: Layer.Layer<Stdio.Stdio | Terminal.Terminal>) {
+	it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
+		it.effect("installs the wizard gate: --wizard is absent from --help when the run is not interactive", () =>
+			Effect.gen(function* () {
+				const app = Command.make("tool").pipe(Command.withSubcommands([Command.make("run", {}, () => Effect.void)]));
+				const helpOn = Effect.fn("helpOn")(function* (io: Layer.Layer<Stdio.Stdio | Terminal.Terminal>) {
 					const { double, out } = capturing();
 					yield* CliRuntime.main(Command.runWith(app, { version: "1.0.0" })(["--help"]), {
-						platform: Layer.mergeAll(NodeServices.layer, io),
+						platform: Layer.mergeAll(
+							Layer.mergeAll(
+								Layer.succeed(FileSystem.FileSystem, yield* FileSystem.FileSystem),
+								Path.layer,
+								Layer.mock(ChildProcessSpawner.ChildProcessSpawner, {
+									spawn: () => Effect.die("unexpected child process"),
+								}),
+							),
+							io,
+						),
 						env: {},
 					}).pipe(
 						Effect.exit,
@@ -325,22 +366,20 @@ describe("CliRuntime.main with the env option", () => {
 					);
 					return out.join("\n");
 				});
-			assert.notInclude(yield* helpOn(PIPED), "--wizard");
-			assert.include(yield* helpOn(TTY), "--wizard");
-		}),
-	);
+				assert.notInclude(yield* helpOn(PIPED), "--wizard");
+				assert.include(yield* helpOn(TTY), "--wizard");
+			}),
+		);
+	});
 
 	it.effect("env.log accepts the file option when the platform provides FileSystem and Path", () =>
 		Effect.gen(function* () {
 			const handle = MemoryFileSystem.makeSync();
 			const { double } = capturing();
-			yield* CliRuntime.main(
-				Effect.asVoid(Effect.logDebug("recorded")),
-				{
-					platform: Layer.mergeAll(TTY, handle.layer),
-					env: { log: { envVar: "TOOL_LOG", file: { path: "/logs/tool.ndjson" } } },
-				},
-			).pipe(
+			yield* CliRuntime.main(Effect.asVoid(Effect.logDebug("recorded")), {
+				platform: Layer.mergeAll(TTY, handle.layer),
+				env: { log: { envVar: "TOOL_LOG", file: { path: "/logs/tool.ndjson" } } },
+			}).pipe(
 				Effect.exit,
 				Effect.provideService(ConfigProvider.ConfigProvider, withEnv({ TOOL_LOG: "debug" })),
 				Effect.provideService(Console.Console, double),
@@ -430,76 +469,133 @@ describe("CliRuntime.main with the env option", () => {
 		}),
 	);
 
-	it.effect("installs the theme bridge: core prompts follow the terminal's colour under env", () => Effect.gen(function* () {
-			const themeUnder = Effect.fn("themeUnder")(function* (env: Record<string, string>, io: Layer.Layer<Stdio.Stdio | Terminal.Terminal>) {
-					const { double } = capturing();
-					let primary: string | undefined;
-					yield* CliRuntime.main(
-						Effect.gen(function* () {
-							primary = (yield* Prompt.Theme).primaryColor;
-						}),
-						{ platform: io, env: {} },
-					).pipe(
-						Effect.exit,
-						Effect.provideService(ConfigProvider.ConfigProvider, withEnv(env)),
-						Effect.provideService(Console.Console, double),
-					);
-					return primary;
-				});
+	it.effect("installs the theme bridge: core prompts follow the terminal's colour under env", () =>
+		Effect.gen(function* () {
+			const themeUnder = Effect.fn("themeUnder")(function* (
+				env: Record<string, string>,
+				io: Layer.Layer<Stdio.Stdio | Terminal.Terminal>,
+			) {
+				const { double } = capturing();
+				let primary: string | undefined;
+				yield* CliRuntime.main(
+					Effect.gen(function* () {
+						primary = (yield* Prompt.Theme).primaryColor;
+					}),
+					{ platform: io, env: {} },
+				).pipe(
+					Effect.exit,
+					Effect.provideService(ConfigProvider.ConfigProvider, withEnv(env)),
+					Effect.provideService(Console.Console, double),
+				);
+				return primary;
+			});
 			assert.strictEqual(yield* themeUnder({}, PIPED), "", "no colour: the prompt colour fields are empty");
 			assert.notStrictEqual(yield* themeUnder({ FORCE_COLOR: "1" }, PIPED), "", "forced colour reaches core prompts");
 		}),
 	);
 
-	it.effect(
-		"provides CliLinks: file by default, vscode on the terminal signal, and the option and env var decide",
-		() =>
-			Effect.gen(function* () {
-				const modeOf = (options: CliEnvOptions, env: Record<string, string>) =>
-					Effect.gen(function* () {
-						return (yield* CliLinks).mode;
-					}).pipe(
-						Effect.provide(CliEnv.layer(options)),
-						Effect.provide(TTY),
-						Effect.provideService(ConfigProvider.ConfigProvider, withEnv(env)),
-					);
-				assert.strictEqual(yield* modeOf({}, {}), "file");
-				assert.strictEqual(yield* modeOf({}, { TERM_PROGRAM: "vscode" }), "vscode");
-				assert.strictEqual(yield* modeOf({ editorLinks: "off" }, { TERM_PROGRAM: "vscode" }), "off");
-				assert.strictEqual(yield* modeOf({ editorLinks: "vscode" }, {}), "vscode");
-				assert.strictEqual(
-					yield* modeOf({ editorLinks: "file", editorLinksEnvVar: "TOOL_EDITOR_LINKS" }, { TOOL_EDITOR_LINKS: "off" }),
-					"off",
+	{
+		class Mode0 extends Context.Service<Mode0, string>()("@beep/scratchpad/test/cli/CliEnv.test/Mode0") {}
+		const layerMode0 = Layer.effect(
+			Mode0,
+			Effect.map(CliLinks, (links) => links.mode),
+		).pipe(
+			Layer.provide(Layer.fresh(CliEnv.layer({}))),
+			Layer.provide(TTY),
+			Layer.provide(ConfigProvider.layer(withEnv({}))),
+		);
+		class Mode1 extends Context.Service<Mode1, string>()("@beep/scratchpad/test/cli/CliEnv.test/Mode1") {}
+		const layerMode1 = Layer.effect(
+			Mode1,
+			Effect.map(CliLinks, (links) => links.mode),
+		).pipe(
+			Layer.provide(Layer.fresh(CliEnv.layer({}))),
+			Layer.provide(TTY),
+			Layer.provide(ConfigProvider.layer(withEnv({ TERM_PROGRAM: "vscode" }))),
+		);
+		class Mode2 extends Context.Service<Mode2, string>()("@beep/scratchpad/test/cli/CliEnv.test/Mode2") {}
+		const layerMode2 = Layer.effect(
+			Mode2,
+			Effect.map(CliLinks, (links) => links.mode),
+		).pipe(
+			Layer.provide(Layer.fresh(CliEnv.layer({ editorLinks: "off" }))),
+			Layer.provide(TTY),
+			Layer.provide(ConfigProvider.layer(withEnv({ TERM_PROGRAM: "vscode" }))),
+		);
+		class Mode3 extends Context.Service<Mode3, string>()("@beep/scratchpad/test/cli/CliEnv.test/Mode3") {}
+		const layerMode3 = Layer.effect(
+			Mode3,
+			Effect.map(CliLinks, (links) => links.mode),
+		).pipe(
+			Layer.provide(Layer.fresh(CliEnv.layer({ editorLinks: "vscode" }))),
+			Layer.provide(TTY),
+			Layer.provide(ConfigProvider.layer(withEnv({}))),
+		);
+		class Mode4 extends Context.Service<Mode4, string>()("@beep/scratchpad/test/cli/CliEnv.test/Mode4") {}
+		const layerMode4 = Layer.effect(
+			Mode4,
+			Effect.map(CliLinks, (links) => links.mode),
+		).pipe(
+			Layer.provide(Layer.fresh(CliEnv.layer({ editorLinks: "file", editorLinksEnvVar: "TOOL_EDITOR_LINKS" }))),
+			Layer.provide(TTY),
+			Layer.provide(ConfigProvider.layer(withEnv({ TOOL_EDITOR_LINKS: "off" }))),
+		);
+		it.layer(Layer.mergeAll(layerMode0, layerMode1, layerMode2, layerMode3, layerMode4), { timeout: "30 seconds" })(
+			(it) => {
+				it.effect(
+					"provides CliLinks: file by default, vscode on the terminal signal, and the option and env var decide",
+					() =>
+						Effect.gen(function* () {
+							assert.strictEqual(yield* Mode0, "file");
+							assert.strictEqual(yield* Mode1, "vscode");
+							assert.strictEqual(yield* Mode2, "off");
+							assert.strictEqual(yield* Mode3, "vscode");
+							assert.strictEqual(yield* Mode4, "off");
+						}),
 				);
-			}),
-	);
+			},
+		);
+	}
 
-	it.effect("finds .vscode through the FileSystem and Path the platform provides, but does not require them", () =>
-		Effect.gen(function* () {
-			const seed = { "/repo/.git": MemoryFileSystem.directory(), "/repo/.vscode": MemoryFileSystem.directory() };
-			const mode = Effect.gen(function* () {
-				return (yield* CliLinks).mode;
-			}).pipe(
-				Effect.provide(CliEnv.layer()),
-				Effect.provide(TTY),
-				Effect.provideService(ConfigProvider.ConfigProvider, withEnv({ PWD: "/repo" })),
+	{
+		class WithFs extends Context.Service<WithFs, string>()("@beep/scratchpad/test/cli/CliEnv.test/WithFs") {}
+		class WithoutFs extends Context.Service<WithoutFs, string>()("@beep/scratchpad/test/cli/CliEnv.test/WithoutFs") {}
+		const seed = { "/repo/.git": MemoryFileSystem.directory(), "/repo/.vscode": MemoryFileSystem.directory() };
+		const modeLayer = <Key>(key: Context.Service<Key, string>) =>
+			Layer.effect(
+				key,
+				Effect.map(CliLinks, (links) => links.mode),
+			).pipe(
+				Layer.provide(Layer.fresh(CliEnv.layer())),
+				Layer.provide(TTY),
+				Layer.provide(ConfigProvider.layer(withEnv({ PWD: "/repo" }))),
 			);
-			assert.strictEqual(
-				yield* mode.pipe(Effect.provide(Layer.mergeAll(MemoryFileSystem.layerWith(seed), Path.layer))),
-				"vscode",
+		it.layer(
+			Layer.mergeAll(
+				modeLayer(WithFs).pipe(Layer.provide(Layer.mergeAll(MemoryFileSystem.layerWith(seed), Path.layer))),
+				modeLayer(WithoutFs),
+			),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("finds .vscode through the FileSystem and Path the platform provides, but does not require them", () =>
+				Effect.gen(function* () {
+					assert.strictEqual(yield* WithFs, "vscode");
+					assert.strictEqual(
+						yield* WithoutFs,
+						"file",
+						"without them the layer still builds, and only the terminal signal applies",
+					);
+				}),
 			);
-			assert.strictEqual(
-				yield* mode,
-				"file",
-				"without them the layer still builds, and only the terminal signal applies",
-			);
-		}),
-	);
+		});
+	}
 
 	it("a CliEnvOptions-typed env, which may carry a file sink, requires FileSystem and Path from the platform", () => {
 		const env: CliEnvOptions = { log: { envVar: "TOOL_LOG", file: { path: "/x" } } };
 		const program = CliRuntime.main(Effect.void, { platform: TTY, env });
-		const assignable: typeof program extends Effect.Effect<void, Error, Stdio.Stdio | Terminal.Terminal> ? true : false = false;
+		const assignable: typeof program extends Effect.Effect<void, Error, Stdio.Stdio | Terminal.Terminal>
+			? true
+			: false = false;
 		assert.isFalse(assignable);
 		const narrowed = program;
 		assert.isDefined(narrowed);

@@ -596,27 +596,26 @@ const assertOutcome = (exit: Exit.Exit<unknown, PlatformError.PlatformError>, ex
 };
 
 export const errnoSuite: {
- <E>(fsLayer: Layer.Layer<FileSystem.FileSystem, E>): (implementation: Implementation) => void;
- <E>(implementation: Implementation, fsLayer: Layer.Layer<FileSystem.FileSystem, E>): void;
+	<E>(fsLayer: Layer.Layer<FileSystem.FileSystem, E>): (implementation: Implementation) => void;
+	<E>(implementation: Implementation, fsLayer: Layer.Layer<FileSystem.FileSystem, E>): void;
 } = dual(2, <E>(implementation: Implementation, fsLayer: Layer.Layer<FileSystem.FileSystem, E>) =>
-	layer(fsLayer, { timeout: { seconds: 30 } })(`FileSystem errno parity (${implementation})`, (it) => {
+	layer(fsLayer, { timeout: "30 seconds" })(`FileSystem errno parity (${implementation})`, (it) => {
 		describe("failure shape matches the node adapter", () => {
 			for (const testCase of cases) {
 				it.effect(testCase.name, () =>
-					Effect.scoped(
-						Effect.gen(function* () {
-							const fs = yield* FileSystem.FileSystem;
-							const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-filesystem-errno-" });
-							const p = (...segments: ReadonlyArray<string>) => [root, ...segments].join("/");
-							yield* seedTree(fs, p);
-							const exit = yield* testCase.run(fs, p).pipe(Effect.scoped, Effect.exit);
-							assertOutcome(exit, resolveExpectation(testCase.expect, implementation));
-							if (testCase.check !== undefined && Exit.isSuccess(exit)) {
-								yield* testCase.check(exit.value, fs, p);
-							}
-						}),
-					),
+					Effect.gen(function* () {
+						const fs = yield* FileSystem.FileSystem;
+						const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-filesystem-errno-" });
+						const p = (...segments: ReadonlyArray<string>) => [root, ...segments].join("/");
+						yield* seedTree(fs, p);
+						const exit = yield* testCase.run(fs, p).pipe(Effect.exit);
+						assertOutcome(exit, resolveExpectation(testCase.expect, implementation));
+						if (testCase.check !== undefined && Exit.isSuccess(exit)) {
+							yield* testCase.check(exit.value, fs, p);
+						}
+					}),
 				);
 			}
 		});
-	}));
+	}),
+);

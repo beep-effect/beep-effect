@@ -1,11 +1,10 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import type { MemoryFileSystemOptions, MemoryFileSystemSeedEntry } from "../../effected/memfs/index.ts";
+import type { MemoryFileSystemSeedEntry } from "../../effected/memfs/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import type * as FileSystem from "effect/FileSystem";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
@@ -34,8 +33,6 @@ const FILES: Record<string, string> = {
 
 /** A real volume holding exactly `FILES`; any other path reads an honest `NotFound`. */
 const files = MemoryFileSystem.layerWith(FILES);
-
-const hashing = <A, E>(program: Effect.Effect<A, E, FileSystem.FileSystem>) => program.pipe(Effect.provide(files));
 
 describe("CacheKey", () => {
 	describe("the key and its ladder", () => {
@@ -135,8 +132,14 @@ describe("CacheKey", () => {
 		it("survives a schema round-trip without regaining a ladder", () => {
 			// The policy is a plain field, so a key that crossed a serialization
 			// boundary (state, JSON output) keeps meaning "exact match only".
-			const encoded = flow(S.encodeResult(CacheKey), Result.getOrThrowWith((error) => error))(CacheKey.of("Linux", "pnpm-store").withoutRestoreKeys());
-			const decoded = flow(S.decodeResult(CacheKey), Result.getOrThrowWith((error) => error))(encoded);
+			const encoded = flow(
+				S.encodeResult(CacheKey),
+				Result.getOrThrowWith((error) => error),
+			)(CacheKey.of("Linux", "pnpm-store").withoutRestoreKeys());
+			const decoded = flow(
+				S.decodeResult(CacheKey),
+				Result.getOrThrowWith((error) => error),
+			)(encoded);
 			assert.deepStrictEqual(decoded.restoreKeys, []);
 			assert.strictEqual(decoded.key, "Linux-pnpm-store");
 		});
@@ -252,107 +255,112 @@ describe("CacheKey", () => {
 	});
 
 	describe("hashFiles", () => {
-		it.effect("hashes files the way @actions/glob does", () =>
-			hashing(
+		it.layer(files, { timeout: "30 seconds" })((it) => {
+			it.effect("hashes files the way @actions/glob does", () =>
 				Effect.gen(function* () {
 					const digest = yield* CacheKey.hashFiles(["/w/alpha.txt", "/w/beta.txt"]);
-					assert.deepStrictEqual(digest, O.some(ALPHA_BETA));
+					assertSome(digest, ALPHA_BETA);
 				}),
-			),
-		);
+			);
+		});
 
-		it.effect("does not depend on the order the caller discovered files in", () =>
-			hashing(
+		it.layer(files, { timeout: "30 seconds" })((it) => {
+			it.effect("does not depend on the order the caller discovered files in", () =>
 				Effect.gen(function* () {
 					const digest = yield* CacheKey.hashFiles(["/w/beta.txt", "/w/alpha.txt"]);
-					assert.deepStrictEqual(digest, O.some(ALPHA_BETA));
+					assertSome(digest, ALPHA_BETA);
 				}),
-			),
-		);
+			);
+		});
 
-		it.effect("counts a repeated path once", () =>
-			hashing(
+		it.layer(files, { timeout: "30 seconds" })((it) => {
+			it.effect("counts a repeated path once", () =>
 				Effect.gen(function* () {
 					const digest = yield* CacheKey.hashFiles(["/w/alpha.txt", "/w/beta.txt", "/w/alpha.txt"]);
-					assert.deepStrictEqual(digest, O.some(ALPHA_BETA));
+					assertSome(digest, ALPHA_BETA);
 				}),
-			),
-		);
+			);
+		});
 
-		it.effect("distinguishes different content", () =>
-			hashing(
+		it.layer(files, { timeout: "30 seconds" })((it) => {
+			it.effect("distinguishes different content", () =>
 				Effect.gen(function* () {
 					const both = yield* CacheKey.hashFiles(["/w/alpha.txt", "/w/beta.txt"]);
 					const one = yield* CacheKey.hashFiles(["/w/alpha.txt"]);
 					assert.notDeepEqual(both, one);
 				}),
-			),
-		);
+			);
+		});
 
-		it.effect("reports nothing rather than a digest when no file matched", () =>
-			hashing(
+		it.layer(files, { timeout: "30 seconds" })((it) => {
+			it.effect("reports nothing rather than a digest when no file matched", () =>
 				Effect.gen(function* () {
 					// A digest of nothing would be a constant, so every run would key
 					// against the same value and the cache would always hit with the
 					// wrong contents.
-					assert.isTrue(O.isNone(yield* CacheKey.hashFiles([])));
+					assertNone(yield* CacheKey.hashFiles([]));
 				}),
-			),
-		);
+			);
+		});
 
-		it.effect("reads the files concurrently rather than one at a time", () =>
-			Effect.gen(function* () {
-				// The discriminating observation, and the only one that catches the
-				// mistake this guards against: `Effect.all` defaults to `concurrency: 1`,
-				// so a version that merely *looks* parallel — an array of effects handed
-				// to `Effect.all` with no option — still reads one file at a time, and
-				// every other test in this describe block passes for it. Two reads have to
-				// be in flight at once.
-				//
-				// Deliberately NOT a latch the second read opens: a sequential run would
-				// then block forever, and `it.effect` runs on the TestClock, so no timeout
-				// inside the program can fire and the mutant reports as a five-second hang
-				// rather than a failed assertion. Yielding instead keeps both branches
-				// terminating and leaves the sequential one with `overlapped === false`.
-				let active = 0;
-				let overlapped = false;
-				// Wrap-and-delegate over the real volume: the content comes from the
-				// seed, the fault only counts reads in flight.
-				const observed = MemoryFileSystem.layerWith(FILES, {
-					faults: (base) => ({
-						readFile: Effect.fn("readFile")(function*(path) {
-								active += 1;
-								if (active > 1) {
-									overlapped = true;
-								}
-								// A suspension point, so a sibling fiber gets to run before this
-								// read completes. Without one, a concurrent `Effect.all` could still
-								// finish each read in a single uninterrupted step and never overlap.
-								yield* Effect.yieldNow;
-								yield* Effect.yieldNow;
-								const bytes = yield* base.readFile(path);
-								active -= 1;
-								return bytes;
-							}),
+		{
+			// The discriminating observation, and the only one that catches the
+			// mistake this guards against: `Effect.all` defaults to `concurrency: 1`,
+			// so a version that merely *looks* parallel — an array of effects handed
+			// to `Effect.all` with no option — still reads one file at a time, and
+			// every other test in this describe block passes for it. Two reads have to
+			// be in flight at once.
+			//
+			// Deliberately NOT a latch the second read opens: a sequential run would
+			// then block forever, and `it.effect` runs on the TestClock, so no timeout
+			// inside the program can fire and the mutant reports as a five-second hang
+			// rather than a failed assertion. Yielding instead keeps both branches
+			// terminating and leaves the sequential one with `overlapped === false`.
+			let active = 0;
+			let overlapped = false;
+			// Wrap-and-delegate over the real volume: the content comes from the
+			// seed, the fault only counts reads in flight.
+			const observed = MemoryFileSystem.layerWith(FILES, {
+				faults: (base) => ({
+					readFile: Effect.fn("readFile")(function* (path) {
+						active += 1;
+						if (active > 1) {
+							overlapped = true;
+						}
+						// A suspension point, so a sibling fiber gets to run before this
+						// read completes. Without one, a concurrent `Effect.all` could still
+						// finish each read in a single uninterrupted step and never overlap.
+						yield* Effect.yieldNow;
+						yield* Effect.yieldNow;
+						const bytes = yield* base.readFile(path);
+						active -= 1;
+						return bytes;
 					}),
-				});
-				const digest = yield* CacheKey.hashFiles(["/w/alpha.txt", "/w/beta.txt"]).pipe(Effect.provide(observed));
-				assert.isTrue(overlapped, "the two reads never overlapped — Effect.all ran sequentially");
-				// And concurrency did not cost correctness: the digest still folds the
-				// per-file digests in sorted order, not completion order.
-				assert.deepStrictEqual(digest, O.some(ALPHA_BETA));
-			}),
-		);
+				}),
+			});
 
-		it.effect("fails typed, naming the file, when one cannot be read", () =>
-			hashing(
+			it.layer(observed, { timeout: "30 seconds" })((it) => {
+				it.effect("reads the files concurrently rather than one at a time", () =>
+					Effect.gen(function* () {
+						const digest = yield* CacheKey.hashFiles(["/w/alpha.txt", "/w/beta.txt"]);
+						assert.isTrue(overlapped, "the two reads never overlapped — Effect.all ran sequentially");
+						// And concurrency did not cost correctness: the digest still folds the
+						// per-file digests in sorted order, not completion order.
+						assertSome(digest, ALPHA_BETA);
+					}),
+				);
+			});
+		}
+
+		it.layer(files, { timeout: "30 seconds" })((it) => {
+			it.effect("fails typed, naming the file, when one cannot be read", () =>
 				Effect.gen(function* () {
 					const error = yield* Effect.flip(CacheKey.hashFiles(["/w/alpha.txt", "/w/gone.txt"]));
 					assert.instanceOf(error, CacheKeyReadError);
 					assert.strictEqual(error.path, "/w/gone.txt");
 				}),
-			),
-		);
+			);
+		});
 	});
 
 	describe("hashing what a pattern set matches", () => {
@@ -369,18 +377,10 @@ describe("CacheKey", () => {
 			"/ws/readme.md": "docs\n",
 		};
 
-		const walking = <A, E>(
-			use: (root: string) => Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>,
-			extra: Record<string, MemoryFileSystemSeedEntry> = {},
-			options: MemoryFileSystemOptions = {},
-		) =>
-			use(WORKSPACE).pipe(
-				Effect.provide(Layer.mergeAll(MemoryFileSystem.layerWith({ ...TREE, ...extra }, options), Path.layer)),
-			);
-
-		it.effect("matches relative to the workspace, and honours an exclusion", () =>
-			walking((root) =>
+		it.layer(Layer.mergeAll(MemoryFileSystem.layerWith(TREE), Path.layer), { timeout: "30 seconds" })((it) => {
+			it.effect("matches relative to the workspace, and honours an exclusion", () =>
 				Effect.gen(function* () {
+					const root = WORKSPACE;
 					const matched = yield* CacheKey.matchingFiles({
 						workspace: root,
 						patterns: ["**/pnpm-lock.yaml", "!**/node_modules/**"],
@@ -393,151 +393,178 @@ describe("CacheKey", () => {
 						["packages/a/pnpm-lock.yaml", "pnpm-lock.yaml"],
 					);
 				}),
-			),
-		);
+			);
+		});
 
-		it.effect("excludes a directory whose name matches the pattern", () =>
-			walking(
-				(root) =>
-					Effect.gen(function* () {
-						// A directory called `notes.txt` matches `**\/*.txt` and is not a file.
-						// Without the check it reaches `hashFiles`, which fails on the read —
-						// so this is the difference between a working cache key and a failing
-						// action.
-						const matched = yield* CacheKey.matchingFiles({ workspace: root, patterns: ["*.txt", "**/*.txt"] });
-						assert.deepStrictEqual(
-							matched.map((file) => file.slice(root.length + 1)),
-							["notes.txt/inner.txt"],
-						);
-					}),
-				{ "/ws/notes.txt/inner.txt": "inner\n" },
-			),
-		);
-
-		it.effect("is exactly hashFiles over what it matched", () =>
-			walking((root) =>
+		it.layer(
+			Layer.mergeAll(MemoryFileSystem.layerWith({ ...TREE, ...{ "/ws/notes.txt/inner.txt": "inner\n" } }), Path.layer),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("excludes a directory whose name matches the pattern", () =>
 				Effect.gen(function* () {
+					const root = WORKSPACE;
+					// A directory called `notes.txt` matches `**\/*.txt` and is not a file.
+					// Without the check it reaches `hashFiles`, which fails on the read —
+					// so this is the difference between a working cache key and a failing
+					// action.
+					const matched = yield* CacheKey.matchingFiles({ workspace: root, patterns: ["*.txt", "**/*.txt"] });
+					assert.deepStrictEqual(
+						matched.map((file) => file.slice(root.length + 1)),
+						["notes.txt/inner.txt"],
+					);
+				}),
+			);
+		});
+
+		it.layer(Layer.mergeAll(MemoryFileSystem.layerWith(TREE), Path.layer), { timeout: "30 seconds" })((it) => {
+			it.effect("is exactly hashFiles over what it matched", () =>
+				Effect.gen(function* () {
+					const root = WORKSPACE;
 					const matched = yield* CacheKey.matchingFiles({ workspace: root, patterns: ["**/pnpm-lock.yaml"] });
 					assert.deepStrictEqual(
 						yield* CacheKey.hashMatching({ workspace: root, patterns: ["**/pnpm-lock.yaml"] }),
 						yield* CacheKey.hashFiles(matched),
 					);
 				}),
-			),
-		);
+			);
+		});
 
-		it.effect("reports nothing rather than a digest when the patterns match nothing", () =>
-			walking((root) =>
+		it.layer(Layer.mergeAll(MemoryFileSystem.layerWith(TREE), Path.layer), { timeout: "30 seconds" })((it) => {
+			it.effect("reports nothing rather than a digest when the patterns match nothing", () =>
 				Effect.gen(function* () {
-					assert.isTrue(O.isNone(yield* CacheKey.hashMatching({ workspace: root, patterns: ["**/*.absent"] })));
+					const root = WORKSPACE;
+					assertNone(yield* CacheKey.hashMatching({ workspace: root, patterns: ["**/*.absent"] }));
 				}),
-			),
-		);
+			);
+		});
 
-		it.effect("fails typed, naming the pattern, when one will not compile", () =>
-			walking((root) =>
+		it.layer(Layer.mergeAll(MemoryFileSystem.layerWith(TREE), Path.layer), { timeout: "30 seconds" })((it) => {
+			it.effect("fails typed, naming the pattern, when one will not compile", () =>
 				Effect.gen(function* () {
+					const root = WORKSPACE;
 					const hostile = "x".repeat(70_000);
 					const error = yield* Effect.flip(CacheKey.matchingFiles({ workspace: root, patterns: [hostile] }));
 					assert.instanceOf(error, CacheKeyBadPatternError);
 					assert.strictEqual(error.pattern, hostile);
 				}),
-			),
-		);
+			);
+		});
 
-		it.effect("matches two-dot filenames consistently as literals and wildcards", () =>
-			walking(
-				(root) => Effect.gen(function* () {
+		it.layer(Layer.mergeAll(MemoryFileSystem.layerWith({ ...TREE, ...{ "/ws/..lock": "two dots\n" } }), Path.layer), {
+			timeout: "30 seconds",
+		})((it) => {
+			it.effect("matches two-dot filenames consistently as literals and wildcards", () =>
+				Effect.gen(function* () {
+					const root = WORKSPACE;
 					const literal = yield* CacheKey.matchingFiles({ workspace: root, patterns: ["..lock"] });
 					const wildcard = yield* CacheKey.matchingFiles({ workspace: root, patterns: ["..*"] });
 					assert.deepStrictEqual(literal, ["/ws/..lock"]);
 					assert.deepStrictEqual(wildcard, literal);
 					const literalHash = yield* CacheKey.hashMatching({ workspace: root, patterns: ["..lock"] });
-					assert.isTrue(O.isSome(literalHash));
+					assertSome(literalHash, O.getOrThrow(literalHash));
 					assert.deepStrictEqual(literalHash, yield* CacheKey.hashMatching({ workspace: root, patterns: ["..*"] }));
 				}),
-				{ "/ws/..lock": "two dots\n" },
-			),
-		);
+			);
+		});
 
-		it.effect("keeps deterministic code-unit order for mixed-case and Unicode matches", () =>
-			walking(
-				(root) => Effect.gen(function* () {
+		it.layer(
+			Layer.mergeAll(
+				MemoryFileSystem.layerWith({
+					...TREE,
+					...{ "/ws/ä.order": "last", "/ws/a.order": "middle", "/ws/Z.order": "first" },
+				}),
+				Path.layer,
+			),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("keeps deterministic code-unit order for mixed-case and Unicode matches", () =>
+				Effect.gen(function* () {
+					const root = WORKSPACE;
 					const matched = yield* CacheKey.matchingFiles({ workspace: root, patterns: ["*.order"] });
 					assert.deepStrictEqual(matched, ["/ws/Z.order", "/ws/a.order", "/ws/ä.order"]);
-					assert.deepStrictEqual(yield* CacheKey.hashFiles(matched), yield* CacheKey.hashFiles(["/ws/ä.order", "/ws/a.order", "/ws/Z.order"]));
+					assert.deepStrictEqual(
+						yield* CacheKey.hashFiles(matched),
+						yield* CacheKey.hashFiles(["/ws/ä.order", "/ws/a.order", "/ws/Z.order"]),
+					);
 				}),
-				{ "/ws/ä.order": "last", "/ws/a.order": "middle", "/ws/Z.order": "first" },
-			),
-		);
+			);
+		});
 
-		it.effect("drops a literal that climbs above the workspace, even when the file exists", () =>
-			walking(
-				(root) =>
-					Effect.gen(function* () {
-						// The old whole-workspace walk could never surface a file above the
-						// workspace; a per-literal stat could, so the containment is explicit.
-						// The sibling lives BESIDE the workspace, under the same parent.
-						const matched = yield* CacheKey.matchingFiles({
-							workspace: root,
-							patterns: ["../ws-outside.lock", "pnpm-lock.yaml"],
-						});
-						assert.deepStrictEqual(
-							matched.map((file) => file.slice(root.length + 1)),
-							["pnpm-lock.yaml"],
-						);
-					}),
-				{ "/ws-outside.lock": "outside\n" },
-			),
-		);
-
-		it.effect("reads an absent literal as a miss but an unreadable one as a typed failure", () =>
-			walking(
-				(root) =>
-					Effect.gen(function* () {
-						// Absent: parity with the walk, which never reported it.
-						const absent = yield* CacheKey.matchingFiles({ workspace: root, patterns: ["not-here.lock"] });
-						assert.deepStrictEqual(absent, []);
-						// Unreadable: the file the caller asked for exists and cannot be
-						// stat'ed — a key computed without it would restore the wrong cache,
-						// so this MUST fail rather than quietly narrow the set.
-						const error = yield* Effect.flip(
-							CacheKey.matchingFiles({ workspace: root, patterns: ["sealed/pnpm-lock.yaml"] }),
-						);
-						assert.instanceOf(error, CacheKeyReadError);
-						assert.strictEqual(error.path, SEALED);
-					}),
-				// The file is genuinely present; only its `stat` is denied — the
-				// EACCES a `chmod 0o000` parent directory produces on a real disk.
-				{ [SEALED]: "hidden\n" },
-				{
-					faults: {
-						stat: (path) =>
-							path === SEALED
-								? Effect.fail(
-										systemError({
-											_tag: "PermissionDenied",
-											module: "FileSystem",
-											method: "stat",
-											pathOrDescriptor: path,
-										}),
-									)
-								: undefined,
-					},
-				},
-			),
-		);
-
-		it.effect("fails typed, naming the workspace, when it cannot be walked", () =>
-			walking((root) =>
+		it.layer(
+			Layer.mergeAll(MemoryFileSystem.layerWith({ ...TREE, ...{ "/ws-outside.lock": "outside\n" } }), Path.layer),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("drops a literal that climbs above the workspace, even when the file exists", () =>
 				Effect.gen(function* () {
+					const root = WORKSPACE;
+					// The old whole-workspace walk could never surface a file above the
+					// workspace; a per-literal stat could, so the containment is explicit.
+					// The sibling lives BESIDE the workspace, under the same parent.
+					const matched = yield* CacheKey.matchingFiles({
+						workspace: root,
+						patterns: ["../ws-outside.lock", "pnpm-lock.yaml"],
+					});
+					assert.deepStrictEqual(
+						matched.map((file) => file.slice(root.length + 1)),
+						["pnpm-lock.yaml"],
+					);
+				}),
+			);
+		});
+
+		it.layer(
+			Layer.mergeAll(
+				MemoryFileSystem.layerWith(
+					{ ...TREE, ...{ [SEALED]: "hidden\n" } },
+					{
+						faults: {
+							stat: (path) =>
+								path === SEALED
+									? Effect.fail(
+											systemError({
+												_tag: "PermissionDenied",
+												module: "FileSystem",
+												method: "stat",
+												pathOrDescriptor: path,
+											}),
+										)
+									: undefined,
+						},
+					},
+				),
+				Path.layer,
+			),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect("reads an absent literal as a miss but an unreadable one as a typed failure", () =>
+				Effect.gen(function* () {
+					const root = WORKSPACE;
+					// Absent: parity with the walk, which never reported it.
+					const absent = yield* CacheKey.matchingFiles({ workspace: root, patterns: ["not-here.lock"] });
+					assert.deepStrictEqual(absent, []);
+					// Unreadable: the file the caller asked for exists and cannot be
+					// stat'ed — a key computed without it would restore the wrong cache,
+					// so this MUST fail rather than quietly narrow the set.
+					const error = yield* Effect.flip(
+						CacheKey.matchingFiles({ workspace: root, patterns: ["sealed/pnpm-lock.yaml"] }),
+					);
+					assert.instanceOf(error, CacheKeyReadError);
+					assert.strictEqual(error.path, SEALED);
+				}),
+			);
+		});
+
+		it.layer(Layer.mergeAll(MemoryFileSystem.layerWith(TREE), Path.layer), { timeout: "30 seconds" })((it) => {
+			it.effect("fails typed, naming the workspace, when it cannot be walked", () =>
+				Effect.gen(function* () {
+					const root = WORKSPACE;
 					const absent = `${root}/not-here`;
 					const error = yield* Effect.flip(CacheKey.matchingFiles({ workspace: absent, patterns: ["**"] }));
 					assert.instanceOf(error, CacheKeyReadError);
 					assert.strictEqual(error.path, absent);
 				}),
-			),
-		);
+			);
+		});
 	});
 
 	describe("followSymlinks semantics (memfs, no platform package)", () => {
@@ -559,22 +586,22 @@ describe("CacheKey", () => {
 		// descend requires both FileSystem and Path; provide both layers.
 		const symlinkPlatform = Layer.mergeAll(MemoryFileSystem.layerWith(seed), Path.layer);
 
-		it.effect("files reachable only through a symlinked directory contribute to the key", () =>
-			Effect.gen(function* () {
-				const matched = yield* CacheKey.matchingFiles({ workspace: "/repo", patterns: ["src/**/*.ts"] }).pipe(
-					Effect.provide(symlinkPlatform),
-				);
-				// Both sibling links to one target appear — @actions/glob's
-				// per-branch traversalChain enumerates both — and so does the
-				// out-of-workspace link target, matching the runner's hashFiles().
-				assert.deepStrictEqual(matched, [
-					"/repo/src/a.ts",
-					"/repo/src/one/inner.ts",
-					"/repo/src/out/secret.ts",
-					"/repo/src/two/inner.ts",
-				]);
-			}),
-		);
+		it.layer(symlinkPlatform, { timeout: "30 seconds" })((it) => {
+			it.effect("files reachable only through a symlinked directory contribute to the key", () =>
+				Effect.gen(function* () {
+					const matched = yield* CacheKey.matchingFiles({ workspace: "/repo", patterns: ["src/**/*.ts"] });
+					// Both sibling links to one target appear — @actions/glob's
+					// per-branch traversalChain enumerates both — and so does the
+					// out-of-workspace link target, matching the runner's hashFiles().
+					assert.deepStrictEqual(matched, [
+						"/repo/src/a.ts",
+						"/repo/src/one/inner.ts",
+						"/repo/src/out/secret.ts",
+						"/repo/src/two/inner.ts",
+					]);
+				}),
+			);
+		});
 	});
 
 	describe("JSON Schema export", () => {

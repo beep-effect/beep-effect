@@ -2,7 +2,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { fcRuns } from "@beep/fc-runs";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as S from "effect/Schema";
 import { Text, useInput } from "ink";
 import type { ReactElement } from "react";
@@ -76,7 +76,7 @@ describe("UiKey.fromInk", () => {
 			const handle = yield* CliUiTest.render(recording(seen));
 			yield* handle.press(...keys);
 			assert.deepStrictEqual(seen, keys.map(named));
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("names Esc and Ctrl-C, which also end the screen", () =>
@@ -101,7 +101,7 @@ describe("UiKey.fromInk", () => {
 			const handle = yield* CliUiTest.render(recording(seen));
 			yield* handle.type("q Z");
 			assert.deepStrictEqual(seen, [{ _tag: "Char", char: "q" }, named("space"), { _tag: "Char", char: "Z" }]);
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
@@ -118,12 +118,12 @@ const table = KeyTable.make<Action>([
 
 describe("KeyTable", () => {
 	it("matches the first binding for a key, and nothing for an unbound one", () => {
-		assert.deepStrictEqual(table.match(named("space")), O.some("toggle"));
-		assert.deepStrictEqual(table.match({ _tag: "Char", char: "x" }), O.some("toggle"));
-		assert.deepStrictEqual(table.match({ _tag: "Char", char: "q" }), O.some("quit"));
-		assert.deepStrictEqual(table.match(named("tab")), O.some("secret"), "hidden bindings still match");
-		assert.isTrue(O.isNone(table.match(named("enter"))));
-		assert.isTrue(O.isNone(table.match({ _tag: "Char", char: "Q" })), "characters match exactly");
+		assertSome(table.match(named("space")), "toggle");
+		assertSome(table.match({ _tag: "Char", char: "x" }), "toggle");
+		assertSome(table.match({ _tag: "Char", char: "q" }), "quit");
+		assertSome(table.match(named("tab")), "secret");
+		assertNone(table.match(named("enter")));
+		assertNone(table.match({ _tag: "Char", char: "Q" }));
 	});
 
 	it("labels help from the glyph set: arrows under Unicode, words under ASCII, hidden bindings omitted", () => {
@@ -161,14 +161,14 @@ describe("KeyTable", () => {
 
 	it("normalises a typed space to the named space key, which is the only one Ink input ever gives", () => {
 		const spaced = KeyTable.make([{ keys: [{ char: " " }], action: "toggle", help: "toggle" }]);
-		assert.deepStrictEqual(spaced.match(named("space")), O.some("toggle"));
+		assertSome(spaced.match(named("space")), "toggle");
 		assert.deepStrictEqual(spaced.help(Glyphs.unicode), [{ label: "space", help: "toggle" }]);
 	});
 
 	it("the root table cancels with escape on Esc (help: cancel) and interrupt on Ctrl-C (hidden)", () => {
-		assert.deepStrictEqual(KeyTable.root.match(named("escape")), O.some("escape"));
-		assert.deepStrictEqual(KeyTable.root.match(named("ctrl+c")), O.some("interrupt"));
-		assert.isTrue(O.isNone(KeyTable.root.match({ _tag: "Char", char: "q" })), "q is never a root key");
+		assertSome(KeyTable.root.match(named("escape")), "escape");
+		assertSome(KeyTable.root.match(named("ctrl+c")), "interrupt");
+		assertNone(KeyTable.root.match({ _tag: "Char", char: "q" }));
 		assert.deepStrictEqual(KeyTable.root.help(Glyphs.unicode), [{ label: "esc", help: "cancel" }]);
 	});
 });
@@ -187,7 +187,7 @@ describe("useKeys and KeyHelp", () => {
 			yield* handle.press("down", "space", "enter", "up");
 			yield* handle.type("q");
 			assert.deepStrictEqual(dispatched, ["move-down", "toggle", "move-up", "quit"]);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("useKeys dispatches nothing while inactive", () =>
@@ -200,7 +200,7 @@ describe("useKeys and KeyHelp", () => {
 			const handle = yield* CliUiTest.render(() => createElement(Keys));
 			yield* handle.press("down", "space");
 			assert.deepStrictEqual(dispatched, []);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("KeyHelp names every visible binding, then the root's esc cancel, and no hidden one", () =>
@@ -217,7 +217,7 @@ describe("useKeys and KeyHelp", () => {
 			assert.notInclude(line, "never reached");
 			assert.isTrue(line.endsWith("esc cancel"), line);
 			assert.include(yield* handle.frame, "[muted]", "the help line is painted muted");
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("KeyHelp under ASCII glyphs labels with words", () =>
@@ -226,7 +226,7 @@ describe("useKeys and KeyHelp", () => {
 			const line = (yield* handle.plainFrame).trim();
 			assert.include(line, "up/down move");
 			assert.notInclude(line, "↑");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 

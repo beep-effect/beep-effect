@@ -99,7 +99,7 @@ describe("okfit's init wizard through CliUi.prompt, driven by CliUiTest.session"
 				`${Result.getOrThrow(S.encodeUnknownResult(Json)({ profile: "software-project", dir: "docs/okf2", location: ".config/okfit.toml" }))}\n`,
 			);
 			assert.strictEqual(yield* session.mounts, 3);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("not interactive: the discovered defaults, byte-identical, with nothing mounted and Ink never loaded", () =>
@@ -110,7 +110,7 @@ describe("okfit's init wizard through CliUi.prompt, driven by CliUiTest.session"
 			assert.strictEqual(yield* session.stdout, `${Result.getOrThrow(S.encodeUnknownResult(Json)(yield* discover))}\n`);
 			assert.strictEqual(yield* session.mounts, 0);
 			assert.strictEqual(loads.count, before);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("Esc on the second screen: exit 130, and the third screen never mounts", () =>
@@ -125,7 +125,7 @@ describe("okfit's init wizard through CliUi.prompt, driven by CliUiTest.session"
 			assert.strictEqual(yield* session.stderr, "cancelled; nothing written\n");
 			assert.strictEqual(yield* session.stdout, "", "the handler wrote nothing");
 			assert.strictEqual(yield* session.mounts, 2, "two screens mounted, not three");
-		}).pipe(Effect.scoped),
+		}),
 	);
 });
 
@@ -167,7 +167,7 @@ describe("CliUi.prompt under okfit's production wiring (CliRuntime.main with env
 			yield* (yield* session.next({ contains: "Config location" })).press("enter");
 			assert.strictEqual(yield* Fiber.join(program), 0, yield* session.stderr);
 			assert.strictEqual(yield* session.stdout, `${Result.getOrThrow(S.encodeUnknownResult(Json)(yield* discover))}\n`);
-		}).pipe(Effect.scoped),
+		}),
 	);
 
 	it.effect("piped: CliEnv decides not interactive, and the defaults come back with Ink never loaded", () =>
@@ -178,6 +178,6 @@ describe("CliUi.prompt under okfit's production wiring (CliRuntime.main with env
 			assert.strictEqual(yield* session.stdout, `${Result.getOrThrow(S.encodeUnknownResult(Json)(yield* discover))}\n`);
 			assert.strictEqual(yield* session.mounts, 0);
 			assert.strictEqual(loads.count, before);
-		}).pipe(Effect.scoped),
+		}),
 	);
 });

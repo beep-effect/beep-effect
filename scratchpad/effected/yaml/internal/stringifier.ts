@@ -38,15 +38,6 @@ const isYamlMap = S.is(YamlMap);
 const isYamlSeq = S.is(YamlSeq);
 const isYamlAlias = S.is(YamlAlias);
 
-/** A defect raised when a YAML stringifier invariant is violated. */
-class StringifierInvariantFailure extends S.TaggedError<StringifierInvariantFailure>($I`StringifierInvariantFailure`)(
-	"StringifierInvariantFailure",
-	{
-		message: S.String.annotateKey({ description: "The violated stringifier invariant." }),
-	},
-	$I.annote("StringifierInvariantFailure", { description: "A violated invariant while rendering YAML." }),
-) {}
-
 /**
  * Thrown by the stringifier on its failure paths (circular references). The
  * facade catches this and materializes the public stringify error.
@@ -223,7 +214,6 @@ const INDICATOR_CHARS = ":#{}[],&*?|-<>=!%@`\"'";
  * string identity during a parse round-trip.
  */
 function wouldBeResolved(s: string): boolean {
-	if (s === "") return true;
 	if (NULL_RE.test(s)) return true;
 	if (TRUE_RE.test(s)) return true;
 	if (FALSE_RE.test(s)) return true;
@@ -312,8 +302,6 @@ function wouldBeResolved11(s: string): boolean {
 function requiresQuoting(s: string, ignoreType = false, quoteCompat?: QuoteCompat, inFlow = false): boolean {
 	// Empty string must be quoted
 	if (s === "") return true;
-	// Contains newlines — use block literal instead
-	if (s.includes("\n")) return true;
 	// Flow context: any flow indicator anywhere terminates or corrupts the
 	// enclosing collection
 	if (inFlow && /[,[\]{}]/.test(s)) return true;
@@ -322,11 +310,10 @@ function requiresQuoting(s: string, ignoreType = false, quoteCompat?: QuoteCompa
 	// Would be coerced by the requested foreign dialect (same tag exemption)
 	if (!ignoreType && quoteCompat === "yaml-1.1" && wouldBeResolved11(s)) return true;
 	// Starts with whitespace (space/tab)
-	const first = s[0];
-	if (first === undefined) throw StringifierInvariantFailure.make({ message: "Missing first" });
+	const first = s.slice(0, 1);
 	if (first === " " || first === "\t") return true;
 	// Check leading indicator characters
-	if (first !== "" && Str.includes(first)(INDICATOR_CHARS)) {
+	if (Str.includes(first)(INDICATOR_CHARS)) {
 		// ':', '?', '-' only require quoting when followed by whitespace or at end of string
 		if (first === ":" || first === "?" || first === "-") {
 			const second = s[1];
@@ -343,8 +330,7 @@ function requiresQuoting(s: string, ignoreType = false, quoteCompat?: QuoteCompa
 	if (s.includes(": ") || s.includes(":\t") || s.endsWith(":")) return true;
 	if (s.includes(" #") || s.includes("\t#")) return true;
 	// Ends with whitespace (space/tab) — plain scalars lose trailing whitespace
-	const last = s[s.length - 1];
-	if (last === undefined) throw StringifierInvariantFailure.make({ message: "Missing last" });
+	const last = s.slice(-1);
 	if (last === " " || last === "\t") return true;
 	// C0 control characters require quoting. `isControlChar` deliberately
 	// excludes TAB (0x09) and CR (0x0D) for its other callers — the block-scalar
@@ -579,8 +565,11 @@ function renderString(
 		// and single-quoted multi-line scalars — matches libyaml canonical form.
 		if (style === "plain" || style === "single-quoted") {
 			if (canonical) {
-				const sq = renderSingleQuotedMultiline(s, indent);
-				if (sq !== null) return sq;
+				// Flow-quoted continuation whitespace is folded away by YAML readers.
+				if (/\n[ \t]/.test(s)) return renderDoubleQuoted(s, canonical);
+				// Controls and CR were excluded above, so the SQ renderer cannot reject.
+				const sq = O.getOrThrow(O.fromNullOr(renderSingleQuotedMultiline(s, indent)));
+				return sq.replace(/\n'$/, `\n${indent}'`);
 			}
 			return renderBlockLiteral(s, indent, explicitChomp, parentPosition, fidelity, fidelityIndent);
 		}
@@ -625,8 +614,7 @@ function renderString(
 function endsWithKeepChomp(rendered: string): boolean {
 	const match = rendered.match(/[|>][1-9]?[+-]?$|[|>][1-9]?[+-]?(?=\n)/g);
 	if (match === null) return false;
-	const last = match[match.length - 1];
-	if (last === undefined) throw StringifierInvariantFailure.make({ message: "Missing last" });
+	const last = A.getUnsafe(match, match.length - 1);
 	return last.includes("+");
 }
 
@@ -658,11 +646,9 @@ function renderNumber(n: number): string {
 /**
  * Detects circular references by tracking the object ancestor chain.
  */
-function detectCircular(value: unknown, seen: object[]): void {
-	if (P.isObjectKeyword(value) && !P.isFunction(value)) {
-		if (A.some(seen, (ancestor) => ancestor === value)) {
-			throw StringifyFailure.make({ message: "Circular reference detected", reason: "Circular reference detected" });
-		}
+function detectCircular(value: object, seen: object[]): void {
+	if (A.some(seen, (ancestor) => ancestor === value)) {
+		throw StringifyFailure.make({ message: "Circular reference detected", reason: "Circular reference detected" });
 	}
 }
 
@@ -826,16 +812,14 @@ function stringifyArrayLines(arr: unknown[], ctx: StringifyContext, depth: numbe
 			lines.push(`- ${itemLines[0]}`);
 		} else {
 			// First line of a block scalar goes on the same line as `-`
-			const first = itemLines[0];
-			if (first === undefined) throw StringifierInvariantFailure.make({ message: "Missing first" });
+			const first = A.getUnsafe(itemLines, 0);
 			// Block scalars (`|`/`>`) and folded/multi-line string scalars (plain or
 			// double-quoted, whose continuation lines already carry their indent)
 			// put the first line inline after `-` and emit continuations as-is.
 			if (first.startsWith("|") || first.startsWith(">") || P.isString(item)) {
 				lines.push(`- ${first}`);
 				for (let i = 1; i < itemLines.length; i++) {
-					const entry1 = itemLines[i];
-					if (entry1 === undefined) throw StringifierInvariantFailure.make({ message: "Missing array entry" });
+					const entry1 = A.getUnsafe(itemLines, i);
 					lines.push(entry1);
 				}
 			} else {
@@ -855,8 +839,7 @@ function stringifyArrayLines(arr: unknown[], ctx: StringifyContext, depth: numbe
  * with block style). Such values must never be placed inline after a key colon
  * in a block mapping — they must always start on the next line.
  */
-function isBlockCollection(value: unknown, ctx: StringifyContext): boolean {
-	if (ctx.defaultCollectionStyle === "flow") return false;
+function isBlockCollection(value: unknown): boolean {
 	if (A.isArray(value) && value.length > 0) return true;
 	if (P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value) && R.keys(value).length > 0) return true;
 	return false;
@@ -920,8 +903,7 @@ function stringifyObjectLines(obj: Record<string, unknown>, ctx: StringifyContex
 		// reach the explicit-key branch (see the node-path complex-key branch).
 		if (keyStr.length > IMPLICIT_KEY_MAX_LENGTH) {
 			lines.push(`? ${keyStr}`);
-			const entry2 = valLines[0];
-			if (entry2 === undefined) throw StringifierInvariantFailure.make({ message: "Missing array entry" });
+			const entry2 = A.getUnsafe(valLines, 0);
 			if (valLines.length === 1) {
 				lines.push(`: ${valLines[0]}`);
 			} else if (entry2.startsWith("|") || entry2.startsWith(">") || P.isString(val)) {
@@ -929,8 +911,7 @@ function stringifyObjectLines(obj: Record<string, unknown>, ctx: StringifyContex
 				// continuation lines already carry their own indent.
 				lines.push(`: ${valLines[0]}`);
 				for (let i = 1; i < valLines.length; i++) {
-					const line = valLines[i];
-					if (line === undefined) throw StringifierInvariantFailure.make({ message: "Missing value line" });
+					const line = A.getUnsafe(valLines, i);
 					lines.push(line);
 				}
 			} else {
@@ -939,28 +920,25 @@ function stringifyObjectLines(obj: Record<string, unknown>, ctx: StringifyContex
 				// (structural, never ctx.indent).
 				lines.push(`: ${valLines[0]}`);
 				for (let i = 1; i < valLines.length; i++) {
-					const line = valLines[i];
-					if (line === undefined) throw StringifierInvariantFailure.make({ message: "Missing value line" });
+					const line = A.getUnsafe(valLines, i);
 					lines.push(line === "" ? line : `${EXPLICIT_COMPACT_PAD}${line}`);
 				}
 			}
 			continue;
 		}
 
-		if (valLines.length === 1 && !isBlockCollection(val, ctx)) {
+		if (valLines.length === 1 && !isBlockCollection(val)) {
 			// Scalar or empty/flow collection — safe to place inline
 			lines.push(`${keyStr}: ${valLines[0]}`);
 		} else {
-			const first = valLines[0];
-			if (first === undefined) throw StringifierInvariantFailure.make({ message: "Missing first" });
+			const first = A.getUnsafe(valLines, 0);
 			if (first.startsWith("|") || first.startsWith(">") || P.isString(val)) {
 				// Block scalar header, or a folded/multi-line string scalar (plain or
 				// double-quoted, continuation lines already indented): first line on
 				// the key line, continuation lines emitted as-is.
 				lines.push(`${keyStr}: ${first}`);
 				for (let i = 1; i < valLines.length; i++) {
-					const entry5 = valLines[i];
-					if (entry5 === undefined) throw StringifierInvariantFailure.make({ message: "Missing array entry" });
+					const entry5 = A.getUnsafe(valLines, i);
 					lines.push(entry5);
 				}
 			} else if (A.isArray(val) && val.length > 0) {
@@ -999,10 +977,8 @@ function buildTagMap(directives: ReadonlyArray<RawDirective>): MutableHashMap.Mu
 	const map = MutableHashMap.empty<string, string>();
 	for (const d of directives) {
 		if (d.name === "TAG" && d.parameters.length >= 2) {
-			const entry6 = d.parameters[0];
-			if (entry6 === undefined) throw StringifierInvariantFailure.make({ message: "Missing array entry" });
-			const entry7 = d.parameters[1];
-			if (entry7 === undefined) throw StringifierInvariantFailure.make({ message: "Missing array entry" });
+			const entry6 = A.getUnsafe(d.parameters, 0);
+			const entry7 = A.getUnsafe(d.parameters, 1);
 			MutableHashMap.set(map, entry6, entry7);
 		}
 	}
@@ -1049,9 +1025,8 @@ function normalizeTag(tag: string, tagMap: MutableHashMap.MutableHashMap<string,
 	// Named handle: !name!suffix
 	const namedMatch = tag.match(/^(![\w-]*!)(.*)$/);
 	if (namedMatch !== null) {
-		const handle = namedMatch[1];
-		if (handle === undefined) throw StringifierInvariantFailure.make({ message: "Missing tag handle" });
-		const suffix = namedMatch[2] ?? "";
+		const handle = A.getUnsafe(namedMatch, 1);
+		const suffix = A.getUnsafe(namedMatch, 2);
 		const prefix = O.getOrUndefined(MutableHashMap.get(tagMap, handle));
 		if (prefix !== undefined && prefix !== "") {
 			const uri = prefix + suffix;
@@ -1242,10 +1217,7 @@ function stringifyNodeLines(node: YamlNode, ctx: StringifyContext, depth: number
 	if (isYamlSeq(node)) {
 		return stringifySeqNodeLines(node, ctx, depth);
 	}
-	if (isYamlAlias(node)) {
-		return [`*${node.name}`];
-	}
-	return ["null"];
+	return [`*${node.name}`];
 }
 
 /**
@@ -1255,7 +1227,7 @@ function stringifyScalarNodeLines(node: YamlScalar, ctx: StringifyContext): stri
 	// When forcing default styles, preserve the node's original style for multiline
 	// strings (block-literal vs block-folded vs double-quoted) since the canonical
 	// output retains scalar presentation style even in normalized form.
-	const nodeStyle = node.style ?? ctx.defaultScalarStyle;
+	const nodeStyle = node.style;
 	const style: ScalarStyle = nodeStyle;
 	const val = node.value;
 
@@ -1444,14 +1416,13 @@ function entryTrailing(pair: YamlPair, ctx: StringifyContext): string | undefine
 function rendersAcrossLines(node: YamlNode, ctx: StringifyContext): boolean {
 	if (!(isYamlMap(node) || isYamlSeq(node))) return false;
 	if (node.items.length === 0) return false;
-	const style = ctx.forceDefaultStyles ? ctx.defaultCollectionStyle : (node.style ?? ctx.defaultCollectionStyle);
+	const style = ctx.forceDefaultStyles ? ctx.defaultCollectionStyle : (node.style);
 	if (style === "block" || node.sourceMultiline === true) return true;
 	// A flow collection carrying INNER comments is emitted one entry per line —
 	// a `#` between the brackets would swallow the closing one. The collection's
 	// OWN comment is not such a case: it renders after the closing bracket, so
 	// it neither swallows anything nor forces the layout, and `a: {b: 1} # t`
 	// stays on one line. Canonical mode emits no comments at all.
-	if (ctx.forceDefaultStyles) return false;
 	return isYamlMap(node)
 		? node.items.some(
 				(p) => pairLeading(p) !== undefined || (p.value ?? p.key).comment !== undefined || pairSpaceBefore(p) === true,
@@ -1510,20 +1481,18 @@ function pushExplicitKeyValueLines(
 		lines.push(`: ${valLines[0]}`);
 		return lines.length - 1;
 	}
-	const first = valLines[0];
-	if (first === undefined) throw StringifierInvariantFailure.make({ message: "Missing first" });
+	const first = A.getUnsafe(valLines, 0);
 	// Detect block scalar headers and multi-line quoted scalars,
 	// either bare or after an optional `&anchor` / `!tag` prefix.
 	const firstStripped = stripScalarMetadataPrefix(first);
 	const isBlockScalarHeader = firstStripped.startsWith("|") || firstStripped.startsWith(">");
 	const valIsScalar = isYamlScalar(valNode);
-	const isInlineQuoted = valIsScalar && (firstStripped.startsWith("'") || firstStripped.startsWith('"'));
+	const isInlineQuoted = valIsScalar && firstStripped.startsWith("'");
 	if (isBlockScalarHeader || isInlineQuoted) {
 		const headerIdx = lines.length;
 		lines.push(`: ${first}`);
 		for (let v = 1; v < valLines.length; v++) {
-			const entry8 = valLines[v];
-			if (entry8 === undefined) throw StringifierInvariantFailure.make({ message: "Missing array entry" });
+			const entry8 = A.getUnsafe(valLines, v);
 			lines.push(entry8);
 		}
 		// A block scalar's header line, or a multi-line quoted scalar's closing
@@ -1544,7 +1513,7 @@ function pushExplicitKeyValueLines(
 	const valIsBlockMap =
 		isYamlMap(valNode) &&
 		valNode.items.length > 0 &&
-		(ctx.forceDefaultStyles ? ctx.defaultCollectionStyle : (valNode.style ?? ctx.defaultCollectionStyle)) === "block";
+		(ctx.forceDefaultStyles ? ctx.defaultCollectionStyle : (valNode.style)) === "block";
 	if (valIsBlockMap) {
 		// Block mapping value — compact notation: first pair on the colon
 		// line, remaining pairs padded two columns to align with it
@@ -1573,7 +1542,7 @@ const pairKeyOrder = Order.mapInput(Order.String, (pair: YamlPair) =>
 function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: number): string[] {
 	const style: CollectionStyle = ctx.forceDefaultStyles
 		? ctx.defaultCollectionStyle
-		: (node.style ?? ctx.defaultCollectionStyle);
+		: (node.style);
 	const items = ctx.sortKeys ? A.sort(node.items, pairKeyOrder) : node.items;
 
 	if (items.length === 0) {
@@ -1610,7 +1579,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 					for (const cl of commentBlockLines(flowLeading)) flowLines.push(cl === "" ? "" : `${flowPad}${cl}`);
 				}
 				const keyStr =
-					pair.key !== undefined ? stringifyMappingKeyLines(pair.key, flowCtx, depth + 1).join(" ") : "null";
+					stringifyMappingKeyLines(pair.key, flowCtx, depth + 1).join(" ");
 				const valStr = pair.value !== null ? stringifyNodeLines(pair.value, flowCtx, depth + 1).join(" ") : "null";
 				const comma = fi < items.length - 1 ? "," : "";
 				const flowTrailing = pairTrailing(pair);
@@ -1624,7 +1593,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 			return flowLines;
 		}
 		const pairs = items.map((pair) => {
-			const keyStr = pair.key !== undefined ? stringifyMappingKeyLines(pair.key, flowCtx, depth + 1).join(" ") : "null";
+			const keyStr = stringifyMappingKeyLines(pair.key, flowCtx, depth + 1).join(" ");
 			const valStr = pair.value !== null ? stringifyNodeLines(pair.value, flowCtx, depth + 1).join(" ") : "null";
 			return `${keyStr}: ${valStr}`;
 		});
@@ -1639,7 +1608,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 	const lines: string[] = [];
 	/** Append a pair's trailing comment to `lines[idx]` (flattened to one line); `-1` drops it. */
 	const appendTrailing = (idx: number, comment: string | undefined): void => {
-		if (!emitComments || comment === undefined || idx < 0 || idx >= lines.length) return;
+		if (!emitComments || comment === undefined || idx < 0) return;
 		lines[idx] = `${lines[idx]}${renderTrailingComment(comment)}`;
 	};
 	/** A value node's own leading comment block, or undefined. */
@@ -1688,8 +1657,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 			// pad is needed. Otherwise pad continuation lines two columns to
 			// align with the first line after `? ` (structural, never
 			// ctx.indent — see EXPLICIT_COMPACT_PAD).
-			const entry9 = keyLines[0];
-			if (entry9 === undefined) throw StringifierInvariantFailure.make({ message: "Missing array entry" });
+			const entry9 = A.getUnsafe(keyLines, 0);
 			const firstTokens = entry9.trim().split(/\s+/).filter(Boolean);
 			const firstIsMetaOnly =
 				firstTokens.length > 0 && firstTokens.every((t) => t.startsWith("&") || t.startsWith("!"));
@@ -1731,7 +1699,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 		) {
 			resolvedKeyStr = pair.key.value;
 		} else {
-			resolvedKeyStr = pair.key !== undefined ? stringifyMappingKeyLines(pair.key, ctx, depth + 1).join(" ") : "null";
+			resolvedKeyStr = stringifyMappingKeyLines(pair.key, ctx, depth + 1).join(" ");
 		}
 		const keyStr = resolvedKeyStr;
 		// Rendered key past the implicit-key limit: spill to explicit-key form
@@ -1780,7 +1748,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 		const isBlockSeqValue =
 			isYamlSeq(valNode) &&
 			valNode.items.length > 0 &&
-			(ctx.forceDefaultStyles ? ctx.defaultCollectionStyle : (valNode.style ?? ctx.defaultCollectionStyle)) === "block";
+			(ctx.forceDefaultStyles ? ctx.defaultCollectionStyle : (valNode.style)) === "block";
 		if (isBlockSeqValue) {
 			// Block sequence as mapping value: compact notation (no extra indent)
 			// by default; one indent level when `indentSequences` is set (the
@@ -1798,14 +1766,13 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 				}
 			}
 			for (let i = startIdx; i < valLines.length; i++) {
-				const vl = valLines[i];
-				if (vl === undefined) throw StringifierInvariantFailure.make({ message: "Missing value line" });
+				const vl = A.getUnsafe(valLines, i);
 				lines.push(ctx.indentSequences && vl !== "" ? `${pad}${vl}` : vl);
 			}
 		} else if (
 			isYamlMap(valNode) &&
 			valNode.items.length > 0 &&
-			(ctx.forceDefaultStyles ? ctx.defaultCollectionStyle : (valNode.style ?? ctx.defaultCollectionStyle)) === "block"
+			(ctx.forceDefaultStyles ? ctx.defaultCollectionStyle : (valNode.style)) === "block"
 		) {
 			// Non-empty block mapping as value: put on next line with indent
 			const mapMeta = buildMetadataPrefix(valNode.tag, valNode.anchor);
@@ -1841,14 +1808,13 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 			lines.push(valLines[0] === "" ? `${keyStr}${sep}` : `${keyStr}${sep} ${valLines[0]}`);
 			appendTrailing(lines.length - 1, entryTrailing(pair, ctx));
 		} else {
-			const first = valLines[0];
-			if (first === undefined) throw StringifierInvariantFailure.make({ message: "Missing first" });
+			const first = A.getUnsafe(valLines, 0);
 			// Detect block scalar headers and multi-line quoted scalars after the
 			// optional `&anchor` / `!tag` prefix that the scalar renderer may add.
 			const firstStripped = stripScalarMetadataPrefix(first);
 			const isBlockScalarHeader = firstStripped.startsWith("|") || firstStripped.startsWith(">");
 			const valIsScalar = isYamlScalar(valNode);
-			const isInlineQuoted = valIsScalar && (firstStripped.startsWith("'") || firstStripped.startsWith('"'));
+			const isInlineQuoted = valIsScalar && firstStripped.startsWith("'");
 			if (isBlockScalarHeader || isInlineQuoted) {
 				if (valLeading !== undefined) {
 					// The value has its own leading block, which needs the line above
@@ -1859,11 +1825,10 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 					const spilledIdx = lines.length;
 					lines.push(`${pad}${first}`);
 					for (let i = 1; i < valLines.length; i++) {
-						const entry10 = valLines[i];
-						if (entry10 === undefined) throw StringifierInvariantFailure.make({ message: "Missing array entry" });
+						const entry10 = A.getUnsafe(valLines, i);
 						lines.push(entry10);
 					}
-					appendTrailing(isBlockScalarHeader ? spilledIdx : lines.length - 1, entryTrailing(pair, ctx));
+					appendTrailing(spilledIdx, entryTrailing(pair, ctx));
 					continue;
 				}
 				// The KEY's own comment and a block scalar's header comment both want
@@ -1878,8 +1843,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 					const spilledIdx = lines.length;
 					lines.push(`${pad}${first}`);
 					for (let i = 1; i < valLines.length; i++) {
-						const entry11 = valLines[i];
-						if (entry11 === undefined) throw StringifierInvariantFailure.make({ message: "Missing array entry" });
+						const entry11 = A.getUnsafe(valLines, i);
 						lines.push(entry11);
 					}
 					appendTrailing(spilledIdx, scalarComment);
@@ -1888,8 +1852,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 				const headerIdx = lines.length;
 				lines.push(`${keyStr}${sep} ${first}`);
 				for (let i = 1; i < valLines.length; i++) {
-					const entry12 = valLines[i];
-					if (entry12 === undefined) throw StringifierInvariantFailure.make({ message: "Missing array entry" });
+					const entry12 = A.getUnsafe(valLines, i);
 					lines.push(entry12);
 				}
 				// The entry's trailing comment goes on the line its VALUE ends on:
@@ -1901,28 +1864,14 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 				// arbitration between them left to do.
 				appendTrailing(isBlockScalarHeader ? headerIdx : lines.length - 1, entryTrailing(pair, ctx));
 			} else {
-				// Check if this is a block map value with metadata prefix
-				const isBlockMapValue =
-					isYamlMap(valNode) &&
-					(ctx.forceDefaultStyles ? ctx.defaultCollectionStyle : (valNode.style ?? ctx.defaultCollectionStyle)) ===
-						"block";
-				const mapMeta = isBlockMapValue ? buildMetadataPrefix(valNode.tag, valNode.anchor) : undefined;
-				if (mapMeta !== undefined && mapMeta !== "") {
-					// Place metadata on key line, skip metadata line in valLines
-					lines.push(`${keyStr}${sep} ${mapMeta}`);
-					appendTrailing(lines.length - 1, entryTrailing(pair, ctx));
-					for (let i = 1; i < valLines.length; i++) {
-						lines.push(valLines[i] === "" ? "" : `${pad}${valLines[i]}`);
-					}
-				} else {
-					lines.push(`${keyStr}${sep}`);
-					appendTrailing(lines.length - 1, entryTrailing(pair, ctx));
-					if (valLeading !== undefined) {
-						for (const cl of commentBlockLines(valLeading)) lines.push(`${pad}${cl}`);
-					}
-					for (const vl of valLines) {
-						lines.push(vl === "" ? "" : `${pad}${vl}`);
-					}
+				// Non-empty block maps were handled above; this is a multiline flow collection.
+				lines.push(`${keyStr}${sep}`);
+				appendTrailing(lines.length - 1, entryTrailing(pair, ctx));
+				if (valLeading !== undefined) {
+					for (const cl of commentBlockLines(valLeading)) lines.push(`${pad}${cl}`);
+				}
+				for (const vl of valLines) {
+					lines.push(vl === "" ? "" : `${pad}${vl}`);
 				}
 			}
 		}
@@ -1979,7 +1928,7 @@ function stripScalarMetadataPrefix(line: string): string {
 function stringifySeqNodeLines(node: YamlSeq, ctx: StringifyContext, depth: number): string[] {
 	const style: CollectionStyle = ctx.forceDefaultStyles
 		? ctx.defaultCollectionStyle
-		: (node.style ?? ctx.defaultCollectionStyle);
+		: (node.style);
 	const items = [...node.items];
 
 	if (items.length === 0) {
@@ -2051,7 +2000,7 @@ function stringifySeqNodeLines(node: YamlSeq, ctx: StringifyContext, depth: numb
 		}
 		/** Append the item's trailing comment to `lines[idx]`; `-1` drops it. */
 		const appendItemTrailing = (idx: number): void => {
-			if (fields?.comment === undefined || idx < 0 || idx >= lines.length) return;
+			if (fields?.comment === undefined) return;
 			lines[idx] = `${lines[idx]}${renderTrailingComment(fields.comment)}`;
 		};
 		const itemLines = stringifyNodeLines(item, itemCtx, depth + 1);
@@ -2060,8 +2009,7 @@ function stringifySeqNodeLines(node: YamlSeq, ctx: StringifyContext, depth: numb
 			lines.push(itemLines[0] === "" ? "-" : `- ${itemLines[0]}`);
 			appendItemTrailing(lines.length - 1);
 		} else {
-			const first = itemLines[0];
-			if (first === undefined) throw StringifierInvariantFailure.make({ message: "Missing first" });
+			const first = A.getUnsafe(itemLines, 0);
 			// Block scalar headers and multi-line quoted scalars (when the item is
 			// itself a YamlScalar) place their first line inline after `- `, with
 			// continuation lines emitted as-is. Detection allows an optional
@@ -2070,13 +2018,12 @@ function stringifySeqNodeLines(node: YamlSeq, ctx: StringifyContext, depth: numb
 			const itemIsScalar = isYamlScalar(item);
 			const isBlockScalarHeader = firstStripped.startsWith("|") || firstStripped.startsWith(">");
 			const isInlineScalar =
-				isBlockScalarHeader || (itemIsScalar && (firstStripped.startsWith("'") || firstStripped.startsWith('"')));
+				isBlockScalarHeader || (itemIsScalar && firstStripped.startsWith("'"));
 			if (isInlineScalar) {
 				const headerIdx = lines.length;
 				lines.push(`- ${first}`);
 				for (let i = 1; i < itemLines.length; i++) {
-					const entry13 = itemLines[i];
-					if (entry13 === undefined) throw StringifierInvariantFailure.make({ message: "Missing array entry" });
+					const entry13 = A.getUnsafe(itemLines, i);
 					lines.push(entry13);
 				}
 				// A block scalar's HEADER line legally carries the item's
@@ -2292,13 +2239,13 @@ export function stringifyDocument(doc: RawYamlDocument, ...[options]: [options?:
 	// collection root is stored the same way (a non-empty collection takes it
 	// on its first entry instead), and gating dropped it entirely.
 	const rootLeading =
-		!ctx.forceDefaultStyles && contents !== null && contents.commentBefore !== undefined
+		!ctx.forceDefaultStyles && contents.commentBefore !== undefined
 			? `${commentBlockLines(contents.commentBefore).join("\n")}\n`
 			: "";
 
 	if (doc.hasDocumentStart) {
-		const rootTag = contents !== undefined && "tag" in contents ? contents.tag : undefined;
-		const rootAnchor = contents !== undefined && "anchor" in contents ? contents.anchor : undefined;
+		const rootTag = "tag" in contents ? contents.tag : undefined;
+		const rootAnchor = "anchor" in contents ? contents.anchor : undefined;
 		const isCollection = isYamlMap(contents) || isYamlSeq(contents);
 		const isScalar = isYamlScalar(contents);
 

@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import * as O from "effect/Option";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { LockfileFormat, filenameFor, filenamesFor, fromFilename } from "../../effected/lockfiles/LockfileFormat.ts";
 
 describe("LockfileFormat", () => {
@@ -37,27 +37,27 @@ describe("LockfileFormat", () => {
 
 	describe("fromFilename", () => {
 		it("recognizes every conventional filename", () => {
-			assert.deepStrictEqual(fromFilename("bun.lock"), O.some("bun"));
-			assert.deepStrictEqual(fromFilename("package-lock.json"), O.some("npm"));
-			assert.deepStrictEqual(fromFilename("pnpm-lock.yaml"), O.some("pnpm"));
-			assert.deepStrictEqual(fromFilename("yarn.lock"), O.some("yarn"));
+			assertSome(fromFilename("bun.lock"), "bun");
+			assertSome(fromFilename("package-lock.json"), "npm");
+			assertSome(fromFilename("pnpm-lock.yaml"), "pnpm");
+			assertSome(fromFilename("yarn.lock"), "yarn");
 		});
 
 		it("round-trips filenameFor for every format", () => {
 			for (const format of LockfileFormat.literals) {
-				assert.deepStrictEqual(fromFilename(filenameFor(format)), O.some(format));
+				assertSome(fromFilename(filenameFor(format)), format);
 			}
 		});
 
 		it("returns none for unknown names, paths and near-misses", () => {
-			assert.isTrue(O.isNone(fromFilename("package.json")));
+			assertNone(fromFilename("package.json"));
 			// The filenamesFor alternates deliberately do not identify: bun.lockb is
 			// a detection alternate, not a parse target (the format is binary).
-			assert.isTrue(O.isNone(fromFilename("bun.lockb")));
-			assert.isTrue(O.isNone(fromFilename("npm-shrinkwrap.json")));
-			assert.isTrue(O.isNone(fromFilename("some/dir/pnpm-lock.yaml")));
-			assert.isTrue(O.isNone(fromFilename("PNPM-LOCK.YAML")));
-			assert.isTrue(O.isNone(fromFilename("")));
+			assertNone(fromFilename("bun.lockb"));
+			assertNone(fromFilename("npm-shrinkwrap.json"));
+			assertNone(fromFilename("some/dir/pnpm-lock.yaml"));
+			assertNone(fromFilename("PNPM-LOCK.YAML"));
+			assertNone(fromFilename(""));
 		});
 	});
 });
