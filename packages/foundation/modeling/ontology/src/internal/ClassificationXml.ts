@@ -247,6 +247,12 @@ const prefixParent = (notation: string) =>
     Match.when(4, () => O.some(Str.slice(0, 3)(notation))),
     Match.orElse(() => O.some(Str.slice(0, 4)(notation)))
   );
+const cpcRootDepth = Match.type<number>().pipe(
+  Match.when(1, () => 0),
+  Match.when(3, () => 1),
+  Match.when(4, () => 2),
+  Match.orElse(() => 3)
+);
 const walkCpc = Effect.fnUntraced(function* (
   entries: readonly CpcEntry[],
   pin: ClassificationPin,
@@ -260,13 +266,7 @@ const walkCpc = Effect.fnUntraced(function* (
       const prefLabel = Str.isNonEmpty(title) ? title : notation;
       const repeated = O.exists(parent, (value) => value.notation === notation);
       const depth = O.match(parent, {
-        onNone: () =>
-          Match.value(Str.length(notation)).pipe(
-            Match.when(1, () => 0),
-            Match.when(3, () => 1),
-            Match.when(4, () => 2),
-            Match.orElse(() => 3)
-          ),
+        onNone: () => cpcRootDepth(Str.length(notation)),
         onSome: (value) => value.depth + 1,
       });
       const concept = repeated
@@ -280,8 +280,7 @@ const walkCpc = Effect.fnUntraced(function* (
         O.isNone(parent) || Str.length(notation) <= 4
           ? ClassificationConcept.make({
               ...value,
-              depth:
-                Str.length(notation) === 1 ? 0 : Str.length(notation) === 3 ? 1 : Str.length(notation) === 4 ? 2 : 3,
+              depth: cpcRootDepth(Str.length(notation)),
               broader: A.map(O.toArray(prefixParent(notation)), (symbol) => classificationConceptIri(pin, symbol)),
             })
           : value

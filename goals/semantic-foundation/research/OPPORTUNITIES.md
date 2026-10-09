@@ -329,3 +329,17 @@ blocker was attributed; its partial full-docgen replay is not a green proof.
   synthetic range-container fixture with the duplicate subclass root.
 - **Prevention:** include cross-file duplicate identity and class-range wrappers
   in the fixture census, beyond repeated-element shapes.
+
+## 2026-10-09 — M2 first publish exposes owned fixture and complexity gaps
+
+- **Work:** wave-1 Yeet publication of the qualified M2 snapshot.
+- **Evidence:** cheap gates reject two new Effect-Vitest findings (native
+  filesystem import and missing acquisition timeout) and Fallow cognitive
+  complexity 11 in `withRootParent`. The inherited schema-policy rows concern
+  untouched Accounts/M365/CLI tests; the file diff against main is empty.
+- **Response:** populate the existing MemoryFileSystem test layer from synthetic
+  fixture bytes, add a 30-second acquisition budget, and reuse one Match-based
+  CPC prefix-depth function. Fresh 90-test coverage and Effect-Vitest pass;
+  Fallow audit now reports zero introduced findings.
+- **Prevention:** include the Effect-Vitest and Fallow audit in bounded package
+  handoff evidence; package audit/docgen alone does not cover these root gates.
