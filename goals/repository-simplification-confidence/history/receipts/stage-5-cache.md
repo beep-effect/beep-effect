@@ -133,3 +133,42 @@ current-process route inventory, not proof of other harness child environments
 or workstation-wide remote posture. It changes no checkout configuration.
 The home proposal also passed synthetic dry-run, repeated-apply/idempotence,
 backup, unowned-field and symlink-refusal checks; actual home files are unchanged.
+
+## Output-restoration and cross-checkout qualification
+
+Latest completed fixture run: source `f56271b6a381ba8d23d55b34da28e2b62368c923`,
+`2026-10-09T19:58Z`. An admitted runner used a private local cache, removed
+both actual output directories before every task, and copied every Turbo
+summary immediately. Output roots: `packages/tooling/test-kit/fc-runs/dist`
+and `packages/foundation/primitive/types/dist`.
+
+| Fixture | Task hashes (fc-runs / types) | Task source | Restored files | Result |
+| --- | --- | --- | ---: | --- |
+| Lane, private local cache | `3ca643e559fb1d3a` / `f8b314d6bfaf4138` | both LOCAL HIT | 28 | pass |
+| Owned linked worktree | same | both LOCAL HIT | 28 | pass |
+| Owned fresh clone | same | both LOCAL HIT | 28 | pass |
+| Lane, normal shared cache route | same | both LOCAL HIT | 28 | pass |
+| Lane, repeated shared restoration | same | both LOCAL HIT | 28 | pass |
+
+All five output SHA-256 manifests are identical, with empty output manifests
+before restoration. Reuse across the two clones and linked worktree is proven
+for these exact inputs and tasks. Cache artifacts were produced at earlier
+revisions with identical relevant inputs; the fixture execution revision alone
+does not identify an artifact's producer. No remote cache or TTC proof reuse
+was enabled.
+
+A relevant source comment changed fc-runs to `793c738517d0e311`: dry lookup
+reported MISS (`local: false`, `remote: false`), while types retained its hash
+and LOCAL HIT. Actual execution also reported the fc-runs MISS, but exited 127:
+`tsc: command not found`. The linked fixture lacked installed dependencies.
+The input bytes were restored. This proves hash invalidation and a miss, but
+not a successful changed-input build. The fixture now requires frozen installs
+in both clone and linked checkout before the rerun. Final execution evidence
+will be appended after that admitted run.
+
+Private evidence: `cache-r1/cache-fixtures.json`, copied task summaries, output
+SHA-256 manifests, changed-input dry summary and execution log. The earlier
+launch restrictions and pending claims above are historical and superseded
+by resume ruling 1 and these completed fixtures. Remote auth remains the
+approved unsupported external condition; workstation-wide harness posture,
+home writes and retiring legacy local caches remain owner dependencies.

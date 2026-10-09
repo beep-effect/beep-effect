@@ -209,3 +209,31 @@ proposed foreign destinations above are superseded; no data was moved there.
 | `~/YeeBois/projects/beep-effect5/.beep/research` | 31508523 | 32067584 | owner-unverified | unverified | `run from owner checkout` | fleet observation only; archive from the owning checkout |
 | `~/YeeBois/projects/beep-effect2/.beep/task-qualification-all-dry.json` | 28537039 | 28540928 | owner-unverified | unverified | `run from owner checkout` | fleet observation only; archive from the owning checkout |
 | `~/YeeBois/projects/beep-effect2-worktrees/qualification-capture-source/.beep/qualification-current-matrix` | 28536192 | 28561408 | owner-unverified | unverified | `run from owner checkout` | fleet observation only; archive from the owning checkout |
+
+## Latest owner-aware census — supersedes earlier previews
+
+Source: `f56271b6a381ba8d23d55b34da28e2b62368c923`. UTC: `2026-10-09T19:58:31.298Z`.
+Command, admitted through `beep-heavy`:
+
+```sh
+bun run beep quality residue-reap --fleet --classes checkout-qa --classes checkout-qualification --classes checkout-generated --classes checkout-jobs --classes checkout-ledgers --classes checkout-pids --classes checkout-material --json
+```
+
+The v3 report contains **2,765 rows across 259 checkout roots**: 2,760 foreign-owner,
+4 owner-ruling-required, and 1 census-failed. All are deferred; 0 applied and
+0/0 MiB reclaimed apparent/exclusive. Surveyed apparent/exclusive totals are
+6,620.577784/6,424.945313 MiB. These totals measure retained data, not available
+reclaim. Changes from earlier snapshots reflect ongoing fleet activity and
+retirements, rather than cleanup by this lane.
+
+The [per-row census](./stage-5-storage-census.csv) gives source, class, exact
+bytes, owner, terminal state, recovery destination, and retention reason for
+every row. Home prefixes and generated worktree/run identifiers are redacted;
+the complete raw report remains private. Raw report SHA-256:
+`df812b44015db8517f779bc0dcda60c21f095dc57ecd5cae667fda1dff7f51e0`.
+
+No real apply is authorized by this report. The orchestrator must acknowledge
+a fresh eligible owner report, with live-clone owner notices, before apply.
+Research/corpus/runtime material remains owner-required. Foreign rows have no
+archive destination in the invoking lane: run the operation from their owner
+checkout after binding the ruling to tracked proof.
