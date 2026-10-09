@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { ConfigFile, JsonCodec, MergeStrategy } from "../../effected/config-file/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
@@ -10,6 +9,13 @@ import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import type { XdgPlatform } from "../../effected/xdg/index.ts";
 import { AppDirs, CurrentPlatform, Xdg, XdgConfig, XdgPaths } from "../../effected/xdg/index.ts";
+
+/** Build the fixture graph in a scope that owns its acquired resources. */
+const provideLayer = <ROut, E, RIn>(layer: Layer.Layer<ROut, E, RIn>) =>
+	<A, E2, R>(self: Effect.Effect<A, E2, R>) =>
+		Effect.scopedWith((scope) =>
+			Effect.flatMap(Layer.buildWithScope(layer, scope), (context) => Effect.provideContext(self, context)),
+		);
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
@@ -76,28 +82,28 @@ describe("XdgConfig.resolver", () => {
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
 			assert.deepStrictEqual(found, O.some("/home/ada/.config/myapp/rc.json"));
-		}).pipe(Effect.provide(context({ present: ["/home/ada/.config/myapp/rc.json"] }))),
+		}).pipe(provideLayer(context({ present: ["/home/ada/.config/myapp/rc.json"] }))),
 	);
 
 	it.effect("falls through to a system config dir — the search path v3 never had", () =>
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
 			assert.deepStrictEqual(found, O.some("/etc/xdg/myapp/rc.json"));
-		}).pipe(Effect.provide(context({ present: ["/etc/xdg/myapp/rc.json"] }))),
+		}).pipe(provideLayer(context({ present: ["/etc/xdg/myapp/rc.json"] }))),
 	);
 
 	it.effect("finds a file present ONLY in the last system dir", () =>
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
 			assert.deepStrictEqual(found, O.some("/opt/xdg/myapp/rc.json"));
-		}).pipe(Effect.provide(context({ present: ["/opt/xdg/myapp/rc.json"] }))),
+		}).pipe(provideLayer(context({ present: ["/opt/xdg/myapp/rc.json"] }))),
 	);
 
 	it.effect("earlier entries in XDG_CONFIG_DIRS win over later ones", () =>
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
 			assert.deepStrictEqual(found, O.some("/etc/xdg/myapp/rc.json"));
-		}).pipe(Effect.provide(context({ present: ["/etc/xdg/myapp/rc.json", "/opt/xdg/myapp/rc.json"] }))),
+		}).pipe(provideLayer(context({ present: ["/etc/xdg/myapp/rc.json", "/opt/xdg/myapp/rc.json"] }))),
 	);
 
 	it.effect("the app's own directory beats every system dir", () =>
@@ -105,7 +111,7 @@ describe("XdgConfig.resolver", () => {
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
 			assert.deepStrictEqual(found, O.some("/home/ada/.config/myapp/rc.json"));
 		}).pipe(
-			Effect.provide(
+			provideLayer(
 				context({
 					present: ["/home/ada/.config/myapp/rc.json", "/etc/xdg/myapp/rc.json", "/opt/xdg/myapp/rc.json"],
 				}),
@@ -117,7 +123,7 @@ describe("XdgConfig.resolver", () => {
 		Effect.gen(function* () {
 			const probed: Array<string> = [];
 			yield* resolve(XdgConfig.resolver({ filename: "rc.json" })).pipe(
-				Effect.provide(context({ present: ["/home/ada/.config/myapp/rc.json"], probed })),
+				provideLayer(context({ present: ["/home/ada/.config/myapp/rc.json"], probed })),
 			);
 			assert.deepStrictEqual(probed, ["/home/ada/.config/myapp/rc.json"]);
 		}),
@@ -131,7 +137,7 @@ describe("XdgConfig.resolver", () => {
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
 			assert.deepStrictEqual(found, O.some("/etc/xdg/myapp/rc.json"));
 		}).pipe(
-			Effect.provide(
+			provideLayer(
 				context({
 					denied: ["/home/ada/.config/myapp/rc.json"],
 					present: ["/etc/xdg/myapp/rc.json"],
@@ -144,7 +150,7 @@ describe("XdgConfig.resolver", () => {
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
 			assert.isTrue(O.isNone(found));
-		}).pipe(Effect.provide(context({}))),
+		}).pipe(provideLayer(context({}))),
 	);
 });
 
@@ -153,14 +159,14 @@ describe("XdgConfig.nativeResolver", () => {
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.nativeResolver({ namespace: "myapp", filename: "rc.json" }));
 			assert.deepStrictEqual(found, O.some("/home/ada/Library/Application Support/myapp/rc.json"));
-		}).pipe(Effect.provide(context({ present: ["/home/ada/Library/Application Support/myapp/rc.json"] }, "darwin"))),
+		}).pipe(provideLayer(context({ present: ["/home/ada/Library/Application Support/myapp/rc.json"] }, "darwin"))),
 	);
 
 	it.effect("returns None on linux WITHOUT probing — XDG already owns ~/.config there", () =>
 		Effect.gen(function* () {
 			const probed: Array<string> = [];
 			const found = yield* resolve(XdgConfig.nativeResolver({ namespace: "myapp", filename: "rc.json" })).pipe(
-				Effect.provide(context({ probed }, "linux")),
+				provideLayer(context({ probed }, "linux")),
 			);
 			assert.isTrue(O.isNone(found));
 			assert.deepStrictEqual(probed, []);
@@ -171,7 +177,7 @@ describe("XdgConfig.nativeResolver", () => {
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.nativeResolver({ namespace: "myapp", filename: "rc.json" }));
 			assert.isTrue(O.isNone(found));
-		}).pipe(Effect.provide(context({ denied: ["/home/ada/Library/Application Support/myapp/rc.json"] }, "darwin"))),
+		}).pipe(provideLayer(context({ denied: ["/home/ada/Library/Application Support/myapp/rc.json"] }, "darwin"))),
 	);
 });
 
@@ -180,7 +186,7 @@ describe("XdgConfig.savePath", () => {
 		Effect.gen(function* () {
 			const target = yield* XdgConfig.savePath("rc.json");
 			assert.strictEqual(target, "/home/ada/.config/myapp/rc.json");
-		}).pipe(Effect.provide(context({}))),
+		}).pipe(provideLayer(context({}))),
 	);
 
 	it.effect("drops into ConfigFile.defaultPath, whose slot demands a `never` channel", () =>
@@ -212,7 +218,7 @@ describe("XdgConfig.savePath", () => {
 				);
 				return target;
 			}).pipe(
-				Effect.provide(
+				provideLayer(
 					Layer.provideMerge(
 						configLayer,
 						context({

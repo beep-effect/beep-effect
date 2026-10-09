@@ -185,7 +185,19 @@ None.
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — Namespace validation now creates AppDirsNamespaceError instead of native Error while preserving defects and messages (scratchpad/test/xdg/AppDirs.test.ts:464,480-485,487).
+- **tagged-errors** — Tagged schema errors now preserve encoded cause stacks, and namespace defects use the added tagged error model (scratchpad/test/xdg/Xdg.test.ts:155; scratchpad/test/xdg/AppDirs.test.ts:182,464).
+- **schema-first** — LiteralKit domains, schema option values, namespace guards and schema JSON decoding replace upstream literal schemas, interfaces, predicates and JSON.parse (scratchpad/test/xdg/Xdg.test.ts:124; scratchpad/test/xdg/AppDirs.test.ts:86,112,127,138,487; scratchpad/test/xdg/XdgConfig.test.ts:192).
+- **numeric-domains** — The savePath integration fixture now uses S.Finite instead of Schema.Number (scratchpad/test/xdg/XdgConfig.test.ts:192,197).
+- **type-safety** — The upstream cause cast is replaced by property narrowing, and later diagnostic skip directives are removed (scratchpad/test/xdg/Xdg.test.ts:61,69-71; module suite scratchpad/test/xdg/**).
+- **tsgo-diagnostics** — Scoped layer builds and context provision replace effectful Effect.provide fixtures, with corrected instance types and direct platform provision (module suite scratchpad/test/xdg/**).
+- **effect-first** — Effect.fn, Bool.match, Effect.asSome and direct service effects replace generator wrappers, Boolean ternaries and redundant helper forms (scratchpad/test/xdg/XdgConfig.test.ts:185,192; scratchpad/test/xdg/NativeDirs.test.ts:31; module suite scratchpad/test/xdg/**).
+- **effect-imports** — Implementation, tests and the converted AppDirs example now import effect modules individually instead of the root barrel (module suite scratchpad/test/xdg/**).
+- **identity-annotations** — Composer keys, identifiers and field annotations replace upstream service keys and short schema identities (module suite scratchpad/test/xdg/**).
+- **upstream-bug** — Empty optional environment directory values now become absent keys and follow fallbacks instead of producing relative paths (scratchpad/test/xdg/Xdg.test.ts:99; scratchpad/test/xdg/AppDirs.test.ts:157).
+- **upstream-bug** — Empty HOME now fails with typed XdgEnvError instead of resolving relative fallback paths (scratchpad/test/xdg/Xdg.test.ts:108).
 
 ### Dependency backlog
 

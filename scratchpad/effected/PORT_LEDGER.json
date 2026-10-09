@@ -9508,9 +9508,168 @@
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 0,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/xdg/AppDirs.test.ts:464,480-485,487",
+          "upstreamBehaviour": "AppDirs.ts badNamespace constructs native Error defects for empty, separator-containing and dot traversal namespaces; tests assert Error instances.",
+          "labBehaviour": "badNamespace constructs AppDirsNamespaceError with an identity-qualified name and tag; tests assert that class while retaining Die, both messages and the rejection set.",
+          "reason": "native-runtime: short law 7 replaces native Error construction with an Effect schema error; D9 and the later 2026-10-09 ruling require a module-level receipt. The oracle/port Die, name and tag probe is in round-1/sol.md:5."
+        },
+        {
+          "test": "scratchpad/test/xdg/Xdg.test.ts:155; scratchpad/test/xdg/AppDirs.test.ts:182,464",
+          "upstreamBehaviour": "XdgEnvError and AppDirsError are unqualified Schema.TaggedError models whose Schema.Defect() cause encoding omits stack; namespace defects are native Error.",
+          "labBehaviour": "AppDirsNamespaceError is a tagged schema defect; XdgEnvError and AppDirsError use identity-qualified tagged models and S.Defect({ includeStack: true }), preserving explicit cause stacks through encode/decode.",
+          "reason": "tagged-errors: D5 and the tagged-error cause template require schema errors and includeStack; round-1 grok-1-4 and codemod-tagged-errors plus fix-xdg-g1.md:67-68 ground the wire-shape change. Namespace defects still use Die."
+        },
+        {
+          "test": "scratchpad/test/xdg/Xdg.test.ts:124; scratchpad/test/xdg/AppDirs.test.ts:86,112,127,138,487; scratchpad/test/xdg/XdgConfig.test.ts:192",
+          "upstreamBehaviour": "XdgPlatform and AppDirKind use Schema.Literals; AppDirOverrides and AppDirsOptions are interfaces; badNamespace owns ad-hoc predicates; the savePath test parses saved JSON with JSON.parse.",
+          "labBehaviour": "Named domains use LiteralKit; option data uses exported S.Struct values and derived types; private namespace schemas supply S.is guards; the savePath fixture decodes JSON with S.fromJsonString(S.Unknown). Plain layer inputs and rejection messages remain compatible.",
+          "reason": "schema-first: D5, short laws 17-19 and EF-12b/EF-33 require schema-owned data, named LiteralKit domains, derived guards and schema JSON codecs. Covers AppDirs.ts, Xdg.ts and XdgConfig.test.ts; fix-xdg-g1.md:65-66,69-70 and required fable-1-3/fable-1-4 pin the main changes."
+        },
+        {
+          "test": "scratchpad/test/xdg/XdgConfig.test.ts:192,197",
+          "upstreamBehaviour": "The ConfigFile savePath integration fixture declares AppShape.port with Schema.Number, admitting non-finite numbers.",
+          "labBehaviour": "The same integration fixture declares AppShape.port with S.Finite, excluding NaN and infinities; load/save assertions still use 4242 and 8080.",
+          "reason": "numeric-domains: the S.Finite systemic ruling and schemaNumber policy refine numeric schemas. This change is confined to the AppShape test fixture in XdgConfig.test.ts; xdg public models contain no numeric fields."
+        },
+        {
+          "test": "scratchpad/test/xdg/Xdg.test.ts:61,69-71; module suite scratchpad/test/xdg/**",
+          "upstreamBehaviour": "The missing-HOME test casts error.cause to { _tag?: string }; three test files temporarily acquired strictEffectProvide:skip-file during the diagnostics port.",
+          "labBehaviour": "The cause assertion narrows with Predicate.hasProperty and checks ConfigError without a cast; AppDirs.test.ts, Xdg.test.ts and XdgConfig.test.ts have no file-wide diagnostic skips.",
+          "reason": "type-safety: D15 forbids unsafe assertions and the Green step requires exposed diagnostics. Commit 35f64403cf removes the upstream cause cast; required fable-1-2 and fix-xdg-g1.md:10-12 remove the later file-wide directives."
+        },
+        {
+          "test": "module suite scratchpad/test/xdg/**",
+          "upstreamBehaviour": "AppDirs, Xdg and XdgConfig tests acquire effectful fixtures with Effect.provide(layer); AppDirs xdgPaths names typeof XdgPaths.Type; platform stubs are supplied through Layer.succeed.",
+          "labBehaviour": "Fixture helpers use Effect.scopedWith, Layer.buildWithScope and Effect.provideContext; xdgPaths uses the XdgPaths instance type; platform-only stubs use Effect.provideService. Original precedence, channel and resolver assertions remain.",
+          "reason": "tsgo-diagnostics: strictEffectProvide and the installed compiler type checks force the scoped test-graph provision and instance-type spelling. Required fable-1-2 and fix-xdg-g1.md:1-5,10-43 ground the removal of diagnostic suppression; no runner or configuration changes are part of xdg."
+        },
+        {
+          "test": "scratchpad/test/xdg/XdgConfig.test.ts:185,192; scratchpad/test/xdg/NativeDirs.test.ts:31; module suite scratchpad/test/xdg/**",
+          "upstreamBehaviour": "XdgConfig.savePath and the NativeDirs test resolve helper are functions returning Effect.gen; native selection uses a Boolean ternary; ensureRuntime maps makeDir through Option.some; the namespace test build uses a passthrough generator.",
+          "labBehaviour": "savePath and the resolve fixture use named Effect.fn; native selection uses Bool.match and O.none; ensureRuntime uses Effect.asSome; the namespace fixture pipes AppDirs directly. Directory resolution and error channels remain compatible.",
+          "reason": "effect-first: D5, effect-fn/terse-effect and short law 12 require Effect-native function and helper shapes. Covers XdgConfig.ts savePath, AppDirs.ts resolveAll/ensureRuntime and NativeDirs.test.ts; required fable-1-10 and fix-xdg-g1.md:7 preserve true-only native activation."
+        },
+        {
+          "test": "module suite scratchpad/test/xdg/**",
+          "upstreamBehaviour": "AppDirs.ts, NativeDirs.ts, Xdg.ts, XdgConfig.ts and all four test files import Effect modules through the root effect barrel, including the AppDirs JSDoc example.",
+          "labBehaviour": "The same code and converted AppDirs example import individual effect/<Module> paths, with namespace aliases and type-only Path imports where needed.",
+          "reason": "effect-imports: operator revision step 3 and short law 2 require per-module Effect imports in code and examples. Covers all four implementation and test files; the carried README is unchanged and its adaptation remains round-1 backlog b3."
+        },
+        {
+          "test": "module suite scratchpad/test/xdg/**",
+          "upstreamBehaviour": "CurrentPlatform, Xdg and AppDirs use @effected/xdg service/reference keys; XdgPaths, ResolvedAppDirs and NativeDirs use short schema ids; errors and schema fields lack composer metadata.",
+          "labBehaviour": "Xdg.ts, AppDirs.ts and NativeDirs.ts derive keys, schema/error ids and annotations from $ScratchpadId composers; fields carry descriptions. Literal kits, option schemas and namespace checks also carry identity metadata.",
+          "reason": "identity-annotations: operator revision step 4 and D5 require @beep/identity keys and field/schema annotations. Inventory codemod-identity-keys describes composer ids, not identity-keyed collections; all its sites belong here. Includes AppDirsNamespaceError.message, required fable-1-9-field."
+        },
+        {
+          "test": "scratchpad/test/xdg/Xdg.test.ts:99; scratchpad/test/xdg/AppDirs.test.ts:157",
+          "upstreamBehaviour": "Xdg.layer retains empty XDG_CONFIG_HOME, XDG_DATA_HOME, XDG_CACHE_HOME, XDG_STATE_HOME, XDG_RUNTIME_DIR, APPDATA and LOCALAPPDATA as present empty strings; joining those bases can produce relative application paths.",
+          "labBehaviour": "Xdg.layer filters empty optional environment directory strings to absent keys, restoring the existing fallback ladder and omitting runtime when unset. Explicit Xdg.layerFrom empty paths are preserved.",
+          "reason": "upstream-bug: round-1 grok-1-1 traces the pinned oracle Config.String/read/Path.join path to cwd-relative directories; fix-xdg-g1.md:63 records the fix. Individual empty-variable tests and the application-resolution regression pin the correction; layerFrom is pinned at Xdg.test.ts:222."
+        },
+        {
+          "test": "scratchpad/test/xdg/Xdg.test.ts:108",
+          "upstreamBehaviour": "Xdg.layer reads HOME with Config.String, so HOME=\"\" succeeds and fallback application paths can be relative.",
+          "labBehaviour": "Xdg.layer reads HOME with Config.NonEmptyString, turning HOME=\"\" into the existing typed XdgEnvError with a ConfigError cause and unchanged missing-HOME message, never a defect.",
+          "reason": "upstream-bug: round-1 grok-1-1 identifies the pinned oracle empty-HOME hole and relative-path consequence; fix-xdg-g1.md:64 records the separate required-HOME fix. Xdg.test.ts:108 explicitly supplies HOME=\"\" and checks Fail, absence of Die, variable, message and cause."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b1 — Convert carried JSDoc grammar during S2 (scratchpad/effected/xdg/Xdg.ts:14)",
+          "reason": "jsdoc: In S2, preserve every carried upstream sentence, convert carriers to titled Example/Details sections, supply canonical metadata and useful compilable examples. Use the module entry in examples only for symbols actually exported there; the optional barrel addition is b7."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b2 — Make the savePath integration example self-contained (scratchpad/effected/xdg/XdgConfig.ts:118)",
+          "reason": "jsdoc: During S2, define a minimal schema and matching ConfigFile.Service in the example, retaining the defaultPath: XdgConfig.savePath(...) integration and dedicated Effect imports."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b3 — Adapt the carried README to the lab during S2 (scratchpad/effected/xdg/README.md:3)",
+          "reason": "docs: In S2, drop release/install boilerplate, adapt examples to lab-relative and dedicated effect/* imports, and use the intended finite-number schema where appropriate while preserving API prose. Errors-table and Port-notes bookkeeping belongs to the central codemod entries below."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b4 — Use canonical Option assertion helpers in S3 (scratchpad/test/xdg/XdgConfig.test.ts:78)",
+          "reason": "test: During S3, use assertSome(value, expectedPayload) and assertNone(value), preserving the exact upstream payload and absence assertions."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b5 — Move effectful test fixtures into runner-owned layers in S3 (scratchpad/test/xdg/Xdg.test.ts:14)",
+          "reason": "test: During S3, migrate to it.layer blocks, separating blocks when environments, fault handlers or mutable volumes differ; preserve oracle cases and isolation. Do not share mutable volumes across cases unless the runner lifecycle preserves their existing isolation. The present suppression repair is separately required under fable-1-2."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b6 — Add the exported-schema property floor in S3 (scratchpad/test/xdg/Xdg.test.ts:16)",
+          "reason": "test: During S3, add Arbitrary.schema encode/decode round trips with the required fcRuns policy for exported schemas, including runtime option schemas added by fable-1-3, and suitable resolution/parsing properties. Retain all upstream example suites."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b7 — Consider exposing the namespace defect through the barrel (scratchpad/effected/xdg/index.ts:11)",
+          "reason": "effect-idiom: If adopted later, add the index.ts re-export and move the test import to index.ts. Keep its existing exported-class inventory in the central added-exports codemod regardless of the barrel decision."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b8 — Prefer Effect helpers or a schema boundary for search-path parsing (scratchpad/effected/xdg/Xdg.ts:132)",
+          "reason": "effect-idiom: Consider the behavior-preserving minimal A.filter(Str.split(raw, \":\"), Str.isNonEmpty) form, or a local schema transformation retaining the exact absent/empty defaults. Keep this outside the required fix wave."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b9 — Qualify the savePath trace span (scratchpad/effected/xdg/XdgConfig.ts:49)",
+          "reason": "effect-idiom: Consider Effect.fn(\"XdgConfig.savePath\") as a tracing naming improvement."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b10 — Consider the declaration-typed error annotation helper (scratchpad/effected/xdg/Xdg.ts:81)",
+          "reason": "effect-idiom: Consider annoteError<Self> if a concrete benefit warrants the consistency change; the missing message-field annotation is separately required as fable-1-9-field."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b11 — Prefer effect/Array for directory mapping helpers (scratchpad/effected/xdg/AppDirs.ts:242)",
+          "reason": "effect-idiom: Consider A.map with the same path.join callbacks and order, importing effect/Array as A."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b12 — Keep optional-path compatibility until any promotion decision (scratchpad/effected/xdg/Xdg.ts:106)",
+          "reason": "schema: Retain the upstream optional-key representation in this wave. Revisit Option-valued public fields only as a separately authorized promotion/API design with a forcing cause; do not rewrite upstream tests or treat a recorded preference as permission for port drift. Any proposed Port-notes entry is outside this inventory’s assignment."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 5,
+              "backlog": 5
+            },
+            "sol": {
+              "required": 3,
+              "backlog": 7
+            },
+            "fable": {
+              "required": 5,
+              "backlog": 9
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

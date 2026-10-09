@@ -1,4 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as Bool from "effect/Boolean";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -33,7 +35,7 @@ const $I = $ScratchpadId.create("effected/xdg/AppDirs");
  */
 export class AppDirsNamespaceError extends S.TaggedError<AppDirsNamespaceError>($I`AppDirsNamespaceError`)(
 	"AppDirsNamespaceError",
-	{ message: S.String },
+	{ message: S.String.annotateKey({ description: "Explains why the namespace cannot name an application directory." }) },
 	$I.annote("AppDirsNamespaceError", { description: "An invalid application directory namespace." }),
 ) {}
 
@@ -42,7 +44,7 @@ export class AppDirsNamespaceError extends S.TaggedError<AppDirsNamespaceError>(
  *
  * @public
  */
-export const AppDirKind = S.Literals(["config", "data", "cache", "state", "runtime"]).pipe($I.annoteSchema("AppDirKind", { description: "The four directory kinds XDG separates, plus the runtime directory." }));
+export const AppDirKind = LiteralKit(["config", "data", "cache", "state", "runtime"]).annotate($I.annote("AppDirKind", { description: "The four directory kinds XDG separates, plus the runtime directory." }));
 
 /**
  * The decoded form of {@link (AppDirKind:variable)}.
@@ -69,7 +71,7 @@ export class AppDirsError extends S.TaggedError<AppDirsError>($I`AppDirsError`)(
 	/** The path that could not be created. */
 	path: S.String.annotateKey({ description: "The path that could not be created." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
+	cause: S.Defect({ includeStack: true }).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("AppDirsError", { description: "Indicates that an application directory could not be created." })) {
 	override get message(): string {
 		return `Failed to create the ${this.directory} directory at "${this.path}"`;
@@ -116,32 +118,61 @@ export class ResolvedAppDirs extends S.Class<ResolvedAppDirs>($I`ResolvedAppDirs
 /**
  * Per-kind absolute directory overrides. Each wins outright over every other rung.
  *
- * @public
+ * **Example** (Decode directory overrides)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { AppDirOverrides } from "./AppDirs.ts";
+ *
+ * const overrides = S.decodeEffect(AppDirOverrides)({ config: "/app/config" });
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
-export interface AppDirOverrides {
+export const AppDirOverrides = S.Struct({
 	/** An absolute path for the config directory. */
-	readonly config?: string;
+	config: S.optionalKey(S.String).annotateKey({ description: "An absolute path for the config directory." }),
 	/** An absolute path for the data directory. */
-	readonly data?: string;
+	data: S.optionalKey(S.String).annotateKey({ description: "An absolute path for the data directory." }),
 	/** An absolute path for the cache directory. */
-	readonly cache?: string;
+	cache: S.optionalKey(S.String).annotateKey({ description: "An absolute path for the cache directory." }),
 	/** An absolute path for the state directory. */
-	readonly state?: string;
+	state: S.optionalKey(S.String).annotateKey({ description: "An absolute path for the state directory." }),
 	/** An absolute path for the runtime directory. */
-	readonly runtime?: string;
-}
+	runtime: S.optionalKey(S.String).annotateKey({ description: "An absolute path for the runtime directory." }),
+}).annotate($I.annote("AppDirOverrides", { description: "Per-kind absolute directory overrides. Each wins outright over every other rung." }));
+
+/**
+ * The decoded per-kind directory overrides.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type AppDirOverrides = typeof AppDirOverrides.Type;
 
 /**
  * Options for {@link AppDirs.layer}.
  *
- * @remarks
+ * **Details**
+ *
  * Plain optional fields, not `Option`s: `Option` is an internal
  * representation, not an input format, so write `fallbackDir: ".myapp"` and
  * omit `dirs` when unused.
  *
- * @public
+ * **Example** (Decode application directory options)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { AppDirsOptions } from "./AppDirs.ts";
+ *
+ * const options = S.decodeEffect(AppDirsOptions)({ namespace: "myapp", native: true });
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
-export interface AppDirsOptions {
+export const AppDirsOptions = S.Struct({
 	/**
 	 * The application namespace — one path component.
 	 *
@@ -151,7 +182,7 @@ export interface AppDirsOptions {
 	 * is rejected as a **defect** at layer construction: it can only come from
 	 * code, never from user input.
 	 */
-	readonly namespace: string;
+	namespace: S.String.annotateKey({ description: "The application namespace — one path component, validated as a defect during layer construction." }),
 	/**
 	 * Use the OS-native directories where the platform has them. Defaults to `false`.
 	 *
@@ -159,17 +190,25 @@ export interface AppDirsOptions {
 	 * Only consulted when no XDG variable and no explicit override applies, and
 	 * only on darwin and win32 — on Linux there is nothing to override.
 	 */
-	readonly native?: boolean;
+	native: S.optionalKey(S.Boolean).annotateKey({ description: "Use the OS-native directories where the platform has them. Defaults to false." }),
 	/**
 	 * A single dot-directory under `$HOME` that all four kinds collapse to.
 	 *
 	 * @remarks
 	 * Relative to `$HOME`: `fallbackDir: ".myapp"` gives `$HOME/.myapp`.
 	 */
-	readonly fallbackDir?: string;
+	fallbackDir: S.optionalKey(S.String).annotateKey({ description: "A single dot-directory under HOME that all four kinds collapse to." }),
 	/** Absolute per-kind overrides. */
-	readonly dirs?: AppDirOverrides;
-}
+	dirs: S.optionalKey(AppDirOverrides).annotateKey({ description: "Absolute per-kind overrides." }),
+}).annotate($I.annote("AppDirsOptions", { description: "Options for resolving application directories through the five-level precedence." }));
+
+/**
+ * The decoded application directory options.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type AppDirsOptions = typeof AppDirsOptions.Type;
 
 /**
  * App-namespaced directory resolution and on-demand creation.
@@ -243,9 +282,10 @@ const searchPath = (own: string, systemDirs: ReadonlyArray<string>, namespace: s
 ];
 
 const resolveAll = (options: AppDirsOptions, paths: XdgPaths, platform: XdgPlatform, path: Path.Path) => {
-	const native = options.native === true
-		? NativeDirs.resolve({ platform, namespace: options.namespace, paths, path })
-		: O.none<NativeDirs>();
+	const native = Bool.match(options.native ?? false, {
+		onTrue: () => NativeDirs.resolve({ platform, namespace: options.namespace, paths, path }),
+		onFalse: O.none<NativeDirs>,
+	});
 
 	const forKind = (xdgHome: string | undefined, nativeDir: (n: NativeDirs) => string, override: string | undefined) =>
 		resolveDir({
@@ -280,6 +320,28 @@ const resolveAll = (options: AppDirsOptions, paths: XdgPaths, platform: XdgPlatf
 	});
 };
 
+const NonEmptyNamespace = S.String.check(S.isNonEmpty({
+	identifier: $I`NonEmptyNamespaceCheck`,
+	title: "Non-empty namespace",
+	description: "An application namespace contains at least one character.",
+})).annotate($I.annote("NonEmptyNamespace", { description: "A namespace with at least one character." }));
+
+const NamespaceComponent = S.String.check(
+	S.isPattern(/^[^/\\]*$/, {
+		identifier: $I`NamespaceSeparatorsCheck`,
+		title: "Namespace without separators",
+		description: "A namespace contains neither forward slashes nor backslashes.",
+	}),
+	S.makeFilter((value) => value !== "." && value !== "..", {
+		identifier: $I`NamespaceTraversalCheck`,
+		title: "Namespace without traversal",
+		description: "A namespace is neither the current nor parent directory component.",
+	}),
+).annotate($I.annote("NamespaceComponent", { description: "A namespace confined to one path component." }));
+
+const isNonEmptyNamespace = S.is(NonEmptyNamespace);
+const isNamespaceComponent = S.is(NamespaceComponent);
+
 /**
  * A namespace is a single path component. Anything else escapes the app's own
  * directories, so it **dies** rather than resolving somewhere surprising. This
@@ -287,10 +349,10 @@ const resolveAll = (options: AppDirsOptions, paths: XdgPaths, platform: XdgPlatf
  * programmer error and belongs on the defect channel, not in `E`.
  */
 const badNamespace = (namespace: string): AppDirsNamespaceError | undefined => {
-	if (namespace.length === 0) {
+	if (!isNonEmptyNamespace(namespace)) {
 		return AppDirsNamespaceError.make({ message: "AppDirs.layer: `namespace` must not be empty" });
 	}
-	if (/[/\\]/.test(namespace) || namespace === "." || namespace === "..") {
+	if (!isNamespaceComponent(namespace)) {
 		return AppDirsNamespaceError.make({
 			message: `AppDirs.layer: \`namespace\` must be a single path component, received ${JSON.stringify(namespace)}`,
 		});

@@ -1,10 +1,12 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effected/xdg/Xdg");
 
@@ -18,7 +20,7 @@ const $I = $ScratchpadId.create("effected/xdg/Xdg");
  *
  * @public
  */
-export const XdgPlatform = S.Literals([
+export const XdgPlatform = LiteralKit([
 	"aix",
 	"android",
 	"darwin",
@@ -30,7 +32,7 @@ export const XdgPlatform = S.Literals([
 	"win32",
 	"cygwin",
 	"netbsd",
-]).pipe($I.annoteSchema("XdgPlatform", { description: "The operating system the path decisions are taken against." }));
+]).annotate($I.annote("XdgPlatform", { description: "The operating system the path decisions are taken against." }));
 
 /**
  * The decoded form of {@link (XdgPlatform:variable)}.
@@ -77,7 +79,7 @@ export class XdgEnvError extends S.TaggedError<XdgEnvError>($I`XdgEnvError`)("Xd
 	/** The environment variable that was required and not found. */
 	variable: S.String.annotateKey({ description: "The environment variable that was required and not found." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
+	cause: S.Defect({ includeStack: true }).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("XdgEnvError", { description: "Indicates that the environment cannot satisfy XDG directory resolution." })) {
 	override get message(): string {
 		return `The ${this.variable} environment variable is not set`;
@@ -165,7 +167,7 @@ export class Xdg extends Context.Service<Xdg, XdgPaths>()($I`Xdg`) {
 			const asEnvError = <A>(name: string, config: Config.Config<A>): Effect.Effect<A, XdgEnvError> =>
 				Effect.catchTag(config, "ConfigError", (cause) => Effect.fail(XdgEnvError.make({ variable: name, cause })));
 
-			const home = yield* asEnvError("HOME", Config.String("HOME"));
+			const home = yield* asEnvError("HOME", Config.NonEmptyString("HOME"));
 
 			/**
 			 * An unset variable is `Option.none()`, not a failure. The residual
@@ -174,7 +176,10 @@ export class Xdg extends Context.Service<Xdg, XdgPaths>()($I`Xdg`) {
 			 * read), not a missing key — so it is mapped rather than swallowed.
 			 */
 			const read = (name: string): Effect.Effect<string | undefined, XdgEnvError> =>
-				Effect.map(asEnvError(name, Config.option(Config.String(name))), O.getOrUndefined<string>);
+				Effect.map(
+					asEnvError(name, Config.option(Config.String(name))),
+					(option) => O.getOrUndefined(O.filter(option, Str.isNonEmpty)),
+				);
 
 			const configHome = yield* read("XDG_CONFIG_HOME");
 			const dataHome = yield* read("XDG_DATA_HOME");
