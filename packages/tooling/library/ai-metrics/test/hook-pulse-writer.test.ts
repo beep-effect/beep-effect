@@ -1028,8 +1028,10 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       expect(run.exitCode).toBe(0);
       expect(run.stdout).toBe("");
       expect(run.rows).toHaveLength(0);
-      const refusal = yield* S.decodeUnknownEffect(S.fromJsonString(HookPulseRefusal))(
-        O.getOrThrow(A.head(run.refusals))
+      const refusal = yield* pipe(
+        A.head(run.refusals),
+        O.getOrThrow,
+        S.decodeEffect(S.fromJsonString(HookPulseRefusal))
       );
       expect(refusal.reason).toBe("timeout");
     })
@@ -1041,7 +1043,7 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       const row = yield* decodeHookPulseRow(expectSingleRow(run));
       assertNone(row.harnessHash);
       expect(run.stdout).toBe("");
-      const refusals = A.map(run.refusals, HookPulseRefusal.decodeJsonResult);
+      const refusals = A.map(run.refusals, (line) => HookPulseRefusal.decodeJsonResult(line));
       expect(
         A.some(refusals, (decoded) => decoded._tag === "Success" && decoded.success.reason === "stamp-failed")
       ).toBe(true);
