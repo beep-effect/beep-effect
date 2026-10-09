@@ -1491,15 +1491,43 @@
       "wave": 1,
       "position": 4,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
         "src": "packages/glob/src",
         "test": "packages/glob/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "GlobPattern",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GlobPatternError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GlobPatternOptions",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GlobSet",
+          "kind": "both",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
-      "newDeps": [],
+      "newDeps": [
+        {
+          "name": "minimatch",
+          "kind": "dev",
+          "spec": "10.2.6",
+          "replacement": null
+        }
+      ],
       "fixturesBytes": 0,
       "deviations": [],
       "backlog": [],

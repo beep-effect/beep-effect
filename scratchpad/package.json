@@ -79,6 +79,7 @@
     "@types/n3": "catalog:",
     "@types/node": "catalog:",
     "drizzle-kit": "catalog:",
+    "minimatch": "10.2.6",
     "smol-toml": "1.9.0",
     "ts-morph": "catalog:",
     "typescript": "catalog:",
