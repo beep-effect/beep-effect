@@ -318,3 +318,25 @@ are available. Cancellation is not a proof failure or a package pass.
   manage the submitted monitor through `yeet job` before the final handoff.
 - Prevention: help should distinguish the publish job ceiling from the
   automatically submitted monitor's lifetime, or expose a monitor ceiling.
+
+
+## 2026-10-09: C CI port qualification catches pinned/reference API drift
+
+- Doing: move the hosted operational CI group to Effect and preserve thin bootstrap adapters.
+- Evidence: typed proof rejects non-finite counter decoding, uncaptured Git-process dependencies,
+  JSON imports without attributes and the reference checkout's callable Crypto UUID API.
+  The installed Effect pin exposes UUID generation as an Effect value instead.
+- Repair: validate both the reference design and the installed pin, use finite codecs,
+  capture platform context inside the live layer, and preserve schema-owned JSON inputs.
+- Prevention: a reference-version compatibility receipt next to the provisioned checkout,
+  plus a focused compiled service contract before broad qualification.
+
+## 2026-10-09: independent C review catches signal and sampling evidence regressions
+
+- Doing: source review of the typed runner-resource port before publication.
+- Evidence: periodic sampler failure could be hidden by a recovered final sample;
+  Effect's child exitCode fails on signal termination rather than yielding shell status.
+- Repair: retain a failure flag and suppress resource evidence after a sampler failure;
+  use a tiny shell wait boundary around the measured command to preserve 128+signal.
+  Synthetic regressions cover recovered sampling failure and TERM/INT/KILL child status.
+- Prevention: make lost-sample and child-signal cases part of the initial port fixtures.

@@ -22,18 +22,17 @@ desktop_rust_relevant=true
 
 # Rust crate inputs for the desktop-ipc cargo check/clippy steps (D15): the
 # crate itself plus the workflow and gate that carry the steps.
-desktop_rust_pattern='^(apps/professional-desktop/src-tauri/|\.github/workflows/check\.yml$|scripts/ci-change-profile\.sh$)'
+# Before Bun/dependencies exist, Node reads the schema owner's declarative patterns.
+pattern_file="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json"
+read_pattern() { node -e 'process.stdout.write(require(process.argv[1])[process.argv[2]])' "$pattern_file" "$1"; }
+desktop_rust_pattern="$(read_pattern desktop)"
+goals_document_pattern="$(read_pattern goals)"
 
 if [[ "$event_name" == "pull_request" ]]; then
   changed_files="$(git diff --name-only "${base_ref}...HEAD")"
   # Only convention-owned packet prose can suppress the repository matrices.
   # Executables, fixtures, and arbitrary data under goals/ remain code-bearing
   # inputs and therefore keep the full verification profile.
-  goals_document_pattern='^('
-  goals_document_pattern+='goals/(INDEX|README)\.md'
-  goals_document_pattern+='|goals/[^/]+/(GOAL|PLAN|README|SPEC|DECISIONS)\.md'
-  goals_document_pattern+='|goals/[^/]+/ops/manifest\.json'
-  goals_document_pattern+=')$'
   if [[ -n "$changed_files" ]] && ! grep -Eqv "$goals_document_pattern" <<< "$changed_files"; then
     goals_only=true
   fi

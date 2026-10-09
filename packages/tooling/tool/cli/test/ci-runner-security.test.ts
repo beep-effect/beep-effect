@@ -19,7 +19,7 @@ import type { Document } from "yaml";
 const SETUP_MONOREPO_ACTION = "./.github/actions/setup-monorepo-ci";
 
 // Explicit secret inputs of setup-monorepo-ci: the Turbo tokens plus the
-// application secret block scripts/ci-job-env.mjs allowlists. The script,
+// application secret block packages/tooling/tool/cli/src/commands/Ci/CiOperational.service.ts allowlists. The script,
 // the action's inputs, and every calling job carry the same names; the
 // credential-policy assertions pin the three copies together.
 const TURBO_SECRET_INPUTS: ReadonlyArray<readonly [string, string]> = [
@@ -130,7 +130,7 @@ const parsedDocument = (text: string): Document => {
   return document;
 };
 
-// $GITHUB_ENV heredoc form written by scripts/ci-job-env.mjs:
+// $GITHUB_ENV heredoc form written by packages/tooling/tool/cli/src/commands/Ci/CiOperational.service.ts:
 //   NAME<<delimiter\n<value lines>\ndelimiter
 // The back-reference closes each block on its own delimiter line, so a value
 // keeps every line shape (including empty) short of the delimiter itself.
@@ -193,7 +193,7 @@ const readCredentialPolicySources = Effect.fnUntraced(function* () {
   const heavyWorkflowText = yield* readText(".github/workflows/heavy.yml");
   const storybookText = yield* readText(".github/workflows/storybook.yml");
   const actionText = yield* readText(".github/actions/setup-monorepo-ci/action.yml");
-  const jobEnvScriptText = yield* readText("scripts/ci-job-env.mjs");
+  const jobEnvScriptText = yield* readText("packages/tooling/tool/cli/src/commands/Ci/CiOperational.service.ts");
 
   return {
     workflowText,
@@ -264,7 +264,7 @@ const assertTurboJobSetup = (jobs: WorkflowJobs, jobId: string, appSecrets: bool
   assert.strictEqual(inputs["app-secrets"], appSecrets ? "true" : undefined, jobId);
 };
 
-it.layer(NodeServices.layer, { timeout: "10 seconds" })("CI runner security", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (it) => {
   it.effect(
     "preserves the requested PR lane when an older checkout has no resource helper",
     Effect.fnUntraced(function* () {
@@ -399,6 +399,66 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("CI runner security", (i
   );
 
   it.effect(
+    "samples a synthetic proc tree and preserves signal termination codes",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const tempRoot = yield* fs.makeTempDirectoryScoped();
+      const proc = path.join(tempRoot, "proc");
+      yield* fs.makeDirectory(proc);
+      yield* fs.writeFileString(path.join(proc, "meminfo"), "MemTotal: 2097152 kB\nMemAvailable: 1048576 kB\n");
+      yield* fs.writeFileString(path.join(proc, "stat"), "cpu 100 0 100 800 0 0 0 0\n");
+      yield* fs.writeFileString(path.join(proc, "vmstat"), "pswpin 5\npswpout 7\n");
+      for (const [signal, code] of [
+        ["TERM", 143],
+        ["INT", 130],
+        ["KILL", 137],
+      ] as const) {
+        const result = Bun.spawnSync(
+          [
+            "bash",
+            path.join(repoRoot, "scripts/ci-runner-resources.sh"),
+            "fixture",
+            "bash",
+            "-c",
+            `kill -${signal} $$`,
+          ],
+          { env: { ...process.env, RUNNER_TEMP: tempRoot, BEEP_CI_PROC_ROOT: proc }, stdout: "pipe", stderr: "pipe" }
+        );
+        assert.strictEqual(result.exitCode, code);
+        assert.include(result.stdout.toString(), `| Lane exit status | ${code} |`);
+        assert.include(result.stdout.toString(), "| Host memory GiB | 2.00 |");
+        assert.include(result.stdout.toString(), "| Sampled used-memory peak GiB | 1.00 |");
+      }
+    })
+  );
+
+  it.effect(
+    "refuses recovered final-sample evidence after a periodic sampling failure",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const tempRoot = yield* fs.makeTempDirectoryScoped();
+      const result = Bun.spawnSync(
+        [
+          "bash",
+          path.join(repoRoot, "scripts/ci-runner-resources.sh"),
+          "fixture",
+          "bash",
+          "-c",
+          'target="$RUNNER_TEMP/beep-runner-resources/fixture.tsv"; mv "$target" "$target.saved"; mkdir "$target"; sleep 6; rmdir "$target"; mv "$target.saved" "$target"; exit 9',
+        ],
+        { env: { ...process.env, RUNNER_TEMP: tempRoot }, stdout: "pipe", stderr: "pipe" }
+      );
+      assert.strictEqual(result.exitCode, 9);
+      assert.include(result.stderr.toString(), "resource measurement unavailable");
+      assert.notInclude(result.stdout.toString(), "### Runner resources:");
+    })
+  );
+
+  it.effect(
     "classifies goals-only pull requests without suppressing mixed or push runs",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -408,8 +468,28 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("CI runner security", (i
       const scriptPath = path.join(repoRoot, "scripts/ci-change-profile.sh");
 
       const git = gitIn(tempRoot);
-      const profile = (eventName: string, outputPath = ""): Readonly<Record<string, string>> =>
-        changeProfile(scriptPath, tempRoot, eventName, outputPath);
+      const profile = (eventName: string, outputPath = ""): Readonly<Record<string, string>> => {
+        const bootstrap = changeProfile(scriptPath, tempRoot, eventName, outputPath);
+        const typed = Bun.spawnSync(
+          [
+            process.execPath,
+            path.join(repoRoot, "packages/tooling/tool/cli/src/bin.ts"),
+            "--",
+            "ci",
+            "change-profile",
+            "origin/main",
+          ],
+          {
+            cwd: tempRoot,
+            env: { ...process.env, GITHUB_EVENT_NAME: eventName, GITHUB_OUTPUT: "" },
+            stdout: "pipe",
+            stderr: "pipe",
+          }
+        );
+        assert.strictEqual(typed.exitCode, 0, typed.stderr.toString());
+        assert.deepEqual(parseProfileOutput(typed.stdout.toString()), bootstrap);
+        return bootstrap;
+      };
 
       git(["init"]);
       git(["config", "user.email", "ci-profile@example.test"]);
@@ -421,6 +501,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("CI runner security", (i
       git(["commit", "-m", "baseline"]);
       git(["update-ref", "refs/remotes/origin/main", git(["rev-parse", "HEAD"])]);
 
+      assert.strictEqual(profile("pull_request").goals_only, "false");
+      assert.strictEqual(profile("pull_request").desktop_rust_relevant, "false");
       yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "GOAL.md"), "# goals-only\n");
       git(["add", "."]);
       git(["commit", "-m", "goals-only"]);
@@ -709,7 +791,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("CI runner security", (i
       assert.isUndefined(policy.workflow.getIn(["on", "pull_request_target"]));
       assert.isDefined(policy.workflow.getIn(["on", "pull_request"]));
       // No workflow hand-copies the credential tuple any more: the selection
-      // lives once in scripts/ci-job-env.mjs behind the composite action. The
+      // lives once in packages/tooling/tool/cli/src/commands/Ci/CiOperational.service.ts behind the composite action. The
       // only secret references left are the explicit input pass-throughs the
       // policy allowlists; `toJSON(secrets)` never reaches a step input, so a
       // job's log header cannot inventory the repository's secret names.
@@ -728,7 +810,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("CI runner security", (i
     Effect.fnUntraced(function* () {
       const { action, actionText, jobEnvScriptText } = yield* readCredentialPolicySources();
 
-      assert.include(actionText, "run: bun scripts/ci-job-env.mjs");
+      assert.include(actionText, "run: bun run beep ci job-env");
       assert.include(actionText, "BEEP_CI_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}");
       // The action maps each explicit input to BEEP_CI_SECRET_<NAME>; the
       // script's allowlist names the same secrets.
@@ -821,7 +903,6 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("CI runner security", (i
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
       const tempRoot = yield* fs.makeTempDirectoryScoped();
-      const scriptPath = path.join(repoRoot, "scripts/ci-job-env.mjs");
       const secrets = {
         TURBO_TOKEN: "write-token",
         TURBO_READ_TOKEN: "read-token",
@@ -846,7 +927,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("CI runner security", (i
         scenario += 1;
         const outputPath = path.join(tempRoot, `job-env-${scenario}.txt`);
         yield* fs.writeFileString(outputPath, "");
-        const result = Bun.spawnSync([process.execPath, scriptPath], {
+        const result = Bun.spawnSync(["bun", "run", "beep", "ci", "job-env"], {
           cwd: repoRoot,
           env: {
             ...R.map(process.env, (value, name) => (Str.startsWith("BEEP_CI_SECRET_")(name) ? "" : value)),
@@ -966,6 +1047,10 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("CI runner security", (i
       );
       // The credential export precedes the Turbo restore so the local fallback
       // keys on the exported TURBO_TOKEN / TURBO_TEAM.
+      assert.isBelow(
+        stepIndexByName(actionSteps, "Install dependencies"),
+        stepIndexByName(actionSteps, "Export job environment")
+      );
       assert.isBelow(
         stepIndexByName(actionSteps, "Export job environment"),
         stepIndexByName(actionSteps, "Restore Turbo cache (local fallback only)")

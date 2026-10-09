@@ -24,6 +24,8 @@ import { formatDurationSeconds, makeTaggedLogger, printLines } from "../../inter
 import { CiCommandError } from "./Ci.errors.ts";
 import { ciAdmissionCommand } from "./CiAdmission.ts";
 import { ciLaneCommand, ciLocalCommand } from "./CiLane.ts";
+import { CiResourceLane } from "./CiOperational.schemas.ts";
+import { CiOperational, CiOperationalLive } from "./CiOperational.service.ts";
 import { ciRerunRunnerLossCommand } from "./CiRerunRunnerLoss.ts";
 import { ciLaneTimingsCommand } from "./LaneTimings.ts";
 
@@ -330,6 +332,53 @@ const appendTurboSummaryCommand = Command.make(
     )
 ).pipe(Command.withDescription("Append a Turbo run summary to GitHub step summary or stdout"));
 
+const operationalFailure = <A, R>(effect: Effect.Effect<A, CiCommandError, R>) =>
+  effect.pipe(
+    Effect.catchTag("CiCommandError", (error) =>
+      Console.error(error.message).pipe(Effect.andThen(failWithReportedExit(error.message)))
+    )
+  );
+const changeProfileCommand = Command.make(
+  "change-profile",
+  {
+    base: Argument.String("base").pipe(Argument.optional),
+  },
+  Effect.fn("Ci.changeProfileCommand")(function* ({ base }) {
+    const defaultBase = yield* Config.String("GITHUB_BASE_REF").pipe(Config.withDefault("main"));
+    yield* CiOperational.use((service) =>
+      operationalFailure(service.changeProfile(O.getOrElse(base, () => `origin/${defaultBase}`)))
+    );
+  })
+).pipe(Command.withDescription("Export goals-only and desktop Rust lane profiles"), Command.provide(CiOperationalLive));
+const jobEnvironmentCommand = Command.make("job-env", {}, () =>
+  CiOperational.use((service) => operationalFailure(service.jobEnvironment))
+).pipe(
+  Command.withDescription("Append the trusted event's explicit environment inputs to GITHUB_ENV"),
+  Command.provide(CiOperationalLive)
+);
+const decodeCiRuntimeArguments = S.decodeUnknownEffect(S.Array(S.String));
+const runnerResourcesCommand = Command.make(
+  "runner-resources",
+  {
+    lane: Argument.String("lane"),
+    command: Argument.String("command"),
+    args: Argument.String("args").pipe(Argument.variadic),
+  },
+  Effect.fn("Ci.runRunnerResources")(function* ({ lane, command, args }) {
+    if (!S.is(CiResourceLane)(lane)) return yield* failWithReportedExit("Invalid resource lane name", 64);
+    const values = yield* decodeCiRuntimeArguments(args).pipe(
+      CiCommandError.mapError("Runtime arguments must be strings.")
+    );
+    const status = yield* CiOperational.use((service) =>
+      operationalFailure(service.runnerResources(lane, command, values))
+    ).pipe(Effect.scoped);
+    if (status !== 0) return yield* failWithReportedExit("CI lane failed", status);
+  })
+).pipe(
+  Command.withDescription("Measure host resources around a command while preserving its status"),
+  Command.provide(CiOperationalLive)
+);
+
 /**
  * CI helper command group.
  *
@@ -358,6 +407,9 @@ export const ciCommand = Command.make("ci", {}, () =>
 ).pipe(
   Command.withDescription("Continuous integration helper commands"),
   Command.withSubcommands([
+    changeProfileCommand,
+    jobEnvironmentCommand,
+    runnerResourcesCommand,
     ciAdmissionCommand,
     appendTurboSummaryCommand,
     ciLaneCommand,

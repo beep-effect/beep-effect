@@ -40,6 +40,20 @@ export * from "./CiLane.ts";
  */
 export * from "./CiLanePartitions.ts";
 /**
+ * Operational CI schemas and platform service.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiOperational.schemas.ts";
+/**
+ * Operational CI service and live layer.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiOperational.service.ts";
+/**
  * Public runner-loss rerun subcommand export.
  *
  * @category cli-commands

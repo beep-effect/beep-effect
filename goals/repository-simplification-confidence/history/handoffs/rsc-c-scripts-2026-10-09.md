@@ -426,3 +426,43 @@ not passed · handoff: history/handoffs/rsc-c-scripts-2026-10-09.md · open: B/V
 exception admission, exact occurrence classification, semantic-delta history
 contract, post-repair verification, E workflow co-sign/Ci wave, publication and
 hosted proof.
+
+
+## Run 4 (after crash)
+
+Resume ruling 3 is applied. Required fetch/merge brought main into this lane at
+`c5787ba017`. The conflict resolution preserves both lanes' append-only friction
+receipts and main's Accounts TUI plus C's secrets-layout command. Shared owner
+regeneration reports 152 manifests, zero drift and zero writes; cache profile
+adds no tracked diff. The Fallow-input change regenerates the policy fingerprint
+through its owner. The earlier terminal passes remain revision-bound evidence.
+
+The whole Ci operational group now moves together: typed change-profile,
+job-env and runner-resources, a schema-owned shared pattern JSON, pre-runtime
+profile shim, resource shutdown adapter, coordinated install/export/restore
+ordering, and the retired job-env Fallow exemption. heavy.yml keeps its older-
+checkout resource fallback. No secret expression moves into policy tooling.
+E's co-sign remains a PR-review dependency and does not block draft publication.
+
+The independent pinned reviewer found two actionable resource-port defects:
+periodic sampler failure could disappear when a final sample recovered; Effect
+child signal termination mapped to exit 1. Repairs retain measurement-failure
+state and use a tiny shell wait boundary to preserve 128+signal. Synthetic
+fixtures add TERM/INT/KILL and recovered sampler failure, plus shared-profile
+parity for empty/goals/mixed/non-PR diffs. Review follow-up remains required.
+
+Admitted Run 4 parity initially catches introduced type/API errors and the
+expected root-input docgen full-required plan. Those source errors are repaired;
+post-repair test-tsgo and explicitly package-scoped docgen must settle before
+claiming current proof. Result/log files are `.beep/rsc-c-run4-*`. No passed old
+gate is rerun merely for a new report. At most two C-owned heavy commands run.
+
+### Reviewed-exception candidates
+
+Exact occurrence table will be appended from the post-repair scanner output.
+AccountsSecretField and AccountsSecretsItem retain lossless StructWithRest wire
+schemas (unknown item/field metadata survives identity verification), pending B
+admission. Real filesystem, symlink, subprocess and installed-Graft fixtures are
+judgment candidates; C does not write inventory/allowlist entries. Every candidate
+will name a source line, class and reason. S11 allows the attributed judgment red
+at publish and the orchestrator merge gate; this is not a blanket census waiver.
