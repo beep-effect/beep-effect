@@ -183,3 +183,13 @@
   Only PLAN needed a manual combination of the status and main table.
 - Prevention: a squash of a previously imported packet needs this explicit
   comparison base; identical-addition assumptions no longer hold after edits.
+
+## 2026-10-09 — H1 nested heavy-wrapper memory limit
+
+- Task: publish the addressed review wave after the crash-resume cap increase.
+- Evidence: the admitted publish wrapper ended with `oom-kill` before push;
+  its default MemoryMax was 16 GB even though the lane cap was 20 GB.
+- Recovery: merge shared repair #1565, retry the same wave, and set the queued
+  transient wrapper to MemoryMax=20G and MemoryHigh=16G; read back both values.
+- Prevention: lane cap rulings must also set `BEEP_HEAVY_MEM=20G` so nested
+  wrapper units carry the same limit. Preserve three-slot admission.

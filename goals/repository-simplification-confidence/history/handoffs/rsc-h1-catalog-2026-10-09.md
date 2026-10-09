@@ -173,3 +173,16 @@ open items: OSV holds renewed through 2026-10-30 with fixed-release/dependency-r
   monitor records before yielding; the final report names the remote head.
 - This remains the OSV-wave handoff, not completion of all H1 work. The worker
   does not merge or retire; the orchestrator owns the merge gate and sequencing.
+
+Run 3 publication preflight was interrupted before push to integrate the
+shared repair: #1565 landed during the admission wait. Fetched and merged
+origin/main as 251a83d481, retaining recovery commit fe73b715e6 and review fix
+c299cea799. The final publication retries this same addressed wave; no shared
+dependency file was changed, and no new wording-only wave is planned.
+
+The first Run 3 publication actually ended in a nested wrapper `oom-kill`
+before push (confirmed by the user journal), not a completed cancellation.
+The wrapper default was 16 GB despite the parent lane's 20 GB ruling. The
+queued retry retains admission and has its transient MemoryMax raised to
+20 GB with MemoryHigh 16 GB, verified by readback. The friction receipt is
+in research/OPPORTUNITIES.md; future heavy commands use BEEP_HEAVY_MEM=20G.
