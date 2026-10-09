@@ -390,18 +390,17 @@ describe("last good reading", () => {
 
   it("keeps an account's last good reading when its newest poll fails, stamped with its age", () => {
     const kept = retainLastGood([failed("me"), ok("other", [])], [ok("me", [weekly(20, inHours(5))])], previousAt);
-    assertSome(
-      A.head(
-        A.map(kept, (usage) =>
-          AccountUsageOutcome.match(usage.outcome, {
-            Ok: ({ asOf, windows }) => [O.getOrNull(asOf), A.length(windows)] as const,
-            NeedsLogin: () => [null, 0] as const,
-            Failed: () => [null, -1] as const,
-          })
-        )
-      ),
-      [previousAt, 1]
+    const readings = A.map(kept, (usage): readonly [DateTime.Utc | null, number] =>
+      AccountUsageOutcome.match(usage.outcome, {
+        Ok: ({ asOf, windows }) => [O.getOrNull(asOf), A.length(windows)],
+        NeedsLogin: () => [null, 0],
+        Failed: () => [null, -1],
+      })
     );
+    expect(readings).toEqual([
+      [previousAt, 1],
+      [null, 0],
+    ]);
     expect(A.map(kept, (usage) => usage.account.label)).toEqual(["me", "other"]);
   });
 
@@ -874,7 +873,9 @@ const runScreen = Effect.fnUntraced(function* (
   });
   const poller = AccountsUsage.of({
     accounts: Effect.succeed([]),
-    poll: (ref) => Effect.succeed(failed(ref.label)),
+    poll: Effect.fn("AccountsUsage.poll")(function* (ref: AccountRef) {
+      return failed(ref.label);
+    }),
     snapshots: usage,
     signedIn: Effect.succeed([]),
   });
