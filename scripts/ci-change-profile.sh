@@ -22,9 +22,39 @@ desktop_rust_relevant=true
 
 # Rust crate inputs for the desktop-ipc cargo check/clippy steps (D15): the
 # crate itself plus the workflow and gate that carry the steps.
-# Before Bun/dependencies exist, Node reads the schema owner's declarative patterns.
+# Before Bun/dependencies exist, this script runs on a bare runner: the hosted
+# heavy lanes call it in their should_run step ahead of the toolchain setup.
+# It reads the schema owner's declarative patterns with whatever JSON-capable
+# runtime is present (node, bun, jq, python3) and otherwise falls back to the
+# literal patterns below, which must stay equal to CiOperational.patterns.json
+# (the typed-vs-shim fixtures compare them). It must never fail for want of a
+# runtime: a failure here marks every heavy lane red.
 pattern_file="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json"
-read_pattern() { BEEP_CI_PATTERN_FILE="$pattern_file" BEEP_CI_PATTERN_NAME="$1" node -e 'process.stdout.write(require(process.env.BEEP_CI_PATTERN_FILE)[process.env.BEEP_CI_PATTERN_NAME])'; }
+fallback_pattern() {
+  case "$1" in
+    desktop) printf '%s' '^(apps/professional-desktop/src-tauri/|\.github/workflows/check\.yml$|scripts/ci-change-profile\.sh$|packages/tooling/tool/cli/src/commands/Ci/CiOperational)' ;;
+    goals) printf '%s' '^(goals/(INDEX|README)\.md|goals/[^/]+/(GOAL|PLAN|README|SPEC|DECISIONS)\.md|goals/[^/]+/ops/manifest\.json)$' ;;
+    *) return 1 ;;
+  esac
+}
+read_pattern() {
+  local name="$1" value=""
+  if [[ -r "$pattern_file" ]]; then
+    if command -v node >/dev/null 2>&1; then
+      value="$(BEEP_CI_PATTERN_FILE="$pattern_file" BEEP_CI_PATTERN_NAME="$name" node -e 'process.stdout.write(String(require(process.env.BEEP_CI_PATTERN_FILE)[process.env.BEEP_CI_PATTERN_NAME] ?? ""))' 2>/dev/null || true)"
+    elif command -v bun >/dev/null 2>&1; then
+      value="$(BEEP_CI_PATTERN_FILE="$pattern_file" BEEP_CI_PATTERN_NAME="$name" bun -e 'process.stdout.write(String(require(process.env.BEEP_CI_PATTERN_FILE)[process.env.BEEP_CI_PATTERN_NAME] ?? ""))' 2>/dev/null || true)"
+    elif command -v jq >/dev/null 2>&1; then
+      value="$(jq -r --arg k "$name" '.[$k] // empty' "$pattern_file" 2>/dev/null || true)"
+    elif command -v python3 >/dev/null 2>&1; then
+      value="$(BEEP_CI_PATTERN_FILE="$pattern_file" BEEP_CI_PATTERN_NAME="$name" python3 -I -c 'import json,os,sys; sys.stdout.write(str(json.load(open(os.environ["BEEP_CI_PATTERN_FILE"])).get(os.environ["BEEP_CI_PATTERN_NAME"], "")))' 2>/dev/null || true)"
+    fi
+  fi
+  if [[ -z "$value" ]]; then
+    value="$(fallback_pattern "$name")" || { echo "ci-change-profile: unknown pattern '$name'" >&2; return 1; }
+  fi
+  printf '%s' "$value"
+}
 desktop_rust_pattern="$(read_pattern desktop)"
 goals_document_pattern="$(read_pattern goals)"
 
