@@ -4,7 +4,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import patterns from "./CiOperational.patterns.json" with { type: "json" };
 
@@ -151,4 +153,31 @@ export class CiResourceSample extends S.Class<CiResourceSample>($I`CiResourceSam
     swapOut: S.Finite,
   },
   $I.annote("CiResourceSample", { description: "Host-wide procfs counters for runner measurement." })
+) {}
+
+const CiEnvironmentMode = LiteralKit([
+  "not requested",
+  "local-only",
+  "read-write (trusted push)",
+  "read-only (same-repository pull request)",
+  "exported (trusted push)",
+  "blank",
+]);
+
+/**
+ * A sanitized mode label alongside redacted GitHub environment entries.
+ *
+ * **Example** (Construct an unrequested export)
+ *
+ * ```ts
+ * import { CiEnvironmentSelection } from "@beep/repo-cli/commands/Ci"
+ * console.log(CiEnvironmentSelection.make({ mode: "not requested", entries: [] }).mode)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiEnvironmentSelection extends S.Class<CiEnvironmentSelection>($I`CiEnvironmentSelection`)(
+  { mode: CiEnvironmentMode, entries: S.Array(S.Tuple([S.String, S.Redacted(S.String)])) },
+  $I.annote("CiEnvironmentSelection", { description: "Trusted event export selection with values kept redacted." })
 ) {}

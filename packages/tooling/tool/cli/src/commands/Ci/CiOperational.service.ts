@@ -16,6 +16,7 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -25,7 +26,13 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runGitLines } from "../../internal/repo-run/ChangedFiles.ts";
 import { CiCommandError } from "./Ci.errors.ts";
-import { CiChangeProfile, CiDesktopInput, CiGoalDocument, CiResourceSample } from "./CiOperational.schemas.ts";
+import {
+  CiChangeProfile,
+  CiDesktopInput,
+  CiEnvironmentSelection,
+  CiGoalDocument,
+  CiResourceSample,
+} from "./CiOperational.schemas.ts";
 import type * as Scope from "effect/Scope";
 
 const $I = $RepoCliId.create("commands/Ci/CiOperational.service");
@@ -43,6 +50,7 @@ const appNames = [
 ];
 const isGoal = S.is(CiGoalDocument);
 const isDesktop = S.is(CiDesktopInput);
+const environmentEntry = S.Tuple([S.String, S.Redacted(S.String)]);
 const decodeNumber = S.decodeUnknownEffect(S.FiniteFromString);
 const decodeSample = S.decodeUnknownEffect(CiResourceSample);
 const unavailable = Console.error("::warning::Runner resource measurement unavailable; lane exit status is preserved.");
@@ -116,6 +124,63 @@ export const CiOperationalLive = Layer.effect(
       Effect.mapError(CiCommandError.new("Failed to determine the CI change profile."))
     );
 
+    const entry = (name: string, value: string): typeof environmentEntry.Type => [name, Redacted.make(value)];
+    const turboEnvironment = Effect.fn("Ci.selectTurboEnvironment")(function* (trusted: boolean, same: boolean) {
+      if ((yield* text("BEEP_CI_TURBO_REMOTE_CACHE")) !== "true")
+        return CiEnvironmentSelection.make({ mode: "not requested", entries: [] });
+      const api = yield* text("BEEP_CI_TURBO_API");
+      const team = yield* text("BEEP_CI_TURBO_TEAM");
+      const token = yield* secret(trusted ? "TURBO_TOKEN" : "TURBO_READ_TOKEN");
+      const permitted =
+        (trusted || same) && Str.isNonEmpty(api) && Str.isNonEmpty(team) && token.pipe(Redacted.value, Str.isNonEmpty);
+      const select = (
+        mode: CiEnvironmentSelection["mode"],
+        cache: string,
+        selectedApi: string,
+        selectedTeam: string,
+        selectedToken: Redacted.Redacted<string>
+      ) =>
+        CiEnvironmentSelection.make({
+          mode,
+          entries: [
+            entry("TURBO_API", selectedApi),
+            ["TURBO_TOKEN", selectedToken],
+            entry("TURBO_TEAM", selectedTeam),
+            entry("TURBO_CACHE", cache),
+            entry("TURBO_LOG_ORDER", "stream"),
+            entry("BEEP_CI_TURBO_REMOTE_MODE", mode),
+          ],
+        });
+      return Match.value({ permitted, trusted }).pipe(
+        Match.when({ permitted: false }, () => select("local-only", "local:rw", "", "", Redacted.make(""))),
+        Match.when({ trusted: true }, () =>
+          select("read-write (trusted push)", "local:rw,remote:rw", api, team, token)
+        ),
+        Match.orElse(() => select("read-only (same-repository pull request)", "local:rw,remote:r", api, team, token))
+      );
+    });
+    const applicationEnvironment = Effect.fn("Ci.selectApplicationEnvironment")(function* (trusted: boolean) {
+      if ((yield* text("BEEP_CI_APP_SECRETS")) !== "true")
+        return CiEnvironmentSelection.make({ mode: "not requested", entries: [] });
+      const entries = yield* Effect.forEach(
+        appNames,
+        Effect.fn("Ci.selectApplicationSecret")(function* (name) {
+          const value = trusted ? yield* secret(name) : Redacted.make("");
+          return environmentEntry.make([name, value]);
+        }),
+        { concurrency: 1 }
+      );
+      return CiEnvironmentSelection.make({ mode: trusted ? "exported (trusted push)" : "blank", entries });
+    });
+    const renderEnvironmentEntry = Effect.fn("Ci.renderEnvironmentEntry")(function* ([name, value]: readonly [
+      string,
+      Redacted.Redacted<string>,
+    ]) {
+      const raw = Redacted.value(value);
+      let delimiter = `beep_ci_env_${yield* crypto.randomUUIDv4}`;
+      while (A.contains(Str.split(raw, /\r?\n/u), delimiter)) delimiter = `beep_ci_env_${yield* crypto.randomUUIDv4}`;
+      return `${name}<<${delimiter}\n${raw}\n${delimiter}\n`;
+    });
     const jobEnvironment = Effect.gen(function* () {
       const target = yield* text("GITHUB_ENV");
       if (Str.isEmpty(target)) return yield* CiCommandError.make({ message: "ci-job-env: GITHUB_ENV is not set" });
@@ -124,50 +189,13 @@ export const CiOperationalLive = Layer.effect(
       const head = yield* text("BEEP_CI_HEAD_REPOSITORY");
       const trusted = event === "push";
       const same = event === "pull_request" && Str.isNonEmpty(repo) && repo === head;
-      let mode = "not requested";
-      let appMode = "not requested";
-      const entries: Array<readonly [string, Redacted.Redacted<string>]> = [];
-      const add = (name: string, value: string) => {
-        entries.push([name, Redacted.make(value)]);
-      };
-      if ((yield* text("BEEP_CI_TURBO_REMOTE_CACHE")) === "true") {
-        const api = yield* text("BEEP_CI_TURBO_API");
-        const team = yield* text("BEEP_CI_TURBO_TEAM");
-        const token = yield* secret(trusted ? "TURBO_TOKEN" : "TURBO_READ_TOKEN");
-        const permitted =
-          (trusted || same) &&
-          Str.isNonEmpty(api) &&
-          Str.isNonEmpty(team) &&
-          token.pipe(Redacted.value, Str.isNonEmpty);
-        mode = permitted
-          ? trusted
-            ? "read-write (trusted push)"
-            : "read-only (same-repository pull request)"
-          : "local-only";
-        add("TURBO_API", permitted ? api : "");
-        entries.push(["TURBO_TOKEN", permitted ? token : Redacted.make("")]);
-        add("TURBO_TEAM", permitted ? team : "");
-        add("TURBO_CACHE", permitted ? (trusted ? "local:rw,remote:rw" : "local:rw,remote:r") : "local:rw");
-        add("TURBO_LOG_ORDER", "stream");
-        add("BEEP_CI_TURBO_REMOTE_MODE", mode);
-      }
-      if ((yield* text("BEEP_CI_APP_SECRETS")) === "true") {
-        for (const name of appNames) entries.push([name, trusted ? yield* secret(name) : Redacted.make("")]);
-        appMode = trusted ? "exported (trusted push)" : "blank";
-      }
-      const rendered = yield* Effect.forEach(
-        entries,
-        Effect.fn("Ci.renderEnvironmentEntry")(function* ([name, value]) {
-          const raw = Redacted.value(value);
-          let delimiter = `beep_ci_env_${yield* crypto.randomUUIDv4}`;
-          while (A.contains(Str.split(raw, /\r?\n/u), delimiter))
-            delimiter = `beep_ci_env_${yield* crypto.randomUUIDv4}`;
-          return `${name}<<${delimiter}\n${raw}\n${delimiter}\n`;
-        }),
-        { concurrency: 1 }
-      );
+      const turbo = yield* turboEnvironment(trusted, same);
+      const app = yield* applicationEnvironment(trusted);
+      const rendered = yield* Effect.forEach(A.appendAll(turbo.entries, app.entries), renderEnvironmentEntry, {
+        concurrency: 1,
+      });
       yield* append(target, A.join(rendered, ""));
-      yield* Console.log(`ci-job-env: turbo remote cache ${mode}; application secrets ${appMode}`);
+      yield* Console.log(`ci-job-env: turbo remote cache ${turbo.mode}; application secrets ${app.mode}`);
     }).pipe(
       Effect.mapError(CiCommandError.new("Failed to export the CI job environment.")),
       Effect.withSpan("Ci.jobEnvironment")

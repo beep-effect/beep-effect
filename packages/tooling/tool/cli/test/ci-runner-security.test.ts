@@ -472,7 +472,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         const bootstrap = changeProfile(scriptPath, tempRoot, eventName, outputPath);
         const typed = Bun.spawnSync(
           [
-            process.execPath,
+            "bun",
             path.join(repoRoot, "packages/tooling/tool/cli/src/bin.ts"),
             "--",
             "ci",
