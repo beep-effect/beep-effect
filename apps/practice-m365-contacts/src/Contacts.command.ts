@@ -47,7 +47,8 @@ export const makeContactsCommand = (checkoutRoot: string) => {
   const baseLayer = contactSeedingLayer(checkoutRoot).pipe(Layer.provide(ContactsStateLive));
   const run = <A, E>(offline: boolean, program: Effect.Effect<A, E, ContactSeeding>) =>
     Effect.scoped(
-      Layer.build(offline ? baseLayer : baseLayer.pipe(Layer.provide(liveMailbox))).pipe(
+      (offline ? baseLayer : baseLayer.pipe(Layer.provide(liveMailbox))).pipe(
+        Layer.build,
         Effect.flatMap((context) => program.pipe(Effect.provideContext(context)))
       )
     ).pipe(Effect.mapError((error) => (S.is(ContactsError)(error) ? error : privateConfigFailure())));

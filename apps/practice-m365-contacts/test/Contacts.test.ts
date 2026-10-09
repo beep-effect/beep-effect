@@ -61,7 +61,8 @@ const csv = "First Name,Last Name,Company,E-mail Address\nFixture,Person,Fixture
 
 const withFiles = <A, E, R>(program: (root: string) => Effect.Effect<A, E, R>) =>
   Effect.scoped(
-    Layer.build(BunServices.layer).pipe(
+    BunServices.layer.pipe(
+      Layer.build,
       Effect.flatMap((context) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
