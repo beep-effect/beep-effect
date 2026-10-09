@@ -8,6 +8,7 @@
 // means every sync updates the first copy while the stale second lives on
 // disk forever.
 
+import { dual } from "effect/Function";
 import type { CommentStyle } from "../CommentStyle.ts";
 import { PlacedSection, Section } from "../Section.ts";
 import type { Eol, SectionDialect } from "../SectionDialect.ts";
@@ -93,7 +94,10 @@ interface MarkerHit {
 }
 
 /** The identity two sections must share to be duplicates of each other. */
-export const identityOf = (key: string, style: CommentStyle): string => `${key}\u0000${style.id}`;
+export const identityOf: {
+	(key: string, style: CommentStyle): string;
+	(style: CommentStyle): (key: string) => string;
+} = dual(2, (key: string, style: CommentStyle): string => `${key}\u0000${style.id}`);
 
 const collectHits = (text: string, dialect: SectionDialect): ReadonlyArray<MarkerHit> => {
 	const hits: Array<MarkerHit> = [];
@@ -146,7 +150,10 @@ const collectHits = (text: string, dialect: SectionDialect): ReadonlyArray<Marke
  * hostile input. Sections cannot nest: a begin marker encountered while
  * another section is open is `overlappingSections`, not an inner block.
  */
-export const scan = (text: string, dialect: SectionDialect): ScanResult => {
+export const scan: {
+	(text: string, dialect: SectionDialect): ScanResult;
+	(dialect: SectionDialect): (text: string) => ScanResult;
+} = dual(2, (text: string, dialect: SectionDialect): ScanResult => {
 	const starts = lineStarts(text);
 	const sections: Array<PlacedSection> = [];
 	const firstSeenAt = new Map<string, number>();
@@ -199,4 +206,4 @@ export const scan = (text: string, dialect: SectionDialect): ScanResult => {
 	}
 
 	return { ok: true, sections };
-};
+});

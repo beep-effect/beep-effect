@@ -2,8 +2,9 @@ import { assert } from "@effect/vitest";
 import type { MemoryFileSystemSeed, MemoryFileSystemVolume } from "../../effected/memfs/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import type { FileSystem, Layer } from "effect";
-import { Effect, PlatformError, Result } from "effect";
-import type { SectionParseError } from "../../effected/templates/index.ts";
+import { Effect, PlatformError, Predicate, Result } from "effect";
+import { dual } from "effect/Function";
+import type { Section, SectionParseError } from "../../effected/templates/index.ts";
 import { CommentStyle, SectionDialect, SectionDocument, SectionId } from "../../effected/templates/index.ts";
 
 /** A writable in-memory filesystem, built fresh per test. */
@@ -75,13 +76,19 @@ export const memoryFs = (
 export const id = (key: string) => SectionId.make({ key, commentStyle: CommentStyle.hash });
 
 /** A section in the default `#` style. */
-export const section = (key: string, content: string) => id(key).section(content);
+export const section: {
+	(key: string, content: string): Section;
+	(content: string): (key: string) => Section;
+} = dual(2, (key: string, content: string) => id(key).section(content));
 
 export const begin = (key: string) => `# --- BEGIN ${key} MANAGED SECTION ---`;
 export const end = (key: string) => `# --- END ${key} MANAGED SECTION ---`;
 
 /** A rendered block as it appears in a document. */
-export const block = (key: string, content: string) => [begin(key), content, end(key)].join("\n");
+export const block: {
+	(key: string, content: string): string;
+	(content: string): (key: string) => string;
+} = dual(2, (key: string, content: string) => [begin(key), content, end(key)].join("\n"));
 
 /** Join lines with LF; the trailing newline is explicit at each call site. */
 export const lines = (...parts: ReadonlyArray<string>) => parts.join("\n");
@@ -89,18 +96,24 @@ export const lines = (...parts: ReadonlyArray<string>) => parts.join("\n");
 /** Rewrite an LF fixture as CRLF. */
 export const crlf = (text: string) => text.replace(/\n/g, "\r\n");
 
-export const parse = (text: string, dialect: SectionDialect = SectionDialect.default): SectionDocument => {
+export const parse: {
+	(text: string, dialect?: SectionDialect): SectionDocument;
+	(dialect?: SectionDialect): (text: string) => SectionDocument;
+} = dual((args) => Predicate.isString(args[0]), (text: string, dialect: SectionDialect = SectionDialect.default): SectionDocument => {
 	const result = SectionDocument.parseResult(text, dialect);
 	if (!Result.isSuccess(result)) {
 		assert.fail(`expected a parseable document, got ${result.failure.reason} at line ${result.failure.line}`);
 	}
 	return result.success;
-};
+});
 
-export const parseFailure = (text: string, dialect: SectionDialect = SectionDialect.default): SectionParseError => {
+export const parseFailure: {
+	(text: string, dialect?: SectionDialect): SectionParseError;
+	(dialect?: SectionDialect): (text: string) => SectionParseError;
+} = dual((args) => Predicate.isString(args[0]), (text: string, dialect: SectionDialect = SectionDialect.default): SectionParseError => {
 	const result = SectionDocument.parseResult(text, dialect);
 	if (!Result.isFailure(result)) {
 		assert.fail("expected the document to be rejected");
 	}
 	return result.failure;
-};
+});

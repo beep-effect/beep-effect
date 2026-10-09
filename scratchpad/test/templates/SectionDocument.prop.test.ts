@@ -10,7 +10,7 @@ const styles = [
 	CommentStyle.make({ prefix: "#" }),
 	CommentStyle.make({ prefix: "//" }),
 	CommentStyle.make({ prefix: "<!--", suffix: "-->" }),
-];
+] as const;
 
 const Key = Schema.Literals(["alpha", "beta", "gamma", "delta"]);
 // The style is generated as an index into `styles` — a literal can name a
