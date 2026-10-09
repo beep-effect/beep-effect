@@ -1,29 +1,52 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import { flow, pipe } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+
+const $I = $ScratchpadId.create("effected/github-commands/WorkflowCommand");
+
 /**
  * The title and source location of a `::notice::`, `::warning::` or `::error::`
  * annotation.
  *
- * @remarks
+ * **Details**
+ *
  * The field names here are the readable ones; GitHub's wire protocol uses
  * abbreviations (`line`, `col`) that this module maps on the way out, so a
  * caller never has to remember which of the six is abbreviated.
  *
- * @public
+ * **Example** (Validate annotation properties)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { AnnotationProperties } from "./index.ts";
+ *
+ * S.is(AnnotationProperties)({ file: "src/main.ts", startLine: 12 }); // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
-export interface AnnotationProperties {
+export const AnnotationProperties = S.Struct({
 	/** A short title shown above the annotation. */
-	readonly title?: string;
+	title: S.optionalKey(S.String.annotate($I.annote("title", { description: "A short title shown above the annotation." }))),
 	/** Repository-relative path of the annotated file. */
-	readonly file?: string;
+	file: S.optionalKey(S.String.annotate($I.annote("file", { description: "Repository-relative path of the annotated file." }))),
 	/** First annotated line, 1-based. */
-	readonly startLine?: number;
+	startLine: S.optionalKey(S.Finite.annotate($I.annote("startLine", { description: "First annotated line, 1-based." }))),
 	/** Last annotated line, 1-based. */
-	readonly endLine?: number;
+	endLine: S.optionalKey(S.Finite.annotate($I.annote("endLine", { description: "Last annotated line, 1-based." }))),
 	/** First annotated column, 1-based. */
-	readonly startColumn?: number;
+	startColumn: S.optionalKey(S.Finite.annotate($I.annote("startColumn", { description: "First annotated column, 1-based." }))),
 	/** Last annotated column, 1-based. */
-	readonly endColumn?: number;
-}
+	endColumn: S.optionalKey(S.Finite.annotate($I.annote("endColumn", { description: "Last annotated column, 1-based." }))),
+}).annotate($I.annote("AnnotationProperties", { description: "The title and source location of a GitHub Actions notice, warning or error annotation." }));
+
+/** The readable annotation properties accepted by the workflow command helpers. */
+export type AnnotationProperties = typeof AnnotationProperties.Type;
 
 /** Property values the runner accepts on a command. */
 type CommandProperties = Readonly<Record<string, string | number | boolean | undefined>>;
@@ -36,8 +59,7 @@ type CommandProperties = Readonly<Record<string, string | number | boolean | und
  * it last would re-escape the `%` of an escape sequence this function just
  * produced, turning `%0A` into `%250A`.
  */
-const escapeMessage = (value: string): string =>
-	value.replaceAll("%", "%25").replaceAll("\r", "%0D").replaceAll("\n", "%0A");
+const escapeMessage = flow(Str.replaceAll("%", "%25"), Str.replaceAll("\r", "%0D"), Str.replaceAll("\n", "%0A"));
 
 /**
  * Escape a property value.
@@ -47,7 +69,7 @@ const escapeMessage = (value: string): string =>
  * delimit the property list and terminate it. An unescaped one truncates the
  * command or lets a value be read as a new property.
  */
-const escapeProperty = (value: string): string => escapeMessage(value).replaceAll(":", "%3A").replaceAll(",", "%2C");
+const escapeProperty = flow(escapeMessage, Str.replaceAll(":", "%3A"), Str.replaceAll(",", "%2C"));
 
 /**
  * The GitHub Actions workflow-command wire protocol: `::name key=value::message`.
@@ -98,10 +120,12 @@ export class WorkflowCommand {
 		properties: Readonly<Record<string, string | number | boolean | undefined>>,
 		message: string,
 	): string {
-		const rendered = R.toEntries(properties)
-			.filter((entry): entry is [string, string | number | boolean] => entry[1] !== undefined)
-			.map(([key, value]) => `${key}=${escapeProperty(String(value))}`)
-			.join(",");
+		const rendered = pipe(
+			R.toEntries(properties),
+			A.filter((entry): entry is [string, string | number | boolean] => P.isNotUndefined(entry[1])),
+			A.map(([key, value]) => `${key}=${escapeProperty(String(value))}`),
+			A.join(","),
+		);
 		const head = rendered === "" ? `::${name}::` : `::${name} ${rendered}::`;
 		return `${head}${escapeMessage(message)}`;
 	}

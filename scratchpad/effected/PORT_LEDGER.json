@@ -3561,9 +3561,102 @@
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 0,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/github-commands/WorkflowCommand.test.ts:52 (property rendering; getter/enumerability edge has no pinning test)",
+          "upstreamBehaviour": "WorkflowCommand.render in WorkflowCommand.ts uses Object.entries, interleaving descriptor checks with property reads; a first getter hiding second yields ::debug first=a::m.",
+          "labBehaviour": "WorkflowCommand.render uses effect/Record.toEntries, snapshotting keys before reads; the same getter yields ::debug first=a,second=b::m. Ordinary property order remains unchanged.",
+          "reason": "native-runtime: effect-laws-v1 law 6 forbids Object.entries; the 2026-10-09 grilling ruling requires keeping Effect replacements without native-runtime exceptions. INVENTORY.md:98 and sol.md:4/fable.md:4 document the getter probe."
+        },
+        {
+          "test": "scratchpad/test/github-commands/WorkflowCommand.test.ts:9, scratchpad/test/github-commands/WorkflowCommand.test.ts:27, scratchpad/test/github-commands/WorkflowCommand.test.ts:38",
+          "upstreamBehaviour": "AnnotationProperties in WorkflowCommand.ts is an erased interface with six optional fields, exported only as a type by index.ts; no runtime validation exists.",
+          "labBehaviour": "WorkflowCommand.ts defines AnnotationProperties as S.Struct with S.optionalKey fields and derives its type; index.ts also exports the runtime schema. S.is rejects invalid field types and explicit undefined; command helpers still accept structural inputs without decoding.",
+          "reason": "schema-first: D2/D5 and the executable-contract law require schemas for representable payloads; INVENTORY.md:22 and fix-github-commands-g1.md:2/:16 require the runtime contract and value export while preserving structural command helpers."
+        },
+        {
+          "test": "scratchpad/test/github-commands/WorkflowCommand.test.ts:9, scratchpad/test/github-commands/WorkflowCommand.test.ts:27, scratchpad/test/github-commands/WorkflowCommand.test.ts:38",
+          "upstreamBehaviour": "AnnotationProperties startLine, endLine, startColumn and endColumn are optional TypeScript numbers with no runtime finite-number checks.",
+          "labBehaviour": "WorkflowCommand.ts uses S.Finite for all four optional coordinates. The schema rejects NaN and infinities, accepts finite negative/fractional/zero values, and adds no integer/range checks; notice/warning/error still render NaN and Infinity without decoding.",
+          "reason": "numeric-domains: schema laws require S.Finite numeric bases; INVENTORY.md:22 and fix-github-commands-g1.md:14 mandate finite validation without extra integer/range constraints or altered structural helper behavior."
+        },
+        {
+          "test": "module suite scratchpad/test/github-commands/**",
+          "upstreamBehaviour": "AnnotationProperties is an erased interface in WorkflowCommand.ts with no schema or field identity metadata and no @beep/identity import.",
+          "labBehaviour": "WorkflowCommand.ts creates $I with $ScratchpadId.create(effected/github-commands/WorkflowCommand) and annotates AnnotationProperties plus title, file, startLine, endLine, startColumn and endColumn.",
+          "reason": "identity-annotations: operator revision step 4 and D5 require @beep/identity IdentityComposer annotations on schemas and fields. fix-github-commands-g1.md:15 describes this metadata under the free-form identity-keys label; no identity-keyed collection changes occur."
+        },
+        {
+          "test": "scratchpad/test/github-commands/WorkflowCommand.test.ts:59/:74/:78/:86; scratchpad/test/github-commands/CommandNeutralizer.test.ts:70/:78/:85/:90",
+          "upstreamBehaviour": "WorkflowCommand escapeMessage/escapeProperty use native replaceAll; render uses filter/map/join and an undefined comparison. CommandNeutralizer.neutralize/lines/text use native replace, split, map and join.",
+          "labBehaviour": "WorkflowCommand uses flow with effect/String.replaceAll and pipe with effect/Array.filter/map/join and Predicate.isNotUndefined. CommandNeutralizer uses String.replace/split and Array.map/join. Percent-first escaping, global replacement and CR/LF splitting are retained.",
+          "reason": "effect-first: EF-5/EF-6, AGENTS.md helper rules and D5 require available Effect-native helpers; INVENTORY.md:31 and fix-github-commands-g1.md:3 cover both implementations. Imports use effect/<Module> paths; Function supplies flow/pipe."
+        },
+        {
+          "test": "scratchpad/test/github-commands/CommandNeutralizer.test.ts:19, scratchpad/test/github-commands/CommandNeutralizer.test.ts:26",
+          "upstreamBehaviour": "CommandNeutralizer V2 uses JavaScript whitespace plus U+0085, so lines/text insert U+200B before U+FEFF::error::x although the independent runner oracle classifies it as quiet.",
+          "labBehaviour": "CommandNeutralizer.ts V2 uses the exact .NET whitespace set excluding U+FEFF; lines/text preserve the BOM-prefixed quiet line unchanged and still neutralize every oracle whitespace prefix, retaining CR/LF splitting.",
+          "reason": "upstream-bug: sol.md:11 and fable.md:11 reproduce over-neutralization at pinned upstream af7566a9da2eff169cb74955efcc5ede1e5de9f8; fix-github-commands-g1.md:1/:6/:7/:13 and the added BOM/whitespace tests verify the quiet-line fidelity repair."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "grok-1-1 — Convert CommandNeutralizer documentation carriers (scratchpad/effected/github-commands/CommandNeutralizer.ts:21)",
+          "reason": "jsdoc: At S2 convert legacy carriers to titled Example, Details and Gotchas sections; add lab-entry examples and category/since metadata while retaining upstream protocol prose."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "grok-1-2 — Convert WorkflowCommand documentation carriers (scratchpad/effected/github-commands/WorkflowCommand.ts:6)",
+          "reason": "jsdoc: At S2 convert legacy carriers and privateRemarks to canonical sections, lab-entry examples and export metadata; retain escaping/injection rationale and describe the schema value/type."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "grok-1-3 — Correct dependency-free entrypoint prose (scratchpad/effected/github-commands/index.ts:2-3)",
+          "reason": "docs: At S2 keep the no-IO claim and describe actual Effect and @beep/identity dependencies; remove the dependency-free guarantee."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "grok-1-4 — Adapt upstream package README to the lab (scratchpad/effected/github-commands/README.md:8/:23-38)",
+          "reason": "docs: At S2 remove release badges, installation instructions and stability boilerplate; retarget usage and dependencies while preserving protocol explanations and attribution."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "grok-1-5 — Complete neutralizer fidelity and idempotence test floor (scratchpad/test/github-commands/CommandNeutralizer.test.ts:37/:82/:107)",
+          "reason": "test: At S3 reuse the required BOM/whitespace regressions, complete any remaining oracle-whitespace coverage and add a ZWSP-seeded idempotence case; retain the exhaustive suite."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "grok-1-6 — Add formatter fidelity properties (scratchpad/test/github-commands/WorkflowCommand.test.ts:29/:47-50)",
+          "reason": "test: At S3 add fcRuns-backed arbitrary-string properties for no raw message CR/LF and one-pass escape round trips, including property colon/comma escaping; retain upstream tests and do not assert renderer idempotence."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 0,
+              "backlog": 6
+            },
+            "sol": {
+              "required": 4,
+              "backlog": 3
+            },
+            "fable": {
+              "required": 5,
+              "backlog": 6
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

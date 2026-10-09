@@ -11,4 +11,4 @@
  */
 
 export { CommandNeutralizer } from "./CommandNeutralizer.ts";
-export { type AnnotationProperties, WorkflowCommand } from "./WorkflowCommand.ts";
+export { AnnotationProperties, WorkflowCommand } from "./WorkflowCommand.ts";

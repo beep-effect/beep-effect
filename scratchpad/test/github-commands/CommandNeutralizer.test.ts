@@ -1,6 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import { CommandNeutralizer } from "../../effected/github-commands/index.ts";
-import { LINE_BREAK, commandLines, isCommand } from "./helpers/runnerCommands.ts";
+import { LINE_BREAK, commandLines, isCommand, isDotNetWhitespace } from "./helpers/runnerCommands.ts";
 
 const ZWSP = String.fromCodePoint(0x200b);
 
@@ -16,6 +16,32 @@ const strings = (alphabet: ReadonlyArray<string>, length: number): ReadonlyArray
 };
 
 describe("CommandNeutralizer: the runner's two parsers", () => {
+	it("returns a quiet BOM-prefixed line unchanged", () => {
+		const line = "\uFEFF::error::x";
+		assert.isFalse(isCommand(line));
+		assert.deepStrictEqual(CommandNeutralizer.lines(line), [line]);
+		assert.strictEqual(CommandNeutralizer.text(line), line);
+	});
+
+	it("neutralizes commands after every oracle whitespace code point, retaining stream line breaks", () => {
+		const whitespace = [
+			"\t", "\n", "\v", "\f", "\r", " ", "\u0085", "\u00A0", "\u1680",
+			"\u2000", "\u2001", "\u2002", "\u2003", "\u2004", "\u2005",
+			"\u2006", "\u2007", "\u2008", "\u2009", "\u200A",
+			"\u2028", "\u2029", "\u202F", "\u205F", "\u3000",
+		];
+		for (const ch of whitespace) {
+			const line = `${ch}::error::x`;
+			assert.isTrue(isDotNetWhitespace(ch), JSON.stringify(ch));
+			assert.isTrue(isCommand(line), JSON.stringify(ch));
+			const expected = ch === "\r" || ch === "\n" ? ["", `${ZWSP}::error::x`] : [`${ZWSP}${line}`];
+			const out = CommandNeutralizer.lines(line);
+			assert.deepStrictEqual(out, expected, JSON.stringify(ch));
+			for (const outputLine of out) assert.isFalse(isCommand(outputLine), JSON.stringify(ch));
+			assert.strictEqual(CommandNeutralizer.text(line), expected.join("\n"), JSON.stringify(ch));
+		}
+	});
+
 	it("the oracle itself flags what each parser reads, and nothing else (mutation controls)", () => {
 		for (const command of [
 			"::error::x",

@@ -1,5 +1,9 @@
-/** V2: after leading .NET whitespace, which is JavaScript's `\s` plus U+0085, the line starts with `::`. */
-const V2 = /^[\s\u0085]*::/;
+import * as A from "effect/Array";
+import { pipe } from "effect/Function";
+import * as Str from "effect/String";
+
+/** V2: after leading .NET whitespace (including U+0085, excluding U+FEFF), the line starts with `::`. */
+const V2 = /^[\t-\r \u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000]*::/;
 
 /** Legacy: `##[` anywhere. */
 const LEGACY = /##\[/g;
@@ -11,7 +15,7 @@ const LINE_BREAK = /\r\n|\r|\n/;
 const ZERO_WIDTH_SPACE = String.fromCodePoint(0x200b);
 
 const neutralize = (line: string): string => {
-	const legacy = line.replace(LEGACY, `##${ZERO_WIDTH_SPACE}[`);
+	const legacy = pipe(line, Str.replace(LEGACY, `##${ZERO_WIDTH_SPACE}[`));
 	return V2.test(legacy) ? `${ZERO_WIDTH_SPACE}${legacy}` : legacy;
 };
 
@@ -61,7 +65,7 @@ export class CommandNeutralizer {
 	 * @returns one entry per line, in order
 	 */
 	static lines(text: string): ReadonlyArray<string> {
-		return text.split(LINE_BREAK).map(neutralize);
+		return pipe(text, Str.split(LINE_BREAK), A.map(neutralize));
 	}
 
 	/**
@@ -73,6 +77,6 @@ export class CommandNeutralizer {
 	 * @param text - text that is data, not a command
 	 */
 	static text(text: string): string {
-		return CommandNeutralizer.lines(text).join("\n");
+		return pipe(CommandNeutralizer.lines(text), A.join("\n"));
 	}
 }

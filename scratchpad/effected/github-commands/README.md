@@ -76,7 +76,14 @@ None.
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — WorkflowCommand.render replaces upstream Object.entries with R.toEntries, whose key snapshot retains a sibling property hidden by an earlier getter. (scratchpad/test/github-commands/WorkflowCommand.test.ts:52 (property rendering; getter/enumerability edge has no pinning test))
+- **schema-first** — The erased upstream AnnotationProperties interface becomes an exported S.Struct runtime schema and derived type, while command helpers keep structural inputs. (scratchpad/test/github-commands/WorkflowCommand.test.ts:9, scratchpad/test/github-commands/WorkflowCommand.test.ts:27, scratchpad/test/github-commands/WorkflowCommand.test.ts:38)
+- **numeric-domains** — The annotation schema uses S.Finite for four coordinates where upstream had unchecked number fields, while structural command helpers still render non-finite inputs. (scratchpad/test/github-commands/WorkflowCommand.test.ts:9, scratchpad/test/github-commands/WorkflowCommand.test.ts:27, scratchpad/test/github-commands/WorkflowCommand.test.ts:38)
+- **identity-annotations** — AnnotationProperties and its six fields gain @beep/identity $I annotations absent from upstream. (module suite scratchpad/test/github-commands/**)
+- **effect-first** — WorkflowCommand and CommandNeutralizer replace upstream native string/array helpers with Effect helpers and flow/pipe while preserving escaping and line splitting. (scratchpad/test/github-commands/WorkflowCommand.test.ts:59/:74/:78/:86; scratchpad/test/github-commands/CommandNeutralizer.test.ts:70/:78/:85/:90)
+- **upstream-bug** — CommandNeutralizer preserves quiet BOM-prefixed lines that upstream unnecessarily modified, using the exact runner whitespace set. (scratchpad/test/github-commands/CommandNeutralizer.test.ts:19, scratchpad/test/github-commands/CommandNeutralizer.test.ts:26)
 
 ### Dependency backlog
 

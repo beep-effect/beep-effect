@@ -1,7 +1,49 @@
 import { assert, describe, it } from "@effect/vitest";
-import { WorkflowCommand } from "../../effected/github-commands/index.ts";
+import * as S from "effect/Schema";
+import { AnnotationProperties, WorkflowCommand } from "../../effected/github-commands/index.ts";
 
 describe("WorkflowCommand", () => {
+	describe("AnnotationProperties runtime contract", () => {
+		const isAnnotationProperties = S.is(AnnotationProperties);
+
+		it("accepts absent fields and structural annotations without integer or range constraints", () => {
+			const properties: AnnotationProperties = {
+				title: "",
+				file: "src/main.ts",
+				startLine: -1.5,
+				endLine: 0,
+				startColumn: 0.25,
+				endColumn: -2,
+			};
+			assert.isTrue(isAnnotationProperties({}));
+			assert.isTrue(isAnnotationProperties({ title: "T" }));
+			assert.isTrue(isAnnotationProperties(properties));
+			assert.strictEqual(
+				WorkflowCommand.error("e", properties),
+				"::error title=,file=src/main.ts,line=-1.5,endLine=0,col=0.25,endColumn=-2::e",
+			);
+		});
+
+		it("rejects invalid field types, explicit undefined and non-finite coordinates", () => {
+			for (const key of ["title", "file"]) {
+				for (const value of [1, null, undefined]) assert.isFalse(isAnnotationProperties({ [key]: value }));
+			}
+			for (const key of ["startLine", "endLine", "startColumn", "endColumn"]) {
+				for (const value of ["1", null, undefined, NaN, Infinity, -Infinity]) {
+					assert.isFalse(isAnnotationProperties({ [key]: value }));
+				}
+			}
+		});
+
+		it("keeps command helpers structural without automatic schema decoding", () => {
+			const properties: AnnotationProperties = { startLine: Infinity, endColumn: NaN };
+			assert.isFalse(isAnnotationProperties(properties));
+			assert.strictEqual(WorkflowCommand.notice("n", properties), "::notice line=Infinity,endColumn=NaN::n");
+			assert.strictEqual(WorkflowCommand.warning("w", properties), "::warning line=Infinity,endColumn=NaN::w");
+			assert.strictEqual(WorkflowCommand.error("e", properties), "::error line=Infinity,endColumn=NaN::e");
+		});
+	});
+
 	describe("rendering", () => {
 		it("renders a bare command with no properties", () => {
 			assert.strictEqual(WorkflowCommand.render("debug", {}, "hello"), "::debug::hello");
