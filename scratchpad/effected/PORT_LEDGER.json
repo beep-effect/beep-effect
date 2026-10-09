@@ -5009,13 +5009,244 @@
       "wave": 3,
       "position": 3,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "tooling/library",
       "upstreamPaths": {
         "src": "packages/config-file/src",
         "test": "packages/config-file/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "ConfigCodec",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigCodecError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ConfigDefaultPathMissingError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ConfigEncodeError",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigEncodeOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigEncryptionError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ConfigEvent",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ConfigEventPayload",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ConfigEvents",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ConfigEventsShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigFile",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ConfigFileMigration",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigFileNotFoundError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ConfigFileOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigFileReadError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ConfigFileShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigFileTestOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigFileWriteError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ConfigLoadError",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigMatch",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigMigration",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ConfigMigrationError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ConfigMigrationOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigProbe",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigReadError",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigReadOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigResolver",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ConfigSaveError",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigSource",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigSourceRef",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "ConfigUpdateError",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigValidationError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ConfigWriteError",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "EncryptedCodec",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "EncryptedCodecKey",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsonCodec",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "JsoncCodec",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "LayerConfigProviderOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MergeStrategy",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "NonEmptySources",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "TomlCodec",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "UpwardWalkOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "VersionAccess",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "YamlCodec",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "asConfigProvider",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "layerConfigProvider",
+          "kind": "value",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 0,
