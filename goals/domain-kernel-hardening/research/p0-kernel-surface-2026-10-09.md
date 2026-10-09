@@ -132,3 +132,13 @@ external insert projections and fixtures need changes under the charter.
 No paired-nullness CHECK or enforcement is introduced. D1-D8 in SPEC record
 placement, scope and reversal. PR 1 activates and reconciles this contract before
 PR 2 touches the named implementation/generated surfaces.
+
+### Pre-publish main reconciliation
+
+Main merge brought in #1566 (`2eefbb64af`), which removed historical changeset
+notes under the new manifest-aware release policy. Kernel source and this packet
+were unchanged. The housekeeping changeset cited above was read on disk during
+P0 and is now cited as the verified local Git blob
+`1e9d946750:.changeset/housekeeping-entity-stack.md`. The deletion does not undo
+DomainModel retirement or alter the compiler measurement. No source package or
+migration consumer changed in this merge.

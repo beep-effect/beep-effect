@@ -13,7 +13,9 @@ domain-layer hardening:
    Base remains timestamps plus row version. Amend the existing ProductEntity
    promotion record; introduce no new audit base.
 2. `@beep/schema/DomainModel` is already retired by #720 (`1e9d946750`), recorded
-   in `.changeset/housekeeping-entity-stack.md`. Evidence satisfies this criterion;
+   in the historical `.changeset/housekeeping-entity-stack.md` Git blob at that
+   commit (the release baseline #1566 removed the working-tree note). Evidence
+   satisfies this criterion;
    no schema-package edit or second version field is needed.
 3. Extract the existing invariant into `entity/EntityRef.errors.ts` as direct
    `S.TaggedError`, preserving its tag, fields and opaque `actualId` equivalence.
@@ -125,7 +127,7 @@ the first packet that actually consumes them (see the exploration MAP).
 | Date | Decision | Reason | Reversal |
 | --- | --- | --- | --- |
 | 2026-10-09 | D1: Map historical BaseEntity fields/persisted to EntityKit.auditColumns flowing through the audited kits and ProductEntity.fields; EntitySchema.persist maps to effect-drizzle metadata; TaggedErrorClass maps to direct S.TaggedError. | #720 replaced the packet's original API; live source is authoritative. | Revert this reconciliation if restoring the historical stack. |
-| 2026-10-09 | D2: Criterion 2 is already met by #720, commit 1e9d946750, and housekeeping-entity-stack.md. | DomainModel is deleted; no product reference or second audit base remains. | Restore the deleted model only through a separately scoped contract change. |
+| 2026-10-09 | D2: Criterion 2 is already met by #720, commit 1e9d946750, and its historical housekeeping-entity-stack.md Git blob; #1566 removed the working-tree note. | DomainModel is deleted; no product reference or second audit base remains. | Restore the deleted model only through a separately scoped contract change. |
 | 2026-10-09 | D3: Extend auditColumns, inherited by Audit, Org and Product; keep Base timestamps/version only. | One canonical audit pack, no new entity base or promotion record; amend the ProductEntity record. | Revert the new columns and promotion-record amendment. |
 | 2026-10-09 | D4: Choose GeneratedByApp(OptionFromNullOr(codec)) with constructor default succeedNone and missing-key decoding default null. Timestamp uses epoch-millis bigint, principal jsonb. No paired-nullness CHECK. | Constructor omissions remain accepted and JSON writes omit audit fields; a CHECK would exceed the columns-only migration contract. Measured: 32 fixture diagnostics in 8 test files, 4 explicit converter projections; no model or behavior edits. FieldOption adds a production fixture failure and exposes JSON writes. | Revert the field additions; reassess encoding before migration generation. |
 | 2026-10-09 | D5: Generate an additive nullable migration without backfill and resync the desktop bundle through codegen. | All audited tables inherit new columns; existing rows read null. The baseline records zero users; no live database is touched here. | Revert the PR and generate a drop-columns migration; preserve any later data before rollback. |

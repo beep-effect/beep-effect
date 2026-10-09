@@ -37,3 +37,13 @@
 - Attribution: external workstation configuration changed during the run.
 - Action: keep using the canonical wrapper; this lane changes no slot or memory
   cap, and still runs at most two own heavy jobs.
+
+## 2026-10-09 — historical source retired during pre-publish merge
+
+- Doing: merge main before PR 1 publication.
+- Evidence: #1566 removed the cited housekeeping-entity-stack changeset note;
+  shared-domain, db-admin and desktop source were unchanged.
+- Remedy: cite its verified local Git blob at #720. Stop the still-queued own
+  publish unit before admission, amend the evidence, rerun packet checks and
+  resubmit. No push or scanner run occurred; no push budget consumed.
+- Prevention: mark historical change records with their commit from the outset.

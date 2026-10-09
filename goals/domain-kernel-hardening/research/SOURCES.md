@@ -2,7 +2,8 @@
 
 Source exploration: `explorations/domain-layer-hardening/`; its decisions and
 syntheses are grounding by reference. This lane reads no external corpus and
-copies no upstream implementation. All sources below are present in this checkout.
+copies no upstream implementation. All live sources below are present in this checkout; historical changes are
+verified from local Git objects.
 
 ## In-repo references
 
@@ -19,7 +20,7 @@ copies no upstream implementation. All sources below are present in this checkou
 | `standards/ARCHITECTURE.md` | Domain role vocabulary and public surfaces. | reference |
 | `.patterns/jsdoc-documentation.md` | Titled examples and compilable exported documentation. | reference |
 | #720, `1e9d946750` (local Git history) | Entity-stack rewrite deleted DomainModel and EntitySchema. | reference |
-| `.changeset/housekeeping-entity-stack.md` | Recorded migration to effect-drizzle and legacy deletion. | reference |
+| `1e9d946750:.changeset/housekeeping-entity-stack.md` (local Git blob) | Recorded migration to effect-drizzle and legacy deletion; #1566 removed the working-tree note during the pre-publish main merge. | historical reference |
 | `packages/shared/domain/src/entity/EntityKit.ts` | Canonical column packs and capabilities. | extend |
 | `packages/shared/domain/src/entity/BaseEntity.ts` | Timestamp/version tier. | reuse |
 | `packages/shared/domain/src/entity/AuditEntity.ts` | Canonical audit lineage. | reuse |

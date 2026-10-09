@@ -105,3 +105,12 @@ manifest jq pass; packet anchor/launcher search pass; git diff --check pass;
 reflection-artifacts pass (blocking_findings=0, advisory_findings=0); goals doctor
 pass (blocking_new=0, blocking_inherited=0). Three completion advisories name
 other packets and are outside this lane. Kernel prototype has been reverted.
+
+### Pre-publish main merge
+
+Activation commit `091235b5bb`; main merge `653aef7039` brought in #1566
+(`2eefbb64af`) and other base changes. Packet and named source packages were
+unchanged. The release-policy baseline removed the housekeeping changeset note;
+SOURCES/SPEC now cite its verified local Git blob at #720. The own publish unit
+was stopped while still queued: no scanner run and no push occurred, so no push
+budget was used. Evidence amendment and packet re-verification precede resubmit.
