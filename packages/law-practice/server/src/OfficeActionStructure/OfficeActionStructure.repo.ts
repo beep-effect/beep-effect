@@ -25,8 +25,9 @@ import * as Str from "effect/String";
 const storageError = (message: string) => OfficeActionStructureStorageError.make({ message });
 const JsonAttempt = S.fromJsonString(OfficeActionStructureAttempt);
 const DocumentKey = S.fromJsonString(S.Struct({ scope: S.String, document: S.String }));
-const documentKey = (row: OfficeActionStructureAttempt) =>
-  S.encodeSync(DocumentKey)({ scope: row.expectedSource.scopeRef, document: row.document.documentId });
+const documentKey = Effect.fn("OfficeActionStructureStore.documentKey")((row: OfficeActionStructureAttempt) =>
+  S.encodeEffect(DocumentKey)({ scope: row.expectedSource.scopeRef, document: row.document.documentId })
+);
 const validateHistory = Effect.fn("OfficeActionStructureStore.validateHistory")(function* (
   rows: ReadonlyArray<OfficeActionStructureAttempt>
 ) {
@@ -34,7 +35,7 @@ const validateHistory = Effect.fn("OfficeActionStructureStore.validateHistory")(
   let latest = HashMap.empty<string, string>();
   for (const row of rows) {
     if (HashSet.has(ids, row.attemptId)) return yield* storageError("Attempt ids are immutable and unique.");
-    const key = documentKey(row);
+    const key = yield* documentKey(row);
     if (!O.makeEquivalence(Str.Equivalence)(HashMap.get(latest, key), row.previousAttemptId))
       return yield* storageError("Broken attempt predecessor chain.");
     ids = HashSet.add(ids, row.attemptId);
@@ -90,7 +91,9 @@ export const officeActionStructureFileStore = (filename: string) =>
         );
         return yield* validateHistory(rows);
       }).pipe(Effect.mapError(() => storageError("Cannot decode complete attempt history.")));
-      const append = Effect.fn("OfficeActionStructureStore.append")(function* (attempt: OfficeActionStructureAttempt) {
+      const appendUnlocked = Effect.fn("OfficeActionStructureStore.appendUnlocked")(function* (
+        attempt: OfficeActionStructureAttempt
+      ) {
         const rows = yield* read;
         if (A.some(rows, (row) => row.attemptId === attempt.attemptId))
           return yield* storageError("Attempt ids are immutable and unique.");
@@ -114,7 +117,7 @@ export const officeActionStructureFileStore = (filename: string) =>
       });
       return OfficeActionStructureStore.of({
         read: withLock(read),
-        find: (source, rule) =>
+        find: Effect.fn("OfficeActionStructureStore.find")((source: SourceTextIdentity, rule: DocStructureRuleFamily) =>
           withLock(
             Effect.map(
               read,
@@ -124,8 +127,11 @@ export const officeActionStructureFileStore = (filename: string) =>
                   S.toEquivalence(DocStructureRuleFamily)(row.rule, rule)
               )
             )
-          ),
-        append: (attempt) => withLock(append(attempt)),
+          )
+        ),
+        append: Effect.fn("OfficeActionStructureStore.append")((attempt: OfficeActionStructureAttempt) =>
+          withLock(appendUnlocked(attempt))
+        ),
       });
     })
   );

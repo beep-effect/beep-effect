@@ -166,3 +166,12 @@
 - Repair: explicitly reference the adjacent raw-module declarations from the
   fixture registry, so consumers retain the same immutable payload types.
 - Prevention: make shared test fixture declarations travel with their registry.
+
+## 2026-10-09 — Effect diagnostic parity for persistence
+
+- Evidence: the server audit rejects synchronous Schema encoding and identifies
+  reusable Effect function opportunities around locked store methods.
+- Attribution: introduced persistence helpers.
+- Repair: encode the history key through Effect and name locked/unlocked method
+  functions; preserve the lock and typed storage-error boundary.
+- Prevention: run the package’s Effect diagnostic compiler before calling proof final.
