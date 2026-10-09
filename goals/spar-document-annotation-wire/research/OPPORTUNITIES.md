@@ -88,3 +88,15 @@ private: true. Local path-aware status passed while reporting private_skipped=3,
 so that proof did not validate existing notes. D17 archives and removes them;
 the graph gate is rerun. Brief generation should check live publication flags,
 and cheap status should include graph validity before opening a PR.
+
+## Final-wave inherited gate friction
+
+Task: publish the same-PR closeout after the required merge of main.
+Evidence: final-wave Yeet preflight passed 15 of 16 gates and failed only
+`lint:effect-vitest`: one new finding in
+`packages/epistemic/use-cases/test/ContradictionDetection.golden.test.ts`.
+The file is identical to main `7336224f34` and remains unchanged through
+`2d4a81216f`; it arrived from #1572. Publication exited 1 before any push.
+Prevention: the program's consolidated main repair must clear inherited local
+preflight reds before dependent lanes publish. S11 hosted-red tolerance does
+not make the local publication gate pass. No other packet or baseline is edited.
