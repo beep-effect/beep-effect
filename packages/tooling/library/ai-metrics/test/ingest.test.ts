@@ -54,6 +54,7 @@ import {
   forwarderRunResultToJson,
   forwarderTimerPlanToJson,
   generateAiMetricsWeeklyReport,
+  HookPulseDisarmSentinel,
   HookPulseDisarmWindow,
   HookPulseRefusal,
   HookPulseV1,
@@ -142,6 +143,7 @@ const ForwarderStampScenario = LiteralKit([
   "prefix",
   "empty-sentinel",
   "custom-sentinel",
+  "future-sentinel",
 ]);
 
 const encodeUnknownJsonEffect = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
@@ -726,6 +728,17 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics",
           );
         if (scenario === "empty-sentinel") yield* writeText(path.join(hookRoot, "hook-pulse.disarmed"), "");
         if (scenario === "custom-sentinel") yield* writeText(path.join(hookRoot, "custom.disarmed"), "");
+        if (scenario === "future-sentinel")
+          yield* writeText(
+            path.join(hookRoot, "hook-pulse.disarmed"),
+            yield* HookPulseDisarmSentinel.encodeJsonEffect(
+              HookPulseDisarmSentinel.make({
+                disarmedAt: "2099-01-01T00:00:00Z",
+                reason: "fixture",
+                evidenceTier: "unknown",
+              })
+            )
+          );
       });
       for (const scenario of ForwarderStampScenario.literals) {
         const homeDir = path.join(tmpDir, scenario, "home");
@@ -799,6 +812,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics",
             prefix: () => [start, tool],
             "empty-sentinel": () => [start, tool],
             "custom-sentinel": () => [start, tool],
+            "future-sentinel": () => [start, tool],
           });
           yield* writeText(
             path.join(hookDir, "fixture.ndjson"),
