@@ -1605,13 +1605,14 @@ const publishArchiveText = Effect.fnUntraced(function* (target: string, content:
 const ensureArchiveDirectories = Effect.fnUntraced(function* (checkout: string, runId?: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const dirs = [path.join(checkout, ".beep"), path.join(checkout, ".beep", "residue-reap")];
+  const realCheckout = yield* fs.realPath(checkout);
+  const dirs = [path.join(realCheckout, ".beep"), path.join(realCheckout, ".beep", "residue-reap")];
   const all = O.match(O.fromUndefinedOr(runId), {
     onNone: () => dirs,
     onSome: (id) =>
       A.appendAll(dirs, [
-        path.join(checkout, ".beep", "residue-reap", id),
-        path.join(checkout, ".beep", "residue-reap", id, "archive"),
+        path.join(realCheckout, ".beep", "residue-reap", id),
+        path.join(realCheckout, ".beep", "residue-reap", id, "archive"),
       ]),
   });
   yield* Effect.forEach(
@@ -1629,7 +1630,7 @@ const ensureArchiveDirectories = Effect.fnUntraced(function* (checkout: string, 
           );
       if (O.isSome(yield* fs.readLink(dir).pipe(Effect.option)))
         return yield* ResidueArchiveError.make({ message: "Archive directory became a symlink" });
-      if (O.isNone(yield* canonicalDirectory(checkout, dir)))
+      if (O.isNone(yield* canonicalDirectory(realCheckout, dir)))
         return yield* ResidueArchiveError.make({ message: "Archive directory escaped checkout" });
       yield* syncDirectory(dir);
       yield* syncDirectory(path.dirname(dir));
@@ -1785,7 +1786,7 @@ const checkoutSafetySkip = Effect.fnUntraced(function* (
       if (Str.isEmpty(parent) && isBookkeepingDirectory(child)) continue;
       const name = path.join(parent, child);
       beneath.push(name);
-      if (N.greaterThan(A.length(beneath), policy.entryCap)) return O.some<ResidueReapSkipReason>("census-overflow");
+      if (N.isGreaterThan(A.length(beneath), policy.entryCap)) return O.some<ResidueReapSkipReason>("census-overflow");
       const absolute = path.join(beep, name);
       if (O.isSome(yield* fs.readLink(absolute).pipe(Effect.option))) continue;
       const info = yield* fs.stat(absolute).pipe(Effect.option);
@@ -1802,7 +1803,7 @@ const checkoutSafetySkip = Effect.fnUntraced(function* (
             const marker = path.join(name, ".git");
             beneath.push(marker);
             opaque = HashSet.add(opaque, marker);
-            if (N.greaterThan(A.length(beneath), policy.entryCap))
+            if (N.isGreaterThan(A.length(beneath), policy.entryCap))
               return O.some<ResidueReapSkipReason>("census-overflow");
           }
         } else pending.push(name);
@@ -1820,7 +1821,7 @@ const checkoutSafetySkip = Effect.fnUntraced(function* (
     if (O.isSome(yield* fs.readLink(absolute).pipe(Effect.option))) continue;
     if (Str.endsWith(".lock")(name)) {
       const holder = yield* runRepoCommandCapture("fuser", ["-s", "--", absolute], checkout).pipe(Effect.option);
-      if (O.isNone(holder) || N.greaterThan(holder.value.exitCode, 1))
+      if (O.isNone(holder) || N.isGreaterThan(holder.value.exitCode, 1))
         return O.some<ResidueReapSkipReason>("process-probe-failed");
       if (N.Equivalence(holder.value.exitCode, 0)) return O.some<ResidueReapSkipReason>("lock-held");
     }
@@ -1949,7 +1950,7 @@ const assessCheckoutResidue = Effect.fnUntraced(function* (entry: ResidueReapCan
       ).pipe(Effect.option);
       if (O.isNone(linked) || !N.Equivalence(linked.value.exitCode, 0) || linked.value.truncated)
         return O.some<ResidueReapSkipReason>("git-probe-failed");
-      if (N.greaterThan(A.length(A.filter(Str.split("\n")(linked.value.output), Str.startsWith("worktree "))), 1))
+      if (N.isGreaterThan(A.length(A.filter(Str.split("\n")(linked.value.output), Str.startsWith("worktree "))), 1))
         return O.some<ResidueReapSkipReason>("protected-name");
       return O.none<ResidueReapSkipReason>();
     })

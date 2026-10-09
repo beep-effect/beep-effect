@@ -12,6 +12,7 @@ import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
@@ -1437,6 +1438,22 @@ const withRetentionFixture = <A, E, R>(
     (root) => retentionFixture(root).pipe(Effect.flatMap(use)),
     removeTempDirectory
   ).pipe(Effect.provide(NodeServices.layer));
+
+const rulingJson = S.fromJsonString(ResidueRetentionRuling);
+const encodeRulingJson = S.encodeEffect(rulingJson);
+const decodeRulingJson = S.decodeEffect(rulingJson);
+const equivalentRuling = S.toEquivalence(ResidueRetentionRuling);
+
+it.effect.prop(
+  "preserves owner, terminal state and evidence binding through JSON for every schema-derived ruling",
+  [Arbitrary.schema(ResidueRetentionRuling)],
+  Effect.fnUntraced(function* ([ruling]) {
+    const decoded = yield* decodeRulingJson(yield* encodeRulingJson(ruling));
+    expect(equivalentRuling(ruling, decoded)).toBe(true);
+    expect(decoded.schemaVersion).toBe("residue-retention/v1");
+  }),
+  { arbitrary: { runs: 20, seed: 7 } }
+);
 
 describe("checkout retention archives", () => {
   it.effect("persists dry-run ownership and moves without deleting, then restores", () =>
