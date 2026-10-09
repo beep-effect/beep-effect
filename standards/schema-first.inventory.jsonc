@@ -303,7 +303,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 75,
+      "line": 73,
       "owner": "@beep/epistemic-server",
       "reason": "External-Postgres race regression decodes fixed commands to drive two genuinely parallel repository writers; what is under test is database contention (row locks, the open-head index, the exclusion constraint), not schema laws, and arbitrary-driven commands would make the race non-reproducible."
     },
