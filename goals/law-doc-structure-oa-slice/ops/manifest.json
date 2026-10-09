@@ -11,7 +11,7 @@
   "packetPath": "goals/law-doc-structure-oa-slice",
   "lifecycle": "active",
   "mission": "Deliver versioned deterministic office-action finality and shortened-period candidates with exact verified anchors to the patent-docketing intake seam.",
-  "statusNote": "Substrate gate cleared by PRs #871 and #1415. P0 stopped: 16 ODP originals lack qualified text, and both permitted blind-label runs are void; valid dual-label floors are unavailable. P0-P3 remain pending.",
+  "statusNote": "P0 passed under Run 2 rulings: third blind audit valid, retained-inventory floors pass; qualified real-OA positives remain unavailable. P1 implementation is next.",
   "dependencies": ["goals/citation-verified-span-substrate"],
   "blockedBy": [],
   "executionCapable": true,
@@ -53,7 +53,7 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",

@@ -2,13 +2,13 @@
 
 ## Status
 
-Status: `blocked`
+Status: `active`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | With the attorney, construct a license-safe fixture corpus from real office actions; define rule-family identity, versioning, replay, migration, and supersession; set labeled per-family precision and abstention floors. This phase may run while the substrate is blocked. | The corpus covers positive pairs, hostile negatives, duplicates, drift, malformed/unsupported forms, Unicode/straddle, and quality/OCR cases; attorney disposition and license/provenance are recorded; version semantics and quantitative floors are explicit. |
+| P0 Research | complete | With the attorney, construct a license-safe fixture corpus from real office actions; define rule-family identity, versioning, replay, migration, and supersession; set labeled per-family precision and abstention floors. This phase may run while the substrate is blocked. | The corpus covers positive pairs, hostile negatives, duplicates, drift, malformed/unsupported forms, Unicode/straddle, and quality/OCR cases; attorney disposition and license/provenance are recorded; version semantics and quantitative floors are explicit. Attorney disposition: ruled substitute per SPEC Decision Log 2026-10-09 Run 2; post-hoc spot-check pending, non-blocking. |
 | P1 Implement | pending | After the verified-span substrate gate clears, add the smallest schema-first `DocStructureCandidate` variants, versioned paired OA recognition, explicit `GroundedExtraction` adapter, typed abstention, persistence/replay behavior, and docketing intake adapter. | `citation-verified-span-substrate` P0/P1 has proved the anchor contract; exactly one supported pair emits two verified candidates; all other shaped states fail closed without partial authority. |
 | P2 Verify | pending | Exercise positive, hostile negative, duplicate, drift, unsupported, malformed, Unicode/straddle, low-quality/OCR-lineage, version replay, persistence, and docketing integration proof. | Every `SPEC.md` criterion and precision/abstention floor passes, or blockers are archived without weakening exact-source or fail-closed rules. |
 | P3 Close | pending | Drive the implementation PR to mergeable through Yeet, write the closeout reflection, archive proof, and synchronize packet evidence/status. | Yeet/GitHub reports the PR mergeable; a schema-valid reflection exists; README, PLAN, and manifest match the evidence. |
@@ -26,6 +26,12 @@ P0 stays pending: both blind reports failed JSON parsing and no qualified real-O
 positive text was retrieved. The form-only inventory cannot establish valid
 dual-label floors. See `history/p0/2026-10-09-label-reconciliation.md` and
 `history/handoffs/oa-slice-2026-10-09.md`. No P1 implementation began.
+
+## Run 2 resumption
+
+Third blind audit passes with 34 parseable labels and frozen A hash. Atomic
+agreement 33/34; all differences reconciled. Retained-inventory floors pass
+under the Run 2 source ruling. See the floor vectors and reconciliation in P0.
 
 ## P3 Closeout Checklist
 

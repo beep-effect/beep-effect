@@ -1,47 +1,28 @@
-# P0 labeling disposition — blocked
+# P0 label reconciliation — Run 2
 
-The out-of-repo blind directory held only the guide, opaque fixture texts and
-`inputs.jsonl`. No label A file existed when either B run began. Both commands
-used GPT-6.1-Sol medium, `--ignore-user-config`, `--ephemeral`, and read-only
-sandboxing. Both processes ended normally; no auth/model fallback was needed.
+Third blind run audit PASS. Labeler A was frozen before B started; its hash is
+unchanged. B ran outside the repository read-only, ignore-user-config, ephemeral,
+GPT-6.1-Sol medium. Only agent_message and command_execution items occurred.
+All command scripts stayed local after stripping the shell wrapper; no document
+codes were read. All 34 label lines parse. Discarded non-JSON tracing lines: 0.
+The two void Run 1 logs remain private.
 
-## Audits
+Atomic agreement: 33/34 (97.06%). Unresolved fixtures: 0.
+Relationship ordering is set-valued, so order-only differences are agreements.
+Adopt B's continuation labels for oa-004/008/012, same-paragraph for oa-015,
+and empty relationships for inputs without a operative pair. These correct A's
+blanket sibling diagnostic without changing any authority outcome.
 
-- Run 1: command paths were local and item types allowlisted, but output line 28
-  is invalid JSON. Void. The label A freeze script failed before writing any
-  labels; the discarded B output was then opened prematurely by a dependent
-  batched read. This ordering fault is recorded as a friction receipt.
-- Run 2: fresh out-of-repo blind directory, same source hashes and boundaries.
-  The output also fails JSON parsing. Void. No B result is used as label evidence.
-- B labels are unavailable after the brief's two permitted attempts. Repairing
-  their JSON manually would not satisfy the recorded audit and is not done.
-- Label A was frozen after the second run ended, before its output was opened.
-  Its SHA-256 is held in the private ledger. The provisional A judgments predate
-  the first B output read, but there is no claim of valid dual-label independence.
+- `oa-016`: A correct/B many-to-many. Resolve to B: multiple declarations and periods.
+- `oa-031`: B recognized zero-width `FI\u200bNAL`; A closes `rule-not-covered`. Resolve to A: exact raw spelling is outside v1 coverage; no removal of invisible characters authorizes finality.
 
-## Corpus counts and limits
+Constructed truth is separate from blind judgment: stale source identity, digest
+drift, malformed offsets, and raw-slice mismatch will be tested by construction
+through the consumed verified-anchor contract. No B legal text judgment is used
+as evidence about these runtime mutations. The inert shadow set is separate
+from the measured 34-document inventory.
 
-| Modality | Text fixtures | Eligible real-OA positives | Reviewed floor vector |
-| --- | ---: | ---: | --- |
-| public-form-language | 32 | 0 | not established |
-| OCR-derived | 1 | 0 | not established |
-| layout-derived | 1 | 0 | not established |
-
-ODP additionally retrieved 16 image-only originals. All have zero fonts and
-only page separators in the extracted text. They are excluded from positive
-recognition; no original source text is committed. The fallback form corpus has
-three MPEP form families, gamma held out, plus synthetic cover and hostile
-variations. It is research inventory, not real-OA performance proof.
-
-No agreement rate or eligible/emitted/abstained/invalid/contradicted/correct
-vector is claimed: B is unavailable, the fixture adapter is unimplemented, and
-only A labels exist. Every fixture is listed on the attorney spot-check sheet.
-Constructed stale-identity, digest-drift, raw-slice-mismatch and inert shadow
-fixtures remain to be added; no constructed-truth fixture was included in B.
-
-## Gate decision
-
-P0 remains pending. The corpus stop condition applies: valid dual labeling
-cannot establish the prescribed floors with the available form-only evidence.
-The two-void-run disposition and full spot-check sheet are retained, but they
-are not silently promoted into passed quantitative proof. P1–P3 are unstarted.
+Per-modality floors measure public form language only: 32 public-form-language,
+1 OCR-derived, 1 layout-derived. No text-qualified real-OA positives were
+available on 2026-10-09. Official ODP codes label 16 excluded image-only
+originals; they provide no text-qualified positive cross-check.
