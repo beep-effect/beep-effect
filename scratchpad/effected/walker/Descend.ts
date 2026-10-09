@@ -9,6 +9,7 @@
 // options, it only reads `hasMagic` / `negated` / `enumerationPrefix` /
 // `crossesSegments` and calls `matches`.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { GlobPattern } from "../glob/index.ts";
 import type * as PlatformError from "effect/PlatformError";
 import * as Effect from "effect/Effect";
@@ -16,6 +17,8 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { dual } from "effect/Function";
+
+const $I = $ScratchpadId.create("effected/walker/Descend");
 
 /**
  * Options for `descend`.
@@ -134,16 +137,16 @@ export interface DescendResult {
  *
  * @public
  */
-export class DescendError extends S.TaggedError<DescendError>()("DescendError", {
+export class DescendError extends S.TaggedError<DescendError>($I`DescendError`)("DescendError", {
 	/** The glob pattern's source text. */
-	pattern: S.String,
+	pattern: S.String.annotateKey({ description: "The glob pattern's source text." }),
 	/** Why the walk failed: a directory could not be read, or the walk went past `maxDepth`. */
-	reason: S.Literals(["unreadableDirectory", "depthExceeded"]),
+	reason: S.Literals(["unreadableDirectory", "depthExceeded"]).annotateKey({ description: "Why the walk failed: a directory could not be read, or the walk went past `maxDepth`." }),
 	/** The offending directory, relative to `cwd` (`""` is the walk's base). */
-	path: S.String,
+	path: S.String.annotateKey({ description: "The offending directory, relative to `cwd` (`\"\"` is the walk's base)." }),
 	/** The depth cap, present when `reason` is `"depthExceeded"`. */
-	limit: S.optionalKey(S.Finite),
-}) {
+	limit: S.optionalKey(S.Finite).annotateKey({ description: "The depth cap, present when `reason` is `\"depthExceeded\"`." }),
+}, $I.annote("DescendError", { description: "Typed failure raised by `descend`: a directory mid-walk was unreadable (under `onUnreadable: \"fail\"`), or the walk descended past `maxDepth`. Depth exhaustion is a typed failure, never a truncation — silent truncation silently changes match semantics." })) {
 	override get message(): string {
 		const where = this.path === "" ? "the base directory" : JSON.stringify(this.path);
 		return this.reason === "depthExceeded"

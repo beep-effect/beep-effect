@@ -11,6 +11,7 @@
 // (`compileResult`); every other reference in the package is type-and-property
 // only.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { GlobPatternOptions } from "../glob/index.ts";
 import { GlobPattern, GlobPatternError } from "../glob/index.ts";
 import type * as FileSystem from "effect/FileSystem";
@@ -21,6 +22,8 @@ import * as S from "effect/Schema";
 import { dual } from "effect/Function";
 import type { DescendOptions } from "./Descend.ts";
 import { DescendError, descend } from "./Descend.ts";
+
+const $I = $ScratchpadId.create("effected/walker/Expand");
 
 /**
  * Options for {@link compileAndExpand}: every {@link DescendOptions} field,
@@ -63,12 +66,12 @@ export interface CompileAndExpandOptions extends DescendOptions {
  *
  * @public
  */
-export class GlobExpansionError extends S.TaggedError<GlobExpansionError>()("GlobExpansionError", {
+export class GlobExpansionError extends S.TaggedError<GlobExpansionError>($I`GlobExpansionError`)("GlobExpansionError", {
 	/** The glob pattern's source text, as handed to {@link compileAndExpand}. */
-	pattern: S.String,
+	pattern: S.String.annotateKey({ description: "The glob pattern's source text, as handed to compileAndExpand." }),
 	/** The underlying typed failure, intact: a compile guard trip or a descent failure. */
-	cause: S.Union([GlobPatternError, DescendError]),
-}) {
+	cause: S.Union([GlobPatternError, DescendError]).annotateKey({ description: "The underlying typed failure, intact: a compile guard trip or a descent failure." }),
+}, $I.annote("GlobExpansionError", { description: "Typed failure raised by compileAndExpand: the single error the compile+expand recipe fails with, so a caller catches one tag rather than folding two error channels by hand." })) {
 	/**
 	 * Which phase failed — `"compile"` when the pattern itself was rejected,
 	 * `"descend"` when the filesystem walk failed. A convenience over
