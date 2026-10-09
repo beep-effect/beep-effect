@@ -41,8 +41,9 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 complete. P1/P2 verification is running against committed implementation
-`c833513460`; both direct-conflict classes and their golden vectors are present.
+P0 complete. P1/P2 stopped under the lane brief repeated-blocker condition.
+Implementation is committed; the repeated audit call is corrected at `9edd003a48`,
+with its package re-run outstanding. Both direct-conflict classes and golden vectors exist.
 
 ## Provenance
 

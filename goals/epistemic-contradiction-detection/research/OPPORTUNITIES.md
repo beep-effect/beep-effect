@@ -22,3 +22,14 @@ This lane did not touch that packet. The scanner interprets a prohibited path
 prefix in normative prose as a live external mirror reference. Repair belongs
 to the owning packet or consolidated main repair, not detector scope.
 Prevention: recognize path-prohibition examples as audit-pattern literals.
+
+## 2026-10-09 — Repair missed the reported codec call
+
+Action: repair a domain package-verify typed-decoder diagnostic.
+Result: the audit repeated at ContradictionDetection.test.ts:67 because the
+first repair changed another codec call. Read the exact numbered source span
+before changing a reported compiler diagnostic; the actual call is now repaired
+in 9edd003a48. No fresh package proof covers that repair. The repeated-blocker
+condition ended the lane, with full qualification still outstanding.
+Prevention: attach the diagnostic span to the repair and verify that the
+reported line itself changed before spending another heavy admission.

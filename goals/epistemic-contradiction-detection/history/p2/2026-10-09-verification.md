@@ -46,3 +46,31 @@ Results/logs remain in ignored `.beep/detection-proof/`.
 Hosted required checks are authoritative under AGENTS.md. The older local
 `yeet verify` exit row does not block publication. Final-head hosted results
 will be recorded after publish; no hosted claim is made here.
+
+## Stop receipt
+
+Latest full domain suite: 9 files, 99 tests pass. Latest domain package-verify:
+audit red at test/ContradictionDetection.test.ts:67, docgen pass. The first
+repair changed the property round-trip call rather than the diagnostic's
+BeliefVersionRef call, so the audit repeated. Read the exact line; corrected it
+to decodeResult in `9edd003a48` (also corrected its JSDoc example). Both P0
+inbox rows are acknowledged with their repair SHAs; acknowledgements are not
+proof of a green re-run.
+
+The brief's repeated-blocker stop applies. The remaining owned use-cases
+pipeline was still queued and was stopped after verifying its unit's working
+directory matches this lane. No proof unit or monitor remains running. Its
+cancel receipt is `.beep/detection-proof/use-cases-pipeline.cancelled`; it is
+not a successful package check. No PR, push, readiness monitor or state flip.
+
+After the stop: packet verification and whitespace checks only; no package
+re-run on 9edd003a48. Use-cases package-verify, coverage, docgen:local, Fallow,
+publication, hosted checks, reflection and completed-retained remain outstanding.
+Doctest verify after owner-command marking: domain 9/9 pure fences marked,
+use-cases 3/3 pure fences marked, no findings.
+
+Final main integration: origin/main `09e1d81b3f`, merge head `8f4b6ba746`.
+Only the evidence-source-policy exploration landed in that merge; detector
+source is unchanged from 9edd003a48. Post-merge version sync passes. Packet
+verification passes, shipped contract diff remains empty, and Yeet reports
+zero unacknowledged P0 rows. No package proof is claimed for the final repair.

@@ -108,7 +108,12 @@ Before marking the packet closed (and `status` → `completed-retained`):
 
 ## Current Blockers
 
-None. Belief-view revision graduated on 2026-08-17 to `goals/belief-view-engine`,
+The lane stopped on a repeated domain audit diagnostic. The actual ref codec
+call is corrected in `9edd003a48`, but no package proof covers that correction.
+Resume both package proofs and remaining parity before publishing or closing.
+The packet remains active, P1/P2 in-progress, P3/P4 pending.
+
+Dependency status: Belief-view revision graduated on 2026-08-17 to `goals/belief-view-engine`,
 which is paused with P1 pending. Triage closed completed-retained in #1421
 (`cd6c9a1b72`; code #520, `244529aa4f`). Neither blocks this detector.
 

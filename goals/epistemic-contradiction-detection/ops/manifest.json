@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/epistemic-contradiction-detection",
   "lifecycle": "active",
-  "statusNote": "P0 complete; deterministic implementation committed. P1/P2 package verification and hosted-parity are in progress. The orchestrator owns the eventual merge under S11.",
+  "statusNote": "P0 complete; implementation committed. Lane stopped under the repeated-blocker condition after a repeated domain audit diagnostic. The actual typed ref decode is corrected in 9edd003a48; verification must resume before publication or closure. Merge remains orchestrator-owned under S11.",
   "mission": "Produce ContradictionCandidate records for typed direct-conflict classes as a pure, model-free function of a belief-view snapshot, against the contract epistemic-contradiction-triage already ships.",
   "executionCapable": true,
   "reflectionRequired": true,
