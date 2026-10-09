@@ -31,6 +31,8 @@ class MissingInkPeersError extends S.TaggedError<MissingInkPeersError>($I`Missin
  * The loaded optional peers: Ink's module and React.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface InkModules {
 	readonly ink: typeof Ink;
@@ -60,7 +62,17 @@ const importPeers = (): Promise<InkModules> => Promise.all([import("ink"), impor
  * Concurrent loads share one import, and a failed one is retried by the next call. A missing peer is a defect, not
  * a typed failure, because it is an installation error no handler can recover from; its message names both peers.
  *
+ * **Example** (Construct the optional peer load)
+ *
+ * ```ts
+ * import { loadInk } from "@beep/scratchpad/effected/cli/ui/internal/ink"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(loadInk)) // true
+ * ```
+ *
  * @internal
+ * @category resource-management
+ * @since 0.0.0
  */
 export const loadInk: Effect.Effect<InkModules> = Effect.suspend(() => {
 	if (modules !== undefined) return Effect.succeed(modules);
@@ -93,7 +105,19 @@ export const loadInk: Effect.Effect<InkModules> = Effect.suspend(() => {
  * Throws when nothing has loaded them: a kit component rendered outside a screen. Inside a render that throw is
  * caught by the screen's error boundary and becomes a defect.
  *
+ * **Example** (Read the loaded optional peers)
+ *
+ * ```ts
+ * import { inkModules } from "@beep/scratchpad/effected/cli/ui/internal/ink"
+ * import * as Effect from "effect/Effect"
+ * import { loadInk } from "@beep/scratchpad/effected/cli/ui/internal/ink"
+ * await Effect.runPromise(loadInk)
+ * console.log(typeof inkModules().react.createElement) // function
+ * ```
+ *
  * @internal
+ * @category getters
+ * @since 0.0.0
  */
 export const inkModules = (): InkModules => {
 	if (modules === undefined) throw InkNotLoaded.make({ message: READ_BEFORE_LOAD });
@@ -109,7 +133,20 @@ export const inkModules = (): InkModules => {
  * The returned accessor builds on first call and returns the same value thereafter; like {@link inkModules}, it
  * throws if called before the load.
  *
+ * **Example** (Reuse a context built from loaded React)
+ *
+ * ```ts
+ * import { fromReact } from "@beep/scratchpad/effected/cli/ui/internal/ink"
+ * import * as Effect from "effect/Effect"
+ * import { loadInk } from "@beep/scratchpad/effected/cli/ui/internal/ink"
+ * await Effect.runPromise(loadInk)
+ * const context = fromReact((react) => react.createContext(0))
+ * console.log(context() === context()) // true
+ * ```
+ *
  * @internal
+ * @category constructors
+ * @since 0.0.0
  */
 export const fromReact = <T>(build: (react: InkModules["react"]) => T): (() => T) => {
 	let built: { readonly react: InkModules["react"]; readonly value: T } | undefined;
@@ -125,7 +162,16 @@ const LEVELS: Record<ColorLevel, ChalkLevel> = { none: 0, basic: 1, "256": 2, tr
 /**
  * A stream's colour level as a chalk level: `none` 0, `basic` 1, `256` 2, `truecolor` 3.
  *
+ * **Example** (Translate a stream colour level)
+ *
+ * ```ts
+ * import { levelOf } from "@beep/scratchpad/effected/cli/ui/internal/ink"
+ * console.log(levelOf("truecolor")) // 3
+ * ```
+ *
  * @internal
+ * @category mapping
+ * @since 0.0.0
  */
 export const levelOf = (colour: ColorLevel): ChalkLevel => LEVELS[colour];
 
@@ -144,7 +190,19 @@ let warned = false;
  * Hold `chalk` at `colour`'s level for the enclosing scope, restoring the saved level when the scope closes, by
  * release or by interruption. With no chalk to hold, warn once and leave Ink's own detection in place.
  *
+ * **Example** (Construct a scoped colour hold)
+ *
+ * ```ts
+ * import { holdChalkLevel } from "@beep/scratchpad/effected/cli/ui/internal/ink"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ * const program = holdChalkLevel(O.some({ level: 1 }), "none")
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @internal
+ * @category resource-management
+ * @since 0.0.0
  */
 export const holdChalkLevel: {
 	(colour: ColorLevel): (found: O.Option<InkChalk>) => Effect.Effect<void, never, Scope.Scope>;
@@ -180,7 +238,17 @@ export const holdChalkLevel: {
  * Set Ink's colour level from the stream's `ColorLevel` for the enclosing scope, on Ink's own chalk. The level is process-global while held: the last screen
  * mounted wins.
  *
+ * **Example** (Construct an Ink colour scope)
+ *
+ * ```ts
+ * import { withInkColour } from "@beep/scratchpad/effected/cli/ui/internal/ink"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(withInkColour("none"))) // true
+ * ```
+ *
  * @internal
+ * @category resource-management
+ * @since 0.0.0
  */
 export const withInkColour = (colour: ColorLevel): Effect.Effect<void, never, Scope.Scope> =>
 	Effect.flatMap(resolveChalk, (found) => holdChalkLevel(found, colour));

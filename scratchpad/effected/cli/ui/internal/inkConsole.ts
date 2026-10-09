@@ -29,6 +29,8 @@ class ConsoleTrace extends S.TaggedError<ConsoleTrace>($I`ConsoleTrace`)(
  * writes.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface InkConsole {
 	/**
@@ -102,7 +104,17 @@ const now = (): number => globalThis.performance?.now() ?? Clock.Clock.defaultVa
  * Every `Console` method is the bridge's own, none the ambient console's: one that fell through would write to the
  * process's terminal past Ink, tearing the frame and escaping `UiStreams`.
  *
+ * **Example** (Construct the console bridge)
+ *
+ * ```ts
+ * import { makeInkConsole } from "@beep/scratchpad/effected/cli/ui/internal/inkConsole"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(makeInkConsole)) // true
+ * ```
+ *
  * @internal
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeInkConsole: Effect.Effect<InkConsole> = Effect.gen(function* () {
 	const streams = yield* UiStreams;

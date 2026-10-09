@@ -12,6 +12,8 @@ import * as R from "effect/Record";
  * scope closes.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface Sandbox {
 	/** The temp directory itself; the default working directory of {@link CliTest.run}. */
@@ -29,6 +31,8 @@ export interface Sandbox {
  * How {@link CliTest.run} spawns a bin.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface RunOptions {
 	/** The sandbox whose environment and root the child runs in. */
@@ -53,6 +57,8 @@ export interface RunOptions {
  * What a spawned bin did, as data: a non-zero exit is a result, not a failure.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface RunResult {
 	/** The child's exit code. */
@@ -72,34 +78,46 @@ const text = <E, R>(stream: Stream.Stream<Uint8Array, E, R>): Effect.Effect<stri
  * **Example** (Test a built CLI version command in a sandbox)
  *
  * ```ts
- * import * as NodeServices from "@effect/platform-node/NodeServices"
- * import { assert, it } from "@effect/vitest"
- * import { CliTest } from "./testing.ts"
- * import * as Effect from "effect/Effect";
+ * import { CliTest } from "@beep/scratchpad/effected/cli/CliTest"
+ * import * as Effect from "effect/Effect"
  *
- * it.effect("prints its version", () =>
- *   Effect.gen(function* () {
- *     const sandbox = yield* CliTest.sandbox({ path: process.env.PATH ?? "" })
- *     const result = yield* CliTest.run("dist/bin.js", ["--version"], { sandbox, execPath: process.execPath })
- *     assert.strictEqual(result.exitCode, 0)
- *   }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
- * )
+ * const program = Effect.gen(function* () {
+ *   const sandbox = yield* CliTest.sandbox({ path: "/usr/bin" })
+ *   const result = yield* CliTest.run("dist/bin.js", ["--version"], { sandbox, execPath: "/usr/bin/node" })
+ *   return result.exitCode === 0
+ * }).pipe(Effect.scoped)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class CliTest {
 	private constructor() {}
 
 	/**
-  * A scoped temp directory with a fresh `HOME` and XDG tree, `NO_COLOR=1`,
-  * and the `PATH` you pass — the host environment is never inherited.
-  *
-  * **Gotchas**
-  *
-  * Each call mints a fresh temp directory; bind the result to a `const`
-  * within one test rather than calling this more than once per assertion.
-  */
+	 * A scoped temp directory with a fresh `HOME` and XDG tree, `NO_COLOR=1`,
+	 * and the `PATH` you pass — the host environment is never inherited.
+	 *
+	 * **Gotchas**
+	 *
+	 * Each call mints a fresh temp directory; bind the result to a `const`
+	 * within one test rather than calling this more than once per assertion.
+	 *
+	 * **Example** (Construct a hermetic sandbox)
+	 *
+	 * ```ts
+	 * import { CliTest } from "@beep/scratchpad/effected/cli/CliTest"
+	 * import * as Effect from "effect/Effect"
+	 *
+	 * const program = CliTest.sandbox({ path: "/usr/bin" })
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly sandbox = Effect.fn("sandbox")(function* (options: {
 		/**
 		 * The `PATH` the child sees, passed explicitly because nothing else is
@@ -123,16 +141,32 @@ export class CliTest {
 	});
 
 	/**
-  * Run `execPath bin ...args`; a non-zero exit is returned, never failed.
-  *
-  * **Details**
-  *
-  * `stdin` is never left as an inherited open pipe: when omitted or `""`
-  * the child gets an already-ended empty input (`Stream.empty`), so a
-  * stdin-reading bin exits instead of hanging on `effect/process`'s
-  * default `"pipe"` stdio, which stays open until something writes to and
-  * ends it.
-  */
+	 * Run `execPath bin ...args`; a non-zero exit is returned, never failed.
+	 *
+	 * **Details**
+	 *
+	 * `stdin` is never left as an inherited open pipe: when omitted or `""`
+	 * the child gets an already-ended empty input (`Stream.empty`), so a
+	 * stdin-reading bin exits instead of hanging on `effect/process`'s
+	 * default `"pipe"` stdio, which stays open until something writes to and
+	 * ends it.
+	 *
+	 * **Example** (Construct a version command with closed stdin)
+	 *
+	 * ```ts
+	 * import { CliTest } from "@beep/scratchpad/effected/cli/CliTest"
+	 * import * as Effect from "effect/Effect"
+	 *
+	 * const program = CliTest.run("dist/bin.js", ["--version"], {
+	 *   sandbox: { root: "/tmp/cli-test", home: "/tmp/cli-test/home", env: { PATH: "/usr/bin", NO_COLOR: "1" } },
+	 *   execPath: "/usr/bin/node",
+	 * })
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category testing
+	 * @since 0.0.0
+	 */
 	static readonly run = (
 		bin: string,
 		args: ReadonlyArray<string>,

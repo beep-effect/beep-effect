@@ -42,7 +42,17 @@ const formatter = SchemaIssue.makeFormatterStandardSchemaV1({
  * included, so `String(node)` would dump the schema rather than describe the
  * failure. Only `message` and `path` are read.
  *
+ * **Example** (Ignore a value that is not a schema issue)
+ *
+ * ```ts
+ * import { formatIssue } from "@beep/scratchpad/effected/cli/internal/format"
+ *
+ * console.log(JSON.stringify(formatIssue("unstructured failure"))) // []
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const formatIssue = (issue: unknown): ReadonlyArray<string> =>
 	issueEntries(issue).map((entry) =>
@@ -53,6 +63,8 @@ export const formatIssue = (issue: unknown): ReadonlyArray<string> =>
  * One rejected value: what is wrong and where.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface IssueEntry {
 	readonly message: string;
@@ -69,7 +81,17 @@ export interface IssueEntry {
  * it tried, so one wrong key in a three-member union is the same entry three times; the per-branch "Missing key"
  * entries differ and are kept, since they say which shapes were allowed, but the repeat is pure noise in front of them.
  *
+ * **Example** (Ignore a missing issue tree)
+ *
+ * ```ts
+ * import { issueEntries } from "@beep/scratchpad/effected/cli/internal/format"
+ *
+ * console.log(JSON.stringify(issueEntries(undefined))) // []
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const issueEntries = (issue: unknown): ReadonlyArray<IssueEntry> => {
 	if (!SchemaIssue.isIssue(issue)) return [];
@@ -98,7 +120,18 @@ const emptyNode = (): PathNode => ({ messages: [], children: MutableHashMap.empt
  * the message at the end of a path is the node's label (`extra: unknown key`) or, when the node has more to say, its
  * leaves.
  *
+ * **Example** (Group a rejected key under its path)
+ *
+ * ```ts
+ * import { issueTreeChildren } from "@beep/scratchpad/effected/cli/internal/format"
+ *
+ * const children = issueTreeChildren([{ message: "unknown key", path: ["config", "extra"] }])
+ * console.log(JSON.stringify(children)) // [{"label":"config","children":[{"label":"extra: unknown key"}]}]
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const issueTreeChildren = (entries: ReadonlyArray<IssueEntry>): ReadonlyArray<IssueTreeNode> => {
 	const root = emptyNode();
@@ -132,6 +165,8 @@ export const issueTreeChildren = (entries: ReadonlyArray<IssueEntry>): ReadonlyA
  * import at runtime.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface IssueTreeNode {
 	readonly label: string;

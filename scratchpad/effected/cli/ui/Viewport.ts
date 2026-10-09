@@ -24,6 +24,8 @@ class DuplicateViewportKeyError extends S.TaggedError<DuplicateViewportKeyError>
  * are no items) and `offset <= cursor < offset + height`, and never lets the window run past the last item.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ViewportState {
 	/** The selected item. */
@@ -41,6 +43,8 @@ export interface ViewportState {
  * key in the view, so keys must be unique within one list: `Viewport.View` dies on a repeat.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type ViewportRow =
 	| { readonly _tag: "Header"; readonly label: string }
@@ -50,6 +54,8 @@ export type ViewportRow =
  * A move through a viewport.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type ViewportMove = "up" | "down" | "home" | "end" | "pageup" | "pagedown";
 
@@ -57,6 +63,8 @@ export type ViewportMove = "up" | "down" | "home" | "end" | "pageup" | "pagedown
  * Props of {@link Viewport.View}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ViewportViewProps {
 	/** The rows, headers and items, in order; the items are what `state` counts. */
@@ -202,7 +210,17 @@ const slice = (
  * the screen and scrollback to redraw it. A section header stays visible: when the header of the first visible item
  * has scrolled off, it is drawn again atop the slice.
  *
+ * **Example** (Follow the selection through a scrolling window)
+ *
+ * ```ts
+ * import { Viewport } from "@beep/scratchpad/effected/cli/ui/Viewport"
+ * const state = Viewport.step(Viewport.init(8, 3), "end")
+ * console.log(state.offset) // 5
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class Viewport {
 	private constructor() {}
@@ -210,29 +228,68 @@ export class Viewport {
 	/**
 	 * A viewport over `count` items, `height` of them in view, with `cursor` selected (clamped; 0 by default).
 	 *
+	 * **Example** (Clamp an initial selection)
+	 *
+	 * ```ts
+	 * import { Viewport } from "@beep/scratchpad/effected/cli/ui/Viewport"
+	 * console.log(Viewport.init(5, 2, 9).cursor) // 4
+	 * ```
+	 *
 	 * @param count - how many items
 	 * @param height - how many fit (at least 1)
 	 * @param cursor - the item to select
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly init: (count: number, height: number, cursor?: number) => ViewportState = init;
 
 	/**
 	 * Move the cursor, clamped at both ends with no wrap, keeping it in view. A page is the window height.
 	 *
+	 * **Example** (Move by one page)
+	 *
+	 * ```ts
+	 * import { Viewport } from "@beep/scratchpad/effected/cli/ui/Viewport"
+	 * console.log(Viewport.step(Viewport.init(10, 3), "pagedown").cursor) // 3
+	 * ```
+	 *
 	 * @param state - where the viewport is
 	 * @param move - the move
+	 * @category combinators
+	 * @since 0.0.0
 	 */
 	static readonly step: (state: ViewportState, move: ViewportMove) => ViewportState = step;
 
 	/**
 	 * Change the window height, keeping the cursor where it is and in view.
 	 *
+	 * **Example** (Keep the selected item visible after shrinking)
+	 *
+	 * ```ts
+	 * import { Viewport } from "@beep/scratchpad/effected/cli/ui/Viewport"
+	 * console.log(Viewport.resize(Viewport.init(8, 4, 6), 2).offset) // 5
+	 * ```
+	 *
 	 * @param state - where the viewport is
 	 * @param height - the new height (at least 1)
+	 * @category combinators
+	 * @since 0.0.0
 	 */
 	static readonly resize: (state: ViewportState, height: number) => ViewportState = resize;
 
-	/** The keys: ↑/↓ move, pgup/pgdn page, home top, end bottom. */
+	/**
+	 * The keys: ↑/↓ move, pgup/pgdn page, home top, end bottom.
+	 *
+	 * **Example** (Inspect the navigation bindings)
+	 *
+	 * ```ts
+	 * import { Viewport } from "@beep/scratchpad/effected/cli/ui/Viewport"
+	 * console.log(Viewport.keys.bindings.length) // 6
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	static readonly keys: KeyTable<ViewportMove> = KeyTable.make<ViewportMove>([
 		{ keys: ["up"], action: "up", help: "move" },
 		{ keys: ["down"], action: "down", help: "move" },
@@ -246,7 +303,24 @@ export class Viewport {
 	 * Draw the window: the visible rows, each clipped to one line. A repeated item key is a defect: the view throws, so
 	 * the screen dies with the reason.
 	 *
+	 * **Example** (Construct a scrolling list element)
+	 *
+	 * ```ts
+	 * import { Viewport } from "@beep/scratchpad/effected/cli/ui/Viewport"
+	 * import { createElement, isValidElement } from "react"
+	 * import { Text } from "ink"
+	 *
+	 * const element = createElement(Viewport.View, {
+	 *   rows: [{ _tag: "Item", key: "a" }],
+	 *   state: Viewport.init(1, 1),
+	 *   renderRow: () => createElement(Text, null, "Alpha"),
+	 * })
+	 * console.log(isValidElement(element)) // true
+	 * ```
+	 *
 	 * @param props - the rows, the state, how to draw a row, and the lines reserved for the rest of the screen
+	 * @category components
+	 * @since 0.0.0
 	 */
 	static readonly View = (props: ViewportViewProps): ReactElement => {
 		assertUniqueItemKeys(props.rows);

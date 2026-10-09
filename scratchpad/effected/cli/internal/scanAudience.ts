@@ -5,6 +5,8 @@ import { AudienceKind } from "../../env/Audience.ts";
  * The four parsed audience flags, as core hands them to a shared-flag command.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface AudienceFlagValues {
 	readonly audience: ReadonlyArray<AudienceKind>;
@@ -13,7 +15,12 @@ export interface AudienceFlagValues {
 	readonly ci: ReadonlyArray<boolean>;
 }
 
-/** What the flags named: one entry per TRUE occurrence, and whether that is more than one. */
+/**
+ * What the flags named: one entry per TRUE occurrence, and whether that is more than one.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface AudienceTally {
 	readonly given: ReadonlyArray<AudienceKind>;
 	readonly conflict: boolean;
@@ -24,7 +31,18 @@ export interface AudienceTally {
  * cannot drift: every `--audience` value counts, and a boolean counts only when it is true (`--agent=false` and
  * `--no-agent` mean "not given").
  *
+ * **Example** (Count only enabled boolean flags)
+ *
+ * ```ts
+ * import { tallyAudience } from "@beep/scratchpad/effected/cli/internal/scanAudience"
+ * const tally = tallyAudience({ audience: [], human: [false], agent: [true], ci: [] })
+ * console.log(tally.given.join(",")) // agent
+ * console.log(tally.conflict) // false
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const tallyAudience = (input: AudienceFlagValues): AudienceTally => {
 	const given: ReadonlyArray<AudienceKind> = [
@@ -54,7 +72,18 @@ const isKind = S.is(AudienceKind);
  * repeats, and anywhere before a `--`, which ends flag parsing. A value core would reject (a bad `--audience`
  * kind, an unknown boolean spelling, a missing value) is left uncounted: core reports that as its own usage error.
  *
+ * **Example** (Ignore disabled flags and stop at the delimiter)
+ *
+ * ```ts
+ * import { scanAudience } from "@beep/scratchpad/effected/cli/internal/scanAudience"
+ * const tally = scanAudience(["--agent", "--human=false", "--", "--ci"])
+ * console.log(tally.given.join(",")) // agent
+ * console.log(tally.conflict) // false
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const scanAudience = (argv: ReadonlyArray<string>): AudienceTally => {
 	const audience: AudienceKind[] = [];

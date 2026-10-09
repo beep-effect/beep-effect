@@ -33,6 +33,8 @@ class DuplicateItemKey extends S.TaggedError<DuplicateItemKey>($I`DuplicateItemK
  * One item of a {@link MultiSelect} section.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface MultiSelectItem<A> {
 	/** Identifies the item within its section. */
@@ -51,6 +53,8 @@ export interface MultiSelectItem<A> {
  * A titled group of items; the title is a header the cursor never stops on.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface MultiSelectSection<A> {
 	/** The header. */
@@ -68,6 +72,8 @@ export interface MultiSelectSection<A> {
  * Items are numbered across sections in order, section by section; `chosen` holds those numbers.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface MultiSelectState<A> {
 	/** The sections. */
@@ -84,6 +90,8 @@ export interface MultiSelectState<A> {
  * What a key does in a {@link MultiSelect}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type MultiSelectAction = ViewportMove | "toggle" | "toggleSection" | "submit" | "cancel";
 
@@ -91,6 +99,8 @@ export type MultiSelectAction = ViewportMove | "toggle" | "toggleSection" | "sub
  * Options for {@link MultiSelect.init}.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface MultiSelectInitOptions {
 	/** How many rows the list shows at most; the terminal height also limits it. 10 by default. */
@@ -101,6 +111,8 @@ export interface MultiSelectInitOptions {
  * Options for {@link MultiSelect.screen}.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface MultiSelectScreenOptions<A> {
 	/** The question, shown above the list. */
@@ -115,6 +127,8 @@ export interface MultiSelectScreenOptions<A> {
  * Props of {@link MultiSelect.View}.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface MultiSelectViewProps<A> extends MultiSelectScreenOptions<A> {
 	/** Receives the selected values, in section then item order, when enter is pressed. */
@@ -207,7 +221,8 @@ const RESERVED = 3;
  * **Example** (Select features from a sectioned list)
  *
  * ```ts
- * import { CliUi, MultiSelect } from "../ui.ts"
+ * import { CliUi } from "@beep/scratchpad/effected/cli/ui/CliUi"
+ * import { MultiSelect } from "@beep/scratchpad/effected/cli/ui/MultiSelect"
  * import * as Effect from "effect/Effect";
  *
  * const pickFeatures = Effect.gen(function* () {
@@ -227,9 +242,12 @@ const RESERVED = 3;
  * 	)
  * 	return features
  * })
+ * console.log(Effect.isEffect(pickFeatures)) // true
  * ```
  *
  * @public
+ * @category components
+ * @since 0.0.0
  */
 export class MultiSelect {
 	private constructor() {}
@@ -237,8 +255,19 @@ export class MultiSelect {
 	/**
 	 * A multi-select over `sections`, each item starting as its own `selected` flag says, on the first item.
 	 *
+	 * **Example** (Start with a selected item)
+	 *
+	 * ```ts
+	 * import { MultiSelect } from "@beep/scratchpad/effected/cli/ui/MultiSelect";
+	 *
+	 * const state = MultiSelect.init([{ title: "Tools", items: [{ key: "lint", label: "Linting", value: "lint", selected: true }] }]);
+	 * console.log(MultiSelect.selected(state).join(",")) // lint
+	 * ```
+	 *
 	 * @param sections - the sections
 	 * @param options - the list height
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly init: <A>(
 		sections: ReadonlyArray<MultiSelectSection<A>>,
@@ -250,32 +279,79 @@ export class MultiSelect {
 	 * selects every item of the highlighted item's section while any is unselected, and clears them all otherwise;
 	 * `"submit"` marks it submitted; `"cancel"` changes nothing here, because ending the screen is the view's job.
 	 *
+	 * **Example** (Toggle every item in a section)
+	 *
+	 * ```ts
+	 * import { MultiSelect } from "@beep/scratchpad/effected/cli/ui/MultiSelect";
+	 *
+	 * const state = MultiSelect.init([{ title: "Tools", items: [{ key: "lint", label: "Linting", value: "lint" }] }]);
+	 * const toggled = MultiSelect.step(state, "toggleSection");
+	 * console.log(MultiSelect.selected(toggled).join(",")) // lint
+	 * ```
+	 *
 	 * @param state - where the multi-select is
 	 * @param action - the action
+	 * @category combinators
+	 * @since 0.0.0
 	 */
 	static readonly step: <A>(state: MultiSelectState<A>, action: MultiSelectAction) => MultiSelectState<A> = step;
 
 	/**
 	 * The selected values, in section order and then item order, however they were toggled.
 	 *
+	 * **Example** (Read selected values in item order)
+	 *
+	 * ```ts
+	 * import { MultiSelect } from "@beep/scratchpad/effected/cli/ui/MultiSelect";
+	 *
+	 * const state = MultiSelect.init([{ title: "Tools", items: [{ key: "lint", label: "Linting", value: "lint", selected: true }, { key: "test", label: "Tests", value: "test", selected: true }] }]);
+	 * console.log(MultiSelect.selected(state).join(",")) // lint,test
+	 * ```
+	 *
 	 * @param state - where the multi-select is
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	static readonly selected: <A>(state: MultiSelectState<A>) => ReadonlyArray<A> = selected;
 
-	/** The keys: ↑/↓ move (page, home and end too), space toggle, a toggle section, enter continue, q cancel. */
+	/**
+	 *  The keys: ↑/↓ move (page, home and end too), space toggle, a toggle section, enter continue, q cancel.
+	 *
+	 * **Example** (Inspect the upward movement binding)
+	 *
+	 * ```ts
+	 * import { MultiSelect } from "@beep/scratchpad/effected/cli/ui/MultiSelect";
+	 *
+	 * console.log(MultiSelect.keys.bindings[0]?.action) // up
+	 * ```
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	static readonly keys: KeyTable<MultiSelectAction> = KEYS;
 
 	/**
-  * Draw the multi-select: the message, the sections (each item a check glyph, `◉`/`◯` or `[x]`/`[ ]` under ASCII,
-  * then its label cut to the width; the highlighted one in the accent token with the arrow glyph), the highlighted
-  * item's detail, and the key help. Enter calls `onSubmit` with the selected values; `q` cancels with `"escape"`.
-  *
-  * **Details**
-  *
-  * Single-shot, like `Select.View`: the sections are read once at mount.
-  *
-  * @param props - the message, the sections, and where the selection goes
-  */
+	 * Draw the multi-select: the message, the sections (each item a check glyph, `◉`/`◯` or `[x]`/`[ ]` under ASCII,
+	 * then its label cut to the width; the highlighted one in the accent token with the arrow glyph), the highlighted
+	 * item's detail, and the key help. Enter calls `onSubmit` with the selected values; `q` cancels with `"escape"`.
+	 *
+	 * **Details**
+	 *
+	 * Single-shot, like `Select.View`: the sections are read once at mount.
+	 *
+	 * **Example** (Compose a multi-select view)
+	 *
+	 * ```ts
+	 * import { MultiSelect } from "@beep/scratchpad/effected/cli/ui/MultiSelect";
+	 * import { createElement } from "react";
+	 *
+	 * const element = createElement(MultiSelect.View<string>, { message: "Which features?", sections: [], onSubmit: (values) => console.log(values) });
+	 * console.log(element.type === MultiSelect.View) // true
+	 * ```
+	 *
+	 * @param props - the message, the sections, and where the selection goes
+	 * @category components
+	 * @since 0.0.0
+	 */
 	static readonly View = <A>(props: MultiSelectViewProps<A>): ReactElement => {
 		const { ink, react } = inkModules();
 		const glyphs = useGlyphs();
@@ -335,7 +411,18 @@ export class MultiSelect {
 	/**
 	 * A ready-made screen for `CliUi.run`: the multi-select, resolving with the selected values (`[]` when none are).
 	 *
+	 * **Example** (Construct a features screen)
+	 *
+	 * ```ts
+	 * import { MultiSelect } from "@beep/scratchpad/effected/cli/ui/MultiSelect";
+	 *
+	 * const screen = MultiSelect.screen({ message: "Which features?", sections: [] });
+	 * console.log(typeof screen) // function
+	 * ```
+	 *
 	 * @param options - the message, the sections and the list height
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly screen =
 		<A>(options: MultiSelectScreenOptions<A>): Screen<ReadonlyArray<A>> =>

@@ -11,7 +11,17 @@ import * as Effect from "effect/Effect";
  * unset `NODE_ENV`, the common case for a CLI, leaks like `"development"`, so `"auto"` drains then too. `NODE_ENV` is
  * read through `Config`, so a test sets it with a `ConfigProvider` and `./ui` reads no `process`.
  *
+ * **Example** (Keep an explicit drain setting)
+ *
+ * ```ts
+ * import { resolveDrain } from "@beep/scratchpad/effected/cli/ui/internal/perfDrain"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.runSync(resolveDrain(false))) // false
+ * ```
+ *
  * @internal
+ * @category configuration
+ * @since 0.0.0
  */
 export const resolveDrain = (mode: boolean | "auto"): Effect.Effect<boolean> =>
 	mode === "auto"
@@ -32,7 +42,17 @@ export const resolveDrain = (mode: boolean | "auto"): Effect.Effect<boolean> =>
  * consumer might call a measure. Marks are left alone: React's development build leaks measures only, never marks,
  * so clearing marks would only take a host's own. A runtime without `performance` is left alone.
  *
+ * **Example** (Leave measures intact when draining is disabled)
+ *
+ * ```ts
+ * import { drainPerformance } from "@beep/scratchpad/effected/cli/ui/internal/perfDrain"
+ * drainPerformance(false)
+ * console.log("drain disabled") // drain disabled
+ * ```
+ *
  * @internal
+ * @category resource-management
+ * @since 0.0.0
  */
 export const drainPerformance = (drain: boolean): void => {
 	if (!drain) return;

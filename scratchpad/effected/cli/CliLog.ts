@@ -35,6 +35,8 @@ import type { Style } from "./Token.ts";
  * Options for `CliLog.status`.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface CliLogStatusOptions {
 	/**
@@ -66,6 +68,8 @@ const indentOf = (indent: number | string | undefined): string => {
  * Options for `CliLog.layer`.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface CliLogOptions {
 	/**
@@ -172,6 +176,8 @@ export interface CliLogOptions {
  * Where the file sink writes: a literal path, or the environment variable that holds it.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type CliLogFile = { readonly envVar: string } | { readonly path: string };
 
@@ -179,6 +185,8 @@ export type CliLogFile = { readonly envVar: string } | { readonly path: string }
  * {@link CliLogOptions} with a file sink, which is what makes the layer require `FileSystem` and `Path`.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface CliLogFileOptions extends CliLogOptions {
 	/**
@@ -309,125 +317,211 @@ const actionsDecision =
  * **Example** (Enable diagnostics with an environment variable)
  *
  * ```ts
- * import { CliRuntime } from "./index.ts"
- * import { NodeRuntime, NodeServices } from "@effect/platform-node"
+ * import { CliRuntime } from "@beep/scratchpad/effected/cli/CliRuntime"
+ * import * as Effect from "effect/Effect"
+ * import * as Layer from "effect/Layer"
  *
  * // `env.log` makes `main` install `CliLog.layer`: set MYTOOL_LOG_LEVEL=debug to get diagnostics on stderr.
- * NodeRuntime.runMain(
- *   CliRuntime.main(program, {
- *     platform: NodeServices.layer,
- *     env: { audienceEnvVar: "MYTOOL_AUDIENCE", log: { envVar: "MYTOOL_LOG_LEVEL" } },
- *   }),
- * )
+ * const program = CliRuntime.main(Effect.log("starting"), {
+ *   platform: Layer.empty,
+ *   env: { audienceEnvVar: "MYTOOL_AUDIENCE", log: { envVar: "MYTOOL_LOG_LEVEL" } },
+ * })
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class CliLog {
 	private constructor() {}
 
 	/**
-  * The diagnostics threshold. Defaults to `None`, silent.
-  *
-  * **Details**
-  *
-  * `CliLog.layer` sets it from the environment variable. A scope may raise it to narrow the output; it
-  * cannot lower it below the level the layer installed, because Effect has already dropped those records.
-  */
+	 * The diagnostics threshold. Defaults to `None`, silent.
+	 *
+	 * **Details**
+	 *
+	 * `CliLog.layer` sets it from the environment variable. A scope may raise it to narrow the output; it
+	 * cannot lower it below the level the layer installed, because Effect has already dropped those records.
+	 *
+	 * **Example** (Inspect the default diagnostics threshold)
+	 *
+	 * ```ts
+	 * import { CliLog } from "@beep/scratchpad/effected/cli/CliLog"
+	 * import * as Effect from "effect/Effect"
+	 *
+	 * console.log(Effect.runSync(CliLog.Level)) // None
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	static readonly Level: Context.Reference<LogLevel.LogLevel> = Level;
 
 	/**
-  * The whole logger set of a program: a `CliLogger` for ordinary lines plus the diagnostics sink.
-  *
-  * **Details**
-  *
-  * Replaces the installed loggers without reading them. Provide it on the program you pass to
-  * `CliRuntime.main`, or use `main`'s `env.log` option; never wrap it around `main`, whose own logger would
-  * replace this one. Bind it to a constant.
-  *
-  * The requirements follow the format. `format: "json"` reads neither the audience nor the terminal, so it
-  * requires neither; `"pretty"` requires `TerminalEnv` alone, for the stderr colour; `"auto"` and an omitted
-  * format require both. A long-lived host that never builds a platform `Terminal` can provide
-  * `TerminalEnv.layerStdio()` for the pretty case.
-  *
-  * A platform or program that installs its own `Logger.layer([...])` replaces this set: do not. The diagnostics
-  * then go silent with no error.
-  *
-  * The NDJSON line is core's `Logger.formatJson`, unchanged so it stays interoperable with Effect tooling: the
-  * `message` field is a string for one log argument and an array for several.
-  *
-  * Level parsing is case-insensitive and accepts `warn`, `warning`, `error`, `info`, `debug`, `trace`,
-  * `fatal`, `all` and `none`. An invalid value warns once, through the `CliLogger`, and leaves diagnostics
-  * off.
-  *
-  * With a `file` option ({@link CliLogFileOptions}) the layer also writes an async NDJSON file, and only then
-  * does it require `FileSystem` and `Path`, and it leaves them in `R` unprovided: the platform supplies them, or
-  * a test supplies a memory filesystem, so a host never provides Node inside its own layer.
-  *
-  * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
-  *
-  * @param options - the level, the env var, the format, the `CliLogger` options and the optional file sink
-  */
+	 * The whole logger set of a program: a `CliLogger` for ordinary lines plus the diagnostics sink.
+	 *
+	 * **Details**
+	 *
+	 * Replaces the installed loggers without reading them. Provide it on the program you pass to
+	 * `CliRuntime.main`, or use `main`'s `env.log` option; never wrap it around `main`, whose own logger would
+	 * replace this one. Bind it to a constant.
+	 *
+	 * The requirements follow the format. `format: "json"` reads neither the audience nor the terminal, so it
+	 * requires neither; `"pretty"` requires `TerminalEnv` alone, for the stderr colour; `"auto"` and an omitted
+	 * format require both. A long-lived host that never builds a platform `Terminal` can provide
+	 * `TerminalEnv.layerStdio()` for the pretty case.
+	 *
+	 * A platform or program that installs its own `Logger.layer([...])` replaces this set: do not. The diagnostics
+	 * then go silent with no error.
+	 *
+	 * The NDJSON line is core's `Logger.formatJson`, unchanged so it stays interoperable with Effect tooling: the
+	 * `message` field is a string for one log argument and an array for several.
+	 *
+	 * Level parsing is case-insensitive and accepts `warn`, `warning`, `error`, `info`, `debug`, `trace`,
+	 * `fatal`, `all` and `none`. An invalid value warns once, through the `CliLogger`, and leaves diagnostics
+	 * off.
+	 *
+	 * With a `file` option ({@link CliLogFileOptions}) the layer also writes an async NDJSON file, and only then
+	 * does it require `FileSystem` and `Path`, and it leaves them in `R` unprovided: the platform supplies them, or
+	 * a test supplies a memory filesystem, so a host never provides Node inside its own layer.
+	 *
+	 * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
+	 *
+	 * **Example** (Construct json diagnostics)
+	 *
+	 * ```ts
+	 * import { CliLog } from "@beep/scratchpad/effected/cli/CliLog"
+	 * import * as Layer from "effect/Layer"
+	 *
+	 * const live = CliLog.layer({ format: "json", level: "Debug" })
+	 * console.log(Layer.isLayer(live)) // true
+	 * ```
+	 *
+	 * @param options - the level, the env var, the format, the `CliLogger` options and the optional file sink
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static layer(
 		options: CliLogOptions & { readonly format: "json"; readonly file?: undefined },
 	): Layer.Layer<never, never, never>;
 	/**
-  * The logger set with NDJSON diagnostics and a file sink; see the first overload.
-  *
-  * **Gotchas**
-  *
-  * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
-  *
-  * @param options - the level, the env var, the `CliLogger` options and the file sink
-  */
+	 * The logger set with NDJSON diagnostics and a file sink; see the first overload.
+	 *
+	 * **Gotchas**
+	 *
+	 * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
+	 *
+	 * **Example** (Construct json diagnostics with a file sink)
+	 *
+	 * ```ts
+	 * import { CliLog } from "@beep/scratchpad/effected/cli/CliLog"
+	 * import * as Layer from "effect/Layer"
+	 *
+	 * const live = CliLog.layer({ format: "json", level: "Debug", file: { path: "/tmp/tool.ndjson" } })
+	 * console.log(Layer.isLayer(live)) // true
+	 * ```
+	 *
+	 * @param options - the level, the env var, the `CliLogger` options and the file sink
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static layer(
 		options: CliLogFileOptions & { readonly format: "json" },
 	): Layer.Layer<never, never, FileSystem.FileSystem | PathModule.Path>;
 	/**
-  * The logger set with pretty diagnostics; see the first overload.
-  *
-  * **Gotchas**
-  *
-  * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
-  *
-  * @param options - the level, the env var and the `CliLogger` options
-  */
+	 * The logger set with pretty diagnostics; see the first overload.
+	 *
+	 * **Gotchas**
+	 *
+	 * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
+	 *
+	 * **Example** (Construct pretty diagnostics)
+	 *
+	 * ```ts
+	 * import { CliLog } from "@beep/scratchpad/effected/cli/CliLog"
+	 * import * as Layer from "effect/Layer"
+	 *
+	 * const live = CliLog.layer({ format: "pretty", level: "Debug" })
+	 * console.log(Layer.isLayer(live)) // true
+	 * ```
+	 *
+	 * @param options - the level, the env var and the `CliLogger` options
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static layer(
 		options: CliLogOptions & { readonly format: "pretty"; readonly file?: undefined },
 	): Layer.Layer<never, never, TerminalEnv>;
 	/**
-  * The logger set with pretty diagnostics and a file sink; see the first overload.
-  *
-  * **Gotchas**
-  *
-  * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
-  *
-  * @param options - the level, the env var, the `CliLogger` options and the file sink
-  */
+	 * The logger set with pretty diagnostics and a file sink; see the first overload.
+	 *
+	 * **Gotchas**
+	 *
+	 * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
+	 *
+	 * **Example** (Construct pretty diagnostics with a file sink)
+	 *
+	 * ```ts
+	 * import { CliLog } from "@beep/scratchpad/effected/cli/CliLog"
+	 * import * as Layer from "effect/Layer"
+	 *
+	 * const live = CliLog.layer({ format: "pretty", level: "Debug", file: { path: "/tmp/tool.ndjson" } })
+	 * console.log(Layer.isLayer(live)) // true
+	 * ```
+	 *
+	 * @param options - the level, the env var, the `CliLogger` options and the file sink
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static layer(
 		options: CliLogFileOptions & { readonly format: "pretty" },
 	): Layer.Layer<never, never, TerminalEnv | FileSystem.FileSystem | PathModule.Path>;
 	/**
-  * The logger set with the format decided by the audience; see the first overload.
-  *
-  * **Gotchas**
-  *
-  * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
-  *
-  * @param options - the level, the env var, the format and the `CliLogger` options
-  */
+	 * The logger set with the format decided by the audience; see the first overload.
+	 *
+	 * **Gotchas**
+	 *
+	 * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
+	 *
+	 * **Example** (Construct auto diagnostics)
+	 *
+	 * ```ts
+	 * import { CliLog } from "@beep/scratchpad/effected/cli/CliLog"
+	 * import * as Layer from "effect/Layer"
+	 *
+	 * const live = CliLog.layer({ format: "auto", level: "Debug" })
+	 * console.log(Layer.isLayer(live)) // true
+	 * ```
+	 *
+	 * @param options - the level, the env var, the format and the `CliLogger` options
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static layer(
 		options?: CliLogOptions & { readonly file?: undefined },
 	): Layer.Layer<never, never, Audience | TerminalEnv>;
 	/**
-  * The logger set with the format decided by the audience, and a file sink; see the first overload.
-  *
-  * **Gotchas**
-  *
-  * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
-  *
-  * @param options - the level, the env var, the format, the `CliLogger` options and the file sink
-  */
+	 * The logger set with the format decided by the audience, and a file sink; see the first overload.
+	 *
+	 * **Gotchas**
+	 *
+	 * Without a `CurrentRuntimeEnv` around the layer, `"auto"` does not neutralize: see {@link CliLogOptions.runtimeEnv}.
+	 *
+	 * **Example** (Construct auto diagnostics with a file sink)
+	 *
+	 * ```ts
+	 * import { CliLog } from "@beep/scratchpad/effected/cli/CliLog"
+	 * import * as Layer from "effect/Layer"
+	 *
+	 * const live = CliLog.layer({ format: "auto", level: "Debug", file: { path: "/tmp/tool.ndjson" } })
+	 * console.log(Layer.isLayer(live)) // true
+	 * ```
+	 *
+	 * @param options - the level, the env var, the format, the `CliLogger` options and the file sink
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static layer(
 		options: CliLogFileOptions,
 	): Layer.Layer<never, never, Audience | TerminalEnv | FileSystem.FileSystem | PathModule.Path>;
@@ -545,41 +639,47 @@ export class CliLog {
 	}
 
 	/**
-  * Log a status line: its glyph painted through the theme, then `text`, at a level that follows the status.
-  *
-  * **Details**
-  *
-  * The line goes through the logger, so it is a diagnostic like any `Effect.log*` call: filtered by the level in
-  * force (`--log-level`, `CliLog.Level`), routed by `CliLogger`'s `stderrFrom` (stderr by default) and neutralized
-  * under GitHub Actions. What differs is the glyph: the logger sanitises every line a program logs, which strips a
-  * colour a program painted itself, so a glyph on the log channel was always drawn bare. Here the kit paints it and
-  * marks the line as its own, so the plain `CliLogger` line keeps the colour, while `text` is still sanitised:
-  * escape sequences and control characters in it are removed, as in every line the kit writes.
-  *
-  * The glyph is painted with stderr's theme (where diagnostics go) through {@link CliTheme.forAudience}, so an agent
-  * gets it unpainted, and an `Audience` is read only when provided, so it stays out of the requirements. ASCII glyphs
-  * give the status's ASCII form. A diagnostics record carries the line as its message as any record does: the `CliLog`
-  * sink's pretty line sanitises it (the glyph is drawn bare there), and NDJSON keeps it, JSON-escaped.
-  *
-  * The level defaults to the status's rank in `vocab`: `Error` at or above `failure`'s, `Warn` at or above
-  * `warning`'s, `Info` below, so a custom status follows its own rank. Pass `level` to choose it, and `indent` (a
-  * number of spaces, or a string, sanitised) to start the line inside an indented block: `    ✗ error   x: red`.
-  *
-  * **Example** (Log a themed failure status)
-  *
-  * ```ts
-  * import { CliLog, Status } from "./index.ts"
-  *
-  * // ✗ in the failure colour, then the message: on stderr, filtered by the log level.
-  * const reportError = (resource: string, message: string) =>
-  *   CliLog.status(Status.core, "failure", `${resource}: ${message}`)
-  * ```
-  *
-  * @param vocab - the vocabulary the status belongs to
-  * @param name - the status
-  * @param text - the text after the glyph, sanitised
-  * @param options - the level to log at, and the indent before the glyph
-  */
+	 * Log a status line: its glyph painted through the theme, then `text`, at a level that follows the status.
+	 *
+	 * **Details**
+	 *
+	 * The line goes through the logger, so it is a diagnostic like any `Effect.log*` call: filtered by the level in
+	 * force (`--log-level`, `CliLog.Level`), routed by `CliLogger`'s `stderrFrom` (stderr by default) and neutralized
+	 * under GitHub Actions. What differs is the glyph: the logger sanitises every line a program logs, which strips a
+	 * colour a program painted itself, so a glyph on the log channel was always drawn bare. Here the kit paints it and
+	 * marks the line as its own, so the plain `CliLogger` line keeps the colour, while `text` is still sanitised:
+	 * escape sequences and control characters in it are removed, as in every line the kit writes.
+	 *
+	 * The glyph is painted with stderr's theme (where diagnostics go) through {@link CliTheme.forAudience}, so an agent
+	 * gets it unpainted, and an `Audience` is read only when provided, so it stays out of the requirements. ASCII glyphs
+	 * give the status's ASCII form. A diagnostics record carries the line as its message as any record does: the `CliLog`
+	 * sink's pretty line sanitises it (the glyph is drawn bare there), and NDJSON keeps it, JSON-escaped.
+	 *
+	 * The level defaults to the status's rank in `vocab`: `Error` at or above `failure`'s, `Warn` at or above
+	 * `warning`'s, `Info` below, so a custom status follows its own rank. Pass `level` to choose it, and `indent` (a
+	 * number of spaces, or a string, sanitised) to start the line inside an indented block: `    ✗ error   x: red`.
+	 *
+	 * **Example** (Log a themed failure status)
+	 *
+	 * ```ts
+	 * import { CliLog } from "@beep/scratchpad/effected/cli/CliLog"
+	 * import * as Effect from "effect/Effect"
+	 * import { Status } from "@beep/scratchpad/effected/cli/Status"
+	 *
+	 * // The failure glyph and message go to stderr, filtered by the log level.
+	 * const reportError = (resource: string, message: string) =>
+	 *   CliLog.status(Status.core, "failure", `${resource}: ${message}`)
+	 * const program = reportError("config", "invalid")
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param vocab - the vocabulary the status belongs to
+	 * @param name - the status
+	 * @param text - the text after the glyph, sanitised
+	 * @param options - the level to log at, and the indent before the glyph
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly status = Effect.fn("status")(function* <N extends string>(
 		vocab: Status<N>,
 		name: N,
@@ -601,14 +701,26 @@ export class CliLog {
 	});
 
 	/**
-  * Mark the log records an effect emits as coming from `name`.
-  *
-  * **Details**
-  *
-  * Shown as `[name]` in pretty output and as `annotations.component` in NDJSON.
-  *
-  * @param name - the component
-  */
+	 * Mark the log records an effect emits as coming from `name`.
+	 *
+	 * **Details**
+	 *
+	 * Shown as `[name]` in pretty output and as `annotations.component` in NDJSON.
+	 *
+	 * **Example** (Annotate a synchronization log)
+	 *
+	 * ```ts
+	 * import { CliLog } from "@beep/scratchpad/effected/cli/CliLog"
+	 * import * as Effect from "effect/Effect"
+	 *
+	 * const program = Effect.log("synced").pipe(CliLog.component("sync"))
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param name - the component
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly component =
 		(name: string) =>
 		<A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
@@ -667,7 +779,19 @@ const buildTimeDecision = Effect.fn("buildTimeDecision")(function* (
  * GitHub Actions from the detected environment. The level is resolved silently: the program's own `CliLog.layer` warns
  * about an invalid value, once.
  *
+ * **Example** (Construct the build-time logger)
+ *
+ * ```ts
+ * import { platformLogLayer } from "@beep/scratchpad/effected/cli/CliLog"
+ * import * as Layer from "effect/Layer"
+ *
+ * const live = platformLogLayer({ format: "json", level: "Debug" })
+ * console.log(Layer.isLayer(live)) // true
+ * ```
+ *
  * @internal
+ * @category layers
+ * @since 0.0.0
  */
 export const platformLogLayer: {
 	(audienceEnvVar?: string | undefined): (options: CliLogOptions | CliLogFileOptions) => Layer.Layer<never>;
@@ -714,7 +838,19 @@ export const platformLogLayer: {
  * logger is pinned to stderr: the platform's build-time logger keeps the host's `stderrFrom`. It floors at `Warning` and installs no
  * `MinimumLogLevel`, so `CliLog.layer`'s own build, which shares this context, reads the ambient minimum.
  *
+ * **Example** (Construct the build-time logger)
+ *
+ * ```ts
+ * import { envBuildLogLayer } from "@beep/scratchpad/effected/cli/CliLog"
+ * import * as Layer from "effect/Layer"
+ *
+ * const live = envBuildLogLayer({ format: "json", level: "Debug" })
+ * console.log(Layer.isLayer(live)) // true
+ * ```
+ *
  * @internal
+ * @category layers
+ * @since 0.0.0
  */
 export const envBuildLogLayer: {
 	(audienceEnvVar?: string | undefined): (options: CliLogOptions | CliLogFileOptions) => Layer.Layer<never>;

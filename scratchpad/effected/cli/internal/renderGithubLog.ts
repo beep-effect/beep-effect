@@ -55,7 +55,19 @@ const blockLines = (block: Block, ctx: RenderContext): ReadonlyArray<string> =>
 /**
  * Render a document for a GitHub Actions log: plain text, with a top-level collapsible as a group.
  *
+ * **Example** (Render a paragraph)
+ *
+ * ```ts
+ * import { renderGithubLog } from "@beep/scratchpad/effected/cli/internal/renderGithubLog"
+ * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+ * import { Render } from "@beep/scratchpad/effected/cli/Render"
+ * const ctx = Render.contextOf({ audience: "human", color: "none" })
+ * console.log(renderGithubLog([Doc.paragraph("Ready")], ctx)) // Ready
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const renderGithubLog: {
 	(ctx: RenderContext): (doc: Document) => string;

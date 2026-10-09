@@ -51,7 +51,20 @@ const ESC = "\x1b[";
 
 type Rgb = readonly [number, number, number];
 
-/** `#rgb` or `#rrggbb` to channels, or `undefined` when it is neither. */
+/**
+ * `#rgb` or `#rrggbb` to channels, or `undefined` when it is neither.
+ *
+ * **Example** (Decode a short hexadecimal colour)
+ *
+ * ```ts
+ * import { parseHex } from "@beep/scratchpad/effected/cli/internal/ansi"
+ *
+ * console.log(JSON.stringify(parseHex("#f80"))) // [255,136,0]
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const parseHex = (hex: string): Rgb | undefined => {
 	const short = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(hex);
 	if (short !== null) {
@@ -84,6 +97,17 @@ const nearestLevel = (value: number): number => {
 /**
  * The nearest xterm 256-colour index for a colour: the closest of the 6x6x6 cube and the 24-step grayscale
  * ramp (232 to 255) by squared RGB distance, the cube winning a tie.
+ *
+ * **Example** (Find the bright red palette index)
+ *
+ * ```ts
+ * import { nearest256 } from "@beep/scratchpad/effected/cli/internal/ansi"
+ *
+ * console.log(nearest256([255, 0, 0])) // 196
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export const nearest256 = (rgb: Rgb): number => {
 	const [r, g, b] = [nearestLevel(rgb[0]), nearestLevel(rgb[1]), nearestLevel(rgb[2])] as const;
@@ -140,9 +164,22 @@ const wraps = (style: Style, level: ColorLevel): ReadonlyArray<Wrap> => {
 /**
  * Render `text` in a style at a colour level; identity at `none`.
  *
+ * **Details**
+ *
  * Each attribute closes with its own code (39, 22, 23, 24), never a blanket reset, and a closer that occurs
  * inside `text` is followed by the opener again, so a painted span nested in a painted span leaves the outer
  * style in force for the text after it.
+ *
+ * **Example** (Inspect bold terminal escapes)
+ *
+ * ```ts
+ * import { paintStyle } from "@beep/scratchpad/effected/cli/internal/ansi"
+ *
+ * console.log(JSON.stringify(paintStyle({ bold: true }, "basic", "ready"))) // "\u001b[1mready\u001b[22m"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export const paintStyle: {
 	(level: ColorLevel, text: string): (style: Style) => string;
@@ -156,7 +193,20 @@ export const paintStyle: {
 	return out;
 });
 
-/** The raw opening SGR sequence of a style at a level, `""` at `none` or for a style that paints nothing. */
+/**
+ * The raw opening SGR sequence of a style at a level, `""` at `none` or for a style that paints nothing.
+ *
+ * **Example** (Inspect the foreground opener)
+ *
+ * ```ts
+ * import { openSequence } from "@beep/scratchpad/effected/cli/internal/ansi"
+ *
+ * console.log(JSON.stringify(openSequence({ fg: "red" }, "basic"))) // "\u001b[31m"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
 export const openSequence: {
 	(level: ColorLevel): (style: Style) => string;
 	(style: Style, level: ColorLevel): string;

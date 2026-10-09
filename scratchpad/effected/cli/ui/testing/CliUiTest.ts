@@ -50,6 +50,8 @@ class CliUiTestError extends S.TaggedError<CliUiTestError>($I`CliUiTestError`)(
  * half of {@link CliUiTest.live}'s.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CliUiTestOptions {
 	/** The terminal width the screen lays out at; 80 by default. */
@@ -79,6 +81,8 @@ export interface CliUiTestOptions {
  * Options for {@link CliUiTest.session}: the terminal's, and the render path its screens mount on.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CliUiTestSessionOptions extends CliUiTestOptions {
 	/**
@@ -95,6 +99,8 @@ export interface CliUiTestSessionOptions extends CliUiTestOptions {
  * A screen under test: drive it with keys and read its frames.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CliUiTestScreen {
 	/**
@@ -141,6 +147,8 @@ export interface CliUiTestScreen {
  * A screen mounted by {@link CliUiTest.render}: a {@link CliUiTestScreen} that can also be swapped and awaited.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CliUiTestHandle<A> extends CliUiTestScreen {
 	/**
@@ -164,6 +172,8 @@ export interface CliUiTestHandle<A> extends CliUiTestScreen {
  * element, with no result to wait for.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CliUiTestView extends CliUiTestScreen {
 	/**
@@ -181,6 +191,8 @@ export interface CliUiTestView extends CliUiTestScreen {
  * Options for {@link CliUiTestSession.next}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CliUiTestNextOptions {
 	/**
@@ -194,6 +206,8 @@ export interface CliUiTestNextOptions {
  * A terminal a whole program runs its screens on, from {@link CliUiTest.session}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CliUiTestSession {
 	/**
@@ -286,6 +300,8 @@ export interface CliUiTestSession {
  * render path.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CliUiTestLive<E, S> {
 	/**
@@ -855,65 +871,83 @@ const capturingConsole = (ambient: Console.Console) => {
  *
  * ```ts
  * import { assert, it } from "@effect/vitest"
- * import { Select } from "../../ui.ts"
- * import { CliUiTest } from "../../ui-testing.ts"
+ * import { Select } from "@beep/scratchpad/effected/cli/ui"
+ * import { CliUiTest } from "@beep/scratchpad/effected/cli/ui-testing"
  * import * as Effect from "effect/Effect";
  *
- * it.effect("chooses the second option", () =>
- *   Effect.gen(function* () {
+ * const test = Effect.gen(function* () {
  *     const choices = [
  *       { label: "a", value: "a" },
  *       { label: "b", value: "b" },
  *     ]
  *     const handle = yield* CliUiTest.render(Select.screen({ message: "Pick one", choices }))
  *     yield* handle.press("down", "enter")
- *     assert.strictEqual(yield* handle.result, "b")
- *   }).pipe(Effect.scoped),
- * )
+ *     const selected = yield* handle.result
+ *     assert.strictEqual(selected, "b")
+ *     console.log(selected) // b
+ * }).pipe(Effect.scoped)
+ * it.effect("chooses the second option", () => test)
+ * console.log(Effect.isEffect(test)) // true
  * ```
  *
  * @public
+ * @category testing
+ * @since 0.0.0
  */
 export class CliUiTest {
 	private constructor() {}
 
 	/**
-  * Mount `screen` on in-memory terminal streams for the enclosing scope.
-  *
-  * **Gotchas**
-  *
-  * The screen runs under a fixed environment: a `TerminalEnv` test layer with the given columns and colour, a
-  * `CliTheme` whose every token paints in its own marker colour (so frames do not depend on the real palette), and
-  * `CliInteractive` set from `interactive`. Ink renders in debug mode, writing every frame in full; the frames
-  * are taken from those writes. Closing the scope unmounts the screen. The returned handle is ready once the first
-  * frame is drawn or the screen has ended.
-  *
-  * Waiting is on real time, through native timers a `TestClock` cannot hold, so the harness's own waits work under
-  * `it.effect` and `it.live` alike, and never sleep longer than 50 ms past the last write (30 ms first, for Esc). A
-  * screen test that itself sleeps, times out or retries on a schedule needs `it.live` (or real timers): under
-  * `it.effect` those run on the `TestClock`, which nothing advances while a screen waits on real time.
-  *
-  * The first frame is awaited for at most 2 s: a screen that draws nothing for longer gives a handle whose `frames`
-  * is `[]`. Screens run one at a time process-wide (`CliUi.run`), so a second handle opened while another is
-  * still mounted waits for that mount: it returns at the 2 s cap with no frames, and its keys queue in its input until
-  * it mounts.
-  *
-  * Debug frames bypass Ink's erase-and-redraw path, so a harness frame says nothing about what Ink writes between
-  * frames on a real terminal (a screen clear, for instance), nor about the final frame left in the scrollback once
-  * the screen ends (answered screens stay); a test of that needs the production render path.
-  * For the same reason `CliUi.run`'s `clear` has no visible effect on a harness frame, since Ink's `clear` does
-  * nothing in debug mode: test `clear` with `session({ renderPath: "production" })` and its `transcript`.
-  * Unmounting is the scope's close; to draw a different screen, render it in a new scope.
-  *
-  * A crash is never swallowed. A screen thunk that throws (a classic-JSX `React is not defined` included) or a
-  * component that throws ends the run with a defect: `result` dies with it, and so does the next frame read, key,
-  * resize or rerender, so a crashed screen is never read as one that drew nothing. As with `view`, after a crash
-  * the frames drawn before it cannot be read. A run refused as not interactive is `result`'s `NotInteractive`, and
-  * its frames read as `[]`.
-  *
-  * @param screen - the screen to mount
-  * @param options - the terminal's size, colour and glyphs, and whether the run is interactive
-  */
+	 * Mount `screen` on in-memory terminal streams for the enclosing scope.
+	 *
+	 * **Gotchas**
+	 *
+	 * The screen runs under a fixed environment: a `TerminalEnv` test layer with the given columns and colour, a
+	 * `CliTheme` whose every token paints in its own marker colour (so frames do not depend on the real palette), and
+	 * `CliInteractive` set from `interactive`. Ink renders in debug mode, writing every frame in full; the frames
+	 * are taken from those writes. Closing the scope unmounts the screen. The returned handle is ready once the first
+	 * frame is drawn or the screen has ended.
+	 *
+	 * Waiting is on real time, through native timers a `TestClock` cannot hold, so the harness's own waits work under
+	 * `it.effect` and `it.live` alike, and never sleep longer than 50 ms past the last write (30 ms first, for Esc). A
+	 * screen test that itself sleeps, times out or retries on a schedule needs `it.live` (or real timers): under
+	 * `it.effect` those run on the `TestClock`, which nothing advances while a screen waits on real time.
+	 *
+	 * The first frame is awaited for at most 2 s: a screen that draws nothing for longer gives a handle whose `frames`
+	 * is `[]`. Screens run one at a time process-wide (`CliUi.run`), so a second handle opened while another is
+	 * still mounted waits for that mount: it returns at the 2 s cap with no frames, and its keys queue in its input until
+	 * it mounts.
+	 *
+	 * Debug frames bypass Ink's erase-and-redraw path, so a harness frame says nothing about what Ink writes between
+	 * frames on a real terminal (a screen clear, for instance), nor about the final frame left in the scrollback once
+	 * the screen ends (answered screens stay); a test of that needs the production render path.
+	 * For the same reason `CliUi.run`'s `clear` has no visible effect on a harness frame, since Ink's `clear` does
+	 * nothing in debug mode: test `clear` with `session({ renderPath: "production" })` and its `transcript`.
+	 * Unmounting is the scope's close; to draw a different screen, render it in a new scope.
+	 *
+	 * A crash is never swallowed. A screen thunk that throws (a classic-JSX `React is not defined` included) or a
+	 * component that throws ends the run with a defect: `result` dies with it, and so does the next frame read, key,
+	 * resize or rerender, so a crashed screen is never read as one that drew nothing. As with `view`, after a crash
+	 * the frames drawn before it cannot be read. A run refused as not interactive is `result`'s `NotInteractive`, and
+	 * its frames read as `[]`.
+	 *
+	 * **Example** (Construct a scoped screen test)
+	 *
+	 * ```ts
+	 * import { CliUiTest } from "@beep/scratchpad/effected/cli/ui/testing/CliUiTest"
+	 * import { Select } from "@beep/scratchpad/effected/cli/ui/Select"
+	 * import * as Effect from "effect/Effect"
+	 * const program = CliUiTest.render(Select.screen({
+	 *   message: "Pick one", choices: [{ label: "Alpha", value: "a" }],
+	 * }))
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param screen - the screen to mount
+	 * @param options - the terminal's size, colour and glyphs, and whether the run is interactive
+	 * @category testing
+	 * @since 0.0.0
+	 */
 	static readonly render = <A>(
 		screen: Screen<A>,
 		options: CliUiTestOptions = {},
@@ -925,29 +959,42 @@ export class CliUiTest {
 		}));
 
 	/**
-  * Mount a display-only element on in-memory terminal streams for the enclosing scope: a status line, a live view,
-  * a component a consumer mounts in an Ink tree of its own.
-  *
-  * **Gotchas**
-  *
-  * The same harness as {@link CliUiTest.render}, with the same options: the marker-palette theme, the fake streams
-  * and the debug frames, and the element is drawn inside the kit's providers, so `useTheme`, `useGlyphs`,
-  * `useTerminalSize` and `Styled` work in it. The handle reads frames and sends keys as a rendered screen's does, and
-  * `rerender` swaps in another element, but it has no `result`: a display-only element never ends on its own, so a
-  * `render` of one would leave `result` waiting forever. Closing the scope unmounts it.
-  *
-  * The kit's root keys stay bound, as on every screen: Esc or Ctrl-C ends the view, after which a key or a rerender
-  * is a defect.
-  *
-  * An element that crashes, or a run that is refused (`interactive: false` ends it with `NotInteractive`), is never
-  * swallowed: `view` dies with that error when it happens before the first frame, and otherwise the next frame read,
-  * key, resize or rerender does. After a crash every read dies with it, `frames` included, so the frames drawn before
-  * the crash cannot be read: the crash is the signal a test needs. A deliberate end (Esc or Ctrl-C) is not a crash:
-  * the frames stay readable, and only a key, resize or rerender after it dies, saying the screen has ended.
-  *
-  * @param element - the element to mount
-  * @param options - the terminal's size, colour and glyphs, and whether the run is interactive
-  */
+	 * Mount a display-only element on in-memory terminal streams for the enclosing scope: a status line, a live view,
+	 * a component a consumer mounts in an Ink tree of its own.
+	 *
+	 * **Gotchas**
+	 *
+	 * The same harness as {@link CliUiTest.render}, with the same options: the marker-palette theme, the fake streams
+	 * and the debug frames, and the element is drawn inside the kit's providers, so `useTheme`, `useGlyphs`,
+	 * `useTerminalSize` and `Styled` work in it. The handle reads frames and sends keys as a rendered screen's does, and
+	 * `rerender` swaps in another element, but it has no `result`: a display-only element never ends on its own, so a
+	 * `render` of one would leave `result` waiting forever. Closing the scope unmounts it.
+	 *
+	 * The kit's root keys stay bound, as on every screen: Esc or Ctrl-C ends the view, after which a key or a rerender
+	 * is a defect.
+	 *
+	 * An element that crashes, or a run that is refused (`interactive: false` ends it with `NotInteractive`), is never
+	 * swallowed: `view` dies with that error when it happens before the first frame, and otherwise the next frame read,
+	 * key, resize or rerender does. After a crash every read dies with it, `frames` included, so the frames drawn before
+	 * the crash cannot be read: the crash is the signal a test needs. A deliberate end (Esc or Ctrl-C) is not a crash:
+	 * the frames stay readable, and only a key, resize or rerender after it dies, saying the screen has ended.
+	 *
+	 * **Example** (Construct a display-only test)
+	 *
+	 * ```ts
+	 * import { CliUiTest } from "@beep/scratchpad/effected/cli/ui/testing/CliUiTest"
+	 * import * as Effect from "effect/Effect"
+	 * import { Text } from "ink"
+	 * import { createElement } from "react"
+	 * const program = CliUiTest.view(createElement(Text, null, "Ready"))
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param element - the element to mount
+	 * @param options - the terminal's size, colour and glyphs, and whether the run is interactive
+	 * @category testing
+	 * @since 0.0.0
+	 */
 	static readonly view = (
 		element: ReactElement,
 		options: CliUiTestOptions = {},
@@ -965,7 +1012,7 @@ export class CliUiTest {
 	 * A terminal for a whole program that runs screens of its own (a wizard, a handler calling `CliUi.prompt` several
 	 * times): provide its `layer` around the program, then take each screen as it mounts with `next`.
 	 *
-	 * @remarks
+	 * **Details**
 	 * The same environment and the same waiting as {@link CliUiTest.render}, with the same options. The session also
 	 * keeps what the program writes through `Console`, its own output beside the screens, as `stdout` and `stderr`.
 	 *
@@ -990,26 +1037,51 @@ export class CliUiTest {
 	 * `ConfigProvider` that sandboxes what the handler reads (`HOME`, the XDG directories), and the platform core's
 	 * runner needs, then fork the program and take each screen with `next`:
 	 *
-	 * ```ts
-	 * const session = yield* CliUiTest.session()
-	 * const program = Effect.gen(function* () {
-	 *   yield* Command.runWith(root, { version })(["init"])
-	 *   return MutableRef.get((yield* CliExit).code)
-	 * }).pipe(
-	 *   Effect.provide(session.layer),
-	 *   Effect.provide(CliExit.layer),
-	 *   Effect.provide(NodeServices.layer),
-	 *   Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ HOME: "/sandbox/home" })),
-	 * )
-	 * const fiber = yield* Effect.forkScoped(program)
-	 * yield* (yield* session.next({ contains: "Profile" })).press("enter")
-	 * const code = yield* Fiber.join(fiber)
-	 * ```
-	 *
 	 * To exercise `CliRuntime.main` as well (its failure report and exit code), run the program through it with the
 	 * session's layer provided around it instead; `main` provides its own `CliExit`.
 	 *
+	 * **Example** (Drive a command handler through a session)
+	 *
+	 * ```ts
+	 * import { Command } from "effect/cli"
+	 * import * as ConfigProvider from "effect/ConfigProvider"
+	 * import * as Fiber from "effect/Fiber"
+	 * import * as MutableRef from "effect/MutableRef"
+	 * import * as NodeServices from "@effect/platform-node/NodeServices"
+	 * import { CliUiTest } from "@beep/scratchpad/effected/cli/ui/testing/CliUiTest"
+	 * import { CliExit } from "@beep/scratchpad/effected/cli/CliExit"
+	 * import { CliUi } from "@beep/scratchpad/effected/cli/ui/CliUi"
+	 * import { Select } from "@beep/scratchpad/effected/cli/ui/Select"
+	 * import * as Effect from "effect/Effect"
+	 *
+	 * const root = Command.make("tool").pipe(Command.withSubcommands([
+	 *   Command.make("init", {}, () => CliUi.prompt(Select.screen({
+	 *     message: "Profile", choices: [{ label: "Default", value: "default" }],
+	 *   }))),
+	 * ]))
+	 * const version = "1.0.0"
+	 * const test = Effect.gen(function* () {
+	 *   const session = yield* CliUiTest.session()
+	 *   const program = Effect.gen(function* () {
+	 *     yield* Command.runWith(root, { version })(["init"])
+	 *     return MutableRef.get((yield* CliExit).code)
+	 *   }).pipe(
+	 *     Effect.provide(session.layer),
+	 *     Effect.provide(CliExit.layer),
+	 *     Effect.provide(NodeServices.layer),
+	 *     Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ HOME: "/sandbox/home" })),
+	 *   )
+	 *   const fiber = yield* Effect.forkScoped(program)
+	 *   yield* (yield* session.next({ contains: "Profile" })).press("enter")
+	 *   const code = yield* Fiber.join(fiber)
+	 *   console.log(code) // 0
+	 * }).pipe(Effect.scoped)
+	 * console.log(Effect.isEffect(test)) // true
+	 * ```
+	 *
 	 * @param options - the terminal's size, colour and glyphs, whether the run is interactive, and the screens' render path
+	 * @category testing
+	 * @since 0.0.0
 	 */
 	static readonly session = (
 		options: CliUiTestSessionOptions = {},
@@ -1066,54 +1138,58 @@ export class CliUiTest {
 		});
 
 	/**
-  * Mount a live view (`CliUi.live`) on a fresh in-memory terminal for the enclosing scope, with an event stream the
-  * test publishes to, and read what it draws on the production render path.
-  *
-  * **Details**
-  *
-  * The options are `CliUi.live`'s without `events`, which the harness supplies, and the terminal's own (`columns`,
-  * `rows`, `color`, `glyphs`, `interactive`). The view runs as it does for real: Ink is interactive and not in debug
-  * mode, so frames are what Ink actually writes, committed frames stay on the terminal, and `transcript` shows what is
-  * left there, scrollback included, through a small terminal model (it does not wrap a line wider than the terminal).
-  * stderr is the same stream as stdout, as on a terminal, so a line logged through `handle.logConsole` lands in the
-  * transcript too.
-  *
-  * Write live tests with `it.effect`: the view's tick runs on the `TestClock`, so `advance` (or `TestClock.adjust`)
-  * drives it frame by frame, and the frame index is `floor(now / tickMillis)` from the clock's epoch. The waits after
-  * `publish`, `advance` and `resize` are real time, which the `TestClock` does not hold. Without `@effect/vitest`'s
-  * `it.effect`, provide the clock yourself: `Effect.provide(test, TestClock.layer())` (from `effect/testing`).
-  *
-  * **Example** (Advance a live view to the second animation frame)
-  *
-  * ```ts
-  * import { assert, it } from "@effect/vitest"
-  * import { CliUiTest } from "../../ui-testing.ts"
-  * import * as Effect from "effect/Effect";
-  * import { Text } from "ink"
-  * import { createElement } from "react"
-  *
-  * type Event = { readonly _tag: "RunStarted" } | { readonly _tag: "RunEnded" }
-  *
-  * it.effect("turns the spinner on the tick", () =>
-  *   Effect.gen(function* () {
-  *     const view = yield* CliUiTest.live({
-  *       initial: 0,
-  *       reduce: (count: number, _event: Event) => count + 1,
-  *       render: (_count, frame) => createElement(Text, null, `frame ${frame}`),
-  *       isStart: (event) => event._tag === "RunStarted",
-  *       isTerminal: (event) => event._tag === "RunEnded",
-  *     })
-  *     yield* view.publish({ _tag: "RunStarted" })
-  *     // The clock starts at 0 and the tick is 80 ms, so 160 ms on is frame 2.
-  *     yield* view.advance("160 millis")
-  *     assert.include(yield* view.plainFrame, "frame 2")
-  *   }).pipe(Effect.scoped),
-  * )
-  * ```
-  *
-  * @param options - the live view's options without `events`, and the terminal's size, colour, glyphs and
-  * interactivity
-  */
+	 * Mount a live view (`CliUi.live`) on a fresh in-memory terminal for the enclosing scope, with an event stream the
+	 * test publishes to, and read what it draws on the production render path.
+	 *
+	 * **Details**
+	 *
+	 * The options are `CliUi.live`'s without `events`, which the harness supplies, and the terminal's own (`columns`,
+	 * `rows`, `color`, `glyphs`, `interactive`). The view runs as it does for real: Ink is interactive and not in debug
+	 * mode, so frames are what Ink actually writes, committed frames stay on the terminal, and `transcript` shows what is
+	 * left there, scrollback included, through a small terminal model (it does not wrap a line wider than the terminal).
+	 * stderr is the same stream as stdout, as on a terminal, so a line logged through `handle.logConsole` lands in the
+	 * transcript too.
+	 *
+	 * Write live tests with `it.effect`: the view's tick runs on the `TestClock`, so `advance` (or `TestClock.adjust`)
+	 * drives it frame by frame, and the frame index is `floor(now / tickMillis)` from the clock's epoch. The waits after
+	 * `publish`, `advance` and `resize` are real time, which the `TestClock` does not hold. Without `@effect/vitest`'s
+	 * `it.effect`, provide the clock yourself: `Effect.provide(test, TestClock.layer())` (from `effect/testing`).
+	 *
+	 * **Example** (Advance a live view to the second animation frame)
+	 *
+	 * ```ts
+	 * import { assert, it } from "@effect/vitest"
+	 * import { CliUiTest } from "@beep/scratchpad/effected/cli/ui-testing"
+	 * import * as Effect from "effect/Effect";
+	 * import { Text } from "ink"
+	 * import { createElement } from "react"
+	 *
+	 * type Event = { readonly _tag: "RunStarted" } | { readonly _tag: "RunEnded" }
+	 *
+	 * const test = Effect.gen(function* () {
+	 *     const view = yield* CliUiTest.live({
+	 *       initial: 0,
+	 *       reduce: (count: number, _event: Event) => count + 1,
+	 *       render: (_count, frame) => createElement(Text, null, `frame ${frame}`),
+	 *       isStart: (event) => event._tag === "RunStarted",
+	 *       isTerminal: (event) => event._tag === "RunEnded",
+	 *     })
+	 *     yield* view.publish({ _tag: "RunStarted" })
+	 *     // The clock starts at 0 and the tick is 80 ms, so 160 ms on is frame 2.
+	 *     yield* view.advance("160 millis")
+	 *     const frame = yield* view.plainFrame
+	 *     assert.include(frame, "frame 2")
+	 *     console.log(frame.includes("frame 2")) // true
+	 * }).pipe(Effect.scoped)
+	 * it.effect("turns the spinner on the tick", () => test)
+	 * console.log(Effect.isEffect(test)) // true
+	 * ```
+	 *
+	 * @param options - the live view's options without `events`, and the terminal's size, colour, glyphs and
+	 * interactivity
+	 * @category testing
+	 * @since 0.0.0
+	 */
 	static readonly live = Effect.fn("live")(function* <E, S>(
 		options: Omit<LiveOptions<E, S>, "events"> & CliUiTestOptions,
 	): Effect.fn.Return<CliUiTestLive<E, S>, never, Scope.Scope> {
@@ -1164,16 +1240,25 @@ export class CliUiTest {
 	 * Why a screen or a program was cancelled, read from its `Exit` or `Cause`: `"escape"` or `"interrupt"` when it
 	 * carries a `Cancelled`, as a typed failure or as a defect, else `None`.
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * Pure. A screen's `result` fails with `Cancelled` in the typed channel; a prompt cancelled where the program
 	 * declares no such error carries it as a defect. Either way a test asks this instead of walking `cause.reasons`:
 	 *
+	 * **Example** (Read cancellation from a failed exit)
+	 *
 	 * ```ts
-	 * const exit = yield* Fiber.await(program)
-	 * assert.deepStrictEqual(CliUiTest.cancelReason(exit), Option.some("escape"))
+	 * import { CliUiTest } from "@beep/scratchpad/effected/cli/ui/testing/CliUiTest"
+	 * import { Cancelled } from "@beep/scratchpad/effected/cli/Cancelled"
+	 * import * as Exit from "effect/Exit"
+	 * import * as O from "effect/Option"
+	 * const exit = Exit.fail(Cancelled.make({ reason: "escape" }))
+	 * console.log(O.getOrElse(CliUiTest.cancelReason(exit), () => "none")) // escape
 	 * ```
 	 *
 	 * @param exitOrCause - the exit of a screen's `result` or of a program, or a bare cause
+	 * @category testing
+	 * @since 0.0.0
 	 */
 	static readonly cancelReason = (
 		exitOrCause: Exit.Exit<unknown, unknown> | Cause.Cause<unknown>,
@@ -1198,7 +1283,16 @@ export class CliUiTest {
 	 * inverse and strikethrough to `[i]`, `[u]`, `[inverse]` and `[s]`. A reset closes everything open; every other
 	 * escape (cursor, erase, hyperlinks) is dropped.
 	 *
+	 * **Example** (Decode ANSI emphasis to markup)
+	 *
+	 * ```ts
+	 * import { CliUiTest } from "@beep/scratchpad/effected/cli/ui/testing/CliUiTest"
+	 * console.log(CliUiTest.styled("\u001b[1mready\u001b[0m")) // [b]ready[/b]
+	 * ```
+	 *
 	 * @param ansi - text with escapes
+	 * @category formatting
+	 * @since 0.0.0
 	 */
 	static readonly styled: (ansi: string) => string = styled;
 
@@ -1208,19 +1302,31 @@ export class CliUiTest {
 	 * only brackets are style tags like `[b]`, which unrelated data uses too. It prints the string as token markup with
 	 * each line's trailing spaces trimmed, so a snapshot reads without escapes and does not churn with the palette.
 	 *
-	 * @remarks
+	 * **Details**
 	 * Register it in either of two ways. Through the Vitest config, by the module whose default export it is, which
-	 * needs no code in a test file:
-	 *
-	 * ```ts
-	 * // vitest.config.ts
-	 * export default defineConfig({ test: { snapshotSerializers: ["@effected/cli/ui/testing/serializer"] } })
-	 * ```
+	 * needs no code in a test file. Set `test.snapshotSerializers` to
+	 * ["@beep/scratchpad/effected/cli/ui-testing-serializer"] in that config.
 	 *
 	 * Or in a test file, with `expect.addSnapshotSerializer(CliUiTest.serializer)`.
 	 *
 	 * Snapshots are the one place a test needs `expect`: `assert` has no snapshot form, so a suite that asserts with
 	 * `assert.*` everywhere else still writes `expect(frame).toMatchInlineSnapshot(...)` for a snapshot.
+	 *
+	 * **Example** (Configure the snapshot serializer)
+	 *
+	 * ```ts
+	 * import { defineConfig } from "vitest/config"
+	 * import { CliUiTest } from "@beep/scratchpad/effected/cli/ui/testing/CliUiTest"
+	 *
+	 * const config = defineConfig({
+	 *   test: { snapshotSerializers: ["@beep/scratchpad/effected/cli/ui-testing-serializer"] },
+	 * })
+	 * console.log(config.test?.snapshotSerializers?.length) // 1
+	 * console.log(CliUiTest.serializer.test("\u001b[1mready\u001b[0m")) // true
+	 * ```
+	 *
+	 * @category testing
+	 * @since 0.0.0
 	 */
 	static readonly serializer: {
 		readonly test: (value: unknown) => boolean;

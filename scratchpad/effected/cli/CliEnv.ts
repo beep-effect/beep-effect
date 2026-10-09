@@ -20,6 +20,8 @@ import { CliTheme } from "./CliTheme.ts";
  * Options for {@link CliEnv.layer} and for `CliRuntime.main`'s `env` option.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface CliEnvOptions {
 	/** The environment variable that overrides the audience, read through `Config`; see `Audience.layer`. */
@@ -112,6 +114,8 @@ export interface CliEnvOptions {
  * The services {@link CliEnv.layer} provides.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type CliEnvServices = CurrentRuntimeEnv | TerminalEnv | Audience | CliTheme | CliLinks | Terminal.Terminal;
 
@@ -119,6 +123,8 @@ export type CliEnvServices = CurrentRuntimeEnv | TerminalEnv | Audience | CliThe
  * Options for {@link CliEnv.layerTest}: the answers a test fixes. Every field has a quiet default.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface CliEnvTestOptions {
 	/** Whether standard input, output and error are all terminals; `false` by default, as for a pipe. */
@@ -142,6 +148,8 @@ export interface CliEnvTestOptions {
  * The services {@link CliEnv.layerTest} provides.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type CliEnvTestServices = TerminalEnv | Audience | CliTheme;
 
@@ -169,20 +177,44 @@ export type CliEnvTestServices = TerminalEnv | Audience | CliTheme;
  * `Console` or `Stdio`, never `Terminal`. It also installs `CliTheme.promptTheme`, so core's prompts follow the
  * theme.
  *
+ * **Example** (Build the CLI environment once)
+ *
+ * ```ts
+ * import { CliEnv } from "@beep/scratchpad/effected/cli/CliEnv";
+ * import * as Layer from "effect/Layer";
+ *
+ * const environment = CliEnv.layer({ audienceEnvVar: "TOOL_AUDIENCE" });
+ * console.log(Layer.isLayer(environment)); // true
+ * ```
+ *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class CliEnv {
 	private constructor() {}
 
 	/**
-  * The environment services for the terminal `Stdio` and `Terminal` describe.
-  *
-  * **Gotchas**
-  *
-  * A layer-returning function mints a fresh layer per call: call it once and bind the result to a constant.
-  *
-  * @param options - the audience env var, the stderr check and the theme options
-  */
+ * The environment services for the terminal `Stdio` and `Terminal` describe.
+ *
+ * **Gotchas**
+ *
+ * A layer-returning function mints a fresh layer per call: call it once and bind the result to a constant.
+ *
+ * **Example** (Construct the terminal environment layer)
+ *
+ * ```ts
+ * import { CliEnv } from "@beep/scratchpad/effected/cli/CliEnv";
+ * import * as Layer from "effect/Layer";
+ *
+ * const environment = CliEnv.layer();
+ * console.log(Layer.isLayer(environment)); // true
+ * ```
+ *
+ * @param options - the audience env var, the stderr check and the theme options
+ * @category layers
+ * @since 0.0.0
+ */
 	static readonly layer = (
 		options: CliEnvOptions = {},
 	): Layer.Layer<CliEnvServices, never, Stdio.Stdio | Terminal.Terminal> => {
@@ -213,22 +245,36 @@ export class CliEnv {
 	};
 
 	/**
-  * The environment services a test fixes, needing nothing and reading nothing of the host's: `TerminalEnv` and
-  * `Audience` from the answers given, `CliTheme` built from them as {@link CliEnv.layer} builds it, and
-  * `CliInteractive` set from them by the same rule (a human, every stream a terminal, and a `TERM` that is not
-  * `dumb`).
-  *
-  * **Details**
-  *
-  * `term` is handed to the theme and interactivity builds alone, through a `ConfigProvider` of their own: the
-  * program under the layer keeps its own provider, and a host's `TERM` (a test runner in a dumb terminal) never
-  * decides. A screen or a live view also needs `UiStreams` from `@effected/cli/ui`, which `CliUiTest` provides; this
-  * layer provides no `Terminal` and installs neither of `CliEnv.layer`'s prompt gates.
-  *
-  * A layer-returning function mints a fresh layer per call: call it once and bind the result to a constant.
-  *
-  * @param options - whether the streams are terminals, the `TERM`, the audience, the width, the colour and the theme
-  */
+ * The environment services a test fixes, needing nothing and reading nothing of the host's: `TerminalEnv` and
+ * `Audience` from the answers given, `CliTheme` built from them as {@link CliEnv.layer} builds it, and
+ * `CliInteractive` set from them by the same rule (a human, every stream a terminal, and a `TERM` that is not
+ * `dumb`).
+ *
+ * **Details**
+ *
+ * `term` is handed to the theme and interactivity builds alone, through a `ConfigProvider` of their own: the
+ * program under the layer keeps its own provider, and a host's `TERM` (a test runner in a dumb terminal) never
+ * decides. A screen or a live view also needs `UiStreams` from `@effected/cli/ui`, which `CliUiTest` provides; this
+ * layer provides no `Terminal` and installs neither of `CliEnv.layer`'s prompt gates.
+ *
+ * A layer-returning function mints a fresh layer per call: call it once and bind the result to a constant.
+ *
+ * **Example** (Fix a noninteractive test environment)
+ *
+ * ```ts
+ * import { CliEnv } from "@beep/scratchpad/effected/cli/CliEnv";
+ * import { CliInteractive } from "@beep/scratchpad/effected/cli/CliInteractive";
+ * import * as Effect from "effect/Effect";
+ *
+ * const environment = CliEnv.layerTest();
+ * const program = Effect.provide(CliInteractive, environment);
+ * console.log(Effect.runSync(program)); // false
+ * ```
+ *
+ * @param options - whether the streams are terminals, the `TERM`, the audience, the width, the colour and the theme
+ * @category layers
+ * @since 0.0.0
+ */
 	static readonly layerTest = (options: CliEnvTestOptions = {}): Layer.Layer<CliEnvTestServices> => {
 		const tty = options.tty ?? false;
 		const stream: Partial<StreamEnv> = {

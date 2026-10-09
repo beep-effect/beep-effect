@@ -16,34 +16,64 @@ import * as O from "@beep/utils/Option";
  * (`{ ...value, size }`).
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface UiContextValue {
-	/** Set by `CliUi.context` alone; never set it yourself. */
+	/**
+	 * Set by `CliUi.context` alone; never set it yourself.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly "~@effected/cli/ui/UiContextValue": true;
-	/** The theme of the stream the tree draws on. */
+	/**
+	 * The theme of the stream the tree draws on.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly theme: Cli.StreamTheme;
-	/** The glyph set in use. */
+	/**
+	 * The glyph set in use.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly glyphs: Cli.GlyphSet;
-	/** The terminal size the tree is laid out at, which `useTerminalSize` reads in place of the stdout's. */
+	/**
+	 * The terminal size the tree is laid out at, which `useTerminalSize` reads in place of the stdout's.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly size?: { readonly columns: number; readonly rows: number };
 	/**
 	 * Whether the GitHub Actions runner reads the output (`CliUi.context` sets it from `CurrentRuntimeEnv`, when one is
 	 * provided): a `DocView` under it neutralizes any line its data would turn into a workflow command. `false` opts the
 	 * tree out of that under GitHub Actions, the consumer's choice; a nested provider cannot clear it once a provider
 	 * above it has set it.
+	 *
+	 * @since 0.0.0
 	 */
 	readonly neutralizeWorkflowCommands?: boolean;
 }
 
 /**
- * Props of {@link UiProvider}.
+ * Supplies minted context and the child tree to {@link UiProvider}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface UiProviderProps {
-	/** The context, from `CliUi.context`. */
+	/**
+	 * The context, from `CliUi.context`.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly value: UiContextValue;
-	/** The tree. */
+	/**
+	 * The tree.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly children?: ReactNode;
 }
 
@@ -66,8 +96,24 @@ export interface UiProviderProps {
  * cancel and its defect route pass through, so `q` still cancels and a throwing handler is still the screen's defect.
  * Ink's colour level is the host's: `Styled` passes the theme's props, none at colour `none`.
  *
+ * **Example** (Construct a provider from minted context)
+ *
+ * ```ts
+ * import { UiProvider } from "@beep/scratchpad/effected/cli/ui/UiProvider"
+ * import { CliUi } from "@beep/scratchpad/effected/cli/ui/CliUi"
+ * import * as Effect from "effect/Effect"
+ * import { createElement, isValidElement } from "react"
+ *
+ * const program = CliUi.context.pipe(
+ *   Effect.map((value) => isValidElement(createElement(UiProvider, { value }, "Ready")))
+ * )
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @param props - the context, and the tree
  * @public
+ * @category providers
+ * @since 0.0.0
  */
 export const UiProvider = (props: UiProviderProps): ReactElement => {
 	const { react } = inkModules();

@@ -15,6 +15,8 @@ import * as P from "effect/Predicate";
  * How a log record is turned into a line.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface CliLoggerOptions {
 	/**
@@ -75,53 +77,81 @@ const defaultRender = (message: unknown): string =>
  * `yield*`. `Console.Console` is a `Context.Reference`, so it never appears in
  * `R`, and a test swaps the reference rather than stubbing a global.
  *
- * **Example** (Separate diagnostics from program output)
- *
- * ```ts
- * import { CliLogger } from "./index.ts"
- * import * as Console from "effect/Console";
- * import * as Effect from "effect/Effect";
- *
- * const program = Effect.gen(function* () {
- *   yield* Effect.log("synced 3 repos")    // stderr, no timestamp — a diagnostic
- *   yield* Console.log("3 repos synced")   // stdout — the program's actual output
- *   yield* Effect.logError("one failed")   // stderr
- * })
- *
- * program.pipe(Effect.provide(CliLogger.layer()))
- * ```
- *
  * `stderrFrom` defaults to `"All"`: a CLI's stdout is its product, so every
  * log level is a diagnostic unless a consumer narrows the threshold. Write
  * program output with `Console.log`, never `Effect.log`. Pass
  * `stderrFrom: "Error"` for a tool whose output *is* its log lines.
  *
+ * **Example** (Separate diagnostics from program output)
+ *
+ * ```ts
+ * import { CliLogger } from "@beep/scratchpad/effected/cli/CliLogger"
+ * import * as Console from "effect/Console"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   yield* Effect.log("synced 3 repos")    // stderr, no timestamp — a diagnostic
+ *   yield* Console.log("3 repos synced")   // stdout — the program's actual output
+ *   yield* Effect.logError("one failed")   // stderr
+ * }).pipe(Effect.provide(CliLogger.layer()))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class CliLogger {
 	private constructor() {}
 
 	/**
-  * The logger itself, for composing into an existing `Logger.layer` set.
-  *
-  * **Details**
-  *
-  * Prefer {@link CliLogger.layer}. Reach for this only when you are building
-  * the logger set yourself and want this one among several.
-  */
+	 * The logger itself, for composing into an existing `Logger.layer` set.
+	 *
+	 * **Details**
+	 *
+	 * Prefer {@link CliLogger.layer}. Reach for this only when you are building
+	 * the logger set yourself and want this one among several.
+	 *
+	 * **Example** (Compose a CLI logger into a logger set)
+	 *
+	 * ```ts
+	 * import { CliLogger } from "@beep/scratchpad/effected/cli/CliLogger"
+	 * import * as Layer from "effect/Layer"
+	 * import * as Logger from "effect/Logger"
+	 *
+	 * const live = Logger.layer([CliLogger.make({ stderrFrom: "Error" })])
+	 * console.log(Layer.isLayer(live)) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly make = (options: CliLoggerOptions = {}): Logger.Logger<unknown, void> => makeCliLogger(options);
 
 	/**
-  * Replace the default logger with this one.
-  *
-  * **Details**
-  *
-  * `Logger.layer` **replaces** rather than merges, so nothing is emitted twice.
-  *
-  * Merge this into the layer you provide to the whole program rather than
-  * providing it beneath: merged, it also covers lines emitted during layer
-  * construction, which is exactly where a startup failure prints.
-  */
+	 * Replace the default logger with this one.
+	 *
+	 * **Details**
+	 *
+	 * `Logger.layer` **replaces** rather than merges, so nothing is emitted twice.
+	 *
+	 * Merge this into the layer you provide to the whole program rather than
+	 * providing it beneath: merged, it also covers lines emitted during layer
+	 * construction, which is exactly where a startup failure prints.
+	 *
+	 * **Example** (Install plain CLI logging)
+	 *
+	 * ```ts
+	 * import { CliLogger } from "@beep/scratchpad/effected/cli/CliLogger"
+	 * import * as Layer from "effect/Layer"
+	 *
+	 * const live = CliLogger.layer()
+	 * console.log(Layer.isLayer(live)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer = (options: CliLoggerOptions = {}): Layer.Layer<never> =>
 		Logger.layer([CliLogger.make(options)]);
 }
@@ -131,7 +161,20 @@ export class CliLogger {
  * `CurrentRuntimeEnv`, else the one captured at build, or its `neutralize` option), so its plain line and its
  * diagnostics line are neutralized alike.
  *
+ * **Example** (Compose a neutralized CLI logger)
+ *
+ * ```ts
+ * import { makeCliLogger } from "@beep/scratchpad/effected/cli/CliLogger"
+ * import * as Layer from "effect/Layer"
+ * import * as Logger from "effect/Logger"
+ *
+ * const live = Logger.layer([makeCliLogger({ stderrFrom: "All" }, () => true)])
+ * console.log(Layer.isLayer(live)) // true
+ * ```
+ *
  * @internal
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeCliLogger: {
 	(options?: CliLoggerOptions): Logger.Logger<unknown, void>;

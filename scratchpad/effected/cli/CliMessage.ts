@@ -11,6 +11,8 @@ import { Status } from "./Status.ts";
  * Options for {@link CliMessage.status}.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface CliMessageOptions {
 	/**
@@ -35,24 +37,48 @@ export interface CliMessageOptions {
  * `CurrentRuntimeEnv` says so, a line the runner would read as a workflow command is neutralized as well. The glyph
  * comes from the vocabulary, sanitised too (`Status.glyph`), so a glyph built from data cannot inject an escape either.
  *
+ * **Example** (Construct a success message)
+ *
+ * ```ts
+ * import { CliMessage } from "@beep/scratchpad/effected/cli/CliMessage"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = CliMessage.success("saved")
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class CliMessage {
 	private constructor() {}
 
 	/**
-  * Print a status line from a vocabulary.
-  *
-  * **Details**
-  *
-  * The stream defaults to stderr when the status ranks at or above `warning` in `vocab`, and stdout
-  * otherwise, so a custom status follows its own rank: a `timeout` ranked 85 goes to stderr.
-  *
-  * @param vocab - the vocabulary the status belongs to
-  * @param name - the status
-  * @param text - the text after the glyph
-  * @param options - the stream override
-  */
+	 * Print a status line from a vocabulary.
+	 *
+	 * **Details**
+	 *
+	 * The stream defaults to stderr when the status ranks at or above `warning` in `vocab`, and stdout
+	 * otherwise, so a custom status follows its own rank: a `timeout` ranked 85 goes to stderr.
+	 *
+	 * **Example** (Construct a vocabulary status message)
+	 *
+	 * ```ts
+	 * import { CliMessage } from "@beep/scratchpad/effected/cli/CliMessage"
+	 * import * as Effect from "effect/Effect"
+	 * import { Status } from "@beep/scratchpad/effected/cli/Status"
+	 * const program = CliMessage.status(Status.core, "warning", "retrying")
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param vocab - the vocabulary the status belongs to
+	 * @param name - the status
+	 * @param text - the text after the glyph
+	 * @param options - the stream override
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly status = Effect.fn("status")(function* <N extends string>(
 		vocab: Status<N>,
 		name: N,
@@ -82,7 +108,19 @@ export class CliMessage {
 	/**
 	 * A success line, on stdout.
 	 *
+	 * **Example** (Construct a success line)
+	 *
+	 * ```ts
+	 * import { CliMessage } from "@beep/scratchpad/effected/cli/CliMessage"
+	 * import * as Effect from "effect/Effect"
+	 *
+	 * const program = CliMessage.success("configuration checked")
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
 	 * @param text - the text after the glyph
+	 * @category utilities
+	 * @since 0.0.0
 	 */
 	static readonly success = (text: string): Effect.Effect<void, never, CliTheme | Audience> =>
 		CliMessage.status(Status.core, "success", text);
@@ -90,7 +128,19 @@ export class CliMessage {
 	/**
 	 * An informational line, on stdout.
 	 *
+	 * **Example** (Construct a info line)
+	 *
+	 * ```ts
+	 * import { CliMessage } from "@beep/scratchpad/effected/cli/CliMessage"
+	 * import * as Effect from "effect/Effect"
+	 *
+	 * const program = CliMessage.info("configuration checked")
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
 	 * @param text - the text after the glyph
+	 * @category utilities
+	 * @since 0.0.0
 	 */
 	static readonly info = (text: string): Effect.Effect<void, never, CliTheme | Audience> =>
 		CliMessage.status(Status.core, "info", text);
@@ -98,7 +148,19 @@ export class CliMessage {
 	/**
 	 * A warning line, on stderr.
 	 *
+	 * **Example** (Construct a warning line)
+	 *
+	 * ```ts
+	 * import { CliMessage } from "@beep/scratchpad/effected/cli/CliMessage"
+	 * import * as Effect from "effect/Effect"
+	 *
+	 * const program = CliMessage.warning("configuration checked")
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
 	 * @param text - the text after the glyph
+	 * @category utilities
+	 * @since 0.0.0
 	 */
 	static readonly warning = (text: string): Effect.Effect<void, never, CliTheme | Audience> =>
 		CliMessage.status(Status.core, "warning", text);
@@ -106,7 +168,19 @@ export class CliMessage {
 	/**
 	 * A failure line, on stderr.
 	 *
+	 * **Example** (Construct a failure line)
+	 *
+	 * ```ts
+	 * import { CliMessage } from "@beep/scratchpad/effected/cli/CliMessage"
+	 * import * as Effect from "effect/Effect"
+	 *
+	 * const program = CliMessage.failure("configuration checked")
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
 	 * @param text - the text after the glyph
+	 * @category utilities
+	 * @since 0.0.0
 	 */
 	static readonly failure = (text: string): Effect.Effect<void, never, CliTheme | Audience> =>
 		CliMessage.status(Status.core, "failure", text);

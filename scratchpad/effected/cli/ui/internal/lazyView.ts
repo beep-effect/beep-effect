@@ -53,14 +53,38 @@ const NO_VIEW = (resolved: unknown): string => {
  * A load that resolved to no view: deterministic, so a lazy view keeps it (one error object for the handle's life) and
  * the live view warns about it once, where a failed import is tried again by the next run.
  *
+ * **Example** (Construct a cached shape error)
+ *
+ * ```ts
+ * import { LazyViewShapeError } from "@beep/scratchpad/effected/cli/ui/internal/lazyView"
+ * const error = LazyViewShapeError.make({ message: "Expected a view function" })
+ * console.log(error.message) // Expected a view function
+ * ```
+ *
  * @internal
+ * @category errors
+ * @since 0.0.0
  */
 export class LazyViewShapeError extends S.TaggedError<LazyViewShapeError>($I`LazyViewShapeError`)(
 	"LazyViewShapeError",
 	{ message: S.String.annotate({ description: "The resolved module's invalid view shape and the expected shape." }) },
 	$I.annote("LazyViewShapeError", { description: "A deterministic invalid lazy-view module, cached for the handle's life." }),
 ) {
-	/** An identity owned by this error, used to distinguish equal-looking cached shape errors. */
+	/**
+	 * An identity owned by this error, used to distinguish equal-looking cached shape errors.
+	 *
+	 * **Example** (Distinguish two cached shape errors)
+	 *
+	 * ```ts
+	 * import { LazyViewShapeError } from "@beep/scratchpad/effected/cli/ui/internal/lazyView"
+	 * const first = LazyViewShapeError.make({ message: "Expected a view" })
+	 * const second = LazyViewShapeError.make({ message: "Expected a view" })
+	 * console.log(first.id === second.id) // false
+	 * ```
+	 *
+	 * @category identifiers
+	 * @since 0.0.0
+	 */
 	readonly id = Symbol();
 	override readonly name = "Error";
 }
@@ -82,7 +106,22 @@ const pick = <S>(resolved: LiveRender<S> | { readonly default: LiveRender<S> }):
  * again; a load that resolved to no view is kept, a `LazyViewShapeError` every later run gets as is. Calling the render
  * before it has loaded is a defect, since only `CliUi.live` knows to load it first.
  *
+ * **Example** (Load a deferred view before drawing)
+ *
+ * ```ts
+ * import { lazyView } from "@beep/scratchpad/effected/cli/ui/internal/lazyView"
+ * import * as Effect from "effect/Effect"
+ * import { loadView } from "@beep/scratchpad/effected/cli/ui/internal/lazyView"
+ * import { createElement, isValidElement } from "react"
+ *
+ * const render = lazyView(async () => (state: string) => createElement("ink-text", null, state))
+ * await Effect.runPromise(loadView(render))
+ * console.log(isValidElement(render("ready", 0))) // true
+ * ```
+ *
  * @internal
+ * @category constructors
+ * @since 0.0.0
  */
 export const lazyView = <S>(
 	load: () => Promise<LiveRender<S> | { readonly default: LiveRender<S> }>,
@@ -125,7 +164,19 @@ class LazyViewLoadError extends S.TaggedError<LazyViewLoadError>($I`LazyViewLoad
  * Load a lazy view's module before its render is first called; nothing for a render that is not lazy. Fails with what
  * the import failed with.
  *
+ * **Example** (Accept a render without a lazy loader)
+ *
+ * ```ts
+ * import { loadView } from "@beep/scratchpad/effected/cli/ui/internal/lazyView"
+ * import * as Effect from "effect/Effect"
+ * const program = loadView(() => null)
+ * Effect.runSync(program)
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @internal
+ * @category resource-management
+ * @since 0.0.0
  */
 export const loadView = (render: unknown): Effect.Effect<void, LazyViewLoadError> => {
 	const ensure = P.hasProperty(render, LOAD) ? render[LOAD] : undefined;

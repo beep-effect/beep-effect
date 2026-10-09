@@ -89,6 +89,8 @@ const textPiece = (text: string, mode: Mode): string =>
 /**
  * A link's URL when it has a form a reader can follow: an allowed scheme, a relative URL, or an absolute file path.
  *
+ * **Details**
+ *
  * The scheme is read from a normalised copy, with whitespace and control characters removed and the case folded,
  * because a browser ignores them inside a scheme (`java<tab>script:`). An entity cannot hide one either: the
  * destination escapes `&`, so what a reader decodes is the text that was checked here.
@@ -510,7 +512,19 @@ const blockMd = (walk: Walk, block: Block, depth: number, compact = false): Line
 /**
  * Render a document as GitHub-flavoured markdown.
  *
+ * **Example** (Render a paragraph)
+ *
+ * ```ts
+ * import { renderMarkdown } from "@beep/scratchpad/effected/cli/internal/renderMarkdown"
+ * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+ * import { Render } from "@beep/scratchpad/effected/cli/Render"
+ * const ctx = Render.contextOf({ audience: "human", color: "none" })
+ * console.log(renderMarkdown([Doc.paragraph("Ready")], ctx)) // Ready
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const renderMarkdown: {
 	(ctx: RenderContext): (doc: Document) => string;

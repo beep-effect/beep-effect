@@ -9,7 +9,12 @@ import { counterLabel, countsTableOf, totalOf, visibleCountersOf } from "./count
 import type { Span } from "./layout.ts";
 import { truncateSpans, widthOf, wrapSpans } from "./layout.ts";
 
-/** One output line as spans; each span keeps its token and link until the line is finished. */
+/**
+ * One output line as spans; each span keeps its token and link until the line is finished.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Line = ReadonlyArray<Span>;
 
 /**
@@ -17,6 +22,8 @@ export type Line = ReadonlyArray<Span>;
  * decides how inline content becomes spans, and how a finished line becomes a string.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface Flavour {
 	/** Inline nodes as spans: code markers, the link policy, and whether tokens are kept. */
@@ -31,7 +38,21 @@ const span = (text: string, token?: Tone): Span => (token === undefined ? { text
 
 const textOf = (line: Line): string => line.map((s) => s.text).join("");
 
-/** A link target as plain text: the URL, or `path:line:col` through `displayPath`; a column needs a line. */
+/**
+ * A link target as plain text: the URL, or `path:line:col` through `displayPath`; a column needs a line.
+ *
+ * **Example** (Display a file location)
+ *
+ * ```ts
+ * import { targetText } from "@beep/scratchpad/effected/cli/internal/renderDoc"
+ * import { Render } from "@beep/scratchpad/effected/cli/Render"
+ * const ctx = Render.contextOf({ audience: "human", color: "none" })
+ * console.log(targetText({ file: "src/main.ts", line: 4, col: 2 }, ctx)) // src/main.ts:4:2
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
 export const targetText: {
 	(ctx: RenderContext): (target: LinkTarget) => string;
 	(target: LinkTarget, ctx: RenderContext): string;
@@ -45,6 +66,17 @@ export const targetText: {
 /**
  * Whether a link's target follows its label where the link cannot be followed: the link's own `suffix` when it set one,
  * otherwise only when the label is not already the target's display form.
+ *
+ * **Example** (Choose a link target suffix)
+ *
+ * ```ts
+ * import { showsSuffix } from "@beep/scratchpad/effected/cli/internal/renderDoc"
+ * console.log(showsSuffix(undefined, "Guide", "https://example.com")) // true
+ * console.log(showsSuffix(undefined, "https://example.com", "https://example.com")) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const showsSuffix: {
 	(label: string, target: string): (suffix: boolean | undefined) => boolean;
@@ -54,7 +86,19 @@ export const showsSuffix: {
 	(suffix: boolean | undefined, label: string, target: string): boolean => suffix ?? label !== target,
 );
 
-/** Drop trailing spaces, and any span they empty, so a line never ends in padding. */
+/**
+ * Drop trailing spaces, and any span they empty, so a line never ends in padding.
+ *
+ * **Example** (Remove trailing padding)
+ *
+ * ```ts
+ * import { trimLine } from "@beep/scratchpad/effected/cli/internal/renderDoc"
+ * console.log(JSON.stringify(trimLine([{ text: "Ready  " }, { text: " " }]))) // [{"text":"Ready"}]
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
 export const trimLine = (line: Line): Line => {
 	const out = [...line];
 	while (out.length > 0) {
@@ -89,7 +133,19 @@ const sliceSpans = (spans: ReadonlyArray<Span>, end: number): ReadonlyArray<Span
 	return out;
 };
 
-/** The lines of a raw text, sanitized, without the empty line a trailing break would add. */
+/**
+ * The lines of a raw text, sanitized, without the empty line a trailing break would add.
+ *
+ * **Example** (Drop the trailing empty line)
+ *
+ * ```ts
+ * import { textLines } from "@beep/scratchpad/effected/cli/internal/renderDoc"
+ * console.log(JSON.stringify(textLines("first\nsecond\n"))) // ["first","second"]
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const textLines = (text: string): ReadonlyArray<string> => {
 	const lines = sanitize(text).split(/\r\n|\r|\n/);
 	return lines.length > 1 && lines[lines.length - 1] === "" ? lines.slice(0, -1) : lines;
@@ -120,7 +176,21 @@ const hang = (lines: ReadonlyArray<Line>, first: Line, rest: Line): ReadonlyArra
 		? [trimLine(first)]
 		: lines.map((line, index) => trimLine([...(index === 0 ? first : rest), ...line]));
 
-/** A cap as a whole number of at least zero, or `undefined` for none. */
+/**
+ * A cap as a whole number of at least zero, or `undefined` for none.
+ *
+ * **Example** (Normalize a row cap)
+ *
+ * ```ts
+ * import { capOf } from "@beep/scratchpad/effected/cli/internal/renderDoc"
+ * console.log(capOf(2.9)) // 2
+ * console.log(capOf(-1)) // 0
+ * console.log(capOf(undefined)) // undefined
+ * ```
+ *
+ * @category normalization
+ * @since 0.0.0
+ */
 export const capOf = (cap: number | undefined): number | undefined =>
 	cap === undefined || Number.isNaN(cap) ? undefined : Math.max(0, Math.floor(cap));
 
@@ -296,7 +366,21 @@ const keepPaint = (
 	return lines.map((line) => line.map((s) => (paint === "glyph" && s.glyph === true ? s : unpainted(s))));
 };
 
-/** An annotation is only `githubLog`'s; every other renderer skips it, without leaving a gap where it stood. */
+/**
+ * An annotation is only `githubLog`'s; every other renderer skips it, without leaving a gap where it stood.
+ *
+ * **Example** (Recognize a workflow annotation)
+ *
+ * ```ts
+ * import { isAnnotation } from "@beep/scratchpad/effected/cli/internal/renderDoc"
+ * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+ * console.log(isAnnotation(Doc.annotation({ level: "warning" }, "Check this"))) // true
+ * console.log(isAnnotation(Doc.paragraph("Ready"))) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 export const isAnnotation = (block: Block): boolean => block._tag === "Annotation";
 
 const countsLines = (walk: Walk, block: Extract<Block, { readonly _tag: "Counts" }>): ReadonlyArray<Line> =>
@@ -473,7 +557,24 @@ const blockLines = (walk: Walk, block: Block, width: number, compact = false): R
  * Render a document to its finished lines in the given flavour: a block that draws nothing contributes no line, where
  * the joined string could not tell it from one empty line.
  *
+ * **Example** (Finish a paragraph with a plain flavour)
+ *
+ * ```ts
+ * import { renderDocLines, type Flavour } from "@beep/scratchpad/effected/cli/internal/renderDoc"
+ * import { plainInline } from "@beep/scratchpad/effected/cli/internal/renderPlain"
+ * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+ * import { Render } from "@beep/scratchpad/effected/cli/Render"
+ * const ctx = Render.contextOf({ audience: "human", color: "none" })
+ * const flavour: Flavour = {
+ *   inline: plainInline,
+ *   finish: (line) => line.map((span) => span.text).join(""),
+ * }
+ * console.log(JSON.stringify(renderDocLines([Doc.paragraph("Ready")], ctx, flavour))) // ["Ready"]
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const renderDocLines: {
 	(ctx: RenderContext, flavour: Flavour): (doc: Document) => ReadonlyArray<string>;
@@ -489,7 +590,24 @@ export const renderDocLines: {
 /**
  * Render a document to lines of text in the given flavour.
  *
+ * **Example** (Finish a paragraph with a plain flavour)
+ *
+ * ```ts
+ * import { renderDoc, type Flavour } from "@beep/scratchpad/effected/cli/internal/renderDoc"
+ * import { plainInline } from "@beep/scratchpad/effected/cli/internal/renderPlain"
+ * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+ * import { Render } from "@beep/scratchpad/effected/cli/Render"
+ * const ctx = Render.contextOf({ audience: "human", color: "none" })
+ * const flavour: Flavour = {
+ *   inline: plainInline,
+ *   finish: (line) => line.map((span) => span.text).join(""),
+ * }
+ * console.log(renderDoc([Doc.paragraph("Ready")], ctx, flavour)) // Ready
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const renderDoc: {
 	(ctx: RenderContext, flavour: Flavour): (doc: Document) => string;

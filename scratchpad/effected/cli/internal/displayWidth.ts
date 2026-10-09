@@ -14,7 +14,17 @@ const ZERO2 = /^[\p{Mn}\p{Me}\p{Cf}\p{Cc}\u115F\u1160\u3164\uFFA0]+$/u;
 /**
  * The text without its ANSI escape sequences: CSI (including SGR colour) and OSC (including OSC-8 hyperlinks).
  *
+ * **Example** (Remove a painted foreground)
+ *
+ * ```ts
+ * import { stripAnsi } from "@beep/scratchpad/effected/cli/internal/displayWidth"
+ *
+ * console.log(stripAnsi("\u001b[31mready\u001b[39m")) // ready
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const stripAnsi = (input: string): string => input.replace(ANSI, "");
 
@@ -22,7 +32,17 @@ export const stripAnsi = (input: string): string => input.replace(ANSI, "");
  * The display width of `input` in terminal columns: graphemes, wide East Asian characters and emoji count two,
  * combining marks, control characters and ANSI escapes count none.
  *
+ * **Example** (Measure wide and combining characters)
+ *
+ * ```ts
+ * import { displayWidth } from "@beep/scratchpad/effected/cli/internal/displayWidth"
+ *
+ * console.log(displayWidth("界e\u0301")) // 3
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const displayWidth = (input: string): number => {
 	let width = 0;
@@ -39,7 +59,17 @@ export const displayWidth = (input: string): number => {
 /**
  * The grapheme clusters of `input`, in order; a cluster is never split.
  *
+ * **Example** (Keep a combining sequence together)
+ *
+ * ```ts
+ * import { graphemes } from "@beep/scratchpad/effected/cli/internal/displayWidth"
+ *
+ * console.log(JSON.stringify(graphemes("e\u0301x"))) // ["é","x"]
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const graphemes = (input: string): ReadonlyArray<string> =>
 	A.map(A.fromIterable(segmenter.segment(input)), (s) => s.segment);

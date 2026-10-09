@@ -22,9 +22,15 @@ import { formatIssue } from "./internal/format.ts";
  * **Example** (Log diagnostics for rejected configuration values)
  *
  * ```ts
- * import { ConfigIssueRenderer } from "./index.ts"
+ * import { ConfigIssueRenderer } from "@beep/scratchpad/effected/cli/ConfigIssueRenderer";
+ * import { ConfigValidationError } from "@beep/scratchpad/effected/config-file/ConfigFile";
+ * import * as O from "effect/Option";
+ * import * as S from "effect/Schema";
  * import * as Effect from "effect/Effect";
  *
+ * const issue = Effect.runSync(Effect.flip(S.decodeUnknownEffect(S.Number)("invalid"))).issue;
+ * const error = ConfigValidationError.make({ path: O.some("config.json"), issue });
+ * const configFile = { load: Effect.fail(error) };
  * const load = configFile.load.pipe(
  *   Effect.catchTag("ConfigValidationError", (error) =>
  *     Effect.gen(function* () {
@@ -33,28 +39,45 @@ import { formatIssue } from "./internal/format.ts";
  *     }),
  *   ),
  * )
+ * console.log(Effect.isEffect(load)) // true
  * ```
  *
  * @public
+ * @category formatting
+ * @since 0.0.0
  */
 export class ConfigIssueRenderer {
 	private constructor() {}
 
 	/**
-  * One line per rejected value.
-  *
-  * **Details**
-  *
-  * Takes the **error**, not its `issue`, because that is what a `catchTag`
-  * hands you and because `issue` is typed `Schema.Defect`, which every call
-  * site would otherwise have to reach into. Inside
-  * `Effect.catchTag("ConfigValidationError", …)` the error is already this
-  * type.
-  *
-  * It cannot throw on a malformed value: the issue tree is validated by
-  * a guard before it is read, so a renderer on an error path never becomes the
-  * reason a program dies.
-  */
+	 * One line per rejected value.
+	 *
+	 * **Details**
+	 *
+	 * Takes the **error**, not its `issue`, because that is what a `catchTag`
+	 * hands you and because `issue` is typed `Schema.Defect`, which every call
+	 * site would otherwise have to reach into. Inside
+	 * `Effect.catchTag("ConfigValidationError", …)` the error is already this
+	 * type.
+	 *
+	 * It cannot throw on a malformed value: the issue tree is validated by
+	 * a guard before it is read, so a renderer on an error path never becomes the
+	 * reason a program dies.
+	 *
+	 * **Example** (Ignore an unstructured validation issue)
+	 *
+	 * ```ts
+	 * import { ConfigIssueRenderer } from "@beep/scratchpad/effected/cli/ConfigIssueRenderer";
+	 * import { ConfigValidationError } from "@beep/scratchpad/effected/config-file/ConfigFile";
+	 * import * as O from "effect/Option";
+	 *
+	 * const error = ConfigValidationError.make({ path: O.none(), issue: new Error("Invalid port") });
+	 * console.log(JSON.stringify(ConfigIssueRenderer.render(error))) // []
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	static readonly render = (error: ConfigValidationError): ReadonlyArray<string> =>
 		formatIssue(error?.issue);
 }

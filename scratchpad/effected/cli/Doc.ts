@@ -38,7 +38,19 @@ const StatusDefinition = S.Struct({
  *
  * The definition is stored, not the vocabulary, so a node stays plain data.
  *
+ * **Example** (Validate a resolved status)
+ *
+ * ```ts
+ * import { StatusRef } from "@beep/scratchpad/effected/cli/Doc"
+ * import { Status } from "@beep/scratchpad/effected/cli/Status"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(StatusRef)({ name: "success", def: Status.core.resolve("success") })) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const StatusRef = S.Struct({
 	/** The name in the vocabulary it was resolved from. */
@@ -46,12 +58,29 @@ export const StatusRef = S.Struct({
 	/** The resolved definition. */
 	def: StatusDefinition.annotate($I.annote("StatusRef.def", { description: "The def field of StatusRef." })),
 }).annotate($I.annote("StatusRef", { description: "A status name and its resolved definition." }));
+/**
+ * A resolved status name and definition stored in a document.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type StatusRef = typeof StatusRef.Type;
 
 /**
  * Where a link points: a URL, or a file with an optional position.
  *
+ * **Example** (Validate a file position)
+ *
+ * ```ts
+ * import { LinkTarget } from "@beep/scratchpad/effected/cli/Doc"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(LinkTarget)({ file: "src/main.ts", line: 12, col: 3 })) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const LinkTarget = S.Union([
 	S.Struct({ url: S.String.annotate($I.annote("LinkTarget.url", { description: "The url field of LinkTarget." })) }),
@@ -63,6 +92,12 @@ export const LinkTarget = S.Union([
 		col: S.optionalKey(S.Finite).annotate($I.annote("LinkTarget.col", { description: "The col field of LinkTarget." })),
 	}),
 ]).annotate($I.annote("LinkTarget", { description: "A URL or file with an optional position." }));
+/**
+ * A URL or file position accepted by a document link.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type LinkTarget = typeof LinkTarget.Type;
 
 const inlineShape = <Children extends S.Constraint>(children: Children) =>
@@ -114,6 +149,12 @@ const inlineShape = <Children extends S.Constraint>(children: Children) =>
 
 // Array interfaces break recursive inference without duplicating any variant's fields.
 interface InlineChildren extends ReadonlyArray<Inline> {}
+/**
+ * The decoded inline content flowing inside a document line.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Inline = ReturnType<typeof inlineShape<S.Codec<InlineChildren>>>["Type"];
 /**
  * Content that flows inside a line.
@@ -128,7 +169,18 @@ export type Inline = ReturnType<typeof inlineShape<S.Codec<InlineChildren>>>["Ty
  * - `Strong` and `Emphasis`: content in bold or italic; markdown `**` and `_`.
  * - `File`: a path shown through the context's `displayPath`, never linked.
  *
+ * **Example** (Validate inline text)
+ *
+ * ```ts
+ * import { Doc, Inline } from "@beep/scratchpad/effected/cli/Doc"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(Inline)(Doc.text("Ready"))) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const Inline = S.suspend((): S.Codec<Inline> => Inline).pipe(S.Array, inlineShape);
 
@@ -144,18 +196,46 @@ const treeNodeShape = <Children extends S.Constraint>(children: Children) =>
 		),
 	}).annotate($I.annote("TreeNode", { description: "A tree label and its ordered children." }));
 interface TreeChildren extends ReadonlyArray<TreeNode> {}
+/**
+ * The decoded tree label and its ordered child nodes.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type TreeNode = ReturnType<typeof treeNodeShape<S.Codec<TreeChildren>>>["Type"];
 /**
  * A node of a {@link TreeNode} tree: a label and its children.
  *
+ * **Example** (Validate a tree root)
+ *
+ * ```ts
+ * import { Doc, TreeNode } from "@beep/scratchpad/effected/cli/Doc"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(TreeNode)(Doc.tree({ label: "src" }).root)) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const TreeNode = S.suspend((): S.Codec<TreeNode> => TreeNode).pipe(S.Array, treeNodeShape);
 
 /**
- * One column of a table.
+ * Describes a table header and its optional cell alignment.
+ *
+ * **Example** (Validate an aligned column)
+ *
+ * ```ts
+ * import { Column, Doc } from "@beep/scratchpad/effected/cli/Doc"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(Column)({ header: [Doc.text("Time")], align: "right" })) // true
+ * ```
  *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const Column = S.Struct({
 	/** The header cell. */
@@ -165,19 +245,38 @@ export const Column = S.Struct({
 		$I.annote("Column.align", { description: "The align field of Column." }),
 	),
 }).annotate($I.annote("Column", { description: "A table header and optional alignment." }));
+/**
+ * The decoded table header and optional cell alignment.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Column = typeof Column.Type;
 
 /**
- * One counter of a `Counts` block.
+ * Describes a labelled count and its resolved status for a `Counts` block.
+ *
+ * **Example** (Validate a resolved counter)
+ *
+ * ```ts
+ * import { Counter, Doc } from "@beep/scratchpad/effected/cli/Doc"
+ * import { Status } from "@beep/scratchpad/effected/cli/Status"
+ * import * as S from "effect/Schema"
+ *
+ * const counter = Doc.counter(Status.core, "success", { key: "passed", label: "passed", n: 3 })
+ * console.log(S.is(Counter)(counter)) // true
+ * ```
  *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const Counter = S.Struct({
 	/** A stable identifier, for a caller's total rule. */
 	key: S.String.annotate($I.annote("Counter.key", { description: "The key field of Counter." })),
 	/**
 	 * What the counter is called when shown: one label, or a singular and a plural form, `one` for a count of exactly 1
-	 * and `other` for any other, 0 included. The count is the counter's own `n`, except in a share headline
+	 * and `other` for every other, 0 included. The count is the counter's own `n`, except in a share headline
 	 * (`1/3 repos`), which reads by the total. A `CountsTable` heads its column with `other`, since the column holds
 	 * every row's count.
 	 */
@@ -197,6 +296,12 @@ export const Counter = S.Struct({
 		$I.annote("Counter.showZero", { description: "The showZero field of Counter." }),
 	),
 }).annotate($I.annote("Counter", { description: "A labeled count with its resolved status and zero-display policy." }));
+/**
+ * The decoded count, label and resolved status used in summaries.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Counter = typeof Counter.Type;
 
 const Overflow = S.declare<(hidden: number) => ReadonlyArray<Inline>>(
@@ -384,9 +489,15 @@ const blockShape = <Children extends S.Constraint>(children: Children) =>
 		$I.annote("Block", { description: "Plain tagged document blocks, including recursive containers and callbacks." }),
 	);
 interface BlockChildren extends ReadonlyArray<Block> {}
+/**
+ * The decoded document block, including recursive containers.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Block = ReturnType<typeof blockShape<S.Codec<BlockChildren>>>["Type"];
 /**
- * A block of a document.
+ * Describes the block variants that compose a document.
  *
  * **Details**
  *
@@ -414,7 +525,18 @@ export type Block = ReturnType<typeof blockShape<S.Codec<BlockChildren>>>["Type"
  *
  * Nodes are plain data and nothing decodes them, so a function field such as `overflow` or `total` is fine.
  *
+ * **Example** (Validate a paragraph block)
+ *
+ * ```ts
+ * import { Block, Doc } from "@beep/scratchpad/effected/cli/Doc"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(Block)(Doc.paragraph("Ready"))) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const Block: S.Codec<Block> = S.suspend(() => S.suspend((): S.Codec<Block> => Block).pipe(S.Array, blockShape)).annotate(
 	$I.annote("Block", { description: "Plain tagged document blocks with recursive containers and callbacks." }),
@@ -423,7 +545,18 @@ export const Block: S.Codec<Block> = S.suspend(() => S.suspend((): S.Codec<Block
 /**
  * Where and how a GitHub Actions annotation is shown: its level, and an optional position and title.
  *
+ * **Example** (Validate annotation metadata)
+ *
+ * ```ts
+ * import { AnnotationOptions } from "@beep/scratchpad/effected/cli/Doc"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(AnnotationOptions)({ level: "warning", file: "src/main.ts", line: 12 })) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const AnnotationOptions = S.Struct({
 	/** `error`, `warning` or `notice`. */
@@ -457,12 +590,29 @@ export const AnnotationOptions = S.Struct({
 }).annotate(
 	$I.annote("AnnotationOptions", { description: "A GitHub Actions annotation level and optional position and title." }),
 );
+/**
+ * The decoded level and optional source position of a workflow annotation.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type AnnotationOptions = typeof AnnotationOptions.Type;
 
 /**
  * One row of a `CountsTable`: its label, its counters and how long it took.
  *
+ * **Example** (Validate a timing row)
+ *
+ * ```ts
+ * import { CountsRow, Doc } from "@beep/scratchpad/effected/cli/Doc"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(CountsRow)({ label: [Doc.text("lint")], counters: [], durationMs: 1200 })) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const CountsRow = S.Struct({
 	/** What the row is, such as a project name. */
@@ -476,12 +626,20 @@ export const CountsRow = S.Struct({
 		$I.annote("CountsRow.durationMs", { description: "The durationMs field of CountsRow." }),
 	),
 }).annotate($I.annote("CountsRow", { description: "A counts-table row with label, counters and optional duration." }));
+/**
+ * The decoded label, counters and optional duration of a summary-table row.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CountsRow = typeof CountsRow.Type;
 
 /**
  * The options of {@link Doc.countsTable}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CountsTableOptions {
 	/** A last row summing each column: labelled with a plain `Total` when `true`, or with the content given (`Doc.strong("Total")` for a bold one). */
@@ -496,6 +654,8 @@ export interface CountsTableOptions {
  * Options for {@link Doc.list}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ListOptions extends OverflowOptions {
 	/** No blank lines between the children of an item, such as a section's title and body. */
@@ -506,6 +666,8 @@ export interface ListOptions extends OverflowOptions {
  * Options for {@link Doc.table}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface TableOptions extends OverflowOptions {
 	/**
@@ -519,6 +681,8 @@ export interface TableOptions extends OverflowOptions {
  * Options for `Doc.link`.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface LinkOptions {
 	/**
@@ -533,6 +697,8 @@ export interface LinkOptions {
  * A whole document: its blocks, in order.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type Document = ReadonlyArray<Block>;
 
@@ -544,6 +710,8 @@ export type Document = ReadonlyArray<Block>;
  * A string becomes a `Text` node with no token.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type InlineInput = string | Inline | ReadonlyArray<string | Inline>;
 
@@ -551,6 +719,8 @@ export type InlineInput = string | Inline | ReadonlyArray<string | Inline>;
  * A tree node as a constructor accepts it: the label may be a string and `children` may be left out.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface TreeInput {
 	/** What the node says. */
@@ -563,6 +733,8 @@ export interface TreeInput {
  * The inline node with a given `_tag`, so a constructor can return its precise type.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type InlineOf<Tag extends Inline["_tag"]> = Extract<Inline, { readonly _tag: Tag }>;
 
@@ -570,6 +742,8 @@ export type InlineOf<Tag extends Inline["_tag"]> = Extract<Inline, { readonly _t
  * The block node with a given `_tag`, so a constructor can return its precise type.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type BlockOf<Tag extends Block["_tag"]> = Extract<Block, { readonly _tag: Tag }>;
 
@@ -577,6 +751,8 @@ export type BlockOf<Tag extends Block["_tag"]> = Extract<Block, { readonly _tag:
  * The cap and overflow options of a list or table.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface OverflowOptions {
 	/** The most rows to show; the renderer hides the rest. */
@@ -589,6 +765,8 @@ export interface OverflowOptions {
  * The options of {@link Doc.counts}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CountsOptions {
 	/** A leading label. */
@@ -652,13 +830,15 @@ const counterOf = (counter: Counter): Counter => ({
  * Options for {@link Doc.print}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface DocPrintOptions {
 	/** The stream to write to; `stdout` by default. */
 	readonly stream?: "stdout" | "stderr" | undefined;
 	/**
 	 * The renderer. `auto`, the default, is chosen from the audience: `plain` for an agent, `githubLog` for a CI
-	 * that `CurrentRuntimeEnv` says is GitHub Actions and `plain` for any other, and `ansi` for a human.
+	 * that `CurrentRuntimeEnv` says is GitHub Actions and `plain` for every other, and `ansi` for a human.
 	 */
 	readonly format?: "auto" | "plain" | "ansi" | "markdown" | "githubLog" | undefined;
 	/** Turns an absolute path into its display form, for example relative to the workspace; see `Render.context`. */
@@ -668,7 +848,7 @@ export interface DocPrintOptions {
 }
 
 /**
- * Constructors for the document IR, and two helpers a renderer shares.
+ * Builds the document intermediate representation and provides two helpers shared by renderers.
  *
  * **Details**
  *
@@ -685,7 +865,8 @@ export interface DocPrintOptions {
  * **Example** (Build a results report with a status and timing table)
  *
  * ```ts
- * import { Doc, Status } from "./index.ts"
+ * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+ * import { Status } from "@beep/scratchpad/effected/cli/Status"
  *
  * const report = [
  * 	Doc.heading(2, "Results"),
@@ -693,27 +874,50 @@ export interface DocPrintOptions {
  * 	Doc.table([{ header: "Check" }, { header: "Time", align: "right" }], [["lint", "1.2s"]]),
  * ]
  * // Written for whoever is reading: `yield* Doc.print(report)`
+ * console.log(report.length) // 3
  * ```
  *
  * @public
+ * @category constructors
+ * @since 0.0.0
  */
 export class Doc {
 	private constructor() {}
 
 	/**
-	 * A run of text.
+	 * Creates inline text that can carry a semantic token or style.
+	 *
+	 * **Example** (Preserve text content)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.text("Ready").value) // Ready
+	 * ```
 	 *
 	 * @param value - the text
 	 * @param token - a semantic token or a style to paint it with
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static text(value: string, token?: TokenName | Style): InlineOf<"Text"> {
 		return text(value, token);
 	}
 
 	/**
-	 * Code in a monospace span.
+	 * Marks inline code for monospace rendering.
+	 *
+	 * **Example** (Preserve inline code)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.code("bun check").value) // bun check
+	 * ```
 	 *
 	 * @param value - the code
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static code(value: string): InlineOf<"Code"> {
 		return { _tag: "Code", value };
@@ -722,18 +926,38 @@ export class Doc {
 	/**
 	 * A link to a URL or a file position.
 	 *
+	 * **Example** (Build a labelled URL)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.link({ url: "https://example.com" }, "Docs")._tag) // Link
+	 * ```
+	 *
 	 * @param target - `{ url }` or `{ file, line?, col? }`
 	 * @param label - what the link says; when omitted, the bare URL or file path, which leaves out `line` and `col`
 	 * @param options - `suffix`, whether the target follows the label where the link cannot be followed
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static link(target: LinkTarget, label?: InlineInput, options?: LinkOptions): InlineOf<"Link">;
 	/**
-	 * A link when there is a target, and its label alone when there is none: a string label as a `Text`, any other
+	 * A link when there is a target, and its label alone when there is none: a string label as a `Text`, every other
 	 * inline as itself.
+	 *
+	 * **Example** (Keep an unlinked label)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.link(undefined, "Offline")._tag) // Text
+	 * ```
 	 *
 	 * @param target - `{ url }`, `{ file, line?, col? }`, or `undefined` for no link
 	 * @param label - what the link says
 	 * @param options - `suffix`, whether the target follows the label where the link cannot be followed
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static link(target: LinkTarget | undefined, label: string | Inline, options?: LinkOptions): Inline;
 	static link(target: LinkTarget | undefined, label?: InlineInput, options?: LinkOptions): InlineInput | undefined {
@@ -748,15 +972,26 @@ export class Doc {
 	}
 
 	/**
-  * A status glyph, holding the resolved definition.
-  *
-  * **Gotchas**
-  *
-  * A name the vocabulary does not have is a compile error.
-  *
-  * @param vocab - the vocabulary the name belongs to
-  * @param name - a status name in it
-  */
+	 * A status glyph, holding the resolved definition.
+	 *
+	 * **Gotchas**
+	 *
+	 * A name the vocabulary does not have is a compile error.
+	 *
+	 * **Example** (Resolve a success glyph)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 * import { Status } from "@beep/scratchpad/effected/cli/Status"
+	 *
+	 * console.log(Doc.status(Status.core, "success").name) // success
+	 * ```
+	 *
+	 * @param vocab - the vocabulary the name belongs to
+	 * @param name - a status name in it
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static status<N extends string>(vocab: Status<N>, name: NoInfer<N>): InlineOf<"StatusMark"> {
 		return { _tag: "StatusMark", name, def: vocab.resolve(name) };
 	}
@@ -764,7 +999,17 @@ export class Doc {
 	/**
 	 * Content in bold: markdown `**…**`, bold in `ansi`, and the content as is in plain and `githubLog`.
 	 *
-	 * @param content - any number of strings, inlines or arrays of them, in order
+	 * **Example** (Group bold content)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.strong("3", " passed").content.length) // 2
+	 * ```
+	 *
+	 * @param content - an arbitrary number of strings, inlines or arrays of them, in order
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static strong(...content: Array<InlineInput>): InlineOf<"Strong"> {
 		return { _tag: "Strong", content: inlines(content.flatMap((part) => (isList(part) ? part : [part]))) };
@@ -774,7 +1019,17 @@ export class Doc {
 	 * Content in italic: markdown `*…*` (which GFM reads inside a word too), italic in `ansi`, and the content as is in
 	 * plain and `githubLog`.
 	 *
-	 * @param content - any number of strings, inlines or arrays of them, in order
+	 * **Example** (Group italic content)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.em("Retry", " later").content.length) // 2
+	 * ```
+	 *
+	 * @param content - an arbitrary number of strings, inlines or arrays of them, in order
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static em(...content: Array<InlineInput>): InlineOf<"Emphasis"> {
 		return { _tag: "Emphasis", content: inlines(content.flatMap((part) => (isList(part) ? part : [part]))) };
@@ -783,7 +1038,17 @@ export class Doc {
 	/**
 	 * A file path, shown through the context's `displayPath` and never linked.
 	 *
+	 * **Example** (Preserve a display path)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.file("/workspace/src/main.ts").path) // /workspace/src/main.ts
+	 * ```
+	 *
 	 * @param path - the path, usually absolute
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static file(path: string): InlineOf<"File"> {
 		return { _tag: "File", path };
@@ -792,17 +1057,37 @@ export class Doc {
 	/**
 	 * A path or breadcrumb; a renderer joins the segments with the audience's separator.
 	 *
+	 * **Example** (Build breadcrumb segments)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.path("src", "main.ts").segments.join("/")) // src/main.ts
+	 * ```
+	 *
 	 * @param segments - the segments, in order
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static path(...segments: Array<string>): InlineOf<"Path"> {
 		return { _tag: "Path", segments: A.copy(segments) };
 	}
 
 	/**
-	 * A heading.
+	 * Introduces a document heading at the requested level.
+	 *
+	 * **Example** (Build a report heading)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.heading(2, "Results").level) // 2
+	 * ```
 	 *
 	 * @param level - 1 to 4
 	 * @param content - the heading text
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static heading(level: 1 | 2 | 3 | 4, content: InlineInput): BlockOf<"Heading"> {
 		return { _tag: "Heading", level, content: inlines(content) };
@@ -811,17 +1096,37 @@ export class Doc {
 	/**
 	 * One logical line of content.
 	 *
-	 * @param content - any number of strings, inlines or arrays of them, in order
+	 * **Example** (Normalize paragraph content)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.paragraph("Ready", Doc.code("bun check")).content.length) // 2
+	 * ```
+	 *
+	 * @param content - an arbitrary number of strings, inlines or arrays of them, in order
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static paragraph(...content: Array<InlineInput>): BlockOf<"Paragraph"> {
 		return { _tag: "Paragraph", content: inlines(content.flatMap((part) => (isList(part) ? part : [part]))) };
 	}
 
 	/**
-	 * A list of blocks.
+	 * Groups blocks into a list with optional row limits and overflow content.
+	 *
+	 * **Example** (Cap a list)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.list([Doc.paragraph("first"), Doc.paragraph("second")], { cap: 1 }).cap) // 1
+	 * ```
 	 *
 	 * @param items - the items
 	 * @param options - `cap`, `overflow`, and `compact` for no blank lines inside an item
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static list(items: ReadonlyArray<Block>, options?: ListOptions): BlockOf<"List"> {
 		return {
@@ -833,11 +1138,22 @@ export class Doc {
 	}
 
 	/**
-	 * A table.
+	 * Arranges inline content into columns and rows for tabular rendering.
+	 *
+	 * **Example** (Build an aligned table)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * const table = Doc.table([{ header: "Time", align: "right" }], [["1.2s"]])
+	 * console.log(table.rows.length) // 1
+	 * ```
 	 *
 	 * @param columns - the columns: a header and an optional alignment each
 	 * @param rows - the rows; each cell takes a string, an inline or an array of either
 	 * @param options - `cap`, `overflow`, and `style: "pipe"` for istanbul's shape in plain and `ansi`
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static table(
 		columns: ReadonlyArray<{ readonly header: InlineInput; readonly align?: "left" | "right" | "center" }>,
@@ -859,9 +1175,19 @@ export class Doc {
 	}
 
 	/**
-	 * A tree of labels.
+	 * Builds nested labels for tree rendering.
+	 *
+	 * **Example** (Normalize a child tree)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.tree({ label: "src", children: [{ label: "main.ts" }] }).root.children.length) // 1
+	 * ```
 	 *
 	 * @param root - the root; a node's `children` may be left out
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static tree(root: TreeInput): BlockOf<"Tree"> {
 		return { _tag: "Tree", root: treeNode(root) };
@@ -870,9 +1196,19 @@ export class Doc {
 	/**
 	 * A titled body a renderer may fold.
 	 *
+	 * **Example** (Start a body unfolded)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.collapsible("Details", [Doc.paragraph("Ready")], { open: true }).open) // true
+	 * ```
+	 *
 	 * @param title - the title
 	 * @param body - the body
 	 * @param options - `open` asks for it to start unfolded
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static collapsible(
 		title: InlineInput,
@@ -888,10 +1224,20 @@ export class Doc {
 	}
 
 	/**
-	 * A callout.
+	 * Highlights a body of blocks with a callout kind.
+	 *
+	 * **Example** (Build a warning body)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.callout("warning", [Doc.paragraph("Retry later")]).kind) // warning
+	 * ```
 	 *
 	 * @param kind - `note`, `tip`, `important`, `warning` or `caution`
 	 * @param body - the body
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static callout(
 		kind: "note" | "tip" | "important" | "warning" | "caution",
@@ -901,21 +1247,41 @@ export class Doc {
 	}
 
 	/**
-	 * Preformatted text.
+	 * Preserves code text with an optional language for fenced rendering.
+	 *
+	 * **Example** (Select a code language)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.codeBlock("const ready = true", "ts").lang) // ts
+	 * ```
 	 *
 	 * @param text - the text
 	 * @param lang - its language, for a renderer that fences it
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static codeBlock(text: string, lang?: string): BlockOf<"CodeBlock"> {
 		return { _tag: "CodeBlock", ...O.getSomesStruct({ lang: O.fromUndefinedOr(lang) }), text };
 	}
 
 	/**
-	 * Expected against received text.
+	 * Builds a comparison of expected and received text for diff rendering.
+	 *
+	 * **Example** (Cap an expected versus received diff)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.diff("expected", "received", { cap: 5 }).cap) // 5
+	 * ```
 	 *
 	 * @param expected - the expected text
 	 * @param received - the received text
 	 * @param options - `cap` limits the lines shown
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static diff(expected: string, received: string, options?: { readonly cap?: number }): BlockOf<"Diff"> {
 		return {
@@ -927,17 +1293,27 @@ export class Doc {
 	}
 
 	/**
-  * Children under an optional title.
-  *
-  * **Details**
-  *
-  * The children are separated by blank lines (unless the document is compact); a title sits directly above the first.
-  * `Doc.section(undefined, blocks)` is the way to space a document's top-level blocks, which are otherwise joined with
-  * no blank line.
-  *
-  * @param title - the title, or `undefined` for none
-  * @param children - the blocks
-  */
+	 * Children under an optional title.
+	 *
+	 * **Details**
+	 *
+	 * The children are separated by blank lines (unless the document is compact); a title sits directly above the first.
+	 * `Doc.section(undefined, blocks)` is the way to space a document's top-level blocks, which are otherwise joined with
+	 * no blank line.
+	 *
+	 * **Example** (Group spaced top-level blocks)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.section(undefined, [Doc.paragraph("first"), Doc.paragraph("second")]).children.length) // 2
+	 * ```
+	 *
+	 * @param title - the title, or `undefined` for none
+	 * @param children - the blocks
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static section(title: InlineInput | undefined, children: ReadonlyArray<Block>): BlockOf<"Section"> {
 		return {
 			_tag: "Section",
@@ -947,22 +1323,34 @@ export class Doc {
 	}
 
 	/**
-  * One counter of a `Counts` block, with its status definition resolved.
-  *
-  * **Details**
-  *
-  * A name the vocabulary does not have is a compile error.
-  *
-  * The label is one string, or `{ one, other }` to pluralise by count: `one` when the count is exactly 1 and `other`
-  * for every other count, 0 included. A count standing alone reads by its own `n` (`1 change`, `2 changes`); a
-  * headline shown as a share of the total reads by that total, the noun it counts (`1/1 repo`, `1/3 repos`,
-  * `2/3 repos`).
-  *
-  * @param vocab - the vocabulary the status belongs to
-  * @param name - a status name in it
-  * @param options - the counter's `key`, its `label` (one string, or `{ one, other }`), its count `n`, and `showZero`
-  * to keep it when `n` is zero
-  */
+	 * One counter of a `Counts` block, with its status definition resolved.
+	 *
+	 * **Details**
+	 *
+	 * A name the vocabulary does not have is a compile error.
+	 *
+	 * The label is one string, or `{ one, other }` to pluralise by count: `one` when the count is exactly 1 and `other`
+	 * for every other count, 0 included. A count standing alone reads by its own `n` (`1 change`, `2 changes`); a
+	 * headline shown as a share of the total reads by that total, the noun it counts (`1/1 repo`, `1/3 repos`,
+	 * `2/3 repos`).
+	 *
+	 * **Example** (Resolve a named count)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 * import { Status } from "@beep/scratchpad/effected/cli/Status"
+	 *
+	 * const counter = Doc.counter(Status.core, "success", { key: "passed", label: { one: "check", other: "checks" }, n: 3 })
+	 * console.log(counter.n) // 3
+	 * ```
+	 *
+	 * @param vocab - the vocabulary the status belongs to
+	 * @param name - a status name in it
+	 * @param options - the counter's `key`, its `label` (one string, or `{ one, other }`), its count `n`, and `showZero`
+	 * to keep it when `n` is zero
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static counter<N extends string>(
 		vocab: Status<N>,
 		name: NoInfer<N>,
@@ -983,9 +1371,19 @@ export class Doc {
 	}
 
 	/**
-	 * Counters in one of three layouts.
+	 * Builds a counter summary in the requested layout.
+	 *
+	 * **Example** (Choose a counter layout)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.counts({ counters: [], layout: "inline" }).layout) // inline
+	 * ```
 	 *
 	 * @param options - the counters, the layout and the optional label, total rule, qualifier and duration
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static counts(options: CountsOptions): BlockOf<"Counts"> {
 		return {
@@ -1003,24 +1401,34 @@ export class Doc {
 	}
 
 	/**
-  * Counters as a table: a row per entry, a column per counter key (in the order the keys first appear, headed by
-  * the counter's label), and an optional total row summing each column.
-  *
-  * **Details**
-  *
-  * A row without a counter for some key leaves that cell empty, and it counts as zero in the total. A counter whose
-  * `n` is zero shows `0`, as a `Doc.table` cell would: a counter's `showZero` has no effect in a table, only in a
-  * `Counts` block, so there is no need to set it. `totalRow`
-  * labels the total row with a plain `Total` when `true`, or with the content given: for a bold one, pass
-  * `totalRow: Doc.strong("Total")`. A column is headed by its counter's `label`; a counter's status paints its cells
-  * in `ansi` and is ignored in markdown, so a plain numbers table may pass any status. `labelHeader` heads the label column, which
-  * is otherwise empty. When some row has a `durationMs`, a last column shows it with `Fmt.duration`, headed
-  * `durationHeader` (`duration` by default); a row without one has an empty cell there and counts as zero in the
-  * total row's summed duration.
-  *
-  * @param rows - each row's label, counters and optional duration
-  * @param options - `totalRow`, to add the summed row; the label and duration column headers
-  */
+	 * Counters as a table: a row per entry, a column per counter key (in the order the keys first appear, headed by
+	 * the counter's label), and an optional total row summing each column.
+	 *
+	 * **Details**
+	 *
+	 * A row without a counter for some key leaves that cell empty, and it counts as zero in the total. A counter whose
+	 * `n` is zero shows `0`, as a `Doc.table` cell would: a counter's `showZero` has no effect in a table, only in a
+	 * `Counts` block, so there is no need to set it. `totalRow`
+	 * labels the total row with a plain `Total` when `true`, or with the content given: for a bold one, pass
+	 * `totalRow: Doc.strong("Total")`. A column is headed by its counter's `label`; a counter's status paints its cells
+	 * in `ansi` and is ignored in markdown, so a plain numbers table may pass a status of its choice. `labelHeader` heads the label column, which
+	 * is otherwise empty. When some row has a `durationMs`, a last column shows it with `Fmt.duration`, headed
+	 * `durationHeader` (`duration` by default); a row without one has an empty cell there and counts as zero in the
+	 * total row's summed duration.
+	 *
+	 * **Example** (Request a summed table row)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.countsTable([{ label: "lint", counters: [] }], { totalRow: true }).totalRow) // true
+	 * ```
+	 *
+	 * @param rows - each row's label, counters and optional duration
+	 * @param options - `totalRow`, to add the summed row; the label and duration column headers
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static countsTable(
 		rows: ReadonlyArray<{
 			readonly label: InlineInput;
@@ -1050,27 +1458,47 @@ export class Doc {
 	/**
 	 * Lines, one per entry, in every renderer: markdown joins them with hard breaks so they never collapse into one.
 	 *
+	 * **Example** (Keep two separate lines)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.lines(["first", "second"]).lines.length) // 2
+	 * ```
+	 *
 	 * @param lines - the entries; each takes a string, an inline or an array of either
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static lines(lines: ReadonlyArray<InlineInput>): BlockOf<"Lines"> {
 		return { _tag: "Lines", lines: A.copy(lines.map(inlines)) };
 	}
 
 	/**
-  * One line of content; with `truncate`, it is cut to the width with the glyph set's ellipsis instead of wrapping,
-  * and with `wrap: false` it is kept whole on one line whatever the width.
-  *
-  * **Details**
-  *
-  * By default a line longer than the width wraps. `wrap: false` keeps it atomic in every audience and renderer, still
-  * carrying its status glyphs, theme tokens and links, which {@link Doc.verbatim} (a plain string) cannot: the tool for
-  * a finding such as `✗ path:line:col  rule  message` that a reader greps or reads line by line, while the prose around
-  * it still wraps. A line break inside it is still a space. With both `truncate` and `wrap: false`, `truncate` wins:
-  * the line is cut to the width.
-  *
-  * @param content - the line
-  * @param options - `truncate`, to cut it to the width; `wrap: false`, to keep it whole
-  */
+	 * One line of content; with `truncate`, it is cut to the width with the glyph set's ellipsis instead of wrapping,
+	 * and with `wrap: false` it is kept whole on one line whatever the width.
+	 *
+	 * **Details**
+	 *
+	 * By default a line longer than the width wraps. `wrap: false` keeps it atomic in every audience and renderer, still
+	 * carrying its status glyphs, theme tokens and links, which {@link Doc.verbatim} (a plain string) cannot: the tool for
+	 * a finding such as `✗ path:line:col  rule  message` that a reader greps or reads line by line, while the prose around
+	 * it still wraps. A line break inside it is still a space. With both `truncate` and `wrap: false`, `truncate` wins:
+	 * the line is cut to the width.
+	 *
+	 * **Example** (Keep a finding on one line)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.line("src/main.ts:12 rule message", { wrap: false }).wrap) // false
+	 * ```
+	 *
+	 * @param content - the line
+	 * @param options - `truncate`, to cut it to the width; `wrap: false`, to keep it whole
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static line(
 		content: InlineInput,
 		options?: { readonly truncate?: boolean; readonly wrap?: boolean },
@@ -1084,21 +1512,31 @@ export class Doc {
 	}
 
 	/**
-  * A unified diff as given, such as a test runner's: sanitized, its `+` and `-` lines painted `success` and
-  * `failure` in `ansi`, and a `diff` fence in markdown.
-  *
-  * **Details**
-  *
-  * With `truncate`, plain and `ansi` cut each line to the width with the glyph set's ellipsis instead of wrapping
-  * it; an agent's or a CI's width is unbounded, so nothing is cut for them unless the context gives a finite width.
-  * Markdown keeps every line whole. Inside a compact list item a blank line of the diff keeps the item's indent.
-  *
-  * A trailing line break ends the last line, as in a unified diff file, and adds no blank line after it: `"a\n"` is
-  * one line. To end on a blank line, end the text with two line breaks.
-  *
-  * @param unified - the diff
-  * @param options - `cap`, the most lines shown; `truncate`, to cut each line to the width
-  */
+	 * A unified diff as given, such as a test runner's: sanitized, its `+` and `-` lines painted `success` and
+	 * `failure` in `ansi`, and a `diff` fence in markdown.
+	 *
+	 * **Details**
+	 *
+	 * With `truncate`, plain and `ansi` cut each line to the width with the glyph set's ellipsis instead of wrapping
+	 * it; an agent's or a CI's width is unbounded, so nothing is cut for them unless the context gives a finite width.
+	 * Markdown keeps every line whole. Inside a compact list item a blank line of the diff keeps the item's indent.
+	 *
+	 * A trailing line break ends the last line, as in a unified diff file, and adds no blank line after it: `"a\n"` is
+	 * one line. To end on a blank line, end the text with two line breaks.
+	 *
+	 * **Example** (Keep a unified diff whole)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.diffText("-old\n+new\n", { truncate: true }).truncate) // true
+	 * ```
+	 *
+	 * @param unified - the diff
+	 * @param options - `cap`, the most lines shown; `truncate`, to cut each line to the width
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static diffText(
 		unified: string,
 		options?: { readonly cap?: number; readonly truncate?: boolean },
@@ -1112,35 +1550,55 @@ export class Doc {
 	}
 
 	/**
-  * Lines kept exactly: each indented by `indent` spaces, sanitized, and never wrapped.
-  *
-  * **Details**
-  *
-  * Plain, `ansi` and `githubLog` write the lines as they are; markdown fences them, so the indentation survives.
-  *
-  * It is the tool for a single line that must never wrap nor be cut, whatever the width: {@link Doc.line} wraps at
-  * the width, or cuts with `truncate`, and `verbatim` does neither.
-  *
-  * @param text - the lines
-  * @param options - `indent`, the spaces in front of every line; none by default
-  */
+	 * Lines kept exactly: each indented by `indent` spaces, sanitized, and never wrapped.
+	 *
+	 * **Details**
+	 *
+	 * Plain, `ansi` and `githubLog` write the lines as they are; markdown fences them, so the indentation survives.
+	 *
+	 * It is the tool for a single line that must never wrap nor be cut, whatever the width: {@link Doc.line} wraps at
+	 * the width, or cuts with `truncate`, and `verbatim` does neither.
+	 *
+	 * **Example** (Indent preformatted output)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.verbatim("fixed output", { indent: 2 }).indent) // 2
+	 * ```
+	 *
+	 * @param text - the lines
+	 * @param options - `indent`, the spaces in front of every line; none by default
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static verbatim(text: string, options?: { readonly indent?: number }): BlockOf<"Verbatim"> {
 		return { _tag: "Verbatim", text, ...O.getSomesStruct({ indent: O.fromUndefinedOr(options?.indent) }) };
 	}
 
 	/**
-  * A GitHub Actions annotation: `Render.githubLog` writes it as one workflow command (`::error file=…::message`),
-  * and every other renderer writes nothing.
-  *
-  * **Details**
-  *
-  * It is the kit's own command, so `githubLog` does not neutralize it; its message and properties are escaped, so
-  * no text in them can end the command or start another. It is a command where a line starts: at the top level, as a
-  * top-level section's child, or as a direct child of a group's body. Nested deeper, it is dropped.
-  *
-  * @param options - the level, and the optional file, position and title
-  * @param message - what it says
-  */
+	 * A GitHub Actions annotation: `Render.githubLog` writes it as one workflow command (`::error file=…::message`),
+	 * and every other renderer writes nothing.
+	 *
+	 * **Details**
+	 *
+	 * It is the kit's own command, so `githubLog` does not neutralize it; its message and properties are escaped, so
+	 * no text in them can end the command or start another. It is a command where a line starts: at the top level, as a
+	 * top-level section's child, or as a direct child of a group's body. Nested deeper, it is dropped.
+	 *
+	 * **Example** (Build a workflow error)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 *
+	 * console.log(Doc.annotation({ level: "error", file: "src/main.ts", line: 12 }, "Invalid input").message) // Invalid input
+	 * ```
+	 *
+	 * @param options - the level, and the optional file, position and title
+	 * @param message - what it says
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static annotation(options: AnnotationOptions, message: string): BlockOf<"Annotation"> {
 		return {
 			_tag: "Annotation",
@@ -1156,14 +1614,26 @@ export class Doc {
 	}
 
 	/**
-  * The total of a `Counts` block: the caller's rule when it has one, otherwise the sum of `n` over every counter.
-  *
-  * **Details**
-  *
-  * The rule sees every counter, including the ones a renderer hides, so hiding never changes the total.
-  *
-  * @param block - the `Counts` block
-  */
+	 * The total of a `Counts` block: the caller's rule when it has one, otherwise the sum of `n` over every counter.
+	 *
+	 * **Details**
+	 *
+	 * The rule sees every counter, including the ones a renderer hides, so hiding never changes the total.
+	 *
+	 * **Example** (Sum counter values)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 * import { Status } from "@beep/scratchpad/effected/cli/Status"
+	 *
+	 * const block = Doc.counts({ counters: [Doc.counter(Status.core, "success", { key: "passed", label: "passed", n: 3 })], layout: "inline" })
+	 * console.log(Doc.total(block)) // 3
+	 * ```
+	 *
+	 * @param block - the `Counts` block
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	static total(block: BlockOf<"Counts">): number {
 		return totalOf(block);
 	}
@@ -1171,36 +1641,60 @@ export class Doc {
 	/**
 	 * The counters a renderer shows: every one except a zero counter that does not ask for `showZero`.
 	 *
+	 * **Example** (Hide a zero counter)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 * import { Status } from "@beep/scratchpad/effected/cli/Status"
+	 *
+	 * const block = Doc.counts({ counters: [Doc.counter(Status.core, "success", { key: "passed", label: "passed", n: 0 })], layout: "inline" })
+	 * console.log(Doc.visibleCounters(block).length) // 0
+	 * ```
+	 *
 	 * @param block - the `Counts` block
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	static visibleCounters(block: BlockOf<"Counts">): ReadonlyArray<Counter> {
 		return visibleCountersOf(block);
 	}
 
 	/**
-  * Render a document for whoever is running the program and write it to a stream.
-  *
-  * **Details**
-  *
-  * The context is {@link Render.context} for the stream, so the width, the colour, the links and the audience
-  * come from the services the program already has, and the text is written with `Console.log` or
-  * `Console.error`: a test captures it by swapping the `Console`. With `format: "auto"` the renderer follows
-  * the audience, and the width is unbounded for an agent, a CI, and a human whose stream is not a terminal.
-  *
-  * An agent is never written an escape of any kind, even with an explicit `format: "ansi"`: its context is
-  * colourless and its links are off. A document that renders to nothing prints nothing.
-  *
-  * The whole document is written as one `Console.log` (or `Console.error`) call, with its line breaks embedded, so a
-  * captured `Console` holds one entry per document, not one per line. Top-level blocks are joined with no blank
-  * line between them; wrap them in `Doc.section(undefined, [...])` to space them.
-  *
-  * `CurrentRuntimeEnv` is read if the environment has one and is not required: a `ci` audience prints
-  * GitHub's log format only when it says GitHub Actions, and plain text otherwise, including when it is
-  * absent. An explicit `format` is honoured whatever the audience.
-  *
-  * @param doc - the document
-  * @param options - the stream and the format
-  */
+	 * Render a document for whoever is running the program and write it to a stream.
+	 *
+	 * **Details**
+	 *
+	 * The context is {@link Render.context} for the stream, so the width, the colour, the links and the audience
+	 * come from the services the program already has, and the text is written with `Console.log` or
+	 * `Console.error`: a test captures it by swapping the `Console`. With `format: "auto"` the renderer follows
+	 * the audience, and the width is unbounded for an agent, a CI, and a human whose stream is not a terminal.
+	 *
+	 * No escape sequence is ever written to an agent, even with an explicit `format: "ansi"`: its context is
+	 * colourless and its links are off. A document that renders to nothing prints nothing.
+	 *
+	 * The whole document is written as one `Console.log` (or `Console.error`) call, with its line breaks embedded, so a
+	 * captured `Console` holds one entry per document, not one per line. Top-level blocks are joined with no blank
+	 * line between them; wrap them in `Doc.section(undefined, [...])` to space them.
+	 *
+	 * `CurrentRuntimeEnv` is read if the environment has one and is not required: a `ci` audience prints
+	 * GitHub's log format only when it says GitHub Actions, and plain text otherwise, including when it is
+	 * absent. An explicit `format` is honoured whatever the audience.
+	 *
+	 * **Example** (Construct a report printing effect)
+	 *
+	 * ```ts
+	 * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
+	 * import * as Effect from "effect/Effect"
+	 *
+	 * const program = Doc.print([Doc.paragraph("Ready")], { format: "plain" })
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param doc - the document
+	 * @param options - the stream and the format
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	static readonly print: (
 		doc: Document,
 		options?: DocPrintOptions,

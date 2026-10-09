@@ -19,12 +19,16 @@ class MissingDocViewThemeError extends S.TaggedError<MissingDocViewThemeError>($
 ) {}
 
 /**
- * Props of {@link DocView}.
+ * Supplies a document or block and an optional render context for {@link DocView}.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface DocViewProps {
-	/** The document, or one block of it, which is drawn as a one-block document. */
+	/**
+	 * The document, or one block of it, which is drawn as a one-block document.
+	 */
 	readonly doc: Cli.Document | Cli.Block;
 	/**
 	 * The render context. Omitted, it is built from the tree's theme (`useTheme`): its colour, its `paint` (token
@@ -39,7 +43,9 @@ export interface DocViewProps {
 const OUTSIDE =
 	"@effected/cli/ui: DocView was drawn with no ctx outside a screen, a live view or a UiProvider, so it has no theme";
 
-/** The context a `DocView` builds from its tree's theme: the theme's own paint, so token overrides hold. */
+/**
+ * The context a `DocView` builds from its tree's theme: the theme's own paint, so token overrides hold.
+ */
 const contextOf = (theme: Cli.StreamTheme, width: number, neutralize: boolean): Cli.RenderContext => ({
 	...(neutralize ? { neutralizeWorkflowCommands: true } : {}),
 	width,
@@ -51,7 +57,9 @@ const contextOf = (theme: Cli.StreamTheme, width: number, neutralize: boolean): 
 	displayPath: (absolute) => absolute,
 });
 
-/** The document's lines as the kit's own renderer lays them out: plain at colour `none`, painted otherwise. */
+/**
+ * The document's lines as the kit's own renderer lays them out: plain at colour `none`, painted otherwise.
+ */
 const linesOf = (doc: Cli.Document | Cli.Block, ctx: Cli.RenderContext): ReadonlyArray<string> => {
 	const isDocument = (value: Cli.Document | Cli.Block): value is Cli.Document => A.isArray(value);
 	const document: Cli.Document = isDocument(doc) ? doc : [doc];
@@ -59,7 +67,9 @@ const linesOf = (doc: Cli.Document | Cli.Block, ctx: Cli.RenderContext): Readonl
 	return text === "" ? [] : text.split("\n");
 };
 
-/** The view, memoised on its props and built on the loaded React, like every kit component. */
+/**
+ * The view, memoised on its props and built on the loaded React, like every kit component.
+ */
 const docView: () => FunctionComponent<DocViewProps> = fromReact((react) => {
 	const View = (props: DocViewProps): ReactElement => {
 		const { ink } = inkModules();
@@ -106,8 +116,20 @@ const docView: () => FunctionComponent<DocViewProps> = fromReact((react) => {
  * are off. The layout is memoised on the document's identity and the context: re-render with the same document, as a
  * live view's tick does, and the renderer does not run again; build a new document only when it changes.
  *
+ * **Example** (Construct a document view)
+ *
+ * ```ts
+ * import { DocView } from "@beep/scratchpad/effected/cli/ui/DocView"
+ * import * as React from "react"
+ *
+ * const view = React.createElement(DocView, { doc: [] })
+ * console.log(React.isValidElement(view)) // true
+ * ```
+ *
  * @param props - the document, and optionally the render context
  * @public
+ * @category components
+ * @since 0.0.0
  */
 export const DocView = (props: DocViewProps): ReactElement =>
 	inkModules().react.createElement(docView(), props);

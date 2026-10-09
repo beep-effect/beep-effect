@@ -7,6 +7,8 @@ const $I = $ScratchpadId.create("effected/cli/ui/internal/renderOptions");
  * Overrides of Ink's render options that only the screen harness sets.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface UiRenderOverrides {
 	/**
@@ -39,7 +41,18 @@ export interface UiRenderOverrides {
  * The render-option overrides in force: none by default. Internal, so `CliUi.run`'s public signature stays as
  * specified; `CliUiTest` sets it.
  *
+ * **Example** (Read the default render overrides)
+ *
+ * ```ts
+ * import { UiRenderOptions } from "@beep/scratchpad/effected/cli/ui/internal/renderOptions"
+ * import * as Effect from "effect/Effect"
+ * const options = Effect.runSync(UiRenderOptions)
+ * console.log(options.debug === undefined) // true
+ * ```
+ *
  * @internal
+ * @category services
+ * @since 0.0.0
  */
 export class UiRenderOptions extends Context.Reference<UiRenderOverrides>($I`UiRenderOptions`, {
 	defaultValue: () => ({}),

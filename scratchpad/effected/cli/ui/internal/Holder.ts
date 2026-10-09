@@ -5,6 +5,8 @@ import { fromReact } from "./ink.ts";
  * Swaps the element a mounted {@link holder} shows; `committed`, when given, is called once React has committed it.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export type HolderSwap = (next: ReactElement, committed?: () => void) => void;
 
@@ -18,6 +20,8 @@ interface Shown {
  * Props of {@link holder}.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface HolderProps {
 	/** The element to show first. */
@@ -41,7 +45,19 @@ export interface HolderProps {
  * ask to be told when its element is committed: the live view waits for that before it draws on or unmounts. Built on
  * the loaded React, like every kit component; the screen harness's `rerender` and the live view's pushes use it.
  *
+ * **Example** (Load the swappable holder component)
+ *
+ * ```ts
+ * import { holder } from "@beep/scratchpad/effected/cli/ui/internal/Holder"
+ * import * as Effect from "effect/Effect"
+ * import { loadInk } from "@beep/scratchpad/effected/cli/ui/internal/ink"
+ * await Effect.runPromise(loadInk)
+ * console.log(holder().displayName) // CliUiHolder
+ * ```
+ *
  * @internal
+ * @category components
+ * @since 0.0.0
  */
 export const holder: () => FunctionComponent<HolderProps> = fromReact((react) => {
 	const Holder = (props: HolderProps): ReactElement => {
@@ -61,6 +77,8 @@ export const holder: () => FunctionComponent<HolderProps> = fromReact((react) =>
  * The owner's side of a {@link holder}: the `bind` to hand it, and the swap it bound.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface HolderSlot {
 	/** Pass as the holder's `bind`. */
@@ -78,7 +96,17 @@ export interface HolderSlot {
 /**
  * A fresh {@link HolderSlot}.
  *
+ * **Example** (Inspect an unbound holder slot)
+ *
+ * ```ts
+ * import { holderSlot } from "@beep/scratchpad/effected/cli/ui/internal/Holder"
+ * const slot = holderSlot()
+ * console.log(slot.isBound()) // false
+ * ```
+ *
  * @internal
+ * @category constructors
+ * @since 0.0.0
  */
 export const holderSlot = (): HolderSlot => {
 	let bound: HolderSwap | undefined;

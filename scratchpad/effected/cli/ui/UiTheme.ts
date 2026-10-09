@@ -23,29 +23,61 @@ class MissingUiThemeError extends S.TaggedError<MissingUiThemeError>($I`MissingU
  * The styling props of an Ink `Text` that a {@link @effected/cli!Style} maps to.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface InkTextProps {
-	/** The foreground: a colour name or a `#rrggbb` hex. */
+	/**
+	 * The foreground: a colour name or a `#rrggbb` hex.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly color?: string;
-	/** Bold. */
+	/**
+	 * Bold.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly bold?: boolean;
-	/** Dim. */
+	/**
+	 * Dim.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly dimColor?: boolean;
-	/** Italic. */
+	/**
+	 * Italic.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly italic?: boolean;
-	/** Underline. */
+	/**
+	 * Underline.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly underline?: boolean;
 }
 
 /**
- * Props of {@link Styled}.
+ * Selects the theme token or explicit style used to paint child text with {@link Styled}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface StyledProps {
-	/** A theme token, or an explicit style. */
+	/**
+	 * A theme token, or an explicit style.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly token: Cli.TokenName | Cli.Style;
-	/** The text. */
+	/**
+	 * The text.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly children?: ReactNode;
 }
 
@@ -53,11 +85,21 @@ export interface StyledProps {
  * The usable size of the terminal.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface TerminalSize {
-	/** The width, less one column, so a full-width line never wraps the cursor. */
+	/**
+	 * The width, less one column, so a full-width line never wraps the cursor.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly columns: number;
-	/** The height, less one row, so a full-height frame never scrolls. */
+	/**
+	 * The height, less one row, so a full-height frame never scrolls.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly rows: number;
 }
 
@@ -71,7 +113,7 @@ const useScreen = (): ScreenContextValue => {
 };
 
 /**
- * The Ink `Text` props for `style` at `color`.
+ * Converts a resolved style into Ink `Text` props for the stream's colour level.
  *
  * **Details**
  *
@@ -81,9 +123,19 @@ const useScreen = (): ScreenContextValue => {
  * Omit `color` in an Ink tree the kit did not mount, which has no colour level of its own to pass: every prop is
  * emitted, as at any level but `"none"`, and Ink's own chalk gates what reaches the terminal.
  *
+ * **Example** (Suppress styling at no colour)
+ *
+ * ```ts
+ * import { inkProps } from "@beep/scratchpad/effected/cli/ui/UiTheme"
+ *
+ * console.log(inkProps({ bold: true }, "none").bold) // undefined
+ * ```
+ *
  * @param style - the resolved style
  * @param color - the stream's colour level; omitted, every prop is emitted for Ink's chalk to gate
  * @public
+ * @category formatting
+ * @since 0.0.0
  */
 export const inkProps: {
 	(color?: ColorLevel): (style: Cli.Style) => InkTextProps;
@@ -109,7 +161,23 @@ export const inkProps: {
  *
  * A React hook: call it from a component rendered inside a `CliUi.run` screen or a `UiProvider`.
  *
+ * **Example** (Construct a component reading the theme)
+ *
+ * ```ts
+ * import { useTheme, Styled } from "@beep/scratchpad/effected/cli/ui/UiTheme"
+ * import { createElement, isValidElement } from "react"
+ *
+ * // Render this component inside the documented hook context.
+ * const ReadScreen = () => {
+ *   const theme = useTheme()
+ *   return createElement(Styled, { token: { bold: true } }, theme.color)
+ * }
+ * console.log(isValidElement(createElement(ReadScreen))) // true
+ * ```
+ *
  * @public
+ * @category hooks
+ * @since 0.0.0
  */
 export const useTheme = (): Cli.StreamTheme => useScreen().theme;
 
@@ -120,7 +188,23 @@ export const useTheme = (): Cli.StreamTheme => useScreen().theme;
  *
  * A React hook: call it from a component rendered inside a `CliUi.run` screen or a `UiProvider`.
  *
+ * **Example** (Construct a component reading glyphs)
+ *
+ * ```ts
+ * import { useGlyphs, Styled } from "@beep/scratchpad/effected/cli/ui/UiTheme"
+ * import { createElement, isValidElement } from "react"
+ *
+ * // Render this component inside the documented hook context.
+ * const ReadScreen = () => {
+ *   const glyphs = useGlyphs()
+ *   return createElement(Styled, { token: { bold: true } }, glyphs.bullet)
+ * }
+ * console.log(isValidElement(createElement(ReadScreen))) // true
+ * ```
+ *
  * @public
+ * @category hooks
+ * @since 0.0.0
  */
 export const useGlyphs = (): Cli.GlyphSet => useScreen().glyphs;
 
@@ -135,8 +219,21 @@ export const useGlyphs = (): Cli.GlyphSet => useScreen().glyphs;
  * unsanitised can paint colour at colour `none` or plant a hyperlink, and a line break in it adds a row the screen's
  * height budget did not count.
  *
+ * **Example** (Construct styled text)
+ *
+ * ```ts
+ * import { Styled } from "@beep/scratchpad/effected/cli/ui/UiTheme"
+ * import { createElement, isValidElement } from "react"
+ *
+ * // Render this element inside a CliUi.run screen or UiProvider.
+ * const text = createElement(Styled, { token: { bold: true } }, "Ready")
+ * console.log(isValidElement(text)) // true
+ * ```
+ *
  * @param props - the token or style, and the text
  * @public
+ * @category components
+ * @since 0.0.0
  */
 export const Styled = (props: StyledProps): ReactElement => {
 	const theme = useTheme();
@@ -172,7 +269,23 @@ const known = (reported: number | undefined, fallback: number): number =>
  * A React hook: call it from a component rendered inside an Ink tree; it needs no screen, but reads a `UiProvider`'s
  * size when there is one.
  *
+ * **Example** (Construct a component reading terminal dimensions)
+ *
+ * ```ts
+ * import { useTerminalSize, Styled } from "@beep/scratchpad/effected/cli/ui/UiTheme"
+ * import { createElement, isValidElement } from "react"
+ *
+ * // Render this component inside the documented hook context.
+ * const ReadScreen = () => {
+ *   const size = useTerminalSize()
+ *   return createElement(Styled, { token: { bold: true } }, `${size.columns} columns`)
+ * }
+ * console.log(isValidElement(createElement(ReadScreen))) // true
+ * ```
+ *
  * @public
+ * @category hooks
+ * @since 0.0.0
  */
 export const useTerminalSize = (): TerminalSize => {
 	const { ink, react } = inkModules();

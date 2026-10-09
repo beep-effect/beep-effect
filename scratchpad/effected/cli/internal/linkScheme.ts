@@ -15,7 +15,18 @@ const ALLOWED = HashSet.make("http", "https", "mailto", "file", "vscode", "vscod
  * because a browser ignores them inside a scheme (`java<tab>script:`). One list serves every renderer that writes a
  * link, so `javascript:`, `data:` and the like are refused the same way in markdown and in a terminal's OSC 8.
  *
+ * **Example** (Accept HTTPS and refuse executable schemes)
+ *
+ * ```ts
+ * import { isAllowedLinkUrl } from "@beep/scratchpad/effected/cli/internal/linkScheme"
+ *
+ * console.log(isAllowedLinkUrl("https://example.com")) // true
+ * console.log(isAllowedLinkUrl("javascript:alert(1)")) // false
+ * ```
+ *
  * @internal
+ * @category predicates
+ * @since 0.0.0
  */
 export const isAllowedLinkUrl = (url: string): boolean => {
 	const scheme = /^([a-z][a-z0-9+.-]*):/.exec(sanitize(url).replace(/\s/g, "").toLowerCase());

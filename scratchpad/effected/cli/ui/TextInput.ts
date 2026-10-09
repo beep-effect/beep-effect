@@ -15,6 +15,8 @@ import * as Match from "effect/Match";
  * Where a {@link TextInput} is: its value, the cursor within it, and whether enter was pressed.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface TextInputState {
 	/** The text. */
@@ -33,6 +35,8 @@ export interface TextInputState {
  * Options for {@link TextInput.init}.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface TextInputInitOptions {
 	/** The starting text; the cursor starts after it. */
@@ -43,6 +47,8 @@ export interface TextInputInitOptions {
  * Options for {@link TextInput.screen}.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface TextInputScreenOptions {
 	/** The question, shown above the input. */
@@ -82,6 +88,8 @@ export interface TextInputScreenOptions {
  * Props of {@link TextInput.View}.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface TextInputViewProps extends TextInputScreenOptions {
 	/** Receives the value when enter is pressed and it validates. */
@@ -254,7 +262,8 @@ const HELP: KeyTable<"submit"> = KeyTable.make<"submit">([{ keys: ["enter"], act
  * **Example** (Ask for a required package name)
  *
  * ```ts
- * import { CliUi, TextInput } from "../ui.ts"
+ * import { CliUi } from "@beep/scratchpad/effected/cli/ui/CliUi"
+ * import { TextInput } from "@beep/scratchpad/effected/cli/ui/TextInput"
  * import * as Effect from "effect/Effect";
  *
  * const askName = Effect.gen(function* () {
@@ -267,9 +276,12 @@ const HELP: KeyTable<"submit"> = KeyTable.make<"submit">([{ keys: ["enter"], act
  * 	)
  * 	return name
  * })
+ * console.log(Effect.isEffect(askName)) // true
  * ```
  *
  * @public
+ * @category components
+ * @since 0.0.0
  */
 export class TextInput {
 	private constructor() {}
@@ -277,35 +289,71 @@ export class TextInput {
 	/**
 	 * An input holding `initial`, the cursor after it.
 	 *
+	 * **Example** (Place the cursor after initial text)
+	 *
+	 * ```ts
+	 * import { TextInput } from "@beep/scratchpad/effected/cli/ui/TextInput";
+	 *
+	 * const state = TextInput.init({ initial: "hello" });
+	 * console.log(state.cursor) // 5
+	 * ```
+	 *
 	 * @param options - the starting text
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly init: (options?: TextInputInitOptions) => TextInputState = init;
 
 	/**
-	 * Apply a key: a typed character (any, `q` included) or space is inserted at the cursor; backspace and delete
+	 * Apply a key: a typed character (every character, `q` included) or space is inserted at the cursor; backspace and delete
 	 * remove the grapheme before or after it; left and right move it a grapheme, home and end to either end, clamped
 	 * to the text; enter marks it submitted. Every other key changes nothing.
 	 *
+	 * **Example** (Delete a whole emoji grapheme)
+	 *
+	 * ```ts
+	 * import { TextInput } from "@beep/scratchpad/effected/cli/ui/TextInput";
+	 * import { UiKey } from "@beep/scratchpad/effected/cli/ui/UiKey";
+	 *
+	 * const state = TextInput.init({ initial: "Hi😀" });
+	 * const edited = TextInput.step(state, UiKey.named("backspace"));
+	 * console.log(edited.value) // Hi
+	 * ```
+	 *
 	 * @param state - where the input is
 	 * @param key - the key pressed
+	 * @category combinators
+	 * @since 0.0.0
 	 */
 	static readonly step: (state: TextInputState, key: UiKey) => TextInputState = step;
 
 	/**
-  * Draw the input: the message, the value with the cursor shown as `▏` (`|` under ASCII glyphs, so it stays visible
-  * without colour), or one mask per grapheme in its place with `mask`, the placeholder while empty, a validation
-  * message in the error token, and the key help. Enter
-  * submits when `validate` passes; otherwise its message is shown until the next key other than enter, or a paste.
-  *
-  * **Details**
-  *
-  * Text read in one go (a fast typist) is typed as it reads: printable runs are inserted whole, a return submits
-  * what came before it (anything after it is dropped), a backspace byte deletes, a line feed becomes a space, and a
-  * tab or other control character is dropped. A bracketed paste is inserted as text, its line breaks as spaces, and
-  * never submits.
-  *
-  * @param props - the message, the starting text, the placeholder, the validator and where the value goes
-  */
+	 * Draw the input: the message, the value with the cursor shown as `▏` (`|` under ASCII glyphs, so it stays visible
+	 * without colour), or one mask per grapheme in its place with `mask`, the placeholder while empty, a validation
+	 * message in the error token, and the key help. Enter
+	 * submits when `validate` passes; otherwise its message is shown until the next key other than enter, or a paste.
+	 *
+	 * **Details**
+	 *
+	 * Text read in one go (a fast typist) is typed as it reads: printable runs are inserted whole, a return submits
+	 * what came before it (anything after it is dropped), a backspace byte deletes, a line feed becomes a space, and a
+	 * tab or other control character is dropped. A bracketed paste is inserted as text, its line breaks as spaces, and
+	 * never submits.
+	 *
+	 * **Example** (Compose a masked token input)
+	 *
+	 * ```ts
+	 * import { TextInput } from "@beep/scratchpad/effected/cli/ui/TextInput";
+	 * import { createElement } from "react";
+	 *
+	 * const element = createElement(TextInput.View, { message: "Token?", mask: true, onSubmit: (value) => console.log(value.length) });
+	 * console.log(element.props.mask) // true
+	 * ```
+	 *
+	 * @param props - the message, the starting text, the placeholder, the validator and where the value goes
+	 * @category components
+	 * @since 0.0.0
+	 */
 	static readonly View = (props: TextInputViewProps): ReactElement => {
 		const { ink, react } = inkModules();
 		const glyphs = useGlyphs();
@@ -405,15 +453,25 @@ export class TextInput {
 	/**
 	 * A ready-made screen for `CliUi.run`: the input, resolving with the submitted text.
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * With `mask`, a secret is drawn as one mask per grapheme and never as itself, while the screen still resolves with
-	 * the real text:
+	 * the real text.
+	 *
+	 * **Example** (Construct a masked token prompt)
 	 *
 	 * ```ts
+	 * import { CliUi } from "@beep/scratchpad/effected/cli/ui/CliUi";
+	 * import { TextInput } from "@beep/scratchpad/effected/cli/ui/TextInput";
+	 * import * as Effect from "effect/Effect";
+	 *
 	 * const token = CliUi.run(TextInput.screen({ message: "Token reference?", mask: true }), { clear: true })
+	 * console.log(Effect.isEffect(token)) // true
 	 * ```
 	 *
 	 * @param options - the message, the starting text, the placeholder, the validator and the mask
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly screen =
 		(options: TextInputScreenOptions): Screen<string> =>

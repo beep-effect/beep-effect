@@ -26,6 +26,8 @@ class NoEnabledChoiceError extends S.TaggedError<NoEnabledChoiceError>($I`NoEnab
  * One choice of a {@link Select}.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface SelectChoice<A> {
 	/** What the row shows. */
@@ -42,6 +44,8 @@ export interface SelectChoice<A> {
  * Where a {@link Select} is: its choices, the viewport over them, and whether one was submitted.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface SelectState<A> {
 	/** The choices. */
@@ -56,6 +60,8 @@ export interface SelectState<A> {
  * What a key does in a {@link Select}: a viewport move, submit, or cancel.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type SelectAction = ViewportMove | "submit" | "cancel";
 
@@ -63,6 +69,8 @@ export type SelectAction = ViewportMove | "submit" | "cancel";
  * Options for {@link Select.init}.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface SelectInitOptions {
 	/**
@@ -78,6 +86,8 @@ export interface SelectInitOptions {
  * Props of {@link Select.View}.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface SelectViewProps<A> {
 	/** The question, shown above the list. */
@@ -96,6 +106,8 @@ export interface SelectViewProps<A> {
  * Options for {@link Select.screen}.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface SelectScreenOptions<A> {
 	/** The question, shown above the list. */
@@ -195,7 +207,8 @@ const RESERVED = 3;
  * **Example** (Choose a deployment environment)
  *
  * ```ts
- * import { CliUi, Select } from "../ui.ts"
+ * import { CliUi } from "@beep/scratchpad/effected/cli/ui/CliUi"
+ * import { Select } from "@beep/scratchpad/effected/cli/ui/Select"
  * import * as Effect from "effect/Effect";
  *
  * const pickTarget = Effect.gen(function* () {
@@ -210,9 +223,12 @@ const RESERVED = 3;
  * 	)
  * 	return target
  * })
+ * console.log(Effect.isEffect(pickTarget)) // true
  * ```
  *
  * @public
+ * @category components
+ * @since 0.0.0
  */
 export class Select {
 	private constructor() {}
@@ -221,8 +237,19 @@ export class Select {
 	 * A select over `choices`, on the first enabled choice at or after `initial` (the nearest enabled one before it
 	 * when none follows).
 	 *
+	 * **Example** (Skip a disabled starting choice)
+	 *
+	 * ```ts
+	 * import { Select } from "@beep/scratchpad/effected/cli/ui/Select";
+	 *
+	 * const state = Select.init([{ label: "Unavailable", value: "old", disabled: true }, { label: "Staging", value: "staging" }]);
+	 * console.log(state.viewport.cursor) // 1
+	 * ```
+	 *
 	 * @param choices - the choices
 	 * @param options - the starting choice and the list height
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly init: <A>(
 		choices: ReadonlyArray<SelectChoice<A>>,
@@ -234,40 +261,87 @@ export class Select {
 	 * end; `"submit"` marks the highlighted choice chosen (a disabled one never is); `"cancel"` changes nothing here,
 	 * because ending the screen is the view's job.
 	 *
+	 * **Example** (Submit the highlighted choice)
+	 *
+	 * ```ts
+	 * import { Select } from "@beep/scratchpad/effected/cli/ui/Select";
+	 *
+	 * const state = Select.init([{ label: "Staging", value: "staging" }]);
+	 * console.log(Select.step(state, "submit").submitted) // true
+	 * ```
+	 *
 	 * @param state - where the select is
 	 * @param action - the action
+	 * @category combinators
+	 * @since 0.0.0
 	 */
 	static readonly step: <A>(state: SelectState<A>, action: SelectAction) => SelectState<A> = step;
 
 	/**
 	 * The submitted value, or `None` before a submit.
 	 *
+	 * **Example** (Read a submitted deployment target)
+	 *
+	 * ```ts
+	 * import { Select } from "@beep/scratchpad/effected/cli/ui/Select";
+	 * import * as O from "effect/Option";
+	 *
+	 * const state = Select.step(Select.init([{ label: "Staging", value: "staging" }]), "submit");
+	 * console.log(O.getOrElse(Select.chosen(state), () => "missing")) // staging
+	 * ```
+	 *
 	 * @param state - where the select is
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	static readonly chosen = <A>(state: SelectState<A>): O.Option<A> => {
 		const choice = state.choices[state.viewport.cursor];
 		return state.submitted && choice !== undefined ? O.some(choice.value) : O.none();
 	};
 
-	/** The keys: the viewport's moves, enter choose, q cancel. */
+	/**
+	 *  The keys: the viewport's moves, enter choose, q cancel.
+	 *
+	 * **Example** (Inspect the upward movement binding)
+	 *
+	 * ```ts
+	 * import { Select } from "@beep/scratchpad/effected/cli/ui/Select";
+	 *
+	 * console.log(Select.keys.bindings[0]?.action) // up
+	 * ```
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	static readonly keys: KeyTable<SelectAction> = KEYS;
 
 	/**
-  * Draw the select: the message, the list (the highlighted row in the accent token with the arrow glyph, disabled
-  * rows muted, and at colour `none` ending in ` (disabled)` instead, every row cut to the width with the glyph set's
-  * ellipsis), the highlighted choice's detail, and the
-  * key help.
-  *
-  * **Details**
-  *
-  * A choice's `detail` is drawn only while that choice is highlighted, as one muted line under the list, so the others'
-  * details are not on screen until the cursor reaches them. Enter calls `onSubmit` with the value; `q` cancels the screen with `"escape"`.
-  *
-  * Single-shot: the choices and the starting choice are read once, when the view mounts, and later changes to them
-  * are ignored; after a submit it stays as it is. Render a new view (a new screen) to ask again.
-  *
-  * @param props - the message, the choices, and where the chosen value goes
-  */
+	 * Draw the select: the message, the list (the highlighted row in the accent token with the arrow glyph, disabled
+	 * rows muted, and at colour `none` ending in ` (disabled)` instead, every row cut to the width with the glyph set's
+	 * ellipsis), the highlighted choice's detail, and the
+	 * key help.
+	 *
+	 * **Details**
+	 *
+	 * A choice's `detail` is drawn only while that choice is highlighted, as one muted line under the list, so the others'
+	 * details are not on screen until the cursor reaches them. Enter calls `onSubmit` with the value; `q` cancels the screen with `"escape"`.
+	 *
+	 * Single-shot: the choices and the starting choice are read once, when the view mounts, and later changes to them
+	 * are ignored; after a submit it stays as it is. Render a new view (a new screen) to ask again.
+	 *
+	 * **Example** (Compose a deployment choice view)
+	 *
+	 * ```ts
+	 * import { Select } from "@beep/scratchpad/effected/cli/ui/Select";
+	 * import { createElement } from "react";
+	 *
+	 * const element = createElement(Select.View<string>, { message: "Deploy where?", choices: [{ label: "Staging", value: "staging" }], onSubmit: (value) => console.log(value) });
+	 * console.log(element.type === Select.View) // true
+	 * ```
+	 *
+	 * @param props - the message, the choices, and where the chosen value goes
+	 * @category components
+	 * @since 0.0.0
+	 */
 	static readonly View = <A>(props: SelectViewProps<A>): ReactElement => {
 		const { ink, react } = inkModules();
 		const glyphs = useGlyphs();
@@ -333,7 +407,18 @@ export class Select {
 	/**
 	 * A ready-made screen for `CliUi.run`: the select, resolving with the chosen value.
 	 *
+	 * **Example** (Construct a deployment choice screen)
+	 *
+	 * ```ts
+	 * import { Select } from "@beep/scratchpad/effected/cli/ui/Select";
+	 *
+	 * const screen = Select.screen({ message: "Deploy where?", choices: [{ label: "Staging", value: "staging" }] });
+	 * console.log(typeof screen) // function
+	 * ```
+	 *
 	 * @param options - the message, the choices, the starting choice and the list height
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly screen =
 		<A>(options: SelectScreenOptions<A>): Screen<A> =>

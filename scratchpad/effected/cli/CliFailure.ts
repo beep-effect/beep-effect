@@ -26,7 +26,20 @@ import * as O from "@beep/utils/Option";
  * table of what went wrong) and the default report uses it with no registration. A `Symbol.for` key, so two copies
  * of this package agree on it.
  *
+ * **Example** (Let an error supply its own document)
+ *
+ * ```ts
+ * import { CliDoc, CliFailure } from "@beep/scratchpad/effected/cli/CliFailure";
+ * import { Doc } from "@beep/scratchpad/effected/cli/Doc";
+ * import * as Cause from "effect/Cause";
+ *
+ * const failure = { [CliDoc]: () => [Doc.paragraph("custom failure")] };
+ * console.log(CliFailure.toDoc(Cause.fail(failure)).length); // 1
+ * ```
+ *
  * @public
+ * @category symbols
+ * @since 0.0.0
  */
 export const CliDoc: unique symbol = Symbol.for("@effected/cli/CliDoc");
 
@@ -34,6 +47,8 @@ export const CliDoc: unique symbol = Symbol.for("@effected/cli/CliDoc");
  * An error that draws itself: see {@link CliDoc}.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface CliDocSource {
 	readonly [CliDoc]: () => Document;
@@ -43,6 +58,8 @@ export interface CliDocSource {
  * Options for {@link CliFailure.toDoc}.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface CliFailureOptions {
 	/**
@@ -407,17 +424,41 @@ const spanBlocks = (
  * All text goes through the document, so a control character in a message or a stack frame never reaches the terminal.
  * Render it with `Render.context` and `Render.plain`, `ansi`, `markdown` or `githubLog`, or `Doc.print` it.
  *
+ * **Example** (Build a typed failure document)
+ *
+ * ```ts
+ * import { CliFailure } from "@beep/scratchpad/effected/cli/CliFailure";
+ * import * as Cause from "effect/Cause";
+ *
+ * const document = CliFailure.toDoc(Cause.fail("could not save"));
+ * console.log(document.length); // 1
+ * ```
+ *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class CliFailure {
 	private constructor() {}
 
 	/**
-	 * Build the document of a cause.
-	 *
-	 * @param cause - the failure
-	 * @param options - per-tag documents and a path display function
-	 */
+ * Build the document of a cause.
+ *
+ * **Example** (Render a typed failure as document blocks)
+ *
+ * ```ts
+ * import { CliFailure } from "@beep/scratchpad/effected/cli/CliFailure";
+ * import * as Cause from "effect/Cause";
+ *
+ * const document = CliFailure.toDoc(Cause.fail("could not save"));
+ * console.log(document.length); // 1
+ * ```
+ *
+ * @param cause - the failure
+ * @param options - per-tag documents and a path display function
+ * @category formatting
+ * @since 0.0.0
+ */
 	static readonly toDoc = (cause: CauseType.Cause<unknown>, options?: CliFailureOptions): Document => {
 		const reasons = cause.reasons;
 		if (reasons.length > 0 && reasons.every(Cause.isInterruptReason)) return [Doc.paragraph("interrupted")];

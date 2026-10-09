@@ -11,7 +11,18 @@ import * as O from "effect/Option";
  *
  * `CurrentRuntimeEnv` is read if the environment has it and is not required: without it, the answer is no.
  *
+ * **Example** (Detect a run without environment services)
+ *
+ * ```ts
+ * import { underGithubActions } from "@beep/scratchpad/effected/cli/internal/autoFormat"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.runSync(underGithubActions)) // false
+ * ```
+ *
  * @internal
+ * @category predicates
+ * @since 0.0.0
  */
 export const underGithubActions: Effect.Effect<boolean> = Effect.gen(function* () {
 	const runtime = yield* Effect.serviceOption(CurrentRuntimeEnv);
@@ -29,7 +40,18 @@ export const underGithubActions: Effect.Effect<boolean> = Effect.gen(function* (
  * A CI gets GitHub's log format only where `CurrentRuntimeEnv` says it is GitHub Actions; that service is read if the
  * environment has it and is not required. Shared by `Doc.print` and the failure report.
  *
+ * **Example** (Choose plain output for an agent)
+ *
+ * ```ts
+ * import { autoFormat } from "@beep/scratchpad/effected/cli/internal/autoFormat"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.runSync(autoFormat("agent"))) // plain
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const autoFormat = Effect.fn("autoFormat")(function* (
 	audience: AudienceKind,

@@ -32,7 +32,19 @@ const CLOSE_TIMEOUT = "2 seconds";
  * var) and the error's message are sanitised, and the line is neutralized when `underActions` says the drain's fiber
  * runs under GitHub Actions, the same decision the diagnostics sink makes.
  *
+ * **Example** (Construct a scoped diagnostics file sink)
+ *
+ * ```ts
+ * import { makeFileSink } from "@beep/scratchpad/effected/cli/internal/fileSink"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = makeFileSink("logs/diagnostics.ndjson", "Info", () => false)
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @internal
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeFileSink = Effect.fn("makeFileSink")(function* (
 	path: string,

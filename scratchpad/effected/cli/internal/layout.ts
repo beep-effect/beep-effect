@@ -17,6 +17,8 @@ import * as O from "@beep/utils/Option";
  * the same `link` object, which is how painting wraps them in a single hyperlink.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface Span {
 	/** The plain text. */
@@ -92,7 +94,19 @@ const spansOf = (inline: Inline, ctx: RenderContext): ReadonlyArray<Span> =>
  * `Code` its text with `code` set. Escape sequences in content and in link targets are removed and empty spans
  * dropped.
  *
+ * **Example** (Remove escapes while flattening text)
+ *
+ * ```ts
+ * import { flatten } from "@beep/scratchpad/effected/cli/internal/layout"
+ * import { Render } from "@beep/scratchpad/effected/cli/Render"
+ *
+ * const spans = flatten([{ _tag: "Text", value: "\u001b[31mready\u001b[39m" }], Render.contextOf({ audience: "agent" }))
+ * console.log(JSON.stringify(spans)) // [{"text":"ready"}]
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const flatten: {
 	(ctx: RenderContext): (inlines: ReadonlyArray<Inline>) => ReadonlyArray<Span>;
@@ -109,7 +123,17 @@ export const flatten: {
  * a joiner and the next emoji) counts as two characters, as it is laid out. Content does not split a cluster unless
  * the caller does.
  *
+ * **Example** (Measure adjacent plain spans)
+ *
+ * ```ts
+ * import { widthOf } from "@beep/scratchpad/effected/cli/internal/layout"
+ *
+ * console.log(widthOf([{ text: "界" }, { text: "ok" }])) // 4
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const widthOf = (spans: ReadonlyArray<Span>): number =>
 	spans.reduce((sum, span) => sum + displayWidth(span.text), 0);
@@ -151,7 +175,17 @@ const spansFromCells = (cells: ReadonlyArray<Cell>): ReadonlyArray<Span> => {
  * stands for the whole label. Spans that already fit are returned as they are. An ellipsis that cannot fit is
  * omitted, and a `width` of 0 or less gives no spans.
  *
+ * **Example** (Reserve columns for the truncation marker)
+ *
+ * ```ts
+ * import { truncateSpans } from "@beep/scratchpad/effected/cli/internal/layout"
+ *
+ * console.log(JSON.stringify(truncateSpans([{ text: "hello" }], 4, "…"))) // [{"text":"hel…"}]
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const truncateSpans: {
 	(width: number, ellipsis: string): (spans: ReadonlyArray<Span>) => ReadonlyArray<Span>;
@@ -201,7 +235,18 @@ export const truncateSpans: {
  * Each span is painted with its token, and consecutive spans that share a link (by identity) are wrapped in one
  * hyperlink. Truncate and wrap first: painting is last, so an escape sequence is never cut.
  *
+ * **Example** (Render spans without terminal colour)
+ *
+ * ```ts
+ * import { paintSpans } from "@beep/scratchpad/effected/cli/internal/layout"
+ * import { Render } from "@beep/scratchpad/effected/cli/Render"
+ *
+ * console.log(paintSpans([{ text: "ready" }], Render.contextOf({ audience: "agent" }))) // ready
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const paintSpans: {
 	(ctx: RenderContext): (spans: ReadonlyArray<Span>) => string;
@@ -239,6 +284,8 @@ const cellsWidth = (cells: ReadonlyArray<Cell>): number => cells.reduce((sum, ce
  * Options for {@link wrapSpans}.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface WrapOptions {
 	/** Break a word longer than the width at the edge; `true` by default. When `false` it stays whole on its own line. */
@@ -258,7 +305,18 @@ export interface WrapOptions {
  * of its own and runs past the width, which is right for a URL or a path. A `width` under 1 is treated as 1. Each character keeps its span's
  * token and link.
  *
+ * **Example** (Wrap at the space between words)
+ *
+ * ```ts
+ * import { wrapSpans } from "@beep/scratchpad/effected/cli/internal/layout"
+ *
+ * const lines = wrapSpans([{ text: "hello world" }], 5)
+ * console.log(JSON.stringify(lines)) // [[{"text":"hello"}],[{"text":"world"}]]
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const wrapSpans: {
 	(width: number, options?: WrapOptions): (spans: ReadonlyArray<Span>) => ReadonlyArray<ReadonlyArray<Span>>;

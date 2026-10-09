@@ -2,6 +2,8 @@
  * The symbols a theme draws with.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface GlyphSet {
 	/** Which set this is. */
@@ -34,6 +36,8 @@ export interface GlyphSet {
  * Options for {@link Glyphs.select}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface GlyphSelectOptions {
 	/**
@@ -55,12 +59,35 @@ export interface GlyphSelectOptions {
  *
  * The sets are shared, so they and their nested values have readonly types.
  *
+ * **Example** (Select the terminal fallback)
+ *
+ * ```ts
+ * import { Glyphs } from "@beep/scratchpad/effected/cli/Glyphs"
+ *
+ * console.log(Glyphs.select({ term: "dumb" }).kind) // ascii
+ * ```
+ *
  * @public
+ * @category constants
+ * @since 0.0.0
  */
 export class Glyphs {
 	private constructor() {}
 
-	/** Unicode symbols. */
+	/**
+	 * Unicode symbols.
+	 *
+	 * **Example** (Inspect the Unicode arrow)
+	 *
+	 * ```ts
+	 * import { Glyphs } from "@beep/scratchpad/effected/cli/Glyphs"
+	 *
+	 * console.log(Glyphs.unicode.arrow) // →
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	static readonly unicode: GlyphSet = {
 		kind: "unicode",
 		ellipsis: "…",
@@ -73,22 +100,45 @@ export class Glyphs {
 	};
 
 	/**
-  * Pick a glyph set without a service: the one `CliTheme` uses, as a pure function.
-  *
-  * **Details**
-  *
-  * `CliTheme.layer` reads `TERM` through `Config` and calls this, so the two agree. `StreamEnv` carries no
-  * `TERM`, and nothing else in it decides ASCII, so the caller passes `term` when it wants `auto` to mean
-  * something.
-  *
-  * @param options - whether to force ASCII or Unicode, and the `TERM` value `auto` reads
-  */
+	 * Pick a glyph set without a service: the one `CliTheme` uses, as a pure function.
+	 *
+	 * **Details**
+	 *
+	 * `CliTheme.layer` reads `TERM` through `Config` and calls this, so the two agree. `StreamEnv` carries no
+	 * `TERM`, and nothing else in it decides ASCII, so the caller passes `term` when it wants `auto` to mean
+	 * something.
+	 *
+	 * **Example** (Force Unicode on a dumb terminal)
+	 *
+	 * ```ts
+	 * import { Glyphs } from "@beep/scratchpad/effected/cli/Glyphs"
+	 *
+	 * console.log(Glyphs.select({ ascii: false, term: "dumb" }).kind) // unicode
+	 * ```
+	 *
+	 * @param options - whether to force ASCII or Unicode, and the `TERM` value `auto` reads
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly select = (options?: GlyphSelectOptions): GlyphSet => {
 		const ascii = options?.ascii ?? "auto";
 		return ascii === true || (ascii === "auto" && options?.term === "dumb") ? Glyphs.ascii : Glyphs.unicode;
 	};
 
-	/** ASCII-only symbols. */
+	/**
+	 * ASCII-only symbols.
+	 *
+	 * **Example** (Inspect the ASCII arrow)
+	 *
+	 * ```ts
+	 * import { Glyphs } from "@beep/scratchpad/effected/cli/Glyphs"
+	 *
+	 * console.log(Glyphs.ascii.arrow) // ->
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	static readonly ascii: GlyphSet = {
 		kind: "ascii",
 		ellipsis: "...",

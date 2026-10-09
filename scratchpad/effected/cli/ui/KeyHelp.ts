@@ -5,18 +5,26 @@ import { lineText } from "./internal/lineText.ts";
 import { KeyTable } from "./KeyTable.ts";
 import { Styled, useGlyphs, useTerminalSize } from "./UiTheme.ts";
 
-/** The fewest cells worth giving the widget's own keys when the line is cut; below it they are left out. */
+/**
+ * The fewest cells worth giving the widget's own keys when the line is cut; below it they are left out.
+ */
 const MIN_OWN = 4;
 
 /**
- * Props of {@link KeyHelp}.
+ * Chooses the key tables and root hint shown by the {@link KeyHelp} footer.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface KeyHelpProps {
-	/** The tables to describe, in order. */
+	/**
+	 * The tables to describe, in order.
+	 */
 	readonly tables: ReadonlyArray<KeyTable<unknown>>;
-	/** Whether to end with the root keys (`esc cancel`); `true` by default. */
+	/**
+	 * Whether to end with the root keys (`esc cancel`); `true` by default.
+	 */
 	readonly root?: boolean;
 }
 
@@ -31,8 +39,21 @@ export interface KeyHelpProps {
  * set's ellipsis; when it must be cut, the widget's own keys give way and the root hint (`esc cancel`) stays whole at
  * the end. Painted with the `muted` token; labels follow the screen's glyph set.
  *
+ * **Example** (Construct a key help footer)
+ *
+ * ```ts
+ * import { KeyHelp } from "@beep/scratchpad/effected/cli/ui/KeyHelp"
+ * import { KeyTable } from "@beep/scratchpad/effected/cli/ui/KeyTable"
+ * import * as React from "react"
+ *
+ * const footer = React.createElement(KeyHelp, { tables: [KeyTable.root] })
+ * console.log(React.isValidElement(footer)) // true
+ * ```
+ *
  * @param props - the tables, and whether to append the root keys
  * @public
+ * @category components
+ * @since 0.0.0
  */
 export const KeyHelp = (props: KeyHelpProps): ReactElement => {
 	const glyphs = useGlyphs();

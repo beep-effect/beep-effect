@@ -29,6 +29,8 @@ const $I = $ScratchpadId.create("effected/cli/internal/failureTarget");
  * Where a failure report is written to: the context the renderer lays out for, and which renderer.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface FailureTarget {
 	readonly ctx: RenderContext;
@@ -47,6 +49,8 @@ export interface FailureTarget {
  * The run's report settings `CliRuntime.main` takes from `env`, recorded with the target.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface FailureSettings {
 	readonly displayPath?: ((absolute: string) => string) | undefined;
@@ -65,14 +69,39 @@ export interface FailureSettings {
  * built, and an audience flag rewrites it once the flag is read. A `Reference` defaulting to `undefined`, so a
  * program run without `main` finds no cell and falls back, and no state is shared between runs.
  *
+ * **Example** (Read a missing failure target cell)
+ *
+ * ```ts
+ * import { FailureTargetCell } from "@beep/scratchpad/effected/cli/internal/failureTarget"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.runSync(FailureTargetCell)) // undefined
+ * ```
+ *
  * @internal
+ * @category configuration
+ * @since 0.0.0
  */
 export const FailureTargetCell = Context.Reference<MutableRef.MutableRef<FailureTarget | undefined> | undefined>(
 	$I`FailureTargetCell`,
 	{ defaultValue: () => undefined },
 );
 
-/** What a report is rendered with when nothing is known about the terminal: plain text, no limit, no escapes. */
+/**
+ * What a report is rendered with when nothing is known about the terminal: plain text, no limit, no escapes.
+ *
+ * **Example** (Inspect the plain fallback policy)
+ *
+ * ```ts
+ * import { fallbackTarget } from "@beep/scratchpad/effected/cli/internal/failureTarget"
+ *
+ * console.log(fallbackTarget.format) // plain
+ * console.log(fallbackTarget.ctx.neutralizeWorkflowCommands) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const fallbackTarget: FailureTarget = {
 	ctx: {
 		width: Number.POSITIVE_INFINITY,
@@ -129,7 +158,18 @@ const build = Effect.fn("build")(function* (
 /**
  * Record the target for the services in context in the cell, if there is one. A no-op without a cell or services.
  *
+ * **Example** (Refresh without a reporting cell)
+ *
+ * ```ts
+ * import { refreshFailureTarget } from "@beep/scratchpad/effected/cli/internal/failureTarget"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.runSync(refreshFailureTarget())) // undefined
+ * ```
+ *
  * @internal
+ * @category utilities
+ * @since 0.0.0
  */
 export const refreshFailureTarget: {
 	(audience?: AudienceShape, settings?: FailureSettings): Effect.Effect<void>;
@@ -157,7 +197,18 @@ export const refreshFailureTarget: {
 /**
  * The target a report is rendered with: the cell, else the services in context, else the plain fallback.
  *
+ * **Example** (Read the fallback without services)
+ *
+ * ```ts
+ * import { currentTarget } from "@beep/scratchpad/effected/cli/internal/failureTarget"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.runSync(currentTarget).format) // plain
+ * ```
+ *
  * @internal
+ * @category getters
+ * @since 0.0.0
  */
 export const currentTarget: Effect.Effect<FailureTarget> = Effect.gen(function* () {
 	const cell = yield* FailureTargetCell;
@@ -187,7 +238,19 @@ const withoutStatus = (doc: Document): Document =>
 /**
  * The lines of a failure report for a target, with or without the leading status.
  *
+ * **Example** (Render an empty cause)
+ *
+ * ```ts
+ * import { linesOf } from "@beep/scratchpad/effected/cli/internal/failureTarget"
+ * import * as Cause from "effect/Cause"
+ * import { fallbackTarget } from "@beep/scratchpad/effected/cli/internal/failureTarget"
+ *
+ * console.log(JSON.stringify(linesOf(Cause.empty, fallbackTarget))) // []
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const linesOf: {
 	(
@@ -233,7 +296,18 @@ export const linesOf: {
  * detects as `ci`, and the kit's own output for it has none). For a person they are kept: the kit cannot tell the consumer's own colour from an injected sequence, so the consumer's `render` is
  * responsible for sanitising what it interpolates. An audience that was only assumed is not an agent.
  *
+ * **Example** (Split consumer output into safe lines)
+ *
+ * ```ts
+ * import { guardConsumerLines } from "@beep/scratchpad/effected/cli/internal/failureTarget"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(JSON.stringify(Effect.runSync(guardConsumerLines(["first\nsecond"])))) // ["first","second"]
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const guardConsumerLines = (lines: ReadonlyArray<string>): Effect.Effect<ReadonlyArray<string>> =>
 	Effect.map(currentTarget, (target) => {
@@ -249,7 +323,18 @@ export const guardConsumerLines = (lines: ReadonlyArray<string>): Effect.Effect<
 /**
  * The plain lines of a failure, for a caller with no services: what `CliRuntime.defaultRender` returns.
  *
+ * **Example** (Render an empty cause without services)
+ *
+ * ```ts
+ * import { plainFailureLines } from "@beep/scratchpad/effected/cli/internal/failureTarget"
+ * import * as Cause from "effect/Cause"
+ *
+ * console.log(JSON.stringify(plainFailureLines(Cause.empty))) // []
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const plainFailureLines: {
 	(status?: boolean, spans?: SpanSetting): (cause: Cause.Cause<unknown>) => ReadonlyArray<string>;
@@ -271,7 +356,18 @@ const isSpanSetting = S.is(SpanSetting);
  * at all), else the variable named `envVar` through `Config`, case-insensitive, unset or empty meaning the default.
  * A value that is not a setting is ignored, with the warning to log.
  *
+ * **Example** (Prefer the explicit span setting)
+ *
+ * ```ts
+ * import { readSpans } from "@beep/scratchpad/effected/cli/internal/failureTarget"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.runSync(readSpans("off", undefined)).spans) // off
+ * ```
+ *
  * @internal
+ * @category configuration
+ * @since 0.0.0
  */
 export const readSpans: {
 	(

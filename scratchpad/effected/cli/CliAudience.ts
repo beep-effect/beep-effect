@@ -29,6 +29,8 @@ const KINDS: ReadonlyArray<AudienceKind> = ["human", "agent", "ci"];
 /**
  * Whether the run may prompt once a flag has named the audience.
  *
+ * **Details**
+ *
  * Only a `human` audience prompts, and only with a terminal on both standard input and standard output and a `TERM`
  * that is not `dumb` (`canPrompt`, the decision `CliInteractive.layer` makes). With the
  * terminal facts in the environment (`TerminalEnv`) that is decided from them, not from the ambient value, so a
@@ -45,6 +47,8 @@ const interactiveWhenFlagged = (kind: AudienceKind, current: boolean): Effect.Ef
  * The four parsed audience flags a root command carries once {@link CliAudience.flags} is shared onto it.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface AudienceFlagInput {
 	/** Every `--audience <kind>` occurrence. */
@@ -61,6 +65,8 @@ export interface AudienceFlagInput {
  * Options for {@link CliAudience.flags}.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface CliAudienceFlagsOptions {
 	/**
@@ -77,6 +83,8 @@ export interface CliAudienceFlagsOptions {
  * a command with no flags still type-checks against it.)
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type RequiresAudienceFlags<Input> = [Input] extends [AudienceFlagInput]
 	? unknown
@@ -105,20 +113,11 @@ const resolve = (input: AudienceFlagInput): Effect.Effect<AudienceShape, CliErro
  * The audience flags of a CLI: `--audience <human|agent|ci>` and the shorthands `--human`, `--agent`, `--ci`,
  * resolved into `@effected/env`'s `Audience`.
  *
- * @remarks
+ * **Details**
+ *
  * The one wiring: share the flags on the root command and hand the root to {@link CliAudience.run} (or
  * {@link CliAudience.runWith}), which resolves the flags from argv before core parses and applies
- * {@link CliAudience.provide} itself:
- *
- * ```ts
- * const root = Command.make("tool").pipe(
- *   Command.withSharedFlags(CliAudience.flags()),
- *   Command.withSubcommands([verify]),
- * )
- * NodeRuntime.runMain(
- *   CliRuntime.main(CliAudience.run(root, { version }), { platform: NodeServices.layer, env: {} }),
- * )
- * ```
+ * {@link CliAudience.provide} itself.
  *
  * Core lists a shared flag in the help of every subcommand, not only at the root: that is upstream (Effect-TS/effect
  * issue 8642), and `flags({ hidden: true })` is the way to keep them out of help altogether.
@@ -137,23 +136,54 @@ const resolve = (input: AudienceFlagInput): Effect.Effect<AudienceShape, CliErro
  * `TerminalEnv` in the environment a flag only narrows. `--wizard` follows the decision: a run a flag makes
  * interactive gets it back where the environment's gate had dropped it, and only there: a consumer's own `builtIns`
  * without it stay without it.
+ *
  * {@link CliAudience.provide} on its own, the path for a bare `Command.run`, acts only on the subcommand handler,
  * because core parses the root flags into a local context before any of it is visible.
  *
+ * **Example** (Wire audience flags into a command)
+ *
+ * ```ts
+ * import { CliAudience } from "@beep/scratchpad/effected/cli/CliAudience";
+ * import { Command } from "effect/cli";
+ * import * as Effect from "effect/Effect";
+ *
+ * const verify = Command.make("verify");
+ * const root = Command.make("tool").pipe(
+ *   Command.withSharedFlags(CliAudience.flags()),
+ *   Command.withSubcommands([verify]),
+ * );
+ * const program = CliAudience.run(root, { version: "1.0.0" });
+ * console.log(Effect.isEffect(program)); // true
+ * ```
+ *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class CliAudience {
 	private constructor() {}
 
 	/**
-  * The four flags, for `Command.withSharedFlags` on the root command.
-  *
-  * **Details**
-  *
-  * Each is repeatable, so every occurrence is counted; a boolean given as `false` (`--agent=false`,
-  * `--no-agent`) is not an occurrence. Core lists shared flags in every command's help; pass
-  * `hidden` to remove them from all of them.
-  */
+ * The four flags, for `Command.withSharedFlags` on the root command.
+ *
+ * **Details**
+ *
+ * Each is repeatable, so every occurrence is counted; a boolean given as `false` (`--agent=false`,
+ * `--no-agent`) is not an occurrence. Core lists shared flags in every command's help; pass
+ * `hidden` to remove them from all of them.
+ *
+ * **Example** (Create the four shared audience flags)
+ *
+ * ```ts
+ * import { CliAudience } from "@beep/scratchpad/effected/cli/CliAudience";
+ *
+ * const flags = CliAudience.flags({ hidden: true });
+ * console.log(Object.keys(flags).join(", ")); // audience, human, agent, ci
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 	static readonly flags = (
 		options?: CliAudienceFlagsOptions,
 	): {
@@ -186,22 +216,36 @@ export class CliAudience {
 	};
 
 	/**
-  * Resolve the flags before every subcommand handler and re-provide `Audience`.
-  *
-  * **Gotchas**
-  *
-  * `CliAudience.run` and `runWith` apply this themselves, so a program run through them never needs it. Use it
-  * directly only with a bare `Command.run`, which leaves a fallback prompt blind to the flags (see the class
-  * remarks).
-  *
-  * A failure report is written outside the run, where the flag is not in force, so only `runWith` and `run` carry
-  * the flag's audience to it; with this on its own the report follows the environment's audience.
-  *
-  * Pipe it onto the composite root, after `withSubcommands`, since a parent's handler does not run when a
-  * subcommand is selected. With exactly one flag the audience is `{ kind, source: "flag" }`; with none the
-  * ambient `Audience` is read and provided back unchanged, so `Audience` stays in the requirement a handler
-  * reading it already has, and is added to a program whose handlers do not read it.
-  */
+ * Resolve the flags before every subcommand handler and re-provide `Audience`.
+ *
+ * **Gotchas**
+ *
+ * `CliAudience.run` and `runWith` apply this themselves, so a program run through them never needs it. Use it
+ * directly only with a bare `Command.run`, which leaves a fallback prompt blind to the flags (see the class
+ * remarks).
+ *
+ * A failure report is written outside the run, where the flag is not in force, so only `runWith` and `run` carry
+ * the flag's audience to it; with this on its own the report follows the environment's audience.
+ *
+ * Pipe it onto the composite root, after `withSubcommands`, since a parent's handler does not run when a
+ * subcommand is selected. With exactly one flag the audience is `{ kind, source: "flag" }`; with none the
+ * ambient `Audience` is read and provided back unchanged, so `Audience` stays in the requirement a handler
+ * reading it already has, and is added to a program whose handlers do not read it.
+ *
+ * **Example** (Provide the audience to a bare command)
+ *
+ * ```ts
+ * import { CliAudience } from "@beep/scratchpad/effected/cli/CliAudience";
+ * import { Command } from "effect/cli";
+ *
+ * const root = Command.make("tool").pipe(Command.withSharedFlags(CliAudience.flags()));
+ * const provided = CliAudience.provide(root);
+ * console.log(provided.name); // tool
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
 	static readonly provide = <const Name extends string, Input extends AudienceFlagInput, ContextInput, E, R>(
 		command: Command.Command<Name, Input, ContextInput, E, R>,
 	): Command.Command<Name, Input, ContextInput, E | CliError.UserError, Exclude<R, Audience> | Audience> =>
@@ -220,21 +264,35 @@ export class CliAudience {
 		);
 
 	/**
-  * Run a command the way `Command.runWith` does, with the audience flag resolved BEFORE core parses.
-  *
-  * **Details**
-  *
-  * It scans `argv` for the four audience flags first, then runs core around a provided `Audience` (when exactly
-  * one is given: `{ kind, source: "flag" }`) and a `CliInteractive` decided from it: `--human` is interactive when
-  * `TerminalEnv` reports a terminal on stdin and stdout and `TERM` is not `dumb` (it can turn prompting on under a detected agent), a
-  * non-human flag or a conflict makes it false. A fallback prompt fires while core parses, earlier than
-  * anything `CliAudience.provide` can reach, so `--agent init` on a terminal would otherwise still prompt. No
-  * flag leaves the ambient values untouched. A conflict still gets core's own usage error, exit `64`, from
-  * `CliAudience.provide`'s resolver.
-  *
-  * @param command - the composite root, with the flags shared and `CliAudience.provide` piped on
-  * @param config - the same `version` and `renderErrors` as core's
-  */
+ * Run a command the way `Command.runWith` does, with the audience flag resolved BEFORE core parses.
+ *
+ * **Details**
+ *
+ * It scans `argv` for the four audience flags first, then runs core around a provided `Audience` (when exactly
+ * one is given: `{ kind, source: "flag" }`) and a `CliInteractive` decided from it: `--human` is interactive when
+ * `TerminalEnv` reports a terminal on stdin and stdout and `TERM` is not `dumb` (it can turn prompting on under a detected agent), a
+ * non-human flag or a conflict makes it false. A fallback prompt fires while core parses, earlier than
+ * anything `CliAudience.provide` can reach, so `--agent init` on a terminal would otherwise still prompt. No
+ * flag leaves the ambient values untouched. A conflict still gets core's own usage error, exit `64`, from
+ * `CliAudience.provide`'s resolver.
+ *
+ * **Example** (Construct a run with explicit arguments)
+ *
+ * ```ts
+ * import { CliAudience } from "@beep/scratchpad/effected/cli/CliAudience";
+ * import { Command } from "effect/cli";
+ * import * as Effect from "effect/Effect";
+ *
+ * const root = Command.make("tool").pipe(Command.withSharedFlags(CliAudience.flags()));
+ * const program = CliAudience.runWith(root, { version: "1.0.0" })(["--agent"]);
+ * console.log(Effect.isEffect(program)); // true
+ * ```
+ *
+ * @param command - the composite root, with the flags shared and `CliAudience.provide` piped on
+ * @param config - the same `version` and `renderErrors` as core's
+ * @category commands
+ * @since 0.0.0
+ */
 	static readonly runWith = <const Name extends string, Input, E, R, ContextInput>(
 		command: Command.Command<Name, Input, ContextInput, E, R> & RequiresAudienceFlags<Input>,
 		config: { readonly version: string; readonly renderErrors?: boolean | undefined },
@@ -280,12 +338,26 @@ export class CliAudience {
 	};
 
 	/**
-	 * `Command.run` with the audience flag resolved before parsing: reads `Stdio.args` and calls
-	 * {@link CliAudience.runWith}.
-	 *
-	 * @param command - the composite root
-	 * @param config - the same `version` and `renderErrors` as core's
-	 */
+ * `Command.run` with the audience flag resolved before parsing: reads `Stdio.args` and calls
+ * {@link CliAudience.runWith}.
+ *
+ * **Example** (Construct a run that reads standard arguments)
+ *
+ * ```ts
+ * import { CliAudience } from "@beep/scratchpad/effected/cli/CliAudience";
+ * import { Command } from "effect/cli";
+ * import * as Effect from "effect/Effect";
+ *
+ * const root = Command.make("tool").pipe(Command.withSharedFlags(CliAudience.flags()));
+ * const program = CliAudience.run(root, { version: "1.0.0" });
+ * console.log(Effect.isEffect(program)); // true
+ * ```
+ *
+ * @param command - the composite root
+ * @param config - the same `version` and `renderErrors` as core's
+ * @category commands
+ * @since 0.0.0
+ */
 	static readonly run = <const Name extends string, Input, E, R, ContextInput>(
 		command: Command.Command<Name, Input, ContextInput, E, R> & RequiresAudienceFlags<Input>,
 		config: { readonly version: string; readonly renderErrors?: boolean | undefined },

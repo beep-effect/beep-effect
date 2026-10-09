@@ -12,12 +12,29 @@ const $I = $ScratchpadId.create("effected/cli/ui/UiKey");
  *
  * Letters, digits and punctuation are not named: they arrive as typed text.
  *
+ * **Example** (Validate a named key)
+ *
+ * ```ts
+ * import { KeyName } from "@beep/scratchpad/effected/cli/ui/UiKey"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(KeyName)("shift+tab")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const KeyName = LiteralKit([
 	"up", "down", "left", "right", "enter", "space", "tab", "shift+tab",
 	"backspace", "delete", "escape", "ctrl+c", "home", "end", "pageup", "pagedown",
 ]).annotate($I.annote("KeyName", { description: "The named keys understood by CLI screens and test input." }));
+/**
+ * A named terminal key accepted by the KeyName schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type KeyName = typeof KeyName.Type;
 
 const Named = S.Struct({
@@ -38,11 +55,35 @@ const Char = S.Struct({
  * Space is always `Named("space")`, never `Char(" ")`, so a key table binds it once. A `Char` is what Ink delivers
  * as one input, so a paste arrives as one `Char` holding the pasted text.
  *
+ * **Example** (Validate pasted text)
+ *
+ * ```ts
+ * import { UiKey } from "@beep/scratchpad/effected/cli/ui/UiKey"
+ * import { UiKeyPayload } from "@beep/scratchpad/effected/cli/ui/UiKey"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(UiKeyPayload)(UiKey.char("pasted text"))) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const UiKeyPayload = S.Union([Named, Char]).pipe(S.toTaggedUnion("_tag"))
 	.annotate($I.annote("UiKeyPayload", { description: "A plain named key or typed-text payload received by a screen." }));
+/**
+ * A named key or typed-text payload validated by UiKeyPayload.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type UiKeyPayload = typeof UiKeyPayload.Type;
+/**
+ * The normalized key payload consumed by a screen.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type UiKey = UiKeyPayload;
 
 const named = (name: KeyName): UiKey => Named.make({ name });
@@ -51,19 +92,90 @@ const named = (name: KeyName): UiKey => Named.make({ name });
 const CONTROL = /[\u0000-\u001f\u007f]/;
 
 /**
- * Normalising Ink's input into {@link UiKey}s.
+ * Normalizes Ink input and constructs the key payloads consumed by screens.
+ *
+ * **Example** (Construct a space key)
+ *
+ * ```ts
+ * import { UiKey } from "@beep/scratchpad/effected/cli/ui/UiKey"
+ *
+ * const key = UiKey.named("space")
+ * console.log(key._tag) // Named
+ * ```
  *
  * @public
+ * @category normalization
+ * @since 0.0.0
  */
 export const UiKey: {
 	/**
 	 * The key Ink reported to a `useInput` handler, or `undefined` for one the kit does not name: a Ctrl or Meta
 	 * combination other than Ctrl-C, or an input holding a control character.
+	 * **Example** (Normalize an Ink space input)
+	 *
+	 * ```ts
+	 * import { UiKey } from "@beep/scratchpad/effected/cli/ui/UiKey"
+	 * import type { Key } from "ink"
+	 *
+	 * const inkKey: Key = {
+	 *   upArrow: false,
+	 *   downArrow: false,
+	 *   leftArrow: false,
+	 *   rightArrow: false,
+	 *   pageDown: false,
+	 *   pageUp: false,
+	 *   home: false,
+	 *   end: false,
+	 *   return: false,
+	 *   escape: false,
+	 *   ctrl: false,
+	 *   shift: false,
+	 *   tab: false,
+	 *   backspace: false,
+	 *   delete: false,
+	 *   meta: false,
+	 *   super: false,
+	 *   hyper: false,
+	 *   capsLock: false,
+	 *   numLock: false,
+	 * }
+	 * const key = UiKey.fromInk(" ", inkKey)
+	 * console.log(key?._tag) // Named
+	 * ```
+	 *
+	 * @category normalization
+	 * @since 0.0.0
 	 */
 	readonly fromInk: (input: string, key: Key) => UiKey | undefined;
-	/** A named key. */
+	/**
+	 * Creates a payload for a named terminal key.
+	 *
+	 * **Example** (Construct a named key)
+	 *
+	 * ```ts
+	 * import { UiKey } from "@beep/scratchpad/effected/cli/ui/UiKey"
+	 *
+	 * console.log(UiKey.named("enter")._tag) // Named
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	readonly named: (name: KeyName) => UiKey;
-	/** Typed text. */
+	/**
+	 * Creates a payload for typed text or a whole pasted input.
+	 *
+	 * **Example** (Construct typed text)
+	 *
+	 * ```ts
+	 * import { UiKey } from "@beep/scratchpad/effected/cli/ui/UiKey"
+	 *
+	 * console.log(UiKey.char("hello")._tag) // Char
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	readonly char: (char: string) => UiKey;
 } = {
 	fromInk: (input, key) => {

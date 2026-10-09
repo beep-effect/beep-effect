@@ -8,7 +8,23 @@ import * as P from "effect/Predicate";
  * The count is the counter's own `n`, except in a share headline (`1/3 repos`), which reads by the denominator, the
  * total, and passes it.
  *
+ * **Example** (Read singular and denominator labels)
+ *
+ * ```ts
+ * import { counterLabel } from "@beep/scratchpad/effected/cli/internal/counts"
+ * import type { Counter } from "@beep/scratchpad/effected/cli/Doc"
+ *
+ * const counter: Counter = {
+ *   key: "repos", label: { one: "repo", other: "repos" }, n: 1,
+ *   status: { name: "ok", def: { glyph: "+", ascii: "+", token: "success", rank: 0 } },
+ * }
+ * console.log(counterLabel(counter)) // repo
+ * console.log(counterLabel(counter, 3)) // repos
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const counterLabel: {
 	(count?: number): (counter: Counter) => string;
@@ -20,7 +36,22 @@ export const counterLabel: {
  * The label a counter's column is headed with in a `CountsTable`: its one label, or its plural form, since a column
  * holds every row's count.
  *
+ * **Example** (Head a column with the plural label)
+ *
+ * ```ts
+ * import { columnLabel } from "@beep/scratchpad/effected/cli/internal/counts"
+ * import type { Counter } from "@beep/scratchpad/effected/cli/Doc"
+ *
+ * const counter: Counter = {
+ *   key: "repos", label: { one: "repo", other: "repos" }, n: 1,
+ *   status: { name: "ok", def: { glyph: "+", ascii: "+", token: "success", rank: 0 } },
+ * }
+ * console.log(columnLabel(counter)) // repos
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const columnLabel = (counter: Counter): string =>
 	P.isString(counter.label) ? counter.label : counter.label.other;
@@ -33,7 +64,17 @@ export const columnLabel = (counter: Counter): string =>
  * Lives here, not on `Doc`, so a renderer needs nothing from `Doc` at runtime: `Doc.print` imports the renderers, and
  * a renderer importing `Doc` back would make a cycle. `Doc.total` is this function.
  *
+ * **Example** (Sum counter values)
+ *
+ * ```ts
+ * import { totalOf } from "@beep/scratchpad/effected/cli/internal/counts"
+ *
+ * console.log(totalOf({ _tag: "Counts", layout: "inline", counters: [] })) // 0
+ * ```
+ *
  * @internal
+ * @category folding
+ * @since 0.0.0
  */
 export const totalOf = (block: BlockOf<"Counts">): number =>
 	block.total === undefined ? block.counters.reduce((sum, counter) => sum + counter.n, 0) : block.total(block.counters);
@@ -42,7 +83,27 @@ export const totalOf = (block: BlockOf<"Counts">): number =>
  * The counters a renderer shows: every one except a zero counter that does not ask for `showZero`. `Doc.visibleCounters`
  * is this function.
  *
+ * **Example** (Hide a zero count unless requested)
+ *
+ * ```ts
+ * import { visibleCountersOf } from "@beep/scratchpad/effected/cli/internal/counts"
+ * import type { Counter } from "@beep/scratchpad/effected/cli/Doc"
+ * import type { BlockOf } from "@beep/scratchpad/effected/cli/Doc"
+ *
+ * const counter: Counter = {
+ *   key: "repos", label: { one: "repo", other: "repos" }, n: 1,
+ *   status: { name: "ok", def: { glyph: "+", ascii: "+", token: "success", rank: 0 } },
+ * }
+ * const block: BlockOf<"Counts"> = {
+ *   _tag: "Counts", layout: "inline", counters: [{ ...counter, n: 0 }],
+ * }
+ * console.log(visibleCountersOf(block).length) // 0
+ * console.log(visibleCountersOf({ ...block, counters: [{ ...counter, n: 0, showZero: true }] }).length) // 1
+ * ```
+ *
  * @internal
+ * @category filtering
+ * @since 0.0.0
  */
 export const visibleCountersOf = (block: BlockOf<"Counts">): ReadonlyArray<Counter> =>
 	block.counters.filter((counter) => counter.n !== 0 || counter.showZero === true);
@@ -57,7 +118,18 @@ export const visibleCountersOf = (block: BlockOf<"Counts">): ReadonlyArray<Count
  *
  * Plain literals, not `Doc` constructors: a renderer needs nothing from `Doc` at runtime (see {@link totalOf}).
  *
+ * **Example** (Build the columns of an empty table)
+ *
+ * ```ts
+ * import { countsTableOf } from "@beep/scratchpad/effected/cli/internal/counts"
+ *
+ * const table = countsTableOf({ _tag: "CountsTable", rows: [] })
+ * console.log(table.columns.length) // 1
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const countsTableOf = (block: BlockOf<"CountsTable">): BlockOf<"Table"> => {
 	const keys: Array<Counter> = [];

@@ -17,7 +17,17 @@ type Config = ReturnType<typeof CliConfig.make>;
  * config is this very object. A consumer who left `Wizard` out of their own `builtIns` never has it set, and one who
  * provides their own `CliConfig` inside the gate has a different object, so neither gets a wizard they did not ask for.
  *
+ * **Example** (Read the absence of a dropped wizard config)
+ *
+ * ```ts
+ * import { WizardDropped } from "@beep/scratchpad/effected/cli/internal/wizardGate"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.runSync(WizardDropped)) // undefined
+ * ```
+ *
  * @internal
+ * @category services
+ * @since 0.0.0
  */
 export class WizardDropped extends Context.Reference<Config | undefined>($I`WizardDropped`, {
 	defaultValue: () => undefined,

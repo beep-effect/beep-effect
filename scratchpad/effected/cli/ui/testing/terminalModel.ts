@@ -15,9 +15,19 @@ const ESC = String.fromCharCode(0x1b);
  * escape is ignored. It does not wrap a line wider than the terminal. Shared by `CliUiTest.live`'s transcript and the
  * kit's own production-path tests.
  *
+ * **Example** (Apply terminal cursor and erase sequences)
+ *
+ * ```ts
+ * import { screenAfter } from "@beep/scratchpad/effected/cli/ui/testing/terminalModel"
+ * const written = "old\u001b[1G\u001b[2Knew"
+ * console.log(screenAfter(written).join("\n")) // new
+ * ```
+ *
  * @param written - every byte written to the terminal
  * @param rows - the terminal's height, which decides how much of the buffer a clear takes as the screen
  * @internal
+ * @category testing
+ * @since 0.0.0
  */
 export const screenAfter: {
 	(rows?: number): (written: string) => ReadonlyArray<string>;

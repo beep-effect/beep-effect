@@ -5,6 +5,8 @@ import { fromReact } from "./ink.ts";
  * Props of the screen's error boundary.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ErrorBoundaryProps {
 	/** Called once with the error a descendant threw while rendering. */
@@ -25,7 +27,19 @@ export interface ErrorBoundaryProps {
  * screen-and-scrollback clear without it. A class over the loaded React, built on first use, because the kit holds
  * no runtime React at module scope.
  *
+ * **Example** (Load the screen error boundary)
+ *
+ * ```ts
+ * import { errorBoundary } from "@beep/scratchpad/effected/cli/ui/internal/ErrorBoundary"
+ * import * as Effect from "effect/Effect"
+ * import { loadInk } from "@beep/scratchpad/effected/cli/ui/internal/ink"
+ * await Effect.runPromise(loadInk)
+ * console.log(errorBoundary().displayName) // CliUiErrorBoundary
+ * ```
+ *
  * @internal
+ * @category components
+ * @since 0.0.0
  */
 export const errorBoundary: () => ComponentClass<ErrorBoundaryProps> = fromReact(
 	(react) =>

@@ -60,6 +60,8 @@ const isRenderedUserError = (u: unknown): u is CliError.UserError =>
  * What `render` is told about a failure beyond the squashed error.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface FailureDetails {
 	/** The whole cause the program failed with, before squashing. */
@@ -100,21 +102,37 @@ export interface FailureDetails {
 	 * The report the kit would write for this failure, rendered for this run: its audience, colour, links and
 	 * `displayPath`.
 	 *
-	 * @remarks
+	 * **Details**
 	 * `lines()` is {@link FailureDetails.defaultLines}. With `status: false` the leading status glyph, or the `[FAIL]`
 	 * tag in plain text, is left off, so a render that puts its own prefix in front (the program's name, say) reads
 	 * cleanly and still gets the run's colour and paths. `CliRuntime.defaultRender` with `status: false` drops the
 	 * status too, but it has no run to read and renders plain with absolute paths.
 	 *
-	 * ```ts
-	 * const render = (_error: unknown, details: FailureDetails) =>
-	 *   details.lines({ status: false }).map((line, i) => (i === 0 ? `prog: ${line}` : line))
-	 * ```
-	 *
 	 * `spans` chooses the `in:` trail for these lines alone, as `CliFailureOptions.spans` does (`app`, `all` or
 	 * `off`); without it the run's own setting (`env.spans`, `app` by default) applies.
 	 *
+	 * **Example** (Prefix the first rendered failure line)
+	 *
+	 * ```ts
+	 * import type { FailureDetails } from "@beep/scratchpad/effected/cli/CliRuntime"
+	 * import * as Cause from "effect/Cause"
+	 *
+	 * const render = (_error: unknown, details: FailureDetails) =>
+	 *   details.lines({ status: false }).map((line, i) => (i === 0 ? `prog: ${line}` : line))
+	 * const details: FailureDetails = {
+	 *   cause: Cause.fail(new Error("invalid configuration")),
+	 *   isDefect: false,
+	 *   isCancelled: false,
+	 *   isNotInteractive: false,
+	 *   defaultLines: ["[FAIL] invalid configuration"],
+	 *   lines: () => ["invalid configuration"],
+	 * }
+	 * console.log(render(new Error("invalid configuration"), details)[0]) // prog: invalid configuration
+	 * ```
+	 *
 	 * @param options - `status: false` leaves off the leading status; `spans` chooses the span trail
+	 * @category utilities
+	 * @since 0.0.0
 	 */
 	readonly lines: (options?: {
 		readonly status?: boolean | undefined;
@@ -126,6 +144,8 @@ export interface FailureDetails {
  * How a failure is turned into output and an exit code.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface ReportFailuresOptions {
 	/**
@@ -185,6 +205,8 @@ export interface ReportFailuresOptions {
  * Options for `CliRuntime.main`.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface MainOptions<RP, EP> extends ReportFailuresOptions {
 	/**
@@ -344,14 +366,19 @@ const chooseExitCode = (error: unknown, fallback: number | undefined): number =>
  * **Example** (Report program failures through the configured logger)
  *
  * ```ts
- * import { CliRuntime } from "./index.ts"
- * import { NodeRuntime } from "@effect/platform-node"
- * import * as Effect from "effect/Effect";
- *
- * NodeRuntime.runMain(program.pipe(CliRuntime.reportFailures(), Effect.provide(MainLive)))
+ * import { CliRuntime } from "@beep/scratchpad/effected/cli/CliRuntime"
+ * import * as Effect from "effect/Effect"
+ * import { CliLogger } from "@beep/scratchpad/effected/cli/CliLogger"
+ * const program = Effect.fail(new Error("invalid configuration")).pipe(
+ *   CliRuntime.reportFailures(),
+ *   Effect.provide(CliLogger.layer()),
+ * )
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class CliRuntime {
 	private constructor() {}
@@ -360,7 +387,7 @@ export class CliRuntime {
 	 * What `reportFailures` and `main` render a failure as when no `render` option is given, for a consumer's own
 	 * `render` to hand a failure back to.
 	 *
-	 * @remarks
+	 * **Details**
 	 * The plain lines of `CliFailure.toDoc(details.cause)`: a failure status line, a `Tree` for a schema failure, a
 	 * defect's message with its cleaned `stack`, and the one fixed line each for `Cancelled` and `NotInteractive`.
 	 * It has no terminal to ask, so it is the plain rendering for an agent, with absolute paths; the report `main` writes
@@ -370,15 +397,30 @@ export class CliRuntime {
 	 * such as the program's name reads cleanly; for that AND the run's settings, use `details.lines({ status: false })`.
 	 * A custom `render` that only cares about its own errors delegates the rest:
 	 *
+	 * **Example** (Delegate failures outside a custom error type)
+	 *
 	 * ```ts
-	 * const render = (error: unknown, details: FailureDetails) =>
+	 * import { CliRuntime } from "@beep/scratchpad/effected/cli/CliRuntime"
+	 * import type { FailureDetails } from "@beep/scratchpad/effected/cli/CliRuntime"
+	 * import * as Cause from "effect/Cause"
+	 *
+	 * class MyError extends Error {}
+	 * const myLines = (error: MyError) => [error.message]
+	 * const render = (error: unknown, details: Pick<FailureDetails, "cause" | "isDefect">) =>
 	 *   error instanceof MyError ? myLines(error) : CliRuntime.defaultRender(error, details)
+	 * const lines = render(new MyError("invalid configuration"), {
+	 *   cause: Cause.fail(new MyError("invalid configuration")),
+	 *   isDefect: false,
+	 * })
+	 * console.log(lines[0]) // invalid configuration
 	 * ```
 	 *
 	 * @param error - the squashed failure
 	 * @param details - what `render` is told about the failure; accepted so a delegating `render` passes both
 	 *   arguments through unchanged (only `cause` and `isDefect` are read)
 	 * @param options - `status: false` leaves off the leading status glyph or `[FAIL]` tag
+	 * @category formatting
+	 * @since 0.0.0
 	 */
 	static readonly defaultRender = (
 		error: unknown,
@@ -392,7 +434,19 @@ export class CliRuntime {
 	 * Catch a program's failure, render it through the ambient logger, and re-fail with the exit code and the
 	 * no-double-report mark.
 	 *
+	 * **Example** (Construct a failure-reporting program)
+	 *
+	 * ```ts
+	 * import { CliRuntime } from "@beep/scratchpad/effected/cli/CliRuntime"
+	 * import * as Effect from "effect/Effect"
+	 *
+	 * const program = Effect.fail(new Error("invalid configuration")).pipe(CliRuntime.reportFailures({ exitCode: 3 }))
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
 	 * @param options - how to render the failure and which exit codes to use
+	 * @category error-handling
+	 * @since 0.0.0
 	 */
 	static readonly reportFailures =
 		(options: ReportFailuresOptions = {}) =>
@@ -474,38 +528,42 @@ export class CliRuntime {
 			);
 
 	/**
-  * Assemble a CLI program in the one order that reports every failure well.
-  *
-  * **Details**
-  *
-  * - `CliExit` is provided fresh, and a non-zero code after success becomes a
-  *   marked failure the teardown honours.
-  * - The platform layer is provided **inside** failure reporting, so a
-  *   layer-build failure (`HOME` unset, say) renders as one line with the
-  *   fallback code rather than escaping to the runtime's stack trace.
-  * - The logger is provided **outermost**, so it is present whichever branch
-  *   fails.
-  * - With the `env` option, `CliEnv.layer` and `CliColor.formatterLayer` are
-  *   provided beside the platform, inside failure reporting, so the program can
-  *   read the audience, terminal, theme and `CliInteractive`.
-  *
-  * You still call your platform's runner.
-  *
-  * **Example** (Run a Node CLI with a custom failure exit code)
-  *
-  * ```ts
-  * import { CliRuntime } from "./index.ts"
-  * import { NodeRuntime, NodeServices } from "@effect/platform-node"
-  * import { Command } from "effect/cli"
-  *
-  * NodeRuntime.runMain(
-  *   CliRuntime.main(Command.run(root, { version: "1.0.0" }), { platform: NodeServices.layer, exitCode: 3 }),
-  * )
-  * ```
-  *
-  * @param program - the CLI program, usually `Command.run(root, { version })`
-  * @param options - the platform layer, and optionally the logger, environment services, exit codes and rendering
-  */
+	 * Assemble a CLI program in the one order that reports every failure well.
+	 *
+	 * **Details**
+	 *
+	 * - `CliExit` is provided fresh, and a non-zero code after success becomes a
+	 *   marked failure the teardown honours.
+	 * - The platform layer is provided **inside** failure reporting, so a
+	 *   layer-build failure (`HOME` unset, say) renders as one line with the
+	 *   fallback code rather than escaping to the runtime's stack trace.
+	 * - The logger is provided **outermost**, so it is present whichever branch
+	 *   fails.
+	 * - With the `env` option, `CliEnv.layer` and `CliColor.formatterLayer` are
+	 *   provided beside the platform, inside failure reporting, so the program can
+	 *   read the audience, terminal, theme and `CliInteractive`.
+	 *
+	 * You still call your platform's runner.
+	 *
+	 * **Example** (Run a CLI with a custom failure exit code)
+	 *
+	 * ```ts
+	 * import { CliRuntime } from "@beep/scratchpad/effected/cli/CliRuntime"
+	 * import * as Effect from "effect/Effect"
+	 * import * as Layer from "effect/Layer"
+	 * import * as Command from "effect/cli/Command"
+	 *
+	 * const root = Command.make("tool", {}, () => Effect.void)
+	 * // Pass the constructed program to your platform's runner.
+	 * const program = CliRuntime.main(Command.run(root, { version: "1.0.0" }), { platform: Layer.empty, exitCode: 3 })
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @param program - the CLI program, usually `Command.run(root, { version })`
+	 * @param options - the platform layer, and optionally the logger, environment services, exit codes and rendering
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static main<A, E, R, RP, EP>(
 		program: Effect.Effect<A, E, R>,
 		options: MainOptions<RP, EP> & { readonly env?: undefined },
@@ -630,42 +688,54 @@ export class CliRuntime {
 	}
 
 	/**
-  * Mark an error as already reported, carrying an exit code.
-  *
-  * **Gotchas**
-  *
-  * Exported because a program that reports a failure itself — a validation
-  * command that prints its own diagnostics, say — needs the same two marks
-  * and should not have to rediscover the inverted polarity.
-  *
-  * Under `CliRuntime.main` or {@link CliRuntime.reportFailures}, do NOT
-  * print the failure yourself before failing with it: `reportFailures`
-  * renders every error except a `ShowHelp` and a `CliError.UserError` whose
-  * reported mark is `false`, so it would print twice. Fail with the marked
-  * error and put any multi-line rendering in the `render` option instead. The
-  * mark matters for a program run WITHOUT `reportFailures`, where it keeps the
-  * runtime from reporting a failure the program already printed.
-  *
-  * A `CliError.UserError` marked with `reported` is treated as already
-  * printed and is not rendered — use a different error type if the program
-  * has not printed it. `reportFailures` cannot tell a `UserError` that
-  * `Command.runWith` printed from one marked here: both carry the same `false`
-  * mark. It does keep the code you pass: `reported(userError, 3)` exits `3`,
-  * not `usageExitCode`.
-  *
-  * The marks are added in place, so a typed error comes back as its own
-  * type: the `E` overload returns the very instance it was given, and a
-  * program failing with it keeps `catchTags` narrowing downstream without a
-  * cast. Any other value takes the `unknown` fallback and is wrapped in a
-  * plain `Error`.
-  *
-  * The `E extends Error` constraint is structural, not nominal — TypeScript
-  * cannot express "is really an `Error`", so the guarantee holds only when
-  * the argument passes `instanceof Error` at runtime. A value that merely
-  * satisfies `Error`'s shape (an object `implements Error`, or an error
-  * revived from JSON) still takes the wrapping branch and comes back as a
-  * fresh, stripped `Error` typed as `E`.
-  */
+	 * Mark an error as already reported, carrying an exit code.
+	 *
+	 * **Gotchas**
+	 *
+	 * Exported because a program that reports a failure itself — a validation
+	 * command that prints its own diagnostics, say — needs the same two marks
+	 * and should not have to rediscover the inverted polarity.
+	 *
+	 * Under `CliRuntime.main` or {@link CliRuntime.reportFailures}, do NOT
+	 * print the failure yourself before failing with it: `reportFailures`
+	 * renders every error except a `ShowHelp` and a `CliError.UserError` whose
+	 * reported mark is `false`, so it would print twice. Fail with the marked
+	 * error and put any multi-line rendering in the `render` option instead. The
+	 * mark matters for a program run WITHOUT `reportFailures`, where it keeps the
+	 * runtime from reporting a failure the program already printed.
+	 *
+	 * A `CliError.UserError` marked with `reported` is treated as already
+	 * printed and is not rendered — use a different error type if the program
+	 * has not printed it. `reportFailures` cannot tell a `UserError` that
+	 * `Command.runWith` printed from one marked here: both carry the same `false`
+	 * mark. It does keep the code you pass: `reported(userError, 3)` exits `3`,
+	 * not `usageExitCode`.
+	 *
+	 * The marks are added in place, so a typed error comes back as its own
+	 * type: the `E` overload returns the very instance it was given, and a
+	 * program failing with it keeps `catchTags` narrowing downstream without a
+	 * cast. Any other value takes the `unknown` fallback and is wrapped in a
+	 * plain `Error`.
+	 *
+	 * The `E extends Error` constraint is structural, not nominal — TypeScript
+	 * cannot express "is really an `Error`", so the guarantee holds only when
+	 * the argument passes `instanceof Error` at runtime. A value that merely
+	 * satisfies `Error`'s shape (an object `implements Error`, or an error
+	 * revived from JSON) still takes the wrapping branch and comes back as a
+	 * fresh, stripped `Error` typed as `E`.
+	 *
+	 * **Example** (Preserve a reported error instance)
+	 *
+	 * ```ts
+	 * import { CliRuntime } from "@beep/scratchpad/effected/cli/CliRuntime"
+	 *
+	 * const error = new Error("invalid configuration")
+	 * console.log(CliRuntime.reported(error, 3) === error) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static reported<E extends Error>(error: E, exitCode?: number): E;
 	static reported(error: unknown, exitCode?: number): Error;
 	static reported(error: unknown, exitCode = 1): Error {

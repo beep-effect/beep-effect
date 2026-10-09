@@ -15,10 +15,12 @@
  * **Example** (Run a CLI with audience flags and runtime services)
  *
  * ```ts
- * import { CliAudience, CliRuntime } from "./index.ts"
+ * import { CliAudience, CliRuntime } from "@beep/scratchpad/effected/cli/index"
  * import { NodeRuntime, NodeServices } from "@effect/platform-node"
  * import { Command } from "effect/cli"
  *
+ * const init = Command.make("init")
+ * const verify = Command.make("verify")
  * const root = Command.make("tool").pipe(
  *   Command.withSharedFlags(CliAudience.flags()),
  *   Command.withSubcommands([init, verify]),

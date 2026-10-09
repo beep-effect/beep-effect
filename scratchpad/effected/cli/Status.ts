@@ -22,26 +22,61 @@ class UnknownStatusError extends S.TaggedError<UnknownStatusError>($I`UnknownSta
  * How one status looks: a Unicode glyph, an ASCII fallback, a token and a rank.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface StatusDef {
-	/** The Unicode glyph. */
+	/**
+	 * The Unicode glyph.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly glyph: string;
-	/** The ASCII fallback, used when the theme's glyphs are ASCII. */
+	/**
+	 * The ASCII fallback, used when the theme's glyphs are ASCII.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly ascii: string;
-	/** The semantic token, or an explicit style, the glyph is painted with. */
+	/**
+	 * The semantic token, or an explicit style, the glyph is painted with.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly token: TokenName | Style;
-	/** Severity for {@link Status.worst}: the highest rank wins. */
+	/**
+	 * Severity for {@link Status.worst}: the highest rank wins.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly rank: number;
 }
 
 /**
  * The names of the core vocabulary.
  *
+ * **Example** (Validate a built-in status)
+ *
+ * ```ts
+ * import { CoreStatusName } from "@beep/scratchpad/effected/cli/Status"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(CoreStatusName)("success")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const CoreStatusName = LiteralKit(["success", "failure", "warning", "info", "skip", "pending"]).annotate(
 	$I.annote("CoreStatusName", { description: "The six built-in names in the CLI status vocabulary." }),
 );
+/**
+ * A name accepted by the built-in status vocabulary.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CoreStatusName = typeof CoreStatusName.Type;
 
 /**
@@ -55,16 +90,18 @@ export type CoreStatusName = typeof CoreStatusName.Type;
  * **Example** (Extend statuses and select the most severe)
  *
  * ```ts
- * import { Status } from "./index.ts"
+ * import { Status } from "@beep/scratchpad/effected/cli/Status"
  *
  * const vocab = Status.extend({
  * 	timeout: { glyph: "⏱", ascii: "[time]", token: "warning", rank: 85 },
  * })
  * const worst = vocab.worst(["success", "timeout"])
- * // => "timeout"
+ * console.log(worst) // timeout
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class Status<Names extends string> {
 	private readonly defs: Readonly<Record<Names | CoreStatusName, StatusDef>>;
@@ -74,7 +111,20 @@ export class Status<Names extends string> {
 		this.defs = defs;
 	}
 
-	/** The core vocabulary: success, skip, pending, info, warning and failure, by rank 10, 20, 30, 40, 60, 90. */
+	/**
+	 * The core vocabulary: success, skip, pending, info, warning and failure, by rank 10, 20, 30, 40, 60, 90.
+	 *
+	 * **Example** (Inspect the built-in failure rank)
+	 *
+	 * ```ts
+	 * import { Status } from "@beep/scratchpad/effected/cli/Status"
+	 *
+	 * console.log(Status.core.def("failure").rank) // 90
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	static readonly core: Status<CoreStatusName> = new Status<CoreStatusName>({
 		success: { glyph: "✓", ascii: "[ok]", token: "success", rank: 10 },
 		skip: { glyph: "↷", ascii: "[skip]", token: "muted", rank: 20 },
@@ -87,23 +137,45 @@ export class Status<Names extends string> {
 	/**
 	 * The core vocabulary plus `extra`; an entry that reuses a core name replaces it.
 	 *
+	 * **Example** (Extend the core vocabulary)
+	 *
+	 * ```ts
+	 * import { Status } from "@beep/scratchpad/effected/cli/Status"
+	 *
+	 * const vocab = Status.extend({ timeout: { glyph: "⏱", ascii: "[time]", token: "warning", rank: 85 } })
+	 * console.log(vocab.worst(["success", "timeout"])) // timeout
+	 * ```
+	 *
 	 * @param extra - the statuses to add, by name
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly extend = <const Extra extends Record<string, StatusDef>>(
 		extra: Extra,
 	): Status<CoreStatusName | (keyof Extra & string)> => Status.core.extend(extra);
 
 	/**
-  * This vocabulary plus `extra`; an entry that reuses a name replaces it.
-  *
-  * **Gotchas**
-  *
-  * An entry may replace a core name. Replacing `warning` with a lower rank moves the threshold at which
-  * `CliMessage.status` defaults to stderr for this vocabulary, since that threshold is `warning`'s rank in the
-  * vocabulary it is given.
-  *
-  * @param extra - the statuses to add, by name
-  */
+	 * This vocabulary plus `extra`; an entry that reuses a name replaces it.
+	 *
+	 * **Gotchas**
+	 *
+	 * An entry may replace a core name. Replacing `warning` with a lower rank moves the threshold at which
+	 * `CliMessage.status` defaults to stderr for this vocabulary, since that threshold is `warning`'s rank in the
+	 * vocabulary it is given.
+	 *
+	 * **Example** (Override a vocabulary entry)
+	 *
+	 * ```ts
+	 * import { Status } from "@beep/scratchpad/effected/cli/Status"
+	 *
+	 * const vocab = Status.core.extend({ warning: { glyph: "?", ascii: "[warn]", token: "warning", rank: 5 } })
+	 * console.log(vocab.def("warning").rank) // 5
+	 * ```
+	 *
+	 * @param extra - the statuses to add, by name
+	 * @category combinators
+	 * @since 0.0.0
+	 */
 	extend<const Extra extends Record<string, StatusDef>>(
 		extra: Extra,
 	): Status<Names | (keyof Extra & string)> {
@@ -111,15 +183,25 @@ export class Status<Names extends string> {
 	}
 
 	/**
-  * The definition of a status.
-  *
-  * **Gotchas**
-  *
-  * A name the vocabulary does not have is a defect: it throws an `Error` naming it and the names that exist. The
-  * types already reject one, so it is reachable only through a cast.
-  *
-  * @param name - a name in this vocabulary
-  */
+	 * The definition of a status.
+	 *
+	 * **Gotchas**
+	 *
+	 * A name the vocabulary does not have is a defect: it throws an `Error` naming it and the names that exist. The
+	 * types already reject one, so it is reachable only through a cast.
+	 *
+	 * **Example** (Read a status definition)
+	 *
+	 * ```ts
+	 * import { Status } from "@beep/scratchpad/effected/cli/Status"
+	 *
+	 * console.log(Status.core.def("success").ascii) // [ok]
+	 * ```
+	 *
+	 * @param name - a name in this vocabulary
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	def(name: Names | CoreStatusName): StatusDef {
 		if (!R.has(this.defs, name)) {
 			throw UnknownStatusError.make({
@@ -130,34 +212,57 @@ export class Status<Names extends string> {
 	}
 
 	/**
-  * The full definition of a status as an immutable snapshot, for a caller that stores it.
-  *
-  * **Details**
-  *
-  * `def` answers the vocabulary's own entry. `resolve` answers a readonly copy, so a document node that holds
-  * the definition stays plain data and editing it cannot change the vocabulary. The copy is shallow: a
-  * `token` given as a `Style` keeps its own identity. Throws on an unknown name, as {@link Status.def} does;
-  * storing an empty definition in a document instead would fail far from the cause.
-  *
-  * @param name - a name in this vocabulary
-  */
+	 * The full definition of a status as an immutable snapshot, for a caller that stores it.
+	 *
+	 * **Details**
+	 *
+	 * `def` answers the vocabulary's own entry. `resolve` answers a readonly copy, so a document node that holds
+	 * the definition stays plain data and editing it cannot change the vocabulary. The copy is shallow: a
+	 * `token` given as a `Style` keeps its own identity. Throws on an unknown name, as {@link Status.def} does;
+	 * storing an empty definition in a document instead would fail far from the cause.
+	 *
+	 * **Example** (Store a copied definition)
+	 *
+	 * ```ts
+	 * import { Status } from "@beep/scratchpad/effected/cli/Status"
+	 *
+	 * const snapshot = Status.core.resolve("success")
+	 * console.log(snapshot === Status.core.def("success")) // false
+	 * ```
+	 *
+	 * @param name - a name in this vocabulary
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	resolve(name: Names): StatusDef {
 		return { ...this.def(name) };
 	}
 
 	/**
-  * A status's glyph from a glyph set: `def.ascii` for an ASCII set, `def.glyph` otherwise. Unpainted, for a caller
-  * that draws it itself (an Ink tree, a reporter).
-  *
-  * **Details**
-  *
-  * Throws on an unknown name, as {@link Status.def} does. The glyph is sanitised, as text in a document is: escape
-  * sequences and control characters in a vocabulary's glyph are removed, so a glyph built from data cannot paint the
-  * terminal, plant a hyperlink or move the cursor. Every kit path that draws a status glyph takes it from here.
-  *
-  * @param name - a name in this vocabulary
-  * @param glyphs - the glyph set, such as `Glyphs.unicode`, `Glyphs.ascii` or a theme's
-  */
+	 * A status's glyph from a glyph set: `def.ascii` for an ASCII set, `def.glyph` otherwise. Unpainted, for a caller
+	 * that draws it itself (an Ink tree, a reporter).
+	 *
+	 * **Details**
+	 *
+	 * Throws on an unknown name, as {@link Status.def} does. The glyph is sanitised, as text in a document is: escape
+	 * sequences and control characters in a vocabulary's glyph are removed, so a glyph built from data cannot paint the
+	 * terminal, plant a hyperlink or move the cursor. Every kit path that draws a status glyph takes it from here.
+	 *
+	 * **Example** (Choose an ASCII status glyph)
+	 *
+	 * ```ts
+	 * import { Status } from "@beep/scratchpad/effected/cli/Status"
+	 *
+	 * import { Glyphs } from "@beep/scratchpad/effected/cli/Glyphs"
+	 *
+	 * console.log(Status.core.glyph("success", Glyphs.ascii)) // [ok]
+	 * ```
+	 *
+	 * @param name - a name in this vocabulary
+	 * @param glyphs - the glyph set, such as `Glyphs.unicode`, `Glyphs.ascii` or a theme's
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	glyph(name: Names, glyphs: GlyphSet): string {
 		const def = this.def(name);
 		// A vocabulary is configuration, but one built from data must not paint the terminal: every path that draws a
@@ -166,20 +271,31 @@ export class Status<Names extends string> {
 	}
 
 	/**
-  * The status with the highest rank; a tie goes to the one that comes first in `names`.
-  *
-  * **Gotchas**
-  *
-  * `rank` is SEVERITY, not an aggregation policy: the higher rank wins, so in `Status.core` a `skip` outranks a
-  * `success`. A consumer whose aggregate differs (a test run where passes dominate skips, say) folds its own
-  * rule over the names instead of reading this.
-  *
-  * Takes at least one name, so the answer is always a name. For an array that may be empty, use
-  * {@link Status.worstOption}. They are two methods because a literal and an array variable are the same
-  * array at runtime, so one method could not return a name for one and an `Option` for the other.
-  *
-  * @param names - the statuses to compare
-  */
+	 * The status with the highest rank; a tie goes to the one that comes first in `names`.
+	 *
+	 * **Gotchas**
+	 *
+	 * `rank` is SEVERITY, not an aggregation policy: the higher rank wins, so in `Status.core` a `skip` outranks a
+	 * `success`. A consumer whose aggregate differs (a test run where passes dominate skips, say) folds its own
+	 * rule over the names instead of reading this.
+	 *
+	 * Takes at least one name, so the answer is always a name. For an array that may be empty, use
+	 * {@link Status.worstOption}. They are two methods because a literal and an array variable are the same
+	 * array at runtime, so one method could not return a name for one and an `Option` for the other.
+	 *
+	 * **Example** (Compare severity and preserve tie order)
+	 *
+	 * ```ts
+	 * import { Status } from "@beep/scratchpad/effected/cli/Status"
+	 *
+	 * console.log(Status.core.worst(["success", "skip"])) // skip
+	 * console.log(Status.core.worst(["warning", "warning"])) // warning
+	 * ```
+	 *
+	 * @param names - the statuses to compare
+	 * @category folding
+	 * @since 0.0.0
+	 */
 	worst(names: Arr.NonEmptyReadonlyArray<Names>): Names {
 		let worst = names[0];
 		for (const name of names) {
@@ -193,7 +309,20 @@ export class Status<Names extends string> {
 	 * the worst, a tie going to the one that comes first in `names`. Rank is severity, not an aggregation policy; see
 	 * {@link Status.worst}.
 	 *
+	 * **Example** (Handle an empty status list)
+	 *
+	 * ```ts
+	 * import { Status } from "@beep/scratchpad/effected/cli/Status"
+	 *
+	 * import * as O from "effect/Option"
+	 *
+	 * console.log(O.isNone(Status.core.worstOption([]))) // true
+	 * console.log(O.getOrElse(Status.core.worstOption(["success", "failure"]), () => "empty")) // failure
+	 * ```
+	 *
 	 * @param names - the statuses to compare
+	 * @category folding
+	 * @since 0.0.0
 	 */
 	worstOption(names: ReadonlyArray<Names>): O.Option<Names> {
 		return Arr.isReadonlyArrayNonEmpty(names) ? O.some(this.worst(names)) : O.none();

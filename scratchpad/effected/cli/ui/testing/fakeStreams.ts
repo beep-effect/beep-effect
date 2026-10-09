@@ -157,6 +157,8 @@ class MemoryOutput extends MemorySocket implements NodeJS.WriteStream {
  * Options for {@link makeFakeStreams}.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface FakeStreamsOptions {
 	/** The terminal width; 80 by default. */
@@ -171,6 +173,8 @@ export interface FakeStreamsOptions {
  * In-memory terminal streams a screen mounts on.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface FakeStreams {
 	/** The streams, to provide as `UiStreams`. */
@@ -215,7 +219,18 @@ const capture = (
  * `readable`, `read()`, `setEncoding` and the write-callback barrier Ink waits on at unmount. Input records raw mode;
  * output implements Node's cursor, colour and terminal-size methods.
  *
+ * **Example** (Capture writes on an in-memory terminal)
+ *
+ * ```ts
+ * import { makeFakeStreams } from "@beep/scratchpad/effected/cli/ui/testing/fakeStreams"
+ * const fake = makeFakeStreams({ columns: 40, rows: 10 })
+ * fake.streams.stdout.write("ready")
+ * console.log(fake.stdout()) // ready
+ * ```
+ *
  * @internal
+ * @category testing
+ * @since 0.0.0
  */
 export const makeFakeStreams = (options: FakeStreamsOptions = {}): FakeStreams => {
 	const columns = options.columns ?? 80;

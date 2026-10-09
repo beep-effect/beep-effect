@@ -43,13 +43,17 @@ import { UiStreams } from "./UiStreams.ts";
 import { useTerminalSize } from "./UiTheme.ts";
 
 /**
- * Options for `CliUi.live`.
+ * Configures event folding, run boundaries and rendering for `CliUi.live`.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface LiveOptions<E, S> {
 	/**
 	 * The events to fold: a `PubSub` subscription, or a stream.
+	 *
+	 * **Details**
 	 *
 	 * A subscription (`PubSub.subscribe`, made before the first publish) is the surest: the view takes from it directly,
 	 * so nothing published after the subscribe is missed, and `LiveHandle.close` folds every message still queued in it
@@ -66,9 +70,13 @@ export interface LiveOptions<E, S> {
 	 * `close` folds what the view has already pulled; what the stream holds and has not yielded is the stream's.
 	 */
 	readonly events: Stream.Stream<E> | PubSub.Subscription<E>;
-	/** The state before the first event. */
+	/**
+	 * The state before the first event.
+	 */
 	readonly initial: S;
-	/** Fold one event into the state. The kit never resets the state: a reducer that wants a fresh run resets it. */
+	/**
+	 * Fold one event into the state. The kit never resets the state: a reducer that wants a fresh run resets it.
+	 */
 	readonly reduce: (state: S, event: E) => S;
 	/**
 	 * Draw the state. `frame` is the wall clock in ticks of `tickMillis` (`floor(now / tickMillis)`, from `Clock`), so a
@@ -77,12 +85,16 @@ export interface LiveOptions<E, S> {
 	 * before it painted), `useTerminalSize().rows` is `Infinity`, since that frame has no height to fit: a render must
 	 * not allocate per row.
 	 *
+	 * **Details**
+	 *
 	 * To keep the view's module (its JSX, and so React) off every run that never draws it, pass
 	 * `CliUi.lazyView(() => import("./view.ts"))`: the module is loaded only when a run first mounts or prints its frame
 	 * with Ink, so `--help`, a usage error, and, with `final`, a run that is not interactive, never load it.
 	 */
 	readonly render: (state: S, frame: number) => ReactElement;
-	/** Whether an event starts a run: by default, the only event that begins one (see `begins`). */
+	/**
+	 * Whether an event starts a run: by default, the only event that begins one (see `begins`).
+	 */
 	readonly isStart: (event: E) => boolean;
 	/**
 	 * Whether an event begins a run while none is going, given the state before and after it is folded; `isStart` by
@@ -94,7 +106,9 @@ export interface LiveOptions<E, S> {
 	 * fresh one.
 	 */
 	readonly begins?: (event: E, before: S, after: S) => boolean;
-	/** Whether an event ends a run: its frame is committed to the terminal and the view unmounts until the next. */
+	/**
+	 * Whether an event ends a run: its frame is committed to the terminal and the view unmounts until the next.
+	 */
 	readonly isTerminal: (event: E) => boolean;
 	/**
 	 * `"owned"` (the default) for a view that owns its output, `"hosted"` for one drawn inside a host's (a test
@@ -103,27 +117,27 @@ export interface LiveOptions<E, S> {
 	 */
 	readonly mode?: "owned" | "hosted";
 	/**
-  * The final frame of a run that is not interactive (an agent, CI, a pipe, `TERM=dumb`), as a document: given, an
-  * `owned` view prints each run's `final(state)` at the run's end instead of rendering `render` to a string with Ink,
-  * so such a run loads neither Ink nor React, nor a `CliUi.lazyView` module.
-  *
-  * **Details**
-  *
-  * It is called once per run, at the run's terminal event (or when the events end mid-run), with the state then, and
-  * replaces the string that run would have printed: never both. It is rendered as `Doc.print` renders a document:
-  * `Render.context("stdout")` when the environment `CliRuntime.main` builds is there (`TerminalEnv`, `Audience` and
-  * `CliLinks`; otherwise the stdout theme, the `Audience` if any, and no width limit), the renderer the audience gets
-  * (`ansi` for a person, `plain` for an agent, `githubLog` under GitHub Actions), and an agent gets no escape. It is
-  * written where the view writes, to `UiStreams` stdout, so a host's capture of the view's output holds it. A document
-  * that renders to nothing prints nothing. A `final` that throws is the run degrading: one warning, nothing printed.
-  *
-  * An interactive run never calls it, and a `hosted` view never prints either way. It need not match the Ink frame:
-  * it is what a reader with no terminal gets.
-  *
-  * With `final` set, `render` is never called on a run that is not interactive, not even to build a string that would
-  * go unused: the run's output is `final(state)` alone. (Pinned by `CliUi.live.final.test.ts`, whose watch-mode test
-  * counts zero `render` calls over three runs.)
-  */
+	 * The final frame of a run that is not interactive (an agent, CI, a pipe, `TERM=dumb`), as a document: given, an
+	 * `owned` view prints each run's `final(state)` at the run's end instead of rendering `render` to a string with Ink,
+	 * so such a run loads neither Ink nor React, nor a `CliUi.lazyView` module.
+	 *
+	 * **Details**
+	 *
+	 * It is called once per run, at the run's terminal event (or when the events end mid-run), with the state then, and
+	 * replaces the string that run would have printed: never both. It is rendered as `Doc.print` renders a document:
+	 * `Render.context("stdout")` when the environment `CliRuntime.main` builds is there (`TerminalEnv`, `Audience` and
+	 * `CliLinks`; otherwise the stdout theme, the `Audience` if any, and no width limit), the renderer the audience gets
+	 * (`ansi` for a person, `plain` for an agent, `githubLog` under GitHub Actions), and an agent gets no escape. It is
+	 * written where the view writes, to `UiStreams` stdout, so a host's capture of the view's output holds it. A document
+	 * that renders to nothing prints nothing. A `final` that throws is the run degrading: one warning, nothing printed.
+	 *
+	 * An interactive run never calls it, and a `hosted` view never prints either way. It need not match the Ink frame:
+	 * it is what a reader with no terminal gets.
+	 *
+	 * With `final` set, `render` is never called on a run that is not interactive, not even to build a string that would
+	 * go unused: the run's output is `final(state)` alone. (Pinned by `CliUi.live.final.test.ts`, whose watch-mode test
+	 * counts zero `render` calls over three runs.)
+	 */
 	readonly final?: ((state: S) => Cli.Document) | undefined;
 	/**
 	 * The frame tick, in milliseconds; 80 by default. While a run is drawn the view redraws on every tick, so a spinner
@@ -140,12 +154,16 @@ export interface LiveOptions<E, S> {
 }
 
 /**
- * The handle of a live view.
+ * Exposes the current fold state, frame-safe logging and completion controls of a live view.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface LiveHandle<S> {
-	/** The current state of the fold. */
+	/**
+	 * The current state of the fold.
+	 */
 	readonly state: Effect.Effect<S>;
 	/**
 	 * A `Console` whose every method writes above the frame while a run is mounted, and straight to the stream otherwise;
@@ -154,6 +172,8 @@ export interface LiveHandle<S> {
 	 * `warn`, `trace` and a failed `assert` to stderr; a group indents what follows. An `Error` argument is written with
 	 * its stack. `clear` does nothing, since erasing the screen would take the scrollback above the frame. Provide it
 	 * around the work done while the view is mounted; a line written to the terminal any other way tears the frame.
+	 *
+	 * **Details**
 	 *
 	 * `Console.Console` is the seam: the kit's logger (`CliLogger`, `CliLog`) and `Effect.log*` write through whatever
 	 * `Console` the fiber has, so they need no reference to the view. A host whose logging lives outside the view's
@@ -171,7 +191,8 @@ export interface LiveHandle<S> {
 	/**
 	 * End the view cleanly, then wait for `done`.
 	 *
-	 * @remarks
+	 * **Details**
+	 *
 	 * It stops taking events, folds what the view holds and has not folded yet, and ends the run as the events ending
 	 * does: an `isTerminal` event among them commits its run as usual, and a run with no terminal event is committed as
 	 * drawn (owned and not interactive: its final frame is printed once). With a subscription, that includes every
@@ -188,8 +209,18 @@ export interface LiveHandle<S> {
 	 * after `close` releases what is left. A `close` after the scope has closed completes at once, there being nothing
 	 * left to end, where `done` is interrupted. A host ends its view with:
 	 *
+	 * **Example** (Close the view before releasing its scope)
+	 *
 	 * ```ts
-	 * handle.close.pipe(Effect.ensuring(Scope.close(scope, Exit.void)))
+	 * import type { LiveHandle } from "@beep/scratchpad/effected/cli/ui/CliUiLive"
+	 * import * as Effect from "effect/Effect"
+	 * import * as Exit from "effect/Exit"
+	 * import * as Scope from "effect/Scope"
+	 *
+	 * const closeHost = (handle: LiveHandle<number>, scope: Scope.Closeable) =>
+	 *   handle.close.pipe(Effect.ensuring(Scope.close(scope, Exit.void)))
+	 *
+	 * console.log(typeof closeHost) // function
 	 * ```
 	 */
 	readonly close: Effect.Effect<void>;
@@ -227,24 +258,38 @@ type Message<E, S> =
 	| { readonly _tag: "Ended" }
 	| { readonly _tag: "Died"; readonly cause: Cause.Cause<never> };
 
-/** What is mounted for a run: its scope (permit, colour, Ink instance, tick) and the slot that swaps its frame. */
+/**
+ * What is mounted for a run: its scope (permit, colour, Ink instance, tick) and the slot that swaps its frame.
+ */
 interface Mounted {
 	readonly scope: Scope.Closeable;
 	readonly slot: HolderSlot;
 }
 
-/** A run, from its first event to its terminal one, mounted or not. */
+/**
+ * A run, from its first event to its terminal one, mounted or not.
+ */
 interface Run<S> {
 	mounted: Mounted | undefined;
-	/** A render failed, or the mount did: the run is unmounted and draws nothing more. */
+	/**
+	 * A render failed, or the mount did: the run is unmounted and draws nothing more.
+	 */
 	degraded: boolean;
-	/** A frame of this run was committed to the terminal. */
+	/**
+	 * A frame of this run was committed to the terminal.
+	 */
 	painted: boolean;
-	/** The error a render threw, reported by the error boundary, not yet acted on. */
+	/**
+	 * The error a render threw, reported by the error boundary, not yet acted on.
+	 */
 	failed: { readonly error: unknown } | undefined;
-	/** The frame index last drawn. */
+	/**
+	 * The frame index last drawn.
+	 */
 	frame: number;
-	/** The last state and frame committed, which the boundary draws in place of a frame that threw. */
+	/**
+	 * The last state and frame committed, which the boundary draws in place of a frame that threw.
+	 */
 	good: { readonly state: S; readonly frame: number } | undefined;
 }
 
@@ -263,9 +308,34 @@ const DEGRADED = (error: unknown): string =>
 	`@effected/cli/ui: the live view stopped drawing this run: ${error instanceof Error ? error.message : String(error)}`;
 
 /**
- * `CliUi.live`, kept in its own module: see `CliUi.live` for the contract.
+ * Folds events into a live terminal view, mounting and committing frames at run boundaries.
+ *
+ * **Details**
+ *
+ * Kept in its own module; see `CliUi.live` for the contract.
+ *
+ * **Example** (Construct a live view effect)
+ *
+ * ```ts
+ * import { live } from "@beep/scratchpad/effected/cli/ui/CliUiLive"
+ * import * as Effect from "effect/Effect"
+ * import * as Stream from "effect/Stream"
+ * import * as React from "react"
+ *
+ * const program = live({
+ *   events: Stream.make("start", "end"),
+ *   initial: 0,
+ *   reduce: (state) => state + 1,
+ *   render: (state) => React.createElement("text", null, String(state)),
+ *   isStart: (event) => event === "start",
+ *   isTerminal: (event) => event === "end",
+ * })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
  *
  * @internal
+ * @category constructors
+ * @since 0.0.0
  */
 export const live = Effect.fn("live")(function* <E, S>(
 	options: LiveOptions<E, S>,
@@ -323,7 +393,9 @@ export const live = Effect.fn("live")(function* <E, S>(
 			}),
 		);
 
-	/** Take the run off and unmount it, in one step an interrupt cannot split; the run taken, if any. */
+	/**
+	 * Take the run off and unmount it, in one step an interrupt cannot split; the run taken, if any.
+	 */
 	const takeRun: Effect.Effect<Run<S> | undefined> = Effect.uninterruptible(
 		Effect.suspend(() => {
 			const current = run;
@@ -339,7 +411,9 @@ export const live = Effect.fn("live")(function* <E, S>(
 	 */
 	const shapesWarned = MutableHashMap.empty<symbol, true>();
 
-	/** The degraded-run warning, unless it is a shape error this view has already warned about. */
+	/**
+	 * The degraded-run warning, unless it is a shape error this view has already warned about.
+	 */
 	const warning = (error: unknown): Effect.Effect<void> => {
 		if (S.is(LazyViewShapeError)(error)) {
 			if (MutableHashMap.has(shapesWarned, error.id)) return Effect.void;
@@ -348,7 +422,9 @@ export const live = Effect.fn("live")(function* <E, S>(
 		return Effect.logWarning(DEGRADED(error));
 	};
 
-	/** Stop drawing a run: unmount first, so the one warning never lands inside a frame, then warn. */
+	/**
+	 * Stop drawing a run: unmount first, so the one warning never lands inside a frame, then warn.
+	 */
 	const degrade = (current: Run<S>, error: unknown): Effect.Effect<void> =>
 		Effect.suspend(() => {
 			if (current.degraded) return unmount(current);
@@ -356,14 +432,18 @@ export const live = Effect.fn("live")(function* <E, S>(
 			return Effect.andThen(unmount(current), warning(error));
 		});
 
-	/** Act on a failure the boundary reported for the run mounted now, if any. */
+	/**
+	 * Act on a failure the boundary reported for the run mounted now, if any.
+	 */
 	const checkFailure: Effect.Effect<void> = Effect.suspend(() => {
 		const current = run;
 		const failed = current?.failed;
 		return current === undefined || failed === undefined ? Effect.void : degrade(current, failed.error);
 	});
 
-	/** Say once that a run stopped drawing: already said for a degraded run, and said here for one that never mounted. */
+	/**
+	 * Say once that a run stopped drawing: already said for a degraded run, and said here for one that never mounted.
+	 */
 	const warnOnce = (current: Run<S>, error: unknown): Effect.Effect<void> =>
 		Effect.suspend(() => {
 			if (current.degraded) return Effect.void;
@@ -371,7 +451,9 @@ export const live = Effect.fn("live")(function* <E, S>(
 			return warning(error);
 		});
 
-	/** The final frame as a string, at the stdout width (80 when it reports none) and with no height to fit. */
+	/**
+	 * The final frame as a string, at the stdout width (80 when it reports none) and with no height to fit.
+	 */
 	const printFrame = Effect.fnUntraced(function* (current: Run<S>): Effect.fn.Return<void> {
 		const viewLoaded = yield* Effect.exit(loadView(options.render));
 		if (Exit.isFailure(viewLoaded)) return yield* warnOnce(current, Cause.squash(Cause.map(viewLoaded.cause, (error) => error.cause)));
@@ -400,7 +482,9 @@ export const live = Effect.fn("live")(function* <E, S>(
 		bridge.print(neutralize ? CommandNeutralizer.text(text) : text);
 	});
 
-	/** The context `final`'s document is rendered with: `Doc.print`'s when the environment is there. */
+	/**
+	 * The context `final`'s document is rendered with: `Doc.print`'s when the environment is there.
+	 */
 	const finalContext: Effect.Effect<RenderContext> = Effect.gen(function* () {
 		const terminal = yield* Effect.serviceOption(TerminalEnv);
 		const links = yield* Effect.serviceOption(CliLinks);
@@ -421,7 +505,9 @@ export const live = Effect.fn("live")(function* <E, S>(
 		});
 	});
 
-	/** A run's `final` document, printed as `Doc.print` would, to the view's stdout; never Ink. */
+	/**
+	 * A run's `final` document, printed as `Doc.print` would, to the view's stdout; never Ink.
+	 */
 	const printFinal = Effect.fnUntraced(function* (current: Run<S>, final: (state: S) => Cli.Document): Effect.fn.Return<void> {
 		const built = Result.try(() => final(state));
 		if (Result.isFailure(built)) return yield* warnOnce(current, built.failure);
@@ -430,7 +516,9 @@ export const live = Effect.fn("live")(function* <E, S>(
 		if (text !== "") bridge.print(text);
 	});
 
-	/** Mount a run's view with the current state, its tick beside it; a failure degrades the run. */
+	/**
+	 * Mount a run's view with the current state, its tick beside it; a failure degrades the run.
+	 */
 	const mount = (current: Run<S>): Effect.Effect<void> =>
 		Effect.gen(function* () {
 			const scope = yield* Scope.make("sequential");
@@ -578,7 +666,9 @@ export const live = Effect.fn("live")(function* <E, S>(
 		}));
 	const draw = drawAt(undefined);
 
-	/** End the run: unmount, which commits its frame; a degraded run that never painted prints its frame instead. */
+	/**
+	 * End the run: unmount, which commits its frame; a degraded run that never painted prints its frame instead.
+	 */
 	const endRun: Effect.Effect<void> = Effect.flatMap(takeRun, (current) => {
 		if (current === undefined) return Effect.void;
 		if (!interactive) {
@@ -616,7 +706,9 @@ export const live = Effect.fn("live")(function* <E, S>(
 		return interactive ? mount(current) : Effect.void;
 	});
 
-	/** Fold a chunk, starting and ending runs at its events, and draw once for what is left of it. */
+	/**
+	 * Fold a chunk, starting and ending runs at its events, and draw once for what is left of it.
+	 */
 	const onChunk = Effect.fnUntraced(function* (chunk: ReadonlyArray<E>): Effect.fn.Return<void> {
 		let dirty = false;
 		for (const event of chunk) {

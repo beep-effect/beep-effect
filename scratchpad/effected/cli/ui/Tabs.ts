@@ -10,6 +10,8 @@ import { Styled, useGlyphs, useTerminalSize, useTheme } from "./UiTheme.ts";
  * What a key does to a {@link Tabs} row: move to the previous or next tab (wrapping), or jump to one by index.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type TabsAction = "prev" | "next" | { readonly jump: number };
 
@@ -17,6 +19,8 @@ export type TabsAction = "prev" | "next" | { readonly jump: number };
  * One tab.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface Tab<N extends string> {
 	/** Identifies the tab; `onChange` and `value` speak in names. */
@@ -29,6 +33,8 @@ export interface Tab<N extends string> {
  * Props of {@link Tabs.View}.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface TabsProps<N extends string> {
 	/** The tabs, in order. */
@@ -111,7 +117,17 @@ const fitAround = (widths: ReadonlyArray<number>, active: number, gap: number, w
  * pass `isFocused: false` to the Tabs while the other widget is being typed into. When unfocused, Tabs reads no key
  * and is drawn muted.
  *
+ * **Example** (Wrap from the last tab to the first)
+ *
+ * ```ts
+ * import { Tabs } from "@beep/scratchpad/effected/cli/ui/Tabs";
+ *
+ * console.log(Tabs.step(2, 3, "next")) // 0
+ * ```
+ *
  * @public
+ * @category components
+ * @since 0.0.0
  */
 export class Tabs {
 	private constructor() {}
@@ -120,32 +136,79 @@ export class Tabs {
 	 * The tab an action lands on: `"prev"` and `"next"` wrap at both ends; `{ jump }` moves to that index and does
 	 * nothing when it is out of range.
 	 *
+	 * **Example** (Wrap backward and ignore an invalid jump)
+	 *
+	 * ```ts
+	 * import { Tabs } from "@beep/scratchpad/effected/cli/ui/Tabs";
+	 *
+	 * console.log(Tabs.step(0, 3, "prev")) // 2
+	 * console.log(Tabs.step(1, 3, { jump: 9 })) // 1
+	 * ```
+	 *
 	 * @param index - the active tab
 	 * @param count - how many tabs there are
 	 * @param action - the action
+	 * @category combinators
+	 * @since 0.0.0
 	 */
 	static readonly step: (index: number, count: number, action: TabsAction) => number = step;
 
-	/** The keys of a row: `←`/`→` and Tab/Shift-Tab switch, plain digits 1–9 jump, 0 is the tenth tab. */
+	/**
+	 *  The keys of a row: `←`/`→` and Tab/Shift-Tab switch, plain digits 1–9 jump, 0 is the tenth tab.
+	 *
+	 * **Example** (Inspect the row navigation binding)
+	 *
+	 * ```ts
+	 * import { Tabs } from "@beep/scratchpad/effected/cli/ui/Tabs";
+	 *
+	 * console.log(Tabs.keys.bindings[0]?.action) // prev
+	 * ```
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	static readonly keys: KeyTable<TabsAction> = ROW_KEYS;
 
-	/** The keys of a column: `↑`/`↓` in place of `←`/`→`. */
+	/**
+	 *  The keys of a column: `↑`/`↓` in place of `←`/`→`.
+	 *
+	 * **Example** (Inspect the column navigation binding)
+	 *
+	 * ```ts
+	 * import { Tabs } from "@beep/scratchpad/effected/cli/ui/Tabs";
+	 *
+	 * console.log(Tabs.columnKeys.bindings[0]?.action) // prev
+	 * ```
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	static readonly columnKeys: KeyTable<TabsAction> = COLUMN_KEYS;
 
 	/**
-  * Draw the tabs: the active one in the accent token, bold and underlined; the others plain; every tab muted while
-  * unfocused. At colour `"none"`, where all of that vanishes, the active tab is bracketed, `[Alpha]`, and the others
-  * padded a space each side. A row wider than the terminal shows the tabs that fit around the active one, with the
-  * glyph set's ellipsis at a cut edge, so it never wraps.
-  *
-  * **Details**
-  *
-  * Controlled when `value` is given: a key calls `onChange` and the active tab moves only when `value` does.
-  * Uncontrolled otherwise, starting at `defaultValue` or the first tab. Either way `onChange` fires once on mount
-  * with the starting tab.
-  *
-  * @param props - the tabs and how they behave
-  */
+	 * Draw the tabs: the active one in the accent token, bold and underlined; the others plain; every tab muted while
+	 * unfocused. At colour `"none"`, where all of that vanishes, the active tab is bracketed, `[Alpha]`, and the others
+	 * padded a space each side. A row wider than the terminal shows the tabs that fit around the active one, with the
+	 * glyph set's ellipsis at a cut edge, so it never wraps.
+	 *
+	 * **Details**
+	 *
+	 * Controlled when `value` is given: a key calls `onChange` and the active tab moves only when `value` does.
+	 * Uncontrolled otherwise, starting at `defaultValue` or the first tab. Either way `onChange` fires once on mount
+	 * with the starting tab.
+	 *
+	 * **Example** (Compose a controlled tabs view)
+	 *
+	 * ```ts
+	 * import { Tabs } from "@beep/scratchpad/effected/cli/ui/Tabs";
+	 * import { createElement } from "react";
+	 *
+	 * const element = createElement(Tabs.View<string>, { tabs: [{ name: "alpha", label: "Alpha" }, { name: "beta", label: "Beta" }], value: "alpha", isFocused: false });
+	 * console.log(element.props.value) // alpha
+	 * ```
+	 *
+	 * @param props - the tabs and how they behave
+	 * @category components
+	 * @since 0.0.0
+	 */
 	static readonly View = <N extends string>(props: TabsProps<N>): ReactElement => {
 		const { ink, react } = inkModules();
 		const glyphs = useGlyphs();

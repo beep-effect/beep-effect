@@ -30,13 +30,21 @@ class DuplicateToggleKeyError extends S.TaggedError<DuplicateToggleKeyError>($I`
  * An extra on/off row a {@link Confirm} hosts beneath its yes/no answer.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface ConfirmToggle<K extends string> {
-	/** Names the toggle in the result. */
+	/**
+	 * Names the toggle in the result.
+	 */
 	readonly key: K;
-	/** What the row shows. */
+	/**
+	 * What the row shows.
+	 */
 	readonly label: string;
-	/** Whether it starts on. */
+	/**
+	 * Whether it starts on.
+	 */
 	readonly value: boolean;
 }
 
@@ -44,9 +52,13 @@ export interface ConfirmToggle<K extends string> {
  * What a {@link Confirm} resolves with: the answer, and every toggle by key.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface ConfirmResult<K extends string> {
-	/** Yes or no. */
+	/**
+	 * Yes or no.
+	 */
 	readonly confirmed: boolean;
 	/**
 	 * Each toggle's final value, by its key. Partial, because a toggle passed conditionally may be absent: read one
@@ -56,18 +68,28 @@ export interface ConfirmResult<K extends string> {
 }
 
 /**
- * Where a {@link Confirm} is.
+ * Tracks the answer, highlighted row, toggle values and submission state of a {@link Confirm}.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface ConfirmState<K extends string> {
-	/** The answer. */
+	/**
+	 * The answer.
+	 */
 	readonly confirmed: boolean;
-	/** The highlighted row: 0 is the yes/no row, each toggle follows. */
+	/**
+	 * The highlighted row: 0 is the yes/no row, each toggle follows.
+	 */
 	readonly row: number;
-	/** The toggles and their current values. */
+	/**
+	 * The toggles and their current values.
+	 */
 	readonly toggles: ReadonlyArray<ConfirmToggle<K>>;
-	/** Whether enter was pressed. */
+	/**
+	 * Whether enter was pressed.
+	 */
 	readonly submitted: boolean;
 }
 
@@ -75,38 +97,54 @@ export interface ConfirmState<K extends string> {
  * What a key does in a {@link Confirm}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type ConfirmAction = "up" | "down" | "toggle" | "yes" | "no" | "flip" | "submit" | "cancel";
 
 /**
- * Options for {@link Confirm.init}.
+ * Configures the starting answer and extra toggle rows for {@link Confirm.init}.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface ConfirmInitOptions<K extends string> {
-	/** The starting answer; no (`false`) by default. */
+	/**
+	 * The starting answer; no (`false`) by default.
+	 */
 	readonly initial?: boolean;
-	/** Extra on/off rows, with unique keys. */
+	/**
+	 * Extra on/off rows, with unique keys.
+	 */
 	readonly toggles?: ReadonlyArray<ConfirmToggle<K>>;
 }
 
 /**
- * Options for {@link Confirm.screen}.
+ * Supplies the question and initial state for a ready-made {@link Confirm.screen}.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface ConfirmScreenOptions<K extends string> extends ConfirmInitOptions<K> {
-	/** The question. */
+	/**
+	 * The question.
+	 */
 	readonly message: string;
 }
 
 /**
- * Props of {@link Confirm.View}.
+ * Supplies the question, initial state and submit handler for {@link Confirm.View}.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface ConfirmViewProps<K extends string> extends ConfirmScreenOptions<K> {
-	/** Receives the answer and the toggles when enter is pressed. */
+	/**
+	 * Receives the answer and the toggles when enter is pressed.
+	 */
 	readonly onSubmit: (result: ConfirmResult<K>) => void;
 }
 
@@ -169,7 +207,9 @@ const result = <K extends string>(state: ConfirmState<K>): ConfirmResult<K> => {
 	return { confirmed: state.confirmed, toggles };
 };
 
-/** The bindings; with no toggles the row and toggle keys stay bound (they do nothing) but leave the help line. */
+/**
+ * The bindings; with no toggles the row and toggle keys stay bound (they do nothing) but leave the help line.
+ */
 const bindings = (toggles: boolean): KeyTable<ConfirmAction> =>
 	KeyTable.make<ConfirmAction>([
 		{ keys: [{ char: "y" }], action: "yes", help: "yes" },
@@ -186,14 +226,17 @@ const bindings = (toggles: boolean): KeyTable<ConfirmAction> =>
 const KEYS = bindings(true);
 const ANSWER_KEYS = bindings(false);
 
-/** The lines around the toggle rows: the question, the answer row and the help line. */
+/**
+ * The lines around the toggle rows: the question, the answer row and the help line.
+ */
 const RESERVED = 3;
 
 /**
  * A yes/no question, optionally with extra on/off rows beneath it: a pure reducer, its key table, a view and a
  * ready-made screen.
  *
- * @remarks
+ * **Details**
+ *
  * The rows are the yes/no row first, then each toggle. `y` and `n` set the answer and `←`/`→` flip it, from any
  * row; `↑`/`↓` move between rows; space flips the highlighted toggle and does nothing on the yes/no row; enter
  * submits; `q` cancels with `"escape"`. Toggle keys must be unique; `init` throws, and `screen` dies, on a repeat.
@@ -203,9 +246,12 @@ const RESERVED = 3;
  *
  * A toggle passed conditionally is absent from the result when it was left out, so read it back with a fallback:
  *
+ * **Example** (Read a conditional toggle safely)
+ *
  * ```ts
- * import { CliUi, Confirm } from "../ui.ts"
- * import * as Effect from "effect/Effect";
+ * import { CliUi } from "@beep/scratchpad/effected/cli/ui/CliUi"
+ * import { Confirm } from "@beep/scratchpad/effected/cli/ui/Confirm"
+ * import * as Effect from "effect/Effect"
  *
  * const publish = (drafts: number) =>
  *   Effect.gen(function* () {
@@ -218,9 +264,13 @@ const RESERVED = 3;
  *     const promote = toggles.promote ?? false
  *     return { confirmed, promote }
  *   })
+ *
+ * console.log(Effect.isEffect(publish(1))) // true
  * ```
  *
  * @public
+ * @category components
+ * @since 0.0.0
  */
 export class Confirm {
 	private constructor() {}
@@ -228,15 +278,36 @@ export class Confirm {
 	/**
 	 * A confirm with its answer (no by default) and toggles, on the yes/no row.
 	 *
+	 * **Example** (Start with a negative answer)
+	 *
+	 * ```ts
+	 * import { Confirm } from "@beep/scratchpad/effected/cli/ui/Confirm"
+	 *
+	 * console.log(Confirm.init().confirmed) // false
+	 * ```
+	 *
 	 * @param options - the starting answer and the toggles
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly init: <K extends string>(options?: ConfirmInitOptions<K>) => ConfirmState<K> = init;
 
 	/**
-	 * Apply an action (see the class remarks for what each key does).
+	 * Apply an action (see the class Details for what each key does).
+	 *
+	 * **Example** (Set the answer to yes)
+	 *
+	 * ```ts
+	 * import { Confirm } from "@beep/scratchpad/effected/cli/ui/Confirm"
+	 *
+	 * const state = Confirm.step(Confirm.init(), "yes")
+	 * console.log(state.confirmed) // true
+	 * ```
 	 *
 	 * @param state - where the confirm is
 	 * @param action - the action
+	 * @category mapping
+	 * @since 0.0.0
 	 */
 	static readonly step: <K extends string>(state: ConfirmState<K>, action: ConfirmAction) => ConfirmState<K> =
 		step;
@@ -244,23 +315,59 @@ export class Confirm {
 	/**
 	 * The answer and every toggle's value by key.
 	 *
+	 * **Example** (Read the final toggle value)
+	 *
+	 * ```ts
+	 * import { Confirm } from "@beep/scratchpad/effected/cli/ui/Confirm"
+	 *
+	 * const state = Confirm.init({ toggles: [{ key: "promote", label: "Promote drafts", value: true }] })
+	 * console.log(Confirm.result(state).toggles.promote) // true
+	 * ```
+	 *
 	 * @param state - where the confirm is
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	static readonly result: <K extends string>(state: ConfirmState<K>) => ConfirmResult<K> = result;
 
-	/** The keys: y yes, n no, ←/→ flip, ↑/↓ row, space toggle, enter submit, q cancel (the view hides row and toggle from its help when there are no toggles). */
+	/**
+	 * The keys: y yes, n no, ←/→ flip, ↑/↓ row, space toggle, enter submit, q cancel (the view hides row and toggle from its help when there are no toggles).
+	 *
+	 * **Example** (Inspect the confirmation bindings)
+	 *
+	 * ```ts
+	 * import { Confirm } from "@beep/scratchpad/effected/cli/ui/Confirm"
+	 *
+	 * console.log(Confirm.keys.bindings.length) // 9
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	static readonly keys: KeyTable<ConfirmAction> = KEYS;
 
 	/**
-  * Draw the confirm: the question, the answer row (`[Yes]  No` or ` Yes  [No]`, the chosen answer in brackets so it
-  * shows without colour, and in the accent token), a {@link Toggle} row per toggle, and the key help.
-  *
-  * **Details**
-  *
-  * Single-shot, like `Select.View`: the options are read once at mount.
-  *
-  * @param props - the question, the starting answer, the toggles and where the result goes
-  */
+	 * Draw the confirm: the question, the answer row (`[Yes]  No` or ` Yes  [No]`, the chosen answer in brackets so it
+	 * shows without colour, and in the accent token), a {@link Toggle} row per toggle, and the key help.
+	 *
+	 * **Details**
+	 *
+	 * Single-shot, like `Select.View`: the options are read once at mount.
+	 *
+	 * **Example** (Construct a confirmation view)
+	 *
+	 * ```ts
+	 * import { Confirm } from "@beep/scratchpad/effected/cli/ui/Confirm"
+	 * import * as React from "react"
+	 *
+	 * const view = React.createElement(Confirm.View, { message: "Publish?", onSubmit: () => {} })
+	 * console.log(React.isValidElement(view)) // true
+	 * ```
+	 *
+	 * @param props - the question, the starting answer, the toggles and where the result goes
+	 * @category components
+	 * @since 0.0.0
+	 */
 	static readonly View = <K extends string>(props: ConfirmViewProps<K>): ReactElement => {
 		const { ink, react } = inkModules();
 		const glyphs = useGlyphs();
@@ -339,7 +446,18 @@ export class Confirm {
 	/**
 	 * A ready-made screen for `CliUi.run`: the confirm, resolving with the answer and the toggles.
 	 *
+	 * **Example** (Prepare a confirmation screen)
+	 *
+	 * ```ts
+	 * import { Confirm } from "@beep/scratchpad/effected/cli/ui/Confirm"
+	 *
+	 * const screen = Confirm.screen({ message: "Publish?" })
+	 * console.log(typeof screen) // function
+	 * ```
+	 *
 	 * @param options - the question, the starting answer and the toggles
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly screen =
 		<K extends string>(options: ConfirmScreenOptions<K>): Screen<ConfirmResult<K>> =>

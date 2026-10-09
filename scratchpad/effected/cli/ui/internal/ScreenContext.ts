@@ -14,6 +14,8 @@ class ScreenContextError extends S.TaggedError<ScreenContextError>($I`ScreenCont
  * What every kit widget reads from its screen.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ScreenContextValue {
 	/** Cancel the screen; absent under a tree that is not a screen (a `UiProvider`, a live view). */
@@ -39,7 +41,19 @@ export interface ScreenContextValue {
 /**
  * The React context carrying {@link ScreenContextValue}, built on the loaded React.
  *
+ * **Example** (Inspect the default screen context)
+ *
+ * ```ts
+ * import { screenContext } from "@beep/scratchpad/effected/cli/ui/internal/ScreenContext"
+ * import * as Effect from "effect/Effect"
+ * import { loadInk } from "@beep/scratchpad/effected/cli/ui/internal/ink"
+ * await Effect.runPromise(loadInk)
+ * console.log(screenContext().Provider === screenContext().Provider) // true
+ * ```
+ *
  * @internal
+ * @category providers
+ * @since 0.0.0
  */
 export const screenContext: () => ReactContext<ScreenContextValue | undefined> = fromReact((react) =>
 	react.createContext<ScreenContextValue | undefined>(undefined),
@@ -55,7 +69,24 @@ const ignore = (): void => undefined;
  * A React hook; throws outside a screen mounted by `CliUi.run` or a `UiProvider`. Under a tree that is not a screen
  * (a `UiProvider`, a live view) there is nothing to cancel, and it does nothing.
  *
+ * **Example** (Cancel from a mounted widget)
+ *
+ * ```ts
+ * import { useScreenCancel } from "@beep/scratchpad/effected/cli/ui/internal/ScreenContext"
+ * import { createElement, isValidElement } from "react"
+ * import { Text } from "ink"
+ *
+ * const Widget = () => {
+ *   const cancel = useScreenCancel()
+ *   return createElement(Text, null, typeof cancel)
+ * }
+ * // Mount Widget inside CliUi.run or UiProvider before its hook executes.
+ * console.log(isValidElement(createElement(Widget))) // true
+ * ```
+ *
  * @internal
+ * @category hooks
+ * @since 0.0.0
  */
 export const useScreenCancel = (): ((reason: "escape" | "interrupt") => void) => {
 	const screen = inkModules().react.useContext(screenContext());
@@ -79,7 +110,25 @@ export const useScreenCancel = (): ((reason: "escape" | "interrupt") => void) =>
  *
  * A React hook.
  *
+ * **Example** (Guard an input handler inside a widget)
+ *
+ * ```ts
+ * import { useScreenGuard } from "@beep/scratchpad/effected/cli/ui/internal/ScreenContext"
+ * import { createElement, isValidElement } from "react"
+ * import { Text } from "ink"
+ *
+ * const Widget = () => {
+ *   const guard = useScreenGuard()
+ *   const handle = guard((text: string) => console.log(text))
+ *   return createElement(Text, null, typeof handle)
+ * }
+ * // Mount Widget inside CliUi.run to route handler throws to the screen.
+ * console.log(isValidElement(createElement(Widget))) // true
+ * ```
+ *
  * @internal
+ * @category hooks
+ * @since 0.0.0
  */
 export const useScreenGuard = (): (<Args extends ReadonlyArray<unknown>>(
 	handler: (...args: Args) => void,

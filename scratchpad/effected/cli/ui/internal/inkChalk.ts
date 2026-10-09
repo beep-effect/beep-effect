@@ -11,6 +11,8 @@ import * as P from "effect/Predicate";
  * A chalk colour level: 0 none, 1 basic, 2 256 colours, 3 truecolor.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export type ChalkLevel = 0 | 1 | 2 | 3;
 
@@ -19,6 +21,8 @@ export type ChalkLevel = 0 | 1 | 2 | 3;
  * is live.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface InkChalk {
 	level: ChalkLevel;
@@ -41,8 +45,18 @@ const esmResolve: ((specifier: string) => string) | undefined =
  * Vite's module runner, which evaluates a Vitest reporter loaded by path, has an `import.meta.resolve` that throws
  * ("not supported"); the CommonJS resolution finds the same file, since Ink's `exports` has a `default` condition.
  *
+ * **Example** (Resolve a supplied Ink entry URL)
+ *
+ * ```ts
+ * import { resolveInkEntry } from "@beep/scratchpad/effected/cli/ui/internal/inkChalk"
+ * const entry = resolveInkEntry(() => "file:///sandbox/ink/index.js")
+ * console.log(entry.endsWith("/sandbox/ink/index.js")) // true
+ * ```
+ *
  * @param resolve - an ESM resolver, to stand in for the runtime's in a test
  * @internal
+ * @category getters
+ * @since 0.0.0
  */
 export const resolveInkEntry = (resolve: ((specifier: string) => string) | undefined = esmResolve): string => {
 	if (resolve !== undefined) {
@@ -68,8 +82,18 @@ export const resolveInkEntry = (resolve: ((specifier: string) => string) | undef
  * to resolve, and the answer is `None`; it never fails. Realpaths are resolved by the ambient FileSystem service,
  * or a scoped Node FileSystem layer when the caller has no platform layer.
  *
+ * **Example** (Construct a chalk resolution effect)
+ *
+ * ```ts
+ * import { inkChalk } from "@beep/scratchpad/effected/cli/ui/internal/inkChalk"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(inkChalk())) // true
+ * ```
+ *
  * @param inkEntryOf - how Ink's entry is found; {@link resolveInkEntry} by default
  * @internal
+ * @category resource-management
+ * @since 0.0.0
  */
 export const inkChalk = Effect.fn("inkChalk")(function* (
 	inkEntryOf: () => string = resolveInkEntry,

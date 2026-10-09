@@ -16,13 +16,27 @@ const $I = $ScratchpadId.create("effected/cli/ui/UiStreams");
  * TypeScript consumer of `./ui` needs `@types/node`, beside the optional peer `@types/react` for its React types.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface UiStreamsShape {
-	/** The input a screen reads keys from. */
+	/**
+	 * The input a screen reads keys from.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly stdin: NodeJS.ReadStream;
-	/** The output a screen draws on. */
+	/**
+	 * The output a screen draws on.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly stdout: NodeJS.WriteStream;
-	/** The error output, which Ink also binds. */
+	/**
+	 * The error output, which Ink also binds.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly stderr: NodeJS.WriteStream;
 }
 
@@ -35,7 +49,19 @@ export interface UiStreamsShape {
  * at import, and a test provides in-memory streams with `Effect.provideService(UiStreams, streams)`. `./ui` binds
  * Node's process streams.
  *
+ * **Example** (Read the default stream service)
+ *
+ * ```ts
+ * import { UiStreams } from "@beep/scratchpad/effected/cli/ui/UiStreams"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.map(UiStreams, (streams) => typeof streams.stdout.write)
+ * console.log(Effect.runSync(program)) // function
+ * ```
+ *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class UiStreams extends Context.Reference<UiStreamsShape>($I`UiStreams`, {
 	defaultValue: () => processStreams(),

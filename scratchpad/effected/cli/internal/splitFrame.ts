@@ -46,7 +46,18 @@ const wrappedFrame = (text: string): { readonly fn: string; readonly location: s
 /**
  * A frame's text without `at `, and its location: the part in parentheses, or the whole text when there are none.
  *
+ * **Example** (Extract a stack frame location)
+ *
+ * ```ts
+ * import { splitFrame } from "@beep/scratchpad/effected/cli/internal/splitFrame"
+ * const frame = splitFrame("  at main (src/main.ts:4:2)  ")
+ * console.log(frame.fn) // main
+ * console.log(frame.location) // src/main.ts:4:2
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const splitFrame = (raw: string): { readonly text: string; readonly fn?: string; readonly location: string } => {
 	const text = raw.trim().replace(/^at\s+/, "");

@@ -11,6 +11,15 @@ import { sanitize } from "../../Fmt.ts";
  * target differs from its label; and a widget's row budget counts one row per line, so a second line would push the
  * frame past the terminal, where Ink wipes the screen and its scrollback.
  *
+ * **Example** (Fold a multiline label into one row)
+ *
+ * ```ts
+ * import { lineText } from "@beep/scratchpad/effected/cli/ui/internal/lineText"
+ * console.log(lineText("Alpha\r\nBeta")) // Alpha Beta
+ * ```
+ *
  * @internal
+ * @category formatting
+ * @since 0.0.0
  */
 export const lineText = (text: string): string => sanitize(text).replace(/\r\n|\r|\n/g, " ");

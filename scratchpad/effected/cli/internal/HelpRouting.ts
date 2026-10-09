@@ -23,7 +23,19 @@ import * as P from "effect/Predicate";
  * A Formatter or Console provided inside `program` is not wrapped, so help
  * stays on stdout there: core's own behaviour.
  *
+ * **Example** (Construct a help-routing program)
+ *
+ * ```ts
+ * import { routeHelpOnUsageError } from "@beep/scratchpad/effected/cli/internal/HelpRouting"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = routeHelpOnUsageError(Effect.succeed("done"))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @internal
+ * @category utilities
+ * @since 0.0.0
  */
 export const routeHelpOnUsageError = Effect.fn("routeHelpOnUsageError")(function* <A, E, R>(
 	program: Effect.Effect<A, E, R>,

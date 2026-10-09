@@ -26,6 +26,8 @@ const $I = $ScratchpadId.create("effected/cli/CliLinks");
  * `auto` picks `vscode` when it finds a signal of VS Code and `file` otherwise.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type EditorLinks = "auto" | "vscode" | "file" | "off";
 
@@ -33,6 +35,8 @@ export type EditorLinks = "auto" | "vscode" | "file" | "off";
  * The shape of the {@link CliLinks} service: the mode decided, and the URL a link target becomes.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface CliLinksShape {
 	/** The mode `auto` resolved to, or the one that was asked for. */
@@ -53,6 +57,8 @@ export interface CliLinksShape {
  * Options for {@link CliLinks.layer}.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface CliLinksOptions {
 	/** The setting, `auto` by default. An environment variable the consumer names beats it. */
@@ -67,6 +73,8 @@ export interface CliLinksOptions {
  * The options of {@link CliLinks.linker}.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface CliLinksLinkerOptions {
 	/** The service that turns a target into a URL. */
@@ -121,6 +129,8 @@ const exists = (fs: FileSystem.FileSystem, path: string): Effect.Effect<boolean>
 
 /**
  * The nearest directory, from `cwd` up, that holds `.git` or `pnpm-workspace.yaml`.
+ *
+ * **Details**
  *
  * It looks at `cwd` and then climbs at most {@link MAX_ASCENT} directories, through `Walker.ascend`, which also stops
  * where `dirname` reaches a fixpoint (the filesystem root). `Walker.findRoot` absorbs a failed probe as "not a root",
@@ -205,18 +215,42 @@ const build = Effect.fn("build")(function* (
  *
  * Whether a link is written at all is a separate question, answered by {@link CliLinks.linker}.
  *
+ * **Example** (Fix file links for a test)
+ *
+ * ```ts
+ * import { CliLinks } from "@beep/scratchpad/effected/cli/CliLinks"
+ * import * as Layer from "effect/Layer"
+ *
+ * const live = CliLinks.layerTest("file")
+ * console.log(Layer.isLayer(live)) // true
+ * ```
+ *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class CliLinks extends Context.Service<CliLinks, CliLinksShape>()($I`CliLinks`) {
 	/**
-  * The links for the working directory, reading the filesystem for a `.vscode/` directory.
-  *
-  * **Gotchas**
-  *
-  * A layer-returning function mints a fresh layer per call: call it once and bind the result to a constant.
-  *
-  * @param options - the setting, the environment variable that overrides it, and the working directory
-  */
+	 * The links for the working directory, reading the filesystem for a `.vscode/` directory.
+	 *
+	 * **Gotchas**
+	 *
+	 * A layer-returning function mints a fresh layer per call: call it once and bind the result to a constant.
+	 *
+	 * **Example** (Build editor-aware links once)
+	 *
+	 * ```ts
+	 * import { CliLinks } from "@beep/scratchpad/effected/cli/CliLinks"
+	 * import * as Layer from "effect/Layer"
+	 *
+	 * const live = CliLinks.layer({ editorLinks: "auto", cwd: "/project" })
+	 * console.log(Layer.isLayer(live)) // true
+	 * ```
+	 *
+	 * @param options - the setting, the environment variable that overrides it, and the working directory
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer = (
 		options: CliLinksOptions = {},
 	): LayerType.Layer<CliLinks, never, FileSystem.FileSystem | Path.Path | CurrentRuntimeEnv> =>
@@ -232,7 +266,23 @@ export class CliLinks extends Context.Service<CliLinks, CliLinksShape>()($I`CliL
 	/**
 	 * Links fixed to a mode, with no filesystem: a relative path has no link, since there is no working directory.
 	 *
+	 * **Example** (Resolve an absolute file without a filesystem)
+	 *
+	 * ```ts
+	 * import { CliLinks } from "@beep/scratchpad/effected/cli/CliLinks"
+	 * import * as Effect from "effect/Effect"
+	 * import * as O from "effect/Option"
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const links = yield* CliLinks
+	 *   return O.getOrElse(links.target({ file: "/project/main.ts" }), () => "missing")
+	 * }).pipe(Effect.provide(CliLinks.layerTest("file")))
+	 * console.log(Effect.runSync(program)) // file:///project/main.ts
+	 * ```
+	 *
 	 * @param mode - `vscode`, `file` or `off`
+	 * @category layers
+	 * @since 0.0.0
 	 */
 	static readonly layerTest = (mode: "vscode" | "file" | "off"): LayerType.Layer<CliLinks> =>
 		Layer.succeed(CliLinks, {
@@ -241,19 +291,35 @@ export class CliLinks extends Context.Service<CliLinks, CliLinksShape>()($I`CliL
 		});
 
 	/**
-  * The function that writes a link: a target and a label in, the label out, wrapped in OSC 8 when it should be.
-  *
-  * **Details**
-  *
-  * It writes the hyperlink `ESC ] 8 ; ; URL ESC \ label ESC ] 8 ; ; ESC \` only when the stream's terminal can
-  * render it (`hyperlinks`) and the audience is not an agent, which never gets an escape of any kind; in every other
-  * case, and whenever the target has no URL, it returns the label unchanged. The URL has its control characters
-  * removed again here, so a hostile target cannot end the sequence early or start another, and a URL whose scheme is
-  * not one a link may have (`javascript:`, `data:`, and the like; the same list markdown uses) is the label alone. It is pure and cheap,
-  * which {@link RenderContext}'s `link` requires.
-  *
-  * @param options - the links, whether hyperlinks are available, and the audience
-  */
+	 * The function that writes a link: a target and a label in, the label out, wrapped in OSC 8 when it should be.
+	 *
+	 * **Details**
+	 *
+	 * It writes the hyperlink `ESC ] 8 ; ; URL ESC \ label ESC ] 8 ; ; ESC \` only when the stream's terminal can
+	 * render it (`hyperlinks`) and the audience is not an agent, which never gets an escape of any kind; in every other
+	 * case, and whenever the target has no URL, it returns the label unchanged. The URL has its control characters
+	 * removed again here, so a hostile target cannot end the sequence early or start another, and a URL whose scheme is
+	 * not one a link may have (`javascript:`, `data:`, and the like; the same list markdown uses) is the label alone. It is pure and cheap,
+	 * which {@link RenderContext}'s `link` requires.
+	 *
+	 * **Example** (Keep agent labels free of escapes)
+	 *
+	 * ```ts
+	 * import { CliLinks } from "@beep/scratchpad/effected/cli/CliLinks"
+	 * import * as O from "effect/Option"
+	 *
+	 * const link = CliLinks.linker({
+	 *   links: { mode: "file", target: () => O.some("file:///project/main.ts") },
+	 *   hyperlinks: true,
+	 *   audience: "agent",
+	 * })
+	 * console.log(link({ file: "/project/main.ts" }, "source")) // source
+	 * ```
+	 *
+	 * @param options - the links, whether hyperlinks are available, and the audience
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	static readonly linker =
 		(options: CliLinksLinkerOptions) =>
 		(target: LinkTarget, label: string): string => {
@@ -270,11 +336,25 @@ export class CliLinks extends Context.Service<CliLinks, CliLinksShape>()($I`CliL
  * The links for {@link CliEnv.layer}: the same as {@link CliLinks.layer}, except that `FileSystem` and `Path` are
  * taken from the environment if it has them, not required.
  *
+ * **Details**
+ *
  * Without them there is no `.vscode/` to look for and no working directory to resolve a relative path against, so
  * `auto` is `vscode` only on the terminal signal. This keeps the requirements of `CliEnv.layer` and of every
  * `CliRuntime.main` overload unchanged.
  *
+ * **Example** (Construct links with optional platform services)
+ *
+ * ```ts
+ * import { ambientLinksLayer } from "@beep/scratchpad/effected/cli/CliLinks"
+ * import * as Layer from "effect/Layer"
+ *
+ * const live = ambientLinksLayer({ editorLinks: "file" })
+ * console.log(Layer.isLayer(live)) // true
+ * ```
+ *
  * @internal
+ * @category layers
+ * @since 0.0.0
  */
 export const ambientLinksLayer = (
 	options: CliLinksOptions = {},

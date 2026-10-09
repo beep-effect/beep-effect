@@ -1,23 +1,6 @@
 # cli (lab port of @effected/cli)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Fcli?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/cli)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
-
 The presentation boundary of a command-line program built on `effect/cli`: who the output is for, and how it reaches them. Plain log lines on the right stream. Colour, glyphs and links only where the terminal and the reader can use them. Documents rendered for a person, an agent or a CI log. Failures reported through your own logger with the right exit code. Prompts that know when there is nobody to ask. Interactive screens and live progress views drawn with Ink. `effect/cli` still owns argument parsing, flags, the command tree and help; this package adds no parser and no command model.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/cli
 
@@ -27,25 +10,11 @@ Effect's default logger emits `[00:33:56.619] INFO (#2): message`, which is righ
 
 This package makes those decisions once, at the edge of the program, from the environment it actually runs in.
 
-## Install
-
-```bash
-npm install @effected/cli @effected/env @effected/glob @effected/walker effect
-```
-
-```bash
-pnpm add @effected/cli @effected/env @effected/glob @effected/walker effect
-```
-
 Requires Node.js >=24.11.0. `effect` v4, `@effected/env` (the audience and terminal services), and `@effected/walker` with its `@effected/glob` peer (the project root for editor links) are peer dependencies. The one runtime dependency is `@effected/github-commands`. The package never imports a platform package, so it runs unchanged on Node, Bun and Deno.
 
 Optional peers:
 
 - **`ink` and `react`**, plus **`@types/react`** for TypeScript, for the interactive screens and live views in `@effected/cli/ui`. The root never reaches them, and `./ui` loads neither until a screen first mounts. Without `@types/react`, a program compiled with `skipLibCheck` silently types every screen as `any`.
-
-  ```bash
-  npm install ink react @types/react
-  ```
 
 - **`@effected/config-file`**, only for `ConfigIssueRenderer`. It is imported as a type, so nothing at runtime reaches for it.
 
@@ -56,9 +25,9 @@ All `@effected/*` packages are ESM-only: the exports maps publish only `import` 
 One wiring serves every program: share the audience flags on the root command, run it through `CliAudience.run`, and hand that to `CliRuntime.main` with an `env`.
 
 ```ts
-import { CliAudience, CliExit, CliMessage, CliRuntime, Doc } from "@effected/cli";
+import { CliAudience, CliExit, CliMessage, CliRuntime, Doc } from "@beep/scratchpad/effected/cli";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { Command } from "effect/cli";
 
 const sync = Command.make("sync", {}, () =>
@@ -150,7 +119,7 @@ Every string that enters a document or a message is sanitised: escape sequences 
 A prompt fires only when `CliInteractive` is true: a human audience, a terminal on stdin and stdout, and `TERM` not `dumb`. Otherwise it answers a default you supply, or fails cleanly.
 
 ```ts
-import { CliPrompt } from "@effected/cli";
+import { CliPrompt } from "@beep/scratchpad/effected/cli";
 import { Flag, Prompt } from "effect/cli";
 
 // Core's prompt as a flag fallback: asks at a terminal, uses "library" in a pipe.
@@ -167,7 +136,7 @@ const profile = Flag.String("profile").pipe(
 `@effected/cli/ui` adds Ink screens: `CliUi.run`, `prompt` (with an `otherwise`) and `fallback` (for a flag), over the widgets `Select`, `TextInput` (with a `mask` for secrets, always, or from the moment a predicate spots one anywhere in the value, latched until the value is cleared: its `validate` message is drawn unmasked, so never echo the value in it), `MultiSelect`, `Confirm` (with toggles), `Toggle`, `Tabs` and `Viewport`. Your own screens use the key layer (`KeyTable`, `useKeys`, `KeyHelp`) and the theme bridge (`Styled`, `useTheme`, `useGlyphs`, `useTerminalSize`).
 
 ```tsx
-import { CliUi, Select } from "@effected/cli/ui";
+import { CliUi, Select } from "@beep/scratchpad/effected/cli/ui";
 
 const pickProfile = Select.screen({
   message: "Profile",
@@ -183,7 +152,7 @@ const profile = CliUi.prompt(pickProfile, { otherwise: "library" });
 `CliUi.map(screen, f)` maps a screen's answer and leaves a cancel alone, so a `Confirm` can back a boolean flag ("confirm, or `--yes`"):
 
 ```ts
-import { CliUi, Confirm } from "@effected/cli/ui";
+import { CliUi, Confirm } from "@beep/scratchpad/effected/cli/ui";
 import { Flag } from "effect/cli";
 
 const yes = Flag.Boolean("yes").pipe(
@@ -203,7 +172,7 @@ const yes = Flag.Boolean("yes").pipe(
 ## Testing
 
 - **`@effected/cli/testing`**: `CliTest.sandbox` and `CliTest.run` spawn a built bin hermetically and return `{ exitCode, stdout, stderr }` as data. `TestTerminal` drives core's prompts.
-- **`@effected/cli/ui/testing`**: `CliUiTest.render` mounts a screen on in-memory streams (`press`, `type`, `chunk`, `frame`, `result`). `view` mounts a display-only element, `session` drives a whole command's screens (its `transcript` shows what reached the terminal, a live view's `logConsole` lines included, `stdoutWritten`/`stderrWritten` each stream alone as raw bytes, `stdoutTranscript`/`stderrTranscript` each stream alone as plain text, and `renderPath: "production"` makes `clear` observable), and `live` mounts a live view on the production render path with a `TestClock` tick. `CliUiTest.serializer` prints frames as token markup in snapshots: register it in the Vitest config with `snapshotSerializers: ["@effected/cli/ui/testing/serializer"]`, or with `expect.addSnapshotSerializer`. Snapshots are the one place a test needs `expect`, since `assert` has no snapshot form.
+- **`@effected/cli/ui/testing`**: `CliUiTest.render` mounts a screen on in-memory streams (`press`, `type`, `chunk`, `frame`, `result`). `view` mounts a display-only element, `session` drives a whole command's screens (its `transcript` shows what reached the terminal, a live view's `logConsole` lines included, `stdoutWritten`/`stderrWritten` each stream alone as raw bytes, `stdoutTranscript`/`stderrTranscript` each stream alone as plain text, and `renderPath: "production"` makes `clear` observable), and `live` mounts a live view on the production render path with a `TestClock` tick. `CliUiTest.serializer` prints frames as token markup in snapshots: register it in the Vitest config with `snapshotSerializers: ["@beep/scratchpad/effected/cli/ui-testing-serializer"]`, or with `expect.addSnapshotSerializer`. Snapshots are the one place a test needs `expect`, since `assert` has no snapshot form.
 
 In-process, provide `layerTest`s from `@effected/env` and `CliTheme.layerTest`, swap in a capturing `Console`, and assert on both streams. Neither testing entrypoint is reachable from a CLI's runtime imports.
 
@@ -214,7 +183,6 @@ Guides for every part, and the full API reference, are at [effected.spencerbeg.g
 ## License
 
 [MIT](LICENSE)
-
 
 ## Port notes
 

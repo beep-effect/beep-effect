@@ -13,15 +13,37 @@ import * as P from "effect/Predicate";
  * One row of a {@link KeyTable}: the keys that trigger an action, and the help line that names it.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface Binding<Action> {
-	/** The keys, named or typed (`{ char: "q" }`); any of them triggers the action. */
+	/**
+	 * The keys, named or typed (`{ char: "q" }`); each of them triggers the action.
+	 */
 	readonly keys: ReadonlyArray<KeyName | { readonly char: string }>;
-	/** What the keys do. */
+	/**
+	 * What the keys do.
+	 */
 	readonly action: Action;
-	/** The words `KeyHelp` shows beside the keys. */
+	/**
+	 * The words `KeyHelp` shows beside the keys.
+	 *
+	 * **Example** (Label root help under ASCII)
+	 *
+	 * ```ts
+	 * import { KeyTable } from "@beep/scratchpad/effected/cli/ui/KeyTable"
+	 * import { Glyphs } from "@beep/scratchpad/effected/cli/Glyphs"
+	 *
+	 * console.log(KeyTable.root.help(Glyphs.ascii)[0]?.label) // esc
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	readonly help: string;
-	/** Bound but left out of the help line. */
+	/**
+	 * Bound but left out of the help line.
+	 */
 	readonly hidden?: boolean;
 }
 
@@ -29,25 +51,49 @@ export interface Binding<Action> {
  * One entry of a key table's help: the key labels and what they do.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface KeyHelpRow {
-	/** The keys, labelled for the glyph set and joined with `/`. */
+	/**
+	 * The keys, labelled for the glyph set and joined with `/`.
+	 */
 	readonly label: string;
-	/** What they do. */
+	/**
+	 * What they do.
+	 *
+	 * **Example** (Label root help under ASCII)
+	 *
+	 * ```ts
+	 * import { KeyTable } from "@beep/scratchpad/effected/cli/ui/KeyTable"
+	 * import { Glyphs } from "@beep/scratchpad/effected/cli/Glyphs"
+	 *
+	 * console.log(KeyTable.root.help(Glyphs.ascii)[0]?.label) // esc
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	readonly help: string;
 }
 
 /**
- * Options for {@link useKeys}.
+ * Controls whether {@link useKeys} listens for input.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface UseKeysOptions {
-	/** Whether the keys are read; `true` by default. */
+	/**
+	 * Whether the keys are read; `true` by default.
+	 */
 	readonly isActive?: boolean;
 }
 
-/** Arrows under a Unicode glyph set; everything else, and everything under ASCII, as words. */
+/**
+ * Arrows under a Unicode glyph set; everything else, and everything under ASCII, as words.
+ */
 const ARROWS: Partial<Record<KeyName, string>> = { up: "↑", down: "↓", left: "←", right: "→" };
 const WORDS: Record<KeyName, string> = {
 	up: "up",
@@ -73,11 +119,15 @@ const labelOf = (key: KeyName | { readonly char: string }, glyphs: Cli.GlyphSet)
 	return (glyphs.kind === "unicode" ? ARROWS[key] : undefined) ?? WORDS[key];
 };
 
-/** A typed space is only ever reported as the named space key, so a `{ char: " " }` binding means `"space"`. */
+/**
+ * A typed space is only ever reported as the named space key, so a `{ char: " " }` binding means `"space"`.
+ */
 const normalise = (key: KeyName | { readonly char: string }): KeyName | { readonly char: string } =>
 	!P.isString(key) && key.char === " " ? "space" : key;
 
-/** Two keys shadow each other in help when they would match the same press, so a char compares in NFC as matching does. */
+/**
+ * Two keys shadow each other in help when they would match the same press, so a char compares in NFC as matching does.
+ */
 const identity = (key: KeyName | { readonly char: string }): string =>
 	P.isString(key) ? `named:${key}` : `char:${key.char.normalize("NFC")}`;
 
@@ -96,10 +146,36 @@ const bound = (binding: KeyName | { readonly char: string }, key: UiKey): boolea
  * Read it with {@link useKeys}, whose handler must step from current state, never render-closure state: several keys
  * from one stdin read are dispatched before React re-renders.
  *
+ * **Example** (Share bindings between dispatch and help)
+ *
+ * ```ts
+ * import { KeyTable } from "@beep/scratchpad/effected/cli/ui/KeyTable"
+ * import { UiKey } from "@beep/scratchpad/effected/cli/ui/UiKey"
+ * import * as O from "effect/Option"
+ *
+ * const table = KeyTable.make([{ keys: ["enter"], action: "submit", help: "submit" }])
+ * console.log(O.getOrElse(table.match(UiKey.named("enter")), () => "unbound")) // submit
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class KeyTable<Action> {
-	/** The bindings, in priority order. */
+	/**
+	 * The bindings, in priority order.
+	 *
+	 * **Example** (Read binding priority)
+	 *
+	 * ```ts
+	 * import { KeyTable } from "@beep/scratchpad/effected/cli/ui/KeyTable"
+	 *
+	 * console.log(KeyTable.root.bindings[0]?.action) // escape
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	readonly bindings: ReadonlyArray<Binding<Action>>;
 
 	// A plain field and an assignment, not a parameter property: Node's strip-only TypeScript refuses those.
@@ -111,7 +187,18 @@ export class KeyTable<Action> {
 	 * A table from its bindings. When two bindings share a key, the first wins. A `{ char: " " }` key is stored as
 	 * the named `"space"`, the only form in which Ink reports a space.
 	 *
+	 * **Example** (Normalize a typed space binding)
+	 *
+	 * ```ts
+	 * import { KeyTable } from "@beep/scratchpad/effected/cli/ui/KeyTable"
+	 *
+	 * const table = KeyTable.make([{ keys: [{ char: " " }], action: "toggle", help: "toggle" }])
+	 * console.log(table.bindings[0]?.keys[0]) // space
+	 * ```
+	 *
 	 * @param bindings - the bindings, in priority order
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly make = <Action>(bindings: ReadonlyArray<Binding<Action>>): KeyTable<Action> =>
 		new KeyTable(bindings.map((binding) => ({ ...binding, keys: binding.keys.map(normalise) })));
@@ -119,6 +206,17 @@ export class KeyTable<Action> {
 	/**
 	 * The keys every screen has: Esc cancels with `"escape"` (help: cancel), and Ctrl-C cancels with `"interrupt"`,
 	 * bound but hidden. `q` is never a root key: it belongs to a widget's own table, so a text input can type it.
+	 *
+	 * **Example** (Keep the interrupt binding hidden)
+	 *
+	 * ```ts
+	 * import { KeyTable } from "@beep/scratchpad/effected/cli/ui/KeyTable"
+	 *
+	 * console.log(KeyTable.root.bindings[1]?.hidden) // true
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
 	 */
 	static readonly root: KeyTable<"escape" | "interrupt"> = new KeyTable<"escape" | "interrupt">([
 		{ keys: ["escape"], action: "escape", help: "cancel" },
@@ -128,7 +226,19 @@ export class KeyTable<Action> {
 	/**
 	 * The action of the first binding that holds `key`, or `None`.
 	 *
+	 * **Example** (Recognize the root escape key)
+	 *
+	 * ```ts
+	 * import { KeyTable } from "@beep/scratchpad/effected/cli/ui/KeyTable"
+	 * import { UiKey } from "@beep/scratchpad/effected/cli/ui/UiKey"
+	 * import * as O from "effect/Option"
+	 *
+	 * console.log(O.getOrElse(KeyTable.root.match(UiKey.named("escape")), () => "unbound")) // escape
+	 * ```
+	 *
 	 * @param key - the key pressed
+	 * @category queries
+	 * @since 0.0.0
 	 */
 	readonly match = (key: UiKey): O.Option<Action> => {
 		for (const binding of this.bindings) {
@@ -138,16 +248,27 @@ export class KeyTable<Action> {
 	};
 
 	/**
-  * The help rows of every binding not hidden that can still fire, in order, labelled for `glyphs`: `↑/↓` under
-  * Unicode, `up/down` under ASCII.
-  *
-  * **Details**
-  *
-  * A key an earlier binding already holds (hidden or not) can never fire a later one, so a later binding is
-  * labelled with its remaining keys only, and left out when none remain.
-  *
-  * @param glyphs - the glyph set the labels are drawn with
-  */
+	 * The help rows of every binding not hidden that can still fire, in order, labelled for `glyphs`: `↑/↓` under
+	 * Unicode, `up/down` under ASCII.
+	 *
+	 * **Details**
+	 *
+	 * A key an earlier binding already holds (hidden or not) can never fire a later one, so a later binding is
+	 * labelled with its remaining keys only, and left out when none remain.
+	 *
+	 * **Example** (Label root help under ASCII)
+	 *
+	 * ```ts
+	 * import { KeyTable } from "@beep/scratchpad/effected/cli/ui/KeyTable"
+	 * import { Glyphs } from "@beep/scratchpad/effected/cli/Glyphs"
+	 *
+	 * console.log(KeyTable.root.help(Glyphs.ascii)[0]?.label) // esc
+	 * ```
+	 *
+	 * @param glyphs - the glyph set the labels are drawn with
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	readonly help = (glyphs: Cli.GlyphSet): ReadonlyArray<KeyHelpRow> => {
 		const taken = MutableHashSet.empty<string>();
 		const rows: Array<KeyHelpRow> = [];
@@ -161,7 +282,9 @@ export class KeyTable<Action> {
 	};
 }
 
-/** What a character of coalesced text is as a key: a line break is enter, and so on; another control is nothing. */
+/**
+ * What a character of coalesced text is as a key: a line break is enter, and so on; another control is nothing.
+ */
 const keyOfCharacter = (character: string): UiKey | undefined => {
 	if (character === "\r" || character === "\n" || character === "\r\n") return UiKey.named("enter");
 	if (character === "\t") return UiKey.named("tab");
@@ -170,7 +293,9 @@ const keyOfCharacter = (character: string): UiKey | undefined => {
 	return UiKey.fromInk(character, PLAIN);
 };
 
-/** Ink's key flags for plain typed text: none set. */
+/**
+ * Ink's key flags for plain typed text: none set.
+ */
 const PLAIN: Parameters<typeof UiKey.fromInk>[1] = {
 	upArrow: false,
 	downArrow: false,
@@ -232,10 +357,21 @@ const keysOf = (input: string, key: Parameters<typeof UiKey.fromInk>[1]): Readon
  * Inside a screen mounted by `CliUi.run`, a `dispatch` that throws ends the screen as a defect carrying the error, as a
  * component that throws in render does; it never escapes as an uncaught exception.
  *
+ * **Example** (Prepare curried key dispatch)
+ *
+ * ```ts
+ * import { useKeys } from "@beep/scratchpad/effected/cli/ui/KeyTable"
+ *
+ * const bind = useKeys((action: string) => console.log(action))
+ * console.log(typeof bind) // function
+ * ```
+ *
  * @param table - the keys to read
  * @param dispatch - receives each matched action
  * @param options - whether the keys are read
  * @public
+ * @category hooks
+ * @since 0.0.0
  */
 export const useKeys: {
 	<Action>(dispatch: (action: Action) => void, options?: UseKeysOptions): (table: KeyTable<Action>) => void;

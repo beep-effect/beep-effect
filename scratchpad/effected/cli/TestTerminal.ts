@@ -10,15 +10,33 @@ import * as Terminal from "effect/Terminal";
  * One key press for {@link TestTerminal}.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface KeyInput {
-	/** The key name the prompts switch on: `down`, `up`, `enter`, `space`, `escape`, or a character. */
+	/**
+	 * The key name the prompts switch on: `down`, `up`, `enter`, `space`, `escape`, or a character.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly name: string;
-	/** Whether Ctrl is held. */
+	/**
+	 * Whether Ctrl is held.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly ctrl?: boolean | undefined;
-	/** Whether Meta is held. */
+	/**
+	 * Whether Meta is held.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly meta?: boolean | undefined;
-	/** Whether Shift is held. */
+	/**
+	 * Whether Shift is held.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly shift?: boolean | undefined;
 }
 
@@ -26,25 +44,53 @@ export interface KeyInput {
  * What {@link TestTerminal.make} builds: the `Terminal` layer and the means to drive and inspect it.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface TestTerminalHandle {
-	/** Provides `Terminal` backed by this double. */
+	/**
+	 * Provides `Terminal` backed by this double.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly layer: Layer.Layer<Terminal.Terminal>;
-	/** Queue key presses, as if the user had typed them. */
+	/**
+	 * Queue key presses, as if the user had typed them.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly input: (keys: ReadonlyArray<KeyInput>) => Effect.Effect<void>;
-	/** Queue `text` one character at a time. */
+	/**
+	 * Queue `text` one character at a time.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly type: (text: string) => Effect.Effect<void>;
-	/** End the input, as Ctrl-C or end-of-file does: a prompt waiting for a key is quit. */
+	/**
+	 * End the input, as Ctrl-C or end-of-file does: a prompt waiting for a key is quit.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly end: Effect.Effect<void>;
-	/** Everything written to the terminal so far, prompt frames and escape codes included. */
+	/**
+	 * Everything written to the terminal so far, prompt frames and escape codes included.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly output: Effect.Effect<string>;
-	/** How many queued key presses nobody has taken yet. */
+	/**
+	 * How many queued key presses nobody has taken yet.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly pending: Effect.Effect<number>;
 	/**
 	 * What the program did with the input: `keys` taken from it, `lines` read with `readLine`, and
 	 * `subscriptions` to `readInput`. All `0` proves a code path never touched the terminal's input. Counting the
 	 * subscription matters: on a real terminal merely subscribing attaches a reader to stdin, even when no key is
 	 * ever taken.
+	 *
+	 * @since 0.0.0
 	 */
 	readonly reads: Effect.Effect<{
 		readonly keys: number;
@@ -61,9 +107,27 @@ export interface TestTerminalHandle {
  * Queue keys with `input` or `type`, run the program under `layer`, then read `output`. To assert that a code path
  * did NOT touch the terminal, queue some keys first and check `reads` is all zero (no subscription, no key, no
  * line) and `pending` is unchanged afterwards. Only
- * available from `@effected/cli/testing`.
+ * available from the testing entry point `@beep/scratchpad/effected/cli/testing`.
+ *
+ * **Example** (Inspect untouched queued input)
+ *
+ * ```ts
+ * import { TestTerminal } from "@beep/scratchpad/effected/cli/TestTerminal"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const terminal = yield* TestTerminal.make()
+ *   yield* terminal.input([{ name: "enter" }])
+ *   const reads = yield* terminal.reads
+ *   const pending = yield* terminal.pending
+ *   return reads.keys === 0 && reads.lines === 0 && reads.subscriptions === 0 && pending === 1
+ * })
+ * console.log(await Effect.runPromise(program)) // true
+ * ```
  *
  * @public
+ * @category testing
+ * @since 0.0.0
  */
 export class TestTerminal {
 	private constructor() {}
@@ -71,7 +135,27 @@ export class TestTerminal {
 	/**
 	 * Build a test terminal.
 	 *
+	 * **Example** (Create a terminal with a custom size)
+	 *
+	 * ```ts
+	 * import { TestTerminal } from "@beep/scratchpad/effected/cli/TestTerminal"
+	 * import * as Effect from "effect/Effect"
+	 *
+	 * import * as Terminal from "effect/Terminal"
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const handle = yield* TestTerminal.make({ columns: 100 })
+	 *   return yield* Effect.gen(function* () {
+	 *     const terminal = yield* Terminal.Terminal
+	 *     return yield* terminal.columns
+	 *   }).pipe(Effect.provide(handle.layer))
+	 * })
+	 * console.log(await Effect.runPromise(program)) // 100
+	 * ```
+	 *
 	 * @param options - the reported size; 80 by 24 by default
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly make = Effect.fn("make")(function* (options?: {
 		readonly columns?: number | undefined;
