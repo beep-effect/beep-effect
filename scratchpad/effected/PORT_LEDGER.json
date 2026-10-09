@@ -7567,9 +7567,294 @@
         }
       ],
       "fixturesBytes": 3905,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/github/GitHubRepository.test.ts; scratchpad/test/github/GitHubClient.test.ts; scratchpad/test/github/resources2.test.ts; module suite scratchpad/test/github/**",
+          "upstreamBehaviour": "GitHubRepository.SECURITY_ANALYSIS_STATUS_FIELDS and GitHubError/Issue membership use native Set; CodeScanning, GitHubApp, GitHubRepository and TokenPermissions use Object keys/entries/hasOwn; CheckRun uses wall-clock Date and WorkflowDispatch wraps Clock millis in Date.",
+          "labBehaviour": "These sites use HashSet and Record helpers. SECURITY_ANALYSIS_STATUS_FIELDS exposes HashSet. CheckRun.started_at/completed_at and WorkflowDispatch dispatch time use DateTime.now/formatIso; check timestamps now follow the Effect clock. Native error replacements are recorded under tagged-errors.",
+          "reason": "native-runtime: Beep native-runtime law and the 2026-10-09 recording/public-API ruling require Effect collections, Record and DateTime; INVENTORY codemod-02 identifies clock and public collection changes. Github had no allowlist entries to remove."
+        },
+        {
+          "test": "scratchpad/test/github/GitHubClient.test.ts:557; scratchpad/test/github/GitHubClient.test.ts:646; scratchpad/test/github/transport.test.ts:93; module suite scratchpad/test/github/**",
+          "upstreamBehaviour": "Resource makeTest members throw native Error; missing request, pagination and GraphQL fixtures die with native Error. The Octokit attempt catches raw unknown throwables.",
+          "labBehaviour": "Resource files, including CheckRun, GitHubClient, GitHubRepository and GitHubCommit, use S.TaggedError UnstubbedError; GitHubClient uses FixtureError. internal/octokit uses TransportFailure with S.Defect before classification, preserving cause identity. CommitFileDecodeError was removed.",
+          "reason": "tagged-errors: Beep law 7 and D5 require schema-tagged errors; INVENTORY codemod-01 and req-31, fix-github-g7.md:3. Existing messages and fixture defect channels survive; typed external commit decoding is recorded under effect-first."
+        },
+        {
+          "test": "scratchpad/test/github/CodeScanning.test.ts:112; scratchpad/test/github/GitHubRepository.test.ts:334; scratchpad/test/github/Ruleset.test.ts:233; scratchpad/test/github/resources2.test.ts:635; module suite scratchpad/test/github/**",
+          "upstreamBehaviour": "CodeScanningSetup, DeploymentEnvironmentInfo, AppliedSettings, UpsertedPullRequest, SecretInfo, VariableInfo, RulesetInfo, RulesetPayload and WorkflowInfo are erased interfaces; named literal domains use S.Literals; status membership is handwritten and accepts arrays with a status property; tests parse JSON directly.",
+          "labBehaviour": "The nine models gain Struct schemas and derived types, keeping open fields and plain objects. CheckConclusion, AnnotationLevel, FileMode, FileStatus, GitHubErrorKind, GitHubValidationCode, MergeMethod, PermissionLevel and RequestMethod use LiteralKit. StatusObject uses S.is and rejects arrays; tests/reachability use fromJsonString codecs.",
+          "reason": "schema-first: D5, schema-first ownership, law 17 and law 19/EF-12b force runtime models, derived guards, named LiteralKit domains and JSON codecs; fix-github-g1/g2/g3/g4/g5/g6/g7 and INVENTORY req-06/07/20/22/26/27/28. RulesetPayload remains upstream-open; array rejection is law-forced."
+        },
+        {
+          "test": "scratchpad/test/github/Ruleset.test.ts:246; scratchpad/test/github/WorkflowDispatch.test.ts:196; module suite scratchpad/test/github/**",
+          "upstreamBehaviour": "RulesetInfo.id and WorkflowInfo.id are number fields on interfaces, with no owning runtime numeric validator.",
+          "labBehaviour": "Ruleset.ts RulesetInfo.id and WorkflowDispatch.ts WorkflowInfo.id use S.Finite in the new boundary schemas; the TypeScript fields remain number. Existing integer constraints elsewhere are retained.",
+          "reason": "numeric-domains: schemaNumber TS377098 requires finite numeric domains when the schema-first models are introduced; fix-github-g5.md:27 supplies the diagnostic cause. D5 and the per-module numeric-domain recording ruling apply."
+        },
+        {
+          "test": "scratchpad/test/github/GitHubClient.test.ts:631; scratchpad/test/github/GitHubClient.test.ts:759; scratchpad/test/github/Ruleset.test.ts:205; scratchpad/test/github/GitHubRepository.test.ts:159; scratchpad/test/github/transport.test.ts:84",
+          "upstreamBehaviour": "GitHubClient fixtures hold raw unknown payloads/errors and cast them to route data; empty single requests fabricate {} as A. Route writes, throwable guards, pagination and tests use casts, assertions or diagnostic suppressions; thrown header arrays can supply rate-limit properties.",
+          "labBehaviour": "GitHubFixtures request/paginate are route-keyed Result values; requestDecoded has its own raw bucket. Empty single requests fail notFound, while pagination stays empty. Typed request overloads, property narrowing, safe spreads and Ruleset requestDecoded remove casts; deliberatelyInvalid owns wrong-input casts. Thrown header arrays no longer update snapshots; touched suppressions are removed.",
+          "reason": "type-safety: D15 and the 2026-10-09 deliberatelyInvalid ruling; INVENTORY codemod-05, req-25/29/30 and fix-github-g3/g4/g6/g7. Law 17 requires built-in narrowing instead of the unsound array-to-record guard. Deferred suppressions elsewhere remain backlog-03."
+        },
+        {
+          "test": "module suite scratchpad/test/github/**",
+          "upstreamBehaviour": "CodeScanning.languages, DeploymentEnvironment.list, RepositoryVariable.list, Ruleset.list and three RepositorySecurity reads are zero-argument Effect functions; internal crypto, headers and pagination helpers expose only data-first calls. Classes/errors use constructor calls.",
+          "labBehaviour": "The listed members are Effect values with deferred stubs. GitHubRepository settings/ownerType use effect-valued generators with restored spans. encryptSecret, headerString/headerNumber/retryAfterMillisFrom and paginate/fromArray expose dual overloads; schema classes/errors use make, and typed decoding follows diagnostic-compatible forms.",
+          "reason": "tsgo-diagnostics: @effect/tsgo lazyEffect, effectFnIife, missingPipeableSignature, newSchemaClass and typed-decoding diagnostics; INVENTORY codemod-04 and actual S0 diff. Numeric schemaNumber changes are consolidated under numeric-domains."
+        },
+        {
+          "test": "scratchpad/test/github/resources.test.ts:446; scratchpad/test/github/resources.test.ts:463; scratchpad/test/github/resources2.test.ts:589; scratchpad/test/github/GitHubRepository.test.ts:39; module suite scratchpad/test/github/**",
+          "upstreamBehaviour": "withCheckRun, GitTag.reset, GitBranch.readRef and client/transport factories wrap Effect.gen; helpers retain trivial decoder/success/None wrappers. GitHubCommit.fileOf synchronously constructs CommitFile, so malformed external status throws a schema defect at compare, changedFiles and PullRequest.listFiles.",
+          "labBehaviour": "The wrappers use Effect.fn/fnUntraced and direct helpers; Option getSomesStruct preserves optional wire fields and scoped Layer construction supplies tests through provideContext. fileOf is effectful and traversed with Effect.forEach, mapping invalid file data to operation-specific GitHubError.decode with cause. Repository resource spans remain preserved.",
+          "reason": "effect-first: Beep effect-fn/terse-effect laws, EF-3 external typed error boundaries and explicit service/layer ownership; INVENTORY req-04/23/24/32 and fix-github-g1.md:18. The invalid-status change is law-forced, not a separate upstream-bug entry."
+        },
+        {
+          "test": "module suite scratchpad/test/github/**",
+          "upstreamBehaviour": "Source, tests and examples import Effect modules from the root effect barrel.",
+          "labBehaviour": "Github source, tests and examples import each module through effect/Effect, effect/Schema, effect/Context and other module paths; Function helpers use effect/Function. Option and LiteralKit integration use existing Beep subpaths.",
+          "reason": "effect-imports: Operator step 3 and the effect-imports law require per-module Effect imports; the S0 diff covers source, tests and examples."
+        },
+        {
+          "test": "module suite scratchpad/test/github/**",
+          "upstreamBehaviour": "Schema identifiers are short local names, schema fields lack the port metadata, and Context.Service keys use @effected/github strings.",
+          "labBehaviour": "Source schemas and services use $ScratchpadId.create(effected/github/<file>), composed $I identifiers, annote/annoteSchema and field descriptions; retained error schemas and new boundary models receive owning metadata, including RulesetInfo/Payload and TransportFailure.",
+          "reason": "identity-annotations: Operator step 4 and D5 require @beep/identity identities and schema/field annotations; fix-github-g1/g3/g4/g7 and INVENTORY req-08/09/21. This changes service keys and schema metadata, not identity-keyed collection semantics."
+        },
+        {
+          "test": "scratchpad/test/github/reachability.test.ts:176; scratchpad/test/github/reachability.test.ts:227; scratchpad/test/github/resources2.test.ts:1076; scratchpad/test/github/resources2.test.ts:1105",
+          "upstreamBehaviour": "Reachability tests read the package manifest beside upstream src. Workflow polling fixtures provide workflow_runs envelopes for discovery and subsequent polls.",
+          "labBehaviour": "The lab keeps upstream package.json as github module data, exports ./index.ts and declares Beep runtime dependencies; manifest tests read it inside the module. Workflow fixtures distinguish list discovery from single-run responses after the verified polling fix, retaining completion/timeout assertions and checking status 408.",
+          "reason": "test-environment: The 2026-10-09 environment-fix ruling and D9 authorize lab manifest data and equivalent fixtures; env-github.md:24, central-notes.md:13 and repair-github.md:6-10. Fixture repair changes no source behavior."
+        },
+        {
+          "test": "scratchpad/test/github/reachability.test.ts:29; scratchpad/test/github/reachability.test.ts:164; scratchpad/test/github/reachability.test.ts:168; scratchpad/test/github/reachability.test.ts:222",
+          "upstreamBehaviour": "Bundle scanning starts at ../src, expects only effect for Rest/Resilience/GraphQL and searches entrypoint exports ending in .js.",
+          "labBehaviour": "Scanning starts at scratchpad/effected/github, normalizes effect/* to effect, includes @beep/identity/packages and GraphQL @beep/utils/Option edges, and checks .ts re-export paths. Manifest assertions still enforce sideEffects=false and declared runtime dependencies.",
+          "reason": "reachability: D9 lab-layout retargeting, step 3 per-module import graph and step 4 identity dependencies require equivalent reachability expectations; env-github.md and the reachability S0 diff ground the changes."
+        },
+        {
+          "test": "scratchpad/test/github/GitHubApp.test.ts:352",
+          "upstreamBehaviour": "Concurrent expired-token requests independently read held state, mint replacements and overwrite ownership, leaking one token and revoking the old token twice.",
+          "labBehaviour": "GitHubApp.makeRotatingClient serializes checking/rotation with a semaphore, retains replacements uninterruptibly and revokes the held token during scoped cleanup.",
+          "reason": "upstream-bug: INVENTORY req-01 upstream recording probe minted three tokens and revoked first, first, third, leaving the second unreclaimed; fix-github-g2.md:13 and the concurrent-expiry regression pin one replacement and exactly-once cleanup."
+        },
+        {
+          "test": "scratchpad/test/github/resources2.test.ts:343",
+          "upstreamBehaviour": "A synchronous throw while constructing withCheckRun use happens before onExit is attached; the created run stays in_progress.",
+          "labBehaviour": "CheckRun.withCheckRun suspends callback construction under onExit, attempts a completed/failure PATCH and preserves the original defect even if PATCH fails.",
+          "reason": "upstream-bug: fix-github-g1.md:17 and INVENTORY req-02 record a pinned-upstream defect with calls=[POST] and no concluding PATCH; regressions cover PATCH statuses 200 and 422."
+        },
+        {
+          "test": "scratchpad/test/github/resources2.test.ts:74; scratchpad/test/github/resources2.test.ts:82",
+          "upstreamBehaviour": "CheckRunOutput truncation removes every trailing decoded U+FFFD, including complete replacement characters in the original input.",
+          "labBehaviour": "capBytes locates a UTF-8 boundary before decoding, preserving complete U+FFFD while excluding incomplete trailing sequences within the same byte cap and notice.",
+          "reason": "upstream-bug: fix-github-g1.md:19 executes pinned upstream with budget 65475 and observes 65472 prefix bytes instead of 65475; complete-character and split-sequence regressions pin the correction."
+        },
+        {
+          "test": "scratchpad/test/github/crypto.test.ts:134; scratchpad/test/github/RepositorySecret.test.ts:189; scratchpad/test/github/RepositorySecret.test.ts:206",
+          "upstreamBehaviour": "Valid base64 decoding to a non-32-byte public key throws during nacl/nonce work inside Result.map; repository secret writes defect.",
+          "labBehaviour": "encryptSecret checks length before encryption, returns EncodingError failures for 0/31/33-byte keys, and RepositorySecret maps them to GitHubError.decode without a write request.",
+          "reason": "upstream-bug: fix-github-g4.md:39 records direct upstream probes: short keys throw bad public key size and a 33-byte key throws an out-of-bounds RangeError; S0 has that same Result.map path and the new length regressions pin typed failures."
+        },
+        {
+          "test": "scratchpad/test/github/TokenPermissions.test.ts:26",
+          "upstreamBehaviour": "TokenPermissions.fromGitHub assigns accepted permission entries into {}, losing __proto__ as an own granted key.",
+          "labBehaviour": "Record.fromEntries preserves prototype-name and arbitrary permission names as own keys while retaining level filtering.",
+          "reason": "upstream-bug: fix-github-g6.md:15 records upstream ownGrant=false for __proto__; the own-key regression pins __proto__, constructor, toString and an arbitrary name against the S0 assignment loop."
+        },
+        {
+          "test": "scratchpad/test/github/TokenPermissions.test.ts:40; scratchpad/test/github/TokenPermissions.test.ts:73",
+          "upstreamBehaviour": "TokenPermissions.compare reads granted[name] through the prototype, so absent prototype-name grants report no missing permission and missing-permission assertions succeed.",
+          "labBehaviour": "Record.get checks own grants, reports missing prototype-name permissions and makes assertSufficient/assertExact fail with the expected insufficient error.",
+          "reason": "upstream-bug: fix-github-g6.md:15 records missing=0 and successful missing assertions for all three prototype names in upstream; the missing-accounting and assertion regressions pin the repair."
+        },
+        {
+          "test": "scratchpad/test/github/TokenPermissions.test.ts:51; scratchpad/test/github/TokenPermissions.test.ts:89",
+          "upstreamBehaviour": "TokenPermissions.compare reads required[name] through the prototype, so surplus prototype-name grants report no extra permission and assertExact succeeds.",
+          "labBehaviour": "Record.get checks own requirements, reports extra prototype-name permissions and rejects them in assertExact while assertSufficient still accepts surplus access.",
+          "reason": "upstream-bug: fix-github-g6.md:15 records extra=0 and successful extra assertExact for prototype names in upstream; extra-accounting and exactness regressions pin the repair."
+        },
+        {
+          "test": "scratchpad/test/github/WorkflowDispatch.test.ts:70",
+          "upstreamBehaviour": "dispatchAndWait matches a workflow identifier against a run filename, timing out for a numeric workflow ID even when that workflow has completed.",
+          "labBehaviour": "Workflow-specific discovery sends workflow_id as supplied, so numeric ID 123 selects its completed run without filename matching.",
+          "reason": "upstream-bug: INVENTORY req-16 and part-2/sol.md:25 record the oracle numeric-ID timeout despite a completed workflow_id=123 run; fix-github-g5.md:21 and the numeric-ID regression pin the corrected route."
+        },
+        {
+          "test": "scratchpad/test/github/WorkflowDispatch.test.ts:80",
+          "upstreamBehaviour": "dispatchAndWait uses repository-wide runs and endsWith(workflow), allowing release-ci.yml to satisfy a request for ci.yml.",
+          "labBehaviour": "Discovery uses the exact workflows/ci.yml/runs route and retains branch/creation-time constraints, excluding suffix collisions.",
+          "reason": "upstream-bug: part-2/sol.md:25 and INVENTORY req-16 record both implementations selecting unrelated release-ci.yml run 99; fix-github-g5.md:21 and the collision regression select requested run 42."
+        },
+        {
+          "test": "scratchpad/test/github/WorkflowDispatch.test.ts:91",
+          "upstreamBehaviour": "dispatchAndWait does not constrain run event, so an unrelated push run can satisfy a workflow_dispatch wait.",
+          "labBehaviour": "Workflow-specific discovery includes event=workflow_dispatch and selects the requested dispatch run.",
+          "reason": "upstream-bug: part-2/sol.md:25 and INVENTORY req-16 record oracle selection of push run 99; fix-github-g5.md:21 and the event-filter regression pin requested run 42 and the event query."
+        },
+        {
+          "test": "scratchpad/test/github/WorkflowDispatch.test.ts:100",
+          "upstreamBehaviour": "Every dispatchAndWait poll repeats run discovery, so later polls can select a different run rather than follow the first selected run.",
+          "labBehaviour": "After discovering a run, selectedId is retained and later polls read actions/runs/<id> until that run completes.",
+          "reason": "upstream-bug: INVENTORY req-16 and fix-github-g5.md:21 identify repeated rediscovery in the oracle; S0 repeats findRun with no retained ID. The regression requires both later reads to use actions/runs/42 and completion to retain ID 42."
+        },
+        {
+          "test": "scratchpad/test/github/WorkflowDispatch.test.ts:121",
+          "upstreamBehaviour": "A zero polling interval yields attempts=Infinity, turning a finite configured timeout into an unbounded wait.",
+          "labBehaviour": "dispatchAndWait rejects non-positive intervals with a typed rejected GitHubError status 422 before sending a request.",
+          "reason": "upstream-bug: part-2/sol.md:32 and fix-github-g5.md:23 record the oracle needing an external 80 ms timeout after about 86 ms and seven polls; the zero-interval regression pins status 422 and zero requests."
+        },
+        {
+          "test": "scratchpad/test/github/WorkflowDispatch.test.ts:134; scratchpad/test/github/WorkflowDispatch.test.ts:157; scratchpad/test/github/WorkflowDispatch.test.ts:179",
+          "upstreamBehaviour": "The attempt-count timeout bounds neither blocked dispatch/discovery requests nor total elapsed request time.",
+          "labBehaviour": "Effect.timeoutOrElse bounds dispatch, discovery, retained-run reads and sleeps by the configured deadline, retaining typed rejected status 408 on expiry.",
+          "reason": "upstream-bug: INVENTORY req-17 and part-2/sol.md:32 identify the oracle attempt-count defect; S0 wraps no request in a deadline. The blocked-dispatch, blocked-discovery and repeated-empty-discovery TestClock regressions reproduce and pin the missing deadline."
+        },
+        {
+          "test": "scratchpad/test/github/transport.test.ts:114",
+          "upstreamBehaviour": "composePaginateRest receives params, but its iterator retains only method/url/headers and drops per-request fetch/redirect options.",
+          "labBehaviour": "An isolated pagination request hook restores request options on every attempt while preserving authentication, retry, normalization, continuation and completion.",
+          "reason": "upstream-bug: fix-github-g7.md:34 and INVENTORY req-33 identify discarded iterator request options; the regression supplies a distinct per-request fetch and redirect=manual and pins their use on every page/retry."
+        },
+        {
+          "test": "scratchpad/test/github/transport.test.ts:176 (pagination case)",
+          "upstreamBehaviour": "Pagination attempt ignores its AbortSignal, leaving a pending HTTP fetch running when the Effect fiber is interrupted.",
+          "labBehaviour": "The pagination wrapper forwards each attempt signal, with fresh signals on retries; interrupting a pending fetch triggers one abort.",
+          "reason": "upstream-bug: INVENTORY req-33 and fix-github-g7.md:34 record pinned upstream in-memory execution producing hasSignal=false and aborts=0; the pagination cancellation regression requires an aborted signal and aborts=1."
+        },
+        {
+          "test": "scratchpad/test/github/transport.test.ts:176 (graphql case)",
+          "upstreamBehaviour": "GraphQL attempt ignores its AbortSignal and leaves a pending HTTP fetch running when interrupted.",
+          "labBehaviour": "octokit.graphql receives withSignal(variables, signal), retaining variables/options and aborting pending fetches on interruption.",
+          "reason": "upstream-bug: INVENTORY req-34 and fix-github-g7.md:35 record pinned upstream in-memory execution producing hasSignal=false and aborts=0; the GraphQL cancellation regression requires an aborted signal and aborts=1."
+        },
+        {
+          "test": "scratchpad/test/github/Rest.test.ts:9; scratchpad/test/github/GitHubApp.test.ts:177; scratchpad/test/github/GitTag.test.ts:8",
+          "upstreamBehaviour": "Rest.Data directly exposes the generated response data type, which is never for bodyless routes even though successful Octokit HTTP 204 responses contain an empty string.",
+          "labBehaviour": "Rest.Data maps bodyless never to the empty-string success type, distributes across route unions and permits typed Result fixtures; resource void methods continue discarding the body.",
+          "reason": "upstream-bug: INVENTORY backlog-09/req-18 and req-03 HTTP-204 probes verify empty-string transport success against the upstream never type. Rest.test.ts:9 pins bodyful/bodyless union assignment and equality; live HTTP-204 resource regressions preserve undefined results."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-01 — Perform the deferred module-wide JSDoc carrier and export-documentation conversion. (scratchpad/effected/github/GitHubClient.ts:254)",
+          "reason": "jsdoc: During S2 convert documentation carriers, add export metadata and compiling titled examples, preserve teaching prose and document restored open rulesets and cancellation."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-02 — Migrate Effect-container assertions to the public test utilities during S3. (scratchpad/test/github/GitBranch.test.ts:177)",
+          "reason": "test: During S3 use public Option/Result/Exit assertion helpers and check expected payloads and causes while retaining upstream assertions."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-03 — Migrate effectful test-layer provision and remove its broad diagnostic suppressions during S3. (scratchpad/test/github/RepositorySecurity.test.ts:1)",
+          "reason": "tsgo: During S3 migrate effectful/scoped test layers to canon ownership and remove unnecessary diagnostic suppressions; justify real-async exceptions."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-04 — Qualify the new CheckRun.withCheckRun and GitTag.reset span names. (scratchpad/effected/github/CheckRun.ts:423)",
+          "reason": "effect-idiom: Optionally qualify the new span names as CheckRun.withCheckRun and GitTag.reset."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-05 — Simplify normalizePermissions with Record.filter. (scratchpad/effected/github/GitHubApp.ts:528)",
+          "reason": "effect-idiom: Optionally replace the normalizePermissions loop with guarded Record.filter, preserving accepted values and own-key behavior."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-06 — Consider narrowing CodeScanningSetup to installed route-literal domains. (scratchpad/effected/github/CodeScanning.ts:149)",
+          "reason": "type-safety: Consider route-literal schemas only with a concrete law or upstream-bug cause and preserved compatibility; retain upstream open strings otherwise."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-07 — Add deferred tests for fixture-empty/requestDecoded behavior and TestClock timestamps. (scratchpad/test/github/GitHubClient.test.ts:759)",
+          "reason": "test: During S3 add requestDecoded round trips, empty single-request notFound coverage and TestClock started_at assertions."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-08 — Reduce whitespace-only oracle diff noise. (scratchpad/effected/github/GitHubError.ts:160)",
+          "reason": "docs: Consider a formatting pass retaining upstream tabs, removing mixed indentation and reducing whitespace-only oracle diff noise."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-09 — Record the verified bodyless Rest.Data correction and its fixture/test provenance centrally. (scratchpad/effected/github/Rest.ts:70)",
+          "reason": "law: Record the verified bodyless Rest.Data correction, HTTP-204 evidence, route-union repair and adjusted Result fixtures centrally."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "backlog-10 — Name the third-party replacement candidates in the central dependency backlog. (scratchpad/effected/PORT_LEDGER.json:w2-github)",
+          "reason": "docs: Name replacement candidates for the three Octokit packages, universal-github-app-jwt, tweetnacl and blakejs in the central dependency backlog; retain them under D3."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-11 — Establish the deferred exported-schema property floor. (scratchpad/test/github/Rest.test.ts:6)",
+          "reason": "test: During S3 add generated encode/decode properties, Effect equality and the fcRuns floor for every exported schema/codec, retaining examples."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-12 — Consider consolidating per-resource UnstubbedError helpers. (scratchpad/effected/github/Ruleset.ts:14)",
+          "reason": "effect-idiom: Consider later consolidation of resource UnstubbedError helpers while preserving message, identity and defect semantics."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-13 — Combine adjacent single-key getSomesStruct calls. (scratchpad/effected/github/PullRequest.ts:348)",
+          "reason": "effect-idiom: Optionally combine adjacent single-key getSomesStruct calls, preserving omission, spread order and parameter precedence."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-14 — Simplify the withSignal request-options predicate. (scratchpad/effected/github/internal/octokit.ts:206)",
+          "reason": "effect-idiom: Optionally replace the compound request-options predicate with Predicate.isObjectOrArray, preserving existing options."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-15 — Consider using constVoid for SILENT_LOG callbacks. (scratchpad/effected/github/internal/octokit.ts:67)",
+          "reason": "effect-idiom: Optionally reuse effect/Function constVoid for SILENT_LOG callbacks after checking their signatures."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "central — Promote the module-data manifest to a real package manifest (scratchpad/effected/github/package.json)",
+          "reason": "test-environment: At promotion, turn the retained upstream package.json module data file into the real package manifest and drop its data-file role."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 10,
+              "backlog": 6
+            },
+            "sol": {
+              "required": 20,
+              "backlog": 10
+            },
+            "fable": {
+              "required": 17,
+              "backlog": 19
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

@@ -338,7 +338,36 @@ None.
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — Native sets, Object helpers and Date timestamps become HashSet, Record and DateTime, with Effect-clock check timestamps and a public HashSet field set. (scratchpad/test/github/GitHubRepository.test.ts; scratchpad/test/github/GitHubClient.test.ts; scratchpad/test/github/resources2.test.ts; module suite scratchpad/test/github/**)
+- **tagged-errors** — Native stub/fixture errors and raw transport failures acquire schema-tagged carriers while retaining messages and original classified causes. (scratchpad/test/github/GitHubClient.test.ts:557; scratchpad/test/github/GitHubClient.test.ts:646; scratchpad/test/github/transport.test.ts:93; module suite scratchpad/test/github/**)
+- **schema-first** — Erased models and handwritten domains gain schemas, LiteralKit and JSON codecs, preserving open plain-object contracts while the status guard rejects arrays. (scratchpad/test/github/CodeScanning.test.ts:112; scratchpad/test/github/GitHubRepository.test.ts:334; scratchpad/test/github/Ruleset.test.ts:233; scratchpad/test/github/resources2.test.ts:635; module suite scratchpad/test/github/**)
+- **numeric-domains** — RulesetInfo and WorkflowInfo gain finite-number validation for their formerly type-only numeric IDs. (scratchpad/test/github/Ruleset.test.ts:246; scratchpad/test/github/WorkflowDispatch.test.ts:196; module suite scratchpad/test/github/**)
+- **type-safety** — Cast-based fixtures and transport boundaries become route-typed Results and safe narrowing, with notFound for empty single requests and no snapshots from thrown header arrays. (scratchpad/test/github/GitHubClient.test.ts:631; scratchpad/test/github/GitHubClient.test.ts:759; scratchpad/test/github/Ruleset.test.ts:205; scratchpad/test/github/GitHubRepository.test.ts:159; scratchpad/test/github/transport.test.ts:84)
+- **tsgo-diagnostics** — Tsgo diagnostics force Effect-valued read members, dual helper overloads and schema make/decoding forms, with adjusted suite call shapes. (module suite scratchpad/test/github/**)
+- **effect-first** — Effect-native functions, helpers and scoped layer composition replace wrappers, and malformed commit files become typed operation-specific decode failures. (scratchpad/test/github/resources.test.ts:446; scratchpad/test/github/resources.test.ts:463; scratchpad/test/github/resources2.test.ts:589; scratchpad/test/github/GitHubRepository.test.ts:39; module suite scratchpad/test/github/**)
+- **effect-imports** — Root Effect barrel imports become per-module effect/* imports throughout source, tests and examples. (module suite scratchpad/test/github/**)
+- **identity-annotations** — Local schema names and upstream service keys become composed @beep/identity identifiers with owning schema and field metadata. (module suite scratchpad/test/github/**)
+- **test-environment** — Manifest reads and workflow fixtures target the lab layout and the repaired endpoints while preserving their original assertions. (scratchpad/test/github/reachability.test.ts:176; scratchpad/test/github/reachability.test.ts:227; scratchpad/test/github/resources2.test.ts:1076; scratchpad/test/github/resources2.test.ts:1105)
+- **reachability** — Reachability follows lab source paths, .ts exports and the per-module Effect/Beep import graph while retaining dependency and side-effect checks. (scratchpad/test/github/reachability.test.ts:29; scratchpad/test/github/reachability.test.ts:164; scratchpad/test/github/reachability.test.ts:168; scratchpad/test/github/reachability.test.ts:222)
+- **upstream-bug** — Concurrent token refresh shares one replacement and cleans up every minted token instead of overwriting and leaking a replacement. (scratchpad/test/github/GitHubApp.test.ts:352)
+- **upstream-bug** — Synchronous check-run callback defects now trigger conclusion and retain the original defect instead of leaving the run in progress. (scratchpad/test/github/resources2.test.ts:343)
+- **upstream-bug** — UTF-8 truncation preserves complete replacement characters instead of mistaking them for split sequences. (scratchpad/test/github/resources2.test.ts:74; scratchpad/test/github/resources2.test.ts:82)
+- **upstream-bug** — Invalid decoded public-key lengths produce typed encoding/decode failures instead of synchronous encryption defects. (scratchpad/test/github/crypto.test.ts:134; scratchpad/test/github/RepositorySecret.test.ts:189; scratchpad/test/github/RepositorySecret.test.ts:206)
+- **upstream-bug** — Permission construction preserves __proto__ as an own grant instead of dropping it. (scratchpad/test/github/TokenPermissions.test.ts:26)
+- **upstream-bug** — Missing permission checks reject inherited prototype properties instead of accepting them as grants. (scratchpad/test/github/TokenPermissions.test.ts:40; scratchpad/test/github/TokenPermissions.test.ts:73)
+- **upstream-bug** — Exact permission checks report surplus prototype-name grants instead of treating inherited properties as requirements. (scratchpad/test/github/TokenPermissions.test.ts:51; scratchpad/test/github/TokenPermissions.test.ts:89)
+- **upstream-bug** — Numeric workflow IDs discover completed runs through their workflow endpoint instead of timing out on filename matching. (scratchpad/test/github/WorkflowDispatch.test.ts:70)
+- **upstream-bug** — Workflow discovery excludes filename suffix collisions by querying the requested workflow directly. (scratchpad/test/github/WorkflowDispatch.test.ts:80)
+- **upstream-bug** — Workflow waiting filters for workflow_dispatch instead of accepting unrelated push runs. (scratchpad/test/github/WorkflowDispatch.test.ts:91)
+- **upstream-bug** — Workflow polling follows the first selected run ID instead of repeating discovery on every poll. (scratchpad/test/github/WorkflowDispatch.test.ts:100)
+- **upstream-bug** — Zero polling intervals fail before dispatch instead of producing an infinite polling budget. (scratchpad/test/github/WorkflowDispatch.test.ts:121)
+- **upstream-bug** — Workflow waiting enforces an elapsed deadline across requests and sleeps instead of relying on a poll count. (scratchpad/test/github/WorkflowDispatch.test.ts:134; scratchpad/test/github/WorkflowDispatch.test.ts:157; scratchpad/test/github/WorkflowDispatch.test.ts:179)
+- **upstream-bug** — Pagination preserves per-request fetch and redirect options that the upstream iterator dropped. (scratchpad/test/github/transport.test.ts:114)
+- **upstream-bug** — Interrupted pagination aborts the pending fetch instead of leaving it running. (scratchpad/test/github/transport.test.ts:176 (pagination case))
+- **upstream-bug** — Interrupted GraphQL requests abort the pending fetch instead of leaving it running. (scratchpad/test/github/transport.test.ts:176 (graphql case))
+- **upstream-bug** — Bodyless Rest.Data routes expose their actual empty-string success type while resource void methods retain undefined results. (scratchpad/test/github/Rest.test.ts:9; scratchpad/test/github/GitHubApp.test.ts:177; scratchpad/test/github/GitTag.test.ts:8)
 
 ### Dependency backlog
 
