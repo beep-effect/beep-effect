@@ -349,3 +349,31 @@ PLAN and SPEC now state the applicable S11 content-final/ready handoff and
 retain the distinction from ordinary hosted-green merge readiness. The brief
 requires the lifecycle flip in this same final PR. Exact-head receipts and
 all active jobs must settle before the final report.
+
+Heavy fallback receipt: both own wrappers queued from 20:52Z through 21:12Z
+without starting their commands or producing result files. At 21:12Z both
+were stopped and verified inactive with MainPID 0. The run-3 ruling explicitly
+permits running a step in this lane's own cgroup after a twenty-minute delay.
+`/proc/self/cgroup` identifies `lane-contradiction-detect`; its live limits are
+MemoryHigh 36G, MemoryMax 40G, swap 0. Remaining heavy steps run serially with
+`env TURBO_CONCURRENCY=2`, unchanged caps and no interference with other holders.
+
+Fresh default package-verify at `22898c9175` passes both packages:
+`@beep/epistemic-domain` audit 8.1s / docgen 3.8s, and
+`@beep/epistemic-use-cases` audit 9.6s / docgen 4.5s (both exit 0).
+The package source/test/config tree matches the final harness revision; later
+changes are packet evidence only. The old typed-ref audit diagnostic does not
+recur. Serial parity/coverage refresh starts after these settled package jobs.
+
+Run-4 serial parity settles with exit 0 for every command: test-tsgo checks
+331 CLI test files, full docgen metadata/package docs/examples/aggregation,
+Fallow audit/dead-code/health/advisory stages, and both coverage suites.
+Coverage: domain 9 files / 99 tests pass, use-cases 9 files / 70 tests pass.
+The scoped comparison against the committed coverage baseline returns ten
+touched source files and zero failures. New executable detector files have
+100% lines/statements/functions/branches; export-only zero-counter barrels
+normalize to 100% using the owner's established rule. No baseline edit.
+Production source/test/config trees are unchanged after `22898c9175`;
+remaining edits are packet evidence. Both queued heavy units are inactive;
+the serial fallback scripts have terminal result files and both PTY sessions
+finished. The readiness monitor is tracked separately until its handoff.
