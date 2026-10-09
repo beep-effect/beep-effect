@@ -41,7 +41,23 @@ const causeMessage = (cause: unknown): string | undefined => {
  * tag (`Effect.catchTag("CatalogAssemblyError", ...)`) rather than inspecting an
  * untyped defect `cause`.
  *
+
+ * **Example** (Report an unreadable catalog source)
+ *
+ * ```ts
+ * import { CatalogAssemblyError } from "@beep/scratchpad/effected/npm/CatalogAssemblyError";
+ *
+ * const error = CatalogAssemblyError.make({
+ *   source: "manifest",
+ *   path: "pnpm-workspace.yaml",
+ *   cause: "invalid YAML",
+ * });
+ * console.log(error.message) // Failed to assemble catalogs from manifest pnpm-workspace.yaml: invalid YAML
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class CatalogAssemblyError extends S.TaggedError<CatalogAssemblyError>($I`CatalogAssemblyError`)("CatalogAssemblyError", {
 	/**
@@ -58,6 +74,8 @@ export class CatalogAssemblyError extends S.TaggedError<CatalogAssemblyError>($I
 	 * Why a `hooks`-source failure could not resolve a config dependency at its
 	 * declared version, when that is what failed. Absent for every other
 	 * failure, including a pnpmfile that resolved but failed to load or replay.
+	 *
+	 * **Details**
 	 *
 	 * - `notInstalled` — the declared version is in neither
 	 *   `node_modules/.pnpm-config` nor any pnpm store, and the replaying layer
@@ -91,6 +109,21 @@ export class CatalogAssemblyError extends S.TaggedError<CatalogAssemblyError>($I
   * normal Effect path, must not lose it. A cause that is itself a
   * `CatalogAssemblyError` (a nested assembly error) already renders its own
   * summary, so its message is used as-is rather than prefixed a second time.
+
+  * **Example** (Render the originating failure)
+  *
+  * ```ts
+  * import { CatalogAssemblyError } from "@beep/scratchpad/effected/npm/CatalogAssemblyError";
+  *
+  * const error = CatalogAssemblyError.make({
+  *   source: "manifest",
+  *   path: "pnpm-workspace.yaml",
+  *   cause: "invalid YAML",
+  * });
+  * console.log(error.message) // Failed to assemble catalogs from manifest pnpm-workspace.yaml: invalid YAML
+  * ```
+  *
+  * @since 0.0.0
   */
 	override get message(): string {
 		if (S.is(CatalogAssemblyError)(this.cause)) return this.cause.message;

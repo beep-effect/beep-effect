@@ -40,7 +40,17 @@ const command = Effect.fnUntraced(function* (
  * "fetch and run a package binary" as `applyDlx`, so a pinned executor
  * delegates to it, and {@link NpmExecutor.command} then requires `LocalExec`.
  *
+ * **Example** (Select a pinned npm release)
+ *
+ * ```ts
+ * import { NpmExecutor } from "@beep/scratchpad/effected/npm/NpmExecutor";
+ *
+ * console.log(NpmExecutor.dlx("npm@11").spec) // npm@11
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class NpmExecutor extends S.Class<NpmExecutor>($I`NpmExecutor`)({
 	/**
@@ -58,50 +68,79 @@ export class NpmExecutor extends S.Class<NpmExecutor>($I`NpmExecutor`)({
 	 */
 	extraArgs: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "Extra flags appended to every generated invocation, after `--cache`." }),
 }, $I.annote("NpmExecutor", { description: "Which `npm` runs a publish command." })) {
-	/** The runner's own `npm`. */
+	/**
+	 * The runner's own `npm`.
+	 *
+	 * **Example** (Select the runner npm)
+	 *
+	 * ```ts
+	 * import { NpmExecutor } from "@beep/scratchpad/effected/npm/NpmExecutor";
+	 *
+	 * console.log(NpmExecutor.ambient.spec === undefined) // true
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	static readonly ambient: NpmExecutor = NpmExecutor.make({});
 
-	/** A pinned npm, fetched through the project's launcher (`pnpm dlx npm@11`). */
+	/**
+	 * A pinned npm, fetched through the project's launcher (`pnpm dlx npm@11`).
+	 *
+	 * **Example** (Pin npm through the launcher)
+	 *
+	 * ```ts
+	 * import { NpmExecutor } from "@beep/scratchpad/effected/npm/NpmExecutor";
+	 *
+	 * console.log(NpmExecutor.dlx("npm@11").spec) // npm@11
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly dlx = (spec: string): NpmExecutor => NpmExecutor.make({ spec });
 
 	/**
-  * A copy of this executor that redirects npm's cache.
-  *
-  * **Gotchas**
-  *
-  * Names a recurring runner-hygiene problem so it shows up in the `.d.ts`
-  * instead of living as tribal knowledge: **GitHub's macOS runner images ship
-  * a partially root-owned `~/.npm/_cacache`**, and current npm hard-fails with
-  * `EACCES` before doing any work when it sees root-owned files in its cache.
-  * Every `npm view` / `pack` / `publish` on such a runner dies until the cache
-  * is redirected somewhere the job owns, typically `RUNNER_TEMP`.
-  *
-  * Setting `npm_config_cache` in the environment also works and npm honours it
-  * in every dispatch form — but it is invisible at the call site, which is how
-  * the fix gets lost in a port and rediscovered the hard way.
-  *
-  * **This OVERRIDES a deliberately configured cache, and that is worth a
-  * decision rather than a default.** A `--cache` flag in argv outranks both
-  * `npm_config_cache` and any npmrc setting, so calling this unconditionally
-  * also overrides a self-hosted runner pointed at a warmed cache on purpose.
-  * The combinator stays deliberately dumb — it reads no environment, because a
-  * value transformation that consulted ambient state could not be reasoned
-  * about from the call site. **A caller that wants "redirect only if nothing
-  * else is configured" makes that check itself**, e.g. applying this only when
-  * `npm_config_cache` is unset. The safe-looking unconditional call is the one
-  * that silently wins, so choose on purpose.
-  *
-  * **Example** (Redirect a pinned npm executor cache to runner storage)
-  *
-  * ```ts
-  * import { NpmExecutor } from "./index.ts";
-  *
-  * const runnerTemp = process.env.RUNNER_TEMP ?? "/tmp";
-  * const executor = NpmExecutor.dlx("npm@11").withCacheDir(`${runnerTemp}/npm-cache`);
-  * ```
-  *
-  * @param cacheDir - The directory to use as npm's cache.
-  */
+	 * A copy of this executor that redirects npm's cache.
+	 *
+	 * **Gotchas**
+	 *
+	 * Names a recurring runner-hygiene problem so it shows up in the `.d.ts`
+	 * instead of living as tribal knowledge: **GitHub's macOS runner images ship
+	 * a partially root-owned `~/.npm/_cacache`**, and current npm hard-fails with
+	 * `EACCES` before doing any work when it sees root-owned files in its cache.
+	 * Every `npm view` / `pack` / `publish` on such a runner dies until the cache
+	 * is redirected somewhere the job owns, typically `RUNNER_TEMP`.
+	 *
+	 * Setting `npm_config_cache` in the environment also works and npm honours it
+	 * in every dispatch form — but it is invisible at the call site, which is how
+	 * the fix gets lost in a port and rediscovered the hard way.
+	 *
+	 * **This OVERRIDES a deliberately configured cache, and that is worth a
+	 * decision rather than a default.** A `--cache` flag in argv outranks both
+	 * `npm_config_cache` and any npmrc setting, so calling this unconditionally
+	 * also overrides a self-hosted runner pointed at a warmed cache on purpose.
+	 * The combinator stays deliberately dumb — it reads no environment, because a
+	 * value transformation that consulted ambient state could not be reasoned
+	 * about from the call site. **A caller that wants "redirect only if nothing
+	 * else is configured" makes that check itself**, e.g. applying this only when
+	 * `npm_config_cache` is unset. The safe-looking unconditional call is the one
+	 * that silently wins, so choose on purpose.
+	 *
+	 * **Example** (Redirect a pinned npm executor cache to runner storage)
+	 *
+	 * ```ts
+	 * import { NpmExecutor } from "@beep/scratchpad/effected/npm/NpmExecutor";
+	 *
+	 * const runnerTemp = process.env.RUNNER_TEMP ?? "/tmp";
+	 * const executor = NpmExecutor.dlx("npm@11").withCacheDir(`${runnerTemp}/npm-cache`);
+	 * console.log(executor.cacheDir === `${runnerTemp}/npm-cache`) // true
+	 * ```
+	 *
+	 * @param cacheDir - The directory to use as npm's cache.
+	 * @category combinators
+	 * @since 0.0.0
+	 */
 	withCacheDir(cacheDir: string): NpmExecutor {
 		return NpmExecutor.make({
 			...O.getSomesStruct({ spec: O.fromUndefinedOr(this.spec) }),
@@ -111,23 +150,34 @@ export class NpmExecutor extends S.Class<NpmExecutor>($I`NpmExecutor`)({
 	}
 
 	/**
-  * A copy of this executor that appends `args` to every invocation.
-  *
-  * **Details**
-  *
-  * The generic vent, for the flag this package has not named — `--loglevel`,
-  * `--ignore-scripts`, a registry-specific option. It exists so a consumer
-  * needing one flag does not have to wait for new API, and so the next
-  * recurring need is a splice rather than a fork.
-  *
-  * Prefer {@link NpmExecutor.withCacheDir} for the cache: it is typed,
-  * discoverable, and carries the reason.
-  *
-  * Replaces any previously set extra args rather than accumulating, so a copy
-  * is a complete statement of its own flags.
-  *
-  * @param args - Flags to append, after `--cache` when one is set.
-  */
+	 * A copy of this executor that appends `args` to every invocation.
+	 *
+	 * **Details**
+	 *
+	 * The generic vent, for the flag this package has not named — `--loglevel`,
+	 * `--ignore-scripts`, a registry-specific option. It exists so a consumer
+	 * needing one flag does not have to wait for new API, and so the next
+	 * recurring need is a splice rather than a fork.
+	 *
+	 * Prefer {@link NpmExecutor.withCacheDir} for the cache: it is typed,
+	 * discoverable, and carries the reason.
+	 *
+	 * Replaces any previously set extra args rather than accumulating, so a copy
+	 * is a complete statement of its own flags.
+	 *
+	 * **Example** (Replace extra invocation flags)
+	 *
+	 * ```ts
+	 * import { NpmExecutor } from "@beep/scratchpad/effected/npm/NpmExecutor";
+	 *
+	 * const executor = NpmExecutor.ambient.withExtraArgs(["--loglevel", "warn"]);
+	 * console.log(executor.extraArgs?.join(" ")) // --loglevel warn
+	 * ```
+	 *
+	 * @param args - Flags to append, after `--cache` when one is set.
+	 * @category combinators
+	 * @since 0.0.0
+	 */
 	withExtraArgs(args: ReadonlyArray<string>): NpmExecutor {
 		return NpmExecutor.make({
 			...O.getSomesStruct({ spec: O.fromUndefinedOr(this.spec) }),
@@ -136,22 +186,51 @@ export class NpmExecutor extends S.Class<NpmExecutor>($I`NpmExecutor`)({
 		});
 	}
 
-	/** `args` plus this executor's cache redirect and extra flags. */
+	/**
+	 * `args` plus this executor's cache redirect and extra flags.
+	 *
+	 * **Example** (Construct a command with cache and extra flags)
+	 *
+	 * ```ts
+	 * import { NpmExecutor } from "@beep/scratchpad/effected/npm/NpmExecutor";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const executor = NpmExecutor.ambient.withCacheDir("/tmp/npm-cache").withExtraArgs(["--loglevel", "warn"]);
+	 * const program = executor.command(["--version"]);
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	#allArgs(args: ReadonlyArray<string>): ReadonlyArray<string> {
 		return [...args, ...(this.cacheDir === undefined ? [] : ["--cache", this.cacheDir]), ...(this.extraArgs ?? [])];
 	}
 
 	/**
-  * The core `Command` that runs `npm` with `args`.
-  *
-  * **Gotchas**
-  *
-  * A `dlx` executor with no project-local launcher **fails typed** rather
-  * than degrading to the ambient `npm`: silently running the runner's bundled
-  * npm when the caller explicitly asked for a pinned one would reintroduce
-  * exactly the OIDC failure the pinned spec exists to avoid, and would do it
-  * invisibly.
-  */
+	 * The core `Command` that runs `npm` with `args`.
+	 *
+	 * **Gotchas**
+	 *
+	 * A `dlx` executor with no project-local launcher **fails typed** rather
+	 * than degrading to the ambient `npm`: silently running the runner's bundled
+	 * npm when the caller explicitly asked for a pinned one would reintroduce
+	 * exactly the OIDC failure the pinned spec exists to avoid, and would do it
+	 * invisibly.
+	 *
+	 * **Example** (Construct an npm version command)
+	 *
+	 * ```ts
+	 * import { NpmExecutor } from "@beep/scratchpad/effected/npm/NpmExecutor";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = NpmExecutor.ambient.command(["--version"]);
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category commands
+	 * @since 0.0.0
+	 */
 	command(args: ReadonlyArray<string>): Effect.Effect<ChildProcess.StandardCommand, PublishError, LocalExec> {
 		const spec = this.spec;
 		const all = this.#allArgs(args);

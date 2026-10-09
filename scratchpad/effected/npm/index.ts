@@ -1,3 +1,10 @@
+/**
+ * Provides npm dependency vocabulary, registry and publishing services, and
+ * default catalog and workspace resolver layers.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import * as Layer from "effect/Layer";
 import { CatalogResolver } from "./CatalogResolver.ts";
 import { WorkspaceResolver } from "./WorkspaceResolver.ts";
@@ -108,7 +115,7 @@ export { DependencyResolutionError, WorkspaceResolver } from "./WorkspaceResolve
  * ```ts
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option";
- * import { CatalogResolver, Default, WorkspaceResolver } from "./index.ts";
+ * import { CatalogResolver, Default, WorkspaceResolver } from "@beep/scratchpad/effected/npm/index";
  *
  * const program = Effect.gen(function* () {
  *   const catalog = yield* CatalogResolver;
@@ -119,11 +126,13 @@ export { DependencyResolutionError, WorkspaceResolver } from "./WorkspaceResolve
  *   ]);
  * });
  *
- * Effect.runPromise(Effect.provide(program, Default));
- * // => [Option.none(), Option.none()]
+ * const results = Effect.runSync(Effect.provide(program, Default));
+ * console.log(results.every(O.isNone)) // true
  * ```
  *
  * @public
+ * @category layers
+ * @since 0.0.0
  */
 export const Default: Layer.Layer<CatalogResolver | WorkspaceResolver> = Layer.mergeAll(
 	CatalogResolver.noop,

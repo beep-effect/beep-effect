@@ -38,6 +38,8 @@ const TarballErrorPayload = S.Struct({
 	 * registry vouched for. `extractFailed` — the bytes could not be written or
 	 * unpacked.
 	 *
+	 * **Details**
+	 *
 	 * **The `notFound` split is load-bearing, not cosmetic.** A consumer that
 	 * cannot tell "this version legitimately does not exist" from "something
 	 * went wrong fetching a version that does" has to treat both the same way,
@@ -85,7 +87,23 @@ const TarballFailure = TarballReason.mapMembers(([notFound, http, integrityMisma
 // into the validated member for its reason, dropping irrelevant fields there.
 const TarballFailureFromPayload = S.toType(TarballErrorPayload).pipe(S.decodeTo(S.toType(TarballFailure)));
 
-/** Raised when a published tarball cannot be fetched, verified or extracted. */
+/**
+ * Raised when a published tarball cannot be fetched, verified or extracted.
+ *
+ *
+ * **Example** (Distinguish a missing published version)
+ *
+ * ```ts
+ * import { TarballError } from "@beep/scratchpad/effected/npm/PackageTarball";
+ *
+ * const error = TarballError.make({ reason: "notFound", package: "some-config", version: "1.2.3" });
+ * console.log(error.reason) // notFound
+ * ```
+ *
+ * @public
+ * @category errors
+ * @since 0.0.0
+ */
 export class TarballError extends S.TaggedError<TarballError>($I`TarballError`)("TarballError", TarballErrorPayload,
 	$I.annote("TarballError", { description: "Raised when a published tarball cannot be fetched, verified or extracted." }),
 ) {
@@ -93,6 +111,21 @@ export class TarballError extends S.TaggedError<TarballError>($I`TarballError`)(
 		return pipe(this, S.decodeUnknownResult(TarballFailureFromPayload), Result.getOrThrow);
 	}
 
+	/**
+	 * Formats the failure reason with the package, version and available case-specific context.
+	 *
+	 * **Example** (Render a missing tarball message)
+	 *
+	 * ```ts
+	 * import { TarballError } from "@beep/scratchpad/effected/npm/PackageTarball";
+	 *
+	 * const error = TarballError.make({ reason: "notFound", package: "some-config", version: "1.2.3" });
+	 * console.log(error.message) // No published tarball for some-config@1.2.3
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		const what = `${this.package}@${this.version}`;
 		return TarballFailure.match(this.variant, {
@@ -109,6 +142,8 @@ export class TarballError extends S.TaggedError<TarballError>($I`TarballError`)(
  * The {@link PackageTarball} service shape.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PackageTarballShape {
 	/**
@@ -119,6 +154,21 @@ export interface PackageTarballShape {
   *
   * **Scoped**: the temporary directory is removed when the calling scope
   * closes, so a caller reads what it needs and never owns the cleanup.
+  *
+  * **Example** (Construct scoped extraction from the service)
+  *
+  * ```ts
+  * import { PackageTarball } from "@beep/scratchpad/effected/npm/PackageTarball";
+  * import * as Effect from "effect/Effect";
+  *
+  * const program = Effect.gen(function* () {
+  *   const tarball = yield* PackageTarball;
+  *   return yield* tarball.extract({ name: "some-config", version: "1.2.3" });
+  * }).pipe(Effect.scoped);
+  * console.log(Effect.isEffect(program)) // true
+  * ```
+  *
+  * @since 0.0.0
   */
 	readonly extract: (published: PublishedVersion) => Effect.Effect<string, TarballError, Scope.Scope>;
 }
@@ -254,7 +304,8 @@ const make = Effect.fnUntraced(function* () {
  * **Example** (Look up and extract a published package within a scope)
  *
  * ```ts
- * import { NpmRegistry, PackageTarball } from "./index.ts";
+ * import { NpmRegistry } from "@beep/scratchpad/effected/npm/NpmRegistry";
+ * import { PackageTarball } from "@beep/scratchpad/effected/npm/PackageTarball";
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option";
  *
@@ -266,9 +317,12 @@ const make = Effect.fnUntraced(function* () {
  *   const directory = yield* tarball.extract(found.value);
  *   return O.some(directory);
  * }).pipe(Effect.scoped);
+ * console.log(Effect.isEffect(read)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class PackageTarball extends Context.Service<PackageTarball, PackageTarballShape>()(
 	$I`PackageTarball`,
@@ -277,6 +331,22 @@ export class PackageTarball extends Context.Service<PackageTarball, PackageTarba
 	 * The live service, over core's `FileSystem`, `Crypto`, `HttpClient` and
 	 * `ChildProcessSpawner`. Pair it with {@link NpmRegistry.layer} to obtain the
 	 * {@link PublishedVersion} that `extract` takes.
+	 *
+	 * **Example** (Compose extraction with the live service layer)
+	 *
+	 * ```ts
+	 * import { PackageTarball } from "@beep/scratchpad/effected/npm/PackageTarball";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const tarball = yield* PackageTarball;
+	 *   return yield* tarball.extract({ name: "some-config", version: "1.2.3" });
+	 * }).pipe(Effect.scoped, Effect.provide(PackageTarball.layer));
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
 	 */
 	static readonly layer: Layer.Layer<
 		PackageTarball,

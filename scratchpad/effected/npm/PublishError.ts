@@ -96,13 +96,40 @@ const PublishFailureFromPayload = PublishErrorPayload.pipe(
  * — the same one-way-edge reasoning that puts `DependencyResolutionError` in
  * `WorkspaceResolver.ts` and `CatalogAssemblyError` in a leaf module.
  *
+ *
+ * **Example** (Route an npm pack failure by kind)
+ *
+ * ```ts
+ * import { PublishError } from "@beep/scratchpad/effected/npm/PublishError";
+ *
+ * const error = PublishError.make({ kind: "pack", subject: "packages/widget", exitCode: 1 });
+ * console.log(error.kind) // pack
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class PublishError extends S.TaggedError<PublishError>($I`PublishError`)("PublishError", PublishErrorPayload, $I.annote("PublishError", { description: "A publish-workflow step failed." })) {
 	private get variant(): typeof PublishFailure.Type {
 		return pipe(this, S.decodeUnknownResult(PublishFailureFromPayload), Result.getOrThrow);
 	}
 
+	/**
+	 * Formats the failed workflow step with its subject, exit code and non-empty trimmed output when applicable.
+	 *
+	 * **Example** (Render an npm pack failure)
+	 *
+	 * ```ts
+	 * import { PublishError } from "@beep/scratchpad/effected/npm/PublishError";
+	 *
+	 * const error = PublishError.make({ kind: "pack", subject: "packages/widget", exitCode: 1 });
+	 * console.log(error.message) // npm pack failed for packages/widget (exit 1)
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		const where = (subject: string | undefined): string => subject === undefined ? "" : ` for ${subject}`;
 		const code = (exitCode: number | undefined): string => exitCode === undefined ? "" : ` (exit ${exitCode})`;

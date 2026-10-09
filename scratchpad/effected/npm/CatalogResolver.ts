@@ -42,18 +42,20 @@ const $I = $ScratchpadId.create("effected/npm/CatalogResolver");
  * ```ts
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option";
- * import { CatalogResolver } from "./index.ts";
+ * import { CatalogResolver } from "@beep/scratchpad/effected/npm/CatalogResolver";
  *
  * const program = Effect.gen(function* () {
  *   const resolver = yield* CatalogResolver;
  *   return yield* resolver.rangeOf("effect", O.none());
  * });
  *
- * Effect.runPromise(Effect.provide(program, CatalogResolver.noop));
- * // => Option.none()
+ * const result = Effect.runSync(Effect.provide(program, CatalogResolver.noop));
+ * console.log(O.isNone(result)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class CatalogResolver extends Context.Service<
 	CatalogResolver,
@@ -69,6 +71,23 @@ export class CatalogResolver extends Context.Service<
 	 * consulting an actual catalog. A pure `Layer.succeed`, bound to a const
 	 * so it memoizes by reference — the layer is built once, not once per
 	 * reference to `CatalogResolver.noop`.
+
+	 * **Example** (Leave named catalogs unresolved)
+	 *
+	 * ```ts
+	 * import { CatalogResolver } from "@beep/scratchpad/effected/npm/CatalogResolver";
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
+	 *
+	 * const program = Effect.flatMap(CatalogResolver, (resolver) =>
+	 *   resolver.rangeOf("effect", O.some("build")),
+	 * );
+	 * const result = Effect.runSync(Effect.provide(program, CatalogResolver.noop));
+	 * console.log(O.isNone(result)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
 	 */
 	static readonly noop: Layer.Layer<CatalogResolver> = Layer.succeed(CatalogResolver, {
 		rangeOf: Effect.fn("CatalogResolver.rangeOf")(() => Effect.succeedNone),

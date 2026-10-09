@@ -40,17 +40,39 @@ const decodePublishDate = S.decodeOption(S.DateFromString);
  * source may set the age, the exclude list, both, or neither. Absent fields
  * contribute nothing to the combination.
  *
+ * **Details**
+ *
  * Deliberately permissive: unlike {@link ReleaseAgeGate} it does not constrain
  * `ageMinutes` to be non-negative, because the raw values arrive from arbitrary
  * config sources and {@link ReleaseAgeGate.combine} is the single authority
  * that clamps them.
  *
+ * **Example** (Decode a partial gate contribution)
+ *
+ * ```ts
+ * import { PartialReleaseAgeGate } from "@beep/scratchpad/effected/npm/ReleaseAgeGate";
+ * import * as S from "effect/Schema";
+ *
+ * const contribution = S.decodeUnknownSync(PartialReleaseAgeGate)({ ageMinutes: -5 });
+ * console.log(contribution.ageMinutes) // -5
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const PartialReleaseAgeGate = S.Struct({
-	/** Minutes a release must age; absent means this source sets no age. */
+	/**
+	 * Minutes a release must age; absent means this source sets no age.
+	 *
+	 * @since 0.0.0
+	 */
 	ageMinutes: S.optionalKey(S.Finite).annotateKey({ description: "Minutes a release must age; absent means this source sets no age." }),
-	/** Exempt package-name patterns; absent means this source adds no exemptions. */
+	/**
+	 * Exempt package-name patterns; absent means this source adds no exemptions.
+	 *
+	 * @since 0.0.0
+	 */
 	exclude: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "Exempt package-name patterns; absent means this source adds no exemptions." }),
 }).pipe($I.annoteSchema("PartialReleaseAgeGate", { description: "A source's partial contribution to a ReleaseAgeGate: the effective gate is assembled from more than one place (inline `pnpm-workspace.yaml` keys, replayed `updateConfig` hooks, `pnpm config get` output), and each source may set the age, the exclude list, both, or neither. Absent fields contribute nothing to the combination." }));
 
@@ -58,6 +80,8 @@ export const PartialReleaseAgeGate = S.Struct({
  * One source's partial contribution to a release-age gate. All fields optional.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type PartialReleaseAgeGate = typeof PartialReleaseAgeGate.Type;
 
@@ -125,7 +149,7 @@ const matchesExclude = (name: string, patterns: readonly string[]): boolean =>
  * **Example** (Combine release-age settings and filter candidate versions)
  *
  * ```ts
- * import { ReleaseAgeGate } from "./index.ts";
+ * import { ReleaseAgeGate } from "@beep/scratchpad/effected/npm/ReleaseAgeGate";
  *
  * const gate = ReleaseAgeGate.combine(
  *   { ageMinutes: 1440 },
@@ -137,16 +161,27 @@ const matchesExclude = (name: string, patterns: readonly string[]): boolean =>
  *   ["1.0.0", "1.0.1"],
  *   { "1.0.0": "2020-01-01T00:00:00Z", "1.0.1": "2026-07-21T00:00:00Z" },
  *   "prettier",
- *   Date.now(),
+ *   Date.parse("2026-07-21T12:00:00Z"),
  * );
+ * console.log(eligible.join(", ")) // 1.0.0
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class ReleaseAgeGate extends S.Class<ReleaseAgeGate>($I`ReleaseAgeGate`)({
-	/** Minutes a published version must age before it is eligible (non-negative, finite). */
+	/**
+	 * Minutes a published version must age before it is eligible (non-negative, finite).
+	 *
+	 * @since 0.0.0
+	 */
 	ageMinutes: AgeMinutes.annotateKey({ description: "Minutes a published version must age before it is eligible (non-negative, finite)." }),
-	/** Package-name patterns exempt from the gate (exact names or `*`-globs). */
+	/**
+	 * Package-name patterns exempt from the gate (exact names or `*`-globs).
+	 *
+	 * @since 0.0.0
+	 */
 	exclude: S.Array(S.String).annotateKey({ description: "Package-name patterns exempt from the gate (exact names or `*`-globs)." }),
 }, $I.annote("ReleaseAgeGate", { description: "pnpm's publish-time release-age gate: the number of minutes a published version must age before it is eligible, and the set of package-name patterns exempt from the gate. Mirrors pnpm's `minimumReleaseAge` / `minimumReleaseAgeExclude` config so a resolver can drop too-young candidate versions before picking, avoiding `ERR_PNPM_NO_MATURE_MATCHING_VERSION`." })) {
 	/**
@@ -160,11 +195,27 @@ export class ReleaseAgeGate extends S.Class<ReleaseAgeGate>($I`ReleaseAgeGate`)(
 	 * contributions (or only empty ones) the result is the inert zero gate
 	 * (`ageMinutes: 0`, `exclude: []`).
 	 *
+	 * **Details**
+	 *
 	 * `combine` is total — it never throws on a fractional, negative, or
 	 * non-finite contribution — which is why {@link (PartialReleaseAgeGate:variable)}
 	 * does not constrain its `ageMinutes` and this method owns the clamp.
 	 *
+	 * **Example** (Merge ages and exemptions)
+	 *
+	 * ```ts
+	 * import { ReleaseAgeGate } from "@beep/scratchpad/effected/npm/ReleaseAgeGate";
+	 *
+	 * const gate = ReleaseAgeGate.combine(
+	 *   { ageMinutes: 60, exclude: ["z", "a"] },
+	 *   { ageMinutes: 120, exclude: ["a"] },
+	 * );
+	 * console.log(gate.ageMinutes, gate.exclude.join(", ")) // 120 a, z
+	 * ```
+	 *
 	 * @param contributions - the partial gates to merge, one per source.
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static combine(...contributions: readonly PartialReleaseAgeGate[]): ReleaseAgeGate {
 		const ages = contributions
@@ -176,24 +227,34 @@ export class ReleaseAgeGate extends S.Class<ReleaseAgeGate>($I`ReleaseAgeGate`)(
 	}
 
 	/**
-  * Whether a package name matches any of `patterns`, using pnpm's
-  * `@pnpm/matcher` semantics: an exact-name match, or a `*`-glob where `*`
-  * matches any run of characters **including `/`** — so a bare `*` matches a
-  * scoped name like `@scope/pkg`, and `@scope/*` matches every package in a
-  * scope.
-  *
-  * **Gotchas**
-  *
-  * This is deliberately **NOT** `@effected/glob`'s minimatch dialect, in
-  * which `*` refuses to cross `/` (there `*` matches `pkg` but not
-  * `@scope/pkg`, and you would need `**`). pnpm treats the package name as a
-  * flat string, so this matcher does too. Do not "fix" this to route through
-  * `@effected/glob`: it would silently change which packages a gate exempts
-  * and diverge from pnpm's own behavior.
-  *
-  * @param name - the package name to test.
-  * @param patterns - the exclude patterns (exact names or `*`-globs).
-  */
+	 * Whether a package name matches any of `patterns`, using pnpm's
+	 * `@pnpm/matcher` semantics: an exact-name match, or a `*`-glob where `*`
+	 * matches any run of characters **including `/`** — so a bare `*` matches a
+	 * scoped name like `@scope/pkg`, and `@scope/*` matches every package in a
+	 * scope.
+	 *
+	 * **Gotchas**
+	 *
+	 * This is deliberately **NOT** `@effected/glob`'s minimatch dialect, in
+	 * which `*` refuses to cross `/` (there `*` matches `pkg` but not
+	 * `@scope/pkg`, and you would need `**`). pnpm treats the package name as a
+	 * flat string, so this matcher does too. Do not "fix" this to route through
+	 * `@effected/glob`: it would silently change which packages a gate exempts
+	 * and diverge from pnpm's own behavior.
+	 *
+	 * **Example** (Match scoped package names)
+	 *
+	 * ```ts
+	 * import { ReleaseAgeGate } from "@beep/scratchpad/effected/npm/ReleaseAgeGate";
+	 *
+	 * console.log(ReleaseAgeGate.matchesExclude("@scope/pkg", ["*"])) // true
+	 * ```
+	 *
+	 * @param name - the package name to test.
+	 * @param patterns - the exclude patterns (exact names or `*`-globs).
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	static matchesExclude(name: string, patterns: readonly string[]): boolean {
 		return matchesExclude(name, patterns);
 	}
@@ -202,7 +263,18 @@ export class ReleaseAgeGate extends S.Class<ReleaseAgeGate>($I`ReleaseAgeGate`)(
 	 * Whether this gate exempts the given package name from the release-age
 	 * check — `ReleaseAgeGate.matchesExclude(name, this.exclude)`.
 	 *
+	 * **Example** (Check a gate exemption)
+	 *
+	 * ```ts
+	 * import { ReleaseAgeGate } from "@beep/scratchpad/effected/npm/ReleaseAgeGate";
+	 *
+	 * const gate = ReleaseAgeGate.combine({ ageMinutes: 60, exclude: ["@scope/*"] });
+	 * console.log(gate.isExcluded("@scope/pkg")) // true
+	 * ```
+	 *
 	 * @param name - the package name to test.
+	 * @category predicates
+	 * @since 0.0.0
 	 */
 	isExcluded(name: string): boolean {
 		return matchesExclude(name, this.exclude);
@@ -211,6 +283,8 @@ export class ReleaseAgeGate extends S.Class<ReleaseAgeGate>($I`ReleaseAgeGate`)(
 	/**
 	 * Filter a package's candidate versions to those old enough to pass the
 	 * gate, given each version's publish timestamp and a caller-supplied `now`.
+	 *
+	 * **Details**
 	 *
 	 * A version is kept when it has a parseable publish timestamp at or before
 	 * the cutoff (`now - ageMinutes * 60000`). A version with a **missing or
@@ -221,10 +295,27 @@ export class ReleaseAgeGate extends S.Class<ReleaseAgeGate>($I`ReleaseAgeGate`)(
 	 * Returns all versions unchanged (a no-op) when the gate is inert
 	 * (`ageMinutes <= 0`) or the package name is excluded.
 	 *
+	 * **Example** (Drop unknown and recent publication times)
+	 *
+	 * ```ts
+	 * import { ReleaseAgeGate } from "@beep/scratchpad/effected/npm/ReleaseAgeGate";
+	 *
+	 * const gate = ReleaseAgeGate.combine({ ageMinutes: 60 });
+	 * const versions = gate.filterVersions(
+	 *   ["1.0.0", "1.0.1", "1.0.2"],
+	 *   { "1.0.0": "2026-01-01T00:00:00Z", "1.0.1": "2026-01-01T01:30:00Z" },
+	 *   "example",
+	 *   Date.parse("2026-01-01T02:00:00Z"),
+	 * );
+	 * console.log(versions.join(", ")) // 1.0.0
+	 * ```
+	 *
 	 * @param versions - the candidate version strings.
 	 * @param times - a map from version string to its ISO-8601 publish date.
 	 * @param name - the package name (checked against the gate's `exclude` list).
 	 * @param now - the current time in epoch milliseconds (the caller's clock).
+	 * @category filtering
+	 * @since 0.0.0
 	 */
 	filterVersions(
 		versions: readonly string[],

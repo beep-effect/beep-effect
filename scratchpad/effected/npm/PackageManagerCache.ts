@@ -34,15 +34,14 @@ const $I = $ScratchpadId.create("effected/npm/PackageManagerCache");
  * **Example** (Read the cache-manager vocabulary)
  *
  * ```ts
- * import { CachingPackageManager } from "./PackageManagerCache.ts";
+ * import { CachingPackageManager } from "@beep/scratchpad/effected/npm/PackageManagerCache";
  *
- * CachingPackageManager.literals;
- * // => ["npm", "pnpm", "yarn-classic", "yarn-berry", "bun"]
+ * console.log(CachingPackageManager.literals.join(",")) // npm,pnpm,yarn-classic,yarn-berry,bun
  * ```
  *
+ * @public
  * @category schemas
  * @since 0.0.0
- * @public
  */
 export const CachingPackageManager = LiteralKit(["npm", "pnpm", "yarn-classic", "yarn-berry", "bun"]).annotate(
 	$I.annote("CachingPackageManager", {
@@ -53,9 +52,9 @@ export const CachingPackageManager = LiteralKit(["npm", "pnpm", "yarn-classic", 
 /**
  * The union of managers the default-cache table covers.
  *
+ * @public
  * @category type-level
  * @since 0.0.0
- * @public
  */
 export type CachingPackageManager = typeof CachingPackageManager.Type;
 
@@ -70,16 +69,15 @@ export type CachingPackageManager = typeof CachingPackageManager.Type;
  * **Example** (Construct cache-directory inputs)
  *
  * ```ts
- * import { DefaultCacheDirectoryOptions, PackageManagerCache } from "./PackageManagerCache.ts";
+ * import { DefaultCacheDirectoryOptions, PackageManagerCache } from "@beep/scratchpad/effected/npm/PackageManagerCache";
  *
  * const options = DefaultCacheDirectoryOptions.make({ platform: "darwin", home: "/Users/ci" });
- * PackageManagerCache.defaultDirectory("pnpm", options);
- * // => "/Users/ci/Library/pnpm/store"
+ * console.log(PackageManagerCache.defaultDirectory("pnpm", options)) // /Users/ci/Library/pnpm/store
  * ```
  *
+ * @public
  * @category schemas
  * @since 0.0.0
- * @public
  */
 export const DefaultCacheDirectoryOptions = S.Struct({
 	/**
@@ -102,9 +100,9 @@ export const DefaultCacheDirectoryOptions = S.Struct({
 /**
  * The plain-object inputs accepted by {@link PackageManagerCache.defaultDirectory}.
  *
+ * @public
  * @category type-level
  * @since 0.0.0
- * @public
  */
 export type DefaultCacheDirectoryOptions = typeof DefaultCacheDirectoryOptions.Type;
 
@@ -128,51 +126,76 @@ const under = (home: string, windows: boolean, ...parts: ReadonlyArray<string>):
  * **Example** (Find the default pnpm cache directory on macOS)
  *
  * ```ts
- * import { PackageManagerCache } from "./index.ts";
+ * import { PackageManagerCache } from "@beep/scratchpad/effected/npm/PackageManagerCache";
  *
- * PackageManagerCache.defaultDirectory("pnpm", { platform: "darwin", home: "/Users/ci" });
- * // => "/Users/ci/Library/pnpm/store"
+ * console.log(PackageManagerCache.defaultDirectory("pnpm", { platform: "darwin", home: "/Users/ci" })) // /Users/ci/Library/pnpm/store
  * ```
  *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class PackageManagerCache {
 	private constructor() {}
 
-	/** The literal schema of managers the table covers. */
+	/**
+	 * The literal schema of managers the table covers.
+	 *
+	 * **Example** (Inspect supported cache managers)
+	 *
+	 * ```ts
+	 * import { PackageManagerCache } from "@beep/scratchpad/effected/npm/PackageManagerCache";
+	 *
+	 * console.log(PackageManagerCache.Manager.literals.includes("pnpm")) // true
+	 * ```
+	 *
+	 * @category schemas
+	 * @since 0.0.0
+	 */
 	static readonly Manager = CachingPackageManager;
 
 	/**
-  * The default cache directory for a manager on a platform.
-  *
-  * **Details**
-  *
-  * Row authorities, each the manager's own documentation or source
-  * (verified 2026-08-02):
-  *
-  * - **npm** — the `cache` config default (docs.npmjs.com, cli v11):
-  *   `%LocalAppData%\npm-cache` on Windows, `~/.npm` on Posix. The content-
-  *   addressable store lives in `_cacache` beneath it.
-  * - **pnpm** — the `storeDir` default chain (pnpm.io/settings/store), with
-  *   no `$PNPM_HOME`/`$XDG_DATA_HOME` set: `~/AppData/Local/pnpm/store` on
-  *   Windows, `~/Library/pnpm/store` on macOS, `~/.local/share/pnpm/store`
-  *   on Linux. pnpm reports a **versioned subdirectory** of this (`…/v10`)
-  *   from `pnpm store path`.
-  * - **yarn-classic** — v1's `getCacheDir` (`src/util/user-dirs.js`):
-  *   `%LocalAppData%\Yarn\Cache` on Windows, `~/Library/Caches/Yarn` on
-  *   macOS, `~/.cache/yarn` on Linux (sans `$XDG_CACHE_HOME`). Classic
-  *   writes into a versioned subdirectory (`…/v6`).
-  * - **yarn-berry** — `getDefaultGlobalFolder` (`@yarnpkg/core`
-  *   `folderUtils.ts`) plus the `cacheFolder` default `<globalFolder>/cache`:
-  *   `%LocalAppData%\Yarn\Berry\cache` on Windows, `~/.yarn/berry/cache`
-  *   elsewhere (sans `$XDG_DATA_HOME`). The **global** cache is the default
-  *   since Berry v4 (`enableGlobalCache: true`); a v3 project defaulted to
-  *   its per-project `.yarn/cache` instead.
-  * - **bun** — the global install cache (bun.com/docs, `install.cache`):
-  *   `~/.bun/install/cache` on **every** platform — bun documents no Windows
-  *   divergence, so the Windows answer is under the user profile, not
-  *   `AppData`.
-  */
+	 * The default cache directory for a manager on a platform.
+	 *
+	 * **Details**
+	 *
+	 * Row authorities, each the manager's own documentation or source
+	 * (verified 2026-08-02):
+	 *
+	 * - **npm** — the `cache` config default (docs.npmjs.com, cli v11):
+	 *   `%LocalAppData%\npm-cache` on Windows, `~/.npm` on Posix. The content-
+	 *   addressable store lives in `_cacache` beneath it.
+	 * - **pnpm** — the `storeDir` default chain (pnpm.io/settings/store), with
+	 *   no `$PNPM_HOME`/`$XDG_DATA_HOME` set: `~/AppData/Local/pnpm/store` on
+	 *   Windows, `~/Library/pnpm/store` on macOS, `~/.local/share/pnpm/store`
+	 *   on Linux. pnpm reports a **versioned subdirectory** of this (`…/v10`)
+	 *   from `pnpm store path`.
+	 * - **yarn-classic** — v1's `getCacheDir` (`src/util/user-dirs.js`):
+	 *   `%LocalAppData%\Yarn\Cache` on Windows, `~/Library/Caches/Yarn` on
+	 *   macOS, `~/.cache/yarn` on Linux (sans `$XDG_CACHE_HOME`). Classic
+	 *   writes into a versioned subdirectory (`…/v6`).
+	 * - **yarn-berry** — `getDefaultGlobalFolder` (`@yarnpkg/core`
+	 *   `folderUtils.ts`) plus the `cacheFolder` default `<globalFolder>/cache`:
+	 *   `%LocalAppData%\Yarn\Berry\cache` on Windows, `~/.yarn/berry/cache`
+	 *   elsewhere (sans `$XDG_DATA_HOME`). The **global** cache is the default
+	 *   since Berry v4 (`enableGlobalCache: true`); a v3 project defaulted to
+	 *   its per-project `.yarn/cache` instead.
+	 * - **bun** — the global install cache (bun.com/docs, `install.cache`):
+	 *   `~/.bun/install/cache` on **every** platform — bun documents no Windows
+	 *   divergence, so the Windows answer is under the user profile, not
+	 *   `AppData`.
+	 *
+	 * **Example** (Find the Linux npm cache directory)
+	 *
+	 * ```ts
+	 * import { PackageManagerCache } from "@beep/scratchpad/effected/npm/PackageManagerCache";
+	 *
+	 * console.log(PackageManagerCache.defaultDirectory("npm", { platform: "linux", home: "/home/ci" })) // /home/ci/.npm
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static defaultDirectory(manager: CachingPackageManager, options: DefaultCacheDirectoryOptions): string {
 		const windows = options.platform === "win32";
 		const darwin = options.platform === "darwin";

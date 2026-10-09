@@ -45,7 +45,7 @@ const $I = $ScratchpadId.create("effected/npm/WorkspaceResolver");
  *
  * ```ts
  * import * as Effect from "effect/Effect";
- * import { DependencyResolutionError, WorkspaceResolver } from "./index.ts";
+ * import { DependencyResolutionError, WorkspaceResolver } from "@beep/scratchpad/effected/npm/WorkspaceResolver";
  *
  * const program = Effect.gen(function* () {
  *   const resolver = yield* WorkspaceResolver;
@@ -55,27 +55,32 @@ const $I = $ScratchpadId.create("effected/npm/WorkspaceResolver");
  *     error.reason === "no-version" ? Effect.succeed(undefined) : Effect.fail(error),
  *   ),
  * );
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class DependencyResolutionError extends S.TaggedError<DependencyResolutionError>($I`DependencyResolutionError`)(
 	"DependencyResolutionError",
 	{
 		specifier: S.String.annotateKey({ description: "The dependency specifier that could not be resolved" }),
 		/**
-   * Why the specifier could not be resolved.
-   *
-   * **Details**
-   *
-   * - `"mechanism"` — the resolution mechanism itself failed (reading or
-   *   assembling the workspace or its catalogs); `cause` carries the failure.
-   * - `"no-version"` — a `workspace:` specifier names a known member whose
-   *   manifest declares no `version`; there is no `cause`.
-   *
-   * Defaults to `"mechanism"` when omitted, at construction and when decoding
-   * an error encoded before the field existed.
-   */
+		 * Why the specifier could not be resolved.
+		 *
+		 * **Details**
+		 *
+		 * - `"mechanism"` — the resolution mechanism itself failed (reading or
+		 *   assembling the workspace or its catalogs); `cause` carries the failure.
+		 * - `"no-version"` — a `workspace:` specifier names a known member whose
+		 *   manifest declares no `version`; there is no `cause`.
+		 *
+		 * Defaults to `"mechanism"` when omitted, at construction and when decoding
+		 * an error encoded before the field existed.
+		 *
+		 * @since 0.0.0
+		 */
 		reason: S.Literals(["mechanism", "no-version"]).pipe(
 			S.withDecodingDefaultKey(Effect.succeed("mechanism" as const)),
 			S.withConstructorDefault(Effect.succeed("mechanism" as const)),
@@ -83,7 +88,25 @@ export class DependencyResolutionError extends S.TaggedError<DependencyResolutio
 		cause: S.Defect({ includeStack: true }).annotateKey({ description: "The originating resolution failure, preserved structurally; absent when a known workspace member declares no version" }),
 	}, $I.annote("DependencyResolutionError", { description: "Raised when a `catalog:` or `workspace:` specifier cannot be resolved because the resolution mechanism itself failed — not for an ordinary unmatched specifier, which resolves to `Option.none()` instead. Both CatalogResolver and WorkspaceResolver fail with it." }),
 ) {
-	/** Renders `specifier` and `reason` into a one-line failure message. */
+	/**
+	 * Renders `specifier` and `reason` into a one-line failure message.
+	 *
+	 * **Example** (Render a missing-version failure)
+	 *
+	 * ```ts
+	 * import { DependencyResolutionError } from "@beep/scratchpad/effected/npm/WorkspaceResolver";
+	 *
+	 * const error = new DependencyResolutionError({
+	 *   specifier: "workspace:*",
+	 *   reason: "no-version",
+	 *   cause: undefined,
+	 * });
+	 * console.log(error.message) // Failed to resolve dependency specifier "workspace:*": the workspace member declares no version
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return this.reason === "no-version"
 			? `Failed to resolve dependency specifier "${this.specifier}": the workspace member declares no version`
@@ -115,18 +138,21 @@ export class DependencyResolutionError extends S.TaggedError<DependencyResolutio
  *
  * ```ts
  * import * as Effect from "effect/Effect";
- * import { WorkspaceResolver } from "./index.ts";
+ * import * as O from "effect/Option";
+ * import { WorkspaceResolver } from "@beep/scratchpad/effected/npm/WorkspaceResolver";
  *
  * const program = Effect.gen(function* () {
  *   const resolver = yield* WorkspaceResolver;
  *   return yield* resolver.versionOf("@effected/semver");
  * });
  *
- * Effect.runPromise(Effect.provide(program, WorkspaceResolver.noop));
- * // => Option.none()
+ * const result = Effect.runSync(Effect.provide(program, WorkspaceResolver.noop));
+ * console.log(O.isNone(result)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class WorkspaceResolver extends Context.Service<
 	WorkspaceResolver,
@@ -138,6 +164,21 @@ export class WorkspaceResolver extends Context.Service<
 	 * No-op default: `versionOf` always succeeds with `Option.none()`, never
 	 * consulting an actual workspace. A pure `Layer.succeed`, bound to a
 	 * const so it memoizes by reference.
+	 *
+	 * **Example** (Provide the no-op workspace layer)
+	 *
+	 * ```ts
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
+	 * import { WorkspaceResolver } from "@beep/scratchpad/effected/npm/WorkspaceResolver";
+	 *
+	 * const program = Effect.flatMap(WorkspaceResolver, (resolver) => resolver.versionOf("@scope/pkg"));
+	 * const result = Effect.runSync(Effect.provide(program, WorkspaceResolver.noop));
+	 * console.log(O.isNone(result)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
 	 */
 	static readonly noop: Layer.Layer<WorkspaceResolver> = Layer.succeed(WorkspaceResolver, {
 		versionOf: Effect.fn("WorkspaceResolver.versionOf")(() => Effect.succeedNone),

@@ -1,41 +1,12 @@
 # npm (lab port of @effected/npm)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Fnpm?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/npm)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
-
 Effect service contracts for resolving pnpm `catalog:` and `workspace:` dependency specifiers, plus the npm registry and publish surface built on top of them. `CatalogResolver.rangeOf` turns a package name plus an optional catalog name into the configured range; `WorkspaceResolver.versionOf` turns a workspace package name into its concrete version. Both are `Context.Service` contracts, both ship a no-op default layer that resolves nothing, and neither one reads a file. The package is the seam: a library that needs to *expand* a specifier depends on this, and something that can actually see the workspace supplies the implementation. On top of the contracts sit the kit's shared dependency vocabulary — `DependencySpecifier`, `DependencySection`, `IntegrityHash` — and `Manifest`, a tolerant manifest model that resolves every `catalog:` and `workspace:` specifier through the contracts in one call. `NpmRegistry` and `PackagePublish` round out the package with the registry reads and pack/publish workflow a release tool needs, over core `HttpClient` and `@effected/commands`.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/npm
 
 `catalog:` and `workspace:` are specifiers whose meaning lives somewhere other than the manifest they appear in. A package.json document library can parse `"effect": "catalog:"` perfectly well and still have no way to say what it resolves to, because the answer is in a workspace file it has no business reading. The usual escape hatches are both bad: take a dependency on a workspace crawler and drag a filesystem into a pure document library, or accept a resolver as an untyped callback and lose the failure channel. Neither is a contract. This package is the contract — shape only, so `@effected/package-json` can express `Package.resolve` against services in `R` and let the application decide where resolution actually comes from.
 
 The one design decision worth stating up front: **an unmatched specifier is `Option.none()`, not an error**. A package that is absent from a catalog, or a name that is not a workspace member, is an ordinary answer and the resolver succeeds with `None`. The error channel is reserved for the resolution *mechanism* failing — an unreadable catalog file, a malformed workspace manifest — and `DependencyResolutionError` carries that cause structurally on a `Schema.Defect` field rather than folding it into a string. Blurring those two is how "no such package" ends up indistinguishable from "your disk is on fire".
-
-## Install
-
-```bash
-npm install @effected/npm effect
-```
-
-```bash
-pnpm add @effected/npm effect
-```
-
-Requires Node.js >=24.11.0.
 
 All `@effected/*` packages are ESM-only: the exports maps publish only `import` conditions, so `require()` — including tools that resolve in CJS mode — fails with Node's `ERR_PACKAGE_PATH_NOT_EXPORTED` rather than loading a CJS build that does not exist. Import from an ES module.
 
@@ -46,20 +17,23 @@ All `@effected/*` packages are ESM-only: the exports maps publish only `import` 
 The `Default` layer merges both no-op resolvers. Provide it when the contracts need to be satisfied but nothing should be resolved:
 
 ```ts
-import { CatalogResolver, Default, WorkspaceResolver } from "@effected/npm";
-import { Effect, Option } from "effect";
+import { CatalogResolver } from "@beep/scratchpad/effected/npm/CatalogResolver";
+import { Default } from "@beep/scratchpad/effected/npm/index";
+import { WorkspaceResolver } from "@beep/scratchpad/effected/npm/WorkspaceResolver";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 
 const program = Effect.gen(function* () {
   const catalog = yield* CatalogResolver;
   const workspace = yield* WorkspaceResolver;
   return yield* Effect.all([
-    catalog.rangeOf("effect", Option.none()),
+    catalog.rangeOf("effect", O.none()),
     workspace.versionOf("@effected/semver"),
   ]);
 });
 
-Effect.runPromise(Effect.provide(program, Default)).then(console.log);
-// => [Option.none(), Option.none()]
+const resolved = Effect.runSync(Effect.provide(program, Default));
+console.log(resolved.every(O.isNone)) // true
 ```
 
 `Option.none()` for the `catalog` argument selects the default catalog; `Option.some("build")` selects the named one.
@@ -78,8 +52,11 @@ Both fail with `DependencyResolutionError`, which carries the `specifier` that c
 A real resolver is a `Layer.succeed` over the shape. `@effected/workspaces` implements these against a discovered monorepo, but the contract is small enough that a fixed record is a legitimate implementation — for a test, a fixture, or a tool that already knows its own catalog:
 
 ```ts
-import { CatalogResolver, WorkspaceResolver } from "@effected/npm";
-import { Effect, Layer, Option } from "effect";
+import { CatalogResolver } from "@beep/scratchpad/effected/npm/CatalogResolver";
+import { WorkspaceResolver } from "@beep/scratchpad/effected/npm/WorkspaceResolver";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 
 const catalogs: Record<string, Record<string, string>> = {
   default: { effect: "^4.0.0" },
@@ -88,15 +65,19 @@ const catalogs: Record<string, Record<string, string>> = {
 
 const workspaceVersions: Record<string, string> = { "@acme/widget": "1.4.0" };
 
-export const ResolversLive = Layer.mergeAll(
+const ResolversLive = Layer.mergeAll(
   Layer.succeed(CatalogResolver, {
     rangeOf: (packageName, catalog) =>
-      Effect.succeed(Option.fromUndefinedOr(catalogs[Option.getOrElse(catalog, () => "default")]?.[packageName])),
+      Effect.succeed(O.fromUndefinedOr(catalogs[O.getOrElse(catalog, () => "default")]?.[packageName])),
   }),
   Layer.succeed(WorkspaceResolver, {
-    versionOf: (packageName) => Effect.succeed(Option.fromUndefinedOr(workspaceVersions[packageName])),
+    versionOf: (packageName) => Effect.succeed(O.fromUndefinedOr(workspaceVersions[packageName])),
   }),
 );
+
+const program = Effect.flatMap(CatalogResolver, (resolver) => resolver.rangeOf("effect", O.none()));
+const range = Effect.runSync(Effect.provide(program, ResolversLive));
+console.log(O.getOrElse(range, () => "unresolved")) // ^4.0.0
 ```
 
 Note what the implementation does *not* do: an unknown package name returns `Option.none()` and never fails. Save the error channel for the case where you tried to read the catalog and could not.
@@ -106,8 +87,9 @@ Note what the implementation does *not* do: an unknown package name returns `Opt
 `Manifest` is a tolerant manifest model over the contracts: the four dependency fields are typed as string→string records, and every other top-level field rides through a `rest` catch-all that flattens back on encode, so the wire shape never carries a literal `rest` key. It is deliberately not `@effected/package-json`'s strict `Package` — a mid-build manifest is an arbitrary user record, and resolution has no business validating fields it never reads.
 
 ```ts
-import { Default, Manifest } from "@effected/npm";
-import { Effect } from "effect";
+import { Default } from "@beep/scratchpad/effected/npm/index";
+import { Manifest } from "@beep/scratchpad/effected/npm/Manifest";
+import * as Effect from "effect/Effect";
 
 const program = Effect.gen(function* () {
   const manifest = yield* Manifest.decode({ name: "app", dependencies: { effect: "^4.0.0" } });
@@ -115,8 +97,8 @@ const program = Effect.gen(function* () {
   return resolved.toRecord();
 });
 
-Effect.runPromise(Effect.provide(program, Default)).then(console.log);
-// => { dependencies: { effect: "^4.0.0" }, name: "app" }
+const record = Effect.runSync(Effect.provide(program, Default));
+console.log(JSON.stringify(record.dependencies)) // {"effect":"^4.0.0"}
 ```
 
 `needsResolution` is a pure getter: check it first and skip resolution entirely (and whatever catalog assembly backs the resolvers) when no dependency field carries a `catalog:` or `workspace:` specifier. `resolve()` projects every such specifier through the contracts and returns a new `Manifest`, applying pnpm's publish-time semantics — the alias form `workspace:<name>@<range>` resolves the *target* package's version and becomes the `npm:<name>@<range>` alias pnpm publishes. At the manifest level a specifier the resolvers answer `Option.none()` for fails typed as `UnresolvedDependencyError`, naming the field, the dependency and the reason: an unmatched entry is an ordinary answer for a resolver, but it means the manifest cannot be projected.
@@ -126,17 +108,18 @@ Effect.runPromise(Effect.provide(program, Default)).then(console.log);
 `NpmRegistry` replaces every shelled `npm view`, reading over core `HttpClient` instead. The registry is a per-call argument rather than baked into the layer, so one program can probe two registries for the same package, and an absent package or version is `Option.none()` rather than an error:
 
 ```ts
-import { NpmRegistry } from "@effected/npm";
-import { FetchHttpClient } from "effect/http";
-import { Effect } from "effect";
+import { NpmRegistry } from "@beep/scratchpad/effected/npm/NpmRegistry";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as Effect from "effect/Effect";
 
 const program = Effect.gen(function* () {
   const registry = yield* NpmRegistry;
   return yield* registry.version("effect", "4.0.0");
 });
 
-Effect.runPromise(program.pipe(Effect.provide(NpmRegistry.layer), Effect.provide(FetchHttpClient.layer)));
-// Option.some(PublishedVersion) when that version is on the registry, Option.none() otherwise
+const request = program.pipe(Effect.provide(NpmRegistry.layer), Effect.provide(FetchHttpClient.layer));
+// O.some(PublishedVersion) when that version is on the registry, O.none() otherwise
+console.log(Effect.isEffect(request)) // true
 ```
 
 A `github-packages` target reads through the packument instead: that registry answers the per-version endpoint with a 405 whatever the credentials, so `version` routes there up front — and any other registry that answers 405 falls back the same way, so "is this version published" gives the same answer everywhere.
@@ -146,12 +129,13 @@ A `github-packages` target reads through the packument instead: that registry an
 `NpmExecutor` is a value you copy rather than a flag bag: `withCacheDir(dir)` redirects npm's cache — worth doing on a runner whose `$HOME` is not writable, or where the cache belongs on the same volume as the workspace — and `withExtraArgs(args)` is the generic vent for a flag this package has not named. Both return a new executor, and `withExtraArgs` replaces rather than accumulates, so a copy is a complete statement of its own flags. `--cache` outranks both `npm_config_cache` and an npmrc `cache`, so `withCacheDir` overrides a cache someone configured deliberately — the combinator stays dumb about ambient state, and checking for one is the caller's call.
 
 ```ts
-import { NpmExecutor } from "@effected/npm";
+import { NpmExecutor } from "@beep/scratchpad/effected/npm/NpmExecutor";
 
-declare const runnerTemp: string;
+const runnerTemp = "/tmp/runner";
 
 const executor = NpmExecutor.dlx("npm@11").withCacheDir(`${runnerTemp}/npm-cache`);
 // every invocation now carries `--cache <runnerTemp>/npm-cache`, after its own args
+console.log(executor.cacheDir) // /tmp/runner/npm-cache
 ```
 
 `classifyRegistry` tells npm, GitHub Packages, JSR and a custom registry apart as a `RegistryKind`, since provenance and auth differ by kind, and three projections render one for a human: `registryShortLabel` (`npm`, `github`, `jsr`, or the host) for a log line or a check name, `registryDisplayName` (`npm`, `GitHub Packages`, `JSR`, or the host) for prose, and `registryHost` for the bare host of any URL.
@@ -161,20 +145,23 @@ const executor = NpmExecutor.dlx("npm@11").withCacheDir(`${runnerTemp}/npm-cache
 `RegistryCredential` is the closed union both halves of the registry surface speak — `{ kind: "token", token }` for npm's `_authToken`, and `{ kind: "basic", encoded }` for its `_auth`, carried already base64-encoded because that is what npm stores and what registry configuration in the wild already contains. `basicCredentialFromPair(username, password)` encodes for a caller that genuinely holds a pair; the secret is `Redacted` on both sides of it.
 
 ```ts
-import { PackagePublish, basicCredentialFromPair } from "@effected/npm";
-import { Effect, Redacted } from "effect";
+import { PackagePublish } from "@beep/scratchpad/effected/npm/PackagePublish";
+import { basicCredentialFromPair } from "@beep/scratchpad/effected/npm/RegistryCredential";
+import * as Effect from "effect/Effect";
+import * as Redacted from "effect/Redacted";
 
-declare const password: Redacted.Redacted<string>;
+const password = Redacted.make("example-password");
 
 const program = Effect.gen(function* () {
   const publish = yield* PackagePublish;
   yield* publish.setupAuth({
     registry: "https://npm.internal.example",
-    credential: basicCredentialFromPair("ci", password),
+    credential: yield* basicCredentialFromPair("ci", password),
     npmrcPath: "/tmp/.npmrc",
   });
 });
 // appends `//npm.internal.example/:_auth=<encoded>` to the npmrc, creating it when absent
+console.log(Effect.isEffect(program)) // true
 ```
 
 One union rather than two spellings is the point: `NpmRegistry`'s per-call `RegistryTarget` takes the same `credential`, so a read probe and a publish cannot disagree about the scheme for one registry. A bearer probe against a basic-auth registry answers 401, `version` reads that as "not published", and a publish flow acting on it republishes a version that already exists.
@@ -182,14 +169,15 @@ One union rather than two spellings is the point: `NpmRegistry`'s per-call `Regi
 **Breaking, and how to migrate.** `setupAuth` and `RegistryTarget` took a `token` field before; both take `credential` now. The rewrite is mechanical:
 
 ```ts
-import type { RegistryCredential } from "@effected/npm";
-import type { Redacted } from "effect";
+import type { RegistryCredential } from "@beep/scratchpad/effected/npm/RegistryCredential";
+import * as Redacted from "effect/Redacted";
 
-declare const token: Redacted.Redacted<string>;
+const token = Redacted.make("example-token");
 
 // before: setupAuth({ registry, token, npmrcPath })
 const credential: RegistryCredential = { kind: "token", token };
 // after:  setupAuth({ registry, credential, npmrcPath })
+console.log(credential.kind) // token
 ```
 
 `RegistryTarget.token` survives for one minor typed as `never`, deliberately, so the break is loud. Callers commonly pass the field through a conditional spread (`...(token !== null ? { token } : {})`), and a spread of a no-longer-known property is not an excess-property error — the field would simply vanish and an authenticated probe would silently become an anonymous one. Typed `never`, the same spread fails to compile.
@@ -199,17 +187,20 @@ const credential: RegistryCredential = { kind: "token", token };
 `PackageTarball` is the inbound half of the registry surface: `NpmRegistry` reads metadata and `PackagePublish` sends a tarball out, but nothing read a published one back. `extract` downloads a version, verifies the bytes against the integrity the registry vouched for, unpacks it, and answers the directory the `package/` root landed in — as a **scoped** resource, so the temporary directory is removed when the calling scope closes:
 
 ```ts
-import { NpmRegistry, PackageTarball } from "@effected/npm";
-import { Effect, Option } from "effect";
+import { NpmRegistry } from "@beep/scratchpad/effected/npm/NpmRegistry";
+import { PackageTarball } from "@beep/scratchpad/effected/npm/PackageTarball";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 
 const read = Effect.gen(function* () {
   const registry = yield* NpmRegistry;
   const tarball = yield* PackageTarball;
   const found = yield* registry.version("some-config", "1.2.3");
-  if (Option.isNone(found)) return Option.none();
-  return Option.some(yield* tarball.extract(found.value));
+  if (O.isNone(found)) return O.none();
+  return O.some(yield* tarball.extract(found.value));
 }).pipe(Effect.scoped);
-// Option.some("<a temporary directory>") — removed when the scope closes
+// O.some("<a temporary directory>") — removed when the scope closes
+console.log(Effect.isEffect(read)) // true
 ```
 
 Verification happens before extraction and before anything reads the contents, so a poisoned intermediary — a CDN edge, a proxy, a mirror — never reaches `tar`. `TarballError` carries a `reason` that keeps the outcomes apart: `notFound` (no recorded tarball, or a 404), `http` (any other transport or non-2xx failure), `integrityMismatch` (with `expected` and `actual`) and `extractFailed`. The `notFound` split is load-bearing — a consumer that cannot tell "this version legitimately does not exist" from "something went wrong fetching a version that does" has to treat both alike, and that failure is silent.
@@ -221,14 +212,15 @@ Extraction shells out to `tar` through core's `ChildProcessSpawner` rather than 
 `IntegrityHash` is a brand over the three textual integrity forms a dependency graph carries — npm's SRI `sha512-<base64>`, corepack's `sha512.<hex>` and yarn's — with `algorithmOf` reading the algorithm out of any of them. `CorepackIntegrityHash` narrows the brand to the corepack spelling, which is what a `packageManager` pin has to be written in, and carries the bridge from the form npm actually hands you:
 
 ```ts
-import { CorepackIntegrityHash } from "@effected/npm";
-import { Effect } from "effect";
+import { CorepackIntegrityHash } from "@beep/scratchpad/effected/npm/IntegrityHash";
+import * as Effect from "effect/Effect";
 
-declare const npmIntegrity: string; // "sha512-<base64>", as the registry reports it
+const npmIntegrity = "sha512-" + "A".repeat(86) + "=="; // a 64-byte zero digest
 
-Effect.runPromise(CorepackIntegrityHash.fromSri(npmIntegrity)).then(console.log);
+const pin = Effect.runSync(CorepackIntegrityHash.fromSri(npmIntegrity));
 // "sha512.<the same digest, lowercase hex>" — the spelling a packageManager pin takes
 // Failure: InvalidSriIntegrityHashError, carrying the offending `input`
+console.log(pin === "sha512." + "0".repeat(128)) // true
 ```
 
 `FromSri` is the same conversion as a `Schema.Codec`, for decoding an integrity field inside your own schemas; `fromSri` is the `Effect` convenience over it. The bridge is deliberately **one-way**: an input that is already in the corepack form fails typed rather than passing through, so a caller feeding pins back into the converter finds the wiring bug instead of masking it. The base64 reader is strict for the same reason — a lenient one mints pins corepack rejects at install time. Padding is its one latitude: a digest's padded and unpadded spellings decode to the same pin, while a stray character, an interior `=`, or non-zero trailing bits all fail.

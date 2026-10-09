@@ -29,13 +29,27 @@ const $I = $ScratchpadId.create("effected/npm/PackageManagerPin");
  * Indicates that a string could not be parsed as a corepack package-manager
  * pin (`<name>@<version>[+<integrity>]`).
  *
+ * **Details**
+ *
  * Raised by {@link PackageManagerPin.parse} and
  * {@link PackageManagerPin.parseResult}; the decode direction of
  * {@link PackageManagerPin.FromString} reports the same failure through a
  * generic `Schema` parse error carrying the same message. The offending string
  * is preserved on `input`; `reason` says which component failed.
  *
+ * **Example** (Describe an unsupported manager)
+ *
+ * ```ts
+ * import { InvalidPackageManagerPinError } from "@beep/scratchpad/effected/npm/PackageManagerPin";
+ *
+ * const error = InvalidPackageManagerPinError.make({ input: "other@1.0.0", reason: "name" });
+ * console.log(error.message) // Invalid package-manager pin "other@1.0.0": name must be one of npm, pnpm, yarn, bun
+ * ```
+ *
  * @public
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class InvalidPackageManagerPinError extends S.TaggedError<InvalidPackageManagerPinError>($I`InvalidPackageManagerPinError`)(
 	"InvalidPackageManagerPinError",
@@ -52,6 +66,21 @@ export class InvalidPackageManagerPinError extends S.TaggedError<InvalidPackageM
 		reason: LiteralKit(["format", "name", "version", "integrity"]).annotateKey({ description: "Which component of the pin failed: `format` (no `@` separator at all), `name` (not one of the four supported package managers), `version` (not an exact SemVer 2.0.0 version — ranges, partial versions and dist-tags all land here), or `integrity` (the tail after `+` is not a corepack `<algo>.<hex>` hash)." }),
 	}, $I.annote("InvalidPackageManagerPinError", { description: "Indicates that a string could not be parsed as a corepack package-manager pin (`<name>@<version>[+<integrity>]`)." }),
 ) {
+	/**
+	 * Explains which pin component failed validation, including the original input.
+	 *
+	 * **Example** (Explain a missing separator)
+	 *
+	 * ```ts
+	 * import { InvalidPackageManagerPinError } from "@beep/scratchpad/effected/npm/PackageManagerPin";
+	 *
+	 * const error = InvalidPackageManagerPinError.make({ input: "pnpm", reason: "format" });
+	 * console.log(error.message) // Invalid package-manager pin "pnpm": expected <name>@<version>[+<integrity>]
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return this.reason === "format"
 			? `Invalid package-manager pin "${this.input}": expected <name>@<version>[+<integrity>]`
@@ -91,7 +120,19 @@ export class InvalidPackageManagerPinError extends S.TaggedError<InvalidPackageM
  * through corepack — which is exactly why the set is stated in kit terms and
  * not copied from corepack.
  *
+ * **Example** (Validate a supported manager)
+ *
+ * ```ts
+ * import { PackageManagerPinName } from "@beep/scratchpad/effected/npm/PackageManagerPin";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(PackageManagerPinName)("bun")) // true
+ * ```
+ *
  * @public
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const PackageManagerPinName = LiteralKit(["npm", "pnpm", "yarn", "bun"]).annotate($I.annote("PackageManagerPinName", { description: "The four package managers a corepack pin can name." }));
 
@@ -100,6 +141,9 @@ export const PackageManagerPinName = LiteralKit(["npm", "pnpm", "yarn", "bun"]).
  * `"npm" | "pnpm" | "yarn" | "bun"`.
  *
  * @public
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export type PackageManagerPinName = typeof PackageManagerPinName.Type;
 
@@ -142,19 +186,21 @@ const pinVersion = SemVer.pipe(
  * **Example** (Parse a pnpm pin with corepack integrity)
  *
  * ```ts
- * import { PackageManagerPin } from "./index.ts";
+ * import { PackageManagerPin } from "@beep/scratchpad/effected/npm/PackageManagerPin";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const pin = yield* PackageManagerPin.parse("pnpm@11.17.0+sha512.deadbeef");
- *   return [pin.name, pin.version.toString(), pin.integrity] as const;
+ *   return pin.toString();
  * });
  *
- * console.log(Effect.runSync(program));
- * // => ["pnpm", "11.17.0", "sha512.deadbeef"]
+ * console.log(Effect.runSync(program)) // pnpm@11.17.0+sha512.deadbeef
  * ```
  *
  * @public
+ *
+ * @category models
+ * @since 0.0.0
  */
 export class PackageManagerPin extends S.Class<PackageManagerPin>($I`PackageManagerPin`)({
 	/** The package-manager name (`npm`, `pnpm`, `yarn` or `bun`). */
@@ -178,6 +224,19 @@ export class PackageManagerPin extends S.Class<PackageManagerPin>($I`PackageMana
 	 * and a {@link PackageManagerPin}. Decoding parses via
 	 * {@link PackageManagerPin.parseResult} (the three surfaces share one
 	 * grammar and cannot diverge); encoding prints the canonical pin string.
+	 *
+	 * **Example** (Decode and encode a pin)
+	 *
+	 * ```ts
+	 * import { PackageManagerPin } from "@beep/scratchpad/effected/npm/PackageManagerPin";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const pin = S.decodeSync(PackageManagerPin.FromString)("pnpm@11.17.0");
+	 * console.log(S.encodeSync(PackageManagerPin.FromString)(pin)) // pnpm@11.17.0
+	 * ```
+	 *
+	 * @category codecs
+	 * @since 0.0.0
 	 */
 	static readonly FromString: S.Codec<PackageManagerPin, string> = S.String.pipe(
 		S.decodeTo(
@@ -195,32 +254,45 @@ export class PackageManagerPin extends S.Class<PackageManagerPin>($I`PackageMana
 	);
 
 	/**
-  * Parse a corepack pin string, synchronously, returning a `Result` instead
-  * of an `Effect`.
-  *
-  * **Details**
-  *
-  * The first `+` after the version always begins the integrity component: a
-  * pin's version never carries semver build metadata, and a malformed tail
-  * after a `+` fails with `reason: "integrity"` rather than falling back to
-  * build-metadata parsing — `pnpm@10.20.0+deadbeef`, whose tail is valid
-  * semver build metadata but not a corepack `<algo>.<hex>` hash, is
-  * intentionally not pinnable. Prerelease versions are accepted; ranges
-  * (`^9.0.0`), partial versions (`9`, `9.1`), dist-tags (`latest`,
-  * `berry`) and padded versions (`pnpm@ 11.17.0` — the version substring is
-  * ruled on by `@effected/semver`'s `SemVer.isPinnable`, which rejects
-  * surrounding whitespace) fail with `reason: "version"`.
-  *
-  * {@link PackageManagerPin.parse} is defined in terms of this function; the
-  * two never diverge. Reach for the `Effect` variant inside Effect code — it
-  * carries the `PackageManagerPin.parse` tracing span — and for this one at
-  * synchronous boundaries.
-  *
-  * @param input - the pin string to parse
-  * @returns a `Result` succeeding with the parsed {@link PackageManagerPin},
-  * or failing with {@link InvalidPackageManagerPinError} when `input` is not
-  * a valid pin.
-  */
+	 * Parse a corepack pin string, synchronously, returning a `Result` instead
+	 * of an `Effect`.
+	 *
+	 * **Details**
+	 *
+	 * The first `+` after the version always begins the integrity component: a
+	 * pin's version never carries semver build metadata, and a malformed tail
+	 * after a `+` fails with `reason: "integrity"` rather than falling back to
+	 * build-metadata parsing — `pnpm@10.20.0+deadbeef`, whose tail is valid
+	 * semver build metadata but not a corepack `<algo>.<hex>` hash, is
+	 * intentionally not pinnable. Prerelease versions are accepted; ranges
+	 * (`^9.0.0`), partial versions (`9`, `9.1`), dist-tags (`latest`,
+	 * `berry`) and padded versions (`pnpm@ 11.17.0` — the version substring is
+	 * ruled on by `@effected/semver`'s `SemVer.isPinnable`, which rejects
+	 * surrounding whitespace) fail with `reason: "version"`.
+	 *
+	 * {@link PackageManagerPin.parse} is defined in terms of this function; the
+	 * two never diverge. Reach for the `Effect` variant inside Effect code — it
+	 * carries the `PackageManagerPin.parse` tracing span — and for this one at
+	 * synchronous boundaries.
+	 *
+	 * **Example** (Reject a build metadata tail)
+	 *
+	 * ```ts
+	 * import { PackageManagerPin } from "@beep/scratchpad/effected/npm/PackageManagerPin";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const result = PackageManagerPin.parseResult("pnpm@10.20.0+deadbeef");
+	 * console.log(Result.isFailure(result) ? result.failure.reason : "valid") // integrity
+	 * ```
+	 *
+	 * @param input - the pin string to parse
+	 * @returns a `Result` succeeding with the parsed {@link PackageManagerPin},
+	 * or failing with {@link InvalidPackageManagerPinError} when `input` is not
+	 * a valid pin.
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	static parseResult(input: string): Result.Result<PackageManagerPin, InvalidPackageManagerPinError> {
 		const at = O.getOrElse(Str.indexOf("@")(input), () => -1);
 		if (at === -1) {
@@ -258,9 +330,22 @@ export class PackageManagerPin extends S.Class<PackageManagerPin>($I`PackageMana
 	 * {@link PackageManagerPin.parseResult} — synchronous callers can use that
 	 * variant directly.
 	 *
+	 * **Example** (Parse a prerelease pin)
+	 *
+	 * ```ts
+	 * import { PackageManagerPin } from "@beep/scratchpad/effected/npm/PackageManagerPin";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pin = Effect.runSync(PackageManagerPin.parse("pnpm@10.0.0-rc.1"));
+	 * console.log(pin.toString()) // pnpm@10.0.0-rc.1
+	 * ```
+	 *
 	 * @param input - the pin string to parse
 	 * @returns the parsed {@link PackageManagerPin}. Fails with
 	 * {@link InvalidPackageManagerPinError} when `input` is not a valid pin.
+	 *
+	 * @category parsing
+	 * @since 0.0.0
 	 */
 	static readonly parse = Effect.fn("PackageManagerPin.parse")((input: string) =>
 		Effect.fromResult(PackageManagerPin.parseResult(input)),
@@ -270,6 +355,19 @@ export class PackageManagerPin extends S.Class<PackageManagerPin>($I`PackageMana
 	 * The pin without its integrity: `<name>@<version>`
 	 * (`pnpm@12.6.0+sha512.<hex>` → `pnpm@12.6.0`), the bare form pnpm itself
 	 * writes to the `packageManager` field.
+	 *
+	 * **Example** (Remove integrity from a pin)
+	 *
+	 * ```ts
+	 * import { PackageManagerPin } from "@beep/scratchpad/effected/npm/PackageManagerPin";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pin = Effect.runSync(PackageManagerPin.parse("pnpm@12.6.0+sha512.deadbeef"));
+	 * console.log(pin.bare) // pnpm@12.6.0
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	get bare(): string {
 		return `${this.name}@${this.version.toString()}`;
@@ -279,6 +377,19 @@ export class PackageManagerPin extends S.Class<PackageManagerPin>($I`PackageMana
 	 * The canonical pin string: `<name>@<version>` or
 	 * `<name>@<version>+<integrity>`. The encode direction of
 	 * {@link PackageManagerPin.FromString} prints exactly this.
+	 *
+	 * **Example** (Print the complete pin)
+	 *
+	 * ```ts
+	 * import { PackageManagerPin } from "@beep/scratchpad/effected/npm/PackageManagerPin";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pin = Effect.runSync(PackageManagerPin.parse("pnpm@11.17.0+sha512.deadbeef"));
+	 * console.log(pin.toString()) // pnpm@11.17.0+sha512.deadbeef
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
 	 */
 	override toString(): string {
 		return this.integrity === undefined ? this.bare : `${this.bare}+${this.integrity}`;

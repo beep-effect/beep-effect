@@ -16,7 +16,19 @@ const $I = $ScratchpadId.create("effected/npm/RegistryKind");
  * an npm-protocol registry at all — a JSR target must be routed away from the
  * npm publish path entirely.
  *
+ *
+ * **Example** (Decode a known registry kind)
+ *
+ * ```ts
+ * import { RegistryKind } from "@beep/scratchpad/effected/npm/RegistryKind";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.decodeUnknownSync(RegistryKind)("github-packages")) // github-packages
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const RegistryKind = LiteralKit(["npm", "github-packages", "jsr", "custom"]).annotate($I.annote("RegistryKind", { description: "Which well-known registry a URL points at." }));
 
@@ -24,6 +36,8 @@ export const RegistryKind = LiteralKit(["npm", "github-packages", "jsr", "custom
  * The decoded type of {@link (RegistryKind:variable)}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type RegistryKind = typeof RegistryKind.Type;
 
@@ -70,18 +84,20 @@ const matchesDomain = (hostname: string | undefined, domain: string): boolean =>
  * **Example** (Classify public and custom registry URLs)
  *
  * ```ts
- * import { classifyRegistry } from "./index.ts";
+ * import { classifyRegistry } from "@beep/scratchpad/effected/npm/RegistryKind";
  *
- * classifyRegistry("https://registry.npmjs.org/"); // => "npm"
- * classifyRegistry("https://npm.pkg.github.com/"); // => "github-packages"
- * classifyRegistry("https://npm.jsr.io/"); // => "jsr"
- * classifyRegistry("https://registry.example.com/"); // => "custom"
+ * console.log(classifyRegistry("https://registry.npmjs.org/")) // npm
+ * console.log(classifyRegistry("https://npm.pkg.github.com/")) // github-packages
+ * console.log(classifyRegistry("https://npm.jsr.io/")) // jsr
+ * console.log(classifyRegistry("https://registry.example.com/")) // custom
  * ```
  *
  * @param registry - A registry URL or bare host; absent or empty means the
  *   public npm registry.
  * @returns The registry's kind.
  * @public
+ * @category parsing
+ * @since 0.0.0
  */
 export const classifyRegistry = (registry: string | undefined): RegistryKind => {
 	if (registry === undefined || registry === "") return "npm";
@@ -105,9 +121,20 @@ export const classifyRegistry = (registry: string | undefined): RegistryKind => 
  * everything from the first `/`, because npm config values are written both as
  * URLs and as bare hosts and a label must render either.
  *
+ * **Example** (Preserve a custom registry port)
+ *
+ * ```ts
+ * import { registryHost } from "@beep/scratchpad/effected/npm/RegistryKind";
+ *
+ * console.log(registryHost("https://registry.example.com:4873/path")) // registry.example.com:4873
+ * ```
+ *
  * @param registry - A registry URL or bare host.
  * @returns The host portion.
+ *
  * @public
+ * @category formatting
+ * @since 0.0.0
  */
 export const registryHost = (registry: string): string => {
 	try {
@@ -151,9 +178,21 @@ export const registryHost = (registry: string): string => {
  * compile error currently catches. "No registry configured" is a real state
  * only where a display name is rendered.
  *
+ * **Example** (Label a known registry and reject a look-alike)
+ *
+ * ```ts
+ * import { registryShortLabel } from "@beep/scratchpad/effected/npm/RegistryKind";
+ *
+ * console.log(registryShortLabel("https://npm.pkg.github.com/")) // github
+ * console.log(registryShortLabel("https://evil-npmjs.org/")) // evil-npmjs.org
+ * ```
+ *
  * @param registry - A registry URL or bare host.
  * @returns The short label.
+ *
  * @public
+ * @category formatting
+ * @since 0.0.0
  */
 export const registryShortLabel = (registry: string): string =>
 	RegistryKind.$match(classifyRegistry(registry), {
@@ -177,10 +216,22 @@ export const registryShortLabel = (registry: string): string =>
  * rather than by relying on `classifyRegistry("")` happening to answer `"npm"`,
  * so the intent survives a future change to that default.
  *
+ * **Example** (Render configured and default registry names)
+ *
+ * ```ts
+ * import { registryDisplayName } from "@beep/scratchpad/effected/npm/RegistryKind";
+ *
+ * console.log(registryDisplayName("https://npm.pkg.github.com/")) // GitHub Packages
+ * console.log(registryDisplayName(undefined)) // npm
+ * ```
+ *
  * @param registry - A registry URL or bare host, or nothing when none is
  *   configured. Absent or empty means the public npm registry.
  * @returns The display name.
+ *
  * @public
+ * @category formatting
+ * @since 0.0.0
  */
 export const registryDisplayName = (registry: string | null | undefined): string => {
 	if (registry === null || registry === undefined || registry === "") return "npm";

@@ -72,7 +72,22 @@ const PackJsonFromString = S.fromJsonString(PackJson);
 /**
  * A packed tarball and the two digests that describe it.
  *
+ * **Example** (Inspect a packed artifact)
+ *
+ * ```ts
+ * import { PackedTarball } from "@beep/scratchpad/effected/npm/PackagePublish";
+ *
+ * const packed = PackedTarball.make({
+ *   tarballPath: "/release/my-lib-1.0.0.tgz", name: "my-lib",
+ *   version: "1.0.0", sha256Hex: "deadbeef",
+ * });
+ * console.log(packed.tarballPath) // /release/my-lib-1.0.0.tgz
+ * ```
+ *
  * @public
+ *
+ * @category models
+ * @since 0.0.0
  */
 export class PackedTarball extends S.Class<PackedTarball>($I`PackedTarball`)({
 	/** Absolute path to the tarball on disk. */
@@ -108,7 +123,20 @@ export class PackedTarball extends S.Class<PackedTarball>($I`PackedTarball`)({
 /**
  * What one publish produced.
  *
+ * **Example** (Read a provenance URL)
+ *
+ * ```ts
+ * import { PublishOutcome } from "@beep/scratchpad/effected/npm/PackagePublish";
+ * import * as S from "effect/Schema";
+ *
+ * const outcome = S.decodeSync(PublishOutcome)({ provenanceUrl: "https://search.sigstore.dev/?logIndex=42" });
+ * console.log(outcome.provenanceUrl) // https://search.sigstore.dev/?logIndex=42
+ * ```
+ *
  * @public
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const PublishOutcome = S.Struct({
 	/**
@@ -117,6 +145,12 @@ export const PublishOutcome = S.Struct({
 	 */
 	provenanceUrl: S.optional(S.String).annotateKey({ description: "The Sigstore URL, when npm published provenance." }),
 }).annotate($I.annote("PublishOutcome", { description: "The structural outcome of one publish." }));
+/**
+ * Decoded publish result represented by {@link (PublishOutcome:variable)}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type PublishOutcome = typeof PublishOutcome.Type;
 
 /**
@@ -130,7 +164,20 @@ export type PublishOutcome = typeof PublishOutcome.Type;
  * `npm pack --dry-run` never contacts a registry, so `ok: true` means the
  * package packs, **not** that a registry would accept it.
  *
+ * **Example** (Represent an unpackable package)
+ *
+ * ```ts
+ * import { DryRunOutcome } from "@beep/scratchpad/effected/npm/PackagePublish";
+ * import * as S from "effect/Schema";
+ *
+ * const outcome = S.decodeSync(DryRunOutcome)({ ok: false, output: "Missing package.json" });
+ * console.log(outcome.ok) // false
+ * ```
+ *
  * @public
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const DryRunOutcome = S.Struct({
 	/** Whether the package packs. `false` is an answer, not a failure. */
@@ -144,23 +191,61 @@ export const DryRunOutcome = S.Struct({
 	/** npm's output, for diagnostics. */
 	output: S.String.annotateKey({ description: "npm output for diagnostics." }),
 }).annotate($I.annote("DryRunOutcome", { description: "Packability and sizing from npm pack --dry-run." }));
+/**
+ * Decoded dry-run result represented by {@link (DryRunOutcome:variable)}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type DryRunOutcome = typeof DryRunOutcome.Type;
 
 /**
  * Options shared by the packing operations.
  *
+ * **Example** (Select ambient npm by omission)
+ *
+ * ```ts
+ * import { PackOptions } from "@beep/scratchpad/effected/npm/PackagePublish";
+ * import * as S from "effect/Schema";
+ *
+ * const options = S.decodeSync(PackOptions)({});
+ * console.log(options.executor === undefined) // true
+ * ```
+ *
  * @public
+ *
+ * @category configuration
+ * @since 0.0.0
  */
 export const PackOptions = S.Struct({
 	/** Which npm runs the command. Defaults to {@link NpmExecutor.ambient}. */
 	executor: NpmExecutor.pipe(S.instanceOf, S.optional).annotateKey({ description: "The npm executor; omission selects ambient npm." }),
 }).annotate($I.annote("PackOptions", { description: "Structural options shared by packing operations." }));
+/**
+ * Decoded packing options represented by {@link (PackOptions:variable)}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type PackOptions = typeof PackOptions.Type;
 
 /**
  * Options for uploading a tarball.
  *
+ * **Example** (Choose a registry and dist-tag)
+ *
+ * ```ts
+ * import { PublishOptions } from "@beep/scratchpad/effected/npm/PackagePublish";
+ * import * as S from "effect/Schema";
+ *
+ * const options = S.decodeSync(PublishOptions)({ registry: "https://registry.npmjs.org", tag: "next" });
+ * console.log(options.tag) // next
+ * ```
+ *
  * @public
+ *
+ * @category configuration
+ * @since 0.0.0
  */
 export const PublishOptions = S.Struct({
 	...PackOptions.fields,
@@ -184,12 +269,21 @@ export const PublishOptions = S.Struct({
   */
 	tokenAuth: S.optional(S.Boolean).annotateKey({ description: "Whether to blank the OIDC environment for classic token auth." }),
 }).annotate($I.annote("PublishOptions", { description: "Structural options for uploading a previously packed tarball." }));
+/**
+ * Decoded publishing options represented by {@link (PublishOptions:variable)}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type PublishOptions = typeof PublishOptions.Type;
 
 /**
  * The {@link PackagePublish} service shape.
  *
  * @public
+ *
+ * @category services
+ * @since 0.0.0
  */
 export interface PackagePublishShape {
 	/**
@@ -482,7 +576,7 @@ const notStubbed = (method: string) => () =>
  * **Example** (Pack and publish a tarball with provenance)
  *
  * ```ts
- * import { PackagePublish } from "./index.ts";
+ * import { PackagePublish } from "@beep/scratchpad/effected/npm/PackagePublish";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
@@ -493,9 +587,14 @@ const notStubbed = (method: string) => () =>
  *     provenance: true,
  *   });
  * });
+ *
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ *
+ * @category services
+ * @since 0.0.0
  */
 export class PackagePublish extends Context.Service<PackagePublish, PackagePublishShape>()(
 	$I`PackagePublish`,
@@ -503,6 +602,22 @@ export class PackagePublish extends Context.Service<PackagePublish, PackagePubli
 	/**
 	 * The live service. Requires `FileSystem`, `Crypto`, `ChildProcessSpawner`
 	 * and `LocalExec` (from `@effected/commands`), resolved once at construction.
+	 *
+	 * **Example** (Provide the live publish layer)
+	 *
+	 * ```ts
+	 * import { PackagePublish } from "@beep/scratchpad/effected/npm/PackagePublish";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const publish = yield* PackagePublish;
+	 *   return yield* publish.dryRun("./packages/my-lib");
+	 * }).pipe(Effect.provide(PackagePublish.layer));
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
 	 */
 	static readonly layer: Layer.Layer<
 		PackagePublish,
@@ -513,6 +628,21 @@ export class PackagePublish extends Context.Service<PackagePublish, PackagePubli
 	/**
 	 * An in-memory double: stub only what the test exercises; every other member
 	 * **dies** with a defect naming itself.
+	 *
+	 * **Example** (Stub a packability check)
+	 *
+	 * ```ts
+	 * import { PackagePublish } from "@beep/scratchpad/effected/npm/PackagePublish";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const publish = PackagePublish.makeTest({
+	 *   dryRun: () => Effect.succeed({ ok: true, output: "packable" }),
+	 * });
+	 * console.log(Effect.runSync(publish.dryRun("./my-lib")).ok) // true
+	 * ```
+	 *
+	 * @category testing
+	 * @since 0.0.0
 	 */
 	static readonly makeTest = (overrides: Partial<PackagePublishShape> = {}): PackagePublishShape => ({
 		setupAuth: notStubbed("setupAuth"),
@@ -523,13 +653,32 @@ export class PackagePublish extends Context.Service<PackagePublish, PackagePubli
 	});
 
 	/**
-  * {@link PackagePublish.makeTest} behind `Layer.succeed`.
-  *
-  * **Gotchas**
-  *
-  * A parameterized layer factory mints a fresh reference per call and layers
-  * memoize by reference — bind the result to a `const`.
-  */
+	 * {@link PackagePublish.makeTest} behind `Layer.succeed`.
+	 *
+	 * **Gotchas**
+	 *
+	 * A parameterized layer factory mints a fresh reference per call and layers
+	 * memoize by reference — bind the result to a `const`.
+	 *
+	 * **Example** (Provide a shared test layer)
+	 *
+	 * ```ts
+	 * import { PackagePublish } from "@beep/scratchpad/effected/npm/PackagePublish";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const testLayer = PackagePublish.layerTest({
+	 *   dryRun: () => Effect.succeed({ ok: false, output: "cannot pack" }),
+	 * });
+	 * const program = Effect.gen(function* () {
+	 *   const publish = yield* PackagePublish;
+	 *   return yield* publish.dryRun("./my-lib");
+	 * }).pipe(Effect.provide(testLayer));
+	 * console.log(Effect.runSync(program).ok) // false
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<PackagePublishShape> = {}): Layer.Layer<PackagePublish> =>
 		Layer.succeed(PackagePublish, PackagePublish.makeTest(overrides));
 }

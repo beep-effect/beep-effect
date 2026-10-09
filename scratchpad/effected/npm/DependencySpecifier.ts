@@ -34,10 +34,23 @@ const $I = $ScratchpadId.create("effected/npm/DependencySpecifier");
 /**
  * Indicates that a string could not be parsed as a valid dependency specifier.
  *
+ * **Details**
+ *
  * Raised by {@link DependencySpecifier.decode}. The offending string is
  * preserved on `input`.
  *
+ * **Example** (Inspect invalid input)
+ *
+ * ```ts
+ * import { InvalidDependencySpecifierError } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+ *
+ * const error = InvalidDependencySpecifierError.make({ input: "" });
+ * console.log(error.input) // ""
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class InvalidDependencySpecifierError extends S.TaggedError<InvalidDependencySpecifierError>($I`InvalidDependencySpecifierError`)(
 	"InvalidDependencySpecifierError",
@@ -46,6 +59,21 @@ export class InvalidDependencySpecifierError extends S.TaggedError<InvalidDepend
 		input: S.String.annotateKey({ description: "The raw input string that failed validation." }),
 	}, $I.annote("InvalidDependencySpecifierError", { description: "Indicates that a string could not be parsed as a valid dependency specifier." }),
 ) {
+	/**
+	 * Describes the rejected input and why it failed validation.
+	 *
+	 * **Example** (Inspect the validation message)
+	 *
+	 * ```ts
+	 * import { InvalidDependencySpecifierError } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+	 *
+	 * const error = InvalidDependencySpecifierError.make({ input: "" });
+	 * console.log(error.message) // 'Invalid dependency specifier "": not a recognized specifier'
+	 * ```
+	 *
+	 * @category errors
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Invalid dependency specifier "${this.input}": not a recognized specifier`;
 	}
@@ -55,12 +83,13 @@ export class InvalidDependencySpecifierError extends S.TaggedError<InvalidDepend
  * The classification of a dependency specifier's protocol.
  *
  * **Example** (Recognizing a dependency protocol)
+ *
  * ```ts
- * import { DependencyProtocol } from "./index.ts";
+ * import { DependencyProtocol } from "@beep/scratchpad/effected/npm/DependencySpecifier";
  * import * as S from "effect/Schema";
  *
- * S.is(DependencyProtocol)("workspace"); // => true
- * DependencyProtocol.Enum.unknown; // => "unknown"
+ * console.log(S.is(DependencyProtocol)("workspace")) // true
+ * console.log(DependencyProtocol.Enum.unknown) // "unknown"
  * ```
  *
  * @public
@@ -73,6 +102,7 @@ export const DependencyProtocol = LiteralKit([
 
 /**
  * The decoded dependency protocol classification.
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -218,7 +248,18 @@ const RecognizedSpecifier = S.Union([CatalogSource, WorkspaceSource, LocalSource
  * version, dist-tag, URL, git ref, GitHub shorthand, file path, or an
  * `npm:` / `catalog:` / `workspace:` protocol.
  *
+ * **Example** (Recognize supported dependency syntax)
+ *
+ * ```ts
+ * import { isValidDependencySpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+ *
+ * console.log(isValidDependencySpecifier("workspace:^")) // true
+ * console.log(isValidDependencySpecifier("")) // false
+ * ```
+ *
  * @public
+ * @category predicates
+ * @since 0.0.0
  */
 export const isValidDependencySpecifier = S.is(RecognizedSpecifier);
 
@@ -226,7 +267,19 @@ export const isValidDependencySpecifier = S.is(RecognizedSpecifier);
  * A `catalog:` reference. `name` carries the catalog name, or `Option.none()`
  * for the default catalog (`catalog:`).
  *
+ * **Example** (Represent the default catalog)
+ *
+ * ```ts
+ * import { CatalogSpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+ * import * as O from "effect/Option";
+ *
+ * const specifier = CatalogSpecifier.make({ raw: "catalog:", name: O.none() });
+ * console.log(O.isNone(specifier.name)) // true
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class CatalogSpecifier extends S.TaggedClass<CatalogSpecifier>($I`CatalogSpecifier`)("catalog", {
 	/** The original specifier string. */
@@ -239,7 +292,18 @@ export class CatalogSpecifier extends S.TaggedClass<CatalogSpecifier>($I`Catalog
  * A `workspace:` reference. `range` carries the part after `workspace:` — a
  * range modifier (`*`, `^`, `~`), a concrete range, or an alias form.
  *
+ * **Example** (Represent a workspace range)
+ *
+ * ```ts
+ * import { WorkspaceSpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+ *
+ * const specifier = WorkspaceSpecifier.make({ raw: "workspace:^", range: "^" });
+ * console.log(specifier.resolve("1.2.3")) // "^1.2.3"
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class WorkspaceSpecifier extends S.TaggedClass<WorkspaceSpecifier>($I`WorkspaceSpecifier`)("workspace", {
 	/** The original specifier string. */
@@ -248,23 +312,37 @@ export class WorkspaceSpecifier extends S.TaggedClass<WorkspaceSpecifier>($I`Wor
 	range: S.String.annotateKey({ description: "The part after `workspace:` (e.g. `*`, `^1.2.3`, or an alias form)." }),
 }, $I.annote("WorkspaceSpecifier", { description: "A `workspace:` reference. `range` carries the part after `workspace:` — a range modifier (`*`, `^`, `~`), a concrete range, or an alias form." })) {
 	/**
-  * The pnpm publish-time projection of this specifier against a concrete
-  * workspace version: `*` (or an empty range) becomes `version`, `~` becomes
-  * `~version`, `^` becomes `^version`, and a pinned range passes through
-  * unchanged. The alias form (`workspace:<name>@<range>`) becomes pnpm's
-  * publish-time aliased dependency `npm:<name>@<projected>`, with the range
-  * modifier projected the same way — `version` must then be the TARGET
-  * package's version (see `DependencySpecifier.workspaceTargetOf`).
-  *
-  * **Details**
-  *
-  * The same projection as `DependencySpecifier.resolveWorkspace`, applied to
-  * this instance's already-extracted `range`; the two share one internal
-  * implementation.
-  *
-  * @param version - The concrete version of the workspace package the
-  *   specifier points at (the alias target's version for the alias form).
-  */
+	 * Projects this workspace reference to its pnpm publish-time dependency.
+	 *
+	 * **Details**
+	 *
+	 * The pnpm publish-time projection of this specifier against a concrete
+	 * workspace version: `*` (or an empty range) becomes `version`, `~` becomes
+	 * `~version`, `^` becomes `^version`, and a pinned range passes through
+	 * unchanged. The alias form (`workspace:<name>@<range>`) becomes pnpm's
+	 * publish-time aliased dependency `npm:<name>@<projected>`, with the range
+	 * modifier projected the same way — `version` must then be the TARGET
+	 * package's version (see `DependencySpecifier.workspaceTargetOf`).
+	 *
+	 * The same projection as `DependencySpecifier.resolveWorkspace`, applied to
+	 * this instance's already-extracted `range`; the two share one internal
+	 * implementation.
+	 *
+	 * **Example** (Project an instance workspace alias)
+	 *
+	 * ```ts
+	 * import { WorkspaceSpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+	 *
+	 * const specifier = WorkspaceSpecifier.make({ raw: "workspace:charts@~", range: "charts@~" });
+	 * console.log(specifier.resolve("1.2.3")) // "npm:charts@~1.2.3"
+	 * ```
+	 *
+	 * @param version - The concrete version of the workspace package the
+	 *   specifier points at (the alias target's version for the alias form).
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	resolve(version: string): string {
 		return projectWorkspaceRange(this.range, version);
 	}
@@ -273,7 +351,18 @@ export class WorkspaceSpecifier extends S.TaggedClass<WorkspaceSpecifier>($I`Wor
 /**
  * A plain semver range or exact version (e.g. `^1.2.3`, `1.x`, `>=1 <2`).
  *
+ * **Example** (Preserve a semver range)
+ *
+ * ```ts
+ * import { RangeSpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+ *
+ * const specifier = RangeSpecifier.make({ raw: "^1.2.3" });
+ * console.log(specifier.raw) // "^1.2.3"
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class RangeSpecifier extends S.TaggedClass<RangeSpecifier>($I`RangeSpecifier`)("range", {
 	/** The original specifier string. */
@@ -283,7 +372,18 @@ export class RangeSpecifier extends S.TaggedClass<RangeSpecifier>($I`RangeSpecif
 /**
  * A bare dist-tag (e.g. `latest`, `next`).
  *
+ * **Example** (Preserve a distribution tag)
+ *
+ * ```ts
+ * import { DistTagSpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+ *
+ * const specifier = DistTagSpecifier.make({ raw: "latest" });
+ * console.log(specifier.raw) // "latest"
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class DistTagSpecifier extends S.TaggedClass<DistTagSpecifier>($I`DistTagSpecifier`)("dist-tag", {
 	/** The original specifier string (also the tag name). */
@@ -294,7 +394,18 @@ export class DistTagSpecifier extends S.TaggedClass<DistTagSpecifier>($I`DistTag
  * The honest fallback for `file:` / `link:` / `portal:` / git / URL / `npm:`
  * forms this concept does not further interpret.
  *
+ * **Example** (Preserve a local dependency)
+ *
+ * ```ts
+ * import { RawSpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+ *
+ * const specifier = RawSpecifier.make({ raw: "file:../library" });
+ * console.log(specifier.raw) // "file:../library"
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class RawSpecifier extends S.TaggedClass<RawSpecifier>($I`RawSpecifier`)("raw", {
 	/** The original specifier string. */
@@ -307,6 +418,8 @@ export class RawSpecifier extends S.TaggedClass<RawSpecifier>($I`RawSpecifier`)(
  * every case preserves the original `raw` string.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type ClassifiedSpecifier =
 	| CatalogSpecifier
@@ -350,10 +463,12 @@ const fromString: S.Codec<ClassifiedSpecifier, string> = S.String.pipe(
 );
 
 /**
- * The branded dependency-specifier type: any string `DependencySpecifier`
+ * The branded dependency-specifier type: a string that `DependencySpecifier`
  * validates.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type DependencySpecifierBrand = string & Brand.Brand<"DependencySpecifier">;
 
@@ -380,86 +495,325 @@ const DependencySpecifierBase: Omit<S.Opaque<DependencySpecifierBrand, typeof br
  * A valid dependency version specifier, carrying the protocol taxonomy statics
  * (`DependencySpecifier.protocolOf` and friends) that classify any specifier
  * string, plus the {@link (DependencySpecifier:variable).FromString} codec that
- * decodes a string into a {@link ClassifiedSpecifier} tagged union. Use it as a
- * schema for a specifier field and reach for the statics to inspect a raw
+ * decodes a string into a {@link ClassifiedSpecifier} tagged union.
+ *
+ * **When to use**
+ *
+ * Use as a schema for a specifier field and reach for the statics to inspect a raw
  * string.
  *
  * **Example** (Classify and project dependency specifiers)
  *
  * ```ts
- * import { DependencySpecifier } from "./index.ts";
+ * import { DependencySpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
  * import * as S from "effect/Schema";
+ * import * as O from "effect/Option";
  *
- * DependencySpecifier.protocolOf("workspace:^"); // => "workspace"
- * DependencySpecifier.resolveWorkspace("workspace:^", "1.2.3"); // => "^1.2.3"
+ * console.log(DependencySpecifier.protocolOf("workspace:^")) // "workspace"
+ * console.log(DependencySpecifier.resolveWorkspace("workspace:^", "1.2.3")) // "^1.2.3"
  *
  * const classified = S.decodeUnknownSync(DependencySpecifier.FromString)("catalog:");
- * // => CatalogSpecifier { raw: "catalog:", name: Option.none() }
+ * console.log(classified._tag) // "catalog"
+ * if (classified._tag === "catalog") {
+ *   console.log(O.isNone(classified.name)) // true
+ * }
+ * console.log(classified.raw) // "catalog:"
  * ```
  *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export class DependencySpecifier extends DependencySpecifierBase {
-    /** Classify a specifier into a single protocol; `"unknown"` for unrecognized input. */
+    /**
+     * Classify a specifier into a single protocol; `"unknown"` for unrecognized input.
+     *
+     * **Example** (Identify a workspace protocol)
+     *
+     * ```ts
+     * import { DependencySpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+     *
+     * console.log(DependencySpecifier.protocolOf("workspace:^")) // "workspace"
+     * console.log(DependencySpecifier.protocolOf("???")) // "unknown"
+     * ```
+     *
+     * @category parsing
+     * @since 0.0.0
+     */
     static readonly protocolOf = protocolOf;
-    /** Parse the specifier as a semver `Range`, `None` when it is not a range. Pure. */
+    /**
+     * Parse the specifier as a semver `Range`, `None` when it is not a range. Pure.
+     *
+     * **Example** (Detect semver range parsing)
+     *
+     * ```ts
+     * import { DependencySpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+     * import * as O from "effect/Option";
+     *
+     * console.log(O.isSome(DependencySpecifier.parseRange("^1.2.3"))) // true
+     * console.log(O.isNone(DependencySpecifier.parseRange("latest"))) // true
+     * ```
+     *
+     * @category parsing
+     * @since 0.0.0
+     */
     static readonly parseRange = parseRange;
-    /** Whether the specifier is a parseable semver range. */
+    /**
+     * Whether the specifier is a parseable semver range.
+     *
+     * **Example** (Recognize a semver range)
+     *
+     * ```ts
+     * import { DependencySpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+     *
+     * console.log(DependencySpecifier.isRange("^1.2.3")) // true
+     * ```
+     *
+     * @category predicates
+     * @since 0.0.0
+     */
     static readonly isRange = isRange;
-    /** Whether the specifier is a dist-tag (`latest`, `next`, ...). */
+    /**
+     * Whether the specifier is a dist-tag (`latest`, `next`, ...).
+     *
+     * **Example** (Recognize a distribution tag)
+     *
+     * ```ts
+     * import { DependencySpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+     *
+     * console.log(DependencySpecifier.isTag("latest")) // true
+     * ```
+     *
+     * @category predicates
+     * @since 0.0.0
+     */
     static readonly isTag = isTag;
-    /** Whether the specifier resolves to a git source (URLs and hosted-git shorthands). */
+    /**
+     * Whether the specifier resolves to a git source (URLs and hosted-git shorthands).
+     *
+     * **Example** (Recognize a hosted git shorthand)
+     *
+     * ```ts
+     * import { DependencySpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+     *
+     * console.log(DependencySpecifier.isGit("owner/repository")) // true
+     * ```
+     *
+     * @category predicates
+     * @since 0.0.0
+     */
     static readonly isGit = isGit;
-    /** Whether the specifier is an HTTP(S) URL. */
+    /**
+     * Whether the specifier is an HTTP(S) URL.
+     *
+     * **Example** (Recognize an HTTPS dependency)
+     *
+     * ```ts
+     * import { DependencySpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+     *
+     * console.log(DependencySpecifier.isUrl("https://example.com/library.tgz")) // true
+     * ```
+     *
+     * @category predicates
+     * @since 0.0.0
+     */
     static readonly isUrl = isUrl;
-    /** Whether the specifier points to a local path (`file:`/`link:`/`portal:` or a bare path). */
+    /**
+     * Whether the specifier points to a local path (`file:`/`link:`/`portal:` or a bare path).
+     *
+     * **Example** (Recognize a bare local path)
+     *
+     * ```ts
+     * import { DependencySpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+     *
+     * console.log(DependencySpecifier.isLocal("../library")) // true
+     * ```
+     *
+     * @category predicates
+     * @since 0.0.0
+     */
     static readonly isLocal = isLocal;
-    /** Whether the specifier uses the `link:` protocol. */
+    /**
+     * Whether the specifier uses the `link:` protocol.
+     *
+     * **Example** (Recognize a linked dependency)
+     *
+     * ```ts
+     * import { DependencySpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+     *
+     * console.log(DependencySpecifier.isLink("link:../library")) // true
+     * ```
+     *
+     * @category predicates
+     * @since 0.0.0
+     */
     static readonly isLink = isLink;
-    /** Whether the specifier uses the `portal:` protocol. */
+    /**
+     * Whether the specifier uses the `portal:` protocol.
+     *
+     * **Example** (Recognize a portal dependency)
+     *
+     * ```ts
+     * import { DependencySpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+     *
+     * console.log(DependencySpecifier.isPortal("portal:../library")) // true
+     * ```
+     *
+     * @category predicates
+     * @since 0.0.0
+     */
     static readonly isPortal = isPortal;
-    /** Whether the specifier uses the `catalog:` protocol. */
+    /**
+     * Whether the specifier uses the `catalog:` protocol.
+     *
+     * **Example** (Recognize a catalog dependency)
+     *
+     * ```ts
+     * import { DependencySpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+     *
+     * console.log(DependencySpecifier.isCatalog("catalog:")) // true
+     * ```
+     *
+     * @category predicates
+     * @since 0.0.0
+     */
     static readonly isCatalog = isCatalog;
-    /** Whether the specifier uses the `workspace:` protocol. */
+    /**
+     * Whether the specifier uses the `workspace:` protocol.
+     *
+     * **Example** (Recognize a workspace dependency)
+     *
+     * ```ts
+     * import { DependencySpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+     *
+     * console.log(DependencySpecifier.isWorkspace("workspace:*")) // true
+     * ```
+     *
+     * @category predicates
+     * @since 0.0.0
+     */
     static readonly isWorkspace = isWorkspace;
     /**
-	 * The catalog name of a `catalog:` specifier: `Some(name)` for a named
-	 * catalog, `None` for the default catalog (nothing but whitespace after the
-	 * prefix). The result is only meaningful when `isCatalog(specifier)` is
-	 * true — non-catalog input also returns `None`.
-	 */
+     * The catalog name of a `catalog:` specifier: `Some(name)` for a named
+     * catalog, `None` for the default catalog (nothing but whitespace after the
+     * prefix). The result is only meaningful when `isCatalog(specifier)` is
+     * true — non-catalog input also returns `None`.
+     *
+     * **Example** (Inspect named and default catalogs)
+     *
+     * ```ts
+     * import { DependencySpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+     * import * as O from "effect/Option";
+     *
+     * console.log(O.getOrElse(DependencySpecifier.catalogNameOf("catalog: tools"), () => "default")) // "tools"
+     * console.log(O.isNone(DependencySpecifier.catalogNameOf("catalog:"))) // true
+     * ```
+     *
+     * @category parsing
+     * @since 0.0.0
+     */
     static readonly catalogNameOf = catalogNameOf;
     /**
-	 * The pnpm publish-time projection of a `workspace:` specifier against a
-	 * concrete version: `workspace:*` (or a bare `workspace:`) becomes
-	 * `version`, `workspace:~` becomes `~version`, `workspace:^` becomes
-	 * `^version`, and a pinned range passes through as-is (the part after the
-	 * prefix). pnpm's alias form (`workspace:<name>@<range>`, the last `@`
-	 * separating a possibly scoped target name from the range) becomes the
-	 * aliased dependency pnpm publishes: `npm:<name>@<projected>`, with the
-	 * range modifier projected the same way — `version` must then be the
-	 * TARGET package's version, resolved via
-	 * `workspaceTargetOf`.
-	 * Non-workspace input is returned unchanged.
-	 */
+     * Projects a `workspace:` dependency for pnpm publication.
+     *
+     * **Details**
+     *
+     * Against a concrete version: `workspace:*` (or a bare `workspace:`) becomes
+     * `version`, `workspace:~` becomes `~version`, `workspace:^` becomes
+     * `^version`, and a pinned range passes through as-is (the part after the
+     * prefix). pnpm's alias form (`workspace:<name>@<range>`, the last `@`
+     * separating a possibly scoped target name from the range) becomes the
+     * aliased dependency pnpm publishes: `npm:<name>@<projected>`, with the
+     * range modifier projected the same way — `version` must then be the
+     * TARGET package's version, resolved via
+     * `workspaceTargetOf`.
+     * Non-workspace input is returned unchanged.
+     *
+     * **Example** (Project workspace aliases for publication)
+     *
+     * ```ts
+     * import { DependencySpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+     *
+     * console.log(DependencySpecifier.resolveWorkspace("workspace:@scope/charts@^", "1.2.3")) // "npm:@scope/charts@^1.2.3"
+     * console.log(DependencySpecifier.resolveWorkspace("latest", "1.2.3")) // "latest"
+     * ```
+     *
+     * @category formatting
+     * @since 0.0.0
+     */
     static readonly resolveWorkspace = resolveWorkspace;
     /**
-	 * The target package name of an alias-form `workspace:` specifier
-	 * (`workspace:<name>@<range>` — e.g. `workspace:foo@^`,
-	 * `workspace:@scope/charts@*`): `Some(name)` for the alias form, `None`
-	 * for the plain form and for non-workspace input. Resolvers must look up
-	 * this package's version (not the dependency-map key's) before projecting
-	 * with `resolveWorkspace`.
-	 */
+     * The target package name of an alias-form `workspace:` specifier
+     * (`workspace:<name>@<range>` — e.g. `workspace:foo@^`,
+     * `workspace:@scope/charts@*`): `Some(name)` for the alias form, `None`
+     * for the plain form and for non-workspace input. Resolvers must look up
+     * this package's version (not the dependency-map key's) before projecting
+     * with `resolveWorkspace`.
+     *
+     * **Example** (Find the workspace alias target)
+     *
+     * ```ts
+     * import { DependencySpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+     * import * as O from "effect/Option";
+     *
+     * console.log(O.getOrElse(DependencySpecifier.workspaceTargetOf("workspace:@scope/charts@*"), () => "none")) // "@scope/charts"
+     * console.log(O.isNone(DependencySpecifier.workspaceTargetOf("workspace:*"))) // true
+     * ```
+     *
+     * @category parsing
+     * @since 0.0.0
+     */
     static readonly workspaceTargetOf = workspaceTargetOf;
-    /** Whether the string is a valid dependency specifier. */
+    /**
+     * Whether the string is a valid dependency specifier.
+     *
+     * **Example** (Validate dependency syntax)
+     *
+     * ```ts
+     * import { DependencySpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+     *
+     * console.log(DependencySpecifier.isValid("npm:library@^1.2.3")) // true
+     * console.log(DependencySpecifier.isValid("")) // false
+     * ```
+     *
+     * @category predicates
+     * @since 0.0.0
+     */
     static readonly isValid = isValidDependencySpecifier;
-    /** Validate a string, failing with a typed {@link InvalidDependencySpecifierError}. */
+    /**
+     * Validate a string, failing with a typed {@link InvalidDependencySpecifierError}.
+     *
+     * **Example** (Decode a valid dependency specifier)
+     *
+     * ```ts
+     * import { DependencySpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+     * import * as Effect from "effect/Effect";
+     *
+     * console.log(Effect.runSync(DependencySpecifier.decode("workspace:^"))) // "workspace:^"
+     * ```
+     *
+     * @category decoding
+     * @since 0.0.0
+     */
     static readonly decode = decode;
     /**
-	 * Codec between a specifier string and a {@link ClassifiedSpecifier} tagged
-	 * union. Decoding classifies; encoding returns the original `raw` string
-	 * byte-for-byte.
-	 */
+     * Codec between a specifier string and a {@link ClassifiedSpecifier} tagged
+     * union. Decoding classifies; encoding returns the original `raw` string
+     * byte-for-byte.
+     *
+     * **Example** (Round trip a catalog reference)
+     *
+     * ```ts
+     * import { DependencySpecifier } from "@beep/scratchpad/effected/npm/DependencySpecifier";
+     * import * as S from "effect/Schema";
+     *
+     * const classified = S.decodeUnknownSync(DependencySpecifier.FromString)("catalog: tools");
+     * console.log(classified._tag) // "catalog"
+     * console.log(S.encodeSync(DependencySpecifier.FromString)(classified)) // "catalog: tools"
+     * ```
+     *
+     * @category codecs
+     * @since 0.0.0
+     */
     static readonly FromString = fromString;
 }

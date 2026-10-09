@@ -24,7 +24,17 @@ const $I = $ScratchpadId.create("effected/npm/NpmRegistry");
 /**
  * The public npm registry, used when a read names no other.
  *
+ * **Example** (Read the default registry URL)
+ *
+ * ```ts
+ * import { DEFAULT_REGISTRY } from "@beep/scratchpad/effected/npm/NpmRegistry";
+ *
+ * console.log(DEFAULT_REGISTRY) // https://registry.npmjs.org
+ * ```
+ *
  * @public
+ * @category constants
+ * @since 0.0.0
  */
 export const DEFAULT_REGISTRY = "https://registry.npmjs.org";
 
@@ -38,7 +48,18 @@ export const DEFAULT_REGISTRY = "https://registry.npmjs.org";
  * registry cannot express what consumers actually do — and a test double
  * keyed without the registry could not express it either.
  *
+ * **Example** (Construct a per-call registry target)
+ *
+ * ```ts
+ * import { RegistryTarget } from "@beep/scratchpad/effected/npm/NpmRegistry";
+ *
+ * const target = RegistryTarget.make({ registry: "https://registry.example.com" });
+ * console.log(target.registry) // https://registry.example.com
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const RegistryTarget = S.Struct({
 	/** Registry base URL. Defaults to {@link DEFAULT_REGISTRY}. */
@@ -46,8 +67,9 @@ export const RegistryTarget = S.Struct({
 	/**
 	 * Superseded by {@link RegistryTarget.credential}.
 	 *
-	 * @deprecated Use `credential: { kind: "token", token }`. This field is
-	 * typed `never` **as a tripwire, not as an alias**:
+	 * **Details**
+	 *
+	 * This field is typed `never` **as a tripwire, not as an alias**:
 	 * removing it outright would be a SILENT break rather than a loud one.
 	 * Callers commonly pass it through a conditional spread —
 	 * `...(token !== null ? { token } : {})` — and a spread of a no-longer-known
@@ -56,6 +78,9 @@ export const RegistryTarget = S.Struct({
 	 * registry that answers 401, `NpmRegistry.version` reads that as "not
 	 * published", and a publish flow acting on it republishes a version that
 	 * already exists. Typed `never`, the same spread fails to compile.
+	 *
+	 * @deprecated Use {@link RegistryTarget.credential} with `credential: { kind: "token", token }`.
+	 * @since 0.0.0
 	 */
 	token: S.optionalKey(S.Never).annotateKey({ description: "Removed token option; use a token credential instead." }),
 	/**
@@ -70,15 +95,37 @@ export const RegistryTarget = S.Struct({
   */
 	credential: S.optional(RegistryCredential).annotateKey({ description: "The redacted credential for this registry read." }),
 }).annotate($I.annote("RegistryTarget", { description: "A structural per-call registry and credential boundary." }));
+/**
+ * Decoded per-call registry options, including the removed token field that rejects legacy callers.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface RegistryTarget extends S.Schema.Type<typeof RegistryTarget> {
-	/** @deprecated Use credential. Retained explicitly for the source-level tripwire contract. */
+	/**
+	 * Retained explicitly for the source-level tripwire contract.
+	 *
+	 * @deprecated Use {@link RegistryTarget.credential} to supply authentication.
+	 * @since 0.0.0
+	 */
 	readonly token?: never;
 }
 
 /**
  * One published version of one package, on one registry.
  *
+ * **Example** (Construct published package metadata)
+ *
+ * ```ts
+ * import { PublishedVersion } from "@beep/scratchpad/effected/npm/NpmRegistry";
+ *
+ * const published = PublishedVersion.make({ name: "example", version: "1.0.0" });
+ * console.log(published.version) // 1.0.0
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class PublishedVersion extends S.Class<PublishedVersion>($I`PublishedVersion`)({
 	/** The package name as the registry reports it. */
@@ -101,7 +148,19 @@ export class PublishedVersion extends S.Class<PublishedVersion>($I`PublishedVers
  * (`created`, `modified`), and every consumer that reads it raw has to
  * re-derive that exclusion.
  *
+ * **Example** (Associate a version with its publication time)
+ *
+ * ```ts
+ * import { PublishTime } from "@beep/scratchpad/effected/npm/NpmRegistry";
+ * import * as DateTime from "effect/DateTime";
+ *
+ * const published = PublishTime.make({ version: "1.0.0", publishedAt: DateTime.makeUnsafe("2026-01-01T00:00:00Z") });
+ * console.log(published.version) // 1.0.0
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class PublishTime extends S.Class<PublishTime>($I`PublishTime`)({
 	/** The version this timestamp belongs to. */
@@ -173,9 +232,35 @@ const registryReadFailure = flow(S.decodeUnknownResult(RegistryReadFailureFromPa
  * `Option.none()`, extending the `None`-is-success convention this package's
  * resolver contracts already use.
  *
+ * **Example** (Describe an unsuccessful registry response)
+ *
+ * ```ts
+ * import { RegistryReadError } from "@beep/scratchpad/effected/npm/NpmRegistry";
+ *
+ * const error = RegistryReadError.make({ kind: "status", package: "example", registry: "https://registry.example.com", status: 503 });
+ * console.log(error.message) // Registry read for example on https://registry.example.com failed with status 503
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class RegistryReadError extends S.TaggedError<RegistryReadError>($I`RegistryReadError`)("RegistryReadError", RegistryReadErrorPayload, $I.annote("RegistryReadError", { description: "A registry read failed." })) {
+	/**
+	 * Describes the failed registry read using its package, registry and failure kind.
+	 *
+	 * **Example** (Read a registry failure message)
+	 *
+	 * ```ts
+	 * import { RegistryReadError } from "@beep/scratchpad/effected/npm/NpmRegistry";
+	 *
+	 * const error = RegistryReadError.make({ kind: "status", package: "example", registry: "https://registry.example.com", status: 503 });
+	 * console.log(error.message) // Registry read for example on https://registry.example.com failed with status 503
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		const failure = registryReadFailure(this);
 		const where = `${failure.package} on ${failure.registry}`;
@@ -251,6 +336,8 @@ const packageUrl = (registry: string, name: string, version?: string): string =>
  * The {@link NpmRegistry} service shape.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface NpmRegistryShape {
 	/**
@@ -449,7 +536,18 @@ const notStubbed = (method: string) => () =>
 /**
  * One seeded version's registry-visible facts.
  *
+ * **Example** (Construct seeded tarball facts)
+ *
+ * ```ts
+ * import { SeededVersion } from "@beep/scratchpad/effected/npm/NpmRegistry";
+ *
+ * const facts = SeededVersion.make({ tarball: "https://registry.example.com/example.tgz" });
+ * console.log(facts.tarball) // https://registry.example.com/example.tgz
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const SeededVersion = S.Struct({
 	/** Published integrity, if any. */
@@ -459,6 +557,12 @@ export const SeededVersion = S.Struct({
 	/** Publish timestamp as an ISO-8601 string, if any. */
 	publishedAt: S.optional(S.String).annotateKey({ description: "ISO-8601 publish timestamp, if any." }),
 }).annotate($I.annote("SeededVersion", { description: "Structural registry-visible facts for a seeded version." }));
+/**
+ * Decoded registry-visible facts for one version in an in-memory seed.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SeededVersion = typeof SeededVersion.Type;
 
 /**
@@ -471,7 +575,18 @@ export type SeededVersion = typeof SeededVersion.Type;
  * publish/recover run). Registry keys are matched exactly against
  * `RegistryTarget.registry`; a read with no registry uses {@link DEFAULT_REGISTRY}.
  *
+ * **Example** (Construct an empty registry world)
+ *
+ * ```ts
+ * import { RegistrySeed } from "@beep/scratchpad/effected/npm/NpmRegistry";
+ *
+ * const seed = RegistrySeed.make({ registries: {} });
+ * console.log(Object.keys(seed.registries).length) // 0
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const RegistrySeed = S.Struct({
 	/** registry → package → version → facts. */
@@ -479,6 +594,12 @@ export const RegistrySeed = S.Struct({
 	/** package → dist-tag map, when a test asserts on tags. */
 	distTags: S.optional(S.Record(S.String, S.Record(S.String, S.String))).annotateKey({ description: "Package to dist-tag map, when seeded." }),
 }).annotate($I.annote("RegistrySeed", { description: "A structural fake registry world retaining every dictionary axis." }));
+/**
+ * Decoded in-memory registry data keyed by registry URL, package name and version.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RegistrySeed = typeof RegistrySeed.Type;
 
 /**
@@ -497,7 +618,7 @@ export type RegistrySeed = typeof RegistrySeed.Type;
  * **Example** (Look up a published version tarball URL)
  *
  * ```ts
- * import { NpmRegistry } from "./index.ts";
+ * import { NpmRegistry } from "@beep/scratchpad/effected/npm/NpmRegistry";
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option";
  * import { FetchHttpClient } from "effect/http";
@@ -508,25 +629,59 @@ export type RegistrySeed = typeof RegistrySeed.Type;
  *   return O.map(found, (published) => published.tarball);
  * });
  *
- * Effect.runPromise(program.pipe(Effect.provide(NpmRegistry.layer), Effect.provide(FetchHttpClient.layer)));
+ * const lookup = program.pipe(Effect.provide(NpmRegistry.layer), Effect.provide(FetchHttpClient.layer));
+ * console.log(Effect.isEffect(lookup)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class NpmRegistry extends Context.Service<NpmRegistry, NpmRegistryShape>()($I`NpmRegistry`) {
-	/** The live service. Resolves `HttpClient` once at construction, so every method's `R` is `never`. */
+	/**
+	 * The live service. Resolves `HttpClient` once at construction, so every method's `R` is `never`.
+	 *
+	 * **Example** (Construct a live registry lookup)
+	 *
+	 * ```ts
+	 * import { NpmRegistry } from "@beep/scratchpad/effected/npm/NpmRegistry";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const registry = yield* NpmRegistry;
+	 *   return yield* registry.versions("example");
+	 * }).pipe(Effect.provide(NpmRegistry.layer));
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<NpmRegistry, never, HttpClient.HttpClient> = Layer.effect(this, make());
 
 	/**
-  * An in-memory double: stub only the members the test exercises; every other
-  * member **dies** with a defect naming itself.
-  *
-  * **Gotchas**
-  *
-  * No member has an honest default — a fabricated version list or integrity
-  * would leak into consumer logic as fact. For a test that wants a working
-  * registry rather than a stub, use {@link NpmRegistry.layerSeeded}.
-  */
+	 * An in-memory double: stub only the members the test exercises; every other
+	 * member **dies** with a defect naming itself.
+	 *
+	 * **Gotchas**
+	 *
+	 * No member has an honest default — a fabricated version list or integrity
+	 * would leak into consumer logic as fact. For a test that wants a working
+	 * registry rather than a stub, use {@link NpmRegistry.layerSeeded}.
+	 *
+	 * **Example** (Stub the version list)
+	 *
+	 * ```ts
+	 * import { NpmRegistry } from "@beep/scratchpad/effected/npm/NpmRegistry";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const registry = NpmRegistry.makeTest({ versions: () => Effect.succeed(["1.0.0"]) });
+	 * console.log(Effect.runSync(registry.versions("example")).join(",")) // 1.0.0
+	 * ```
+	 *
+	 * @category testing
+	 * @since 0.0.0
+	 */
 	static readonly makeTest = (overrides: Partial<NpmRegistryShape> = {}): NpmRegistryShape => ({
 		version: notStubbed("version"),
 		versions: notStubbed("versions"),
@@ -536,18 +691,50 @@ export class NpmRegistry extends Context.Service<NpmRegistry, NpmRegistryShape>(
 	});
 
 	/**
-  * {@link NpmRegistry.makeTest} behind `Layer.succeed`.
-  *
-  * **Gotchas**
-  *
-  * A parameterized layer factory mints a fresh reference per call and layers
-  * memoize by reference — bind the result to a `const` rather than calling it
-  * at each composition site.
-  */
+	 * {@link NpmRegistry.makeTest} behind `Layer.succeed`.
+	 *
+	 * **Gotchas**
+	 *
+	 * A parameterized layer factory mints a fresh reference per call and layers
+	 * memoize by reference — bind the result to a `const` rather than calling it
+	 * at each composition site.
+	 *
+	 * **Example** (Provide a registry stub)
+	 *
+	 * ```ts
+	 * import { NpmRegistry } from "@beep/scratchpad/effected/npm/NpmRegistry";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const testLayer = NpmRegistry.layerTest({ versions: () => Effect.succeed(["1.0.0"]) });
+	 * const program = Effect.gen(function* () {
+	 *   const registry = yield* NpmRegistry;
+	 *   return yield* registry.versions("example");
+	 * }).pipe(Effect.provide(testLayer));
+	 * console.log(Effect.runSync(program).join(",")) // 1.0.0
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<NpmRegistryShape> = {}): Layer.Layer<NpmRegistry> =>
 		Layer.succeed(NpmRegistry, NpmRegistry.makeTest(overrides));
 
-	/** A fully-working in-memory double over a {@link RegistrySeed}. */
+	/**
+	 * A fully-working in-memory double over a {@link RegistrySeed}.
+	 *
+	 * **Example** (Read a seeded version list)
+	 *
+	 * ```ts
+	 * import { DEFAULT_REGISTRY, NpmRegistry } from "@beep/scratchpad/effected/npm/NpmRegistry";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const registry = NpmRegistry.makeSeeded({ registries: { [DEFAULT_REGISTRY]: { example: { "1.0.0": {} } } } });
+	 * console.log(Effect.runSync(registry.versions("example")).join(",")) // 1.0.0
+	 * ```
+	 *
+	 * @category testing
+	 * @since 0.0.0
+	 */
 	static readonly makeSeeded = (seed: RegistrySeed): NpmRegistryShape => {
 		const at = (target: RegistryTarget | undefined): Record<string, Record<string, SeededVersion>> =>
 			seed.registries[target?.registry ?? DEFAULT_REGISTRY] ?? {};
@@ -580,7 +767,26 @@ export class NpmRegistry extends Context.Service<NpmRegistry, NpmRegistryShape>(
 		};
 	};
 
-	/** {@link NpmRegistry.makeSeeded} behind `Layer.succeed`. */
+	/**
+	 * {@link NpmRegistry.makeSeeded} behind `Layer.succeed`.
+	 *
+	 * **Example** (Provide an empty seeded registry)
+	 *
+	 * ```ts
+	 * import { NpmRegistry } from "@beep/scratchpad/effected/npm/NpmRegistry";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const seededLayer = NpmRegistry.layerSeeded({ registries: {} });
+	 * const program = Effect.gen(function* () {
+	 *   const registry = yield* NpmRegistry;
+	 *   return yield* registry.versions("example");
+	 * }).pipe(Effect.provide(seededLayer));
+	 * console.log(Effect.runSync(program).length) // 0
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerSeeded = (seed: RegistrySeed): Layer.Layer<NpmRegistry> =>
 		Layer.succeed(NpmRegistry, NpmRegistry.makeSeeded(seed));
 }
