@@ -55,6 +55,18 @@ export * as ClaimGate from "./ClaimGate/index.ts";
  */
 export * as ClaimLifecycle from "./ClaimLifecycle/index.ts";
 /**
+ * Pure snapshot contradiction detection service and layer.
+ * @category services
+ * @since 0.0.0
+ */
+export * as ContradictionDetection from "./ContradictionDetection/server.ts";
+/**
+ * Direct server-only contradiction detection exports.
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./ContradictionDetection/server.ts";
+/**
  * Contradiction-triage repository contracts.
  *
  * **Example** (Log triage repository export)

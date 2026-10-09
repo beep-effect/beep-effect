@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -41,10 +41,13 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started. Next concrete action: re-verify the `file:line`
-citations in [`SPEC.md`](./SPEC.md) against the live tree, then answer the Open
-Contract Question (where conflict class rides on the shipped contract) on the
-record before any schema is written.
+P0-P4 complete; both conflict classes, conformance vectors and reflection are
+content-final in PR #1572.
+Canonical test-layer provision clears the original eleven policy findings;
+one serial shared-clock EV015 judgment is pending B admission under the
+run-4 resume ruling. The implementation wave is pushed to PR #1572 at
+`b245bda5c7`; fresh qualification and hosted monitoring receipts are in P2. The orchestrator owns merge
+under S11.
 
 ## Provenance
 
@@ -63,12 +66,17 @@ Back-links, not copies:
   `ContradictionMatchBasis`, all shipped in
   `packages/epistemic/domain/src/{values,entities}/Contradiction/`.
 - [`explorations/epistemic-belief-view-revision`](../../explorations/epistemic-belief-view-revision/README.md)
-  owns the MATRES modality vocabulary this packet consumes. It is at **capture**
-  stage; this packet does **not** block on it.
+  owns the MATRES modality vocabulary (Q9). It graduated on 2026-08-17 to
+  `goals/belief-view-engine`, paused with P1 pending; this packet does **not** block on it.
 
 ## Latest Evidence
 
-Not started.
+P0: [`contract evidence`](./history/p0/2026-10-09-contract.md).
+P1: [`implementation and alias diff`](./history/p1/2026-10-09-implementation.md).
+P2: [`verification and run-4 qualification`](./history/p2/2026-10-09-verification.md).
+Closeout: [`reflection`](./history/reflections/2026-10-09-codex.md);
+artifact lint passes; lifecycle is completed-retained, merge belongs to S11.
+Handoff: [`contradiction-detect`](./history/handoffs/contradiction-detect-2026-10-09.md).
 
 ## Notes
 
@@ -76,8 +84,8 @@ High-signal constraints that do not belong in the normative spec:
 
 - **The boundary is one-way.** Triage's stop-and-re-scope clause
   (`goals/epistemic-contradiction-triage/SPEC.md:138-139`) stays law. This
-  packet exists to answer that clause, not to relax it — and triage has not
-  closed (P2 verify in flight), which is one more reason v1 produces against
+  packet exists to answer that clause, not to relax it — and triage is closed
+  with no active owner, which is one more reason v1 produces against
   the shipped schema instead of extending it.
 - **Confidence is a constant, not a score.** The shipped
   `ContradictionAssessment` requires `confidence`, and v1 satisfies it with a

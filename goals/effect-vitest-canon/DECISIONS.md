@@ -625,3 +625,15 @@ batch and subsequent goal work continue on `codex/effect-vitest-followup` from
 merge commit `c2b75455dff12367794abd4ebf52136f52553c15`. The checkpoint merge
 does not close the goal or waive any remaining inventory, empty-baseline,
 adversarial-review, verification or hosted acceptance requirements.
+
+## 2026-10-09 — qualified CLI integration published; follow-up remains active
+
+PR #1575 integrates preserved post-#1506 work in the CLI-only D13 boundary.
+Default repo-cli verification and all local parity stages pass at `4be0599a18`;
+main document merge `7ef36e8020` preserves the source hashes. The final owner
+scan is 1,853 / 716 / 1,137. D's landed private-package policy supersedes the
+pre-D patch-note requirement: the exact old note is archived, with no active
+private changeset. Goal lifecycle remains active; the fleet orchestrator owns
+merge, R105 ships separately after integration lands, and R102 continues the
+716-row frontier before completed-retained acceptance. Reversal: revert each
+integration/follow-up PR independently and replay the preserved patches.

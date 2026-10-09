@@ -37,7 +37,7 @@ Scope:
 Workflow:
 
 1. P0: re-verify every `file:line` in `SPEC.md` against the live tree (triage
-   is mid-flight), then answer `SPEC.md`'s **Open Contract Question** — where
+   is closed), then answer `SPEC.md`'s **Open Contract Question** — where
    conflict class rides on the shipped contract — on the record before writing
    any schema. v1 proceeds on the no-contract-change option regardless.
 2. P1: follow the design order — schema, then `Context.Service` contract, then
