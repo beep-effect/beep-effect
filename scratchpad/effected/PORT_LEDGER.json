@@ -2460,13 +2460,89 @@
       "wave": 1,
       "position": 12,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "tooling/library",
       "upstreamPaths": {
         "src": "packages/env/src",
         "test": "packages/env/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "Audience",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "AudienceKind",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "AudienceOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "AudienceShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CiName",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ColorLevel",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CurrentRuntimeEnv",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "EnvOverride",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RuntimeEnv",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RuntimeEnvOverrides",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "StreamEnv",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "TerminalEnv",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TerminalEnvOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "TerminalEnvShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "TerminalEnvTestOptions",
+          "kind": "type",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 0,
