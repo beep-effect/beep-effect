@@ -41,7 +41,7 @@ export class CiOperationalPatterns extends S.Class<CiOperationalPatterns>($I`CiO
  *
  * ```ts
  * import { ciOperationalPatterns } from "@beep/repo-cli/commands/Ci"
- * console.log(ciOperationalPatterns.docs.startsWith("^docs/")) // true
+ * console.log(ciOperationalPatterns.docs)
  * ```
  *
  * @category configuration
