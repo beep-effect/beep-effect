@@ -57,11 +57,39 @@ from the focused proof and from exact-head hosted CI.
 
 | Package | Result | Evidence |
 | --- | --- | --- |
-| `@beep/law-practice-domain` | pass | Audit 14.7 s; docgen 9.4 s; opaque-proof declaration emission passes. |
-| `@beep/law-practice-use-cases` | pass | Audit 12.9 s; docgen 8.5 s; opaque declaration and test typecheck pass. |
-| `@beep/law-practice-server` | pass | Audit 42.2 s; docgen 11.3 s at `4ade6f1aca`; four storage/replay tests and package test typecheck pass. |
+| `@beep/law-practice-domain` | pass | Audit 18.4 s; docgen 18.4 s; source unchanged since this proof. |
+| `@beep/law-practice-use-cases` | pass | Final audit 13.0 s; docgen 8.8 s; test typecheck passes. |
+| `@beep/law-practice-server` | pass | Final audit 42.7 s; docgen 12.2 s; test typecheck passes. |
 
-Hosted-parity commands remain pending heavy admission at this checkpoint.
+Tested implementation head: `1f1d5ac6641ac3e90fbf0ff026b367e30488e9b7`.
+Private terminal results are retained for archive at lane retirement.
+
+| Hosted-parity gate | Terminal result |
+| --- | --- |
+| `quality test-tsgo` | pass; 331 files checked, 148 packages covered by their own check scripts. |
+| `docgen:local` | Initial global-input preflight required full proof; `docgen:local --full` passes metadata, generation, example typecheck and aggregation. Decision (l). |
+| `ci lane jsdoc-ratchet` | pass; zero legacy non-generated findings. |
+| `CI=true knowledge refs --check` | pass; zero live gated observations. |
+| `ci lane fallow --base origin/main` | pass after the two introduced complexity repairs; audit and health both exit 0. Two local-fixture duplication observations are advisory; Decision (j). |
+| Scoped coverage | all three commands pass; canonical tool comparison judges three packages with zero failures. |
+
+All baseline file identities remain present and pass: domain 223, use-cases 42,
+server 32. Package totals exceed the unchanged baseline. Percentage columns are
+lines, statements, branches, functions:
+
+| Package | Percentages |
+| --- | --- |
+| Domain | 89.60, 89.60, 87.17, 84.59 |
+| Use-cases | 96.85, 96.69, 90.79, 95.40 |
+| Server | 99.45, 99.34, 94.35, 98.84 |
+
+Every newly added source file reaches 100% across all four metrics under the
+canonical zero-unit convention. No baseline or coverage suppression was changed.
+The final test-canon scan introduces zero findings. The fixtures still prove all
+34 complete outcomes and every emitted raw slice.
+
+These local proofs are distinct from hosted required checks on the published
+head and the final PR review window, which P3 drives through Yeet.
 
 ## Attributed hosted policy red
 

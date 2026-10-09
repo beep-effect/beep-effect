@@ -34,13 +34,15 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 complete under the Run 2 ruling. Third blind audit passes, 33/34 atomic
-agreement, no unresolved labels; retained-inventory floors pass. P1 implementation
-is next. No text-qualified real-OA positive performance is claimed.
+P0-P2 complete. The deterministic pair, grounded adapter, append-only attempt
+store, exact-source replay and evidence consumer pass the package and parity
+proofs. P3 reflection and content-final PR closeout are next. Retained-inventory
+floors use public form language; no real-OA positive performance is claimed.
 
 ## Latest Evidence
 
-Run 2: retained-inventory floors and third blind audit pass; receipts are in
+Run 2: package and parity proofs pass in `history/p2/2026-10-09-verification.md`.
+Retained-inventory floors and third blind audit pass; receipts are in
 `history/p0/2026-10-09-label-reconciliation.md`. Every fixture is on the
 non-blocking `history/p0/2026-10-09-attorney-spot-check.md`. See the handoff for
 the final package gate and exact evidence commit.
