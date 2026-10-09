@@ -33,3 +33,13 @@ in 9edd003a48. No fresh package proof covers that repair. The repeated-blocker
 condition ended the lane, with full qualification still outstanding.
 Prevention: attach the diagnostic span to the repair and verify that the
 reported line itself changed before spending another heavy admission.
+
+## 2026-10-09 — Heavy admission has no visible queue position
+
+Action: submit the two authorized resume package-verification jobs via beep-heavy.
+Result: both remain alive waiting for the three machine-wide flock slots across
+repeated 60-second result polls. Slot-holder changes are visible, but the wrapper
+reports only "all 3 slots busy, waiting", with no queue position or wait estimate.
+No caps were raised and no other lane's work was interrupted.
+Prevention: expose ordered admission position and elapsed wait in the wrapper so
+queued lanes can distinguish progress from starvation without bypassing admission.

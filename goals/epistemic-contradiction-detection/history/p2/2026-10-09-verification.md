@@ -74,3 +74,24 @@ Only the evidence-source-policy exploration landed in that merge; detector
 source is unchanged from 9edd003a48. Post-merge version sync passes. Packet
 verification passes, shipped contract diff remains empty, and Yeet reports
 zero unacknowledged P0 rows. No package proof is claimed for the final repair.
+
+## Authorized resume qualification
+
+The run-2 brief ruling lifts the earlier stop for one qualification round on
+`a799682c02`, after the actual typed ref repair in `9edd003a48`. Package audits
+for both edited packages were submitted through beep-heavy with concurrency 2
+and a 32G cap; no third owned heavy job is admitted. A third occurrence of the
+same typed-ref diagnostic requires a stop without another repair.
+
+- Packet adoption plan: no conflicts; existing authored files retained and
+  manifest extension keys preserved.
+- `bun run config-sync:check`: pass before the resume qualification.
+- Generated alias diff: exactly one ContradictionDetection entry in each of
+  tsconfig.json and vitest.aliases.generated.json, no inherited hunk.
+- Shipped values/Contradiction and entities/Contradiction diff: empty.
+- `CI=true bun run beep knowledge refs --check`: inherited failure at
+  goals/repository-simplification-confidence/SPEC.md:374:4. The resume ruling
+  explicitly classifies this path-prohibition false positive as nonblocking.
+
+Local resume logs/results are retained under ignored `.beep/detection-proof/run2/`.
+Final qualification outcomes are appended below when those commands terminate.
