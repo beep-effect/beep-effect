@@ -39,6 +39,7 @@ import { ghOutput } from "../../../internal/github/index.ts";
 import { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
+import { MergeGateCheckRun } from "./MergeGate.schemas.ts";
 import {
   deriveYeetReviewThreadState,
   YeetReviewThreadNewestComment,
@@ -52,32 +53,9 @@ import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
 import type { GhCommandFailure } from "../../../internal/github/index.ts";
 
-const $I = $RepoCliId.create("commands/Yeet/internal/MergeGate");
+export { MergeGateCheckRun } from "./MergeGate.schemas.ts";
 
-/**
- * One check run on the head commit, reduced to what the gate reads.
- *
- * **Example** (A green required run)
- *
- * ```ts
- * import { MergeGateCheckRun } from "@beep/repo-cli/test/Yeet"
- *
- * const run = MergeGateCheckRun.make({ id: 1, name: "Lint", status: "completed", conclusion: "success" })
- * console.log(run.name) // "Lint"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class MergeGateCheckRun extends S.Class<MergeGateCheckRun>($I`MergeGateCheckRun`)(
-  {
-    id: S.Finite,
-    name: S.NonEmptyString,
-    status: S.String,
-    conclusion: S.NullOr(S.String),
-  },
-  $I.annote("MergeGateCheckRun", { description: "One check run on the pull request head, as the gate reads it." })
-) {}
+const $I = $RepoCliId.create("commands/Yeet/internal/MergeGate");
 
 /**
  * A non-required check the orchestrator tolerates red or pending, with the

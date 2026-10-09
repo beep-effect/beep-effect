@@ -21,6 +21,10 @@ cannot reconstruct deleted rulesets; that historical completeness boundary remai
 an adapter limitation. Proof-fact and packet-history evidence references are
 recognized but remain unknown until a head-bound provider is implemented.
 
+The reused `MergeGateCheckRun` lives in a schema-only module with its existing
+identifier and public re-export retained, preventing completion observations from
+importing merge-handler runtime wiring.
+
 Storage reuses `resolveProofLedgerLocation`: the owning clone's
 `.beep/goals/completion-receipts.ndjson`, separate from ProofLedger. ProofFact
 version, expiry and TTC semantics are unchanged. Reads reject mismatched repository,

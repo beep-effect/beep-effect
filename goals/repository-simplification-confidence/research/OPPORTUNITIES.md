@@ -135,3 +135,29 @@
   row can be identified independently, but missing baseline rows cannot prove equality.
 - Would have prevented it: retained complete job logs or a separate immutable
   coverage-row artifact linked to the job.
+
+## 2026-10-09: source qualification does not cover test Effect diagnostics
+
+- Doing: qualifying H2 completion fixtures after the source compiler passed.
+- Evidence: `beep quality test-tsgo` found 11 introduced test diagnostics:
+  `preferTypedSchemaDecoder`, `effectFnOpportunity`, and `missedPipeableOpportunity`.
+- Disposition: use typed decoders for typed fixture input and reusable Effect.fn
+  helpers; repeat the test compiler before publication. No suppression was added.
+- Would have prevented it: running the dedicated test compiler immediately after
+  authoring fixtures, alongside their runtime assertions.
+
+## 2026-10-09: H2 parity exposes static graph and packet-literal failures
+
+- Doing: the required Fallow audit/health and CI knowledge-reference qualification.
+- Evidence: Fallow identifies a six-file cycle from Completion through MergeGate,
+  Handler, Status and GateStaleness back to Doctor, plus eight introduced complexity
+  findings. Runtime lazy import avoided initialization failure but retained the
+  static cycle. The existing shared check-run schema is moved into a schema-only
+  role, preserving its identifier and re-export. Observation and refresh boundaries
+  are separated without suppressions.
+- Additional evidence: knowledge refs reports the inherited literal home-directory
+  prefix in SPEC's path-policy sentence (line 374), identical on origin/main.
+  It is a statement about prohibited paths, not a client location. Main owns its
+  single repair; H2 records the inherited red rather than copying a lane-local fix.
+- Would have prevented it: early static graph qualification after adding cross-command
+  schema reuse, and audit-pattern classification for path-policy literals.

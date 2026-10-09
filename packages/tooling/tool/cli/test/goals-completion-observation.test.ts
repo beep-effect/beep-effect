@@ -20,6 +20,7 @@ import { Command } from "effect/cli";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
@@ -70,86 +71,99 @@ const fixtureIo = (acceptedText: string, scenario: typeof Scenario.Type = {}) =>
       if (scenario.failure === true)
         return Effect.fail(YeetCommandError.make({ message: "Synthetic network error or rate limit" }));
       const endpoint = O.getOrElse(A.get(args, 1), () => "");
-      if (Str.includes("pulls/7")(endpoint))
-        return Effect.succeed(
-          encode({
-            number: 7,
-            merged: scenario.merged !== false,
-            created_at: "2026-10-05T23:00:00Z",
-            merged_at: scenario.merged === false ? null : "2026-10-06T01:00:00Z",
-            merge_commit_sha: "merge-result",
-            head: { sha: "accepted-head" },
-            base: { ref: "main", repo: { full_name: "example/repo" } },
-          })
-        );
-      if (Str.includes("check-runs")(endpoint))
-        return Effect.succeed(
-          encode([
-            {
-              check_runs: [
-                check(1, "2026-10-06T00:10:00Z", scenario.red === true ? "failure" : "success"),
-                ...(scenario.postMergeRerun === true
-                  ? [{ ...check(2, "2026-10-06T02:00:00Z", "failure"), started_at: "2026-10-06T01:30:00Z" }]
-                  : []),
-                ...(scenario.preMergePendingRerun === true ? [check(3, "2026-10-06T02:00:00Z", "failure")] : []),
-              ],
-            },
-          ])
-        );
-      if (Str.includes("check-suites")(endpoint))
-        return Effect.succeed(encode([{ check_suites: [{ created_at: "2026-10-06T00:00:00Z" }] }]));
-      if (Str.includes("timeline")(endpoint))
-        return scenario.missingTimeline === true
-          ? Effect.fail(YeetCommandError.make({ message: "Timeline unavailable" }))
-          : Effect.succeed(
-              encode([
-                [
+      return Match.value(endpoint).pipe(
+        Match.when(Str.includes("pulls/7"), () =>
+          Effect.succeed(
+            encode({
+              number: 7,
+              merged: scenario.merged !== false,
+              created_at: "2026-10-05T23:00:00Z",
+              merged_at: scenario.merged === false ? null : "2026-10-06T01:00:00Z",
+              merge_commit_sha: "merge-result",
+              head: { sha: "accepted-head" },
+              base: { ref: "main", repo: { full_name: "example/repo" } },
+            })
+          )
+        ),
+        Match.when(Str.includes("check-runs"), () =>
+          Effect.succeed(
+            encode([
+              {
+                check_runs: [
+                  check(1, "2026-10-06T00:10:00Z", scenario.red === true ? "failure" : "success"),
+                  ...(scenario.postMergeRerun === true
+                    ? [{ ...check(2, "2026-10-06T02:00:00Z", "failure"), started_at: "2026-10-06T01:30:00Z" }]
+                    : []),
+                  ...(scenario.preMergePendingRerun === true ? [check(3, "2026-10-06T02:00:00Z", "failure")] : []),
+                ],
+              },
+            ])
+          )
+        ),
+        Match.when(Str.includes("check-suites"), () =>
+          Effect.succeed(encode([{ check_suites: [{ created_at: "2026-10-06T00:00:00Z" }] }]))
+        ),
+        Match.when(Str.includes("timeline"), () =>
+          scenario.missingTimeline === true
+            ? Effect.fail(YeetCommandError.make({ message: "Timeline unavailable" }))
+            : Effect.succeed(
+                encode([
+                  [
+                    {
+                      event: "ready_for_review",
+                      created_at: scenario.windowShort === true ? "2026-10-06T00:59:53Z" : "2026-10-06T00:00:00Z",
+                    },
+                  ],
+                ])
+              )
+        ),
+        Match.when(Str.includes("/history/1"), () =>
+          Effect.succeed(
+            encode({
+              state: {
+                enforcement: "active",
+                target: "branch",
+                conditions: { ref_name: { include: ["~DEFAULT_BRANCH"], exclude: [] } },
+                rules: [
                   {
-                    event: "ready_for_review",
-                    created_at: scenario.windowShort === true ? "2026-10-06T00:59:53Z" : "2026-10-06T00:00:00Z",
+                    type: "required_status_checks",
+                    parameters: {
+                      strict_required_status_checks_policy: false,
+                      required_status_checks: [{ context: "Lint" }],
+                    },
                   },
                 ],
-              ])
-            );
-      if (Str.includes("/history/1")(endpoint))
-        return Effect.succeed(
-          encode({
-            state: {
-              enforcement: "active",
-              target: "branch",
-              conditions: { ref_name: { include: ["~DEFAULT_BRANCH"], exclude: [] } },
-              rules: [
-                {
-                  type: "required_status_checks",
-                  parameters: {
-                    strict_required_status_checks_policy: false,
-                    required_status_checks: [{ context: "Lint" }],
-                  },
-                },
-              ],
-            },
-          })
-        );
-      if (Str.includes("/history")(endpoint))
-        return scenario.missingHistory === true
-          ? Effect.fail(YeetCommandError.make({ message: "History unavailable" }))
-          : Effect.succeed(
-              encode([
-                [
-                  { version_id: 1, updated_at: "2026-10-01T00:00:00Z" },
-                  { version_id: 2, updated_at: "2026-10-07T00:00:00Z" },
-                ],
-              ])
-            );
-      if (Str.includes("rulesets?")(endpoint))
-        return Effect.succeed(encode([[{ id: 42, source_type: "Repository", created_at: "2026-09-01T00:00:00Z" }]]));
-      return Effect.succeed(
-        encode({
-          sha: "merge-result",
-          parents:
-            scenario.mergeParents === 2 ? [{ sha: "parent" }, { sha: "accepted-head" }] : [{ sha: "unrelated-parent" }],
-          commit: { tree: { sha: "merge-tree" } },
-        })
+              },
+            })
+          )
+        ),
+        Match.when(Str.includes("/history"), () =>
+          scenario.missingHistory === true
+            ? Effect.fail(YeetCommandError.make({ message: "History unavailable" }))
+            : Effect.succeed(
+                encode([
+                  [
+                    { version_id: 1, updated_at: "2026-10-01T00:00:00Z" },
+                    { version_id: 2, updated_at: "2026-10-07T00:00:00Z" },
+                  ],
+                ])
+              )
+        ),
+        Match.when(Str.includes("rulesets?"), () =>
+          Effect.succeed(encode([[{ id: 42, source_type: "Repository", created_at: "2026-09-01T00:00:00Z" }]]))
+        ),
+        Match.orElse(() =>
+          Effect.succeed(
+            encode({
+              sha: "merge-result",
+              parents:
+                scenario.mergeParents === 2
+                  ? [{ sha: "parent" }, { sha: "accepted-head" }]
+                  : [{ sha: "unrelated-parent" }],
+              commit: { tree: { sha: "merge-tree" } },
+            })
+          )
+        )
       );
     }),
   });

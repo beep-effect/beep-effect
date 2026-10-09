@@ -12,6 +12,7 @@ import * as Context from "effect/Context";
 import { Command, Flag } from "effect/cli";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -21,7 +22,7 @@ import { ghOutput } from "../../internal/github/index.ts";
 import { runGitOutput } from "../../internal/repo-run/index.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { resolveProofLedgerLocation } from "../Yeet/internal/ArtifactPaths.ts";
-import { MergeGateCheckRun } from "../Yeet/internal/MergeGate.ts";
+import { MergeGateCheckRun } from "../Yeet/internal/MergeGate.schemas.ts";
 import { decideYeetReviewWindow, YEET_REVIEW_WINDOW_DEFAULT } from "../Yeet/internal/ReviewWindow.ts";
 import { GhBranchRule, rulesetRequiredContextsFromRules, YeetRulesetRulesPayload } from "../Yeet/internal/Settle.ts";
 import { YeetVerdict } from "../Yeet/internal/Verdict.ts";
@@ -40,6 +41,7 @@ import {
 import { listGoalPackets, parseGoalManifestText } from "./Inventory.ts";
 import { canonicalJsonText, sha256Hex } from "./PacketCore/PacketDigest.ts";
 import type { GoalCompletionOutcome, GoalPullRequestRef } from "./Goals.schemas.ts";
+import type { GoalPacketRecord } from "./Inventory.ts";
 
 const $I = $RepoCliId.create("commands/Goals/Completion");
 const hostedRef = GoalAcceptanceEvidenceRef.make({ kind: "hosted-required-checks", ref: "required", gating: true });
@@ -99,10 +101,14 @@ const overallOutcome = (observation: GoalCompletionObservation): GoalCompletionO
   )
     return "unsatisfied";
   if (
-    O.isNone(observation.merged) ||
-    O.isNone(observation.merge) ||
-    O.isNone(observation.acceptedHead) ||
-    O.isNone(observation.acceptedDeclarationDigest) ||
+    O.isNone(
+      O.all({
+        merged: observation.merged,
+        merge: observation.merge,
+        head: observation.acceptedHead,
+        declaration: observation.acceptedDeclarationDigest,
+      })
+    ) ||
     A.isReadonlyArrayEmpty(gating) ||
     A.some(gating, (check) => check.outcome === "unknown" || O.isNone(check.observedHead))
   )
@@ -252,6 +258,58 @@ const RulesetVersion = S.Struct({
     rules: S.Array(GhBranchRule),
   }),
 });
+const historicalRulesetApplies = Effect.fn("Goals.Completion.rulesetApplies")(function* (
+  state: typeof RulesetVersion.Type.state,
+  base: string
+) {
+  if (state.enforcement !== "active" || state.target !== "branch") return false;
+  const matches = (pattern: string): boolean =>
+    pattern === "~ALL" || (pattern === "~DEFAULT_BRANCH" && base === "main") || pattern === `refs/heads/${base}`;
+  if (
+    A.some([...state.conditions.ref_name.include, ...state.conditions.ref_name.exclude], (pattern) =>
+      Str.includes("*")(pattern)
+    )
+  )
+    return yield* YeetCommandError.make({
+      message: "Historical ruleset glob requires an independently evaluated branch snapshot",
+    });
+  return A.some(state.conditions.ref_name.include, matches) && !A.some(state.conditions.ref_name.exclude, matches);
+});
+const readHistoricalRuleset = Effect.fn("Goals.Completion.historicalRuleset")(function* (
+  root: string,
+  ruleset: (typeof RulesetList.Type)[number][number],
+  base: string,
+  mergedAt: DateTime.Utc
+) {
+  if (ruleset.source_type !== "Repository")
+    return yield* YeetCommandError.make({
+      message: "Inherited ruleset history is unavailable through the repository-only adapter",
+    });
+  const history = A.flatten(
+    yield* readJson(
+      root,
+      ["api", `repos/{owner}/{repo}/rulesets/${ruleset.id}/history?per_page=100`, "--paginate", "--slurp"],
+      RulesetHistory
+    )
+  );
+  const version = A.reduce(
+    A.filter(history, (row) => DateTime.toEpochMillis(row.updated_at) <= DateTime.toEpochMillis(mergedAt)),
+    O.none<(typeof RulesetHistory.Type)[number][number]>(),
+    (found, row) =>
+      O.isNone(found) || DateTime.isGreaterThan(row.updated_at, found.value.updated_at) ? O.some(row) : found
+  );
+  if (O.isNone(version)) {
+    if (ruleset.created_at !== undefined && DateTime.isGreaterThan(ruleset.created_at, mergedAt)) return O.none();
+    return yield* YeetCommandError.make({ message: "No historical ruleset version covers this merge" });
+  }
+  const source = `repos/{owner}/{repo}/rulesets/${ruleset.id}/history/${version.value.version_id}`;
+  const { state } = yield* readJson(root, ["api", source], RulesetVersion);
+  if (!(yield* historicalRulesetApplies(state, base))) return O.none();
+  const folded = rulesetRequiredContextsFromRules(
+    YeetRulesetRulesPayload.make({ base, readAt: DateTime.formatIso(mergedAt), rules: state.rules })
+  );
+  return O.some({ source, contexts: folded.contexts });
+});
 const readHistoricalRequiredChecks = Effect.fn("Goals.Completion.historicalRequiredChecks")(function* (
   root: string,
   base: string,
@@ -264,55 +322,16 @@ const readHistoricalRequiredChecks = Effect.fn("Goals.Completion.historicalRequi
       RulesetList
     )
   );
-  let contexts = A.empty<string>();
-  let sources = A.empty<string>();
-  for (const ruleset of inventory) {
-    if (ruleset.source_type !== "Repository")
-      return yield* YeetCommandError.make({
-        message: "Inherited ruleset history is unavailable through the repository-only adapter",
-      });
-    const history = A.flatten(
-      yield* readJson(
-        root,
-        ["api", `repos/{owner}/{repo}/rulesets/${ruleset.id}/history?per_page=100`, "--paginate", "--slurp"],
-        RulesetHistory
-      )
-    );
-    const version = A.reduce(
-      A.filter(history, (row) => DateTime.toEpochMillis(row.updated_at) <= DateTime.toEpochMillis(mergedAt)),
-      O.none<(typeof RulesetHistory.Type)[number][number]>(),
-      (found, row) =>
-        O.isNone(found) || DateTime.isGreaterThan(row.updated_at, found.value.updated_at) ? O.some(row) : found
-    );
-    if (O.isNone(version)) {
-      if (ruleset.created_at !== undefined && DateTime.isGreaterThan(ruleset.created_at, mergedAt)) continue;
-      return yield* YeetCommandError.make({ message: "No historical ruleset version covers this merge" });
-    }
-    const source = `repos/{owner}/{repo}/rulesets/${ruleset.id}/history/${version.value.version_id}`;
-    const { state } = yield* readJson(root, ["api", source], RulesetVersion);
-    if (state.enforcement !== "active" || state.target !== "branch") continue;
-    // The program's historical default branch is main. Unsupported globs stay unknown.
-    const matches = (pattern: string): boolean =>
-      pattern === "~ALL" || (pattern === "~DEFAULT_BRANCH" && base === "main") || pattern === `refs/heads/${base}`;
-    if (
-      A.some([...state.conditions.ref_name.include, ...state.conditions.ref_name.exclude], (pattern) =>
-        Str.includes("*")(pattern)
-      )
-    )
-      return yield* YeetCommandError.make({
-        message: "Historical ruleset glob requires an independently evaluated branch snapshot",
-      });
-    if (!A.some(state.conditions.ref_name.include, matches) || A.some(state.conditions.ref_name.exclude, matches))
-      continue;
-    const folded = rulesetRequiredContextsFromRules(
-      YeetRulesetRulesPayload.make({ base, readAt: DateTime.formatIso(mergedAt), rules: state.rules })
-    );
-    contexts = A.dedupe(A.appendAll(contexts, folded.contexts));
-    sources = A.append(sources, source);
-  }
-  if (A.isReadonlyArrayEmpty(sources))
+  const snapshots = A.getSomes(
+    yield* Effect.forEach(inventory, (ruleset) => readHistoricalRuleset(root, ruleset, base, mergedAt))
+  );
+  if (A.isReadonlyArrayEmpty(snapshots))
     return yield* YeetCommandError.make({ message: "No historical applicable ruleset observed" });
-  return GoalRequiredCheckSnapshot.make({ contexts, sources, effectiveAt: mergedAt });
+  return GoalRequiredCheckSnapshot.make({
+    contexts: A.dedupe(A.flatMap(snapshots, (snapshot) => snapshot.contexts)),
+    sources: A.map(snapshots, (snapshot) => snapshot.source),
+    effectiveAt: mergedAt,
+  });
 });
 /**
  * Digests the decoded completion declaration, initiative identity and packet identity canonically.
@@ -367,16 +386,46 @@ const readLocalEvidence = Effect.fn("Goals.Completion.localEvidence")(function* 
   if (O.isNone(verdict)) return evidenceCheck(ref, "unknown", O.none(), "Yeet verdict absent, invalid or unreadable.");
   const observedHead = verdict.value.resolvedHeadSha;
   const ready = O.map(verdict.value.mergeReady, (value) => value.ready);
+  const outcome = Match.value({ observedHead, ready }).pipe(
+    Match.when(
+      ({ observedHead, ready }) => O.exists(observedHead, (value) => value !== head) || O.contains(false)(ready),
+      (): GoalCompletionOutcome => "unsatisfied"
+    ),
+    Match.when(
+      ({ observedHead, ready }) => O.isSome(ready) && O.isSome(observedHead),
+      (): GoalCompletionOutcome => "verified"
+    ),
+    Match.orElse((): GoalCompletionOutcome => "unknown")
+  );
   return evidenceCheck(
     ref,
-    O.exists(observedHead, (value) => value !== head) || O.contains(false)(ready)
-      ? "unsatisfied"
-      : O.isSome(ready) && O.isSome(observedHead)
-        ? "verified"
-        : "unknown",
+    outcome,
     observedHead,
     "Yeet verdict checked against resolvedHeadSha and mergeReady.ready."
   );
+});
+
+const readAcceptedManifest = Effect.fn("Goals.Completion.acceptedManifest")(function* (
+  root: string,
+  head: string,
+  slug: string
+) {
+  const acceptedText = yield* readCompletionGit(root, ["show", `${head}:goals/${slug}/ops/manifest.json`]).pipe(
+    Effect.catchTag("YeetCommandError", () =>
+      readCompletionGithub(root, [
+        "api",
+        `repos/{owner}/{repo}/contents/goals/${slug}/ops/manifest.json?ref=${head}`,
+        "-H",
+        "Accept: application/vnd.github.raw+json",
+      ])
+    ),
+    Effect.option
+  );
+  const acceptedParsed = O.flatMap(acceptedText, parseGoalManifestText);
+  const acceptedManifest = O.isSome(acceptedParsed)
+    ? yield* S.decodeUnknownEffect(GoalManifest)(acceptedParsed.value).pipe(Effect.option)
+    : O.none<GoalManifest>();
+  return acceptedManifest;
 });
 
 /**
@@ -451,21 +500,7 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
       method: A.length(mergeCommit.parents) === 2 ? O.some("merge") : O.none(),
       baseRef: pull.base.ref,
     });
-    const acceptedText = yield* readCompletionGit(root, ["show", `${head}:goals/${slug}/ops/manifest.json`]).pipe(
-      Effect.catchTag("YeetCommandError", () =>
-        readCompletionGithub(root, [
-          "api",
-          `repos/{owner}/{repo}/contents/goals/${slug}/ops/manifest.json?ref=${head}`,
-          "-H",
-          "Accept: application/vnd.github.raw+json",
-        ])
-      ),
-      Effect.option
-    );
-    const acceptedParsed = O.flatMap(acceptedText, parseGoalManifestText);
-    const acceptedManifest = O.isSome(acceptedParsed)
-      ? yield* S.decodeUnknownEffect(GoalManifest)(acceptedParsed.value).pipe(Effect.option)
-      : O.none<GoalManifest>();
+    const acceptedManifest = yield* readAcceptedManifest(root, head, slug);
     const acceptedDeclarationDigest = O.isSome(acceptedManifest)
       ? O.some(yield* goalCompletionDeclarationDigest(acceptedManifest.value))
       : O.none<string>();
@@ -743,46 +778,54 @@ export const storedGoalCompletion = Effect.fn("Goals.Completion.stored")(functio
   );
 });
 
+const readRefreshManifest = Effect.fn("Goals.Completion.refreshManifest")(function* (record: GoalPacketRecord) {
+  const parsed = yield* Effect.fromOption(
+    O.flatMap(O.fromUndefinedOr(record.manifestText), parseGoalManifestText)
+  ).pipe(Effect.mapError(() => YeetCommandError.make({ message: "Requested goal manifest is missing or invalid" })));
+  return yield* S.decodeUnknownEffect(GoalManifest)(parsed).pipe(
+    Effect.mapError(() => YeetCommandError.make({ message: "Requested goal manifest cannot decode" }))
+  );
+});
+const refreshRecord = Effect.fn("Goals.Completion.refreshRecord")(function* (
+  root: string,
+  record: GoalPacketRecord,
+  explicit: boolean,
+  location: { readonly ledgerRoot: string; readonly file: string }
+) {
+  const decoded = readRefreshManifest(record);
+  const manifest = yield* explicit ? decoded.pipe(Effect.asSome) : decoded.pipe(Effect.option);
+  if (O.isNone(manifest)) return;
+  if (manifest.value.completionGate.grandfathered) {
+    if (explicit) yield* Console.log(`[goals:completion] ${record.slug}: grandfathered (no receipt needed)`);
+    return;
+  }
+  const finalRead = Effect.fromOption(
+    A.findFirst(goalPullRequestRefs(manifest.value), (ref) => ref.role === "final")
+  ).pipe(Effect.mapError(() => YeetCommandError.make({ message: "Requested goal has no final pull request" })));
+  const final = yield* explicit ? finalRead.pipe(Effect.asSome) : finalRead.pipe(Effect.option);
+  if (O.isNone(final)) return;
+  const receipt = yield* observeGoalCompletion(root, record.slug, manifest.value, final.value);
+  if (O.isNone(receipt.merge)) {
+    yield* Console.log(
+      `[goals:completion] ${record.slug} #${final.value.number}: ${receipt.outcome} (no post-merge receipt written)`
+    );
+    return;
+  }
+  yield* appendContainedFileString(location.ledgerRoot, location.file, `${yield* ReceiptJson.encode(receipt)}\n`);
+  yield* Console.log(`[goals:completion] ${record.slug} #${final.value.number}: ${receipt.outcome}`);
+});
 const refresh = Effect.fn("Goals.Completion.refresh")(function* (slug: O.Option<string>) {
   const root = yield* findRepoRoot();
   const records = yield* listGoalPackets(root);
   const location = yield* receiptLocation(root);
   if (O.exists(slug, (value) => !A.some(records, (record) => record.slug === value)))
     return yield* YeetCommandError.make({ message: "Requested goal packet does not exist" });
-  for (const record of records) {
-    if (O.exists(slug, (value) => value !== record.slug)) continue;
-    const parsed = O.flatMap(O.fromUndefinedOr(record.manifestText), parseGoalManifestText);
-    if (O.isNone(parsed)) {
-      if (O.isSome(slug))
-        return yield* YeetCommandError.make({ message: "Requested goal manifest is missing or invalid" });
-      continue;
-    }
-    const manifest = yield* S.decodeUnknownEffect(GoalManifest)(parsed.value).pipe(Effect.option);
-    if (O.isNone(manifest)) {
-      if (O.isSome(slug)) return yield* YeetCommandError.make({ message: "Requested goal manifest cannot decode" });
-      continue;
-    }
-    const final = A.findFirst(goalPullRequestRefs(manifest.value), (ref) => ref.role === "final");
-    if (manifest.value.completionGate.grandfathered) {
-      if (O.isSome(slug)) yield* Console.log(`[goals:completion] ${record.slug}: grandfathered (no receipt needed)`);
-      continue;
-    }
-    if (O.isNone(final)) {
-      if (O.isSome(slug)) return yield* YeetCommandError.make({ message: "Requested goal has no final pull request" });
-      continue;
-    }
-    const receipt = yield* observeGoalCompletion(root, record.slug, manifest.value, final.value);
-    if (O.isNone(receipt.merge)) {
-      yield* Console.log(
-        `[goals:completion] ${record.slug} #${final.value.number}: ${receipt.outcome} (no post-merge receipt written)`
-      );
-      continue;
-    }
-    yield* appendContainedFileString(location.ledgerRoot, location.file, `${yield* ReceiptJson.encode(receipt)}\n`);
-    yield* Console.log(`[goals:completion] ${record.slug} #${final.value.number}: ${receipt.outcome}`);
-  }
+  const selected = O.match(slug, {
+    onNone: () => records,
+    onSome: (value) => A.filter(records, (record) => record.slug === value),
+  });
+  yield* Effect.forEach(selected, (record) => refreshRecord(root, record, O.isSome(slug), location));
 });
-
 /**
  * Explicit sole writer for derived completion receipts; doctor never calls this command.
  *
