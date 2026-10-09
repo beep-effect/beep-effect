@@ -24,24 +24,91 @@ import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/templates/internal/scan");
 
-/** The ways a document can be structurally unreadable. */
+/**
+ * The ways a document can be structurally unreadable.
+ *
+ * **Example** (Validate a structural failure reason)
+ *
+ * ```ts
+ * import { ScanFailureReason } from "@beep/scratchpad/effected/templates/internal/scan";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(ScanFailureReason)("orphanedEnd")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const ScanFailureReason = LiteralKit([
 	"unterminatedSection", "orphanedEnd", "overlappingSections", "duplicateSection",
 ]).annotate($I.annote("ScanFailureReason", { description: "The ambiguities refused by the managed-section scanner." }));
+/**
+ * The structural ambiguity reason validated by {@link ScanFailureReason}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ScanFailureReason = typeof ScanFailureReason.Type;
 
-/** The existing ordered list of scanner failure reasons. */
+/**
+ * The existing ordered list of scanner failure reasons.
+ *
+ * **Example** (Read the first scanner failure reason)
+ *
+ * ```ts
+ * import { SCAN_FAILURE_REASONS } from "@beep/scratchpad/effected/templates/internal/scan";
+ *
+ * console.log(SCAN_FAILURE_REASONS[0]) // unterminatedSection
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const SCAN_FAILURE_REASONS = ScanFailureReason.literals;
 
-/** A scanner failure retains its required, explicitly undefined-capable key. */
+/**
+ * A scanner failure retains its required, explicitly undefined-capable key.
+ *
+ * **Example** (Validate a failure with an unknown key)
+ *
+ * ```ts
+ * import { ScanFailure } from "@beep/scratchpad/effected/templates/internal/scan";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(ScanFailure)({ reason: "orphanedEnd", line: 1, key: undefined })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const ScanFailure = S.Struct({
 	reason: ScanFailureReason.annotateKey({ description: "The first structural ambiguity found." }),
 	line: S.Finite.annotateKey({ description: "The one-based line of the offending marker." }),
 	key: S.UndefinedOr(S.String).annotateKey({ description: "The section key, explicitly undefined when unknown." }),
 }).annotate($I.annote("ScanFailure", { description: "A plain scanner failure with its reason and marker location." }));
+/**
+ * The failure reason, one-based marker line and explicit key validated by {@link ScanFailure}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ScanFailure = typeof ScanFailure.Type;
 
-/** Plain scan results keep the boolean ok discriminant and variant-specific fields. */
+/**
+ * Plain scan results keep the boolean `ok` discriminant and variant-specific fields.
+ *
+ * **Example** (Validate a successful empty scan)
+ *
+ * ```ts
+ * import { ScanResult } from "@beep/scratchpad/effected/templates/internal/scan";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(ScanResult)({ ok: true, sections: [] })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const ScanResult = S.Union([
 	S.Struct({
 		ok: S.Literal(true).annotateKey({ description: "The scan succeeded." }),
@@ -52,9 +119,32 @@ export const ScanResult = S.Union([
 		failure: ScanFailure.annotateKey({ description: "The first structural failure." }),
 	}),
 ]).annotate($I.annote("ScanResult", { description: "Either located sections or the first ambiguity, in plain-object form." }));
+/**
+ * The success or failure shape validated by {@link ScanResult}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ScanResult = typeof ScanResult.Type;
 
-/** A document's dominant line ending. Any CRLF makes the document CRLF. */
+/**
+ * Detects a document's dominant line ending.
+ *
+ * **Details**
+ *
+ * Any CRLF makes the document CRLF.
+ *
+ * **Example** (Detect CRLF in mixed line endings)
+ *
+ * ```ts
+ * import { detectEol } from "@beep/scratchpad/effected/templates/internal/scan";
+ *
+ * console.log(detectEol("first\nsecond\r\n") === "\r\n") // true
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const detectEol = (text: string): Eol => (text.includes("\r\n") ? "\r\n" : "\n");
 
 /**
@@ -67,6 +157,17 @@ export const detectEol = (text: string): Eol => (text.includes("\r\n") ? "\r\n" 
  * than inside equality keeps `Equal.equals` honest for a consumer comparing
  * two sections directly, and it is what stops a CRLF document from reporting
  * drift on every single run.
+ *
+ * **Example** (Normalize section content to LF)
+ *
+ * ```ts
+ * import { normalizeEol } from "@beep/scratchpad/effected/templates/internal/scan";
+ *
+ * console.log(normalizeEol("first\r\nsecond") === "first\nsecond") // true
+ * ```
+ *
+ * @category normalization
+ * @since 0.0.0
  */
 export const normalizeEol = (text: string): string => text.replace(/\r\n/g, "\n");
 
@@ -114,7 +215,26 @@ interface MarkerHit {
 	readonly attributes?: Record<string, string>;
 }
 
-/** The identity two sections must share to be duplicates of each other. */
+/**
+ * The identity two sections must share to be duplicates of each other.
+ *
+ * **Details**
+ *
+ * The key and comment-style identity are separated by NUL. Content and attributes
+ * do not participate in this identity.
+ *
+ * **Example** (Compare direct and curried section identities)
+ *
+ * ```ts
+ * import { identityOf } from "@beep/scratchpad/effected/templates/internal/scan";
+ * import { CommentStyle } from "@beep/scratchpad/effected/templates/CommentStyle";
+ *
+ * console.log(identityOf("tool", CommentStyle.hash) === identityOf(CommentStyle.hash)("tool")) // true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const identityOf: {
 	(key: string, style: CommentStyle): string;
 	(style: CommentStyle): (key: string) => string;
@@ -171,6 +291,24 @@ const collectHits = (text: string, dialect: SectionDialect): ReadonlyArray<Marke
  * A bounded linear pass — no recursion, so no stack-overflow surface on
  * hostile input. Sections cannot nest: a begin marker encountered while
  * another section is open is `overlappingSections`, not an inner block.
+ *
+ * **Example** (Locate a section from generated marker lines)
+ *
+ * ```ts
+ * import { scan } from "@beep/scratchpad/effected/templates/internal/scan";
+ * import { CommentStyle } from "@beep/scratchpad/effected/templates/CommentStyle";
+ * import { SectionId } from "@beep/scratchpad/effected/templates/Section";
+ * import { SectionDialect } from "@beep/scratchpad/effected/templates/SectionDialect";
+ *
+ * const dialect = SectionDialect.default;
+ * const id = SectionId.make({ key: "tool", commentStyle: CommentStyle.hash });
+ * const text = [dialect.beginMarker(id), "echo hello", dialect.endMarker(id)].join("\n");
+ * const result = scan(text, dialect);
+ * console.log(result.ok && result.sections[0]?.section.content) // echo hello
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const scan: {
 	(text: string, dialect: SectionDialect): ScanResult;

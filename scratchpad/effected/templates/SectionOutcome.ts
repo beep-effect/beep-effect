@@ -44,7 +44,7 @@ class SyncOutcomeStatics extends syncBase {
  *
  * **Example** (Guarding an updated outcome)
  * ```ts
- * import { SyncOutcome } from "./SectionOutcome.ts";
+ * import { SyncOutcome } from "@beep/scratchpad/effected/templates/SectionOutcome";
  * const isUpdated = SyncOutcome.$is("Updated");
  * console.log(isUpdated(undefined));
  * ```
@@ -91,7 +91,7 @@ class CheckOutcomeStatics extends checkBase {
  *
  * **Example** (Guarding a drifted outcome)
  * ```ts
- * import { CheckOutcome } from "./SectionOutcome.ts";
+ * import { CheckOutcome } from "@beep/scratchpad/effected/templates/SectionOutcome";
  * const isDrifted = CheckOutcome.$is("Drifted");
  * console.log(isDrifted(undefined));
  * ```

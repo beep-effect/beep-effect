@@ -24,7 +24,23 @@ import { identityOf } from "./scan.ts";
 
 const $I = $ScratchpadId.create("effected/templates/internal/reconcile");
 
-/** Plain input to the pure reconciliation core; every field remains required. */
+/**
+ * Plain input to the pure reconciliation core; every field remains required.
+ *
+ * **Example** (Validate complete reconciliation input)
+ *
+ * ```ts
+ * import { ReconcileInput } from "@beep/scratchpad/effected/templates/internal/reconcile";
+ * import { SectionDialect } from "@beep/scratchpad/effected/templates/SectionDialect";
+ * import * as S from "effect/Schema";
+ *
+ * const input = { text: "Notes\n", placed: [], declared: [], dialect: SectionDialect.default, eol: "\n" };
+ * console.log(S.is(ReconcileInput)(input)) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const ReconcileInput = S.Struct({
 	text: S.String.annotateKey({ description: "The exact source document." }),
 	placed: S.Array(S.suspend(() => PlacedSection)).annotateKey({ description: "Sections with their source spans." }),
@@ -32,14 +48,40 @@ export const ReconcileInput = S.Struct({
 	dialect: S.suspend(() => SectionDialect).annotateKey({ description: "The marker vocabulary to render with." }),
 	eol: Eol.annotateKey({ description: "The document line ending." }),
 }).annotate($I.annote("ReconcileInput", { description: "The complete input to managed-section reconciliation." }));
+/**
+ * The complete input shape validated by {@link ReconcileInput}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ReconcileInput = typeof ReconcileInput.Type;
 
-/** Shared plain output authority for public and internal reconciliation results. */
+/**
+ * Shared plain output authority for public and internal reconciliation results.
+ *
+ * **Example** (Validate an unchanged reconciliation result)
+ *
+ * ```ts
+ * import { ReconcileOutput } from "@beep/scratchpad/effected/templates/internal/reconcile";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(ReconcileOutput)({ text: "Notes\n", outcomes: [], changed: false })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const ReconcileOutput = S.Struct({
 	text: S.String.annotateKey({ description: "The document as it should now read." }),
 	outcomes: S.Array(S.suspend(() => SyncOutcome)).annotateKey({ description: "One outcome per declared section, in declaration order." }),
 	changed: S.Boolean.annotateKey({ description: "Whether output text differs from the source." }),
 }).annotate($I.annote("ReconcileOutput", { description: "The resulting text, per-section outcomes and byte-change indicator." }));
+/**
+ * The resulting text, outcomes and change flag validated by {@link ReconcileOutput}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ReconcileOutput = typeof ReconcileOutput.Type;
 
 /** A document broken into preserved text spans and section placeholders. */
@@ -47,6 +89,35 @@ type Item =
 	| { readonly kind: "text"; readonly value: string }
 	| { kind: "section"; readonly identity: string; readonly raw: string; render: string | undefined };
 
+/**
+ * Fits declared sections into existing document slots while preserving surrounding text and foreign sections.
+ *
+ * **Details**
+ *
+ * All declarations are rendered before output is assembled. Duplicate declarations and
+ * rendering refusals return a typed failure rather than a partial result. Existing
+ * declared sections are assigned to their existing slots in declaration order. Missing
+ * sections go before the nearest present successor, otherwise after the nearest present
+ * predecessor, otherwise at the end. Outcomes follow declaration order; `changed`
+ * compares output bytes with the source, so reordering can change text even when
+ * section contents are unchanged.
+ *
+ * **Example** (Keep a document unchanged without declarations)
+ *
+ * ```ts
+ * import { reconcile } from "@beep/scratchpad/effected/templates/internal/reconcile";
+ * import { SectionDialect } from "@beep/scratchpad/effected/templates/SectionDialect";
+ * import * as Result from "effect/Result";
+ *
+ * const result = reconcile({
+ *   text: "Notes\n", placed: [], declared: [], dialect: SectionDialect.default, eol: "\n",
+ * });
+ * console.log(Result.isSuccess(result) && result.success.text === "Notes\n") // true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const reconcile = (input: ReconcileInput): Result.Result<ReconcileOutput, SectionRenderError> => {
 	const { text, placed, declared, dialect, eol } = input;
 

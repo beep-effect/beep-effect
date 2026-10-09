@@ -25,7 +25,19 @@ const $I = $ScratchpadId.create("effected/templates/Section");
  * `SectionId.make({ key: "example-tool", … })`, and the validation a brand
  * would carry is already enforced by the check at construction.
  *
+ * **Example** (Validate a case-sensitive marker key)
+ *
+ * ```ts
+ * import { SectionKey } from "@beep/scratchpad/effected/templates/Section";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(SectionKey)("SAVVY-LINT")) // true
+ * console.log(S.is(SectionKey)("two words")) // false
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const SectionKey = S.String.check(
 	S.isPattern(/^[A-Za-z0-9][A-Za-z0-9._-]*$/u, {
@@ -57,33 +69,53 @@ export type SectionKey = typeof SectionKey.Type;
  * **Example** (Create a named section with hash markers)
  *
  * ```ts
- * import { CommentStyle, SectionId } from "./index.ts";
+ * import { SectionId } from "@beep/scratchpad/effected/templates/Section";
+ * import { CommentStyle } from "@beep/scratchpad/effected/templates/CommentStyle";
  *
- * const ToolSection = SectionId.make({
- *   key: "example-tool",
- *   commentStyle: CommentStyle.hash,
- * });
- *
+ * const ToolSection = SectionId.make({ key: "example-tool", commentStyle: CommentStyle.hash });
  * const block = ToolSection.section("echo hello");
+ * console.log(block.content) // echo hello
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class SectionId extends S.Class<SectionId>($I`SectionId`)({
-	/** The section's name, exactly as it appears in the markers. */
+	/**
+	 * The section's name, exactly as it appears in the markers.
+	 *
+	 * @since 0.0.0
+	 */
 	key: SectionKey.annotateKey({ description: "The section's name, exactly as it appears in the markers." }),
-	/** How this section's markers are commented out. */
+	/**
+	 * How this section's markers are commented out.
+	 *
+	 * @since 0.0.0
+	 */
 	commentStyle: CommentStyle.annotateKey({ description: "How this section's markers are commented out." }),
 }, $I.annote("SectionId", { description: "What identifies a managed section inside a document: its key and the comment style its markers are written in." })) {
 	/**
-  * Pair this identity with the content a tool wants inside it.
-  *
-  * **Details**
-  *
-  * `attributes` become `name="value"` pairs on the section's BEGIN marker,
-  * emitted in the record's insertion order. They are metadata, not identity:
-  * see {@link Section} for the grammar and the equality rules.
-  */
+	 * Pair this identity with the content a tool wants inside it.
+	 *
+	 * **Details**
+	 *
+	 * `attributes` become `name="value"` pairs on the section's BEGIN marker,
+	 * emitted in the record's insertion order. They are metadata, not identity:
+	 * see {@link Section} for the grammar and the equality rules.
+	 *
+	 * **Example** (Attach marker metadata to content)
+	 *
+	 * ```ts
+	 * import { SectionId } from "@beep/scratchpad/effected/templates/Section";
+	 * import { CommentStyle } from "@beep/scratchpad/effected/templates/CommentStyle";
+	 *
+	 * const id = SectionId.make({ key: "tool", commentStyle: CommentStyle.hash });
+	 * console.log(id.section("echo hello", { origin: "ci" }).attributes.origin) // ci
+	 * ```
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	section(content: string, attributes?: Readonly<Record<string, string>>): Section {
 		return Section.make({
 			key: this.key,
@@ -122,24 +154,83 @@ export class SectionId extends S.Class<SectionId>($I`SectionId`)({
  * contain `"` or a line break; violations fail typed at render, not here, so
  * runtime data can never turn construction into a defect.
  *
+ * **Example** (Construct a section with empty metadata)
+ *
+ * ```ts
+ * import { Section } from "@beep/scratchpad/effected/templates/Section";
+ * import { CommentStyle } from "@beep/scratchpad/effected/templates/CommentStyle";
+ * import * as R from "effect/Record";
+ *
+ * const section = Section.make({ key: "tool", commentStyle: CommentStyle.hash, content: "echo hello" });
+ * console.log(R.isEmptyRecord(section.attributes)) // true
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class Section extends S.Class<Section>($I`Section`)({
-	/** The section's name, exactly as it appears in the markers. */
+	/**
+	 * The section's name, exactly as it appears in the markers.
+	 *
+	 * @since 0.0.0
+	 */
 	key: SectionKey.annotateKey({ description: "The section's name, exactly as it appears in the markers." }),
-	/** How this section's markers are commented out. */
+	/**
+	 * How this section's markers are commented out.
+	 *
+	 * @since 0.0.0
+	 */
 	commentStyle: CommentStyle.annotateKey({ description: "How this section's markers are commented out." }),
-	/** Everything between the markers, exclusive of the boundary line breaks. */
+	/**
+	 * Everything between the markers, exclusive of the boundary line breaks.
+	 *
+	 * @since 0.0.0
+	 */
 	content: S.String.annotateKey({ description: "Everything between the markers, exclusive of the boundary line breaks." }),
-	/** The BEGIN marker's `name="value"` pairs. Empty when the marker carries none. */
+	/**
+	 * The BEGIN marker's `name="value"` pairs. Empty when the marker carries none.
+	 *
+	 * @since 0.0.0
+	 */
 	attributes: S.Record(S.String, S.String).pipe(S.withConstructorDefault(Effect.succeed({}))).annotateKey({ description: "The BEGIN marker's `name=\"value\"` pairs. Empty when the marker carries none." }),
 }, $I.annote("Section", { description: "A managed section: an identity plus the content its owner wants between the markers." })) {
-	/** This section's identity, without its content. */
+	/**
+	 * This section's identity, without its content.
+	 *
+	 * **Example** (Recover the section identity)
+	 *
+	 * ```ts
+	 * import { Section } from "@beep/scratchpad/effected/templates/Section";
+	 * import { CommentStyle } from "@beep/scratchpad/effected/templates/CommentStyle";
+	 *
+	 * const section = Section.make({ key: "tool", commentStyle: CommentStyle.hash, content: "echo hello" });
+	 * console.log(section.id.key) // tool
+	 * ```
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get id(): SectionId {
 		return SectionId.make({ key: this.key, commentStyle: this.commentStyle });
 	}
 
-	/** The same section carrying different content. Attributes are preserved. */
+	/**
+	 * The same section carrying different content. Attributes are preserved.
+	 *
+	 * **Example** (Replace content while preserving metadata)
+	 *
+	 * ```ts
+	 * import { SectionId } from "@beep/scratchpad/effected/templates/Section";
+	 * import { CommentStyle } from "@beep/scratchpad/effected/templates/CommentStyle";
+	 *
+	 * const id = SectionId.make({ key: "tool", commentStyle: CommentStyle.hash });
+	 * const updated = id.section("old", { origin: "ci" }).withContent("new");
+	 * console.log(updated.content) // new
+	 * console.log(updated.attributes.origin) // ci
+	 * ```
+	 * @category mapping
+	 * @since 0.0.0
+	 */
 	withContent(content: string): Section {
 		return Section.make({ key: this.key, commentStyle: this.commentStyle, content, attributes: this.attributes });
 	}
@@ -155,15 +246,45 @@ export class Section extends S.Class<Section>($I`Section`)({
  * `text.slice(start, end)` is exactly the block as written. `line` is 1-based
  * and points at the begin marker, which is what a diagnostic needs.
  *
+ * **Example** (Inspect a parsed block span)
+ *
+ * ```ts
+ * import { PlacedSection, SectionId } from "@beep/scratchpad/effected/templates/Section";
+ * import { CommentStyle } from "@beep/scratchpad/effected/templates/CommentStyle";
+ *
+ * const id = SectionId.make({ key: "tool", commentStyle: CommentStyle.hash });
+ * const placed = PlacedSection.make({ section: id.section("echo hello"), start: 0, end: 80, line: 1 });
+ * console.log(placed.end - placed.start) // 80
+ * console.log(placed.line) // 1
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class PlacedSection extends S.Class<PlacedSection>($I`PlacedSection`)({
-	/** The section, with line endings already normalized to `\n`. */
+	/**
+	 * The section, with line endings already normalized to `\n`.
+	 *
+	 * @since 0.0.0
+	 */
 	section: Section.annotateKey({ description: "The section, with line endings already normalized to `\\n`." }),
-	/** Offset of the begin marker's first character. */
+	/**
+	 * Offset of the begin marker's first character.
+	 *
+	 * @since 0.0.0
+	 */
 	start: S.Finite.annotateKey({ description: "Offset of the begin marker's first character." }),
-	/** Offset one past the end marker's last character. */
+	/**
+	 * Offset one past the end marker's last character.
+	 *
+	 * @since 0.0.0
+	 */
 	end: S.Finite.annotateKey({ description: "Offset one past the end marker's last character." }),
-	/** 1-based line of the begin marker. */
+	/**
+	 * 1-based line of the begin marker.
+	 *
+	 * @since 0.0.0
+	 */
 	line: S.Finite.annotateKey({ description: "1-based line of the begin marker." }),
 }, $I.annote("PlacedSection", { description: "A managed section as found in a document, carrying the span it occupies." })) {}

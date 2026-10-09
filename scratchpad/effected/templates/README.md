@@ -1,41 +1,13 @@
 # templates (lab port of @effected/templates)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Ftemplates?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/templates)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
 
 Managed sections: delimited `BEGIN`/`END` blocks inside files whose surrounding content belongs to the user. A tool owns the block, the user owns everything else, and neither destroys the other — the mechanism behind a generated hook, a managed config fragment, or any file your tool and your user both need to edit.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/templates
 
 Most "managed section" implementations put the whole algorithm inside a service that also does file IO, so the hardest logic — deciding what changed, and where a new block belongs — can only be tested by writing files to disk. This package splits the two apart. `SectionDocument` is a pure string-to-string core with no `Effect`, no IO and no runtime: parse a document, compare a declared section against what is already there, reconcile a whole set of them, render the result. `ManagedSection` is a thin service that reads a file, calls the pure core, and writes back only when the text actually changed.
 
 Ambiguity fails typed rather than being resolved by guessing: an unterminated marker, an orphaned `END`, two overlapping sections, or the same identity declared twice are all a typed `SectionParseError` naming the line, never a silent skip that leaves a duplicate block on the next run. Line endings are a first-class invariant too — the document's dominant EOL is detected at parse and every comparison is EOL-normalized, so a CRLF file does not report drift forever.
-
-## Install
-
-```bash
-npm install @effected/templates effect
-```
-
-```bash
-pnpm add @effected/templates effect
-```
-
-Requires Node.js >=24.11.0. `effect` v4 is the only peer dependency, and the only dependency of any kind.
 
 All `@effected/*` packages are ESM-only: the exports maps publish only `import` conditions, so `require()` — including tools that resolve in CJS mode — fails with Node's `ERR_PACKAGE_PATH_NOT_EXPORTED` rather than loading a CJS build that does not exist. Import from an ES module.
 
@@ -46,9 +18,11 @@ All `@effected/*` packages are ESM-only: the exports maps publish only `import` 
 Declare two sections and sync them into a file in one call. Declared order becomes file order, so `base` always precedes `tool`, however a user may have reordered the file by hand:
 
 ```ts
-import { CommentStyle, ManagedSection, SectionId } from "@effected/templates";
-import { NodeFileSystem } from "@effect/platform-node";
-import { Effect } from "effect";
+import { ManagedSection } from "@beep/scratchpad/effected/templates/ManagedSection";
+import { SectionId } from "@beep/scratchpad/effected/templates/Section";
+import { CommentStyle } from "@beep/scratchpad/effected/templates/CommentStyle";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import * as Effect from "effect/Effect";
 
 const Base = SectionId.make({ key: "base", commentStyle: CommentStyle.hash });
 const Tool = SectionId.make({ key: "tool", commentStyle: CommentStyle.hash });
@@ -70,8 +44,10 @@ Effect.runPromise(program.pipe(Effect.provide(ManagedSection.layer), Effect.prov
 A `BEGIN` marker can carry `name="value"` pairs, so a tool reads a block's provenance — which run wrote it, and when — off the marker line without opening the block:
 
 ```ts
-import { CommentStyle, SectionDocument, SectionId } from "@effected/templates";
-import { Result } from "effect";
+import { CommentStyle } from "@beep/scratchpad/effected/templates/CommentStyle";
+import { SectionDocument } from "@beep/scratchpad/effected/templates/SectionDocument";
+import { SectionId } from "@beep/scratchpad/effected/templates/Section";
+import * as Result from "effect/Result";
 
 const Tool = SectionId.make({ key: "tool", commentStyle: CommentStyle.hash });
 const doc = SectionDocument.parseResult("#!/usr/bin/env sh\n");

@@ -14,25 +14,111 @@ import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effected/templates/internal/attributes");
 
-/** The attribute name grammar. No leading digit, underscore or dash. */
+/**
+ * The attribute name grammar. No leading digit, underscore or dash.
+ *
+ * **Example** (Check the first character of an attribute name)
+ *
+ * ```ts
+ * import { ATTRIBUTE_NAME_PATTERN } from "@beep/scratchpad/effected/templates/internal/attributes";
+ *
+ * console.log(ATTRIBUTE_NAME_PATTERN.test("owner-id")) // true
+ * console.log(ATTRIBUTE_NAME_PATTERN.test("_owner")) // false
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const ATTRIBUTE_NAME_PATTERN = /^[A-Za-z][A-Za-z0-9_-]*$/;
 
-/** Attribute names retain the original JavaScript dollar-anchor semantics. */
+/**
+ * Attribute names retain the original JavaScript dollar-anchor semantics.
+ *
+ * **Example** (Validate an attribute name with its schema)
+ *
+ * ```ts
+ * import { AttributeName } from "@beep/scratchpad/effected/templates/internal/attributes";
+ * import * as S from "effect/Schema";
+ *
+ * const valid = S.is(AttributeName);
+ * console.log(valid("owner-id")) // true
+ * console.log(valid("9owner")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const AttributeName = S.String.check(S.isPattern(ATTRIBUTE_NAME_PATTERN)).annotate(
 	$I.annote("AttributeName", { description: "An attribute name accepted by the existing marker renderer grammar." }),
 );
+/**
+ * The string type validated by {@link AttributeName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type AttributeName = typeof AttributeName.Type;
 
-/** Values may contain neither a double quote nor CR or LF, with no escaping. */
+/**
+ * Values may contain neither a double quote nor CR or LF, with no escaping.
+ *
+ * **Example** (Validate values that render verbatim)
+ *
+ * ```ts
+ * import { AttributeValue } from "@beep/scratchpad/effected/templates/internal/attributes";
+ * import * as S from "effect/Schema";
+ *
+ * const valid = S.is(AttributeValue);
+ * console.log(valid("Ada")) // true
+ * console.log(valid('Ada"')) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const AttributeValue = S.String.check(S.isPattern(/^(?![\s\S]*["\r\n])/)).annotate(
 	$I.annote("AttributeValue", { description: "An attribute value that can be rendered verbatim inside double quotes." }),
 );
+/**
+ * The string type validated by {@link AttributeValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type AttributeValue = typeof AttributeValue.Type;
 
-/** True when a name satisfies the renderer's original grammar. */
+/**
+ * True when a name satisfies the renderer's original grammar.
+ *
+ * **Example** (Reject a leading dash in an attribute name)
+ *
+ * ```ts
+ * import { isValidAttributeName } from "@beep/scratchpad/effected/templates/internal/attributes";
+ *
+ * console.log(isValidAttributeName("owner-id")) // true
+ * console.log(isValidAttributeName("-owner")) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 export const isValidAttributeName = S.is(AttributeName);
 
-/** True when a value can appear inside an attribute's double quotes verbatim. */
+/**
+ * True when a value can appear inside an attribute's double quotes verbatim.
+ *
+ * **Example** (Reject a line break in an attribute value)
+ *
+ * ```ts
+ * import { isValidAttributeValue } from "@beep/scratchpad/effected/templates/internal/attributes";
+ *
+ * console.log(isValidAttributeValue("Ada")) // true
+ * console.log(isValidAttributeValue("Ada\nLovelace")) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 export const isValidAttributeValue = S.is(AttributeValue);
 
 const isNameStart = (code: number): boolean => (code >= 65 && code <= 90) || (code >= 97 && code <= 122); // A-Z a-z
@@ -60,6 +146,18 @@ const isSeparator = (code: number): boolean => code === 32 || code === 9; // spa
  * backtracks polynomially on hostile near-misses. This walk touches each
  * character exactly once, so a megabyte of adversarial line costs a megabyte
  * of work.
+ *
+ * **Example** (Read attribute pairs and refuse duplicate names)
+ *
+ * ```ts
+ * import { parseAttributeRun } from "@beep/scratchpad/effected/templates/internal/attributes";
+ *
+ * const attributes = parseAttributeRun('owner="Ada" mode="strict"');
+ * console.log(attributes?.owner) // Ada
+ * console.log(parseAttributeRun('owner="Ada" owner="Grace"')) // undefined
+ * ```
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseAttributeRun = (run: string): Record<string, string> | undefined => {
 	const attributes: Record<string, string> = {};

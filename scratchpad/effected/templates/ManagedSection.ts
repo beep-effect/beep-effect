@@ -29,16 +29,54 @@ const $I = $ScratchpadId.create("effected/templates/ManagedSection");
  * A **missing** file is not an error — it reads as a document with no
  * sections, and a sync creates it.
  *
+ * **Example** (Describe a failed file read)
+ *
+ * ```ts
+ * import { SectionFileError } from "@beep/scratchpad/effected/templates/ManagedSection";
+ *
+ * const error = SectionFileError.make({ path: "config.txt", operation: "read", cause: "permission denied" });
+ * console.log(error.message) // Failed to read managed sections in "config.txt"
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class SectionFileError extends S.TaggedError<SectionFileError>($I`SectionFileError`)("SectionFileError", {
-	/** The file the operation was against. */
+	/**
+	 * The file the operation was against.
+	 *
+	 * @since 0.0.0
+	 */
 	path: S.String.annotateKey({ description: "The file the operation was against." }),
-	/** Which half of the read-modify-write failed. */
+	/**
+	 * Which half of the read-modify-write failed.
+	 *
+	 * @since 0.0.0
+	 */
 	operation: S.Literals(["read", "write"]).annotateKey({ description: "Which half of the read-modify-write failed." }),
-	/** The underlying failure, preserved structurally. */
+	/**
+	 * The underlying failure, preserved structurally.
+	 *
+	 * @since 0.0.0
+	 */
 	cause: S.Defect({ includeStack: true }).annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("SectionFileError", { description: "Raised when the file behind a managed-section operation could not be read or written." })) {
+	/**
+	 * Describes which file operation failed and the path it targeted.
+	 *
+	 * **Example** (Inspect a failed write message)
+	 *
+	 * ```ts
+	 * import { SectionFileError } from "@beep/scratchpad/effected/templates/ManagedSection";
+	 *
+	 * const error = SectionFileError.make({ path: "config.txt", operation: "write", cause: "permission denied" });
+	 * console.log(error.message) // Failed to write managed sections in "config.txt"
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Failed to ${this.operation} managed sections in "${this.path}"`;
 	}
@@ -58,49 +96,81 @@ export class SectionFileError extends S.TaggedError<SectionFileError>($I`Section
  * {@link ManagedSection.layerTest}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ManagedSectionShape {
-	/** The section with this identity, if the file has one. */
+	/**
+	 * The section with this identity, if the file has one.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly read: (
 		path: string,
 		id: SectionId,
 	) => Effect.Effect<O.Option<Section>, SectionParseError | SectionFileError>;
 
-	/** Every managed section in the file, in document order. */
+	/**
+	 * Every managed section in the file, in document order.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly readAll: (path: string) => Effect.Effect<ReadonlyArray<Section>, SectionParseError | SectionFileError>;
 
-	/** Whether the file carries a section with this identity. */
+	/**
+	 * Whether the file carries a section with this identity.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly isManaged: (path: string, id: SectionId) => Effect.Effect<boolean, SectionParseError | SectionFileError>;
 
-	/** Make one section say what it should, writing only if that changes the file. */
+	/**
+	 * Make one section say what it should, writing only if that changes the file.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly sync: (
 		path: string,
 		section: Section,
 	) => Effect.Effect<SyncOutcome, SectionParseError | SectionRenderError | SectionFileError>;
 
 	/**
-  * Make a whole set of sections say what they should, in declared order.
-  *
-  * **Details**
-  *
-  * The declared order is written into the file — see
-  * {@link SectionDocument.reconcile}. Writes only if the text changes.
-  */
+	 * Make a whole set of sections say what they should, in declared order.
+	 *
+	 * **Details**
+	 *
+	 * The declared order is written into the file — see
+	 * {@link SectionDocument.reconcile}. Writes only if the text changes.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly syncAll: (
 		path: string,
 		sections: ReadonlyArray<Section>,
 	) => Effect.Effect<ReadonlyArray<SyncOutcome>, SectionParseError | SectionRenderError | SectionFileError>;
 
-	/** Compare one section against the file, changing nothing. */
+	/**
+	 * Compare one section against the file, changing nothing.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly check: (path: string, section: Section) => Effect.Effect<CheckOutcome, SectionParseError | SectionFileError>;
 
-	/** Compare a set of sections against the file from a single read. */
+	/**
+	 * Compare a set of sections against the file from a single read.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly checkAll: (
 		path: string,
 		sections: ReadonlyArray<Section>,
 	) => Effect.Effect<ReadonlyArray<CheckOutcome>, SectionParseError | SectionFileError>;
 
-	/** Remove a section. `false` when it was not there. */
+	/**
+	 * Remove a section. `false` when it was not there.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly remove: (path: string, id: SectionId) => Effect.Effect<boolean, SectionParseError | SectionFileError>;
 }
 
@@ -108,9 +178,15 @@ export interface ManagedSectionShape {
  * How a `ManagedSection` layer reads and writes markers.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface ManagedSectionOptions {
-	/** Defaults to {@link SectionDialect.default}. */
+	/**
+	 * Defaults to {@link SectionDialect.default}.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly dialect?: SectionDialect;
 }
 
@@ -127,6 +203,8 @@ const notFound = (error: PlatformError.PlatformError): boolean => error.reason._
  * central promise that every byte outside a managed span survives. Reading
  * bytes and decoding with `ignoreBOM: true` keeps the mark in the leading
  * text span, where it is preserved like any other content.
+ *
+ * @since 0.0.0
  */
 const decoder = new TextDecoder("utf-8", { ignoreBOM: true });
 
@@ -138,8 +216,12 @@ const make: (options?: ManagedSectionOptions) => Effect.Effect<ManagedSectionSha
 		/**
 		 * Read and parse, degrading a missing file to an empty document.
 		 *
+		 * **Details**
+		 *
 		 * One read, not an `exists` probe followed by a read: two syscalls with a
 		 * race between them, where the file can appear or vanish in the gap.
+		 *
+		 * @since 0.0.0
 		 */
 		const load = (path: string): Effect.Effect<SectionDocument, SectionParseError | SectionFileError> =>
 			fs.readFile(path).pipe(
@@ -238,16 +320,16 @@ const make: (options?: ManagedSectionOptions) => Effect.Effect<ManagedSectionSha
 /**
  * A defect raised when a managed-section test double calls an unstubbed member.
  *
- * **Example** (Identifying an unstubbed member)
+ * **Example** (Identify an unstubbed member)
+ *
  * ```ts
- * import { ManagedSectionTestError } from "./ManagedSection.ts";
+ * import { ManagedSectionTestError } from "@beep/scratchpad/effected/templates/ManagedSection";
  * import * as S from "effect/Schema";
  *
  * const error = ManagedSectionTestError.make({ message: "Unstubbed read" });
- * const isUnstubbed = S.is(ManagedSectionTestError)(error);
+ * console.log(S.is(ManagedSectionTestError)(error)) // true
  * ```
- *
- * @category Errors
+ * @category errors
  * @since 0.0.0
  */
 export class ManagedSectionTestError extends S.TaggedError<ManagedSectionTestError>($I`ManagedSectionTestError`)(
@@ -279,46 +361,71 @@ const unimplemented = (member: string): never => {
  * **Example** (Sync file sections in declared order)
  *
  * ```ts
- * import { CommentStyle, ManagedSection, SectionId } from "./index.ts";
+ * import { ManagedSection } from "@beep/scratchpad/effected/templates/ManagedSection";
+ * import { SectionId } from "@beep/scratchpad/effected/templates/Section";
+ * import { CommentStyle } from "@beep/scratchpad/effected/templates/CommentStyle";
  * import * as Effect from "effect/Effect";
  *
  * const Base = SectionId.make({ key: "base", commentStyle: CommentStyle.hash });
  * const Tool = SectionId.make({ key: "tool", commentStyle: CommentStyle.hash });
- *
  * const program = Effect.gen(function* () {
  *   const sections = yield* ManagedSection;
  *   // Declared order is written into the file, so `base` precedes `tool`.
- *   return yield* sections.syncAll(".husky/pre-commit", [
- *     Base.section("preamble"),
- *     Tool.section("run-the-tool"),
- *   ]);
+ *   return yield* sections.syncAll(".husky/pre-commit", [Base.section("preamble"), Tool.section("run-the-tool")]);
  * });
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class ManagedSection extends Context.Service<ManagedSection, ManagedSectionShape>()(
 	$I`ManagedSection`,
 ) {
 	/**
-  * The default layer, reading and writing {@link SectionDialect.default}
-  * markers.
-  *
-  * **Details**
-  *
-  * A bound `const`, not a function, so it memoizes by reference.
-  */
+	 * The default layer, reading and writing {@link SectionDialect.default}
+	 * markers.
+	 *
+	 * **Details**
+	 *
+	 * A bound `const`, not a function, so it memoizes by reference.
+	 *
+	 * **Example** (Inspect the default file-backed layer)
+	 *
+	 * ```ts
+	 * import { ManagedSection } from "@beep/scratchpad/effected/templates/ManagedSection";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(ManagedSection.layer)) // true
+	 * ```
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<ManagedSection, never, FileSystem.FileSystem> = Layer.effect(this, make());
 
 	/**
-  * A layer with a custom marker dialect.
-  *
-  * **Gotchas**
-  *
-  * A parameterized layer factory mints a **fresh reference per call**, and
-  * layers memoize by reference — bind the result to a `const` and reuse it
-  * rather than calling `layerWith(...)` at each composition site.
-  */
+	 * A layer with a custom marker dialect.
+	 *
+	 * **Gotchas**
+	 *
+	 * A parameterized layer factory mints a **fresh reference per call**, and
+	 * layers memoize by reference — bind the result to a `const` and reuse it
+	 * rather than calling `layerWith(...)` at each composition site.
+	 *
+	 * **Example** (Bind a layer with an explicit dialect)
+	 *
+	 * ```ts
+	 * import { ManagedSection } from "@beep/scratchpad/effected/templates/ManagedSection";
+	 * import { SectionDialect } from "@beep/scratchpad/effected/templates/SectionDialect";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * const managed = ManagedSection.layerWith({ dialect: SectionDialect.default });
+	 * console.log(Layer.isLayer(managed)) // true
+	 * ```
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerWith = (
 		options: ManagedSectionOptions,
 	): Layer.Layer<ManagedSection, never, FileSystem.FileSystem> => Layer.effect(ManagedSection, make(options));
@@ -326,6 +433,18 @@ export class ManagedSection extends Context.Service<ManagedSection, ManagedSecti
 	/**
 	 * A test double. Members a suite does not stub **die when called**, rather
 	 * than returning a plausible-looking answer that makes a wrong test pass.
+	 *
+	 * **Example** (Stub only the member a test exercises)
+	 *
+	 * ```ts
+	 * import { ManagedSection } from "@beep/scratchpad/effected/templates/ManagedSection";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const sections = ManagedSection.makeTest({ readAll: () => Effect.succeed([]) });
+	 * console.log(Effect.runSync(sections.readAll("config.txt")).length) // 0
+	 * ```
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly makeTest = (overrides: Partial<ManagedSectionShape> = {}): ManagedSectionShape => ({
 		read: () => Effect.sync(() => unimplemented("read")),
@@ -340,14 +459,30 @@ export class ManagedSection extends Context.Service<ManagedSection, ManagedSecti
 	});
 
 	/**
-  * The test layer: {@link ManagedSection.makeTest} behind `Layer.succeed`, so
-  * a suite provides only the members it exercises.
-  *
-  * **Gotchas**
-  *
-  * A parameterized layer factory mints a fresh reference per call — bind it
-  * to a `const` rather than calling it at each composition site.
-  */
+	 * The test layer: {@link ManagedSection.makeTest} behind `Layer.succeed`, so
+	 * a suite provides only the members it exercises.
+	 *
+	 * **Gotchas**
+	 *
+	 * A parameterized layer factory mints a fresh reference per call — bind it
+	 * to a `const` rather than calling it at each composition site.
+	 *
+	 * **Example** (Provide a stubbed managed-section service)
+	 *
+	 * ```ts
+	 * import { ManagedSection } from "@beep/scratchpad/effected/templates/ManagedSection";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const testLayer = ManagedSection.layerTest({ readAll: () => Effect.succeed([]) });
+	 * const program = Effect.gen(function* () {
+	 *   const sections = yield* ManagedSection;
+	 *   return yield* sections.readAll("config.txt");
+	 * });
+	 * console.log(Effect.runSync(Effect.provide(program, testLayer)).length) // 0
+	 * ```
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<ManagedSectionShape> = {}): Layer.Layer<ManagedSection> =>
 		Layer.succeed(ManagedSection, ManagedSection.makeTest(overrides));
 }

@@ -15,18 +15,28 @@ const $I = $ScratchpadId.create("effected/templates/SectionDialect");
  * The line ending a document uses.
  *
  * **Example** (Accepted line endings)
+ *
  * ```ts
- * import { Eol } from "./SectionDialect.ts";
- * console.log(Eol.literals);
+ * import { Eol } from "@beep/scratchpad/effected/templates/SectionDialect";
+ *
+ * console.log(Eol.literals.length) // 2
+ * console.log(Eol.literals[0] === "\n") // true
+ * console.log(Eol.literals[1] === "\r\n") // true
  * ```
  *
- * @category models
- * @since 0.0.0
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const Eol = LiteralKit(["\n", "\r\n"]).annotate(
 	$I.annote("Eol", { description: "The LF or CRLF line ending used by a document." }),
 );
+/**
+ * The LF or CRLF literal accepted by the {@link Eol} schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Eol = typeof Eol.Type;
 
 /**
@@ -34,11 +44,22 @@ export type Eol = typeof Eol.Type;
  *
  * **Details**
  *
- * Both reasons describe a document this package would be unable to read back
+ * These reasons describe a document this package would be unable to read back
  * correctly, so rendering refuses rather than writing something it cannot
  * re-parse.
  *
+ * **Example** (Inspect a duplicate declaration refusal)
+ *
+ * ```ts
+ * import { SectionRenderError } from "@beep/scratchpad/effected/templates/SectionDialect";
+ *
+ * const error = SectionRenderError.make({ reason: "duplicateDeclaration", key: "tool" });
+ * console.log(error.message) // Section "tool" was declared twice in one call
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class SectionRenderError extends S.TaggedError<SectionRenderError>($I`SectionRenderError`)("SectionRenderError", {
 	/**
@@ -55,13 +76,38 @@ export class SectionRenderError extends S.TaggedError<SectionRenderError>($I`Sec
 	 * `[A-Za-z][A-Za-z0-9_-]*` grammar, or its value contains `"` or a line
 	 * break; either would render a marker the scanner could not read back
 	 * verbatim, and there is no escaping mechanism by design.
+	 *
+	 * @since 0.0.0
 	 */
 	reason: S.Literals(["markerInContent", "unknownCommentStyle", "duplicateDeclaration", "invalidAttribute"]).annotateKey({ description: "`markerInContent` — the content carries a line the scanner would read as a marker, which would move the block boundary and let the next sync consume user text. `unknownCommentStyle` — the section's comment style is not in the dialect's set, so the block would be written into a document where the scanner could never find it again, growing a duplicate on every run. `duplicateDeclaration` — the same identity was declared twice in one call, so the caller stated two intentions for one block and any choice between them would be a guess; this is the caller-side twin of the document-side `duplicateSection`. `invalidAttribute` — an attribute's name is outside the `[A-Za-z][A-Za-z0-9_-]*` grammar, or its value contains `\"` or a line break; either would render a marker the scanner could not read back verbatim, and there is no escaping mechanism by design." }),
-	/** The key of the section that could not be rendered. */
+	/**
+	 * The key of the section that could not be rendered.
+	 *
+	 * @since 0.0.0
+	 */
 	key: S.String.annotateKey({ description: "The key of the section that could not be rendered." }),
-	/** The offending attribute's name, when the refusal names one. */
+	/**
+	 * The offending attribute's name, when the refusal names one.
+	 *
+	 * @since 0.0.0
+	 */
 	attribute: S.optionalKey(S.String).annotateKey({ description: "The offending attribute's name, when the refusal names one." }),
 }, $I.annote("SectionRenderError", { description: "Raised when a section cannot be turned into marker-delimited text." })) {
+	/**
+	 * Explains why rendering refused the named section.
+	 *
+	 * **Example** (Name the invalid attribute)
+	 *
+	 * ```ts
+	 * import { SectionRenderError } from "@beep/scratchpad/effected/templates/SectionDialect";
+	 *
+	 * const error = SectionRenderError.make({ reason: "invalidAttribute", key: "tool", attribute: "origin" });
+	 * console.log(error.message) // Section "tool" declares attribute "origin" with an invalid name or value
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return Match.value(this.reason).pipe(
 			Match.when("markerInContent", () => `Section "${this.key}" has content containing a managed-section marker`),
@@ -100,58 +146,168 @@ const GAP = "[ \\t]+";
  * One phrase per dialect is deliberate: two marker families in one document
  * make parsing ambiguous for no benefit anyone has asked for.
  *
+ * **Example** (Choose a custom marker phrase)
+ *
+ * ```ts
+ * import { SectionDialect } from "@beep/scratchpad/effected/templates/SectionDialect";
+ * import { CommentStyle } from "@beep/scratchpad/effected/templates/CommentStyle";
+ *
+ * const dialect = SectionDialect.make({ phrase: "GENERATED CODE", styles: [CommentStyle.slash] });
+ * console.log(dialect.phrase) // GENERATED CODE
+ * console.log(dialect.recognizes(CommentStyle.slash)) // true
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)({
 	/**
-  * The phrase between the key and the closing rule.
-  *
-  * **Details**
-  *
-  * Letters, digits, spaces and underscores only. Dashes are excluded so a
-  * phrase can never contain the `---` rule and make a marker ambiguous
-  * against itself.
+	 * The phrase between the key and the closing rule.
+	 *
+	 * **Details**
+	 *
+	 * Letters, digits, spaces and underscores only. Dashes are excluded so a
+	 * phrase can never contain the `---` rule and make a marker ambiguous
+	 * against itself.
+	 *
+	 * @since 0.0.0
   */
 	phrase: S.String.check(S.isPattern(/^[A-Za-z0-9][A-Za-z0-9 _]*$/u)).annotateKey({ description: "The phrase between the key and the closing rule." }),
-	/** Which comment styles the document scanner recognizes. At least one. */
+	/**
+	 * Which comment styles the document scanner recognizes. At least one.
+	 *
+	 * @since 0.0.0
+	 */
 	styles: S.Array(CommentStyle).check(S.isMinLength(1)).annotateKey({ description: "Which comment styles the document scanner recognizes. At least one." }),
 }, $I.annote("SectionDialect", { description: "The marker vocabulary: what phrase delimits a managed section, and which comment styles a document is scanned for." })) {
 	// Runtime-only state belongs to its dialect; private fields never enter the wire form.
+	/**
+	 * Keeps the compiled scanners on this dialect instance, outside its wire form.
+	 *
+	 * **Example** (Observe the instance scanner cache)
+	 *
+	 * ```ts
+	 * import { SectionDialect } from "@beep/scratchpad/effected/templates/SectionDialect";
+	 *
+	 * const dialect = SectionDialect.default;
+	 * console.log(dialect.matchers() === dialect.matchers()) // true
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	readonly #compiledMatchers = this.compileMatchers();
 
 	/**
 	 * The zero-configuration dialect: the phrase `MANAGED SECTION` and every
 	 * preset comment style.
+	 *
+	 * **Example** (Inspect the default marker vocabulary)
+	 *
+	 * ```ts
+	 * import { SectionDialect } from "@beep/scratchpad/effected/templates/SectionDialect";
+	 *
+	 * console.log(SectionDialect.default.phrase) // MANAGED SECTION
+	 * console.log(SectionDialect.default.styles.length) // 6
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
 	 */
 	static readonly default: SectionDialect = SectionDialect.make({
 		phrase: "MANAGED SECTION",
 		styles: CommentStyle.presets,
 	});
 
-	/** True when a section written in this style can be scanned back. */
+	/**
+	 * True when a section written in this style can be scanned back.
+	 *
+	 * **Example** (Check a custom style against the dialect)
+	 *
+	 * ```ts
+	 * import { SectionDialect } from "@beep/scratchpad/effected/templates/SectionDialect";
+	 * import { CommentStyle } from "@beep/scratchpad/effected/templates/CommentStyle";
+	 *
+	 * console.log(SectionDialect.default.recognizes(CommentStyle.hash)) // true
+	 * console.log(SectionDialect.default.recognizes(CommentStyle.make({ prefix: "%" }))) // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	recognizes(style: CommentStyle): boolean {
 		return this.styles.some((candidate) => Equal.equals(candidate, style));
 	}
 
-	/** The opening marker line for an identity, without a line break. */
+	/**
+	 * The opening marker line for an identity, without a line break.
+	 *
+	 * **Example** (Format a hash BEGIN marker)
+	 *
+	 * ```ts
+	 * import { SectionDialect } from "@beep/scratchpad/effected/templates/SectionDialect";
+	 * import { SectionId } from "@beep/scratchpad/effected/templates/Section";
+	 * import { CommentStyle } from "@beep/scratchpad/effected/templates/CommentStyle";
+	 *
+	 * const id = SectionId.make({ key: "tool", commentStyle: CommentStyle.hash });
+	 * console.log(SectionDialect.default.beginMarker(id)) // # --- BEGIN tool MANAGED SECTION ---
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	beginMarker(id: SectionId): string {
 		return this.marker("BEGIN", id);
 	}
 
-	/** The closing marker line for an identity, without a line break. */
+	/**
+	 * The closing marker line for an identity, without a line break.
+	 *
+	 * **Example** (Format a hash END marker)
+	 *
+	 * ```ts
+	 * import { SectionDialect } from "@beep/scratchpad/effected/templates/SectionDialect";
+	 * import { SectionId } from "@beep/scratchpad/effected/templates/Section";
+	 * import { CommentStyle } from "@beep/scratchpad/effected/templates/CommentStyle";
+	 *
+	 * const id = SectionId.make({ key: "tool", commentStyle: CommentStyle.hash });
+	 * console.log(SectionDialect.default.endMarker(id)) // # --- END tool MANAGED SECTION ---
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	endMarker(id: SectionId): string {
 		return this.marker("END", id);
 	}
 
 	/**
-  * A section as marker-delimited text, or a typed refusal.
-  *
-  * **Details**
-  *
-  * Fails rather than producing a document it could not read back: see
-  * {@link SectionRenderError}. Content is emitted with `eol` throughout,
-  * so a section rendered into a CRLF document stays CRLF.
-  */
+	 * A section as marker-delimited text, or a typed refusal.
+	 *
+	 * **Details**
+	 *
+	 * Fails rather than producing a document it could not read back: see
+	 * {@link SectionRenderError}. Content is emitted with `eol` throughout,
+	 * so a section rendered into a CRLF document stays CRLF.
+	 *
+	 * **Example** (Render content with CRLF line endings)
+	 *
+	 * ```ts
+	 * import { SectionDialect } from "@beep/scratchpad/effected/templates/SectionDialect";
+	 * import { SectionId } from "@beep/scratchpad/effected/templates/Section";
+	 * import { CommentStyle } from "@beep/scratchpad/effected/templates/CommentStyle";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const id = SectionId.make({ key: "tool", commentStyle: CommentStyle.hash });
+	 * const rendered = SectionDialect.default.render(id.section("first\nsecond"), "\r\n");
+	 * console.log(Result.isSuccess(rendered)) // true
+	 * console.log(Result.isSuccess(rendered) && rendered.success.split("\r\n").length) // 4
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	render(section: Section, eol: Eol = "\n"): Result.Result<string, SectionRenderError> {
 		if (!this.recognizes(section.commentStyle)) {
 			return Result.fail(SectionRenderError.make({ reason: "unknownCommentStyle", key: section.key }));
@@ -177,7 +333,18 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 	/**
 	 * True when `text` contains a line this dialect would read as a marker.
 	 *
+	 * **Example** (Detect markers inside proposed content)
+	 *
+	 * ```ts
+	 * import { SectionDialect } from "@beep/scratchpad/effected/templates/SectionDialect";
+	 *
+	 * console.log(SectionDialect.default.containsMarker("# --- BEGIN tool MANAGED SECTION ---")) // true
+	 * console.log(SectionDialect.default.containsMarker("echo hello")) // false
+	 * ```
+	 *
 	 * @internal
+	 * @category predicates
+	 * @since 0.0.0
 	 */
 	containsMarker(text: string): boolean {
 		// `matchAll` clones the regex internally; `regex.test` would advance the
@@ -202,21 +369,49 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 	}
 
 	/**
-  * One compiled scanner per recognized comment style, memoized.
-  *
-  * **Details**
-  *
-  * Each pattern is anchored per line, bounds the key with an explicit
-  * character class, and carries no nested quantifier, so scanning is linear
-  * in document length. Every caller-supplied fragment — prefix, suffix,
-  * phrase — is regex-escaped before interpolation.
-  *
-  * @internal
+	 * One compiled scanner per recognized comment style, memoized.
+	 *
+	 * **Details**
+	 *
+	 * Each pattern is anchored per line, bounds the key with an explicit
+	 * character class, and carries no nested quantifier, so scanning is linear
+	 * in document length. Every caller-supplied fragment — prefix, suffix,
+	 * phrase — is regex-escaped before interpolation.
+	 *
+	 * **Example** (Inspect the memoized scanner set)
+	 *
+	 * ```ts
+	 * import { SectionDialect } from "@beep/scratchpad/effected/templates/SectionDialect";
+	 *
+	 * const dialect = SectionDialect.default;
+	 * console.log(dialect.matchers().length) // 6
+	 * console.log(dialect.matchers() === dialect.matchers()) // true
+	 * ```
+	 *
+	 * @internal
+	 * @category getters
+	 * @since 0.0.0
   */
 	matchers(): ReadonlyArray<{ readonly style: CommentStyle; readonly regex: RegExp }> {
 		return this.#compiledMatchers;
 	}
 
+	/**
+	 * Builds a line-anchored scanner for each recognized comment style.
+	 *
+	 * **Example** (Scan with a newly constructed dialect)
+	 *
+	 * ```ts
+	 * import { SectionDialect } from "@beep/scratchpad/effected/templates/SectionDialect";
+	 * import { CommentStyle } from "@beep/scratchpad/effected/templates/CommentStyle";
+	 *
+	 * const dialect = SectionDialect.make({ phrase: "GENERATED CODE", styles: [CommentStyle.hash] });
+	 * console.log(dialect.containsMarker("# --- BEGIN tool GENERATED CODE ---")) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	private compileMatchers(): ReadonlyArray<{ readonly style: CommentStyle; readonly regex: RegExp }> {
 		// A phrase's internal spaces read as "some whitespace" so a hand-edited
 		// file with a double space still matches.
@@ -255,6 +450,25 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 		return compiled;
 	}
 
+	/**
+	 * Formats a marker with the identity's comment delimiters and optional BEGIN attributes.
+	 *
+	 * **Example** (Include attributes in the opening marker)
+	 *
+	 * ```ts
+	 * import { SectionDialect } from "@beep/scratchpad/effected/templates/SectionDialect";
+	 * import { SectionId } from "@beep/scratchpad/effected/templates/Section";
+	 * import { CommentStyle } from "@beep/scratchpad/effected/templates/CommentStyle";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const id = SectionId.make({ key: "tool", commentStyle: CommentStyle.hash });
+	 * const rendered = SectionDialect.default.render(id.section("echo hello", { origin: "ci" }));
+	 * console.log(Result.isSuccess(rendered) && rendered.success.split("\n")[0]) // # --- BEGIN tool MANAGED SECTION origin="ci" ---
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	private marker(kind: "BEGIN" | "END", id: SectionId, attributes?: Readonly<Record<string, string>>): string {
 		const tail = id.commentStyle.suffix === undefined ? "" : ` ${id.commentStyle.suffix}`;
 		// Emission order is the record's insertion order — the caller's declared
