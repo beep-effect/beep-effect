@@ -330,11 +330,40 @@ const TestOutputs = ActionOutputs.layerTest({
 
 ### Added exports
 
-None.
+| Export | Facets | Why |
+| --- | --- | --- |
+| `InvalidActionStateNameError` | value, type | Added by review round 1; see the deviations below. |
+| `InvalidDigestLengthError` | value, type | Added by review round 1; see the deviations below. |
+| `MissingProcessIdError` | value, type | Added by review round 1; see the deviations below. |
+| `RejectedRegionDialectError` | value, type | Added by review round 1; see the deviations below. |
+| `UnhandledCheckStateError` | value, type | Added by review round 1; see the deviations below. |
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — Effect hash collections, ordered check snapshots, scoped Logger.layer and Clock/DateTime replace native structures and wall-clock paths; zone-less stamps read as UTC. (scratchpad/test/github-actions/CheckDocument.test.ts:222,365; scratchpad/test/github-actions/BlobStore.test.ts:230; scratchpad/test/github-actions/Artifact.test.ts:392; scratchpad/test/github-actions/ActionLogger.test.ts)
+- **identity-keys** — IdentityComposer keys replace upstream service/reference identities and change CacheKey/ManagedDocument JSON Schema definition paths. (scratchpad/test/github-actions/CacheKey.test.ts:583; scratchpad/test/github-actions/ManagedDocument.test.ts:305)
+- **tagged-errors** — Schema tagged errors with retained messages replace native Error/RangeError values, and the five public replacements are exported. (scratchpad/test/github-actions/CacheKey.test.ts:245; scratchpad/test/github-actions/ActionState.test.ts:58; scratchpad/test/github-actions/Exports.test.ts:16)
+- **schema-first** — Runtime schemas, LiteralKit domains and schema JSON codecs replace interfaces, asserted guards and native JSON paths, changing malformed-JSON cause/diagnostic identity. (scratchpad/test/github-actions/ActionInput.test.ts; scratchpad/test/github-actions/ActionEnvironment.test.ts:239; scratchpad/test/github-actions/ActionState.test.ts:156; scratchpad/test/github-actions/CheckState.test.ts:9; scratchpad/test/github-actions/DetachedProcess.test.ts:110)
+- **numeric-domains** — Finite schemas narrow numeric domains while integer filters and the non-finite InvalidPidError payload contract remain explicit. (scratchpad/test/github-actions/CacheKey.test.ts; scratchpad/test/github-actions/DetachedProcess.test.ts:160; scratchpad/test/github-actions/Artifact.test.ts:193; scratchpad/test/github-actions/ActionEnvironment.test.ts:150)
+- **type-safety** — Typed narrowing and the authorized wrong-input helper replace assertions; null installer JSON now takes typed failure paths. (scratchpad/test/github-actions/deliberatelyInvalid.ts; scratchpad/test/github-actions/GitHubMarkdown.test.ts:173; scratchpad/test/github-actions/ActionsIdentityToken.test.ts; scratchpad/test/github-actions/CheckDocument.test.ts:21)
+- **tsgo-diagnostics** — Diagnostic-driven lazy Effects, dual overloads, heredoc options, typed sink errors, scoped provision and builtin/Config loading replace upstream API shapes. (scratchpad/test/github-actions/Artifact.test.ts:165; scratchpad/test/github-actions/ActionOutputs.test.ts:71; scratchpad/test/github-actions/CheckDocument.test.ts:21; scratchpad/test/github-actions/ambientReads.test.ts:143; scratchpad/test/github-actions/reachability.test.ts:32)
+- **effect-first** — Effect functions, helpers, Console and explicit scoped service composition replace generator/native helper paths and add lawful trace frames. (module suite scratchpad/test/github-actions/**)
+- **effect-imports** — Per-module Effect imports replace the effect root barrel in source, tests and carried examples. (module suite scratchpad/test/github-actions/**)
+- **identity-annotations** — File-local IdentityComposer identities and annotations replace literal or incomplete schema/service metadata. (module suite scratchpad/test/github-actions/**)
+- **test-environment** — Lab source paths, the installed TypeScript 7 alias and a module-local manifest replace upstream workspace test assumptions. (scratchpad/test/github-actions/ambientReads.test.ts:6,26; scratchpad/test/github-actions/reachability.test.ts:518,530)
+- **reachability** — Exact lab dependency sets and runtime-builtin scanning replace the upstream static/package graph while retaining dependency confinement. (scratchpad/test/github-actions/reachability.test.ts:32,176,293,307,363,530)
+- **upstream-bug** — Buffer envelope decoding makes an independent body copy instead of sharing the input frame storage. (scratchpad/test/github-actions/BlobEnvelope.test.ts:68)
+- **upstream-bug** — Accepted __proto__ input pairs survive as own properties instead of disappearing through the prototype setter. (scratchpad/test/github-actions/ActionInput.test.ts:287)
+- **upstream-bug** — Environment lookups use own properties so prototype values cannot appear present or shadow configured strings. (scratchpad/test/github-actions/ActionEnvironment.test.ts:73,88)
+- **upstream-bug** — Artifact listings reject malformed non-finite numeric rows instead of successfully returning unusable ids/sizes. (scratchpad/test/github-actions/Artifact.test.ts:193)
+- **upstream-bug** — S3 URLs encode raw key segments consistently with signing instead of treating reserved key characters as URL syntax. (scratchpad/test/github-actions/BlobStore.test.ts:175; scratchpad/test/github-actions/sigv4.test.ts:15,38)
+- **upstream-bug** — S3 joins and signing preserve empty path segments so repeated/trailing-slash keys remain distinct. (scratchpad/test/github-actions/BlobStore.test.ts:199; scratchpad/test/github-actions/sigv4.test.ts:15,31,48)
+- **upstream-bug** — Literal two-dot filenames contribute to matching and hashing instead of being rejected as parent paths. (scratchpad/test/github-actions/CacheKey.test.ts:448)
+- **upstream-bug** — Exact decimal runId ordering rejects genuinely older large integers instead of rounding them equal. (scratchpad/test/github-actions/CheckDocument.test.ts:337,345,353)
+- **upstream-bug** — Sentinel adoption preserves unmanaged whitespace and newline bytes instead of stripping them. (scratchpad/test/github-actions/ManagedDocument.test.ts:243,256)
+- **upstream-bug** — Installer shim validation rejects escaping bin names before writes instead of accepting out-of-package destinations. (scratchpad/test/github-actions/PackageManagerInstaller.test.ts:1645)
 
 ### Dependency backlog
 
