@@ -39,7 +39,7 @@ Categories: **policy** (binding law or operating procedure) · **remediation inv
 | `lint-policy.sweeps.jsonc` | policy (config) | hand-edited | Lint / Quality Tasks | 1 key (`deprecatedApis: "shards"`) |
 | `schema-crispening.policy.jsonc` | policy (config) | hand-edited | Lint / `SchemaFirstPolicy.ts` | 4 cards, 4 blocking families |
 
-### 1b. `standards/` prose (31)
+### 1b. `standards/` prose (36)
 
 | File | Class | Owner / note |
 |---|---|---|
@@ -90,7 +90,7 @@ Categories: **policy** (binding law or operating procedure) · **remediation inv
 
 Runbooks (by name): agent-convention-comparisons, agent-notifications, agent-pools (contains generated block `beep-models:begin cursor-seats`, l.132–141; `Models.render.ts:8` says `check` only, "a future `--write`"), aws-cost-operations, ci-runner-reliability, cloud-environments, codex-security, codex-security-cloud, design-system-lint, docket-intake-entra-registration, docket-intake-first-run, fallow-audit-cache, graft-local-recovery, lab-promotion, m365-agent-outbox-registration, onepassword-beep-secrets-layout (calls `scripts/onepassword/beep-secrets-layout.sh` l.31–32, a workstream C port target), practice-box-content-migration, practice-box-drive-windows, practice-box-how-to, practice-mail-tagging, research-library, **skillopt-rerun** (becomes historical evidence when workstream A retires `tools/skillopt`; 27 SkillOpt references), systemd-timers (calls `scripts/setup-effect-ref.sh` l.14, 46, a port target), turbo-cache-inputs (lists `knip:check` l.109), typescript-toolchain (knip row l.57), xstate-effect-statecharts. Deeper level: `docs/runbooks/evidence/2026-10-01-spot-pool-spread-launches.md` (historical evidence, linked from ci-runner-reliability).
 
-**Totals:** standards 56 (25 data + 31 prose), .patterns 6, docs 67 = **129 files**. By class:
+**Totals:** standards 61 (25 data + 36 prose), .patterns 6, docs 67 = **134 files**. By class:
 
 | Class | Files |
 |---|---:|

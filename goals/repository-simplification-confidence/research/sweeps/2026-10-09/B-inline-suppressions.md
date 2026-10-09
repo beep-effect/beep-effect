@@ -237,7 +237,7 @@ The debt it hid must transfer through the Knip 41-finding capture (brief §269),
 
 ### Open questions
 
-- Fresh hit counts per suppression. I could not establish whether each directive still suppresses a live finding, because no linter was run. Unused-suppression detection needs `fallow` (it reports stale pragmas) and `tsc` (an unused `@ts-expect-error` is an error, so the 94 are live by construction if typecheck is green).
+- Fresh hit counts per suppression. I could not establish whether each directive still suppresses a live finding, because no linter was run. Unused-suppression detection needs `fallow` (it reports stale pragmas) and `tsc` (an unused `@ts-expect-error` is an error, but only for files inside the compiled program). 90 of the 94 sit in 12 package files that each package's `tsconfig.test.json` (whose `include` covers `src` and `test`, run by `beep:check:tests` inside `check`) compiles, so a green `check` proves those live. The other 4 (`scratchpad/beep/Port.ts` ×3, `scratchpad/encode-keys-probe.ts` ×1) are only in `scratchpad/tsconfig.json`, which no `check` script runs, so their liveness is unverified.
 - Whether `**/plugins.ts` in `ignoreUnresolvedImports` refers to the plugins tree retired by workstream A, or to an unrelated UI `plugins.ts`. I did not trace it.
 - How many of `standards/fallow.health.regression-baseline.jsonc`'s rows are absorbed findings, as opposed to metadata. I did not parse it.
 - Whether the "SPEC exception ledger" that `.oxlintrc.json:9` cites exists and is current. I did not locate it.

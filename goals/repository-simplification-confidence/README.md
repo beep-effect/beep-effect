@@ -67,8 +67,10 @@ nothing was adopted or discarded. P0 Research is complete.
 
 ## Notes
 
-- Orchestrator: the program's Claude Fable orchestrator session, which commits for the
-  program; workers never commit.
+- Orchestrator: the program's Claude Fable orchestrator session, which holds
+  the shared files and merges at the gate. Codex lane workers commit, push and
+  publish from their own sibling worktree through Yeet (SPEC.md Decision Log);
+  they never commit to another lane and never merge.
 - Packet lane: `rsc-packet` in the implementation clone's sibling
   `-worktrees` root, cut from `e62411d63f`; its branch name is recorded in
   `research/baseline-2026-10-09.md`.
