@@ -11,6 +11,7 @@ import * as Console from "effect/Console";
 import * as Context from "effect/Context";
 import { Command, Flag } from "effect/cli";
 import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -23,6 +24,7 @@ import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { resolveProofLedgerLocation } from "../Yeet/internal/ArtifactPaths.ts";
 import { hydrateYeetReadOnlyContext } from "../Yeet/internal/Handler.ts";
 import { MergeGateCheckRun } from "../Yeet/internal/MergeGate.ts";
+import { decideYeetReviewWindow } from "../Yeet/internal/ReviewWindow.ts";
 import { readYeetRulesetRequiredContexts } from "../Yeet/internal/Settle.ts";
 import { YeetVerdict } from "../Yeet/internal/Verdict.ts";
 import { YeetCommandError } from "../Yeet/Yeet.errors.ts";
@@ -321,7 +323,7 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
       ["show", `${head}:goals/${slug}/ops/manifest.json`],
       gitAdapter
     ).pipe(
-      Effect.orElse(() =>
+      Effect.catchTag("YeetCommandError", () =>
         ghOutput({
           cwd: root,
           args: [
@@ -434,16 +436,36 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
     const lastReady = A.reduce(readyTimes, O.none<DateTime.Utc>(), (found, time) =>
       O.isNone(found) || DateTime.toEpochMillis(time) > DateTime.toEpochMillis(found.value) ? O.some(time) : found
     );
-    const commit = yield* readJson(
+    const suites = yield* readJson(
       root,
-      ["api", `repos/{owner}/{repo}/commits/${head}`],
-      S.Struct({ commit: S.Struct({ committer: S.Struct({ date: S.DateTimeUtcFromString }) }) })
+      ["api", `repos/{owner}/{repo}/commits/${head}/check-suites?per_page=100`, "--paginate", "--slurp"],
+      S.Struct({ check_suites: S.Array(S.Struct({ created_at: S.DateTimeUtcFromString })) }).pipe(S.Array)
     ).pipe(Effect.option);
-    const window =
-      O.isSome(lastReady) && O.isSome(commit)
-        ? DateTime.toEpochMillis(mergedAt) -
-          Math.max(DateTime.toEpochMillis(lastReady.value), DateTime.toEpochMillis(commit.value.commit.committer.date))
-        : undefined;
+    const received = O.flatMap(suites, (pages) =>
+      A.reduce(
+        A.flatMap(pages, (page) => page.check_suites),
+        O.none<DateTime.Utc>(),
+        (found, suite) =>
+          O.isNone(found) ? O.some(suite.created_at) : O.some(DateTime.min(found.value, suite.created_at))
+      )
+    );
+    const forced = A.getSomes(
+      A.map(
+        A.filter(events, (event) => event.event === "head_ref_force_pushed"),
+        (event) => O.fromUndefinedOr(event.created_at)
+      )
+    );
+    const pushedAt = O.map(received, (first) =>
+      A.reduce(forced, first, (left, right) => DateTime.toUtc(DateTime.max(left, right)))
+    );
+    const window = O.map(O.all({ pushedAt, readyAt: lastReady }), (instants) =>
+      decideYeetReviewWindow({
+        ...instants,
+        now: mergedAt,
+        readyAnchor: "ready-for-review",
+        window: Duration.minutes(20),
+      })
+    );
     const subClaims = [
       evidenceCheck(
         GoalAcceptanceEvidenceRef.make({ kind: "packet-history", ref: "draft-to-ready", gating: false }),
@@ -453,9 +475,16 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
       ),
       evidenceCheck(
         GoalAcceptanceEvidenceRef.make({ kind: "packet-history", ref: "review-window", gating: false }),
-        window === undefined ? "unknown" : window >= 1_200_000 ? "verified" : "unsatisfied",
+        O.match(window, {
+          onNone: (): GoalCompletionOutcome => "unknown",
+          onSome: (value): GoalCompletionOutcome => (value._tag === "elapsed" ? "verified" : "unsatisfied"),
+        }),
         O.some(head),
-        window === undefined ? "Timeline or head commit time unavailable." : `Ready/head to merge window: ${window} ms.`
+        O.match(window, {
+          onNone: () => "Timeline or GitHub head receipt time unavailable.",
+          onSome: (value) =>
+            `Review window at merge: ${value._tag}; anchor ${value.anchoredAt}. Check-suite first receipt plus force-push events use Yeet semantics.`,
+        })
       ),
       evidenceCheck(
         GoalAcceptanceEvidenceRef.make({ kind: "yeet-verdict", ref: "merge-ready", gating: false }),
@@ -508,10 +537,31 @@ export const storedGoalCompletion = Effect.fn("Goals.Completion.stored")(functio
   const lines = Str.split(text, "\n");
   const complete = Str.endsWith("\n")(text) ? lines : A.dropRight(lines, 1);
   const receipts = A.getSomes(A.map(complete, ReceiptJson.decodeOption));
-  return A.findLast(
+  const remote = yield* runGitOutput(root, ["remote", "get-url", "origin"], gitAdapter).pipe(Effect.option);
+  const repository = O.flatMap(remote, (text) =>
+    O.flatMap(Str.match(/github\.com[:/]([^/\s]+\/[^/\s]+?)(?:\.git)?\s*$/u)(text), (match) => A.get(match, 1))
+  );
+  const matching = A.filter(
     receipts,
     (receipt) =>
-      receipt.packet === slug && receipt.declarationDigest === digest && receipt.finalPullRequest === final.number
+      receipt.packet === slug &&
+      receipt.declarationDigest === digest &&
+      receipt.finalPullRequest === final.number &&
+      O.contains(receipt.repository)(repository)
+  );
+  const newest = A.reduce(matching, O.none<GoalCompletionReceipt>(), (found, receipt) =>
+    O.isNone(found) || DateTime.isGreaterThan(receipt.verifiedAt, found.value.verifiedAt) ? O.some(receipt) : found
+  );
+  if (O.isNone(newest)) return newest;
+  const receipt = newest.value;
+  return O.some(
+    yield* GoalCompletionVerifier.resolve(
+      GoalCompletionObservation.make({
+        ...receipt,
+        merged: O.isSome(receipt.merge) ? O.some(true) : O.none(),
+        grandfathered: manifest.completionGate.grandfathered,
+      })
+    )
   );
 });
 

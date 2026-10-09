@@ -209,7 +209,9 @@ export type GoalManifestSchemaVersion = typeof GoalManifestSchemaVersion.Type;
 export const GoalPullRequestRole = LiteralKit(["final", "supporting"]).pipe(
   $I.annoteSchema("GoalPullRequestRole", { description: "Distinguishes the final delivery PR from supporting work." })
 );
-/** Distinguishes the final delivery PR from supporting work.
+/**
+ * Distinguishes the final delivery PR from supporting work.
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -236,7 +238,9 @@ export const GoalAcceptanceEvidenceKind = LiteralKit([
 ]).pipe(
   $I.annoteSchema("GoalAcceptanceEvidenceKind", { description: "Names the evidence provider used to accept a goal." })
 );
-/** Names the evidence provider used to accept a goal.
+/**
+ * Names the evidence provider used to accept a goal.
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -258,7 +262,9 @@ export type GoalAcceptanceEvidenceKind = typeof GoalAcceptanceEvidenceKind.Type;
 export const GoalMergeMethod = LiteralKit(["squash", "merge", "rebase"]).pipe(
   $I.annoteSchema("GoalMergeMethod", { description: "Names the independently observed GitHub merge workflow." })
 );
-/** Names the independently observed GitHub merge workflow.
+/**
+ * Names the independently observed GitHub merge workflow.
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -282,7 +288,9 @@ export const GoalCompletionOutcome = LiteralKit(["verified", "unsatisfied", "unk
     description: "Separates affirmative completion, contrary facts, and missing observations.",
   })
 );
-/** Separates affirmative completion, contrary facts, and missing observations.
+/**
+ * Separates affirmative completion, contrary facts, and missing observations.
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -306,7 +314,9 @@ export const GoalRedAttribution = LiteralKit(["inherited", "introduced", "mixed"
     description: "Attributes non-required failures without treating their conclusion as a waiver.",
   })
 );
-/** Attributes non-required failures without treating their conclusion as a waiver.
+/**
+ * Attributes non-required failures without treating their conclusion as a waiver.
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -784,6 +794,8 @@ export const decodeGoalManifest: {
  * console.log(typeof goalPullRequestRefs)
  * ```
  *
+ * @param manifest - Decoded manifest whose optional legacy PR fields are retained.
+ * @returns Declared references, or a legacy final reference with supporting PRs.
  * @category normalization
  * @since 0.0.0
  */

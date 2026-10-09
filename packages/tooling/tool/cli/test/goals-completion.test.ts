@@ -57,6 +57,25 @@ const fixture = () =>
   });
 
 describe("goal completion declaration", () => {
+  it.effect("leaves packets without PR declarations on the legacy citation path", () =>
+    Effect.gen(function* () {
+      const manifest = yield* S.decodeUnknownEffect(GoalManifest)({
+        initiative: { id: "legacy", status: "completed-retained" },
+        completionGate: gate,
+      });
+      expect(goalPullRequestRefs(manifest)).toEqual([]);
+    })
+  );
+  it.effect("normalizes a singular PR with no plural list", () =>
+    Effect.gen(function* () {
+      const manifest = yield* S.decodeUnknownEffect(GoalManifest)({
+        initiative: { id: "legacy", status: "completed-retained" },
+        completionGate: gate,
+        mergedPullRequest: 8,
+      });
+      expect(goalPullRequestRefs(manifest)).toEqual([{ number: 8, role: "final" }]);
+    })
+  );
   it.effect("normalizes singular and plural legacy PRs in memory", () =>
     Effect.gen(function* () {
       const manifest = yield* S.decodeUnknownEffect(GoalManifest)({
