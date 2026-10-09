@@ -130,6 +130,8 @@ const sbomAuthor = (document: SbomDocument): NtiaElement => {
 	return element("sbomAuthor", author ?? supplier ?? publisher);
 };
 
+const parseTimestamp = S.decodeUnknownResult(S.DateFromString);
+
 /**
  * Element 7: when the BOM was assembled.
  *
@@ -138,7 +140,7 @@ const sbomAuthor = (document: SbomDocument): NtiaElement => {
  */
 const timestamp = (document: SbomDocument): NtiaElement => {
 	const stamped = present(document.metadata?.timestamp);
-	return element("timestamp", stamped !== undefined && !Number.isNaN(Date.parse(stamped)) ? stamped : undefined);
+	return element("timestamp", stamped !== undefined && parseTimestamp(stamped)._tag === "Success" ? stamped : undefined);
 };
 
 /**

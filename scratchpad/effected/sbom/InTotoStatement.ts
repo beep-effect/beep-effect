@@ -103,14 +103,11 @@ const parseResult = (value: string): Result.Result<Sha256Digest, InvalidSha256Di
  *
  * @public
  */
-export const Sha256Digest = Object.assign(
-	S.String.pipe(S.check(S.isPattern(SHA256_RE)), S.brand("Sha256Digest")),
-	{
-		isValid: (value: string): boolean => SHA256_RE.test(normalizeDigest(value)),
-		parseResult,
-		parse: Effect.fn("Sha256Digest.parse")((value: string) => Effect.fromResult(parseResult(value))),
-	} satisfies Sha256DigestStatics,
-);
+export const Sha256Digest = class extends S.String.pipe(S.check(S.isPattern(SHA256_RE)), S.brand("Sha256Digest")) {
+	static isValid = (value: string): boolean => SHA256_RE.test(normalizeDigest(value));
+	static parseResult = parseResult;
+	static parse = Effect.fn("Sha256Digest.parse")((value: string) => Effect.fromResult(parseResult(value)));
+} satisfies Sha256DigestStatics;
 
 /**
  * A SHA-256 digest as 64 lowercase hexadecimal characters.

@@ -131,7 +131,7 @@ describe("bundle reachability", () => {
 		// the shape without loading Fulcio's transport.
 		assert.deepStrictEqual([...reachableBareImports("SigstoreBundle.ts")].sort(), ["@beep/identity/packages", "effect/Schema"]);
 		assert.deepStrictEqual([...reachableBareImports("IdentityToken.ts")].sort(), [
-			"@beep/identity/packages", "effect/Context", "effect/Effect", "effect/Layer", "effect/Redacted", "effect/Schema",
+			"@beep/identity/packages", "effect/Context", "effect/Effect", "effect/Layer", "effect/Predicate", "effect/Redacted", "effect/Schema",
 		]);
 	});
 

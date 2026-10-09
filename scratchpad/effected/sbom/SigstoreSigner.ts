@@ -173,10 +173,17 @@ const make = (identity: IdentityTokenShape, options: SigstoreSignerOptions): Sig
 	}),
 });
 
+/** Raised when a signer test double has no signing override. */
+class UnstubbedSigstoreSignerError extends S.TaggedError<UnstubbedSigstoreSignerError>($I`UnstubbedSigstoreSignerError`)(
+	"UnstubbedSigstoreSignerError",
+	{ message: S.String },
+	$I.annote("UnstubbedSigstoreSignerError", { description: "Raised when a signer test double has no signing override." }),
+) {}
+
 const unstubbed = (): never => {
-	throw new Error(
-		"SigstoreSigner.makeTest: sign() was called but not stubbed — a fabricated bundle would be a signature-shaped lie. Pass a `sign` override, or drive the real builder through SigstoreSigner.layerWith({ signer, witnesses }).",
-	);
+	throw UnstubbedSigstoreSignerError.make({
+		message: "SigstoreSigner.makeTest: sign() was called but not stubbed — a fabricated bundle would be a signature-shaped lie. Pass a `sign` override, or drive the real builder through SigstoreSigner.layerWith({ signer, witnesses }).",
+	});
 };
 
 /**
