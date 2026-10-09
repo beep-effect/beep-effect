@@ -88,9 +88,11 @@ dated successor receipt) when it opens.
 
 ### C lane status — 2026-10-09
 
-`rsc-c-scripts`: command ports and retained-adapter fixtures implemented; final
-Ci group, R24 cloud owner confirmation, independent review and terminal package /
-hosted parity remain open. Evidence and coordination requests:
+`rsc-c-scripts`: wave 1 implemented and recovery regressions repaired; blocked
+on E workflow/Ci coordination and R24 owner audit. Focused fixtures, test-tsgo,
+package docgen and knowledge census have local passes; full package audit retry,
+scoped docgen, independent review, publication and hosted parity remain open.
+No C-owned heavy unit remains running; no PR exists. Evidence and coordination requests:
 [`history/handoffs/rsc-c-scripts-2026-10-09.md`](history/handoffs/rsc-c-scripts-2026-10-09.md),
 [`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).
 This status does not mark the Script ports or Sensitive scripts rows accepted.

@@ -226,3 +226,54 @@ has a terminal pass. Full package audit needs its final post-fixture rerun;
 focused regression success is reported separately. Draft publication is queued
 through the heavy wrapper. This wave is still not content-final for the program:
 R24 owner audit and E's workflow review/Ci ordering remain open.
+
+
+### Run 2 stopping boundary and resume
+
+Status: blocked handoff; not content-final, not merge-ready. All three P0 rows
+are acknowledged with the source/fixture repair commits. No waiver or inherited
+red copy was introduced. After importing main's fixes, CI=true knowledge refs
+reports zero live gated observations.
+
+Both pending units were verified to still be in beep-heavy's pre-admission
+wrapper, then cancelled before admission. Neither final package rerun nor
+publication started. All units launched in Run 2 have settled or stopped;
+no C-owned heavy unit is left running. No PR exists and nothing was pushed.
+The explicit scoped-docgen attempt stopped without a terminal result and cannot
+be counted as a pass. Retain the terminal package-docgen pass and recovered
+JSDoc/Graft passes; rerun unfinished/failing gates only.
+
+Orchestrator resume actions:
+
+1. Provide R24's owner/lease audit result and route E's review of the existing
+   ONNX and merge-driver workflow hunks plus C's proposed Ci ordering. E's
+   co-sign is still required; the three original Ci operational scripts and
+   workflow/Fallow contracts remain intact for their one coordinated PR.
+2. Route the root unused ONNX development declaration to the shared dependency
+   owner with H1. Do not remove the owning package dependency, exact override,
+   installer patch or its regression. A can use C's already-passing compiler
+   adapter fixtures and surviving-capabilities rows now.
+3. Resume C under the same 12 GB wrapper cap and at most two heavy commands:
+   full package-verify, unfinished scoped docgen, owner regeneration after
+   merging any newer main; then pinned independent review and Yeet publication.
+   Keep the known 16-case and 66-case focused results, test-tsgo 334-file pass,
+   Fallow exit-0 results, zero-observation knowledge check and coverage-floor read
+   as their recorded local evidence, without claiming exact-head hosted proof.
+
+## Run 2 final report
+
+lane: rsc-c-scripts · head: 422895778cf1ba3abbbcaedc8faf2148bac74205 (work head; report-only commit follows)
+· PR: none (wave 1 unpublished; queued publish cancelled before admission)
+· package-verify: @beep/repo-cli fail(introduced integration fixtures; repaired in
+9457ec5f23; 66-case regression rerun pass; final full audit rerun not executed)
+· hosted-parity: local test-tsgo pass (334 files); package docgen pass (26.7s),
+automatic docgen local full-required and explicit scoped retry unfinished;
+jsdoc-ratchet recovered pass; CI=true knowledge refs --check pass (0 live gated
+observations); fallow audit+health exit 0 (root ONNX unused declaration still
+reported); coverage read complete (existing floors, no lowered baseline).
+Hosted checks not started.
+· handoff: history/handoffs/rsc-c-scripts-2026-10-09.md
+· open: BLOCKED on E's workflow review and Ci ordering co-sign, and R24's
+orchestrator owner/lease audit; shared ONNX declaration reconciliation;
+final full audit and scoped-docgen proof; independent pinned review;
+Yeet draft publication/ready/hosted checks; final Ci-group wave.

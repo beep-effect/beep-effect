@@ -166,3 +166,11 @@
 - Would have prevented it: FIFO admission and non-truncating owner metadata,
   plus terminal status files that distinguish queue wait from active proof.
 - Boundary: no other owner's job, live lock, or workstation wrapper was changed.
+
+
+### C queue stopping boundary
+
+The two pending final-audit/publication units were verified still pre-admission
+and cancelled at the blocked handoff. No other owner's unit or lock was touched.
+Resume those commands after the cross-lane coordination and admission capacity
+are available. Cancellation is not a proof failure or a package pass.
