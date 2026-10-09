@@ -26,6 +26,13 @@ export * from "./Ci.errors.ts";
  */
 export * from "./CiAdmission.ts";
 /**
+ * Hosted CI governance commands and policy checks.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiGovernance.ts";
+/**
  * Public CI lane definitions export.
  *
  * @category cli-commands

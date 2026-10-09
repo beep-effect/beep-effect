@@ -7,8 +7,8 @@ name: Heavy Admit
 # skips them either: a tier-1 job skipped on a `labeled` run would report a
 # skipped check run that GitHub counts as success, masking an earlier red on
 # the same SHA. Other labels are ignored at job level, so `size/*` from the
-# pr-size job (GITHUB_TOKEN, which never triggers workflows anyway) spends
-# nothing. Pushes after the label go through check.yml's own admission job,
+# pr-size job uses GITHUB_TOKEN and does not trigger workflows. Human or
+# agent labels do start runs, in a separate non-admission concurrency group. Pushes after the label go through check.yml's own admission job,
 # which reads the sticky label.
 
 on:
@@ -17,12 +17,13 @@ on:
     types: [labeled]
 
 # No cancel-in-progress: every `labeled` event (any label, from any actor)
-# starts a run in this group, and cancelling would kill the heavy matrix a
+# starts a run. Admission labels have a distinct group so unrelated labels
+# cannot replace a pending admission. Cancelling would kill the heavy matrix a
 # previous `ready-for-heavy` run is executing. Runs for other labels skip at
 # job level; a superseded head's matrix is cancelled by check.yml's
 # admission job, never by a later label.
 concurrency:
-  group: heavy-admit-${{ github.ref }}
+  group: heavy-admit-${{ github.ref }}-${{ github.event.label.name == 'ready-for-heavy' || github.event.label.name == 'ready-for-heavy-fork' }}
   cancel-in-progress: false
 
 permissions:
@@ -31,7 +32,7 @@ permissions:
 jobs:
   admission:
     name: Heavy Admission
-    if: github.event.label.name == 'ready-for-heavy'
+    if: github.event.label.name == 'ready-for-heavy' || github.event.label.name == 'ready-for-heavy-fork'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
