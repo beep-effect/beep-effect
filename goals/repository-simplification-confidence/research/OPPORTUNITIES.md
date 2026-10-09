@@ -177,3 +177,102 @@
 - Evidence: the focused assertion received a function as its expected value. `effect/String.replace` in the Effect v4 reference is curried-only: `replace(search, replacement)(self)`.
 - Resolution: corrected the call against `.repos/effect/packages/effect/src/String.ts` and reran the failed fixture group. The normalized historical placeholders are comparison text and are not decoded as a live DTO.
 - Prevention: inspect the current reference signature before writing each newly used Effect helper call; the data-first form cannot be assumed.
+## 2026-10-09 — H1 admission wrapper requires the user-session bus
+
+- Task: run the OSV wave parity commands through `beep-heavy`.
+- Evidence: `beep-heavy bash .beep/rsc-h1/parity.sh` exited 1 before admission:
+  `DBUS_SESSION_BUS_ADDRESS and XDG_RUNTIME_DIR not defined`.
+- Resolution: supply the existing user's runtime directory and bus address to
+  the wrapper; retain machine-wide admission. No fallback bypass.
+- Prevention: have the wrapper resolve the current user's existing runtime bus
+  when launched from an agent environment that omits those variables.
+
+## 2026-10-09 — H1 publication succeeds before monitor submission fails
+
+- Task: publish the OSV exception renewal wave through Yeet.
+- Evidence: PR #1562 was created at `18fdc60e50`, but publication exited 1:
+  `Detached proof jobs require an active systemd user manager`.
+- Resolution: re-submit the monitor with the existing user-session bus
+  environment, without republishing the already-pushed commit.
+- Prevention: apply the same runtime-bus discovery to Yeet monitor submission
+  as to the heavy admission wrapper.
+
+## 2026-10-09 — H1 knowledge-reference parity inherits two host-path gates
+
+- Task: run `CI=true bun run beep knowledge refs --check` in the admitted OSV wave.
+- Evidence: exit 1, `check: 2 live gated observation(s)`:
+  `explorations/build-pipeline-simplification/RESEARCH.md:194` (home-relative
+  heavy-wrapper reference) and `SPEC.md:374` (home-absolute path fragment).
+- Attribution: first line is present in `origin/main` at `d1e8350670`; second
+  is present in the packet branch at `3dbf109066`. Neither line is edited by
+  H1. The brief assigns knowledge-reference drift repair to lane C.
+- Prevention: have the shared baseline/portability repair land once through
+  its owning lane; H1 then merges main and reruns the failed check. Do not
+  copy the repair into every lane or weaken the check.
+
+## 2026-10-09 — H1 hosted policy delta compares imported packet against main
+
+- Task: triage Heavy / Lint Policy on OSV PR #1562.
+- Evidence: job 113904025701 fails knowledge refs and reports three introduced
+  semantic-delta findings for PLAN's docs/generated/untracked SkillOpt venv
+  references and SPEC's untracked SkillOpt venv provenance.
+- Attribution: all those references are in packet base `3dbf109066`; the packet
+  has not landed on main. H1 imports the packet as Mechanics step 0 requires.
+- Routing: packet orchestrator/lane C repairs the shared knowledge baseline
+  once; H1 merges and reruns. Inbox row acknowledged with that owner and
+  evidence; the gate is retained, with no suppression or waiver.
+- Prevention: prove the packet itself against the hosted knowledge lanes
+  before it becomes the required starting point for every worker lane.
+
+## 2026-10-09 — H1 crash-resume monitor and acknowledgement recovery
+
+- Task: recover the OSV wave after workstation memory exhaustion.
+- Evidence: proof job `f8d5ad78-1177-409e-b399-2baea41d1ddf` has terminal
+  phase `terminated`, reason `timeout`, exit 130 at 16:38Z. Its 45-minute
+  ceiling expired before the later crash; no passed parity result was lost.
+- Recovery: read the terminal record and logs before acknowledging
+  `proof-job-f8d5ad78-1177-409e-b399-2baea41d1ddf` with `--observed`. The
+  bare job UUID is not the inbox row id and is rejected without mutation.
+- Prevention: use the exact `inbox list` row id and bounded readiness jobs;
+  distinguish a monitor timeout from a killed proof or a failed code gate.
+- Hosted attribution: latest Lint Policy job 113919634320 still reports the
+  same two host-path and three packet semantic findings; the shared repair
+  remains with the orchestrator/lane C. No H1 suppression or duplicate fix.
+
+## 2026-10-09 — H1 packet squash conflicts on final main merge
+
+- Task: merge the landed packet #1560 before H1 publication.
+- Evidence: main `83d8967a03` produced fourteen add/add packet conflicts;
+  the imported packet had diverged after the shared original `3dbf109066`.
+- Resolution: three-way merge against that original packet; preserve main's
+  stage-1 closure and reviewer-routing updates and H1's OSV evidence/status.
+  Only PLAN needed a manual combination of the status and main table.
+- Prevention: a squash of a previously imported packet needs this explicit
+  comparison base; identical-addition assumptions no longer hold after edits.
+
+## 2026-10-09 — H1 nested heavy-wrapper memory limit
+
+- Task: publish the addressed review wave after the crash-resume cap increase.
+- Evidence: the admitted publish wrapper ended with `oom-kill` before push;
+  its default MemoryMax was 16 GB even though the lane cap was 20 GB.
+- Recovery: merge shared repair #1565, retry the same wave, and set the queued
+  transient wrapper to MemoryMax=20G and MemoryHigh=16G; read back both values.
+- Prevention: lane cap rulings must also set `BEEP_HEAVY_MEM=20G` so nested
+  wrapper units carry the same limit. Preserve three-slot admission.
+
+- Terminal retry evidence: at roughly 18 GB current memory, both policy
+  scanner processes waited in `__mem_cgroup_handle_over_high`; CPU progressed
+  about 1.3 seconds across two minutes, with zero hard-cap/OOM events. Stopped
+  the lane-owned unit (publish exit 130); remote #1562 stayed at 8fe6d27057.
+  A serial preflight or an orchestrator-approved throttle adjustment is needed.
+
+## 2026-10-09 — H1 publish monitor ceiling flag
+
+- Task: publish the addressed H1 review wave with a bounded monitor.
+- Evidence: `yeet publish --job-max-runtime "3 minutes"` exits before any
+  publication step with `--job-max-runtime requires --detach`; the help lists
+  the flag on publish but its bound applies to detached command jobs.
+- Recovery: remove the incompatible flag and publish the same staged wave;
+  manage the submitted monitor through `yeet job` before the final handoff.
+- Prevention: help should distinguish the publish job ceiling from the
+  automatically submitted monitor's lifetime, or expose a monitor ceiling.
