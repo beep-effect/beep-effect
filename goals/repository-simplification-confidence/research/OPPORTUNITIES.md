@@ -153,3 +153,24 @@ three-way base: retain main's updates, then retain the lane-specific status,
 decision and friction deltas. A documented packet-squash reconciliation
 command would prevent this predictable recovery cost. No code or preservation
 export was discarded.
+
+### Heavy wrapper queue has no durable queue position
+
+Lane V's two 12 GB admitted collectors waited while all three heavy slots
+were occupied by peer lanes. `beep-heavy` reports only "all 3 slots busy";
+its repeated open-before-flock loop truncates the slot metadata even when
+acquisition fails, so metadata files cannot identify holders during contention.
+`lslocks` provides read-only holder evidence. A FIFO ticket and atomic
+post-acquisition metadata publication would make queue progress and crash
+recovery observable. This lane does not change the workstation wrapper or
+stop peer jobs; qualification stays queued.
+
+### Inherited SPEC prefix still blocks full knowledge references
+
+After #1565 was merged, the full `CI=true beep knowledge refs --check`
+completed red with one `external-mirror-reference` in this packet's
+`SPEC.md:374` (a home-absolute prefix example). The same example exists on
+main; #1565 fixed only the build-pipeline observation. V reports the remaining
+row to the orchestrator's packet lane for one main repair, then will merge
+main and rerun that gate. A full-corpus local check on the coordinating
+packet before its stage-1 publication would have caught this second row.

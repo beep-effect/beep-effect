@@ -687,3 +687,13 @@ original identities. Their prior source proofs remain historical. PR #1506's
 head was c921d9e11d, not the later e4c608f9c1 local consolidation. Fresh main
 reconciliation and acceptance live in the Stage 4 receipt; the scan must be
 regenerated under 4.0.2 and re-anchor churn must not close human coverage rows.
+
+## 2026-10-09 source integration scan
+
+CLI source `a0b0df4147`, merged main `7febc0287b`, Effect/Vitest 4.0.2:
+repo-wide current scan 1,853 / 716 open / 1,137 exceptions. Historical ledger
+IDs and human-lens statuses remain unchanged. The dated reconciliation JSON
+links current detector occurrences without inferring closure from absence.
+Local qualification and the inherited knowledge-reference blocker are in the
+repository-simplification-confidence Stage 4 receipt and V handoff. This does
+not mark the baseline complete or qualify an eventual hosted PR.

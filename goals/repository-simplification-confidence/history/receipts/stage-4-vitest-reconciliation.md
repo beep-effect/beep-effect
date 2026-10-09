@@ -101,7 +101,7 @@ resource patch's scripted spawner witness (no process is spawned).
 - **Coverage follow-up — port:** `renders an unratified version without claiming
   a ratified context count` and `retains a pending job status and reports
   unavailable pickup timestamps` are added. The existing current-model imports
-  and existing ruleset-population tests remain. Runtime proof pending.
+  and existing ruleset-population tests remain. Both selected CLI runtime cohorts passed; exact final parser rows also passed on Node and Bun.
 - **Box — superseded:** main's service tests cover every WIP scenario. Main also
   has explicit early-stream termination, interruption, and listener-removal
   tests absent from the WIP. The old SDK-version expectation, old schema models,
@@ -123,15 +123,65 @@ No second worktree is created and no other session's checkout is edited.
 ## Inventory
 
 Starting main snapshot: **1,879 total / 741 open / 1,138 exceptions** under
-Effect/Vitest **4.0.2**. Fresh scans and ledger-ID reconciliation pending.
+Effect/Vitest **4.0.2**. Fresh final-source scan: **1,853 total / 716 open / 1,137 exceptions**.
+The generated snapshot is tied to source `a0b0df414732a07b4449f07e1cafd397cf995af0`
+and merged main `7febc0287bed98ae84659ee7278e3fe8f2e28b65`.
 Re-anchors from #1552 import layout and #1555 primitive pin shifts are counted
 separately from resolved semantic rows. Inventory is generated, never merged.
 
+The authored linkage record is
+`goals/effect-vitest-canon/ops/inventory/reconciliation/rsc-v-vitest-canon-2026-10-09.json`.
+All 15,513 historical IDs remain unchanged. Of current rows, 1,756 IDs are
+unchanged relative to main and 61 re-anchor; 50 old and 24 new occurrence keys
+are unmatched (net minus 26). 1,172 current rows link to historical occurrence
+keys, including 270 exact historical IDs. Churn includes #1552 import layout,
+#1555 pin movement and this integration's semantic/test changes; unmatched
+rows are not automatically treated as fixed. Human-lens statuses are preserved.
+
 ## Proofs
 
-Pending admitted formatter, selected Node/Bun cohorts, package verification,
-and hosted-parity lanes. This receipt does not qualify any prior historical
-proof as proof of the integrated head.
+The final source review covers 37 CLI files at
+`a0b0df414732a07b4449f07e1cafd397cf995af0`. Separate read-only Opus 5.5
+medium review returned terminal zero after seven rounds; every actionable
+finding was repaired. The worker independently re-hashed all 37 files against
+the final review snapshot. Inventory, goals, RDF and Pacer were outside that
+code review. Runtime and parity evidence follows in the final handoff; no
+hosted check or publication is claimed.
+
+Selected CLI cohort: 35 files / 1,248 cases passed on Node (164.512 s) and Bun
+(108.154 s). The final parser was subsequently re-proved independently on both
+runtimes (3.522 s / 1.968 s); other cohort sources did not change. Final-source
+test-tsgo passed (18.096 s), Fallow audit passed (7.226 s). Docgen local passed
+(36.580 s), JSDoc ratchet passed (285.965 s), and Fallow health passed (5.424 s);
+their relevant production/export surfaces remained unchanged afterward.
+
+Scoped coverage did not regress either touched baseline row: RatchetDiff lines
+90%, statements 90.9%, branches 100%, functions 85.71%; Research.test-kit is a
+100% reexport row with zero executable statements. No untouched floor was
+rewritten. This is scoped evidence, not repository-wide coverage.
+
+Knowledge refs failed (exit 1, 26.710 s) after #1565: packet SPEC line 374's
+literal home-absolute-prefix example remains on main and is classified as a
+live host reference. The orchestrator must fix the inherited row once on main.
+V preserves that ownership boundary. Full repo-cli verification passed at the reviewed source head in 770.804 s
+(audit 743.7 s, docgen 25.5 s). The stale property-boundaries ledger row is
+closed through the canonical noteSession service: it probes source git facts
+read-only and appends only the workstation ledger. No source files, index or
+branch were changed. The CLI has no checkout-selector flag, so the service was
+called from the integration lane to preserve the source ownership boundary.
+
+The prepared non-CLI follow-up is preserved in
+[rsc-v-noncli-followup.patch](./rsc-v-noncli-followup.patch), SHA256
+`b0f087e9b4addbd08cebc4c8cb4750e879a6367d8f344c6a55b278f5f77a4a92`.
+Six RDF tests and the Pacer logout witness are excluded from this CLI source
+commit. Full package checks passed for the prepared patch: RDF 12.064 s,
+Pacer 10.024 s. Selected Node/Bun checks passed for RDF (3.375 / 1.827 s) and
+Pacer (3.065 / 1.734 s). These results qualify this prepared patch only; the
+future separate PR must merge main and requalify its final head.
+
+Disposition totals across 46 worktrees: **5 port / 41 superseded / 0 discard**.
+The stale Pacer changeset is a separate discarded artifact, not a discarded
+worktree. No sources, branches or worktrees were removed.
 
 ## Retirement
 

@@ -1,0 +1,142 @@
+{
+  "sourceHead": "a0b0df414732a07b4449f07e1cafd397cf995af0",
+  "finalSourceResults": [
+    {
+      "lane": "scan",
+      "exit": 0,
+      "durationSeconds": 11.033,
+      "head": "a0b0df414732a07b4449f07e1cafd397cf995af0"
+    },
+    {
+      "lane": "test-tsgo",
+      "exit": 0,
+      "durationSeconds": 18.096,
+      "head": "a0b0df414732a07b4449f07e1cafd397cf995af0"
+    },
+    {
+      "lane": "single-project-node",
+      "exit": 0,
+      "durationSeconds": 3.522,
+      "head": "a0b0df414732a07b4449f07e1cafd397cf995af0"
+    },
+    {
+      "lane": "single-project-bun",
+      "exit": 0,
+      "durationSeconds": 1.968,
+      "head": "a0b0df414732a07b4449f07e1cafd397cf995af0"
+    },
+    {
+      "lane": "fallow-audit",
+      "exit": 0,
+      "durationSeconds": 7.226,
+      "head": "a0b0df414732a07b4449f07e1cafd397cf995af0"
+    }
+  ],
+  "earlierSourceResults": [
+    {
+      "lane": "scan",
+      "exit": 0,
+      "durationSeconds": 11.784,
+      "head": "e017964fc49f4d0e79871b996e709a30febcb86b"
+    },
+    {
+      "lane": "test-tsgo",
+      "exit": 0,
+      "durationSeconds": 21.354,
+      "head": "e017964fc49f4d0e79871b996e709a30febcb86b"
+    },
+    {
+      "lane": "cohort-node",
+      "exit": 0,
+      "durationSeconds": 164.512,
+      "head": "3d37eeb2dfab6916859cf377e936ecaa56665a00"
+    },
+    {
+      "lane": "cohort-bun",
+      "exit": 0,
+      "durationSeconds": 108.154,
+      "head": "3d37eeb2dfab6916859cf377e936ecaa56665a00"
+    },
+    {
+      "lane": "scoped-coverage",
+      "exit": 0,
+      "durationSeconds": 4.472,
+      "head": "3d37eeb2dfab6916859cf377e936ecaa56665a00"
+    },
+    {
+      "lane": "fallow-audit",
+      "exit": 0,
+      "durationSeconds": 12.134,
+      "head": "3d37eeb2dfab6916859cf377e936ecaa56665a00"
+    },
+    {
+      "lane": "fallow-health",
+      "exit": 0,
+      "durationSeconds": 5.424,
+      "head": "3d37eeb2dfab6916859cf377e936ecaa56665a00"
+    },
+    {
+      "lane": "docgen-local",
+      "exit": 0,
+      "durationSeconds": 36.58,
+      "head": "3d37eeb2dfab6916859cf377e936ecaa56665a00"
+    },
+    {
+      "lane": "jsdoc-ratchet",
+      "exit": 0,
+      "durationSeconds": 285.965,
+      "head": "5670a0b6d96a90415b95be94cedd159f6bd24845"
+    },
+    {
+      "lane": "knowledge-refs",
+      "exit": 1,
+      "durationSeconds": 26.71,
+      "head": "5670a0b6d96a90415b95be94cedd159f6bd24845"
+    }
+  ],
+  "nonCliPreparedPatchResults": [
+    {
+      "lane": "rdf-node",
+      "exit": 0,
+      "durationSeconds": 3.375
+    },
+    {
+      "lane": "rdf-bun",
+      "exit": 0,
+      "durationSeconds": 1.827
+    },
+    {
+      "lane": "rdf-package",
+      "exit": 0,
+      "durationSeconds": 12.064
+    },
+    {
+      "lane": "pacer-node",
+      "exit": 0,
+      "durationSeconds": 3.065
+    },
+    {
+      "lane": "pacer-bun",
+      "exit": 0,
+      "durationSeconds": 1.734
+    },
+    {
+      "lane": "pacer-package",
+      "exit": 0,
+      "durationSeconds": 10.024
+    }
+  ],
+  "proofBoundary": "Earlier-source gates are retained where their relevant files remained unchanged; final parser rows were rerun. The non-CLI patch is excluded from this integration. Wrapper process exit alone is not a gate result. Full repo-cli package verification passed at the recorded source head. Hosted PR checks are not claimed.",
+  "preservationVerification": {
+    "exportChecksumsVerified": 17,
+    "stage1DigestsMatch": true,
+    "sourceStateChanged": false
+  },
+  "sourceDigests": "rsc-v-cli-source-digests.json",
+  "packageVerify": {
+    "lane": "package-repo-cli",
+    "exit": 0,
+    "durationSeconds": 770.804,
+    "head": "a0b0df414732a07b4449f07e1cafd397cf995af0"
+  }
+}

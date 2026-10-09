@@ -61,3 +61,58 @@ terminal package gate. No other lane service was stopped.
 Review R1 found P2 Bun launcher fallback and P3 pipe import ownership; both
 are repaired in single-project-emit.test.ts for re-proof. Saved test-tsgo
 errors describe pre-repair code; current assertion pipes already address them.
+
+### Run 3 qualification boundary
+
+Integration code is committed; current CLI source is `929c622ee2`.
+Main packet #1560 and import-loop repair #1564 are merged. Packet squash
+add/add conflicts were resolved using the pre-squash packet as the base,
+retaining main's updates and lane-specific deltas. R1/R2 independent Opus
+findings are repaired; final source review is in progress.
+Two admitted heavy jobs are queued with 12 GB caps: full repo-cli package
+verification and a serial runtime/coverage/parity collector. Neither queued
+job has a terminal result. The prior aborted package log is not evidence.
+The current generated scan is 1,853 / 716 open / 1,137 exceptions; the collector
+will regenerate it again against final code before inventory qualification.
+PR #1565 owns the inherited knowledge-ref repair; it is open and green,
+awaiting the orchestrator gate. No PR is published for V yet.
+
+The non-CLI replay patch is `.beep/rsc-v/noncli-final.patch`, SHA256
+`b0f087e9b4addbd08cebc4c8cb4750e879a6367d8f344c6a55b278f5f77a4a92`.
+It contains six RDF test files and the Pacer interruption logout witness.
+It is excluded from the CLI integration commit. R105 follow-up still needs
+its separate PR and changesets; earlier non-CLI gates are historical to this
+local prepared patch, not proof of a future merged-main follow-up.
+
+### New inherited parity blocker after #1565
+
+The final `CI=true bun run beep knowledge refs --check` collector completed
+with exit 1 in 26.710 seconds. #1565 resolved the build-pipeline observation.
+One inherited observation remains in packet `SPEC.md:374`: the example of a
+home-absolute prefix is classified as a live host path. The same literal is
+present on current main. The orchestrator must fix this once through its
+packet/main lane; V does not copy an inherited repair into its integration.
+All other collected parity gates are green; full package qualification and
+final source review remain pending. This row reports the exact remaining
+blocker and supersedes the earlier assumption that #1565 cleared both rows.
+
+### S11/S12 routing update
+
+The latest RULINGS.md permits publication with attributed inherited hosted reds
+and assigns the consolidated repair to the orchestrator. V will attempt Yeet
+publication once its final local receipt is concrete; knowledge refs remains
+a red observation, not an automatic reason to withhold all publication. The
+admission wrapper applied the orchestrator's memory floor to the new package
+job (32 GB MemoryMax), without a worker-side cap change. Full package
+verification is running; no terminal result is inferred from the active unit.
+
+### Terminal local package qualification
+
+Full `bun run beep quality package-verify @beep/repo-cli` passed at
+`a0b0df414732a07b4449f07e1cafd397cf995af0` in 770.804 seconds
+(audit 743.7 s, docgen 25.5 s). The lane-owned heavy unit exited; no surviving
+job is inferred as proof. The old property-boundaries session row is marked
+done through the canonical ledger service, probing only read-only git facts
+from that source. Its files/index/branch remain untouched. Main subsequently
+advanced with #1563 (accounts screen); it does not overlap the 37 reviewed
+files. Final merge and regeneration precede publication.
