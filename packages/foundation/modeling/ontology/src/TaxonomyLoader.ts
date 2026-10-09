@@ -103,6 +103,14 @@ export const VendorLoadKind = LiteralKit(["concept-alignment", "classification-s
 /**
  * Decoded vendor loading route derived from its schema.
  *
+ * **Example** (Type a classification loading route)
+ *
+ * ```ts
+ * import type { VendorLoadKind } from "@beep/ontology/TaxonomyLoader"
+ * const kind: VendorLoadKind = "classification-scheme"
+ * console.log(kind)
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -506,7 +514,21 @@ export class VendorAlignmentTargetNotFound extends S.TaggedError<VendorAlignment
   })
 ) {}
 
-class VendorAssetManifestRow extends S.Class<VendorAssetManifestRow>($I`VendorAssetManifestRow`)(
+/**
+ * Common asset-pack identity, kind and vetting boundary shared by both loaders.
+ *
+ * **Example** (Inspect a classification route)
+ *
+ * ```ts
+ * import { VendorAssetManifestRow } from "@beep/ontology/TaxonomyLoader"
+ * import * as S from "effect/Schema"
+ * S.decodeUnknownResult(VendorAssetManifestRow)({ format: "xml", id: "ipc", loadKind: "classification-scheme" })._tag
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class VendorAssetManifestRow extends S.Class<VendorAssetManifestRow>($I`VendorAssetManifestRow`)(
   {
     format: S.NonEmptyString,
     id: S.NonEmptyString,
@@ -552,6 +574,30 @@ const alignmentEquivalence = S.toEquivalence(ConceptAlignment);
 const manifestParseError = (path: string, line: number) => TaxonomyManifestParseError.make({ line, path });
 
 /**
+ * Decode the shared asset-pack boundary and reject every unknown runtime kind.
+ *
+ * **Example** (Decode a classification route)
+ *
+ * ```ts
+ * import { decodeVendorManifestRow } from "@beep/ontology/TaxonomyLoader"
+ * import * as Effect from "effect/Effect"
+ * const row = '{"id":"ipc","format":"xml","loadKind":"classification-scheme"}'
+ * const parsed = await Effect.runPromise(decodeVendorManifestRow("manifest.jsonl", row, 0))
+ * console.log(parsed.id)
+ * ```
+ *
+ * @category decoding
+ * @since 0.0.0
+ */
+export const decodeVendorManifestRow = Effect.fn("TaxonomyLoader.decodeVendorManifestRow")(function* (
+  path: string,
+  line: string,
+  index: number
+): Effect.fn.Return<VendorAssetManifestRow, TaxonomyManifestParseError> {
+  return yield* decodeAssetManifestRow(line).pipe(Effect.mapError(() => manifestParseError(path, index + 1)));
+});
+
+/**
  * Decode one asset-pack row into its M1 load directive without reading vendor bytes.
  *
  * **Details**
@@ -577,7 +623,7 @@ export const decodeLoadManifestEntry = Effect.fn("TaxonomyLoader.decodeLoadManif
   line: string,
   index: number
 ): Effect.fn.Return<O.Option<VendorLoadManifestEntry>, TaxonomyManifestParseError> {
-  const row = yield* decodeAssetManifestRow(line).pipe(Effect.mapError(() => manifestParseError(path, index + 1)));
+  const row = yield* decodeVendorManifestRow(path, line, index);
   return yield* Match.value({ loadKind: O.getOrUndefined(row.loadKind), hasLoadStatus: O.isSome(row.loadStatus) }).pipe(
     Match.when({ loadKind: "concept-alignment" }, () =>
       decodeAlignmentManifestEntry(line).pipe(
@@ -604,7 +650,24 @@ const parseManifest = Effect.fn("TaxonomyLoader.parseManifest")(function* (path:
   return A.getSomes(entries);
 });
 
-const readVendorContent = Effect.fn("TaxonomyLoader.readVendorContent")(function* (
+/**
+ * Resolve a vendor-relative path under the canonical configured root.
+ *
+ * **Details**
+ * Realpath containment rejects symlink escapes before a read or directory scan.
+ *
+ * **Example** (Resolve a vetted local path)
+ *
+ * ```ts
+ * import { resolveVendorPath } from "@beep/ontology/TaxonomyLoader"
+ * const program = resolveVendorPath("fixture", "fixture.xml", "vendor")
+ * console.log(program)
+ * ```
+ *
+ * @category filesystem
+ * @since 0.0.0
+ */
+export const resolveVendorPath = Effect.fn("TaxonomyLoader.resolveVendorPath")(function* (
   id: string,
   relativePath: string,
   vendorRoot: string
@@ -641,6 +704,30 @@ const readVendorContent = Effect.fn("TaxonomyLoader.readVendorContent")(function
   const containedPath = yield* Effect.filterOrFail(Effect.succeed(path), Str.startsWith(rootedPrefix), () =>
     VendorSlicePathEscape.make({ id, path, vendorRoot: canonicalVendorRoot })
   );
+  return containedPath;
+});
+
+/**
+ * Read vendor text through the shared canonical containment boundary.
+ *
+ * **Example** (Describe a contained read)
+ *
+ * ```ts
+ * import { readVendorContent } from "@beep/ontology/TaxonomyLoader"
+ * const program = readVendorContent("fixture", "fixture.xml", "vendor")
+ * console.log(program)
+ * ```
+ *
+ * @category filesystem
+ * @since 0.0.0
+ */
+export const readVendorContent = Effect.fn("TaxonomyLoader.readVendorContent")(function* (
+  id: string,
+  relativePath: string,
+  vendorRoot: string
+): Effect.fn.Return<string, VendorSlicePathEscape | VendorSliceReadError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const containedPath = yield* resolveVendorPath(id, relativePath, vendorRoot);
   return yield* fs.readFileString(containedPath).pipe(
     Effect.mapError(() =>
       VendorSliceReadError.make({

@@ -5,6 +5,20 @@
  */
 
 /**
+ * Edition-pinned classification identifiers and immutable SKOS snapshots.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Classification.models.ts";
+/**
+ * Fail-closed classification loading and hierarchy lookup.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./ClassificationRegistry.ts";
+/**
  * Assembly walk and fold entrypoint for the identity-backed ontology fold.
  *
  * @category constructors
