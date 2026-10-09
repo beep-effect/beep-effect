@@ -685,7 +685,7 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       const run = yield* runWriter(yield* encodeJson(preToolUsePayload), { agentKind: "other" });
       expectSilentRefusal(run);
       expect(run.refusals).toHaveLength(1);
-      const refusal = yield* S.decodeUnknownEffect(S.fromJsonString(HookPulseRefusal))(
+      const refusal = yield* S.decodeEffect(S.fromJsonString(HookPulseRefusal))(
         pipe(A.head(run.refusals), O.getOrThrow)
       );
       expect(refusal.agentKind).toBe("unknown");
@@ -1154,7 +1154,7 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
 
       expectSilentRefusal(run);
       expect(run.refusals).toHaveLength(1);
-      const refusal = yield* S.decodeUnknownEffect(S.fromJsonString(HookPulseRefusal))(
+      const refusal = yield* S.decodeEffect(S.fromJsonString(HookPulseRefusal))(
         pipe(A.head(run.refusals), O.getOrThrow)
       );
       expect(refusal.reason).toBe("disabled");
