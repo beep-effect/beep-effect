@@ -98,6 +98,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
@@ -296,7 +297,13 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
   const readJournalEvents = Effect.fnUntraced(function* (root: string) {
     const fs = yield* FileSystem.FileSystem;
     const journalPath = yield* admissionJournalPath(root);
-    const text = yield* fs.readFileString(journalPath).pipe(Effect.orElseSucceed(() => Str.empty));
+    // The journal is created lazily. Only absence denotes an empty history.
+    const text = yield* fs.readFileString(journalPath).pipe(
+      Effect.catchIf(
+        (error) => error.reason._tag === "NotFound",
+        () => Effect.succeed(Str.empty)
+      )
+    );
     const lines = pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty));
     return yield* Effect.forEach(lines, (line) => decodeAdmissionJournalEvent(line));
   });
@@ -558,8 +565,55 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
   // state files count.
   const listDirectory = Effect.fnUntraced(function* (directory: string) {
     const fs = yield* FileSystem.FileSystem;
-    const names = yield* fs.readDirectory(directory).pipe(Effect.orElseSucceed(A.empty<string>));
+    // Coordination directories are created lazily; unreadable state is not empty state.
+    const names = yield* fs.readDirectory(directory).pipe(
+      Effect.catchIf(
+        (error) => error.reason._tag === "NotFound",
+        () => Effect.succeed(A.empty<string>())
+      )
+    );
     return A.filter(names, (name) => !Str.includes(".tmp-")(name));
+  });
+
+  describe("scheduler observation failures", () => {
+    it.effect("observes absent lazy directories and journals as empty", () =>
+      Effect.gen(function* () {
+        const { tempRoot } = yield* admissionTemporaryRoot;
+        expect(yield* listDirectory(tempRoot.queue)).toEqual([]);
+        expect(yield* readJournalEvents(tempRoot.root)).toEqual([]);
+      })
+    );
+
+    for (const reason of ["PermissionDenied", "Unknown"] satisfies Array<PlatformError.SystemErrorTag>) {
+      it.effect(`propagates ${reason} from both observation helpers`, () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const failure = PlatformError.systemError({
+            _tag: reason,
+            module: "FileSystem",
+            method: "read",
+            pathOrDescriptor: "scheduler-observation-control",
+          });
+          const unreadable = FileSystem.make({
+            ...fs,
+            readDirectory: () => Effect.fail(failure),
+            readFile: () => Effect.fail(failure),
+          });
+          expect(
+            yield* listDirectory("/unreadable").pipe(
+              Effect.provideService(FileSystem.FileSystem, unreadable),
+              Effect.flip
+            )
+          ).toBe(failure);
+          expect(
+            yield* readJournalEvents("/unreadable").pipe(
+              Effect.provideService(FileSystem.FileSystem, unreadable),
+              Effect.flip
+            )
+          ).toBe(failure);
+        })
+      );
+    }
   });
 
   const writePromotionTransition = Effect.fnUntraced(function* (
@@ -5637,11 +5691,16 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const fs = yield* FileSystem.FileSystem;
             // Materialize the directories, then make the queue unlistable.
             yield* withQualityAdmission(request(), noAdmissionOriginGate, Effect.void, fastConfig);
-            yield* fs.chmod(tempRoot.queue, 0o000);
-            const failure = yield* admissionStatus(fastConfig).pipe(Effect.flip);
-            expect(failure._tag).toBe("QualitySchedulerError");
-            expect(failure.message).toContain("Failed to list admission state");
-            yield* fs.chmod(tempRoot.queue, 0o700);
+            yield* Effect.acquireUseRelease(
+              fs.chmod(tempRoot.queue, 0o000),
+              () =>
+                Effect.gen(function* () {
+                  const failure = yield* admissionStatus(fastConfig).pipe(Effect.flip);
+                  expect(failure._tag).toBe("QualitySchedulerError");
+                  expect(failure.message).toContain("Failed to list admission state");
+                }),
+              () => fs.chmod(tempRoot.queue, 0o700).pipe(Effect.orDie)
+            );
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -5667,13 +5726,21 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             // Materialize the directories, then make the leases dir unwritable
             // so staging the lease fails after the gate has been acquired.
             yield* withQualityAdmission(request(), noAdmissionOriginGate, Effect.void, fastConfig);
-            yield* fs.chmod(tempRoot.leases, 0o500);
-            const failure = yield* withQualityAdmission(request(), gate, Effect.succeed("never"), fastConfig).pipe(
-              Effect.flip
+            yield* Effect.acquireUseRelease(
+              fs.chmod(tempRoot.leases, 0o500),
+              () =>
+                Effect.gen(function* () {
+                  const failure = yield* withQualityAdmission(
+                    request(),
+                    gate,
+                    Effect.succeed("never"),
+                    fastConfig
+                  ).pipe(Effect.flip);
+                  expect(failure._tag).toBe("QualitySchedulerError");
+                  expect(yield* Ref.get(releases)).toBe(1);
+                }),
+              () => fs.chmod(tempRoot.leases, 0o700).pipe(Effect.orDie)
             );
-            expect(failure._tag).toBe("QualitySchedulerError");
-            expect(yield* Ref.get(releases)).toBe(1);
-            yield* fs.chmod(tempRoot.leases, 0o700);
             expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(0);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),

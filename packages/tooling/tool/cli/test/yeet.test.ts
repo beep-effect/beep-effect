@@ -4459,6 +4459,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           expect(decoded.schemaVersion).toBe("yeet-verdict/v2");
           expect(decoded.lanes.length).toBe(verdict.lanes.length);
           expect(decoded.outcome).toBe(verdict.outcome);
+          expect(S.toEquivalence(YeetVerdict)(decoded, verdict)).toBe(true);
         }),
         { arbitrary: fcRuns(32) }
       );

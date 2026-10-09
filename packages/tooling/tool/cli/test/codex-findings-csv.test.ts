@@ -7,6 +7,7 @@ import {
 } from "@beep/repo-cli/test/Codex";
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
 import * as Result from "effect/Result";
@@ -74,6 +75,13 @@ describe("codex findings csv parser integration", () => {
       expect(A.length(decoded.findings)).toBe(2);
       expect(decoded.findings[0]?.codexId).toBe(id("a"));
       expect(decoded.findings[1]?.codexId).toBe(id("b"));
+      assertSome(
+        O.map(
+          A.findFirst(decoded.reports, (report) => report.codexId === id("a")),
+          (report) => report.description
+        ),
+        "First line, with comma.\nSecond line."
+      );
     })
   );
 
@@ -82,6 +90,7 @@ describe("codex findings csv parser integration", () => {
       const decoded = yield* decode(csv([row({ seed: "a", title: 'Say ""hi"" to the parser' })]));
 
       expect(A.length(decoded.findings)).toBe(1);
+      expect(decoded.findings[0]?.title).toBe('Say ""hi"" to the parser');
     })
   );
 });
