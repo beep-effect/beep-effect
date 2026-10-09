@@ -10,6 +10,7 @@ import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
 import * as OptionUtils from "@beep/utils/Option";
+import { getSomesStruct } from "@beep/utils/Option";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import { Argument, Command, Flag } from "effect/cli";
@@ -4330,13 +4331,21 @@ export const renderResidueReportLinesForTesting: (report: ResidueReapReport) => 
 const residueReapCommand = Command.make(
   "residue-reap",
   {
+    resume: Flag.String("resume").pipe(
+      Flag.optional,
+      Flag.withDescription("Resume an interrupted persisted archive run by id")
+    ),
+    restore: Flag.String("restore").pipe(
+      Flag.optional,
+      Flag.withDescription("Restore a persisted archive run by id; refuses occupied sources")
+    ),
     apply: Flag.Boolean("apply").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Apply eligible removals (default: dry run)")
+      Flag.withDescription("Apply eligible removals or recoverable archives (default: dry run)")
     ),
     json: Flag.Boolean("json").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Emit the encoded residue-reap/v2 report as JSON")
+      Flag.withDescription("Emit the encoded residue-reap/v3 report as JSON")
     ),
     classes: Flag.Literals("classes", ResidueReapClass.literals).pipe(
       Flag.between(0, A.length(ResidueReapClass.literals)),
@@ -4373,6 +4382,8 @@ const residueReapCommand = Command.make(
   },
   Effect.fn(function* ({
     apply,
+    resume,
+    restore,
     classes,
     fleet,
     json,
@@ -4386,6 +4397,7 @@ const residueReapCommand = Command.make(
     const checkoutRoots = fleet ? yield* (yield* FleetMirrorService).listCheckouts() : A.empty<string>();
     const report = yield* runResidueReap({
       apply,
+      ...getSomesStruct({ resume, restore }),
       checkoutRoots,
       classes,
       fleet,

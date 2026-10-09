@@ -10,6 +10,17 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("internal/repo-run/ResidueReap.schemas");
+const ResidueTerminalState = LiteralKit([
+  "completed",
+  "failed",
+  "cancelled",
+  "active",
+  "paused",
+  "unknown",
+  "unverified",
+]);
+const ResidueDisposition = LiteralKit(["regenerable", "redundant", "retain"]);
+const ResidueArchivePhase = LiteralKit(["intent", "moved", "restored", "fenced-live"]);
 
 /**
  * Home-residue families owned by the janitor's closed policy.
@@ -34,6 +45,13 @@ export const ResidueReapClass = LiteralKit([
   "turbo-runs",
   "shared-turbo-cache",
   "qualification-views",
+  "checkout-qa",
+  "checkout-qualification",
+  "checkout-generated",
+  "checkout-jobs",
+  "checkout-ledgers",
+  "checkout-pids",
+  "checkout-material",
 ]).pipe(
   $I.annoteSchema("ResidueReapClass", {
     description: "Home-residue family recognized by the janitor's closed discovery policy.",
@@ -62,7 +80,13 @@ export type ResidueReapClass = typeof ResidueReapClass.Type;
  * @category models
  * @since 0.0.0
  */
-export const ResidueReapAction = LiteralKit(["remove-file", "remove-dir", "worktree-remove", "skip"]).pipe(
+export const ResidueReapAction = LiteralKit([
+  "remove-file",
+  "remove-dir",
+  "worktree-remove",
+  "archive-move",
+  "skip",
+]).pipe(
   $I.annoteSchema("ResidueReapAction", {
     description: "Filesystem action selected after a residue candidate's evidence is evaluated.",
   })
@@ -108,6 +132,11 @@ export const ResidueReapSkipReason = LiteralKit([
   "kept-newest",
   "evidence-referenced",
   "worktree-remove-failed",
+  "owner-ruling-required",
+  "terminal-state-unverified",
+  "lock-held",
+  "draft-unresolved",
+  "checkout-recent-write",
 ]).pipe(
   $I.annoteSchema("ResidueReapSkipReason", {
     description: "Precise missing or negative safety evidence that prevented residue removal.",
@@ -329,6 +358,11 @@ export class ResidueReapCandidate extends S.Class<ResidueReapCandidate>($I`Resid
     checkoutRoot: S.optional(S.String),
     mtimeMillis: S.optional(S.Finite),
     groupKey: S.optional(S.String),
+    owner: S.optional(S.String),
+    terminalState: S.optional(ResidueTerminalState),
+    recoveryDestination: S.optional(S.String),
+    retentionReason: S.optional(S.String),
+    bytesExclusive: S.optional(ResidueReapByteCap),
   },
   $I.annote("ResidueReapCandidate", {
     description: "One home-residue candidate with age, census, action, and fail-closed skip evidence.",
@@ -340,8 +374,9 @@ export class ResidueReapCandidate extends S.Class<ResidueReapCandidate>($I`Resid
  *
  * **Details**
  *
- * Version 2 widened the class, action, and skip-reason domains, so a
- * `residue-reap/v1` decoder rejects v2 output instead of misreading it.
+ * Version 3 adds persisted archive runs, ownership and terminal-state metadata,
+ * recovery destinations, and checkout retention classes. Earlier version
+ * decoders reject the new tag instead of treating archive moves as deletions.
  *
  * **Example** (Construct an empty dry-run report)
  *
@@ -368,7 +403,7 @@ export class ResidueReapCandidate extends S.Class<ResidueReapCandidate>($I`Resid
  *   reclaimedBytes: 0,
  *   warnings: [],
  * })
- * console.log(report.schemaVersion) // "residue-reap/v2"
+ * console.log(report.schemaVersion) // "residue-reap/v3"
  * ```
  *
  * @category models
@@ -376,7 +411,9 @@ export class ResidueReapCandidate extends S.Class<ResidueReapCandidate>($I`Resid
  */
 export class ResidueReapReport extends S.Class<ResidueReapReport>($I`ResidueReapReport`)(
   {
-    schemaVersion: S.tag("residue-reap/v2"),
+    schemaVersion: S.tag("residue-reap/v3"),
+    runId: S.optional(S.String),
+    reportPath: S.optional(S.String),
     scannedAt: S.String,
     homeRoot: S.String,
     repoRoot: S.String,
@@ -398,5 +435,99 @@ export class ResidueReapReport extends S.Class<ResidueReapReport>($I`ResidueReap
   },
   $I.annote("ResidueReapReport", {
     description: "Versioned report for a dry-run or applied home-residue cleanup pass.",
+  })
+) {}
+
+/**
+ * Owner-issued retention ruling bound to one checkout-relative residue path.
+ *
+ * **Details**
+ * Place the ruling in `.beep/retention/<class>.json` as an array. Missing,
+ * malformed, active, paused, or retained rulings never authorize archival.
+ * `evidence` names an existing tracked receipt; `regeneration` documents how
+ * to reproduce redundant derivatives. Durable proof itself remains protected
+ * by the citation index.
+ *
+ * **Example** (Record redundant generated output)
+ *
+ * ```ts
+ * import { ResidueRetentionRuling } from "@beep/repo-cli/test/RepoRun"
+ * const ruling = ResidueRetentionRuling.make({
+ *   path: ".beep/ci/old-report", owner: "quality", state: "completed",
+ *   disposition: "regenerable", evidence: "standards/turbo-remote-cache.md",
+ *   regeneration: "bun run beep quality audit", reason: "obsolete scanner derivative",
+ * })
+ * console.log(ruling.state) // "completed"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ResidueRetentionRuling extends S.Class<ResidueRetentionRuling>($I`ResidueRetentionRuling`)(
+  {
+    schemaVersion: S.tag("residue-retention/v1"),
+    path: S.NonEmptyString,
+    owner: S.NonEmptyString,
+    state: ResidueTerminalState,
+    disposition: ResidueDisposition,
+    evidence: S.NonEmptyString,
+    regeneration: S.NonEmptyString,
+    reason: S.NonEmptyString,
+  },
+  $I.annote("ResidueRetentionRuling", {
+    description: "Explicit owner, terminal state, and recovery policy for checkout residue.",
+  })
+) {}
+
+/**
+ * Fsynced archive intent and its last confirmed transition.
+ *
+ * **Example** (Construct an intent)
+ *
+ * ```ts
+ * import { ResidueArchiveIntent } from "@beep/repo-cli/test/RepoRun"
+ * const intent = ResidueArchiveIntent.make({
+ *   source: "/repo/.beep/ci/old", lexicalSource: "/repo/.beep/ci/old", destination: "/repo/.beep/residue-reap/run/archive/0",
+ *   dev: 1, ino: 42, phase: "intent",
+ * })
+ * console.log(intent.phase) // "intent"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ResidueArchiveIntent extends S.Class<ResidueArchiveIntent>($I`ResidueArchiveIntent`)(
+  {
+    source: S.String,
+    lexicalSource: S.String,
+    destination: S.String,
+    dev: S.Int,
+    ino: S.Int,
+    phase: ResidueArchivePhase,
+  },
+  $I.annote("ResidueArchiveIntent", {
+    description: "Inode-bound archive journal row supporting interruption recovery.",
+  })
+) {}
+
+/**
+ * Refusal or recovery failure that leaves residue and its journal intact.
+ *
+ * **Example** (Construct a recovery refusal)
+ *
+ * ```ts
+ * import { ResidueArchiveError } from "@beep/repo-cli/test/RepoRun"
+ * const error = ResidueArchiveError.make({ message: "Restore refuses an occupied source" })
+ * console.log(error._tag) // "ResidueArchiveError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class ResidueArchiveError extends S.TaggedError<ResidueArchiveError>($I`ResidueArchiveError`)(
+  "ResidueArchiveError",
+  { message: S.String },
+  $I.annoteError<ResidueArchiveError>("ResidueArchiveError", {
+    description: "Archive recovery refused a changed boundary, inode, or live owner.",
   })
 ) {}
