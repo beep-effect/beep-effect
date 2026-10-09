@@ -16,9 +16,11 @@ import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { dual } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as Layer from "effect/Layer";
@@ -34,16 +36,23 @@ import {
   AccountProvider,
   AccountRef,
   AccountSnapshotJson,
+  AccountsStatusReport,
   AccountUsage,
   AccountUsageOutcome,
+  groupAccounts,
+  rankAccounts,
+  SignedInLogin,
 } from "./Accounts.schemas.ts";
 import {
+  ClaudeCliConfigJson,
   ClaudeUsageBodyJson,
+  CodexCliAuthJson,
   CodexUsageBodyJson,
   claudeCreditBalances,
   claudeUsageWindows,
   codexCreditBalances,
   codexLimitResets,
+  codexSignedInEmail,
   codexUsageWindows,
   grokUsageWindows,
   MuseKeyBodyJson,
@@ -66,7 +75,9 @@ const $I = $RepoCliId.create("commands/Accounts/AccountsUsage.service");
  * an undecodable response becomes that account's outcome, so one bad account
  * cannot hide the others. `snapshots` reads the usage a local collector wrote
  * for providers the poller cannot read itself; an unreadable snapshot file is
- * skipped.
+ * skipped. `signedIn` reads which account the Claude and Codex CLIs on this
+ * machine are signed in to, from their own config files; a missing or
+ * unreadable file means no account is marked.
  *
  * **Example** (Poll every account)
  *
@@ -83,6 +94,7 @@ const $I = $RepoCliId.create("commands/Accounts/AccountsUsage.service");
 export interface AccountsUsageShape {
   readonly accounts: Effect.Effect<ReadonlyArray<AccountRef>, AccountsError>;
   readonly poll: (account: AccountRef) => Effect.Effect<AccountUsage>;
+  readonly signedIn: Effect.Effect<ReadonlyArray<SignedInLogin>>;
   readonly snapshots: Effect.Effect<ReadonlyArray<AccountUsage>, AccountsError>;
 }
 
@@ -551,7 +563,31 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
     Effect.withSpan("AccountsUsage.snapshots")
   );
 
-  return AccountsUsage.of({ accounts, poll, snapshots });
+  const readOptional = (file: string) =>
+    fs.readFileString(file).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
+
+  const signedInAs = (provider: string, label: O.Option<string>) =>
+    O.map(label, (value) => SignedInLogin.make({ provider, label: value }));
+
+  const signedIn = Effect.gen(function* () {
+    const home = yield* Config.String("HOME").pipe(Config.withDefault(""));
+    const claudeDir = yield* Config.String("CLAUDE_CONFIG_DIR").pipe(Config.withDefault(home));
+    const codexDir = yield* Config.String("CODEX_HOME").pipe(Config.withDefault(path.join(home, ".codex")));
+    const claude = O.flatMap(
+      yield* readOptional(path.join(claudeDir, ".claude.json")),
+      ClaudeCliConfigJson.decodeOption
+    );
+    const codex = O.flatMap(yield* readOptional(path.join(codexDir, "auth.json")), CodexCliAuthJson.decodeOption);
+    return A.getSomes([
+      signedInAs(
+        "claude",
+        O.map(claude, (config) => config.oauthAccount.emailAddress)
+      ),
+      signedInAs("codex", O.flatMap(codex, codexSignedInEmail)),
+    ]);
+  }).pipe(Effect.orElseSucceed(A.empty<SignedInLogin>), Effect.withSpan("AccountsUsage.signedIn"));
+
+  return AccountsUsage.of({ accounts, poll, snapshots, signedIn });
 });
 
 /**
@@ -592,3 +628,120 @@ export const pollAccounts = Effect.gen(function* () {
   const polled = yield* Effect.forEach(yield* usage.accounts, usage.poll, { concurrency: POLL_CONCURRENCY });
   return dedupeAccountUsages(A.appendAll(polled, yield* usage.snapshots));
 }).pipe(Effect.withSpan("AccountsUsage.pollAll"));
+
+/**
+ * Keep the last good reading of an account whose newest poll failed.
+ *
+ * **Details**
+ *
+ * A failed poll (a timeout, a rate limit, a network blip) would otherwise
+ * blank the account's row until the next poll. The previous reading stays
+ * instead, stamped with the time it was taken so the row shows its age; a
+ * reading that was already old keeps its original stamp. Only a `Failed`
+ * outcome falls back: a rejected login (`NeedsLogin`) is a definite answer and
+ * shows at once, so a revoked login is never advertised as ready.
+ *
+ * **Example** (Nothing to keep)
+ *
+ * ```ts
+ * import { retainLastGood } from "@beep/repo-cli/test/Accounts"
+ * import * as DateTime from "effect/DateTime"
+ *
+ * console.log(retainLastGood([], [], DateTime.makeUnsafe(0))) // []
+ * ```
+ *
+ * @param next - The newest poll.
+ * @param previous - The rows shown before it.
+ * @param previousAt - When the previous rows were polled.
+ * @returns The newest poll, with failed rows replaced by their last good reading.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const retainLastGood: {
+  (
+    previous: ReadonlyArray<AccountUsage>,
+    previousAt: DateTime.Utc
+  ): (next: ReadonlyArray<AccountUsage>) => ReadonlyArray<AccountUsage>;
+  (
+    next: ReadonlyArray<AccountUsage>,
+    previous: ReadonlyArray<AccountUsage>,
+    previousAt: DateTime.Utc
+  ): ReadonlyArray<AccountUsage>;
+} = dual(
+  3,
+  (
+    next: ReadonlyArray<AccountUsage>,
+    previous: ReadonlyArray<AccountUsage>,
+    previousAt: DateTime.Utc
+  ): ReadonlyArray<AccountUsage> =>
+    A.map(next, (usage) =>
+      usage.outcome._tag !== "Failed"
+        ? usage
+        : O.match(
+            A.findFirst(previous, (other) => sameAccount(usage, other) && isOk(other)),
+            {
+              onNone: () => usage,
+              onSome: (kept) =>
+                AccountUsageOutcome.match(kept.outcome, {
+                  Ok: (ok) =>
+                    AccountUsage.make({
+                      account: usage.account,
+                      outcome: AccountUsageOutcome.cases.Ok.make({
+                        ...ok,
+                        asOf: O.orElse(ok.asOf, () => O.some(previousAt)),
+                      }),
+                    }),
+                  NeedsLogin: () => usage,
+                  Failed: () => usage,
+                }),
+            }
+          )
+    )
+);
+
+/**
+ * Build the report: poll every account, rank each provider's accounts, and
+ * mark the signed-in ones.
+ *
+ * **Details**
+ *
+ * `previous` carries the last report's readings so a failed poll keeps the
+ * account's last good figures; see {@link retainLastGood}.
+ *
+ * **Example** (Build the report effect)
+ *
+ * ```ts
+ * import { loadAccountsReport } from "@beep/repo-cli/test/Accounts"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * console.log(Effect.isEffect(loadAccountsReport(O.none()))) // true
+ * ```
+ *
+ * @param previous - The report shown before this one, if any.
+ * @returns The new report.
+ * @category commands
+ * @since 0.0.0
+ */
+export const loadAccountsReport = Effect.fn("AccountsUsage.loadReport")(function* (
+  previous: O.Option<AccountsStatusReport>
+) {
+  const usage = yield* AccountsUsage;
+  const polled = yield* pollAccounts;
+  const signedIn = yield* usage.signedIn;
+  const now = yield* DateTime.now;
+  const usages = O.match(previous, {
+    onNone: () => polled,
+    onSome: (report) =>
+      retainLastGood(
+        polled,
+        A.flatMap(report.groups, (group) => A.map(group.rows, (row) => row.usage)),
+        report.generatedAt
+      ),
+  });
+  return AccountsStatusReport.make({
+    schemaVersion: "accounts-status/v2",
+    generatedAt: now,
+    groups: groupAccounts(rankAccounts(usages, now), signedIn),
+  });
+});

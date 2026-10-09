@@ -1,10 +1,15 @@
 import { accountsCommand } from "@beep/repo-cli";
 import {
   AccountRef,
+  AccountsBoardLayout,
+  AccountsError,
+  AccountsStatusReport,
   AccountsUsage,
   AccountUsage,
   AccountUsageOutcome,
+  accountSection,
   ClaudeUsageBodyJson,
+  CodexCliAuth,
   CodexUsageBodyJson,
   CreditBalance,
   claudeCreditBalances,
@@ -12,32 +17,39 @@ import {
   claudeUsageWindows,
   codexCreditBalances,
   codexLimitResets,
+  codexSignedInEmail,
   codexUsageOutcome,
   codexUsageWindows,
   dedupeAccountUsages,
   grokUsageOutcome,
   grokUsageWindows,
+  groupAccounts,
   layerAccountsUsageLive,
+  loadAccountsReport,
   MuseKeyBodyJson,
   museUsageOutcome,
   museUsageWindows,
   pollAccounts,
   rankAccount,
   rankAccounts,
-  renderAccountRanking,
-  renderAccountsStatus,
+  renderAccountsBoard,
   renderHours,
+  retainLastGood,
+  SignedInLogin,
   UsageWindow,
+  watchAccounts,
 } from "@beep/repo-cli/test/Accounts";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import { Command } from "effect/cli";
 import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
@@ -46,13 +58,18 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as Queue from "effect/Queue";
+import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
+import * as Terminal from "effect/Terminal";
+import * as TestClock from "effect/testing/TestClock";
+import type * as Cause from "effect/Cause";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
 const now = DateTime.makeUnsafe("2026-01-05T00:00:00.000Z");
 const inHours = (hours: number) => O.some(DateTime.makeUnsafe(DateTime.toEpochMillis(now) + hours * 3_600_000));
 
-const account = (label: string, provider: "claude" | "codex" = "claude") =>
+const account = (label: string, provider = "claude") =>
   AccountRef.make({ provider, label, source: `/auth/${provider}-${label}.json` });
 
 const weekly = (usedPercent: number, resetsAt: O.Option<DateTime.Utc>) =>
@@ -60,18 +77,41 @@ const weekly = (usedPercent: number, resetsAt: O.Option<DateTime.Utc>) =>
 const session = (usedPercent: number) =>
   UsageWindow.make({ kind: "session", scope: O.none(), usedPercent, resetsAt: inHours(2) });
 
-const ok = (label: string, windows: ReadonlyArray<UsageWindow>) =>
+const ok = (
+  label: string,
+  windows: ReadonlyArray<UsageWindow>,
+  provider = "claude",
+  asOf: O.Option<DateTime.Utc> = O.none()
+) =>
   AccountUsage.make({
-    account: account(label),
+    account: account(label, provider),
     outcome: AccountUsageOutcome.cases.Ok.make({
       identity: O.some(label),
       plan: O.none(),
       windows,
       credits: [],
       limitResets: O.none(),
-      asOf: O.none(),
+      asOf,
     }),
   });
+
+const failed = (label: string, provider = "claude") =>
+  AccountUsage.make({
+    account: account(label, provider),
+    outcome: AccountUsageOutcome.cases.Failed.make({ detail: "offline" }),
+  });
+
+const plainBoard = (report: AccountsStatusReport, width = 100) =>
+  renderAccountsBoard(report, AccountsBoardLayout.make({ width, color: false, status: "updated now" }));
+
+const reportOf = (usages: ReadonlyArray<AccountUsage>, signedIn: ReadonlyArray<SignedInLogin> = []) =>
+  AccountsStatusReport.make({
+    schemaVersion: "accounts-status/v2",
+    generatedAt: now,
+    groups: groupAccounts(rankAccounts(usages, now), signedIn),
+  });
+
+const linesOf = (text: string) => text.split("\n");
 
 const claudeBody = `{
   "five_hour": {"utilization": 1, "resets_at": null},
@@ -280,46 +320,279 @@ describe("account ranking", () => {
   it("supports the data-last form", () => {
     expect(rankAccounts(now)([])).toEqual([]);
   });
-});
 
-describe("account report rendering", () => {
-  it("renders spans in their two largest units", () => {
-    expect(A.map([136.5, 3.25, 0, 24], renderHours)).toEqual(["5d 16h", "3h 15m", "0h 0m", "1d 0h"]);
-  });
-
-  it("names the account to use first and lists every account", () => {
+  it("spends a week that is running down before an untouched one", () => {
     const rows = rankAccounts(
-      [
-        ok("me@example.com", [
-          session(42),
-          weekly(86, inHours(136.5)),
-          UsageWindow.make({ kind: "weekly-scoped", scope: O.some("Fable"), usedPercent: 98, resetsAt: O.none() }),
-        ]),
-        AccountUsage.make({
-          account: account("work", "codex"),
-          outcome: AccountUsageOutcome.cases.Failed.make({ detail: "offline" }),
-        }),
-      ],
+      [ok("untouched", [weekly(0, inHours(168))]), ok("running", [weekly(9, inHours(160))])],
       now
     );
-    expect(renderAccountsStatus(rows)).toBe(
-      A.join(
+    expect(A.map(rows, (row) => row.usage.account.label)).toEqual(["running", "untouched"]);
+  });
+
+  it("restarts the windows of an older reading that reset since it was taken", () => {
+    const row = rankAccount(ok("bot", [weekly(44, inHours(-1)), session(100)], "grok-bot", inHours(-72)), now);
+    expect([row.estimated, row.availability, O.getOrNull(row.weeklyRemainingPercent)]).toEqual([
+      true,
+      "session-capped",
+      100,
+    ]);
+    expect(O.getOrNull(row.dataAgeHours)).toBe(72);
+    const fresh = rankAccount(ok("live", [weekly(44, inHours(-1))]), now);
+    expect(fresh.estimated).toBe(false);
+  });
+});
+
+describe("provider panels", () => {
+  it("places each provider in its panel", () => {
+    expect(A.map(["claude", "codex", "grok", "cursor", "grok-bot", "muse", "kimi"], accountSection)).toEqual([
+      "claude",
+      "codex",
+      "supergrok",
+      "supergrok",
+      "supergrok",
+      "muse",
+      "other",
+    ]);
+  });
+
+  it("groups ranked rows by panel in a fixed order and marks the signed-in account", () => {
+    const groups = groupAccounts(
+      rankAccounts(
         [
-          "[accounts] use first: claude me@example.com",
-          "  1. claude me@example.com: ready · weekly 14% left, resets in 5d 16h · session 42% · Fable 98%",
-          "  2. codex work: unreadable (offline)",
+          ok("cursor@example.com", [weekly(10, inHours(5))], "cursor"),
+          ok("b@example.com", [weekly(10, inHours(5))], "codex"),
+          ok("a@example.com", [weekly(10, inHours(50))]),
+          ok("z@example.com", [weekly(10, inHours(5))]),
         ],
-        "\n"
+        now
+      ),
+      [SignedInLogin.make({ provider: "claude", label: "a@example.com" })]
+    );
+    expect(
+      A.map(groups, (group) => [group.section, A.map(group.rows, (row) => [row.usage.account.label, row.signedIn])])
+    ).toEqual([
+      [
+        "claude",
+        [
+          ["z@example.com", false],
+          ["a@example.com", true],
+        ],
+      ],
+      ["codex", [["b@example.com", false]]],
+      ["supergrok", [["cursor@example.com", false]]],
+    ]);
+    expect(groupAccounts([])([])).toEqual([]);
+  });
+});
+
+describe("last good reading", () => {
+  const previousAt = DateTime.makeUnsafe("2026-01-04T23:00:00.000Z");
+
+  it("keeps an account's last good reading when its newest poll fails, stamped with its age", () => {
+    const kept = retainLastGood([failed("me"), ok("other", [])], [ok("me", [weekly(20, inHours(5))])], previousAt);
+    const readings = A.map(kept, (usage): readonly [DateTime.Utc | null, number] =>
+      AccountUsageOutcome.match(usage.outcome, {
+        Ok: ({ asOf, windows }) => [O.getOrNull(asOf), A.length(windows)],
+        NeedsLogin: () => [null, 0],
+        Failed: () => [null, -1],
+      })
+    );
+    expect(readings).toEqual([
+      [previousAt, 1],
+      [null, 0],
+    ]);
+    expect(A.map(kept, (usage) => usage.account.label)).toEqual(["me", "other"]);
+  });
+
+  it("shows a rejected login at once instead of an older ready reading", () => {
+    const rejected = AccountUsage.make({
+      account: account("me"),
+      outcome: AccountUsageOutcome.cases.NeedsLogin.make({ detail: "the provider rejected the stored login" }),
+    });
+    const kept = retainLastGood([rejected], [ok("me", [weekly(20, inHours(5))])], previousAt);
+    expect(A.map(kept, (usage) => usage.outcome._tag)).toEqual(["NeedsLogin"]);
+  });
+
+  it("keeps an older stamp, and leaves a failure with no earlier reading as it is", () => {
+    const older = DateTime.makeUnsafe("2026-01-04T20:00:00.000Z");
+    const kept = retainLastGood([ok("x", [])], previousAt)([failed("me"), failed("new")]);
+    expect(A.map(kept, (usage) => usage.outcome._tag)).toEqual(["Failed", "Failed"]);
+    const stamped = retainLastGood([failed("me")], [ok("me", [], "claude", O.some(older))], previousAt);
+    expect(
+      A.map(stamped, (usage) =>
+        AccountUsageOutcome.match(usage.outcome, {
+          Ok: ({ asOf }) => O.getOrNull(asOf),
+          NeedsLogin: () => null,
+          Failed: () => null,
+        })
       )
+    ).toEqual([older]);
+  });
+});
+
+describe("signed-in CLI logins", () => {
+  const token = (claims: string) =>
+    CodexCliAuth.make({
+      tokens: {
+        id_token: Redacted.make(`header.${Buffer.from(claims).toString("base64url")}.sig`, { label: "id_token" }),
+      },
+    });
+
+  it("reads the email claim of the Codex ID token", () => {
+    assertSome(codexSignedInEmail(token(`{"email":"me@example.com","sub":"x"}`)), "me@example.com");
+    assertNone(codexSignedInEmail(token(`{"sub":"x"}`)));
+    assertNone(
+      codexSignedInEmail(CodexCliAuth.make({ tokens: { id_token: Redacted.make("not-a-jwt", { label: "id_token" }) } }))
+    );
+  });
+});
+
+describe("accounts board rendering", () => {
+  it("renders spans in their two largest units, or minutes under an hour", () => {
+    expect(A.map([136.5, 3.25, 0, 24, 0.5], renderHours)).toEqual(["5d 16h", "3h 15m", "0m", "1d 0h", "30m"]);
+  });
+
+  it("draws one panel per provider with every percentage as quota left", () => {
+    const board = plainBoard(
+      reportOf(
+        [
+          ok("me@example.com", [
+            session(42),
+            weekly(86, inHours(136.5)),
+            UsageWindow.make({ kind: "weekly-scoped", scope: O.some("Fable"), usedPercent: 98, resetsAt: O.none() }),
+          ]),
+          ok("other@example.com", [session(100), weekly(10, inHours(50))]),
+          failed("work", "codex"),
+        ],
+        [SignedInLogin.make({ provider: "claude", label: "other@example.com" })]
+      )
+    );
+    const lines = linesOf(board);
+    expect(lines[0]).toBe(" Accounts  updated now");
+    expect(board).toContain("Claude");
+    expect(board).toContain("switch to me@example.com");
+    expect(board).toMatch(/▶ me@example\.com +ready +█+░+ +14% left +5d 16h/);
+    expect(board).toContain("session 58% left · Fable 2% left");
+    expect(board).toContain("other@example.com ●");
+    expect(board).toContain("session back in 2h 0m");
+    expect(board).toContain("Codex");
+    expect(board).toContain("unreadable");
+    expect(board).toContain("offline");
+    expect(A.every(lines, (line) => line.length <= 100)).toBe(true);
+  });
+
+  it("says when to stay, and when no account in a panel is ready", () => {
+    expect(
+      plainBoard(
+        reportOf(
+          [ok("me@example.com", [weekly(10, inHours(5))])],
+          [SignedInLogin.make({ provider: "claude", label: "me@example.com" })]
+        )
+      )
+    ).toContain("stay on me@example.com");
+    expect(plainBoard(reportOf([ok("me@example.com", [weekly(10, inHours(5))])]))).toContain("use me@example.com");
+    expect(
+      plainBoard(
+        reportOf([ok("spent", [weekly(100, inHours(1))]), ok("capped", [session(100), weekly(1, inHours(9))])])
+      )
+    ).toContain("none ready · first back in 1h 0m");
+    expect(plainBoard(reportOf([failed("gone")]))).toContain("none ready");
+  });
+
+  it("names SuperGrok tools by product and flags old or estimated readings", () => {
+    const board = plainBoard(
+      reportOf([
+        ok("me@example.com", [weekly(55, inHours(20))], "grok"),
+        ok("me@example.com", [weekly(44, inHours(-1))], "grok-bot", inHours(-72)),
+        ok("me@example.com", [], "muse"),
+      ])
+    );
+    expect(board).toContain("SuperGrok Heavy");
+    expect(board).toContain("· Grok Build");
+    expect(board).toContain("Grok Bot");
+    expect(board).toContain("ready (est.)");
+    expect(board).toContain("as of 3d 0h ago · a limit reset since then");
+    expect(board).toContain("Muse");
+    expect(board).toContain("no usage reported (idle)");
+  });
+
+  it("renders credits, unused limit resets, and the plan on the detail line", () => {
+    const board = plainBoard(
+      AccountsStatusReport.make({
+        schemaVersion: "accounts-status/v2",
+        generatedAt: now,
+        groups: groupAccounts(
+          [
+            rankAccount(
+              AccountUsage.make({
+                account: account("me@example.com", "codex"),
+                outcome: AccountUsageOutcome.cases.Ok.make({
+                  identity: O.some("me@example.com"),
+                  plan: O.some("pro"),
+                  windows: [weekly(40, inHours(10))],
+                  credits: [
+                    CreditBalance.make({
+                      label: "cloud session credits",
+                      unit: "usd",
+                      remaining: 246.5,
+                      limit: O.some(250),
+                      expiresAt: O.some(DateTime.makeUnsafe("2026-11-05T07:59:00.000Z")),
+                    }),
+                    CreditBalance.make({
+                      label: "credits",
+                      unit: "credits",
+                      remaining: 62286.98,
+                      limit: O.none(),
+                      expiresAt: O.none(),
+                    }),
+                  ],
+                  limitResets: O.some(2),
+                  asOf: O.none(),
+                }),
+              }),
+              now
+            ),
+          ],
+          []
+        ),
+      }),
+      120
+    );
+    expect(board).toContain(
+      "$247 of $250 cloud session credits (expire Nov 5) · 62287 credits · 2 limit resets unused · plan pro"
     );
   });
 
-  it("says so when nothing is ready or nothing is registered", () => {
-    expect(renderAccountsStatus([])).toBe("[accounts] the proxy holds no supported login");
-    assertSome(
-      A.head(renderAccountsStatus(rankAccounts([ok("spent", [weekly(100, inHours(1))])], now)).split("\n")),
-      "[accounts] no account is ready right now"
+  it("keeps every line inside the board at the minimum width with a long label", () => {
+    const board = plainBoard(
+      reportOf(
+        [
+          ok("abcdefghijklmnopqrstuvwxyz@example.com", [session(10), weekly(30, inHours(20))]),
+          ok("short@example.com", [weekly(10, inHours(5))]),
+        ],
+        [SignedInLogin.make({ provider: "claude", label: "abcdefghijklmnopqrstuvwxyz@example.com" })]
+      ),
+      64
     );
+    const lines = linesOf(board);
+    expect(A.every(lines, (line) => line.length <= 64)).toBe(true);
+    expect(
+      A.every(
+        A.filter(lines, (line) => /^[╭│╰]/.test(line)),
+        (line) => line.length === 64
+      )
+    ).toBe(true);
+    expect(board).toContain("abcdefghijklmnopqr… ●");
+  });
+
+  it("prints a hint when no account is registered, and colors on request", () => {
+    expect(plainBoard(reportOf([]))).toContain("no accounts");
+    const colored = renderAccountsBoard(
+      reportOf([ok("me@example.com", [session(95), weekly(90, inHours(5))])]),
+      AccountsBoardLayout.make({ width: 40, color: true, status: "" })
+    );
+    expect(colored).toContain("━");
+    expect(colored).toContain("session 5% left");
   });
 });
 
@@ -337,7 +610,10 @@ const runLive = Effect.fn("runLive")(function* <A, E>(
   yield* fs.makeDirectory(path.join(root, "snapshots"));
   yield* Effect.forEach(
     Object.entries(files),
-    ([name, content]) => fs.writeFileString(path.join(root, name), content),
+    ([name, content]) =>
+      fs
+        .makeDirectory(path.dirname(path.join(root, name)), { recursive: true })
+        .pipe(Effect.andThen(fs.writeFileString(path.join(root, name), content))),
     {
       discard: true,
     }
@@ -421,6 +697,61 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("live account poller", (
     })
   );
 
+  it.effect("reads which account each CLI is signed in to, and builds the panel report", () =>
+    Effect.gen(function* () {
+      const idToken = `h.${Buffer.from(`{"email":"work@example.com"}`).toString("base64url")}.s`;
+      const client = HttpClient.make((request) =>
+        Effect.succeed(request.url.includes("anthropic") ? respond(request, claudeBody) : respond(request, "{}", 500))
+      );
+      const [signedIn, report, again] = yield* runLive(
+        {
+          "claude-me.json": authFiles["claude-me.json"],
+          "codex-work.json": authFiles["codex-work.json"],
+          ".claude.json": `{"oauthAccount":{"emailAddress":"me@example.com"},"projects":{}}`,
+          ".codex/auth.json": `{"tokens":{"id_token":"${idToken}","access_token":"secret"}}`,
+        },
+        client,
+        Effect.gen(function* () {
+          const usage = yield* AccountsUsage;
+          const first = yield* loadAccountsReport(O.none());
+          return [yield* usage.signedIn, first, yield* loadAccountsReport(O.some(first))] as const;
+        })
+      );
+      expect(A.map(signedIn, (login) => [login.provider, login.label])).toEqual([
+        ["claude", "me@example.com"],
+        ["codex", "work@example.com"],
+      ]);
+      expect(report.schemaVersion).toBe("accounts-status/v2");
+      expect(
+        A.map(report.groups, (group) => [
+          group.section,
+          A.map(group.rows, (row) => [row.usage.outcome._tag, row.signedIn]),
+        ])
+      ).toEqual([
+        ["claude", [["Ok", true]]],
+        ["codex", [["Failed", true]]],
+      ]);
+      expect(A.map(again.groups, (group) => A.map(group.rows, (row) => row.usage.outcome._tag))).toEqual([
+        ["Ok"],
+        ["Failed"],
+      ]);
+    })
+  );
+
+  it.effect("marks no account when the CLI config files are missing or unreadable", () =>
+    Effect.gen(function* () {
+      const client = HttpClient.make((request) => Effect.succeed(respond(request, "{}")));
+      const signedIn = yield* runLive(
+        { ".claude.json": "{", ".codex/auth.json": `{"tokens":{}}` },
+        client,
+        Effect.gen(function* () {
+          return yield* (yield* AccountsUsage).signedIn;
+        })
+      );
+      expect(signedIn).toEqual([]);
+    })
+  );
+
   it.effect("treats a missing auth directory as no accounts and a vanished login as a re-login", () =>
     Effect.gen(function* () {
       const client = HttpClient.make((request) => Effect.succeed(respond(request, "{}")));
@@ -453,15 +784,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("local snapshots", (it) 
       expect(A.map(usages, (usage) => [usage.account.provider, usage.account.label, usage.outcome._tag])).toEqual([
         ["cursor", "me@example.com", "Ok"],
       ]);
-      expect(renderAccountsStatus(rankAccounts(usages, now))).toBe(
-        A.join(
-          [
-            "[accounts] use first: cursor me@example.com",
-            "  1. cursor me@example.com: ready · cycle 86% left, resets in 10h 0m · Auto 11% · plan Ultra · snapshot 3h 0m old",
-          ],
-          "\n"
-        )
-      );
+      const board = plainBoard(reportOf(usages));
+      expect(board).toMatch(/· Cursor +ready +█+░+ +86% left +10h 0m/);
+      expect(board).toContain("Auto 89% left · plan Ultra · as of 3h 0m ago");
     })
   );
 
@@ -483,55 +808,6 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("local snapshots", (it) 
       expect(outcome).toEqual(["Failed"]);
     })
   );
-});
-
-describe("credit and reset rendering", () => {
-  it("renders dollar pools with a limit and expiry, credit points, and unused resets", () => {
-    const usage = AccountUsage.make({
-      account: account("me@example.com", "codex"),
-      outcome: AccountUsageOutcome.cases.Ok.make({
-        identity: O.some("me@example.com"),
-        plan: O.some("pro"),
-        windows: [weekly(40, inHours(10))],
-        credits: [
-          CreditBalance.make({
-            label: "cloud session credits",
-            unit: "usd",
-            remaining: 246.5,
-            limit: O.some(250),
-            expiresAt: O.some(DateTime.makeUnsafe("2026-11-05T07:59:00.000Z")),
-          }),
-          CreditBalance.make({
-            label: "credits",
-            unit: "credits",
-            remaining: 62286.98,
-            limit: O.none(),
-            expiresAt: O.none(),
-          }),
-        ],
-        limitResets: O.some(1),
-        asOf: O.none(),
-      }),
-    });
-    expect(renderAccountRanking(rankAccount(usage, now))).toBe(
-      "codex me@example.com: ready · weekly 60% left, resets in 10h 0m · cloud session credits $247 of $250 left until 2026-11-05 · credits 62287 left · 1 limit reset(s) unused · plan pro"
-    );
-  });
-
-  it("leaves out a reset count of zero", () => {
-    const usage = AccountUsage.make({
-      account: account("me@example.com", "codex"),
-      outcome: AccountUsageOutcome.cases.Ok.make({
-        identity: O.none(),
-        plan: O.none(),
-        windows: [],
-        credits: [],
-        limitResets: O.some(0),
-        asOf: O.none(),
-      }),
-    });
-    expect(renderAccountRanking(rankAccount(usage, now))).toBe("codex me@example.com: ready");
-  });
 });
 
 const runAccounts = Command.runWith(accountsCommand, { version: "0.0.0" });
@@ -584,11 +860,16 @@ describe("accounts status command", () => {
             )
           );
         const text = yield* run(["status"]);
-        expect(text).toContain("[accounts] use first: cursor me@example.com");
+        expect(text).toContain("SuperGrok Heavy");
+        expect(text).toContain("· Cursor");
         const json = yield* run(["status", "--json"]);
-        expect(json).toContain('"schemaVersion":"accounts-status/v1"');
+        expect(json).toContain('"schemaVersion":"accounts-status/v2"');
+        expect(json).toContain('"section":"supergrok"');
         expect(json).toContain('"provider":"cursor"');
-        expect(yield* run([])).toContain("bun run beep accounts status [--json]");
+        // Without a terminal the live screen prints the board once and ends.
+        const live = yield* run(["--every", "30"]);
+        expect(live).toContain(" Accounts  updated ");
+        expect(live).toContain("· Cursor");
       })
     );
   });
@@ -601,4 +882,72 @@ describe("accounts command", () => {
       ["status"]
     );
   });
+});
+
+const keyPress = (name: string): Terminal.UserInput => ({
+  input: O.some(name),
+  key: { name, ctrl: false, meta: false, shift: false },
+});
+
+const runScreen = Effect.fnUntraced(function* (
+  usage: Effect.Effect<ReadonlyArray<AccountUsage>, AccountsError>,
+  keys: ReadonlyArray<Terminal.UserInput>
+) {
+  const shown = yield* Ref.make(A.empty<string>());
+  const input = yield* Queue.unbounded<Terminal.UserInput, Cause.Done>();
+  const terminal = Terminal.make({
+    columns: Effect.succeed(90),
+    rows: Effect.succeed(40),
+    readInput: Effect.succeed(input),
+    readLine: Effect.succeed(""),
+    display: (text) => Ref.update(shown, A.append(text)),
+  });
+  const poller = AccountsUsage.of({
+    accounts: Effect.succeed([]),
+    poll: Effect.fn("AccountsUsage.poll")(function* (ref: AccountRef) {
+      return failed(ref.label);
+    }),
+    snapshots: usage,
+    signedIn: Effect.succeed([]),
+  });
+  const screen = yield* watchAccounts(Duration.seconds(30)).pipe(
+    Effect.provideService(Terminal.Terminal, terminal),
+    Effect.provideService(AccountsUsage, poller),
+    Effect.forkChild
+  );
+  // Let a second of screen time pass before each key: the first poll lands,
+  // and a poll asked for with `r` starts on the next tick.
+  yield* Effect.forEach(keys, (key) => TestClock.adjust("1 second").pipe(Effect.andThen(Queue.offer(input, key))), {
+    discard: true,
+  });
+  yield* Fiber.join(screen);
+  return A.join(yield* Ref.get(shown), "");
+});
+
+describe("live accounts screen", () => {
+  it.effect("draws the board, polls again on r, and restores the screen on q", () =>
+    Effect.gen(function* () {
+      const output = yield* runScreen(Effect.succeed([ok("me@example.com", [weekly(10, inHours(5))])]), [
+        keyPress("x"),
+        keyPress("r"),
+        keyPress("q"),
+      ]);
+      expect(output.startsWith("\u001b[?1049h")).toBe(true);
+      expect(output.endsWith("\u001b[?25h\u001b[?1049l")).toBe(true);
+      expect(output).toContain("polling");
+      expect(output).toContain("me@example.com");
+      expect(output).toContain("r refresh");
+    })
+  );
+
+  it.effect("keeps waiting when a poll fails, and quits on Ctrl+C or a closed input", () =>
+    Effect.gen(function* () {
+      const output = yield* runScreen(Effect.fail(AccountsError.make({ reason: "io", message: "disk gone" })), [
+        { input: O.none(), key: { name: "c", ctrl: true, meta: false, shift: false } },
+      ]);
+      expect(output).toContain("polling every account");
+      expect(output).toContain("poll failed: disk gone (showing the last reading)");
+      expect(output.endsWith("\u001b[?1049l")).toBe(true);
+    })
+  );
 });
