@@ -15,6 +15,8 @@ import { join } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
 import { Lockfile } from "../../effected/lockfiles/index.ts";
 import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { NoPeerDependencyRules } from "../../effected/workspaces/ConfigDependencyHooks.ts";
 import { peerNameMatcher } from "../../effected/workspaces/internal/peerPatterns.ts";
 import type { UnsatisfiedPeer } from "../../effected/workspaces/PeerCheck.ts";
@@ -80,24 +82,19 @@ const ours = (rows: ReadonlyArray<UnsatisfiedPeer>): ReadonlyArray<Row> =>
 	);
 
 /** pnpm's own shape, narrowed to the fields the comparison uses. */
-interface OracleEntry {
-	readonly parents: ReadonlyArray<{ readonly name: string; readonly version: string }>;
-	readonly optional: boolean;
-	readonly wantedRange: string;
-	readonly foundVersion?: string;
-}
-type Oracle = Readonly<
-	Record<
-		string,
-		{
-			readonly bad: Record<string, ReadonlyArray<OracleEntry>>;
-			readonly missing: Record<string, ReadonlyArray<OracleEntry>>;
-		}
-	>
->;
+const OracleEntry = S.Struct({
+	parents: S.Array(S.Struct({ name: S.String, version: S.String })),
+	optional: S.Boolean,
+	wantedRange: S.String,
+	foundVersion: S.optionalKey(S.String),
+});
+const Oracle = S.fromJsonString(S.Record(S.String, S.Struct({
+	bad: S.optionalKey(S.Record(S.String, S.Array(OracleEntry))),
+	missing: S.optionalKey(S.Record(S.String, S.Array(OracleEntry))),
+})));
 
 const theirs = (dir: string, file = "peers-check.json"): ReadonlyArray<Row> => {
-	const oracle = JSON.parse(fixture(`peers/${dir}/${file}`)) as Oracle;
+	const oracle = Result.getOrThrow(S.decodeResult(Oracle)(fixture(`peers/${dir}/${file}`)));
 	const rows: Array<Row> = [];
 	for (const [importer, report] of Object.entries(oracle)) {
 		// A clean importer still emits its key with empty objects, so emptiness

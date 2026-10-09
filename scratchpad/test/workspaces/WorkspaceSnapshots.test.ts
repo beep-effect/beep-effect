@@ -340,7 +340,9 @@ describe('WorkspaceStateSnapshot — a version-less member is absent, never `""`
 	});
 
 	it("encoding omits the key rather than writing a placeholder", () => {
-		const encoded = Result.getOrThrow(S.encodeResult(PackageStateSnapshot)(bareVersionSnapshot.packages[0] as PackageStateSnapshot));
+		const pkg = bareVersionSnapshot.packages[0];
+		if (pkg === undefined) return assert.fail("expected a snapshot package");
+		const encoded = Result.getOrThrow(S.encodeResult(PackageStateSnapshot)(pkg));
 		assert.isFalse(Object.hasOwn(encoded, "version"));
 	});
 

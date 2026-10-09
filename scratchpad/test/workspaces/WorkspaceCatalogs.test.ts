@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import {
 	CatalogSet,
 	LockfileReadError,
@@ -112,17 +113,22 @@ describe("CatalogSet", () => {
 		// It must come from JSON.parse, not an object literal — in a literal
 		// `__proto__:` sets the prototype and creates no own key, so the test would
 		// assert nothing. This is the shape a hostile lockfile actually produces.
-		const hostile = JSON.parse('{"__proto__": {"evil": "1.0.0"}}') as unknown;
+		const hostile: unknown = JSON.parse('{"__proto__": {"evil": "1.0.0"}}');
 		const set = CatalogSet.fromLockfileCatalogs(hostile);
 		assert.isTrue(Object.hasOwn(set.entries, "__proto__"));
-		assert.isUndefined(({} as Record<string, unknown>).evil);
-		assert.isUndefined((Object.prototype as unknown as Record<string, unknown>).evil);
+		const empty: Record<string, unknown> = {};
+		assert.isUndefined(empty.evil);
+		const prototype: unknown = Object.prototype;
+		if (!P.isObject(prototype)) return assert.fail("expected Object.prototype to be an object");
+		assert.isUndefined(prototype.evil);
 	});
 
 	it("a __proto__ DEPENDENCY key inside a catalog does not pollute either", () => {
-		const hostile = JSON.parse('{"default": {"__proto__": "1.0.0"}}') as unknown;
+		const hostile: unknown = JSON.parse('{"default": {"__proto__": "1.0.0"}}');
 		const set = CatalogSet.fromLockfileCatalogs(hostile);
-		assert.isUndefined((Object.prototype as unknown as Record<string, unknown>)["1.0.0"]);
+		const prototype: unknown = Object.prototype;
+		if (!P.isObject(prototype)) return assert.fail("expected Object.prototype to be an object");
+		assert.isUndefined(prototype["1.0.0"]);
 		const entries = set.entries.default;
 		if (entries === undefined) return assert.fail("expected the default catalog");
 		assert.isTrue(Object.hasOwn(entries, "__proto__"));

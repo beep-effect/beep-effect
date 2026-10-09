@@ -1,4 +1,5 @@
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 // The ONLY module that imports `@pnpm/catalogs.*`.
 //
 // Those four packages are what make this package integrated tier: they are
@@ -47,12 +48,12 @@ export const catalogNameOf = (specifier: string): string | null => parseCatalogP
 
 /** Normalize the arbitrary shape of a catalog map into `CatalogEntries`, dropping anything unusable. */
 export const normalize = (raw: unknown): CatalogEntries => {
-	if (raw === null || typeof raw !== "object") return {};
+	if (!P.isObjectOrArray(raw)) return {};
 	const entries: CatalogEntries = {};
-	for (const [catalogName, catalog] of Object.entries(raw as Record<string, unknown>)) {
-		if (catalog === null || typeof catalog !== "object") continue;
+	for (const [catalogName, catalog] of Object.entries<unknown>(raw)) {
+		if (!P.isObjectOrArray(catalog)) continue;
 		const clean: Record<string, string> = {};
-		for (const [dependency, value] of Object.entries(catalog as Record<string, unknown>)) {
+		for (const [dependency, value] of Object.entries<unknown>(catalog)) {
 			if (typeof value === "string") {
 				// `__proto__` as a plain assignment would mutate the prototype; route
 				// every key through defineProperty, matching JSON.parse semantics.
@@ -60,11 +61,11 @@ export const normalize = (raw: unknown): CatalogEntries => {
 			} else if (value !== null && typeof value === "object" && "specifier" in value) {
 				// A pnpm LOCKFILE catalog entry is `{ specifier, version }`; the
 				// specifier is the declared range, which is what a catalog resolves to.
-				const specifier = (value as { readonly specifier: unknown }).specifier;
+				const specifier = value.specifier;
 				if (typeof specifier === "string") define(clean, dependency, specifier);
 			}
 		}
-		define(entries as Record<string, unknown>, catalogName, clean);
+		define(entries, catalogName, clean);
 	}
 	return entries;
 };

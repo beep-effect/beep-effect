@@ -430,7 +430,8 @@ describe("WorkspaceDiscovery — a version that is PRESENT but EMPTY", () => {
 				assert.strictEqual(error.path, "/repo/packages/empty/package.json");
 				// The same sentence the sync facade attaches to its skip, so the two
 				// surfaces describe one condition one way.
-				assert.strictEqual((error.cause as Error).message, "version must be a non-empty string");
+				if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
+				assert.strictEqual(error.cause.message, "version must be a non-empty string");
 			}),
 		);
 

@@ -156,12 +156,12 @@ export class PublishabilityDetector extends Context.Service<PublishabilityDetect
 	 */
 	static readonly npm: PublishabilityDetectorShape = {
 		detect: (pkg: WorkspacePackage) =>
-			Effect.sync(() => {
+			Effect.sync((): ReadonlyArray<PublishTarget> => {
 				const config = pkg.publishConfig;
 				const access = config?.access;
 
 				// Private and silent about access: npm will not publish it.
-				if (pkg.private && access === undefined) return [] as ReadonlyArray<PublishTarget>;
+				if (pkg.private && access === undefined) return [];
 
 				return [
 					PublishTarget.make({
@@ -177,7 +177,7 @@ export class PublishabilityDetector extends Context.Service<PublishabilityDetect
 
 	/** Nothing publishes. */
 	static readonly none: PublishabilityDetectorShape = {
-		detect: () => Effect.succeed([] as ReadonlyArray<PublishTarget>),
+		detect: () => Effect.succeed([]),
 	};
 
 	/**

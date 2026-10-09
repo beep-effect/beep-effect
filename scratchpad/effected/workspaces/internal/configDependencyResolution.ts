@@ -1,5 +1,3 @@
-// Config-dependency replay reads the real Node module store even when the supplied FileSystem is virtual.
-// @effect-diagnostics nodeBuiltinImport:skip-file
 import { dual } from "effect/Function";
 // Resolving a declared pnpm config dependency to the pnpmfile of the version
 // it DECLARES — not whatever happens to be installed right now.
@@ -27,9 +25,7 @@ import { dual } from "effect/Function";
 // whenever that fails, it fails typed with a `reason` and the remediation in
 // the message. Nothing is ever fetched unverified.
 
-import { readFile, readdir, realpath } from "node:fs/promises";
 import { homedir } from "node:os";
-import { basename, dirname, join } from "node:path";
 import { PnpmEnvLockfile } from "../../lockfiles/index.ts";
 import type { CatalogAssemblyError } from "../../npm/index.ts";
 import { PackageManagerCache } from "../../npm/index.ts";
@@ -46,6 +42,10 @@ import type { FetchConfigDependency, FetchFailure, RecordedLocks } from "./confi
 import type { ManifestVersion } from "./configDependencyShared.ts";
 import { carries, hooksError, ioOrNone, manifestVersion, sideLabel } from "./configDependencyShared.ts";
 import { splitConfigDependencySpec } from "./configDependencySpecGrammar.ts";
+
+// The caller's Effect FileSystem may be virtual; resolution must walk the real pnpm store.
+const { readFile, readdir, realpath } = process.getBuiltinModule("node:fs/promises");
+const { basename, dirname, join } = process.getBuiltinModule("node:path");
 
 /**
  * One config dependency resolved at its declared version: where it was
@@ -111,7 +111,11 @@ const declaredEntries = (
 	return traversal === undefined
 		? Effect.succeed(entries)
 		: Effect.fail(
-				hooksError(traversal.name, new Error(`config dependency name has a '..' path segment: ${traversal.name}`)),
+				hooksError(
+					traversal.name,
+					new Error(`config dependency name has a '..' path segment: ${traversal.name}`),
+					undefined,
+				),
 			);
 };
 
@@ -504,6 +508,7 @@ export const lookupPnpmfiles: {
 								known.length === 0 ? "none" : known.join(", ")
 							})`,
 						),
+						undefined,
 					),
 				);
 			}

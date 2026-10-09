@@ -18,12 +18,12 @@ import * as S from "effect/Schema";
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
-const EMPTY: Record<string, string> = Object.freeze(Object.create(null) as Record<string, string>);
+const EMPTY: Record<string, string> = Object.freeze<Record<string, string>>(Object.create(null));
 
 // The frozen empty default for `manifestRecord`, shared like the dependency-map
 // default: construction sites and serialized values without the field decode to
 // `{}` rather than failing or carrying `undefined`.
-const EMPTY_MANIFEST: Record<string, unknown> = Object.freeze(Object.create(null) as Record<string, unknown>);
+const EMPTY_MANIFEST: Record<string, unknown> = Object.freeze<Record<string, unknown>>(Object.create(null));
 
 /**
  * The `publishConfig` fields workspace tooling reads.

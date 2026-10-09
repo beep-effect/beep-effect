@@ -84,8 +84,8 @@ export const enumerate: {
 		const included = new Map<string, string>();
 
 		/** A shared-traversal stop, materialized as this module's failure record. */
-		const failureOf = (stop: { readonly kind: string; readonly detail: string }, pattern: string): EnumerationFailure =>
-			({ kind: stop.kind, pattern, detail: stop.detail }) as EnumerationFailure;
+		const failureOf = (stop: { readonly kind: EnumerationFailureKind; readonly detail: string }, pattern: string): EnumerationFailure =>
+			({ kind: stop.kind, pattern, detail: stop.detail });
 
 		// Literals: an exact lookup, no directory read at all.
 		//

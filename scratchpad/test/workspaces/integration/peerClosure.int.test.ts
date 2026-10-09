@@ -9,6 +9,7 @@ import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { assert, describe, it, layer } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as P from "effect/Predicate";
 import { WorkspaceDiscovery, Workspaces } from "../../../effected/workspaces/index.ts";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
@@ -56,10 +57,14 @@ const closureGaps = (manifests: ReadonlyArray<Manifest>): ReadonlyArray<Gap> => 
 			.filter((name) => byName.has(name))
 			.map((name) => [name, [name]] as const);
 		while (queue.length > 0) {
-			const [name, via] = queue.shift() as readonly [string, ReadonlyArray<string>];
+			const next = queue.shift();
+			if (next === undefined) return assert.fail("expected a queued peer");
+			const [name, via] = next;
 			if (seen.has(name)) continue;
 			seen.add(name);
-			for (const required of (byName.get(name) as Manifest).peers.filter((peer) => byName.has(peer))) {
+			const manifest = byName.get(name);
+			if (manifest === undefined) return assert.fail("expected a manifest for the queued peer");
+			for (const required of manifest.peers.filter((peer) => byName.has(peer))) {
 				if (
 					required !== pkg.name &&
 					!declared.has(required) &&
@@ -172,17 +177,19 @@ describe("every published @effected package declares its full peer closure", () 
 				const manifests: ReadonlyArray<Manifest> = packages
 					.filter((pkg) => pkg.name.startsWith("@effected/"))
 					.map((pkg) => {
-						const meta = (pkg.manifestRecord.peerDependenciesMeta ?? {}) as Record<
-							string,
-							{ readonly optional?: boolean }
-						>;
+						const meta = pkg.manifestRecord.peerDependenciesMeta;
+						const isOptional = (name: string): boolean => {
+							if (!P.isObject(meta)) return false;
+							const entry = meta[name];
+							return P.isObject(entry) && entry.optional === true;
+						};
 						const peerNames = Object.keys(pkg.peerDependencies);
 						return {
 							name: pkg.name,
 							published: pkg.publishConfig?.access === "public",
 							dependencies: Object.keys(pkg.dependencies),
-							peers: peerNames.filter((name) => meta[name]?.optional !== true),
-							optionalPeers: peerNames.filter((name) => meta[name]?.optional === true),
+							peers: peerNames.filter((name) => !isOptional(name)),
+							optionalPeers: peerNames.filter(isOptional),
 						};
 					});
 				assert.isAbove(manifests.filter((m) => m.published).length, 25, "the published packages were found");

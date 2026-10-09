@@ -35,13 +35,15 @@ describe("the node-sync preset against the real repository", () => {
 	it("findWorkspaceRootSync finds the workspace root from a packages/ subdir", () => {
 		const root = findWorkspaceRootSync(cwd, nodeSyncOps);
 		assert.isNotNull(root);
-		assert.isTrue(nodeFileSystem.exists(nodePath.join(root as string, "pnpm-workspace.yaml")));
+		if (root === null) return assert.fail("expected a workspace root");
+		assert.isTrue(nodeFileSystem.exists(nodePath.join(root, "pnpm-workspace.yaml")));
 	});
 
 	it("getWorkspacePackagesSync enumerates this package and its siblings", () => {
 		const root = findWorkspaceRootSync(cwd, nodeSyncOps);
 		assert.isNotNull(root);
-		const names = getWorkspacePackagesSync(root as string, nodeSyncOps).map((pkg) => pkg.name);
+		if (root === null) return assert.fail("expected a workspace root");
+		const names = getWorkspacePackagesSync(root, nodeSyncOps).map((pkg) => pkg.name);
 		assert.include(names, "@effected/workspaces");
 		assert.include(names, "@effected/glob");
 		assert.include(names, "@effected/walker");
@@ -52,9 +54,10 @@ describe("the node-sync preset against the real repository", () => {
 		const manualRoot = findWorkspaceRootSync(cwd, handWired);
 		assert.strictEqual(presetRoot, manualRoot);
 		assert.isNotNull(presetRoot);
+		if (presetRoot === null || manualRoot === null) return assert.fail("expected both workspace roots");
 
-		const preset = getWorkspacePackagesSync(presetRoot as string, nodeSyncOps).map((pkg) => pkg.name);
-		const manual = getWorkspacePackagesSync(manualRoot as string, handWired).map((pkg) => pkg.name);
+		const preset = getWorkspacePackagesSync(presetRoot, nodeSyncOps).map((pkg) => pkg.name);
+		const manual = getWorkspacePackagesSync(manualRoot, handWired).map((pkg) => pkg.name);
 		assert.deepStrictEqual(preset, manual);
 	});
 });

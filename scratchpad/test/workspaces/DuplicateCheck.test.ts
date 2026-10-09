@@ -55,7 +55,8 @@ describe("DuplicateCheck.run", () => {
 			// The question the issue could not answer from the type error: WHICH
 			// versions, and WHO holds each one. `@effected/npm` was never bumped,
 			// which is exactly why nobody suspected it.
-			assert.deepStrictEqual(flatten(commands as DuplicatedPackage), {
+			if (commands === undefined) return assert.fail("expected commands in duplicate report");
+			assert.deepStrictEqual(flatten(commands), {
 				"0.2.1": { "@effected/commands@0.2.1": ["package:@effected/npm@0.8.2"] },
 				"0.3.1": { "@effected/commands@0.3.1": ["package:@effected/workspaces@0.10.1"] },
 			});
@@ -103,7 +104,8 @@ describe("DuplicateCheck.run", () => {
 			const foo = byName(report, "foo");
 			assert.isDefined(foo);
 			assert.strictEqual(foo?.versions.length, 2);
-			assert.deepStrictEqual(flatten(foo as DuplicatedPackage), {
+			if (foo === undefined) return assert.fail("expected foo in duplicate report");
+			assert.deepStrictEqual(flatten(foo), {
 				"1.0.0": {
 					"foo@1.0.0": ["importer:packages/other"],
 					"foo@1.0.0(bar@1.0.0)": ["importer:."],
@@ -133,7 +135,8 @@ describe("DuplicateCheck.run", () => {
 			);
 			assert.isFalse(kit.isClean);
 			const commands = byName(kit, "@effected/commands");
-			assert.deepStrictEqual(flatten(commands as DuplicatedPackage), {
+			if (commands === undefined) return assert.fail("expected commands in duplicate report");
+			assert.deepStrictEqual(flatten(commands), {
 				"0.2.1": { "@effected/commands@0.2.1": ["package:@savvy-web/silk-effects@6.0.4"] },
 				"0.3.1": { "@effected/commands@0.3.1": ["package:@effected/workspaces@0.10.1"] },
 			});
@@ -170,7 +173,8 @@ describe("DuplicateCheck.run", () => {
 
 			assert.isFalse(report.isClean);
 			const commands = byName(report, "@effected/commands");
-			assert.deepStrictEqual(flatten(commands as DuplicatedPackage), {
+			if (commands === undefined) return assert.fail("expected commands in duplicate report");
+			assert.deepStrictEqual(flatten(commands), {
 				"0.2.1": { "@effected/commands@0.2.1": ["package:@effected/npm@0.8.2"] },
 				"0.3.1": { "@effected/commands@0.3.1": ["importer:packages/app"] },
 			});
@@ -213,7 +217,8 @@ describe("DuplicateCheck.run", () => {
 				["react"],
 			);
 			const react = byName(report, "react");
-			assert.deepStrictEqual(flatten(react as DuplicatedPackage), {
+			if (react === undefined) return assert.fail("expected react in duplicate report");
+			assert.deepStrictEqual(flatten(react), {
 				"17.0.2": { "react@17.0.2": ["importer:.", "package:react-dom@18.3.1"] },
 				"18.3.1": { "react@18.3.1": ["importer:packages/other", "package:react-dom@18.3.1"] },
 			});

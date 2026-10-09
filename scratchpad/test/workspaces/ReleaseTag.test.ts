@@ -23,7 +23,9 @@ const assertRefusesEmpty = (thunk: () => unknown): void => {
 		thrown = error;
 	}
 	assert.instanceOf(thrown, Error);
-	assert.match(formatIssue((thrown as Error).cause as SchemaIssue.Issue), /length of at least 1/);
+	if (!(thrown instanceof Error)) return assert.fail("expected an Error");
+	if (!SchemaIssue.isIssue(thrown.cause)) return assert.fail("expected a schema issue cause");
+	assert.match(formatIssue(thrown.cause), /length of at least 1/);
 };
 
 describe("ReleaseTag.single", () => {

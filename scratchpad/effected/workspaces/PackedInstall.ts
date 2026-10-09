@@ -304,7 +304,7 @@ const isNotALink = (error: PlatformError.PlatformError): boolean =>
 	error.reason._tag === "Unknown" &&
 	typeof error.reason.cause === "object" &&
 	error.reason.cause !== null &&
-	(error.reason.cause as { readonly code?: unknown }).code === "EINVAL";
+	("code" in error.reason.cause ? error.reason.cause.code : undefined) === "EINVAL";
 
 /**
  * Which installed package a `node_modules/.bin` symlink resolves into.
@@ -419,7 +419,7 @@ export class InstalledConsumer extends S.Class<InstalledConsumer>("InstalledCons
 				const text = yield* fs.readFileString(manifest).pipe(Effect.mapError(io(`could not read ${manifest}`)));
 				const parsed: unknown = yield* S.decodeEffect(JsonValue)(text).pipe(Effect.mapError(io(`${manifest} is not JSON`)));
 				const named =
-					typeof parsed === "object" && parsed !== null ? (parsed as { readonly name?: unknown }).name : undefined;
+					typeof parsed === "object" && parsed !== null && "name" in parsed ? parsed.name : undefined;
 				if (typeof named === "string") return { package: named, target };
 			}
 			return yield* failure(

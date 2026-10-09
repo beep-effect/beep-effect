@@ -228,14 +228,14 @@ export const readPackedManifest = (manifestJson: string): Result.Result<PackedMa
 	} catch (cause) {
 		return Result.fail(cause);
 	}
-	if (typeof manifest !== "object" || manifest === null || Array.isArray(manifest))
+	if (!P.isObject(manifest))
 		return Result.fail(new Error("package.json is not an object"));
-	const record = manifest as Record<string, unknown>;
+	const record = manifest;
 	const name = typeof record.name === "string" ? record.name : undefined;
 	const unresolved = RUNTIME_DEPENDENCY_FIELDS.flatMap((field) => {
 		const block = record[field];
-		if (typeof block !== "object" || block === null) return [];
-		return Object.entries(block as Record<string, unknown>)
+		if (!P.isObjectOrArray(block)) return [];
+		return Object.entries<unknown>(block)
 			.filter(([, spec]) => typeof spec === "string" && UNRESOLVABLE.test(spec))
 			.map(([dependency, spec]) => `${field}.${dependency}: ${String(spec)}`);
 	});
@@ -272,7 +272,7 @@ export const binTargetOf: {
 		return typeof manifest.name === "string" && manifest.name.replace(/^@[^/]+\//, "") === name ? bin : undefined;
 	}
 	if (!P.isObject(bin) || Array.isArray(bin)) return undefined;
-	const target = (bin as Record<string, unknown>)[name];
+	const target = bin[name];
 	return typeof target === "string" && Object.hasOwn(bin, name) ? target : undefined;
 });
 

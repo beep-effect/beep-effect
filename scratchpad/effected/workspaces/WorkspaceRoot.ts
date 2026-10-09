@@ -125,11 +125,14 @@ const isWorkspaceRoot = (dir: string): Effect.Effect<boolean, never, FileSystem.
 		// defect, so it is wrapped at the point it can throw rather than trusted
 		// to a catch further out.
 		const parsed = yield* Effect.try({
-			try: () => Result.getOrThrow(S.decodeResult(JsonValue)(content)) as Record<string, unknown>,
+			try: (): unknown => Result.getOrThrow(S.decodeResult(JsonValue)(content)),
 			catch: () => undefined,
-		}).pipe(Effect.orElseSucceed(() => ({}) as Record<string, unknown>));
+		}).pipe(Effect.orElseSucceed(() => ({})));
 
-		return parsed.workspaces !== undefined && parsed.workspaces !== null;
+		// A JSON null previously failed on property access; retain that defect.
+		if (parsed === null) throw new TypeError("Cannot read properties of null (reading 'workspaces')");
+		return typeof parsed === "object" && "workspaces" in parsed &&
+			parsed.workspaces !== undefined && parsed.workspaces !== null;
 	});
 
 /**

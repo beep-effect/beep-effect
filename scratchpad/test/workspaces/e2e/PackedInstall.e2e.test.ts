@@ -517,7 +517,7 @@ describe("PackedInstall against a real fixture workspace", () => {
 						// The range the caller passed became the packed tarball: the one spec npm accepts beside the override.
 						const manifest = readJson(join(consumer.directory, "package.json"));
 						assert.deepInclude(
-							manifest.dependencies as Record<string, string>,
+							manifest.dependencies,
 							{ [LIB]: `file:${result.tarballs[LIB]}` },
 							consumer.manager,
 						);

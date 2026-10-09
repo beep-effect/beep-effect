@@ -55,8 +55,8 @@ const JsonValue = S.fromJsonString(S.Unknown);
  * until a hook sets them.
  */
 interface HookConfig {
-	catalog: Record<string, string>;
-	catalogs: Record<string, Record<string, string>>;
+	catalog: Record<string, unknown>;
+	catalogs: Record<string, unknown>;
 	minimumReleaseAge: number | undefined;
 	minimumReleaseAgeExclude: readonly string[] | undefined;
 	peerDependencyRules: PeerDependencyRules | undefined;
@@ -309,7 +309,7 @@ const finiteNumberOr = (value: unknown, fallback: number | undefined): number | 
 
 /** A string array if `value` is one, else the prior threaded value — a malformed exclude is dropped, not fatal. */
 const stringArrayOr = (value: unknown, fallback: readonly string[] | undefined): readonly string[] | undefined =>
-	Array.isArray(value) && value.every((entry) => typeof entry === "string") ? (value as readonly string[]) : fallback;
+	Array.isArray(value) && value.every((entry: unknown): entry is string => typeof entry === "string") ? value : fallback;
 
 /**
  * Read the catalog slice and the release-age keys back out of whatever a hook
@@ -326,10 +326,8 @@ const stringArrayOr = (value: unknown, fallback: readonly string[] | undefined):
 const configOf = (value: unknown, fallback: HookConfig): HookConfig => {
 	if (!P.isObject(value)) return fallback;
 	return {
-		catalog: P.isObject(value.catalog) ? (value.catalog as Record<string, string>) : fallback.catalog,
-		catalogs: P.isObject(value.catalogs)
-			? (value.catalogs as Record<string, Record<string, string>>)
-			: fallback.catalogs,
+		catalog: P.isObject(value.catalog) ? value.catalog : fallback.catalog,
+		catalogs: P.isObject(value.catalogs) ? value.catalogs : fallback.catalogs,
 		minimumReleaseAge: finiteNumberOr(value.minimumReleaseAge, fallback.minimumReleaseAge),
 		minimumReleaseAgeExclude: stringArrayOr(value.minimumReleaseAgeExclude, fallback.minimumReleaseAgeExclude),
 		peerDependencyRules: peerRulesOr(value.peerDependencyRules, fallback.peerDependencyRules),
@@ -347,9 +345,10 @@ const stringRecordOr = (
 	value: unknown,
 	fallback: Readonly<Record<string, string>> | undefined,
 ): Readonly<Record<string, string>> | undefined =>
-	P.isObject(value) && Object.values(value).every((entry) => typeof entry === "string")
-		? (value as Record<string, string>)
-		: fallback;
+	isStringRecord(value) ? value : fallback;
+
+const isStringRecord = (value: unknown): value is Record<string, string> =>
+	P.isObject(value) && Object.values(value).every(P.isString);
 
 const peerRulesOr = (value: unknown, fallback: PeerDependencyRules | undefined): PeerDependencyRules | undefined => {
 	if (!P.isObject(value)) return fallback;
@@ -399,9 +398,14 @@ const updateConfigOf = (mod: unknown): UpdateConfig | undefined => {
 	for (const candidate of [mod, P.isObject(mod) ? mod.default : undefined]) {
 		if (!P.isObject(candidate)) continue;
 		const hooks = candidate.hooks;
-		if (P.isObject(hooks) && P.isFunction(hooks.updateConfig))
-			return hooks.updateConfig as UpdateConfig;
-		if (P.isFunction(candidate.updateConfig)) return candidate.updateConfig as UpdateConfig;
+		if (P.isObject(hooks) && P.isFunction(hooks.updateConfig)) {
+			const updateConfig = hooks.updateConfig;
+			return (config) => updateConfig(config);
+		}
+		if (P.isFunction(candidate.updateConfig)) {
+			const updateConfig = candidate.updateConfig;
+			return (config) => updateConfig(config);
+		}
 	}
 	return undefined;
 };
@@ -469,7 +473,7 @@ const replayInProcess = (
 				// Critical-dependency warning it cannot silence — even one composing
 				// `layerSubprocess`, because this module stays in its import graph
 				// either way.
-				try: () => import(/* webpackIgnore: true */ url) as Promise<unknown>,
+				try: (): Promise<unknown> => import(/* webpackIgnore: true */ url),
 				catch: (cause) => CatalogAssemblyError.make({ source: "hooks", path: name, cause }),
 			});
 			const updateConfig = updateConfigOf(loaded);

@@ -29,7 +29,8 @@ const assertDies = (exit: Exit.Exit<unknown, unknown>, fragment: string): void =
 		assert.isTrue(Cause.hasDies(exit.cause));
 		const defect = exit.cause.reasons.filter(Cause.isDieReason).map((reason) => reason.defect)[0];
 		assert.instanceOf(defect, Error);
-		assert.include((defect as Error).message, fragment);
+		if (!(defect instanceof Error)) return assert.fail("expected an Error defect");
+		assert.include(defect.message, fragment);
 	}
 };
 

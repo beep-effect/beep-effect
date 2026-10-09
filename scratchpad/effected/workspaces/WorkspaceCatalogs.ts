@@ -35,7 +35,6 @@ import type {
 	PeerDependencyRules,
 } from "./ConfigDependencyHooks.ts";
 import { ConfigDependencyHooks, NoPeerDependencyRules } from "./ConfigDependencyHooks.ts";
-import type { Catalogs } from "./internal/catalogs.ts";
 import { inlineCatalogs, merge, normalize, rangeOf } from "./internal/catalogs.ts";
 import { importerVersionsOf } from "./internal/importerVersions.ts";
 import { findLayerRoot } from "./internal/layerRoot.ts";
@@ -185,7 +184,7 @@ export class CatalogSet extends S.Class<CatalogSet>("CatalogSet")({
 
 	/** Merge sets. Later sets win per dependency within a catalog. */
 	static merge(...sets: ReadonlyArray<CatalogSet>): CatalogSet {
-		return CatalogSet.fromCatalogs(merge(...sets.map((set) => set.entries as Catalogs)));
+		return CatalogSet.fromCatalogs(merge(...sets.map((set) => set.entries)));
 	}
 
 	/** Whether any catalog declares anything. */
@@ -206,7 +205,7 @@ export class CatalogSet extends S.Class<CatalogSet>("CatalogSet")({
 	 * @param specifier - The declared specifier, e.g. `catalog:` or `catalog:build`.
 	 */
 	resolveSpecifier(dependency: string, specifier: string): O.Option<string> {
-		const resolved = rangeOf(this.entries as Catalogs, dependency, specifier);
+		const resolved = rangeOf(this.entries, dependency, specifier);
 		return typeof resolved === "string" ? O.some(resolved) : O.none();
 	}
 
@@ -239,10 +238,17 @@ const catalogBlocksOf = (
 	readonly catalogs?: Record<string, Record<string, string>> | undefined;
 } => {
 	if (document === null || typeof document !== "object") return {};
-	const raw = document as Record<string, unknown>;
+	const catalog = "catalog" in document ? document.catalog : undefined;
+	const catalogs = "catalogs" in document ? document.catalogs : undefined;
+	// Preserve pnpm's duplicate-default refusal before dropping unusable entries.
+	if (catalog !== undefined && catalog !== null &&
+		typeof catalogs === "object" && catalogs !== null && "default" in catalogs &&
+		catalogs.default !== undefined && catalogs.default !== null) return {};
 	return {
-		catalog: raw.catalog as Record<string, string> | undefined,
-		catalogs: raw.catalogs as Record<string, Record<string, string>> | undefined,
+		catalogs: normalize({
+			default: catalog,
+			...(typeof catalogs === "object" && catalogs !== null ? catalogs : {}),
+		}),
 	};
 };
 
@@ -324,6 +330,7 @@ const validatedCatalogBlocks = (
 				malformed("catalog", labels.catalogs, `"${labels.catalogs}" must map catalog names to catalogs`),
 			);
 		}
+		const checked: Record<string, Record<string, string>> = {};
 		for (const [name, entries] of Object.entries(catalogs)) {
 			if (!isStringRecord(entries)) {
 				return Effect.fail(
@@ -334,8 +341,9 @@ const validatedCatalogBlocks = (
 					),
 				);
 			}
+			Object.defineProperty(checked, name, { value: entries, enumerable: true, writable: true, configurable: true });
 		}
-		validCatalogs = catalogs as Record<string, Record<string, string>>;
+		validCatalogs = checked;
 	}
 
 	// The default catalog declared twice — pnpm rejects the equivalent
@@ -667,7 +675,7 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 						importerVersions: importerVersionsOf(lockfile),
 					})),
 					Effect.catch((_failure: LockfileReadFailure) =>
-						Effect.succeed({ catalogs: CatalogSet.empty(), importerVersions: {} as ImporterVersions }),
+						Effect.succeed({ catalogs: CatalogSet.empty(), importerVersions: {} }),
 					),
 				);
 				const fromLockfile = lockfileOutputs.catalogs;

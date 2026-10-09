@@ -18,6 +18,7 @@ import { Yaml } from "../yaml/index.ts";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
 import { MAX_ENUMERATION_DEPTH } from "./internal/limits.ts";
 import { manifestPatternsOf, pnpmPatternsOf } from "./internal/patterns.ts";
 import { Traversal, badMaxDepthMessage, isPruned, isValidMaxDepth, joinRelative } from "./internal/traverse.ts";
@@ -241,8 +242,8 @@ const readManifest = (fileSystem: SyncFileSystem, file: string): ManifestRead =>
 	}
 	// `JSON.parse` returns `null` / a number / a string for VALID input; only a
 	// non-null, non-array object is a manifest.
-	return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
-		? { raw: parsed as Record<string, unknown> }
+	return P.isObject(parsed)
+		? { raw: parsed }
 		: { kind: "invalidShape", cause: new Error("package.json is not a JSON object") };
 };
 
@@ -265,9 +266,7 @@ const readJson = (fileSystem: SyncFileSystem, file: string): Record<string, unkn
 	} catch {
 		return undefined;
 	}
-	return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
-		? (parsed as Record<string, unknown>)
-		: undefined;
+	return P.isObject(parsed) ? parsed : undefined;
 };
 
 /** Whether `dir` is a directory. Never throws — a throwing consumer op reads as `false`. */
@@ -500,13 +499,11 @@ const readPackageSync = (
 		};
 	}
 
+	const isStringRecord = (value: unknown): value is Record<string, string> =>
+		P.isObject(value) && Object.values(value).every(P.isString);
+
 	const stringRecord = (value: unknown): Record<string, string> | undefined =>
-		value !== null &&
-		typeof value === "object" &&
-		!Array.isArray(value) &&
-		Object.values(value as Record<string, unknown>).every((entry) => typeof entry === "string")
-			? (value as Record<string, string>)
-			: undefined;
+		isStringRecord(value) ? value : undefined;
 
 	const publishConfig = raw.publishConfig;
 	const config =

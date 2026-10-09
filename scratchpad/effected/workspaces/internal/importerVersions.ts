@@ -77,9 +77,9 @@ const isConcreteVersion = (version: string): boolean =>
  * fallback is inert for them.
  */
 export const importerVersionsOf = (lockfile: Lockfile): VersionIndex => {
-	const index: Record<string, Record<string, string>> = Object.create(null) as Record<string, Record<string, string>>;
+	const index: Record<string, Record<string, string>> = Object.create(null);
 	for (const importer of lockfile.importers) {
-		const versions: Record<string, string> = Object.create(null) as Record<string, string>;
+		const versions: Record<string, string> = Object.create(null);
 		for (const dependency of importer.dependencies) {
 			const recorded = dependency.version;
 			if (recorded === undefined) continue;

@@ -1,5 +1,3 @@
-// This synchronous Node binding preserves native filesystem exceptions and the running platform path semantics.
-// @effect-diagnostics nodeBuiltinImport:skip-file
 /**
  * The Node.js binding for the sync entry points — ready-made `SyncFileSystem`
  * and `SyncPath` operations over `node:fs` / `node:path`, so adopting
@@ -26,9 +24,11 @@
  * @packageDocumentation
  */
 
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import * as path from "node:path";
 import type { SyncFileSystem, SyncPath, WorkspacesSyncOptions } from "./WorkspacesSync.ts";
+
+// Effect FileSystem is asynchronous, and Path.layer cannot preserve the running platform's path semantics.
+const { existsSync, readFileSync, readdirSync, statSync } = process.getBuiltinModule("node:fs");
+const path = process.getBuiltinModule("node:path");
 
 // This module is an ENTRY POINT, so re-exporting is allowed (and required):
 // api-extractor models each entry as its own surface, and the three op types

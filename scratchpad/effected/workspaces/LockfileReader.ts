@@ -18,6 +18,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
 import { findLayerRoot } from "./internal/layerRoot.ts";
 import type { PackageManagerDetectionFailure } from "./PackageManagerName.ts";
 import { PackageManagerDetector } from "./PackageManagerName.ts";
@@ -246,8 +247,8 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
 					// parses to `null`, and reading `.name` off it would throw a TypeError
 					// as an unhandled DEFECT. Narrow to a plain object before touching it.
 					const parsed = yield* S.decodeEffect(JsonValue)(content).pipe(Effect.orElseSucceed(() => undefined));
-					if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return O.none<string>();
-					const name = (parsed as Record<string, unknown>).name;
+					if (!P.isObject(parsed)) return O.none<string>();
+					const name = parsed.name;
 					return typeof name === "string" && name.length > 0 ? O.some(name) : O.none<string>();
 				});
 

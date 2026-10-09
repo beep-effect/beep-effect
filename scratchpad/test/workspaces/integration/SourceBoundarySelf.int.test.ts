@@ -1,7 +1,7 @@
 // @effect-diagnostics nodeBuiltinImport:skip-file
 // The package's own source, scanned by the scanner it ships. Real disk, real
 // lexing: ConfigDependencyHooks.ts embeds a child script whose process.argv and
-// process.stdout.write sit in TEMPLATE TEXT, which must not count, while three
+// process.stdout.write sit in TEMPLATE TEXT, which must not count, while six
 // other modules really do read process.
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -25,15 +25,18 @@ const TESTING_MODULES = new Set([
 ]);
 
 /**
- * The modules that legitimately read `process`: each derives a default the
- * caller did not pass (the cwd, the environment). Four reads across three
- * files: the four root-resolving services share `internal/layerRoot.ts`'s one
- * ambient-cwd read.
+ * The modules that legitimately read `process`: ambient defaults (the cwd,
+ * the environment) and real Node bindings. Twelve reads across six files:
+ * the four root-resolving services share `internal/layerRoot.ts`'s one
+ * ambient-cwd read, and four Node bindings each retrieve two built-in modules.
  */
 const PROCESS_READERS: ReadonlyArray<string> = [
 	"Workspaces.ts",
+	"internal/configDependencyFetch.ts",
 	"internal/configDependencyResolution.ts",
+	"internal/configDependencyShared.ts",
 	"internal/layerRoot.ts",
+	"node-sync.ts",
 ];
 
 describe("@effected/workspaces, scanned by SourceBoundary", () => {
@@ -43,7 +46,7 @@ describe("@effected/workspaces, scanned by SourceBoundary", () => {
 				const scan = yield* SourceBoundary.scan({ root: SRC, rules: ["process"] });
 				assert.include(scan.files, "ConfigDependencyHooks.ts", "the embedded script's module was read");
 				assert.deepStrictEqual([...new Set(scan.offences.map((offence) => offence.file))], [...PROCESS_READERS]);
-				assert.strictEqual(scan.offences.length, 4);
+				assert.strictEqual(scan.offences.length, 12);
 			}),
 		);
 

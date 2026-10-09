@@ -138,7 +138,8 @@ describe("ConfigDependencyHooks.layerLive — replays the pnpmfile", () => {
 			assert.instanceOf(error, CatalogAssemblyError);
 			assert.strictEqual(error.source, "hooks");
 			assert.strictEqual(error.path, "absent-dep");
-			assert.include((error.cause as Error).message, "pnpm add --config absent-dep@1.0.0");
+			if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
+			assert.include(error.cause.message, "pnpm add --config absent-dep@1.0.0");
 		}).pipe(Effect.provide(ConfigDependencyHooks.layerLive)),
 	);
 });

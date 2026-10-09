@@ -12,6 +12,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
 import { WorkspaceDiscovery, WorkspaceInfo, WorkspacePackage } from "../../effected/workspaces/index.ts";
 import { InstalledConsumer, PackedInstall } from "../../effected/workspaces/testing.ts";
 
@@ -375,10 +376,8 @@ describe("PackedInstall.run past the pack", () => {
 				}
 
 				const fs = yield* FileSystem.FileSystem;
-				const npmManifest = Result.getOrThrow(S.decodeResult(JsonValue)(yield* fs.readFileString("/scratch/consumer-npm/package.json"))) as Record<
-					string,
-					unknown
-				>;
+				const npmManifest = Result.getOrThrow(S.decodeResult(JsonValue)(yield* fs.readFileString("/scratch/consumer-npm/package.json")));
+				if (!P.isObject(npmManifest)) return assert.fail("expected a manifest object");
 				assert.strictEqual(npmManifest.packageManager, "npm@11.19.1");
 				assert.deepStrictEqual(npmManifest.dependencies, { "@x/carrier": `file:${CARRIER_TGZ}` });
 				assert.deepStrictEqual(npmManifest.overrides, { "@x/lib": `file:${LIB_TGZ}` });
@@ -619,7 +618,9 @@ describe("PackedInstall.run past the pack", () => {
 		);
 	const readManifest = Effect.fn("readManifest")(function* (file: string) {
 			const fs = yield* FileSystem.FileSystem;
-			return Result.getOrThrow(S.decodeResult(JsonValue)(yield* fs.readFileString(file))) as Record<string, Record<string, string>>;
+			const manifest = Result.getOrThrow(S.decodeResult(JsonValue)(yield* fs.readFileString(file)));
+			if (!P.isObject(manifest)) return assert.fail("expected a manifest object");
+			return manifest;
 		});
 
 	const overridden = ScriptedSpawner.make(packedManifests());

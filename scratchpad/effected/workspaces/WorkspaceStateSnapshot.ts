@@ -22,7 +22,7 @@ import { CatalogSet } from "./WorkspaceCatalogs.ts";
 // A frozen, prototype-free empty map shared as the default for every absent
 // dependency record — the `WorkspacePackage` precedent, so an omitted record
 // round-trips as `{}` rather than `undefined`.
-const EMPTY: Record<string, string> = Object.freeze(Object.create(null) as Record<string, string>);
+const EMPTY: Record<string, string> = Object.freeze<Record<string, string>>(Object.create(null));
 
 const DependencyMap = S.Record(S.String, S.String).pipe(
 	S.withDecodingDefaultKey(Effect.succeed(EMPTY)),

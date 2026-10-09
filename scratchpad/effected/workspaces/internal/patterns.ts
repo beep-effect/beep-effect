@@ -9,6 +9,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
@@ -25,18 +26,18 @@ export const stringsOf = (value: unknown): ReadonlyArray<string> | undefined =>
 
 /** The `packages:` list of a `pnpm-workspace.yaml` document. Total on a parsed document. */
 export const pnpmPatternsOf = (document: unknown): ReadonlyArray<string> => {
-	if (document === null || typeof document !== "object") return [];
-	return stringsOf((document as Record<string, unknown>).packages) ?? [];
+	if (!P.isObjectOrArray(document)) return [];
+	return stringsOf("packages" in document ? document.packages : undefined) ?? [];
 };
 
 /** The `workspaces` field of a root package.json, in either supported shape. */
 export const manifestPatternsOf = (manifest: unknown): ReadonlyArray<string> => {
-	if (manifest === null || typeof manifest !== "object") return [];
-	const workspaces = (manifest as Record<string, unknown>).workspaces;
+	if (!P.isObjectOrArray(manifest)) return [];
+	const workspaces = "workspaces" in manifest ? manifest.workspaces : undefined;
 	const direct = stringsOf(workspaces);
 	if (direct !== undefined) return direct;
 	if (workspaces !== null && typeof workspaces === "object" && "packages" in workspaces) {
-		return stringsOf((workspaces as { readonly packages: unknown }).packages) ?? [];
+		return stringsOf(workspaces.packages) ?? [];
 	}
 	return [];
 };

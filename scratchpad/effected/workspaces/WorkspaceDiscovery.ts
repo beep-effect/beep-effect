@@ -18,6 +18,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
 import type { EnumerationFailureKind } from "./internal/enumerate.ts";
 import { enumerate } from "./internal/enumerate.ts";
 import { findLayerRoot } from "./internal/layerRoot.ts";
@@ -337,7 +338,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 					//
 					// This is `invalidShape`, NOT `invalidJson`: the text is perfectly valid
 					// JSON. What is wrong is that it does not denote an object.
-					if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+					if (!P.isObject(parsed)) {
 						return yield* WorkspaceDiscoveryError.make({
 								root,
 								path: packageJsonPath,
@@ -345,7 +346,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 								cause: new Error("package.json is not a JSON object"),
 							});
 					}
-					const raw = parsed as Record<string, unknown>;
+					const raw = parsed;
 
 					const name = raw.name;
 					if (typeof name !== "string" || name.length === 0) {
@@ -900,7 +901,4 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 }
 
 const isStringRecord = (value: unknown): value is Record<string, string> =>
-	value !== null &&
-	typeof value === "object" &&
-	!Array.isArray(value) &&
-	Object.values(value as Record<string, unknown>).every((entry) => typeof entry === "string");
+	P.isObject(value) && Object.values(value).every(P.isString);

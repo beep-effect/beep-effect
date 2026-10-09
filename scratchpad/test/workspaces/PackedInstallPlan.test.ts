@@ -1,5 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+
 import { WorkspacePackage } from "../../effected/workspaces/index.ts";
 import {
 	binConflict,
@@ -14,6 +16,8 @@ import {
 	unresolvedSpecifiers,
 	versionOf,
 } from "../../effected/workspaces/internal/packedInstallPlan.ts";
+
+const JsonObject = S.fromJsonString(S.Record(S.String, S.Unknown));
 
 const pkg = (name: string, fields: Record<string, Record<string, string>> = {}): WorkspacePackage =>
 	WorkspacePackage.make({
@@ -109,7 +113,7 @@ describe("consumerFiles", () => {
 	it("npm: overrides in the manifest, the carrier a dependency (never dev, never an override), the probed version pinned", () => {
 		const files = fileMap(consumerFiles({ ...INPUT, manager: "npm", version: "11.19.1" }));
 		assert.deepStrictEqual(Object.keys(files), ["package.json"]);
-		const manifest = JSON.parse(files["package.json"] ?? "{}") as Record<string, unknown>;
+		const manifest = Result.getOrThrow(S.decodeResult(JsonObject)(files["package.json"] ?? "{}"));
 		assert.strictEqual(manifest.packageManager, "npm@11.19.1");
 		assert.deepStrictEqual(manifest.dependencies, { "@x/carrier": "file:/t/carrier.tgz", effect: "4.0.0-rc.117" });
 		assert.isUndefined(manifest.devDependencies, "omit=dev or NODE_ENV=production would skip a devDependency");
@@ -119,7 +123,7 @@ describe("consumerFiles", () => {
 
 	it("pnpm: overrides only in a settings-only pnpm-workspace.yaml", () => {
 		const files = fileMap(consumerFiles({ ...INPUT, manager: "pnpm", version: "12.5.1" }));
-		const manifest = JSON.parse(files["package.json"] ?? "{}") as Record<string, unknown>;
+		const manifest = Result.getOrThrow(S.decodeResult(JsonObject)(files["package.json"] ?? "{}"));
 		assert.isUndefined(manifest.overrides);
 		// pnpm resolves a `packageManager` pin from the registry even when it names
 		// the running version, which fails an offline install; devEngines with
@@ -140,7 +144,7 @@ describe("consumerFiles", () => {
 
 	it("yarn: resolutions, plus the node-modules linker for Berry only", () => {
 		const berry = fileMap(consumerFiles({ ...INPUT, manager: "yarn", version: "4.5.0" }));
-		assert.deepStrictEqual((JSON.parse(berry["package.json"] ?? "{}") as Record<string, unknown>).resolutions, {
+		assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonObject)(berry["package.json"] ?? "{}")).resolutions, {
 			"@x/lib": "file:/t/lib.tgz",
 		});
 		assert.strictEqual(
@@ -184,7 +188,7 @@ describe("consumerFiles", () => {
 					dependencies: { "@x/lib": "^1.0.0", "@x/carrier": "1.0.0", effect: "4.0.0-rc.117" },
 				}),
 			);
-			const manifest = JSON.parse(files["package.json"] ?? "{}") as Record<string, unknown>;
+			const manifest = Result.getOrThrow(S.decodeResult(JsonObject)(files["package.json"] ?? "{}"));
 			assert.deepStrictEqual(
 				manifest.dependencies,
 				{ "@x/carrier": "file:/t/carrier.tgz", "@x/lib": "file:/t/lib.tgz", effect: "4.0.0-rc.117" },
@@ -195,7 +199,7 @@ describe("consumerFiles", () => {
 
 	it("bun: overrides in the manifest", () => {
 		const files = fileMap(consumerFiles({ ...INPUT, manager: "bun", version: "1.4.2" }));
-		assert.deepStrictEqual((JSON.parse(files["package.json"] ?? "{}") as Record<string, unknown>).overrides, {
+		assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonObject)(files["package.json"] ?? "{}")).overrides, {
 			"@x/lib": "file:/t/lib.tgz",
 		});
 	});

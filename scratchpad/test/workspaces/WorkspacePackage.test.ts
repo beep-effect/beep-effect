@@ -255,7 +255,7 @@ describe("WorkspacePackage.manifestRecord", () => {
 				sideEffects: false,
 			},
 		});
-		const wire = JSON.parse(JSON.stringify(Result.getOrThrow(S.encodeUnknownResult(WorkspacePackage)(pkg)))) as unknown;
+		const wire: unknown = JSON.parse(JSON.stringify(Result.getOrThrow(S.encodeUnknownResult(WorkspacePackage)(pkg))));
 		const decoded = Result.getOrThrow(S.decodeUnknownResult(WorkspacePackage)(wire));
 		assert.deepStrictEqual(decoded.manifestRecord, pkg.manifestRecord);
 		assert.deepStrictEqual(decoded.dependencies, { effect: "^4.0.0" });

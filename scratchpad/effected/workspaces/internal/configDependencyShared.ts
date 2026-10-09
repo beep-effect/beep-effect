@@ -1,5 +1,3 @@
-// Config-dependency replay reads the real Node module store even when the supplied FileSystem is virtual.
-// @effect-diagnostics nodeBuiltinImport:skip-file
 import { dual } from "effect/Function";
 // What the config-dependency ladder (`configDependencyResolution.ts`) and its
 // fetch rung (`configDependencyFetch.ts`) share: the typed `hooks` failure,
@@ -11,8 +9,6 @@ import { dual } from "effect/Function";
 // even when a caller's `FileSystem` is virtual, so this reads through
 // `node:fs`.
 
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { CatalogAssemblyError } from "../../npm/index.ts";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -20,17 +16,21 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { HookReplayContext } from "../ConfigDependencyHooks.ts";
 
+// The caller's Effect FileSystem may be virtual; replay must read the real Node module store.
+const { readFile } = process.getBuiltinModule("node:fs/promises");
+const { join } = process.getBuiltinModule("node:path");
+
 const JsonValue = S.fromJsonString(S.Unknown);
 
 /** The typed `hooks`-source failure every rung of the ladder reports through. */
-// A string cause overlaps the path argument, so optional reason makes the two call forms ambiguous.
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const hooksError = (
-	path: string,
-	cause: unknown,
-	reason?: CatalogAssemblyError["reason"],
-): CatalogAssemblyError =>
-	CatalogAssemblyError.make({ source: "hooks", path, cause, ...(reason === undefined ? {} : { reason }) });
+export const hooksError: {
+	(path: string, cause: unknown, reason: CatalogAssemblyError["reason"] | undefined): CatalogAssemblyError;
+	(cause: unknown, reason: CatalogAssemblyError["reason"] | undefined): (path: string) => CatalogAssemblyError;
+} = dual(
+	3,
+	(path: string, cause: unknown, reason: CatalogAssemblyError["reason"] | undefined): CatalogAssemblyError =>
+		CatalogAssemblyError.make({ source: "hooks", path, cause, ...(reason === undefined ? {} : { reason }) }),
+);
 
 /** The message of a cause, for splicing into ours. */
 export const messageOf = (cause: unknown): string => (cause instanceof Error ? cause.message : String(cause));
@@ -55,7 +55,7 @@ export const ioOrNone: {
 	path: string,
 	run: () => Promise<A>,
 ): Effect.Effect<O.Option<A>, CatalogAssemblyError> =>
-	Effect.tryPromise({ try: run, catch: (cause) => hooksError(path, cause) }).pipe(
+	Effect.tryPromise({ try: run, catch: (cause) => hooksError(path, cause, undefined) }).pipe(
 		Effect.asSome,
 		Effect.catchIf((error) => isAbsent(error.cause), () => Effect.succeedNone),
 	));
@@ -94,7 +94,7 @@ export const manifestVersion: {
 		Effect.flatMap((text) => {
 			if (O.isNone(text)) return Effect.succeed(ABSENT);
 			return S.decodeEffect(JsonValue)(text.value).pipe(
-				Effect.mapError((cause) => hooksError(name, cause)),
+				Effect.mapError((cause) => hooksError(name, cause, undefined)),
 				Effect.map(
 					(parsed): ManifestVersion =>
 						P.isObject(parsed) && typeof parsed.version === "string" && parsed.version !== ""

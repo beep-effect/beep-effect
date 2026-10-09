@@ -1,5 +1,3 @@
-// Config-dependency replay reads the real Node module store even when the supplied FileSystem is virtual.
-// @effect-diagnostics nodeBuiltinImport:skip-file
 import { dual } from "effect/Function";
 // The fetch rung of the config-dependency ladder: when neither
 // `node_modules/.pnpm-config` nor any discovered store holds the version a
@@ -41,9 +39,7 @@ import { dual } from "effect/Function";
 // workspace and the store are real directories even when a caller's
 // `FileSystem` is virtual, so this reads and writes through `node:fs`.
 
-import { copyFile, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { basename, dirname, join } from "node:path";
 import { Run } from "../../commands/index.ts";
 import type { ConfigDependencyLock, LockfileFramingError, LockfileParseError } from "../../lockfiles/index.ts";
 import { IntegrityHash } from "../../npm/index.ts";
@@ -55,6 +51,10 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import type { HookReplayContext } from "../ConfigDependencyHooks.ts";
 import { carries, manifestVersion, messageOf, sideLabel } from "./configDependencyShared.ts";
 import { splitConfigDependencySpec } from "./configDependencySpecGrammar.ts";
+
+// The caller's Effect FileSystem may be virtual; fetching must use the real scratch workspace and store.
+const { copyFile, mkdtemp, readFile, realpath, rm, writeFile } = process.getBuiltinModule("node:fs/promises");
+const { basename, dirname, join } = process.getBuiltinModule("node:path");
 
 /**
  * The config dependencies the declaring side's `pnpm-lock.yaml` env preamble

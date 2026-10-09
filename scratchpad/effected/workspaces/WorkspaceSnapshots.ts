@@ -180,7 +180,7 @@ const isStringRecord = (value: unknown): value is Record<string, string> =>
  */
 const parseJsonObject = (text: string): Record<string, unknown> => {
 	try {
-		const parsed = JSON.parse(text) as unknown;
+		const parsed: unknown = JSON.parse(text);
 		return isObject(parsed) ? parsed : {};
 	} catch {
 		return {};
@@ -359,7 +359,7 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 						{ concurrency: 2 },
 					);
 					const rootManifest = O.match(rootManifestText, {
-						onNone: () => ({}) as Record<string, unknown>,
+						onNone: (): Record<string, unknown> => ({}),
 						onSome: parseJsonObject,
 					});
 

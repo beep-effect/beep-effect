@@ -18,6 +18,7 @@ import { Range, SemVer } from "../semver/index.ts";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
 import type { PeerDependencyRules } from "./ConfigDependencyHooks.ts";
 import type { PeerNameMatcher } from "./internal/peerPatterns.ts";
 import { peerNameMatcher } from "./internal/peerPatterns.ts";
@@ -442,9 +443,9 @@ const joinedManifest = (join: Join, instance: ResolvedPackage): WorkspacePackage
 const optionalPeers = (manifest: WorkspacePackage): ReadonlySet<string> => {
 	const optional = new Set<string>();
 	const meta: unknown = manifest.manifestRecord.peerDependenciesMeta;
-	if (typeof meta !== "object" || meta === null) return optional;
-	for (const [name, entry] of Object.entries(meta as Record<string, unknown>)) {
-		if (typeof entry === "object" && entry !== null && (entry as { optional?: unknown }).optional === true) {
+	if (!P.isObjectOrArray(meta)) return optional;
+	for (const [name, entry] of Object.entries<unknown>(meta)) {
+		if (typeof entry === "object" && entry !== null && ("optional" in entry ? entry.optional : undefined) === true) {
 			optional.add(name);
 		}
 	}

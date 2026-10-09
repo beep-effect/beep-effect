@@ -212,7 +212,8 @@ const ladderCases = (label: string, hooksLayer: Layer.Layer<ConfigDependencyHook
 				assert.instanceOf(error, CatalogAssemblyError);
 				assert.strictEqual(error.source, "hooks");
 				assert.strictEqual(error.path, NAME);
-				const message = (error.cause as Error).message;
+				if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
+				const message = error.cause.message;
 				assert.include(message, `${NAME}@3.0.0`);
 				// What `.pnpm-config` holds instead.
 				assert.include(message, "version 1.0.0");
@@ -229,7 +230,8 @@ const ladderCases = (label: string, hooksLayer: Layer.Layer<ConfigDependencyHook
 				const error = yield* Effect.flip(hooks.inject(root, { [NO_MANIFEST]: "1.0.0" }, SEED));
 				assert.instanceOf(error, CatalogAssemblyError);
 				assert.strictEqual(error.path, NO_MANIFEST);
-				assert.include((error.cause as Error).message, "holds nothing");
+				if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
+				assert.include(error.cause.message, "holds nothing");
 			}).pipe(Effect.provide(hooksLayer)),
 		);
 
@@ -245,7 +247,8 @@ const ladderCases = (label: string, hooksLayer: Layer.Layer<ConfigDependencyHook
 					assert.instanceOf(error, CatalogAssemblyError);
 					assert.strictEqual(error.path, name);
 					assert.strictEqual(error.reason, reason);
-					const message = (error.cause as Error).message;
+					if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
+					const message = error.cause.message;
 					assert.include(message, `node_modules/.pnpm-config/${name} holds a package with no version,`);
 					// No version to compare, so no "declares a different version" diagnosis.
 					assert.notInclude(message, "declares a different version");
@@ -340,7 +343,8 @@ const ladderCases = (label: string, hooksLayer: Layer.Layer<ConfigDependencyHook
 				assert.instanceOf(error, CatalogAssemblyError);
 				assert.strictEqual(error.source, "hooks");
 				assert.strictEqual(error.path, AMBIGUOUS);
-				const message = (error.cause as Error).message;
+				if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
+				const message = error.cause.message;
 				assert.include(message, "ambiguous");
 				assert.include(message, "2 copies");
 				// The store is named by its REALPATH (macOS's `/var` is `/private/var`):
@@ -424,7 +428,8 @@ const ladderCases = (label: string, hooksLayer: Layer.Layer<ConfigDependencyHook
 				// and the message shows the env store was NOT among those searched.
 				const error = yield* Effect.flip(hooks.inject(bareRoot, { [ENV_ONLY]: "1.0.0" }, SEED));
 				assert.instanceOf(error, CatalogAssemblyError);
-				assert.notInclude((error.cause as Error).message, envHome);
+				if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
+				assert.notInclude(error.cause.message, envHome);
 			}).pipe(Effect.provide(hooksLayer)),
 		);
 
@@ -434,7 +439,8 @@ const ladderCases = (label: string, hooksLayer: Layer.Layer<ConfigDependencyHook
 				const error = yield* Effect.flip(hooks.inject(bareRoot, { "../../evil": "1.0.0" }, SEED));
 				assert.instanceOf(error, CatalogAssemblyError);
 				assert.strictEqual(error.path, "../../evil");
-				assert.include((error.cause as Error).message, "'..' path segment");
+				if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
+				assert.include(error.cause.message, "'..' path segment");
 			}).pipe(Effect.provide(hooksLayer)),
 		);
 	});
@@ -503,7 +509,8 @@ describe("ConfigDependencyHooks.layerFrom — replays caller-supplied files, res
 			assert.instanceOf(error, CatalogAssemblyError);
 			assert.strictEqual(error.source, "hooks");
 			assert.strictEqual(error.path, "@scope/plugin");
-			assert.include((error.cause as Error).message, "@scope/plugin@3.0.0");
+			if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
+			assert.include(error.cause.message, "@scope/plugin@3.0.0");
 		}).pipe(Effect.provide(ConfigDependencyHooks.layerFrom({ "@scope/plugin@1.0.0": ONE }))),
 	);
 

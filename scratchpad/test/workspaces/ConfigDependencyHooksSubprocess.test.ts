@@ -194,8 +194,9 @@ describe("ConfigDependencyHooks.layerSubprocess — transport failures are typed
 			assert.strictEqual(error.path, ROOT);
 			// The cause is Run.jsonLine's CommandOutputError, whose message carries
 			// the exit code and the stderr tail as context.
-			assert.include(String((error.cause as Error).message), "exit 7");
-			assert.include(String((error.cause as Error).message), "boom from node");
+			if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
+			assert.include(String(error.cause.message), "exit 7");
+			assert.include(String(error.cause.message), "boom from node");
 		}).pipe(Effect.provide(layer));
 	});
 
@@ -254,7 +255,8 @@ describe("ConfigDependencyHooks.layerSubprocess — transport failures are typed
 			assert.strictEqual(error.source, "hooks");
 			// Per-name attribution survives the process boundary.
 			assert.strictEqual(error.path, "broken-dep");
-			const cause = error.cause as Error;
+			if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
+			const cause = error.cause;
 			assert.strictEqual(cause.message, "Unexpected token");
 			assert.strictEqual(cause.stack, "SyntaxError: Unexpected token\n  at x");
 		}).pipe(Effect.provide(layer));
