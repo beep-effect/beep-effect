@@ -18,11 +18,17 @@
 # shipped.
 set -euo pipefail
 
-sources_dir=/etc/apt/sources.list.d
+# The optional argument is a synthetic-filesystem seam. Hosted callers pass no
+# argument and retain the privileged system path; fixtures never invoke sudo.
+sources_dir=${1:-/etc/apt/sources.list.d}
+privilege=()
+if [[ "$sources_dir" == /etc/apt/sources.list.d ]]; then
+  privilege=(sudo)
+fi
 
 echo "apt sources before pruning:"
 ls -l "$sources_dir"
-sudo find "$sources_dir" -maxdepth 1 -type f \( -name '*.list' -o -name '*.sources' \) \
+"${privilege[@]}" find "$sources_dir" -maxdepth 1 -type f \( -name '*.list' -o -name '*.sources' \) \
   ! -name 'ubuntu.sources' -print -delete
 echo "apt sources after pruning:"
 ls -l "$sources_dir"

@@ -399,13 +399,15 @@ it.effect(
     const f = yield* fixture();
     yield* f.fs.makeDirectory(f.path.join(f.owner, ".git"));
     yield* f.fs.writeFileString(f.path.join(f.owner, ".env"), "COPIED=yes\n");
+    yield* f.fs.makeDirectory(f.path.join(f.owner, "scripts"), { recursive: true });
+    yield* f.fs.writeFileString(f.path.join(f.owner, "scripts", "regenerate-merge-driver.sh"), "#!/bin/sh\nexit 1\n");
     yield* writeExecutable(
       f.path.join(f.bin, "git"),
       `#!/bin/sh
 case "$1 $2" in
   "worktree list") printf 'worktree %s\\0HEAD 0000000000000000000000000000000000000000\\0branch refs/heads/main\\0\\0' "$PWD" ;;
-  "worktree add") mkdir -p "$3" ;;
-  "submodule update") exit 0 ;;
+  "worktree add") mkdir -p "$3/scripts"; cp "$PWD/scripts/regenerate-merge-driver.sh" "$3/scripts/" ;;
+  "submodule update"|"config --local") exit 0 ;;
   *) exit 91 ;;
 esac
 `

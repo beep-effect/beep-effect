@@ -1,0 +1,287 @@
+{
+  "schemaVersion": 1,
+  "executionRevision": "4916a7479698b34f6461aa4495361d3dbb9f554d",
+  "command": "turbo run @beep/fc-runs#build @beep/types#build --cache=local:rw --summarize",
+  "inputManifestSha256": "e2cc49ae5f571f9dc3e837301f3820136595b4d2b5f5c7190481cadda4663b3b",
+  "incrementalState": "owned dist and node_modules/.tmp/tsconfig.tsbuildinfo cleared before each execution",
+  "fixtures": [
+    {
+      "fixture": "cold-original",
+      "utc": "2026-10-09T21:12:33.540933+00:00",
+      "head": "4916a7479698b34f6461aa4495361d3dbb9f554d",
+      "exitCode": 0,
+      "outputsBefore": {},
+      "outputsAfter": {
+        "packages/tooling/test-kit/fc-runs/dist/FastCheckRuns.d.ts": "22d77a2c6e0697284e0efe573f3687e5d63ca45f23c44e7f192b7f4d35aab446",
+        "packages/tooling/test-kit/fc-runs/dist/FastCheckRuns.d.ts.map": "4b4396ff58aed63c081ea3dc118ec26fd51d62925dc1b5227af763b1cd031754",
+        "packages/tooling/test-kit/fc-runs/dist/FastCheckRuns.js": "c49bdbce2d0f2587759d974b29697c92b32acaf7d7bd0d18a86c378fb7e0c444",
+        "packages/tooling/test-kit/fc-runs/dist/FastCheckRuns.js.map": "4cfc8d9c7b6d6785e27e742cfd3995312cdfc87a20048546f01552114bc63a63",
+        "packages/tooling/test-kit/fc-runs/dist/index.d.ts": "c8f6e8efb75aaee34d3ca59c35fc83e787acdcbcd24193f7891b8943e2455a21",
+        "packages/tooling/test-kit/fc-runs/dist/index.d.ts.map": "cf71e81b73d481950b3816d73c46b705c876f74e209da15382a165a2f18e6654",
+        "packages/tooling/test-kit/fc-runs/dist/index.js": "ce1ae19906762c74c2a835d14d7ffbbb3dd5d2091f0b6ca168e68dbbc156364c",
+        "packages/tooling/test-kit/fc-runs/dist/index.js.map": "e0ac88b3528c5558b6a0b79f366cde4b72e071cee3df3555c6d31835adb55509",
+        "packages/foundation/primitive/types/dist/TArray.types.d.ts": "af2074c8290b15377d6e7193f9fb1247d98e14dbe5b062b4d3b110a388a6dc25",
+        "packages/foundation/primitive/types/dist/TArray.types.d.ts.map": "d4f1ef28d673695479855c707d0d75f9dab61056e945dfd82b2d8367f0b130b2",
+        "packages/foundation/primitive/types/dist/TArray.types.js": "98081076fd99affa3de0717e9a7b441473ee5e04679354e7f4dbe35c4db4d8e5",
+        "packages/foundation/primitive/types/dist/TArray.types.js.map": "384cf5e9f5fa58a243b731f26e1a55e9bc3d9c66cb1a91dc4aa75975872c859f",
+        "packages/foundation/primitive/types/dist/TString.types.d.ts": "e7e74cae8fbc3d0863acafe17000876660342dc4ea45bf7f50791f6d9b0b7f77",
+        "packages/foundation/primitive/types/dist/TString.types.d.ts.map": "b6be06f74dfff3bf6138cde431b259a69397fae07e61f8af2e5db4dbde071808",
+        "packages/foundation/primitive/types/dist/TString.types.js": "6a90a08708abc0979d28aa1b20b0e8037581d4b5b8bb5311d24fcb3480467048",
+        "packages/foundation/primitive/types/dist/TString.types.js.map": "573cde34534ee5d6618eb09644984b73cce3a86e68ca59724c82f9c102415a52",
+        "packages/foundation/primitive/types/dist/TUnsafe.types.d.ts": "66ef5b290310080c44e9f64ec7ee13d650c8022899ae9c7712923d07ad69b8aa",
+        "packages/foundation/primitive/types/dist/TUnsafe.types.d.ts.map": "cf911d1c4dd6faff512132c74a1eaa90b809f14e0f15f4e5946ad56404c9243b",
+        "packages/foundation/primitive/types/dist/TUnsafe.types.js": "f234350bb4ec9aa958737dc443ebb3e895b799516652c94071d2ceb460444dfe",
+        "packages/foundation/primitive/types/dist/TUnsafe.types.js.map": "6901a2a9a9c34fc574b0cc9e5ef2644b59674ece084b77e87a40be87b03c58b9",
+        "packages/foundation/primitive/types/dist/TUtils.types.d.ts": "a8e785d89d8d9919cfbfc1eb3fcdbb9ce52cb6102b45d7b7ac3522d44903b532",
+        "packages/foundation/primitive/types/dist/TUtils.types.d.ts.map": "7b7c52c1b09964bfa1dcff6f8677055fd9d371cb60480b7765c201f9e509b3c5",
+        "packages/foundation/primitive/types/dist/TUtils.types.js": "10933b758f9f35df44dd2beb8d2330944829170e6606dffaded84349427f3ea5",
+        "packages/foundation/primitive/types/dist/TUtils.types.js.map": "1d164e7b199fd693f704f97e8ef3ad3594eb98af00642cc6a7d9406ab0482b6d",
+        "packages/foundation/primitive/types/dist/index.d.ts": "c8b5d9823df87d2f94db30450b5a09d9719b2ac1401d55bef5927aadb2752d98",
+        "packages/foundation/primitive/types/dist/index.d.ts.map": "0c2dc02a7aa8ac09461d940d769065545682fccef88839bf21200087468ee896",
+        "packages/foundation/primitive/types/dist/index.js": "e98240ee6e51b4588a63fec5042659ceeefbb90467ec616eb8718337bda8a0cf",
+        "packages/foundation/primitive/types/dist/index.js.map": "0b3951377e739f3f6b6850f85b5e677a8131551d489dd5bab511f8c81d80845c"
+      },
+      "tasks": [
+        {
+          "taskId": "@beep/fc-runs#build",
+          "hash": "3ca643e559fb1d3a",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          }
+        },
+        {
+          "taskId": "@beep/types#build",
+          "hash": "f8b314d6bfaf4138",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          }
+        }
+      ],
+      "sameOutputManifestAsEarlierLane": true
+    },
+    {
+      "fixture": "warm-clone",
+      "utc": "2026-10-09T21:12:33.639246+00:00",
+      "head": "4916a7479698b34f6461aa4495361d3dbb9f554d",
+      "exitCode": 0,
+      "outputsBefore": {},
+      "outputsAfter": {
+        "packages/tooling/test-kit/fc-runs/dist/FastCheckRuns.d.ts": "22d77a2c6e0697284e0efe573f3687e5d63ca45f23c44e7f192b7f4d35aab446",
+        "packages/tooling/test-kit/fc-runs/dist/FastCheckRuns.d.ts.map": "4b4396ff58aed63c081ea3dc118ec26fd51d62925dc1b5227af763b1cd031754",
+        "packages/tooling/test-kit/fc-runs/dist/FastCheckRuns.js": "c49bdbce2d0f2587759d974b29697c92b32acaf7d7bd0d18a86c378fb7e0c444",
+        "packages/tooling/test-kit/fc-runs/dist/FastCheckRuns.js.map": "4cfc8d9c7b6d6785e27e742cfd3995312cdfc87a20048546f01552114bc63a63",
+        "packages/tooling/test-kit/fc-runs/dist/index.d.ts": "c8f6e8efb75aaee34d3ca59c35fc83e787acdcbcd24193f7891b8943e2455a21",
+        "packages/tooling/test-kit/fc-runs/dist/index.d.ts.map": "cf71e81b73d481950b3816d73c46b705c876f74e209da15382a165a2f18e6654",
+        "packages/tooling/test-kit/fc-runs/dist/index.js": "ce1ae19906762c74c2a835d14d7ffbbb3dd5d2091f0b6ca168e68dbbc156364c",
+        "packages/tooling/test-kit/fc-runs/dist/index.js.map": "e0ac88b3528c5558b6a0b79f366cde4b72e071cee3df3555c6d31835adb55509",
+        "packages/foundation/primitive/types/dist/TArray.types.d.ts": "af2074c8290b15377d6e7193f9fb1247d98e14dbe5b062b4d3b110a388a6dc25",
+        "packages/foundation/primitive/types/dist/TArray.types.d.ts.map": "d4f1ef28d673695479855c707d0d75f9dab61056e945dfd82b2d8367f0b130b2",
+        "packages/foundation/primitive/types/dist/TArray.types.js": "98081076fd99affa3de0717e9a7b441473ee5e04679354e7f4dbe35c4db4d8e5",
+        "packages/foundation/primitive/types/dist/TArray.types.js.map": "384cf5e9f5fa58a243b731f26e1a55e9bc3d9c66cb1a91dc4aa75975872c859f",
+        "packages/foundation/primitive/types/dist/TString.types.d.ts": "e7e74cae8fbc3d0863acafe17000876660342dc4ea45bf7f50791f6d9b0b7f77",
+        "packages/foundation/primitive/types/dist/TString.types.d.ts.map": "b6be06f74dfff3bf6138cde431b259a69397fae07e61f8af2e5db4dbde071808",
+        "packages/foundation/primitive/types/dist/TString.types.js": "6a90a08708abc0979d28aa1b20b0e8037581d4b5b8bb5311d24fcb3480467048",
+        "packages/foundation/primitive/types/dist/TString.types.js.map": "573cde34534ee5d6618eb09644984b73cce3a86e68ca59724c82f9c102415a52",
+        "packages/foundation/primitive/types/dist/TUnsafe.types.d.ts": "66ef5b290310080c44e9f64ec7ee13d650c8022899ae9c7712923d07ad69b8aa",
+        "packages/foundation/primitive/types/dist/TUnsafe.types.d.ts.map": "cf911d1c4dd6faff512132c74a1eaa90b809f14e0f15f4e5946ad56404c9243b",
+        "packages/foundation/primitive/types/dist/TUnsafe.types.js": "f234350bb4ec9aa958737dc443ebb3e895b799516652c94071d2ceb460444dfe",
+        "packages/foundation/primitive/types/dist/TUnsafe.types.js.map": "6901a2a9a9c34fc574b0cc9e5ef2644b59674ece084b77e87a40be87b03c58b9",
+        "packages/foundation/primitive/types/dist/TUtils.types.d.ts": "a8e785d89d8d9919cfbfc1eb3fcdbb9ce52cb6102b45d7b7ac3522d44903b532",
+        "packages/foundation/primitive/types/dist/TUtils.types.d.ts.map": "7b7c52c1b09964bfa1dcff6f8677055fd9d371cb60480b7765c201f9e509b3c5",
+        "packages/foundation/primitive/types/dist/TUtils.types.js": "10933b758f9f35df44dd2beb8d2330944829170e6606dffaded84349427f3ea5",
+        "packages/foundation/primitive/types/dist/TUtils.types.js.map": "1d164e7b199fd693f704f97e8ef3ad3594eb98af00642cc6a7d9406ab0482b6d",
+        "packages/foundation/primitive/types/dist/index.d.ts": "c8b5d9823df87d2f94db30450b5a09d9719b2ac1401d55bef5927aadb2752d98",
+        "packages/foundation/primitive/types/dist/index.d.ts.map": "0c2dc02a7aa8ac09461d940d769065545682fccef88839bf21200087468ee896",
+        "packages/foundation/primitive/types/dist/index.js": "e98240ee6e51b4588a63fec5042659ceeefbb90467ec616eb8718337bda8a0cf",
+        "packages/foundation/primitive/types/dist/index.js.map": "0b3951377e739f3f6b6850f85b5e677a8131551d489dd5bab511f8c81d80845c"
+      },
+      "tasks": [
+        {
+          "taskId": "@beep/fc-runs#build",
+          "hash": "3ca643e559fb1d3a",
+          "cache": {
+            "local": true,
+            "remote": false,
+            "status": "HIT",
+            "source": "LOCAL",
+            "timeSaved": 227,
+            "sha": "4916a7479698b34f6461aa4495361d3dbb9f554d"
+          }
+        },
+        {
+          "taskId": "@beep/types#build",
+          "hash": "f8b314d6bfaf4138",
+          "cache": {
+            "local": true,
+            "remote": false,
+            "status": "HIT",
+            "source": "LOCAL",
+            "timeSaved": 224,
+            "sha": "4916a7479698b34f6461aa4495361d3dbb9f554d"
+          }
+        }
+      ],
+      "sameOutputManifestAsCold": true
+    },
+    {
+      "fixture": "linked-reuse",
+      "utc": "2026-10-09T21:12:33.737323+00:00",
+      "head": "4916a7479698b34f6461aa4495361d3dbb9f554d",
+      "exitCode": 0,
+      "outputsBefore": {},
+      "outputsAfter": {
+        "packages/tooling/test-kit/fc-runs/dist/FastCheckRuns.d.ts": "22d77a2c6e0697284e0efe573f3687e5d63ca45f23c44e7f192b7f4d35aab446",
+        "packages/tooling/test-kit/fc-runs/dist/FastCheckRuns.d.ts.map": "4b4396ff58aed63c081ea3dc118ec26fd51d62925dc1b5227af763b1cd031754",
+        "packages/tooling/test-kit/fc-runs/dist/FastCheckRuns.js": "c49bdbce2d0f2587759d974b29697c92b32acaf7d7bd0d18a86c378fb7e0c444",
+        "packages/tooling/test-kit/fc-runs/dist/FastCheckRuns.js.map": "4cfc8d9c7b6d6785e27e742cfd3995312cdfc87a20048546f01552114bc63a63",
+        "packages/tooling/test-kit/fc-runs/dist/index.d.ts": "c8f6e8efb75aaee34d3ca59c35fc83e787acdcbcd24193f7891b8943e2455a21",
+        "packages/tooling/test-kit/fc-runs/dist/index.d.ts.map": "cf71e81b73d481950b3816d73c46b705c876f74e209da15382a165a2f18e6654",
+        "packages/tooling/test-kit/fc-runs/dist/index.js": "ce1ae19906762c74c2a835d14d7ffbbb3dd5d2091f0b6ca168e68dbbc156364c",
+        "packages/tooling/test-kit/fc-runs/dist/index.js.map": "e0ac88b3528c5558b6a0b79f366cde4b72e071cee3df3555c6d31835adb55509",
+        "packages/foundation/primitive/types/dist/TArray.types.d.ts": "af2074c8290b15377d6e7193f9fb1247d98e14dbe5b062b4d3b110a388a6dc25",
+        "packages/foundation/primitive/types/dist/TArray.types.d.ts.map": "d4f1ef28d673695479855c707d0d75f9dab61056e945dfd82b2d8367f0b130b2",
+        "packages/foundation/primitive/types/dist/TArray.types.js": "98081076fd99affa3de0717e9a7b441473ee5e04679354e7f4dbe35c4db4d8e5",
+        "packages/foundation/primitive/types/dist/TArray.types.js.map": "384cf5e9f5fa58a243b731f26e1a55e9bc3d9c66cb1a91dc4aa75975872c859f",
+        "packages/foundation/primitive/types/dist/TString.types.d.ts": "e7e74cae8fbc3d0863acafe17000876660342dc4ea45bf7f50791f6d9b0b7f77",
+        "packages/foundation/primitive/types/dist/TString.types.d.ts.map": "b6be06f74dfff3bf6138cde431b259a69397fae07e61f8af2e5db4dbde071808",
+        "packages/foundation/primitive/types/dist/TString.types.js": "6a90a08708abc0979d28aa1b20b0e8037581d4b5b8bb5311d24fcb3480467048",
+        "packages/foundation/primitive/types/dist/TString.types.js.map": "573cde34534ee5d6618eb09644984b73cce3a86e68ca59724c82f9c102415a52",
+        "packages/foundation/primitive/types/dist/TUnsafe.types.d.ts": "66ef5b290310080c44e9f64ec7ee13d650c8022899ae9c7712923d07ad69b8aa",
+        "packages/foundation/primitive/types/dist/TUnsafe.types.d.ts.map": "cf911d1c4dd6faff512132c74a1eaa90b809f14e0f15f4e5946ad56404c9243b",
+        "packages/foundation/primitive/types/dist/TUnsafe.types.js": "f234350bb4ec9aa958737dc443ebb3e895b799516652c94071d2ceb460444dfe",
+        "packages/foundation/primitive/types/dist/TUnsafe.types.js.map": "6901a2a9a9c34fc574b0cc9e5ef2644b59674ece084b77e87a40be87b03c58b9",
+        "packages/foundation/primitive/types/dist/TUtils.types.d.ts": "a8e785d89d8d9919cfbfc1eb3fcdbb9ce52cb6102b45d7b7ac3522d44903b532",
+        "packages/foundation/primitive/types/dist/TUtils.types.d.ts.map": "7b7c52c1b09964bfa1dcff6f8677055fd9d371cb60480b7765c201f9e509b3c5",
+        "packages/foundation/primitive/types/dist/TUtils.types.js": "10933b758f9f35df44dd2beb8d2330944829170e6606dffaded84349427f3ea5",
+        "packages/foundation/primitive/types/dist/TUtils.types.js.map": "1d164e7b199fd693f704f97e8ef3ad3594eb98af00642cc6a7d9406ab0482b6d",
+        "packages/foundation/primitive/types/dist/index.d.ts": "c8b5d9823df87d2f94db30450b5a09d9719b2ac1401d55bef5927aadb2752d98",
+        "packages/foundation/primitive/types/dist/index.d.ts.map": "0c2dc02a7aa8ac09461d940d769065545682fccef88839bf21200087468ee896",
+        "packages/foundation/primitive/types/dist/index.js": "e98240ee6e51b4588a63fec5042659ceeefbb90467ec616eb8718337bda8a0cf",
+        "packages/foundation/primitive/types/dist/index.js.map": "0b3951377e739f3f6b6850f85b5e677a8131551d489dd5bab511f8c81d80845c"
+      },
+      "tasks": [
+        {
+          "taskId": "@beep/fc-runs#build",
+          "hash": "3ca643e559fb1d3a",
+          "cache": {
+            "local": true,
+            "remote": false,
+            "status": "HIT",
+            "source": "LOCAL",
+            "timeSaved": 227,
+            "sha": "4916a7479698b34f6461aa4495361d3dbb9f554d"
+          }
+        },
+        {
+          "taskId": "@beep/types#build",
+          "hash": "f8b314d6bfaf4138",
+          "cache": {
+            "local": true,
+            "remote": false,
+            "status": "HIT",
+            "source": "LOCAL",
+            "timeSaved": 224,
+            "sha": "4916a7479698b34f6461aa4495361d3dbb9f554d"
+          }
+        }
+      ],
+      "sameOutputManifestAsCold": true
+    },
+    {
+      "fixture": "changed-lookup",
+      "utc": "2026-10-09T21:12:33.836778+00:00",
+      "mode": "dry hash lookup",
+      "tasks": [
+        {
+          "taskId": "@beep/fc-runs#build",
+          "hash": "793c738517d0e311",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          }
+        },
+        {
+          "taskId": "@beep/types#build",
+          "hash": "f8b314d6bfaf4138",
+          "cache": {
+            "local": true,
+            "remote": false,
+            "status": "HIT",
+            "source": "LOCAL",
+            "timeSaved": 224,
+            "sha": "4916a7479698b34f6461aa4495361d3dbb9f554d"
+          }
+        }
+      ]
+    },
+    {
+      "fixture": "changed-execution",
+      "utc": "2026-10-09T21:12:34.163276+00:00",
+      "head": "4916a7479698b34f6461aa4495361d3dbb9f554d",
+      "exitCode": 0,
+      "outputsBefore": {},
+      "outputsAfter": {
+        "packages/tooling/test-kit/fc-runs/dist/FastCheckRuns.d.ts": "22d77a2c6e0697284e0efe573f3687e5d63ca45f23c44e7f192b7f4d35aab446",
+        "packages/tooling/test-kit/fc-runs/dist/FastCheckRuns.d.ts.map": "4b4396ff58aed63c081ea3dc118ec26fd51d62925dc1b5227af763b1cd031754",
+        "packages/tooling/test-kit/fc-runs/dist/FastCheckRuns.js": "1903448e2d4c786bbadb4e349ef161421112eb2c6122e4432618258bdc4992ed",
+        "packages/tooling/test-kit/fc-runs/dist/FastCheckRuns.js.map": "119de11fae9a6a8a406bd58f228ffbbcbe2e142c73d15a1d03349240ebfae8f8",
+        "packages/tooling/test-kit/fc-runs/dist/index.d.ts": "c8f6e8efb75aaee34d3ca59c35fc83e787acdcbcd24193f7891b8943e2455a21",
+        "packages/tooling/test-kit/fc-runs/dist/index.d.ts.map": "cf71e81b73d481950b3816d73c46b705c876f74e209da15382a165a2f18e6654",
+        "packages/tooling/test-kit/fc-runs/dist/index.js": "ce1ae19906762c74c2a835d14d7ffbbb3dd5d2091f0b6ca168e68dbbc156364c",
+        "packages/tooling/test-kit/fc-runs/dist/index.js.map": "e0ac88b3528c5558b6a0b79f366cde4b72e071cee3df3555c6d31835adb55509",
+        "packages/foundation/primitive/types/dist/TArray.types.d.ts": "af2074c8290b15377d6e7193f9fb1247d98e14dbe5b062b4d3b110a388a6dc25",
+        "packages/foundation/primitive/types/dist/TArray.types.d.ts.map": "d4f1ef28d673695479855c707d0d75f9dab61056e945dfd82b2d8367f0b130b2",
+        "packages/foundation/primitive/types/dist/TArray.types.js": "98081076fd99affa3de0717e9a7b441473ee5e04679354e7f4dbe35c4db4d8e5",
+        "packages/foundation/primitive/types/dist/TArray.types.js.map": "384cf5e9f5fa58a243b731f26e1a55e9bc3d9c66cb1a91dc4aa75975872c859f",
+        "packages/foundation/primitive/types/dist/TString.types.d.ts": "e7e74cae8fbc3d0863acafe17000876660342dc4ea45bf7f50791f6d9b0b7f77",
+        "packages/foundation/primitive/types/dist/TString.types.d.ts.map": "b6be06f74dfff3bf6138cde431b259a69397fae07e61f8af2e5db4dbde071808",
+        "packages/foundation/primitive/types/dist/TString.types.js": "6a90a08708abc0979d28aa1b20b0e8037581d4b5b8bb5311d24fcb3480467048",
+        "packages/foundation/primitive/types/dist/TString.types.js.map": "573cde34534ee5d6618eb09644984b73cce3a86e68ca59724c82f9c102415a52",
+        "packages/foundation/primitive/types/dist/TUnsafe.types.d.ts": "66ef5b290310080c44e9f64ec7ee13d650c8022899ae9c7712923d07ad69b8aa",
+        "packages/foundation/primitive/types/dist/TUnsafe.types.d.ts.map": "cf911d1c4dd6faff512132c74a1eaa90b809f14e0f15f4e5946ad56404c9243b",
+        "packages/foundation/primitive/types/dist/TUnsafe.types.js": "f234350bb4ec9aa958737dc443ebb3e895b799516652c94071d2ceb460444dfe",
+        "packages/foundation/primitive/types/dist/TUnsafe.types.js.map": "6901a2a9a9c34fc574b0cc9e5ef2644b59674ece084b77e87a40be87b03c58b9",
+        "packages/foundation/primitive/types/dist/TUtils.types.d.ts": "a8e785d89d8d9919cfbfc1eb3fcdbb9ce52cb6102b45d7b7ac3522d44903b532",
+        "packages/foundation/primitive/types/dist/TUtils.types.d.ts.map": "7b7c52c1b09964bfa1dcff6f8677055fd9d371cb60480b7765c201f9e509b3c5",
+        "packages/foundation/primitive/types/dist/TUtils.types.js": "10933b758f9f35df44dd2beb8d2330944829170e6606dffaded84349427f3ea5",
+        "packages/foundation/primitive/types/dist/TUtils.types.js.map": "1d164e7b199fd693f704f97e8ef3ad3594eb98af00642cc6a7d9406ab0482b6d",
+        "packages/foundation/primitive/types/dist/index.d.ts": "c8b5d9823df87d2f94db30450b5a09d9719b2ac1401d55bef5927aadb2752d98",
+        "packages/foundation/primitive/types/dist/index.d.ts.map": "0c2dc02a7aa8ac09461d940d769065545682fccef88839bf21200087468ee896",
+        "packages/foundation/primitive/types/dist/index.js": "e98240ee6e51b4588a63fec5042659ceeefbb90467ec616eb8718337bda8a0cf",
+        "packages/foundation/primitive/types/dist/index.js.map": "0b3951377e739f3f6b6850f85b5e677a8131551d489dd5bab511f8c81d80845c"
+      },
+      "tasks": [
+        {
+          "taskId": "@beep/fc-runs#build",
+          "hash": "793c738517d0e311",
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          }
+        },
+        {
+          "taskId": "@beep/types#build",
+          "hash": "f8b314d6bfaf4138",
+          "cache": {
+            "local": true,
+            "remote": false,
+            "status": "HIT",
+            "source": "LOCAL",
+            "timeSaved": 224,
+            "sha": "4916a7479698b34f6461aa4495361d3dbb9f554d"
+          }
+        }
+      ]
+    }
+  ]
+}

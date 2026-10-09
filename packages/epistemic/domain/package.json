@@ -49,6 +49,7 @@
     "./values/ClaimDispositionStatus": "./src/values/ClaimDispositionStatus/index.ts",
     "./values/ClaimEvidenceReview": "./src/values/ClaimEvidenceReview/index.ts",
     "./values/Contradiction": "./src/values/Contradiction/index.ts",
+    "./values/ContradictionDetection": "./src/values/ContradictionDetection/index.ts",
     "./values/ClaimGate": "./src/values/ClaimGate/index.ts",
     "./values/ClaimLifecycle": "./src/values/ClaimLifecycle/index.ts",
     "./values/ClaimProjection": "./src/values/ClaimProjection/index.ts",

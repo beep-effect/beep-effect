@@ -26,6 +26,7 @@
  *
  * @since 0.0.0
  */
+
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -38,6 +39,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
 import { CiCommandError } from "./Ci.errors.ts";
+import { ciOperationalPatterns } from "./CiOperational.schemas.ts";
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
 
@@ -270,7 +272,7 @@ export class HeavyAdmission extends S.Class<HeavyAdmission>($I`HeavyAdmission`)(
  *
  * **Details**
  *
- * The `goals_document_pattern` of `scripts/ci-change-profile.sh` verbatim
+ * The schema-owned goals pattern consumed by the pre-runtime profile adapter
  * (packet prose: `GOAL|PLAN|README|SPEC|DECISIONS.md`, `ops/manifest.json`,
  * `goals/INDEX|README.md`), widened by `docs/**`, `explorations/**`,
  * `research/**`, `.changeset/*.md`, and `*.md` anywhere. Executables,
@@ -288,8 +290,10 @@ export class HeavyAdmission extends S.Class<HeavyAdmission>($I`HeavyAdmission`)(
  * @category constants
  * @since 0.0.0
  */
-export const heavyDocsOnlyPattern: RegExp =
-  /^(?!(?:packages|apps|infra)\/)(?:(goals\/(INDEX|README)\.md|goals\/[^/]+\/(GOAL|PLAN|README|SPEC|DECISIONS)\.md|goals\/[^/]+\/ops\/manifest\.json)$|^docs\/|^explorations\/|^research\/|^\.changeset\/[^/]+\.md$|.*\.md$)/u;
+export const heavyDocsOnlyPattern: RegExp = new RegExp(
+  `^(?!(?:packages|apps|infra)/)(?:${ciOperationalPatterns.goals}|.*(?:${ciOperationalPatterns.docs}))`,
+  "u"
+);
 
 /**
  * Whether one repo-relative path is docs-only under {@link heavyDocsOnlyPattern}.

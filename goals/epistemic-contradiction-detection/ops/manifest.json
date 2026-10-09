@@ -3,14 +3,14 @@
   "initiative": {
     "id": "epistemic-contradiction-detection",
     "title": "Epistemic Contradiction Detection",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-06",
-    "updated": "2026-08-29",
+    "updated": "2026-10-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/epistemic-contradiction-detection",
-  "lifecycle": "active",
-  "statusNote": "Authored but not started: all phases remain pending. The next work is P0 contract citation re-verification when this packet is explicitly prioritized.",
+  "lifecycle": "completed-retained",
+  "statusNote": "Both deterministic conflict classes and closeout reflection are content-final in PR #1572. Canonical harness retains one EV015 serial-clock judgment pending B admission under the run-4 ruling. Fresh qualification and hosted monitoring are recorded in P2 evidence. Merge belongs to the orchestrator under S11; this lane never merges.",
   "mission": "Produce ContradictionCandidate records for typed direct-conflict classes as a pure, model-free function of a belief-view snapshot, against the contract epistemic-contradiction-triage already ships.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -54,31 +54,31 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending",
+      "status": "complete",
       "exit": "Every file:line citation in SPEC.md is re-verified against the live tree, and SPEC.md's Open Contract Question (where conflict class rides on the shipped ContradictionCandidate contract) is answered on the record before any schema lands."
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending",
+      "status": "complete",
       "exit": "Conflict-class LiteralKit, belief-view snapshot input schema, and per-class confidence constants land first, then the detection Context.Service contract, then its pure implementation; packages/epistemic/domain/src/{values,entities}/Contradiction/ is unmodified."
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending",
+      "status": "complete",
       "exit": "Golden vectors (positive and negative) plus the purity proof are green, every emitted candidate decodes against the shipped ContradictionCandidate schema, and bun run beep yeet verify reports SUCCESS. Any determinism-tier declaration ships in this same PR."
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending",
+      "status": "complete",
       "exit": "PR published via bun run beep yeet publish --pr and driven to mergeable with hosted required checks green and zero unresolved review threads."
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending",
+      "status": "complete",
       "exit": "Closeout reflection passes bun run beep lint reflection-artifacts and the packet-state flip (manifest + README) lands in the same PR as the final work."
     }
   ],

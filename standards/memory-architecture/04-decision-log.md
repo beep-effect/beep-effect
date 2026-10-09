@@ -377,7 +377,7 @@ one starts as a fresh exploration with its own decision here first.
 
 **Mechanics:** the setup-agent-memory bootstrap script is retired; its
 still-required Effect reference-checkout half survives as
-`scripts/setup-effect-ref.sh`.
+`bun run beep refs provision`.
 The `.codegraph/` gitignore entry is retained defensively while stale
 machine-local indexes exist. This supersedes the 2026-08-06 role assignment
 above and the operational detail in `07-shared-memory-adoption.md`, which is

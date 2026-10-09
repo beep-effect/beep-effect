@@ -529,6 +529,23 @@ const runRefs = Effect.fn("KnowledgeCommand.runRefs")(function* (options: {
   }
 });
 
+const knowledgeRefsRewriteCommand = Command.make(
+  "rewrite",
+  { dryRun: Flag.Boolean("dry-run").pipe(Flag.withDefault(false)) },
+  Effect.fn("Knowledge.refsRewrite")(function* ({ dryRun }) {
+    const service = yield* KnowledgeService;
+    const report = yield* service.rewriteRefs(dryRun);
+    yield* Console.log(
+      `knowledge-refs-rewrite: ${report.applied} applied, ${report.skipped} already-applied${dryRun ? " (dry run)" : ""}`
+    );
+    for (const failure of report.failures) yield* Console.error(`FAIL ${failure}`);
+    if (report.failures.length > 0)
+      return yield* KnowledgeOperationalError.make({
+        message: "Knowledge reference rewrite drift; failed files were preserved.",
+      });
+  })
+).pipe(Command.withDescription("Apply reviewed exact-count reference rewrites to the working tree"));
+
 /**
  * The `beep knowledge refs` subcommand.
  *
@@ -569,6 +586,7 @@ export const knowledgeRefsCommand = Command.make(
   runRefs
 ).pipe(
   Command.withDescription("Census every reference in one tracked tree; --check gates on live host-path debt"),
+  Command.withSubcommands([knowledgeRefsRewriteCommand]),
   Command.provide(KnowledgeServiceLive)
 );
 
