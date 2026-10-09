@@ -6822,16 +6822,921 @@
       "wave": 4,
       "position": 4,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "tooling/library",
       "upstreamPaths": {
         "src": "packages/cli/src",
         "test": "packages/cli/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "AnnotationLevel",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "AnnotationOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "AudienceFlagInput",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Block",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "BlockOf",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Cancelled",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CliAudience",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CliAudienceFlagsOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliColor",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CliDoc",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "CliDocSource",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliEnv",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CliEnvOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliEnvServices",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliEnvTestOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliEnvTestServices",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliExit",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CliExitShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliFailure",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CliFailureOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliInteractive",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CliLinks",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CliLinksLinkerOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliLinksOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliLinksShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliLog",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CliLogFile",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliLogFileOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliLogOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliLogStatusOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliLogger",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CliLoggerOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliMessage",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CliMessageOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliPrompt",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CliPromptFallbackOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliPromptTarget",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliRuntime",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CliTheme",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CliThemeOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliThemeShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliThemeTestOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Column",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ConfigIssueRenderer",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CoreStatusName",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Counter",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CountsOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CountsRow",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CountsTableOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Doc",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DocPrintOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Document",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "EditorLinks",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "FailureDetails",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Fmt",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GithubAnnotation",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GithubAnnotationProperties",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GlyphSelectOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GlyphSet",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Glyphs",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Inline",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "InlineInput",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "InlineOf",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "LinkOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "LinkTarget",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ListOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MainOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "NamedColor",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "NotInteractive",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "OverflowOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PercentOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Render",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RenderContext",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RenderContextOfOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RenderContextOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ReportFailuresOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "RequiresAudienceFlags",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "SchemaIssueRenderer",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Status",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "StatusDef",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "StatusRef",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "StreamTheme",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Style",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "TableOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Token",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TokenName",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "TreeInput",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "TreeNode",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "TruncateOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CliTest",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "KeyInput",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "RunOptions",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "RunResult",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "Sandbox",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "TestTerminal",
+          "kind": "both",
+          "entry": "./testing"
+        },
+        {
+          "name": "TestTerminalHandle",
+          "kind": "type",
+          "entry": "./testing"
+        },
+        {
+          "name": "Binding",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "CliUi",
+          "kind": "both",
+          "entry": "./ui"
+        },
+        {
+          "name": "CliUiFallbackOptions",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "CliUiPromptOptions",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "CliUiRunOptions",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "Confirm",
+          "kind": "both",
+          "entry": "./ui"
+        },
+        {
+          "name": "ConfirmAction",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "ConfirmInitOptions",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "ConfirmResult",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "ConfirmScreenOptions",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "ConfirmState",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "ConfirmToggle",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "ConfirmViewProps",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "DocView",
+          "kind": "value",
+          "entry": "./ui"
+        },
+        {
+          "name": "DocViewProps",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "InkTextProps",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "KeyHelp",
+          "kind": "value",
+          "entry": "./ui"
+        },
+        {
+          "name": "KeyHelpProps",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "KeyHelpRow",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "KeyName",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "KeyTable",
+          "kind": "both",
+          "entry": "./ui"
+        },
+        {
+          "name": "LiveHandle",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "LiveOptions",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "MultiSelect",
+          "kind": "both",
+          "entry": "./ui"
+        },
+        {
+          "name": "MultiSelectAction",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "MultiSelectInitOptions",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "MultiSelectItem",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "MultiSelectScreenOptions",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "MultiSelectSection",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "MultiSelectState",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "MultiSelectViewProps",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "Screen",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "ScreenControl",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "Select",
+          "kind": "both",
+          "entry": "./ui"
+        },
+        {
+          "name": "SelectAction",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "SelectChoice",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "SelectInitOptions",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "SelectScreenOptions",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "SelectState",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "SelectViewProps",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "Styled",
+          "kind": "value",
+          "entry": "./ui"
+        },
+        {
+          "name": "StyledProps",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "Tab",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "Tabs",
+          "kind": "both",
+          "entry": "./ui"
+        },
+        {
+          "name": "TabsAction",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "TabsProps",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "TerminalSize",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "TextInput",
+          "kind": "both",
+          "entry": "./ui"
+        },
+        {
+          "name": "TextInputInitOptions",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "TextInputScreenOptions",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "TextInputState",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "TextInputViewProps",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "Toggle",
+          "kind": "both",
+          "entry": "./ui"
+        },
+        {
+          "name": "ToggleViewProps",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "UiContextValue",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "UiKey",
+          "kind": "both",
+          "entry": "./ui"
+        },
+        {
+          "name": "UiProvider",
+          "kind": "value",
+          "entry": "./ui"
+        },
+        {
+          "name": "UiProviderProps",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "UiStreams",
+          "kind": "both",
+          "entry": "./ui"
+        },
+        {
+          "name": "UiStreamsShape",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "UseKeysOptions",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "Viewport",
+          "kind": "both",
+          "entry": "./ui"
+        },
+        {
+          "name": "ViewportMove",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "ViewportRow",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "ViewportState",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "ViewportViewProps",
+          "kind": "type",
+          "entry": "./ui"
+        },
+        {
+          "name": "inkProps",
+          "kind": "value",
+          "entry": "./ui"
+        },
+        {
+          "name": "useGlyphs",
+          "kind": "value",
+          "entry": "./ui"
+        },
+        {
+          "name": "useKeys",
+          "kind": "value",
+          "entry": "./ui"
+        },
+        {
+          "name": "useTerminalSize",
+          "kind": "value",
+          "entry": "./ui"
+        },
+        {
+          "name": "useTheme",
+          "kind": "value",
+          "entry": "./ui"
+        },
+        {
+          "name": "CliUiTest",
+          "kind": "both",
+          "entry": "./ui/testing"
+        },
+        {
+          "name": "CliUiTestHandle",
+          "kind": "type",
+          "entry": "./ui/testing"
+        },
+        {
+          "name": "CliUiTestLive",
+          "kind": "type",
+          "entry": "./ui/testing"
+        },
+        {
+          "name": "CliUiTestNextOptions",
+          "kind": "type",
+          "entry": "./ui/testing"
+        },
+        {
+          "name": "CliUiTestOptions",
+          "kind": "type",
+          "entry": "./ui/testing"
+        },
+        {
+          "name": "CliUiTestScreen",
+          "kind": "type",
+          "entry": "./ui/testing"
+        },
+        {
+          "name": "CliUiTestSession",
+          "kind": "type",
+          "entry": "./ui/testing"
+        },
+        {
+          "name": "CliUiTestSessionOptions",
+          "kind": "type",
+          "entry": "./ui/testing"
+        },
+        {
+          "name": "CliUiTestView",
+          "kind": "type",
+          "entry": "./ui/testing"
+        },
+        {
+          "name": "default",
+          "kind": "value",
+          "entry": "./ui/testing/serializer"
+        }
+      ],
       "exportsAdded": [],
-      "newDeps": [],
-      "fixturesBytes": 0,
+      "newDeps": [
+        {
+          "name": "ink",
+          "kind": "runtime",
+          "spec": "^7.1.1",
+          "replacement": null
+        },
+        {
+          "name": "react",
+          "kind": "runtime",
+          "spec": "catalog:",
+          "replacement": null
+        },
+        {
+          "name": "string-width",
+          "kind": "dev",
+          "spec": "^8.3.0",
+          "replacement": null
+        }
+      ],
+      "fixturesBytes": 6211,
       "deviations": [],
       "backlog": [],
       "reviewRounds": [],

@@ -71,12 +71,14 @@
     "exifreader": "catalog:",
     "file-type": "catalog:",
     "gray-matter": "catalog:",
+    "ink": "^7.1.1",
     "lexical": "catalog:",
     "mediabunny": "catalog:",
     "music-metadata": "catalog:",
     "n3": "catalog:",
     "officeparser": "catalog:",
     "pdfjs-dist": "catalog:",
+    "react": "catalog:",
     "tweetnacl": "1.0.3",
     "universal-github-app-jwt": "^2.2.2"
   },
@@ -98,6 +100,7 @@
     "spdx-exceptions": "2.5.0",
     "spdx-expression-parse": "5.0.0",
     "spdx-license-ids": "3.0.24",
+    "string-width": "^8.3.0",
     "ts-morph": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
