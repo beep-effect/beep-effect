@@ -79,6 +79,8 @@ const skipLauncherOptions = (
 };
 
 const compilerArguments = (words: ReadonlyArray<string>): O.Option<ReadonlyArray<string>> => {
+  // Attached option bodies may themselves execute commands (env -S, npm --call).
+  if (A.some(words, (word) => Str.startsWith("-")(word) && containsCompilerBuildTokens(word))) return O.none();
   let index = 0;
   const packageOptions = ["-p", "--package", "--cache", "--registry", "--userconfig", "--prefix"];
   const directoryOptions = ["-C", "--dir", "--cwd", "--filter", "--filter-prod", "-F"];
@@ -290,6 +292,10 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
         "tsc $'--force'",
         "FLAGS=--force; tsc $FLAGS",
         "COMPILER='tsc '; $COMPILER --force",
+        "env -S'tsc --force'",
+        "env --split-string='tsc -b .'",
+        "npm exec --call='tsc --force'",
+        "npx --call='tsc -b .'",
         "bunx --bun --no-install tsgo --build",
         "bunx --package typescript tsc -b",
         "bunx -p typescript tsc --force",

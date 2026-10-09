@@ -700,6 +700,8 @@ without claiming completion.
 
 | 2026-10-09 | Resume canon through completed-retained (R102), first integrating CLI-only unpublished work and regeneration, then separate RDF/Pacer ports (R105), then bounded remaining open-row waves. | Continuation's 16 later commits were not in #1506. Main already covers Box WIP and RDF property cohorts; stronger RDF failure assertions and Pacer logout teardown witness remain useful. Preserve all source state and exports, keep tooling/tool alone under D13, and qualify each new head. | Revert each PR independently; restore generated inventory by its owner command and replay the SHA256-qualified patches. Historical IDs and original proof receipts remain retained. |
 
+| 2026-10-09 | Preserve the legacy compiler guard with whole-script conservative handling of shell syntax and attached command-bearing option bodies; retain operand-aware simple launcher parsing. | Independent reviews reproduced valid compiler invocations hidden by substitutions, redirects, npm/env aliases and attached call options. Keep all existing assertion and inert-operand tables, add opposing regression witnesses, and do not claim complete shell evaluation. | Revert the guard repair and its new witnesses only with a replacement preserving every established compiler catch and inert-operand control; rerun the five guard tests on Node/Bun and the package gates. |
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |
