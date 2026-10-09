@@ -79,3 +79,12 @@ repair continued waiting. Both remain within the at-most-two wrapper limit.
 Capacity is preserved; no other lane is stopped and no cap is raised. An
 observable admission queue with wait age would make this delay easier to
 diagnose than the wrapper's one-time waiting line.
+
+## 2026-10-09 — Private changesets escape cheap status but fail hosted graph
+
+Hosted Repo Sanity job 114036229903 rejects the two lane-authored changesets:
+`private workspace changesets are forbidden`. Both named manifests declare
+private: true. Local path-aware status passed while reporting private_skipped=3,
+so that proof did not validate existing notes. D17 archives and removes them;
+the graph gate is rerun. Brief generation should check live publication flags,
+and cheap status should include graph validity before opening a PR.

@@ -98,3 +98,9 @@ citesAsEvidence toward a synthetic source, and attributes it through PROV.
 | Decision | Choice and reason | Reversal |
 | --- | --- | --- |
 | D16 Dependency-derived snapshots | The program owner authorizes owner-command regeneration of Fallow boundaries, reviewed cache policy and project references forced by D11. Review every changed row against the RDF-to-Md edge or the three edited packages; retain no unrelated regeneration. | Drop D11's edge and adapter placement, then regenerate the same snapshots through their owners. |
+
+## Publication metadata decision (2026-10-09)
+
+| Decision | Choice and reason | Reversal |
+| --- | --- | --- |
+| D17 Private release notes | Live identity and RDF manifests declare private: true. Hosted Repo Sanity rejects both lane-authored changesets; the path-aware status gate skips all three edited private packages. Retain the notes in research/retained-private-release-notes.md and remove them from .changeset. The brief's changeset package list assumes publish-enabled packages and does not apply to these private workspaces. No publication policy is changed. | Deliberately activate package publication, establish release/versioning policy, then restore the archived changesets if still appropriate. |
