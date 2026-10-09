@@ -6,7 +6,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { CodegenFormatError } from "../CodegenKit.errors.ts";
 
-export interface Formatter {
+interface Formatter {
   readonly content: (source: string, outputPath: string) => Effect.Effect<string, CodegenFormatError>;
   readonly file: (filePath: string) => Effect.Effect<void, CodegenFormatError>;
   readonly unifiedDiff: (currentPath: string, generated: string) => Effect.Effect<string, CodegenFormatError>;

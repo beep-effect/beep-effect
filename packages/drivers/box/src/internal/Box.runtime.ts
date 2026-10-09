@@ -128,7 +128,7 @@ export const acquireSdkCallController = <Payload, Out>(spec: {
  * @category utilities
  * @since 0.0.0
  */
-export const diagnosticsFor: {
+const diagnosticsFor: {
   (error: BoxError, event: string): Readonly<Record<string, unknown>>;
   (event: string): (error: BoxError) => Readonly<Record<string, unknown>>;
 } = dual(

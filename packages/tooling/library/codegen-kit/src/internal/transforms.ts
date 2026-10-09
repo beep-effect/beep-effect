@@ -59,7 +59,7 @@ const flattenNode = (node: JsonSchema.JsonSchema, target: JsonSchema.JsonSchema)
   };
 };
 
-export const nullableTypeArray: NodeTransform = (node) => {
+const nullableTypeArray: NodeTransform = (node) => {
   const types = stringValues(node.type);
   const nonNull = A.filter(types, (type) => type !== "null");
   if (!isStringTypeArray(node.type, types)) return node;
@@ -74,7 +74,7 @@ const isStringTypeArray = (value: unknown, types: ReadonlyArray<string>): value 
 const isSingleNullableType = (types: ReadonlyArray<string>, nonNull: ReadonlyArray<string>): boolean =>
   A.contains(types, "null") && A.length(nonNull) === 1;
 
-export const makeFlattenAllOfRefVariants =
+const makeFlattenAllOfRefVariants =
   (definitions: JsonSchema.Definitions): NodeTransform =>
   (node) =>
     pipe(
@@ -102,7 +102,7 @@ const mergeUnionMember = (member: unknown, siblings: JsonSchema.JsonSchema, flat
     O.getOrElse(() => member)
   );
 
-export const makeDistributeUnionSiblings = (definitions: JsonSchema.Definitions): NodeTransform => {
+const makeDistributeUnionSiblings = (definitions: JsonSchema.Definitions): NodeTransform => {
   const flatten = makeFlattenAllOfRefVariants(definitions);
   return (node) =>
     pipe(
@@ -127,12 +127,12 @@ export const makeDistributeUnionSiblings = (definitions: JsonSchema.Definitions)
     );
 };
 
-export const openObjects: NodeTransform = (node) =>
+const openObjects: NodeTransform = (node) =>
   node.type === "object" && (node.additionalProperties === undefined || node.additionalProperties === false)
     ? { ...node, additionalProperties: true }
     : node;
 
-export const stripExamples: NodeTransform = (node) => {
+const stripExamples: NodeTransform = (node) => {
   const { example: _example, examples: _examples, ...rest } = node;
   return rest;
 };

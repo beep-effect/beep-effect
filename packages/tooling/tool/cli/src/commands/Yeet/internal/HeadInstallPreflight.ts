@@ -41,7 +41,7 @@ export const HEAD_INSTALL_PREFLIGHT_STEP_ID = "publish:00-head-install-preflight
  * @category diagnostics
  * @since 0.0.0
  */
-export const HEAD_INSTALL_PREFLIGHT_FAILURE_HINT =
+const HEAD_INSTALL_PREFLIGHT_FAILURE_HINT =
   "Frozen-lockfile clean-HEAD install preflight failed. The lockfile/manifest state committed on HEAD may be incomplete. Commit or restage the required lockfile and manifest changes; if needed, run `bun install` and restage `bun.lock`." as const;
 
 const renderCommandOutput = (label: string, output: string): string =>

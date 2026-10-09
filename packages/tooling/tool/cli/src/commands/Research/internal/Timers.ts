@@ -39,7 +39,7 @@ import type { ResearchTimerOptions } from "../Research.schemas.ts";
  * @internal
  * @category utilities
  */
-export const RESEARCH_UNITS = ["beep-research-daily", "beep-research-repo-card"] as const;
+const RESEARCH_UNITS = ["beep-research-daily", "beep-research-repo-card"] as const;
 
 type ResearchTimerRequirements =
   | ChildProcessSpawner.ChildProcessSpawner

@@ -59,7 +59,7 @@ const readNumber = (bytes: Uint8Array, start: number): { readonly value: number;
  *
  * @internal
  */
-export const parseP6Header = (
+const parseP6Header = (
   bytes: Uint8Array
 ): { readonly width: number; readonly height: number; readonly offset: number } => {
   if (bytes[0] !== 0x50 || bytes[1] !== 0x36) {

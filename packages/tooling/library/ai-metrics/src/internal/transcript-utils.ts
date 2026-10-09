@@ -8,6 +8,7 @@ import * as A from "@beep/utils/Array";
 import * as Str from "@beep/utils/Str";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import {
   AiMetricsTranscriptSource,
   ClaudeTranscriptEventName,
@@ -15,12 +16,8 @@ import {
   OpenClawTranscriptEventName,
 } from "../models.ts";
 import { repoPathToClaudeProjectName } from "../shell.ts";
-import type { AiMetricsTranscriptEventName } from "../models.ts";
-
-export { repoPathToClaudeProjectName };
-
-import * as S from "effect/Schema";
 import type * as Path from "effect/Path";
+import type { AiMetricsTranscriptEventName } from "../models.ts";
 
 const isEventNameForSource = (
   sourceKind: AiMetricsTranscriptSource,

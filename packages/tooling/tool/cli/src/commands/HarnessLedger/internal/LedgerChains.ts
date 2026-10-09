@@ -21,7 +21,7 @@ import type { HarnessLedgerRow } from "@beep/repo-ai-metrics";
  * @category queries
  * @since 0.0.0
  */
-export const supersededRowIds = (rows: ReadonlyArray<HarnessLedgerRow>): HashSet.HashSet<string> =>
+const supersededRowIds = (rows: ReadonlyArray<HarnessLedgerRow>): HashSet.HashSet<string> =>
   HashSet.fromIterable(A.getSomes(A.map(rows, (row) => row.previousRowId)));
 
 /**

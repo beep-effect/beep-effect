@@ -28,19 +28,10 @@ import { isDirectoryPath } from "../../../internal/quality/TestTypecheckCoverage
  * workspace-owned sources. Pruning them here keeps every Lint walk in
  * agreement with the repo-wide `beep quality test-tsgo` lane.
  *
- * **Example** (Check a pruned directory name)
- *
- * ```ts
- * import { ignoredDirectoryNames } from "@beep/repo-cli/commands/Lint/internal/WorkspaceWalk"
- * import * as HashSet from "effect/HashSet"
- *
- * console.log(HashSet.has(ignoredDirectoryNames, "node_modules")) // true
- * ```
- *
  * @category constants
  * @since 0.0.0
  */
-export const ignoredDirectoryNames: HashSet.HashSet<string> = HashSet.fromIterable([
+const ignoredDirectoryNames: HashSet.HashSet<string> = HashSet.fromIterable([
   "node_modules",
   "dist",
   "dist-test",
