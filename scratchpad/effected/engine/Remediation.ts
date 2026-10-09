@@ -17,16 +17,19 @@ const $I = $ScratchpadId.create("effected/engine/Remediation");
  * **Example** (Suggest a validation tool and its arguments)
  *
  * ```ts
- * import { Remediation } from "./index.ts"
+ * import { Remediation } from "@beep/scratchpad/effected/engine/Remediation"
  *
  * const remediation: Remediation = {
  * 	hint: "Run the validator on the whole bundle first.",
  * 	suggestedTool: "validate_bundle",
  * 	suggestedArgs: { strict: true },
  * }
+ * console.log(remediation.suggestedTool) // validate_bundle
  * ```
  *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const Remediation = S.Struct({
 	hint: S.String.annotateKey({ description: "The human-readable instruction for what the caller should do after a failure" }),
@@ -38,5 +41,7 @@ export const Remediation = S.Struct({
  * A decoded {@link (Remediation:variable)}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type Remediation = typeof Remediation.Type;

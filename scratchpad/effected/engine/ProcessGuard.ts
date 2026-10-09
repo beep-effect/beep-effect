@@ -18,6 +18,8 @@ const UncaughtMode = RejectionMode.pick(["exit", "exitBeforeConnect"]);
  * double and a front end passes `process` from its own `main`.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface ProcessGuardHost {
 	/** Register the `uncaughtException` listener. */
@@ -45,7 +47,18 @@ export interface ProcessGuardHost {
  * server that dies mid-session drops every client attached to it. `"log"`
  * never exits.
  *
+ * **Example** (Validate a connection-aware exit policy)
+ *
+ * ```ts
+ * import { ProcessGuardPolicy } from "@beep/scratchpad/effected/engine/ProcessGuard"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ProcessGuardPolicy)({ onUncaught: "exitBeforeConnect", onRejection: "log" })) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ProcessGuardPolicy = S.Struct({
 	onUncaught: UncaughtMode.annotate({ description: "The uncaught-exception exit policy." }),
@@ -55,13 +68,30 @@ export const ProcessGuardPolicy = S.Struct({
 	title: "ProcessGuardPolicy",
 	description: "When a stray exception or rejection ends the process.",
 });
+/**
+ * Decoded {@link (ProcessGuardPolicy:variable)} accepted by the guard.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ProcessGuardPolicy = typeof ProcessGuardPolicy.Type;
 
 /**
  * One crash {@link ProcessGuardOptions.injectCrash} raises: which event, and
  * when.
  *
+ * **Example** (Validate a post-connection rejection injection)
+ *
+ * ```ts
+ * import { ProcessGuardInjection } from "@beep/scratchpad/effected/engine/ProcessGuard"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ProcessGuardInjection)({ at: "connected", kind: "unhandledRejection" })) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ProcessGuardInjection = S.Struct({
 	at: InjectAt.annotate({ description: "Before load or after the first markConnected call." }),
@@ -71,6 +101,12 @@ export const ProcessGuardInjection = S.Struct({
 	title: "ProcessGuardInjection",
 	description: "Which crash event to inject and when to raise it.",
 });
+/**
+ * Decoded {@link (ProcessGuardInjection:variable)} accepted by the guard.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ProcessGuardInjection = typeof ProcessGuardInjection.Type;
 
 /**
@@ -86,20 +122,22 @@ export type ProcessGuardInjection = typeof ProcessGuardInjection.Type;
  * listening.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface ProcessGuardControl {
 	/**
-  * Report the server connected: from here on `"exitBeforeConnect"` logs and
-  * keeps going. Call it once the server is serving. Later calls do nothing.
-  * Safe to call after `load` has resolved, which is the usual case.
-  *
-  * **Details**
-  *
-  * For a server framed over stdio (MCP, LSP), "serving" is the moment its
-  * transport is built and reading stdin, before the first request arrives:
-  * from then on a client is attached, and a stray error should be logged,
-  * not end the session.
-  */
+	 * Report the server connected: from here on `"exitBeforeConnect"` logs and
+	 * keeps going. Call it once the server is serving. Later calls do nothing.
+	 * Safe to call after `load` has resolved, which is the usual case.
+	 *
+	 * **Details**
+	 *
+	 * For a server framed over stdio (MCP, LSP), "serving" is the moment its
+	 * transport is built and reading stdin, before the first request arrives:
+	 * from then on a client is attached, and a stray error should be logged,
+	 * not end the session.
+	 */
 	readonly markConnected: () => void;
 	/**
 	 * Format every report from here on with `format`, in place of the guard's
@@ -113,6 +151,8 @@ export interface ProcessGuardControl {
  * Options for {@link ProcessGuard.run}.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface ProcessGuardOptions {
 	/** Prefixes every report the guard writes, as in `my-server: uncaughtException (…): …`. */
@@ -133,6 +173,7 @@ export interface ProcessGuardOptions {
 	 * both halves of a policy can be driven end to end in a real process.
 	 *
 	 * **Details**
+	 *
 	 * - `"load"` raises it once both listeners are installed and before
 	 *   `load` is called, then waits for the guard to handle it: `load` is
 	 *   not called until the listener has run. If a test double's `exit`
@@ -197,7 +238,7 @@ const fallbackFormat = (error: unknown): string =>
 
 /**
  * Transport-neutral crash guards for a server process, installed before the
- * server's module graph loads. Imported from `@effected/engine/guard`.
+ * server's module graph loads. Imported from `@beep/scratchpad/effected/engine/guard`.
  *
  * **Details**
  *
@@ -206,6 +247,8 @@ const fallbackFormat = (error: unknown): string =>
  * nothing itself: `load` starts the server, over whatever transport, and
  * calls `markConnected` once it is serving. `@effected/mcp/guard`'s
  * `McpGuard.run` is this guard with an MCP stdio launch in its `load`.
+ * Import the server module dynamically inside `load`, start the server, then
+ * call `markConnected` once startup has made it ready to serve.
  *
  * - This entrypoint imports only effect/*, so a throw while the server
  *   graph evaluates is still reported on stderr.
@@ -221,38 +264,55 @@ const fallbackFormat = (error: unknown): string =>
  * **Example** (Guard a server through startup and connection)
  *
  * ```ts
- * import { ProcessGuard } from "./guard.ts";
+ * import { ProcessGuard } from "@beep/scratchpad/effected/engine/ProcessGuard"
+ * import type { ProcessGuardHost } from "@beep/scratchpad/effected/engine/ProcessGuard"
  *
+ * const host: ProcessGuardHost = {
+ *   on: () => undefined,
+ *   emit: () => undefined,
+ *   stderr: { write: () => undefined },
+ *   exit: (code) => { throw code },
+ * }
+ * let serving = false
  * await ProcessGuard.run({
  *   label: "my-lsp",
- *   host: process,
+ *   host,
  *   policy: { onUncaught: "exitBeforeConnect", onRejection: "log" },
- *   load: async (guard) => {
- *     const { startServer } = await import("./server.ts");
- *     await startServer();
- *     guard.markConnected();
+ *   load: (guard) => {
+ *     serving = true
+ *     guard.markConnected()
+ *     return Promise.resolve()
  *   },
- * });
+ * })
+ * console.log(serving) // true
  * ```
  *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class ProcessGuard {
 	private constructor() {}
 
 	/**
-  * Parse a test-only crash-injection setting into {@link ProcessGuardOptions.injectCrash}: `<at>:<kind>`, where `at`
-  * is `"load"` or `"connected"` and `kind` is `"uncaughtException"` or `"unhandledRejection"`. Anything else, or no
-  * value, is `undefined` (no injection), so a launcher can pass an environment variable straight through and every
-  * launcher shares one grammar.
-  *
-  * **Example** (Parse crash injection settings and reject invalid values)
-  *
-  * ```ts
-  * ProcessGuard.parseInjectCrash("connected:unhandledRejection"); // => { at: "connected", kind: "unhandledRejection" }
-  * ProcessGuard.parseInjectCrash("later:boom"); // => undefined
-  * ```
-  */
+	 * Parse a test-only crash-injection setting into {@link ProcessGuardOptions.injectCrash}: `<at>:<kind>`, where `at`
+	 * is `"load"` or `"connected"` and `kind` is `"uncaughtException"` or `"unhandledRejection"`. Anything else, or no
+	 * value, is `undefined` (no injection), so a launcher can pass an environment variable straight through and every
+	 * launcher shares one grammar.
+	 *
+	 * **Example** (Parse crash injection settings and reject invalid values)
+	 *
+	 * ```ts
+	 * import { ProcessGuard } from "@beep/scratchpad/effected/engine/ProcessGuard"
+	 *
+	 * const injection = ProcessGuard.parseInjectCrash("connected:unhandledRejection")
+	 * console.log(injection?.at) // connected
+	 * console.log(injection?.kind) // unhandledRejection
+	 * console.log(ProcessGuard.parseInjectCrash("later:boom")) // undefined
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly parseInjectCrash = (value: string | undefined): ProcessGuardInjection | undefined => {
 		if (value === undefined) return undefined;
 		const [at, kind, ...rest] = Str.split(value, ":");
@@ -261,7 +321,37 @@ export class ProcessGuard {
 		return isInjection(injection) ? injection : undefined;
 	};
 
-	/** Install the guards, then run `load`. Resolves once `load` has resolved. */
+	/**
+	 * Install the guards, then run `load`. Resolves once `load` has resolved.
+	 *
+	 * **Example** (Install guards and finish startup)
+	 *
+	 * ```ts
+	 * import { ProcessGuard } from "@beep/scratchpad/effected/engine/ProcessGuard"
+	 * import type { ProcessGuardHost } from "@beep/scratchpad/effected/engine/ProcessGuard"
+	 *
+	 * const host: ProcessGuardHost = {
+	 *   on: () => undefined,
+	 *   emit: () => undefined,
+	 *   stderr: { write: () => undefined },
+	 *   exit: (code) => { throw code },
+	 * }
+	 * let serving = false
+	 * await ProcessGuard.run({
+	 *   label: "my-lsp",
+	 *   host,
+	 *   policy: { onUncaught: "exitBeforeConnect", onRejection: "log" },
+	 *   load: (guard) => {
+	 *     serving = true
+	 *     guard.markConnected()
+	 *     return Promise.resolve()
+	 *   },
+	 * })
+	 * console.log(serving) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly run = (options: ProcessGuardOptions): Promise<void> => {
 		// A plain function over an explicit chain, with an async function's contract: everything up to the first wait
 		// runs on the caller's tick, and a throw anywhere becomes a rejection, never a synchronous throw.

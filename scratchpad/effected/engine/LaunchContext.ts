@@ -7,21 +7,23 @@ const $I = $ScratchpadId.create("effected/engine/LaunchContext");
  * The process-derived facts a front end resolves once, passed in as values.
  *
  * **Details**
+ *
  * Nothing here reads `process`: `argv`, `env` and `cwd` come from the front
  * end's own `main.ts`. That keeps the resolution rule shared and testable
  * while the process read stays at the one place allowed to make it.
  *
  * **Example** (Validate process-derived inputs)
+ *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ProjectDirInput } from "./index.ts"
+ * import { ProjectDirInput } from "@beep/scratchpad/effected/engine/LaunchContext"
  *
- * S.is(ProjectDirInput)({ env: {}, keys: [], cwd: "/work/app" }) // => true
+ * console.log(S.is(ProjectDirInput)({ env: {}, keys: [], cwd: "/work/app" })) // true
  * ```
  *
+ * @public
  * @category schemas
  * @since 0.0.0
- * @public
  */
 export const ProjectDirInput = S.Struct({
 	argv: S.Array(S.String).pipe(S.optional).annotateKey({
@@ -42,9 +44,9 @@ export const ProjectDirInput = S.Struct({
 /**
  * Readonly process-derived inputs accepted by {@link LaunchContext.projectDir}.
  *
+ * @public
  * @category type-level
  * @since 0.0.0
- * @public
  */
 export type ProjectDirInput = typeof ProjectDirInput.Type;
 
@@ -54,7 +56,7 @@ export type ProjectDirInput = typeof ProjectDirInput.Type;
  * **Example** (Resolve the project directory from the host environment)
  *
  * ```ts
- * import { LaunchContext } from "./index.ts"
+ * import { LaunchContext } from "@beep/scratchpad/effected/engine/LaunchContext"
  *
  * const dir = LaunchContext.projectDir({
  * 	argv: [],
@@ -62,22 +64,35 @@ export type ProjectDirInput = typeof ProjectDirInput.Type;
  * 	keys: ["MYTOOL_PROJECT_DIR", "CLAUDE_PROJECT_DIR"],
  * 	cwd: "/home/me",
  * })
- * // => "/work/app"
+ * console.log(dir) // /work/app
  * ```
  *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class LaunchContext {
 	private constructor() {}
 
 	/**
-  * Whether a value still carries a literal `${VAR}` placeholder.
-  *
-  * **Gotchas**
-  *
-  * An agent host can pass `${CLAUDE_PROJECT_DIR}` through unsubstituted in
-  * some launch paths; a path containing a placeholder is never what was meant.
-  */
+	 * Whether a value still carries a literal `${VAR}` placeholder.
+	 *
+	 * **Gotchas**
+	 *
+	 * An agent host can pass `${CLAUDE_PROJECT_DIR}` through unsubstituted in
+	 * some launch paths; a path containing a placeholder is never what was meant.
+	 *
+	 * **Example** (Recognize an unresolved host placeholder)
+	 *
+	 * ```ts
+	 * import { LaunchContext } from "@beep/scratchpad/effected/engine/LaunchContext"
+	 *
+	 * console.log(LaunchContext.isUnsubstituted("${CLAUDE_PROJECT_DIR}/src")) // true
+	 * console.log(LaunchContext.isUnsubstituted("/work/app")) // false
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly isUnsubstituted = (value: string): boolean => {
 		// A `${` with any `}` after it. The first `${` has the most text after it,
 		// so it alone decides; two scans keep this linear, where the equivalent
@@ -91,6 +106,21 @@ export class LaunchContext {
 	 * order, then `cwd`. A value is usable when it is non-empty after trimming
 	 * and carries no placeholder — `??` would return an empty string or a literal
 	 * `${VAR}`, neither of which names a directory.
+	 *
+	 * **Example** (Prefer usable positionals over environment and cwd)
+	 *
+	 * ```ts
+	 * import { LaunchContext } from "@beep/scratchpad/effected/engine/LaunchContext"
+	 *
+	 * console.log(LaunchContext.projectDir({
+	 *   argv: ["${PROJECT_DIR}", " /work/cli "],
+	 *   env: { PROJECT_DIR: "/work/env" },
+	 *   keys: ["PROJECT_DIR"],
+	 *   cwd: "/work/fallback",
+	 * })) // /work/cli
+	 * ```
+	 *
+	 * @since 0.0.0
 	 */
 	static readonly projectDir = (input: ProjectDirInput): string => {
 		const usable = (value: string | undefined): string | undefined => {

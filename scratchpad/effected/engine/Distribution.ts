@@ -15,7 +15,19 @@ const $I = $ScratchpadId.create("effected/engine/Distribution");
  * `Schema.Class`, because it travels in JSON envelopes as a plain object and
  * is compared structurally.
  *
+ * **Example** (Decode a carrier identity)
+ *
+ * ```ts
+ * import { Distribution } from "@beep/scratchpad/effected/engine/Distribution"
+ * import * as S from "effect/Schema"
+ *
+ * const carrier = S.decodeUnknownSync(Distribution)({ name: "@okfit/plugin", version: "0.5.1" })
+ * console.log(carrier.name) // @okfit/plugin
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const Distribution = S.Struct({
 	name: S.String.annotateKey({ description: "The carrier package that installed and re-exposes the tool's bins" }),
@@ -26,6 +38,8 @@ export const Distribution = S.Struct({
  * A decoded {@link (Distribution:variable)}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type Distribution = typeof Distribution.Type;
 
@@ -34,16 +48,17 @@ export type Distribution = typeof Distribution.Type;
  * front end was installed directly rather than through a carrier.
  *
  * **Example** (Validate a direct install)
+ *
  * ```ts
  * import * as S from "effect/Schema"
- * import { DistributionField } from "./index.ts"
+ * import { DistributionField } from "@beep/scratchpad/effected/engine/Distribution"
  *
- * S.is(DistributionField)(null) // => true
+ * console.log(S.is(DistributionField)(null)) // true
  * ```
  *
+ * @public
  * @category schemas
  * @since 0.0.0
- * @public
  */
 export const DistributionField = S.NullOr(Distribution).pipe(
 	$I.annoteSchema("DistributionField", {
@@ -55,9 +70,9 @@ export const DistributionField = S.NullOr(Distribution).pipe(
 /**
  * A decoded nullable carrier field from a machine-readable envelope.
  *
+ * @public
  * @category type-level
  * @since 0.0.0
- * @public
  */
 export type DistributionField = typeof DistributionField.Type;
 
@@ -72,7 +87,21 @@ export type DistributionField = typeof DistributionField.Type;
  * end's `main` provides it once, at the top of the program, with
  * `Effect.provideService(CurrentDistribution, Option.fromNullishOr(options.distribution))`.
  *
+ * **Example** (Read the default and provide a carrier)
+ *
+ * ```ts
+ * import { CurrentDistribution } from "@beep/scratchpad/effected/engine/Distribution"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(Effect.runSync(CurrentDistribution))) // true
+ * const provided = Effect.provideService(CurrentDistribution, CurrentDistribution, O.some({ name: "@okfit/plugin", version: "0.5.1" }))
+ * console.log(O.isSome(Effect.runSync(provided))) // true
+ * ```
+ *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export const CurrentDistribution: Context.Reference<O.Option<Distribution>> = Context.Reference(
 	$I`CurrentDistribution`,
@@ -83,7 +112,19 @@ export const CurrentDistribution: Context.Reference<O.Option<Distribution>> = Co
  * The `via <name> <version>` suffix (prefixed with a space) a `--version`
  * line or a startup log line appends, or `""` for a direct install.
  *
+ * **Example** (Format direct and carrier installs)
+ *
+ * ```ts
+ * import { distributionSuffix } from "@beep/scratchpad/effected/engine/Distribution"
+ * import * as O from "effect/Option"
+ *
+ * console.log(distributionSuffix(O.none()) === "") // true
+ * console.log(distributionSuffix(O.some({ name: "@okfit/plugin", version: "0.5.1" }))) //  via @okfit/plugin 0.5.1
+ * ```
+ *
  * @public
+ * @category formatting
+ * @since 0.0.0
  */
 export const distributionSuffix = (distribution: O.Option<Distribution>): string =>
 	O.match(distribution, {
