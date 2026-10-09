@@ -14,6 +14,7 @@
 //   @effected/npm Manifest — shape-blind outside the four dependency fields.
 //   PackageJsonFormat — decode-free text path.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -21,6 +22,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { ExportsField, PackageDecodeError, PublishConfigField } from "./Package.ts";
 import { PackageJsonSyntaxError } from "./PackageJsonFormat.ts";
+
+const $I = $ScratchpadId.create("effected/package-json/LenientManifest");
 
 // ── Issue reporting ─────────────────────────────────────────────────────────
 
@@ -199,42 +202,42 @@ const decodeRecord = S.decodeUnknownExit(UnknownRecord);
  *
  * @public
  */
-export class LenientManifest extends S.Class<LenientManifest>("LenientManifest")({
-	name: S.optionalKey(S.String),
-	version: S.optionalKey(S.String),
-	description: S.optionalKey(S.String),
-	private: S.optionalKey(S.Boolean),
-	type: S.optionalKey(S.String),
-	main: S.optionalKey(S.String),
-	license: S.optionalKey(S.String),
-	author: S.optionalKey(StringOrRecord),
-	contributors: StringOrRecord.pipe(S.Array, S.optionalKey),
-	maintainers: StringOrRecord.pipe(S.Array, S.optionalKey),
-	keywords: S.String.pipe(S.Array, S.optionalKey),
-	repository: S.optionalKey(StringOrRecord),
-	bugs: S.optionalKey(StringOrRecord),
-	funding: S.optionalKey(S.Union([StringOrRecord, S.Array(StringOrRecord)])),
-	homepage: S.optionalKey(S.String),
-	dependencies: S.optionalKey(StringRecord),
-	devDependencies: S.optionalKey(StringRecord),
-	peerDependencies: S.optionalKey(StringRecord),
-	optionalDependencies: S.optionalKey(StringRecord),
-	peerDependenciesMeta: S.optionalKey(UnknownRecord),
-	scripts: S.optionalKey(StringRecord),
-	bin: S.optionalKey(S.Union([S.String, StringRecord])),
-	engines: S.optionalKey(StringRecord),
-	exports: S.optionalKey(ExportsField),
-	publishConfig: S.optionalKey(PublishConfigField),
-	packageManager: S.optionalKey(S.String),
-	devEngines: S.optionalKey(UnknownRecord),
+export class LenientManifest extends S.Class<LenientManifest>($I`LenientManifest`)({
+	name: S.optionalKey(S.String).annotateKey({ description: "The package identifier from the manifest, preserved without npm name validation" }),
+	version: S.optionalKey(S.String).annotateKey({ description: "The declared package release, preserved without semver validation" }),
+	description: S.optionalKey(S.String).annotateKey({ description: "A human-readable summary of the package from the manifest" }),
+	private: S.optionalKey(S.Boolean).annotateKey({ description: "Whether the manifest marks the package as private; absence reads as false through `isPrivate`" }),
+	type: S.optionalKey(S.String).annotateKey({ description: "The declared module format; only the exact value `module` makes `isESM` true" }),
+	main: S.optionalKey(S.String).annotateKey({ description: "The package's declared primary entry-point path" }),
+	license: S.optionalKey(S.String).annotateKey({ description: "The declared licensing terms, preserved without SPDX validation" }),
+	author: S.optionalKey(StringOrRecord).annotateKey({ description: "The package creator's details, preserved in the manifest's original form" }),
+	contributors: StringOrRecord.pipe(S.Array, S.optionalKey).annotateKey({ description: "Details of people credited with contributing to the package, preserved without parsing individual entries" }),
+	maintainers: StringOrRecord.pipe(S.Array, S.optionalKey).annotateKey({ description: "Details of people listed as maintaining the package, preserved without parsing individual entries" }),
+	keywords: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "Search terms associated with the package in its manifest" }),
+	repository: S.optionalKey(StringOrRecord).annotateKey({ description: "The source repository reference, preserved without normalization or validation of its details" }),
+	bugs: S.optionalKey(StringOrRecord).annotateKey({ description: "Issue-reporting contact details, preserved without validation of URLs, email addresses, or object contents" }),
+	funding: S.optionalKey(S.Union([StringOrRecord, S.Array(StringOrRecord)])).annotateKey({ description: "Declared funding destinations, preserved without validating individual entries or normalizing their original form" }),
+	homepage: S.optionalKey(S.String).annotateKey({ description: "The package's declared homepage address, preserved without URL validation" }),
+	dependencies: S.optionalKey(StringRecord).annotateKey({ description: "Package names mapped to declared runtime dependency specifiers, preserved without specifier validation" }),
+	devDependencies: S.optionalKey(StringRecord).annotateKey({ description: "Package names mapped to declared development dependency specifiers, preserved without specifier validation" }),
+	peerDependencies: S.optionalKey(StringRecord).annotateKey({ description: "Package names mapped to dependency requirements expected from the consuming project, preserved without specifier validation" }),
+	optionalDependencies: S.optionalKey(StringRecord).annotateKey({ description: "Package names mapped to dependency specifiers whose installation may fail without failing the overall install" }),
+	peerDependenciesMeta: S.optionalKey(UnknownRecord).annotateKey({ description: "Additional peer dependency metadata, such as optional status, preserved without validating individual entries" }),
+	scripts: S.optionalKey(StringRecord).annotateKey({ description: "Lifecycle or task names mapped to command text declared in the manifest" }),
+	bin: S.optionalKey(S.Union([S.String, StringRecord])).annotateKey({ description: "Executable entry-point paths, declared as a single path or a mapping from command names to paths" }),
+	engines: S.optionalKey(StringRecord).annotateKey({ description: "Runtime and tool names mapped to declared version requirements, preserved without range validation" }),
+	exports: S.optionalKey(ExportsField).annotateKey({ description: "The declared package entry point or export mappings, preserving object contents without validating individual targets" }),
+	publishConfig: S.optionalKey(PublishConfigField).annotateKey({ description: "Publishing configuration from the manifest, preserving npm settings and extensions without validating their values" }),
+	packageManager: S.optionalKey(S.String).annotateKey({ description: "The declared package-manager selection, preserved without parsing its name, version, or integrity component" }),
+	devEngines: S.optionalKey(UnknownRecord).annotateKey({ description: "Development environment constraints from the manifest, preserved without validating individual engine entries" }),
 	/**
 	 * Unknown top-level keys, plus every degraded known field's raw value,
 	 * verbatim. Always present after a lenient decode (possibly empty).
 	 */
-	rest: S.optionalKey(UnknownRecord),
+	rest: S.optionalKey(UnknownRecord).annotateKey({ description: "Unknown top-level keys, plus every degraded known field's raw value, verbatim. Always present after a lenient decode (possibly empty)." }),
 	/** The degradations collected by the decode — empty when nothing degraded. */
-	issues: S.Array(LenientFieldIssueSchema),
-}) {
+	issues: S.Array(LenientFieldIssueSchema).annotateKey({ description: "The degradations collected by the decode — empty when nothing degraded." }),
+}, $I.annote("LenientManifest", { description: "The shape-lenient view of a package.json document, for discovery and sniffing — probing a fetched tarball's manifest, walking a `node_modules` tree, listing candidate packages — where the document is other people's data and one malformed field must not fail the read." })) {
 	/**
 	 * Decode an unknown JSON value leniently, degrading malformed fields instead
 	 * of failing the document. The sync primitive backing

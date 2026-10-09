@@ -4,9 +4,12 @@
 // `PackageName.isScoped`), and the `InvalidPackageNameError` the concept
 // raises.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Brand from "effect/Brand";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/package-json/PackageName");
 
 /**
  * Indicates that a string could not be used as a valid npm package name.
@@ -16,10 +19,10 @@ import * as S from "effect/Schema";
  *
  * @public
  */
-export class InvalidPackageNameError extends S.TaggedError<InvalidPackageNameError>()("InvalidPackageNameError", {
+export class InvalidPackageNameError extends S.TaggedError<InvalidPackageNameError>($I`InvalidPackageNameError`)("InvalidPackageNameError", {
 	/** The raw input string that failed validation. */
-	input: S.String,
-}) {
+	input: S.String.annotateKey({ description: "The raw input string that failed validation." }),
+}, $I.annote("InvalidPackageNameError", { description: "Indicates that a string could not be used as a valid npm package name." })) {
 	override get message(): string {
 		return `Invalid package name "${this.input}": does not satisfy npm naming rules`;
 	}

@@ -23,6 +23,7 @@
 // shape onto this model through the same component validation `parseResult`
 // uses, so the two fields cannot drift apart.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { CorepackIntegrityHash } from "../npm/index.ts";
 import { Range, SemVer } from "../semver/index.ts";
 import * as Effect from "effect/Effect";
@@ -33,6 +34,8 @@ import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import type { DevEngine } from "./DevEngines.ts";
+
+const $I = $ScratchpadId.create("effected/package-json/PackageManagerRange");
 
 /**
  * The encoded shape of a `devEngines.packageManager` entry: what a raw
@@ -92,7 +95,7 @@ const SemVerRangeString: S.String = S.String.pipe(
  *
  * @public
  */
-export class InvalidPackageManagerRangeError extends S.TaggedError<InvalidPackageManagerRangeError>()(
+export class InvalidPackageManagerRangeError extends S.TaggedError<InvalidPackageManagerRangeError>($I`InvalidPackageManagerRangeError`)(
 	"InvalidPackageManagerRangeError",
 	{
 		/**
@@ -100,15 +103,15 @@ export class InvalidPackageManagerRangeError extends S.TaggedError<InvalidPackag
 		 * `devEngines` entry its `name` and `version` joined as
 		 * `<name>@<version>` (just `<name>` when `version` is absent).
 		 */
-		input: S.String,
+		input: S.String.annotateKey({ description: "The offending value: the raw `packageManager` string, or for a `devEngines` entry its `name` and `version` joined as `<name>@<version>` (just `<name>` when `version` is absent)." }),
 		/**
 		 * Which component failed: `format` (a `packageManager` string with no
 		 * `@`), `name` (not a lowercase name), `range` (absent, empty, or not a
 		 * semver range) or `integrity` (the tail after the first `+` is not a
 		 * corepack `<algo>.<hex>` hash).
 		 */
-		reason: S.Literals(["format", "name", "range", "integrity"]),
-	},
+		reason: S.Literals(["format", "name", "range", "integrity"]).annotateKey({ description: "Which component failed: `format` (a `packageManager` string with no `@`), `name` (not a lowercase name), `range` (absent, empty, or not a semver range) or `integrity` (the tail after the first `+` is not a corepack `<algo>.<hex>` hash)." }),
+	}, $I.annote("InvalidPackageManagerRangeError", { description: "Indicates that a `packageManager` value, or a `devEngines.packageManager` entry, could not be read as a PackageManagerRange." }),
 ) {
 	override get message(): string {
 		return this.reason === "format"
@@ -193,24 +196,24 @@ const fromParts = (
  *
  * @public
  */
-export class PackageManagerRange extends S.Class<PackageManagerRange>("PackageManagerRange")({
+export class PackageManagerRange extends S.Class<PackageManagerRange>($I`PackageManagerRange`)({
 	/** The package-manager name (e.g. `pnpm`). Any lowercase name — the same latitude as {@link PackageManager}, for the same evidence. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "The package-manager name (e.g. `pnpm`). Any lowercase name — the same latitude as PackageManager, for the same evidence." }),
 	/**
 	 * The version position, verbatim: a semver range (`^11.20.0`,
 	 * `>=10 <12`, ...) or an exact version (`11.2.0`). Validated to parse
 	 * through `@effected/semver`'s `Range.parseResult`; never normalized, so
 	 * the field round-trips byte-identically.
 	 */
-	range: SemVerRangeString,
+	range: SemVerRangeString.annotateKey({ description: "The version position, verbatim: a semver range (`^11.20.0`, `>=10 <12`, ...) or an exact version (`11.2.0`). Validated to parse through `@effected/semver`'s `Range.parseResult`; never normalized, so the field round-trips byte-identically." }),
 	/**
 	 * The optional integrity hash (e.g. `sha512.abc`): `@effected/npm`'s
 	 * `CorepackIntegrityHash`. Meaningful only alongside an exact range —
 	 * an integrity pins one artifact — but carried whenever the manifest
 	 * carries it, because fidelity outranks plausibility in a field model.
 	 */
-	integrity: S.Option(CorepackIntegrityHash),
-}) {
+	integrity: S.Option(CorepackIntegrityHash).annotateKey({ description: "The optional integrity hash (e.g. `sha512.abc`): `@effected/npm`'s `CorepackIntegrityHash`. Meaningful only alongside an exact range — an integrity pins one artifact — but carried whenever the manifest carries it, because fidelity outranks plausibility in a field model." }),
+}, $I.annote("PackageManagerRange", { description: "A structured `packageManager` value whose version position is a semver **range**, carried verbatim: `name`, `range` and an optional `integrity` hash." })) {
 	/**
 	 * Schema transformation between the `"name@range[+integrity]"` string and a
 	 * {@link PackageManagerRange}.

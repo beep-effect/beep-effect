@@ -4,11 +4,14 @@
 // `@effected/npm`'s `DependencySpecifier`; `kind` types against `@effected/npm`'s
 // `DependencyKind`, the kit-wide dependency-section vocabulary.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { DependencyProtocol } from "../npm/index.ts";
 import { DependencyKind, DependencySpecifier } from "../npm/index.ts";
 import type { Range } from "../semver/index.ts";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/package-json/Dependency");
 
 /**
  * A resolved dependency entry pairing a package name with its version
@@ -17,16 +20,16 @@ import * as S from "effect/Schema";
  *
  * @public
  */
-export class Dependency extends S.Class<Dependency>("Dependency")({
+export class Dependency extends S.Class<Dependency>($I`Dependency`)({
 	/** The package name. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "The package name." }),
 	/** The raw version specifier. */
-	specifier: S.String,
+	specifier: S.String.annotateKey({ description: "The raw version specifier." }),
 	/** Which dependency map this entry came from. */
-	kind: DependencyKind,
+	kind: DependencyKind.annotateKey({ description: "Which dependency map this entry came from." }),
 	/** For `peer` dependencies, whether the peer is optional (from `peerDependenciesMeta`). */
-	isOptional: S.optionalKey(S.Boolean),
-}) {
+	isOptional: S.optionalKey(S.Boolean).annotateKey({ description: "For `peer` dependencies, whether the peer is optional (from `peerDependenciesMeta`)." }),
+}, $I.annote("Dependency", { description: "A resolved dependency entry pairing a package name with its version specifier and the `kind` of map it came from (`@effected/npm`'s `DependencyKind`). The protocol predicates delegate to `DependencySpecifier`." })) {
 	/** The classified protocol, or `None` for an empty specifier. */
 	get protocol(): O.Option<DependencyProtocol> {
 		return this.specifier.length === 0 ? O.none() : O.some(DependencySpecifier.protocolOf(this.specifier));

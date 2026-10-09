@@ -5,6 +5,7 @@
 // `Package.toJsonString` serializer, and `Package.resolve` over the
 // `@effected/npm` resolver contracts.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { CatalogResolver, DependencySpecifier, WorkspaceResolver } from "../npm/index.ts";
 import type { InvalidVersionError } from "../semver/index.ts";
 import { SemVer } from "../semver/index.ts";
@@ -26,6 +27,8 @@ import { PackageManager } from "./PackageManager.ts";
 import { InvalidPackageNameError, PackageName } from "./PackageName.ts";
 import { Person } from "./Person.ts";
 import { Bugs, Repository } from "./Repository.ts";
+
+const $I = $ScratchpadId.create("effected/package-json/Package");
 
 // ── Field codecs ────────────────────────────────────────────────────────────
 // Exported @public as reusable field schemas: they compose the `Package` model
@@ -66,7 +69,7 @@ export const StringMapField = S.Record(S.String, S.String).pipe(
  *
  * @public
  */
-export const BinField = S.Union([S.String, StringMapField]);
+export const BinField = S.Union([S.String, StringMapField]).pipe($I.annoteSchema("BinField", { description: "The `bin` field: a single string path or a name→path map. Not meant to be referenced directly." }));
 
 /**
  * The `exports` field: a single string entry point or an open object of
@@ -74,7 +77,7 @@ export const BinField = S.Union([S.String, StringMapField]);
  *
  * @public
  */
-export const ExportsField = S.Union([S.String, S.Record(S.String, S.Unknown)]);
+export const ExportsField = S.Union([S.String, S.Record(S.String, S.Unknown)]).pipe($I.annoteSchema("ExportsField", { description: "The `exports` field: a single string entry point or an open object of conditional exports. Not meant to be referenced directly." }));
 
 /**
  * The `publishConfig` field: an open record preserving known npm keys
@@ -106,7 +109,7 @@ export const PeerDependenciesMetaField = S.Record(
  *
  * @public
  */
-export const RepositoryField = S.Union([S.String, S.Record(S.String, S.Unknown)]);
+export const RepositoryField = S.Union([S.String, S.Record(S.String, S.Unknown)]).pipe($I.annoteSchema("RepositoryField", { description: "The `repository` field's raw wire shape: a shorthand string or an object." }));
 
 // ── Errors ──────────────────────────────────────────────────────────────────
 
@@ -119,10 +122,10 @@ export const RepositoryField = S.Union([S.String, S.Record(S.String, S.Unknown)]
  *
  * @public
  */
-export class PackageDecodeError extends S.TaggedError<PackageDecodeError>()("PackageDecodeError", {
+export class PackageDecodeError extends S.TaggedError<PackageDecodeError>($I`PackageDecodeError`)("PackageDecodeError", {
 	/** The underlying `SchemaError`, preserved structurally rather than stringified. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The underlying `SchemaError`, preserved structurally rather than stringified." }),
+}, $I.annote("PackageDecodeError", { description: "Indicates that a JSON value could not be decoded into a valid Package." })) {
 	override get message(): string {
 		return "Failed to decode package.json";
 	}
@@ -195,36 +198,36 @@ export type PackagePatch = Partial<{
  *
  * @public
  */
-export class Package extends S.Class<Package>("Package")({
-	name: PackageName,
-	version: SemVer.FromString,
-	description: S.optionalKey(S.String),
-	private: S.optionalKey(S.Boolean),
-	type: S.optionalKey(S.Literals(["module", "commonjs"])),
-	main: S.optionalKey(S.String),
-	license: S.optionalKey(SpdxLicense),
-	author: S.optionalKey(Person.FromValue),
-	contributors: Person.FromValue.pipe(S.Array, S.optionalKey),
-	maintainers: Person.FromValue.pipe(S.Array, S.optionalKey),
-	keywords: S.String.pipe(S.Array, S.optionalKey),
-	repository: S.optionalKey(Repository.FromValue),
-	bugs: S.optionalKey(Bugs.FromValue),
-	funding: S.optionalKey(Funding.FromField),
-	homepage: S.optionalKey(S.String),
-	dependencies: DependencyMapField,
-	devDependencies: DependencyMapField,
-	peerDependencies: DependencyMapField,
-	optionalDependencies: DependencyMapField,
-	peerDependenciesMeta: S.optionalKey(PeerDependenciesMetaField),
-	scripts: DependencyMapField,
-	bin: S.optionalKey(BinField),
-	engines: S.optionalKey(StringMapField),
-	exports: S.optionalKey(ExportsField),
-	publishConfig: S.optionalKey(PublishConfigField),
-	packageManager: S.optionalKey(PackageManager.FromString),
-	devEngines: S.optionalKey(DevEnginesSchema),
-	rest: S.optionalKey(S.Record(S.String, S.Unknown)),
-}) {
+export class Package extends S.Class<Package>($I`Package`)({
+	name: PackageName.annotateKey({ description: "Package identifier satisfying npm naming rules, with an optional `@scope/` prefix" }),
+	version: SemVer.FromString.annotateKey({ description: "Package release version validated against strict semantic versioning" }),
+	description: S.optionalKey(S.String).annotateKey({ description: "Human-readable summary of the package's purpose" }),
+	private: S.optionalKey(S.Boolean).annotateKey({ description: "Whether the manifest marks the package as private, treated as false when absent" }),
+	type: S.optionalKey(S.Literals(["module", "commonjs"])).annotateKey({ description: "Module interpretation for JavaScript files in the package: `module` or `commonjs`" }),
+	main: S.optionalKey(S.String).annotateKey({ description: "Legacy root entry-point path, consulted by the resolver only when `exports` is absent" }),
+	license: S.optionalKey(SpdxLicense).annotateKey({ description: "Package licensing declaration: an SPDX identifier or expression, `UNLICENSED`, or `SEE LICENSE IN <file>`" }),
+	author: S.optionalKey(Person.FromValue).annotateKey({ description: "Primary author information decoded from a person object or `Name <email> (url)` shorthand" }),
+	contributors: Person.FromValue.pipe(S.Array, S.optionalKey).annotateKey({ description: "People credited with contributions, decoded from person objects or shorthand strings" }),
+	maintainers: Person.FromValue.pipe(S.Array, S.optionalKey).annotateKey({ description: "People listed as package maintainers, decoded from person objects or shorthand strings" }),
+	keywords: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "Terms describing the package for discovery and search" }),
+	repository: S.optionalKey(Repository.FromValue).annotateKey({ description: "Source repository reference, preserving its original shorthand or object form and any monorepo subdirectory" }),
+	bugs: S.optionalKey(Bugs.FromValue).annotateKey({ description: "Issue-reporting destination, carrying an issue-tracker URL, contact email, or both" }),
+	funding: S.optionalKey(Funding.FromField).annotateKey({ description: "Financial support destinations, decoded to an array while preserving the original field and entry forms on encode" }),
+	homepage: S.optionalKey(S.String).annotateKey({ description: "Address of the package's homepage" }),
+	dependencies: DependencyMapField.annotateKey({ description: "Production dependency specifiers keyed by package name, defaulting to an empty map" }),
+	devDependencies: DependencyMapField.annotateKey({ description: "Development dependency specifiers keyed by package name, defaulting to an empty map" }),
+	peerDependencies: DependencyMapField.annotateKey({ description: "Peer dependency specifiers keyed by package name, defaulting to an empty map" }),
+	optionalDependencies: DependencyMapField.annotateKey({ description: "Optional dependency specifiers keyed by package name, defaulting to an empty map" }),
+	peerDependenciesMeta: S.optionalKey(PeerDependenciesMetaField).annotateKey({ description: "Per-package peer dependency metadata whose `optional` flag determines whether a decoded peer dependency is optional" }),
+	scripts: DependencyMapField.annotateKey({ description: "Commands keyed by script name, defaulting to an empty map" }),
+	bin: S.optionalKey(BinField).annotateKey({ description: "Executable entry-point path, either a single path or command names mapped to paths" }),
+	engines: S.optionalKey(StringMapField).annotateKey({ description: "Supported runtime and tool version constraints keyed by engine name" }),
+	exports: S.optionalKey(ExportsField).annotateKey({ description: "Public package entry points expressed as a single path or an object of subpaths and conditions" }),
+	publishConfig: S.optionalKey(PublishConfigField).annotateKey({ description: "Publication settings preserving npm keys such as `access` and `directory` alongside extension keys" }),
+	packageManager: S.optionalKey(PackageManager.FromString).annotateKey({ description: "Package-manager pin carrying a lowercase manager name, exact version without build metadata, and optional Corepack integrity hash" }),
+	devEngines: S.optionalKey(DevEnginesSchema).annotateKey({ description: "Development environment constraints for package manager, runtime, operating system, CPU, and libc, with optional failure policies" }),
+	rest: S.optionalKey(S.Record(S.String, S.Unknown)).annotateKey({ description: "Unknown top-level manifest fields preserved on decode and flattened back into the document on encode" }),
+}, $I.annote("Package", { description: "A package.json document as a rich `Schema.Class`: typed known fields, a `rest` catch-all preserving unknown top-level fields across a read/edit/write cycle, computed getters, and immutable mutation statics." })) {
 	// ── Pipeable ──────────────────────────────────────────────────────────
 	// `Schema.Class` instances are not `Pipeable` out of the box, so this manual
 	// overload block makes `pkg.pipe(Package.setVersion(v))` work alongside the

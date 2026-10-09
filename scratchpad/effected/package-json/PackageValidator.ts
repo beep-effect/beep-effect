@@ -3,6 +3,7 @@
 // `PackageValidationError`. Ships `PackageValidator.layer` (the default rule
 // set) and the genuinely-parameterized `PackageValidator.layerRules` factory.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
@@ -11,6 +12,8 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { Package } from "./Package.ts";
+
+const $I = $ScratchpadId.create("effected/package-json/PackageValidator");
 
 /**
  * A single validation-rule failure.
@@ -45,7 +48,7 @@ export interface ValidationRule {
  *
  * @public
  */
-export class PackageValidationError extends S.TaggedError<PackageValidationError>()("PackageValidationError", {
+export class PackageValidationError extends S.TaggedError<PackageValidationError>($I`PackageValidationError`)("PackageValidationError", {
 	/** The aggregated rule failures. */
 	failures: S.Array(
 		S.Struct({
@@ -53,8 +56,8 @@ export class PackageValidationError extends S.TaggedError<PackageValidationError
 			message: S.String,
 			path: S.Option(S.String),
 		}),
-	),
-}) {
+	).annotateKey({ description: "The aggregated rule failures." }),
+}, $I.annote("PackageValidationError", { description: "Indicates that a Package failed one or more validation rules." })) {
 	override get message(): string {
 		const lines = this.failures.map((failure) => {
 			const path = O.match(failure.path, { onNone: () => "", onSome: (value) => ` (at ${value})` });
@@ -179,7 +182,7 @@ const runRules = Effect.fn("PackageValidator.validate")(function* (pkg: Package,
 export class PackageValidator extends Context.Service<
 	PackageValidator,
 	{ readonly validate: (pkg: Package) => Effect.Effect<void, PackageValidationError> }
->()("@beep/scratchpad/effected/package-json/PackageValidator") {
+>()($I`PackageValidator`) {
 	/** The default layer, backed by {@link defaultRules}. */
 	static readonly layer: Layer.Layer<PackageValidator> = Layer.succeed(PackageValidator, {
 		validate: Effect.fn("PackageValidator.validate")((pkg) => runRules(pkg, defaultRules)),

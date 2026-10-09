@@ -24,11 +24,14 @@
 // tiers normalize to `PackageDecodeError` at their decode boundary — rather
 // than as a degradation, which is `LenientManifest`'s job alone.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as SchemaIssue from "effect/SchemaIssue";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+
+const $I = $ScratchpadId.create("effected/package-json/Funding");
 
 /** The wire value a single funding entry was decoded from. */
 type EntryWire = string | { readonly [k: string]: unknown };
@@ -148,14 +151,14 @@ const FieldValue = S.Union([EntryValue, S.Array(EntryValue)]);
  *
  * @public
  */
-export class Funding extends S.Class<Funding>("Funding")({
+export class Funding extends S.Class<Funding>($I`Funding`)({
 	/** The funding platform, when the object form carried one (`"github"`, …). */
-	type: S.optionalKey(S.String),
+	type: S.optionalKey(S.String).annotateKey({ description: "The funding platform, when the object form carried one (`\"github\"`, …)." }),
 	/** Where the money goes, exactly as the manifest wrote it. */
-	url: S.String,
+	url: S.String.annotateKey({ description: "Where the money goes, exactly as the manifest wrote it." }),
 	/** Keys outside the documented set, preserved so encoding does not drop them. */
-	rest: S.optionalKey(S.Record(S.String, S.Unknown)),
-}) {
+	rest: S.optionalKey(S.Record(S.String, S.Unknown)).annotateKey({ description: "Keys outside the documented set, preserved so encoding does not drop them." }),
+}, $I.annote("Funding", { description: "Where to send money for a package: one funding entry." })) {
 	/**
 	 * A single `funding` entry: the bare URL string or the object form, always
 	 * decoded to a {@link Funding} and always re-encoded in the form it was read

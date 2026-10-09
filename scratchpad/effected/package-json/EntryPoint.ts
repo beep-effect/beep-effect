@@ -1,7 +1,10 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/package-json/EntryPoint");
 
 /**
  * Options for {@link resolveEntryPoint}.
@@ -32,7 +35,7 @@ export interface ResolveEntryPointOptions {
  *
  * @public
  */
-export class UnresolvedEntryPointError extends S.TaggedError<UnresolvedEntryPointError>()(
+export class UnresolvedEntryPointError extends S.TaggedError<UnresolvedEntryPointError>($I`UnresolvedEntryPointError`)(
 	"UnresolvedEntryPointError",
 	{
 		/**
@@ -43,10 +46,10 @@ export class UnresolvedEntryPointError extends S.TaggedError<UnresolvedEntryPoin
 		 * `unsupportedExportsForm` — an array fallback list, or another shape this
 		 * resolver does not implement.
 		 */
-		reason: S.Literals(["noRootExport", "noConditionMatched", "unsupportedExportsForm"]),
+		reason: S.Literals(["noRootExport", "noConditionMatched", "unsupportedExportsForm"]).annotateKey({ description: "`noRootExport` — `exports` is a subpath map with no `\".\"` entry, so the package exports subpaths but no root. `noConditionMatched` — a root entry exists but none of the requested conditions are present, e.g. a `require`-only package read with `[\"import\"]`. `unsupportedExportsForm` — an array fallback list, or another shape this resolver does not implement." }),
 		/** The conditions that were tried, for `noConditionMatched`. */
-		conditions: S.String.pipe(S.Array, S.optionalKey),
-	},
+		conditions: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "The conditions that were tried, for `noConditionMatched`." }),
+	}, $I.annote("UnresolvedEntryPointError", { description: "Raised when a manifest resolves no root entry point." }),
 ) {
 	override get message(): string {
 		switch (this.reason) {

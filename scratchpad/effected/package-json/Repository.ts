@@ -13,9 +13,12 @@
 // rewriting the field. A caller that wants a browsable link asks for one; a
 // caller that wants the bytes it read keeps them.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+
+const $I = $ScratchpadId.create("effected/package-json/Repository");
 
 /** The shorthand hosts npm resolves without a scheme. */
 const SHORTHAND_HOSTS: ReadonlyMap<string, string> = new Map([
@@ -178,16 +181,16 @@ const isFaithfulBugs = (wire: { readonly [k: string]: unknown }, bugs: Bugs): bo
  *
  * @public
  */
-export class Repository extends S.Class<Repository>("Repository")({
+export class Repository extends S.Class<Repository>($I`Repository`)({
 	/** The `type` field, when the object form carried one (`"git"`, …). */
-	type: S.optionalKey(S.String),
+	type: S.optionalKey(S.String).annotateKey({ description: "The `type` field, when the object form carried one (`\"git\"`, …)." }),
 	/** The reference exactly as written: a shorthand, a git URL, or an https URL. */
-	url: S.String,
+	url: S.String.annotateKey({ description: "The reference exactly as written: a shorthand, a git URL, or an https URL." }),
 	/** The subdirectory within the repository, for a monorepo member. */
-	directory: S.optionalKey(S.String),
+	directory: S.optionalKey(S.String).annotateKey({ description: "The subdirectory within the repository, for a monorepo member." }),
 	/** Keys outside the documented set, preserved so encoding does not drop them. */
-	rest: S.optionalKey(S.Record(S.String, S.Unknown)),
-}) {
+	rest: S.optionalKey(S.Record(S.String, S.Unknown)).annotateKey({ description: "Keys outside the documented set, preserved so encoding does not drop them." }),
+}, $I.annote("Repository", { description: "Where a package's source lives." })) {
 	/**
 	 * The browsable `https://` URL, or `Option.none()` when `url` is not a form
 	 * this model recognizes.
@@ -329,14 +332,14 @@ export class Repository extends S.Class<Repository>("Repository")({
  *
  * @public
  */
-export class Bugs extends S.Class<Bugs>("Bugs")({
+export class Bugs extends S.Class<Bugs>($I`Bugs`)({
 	/** The issue-tracker URL. */
-	url: S.optionalKey(S.String),
+	url: S.optionalKey(S.String).annotateKey({ description: "The issue-tracker URL." }),
 	/** The address to mail instead of, or alongside, filing an issue. */
-	email: S.optionalKey(S.String),
+	email: S.optionalKey(S.String).annotateKey({ description: "The address to mail instead of, or alongside, filing an issue." }),
 	/** Keys outside the documented set, preserved so encoding does not drop them. */
-	rest: S.optionalKey(S.Record(S.String, S.Unknown)),
-}) {
+	rest: S.optionalKey(S.Record(S.String, S.Unknown)).annotateKey({ description: "Keys outside the documented set, preserved so encoding does not drop them." }),
+}, $I.annote("Bugs", { description: "Where to report problems with a package." })) {
 	/** The `bugs` field: a URL string or the object form. */
 	static readonly FromValue: S.Codec<Bugs, string | { readonly [k: string]: unknown }> = S.Union([
 		S.Record(S.String, S.Unknown),

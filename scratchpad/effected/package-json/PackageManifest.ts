@@ -20,6 +20,7 @@
 //                        for mid-build resolution.
 //   PackageJsonFormat  — decode-free text path: anything syntactically JSON.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { SemVer } from "../semver/index.ts";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
@@ -30,6 +31,8 @@ import type { PackageFormatOptions } from "./Package.ts";
 import { Package, PackageDecodeError } from "./Package.ts";
 import { PackageManagerRange } from "./PackageManagerRange.ts";
 import { PackageName } from "./PackageName.ts";
+
+const $I = $ScratchpadId.create("effected/package-json/PackageManifest");
 
 /**
  * A package.json document as it exists on disk, publishable or not: every
@@ -74,12 +77,12 @@ import { PackageName } from "./PackageName.ts";
  *
  * @public
  */
-export class PackageManifest extends S.Class<PackageManifest>("PackageManifest")({
+export class PackageManifest extends S.Class<PackageManifest>($I`PackageManifest`)({
 	...Package.fields,
-	name: S.optionalKey(PackageName),
-	version: S.optionalKey(SemVer.FromString),
-	packageManager: S.optionalKey(PackageManagerRange.FromString),
-}) {
+	name: S.optionalKey(PackageName).annotateKey({ description: "Optional package identifier that must satisfy npm naming rules when present" }),
+	version: S.optionalKey(SemVer.FromString).annotateKey({ description: "Optional package release version that must satisfy strict semantic versioning when present" }),
+	packageManager: S.optionalKey(PackageManagerRange.FromString).annotateKey({ description: "Package-manager declaration accepting an exact version or semver range, with optional integrity hash and original range spelling preserved" }),
+}, $I.annote("PackageManifest", { description: "A package.json document as it exists on disk, publishable or not: every field of Package with `name` and `version` optional and `packageManager` accepting the range spelling." })) {
 	/**
 	 * The wire codec: an open JSON object ↔ a {@link PackageManifest} instance,
 	 * partitioning unknown keys into `rest` and flattening them back on encode —

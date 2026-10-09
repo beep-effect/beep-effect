@@ -12,10 +12,13 @@
 // object form land in `rest` and flatten back on encode, instead of being
 // silently dropped.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+
+const $I = $ScratchpadId.create("effected/package-json/Person");
 
 const parsePersonString = (input: string): Person => {
 	const emailMatch = input.match(/<([^>]+)>/);
@@ -146,16 +149,16 @@ const encodePersonObject = (person: Person): { readonly [k: string]: unknown } =
  *
  * @public
  */
-export class Person extends S.Class<Person>("Person")({
+export class Person extends S.Class<Person>($I`Person`)({
 	/** The person's name. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "The person's name." }),
 	/** The optional email address. */
-	email: S.optionalKey(S.String),
+	email: S.optionalKey(S.String).annotateKey({ description: "The optional email address." }),
 	/** The optional homepage URL. */
-	url: S.optionalKey(S.String),
+	url: S.optionalKey(S.String).annotateKey({ description: "The optional homepage URL." }),
 	/** Any additional keys, preserved verbatim and flattened back on encode. */
-	rest: S.optionalKey(S.Record(S.String, S.Unknown)),
-}) {
+	rest: S.optionalKey(S.Record(S.String, S.Unknown)).annotateKey({ description: "Any additional keys, preserved verbatim and flattened back on encode." }),
+}, $I.annote("Person", { description: "A structured person object with `name`, optional `email` / `url`, and a `rest` catch-all preserving any additional keys across a read/write cycle." })) {
 	/**
 	 * The object wire codec: an open JSON object ↔ a {@link Person}, partitioning
 	 * unknown keys into `rest` and flattening them back on encode so the on-disk

@@ -4,6 +4,7 @@
 // (`@effect/platform-node`) at the edge. Resolution is not fused into `write`
 // (compose `Package.resolve` explicitly).
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { JsoncPath, JsoncStringifyError } from "../jsonc/index.ts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -18,6 +19,8 @@ import type { PackageJsonModifyError } from "./PackageJsonFormat.ts";
 import { PackageJsonFormat } from "./PackageJsonFormat.ts";
 import { PackageManifest } from "./PackageManifest.ts";
 
+const $I = $ScratchpadId.create("effected/package-json/PackageJsonFile");
+
 const Json = S.fromJsonString(S.Unknown);
 
 // ── Errors ────────────────────────────────────────────────────────────────────
@@ -28,12 +31,12 @@ const Json = S.fromJsonString(S.Unknown);
  *
  * @public
  */
-export class PackageJsonReadError extends S.TaggedError<PackageJsonReadError>()("PackageJsonReadError", {
+export class PackageJsonReadError extends S.TaggedError<PackageJsonReadError>($I`PackageJsonReadError`)("PackageJsonReadError", {
 	/** The path that could not be read. */
-	path: S.String,
+	path: S.String.annotateKey({ description: "The path that could not be read." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("PackageJsonReadError", { description: "Indicates that a package.json file could not be read from the filesystem (a filesystem error other than not-found)." })) {
 	override get message(): string {
 		return `Failed to read package.json from "${this.path}"`;
 	}
@@ -45,12 +48,12 @@ export class PackageJsonReadError extends S.TaggedError<PackageJsonReadError>()(
  *
  * @public
  */
-export class PackageJsonNotFoundError extends S.TaggedError<PackageJsonNotFoundError>()(
+export class PackageJsonNotFoundError extends S.TaggedError<PackageJsonNotFoundError>($I`PackageJsonNotFoundError`)(
 	"PackageJsonNotFoundError",
 	{
 		/** The path where package.json was expected. */
-		path: S.String,
-	},
+		path: S.String.annotateKey({ description: "The path where package.json was expected." }),
+	}, $I.annote("PackageJsonNotFoundError", { description: "Indicates that no package.json file exists at the expected path. Carries its own tag for `catchTag` routing." }),
 ) {
 	override get message(): string {
 		return `package.json not found at "${this.path}"`;
@@ -62,12 +65,12 @@ export class PackageJsonNotFoundError extends S.TaggedError<PackageJsonNotFoundE
  *
  * @public
  */
-export class PackageJsonParseError extends S.TaggedError<PackageJsonParseError>()("PackageJsonParseError", {
+export class PackageJsonParseError extends S.TaggedError<PackageJsonParseError>($I`PackageJsonParseError`)("PackageJsonParseError", {
 	/** The path whose contents failed to parse as JSON. */
-	path: S.String,
+	path: S.String.annotateKey({ description: "The path whose contents failed to parse as JSON." }),
 	/** The underlying `SyntaxError`, preserved structurally. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The underlying `SyntaxError`, preserved structurally." }),
+}, $I.annote("PackageJsonParseError", { description: "Indicates that a package.json file's contents are not valid JSON." })) {
 	override get message(): string {
 		return `Failed to parse package.json at "${this.path}"`;
 	}
@@ -80,12 +83,12 @@ export class PackageJsonParseError extends S.TaggedError<PackageJsonParseError>(
  *
  * @public
  */
-export class PackageJsonWriteError extends S.TaggedError<PackageJsonWriteError>()("PackageJsonWriteError", {
+export class PackageJsonWriteError extends S.TaggedError<PackageJsonWriteError>($I`PackageJsonWriteError`)("PackageJsonWriteError", {
 	/** The path that could not be written. */
-	path: S.String,
+	path: S.String.annotateKey({ description: "The path that could not be written." }),
 	/** The underlying filesystem failure, preserved structurally. Narrowed to the write failure only. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The underlying filesystem failure, preserved structurally. Narrowed to the write failure only." }),
+}, $I.annote("PackageJsonWriteError", { description: "Indicates that a package.json file could not be written to the filesystem. Narrowed to the filesystem-write failure only — never a resolution or encode error." })) {
 	override get message(): string {
 		return `Failed to write package.json to "${this.path}"`;
 	}
@@ -208,7 +211,7 @@ export interface PackageJsonFileShape {
  * @public
  */
 export class PackageJsonFile extends Context.Service<PackageJsonFile, PackageJsonFileShape>()(
-	"@beep/scratchpad/effected/package-json/PackageJsonFile",
+	$I`PackageJsonFile`,
 ) {
 	/** Build the service implementation from `FileSystem` / `Path` in context; use {@link PackageJsonFile.layer} to provide it. */
 	static readonly make: Effect.Effect<PackageJsonFileShape, never, FileSystem.FileSystem | Path.Path> = Effect.gen(

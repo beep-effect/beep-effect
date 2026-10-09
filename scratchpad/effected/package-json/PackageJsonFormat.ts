@@ -16,12 +16,15 @@
 // `author` shorthand above all) survive untouched because they are never
 // looked at.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { JsoncPath } from "../jsonc/index.ts";
 import { JsoncEdit, JsoncModifier } from "../jsonc/index.ts";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { detectIndent, renderJson, resolveIndent, sortKeys } from "./internal/format.ts";
+
+const $I = $ScratchpadId.create("effected/package-json/PackageJsonFormat");
 
 const Json = S.fromJsonString(S.Unknown);
 
@@ -37,12 +40,12 @@ const Json = S.fromJsonString(S.Unknown);
  *
  * @public
  */
-export class PackageJsonSyntaxError extends S.TaggedError<PackageJsonSyntaxError>()("PackageJsonSyntaxError", {
+export class PackageJsonSyntaxError extends S.TaggedError<PackageJsonSyntaxError>($I`PackageJsonSyntaxError`)("PackageJsonSyntaxError", {
 	/** Which syntactic precondition failed. */
-	reason: S.Literals(["invalid-json", "not-an-object"]),
+	reason: S.Literals(["invalid-json", "not-an-object"]).annotateKey({ description: "Which syntactic precondition failed." }),
 	/** The underlying `SyntaxError` for `"invalid-json"`, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying `SyntaxError` for `\"invalid-json\"`, preserved structurally." }),
+}, $I.annote("PackageJsonSyntaxError", { description: "Indicates that a text input could not be treated as a package.json document: either it is not valid JSON (`\"invalid-json\"`, carrying the underlying `SyntaxError` on `cause`) or it parsed to something other than a JSON object (`\"not-an-object\"` — an array, a scalar or `null`)." })) {
 	override get message(): string {
 		return this.reason === "invalid-json"
 			? "package.json text is not valid JSON"
@@ -95,12 +98,12 @@ const isJsonObject = (value: unknown): value is Record<string, unknown> =>
  *
  * @public
  */
-export class PackageJsonModifyError extends S.TaggedError<PackageJsonModifyError>()("PackageJsonModifyError", {
+export class PackageJsonModifyError extends S.TaggedError<PackageJsonModifyError>($I`PackageJsonModifyError`)("PackageJsonModifyError", {
 	/** The field path whose navigation failed. */
-	path: S.Array(S.Union([S.String, S.Finite])),
+	path: S.Array(S.Union([S.String, S.Finite])).annotateKey({ description: "The field path whose navigation failed." }),
 	/** The underlying `JsoncModificationError`, preserved structurally. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The underlying `JsoncModificationError`, preserved structurally." }),
+}, $I.annote("PackageJsonModifyError", { description: "Indicates that a surgical modification could not be applied: the value on the navigation path is not the container kind the next path segment requires. The underlying `@effected/jsonc` `JsoncModificationError` — which names the expected container and the 1-based depth of the mismatch — is preserved on the structured `cause` field, never stringified." })) {
 	override get message(): string {
 		return `Failed to modify package.json at path [${this.path.join(", ")}]`;
 	}

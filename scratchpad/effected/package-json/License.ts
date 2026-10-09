@@ -2,12 +2,15 @@
 // SPDX expressions plus the `UNLICENSED` and `SEE LICENSE IN` special cases)
 // and the `InvalidSpdxLicenseError` the concept raises.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import type { SpdxExpression } from "../spdx/index.ts";
 import { SpdxExpression as SpdxExpressionOps, isValidExpression } from "../spdx/index.ts";
 import type * as Brand from "effect/Brand";
 import type * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/package-json/License");
 
 /**
  * Indicates that a string is not a valid SPDX license identifier or expression.
@@ -17,10 +20,10 @@ import * as S from "effect/Schema";
  *
  * @public
  */
-export class InvalidSpdxLicenseError extends S.TaggedError<InvalidSpdxLicenseError>()("InvalidSpdxLicenseError", {
+export class InvalidSpdxLicenseError extends S.TaggedError<InvalidSpdxLicenseError>($I`InvalidSpdxLicenseError`)("InvalidSpdxLicenseError", {
 	/** The raw input string that failed validation. */
-	input: S.String,
-}) {
+	input: S.String.annotateKey({ description: "The raw input string that failed validation." }),
+}, $I.annote("InvalidSpdxLicenseError", { description: "Indicates that a string is not a valid SPDX license identifier or expression." })) {
 	override get message(): string {
 		return `Invalid SPDX license "${this.input}": not a recognized identifier or expression`;
 	}

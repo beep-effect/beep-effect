@@ -20,6 +20,7 @@
 // What this module does NOT share with the pin is the name grammar; the
 // `PackageManager` class remarks carry that decision and its evidence.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { CorepackIntegrityHash } from "../npm/index.ts";
 import { SemVer } from "../semver/index.ts";
 import * as Effect from "effect/Effect";
@@ -28,6 +29,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+
+const $I = $ScratchpadId.create("effected/package-json/PackageManager");
 
 // The name half of the grammar, deliberately looser than
 // `PackageManagerPin`'s four literals — see the class remarks for why.
@@ -84,9 +87,9 @@ const invalid = (input: string, message: string) => Effect.fail(new SchemaIssue.
  *
  * @public
  */
-export class PackageManager extends S.Class<PackageManager>("PackageManager")({
+export class PackageManager extends S.Class<PackageManager>($I`PackageManager`)({
 	/** The package-manager name (e.g. `pnpm`). Any lowercase name — see the class remarks. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "The package-manager name (e.g. `pnpm`). Any lowercase name — see the class remarks." }),
 	/**
 	 * The version (e.g. `10.33.0`): `@effected/semver`'s
 	 * `SemVer.PinnableVersionString` — an exact SemVer 2.0.0 version with no
@@ -102,8 +105,8 @@ export class PackageManager extends S.Class<PackageManager>("PackageManager")({
 	 * `CorepackIntegrityHash`, the shared restriction of the `IntegrityHash`
 	 * brand to the corepack `<algo>.<hex>` form.
 	 */
-	integrity: S.Option(CorepackIntegrityHash),
-}) {
+	integrity: S.Option(CorepackIntegrityHash).annotateKey({ description: "The optional integrity hash (e.g. `sha512.abc`): `@effected/npm`'s `CorepackIntegrityHash`, the shared restriction of the `IntegrityHash` brand to the corepack `<algo>.<hex>` form." }),
+}, $I.annote("PackageManager", { description: "A structured `packageManager` value with `name`, `version` and an optional `integrity` hash." })) {
 	/**
 	 * Schema transformation between the `"name@version+integrity"` string and a
 	 * {@link PackageManager}.
