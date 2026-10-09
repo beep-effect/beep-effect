@@ -2,6 +2,7 @@
 // ports. The engine is pure sync — no Effect in this file.
 
 import { assert, describe, it } from "@effect/vitest";
+import * as S from "effect/Schema";
 import { balanced } from "../../effected/glob/internal/balancedMatch.ts";
 import { expand } from "../../effected/glob/internal/braceExpansion.ts";
 import { GuardExceeded, InvalidCap } from "../../effected/glob/internal/limits.ts";
@@ -10,7 +11,7 @@ const reasonOf = (fn: () => unknown): string => {
 	try {
 		fn();
 	} catch (e) {
-		if (e instanceof GuardExceeded) return e.reason;
+		if (S.is(GuardExceeded)(e)) return e.reason;
 		throw e;
 	}
 	throw new Error("expected a GuardExceeded throw");

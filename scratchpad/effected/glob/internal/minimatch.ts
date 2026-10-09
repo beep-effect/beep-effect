@@ -48,8 +48,11 @@ const $I = $ScratchpadId.create("effected/glob/internal/minimatch");
 
 /** An invariant violation in the internal minimatch engine. */
 export class MinimatchError extends S.TaggedError<MinimatchError>($I`MinimatchError`)("MinimatchError", {
-	message: S.String,
-}) {}
+	message: S.String.annotateKey({ description: "Describes the internal matching invariant that was violated." }),
+}, $I.annote("MinimatchError", {
+	title: "Minimatch engine invariant violation",
+	description: "Programmer error raised when the internal matcher reaches an impossible state while matching a path against a compiled pattern.",
+})) {}
 
 // Optimized checking for the most common glob patterns.
 const starDotExtRE = /^\*+([^+@!?*[(]*)$/;
@@ -130,12 +133,12 @@ const twoStarNoDot = "(?:(?!(?:\\/|^)\\.).)*?";
 export const braceExpand: {
 	(options?: EngineOptions): (pattern: string) => Array<string>;
 	(pattern: string, options?: EngineOptions): Array<string>;
-} = dual((args) => args.length >= 2 || P.isString(args[0]), (pattern: string, options: EngineOptions = {}): Array<string> => {
+} = dual((args) => P.isString(args[0]), (pattern: string, options: EngineOptions = {}): Array<string> => {
 	assertValidPattern(pattern);
 
 	// Thanks to Yeting Li <https://github.com/yetingli> for
 	// improving this regexp to avoid a ReDOS vulnerability.
-	if (options.nobrace === true || !/\{(?:(?!\{).)*\}/.test(pattern)) {
+	if (options.nobrace === true || !/\{(?:(?!\{).)*}/.test(pattern)) {
 		// shortcut. no need to expand.
 		return [pattern];
 	}
@@ -145,7 +148,7 @@ export const braceExpand: {
 });
 
 // replace stuff like \* with *
-const globMagic = /[?*]|[+@!]\(.*?\)|\[|\]/;
+const globMagic = /[?*]|[+@!]\(.*?\)|\[|]/;
 const regExpEscape = (s: string): string => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 
 export class Minimatch {

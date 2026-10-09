@@ -26,6 +26,7 @@
 // it here). The debug/inspect id plumbing is kept for diffability.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -40,8 +41,11 @@ const $I = $ScratchpadId.create("effected/glob/internal/ast");
 
 /** An invariant violation in the internal extglob syntax tree. */
 export class ASTError extends S.TaggedError<ASTError>($I`ASTError`)("ASTError", {
-	message: S.String,
-}) {}
+	message: S.String.annotateKey({ description: "The violated invariant in the extglob syntax tree." }),
+}, $I.annote("ASTError", {
+	title: "Extglob syntax tree invariant violation",
+	description: "An internal syntax-tree operation encountered an invalid extglob structure.",
+})) {}
 
 // classes [] are handled by the parseClass method
 // for positive extglobs, we sub-parse the contents, and combine,
@@ -79,9 +83,13 @@ export class ASTError extends S.TaggedError<ASTError>($I`ASTError`)("ASTError", 
 // ['^a', '(?:i|w(?:(?!(?:x|y).*zb$).*)z|j)', 'b$']
 // ['^a(?:i|w(?:(?!(?:x|y).*zb$).*)z|j)b$']
 
-export type ExtglobType = "!" | "?" | "+" | "*" | "@";
-const types = HashSet.fromIterable<string>(["!", "?", "+", "*", "@"]);
-const isExtglobType = (c: string | null): c is ExtglobType => c !== null && HashSet.has(types, c);
+/** The five operators that introduce an extended glob expression. */
+export const ExtglobType = LiteralKit(["!", "?", "+", "*", "@"]).annotate($I.annote("ExtglobType", {
+	title: "Extended glob operator",
+	description: "The negation, optional, one-or-more, zero-or-more and exactly-one extglob operators.",
+}));
+export type ExtglobType = typeof ExtglobType.Type;
+const isExtglobType = S.is(ExtglobType);
 const isExtglobAST = (c: AST): c is AST & { type: ExtglobType } => isExtglobType(c.type);
 
 // Map of which extglob types can adopt the children of a nested extglob
@@ -185,7 +193,7 @@ const starNoEmpty = `${qmark}+?`;
 
 const guardDepth = (depth: number): void => {
 	if (depth > MAX_NESTING_DEPTH) {
-		throw new GuardExceeded("NestingDepthExceeded", MAX_NESTING_DEPTH, depth);
+		throw GuardExceeded.fromReason("NestingDepthExceeded", MAX_NESTING_DEPTH, depth);
 	}
 };
 
@@ -622,7 +630,7 @@ export class AST {
 			hasMagic ||
 			this.#hasMagic ||
 			(this.#options.nocase === true && this.#options.nocaseMagicOnly !== true && glob.toUpperCase() !== glob.toLowerCase());
-		if (anyMagic !== true) {
+		if (!anyMagic) {
 			return body;
 		}
 

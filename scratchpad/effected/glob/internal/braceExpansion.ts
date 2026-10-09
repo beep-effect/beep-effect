@@ -34,17 +34,17 @@
 //    programmer error and dies as a TypeError defect.
 
 import { dual } from "effect/Function";
-import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
 import * as Random from "effect/Random";
 import { balanced } from "./balancedMatch.ts";
 import { EXPANSION_MAX, GuardExceeded, MAX_NESTING_DEPTH, assertCap } from "./limits.ts";
-import * as P from "effect/Predicate";
 
-const escSlash = `\0SLASH${Effect.runSync(Random.next)}\0`;
-const escOpen = `\0OPEN${Effect.runSync(Random.next)}\0`;
-const escClose = `\0CLOSE${Effect.runSync(Random.next)}\0`;
-const escComma = `\0COMMA${Effect.runSync(Random.next)}\0`;
-const escPeriod = `\0PERIOD${Effect.runSync(Random.next)}\0`;
+const random = Random.Random.defaultValue();
+const escSlash = `\0SLASH${random.nextDoubleUnsafe()}\0`;
+const escOpen = `\0OPEN${random.nextDoubleUnsafe()}\0`;
+const escClose = `\0CLOSE${random.nextDoubleUnsafe()}\0`;
+const escComma = `\0COMMA${random.nextDoubleUnsafe()}\0`;
+const escPeriod = `\0PERIOD${random.nextDoubleUnsafe()}\0`;
 const escSlashPattern = new RegExp(escSlash, "g");
 const escOpenPattern = new RegExp(escOpen, "g");
 const escClosePattern = new RegExp(escClose, "g");
@@ -81,7 +81,7 @@ const unescapeBraces = (str: string): string =>
  */
 const parseCommaParts = (str: string, depth: number): Array<string> => {
 	if (depth > MAX_NESTING_DEPTH) {
-		throw new GuardExceeded("NestingDepthExceeded", MAX_NESTING_DEPTH, depth);
+		throw GuardExceeded.fromReason("NestingDepthExceeded", MAX_NESTING_DEPTH, depth);
 	}
 	if (str === "") {
 		return [""];
@@ -123,7 +123,7 @@ export interface BraceExpansionOptions {
 export const expand: {
 	(options?: BraceExpansionOptions): (str: string) => Array<string>;
 	(str: string, options?: BraceExpansionOptions): Array<string>;
-} = dual((args) => args.length >= 2 || P.isString(args[0]), (str: string, options: BraceExpansionOptions = {}): Array<string> => {
+} = dual((args) => P.isString(args[0]), (str: string, options: BraceExpansionOptions = {}): Array<string> => {
 	if (str === "") {
 		return [];
 	}
@@ -152,10 +152,9 @@ const lte = (i: number, y: number): boolean => i <= y;
 
 const gte = (i: number, y: number): boolean => i >= y;
 
-// oxlint-disable-next-line func-style
-function expand_(str: string, max: number, isTopInput: boolean, depth: number): Array<string> {
+const expand_ = (str: string, max: number, isTopInput: boolean, depth: number): Array<string> => {
 	if (depth > MAX_NESTING_DEPTH) {
-		throw new GuardExceeded("NestingDepthExceeded", MAX_NESTING_DEPTH, depth);
+		throw GuardExceeded.fromReason("NestingDepthExceeded", MAX_NESTING_DEPTH, depth);
 	}
 
 	const expansions: Array<string> = [];
@@ -175,7 +174,7 @@ function expand_(str: string, max: number, isTopInput: boolean, depth: number): 
 		if (/\$$/.test(m.pre)) {
 			const post: Array<string> = m.post.length !== 0 ? expand_(m.post, max, false, depth + 1) : [""];
 			if (post.length > max) {
-				throw new GuardExceeded("ExpansionBudgetExceeded", max, post.length);
+				throw GuardExceeded.fromReason("ExpansionBudgetExceeded", max, post.length);
 			}
 			for (const p of post) {
 				expansions.push(`${pre}{${m.body}}${p}`);
@@ -189,7 +188,7 @@ function expand_(str: string, max: number, isTopInput: boolean, depth: number): 
 		const isOptions = m.body.indexOf(",") >= 0;
 		if (!isSequence && !isOptions) {
 			// {a},b}
-			if (m.post.match(/,(?!,).*\}/) !== null) {
+			if (m.post.match(/,(?!,).*}/) !== null) {
 				current = `${m.pre}{${m.body}${escClose}${m.post}`;
 				isTop = true;
 				continue;
@@ -243,7 +242,7 @@ function expand_(str: string, max: number, isTopInput: boolean, depth: number): 
 			// truncated the loop at max instead).
 			const total = Math.floor(Math.abs(y - x) / Math.abs(incr)) + 1;
 			if (total > max) {
-				throw new GuardExceeded("ExpansionBudgetExceeded", max, total);
+				throw GuardExceeded.fromReason("ExpansionBudgetExceeded", max, total);
 			}
 
 			N = [];
@@ -278,12 +277,12 @@ function expand_(str: string, max: number, isTopInput: boolean, depth: number): 
 		for (let j = 0; j < N.length; j++) {
 			for (let k = 0; k < post.length; k++) {
 				const expansion = pre + N[j] + post[k];
-				if (isTop !== true || isSequence || expansion !== "") {
+				if (!isTop || isSequence || expansion !== "") {
 					if (expansions.length >= max) {
 						// Budget exhausted with work remaining: the actual reported is the
 						// count reached plus what remains in this group — a lower bound on
 						// the full expansion size.
-						throw new GuardExceeded(
+						throw GuardExceeded.fromReason(
 							"ExpansionBudgetExceeded",
 							max,
 							expansions.length + (N.length - j) * post.length - k,
@@ -296,4 +295,4 @@ function expand_(str: string, max: number, isTopInput: boolean, depth: number): 
 
 		return expansions;
 	}
-}
+};

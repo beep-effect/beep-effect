@@ -5,8 +5,9 @@
 // types leaf.
 
 import { dual } from "effect/Function";
-import type { EngineOptions } from "./types.ts";
 import * as P from "effect/Predicate";
+
+import type { EngineOptions } from "./types.ts";
 
 /**
  * Un-escape a string that has been escaped with `escape`.
@@ -28,7 +29,7 @@ import * as P from "effect/Predicate";
 const unescapePattern: {
 	(options?: Pick<EngineOptions, "windowsPathsNoEscape" | "magicalBraces">): (s: string) => string;
 	(s: string, options?: Pick<EngineOptions, "windowsPathsNoEscape" | "magicalBraces">): string;
-} = dual((args) => args.length >= 2 || P.isString(args[0]), (
+} = dual((args) => P.isString(args[0]), (
 	s: string,
 	{
 		windowsPathsNoEscape = false,
@@ -37,12 +38,12 @@ const unescapePattern: {
 ): string => {
 	if (magicalBraces) {
 		return windowsPathsNoEscape
-			? s.replace(/\[([^/\\])\]/g, "$1")
-			: s.replace(/((?!\\).|^)\[([^/\\])\]/g, "$1$2").replace(/\\([^/])/g, "$1");
+			? s.replace(/\[([^\/\\])]/g, "$1")
+			: s.replace(/((?!\\).|^)\[([^\/\\])]/g, "$1$2").replace(/\\([^/])/g, "$1");
 	}
 	return windowsPathsNoEscape
-		? s.replace(/\[([^/\\{}])\]/g, "$1")
-		: s.replace(/((?!\\).|^)\[([^/\\{}])\]/g, "$1$2").replace(/\\([^/{}])/g, "$1");
+		? s.replace(/\[([^\/\\{}])]/g, "$1")
+		: s.replace(/((?!\\).|^)\[([^\/\\{}])]/g, "$1$2").replace(/\\([^/{}])/g, "$1");
 });
 
 // Exported under the upstream name; the internal binding avoids shadowing the

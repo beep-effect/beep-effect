@@ -4,6 +4,7 @@
 // hostile input must never surface as a stack overflow, an OOM, or a hang.
 
 import { assert, describe, it } from "@effect/vitest";
+import * as S from "effect/Schema";
 import { assertInstanceOf } from "@effect/vitest/utils";
 import { expand } from "../../effected/glob/internal/braceExpansion.ts";
 import { GuardExceeded, InvalidCap } from "../../effected/glob/internal/limits.ts";
@@ -13,7 +14,7 @@ const reasonOf = (fn: () => unknown): string => {
 	try {
 		fn();
 	} catch (e) {
-		if (e instanceof GuardExceeded) return e.reason;
+		if (S.is(GuardExceeded)(e)) return e.reason;
 		throw e;
 	}
 	throw new Error("expected a GuardExceeded throw");

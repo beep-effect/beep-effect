@@ -2243,9 +2243,144 @@
         }
       ],
       "fixturesBytes": 0,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/glob/GlobSet.test.ts:74,132; scratchpad/test/glob/engine.test.ts:173; scratchpad/test/glob/compliance.test.ts:188,301",
+          "upstreamBehaviour": "GlobSet uses native Set for literal deduplication and lookup; AST uses Set and Map for character membership and adoption/usurpation tables; Minimatch uses Set for expansion deduplication and regex flags, Object.assign attaches regex metadata, and parseClass enumerates Object.entries.",
+          "labBehaviour": "GlobSet uses MutableHashSet; AST uses HashSet and nested HashMap with Option lookups; Minimatch uses Array.dedupe and MutableHashSet; regex metadata is assigned to a typed MMRegExp; parseClass uses Record.toEntries, preserving literal order and matching semantics.",
+          "reason": "native-runtime: native Set/Map/Object.* are forbidden by the native-runtime law; the 2026-10-09 grilling ruling empties the allowlist. Main sites: GlobSet.#classify/#literals, AST adoption/usurpation tables and toMMPattern, Minimatch.make/makeRe, braceExpressions.parseClass."
+        },
+        {
+          "test": "scratchpad/test/glob/braceExpansion.test.ts:229; scratchpad/test/glob/hostility.test.ts:128; scratchpad/test/glob/engine.test.ts:48,208,243",
+          "upstreamBehaviour": "Invalid caps and non-string patterns throw native TypeError; AST, character-class parser and matcher invariant failures throw Error, including an implicit TypeError in AST.toJSON. GuardExceeded extends Error with positional fields; GlobPatternError is already schema tagged.",
+          "labBehaviour": "InvalidCap, InvalidPattern, ASTError, BraceExpressionError, MinimatchError and GuardExceeded extend S.TaggedError. Invalid-input assertions expect the tagged classes. GuardExceeded retains its Error name, tag and message while gaining a schema-backed payload.",
+          "reason": "tagged-errors: law 7 and schema-contract laws require schema tagged errors instead of native Error/TypeError or declaration-only failures; round-1 INVENTORY codemod-1 and sol-1-2 cover limits.ts, assertValidPattern.ts, ast.ts, braceExpressions.ts and minimatch.ts."
+        },
+        {
+          "test": "scratchpad/test/glob/engine.test.ts:48,97; scratchpad/test/glob/GlobPattern.test.ts:217,232; scratchpad/test/glob/compliance.test.ts:301,316; scratchpad/test/glob/GlobSet.test.ts:274",
+          "upstreamBehaviour": "GuardReason, Platform and ExtglobType are handwritten literal unions; facade schemas duplicate reason/platform lists and extglob membership uses a cast into a native Set. Test diagnostics serialize strings/options with JSON.stringify.",
+          "labBehaviour": "Annotated LiteralKit domains own GuardReason, Platform and ExtglobType and their derived types; facade fields reuse them and extglob membership uses S.is. GuardMeasurement is an executable declared schema. Test diagnostic strings/options use S.fromJsonString codecs in GlobSet.test.ts and compliance.test.ts.",
+          "reason": "schema-first: laws 17/19 require schema-derived guards and named LiteralKit domains; schema-first JSON codec policy replaces test JSON.stringify. Round-1 grok-1-2/sol-1-3 and repair-glob.md:48 ground the shared domains and measurement model."
+        },
+        {
+          "test": "scratchpad/test/glob/engine.test.ts:97,106; scratchpad/test/glob/GlobPattern.test.ts:221,311,324; scratchpad/test/glob/GlobSet.test.ts:291,306",
+          "upstreamBehaviour": "GlobPatternError.limit/actual and option cap refinements start from Schema.Number; GuardExceeded carries unrestricted number fields. Direct error construction/decoding can admit non-finite limits and measurements.",
+          "labBehaviour": "GlobPatternError.limit, GuardExceeded.limit and option cap refinements use S.Finite, with the original integer/range checks retained. Both error actual fields use GuardMeasurement: finite numbers or positive Infinity; NaN and negative Infinity are rejected, while expansion overflow remains a typed failure.",
+          "reason": "numeric-domains: @effect/tsgo schemaNumber and schema contracts require explicit numeric domains; retain positive Infinity produced by upstream expansion arithmetic. INVENTORY codemod-2, fix-glob-g1.md:23 and repair-glob.md:48 ground the final narrowing."
+        },
+        {
+          "test": "scratchpad/test/glob/GlobPattern.test.ts:213,217; scratchpad/test/glob/hostility.test.ts:24; scratchpad/test/glob/compliance.test.ts:188,301; scratchpad/test/glob/engine.test.ts:208",
+          "upstreamBehaviour": "AST and Minimatch narrow arrays/children and regex results through assertions; GlobSet casts its lazily initialized literal set. Tests cast invalid options, caught GuardExceeded and oracle option bags, and cast a non-string passed to assertValidPattern.",
+          "labBehaviour": "AST/Minimatch use checked local reads and type predicates; GlobSet stores its literal set in the classified result. The two constructor rejection cases use deliberatelyInvalid.ts; hostility uses assertInstanceOf, oracleOpts constructs a typed bag, and assertValidPattern receives unknown directly.",
+          "reason": "type-safety: D15 removes unsafe casts and non-null assertions; the 2026-10-09 wrong-input ruling admits one deliberatelyInvalid<T> helper per module. Restored make-time rejection coverage is grounded in fix-glob-g1.md:6 and the final S0 diff."
+        },
+        {
+          "test": "scratchpad/test/glob/engine.test.ts:28,48,82,106; scratchpad/test/glob/braceExpansion.test.ts:10; scratchpad/test/glob/hostility.test.ts:13",
+          "upstreamBehaviour": "balanced/range, parseClass, assertCap, expand, braceExpand, escape and unescape expose plain data-first arrows. GuardExceeded has a positional constructor and instanceof guard; compileResult constructs schema classes with new.",
+          "labBehaviour": "Helpers gain dual overloads; the four optional-options APIs dispatch with Predicate.isString and retain omitted options. GuardExceeded.fromReason uses .make and S.is replaces its instanceof catch guard; GlobPattern, GlobSet and GlobPatternError also use .make instead of new.",
+          "reason": "tsgo-diagnostics: missingPipeableSignature, newSchemaClass, overriddenSchemaConstructor and instanceOfSchema require overloads, factories and schema guards; repair-glob.md:41-47 grounds the final shapes. Numeric diagnostics are recorded separately under numeric-domains."
+        },
+        {
+          "test": "scratchpad/test/glob/braceExpansion.test.ts:139,143; scratchpad/test/glob/compliance.test.ts:301; module suite scratchpad/test/glob/**",
+          "upstreamBehaviour": "Brace expansion creates five module-lifetime escape salts with Math.random; engine and facade type checks use native typeof and Array.isArray. Effect result comparisons nest Effect.result inside Effect.runSync.",
+          "labBehaviour": "Brace expansion obtains Random.Random.defaultValue once and draws five nextDoubleUnsafe salts without starting an Effect runtime. Engine/facade checks use Predicate helpers and Array.isArray from effect/Array; test comparisons pipe the Effect through result and runSync.",
+          "reason": "effect-first: Effect helper modules and EF-21 runtime-boundary law require Effect-native predicates and synchronous Random service access. Main files: braceExpansion.ts, ast.ts, minimatch.ts, GlobPattern.ts, GlobSet.ts and comparison tests; sol-1-6 and fix-glob-g2.md:2 ground salt initialization."
+        },
+        {
+          "test": "module suite scratchpad/test/glob/**",
+          "upstreamBehaviour": "GlobPattern.ts, GlobSet.ts and schema/property test files import Effect, Result, Schema and Arbitrary from the root effect barrel, including source JSDoc examples.",
+          "labBehaviour": "Those imports and source examples use dedicated effect/Effect, effect/Result, effect/Schema and effect/Arbitrary paths; new internal helper, collection and guard imports also use their effect/<Module> paths.",
+          "reason": "effect-imports: law 2 requires per-module effect/* imports instead of the root barrel. The S0-to-working-tree source/test diff grounds this structural class; README example retargeting remains the separate sol-1-9 backlog item."
+        },
+        {
+          "test": "module suite scratchpad/test/glob/**",
+          "upstreamBehaviour": "GlobPatternError, GlobPatternOptions, GlobPattern and GlobSet use plain or absent schema identifiers with unannotated fields; compilability filters have only titles, and internal literal domains/errors lack identity metadata.",
+          "labBehaviour": "$ScratchpadId.create establishes file-local $I identifiers, $I.annote schema/check descriptions and annotateKey field metadata across GlobPattern.ts, GlobSet.ts, limits.ts, types.ts, ast.ts, assertValidPattern.ts, braceExpressions.ts and minimatch.ts.",
+          "reason": "identity-annotations: step 4/D5 and laws 18/19 require @beep/identity schema, field and reusable-check annotations. INVENTORY sol-1-4a/4b/5 and fix-glob-g1.md:4-5 plus fix-glob-g2.md:1 ground the completed metadata."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "grok-1-4 — Canonical exported JSDoc (scratchpad/effected/glob/GlobPattern.ts:29)",
+          "reason": "jsdoc: During S2 preserve all prose/examples, convert to Details and titled Example sections, and add canonical categories, @since 0.0.0 and compilable value-export examples."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "sol-1-10 — Canonical Effect test runner and Result assertions (scratchpad/test/glob/GlobPattern.test.ts:330)",
+          "reason": "test: During S3 move the cases to it.effect, yield the effects and use @effect/vitest/utils Result assertions retaining variant and payload checks; retain assert.* for plain values."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-9 — Dedicated Effect imports in README examples (scratchpad/effected/glob/README.md:52)",
+          "reason": "docs: Rewrite the adapted README examples to dedicated effect/Effect and effect/Schema namespace imports without changing behavior; leave KNOWLEDGE.md verbatim."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-11 — Schema round-trip properties and configurable runs (scratchpad/test/glob/GlobPattern.test.ts:280)",
+          "reason": "test: During S3 add Arbitrary.schema round-trip properties for every exported schema/codec, preserve differential properties, and use @beep/fc-runs for all run counts."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-11 — Unreachable cast-removal guards (scratchpad/effected/glob/internal/ast.ts:538)",
+          "reason": "test: At S3 prove the preconditions, then express safe schema/type predicates or index-free iteration to remove unreachable branches while preserving D15 and upstream behavior. Do not silently introduce new invariant failures without evidence and the D9 protocol."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-12 — Stale TypeError brace-expansion prose (scratchpad/effected/glob/internal/braceExpansion.ts:34)",
+          "reason": "docs: During S2 replace TypeError with InvalidCap at both adapted-source sites; preserve KNOWLEDGE.md:68 verbatim."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-13 — Vendored engine attribution (scratchpad/effected/glob/README.md:170)",
+          "reason": "docs: Replace the dump with clear engine entries for minimatch@10.2.5 (BlueOak-1.0.0), balanced-match@4.0.4 (MIT) and brace-expansion@5.0.7 (MIT), naming source/header/license pointers. Distinguish vendored minimatch 10.2.5 from the separately pinned 10.2.6 test oracle."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-14 — Redundant integer-counter NaN predicates (scratchpad/effected/glob/internal/minimatch.ts:724)",
+          "reason": "effect-idiom: During S3 verify the integer invariants and simplify to n !== 0, sharing the minimatch predicate where useful and preserving existing matching semantics."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-15 — Literal optimization-level domain (scratchpad/effected/glob/GlobPattern.ts:92)",
+          "reason": "schema: Consider S.optionalKey(S.Literals([0,1,2])) with the existing field annotation after confirming public type compatibility; keep EngineOptions and all acceptance/rejection semantics."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "central — Root minimatch override differs from the pinned oracle (package.json:339)",
+          "reason": "bug: central-notes.md:19 records reverting the lane override bump from 10.2.5 to 10.2.6 because root manifests are outside lane ownership; a root override decision and dependency reconciliation remain pending."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 3,
+              "backlog": 2
+            },
+            "sol": {
+              "required": 6,
+              "backlog": 5
+            },
+            "fable": {
+              "required": 6,
+              "backlog": 9
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

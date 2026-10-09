@@ -288,6 +288,36 @@ describe("GlobSet: literals key on the effective unescaped path", () => {
 });
 
 describe("GlobSet.compileResult", () => {
+	it("preserves an overflowing expansion count in a synchronous typed failure", () => {
+		const source = `{1..${"9".repeat(310)}}`;
+		for (const member of [source, `!${source}`]) {
+			const result = GlobSet.compileResult(["fine/*", member, "also-fine"]);
+			assert.isTrue(Result.isFailure(result));
+			if (Result.isFailure(result)) {
+				assert.instanceOf(result.failure, GlobPatternError);
+				assert.strictEqual(result.failure.pattern, member);
+				assert.strictEqual(result.failure.reason, "ExpansionBudgetExceeded");
+				assert.strictEqual(result.failure.limit, 100_000);
+				assert.strictEqual(result.failure.actual, Infinity);
+			}
+		}
+	});
+
+	it.effect("preserves an overflowing expansion count in the Effect failure channel", () =>
+		Effect.gen(function* () {
+			const source = `{1..${"9".repeat(310)}}`;
+			for (const member of [source, `!${source}`]) {
+				const error = yield* Effect.flip(GlobSet.compile(["fine/*", member, "also-fine"]));
+				assert.instanceOf(error, GlobPatternError);
+				assert.strictEqual(error._tag, "GlobPatternError");
+				assert.strictEqual(error.pattern, member);
+				assert.strictEqual(error.reason, "ExpansionBudgetExceeded");
+				assert.strictEqual(error.limit, 100_000);
+				assert.strictEqual(error.actual, Infinity);
+			}
+		}),
+	);
+
 	it("compiles synchronously without an Effect runtime", () => {
 		const r = GlobSet.compileResult(["packages/*", "!packages/private"]);
 		assert.isTrue(Result.isSuccess(r));

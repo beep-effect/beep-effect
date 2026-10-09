@@ -9,6 +9,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { minimatch as oracle } from "minimatch";
 import { GlobPattern, GlobPatternError, GlobPatternOptions } from "../../effected/glob/index.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 describe("GlobPattern.compile", () => {
 	it.effect("compiles and matches with segment-scoped star", () =>
@@ -210,11 +211,11 @@ describe("GlobPattern construction and schema", () => {
 
 describe("GlobPatternOptions", () => {
 	it("rejects an explicit undefined for an optionalKey field", () => {
-		assert.throws(() => Result.getOrThrow(S.decodeUnknownResult(GlobPatternOptions)({ dot: undefined })));
+		assert.throws(() => GlobPatternOptions.make({ dot: deliberatelyInvalid<boolean>(undefined) }));
 	});
 
 	it("rejects an unknown platform", () => {
-		assert.throws(() => Result.getOrThrow(S.decodeUnknownResult(GlobPatternOptions)({ platform: "vms" })));
+		assert.throws(() => GlobPatternOptions.make({ platform: deliberatelyInvalid<"posix">("vms") }));
 	});
 
 	it("rejects out-of-range or non-integer caps as wiring defects", () => {
@@ -307,6 +308,32 @@ describe("GlobPattern oracle (public seam)", () => {
 });
 
 describe("GlobPattern.compileResult", () => {
+	it("preserves an overflowing expansion count in a synchronous typed failure", () => {
+		const source = `{1..${"9".repeat(310)}}`;
+		const result = GlobPattern.compileResult(source);
+		assert.isTrue(Result.isFailure(result));
+		if (Result.isFailure(result)) {
+			assert.instanceOf(result.failure, GlobPatternError);
+			assert.strictEqual(result.failure.pattern, source);
+			assert.strictEqual(result.failure.reason, "ExpansionBudgetExceeded");
+			assert.strictEqual(result.failure.limit, 100_000);
+			assert.strictEqual(result.failure.actual, Infinity);
+		}
+	});
+
+	it.effect("preserves an overflowing expansion count in the Effect failure channel", () =>
+		Effect.gen(function* () {
+			const source = `{1..${"9".repeat(310)}}`;
+			const error = yield* Effect.flip(GlobPattern.compile(source));
+			assert.instanceOf(error, GlobPatternError);
+			assert.strictEqual(error._tag, "GlobPatternError");
+			assert.strictEqual(error.pattern, source);
+			assert.strictEqual(error.reason, "ExpansionBudgetExceeded");
+			assert.strictEqual(error.limit, 100_000);
+			assert.strictEqual(error.actual, Infinity);
+		}),
+	);
+
 	it("compiles synchronously without an Effect runtime", () => {
 		const r = GlobPattern.compileResult("packages/*");
 		assert.isTrue(Result.isSuccess(r));

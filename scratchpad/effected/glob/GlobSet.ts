@@ -81,8 +81,11 @@ interface Classified {
  * @public
  */
 export class GlobSet extends S.Class<GlobSet>($I`GlobSet`)(
-	S.Struct({ patterns: S.Array(S.String) }).check(
-		S.makeFilter((v) => allCompileUnderDefaults(v.patterns), { title: "compilable glob pattern set" }),
+	S.Struct({ patterns: S.Array(S.String).annotateKey({ description: "The ordered include and exclusion pattern sources, preserved verbatim." }) }).check(
+		S.makeFilter((v) => allCompileUnderDefaults(v.patterns), $I.annote("AllCompileUnderDefaults", {
+			title: "compilable glob pattern set",
+			description: "Requires every member, after stripping its set-level exclusion bang, to compile within the default caps.",
+		})),
 	), $I.annote("GlobSet", { description: "A compiled multi-pattern include/exclude set: `matches(candidate)` is true when some include accepts it and no exclude does. One encoded field, `patterns` — the source text of every member, preserved verbatim; the classified indexes live in a private field the schema never encodes." }),
 ) {
 	#classified: Classified | undefined;

@@ -189,7 +189,17 @@ None.
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — Effect hash collections, Array.dedupe, Record.toEntries and typed regex assignments replace native collection/Object operations while preserving matching and literal order. (scratchpad/test/glob/GlobSet.test.ts:74,132; scratchpad/test/glob/engine.test.ts:173; scratchpad/test/glob/compliance.test.ts:188,301)
+- **tagged-errors** — Schema tagged errors replace native programmer/invariant defects and model GuardExceeded while preserving its name and diagnostic message. (scratchpad/test/glob/braceExpansion.test.ts:229; scratchpad/test/glob/hostility.test.ts:128; scratchpad/test/glob/engine.test.ts:48,208,243)
+- **schema-first** — LiteralKit domains and schema-derived guards replace duplicated unions/membership predicates, and test JSON diagnostics use schema codecs. (scratchpad/test/glob/engine.test.ts:48,97; scratchpad/test/glob/GlobPattern.test.ts:217,232; scratchpad/test/glob/compliance.test.ts:301,316; scratchpad/test/glob/GlobSet.test.ts:274)
+- **numeric-domains** — Finite limits and refined option caps replace unrestricted number schemas, while actual measurements explicitly retain positive Infinity and reject NaN/negative Infinity. (scratchpad/test/glob/engine.test.ts:97,106; scratchpad/test/glob/GlobPattern.test.ts:221,311,324; scratchpad/test/glob/GlobSet.test.ts:291,306)
+- **type-safety** — Checked reads, type predicates and the sanctioned deliberatelyInvalid helper replace unsafe assertions while retaining upstream constructor rejection tests. (scratchpad/test/glob/GlobPattern.test.ts:213,217; scratchpad/test/glob/hostility.test.ts:24; scratchpad/test/glob/compliance.test.ts:188,301; scratchpad/test/glob/engine.test.ts:208)
+- **tsgo-diagnostics** — Diagnostic-required dual overloads, .make factories and S.is guards replace plain helper signatures, positional schema construction and instanceof guards. (scratchpad/test/glob/engine.test.ts:28,48,82,106; scratchpad/test/glob/braceExpansion.test.ts:10; scratchpad/test/glob/hostility.test.ts:13)
+- **effect-first** — Effect predicates and the synchronous Random service replace native type checks and Math.random without starting runtimes for module initialization. (scratchpad/test/glob/braceExpansion.test.ts:139,143; scratchpad/test/glob/compliance.test.ts:301; module suite scratchpad/test/glob/**)
+- **effect-imports** — Dedicated effect/* imports replace root-barrel imports in source, tests and source examples. (module suite scratchpad/test/glob/**)
+- **identity-annotations** — File-local $I identifiers and schema/field/check annotations replace plain identifiers and incomplete schema metadata. (module suite scratchpad/test/glob/**)
 
 ### Dependency backlog
 

@@ -16,8 +16,11 @@ const $I = $ScratchpadId.create("effected/glob/internal/assertValidPattern");
 
 /** Programmer error raised by this internal glob boundary. */
 export class InvalidPattern extends S.TaggedError<InvalidPattern>($I`InvalidPattern`)("InvalidPattern", {
-	message: S.String,
-}) {}
+	message: S.String.annotateKey({ description: "Why the programmer-supplied pattern is invalid." }),
+}, $I.annote("InvalidPattern", {
+	title: "Invalid internal glob pattern",
+	description: "An internal glob boundary received a non-string pattern, indicating a programmer error.",
+})) {}
 
 export const assertValidPattern: (pattern: unknown) => void = (pattern: unknown): asserts pattern is string => {
 	if (!P.isString(pattern)) {
@@ -25,6 +28,6 @@ export const assertValidPattern: (pattern: unknown) => void = (pattern: unknown)
 	}
 
 	if (pattern.length > MAX_PATTERN_LENGTH) {
-		throw new GuardExceeded("PatternTooLong", MAX_PATTERN_LENGTH, pattern.length);
+		throw GuardExceeded.fromReason("PatternTooLong", MAX_PATTERN_LENGTH, pattern.length);
 	}
 };

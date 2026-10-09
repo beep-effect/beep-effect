@@ -12,8 +12,9 @@ import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
-import { EXPANSION_MAX, isGuardExceeded } from "./internal/limits.ts";
-import type { EngineOptions } from "./internal/minimatch.ts";
+import { EXPANSION_MAX, GuardMeasurement, GuardReason, isGuardExceeded } from "./internal/limits.ts";
+import { Platform } from "./internal/types.ts";
+import type { EngineOptions } from "./internal/types.ts";
 import { GLOBSTAR, Minimatch, escape as engineEscape, unescape as engineUnescape } from "./internal/minimatch.ts";
 import * as P from "effect/Predicate";
 
@@ -32,11 +33,12 @@ export class GlobPatternError extends S.TaggedError<GlobPatternError>($I`GlobPat
 	/** The pattern source that was rejected. */
 	pattern: S.String.annotateKey({ description: "The pattern source that was rejected." }),
 	/** Which guard tripped: pattern length, brace-expansion budget, or nesting depth. */
-	reason: S.Literals(["PatternTooLong", "ExpansionBudgetExceeded", "NestingDepthExceeded"]).annotateKey({ description: "Which guard tripped: pattern length, brace-expansion budget, or nesting depth." }),
+	reason: GuardReason.annotateKey({ description: "Which guard tripped: pattern length, brace-expansion budget, or nesting depth." }),
 	/** The cap the pattern exceeded. */
 	limit: S.Finite.annotateKey({ description: "The cap the pattern exceeded." }),
 	/** The measured value that exceeded `limit`. */
-	actual: S.Finite.annotateKey({ description: "The measured value that exceeded `limit`." }),
+	// Expansion arithmetic intentionally overflows to Infinity; preserve the typed failure boundary.
+	actual: GuardMeasurement.annotateKey({ description: "The measured value that exceeded `limit`, including Infinity for an overflowing expansion count." }),
 }, $I.annote("GlobPatternError", { description: "Typed failure raised when a glob pattern trips a compile-time guard: over-length, brace-expansion budget exhaustion, or nesting past the depth cap. Malformed input is never a defect — this is the only failure the package's fallible boundaries (GlobPattern.compile and `GlobSet.compile`) can produce." })) {
 	override get message(): string {
 		const shown = this.pattern.length > 64 ? `${this.pattern.slice(0, 64)}…` : this.pattern;
@@ -94,20 +96,7 @@ export class GlobPatternOptions extends S.Class<GlobPatternOptions>($I`GlobPatte
 	).annotateKey({ description: "The level of pre-parse pattern optimization: `0`, `1` or `2`." }),
 	/** The operating system the pattern is interpreted for. Defaults to `"posix"`; only `"win32"` changes behavior, and it is never read from the ambient process. */
 	platform: S.optionalKey(
-		S.Literals([
-			"posix",
-			"aix",
-			"android",
-			"darwin",
-			"freebsd",
-			"haiku",
-			"linux",
-			"openbsd",
-			"sunos",
-			"win32",
-			"cygwin",
-			"netbsd",
-		]),
+		Platform,
 	).annotateKey({ description: "The operating system the pattern is interpreted for. Defaults to `\"posix\"`; only `\"win32\"` changes behavior, and it is never read from the ambient process." }),
 	/** Maximum number of `{...}` expansions, from `1` to `100000` (the default and ceiling). */
 	braceExpandMax: S.optionalKey(
@@ -176,8 +165,11 @@ const compilesUnderDefaults = (source: string): true | string => {
  * @public
  */
 export class GlobPattern extends S.Class<GlobPattern>($I`GlobPattern`)(
-	S.Struct({ source: S.String }).check(
-		S.makeFilter((v) => compilesUnderDefaults(v.source), { title: "compilable glob pattern" }),
+	S.Struct({ source: S.String.annotateKey({ description: "The glob pattern source, preserved verbatim." }) }).check(
+		S.makeFilter((v) => compilesUnderDefaults(v.source), $I.annote("CompilesUnderDefaults", {
+			title: "compilable glob pattern",
+			description: "Requires the pattern source to compile within the default length, expansion and nesting caps.",
+		})),
 	), $I.annote("GlobPattern", { description: "A compiled glob pattern with a total `matches(candidate)` predicate, plus the metadata a directory walker needs." }),
 ) {
 	#engine: Minimatch | undefined;

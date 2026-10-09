@@ -14,8 +14,11 @@ const $I = $ScratchpadId.create("effected/glob/internal/braceExpressions");
 
 /** Programmer error raised by this internal glob boundary. */
 export class BraceExpressionError extends S.TaggedError<BraceExpressionError>($I`BraceExpressionError`)("BraceExpressionError", {
-	message: S.String,
-}) {}
+	message: S.String.annotateKey({ description: "Explains why character-class parsing was called outside a brace expression." }),
+}, $I.annote("BraceExpressionError", {
+	title: "Invalid brace-expression parser invocation",
+	description: "Programmer error raised when the character-class parser is invoked at a position that does not begin a brace expression.",
+})) {}
 
 // translate the various posix character classes into unicode properties
 // this works across all unicode locales

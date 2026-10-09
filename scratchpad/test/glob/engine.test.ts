@@ -3,22 +3,126 @@
 // platform deviation, and reachability of the new AST depth guards.
 
 import { assert, describe, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as S from "effect/Schema";
 import { minimatch as oracle } from "minimatch";
 import { assertValidPattern, InvalidPattern } from "../../effected/glob/internal/assertValidPattern.ts";
+import { expand } from "../../effected/glob/internal/braceExpansion.ts";
 import { escape as escapePattern } from "../../effected/glob/internal/escape.ts";
-import { GuardExceeded, InvalidCap } from "../../effected/glob/internal/limits.ts";
-import { Minimatch } from "../../effected/glob/internal/minimatch.ts";
+import { GuardExceeded, GuardMeasurement, GuardReason, InvalidCap, isGuardExceeded } from "../../effected/glob/internal/limits.ts";
+import { Minimatch, braceExpand } from "../../effected/glob/internal/minimatch.ts";
 import { unescape as unescapePattern } from "../../effected/glob/internal/unescape.ts";
 
 const reasonOf = (fn: () => unknown): string => {
 	try {
 		fn();
 	} catch (e) {
-		if (e instanceof GuardExceeded) return e.reason;
+		if (S.is(GuardExceeded)(e)) return e.reason;
 		throw e;
 	}
 	throw new Error("expected a GuardExceeded throw");
 };
+
+describe("optional-options pipeable APIs", () => {
+	it("preserves omitted and explicit options in both call forms", () => {
+		for (const options of [undefined, {}]) {
+			assert.strictEqual(pipe("a*b?", escapePattern(options)), escapePattern("a*b?", options));
+			assert.strictEqual(pipe("a\\*b\\?", unescapePattern(options)), unescapePattern("a\\*b\\?", options));
+			assert.deepStrictEqual(pipe("{a,b}", expand(options)), expand("{a,b}", options));
+			assert.deepStrictEqual(pipe("{a,b}", braceExpand(options)), braceExpand("{a,b}", options));
+		}
+		assert.strictEqual(pipe("a*b", escapePattern()), "a\\*b");
+		assert.strictEqual(pipe("a\\*b", unescapePattern()), "a*b");
+		assert.deepStrictEqual(pipe("{a,b}", expand()), ["a", "b"]);
+		assert.deepStrictEqual(pipe("{a,b}", braceExpand()), ["a", "b"]);
+		assert.strictEqual(pipe("{a}*", escapePattern({ magicalBraces: true, windowsPathsNoEscape: true })), "[{]a[}][*]");
+		assert.strictEqual(pipe("[{]a[}][*]", unescapePattern({ magicalBraces: true, windowsPathsNoEscape: true })), "{a}*");
+		assert.deepStrictEqual(pipe("{a,b}", braceExpand({ nobrace: true })), ["{a,b}"]);
+		assert.strictEqual(reasonOf(() => pipe("{a,b}", expand({ max: 1 }))), "ExpansionBudgetExceeded");
+		assert.strictEqual(reasonOf(() => pipe("{a,b}", braceExpand({ braceExpandMax: 1 }))), "ExpansionBudgetExceeded");
+	});
+});
+
+describe("GuardExceeded schema and factory", () => {
+	it.effect("preserves factory fields, message, name and schema identity through the codec", () =>
+		Effect.gen(function* () {
+			for (const reason of GuardReason.literals) {
+				const error = GuardExceeded.fromReason(reason, 256, 257);
+				const fields = {
+					_tag: "GuardExceeded",
+					reason,
+					limit: 256,
+					actual: 257,
+					message: `${reason}: limit 256, actual 257`,
+				};
+				assert.instanceOf(error, GuardExceeded);
+				assert.isTrue(isGuardExceeded(error));
+				assert.isTrue(S.is(GuardExceeded)(error));
+				assert.strictEqual(error.name, "Error");
+				assert.strictEqual(error.message, fields.message);
+				assert.deepStrictEqual(yield* S.encodeEffect(GuardExceeded)(error), fields);
+				const decoded = yield* S.decodeUnknownEffect(GuardExceeded)(fields);
+				assert.instanceOf(decoded, GuardExceeded);
+				assert.isTrue(isGuardExceeded(decoded));
+				assert.strictEqual(decoded._tag, "GuardExceeded");
+				assert.strictEqual(decoded.name, "Error");
+				assert.strictEqual(decoded.message, error.message);
+				assert.strictEqual(decoded.reason, error.reason);
+				assert.strictEqual(decoded.limit, error.limit);
+				assert.strictEqual(decoded.actual, error.actual);
+				const made = GuardExceeded.make({ reason, limit: 256, actual: 257, message: fields.message });
+				assert.instanceOf(made, GuardExceeded);
+				assert.strictEqual(made.name, "Error");
+				assert.deepStrictEqual(yield* S.encodeEffect(GuardExceeded)(made), fields);
+			}
+		}),
+	);
+
+	it.effect("preserves Infinity measurements in factory construction and schema round trips", () =>
+		Effect.gen(function* () {
+			const error = GuardExceeded.fromReason("ExpansionBudgetExceeded", 100_000, Infinity);
+			assert.strictEqual(error.actual, Infinity);
+			assert.strictEqual(error.message, "ExpansionBudgetExceeded: limit 100000, actual Infinity");
+			const encoded = yield* S.encodeEffect(GuardExceeded)(error);
+			assert.strictEqual(encoded.actual, Infinity);
+			const decoded = yield* S.decodeEffect(GuardExceeded)(encoded);
+			assert.instanceOf(decoded, GuardExceeded);
+			assert.strictEqual(decoded.actual, Infinity);
+			assert.strictEqual(decoded.message, error.message);
+			assert.strictEqual(decoded.name, "Error");
+		}),
+	);
+
+	it("accepts finite and overflowing measurements and rejects other non-finite numbers", () => {
+		assert.isTrue(S.is(GuardMeasurement)(257));
+		assert.isTrue(S.is(GuardMeasurement)(Infinity));
+		for (const actual of [Number.NaN, -Infinity]) {
+			assert.isFalse(S.is(GuardMeasurement)(actual));
+			assert.throws(() => GuardExceeded.fromReason("ExpansionBudgetExceeded", 100_000, actual));
+		}
+	});
+
+	it("keeps guard limits finite", () => {
+		assert.throws(() => GuardExceeded.fromReason("ExpansionBudgetExceeded", Infinity, Infinity));
+	});
+
+	it("throws the schema-backed guard with the engine's overflowing measurement", () => {
+		try {
+			new Minimatch(`{1..${"9".repeat(310)}}`);
+			assert.fail("expected an overflowing expansion to throw GuardExceeded");
+		} catch (error) {
+			assert.instanceOf(error, GuardExceeded);
+			assert.isTrue(isGuardExceeded(error));
+			if (!isGuardExceeded(error)) return;
+			assert.strictEqual(error._tag, "GuardExceeded");
+			assert.strictEqual(error.name, "Error");
+			assert.strictEqual(error.reason, "ExpansionBudgetExceeded");
+			assert.strictEqual(error.limit, 100_000);
+			assert.strictEqual(error.actual, Infinity);
+		}
+	});
+});
 
 describe("escape and unescape", () => {
 	it("escapes the magic characters with backslashes by default", () => {

@@ -9,20 +9,20 @@
 // process.platform detection anywhere); the deprecated allowWindowsEscape,
 // the debug flag and the nonull flag (match-list only) are dropped.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+
+const $I = $ScratchpadId.create("effected/glob/internal/types");
+
 /** The platforms the engine distinguishes; only "win32" changes behavior. */
-export type Platform =
-	| "posix"
-	| "aix"
-	| "android"
-	| "darwin"
-	| "freebsd"
-	| "haiku"
-	| "linux"
-	| "openbsd"
-	| "sunos"
-	| "win32"
-	| "cygwin"
-	| "netbsd";
+export const Platform = LiteralKit([
+	"posix", "aix", "android", "darwin", "freebsd", "haiku",
+	"linux", "openbsd", "sunos", "win32", "cygwin", "netbsd",
+]).annotate($I.annote("Platform", {
+	title: "Glob target platform",
+	description: "The twelve accepted glob platforms; only win32 changes matching behavior, and posix is the default.",
+}));
+export type Platform = typeof Platform.Type;
 
 /**
  * The engine option bag — upstream MinimatchOptions minus the dropped fields.
