@@ -393,23 +393,19 @@ describe("yeet push-first publish plan wiring", () => {
     return A.join(chunks, "");
   });
 
-  it.effect("property: printed plans preserve schema-generated context and ordered command data", () =>
-    Effect.gen(function* () {
-      const result = yield* Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(RepoRunPlan)]),
-        Effect.fnUntraced(function* ([plan]) {
-          const decoded = yield* decodePlan(yield* printedPlan(plan));
-          const stepsWithoutEnvironment = (value: RepoRunPlan) =>
-            A.map(value.steps, ({ env: _env, ...step }) => RepoPlanStep.make(step));
-          return (
-            S.toEquivalence(RepoRunContext)(decoded.context, plan.context) &&
-            S.toEquivalence(S.Array(RepoPlanStep))(stepsWithoutEnvironment(decoded), stepsWithoutEnvironment(plan))
-          );
-        }),
-        fcRuns(25)
+  it.effect.prop(
+    "printed plans preserve schema-generated context and ordered command data",
+    [Arbitrary.schema(RepoRunPlan)],
+    Effect.fnUntraced(function* ([plan]) {
+      const decoded = yield* decodePlan(yield* printedPlan(plan));
+      const stepsWithoutEnvironment = (value: RepoRunPlan) =>
+        A.map(value.steps, ({ env: _env, ...step }) => RepoPlanStep.make(step));
+      return (
+        S.toEquivalence(RepoRunContext)(decoded.context, plan.context) &&
+        S.toEquivalence(S.Array(RepoPlanStep))(stepsWithoutEnvironment(decoded), stepsWithoutEnvironment(plan))
       );
-      expect(result).toMatchObject({ _tag: "Passed" });
-    })
+    }),
+    { arbitrary: fcRuns(25) }
   );
 
   it("plans the default publish as cheap-gates, preflight, push, draft PR, label, stamp, detached monitor", () => {

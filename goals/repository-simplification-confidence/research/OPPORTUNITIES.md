@@ -370,3 +370,11 @@ schema-derived property. The integration did not previously run this full
 cheap tier. Added a generated run-plan print/decode property preserving
 context and ordered command data. Running the cheap tier before freezing the
 review snapshot would have caught the missing obligation earlier.
+
+The first schema-property repair used direct `Arbitrary.checkEffect`, which
+passed schema-first but introduced EV007 in effect-vitest. Converted it to
+`it.effect.prop` with the same generated plan, 25 runs and callback. The
+admitted collector's Node/Bun/typecheck passes remain recorded for the direct
+variant; its running package stage was stopped without a terminal result before
+changing source. A canonical-property example in the schema-first repair
+message would have prevented the cross-detector round trip.
