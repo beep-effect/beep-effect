@@ -34,11 +34,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 complete. P1 is implemented locally and blocked before its implementation push.
-Main PR #1566 now forbids changesets for private workspaces, while the lane brief
-requires six such notes. `beep quality changeset-graph` rejects all six. The
-orchestrator must reconcile that requirement; the lane retains the required notes.
-PR #1570 remains draft at the wave-1 head. No completion or merge-readiness claim.
+P0 complete. P1 is implemented locally; the run-2 release ruling clears the
+private-changeset blocker. Final schema/file-processing/documents-server default
+proofs and hosted-parity retries are waiting for shared heavy slots. PR #1570
+remains draft at the wave-1 head. P2/P3 and content-final publication remain.
 
 ## Latest Evidence
 
@@ -80,7 +79,7 @@ the orchestrator owns its consolidated repair. The lane changes no shared policy
 Injection findings are the next gated increment. PII/OOXML, sanitizer, guarded
 fetch, resolver, and credential vault work remain outside this packet.
 
-### Latest detached proof and blocker
+### Run 1 detached proof and former blocker
 
 Observability, ai-metrics and documents-domain default package-verify, test-tsgo
 and scoped coverage pass. Schema and file-processing default package-verify,
@@ -103,3 +102,12 @@ Coverage Regression failures concern unchanged CLI files, and initial hosted
 Check's scanner-construction error is repaired locally. Current implementation
 has not been pushed, so none of those old hosted results proves the local head.
 All owned jobs are stopped or terminal; no queued proof is reported as executed.
+
+### Run 2 resume
+
+The orchestrator release ruling clears the private-changeset conflict. All six
+packages are private; release notes and the standalone Layer major compatibility
+note live in the handoff and PR body. Changeset graph: pass, zero references.
+Final schema/file-processing/documents-server default proofs, test-tsgo, coverage
+and updated repo parity are queued through two owned heavy units. No canceled or
+queued command is counted as a pass. P1 remains in progress.

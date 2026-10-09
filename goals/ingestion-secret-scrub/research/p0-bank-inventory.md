@@ -43,7 +43,7 @@ secret-specific provider placeholder. `redactString`, `redactCause`, cause summa
 and derived diagnostic outputs inherit the stricter union redaction. Public export types
 stay unchanged. `AiMetricsRedactionResult` gains assignment/header counts only for the
 union-added inputs, and `safeForDerivedUi` becomes false for those inputs. Other categories
-remain absent from metrics. Changesets are minor for stricter output and additive APIs.
+remain absent from metrics. Stricter output and additive APIs are minor compatibility changes. All edited workspaces are private; run-2 release notes replace changesets under main PR #1566.
 
 Home-path matches participate in scrub replacement and residue checks as carried-over
 coverage; they do not introduce general PII recognition. Their successful removal permits

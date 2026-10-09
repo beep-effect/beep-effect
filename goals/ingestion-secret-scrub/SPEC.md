@@ -235,7 +235,7 @@ The standalone FilingDecisionLlmLayer now requires SecretScrubService explicitly
 The composed DocumentsServerLlmLayer provides the default scrub layer, and the two
 standalone test compositions provide their scrub service. Reason: preserve an
 injectable fail-closed service boundary without hidden ambient fallback. The
-changed public Layer requirement receives a major documents-server changeset;
+changed public Layer requirement carries a major compatibility note in the handoff and PR body;
 other existing redaction types remain unchanged and their stricter outputs remain
 minor. Reversal: remove the gate requirement, service wiring and additive inbox
 reason together; restore the prior layer contract before merging.
@@ -257,3 +257,9 @@ masks partial residue extents and fails prompt admission. Reason: retain the
 legacy category/rendering coverage contract while enforcing ingestion's stricter
 partial-form boundary. Reversal: restore the former adapter and its consumer
 fixtures together; the ingestion gate remains fail-closed.
+
+### Run 2 release-policy reconciliation
+
+| Decision | Reason | Reversal |
+| --- | --- | --- |
+| No changesets for the six private edited workspaces; retain six release notes and the standalone Layer major compatibility note in handoff and PR body | Orchestrator resume ruling 2026-10-09 20:30Z and main PR #1566 make manifest-aware publication policy authoritative | Restore changesets only on deliberate package publication activation with a release policy |

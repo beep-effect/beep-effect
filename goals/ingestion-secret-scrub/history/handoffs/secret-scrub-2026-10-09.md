@@ -213,3 +213,34 @@ because P2/P3 and the final reflection are still pending.
 Post-merge correction: the latest `bun run knowledge:refs-check` passes with zero
 live gated observations. The earlier inherited knowledge red described above is
 cleared by main. The six-note private-changeset graph failure remains the blocker.
+
+### Final worker report (uncommitted)
+
+lane: secret-scrub
+head: 9efcb3abcba69fe9a808e44f9d9fb4e80753e55a (exact head the report describes)
+PR(s): #1570 OPEN, draft; remote head 4a17ab76fd9aba3f91b356f35ad7cecc09819ae1 contains wave 1 only. Local implementation and repairs are not pushed.
+package-verify: @beep/schema: pending (passed before final parser/adapter delta; final retry canceled before execution); @beep/file-processing: pending (passed before dependency delta; final retry canceled before execution); @beep/observability: pass; @beep/repo-ai-metrics: pass; @beep/documents-server: pending (last audit failed; signed Effect.fn repair and five gate tests pass, default retry canceled before execution); @beep/documents-domain: pass.
+hosted-parity: test-tsgo: six packages passed on recorded pre-final-delta runs, final deltas pending | docgen local: pass before final internal parser delta | jsdoc-ratchet: pass with regenerated inventory | knowledge refs: pass after main merge, zero gated observations | fallow audit+health: pass after parser complexity repair, zero introduced findings | scoped coverage: six packages passed on recorded runs; final schema/file-processing/server retries not run because the policy blocker canceled their queued units. Hosted results at the wave-1 head do not prove the local implementation.
+handoff: goals/ingestion-secret-scrub/history/handoffs/secret-scrub-2026-10-09.md
+open items: Main PR #1566 introduced a private-workspace changeset prohibition. The unchanged worker brief requires six such notes, and changeset-graph rejects exactly those six. An orchestrator ruling must reconcile the requirements before P1 publication; no shared policy was changed and all required notes are retained. P1 remains in progress; P2/P3 and completed-retained closeout are pending. All owned jobs are inactive or terminal and all inbox rows are acknowledged. Exact-canary scans: 105 persisted log/support surfaces each zero; latest PR text and branch commit messages each zero. Autonomy decisions and reversals are recorded in SPEC and the handoff: canonical union preserves original coverage (reverse by restoring the original banks); complete consumer matching preserves legacy rendering while ingestion blocks residue (reverse the adapter and its fixture); mask-only evidence avoids raw values (replace only through a later approved proof contract); explicit scrub service protects the prompt boundary, with a major compatibility note for the changed standalone Layer requirement (reverse gate/wiring/inbox reason and restore the prior Layer); retention is a pure eligibility contract, with storage enforcement deferred to its own packet. Resume the canceled final proofs, publish P1, then finish P2/P3 and bounded readiness monitoring after the release ruling. Graft estimated context savings: ~1,808,275 tokens.
+blocked: Main forbids the six private-package changesets required by the unchanged lane brief.
+
+### 2026-10-09 — run 2 release ruling and proof resume
+
+Phase reached: P1 implemented; final default proofs and parity retries submitted
+through two owned beep-heavy units. The 20:30Z resume ruling reconciles the brief
+with main PR #1566: all six edited packages are private, so their changesets are
+removed and release notes are retained below. Reason: the manifest-aware release
+guard is authoritative. Reversal: restore the notes only if a package deliberately
+activates publication and its release policy. PR #1570 remains draft at wave 1.
+
+## Release notes without changesets
+
+| Package | Change | Compatibility / why major if applicable | Reversal |
+| --- | --- | --- | --- |
+| `@beep/schema` | Versioned canonical credential/private-tag bank and pure matching/count/mask adapters | Additive; minor if published | Remove bank/export and restore consumer rules |
+| `@beep/file-processing` | Scrub service, mask-only proof, coverage/residue, retention eligibility and prompt carrier | Additive; minor if published | Remove scrub modules/export and gate together |
+| `@beep/observability` | Consume canonical union with existing placeholder/whitespace behavior | Stricter coverage behind unchanged export types; minor if published | Restore original bank and consumer calls |
+| `@beep/repo-ai-metrics` | Consume canonical union with existing rendering and counted proof | Stricter coverage behind unchanged export types; minor if published | Restore original bank and consumer calls |
+| `@beep/documents-server` | Scrub extracted excerpt before model construction; blocked/unknown inboxes | Major compatibility note: standalone `FilingDecisionLlmLayer` now requires `SecretScrubService`; composed `DocumentsServerLlmLayer` supplies its default | Remove gate/service wiring and restore prior Layer requirement |
+| `@beep/documents-domain` | Add `secret-scrub-blocked` inbox reason | Additive literal; minor if published | Remove reason together with gate wiring |

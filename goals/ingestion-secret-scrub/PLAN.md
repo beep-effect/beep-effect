@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` — P0 complete; P1 implemented locally, blocked by the new private-changeset policy. Final package retries were canceled before execution.
+Status: `active` — P0 complete; P1 implemented locally. The run-2 release ruling clears the private-changeset blocker; final package and parity retries are queued.
 
 ## Phases
 
