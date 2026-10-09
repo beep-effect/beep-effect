@@ -21,7 +21,10 @@ Status decodes `private`, derives publishEnabled and logs private_skipped.
 Absent/false private remains publish-enabled. Graph fails on notes naming live
 private workspaces even if a stale registry entry permits the name. Deletion
 adds private-exempt with pending key pruning but no empty deletion note; labs
-and publish-enabled deletion behavior remain compatible. Root/unowned paths
+and explicitly publish-enabled deletion behavior remain compatible. Deleting a
+manifest with an absent private field is now refused as published unless the
+existing override is supplied; all 152 live workspaces explicitly declare
+private true in the committed census. Root/unowned paths
 intentionally carry no independent note requirement.
 
 Dormant config explicitly disables private versioning/tagging. Changesets

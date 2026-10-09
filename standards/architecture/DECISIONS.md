@@ -2113,7 +2113,9 @@ The status gate reads `private`; versioned publish-enabled product workspaces
 retain in-branch note requirements and existing explicit ignore exemptions.
 The graph guard rejects notes naming live private workspaces. Root/unowned paths
 have no independent note obligation; release impact is represented by the
-changed publish-enabled workspace. Private deletion emits no empty note.
+changed publish-enabled workspace. Private deletion emits no empty note. A manifest omitting `private` is treated
+as publish-enabled and requires the existing published-deletion override; all
+152 live workspaces explicitly declare private true in the reset census.
 
 The external-contract census precedes retirement in
 `goals/repository-simplification-confidence/history/receipts/stage-2-policy.md`.

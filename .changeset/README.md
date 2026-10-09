@@ -2,7 +2,7 @@
 
 Internal workspaces with `private: true` do not require or accumulate changesets.
 `beep quality changeset-status` reads that flag; `changeset-graph` rejects notes
-naming live private workspaces. A versioned, publish-enabled product workspace
+naming live private workspaces. A changed, versioned, publish-enabled product workspace
 must have an in-branch changeset unless explicitly ignored by the config.
 Root configuration and other unowned paths do not independently require notes;
 release impact belongs to the affected publish-enabled workspace.
