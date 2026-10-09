@@ -1244,16 +1244,239 @@
       "wave": 1,
       "position": 3,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
         "src": "packages/toml/src",
         "test": "packages/toml/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "Toml",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlArray",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlArrayTableHeader",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlBoolean",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlBoundCodec",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "TomlDateTimeLiteral",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlDiagnostic",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlDocument",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlEdit",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlErrorCode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlExpression",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlFloat",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlFormat",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlFormattingOptions",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlInlineEntry",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlInlineTable",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlInteger",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlKey",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlKeyKind",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlKeyValue",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlLexErrorCode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlLocalDate",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlLocalDateTime",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlLocalTime",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlModificationError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlOffsetDateTime",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlParseError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlParseErrorCode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlPath",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "TomlRange",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlRangeLike",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "TomlSegment",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "TomlSemanticErrorCode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlString",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlStringStyle",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlStringifyError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlStringifyErrorCode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlStringifyOptions",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlTableHeader",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlTrivia",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlValueNode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlVisitor",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "TomlVisitorEvent",
+          "kind": "both",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
-      "newDeps": [],
-      "fixturesBytes": 0,
+      "newDeps": [
+        {
+          "name": "smol-toml",
+          "kind": "dev",
+          "spec": "1.9.0",
+          "replacement": null
+        }
+      ],
+      "fixturesBytes": 109021,
       "deviations": [],
       "backlog": [],
       "reviewRounds": [],
