@@ -6,6 +6,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import { Xdg, XdgEnvError, XdgPaths } from "../../effected/xdg/index.ts";
 
 /** Drive `Config` from a record instead of mutating the real environment. */
@@ -58,7 +59,9 @@ describe("Xdg", () => {
 				assert.strictEqual(error.variable, "HOME");
 				assert.include(error.message, "HOME");
 				// The ConfigError is preserved structurally rather than stringified.
-				assert.strictEqual((error.cause as { _tag?: string })._tag, "ConfigError");
+				const cause = error.cause;
+				assert(P.hasProperty(cause, "_tag"));
+				assert.strictEqual(cause._tag, "ConfigError");
 			}),
 		);
 
