@@ -8,7 +8,6 @@
 import * as NodeUrl from "node:url";
 import { $RepoCliId } from "@beep/identity/packages";
 import { extractFencedCodeBlockDetails } from "@beep/repo-docgen/Core";
-import { FsUtils } from "@beep/repo-utils/FsUtils";
 import { jsonParse } from "@beep/repo-utils/JsonUtils";
 import { readPackageJsonFile } from "@beep/repo-utils/schemas/PackageJson";
 import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
@@ -24,7 +23,9 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { glob } from "tinyglobby";
 import { Node, Project, SyntaxKind } from "ts-morph";
+import { createRepoTsMorphProject } from "../../internal/tsmorph/index.ts";
 import { EffectImportRulesConfigurationError, EffectImportRulesPersistenceError } from "./Laws.errors.ts";
 import type {
   ExportDeclaration,
@@ -489,6 +490,21 @@ const MARKDOWN_GLOBS = [
 
 const NESTED_WORKTREE_SEGMENT = "/.claude/worktrees/";
 const GENERATED_OR_VENDOR_SEGMENTS = ["/.repos/", "/node_modules/", "/dist/", "/vendor/"] as const;
+const EXCLUDED_DIRECTORY_GLOBS = [
+  "**/.repos",
+  "**/node_modules",
+  "**/dist",
+  "**/vendor",
+  "**/.claude/worktrees",
+] as const;
+const CODE_EXCLUSION_GLOBS = A.flatMap(EXCLUDED_DIRECTORY_GLOBS, (directory) => [directory, `${directory}/**`]);
+const MARKDOWN_EXCLUSION_GLOBS = A.appendAll(
+  CODE_EXCLUSION_GLOBS,
+  A.flatMap(["**/.git", "**/.beep", "**/docs/modules", "docs/generated", "docs/_internal"], (directory) => [
+    directory,
+    `${directory}/**`,
+  ])
+);
 
 const hasPathPrefix = (prefix: string, filePath: string): boolean =>
   filePath === prefix || Str.startsWith(Str.endsWith("/")(prefix) ? prefix : `${prefix}/`)(filePath);
@@ -1708,15 +1724,26 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
     MutableHashSet.add(excludePaths, toPosixPath(excludePath));
   }
 
-  const project = new Project({
-    tsConfigFilePath: path.join(process.cwd(), "tsconfig.json"),
-    skipAddingFilesFromTsConfig: true,
+  // Prune ignored directories and suppress inaccessible-entry errors during discovery.
+  // Load only matches to avoid ts-morph recursively registering excluded directories.
+  const discoveredSourceFiles = yield* Effect.tryPromise({
+    try: () =>
+      glob(
+        A.append(
+          options.mode === "markdown" ? A.empty<string>() : codeGlobsFor(options),
+          "packages/foundation/**/src/**/*.{ts,tsx}"
+        ),
+        { cwd: process.cwd(), absolute: true, ignore: CODE_EXCLUSION_GLOBS, followSymbolicLinks: false }
+      ),
+    catch: () => EffectImportRulesConfigurationError.new("Could not discover source files."),
   });
-
-  if (options.mode !== "markdown") {
-    project.addSourceFilesAtPaths(A.fromIterable(codeGlobsFor(options)));
+  const project = createRepoTsMorphProject({
+    tsConfigFilePath: path.join(process.cwd(), "tsconfig.json"),
+    sourceFileGlobs: [],
+  });
+  for (const filePath of discoveredSourceFiles) {
+    project.addSourceFileAtPathIfExists(filePath);
   }
-  project.addSourceFilesAtPaths("packages/foundation/**/src/**/*.{ts,tsx}");
 
   const effectMapping = yield* buildEffectRootMapping();
   const foundationMappings = options.effectOnly
@@ -1737,22 +1764,16 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
 
   if (options.mode === "markdown") {
     const fs = yield* FileSystem.FileSystem;
-    const fsUtils = yield* FsUtils;
     const discoveredFiles = P.isUndefined(options.includePaths)
-      ? yield* fsUtils.globFiles(MARKDOWN_GLOBS, {
-          cwd: process.cwd(),
-          dot: true,
-          ignore: [
-            "**/node_modules/**",
-            "**/.git/**",
-            "**/.repos/**",
-            "**/dist/**",
-            "**/.beep/**",
-            "**/.claude/worktrees/**",
-            "**/docs/modules/**",
-            "docs/generated/**",
-            "docs/_internal/**",
-          ],
+      ? yield* Effect.tryPromise({
+          try: () =>
+            glob(A.fromIterable(MARKDOWN_GLOBS), {
+              cwd: process.cwd(),
+              dot: true,
+              ignore: MARKDOWN_EXCLUSION_GLOBS,
+              followSymbolicLinks: false,
+            }),
+          catch: () => EffectImportRulesConfigurationError.new("Could not discover Markdown source files."),
         })
       : options.includePaths;
     const markdownFiles = pipe(
