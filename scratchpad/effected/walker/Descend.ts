@@ -10,16 +10,44 @@
 // `crossesSegments` and calls `matches`.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import type { GlobPattern } from "../glob/index.ts";
-import type * as PlatformError from "effect/PlatformError";
+import * as PlatformError from "effect/PlatformError";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
 
 const $I = $ScratchpadId.create("effected/walker/Descend");
+
+const OnUnreadable = LiteralKit(["fail", "skip", "record"]).annotate(
+	$I.annote("OnUnreadable", { description: "How unreadable traversal directories are handled." }),
+);
+type OnUnreadable = typeof OnUnreadable.Type;
+const OnUnreadableArray = OnUnreadable.pick(["fail", "skip"]);
+const OnUnreadableRecord = OnUnreadable.pick(["record"]);
+
+const DescendErrorReason = LiteralKit(["unreadableDirectory", "depthExceeded"]).annotate(
+	$I.annote("DescendErrorReason", { description: "Why downward traversal failed." }),
+);
+const DescendFailure = DescendErrorReason.mapMembers(([unreadable, depth]) => [
+	S.Struct({ reason: unreadable }),
+	S.Struct({
+		reason: depth,
+		limit: S.Option(S.Finite).annotateKey({ description: "The optional cap for depth exhaustion." }),
+	}),
+] as const).annotate($I.annote("DescendFailure", { description: "Internal case-specific descent failure payload." }))
+	.pipe(S.toTaggedUnion("reason"));
+type DescendFailure = typeof DescendFailure.Type;
+
+const JsonString = S.fromJsonString(S.String);
+const encodeJsonString = S.encodeResult(JsonString);
 
 /** Invalid descent wiring, raised as a defect rather than a recoverable failure. */
 class DescendDefect extends S.TaggedError<DescendDefect>($I`DescendDefect`)(
@@ -50,7 +78,7 @@ export interface DescendOptions {
 	 * here, because this type is the options contract of the overload that
 	 * returns a bare match array.
 	 */
-	readonly onUnreadable?: "fail" | "skip";
+	readonly onUnreadable?: typeof OnUnreadableArray.Type;
 	/**
 	 * Whether to descend into symlinked directories. Defaults to `false`: a
 	 * symlinked directory is never entered (cycle safety). Under `true` links
@@ -93,7 +121,7 @@ export interface DescendOptions {
  */
 export interface DescendRecordOptions extends Omit<DescendOptions, "onUnreadable"> {
 	/** Collect every unreadable directory rather than failing or discarding it. */
-	readonly onUnreadable: "record";
+	readonly onUnreadable: typeof OnUnreadableRecord.Type;
 }
 
 /**
@@ -105,7 +133,7 @@ export interface DescendRecordOptions extends Omit<DescendOptions, "onUnreadable
  *
  * @public
  */
-export interface UnreadableDirectory {
+export const UnreadableDirectory = S.Struct({
 	/**
 	 * The directory's path relative to `cwd`, POSIX separators.
 	 *
@@ -115,10 +143,11 @@ export interface UnreadableDirectory {
 	 * `{ matches: [], unreadable: [{ path: "", cause }] }`. Code matching
 	 * these entries as ordinary paths will not expect that; special-case it.
 	 */
-	readonly path: string;
+	path: S.String.annotateKey({ description: "The cwd-relative POSIX directory path; the base is an empty string." }),
 	/** The `readDirectory` (or, for a link under `followSymlinks`, `realPath`) failure, never `NotFound` (a vanished directory is a benign race and is not recorded). */
-	readonly cause: PlatformError.PlatformError;
-}
+	cause: S.instanceOf(PlatformError.PlatformError).annotateKey({ description: "The absorbed readDirectory or realPath failure." }),
+}).annotate($I.annote("UnreadableDirectory", { description: "An unreadable directory and its original filesystem failure." }));
+export type UnreadableDirectory = typeof UnreadableDirectory.Type;
 
 /**
  * `descend`'s success value under `onUnreadable: "record"`: the matched
@@ -130,12 +159,13 @@ export interface UnreadableDirectory {
  *
  * @public
  */
-export interface DescendResult {
+export const DescendResult = S.Struct({
 	/** Matching FILE paths relative to `cwd`, POSIX separators, sorted — identical in shape to the `"fail"`/`"skip"` success value. */
-	readonly matches: ReadonlyArray<string>;
+	matches: S.Array(S.String).annotateKey({ description: "Matching cwd-relative POSIX file paths, in lexical order." }),
 	/** Directories that could not be read, each with its cause, in walk order. */
-	readonly unreadable: ReadonlyArray<UnreadableDirectory>;
-}
+	unreadable: S.Array(UnreadableDirectory).annotateKey({ description: "Unreadable directories and their causes, in walk order." }),
+}).annotate($I.annote("DescendResult", { description: "Matches and unreadable directories collected in record mode." }));
+export type DescendResult = typeof DescendResult.Type;
 
 /**
  * Typed failure raised by `descend`: a directory mid-walk was unreadable
@@ -149,17 +179,24 @@ export class DescendError extends S.TaggedError<DescendError>($I`DescendError`)(
 	/** The glob pattern's source text. */
 	pattern: S.String.annotateKey({ description: "The glob pattern's source text." }),
 	/** Why the walk failed: a directory could not be read, or the walk went past `maxDepth`. */
-	reason: S.Literals(["unreadableDirectory", "depthExceeded"]).annotateKey({ description: "Why the walk failed: a directory could not be read, or the walk went past `maxDepth`." }),
+	reason: DescendErrorReason.annotateKey({ description: "Why the walk failed: a directory could not be read, or the walk went past `maxDepth`." }),
 	/** The offending directory, relative to `cwd` (`""` is the walk's base). */
 	path: S.String.annotateKey({ description: "The offending directory, relative to `cwd` (`\"\"` is the walk's base)." }),
 	/** The depth cap, present when `reason` is `"depthExceeded"`. */
 	limit: S.optionalKey(S.Finite).annotateKey({ description: "The depth cap, present when `reason` is `\"depthExceeded\"`." }),
 }, $I.annote("DescendError", { description: "Typed failure raised by `descend`: a directory mid-walk was unreadable (under `onUnreadable: \"fail\"`), or the walk descended past `maxDepth`. Depth exhaustion is a typed failure, never a truncation — silent truncation silently changes match semantics." })) {
 	override get message(): string {
-		const where = this.path === "" ? "the base directory" : JSON.stringify(this.path);
-		return this.reason === "depthExceeded"
-			? `glob descent for ${JSON.stringify(this.pattern)} descended past ${this.limit ?? "the depth cap"} levels below ${where}`
-			: `glob descent for ${JSON.stringify(this.pattern)} could not read ${where}`;
+		const failure: DescendFailure = DescendErrorReason.$match(this.reason, {
+			unreadableDirectory: (reason) => DescendFailure.cases.unreadableDirectory.make({ reason }),
+			depthExceeded: (reason) => DescendFailure.cases.depthExceeded.make({ reason, limit: O.fromNullishOr(this.limit) }),
+		});
+		const where = this.path === "" ? "the base directory" : Result.getOrThrowWith(encodeJsonString(this.path), identity);
+		const pattern = Result.getOrThrowWith(encodeJsonString(this.pattern), identity);
+		return DescendFailure.match(failure, {
+			unreadableDirectory: () => `glob descent for ${pattern} could not read ${where}`,
+			depthExceeded: ({ limit }) =>
+				`glob descent for ${pattern} descended past ${O.getOrElse(limit, () => "the depth cap")} levels below ${where}`,
+		});
 	}
 }
 
@@ -195,12 +232,13 @@ const NO_ANCESTORS: ReadonlyArray<string> = [];
  * resolves to an ancestor of the branch it sits on, and two sibling links to
  * one target both enumerate.
  */
-interface DescendFrame {
-	readonly relative: string;
-	readonly absolute: string;
-	readonly depth: number;
-	readonly ancestors: ReadonlyArray<string>;
-}
+const DescendFrame = S.Struct({
+	relative: S.String.annotateKey({ description: "The cwd-relative POSIX path." }),
+	absolute: S.String.annotateKey({ description: "The absolute directory path to read." }),
+	depth: S.Finite.annotateKey({ description: "Directory depth below the walk base." }),
+	ancestors: S.Array(S.String).annotateKey({ description: "Real paths on this branch's ancestor chain." }),
+}).annotate($I.annote("DescendFrame", { description: "A queued directory and its per-branch cycle guard." }));
+type DescendFrame = typeof DescendFrame.Type;
 
 /**
  * The one options shape spanning all three modes. Not exported: the PUBLIC
@@ -209,7 +247,7 @@ interface DescendFrame {
  * needs in order to still branch on all three values.
  */
 type DescendAnyOptions = Omit<DescendOptions, "onUnreadable"> & {
-	readonly onUnreadable?: "fail" | "skip" | "record";
+	readonly onUnreadable?: OnUnreadable;
 };
 
 /** Not exported — `descend`'s overloads below carry the public documentation. */
@@ -234,11 +272,11 @@ const descendImpl: (
 	// Populated only under "record"; the wrapper decides the return shape.
 	const unreadable: Array<UnreadableDirectory> = [];
 
-	/** The stat-resolved type of `absolute`, or `undefined` when it does not resolve (missing, dangling symlink, unstatable). */
-	const typeOf = (absolute: string): Effect.Effect<FileSystem.File.Info["type"] | undefined> =>
+	/** The stat-resolved type of `absolute`, or None when missing, dangling or unstatable. */
+	const typeOf = (absolute: string): Effect.Effect<O.Option<FileSystem.File.Info["type"]>> =>
 		fs.stat(absolute).pipe(
-			Effect.map((info) => info.type),
-			Effect.orElseSucceed(() => undefined),
+			Effect.map((info) => O.some(info.type)),
+			Effect.orElseSucceed(O.none),
 		);
 
 	/** Whether `absolute` is itself a symlink. `readLink` succeeds only on links; any failure means "not one". */
@@ -250,7 +288,7 @@ const descendImpl: (
 
 	/**
 	 * The real path of a directory the cycle guard must identify — the walk
-	 * base, or a symlinked directory — or `undefined` when the walk must not
+	 * base, or a symlinked directory — or None when the walk must not
 	 * enter it. A link the resolver cannot resolve is one the guard cannot
 	 * reason about: recording a stand-in (the link's own path) would make
 	 * every hop around a loop look unseen, so the subtree is never queued.
@@ -264,30 +302,30 @@ const descendImpl: (
 	 * answer with nothing reporting it, which is the failure `"fail"` exists
 	 * to prevent.
 	 */
-	const realPathOf = (absolute: string, relative: string): Effect.Effect<string | undefined, DescendError> =>
+	const realPathOf = (absolute: string, relative: string): Effect.Effect<O.Option<string>, DescendError> =>
 		fs.realPath(absolute).pipe(
+			Effect.asSome,
 			Effect.catch((error) => {
-				if (error.reason._tag === "NotFound") return Effect.void;
-				if (onUnreadable === "fail") {
+				if (error.reason._tag === "NotFound") return Effect.succeedNone;
+				if (OnUnreadable.is.fail(onUnreadable)) {
 					return Effect.fail(
 						DescendError.make({ pattern: pattern.source, reason: "unreadableDirectory", path: relative }),
 					);
 				}
-				if (onUnreadable === "record") unreadable.push({ path: relative, cause: error });
-				return Effect.void;
+				if (OnUnreadable.is.record(onUnreadable)) unreadable.push({ path: relative, cause: error });
+				return Effect.succeedNone;
 			}),
-			Effect.map((real): string | undefined => real ?? undefined),
 		);
 
 	/** Wrap the walk's success value per `onUnreadable`: a plain array unless "record" asked for the pair. */
 	const finish = (matches: ReadonlyArray<string>): ReadonlyArray<string> | DescendResult =>
-		onUnreadable === "record" ? { matches, unreadable } : matches;
+		OnUnreadable.is.record(onUnreadable) ? { matches, unreadable } : matches;
 
 	// Literal pattern: a single stat decides. Missing is zero matches, and so is
 	// a literal that climbs above `cwd` — never stat outside the documented root.
 	if (!pattern.hasMagic && !pattern.negated) {
 		if (escapesCwd(pattern.source)) return finish([]);
-		return finish((yield* typeOf(path.join(options.cwd, pattern.source))) === "File" ? [pattern.source] : []);
+		return finish(O.exists(yield* typeOf(path.join(options.cwd, pattern.source)), (kind) => kind === "File") ? [pattern.source] : []);
 	}
 
 	// Magic pattern: walk from the literal prefix. An absent base directory is
@@ -300,15 +338,15 @@ const descendImpl: (
 	const base = pattern.negated ? "" : pattern.enumerationPrefix.replace(/\/+$/, "");
 	if (escapesCwd(base)) return finish([]);
 	const absoluteBase = base === "" ? options.cwd : path.join(options.cwd, base);
-	if ((yield* typeOf(absoluteBase)) !== "Directory") return finish([]);
+	if (!O.exists(yield* typeOf(absoluteBase), (kind) => kind === "Directory")) return finish([]);
 	// Under followSymlinks the base's real path seeds the root frame's ancestor
 	// chain — the `@actions/glob` traversalChain position for the search path —
 	// so a link resolving back to the base is the cycle it is, on every branch.
 	let baseAncestors: ReadonlyArray<string> = NO_ANCESTORS;
 	if (followSymlinks) {
 		const real = yield* realPathOf(absoluteBase, base);
-		if (real === undefined) return finish([]);
-		baseAncestors = [real];
+		if (O.isNone(real)) return finish([]);
+		baseAncestors = [real.value];
 	}
 
 	// Only a pattern that can match below one level earns a descent; a negated
@@ -336,12 +374,12 @@ const descendImpl: (
 		const entries = yield* fs.readDirectory(frame.absolute).pipe(
 			Effect.catch((error) => {
 				if (error.reason._tag === "NotFound") return Effect.succeed<Array<string>>([]);
-				if (onUnreadable === "fail") {
+				if (OnUnreadable.is.fail(onUnreadable)) {
 					return Effect.fail(
 						DescendError.make({ pattern: pattern.source, reason: "unreadableDirectory", path: frame.relative }),
 					);
 				}
-				if (onUnreadable === "record") unreadable.push({ path: frame.relative, cause: error });
+				if (OnUnreadable.is.record(onUnreadable)) unreadable.push({ path: frame.relative, cause: error });
 				return Effect.succeed<Array<string>>([]);
 			}),
 		);
@@ -351,11 +389,11 @@ const descendImpl: (
 			const absolute = path.join(frame.absolute, entry);
 
 			const kind = yield* typeOf(absolute);
-			if (kind === "File") {
+			if (O.exists(kind, (kind) => kind === "File")) {
 				if (pattern.matches(relative)) results.push(relative);
 				continue;
 			}
-			if (kind !== "Directory" || !deep) continue;
+			if (!O.exists(kind, (kind) => kind === "Directory") || !deep) continue;
 			// Prune suppresses DIRECTORIES only, per the option's contract — a
 			// FILE named `.git` (a submodule or worktree gitlink) stays matchable.
 			if (MutableHashSet.has(prune, entry)) continue;
@@ -380,9 +418,9 @@ const descendImpl: (
 				const parentReal = frame.ancestors[frame.ancestors.length - 1] ?? frame.absolute;
 				const real = (yield* isSymbolicLink(absolute))
 					? yield* realPathOf(absolute, relative)
-					: path.join(parentReal, entry);
-				if (real === undefined || frame.ancestors.includes(real)) continue;
-				ancestors = [...frame.ancestors, real];
+					: O.some(path.join(parentReal, entry));
+				if (O.isNone(real) || frame.ancestors.includes(real.value)) continue;
+				ancestors = [...frame.ancestors, real.value];
 			} else if (yield* isSymbolicLink(absolute)) {
 				continue;
 			}
@@ -399,8 +437,7 @@ const descendImpl: (
 		}
 	}
 
-	results.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-	return finish(results);
+	return finish(A.sort(results, Order.String));
 });
 
 /**

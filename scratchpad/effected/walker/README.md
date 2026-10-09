@@ -116,7 +116,17 @@ None.
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — The lab replaces native prune and fixture sets/Object.entries with Effect hash collections/Record helpers and drops ancestor-array freezing while upstream uses native sets and a frozen empty chain. (scratchpad/test/walker/Descend.test.ts:105,117,467,500,523; scratchpad/test/walker/Expand.test.ts:149; scratchpad/test/walker/fixtures.ts:34)
+- **tagged-errors** — The lab dies with schema-tagged WalkerDefect/DescendDefect and constructs typed failures with .make while upstream invalid wiring dies with ordinary Error. (scratchpad/test/walker/Walker.test.ts:76,96,177,501; scratchpad/test/walker/Descend.test.ts:146,439,541; scratchpad/test/walker/Expand.test.ts:99,149)
+- **schema-first** — The lab adds runtime Struct schemas, LiteralKit domains, internal error-case normalization and schema JSON codecs where upstream uses interfaces, literal unions, a public optional bag and JSON.stringify. (scratchpad/test/walker/Descend.test.ts:12,23,34,41,467,523,622; scratchpad/test/walker/Expand.test.ts:15,23,30,84; scratchpad/test/walker/Walker.test.ts:30)
+- **numeric-domains** — The lab uses S.Finite for schema depth/cap domains and rejects non-finite decoded limits while upstream DescendError uses Schema.Number. (scratchpad/test/walker/Descend.test.ts:12,23,41,155,164,541; scratchpad/test/walker/Walker.test.ts:184,191)
+- **type-safety** — The lab compiles a real GlobPattern and uses a typed Error assignment in oracle tests where upstream relies on unsafe casts. (scratchpad/test/walker/Descend.test.ts:622; scratchpad/test/walker/Expand.test.ts:120)
+- **tsgo-diagnostics** — The lab adds dual direct/curried descend and compileAndExpand signatures plus a fixture diagnostic exemption where upstream exposes direct-call forms. (scratchpad/test/walker/Descend.test.ts:622; module suite scratchpad/test/walker/**)
+- **effect-first** — The lab uses Effect.fn, Option probe results, Effect-native sorting and orElseSucceed where upstream uses bare generators, undefined, native sort and catch/succeed. (scratchpad/test/walker/Walker.test.ts:16,223,242,278,421,451; scratchpad/test/walker/Descend.test.ts:76,85,135,295,320,346,374,420)
+- **effect-imports** — The lab imports Effect modules through effect/<Module> paths in code, tests and source examples where upstream imports the root effect barrel. (module suite scratchpad/test/walker/**)
+- **identity-annotations** — The lab derives schema/error identities and annotations from @beep/identity, including namespaced error names, where upstream omits identifiers and uses tag/native Error names. (module suite scratchpad/test/walker/**; scratchpad/test/walker/Walker.test.ts:76; scratchpad/test/walker/Expand.test.ts:120)
 
 ### Dependency backlog
 

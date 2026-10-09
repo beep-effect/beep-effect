@@ -12,18 +12,20 @@
 // only.
 
 import { $ScratchpadId } from "@beep/identity/packages";
-import type { GlobPatternOptions } from "../glob/index.ts";
-import { GlobPattern, GlobPatternError } from "../glob/index.ts";
+import { GlobPattern, GlobPatternError, GlobPatternOptions } from "../glob/index.ts";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
 import type { DescendOptions } from "./Descend.ts";
 import { DescendError, descend } from "./Descend.ts";
 
 const $I = $ScratchpadId.create("effected/walker/Expand");
+
+const JsonString = S.fromJsonString(S.String);
+const encodeJsonString = S.encodeResult(JsonString);
 
 /**
  * Options for {@link compileAndExpand}: every {@link DescendOptions} field,
@@ -31,7 +33,12 @@ const $I = $ScratchpadId.create("effected/walker/Expand");
  *
  * @public
  */
-export interface CompileAndExpandOptions extends DescendOptions {
+export const CompileAndExpandOptions = S.Struct({
+	cwd: S.String.annotateKey({ description: "Absolute directory the pattern is resolved against." }),
+	maxDepth: S.optionalKey(S.Finite).annotateKey({ description: "Hard cap on directory depth below the literal prefix." }),
+	prune: S.Array(S.String).pipe(S.optionalKey).annotateKey({ description: "Directory names never descended into." }),
+	onUnreadable: S.optionalKey(S.Literals(["fail", "skip"])).annotateKey({ description: "Whether unreadable directories fail or are skipped; record mode is excluded." }),
+	followSymlinks: S.optionalKey(S.Boolean).annotateKey({ description: "Whether symlinked directories are followed with per-branch cycle safety." }),
 	/**
 	 * The options the pattern compiles under — **required, deliberately**.
 	 *
@@ -45,8 +52,9 @@ export interface CompileAndExpandOptions extends DescendOptions {
 	 * Pass `GlobPatternOptions.make({})` to mean "the defaults" — that is a
 	 * deliberate choice being written down, not boilerplate.
 	 */
-	readonly glob: GlobPatternOptions;
-}
+	glob: GlobPatternOptions.annotateKey({ description: "The explicitly supplied matching dialect." }),
+}).annotate($I.annote("CompileAndExpandOptions", { description: "Downward traversal options and the required glob matching dialect." }));
+export type CompileAndExpandOptions = typeof CompileAndExpandOptions.Type;
 
 /**
  * Typed failure raised by {@link compileAndExpand}: the single error the
@@ -83,7 +91,8 @@ export class GlobExpansionError extends S.TaggedError<GlobExpansionError>($I`Glo
 
 	override get message(): string {
 		const shown = this.pattern.length > 64 ? `${this.pattern.slice(0, 64)}…` : this.pattern;
-		return `glob expansion of ${JSON.stringify(shown)} failed during ${this.stage}: ${this.cause.message}`;
+		const quoted = Result.getOrThrowWith(encodeJsonString(shown), identity);
+		return `glob expansion of ${quoted} failed during ${this.stage}: ${this.cause.message}`;
 	}
 }
 

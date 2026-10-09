@@ -21,7 +21,7 @@ const JsonString = S.fromJsonString(S.String);
  *
  * @public
  */
-export interface AscendOptions {
+export const AscendOptions = S.Struct({
 	/**
 	 * Stop after this directory, inclusive.
 	 *
@@ -67,10 +67,11 @@ export interface AscendOptions {
 	 * symlink, and the ascent runs to the filesystem root. Use
 	 * {@link Walker.ascendWithin} for a physical ceiling.
 	 */
-	readonly stopAt?: string;
+	stopAt: S.optionalKey(S.String).annotateKey({ description: "Absolute inclusive ceiling, normalized before comparison." }),
 	/** Hard cap on chain length. Defaults to 256. */
-	readonly maxDepth?: number;
-}
+	maxDepth: S.optionalKey(S.Finite).annotateKey({ description: "Hard cap on chain length; invalid supplied depths remain defects." }),
+}).annotate($I.annote("AscendOptions", { description: "An optional lexical ceiling and cap for upward traversal." }));
+export type AscendOptions = typeof AscendOptions.Type;
 
 // Implementation of Walker.ascend; the public contract lives on the static.
 const ascend: (start: string, options?: AscendOptions) => Effect.Effect<ReadonlyArray<string>, never, Path.Path> =

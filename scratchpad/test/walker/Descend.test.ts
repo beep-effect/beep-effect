@@ -2,9 +2,48 @@ import { assert, describe, it, layer } from "@effect/vitest";
 import { GlobPattern, GlobPatternOptions } from "../../effected/glob/index.ts";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
+import * as S from "effect/Schema";
 import type { DescendOptions, DescendRecordOptions, DescendResult } from "../../effected/walker/Descend.ts";
-import { descend } from "../../effected/walker/Descend.ts";
+import { DescendError, descend } from "../../effected/walker/Descend.ts";
 import { platform } from "./fixtures.ts";
+
+describe("DescendError — compatible payloads and exact messages", () => {
+	it.effect("decodes depth exhaustion without a cap and keeps the base-directory fallback", () =>
+		Effect.gen(function* () {
+			const error = yield* S.decodeEffect(DescendError)({
+				_tag: "DescendError", pattern: "**/*.ts", reason: "depthExceeded", path: "",
+			});
+			assert.strictEqual(error.reason, "depthExceeded");
+			assert.strictEqual(error.limit, undefined);
+			assert.strictEqual(error.message, 'glob descent for "**/*.ts" descended past the depth cap levels below the base directory');
+		}),
+	);
+
+	it.effect("decodes an unreadable case with a legacy cap without using or discarding it", () =>
+		Effect.gen(function* () {
+			const error = yield* S.decodeEffect(DescendError)({
+				_tag: "DescendError", pattern: "**/*.ts", reason: "unreadableDirectory", path: "src/locked", limit: 7,
+			});
+			assert.strictEqual(error.reason, "unreadableDirectory");
+			assert.strictEqual(error.limit, 7);
+			assert.strictEqual(error.message, 'glob descent for "**/*.ts" could not read "src/locked"');
+		}),
+	);
+
+	it("quotes and escapes the full pattern and path synchronously", () => {
+		const error = DescendError.make({
+			pattern: 'a"\\\n*.ts', reason: "unreadableDirectory", path: 'src/"\\\tlocked',
+		});
+		assert.strictEqual(error.message, 'glob descent for "a\\"\\\\\\n*.ts" could not read "src/\\"\\\\\\tlocked"');
+	});
+
+	it("keeps a supplied zero cap and quoted directory in the depth message", () => {
+		const error = DescendError.make({ pattern: "**/*", reason: "depthExceeded", path: "a/b", limit: 0 });
+		assert.strictEqual(error.limit, 0);
+		assert.strictEqual(error.message, 'glob descent for "**/*" descended past 0 levels below "a/b"');
+	});
+});
 
 // The main tree: nesting, a dotfile, both default-pruned directories, and a
 // second top-level directory so sorted output diverges from walk order.
@@ -394,7 +433,7 @@ const unreadableTree = {
 	"/proj/src/a.ts": "",
 	"/proj/src/locked/b.ts": "",
 };
-const unreadableOptions = { unreadable: new Set(["/proj/src/locked"]) };
+const unreadableOptions = { unreadable: HashSet.make("/proj/src/locked") };
 
 layer(platform(unreadableTree, unreadableOptions))("descend, unreadable directory", (it) => {
 	it.effect("fails typed by default, carrying the pattern and the offending relative directory", () =>
@@ -455,7 +494,7 @@ layer(platform(unreadableTree, unreadableOptions))("descend, unreadable director
 
 // A directory that vanishes between its parent's listing and its own read.
 const vanishedTree = { "/proj/src/a.ts": "" };
-const vanishedOptions = { vanished: new Set(["/proj/src/gone"]) };
+const vanishedOptions = { vanished: HashSet.make("/proj/src/gone") };
 
 layer(platform(vanishedTree, vanishedOptions))("descend, vanished directory", (it) => {
 	it.effect("treats a NotFound mid-walk as a benign race, even under onUnreadable: fail", () =>
@@ -478,7 +517,7 @@ layer(platform(vanishedTree, vanishedOptions))("descend, vanished directory", (i
 // The walk BASE itself is unreadable: its cwd-relative path is the empty
 // string, so the record entry carries the `""` sentinel — with its cause.
 const unreadableBaseTree = { "/proj/src/a.ts": "" };
-const unreadableBaseOptions = { unreadable: new Set(["/proj"]) };
+const unreadableBaseOptions = { unreadable: HashSet.make("/proj") };
 
 layer(platform(unreadableBaseTree, unreadableBaseOptions))("descend, unreadable walk base", (it) => {
 	it.effect("records the base as the empty-string path, carrying the cause, with no matches", () =>

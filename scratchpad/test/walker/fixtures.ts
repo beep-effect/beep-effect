@@ -19,9 +19,11 @@ import type { MemoryFileSystemSeedEntry } from "../../effected/memfs/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import type * as FileSystem from "effect/FileSystem";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as R from "effect/Record";
 
 /** A virtual tree: absolute path → file contents. Directories are implied by their files. */
 export type Tree = Readonly<Record<string, string>>;
@@ -29,7 +31,7 @@ export type Tree = Readonly<Record<string, string>>;
 /** Knobs for making a fixture tree misbehave in specific, realistic ways. */
 export interface FileSystemOptions {
 	/** Directories whose `readDirectory` fails with `PermissionDenied` — the unreadable-subtree case. */
-	readonly unreadable?: ReadonlySet<string>;
+	readonly unreadable?: HashSet.HashSet<string>;
 	/**
 	 * Symlinks: link path → absolute target. The link appears in its parent's
 	 * listing; `stat` resolves through it (a missing target is a dangling link
@@ -41,7 +43,7 @@ export interface FileSystemOptions {
 	 * read: they appear in listings and `stat` as directories, but
 	 * `readDirectory` fails NotFound — the benign-race case.
 	 */
-	readonly vanished?: ReadonlySet<string>;
+	readonly vanished?: HashSet.HashSet<string>;
 	/**
 	 * Paths whose `realPath` fails with the given reason — the
 	 * `followSymlinks` counterpart of `unreadable` / `vanished`. Seeded
@@ -71,22 +73,22 @@ const failure = (method: "readDirectory" | "realPath", reason: "NotFound" | "Per
  * their `readDirectory` intercepted.
  */
 export const fileSystem = (tree: Tree, options: FileSystemOptions = {}): Layer.Layer<FileSystem.FileSystem> => {
-	const unreadable = options.unreadable ?? new Set<string>();
-	const vanished = options.vanished ?? new Set<string>();
+	const unreadable = options.unreadable ?? HashSet.empty<string>();
+	const vanished = options.vanished ?? HashSet.empty<string>();
 	const unresolvable = options.unresolvable ?? {};
 
 	const seed: Record<string, MemoryFileSystemSeedEntry> = {};
-	for (const [path, contents] of Object.entries(tree)) seed[path] = contents;
-	for (const [link, target] of Object.entries(options.symlinks ?? {})) seed[link] = MemoryFileSystem.symlink(target);
+	for (const [path, contents] of R.toEntries(tree)) seed[path] = contents;
+	for (const [link, target] of R.toEntries(options.symlinks ?? {})) seed[link] = MemoryFileSystem.symlink(target);
 	// Seeded as real (empty) directories: the misbehavior is on the read, not on
 	// their existence — both cases must still be listed by their parent.
-	for (const dir of [...unreadable, ...vanished]) seed[dir] ??= MemoryFileSystem.directory();
+	for (const dir of HashSet.union(unreadable, vanished)) seed[dir] ??= MemoryFileSystem.directory();
 
 	return MemoryFileSystem.layerWith(seed, {
 		faults: {
 			readDirectory: (path: string) => {
-				if (unreadable.has(path)) return failure("readDirectory", "PermissionDenied", path);
-				if (vanished.has(path)) return failure("readDirectory", "NotFound", path);
+				if (HashSet.has(unreadable, path)) return failure("readDirectory", "PermissionDenied", path);
+				if (HashSet.has(vanished, path)) return failure("readDirectory", "NotFound", path);
 				return undefined; // delegate to the real volume
 			},
 			realPath: (path: string) => {

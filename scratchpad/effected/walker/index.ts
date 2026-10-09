@@ -17,9 +17,9 @@ export {
 	DescendError,
 	type DescendOptions,
 	type DescendRecordOptions,
-	type DescendResult,
-	type UnreadableDirectory,
+	DescendResult,
+	UnreadableDirectory,
 	descend,
 } from "./Descend.ts";
-export { type CompileAndExpandOptions, GlobExpansionError, compileAndExpand } from "./Expand.ts";
-export { type AscendOptions, Walker } from "./Walker.ts";
+export { CompileAndExpandOptions, GlobExpansionError, compileAndExpand } from "./Expand.ts";
+export { AscendOptions, Walker } from "./Walker.ts";

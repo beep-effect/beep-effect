@@ -5246,9 +5246,132 @@
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 4665,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/walker/Descend.test.ts:105,117,467,500,523; scratchpad/test/walker/Expand.test.ts:149; scratchpad/test/walker/fixtures.ts:34",
+          "upstreamBehaviour": "Descend.ts builds its prune lookup with native Set and freezes NO_ANCESTORS. Fixture fault options use ReadonlySet/new Set, native membership, concatenation and Object.entries for file and symlink seeds.",
+          "labBehaviour": "Descend.ts uses MutableHashSet for prune and an unfrozen readonly ancestor array. fixtures.ts uses HashSet for unreadable/vanished options, defaults, union and membership, plus Record.toEntries; Descend.test.ts and Expand.test.ts supply HashSet.make with the same fault paths.",
+          "reason": "native-runtime: D5 and laws 6/7 forbid native runtime collections and Object helpers; the 2026-10-09 grilling ruling removes runtime freezing. req-7 and fix-walker-g1 require the fixture conversion; traversal, fault membership and record ordering remain pinned by the existing tests."
+        },
+        {
+          "test": "scratchpad/test/walker/Walker.test.ts:76,96,177,501; scratchpad/test/walker/Descend.test.ts:146,439,541; scratchpad/test/walker/Expand.test.ts:99,149",
+          "upstreamBehaviour": "Invalid ascent depth or relative ceilings and invalid descent depth die with ordinary Error values without a tag. Recoverable descent and expansion failures already use Schema.TaggedError and are constructed with new.",
+          "labBehaviour": "Walker.ts uses WalkerDefect and Descend.ts uses DescendDefect, both S.TaggedError classes with message fields, as Effect.die payloads. DescendError and Expand.ts GlobExpansionError retain their typed channels and use .make construction; defects gain tags while their message text and defect channel remain.",
+          "reason": "tagged-errors: native-error law 7 and D5 require schema-defined errors. INVENTORY.md codemod-1 and sol-1-1/fable-1-3 document the ordinary-Error versus tagged-defect difference; the tests preserve die-versus-typed-failure behavior rather than asserting the new tags."
+        },
+        {
+          "test": "scratchpad/test/walker/Descend.test.ts:12,23,34,41,467,523,622; scratchpad/test/walker/Expand.test.ts:15,23,30,84; scratchpad/test/walker/Walker.test.ts:30",
+          "upstreamBehaviour": "UnreadableDirectory, DescendResult, DescendFrame, AscendOptions and CompileAndExpandOptions are interfaces. Unreadability modes are inline unions, DescendError.reason is an anonymous literal schema, its getter branches on a public optional-limit bag, and diagnostics quote strings with JSON.stringify.",
+          "labBehaviour": "Descend.ts, Walker.ts and Expand.ts define Struct schemas and derived types; index.ts adds four runtime schema exports. OnUnreadable and DescendErrorReason use LiteralKit. DescendFailure normalizes the legacy bag to internal tagged cases with an Option cap. Schema JSON codecs preserve quoting/truncation; results stay plain objects.",
+          "reason": "schema-first: D5, EF-3/19/33 and laws 17/19/20 require schema models, named domains, JSON codecs and normalization before case-specific behavior. req-2/3/4/6 and fix-walker-g1 preserve overload discriminators, absent caps and wrong-case finite caps; central-notes.md:10 grounds the LiteralKit subpath import."
+        },
+        {
+          "test": "scratchpad/test/walker/Descend.test.ts:12,23,41,155,164,541; scratchpad/test/walker/Walker.test.ts:184,191",
+          "upstreamBehaviour": "DescendError.limit is Schema.optionalKey(Schema.Number), accepting Infinity on schema decode as shown by the review differential probe. Configuration and frame depths are interface number fields; runtime positive-integer checks already reject invalid traversal depths.",
+          "labBehaviour": "Descend.ts uses optional S.Finite for DescendError.limit, S.Finite for frame depth and Option(S.Finite) for internal caps. AscendOptions.maxDepth in Walker.ts and CompileAndExpandOptions.maxDepth in Expand.ts use optional S.Finite. Schema decoding rejects non-finite limits; runtime integer checks and missing/zero-cap message behavior remain.",
+          "reason": "numeric-domains: @effect/tsgo schemaNumber and the finite-number law force S.Finite. sol.md:4 and fable.md:18 report upstream Infinity acceptance versus lab rejection; INVENTORY.md codemod-1 assigns this to bookkeeping. The suite pins valid/absent caps and invalid traversal depths but has no focused Infinity-decode test."
+        },
+        {
+          "test": "scratchpad/test/walker/Descend.test.ts:622; scratchpad/test/walker/Expand.test.ts:120",
+          "upstreamBehaviour": "The overload-resolution test casts GlobPattern.compile, an Effect value, through unknown to GlobPattern; the expansion cause assertion casts the typed error to Error.",
+          "labBehaviour": "Descend.test.ts obtains the actual GlobPattern with Effect.runSync before checking overload assignments. Expand.test.ts assigns the error to a typed Error variable and retains the same cause assertion. The intentional record-mode @ts-expect-error guard remains.",
+          "reason": "type-safety: D15 forbids unsafe assertions; step-2 commit 0da9926be4eed664b4ec657d536eaf7496d4e519 removes these casts. INVENTORY.md backlog-3 and grok.md:25 identify the overload-test adjustment as D15-forced; compile execution belongs to the deferred S3 canonical-runner cleanup."
+        },
+        {
+          "test": "scratchpad/test/walker/Descend.test.ts:622; module suite scratchpad/test/walker/**",
+          "upstreamBehaviour": "descend exports direct-call record/array overloads only; compileAndExpand accepts pattern and options only. Fixture fileSystem/platform factories have direct-call optional-options contracts without an Effect diagnostic exemption.",
+          "labBehaviour": "Descend.ts exposes direct and curried record/array signatures through dual(2, descendImpl). Expand.ts wraps compileAndExpand in dual(2), adding options-first calls. fixtures.ts retains a file-wide missingPipeableSignature exemption for its optional-options factories; the direct-call contracts remain.",
+          "reason": "tsgo-diagnostics: @effect/tsgo missingPipeableSignature requires pipeable overloads; step-2 commit cef8540629b73e366f71d618626d04af76c42bd5 adds dual forms. INVENTORY.md backlog-6 documents the justified fixture exemption and tracks narrowing its scope. No dedicated curried-call test is present."
+        },
+        {
+          "test": "scratchpad/test/walker/Walker.test.ts:16,223,242,278,421,451; scratchpad/test/walker/Descend.test.ts:76,85,135,295,320,346,374,420",
+          "upstreamBehaviour": "Walker.ts reusable operations and test predicates return bare Effect.gen; firstMatch absorbs typed failures with catch plus succeed(false). Descend.ts stat/realPath helpers carry undefined absence and sort matched paths through native Array.sort with a comparison lambda.",
+          "labBehaviour": "Walker.ts ascend, ascendWithin, ascendToPhysical, firstMatch and findUpward, plus test predicates, use named Effect.fn wrappers. firstMatch uses orElseSucceed. Descend.ts carries probe absence as Option and returns Array.sort(results, Order.String), retaining sorted paths, branch-local cycle safety and failure policies.",
+          "reason": "effect-first: EF-2/14/38 and the Effect-helper laws require Option at domain boundaries, Effect.fn for reusable effects and Effect-native sorting/combinators. req-1/5 and fix-walker-g1 preserve order and failure absorption; upward operations gain bare-named spans, while the proposed qualification remains backlog-8."
+        },
+        {
+          "test": "module suite scratchpad/test/walker/**",
+          "upstreamBehaviour": "Walker.ts, Descend.ts, Expand.ts and the four test/fixture files import Effect modules from the root effect barrel, with the same style in source JSDoc examples.",
+          "labBehaviour": "All seven TypeScript implementation/test files use dedicated effect/<Module> imports, including type-only imports; source examples use effect/Effect. Newly needed helpers use Array, Order, MutableHashSet, HashSet, Option, Result, Record and Schema subpaths, and Function supplies dual/identity. README examples retain the deferred root imports.",
+          "reason": "effect-imports: law 2 and step 3 require per-module effect/* imports in code and examples. Commit e8f75881080b97c4cb0dc25d1e5d4389fbeb7226 and the S0 diff ground the conversion; INVENTORY.md backlog-2 keeps the remaining README fence conversion in S2."
+        },
+        {
+          "test": "module suite scratchpad/test/walker/**; scratchpad/test/walker/Walker.test.ts:76; scratchpad/test/walker/Expand.test.ts:120",
+          "upstreamBehaviour": "DescendError and GlobExpansionError have no explicit schema identifier; their Error.name is their tag. The other data shapes have no schema annotations, and invalid wiring dies with Error named Error.",
+          "labBehaviour": "Descend.ts, Expand.ts and Walker.ts create $ScratchpadId-derived $I identities. Error classes take $I identifiers and schema annotations; Struct fields and LiteralKit domains gain descriptions/identities. DescendError, GlobExpansionError, WalkerDefect and DescendDefect expose namespaced Error.name and corresponding string/stack representations.",
+          "reason": "identity-annotations: step 4 and D5 require @beep/identity-derived schema/error identifiers and annotations. fable.md:18 and grok.md:4 ground the observable names; INVENTORY.md codemod-1 records them and reject-1 refuses oracle-name overrides. Existing tests cover Error compatibility and messages, not exact names."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "backlog-1 — Complete export JSDoc and restore record-mode guarantees (scratchpad/effected/walker/Walker.ts:213)",
+          "reason": "jsdoc: During S2 preserve upstream prose, convert Example/Details/Gotchas carriers, add examples/category/since, correct the orElseSucceed reference and restore readDirectory/realPath, non-NotFound and retained-failure guarantees."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "backlog-2 — Adapt README release chrome and import examples (scratchpad/effected/walker/README.md:3)",
+          "reason": "docs: During S2 drop release badges, stability block and Install, retarget walker examples to lab paths and dedicated effect/<Module> imports, and preserve explanatory prose; Port notes belong to central bookkeeping."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "backlog-3 — Use canonical Effect execution in the overload test (scratchpad/test/walker/Descend.test.ts:585)",
+          "reason": "test: During S3 yield compilation from it.effect while retaining overload assignments, satisfies checks and the intentional @ts-expect-error guard; do not restore the unsafe upstream cast."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-4 — Use specialized Option and Exit assertions (scratchpad/test/walker/Walker.test.ts:203)",
+          "reason": "test: During S3 use assertSome/assertNone and appropriate Exit/Cause helpers, preserving expected payloads, defect identity and probe-order assertions."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "backlog-5 — Add exported-schema fidelity properties (scratchpad/test/walker/Descend.test.ts:1)",
+          "reason": "test: During S3 add schema-derived encode/decode fidelity properties for both errors and supported nested causes, use @beep/fc-runs, and include runtime schemas added by req-3 in the export inventory."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-6 — Narrow fixture pipeable-diagnostic suppression (scratchpad/test/walker/fixtures.ts:2)",
+          "reason": "tsgo: Replace the file-wide suppression with next-line missingPipeableSignature:off directives on fileSystem/platform, preserving the optional-options reason and direct-call contracts."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-7 — Replace native Object helpers in tests (scratchpad/test/walker/fixtures.ts:79)",
+          "reason": "law: Use Record.toEntries in fixture loops, already converted under req-7, and Record.fromEntries with Effect Array mapping in FsWith/FsDenying during S3; preserve seeds and injected faults."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-8 — Consider qualified upward-operation span names (scratchpad/effected/walker/Walker.ts:77)",
+          "reason": "effect-idiom: Track Walker.<operation> span qualification as a naming proposal; retain the current law-forced Effect.fn wrappers unless a binding convention or permitted deviation authorizes new observable labels."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 1,
+              "backlog": 4
+            },
+            "sol": {
+              "required": 6,
+              "backlog": 4
+            },
+            "fable": {
+              "required": 4,
+              "backlog": 8
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

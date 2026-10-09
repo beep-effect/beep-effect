@@ -1,14 +1,40 @@
 // The compile+expand recipe: one call, one typed error, both causes intact.
 
-import { assert, layer } from "@effect/vitest";
+import { assert, describe, it, layer } from "@effect/vitest";
 import { GlobPatternError, GlobPatternOptions } from "../../effected/glob/index.ts";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import { DescendError } from "../../effected/walker/Descend.ts";
 import { GlobExpansionError, compileAndExpand } from "../../effected/walker/Expand.ts";
 import { platform } from "./fixtures.ts";
 
 /** The defaults, spelled out — what a caller passes to mean "no option refinements". */
 const defaults = GlobPatternOptions.make({});
+
+describe("GlobExpansionError — exact synchronous messages", () => {
+	it("quotes the pattern and preserves every nested descent message byte", () => {
+		const pattern = 'a"\\\n*.ts';
+		const cause = DescendError.make({ pattern, reason: "unreadableDirectory", path: 'src/"\\\tlocked' });
+		const error = GlobExpansionError.make({ pattern, cause });
+		assert.strictEqual(error.cause, cause);
+		assert.strictEqual(error.message, 'glob expansion of "a\\"\\\\\\n*.ts" failed during descend: glob descent for "a\\"\\\\\\n*.ts" could not read "src/\\"\\\\\\tlocked"');
+	});
+
+	it("does not truncate a pattern of exactly 64 characters", () => {
+		const pattern = "a".repeat(64);
+		const cause = DescendError.make({ pattern, reason: "depthExceeded", path: "" });
+		const error = GlobExpansionError.make({ pattern, cause });
+		assert.strictEqual(error.message, `glob expansion of "${pattern}" failed during descend: glob descent for "${pattern}" descended past the depth cap levels below the base directory`);
+	});
+
+	it("truncates only the expansion prefix after 64 characters and keeps the full cause", () => {
+		const prefix = "a".repeat(64);
+		const pattern = `${prefix}tail`;
+		const cause = DescendError.make({ pattern, reason: "unreadableDirectory", path: "" });
+		const error = GlobExpansionError.make({ pattern, cause });
+		assert.strictEqual(error.message, `glob expansion of "${prefix}…" failed during descend: glob descent for "${pattern}" could not read the base directory`);
+	});
+});
 
 const tree = {
 	"/proj/readme.md": "",
@@ -117,7 +143,7 @@ const unreadableTree = {
 	"/proj/src/locked/b.ts": "",
 };
 
-layer(platform(unreadableTree, { unreadable: new Set(["/proj/src/locked"]) }))(
+layer(platform(unreadableTree, { unreadable: HashSet.make("/proj/src/locked") }))(
 	"compileAndExpand, descend failure",
 	(it) => {
 		it.effect("an unreadable directory fails as GlobExpansionError at the descend stage", () =>
