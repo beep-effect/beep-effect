@@ -41,14 +41,23 @@ runs its own chain. The meter and recipe below describe that route.
 
 ### Opus
 
-`bun run beep accounts status [--json]` polls every Claude, Codex, Muse Code, and Grok Build account
-the local proxy holds a login for and ranks them by how urgently the weekly quota needs use
-(weekly percent left per hour until reset). A row also shows credit balances (Claude cloud session
-credits with their expiry, ChatGPT credits) and unused ChatGPT limit resets. Muse reports no
-windows while its five-hour window is idle. Cursor is not polled (D17): the command only shows
-`accounts-snapshot/v1` files that a local collector leaves in `$HOME/.local/state/beep/accounts/`
-(`BEEP_ACCOUNTS_SNAPSHOT_DIR` overrides), each as a row with its age. It only reads the proxy's stored logins under `$HOME/.cli-proxy-api`; an account
-appears once it is signed in to the proxy, and one whose login the provider rejects shows as
+`bun run beep accounts` opens a live screen of every Claude, Codex, Muse Code, and Grok Build account
+the local proxy holds a login for: one panel per provider, each ranked on its own, re-polled every
+60 seconds (`--every <seconds>`, at least 15; `r` polls now, `q` quits). Inside the Claude and Codex
+panels the account to use next carries `▶`, and the panel title says whether to stay on the account
+the CLI is signed in to (`●`, read from the Claude and Codex CLIs' own config files) or switch.
+Ranking: ready accounts first; a week already running down before an untouched one, whose quota
+cannot expire while it waits; then weekly percent left per hour until reset. Every percentage means
+quota left. A detail line shows the session window, model-scoped windows, credit balances (Claude
+cloud session credits with their expiry, ChatGPT credits), unused ChatGPT limit resets, and the plan.
+A poll that fails keeps the account's last good reading, marked with its age. `bun run beep accounts
+status` prints the same board once; `--json` emits the `accounts-status/v2` report (one group per
+provider). Muse reports no windows while its five-hour window is idle. Cursor is not polled (D17):
+the SuperGrok Heavy panel shows `accounts-snapshot/v1` files that a local collector leaves in
+`$HOME/.local/state/beep/accounts/` (`BEEP_ACCOUNTS_SNAPSHOT_DIR` overrides), each with its age; a
+snapshot window that has reset since capture shows as `ready (est.)`. It only reads the proxy's
+stored logins under `$HOME/.cli-proxy-api`; an account appears once it is signed in to the proxy,
+and one whose login the provider rejects shows as
 `needs login`. The usage endpoints are undocumented and can change without notice, so inside a
 running lane the signal is still the request itself. A delegation that fails with `rate_limit_error` ("This request would exceed your
 account's rate limit") marks the Opus pool below floor for the session: finish what is already
