@@ -88,16 +88,16 @@ dated successor receipt) when it opens.
 
 ### C lane status — 2026-10-09
 
-`rsc-c-scripts`: wave 1 implements all command-family ports and the coordinated
-Ci pre-runtime shim / install-export-restore ordering under resume ruling 3.
-R24 owner audit is resolved. Main includes D's #1566 release policy through
-`17a04eb0e5`; shared owners regenerate without tracked diff. Full package
-verification passes (audit 811.4s, docgen 28.8s), alongside 25 CI fixtures,
-test-tsgo, JSDoc ratchet and knowledge census. Fallow health has zero findings;
-ordinary audit exits 0 with attributed ONNX/unchanged complexity observations.
-Normal publication at `bc176b61fa` fails before push on occurrence-specific
-B/V policy admission and H1's root ONNX declaration. No PR is created; E's
-workflow co-sign and hosted evidence remain open. No inventory is edited.
+`rsc-c-scripts`: wave 1 implements the command-family ports and coordinated
+Ci pre-runtime shim / install-export-restore ordering. R24 is resolved.
+Run 4's full package and local parity qualification is terminal and retained.
+Run 6 integrates main, removes only the unused root ONNX devDependency,
+retains catalog/override/patch/consumer and installs successfully. The installed
+1.30.0 source retains all four patch markers. Shared owner regeneration has
+zero tracked diff. The three named Knip/Fallow reruns are queued; S5 lockfile
+notification confirmation is pending before authorized push-only publication.
+B owns occurrence-specific judgment admission after V. E's workflow co-sign,
+publication and hosted evidence remain open. No inventory is edited.
 Evidence:
 [`history/handoffs/rsc-c-scripts-2026-10-09.md`](history/handoffs/rsc-c-scripts-2026-10-09.md),
 [`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).

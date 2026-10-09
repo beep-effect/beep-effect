@@ -75,14 +75,14 @@ C implementation evidence (partial, 2026-10-09):
 [`history/handoffs/rsc-c-scripts-2026-10-09.md`](history/handoffs/rsc-c-scripts-2026-10-09.md)
 and [`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).
 C includes the coordinated Ci group and pre-runtime adapters. Full
-`@beep/repo-cli` package verification passes (audit 811.4s, docgen 28.8s),
-with 25 CI fixtures, test-tsgo, JSDoc ratchet and knowledge census passing.
-Ordinary Fallow audit exits 0 with attributed ONNX/unchanged complexity
-observations; health has zero findings. Normal Yeet publication at `bc176b61fa`
-stops before push on B-owned exception candidates and the H1-owned root ONNX
-regression. No PR or hosted proof exists. E's workflow co-sign remains open.
-Exact candidate rows and publication logs are in the handoff; C edits no
-inventory or allowlist and does not close program acceptance.
+`@beep/repo-cli` package verification and Run 4 local parity pass; those terminal
+receipts are retained. Resume ruling 4 authorizes removing the unused root ONNX
+devDependency and publishing with the push-only bypass for B-owned judgment rows.
+Run 6 preserves the catalog, override, patch and live package consumer; install
+passes, installed patch markers are present, and Knip/Fallow policy reruns are
+queued. S5 lockfile notification confirmation precedes the push. E's workflow
+co-sign and hosted evidence remain open. C edits no inventory or allowlist and
+does not close program acceptance.
 
 ## Notes
 

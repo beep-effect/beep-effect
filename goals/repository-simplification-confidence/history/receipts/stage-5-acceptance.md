@@ -185,3 +185,15 @@ B-owned schema/fixture judgment rows, and Knip/Fallow's H1-owned root ONNX row.
 The exact candidate identities, attribution and terminal logs are in the handoff.
 No PR, E co-sign, hosted proof or accepted program row is claimed from these
 local results. Both C-owned heavy commands have ended.
+
+### C Run 6 publication recovery
+
+Resume ruling 4 transfers the unused root ONNX devDependency removal to C.
+Only the root `catalog:` devDependency and matching root lockfile row are
+removed; catalog range, override, installer patch and face-detection consumer
+remain. Install exits 0; reused installed ONNX 1.30.0 has all four patch markers.
+Bun emits no fresh patch-applied line, so that output is not claimed.
+Run 4's six-row terminal qualification remains the verification of record.
+The requested Knip/Fallow policy reruns are queued through beep-heavy; owner
+regeneration has zero tracked diff. S5 requires lockfile notification confirmation
+before push. E co-sign, hosted evidence and B/V judgment admission remain open.

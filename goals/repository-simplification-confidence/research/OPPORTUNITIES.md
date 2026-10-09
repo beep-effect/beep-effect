@@ -474,3 +474,19 @@ are available. Cancellation is not a proof failure or a package pass.
   applied program admission for them. No PR is created. A narrow, explicit
   owner-approved publication mechanism for attributed delegated reds would
   prevent repeated qualification without weakening inventories or fabricating proof.
+
+## C Run 6: dependency field ambiguity
+
+Resume ruling 4 named the `^1.30.0` line as a root devDependency, but it is
+the catalog entry. Removing it made `bun install` refuse: `onnxruntime-node@catalog: is not in the catalog`.
+The catalog was restored and the actual root devDependency (`catalog:`) removed.
+A JSON property path in the ruling would have prevented the failed install;
+no baseline or package-owned dependency was changed.
+
+## C Run 6: notification prerequisite omitted from recovery ruling
+
+The publication recovery ruling authorizes a lockfile edit and push-only retry,
+but standing S5 requires confirmation that the effected-port session was notified.
+C's handoff reports the one-line lockfile delta; confirmation is absent from the
+brief and rulings at the recovery boundary. Including the notification receipt
+in the same recovery ruling would remove this additional handoff round.

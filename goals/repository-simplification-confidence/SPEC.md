@@ -734,6 +734,8 @@ without claiming completion.
 
 | 2026-10-09 | C records a blocked normal publication rather than bypassing cheap gates or editing B/H1-owned ratchets. | Yeet at `bc176b61fa` enforces five attributed reds despite S11: lossless-wire/platform/golden-regression candidates pending B after V, and root ONNX assigned to H1. Full CLI package and required local parity pass; exact occurrence additions and logs are in C's handoff. | Owners admit or repair the named findings, or the orchestrator supplies an explicit program publication mechanism; retry Yeet from a fresh merged base. No gate result is manufactured. |
 
+| 2026-10-09 | C carries out resume ruling 4 by removing `devDependencies.onnxruntime-node` (`catalog:`), preserving `catalog.onnxruntime-node` (`^1.30.0`), the override and installer patch. Publication uses the explicitly authorized push-only bypass with Run 4 qualification plus the three Run 6 policy reruns. | The ruling named the catalog literal as a devDependency; literal removal failed install because the live package still consumes the catalog. Property-scoped removal fulfills the unused-root-dependency intent. B owns the two wire-schema and twelve test judgment rows after V; C changes no inventory or baseline. | Revert the C dependency-removal commit and reinstall; restore the root development consumer only if a real root consumer returns. |
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |

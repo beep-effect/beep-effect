@@ -695,3 +695,37 @@ blocked by B/V occurrence-specific policy admission and H1 root ONNX reds;
 E workflow co-sign and all hosted evidence await a PR; orchestrator must
 resolve the explicit delegated-red publication fence. No PR was pushed,
 readied or merged; no C-owned heavy command remains running.
+
+
+### Run 5 launch correction
+
+The missing-relative-brief blocker was the orchestrator's launch error; the complete brief is in the orchestrator cache and Run 6 read it in full.
+
+## Run 6 (after crash): authorized publication recovery
+
+Required fetch and merge integrated main's documentation-only GPU OCR update.
+Run 4 terminal qualification remains the verification of record:
+`.beep/rsc-c-run4-qualified-result.txt` has six zero rows (patterns, test-tsgo,
+CI fixtures, Fallow audit, Fallow health, full package verification).
+Earlier failed experiments remain superseded, not relabeled as passing.
+Resume ruling 4 assigns removal of the unused root ONNX declaration to C;
+only that declaration is removed. Catalog, exact override, owning-package
+consumer and installer patch remain intact. Install and the three requested
+policy reruns are pending. No baseline or inventory exception is added.
+
+### Run 6 lockfile notice for orchestrator (S5)
+
+The authorized root dependency removal makes the exact one-line lockfile change:
+remove `workspaces[""].devDependencies.onnxruntime-node = "catalog:"`.
+No resolved version, catalog, override or patchedDependencies entry changes.
+Before the push, S5 requires confirmation that the effected-port session has
+been notified, unless its branch has landed and S5 has ended. Please record
+that confirmation in the orchestrator rulings. Ruling 4 already authorizes
+this change and install, but this notice explicitly identifies the lockfile delta.
+
+Install exits 0. Bun reports three packages installed and retains the ONNX
+patch entry; it does not print a fresh ONNX patch-applied line for the reused
+installation. Physical installed-source verification follows rather than
+claiming that absent output. Owner regeneration reports 152 manifests,
+zero drift/writes; cache profile, goals index and CLI tsconfig remain in sync.
+The three policy reruns are queued through the canonical heavy wrapper.
