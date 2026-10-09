@@ -236,4 +236,235 @@ it.layer(Layer.merge(ClassificationRegistry.layer, BunFileSystem.layer))("classi
       expect(escaped.reason).toBe("path-escape");
     })
   );
+  it.effect(
+    "rejects source edition drift, invalid symbols and broken Nice joins",
+    Effect.fnUntraced(function* () {
+      const registry = yield* ClassificationRegistry;
+      const fs = yield* FileSystem.FileSystem;
+      const cases: readonly (readonly [ClassificationPin, string, string, string])[] = [
+        [ipcPin, "ipc.xml", "20260101", "20250101"],
+        [ipcPin, "ipc.xml", 'symbol="A"', 'symbol="Z"'],
+        [cpcPin, ".xml", "2026-08-01", "2025-08-01"],
+        [
+          cpcPin,
+          ".xml",
+          "<classification-symbol>A</classification-symbol>",
+          "<classification-symbol>Z</classification-symbol>",
+        ],
+        [nicePin, "nice-structure.xml", 'version="2026"', 'version="2025"'],
+        [nicePin, "nice-texts.xml", 'language="en"', 'language="fr"'],
+        [nicePin, "nice-structure.xml", 'classNumber="1"', 'classNumber="46"'],
+        [nicePin, "nice-structure.xml", 'basicNumber="0001"', 'basicNumber="invalid"'],
+        [nicePin, "nice-texts.xml", 'idRef="class1"', 'idRef="missing"'],
+        [nicePin, "nice-texts.xml", 'idRef="good1"', 'idRef="missing"'],
+        [nicePin, "nice-texts.xml", "Synthetic goods class", ""],
+        [nicePin, "nice-texts.xml", "Synthetic goods term", ""],
+      ];
+      yield* Effect.forEach(
+        cases,
+        Effect.fnUntraced(function* ([pin, suffix, before, after]) {
+          const error = yield* registry.load(manifest, vendor, pin).pipe(
+            Effect.provideService(FileSystem.FileSystem, {
+              ...fs,
+              readFileString: (path) =>
+                fs
+                  .readFileString(path)
+                  .pipe(
+                    Effect.map((content) =>
+                      Str.endsWith(suffix)(path) ? Str.replaceAll(before, after)(content) : content
+                    )
+                  ),
+            }),
+            Effect.flip
+          );
+          expect(error.reason).toBe("source-parse");
+        })
+      );
+    })
+  );
+
+  it.effect(
+    "fails closed when manifest, archive or CPC directory is unavailable",
+    Effect.fnUntraced(function* () {
+      const registry = yield* ClassificationRegistry;
+      const fs = yield* FileSystem.FileSystem;
+      expect((yield* registry.load("missing-manifest", vendor, ipcPin).pipe(Effect.flip)).reason).toBe(
+        "manifest-invalid"
+      );
+      for (const pin of [ipcPin, cpcPin]) {
+        const error = yield* registry.load(manifest, vendor, pin).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            realPath: (path) => (path === vendor ? fs.realPath(path) : fs.realPath("missing-archive")),
+          }),
+          Effect.flip
+        );
+        expect(error.reason).toBe("source-parse");
+      }
+      const noFiles = yield* registry
+        .load(manifest, vendor, cpcPin)
+        .pipe(
+          Effect.provideService(FileSystem.FileSystem, { ...fs, readDirectory: () => Effect.succeed([]) }),
+          Effect.flip
+        );
+      expect(noFiles.detail).toBe("CPC scheme files missing");
+      const noDirectory = yield* registry.load(manifest, vendor, cpcPin).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          readDirectory: () => fs.readDirectory("missing-directory"),
+        }),
+        Effect.flip
+      );
+      expect(noDirectory.reason).toBe("source-parse");
+      const content = yield* fs.readFileString(manifest);
+      for (const archive of ["structure", "texts"]) {
+        const error = yield* registry.load(manifest, vendor, nicePin).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            readFileString: (path) =>
+              path === manifest
+                ? Effect.succeed(
+                    A.join(
+                      A.filter(Str.split(content, "\n"), (line) => !Str.includes(`nice-${archive}-fixture`)(line)),
+                      "\n"
+                    )
+                  )
+                : fs.readFileString(path),
+          }),
+          Effect.flip
+        );
+        expect(error.reason).toBe("manifest-invalid");
+      }
+      const invalidAsset = yield* registry.load(manifest, vendor, ipcPin).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          readFileString: (path) =>
+            path === manifest
+              ? Effect.succeed(Str.replaceAll('"schemeKind": "ipc"', '"schemeKind": "other"')(content))
+              : fs.readFileString(path),
+        }),
+        Effect.flip
+      );
+      expect(invalidAsset.reason).toBe("manifest-invalid");
+    })
+  );
+
+  it.effect(
+    "decodes attributed text content and preserves literal text child elements",
+    Effect.fnUntraced(function* () {
+      const registry = yield* ClassificationRegistry;
+      const fs = yield* FileSystem.FileSystem;
+      const snapshot = yield* registry.load(manifest, vendor, ipcPin).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          readFileString: (path) =>
+            fs
+              .readFileString(path)
+              .pipe(
+                Effect.map((content) =>
+                  Str.endsWith("ipc.xml")(path) ? Str.replaceAll("<text>", '<text language="en">')(content) : content
+                )
+              ),
+        })
+      );
+      expect((yield* registry.resolve(snapshot, ipcPin, "A")).prefLabel).toBe("Synthetic IPC section");
+      const cpc = yield* registry.load(manifest, vendor, cpcPin).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          readFileString: (path) =>
+            fs
+              .readFileString(path)
+              .pipe(
+                Effect.map((content) =>
+                  Str.endsWith(".xml")(path)
+                    ? Str.replaceAll(
+                        "<text>Synthetic CPC section</text>",
+                        '<CPC-specific-text><text language="en">Synthetic CPC section</text></CPC-specific-text>'
+                      )(content)
+                    : content
+                )
+              ),
+        })
+      );
+      expect((yield* registry.resolve(cpc, cpcPin, "A")).prefLabel).toBe("Synthetic CPC section");
+    })
+  );
+  it.effect(
+    "joins repeated CPC title text elements without admitting notes",
+    Effect.fnUntraced(function* () {
+      const registry = yield* ClassificationRegistry;
+      const fs = yield* FileSystem.FileSystem;
+      const snapshot = yield* registry.load(manifest, vendor, cpcPin).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          readFileString: (path) =>
+            fs
+              .readFileString(path)
+              .pipe(
+                Effect.map((content) =>
+                  Str.endsWith(".xml")(path)
+                    ? Str.replaceAll(
+                        "<text>Synthetic CPC section</text>",
+                        '<text>Synthetic CPC section</text><text>Second synthetic title</text><CPC-specific-text marker="synthetic"/>'
+                      )(content)
+                    : content
+                )
+              ),
+        })
+      );
+      expect((yield* registry.resolve(snapshot, cpcPin, "A")).prefLabel).toBe(
+        "Synthetic CPC section; Second synthetic title"
+      );
+    })
+  );
+  it.effect(
+    "keeps CPC identifiers when optional titles are absent",
+    Effect.fnUntraced(function* () {
+      const registry = yield* ClassificationRegistry;
+      const fs = yield* FileSystem.FileSystem;
+      const snapshot = yield* registry.load(manifest, vendor, cpcPin).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          readFileString: (path) =>
+            fs
+              .readFileString(path)
+              .pipe(
+                Effect.map((content) =>
+                  Str.endsWith(".xml")(path)
+                    ? Str.replaceAll(/<class-title>[\s\S]*?<\/class-title>/g, "")(content)
+                    : content
+                )
+              ),
+        })
+      );
+      expect((yield* registry.resolve(snapshot, cpcPin, "A")).prefLabel).toBe("A");
+      expect((yield* registry.resolve(snapshot, cpcPin, "Y02A10/00")).prefLabel).toBe("Y02A10/00");
+    })
+  );
+  it.effect(
+    "ignores non-concept IPC wrappers and absent title content",
+    Effect.fnUntraced(function* () {
+      const registry = yield* ClassificationRegistry;
+      const fs = yield* FileSystem.FileSystem;
+      for (const replacement of ['<titlePart marker="synthetic"/>', '<titlePart><text language="en"/></titlePart>']) {
+        const snapshot = yield* registry.load(manifest, vendor, ipcPin).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            readFileString: (path) =>
+              fs
+                .readFileString(path)
+                .pipe(
+                  Effect.map((content) =>
+                    Str.endsWith("ipc.xml")(path)
+                      ? Str.replace("<titlePart><text>Synthetic IPC section</text></titlePart>", replacement)(content)
+                      : content
+                  )
+                ),
+          })
+        );
+        expect(snapshot.concepts).toHaveLength(4);
+        expect((yield* registry.resolve(snapshot, ipcPin, "A").pipe(Effect.flip)).reason).toBe("symbol-not-found");
+      }
+    })
+  );
 });

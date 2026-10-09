@@ -24,7 +24,7 @@ import {
 } from "../Classification.models.ts";
 import type { ClassificationPin } from "../Classification.models.ts";
 
-const TextNode = S.Struct({ text: S.OptionFromOptionalKey(S.String) });
+const TextNode = S.Struct({ "#text": S.OptionFromOptionalKey(S.String) });
 const Text = S.Union([S.String, TextNode]);
 const TitlePart = S.Struct({ text: S.OptionFromOptionalKey(Text) });
 const IpcTitle = S.Struct({
@@ -49,8 +49,10 @@ class IpcEntry extends S.Class<IpcEntry>("ClassificationXml/IpcEntry")({
 }) {}
 
 const CpcTitlePart = S.Struct({
-  text: S.OptionFromOptionalKey(Text),
-  "CPC-specific-text": S.OptionFromOptionalKey(S.Struct({ text: S.ArrayEnsure(Text) })),
+  text: Text.pipe(S.ArrayEnsure, S.OptionFromOptionalKey),
+  "CPC-specific-text": S.OptionFromOptionalKey(
+    S.Struct({ text: S.ArrayEnsure(Text).pipe(S.withDecodingDefaultKey(Effect.succeed([]))) })
+  ),
 });
 const CpcTitle = S.Struct({ "title-part": S.ArrayEnsure(CpcTitlePart) });
 
@@ -117,7 +119,7 @@ const NiceTextDocument = S.Struct({
 
 const textValue = Match.type<typeof Text.Type>().pipe(
   Match.when(S.is(S.String), (text) => text),
-  Match.orElse((node) => O.getOrElse(node.text, () => ""))
+  Match.orElse((node) => O.getOrElse(node["#text"], () => ""))
 );
 const label = (texts: readonly string[]) => A.join(A.filter(A.map(texts, Str.trim), Str.isNonEmpty), "; ");
 const sourceFailure = (detail: string) => ClassificationError.make({ reason: "source-parse", detail });
@@ -223,7 +225,7 @@ const cpcLabel = (title: typeof CpcTitle.Type) =>
   label(
     A.flatMap(title["title-part"], (part) =>
       A.appendAll(
-        A.map(O.toArray(part.text), textValue),
+        A.flatMap(O.toArray(part.text), (texts) => A.map(texts, textValue)),
         O.match(part["CPC-specific-text"], { onNone: () => [], onSome: (value) => A.map(value.text, textValue) })
       )
     )
@@ -364,7 +366,7 @@ export const parseNice = Effect.fnUntraced(function* (
         const classConcept = yield* makeConcept(
           pin,
           entry.classNumber,
-          label(A.map(classText.Heading.HeadingItem, (node) => O.getOrElse(node.text, () => ""))),
+          label(A.map(classText.Heading.HeadingItem, (node) => O.getOrElse(node["#text"], () => ""))),
           O.none(),
           0
         ).pipe(Effect.mapError(() => sourceFailure("Invalid Nice class")));
@@ -375,7 +377,7 @@ export const parseNice = Effect.fnUntraced(function* (
               sourceFailure("Nice basic title missing")
             );
             const prefLabel = label(
-              A.flatMap(text.Indication, (value) => A.map(value.Label, (node) => O.getOrElse(node.text, () => "")))
+              A.flatMap(text.Indication, (value) => A.map(value.Label, (node) => O.getOrElse(node["#text"], () => "")))
             );
             return yield* makeConcept(
               pin,

@@ -197,6 +197,10 @@ starts after M2 tests and the real-artifact proof pass. M4 remains gated.
 | 2026-10-09 | Select shared `decodeVendorManifestRow` and canonical vendor-path containment for M1/M2; implementation is checkpointed at `14596dceef` pending the separately owned XML-reader fix and runtime proof. | The M1 reflection requested one manifest validator when another runtime kind exists; sharing admission rejects unknown discriminators consistently and preserves symlink guards. | Revert the shared extraction and registry together, retaining the R3 skip route while classification rows remain. |
 | 2026-10-09 | Release notes replace a changeset for private `@beep/ontology`, per #1566 and the standing orchestrator ruling. | The package is private; M2 adds pinned classification APIs and shared admission without breaking existing M1 callers, so no major release would be needed. Private workspaces cannot appear in changesets. | Revert the additive M2 API/extraction and classification manifest rows together; if publication policy changes, use the then-current release mechanism. |
 
+| 2026-10-09 | Adapt classification element content to the landed `#text` reader contract (run-6 ruling); retain child elements named `text`. | Nice attributed heading/label content and attributed IPC/CPC text nodes use the reserved content key. | Revert the consumer adaptation only if the shared reader contract is also reversed; never add a fallback conflating content and child elements. |
+| 2026-10-09 | R4 adds the new `ClassificationRegistry.ts` row: lines 95.61, statements 95.72, branches 86.36, functions 91.93. | The sanctioned scoped coverage writer measured these error paths; existing rows and package totals remain unchanged. | Delete this row once the file has zero uncovered units. |
+| 2026-10-09 | R4 adds the new `internal/ClassificationXml.ts` row: lines 93.22, statements 93.18, branches 100, functions 87.14. | The sanctioned scoped coverage writer measured these parser paths; existing rows and package totals remain unchanged. | Delete this row once the file has zero uncovered units. |
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |

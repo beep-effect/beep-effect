@@ -287,3 +287,24 @@ blocker was attributed; its partial full-docgen replay is not a green proof.
 - Prevention: when resuming a dependent lane after an output-shape repair,
   authorize that lane to adapt its own new consumer to the landed shape, and
   test elements containing both attributes and text before full archive proof.
+
+## 2026-10-09 — Interrupted coverage receipt did not identify its source snapshot
+
+- **What happened:** the resumed tree included a coverage test edit made after the saved passing run; the self-closing `titlePart` fixture decoded as an empty string rather than an object.
+- **Evidence:** fresh coverage reported `Invalid IPC XML` in the optional-title test while the older receipt said 85 passed. Adding a synthetic attribute to the empty `titlePart` expressed the intended object boundary; the next suite passed all 87 tests.
+- **What would have prevented it:** save a source fingerprint beside every proof receipt, especially before interrupted edits.
+- **Disposition:** retain the meaningful absent-title test and use fresh coverage, not the stale passing log.
+
+## 2026-10-09 — CPC master repeats title text nodes
+
+- **What happened:** the first real-artifact proof failed on CPC after fixtures passed.
+- **Evidence:** `cpc-scheme-A.xml` schema decoding reached the `A01H` title; its first title part has two child `text` elements. The boundary expected one string or attributed node.
+- **What would have prevented it:** a synthetic repeated-title fixture and shape census before loader qualification.
+- **Disposition:** admit singleton or repeated title children through `ArrayEnsure`, retain `#text` for attributed content, and join only admitted title fragments. Definitions, notes, references and warnings remain excluded.
+
+## 2026-10-09 — CPC-specific title wrapper has no text child
+
+- **What happened:** after repeated title children decoded, the real CPC master exposed a different title shape.
+- **Evidence:** the diagnostic identified a missing `text` key in a `CPC-specific-text` title-part child of `cpc-scheme-A.xml`. This is distinct from the repeated-title mismatch; a wrapper may carry only excluded reference content.
+- **What would have prevented it:** a synthetic attributed wrapper with no admitted title child.
+- **Disposition:** default the absent child list to empty at the XML boundary and retain the facts-only field projection.
