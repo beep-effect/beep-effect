@@ -399,33 +399,16 @@ describe("yeet push-first publish plan wiring", () => {
         Arbitrary.all([Arbitrary.schema(RepoRunPlan)]),
         Effect.fnUntraced(function* ([plan]) {
           const decoded = yield* decodePlan(yield* printedPlan(plan));
-          expect(S.toEquivalence(RepoRunContext)(decoded.context, plan.context)).toBe(true);
-          expect(
-            A.map(decoded.steps, ({ id, command, args, cwd, phase, mutability, resume }) => ({
-              id,
-              command,
-              args,
-              cwd,
-              phase,
-              mutability,
-              resume,
-            }))
-          ).toEqual(
-            A.map(plan.steps, ({ id, command, args, cwd, phase, mutability, resume }) => ({
-              id,
-              command,
-              args,
-              cwd,
-              phase,
-              mutability,
-              resume,
-            }))
+          const stepsWithoutEnvironment = (value: RepoRunPlan) =>
+            A.map(value.steps, ({ env: _env, ...step }) => RepoPlanStep.make(step));
+          return (
+            S.toEquivalence(RepoRunContext)(decoded.context, plan.context) &&
+            S.toEquivalence(S.Array(RepoPlanStep))(stepsWithoutEnvironment(decoded), stepsWithoutEnvironment(plan))
           );
-          return true;
         }),
         fcRuns(25)
       );
-      expect(result._tag).toBe("Passed");
+      expect(result).toMatchObject({ _tag: "Passed" });
     })
   );
 
