@@ -931,7 +931,7 @@ const buildHandle: (
 				const pieces = path.split("/");
 				for (let index = 1; index < pieces.length; index++) {
 					const prefix = pieces.slice(0, index + 1).join("/");
-					const resolved = resolvePath(volume, prefix === "" ? "/" : prefix);
+					const resolved = resolvePath(volume, prefix);
 					const failure = Resolved.match(resolved, {
       Failure: ({ code }) => code === "ENOENT" ? errnoError("makeDirectory", path, "ENOENT", undefined) : error,
       Success: () => undefined,
@@ -1710,7 +1710,7 @@ export class MemoryFileSystem {
 		if (applied._tag === "Failure") throw nodeErrno("EINVAL", "seed", applied.failure.subject);
 		return runNode(buildHandle(seed, options), (error) => ({
 			syscall: syscallForMethod(error.reason.method),
-			path: "pathOrDescriptor" in error.reason ? String(error.reason.pathOrDescriptor ?? "") : "",
+			path: "pathOrDescriptor" in error.reason ? String(error.reason.pathOrDescriptor) : "",
 		}));
 	};
 

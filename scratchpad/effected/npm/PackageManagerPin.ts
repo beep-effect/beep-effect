@@ -240,7 +240,9 @@ export class PackageManagerPin extends S.Class<PackageManagerPin>($I`PackageMana
 	 */
 	static readonly FromString: S.Codec<PackageManagerPin, string> = S.String.pipe(
 		S.decodeTo(
-			S.instanceOf(PackageManagerPin),
+			S.instanceOf(PackageManagerPin, {
+				toCodecArbitrary: () => S.link<PackageManagerPin>()(S.toType(PackageManagerPin), SchemaTransformation.passthrough()),
+			}),
 			SchemaTransformation.transformEffect({
 				decode: (input: string) => {
 					const parsed = PackageManagerPin.parseResult(input);

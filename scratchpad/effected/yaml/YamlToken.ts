@@ -9,6 +9,7 @@
 // layer above it.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
@@ -110,9 +111,6 @@ const promoteAll = (text: string, tokens: ReadonlyArray<InternalToken>): Readonl
 	// in one pass.
 	let line = 0;
 	return tokens.map((token) => {
-		// Defensive: a non-monotone offset would otherwise yield a negative
-		// `character`. Restart the scan instead.
-		if (token.offset < (lineStarts[line] ?? 0)) line = 0;
 		let nextStart = lineStarts[line + 1];
 		while (nextStart !== undefined && nextStart <= token.offset) {
 			line++;
@@ -127,7 +125,7 @@ const promoteAll = (text: string, tokens: ReadonlyArray<InternalToken>): Readonl
 			offset: token.offset,
 			length: token.length,
 			line,
-			character: token.offset - (lineStarts[line] ?? 0),
+			character: token.offset - A.getUnsafe(lineStarts, line),
 		});
 	});
 };
@@ -218,11 +216,6 @@ export class YamlTokens {
  * @since 0.0.0
  */
 	static stream(text: string): Stream.Stream<YamlToken> {
-		return Stream.suspend(() =>
-			Result.match(YamlTokens.tokenize(text), {
-				onSuccess: (tokens) => Stream.fromIterable(tokens),
-				onFailure: (error) => Stream.die(error),
-			}),
-		);
+		return Stream.suspend(() => YamlTokens.tokenize(text).pipe(Result.getOrThrow, Stream.fromIterable));
 	}
 }

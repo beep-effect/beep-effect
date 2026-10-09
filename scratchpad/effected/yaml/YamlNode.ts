@@ -884,13 +884,9 @@ const isAlias = S.is(YamlAlias);
 // the classes; function declarations hoist.
 
 function findByPath(root: YamlNode, path: YamlPath): O.Option<YamlNode> {
-	let current: YamlNode | null = root;
+	let current: YamlNode = root;
 
 	for (const segment of path) {
-		if (current === null) {
-			return O.none();
-		}
-
 		if (P.isString(segment)) {
 			// Navigate by key — requires a YamlMap
 			if (!isMap(current)) {
@@ -916,7 +912,7 @@ function findByPath(root: YamlNode, path: YamlPath): O.Option<YamlNode> {
 		}
 	}
 
-	return current === null ? O.none() : O.some(current);
+	return O.some(current);
 }
 
 /**
@@ -1172,10 +1168,7 @@ function nodeToValue(
 		return result;
 	}
 	if (isSeq(node)) return node.items.map((item) => nodeToValue(item, anchors, budget, counting));
-	if (isAlias(node)) {
-		const resolved = anchors === undefined ? undefined : O.getOrUndefined(MutableHashMap.get(anchors, node.name));
-		// Resolving an alias enters alias expansion → count the resolved subtree.
-		return resolved !== undefined ? nodeToValue(resolved, anchors, budget, true) : null;
-	}
-	return null;
+	const resolved = anchors === undefined ? undefined : O.getOrUndefined(MutableHashMap.get(anchors, node.name));
+	// The remaining union member is an alias; resolving it enters alias expansion.
+	return resolved !== undefined ? nodeToValue(resolved, anchors, budget, true) : null;
 }

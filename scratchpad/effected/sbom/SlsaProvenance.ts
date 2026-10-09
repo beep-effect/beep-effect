@@ -259,7 +259,7 @@ export type GitHubWorkflowProvenance = typeof GitHubWorkflowProvenance.Type;
  * included — a divergence here is a divergence in the emitted predicate.
  */
 const workflowPathOf = (input: GitHubWorkflowProvenance): string =>
-	input.workflowRef.replace(`${input.repository}/`, "").split("@")[0] ?? "";
+	input.workflowRef.replace(`${input.repository}/`, "").replace(/@[\s\S]*$/, "");
 
 /**
  * A SLSA Provenance v1 predicate.

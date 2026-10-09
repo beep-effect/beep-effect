@@ -1,6 +1,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Duration from "effect/Duration";
 import type * as Redacted from "effect/Redacted";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Fn from "effect/Function";
 import * as PlatformError from "effect/PlatformError";
@@ -629,8 +630,7 @@ const jsonLine = Effect.fn("Run.jsonLine")(function* <A, I>(
 	let notJsonCause: unknown;
 	let schemaCause: unknown;
 	for (let index = candidates.length - 1; index >= 0; index--) {
-		const candidate = candidates[index];
-		if (candidate === undefined) continue;
+		const candidate = A.getUnsafe(candidates, index);
 		const parsed = yield* Effect.result(S.decodeEffect(JsonOutput)(candidate));
 		if (Result.isFailure(parsed)) {
 			notJsonCause ??= parsed.failure;

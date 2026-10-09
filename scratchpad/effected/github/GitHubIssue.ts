@@ -1,5 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
@@ -496,11 +497,12 @@ const make = (client: GitHubClient["Service"]): GitHubIssueShape => ({
 			issue_number: issueNumber,
 			headers: API_VERSION_HEADERS,
 		});
-		const existing = comments.find((comment) => marker.matches(comment.body ?? ""));
+		const existing = A.map(comments, (comment) => ({ ...comment, body: comment.body ?? "" }))
+			.find((comment) => marker.matches(comment.body));
 		if (existing !== undefined) {
 			return CommentOnceResult.make({
 				wrote: false,
-				comment: CommentRecord.make({ id: numericId(existing.id), body: existing.body ?? "", url: existing.html_url }),
+				comment: CommentRecord.make({ id: numericId(existing.id), body: existing.body, url: existing.html_url }),
 			});
 		}
 		const created = yield* client.request("POST /repos/{owner}/{repo}/issues/{issue_number}/comments", {

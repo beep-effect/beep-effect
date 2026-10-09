@@ -73,8 +73,7 @@ export const sanitize = (input: string): string => stripAnsi(input).replace(/\t/
  * @category formatting
  * @since 0.0.0
  */
-export class Fmt {
-	private constructor() {}
+export abstract class Fmt {
 
 	/**
 	 * Text made safe to lay out and print, exactly as the renderers make it: complete ANSI and OSC sequences removed,

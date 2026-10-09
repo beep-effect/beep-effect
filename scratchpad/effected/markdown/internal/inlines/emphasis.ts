@@ -111,7 +111,7 @@ export const scanDelims: {
 	let beforeStart = startpos - 1;
 	const beforeUnit = O.getOrElse(Str.charCodeAt(scanner.subject, beforeStart), () => -1);
 	if (beforeUnit >= 0xdc00 && beforeUnit <= 0xdfff && beforeStart > 0) {
-		const precedingUnit = O.getOrElse(Str.charCodeAt(scanner.subject, beforeStart - 1), () => -1);
+		const precedingUnit = O.getOrThrow(Str.charCodeAt(scanner.subject, beforeStart - 1));
 		if (precedingUnit >= 0xd800 && precedingUnit <= 0xdbff) {
 			beforeStart -= 1;
 		}
@@ -143,12 +143,8 @@ const markerCharOf = (cc: number): EmphasisChar => (cc === C_UNDERSCORE ? "_" : 
  * emphasis, push it onto the delimiter stack for `processEmphasis` to pair up.
  */
 const handleDelim = (scanner: InlineScanner, cc: number): boolean => {
-	const res = scanDelims(scanner, cc);
-	if (O.isNone(res)) {
-		return false;
-	}
-
-	const run = res.value;
+	// The construct passes the current peek code, so at least one delimiter matches.
+	const run = O.getOrThrow(scanDelims(scanner, cc));
 	const startpos = scanner.pos;
 	scanner.pos += run.numdelims;
 	const node = scanner.appendText(scanner.subject.slice(startpos, scanner.pos), startpos, scanner.pos);

@@ -164,7 +164,7 @@ export const backendIdsFrom = (token: string): Result.Result<BackendIds, string>
 		}
 		const run = parts[1];
 		const job = parts[2];
-		if (parts.length !== 3 || run === undefined || run === "" || job === undefined || job === "") {
+		if (parts.length > 3 || run === undefined || run === "" || job === undefined || job === "") {
 			return Result.fail(`the runtime token's Actions.Results scope is malformed: "${entry}"`);
 		}
 		return Result.succeed({ workflowRunBackendId: run, workflowJobRunBackendId: job });

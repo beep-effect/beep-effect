@@ -21,6 +21,7 @@
 //    nodes, because mdast images have no children. Upstream computes the same
 //    string at render time by re-rendering the children with tags disabled.
 
+import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import type { InlineNode } from "../inlineNode.ts";
 import { appendChild, childrenOf, insertAfter, makeInlineNode, unlink } from "../inlineNode.ts";
@@ -72,10 +73,9 @@ const plainTextOf = (nodes: ReadonlyArray<InlineNode>): string => {
 	const pending: InlineNode[] = [...nodes].reverse();
 
 	while (pending.length > 0) {
-		const node = pending.pop();
-		if (node === undefined) {
-			break;
-		}
+		// The loop proves the stack is non-empty; every entry is a real node.
+		const node = A.getUnsafe(pending, pending.length - 1);
+		pending.pop();
 
 		if (node.type === "text" || node.type === "inlineCode" || node.type === "html") {
 			text += node.value;
@@ -87,10 +87,7 @@ const plainTextOf = (nodes: ReadonlyArray<InlineNode>): string => {
 		} else {
 			const children = childrenOf(node);
 			for (let index = children.length - 1; index >= 0; index -= 1) {
-				const child = children[index];
-				if (child !== undefined) {
-					pending.push(child);
-				}
+				pending.push(A.getUnsafe(children, index));
 			}
 		}
 	}
@@ -259,7 +256,8 @@ export const makeLinkCloseConstruct = (onNoMatch?: LinkCloseFallback): InlineCon
 		const isImage = opener.image;
 		const savepos = scanner.pos;
 
-		let url: string | undefined;
+		// A matched inline link always assigns its destination, including an empty one.
+		let url = "";
 		let title: string | undefined;
 		let matched = false;
 
@@ -295,7 +293,7 @@ export const makeLinkCloseConstruct = (onNoMatch?: LinkCloseFallback): InlineCon
 		}
 
 		let identifier: string | undefined;
-		let rawLabel: string | undefined;
+		let rawLabel = "";
 		let referenceType: "shortcut" | "collapsed" | "full" = "shortcut";
 
 		if (!matched) {
@@ -319,7 +317,7 @@ export const makeLinkCloseConstruct = (onNoMatch?: LinkCloseFallback): InlineCon
 				scanner.pos = savepos;
 			}
 
-			if (rawLabel !== undefined) {
+			if (rawLabel !== "") {
 				const key = normalizeReference(rawLabel);
 				// THE formation rule: no definition, no link. The brackets stay
 				// literal text — this is where upstream consults its refmap and
@@ -358,15 +356,14 @@ export const makeLinkCloseConstruct = (onNoMatch?: LinkCloseFallback): InlineCon
 		insertAfter(opener.node, node);
 
 		if (identifier === undefined) {
-			if (url !== undefined) {
-				node.data.url = url;
-			}
+			node.data.url = url;
 			if (title !== undefined) {
 				node.data.title = title;
 			}
 		} else {
 			node.data.identifier = identifier;
-			node.data.label = rawLabel === undefined ? identifier : rawLabel.slice(1, -1);
+			// An identifier is assigned only after this non-empty raw label resolves.
+			node.data.label = rawLabel.slice(1, -1);
 			node.data.referenceType = referenceType;
 		}
 

@@ -46,8 +46,7 @@ import { formatIssue } from "./internal/format.ts";
  * @category formatting
  * @since 0.0.0
  */
-export class ConfigIssueRenderer {
-	private constructor() {}
+export abstract class ConfigIssueRenderer {
 
 	/**
 	 * One line per rejected value.

@@ -19,7 +19,7 @@ import type { YamlParseOptions } from "./Yaml.ts";
 import { YamlDiagnostic } from "./YamlDiagnostic.ts";
 import type { YamlPath } from "./YamlEdit.ts";
 import { CollectionStyle, ScalarStyle, type YamlNode, type YamlPair } from "./YamlNode.ts";
-import { YamlAlias, YamlMap, YamlScalar, YamlSeq } from "./YamlNode.ts";
+import { YamlAlias, YamlMap, YamlScalar } from "./YamlNode.ts";
 import * as P from "effect/Predicate";
 import * as O from "@beep/utils/Option";
 
@@ -274,7 +274,7 @@ function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<Yam
 			yield* walkPair(pair, path, depth + 1);
 		}
 		yield YamlVisitorEvent.MapEnd({ path, depth });
-	} else if (S.is(YamlSeq)(node)) {
+	} else {
 		if (node.commentBefore !== undefined) {
 			yield YamlVisitorEvent.Comment({ path, depth, text: node.commentBefore, placement: "leading" });
 		}

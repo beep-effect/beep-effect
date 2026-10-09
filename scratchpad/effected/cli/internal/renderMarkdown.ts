@@ -150,7 +150,7 @@ const emphasized = (spans: ReadonlyArray<Span>, mode: Mode): string => {
 			(A.getUnsafe(spans, i).strong === true) === strong &&
 			(A.getUnsafe(spans, i).em === true) === em
 		);
-		const lead = /^\s*/.exec(body)?.[0] ?? "";
+		const lead = body.slice(0, body.length - body.trimStart().length);
 		const core = body.slice(lead.length).trimEnd();
 		const trail = body.slice(lead.length + core.length);
 		if ((!strong && !em) || core === "") {
@@ -220,7 +220,7 @@ const joinTight = (blocks: ReadonlyArray<Lines>): Lines => {
 	for (const block of blocks) {
 		if (block.length === 0) continue;
 		const last = joined[joined.length - 1];
-		if (last !== undefined && endsText(last) && endsText(block[0] ?? ""))
+		if (last !== undefined && endsText(last) && endsText(A.getUnsafe(block, 0)))
 			joined[joined.length - 1] = `${last}\\`;
 		joined.push(...block);
 	}
@@ -448,10 +448,7 @@ const blockMd = (walk: Walk, block: Block, depth: number, compact = false): Line
 		},
 		CodeBlock: (block): Lines => {
 			const info =
-				sanitize(block.lang ?? "")
-					.trim()
-					.split(/\s+/)[0]
-					?.replace(/`/g, "") ?? "";
+				A.getUnsafe(sanitize(block.lang ?? "").trim().split(/\s+/), 0).replace(/`/g, "");
 			return fenced(block.text === "" ? [] : textLines(block.text), info);
 		},
 		Diff: (block): Lines => {

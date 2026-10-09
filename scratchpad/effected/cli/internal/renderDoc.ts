@@ -201,7 +201,7 @@ const shrink = (widths: Array<number>, limit: number): void => {
 		let widest = 0;
 		for (let i = 1; i < widths.length; i++)
 			if (A.getUnsafe(widths, i) > A.getUnsafe(widths, widest)) widest = i;
-		if ((widths[widest] ?? 0) <= 1) return;
+		if (A.getUnsafe(widths, widest) <= 1) return;
 		widths[widest] = A.getUnsafe(widths, widest) - 1;
 	}
 };
@@ -266,7 +266,7 @@ const tableLines = (
 	if (!showHeader && body.length === 0) return hidden > 0 ? [overflowLine(walk, block.overflow, hidden)] : [];
 
 	const widths = A.makeBy(columns, (index) =>
-		Math.max(0, ...[...(showHeader ? [header] : []), ...body].map((row) => widthOf(row[index] ?? []))),
+		Math.max(0, ...[...(showHeader ? [header] : []), ...body].map((row) => widthOf(A.getUnsafe(row, index)))),
 	);
 	shrink(widths, width);
 

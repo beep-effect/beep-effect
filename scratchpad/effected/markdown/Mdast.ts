@@ -132,10 +132,8 @@ const projectLabel = (label: string | undefined): Record<string, unknown> =>
 // is recomputable from item positions, so the projection derives it instead
 // of forwarding the looseness bit.
 const listSpread = (node: List): boolean => {
-	for (let index = 0; index + 1 < node.children.length; index += 1) {
-		const current = node.children[index];
-		const next = node.children[index + 1];
-		if (current !== undefined && next !== undefined && next.position.start.line - current.position.end.line >= 2) {
+	for (const [current, next] of A.zip(node.children, node.children.slice(1))) {
+		if (next.position.start.line - current.position.end.line >= 2) {
 			return true;
 		}
 	}

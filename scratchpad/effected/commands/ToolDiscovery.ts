@@ -482,8 +482,8 @@ const make = Effect.fnUntraced(function* () {
 		if (mismatch && tool.onMismatch === "fail") {
 			return yield* ToolVersionMismatchError.make({
 					tool: tool.name,
-					globalVersion: O.getOrElse(evidence.global.version, () => ""),
-					localVersion: O.getOrElse(evidence.local.version, () => ""),
+					globalVersion: O.getOrThrow(evidence.global.version),
+					localVersion: O.getOrThrow(evidence.local.version),
 				});
 		}
 

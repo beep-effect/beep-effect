@@ -51,8 +51,7 @@ export interface CliMessageOptions {
  * @category services
  * @since 0.0.0
  */
-export class CliMessage {
-	private constructor() {}
+export abstract class CliMessage {
 
 	/**
 	 * Print a status line from a vocabulary.

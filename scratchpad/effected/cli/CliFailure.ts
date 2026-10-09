@@ -126,7 +126,7 @@ const describe = (value: unknown): string => {
 	}
 };
 
-const firstLine = (text: string): string => text.split(/\r\n|\r|\n/, 1)[0] ?? "";
+const firstLine = (text: string): string => A.getUnsafe(text.split(/\r\n|\r|\n/, 1), 0);
 
 const tagOf = (value: unknown): string | undefined => {
 	if (!P.isObjectKeyword(value) || P.isFunction(value)) return undefined;
@@ -136,8 +136,8 @@ const tagOf = (value: unknown): string | undefined => {
 
 /** The failure status and the text of a message: one block per line, the status on the first. */
 const failureBlocks = (message: string): ReadonlyArray<Block> => {
-	const [first = "", ...rest] = message.split(/\r\n|\r|\n/);
-	return [Doc.paragraph(Doc.status(Status.core, "failure"), " ", first), ...rest.map((line) => Doc.paragraph(line))];
+	const lines = message.split(/\r\n|\r|\n/);
+	return [Doc.paragraph(Doc.status(Status.core, "failure"), " ", A.getUnsafe(lines, 0)), ...A.drop(lines, 1).map((line) => Doc.paragraph(line))];
 };
 
 /** The issue of a schema failure: the value itself, or the `issue` an error carries. */
@@ -192,7 +192,7 @@ const splitPosition = (location: string): { readonly where: string; readonly lin
 	const position = /^(.*):(\d+):(\d+)$/.exec(location);
 	return position === null
 		? { where: location }
-		: { where: position[1] ?? "", line: Number(position[2]), col: Number(position[3]) };
+		: { where: A.getUnsafe(position, 1), line: Number(position[2]), col: Number(position[3]) };
 };
 
 const parseFrame = (raw: string): Frame => {

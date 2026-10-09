@@ -10,6 +10,7 @@ import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
 import * as Red from "effect/Redacted";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 import * as Hex from "effect/encoding/Hex";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -219,7 +220,9 @@ export type DryRunOutcome = typeof DryRunOutcome.Type;
  */
 export const PackOptions = S.Struct({
 	/** Which npm runs the command. Defaults to {@link NpmExecutor.ambient}. */
-	executor: NpmExecutor.pipe(S.instanceOf, S.optional).annotateKey({ description: "The npm executor; omission selects ambient npm." }),
+	executor: S.instanceOf(NpmExecutor, {
+		toCodecArbitrary: () => S.link<NpmExecutor>()(S.toType(NpmExecutor), SchemaTransformation.passthrough()),
+	}).pipe(S.optional).annotateKey({ description: "The npm executor; omission selects ambient npm." }),
 }).annotate($I.annote("PackOptions", { description: "Structural options shared by packing operations." }));
 /**
  * Decoded packing options represented by {@link (PackOptions:variable)}.

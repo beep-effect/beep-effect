@@ -38,6 +38,9 @@
 //
 // Registered under the `gfm` dialect only.
 
+import * as A from "effect/Array";
+import * as O from "effect/Option";
+import * as Str from "effect/String";
 import type { InlineNode } from "../inlineNode.ts";
 import { appendChild, childrenOf, insertAfter, makeInlineNode, unlink } from "../inlineNode.ts";
 import type { InlineConstruct, InlineScanner } from "../inlineTypes.ts";
@@ -65,10 +68,8 @@ const SAFE_SCHEMES: ReadonlyArray<string> = ["http://", "https://", "ftp://"];
 
 /** Whether the code point at `index` may appear in a host name. */
 const isValidHostChar = (subject: string, index: number): boolean => {
-	const code = subject.codePointAt(index);
-	if (code === undefined) {
-		return false;
-	}
+	// All callers supply an index strictly inside the subject.
+	const code = O.getOrThrow(Str.codePointAt(subject, index));
 	const char = String.fromCodePoint(code);
 	if (reUnicodeSpace.test(char)) {
 		return false;
@@ -94,10 +95,6 @@ const autolinkDelim = (subject: string, base: number, end: number): number => {
 
 	for (let index = 0; index < linkEnd; index += 1) {
 		const char = subject.charAt(base + index);
-		if (char === "<") {
-			linkEnd = index;
-			break;
-		}
 		if (char === "(") {
 			opening += 1;
 		} else if (char === ")") {
@@ -105,7 +102,8 @@ const autolinkDelim = (subject: string, base: number, end: number): number => {
 		}
 	}
 
-	while (linkEnd > 0) {
+	// Trimming cannot consume the validated prefix (www., ://, or @).
+	while (true) {
 		const char = subject.charAt(base + linkEnd - 1);
 		if (char === ")") {
 			if (closing <= opening) {
@@ -120,13 +118,8 @@ const autolinkDelim = (subject: string, base: number, end: number): number => {
 			continue;
 		}
 		if (char === ";") {
-			// Upstream indexes `link_end - 2` unsigned, which underflows when
-			// the `;` is the only character left; a run that short cannot hold
-			// an entity reference, so it is simply trimmed.
-			if (linkEnd < 2) {
-				linkEnd -= 1;
-				continue;
-			}
+			// Each candidate retains its www., ://, or @ prefix, so a
+			// trailing semicolon always has a preceding character.
 			let newEnd = linkEnd - 2;
 			while (newEnd > 0 && reAlpha.test(subject.charAt(base + newEnd))) {
 				newEnd -= 1;
@@ -140,8 +133,6 @@ const autolinkDelim = (subject: string, base: number, end: number): number => {
 		}
 		return linkEnd;
 	}
-
-	return linkEnd;
 };
 
 /**
@@ -266,9 +257,6 @@ export const wwwAutolinkConstruct: InlineConstruct = {
 		}
 
 		const linkEnd = autolinkDelim(scanner.subject, start, extendToBoundary(scanner.subject, start, domain, size));
-		if (linkEnd === 0) {
-			return false;
-		}
 
 		appendLiteralLink(scanner, start, start + linkEnd, `http://${scanner.subject.slice(start, start + linkEnd)}`);
 		return true;
@@ -328,9 +316,6 @@ export const urlAutolinkConstruct: InlineConstruct = {
 		}
 
 		const linkEnd = autolinkDelim(subject, colon, extendToBoundary(subject, colon, 3 + domain, size));
-		if (linkEnd === 0) {
-			return false;
-		}
 
 		if (!scanner.unputText(rewind)) {
 			return false;
@@ -474,10 +459,6 @@ const scanEmails = (data: string): ReadonlyArray<EmailMatch> => {
 		}
 
 		linkEnd = autolinkDelim(data, start + offset + maxRewind, linkEnd);
-		if (linkEnd === 0) {
-			offset += maxRewind + 1;
-			continue;
-		}
 
 		const from = start + offset + maxRewind - rewind;
 		const to = start + offset + maxRewind + linkEnd;
@@ -521,23 +502,16 @@ const linkifyRun = (pieces: ReadonlyArray<RunPiece>): void => {
 	// Boundary queries are nondecreasing, including repeated exact ends.
 	let pieceIndex = 0;
 	const localAt = (index: number): number => {
-		while (pieceIndex < pieces.length) {
-			const piece = pieces[pieceIndex];
-			if (piece === undefined) {
-				break;
-			}
-			const within = index - piece.valueStart;
-			const valueLength = piece.node.value.length;
-			if (within === valueLength) {
-				return piece.node.end;
-			}
-			if (within < valueLength) {
-				return piece.node.start + Math.min(within, piece.node.end - piece.node.start);
-			}
+		// The run is dense and nonempty; callers query only [0, merged.length].
+		let piece = A.getUnsafe(pieces, pieceIndex);
+		while (index > piece.valueStart + piece.node.value.length) {
 			pieceIndex += 1;
+			piece = A.getUnsafe(pieces, pieceIndex);
 		}
-		const last = pieces[pieces.length - 1];
-		return last === undefined ? 0 : last.node.end;
+		const within = index - piece.valueStart;
+		return within === piece.node.value.length
+			? piece.node.end
+			: piece.node.start + Math.min(within, piece.node.end - piece.node.start);
 	};
 
 	const replacements: InlineNode[] = [];
@@ -564,10 +538,7 @@ const linkifyRun = (pieces: ReadonlyArray<RunPiece>): void => {
 
 	// Splice after the run's last node, then drop the originals — the list has
 	// no insert-before, and appending keeps the order without needing one.
-	const lastPiece = pieces[pieces.length - 1];
-	if (lastPiece === undefined) {
-		return;
-	}
+	const lastPiece = A.getUnsafe(pieces, pieces.length - 1);
 	let tail = lastPiece.node;
 	for (const replacement of replacements) {
 		insertAfter(tail, replacement);
@@ -606,10 +577,8 @@ export const linkifyEmails = (root: InlineNode): void => {
 	const pending: InlineNode[] = [root];
 
 	while (pending.length > 0) {
-		const container = pending.pop();
-		if (container === undefined) {
-			break;
-		}
+		const container = A.getUnsafe(pending, pending.length - 1);
+		pending.pop();
 
 		let pieces: RunPiece[] = [];
 		let valueLength = 0;

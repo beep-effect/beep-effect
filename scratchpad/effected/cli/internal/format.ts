@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as MutableHashSet from "effect/MutableHashSet";
@@ -98,7 +99,8 @@ export const issueEntries = (issue: unknown): ReadonlyArray<IssueEntry> => {
 	const seen = MutableHashSet.empty<string>();
 	const entries: Array<IssueEntry> = [];
 	for (const entry of formatter(issue).issues) {
-		const path = (entry.path ?? []).map(String);
+		// The core formatter always emits a path, including [] for a root issue.
+		const path = O.fromUndefinedOr(entry.path).pipe(O.getOrThrow, A.map(String));
 		const key = path.length === 0 ? entry.message : `${entry.message} at ${path.join(".")}`;
 		if (MutableHashSet.has(seen, key)) continue;
 		MutableHashSet.add(seen, key);

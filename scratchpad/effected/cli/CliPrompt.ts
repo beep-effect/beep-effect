@@ -49,8 +49,7 @@ export type CliPromptFallbackOptions<A> = CliPromptTarget & {
  * @category services
  * @since 0.0.0
  */
-export class CliPrompt {
-	private constructor() {}
+export abstract class CliPrompt {
 
 	/**
 	 * A fallback for `Flag.withFallbackPrompt` or `Argument.withFallbackPrompt` that only prompts when the run is

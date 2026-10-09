@@ -179,7 +179,7 @@ const build = Effect.fn("build")(function* (
 	const cwd =
 		options.cwd ??
 		O.getOrUndefined(pwd) ??
-		(O.isSome(ambient.path) ? ambient.path.value.resolve(".") : undefined);
+		(O.isSome(ambient.path) ? ambient.path.value.resolve(".") : ".");
 	const path = O.getOrUndefined(ambient.path);
 	const absolute = (file: string): string | undefined => {
 		// A UNC path is not on this machine: it must not be resolved against the working directory as a filename.
@@ -187,13 +187,13 @@ const build = Effect.fn("build")(function* (
 		if (DRIVE.test(file)) return file;
 		if (path === undefined) return file.startsWith("/") ? file : undefined;
 		if (path.isAbsolute(file)) return file;
-		return cwd === undefined ? undefined : path.resolve(cwd, file);
+		return path.resolve(cwd, file);
 	};
 
 	let mode: "vscode" | "file" | "off";
 	if (setting !== "auto") mode = setting;
 	else if (O.exists(runtime.terminal, (terminal) => terminal.name === "vscode")) mode = "vscode";
-	else if (O.isNone(ambient.fs) || path === undefined || cwd === undefined) mode = "file";
+	else if (O.isNone(ambient.fs) || path === undefined) mode = "file";
 	else {
 		const root = yield* findRoot(ambient.fs.value, path, cwd);
 		const base = O.getOrElse(root, () => cwd);

@@ -1,5 +1,8 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as SchemaAST from "effect/SchemaAST";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import type { Audience, TerminalEnv } from "../env/index.ts";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -306,10 +309,26 @@ export type Counter = typeof Counter.Type;
 
 const Overflow = S.declare<(hidden: number) => ReadonlyArray<Inline>>(
 	(value): value is (hidden: number) => ReadonlyArray<Inline> => P.isFunction(value),
-).annotate($I.annote("Overflow", { description: "An opaque callback producing normalized overflow content." }));
+).annotate({
+	...$I.annote("Overflow", { description: "An opaque callback producing normalized overflow content." }),
+	toCodecArbitrary: () => new SchemaAST.Link(
+		S.Array(Inline).ast, SchemaTransformation.makeTransformation({
+			decode: SchemaGetter.transform((content: ReadonlyArray<Inline>) => () => content),
+			encode: SchemaGetter.forbiddenEncoding,
+		}),
+	),
+});
 const Total = S.declare<(counters: ReadonlyArray<Counter>) => number>(
 	(value): value is (counters: ReadonlyArray<Counter>) => number => P.isFunction(value),
-).annotate($I.annote("Total", { description: "An opaque callback computing a counter total." }));
+).annotate({
+	...$I.annote("Total", { description: "An opaque callback computing a counter total." }),
+	toCodecArbitrary: () => new SchemaAST.Link(
+		S.Finite.ast, SchemaTransformation.makeTransformation({
+			decode: SchemaGetter.transform((total: number) => () => total),
+			encode: SchemaGetter.forbiddenEncoding,
+		}),
+	),
+});
 const blockShape = <Children extends S.Constraint>(children: Children) =>
 	S.Union([
 		S.TaggedStruct("Heading", {
@@ -881,8 +900,7 @@ export interface DocPrintOptions {
  * @category constructors
  * @since 0.0.0
  */
-export class Doc {
-	private constructor() {}
+export abstract class Doc {
 
 	/**
 	 * Creates inline text that can carry a semantic token or style.

@@ -29,6 +29,7 @@
 // the cycle firewall) and nothing else public.
 
 import { dual } from "effect/Function";
+import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -369,7 +370,7 @@ class BlockParser implements BlockScanner {
 		while (this.oldtip !== this.lastMatchedContainer) {
 			const parent = this.oldtip.parent;
 			this.finalizeBlock(this.oldtip, this.lineNumber - 1);
-			this.oldtip = parent ?? this.doc;
+			this.oldtip = O.getOrThrow(O.fromUndefinedOr(parent));
 		}
 		this.allClosed = true;
 	}
@@ -390,10 +391,9 @@ class BlockParser implements BlockScanner {
 	 */
 	private endOfLine(lineNumber: number, length: number): number {
 		const index = Math.min(Math.max(lineNumber - 1, 0), this.lines.length - 1);
-		const line = this.lines[index];
-		if (line === undefined) {
-			return 0;
-		}
+		// preprocessLines always supplies at least one line, including for
+		// empty input, and the index is clamped to that nonempty table.
+		const line = A.getUnsafe(this.lines, index);
 		return line.start + Math.min(Math.max(length, 0), line.text.length);
 	}
 
@@ -426,7 +426,7 @@ class BlockParser implements BlockScanner {
 			if (verdict === 1) {
 				// Upstream's `all_matched` flag lives only to reach this branch
 				// on the next statement, so it collapses into the branch itself.
-				container = container.parent ?? this.doc;
+				container = O.getOrThrow(O.fromUndefinedOr(container.parent));
 				break;
 			}
 
@@ -508,9 +508,8 @@ class BlockParser implements BlockScanner {
 	// --- materialization ----------------------------------------------------
 
 	/**
-	 * Prepend the captured frontmatter node, when there is one. The root's
-	 * own span widens to cover the block if the body ended before it — the
-	 * frontmatter-only document, where the block pass saw no lines at all.
+	 * Prepend the captured frontmatter node, when there is one. The root
+	 * already spans the entire source, including frontmatter-only documents.
 	 */
 	private withFrontmatter(root: Root): Root {
 		const capture = this.frontmatterCapture;
@@ -523,12 +522,10 @@ class BlockParser implements BlockScanner {
 			value: capture.value,
 			position: this.position(0, capture.endOffset),
 		});
-		const position =
-			root.position.end.offset >= capture.endOffset ? root.position : this.position(0, capture.endOffset);
 		return Root.make({
 			type: "root",
 			children: [node, ...root.children],
-			position,
+			position: root.position,
 		});
 	}
 
@@ -635,11 +632,8 @@ class BlockParser implements BlockScanner {
 		// pre-advanced so every position downstream stays absolute.
 		const skippedLines = this.frontmatterCapture?.lineCount ?? 0;
 		this.lineNumber = skippedLines;
-		for (let index = skippedLines; index < this.lines.length; index += 1) {
-			const line = this.lines[index];
-			if (line !== undefined) {
-				this.incorporateLine(line);
-			}
+		for (const line of this.lines.slice(skippedLines)) {
+			this.incorporateLine(line);
 		}
 
 		while (this.tipNode !== undefined) {

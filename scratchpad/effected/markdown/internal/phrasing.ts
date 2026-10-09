@@ -19,6 +19,7 @@
 // Throws the raw `GuardExceeded` carrier on a hardening trip (the inline
 // pass's delimiter/bracket stacks); the facade materializes the typed error.
 
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import type { Definition, PhrasingContent, Position } from "../MarkdownNode.ts";
@@ -77,8 +78,8 @@ export const parsePhrasingText: {
 		return [];
 	}
 
-	const first = trimmed.segments[0];
-	const startOffset = first === undefined ? 0 : first.sourceOffset;
+	// Non-empty trimmed content contains a character from at least one source segment.
+	const startOffset = A.getUnsafe(trimmed.segments, 0).sourceOffset;
 
 	const lineIndex = LineIndex.fromLineStarts(
 		text,

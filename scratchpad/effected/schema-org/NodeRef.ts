@@ -104,6 +104,9 @@ const NODE_ID_PATTERN = /^[^\s\p{Cc}]+$/u;
  * @since 0.0.0
  */
 export const NodeId = S.String.check(S.isPattern(NODE_ID_PATTERN, {
+	// The native arbitrary cannot construct Unicode property escapes; guide its
+	// fallback away from the empty size-zero string, which the pattern rejects.
+	arbitraryConstraint: { minLength: 1 },
 	identifier: $I`NodeIdPattern`,
 	title: "JSON-LD node identifier pattern",
 	description: "A non-empty string without whitespace or control characters.",

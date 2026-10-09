@@ -38,6 +38,7 @@
 // Imports node classes from `../MarkdownNode.js` (the sanctioned exception to
 // the cycle firewall) and nothing else public.
 
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
@@ -119,11 +120,12 @@ const indexBacktickRuns = (subject: string): MutableHashMap.MutableHashMap<numbe
 type PositionOf = (startOffset: number, endOffset: number) => Position;
 
 type MaterializeChildren = (node: InlineNode) => ReadonlyArray<PhrasingContent>;
-type InlineMaterializer = (position: Position, materializeChildren: MaterializeChildren) => PhrasingContent | undefined;
+type MaterializableInlineNode = InlineNode & { readonly type: Exclude<InlineNode["type"], "text"> };
+type InlineMaterializer = (position: Position, materializeChildren: MaterializeChildren) => PhrasingContent;
 
 // Compile the kind dispatch once; each selected builder receives its position
 // and the current parser's depth-checked child materializer.
-const materializeInlineNode = Match.type<InlineNode>().pipe(
+const materializeInlineNode = Match.type<MaterializableInlineNode>().pipe(
 	Match.withReturnType<InlineMaterializer>(),
 	Match.when({ type: "inlineCode" }, (node) => (position, _materializeChildren) =>
 		InlineCode.make({ value: node.value, position })
@@ -195,7 +197,7 @@ const materializeInlineNode = Match.type<InlineNode>().pipe(
 			...(node.value === "" ? {} : { alt: node.value }),
 		})
 	),
-	Match.orElse(() => () => undefined),
+	Match.exhaustive,
 );
 
 class InlineParser implements InlineScanner {
@@ -328,7 +330,7 @@ class InlineParser implements InlineScanner {
 		let high = starts.length;
 		while (low < high) {
 			const mid = (low + high) >> 1;
-			if ((starts[mid] ?? 0) < from) {
+			if (A.getUnsafe(starts, mid) < from) {
 				low = mid + 1;
 			} else {
 				high = mid;
@@ -373,10 +375,8 @@ class InlineParser implements InlineScanner {
 
 		let remaining = count;
 		while (remaining > 0) {
-			const last = this.root.lastChild;
-			if (last === undefined) {
-				return false;
-			}
+			// The availability check above guarantees a tail until remaining reaches zero.
+			const last = O.getOrThrow(O.fromUndefinedOr(this.root.lastChild));
 			if (last.value.length > remaining) {
 				last.value = last.value.slice(0, last.value.length - remaining);
 				last.end -= remaining;
@@ -522,7 +522,7 @@ class InlineParser implements InlineScanner {
 				(closer.origdelims % 3);
 
 			let opener = closer.previous;
-			let openerFound = false;
+			let matchingOpener: Delimiter | undefined;
 			while (opener !== undefined && opener !== stackBottom && opener !== openersBottom[openersBottomIndex]) {
 				// The multiple-of-three rule: a run that can both open and
 				// close cannot pair when the two lengths sum to a multiple of
@@ -532,7 +532,7 @@ class InlineParser implements InlineScanner {
 					closer.origdelims % 3 !== 0 &&
 					(opener.origdelims + closer.origdelims) % 3 === 0;
 				if (opener.cc === closer.cc && opener.canOpen && !oddMatch) {
-					openerFound = true;
+					matchingOpener = opener;
 					break;
 				}
 				opener = opener.previous;
@@ -541,15 +541,15 @@ class InlineParser implements InlineScanner {
 			const oldCloser = closer;
 
 			if (closercc === C_ASTERISK || closercc === C_UNDERSCORE) {
-				if (!openerFound || opener === undefined) {
+				if (matchingOpener === undefined) {
 					closer = closer.next;
 				} else {
 					// Two delimiters make strong emphasis, one makes emphasis.
-					const useDelims = closer.numdelims >= 2 && opener.numdelims >= 2 ? 2 : 1;
-					const openerNode = opener.node;
+					const useDelims = closer.numdelims >= 2 && matchingOpener.numdelims >= 2 ? 2 : 1;
+					const openerNode = matchingOpener.node;
 					const closerNode = closer.node;
 
-					opener.numdelims -= useDelims;
+					matchingOpener.numdelims -= useDelims;
 					closer.numdelims -= useDelims;
 					openerNode.value = openerNode.value.slice(0, openerNode.value.length - useDelims);
 					openerNode.end -= useDelims;
@@ -567,11 +567,11 @@ class InlineParser implements InlineScanner {
 					}
 
 					insertAfter(openerNode, emphasis);
-					this.removeDelimitersBetween(opener, closer);
+					this.removeDelimitersBetween(matchingOpener, closer);
 
-					if (opener.numdelims === 0) {
+					if (matchingOpener.numdelims === 0) {
 						unlink(openerNode);
-						this.removeDelimiter(opener);
+						this.removeDelimiter(matchingOpener);
 					}
 
 					if (closer.numdelims === 0) {
@@ -581,15 +581,13 @@ class InlineParser implements InlineScanner {
 						closer = next;
 					}
 				}
-			} else if (closercc === C_TILDE) {
+			} else {
 				// GFM strikethrough rides the same stack; the pairing rules
 				// that differ from emphasis live in the construct module.
-				closer = !openerFound || opener === undefined ? closer.next : insertStrikethrough(this, opener, closer);
-			} else {
-				closer = closer.next;
+				closer = matchingOpener === undefined ? closer.next : insertStrikethrough(this, matchingOpener, closer);
 			}
 
-			if (!openerFound) {
+			if (matchingOpener === undefined) {
 				// Nothing above this point can ever match this closer, so future
 				// searches stop here.
 				openersBottom[openersBottomIndex] = oldCloser.previous;
@@ -681,17 +679,14 @@ class InlineParser implements InlineScanner {
 			}
 
 			flushText();
-			const built = this.materializeNode(node, depth);
-			if (built !== undefined) {
-				children.push(built);
-			}
+			children.push(this.materializeNode({ ...node, type: node.type }, depth));
 		}
 
 		flushText();
 		return children;
 	}
 
-	private materializeNode(node: InlineNode, depth: number): PhrasingContent | undefined {
+	private materializeNode(node: MaterializableInlineNode, depth: number): PhrasingContent {
 		return materializeInlineNode(node)(this.position(node.start, node.end), (child) => this.materialize(child, depth + 1));
 	}
 

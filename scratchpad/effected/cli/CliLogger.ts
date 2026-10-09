@@ -101,8 +101,7 @@ const defaultRender = (message: unknown): string =>
  * @category services
  * @since 0.0.0
  */
-export class CliLogger {
-	private constructor() {}
+export abstract class CliLogger {
 
 	/**
 	 * The logger itself, for composing into an existing `Logger.layer` set.

@@ -1,4 +1,5 @@
 import * as S from "effect/Schema";
+import * as A from "effect/Array";
 import { AudienceKind } from "../../env/Audience.ts";
 
 /**
@@ -91,7 +92,7 @@ export const scanAudience = (argv: ReadonlyArray<string>): AudienceTally => {
 	const isBoolean = S.is(AudienceKind);
 
 	for (let index = 0; index < argv.length; index++) {
-		const token = argv[index] ?? "";
+		const token = A.getUnsafe(argv, index);
 		if (token === "--") break;
 		if (!token.startsWith("--")) continue;
 		const equals = token.indexOf("=");

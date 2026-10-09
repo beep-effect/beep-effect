@@ -71,8 +71,7 @@ export interface GlyphSelectOptions {
  * @category constants
  * @since 0.0.0
  */
-export class Glyphs {
-	private constructor() {}
+export abstract class Glyphs {
 
 	/**
 	 * Unicode symbols.

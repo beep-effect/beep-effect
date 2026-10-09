@@ -210,22 +210,6 @@ export const referencesOf = (node: JsonLdNode): ReadonlyArray<readonly [property
 	return out;
 };
 
-/**
- * The three characters escaped by {@link JsonLdDocument.toScriptBody}.
- *
- * **Details**
- *
- * In a JSON document these can occur only inside string literals — no other
- * JSON token contains them — so a blanket post-`stringify` replacement cannot
- * corrupt the document's structure. That is what makes the escape exhaustive
- * rather than heuristic.
- */
-const SCRIPT_ESCAPES: Readonly<Record<string, string>> = {
-	"<": "\\u003c",
-	">": "\\u003e",
-	"&": "\\u0026",
-};
-
 /** Drops keys whose value is `undefined`; JSON-LD has no undefined and no meaningful null. */
 const withoutUndefined = (value: Record<string, S.Json | undefined>): Record<string, S.Json> => {
 	const out: Record<string, S.Json> = {};
@@ -566,6 +550,6 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 	 * @since 0.0.0
 	 */
 	toScriptBody(): string {
-		return JSON.stringify(this.toJsonLd()).replace(/[<>&]/g, (char) => SCRIPT_ESCAPES[char] ?? char);
+		return JSON.stringify(this.toJsonLd()).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
 	}
 }

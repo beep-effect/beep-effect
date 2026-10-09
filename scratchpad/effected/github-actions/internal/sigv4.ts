@@ -176,7 +176,7 @@ export const canonicalize: {
 	const lowered = MutableHashMap.fromIterable(R.toEntries(headers).map(([name, value]) => [name.toLowerCase(), value] as const));
 	const canonicalNames = A.sort(MutableHashMap.keys(lowered), Order.String);
 	const canonicalHeaders = canonicalNames
-		.map((name) => `${name}:${(O.getOrElse(MutableHashMap.get(lowered, name), () => "")).trim().replace(/\s+/g, " ")}\n`)
+		.map((name) => `${name}:${O.getOrThrow(MutableHashMap.get(lowered, name)).trim().replace(/\s+/g, " ")}\n`)
 		.join("");
 	const signedHeaders = canonicalNames.join(";");
 

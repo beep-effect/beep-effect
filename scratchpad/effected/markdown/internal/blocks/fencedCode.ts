@@ -10,7 +10,8 @@ import type { BlockStart } from "../blockTypes.ts";
 
 const reCodeFence = /^`{3,}(?!.*`)|^~{3,}/;
 
-const fenceCharOf = (char: string): FenceChar | undefined => (char === "`" || char === "~" ? char : undefined);
+// A successful fence match begins with one of these two characters.
+const fenceCharOf = (char: string): FenceChar => (char === "`" ? "`" : "~");
 
 /**
  * Opens a fenced code block with three or more backticks or tildes.
@@ -39,9 +40,6 @@ export const fencedCodeStart: BlockStart = {
 		}
 
 		const fenceChar = fenceCharOf(match[0].charAt(0));
-		if (fenceChar === undefined) {
-			return 0;
-		}
 
 		scanner.closeUnmatchedBlocks();
 		const container = scanner.addChild("code", scanner.nextNonspace);

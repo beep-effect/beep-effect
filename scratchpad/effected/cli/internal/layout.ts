@@ -331,7 +331,6 @@ export const wrapSpans: {
 	const lines: Array<ReadonlyArray<Cell>> = [];
 	let line: Array<Cell> = [];
 	let used = 0;
-	let keepLeading = true;
 	const flush = (): void => {
 		lines.push(line);
 		line = [];
@@ -342,7 +341,6 @@ export const wrapSpans: {
 	while (i < cells.length) {
 		if (isLineBreak((A.getUnsafe(cells, i)).grapheme)) {
 			flush();
-			keepLeading = true;
 			i++;
 			continue;
 		}
@@ -356,7 +354,8 @@ export const wrapSpans: {
 		}
 		if (word.length === 0) continue;
 
-		const lead = line.length > 0 || keepLeading ? spaces : [];
+		// Every overflow flush immediately appends a word or cell; an empty line is a leading line.
+		const lead = spaces;
 		const leadWidth = cellsWidth(lead);
 		const wordWidth = cellsWidth(word);
 		if (used + leadWidth + wordWidth <= limit) {
@@ -366,7 +365,6 @@ export const wrapSpans: {
 		}
 		if (line.length > 0) {
 			flush();
-			keepLeading = false;
 		}
 		if (wordWidth <= limit || options?.hardBreak === false) {
 			line.push(...word);
@@ -376,7 +374,6 @@ export const wrapSpans: {
 		for (const cell of word) {
 			if (used + cell.width > limit && line.length > 0) {
 				flush();
-				keepLeading = false;
 			}
 			line.push(cell);
 			used += cell.width;

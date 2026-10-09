@@ -48,8 +48,7 @@ export interface GithubAnnotationProperties {
  * @category formatting
  * @since 0.0.0
  */
-export class GithubAnnotation {
-	private constructor() {}
+export abstract class GithubAnnotation {
 
 	/**
 	 * Format an annotation as a workflow command: `::error title=T,file=F,line=1,endLine=2,col=3,endColumn=4::message`.

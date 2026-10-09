@@ -37,8 +37,7 @@ export interface ToggleViewProps {
  * @category components
  * @since 0.0.0
  */
-export class Toggle {
-	private constructor() {}
+export abstract class Toggle {
 
 	/**
 	 * Draw a toggle row: `◉` on or `◯` off (`[x]` and `[ ]` under ASCII glyphs), then the label, cut to the width with

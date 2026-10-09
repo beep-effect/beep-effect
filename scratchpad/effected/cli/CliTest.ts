@@ -93,8 +93,7 @@ const text = <E, R>(stream: Stream.Stream<Uint8Array, E, R>): Effect.Effect<stri
  * @category services
  * @since 0.0.0
  */
-export class CliTest {
-	private constructor() {}
+export abstract class CliTest {
 
 	/**
 	 * A scoped temp directory with a fresh `HOME` and XDG tree, `NO_COLOR=1`,

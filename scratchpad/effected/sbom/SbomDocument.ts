@@ -352,8 +352,8 @@ const compact = <T extends Record<string, unknown>>(value: T): Record<string, un
 const licensesJson = (licenses: ReadonlyArray<string>): ReadonlyArray<Record<string, unknown>> => {
 	// The expression tuple is exclusive — the schema caps it at one element — so
 	// it is only available when the component carries a single license.
-	const [only] = licenses;
-	if (licenses.length === 1 && only !== undefined && !License.isKnownId(only) && isValidExpression(only)) {
+	const [only, ...others] = licenses;
+	if (only !== undefined && others.length === 0 && !License.isKnownId(only) && isValidExpression(only)) {
 		return [{ expression: only }];
 	}
 	return licenses.map((license) =>

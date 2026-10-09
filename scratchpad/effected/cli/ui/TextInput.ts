@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import type { ReactElement } from "react";
 import { Fmt } from "../Fmt.ts";
 import type { Screen } from "./CliUi.ts";
@@ -153,8 +154,7 @@ const typedKeys = (input: string, key: Parameters<typeof UiKey.fromInk>[1]): Rea
 			keys.push(UiKey.named("enter"));
 			break;
 		}
-		if (piece === "\u007f" || piece === "\b") keys.push(UiKey.named("backspace"));
-		else if (piece === "\n") keys.push(UiKey.char(" "));
+		if (piece === "\n") keys.push(UiKey.char(" "));
 		else if (!CONTROLS.test(piece)) keys.push(UiKey.char(piece));
 	}
 	return keys;
@@ -188,7 +188,7 @@ const tail = (text: string, width: number): string => {
 	let out = "";
 	let used = 0;
 	for (let index = points.length - 1; index >= 0; index--) {
-		const point = points[index] ?? "";
+		const point = A.getUnsafe(points, index);
 		const cells = Fmt.width(point);
 		if (used + cells > width) break;
 		out = point + out;
@@ -283,8 +283,7 @@ const HELP: KeyTable<"submit"> = KeyTable.make<"submit">([{ keys: ["enter"], act
  * @category components
  * @since 0.0.0
  */
-export class TextInput {
-	private constructor() {}
+export abstract class TextInput {
 
 	/**
 	 * An input holding `initial`, the cursor after it.

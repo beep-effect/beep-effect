@@ -1,0 +1,23 @@
+import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
+import { assert, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as Base64 from "effect/encoding/Base64";
+import * as Hex from "effect/encoding/Hex";
+import { strongestSri } from "../../../effected/github-actions/internal/pnpmExe.ts";
+const runs = { arbitrary: fcRuns(100) };
+it.effect.prop("SRI canonical rendering is idempotent and parsing preserves digest bytes", [Arbitrary.schema(S.String)], ([text]) => Effect.sync(() => {
+  const bytes = new TextEncoder().encode(text);
+  const parsed = O.getOrThrow(strongestSri(`sha256-${Base64.encode(bytes)}?ignored`));
+  assertSome(strongestSri(`sha256-${Base64.encode(bytes)}`), { algorithm: "sha256", hex: Hex.encode(bytes) });
+  const render = (entry: { readonly algorithm: string; readonly hex: string }) => `${entry.algorithm}-${Base64.encode(Hex.decode(entry.hex).pipe(Result.getOrThrow))}`;
+  const canonical = render(parsed);
+  const again = O.getOrThrow(strongestSri(canonical));
+  assert.strictEqual(render(again), canonical);
+  assertSome(strongestSri(render(again)), parsed);
+  assertSome(strongestSri(canonical), parsed);
+}), runs);

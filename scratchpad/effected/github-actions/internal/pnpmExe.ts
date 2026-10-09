@@ -183,7 +183,7 @@ export const strongestSri = (
 				return [];
 			}
 			// Options (`?opt`) may trail the digest per the SRI grammar; drop them.
-			const digest = entry.slice(dash + 1).split("?")[0] ?? "";
+			const digest = entry.slice(dash + 1).replace(/\?.*$/s, "");
 			const decoded = Base64.decode(digest);
 			return Result.isSuccess(decoded) ? [{ algorithm, hex: Hex.encode(decoded.success) }] : [];
 		});

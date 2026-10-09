@@ -3,6 +3,7 @@
 // then queried by binary search — MarkdownNode.ts's Point construction is the
 // consumer. Imports no public markdown modules, keeping the cycle firewall.
 
+import * as A from "effect/Array";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 
@@ -178,14 +179,15 @@ export class LineIndex {
 		let high = this.lineStarts.length - 1;
 		while (low < high) {
 			const mid = (low + high + 1) >> 1;
-			if ((this.lineStarts[mid] ?? 0) <= clamped) {
+			if (A.getUnsafe(this.lineStarts, mid) <= clamped) {
 				low = mid;
 			} else {
 				high = mid - 1;
 			}
 		}
 
-		const lineStart = this.lineStarts[low] ?? 0;
+		// Both constructors provide a non-empty table; the search keeps low in bounds.
+		const lineStart = A.getUnsafe(this.lineStarts, low);
 		return { line: low + 1, column: clamped - lineStart + 1 };
 	}
 }

@@ -134,8 +134,9 @@ export const htmlBlockStart: BlockStart = {
 		}
 
 		const rest = scanner.currentLine.slice(scanner.nextNonspace);
-		for (let blockType = 1; blockType <= 7; blockType += 1) {
-			const opens = reHtmlBlockOpen[blockType]?.test(rest) ?? false;
+		for (const [index, pattern] of reHtmlBlockOpen.slice(1).entries()) {
+			const blockType = index + 1;
+			const opens = pattern.test(rest);
 			// Type 7 may not interrupt a paragraph, nor be opened by a line
 			// that is about to become a lazy continuation of one.
 			const mayOpen =

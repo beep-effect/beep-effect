@@ -249,8 +249,7 @@ const RESERVED = 3;
  * @category components
  * @since 0.0.0
  */
-export class MultiSelect {
-	private constructor() {}
+export abstract class MultiSelect {
 
 	/**
 	 * A multi-select over `sections`, each item starting as its own `selected` flag says, on the first item.
@@ -384,10 +383,10 @@ export class MultiSelect {
 		const renderRow = (row: ViewportRow, highlighted: boolean): ReactElement => {
 			if (row._tag === "Header")
 				return react.createElement(Styled, { token: "emphasis" }, Fmt.truncate(lineText(row.label), columns, ellipsis));
-			const index = O.getOrElse(MutableHashMap.get(numberOf, row.key), () => -1);
-			const entry = items[index];
+			const index = O.getOrThrow(MutableHashMap.get(numberOf, row.key));
+			const entry = A.getUnsafe(items, index);
 			const text = Fmt.truncate(
-				`${highlighted ? glyphs.arrow : blank} ${HashSet.has(state.chosen, index) ? on : off} ${lineText(entry?.item.label ?? "")}`,
+				`${highlighted ? glyphs.arrow : blank} ${HashSet.has(state.chosen, index) ? on : off} ${lineText(entry.item.label)}`,
 				columns,
 				ellipsis,
 			);

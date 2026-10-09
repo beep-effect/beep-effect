@@ -104,6 +104,12 @@ Launch, from a `claude` session in `~/YeeBois/projects/beep-effect` on branch
 > close goes to the row's backlog with its reason, and the module then closes `done`. Section 12.6
 > (`blocked` after the round limit) no longer applies. Supersedes "At most five rounds" in S4 and
 > section 12.
+>
+> **Publish to main, 2026-10-09.** "I want you to just commit all the changes merge in main & just
+> open the PR I want the progress on this saved and in main." The lab branch is published through
+> `bun run beep yeet publish` and merged into `main` at the gate (the 2026-10-09 merge-with-reds
+> ruling applies). Supersedes "local commits only; never push, never open a PR, never touch `main`"
+> for this and later progress PRs; the remaining stages continue on a branch and land the same way.
 
 This file is the whole contract. The `/goal` evaluator only reads the
 transcript, so section 0 defines what you print and when. Everything else is

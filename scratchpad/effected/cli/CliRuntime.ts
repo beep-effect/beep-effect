@@ -380,8 +380,7 @@ const chooseExitCode = (error: unknown, fallback: number | undefined): number =>
  * @category services
  * @since 0.0.0
  */
-export class CliRuntime {
-	private constructor() {}
+export abstract class CliRuntime {
 
 	/**
 	 * What `reportFailures` and `main` render a failure as when no `render` option is given, for a consumer's own

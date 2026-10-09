@@ -26,7 +26,7 @@ const reClosingCodeFence = /^(?:`{3,}|~{3,})(?=[ \t]*$)/;
  */
 const finalizeIndented = (block: BlockNode): void => {
 	const lines = block.stringContent.split("\n");
-	while (lines.length > 0 && reBlankLine.test(lines[lines.length - 1] ?? "")) {
+	while (lines.length > 0 && reBlankLine.test(lines.slice(-1).join(""))) {
 		lines.pop();
 	}
 
@@ -68,9 +68,8 @@ const finalizeFenced = (block: BlockNode): void => {
 
 	block.data.lang = unescapeString(firstLine.slice(0, wordEnd));
 	const meta = firstLine.slice(wordEnd).trim();
-	if (meta.length > 0) {
-		block.data.meta = unescapeString(meta);
-	}
+	// Trimming firstLine makes the suffix after an internal separator nonempty.
+	block.data.meta = unescapeString(meta);
 };
 
 /**

@@ -246,7 +246,7 @@ const make = Effect.fnUntraced(function* () {
 					// docstring — a failure to verify presented as a measured
 					// mismatch is the exact class this package fixes elsewhere.
 					.pipe(Effect.mapError((cause) => fail("integrityUnverifiable", { expected, cause })));
-				const actual = `${Str.slice(0, O.getOrElse(Str.indexOf("-")(expected), () => -1))(expected)}-${Base64.encode(digest)}`;
+				const actual = `${Str.toLowerCase(Str.replace("-", "")(algorithm.value))}-${Base64.encode(digest)}`;
 				// Compared without base64 padding: the SRI grammar permits an
 				// unpadded value, and a padding difference is not a byte
 				// difference. Refusing a valid tarball over one would be the

@@ -12,8 +12,8 @@ import * as O from "@beep/utils/Option";
 
 const reThematicBreak = /^(?:\*[ \t]*){3,}$|^(?:_[ \t]*){3,}$|^(?:-[ \t]*){3,}$/;
 
-const markerCharOf = (char: string): ThematicBreakChar | undefined =>
-	char === "-" || char === "_" || char === "*" ? char : undefined;
+const markerCharOf = (char: string): ThematicBreakChar =>
+	char === "-" ? "-" : char === "_" ? "_" : "*";
 
 /**
  * Represents a thematic break occupying one line with no children.
@@ -71,9 +71,7 @@ export const thematicBreakStart: BlockStart = {
 		scanner.closeUnmatchedBlocks();
 		const container = scanner.addChild("thematicBreak", scanner.nextNonspace);
 		const marker = markerCharOf(scanner.currentLine.charAt(scanner.nextNonspace));
-		if (marker !== undefined) {
-			container.data.markerChar = marker;
-		}
+		container.data.markerChar = marker;
 		scanner.advanceOffset(scanner.currentLine.length - scanner.offset, false);
 		return 2;
 	},

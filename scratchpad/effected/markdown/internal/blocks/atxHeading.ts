@@ -14,6 +14,7 @@
 // can place real offsets inside the heading.
 
 import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 import { HeadingDepth } from "../../MarkdownNode.ts";
 import { Heading } from "../../MarkdownNode.ts";
 import type { BlockConstruct, BlockStart } from "../blockTypes.ts";
@@ -24,7 +25,7 @@ const reClosingHashes = /[ \t]+#+[ \t]*$/;
 
 /** Narrow a `#`-run length to the schema's depth literal; the regex caps it at 6. */
 const headingDepth = (hashes: number): HeadingDepth =>
-	hashes < 1 ? 1 : hashes > 6 ? 6 : S.is(HeadingDepth)(hashes) ? hashes : 1;
+	Result.getOrThrow(S.decodeUnknownResult(HeadingDepth)(hashes));
 
 /**
  * Materializes a heading that never spans more than one line and contains no blocks.

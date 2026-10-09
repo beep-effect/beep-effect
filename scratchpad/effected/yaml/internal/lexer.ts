@@ -4,6 +4,7 @@
 // imperative character-by-character scanning with position tracking.
 // `createScanner` IS the state machine; `lexAll` drives it to completion.
 
+import * as A from "effect/Array";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -248,27 +249,32 @@ export function createScanner(text: string): YamlScanner {
 
 	function peek(offset = 0): string {
 		const idx = pos + offset;
-		return idx < text.length ? (text[idx] ?? "") : "";
+		return text.slice(idx, idx + 1);
 	}
 
 	function charAt(i: number): string {
-		return i < text.length ? (text[i] ?? "") : "";
+		return text.slice(i, i + 1);
 	}
 
 	function advance(count = 1): void {
 		for (let i = 0; i < count; i++) {
-			if (pos < text.length) {
-				if (text[pos] === "\r" || text[pos] === "\n") {
-					if (text[pos] === "\r" || text[pos - 1] !== "\r") line++;
-					col = 0;
-					lineIndent = 0;
-					lineIndentLocked = false;
-				} else {
-					col++;
-				}
-				pos++;
+			if (text[pos] === "\r" || text[pos] === "\n") {
+				if (text[pos] === "\r" || text[pos - 1] !== "\r") line++;
+				col = 0;
+				lineIndent = 0;
+				lineIndentLocked = false;
+			} else {
+				col++;
 			}
+			pos++;
 		}
+	}
+
+	/** Called only after testing or populating the nonempty pending queue. */
+	function takePending(): YamlToken {
+		const token = A.getUnsafe(pending, 0);
+		pending.shift();
+		return token;
 	}
 
 	/** Lock the line indent to the current column (called on first non-ws char). */
@@ -362,7 +368,6 @@ export function createScanner(text: string): YamlScanner {
 	}
 
 	function ensureBlockSeq(indent: number, offset: number, tokLine: number, _tokCol: number): void {
-		if (flowDepth > 0) return;
 		const started = O.getOrUndefined(MutableHashMap.get(blockStarted, indent));
 		if (started === "seq") return;
 		MutableHashMap.set(blockStarted, indent, "seq");
@@ -546,7 +551,7 @@ export function createScanner(text: string): YamlScanner {
 
 		// Trim trailing whitespace from plain scalar value
 		let end = pos;
-		while (end > start && isWhitespace(text[end - 1] ?? "")) {
+		while (end > start && isWhitespace(charAt(end - 1))) {
 			end--;
 		}
 
@@ -996,8 +1001,7 @@ export function createScanner(text: string): YamlScanner {
 			let result = "";
 			let prevMoreIndented = false;
 			let hadContent = false;
-			for (let i = 0; i < lines.length; i++) {
-				const ln = lines[i] ?? "";
+			for (const ln of lines) {
 				const isMoreIndented = ln.length > 0 && (ln[0] === " " || ln[0] === "\t");
 				if (ln === "") {
 					// Empty line — preserved as newline
@@ -1155,8 +1159,7 @@ export function createScanner(text: string): YamlScanner {
 	function scanNext(): YamlToken | null {
 		// Drain pending tokens first
 		if (pending.length > 0) {
-			const next = pending.shift();
-			if (next !== undefined) return next;
+			return takePending();
 		}
 
 		if (pos >= text.length) {
@@ -1379,17 +1382,14 @@ export function createScanner(text: string): YamlScanner {
 					ensureBlockMap(indent, start, sLine, sCol);
 					pending.push(makeToken("block-map-key", "?", start, sLine, sCol));
 					pending.push(makeToken("error", "\t", tabStart, tabLine, tabCol));
-					const first = pending.shift();
-					if (first !== undefined) return first;
-					return makeToken("block-map-key", "?", start, sLine, sCol);
+					return takePending();
 				}
 			}
 			ensureBlockMap(indent, start, sLine, sCol);
 			if (pending.length > 0) {
 				// block-map-start was pushed, push the key indicator after it
 				pending.push(makeToken("block-map-key", "?", start, sLine, sCol));
-				const first = pending.shift();
-				if (first !== undefined) return first;
+				return takePending();
 			}
 			return makeToken("block-map-key", "?", start, sLine, sCol);
 		}
@@ -1436,9 +1436,7 @@ export function createScanner(text: string): YamlScanner {
 						ensureBlockSeq(indent, start, sLine, sCol);
 						pending.push(makeToken("block-seq-entry", "-", start, sLine, sCol));
 						pending.push(makeToken("error", "\t", tabStart, tabLine, tabCol));
-						const first = pending.shift();
-						if (first !== undefined) return first;
-						return makeToken("block-seq-entry", "-", start, sLine, sCol);
+						return takePending();
 					}
 				}
 			}
@@ -1446,8 +1444,7 @@ export function createScanner(text: string): YamlScanner {
 			if (pending.length > 0) {
 				// block-seq-start was pushed, push the entry after it
 				pending.push(makeToken("block-seq-entry", "-", start, sLine, sCol));
-				const first = pending.shift();
-				if (first !== undefined) return first;
+				return takePending();
 			}
 			return makeToken("block-seq-entry", "-", start, sLine, sCol);
 		}
@@ -1500,9 +1497,7 @@ export function createScanner(text: string): YamlScanner {
 						ensureBlockMap(indent, start, sLine, sCol);
 						pending.push(makeToken("block-map-value", ":", start, sLine, sCol));
 						pending.push(makeToken("error", "\t", tabStart, tabLine, tabCol));
-						const first = pending.shift();
-						if (first !== undefined) return first;
-						return makeToken("block-map-value", ":", start, sLine, sCol);
+						return takePending();
 					}
 				}
 			}
@@ -1510,8 +1505,7 @@ export function createScanner(text: string): YamlScanner {
 			if (pending.length > 0) {
 				// block-map-start was pushed, push the value indicator after it
 				pending.push(makeToken("block-map-value", ":", start, sLine, sCol));
-				const first = pending.shift();
-				if (first !== undefined) return first;
+				return takePending();
 			}
 			return makeToken("block-map-value", ":", start, sLine, sCol);
 		}

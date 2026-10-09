@@ -49,13 +49,11 @@ const fail = (s: ParserState, position?: number): never => {
 
 const peek = (s: ParserState): string | undefined => (s.pos < s.len ? s.input[s.pos] : undefined);
 
-const advance = (s: ParserState): string | undefined => {
-	if (s.pos < s.len) {
-		const ch = s.input[s.pos];
-		s.pos++;
-		return ch;
-	}
-	return undefined;
+// Every caller has already checked the next character (or separator width).
+const advance = (s: ParserState): string => {
+	const ch = s.input.charAt(s.pos);
+	s.pos++;
+	return ch;
 };
 
 const isDigit = (ch: string): boolean => ch >= "0" && ch <= "9";
@@ -118,15 +116,11 @@ const parsePrereleaseIdentifier = (s: ParserState): string | number => {
 	}
 
 	while (peekIdentChar(s)) {
-		const ch = advance(s) ?? "";
+		const ch = advance(s);
 		if (!isDigit(ch)) {
 			hasNonDigit = true;
 		}
 		token += ch;
-	}
-
-	if (token.length === 0) {
-		return fail(s);
 	}
 
 	if (hasNonDigit) {
@@ -158,11 +152,7 @@ const parseBuildIdentifier = (s: ParserState): string => {
 	}
 
 	while (peekIdentChar(s)) {
-		token += advance(s) ?? "";
-	}
-
-	if (token.length === 0) {
-		return fail(s);
+		token += advance(s);
 	}
 
 	// Build identifiers allow leading zeros — just return as string
@@ -459,7 +449,6 @@ const parseRangeComparators = (s: ParserState): ReadonlyArray<ComparatorParts> =
 			break;
 		}
 		skipSpaces(s);
-		if (atRangeEnd(s)) break;
 
 		const next = parseSimple(s);
 		for (const c of next) {

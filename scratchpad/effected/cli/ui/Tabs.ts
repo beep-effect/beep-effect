@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import type { ReactElement } from "react";
 import { Fmt } from "../Fmt.ts";
 import { inkModules } from "./internal/ink.ts";
@@ -129,8 +130,7 @@ const fitAround = (widths: ReadonlyArray<number>, active: number, gap: number, w
  * @category components
  * @since 0.0.0
  */
-export class Tabs {
-	private constructor() {}
+export abstract class Tabs {
 
 	/**
 	 * The tab an action lands on: `"prev"` and `"next"` wrap at both ends; `{ jump }` moves to that index and does
@@ -258,7 +258,7 @@ export class Tabs {
 			{ isActive: focused },
 		);
 		const labelOf = (position: number): string =>
-			`${props.showIndex === true ? `${position + 1}. ` : ""}${lineText(props.tabs[position]?.label ?? "")}`;
+			`${props.showIndex === true ? `${position + 1}. ` : ""}${lineText(A.getUnsafe(props.tabs, position).label)}`;
 		// At colour none, accent, bold and underline all vanish: the active tab is bracketed instead, and the others
 		// padded a space each side so a tab's width does not change as it becomes active.
 		const plain = theme.color === "none";

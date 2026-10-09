@@ -1,4 +1,5 @@
 import * as S from "effect/Schema";
+import * as A from "effect/Array";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as O from "@beep/utils/Option";
 import type { ReactElement } from "react";
@@ -230,8 +231,7 @@ const RESERVED = 3;
  * @category components
  * @since 0.0.0
  */
-export class Select {
-	private constructor() {}
+export abstract class Select {
 
 	/**
 	 * A select over `choices`, on the first enabled choice at or after `initial` (the nearest enabled one before it
@@ -372,15 +372,15 @@ export class Select {
 		}));
 		const blank = " ".repeat(Fmt.width(glyphs.arrow));
 		const renderRow = (row: ViewportRow, highlighted: boolean): ReactElement => {
-			const choice = row._tag === "Item" ? props.choices[Number(row.key)] : undefined;
-			const line = `${highlighted ? glyphs.arrow : blank} ${lineText(choice?.label ?? "")}`;
+			const choice = A.getUnsafe(props.choices, rows.indexOf(row));
+			const line = `${highlighted ? glyphs.arrow : blank} ${lineText(choice.label)}`;
 			// At colour none the muted token paints nothing, so a disabled row says so in text; the label is cut, never the mark.
-			const marked = choice?.disabled === true && theme.color === "none";
+			const marked = choice.disabled === true && theme.color === "none";
 			const text = marked
 				? `${Fmt.truncate(line, Math.max(0, columns - Fmt.width(DISABLED)), { ellipsis: glyphs.ellipsis })}${DISABLED}`
 				: Fmt.truncate(line, columns, { ellipsis: glyphs.ellipsis });
 			if (highlighted) return react.createElement(Styled, { token: "accent" }, text);
-			if (choice?.disabled === true) return react.createElement(Styled, { token: "muted" }, text);
+			if (choice.disabled === true) return react.createElement(Styled, { token: "muted" }, text);
 			return react.createElement(ink.Text, null, text);
 		};
 		const detail = props.choices[state.viewport.cursor]?.detail;
