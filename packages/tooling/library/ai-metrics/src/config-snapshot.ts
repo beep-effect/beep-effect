@@ -656,7 +656,7 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
         (relative === ".mcp.json" || isAgentDocName(pathApi.basename(relative)) || inConfigRoot)
       );
     });
-    const local = pathApi.join(repoRoot, ".claude/settings.local.json");
+    const local = pathApi.join(pathApi.resolve(repoRoot), ".claude/settings.local.json");
     const existing = yield* Effect.filter(
       A.map(selected, (relative) => pathApi.join(pathApi.resolve(repoRoot), relative)),
       (file) =>

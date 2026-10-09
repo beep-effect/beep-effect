@@ -466,7 +466,7 @@ export class PruneProposal extends S.Class<PruneProposal>($I`PruneProposal`)(
 
 /**
  * Observed hook-pulse window: the last N distinct sessions by newest event
- * that ran under the current harness hash, the surface ids they touched, and
+ * that ran under the current harness hash, positive surface use across scanned history, and
  * the sessions skipped to find them.
  *
  * **Details**
@@ -539,7 +539,7 @@ export class ObservedSessionWindow extends S.Class<ObservedSessionWindow>($I`Obs
   },
   $I.annote("ObservedSessionWindow", {
     description:
-      "Last N hook-pulse sessions under the current harness hash, their touched surface ids, skip counts, and shard decode tallies.",
+      "Last N hook-pulse sessions under the current harness hash, positive surface use across scanned history, skip counts, and shard decode tallies.",
   })
 ) {}
 

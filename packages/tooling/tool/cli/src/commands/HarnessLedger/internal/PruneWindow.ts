@@ -439,17 +439,18 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
     Result.isFailure(HookPulseDisarmWindow.decodeJsonResult(line))
   );
   const openSentinel = O.contains(sentinelPresent, true)
-    ? yield* fs.readFileString(sentinel).pipe(
-        Effect.map(HookPulseDisarmSentinel.decodeJsonResult),
-        Effect.orElseSucceed(() => Result.fail("unreadable sentinel"))
-      )
-    : Result.fail("no sentinel");
+    ? yield* fs
+        .readFileString(sentinel)
+        .pipe(
+          Effect.map(F.flow(HookPulseDisarmSentinel.decodeJsonResult, Result.getSuccess)),
+          Effect.orElseSucceed(O.none<HookPulseDisarmSentinel>)
+        )
+    : O.none<HookPulseDisarmSentinel>();
   const openDisarmSince = malformedWindows
     ? O.none<number>()
     : pipe(
         openSentinel,
-        Result.map((value) => DateTime.toEpochMillis(DateTime.makeUnsafe(value.disarmedAt))),
-        Result.getSuccess
+        O.map((value) => DateTime.toEpochMillis(DateTime.makeUnsafe(value.disarmedAt)))
       );
   const openDisarm = O.getOrElse(sentinelPresent, () => true) || malformedWindows;
   const { refusalUndecodableLines, writerRefusalsTotal, refusalsByAgentKind } = yield* readRefusals(root);
