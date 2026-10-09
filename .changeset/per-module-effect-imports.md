@@ -119,6 +119,7 @@
 "@beep/shared-domain": patch
 "@beep/shared-use-cases": patch
 "@beep/skill-contract": patch
+"@beep/storybook": patch
 "@beep/tailscale": patch
 "@beep/technical-drawing": patch
 "@beep/tesseract": patch
