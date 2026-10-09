@@ -2,9 +2,11 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./tsconfig.json",
   "references": [
-    { "path": "../md/tsconfig.json" },
     {
       "path": "../identity/tsconfig.json"
+    },
+    {
+      "path": "../md/tsconfig.json"
     },
     {
       "path": "../schema/tsconfig.json"

@@ -59,3 +59,23 @@ package audit remains the authoritative proof of the repair.
 - Wave 1 publication preflight rejected the unstaged P2 packet updates before any push: `requires reviewed staged changes or a clean local commit ahead`. Commit the reviewed packet updates first, then retry the same wave. The heavy-slot queue delayed this precondition feedback by about 23 minutes; push budget remains unused.
 
 - Wave 1 cheap gates terminated with exactly two failures. `quality:cache-policy` reports six configuration-drift rows for RDF build/check/doctest/deprecated-api/test/property tasks. `repo-sanity:tsconfig-sync` reports RDF reference reorder plus regeneration of `standards/fallow.boundaries.generated.jsonc` from the new workspace edge. The lane's explicit stop condition prohibits making a gate green through whole-repository generated standards regeneration. Stop before push, preserve the code and evidence, and hand the dependency snapshot decision to the program owner. P0 inbox acknowledged with the scope reason; no gate waived.
+
+## 2026-10-09 — Run 2 docgen attribution corrects the inherited-red claim
+
+Main hosted Docgen job `113987345990` passes and runs
+`infra:prepare-gha-runners` during install. The lane used `bun install
+--ignore-scripts`; its Pulumi SDK still exposes unbuilt TypeScript sources.
+The prior local TS1205/TS1294/TS4114 failure needs environment remediation
+proof, not an inherited classification based only on unchanged infra files.
+Run the existing SDK preparation script before repeating full docgen. A lane
+bootstrap that preserves mandatory local SDK preparation would prevent this.
+
+## 2026-10-09 — Resume repair waits behind shared heavy work
+
+The run-2 `beep-heavy` Yeet repair wrapper remains queued for about 18 minutes
+with `all 4 slots busy, waiting`; no repair step has started. A second owned
+wrapper acquired capacity, prepared the SDK and completed full docgen while
+repair continued waiting. Both remain within the at-most-two wrapper limit.
+Capacity is preserved; no other lane is stopped and no cap is raised. An
+observable admission queue with wait age would make this delay easier to
+diagnose than the wrapper's one-time waiting line.

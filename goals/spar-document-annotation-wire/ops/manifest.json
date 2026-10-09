@@ -11,7 +11,7 @@
   "packetPath": "goals/spar-document-annotation-wire",
   "lifecycle": "active",
   "mission": "Generate pinned SPAR terms and ship typed OA/PROV document annotations plus the Md-to-DOCO section fold.",
-  "statusNote": "Blocked at P3: RDF-to-Md dependency requires out-of-scope generated boundaries and reviewed cache-policy synchronization. No PR was pushed.",
+  "statusNote": "P3 resumed under D16: owner-command dependency snapshot synchronization and prepared-SDK docgen proof are underway before publication.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

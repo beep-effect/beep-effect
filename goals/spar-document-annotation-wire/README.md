@@ -19,10 +19,10 @@ annotation wire shape, including the Md-to-DOCO section fold.
 
 ## Current Phase
 
-P3 blocked before push: the RDF-to-Md dependency requires generated Fallow boundary
-and reviewed cache-policy synchronization outside the lane scope. Package audits,
-fixtures, test TSGo, JSDoc, knowledge refs and Fallow pass; full repository docgen
-retains an inherited infra SDK failure. See the committed lane handoff.
+P3 resumed under D16: synchronize the dependency-derived boundaries and cache
+policy through their owners, then publish. Package audits and fixtures passed
+in run 1; run 2 full docgen passes after the existing SDK preparation step,
+matching main's passing hosted setup. See the lane handoff.
 
 ## Read This First
 

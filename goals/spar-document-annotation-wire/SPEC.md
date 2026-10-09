@@ -92,3 +92,9 @@ class); a second instance may refine Title to field. The OA annotation selects
 the folded Detail heading's structural id, types its body as DOCO Title and
 DEO Introduction, types the document as FaBiO Report, carries CiTO
 citesAsEvidence toward a synthetic source, and attributes it through PROV.
+
+## Resume decision (2026-10-09)
+
+| Decision | Choice and reason | Reversal |
+| --- | --- | --- |
+| D16 Dependency-derived snapshots | The program owner authorizes owner-command regeneration of Fallow boundaries, reviewed cache policy and project references forced by D11. Review every changed row against the RDF-to-Md edge or the three edited packages; retain no unrelated regeneration. | Drop D11's edge and adapter placement, then regenerate the same snapshots through their owners. |
