@@ -7,6 +7,7 @@ import { YamlAlias, YamlMap, YamlScalar, YamlSeq } from "../../YamlNode.ts";
 import type { CstNode } from "../cst.ts";
 import type { ComposerState, NodeMeta } from "./state.ts";
 import * as Schema from "effect/Schema";
+import * as MutableHashMap from "effect/MutableHashMap";
 import { dual } from "effect/Function";
 
 /**
@@ -18,13 +19,10 @@ import { dual } from "effect/Function";
  * dedicated `AnchorOnAlias` code would be a public API change. The error message
  * distinguishes the two cases for consumers inspecting the message text.
  */
-export function checkAnchorOnAlias(pendingMeta: NodeMeta, cst: CstNode, state: ComposerState): void;
-export function checkAnchorOnAlias(cst: CstNode, state: ComposerState): (pendingMeta: NodeMeta) => void;
-export function checkAnchorOnAlias(...args: [pendingMeta: NodeMeta, cst: CstNode, state: ComposerState] | [cst: CstNode, state: ComposerState]): void | ((pendingMeta: NodeMeta) => void) {
-	return dual<
-		(...args: [pendingMeta: NodeMeta, cst: CstNode, state: ComposerState] | [cst: CstNode, state: ComposerState]) => void | ((pendingMeta: NodeMeta) => void),
-		(pendingMeta: NodeMeta, cst: CstNode, state: ComposerState) => void
-	>(3, function checkAnchorOnAlias(pendingMeta: NodeMeta, cst: CstNode, state: ComposerState): void {
+export const checkAnchorOnAlias: {
+	(pendingMeta: NodeMeta, cst: CstNode, state: ComposerState): void;
+	(cst: CstNode, state: ComposerState): (pendingMeta: NodeMeta) => void;
+} = dual(3, (pendingMeta: NodeMeta, cst: CstNode, state: ComposerState): void => {
 	if (pendingMeta.anchor !== undefined) {
 		state.errors.push({
 			code: "DuplicateAnchor",
@@ -33,16 +31,12 @@ export function checkAnchorOnAlias(...args: [pendingMeta: NodeMeta, cst: CstNode
 			length: cst.length,
 		});
 	}
-})(...args);
-}
+});
 
-export function makeAlias(cst: CstNode, state: ComposerState): YamlAlias;
-export function makeAlias(state: ComposerState): (cst: CstNode) => YamlAlias;
-export function makeAlias(...args: [cst: CstNode, state: ComposerState] | [state: ComposerState]): YamlAlias | ((cst: CstNode) => YamlAlias) {
-	return dual<
-		(...args: [cst: CstNode, state: ComposerState] | [state: ComposerState]) => YamlAlias | ((cst: CstNode) => YamlAlias),
-		(cst: CstNode, state: ComposerState) => YamlAlias
-	>(2, function makeAlias(cst: CstNode, state: ComposerState): YamlAlias {
+export const makeAlias: {
+	(cst: CstNode, state: ComposerState): YamlAlias;
+	(state: ComposerState): (cst: CstNode) => YamlAlias;
+} = dual(2, (cst: CstNode, state: ComposerState): YamlAlias => {
 	const name = getAliasName(cst, state.text);
 
 	// Check existence first — an undefined alias is a more specific error
@@ -68,16 +62,12 @@ export function makeAlias(...args: [cst: CstNode, state: ComposerState] | [state
 	}
 
 	return YamlAlias.make({ name, offset: cst.offset, length: cst.length });
-})(...args);
-}
+});
 
-export function registerAnchor(node: YamlNode, anchor: string, state: ComposerState, offset: number): void;
-export function registerAnchor(anchor: string, state: ComposerState, offset: number): (node: YamlNode) => void;
-export function registerAnchor(...args: [node: YamlNode, anchor: string, state: ComposerState, offset: number] | [anchor: string, state: ComposerState, offset: number]): void | ((node: YamlNode) => void) {
-	return dual<
-		(...args: [node: YamlNode, anchor: string, state: ComposerState, offset: number] | [anchor: string, state: ComposerState, offset: number]) => void | ((node: YamlNode) => void),
-		(node: YamlNode, anchor: string, state: ComposerState, offset: number) => void
-	>(4, function registerAnchor(node: YamlNode, anchor: string, state: ComposerState, offset: number): void {
+export const registerAnchor: {
+	(node: YamlNode, anchor: string, state: ComposerState, offset: number): void;
+	(anchor: string, state: ComposerState, offset: number): (node: YamlNode) => void;
+} = dual(4, (node: YamlNode, anchor: string, state: ComposerState, offset: number): void => {
 	if (state.anchors.has(anchor)) {
 		state.warnings.push({
 			code: "DuplicateAnchor",
@@ -87,16 +77,12 @@ export function registerAnchor(...args: [node: YamlNode, anchor: string, state: 
 		});
 	}
 	state.anchors.set(anchor, node);
-})(...args);
-}
+});
 
-export function getAnchorName(cst: CstNode, text: string): string;
-export function getAnchorName(text: string): (cst: CstNode) => string;
-export function getAnchorName(...args: [cst: CstNode, text: string] | [text: string]): string | ((cst: CstNode) => string) {
-	return dual<
-		(...args: [cst: CstNode, text: string] | [text: string]) => string | ((cst: CstNode) => string),
-		(cst: CstNode, text: string) => string
-	>(2, function getAnchorName(cst: CstNode, text: string): string {
+export const getAnchorName: {
+	(cst: CstNode, text: string): string;
+	(text: string): (cst: CstNode) => string;
+} = dual(2, (cst: CstNode, text: string): string => {
 	// The CST anchor node carries the lexer token's span, which covers the
 	// "&" sigil plus the name. Scan the name from the original text starting
 	// after the sigil rather than slicing by length, keeping this independent
@@ -106,31 +92,23 @@ export function getAnchorName(...args: [cst: CstNode, text: string] | [text: str
 		return scanName(text, cst.offset + 1);
 	}
 	return cst.source;
-})(...args);
-}
+});
 
-export function getAliasName(cst: CstNode, text: string): string;
-export function getAliasName(text: string): (cst: CstNode) => string;
-export function getAliasName(...args: [cst: CstNode, text: string] | [text: string]): string | ((cst: CstNode) => string) {
-	return dual<
-		(...args: [cst: CstNode, text: string] | [text: string]) => string | ((cst: CstNode) => string),
-		(cst: CstNode, text: string) => string
-	>(2, function getAliasName(cst: CstNode, text: string): string {
+export const getAliasName: {
+	(cst: CstNode, text: string): string;
+	(text: string): (cst: CstNode) => string;
+} = dual(2, (cst: CstNode, text: string): string => {
 	const rawStart = text[cst.offset];
 	if (rawStart === "*") {
 		return scanName(text, cst.offset + 1);
 	}
 	return cst.source;
-})(...args);
-}
+});
 
-export function scanName(text: string, start: number): string;
-export function scanName(start: number): (text: string) => string;
-export function scanName(...args: [text: string, start: number] | [start: number]): string | ((text: string) => string) {
-	return dual<
-		(...args: [text: string, start: number] | [start: number]) => string | ((text: string) => string),
-		(text: string, start: number) => string
-	>(2, function scanName(text: string, start: number): string {
+export const scanName: {
+	(text: string, start: number): string;
+	(start: number): (text: string) => string;
+} = dual(2, (text: string, start: number): string => {
 	let end = start;
 	// YAML 1.2 ns-anchor-char: any non-whitespace char except c-flow-indicator
 	while (end < text.length) {
@@ -152,8 +130,7 @@ export function scanName(...args: [text: string, start: number] | [start: number
 		end++;
 	}
 	return text.slice(start, end);
-})(...args);
-}
+});
 
 // ---------------------------------------------------------------------------
 // Anchor map / value extraction
@@ -165,23 +142,24 @@ export function scanName(...args: [text: string, start: number] | [start: number
  * parsed YAML documents.
  */
 export function buildAnchorMap(node: YamlNode | null): Map<string, YamlNode> {
-	const anchors = new Map<string, YamlNode>();
+	const anchors = MutableHashMap.empty<string, YamlNode>();
 	collectAnchors(node, anchors);
-	return anchors;
+	// Value extraction accepts a native Map, including data-last dispatch.
+	return anchors.backing;
 }
 
-function collectAnchors(node: YamlNode | null, anchors: Map<string, YamlNode>): void {
+function collectAnchors(node: YamlNode | null, anchors: MutableHashMap.MutableHashMap<string, YamlNode>): void {
 	if (node === null) return;
 	if (Schema.is(YamlScalar)(node)) {
-		if (node.anchor !== undefined) anchors.set(node.anchor, node);
+		if (node.anchor !== undefined) MutableHashMap.set(anchors, node.anchor, node);
 	} else if (Schema.is(YamlMap)(node)) {
-		if (node.anchor !== undefined) anchors.set(node.anchor, node);
+		if (node.anchor !== undefined) MutableHashMap.set(anchors, node.anchor, node);
 		for (const pair of node.items) {
 			collectAnchors(pair.key, anchors);
 			collectAnchors(pair.value, anchors);
 		}
 	} else if (Schema.is(YamlSeq)(node)) {
-		if (node.anchor !== undefined) anchors.set(node.anchor, node);
+		if (node.anchor !== undefined) MutableHashMap.set(anchors, node.anchor, node);
 		for (const item of node.items) {
 			collectAnchors(item, anchors);
 		}
@@ -195,13 +173,7 @@ function collectAnchors(node: YamlNode | null, anchors: Map<string, YamlNode>): 
  * which resolves aliases through the optional anchor map with incremental
  * registration and handles `__proto__` keys as own data properties.
  */
-export function getNodeValue(node: YamlNode | null, anchors?: Map<string, YamlNode>): unknown;
-export function getNodeValue(anchors?: Map<string, YamlNode>): (node: YamlNode | null) => unknown;
-export function getNodeValue(...args: [node: YamlNode | null, anchors?: Map<string, YamlNode> | undefined] | [anchors?: Map<string, YamlNode> | undefined]): unknown | ((node: YamlNode | null) => unknown) {
-	return dual<
-		(...args: [node: YamlNode | null, anchors?: Map<string, YamlNode> | undefined] | [anchors?: Map<string, YamlNode> | undefined]) => unknown | ((node: YamlNode | null) => unknown),
-		(node: YamlNode | null, anchors?: Map<string, YamlNode>) => unknown
-	>((args) => args[0] === null || (args[0] !== undefined && !(args[0] instanceof Map)), function getNodeValue(node: YamlNode | null, anchors?: Map<string, YamlNode>): unknown {
-	return node === null ? null : node.toValue(anchors);
-})(...args);
-}
+export const getNodeValue: {
+	(node: YamlNode | null, anchors?: Map<string, YamlNode>): unknown;
+	(anchors?: Map<string, YamlNode>): (node: YamlNode | null) => unknown;
+} = dual((args) => args[0] === null || (args[0] !== undefined && !(args[0] instanceof Map)), (node: YamlNode | null, anchors?: Map<string, YamlNode>): unknown => node === null ? null : node.toValue(anchors));

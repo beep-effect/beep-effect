@@ -7,6 +7,7 @@
 // Opt-in: absent from both presets.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
@@ -21,11 +22,11 @@ export const documentEndOptions = S.Struct({
 	present: S.optionalKey(S.Boolean).annotateKey({ description: "Whether the stream's final `...` marker is required (`true`, default) or forbidden (`false`)" }),
 }).pipe($I.annoteSchema("documentEndOptions", { description: "Options for `document-end`: require (`true`, default) or forbid the marker." }));
 
-const TRIVIA = new Set(["newline", "whitespace", "comment", "byte-order-mark"]);
+const TRIVIA = HashSet.fromIterable(["newline", "whitespace", "comment", "byte-order-mark"]);
 
 /** The last non-trivia token: it decides whether the stream ends with `...`. */
 const tailToken = (ctx: LintContext): YamlToken | undefined =>
-	[...ctx.tokens].reverse().find((t) => !TRIVIA.has(t.kind));
+	[...ctx.tokens].reverse().find((t) => !HashSet.has(TRIVIA, t.kind));
 
 /**
  * The end-of-stream position, shared by the missing-marker diagnostic and

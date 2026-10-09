@@ -208,13 +208,10 @@ function checkTrailingContentAfterDocValue(
 // Compose document
 // ---------------------------------------------------------------------------
 
-export function composeDocument(cst: CstNode, state: ComposerState, hasSubsequentDocuments?: boolean, nextDocCst?: CstNode): RawYamlDocument;
-export function composeDocument(state: ComposerState, hasSubsequentDocuments?: boolean, nextDocCst?: CstNode): (cst: CstNode) => RawYamlDocument;
-export function composeDocument(...args: [cst: CstNode, state: ComposerState, hasSubsequentDocuments?: boolean | undefined, nextDocCst?: CstNode | undefined] | [state: ComposerState, hasSubsequentDocuments?: boolean | undefined, nextDocCst?: CstNode | undefined]): RawYamlDocument | ((cst: CstNode) => RawYamlDocument) {
-	return dual<
-		(...args: [cst: CstNode, state: ComposerState, hasSubsequentDocuments?: boolean | undefined, nextDocCst?: CstNode | undefined] | [state: ComposerState, hasSubsequentDocuments?: boolean | undefined, nextDocCst?: CstNode | undefined]) => RawYamlDocument | ((cst: CstNode) => RawYamlDocument),
-		(cst: CstNode, state: ComposerState, hasSubsequentDocuments?: boolean, nextDocCst?: CstNode) => RawYamlDocument
-	>((args) => args[0] !== undefined && "type" in args[0], function composeDocument(cst: CstNode, state: ComposerState, hasSubsequentDocuments = false, nextDocCst?: CstNode): RawYamlDocument {
+export const composeDocument: {
+	(cst: CstNode, state: ComposerState, hasSubsequentDocuments?: boolean, nextDocCst?: CstNode): RawYamlDocument;
+	(state: ComposerState, hasSubsequentDocuments?: boolean, nextDocCst?: CstNode): (cst: CstNode) => RawYamlDocument;
+} = dual((args) => args[0] !== undefined && "type" in args[0], (cst: CstNode, state: ComposerState, hasSubsequentDocuments = false, nextDocCst?: CstNode): RawYamlDocument => {
 	// Hardening: unescaped C0 control characters (other than tab/LF/CR) are
 	// not c-printable (YAML 1.2 §5.1) and are invalid anywhere in the stream.
 	// Escaped forms in double-quoted scalars never appear raw in the source,
@@ -744,8 +741,7 @@ export function composeDocument(...args: [cst: CstNode, state: ComposerState, ha
 		...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(headerForDocument) }),
 		...O.getSomesStruct({ comment: O.fromUndefinedOr(documentCommentAfter) }),
 	};
-})(...args);
-}
+});
 
 // ---------------------------------------------------------------------------
 // Directive validation
@@ -915,13 +911,10 @@ function findNestedDirective(node: CstNode): CstNode | null {
  * CST document node after the first: if it contains directives, the
  * preceding document must have ended with `...`.
  */
-export function validateCrossDocumentDirectives(cstNodes: readonly CstNode[], state: ComposerState): void;
-export function validateCrossDocumentDirectives(state: ComposerState): (cstNodes: readonly CstNode[]) => void;
-export function validateCrossDocumentDirectives(...args: [cstNodes: readonly CstNode[], state: ComposerState] | [state: ComposerState]): void | ((cstNodes: readonly CstNode[]) => void) {
-	return dual<
-		(...args: [cstNodes: readonly CstNode[], state: ComposerState] | [state: ComposerState]) => void | ((cstNodes: readonly CstNode[]) => void),
-		(cstNodes: readonly CstNode[], state: ComposerState) => void
-	>(2, function validateCrossDocumentDirectives(cstNodes: readonly CstNode[], state: ComposerState): void {
+export const validateCrossDocumentDirectives: {
+	(cstNodes: readonly CstNode[], state: ComposerState): void;
+	(state: ComposerState): (cstNodes: readonly CstNode[]) => void;
+} = dual(2, (cstNodes: readonly CstNode[], state: ComposerState): void => {
 	for (let docIdx = 1; docIdx < cstNodes.length; docIdx++) {
 		const cst = cstNodes[docIdx];
 		if (cst === undefined) continue;
@@ -970,8 +963,7 @@ export function validateCrossDocumentDirectives(...args: [cstNodes: readonly Cst
 			}
 		}
 	}
-})(...args);
-}
+});
 
 // ---------------------------------------------------------------------------
 // sourceMultiline decoration
@@ -1087,16 +1079,10 @@ export const EMPTY_DOCUMENT: RawYamlDocument = {
  * Cross-document directive-placement errors are validated into the same
  * state and therefore appear in the returned document's `errors`.
  */
-export function composeFirstDocument(text: string, options?: ParseOptionsInput): RawYamlDocument;
-export function composeFirstDocument(options?: ParseOptionsInput): (text: string) => RawYamlDocument;
-export function composeFirstDocument(...args: [text: string, options?: ParseOptionsInput | undefined] | [options?: ParseOptionsInput | undefined]): RawYamlDocument | ((text: string) => RawYamlDocument) {
-	return dual<
-		(...args: [text: string, options?: ParseOptionsInput | undefined] | [options?: ParseOptionsInput | undefined]) => RawYamlDocument | ((text: string) => RawYamlDocument),
-		(text: string, options?: ParseOptionsInput) => RawYamlDocument
-	>((args) => P.isString(args[0]), function composeFirstDocument(text: string, options?: ParseOptionsInput): RawYamlDocument {
-	return composeFirstDocumentCounted(text, options).document;
-})(...args);
-}
+export const composeFirstDocument: {
+	(text: string, options?: ParseOptionsInput): RawYamlDocument;
+	(options?: ParseOptionsInput): (text: string) => RawYamlDocument;
+} = dual((args) => P.isString(args[0]), (text: string, options?: ParseOptionsInput): RawYamlDocument => composeFirstDocumentCounted(text, options).document);
 
 /**
  * {@link composeFirstDocument} plus the CST-level document count of the whole
@@ -1106,13 +1092,10 @@ export function composeFirstDocument(...args: [text: string, options?: ParseOpti
  * must refuse multi-document input (the `YamlFormat` single-document
  * contract) read `documentCount` instead of re-parsing.
  */
-export function composeFirstDocumentCounted(text: string, options?: ParseOptionsInput): { readonly document: RawYamlDocument; readonly documentCount: number };
-export function composeFirstDocumentCounted(options?: ParseOptionsInput): (text: string) => { readonly document: RawYamlDocument; readonly documentCount: number };
-export function composeFirstDocumentCounted(...args: [text: string, options?: ParseOptionsInput | undefined] | [options?: ParseOptionsInput | undefined]): { readonly document: RawYamlDocument; readonly documentCount: number } | ((text: string) => { readonly document: RawYamlDocument; readonly documentCount: number }) {
-	return dual<
-		(...args: [text: string, options?: ParseOptionsInput | undefined] | [options?: ParseOptionsInput | undefined]) => { readonly document: RawYamlDocument; readonly documentCount: number } | ((text: string) => { readonly document: RawYamlDocument; readonly documentCount: number }),
-		(text: string, options?: ParseOptionsInput) => { readonly document: RawYamlDocument; readonly documentCount: number }
-	>((args) => P.isString(args[0]), function composeFirstDocumentCounted(text: string, options?: ParseOptionsInput): { readonly document: RawYamlDocument; readonly documentCount: number } {
+export const composeFirstDocumentCounted: {
+	(text: string, options?: ParseOptionsInput): { readonly document: RawYamlDocument; readonly documentCount: number };
+	(options?: ParseOptionsInput): (text: string) => { readonly document: RawYamlDocument; readonly documentCount: number };
+} = dual((args) => P.isString(args[0]), (text: string, options?: ParseOptionsInput): { readonly document: RawYamlDocument; readonly documentCount: number } => {
 	const cstNodes = parseCSTAll(text);
 	const state = createState(text, FLOW, options);
 
@@ -1126,8 +1109,7 @@ export function composeFirstDocumentCounted(...args: [text: string, options?: Pa
 
 	const result = composeDocument(doc, state, cstNodes.length > 1, cstNodes[1]);
 	return { document: decorateDocumentSourceMultiline(result, text), documentCount: cstNodes.length };
-})(...args);
-}
+});
 
 /**
  * Compose every document of `text` with full error recovery, with no
@@ -1135,13 +1117,10 @@ export function composeFirstDocumentCounted(...args: [text: string, options?: Pa
  * cross-document directive validation runs in its own state whose errors
  * are returned unfiltered as `streamErrors` (the facade applies its filter).
  */
-export function composeAllDocuments(text: string, options?: ParseOptionsInput): { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> };
-export function composeAllDocuments(options?: ParseOptionsInput): (text: string) => { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> };
-export function composeAllDocuments(...args: [text: string, options?: ParseOptionsInput | undefined] | [options?: ParseOptionsInput | undefined]): { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> } | ((text: string) => { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> }) {
-	return dual<
-		(...args: [text: string, options?: ParseOptionsInput | undefined] | [options?: ParseOptionsInput | undefined]) => { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> } | ((text: string) => { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> }),
-		(text: string, options?: ParseOptionsInput) => { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> }
-	>((args) => P.isString(args[0]), function composeAllDocuments(text: string, options?: ParseOptionsInput): { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> } {
+export const composeAllDocuments: {
+	(text: string, options?: ParseOptionsInput): { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> };
+	(options?: ParseOptionsInput): (text: string) => { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> };
+} = dual((args) => P.isString(args[0]), (text: string, options?: ParseOptionsInput): { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> } => {
 	const cstNodes = parseCSTAll(text);
 	const documents: RawYamlDocument[] = [];
 
@@ -1158,8 +1137,7 @@ export function composeAllDocuments(...args: [text: string, options?: ParseOptio
 	}
 
 	return { documents, streamErrors: crossDocState.errors };
-})(...args);
-}
+});
 
 /**
  * Attach a marker-less document header to the FIRST entry of the content — the

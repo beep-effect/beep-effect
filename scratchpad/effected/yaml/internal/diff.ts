@@ -26,13 +26,10 @@ export interface RawEdit {
  * structural skeleton (they were produced from the same AST); a simple
  * prefix/suffix match is sufficient and a full Myers diff is unnecessary.
  */
-export function computeEdits(original: string, modified: string): ReadonlyArray<RawEdit>;
-export function computeEdits(modified: string): (original: string) => ReadonlyArray<RawEdit>;
-export function computeEdits(...args: [original: string, modified: string] | [modified: string]): ReadonlyArray<RawEdit> | ((original: string) => ReadonlyArray<RawEdit>) {
-	return dual<
-		(...args: [original: string, modified: string] | [modified: string]) => ReadonlyArray<RawEdit> | ((original: string) => ReadonlyArray<RawEdit>),
-		(original: string, modified: string) => ReadonlyArray<RawEdit>
-	>(2, function computeEdits(original: string, modified: string): ReadonlyArray<RawEdit> {
+export const computeEdits: {
+	(original: string, modified: string): ReadonlyArray<RawEdit>;
+	(modified: string): (original: string) => ReadonlyArray<RawEdit>;
+} = dual(2, (original: string, modified: string): ReadonlyArray<RawEdit> => {
 	if (original === modified) return [];
 
 	// Find common prefix
@@ -97,5 +94,4 @@ export function computeEdits(...args: [original: string, modified: string] | [mo
 			content: modified.substring(modStart, modEnd),
 		},
 	];
-})(...args);
-}
+});

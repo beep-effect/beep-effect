@@ -4,9 +4,19 @@
 // whitespace, comments, and structural indicators. No value interpretation
 // occurs at this stage.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
+
 import type { CstNode, CstNodeType } from "./cst.ts";
 import { lexAll } from "./lexer.ts";
 import type { YamlToken } from "./token.ts";
+
+const $I = $ScratchpadId.create("effected/yaml/internal/cst-parser");
+
+/** A defect raised when a YAML helper invariant is violated. */
+class CstParserFailure extends S.TaggedError<CstParserFailure>($I`CstParserFailure`)("CstParserFailure", {
+	message: S.String,
+}) {}
 
 // ---------------------------------------------------------------------------
 // Internal parser state
@@ -78,9 +88,9 @@ function makeContainerNode(type: CstNodeType, children: CstNode[], text: string)
 		return { type, source: "", offset: 0, length: 0, children };
 	}
 	const first = children[0];
-	if (first === undefined) throw new TypeError("Missing first");
+	if (first === undefined) throw CstParserFailure.make({ message: "Missing first" });
 	const last = children[children.length - 1];
-	if (last === undefined) throw new TypeError("Missing last");
+	if (last === undefined) throw CstParserFailure.make({ message: "Missing last" });
 	const offset = first.offset;
 	const end = last.offset + last.length;
 	const source = text.slice(offset, end);
@@ -137,58 +147,50 @@ function consumeLeafToken(state: ParserState): CstNode | undefined {
 	if (token === undefined) return undefined;
 	advance(state);
 
-	switch (token.kind) {
-		case "whitespace":
-			return makeLeafNode("whitespace", token, state.text);
-		case "newline":
-			return makeLeafNode("newline", token, state.text);
-		case "comment":
-			return makeLeafNode("comment", token, state.text);
-		case "scalar":
-			return makeLeafNode("flow-scalar", token, state.text);
-		case "anchor":
-			return makeLeafNode("anchor", token, state.text);
-		case "alias":
-			return makeLeafNode("alias", token, state.text);
-		case "tag":
-			return makeLeafNode("tag", token, state.text);
-		case "directive":
-			return makeLeafNode("directive", token, state.text);
-		case "flow-separator":
-			// Commas are structural punctuation; typed as "whitespace" since
-			// CstNodeType has no dedicated delimiter type. The raw "," is
-			// preserved in the node's source field.
-			return makeLeafNode("whitespace", token, state.text);
-		case "block-map-value":
-		case "block-map-key":
-		case "block-seq-entry":
-			// Structural indicators (":", "?", "-") are typed as "whitespace"
-			// when consumed as generic leaf tokens (e.g. inside flow contexts).
-			return makeLeafNode("whitespace", token, state.text);
-		case "document-start":
-		case "document-end":
-			// Document markers ("---", "...") consumed as leaf tokens.
-			return makeLeafNode("whitespace", token, state.text);
-		case "flow-map-start":
-		case "flow-map-end":
-		case "flow-seq-start":
-		case "flow-seq-end":
-			// Flow brackets consumed as leaf tokens outside their normal
-			// parse path — treat as structural whitespace.
-			return makeLeafNode("whitespace", token, state.text);
-		case "block-map-start":
-		case "block-seq-start":
-			// Zero-width start markers from the lexer — skip gracefully.
-			return makeLeafNode("whitespace", token, state.text);
-		case "byte-order-mark":
-			// BOM is structural metadata, not visible content. Mapping it to
-			// "whitespace" is intentional — it keeps source fidelity without
-			// needing a dedicated CstNodeType variant.
-			return makeLeafNode("whitespace", token, state.text);
-		case "error":
-			return makeLeafNode("error", token, state.text);
-		default:
-			return makeLeafNode("error", token, state.text);
+	if (token.kind === "whitespace") {
+		return makeLeafNode("whitespace", token, state.text);
+	} else if (token.kind === "newline") {
+		return makeLeafNode("newline", token, state.text);
+	} else if (token.kind === "comment") {
+		return makeLeafNode("comment", token, state.text);
+	} else if (token.kind === "scalar") {
+		return makeLeafNode("flow-scalar", token, state.text);
+	} else if (token.kind === "anchor") {
+		return makeLeafNode("anchor", token, state.text);
+	} else if (token.kind === "alias") {
+		return makeLeafNode("alias", token, state.text);
+	} else if (token.kind === "tag") {
+		return makeLeafNode("tag", token, state.text);
+	} else if (token.kind === "directive") {
+		return makeLeafNode("directive", token, state.text);
+	} else if (token.kind === "flow-separator") {
+		// Commas are structural punctuation; typed as "whitespace" since
+		// CstNodeType has no dedicated delimiter type. The raw "," is
+		// preserved in the node's source field.
+		return makeLeafNode("whitespace", token, state.text);
+	} else if (token.kind === "block-map-value" || token.kind === "block-map-key" || token.kind === "block-seq-entry") {
+		// Structural indicators (":", "?", "-") are typed as "whitespace"
+		// when consumed as generic leaf tokens (e.g. inside flow contexts).
+		return makeLeafNode("whitespace", token, state.text);
+	} else if (token.kind === "document-start" || token.kind === "document-end") {
+		// Document markers ("---", "...") consumed as leaf tokens.
+		return makeLeafNode("whitespace", token, state.text);
+	} else if (token.kind === "flow-map-start" || token.kind === "flow-map-end" || token.kind === "flow-seq-start" || token.kind === "flow-seq-end") {
+		// Flow brackets consumed as leaf tokens outside their normal
+		// parse path — treat as structural whitespace.
+		return makeLeafNode("whitespace", token, state.text);
+	} else if (token.kind === "block-map-start" || token.kind === "block-seq-start") {
+		// Zero-width start markers from the lexer — skip gracefully.
+		return makeLeafNode("whitespace", token, state.text);
+	} else if (token.kind === "byte-order-mark") {
+		// BOM is structural metadata, not visible content. Mapping it to
+		// "whitespace" is intentional — it keeps source fidelity without
+		// needing a dedicated CstNodeType variant.
+		return makeLeafNode("whitespace", token, state.text);
+	} else if (token.kind === "error") {
+		return makeLeafNode("error", token, state.text);
+	} else {
+		return makeLeafNode("error", token, state.text);
 	}
 }
 

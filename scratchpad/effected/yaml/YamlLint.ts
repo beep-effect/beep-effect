@@ -9,6 +9,9 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Result from "effect/Result";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { composeFirstDocument } from "./internal/composer/document.ts";
 import { isFatalCode } from "./internal/diagnostics.ts";
@@ -54,12 +57,12 @@ const validateRulesMap = (rules: { readonly [id: string]: YamlLintRuleSetting })
 			if (entry === "off" || entry === "warning") {
 				return `Rule "parse-validity" is always-on and cannot be set to "${entry}"`;
 			}
-			if (typeof entry === "object") {
+			if (P.isObjectKeyword(entry) && !P.isFunction(entry)) {
 				return `Rule "parse-validity" accepts no options`;
 			}
 			continue;
 		}
-		if (typeof entry === "object") {
+		if (P.isObjectKeyword(entry) && !P.isFunction(entry)) {
 			const optionsSchema = builtinOptionsSchemas.get(id);
 			// Custom rule ids carry opaque options the custom rule validates
 			// itself; built-in options are validated against the rule's own
@@ -277,21 +280,21 @@ export class StyleEvidence extends S.Class<StyleEvidence>($I`StyleEvidence`)({
 	 * position wins per spelling, floors take the maximum.
 	 */
 	static combine(a: StyleEvidence, b: StyleEvidence): StyleEvidence {
-		const votes = new Map<string, StyleVoteTally>();
+		const votes = MutableHashMap.empty<string, StyleVoteTally>();
 		for (const tally of [...a.votes, ...b.votes]) {
 			const key = `${tally.rule}\0${tally.dimension}\0${valueKey(tally.value)}`;
-			const seen = votes.get(key);
-			votes.set(key, seen === undefined ? tally : StyleVoteTally.make({ ...seen, count: seen.count + tally.count }));
+			const seen = O.getOrUndefined(MutableHashMap.get(votes, key));
+			MutableHashMap.set(votes, key, seen === undefined ? tally : StyleVoteTally.make({ ...seen, count: seen.count + tally.count }));
 		}
-		const floors = new Map<string, StyleFloorTally>();
+		const floors = MutableHashMap.empty<string, StyleFloorTally>();
 		for (const floor of [...a.floors, ...b.floors]) {
 			const key = `${floor.rule}\0${floor.dimension}`;
-			const seen = floors.get(key);
-			floors.set(key, seen === undefined || floor.value > seen.value ? floor : seen);
+			const seen = O.getOrUndefined(MutableHashMap.get(floors, key));
+			MutableHashMap.set(floors, key, seen === undefined || floor.value > seen.value ? floor : seen);
 		}
 		return StyleEvidence.make({
-			votes: [...votes.values()].sort((x, y) => byTallyOrder(x, y, valueKey(x.value), valueKey(y.value))),
-			floors: [...floors.values()].sort((x, y) => byTallyOrder(x, y, "", "")),
+			votes: [...MutableHashMap.values(votes)].sort((x, y) => byTallyOrder(x, y, valueKey(x.value), valueKey(y.value))),
+			floors: [...MutableHashMap.values(floors)].sort((x, y) => byTallyOrder(x, y, "", "")),
 		});
 	}
 
@@ -381,14 +384,14 @@ export class YamlStyleConflictError extends S.TaggedError<YamlStyleConflictError
 }
 
 /** Group canonical vote tallies by rule, then dimension (order-preserving). */
-const groupVotes = (evidence: StyleEvidence): Map<string, Map<string, Array<StyleVoteTally>>> => {
-	const byRule = new Map<string, Map<string, Array<StyleVoteTally>>>();
+const groupVotes = (evidence: StyleEvidence): MutableHashMap.MutableHashMap<string, MutableHashMap.MutableHashMap<string, Array<StyleVoteTally>>> => {
+	const byRule = MutableHashMap.empty<string, MutableHashMap.MutableHashMap<string, Array<StyleVoteTally>>>();
 	for (const tally of evidence.votes) {
-		const dims = byRule.get(tally.rule) ?? new Map<string, Array<StyleVoteTally>>();
-		const tallies = dims.get(tally.dimension) ?? [];
+		const dims = O.getOrUndefined(MutableHashMap.get(byRule, tally.rule)) ?? MutableHashMap.empty<string, Array<StyleVoteTally>>();
+		const tallies = O.getOrUndefined(MutableHashMap.get(dims, tally.dimension)) ?? [];
 		tallies.push(tally);
-		dims.set(tally.dimension, tallies);
-		byRule.set(tally.rule, dims);
+		MutableHashMap.set(dims, tally.dimension, tallies);
+		MutableHashMap.set(byRule, tally.rule, dims);
 	}
 	return byRule;
 };
@@ -401,15 +404,14 @@ const groupVotes = (evidence: StyleEvidence): Map<string, Map<string, Array<Styl
  */
 const overlayConfig = (
 	base: YamlLintConfig,
-	picks: Map<string, Map<string, string | number | boolean>>,
+	picks: MutableHashMap.MutableHashMap<string, MutableHashMap.MutableHashMap<string, string | number | boolean>>,
 ): YamlLintConfig => {
 	const rules: Record<string, YamlLintRuleSetting> = { ...base.rules };
 	for (const [ruleId, dims] of picks) {
 		const entry = rules[ruleId];
 		if (entry === "off") continue;
-		const merged: Record<string, unknown> = {};
-		if (typeof entry === "object") Object.assign(merged, entry);
-		else if (entry === "warning") merged.severity = "warning";
+		const merged: Record<string, unknown> = P.isObjectKeyword(entry) && !P.isFunction(entry) ? { ...entry } : {};
+		if (entry === "warning") merged.severity = "warning";
 		for (const [dimension, value] of dims) merged[dimension] = value;
 		rules[ruleId] = merged;
 	}
@@ -431,7 +433,7 @@ const resolveStrictEvidence = (
 	base: YamlLintConfig,
 ): Result.Result<YamlLintConfig, YamlStyleConflictError> => {
 	const conflicts: Array<StyleConflict> = [];
-	const picks = new Map<string, Map<string, string | number | boolean>>();
+	const picks = MutableHashMap.empty<string, MutableHashMap.MutableHashMap<string, string | number | boolean>>();
 	for (const [ruleId, dims] of groupVotes(evidence)) {
 		for (const [dimension, tallies] of dims) {
 			if (tallies.length > 1) {
@@ -446,9 +448,9 @@ const resolveStrictEvidence = (
 			}
 			const only = tallies[0];
 			if (only === undefined) continue;
-			const dimPicks = picks.get(ruleId) ?? new Map<string, string | number | boolean>();
-			dimPicks.set(dimension, only.value);
-			picks.set(ruleId, dimPicks);
+			const dimPicks = O.getOrUndefined(MutableHashMap.get(picks, ruleId)) ?? MutableHashMap.empty<string, string | number | boolean>();
+			MutableHashMap.set(dimPicks, dimension, only.value);
+			MutableHashMap.set(picks, ruleId, dimPicks);
 		}
 	}
 	if (conflicts.length > 0) return Result.fail(YamlStyleConflictError.make({ conflicts }));
@@ -456,7 +458,7 @@ const resolveStrictEvidence = (
 };
 
 const resolveLenientEvidence = (evidence: StyleEvidence, base: YamlLintConfig): YamlLintConfig => {
-	const picks = new Map<string, Map<string, string | number | boolean>>();
+	const picks = MutableHashMap.empty<string, MutableHashMap.MutableHashMap<string, string | number | boolean>>();
 	for (const [ruleId, dims] of groupVotes(evidence)) {
 		for (const [dimension, tallies] of dims) {
 			// Dominant = plurality: highest count wins; a tie breaks to the first
@@ -466,9 +468,9 @@ const resolveLenientEvidence = (evidence: StyleEvidence, base: YamlLintConfig): 
 			for (const tally of tallies) {
 				if (tally.count > dominant.count) dominant = tally;
 			}
-			const dimPicks = picks.get(ruleId) ?? new Map<string, string | number | boolean>();
-			dimPicks.set(dimension, dominant.value);
-			picks.set(ruleId, dimPicks);
+			const dimPicks = O.getOrUndefined(MutableHashMap.get(picks, ruleId)) ?? MutableHashMap.empty<string, string | number | boolean>();
+			MutableHashMap.set(dimPicks, dimension, dominant.value);
+			MutableHashMap.set(picks, ruleId, dimPicks);
 		}
 	}
 	return overlayConfig(base, picks);
@@ -491,7 +493,7 @@ export interface YamlLintInference {
 /** Resolve the effective severity of a configured entry. */
 const resolveSeverity = (entry: YamlLintRuleSetting): YamlLintSeverity => {
 	if (entry === "error" || entry === "warning") return entry;
-	if (typeof entry === "object" && (entry.severity === "error" || entry.severity === "warning")) {
+	if (P.isObjectKeyword(entry) && !P.isFunction(entry) && (entry.severity === "error" || entry.severity === "warning")) {
 		return entry.severity;
 	}
 	return "error";
@@ -515,7 +517,7 @@ const runRules = (
 		const entry = alwaysOn ? "error" : config.rules[rule.id];
 		if (entry === undefined || entry === "off") continue;
 		const severity = resolveSeverity(entry);
-		const options = typeof entry === "object" ? entry : undefined;
+		const options = P.isObjectKeyword(entry) && !P.isFunction(entry) ? entry : undefined;
 		for (const diagnostic of rule.check(ctx, options)) {
 			out.push(
 				alwaysOn || diagnostic.severity === severity ? diagnostic : YamlLintDiagnostic.make({ ...diagnostic, severity }),

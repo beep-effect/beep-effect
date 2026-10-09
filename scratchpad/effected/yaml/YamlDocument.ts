@@ -271,16 +271,10 @@ const toStringifyInput = (options?: YamlStringifyOptions) =>
  *
  * @internal
  */
-export function documentFromRaw(raw: RawYamlDocument, text: string): YamlDocument;
-export function documentFromRaw(text: string): (raw: RawYamlDocument) => YamlDocument;
-export function documentFromRaw(...args: [raw: RawYamlDocument, text: string] | [text: string]): YamlDocument | ((raw: RawYamlDocument) => YamlDocument) {
-	return dual<
-		(...args: [raw: RawYamlDocument, text: string] | [text: string]) => YamlDocument | ((raw: RawYamlDocument) => YamlDocument),
-		(raw: RawYamlDocument, text: string) => YamlDocument
-	>(2, function documentFromRaw(raw: RawYamlDocument, text: string): YamlDocument {
-	return fromRawDocument(raw, text);
-})(...args);
-}
+export const documentFromRaw: {
+	(raw: RawYamlDocument, text: string): YamlDocument;
+	(text: string): (raw: RawYamlDocument) => YamlDocument;
+} = dual(2, (raw: RawYamlDocument, text: string): YamlDocument => fromRawDocument(raw, text));
 
 /** Materialize a raw engine document into the public class. */
 function fromRawDocument(raw: RawYamlDocument, text: string): YamlDocument {

@@ -8,6 +8,7 @@
 // files above all — never carry the marker).
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
@@ -22,13 +23,13 @@ export const documentStartOptions = S.Struct({
 	present: S.optionalKey(S.Boolean).annotateKey({ description: "Whether the stream's initial `---` marker is required (`true`, default) or forbidden (`false`)" }),
 }).pipe($I.annoteSchema("documentStartOptions", { description: "Options for `document-start`: require (`true`, default) or forbid the marker." }));
 
-const TRIVIA = new Set(["newline", "whitespace", "comment", "byte-order-mark", "directive"]);
+const TRIVIA = HashSet.fromIterable(["newline", "whitespace", "comment", "byte-order-mark", "directive"]);
 
 /** True when the stream carries `%YAML`/`%TAG` directives — which REQUIRE `---`. */
 const hasDirectives = (ctx: LintContext): boolean => ctx.tokens.some((t) => t.kind === "directive");
 
 /** The first non-trivia token: it decides whether the stream is headed by `---`. */
-const headToken = (ctx: LintContext): YamlToken | undefined => ctx.tokens.find((t) => !TRIVIA.has(t.kind));
+const headToken = (ctx: LintContext): YamlToken | undefined => ctx.tokens.find((t) => !HashSet.has(TRIVIA, t.kind));
 
 /** The `---` marker at the head of the stream. */
 export const documentStart: YamlRule = {

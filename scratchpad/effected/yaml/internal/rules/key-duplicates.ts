@@ -6,6 +6,7 @@
 // No fix: dropping a pair changes what the document means.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as S from "effect/Schema";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
@@ -24,11 +25,11 @@ export const keyDuplicatesOptions = S.Struct({
 const walk = (node: YamlNode | null, text: string, out: Array<YamlLintDiagnostic>, ctx: LintContext): void => {
 	if (node === null) return;
 	if (S.is(YamlMap)(node)) {
-		const seen = new Set<string>();
+		const seen = MutableHashSet.empty<string>();
 		for (const pair of node.items) {
 			if (S.is(YamlScalar)(pair.key)) {
 				const id = keyIdentity(pair.key, text);
-				if (seen.has(id)) {
+				if (MutableHashSet.has(seen, id)) {
 					const pos = positionAt(ctx.lines, pair.key.offset);
 					out.push(
 						YamlLintDiagnostic.make({
@@ -42,7 +43,7 @@ const walk = (node: YamlNode | null, text: string, out: Array<YamlLintDiagnostic
 						}),
 					);
 				}
-				seen.add(id);
+				MutableHashSet.add(seen, id);
 			}
 			walk(pair.key, text, out, ctx);
 			walk(pair.value, text, out, ctx);

@@ -10,6 +10,7 @@
 // explicit intent and never flagged.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
@@ -32,7 +33,7 @@ export const truthyOptions = S.Struct({
 }).pipe($I.annoteSchema("truthyOptions", { description: "Options for `truthy`: the `allowed` boolean spellings (default `[\"true\", \"false\"]`) and whether mapping keys are checked (`checkKeys`, default `true` — the workflow `on:` key is the point)." }));
 
 /** The YAML 1.1 boolean family, per spelling case the 1.1 grammar admits. */
-const TRUTHY = new Set([
+const TRUTHY = HashSet.fromIterable([
 	"yes",
 	"Yes",
 	"YES",
@@ -53,29 +54,29 @@ const TRUTHY = new Set([
 	"FALSE",
 ]);
 
-const TRUE_SET = new Set(["yes", "on", "true"]);
+const TRUE_SET = HashSet.fromIterable(["yes", "on", "true"]);
 
 /** YAML 1.1 truthy spellings outside the allowed list. */
 export const truthy: YamlRule = {
 	id: "truthy",
 	check: (ctx: LintContext, options) => {
 		const opts = S.is(truthyOptions)(options) ? options : {};
-		const allowed = new Set(opts.allowed ?? ["true", "false"]);
+		const allowed = HashSet.fromIterable(opts.allowed ?? ["true", "false"]);
 		const checkKeys = opts.checkKeys ?? true;
 		const out: Array<YamlLintDiagnostic> = [];
 		walkScalars(ctx.document.contents, "root", (scalar, role) => {
 			if (role === "key" && !checkKeys) return;
 			if (scalar.style !== "plain" || scalar.tag !== undefined) return;
 			const raw = ctx.text.slice(scalar.offset, scalar.offset + scalar.length);
-			if (!TRUTHY.has(raw) || allowed.has(raw)) return;
+			if (!HashSet.has(TRUTHY, raw) || HashSet.has(allowed, raw)) return;
 			const pos = positionAt(ctx.lines, scalar.offset);
 			const isBool = P.isBoolean(scalar.value);
-			const truth = TRUE_SET.has(raw.toLowerCase());
+			const truth = HashSet.has(TRUE_SET, raw.toLowerCase());
 			const respell = truth ? "true" : "false";
 			// A real boolean respells when the canonical spelling is allowed; a
 			// string lookalike gets quoted. Both preserve the parsed value.
 			const fix = isBool
-				? allowed.has(respell)
+				? HashSet.has(allowed, respell)
 					? YamlEdit.make({ offset: scalar.offset, length: scalar.length, content: respell })
 					: undefined
 				: YamlEdit.make({ offset: scalar.offset, length: scalar.length, content: `"${raw}"` });

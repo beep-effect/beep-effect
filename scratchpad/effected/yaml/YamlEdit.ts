@@ -16,6 +16,11 @@ import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effected/yaml/YamlEdit");
 
+/** A defect raised when a YAML helper invariant is violated. */
+class YamlEditFailure extends S.TaggedError<YamlEditFailure>($I`YamlEditFailure`)("YamlEditFailure", {
+	message: S.String,
+}) {}
+
 /**
  * A single path segment: a `string` for mapping keys or a `number` for
  * sequence indices.
@@ -75,13 +80,13 @@ export class YamlEdit extends S.Class<YamlEdit>($I`YamlEdit`)({
 		const sorted = [...edits].sort((a, b) => b.offset - a.offset);
 		for (let i = 0; i + 1 < sorted.length; i++) {
 			const upper = sorted[i];
-			if (upper === undefined) throw new TypeError("Missing upper");
+			if (upper === undefined) throw YamlEditFailure.make({ message: "Missing upper" });
 			const lower = sorted[i + 1];
-			if (lower === undefined) throw new TypeError("Missing lower");
+			if (lower === undefined) throw YamlEditFailure.make({ message: "Missing lower" });
 			if (lower.offset + lower.length > upper.offset) {
-				throw new Error(
-					`YamlEdit.applyAll received overlapping edits at offsets ${lower.offset} and ${upper.offset} — overlapping edits are a programmer error`,
-				);
+				throw YamlEditFailure.make({
+					message: `YamlEdit.applyAll received overlapping edits at offsets ${lower.offset} and ${upper.offset} — overlapping edits are a programmer error`,
+				});
 			}
 		}
 		let result = text;

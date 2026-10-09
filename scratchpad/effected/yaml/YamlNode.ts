@@ -584,16 +584,12 @@ function defaultBudget(): ExpansionBudget {
  * {@link AliasExpansionBudgetExceeded} when the cap is exceeded. Not
  * re-exported from the package entry point.
  */
-export function nodeToJsValue(node: YamlNode | null, anchors: Map<string, YamlNode>, maxAliasCount: number): unknown;
-export function nodeToJsValue(anchors: Map<string, YamlNode>, maxAliasCount: number): (node: YamlNode | null) => unknown;
-export function nodeToJsValue(...args: [node: YamlNode | null, anchors: Map<string, YamlNode>, maxAliasCount: number] | [anchors: Map<string, YamlNode>, maxAliasCount: number]): unknown | ((node: YamlNode | null) => unknown) {
-	return dual<
-		(...args: [node: YamlNode | null, anchors: Map<string, YamlNode>, maxAliasCount: number] | [anchors: Map<string, YamlNode>, maxAliasCount: number]) => unknown | ((node: YamlNode | null) => unknown),
-		(node: YamlNode | null, anchors: Map<string, YamlNode>, maxAliasCount: number) => unknown
-	>(3, function nodeToJsValue(node: YamlNode | null, anchors: Map<string, YamlNode>, maxAliasCount: number): unknown {
-	return nodeToValue(node, anchors, { count: 0, limit: aliasExpansionLimit(maxAliasCount) });
-})(...args);
-}
+export const nodeToJsValue: {
+	(node: YamlNode | null, anchors: Map<string, YamlNode>, maxAliasCount: number): unknown;
+	(anchors: Map<string, YamlNode>, maxAliasCount: number): (node: YamlNode | null) => unknown;
+} = dual(3, (node: YamlNode | null, anchors: Map<string, YamlNode>, maxAliasCount: number): unknown =>
+	nodeToValue(node, anchors, { count: 0, limit: aliasExpansionLimit(maxAliasCount) }),
+);
 
 function nodeToValue(
 	node: YamlNode | null,

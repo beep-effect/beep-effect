@@ -171,13 +171,10 @@ function isClosersOnly(text: string, start: number, end: number): boolean {
 // Compose flow map
 // ---------------------------------------------------------------------------
 
-export function composeFlowMap(cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlMap;
-export function composeFlowMap(state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): (cst: CstNode) => YamlMap;
-export function composeFlowMap(...args: [cst: CstNode, state: ComposerState, meta?: NodeMeta | undefined, parentBlockColumn?: number | undefined] | [state: ComposerState, meta?: NodeMeta | undefined, parentBlockColumn?: number | undefined]): YamlMap | ((cst: CstNode) => YamlMap) {
-	return dual<
-		(...args: [cst: CstNode, state: ComposerState, meta?: NodeMeta | undefined, parentBlockColumn?: number | undefined] | [state: ComposerState, meta?: NodeMeta | undefined, parentBlockColumn?: number | undefined]) => YamlMap | ((cst: CstNode) => YamlMap),
-		(cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number) => YamlMap
-	>((args) => args[0] !== undefined && "type" in args[0], function composeFlowMap(cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlMap {
+export const composeFlowMap: {
+	(cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlMap;
+	(state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): (cst: CstNode) => YamlMap;
+} = dual((args) => args[0] !== undefined && "type" in args[0], (cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlMap => {
 	// Nesting-depth guard: unbounded recursion is a stack-overflow DoS vector.
 	if (!enterNesting(state, cst)) {
 		return YamlMap.make({ items: [], style: "flow", offset: cst.offset, length: cst.length });
@@ -187,8 +184,7 @@ export function composeFlowMap(...args: [cst: CstNode, state: ComposerState, met
 	} finally {
 		exitNesting(state);
 	}
-})(...args);
-}
+});
 
 function composeFlowMapInner(cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlMap {
 	const children = cst.children ?? [];
@@ -237,8 +233,8 @@ function composeFlowMapInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 		style: "flow",
 		offset: cst.offset,
 		length: cst.length,
-		...(meta?.tag !== undefined ? { tag: meta.tag } : {}),
-		...(meta?.anchor !== undefined ? { anchor: meta.anchor } : {}),
+		...O.getSomesStruct({ tag: O.fromUndefinedOr(meta?.tag) }),
+		...O.getSomesStruct({ anchor: O.fromUndefinedOr(meta?.anchor) }),
 		...O.getSomesStruct({ comment: O.fromUndefinedOr(mapComment) }),
 	});
 
@@ -246,13 +242,10 @@ function composeFlowMapInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 	return map;
 }
 
-export function flattenFlowChildren(children: readonly CstNode[], state: ComposerState): SemanticItem[];
-export function flattenFlowChildren(state: ComposerState): (children: readonly CstNode[]) => SemanticItem[];
-export function flattenFlowChildren(...args: [children: readonly CstNode[], state: ComposerState] | [state: ComposerState]): SemanticItem[] | ((children: readonly CstNode[]) => SemanticItem[]) {
-	return dual<
-		(...args: [children: readonly CstNode[], state: ComposerState] | [state: ComposerState]) => SemanticItem[] | ((children: readonly CstNode[]) => SemanticItem[]),
-		(children: readonly CstNode[], state: ComposerState) => SemanticItem[]
-	>(2, function flattenFlowChildren(children: readonly CstNode[], state: ComposerState): SemanticItem[] {
+export const flattenFlowChildren: {
+	(children: readonly CstNode[], state: ComposerState): SemanticItem[];
+	(state: ComposerState): (children: readonly CstNode[]) => SemanticItem[];
+} = dual(2, (children: readonly CstNode[], state: ComposerState): SemanticItem[] => {
 	const items: SemanticItem[] = [];
 	let pendingMeta: NodeMeta = {};
 
@@ -454,20 +447,16 @@ export function flattenFlowChildren(...args: [children: readonly CstNode[], stat
 		items.push({ kind: "node", node: scalar });
 	}
 	return items;
-})(...args);
-}
+});
 
 // ---------------------------------------------------------------------------
 // Compose flow seq
 // ---------------------------------------------------------------------------
 
-export function composeFlowSeq(cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlSeq;
-export function composeFlowSeq(state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): (cst: CstNode) => YamlSeq;
-export function composeFlowSeq(...args: [cst: CstNode, state: ComposerState, meta?: NodeMeta | undefined, parentBlockColumn?: number | undefined] | [state: ComposerState, meta?: NodeMeta | undefined, parentBlockColumn?: number | undefined]): YamlSeq | ((cst: CstNode) => YamlSeq) {
-	return dual<
-		(...args: [cst: CstNode, state: ComposerState, meta?: NodeMeta | undefined, parentBlockColumn?: number | undefined] | [state: ComposerState, meta?: NodeMeta | undefined, parentBlockColumn?: number | undefined]) => YamlSeq | ((cst: CstNode) => YamlSeq),
-		(cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number) => YamlSeq
-	>((args) => args[0] !== undefined && "type" in args[0], function composeFlowSeq(cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlSeq {
+export const composeFlowSeq: {
+	(cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlSeq;
+	(state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): (cst: CstNode) => YamlSeq;
+} = dual((args) => args[0] !== undefined && "type" in args[0], (cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlSeq => {
 	// Nesting-depth guard: unbounded recursion is a stack-overflow DoS vector.
 	if (!enterNesting(state, cst)) {
 		return YamlSeq.make({ items: [], style: "flow", offset: cst.offset, length: cst.length });
@@ -477,8 +466,7 @@ export function composeFlowSeq(...args: [cst: CstNode, state: ComposerState, met
 	} finally {
 		exitNesting(state);
 	}
-})(...args);
-}
+});
 
 function composeFlowSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlSeq {
 	const children = cst.children ?? [];
@@ -711,8 +699,8 @@ function composeFlowSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 		style: "flow",
 		offset: cst.offset,
 		length: cst.length,
-		...(meta?.tag !== undefined ? { tag: meta.tag } : {}),
-		...(meta?.anchor !== undefined ? { anchor: meta.anchor } : {}),
+		...O.getSomesStruct({ tag: O.fromUndefinedOr(meta?.tag) }),
+		...O.getSomesStruct({ anchor: O.fromUndefinedOr(meta?.anchor) }),
 		...O.getSomesStruct({ comment: O.fromUndefinedOr(seqComment) }),
 	});
 

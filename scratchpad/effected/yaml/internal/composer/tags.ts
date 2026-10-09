@@ -6,6 +6,7 @@
 import type { CstNode } from "../cst.ts";
 import type { RawDirective } from "../raw-document.ts";
 import type { ComposerState } from "./state.ts";
+import * as MutableHashSet from "effect/MutableHashSet";
 import { dual } from "effect/Function";
 
 /**
@@ -15,13 +16,10 @@ import { dual } from "effect/Function";
  *
  * Returns the resolved tag URI, or the original tag if no directive matches.
  */
-export function resolveTagHandle(tag: string, state: ComposerState): string;
-export function resolveTagHandle(state: ComposerState): (tag: string) => string;
-export function resolveTagHandle(...args: [tag: string, state: ComposerState] | [state: ComposerState]): string | ((tag: string) => string) {
-	return dual<
-		(...args: [tag: string, state: ComposerState] | [state: ComposerState]) => string | ((tag: string) => string),
-		(tag: string, state: ComposerState) => string
-	>(2, function resolveTagHandle(tag: string, state: ComposerState): string {
+export const resolveTagHandle: {
+	(tag: string, state: ComposerState): string;
+	(state: ComposerState): (tag: string) => string;
+} = dual(2, (tag: string, state: ComposerState): string => {
 	// Verbatim tags: !<...> — return the content as-is
 	if (tag.startsWith("!<") && tag.endsWith(">")) {
 		return tag.slice(2, -1);
@@ -58,8 +56,7 @@ export function resolveTagHandle(...args: [tag: string, state: ComposerState] | 
 	}
 	// Non-specific tag: ! alone
 	return tag;
-})(...args);
-}
+});
 
 export function parseDirective(source: string): RawDirective | null {
 	const trimmed = source.trim();
@@ -82,22 +79,19 @@ export function parseDirective(source: string): RawDirective | null {
  * are local to a single document and do not leak across `---` boundaries.
  * The `!!` shorthand and the primary `!` handle are always available.
  */
-export function validateTagHandlesInDocument(docCst: CstNode, state: ComposerState): void;
-export function validateTagHandlesInDocument(state: ComposerState): (docCst: CstNode) => void;
-export function validateTagHandlesInDocument(...args: [docCst: CstNode, state: ComposerState] | [state: ComposerState]): void | ((docCst: CstNode) => void) {
-	return dual<
-		(...args: [docCst: CstNode, state: ComposerState] | [state: ComposerState]) => void | ((docCst: CstNode) => void),
-		(docCst: CstNode, state: ComposerState) => void
-	>(2, function validateTagHandlesInDocument(docCst: CstNode, state: ComposerState): void {
+export const validateTagHandlesInDocument: {
+	(docCst: CstNode, state: ComposerState): void;
+	(state: ComposerState): (docCst: CstNode) => void;
+} = dual(2, (docCst: CstNode, state: ComposerState): void => {
 	const children = docCst.children ?? [];
 	// Build local tagMap from %TAG directives in this doc.
-	const localHandles = new Set<string>();
+	const localHandles = MutableHashSet.empty<string>();
 	for (const child of children) {
 		if (child.type !== "directive") continue;
 		const directive = parseDirective(child.source);
 		if ((directive !== null) && directive.name === "TAG" && directive.parameters.length >= 2) {
 			const handle = directive.parameters[0];
-			if ((handle !== undefined && handle !== "")) localHandles.add(handle);
+			if ((handle !== undefined && handle !== "")) MutableHashSet.add(localHandles, handle);
 		}
 	}
 	// Walk the doc's CST nodes for `tag` children and validate references.
@@ -113,7 +107,7 @@ export function validateTagHandlesInDocument(...args: [docCst: CstNode, state: C
 			const m = src.match(/^(![\w-]*!)/);
 			if ((m !== null)) {
 				const handle = m[1];
-				if ((handle !== undefined && handle !== "") && !localHandles.has(handle)) {
+				if ((handle !== undefined && handle !== "") && !MutableHashSet.has(localHandles, handle)) {
 					state.errors.push({
 						code: "UnresolvedTag",
 						message: `Tag handle ${handle} is not declared in this document`,
@@ -127,5 +121,4 @@ export function validateTagHandlesInDocument(...args: [docCst: CstNode, state: C
 			for (const c of node.children) stack.push(c);
 		}
 	}
-})(...args);
-}
+});

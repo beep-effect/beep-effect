@@ -15,6 +15,7 @@ import { resolveTagHandle } from "./tags.ts";
 import { dual } from "effect/Function";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
+import * as Match from "effect/Match";
 import * as O from "@beep/utils/Option";
 
 // ---------------------------------------------------------------------------
@@ -75,36 +76,28 @@ function resolvePlainScalar(value: string): unknown {
 }
 
 function resolveTaggedScalar(rawValue: string, tag: string): unknown {
-	switch (tag) {
-		case "!!str":
-		case "tag:yaml.org,2002:str":
-			return rawValue;
-		case "!!int":
-		case "tag:yaml.org,2002:int": {
+	return Match.value(tag).pipe(
+		Match.when(Match.is("!!str", "tag:yaml.org,2002:str"), () => rawValue),
+		Match.when(Match.is("!!int", "tag:yaml.org,2002:int"), () => {
 			if (OCT_RE.test(rawValue)) return Number.parseInt(rawValue.slice(2), 8);
 			if (HEX_RE.test(rawValue)) return Number.parseInt(rawValue.slice(2), 16);
 			const n = Number.parseInt(rawValue, 10);
 			return Number.isNaN(n) ? rawValue : n;
-		}
-		case "!!float":
-		case "tag:yaml.org,2002:float": {
+		}),
+		Match.when(Match.is("!!float", "tag:yaml.org,2002:float"), () => {
 			if (INF_RE.test(rawValue)) return rawValue.startsWith("-") ? -Number.POSITIVE_INFINITY : Number.POSITIVE_INFINITY;
 			if (NAN_RE.test(rawValue)) return Number.NaN;
 			const n = Number.parseFloat(rawValue);
 			return Number.isNaN(n) ? rawValue : n;
-		}
-		case "!!bool":
-		case "tag:yaml.org,2002:bool": {
+		}),
+		Match.when(Match.is("!!bool", "tag:yaml.org,2002:bool"), () => {
 			if (TRUE_RE.test(rawValue)) return true;
 			if (FALSE_RE.test(rawValue)) return false;
 			return rawValue;
-		}
-		case "!!null":
-		case "tag:yaml.org,2002:null":
-			return null;
-		default:
-			return rawValue;
-	}
+		}),
+		Match.when(Match.is("!!null", "tag:yaml.org,2002:null"), () => null),
+		Match.orElse(() => rawValue),
+	);
 }
 
 export const resolveScalar: {
@@ -185,20 +178,16 @@ function blockScalarHeaderComment(cst: CstNode): string | undefined {
 	return rawCommentText(header.slice(hash));
 }
 
-export function getScalarValue(node: CstNode, fullText?: string): string;
-export function getScalarValue(fullText?: string): (node: CstNode) => string;
-export function getScalarValue(...args: [node: CstNode, fullText?: string | undefined] | [fullText?: string | undefined]): string | ((node: CstNode) => string) {
-	return dual<
-		(...args: [node: CstNode, fullText?: string | undefined] | [fullText?: string | undefined]) => string | ((node: CstNode) => string),
-		(node: CstNode, fullText?: string) => string
-	>((args) => args.length >= 2 || (typeof args[0] === "object" && args[0] !== null && "type" in args[0]), function getScalarValue(node: CstNode, fullText?: string): string {
+export const getScalarValue: {
+	(node: CstNode, fullText?: string): string;
+	(fullText?: string): (node: CstNode) => string;
+} = dual((args) => args.length >= 2 || (P.isObjectKeyword(args[0]) && !P.isFunction(args[0]) && "type" in args[0]), (node: CstNode, fullText?: string): string => {
 	if (node.type === "block-scalar") return decodeBlockScalar(node.source, fullText, node.offset);
 	const style = getScalarStyle(node);
 	if (style === "single-quoted") return decodeSingleQuoted(node.source);
 	if (style === "double-quoted") return decodeDoubleQuoted(node.source);
 	return decodePlainScalar(node.source);
-})(...args);
-}
+});
 
 /**
  * YAML 1.2 §6.5 flow line folding for plain scalars.
@@ -237,93 +226,67 @@ function decodeDoubleQuoted(raw: string): string {
 		if (ch === "\\") {
 			i++;
 			const esc = inner[i];
-			switch (esc) {
-				case "\\":
-					result += "\\";
-					break;
-				case '"':
-					result += '"';
-					break;
-				case "/":
-					result += "/";
-					break;
-				case "b":
-					result += "\b";
-					break;
-				case "f":
-					result += "\f";
-					break;
-				case "n":
-					result += "\n";
-					break;
-				case "r":
-					result += "\r";
-					break;
-				case "t":
-					result += "\t";
-					break;
-				case "0":
-					result += "\0";
-					break;
-				case "a":
-					result += "\x07";
-					break;
-				case "e":
-					result += "\x1B";
-					break;
-				case "v":
-					result += "\x0B";
-					break;
-				case " ":
-					result += " ";
-					break;
-				case "N":
-					result += "\u0085";
-					break;
-				case "_":
-					result += "\u00a0";
-					break;
-				case "L":
-					result += "\u2028";
-					break;
-				case "P":
-					result += "\u2029";
-					break;
-				case "x": {
-					const hex = inner.slice(i + 1, i + 3);
-					result += String.fromCharCode(Number.parseInt(hex, 16));
-					i += 2;
-					break;
-				}
-				case "u": {
-					const hex = inner.slice(i + 1, i + 5);
-					result += String.fromCodePoint(Number.parseInt(hex, 16));
-					i += 4;
-					break;
-				}
-				case "U": {
-					const hex = inner.slice(i + 1, i + 9);
-					// Defensive: the lexer already rejects `\U` escapes above U+10FFFF
-					// with an error token, but guard the composer's re-decode too so a
-					// stray code point can never throw a RangeError as a defect.
-					const cp = Number.parseInt(hex, 16);
-					result += cp <= 0x10ffff ? String.fromCodePoint(cp) : "\uFFFD";
-					i += 8;
-					break;
-				}
-				case "\n": {
-					i++;
-					while (i < inner.length && (inner[i] === " " || inner[i] === "\t")) i++;
-					continue;
-				}
-				case "\r": {
-					i++;
-					if (i < inner.length && inner[i] === "\n") i++;
-					while (i < inner.length && (inner[i] === " " || inner[i] === "\t")) i++;
-					continue;
-				}
-				default:
-					result += esc === undefined ? "\\" : esc;
+			if (esc === "\\") {
+				result += "\\";
+			} else if (esc === '"') {
+				result += '"';
+			} else if (esc === "/") {
+				result += "/";
+			} else if (esc === "b") {
+				result += "\b";
+			} else if (esc === "f") {
+				result += "\f";
+			} else if (esc === "n") {
+				result += "\n";
+			} else if (esc === "r") {
+				result += "\r";
+			} else if (esc === "t") {
+				result += "\t";
+			} else if (esc === "0") {
+				result += "\0";
+			} else if (esc === "a") {
+				result += "\x07";
+			} else if (esc === "e") {
+				result += "\x1B";
+			} else if (esc === "v") {
+				result += "\x0B";
+			} else if (esc === " ") {
+				result += " ";
+			} else if (esc === "N") {
+				result += "\u0085";
+			} else if (esc === "_") {
+				result += "\u00a0";
+			} else if (esc === "L") {
+				result += "\u2028";
+			} else if (esc === "P") {
+				result += "\u2029";
+			} else if (esc === "x") {
+				const hex = inner.slice(i + 1, i + 3);
+				result += String.fromCharCode(Number.parseInt(hex, 16));
+				i += 2;
+			} else if (esc === "u") {
+				const hex = inner.slice(i + 1, i + 5);
+				result += String.fromCodePoint(Number.parseInt(hex, 16));
+				i += 4;
+			} else if (esc === "U") {
+				const hex = inner.slice(i + 1, i + 9);
+				// Defensive: the lexer already rejects `\U` escapes above U+10FFFF
+				// with an error token, but guard the composer's re-decode too so a
+				// stray code point can never throw a RangeError as a defect.
+				const cp = Number.parseInt(hex, 16);
+				result += cp <= 0x10ffff ? String.fromCodePoint(cp) : "\uFFFD";
+				i += 8;
+			} else if (esc === "\n") {
+				i++;
+				while (i < inner.length && (inner[i] === " " || inner[i] === "\t")) i++;
+				continue;
+			} else if (esc === "\r") {
+				i++;
+				if (i < inner.length && inner[i] === "\n") i++;
+				while (i < inner.length && (inner[i] === " " || inner[i] === "\t")) i++;
+				continue;
+			} else {
+				result += esc === undefined ? "\\" : esc;
 			}
 			// Escape-produced content is always significant (never trimmed)
 			significantEnd = result.length;
@@ -409,13 +372,10 @@ export function foldFlowLines(text: string): string {
  * up until the `:` value separator, merging them with flow line folding.
  * Returns the folded key text and the index after the last consumed child.
  */
-export function collectMultilineKey(children: readonly CstNode[], startIdx: number): { value: string; nextIdx: number };
-export function collectMultilineKey(startIdx: number): (children: readonly CstNode[]) => { value: string; nextIdx: number };
-export function collectMultilineKey(...args: [children: readonly CstNode[], startIdx: number] | [startIdx: number]): { value: string; nextIdx: number } | ((children: readonly CstNode[]) => { value: string; nextIdx: number }) {
-	return dual<
-		(...args: [children: readonly CstNode[], startIdx: number] | [startIdx: number]) => { value: string; nextIdx: number } | ((children: readonly CstNode[]) => { value: string; nextIdx: number }),
-		(children: readonly CstNode[], startIdx: number) => { value: string; nextIdx: number }
-	>(2, function collectMultilineKey(children: readonly CstNode[], startIdx: number): { value: string; nextIdx: number } {
+export const collectMultilineKey: {
+	(children: readonly CstNode[], startIdx: number): { value: string; nextIdx: number };
+	(startIdx: number): (children: readonly CstNode[]) => { value: string; nextIdx: number };
+} = dual(2, (children: readonly CstNode[], startIdx: number): { value: string; nextIdx: number } => {
 	const first = children[startIdx];
 	if (first?.type !== "flow-scalar") {
 		return { value: first?.source.trim() ?? "", nextIdx: startIdx + 1 };
@@ -448,8 +408,7 @@ export function collectMultilineKey(...args: [children: readonly CstNode[], star
 	}
 
 	return { value: foldFlowLines(parts.join("\n")), nextIdx: idx };
-})(...args);
-}
+});
 
 /**
  * Extract the trimmed content of the line at `offset` in `text`.
@@ -508,13 +467,10 @@ function skipChildrenOnLine(children: readonly CstNode[], startIdx: number, line
  * can span the composed scalar node across the whole folded value (the
  * sourceMultiline decoration pass then stamps it from the span).
  */
-export function collectMultilinePlainScalar(children: readonly CstNode[], startIdx: number, minContinuationColumn?: number, sourceText?: string): { value: string; nextIdx: number; partsCount: number; endOffset: number };
-export function collectMultilinePlainScalar(startIdx: number, minContinuationColumn?: number, sourceText?: string): (children: readonly CstNode[]) => { value: string; nextIdx: number; partsCount: number; endOffset: number };
-export function collectMultilinePlainScalar(...args: [children: readonly CstNode[], startIdx: number, minContinuationColumn?: number | undefined, sourceText?: string | undefined] | [startIdx: number, minContinuationColumn?: number | undefined, sourceText?: string | undefined]): { value: string; nextIdx: number; partsCount: number; endOffset: number } | ((children: readonly CstNode[]) => { value: string; nextIdx: number; partsCount: number; endOffset: number }) {
-	return dual<
-		(...args: [children: readonly CstNode[], startIdx: number, minContinuationColumn?: number | undefined, sourceText?: string | undefined] | [startIdx: number, minContinuationColumn?: number | undefined, sourceText?: string | undefined]) => { value: string; nextIdx: number; partsCount: number; endOffset: number } | ((children: readonly CstNode[]) => { value: string; nextIdx: number; partsCount: number; endOffset: number }),
-		(children: readonly CstNode[], startIdx: number, minContinuationColumn?: number, sourceText?: string) => { value: string; nextIdx: number; partsCount: number; endOffset: number }
-	>((args) => A.isArray(args[0]), function collectMultilinePlainScalar(children: readonly CstNode[], startIdx: number, minContinuationColumn?: number, sourceText?: string): { value: string; nextIdx: number; partsCount: number; endOffset: number } {
+export const collectMultilinePlainScalar: {
+	(children: readonly CstNode[], startIdx: number, minContinuationColumn?: number, sourceText?: string): { value: string; nextIdx: number; partsCount: number; endOffset: number };
+	(startIdx: number, minContinuationColumn?: number, sourceText?: string): (children: readonly CstNode[]) => { value: string; nextIdx: number; partsCount: number; endOffset: number };
+} = dual((args) => A.isArray(args[0]), (children: readonly CstNode[], startIdx: number, minContinuationColumn?: number, sourceText?: string): { value: string; nextIdx: number; partsCount: number; endOffset: number } => {
 	const first = children[startIdx];
 	if (first?.type !== "flow-scalar") {
 		return {
@@ -651,8 +607,7 @@ export function collectMultilinePlainScalar(...args: [children: readonly CstNode
 
 	// Apply flow folding to the collected parts
 	return { value: foldFlowLines(parts.join("\n")), nextIdx: idx, partsCount: parts.length, endOffset };
-})(...args);
-}
+});
 
 // ---------------------------------------------------------------------------
 // CST scanning helpers (shared by the block/flow/document seams)
@@ -663,13 +618,10 @@ export function collectMultilinePlainScalar(...args: [children: readonly CstNode
  * If `stopAtDash` is true, returns null when a `-` indicator is encountered before
  * any significant child (used to avoid merging across sequence entry boundaries).
  */
-export function findNextSignificantChild(children: readonly CstNode[], startIdx: number, stopAtDash?: boolean): number | null;
-export function findNextSignificantChild(startIdx: number, stopAtDash?: boolean): (children: readonly CstNode[]) => number | null;
-export function findNextSignificantChild(...args: [children: readonly CstNode[], startIdx: number, stopAtDash?: boolean | undefined] | [startIdx: number, stopAtDash?: boolean | undefined]): number | null | ((children: readonly CstNode[]) => number | null) {
-	return dual<
-		(...args: [children: readonly CstNode[], startIdx: number, stopAtDash?: boolean | undefined] | [startIdx: number, stopAtDash?: boolean | undefined]) => number | null | ((children: readonly CstNode[]) => number | null),
-		(children: readonly CstNode[], startIdx: number, stopAtDash?: boolean) => number | null
-	>((args) => A.isArray(args[0]), function findNextSignificantChild(children: readonly CstNode[], startIdx: number, stopAtDash: boolean = false): number | null {
+export const findNextSignificantChild: {
+	(children: readonly CstNode[], startIdx: number, stopAtDash?: boolean): number | null;
+	(startIdx: number, stopAtDash?: boolean): (children: readonly CstNode[]) => number | null;
+} = dual((args) => A.isArray(args[0]), (children: readonly CstNode[], startIdx: number, stopAtDash: boolean = false): number | null => {
 	for (let j = startIdx; j < children.length; j++) {
 		const c = children[j];
 		if (c === undefined) continue;
@@ -681,23 +633,16 @@ export function findNextSignificantChild(...args: [children: readonly CstNode[],
 		return j;
 	}
 	return null;
-})(...args);
-}
+});
 
 /**
  * Check if a value separator (`:`) follows in a CST children list,
  * skipping whitespace and newlines.
  */
-export function hasValueSepAfterInList(children: readonly CstNode[], startIdx: number): boolean;
-export function hasValueSepAfterInList(startIdx: number): (children: readonly CstNode[]) => boolean;
-export function hasValueSepAfterInList(...args: [children: readonly CstNode[], startIdx: number] | [startIdx: number]): boolean | ((children: readonly CstNode[]) => boolean) {
-	return dual<
-		(...args: [children: readonly CstNode[], startIdx: number] | [startIdx: number]) => boolean | ((children: readonly CstNode[]) => boolean),
-		(children: readonly CstNode[], startIdx: number) => boolean
-	>(2, function hasValueSepAfterInList(children: readonly CstNode[], startIdx: number): boolean {
-	return findValueSepOffset(children, startIdx) >= 0;
-})(...args);
-}
+export const hasValueSepAfterInList: {
+	(children: readonly CstNode[], startIdx: number): boolean;
+	(startIdx: number): (children: readonly CstNode[]) => boolean;
+} = dual(2, (children: readonly CstNode[], startIdx: number): boolean => findValueSepOffset(children, startIdx) >= 0);
 
 /**
  * Check if the next non-trivia child is a block-map (indicating that the
@@ -705,13 +650,10 @@ export function hasValueSepAfterInList(...args: [children: readonly CstNode[], s
  * false if a sibling `:` value-sep is encountered first, since that means
  * the scalar is a key at the current level (not a nested mapping start).
  */
-export function hasBlockMapAfterInList(children: readonly CstNode[], startIdx: number): boolean;
-export function hasBlockMapAfterInList(startIdx: number): (children: readonly CstNode[]) => boolean;
-export function hasBlockMapAfterInList(...args: [children: readonly CstNode[], startIdx: number] | [startIdx: number]): boolean | ((children: readonly CstNode[]) => boolean) {
-	return dual<
-		(...args: [children: readonly CstNode[], startIdx: number] | [startIdx: number]) => boolean | ((children: readonly CstNode[]) => boolean),
-		(children: readonly CstNode[], startIdx: number) => boolean
-	>(2, function hasBlockMapAfterInList(children: readonly CstNode[], startIdx: number): boolean {
+export const hasBlockMapAfterInList: {
+	(children: readonly CstNode[], startIdx: number): boolean;
+	(startIdx: number): (children: readonly CstNode[]) => boolean;
+} = dual(2, (children: readonly CstNode[], startIdx: number): boolean => {
 	for (let j = startIdx; j < children.length; j++) {
 		const c = children[j];
 		if (c === undefined) continue;
@@ -723,17 +665,13 @@ export function hasBlockMapAfterInList(...args: [children: readonly CstNode[], s
 		return c.type === "block-map";
 	}
 	return false;
-})(...args);
-}
+});
 
 /** Find the offset of the next ":" value separator in a CST children list, or -1 if none. */
-export function findValueSepOffset(children: readonly CstNode[], startIdx: number): number;
-export function findValueSepOffset(startIdx: number): (children: readonly CstNode[]) => number;
-export function findValueSepOffset(...args: [children: readonly CstNode[], startIdx: number] | [startIdx: number]): number | ((children: readonly CstNode[]) => number) {
-	return dual<
-		(...args: [children: readonly CstNode[], startIdx: number] | [startIdx: number]) => number | ((children: readonly CstNode[]) => number),
-		(children: readonly CstNode[], startIdx: number) => number
-	>(2, function findValueSepOffset(children: readonly CstNode[], startIdx: number): number {
+export const findValueSepOffset: {
+	(children: readonly CstNode[], startIdx: number): number;
+	(startIdx: number): (children: readonly CstNode[]) => number;
+} = dual(2, (children: readonly CstNode[], startIdx: number): number => {
 	for (let j = startIdx; j < children.length; j++) {
 		const c = children[j];
 		if (c === undefined) continue;
@@ -745,25 +683,20 @@ export function findValueSepOffset(...args: [children: readonly CstNode[], start
 		return -1;
 	}
 	return -1;
-})(...args);
-}
+});
 
 /** Check if a ":" value-sep exists between startIdx (inclusive) and endIdx (exclusive). */
-export function hasValueSepBetween(children: readonly CstNode[], startIdx: number, endIdx: number): boolean;
-export function hasValueSepBetween(startIdx: number, endIdx: number): (children: readonly CstNode[]) => boolean;
-export function hasValueSepBetween(...args: [children: readonly CstNode[], startIdx: number, endIdx: number] | [startIdx: number, endIdx: number]): boolean | ((children: readonly CstNode[]) => boolean) {
-	return dual<
-		(...args: [children: readonly CstNode[], startIdx: number, endIdx: number] | [startIdx: number, endIdx: number]) => boolean | ((children: readonly CstNode[]) => boolean),
-		(children: readonly CstNode[], startIdx: number, endIdx: number) => boolean
-	>(3, function hasValueSepBetween(children: readonly CstNode[], startIdx: number, endIdx: number): boolean {
+export const hasValueSepBetween: {
+	(children: readonly CstNode[], startIdx: number, endIdx: number): boolean;
+	(startIdx: number, endIdx: number): (children: readonly CstNode[]) => boolean;
+} = dual(3, (children: readonly CstNode[], startIdx: number, endIdx: number): boolean => {
 	for (let j = startIdx; j < endIdx; j++) {
 		const c = children[j];
 		if (c === undefined) continue;
 		if (c.type === "whitespace" && c.source === ":") return true;
 	}
 	return false;
-})(...args);
-}
+});
 
 /**
  * Returns true when the first non-trivia child of a block-map CST node is a
@@ -792,13 +725,10 @@ export function blockMapStartsWithValueSep(blockMap: CstNode): boolean {
  * Only allows skipping plain scalars that were preceded by a newline,
  * preventing false matches across comma-delimited entries on the same line.
  */
-export function hasValueSepThroughPlainScalars(children: readonly CstNode[], startIdx: number): boolean;
-export function hasValueSepThroughPlainScalars(startIdx: number): (children: readonly CstNode[]) => boolean;
-export function hasValueSepThroughPlainScalars(...args: [children: readonly CstNode[], startIdx: number] | [startIdx: number]): boolean | ((children: readonly CstNode[]) => boolean) {
-	return dual<
-		(...args: [children: readonly CstNode[], startIdx: number] | [startIdx: number]) => boolean | ((children: readonly CstNode[]) => boolean),
-		(children: readonly CstNode[], startIdx: number) => boolean
-	>(2, function hasValueSepThroughPlainScalars(children: readonly CstNode[], startIdx: number): boolean {
+export const hasValueSepThroughPlainScalars: {
+	(children: readonly CstNode[], startIdx: number): boolean;
+	(startIdx: number): (children: readonly CstNode[]) => boolean;
+} = dual(2, (children: readonly CstNode[], startIdx: number): boolean => {
 	let sawNewline = false;
 	for (let j = startIdx; j < children.length; j++) {
 		const c = children[j];
@@ -819,17 +749,13 @@ export function hasValueSepThroughPlainScalars(...args: [children: readonly CstN
 		return false;
 	}
 	return false;
-})(...args);
-}
+});
 
 /** Find the next non-trivia CST child in a list, returning the node and its index. */
-export function findNextContentInList(children: readonly CstNode[], startIdx: number): { node: CstNode; idx: number } | null;
-export function findNextContentInList(startIdx: number): (children: readonly CstNode[]) => { node: CstNode; idx: number } | null;
-export function findNextContentInList(...args: [children: readonly CstNode[], startIdx: number] | [startIdx: number]): { node: CstNode; idx: number } | null | ((children: readonly CstNode[]) => { node: CstNode; idx: number } | null) {
-	return dual<
-		(...args: [children: readonly CstNode[], startIdx: number] | [startIdx: number]) => { node: CstNode; idx: number } | null | ((children: readonly CstNode[]) => { node: CstNode; idx: number } | null),
-		(children: readonly CstNode[], startIdx: number) => { node: CstNode; idx: number } | null
-	>(2, function findNextContentInList(children: readonly CstNode[], startIdx: number): { node: CstNode; idx: number } | null {
+export const findNextContentInList: {
+	(children: readonly CstNode[], startIdx: number): { node: CstNode; idx: number } | null;
+	(startIdx: number): (children: readonly CstNode[]) => { node: CstNode; idx: number } | null;
+} = dual(2, (children: readonly CstNode[], startIdx: number): { node: CstNode; idx: number } | null => {
 	for (let j = startIdx; j < children.length; j++) {
 		const c = children[j];
 		if (c === undefined) continue;
@@ -837,8 +763,7 @@ export function findNextContentInList(...args: [children: readonly CstNode[], st
 		return { node: c, idx: j };
 	}
 	return null;
-})(...args);
-}
+});
 
 export function findFirstContent(children: readonly CstNode[]): CstNode | undefined {
 	for (const c of children) {
@@ -865,13 +790,10 @@ export function findLastContent(children: readonly CstNode[]): CstNode | undefin
  * Find the next content child (skipping trivia AND anchor/tag properties),
  * or null. Used at the document level where properties precede content.
  */
-export function findNextContentChild(children: readonly CstNode[], startIdx: number): CstNode | null;
-export function findNextContentChild(startIdx: number): (children: readonly CstNode[]) => CstNode | null;
-export function findNextContentChild(...args: [children: readonly CstNode[], startIdx: number] | [startIdx: number]): CstNode | null | ((children: readonly CstNode[]) => CstNode | null) {
-	return dual<
-		(...args: [children: readonly CstNode[], startIdx: number] | [startIdx: number]) => CstNode | null | ((children: readonly CstNode[]) => CstNode | null),
-		(children: readonly CstNode[], startIdx: number) => CstNode | null
-	>(2, function findNextContentChild(children: readonly CstNode[], startIdx: number): CstNode | null {
+export const findNextContentChild: {
+	(children: readonly CstNode[], startIdx: number): CstNode | null;
+	(startIdx: number): (children: readonly CstNode[]) => CstNode | null;
+} = dual(2, (children: readonly CstNode[], startIdx: number): CstNode | null => {
 	for (let i = startIdx; i < children.length; i++) {
 		const c = children[i];
 		if (c === undefined) continue;
@@ -886,31 +808,23 @@ export function findNextContentChild(...args: [children: readonly CstNode[], sta
 		return c;
 	}
 	return null;
-})(...args);
-}
+});
 
-export function indexOfChild(children: readonly CstNode[], target: CstNode): number;
-export function indexOfChild(target: CstNode): (children: readonly CstNode[]) => number;
-export function indexOfChild(...args: [children: readonly CstNode[], target: CstNode] | [target: CstNode]): number | ((children: readonly CstNode[]) => number) {
-	return dual<
-		(...args: [children: readonly CstNode[], target: CstNode] | [target: CstNode]) => number | ((children: readonly CstNode[]) => number),
-		(children: readonly CstNode[], target: CstNode) => number
-	>(2, function indexOfChild(children: readonly CstNode[], target: CstNode): number {
+export const indexOfChild: {
+	(children: readonly CstNode[], target: CstNode): number;
+	(target: CstNode): (children: readonly CstNode[]) => number;
+} = dual(2, (children: readonly CstNode[], target: CstNode): number => {
 	for (let i = 0; i < children.length; i++) {
 		if (children[i] === target) return i;
 	}
 	return -1;
-})(...args);
-}
+});
 
 /** Check if there's a value separator ":" after startIdx (skipping only whitespace). */
-export function hasValueSepAfter(children: readonly CstNode[], startIdx: number): boolean;
-export function hasValueSepAfter(startIdx: number): (children: readonly CstNode[]) => boolean;
-export function hasValueSepAfter(...args: [children: readonly CstNode[], startIdx: number] | [startIdx: number]): boolean | ((children: readonly CstNode[]) => boolean) {
-	return dual<
-		(...args: [children: readonly CstNode[], startIdx: number] | [startIdx: number]) => boolean | ((children: readonly CstNode[]) => boolean),
-		(children: readonly CstNode[], startIdx: number) => boolean
-	>(2, function hasValueSepAfter(children: readonly CstNode[], startIdx: number): boolean {
+export const hasValueSepAfter: {
+	(children: readonly CstNode[], startIdx: number): boolean;
+	(startIdx: number): (children: readonly CstNode[]) => boolean;
+} = dual(2, (children: readonly CstNode[], startIdx: number): boolean => {
 	for (let j = startIdx; j < children.length; j++) {
 		const c = children[j];
 		if (c === undefined) continue;
@@ -920,8 +834,7 @@ export function hasValueSepAfter(...args: [children: readonly CstNode[], startId
 		break;
 	}
 	return false;
-})(...args);
-}
+});
 
 // ---------------------------------------------------------------------------
 // Block scalar decoding
@@ -1274,13 +1187,10 @@ function validateBlockScalarLeadingEmpties(cst: CstNode, state: ComposerState): 
 	}
 }
 
-export function makeScalar(cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlScalar;
-export function makeScalar(state: ComposerState, meta?: NodeMeta): (cst: CstNode) => YamlScalar;
-export function makeScalar(...args: [cst: CstNode, state: ComposerState, meta?: NodeMeta | undefined] | [state: ComposerState, meta?: NodeMeta | undefined]): YamlScalar | ((cst: CstNode) => YamlScalar) {
-	return dual<
-		(...args: [cst: CstNode, state: ComposerState, meta?: NodeMeta | undefined] | [state: ComposerState, meta?: NodeMeta | undefined]) => YamlScalar | ((cst: CstNode) => YamlScalar),
-		(cst: CstNode, state: ComposerState, meta?: NodeMeta) => YamlScalar
-	>((args) => args[0] !== undefined && "type" in args[0], function makeScalar(cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlScalar {
+export const makeScalar: {
+	(cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlScalar;
+	(state: ComposerState, meta?: NodeMeta): (cst: CstNode) => YamlScalar;
+} = dual((args) => args[0] !== undefined && "type" in args[0], (cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlScalar => {
 	const style = getScalarStyle(cst);
 	if (style === "block-literal" || style === "block-folded") {
 		// 5LLU, S98Z, W9L4: leading empty lines in a block scalar must not be
@@ -1308,8 +1218,8 @@ export function makeScalar(...args: [cst: CstNode, state: ComposerState, meta?: 
 		style,
 		offset: cst.offset,
 		length: cst.length,
-		...(meta?.tag !== undefined ? { tag: meta.tag } : {}),
-		...(meta?.anchor !== undefined ? { anchor: meta.anchor } : {}),
+		...O.getSomesStruct({ tag: O.fromUndefinedOr(meta?.tag) }),
+		...O.getSomesStruct({ anchor: O.fromUndefinedOr(meta?.anchor) }),
 		...O.getSomesStruct({ comment: O.fromUndefinedOr(comment) }),
 		...O.getSomesStruct({ chomp: O.fromUndefinedOr(chomp) }),
 		...O.getSomesStruct({ blockIndent: O.fromUndefinedOr(blockIndent) }),
@@ -1317,8 +1227,7 @@ export function makeScalar(...args: [cst: CstNode, state: ComposerState, meta?: 
 	});
 	if ((meta?.anchor !== undefined && meta?.anchor !== "")) registerAnchor(scalar, meta.anchor, state, cst.offset);
 	return scalar;
-})(...args);
-}
+});
 
 /**
  * Returns true when the scalar's source representation should be preserved
@@ -1330,17 +1239,13 @@ export function makeScalar(...args: [cst: CstNode, state: ComposerState, meta?: 
  * variants like `.INF` or `.NaN` should normalize on round-trip rather than
  * preserve.
  */
-export function shouldPreserveRaw(rawValue: string, value: unknown): boolean;
-export function shouldPreserveRaw(value: unknown): (rawValue: string) => boolean;
-export function shouldPreserveRaw(...args: [rawValue: string, value: unknown] | [value: unknown]): boolean | ((rawValue: string) => boolean) {
-	return dual<
-		(...args: [rawValue: string, value: unknown] | [value: unknown]) => boolean | ((rawValue: string) => boolean),
-		(rawValue: string, value: unknown) => boolean
-	>(2, function shouldPreserveRaw(rawValue: string, value: unknown): boolean {
+export const shouldPreserveRaw: {
+	(rawValue: string, value: unknown): boolean;
+	(value: unknown): (rawValue: string) => boolean;
+} = dual(2, (rawValue: string, value: unknown): boolean => {
 	if (P.isNumber(value)) {
 		if (Number.isNaN(value) || !Number.isFinite(value)) return false;
 		return rawValue !== String(value);
 	}
 	return false;
-})(...args);
-}
+});

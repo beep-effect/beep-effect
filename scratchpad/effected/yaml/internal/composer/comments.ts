@@ -61,44 +61,33 @@ export interface CommentFields {
  * contains at least one blank line (a newline followed, after optional
  * horizontal whitespace, by another newline).
  */
-export function hasBlankLineBetween(text: string, start: number, end: number): boolean;
-export function hasBlankLineBetween(start: number, end: number): (text: string) => boolean;
-export function hasBlankLineBetween(...args: [text: string, start: number, end: number] | [start: number, end: number]): boolean | ((text: string) => boolean) {
-	return dual<
-		(...args: [text: string, start: number, end: number] | [start: number, end: number]) => boolean | ((text: string) => boolean),
-		(text: string, start: number, end: number) => boolean
-	>(3, function hasBlankLineBetween(text: string, start: number, end: number): boolean {
+export const hasBlankLineBetween: {
+	(text: string, start: number, end: number): boolean;
+	(start: number, end: number): (text: string) => boolean;
+} = dual(3, (text: string, start: number, end: number): boolean => {
 	if (start < 0) return false;
 	const gap = text.slice(Math.max(0, start), Math.max(0, end));
 	return /\n[ \t\r]*\n/.test(gap);
-})(...args);
-}
+});
 
 /** True when there is no line break between `start` and `end` in `text`. */
-export function sameLineSpan(text: string, start: number, end: number): boolean;
-export function sameLineSpan(start: number, end: number): (text: string) => boolean;
-export function sameLineSpan(...args: [text: string, start: number, end: number] | [start: number, end: number]): boolean | ((text: string) => boolean) {
-	return dual<
-		(...args: [text: string, start: number, end: number] | [start: number, end: number]) => boolean | ((text: string) => boolean),
-		(text: string, start: number, end: number) => boolean
-	>(3, function sameLineSpan(text: string, start: number, end: number): boolean {
+export const sameLineSpan: {
+	(text: string, start: number, end: number): boolean;
+	(start: number, end: number): (text: string) => boolean;
+} = dual(3, (text: string, start: number, end: number): boolean => {
 	if (start < 0) return false;
 	return !text.slice(Math.max(0, start), Math.max(0, end)).includes("\n");
-})(...args);
-}
+});
 
 /**
  * True when only horizontal whitespace precedes `offset` on its line — i.e.
  * the token at `offset` starts its own line. Purely local, so it stays
  * correct even when a preceding node's span over-extends past line ends.
  */
-export function isOwnLineAt(text: string, offset: number): boolean;
-export function isOwnLineAt(offset: number): (text: string) => boolean;
-export function isOwnLineAt(...args: [text: string, offset: number] | [offset: number]): boolean | ((text: string) => boolean) {
-	return dual<
-		(...args: [text: string, offset: number] | [offset: number]) => boolean | ((text: string) => boolean),
-		(text: string, offset: number) => boolean
-	>(2, function isOwnLineAt(text: string, offset: number): boolean {
+export const isOwnLineAt: {
+	(text: string, offset: number): boolean;
+	(offset: number): (text: string) => boolean;
+} = dual(2, (text: string, offset: number): boolean => {
 	let i = offset - 1;
 	while (i >= 0) {
 		const ch = text[i];
@@ -109,8 +98,7 @@ export function isOwnLineAt(...args: [text: string, offset: number] | [offset: n
 		return ch === "\n" || ch === "\r";
 	}
 	return true;
-})(...args);
-}
+});
 
 /**
  * True when the only thing before `offset` on its line is a block indicator —
@@ -119,13 +107,10 @@ export function isOwnLineAt(...args: [text: string, offset: number] | [offset: n
  * came before (`? # c` / ` - seq1`). Without this, the `? ` prefix makes the
  * comment look like a trailing comment on the previous entry.
  */
-export function isAfterIndicatorOnly(text: string, offset: number): boolean;
-export function isAfterIndicatorOnly(offset: number): (text: string) => boolean;
-export function isAfterIndicatorOnly(...args: [text: string, offset: number] | [offset: number]): boolean | ((text: string) => boolean) {
-	return dual<
-		(...args: [text: string, offset: number] | [offset: number]) => boolean | ((text: string) => boolean),
-		(text: string, offset: number) => boolean
-	>(2, function isAfterIndicatorOnly(text: string, offset: number): boolean {
+export const isAfterIndicatorOnly: {
+	(text: string, offset: number): boolean;
+	(offset: number): (text: string) => boolean;
+} = dual(2, (text: string, offset: number): boolean => {
 	let i = offset - 1;
 	let sawIndicator = false;
 	while (i >= 0) {
@@ -142,24 +127,17 @@ export function isAfterIndicatorOnly(...args: [text: string, offset: number] | [
 		return sawIndicator && (ch === "\n" || ch === "\r");
 	}
 	return sawIndicator;
-})(...args);
-}
+});
 
 /**
  * True when the line immediately above the line containing `offset` is blank
  * (empty or horizontal whitespace only). Purely local — see
  * {@link isOwnLineAt} for why span-based gap checks are not used.
  */
-export function hasBlankLineAbove(text: string, offset: number): boolean;
-export function hasBlankLineAbove(offset: number): (text: string) => boolean;
-export function hasBlankLineAbove(...args: [text: string, offset: number] | [offset: number]): boolean | ((text: string) => boolean) {
-	return dual<
-		(...args: [text: string, offset: number] | [offset: number]) => boolean | ((text: string) => boolean),
-		(text: string, offset: number) => boolean
-	>(2, function hasBlankLineAbove(text: string, offset: number): boolean {
-	return blankLineAboveStart(text, offset) >= 0;
-})(...args);
-}
+export const hasBlankLineAbove: {
+	(text: string, offset: number): boolean;
+	(offset: number): (text: string) => boolean;
+} = dual(2, (text: string, offset: number): boolean => blankLineAboveStart(text, offset) >= 0);
 
 /**
  * Start offset of the blank line immediately above the line containing
@@ -167,20 +145,16 @@ export function hasBlankLineAbove(...args: [text: string, offset: number] | [off
  * {@link hasBlankLineAbove}, for callers that must locate the blank line
  * (e.g. to test whether it falls inside a preceding scalar token's span).
  */
-export function blankLineAboveStart(text: string, offset: number): number;
-export function blankLineAboveStart(offset: number): (text: string) => number;
-export function blankLineAboveStart(...args: [text: string, offset: number] | [offset: number]): number | ((text: string) => number) {
-	return dual<
-		(...args: [text: string, offset: number] | [offset: number]) => number | ((text: string) => number),
-		(text: string, offset: number) => number
-	>(2, function blankLineAboveStart(text: string, offset: number): number {
+export const blankLineAboveStart: {
+	(text: string, offset: number): number;
+	(offset: number): (text: string) => number;
+} = dual(2, (text: string, offset: number): number => {
 	const lineBreak = text.lastIndexOf("\n", Math.max(0, offset - 1));
 	if (lineBreak < 0) return -1;
 	const prevBreak = text.lastIndexOf("\n", lineBreak - 1);
 	const prevLine = text.slice(prevBreak + 1, lineBreak);
 	return prevLine.trim() === "" ? prevBreak + 1 : -1;
-})(...args);
-}
+});
 
 /**
  * The deepest trailing scalar reached by descending last-child edges from
@@ -222,21 +196,17 @@ function deepestTrailingScalar(node: YamlNode): YamlScalar | undefined {
  * item); the check descends to its deepest trailing scalar and requires the
  * blank line to start inside that scalar's token span.
  */
-export function blankAboveIsKeepChompContent(text: string, offset: number, prev: YamlNode | undefined): boolean;
-export function blankAboveIsKeepChompContent(offset: number, prev: YamlNode | undefined): (text: string) => boolean;
-export function blankAboveIsKeepChompContent(...args: [text: string, offset: number, prev: YamlNode | undefined] | [offset: number, prev: YamlNode | undefined]): boolean | ((text: string) => boolean) {
-	return dual<
-		(...args: [text: string, offset: number, prev: YamlNode | undefined] | [offset: number, prev: YamlNode | undefined]) => boolean | ((text: string) => boolean),
-		(text: string, offset: number, prev: YamlNode | undefined) => boolean
-	>(3, function blankAboveIsKeepChompContent(text: string, offset: number, prev: YamlNode | undefined): boolean {
+export const blankAboveIsKeepChompContent: {
+	(text: string, offset: number, prev: YamlNode | undefined): boolean;
+	(offset: number, prev: YamlNode | undefined): (text: string) => boolean;
+} = dual(3, (text: string, offset: number, prev: YamlNode | undefined): boolean => {
 	if (prev === undefined) return false;
 	const scalar = deepestTrailingScalar(prev);
 	if (scalar === undefined || scalar.chomp !== "keep") return false;
 	if (scalar.style !== "block-literal" && scalar.style !== "block-folded") return false;
 	const start = blankLineAboveStart(text, offset);
 	return start >= scalar.offset && start < scalar.offset + scalar.length;
-})(...args);
-}
+});
 
 /**
  * True when the line immediately below the line containing `offset` is blank
@@ -245,20 +215,16 @@ export function blankAboveIsKeepChompContent(...args: [text: string, offset: num
  * a blank line AFTER a comment run as a trailing empty line in the stored
  * comment string.
  */
-export function hasBlankLineBelow(text: string, offset: number): boolean;
-export function hasBlankLineBelow(offset: number): (text: string) => boolean;
-export function hasBlankLineBelow(...args: [text: string, offset: number] | [offset: number]): boolean | ((text: string) => boolean) {
-	return dual<
-		(...args: [text: string, offset: number] | [offset: number]) => boolean | ((text: string) => boolean),
-		(text: string, offset: number) => boolean
-	>(2, function hasBlankLineBelow(text: string, offset: number): boolean {
+export const hasBlankLineBelow: {
+	(text: string, offset: number): boolean;
+	(offset: number): (text: string) => boolean;
+} = dual(2, (text: string, offset: number): boolean => {
 	const lineEnd = text.indexOf("\n", Math.max(0, offset));
 	if (lineEnd < 0) return false;
 	const nextEnd = text.indexOf("\n", lineEnd + 1);
 	if (nextEnd < 0) return false;
 	return text.slice(lineEnd + 1, nextEnd).trim() === "";
-})(...args);
-}
+});
 
 /**
  * The stored text of a comment token: the RAW post-`#` slice, reference
@@ -279,16 +245,10 @@ export function rawCommentText(source: string): string {
 }
 
 /** Join two optional comment blocks with a newline. */
-export function joinComments(a: string | undefined, b: string): string;
-export function joinComments(b: string): (a: string | undefined) => string;
-export function joinComments(...args: [a: string | undefined, b: string] | [b: string]): string | ((a: string | undefined) => string) {
-	return dual<
-		(...args: [a: string | undefined, b: string] | [b: string]) => string | ((a: string | undefined) => string),
-		(a: string | undefined, b: string) => string
-	>(2, function joinComments(a: string | undefined, b: string): string {
-	return a === undefined ? b : `${a}\n${b}`;
-})(...args);
-}
+export const joinComments: {
+	(a: string | undefined, b: string): string;
+	(b: string): (a: string | undefined) => string;
+} = dual(2, (a: string | undefined, b: string): string => a === undefined ? b : `${a}\n${b}`);
 
 /**
  * Zero-based column of `offset` within its line. A byte-order mark at the
@@ -296,19 +256,15 @@ export function joinComments(...args: [a: string | undefined, b: string] | [b: s
  * BOM-prefixed root mapping's content column is `0`, not `1`, and its
  * terminal own-line comment is not mistaken for one escaping a nested map.
  */
-export function columnAt(text: string, offset: number): number;
-export function columnAt(offset: number): (text: string) => number;
-export function columnAt(...args: [text: string, offset: number] | [offset: number]): number | ((text: string) => number) {
-	return dual<
-		(...args: [text: string, offset: number] | [offset: number]) => number | ((text: string) => number),
-		(text: string, offset: number) => number
-	>(2, function columnAt(text: string, offset: number): number {
+export const columnAt: {
+	(text: string, offset: number): number;
+	(offset: number): (text: string) => number;
+} = dual(2, (text: string, offset: number): number => {
 	if (offset <= 0) return 0;
 	const lineStart = text.lastIndexOf("\n", offset - 1) + 1;
 	const bom = text[lineStart] === "\uFEFF" && offset > lineStart ? 1 : 0;
 	return offset - lineStart - bom;
-})(...args);
-}
+});
 
 /**
  * A comment that outlived its collection: it sat after the collection's last
@@ -329,13 +285,10 @@ export interface EscapedComment {
  * both sides are present). Every node class carries the triple, aliases
  * included.
  */
-export function withCommentFields(node: YamlNode, fields: CommentFields): YamlNode;
-export function withCommentFields(fields: CommentFields): (node: YamlNode) => YamlNode;
-export function withCommentFields(...args: [node: YamlNode, fields: CommentFields] | [fields: CommentFields]): YamlNode | ((node: YamlNode) => YamlNode) {
-	return dual<
-		(...args: [node: YamlNode, fields: CommentFields] | [fields: CommentFields]) => YamlNode | ((node: YamlNode) => YamlNode),
-		(node: YamlNode, fields: CommentFields) => YamlNode
-	>(2, function withCommentFields(node: YamlNode, fields: CommentFields): YamlNode {
+export const withCommentFields: {
+	(node: YamlNode, fields: CommentFields): YamlNode;
+	(fields: CommentFields): (node: YamlNode) => YamlNode;
+} = dual(2, (node: YamlNode, fields: CommentFields): YamlNode => {
 	if (Schema.is(YamlScalar)(node)) {
 		return YamlScalar.make({
 			value: node.value,
@@ -381,8 +334,7 @@ export function withCommentFields(...args: [node: YamlNode, fields: CommentField
 		offset: node.offset,
 		length: node.length,
 	});
-})(...args);
-}
+});
 
 function mergedCommentFields(existing: CommentFields, incoming: CommentFields): CommentFields {
 	const commentBefore =

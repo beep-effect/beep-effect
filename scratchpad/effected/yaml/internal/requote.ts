@@ -73,13 +73,10 @@ function isSingleQuotable(value: string): boolean {
  * `undefined` when no value-preserving replacement exists under `mode`
  * (skipping is always correct; corrupting never is).
  */
-export function requoteScalarText(text: string, scalar: RequoteScalarInput, quote: '"' | "'", mode: RequoteMode): string | undefined;
-export function requoteScalarText(scalar: RequoteScalarInput, quote: '"' | "'", mode: RequoteMode): (text: string) => string | undefined;
-export function requoteScalarText(...args: [text: string, scalar: RequoteScalarInput, quote: '"' | "'", mode: RequoteMode] | [scalar: RequoteScalarInput, quote: '"' | "'", mode: RequoteMode]): string | undefined | ((text: string) => string | undefined) {
-	return dual<
-		(...args: [text: string, scalar: RequoteScalarInput, quote: '"' | "'", mode: RequoteMode] | [scalar: RequoteScalarInput, quote: '"' | "'", mode: RequoteMode]) => string | undefined | ((text: string) => string | undefined),
-		(text: string, scalar: RequoteScalarInput, quote: '"' | "'", mode: RequoteMode) => string | undefined
-	>(4, function requoteScalarText(text: string, scalar: RequoteScalarInput, quote: '"' | "'", mode: RequoteMode): string | undefined {
+export const requoteScalarText: {
+	(text: string, scalar: RequoteScalarInput, quote: '"' | "'", mode: RequoteMode): string | undefined;
+	(scalar: RequoteScalarInput, quote: '"' | "'", mode: RequoteMode): (text: string) => string | undefined;
+} = dual(4, (text: string, scalar: RequoteScalarInput, quote: '"' | "'", mode: RequoteMode): string | undefined => {
 	if (scalar.tag !== undefined || scalar.anchor !== undefined) return undefined;
 	if (!P.isString(scalar.value)) return undefined;
 	const raw = text.slice(scalar.offset, scalar.offset + scalar.length);
@@ -110,5 +107,4 @@ export function requoteScalarText(...args: [text: string, scalar: RequoteScalarI
 	if (scalar.style !== "double-quoted") return undefined;
 	if (!isSingleQuotable(scalar.value)) return undefined;
 	return renderSingleQuoted(scalar.value);
-})(...args);
-}
+});

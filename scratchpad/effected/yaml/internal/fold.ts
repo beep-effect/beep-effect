@@ -3,7 +3,17 @@
 // scalars, plus the whitespace analyses that decide when block styles cannot
 // represent a value faithfully.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
+
 import { dual } from "effect/Function";
+
+const $I = $ScratchpadId.create("effected/yaml/internal/fold");
+
+/** A defect raised when a YAML helper invariant is violated. */
+class FoldFailure extends S.TaggedError<FoldFailure>($I`FoldFailure`)("FoldFailure", {
+	message: S.String,
+}) {}
 
 /**
  * Column-based line folding for a single logical scalar line (YAML 1.2 flow
@@ -25,13 +35,10 @@ import { dual } from "effect/Function";
  * width folding is a best-effort presentation concern, never a correctness one.
  * A non-positive `lineWidth` (the default) returns the text unchanged.
  */
-export function foldScalarLine(text: string, indent: string, lineWidth: number, indentAtStart: number): string;
-export function foldScalarLine(indent: string, lineWidth: number, indentAtStart: number): (text: string) => string;
-export function foldScalarLine(...args: [text: string, indent: string, lineWidth: number, indentAtStart: number] | [indent: string, lineWidth: number, indentAtStart: number]): string | ((text: string) => string) {
-	return dual<
-		(...args: [text: string, indent: string, lineWidth: number, indentAtStart: number] | [indent: string, lineWidth: number, indentAtStart: number]) => string | ((text: string) => string),
-		(text: string, indent: string, lineWidth: number, indentAtStart: number) => string
-	>(4, function foldScalarLine(text: string, indent: string, lineWidth: number, indentAtStart: number): string {
+export const foldScalarLine: {
+	(text: string, indent: string, lineWidth: number, indentAtStart: number): string;
+	(indent: string, lineWidth: number, indentAtStart: number): (text: string) => string;
+} = dual(4, (text: string, indent: string, lineWidth: number, indentAtStart: number): string => {
 	if (lineWidth <= 0) return text;
 	// Chars a continuation line can hold before reaching the width column. Guard
 	// against a pathological indent >= lineWidth (nothing would fit) by never
@@ -60,14 +67,13 @@ export function foldScalarLine(...args: [text: string, indent: string, lineWidth
 	let result = text.slice(0, folds[0]);
 	for (let f = 0; f < folds.length; f++) {
 		const fold = folds[f];
-		if (fold === undefined) throw new TypeError("Missing fold");
+		if (fold === undefined) throw FoldFailure.make({ message: "Missing fold" });
 		const sliceEnd = folds[f + 1] ?? text.length;
 		// Drop the space at `fold`; the inserted break carries the join.
 		result += `\n${indent}${text.slice(fold + 1, sliceEnd)}`;
 	}
 	return result;
-})(...args);
-}
+});
 
 /**
  * Apply {@link foldScalarLine} to an already-rendered scalar according to its
@@ -86,13 +92,10 @@ export function foldScalarLine(...args: [text: string, indent: string, lineWidth
  * `indent` is one indentation level (the continuation prefix); `lineWidth` is
  * the target column. A non-positive `lineWidth` returns the text unchanged.
  */
-export function foldRenderedScalar(rendered: string, indent: string, lineWidth: number): string;
-export function foldRenderedScalar(indent: string, lineWidth: number): (rendered: string) => string;
-export function foldRenderedScalar(...args: [rendered: string, indent: string, lineWidth: number] | [indent: string, lineWidth: number]): string | ((rendered: string) => string) {
-	return dual<
-		(...args: [rendered: string, indent: string, lineWidth: number] | [indent: string, lineWidth: number]) => string | ((rendered: string) => string),
-		(rendered: string, indent: string, lineWidth: number) => string
-	>(3, function foldRenderedScalar(rendered: string, indent: string, lineWidth: number): string {
+export const foldRenderedScalar: {
+	(rendered: string, indent: string, lineWidth: number): string;
+	(indent: string, lineWidth: number): (rendered: string) => string;
+} = dual(3, (rendered: string, indent: string, lineWidth: number): string => {
 	if (lineWidth <= 0 || rendered.length === 0) return rendered;
 	const first = rendered[0];
 	// Block-literal and single-quoted are never width-folded.
@@ -100,11 +103,11 @@ export function foldRenderedScalar(...args: [rendered: string, indent: string, l
 	if (first === ">") {
 		const lines = rendered.split("\n");
 		const firstLine = lines[0];
-		if (firstLine === undefined) throw new TypeError("Missing first line");
+		if (firstLine === undefined) throw FoldFailure.make({ message: "Missing first line" });
 		const out: string[] = [firstLine];
 		for (let i = 1; i < lines.length; i++) {
 			const line = lines[i];
-			if (line === undefined) throw new TypeError("Missing line");
+			if (line === undefined) throw FoldFailure.make({ message: "Missing line" });
 			// Fold only base-indent content lines: they start with exactly `indent`
 			// and the next char is content (not a further space/tab, which would
 			// make the line "more-indented" and its break literal to the reader).
@@ -129,8 +132,7 @@ export function foldRenderedScalar(...args: [rendered: string, indent: string, l
 	}
 	// Plain scalar.
 	return foldScalarLine(rendered, indent, lineWidth, indent.length);
-})(...args);
-}
+});
 
 /**
  * C0 control characters (except TAB) that must be escaped in double-quoted scalars.
@@ -201,13 +203,10 @@ export function hasNewlineSpacesTab(s: string): boolean {
  * Returns null if the content cannot safely be represented as single-quoted
  * (carriage returns or non-tab control characters).
  */
-export function renderSingleQuotedMultiline(s: string, indent: string): string | null;
-export function renderSingleQuotedMultiline(indent: string): (s: string) => string | null;
-export function renderSingleQuotedMultiline(...args: [s: string, indent: string] | [indent: string]): string | null | ((s: string) => string | null) {
-	return dual<
-		(...args: [s: string, indent: string] | [indent: string]) => string | null | ((s: string) => string | null),
-		(s: string, indent: string) => string | null
-	>(2, function renderSingleQuotedMultiline(s: string, indent: string): string | null {
+export const renderSingleQuotedMultiline: {
+	(s: string, indent: string): string | null;
+	(indent: string): (s: string) => string | null;
+} = dual(2, (s: string, indent: string): string | null => {
 	// CR or non-tab control chars cannot be represented in single-quoted
 	for (let i = 0; i < s.length; i++) {
 		const code = s.charCodeAt(i);
@@ -238,8 +237,7 @@ export function renderSingleQuotedMultiline(...args: [s: string, indent: string]
 		i = nlEnd;
 	}
 	return `'${result}'`;
-})(...args);
-}
+});
 
 /**
  * Renders a string scalar using block literal style (pipe `|`).
@@ -421,7 +419,7 @@ export const renderBlockFolded: {
 	let pendingCompensation = false;
 	for (let i = 0; i < valueLines.length; i++) {
 		const line = valueLines[i];
-		if (line === undefined) throw new TypeError("Missing line");
+		if (line === undefined) throw FoldFailure.make({ message: "Missing line" });
 		if (line === "") {
 			// If the previous line was non-empty, non-more-indented content,
 			// the \n after it is preserved (not folded) because it's followed

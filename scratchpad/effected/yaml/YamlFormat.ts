@@ -46,6 +46,11 @@ import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/yaml/YamlFormat");
 
+/** A defect raised when a YAML helper invariant is violated. */
+class YamlFormatInvariantFailure extends S.TaggedError<YamlFormatInvariantFailure>($I`YamlFormatInvariantFailure`)("YamlFormatInvariantFailure", {
+	message: S.String,
+}) {}
+
 /**
  * A range accepted at the `format`/`formatToString`/etc. call sites: either a
  * {@link YamlRange} instance or a plain `{ offset, length }` literal (the two
@@ -448,7 +453,7 @@ function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknow
 			if (pairIndex >= 0) {
 				const newItems = [...node.items];
 				const oldPair = newItems[pairIndex];
-				if (oldPair === undefined) throw new TypeError("Cannot read properties of undefined (reading 'key')");
+				if (oldPair === undefined) throw YamlFormatInvariantFailure.make({ message: "Cannot read properties of undefined (reading 'key')" });
 				// Comments live on the key and value nodes, so the key carries its
 				// own through unchanged; the replacement value is a fresh node and
 				// deliberately starts with no comments of its own.
@@ -472,7 +477,7 @@ function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknow
 			);
 		}
 		const pair = node.items[pairIndex];
-		if (pair === undefined) throw new TypeError("Cannot read properties of undefined (reading 'value')");
+		if (pair === undefined) throw YamlFormatInvariantFailure.make({ message: "Cannot read properties of undefined (reading 'value')" });
 		if (pair.value === null) {
 			throw new ModifyFailure("PathNotFound", `Value at key "${String(segment)}" is null`, node.offset, node.length);
 		}
@@ -504,7 +509,7 @@ function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknow
 			throw new ModifyFailure("InvalidIndex", `Index ${idx} out of bounds`, node.offset, node.length);
 		}
 		const child = node.items[idx];
-		if (child === undefined) throw new TypeError("Cannot read properties of undefined (reading '_tag')");
+		if (child === undefined) throw YamlFormatInvariantFailure.make({ message: "Cannot read properties of undefined (reading '_tag')" });
 		const newChild = modifyNode(child, path, depth + 1, value);
 		const newItems = [...node.items];
 		newItems[idx] = newChild;

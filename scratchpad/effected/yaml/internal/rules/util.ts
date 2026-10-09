@@ -37,13 +37,10 @@ export const positiveIntegerOption = S.Number.check(
 export type ScalarRole = "key" | "value" | "item" | "root";
 
 /** Depth-first walk over every scalar node with its structural role. */
-export function walkScalars(node: YamlNode | null, role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void): void;
-export function walkScalars(role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void): (node: YamlNode | null) => void;
-export function walkScalars(...args: [node: YamlNode | null, role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void] | [role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void]): void | ((node: YamlNode | null) => void) {
-	return dual<
-		(...args: [node: YamlNode | null, role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void] | [role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void]) => void | ((node: YamlNode | null) => void),
-		(node: YamlNode | null, role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void) => void
-	>(3, function walkScalars(node: YamlNode | null, role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void): void {
+export const walkScalars: {
+	(node: YamlNode | null, role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void): void;
+	(role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void): (node: YamlNode | null) => void;
+} = dual(3, (node: YamlNode | null, role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void): void => {
 	if (node === null) return;
 	if (S.is(Scalar)(node)) {
 		visit(node, role);
@@ -59,8 +56,7 @@ export function walkScalars(...args: [node: YamlNode | null, role: ScalarRole, v
 	if (S.is(YamlSeq)(node)) {
 		for (const item of node.items) walkScalars(item, "item", visit);
 	}
-})(...args);
-}
+});
 
 /**
  * True when the first content of a line is the CONTINUATION of a scalar
@@ -68,26 +64,19 @@ export function walkScalars(...args: [node: YamlNode | null, role: ScalarRole, v
  * plain/quoted scalars. The indentation rule skips such lines: their layout
  * is the value's, not block structure's.
  */
-export function isScalarContinuationLine(tokens: ReadonlyArray<YamlToken>, lineOffset: number, probeOffset: number): boolean;
-export function isScalarContinuationLine(lineOffset: number, probeOffset: number): (tokens: ReadonlyArray<YamlToken>) => boolean;
-export function isScalarContinuationLine(...args: [tokens: ReadonlyArray<YamlToken>, lineOffset: number, probeOffset: number] | [lineOffset: number, probeOffset: number]): boolean | ((tokens: ReadonlyArray<YamlToken>) => boolean) {
-	return dual<
-		(...args: [tokens: ReadonlyArray<YamlToken>, lineOffset: number, probeOffset: number] | [lineOffset: number, probeOffset: number]) => boolean | ((tokens: ReadonlyArray<YamlToken>) => boolean),
-		(tokens: ReadonlyArray<YamlToken>, lineOffset: number, probeOffset: number) => boolean
-	>(3, function isScalarContinuationLine(tokens: ReadonlyArray<YamlToken>, lineOffset: number, probeOffset: number): boolean {
+export const isScalarContinuationLine: {
+	(tokens: ReadonlyArray<YamlToken>, lineOffset: number, probeOffset: number): boolean;
+	(lineOffset: number, probeOffset: number): (tokens: ReadonlyArray<YamlToken>) => boolean;
+} = dual(3, (tokens: ReadonlyArray<YamlToken>, lineOffset: number, probeOffset: number): boolean => {
 	const token = coveringToken(tokens, probeOffset);
 	return token !== undefined && token.kind === "scalar" && token.offset < lineOffset;
-})(...args);
-}
+});
 
 /** The token whose span covers `offset`, when one does. */
-export function coveringToken(tokens: ReadonlyArray<YamlToken>, offset: number): YamlToken | undefined;
-export function coveringToken(offset: number): (tokens: ReadonlyArray<YamlToken>) => YamlToken | undefined;
-export function coveringToken(...args: [tokens: ReadonlyArray<YamlToken>, offset: number] | [offset: number]): YamlToken | undefined | ((tokens: ReadonlyArray<YamlToken>) => YamlToken | undefined) {
-	return dual<
-		(...args: [tokens: ReadonlyArray<YamlToken>, offset: number] | [offset: number]) => YamlToken | undefined | ((tokens: ReadonlyArray<YamlToken>) => YamlToken | undefined),
-		(tokens: ReadonlyArray<YamlToken>, offset: number) => YamlToken | undefined
-	>(2, function coveringToken(tokens: ReadonlyArray<YamlToken>, offset: number): YamlToken | undefined {
+export const coveringToken: {
+	(tokens: ReadonlyArray<YamlToken>, offset: number): YamlToken | undefined;
+	(offset: number): (tokens: ReadonlyArray<YamlToken>) => YamlToken | undefined;
+} = dual(2, (tokens: ReadonlyArray<YamlToken>, offset: number): YamlToken | undefined => {
 	let lo = 0;
 	let hi = tokens.length - 1;
 	while (lo <= hi) {
@@ -103,8 +92,7 @@ export function coveringToken(...args: [tokens: ReadonlyArray<YamlToken>, offset
 		}
 	}
 	return undefined;
-})(...args);
-}
+});
 
 /**
  * True when `offset` falls inside a scalar token's span. Layout rules use
@@ -112,29 +100,20 @@ export function coveringToken(...args: [tokens: ReadonlyArray<YamlToken>, offset
  * inside a block scalar are part of the parsed value, and a lint layer that
  * edits content under the banner of layout is corrupting, not fixing.
  */
-export function insideScalarSpan(tokens: ReadonlyArray<YamlToken>, offset: number): boolean;
-export function insideScalarSpan(offset: number): (tokens: ReadonlyArray<YamlToken>) => boolean;
-export function insideScalarSpan(...args: [tokens: ReadonlyArray<YamlToken>, offset: number] | [offset: number]): boolean | ((tokens: ReadonlyArray<YamlToken>) => boolean) {
-	return dual<
-		(...args: [tokens: ReadonlyArray<YamlToken>, offset: number] | [offset: number]) => boolean | ((tokens: ReadonlyArray<YamlToken>) => boolean),
-		(tokens: ReadonlyArray<YamlToken>, offset: number) => boolean
-	>(2, function insideScalarSpan(tokens: ReadonlyArray<YamlToken>, offset: number): boolean {
-	return coveringToken(tokens, offset)?.kind === "scalar";
-})(...args);
-}
+export const insideScalarSpan: {
+	(tokens: ReadonlyArray<YamlToken>, offset: number): boolean;
+	(offset: number): (tokens: ReadonlyArray<YamlToken>) => boolean;
+} = dual(2, (tokens: ReadonlyArray<YamlToken>, offset: number): boolean => coveringToken(tokens, offset)?.kind === "scalar");
 
 /**
  * The line containing `offset` and the character index within it — a binary
  * search over the ordered `LintLine` array (lines are ordered by `offset`,
  * the same invariant {@link coveringToken} rests on for tokens).
  */
-export function positionAt(lines: ReadonlyArray<LintLine>, offset: number): { readonly line: number; readonly character: number };
-export function positionAt(offset: number): (lines: ReadonlyArray<LintLine>) => { readonly line: number; readonly character: number };
-export function positionAt(...args: [lines: ReadonlyArray<LintLine>, offset: number] | [offset: number]): { readonly line: number; readonly character: number } | ((lines: ReadonlyArray<LintLine>) => { readonly line: number; readonly character: number }) {
-	return dual<
-		(...args: [lines: ReadonlyArray<LintLine>, offset: number] | [offset: number]) => { readonly line: number; readonly character: number } | ((lines: ReadonlyArray<LintLine>) => { readonly line: number; readonly character: number }),
-		(lines: ReadonlyArray<LintLine>, offset: number) => { readonly line: number; readonly character: number }
-	>(2, function positionAt(lines: ReadonlyArray<LintLine>, offset: number): { readonly line: number; readonly character: number } {
+export const positionAt: {
+	(lines: ReadonlyArray<LintLine>, offset: number): { readonly line: number; readonly character: number };
+	(offset: number): (lines: ReadonlyArray<LintLine>) => { readonly line: number; readonly character: number };
+} = dual(2, (lines: ReadonlyArray<LintLine>, offset: number): { readonly line: number; readonly character: number } => {
 	let lo = 0;
 	let hi = lines.length - 1;
 	let found: LintLine | undefined;
@@ -150,5 +129,4 @@ export function positionAt(...args: [lines: ReadonlyArray<LintLine>, offset: num
 		}
 	}
 	return found === undefined ? { line: 0, character: 0 } : { line: found.number, character: offset - found.offset };
-})(...args);
-}
+});

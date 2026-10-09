@@ -7,6 +7,8 @@
 // against the source text). This keeps the import arrow pointing facade →
 // engine, never back (`noImportCycles` is error-level).
 
+import * as HashSet from "effect/HashSet";
+
 /** Error codes emitted by the lexer stage. */
 export const YAML_LEX_ERROR_CODES = [
 	"UnexpectedCharacter",
@@ -123,7 +125,7 @@ export interface RawDiagnostic {
  * parse (vs. recoverable warnings-as-data): fatality is a property of the
  * code, declared once.
  */
-export const FATAL_CODES: ReadonlySet<YamlErrorCode> = new Set([
+export const FATAL_CODES: HashSet.HashSet<YamlErrorCode> = HashSet.fromIterable([
 	"UndefinedAlias",
 	"DuplicateAnchor",
 	"AliasCountExceeded",
@@ -141,5 +143,5 @@ export const FATAL_CODES: ReadonlySet<YamlErrorCode> = new Set([
 
 /** Whether `code` is fatal to a parse. */
 export function isFatalCode(code: YamlErrorCode): boolean {
-	return FATAL_CODES.has(code);
+	return HashSet.has(FATAL_CODES, code);
 }
