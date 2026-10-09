@@ -243,3 +243,30 @@ mechanically (76 total sites). A dependent domain property suite in P1 would
 have caught these before publish. Six heavy jobs fail before running code
 with `goals_only: unbound variable`; heavy.yml is identical to main, and the
 orchestrator owns its repair. Logs and acknowledgements are retained locally.
+
+## Run-7 fail-fast masks remaining wire fixtures
+
+Round-1 Property Laws reaches agents and law-practice after the prior packages
+pass, exposing four agents and nine law-practice exact-wire subjects. The
+combined three-entity assertion stops at its first mismatch. Source census
+corrects the initial log-only count from eleven to thirteen additional sites;
+cumulative count 89, within 90. Qualifying the entire dependent domain property
+set before pushing would avoid a second review wave. No slice model edits.
+
+## Full Property Laws expands the qualification surface
+
+The unshaped `beep ci lane property` command runs all eligible workspaces,
+including the full repo-cli test task, while the four repaired domain packages
+already have passing default proofs. This broad run is useful for finding
+masked fixture subjects but lengthens publication by several minutes. A
+source-bound affected shape matching hosted CI would retain that coverage
+without coupling kernel fixture repair to unrelated CLI test runtime. No test
+is cancelled or declared passing while the broad command remains active.
+
+## Sequential Git mutation barrier
+
+Staging was attempted before the final main-merge hook finished, and Git
+refused because its index.lock was active. The following commit was empty.
+Waited for the merge, staged named paths, and amended that unpublished
+commit; never removed the lock or changed published history. Awaiting every
+mutating Git operation before staging would prevent this sequencing error.

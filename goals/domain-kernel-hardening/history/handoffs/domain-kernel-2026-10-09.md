@@ -948,3 +948,87 @@ Hosted JSDoc Ratchet fails after 388 seconds with only the generic
 source finding or cause, and no inventory artifact is available. Row
 acknowledged wontfix pending attribution, explicitly not a waiver or an
 inherited classification. Current local CI-parity rerun is diagnostic.
+
+### Round 2 and complete fixture census
+
+Round-1 push is 4e5f2a8a881e7b3fd8985ac5554891bd77eb7f01; PR2 remains
+OPEN, ready, exact head confirmed. One publish push plus one round-1 push
+so far. No thread is outstanding. Property Laws now reaches agents and
+law-practice after the first repaired packages. Four agents subjects and
+nine law-practice subjects need the same pair of null fields. The first log
+showed seven law-practice test failures because the combined legal
+client/contact/patent-asset assertion aborts on its first row. Source census
+is nine subjects, so D23 corrects the initial log-only estimate: cumulative
+mechanical count is 89, below 90.
+
+Mechanical round-2 edits, no slice model/behavior changes:
+
+| File | Exact encoded fixture subjects | Sites |
+| --- | --- | --- |
+| packages/agents/domain/test/AgentsDomain.test.ts | Agent, Skill | 2 |
+| packages/agents/domain/test/ProviderInstance.test.ts | Populated ProviderInstance, defaulted ProviderInstance | 2 |
+| packages/law-practice/domain/test/LawPracticeDomain.test.ts | Matter, OfficeAction, Claim, PriorArtReference, Rejection, Distinction, LegalClient, LegalContact, PatentAsset | 9 |
+
+The two additional private packages receive no changeset under D10/#1566:
+
+| Package | Change | Why compatibility impact would have been major | Reversal |
+| --- | --- | --- | --- |
+| @beep/agents-domain (private) | Nullable pair in four exact encoded-row test subjects | Shared kernel expands exact persisted wire shape | Remove pairs with kernel rollback |
+| @beep/law-practice-domain (private) | Nullable pair in nine exact encoded-row test subjects | Shared kernel expands exact persisted wire shape | Remove pairs with kernel rollback |
+
+Fresh JSDoc parity exits 1, with successful inventory generation and eight
+inherited ratchet increases: empty-section 9>0; leading-blank 7>0;
+missingExportCategories 7>0; missingExportExamples 15>9;
+missingExportSince 7>0; schemaAnnotationFindings 16>0; trailing-blank 46>0;
+unsafeExampleFindings 2>0. D24 records source-bound attribution: all 558
+files carrying findings in these metric classes match origin/main.
+Package finding-entry census: epistemic-use-cases 2, repo-cli 3, scratchpad
+624, infra 4, freshbooks 1 (includes inherited findings already admitted
+by baseline; not a count of newly added violations). Shared-domain has zero
+findings in the regressed metric classes. The generic hosted generation
+failure does not reproduce locally; the current local red is fully
+attributed to inherited sources. No baseline, tracked inventory or scanner
+edit. Reversal: owner repairs source on main and the lane integrates once.
+The diagnostic inventory and JSON attribution stay ignored under .beep.
+
+Default agents-domain package-verify passes audit 17.4s/docgen 11.0s.
+Law-practice-domain and complete local Property Laws results follow below.
+Remaining hosted Repo Sanity repeats the same two main-owned private notes;
+row acknowledged with attribution. New Vercel rate-limit rows acknowledged
+environment-only. No paid quota action or rerun of a known inherited bug.
+
+Round-2 qualification is green for the repaired surface: default
+law-practice-domain package-verify audit 26.0s/docgen 10.8s; the complete
+local `beep-heavy bun run beep ci lane property` passes 90/90 tasks,
+uncached, 6m42.617s (404.9s wrapper). This exhausts the previously masked
+exact-wire subjects without another fixture edit: count remains 89.
+The round-2 packet verification set passes in order: size 3,521; jq;
+anchor scan; whitespace; reflection blocking=0/advisory=0; doctor
+blocking_new=0/blocking_inherited=0 with three unrelated advisories.
+Post-main-merge stream remains exactly the active-state summary above,
+without a packet finding for this slug. Main merge reports already up to
+date at 3200e01946. No migration or generated-bundle drift and no conflict.
+
+Round 2 is the last permitted repair push. All known introduced rows are
+addressed; inherited JSDoc totals/private changeset rows and the unexposed
+hosted inventory-generation failure remain with S11 owner burn-down.
+No round-3 push, merge, rebase, inventory waiver, dependency/lockfile edit
+or live database operation is performed. P2/P3 remain pending under the
+amended separate-wave ruling; no completed-retained transition is claimed.
+Graft retrieval estimate this run: 161,134 tokens saved across six calls.
+
+Final fetch correction: main advanced to 45f334e3c2 (#1594, reserved
+XML text-node key), merged cleanly at def90ed4fc. This supersedes the
+preceding already-up-to-date receipt. It changes the schema package only;
+no migration, bundle or kernel conflict. Required kernel/schema gate is
+rerun after this merge. The 90-task Property Laws proof precedes this
+XML-only integration, which is not claimed as part of that run.
+An early staging attempt encountered the merge's active index.lock; no
+lock was removed. An empty unpublished commit resulted and is amended
+with the named fixture/packet paths after the merge completes. No data
+lost, no additional push or published history rewrite.
+
+Final post-#1594 kernel/schema rerun passes 19/19 tasks uncached,
+18.048 seconds. Stream check still prints only the active summary for this
+slug; doctor blocking_new=0/blocking_inherited=0. The final ordered packet
+set is repeated before the amended commit and last push below.
