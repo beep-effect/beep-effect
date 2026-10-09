@@ -83,7 +83,8 @@ const reservedTerms = (node: JsonLdNode): ReadonlySet<string> =>
 /** Every `@id` a node points at through a `NodeRef`, in any field. */
 const referencedIds = (node: JsonLdNode): ReadonlyArray<string> => {
 	const ids: Array<string> = [];
-	for (const value of Object.values(node)) {
+	const values: ReadonlyArray<unknown> = Object.values(node);
+	for (const value of values) {
 		if (Schema.is(NodeRef)(value)) ids.push(value["@id"]);
 		else if (Array.isArray(value)) for (const item of value) if (Schema.is(NodeRef)(item)) ids.push(item["@id"]);
 	}
@@ -248,7 +249,7 @@ export class JsonLdDocument extends Schema.Class<JsonLdDocument>("JsonLdDocument
 	 * a framework that serializes JSON-LD itself.
 	 */
 	toJsonLd(): Schema.Json {
-		const encoded = Schema.encodeSync(JsonLdDocument)(this) as {
+		const encoded = Result.getOrThrow(Schema.encodeResult(JsonLdDocument)(this)) as {
 			readonly "@context": string;
 			readonly "@graph": ReadonlyArray<Record<string, unknown>>;
 		};

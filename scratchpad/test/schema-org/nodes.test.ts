@@ -148,7 +148,7 @@ describe("NodeRef", () => {
 	});
 
 	it("encodes to the {'@id'} form and nothing else", () => {
-		assert.deepStrictEqual(Schema.encodeSync(NodeRef)(NodeRef.to("x")), { "@id": "x" });
+		assert.deepStrictEqual(Result.getOrThrow(Schema.encodeResult(NodeRef)(NodeRef.to("x"))), { "@id": "x" });
 	});
 
 	it("rejects C1 control characters, not only the C0 block", () => {

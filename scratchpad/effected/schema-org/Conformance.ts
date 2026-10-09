@@ -272,7 +272,8 @@ function assertedTerms(node: JsonLdNode): ReadonlyArray<string> {
 /** Every `NodeRef` a node holds, paired with the property it sits in. */
 function referencesOf(node: JsonLdNode): ReadonlyArray<readonly [property: string, id: string]> {
 	const out: Array<readonly [string, string]> = [];
-	for (const [property, value] of Object.entries(node)) {
+	const entries: ReadonlyArray<readonly [string, unknown]> = Object.entries(node);
+	for (const [property, value] of entries) {
 		if (Schema.is(NodeRef)(value)) out.push([property, value["@id"]]);
 		else if (Array.isArray(value)) {
 			for (const item of value) if (Schema.is(NodeRef)(item)) out.push([property, item["@id"]]);

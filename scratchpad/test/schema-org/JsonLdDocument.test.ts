@@ -264,7 +264,7 @@ describe("JsonLdDocument — the decode direction is unimplemented, and the asym
 			JsonLdDocument.buildResult([SoftwareSourceCode.make({ "@id": PKG, additional: { alternateName: "ex" } })]),
 		);
 
-		const decoded = Schema.decodeResult(JsonLdDocument)(Schema.encodeSync(JsonLdDocument)(graph));
+		const decoded = Schema.decodeResult(JsonLdDocument)(Result.getOrThrow(Schema.encodeResult(JsonLdDocument)(graph)));
 
 		assert.isTrue(Result.isSuccess(decoded));
 		assert.deepStrictEqual(
@@ -281,7 +281,7 @@ describe("JsonLdDocument — the decode direction is unimplemented, and the asym
 
 		assert.notDeepEqual(
 			graph.toJsonLd() as unknown,
-			Schema.encodeSync(JsonLdDocument)(graph) as unknown,
+			Result.getOrThrow(Schema.encodeResult(JsonLdDocument)(graph)) as unknown,
 			"the wire form flattens; the structural form nests",
 		);
 	});
