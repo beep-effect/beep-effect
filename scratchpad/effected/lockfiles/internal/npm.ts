@@ -46,6 +46,8 @@ const NpmPackageEntry = S.Struct({
 /**
  * The version gate's own input: `lockfileVersion` and nothing else.
  *
+ * **Details**
+ *
  * The gate has to read the version *before* the shape decode, because the
  * shape it would decode against is the shape of a supported version. `packages`
  * is a required key here and a v1 tree does not have one, so a shape-first
@@ -79,6 +81,8 @@ const NESTED_NODE_MODULES = "/node_modules/";
  * Where a `packages` key's package name starts: after the **last**
  * `node_modules/` segment, not the first.
  *
+ * **Details**
+ *
  * npm encodes the whole install position in the key, so
  * `node_modules/express/node_modules/debug` is *debug*, nested under express —
  * and `packages/lib/node_modules/react` is *react*, nested under a workspace
@@ -101,6 +105,8 @@ const packageNameIndex = (key: string): number => {
  * out to the root — **deepest first**, first hit wins. That order is the whole
  * algorithm: outermost-first would return the hoisted copy and silently
  * mis-report every shadowed dependency.
+ *
+ * **Details**
  *
  * Only keys that actually exist in the lockfile are emitted, so an edge npm
  * did not record is omitted rather than invented.
@@ -154,7 +160,19 @@ const decodeJsonText = S.decodeEffect(S.fromJsonString(S.Unknown));
  * Schema JSON decoding maps malformed input into the typed `stage: "syntax"`
  * failure channel before version and shape validation.
  *
+ * **Example** (Parse an empty npm package map)
+ *
+ * ```ts
+ * import { parseNpm } from "@beep/scratchpad/effected/lockfiles/internal/npm";
+ * import * as Effect from "effect/Effect";
+ *
+ * const fields = Effect.runSync(parseNpm('{"lockfileVersion":3,"packages":{}}'));
+ * console.log(fields.lockfileVersion); // 3
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseNpm = Effect.fn("parseNpm")(function* (content: string): Effect.fn.Return<LockfileFields, ParseFailure> {
 	const raw = yield* decodeJsonText(content).pipe(

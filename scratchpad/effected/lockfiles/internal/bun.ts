@@ -87,7 +87,19 @@ type BunLockfileRawType = typeof BunLockfileRaw.Type;
  * the integrity hash is assumed at tuple index 3 (a permissive
  * reading of an under-documented upstream shape).
  *
+ * **Example** (Parse an empty text bun lockfile)
+ *
+ * ```ts
+ * import { parseBun } from "@beep/scratchpad/effected/lockfiles/internal/bun";
+ * import * as Effect from "effect/Effect";
+ *
+ * const fields = Effect.runSync(parseBun('{"lockfileVersion":1,"workspaces":{},"packages":{}}'));
+ * console.log(fields.packages.length); // 0
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseBun = Effect.fn("parseBun")(function* (content: string): Effect.fn.Return<LockfileFields, ParseFailure> {
 	const parsed = yield* Jsonc.parse(content).pipe(Effect.mapError(syntaxFailure));
@@ -101,6 +113,8 @@ export const parseBun = Effect.fn("parseBun")(function* (content: string): Effec
 
 /**
  * Resolve one entry's outgoing edges by replaying bun's own key scheme.
+ *
+ * **Details**
  *
  * bun encodes install position in the `packages` key: a nested install is
  * keyed `<parent-key>/<name>`, so `"react-dom/react"` is literally "the react

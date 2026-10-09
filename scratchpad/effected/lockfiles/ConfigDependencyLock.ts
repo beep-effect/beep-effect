@@ -26,7 +26,21 @@ const $I = $ScratchpadId.create("effected/lockfiles/ConfigDependencyLock");
  * - `integrity` — the SRI integrity (`sha512-<base64>`) of
  *   `<name>@<version>`.
  *
+ *
+ * **Example** (Inspect a config dependency checksum)
+ *
+ * ```ts
+ * import { ConfigDependencyLock } from "@beep/scratchpad/effected/lockfiles/ConfigDependencyLock";
+ *
+ * const dependency = ConfigDependencyLock.make({
+ *   name: "@acme/config", specifier: "1.0.0", version: "1.0.0", integrity: "sha512-YWJj",
+ * });
+ * console.log(dependency.integrity); // sha512-YWJj
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class ConfigDependencyLock extends S.Class<ConfigDependencyLock>($I`ConfigDependencyLock`)({
 	name: S.String.annotateKey({ description: "Config dependency package recorded in the pnpm lockfile's env preamble" }),

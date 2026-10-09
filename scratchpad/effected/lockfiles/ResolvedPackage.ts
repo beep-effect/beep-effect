@@ -82,7 +82,19 @@ const EMPTY_EDGE_NAMES: ReadonlyArray<string> = [];
  * when decoding, and `unresolvedEdges` defaults to `[]`. An absent section is
  * therefore an empty collection, never `undefined`.
  *
+ * **Example** (Inspect empty dependency defaults)
+ *
+ * ```ts
+ * import { ResolvedPackage } from "@beep/scratchpad/effected/lockfiles/ResolvedPackage";
+ * import * as R from "effect/Record";
+ *
+ * const pkg = ResolvedPackage.make({ name: "effect", version: "4.0.2", instanceId: "node_modules/effect", isWorkspace: false });
+ * console.log(R.size(pkg.resolved)); // 0
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class ResolvedPackage extends S.Class<ResolvedPackage>($I`ResolvedPackage`)({
 	name: S.NonEmptyString.annotateKey({ description: "Resolved package name; pnpm workspace entries initially carry importer paths until rewritten with manifest names" }),

@@ -24,7 +24,7 @@ const OverrideValue: S.Codec<OverrideValue> = S.Union([
  * **Example** (Preserve a parent-scoped override)
  *
  * ```ts
- * import { BunExtension } from "./BunExtension.ts";
+ * import { BunExtension } from "@beep/scratchpad/effected/lockfiles/BunExtension";
  *
  * const extension = BunExtension.make({ overrides: { parent: { child: "^2.0.0" } } });
  * extension.overrides; // { parent: { child: "^2.0.0" } }

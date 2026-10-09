@@ -17,9 +17,9 @@ const $I = $ScratchpadId.create("effected/lockfiles/PnpmExtension");
  *
  * ```ts
  * import * as S from "effect/Schema";
- * import { PnpmCatalogs } from "./PnpmExtension.ts";
+ * import { PnpmCatalogs } from "@beep/scratchpad/effected/lockfiles/PnpmExtension";
  *
- * S.is(PnpmCatalogs)({ default: { effect: { specifier: "^4.0.0", version: "4.0.2" } } }); // true
+ * console.log(S.is(PnpmCatalogs)({ default: { effect: { specifier: "^4.0.0", version: "4.0.2" } } })); // true
  * ```
  *
  * @public
@@ -59,7 +59,18 @@ export type PnpmCatalogs = typeof PnpmCatalogs.Type;
  * - `overrides` — the version override map recorded in the lockfile header.
  * - `settings` — pnpm settings recorded in the lockfile header.
  *
+ * **Example** (Construct pnpm header metadata)
+ *
+ * ```ts
+ * import { PnpmExtension } from "@beep/scratchpad/effected/lockfiles/PnpmExtension";
+ *
+ * const extension = PnpmExtension.make({ overrides: { effect: "4.0.2" } });
+ * console.log(extension._tag); // pnpm
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class PnpmExtension extends S.Class<PnpmExtension>($I`PnpmExtension`)({
 	_tag: S.tag("pnpm").annotateKey({ description: "Identifies extension data preserved from a pnpm lockfile" }),

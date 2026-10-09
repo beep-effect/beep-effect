@@ -21,16 +21,18 @@
  *
  * **Example** (Parse a pnpm lockfile and count workspace packages)
  *
- * ```typescript
- * import { Lockfile } from "./index.ts";
+ * ```ts
+ * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/index";
  * import * as Effect from "effect/Effect";
  *
- * declare const content: string; // the text of a pnpm-lock.yaml
+ * const content = "lockfileVersion: '9.0'\nimporters:\n  .: {}\npackages: {}"; // the text of a pnpm-lock.yaml
  *
  * const program = Effect.gen(function* () {
  *   const lockfile = yield* Lockfile.parse(content, { format: "pnpm" });
  *   return lockfile.workspacePackages.length;
  * });
+ *
+ * console.log(Effect.runSync(program)); // 0
  * ```
  *
  * @packageDocumentation

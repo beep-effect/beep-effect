@@ -22,7 +22,18 @@ const $I = $ScratchpadId.create("effected/lockfiles/LockfileIntegrity");
  * manifests as plain values so its consumers own the manifest IO (and may
  * derive these from any richer model).
  *
+ * **Example** (Construct a manifest for comparison)
+ *
+ * ```ts
+ * import { WorkspaceManifest } from "@beep/scratchpad/effected/lockfiles/LockfileIntegrity";
+ *
+ * const manifest = WorkspaceManifest.make({ name: "@acme/app", dependencies: { effect: "^4.0.0" } });
+ * console.log(manifest.dependencies?.effect); // ^4.0.0
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class WorkspaceManifest extends S.Class<WorkspaceManifest>($I`WorkspaceManifest`)({
 	name: S.NonEmptyString.annotateKey({ description: "Workspace package identity used to match its manifest against lockfile workspace entries" }),
@@ -52,7 +63,18 @@ const decodeSemVer = S.decodeUnknownExit(SemVer.FromString);
  * - `unsatisfiedConstraints` — declared constraints the lockfile's resolved
  *   versions do not satisfy.
  *
+ * **Example** (Inspect a consistent report)
+ *
+ * ```ts
+ * import { LockfileIntegrity } from "@beep/scratchpad/effected/lockfiles/LockfileIntegrity";
+ *
+ * const report = LockfileIntegrity.make({ valid: true, missingWorkspaces: [], extraWorkspaces: [], unsatisfiedConstraints: [] });
+ * console.log(report.valid); // true
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class LockfileIntegrity extends S.Class<LockfileIntegrity>($I`LockfileIntegrity`)({
 	valid: S.Boolean.annotateKey({ description: "Whether comparison found no missing workspaces, extra workspaces or unsatisfied constraints among the rows it checked" }),
@@ -69,29 +91,42 @@ export class LockfileIntegrity extends S.Class<LockfileIntegrity>($I`LockfileInt
 	).annotateKey({ description: "Declared SemVer constraints satisfied by no parseable resolved candidate, with workspace, dependency section and all candidate versions" }),
 }, $I.annote("LockfileIntegrity", { description: "Result of checking a parsed lockfile against the workspace's declared manifests." })) {
 	/**
-  * Check a lockfile's consistency against workspace manifests — a total,
-  * pure function: no Effect, no error channel, no IO.
-  *
-  * **Details**
-  *
-  * Constraint checking is best-effort by design: `workspace:` / `link:` /
-  * `file:` specifiers and rows whose range (or every resolved version) does
-  * not parse as SemVer are skipped.
-  * A lockfile may resolve the same package at several versions; a
-  * constraint is satisfied when *any* resolved version matches, and an
-  * unsatisfied row reports every candidate in `resolved`. The
-  * caller reads the manifests (this package does no IO). For pnpm, apply
-  * `Lockfile#withImporterNames` first so workspace names align with
-  * manifest names.
-  *
-  * (Named `compare`, not `check`: every `Schema.Class` already carries a
-  * `static check(...checks)` for attaching schema checks, and statics cannot
-  * be shadowed with an incompatible signature.)
-  *
-  * @param lockfile - The parsed lockfile.
-  * @param manifests - The workspace manifests to compare against.
-  * @returns The integrity report.
-  */
+	 * Check a lockfile's consistency against workspace manifests — a total,
+	 * pure function: no Effect, no error channel, no IO.
+	 *
+	 * **Details**
+	 *
+	 * Constraint checking is best-effort by design: `workspace:` / `link:` /
+	 * `file:` specifiers and rows whose range (or every resolved version) does
+	 * not parse as SemVer are skipped.
+	 * A lockfile may resolve the same package at several versions; a
+	 * constraint is satisfied when *any* resolved version matches, and an
+	 * unsatisfied row reports every candidate in `resolved`. The
+	 * caller reads the manifests (this package does no IO). For pnpm, apply
+	 * `Lockfile#withImporterNames` first so workspace names align with
+	 * manifest names.
+	 *
+	 * (Named `compare`, not `check`: every `Schema.Class` already carries a
+	 * `static check(...checks)` for attaching schema checks, and statics cannot
+	 * be shadowed with an incompatible signature.)
+	 *
+	 * **Example** (Report a missing workspace)
+	 *
+	 * ```ts
+	 * import { LockfileIntegrity, WorkspaceManifest } from "@beep/scratchpad/effected/lockfiles/LockfileIntegrity";
+	 * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+	 *
+	 * const lockfile = Lockfile.make({ format: "npm", lockfileVersion: "3", packages: [], workspaceDependencies: [] });
+	 * const report = LockfileIntegrity.compare(lockfile, [WorkspaceManifest.make({ name: "@acme/app" })]);
+	 * console.log(report.missingWorkspaces.join(", ")); // @acme/app
+	 * ```
+	 *
+	 * @param lockfile - The parsed lockfile.
+	 * @param manifests - The workspace manifests to compare against.
+	 * @returns The integrity report.
+	 * @category validation
+	 * @since 0.0.0
+	 */
 	static compare(lockfile: Lockfile, manifests: ReadonlyArray<WorkspaceManifest>): LockfileIntegrity {
 		const workspacePackages = lockfile.packages.filter((p) => p.isWorkspace && p.relativePath !== undefined);
 

@@ -15,9 +15,9 @@ const $I = $ScratchpadId.create("effected/lockfiles/internal/documents");
  *
  * ```ts
  * import * as S from "effect/Schema";
- * import { SelectedDocument } from "./documents.ts";
+ * import { SelectedDocument } from "@beep/scratchpad/effected/lockfiles/internal/documents";
  *
- * S.is(SelectedDocument)({ document: { lockfileVersion: "9.0" }, documents: 1 }); // true
+ * console.log(S.is(SelectedDocument)({ document: { lockfileVersion: "9.0" }, documents: 1 })); // true
  * ```
  *
  * @internal
@@ -65,9 +65,9 @@ const MAX_PNPM_DOCUMENTS = 2;
  *
  * ```ts
  * import * as S from "effect/Schema";
- * import { PnpmStream } from "./documents.ts";
+ * import { PnpmStream } from "@beep/scratchpad/effected/lockfiles/internal/documents";
  *
- * S.is(PnpmStream)({ preamble: undefined, main: { lockfileVersion: "9.0" }, documents: 1 }); // true
+ * console.log(S.is(PnpmStream)({ preamble: undefined, main: { lockfileVersion: "9.0" }, documents: 1 })); // true
  * ```
  *
  * @internal
@@ -124,7 +124,19 @@ export type PnpmStream = typeof PnpmStream.Type;
  * identical). Whether that is a lockfile is the caller's decision, not the
  * splitter's.
  *
+ * **Example** (Split a lockfile without an env preamble)
+ *
+ * ```ts
+ * import { splitPnpmStream } from "@beep/scratchpad/effected/lockfiles/internal/documents";
+ * import * as Effect from "effect/Effect";
+ *
+ * const stream = Effect.runSync(splitPnpmStream("lockfileVersion: '9.0'"));
+ * console.log(stream.preamble === undefined); // true
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const splitPnpmStream = Effect.fn("splitPnpmStream")(function* (content: string): Effect.fn.Return<PnpmStream, ParseFailure> {
 	const documents = yield* Yaml.parseAll(content).pipe(Effect.mapError(syntaxFailure));
@@ -150,7 +162,19 @@ export const splitPnpmStream = Effect.fn("splitPnpmStream")(function* (content: 
  * through the typed framing channel: we refuse to guess where the format
  * defines no rule.
  *
+ * **Example** (Select a single yarn document)
+ *
+ * ```ts
+ * import { selectSoleDocument } from "@beep/scratchpad/effected/lockfiles/internal/documents";
+ * import * as Effect from "effect/Effect";
+ *
+ * const selected = Effect.runSync(selectSoleDocument("__metadata:\n  version: 8"));
+ * console.log(selected.documents); // 1
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const selectSoleDocument = Effect.fn("selectSoleDocument")(function* (content: string): Effect.fn.Return<SelectedDocument, ParseFailure> {
 	const documents = yield* Yaml.parseAll(content).pipe(Effect.mapError(syntaxFailure));

@@ -43,6 +43,13 @@ const UnsupportedLockfileVersion = S.TaggedStruct("UnsupportedLockfileVersion", 
 	minimumSupported: S.Finite.annotateKey({ description: "Lowest format version supported by the rejecting parser" }),
 	message: S.String.annotateKey({ description: "Human-readable explanation of the unsupported version" }),
 }).annotate($I.annote("UnsupportedLockfileVersion", { description: "Complete structural cause for a rejected npm or pnpm lockfile version" }));
+/**
+ * Structural version-gate cause distinguishing unsupported formats from malformed input.
+ *
+ * @see {@link isUnsupportedLockfileVersion} for narrowing an open parse-error cause.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type UnsupportedLockfileVersion = typeof UnsupportedLockfileVersion.Type;
 const isVersionFailure = S.is(UnsupportedLockfileVersion);
 
@@ -61,9 +68,11 @@ const isVersionFailure = S.is(UnsupportedLockfileVersion);
  * **Example** (Distinguish unsupported lockfile versions from malformed input)
  *
  * ```ts
- * import { Lockfile, isUnsupportedLockfileVersion } from "./index.ts";
+ * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+ * import { isUnsupportedLockfileVersion } from "@beep/scratchpad/effected/lockfiles/UnsupportedLockfileVersion";
  * import * as Effect from "effect/Effect";
  *
+ * const text = '{"lockfileVersion":2,"packages":{}}';
  * const parsed = Lockfile.parse(text, { format: "npm" }).pipe(
  *   Effect.catchTag("LockfileParseError", (error) =>
  *     isUnsupportedLockfileVersion(error.cause)
@@ -71,11 +80,15 @@ const isVersionFailure = S.is(UnsupportedLockfileVersion);
  *       : Effect.fail("malformed lockfile"),
  *   ),
  * );
+ *
+ * console.log(Effect.runSync(Effect.flip(parsed))); // upgrade: npm needs lockfileVersion 3+
  * ```
  *
- * @param cause - the `cause` of a `LockfileParseError`, or any unknown value
+ * @param cause - the `cause` of a `LockfileParseError`, or an unknown value
  * @returns `true` when `cause` is the version-gate record
  * @public
+ * @category predicates
+ * @since 0.0.0
  */
 export const isUnsupportedLockfileVersion = (cause: unknown): cause is UnsupportedLockfileVersion =>
 	P.isObjectKeyword(cause) &&

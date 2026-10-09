@@ -1,23 +1,6 @@
 # lockfiles (lab port of @effected/lockfiles)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Flockfiles?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/lockfiles)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
-
 Lockfile parsing for [Effect](https://effect.website) v4: bun (`bun.lock`), npm (`package-lock.json`), pnpm (`pnpm-lock.yaml`) and yarn Berry (`yarn.lock`) all normalized into one `Lockfile` schema model, plus pure integrity checking of that model against workspace manifests. Four formats, one model, no IO and no external runtime dependencies.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/lockfiles
 
@@ -25,30 +8,17 @@ Every package manager writes its lockfile in a different dialect — JSONC for b
 
 Every entrypoint takes content as a **string**. The package performs no IO at all: reading files, finding workspace roots and detecting which package manager a repo uses belong to its consumers, and keeping them out means the parser is a pure function you can drive from a fixture, a network response or a git blob. Malformed input always exits through a typed error channel, never as a defect, and the two ways a lockfile can be unusable are distinct tags rather than one blurry `reason` string. Yarn support is Berry only, and that is enforced: classic v1 content fails typed instead of being mis-normalized into something that looks plausible.
 
-## Install
-
-```bash
-npm install @effected/lockfiles @effected/jsonc @effected/npm @effected/semver @effected/yaml effect
-```
-
-```bash
-pnpm add @effected/lockfiles @effected/jsonc @effected/npm @effected/semver @effected/yaml effect
-```
-
-Requires Node.js >=24.11.0. `effect` v4, `@effected/jsonc`, `@effected/npm`, `@effected/semver` and `@effected/yaml` are peer dependencies — the JSONC and YAML engines, the shared dependency-specifier vocabulary and the SemVer range checker all arrive through those siblings, so nothing outside `effect` and `@effected/*` reaches your tree. Package managers that install peers automatically will pull them in; add them to your manifest explicitly if yours does not.
-
-All `@effected/*` packages are ESM-only: the exports maps publish only `import` conditions, so `require()` — including tools that resolve in CJS mode — fails with Node's `ERR_PACKAGE_PATH_NOT_EXPORTED` rather than loading a CJS build that does not exist. Import from an ES module.
-
 ## Quick start
 
 ```ts
-import { Lockfile, LockfileIntegrity, WorkspaceManifest } from "@effected/lockfiles";
-import { Effect } from "effect";
+import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+import { LockfileIntegrity, WorkspaceManifest } from "@beep/scratchpad/effected/lockfiles/LockfileIntegrity";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 
-declare const content: string; // lockfile text, read by the caller
-
+const content = "lockfileVersion: '9.0'\nimporters:\n  packages/core: {}";
 const program = Effect.gen(function* () {
-  // The only fallible boundary in the package.
+  // The only fallible boundary in the package; the caller supplies the text.
   const lockfile = yield* Lockfile.parse(content, { format: "pnpm" });
 
   // pnpm workspace packages come back keyed by importer path; rewrite them
@@ -56,18 +26,17 @@ const program = Effect.gen(function* () {
   const named = lockfile.withImporterNames(new Map([["packages/core", "@acme/core"]]));
 
   // Total lookups over the model.
-  const versions = named.packagesNamed("typescript").map((p) => p.version);
+  const versions = A.map(named.packagesNamed("typescript"), (p) => p.version);
 
   // Pure integrity checking — no Effect, no error channel, no IO.
   const report = LockfileIntegrity.compare(named, [
     WorkspaceManifest.make({ name: "@acme/core", dependencies: { lodash: "^4.17.0" } }),
   ]);
-
   return { versions, workspaces: named.workspacePackages.length, valid: report.valid };
 });
 
-Effect.runPromise(program).then(console.log);
-// { versions: [...resolved typescript versions], workspaces: <count>, valid: true | false }
+const result = Effect.runSync(program);
+console.log(result.versions.length, result.workspaces, result.valid); // 0 1 true
 ```
 
 ## Formats
@@ -94,19 +63,20 @@ The gate is on the **lockfile format version**, which is the only version a lock
 The `cause` is a structured `{ _tag: "UnsupportedLockfileVersion", format, lockfileVersion, minimumSupported, message }`, so a consumer can distinguish "your lockfile is too old" from "your lockfile is malformed" without parsing prose. `isUnsupportedLockfileVersion` is the exported predicate that narrows to it — discriminate on the tag, never on `message`, which is a summary rather than contract:
 
 ```ts
-import { isUnsupportedLockfileVersion, Lockfile } from "@effected/lockfiles";
-import { Effect } from "effect";
+import { isUnsupportedLockfileVersion } from "@beep/scratchpad/effected/lockfiles/UnsupportedLockfileVersion";
+import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+import * as Effect from "effect/Effect";
 
-declare const content: string;
-
+const content = "lockfileVersion: '8.0'\nimporters:\n  .: {}";
 const program = Lockfile.parse(content, { format: "pnpm" }).pipe(
   Effect.catchTag("LockfileParseError", (error) =>
     isUnsupportedLockfileVersion(error.cause)
-      ? Effect.fail(`lockfileVersion ${error.cause.lockfileVersion}; need ${error.cause.minimumSupported}+`)
+      ? Effect.fail("lockfileVersion " + error.cause.lockfileVersion + "; need " + error.cause.minimumSupported + "+")
       : Effect.fail("malformed lockfile"),
   ),
 );
-// a pre-v9 pnpm lockfile takes the first branch, a truncated one the second
+// A pre-v9 pnpm lockfile takes the first branch, a truncated one the second.
+console.log(Effect.runSync(Effect.flip(program))); // lockfileVersion 8.0; need 9+
 ```
 
 `cause` stays an open channel deliberately: it carries whatever the delegated parsing engines throw, so declaring it as a closed union would present an open channel as an exhaustive one. The predicate is what makes narrowing it honest.
@@ -135,13 +105,18 @@ A row in `lockfile.packages` is one package **instance**, not one package. A dep
 `resolved` maps each dependency name — and each peer name the lockfile records a resolution for — to the `instanceId` it actually resolved to, which is what lets a consumer walk the real graph rather than re-resolving ranges itself. `peerDependencies` and `peerDependenciesMeta` carry the declarations as written, defaulting to `{}`.
 
 ```ts
-import { Option } from "effect";
+import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 
+const content = '{"lockfileVersion":3,"packages":{"node_modules/react-dom":{"version":"18.3.1","dependencies":{"react":"18.3.1"}},"node_modules/react":{"version":"18.3.1"}}}';
+const lockfile = Effect.runSync(Lockfile.parse(content, { format: "npm" }));
 const [instance] = lockfile.packagesNamed("react-dom");
 const reactId = instance?.resolved["react"];
-const react = reactId === undefined ? Option.none() : lockfile.packageByInstanceId(reactId);
-// Option.some(ResolvedPackage) — the version this particular react-dom instance resolved to
-// Option.none() when the lockfile records no row under that id
+const react = reactId === undefined ? O.none() : lockfile.packageByInstanceId(reactId);
+// Some identifies the version this particular react-dom instance resolved to.
+// None means the lockfile records no row under that id.
+console.log(O.getOrUndefined(react)?.version); // 18.3.1
 ```
 
 `packageByInstanceId` is the lookup to reach for rather than a scan over `lockfile.packages`: it builds its index lazily on first call and reuses it, so walking a graph edge by edge stays linear instead of quadratic. A repeated id resolves to the first row, so a malformed lockfile gives a stable answer rather than an iteration-order one.

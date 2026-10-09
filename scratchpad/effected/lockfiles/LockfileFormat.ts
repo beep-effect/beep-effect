@@ -20,7 +20,18 @@ const $I = $ScratchpadId.create("effected/lockfiles/LockfileFormat");
  * supported: pnpm `lockfileVersion` 9+ and npm `lockfileVersion` 3+ parse,
  * and older ones fail typed. See `Lockfile.parse`.
  *
+ * **Example** (Validate a format name)
+ *
+ * ```ts
+ * import { LockfileFormat } from "@beep/scratchpad/effected/lockfiles/LockfileFormat";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(LockfileFormat)("pnpm")); // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const LockfileFormat = LiteralKit(["bun", "npm", "pnpm", "yarn"]).pipe($I.annoteSchema("LockfileFormat", { description: "The lockfile formats this package parses: bun's `bun.lock` (JSONC), npm's `package-lock.json` (JSON), pnpm's `pnpm-lock.yaml` and yarn Berry's `yarn.lock` (both YAML)." }));
 
@@ -28,6 +39,8 @@ export const LockfileFormat = LiteralKit(["bun", "npm", "pnpm", "yarn"]).pipe($I
  * The union of supported lockfile format names.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type LockfileFormat = typeof LockfileFormat.Type;
 
@@ -49,7 +62,17 @@ const FILENAMES: Readonly<Record<LockfileFormat, readonly [string, ...ReadonlyAr
  * The primary name only — the first element of {@link filenamesFor}, which is
  * what detection that must also see the genuine alternates should use.
  *
+ * **Example** (Find the conventional npm filename)
+ *
+ * ```ts
+ * import { filenameFor } from "@beep/scratchpad/effected/lockfiles/LockfileFormat";
+ *
+ * console.log(filenameFor("npm")); // package-lock.json
+ * ```
+ *
  * @public
+ * @category getters
+ * @since 0.0.0
  */
 export const filenameFor = (format: LockfileFormat): string => FILENAMES[format][0];
 
@@ -74,7 +97,17 @@ export const filenameFor = (format: LockfileFormat): string => FILENAMES[format]
  * binary format fails typed), and {@link fromFilename} keeps answering for the
  * primary names only.
  *
+ * **Example** (Include binary bun detection)
+ *
+ * ```ts
+ * import { filenamesFor } from "@beep/scratchpad/effected/lockfiles/LockfileFormat";
+ *
+ * console.log(filenamesFor("bun").join(", ")); // bun.lock, bun.lockb
+ * ```
+ *
  * @public
+ * @category getters
+ * @since 0.0.0
  */
 export const filenamesFor = (format: LockfileFormat): readonly [string, ...ReadonlyArray<string>] => FILENAMES[format];
 
@@ -87,7 +120,18 @@ export const filenamesFor = (format: LockfileFormat): readonly [string, ...Reado
  * `"package-lock.json"`, `"pnpm-lock.yaml"`, `"yarn.lock"`) — paths, other
  * spellings and the {@link filenamesFor} alternates return `Option.none()`.
  *
+ * **Example** (Reject alternate filenames)
+ *
+ * ```ts
+ * import { fromFilename } from "@beep/scratchpad/effected/lockfiles/LockfileFormat";
+ * import * as O from "effect/Option";
+ *
+ * console.log(O.isNone(fromFilename("npm-shrinkwrap.json"))); // true
+ * ```
+ *
  * @public
+ * @category parsing
+ * @since 0.0.0
  */
 export const fromFilename = (name: string): O.Option<LockfileFormat> => {
 	for (const format of LockfileFormat.literals) {

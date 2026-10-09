@@ -13,7 +13,9 @@ import { gatePnpmVersion, validationFailure } from "./shared.ts";
 
 const $I = $ScratchpadId.create("effected/lockfiles/internal/pnpmEnv");
 
-/** A well-formed env preamble whose recorded dependency cannot be accounted for. */
+/**
+ * A well-formed env preamble whose recorded dependency cannot be accounted for.
+ */
 class PnpmEnvPreambleError extends S.TaggedError<PnpmEnvPreambleError>($I`PnpmEnvPreambleError`)(
 	"PnpmEnvPreambleError",
 	{ message: S.String.annotateKey({ description: "The env preamble's unaccounted dependency or integrity claim." }) },
@@ -69,10 +71,14 @@ const PnpmEnvRaw = S.Struct({
 
 type PnpmEnvRawType = typeof PnpmEnvRaw.Type;
 
-/** The package-manager package this reader resolves. */
+/**
+ * The package-manager package this reader resolves.
+ */
 const PNPM = "pnpm";
 
-/** The importer pnpm records `packageManagerDependencies` under. */
+/**
+ * The importer pnpm records `packageManagerDependencies` under.
+ */
 const ROOT_IMPORTER = ".";
 
 const JsonString = S.fromJsonString(S.String).annotate($I.annote("JsonString", {
@@ -154,13 +160,24 @@ const decodePreamble = Effect.fn("decodePreamble")(function* (content: string): 
  * a preamble whose root importer declares no `pnpm` package-manager
  * dependency. Everything past that point is a claim the lockfile made, so a
  * claim it cannot back — a missing `pnpm@<version>` entry, a missing snapshot,
- * a missing or non-SRI integrity for pnpm or any native it lists — fails typed
+ * a missing or non-SRI integrity for pnpm or each native it lists — fails typed
  * rather than degrading to "nothing recorded".
  *
  * Native packages come from the lockfile's own graph — the optional
  * dependencies of the `pnpm@<version>` snapshot — not from a name pattern.
  *
+ * **Example** (Read a stream without a manager preamble)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import { readPnpmPackageManager } from "@beep/scratchpad/effected/lockfiles/internal/pnpmEnv";
+ *
+ * console.log(Effect.runSync(readPnpmPackageManager("lockfileVersion: 9\nimporters:\n  .: {}"))) // undefined
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const readPnpmPackageManager = Effect.fn("readPnpmPackageManager")(function* (content: string): Effect.fn.Return<PackageManagerLock | undefined, ParseFailure> {
 	const raw = yield* decodePreamble(content);
@@ -200,7 +217,20 @@ export const readPnpmPackageManager = Effect.fn("readPnpmPackageManager")(functi
  * dropped. The map is built from own keys only, so a hostile name such as
  * `__proto__` is an ordinary entry.
  *
+ * **Example** (Read a stream without config dependencies)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import * as HashMap from "effect/HashMap";
+ * import { readPnpmConfigDependencies } from "@beep/scratchpad/effected/lockfiles/internal/pnpmEnv";
+ *
+ * const locks = Effect.runSync(readPnpmConfigDependencies("lockfileVersion: 9\nimporters:\n  .: {}"));
+ * console.log(HashMap.size(locks)) // 0
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const readPnpmConfigDependencies = Effect.fn("readPnpmConfigDependencies")(function* (content: string): Effect.fn.Return<HashMap.HashMap<string, ConfigDependencyLock>, ParseFailure> {
 	const raw = yield* decodePreamble(content);

@@ -17,7 +17,18 @@ const $I = $ScratchpadId.create("effected/lockfiles/WorkspaceDependency");
  *   `@effected/npm`'s kit-wide `DependencyField` vocabulary.
  * - `constraint` — the declared specifier (e.g. `"workspace:*"`, `"^1.0.0"`).
  *
+ * **Example** (Construct a workspace dependency edge)
+ *
+ * ```ts
+ * import { WorkspaceDependency } from "@beep/scratchpad/effected/lockfiles/WorkspaceDependency";
+ *
+ * const edge = WorkspaceDependency.make({ from: "@acme/app", to: "@acme/lib", depType: "dependencies", constraint: "workspace:*" });
+ * console.log(edge.constraint); // workspace:*
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class WorkspaceDependency extends S.Class<WorkspaceDependency>($I`WorkspaceDependency`)({
 	from: S.NonEmptyString.annotateKey({ description: "Workspace package declaring the dependency; pnpm initially uses its importer path until rewritten with its manifest name" }),

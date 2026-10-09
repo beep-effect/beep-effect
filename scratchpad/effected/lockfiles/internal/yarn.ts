@@ -50,11 +50,25 @@ const YarnMetadata = S.Struct({
 /**
  * Parse yarn Berry `yarn.lock` content into the unified field bundle.
  *
+ * **Details**
+ *
  * Yarn Berry lockfiles are YAML with a flat key structure where each key
  * encodes package name + resolution descriptor(s) (e.g.
  * `"@scope/name@npm:^1.0.0"`); workspace entries carry `linkType: "soft"`.
  *
+ * **Example** (Read Yarn Berry metadata)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import { parseYarn } from "@beep/scratchpad/effected/lockfiles/internal/yarn";
+ *
+ * const fields = Effect.runSync(parseYarn("__metadata:\n  version: 8"));
+ * console.log(fields.lockfileVersion) // 8
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseYarn = Effect.fn("parseYarn")(function* (content: string): Effect.fn.Return<LockfileFields, ParseFailure> {
 	// yarn defines no document framing, so a multi-document yarn.lock fails
@@ -158,6 +172,8 @@ const toFields = Effect.fn("toFields")(function* (lockfileVersion: string, decod
 
 /**
  * Resolve one entry's outgoing edges through the descriptor→locator index.
+ *
+ * **Details**
  *
  * A yarn dependency value is a *descriptor* range (`"npm:5.3.0"`), and the
  * lockfile keys enumerate exactly which descriptors resolve to which locator,

@@ -31,19 +31,15 @@ const configDependencies = Effect.fn("PnpmEnvLockfile.configDependencies")((cont
  * `Lockfile.parse` reads the last; these readers read the first.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PnpmEnvLockfileReaders {
 	/**
 	 * Read the package manager a `pnpm-lock.yaml` pins, with its recorded
 	 * integrity. Pure: takes the lockfile text, performs no IO.
 	 *
-	 * @param content - The `pnpm-lock.yaml` text.
-	 * @returns `Option.none()` when the lockfile records no package manager —
-	 *   a single-document lockfile (no preamble; pnpm writes none for a
-	 *   workspace declaring neither `devEngines.packageManager` nor
-	 *   `configDependencies`), or a preamble whose root importer declares no
-	 *   `pnpm` in `packageManagerDependencies`. Otherwise `Option.some` of the
-	 *   {@link PackageManagerLock}.
+	 * **Gotchas**
 	 *
 	 * Fails with {@link LockfileParseError} when the text is not well-formed
 	 * YAML (`stage: "syntax"`), or when the preamble is malformed or records a
@@ -54,37 +50,73 @@ export interface PnpmEnvLockfileReaders {
 	 * {@link LockfileFramingError} (`reason: "unexpectedDocuments"`) when the
 	 * stream carries more than two documents, since no position then
 	 * identifies the preamble.
+	 *
+	 * **Example** (Read a lockfile with no manager pin)
+	 *
+	 * ```ts
+	 * import { PnpmEnvLockfile } from "@beep/scratchpad/effected/lockfiles/PnpmEnvLockfile";
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
+	 *
+	 * const manager = Effect.runSync(PnpmEnvLockfile.packageManager("lockfileVersion: '9.0'"));
+	 * console.log(O.isNone(manager)); // true
+	 * ```
+	 *
+	 * @param content - The `pnpm-lock.yaml` text.
+	 * @returns `Option.none()` when the lockfile records no package manager —
+	 *   a single-document lockfile (no preamble; pnpm writes none for a
+	 *   workspace declaring neither `devEngines.packageManager` nor
+	 *   `configDependencies`), or a preamble whose root importer declares no
+	 *   `pnpm` in `packageManagerDependencies`. Otherwise `Option.some` of the
+	 *   {@link PackageManagerLock}.
+	 *
+	 * @since 0.0.0
 	 */
 	readonly packageManager: (
 		content: string,
 	) => Effect.Effect<O.Option<PackageManagerLock>, LockfileParseError | LockfileFramingError>;
 
 	/**
-  * Read the config dependencies a `pnpm-lock.yaml` records, each with its
-  * recorded integrity. Pure: takes the lockfile text, performs no IO.
-  *
-  * **Details**
-  *
-  * The integrity source for a `configDependencies` entry written as a bare
-  * version: pnpm 11 and 12 keep it here rather than inline in
-  * `pnpm-workspace.yaml`. Read by `@effected/workspaces` to verify a config
-  * dependency it fetches at a version this checkout never installed.
-  *
-  * @param content - The `pnpm-lock.yaml` text.
-  * @returns An Effect HashMap keyed by config-dependency name. Empty when the lockfile
-  *   records none — a single-document lockfile (no preamble), or a preamble
-  *   whose root importer declares no `configDependencies`.
-  *   Iteration order is unspecified.
-  *
-  * Fails exactly as {@link PnpmEnvLockfileReaders.packageManager} does, with
-  * {@link LockfileParseError} for broken YAML (`stage: "syntax"`) or a
-  * malformed preamble (`stage: "validation"`), and with
-  * {@link LockfileFramingError} (`reason: "unexpectedDocuments"`) for more
-  * than two documents. A recorded entry the lockfile cannot back fails at
-  * `stage: "validation"`: an empty version, or a `<name>@<version>` with no
-  * `packages` entry, no `resolution.integrity`, or an integrity that is not
-  * SRI. An entry is never silently dropped.
-  */
+	 * Read the config dependencies a `pnpm-lock.yaml` records, each with its
+	 * recorded integrity. Pure: takes the lockfile text, performs no IO.
+	 *
+	 * **Details**
+	 *
+	 * The integrity source for a `configDependencies` entry written as a bare
+	 * version: pnpm 11 and 12 keep it here rather than inline in
+	 * `pnpm-workspace.yaml`. Read by `@effected/workspaces` to verify a config
+	 * dependency it fetches at a version this checkout never installed.
+	 *
+	 * **Gotchas**
+	 *
+	 * Fails exactly as {@link PnpmEnvLockfileReaders.packageManager} does, with
+	 * {@link LockfileParseError} for broken YAML (`stage: "syntax"`) or a
+	 * malformed preamble (`stage: "validation"`), and with
+	 * {@link LockfileFramingError} (`reason: "unexpectedDocuments"`) for more
+	 * than two documents. A recorded entry the lockfile cannot back fails at
+	 * `stage: "validation"`: an empty version, or a `<name>@<version>` with no
+	 * `packages` entry, no `resolution.integrity`, or an integrity that is not
+	 * SRI. An entry is never silently dropped.
+	 *
+	 * **Example** (Read a lockfile with no config dependencies)
+	 *
+	 * ```ts
+	 * import { PnpmEnvLockfile } from "@beep/scratchpad/effected/lockfiles/PnpmEnvLockfile";
+	 * import * as Effect from "effect/Effect";
+	 * import * as HashMap from "effect/HashMap";
+	 *
+	 * const dependencies = Effect.runSync(PnpmEnvLockfile.configDependencies("lockfileVersion: '9.0'"));
+	 * console.log(HashMap.size(dependencies)); // 0
+	 * ```
+	 *
+	 * @param content - The `pnpm-lock.yaml` text.
+	 * @returns An Effect HashMap keyed by config-dependency name. Empty when the lockfile
+	 *   records none — a single-document lockfile (no preamble), or a preamble
+	 *   whose root importer declares no `configDependencies`.
+	 *   Iteration order is unspecified.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly configDependencies: (
 		content: string,
 	) => Effect.Effect<HashMap.HashMap<string, ConfigDependencyLock>, LockfileParseError | LockfileFramingError>;
@@ -97,7 +129,7 @@ export interface PnpmEnvLockfileReaders {
  * **Example** (Read the env preamble)
  *
  * ```ts
- * import { PnpmEnvLockfile } from "./index.ts";
+ * import { PnpmEnvLockfile } from "@beep/scratchpad/effected/lockfiles/index";
  * import * as Effect from "effect/Effect";
  * import * as HashMap from "effect/HashMap";
  * import * as O from "effect/Option";
@@ -112,8 +144,12 @@ export interface PnpmEnvLockfileReaders {
  *     plugin: O.map(HashMap.get(configDependencies, "@effected/pnpm-plugin-effect"), (dep) => dep.integrity),
  *   };
  * });
+ *
+ * console.log(O.isNone(Effect.runSync(program).pnpm)); // true
  * ```
  *
  * @public
+ * @category parsing
+ * @since 0.0.0
  */
 export const PnpmEnvLockfile: PnpmEnvLockfileReaders = { packageManager, configDependencies };

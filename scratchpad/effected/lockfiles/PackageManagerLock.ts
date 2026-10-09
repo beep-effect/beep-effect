@@ -31,7 +31,18 @@ const $I = $ScratchpadId.create("effected/lockfiles/PackageManagerLock");
  *   the record is empty — pnpm 11 hangs its platform binaries off a separate
  *   `@pnpm/exe` wrapper entry instead, which this model does not carry.
  *
+ * **Example** (Inspect the pinned manager version)
+ *
+ * ```ts
+ * import { PackageManagerLock } from "@beep/scratchpad/effected/lockfiles/PackageManagerLock";
+ *
+ * const manager = PackageManagerLock.make({ name: "pnpm", specifier: "12.7.0", version: "12.7.0", integrity: "sha512-YWJj", nativeIntegrity: {} });
+ * console.log(manager.version); // 12.7.0
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class PackageManagerLock extends S.Class<PackageManagerLock>($I`PackageManagerLock`)({
 	name: S.Literal("pnpm").annotateKey({ description: "Package manager pinned by the env preamble, always `pnpm`" }),

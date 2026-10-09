@@ -21,7 +21,18 @@ const $I = $ScratchpadId.create("effected/lockfiles/LockfileImporter");
  * Populated by the pnpm, bun and npm parsers. yarn does not record importers,
  * so a yarn lockfile always yields an empty `importers` array.
  *
+ * **Example** (Construct the root importer)
+ *
+ * ```ts
+ * import { LockfileImporter } from "@beep/scratchpad/effected/lockfiles/LockfileImporter";
+ *
+ * const importer = LockfileImporter.make({ path: ".", dependencies: [] });
+ * console.log(importer.path); // .
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class LockfileImporter extends S.Class<LockfileImporter>($I`LockfileImporter`)({
 	path: S.NonEmptyString.annotateKey({ description: "Importer path relative to the workspace root, with `.` identifying the root package" }),

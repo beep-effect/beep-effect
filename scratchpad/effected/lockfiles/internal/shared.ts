@@ -30,7 +30,17 @@ const $I = $ScratchpadId.create("effected/lockfiles/internal/shared");
  * to, since the two coincide. Consumed by `extractWorkspaceDeps` and by the
  * pnpm/bun/npm importer builders.
  *
+ * **Example** (Inspect dependency section order)
+ *
+ * ```ts
+ * import { DEP_TYPES } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * console.log(DEP_TYPES.join(", ")) // dependencies, devDependencies, peerDependencies, optionalDependencies
+ * ```
+ *
  * @internal
+ * @category constants
+ * @since 0.0.0
  */
 export const DEP_TYPES = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"] as const;
 
@@ -38,6 +48,8 @@ export const DEP_TYPES = ["dependencies", "devDependencies", "peerDependencies",
  * Coerce a raw lockfile integrity string to the `@effected/npm` `IntegrityHash`
  * brand, which recognizes the SRI (`<algo>-<base64>`), corepack (`<algo>.<hex>`)
  * and yarn (`<cachekey>/<hex>`) textual forms.
+ *
+ * **Details**
  *
  * Absence and corruption are treated differently, and the distinction is the
  * point. An *absent* integrity (input `undefined`) succeeds with `undefined`,
@@ -49,7 +61,18 @@ export const DEP_TYPES = ["dependencies", "devDependencies", "peerDependencies",
  * defect. yarn's `10c0/<hex>` cache checksums are a recognized form, so real
  * yarn/npm/pnpm/bun integrity all still parses; only genuine corruption fails.
  *
+ * **Example** (Preserve absent integrity)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import { toIntegrityHash } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * console.log(Effect.runSync(toIntegrityHash(undefined))) // undefined
+ * ```
+ *
  * @internal
+ * @category decoding
+ * @since 0.0.0
  */
 export const toIntegrityHash = (
 	raw: string | undefined,
@@ -69,6 +92,8 @@ const decodeSpecifier = S.decodeUnknownExit(DependencySpecifier.FromString);
  * snapshot key (`"fdir@6.5.0(picomatch@4.0.4)"`) — and nested chains
  * (`"(a@1(b@2))(c@3)"`) as one suffix.
  *
+ * **Details**
+ *
  * pnpm suffixes a `file:` resolution exactly as it suffixes a registry
  * version whenever the package declares peers, directory and tarball alike
  * (`file:vendor/lib(react@18.3.1)`, measured against pnpm 12.6.0), so the rule
@@ -87,7 +112,19 @@ const decodeSpecifier = S.decodeUnknownExit(DependencySpecifier.FromString);
  * This is the single stripping implementation — do not hand-roll a
  * parenthesis split elsewhere.
  *
+ * **Example** (Separate a peer chain from its version)
+ *
+ * ```ts
+ * import { splitPeerSuffix } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * const split = splitPeerSuffix("1.0.0(effect@4.0.0)");
+ * console.log(split.plain) // 1.0.0
+ * console.log(split.peerSuffix) // (effect@4.0.0)
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const splitPeerSuffix = (raw: string): { readonly plain: string; readonly peerSuffix?: string } => {
 	if (raw.startsWith("link:") || !raw.endsWith(")")) return { plain: raw };
@@ -108,7 +145,17 @@ export const splitPeerSuffix = (raw: string): { readonly plain: string; readonly
  * Returns `undefined` for a key with no separator after its first character
  * (`"@"`, `"@scope/"`, a bare name).
  *
+ * **Example** (Split a scoped package identity)
+ *
+ * ```ts
+ * import { splitNameVersion } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * console.log(splitNameVersion("@scope/lib@1.2.3")?.name) // @scope/lib
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const splitNameVersion = (key: string): { readonly name: string; readonly version: string } | undefined => {
 	const at = key.indexOf("@", 1);
@@ -121,6 +168,8 @@ export const splitNameVersion = (key: string): { readonly name: string; readonly
  * the `@effected/npm` `ClassifiedSpecifier` tagged union. Returns `undefined`
  * — a skip, never a throw — when the name is empty or the specifier does not
  * classify (e.g. an empty specifier), per the total-string-surgery discipline.
+ *
+ * **Details**
  *
  * A pnpm-recorded version is normalized through {@link splitPeerSuffix}: the
  * `version` field carries the plain version and the split-off peer chain lands
@@ -159,6 +208,8 @@ const buildImporterDependency = (
  * that projects a section value to a specifier and (pnpm-only) a version.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export type ImporterSections<V> = { readonly [K in DependencyField]?: Readonly<Record<string, V>> };
 
@@ -169,7 +220,18 @@ export type ImporterSections<V> = { readonly [K in DependencyField]?: Readonly<R
  * are the schema-decoded records, whose own-property `Object.entries` iteration
  * neither pollutes nor drops a `__proto__` key.
  *
+ * **Example** (Collect a declared runtime dependency)
+ *
+ * ```ts
+ * import { importerDependencies } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * const deps = importerDependencies({ dependencies: { react: "^18.0.0" } }, (specifier) => ({ specifier }));
+ * console.log(deps.length) // 1
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const importerDependencies: {
 	<V>(read: (value: V) => { readonly specifier: string; readonly version?: string }): (entry: ImporterSections<V>) => ReadonlyArray<ImporterDependency>;
@@ -195,18 +257,38 @@ export const importerDependencies: {
  * The two peer fields of a `ResolvedPackage`, always present. Spread
  * straight into `ResolvedPackage.make`.
  *
+ * **Example** (Validate normalized peer fields)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { PeerDeclarations } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * console.log(S.is(PeerDeclarations)({ peerDependencies: {}, peerDependenciesMeta: {} })) // true
+ * ```
+ *
  * @internal
+ * @category schemas
+ * @since 0.0.0
  */
 export const PeerDeclarations = S.Struct({
 	peerDependencies: S.Record(S.String, S.String).annotateKey({ description: "Declared peer dependencies keyed by package name" }),
 	peerDependenciesMeta: S.Record(S.String, S.Struct({ optional: S.Boolean.annotateKey({ description: "Whether this peer dependency is optional" }) })).annotateKey({ description: "Optionality metadata keyed by peer dependency name" }),
 }).annotate($I.annote("PeerDeclarations", { description: "Normalized peer ranges and optional flags shared by all lockfile formats" }));
+/**
+ * Decoded representation of {@link PeerDeclarations} for internal parser composition.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type PeerDeclarations = typeof PeerDeclarations.Type;
 
 const EMPTY_PEERS: PeerDeclarations = { peerDependencies: {}, peerDependenciesMeta: {} };
 
 /**
  * Normalize one format's peer declarations into the unified pair.
+ *
+ * **Details**
  *
  * Every format records the ranges the same way (a name→range map), but the
  * optional flag has two spellings: a `peerDependenciesMeta` object (pnpm, npm,
@@ -229,15 +311,15 @@ const EMPTY_PEERS: PeerDeclarations = { peerDependencies: {}, peerDependenciesMe
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { peerDeclarations } from "./shared.ts";
+ * import { peerDeclarations } from "@beep/scratchpad/effected/lockfiles/internal/shared";
  *
  * const peers = pipe({ react: "^18" }, peerDeclarations(undefined, ["react"]));
- * peers.peerDependenciesMeta.react // => { optional: true }
+ * console.log(peers.peerDependenciesMeta.react?.optional) // true
  * ```
  *
+ * @internal
  * @category normalization
  * @since 0.0.0
- * @internal
  */
 export const peerDeclarations: {
 	(meta: Readonly<Record<string, { readonly optional?: boolean }>> | undefined, optionalPeers?: ReadonlyArray<string> | undefined): (peers: Readonly<Record<string, string>> | undefined) => PeerDeclarations;
@@ -266,6 +348,8 @@ export const peerDeclarations: {
 /**
  * The minimum lockfile-format version each gated format is parsed at.
  *
+ * **Details**
+ *
  * This is a deliberate narrowing of the supported input domain, not an
  * implementation detail: an older lockfile fails typed rather than parsing
  * into a model that cannot answer resolution questions. Note the gate is on
@@ -273,7 +357,18 @@ export const peerDeclarations: {
  * records — the writing package manager's version is not recoverable from the
  * file, so no manager-version claim could be enforced here.
  *
+ * **Example** (Inspect supported format floors)
+ *
+ * ```ts
+ * import { MINIMUM_LOCKFILE_VERSION } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * console.log(MINIMUM_LOCKFILE_VERSION.pnpm) // 9
+ * console.log(MINIMUM_LOCKFILE_VERSION.npm) // 3
+ * ```
+ *
  * @internal
+ * @category constants
+ * @since 0.0.0
  */
 export const MINIMUM_LOCKFILE_VERSION = { pnpm: 9, npm: 3 } as const;
 
@@ -286,6 +381,8 @@ const encodeVersionMessage = S.encodeResult(VersionMessage);
 /**
  * Fail typed when a lockfile predates the supported format version.
  *
+ * **Details**
+ *
  * Routed through {@link validationFailure} rather than {@link framingFailure}:
  * the document was located perfectly well, so this is a shape judgement about
  * a located document, not a framing problem. The cause is a structured record
@@ -295,7 +392,18 @@ const encodeVersionMessage = S.encodeResult(VersionMessage);
  * A version that is not a number at all (`lockfileVersion: "next"`) is not a
  * supported version either, and fails the same way.
  *
+ * **Example** (Accept the supported pnpm format)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import { requireLockfileVersion } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * console.log(Effect.runSync(requireLockfileVersion("pnpm", 9))) // undefined
+ * ```
+ *
  * @internal
+ * @category validation
+ * @since 0.0.0
  */
 export const requireLockfileVersion: {
 	(raw: string | number): (format: keyof typeof MINIMUM_LOCKFILE_VERSION) => Effect.Effect<void, ParseFailure>;
@@ -323,6 +431,8 @@ export const requireLockfileVersion: {
 /**
  * The pnpm version gate's own input: `lockfileVersion` and nothing else.
  *
+ * **Details**
+ *
  * The gate has to read the version *before* the shape decode, because the
  * shape it decodes against is the shape of a supported version. `importers` is
  * a required key in the lockfile shape and a pre-v9 single-project lockfile has
@@ -341,11 +451,24 @@ const PnpmVersionProbe = S.Struct({
  * version: decode {@link PnpmVersionProbe}, then {@link requireLockfileVersion}.
  * Call it BEFORE the shape decode, for the reason the probe documents.
  *
+ * **Details**
+ *
  * Succeeds with the gated version as the model spells it (`String` of the
  * recorded value), for a caller that reports a version without decoding the
  * rest of the document.
  *
+ * **Example** (Read a supported format version)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import { gatePnpmVersion } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * console.log(Effect.runSync(gatePnpmVersion({ lockfileVersion: 9 }))) // 9
+ * ```
+ *
  * @internal
+ * @category validation
+ * @since 0.0.0
  */
 export const gatePnpmVersion = (document: unknown): Effect.Effect<string, ParseFailure> =>
 	S.decodeUnknownEffect(PnpmVersionProbe)(document).pipe(
@@ -358,22 +481,58 @@ export const gatePnpmVersion = (document: unknown): Effect.Effect<string, ParseF
 /**
  * Why the lockfile document could not be located in a YAML stream.
  *
+ * **Example** (Recognize a framing reason)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { FramingReason } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * console.log(S.is(FramingReason)("noImporters")) // true
+ * ```
+ *
  * @internal
+ * @category schemas
+ * @since 0.0.0
  */
 export const FramingReason = LiteralKit(["noLockfileDocument", "noImporters", "unexpectedDocuments"])
 	.annotate($I.annote("FramingReason", { description: "Reasons a parsed YAML stream has no unique lockfile document" }));
+/**
+ * Decoded representation of {@link FramingReason} for internal parser composition.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type FramingReason = typeof FramingReason.Type;
 
 /**
  * A text- or shape-level failure: the content is not well-formed, or it does
  * not have the format's expected shape. Carries the delegated engine's error.
  *
+ * **Example** (Validate a syntax failure record)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { ContentFailure } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * console.log(S.is(ContentFailure)({ stage: "syntax", cause: "invalid YAML" })) // true
+ * ```
+ *
  * @internal
+ * @category schemas
+ * @since 0.0.0
  */
 export const ContentFailure = S.Union([
 	S.Struct({ stage: S.Literal("syntax").annotateKey({ description: "Parser stage at which this failure occurred" }), cause: S.Unknown.annotateKey({ description: "Original engine throwable or structural validation cause, retained without narrowing" }) }),
 	S.Struct({ stage: S.Literal("validation").annotateKey({ description: "Parser stage at which this failure occurred" }), cause: S.Unknown.annotateKey({ description: "Original engine throwable or structural validation cause, retained without narrowing" }) }),
 ]).annotate($I.annote("ContentFailure", { description: "Syntax or validation failure preserving the original engine throwable without transformation" }));
+/**
+ * Decoded representation of {@link ContentFailure} for internal parser composition.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ContentFailure = typeof ContentFailure.Type;
 
 /**
@@ -381,13 +540,31 @@ export type ContentFailure = typeof ContentFailure.Type;
  * one locatable lockfile document. Purely synthetic — there is no foreign
  * throwable to wrap, so it carries typed fields instead of a `cause`.
  *
+ * **Example** (Validate a missing-document failure)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { FramingFailure } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * console.log(S.is(FramingFailure)({ stage: "framing", reason: "noLockfileDocument", documents: 0 })) // true
+ * ```
+ *
  * @internal
+ * @category schemas
+ * @since 0.0.0
  */
 export const FramingFailure = S.Struct({
 	stage: S.Literal("framing").annotateKey({ description: "Parser stage at which this failure occurred" }),
 	reason: FramingReason.annotateKey({ description: "Reason a lockfile document could not be uniquely located" }),
 	documents: S.Finite.annotateKey({ description: "Number of parsed documents in the YAML stream" }),
 }).annotate($I.annote("FramingFailure", { description: "Synthetic document-framing failure with a reason and the parsed document count" }));
+/**
+ * Decoded representation of {@link FramingFailure} for internal parser composition.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type FramingFailure = typeof FramingFailure.Type;
 
 /**
@@ -396,19 +573,79 @@ export type FramingFailure = typeof FramingFailure.Type;
  * (which live in `Lockfile.ts`, a module the internals must not import —
  * `noImportCycles`).
  *
+ * **Example** (Recognize a parser failure by stage)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { ParseFailure } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * console.log(S.is(ParseFailure)({ stage: "validation", cause: "invalid shape" })) // true
+ * ```
+ *
  * @internal
+ * @category schemas
+ * @since 0.0.0
  */
 export const ParseFailure = S.Union([...ContentFailure.members, FramingFailure]).pipe(S.toTaggedUnion("stage"))
 	.annotate($I.annote("ParseFailure", { description: "Parser failure discriminated by syntax, validation or framing stage" }));
+/**
+ * Decoded representation of {@link ParseFailure} for internal parser composition.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ParseFailure = typeof ParseFailure.Type;
 
-/** @internal */
+/**
+ * Preserves a syntax parser cause in the shared failure channel.
+ *
+ * **Example** (Wrap a syntax cause)
+ *
+ * ```ts
+ * import { syntaxFailure } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * console.log(syntaxFailure("invalid YAML").stage) // syntax
+ * ```
+ *
+ * @internal
+ * @category errors
+ * @since 0.0.0
+ */
 export const syntaxFailure = (cause: unknown): ParseFailure => ({ stage: "syntax", cause });
 
-/** @internal */
+/**
+ * Preserves a shape-validation cause in the shared failure channel.
+ *
+ * **Example** (Wrap a shape validation cause)
+ *
+ * ```ts
+ * import { validationFailure } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * console.log(validationFailure("invalid shape").stage) // validation
+ * ```
+ *
+ * @internal
+ * @category errors
+ * @since 0.0.0
+ */
 export const validationFailure = (cause: unknown): ParseFailure => ({ stage: "validation", cause });
 
-/** @internal */
+/**
+ * Records why a parsed stream has no uniquely locatable lockfile document.
+ *
+ * **Example** (Report an unexpected document count)
+ *
+ * ```ts
+ * import { framingFailure } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * console.log(framingFailure("unexpectedDocuments", 2).stage) // framing
+ * ```
+ *
+ * @internal
+ * @category errors
+ * @since 0.0.0
+ */
 export const framingFailure: {
 	(documents: number): (reason: FramingReason) => ParseFailure;
 	(reason: FramingReason, documents: number): ParseFailure;
@@ -422,7 +659,18 @@ export const framingFailure: {
  * The field bundle a per-format transform produces and `Lockfile.parse`
  * constructs the `Lockfile` from.
  *
+ * **Example** (Validate an empty normalized field bundle)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { LockfileFields } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * console.log(S.is(LockfileFields)({ lockfileVersion: "9", packages: [], workspaceDependencies: [], importers: [] })) // true
+ * ```
+ *
  * @internal
+ * @category schemas
+ * @since 0.0.0
  */
 export const LockfileFields = S.Struct({
 	lockfileVersion: S.String.annotateKey({ description: "Recorded format version, preserved verbatim before gating or string conversion" }),
@@ -431,13 +679,31 @@ export const LockfileFields = S.Struct({
 	importers: S.Array(LockfileImporter).annotateKey({ description: "Workspace importer entries recorded by the lockfile" }),
 	extension: S.optionalKey(S.Union([PnpmExtension, BunExtension])).annotateKey({ description: "Optional format-specific extension fields" }),
 }).annotate($I.annote("LockfileFields", { description: "Plain field bundle normalized by a format parser before constructing the public Lockfile" }));
+/**
+ * Decoded representation of {@link LockfileFields} for internal parser composition.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type LockfileFields = typeof LockfileFields.Type;
 
 /**
  * Common dependency-map shape of a single workspace entry, shared across all
  * four formats.
  *
+ * **Example** (Validate optional dependency sections)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { WorkspaceEntry } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * console.log(S.is(WorkspaceEntry)({ dependencies: { react: "^18" } })) // true
+ * ```
+ *
  * @internal
+ * @category schemas
+ * @since 0.0.0
  */
 export const WorkspaceEntry = S.Struct({
 	dependencies: S.optionalKey(S.Record(S.String, S.String)).annotateKey({ description: "Declared runtime dependencies keyed by package name" }),
@@ -445,13 +711,31 @@ export const WorkspaceEntry = S.Struct({
 	peerDependencies: S.optionalKey(S.Record(S.String, S.String)).annotateKey({ description: "Declared peer dependencies keyed by package name" }),
 	optionalDependencies: S.optionalKey(S.Record(S.String, S.String)).annotateKey({ description: "Declared optional dependencies keyed by package name" }),
 }).annotate($I.annote("WorkspaceEntry", { description: "Optional dependency sections of a workspace entry shared across the four formats" }));
+/**
+ * Decoded representation of {@link WorkspaceEntry} for internal parser composition.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
 export type WorkspaceEntry = typeof WorkspaceEntry.Type;
 
 /**
  * Whether the specifier is a workspace, link or file reference
  * (`"workspace:*"`, `"link:../foo"`, `"file:../bar"`).
  *
+ * **Example** (Recognize local dependency protocols)
+ *
+ * ```ts
+ * import { isWorkspaceSpecifier } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * console.log(isWorkspaceSpecifier("workspace:*")) // true
+ * console.log(isWorkspaceSpecifier("^1.0.0")) // false
+ * ```
+ *
  * @internal
+ * @category predicates
+ * @since 0.0.0
  */
 export const isWorkspaceSpecifier = (specifier: string): boolean =>
 	specifier.startsWith("workspace:") || specifier.startsWith("link:") || specifier.startsWith("file:");
@@ -469,7 +753,21 @@ export const isWorkspaceSpecifier = (specifier: string): boolean =>
  * hash sets: lockfile keys are attacker-adjacent strings (`__proto__`,
  * `constructor`) and must never be assigned onto plain objects here.
  *
+ * **Example** (Extract an inter-workspace edge)
+ *
+ * ```ts
+ * import * as MutableHashMap from "effect/MutableHashMap";
+ * import * as HashSet from "effect/HashSet";
+ * import { extractWorkspaceDeps } from "@beep/scratchpad/effected/lockfiles/internal/shared";
+ *
+ * const workspaces = MutableHashMap.fromIterable([["app", { dependencies: { lib: "workspace:*" } }]]);
+ * const edges = extractWorkspaceDeps(workspaces, HashSet.fromIterable(["app", "lib"]));
+ * console.log(edges.length) // 1
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const extractWorkspaceDeps: {
 	(workspaces: MutableHashMap.MutableHashMap<string, WorkspaceEntry>, workspaceNames: HashSet.HashSet<string>): ReadonlyArray<WorkspaceDependency>;

@@ -38,7 +38,18 @@ const EMPTY_IMPORTERS: ReadonlyArray<LockfileImporter> = [];
  * defect. Parse takes content, not a path — the caller that did the IO owns
  * any path context.
  *
+ * **Example** (Construct a syntax failure)
+ *
+ * ```ts
+ * import { LockfileParseError } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+ *
+ * const error = LockfileParseError.make({ format: "npm", stage: "syntax", cause: "invalid JSON" });
+ * console.log(error.stage); // syntax
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class LockfileParseError extends S.TaggedError<LockfileParseError>($I`LockfileParseError`)("LockfileParseError", {
 	/** The lockfile format that was being parsed. */
@@ -48,6 +59,21 @@ export class LockfileParseError extends S.TaggedError<LockfileParseError>($I`Loc
 	/** The underlying engine or schema failure, preserved structurally. */
 	cause: S.Defect().annotateKey({ description: "The underlying engine or schema failure, preserved structurally." }),
 }, $I.annote("LockfileParseError", { description: "Failure of `Lockfile.parse`: the given content is not a valid lockfile of the requested format." })) {
+	/**
+	 * Summarizes the failed parsing stage for display.
+	 *
+	 * **Example** (Read the failure message)
+	 *
+	 * ```ts
+	 * import { LockfileParseError } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+	 *
+	 * const error = LockfileParseError.make({ format: "npm", stage: "syntax", cause: "invalid JSON" });
+	 * console.log(error.message); // Failed to parse npm lockfile: the content is not well-formed
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return this.stage === "syntax"
 			? `Failed to parse ${this.format} lockfile: the content is not well-formed`
@@ -95,7 +121,18 @@ export class LockfileParseError extends S.TaggedError<LockfileParseError>($I`Loc
  * {@link LockfileParseError}, there is no underlying engine failure to wrap —
  * the text parsed fine.
  *
+ * **Example** (Construct a framing failure)
+ *
+ * ```ts
+ * import { LockfileFramingError } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+ *
+ * const error = LockfileFramingError.make({ format: "pnpm", reason: "noImporters", documents: 1 });
+ * console.log(error.reason); // noImporters
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class LockfileFramingError extends S.TaggedError<LockfileFramingError>($I`LockfileFramingError`)("LockfileFramingError", {
 	/** The lockfile format that was being parsed. */
@@ -105,6 +142,21 @@ export class LockfileFramingError extends S.TaggedError<LockfileFramingError>($I
 	/** How many YAML documents the stream carried. */
 	documents: S.Int.annotateKey({ description: "How many YAML documents the stream carried." }),
 }, $I.annote("LockfileFramingError", { description: "Failure of `Lockfile.parse`: the content parsed as text, but no single lockfile document could be located in it." })) {
+	/**
+	 * Summarizes the failed document-framing check for display.
+	 *
+	 * **Example** (Read the failure message)
+	 *
+	 * ```ts
+	 * import { LockfileFramingError } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+	 *
+	 * const error = LockfileFramingError.make({ format: "pnpm", reason: "noImporters", documents: 1 });
+	 * console.log(error.message); // Failed to parse pnpm lockfile: the lockfile document declares no importers, so it describes no workspace
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		const detail =
 			this.reason === "noImporters"
@@ -124,7 +176,18 @@ export class LockfileFramingError extends S.TaggedError<LockfileFramingError>($I
  * `Lockfile.parse` and `PnpmEnvLockfile.packageManager` cannot disagree about
  * which failure is which.
  *
+ * **Example** (Materialize a framing failure)
+ *
+ * ```ts
+ * import { materializeFailure } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+ *
+ * const error = materializeFailure("pnpm", { stage: "framing", reason: "noImporters", documents: 1 });
+ * console.log(error._tag); // LockfileFramingError
+ * ```
+ *
  * @internal
+ * @category error-handling
+ * @since 0.0.0
  */
 export const materializeFailure: {
 	(failure: ParseFailure): (format: LockfileFormat) => LockfileParseError | LockfileFramingError;
@@ -172,7 +235,18 @@ const dispatch = (
  * manifests. npm, yarn and bun lockfiles carry real names and need no
  * second stage.
  *
+ * **Example** (Construct an empty normalized lockfile)
+ *
+ * ```ts
+ * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+ *
+ * const lockfile = Lockfile.make({ format: "npm", lockfileVersion: "3", packages: [], workspaceDependencies: [] });
+ * console.log(lockfile.format); // npm
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 	format: LockfileFormat.annotateKey({ description: "Lockfile format that produced the normalized data: bun, npm, pnpm or yarn Berry" }),
@@ -188,18 +262,72 @@ export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 	).annotateKey({ description: "Workspace importers and their declared dependencies, identified by root-relative path; empty for yarn" }),
 	extension: S.optionalKey(S.Union([PnpmExtension, BunExtension])).annotateKey({ description: "Optional pnpm- or bun-specific metadata preserved alongside the normalized lockfile model" }),
 }, $I.annote("Lockfile", { description: "The unified lockfile model all four formats normalize into." })) {
-	/** Lazily built name → packages index; deliberately outside the schema, never encodes. */
+	/**
+	 * Lazily built name → packages index; deliberately outside the schema, never encodes.
+	 *
+	 * **Example** (Build the name index on lookup)
+	 *
+	 * ```ts
+	 * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+	 *
+	 * const lockfile = Lockfile.make({ format: "npm", lockfileVersion: "3", packages: [], workspaceDependencies: [] });
+	 * console.log(lockfile.packagesNamed("missing").length); // 0
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	#nameIndex: MutableHashMap.MutableHashMap<string, ReadonlyArray<ResolvedPackage>> | undefined;
 
-	/** Lazily built importer-path → importer index; deliberately outside the schema, never encodes. */
+	/**
+	 * Lazily built importer-path → importer index; deliberately outside the schema, never encodes.
+	 *
+	 * **Example** (Build the importer index on lookup)
+	 *
+	 * ```ts
+	 * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+	 * import * as O from "effect/Option";
+	 *
+	 * const lockfile = Lockfile.make({ format: "npm", lockfileVersion: "3", packages: [], workspaceDependencies: [] });
+	 * console.log(O.isNone(lockfile.importer("."))); // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	#importerIndex: MutableHashMap.MutableHashMap<string, LockfileImporter> | undefined;
 
-	/** Lazily built instance-id → package index; deliberately outside the schema, never encodes. */
+	/**
+	 * Lazily built instance-id → package index; deliberately outside the schema, never encodes.
+	 *
+	 * **Example** (Build the instance index on lookup)
+	 *
+	 * ```ts
+	 * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+	 * import * as O from "effect/Option";
+	 *
+	 * const lockfile = Lockfile.make({ format: "npm", lockfileVersion: "3", packages: [], workspaceDependencies: [] });
+	 * console.log(O.isNone(lockfile.packageByInstanceId("missing"))); // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	#instanceIndex: MutableHashMap.MutableHashMap<string, ResolvedPackage> | undefined;
 
 	/**
 	 * Parse lockfile content of a known format into the unified model — the
 	 * package's only fallible boundary.
+	 *
+	 * **Example** (Parse npm lockfile text)
+	 *
+	 * ```ts
+	 * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const lockfile = Effect.runSync(Lockfile.parse('{"lockfileVersion":3,"packages":{}}', { format: "npm" }));
+	 * console.log(lockfile.lockfileVersion); // 3
+	 * ```
 	 *
 	 * @param content - The lockfile text (this package does no IO; the caller
 	 *   reads the file).
@@ -216,6 +344,8 @@ export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 	 *   {@link LockfileFramingError} (the text parsed, but no lockfile document
 	 *   could be located in the stream — see that error for why a
 	 *   multi-document `pnpm-lock.yaml` needs it).
+	 * @category parsing
+	 * @since 0.0.0
 	 */
 	static readonly parse = Effect.fn("Lockfile.parse")(function* (
 		content: string,
@@ -235,20 +365,33 @@ export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 	});
 
 	/**
-  * Rewrite pnpm importer-path names to real package names — the explicit
-  * second stage of pnpm parsing. Total and pure.
-  *
-  * **Details**
-  *
-  * Workspace packages whose `relativePath` appears in `names` are renamed;
-  * dependency edge ends are rewritten through the same map. Entries not in
-  * the map keep their path name, and non-pnpm lockfiles are unaffected (no
-  * key matches). Versions are not touched — pnpm workspace packages keep
-  * `"0.0.0"` (the lockfile does not record their real versions).
-  *
-  * @param names - Importer path → real package name.
-  * @returns A new {@link Lockfile} with names rewritten.
-  */
+	 * Rewrite pnpm importer-path names to real package names — the explicit
+	 * second stage of pnpm parsing. Total and pure.
+	 *
+	 * **Details**
+	 *
+	 * Workspace packages whose `relativePath` appears in `names` are renamed;
+	 * dependency edge ends are rewritten through the same map. Entries not in
+	 * the map keep their path name, and non-pnpm lockfiles are unaffected (no
+	 * key matches). Versions are not touched — pnpm workspace packages keep
+	 * `"0.0.0"` (the lockfile does not record their real versions).
+	 *
+	 * **Example** (Name a pnpm workspace importer)
+	 *
+	 * ```ts
+	 * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const lockfile = Effect.runSync(Lockfile.parse("lockfileVersion: '9.0'\nimporters:\n  packages/core: {}", { format: "pnpm" }));
+	 * const named = lockfile.withImporterNames(new Map([["packages/core", "@acme/core"]]));
+	 * console.log(named.workspacePackages[0]?.name); // @acme/core
+	 * ```
+	 *
+	 * @param names - Importer path → real package name.
+	 * @returns A new {@link Lockfile} with names rewritten.
+	 * @category mapping
+	 * @since 0.0.0
+	 */
 	withImporterNames(names: ReadonlyMap<string, string>): Lockfile {
 		const packages = this.packages.map((pkg) => {
 			if (!pkg.isWorkspace || pkg.relativePath === undefined) return pkg;
@@ -295,9 +438,20 @@ export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 	 * Every resolved package with the given name — one entry per resolved
 	 * version. Backed by a lazily built index, so repeated lookups are O(1).
 	 *
+	 * **Example** (Look up an absent package)
+	 *
+	 * ```ts
+	 * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+	 *
+	 * const lockfile = Lockfile.make({ format: "npm", lockfileVersion: "3", packages: [], workspaceDependencies: [] });
+	 * console.log(lockfile.packagesNamed("effect").length); // 0
+	 * ```
+	 *
 	 * @param name - The package name to look up.
 	 * @returns The matching packages, empty when the name is not in the
 	 *   lockfile.
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	packagesNamed(name: string): ReadonlyArray<ResolvedPackage> {
 		if (this.#nameIndex === undefined) {
@@ -318,12 +472,25 @@ export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 	/**
 	 * The importer at the given path — `"."` for the workspace root — or
 	 * `Option.none()` when the lockfile records no importer there. Backed by a
-	 * lazily built index, so repeated lookups are O(1). The index is a `Map`,
+	 * lazily built index, so repeated lookups are O(1). The index is a `MutableHashMap`,
 	 * so an attacker-adjacent path (`__proto__`, `constructor`) neither pollutes
 	 * nor collides.
 	 *
+	 * **Example** (Look up the root importer)
+	 *
+	 * ```ts
+	 * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
+	 *
+	 * const lockfile = Effect.runSync(Lockfile.parse('{"lockfileVersion":3,"packages":{"":{}}}', { format: "npm" }));
+	 * console.log(O.isSome(lockfile.importer("."))); // true
+	 * ```
+	 *
 	 * @param path - The importer path to look up.
 	 * @returns The matching {@link LockfileImporter}, or `Option.none()`.
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	importer(path: string): O.Option<LockfileImporter> {
 		if (this.#importerIndex === undefined) {
@@ -335,23 +502,35 @@ export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 	}
 
 	/**
-  * The resolved package with the given instance id, or `Option.none()` when
-  * the lockfile records none. Backed by a lazily built index, so repeated
-  * lookups are O(1) and a consumer that never walks edges pays nothing.
-  *
-  * **Details**
-  *
-  * `ResolvedPackage.instanceId` is what a resolved edge points at, so peer and
-  * dependency resolution is a lookup through this index rather than a scan
-  * over `packages`.
-  *
-  * The index is a `Map`, so an instance id that collides with an `Object`
-  * member name (`__proto__`, `constructor`) neither pollutes nor
-  * false-matches, exactly as for {@link Lockfile.importer}.
-  *
-  * @param instanceId - The instance id to look up.
-  * @returns The matching {@link ResolvedPackage}, or `Option.none()`.
-  */
+	 * The resolved package with the given instance id, or `Option.none()` when
+	 * the lockfile records none. Backed by a lazily built index, so repeated
+	 * lookups are O(1) and a consumer that never walks edges pays nothing.
+	 *
+	 * **Details**
+	 *
+	 * `ResolvedPackage.instanceId` is what a resolved edge points at, so peer and
+	 * dependency resolution is a lookup through this index rather than a scan
+	 * over `packages`.
+	 *
+	 * The index is a `MutableHashMap`, so an instance id that collides with an `Object`
+	 * member name (`__proto__`, `constructor`) neither pollutes nor
+	 * false-matches, exactly as for {@link Lockfile.importer}.
+	 *
+	 * **Example** (Look up an absent package instance)
+	 *
+	 * ```ts
+	 * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+	 * import * as O from "effect/Option";
+	 *
+	 * const lockfile = Lockfile.make({ format: "npm", lockfileVersion: "3", packages: [], workspaceDependencies: [] });
+	 * console.log(O.isNone(lockfile.packageByInstanceId("missing"))); // true
+	 * ```
+	 *
+	 * @param instanceId - The instance id to look up.
+	 * @returns The matching {@link ResolvedPackage}, or `Option.none()`.
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	packageByInstanceId(instanceId: string): O.Option<ResolvedPackage> {
 		if (this.#instanceIndex === undefined) {
 			const index = MutableHashMap.empty<string, ResolvedPackage>();
@@ -365,7 +544,21 @@ export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 		return MutableHashMap.get(this.#instanceIndex, instanceId);
 	}
 
-	/** The workspace-local packages. */
+	/**
+	 * The workspace-local packages.
+	 *
+	 * **Example** (Count workspace-local packages)
+	 *
+	 * ```ts
+	 * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
+	 *
+	 * const lockfile = Lockfile.make({ format: "npm", lockfileVersion: "3", packages: [], workspaceDependencies: [] });
+	 * console.log(lockfile.workspacePackages.length); // 0
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get workspacePackages(): ReadonlyArray<ResolvedPackage> {
 		return this.packages.filter((pkg) => pkg.isWorkspace);
 	}

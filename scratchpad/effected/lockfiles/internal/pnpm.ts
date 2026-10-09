@@ -102,6 +102,8 @@ type PnpmPackageEntry = NonNullable<PnpmLockfileRawType["packages"]>[string];
 /**
  * Parse pnpm `pnpm-lock.yaml` content into the unified field bundle.
  *
+ * **Details**
+ *
  * `pnpm-lock.yaml` is a YAML *stream*, not a single document: a workspace
  * using `configDependencies` gets a config-dependencies preamble document
  * ahead of the lockfile. {@link splitPnpmStream} locates the lockfile
@@ -125,7 +127,19 @@ type PnpmPackageEntry = NonNullable<PnpmLockfileRawType["packages"]>[string];
  * `Lockfile#withImporterNames` is the explicit second stage that rewrites
  * them to real names.
  *
+ * **Example** (Parse a dependency-free pnpm workspace)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import { parsePnpm } from "@beep/scratchpad/effected/lockfiles/internal/pnpm";
+ *
+ * const fields = Effect.runSync(parsePnpm("lockfileVersion: 9\nimporters:\n  .: {}", false));
+ * console.log(fields.lockfileVersion) // 9
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const parsePnpm: {
 	(configOnly: boolean): (content: string) => Effect.Effect<LockfileFields, ParseFailure>;
@@ -174,6 +188,8 @@ export const parsePnpm: {
 
 /**
  * Resolve one instance's outgoing edges to instance ids.
+ *
+ * **Details**
  *
  * pnpm names a resolved dependency as `name` → `version`, where the version may
  * itself carry a peer suffix (`1.6.0(react@17.0.2)`); the referenced instance's
@@ -268,13 +284,19 @@ const ResolvedEdges = S.Struct({
 }).annotate($I.annote("ResolvedEdges", { description: "Resolved instance ids by dependency name and the sorted names of edges that could not be resolved" }));
 type ResolvedEdges = typeof ResolvedEdges.Type;
 
-/** The protocol pnpm records a workspace-directory resolution under. @internal */
+/**
+ * The protocol pnpm records a workspace-directory resolution under.
+ *
+ * @internal
+ */
 const LINK_PREFIX = "link:";
 
 /**
  * Normalize a `link:` target against the linking importer's path, so a
  * workspace edge can name the workspace importer's instance id.
  * Total: a target that walks above the root yields `undefined`.
+ *
+ * **Details**
  *
  * A target that normalizes to NOTHING — `link:.` recorded root-relative —
  * also yields `undefined` rather than the root importer's ".": the root
@@ -298,11 +320,17 @@ const resolveLinkTarget = (importerPath: string, target: string): string | undef
 	return segments.length === 0 ? undefined : segments.join("/");
 };
 
-/** The specifier protocol pnpm resolves through the workspace itself. @internal */
+/**
+ * The specifier protocol pnpm resolves through the workspace itself.
+ *
+ * @internal
+ */
 const WORKSPACE_PREFIX = "workspace:";
 
 /**
  * The importer a `link:` target lands INSIDE, longest path first.
+ *
+ * **Details**
  *
  * pnpm's `publishConfig.linkDirectory` makes a workspace link point at the
  * package's publish directory rather than its root — `link:../bundler/dist/dev/pkg`
@@ -332,6 +360,8 @@ const owningImporter = (target: string, importerPaths: MutableHashSet.MutableHas
  * instance-id composition {@link resolveEdges} performs) or a `link:` target
  * naming another importer — normalized against this importer's own path. Both
  * are checked against the lockfile's instance ids before being emitted.
+ *
+ * **Details**
  *
  * A `link:` target that is no importer gets two further chances. First the
  * publish-directory map: an importer that DECLARES `publishDirectory` has told

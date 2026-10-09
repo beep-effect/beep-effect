@@ -34,7 +34,22 @@ const $I = $ScratchpadId.create("effected/lockfiles/ImporterDependency");
  * - `depType` — which dependency map declared it, spelled with `@effected/npm`'s
  *   kit-wide `DependencyField` vocabulary.
  *
+ *
+ * **Example** (Round-trip a declared dependency specifier)
+ *
+ * ```ts
+ * import { ImporterDependency } from "@beep/scratchpad/effected/lockfiles/ImporterDependency";
+ * import * as S from "effect/Schema";
+ *
+ * const dependency = S.decodeUnknownSync(ImporterDependency)({
+ *   name: "effect", specifier: "^4.0.0", version: "4.0.0", depType: "dependencies",
+ * });
+ * console.log(S.encodeSync(ImporterDependency)(dependency).specifier); // ^4.0.0
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class ImporterDependency extends S.Class<ImporterDependency>($I`ImporterDependency`)({
 	name: S.NonEmptyString.annotateKey({ description: "Dependency package declared by this workspace importer" }),
