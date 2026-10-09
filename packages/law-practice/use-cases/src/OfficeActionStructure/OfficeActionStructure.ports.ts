@@ -34,7 +34,7 @@ type OfficeActionStructureInputFields = {
   readonly document: typeof DocStructureDocument;
   readonly verifiedSource: S.Codec<VerifiedSourceText>;
   readonly rule: S.withConstructorDefault<typeof DocStructureRuleFamily>;
-  readonly ocrPages: S.withConstructorDefault<S.Array<typeof PageOcrResult>>;
+  readonly ocrPages: S.withConstructorDefault<S.$Array<typeof PageOcrResult>>;
 };
 const OfficeActionStructureInputStruct: S.Struct<OfficeActionStructureInputFields> =
   S.Struct<OfficeActionStructureInputFields>({

@@ -138,3 +138,12 @@
 - Repair: give each opaque-proof Struct a named field type and explicit schema
   annotation, completing the existing named-base pattern without a type cast.
 - Prevention: include field-schema annotations in the opaque-proof example.
+
+## 2026-10-09 — Effect array schema type name
+
+- Evidence: TS2724 reports that Schema’s array type is `$Array`; its constructor
+  is `Array`. The wrong annotation propagated unresolved services into server
+  declarations.
+- Attribution: introduced field-schema annotation, not an inherited API failure.
+- Repair: use the live Effect v4 `$Array` interface for the OCR page schema.
+- Prevention: check constructor and interface names independently in declarations.
