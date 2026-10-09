@@ -100,9 +100,9 @@ const CALIBRATION_BASELINE_MS = 93;
 const speedFactor = ((): number => {
 	// One warm-up pass so the measurement is not dominated by first-call
 	// compilation of the parse path.
-	parseBlocks(CALIBRATION_INPUT, "gfm");
+	parseBlocks(CALIBRATION_INPUT, { dialect: "gfm" });
 	const started = performance.now();
-	parseBlocks(CALIBRATION_INPUT, "gfm");
+	parseBlocks(CALIBRATION_INPUT, { dialect: "gfm" });
 	const elapsed = performance.now() - started;
 	return Math.min(Math.max(elapsed / CALIBRATION_BASELINE_MS, 1), 40);
 })();
@@ -126,7 +126,7 @@ describe("pathological inputs", () => {
 					// upstream's GFM-extension cases parse and render under gfm.
 					html =
 						testCase.dialect === "gfm"
-							? renderHtml(parseBlocks(testCase.input, "gfm").root, { gfm: true })
+							? renderHtml(parseBlocks(testCase.input, { dialect: "gfm" }).root, { gfm: true })
 							: renderHtml(parseBlocks(testCase.input).root);
 				} catch (error) {
 					caught = error;

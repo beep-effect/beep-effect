@@ -7,6 +7,7 @@
 // against the source text. The dependency edge runs public modules ->
 // engine only (toml src/TomlDiagnostic.ts precedent).
 
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { MARKDOWN_PARSE_ERROR_CODES } from "./internal/carriers.ts";
@@ -20,7 +21,7 @@ const $I = $ScratchpadId.create("effected/markdown/MarkdownDiagnostic");
  *
  * @public
  */
-export const MarkdownParseErrorCode = S.Literals(MARKDOWN_PARSE_ERROR_CODES).pipe($I.annoteSchema("MarkdownParseErrorCode", { description: "Error codes `Markdown.parse`/`MarkdownDocument.parse` can fail with. Currently exactly one, `\"NestingDepthExceeded\"`, the hardening-guard trip; the union may widen as new fatal conditions are identified." }));
+export const MarkdownParseErrorCode = LiteralKit(MARKDOWN_PARSE_ERROR_CODES).pipe($I.annoteSchema("MarkdownParseErrorCode", { description: "Error codes `Markdown.parse`/`MarkdownDocument.parse` can fail with. Currently exactly one, `\"NestingDepthExceeded\"`, the hardening-guard trip; the union may widen as new fatal conditions are identified." }));
 
 /**
  * The union of all markdown parse-error code string literals.
@@ -102,6 +103,8 @@ function lineChar(text: string, offset: number): { line: number; character: numb
 			lineStart = i + 1;
 		} else if (ch === 0x0d) {
 			if (i + 1 < text.length && text.charCodeAt(i + 1) === 0x0a) {
+				// Both code units must precede the offset before advancing the line.
+				if (i + 1 >= limit) break;
 				i++;
 			}
 			line++;

@@ -50,7 +50,7 @@ const flowNodes = (source: string, dialect: Dialect = "gfm"): ReadonlyArray<Flow
 			}
 		}
 	};
-	walk(parseBlocks(source, dialect).root.children);
+	walk(parseBlocks(source, { dialect: dialect }).root.children);
 	return found;
 };
 
@@ -479,11 +479,11 @@ describe("gfm footnotes", () => {
 			// `MAX_NESTING_DEPTH` cap with every other one. cmark-gfm guards the
 			// same shape with its own `depth < MAX_LIST_DEPTH` test on the block
 			// start.
-			assert.throws(() => parseBlocks("[^a]: ".repeat(MAX_NESTING_DEPTH + 4), "gfm"));
+			assert.throws(() => parseBlocks("[^a]: ".repeat(MAX_NESTING_DEPTH + 4), { dialect: "gfm" }));
 		});
 
 		it("parses a definition nested just under the cap", () => {
-			assert.doesNotThrow(() => parseBlocks("[^a]: ".repeat(8), "gfm"));
+			assert.doesNotThrow(() => parseBlocks("[^a]: ".repeat(8), { dialect: "gfm" }));
 		});
 
 		it("does not blow the stack on many sibling definitions", () => {

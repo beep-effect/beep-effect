@@ -19,13 +19,15 @@
 // owning-node/expression intersection, yaml requires edits fully within range.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effected/markdown/MarkdownEdit");
 
 class OverlappingMarkdownEditsError extends S.TaggedError<OverlappingMarkdownEditsError>($I`OverlappingMarkdownEditsError`)("OverlappingMarkdownEditsError", {
-	message: S.String,
-}) {}
+	message: S.String.annotateKey({ description: "Explanation identifying the overlapping edit offsets and the programmer-error contract" }),
+}, $I.annote("OverlappingMarkdownEditsError", { description: "Rejects intersecting source edits before MarkdownEdit.applyAll can splice ambiguous replacements." })) {}
 
 /**
  * A single path segment: a `number` for child indices in the node tree, or a
@@ -83,7 +85,7 @@ export class MarkdownEdit extends S.Class<MarkdownEdit>($I`MarkdownEdit`)({
 	 * @returns The edited text.
 	 */
 	static applyAll(text: string, edits: ReadonlyArray<MarkdownEdit>): string {
-		const sorted = [...edits].sort((a, b) => b.offset - a.offset);
+		const sorted = A.sort(edits, Order.mapInput(Order.flip(Order.Number), (edit: MarkdownEdit) => edit.offset));
 		for (let i = 0; i + 1 < sorted.length; i++) {
 			const upper = sorted[i];
 			const lower = sorted[i + 1];

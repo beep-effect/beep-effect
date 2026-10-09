@@ -482,12 +482,23 @@ const linkifyRun = (pieces: ReadonlyArray<RunPiece>): void => {
 	 * running past its end. An email address holds neither, so this is a
 	 * bound, not a rounding.
 	 */
+	// Boundary queries are nondecreasing, including repeated exact ends.
+	let pieceIndex = 0;
 	const localAt = (index: number): number => {
-		for (const piece of pieces) {
+		while (pieceIndex < pieces.length) {
+			const piece = pieces[pieceIndex];
+			if (piece === undefined) {
+				break;
+			}
 			const within = index - piece.valueStart;
-			if (within <= piece.node.value.length) {
+			const valueLength = piece.node.value.length;
+			if (within === valueLength) {
+				return piece.node.end;
+			}
+			if (within < valueLength) {
 				return piece.node.start + Math.min(within, piece.node.end - piece.node.start);
 			}
+			pieceIndex += 1;
 		}
 		const last = pieces[pieces.length - 1];
 		return last === undefined ? 0 : last.node.end;

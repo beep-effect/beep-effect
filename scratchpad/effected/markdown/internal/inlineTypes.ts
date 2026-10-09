@@ -11,6 +11,7 @@
 // is what lets the GFM constructs (autolink literals, strikethrough) register
 // without touching the parser.
 
+import type * as HashMap from "effect/HashMap";
 import type * as HashSet from "effect/HashSet";
 import type { Definition } from "../MarkdownNode.ts";
 import type { RawInlineSegment } from "./blockTypes.ts";
@@ -80,7 +81,7 @@ export interface InlineScanner {
 	/** The cursor. */
 	pos: number;
 	/** The definitions a reference may resolve against. */
-	readonly refmap: ReadonlyMap<string, Definition>;
+	readonly refmap: HashMap.HashMap<string, Definition>;
 	/**
 	 * The case-folded labels a GFM footnote reference may form against.
 	 *
@@ -180,7 +181,7 @@ export interface InlineConstruct {
 
 /** A dialect: a trigger table, the text fallback, and its postprocess passes. */
 export interface InlineDialect {
-	readonly byTrigger: ReadonlyMap<number, ReadonlyArray<InlineConstruct>>;
+	readonly byTrigger: HashMap.HashMap<number, ReadonlyArray<InlineConstruct>>;
 	readonly text: InlineConstruct;
 	/**
 	 * Passes run over the finished node list, before it is materialized —

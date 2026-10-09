@@ -12,8 +12,8 @@
 // excludes it — and ends up as a literal single character.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
-import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { autolinkConstruct } from "./inlines/autolink.ts";
@@ -28,47 +28,33 @@ import { imageOpenConstruct, linkCloseConstruct, linkOpenConstruct } from "./inl
 import { rawHtmlConstruct } from "./inlines/rawHtml.ts";
 import { strikethroughConstruct } from "./inlines/strikethrough.ts";
 import { gfmTextConstruct, textConstruct } from "./inlines/text.ts";
+import type { MarkdownDialect } from "./blockRegistry.ts";
 import type { InlineConstruct, InlineDialect } from "./inlineTypes.ts";
 
 const $I = $ScratchpadId.create("effected/markdown/internal/inlineRegistry");
 
 class UnknownInlineDialectError extends S.TaggedError<UnknownInlineDialectError>($I`UnknownInlineDialectError`)("UnknownInlineDialectError", {
-	message: S.String,
-}) {}
+	message: S.String.annotate($I.annote("UnknownInlineDialectMessage", {
+		description: "Identifies the unsupported markdown dialect requested by the inline parser.",
+	})).annotateKey({ description: "Diagnostic message naming the unsupported inline dialect." }),
+}, $I.annote("UnknownInlineDialectError", {
+	description: "An inline dialect lookup failed because its key is outside the supported markdown dialect domain.",
+})) {}
 
 /** The dialects the inline pass can be keyed by. */
-export type InlineDialectName = "commonmark" | "gfm";
+export type InlineDialectName = MarkdownDialect;
 
 const triggerTable = (
 	constructs: ReadonlyArray<InlineConstruct>,
-): ReadonlyMap<number, ReadonlyArray<InlineConstruct>> => {
-	const table = MutableHashMap.empty<number, InlineConstruct[]>();
-	const entries: Array<[number, InlineConstruct[]]> = [];
+): HashMap.HashMap<number, ReadonlyArray<InlineConstruct>> => {
+	let table = HashMap.empty<number, ReadonlyArray<InlineConstruct>>();
 	for (const construct of constructs) {
 		for (const trigger of construct.triggers) {
-			const bucket = O.getOrUndefined(MutableHashMap.get(table, trigger));
-			if (bucket === undefined) {
-				const made = [construct];
-				MutableHashMap.set(table, trigger, made);
-				entries.push([trigger, made]);
-			} else {
-				bucket.push(construct);
-			}
+			const bucket = O.getOrElse(HashMap.get(table, trigger), () => []);
+			table = HashMap.set(table, trigger, A.append(bucket, construct));
 		}
 	}
-	// Keep the scanner's ReadonlyMap boundary and trigger insertion order.
-	return {
-		size: MutableHashMap.size(table),
-		get: (key) => O.getOrUndefined(MutableHashMap.get(table, key)),
-		has: (key) => MutableHashMap.has(table, key),
-		*keys() { for (const [key] of entries) yield key; return undefined; },
-		*values() { for (const [, value] of entries) yield value; return undefined; },
-		*entries() { for (const [key, value] of entries) yield [key, value]; return undefined; },
-		[Symbol.iterator]() { return this.entries(); },
-		forEach(callback, thisArg) {
-			for (const [key, value] of entries) callback.call(thisArg, value, key, this);
-		},
-	};
+	return table;
 };
 
 /** The CommonMark construct set, which every dialect starts from. */
@@ -114,7 +100,7 @@ const commonmarkDialect: InlineDialect = {
 // reasoning for each.
 const gfmDialect: InlineDialect = {
 	byTrigger: triggerTable([
-		...COMMONMARK_CONSTRUCTS.filter(
+		...A.filter(COMMONMARK_CONSTRUCTS,
 			(construct) => construct !== linkCloseConstruct && construct !== imageOpenConstruct,
 		),
 		gfmLinkCloseConstruct,
@@ -141,7 +127,7 @@ const dialects = HashMap.fromIterable<InlineDialectName, InlineDialect>([
 export const inlineDialect = (dialect: InlineDialectName): InlineDialect => {
 	const found = O.getOrUndefined(HashMap.get(dialects, dialect));
 	if (found === undefined) {
-		throw UnknownInlineDialectError.make({ message: `unknown markdown dialect: ${String(dialect)}` });
+		throw UnknownInlineDialectError.make({ message: `unknown markdown dialect: ${dialect}` });
 	}
 	return found;
 };

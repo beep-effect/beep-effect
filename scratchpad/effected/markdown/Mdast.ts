@@ -8,6 +8,8 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as R from "effect/Record";
+import * as Str from "effect/String";
 import { unescapeString } from "./internal/unescape.ts";
 import type {
 	FlowContent,
@@ -83,7 +85,7 @@ const projectChildren = (children: ReadonlyArray<AnyNode>): Array<Record<string,
 // without it and lets renderers re-add it. The projection translates: strip
 // one final line ending going out, restore it coming back in.
 const stripFinalLineEnding = (value: string): string =>
-	value.endsWith("\r\n") ? value.slice(0, -2) : value.endsWith("\n") ? value.slice(0, -1) : value;
+	Str.endsWith("\r\n")(value) ? value.slice(0, -2) : Str.endsWith("\n")(value) ? value.slice(0, -1) : value;
 
 // mdast's Association rules that `label` is a *parsed* value — character
 // escapes and character references decoded — while this package's nodes keep
@@ -112,136 +114,133 @@ const listSpread = (node: List): boolean => {
 
 // One arm per node type. Field order mirrors mdast-util-from-markdown's
 // emission for readability of test diffs; deep equality does not depend on it.
-const projectNode = (node: AnyNode): MdastNode => {
-	const position = projectPosition(node.position);
-	return Match.value(node)
-		.pipe(
-			Match.discriminator("type")("root", (node) => ({
-				type: "root",
-				children: projectChildren(node.children),
-				position,
-			})),
-			Match.discriminator("type")(
-				"paragraph",
-				"blockquote",
-				"emphasis",
-				"strong",
-				"delete",
-				"tableRow",
-				"tableCell",
-				(node) => ({ type: node.type, children: projectChildren(node.children), position }),
-			),
-			Match.discriminator("type")("heading", (node) => ({
-				type: "heading",
-				depth: node.depth,
-				children: projectChildren(node.children),
-				position,
-			})),
-			Match.discriminator("type")("text", (node) => ({
-				type: "text",
-				value: node.value,
-				...O.getSomesStruct({ escapeStyle: O.fromUndefinedOr(node.escapeStyle) }),
-				position,
-			})),
-			Match.discriminator("type")("html", "inlineCode", (node) => ({ type: node.type, value: node.value, position })),
-			Match.discriminator("type")("break", "thematicBreak", (node) => ({ type: node.type, position })),
-			Match.discriminator("type")("code", (node) => ({
-				type: "code",
-				lang: node.lang ?? null,
-				meta: node.meta ?? null,
-				value: stripFinalLineEnding(node.value),
-				position,
-			})),
-			Match.discriminator("type")("link", (node) => ({
-				type: "link",
-				title: node.title ?? null,
-				url: node.url,
-				children: projectChildren(node.children),
-				position,
-			})),
-			Match.discriminator("type")("image", (node) => ({
-				type: "image",
-				title: node.title ?? null,
-				url: node.url,
-				alt: node.alt ?? "",
-				position,
-			})),
-			Match.discriminator("type")("linkReference", (node) => ({
-				type: "linkReference",
-				children: projectChildren(node.children),
-				position,
-				...projectLabel(node.label),
-				identifier: node.identifier,
-				referenceType: node.referenceType,
-			})),
-		)
-		.pipe(
-			Match.discriminator("type")("imageReference", (node) => ({
-				type: "imageReference",
-				alt: node.alt ?? "",
-				position,
-				...projectLabel(node.label),
-				identifier: node.identifier,
-				referenceType: node.referenceType,
-			})),
-			Match.discriminator("type")("definition", (node) => ({
-				type: "definition",
-				identifier: node.identifier,
-				...projectLabel(node.label),
-				title: node.title ?? null,
-				url: node.url,
-				position,
-			})),
-			Match.discriminator("type")("footnoteReference", (node) => ({
-				type: "footnoteReference",
-				identifier: node.identifier,
-				...projectLabel(node.label),
-				position,
-			})),
-			Match.discriminator("type")("footnoteDefinition", (node) => ({
-				type: "footnoteDefinition",
-				identifier: node.identifier,
-				...projectLabel(node.label),
-				children: projectChildren(node.children),
-				position,
-			})),
-			Match.discriminator("type")("list", (node) => ({
-				type: "list",
-				ordered: node.ordered ?? false,
-				start: node.start ?? null,
-				spread: listSpread(node),
-				children: projectChildren(node.children),
-				position,
-			})),
-			Match.discriminator("type")("listItem", (node) => ({
-				type: "listItem",
-				spread: node.spread ?? false,
-				checked: node.checked ?? null,
-				children: projectChildren(node.children),
-				position,
-			})),
-			Match.discriminator("type")("table", (node) => ({
-				type: "table",
-				align: node.align === undefined ? null : [...node.align],
-				children: projectChildren(node.children),
-				position,
-			})),
-			Match.discriminator("type")("frontmatter", (node) => ({ type: node.format, value: node.value, position })),
-			Match.discriminator("type")("mdxJsxFlowElement", "mdxJsxTextElement", (node) => ({
-				type: node.type,
-				name: node.name,
-				attributes: node.attributes.map((attribute) => projectMdxAttribute(attribute)),
-				children: projectChildren(node.children),
-				position,
-			})),
-			Match.discriminator("type")("mdxFlowExpression", "mdxTextExpression", "mdxjsEsm", (node) => ({
-				type: node.type,
-				value: node.value,
-				position,
-			})),
-			Match.exhaustive,
-		);
-};
+const projectNode: (node: AnyNode) => MdastNode = Match.type<AnyNode>()
+	.pipe(
+		Match.discriminator("type")("root", (node) => ({
+			type: "root",
+			children: projectChildren(node.children),
+			position: projectPosition(node.position),
+		})),
+		Match.discriminator("type")(
+			"paragraph",
+			"blockquote",
+			"emphasis",
+			"strong",
+			"delete",
+			"tableRow",
+			"tableCell",
+			(node) => ({ type: node.type, children: projectChildren(node.children), position: projectPosition(node.position) }),
+		),
+		Match.discriminator("type")("heading", (node) => ({
+			type: "heading",
+			depth: node.depth,
+			children: projectChildren(node.children),
+			position: projectPosition(node.position),
+		})),
+		Match.discriminator("type")("text", (node) => ({
+			type: "text",
+			value: node.value,
+			...O.getSomesStruct({ escapeStyle: O.fromUndefinedOr(node.escapeStyle) }),
+			position: projectPosition(node.position),
+		})),
+		Match.discriminator("type")("html", "inlineCode", (node) => ({ type: node.type, value: node.value, position: projectPosition(node.position) })),
+		Match.discriminator("type")("break", "thematicBreak", (node) => ({ type: node.type, position: projectPosition(node.position) })),
+		Match.discriminator("type")("code", (node) => ({
+			type: "code",
+			lang: node.lang ?? null,
+			meta: node.meta ?? null,
+			value: stripFinalLineEnding(node.value),
+			position: projectPosition(node.position),
+		})),
+		Match.discriminator("type")("link", (node) => ({
+			type: "link",
+			title: node.title ?? null,
+			url: node.url,
+			children: projectChildren(node.children),
+			position: projectPosition(node.position),
+		})),
+		Match.discriminator("type")("image", (node) => ({
+			type: "image",
+			title: node.title ?? null,
+			url: node.url,
+			alt: node.alt ?? "",
+			position: projectPosition(node.position),
+		})),
+		Match.discriminator("type")("linkReference", (node) => ({
+			type: "linkReference",
+			children: projectChildren(node.children),
+			position: projectPosition(node.position),
+			...projectLabel(node.label),
+			identifier: node.identifier,
+			referenceType: node.referenceType,
+		})),
+	)
+	.pipe(
+		Match.discriminator("type")("imageReference", (node) => ({
+			type: "imageReference",
+			alt: node.alt ?? "",
+			position: projectPosition(node.position),
+			...projectLabel(node.label),
+			identifier: node.identifier,
+			referenceType: node.referenceType,
+		})),
+		Match.discriminator("type")("definition", (node) => ({
+			type: "definition",
+			identifier: node.identifier,
+			...projectLabel(node.label),
+			title: node.title ?? null,
+			url: node.url,
+			position: projectPosition(node.position),
+		})),
+		Match.discriminator("type")("footnoteReference", (node) => ({
+			type: "footnoteReference",
+			identifier: node.identifier,
+			...projectLabel(node.label),
+			position: projectPosition(node.position),
+		})),
+		Match.discriminator("type")("footnoteDefinition", (node) => ({
+			type: "footnoteDefinition",
+			identifier: node.identifier,
+			...projectLabel(node.label),
+			children: projectChildren(node.children),
+			position: projectPosition(node.position),
+		})),
+		Match.discriminator("type")("list", (node) => ({
+			type: "list",
+			ordered: node.ordered ?? false,
+			start: node.start ?? null,
+			spread: listSpread(node),
+			children: projectChildren(node.children),
+			position: projectPosition(node.position),
+		})),
+		Match.discriminator("type")("listItem", (node) => ({
+			type: "listItem",
+			spread: node.spread ?? false,
+			checked: node.checked ?? null,
+			children: projectChildren(node.children),
+			position: projectPosition(node.position),
+		})),
+		Match.discriminator("type")("table", (node) => ({
+			type: "table",
+			align: node.align === undefined ? null : [...node.align],
+			children: projectChildren(node.children),
+			position: projectPosition(node.position),
+		})),
+		Match.discriminator("type")("frontmatter", (node) => ({ type: node.format, value: node.value, position: projectPosition(node.position) })),
+		Match.discriminator("type")("mdxJsxFlowElement", "mdxJsxTextElement", (node) => ({
+			type: node.type,
+			name: node.name,
+			attributes: node.attributes.map((attribute) => projectMdxAttribute(attribute)),
+			children: projectChildren(node.children),
+			position: projectPosition(node.position),
+		})),
+		Match.discriminator("type")("mdxFlowExpression", "mdxTextExpression", "mdxjsEsm", (node) => ({
+			type: node.type,
+			value: node.value,
+			position: projectPosition(node.position),
+		})),
+		Match.exhaustive,
+	);
 
 // mdast-util-mdx spells a bare attribute's value as explicit `null` (its
 // parser writes it, "as it serializes in JSON"), and puts NO position on an
@@ -378,7 +377,7 @@ const normalizeNode = (value: unknown): unknown => {
 			position: normalizePosition(value.position),
 		};
 	}
-	const admitted = admittedFields[type];
+	const admitted = O.getOrUndefined(R.get(admittedFields, type));
 	if (admitted === undefined) {
 		return value;
 	}
@@ -386,14 +385,19 @@ const normalizeNode = (value: unknown): unknown => {
 	for (const field of admitted) {
 		const raw = value[field];
 		if (raw !== undefined && raw !== null) {
-			normalized[field] = raw;
+			// Association labels arrive decoded; shield literal escapes and entities
+			// before storing the source spelling consumed once by projectLabel.
+			normalized[field] = field === "label" && P.isString(raw)
+				? Str.replaceAll(/[\\&]/g, "\\$&")(raw)
+				: raw;
 		}
 	}
 	// Restore the engine's carried-terminator convention on code values (the
 	// inverse of toMdast's strip).
 	if (type === "code" && P.isString(normalized.value) && normalized.value !== "") {
-		const code = normalized.value;
-		normalized.value = code.endsWith("\n") ? code : `${code}\n`;
+		// Use CRLF after a content-final CR so stripping the carried line ending
+		// cannot consume that content character as half of a CRLF pair.
+		normalized.value = `${normalized.value}${Str.endsWith("\r")(normalized.value) ? "\r\n" : "\n"}`;
 	}
 	if (A.isArray(value.children)) {
 		normalized.children = value.children.map(normalizeNode);

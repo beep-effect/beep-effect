@@ -55,6 +55,8 @@
 // defect) belongs with the facade and lands in Task 11.
 
 import { assert, describe, it } from "@effect/vitest";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
 import { parseBlocks } from "../../effected/markdown/internal/blockParser.ts";
 import { GuardExceeded, isGuardExceeded } from "../../effected/markdown/internal/carriers.ts";
 import { MAX_NESTING_DEPTH } from "../../effected/markdown/internal/limits.ts";
@@ -206,12 +208,12 @@ describe("prototype pollution", () => {
 
 		for (const label of DANGEROUS) {
 			const key = label.toUpperCase();
-			assert.isTrue(refmap.has(key), `the refmap lost the ${label} definition`);
-			assert.strictEqual(refmap.get(key)?.url, `/url-${label}`);
+			assert.isTrue(HashMap.has(refmap, key), `the refmap lost the ${label} definition`);
+			assert.strictEqual(O.getOrUndefined(HashMap.get(refmap, key))?.url, `/url-${label}`);
 		}
 
 		// Each reference formed against its definition rather than staying
-		// literal — which is what proves the lookup went through the Map.
+		// literal — which is what proves the lookup went through the HashMap.
 		const rendered = renderHtml(root);
 		for (const label of DANGEROUS) {
 			assert.include(rendered, `href="/url-${label}"`, `the ${label} reference did not resolve`);
@@ -228,9 +230,9 @@ describe("prototype pollution", () => {
 		assert.isUndefined(plain.url);
 	});
 
-	it("keys the refmap through a real Map, not an object", () => {
+	it("keys the refmap through an Effect HashMap, not an object", () => {
 		const { refmap } = parseBlocks("[a]: /1\n");
-		assert.strictEqual(Object.getPrototypeOf(refmap), Map.prototype);
+		assert.isTrue(HashMap.isHashMap(refmap));
 	});
 });
 

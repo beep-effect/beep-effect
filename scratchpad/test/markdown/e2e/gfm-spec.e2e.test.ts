@@ -100,10 +100,10 @@ const runCorpus = (
 						if (TERMINATION_ONLY.has(example.example)) {
 							// No expected output to compare — the assertion is
 							// that rendering completes at all.
-							assert.isString(renderHtml(parseBlocks(example.markdown, "gfm").root, { gfm: true }));
+							assert.isString(renderHtml(parseBlocks(example.markdown, { dialect: "gfm" }).root, { gfm: true }));
 							return;
 						}
-						const actual = normalizeHtml(renderHtml(parseBlocks(example.markdown, "gfm").root, { gfm: true }));
+						const actual = normalizeHtml(renderHtml(parseBlocks(example.markdown, { dialect: "gfm" }).root, { gfm: true }));
 						assert.strictEqual(actual, normalizeHtml(example.html));
 					});
 				}

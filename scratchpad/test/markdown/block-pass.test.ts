@@ -1,4 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
 import { parseBlocks } from "../../effected/markdown/internal/blockParser.ts";
 import { GuardExceeded, isGuardExceeded } from "../../effected/markdown/internal/carriers.ts";
 import { MAX_NESTING_DEPTH } from "../../effected/markdown/internal/limits.ts";
@@ -507,39 +509,39 @@ describe("link reference definitions", () => {
 	describe("the refmap", () => {
 		it("keys definitions by their case-folded label", () => {
 			const { refmap } = parseBlocks("[Foo Bar]: /url\n");
-			assert.strictEqual(refmap.size, 1);
-			assert.isTrue(refmap.has("FOO BAR"));
+			assert.strictEqual(HashMap.size(refmap), 1);
+			assert.isTrue(HashMap.has(refmap, "FOO BAR"));
 		});
 
 		it("collapses internal whitespace in the key", () => {
 			const { refmap } = parseBlocks("[foo \t bar]: /url\n");
-			assert.isTrue(refmap.has("FOO BAR"));
+			assert.isTrue(HashMap.has(refmap, "FOO BAR"));
 		});
 
 		it("lets the first definition win", () => {
 			const { refmap } = parseBlocks("[foo]: /first\n[foo]: /second\n");
-			assert.strictEqual(refmap.size, 1);
-			assert.strictEqual(refmap.get("FOO")?.url, "/first");
+			assert.strictEqual(HashMap.size(refmap), 1);
+			assert.strictEqual(O.getOrUndefined(HashMap.get(refmap, "FOO"))?.url, "/first");
 		});
 
 		it("collects definitions from inside containers", () => {
 			const { refmap } = parseBlocks("> [foo]: /url\n");
-			assert.isTrue(refmap.has("FOO"));
+			assert.isTrue(HashMap.has(refmap, "FOO"));
 		});
 
 		it("holds a `__proto__` label as a key, never as a prototype write", () => {
 			const { refmap } = parseBlocks("[__proto__]: /url\n");
-			assert.isTrue(refmap.has("__PROTO__"));
-			assert.strictEqual(refmap.get("__PROTO__")?.url, "/url");
-			// The label round-trips as data because the refmap is a real Map:
+			assert.isTrue(HashMap.has(refmap, "__PROTO__"));
+			assert.strictEqual(O.getOrUndefined(HashMap.get(refmap, "__PROTO__"))?.url, "/url");
+			// The label round-trips as data because the refmap is an Effect HashMap:
 			// on a plain object the same assignment would have written a
 			// prototype instead of a key, and the lookup above would fail.
-			assert.strictEqual(Object.getPrototypeOf(refmap), Map.prototype);
+			assert.isTrue(HashMap.isHashMap(refmap));
 			assert.isUndefined(Object.getOwnPropertyDescriptor(Object.prototype, "url"));
 		});
 
 		it("is empty for a document with no definitions", () => {
-			assert.strictEqual(parseBlocks("foo\n").refmap.size, 0);
+			assert.strictEqual(HashMap.size(parseBlocks("foo\n").refmap), 0);
 		});
 	});
 });
@@ -576,5 +578,37 @@ describe("hardening", () => {
 		// above would pass for the wrong reason.
 		const { root } = parseBlocks(`${">".repeat(MAX_NESTING_DEPTH - 2)} foo\n`);
 		assert.strictEqual(root.children[0]?.type, "blockquote");
+	});
+});
+
+
+describe("parseBlocks callable contract", () => {
+	it("keeps every string-first call data-first, including dialect spellings", () => {
+		for (const text of ["gfm", "commonmark", ""]) {
+			assert.deepStrictEqual(parseBlocks(text), parseBlocks(text, {}));
+		}
+	});
+
+	it("supports direct and curried dialect options with identical output", () => {
+		const text = "~~struck~~\n";
+		for (const dialect of ["commonmark", "gfm"] as const) {
+			assert.deepStrictEqual(parseBlocks({ dialect })(text), parseBlocks(text, { dialect }));
+		}
+		assert.notDeepEqual(parseBlocks(text, { dialect: "gfm" }).root, parseBlocks(text).root);
+	});
+
+	it("supports omitted and explicitly undefined curried options", () => {
+		const text = "# Heading\n";
+		assert.deepStrictEqual(parseBlocks()(text), parseBlocks(text));
+		assert.deepStrictEqual(parseBlocks(undefined)(text), parseBlocks(text, undefined));
+	});
+
+	it("preserves the frontmatter toggle in direct and curried calls", () => {
+		const text = "---\nkey: value\n---\n";
+		const options = { dialect: "gfm", frontmatter: true } as const;
+		const direct = parseBlocks(text, options);
+		assert.strictEqual(direct.root.children[0]?.type, "frontmatter");
+		assert.deepStrictEqual(parseBlocks(options)(text), direct);
+		assert.strictEqual(parseBlocks(text).root.children[0]?.type, "thematicBreak");
 	});
 });

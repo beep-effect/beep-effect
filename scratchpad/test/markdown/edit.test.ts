@@ -71,6 +71,15 @@ describe("MarkdownEdit", () => {
 		assert.strictEqual(edits[1]?.offset, 0);
 	});
 
+	it("preserves stable equal-offset insertion ordering without mutating edits", () => {
+		const first = edit(1, 0, "x");
+		const second = edit(1, 0, "y");
+		const edits = [first, second];
+		assert.strictEqual(MarkdownEdit.applyAll("ab", edits), "ayxb");
+		assert.strictEqual(edits[0], first);
+		assert.strictEqual(edits[1], second);
+	});
+
 	it("offsets are UTF-16 code units on astral content", () => {
 		// "𝄞" occupies two UTF-16 code units, so "b" sits at offset 3.
 		assert.strictEqual(MarkdownEdit.applyAll("a\u{1D11E}b", [edit(3, 1, "c")]), "a\u{1D11E}c");

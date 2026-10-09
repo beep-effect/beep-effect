@@ -32,6 +32,21 @@ describe("MarkdownDiagnostic", () => {
 		assert.strictEqual(d.character, 2);
 	});
 
+	it("keeps both CRLF terminator offsets on the preceding line", () => {
+		for (const offset of [1, 2]) {
+			const diagnostic = MarkdownDiagnostic.fromRaw("a\r\nb", {
+				code: "NestingDepthExceeded", message: "m", offset, length: 0,
+			});
+			assert.strictEqual(diagnostic.line, 0);
+			assert.strictEqual(diagnostic.character, offset);
+		}
+		const after = MarkdownDiagnostic.fromRaw("a\r\nb", {
+			code: "NestingDepthExceeded", message: "m", offset: 3, length: 0,
+		});
+		assert.strictEqual(after.line, 1);
+		assert.strictEqual(after.character, 0);
+	});
+
 	it("clamps an offset at EOF to the final position", () => {
 		const d = MarkdownDiagnostic.fromRaw("abc", {
 			code: "NestingDepthExceeded",

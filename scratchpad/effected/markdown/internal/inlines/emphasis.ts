@@ -11,9 +11,15 @@
 // deliberately not ported: the `smart` option is not offered, so those
 // two characters never reach the delimiter stack at all.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { EmphasisChar } from "../../MarkdownNode.ts";
 import type { InlineConstruct, InlineScanner } from "../inlineTypes.ts";
+
+const $I = $ScratchpadId.create("effected/markdown/internal/inlines/emphasis");
 
 const C_ASTERISK = 0x2a;
 const C_UNDERSCORE = 0x5f;
@@ -30,11 +36,16 @@ const reUnicodeWhitespaceChar = /^\s/;
  * cmark-gfm's `strikethrough.c` calls the same `scan_delimiters` the emphasis
  * algorithm does and reads the same two flanking flags out of it.
  */
-export interface DelimiterRun {
-	readonly numdelims: number;
-	readonly canOpen: boolean;
-	readonly canClose: boolean;
-}
+export const DelimiterRun = S.Struct({
+	numdelims: S.Finite.annotateKey({ description: "Length of the delimiter run in UTF-16 code units." }),
+	canOpen: S.Boolean.annotateKey({ description: "Whether the run satisfies the opening flanking rule." }),
+	canClose: S.Boolean.annotateKey({ description: "Whether the run satisfies the closing flanking rule." }),
+}).annotate($I.annote("DelimiterRun", {
+	description: "The length and flanking capabilities shared by emphasis and strikethrough.",
+}));
+
+/** The payload measured by {@link DelimiterRun}. */
+export type DelimiterRun = typeof DelimiterRun.Type;
 
 /**
  * Measure the delimiter run at the cursor and decide whether it can open or
@@ -45,9 +56,9 @@ export interface DelimiterRun {
  * `*`'s rules) reuses this as it stands.
  */
 export const scanDelims: {
-	(scanner: InlineScanner, cc: number): DelimiterRun | undefined;
-	(cc: number): (scanner: InlineScanner) => DelimiterRun | undefined;
-} = dual(2, (scanner: InlineScanner, cc: number): DelimiterRun | undefined => {
+	(scanner: InlineScanner, cc: number): O.Option<DelimiterRun>;
+	(cc: number): (scanner: InlineScanner) => O.Option<DelimiterRun>;
+} = dual(2, (scanner: InlineScanner, cc: number): O.Option<DelimiterRun> => {
 	const startpos = scanner.pos;
 	let numdelims = 0;
 
@@ -58,12 +69,21 @@ export const scanDelims: {
 
 	if (numdelims === 0) {
 		scanner.pos = startpos;
-		return undefined;
+		return O.none();
 	}
 
-	const charBefore = startpos === 0 ? "\n" : scanner.subject.charAt(startpos - 1);
-	const ccAfter = scanner.peek();
-	const charAfter = ccAfter === -1 ? "\n" : String.fromCodePoint(ccAfter);
+	// The scanner counts UTF-16 units; flanking classifies Unicode code points.
+	let beforeStart = startpos - 1;
+	const beforeUnit = O.getOrElse(Str.charCodeAt(scanner.subject, beforeStart), () => -1);
+	if (beforeUnit >= 0xdc00 && beforeUnit <= 0xdfff && beforeStart > 0) {
+		const precedingUnit = O.getOrElse(Str.charCodeAt(scanner.subject, beforeStart - 1), () => -1);
+		if (precedingUnit >= 0xd800 && precedingUnit <= 0xdbff) {
+			beforeStart -= 1;
+		}
+	}
+	const charBefore = startpos === 0 ? "\n" : Str.slice(beforeStart, startpos)(scanner.subject);
+	const ccAfter = O.getOrElse(Str.codePointAt(scanner.subject, scanner.pos), () => -1);
+	const charAfter = ccAfter === -1 ? "\n" : Str.slice(scanner.pos, scanner.pos + (ccAfter > 0xffff ? 2 : 1))(scanner.subject);
 
 	const afterIsWhitespace = reUnicodeWhitespaceChar.test(charAfter);
 	const afterIsPunctuation = rePunctuation.test(charAfter);
@@ -78,7 +98,7 @@ export const scanDelims: {
 	const canClose = cc === C_UNDERSCORE ? rightFlanking && (!leftFlanking || afterIsPunctuation) : rightFlanking;
 
 	scanner.pos = startpos;
-	return { numdelims, canOpen, canClose };
+	return O.some(DelimiterRun.make({ numdelims, canOpen, canClose }));
 });
 
 const markerCharOf = (cc: number): EmphasisChar => (cc === C_UNDERSCORE ? "_" : "*");
@@ -89,25 +109,26 @@ const markerCharOf = (cc: number): EmphasisChar => (cc === C_UNDERSCORE ? "_" : 
  */
 const handleDelim = (scanner: InlineScanner, cc: number): boolean => {
 	const res = scanDelims(scanner, cc);
-	if (res === undefined) {
+	if (O.isNone(res)) {
 		return false;
 	}
 
+	const run = res.value;
 	const startpos = scanner.pos;
-	scanner.pos += res.numdelims;
+	scanner.pos += run.numdelims;
 	const node = scanner.appendText(scanner.subject.slice(startpos, scanner.pos), startpos, scanner.pos);
 	node.data.markerChar = markerCharOf(cc);
 
-	if (res.canOpen || res.canClose) {
+	if (run.canOpen || run.canClose) {
 		const delimiter = {
 			cc,
-			numdelims: res.numdelims,
-			origdelims: res.numdelims,
+			numdelims: run.numdelims,
+			origdelims: run.numdelims,
 			node,
 			previous: scanner.delimiters,
 			next: undefined,
-			canOpen: res.canOpen,
-			canClose: res.canClose,
+			canOpen: run.canOpen,
+			canClose: run.canClose,
 		};
 		if (delimiter.previous !== undefined) {
 			delimiter.previous.next = delimiter;

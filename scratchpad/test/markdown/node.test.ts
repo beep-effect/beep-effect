@@ -1,5 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as S from "effect/Schema";
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as Node from "../../effected/markdown/MarkdownNode.ts";
 import * as Result from "effect/Result";
 import {
 	Blockquote,
@@ -45,6 +47,77 @@ const rawSpan = (startOffset = 0, endOffset = 0) => ({
 });
 
 describe("MarkdownNode", () => {
+	describe("schema metadata and named literal domains", () => {
+		it("names all suspended content categories through IdentityComposer", () => {
+			const identity = $ScratchpadId.create("effected/markdown/MarkdownNode");
+			for (const [schema, name] of [
+				[Node.PhrasingContent, "PhrasingContent"],
+				[Node.FlowContent, "FlowContent"],
+				[Node.ListContent, "ListContent"],
+				[Node.RowContent, "RowContent"],
+				[Node.TableContent, "TableContent"],
+				[Node.FrontmatterContent, "FrontmatterContent"],
+				[Node.MarkdownNode, "MarkdownNode"],
+			] as const) {
+				assert.strictEqual(schema.ast.annotations?.identifier, identity.make(name));
+				assert.isString(schema.ast.annotations?.description);
+				assert.isNotEmpty(schema.ast.annotations?.description);
+			}
+		});
+
+		it("describes MDX keys without changing their encoded shapes", () => {
+			for (const schema of [Node.MdxJsxAttribute, Node.MdxJsxFlowElement, Node.MdxJsxTextElement]) {
+				for (const field of Object.values(schema.fields)) {
+					assert.isString(field.ast.context?.annotations?.description);
+					assert.isNotEmpty(field.ast.context?.annotations?.description);
+				}
+			}
+			const position = rawSpan();
+			const attribute = { type: "mdxJsxAttribute", name: "disabled", value: null, position } as const;
+			const flow = { type: "mdxJsxFlowElement", name: "Panel", attributes: [attribute], children: [], position } as const;
+			const text = { type: "mdxJsxTextElement", name: null, attributes: [], children: [], position } as const;
+			const decodedAttribute = Result.getOrThrow(S.decodeResult(Node.MdxJsxAttribute)(attribute));
+			const decodedFlow = Result.getOrThrow(S.decodeResult(Node.MdxJsxFlowElement)(flow));
+			const decodedText = Result.getOrThrow(S.decodeResult(Node.MdxJsxTextElement)(text));
+			assert.deepStrictEqual(Result.getOrThrow(S.encodeResult(Node.MdxJsxAttribute)(decodedAttribute)), attribute);
+			assert.deepStrictEqual(Result.getOrThrow(S.encodeResult(Node.MdxJsxFlowElement)(decodedFlow)), flow);
+			assert.deepStrictEqual(Result.getOrThrow(S.encodeResult(Node.MdxJsxTextElement)(decodedText)), text);
+		});
+
+		it("preserves named literal members, identities and keyed helper APIs", () => {
+			const identity = $ScratchpadId.create("effected/markdown/MarkdownNode");
+			for (const [schema, name, members] of [
+				[Node.ReferenceType, "ReferenceType", ["shortcut", "collapsed", "full"]],
+				[Node.HeadingStyle, "HeadingStyle", ["atx", "setext"]],
+				[Node.BreakStyle, "BreakStyle", ["backslash", "spaces"]],
+				[Node.FenceChar, "FenceChar", ["`", "~"]],
+				[Node.BulletChar, "BulletChar", ["-", "*", "+"]],
+				[Node.ListDelimiter, "ListDelimiter", [".", ")"]],
+				[Node.ThematicBreakChar, "ThematicBreakChar", ["-", "_", "*"]],
+				[Node.EmphasisChar, "EmphasisChar", ["*", "_"]],
+				[Node.HeadingDepth, "HeadingDepth", [1, 2, 3, 4, 5, 6]],
+				[Node.TableAlign, "TableAlign", ["left", "right", "center"]],
+				[Node.FrontmatterFormat, "FrontmatterFormat", ["yaml", "toml", "json"]],
+			] as const) {
+				assert.deepStrictEqual(schema.literals, members);
+				assert.deepStrictEqual(Object.values(schema.Enum), [...members]);
+				assert.strictEqual(schema.ast.annotations?.identifier, identity.make(name));
+				assert.isFunction(schema.$match);
+				for (const guard of Object.values(schema.is)) {
+					assert.strictEqual(schema.literals.filter((value) => guard(value)).length, 1);
+					assert.isFalse(guard("invalid"));
+				}
+			}
+			assert.strictEqual(Node.ReferenceType.$match("full", {
+				shortcut: () => "inferred",
+				collapsed: () => "inferred",
+				full: () => "explicit",
+			}), "explicit");
+			assert.isTrue(Node.HeadingDepth.is.number6(6));
+			assert.isFalse(Node.HeadingDepth.is.number6(7));
+		});
+	});
+
 	describe("construction", () => {
 		it("builds a document tree with X.make, filling `type` from the tag default", () => {
 			const document = Root.make({

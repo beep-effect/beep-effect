@@ -593,6 +593,9 @@ const serializeInlines = (
 	let out = "";
 	let atLineStart = startsLine;
 	let index = 0;
+	let textRunEnd = 0;
+	let textRun = "";
+	let textRunOffset = 0;
 	for (const child of children) {
 		guard(state, child);
 		const lastChar = out === "" ? undefined : out[out.length - 1];
@@ -607,21 +610,26 @@ const serializeInlines = (
 		};
 		Match.value(child).pipe(
 			Match.discriminator("type")("text", (child) => {
-				let followingText = "";
-				let next = index + 1;
-				while (next < children.length) {
-					const following = children[next];
-					if (following?.type !== "text") break;
-					followingText += following.value;
-					next += 1;
+				if (index >= textRunEnd) {
+					const values: string[] = [];
+					textRunEnd = index;
+					while (textRunEnd < children.length) {
+						const following = children[textRunEnd];
+						if (following?.type !== "text") break;
+						values.push(following.value);
+						textRunEnd += 1;
+					}
+					textRun = A.join(values, "");
+					textRunOffset = 0;
 				}
+				textRunOffset += child.value.length;
 				const escaped = (child.escapeStyle === "literal" ? literalText : escapeText)(
 					child.value,
 					context,
 					atLineStart,
 					state.mdx,
-					followingText,
-					next < children.length,
+					textRun.slice(textRunOffset),
+					textRunEnd < children.length,
 				);
 				out += escaped.text;
 				atLineStart = escaped.atLineStart;
@@ -1005,7 +1013,7 @@ const escapeCellPipes = (content: string): string => {
 };
 
 const serializeTable = (table: Table, state: StringifyState): string => {
-	const columnCount = Math.max(1, ...table.children.map((row) => row.children.length));
+	const columnCount = A.reduce(table.children, 1, (count, row) => Math.max(count, row.children.length));
 	const rows = table.children.map((row) => {
 		guard(state, row);
 		const cells = row.children.map((cell) => {

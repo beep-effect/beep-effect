@@ -21,6 +21,7 @@
 //    nodes, because mdast images have no children. Upstream computes the same
 //    string at render time by re-rendering the children with tags disabled.
 
+import * as HashMap from "effect/HashMap";
 import type { InlineNode } from "../inlineNode.ts";
 import { appendChild, childrenOf, insertAfter, makeInlineNode, unlink } from "../inlineNode.ts";
 import type { Bracket, InlineConstruct, InlineScanner } from "../inlineTypes.ts";
@@ -72,8 +73,10 @@ const plainTextOf = (nodes: ReadonlyArray<InlineNode>): string => {
 			break;
 		}
 
-		if (node.type === "text" || node.type === "inlineCode") {
+		if (node.type === "text" || node.type === "inlineCode" || node.type === "html") {
 			text += node.value;
+		} else if (node.type === "break") {
+			text += "\n";
 		} else if (node.type === "image" || node.type === "imageReference") {
 			// A nested image contributes the alt text it already flattened.
 			text += node.value;
@@ -262,7 +265,7 @@ export const makeLinkCloseConstruct = (onNoMatch?: LinkCloseFallback): InlineCon
 				// THE formation rule: no definition, no link. The brackets stay
 				// literal text — this is where upstream consults its refmap and
 				// where this port consults the one the block pass built.
-				if (scanner.refmap.has(key)) {
+				if (HashMap.has(scanner.refmap, key)) {
 					identifier = key.toLowerCase();
 					matched = true;
 				}

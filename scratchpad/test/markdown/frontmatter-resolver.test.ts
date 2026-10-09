@@ -309,6 +309,53 @@ describe("SchemaResolver.fromRegistry", () => {
 		}),
 	);
 
+	it.effect("keeps adjacent large integers distinct in every version segment", () =>
+		Effect.gen(function* () {
+			for (const [lower, upper, paddedUpper] of [
+				["9007199254740992", "9007199254740993", "009007199254740993"],
+				["1.9007199254740992", "1.9007199254740993", "01.009007199254740993"],
+				["1.2.9007199254740992", "1.2.9007199254740993", "01.002.009007199254740993"],
+			] as const) {
+				const large = SchemaResolver.fromRegistry({ [`skill@${lower}`]: Skill, [`skill@${upper}`]: BlogPost });
+				assert.strictEqual(yield* large.resolve(declare(`skill@${lower}`), {}), Skill);
+				assert.strictEqual(yield* large.resolve(declare(`skill@${upper}`), {}), BlogPost);
+				assert.strictEqual(yield* large.resolve(declare(`skill@${paddedUpper}`), {}), BlogPost);
+			}
+		}),
+	);
+
+	it.effect("rejects an unregistered adjacent large integer in every version segment", () =>
+		Effect.gen(function* () {
+			for (const [registered, requested] of [
+				["9007199254740992", "9007199254740993"],
+				["1.9007199254740992", "1.9007199254740993"],
+				["1.2.9007199254740992", "1.2.9007199254740993"],
+			] as const) {
+				const large = SchemaResolver.fromRegistry({ [`skill@${registered}`]: Skill });
+				const failure = yield* Effect.flip(large.resolve(declare(`skill@${requested}`), {}));
+				assert.instanceOf(failure, SchemaVersionUnresolvableError);
+				assert.strictEqual(failure.name, "skill");
+				assert.strictEqual(failure.version, requested);
+			}
+		}),
+	);
+
+	it.effect("canonicalizes zero segments without losing their count", () =>
+		Effect.gen(function* () {
+			const zeros = SchemaResolver.fromRegistry({ "skill@0": Skill, "skill@0.0": BlogPost, "skill@0.0.0": S.String });
+			assert.strictEqual(yield* zeros.resolve(declare("skill@000"), {}), Skill);
+			assert.strictEqual(yield* zeros.resolve(declare("skill@000.00"), {}), BlogPost);
+			assert.strictEqual(yield* zeros.resolve(declare("skill@000.00.0000"), {}), S.String);
+			const partial = SchemaResolver.fromRegistry({ "skill@9007199254740993": Skill });
+			const failure = yield* Effect.flip(partial.resolve(declare("skill@9007199254740993.0"), {}));
+			assert.instanceOf(failure, SchemaVersionUnresolvableError);
+		}),
+	);
+
+	it("rejects duplicate large integer registrations with leading zeros", () => {
+		assert.throws(() => SchemaResolver.fromRegistry({ "skill@9007199254740993": Skill, "skill@009007199254740993": BlogPost }));
+	});
+
 	it.effect("cannot resolve url, path or inline declarations", () =>
 		Effect.gen(function* () {
 			for (const value of ["https://example.com/s.json", "./local/s.json"]) {

@@ -9,6 +9,8 @@
 import * as Match from "effect/Match";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { scanFrontmatter } from "./internal/blocks/frontmatter.ts";
@@ -22,18 +24,12 @@ import { MarkdownRange } from "./MarkdownEdit.ts";
 import type {
 	FlowContent,
 	Frontmatter,
-	Heading,
-	HeadingDepth,
-	Image,
-	ImageReference,
-	Link,
-	LinkReference,
 	MarkdownNode,
 	MarkdownNodeOfType,
 	MarkdownNodeType,
 	PhrasingContent,
 } from "./MarkdownNode.ts";
-import { Definition, Root } from "./MarkdownNode.ts";
+import { Definition, Heading, HeadingDepth, Image, ImageReference, Link, LinkReference, Root } from "./MarkdownNode.ts";
 import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/markdown/MarkdownDocument");
@@ -59,11 +55,14 @@ class DocumentNavigationError extends S.TaggedError<DocumentNavigationError>($I`
  *
  * @public
  */
-export interface DocumentHeading {
-	readonly node: Heading;
-	readonly depth: HeadingDepth;
-	readonly text: string;
-}
+export const DocumentHeading = S.Struct({
+	node: Heading.annotateKey({ description: "The original heading node in the document tree" }),
+	depth: HeadingDepth.annotateKey({ description: "Heading level used for outline navigation" }),
+	text: S.String.annotateKey({ description: "Plain-text projection of the heading's phrasing content" }),
+}).annotate($I.annote("DocumentHeading", { description: "Plain-object heading navigation entry retaining its source node, depth and derived text." }));
+
+/** The schema-derived heading navigation entry. */
+export type DocumentHeading = typeof DocumentHeading.Type;
 
 /**
  * A heading-delimited span from {@link MarkdownDocument.sections}: the
@@ -158,7 +157,7 @@ export class DocumentSection {
  *
  * @public
  */
-export interface SectionQueryOptions {
+export const SectionQueryOptions = S.Struct({
 	/**
 	 * Restrict to sections opened by a heading of exactly this depth.
 	 *
@@ -167,8 +166,11 @@ export interface SectionQueryOptions {
 	 * changelog idiom. A depth *range* is a different question and belongs in a
 	 * predicate.
 	 */
-	readonly depth?: HeadingDepth;
-}
+	depth: S.optionalKey(HeadingDepth).annotateKey({ description: "Exact heading depth to select; omission admits every heading depth" }),
+}).annotate($I.annote("SectionQueryOptions", { description: "Optional exact-depth restriction for document section navigation." }));
+
+/** The schema-derived section query configuration. */
+export type SectionQueryOptions = typeof SectionQueryOptions.Type;
 
 /**
  * How {@link MarkdownDocument.sectionByHeading} decides a section matches: an
@@ -202,10 +204,13 @@ export type LinkBearingNode = Link | Image | Definition | LinkReference | ImageR
  *
  * @public
  */
-export interface DocumentLink {
-	readonly node: LinkBearingNode;
-	readonly url?: string;
-}
+export const DocumentLink = S.Struct({
+	node: S.Union([Link, Image, Definition, LinkReference, ImageReference]).annotateKey({ description: "Original outbound-link or reference node in the document tree" }),
+	url: S.optionalKey(S.String).annotateKey({ description: "Unmodified outbound URL; absent for unresolved foreign references" }),
+}).annotate($I.annote("DocumentLink", { description: "Plain-object link navigation entry with the original node and an optional resolved URL." }));
+
+/** The schema-derived link navigation entry. */
+export type DocumentLink = typeof DocumentLink.Type;
 
 // The accessor walks recurse over the tree, so they share the engine's depth
 // cap. A getter has no typed error channel, so — like `applyAll`'s overlap
@@ -339,7 +344,8 @@ export class MarkdownDocument extends S.Class<MarkdownDocument>($I`MarkdownDocum
 	source: S.String.annotateKey({ description: "Original markdown text retained so tree positions and surgical edits refer to the exact parsed source" }),
 	root: Root.annotateKey({ description: "Parsed mdast-shaped document tree carrying source positions and fidelity details" }),
 	diagnostics: S.Array(MarkdownDiagnostic).annotateKey({ description: "Non-fatal conditions reported during parsing; currently empty for every accepted document" }),
-	definitions: S.ReadonlyMap(S.String, Definition).annotateKey({ description: "Link-reference definitions indexed by normalized, case-folded label, with the first definition winning and nodes retained in the tree" }),
+	definitions: S.HashMap(S.String, Definition).annotateKey({ description: "Link-reference definitions indexed by normalized, case-folded label, with the first definition winning and nodes retained in the tree" }),
+	definitionOrder: S.Array(S.Tuple([S.String, Definition])).annotateKey({ description: "Winning normalized labels and their original definition nodes in document order; HashMap iteration order is unspecified" }),
 }, $I.annote("MarkdownDocument", { description: "A parsed markdown document: the original `source`, the mdast-shaped Root tree, the non-fatal MarkdownDiagnostics the parse produced, and the link-reference `definitions` index." })) {
 	/**
 	 * The document's frontmatter capture, or `undefined` when there is none.
@@ -558,8 +564,8 @@ export class MarkdownDocument extends S.Class<MarkdownDocument>($I`MarkdownDocum
 						entries.push({ node, url: node.url });
 					}),
 					Match.discriminator("type")("linkReference", "imageReference", (node) => {
-						const definition = this.definitions.get(normalizeLabelText(node.identifier));
-						entries.push(definition === undefined ? { node } : { node, url: definition.url });
+						const definition = HashMap.get(this.definitions, normalizeLabelText(node.identifier));
+						entries.push(O.isNone(definition) ? { node } : { node, url: definition.value.url });
 					}),
 					Match.orElse(() => {}),
 				);
@@ -647,6 +653,7 @@ export class MarkdownDocument extends S.Class<MarkdownDocument>($I`MarkdownDocum
 				root: pass.root,
 				diagnostics: pass.carriers.map((carrier) => MarkdownDiagnostic.fromRaw(text, carrier)),
 				definitions: pass.refmap,
+				definitionOrder: pass.definitionOrder,
 			}),
 		);
 	}

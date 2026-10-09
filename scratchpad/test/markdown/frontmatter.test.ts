@@ -55,7 +55,7 @@ describe("frontmatter capture", () => {
 		});
 
 		it("is off by default at the engine level too", () => {
-			const types = parseBlocks("---\na: 1\n---\n", "gfm").root.children.map((child) => child.type);
+			const types = parseBlocks("---\na: 1\n---\n", { dialect: "gfm" }).root.children.map((child) => child.type);
 			assert.deepStrictEqual(types, ["thematicBreak", "heading"]);
 		});
 

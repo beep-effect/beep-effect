@@ -6,13 +6,10 @@
 // looks at a single character. Sticky and global clones with `lastIndex` do
 // the same matching against the original string and copy nothing.
 //
-// The clones are cached against the source pattern, so each pattern is
-// compiled once for the life of the process.
+// Each operation owns a fresh clone, so its mutable `lastIndex` cannot
+// interfere with another operation using the same source pattern.
 //
 // Leaf module: imports nothing.
-
-const stickyCache = new WeakMap<RegExp, RegExp>();
-const globalCache = new WeakMap<RegExp, RegExp>();
 
 const clone = (pattern: RegExp, flag: "y" | "g", dropCaret: boolean): RegExp => {
 	// A leading `^` and the `y` flag say the same thing, but together they say
@@ -23,23 +20,7 @@ const clone = (pattern: RegExp, flag: "y" | "g", dropCaret: boolean): RegExp => 
 };
 
 /** The sticky twin of `pattern`, anchored at `lastIndex`. */
-export const stickyOf = (pattern: RegExp): RegExp => {
-	const cached = stickyCache.get(pattern);
-	if (cached !== undefined) {
-		return cached;
-	}
-	const made = clone(pattern, "y", true);
-	stickyCache.set(pattern, made);
-	return made;
-};
+export const stickyOf = (pattern: RegExp): RegExp => clone(pattern, "y", true);
 
 /** The global twin of `pattern`, searching forward from `lastIndex`. */
-export const globalOf = (pattern: RegExp): RegExp => {
-	const cached = globalCache.get(pattern);
-	if (cached !== undefined) {
-		return cached;
-	}
-	const made = clone(pattern, "g", false);
-	globalCache.set(pattern, made);
-	return made;
-};
+export const globalOf = (pattern: RegExp): RegExp => clone(pattern, "g", false);

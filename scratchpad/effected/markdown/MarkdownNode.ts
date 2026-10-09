@@ -26,6 +26,7 @@
 // Leaf module: imports only `effect`.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
@@ -103,7 +104,7 @@ const NodePosition = Position.pipe(S.withConstructorDefault(Effect.succeed(Posit
  *
  * @public
  */
-export const ReferenceType = S.Literals(["shortcut", "collapsed", "full"]).pipe($I.annoteSchema("ReferenceType", { description: "The explicitness of a reference, per mdast's `referenceType` enum." }));
+export const ReferenceType = LiteralKit(["shortcut", "collapsed", "full"]).pipe($I.annoteSchema("ReferenceType", { description: "The explicitness of a reference, per mdast's `referenceType` enum." }));
 
 /**
  * The union of all reference-type string literals.
@@ -118,7 +119,7 @@ export type ReferenceType = typeof ReferenceType.Type;
  *
  * @public
  */
-export const HeadingStyle = S.Literals(["atx", "setext"]).pipe($I.annoteSchema("HeadingStyle", { description: "The two ways CommonMark spells a heading: `atx` (`# Title`) and `setext` (a title underlined with `=` or `-`)." }));
+export const HeadingStyle = LiteralKit(["atx", "setext"]).pipe($I.annoteSchema("HeadingStyle", { description: "The two ways CommonMark spells a heading: `atx` (`# Title`) and `setext` (a title underlined with `=` or `-`)." }));
 
 /**
  * The union of all heading-style string literals.
@@ -133,7 +134,7 @@ export type HeadingStyle = typeof HeadingStyle.Type;
  *
  * @public
  */
-export const BreakStyle = S.Literals(["backslash", "spaces"]).pipe($I.annoteSchema("BreakStyle", { description: "The two ways CommonMark spells a hard line break: a trailing backslash or two-or-more trailing spaces." }));
+export const BreakStyle = LiteralKit(["backslash", "spaces"]).pipe($I.annoteSchema("BreakStyle", { description: "The two ways CommonMark spells a hard line break: a trailing backslash or two-or-more trailing spaces." }));
 
 /**
  * The union of all break-style string literals.
@@ -147,7 +148,7 @@ export type BreakStyle = typeof BreakStyle.Type;
  *
  * @public
  */
-export const FenceChar = S.Literals(["`", "~"]).pipe($I.annoteSchema("FenceChar", { description: "The two fence characters a fenced code block may use." }));
+export const FenceChar = LiteralKit(["`", "~"]).pipe($I.annoteSchema("FenceChar", { description: "The two fence characters a fenced code block may use." }));
 
 /**
  * The union of all fence-character literals.
@@ -161,7 +162,7 @@ export type FenceChar = typeof FenceChar.Type;
  *
  * @public
  */
-export const BulletChar = S.Literals(["-", "*", "+"]).pipe($I.annoteSchema("BulletChar", { description: "The three bullet characters an unordered list may use." }));
+export const BulletChar = LiteralKit(["-", "*", "+"]).pipe($I.annoteSchema("BulletChar", { description: "The three bullet characters an unordered list may use." }));
 
 /**
  * The union of all bullet-character literals.
@@ -175,7 +176,7 @@ export type BulletChar = typeof BulletChar.Type;
  *
  * @public
  */
-export const ListDelimiter = S.Literals([".", ")"]).pipe($I.annoteSchema("ListDelimiter", { description: "The two delimiters an ordered list marker may use (`1.` or `1)`)." }));
+export const ListDelimiter = LiteralKit([".", ")"]).pipe($I.annoteSchema("ListDelimiter", { description: "The two delimiters an ordered list marker may use (`1.` or `1)`)." }));
 
 /**
  * The union of all ordered-list delimiter literals.
@@ -189,7 +190,7 @@ export type ListDelimiter = typeof ListDelimiter.Type;
  *
  * @public
  */
-export const ThematicBreakChar = S.Literals(["-", "_", "*"]).pipe($I.annoteSchema("ThematicBreakChar", { description: "The three characters a thematic break may be drawn with." }));
+export const ThematicBreakChar = LiteralKit(["-", "_", "*"]).pipe($I.annoteSchema("ThematicBreakChar", { description: "The three characters a thematic break may be drawn with." }));
 
 /**
  * The union of all thematic-break character literals.
@@ -203,7 +204,7 @@ export type ThematicBreakChar = typeof ThematicBreakChar.Type;
  *
  * @public
  */
-export const EmphasisChar = S.Literals(["*", "_"]).pipe($I.annoteSchema("EmphasisChar", { description: "The two characters emphasis and strong emphasis may be marked with." }));
+export const EmphasisChar = LiteralKit(["*", "_"]).pipe($I.annoteSchema("EmphasisChar", { description: "The two characters emphasis and strong emphasis may be marked with." }));
 
 /**
  * The union of all emphasis-marker character literals.
@@ -217,7 +218,7 @@ export type EmphasisChar = typeof EmphasisChar.Type;
  *
  * @public
  */
-export const HeadingDepth = S.Literals([1, 2, 3, 4, 5, 6]).pipe($I.annoteSchema("HeadingDepth", { description: "The six legal ATX/setext heading depths." }));
+export const HeadingDepth = LiteralKit([1, 2, 3, 4, 5, 6]).pipe($I.annoteSchema("HeadingDepth", { description: "The six legal ATX/setext heading depths." }));
 
 /**
  * The union of all legal heading depths.
@@ -232,7 +233,7 @@ export type HeadingDepth = typeof HeadingDepth.Type;
  *
  * @public
  */
-export const TableAlign = S.Literals(["left", "right", "center"]).pipe($I.annoteSchema("TableAlign", { description: "The three alignments a GFM table column may declare. A `null` entry in a Table's `align` array means the column carries no alignment." }));
+export const TableAlign = LiteralKit(["left", "right", "center"]).pipe($I.annoteSchema("TableAlign", { description: "The three alignments a GFM table column may declare. A `null` entry in a Table's `align` array means the column carries no alignment." }));
 
 /**
  * The union of all table-alignment string literals.
@@ -493,7 +494,7 @@ export const PhrasingContent: S.Codec<PhrasingContent> = S.suspend(() =>
 		Strong,
 		Text,
 	]),
-);
+).pipe($I.annoteSchema("PhrasingContent", { description: "Nodes admitted as inline text and markup, including constructed MDX text elements and expressions." }));
 
 /**
  * The union of all phrasing-content node types. Widened for MDX with
@@ -714,7 +715,7 @@ export class TableCell extends S.Class<TableCell>($I`TableCell`)({
  *
  * @public
  */
-export const RowContent: S.Codec<RowContent> = S.suspend(() => S.Union([TableCell]));
+export const RowContent: S.Codec<RowContent> = S.suspend(() => S.Union([TableCell])).pipe($I.annoteSchema("RowContent", { description: "Table-cell nodes admitted as children of a table row." }));
 
 /**
  * The union of all row-content node types.
@@ -743,7 +744,7 @@ export class TableRow extends S.Class<TableRow>($I`TableRow`)({
  *
  * @public
  */
-export const TableContent: S.Codec<TableContent> = S.suspend(() => S.Union([TableRow]));
+export const TableContent: S.Codec<TableContent> = S.suspend(() => S.Union([TableRow])).pipe($I.annoteSchema("TableContent", { description: "Table-row nodes admitted as children of a table." }));
 
 /**
  * The union of all table-content node types.
@@ -795,7 +796,7 @@ export const FlowContent: S.Codec<FlowContent> = S.suspend(() =>
 		Table,
 		ThematicBreak,
 	]),
-);
+).pipe($I.annoteSchema("FlowContent", { description: "Nodes admitted as block content, including GFM tables and footnotes and constructed MDX flow content." }));
 
 /**
  * The union of all flow-content node types. Includes mdast's `Content`
@@ -829,7 +830,7 @@ export type FlowContent =
  *
  * @public
  */
-export const ListContent: S.Codec<ListContent> = S.suspend(() => S.Union([ListItem]));
+export const ListContent: S.Codec<ListContent> = S.suspend(() => S.Union([ListItem])).pipe($I.annoteSchema("ListContent", { description: "List-item nodes admitted as children of a list." }));
 
 /**
  * The union of all list-content node types.
@@ -885,10 +886,10 @@ export class MdxJsxAttributeValueExpression extends S.Class<MdxJsxAttributeValue
  */
 export class MdxJsxAttribute extends S.Class<MdxJsxAttribute>($I`MdxJsxAttribute`)(
 	S.Struct({
-		type: S.tag("mdxJsxAttribute"),
-		name: S.String,
-		value: S.Union([MdxJsxAttributeValueExpression, S.String]).pipe(S.NullOr, S.optionalKey),
-		position: NodePosition,
+		type: S.tag("mdxJsxAttribute").annotateKey({ description: "The `mdxJsxAttribute` discriminator identifying a named JSX attribute" }),
+		name: S.String.annotateKey({ description: "Non-empty JSX attribute name, including namespace spelling when present" }),
+		value: S.Union([MdxJsxAttributeValueExpression, S.String]).pipe(S.NullOr, S.optionalKey).annotateKey({ description: "Attribute string literal or unevaluated expression; absent or null denotes a boolean attribute" }),
+		position: NodePosition.annotateKey({ description: "Source span of the named attribute, constructor-defaulted to the synthetic position" }),
 	}).pipe(
 		S.check(
 			S.makeFilter((attribute) =>
@@ -952,11 +953,11 @@ export type MdxJsxAttributeContent = MdxJsxAttribute | MdxJsxExpressionAttribute
  */
 export class MdxJsxFlowElement extends S.Class<MdxJsxFlowElement>($I`MdxJsxFlowElement`)(
 	S.Struct({
-		type: S.tag("mdxJsxFlowElement"),
-		name: S.NullOr(S.String),
-		attributes: S.Array(MdxJsxAttributeContent),
-		children: S.Array(S.suspend((): S.Codec<FlowContent> => FlowContent)),
-		position: NodePosition,
+		type: S.tag("mdxJsxFlowElement").annotateKey({ description: "The `mdxJsxFlowElement` discriminator identifying a JSX element in block position" }),
+		name: S.NullOr(S.String).annotateKey({ description: "Non-empty JSX element name, or null for a fragment that cannot carry attributes" }),
+		attributes: S.Array(MdxJsxAttributeContent).annotateKey({ description: "Named and expression attributes in source order; empty for a fragment" }),
+		children: S.Array(S.suspend((): S.Codec<FlowContent> => FlowContent)).annotateKey({ description: "Block content enclosed by the JSX element, in document order" }),
+		position: NodePosition.annotateKey({ description: "Source span of the block JSX element, constructor-defaulted to the synthetic position" }),
 	}).pipe(
 		S.check(
 			S.makeFilter((element) => {
@@ -981,11 +982,11 @@ export class MdxJsxFlowElement extends S.Class<MdxJsxFlowElement>($I`MdxJsxFlowE
  */
 export class MdxJsxTextElement extends S.Class<MdxJsxTextElement>($I`MdxJsxTextElement`)(
 	S.Struct({
-		type: S.tag("mdxJsxTextElement"),
-		name: S.NullOr(S.String),
-		attributes: S.Array(MdxJsxAttributeContent),
-		children: S.Array(S.suspend((): S.Codec<PhrasingContent> => PhrasingContent)),
-		position: NodePosition,
+		type: S.tag("mdxJsxTextElement").annotateKey({ description: "The `mdxJsxTextElement` discriminator identifying a JSX element in inline position" }),
+		name: S.NullOr(S.String).annotateKey({ description: "Non-empty JSX element name, or null for a fragment that cannot carry attributes" }),
+		attributes: S.Array(MdxJsxAttributeContent).annotateKey({ description: "Named and expression attributes in source order; empty for a fragment" }),
+		children: S.Array(S.suspend((): S.Codec<PhrasingContent> => PhrasingContent)).annotateKey({ description: "Inline content enclosed by the JSX element, in document order" }),
+		position: NodePosition.annotateKey({ description: "Source span of the inline JSX element, constructor-defaulted to the synthetic position" }),
 	}).pipe(
 		S.check(
 			S.makeFilter((element) => {
@@ -1050,7 +1051,7 @@ export class MdxjsEsm extends S.Class<MdxjsEsm>($I`MdxjsEsm`)({
  *
  * @public
  */
-export const FrontmatterFormat = S.Literals(["yaml", "toml", "json"]).pipe($I.annoteSchema("FrontmatterFormat", { description: "The frontmatter formats the capture recognizes, keyed by their opening fence: `---` is yaml, `+++` is toml and `---json` is json." }));
+export const FrontmatterFormat = LiteralKit(["yaml", "toml", "json"]).pipe($I.annoteSchema("FrontmatterFormat", { description: "The frontmatter formats the capture recognizes, keyed by their opening fence: `---` is yaml, `+++` is toml and `---json` is json." }));
 
 /**
  * The union of all frontmatter format string literals.
@@ -1093,7 +1094,7 @@ export class Frontmatter extends S.Class<Frontmatter>($I`Frontmatter`)({
  *
  * @public
  */
-export const FrontmatterContent: S.Codec<FrontmatterContent> = S.suspend(() => Frontmatter);
+export const FrontmatterContent: S.Codec<FrontmatterContent> = S.suspend(() => Frontmatter).pipe($I.annoteSchema("FrontmatterContent", { description: "Captured frontmatter metadata admitted at the document root." }));
 
 /**
  * The union of all frontmatter-content node types.
@@ -1157,7 +1158,7 @@ export const MarkdownNode: S.Codec<MarkdownNode> = S.suspend(() =>
 		RowContent,
 		TableContent,
 	]),
-);
+).pipe($I.annoteSchema("MarkdownNode", { description: "Every node admitted in a markdown tree, including the root and all content categories." }));
 
 /**
  * The union of every node `type` tag this package produces — the selector

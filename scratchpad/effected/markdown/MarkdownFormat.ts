@@ -29,7 +29,8 @@
 // parseResult`/`Markdown.stringifyResult`) and the node classes; it never
 // imports the engine.
 
-import * as HashSet from "effect/HashSet";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
 import * as O from "@beep/utils/Option";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
@@ -42,11 +43,9 @@ import { MarkdownEdit } from "./MarkdownEdit.ts";
 import type {
 	Code,
 	Emphasis,
-	FlowContent,
 	Heading,
 	List,
 	MarkdownNode,
-	PhrasingContent,
 	Strong,
 	ThematicBreak,
 } from "./MarkdownNode.ts";
@@ -54,8 +53,10 @@ import {
 	BulletChar,
 	EmphasisChar,
 	FenceChar,
+	FlowContent,
 	HeadingStyle,
 	Paragraph,
+	PhrasingContent,
 	Root,
 	Text,
 	ThematicBreakChar,
@@ -85,7 +86,7 @@ export type MarkdownRangeLike = MarkdownRange | { readonly offset: number; reado
  *
  * @public
  */
-export const CodeBlockStyle = S.Literals(["fenced", "indented"]).pipe($I.annoteSchema("CodeBlockStyle", { description: "The two ways CommonMark spells a code block: `fenced` (a backtick or tilde fence) and `indented` (four-space indentation)." }));
+export const CodeBlockStyle = LiteralKit(["fenced", "indented"]).annotate($I.annote("CodeBlockStyle", { description: "The two ways CommonMark spells a code block: `fenced` (a backtick or tilde fence) and `indented` (four-space indentation)." }));
 
 /**
  * The union of all code-block-style string literals.
@@ -140,12 +141,12 @@ export class MarkdownFormattingOptions extends S.Class<MarkdownFormattingOptions
  *
  * @public
  */
-export const MarkdownModificationErrorCode = S.Literals([
+export const MarkdownModificationErrorCode = LiteralKit([
 	"NodeNotInDocument",
 	"UnsupportedTarget",
 	"FragmentCategoryMismatch",
 	"FragmentUnrenderable",
-]).pipe($I.annoteSchema("MarkdownModificationErrorCode", { description: "Error codes `MarkdownFormat.modify` can fail with." }));
+]).annotate($I.annote("MarkdownModificationErrorCode", { description: "Error codes `MarkdownFormat.modify` can fail with." }));
 
 /**
  * The union of all modification-error code string literals.
@@ -195,9 +196,11 @@ const walk = (
 		parent: MarkdownNode | undefined,
 		siblings: ReadonlyArray<MarkdownNode>,
 		index: number,
-	) => void,
+	) => void | boolean,
 ): void => {
-	visit(node, parent, siblings, index);
+	if (visit(node, parent, siblings, index) === false) {
+		return;
+	}
 	const children = childrenOf(node);
 	for (let i = 0; i < children.length; i++) {
 		const child = children[i];
@@ -317,35 +320,61 @@ const formatThematicBreak = (
 	emit.push(node, start, end - start, target.repeat(3));
 };
 
-const formatHeading = (source: string, emit: FormatEmitter, node: Heading, target: HeadingStyle): void => {
+const formatHeading = (
+	source: string,
+	emit: FormatEmitter,
+	node: Heading,
+	target: HeadingStyle,
+	emphasisChar: EmphasisChar | undefined,
+): boolean => {
 	const fidelity = node.headingStyle ?? "atx";
 	if (fidelity === target || node.children.length === 0) {
-		return;
+		return false;
 	}
 	const { start, end } = spanOf(node);
 	const first = node.children[0];
 	const last = node.children[node.children.length - 1];
 	if (first === undefined || last === undefined) {
-		return;
+		return false;
 	}
 	const contentStart = first.position.start.offset;
 	const contentEnd = last.position.end.offset;
-	const content = source.slice(contentStart, contentEnd);
-	if (content.includes("\n") || content.includes("\r")) {
-		return;
+	const original = source.slice(contentStart, contentEnd);
+	if (original.includes("\n") || original.includes("\r")) {
+		return false;
 	}
+	if (target === "setext") {
+		if (node.depth > 2 || original.length === 0 || SETEXT_CONTENT_HAZARD.test(original)) {
+			return false;
+		}
+		if (start !== 0 && source.charCodeAt(start - 1) !== 0x0a) {
+			return false;
+		}
+	}
+	// Normalize the descendants against the original source, then compose
+	// their splices into the heading's single replacement. The outer walk
+	// skips these descendants only when this whole-heading edit is emitted.
+	const descendants = new FormatEmitter(source);
+	if (emphasisChar !== undefined) {
+		walk(node, undefined, [], 0, (child, _parent, siblings, index) => {
+			if (isEmphasisLike(child)) {
+				formatEmphasis(source, descendants, child, siblings, index, emphasisChar);
+			}
+		});
+	}
+	const content = MarkdownEdit.applyAll(original, A.map(descendants.edits, (edit) =>
+		MarkdownEdit.make({ offset: edit.offset - contentStart, length: edit.length, content: edit.content }),
+	));
 	if (target === "atx") {
 		emit.push(node, start, end - start, `${"#".repeat(node.depth)} ${content}`);
-		return;
+		return true;
 	}
-	if (node.depth > 2 || content.length === 0 || SETEXT_CONTENT_HAZARD.test(content)) {
-		return;
-	}
-	if (start !== 0 && source.charCodeAt(start - 1) !== 0x0a) {
-		return;
+	if (SETEXT_CONTENT_HAZARD.test(content)) {
+		return false;
 	}
 	const underline = (node.depth === 1 ? "=" : "-").repeat(Math.max(3, content.length));
 	emit.push(node, start, end - start, `${content}\n${underline}`);
+	return true;
 };
 
 const formatList = (
@@ -523,7 +552,7 @@ const formatCodeBlockStyle = (
 
 // ── Internal: modify support ────────────────────────────────────────────────
 
-const FLOW_TYPES = HashSet.fromIterable<string>([
+const FLOW_TYPES = LiteralKit([
 	"blockquote",
 	"code",
 	"definition",
@@ -534,9 +563,9 @@ const FLOW_TYPES = HashSet.fromIterable<string>([
 	"paragraph",
 	"table",
 	"thematicBreak",
-]);
+] satisfies A.NonEmptyReadonlyArray<MarkdownNode["type"]>);
 
-const PHRASING_TYPES = HashSet.fromIterable<string>([
+const PHRASING_TYPES = LiteralKit([
 	"break",
 	"delete",
 	"emphasis",
@@ -549,17 +578,17 @@ const PHRASING_TYPES = HashSet.fromIterable<string>([
 	"linkReference",
 	"strong",
 	"text",
-]);
+] satisfies A.NonEmptyReadonlyArray<MarkdownNode["type"]>);
 
-const isFlowReplacement = (node: MarkdownNode): node is FlowContent => HashSet.has(FLOW_TYPES, node.type);
+const isFlowReplacement = P.and(S.is(FlowContent), S.is(S.Struct({ type: FLOW_TYPES })));
 
-const isPhrasingReplacement = (node: MarkdownNode): node is PhrasingContent => HashSet.has(PHRASING_TYPES, node.type);
+const isPhrasingReplacement = P.and(S.is(PhrasingContent), S.is(S.Struct({ type: PHRASING_TYPES })));
 
 /** Parent types whose child slot holds flow content. */
-const FLOW_PARENTS = HashSet.fromIterable<string>(["root", "blockquote", "listItem", "footnoteDefinition"]);
+const FLOW_PARENTS = LiteralKit(["root", "blockquote", "listItem", "footnoteDefinition"] satisfies A.NonEmptyReadonlyArray<MarkdownNode["type"]>);
 
 /** Parent types whose child slot holds phrasing content. */
-const PHRASING_PARENTS = HashSet.fromIterable<string>([
+const PHRASING_PARENTS = LiteralKit([
 	"paragraph",
 	"heading",
 	"emphasis",
@@ -568,10 +597,10 @@ const PHRASING_PARENTS = HashSet.fromIterable<string>([
 	"link",
 	"linkReference",
 	"tableCell",
-]);
+] satisfies A.NonEmptyReadonlyArray<MarkdownNode["type"]>);
 
 /** Ancestor types whose continuation lines carry a prefix (or forbid newlines outright). */
-const NO_MULTILINE_ANCESTORS = HashSet.fromIterable<string>([
+const NO_MULTILINE_ANCESTORS = LiteralKit([
 	"blockquote",
 	"list",
 	"listItem",
@@ -580,7 +609,27 @@ const NO_MULTILINE_ANCESTORS = HashSet.fromIterable<string>([
 	"tableRow",
 	"tableCell",
 	"heading",
-]);
+] satisfies A.NonEmptyReadonlyArray<MarkdownNode["type"]>);
+
+const isFlowParent = S.is(FLOW_PARENTS);
+const isPhrasingParent = S.is(PHRASING_PARENTS);
+const isNoMultilineAncestor = S.is(NO_MULTILINE_ANCESTORS);
+
+/**
+ * The stringifier's parity-aware cell post-pass, kept at the facade boundary
+ * because this module cannot import the engine. An odd backslash run already
+ * escapes a pipe; an even run needs one more backslash for the cell splitter.
+ */
+const escapeCellPipes = (content: string): string => {
+	let out = "";
+	let backslashes = 0;
+	for (const char of content) {
+		if (char === "|" && backslashes % 2 === 0) out += "\\";
+		backslashes = char === "\\" ? backslashes + 1 : 0;
+		out += char;
+	}
+	return out;
+};
 
 /** Find `target` by identity; returns its ancestor chain (nearest first) or undefined. */
 const findAncestry = (root: Root, target: MarkdownNode): ReadonlyArray<MarkdownNode> | undefined => {
@@ -686,7 +735,9 @@ export class MarkdownFormat {
 				formatThematicBreak(text, emit, node, options.thematicBreakChar);
 			}
 			if (options?.headingStyle !== undefined && node.type === "heading") {
-				formatHeading(text, emit, node, options.headingStyle);
+				if (formatHeading(text, emit, node, options.headingStyle, options.emphasisChar)) {
+					return false;
+				}
 			}
 			if (options?.bulletChar !== undefined && node.type === "list") {
 				formatList(text, emit, node, siblings, index, options.bulletChar);
@@ -704,6 +755,7 @@ export class MarkdownFormat {
 					formatFence(text, emit, node, options.fenceChar);
 				}
 			}
+			return true;
 		});
 		const filtered =
 			range === undefined
@@ -770,9 +822,9 @@ export class MarkdownFormat {
 		let slot: "flow" | "phrasing" | "cell";
 		if (target.type === "tableCell" && parent.type === "tableRow") {
 			slot = "cell";
-		} else if (HashSet.has(FLOW_PARENTS, parent.type)) {
+		} else if (isFlowParent(parent.type)) {
 			slot = "flow";
-		} else if (HashSet.has(PHRASING_PARENTS, parent.type)) {
+		} else if (isPhrasingParent(parent.type)) {
 			slot = "phrasing";
 		} else {
 			return yield* fail("UnsupportedTarget", `a ${target.type} node inside a ${parent.type} cannot be replaced`);
@@ -806,8 +858,10 @@ export class MarkdownFormat {
 		if (Result.isFailure(rendered)) {
 			return yield* fail("FragmentUnrenderable", rendered.failure.message);
 		}
-		const content = rendered.success.replace(/\n+$/, "");
-		if (content.includes("\n") && ancestry.some((ancestor) => HashSet.has(NO_MULTILINE_ANCESTORS, ancestor.type))) {
+		const renderedContent = rendered.success.replace(/\n+$/, "");
+		const inCell = slot === "cell" || A.some(ancestry, (ancestor) => ancestor.type === "tableCell");
+		const content = inCell ? escapeCellPipes(renderedContent) : renderedContent;
+		if (content.includes("\n") && ancestry.some((ancestor) => isNoMultilineAncestor(ancestor.type))) {
 			return yield* fail(
 				"UnsupportedTarget",
 				"a multi-line replacement cannot be spliced inside a container whose continuation lines carry a prefix",

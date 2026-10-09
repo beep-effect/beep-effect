@@ -11,6 +11,7 @@
 // failure. The dependency edge runs facade -> engine only, so
 // `noImportCycles` stays satisfied.
 
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import { isString } from "effect/Predicate";
@@ -40,7 +41,7 @@ const $I = $ScratchpadId.create("effected/markdown/Markdown");
  *
  * @public
  */
-export const MarkdownDialect = S.Literals(["commonmark", "gfm"]).pipe($I.annoteSchema("MarkdownDialect", { description: "The markdown dialects the parser can be pointed at. `\"gfm\"` — CommonMark 0.31.2 plus the GitHub extensions (tables, strikethrough, autolink literals, task-list items, footnotes, and the tagfilter's output contract) — is the default; `\"commonmark\"` opts out of every extension. A dialect is a registry composition in the engine, so widening this union is additive and never changes an existing dialect's behavior." }));
+export const MarkdownDialect = LiteralKit(["commonmark", "gfm"]).pipe($I.annoteSchema("MarkdownDialect", { description: "The markdown dialects the parser can be pointed at. `\"gfm\"` — CommonMark 0.31.2 plus the GitHub extensions (tables, strikethrough, autolink literals, task-list items, footnotes, and the tagfilter's output contract) — is the default; `\"commonmark\"` opts out of every extension. A dialect is a registry composition in the engine, so widening this union is additive and never changes an existing dialect's behavior." }));
 
 /**
  * The union of all markdown dialect string literals.
@@ -158,7 +159,7 @@ export const parsePassResult: {
 	options?: MarkdownParseOptions,
 ): Result.Result<BlockPassResult, MarkdownParseError> => {
 	try {
-		return Result.succeed(parseBlocks(text, dialectOf(options), frontmatterOf(options)));
+		return Result.succeed(parseBlocks(text, { dialect: dialectOf(options), frontmatter: frontmatterOf(options) }));
 	} catch (caught) {
 		if (isGuardExceeded(caught)) {
 			return Result.fail(

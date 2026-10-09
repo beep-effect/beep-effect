@@ -27,17 +27,24 @@ export const sourceOffsetAt: {
 	textIndex: number,
 	fallback: number,
 ): number => {
-	let offset = fallback;
-	for (const segment of segments) {
-		if (textIndex < segment.textOffset) {
-			return offset;
+	let low = 0;
+	let high = segments.length;
+	while (low < high) {
+		const mid = Math.floor((low + high) / 2);
+		const segment = segments[mid];
+		// Use the same comparison as the forward scan, including its NaN
+		// behavior: an unordered index advances to the final segment end.
+		if (segment !== undefined && !(textIndex < segment.textOffset)) {
+			low = mid + 1;
+		} else {
+			high = mid;
 		}
-		if (textIndex < segment.textOffset + segment.length) {
-			return segment.sourceOffset + (textIndex - segment.textOffset);
-		}
-		offset = segment.sourceOffset + segment.length;
 	}
-	return offset;
+	const segment = segments[low - 1];
+	if (segment === undefined) return fallback;
+	return textIndex < segment.textOffset + segment.length
+		? segment.sourceOffset + (textIndex - segment.textOffset)
+		: segment.sourceOffset + segment.length;
 });
 
 /**

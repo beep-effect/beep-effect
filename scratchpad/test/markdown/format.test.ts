@@ -17,7 +17,7 @@ import { MarkdownDocument } from "../../effected/markdown/MarkdownDocument.ts";
 import { MarkdownEdit } from "../../effected/markdown/MarkdownEdit.ts";
 import { MarkdownFormat, MarkdownFormattingOptions, MarkdownModificationError } from "../../effected/markdown/MarkdownFormat.ts";
 import type { MarkdownNode } from "../../effected/markdown/MarkdownNode.ts";
-import { Blockquote, Heading, Paragraph, Point, Position, Text } from "../../effected/markdown/MarkdownNode.ts";
+import { Blockquote, Heading, InlineCode, Paragraph, Point, Position, Text } from "../../effected/markdown/MarkdownNode.ts";
 import { renderHtml } from "./e2e/support/htmlWriter.ts";
 
 /** A throwaway span for hand-built fragments; modify never reads fragment offsets. */
@@ -65,6 +65,28 @@ describe("MarkdownFormat.format", () => {
 	describe("headingStyle", () => {
 		it("converts setext to atx preserving content verbatim", () => {
 			assert.strictEqual(fmt("foo *bar*\n=========\n", { headingStyle: "atx" }), "# foo *bar*\n");
+		});
+
+		it("composes heading conversion with descendant emphasis normalization", () => {
+			for (const [source, expected, headingStyle] of [
+				["*Title*\n=======\n", "# _Title_\n", "atx"],
+				["# Title **bold** and *word*\n", "Title __bold__ and _word_\n=========================\n", "setext"],
+			] as const) {
+				const options = MarkdownFormattingOptions.make({ headingStyle, emphasisChar: "_" });
+				const edits = MarkdownFormat.format(source, undefined, options);
+				assert.strictEqual(edits.length, 1);
+				const result = MarkdownEdit.applyAll(source, edits);
+				assert.strictEqual(result, expected);
+				assertEquivalent(source, result);
+				assert.strictEqual(MarkdownFormat.formatToString(result, undefined, options), result);
+			}
+		});
+
+		it("still normalizes emphasis when heading conversion is skipped", () => {
+			const source = "### Title *word*\n";
+			const result = fmt(source, { headingStyle: "setext", emphasisChar: "_" });
+			assert.strictEqual(result, "### Title _word_\n");
+			assertEquivalent(source, result);
 		});
 
 		it("converts a depth-2 setext to atx", () => {
@@ -367,6 +389,45 @@ describe("MarkdownFormat.modify", () => {
 			const out = yield* MarkdownFormat.modifyToString(doc, cell, "a|b");
 			const reparsed = yield* parseDoc(out);
 			assert.include(renderHtml(reparsed.root, { gfm: true }), "a|b");
+		}),
+	);
+
+	it.effect("escapes inline-code pipes in a table cell and its descendants", () =>
+		Effect.gen(function* () {
+			const source = "| h |\n| - |\n| *x* |\n";
+			const doc = yield* parseDoc(source);
+			const table = firstChild(doc);
+			if (table.type !== "table") assert.fail("expected a table");
+			const cell = table.children[1]?.children[0];
+			if (cell === undefined) assert.fail("expected a table cell");
+			const emphasis = cell.children[0];
+			if (emphasis?.type !== "emphasis") assert.fail("expected emphasis");
+			const text = emphasis.children[0];
+			if (text === undefined) assert.fail("expected emphasis text");
+			for (const target of [cell, emphasis, text]) {
+				const out = yield* MarkdownFormat.modifyToString(doc, target, InlineCode.make({ value: "a|b" }));
+				assert.include(out, "`a\\|b`");
+				const reparsed = yield* parseDoc(out);
+				const resultTable = firstChild(reparsed);
+				if (resultTable.type !== "table") assert.fail("expected a table after replacement");
+				assert.strictEqual(resultTable.children[1]?.children.length, 1);
+				assert.include(renderHtml(reparsed.root, { gfm: true }), "<code>a|b</code>");
+			}
+		}),
+	);
+
+	it.effect("preserves already escaped pipes and backslash parity in table replacements", () =>
+		Effect.gen(function* () {
+			const doc = yield* parseDoc("| h |\n| - |\n| x |\n");
+			const table = firstChild(doc);
+			if (table.type !== "table") assert.fail("expected a table");
+			const cell = table.children[1]?.children[0];
+			if (cell === undefined) assert.fail("expected a table cell");
+			for (const value of ["a|b", "a\\|b", "a\\\\|b"]) {
+				const out = yield* MarkdownFormat.modifyToString(doc, cell, value);
+				const reparsed = yield* parseDoc(out);
+				assert.include(renderHtml(reparsed.root, { gfm: true }), value);
+			}
 		}),
 	);
 

@@ -29,9 +29,9 @@ type Dialect = "commonmark" | "gfm";
 
 const roundTrip = (markdown: string, dialect: Dialect): { before: string; after: string; emitted: string } => {
 	const gfm = dialect === "gfm";
-	const first = parseBlocks(markdown, dialect).root;
+	const first = parseBlocks(markdown, { dialect: dialect }).root;
 	const emitted = stringifyTree(first);
-	const second = parseBlocks(emitted, dialect).root;
+	const second = parseBlocks(emitted, { dialect: dialect }).root;
 	return {
 		before: normalizeHtml(renderHtml(first, { gfm })),
 		after: normalizeHtml(renderHtml(second, { gfm })),
@@ -83,11 +83,11 @@ describe("stringify cost", () => {
 			"# heading\n\npara *em* **st** `code` [l](/u)\n\n- a\n- b\n\n> quote\n\n| a | b |\n| - | - |\n| 1 | 2 |\n".repeat(
 				500,
 			);
-		const warm = parseBlocks(input, "gfm").root;
+		const warm = parseBlocks(input, { dialect: "gfm" }).root;
 		stringifyTree(warm);
 
 		const parseStart = performance.now();
-		const tree = parseBlocks(input, "gfm").root;
+		const tree = parseBlocks(input, { dialect: "gfm" }).root;
 		const parseMs = performance.now() - parseStart;
 
 		const stringifyStart = performance.now();

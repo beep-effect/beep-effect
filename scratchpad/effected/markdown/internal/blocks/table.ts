@@ -40,7 +40,8 @@
 // where its content would have begun. A row spans its source line, and the
 // table spans from its header row to the end of its last row.
 
-import { Table, TableCell, TableRow } from "../../MarkdownNode.ts";
+import * as Str from "effect/String";
+import { Table, type TableAlign, TableCell, TableRow } from "../../MarkdownNode.ts";
 import type {
 	BlockConstruct,
 	BlockNode,
@@ -343,11 +344,11 @@ const offsetAt = (source: RowSource, index: number, fallback: number): number =>
  * Upstream reads the first and last byte of the TRIMMED cell buffer, so the
  * whitespace the scanner allows around a marker never reaches this decision.
  */
-const alignmentsOf = (source: RowSource, row: ScannedRow): ReadonlyArray<"left" | "right" | "center" | null> =>
+const alignmentsOf = (source: RowSource, row: ScannedRow): ReadonlyArray<TableAlign | null> =>
 	row.cells.map((cell) => {
 		const text = source.text.slice(cell.contentStart, cell.end).trim();
-		const left = text.startsWith(":");
-		const right = text.endsWith(":");
+		const left = Str.startsWith(":")(text);
+		const right = Str.endsWith(":")(text);
 		if (left && right) {
 			return "center";
 		}

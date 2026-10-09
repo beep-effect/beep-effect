@@ -121,6 +121,89 @@ describe("Mdast.toMdast", () => {
 });
 
 describe("Mdast.fromMdast", () => {
+	it("preserves content line endings when restoring the code terminator", () => {
+		for (const [value, carried] of [
+			["", ""], ["body", "body\n"], ["body\n", "body\n\n"],
+			["body\r\n", "body\r\n\n"], ["body\n\n", "body\n\n\n"],
+			["body\r\n\r\n", "body\r\n\r\n\n"], ["body\r", "body\r\r\n"],
+		] as const) {
+			const back = Mdast.fromMdastResult({ type: "root", children: [{ type: "code", value }] });
+			if (Result.isFailure(back)) assert.fail("expected code admission to succeed");
+			const code = back.success.children[0];
+			assert.strictEqual(code?.type === "code" ? code.value : undefined, carried);
+			assert.strictEqual(first(Mdast.toMdast(back.success)).value, value);
+		}
+	});
+
+	it("round-trips parsed code blocks with trailing blank content lines", () => {
+		for (const source of ["```\nbody\n\n```\n", "```\r\nbody\r\n\r\n```\r\n"]) {
+			const plain = Mdast.toMdast(gfm(source));
+			assert.strictEqual(first(plain).value, "body\n");
+			const back = Mdast.fromMdastResult(plain);
+			if (Result.isFailure(back)) assert.fail("expected code admission to succeed");
+			assert.deepStrictEqual(Mdast.toMdast(back.success), plain);
+		}
+	});
+
+	it("admits decoded association labels without decoding them twice", () => {
+		for (const label of ["&amp;", "a\\*", "\\&amp;", "&#10;", "&semi;", "plain"]) {
+			const identifier = "source\\* &amp;";
+			const association = { identifier, label };
+			const back = Mdast.fromMdastResult({
+				type: "root",
+				children: [
+					{ type: "definition", ...association, url: "/u" },
+					{ type: "footnoteDefinition", ...association, children: [] },
+					{ type: "paragraph", children: [
+						{ type: "linkReference", ...association, referenceType: "full", children: [] },
+						{ type: "imageReference", ...association, referenceType: "full", alt: "alt" },
+						{ type: "footnoteReference", ...association },
+					] },
+				],
+			});
+			if (Result.isFailure(back)) assert.fail("expected association admission to succeed");
+			const projected = Mdast.toMdast(back.success);
+			const children = projected.children;
+			if (!Array.isArray(children) || !children.every(isRecord)) assert.fail("expected child records");
+			const references = children[2]?.children;
+			if (!Array.isArray(references) || !references.every(isRecord)) assert.fail("expected reference records");
+			for (const node of [children[0], children[1], ...references]) {
+				assert.strictEqual(node?.label, label);
+				assert.strictEqual(node?.identifier, identifier);
+			}
+		}
+	});
+
+	it("round-trips parsed entity-like and escaped association labels", () => {
+		for (const source of [
+			"[&amp;amp;]\n\n[&amp;amp;]: /u\n",
+			"[a\\\\*]\n\n[a\\\\*]: /u\n",
+			"[^&amp;amp;]\n\n[^&amp;amp;]: footnote\n",
+		]) {
+			const plain = Mdast.toMdast(gfm(source));
+			const back = Mdast.fromMdastResult(plain);
+			if (Result.isFailure(back)) assert.fail("expected association admission to succeed");
+			assert.deepStrictEqual(Mdast.toMdast(back.success), plain);
+		}
+	});
+
+	it.effect("fails typed for prototype-property node kinds through both admission channels", () => Effect.gen(function* () {
+		for (const type of ["toString", "constructor", "__proto__"]) {
+			for (const input of [{ type }, { type: "root", children: [{ type }] }]) {
+				const sync = Mdast.fromMdastResult(input);
+				const effect = yield* Effect.result(Mdast.fromMdast(input));
+				assert.isTrue(Result.isFailure(sync));
+				assert.isTrue(Result.isFailure(effect));
+				if (Result.isFailure(sync) && Result.isFailure(effect)) {
+					assert.instanceOf(sync.failure, MdastDecodeError);
+					assert.isDefined(sync.failure.issue);
+					assert.instanceOf(effect.failure, MdastDecodeError);
+					assert.deepStrictEqual(effect.failure.issue, sync.failure.issue);
+				}
+			}
+		}
+	}));
+
 	it("round-trips a parsed tree through plain mdast, positions included", () => {
 		const root = gfm("# T\n\ntext with *emphasis* and ~~strike~~\n\n- [x] item\n");
 		const back = Mdast.fromMdastResult(Mdast.toMdast(root));

@@ -19,6 +19,7 @@ const UNTERMINATED_FORMS: ReadonlyArray<readonly [opener: string, closer: string
 	["<!--", "-->"],
 	["<?", "?>"],
 	["<![CDATA[", "]]>"],
+	["<!", ">"],
 ];
 
 /** A raw HTML tag, comment, processing instruction, declaration or CDATA. */
@@ -28,7 +29,7 @@ export const rawHtmlConstruct: InlineConstruct = {
 	parse: (scanner) => {
 		const from = scanner.pos;
 
-		// The comment, instruction and CDATA forms all end in a fixed sequence
+		// The comment, instruction, CDATA and declaration forms all end in a fixed sequence
 		// that their pattern scans forward for. When the document holds no such
 		// sequence at all, that scan runs to the end of input for EVERY opener —
 		// 300k unclosed `<!--` is one of the vendored pathological cases. Asking

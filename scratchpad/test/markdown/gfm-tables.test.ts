@@ -13,11 +13,11 @@ import type { PhrasingContent, Table, TableAlign } from "../../effected/markdown
 
 /** The first block of a source parsed under a dialect. */
 const firstBlock = (source: string, dialect: "commonmark" | "gfm" = "gfm") =>
-	parseBlocks(source, dialect).root.children[0];
+	parseBlocks(source, { dialect: dialect }).root.children[0];
 
 /** The table a source parses to, or `undefined` if it produced anything else. */
 const tableOf = (source: string, dialect: "commonmark" | "gfm" = "gfm"): Table | undefined => {
-	const block = parseBlocks(source, dialect).root.children.find((child) => child.type === "table");
+	const block = parseBlocks(source, { dialect: dialect }).root.children.find((child) => child.type === "table");
 	return block?.type === "table" ? block : undefined;
 };
 
@@ -180,7 +180,7 @@ describe("gfm tables", () => {
 
 	describe("paragraph interaction", () => {
 		it("reclaims only the last paragraph line as the header", () => {
-			const { root } = parseBlocks("123\n456\n| a | b |\n| - | - |\nd | e\n", "gfm");
+			const { root } = parseBlocks("123\n456\n| a | b |\n| - | - |\nd | e\n", { dialect: "gfm" });
 			const [paragraph, table] = root.children;
 			assert.isTrue(paragraph?.type === "paragraph", "the reclaimed lines are a paragraph");
 			const text = paragraph?.type === "paragraph" ? paragraph.children[0] : undefined;
@@ -196,13 +196,13 @@ describe("gfm tables", () => {
 		});
 
 		it("is interrupted by a block-level construct", () => {
-			const { root } = parseBlocks("| a | b |\n| - | - |\n| c | d |\n> quoted\n", "gfm");
+			const { root } = parseBlocks("| a | b |\n| - | - |\n| c | d |\n> quoted\n", { dialect: "gfm" });
 			assert.strictEqual(root.children[0]?.type, "table");
 			assert.strictEqual(root.children[1]?.type, "blockquote");
 		});
 
 		it("ends at a blank line and the next paragraph stands alone", () => {
-			const { root } = parseBlocks("| a | b |\n| - | - |\n| c | d |\n\ntext\n", "gfm");
+			const { root } = parseBlocks("| a | b |\n| - | - |\n| c | d |\n\ntext\n", { dialect: "gfm" });
 			assert.strictEqual(root.children[0]?.type, "table");
 			assert.strictEqual(root.children[1]?.type, "paragraph");
 		});
@@ -283,7 +283,7 @@ describe("gfm tables", () => {
 
 	describe("containers", () => {
 		it("forms inside a blockquote", () => {
-			const { root } = parseBlocks("> | a | b |\n> | - | - |\n> | c | d |\n", "gfm");
+			const { root } = parseBlocks("> | a | b |\n> | - | - |\n> | c | d |\n", { dialect: "gfm" });
 			const quote = root.children[0];
 			const table = quote?.type === "blockquote" ? quote.children[0] : undefined;
 			assert.isTrue(table?.type === "table", "the blockquote holds a table");
@@ -291,7 +291,7 @@ describe("gfm tables", () => {
 		});
 
 		it("forms inside a list item", () => {
-			const { root } = parseBlocks("- | a | b |\n  | - | - |\n  | c | d |\n", "gfm");
+			const { root } = parseBlocks("- | a | b |\n  | - | - |\n  | c | d |\n", { dialect: "gfm" });
 			const list = root.children[0];
 			const table = list?.type === "list" ? list.children[0]?.children[0] : undefined;
 			assert.isTrue(table?.type === "table", "the list item holds a table");

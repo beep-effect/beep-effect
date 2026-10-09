@@ -5,9 +5,10 @@
 // with the source provenance attached (`segments.ts`), so the inline pass can
 // give every node it builds an absolute position in the original document.
 
+import type * as HashMap from "effect/HashMap";
 import { dual } from "effect/Function";
 import type * as HashSet from "effect/HashSet";
-import { isFunction } from "effect/Predicate";
+import * as P from "effect/Predicate";
 import type { Definition, PhrasingContent, Position } from "../MarkdownNode.ts";
 import type { BlockNode, PreparedInline, RawInlineSegment } from "./blockTypes.ts";
 import { parseInlines } from "./inlineParser.ts";
@@ -74,12 +75,12 @@ export const trimWithSegments: {
  * trim it, keep its source provenance, and parse it into phrasing content.
  */
 export const prepareInline: {
-	(block: BlockNode, position: PositionOf, refmap: ReadonlyMap<string, Definition>, dialect?: InlineDialectName, footnoteLabels?: HashSet.HashSet<string>): PreparedInline;
-	(position: PositionOf, refmap: ReadonlyMap<string, Definition>, dialect?: InlineDialectName, footnoteLabels?: HashSet.HashSet<string>): (block: BlockNode) => PreparedInline;
-} = dual((args) => !isFunction(args[0]), (
+	(block: BlockNode, position: PositionOf, refmap: HashMap.HashMap<string, Definition>, dialect?: InlineDialectName, footnoteLabels?: HashSet.HashSet<string>): PreparedInline;
+	(position: PositionOf, refmap: HashMap.HashMap<string, Definition>, dialect?: InlineDialectName, footnoteLabels?: HashSet.HashSet<string>): (block: BlockNode) => PreparedInline;
+} = dual((args) => !P.isFunction(args[0]), (
 	block: BlockNode,
 	position: PositionOf,
-	refmap: ReadonlyMap<string, Definition>,
+	refmap: HashMap.HashMap<string, Definition>,
 	dialect: InlineDialectName = "commonmark",
 	footnoteLabels?: HashSet.HashSet<string>,
 ): PreparedInline => {

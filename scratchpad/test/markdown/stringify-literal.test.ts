@@ -41,6 +41,43 @@ const out = (root: Root): string => {
 
 const parse = (source: string): Root => Result.getOrThrow(Markdown.parseResult(source));
 
+describe("adjacent text run boundaries", () => {
+	it("keeps canonical underscore boundaries and split entity defenses", () => {
+		const children = [canonical("a"), canonical("_"), canonical("b &a"), canonical("mp;"), canonical("")];
+		const paragraph = Paragraph.make({ children });
+		const before = paragraph.children;
+		assert.strictEqual(out(Root.make({ children: [paragraph] })), "a\\_b \\&amp;\n");
+		assert.strictEqual(paragraph.children, before);
+		for (let index = 0; index < children.length; index += 1) {
+			assert.strictEqual(paragraph.children[index], children[index]);
+		}
+	});
+
+	it("keeps mixed escape styles and restarts lookahead after non-text siblings", () => {
+		const children = [literal("a_"), canonical("b_"), literal("C:\\"), canonical(""),
+			InlineCode.make({ value: "x" }), canonical("&a"), literal("mp;"), literal("~1")];
+		const paragraph = Paragraph.make({ children });
+		const before = paragraph.children;
+		assert.strictEqual(out(Root.make({ children: [paragraph] })), "a_b\\_C:\\\\`x`\\&amp;~1\n");
+		assert.strictEqual(paragraph.children, before);
+		const first = children[0];
+		const second = children[1];
+		if (first?.type !== "text" || second?.type !== "text") assert.fail("expected text siblings");
+		assert.strictEqual(first.escapeStyle, "literal");
+		assert.strictEqual(second.escapeStyle, undefined);
+	});
+
+	it("defends split literal block openers and heading hash runs across empty siblings", () => {
+		assert.strictEqual(out(paragraphOf(literal("-"), literal(""), canonical(" item"))), "\\- item\n");
+		assert.strictEqual(out(Root.make({ children: [Heading.make({ depth: 2,
+			children: [literal("v #"), canonical(""), literal("#"), canonical(" ")],
+		})] })), "## v \\#\\# \n");
+		assert.strictEqual(out(Root.make({ children: [Heading.make({ depth: 2,
+			children: [canonical("v #"), literal(" tail")],
+		})] })), "## v # tail\n");
+	});
+});
+
 const tableOf = (rows: ReadonlyArray<ReadonlyArray<ReadonlyArray<Text>>>): Root =>
 	Root.make({
 		children: [

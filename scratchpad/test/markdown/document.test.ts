@@ -3,6 +3,8 @@
 // parity and guard-materialization contract the bare-tree facade holds.
 
 import { assert, describe, it } from "@effect/vitest";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -42,15 +44,15 @@ describe("MarkdownDocument.parseResult", () => {
 			assert.fail("expected the document to parse");
 		}
 		const { definitions } = result.success;
-		// A real Map, not an object: link labels are attacker-controlled, so
+		// An Effect HashMap, rather than a label-keyed object: link labels are attacker-controlled, so
 		// the index must not be prototype-pollutable.
-		assert.instanceOf(definitions, Map);
-		assert.strictEqual(definitions.size, 2);
-		for (const definition of definitions.values()) {
+		assert.isTrue(HashMap.isHashMap(definitions));
+		assert.strictEqual(HashMap.size(definitions), 2);
+		for (const definition of HashMap.values(definitions)) {
 			assert.instanceOf(definition, Definition);
 		}
 		// Labels fold case, so `[a]` and `[B]` land under one normalized key each.
-		const urls = [...definitions.values()].map((definition) => definition.url).sort();
+		const urls = [...HashMap.values(definitions)].map((definition) => definition.url).sort();
 		assert.deepStrictEqual(urls, ["/a", "/b"]);
 	});
 
@@ -101,7 +103,7 @@ describe("MarkdownDocument.parseResult", () => {
 		}
 		assert.isUndefined(Object.getOwnPropertyDescriptor(Object.prototype, "polluted"));
 		assert.strictEqual(Object.prototype.constructor, Object);
-		assert.strictEqual(result.success.definitions.size, 1);
+		assert.strictEqual(HashMap.size(result.success.definitions), 1);
 	});
 
 	it("materializes a tripped guard as a typed MarkdownParseError", () => {
@@ -119,7 +121,7 @@ describe("MarkdownDocument.parseResult", () => {
 		}
 		assert.strictEqual(result.success.source, "");
 		assert.deepStrictEqual(result.success.root.children, []);
-		assert.strictEqual(result.success.definitions.size, 0);
+		assert.strictEqual(HashMap.size(result.success.definitions), 0);
 	});
 });
 
@@ -178,7 +180,7 @@ describe("MarkdownDocument schema", () => {
 		const encoded = Result.getOrThrow(S.encodeUnknownResult(MarkdownDocument)(result.success));
 		const decoded = Result.getOrThrow(S.decodeResult(MarkdownDocument)(encoded));
 		assert.strictEqual(decoded.source, result.success.source);
-		assert.strictEqual(decoded.definitions.size, result.success.definitions.size);
+		assert.strictEqual(HashMap.size(decoded.definitions), HashMap.size(result.success.definitions));
 		assert.deepStrictEqual(
 			decoded.root.children.map((child) => child.type),
 			result.success.root.children.map((child) => child.type),
@@ -337,7 +339,8 @@ describe("MarkdownDocument navigation accessors", () => {
 				position,
 			}),
 			diagnostics: [],
-			definitions: new Map(),
+			definitions: HashMap.empty(),
+			definitionOrder: [],
 		});
 		const [entry] = document.links;
 		assert.isDefined(entry);
@@ -391,8 +394,32 @@ describe("MarkdownDocument navigation accessors", () => {
 			source: "",
 			root: Root.make({ type: "root", children: [flow], position }),
 			diagnostics: [],
-			definitions: new Map(),
+			definitions: HashMap.empty(),
+			definitionOrder: [],
 		});
 		assert.throws(() => document.links);
+	});
+});
+
+
+describe("definition index document order", () => {
+	it("retains first-definition-wins, nested order and original node identity", () => {
+		const document = Result.getOrThrow(MarkdownDocument.parseResult(
+			"[z]: /z\n\n> [a]: /a\n\n[z]: /duplicate\n\n[m]: /m\n\n[z] [a] [m]\n",
+		));
+		assert.deepStrictEqual(document.definitionOrder.map(([label]) => label), ["Z", "A", "M"]);
+		assert.strictEqual(HashMap.size(document.definitions), 3);
+		const definitions = document.findAll("definition");
+		assert.strictEqual(definitions.length, 4);
+		for (const [label, definition] of document.definitionOrder) {
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(Definition)(definition)), definition);
+			assert.strictEqual(HashMap.get(document.definitions, label).pipe(O.getOrThrow), definition);
+			assert.isTrue(definitions.some((node) => node === definition));
+		}
+		assert.strictEqual(HashMap.get(document.definitions, "Z").pipe(O.getOrThrow).url, "/z");
+		assert.deepStrictEqual(document.links.filter(({ node }) => node.type === "linkReference").map(({ url }) => url), ["/z", "/a", "/m"]);
+		const encoded = Result.getOrThrow(S.encodeResult(MarkdownDocument)(document));
+		const decoded = Result.getOrThrow(S.decodeResult(MarkdownDocument)(encoded));
+		assert.deepStrictEqual(decoded.definitionOrder.map(([label, definition]) => [label, definition.url]), [["Z", "/z"], ["A", "/a"], ["M", "/m"]]);
 	});
 });

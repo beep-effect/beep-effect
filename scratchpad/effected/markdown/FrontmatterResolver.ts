@@ -19,6 +19,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effected/markdown/FrontmatterResolver");
 
@@ -233,15 +234,15 @@ export interface FrontmatterSchemaResolver<E = never> {
 }
 
 // The committed version grammar: one to three dot-separated non-negative
-// integer segments. Parsed to numbers so equality is numeric — "02.1.00" and
-// "2.1.0" carry the same segments ("identically written" modulo integer
-// value); leading zeros are legal, npm-style prerelease/build/range syntax is
-// not.
-const parseVersionSegments = (version: string): ReadonlyArray<number> | undefined => {
+// integer segments. Canonical decimal strings preserve exact integer values
+// at every size: "02.1.00" and "2.1.0" carry the same segments, without
+// rounding adjacent large integers. Leading zeros are legal; npm-style
+// prerelease/build/range syntax is not.
+const parseVersionSegments = (version: string): ReadonlyArray<string> | undefined => {
 	if (!/^\d+(\.\d+){0,2}$/.test(version)) {
 		return undefined;
 	}
-	return version.split(".").map((segment) => Number.parseInt(segment, 10));
+	return A.map(Str.split(version, "."), Str.replace(/^0+(?=\d)/, ""));
 };
 
 const isMapping = (value: unknown): value is Record<string, unknown> =>
@@ -387,7 +388,7 @@ export class SchemaResolver {
 						message: `SchemaResolver.fromRegistry: registration key "${key}" carries an illegal version`,
 					});
 				}
-				const canonical = segments.join(".");
+				const canonical = A.join(segments, ".");
 				if (MutableHashMap.has(entry.versions, canonical)) {
 					throw SchemaRegistryError.make({
 						message: `SchemaResolver.fromRegistry: registrations for "${declaration.name}" collide on version ${canonical}`,
@@ -419,7 +420,7 @@ export class SchemaResolver {
 					const match =
 						segments === undefined
 							? undefined
-							: O.getOrUndefined(MutableHashMap.get(entry.versions, segments.join(".")));
+							: O.getOrUndefined(MutableHashMap.get(entry.versions, A.join(segments, ".")));
 					return match === undefined
 						? Effect.fail(SchemaVersionUnresolvableError.make({ name: declaration.name, version: declaration.version }))
 						: Effect.succeed(match);

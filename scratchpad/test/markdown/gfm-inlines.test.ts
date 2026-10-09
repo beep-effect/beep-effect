@@ -12,7 +12,7 @@ import type { PhrasingContent } from "../../effected/markdown/MarkdownNode.ts";
 
 /** The phrasing children of a source that parses to a single leaf block. */
 const inlinesOf = (source: string, dialect: "commonmark" | "gfm" = "gfm"): ReadonlyArray<PhrasingContent> => {
-	const [first] = parseBlocks(source, dialect).root.children;
+	const [first] = parseBlocks(source, { dialect: dialect }).root.children;
 	return first?.type === "paragraph" || first?.type === "heading" ? first.children : [];
 };
 

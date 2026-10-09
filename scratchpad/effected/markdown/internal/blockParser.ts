@@ -29,6 +29,7 @@
 // the cycle firewall) and nothing else public.
 
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
@@ -94,7 +95,9 @@ export interface BlockPassResult {
 	 * unresolved, so whoever resolves them (the inline pass, a renderer, a
 	 * consumer) does it against this.
 	 */
-	readonly refmap: ReadonlyMap<string, Definition>;
+	readonly refmap: HashMap.HashMap<string, Definition>;
+	/** Winning normalized labels and definition nodes, in document order. */
+	readonly definitionOrder: ReadonlyArray<readonly [string, Definition]>;
 	/**
 	 * The case-folded label of every GFM footnote definition in the tree.
 	 *
@@ -585,7 +588,8 @@ class BlockParser implements BlockScanner {
 		block: BlockNode,
 		context: MaterializeContext,
 		nodes: MutableHashMap.MutableHashMap<number, Definition>,
-		refmap: Map<string, Definition>,
+		refmap: MutableHashMap.MutableHashMap<string, Definition>,
+		definitionOrder: Array<readonly [string, Definition]>,
 		footnoteLabels: HashSet.HashSet<string>,
 	): HashSet.HashSet<string> {
 		if (block.type === "definition") {
@@ -595,8 +599,9 @@ class BlockParser implements BlockScanner {
 				MutableHashMap.set(nodes, block.startOffset, materialized);
 				// First definition wins, which is CommonMark's rule and the
 				// order this walk visits in.
-				if (!refmap.has(key)) {
-					refmap.set(key, materialized);
+				if (!MutableHashMap.has(refmap, key)) {
+					MutableHashMap.set(refmap, key, materialized);
+					definitionOrder.push([key, materialized]);
 				}
 			}
 			return footnoteLabels;
@@ -608,7 +613,7 @@ class BlockParser implements BlockScanner {
 		}
 
 		for (const child of block.children) {
-			footnoteLabels = this.collectReferences(child, context, nodes, refmap, footnoteLabels);
+			footnoteLabels = this.collectReferences(child, context, nodes, refmap, definitionOrder, footnoteLabels);
 		}
 		return footnoteLabels;
 	}
@@ -638,9 +643,10 @@ class BlockParser implements BlockScanner {
 		// only the document node.
 		this.doc.endOffset = this.sourceLength;
 
-		// The document's S.ReadonlyMap field requires a native Map at this
-		// boundary. Keep label insertion order and Definition object identity.
-		const refmap = new Map<string, Definition>();
+		// Keep lookup and document order separate, retaining the original nodes.
+		const definitionIndex = MutableHashMap.empty<string, Definition>();
+		const definitionOrder: Array<readonly [string, Definition]> = [];
+		let refmap = HashMap.empty<string, Definition>();
 		let footnoteLabels = HashSet.empty<string>();
 		const definitionNodes = MutableHashMap.empty<number, Definition>();
 		const rawInlines: RawInlineSlice[] = [];
@@ -659,7 +665,8 @@ class BlockParser implements BlockScanner {
 			},
 		};
 
-		footnoteLabels = this.collectReferences(this.doc, context, definitionNodes, refmap, footnoteLabels);
+		footnoteLabels = this.collectReferences(this.doc, context, definitionNodes, definitionIndex, definitionOrder, footnoteLabels);
+		refmap = HashMap.fromIterable(definitionOrder);
 
 		const materialized = this.materializeBlock(this.doc, context, definitionNodes);
 		if (materialized === undefined || materialized.type !== "root") {
@@ -668,9 +675,18 @@ class BlockParser implements BlockScanner {
 
 		const root = this.withFrontmatter(materialized);
 
-		return { root, rawInlines, carriers: [], refmap, footnoteLabels };
+		return { root, rawInlines, carriers: [], refmap, definitionOrder, footnoteLabels };
 	}
 }
+
+/** Configuration for an engine block pass; defaults to CommonMark with capture disabled. */
+export const BlockParseOptions = S.Struct({
+	dialect: S.optionalKey(S.Literals(["commonmark", "gfm"])).annotateKey({ description: "Registry dialect to apply; defaults to commonmark" }),
+	frontmatter: S.optionalKey(S.Boolean).annotateKey({ description: "Whether to capture an opening frontmatter block; defaults to false" }),
+}).annotate($I.annote("BlockParseOptions", { description: "Engine parse options that distinguish curried configuration from document text." }));
+
+/** Schema-derived engine block-pass options. */
+export type BlockParseOptions = typeof BlockParseOptions.Type;
 
 /**
  * Run the block pass over `text`.
@@ -685,10 +701,12 @@ class BlockParser implements BlockScanner {
 // this default only ever serves engine-level callers (tests, mostly) that
 // mean "the substrate".
 export const parseBlocks: {
-	(text: string, dialect?: MarkdownDialect, frontmatter?: boolean): BlockPassResult;
-	(dialect?: MarkdownDialect, frontmatter?: boolean): (text: string) => BlockPassResult;
+	(text: string, options?: BlockParseOptions): BlockPassResult;
+	(options?: BlockParseOptions): (text: string) => BlockPassResult;
 } = dual(
-	(args) => P.isString(args[0]) && !P.isBoolean(args[1]),
-	(text: string, dialect: MarkdownDialect = "commonmark", frontmatter: boolean = false): BlockPassResult =>
-		new BlockParser(text, blockDialect(dialect), dialect, frontmatter).parse(),
+	(args) => P.isString(args[0]),
+	(text: string, options?: BlockParseOptions): BlockPassResult => {
+		const dialect = options?.dialect ?? "commonmark";
+		return new BlockParser(text, blockDialect(dialect), dialect, options?.frontmatter ?? false).parse();
+	},
 );

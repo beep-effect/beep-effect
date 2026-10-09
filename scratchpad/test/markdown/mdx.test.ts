@@ -12,6 +12,7 @@
 // markdown inside it is ours.
 
 import { assert, describe, it } from "@effect/vitest";
+import * as HashMap from "effect/HashMap";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { Markdown } from "../../effected/markdown/Markdown.ts";
@@ -492,7 +493,8 @@ describe("mdx nodes", () => {
 				source: "",
 				root: rootOf(...children),
 				diagnostics: [],
-				definitions: new Map(),
+				definitions: HashMap.empty(),
+			definitionOrder: [],
 			});
 
 		it("reads heading text through a JSX text wrapper; an expression contributes none", () => {

@@ -25,6 +25,7 @@
 // Registered under the `gfm` dialect only.
 
 import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import type { InlineNode } from "../inlineNode.ts";
 import { appendChild, insertAfter, makeInlineNode, unlink } from "../inlineNode.ts";
 import type { Delimiter, InlineConstruct, InlineScanner } from "../inlineTypes.ts";
@@ -42,24 +43,25 @@ export const C_TILDE = 0x7e;
  */
 const handleTilde = (scanner: InlineScanner): boolean => {
 	const res = scanDelims(scanner, C_TILDE);
-	if (res === undefined) {
+	if (O.isNone(res)) {
 		return false;
 	}
 
+	const run = res.value;
 	const startpos = scanner.pos;
-	scanner.pos += res.numdelims;
+	scanner.pos += run.numdelims;
 	const node = scanner.appendText(scanner.subject.slice(startpos, scanner.pos), startpos, scanner.pos);
 
-	if ((res.canOpen || res.canClose) && (res.numdelims === 1 || res.numdelims === 2)) {
+	if ((run.canOpen || run.canClose) && (run.numdelims === 1 || run.numdelims === 2)) {
 		const delimiter: Delimiter = {
 			cc: C_TILDE,
-			numdelims: res.numdelims,
-			origdelims: res.numdelims,
+			numdelims: run.numdelims,
+			origdelims: run.numdelims,
 			node,
 			previous: scanner.delimiters,
 			next: undefined,
-			canOpen: res.canOpen,
-			canClose: res.canClose,
+			canOpen: run.canOpen,
+			canClose: run.canClose,
 		};
 		if (delimiter.previous !== undefined) {
 			delimiter.previous.next = delimiter;

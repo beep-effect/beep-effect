@@ -28,7 +28,7 @@ const itemsOf = (source: string, dialect: "commonmark" | "gfm" = "gfm"): Readonl
 			}
 		}
 	};
-	walk(parseBlocks(source, dialect).root.children);
+	walk(parseBlocks(source, { dialect: dialect }).root.children);
 	return found;
 };
 
@@ -132,7 +132,7 @@ describe("gfm task-list items", () => {
 
 		it("does not match a marker outside a list", () => {
 			const source = "[x] foo";
-			const block = parseBlocks(source, "gfm").root.children[0];
+			const block = parseBlocks(source, { dialect: "gfm" }).root.children[0];
 			assert.strictEqual(block?.type, "paragraph");
 		});
 	});
@@ -240,7 +240,7 @@ describe("gfm task-list items", () => {
 	describe("interaction with other gfm constructs", () => {
 		it("leaves a marker inside a table cell as literal text", () => {
 			const source = "| a |\n| - |\n| [x] b |\n";
-			const table = parseBlocks(source, "gfm").root.children.find((child) => child.type === "table");
+			const table = parseBlocks(source, { dialect: "gfm" }).root.children.find((child) => child.type === "table");
 			assert.isDefined(table);
 			const cell = table.children[1]?.children[0];
 			assert.isDefined(cell);

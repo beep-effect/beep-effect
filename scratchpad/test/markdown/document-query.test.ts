@@ -5,6 +5,7 @@
 // thrown-defect posture on an over-deep foreign tree.
 
 import { assert, describe, it } from "@effect/vitest";
+import * as HashMap from "effect/HashMap";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as Stream from "effect/Stream";
@@ -150,7 +151,8 @@ describe("guard posture", () => {
 			source: "",
 			root: Root.make({ children: [flow] }),
 			diagnostics: [],
-			definitions: new Map(),
+			definitions: HashMap.empty(),
+			definitionOrder: [],
 		});
 	};
 

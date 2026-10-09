@@ -57,8 +57,8 @@ describe("dialect matrix: commonmark vs gfm over the spec corpus", () => {
 	for (const example of examples) {
 		const expectation = EXPECTED_GFM_DIVERGENT.get(example.example);
 		it(`example ${example.example}${expectation === undefined ? "" : ` diverges (${expectation})`}`, () => {
-			const commonmark = normalizeHtml(renderHtml(parseBlocks(example.markdown, "commonmark").root));
-			const gfm = normalizeHtml(renderHtml(parseBlocks(example.markdown, "gfm").root, { gfm: true }));
+			const commonmark = normalizeHtml(renderHtml(parseBlocks(example.markdown, { dialect: "commonmark" }).root));
+			const gfm = normalizeHtml(renderHtml(parseBlocks(example.markdown, { dialect: "gfm" }).root, { gfm: true }));
 			if (expectation === undefined) {
 				assert.strictEqual(gfm, commonmark, `dialects diverge on an example not in EXPECTED_GFM_DIVERGENT`);
 			} else {

@@ -9,9 +9,19 @@ import * as S from "effect/Schema";
 const $I = $ScratchpadId.create("effected/markdown/internal/lineIndex");
 
 /** A malformed line table supplied to the source-position index. */
-export class InvalidLineTableError extends S.TaggedError<InvalidLineTableError>($I`InvalidLineTableError`)("InvalidLineTableError", {
-	message: S.String,
-}) {}
+export class InvalidLineTableError extends S.TaggedError<InvalidLineTableError>($I`InvalidLineTableError`)(
+	"InvalidLineTableError",
+	{
+		message: S.String.annotateKey({
+			title: "Line Table Validation Message",
+			description: "Explains why the supplied line-start table cannot initialize the source-position index.",
+		}),
+	},
+	$I.annote("InvalidLineTableError", {
+		title: "Invalid Line Table Error",
+		description: "Signals that a supplied line-start table is empty or does not begin at source offset zero.",
+	}),
+) {}
 
 /** A 1-based line/column pair, unist's `Point` shape minus the `offset` field. */
 export interface LineColumn {

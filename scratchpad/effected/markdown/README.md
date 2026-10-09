@@ -516,7 +516,34 @@ None.
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — Effect hash collections and explicit definitionOrder replace upstream native Map/Set indexes, while A.sort replaces native edit sorting and DateTime replaces the generator timestamp (scratchpad/test/markdown/block-pass.test.ts:510; document.test.ts:406; inline-dispatch.test.ts:23; hardening.test.ts:193; edit.test.ts:74).
+- **identity-keys** — Operation-owned regex clones and a primitive-offset definition index replace upstream global identity-keyed WeakMaps and the BlockNode-keyed Map (scratchpad/test/markdown/pattern-clones.test.ts:5,26,71; document.test.ts:406).
+- **tagged-errors** — Schema tagged errors replace upstream native Error/TypeError failure sites, while the engine carriers currently use Data.TaggedError and still await their required schema migration (scratchpad/test/markdown/hardening.test.ts:193; edit.test.ts:59; frontmatter-resolver.test.ts:380; document.test.ts:382; diagnostic.test.ts:95,102).
+- **schema-first** — LiteralKit domains, navigation/options/delimiter schemas, derived guards and JSON codecs replace upstream literal/interface duplication, manual guards and asserted JSON parsing (scratchpad/test/markdown/node.test.ts:87; delimiter-run.test.ts:62; table-align-types.test.ts:7; module suite scratchpad/test/markdown/**).
+- **numeric-domains** — S.Finite rejects non-finite values that upstream numeric schemas admitted across diagnostics, edits, positions, code/list fields, frontmatter offsets and the delimiter model (scratchpad/test/markdown/delimiter-run.test.ts:62; module suite scratchpad/test/markdown/**).
+- **type-safety** — Guarded narrowing, typed projection, commonmark declarations and the approved deliberatelyInvalid helper replace upstream source/test assertions (module suite scratchpad/test/markdown/**).
+- **tsgo-diagnostics** — Diagnostic-required dual call forms and schema construction/recognition helpers replace upstream data-first-only helpers, including an options-object parseBlocks contract (scratchpad/test/markdown/block-pass.test.ts:585; delimiter-run.test.ts:43; source-offsets.test.ts:9; module suite scratchpad/test/markdown/**).
+- **effect-first** — Option delimiter absence, Match dispatch, an Effect.fn resolver and Effect helpers replace upstream undefined results, switch dispatch and manual runtime forms (scratchpad/test/markdown/delimiter-run.test.ts:43,52; inline-dispatch.test.ts:12; module suite scratchpad/test/markdown/**).
+- **effect-imports** — Per-module effect/* imports replace upstream root effect barrel imports in source, tests and examples (module suite scratchpad/test/markdown/**).
+- **identity-annotations** — Per-file @beep/identity identities and meaningful schema/key descriptions augment upstream short names and missing metadata (scratchpad/test/markdown/node.test.ts:51,68,87; module suite scratchpad/test/markdown/**).
+- **upstream-bug** — Composed whole-heading replacements make combined heading and emphasis formatting succeed where upstream emitted overlapping edits and threw (scratchpad/test/markdown/format.test.ts:70,85).
+- **upstream-bug** — Parity-aware table replacement escaping preserves inline-code pipes where upstream reparsing split cells and lost content (scratchpad/test/markdown/format.test.ts:395,419).
+- **upstream-bug** — Decimal-string version canonicalization distinguishes valid large integers that upstream numeric rounding aliased (scratchpad/test/markdown/frontmatter-resolver.test.ts:312,327,343,355).
+- **upstream-bug** — CRLF-interior diagnostics retain the preceding line and nonnegative character positions where upstream consumed LF beyond the requested offset (scratchpad/test/markdown/diagnostic.test.ts:35).
+- **upstream-bug** — Appending a separate engine terminator preserves foreign code content line endings that upstream mdast round trips stripped (scratchpad/test/markdown/mdast.test.ts:124,138).
+- **upstream-bug** — Protecting decoded association labels preserves literal entities and backslashes that upstream decoded twice (scratchpad/test/markdown/mdast.test.ts:148,177).
+- **upstream-bug** — Own-key admission returns typed mdast failures for prototype-property kinds that upstream let escape as TypeError (scratchpad/test/markdown/mdast.test.ts:190).
+- **upstream-bug** — Image-alt flattening preserves raw HTML tags and comments that upstream discarded (scratchpad/test/markdown/image-alt.test.ts:10,11,12,19).
+- **upstream-bug** — Image-alt flattening preserves hard-break newlines that upstream removed (scratchpad/test/markdown/image-alt.test.ts:8,9,19).
+- **upstream-bug** — Email boundaries use complete decoded-piece source ends where upstream entity/escape prefixes truncated link and text spans (scratchpad/test/markdown/autolink-boundaries.test.ts:10,34,48,100).
+- **upstream-bug** — Unicode code-point flanking fixes astral-adjacent emphasis and strikethrough classification that upstream performed on surrogate halves (scratchpad/test/markdown/emphasis-astral.test.ts:6,23,37,46; delimiter-run.test.ts:70,79).
+- **upstream-bug** — Column-count reduction serializes schema-valid tall tables that upstream argument spreading rejected with Node RangeError (scratchpad/test/markdown/stringify-scalability.test.ts:10).
+- **upstream-bug** — Binary-searched source offsets replace upstream quadratic repeated segment scans while preserving pinned positions and boundaries (scratchpad/test/markdown/source-offsets.test.ts:9,29,43).
+- **upstream-bug** — One backing string per text run replaces upstream quadratic suffix rebuilding while preserving escaping and node identity (scratchpad/test/markdown/stringify-scalability.test.ts:20; stringify-literal.test.ts:44,56,72).
+- **upstream-bug** — A forward email-boundary cursor replaces upstream quadratic piece rescans while preserving corrected source spans (scratchpad/test/markdown/autolink-boundaries.test.ts:48,71).
+- **upstream-bug** — Memoized declaration-closer checks bypass upstream quadratic HTML regex retries while preserving accepted HTML and literal text (scratchpad/test/markdown/raw-html-pathological.test.ts:7,31,44,59).
 
 ### Dependency backlog
 

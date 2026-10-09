@@ -14,6 +14,7 @@
 // rule, applied verbatim).
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type { MarkdownDocument } from "./MarkdownDocument.ts";
@@ -145,7 +146,7 @@ export interface FrontmatterCodec {
  *
  * @public
  */
-export const FrontmatterMissingReason = S.Literals(["absent", "captureDisabled"]).pipe($I.annoteSchema("FrontmatterMissingReason", { description: "Why a frontmatter decoder found no capture on a document." }));
+export const FrontmatterMissingReason = LiteralKit(["absent", "captureDisabled"]).annotate($I.annote("FrontmatterMissingReason", { description: "Why a frontmatter decoder found no capture on a document." }));
 
 /**
  * Why a frontmatter decoder found no capture on a document.

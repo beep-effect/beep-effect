@@ -30,11 +30,15 @@
 //   behavior too, and it is not a diagnostic — an opening fence with no
 //   close IS a thematic break followed by content.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import type { FrontmatterFormat } from "../../MarkdownNode.ts";
 import type { SourceLine } from "../preprocess.ts";
+
+const $I = $ScratchpadId.create("effected/markdown/internal/blocks/frontmatter");
 
 /** What the fence's opening line commits the scan to. */
 interface FenceRule {
@@ -115,8 +119,31 @@ export const scanFrontmatter: {
 	return null;
 });
 
-/** A raw line terminator spelling. */
-export type RawNewline = "\n" | "\r\n" | "\r";
+/**
+ * The three raw line terminators recognized by the frontmatter scanners.
+ *
+ * **Example** (Read the accepted terminators)
+ *
+ * ```ts
+ * import { RawNewline } from "./frontmatter.ts";
+ *
+ * console.log(RawNewline.literals); // => ["\n", "\r\n", "\r"]
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RawNewline = LiteralKit(["\n", "\r\n", "\r"]).annotate(
+	$I.annote("RawNewline", { description: "The three raw line terminators recognized by the frontmatter scanners." }),
+);
+
+/**
+ * A raw line terminator spelling derived from the shared literal domain.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type RawNewline = typeof RawNewline.Type;
 
 /**
  * A successful raw string-level capture: exact byte boundaries into the

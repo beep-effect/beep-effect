@@ -14,7 +14,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { scanRawFrontmatter } from "./internal/blocks/frontmatter.ts";
+import { RawNewline, scanRawFrontmatter } from "./internal/blocks/frontmatter.ts";
 import { FrontmatterFormat } from "./MarkdownNode.ts";
 
 const $I = $ScratchpadId.create("effected/markdown/FrontmatterSource");
@@ -26,7 +26,7 @@ const $I = $ScratchpadId.create("effected/markdown/FrontmatterSource");
  *
  * @public
  */
-export const FrontmatterNewline = S.Literals(["\n", "\r\n", "\r"]).pipe($I.annoteSchema("FrontmatterNewline", { description: "The three line-terminator spellings a fence line may end with. Recorded by FrontmatterSource.split as fidelity — what the source's fence lines actually used — and consumed by FrontmatterSource.join." }));
+export const FrontmatterNewline = RawNewline.annotate($I.annote("FrontmatterNewline", { description: "The three line-terminator spellings a fence line may end with. Recorded by FrontmatterSource.split as fidelity — what the source's fence lines actually used — and consumed by FrontmatterSource.join." }));
 
 /**
  * The union of all fence line-terminator literals.
