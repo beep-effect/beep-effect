@@ -1,5 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
@@ -140,18 +141,14 @@ export class Comparator extends S.Class<Comparator>($I`Comparator`)({
 	/** Test whether a version satisfies this comparator. */
 	test(version: SemVer): boolean {
 		const cmp = version.compare(this.version);
-		switch (this.operator) {
-			case "=":
-				return cmp === 0;
-			case ">":
-				return cmp > 0;
-			case ">=":
-				return cmp >= 0;
-			case "<":
-				return cmp < 0;
-			case "<=":
-				return cmp <= 0;
-		}
+		return Match.value(this.operator).pipe(
+			Match.when("=", () => cmp === 0),
+			Match.when(">", () => cmp > 0),
+			Match.when(">=", () => cmp >= 0),
+			Match.when("<", () => cmp < 0),
+			Match.when("<=", () => cmp <= 0),
+			Match.exhaustive,
+		);
 	}
 
 	/** The comparator string; the `=` operator is implicit. */

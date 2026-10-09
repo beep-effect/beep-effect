@@ -4,6 +4,8 @@ import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Fn from "effect/Function";
 import * as Hash from "effect/Hash";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
@@ -426,18 +428,12 @@ export class SemVer extends S.Class<SemVer>($I`SemVer`)({
 	): Record<string, ReadonlyArray<SemVer>> {
 		const grouped: Record<string, Array<SemVer>> = {};
 		for (const version of SemVer.sort(versions)) {
-			let key: string;
-			switch (strategy) {
-				case "major":
-					key = `${version.major}`;
-					break;
-				case "minor":
-					key = `${version.major}.${version.minor}`;
-					break;
-				case "patch":
-					key = `${version.major}.${version.minor}.${version.patch}`;
-					break;
-			}
+			const key = Match.value(strategy).pipe(
+				Match.when("major", () => `${version.major}`),
+				Match.when("minor", () => `${version.major}.${version.minor}`),
+				Match.when("patch", () => `${version.major}.${version.minor}.${version.patch}`),
+				Match.exhaustive,
+			);
 			const group = grouped[key] ?? [];
 			group.push(version);
 			grouped[key] = group;
@@ -447,20 +443,20 @@ export class SemVer extends S.Class<SemVer>($I`SemVer`)({
 
 	/** The highest version for each distinct major version, ascending. */
 	static latestByMajor(versions: ReadonlyArray<SemVer>): ReadonlyArray<SemVer> {
-		const latest = new Map<number, SemVer>();
+		const latest = MutableHashMap.empty<number, SemVer>();
 		for (const version of SemVer.sort(versions)) {
-			latest.set(version.major, version);
+			MutableHashMap.set(latest, version.major, version);
 		}
-		return Array.from(latest.values());
+		return latest.pipe(MutableHashMap.values, Arr.fromIterable);
 	}
 
 	/** The highest version for each distinct major.minor pair, ascending. */
 	static latestByMinor(versions: ReadonlyArray<SemVer>): ReadonlyArray<SemVer> {
-		const latest = new Map<string, SemVer>();
+		const latest = MutableHashMap.empty<string, SemVer>();
 		for (const version of SemVer.sort(versions)) {
-			latest.set(`${version.major}.${version.minor}`, version);
+			MutableHashMap.set(latest, `${version.major}.${version.minor}`, version);
 		}
-		return Array.from(latest.values());
+		return latest.pipe(MutableHashMap.values, Arr.fromIterable);
 	}
 
 	// ── Instance: comparison ────────────────────────────────────────────
@@ -585,11 +581,33 @@ export class SemVer extends S.Class<SemVer>($I`SemVer`)({
 // rather than a typed `Effect` failure, matching every other
 // `SemVer`/`SemVerBump` method's synchronous, non-`Effect` signature. The
 // original `SemVer.make` schema failure rides as `cause`.
+/**
+ * A synchronous bump exceeded the safe-integer cap. Retains the underlying
+ * schema failure as its cause.
+ *
+ * **Example** (Inspecting a bump overflow)
+ *
+ * ```ts
+ * import { SemVerBumpOverflowError } from "./SemVer.ts";
+ *
+ * const error = SemVerBumpOverflowError.make({ message: "Overflow", cause: undefined });
+ * error.message; // => "Overflow"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class SemVerBumpOverflowError extends S.TaggedError<SemVerBumpOverflowError>($I`SemVerBumpOverflowError`)(
+	"SemVerBumpOverflowError",
+	{ message: S.String, cause: S.Unknown },
+	$I.annote("SemVerBumpOverflowError", { description: "A SemVer bump exceeded the safe-integer cap." }),
+) {}
+
 function overflow(component: "major" | "minor" | "patch" | "prerelease", cause: unknown): never {
-	throw new Error(
-		`SemVerBump invariant violated: bumping "${component}" would exceed Number.MAX_SAFE_INTEGER (${Number.MAX_SAFE_INTEGER})`,
-		{ cause },
-	);
+	throw SemVerBumpOverflowError.make({
+		message: `SemVerBump invariant violated: bumping "${component}" would exceed Number.MAX_SAFE_INTEGER (${Number.MAX_SAFE_INTEGER})`,
+		cause,
+	});
 }
 
 /**

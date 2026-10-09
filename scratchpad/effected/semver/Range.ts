@@ -1,6 +1,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Fn from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -437,24 +438,7 @@ const isSetSatisfiable = (set: ComparatorSet): boolean => {
 	for (const eq of equals) {
 		for (const c of set) {
 			if (c === eq) continue;
-			const cmp = eq.version.compare(c.version);
-			switch (c.operator) {
-				case ">":
-					if (cmp <= 0) return false;
-					break;
-				case ">=":
-					if (cmp < 0) return false;
-					break;
-				case "<":
-					if (cmp >= 0) return false;
-					break;
-				case "<=":
-					if (cmp > 0) return false;
-					break;
-				case "=":
-					if (cmp !== 0) return false;
-					break;
-			}
+			if (!c.test(eq.version)) return false;
 		}
 	}
 
@@ -479,29 +463,19 @@ const isSetSatisfiable = (set: ComparatorSet): boolean => {
 const isComparatorImplied = (set: ComparatorSet, comp: Comparator): boolean => {
 	for (const s of set) {
 		const cmp = s.version.compare(comp.version);
-		switch (comp.operator) {
-			case ">=":
-				if ((s.operator === ">=" && cmp >= 0) || (s.operator === ">" && cmp >= 0)) return true;
-				if (s.operator === "=" && cmp >= 0) return true;
-				break;
-			case ">":
-				if (s.operator === ">" && cmp >= 0) return true;
-				if (s.operator === ">=" && cmp > 0) return true;
-				if (s.operator === "=" && cmp > 0) return true;
-				break;
-			case "<=":
-				if ((s.operator === "<=" && cmp <= 0) || (s.operator === "<" && cmp <= 0)) return true;
-				if (s.operator === "=" && cmp <= 0) return true;
-				break;
-			case "<":
-				if (s.operator === "<" && cmp <= 0) return true;
-				if (s.operator === "<=" && cmp < 0) return true;
-				if (s.operator === "=" && cmp < 0) return true;
-				break;
-			case "=":
-				if (s.operator === "=" && cmp === 0) return true;
-				break;
-		}
+		const implied = Match.value(comp.operator).pipe(
+			Match.when(">=", () => (s.operator === ">=" || s.operator === ">" || s.operator === "=") && cmp >= 0),
+			Match.when(">", () =>
+				(s.operator === ">" && cmp >= 0) || ((s.operator === ">=" || s.operator === "=") && cmp > 0),
+			),
+			Match.when("<=", () => (s.operator === "<=" || s.operator === "<" || s.operator === "=") && cmp <= 0),
+			Match.when("<", () =>
+				(s.operator === "<" && cmp <= 0) || ((s.operator === "<=" || s.operator === "=") && cmp < 0),
+			),
+			Match.when("=", () => s.operator === "=" && cmp === 0),
+			Match.exhaustive,
+		);
+		if (implied) return true;
 	}
 	return false;
 };

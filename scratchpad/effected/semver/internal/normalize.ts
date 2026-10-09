@@ -2,25 +2,19 @@
 // precedence, plus semantic deduplication. Comparators that differ only in
 // build metadata are duplicate constraints (SemVer §10) and collapse to one.
 
+import * as Match from "effect/Match";
+import * as MutableHashSet from "effect/MutableHashSet";
 import type { ComparatorParts } from "./order.ts";
 import { compareParts } from "./order.ts";
 
-const operatorWeight = (op: string): number => {
-	switch (op) {
-		case ">=":
-			return 0;
-		case ">":
-			return 1;
-		case "=":
-			return 2;
-		case "<":
-			return 3;
-		case "<=":
-			return 4;
-		default:
-			return 5;
-	}
-};
+const operatorWeight = Match.type<string>().pipe(
+	Match.when(">=", () => 0),
+	Match.when(">", () => 1),
+	Match.when("=", () => 2),
+	Match.when("<", () => 3),
+	Match.when("<=", () => 4),
+	Match.orElse(() => 5),
+);
 
 const sortComparators = (set: ReadonlyArray<ComparatorParts>): ReadonlyArray<ComparatorParts> =>
 	[...set].sort((a, b) => {
@@ -30,15 +24,15 @@ const sortComparators = (set: ReadonlyArray<ComparatorParts>): ReadonlyArray<Com
 	});
 
 const removeDuplicates = (set: ReadonlyArray<ComparatorParts>): ReadonlyArray<ComparatorParts> => {
-	const seen = new Set<string>();
+	const seen = MutableHashSet.empty<string>();
 	return set.filter((c) => {
 		const v = c.version;
 		const pre = v.prerelease.length > 0 ? `-${v.prerelease.join(".")}` : "";
 		// Build metadata is ignored per SemVer §10 — comparators differing
 		// only in build metadata are semantically identical constraints.
 		const key = `${c.operator}${v.major}.${v.minor}.${v.patch}${pre}`;
-		if (seen.has(key)) return false;
-		seen.add(key);
+		if (MutableHashSet.has(seen, key)) return false;
+		MutableHashSet.add(seen, key);
 		return true;
 	});
 };

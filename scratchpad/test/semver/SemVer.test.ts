@@ -6,6 +6,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { InvalidVersionError, SemVer } from "../../effected/semver/index.ts";
+import { SemVerBumpOverflowError } from "../../effected/semver/SemVer.ts";
 
 describe("SemVer", () => {
 	describe("parse", () => {
@@ -234,7 +235,7 @@ describe("SemVer", () => {
 				SemVer.of(MAX, 0, 0).bump.major();
 				assert.fail("expected bump.major() to throw");
 			} catch (e) {
-				assert.instanceOf(e, Error);
+				assert.instanceOf(e, SemVerBumpOverflowError);
 				assert.isDefined(e.cause);
 			}
 		});
