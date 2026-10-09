@@ -31,7 +31,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import type { IntegrityHashBrand } from "../../effected/npm/index.ts";
 import { DependencySpecifier } from "../../effected/npm/index.ts";
-import { Arbitrary, Effect, Schema } from "effect";
+import { Arbitrary, Effect, Result, Schema } from "effect";
 import { ImporterDependency } from "../../effected/lockfiles/ImporterDependency.ts";
 import { Lockfile } from "../../effected/lockfiles/Lockfile.ts";
 import { LockfileImporter } from "../../effected/lockfiles/LockfileImporter.ts";
@@ -39,12 +39,11 @@ import { LockfileIntegrity } from "../../effected/lockfiles/LockfileIntegrity.ts
 import { ResolvedPackage } from "../../effected/lockfiles/ResolvedPackage.ts";
 import { WorkspaceDependency } from "../../effected/lockfiles/WorkspaceDependency.ts";
 
-const roundTrip = <T, S extends Schema.Codec<T, unknown>>(schema: S, value: T) =>
-	Effect.gen(function* () {
-		const encoded = yield* Schema.encodeUnknownEffect(schema)(value);
-		const decoded = yield* Schema.decodeUnknownEffect(schema)(encoded);
-		assert.deepStrictEqual(decoded, value);
-	});
+const roundTrip = Effect.fn("roundTrip")(function*<T, S extends Schema.Codec<T, unknown>>(schema: S, value: T) {
+	const encoded = yield* Schema.encodeUnknownEffect(schema)(value);
+	const decoded = yield* Schema.decodeUnknownEffect(schema)(encoded);
+	assert.deepStrictEqual(decoded, value);
+});
 
 // ── Explicit arbitraries for the non-schema-derivable leaves ─────────────────
 
@@ -92,7 +91,7 @@ const specifierArb = Arbitrary.schema(
 		"file:../local",
 		"npm:lodash@^4.0.0",
 	]),
-).pipe(Arbitrary.map((s) => Schema.decodeSync(DependencySpecifier.FromString)(s)));
+).pipe(Arbitrary.map((s) => Result.getOrThrowWith(Schema.decodeResult(DependencySpecifier.FromString)(s), (error) => error)));
 
 const DepField = Schema.Literals(["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"]);
 
@@ -231,7 +230,7 @@ describe("codec round-trips", () => {
 						dependencies: [
 							ImporterDependency.make({
 								name: "lodash",
-								specifier: Schema.decodeSync(DependencySpecifier.FromString)("catalog:"),
+								specifier: yield* Schema.decodeEffect(DependencySpecifier.FromString)("catalog:"),
 								version: "4.17.23",
 								depType: "dependencies",
 							}),

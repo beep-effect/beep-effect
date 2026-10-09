@@ -94,21 +94,19 @@ const preamble = (options: PreambleOptions = {}): string => {
 	].join("\n");
 };
 
-const lockOf = (content: string) =>
-	Effect.gen(function* () {
-		const result = yield* PnpmEnvLockfile.packageManager(content);
-		assert.isTrue(Option.isSome(result), "expected the lockfile to record a package manager");
-		return Option.getOrThrow(result);
-	});
+const lockOf = Effect.fn("lockOf")(function*(content: string) {
+	const result = yield* PnpmEnvLockfile.packageManager(content);
+	assert.isTrue(Option.isSome(result), "expected the lockfile to record a package manager");
+	return Option.getOrThrow(result);
+});
 
-const validationError = (content: string) =>
-	Effect.gen(function* () {
-		const error = yield* Effect.flip(PnpmEnvLockfile.packageManager(content));
-		assert.instanceOf(error, LockfileParseError);
-		assert.strictEqual(error.format, "pnpm");
-		assert.strictEqual(error.stage, "validation");
-		return error;
-	});
+const validationError = Effect.fn("validationError")(function*(content: string) {
+	const error = yield* Effect.flip(PnpmEnvLockfile.packageManager(content));
+	assert.instanceOf(error, LockfileParseError);
+	assert.strictEqual(error.format, "pnpm");
+	assert.strictEqual(error.stage, "validation");
+	return error;
+});
 
 const causeMessage = (error: LockfileParseError): string => (error.cause instanceof Error ? error.cause.message : "");
 
@@ -217,17 +215,13 @@ describe("PnpmEnvLockfile.packageManager", () => {
 		);
 
 		it.effect("the pnpm@<version> entry records no integrity", () =>
-			Effect.gen(function* () {
-				yield* validationError(preamble({ pnpmPackage: "  pnpm@12.6.0:\n    resolution: {tarball: x}" }));
-			}),
+			validationError(preamble({ pnpmPackage: "  pnpm@12.6.0:\n    resolution: {tarball: x}" })),
 		);
 
 		it.effect("the pnpm integrity is not SRI (the corepack hex form)", () =>
-			Effect.gen(function* () {
-				yield* validationError(
-					preamble({ pnpmPackage: `  pnpm@12.6.0:\n    resolution: {integrity: sha512.${"ab".repeat(64)}}` }),
-				);
-			}),
+			validationError(
+				preamble({ pnpmPackage: `  pnpm@12.6.0:\n    resolution: {integrity: sha512.${"ab".repeat(64)}}` }),
+			),
 		);
 
 		it.effect("the pnpm@<version> snapshot is missing", () =>
@@ -245,32 +239,26 @@ describe("PnpmEnvLockfile.packageManager", () => {
 		);
 
 		it.effect("an empty recorded version", () =>
-			Effect.gen(function* () {
-				yield* validationError(
-					preamble({
-						pmDeps: [
-							"    packageManagerDependencies:",
-							"      pnpm:",
-							"        specifier: 12.6.0",
-							"        version: ''",
-						].join("\n"),
-					}),
-				);
-			}),
+			validationError(
+				preamble({
+					pmDeps: [
+						"    packageManagerDependencies:",
+						"      pnpm:",
+						"        specifier: 12.6.0",
+						"        version: ''",
+					].join("\n"),
+				}),
+			),
 		);
 	});
 
 	describe("malformed input fails typed", () => {
 		it.effect("a packageManagerDependencies entry of the wrong shape", () =>
-			Effect.gen(function* () {
-				yield* validationError(preamble({ pmDeps: "    packageManagerDependencies:\n      pnpm: 12.6.0" }));
-			}),
+			validationError(preamble({ pmDeps: "    packageManagerDependencies:\n      pnpm: 12.6.0" })),
 		);
 
 		it.effect("a preamble that is not a mapping", () =>
-			Effect.gen(function* () {
-				yield* validationError("--- 42\n---\nlockfileVersion: '9.0'\n");
-			}),
+			validationError("--- 42\n---\nlockfileVersion: '9.0'\n"),
 		);
 
 		it.effect("broken YAML fails at stage 'syntax'", () =>
@@ -334,14 +322,13 @@ const configPreamble = (options: { readonly importer?: string; readonly packages
 		"",
 	].join("\n");
 
-const configValidationError = (content: string) =>
-	Effect.gen(function* () {
-		const error = yield* Effect.flip(PnpmEnvLockfile.configDependencies(content));
-		assert.instanceOf(error, LockfileParseError);
-		assert.strictEqual(error.format, "pnpm");
-		assert.strictEqual(error.stage, "validation");
-		return error;
-	});
+const configValidationError = Effect.fn("configValidationError")(function*(content: string) {
+	const error = yield* Effect.flip(PnpmEnvLockfile.configDependencies(content));
+	assert.instanceOf(error, LockfileParseError);
+	assert.strictEqual(error.format, "pnpm");
+	assert.strictEqual(error.stage, "validation");
+	return error;
+});
 
 describe("PnpmEnvLockfile.configDependencies", () => {
 	describe("real pnpm output", () => {
@@ -421,17 +408,13 @@ describe("PnpmEnvLockfile.configDependencies", () => {
 		);
 
 		it.effect("the entry records no integrity", () =>
-			Effect.gen(function* () {
-				yield* configValidationError(configPreamble({ packages: "  cfg@1.0.0:\n    resolution: {tarball: x}" }));
-			}),
+			configValidationError(configPreamble({ packages: "  cfg@1.0.0:\n    resolution: {tarball: x}" })),
 		);
 
 		it.effect("the integrity is not SRI", () =>
-			Effect.gen(function* () {
-				yield* configValidationError(
-					configPreamble({ packages: `  cfg@1.0.0:\n    resolution: {integrity: sha512.${"ab".repeat(64)}}` }),
-				);
-			}),
+			configValidationError(
+				configPreamble({ packages: `  cfg@1.0.0:\n    resolution: {integrity: sha512.${"ab".repeat(64)}}` }),
+			),
 		);
 
 		it.effect("an empty recorded version", () =>
@@ -448,9 +431,7 @@ describe("PnpmEnvLockfile.configDependencies", () => {
 		);
 
 		it.effect("an entry of the wrong shape", () =>
-			Effect.gen(function* () {
-				yield* configValidationError(configPreamble({ importer: "    configDependencies:\n      cfg: 1.0.0" }));
-			}),
+			configValidationError(configPreamble({ importer: "    configDependencies:\n      cfg: 1.0.0" })),
 		);
 
 		it.effect("more than two documents fails through the framing channel", () =>

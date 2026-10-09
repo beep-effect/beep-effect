@@ -103,7 +103,7 @@ const resolveNpmEdges = (
 ): Record<string, string> => {
 	const names = new Set<string>();
 	for (const section of sections) {
-		if (!section) continue;
+		if (section === undefined) continue;
 		for (const name of Object.keys(section)) if (name !== "") names.add(name);
 	}
 	if (names.size === 0) return {};
@@ -175,7 +175,7 @@ const toFields = (raw: NpmLockfileRawType): Effect.Effect<LockfileFields, ParseF
 		// importer, so every importer dependency carries a specifier and no version.
 		// The root manifest is the `""` entry — the `"."` importer.
 		const rootEntry = raw.packages[""];
-		if (rootEntry) {
+		if (rootEntry !== undefined) {
 			importers.push(
 				LockfileImporter.make({ path: ".", dependencies: importerDependencies(rootEntry, (s) => ({ specifier: s })) }),
 			);
@@ -228,12 +228,12 @@ const toFields = (raw: NpmLockfileRawType): Effect.Effect<LockfileFields, ParseF
 						),
 					}),
 				);
-				if (wsEntry) {
+				if (wsEntry !== undefined) {
 					workspaceEntries.set(name, {
-						...(wsEntry.dependencies ? { dependencies: wsEntry.dependencies } : {}),
-						...(wsEntry.devDependencies ? { devDependencies: wsEntry.devDependencies } : {}),
-						...(wsEntry.peerDependencies ? { peerDependencies: wsEntry.peerDependencies } : {}),
-						...(wsEntry.optionalDependencies ? { optionalDependencies: wsEntry.optionalDependencies } : {}),
+						...(wsEntry.dependencies !== undefined ? { dependencies: wsEntry.dependencies } : {}),
+						...(wsEntry.devDependencies !== undefined ? { devDependencies: wsEntry.devDependencies } : {}),
+						...(wsEntry.peerDependencies !== undefined ? { peerDependencies: wsEntry.peerDependencies } : {}),
+						...(wsEntry.optionalDependencies !== undefined ? { optionalDependencies: wsEntry.optionalDependencies } : {}),
 					});
 				}
 				// An empty resolved path is malformed: `LockfileImporter.path` is a
@@ -243,7 +243,7 @@ const toFields = (raw: NpmLockfileRawType): Effect.Effect<LockfileFields, ParseF
 					importers.push(
 						LockfileImporter.make({
 							path: resolved,
-							dependencies: wsEntry ? importerDependencies(wsEntry, (s) => ({ specifier: s })) : [],
+							dependencies: wsEntry !== undefined ? importerDependencies(wsEntry, (s) => ({ specifier: s })) : [],
 						}),
 					);
 				}

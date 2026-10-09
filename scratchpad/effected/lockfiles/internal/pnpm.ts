@@ -1,4 +1,5 @@
 import { Effect, Schema } from "effect";
+import { dual } from "effect/Function";
 import { LockfileImporter } from "../LockfileImporter.ts";
 import { PnpmExtension } from "../PnpmExtension.ts";
 import { ResolvedPackage } from "../ResolvedPackage.ts";
@@ -114,7 +115,10 @@ type PnpmPackageEntry = NonNullable<PnpmLockfileRawType["packages"]>[string];
  *
  * @internal
  */
-export const parsePnpm = (content: string, configOnly: boolean): Effect.Effect<LockfileFields, ParseFailure> =>
+export const parsePnpm: {
+	(configOnly: boolean): (content: string) => Effect.Effect<LockfileFields, ParseFailure>;
+	(content: string, configOnly: boolean): Effect.Effect<LockfileFields, ParseFailure>;
+} = dual(2, (content: string, configOnly: boolean): Effect.Effect<LockfileFields, ParseFailure> =>
 	Effect.gen(function* () {
 		const { preamble, main: document, documents } = yield* splitPnpmStream(content);
 		if (document === undefined) {
@@ -153,7 +157,7 @@ export const parsePnpm = (content: string, configOnly: boolean): Effect.Effect<L
 			return yield* Effect.fail(framingFailure("noImporters", documents));
 		}
 		return yield* toFields(validated);
-	});
+	}));
 
 // ── Transform ──────────────────────────────────────────────────────────────
 
@@ -194,7 +198,7 @@ const resolveEdges = (
 	const edges = new Map<string, string>();
 	const unnameable = new Set<string>();
 	for (const section of sections) {
-		if (!section) continue;
+		if (section === undefined) continue;
 		for (const [name, version] of Object.entries(section)) {
 			if (name === "") continue;
 			// A `link:` resolution names a directory, not a registry version, so
@@ -347,7 +351,7 @@ const resolveImporterEdges = (
 	const edges = new Map<string, string>();
 	const unnameable = new Set<string>();
 	for (const group of importerDepGroups(importer)) {
-		if (!group) continue;
+		if (group === undefined) continue;
 		for (const [name, info] of Object.entries(group)) {
 			if (name === "") continue;
 			if (info.version.startsWith(LINK_PREFIX)) {
@@ -379,7 +383,7 @@ const resolveImporterEdges = (
 const toVersionMap = (
 	deps: Record<string, { readonly specifier: string; readonly version: string }> | undefined,
 ): Record<string, string> | undefined => {
-	if (!deps) return undefined;
+	if (deps === undefined) return undefined;
 	// Object.fromEntries defines own data properties, so a "__proto__" key
 	// neither pollutes nor drops.
 	return Object.fromEntries(Object.entries(deps).map(([name, info]) => [name, info.specifier]));
@@ -416,14 +420,14 @@ const toFields = (raw: PnpmLockfileRawType): Effect.Effect<LockfileFields, Parse
 			const peerDeps = toVersionMap(importer.peerDependencies);
 			const optDeps = toVersionMap(importer.optionalDependencies);
 			workspaceEntries.set(importerPath, {
-				...(deps ? { dependencies: deps } : {}),
-				...(devDeps ? { devDependencies: devDeps } : {}),
-				...(peerDeps ? { peerDependencies: peerDeps } : {}),
-				...(optDeps ? { optionalDependencies: optDeps } : {}),
+				...(deps !== undefined ? { dependencies: deps } : {}),
+				...(devDeps !== undefined ? { devDependencies: devDeps } : {}),
+				...(peerDeps !== undefined ? { peerDependencies: peerDeps } : {}),
+				...(optDeps !== undefined ? { optionalDependencies: optDeps } : {}),
 			});
 
 			for (const group of importerDepGroups(importer)) {
-				if (!group) continue;
+				if (group === undefined) continue;
 				for (const [name, info] of Object.entries(group)) {
 					if (name !== "" && info.version.startsWith("link:")) {
 						workspaceNames.add(name);
@@ -448,8 +452,8 @@ const toFields = (raw: PnpmLockfileRawType): Effect.Effect<LockfileFields, Parse
 		// names one.
 		const snapshots = raw.snapshots;
 		const instanceIds = new Set<string>([
-			...(snapshots ? Object.keys(snapshots) : []),
-			...(raw.packages ? Object.keys(raw.packages) : []),
+			...(snapshots !== undefined ? Object.keys(snapshots) : []),
+			...(raw.packages !== undefined ? Object.keys(raw.packages) : []),
 			...Object.keys(raw.importers),
 		]);
 		// Importer paths alone — the ancestor walk that resolves a `linkDirectory`
@@ -493,35 +497,34 @@ const toFields = (raw: PnpmLockfileRawType): Effect.Effect<LockfileFields, Parse
 			);
 		}
 
-		const emit = (
+		const emit = Effect.fn("emit")(function*(
 			instanceId: string,
 			meta: PnpmPackageEntry | undefined,
 			edges: ReadonlyArray<Readonly<Record<string, string>> | undefined>,
-		) =>
-			Effect.gen(function* () {
-				// Keys may carry a peer-resolution suffix — "fdir@6.5.0(picomatch@4.0.4)",
-				// "lib@file:vendor/lib(react@18.3.1)" — whose inner "@" would corrupt
-				// the split; splitPeerSuffix (the one stripping implementation, shared
-				// with the importer path) drops it first.
-				const split = splitNameVersion(splitPeerSuffix(instanceId).plain);
-				if (split === undefined) return; // malformed "name@version" keys are skipped, never thrown on
-				const { name, version } = split;
-				const integrity = yield* toIntegrityHash(meta?.resolution?.integrity);
-				emitted.add(instanceId);
-				packages.push(
-					ResolvedPackage.make({
-						name,
-						version,
-						instanceId,
-						...(integrity !== undefined ? { integrity } : {}),
-						isWorkspace: false,
-						...peerDeclarations(meta?.peerDependencies, meta?.peerDependenciesMeta),
-						...resolveEdges(edges, instanceIds, publishDirTargets),
-					}),
-				);
-			});
+		) {
+			// Keys may carry a peer-resolution suffix — "fdir@6.5.0(picomatch@4.0.4)",
+			// "lib@file:vendor/lib(react@18.3.1)" — whose inner "@" would corrupt
+			// the split; splitPeerSuffix (the one stripping implementation, shared
+			// with the importer path) drops it first.
+			const split = splitNameVersion(splitPeerSuffix(instanceId).plain);
+			if (split === undefined) return; // malformed "name@version" keys are skipped, never thrown on
+			const { name, version } = split;
+			const integrity = yield* toIntegrityHash(meta?.resolution?.integrity);
+			emitted.add(instanceId);
+			packages.push(
+				ResolvedPackage.make({
+					name,
+					version,
+					instanceId,
+					...(integrity !== undefined ? { integrity } : {}),
+					isWorkspace: false,
+					...peerDeclarations(meta?.peerDependencies, meta?.peerDependenciesMeta),
+					...resolveEdges(edges, instanceIds, publishDirTargets),
+				}),
+			);
+		});
 
-		if (snapshots) {
+		if (snapshots !== undefined) {
 			for (const [key, snapshot] of Object.entries(snapshots)) {
 				// Peer declarations live on the matching per-version `packages:` entry,
 				// which is keyed by the plain "name@version" the suffix hangs off.
@@ -536,7 +539,7 @@ const toFields = (raw: PnpmLockfileRawType): Effect.Effect<LockfileFields, Parse
 		// Which `packages:` keys a snapshot already spoke for.
 		const covered = new Set([...emitted].map((key) => splitPeerSuffix(key).plain));
 
-		if (raw.packages) {
+		if (raw.packages !== undefined) {
 			for (const [key, pkg] of Object.entries(raw.packages)) {
 				// A `packages:` entry no snapshot covers is an orphan — still emitted
 				// rather than dropped, since an unexplained disappearance is the worse

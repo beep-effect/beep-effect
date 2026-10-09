@@ -8,12 +8,14 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { Lockfile } from "../../effected/lockfiles/Lockfile.ts";
 import type { LockfileFormat } from "../../effected/lockfiles/LockfileFormat.ts";
 import { filenameFor } from "../../effected/lockfiles/LockfileFormat.ts";
 import { ResolvedPackage } from "../../effected/lockfiles/ResolvedPackage.ts";
 import { isUnsupportedLockfileVersion } from "../../effected/lockfiles/UnsupportedLockfileVersion.ts";
+
+const JsonString = Schema.fromJsonString(Schema.Unknown);
 
 const fixture = (relative: string): string => readFileSync(join(import.meta.dirname, "fixtures", relative), "utf8");
 
@@ -1519,7 +1521,7 @@ describe("supported lockfile versions", () => {
 
 			// And a shape failure, which shares the "validation" stage with the
 			// version gate — so stage alone cannot tell them apart, only the tag.
-			const shape = yield* Effect.flip(Lockfile.parse(JSON.stringify({ lockfileVersion: 3 }), { format: "npm" }));
+			const shape = yield* Effect.flip(Lockfile.parse(yield* Schema.encodeEffect(JsonString)({ lockfileVersion: 3 }), { format: "npm" }));
 			assert.strictEqual(shape._tag, "LockfileParseError");
 			if (shape._tag !== "LockfileParseError") return;
 			assert.strictEqual(shape.stage, "validation");

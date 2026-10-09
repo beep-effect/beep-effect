@@ -48,6 +48,8 @@ const PNPM = "pnpm";
 /** The importer pnpm records `packageManagerDependencies` under. */
 const ROOT_IMPORTER = ".";
 
+const JsonString = Schema.fromJsonString(Schema.String);
+
 /**
  * Own-property read of a decoded record. The records come from YAML, so a key
  * such as `constructor` or `__proto__` must never be answered by
@@ -138,7 +140,7 @@ export const readPnpmPackageManager = (content: string): Effect.Effect<PackageMa
 		const key = `${PNPM}@${declared.version}`;
 		const snapshot = own(raw.snapshots, key);
 		if (snapshot === undefined) {
-			return yield* Effect.fail(unaccounted(`snapshots[${JSON.stringify(key)}] is missing`));
+			return yield* Effect.fail(unaccounted(`snapshots[${yield* Schema.encodeEffect(JsonString)(key).pipe(Effect.mapError(validationFailure))}] is missing`));
 		}
 		const natives: Array<readonly [string, string]> = [];
 		for (const [name, version] of Object.entries(snapshot.optionalDependencies ?? {})) {
@@ -177,7 +179,7 @@ export const readPnpmConfigDependencies = (
 		const locks = new Map<string, ConfigDependencyLock>();
 		if (raw === undefined || declared === undefined) return locks;
 		for (const [name, entry] of Object.entries(declared)) {
-			const integrity = yield* recordedIntegrity(raw, `config dependency ${JSON.stringify(name)}`, name, entry.version);
+			const integrity = yield* recordedIntegrity(raw, `config dependency ${yield* Schema.encodeEffect(JsonString)(name).pipe(Effect.mapError(validationFailure))}`, name, entry.version);
 			locks.set(
 				name,
 				ConfigDependencyLock.make({ name, specifier: entry.specifier, version: entry.version, integrity }),

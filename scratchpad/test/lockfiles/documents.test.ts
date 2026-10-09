@@ -29,13 +29,12 @@ import { isUnsupportedLockfileVersion } from "../../effected/lockfiles/Unsupport
 const fixture = (relative: string): string => readFileSync(join(import.meta.dirname, "fixtures", relative), "utf8");
 
 /** Flip a failing parse and hand back the typed framing error. */
-const framingError = (content: string, format: LockfileFormat) =>
-	Effect.gen(function* () {
-		const error = yield* Effect.flip(Lockfile.parse(content, { format }));
-		assert.instanceOf(error, LockfileFramingError);
-		assert.strictEqual(error.format, format);
-		return error;
-	});
+const framingError = Effect.fn("framingError")(function*(content: string, format: LockfileFormat) {
+	const error = yield* Effect.flip(Lockfile.parse(content, { format }));
+	assert.instanceOf(error, LockfileFramingError);
+	assert.strictEqual(error.format, format);
+	return error;
+});
 
 /** A pnpm config-dependencies preamble document, verbatim in shape. */
 const preamble = [

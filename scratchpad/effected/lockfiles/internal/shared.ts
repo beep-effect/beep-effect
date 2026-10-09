@@ -1,6 +1,7 @@
 import type { DependencyField, IntegrityHashBrand } from "../../npm/index.ts";
 import { DependencySpecifier, IntegrityHash } from "../../npm/index.ts";
 import { Effect, Exit, Schema } from "effect";
+import { dual } from "effect/Function";
 import type { BunExtension } from "../BunExtension.ts";
 import { ImporterDependency } from "../ImporterDependency.ts";
 import type { LockfileImporter } from "../LockfileImporter.ts";
@@ -40,7 +41,7 @@ export const DEP_TYPES = ["dependencies", "devDependencies", "peerDependencies",
 export const toIntegrityHash = (
 	raw: string | undefined,
 ): Effect.Effect<IntegrityHashBrand | undefined, ParseFailure> => {
-	if (raw === undefined) return Effect.succeed(undefined);
+	if (raw === undefined) return Effect.as(Effect.void, undefined);
 	return Schema.decodeEffect(IntegrityHash)(raw).pipe(Effect.mapError(validationFailure));
 };
 
@@ -157,14 +158,17 @@ export type ImporterSections<V> = { readonly [K in DependencyField]?: Readonly<R
  *
  * @internal
  */
-export const importerDependencies = <V>(
+export const importerDependencies: {
+	<V>(read: (value: V) => { readonly specifier: string; readonly version?: string }): (entry: ImporterSections<V>) => ReadonlyArray<ImporterDependency>;
+	<V>(entry: ImporterSections<V>, read: (value: V) => { readonly specifier: string; readonly version?: string }): ReadonlyArray<ImporterDependency>;
+} = dual(2, <V>(
 	entry: ImporterSections<V>,
 	read: (value: V) => { readonly specifier: string; readonly version?: string },
 ): ReadonlyArray<ImporterDependency> => {
 	const deps: Array<ImporterDependency> = [];
 	for (const field of DEP_TYPES) {
 		const section = entry[field];
-		if (!section) continue;
+		if (section === undefined) continue;
 		for (const [name, value] of Object.entries(section)) {
 			const { specifier, version } = read(value);
 			const dep = buildImporterDependency(name, specifier, field, version);
@@ -172,7 +176,7 @@ export const importerDependencies = <V>(
 		}
 	}
 	return deps;
-};
+});
 
 /**
  * The two peer fields of a `ResolvedPackage`, always present. Spread
@@ -203,7 +207,10 @@ const EMPTY_PEERS: PeerDeclarations = { peerDependencies: {}, peerDependenciesMe
  *
  * @internal
  */
-export const peerDeclarations = (
+export const peerDeclarations: {
+	(meta: Readonly<Record<string, { readonly optional?: boolean }>> | undefined, optionalPeers?: ReadonlyArray<string> | undefined): (peers: Readonly<Record<string, string>> | undefined) => PeerDeclarations;
+	(peers: Readonly<Record<string, string>> | undefined, meta: Readonly<Record<string, { readonly optional?: boolean }>> | undefined, optionalPeers?: ReadonlyArray<string> | undefined): PeerDeclarations;
+} = dual((args) => args.length >= 2 && !Array.isArray(args[1]), (
 	peers: Readonly<Record<string, string>> | undefined,
 	meta: Readonly<Record<string, { readonly optional?: boolean }>> | undefined,
 	optionalPeers?: ReadonlyArray<string> | undefined,
@@ -222,7 +229,7 @@ export const peerDeclarations = (
 		peerDependencies: peers === undefined ? {} : Object.fromEntries(Object.entries(peers)),
 		peerDependenciesMeta: Object.fromEntries([...flags].map(([name, optional]) => [name, { optional }])),
 	};
-};
+});
 
 /**
  * The minimum lockfile-format version each gated format is parsed at.
@@ -252,7 +259,10 @@ export const MINIMUM_LOCKFILE_VERSION = { pnpm: 9, npm: 3 } as const;
  *
  * @internal
  */
-export const requireLockfileVersion = (
+export const requireLockfileVersion: {
+	(raw: string | number): (format: keyof typeof MINIMUM_LOCKFILE_VERSION) => Effect.Effect<void, ParseFailure>;
+	(format: keyof typeof MINIMUM_LOCKFILE_VERSION, raw: string | number): Effect.Effect<void, ParseFailure>;
+} = dual(2, (
 	format: keyof typeof MINIMUM_LOCKFILE_VERSION,
 	raw: string | number,
 ): Effect.Effect<void, ParseFailure> => {
@@ -270,7 +280,7 @@ export const requireLockfileVersion = (
 		message: `${format} lockfileVersion ${JSON.stringify(raw)} is not supported: @effected/lockfiles parses ${format} lockfileVersion ${minimum} and newer`,
 	};
 	return Effect.fail(validationFailure(cause));
-};
+});
 
 /**
  * The pnpm version gate's own input: `lockfileVersion` and nothing else.
@@ -354,11 +364,14 @@ export const syntaxFailure = (cause: unknown): ParseFailure => ({ stage: "syntax
 export const validationFailure = (cause: unknown): ParseFailure => ({ stage: "validation", cause });
 
 /** @internal */
-export const framingFailure = (reason: FramingReason, documents: number): ParseFailure => ({
+export const framingFailure: {
+	(documents: number): (reason: FramingReason) => ParseFailure;
+	(reason: FramingReason, documents: number): ParseFailure;
+} = dual(2, (reason: FramingReason, documents: number): ParseFailure => ({
 	stage: "framing",
 	reason,
 	documents,
-});
+}));
 
 /**
  * The field bundle a per-format transform produces and `Lockfile.parse`
@@ -405,7 +418,10 @@ export const isWorkspaceSpecifier = (specifier: string): boolean =>
  *
  * @internal
  */
-export const extractWorkspaceDeps = (
+export const extractWorkspaceDeps: {
+	(workspaceNames: ReadonlySet<string>): (workspaces: ReadonlyMap<string, WorkspaceEntry>) => ReadonlyArray<WorkspaceDependency>;
+	(workspaces: ReadonlyMap<string, WorkspaceEntry>, workspaceNames: ReadonlySet<string>): ReadonlyArray<WorkspaceDependency>;
+} = dual(2, (
 	workspaces: ReadonlyMap<string, WorkspaceEntry>,
 	workspaceNames: ReadonlySet<string>,
 ): ReadonlyArray<WorkspaceDependency> => {
@@ -413,7 +429,7 @@ export const extractWorkspaceDeps = (
 	for (const [from, entry] of workspaces) {
 		for (const depType of DEP_TYPES) {
 			const depMap = entry[depType];
-			if (!depMap) continue;
+			if (depMap === undefined) continue;
 			for (const [name, constraint] of Object.entries(depMap)) {
 				if (workspaceNames.has(name)) {
 					deps.push(WorkspaceDependency.make({ from, to: name, depType, constraint }));
@@ -422,4 +438,4 @@ export const extractWorkspaceDeps = (
 		}
 	}
 	return deps;
-};
+});

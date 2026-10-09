@@ -1,4 +1,5 @@
 import { Effect, Option, Schema } from "effect";
+import { dual } from "effect/Function";
 import { BunExtension } from "./BunExtension.ts";
 import { parseBun } from "./internal/bun.ts";
 import { parseNpm } from "./internal/npm.ts";
@@ -116,13 +117,16 @@ export class LockfileFramingError extends Schema.TaggedError<LockfileFramingErro
  *
  * @internal
  */
-export const materializeFailure = (
+export const materializeFailure: {
+	(failure: ParseFailure): (format: LockfileFormat) => LockfileParseError | LockfileFramingError;
+	(format: LockfileFormat, failure: ParseFailure): LockfileParseError | LockfileFramingError;
+} = dual(2, (
 	format: LockfileFormat,
 	failure: ParseFailure,
 ): LockfileParseError | LockfileFramingError =>
 	failure.stage === "framing"
 		? LockfileFramingError.make({ format, reason: failure.reason, documents: failure.documents })
-		: LockfileParseError.make({ format, stage: failure.stage, cause: failure.cause });
+		: LockfileParseError.make({ format, stage: failure.stage, cause: failure.cause }));
 
 const dispatch = (
 	format: LockfileFormat,

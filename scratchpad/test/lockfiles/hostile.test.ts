@@ -5,18 +5,19 @@
 // the delegated typed failures actually surface through Lockfile.parse.
 
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { Lockfile, LockfileParseError } from "../../effected/lockfiles/Lockfile.ts";
 import type { LockfileFormat } from "../../effected/lockfiles/LockfileFormat.ts";
 
+const JsonString = Schema.fromJsonString(Schema.Unknown);
+
 /** Flip a failing parse and hand back the typed error. */
-const parseError = (content: string, format: LockfileFormat) =>
-	Effect.gen(function* () {
-		const error = yield* Effect.flip(Lockfile.parse(content, { format }));
-		assert.instanceOf(error, LockfileParseError);
-		assert.strictEqual(error.format, format);
-		return error;
-	});
+const parseError = Effect.fn("parseError")(function*(content: string, format: LockfileFormat) {
+	const error = yield* Effect.flip(Lockfile.parse(content, { format }));
+	assert.instanceOf(error, LockfileParseError);
+	assert.strictEqual(error.format, format);
+	return error;
+});
 
 /** Prove Object.prototype picked up nothing from a hostile parse. */
 const assertPrototypeUnpolluted = (): void => {
@@ -157,7 +158,7 @@ describe("hostile input", () => {
 
 		it.effect("__proto__ npm package keys and dependency maps neither pollute nor crash", () =>
 			Effect.gen(function* () {
-				const content = JSON.stringify({
+				const content = yield* Schema.encodeEffect(JsonString)({
 					lockfileVersion: 3,
 					packages: {
 						"": { name: "root" },
@@ -231,7 +232,7 @@ describe("hostile input", () => {
 				]);
 				const hostileMeta = Object.fromEntries([["__proto__", { optional: true }]]);
 
-				const npmContent = JSON.stringify({
+				const npmContent = yield* Schema.encodeEffect(JsonString)({
 					lockfileVersion: 3,
 					packages: {
 						"": { name: "root" },
@@ -244,7 +245,7 @@ describe("hostile input", () => {
 				});
 				assert.include(npmContent, '"__proto__":"^1.0.0"'); // the hostile key survived serialization
 
-				const bunContent = JSON.stringify({
+				const bunContent = yield* Schema.encodeEffect(JsonString)({
 					lockfileVersion: 1,
 					workspaces: { "": { name: "root" } },
 					packages: {
@@ -276,7 +277,7 @@ describe("hostile input", () => {
 
 		it.effect("a __proto__ bun workspace neither pollutes nor crashes", () =>
 			Effect.gen(function* () {
-				const content = JSON.stringify({
+				const content = yield* Schema.encodeEffect(JsonString)({
 					lockfileVersion: 1,
 					workspaces: {
 						"": { name: "root" },
@@ -314,7 +315,7 @@ describe("hostile input", () => {
 
 		it.effect("bun: malformed and non-string package tuples", () =>
 			Effect.gen(function* () {
-				const content = JSON.stringify({
+				const content = yield* Schema.encodeEffect(JsonString)({
 					lockfileVersion: 1,
 					packages: {
 						a: [], // empty tuple
@@ -361,7 +362,7 @@ describe("hostile input", () => {
 
 		it.effect("npm: a corrupt package integrity", () =>
 			Effect.gen(function* () {
-				const content = JSON.stringify({
+				const content = yield* Schema.encodeEffect(JsonString)({
 					lockfileVersion: 3,
 					packages: {
 						"": { name: "root" },
@@ -405,7 +406,7 @@ describe("hostile input", () => {
 
 		it.effect("bun: a corrupt package-tuple integrity", () =>
 			Effect.gen(function* () {
-				const content = JSON.stringify({
+				const content = yield* Schema.encodeEffect(JsonString)({
 					lockfileVersion: 1,
 					packages: { foo: ["foo@1.0.0", "", {}, CORRUPT] },
 				});
@@ -416,7 +417,7 @@ describe("hostile input", () => {
 
 		it.effect("an absent integrity is omitted and the parse succeeds", () =>
 			Effect.gen(function* () {
-				const content = JSON.stringify({
+				const content = yield* Schema.encodeEffect(JsonString)({
 					lockfileVersion: 3,
 					packages: {
 						"": { name: "root" },
@@ -436,7 +437,7 @@ describe("hostile input", () => {
 		// construction — the same total-skip discipline as malformed name keys.
 		it.effect("npm: a link entry with an empty resolved path is skipped, parse succeeds", () =>
 			Effect.gen(function* () {
-				const content = JSON.stringify({
+				const content = yield* Schema.encodeEffect(JsonString)({
 					lockfileVersion: 3,
 					packages: {
 						"": { name: "root" },

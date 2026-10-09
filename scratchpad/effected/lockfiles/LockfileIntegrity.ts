@@ -109,7 +109,7 @@ export class LockfileIntegrity extends Schema.Class<LockfileIntegrity>("Lockfile
 		for (const manifest of manifests) {
 			for (const depType of DEP_TYPES) {
 				const depMap = manifest[depType];
-				if (!depMap) continue;
+				if (depMap === undefined) continue;
 
 				for (const [dependency, constraint] of Object.entries(depMap)) {
 					if (isWorkspaceSpecifier(constraint)) continue;

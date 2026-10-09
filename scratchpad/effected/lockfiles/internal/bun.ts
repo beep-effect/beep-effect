@@ -108,7 +108,7 @@ const resolveBunEdges = (
 ): Record<string, string> => {
 	const names = new Set<string>();
 	for (const section of sections) {
-		if (!section) continue;
+		if (section === undefined) continue;
 		for (const name of Object.keys(section)) if (name !== "") names.add(name);
 	}
 	if (names.size === 0) return {};
@@ -147,12 +147,12 @@ const toFields = (raw: BunLockfileRawType): Effect.Effect<LockfileFields, ParseF
 	Effect.gen(function* () {
 		const packages: Array<ResolvedPackage> = [];
 		// bun's own instance identities: the `packages` keys.
-		const keys = new Set(raw.packages ? Object.keys(raw.packages) : []);
+		const keys = new Set(raw.packages !== undefined ? Object.keys(raw.packages) : []);
 		const workspaceNames = new Set<string>();
 		const workspaceEntries = new Map<string, WorkspaceEntry>();
 		const importers: Array<LockfileImporter> = [];
 
-		if (raw.workspaces) {
+		if (raw.workspaces !== undefined) {
 			// Bun records concrete versions on the package tuples, not per importer,
 			// so every importer dependency carries a specifier and no version. The
 			// root workspace is the `""` entry — the `"."` importer.
@@ -186,15 +186,15 @@ const toFields = (raw: BunLockfileRawType): Effect.Effect<LockfileFields, ParseF
 					}),
 				);
 				workspaceEntries.set(name, {
-					...(wsEntry.dependencies ? { dependencies: wsEntry.dependencies } : {}),
-					...(wsEntry.devDependencies ? { devDependencies: wsEntry.devDependencies } : {}),
-					...(wsEntry.peerDependencies ? { peerDependencies: wsEntry.peerDependencies } : {}),
-					...(wsEntry.optionalDependencies ? { optionalDependencies: wsEntry.optionalDependencies } : {}),
+					...(wsEntry.dependencies !== undefined ? { dependencies: wsEntry.dependencies } : {}),
+					...(wsEntry.devDependencies !== undefined ? { devDependencies: wsEntry.devDependencies } : {}),
+					...(wsEntry.peerDependencies !== undefined ? { peerDependencies: wsEntry.peerDependencies } : {}),
+					...(wsEntry.optionalDependencies !== undefined ? { optionalDependencies: wsEntry.optionalDependencies } : {}),
 				});
 			}
 		}
 
-		if (raw.packages) {
+		if (raw.packages !== undefined) {
 			for (const [key, tuple] of Object.entries(raw.packages)) {
 				if (key === "") continue; // no identity, no row; skip, never throw
 				if (tuple.length < 1) continue;

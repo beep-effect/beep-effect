@@ -135,10 +135,10 @@ const toFields = (
 				const peerDeps = cleanYarnDeps(entry.peerDependencies);
 				const optDeps = cleanYarnDeps(entry.optionalDependencies);
 				workspaceEntries.set(name, {
-					...(deps ? { dependencies: deps } : {}),
-					...(devDeps ? { devDependencies: devDeps } : {}),
-					...(peerDeps ? { peerDependencies: peerDeps } : {}),
-					...(optDeps ? { optionalDependencies: optDeps } : {}),
+					...(deps !== undefined ? { dependencies: deps } : {}),
+					...(devDeps !== undefined ? { devDependencies: devDeps } : {}),
+					...(peerDeps !== undefined ? { peerDependencies: peerDeps } : {}),
+					...(optDeps !== undefined ? { optionalDependencies: optDeps } : {}),
 				});
 			}
 		}
@@ -179,7 +179,7 @@ const resolveYarnEdges = (
 	const edges = new Map<string, string>();
 	const unnameable = new Set<string>();
 	for (const section of [entry.dependencies, entry.optionalDependencies]) {
-		if (!section) continue;
+		if (section === undefined) continue;
 		for (const [name, range] of Object.entries(section)) {
 			if (name === "") continue;
 			const locator = locators.get(`${name}@${range}`);
@@ -240,7 +240,7 @@ const extractYarnWorkspacePath = (key: string): string | undefined => {
 const cleanYarnDeps = (
 	deps: Readonly<Record<string, string>> | undefined,
 ): Readonly<Record<string, string>> | undefined => {
-	if (!deps) return undefined;
+	if (deps === undefined) return undefined;
 	return Object.fromEntries(
 		Object.entries(deps).map(([name, value]) => [name, value.startsWith("npm:") ? value.slice(4) : value]),
 	);
