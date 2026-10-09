@@ -132,6 +132,7 @@ class WatchPullRequestView extends S.Class<WatchPullRequestView>($I`WatchPullReq
     headRefOid: S.NonEmptyString,
     id: S.NonEmptyString,
     isDraft: S.Boolean,
+    isCrossRepository: S.Boolean.pipe(S.withDecodingDefaultTypeKey(Effect.succeed(false))),
     labels: S.Array(WatchPullRequestLabel).pipe(
       S.withConstructorDefault(Effect.succeed(watchPullRequestViewLabelsDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(watchPullRequestViewLabelsDefault))
@@ -401,7 +402,12 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
 > {
   const viewResult = yield* runRepoCommandCapture(
     "gh",
-    ["pr", "view", "--json", "id,number,state,isDraft,mergeable,mergeStateStatus,reviewDecision,headRefOid,labels"],
+    [
+      "pr",
+      "view",
+      "--json",
+      "id,number,state,isDraft,isCrossRepository,mergeable,mergeStateStatus,reviewDecision,headRefOid,labels",
+    ],
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to read the pull request for yeet watch.")));
   if (viewResult.exitCode !== 0) {
@@ -483,6 +489,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
   return YeetWatchSnapshot.make({
     checks,
     headSha: view.headRefOid,
+    isCrossRepository: view.isCrossRepository,
     mergeable: view.mergeable ?? "UNKNOWN",
     mergeStateStatus,
     prNumber: view.number,
@@ -615,6 +622,7 @@ const decideWatchAdmission = (snapshot: YeetWatchSnapshot, changedPaths: Readonl
     HeavyAdmissionEvent.make({
       eventName: "pull_request",
       labels: snapshot.labels,
+      headRepository: snapshot.isCrossRepository ? "fork" : "beep-effect/beep-effect",
       draft: !snapshot.criteria.notDraft,
       changedPaths,
     })

@@ -4,6 +4,8 @@
 
 Lifecycle: `active`
 
+Latest E evidence: [GitHub audit](./history/receipts/stage-4-github-audit.md), [settings snapshots](./history/receipts/stage-3-github-settings.md), and [lane handoff](./history/handoffs/rsc-e-github-2026-10-09.md). E source repairs are final in ready PR #1568. Both integrated full package gates and all local hosted-parity lanes pass; focused fixtures pass 127 tests and scoped coverage passes 396 tests across all seven touched baseline files. The actual GITHUB_TOKEN hosted governance step passes. Cross-lane, trusted-main writer and post-merge acceptance remain open; inherited hosted coverage reds remain attributed for the consolidated repair.
+
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission
@@ -86,3 +88,11 @@ and [lane handoff](./history/handoffs/rsc-h1-catalog-2026-10-09.md).
 - Program review exception: every in-scope actionable finding is resolved,
   including P2 and below; the round-2 review cap does not apply (SPEC.md
   Exception Ledger).
+
+D latest evidence: [release policy and census](history/receipts/stage-2-policy.md)
+and [Run 2 lane handoff](history/handoffs/rsc-d-release-2026-10-09.md).
+The census preceded the committed 939-note reset. Crash resumption merged the
+owner's inherited repairs; independent source/scope review has zero actionable
+findings. Local package/parity proof passes; PR #1566 is ready for the orchestrator gate.
+Hosted success is pending. E owns desktop
+verification; GitHub Packages census remains externally blocked on token scope.

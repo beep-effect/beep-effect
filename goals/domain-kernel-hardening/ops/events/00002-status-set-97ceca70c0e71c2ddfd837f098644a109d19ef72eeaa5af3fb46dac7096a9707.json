@@ -1,0 +1,15 @@
+{
+  "actor": "operator",
+  "at": "2026-10-09T18:28:03.186Z",
+  "body": {
+    "previous": "paused",
+    "status": "active",
+    "type": "status-set"
+  },
+  "expectedRevision": 1,
+  "packet": "domain-kernel-hardening",
+  "parent": "510fcb39297e708d4f6bbef4be826ad08288ec7d78235705786a9decb621fec5",
+  "root": "goals",
+  "schemaVersion": "packet-event/v1",
+  "seq": 2
+}
