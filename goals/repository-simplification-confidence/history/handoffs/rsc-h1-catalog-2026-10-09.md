@@ -186,3 +186,29 @@ The wrapper default was 16 GB despite the parent lane's 20 GB ruling. The
 queued retry retains admission and has its transient MemoryMax raised to
 20 GB with MemoryHigh 16 GB, verified by readback. The friction receipt is
 in research/OPPORTUNITIES.md; future heavy commands use BEEP_HEAVY_MEM=20G.
+
+### Run 3 terminal report — publication blocked
+
+lane: rsc-h1-catalog
+head: 6205923e3615b596ffd30cb7bae4b1d598259972 (local report base; terminal report commit follows; remote remains 8fe6d27057f1abf62b498658a51c6a3677d8b637)
+PR: #1562 (wave 1 OSV: #1562; tsgo ratchet: SPEC Decision Log row "H1 tsgo ratchet deferral")
+package-verify: not applicable (no workspace package edited)
+hosted-parity: test-tsgo: pass (saved terminal result); docgen local: pass (saved noop); jsdoc-ratchet: pass (saved); knowledge refs: fail (saved inherited SPEC observation remains after #1565); fallow audit+health: pass (saved); coverage read: pass (no measured source touched); Security (OSV): pass at earlier proved heads, final exact-head hosted result unavailable because push was blocked
+handoff: goals/repository-simplification-confidence/history/handoffs/rsc-h1-catalog-2026-10-09.md
+open items: publication blocked in policy preflight by memory throttling; local review fix and main integration remain unpushed; OSV holds renewed through 2026-10-30; orchestrator owns remaining inherited SPEC knowledge observation; A Knip merge precedes catalog/register; compatibility waves and tsgo deferral remain open; no effected-port notification pending.
+
+- The retry committed the recovery/repair evidence at 6205923e36 but did not
+  push. The remote read confirms PR #1562 remains READY at 8fe6d27057.
+- Despite the corrected 20 GB hard cap, policy processes spent the stalled
+  interval in `__mem_cgroup_handle_over_high` under the required 16 GB high
+  watermark. CPU usage advanced only about 1.3 seconds across roughly two
+  minutes; memory was about 18 GB, with zero OOM or hard-cap events.
+- Stopped only this lane's transient wrapper. The attached publish returned
+  130 and the unit is inactive/dead. No newly started monitor or other unit
+  remains running. No gate bypass, push, merge or retirement was performed.
+- Orchestrator next: choose a serial policy-preflight execution or revise the
+  heavy-job throttle ruling, then publish the existing addressed wave and
+  gate its exact head. The review reply is already posted and resolved.
+- Report-only commit preserves this terminal state; it is not a second
+  published wording wave. Reversal: revert the report-only commit; dependency
+  state and OSV exceptions are unchanged.

@@ -193,3 +193,9 @@
   transient wrapper to MemoryMax=20G and MemoryHigh=16G; read back both values.
 - Prevention: lane cap rulings must also set `BEEP_HEAVY_MEM=20G` so nested
   wrapper units carry the same limit. Preserve three-slot admission.
+
+- Terminal retry evidence: at roughly 18 GB current memory, both policy
+  scanner processes waited in `__mem_cgroup_handle_over_high`; CPU progressed
+  about 1.3 seconds across two minutes, with zero hard-cap/OOM events. Stopped
+  the lane-owned unit (publish exit 130); remote #1562 stayed at 8fe6d27057.
+  A serial preflight or an orchestrator-approved throttle adjustment is needed.
