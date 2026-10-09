@@ -171,3 +171,14 @@
 - Would have prevented it: program scheduling that reserves a short remediation
   slot, or shared immutable proof reuse where the command's inputs match. The
   admission cap itself is retained; no bypass is used.
+
+## 2026-10-09: publish runtime flag is not the default monitor's runtime flag
+
+- Doing: publishing H2 with a bounded readiness monitor.
+- Evidence: `yeet publish --job-max-runtime` exits before publication with
+  `--job-max-runtime requires --detach`, although ordinary publish submits a
+  detached readiness monitor itself.
+- Disposition: use the canonical publish invocation and manage the resulting
+  monitor job explicitly; no branch push occurred during the rejected invocation.
+- Would have prevented it: command help distinguishing the detached publication
+  runner's runtime from the readiness monitor that ordinary publish submits.
