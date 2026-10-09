@@ -160,3 +160,14 @@ cannot widen non-goals without a dated `SPEC.md` change.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | None | — | — | A drafting-time exception about absent exploration source files was removed 2026-07-08: the files exist (`CAPTURE.md`, `research/01-direction-grounding.md`, `assets/README.md`) and this SPEC was reconciled against them at review. | — |
+
+## Decision Log — shared XML reader repair, 2026-10-09
+
+- Use fast-xml-parser's reserved `#text` key and migrate the ISO 4217 and IANA
+  parsed-node consumers in the same PR. The key cannot collide with a valid
+  XML element name; reverting these three source edits reverses the change.
+- Follow the live private-workspace release policy: both `@beep/schema` and
+  `@beep/repo-cli` have `private: true` on base `4e82f6d942`. The lane brief's
+  published-schema premise is stale. A staged patch changeset failed the
+  changeset graph guard, so remove it and list the packages in the PR body.
+  Publication activation requires its own release-policy decision.

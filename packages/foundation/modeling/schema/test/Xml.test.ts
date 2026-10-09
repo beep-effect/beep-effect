@@ -8,6 +8,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
+import XMLBuilder from "fast-xml-builder";
 
 const decodeXmlTextToUnknown = S.decodeEffect(XmlTextToUnknown);
 const encodeXmlTextToUnknown = S.encodeEffect(XmlTextToUnknown);
@@ -34,6 +35,33 @@ class PeopleDocument extends S.Class<PeopleDocument>($I`PeopleDocument`)(
 ) {}
 
 describe("Xml", () => {
+  it.effect(
+    "preserves text elements and nested text content without a key collision",
+    Effect.fnUntraced(function* () {
+      const document = yield* decodeXmlTextToUnknown(
+        '<root><text lang="en">Outer &amp; content<text kind="nested">Inner &amp; content</text></text></root>'
+      );
+
+      expect(document).toEqual({
+        root: {
+          text: {
+            lang: "en",
+            "#text": "Outer & content",
+            text: { kind: "nested", "#text": "Inner & content" },
+          },
+        },
+      });
+
+      const xml = new XMLBuilder({
+        ignoreAttributes: false,
+        attributeNamePrefix: "",
+        textNodeName: "#text",
+      }).build(document);
+
+      expect(yield* decodeXmlTextToUnknown(xml)).toEqual(document);
+    })
+  );
+
   it.effect(
     "decodes XML text into typed schema values",
     Effect.fnUntraced(function* () {

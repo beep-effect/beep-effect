@@ -68,3 +68,14 @@
 - **Disposition:** cover the fail-closed parse-error path and retain the existing
   baseline; the comparator correctly ignores a percentage-only denominator
   change when uncovered debt does not increase.
+
+## 2026-10-09 — XML repair brief carries stale publication metadata
+
+The schema-xml-text-node brief requested a patch changeset for `@beep/schema`,
+calling it published. On current main `4e82f6d942`, its manifest and the CLI
+consumer manifest both have `private: true`. After staging the requested
+changeset, `bun run beep quality changeset-graph` exited 1 with
+`private workspace changesets are forbidden`. Removed the changeset under
+the brief's private-workspace exemption; no release policy was changed.
+Generate package publication facts from the lane's refreshed base when
+writing briefs so workers do not prepare release notes the gate rejects.
