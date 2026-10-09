@@ -215,6 +215,8 @@ type WriterOptions = {
   readonly writerCap?: string;
   readonly stampCap?: string;
   readonly registeredEvent?: string;
+  readonly writerArgs?: ReadonlyArray<string>;
+  readonly attemptUtc?: string;
 };
 
 const writerEnvironment = (stateHome: string, evidenceRoot: string, options: WriterOptions) => {
@@ -253,6 +255,7 @@ const writerEnvironment = (stateHome: string, evidenceRoot: string, options: Wri
     // halves walk the *same* chain rather than only its first link.
     BEEP_HOOK_PULSE_HASH_SALT: options.hashSalt ?? "",
     BEEP_AI_METRICS_HASH_SALT: options.aiMetricsHashSalt ?? "",
+    BEEP_HOOK_PULSE_ATTEMPT_UTC: options.attemptUtc ?? "",
   };
 };
 
@@ -283,7 +286,7 @@ const runWriter = Effect.fnUntraced(function* (stdin: string, options: WriterOpt
   // repo's `nodeBuiltinImport` law names as the replacement for `node:child_process`.
   const handle = yield* ChildProcess.make(
     options.writerPath ?? writerPath,
-    options.registeredEvent ? ["--event", options.registeredEvent] : [],
+    options.writerArgs ?? (options.registeredEvent ? ["--event", options.registeredEvent] : []),
     {
       cwd: repoRoot,
       // Inherited, not restated. The writer shells out to `jq`, `sha256sum`, `date`, and
@@ -334,7 +337,7 @@ const runWriter = Effect.fnUntraced(function* (stdin: string, options: WriterOpt
       Effect.map(A.filter((name) => name.startsWith("hook-pulse-refusals-")))
     );
   const refusals = yield* readWriterLines(evidenceRoot, refusalFiles);
-  return { exitCode, files, stderr, stdout, rows, refusals };
+  return { exitCode, files, stderr, stdout, rows, refusals, refusalFiles };
 });
 
 const session = "ccd-session-writer";
@@ -1256,6 +1259,31 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse writer confo
       const oracle = yield* typescriptHarnessHash(inner);
       const run = yield* runWriter(yield* encodeJson(sessionStartPayload(alias)));
       assertSome((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash, oracle.harnessHash);
+    })
+  );
+
+  it.effect("withholds the outer stamp when nearer Git metadata has no root guide", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const outer = yield* makeHarnessFixtureRoot();
+      const inner = path.join(outer, "nearer");
+      yield* fs.makeDirectory(path.join(inner, ".git"), { recursive: true });
+      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(inner)));
+      assertNone((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash);
+    })
+  );
+
+  it.effect("rejects an invalid inherited refusal date and partitions valid dates by the attempt", () =>
+    Effect.gen(function* () {
+      const invalid = yield* runWriter("", { writerArgs: ["--refuse", "timeout"], attemptUtc: "2026-02-30T00:00:00Z" });
+      expect(invalid.refusals).toHaveLength(1);
+      const row = yield* S.decodeEffect(S.fromJsonString(HookPulseRefusal))(invalid.refusals[0]);
+      expect(DateTime.formatIso(row.ts)).not.toBe("2026-03-02T00:00:00.000Z");
+      const valid = yield* runWriter("", { writerArgs: ["--refuse", "timeout"], attemptUtc: "2026-08-01T23:59:59Z" });
+      expect(valid.refusalFiles).toEqual(["hook-pulse-refusals-2026-08-01.ndjson"]);
+      const validRow = yield* S.decodeEffect(S.fromJsonString(HookPulseRefusal))(valid.refusals[0]);
+      expect(DateTime.formatIso(validRow.ts)).toBe("2026-08-01T23:59:59.000Z");
     })
   );
 

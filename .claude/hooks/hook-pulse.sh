@@ -61,10 +61,11 @@ if [ "${1:-}" != "--bounded-body" ] && [ "${1:-}" != "--refuse" ]; then
 fi
 refuse() {
   local reason="$1" day ts
-  day="$(date -u +%Y-%m-%d)"; ts="${BEEP_HOOK_PULSE_ATTEMPT_UTC:-}"
-  if ! [[ "${ts}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]] || [ "$(date -u -d "${ts}" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null)" != "${ts}" ]; then
+  ts="${BEEP_HOOK_PULSE_ATTEMPT_UTC:-}"
+  if ! [[ "${ts}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]] || [ "$(date -u -d "${ts}" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -j -f '%Y-%m-%dT%H:%M:%SZ' "${ts}" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null)" != "${ts}" ]; then
     ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   fi
+  day="${ts:0:10}"
   mkdir -p "${BEEP_AGENT_EVIDENCE_ROOT}" 2>/dev/null || return 0
   printf '{"ts":"%s","agentKind":"%s","reason":"%s"}\n' "${ts}" "${agent_kind}" "${reason}" \
     >>"${BEEP_AGENT_EVIDENCE_ROOT}/hook-pulse-refusals-${day}.ndjson" 2>/dev/null || true
@@ -306,13 +307,11 @@ transcript_path_hash="$(sha256_private_identifier "${raw_transcript_path}")" || 
 # can never false-negative, since a PostToolUse payload always carries the
 # quoted event name. The raw skill name or path lives only in these locals and
 # the jq pass; the row receives the digest or nothing.
-# The repo root is the nearest ancestor of `cwd` holding BOTH `AGENTS.md` and
-# `.git`: `AGENTS.md` alone would stop at a nested app's own guide
-# (`apps/*/AGENTS.md`) and misfile every root surface. Only an absolute `cwd`
-# is resolved physically before the walk; nearest Git metadata stops discovery
-# even when that checkout has no guide (relative paths yield no surface), and the loop stops once a strip makes no progress, so a segment
-# without `/` can never spin forever. It sets `found_repo_root` (empty when
-# nothing matches) instead of printing, so callers pay no subshell for it.
+# Resolve an absolute cwd physically before searching for checkout ownership.
+# Stop at the nearest Git metadata, and select it only when AGENTS.md exists;
+# a missing guide never permits attribution to a farther checkout. Nested app
+# guides alone do not terminate discovery. Physical resolution uses a subshell
+# and preserves trailing path bytes. Relative paths yield no discovered root.
 find_repo_root() {
   found_repo_root=""
   local probe next_probe
@@ -520,11 +519,13 @@ END {
   done
 
   indexed=0
-  if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    git_top="$(git rev-parse --show-toplevel 2>/dev/null && printf '.')"
+  if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = true ]; then
+    git_top="$(git rev-parse --show-toplevel 2>/dev/null && printf '.')" || exit 1
     git_top="${git_top%.}"; git_top="${git_top%$'\n'}"
-    git_top="$(cd -- "${git_top}" 2>/dev/null && pwd -P && printf '.')"
+    [ -n "${git_top}" ] || exit 1
+    git_top="$(cd -- "${git_top}" 2>/dev/null && pwd -P && printf '.')" || exit 1
     git_top="${git_top%.}"; git_top="${git_top%$'\n'}"
+    [ -n "${git_top}" ] || exit 1
     indexed_probe="$(pwd -P && printf '.')"
     indexed_probe="${indexed_probe%.}"; indexed_probe="${indexed_probe%$'\n'}"
     while [ "${indexed_probe}" != "${git_top}" ]; do

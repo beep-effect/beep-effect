@@ -7,6 +7,8 @@ import {
   HookPulseInstrumentClass,
   HookPulseNotificationType,
   HookPulseRawEvent,
+  HookPulseRefusal,
+  HookPulseSwitchTransition,
   HookPulseV1,
   HookPulseV1Arbitrary,
   HookPulseV1FromLegacyRecord,
@@ -338,6 +340,17 @@ const hookPulseEquivalent = S.toEquivalence(HookPulseV1);
 const isHookPulseWaitReason = S.is(HookPulseWaitReason);
 
 describe("HookPulseV1", () => {
+  it.effect("rejects calendar rollover in refusal and switch transition timestamps", () =>
+    Effect.sync(() => {
+      A.forEach(["2026-02-30T00:00:00Z", "2026-08-01T24:00:00Z"], (ts) => {
+        assertTrue(
+          Result.isFailure(S.decodeUnknownResult(HookPulseRefusal)({ ts, agentKind: "claude-code", reason: "timeout" }))
+        );
+        assertTrue(Result.isFailure(S.decodeUnknownResult(HookPulseSwitchTransition)({ ts, action: "arm" })));
+      });
+    })
+  );
+
   it.prop(
     "round-trips disarm artifacts through their production JSON codecs",
     [
