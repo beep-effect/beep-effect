@@ -38,19 +38,29 @@ fallback_pattern() {
   esac
 }
 read_pattern() {
-  local name="$1" value=""
-  if [[ -r "$pattern_file" ]]; then
-    if command -v node >/dev/null 2>&1; then
-      value="$(BEEP_CI_PATTERN_FILE="$pattern_file" BEEP_CI_PATTERN_NAME="$name" node -e 'process.stdout.write(String(require(process.env.BEEP_CI_PATTERN_FILE)[process.env.BEEP_CI_PATTERN_NAME] ?? ""))' 2>/dev/null || true)"
-    elif command -v bun >/dev/null 2>&1; then
-      value="$(BEEP_CI_PATTERN_FILE="$pattern_file" BEEP_CI_PATTERN_NAME="$name" bun -e 'process.stdout.write(String(require(process.env.BEEP_CI_PATTERN_FILE)[process.env.BEEP_CI_PATTERN_NAME] ?? ""))' 2>/dev/null || true)"
-    elif command -v jq >/dev/null 2>&1; then
-      value="$(jq -r --arg k "$name" '.[$k] // empty' "$pattern_file" 2>/dev/null || true)"
-    elif command -v python3 >/dev/null 2>&1; then
-      value="$(BEEP_CI_PATTERN_FILE="$pattern_file" BEEP_CI_PATTERN_NAME="$name" python3 -I -c 'import json,os,sys; sys.stdout.write(str(json.load(open(os.environ["BEEP_CI_PATTERN_FILE"])).get(os.environ["BEEP_CI_PATTERN_NAME"], "")))' 2>/dev/null || true)"
-    fi
+  # Fail closed when a JSON runtime is present but the read fails (missing file,
+  # invalid JSON, unknown key): a stale literal must never classify a change
+  # silently. Fall back to the literals only when no runtime exists at all.
+  local name="$1" value="" runtime=""
+  if command -v node >/dev/null 2>&1; then
+    runtime=node
+    value="$(BEEP_CI_PATTERN_FILE="$pattern_file" BEEP_CI_PATTERN_NAME="$name" node -e 'const v = require(process.env.BEEP_CI_PATTERN_FILE)[process.env.BEEP_CI_PATTERN_NAME]; if (typeof v !== "string" || v === "") process.exit(3); process.stdout.write(v)')" || value=""
+  elif command -v bun >/dev/null 2>&1; then
+    runtime=bun
+    value="$(BEEP_CI_PATTERN_FILE="$pattern_file" BEEP_CI_PATTERN_NAME="$name" bun -e 'const v = require(process.env.BEEP_CI_PATTERN_FILE)[process.env.BEEP_CI_PATTERN_NAME]; if (typeof v !== "string" || v === "") process.exit(3); process.stdout.write(v)')" || value=""
+  elif command -v jq >/dev/null 2>&1; then
+    runtime=jq
+    value="$(jq -er --arg k "$name" '.[$k] | select(type == "string" and . != "")' "$pattern_file")" || value=""
+  elif command -v python3 >/dev/null 2>&1; then
+    runtime=python3
+    value="$(BEEP_CI_PATTERN_FILE="$pattern_file" BEEP_CI_PATTERN_NAME="$name" python3 -I -c 'import json,os,sys; v=json.load(open(os.environ["BEEP_CI_PATTERN_FILE"])).get(os.environ["BEEP_CI_PATTERN_NAME"]); sys.exit(3) if not isinstance(v,str) or v=="" else sys.stdout.write(v)')" || value=""
   fi
-  if [[ -z "$value" ]]; then
+  if [[ -n "$runtime" ]]; then
+    if [[ -z "$value" ]]; then
+      echo "ci-change-profile: $runtime could not read pattern '$name' from $pattern_file" >&2
+      return 1
+    fi
+  else
     value="$(fallback_pattern "$name")" || { echo "ci-change-profile: unknown pattern '$name'" >&2; return 1; }
   fi
   printf '%s' "$value"
