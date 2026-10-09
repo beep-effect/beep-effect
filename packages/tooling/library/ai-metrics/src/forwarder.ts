@@ -34,7 +34,7 @@ import {
   writeAiMetricsDerivedStorage,
 } from "./derived-storage.ts";
 import { HarnessHash } from "./harness-ledger.ts";
-import { HookPulseV1 } from "./hook-pulse.ts";
+import { agentEvidenceRoot, HookPulseV1, hookPulseHashSalt, hookPulseLedgerDir } from "./hook-pulse.ts";
 import { AiMetricsIdentityRegistryUpsertInput, upsertAiMetricsIdentityRegistry } from "./identity-registry.ts";
 import { summarizeTranscriptText } from "./ingest.ts";
 import { AiMetricsInstallInput, makeAiMetricsInstallSpec } from "./install.ts";
@@ -75,6 +75,7 @@ const AiMetricsForwarderTimerCommand = AiMetricsForwarderTimerCommandBase.pipe(
 
 class ProcessedForwarderSource extends S.Class<ProcessedForwarderSource>($I`ProcessedForwarderSource`)({
   record: AiMetricsDerivedTranscriptRecord,
+  hookPathHash: S.toEncoded(Sha256Hex),
   sessionIdentityHash: S.OptionFromOptionalKey(S.toEncoded(Sha256Hex)),
 }) {}
 
@@ -1011,7 +1012,12 @@ const discoverForwarderSourceFiles = Effect.fn("AiMetrics.forwarder.discoverSour
 });
 
 const processSourceFile = Effect.fn("AiMetrics.forwarder.processSourceFile")(
-  function* (input: AiMetricsForwarderInput, rawArchiveDir: string, sourceFile: ForwarderSourceFile) {
+  function* (
+    input: AiMetricsForwarderInput,
+    rawArchiveDir: string,
+    sourceFile: ForwarderSourceFile,
+    hookSalt: O.Option<string>
+  ) {
     const fs = yield* FileSystem.FileSystem;
     const diagnosticSourcePathHash = yield* sourcePathHashForDiagnostics(input, sourceFile);
     const content = yield* fs.readFileString(sourceFile.sourcePath).pipe(
@@ -1047,12 +1053,15 @@ const processSourceFile = Effect.fn("AiMetrics.forwarder.processSourceFile")(
       summary,
     }).pipe(Effect.mapError((cause) => forwarderFailure("Failed to build AI metrics privacy projection.", cause)));
 
-    const sessionIdentityHash = yield* readSessionIdentityHash(content, sourceFile.sourceKind, input.hashSalt).pipe(
+    const sessionIdentityHash = yield* readSessionIdentityHash(content, sourceFile.sourceKind, hookSalt).pipe(
       Effect.mapError((cause) => forwarderFailure("Failed to bind transcript session identity.", cause))
     );
     return ProcessedForwarderSource.make({
       record: AiMetricsDerivedTranscriptRecord.make({ archiveObject, privacy }),
       sessionIdentityHash,
+      hookPathHash: yield* hashPrivateIdentifier(sourceFile.sourcePath, hookSalt).pipe(
+        Effect.mapError((cause) => forwarderFailure("Failed to bind transcript path identity.", cause))
+      ),
     });
   },
   (effect, _input, _rawArchiveDir, sourceFile) =>
@@ -1167,9 +1176,12 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
       Effect.mapError((cause) => forwarderFailure("Failed to hash AI metrics repo root.", cause))
     );
     const sourceSelection = yield* discoverForwarderSourceFiles(input);
+    const hookSalt = yield* hookPulseHashSalt.pipe(
+      Effect.mapError((cause) => forwarderFailure("Cannot resolve hook hash namespace.", cause))
+    );
     const records = yield* Effect.forEach(
       sourceSelection.files,
-      (sourceFile) => processSourceFile(input, installSpec.storage.rawArchiveDir, sourceFile),
+      (sourceFile) => processSourceFile(input, installSpec.storage.rawArchiveDir, sourceFile, hookSalt),
       { concurrency: 4 }
     );
     // Session-time stamps stay separate from the ingest-time snapshot. Unknown
@@ -1181,11 +1193,11 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
       Effect.mapError((cause) => forwarderFailure("Cannot resolve XDG state home.", cause))
     );
     const evidenceRoot = yield* Config.String("BEEP_AGENT_EVIDENCE_ROOT").pipe(
-      Config.withDefault(pathApi.join(stateHome, "beep/agent-evidence")),
-      Effect.map((value) => (value === "" ? pathApi.join(stateHome, "beep/agent-evidence") : value)),
+      Config.withDefault(agentEvidenceRoot(stateHome)),
+      Effect.map((value) => (value === "" ? agentEvidenceRoot(stateHome) : value)),
       Effect.mapError((cause) => forwarderFailure("Cannot resolve hook evidence root.", cause))
     );
-    const hookDir = pathApi.join(evidenceRoot, "hook-events");
+    const hookDir = hookPulseLedgerDir(evidenceRoot);
     const shards = yield* fs.readDirectory(hookDir).pipe(Effect.orElseSucceed(A.empty<string>));
     const stamps = MutableHashMap.empty<string, HashSet.HashSet<string>>();
     const sessions = MutableHashMap.empty<string, HashSet.HashSet<string>>();
@@ -1212,7 +1224,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
       }),
       { discard: true }
     );
-    const stampedRecords = A.map(records, ({ record, sessionIdentityHash }) => {
+    const stampedRecords = A.map(records, ({ record, sessionIdentityHash, hookPathHash }) => {
       const sanitized = record.privacy.sanitized;
       const kind = AiMetricsTranscriptSource.$match(sanitized.sourceKind, {
         claude: () => O.some("claude-code"),
@@ -1222,7 +1234,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
       const sessionHarnessHash = O.flatMap(
         O.filter(kind, () => hookCollectionComplete),
         (agentKind) => {
-          const key = `${agentKind}:${sanitized.sourcePathHash}`;
+          const key = `${agentKind}:${hookPathHash}`;
           return pipe(
             MutableHashMap.get(sessions, key),
             O.filter(() =>

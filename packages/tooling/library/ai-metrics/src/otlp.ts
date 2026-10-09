@@ -25,6 +25,7 @@ import * as R from "effect/Record";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { ensureAiMetricsDerivedStorage } from "./derived-storage.ts";
+import { HarnessHash } from "./harness-ledger.ts";
 import {
   AiMetricsDeployTarget,
   AiMetricsOtlpEndpointSpec,
@@ -366,7 +367,7 @@ class AiMetricsOtlpTurnExportRow extends S.Class<AiMetricsOtlpTurnExportRow>($I`
     agentRoleHash: S.OptionFromNullOr(S.String),
     agentSessionId: S.String,
     configSnapshotId: S.String,
-    sessionHarnessHash: S.OptionFromNullOr(S.String),
+    sessionHarnessHash: S.OptionFromNullOr(HarnessHash),
     eventName: S.String,
     forkedFromIdHash: S.OptionFromNullOr(S.String),
     ingestRunId: S.String,

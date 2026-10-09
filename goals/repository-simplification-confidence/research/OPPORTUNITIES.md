@@ -341,3 +341,13 @@ frozen-source package/parity repeat follows the admitted current run.
   rather than keeping an ordered ticket queue, so closeout admission has
   unpredictable wait time. A fair queue with observable position would prevent
   this delay; this lane does not alter the workstation wrapper or other jobs.
+
+### H3 storage and hook namespace boundary
+
+Final review found that a forwarder stamp join reused the storage salt instead
+of the hook namespace. Join-side session and path hashes now resolve the hook
+salt chain separately; storage pseudonyms remain unchanged. Nine isolated
+integration cases cover storage and OTLP projection plus mixed, missing, reused,
+late, mismatched, corrupt and unreadable evidence. The earlier private-schema
+import error and sentinel Result-union error were repaired before the final
+package run; CLI inbox rows reference their concrete repair commits.

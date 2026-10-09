@@ -412,8 +412,7 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
   stateDir: string,
   window: number,
   harnessHash: HarnessHash,
-  agentKind: HookPulseAgentKind = "claude-code",
-  _shared = false
+  agentKind: HookPulseAgentKind = "claude-code"
 ) {
   const names = A.filter(yield* listDirectorySorted(stateDir), (name) => ANY_SHARD.test(name));
   const fs = yield* FileSystem.FileSystem;
@@ -610,13 +609,38 @@ const reconciliationTranscriptFiles = Effect.fn("HarnessLedger.reconciliationTra
             onSuccess: Effect.succeedSome,
           })
         );
-        if (O.isNone(canonicalFile) || MutableHashSet.has(visited, canonicalFile.value)) return A.empty<string>();
-        MutableHashSet.add(visited, canonicalFile.value);
+        if (O.isNone(canonicalFile)) return A.empty<string>();
         return A.of(file);
       }),
       { concurrency: 1 }
     )
   );
+});
+
+const selectTranscriptRepresentatives = Effect.fnUntraced(function* (
+  files: ReadonlyArray<string>,
+  hooks: MutableHashMap.MutableHashMap<string, number>,
+  hashSalt: O.Option<string>,
+  failures: Ref.Ref<number>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const selected = MutableHashMap.empty<string, { readonly file: string; readonly priority: number }>();
+  for (const file of files) {
+    const canonical = yield* fs.realPath(file).pipe(
+      Effect.matchEffect({
+        onFailure: () => Ref.update(failures, (count) => count + 1).pipe(Effect.as(O.none())),
+        onSuccess: Effect.succeedSome,
+      })
+    );
+    if (O.isNone(canonical)) continue;
+    const pathHash = yield* hashPrivateIdentifier(file, hashSalt).pipe(
+      Effect.mapError(HarnessLedgerIoError.wrap("Cannot hash transcript alias identity."))
+    );
+    const priority = MutableHashMap.has(hooks, pathHash) ? 2 : canonical.value === file ? 1 : 0;
+    if (O.exists(MutableHashMap.get(selected, canonical.value), (prior) => prior.priority >= priority)) continue;
+    MutableHashMap.set(selected, canonical.value, { file, priority });
+  }
+  return A.map(A.fromIterable(MutableHashMap.values(selected)), (entry) => entry.file);
 });
 
 const ParentSessionSegment = S.String.check(S.isPattern(/^[0-9a-f-]{36}$/));
@@ -696,7 +720,12 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
   const canonical = path.resolve(transcriptDir);
   yield* fs.realPath(canonical).pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve transcript root.")));
   const failures = yield* Ref.make(0);
-  const files = yield* reconciliationTranscriptFiles(canonical, failures);
+  const files = yield* selectTranscriptRepresentatives(
+    yield* reconciliationTranscriptFiles(canonical, failures),
+    hooks,
+    hashSalt,
+    failures
+  );
   const sessions = MutableHashMap.empty<string, number>();
   const transcriptPaths = MutableHashMap.empty<string, number>();
   for (const file of files) {

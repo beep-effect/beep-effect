@@ -422,8 +422,7 @@ const pruneProposalsImpl = Effect.fn("HarnessLedger.pruneProposals")(function* (
     options.stateDir,
     options.windowSessions,
     harnessHash,
-    options.agentKind,
-    true
+    options.agentKind
   );
   // A zero-touch observation remains advisory until tool identities and surface
   // coverage are reconciled. No incomplete collection can persist a non-use claim.
