@@ -1,41 +1,13 @@
 # github-references (lab port of @effected/github-references)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Fgithub-references?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/github-references)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
 
 GitHub's issue-reference grammar as pure functions: the nine closing keywords in the three dialects real tools write — inline in prose, one reference per line, and a whole line naming several issues at once. Strings in, values out. No service, no layer, no client, no network, and no octokit anywhere in the dependency graph: `effect` is the only peer and there are no runtime dependencies at all.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/github-references
 
 Deciding which issues a pull request closes is a grammar question, not an API call, and the answer is usually re-derived from memory in a one-line regex. That regex is where the bugs live: accept a colon inline and you harvest references GitHub will not link, so your pipeline reports an issue as closing that merging leaves open. Accept `closes 123` without the `#` and you report a link GitHub never made. Read `Closes #1, #2 and #3` with a parser built for one reference per line and you silently see the first issue and lose the rest.
 
 This package is that grammar written once, with the disagreements resolved on purpose rather than by whoever copied the regex last. Each dialect is a separate function because each has a distinct producer: prose is written by humans for GitHub's own scanner, and a generated references region is written by tooling for humans. The functions are pure and synchronous — no `Effect`, no layer to provide, nothing to stub in a test — so a release script, a lint rule, a commit-message check and an Action can all speak the same grammar without any of them installing a GitHub client.
-
-## Install
-
-```bash
-npm install @effected/github-references effect
-```
-
-```bash
-pnpm add @effected/github-references effect
-```
-
-Requires Node.js >=24.11.0.
 
 All `@effected/*` packages are ESM-only: the exports maps publish only `import` conditions, so `require()` — including tools that resolve in CJS mode — fails with Node's `ERR_PACKAGE_PATH_NOT_EXPORTED` rather than loading a CJS build that does not exist. Import from an ES module.
 
@@ -46,7 +18,7 @@ All `@effected/*` packages are ESM-only: the exports maps publish only `import` 
 Harvest references out of a pull request body, then read a generated line that names several issues:
 
 ```ts
-import { harvestIssueReferences, parseClosingList } from "@effected/github-references";
+import { harvestIssueReferences, parseClosingList } from "@beep/scratchpad/effected/github-references";
 
 console.log(harvestIssueReferences("Fixes #12 and closes #13."));
 // [ { issueNumber: 12, keyword: "fixes", start: 0, end: 9 },
@@ -61,7 +33,7 @@ console.log(parseClosingList("Closes #247, #248 and #251"));
 `harvestIssueReferences` reads the **inline-in-prose** dialect: one of the nine closing keywords in `CLOSING_KEYWORDS`, mandatory whitespace, then `#<number>`, anywhere in the text, case-insensitive, and **no colon** — that is the spelling GitHub itself scans a pull request body for. Every hit carries `start` and `end` offsets into the input, so a caller can underline the match, strip it, or rewrite it in place.
 
 ```ts
-import { harvestIssueReferences } from "@effected/github-references";
+import { harvestIssueReferences } from "@beep/scratchpad/effected/github-references";
 
 console.log(harvestIssueReferences("closes: 123 and fixes #9"));
 // [ { issueNumber: 9, keyword: "fixes", start: 16, end: 24 } ]
@@ -75,7 +47,7 @@ Duplicates come back as written, because whether `fixes #1, fixes #1` means one 
 `parseBareLineReference` reads the **bare-line** dialect: after trimming, the whole line *is* the reference, the colon is optional, and anything left over rejects the line. That is the shape a generated references block writes, one reference per line. There are no offsets, because in a dialect where the line is the reference an offset would restate a constant.
 
 ```ts
-import { parseBareLineReference } from "@effected/github-references";
+import { parseBareLineReference } from "@beep/scratchpad/effected/github-references";
 
 console.log(parseBareLineReference("Closes: #12"));
 // Option.some({ issueNumber: 12, keyword: "closes" })
@@ -89,7 +61,7 @@ console.log(parseBareLineReference("closes #12 for real"));
 `parseClosingList` reads one whole line naming several issues under a single keyword. Items are `#<digits>` separated by a comma, by `and`, or by the Oxford `, and`, and the keyword's colon is optional as in the bare-line dialect.
 
 ```ts
-import { parseClosingList } from "@effected/github-references";
+import { parseClosingList } from "@beep/scratchpad/effected/github-references";
 
 console.log(parseClosingList("Fixes #1, #2, and #3"));
 // Option.some({ keyword: "fixes", issueNumbers: [1, 2, 3] })
@@ -101,7 +73,7 @@ console.log(parseClosingList("Closes #1 and please review"));
 `parseReferenceList` is the wider reading of the same line. It additionally accepts the non-closing `REFERENCE_KEYWORDS` — `ref`, `refs`, `references` — which associate an issue without closing it, and reports which set matched through a `closing` flag. `parseClosingList` is the closing-only view of exactly that engine, so a `Refs:` line is `Option.none()` there and `closing: false` here:
 
 ```ts
-import { parseClosingList, parseReferenceList } from "@effected/github-references";
+import { parseClosingList, parseReferenceList } from "@beep/scratchpad/effected/github-references";
 
 console.log(parseReferenceList("Refs #7, #8"));
 // Option.some({ keyword: "refs", closing: false, issueNumbers: [7, 8] })
@@ -115,7 +87,7 @@ console.log(parseClosingList("Refs #7, #8"));
 `harvestReferenceLists` generalizes the closing-list grammar to the inline-in-prose posture: several lists can share one line of running text, each ending at its own last valid item.
 
 ```ts
-import { harvestReferenceLists } from "@effected/github-references";
+import { harvestReferenceLists } from "@beep/scratchpad/effected/github-references";
 
 console.log(harvestReferenceLists("Closes #123, Fixes #456"));
 // [ { keyword: "closes", closing: true, issueNumbers: [123], start: 0, end: 11 },
@@ -129,7 +101,7 @@ Both keyword sets play, exactly as in `parseReferenceList`, and each hit carries
 `parseBareLines`, `parseClosingLists` and `parseReferenceLists` apply their single-line parser across every line of a text and collect the hits in order. Rejected lines contribute nothing, and results carry no line numbers — a caller that needs positions keeps its own split loop.
 
 ```ts
-import { parseBareLines, parseClosingLists } from "@effected/github-references";
+import { parseBareLines, parseClosingLists } from "@beep/scratchpad/effected/github-references";
 
 console.log(parseBareLines("Closes: #12\nsome unrelated line\nFixed #34"));
 // [ { issueNumber: 12, keyword: "closes" }, { issueNumber: 34, keyword: "fixed" } ]
@@ -145,7 +117,7 @@ console.log(parseClosingLists("Fixes #1, #2\nRefs #9\nCloses #3 and #4"));
 `collectReferenceLists` reads a text the way a real trailer/prose interleave actually looks: each line is tried as a whole-line reference list first (colon-tolerant, per `parseReferenceList`), and only a line that isn't one is harvested inline (no colon, per `harvestReferenceLists`). That preference order means a colon-less trailer line contributes its list exactly once, never once per posture. Results carry no offsets — this is the line-granular reading; a caller that needs spans reaches for `harvestReferenceLists` directly.
 
 ```ts
-import { collectReferenceLists } from "@effected/github-references";
+import { collectReferenceLists } from "@beep/scratchpad/effected/github-references";
 
 console.log(collectReferenceLists("Fixes: #10\nprose mentioning closes #11"));
 // [ { keyword: "fixes", closing: true, issueNumbers: [10] },
@@ -157,7 +129,7 @@ console.log(collectReferenceLists("Fixes: #10\nprose mentioning closes #11"));
 `keywordFamily(keyword)` collapses any of the twelve keywords across both sets to one of four families — `"close"`, `"fix"`, `"resolve"`, `"ref"` — for a caller building a Closes/Fixes/Refs-style map instead of switching on all twelve spellings by hand.
 
 ```ts
-import { keywordFamily } from "@effected/github-references";
+import { keywordFamily } from "@beep/scratchpad/effected/github-references";
 
 console.log(keywordFamily("resolved"));
 // "resolve"

@@ -54,31 +54,92 @@ const $I = $ScratchpadId.create("effected/github-references/ClosingList");
  * GitHub does not act on these — they associate without closing — but a
  * generated references region writes them, so the list parsers read them.
  *
+ * **Example** (Recognize a non-closing keyword)
+ *
+ * ```ts
+ * import { ReferenceKeyword } from "@beep/scratchpad/effected/github-references/ClosingList";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(ReferenceKeyword)("refs")); // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ReferenceKeyword = LiteralKit(["ref", "refs", "references"]).annotate(
 	$I.annote("ReferenceKeyword", { description: "A non-closing reference keyword in canonical lowercase form." }),
 );
 
+/**
+ * The decoded representation accepted by {@link ReferenceKeyword}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ReferenceKeyword = typeof ReferenceKeyword.Type;
 
+/**
+ * Lists the non-closing reference keywords in canonical lowercase form.
+ *
+ * **Example** (Read the non-closing keyword spellings)
+ *
+ * ```ts
+ * import * as A from "effect/Array";
+ * import { REFERENCE_KEYWORDS } from "@beep/scratchpad/effected/github-references/ClosingList";
+ *
+ * console.log(A.join(REFERENCE_KEYWORDS, ",")); // ref,refs,references
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const REFERENCE_KEYWORDS = ReferenceKeyword.literals;
 
 /**
  * Any closing or non-closing keyword accepted by the list dialect.
  *
+ * **Example** (Recognize both keyword sets)
+ *
+ * ```ts
+ * import { ListKeyword } from "@beep/scratchpad/effected/github-references/ClosingList";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(ListKeyword)("fixes")); // true
+ * console.log(S.is(ListKeyword)("refs")); // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ListKeyword = LiteralKit([...ClosingKeyword.literals, ...ReferenceKeyword.literals]).annotate(
 	$I.annote("ListKeyword", { description: "A closing or non-closing keyword accepted by the list dialect." }),
 );
 
+/**
+ * The decoded representation accepted by {@link ListKeyword}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ListKeyword = typeof ListKeyword.Type;
 
 /**
  * The issues a closing-list line names, per {@link parseClosingList}.
  *
+ * **Example** (Validate a closing list with duplicates)
+ *
+ * ```ts
+ * import { ClosingList } from "@beep/scratchpad/effected/github-references/ClosingList";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(ClosingList)({ keyword: "closes", issueNumbers: [12, 12] })); // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ClosingList = S.Struct({
 	/** The matched closing keyword, lowercased to its canonical form. */
@@ -87,12 +148,29 @@ export const ClosingList = S.Struct({
 	issueNumbers: S.Array(S.Int).annotate($I.annote("ClosingList.issueNumbers", { description: "The safe integer issue numbers in line order, including duplicates." })),
 }).annotate($I.annote("ClosingList", { description: "The issues named by a whole closing-list line." }));
 
+/**
+ * The decoded representation accepted by {@link ClosingList}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ClosingList = typeof ClosingList.Type;
 
 /**
  * The issues a reference-list line names, per {@link parseReferenceList}.
  *
+ * **Example** (Validate a non-closing reference list)
+ *
+ * ```ts
+ * import { ReferenceList } from "@beep/scratchpad/effected/github-references/ClosingList";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(ReferenceList)({ keyword: "refs", closing: false, issueNumbers: [7, 8] })); // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ReferenceList = S.Struct({
 	/** The matched keyword, lowercased to its canonical form. */
@@ -103,6 +181,12 @@ export const ReferenceList = S.Struct({
 	issueNumbers: S.Array(S.Int).annotate($I.annote("ReferenceList.issueNumbers", { description: "The safe integer issue numbers in line order, including duplicates." })),
 }).annotate($I.annote("ReferenceList", { description: "The issues named by a whole reference-list line with its closing flag." }));
 
+/**
+ * The decoded representation accepted by {@link ReferenceList}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ReferenceList = typeof ReferenceList.Type;
 
 const HASH = 0x23; // #
@@ -221,16 +305,18 @@ const parseItems = (line: string, from: number): O.Option<ReadonlyArray<number>>
  * **Example** (Parse a closing issue list and reject trailing prose)
  *
  * ```ts
- * import { parseReferenceList } from "./index.ts";
+ * import * as A from "effect/Array";
+ * import { parseReferenceList } from "@beep/scratchpad/effected/github-references/ClosingList";
  * import * as O from "effect/Option";
  *
  * const list = parseReferenceList("Closes #247, #248 and #251");
- * // => Option.some({ keyword: "closes", closing: true, issueNumbers: [247, 248, 251] })
- * O.isNone(parseReferenceList("Closes #1 for the rest"));
- * // => true
+ * console.log(O.map(list, (value) => A.join(A.map(value.issueNumbers, String), ",")).pipe(O.getOrUndefined)); // 247,248,251
+ * console.log(O.isNone(parseReferenceList("Closes #1 for the rest"))); // true
  * ```
  *
  * @public
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseReferenceList = (line: string): O.Option<ReferenceList> => {
 	const trimmed = Str.trim(line);
@@ -269,7 +355,18 @@ export const parseReferenceList = (line: string): O.Option<ReferenceList> => {
  * {@link harvestReferenceLists} directly. Duplicates are preserved, in
  * document order.
  *
+ * **Example** (Collect trailers and prose without counting twice)
+ *
+ * ```ts
+ * import * as A from "effect/Array";
+ * import { collectReferenceLists } from "@beep/scratchpad/effected/github-references/ClosingList";
+ * const lists = collectReferenceLists("Fixes: #10\nprose mentioning closes #11");
+ * console.log(A.join(A.map(lists, (list) => A.join(A.map(list.issueNumbers, String), ",")), ";")); // 10;11
+ * ```
+ *
  * @public
+ * @category parsing
+ * @since 0.0.0
  */
 export const collectReferenceLists = (text: string): ReadonlyArray<ReferenceList> => {
 	const lists: Array<ReferenceList> = [];
@@ -296,7 +393,20 @@ export const collectReferenceLists = (text: string): ReadonlyArray<ReferenceList
  * returns `Option.none()` here and `closing: false` from
  * {@link parseReferenceList}.
  *
+ * **Example** (Accept closing keywords and reject reference keywords)
+ *
+ * ```ts
+ * import * as A from "effect/Array";
+ * import { parseClosingList } from "@beep/scratchpad/effected/github-references/ClosingList";
+ * import * as O from "effect/Option";
+ *
+ * console.log(O.map(parseClosingList("Fixes #1, #2, and #3"), (value) => A.join(A.map(value.issueNumbers, String), ",")).pipe(O.getOrUndefined)); // 1,2,3
+ * console.log(O.isNone(parseClosingList("Refs #7, #8"))); // true
+ * ```
+ *
  * @public
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseClosingList = (line: string): O.Option<ClosingList> =>
 	O.flatMap(parseReferenceList(line), (list) =>
@@ -315,7 +425,18 @@ export const parseClosingList = (line: string): O.Option<ClosingList> =>
  * numbers** — deliberately, because most consumers only aggregate the
  * references; a consumer that needs positions keeps its own split loop.
  *
+ * **Example** (Collect accepted reference lines in order)
+ *
+ * ```ts
+ * import * as A from "effect/Array";
+ * import { parseReferenceLists } from "@beep/scratchpad/effected/github-references/ClosingList";
+ * const lists = parseReferenceLists("Refs #7, #8\r\nnot a reference\r\nCloses #9");
+ * console.log(A.join(A.map(lists, (list) => list.keyword), ",")); // refs,closes
+ * ```
+ *
  * @public
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseReferenceLists = (text: string): ReadonlyArray<ReferenceList> => {
 	const lists: Array<ReferenceList> = [];
@@ -336,7 +457,18 @@ export const parseReferenceLists = (text: string): ReadonlyArray<ReferenceList> 
  * collect-the-accepted shape and the same deliberate absence of line
  * numbers: a consumer that needs positions keeps its own split loop.
  *
+ * **Example** (Collect only closing lines)
+ *
+ * ```ts
+ * import * as A from "effect/Array";
+ * import { parseClosingLists } from "@beep/scratchpad/effected/github-references/ClosingList";
+ * const lists = parseClosingLists("Fixes #1, #2\nRefs #9\nCloses #3 and #4");
+ * console.log(A.join(A.map(lists, (list) => A.join(A.map(list.issueNumbers, String), ",")), ";")); // 1,2;3,4
+ * ```
+ *
  * @public
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseClosingLists = (text: string): ReadonlyArray<ClosingList> => {
 	const lists: Array<ClosingList> = [];
@@ -374,7 +506,20 @@ const isAnyWhitespace = (code: number): boolean =>
  * A reference list harvested out of running text by
  * {@link harvestReferenceLists}, with the offsets a prose harvest needs.
  *
+ * **Example** (Validate a harvested list span)
+ *
+ * ```ts
+ * import { HarvestedReferenceList } from "@beep/scratchpad/effected/github-references/ClosingList";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(HarvestedReferenceList)({
+ *  keyword: "closes", closing: true, issueNumbers: [123], start: 0, end: 11
+ * })); // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const HarvestedReferenceList = S.Struct({
 	...ReferenceList.fields,
@@ -384,6 +529,12 @@ export const HarvestedReferenceList = S.Struct({
 	end: S.Int.annotate($I.annote("HarvestedReferenceList.end", { description: "The offset one past the last digit of the last item." })),
 }).annotate($I.annote("HarvestedReferenceList", { description: "A reference list harvested from prose with its match offsets." }));
 
+/**
+ * The decoded representation accepted by {@link HarvestedReferenceList}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type HarvestedReferenceList = typeof HarvestedReferenceList.Type;
 
 /**
@@ -424,7 +575,18 @@ export type HarvestedReferenceList = typeof HarvestedReferenceList.Type;
  * character scan with no regular expressions, so time stays linear in the
  * text length and no input is truncated.
  *
+ * **Example** (Harvest separate lists from one prose line)
+ *
+ * ```ts
+ * import * as A from "effect/Array";
+ * import { harvestReferenceLists } from "@beep/scratchpad/effected/github-references/ClosingList";
+ * const lists = harvestReferenceLists("Closes #123, Fixes #456");
+ * console.log(A.join(A.map(lists, (list) => `${list.keyword}:${list.start}-${list.end}`), ",")); // closes:0-11,fixes:13-23
+ * ```
+ *
  * @public
+ * @category parsing
+ * @since 0.0.0
  */
 export const harvestReferenceLists = (text: string): ReadonlyArray<HarvestedReferenceList> => {
 	const lists: Array<HarvestedReferenceList> = [];

@@ -17,12 +17,29 @@ const $I = $ScratchpadId.create("effected/github-references/KeywordFamily");
 /**
  * The four keyword families: the twelve keywords collapsed to their stems.
  *
+ * **Example** (Validate a tense-collapsed keyword stem)
+ *
+ * ```ts
+ * import { KeywordFamily } from "@beep/scratchpad/effected/github-references/KeywordFamily";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(KeywordFamily)("ref")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const KeywordFamily = LiteralKit(["close", "fix", "resolve", "ref"]).annotate(
 	$I.annote("KeywordFamily", { description: "The tense-collapsed stem of a closing or reference keyword." }),
 );
 
+/**
+ * Tense-collapsed stem used to categorize closing and reference keywords.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type KeywordFamily = typeof KeywordFamily.Type;
 
 /**
@@ -59,12 +76,14 @@ const FAMILIES: Record<ListKeyword, KeywordFamily> = {
  * **Example** (Map closing and reference keywords to their families)
  *
  * ```ts
- * import { keywordFamily } from "./index.ts";
+ * import { keywordFamily } from "@beep/scratchpad/effected/github-references/KeywordFamily";
  *
- * keywordFamily("closed");     // "close"
- * keywordFamily("references"); // "ref"
+ * console.log(keywordFamily("closed")) // close
+ * console.log(keywordFamily("references")) // ref
  * ```
  *
  * @public
+ * @category mapping
+ * @since 0.0.0
  */
 export const keywordFamily = (keyword: ListKeyword): KeywordFamily => FAMILIES[keyword];

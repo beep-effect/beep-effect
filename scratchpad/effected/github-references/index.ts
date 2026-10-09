@@ -2,6 +2,8 @@
  * GitHub's issue-reference grammar as pure functions: strings in, values out,
  * with no service, layer or client.
  *
+ * **Details**
+ *
  * GitHub links an issue to a pull request when the description carries
  * `<keyword> #<number>` for one of nine documented closing keywords
  * ({@link CLOSING_KEYWORDS}). Three dialects are modelled, because their
@@ -27,6 +29,15 @@
  * {@link keywordFamily} collapses any keyword to its stem for categorizing
  * results. Cross-repo (`owner/repo#N`) and full-URL references are not
  * recognized.
+ *
+ * **Example** (Harvest and categorize an inline closing reference)
+ *
+ * ```ts
+ * import { harvestIssueReferences, keywordFamily } from "@beep/scratchpad/effected/github-references/index";
+ *
+ * const references = harvestIssueReferences("fixes #12");
+ * console.log(references.map((reference) => keywordFamily(reference.keyword)).join(",")) // fix
+ * ```
  *
  * @packageDocumentation
  */

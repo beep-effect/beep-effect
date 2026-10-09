@@ -36,7 +36,18 @@ const $I = $ScratchpadId.create("effected/github-references/IssueReferences");
 /**
  * One of the nine documented closing keywords, in canonical lowercase form.
  *
+ * **Example** (Validate a canonical closing keyword)
+ *
+ * ```ts
+ * import { ClosingKeyword } from "@beep/scratchpad/effected/github-references/IssueReferences";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(ClosingKeyword)("fixes")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ClosingKeyword = LiteralKit([
 	"close",
@@ -50,19 +61,47 @@ export const ClosingKeyword = LiteralKit([
 	"resolved",
 ]).annotate($I.annote("ClosingKeyword", { description: "A documented GitHub closing keyword in canonical lowercase form." }));
 
+/**
+ * Canonical lowercase spelling accepted by the closing-keyword schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ClosingKeyword = typeof ClosingKeyword.Type;
 
 /**
  * The nine closing keywords GitHub documents, lowercased.
  *
+ * **Example** (Count the supported closing keywords)
+ *
+ * ```ts
+ * import { CLOSING_KEYWORDS } from "@beep/scratchpad/effected/github-references/IssueReferences";
+ *
+ * console.log(CLOSING_KEYWORDS.length) // 9
+ * ```
+ *
  * @public
+ * @category constants
+ * @since 0.0.0
  */
 export const CLOSING_KEYWORDS = ClosingKeyword.literals;
 
 /**
  * One closing reference found in prose by {@link harvestIssueReferences}.
  *
+ * **Example** (Validate a harvested reference with offsets)
+ *
+ * ```ts
+ * import { IssueReference } from "@beep/scratchpad/effected/github-references/IssueReferences";
+ * import * as S from "effect/Schema";
+ *
+ * const reference = { issueNumber: 12, keyword: "fixes", start: 0, end: 9 };
+ * console.log(S.is(IssueReference)(reference)) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const IssueReference = S.Struct({
 	/** The referenced issue number. */
@@ -75,6 +114,12 @@ export const IssueReference = S.Struct({
 	end: S.Int.annotate($I.annote("IssueReference.end", { description: "The offset one past the last character of the whole match." })),
 }).annotate($I.annote("IssueReference", { description: "A closing issue reference harvested from prose with its match offsets." }));
 
+/**
+ * Decoded inline closing reference with its issue number, canonical keyword and match offsets.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type IssueReference = typeof IssueReference.Type;
 
 /**
@@ -85,7 +130,18 @@ export type IssueReference = typeof IssueReference.Type;
  * No offsets: in the bare-line dialect the whole line is the reference, so
  * positions within it locate nothing a caller acts on.
  *
+ * **Example** (Validate a whole-line reference)
+ *
+ * ```ts
+ * import { BareLineReference } from "@beep/scratchpad/effected/github-references/IssueReferences";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(BareLineReference)({ issueNumber: 12, keyword: "closes" })) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const BareLineReference = S.Struct({
 	/** The referenced issue number. */
@@ -94,6 +150,12 @@ export const BareLineReference = S.Struct({
 	keyword: ClosingKeyword.annotate($I.annote("BareLineReference.keyword", { description: "The matched closing keyword in canonical lowercase form." })),
 }).annotate($I.annote("BareLineReference", { description: "The closing issue reference carried by a whole bare line." }));
 
+/**
+ * Decoded whole-line closing reference without match offsets.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type BareLineReference = typeof BareLineReference.Type;
 
 /**
@@ -139,16 +201,15 @@ const safeIssueNumber: (digits: string) => O.Option<number> = flow(Number, O.lif
  * **Example** (Harvest inline closing references with offsets)
  *
  * ```ts
- * import { harvestIssueReferences } from "./index.ts";
+ * import { harvestIssueReferences } from "@beep/scratchpad/effected/github-references/IssueReferences";
  *
- * harvestIssueReferences("fixes #12 and closes #13");
- * // => [
- * //   { issueNumber: 12, keyword: "fixes", start: 0, end: 9 },
- * //   { issueNumber: 13, keyword: "closes", start: 14, end: 24 },
- * // ]
+ * const references = harvestIssueReferences("fixes #12 and closes #13");
+ * console.log(JSON.stringify(references)) // [{"issueNumber":12,"keyword":"fixes","start":0,"end":9},{"issueNumber":13,"keyword":"closes","start":14,"end":24}]
  * ```
  *
  * @public
+ * @category parsing
+ * @since 0.0.0
  */
 export const harvestIssueReferences = (text: string): ReadonlyArray<IssueReference> => {
 	const references: Array<IssueReference> = [];
@@ -182,13 +243,16 @@ export const harvestIssueReferences = (text: string): ReadonlyArray<IssueReferen
  * **Example** (Parse a closing reference with an optional colon)
  *
  * ```ts
- * import { parseBareLineReference } from "./index.ts";
+ * import { parseBareLineReference } from "@beep/scratchpad/effected/github-references/IssueReferences";
+ * import * as O from "effect/Option";
  *
- * parseBareLineReference("Closes: #12");
- * // => Option.some({ issueNumber: 12, keyword: "closes" })
+ * const reference = parseBareLineReference("Closes: #12");
+ * console.log(JSON.stringify(O.getOrNull(reference))) // {"issueNumber":12,"keyword":"closes"}
  * ```
  *
  * @public
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseBareLineReference = (line: string): O.Option<BareLineReference> => {
 	const match = BARE_LINE_PATTERN.exec(Str.trim(line));
@@ -212,7 +276,18 @@ export const parseBareLineReference = (line: string): O.Option<BareLineReference
  * none and most consumers only aggregate the references; a consumer that
  * needs positions keeps its own split loop.
  *
+ * **Example** (Collect accepted lines in order)
+ *
+ * ```ts
+ * import { parseBareLines } from "@beep/scratchpad/effected/github-references/IssueReferences";
+ *
+ * const references = parseBareLines("Closes: #12\r\nnot a reference\nfixes #13");
+ * console.log(JSON.stringify(references)) // [{"issueNumber":12,"keyword":"closes"},{"issueNumber":13,"keyword":"fixes"}]
+ * ```
+ *
  * @public
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseBareLines = (text: string): ReadonlyArray<BareLineReference> => {
 	const references: Array<BareLineReference> = [];
