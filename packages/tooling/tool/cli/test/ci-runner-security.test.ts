@@ -435,6 +435,24 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
   );
 
   it.effect(
+    "preserves caller stdin through the resource adapter",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const tempRoot = yield* fs.makeTempDirectoryScoped();
+      const result = Bun.spawnSync(["bash", path.join(repoRoot, "scripts/ci-runner-resources.sh"), "fixture", "cat"], {
+        env: { ...process.env, RUNNER_TEMP: tempRoot },
+        stdin: new TextEncoder().encode("fixture input\n"),
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      assert.strictEqual(result.exitCode, 0);
+      assert.include(result.stdout.toString(), "fixture input\n");
+    })
+  );
+
+  it.effect(
     "refuses recovered final-sample evidence after a periodic sampling failure",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
