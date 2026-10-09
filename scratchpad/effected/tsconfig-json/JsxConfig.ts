@@ -7,9 +7,12 @@
 // them there). `"preserve"` and `"react-native"` leave JSX untransformed, so
 // they project to `Option.none()` alongside an absent `jsx`.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { CompilerOptions } from "./CompilerOptions.ts";
+
+const $I = $ScratchpadId.create("effected/tsconfig-json/JsxConfig");
 
 /**
  * The JSX transform configuration a `jsx` compiler option implies: which
@@ -19,12 +22,12 @@ import type { CompilerOptions } from "./CompilerOptions.ts";
  *
  * @public
  */
-export class JsxConfig extends S.Class<JsxConfig>("JsxConfig")({
+export class JsxConfig extends S.Class<JsxConfig>($I`JsxConfig`)({
 	/** The JSX transform runtime: `"automatic"` (`react-jsx` / `react-jsxdev`) or `"classic"` (`react`). */
-	runtime: S.Literals(["automatic", "classic"]),
+	runtime: S.Literals(["automatic", "classic"]).annotateKey({ description: "The JSX transform runtime: `\"automatic\"` (`react-jsx` / `react-jsxdev`) or `\"classic\"` (`react`)." }),
 	/** The automatic runtime's import source (`jsxImportSource`, defaulted to `"react"`); absent for classic. */
-	importSource: S.optionalKey(S.String),
-}) {
+	importSource: S.optionalKey(S.String).annotateKey({ description: "The automatic runtime's import source (`jsxImportSource`, defaulted to `\"react\"`); absent for classic." }),
+}, $I.annote("JsxConfig", { description: "The JSX transform configuration a `jsx` compiler option implies: which runtime (`\"automatic\"` for `react-jsx` / `react-jsxdev`, `\"classic\"` for `react`) and, for the automatic runtime, the import source the transform emits (`jsxImportSource`, defaulting to `\"react\"` per tsc)." })) {
 	/**
 	 * Project decoded compiler options to their implied JSX transform
 	 * configuration. `"react-jsx"` and `"react-jsxdev"` yield the automatic

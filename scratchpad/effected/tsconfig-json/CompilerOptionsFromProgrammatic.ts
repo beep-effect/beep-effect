@@ -20,8 +20,8 @@
 // Case-insensitivity (`"ESNext"`) comes free from `CompilerOptions`'s existing
 // case-insensitive literal decode.
 //
-// It is its own module because `TsEnumCodec.ts` is chartered as pure data with
-// no Schema and no validation (see its banner), and because putting the codec
+// It is its own module because `TsEnumCodec.ts` performs no validation
+// (see its banner), and because putting the codec
 // in `CompilerOptions.ts` would make that schema module import `TsEnumCodec` at
 // runtime while `TsEnumCodec` type-imports it back — a conceptual inversion and
 // a `noImportCycles` risk. This module imports both; nothing imports it.
@@ -36,9 +36,9 @@ import { TsEnumCodec } from "./TsEnumCodec.ts";
 /**
  * The untyped record this codec accepts on its encoded side. Exported because
  * it names the codec's encoded type in the public signature; the values stay
- * `unknown` rather than {@link ProgrammaticCompilerOptionsValue} because decode
- * validates them and must be able to receive anything, including the
- * unmappable numeric it exists to reject.
+ * `unknown`, matching the encoder's passthrough contract. Decode must also be
+ * able to receive invalid known fields, including unmappable numeric enum
+ * values, so it can reject them with a typed schema issue.
  *
  * @public
  */
@@ -62,27 +62,31 @@ export interface ProgrammaticRecord {
  * Encoding is {@link TsEnumCodec.encodeCompilerOptions}: numeric enum values and
  * `lib` in the file-name form (`lib.esnext.d.ts`).
  *
- * @remarks
+ * **Details**
+ *
  * A numeric value with no table entry — a future TypeScript enum member — survives
  * normalization as a number and then **fails decode** with a typed schema issue,
  * rather than passing through. That is deliberate: this is the validating door
  * {@link TsEnumCodec.decodeCompilerOptions} is not, which is why that function's
  * return type stays the wider `Record<string, unknown>`.
  *
- * @example
+ * **Example** (Decode programmatic compiler options)
+ *
  * ```ts
- * import { Schema } from "effect";
+ * import * as S from "effect/Schema";
  * import { CompilerOptionsFromProgrammatic } from "./index.ts";
  *
- * // { target: "es2025", strict: true, lib: ["esnext"] }
- * Schema.decodeUnknownSync(CompilerOptionsFromProgrammatic)({
+ * const decoded = S.decodeUnknownResult(CompilerOptionsFromProgrammatic)({
  * 	target: 12,
  * 	strict: true,
  * 	lib: ["lib.esnext.d.ts"],
  * });
+ * console.log(decoded); // Success containing { target: "es2025", strict: true, lib: ["esnext"] }
  * ```
  *
  * @public
+ * @category codecs
+ * @since 0.0.0
  */
 export const CompilerOptionsFromProgrammatic: S.Codec<typeof CompilerOptions.Type, ProgrammaticRecord> =
 	S.Record(S.String, S.Unknown).pipe(

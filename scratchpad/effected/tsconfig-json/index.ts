@@ -37,9 +37,5 @@ export {
 export { TsconfigExtendsError, TsconfigLoader } from "./TsconfigLoader.ts";
 export type { SyncFileSystem, SyncPath, TsconfigLoaderSyncOptions } from "./TsconfigLoaderSync.ts";
 export { TsconfigLoaderSync } from "./TsconfigLoaderSync.ts";
-export type {
-	EnumFamily,
-	ProgrammaticCompilerOptions,
-	ProgrammaticCompilerOptionsValue,
-} from "./TsEnumCodec.ts";
-export { TsEnumCodec } from "./TsEnumCodec.ts";
+export type { EnumFamily, ProgrammaticCompilerOptionsValue } from "./TsEnumCodec.ts";
+export { ProgrammaticCompilerOptions, TsEnumCodec } from "./TsEnumCodec.ts";

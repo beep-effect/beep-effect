@@ -10,10 +10,13 @@
 // once at module top level, per the house Schema-producing-function
 // discipline (`Jsonc.schema` derives fresh caches per call).
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { Jsonc } from "../jsonc/index.ts";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { CompilerOptions } from "./CompilerOptions.ts";
+
+const $I = $ScratchpadId.create("effected/tsconfig-json/TsconfigJson");
 
 /**
  * Case-insensitive literal-union decode; canonical lowercase encode.
@@ -228,12 +231,12 @@ export const TsconfigJsonFromString: S.Codec<typeof TsconfigJson.Type, string> =
  *
  * @public
  */
-export class TsconfigParseError extends S.TaggedError<TsconfigParseError>()("TsconfigParseError", {
+export class TsconfigParseError extends S.TaggedError<TsconfigParseError>($I`TsconfigParseError`)("TsconfigParseError", {
 	/** The file path that failed to parse, or `""` when not file-bound. */
-	path: S.String,
+	path: S.String.annotateKey({ description: "The file path that failed to parse, or `\"\"` when not file-bound." }),
 	/** The underlying decode failure. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The underlying decode failure." }),
+}, $I.annote("TsconfigParseError", { description: "Raised when a tsconfig.json document fails to parse or decode. `path` is the file path when the failure is file-bound, and the empty string otherwise (e.g. decoding an in-memory string). `TsconfigLoader` wraps file-bound decode failures in this error." })) {
 	override get message(): string {
 		return this.path.length > 0 ? `failed to parse tsconfig.json at "${this.path}"` : "failed to parse tsconfig.json";
 	}

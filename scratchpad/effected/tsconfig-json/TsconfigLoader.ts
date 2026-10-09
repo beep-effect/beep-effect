@@ -27,6 +27,7 @@
 // stat-and-isFile probe) would require rewriting the tsc-cited `extendsTarget`
 // engine and its fixtures for a case no supported test can reach.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as PlatformError from "effect/PlatformError";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -38,6 +39,8 @@ import { resolveExtendsTarget } from "./internal/extendsTarget.ts";
 import { ResolvedTsconfig } from "./ResolvedTsconfig.ts";
 import type { TsconfigJson } from "./TsconfigJson.ts";
 import { TsconfigJsonFromString, TsconfigParseError } from "./TsconfigJson.ts";
+
+const $I = $ScratchpadId.create("effected/tsconfig-json/TsconfigLoader");
 
 /**
  * The maximum number of `extends` levels the loader will descend before failing
@@ -57,16 +60,16 @@ const MAX_EXTENDS_DEPTH = 32;
  *
  * @public
  */
-export class TsconfigExtendsError extends S.TaggedError<TsconfigExtendsError>()("TsconfigExtendsError", {
+export class TsconfigExtendsError extends S.TaggedError<TsconfigExtendsError>($I`TsconfigExtendsError`)("TsconfigExtendsError", {
 	/** The config whose `extends` could not be resolved. */
-	path: S.String,
+	path: S.String.annotateKey({ description: "The config whose `extends` could not be resolved." }),
 	/** The target that failed: the spec, the re-entered path, or the refused path. */
-	target: S.String,
+	target: S.String.annotateKey({ description: "The target that failed: the spec, the re-entered path, or the refused path." }),
 	/** Why resolution failed. */
-	reason: S.Literals(["not-found", "cycle", "depth", "empty"]),
+	reason: S.Literals(["not-found", "cycle", "depth", "empty"]).annotateKey({ description: "Why resolution failed." }),
 	/** The full resolution chain of normalized absolute config paths. */
-	chain: S.Array(S.String),
-}) {
+	chain: S.Array(S.String).annotateKey({ description: "The full resolution chain of normalized absolute config paths." }),
+}, $I.annote("TsconfigExtendsError", { description: "Raised when a config's `extends` chain cannot be resolved: an unresolvable target (`\"not-found\"`), a re-entrant chain (`\"cycle\"`), a chain deeper than `MAX_EXTENDS_DEPTH` (`\"depth\"`), or an empty target string (`\"empty\"`). `path` is the config whose `extends` failed, `target` is what it tried to extend (the offending spec for `\"not-found\"`/`\"empty\"`, the re-entered config path for `\"cycle\"`, the refused config for `\"depth\"`), and `chain` is the full resolution chain of normalized absolute paths." })) {
 	override get message(): string {
 		return this.reason === "not-found"
 			? `cannot resolve extends target "${this.target}" from "${this.path}"`

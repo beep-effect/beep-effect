@@ -7,8 +7,9 @@
 // (es6→es2015, node→node10) with no per-family special-casing.
 //
 // Zero `typescript` imports, including `import type` — the package's
-// `CompilerOptions` is consumed type-only, and every value here is a plain
-// map/Option lookup. No Schema: this module does no validation, only lossless
+// `CompilerOptions` is consumed type-only. The output schema describes the
+// programmatic shape; the codec functions use plain map/Option lookups and
+// perform no validation, only lossless
 // numeric↔string data movement for values a schema already validated
 // upstream (`CompilerOptions.ts`'s case-insensitive decode normalizes casing
 // before a value ever reaches this codec).
@@ -42,6 +43,7 @@
 //     → `{ target: 10, strict: true, lib: ["lib.esnext.d.ts"] }`.
 
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import type { CompilerOptions } from "./CompilerOptions.ts";
 
 /**
@@ -216,8 +218,8 @@ const COMPILER_OPTION_ENUM_KEYS: ReadonlyArray<readonly [key: string, family: En
 ];
 
 /**
- * A single value a programmatic `compilerOptions` entry can hold — a
- * structural transcription of TypeScript's own `CompilerOptionsValue`,
+ * The values accepted by TypeScript's compiler API — a structural
+ * transcription of TypeScript's own `CompilerOptionsValue`,
  * transcribed (not imported) to honor this package's zero-`typescript` rule.
  *
  * Transcribed verbatim from `typescript@6.0.3`'s
@@ -238,11 +240,10 @@ const COMPILER_OPTION_ENUM_KEYS: ReadonlyArray<readonly [key: string, family: En
  * full parsed-AST node the compiler synthesizes, never a value reachable from
  * JSON, so it cannot appear in options this codec builds. Omitting it keeps the
  * union a strict structural subset of the compiler's own index-signature value
- * type, which is what assignability to `ts.CompilerOptions` requires. Arrays
- * are intentionally mutable (`string[]`, not `readonly string[]`): TypeScript's
- * mutable array members are not assignable from a `readonly` array, and the one
- * narrowing below reconciles this with the codec's actual `readonly`-array
- * outputs.
+ * type. Arrays are intentionally mutable (`string[]`, not `readonly string[]`)
+ * to describe that API's accepted values. This union does not describe every
+ * value returned by {@link TsEnumCodec.encodeCompilerOptions}: unknown options
+ * and readonly arrays pass through unchanged.
  *
  * @public
  */
@@ -259,46 +260,56 @@ export type ProgrammaticCompilerOptionsValue =
 	| undefined;
 
 /**
- * The shape {@link TsEnumCodec.encodeCompilerOptions} returns: the
- * numeric-enum-encoded `compilerOptions` a virtual-TS environment and the
- * TypeScript compiler API consume programmatically.
+ * The numeric-enum-encoded output of {@link TsEnumCodec.encodeCompilerOptions},
+ * including unknown passthrough options.
  *
- * It is deliberately shaped to be assignable to TypeScript's `ts.CompilerOptions`
- * without naming it (the zero-`typescript` rule), so a consumer handing the
- * result to `@typescript/vfs`'s `createVirtualTypeScriptEnvironment` /
- * `createDefaultMapFromNodeModules` or to `ts.createProgram` no longer ends the
- * pipeline with a cast. Verified assignable to the real `ts.CompilerOptions`
- * (`typescript@6.0.3`, `@typescript/vfs@1.6.4`) by a compile-time test
- * (`__test__/TsEnumCodec.assignability.test.ts`).
+ * **Details**
  *
- * What it honestly **claims**: the six enum-family keys read back as `number`
- * (they are always encoded — a decoded `CompilerOptions.Type` constrains each
- * to a spelling the codec's tables cover, so the runtime "unknown string passes
- * through unencoded" branch is unreachable for a well-typed input); `lib` reads
- * back as `string[]` (the file-name form); every other value is one of the
- * structural forms `ts.CompilerOptions` accepts.
+ * The six enum-family keys are optional numbers and `lib` is an optional mutable
+ * string array containing file names. Other values remain `unknown`, matching
+ * {@link (CompilerOptions:namespace).Type}'s passthrough contract. The encoder
+ * copies those values without validation or conversion, including readonly
+ * arrays and objects outside {@link ProgrammaticCompilerOptionsValue}.
+ * Consumers of TypeScript's narrower `ts.CompilerOptions` must validate or
+ * select the values their boundary accepts.
  *
- * What it does **not** prove: that an arbitrary passthrough value carried
- * through from JSONC (the schema preserves unknown keys as `unknown`) fits
- * {@link ProgrammaticCompilerOptionsValue}. Neither does `ts.CompilerOptions`:
- * its own index signature makes the identical unproven claim, and any consumer
- * feeding parsed tsconfig to `ts.createProgram` relies on it. The single
- * narrowing that bridges the codec's `unknown`/`readonly` outputs to this type
- * lives once, at `encodeCompilerOptions`'s return (below), so the assertion is
- * owned here rather than re-made at every call site.
+ * **Example** (Accept an unknown compiler option)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { ProgrammaticCompilerOptions } from "./TsEnumCodec.ts";
+ *
+ * S.is(ProgrammaticCompilerOptions)({ target: 10, futureOption: { enabled: true } }); // true
+ * ```
  *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
-export interface ProgrammaticCompilerOptions {
-	readonly [option: string]: ProgrammaticCompilerOptionsValue;
-	readonly target?: number;
-	readonly module?: number;
-	readonly moduleResolution?: number;
-	readonly jsx?: number;
-	readonly newLine?: number;
-	readonly moduleDetection?: number;
-	readonly lib?: string[];
-}
+export const ProgrammaticCompilerOptions = S.StructWithRest(
+	S.Struct({
+		target: S.optionalKey(S.Finite),
+		module: S.optionalKey(S.Finite),
+		moduleResolution: S.optionalKey(S.Finite),
+		jsx: S.optionalKey(S.Finite),
+		newLine: S.optionalKey(S.Finite),
+		moduleDetection: S.optionalKey(S.Finite),
+		lib: S.String.pipe(S.Array, S.mutable, S.optionalKey),
+	}),
+	[S.Record(S.String, S.Unknown)],
+).annotate({
+	identifier: "ProgrammaticCompilerOptions",
+	title: "Programmatic Compiler Options",
+	description: "Numeric compiler option enums and library file names with unknown options preserved.",
+});
+
+/**
+ * Programmatic compiler options with unknown passthrough values.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ProgrammaticCompilerOptions = typeof ProgrammaticCompilerOptions.Type;
 
 // Implementation of TsEnumCodec.encodeCompilerOptions; the public contract lives on the static.
 const encodeCompilerOptions = (options: CompilerOptions.Type): ProgrammaticCompilerOptions => {
@@ -318,10 +329,7 @@ const encodeCompilerOptions = (options: CompilerOptions.Type): ProgrammaticCompi
 		result.lib = lib.map((entry) => (typeof entry === "string" ? `lib.${normalizeLibReference(entry)}.d.ts` : entry));
 	}
 
-	// The single documented narrowing (see ProgrammaticCompilerOptions): the
-	// result's values are `unknown`/`readonly` here, but structurally satisfy
-	// the tsc-assignable value union — asserted once, so consumers do not cast.
-	return result as ProgrammaticCompilerOptions;
+	return result;
 };
 
 // Implementation of TsEnumCodec.decodeCompilerOptions; the public contract lives on the static.
@@ -386,14 +394,10 @@ export class TsEnumCodec {
 	 * for the evidence. Every other key (booleans, strings, arrays, unknown
 	 * passthrough keys) is copied through untouched.
 	 *
-	 * @remarks
-	 * The return carries this package's single narrowing from the codec's
-	 * internal `Record<string, unknown>` (whose values include the schema's
-	 * `unknown` passthrough and its `readonly` arrays) to
-	 * {@link ProgrammaticCompilerOptions} — see that type's docs for why the
-	 * package owns this one assertion instead of leaving every consumer to
-	 * cast. Runtime behavior is unchanged; only the declared return type
-	 * narrows.
+	 * **Details**
+	 *
+	 * Passthrough values remain `unknown` in the return type. Encoding does not
+	 * establish assignability to TypeScript's narrower `ts.CompilerOptions`.
 	 */
 	static readonly encodeCompilerOptions = encodeCompilerOptions;
 
