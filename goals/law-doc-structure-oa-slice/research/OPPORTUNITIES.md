@@ -37,3 +37,12 @@
   the sole available text judgment and every fixture goes on the attorney sheet.
   Do not repair malformed B output and treat it as a valid independent result.
 - Prevention: a model-output schema boundary with generation-time validation.
+
+## 2026-10-09 — Package handoff gate admission latency
+
+- Task: package-verify the fixture-owning use-cases package before handoff.
+- Evidence: the owned `beep-heavy` result log continued to report all three slots
+  busy for at least ten minutes; the package command had not begun.
+- Outcome: retained the queued gate and polled without changing other workers.
+- Prevention: a visible fair admission queue with estimated start time would
+  distinguish capacity latency from package verification time.
