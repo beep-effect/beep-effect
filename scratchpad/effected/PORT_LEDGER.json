@@ -1980,13 +1980,114 @@
       "wave": 1,
       "position": 8,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
         "src": "packages/github-references/src",
         "test": "packages/github-references/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "BareLineReference",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CLOSING_KEYWORDS",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "ClosingKeyword",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ClosingList",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "HarvestedReferenceList",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "IssueReference",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "KeywordFamily",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "REFERENCE_KEYWORDS",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "ReferenceKeyword",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ReferenceList",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "collectReferenceLists",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "harvestIssueReferences",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "harvestReferenceLists",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "keywordFamily",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "parseBareLineReference",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "parseBareLines",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "parseClosingList",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "parseClosingLists",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "parseReferenceList",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "parseReferenceLists",
+          "kind": "value",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 0,
