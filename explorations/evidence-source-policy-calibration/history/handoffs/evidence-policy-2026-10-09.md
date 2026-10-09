@@ -82,3 +82,18 @@ package-verify: none edited
 hosted-parity: test-tsgo: not run (docs-only, no TS or package touched); docgen local: not run (docs-only, no TS or package touched); jsdoc-ratchet: not run as a standalone parity proof (docs-only, no TS or package touched); knowledge refs: fail, one inherited gated example in repository-simplification SPEC line 374, no lane gated findings; fallow audit+health: not run as a standalone package parity proof (docs-only, no TS or package touched); scoped coverage: not run (docs-only, no TS or package touched); explore atlas --check: pass; explore --check: pass, zero findings; typos: pass; knowledge semantic-delta: pass, introduced 0, unchanged 510; Yeet cheap gates and frozen install: pass
 handoff: explorations/evidence-source-policy-calibration/history/handoffs/evidence-policy-2026-10-09.md
 open items: orchestrator merges under S11 and consolidates inherited reds; no blocking field-design questions; v1 decisions ratified under autonomy with per-decision reversals in DECISIONS, supersede before G3 scaffold or migrate after freeze; park reversal is reopen at decompose when G3 is scaffolded; G3 implements/evaluates the contract; readiness monitor must settle before worker final
+
+## Content-final report for the orchestrator
+
+This report names the published head it describes. Its own append-only receipt
+commit follows that head and changes no field-design decisions. The final
+worker message reports the resulting exact PR tip and terminal monitor outcome.
+
+lane: evidence-policy
+head: 2998bfa697bb (published content-final head before this final report receipt)
+PR(s): #1567 OPEN, ready for review
+package-verify: none edited
+hosted-parity: test-tsgo: not run (docs-only, no TS or package touched); docgen local: not run (docs-only, no TS or package touched); jsdoc-ratchet: not run as standalone parity proof (docs-only, no TS or package touched); knowledge refs: fail (one inherited gated finding, repository-simplification SPEC line 374; no lane gated findings); fallow audit+health: not run as standalone parity proof (docs-only, no TS or package touched); scoped coverage: not run (docs-only, no TS or package touched); explore atlas --check: pass; explore --check: pass, zero findings; typos: pass; semantic-delta: pass, 0 introduced; Yeet cheap gates/head install: pass
+handoff: explorations/evidence-source-policy-calibration/history/handoffs/evidence-policy-2026-10-09.md
+open items: orchestrator owns merge under S11 and inherited-red consolidation; worker awaits bounded readiness monitor and leaves no owned running gates at final; no unresolved field-design questions; G3 implements/calibrates/tests v1; every autonomy decision has its reversal in DECISIONS (supersede before scaffold, semantic migration after freeze); packet parked at shape, reopen at decompose when oppold-corpus-semantic-ingestion-v2 is scaffolded
+final 2998bfa697bb
