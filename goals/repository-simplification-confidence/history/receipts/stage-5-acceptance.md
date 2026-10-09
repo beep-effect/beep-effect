@@ -37,3 +37,28 @@ Private prompts and receipts remain in the lane's ignored evidence directory.
 That source-only verdict predates the admitted runtime failures above. A new
 independent review of `bc0591bbb1` is running; the older verdict is historical,
 and does not establish terminal zero on the refactor or runtime qualification.
+
+## Current qualification checkpoint
+
+Source `b78c673e039cbd6a6461e2f4f7f3159d2a354cd6`, UTC
+`2026-10-09T20:13Z`. Independent read-only `claude-opus-5-5` medium round 15
+returned terminal zero High/Medium/Low findings on the supplied source. Rounds
+12–15 corrected direct-parent containment, its regression assertion, and the
+OS fixture clock. The prior focused admitted run finished 55 cases: 53 passed
+and two SIGKILL cases timed out while the fake clock held abandoned-lock retry.
+The live-clock repair is committed; final rerun remains pending.
+
+Canonical `yeet publish` passed all 16 cheap gates and opened draft
+[PR #1580](https://github.com/beep-effect/beep-effect/pull/1580) at
+`5f5a4f452a6cac4ee8d30a6532ed9fdaaaba2529`. This publication predates the
+clock repair. No final passing runtime, package, compiler, docgen or scoped
+coverage claim is made here. The three Vercel failures explicitly report
+"Deployment rate limited — retry in 24 hours." and are acknowledged as
+environment-only. No service plan or quota changed.
+
+The latest storage dry run has 2,765 rows across 259 roots, all deferred, with
+0 applied and 0/0 MiB reclaimed. The latest cache receipts prove identical
+28-file restored manifests for both task hashes in the lane, linked worktree,
+fresh clone, and shared route. Changed-input execution recorded a new task
+hash and MISS, then failed because the linked fixture lacked `tsc`; the
+frozen-install repair and successful execution proof are pending.

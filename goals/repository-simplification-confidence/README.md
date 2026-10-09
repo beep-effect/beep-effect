@@ -67,10 +67,13 @@ and [lane handoff](./history/handoffs/rsc-h1-catalog-2026-10-09.md).
 
 [G storage census and deferred retention](./history/receipts/stage-5-storage-cleanup.md)
 and [G cache evidence](./history/receipts/stage-5-cache.md), 2026-10-09:
-2,475 v3 rows across 262 checkout roots; zero real cleanup; local cache hits
-proven. Owner-aware archive/recovery implementation is under qualification;
-remote auth and home changes remain deferred. Historical source-zero review at `a1363f237b` preceded runtime failures;
-repairs and a new source review at `bc0591bbb1` are in progress;
+2,765 v3 rows across 259 checkout roots, with a sanitized per-row CSV;
+zero real cleanup. Local/shared cache output restoration and cross-clone/linked
+reuse are proven. [PR #1580](https://github.com/beep-effect/beep-effect/pull/1580)
+is draft after green cheap gates. Independent source review is terminal zero at
+`b78c673e03`; final runtime, package and parity qualification remain queued.
+Both SIGKILL fixture timeouts were corrected with the live test clock.
+Remote auth, home changes and real apply remain deferred:
 [handoff](./history/handoffs/rsc-g-storage-2026-10-09.md).
 
 [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md)
