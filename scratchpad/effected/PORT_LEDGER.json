@@ -5629,13 +5629,84 @@
       "wave": 4,
       "position": 1,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "tooling/library",
       "upstreamPaths": {
         "src": "packages/xdg/src",
         "test": "packages/xdg/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "AppDirKind",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "AppDirOverrides",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "AppDirs",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "AppDirsError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "AppDirsOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "AppDirsShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CurrentPlatform",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "NativeDirs",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ResolvedAppDirs",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Xdg",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "XdgConfig",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "XdgEnvError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "XdgPaths",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "XdgPlatform",
+          "kind": "both",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 0,
