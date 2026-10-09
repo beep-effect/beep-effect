@@ -35,15 +35,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — operator-attended Entra app registration (certificate
-credential; mailbox access granted exclusively via the Exchange
-RBAC-for-Applications assignment scoped to the attorney's mailbox — never
-the unscoped tenant-wide contacts role), seeding-job home choice, and a
-headers/counts-only census of the salvaged contact CSVs.
+P0/P1/P2 in progress. Route A consumes the existing certificate registration.
+The orchestrator adds the attorney-only RBAC contacts grant after PR 1 merges.
+The driver, private seeding app and grant/reversal runbook are implemented;
+package qualification and synthetic fixtures remain in progress. No live call
+or mailbox write has run.
 
 ## Latest Evidence
 
-Not started.
+- [Contact census](./history/2026-10-09-p0-contact-census.md): 533 CSV records,
+  487 normalized contacts; four inputs share one byte hash. VCF is census-only.
+- [Offline dry run](./history/2026-10-09-seeding-dry-run.md): 480 creates, seven
+  unidentifiable skips, zero conflicts and zero untracked tags.
+- [Lane handoff](./history/handoffs/m365-contacts-2026-10-09.md): setup, decisions
+  and current verification evidence.
 
 ## Notes
 

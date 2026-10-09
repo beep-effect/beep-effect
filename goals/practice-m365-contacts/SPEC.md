@@ -100,6 +100,67 @@ Binding decisions live in the source exploration —
 auth lanes for egress, M365 document lane dropped, contacts import shape.
 This spec binds to them without restating.
 
+### Lane decisions (2026-10-09)
+
+- **(a) Consume #1456.** The app-only certificate/secret union, Graph `/.default`,
+  injected auth seam and write-safe executor already landed. Reversal: none.
+- **(b) Job home.** `apps/practice-m365-contacts`, package
+  `@beep/practice-m365-contacts`, mirrors the existing practice jobs. Reversal:
+  remove it with `bun run beep delete-package`.
+- **(c) Delete contact.** Add `deleteContact` for the self-cleaning smoke and
+  rollback. Reversal: remove the verb.
+- **(d) Delegated fixtures.** Prove both lanes' request shapes with injected
+  tokens; add no delegated write scope. Reversal: none.
+- **(e) Grant route A (R2).** Reuse `beep-agent-outbox`'s certificate registration.
+  After PR 1 merges, the orchestrator grants `Application Contacts.ReadWrite`
+  through assignment `beep-practice-contacts-readwrite` on the new attorney-only
+  scope `beep-practice-contacts-mailbox`. `requiredResourceAccess` stays empty;
+  no Entra permission or consent is added. Nothing changes on another mailbox.
+  This avoids a new registration and new vault fields. Route B, a dedicated
+  registration requiring human vault writes, was rejected. The reused credential
+  already has mail and calendar capabilities on the shared scope; this job calls
+  contact verbs only and its smoke uses its own opt-in. Reversal, landed before
+  the grant: runbook §4 removes the contacts assignment then its scope, preserving
+  the three outbox assignments and `beep-docket-intake-mailbox`.
+- **(f) Rollback marker (R3c).** Every create carries fixed category
+  `beep-practice-contacts-seed` and extended property `beepSeedRun` with its run id.
+  This permits full reversal without a journal. Reversal: `undo --by-category --yes`
+  as documented in runbook §3; live reversal requires a later orchestrator ruling.
+- **(g) CSV-only seeding (R4).** The binding contacts-import decision names CSVs.
+  VCF is census-only and is rejected by apply and online dry-run. Reversal: none;
+  a later packet can authorize VCF population.
+
+- **Contacts smoke opt-in.** `M365_LIVE_CONTACTS_WRITE=1` gates contact-only
+  create/delete, and the test-name filter excludes message reads. The older
+  `M365_LIVE_WRITE` also writes calendar events. Reversal: fold the opt-ins
+  together in a later authorized packet.
+- **Normalizer identity.** Reuse `normaliseContacts` unchanged: it merges
+  transitively by non-role email and name/company and has phone/postal fallbacks
+  for nameless cards. The seed planner matches personal emails first, then
+  name/company only when no personal email exists; nameless cards without
+  personal email are unidentifiable. Shared role inboxes must not collapse
+  unrelated people. Reversal: replace the planner identity rule after a new
+  contacts-import decision; do not duplicate the shared normalizer.
+- **Compatible injected doubles.** `M365.of` supplies explicit failing contact
+  capabilities to older implementations that omit them. Live layers supply
+  all verbs. This preserves excluded consumers' existing test doubles without
+  editing those packages. Reversal: remove compatibility after consumers migrate.
+- **Folder-aware deletes.** Include optional folder routing in `deleteContact`
+  and add `deleteContactFolder` for empty journal-owned rollback folders, per the
+  Graph contact deletion contract. Reversal: remove the folder-delete verb.
+
+- The contact smoke's injected configuration sets `maxRetries` to zero.
+  Reason: its authorized budget is exactly one contact POST and one DELETE,
+  including on throttling or transport failure. Reversal: restore the default
+  only in a future smoke with an explicitly broader request budget.
+- Repeat planning also recognizes a seed receipt by source identity and contact id.
+  Reason: a hand edit to name or email must not cause a duplicate seeded contact.
+  Reversal: remove receipt matching if a future normalizer changes source identity.
+- Child folder inventory records its traversal parent when Graph omits that field.
+  Reason: rollback may delete a created folder only when it has no children.
+  Reversal: remove the synthesized relationship only after Graph provides a stable
+  equivalent relationship in every page response.
+
 ## Acceptance Criteria
 
 - [ ] Either auth lane injects into the unchanged REST service boundary in

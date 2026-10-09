@@ -340,6 +340,25 @@
         "@types/node": "catalog:",
       },
     },
+    "apps/practice-m365-contacts": {
+      "name": "@beep/practice-m365-contacts",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/law-practice-server": "workspace:^",
+        "@beep/law-practice-use-cases": "workspace:^",
+        "@beep/m365": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@effect/platform-bun": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-runner": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "apps/practice-mail-tagging": {
       "name": "@beep/practice-mail-tagging",
       "version": "0.0.0",
@@ -4095,6 +4114,8 @@
     "@beep/practice-identify": ["@beep/practice-identify@workspace:apps/practice-identify"],
 
     "@beep/practice-kg-mcp": ["@beep/practice-kg-mcp@workspace:apps/practice-kg-mcp"],
+
+    "@beep/practice-m365-contacts": ["@beep/practice-m365-contacts@workspace:apps/practice-m365-contacts"],
 
     "@beep/practice-mail-tagging": ["@beep/practice-mail-tagging@workspace:apps/practice-mail-tagging"],
 

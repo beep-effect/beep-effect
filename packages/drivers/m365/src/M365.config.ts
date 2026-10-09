@@ -6,12 +6,10 @@
  */
 
 import { $M365Id } from "@beep/identity";
-import { URLStr } from "@beep/schema";
+import { LiteralKit, URLStr } from "@beep/schema";
 import { O } from "@beep/utils";
-import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
-import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
@@ -123,35 +121,33 @@ export const M365_READ_SCOPES = [
 ] as const;
 
 /**
- * Write scopes reserved for a future write-back phase. v1 NEVER requests these.
+ * Decoded delegated scopes; arbitrary and write scopes are rejected.
  *
- * **Details**
- *
- * The service shape is write-ready (verbs/scopes are extensible), but the v1
- * scope set is read-only by construction — see {@link M365ConfigInput}.
- *
- * **Example** (Check Mail.Send write scope)
+ * **Example** (Check an approved scope)
  *
  * ```ts
- * import { M365_RESERVED_WRITE_SCOPES } from "@beep/m365"
- *
- * console.log(M365_RESERVED_WRITE_SCOPES.includes("Mail.Send")) // true
+ * import { M365DelegatedReadScope } from "@beep/m365"
+ * console.log(M365DelegatedReadScope.is["Mail.Read"]("Mail.Read")) // true
  * ```
  *
- * @category constants
+ * @category schemas
  * @since 0.0.0
  */
-export const M365_RESERVED_WRITE_SCOPES = [
-  "Files.ReadWrite.All",
-  "Sites.ReadWrite.All",
-  "Mail.Send",
-  "Calendars.ReadWrite",
-] as const;
-
-const reservedWriteScopes = HashSet.make(...M365_RESERVED_WRITE_SCOPES);
-
-const requestsNoWriteScope = (scopes: ReadonlyArray<string>): boolean =>
-  A.every(scopes, (scope) => !HashSet.has(reservedWriteScopes, scope));
+export const M365DelegatedReadScope = LiteralKit([
+  "offline_access",
+  "User.Read",
+  "Files.Read.All",
+  "Sites.Read.All",
+  "Mail.Read",
+  "Calendars.Read",
+]).pipe($I.annoteSchema("M365DelegatedReadScope", { description: "The approved delegated read scopes." }));
+/**
+ * A scope admitted by the delegated read-only configuration.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type M365DelegatedReadScope = typeof M365DelegatedReadScope.Type;
 
 const normalizeBaseUrl = Str.replace(/\/+$/, "");
 const makeNormalizedUrl = (value: string): URLStr => URLStr.make(normalizeBaseUrl(value));
@@ -192,7 +188,7 @@ const m365ConfigInputRedirectUriDefault = makeNormalizedUrl(DEFAULT_REDIRECT_URI
  * defaults in the schema, so the host may omit them and {@link resolveM365Config}
  * only derives `authority` and folds the genuinely-absent fields into `Option`.
  *
- * Requested `scopes` may not include any {@link M365_RESERVED_WRITE_SCOPES}
+ * Requested `scopes` must belong to {@link M365DelegatedReadScope}
  * entry — read-only by construction.
  *
  * **Example** (Create minimal config input)
@@ -240,21 +236,13 @@ export class M365ConfigInput extends S.Class<M365ConfigInput>($I`M365ConfigInput
     ).annotateKey({
       description: "Loopback redirect URI base for the interactive authorizer; defaults to http://localhost.",
     }),
-    scopes: S.Array(S.NonEmptyString)
-      .check(
-        S.makeFilter(requestsNoWriteScope, {
-          identifier: $I`M365ReadOnlyScopes`,
-          title: "M365 read-only scopes",
-          description: "v1 requests delegated read scopes only; reserved write scopes must not be requested.",
-          message: "Reserved write scope requested; the v1 Microsoft 365 driver is read-only.",
-        })
-      )
+    scopes: S.Array(M365DelegatedReadScope)
       .pipe(
         S.withConstructorDefault(Effect.succeed(M365_READ_SCOPES)),
         S.withDecodingDefaultTypeKey(Effect.succeed(M365_READ_SCOPES))
       )
       .annotateKey({
-        description: "Requested delegated scopes; defaults to M365_READ_SCOPES. Reserved write scopes are rejected.",
+        description: "Requested delegated scopes; defaults to M365_READ_SCOPES. Unapproved scopes are rejected.",
       }),
     tokenCachePath: S.OptionFromOptionalKey(S.NonEmptyString)
       .pipe(S.withConstructorDefault(Effect.succeedNone))
