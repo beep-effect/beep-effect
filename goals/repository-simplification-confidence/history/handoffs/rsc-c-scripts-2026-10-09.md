@@ -808,3 +808,12 @@ The unused root ONNX regression is gone. Logs are
 Run 4 six-row terminal qualification plus these three reruns is the
 verification of record under resume rulings 4/5. No passed gate is rerun.
 No C-owned heavy unit remains running. Publication and ready transition follow.
+
+### Run 7 publication refusal and authorized fallback
+
+The admitted `env TURBO_CONCURRENCY=2 beep-heavy bun run beep yeet publish
+--push-only` attempt exits 1 at 2026-10-09T20:29:35Z with the exact refusal:
+`yeet publish --push-only requires --reuse-verified.` No push occurs.
+Resume ruling 4 item 3 explicitly authorizes direct push and draft creation
+after a refusal; C uses that fallback with the same qualification evidence.
+No full-proof reuse is fabricated. The wrapper is terminal before fallback.

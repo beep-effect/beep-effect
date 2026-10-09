@@ -498,3 +498,12 @@ The first canonical heavy-wrapper launch failed before admission with
 standard user-manager runtime and bus environment allowed the same wrapper
 to queue normally. Exporting these variables in the worker launcher would
 prevent this pre-admission failure; no gate pass or host change is claimed.
+
+## C Run 7: push-only recovery flag mismatch
+
+The orchestrator-prescribed `yeet publish --push-only` exits before pushing:
+`yeet publish --push-only requires --reuse-verified.` The preserved six-row
+qualification and dependency-policy reruns are not a reusable full-proof
+manifest. Resume ruling 4 supplies the explicit push/create fallback. Matching
+the recovery command to the current publisher contract would avoid another
+heavy-slot wait; no proof state is fabricated or gate weakened.
