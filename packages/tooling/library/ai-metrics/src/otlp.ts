@@ -57,6 +57,7 @@ export const AiMetricsOtlpAttributeKey = LiteralKit([
   "ai_metrics.agent_nickname_hash",
   "ai_metrics.agent_role_hash",
   "ai_metrics.config_snapshot_id",
+  "ai_metrics.session_harness_hash",
   "ai_metrics.event_name",
   "ai_metrics.forked_from_id_hash",
   "ai_metrics.ingest_run_id",

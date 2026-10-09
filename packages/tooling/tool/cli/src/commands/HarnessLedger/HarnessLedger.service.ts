@@ -23,10 +23,8 @@ import { A, O, pipe, Str } from "@beep/utils";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
-import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import { HarnessLedgerChainError, HarnessLedgerInputError, HarnessLedgerIoError } from "./HarnessLedger.errors.ts";
@@ -47,6 +45,8 @@ import {
 } from "./internal/LedgerFiles.ts";
 import { enumeratePruneCandidates, observeSessionWindow, reconcileTranscripts } from "./internal/PruneWindow.ts";
 import type { HarnessFingerprint, HarnessHash, HookPulseAgentKind } from "@beep/repo-ai-metrics";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { ChildProcessSpawner } from "effect/process";
 import type { HarnessLedgerCommandError } from "./HarnessLedger.errors.ts";
 import type {
@@ -376,13 +376,10 @@ const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(functio
     onNone: () => Effect.succeed(A.empty<PruneProposal>()),
     onSome: (windowEnd) => buildPruneProposals(fingerprint, fresh, observed, windowEnd),
   });
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const shared = yield* fs
-    .exists(path.join(options.repoRoot, ".agents/skills"))
-    .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot inspect shared harness surfaces.")));
-  const sharedHarnessWindowFull =
-    !shared || A.every(R.values(observed.sessionsByAgentKind), (count) => count >= options.windowSessions);
+  const sharedHarnessWindowFull = A.every(
+    R.values(observed.sessionsByAgentKind),
+    (count) => count >= options.windowSessions
+  );
   return HarnessLedgerPruneReport.make({
     sharedHarnessWindowFull,
     // Transcript reconciliation is independently reported. Missing reconciliation
@@ -418,17 +415,12 @@ const pruneProposalsImpl = Effect.fn("HarnessLedger.pruneProposals")(function* (
   const harnessHash = yield* deriveHarnessHash(fingerprint).pipe(
     Effect.mapError(HarnessLedgerIoError.wrap("Failed to derive the current harness hash."))
   );
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const shared = yield* fs
-    .exists(path.join(options.repoRoot, ".agents/skills"))
-    .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot inspect shared harness surfaces.")));
   const observed = yield* observeSessionWindow(
     options.stateDir,
     options.windowSessions,
     harnessHash,
     options.agentKind,
-    shared
+    true
   );
   // A zero-touch observation remains advisory until tool identities and surface
   // coverage are reconciled. No incomplete collection can persist a non-use claim.

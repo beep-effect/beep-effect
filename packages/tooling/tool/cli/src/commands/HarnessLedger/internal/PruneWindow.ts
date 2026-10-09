@@ -138,11 +138,6 @@ const regimeOf = (tally: SessionTally, harnessHash: HarnessHash): SessionRegime 
 
 const byNewestFirst = Order.flip(Order.mapInput(Order.Number, (tally: SessionTally) => tally.maxTs));
 
-const isInRegime =
-  (harnessHash: HarnessHash) =>
-  (tally: SessionTally): boolean =>
-    SessionRegime.is["in-regime"](regimeOf(tally, harnessHash));
-
 // The mutable state one observation threads through its shard reads: the
 // per-session tallies and the two counters the report carries.
 type ShardScan = {
@@ -264,7 +259,13 @@ const windowReport = (
       HashSet.empty<string>(),
       (acc, other) => HashSet.union(acc, other.stamps)
     );
-  const parentRegime = (tally: SessionTally) => regimeOf({ ...tally, stamps: parentStamps(tally) }, harnessHash);
+  const parentSummary = (tally: SessionTally) =>
+    A.reduce(
+      A.filter(ranked, (other) => other.parent === tally.parent),
+      { ...tally, stamps: parentStamps(tally) },
+      (acc, other) => ({ ...acc, minTs: Math.min(acc.minTs, other.minTs), maxTs: Math.max(acc.maxTs, other.maxTs) })
+    );
+  const parentRegime = (tally: SessionTally) => regimeOf(parentSummary(tally), harnessHash);
   const isChild = (tally: SessionTally) =>
     A.some(
       ranked,
@@ -290,7 +291,7 @@ const windowReport = (
       parentRegime(tally) === "in-regime" &&
       !A.some(ranked, (other) => other.parent === tally.parent && other.unknownStart) &&
       active(tally) &&
-      !overlapsDisarm(tally)
+      !overlapsDisarm(parentSummary(tally))
   );
   const countFor = (kind: HookPulseAgentKind) =>
     Math.min(window, A.length(A.filter(qualifying, (tally) => tally.agentKind === kind)));
@@ -306,7 +307,7 @@ const windowReport = (
   const rootsForTouches = shared
     ? A.flatten(
         R.values(
-          R.map(counts, (_, kind) =>
+          R.map(counts, () =>
             A.take(
               A.filter(qualifying, (tally) => tally.agentKind === kind),
               window
@@ -316,24 +317,27 @@ const windowReport = (
       )
     : inRegime;
   const selectedRanked = A.filter(ranked, (tally) => tally.agentKind === agentKind);
+  const selectedGrouped = A.map(
+    A.filter(selectedRanked, (tally) =>
+      O.exists(
+        A.findFirst(selectedRanked, (other) => other.parent === tally.parent),
+        (first) => first.key === tally.key
+      )
+    ),
+    parentSummary
+  );
   const oldest = A.length(inRegime) < window ? O.none<SessionTally>() : A.last(inRegime);
   return ObservedSessionWindow.make({
     harnessHash,
     sessionsObserved: A.length(inRegime),
     sessionsByAgentKind: counts,
-    sessionsSkippedMixedFingerprint: A.length(A.filter(selectedRanked, (tally) => HashSet.size(tally.stamps) > 1)),
+    sessionsSkippedMixedFingerprint: A.length(A.filter(selectedGrouped, (tally) => HashSet.size(tally.stamps) > 1)),
     refusalsByAgentKind: scan.refusalsByAgentKind,
-    clientCoverage: R.map(counts, (_, kind) =>
-      scan.openDisarm
-        ? O.some(HookPulseClientCoverage.Enum.disabled)
-        : counts[kind] > 0
-          ? O.some(HookPulseClientCoverage.Enum.stamped)
-          : O.none()
-    ),
-    sessionsSkippedDisarmed: A.length(A.filter(selectedRanked, overlapsDisarm)),
+    clientCoverage: R.map(counts, () => (scan.openDisarm ? O.some(HookPulseClientCoverage.Enum.disabled) : O.none())),
+    sessionsSkippedDisarmed: A.length(A.filter(selectedGrouped, overlapsDisarm)),
     sessionsBelowActivityFloor: A.length(A.filter(selectedRanked, (tally) => !active(tally))),
-    sessionsSkippedOutOfRegime: countSkipped(selectedRanked, oldest, harnessHash, SessionRegime.Enum["out-of-regime"]),
-    sessionsSkippedUnstamped: countSkipped(selectedRanked, oldest, harnessHash, SessionRegime.Enum.unstamped),
+    sessionsSkippedOutOfRegime: countSkipped(selectedGrouped, oldest, harnessHash, SessionRegime.Enum["out-of-regime"]),
+    sessionsSkippedUnstamped: countSkipped(selectedGrouped, oldest, harnessHash, SessionRegime.Enum.unstamped),
     windowEnd: pipe(
       A.head(inRegime),
       O.map((tally) => DateTime.makeUnsafe(tally.maxTs))
@@ -342,8 +346,8 @@ const windowReport = (
       A.filter(
         ranked,
         (tally) =>
-          isInRegime(harnessHash)(tally) &&
-          !overlapsDisarm(tally) &&
+          parentRegime(tally) === "in-regime" &&
+          !overlapsDisarm(parentSummary(tally)) &&
           A.some(rootsForTouches, (root) => root.parent === tally.parent)
       ),
       HashSet.empty<string>(),

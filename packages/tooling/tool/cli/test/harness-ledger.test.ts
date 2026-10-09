@@ -824,6 +824,33 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     }).pipe(Effect.scoped)
   );
 
+  it.effect("unstamped children retain observed touches through a qualified parent", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* makeRepo();
+      const current = yield* repoHarnessHash(root);
+      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-child-touch-" });
+      const alphaId = yield* contextSurfaceId("skill", "alpha");
+      const child = yield* HookPulseV1.decodeJsonEffect(
+        yield* pulseRow(sessionA, "2026-10-09T10:01:30Z", "PostToolUse", O.some(alphaId), O.none(), O.some("subagent"))
+      );
+      yield* writeShard(stateDir, "2026-10-09", sessionA, [
+        yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
+        yield* pulse(sessionA, "2026-10-09T10:01:00Z", O.none()),
+        yield* HookPulseV1.encodeJsonEffect(
+          HookPulseV1.make({ ...child, transcriptPath: O.some(Sha256Hex.make("e".repeat(64))) })
+        ),
+      ]);
+      const ledger = yield* HarnessLedgerService;
+      const report = yield* ledger.pruneProposals(
+        HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1 })
+      );
+      expect(report.sessionsObserved).toBe(1);
+      expect(report.touchedCandidates).toBe(1);
+      expect(A.map(report.proposals, (proposal) => proposal.candidate.name)).toStrictEqual(["beta", "notion"]);
+    }).pipe(Effect.scoped)
+  );
+
   it.effect("shared skills require complete windows for every loading client", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -860,7 +887,20 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       yield* fs.makeDirectory(stateDir);
       yield* writeShard(stateDir, "2026-10-09", sessionA, [
         yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
-        yield* sessionStart(sessionA, "2026-10-09T10:00:01Z", Sha256Hex.make("f".repeat(64))),
+        yield* HookPulseV1.encodeJsonEffect(
+          HookPulseV1.make({
+            ...(yield* HookPulseV1.decodeJsonEffect(
+              yield* pulseRow(
+                sessionA,
+                "2026-10-09T10:00:01Z",
+                "SessionStart",
+                O.none(),
+                O.some(Sha256Hex.make("f".repeat(64)))
+              )
+            )),
+            transcriptPath: O.some(Sha256Hex.make("e".repeat(64))),
+          })
+        ),
         yield* pulse(sessionA, "2026-10-09T10:01:00Z", O.none()),
       ]);
       yield* fs.writeFileString(

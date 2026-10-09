@@ -1097,6 +1097,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
           if (
             Result.isSuccess(row) &&
             row.success.hookEvent === "SessionStart" &&
+            row.success.instrumentClass === "production" &&
             O.isSome(row.success.transcriptPath)
           ) {
             const key = `${row.success.agentKind}:${row.success.transcriptPath.value}`;
