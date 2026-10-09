@@ -1357,7 +1357,7 @@ const decideMonitorAdmission = (snapshot: YeetStatusSnapshot, changedPaths: Read
     HeavyAdmissionEvent.make({
       eventName: "pull_request",
       labels: snapshot.remote.labels,
-      headRepository: snapshot.remote.isCrossRepository ? "fork" : "beep-effect/beep-effect",
+      headRepository: snapshot.remote.isCrossRepository === true ? "fork" : "beep-effect/beep-effect",
       draft: snapshot.remote.isDraft ?? false,
       changedPaths,
     })

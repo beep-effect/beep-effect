@@ -141,48 +141,50 @@ describe("CI governance policy", () => {
 // workflow names are deliberate orchestration surfaces, not runnable lane bodies.
 
 describe("hosted workflow inventory", () => {
-  it.effect("maps every hosted job to a descriptor or explicit orchestration exemption", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const root = new URL("../../../../..", import.meta.url).pathname;
-      const exemptions = [
-        "check.yml:Heavy Admission",
-        "check.yml:Heavy",
-        "check.yml:Lint (${{ matrix.partition }})",
-        "check.yml:Test Unit (${{ matrix.partition }})",
-        "cache-warm.yml:Warm Turbo cache",
-        "data-sync.yml:Sync Official Data",
-        "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
-        "fleet-shadow-check.yml:Shadow Probe",
-        "heavy-admit.yml:Heavy Admission",
-        "heavy-admit.yml:Heavy",
-        "property-laws-nightly.yml:Property Laws Sweep",
-        "release-desktop.yml:Validate desktop release inputs",
-        "release-desktop.yml:macOS arm64",
-        "release-desktop.yml:macOS x64",
-        "release-desktop.yml:Linux x64",
-        "release-desktop.yml:Windows x64",
-        "release-desktop.yml:Desktop release draft ready",
-        "rerun-runner-loss.yml:Rerun Runner Loss",
-      ];
-      const files = A.filter(yield* fs.readDirectory(`${root}/.github/workflows`), Str.endsWith(".yml"));
-      for (const file of files) {
-        const workflow = Str.replace(/\.yml$/, "")(file);
-        const text = yield* fs.readFileString(`${root}/.github/workflows/${file}`);
-        expect(yield* workflowPolicyDiagnostics(file, text)).toEqual([]);
-        const contexts = yield* workflowJobContexts(file, text);
-        const declared = A.map(
-          A.filter(CI_LANE_DESCRIPTORS, (row) => row.workflow === workflow),
-          (row) => row.contextName
-        );
-        expect(
-          A.filter(
-            contexts,
-            (context) => !A.contains(declared, context) && !A.contains(exemptions, `${file}:${context}`)
-          )
-        ).toEqual([]);
-        expect(A.filter(declared, (context) => !A.contains(contexts, context))).toEqual([]);
-      }
-    }).pipe(Effect.provide(NodeServices.layer))
-  );
+  it.layer(NodeServices.layer)((it) => {
+    it.effect("maps every hosted job to a descriptor or explicit orchestration exemption", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = new URL("../../../../..", import.meta.url).pathname;
+        const exemptions = [
+          "check.yml:Heavy Admission",
+          "check.yml:Heavy",
+          "check.yml:Lint (${{ matrix.partition }})",
+          "check.yml:Test Unit (${{ matrix.partition }})",
+          "cache-warm.yml:Warm Turbo cache",
+          "data-sync.yml:Sync Official Data",
+          "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
+          "fleet-shadow-check.yml:Shadow Probe",
+          "heavy-admit.yml:Heavy Admission",
+          "heavy-admit.yml:Heavy",
+          "property-laws-nightly.yml:Property Laws Sweep",
+          "release-desktop.yml:Validate desktop release inputs",
+          "release-desktop.yml:macOS arm64",
+          "release-desktop.yml:macOS x64",
+          "release-desktop.yml:Linux x64",
+          "release-desktop.yml:Windows x64",
+          "release-desktop.yml:Desktop release draft ready",
+          "rerun-runner-loss.yml:Rerun Runner Loss",
+        ];
+        const files = A.filter(yield* fs.readDirectory(`${root}/.github/workflows`), Str.endsWith(".yml"));
+        for (const file of files) {
+          const workflow = Str.replace(/\.yml$/, "")(file);
+          const text = yield* fs.readFileString(`${root}/.github/workflows/${file}`);
+          expect(yield* workflowPolicyDiagnostics(file, text)).toEqual([]);
+          const contexts = yield* workflowJobContexts(file, text);
+          const declared = A.map(
+            A.filter(CI_LANE_DESCRIPTORS, (row) => row.workflow === workflow),
+            (row) => row.contextName
+          );
+          expect(
+            A.filter(
+              contexts,
+              (context) => !A.contains(declared, context) && !A.contains(exemptions, `${file}:${context}`)
+            )
+          ).toEqual([]);
+          expect(A.filter(declared, (context) => !A.contains(contexts, context))).toEqual([]);
+        }
+      })
+    );
+  });
 });

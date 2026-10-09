@@ -350,8 +350,8 @@ export class CiLaneDescriptor extends S.Class<CiLaneDescriptor>($I`CiLaneDescrip
     id: S.String,
     contextName: S.String,
     workflow: CiWorkflow.pipe(
-      S.withConstructorDefault(Effect.succeed("check")),
-      S.withDecodingDefaultTypeKey(Effect.succeed("check"))
+      S.withConstructorDefault(Effect.succeed(CiWorkflow.Enum.check)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(CiWorkflow.Enum.check))
     ),
     required: S.Boolean,
     laneClass: CiLaneClass,
