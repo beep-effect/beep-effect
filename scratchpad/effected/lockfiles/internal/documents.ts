@@ -81,17 +81,16 @@ export interface PnpmStream {
  *
  * @internal
  */
-export const splitPnpmStream = (content: string): Effect.Effect<PnpmStream, ParseFailure> =>
-	Effect.gen(function* () {
-		const documents = yield* Yaml.parseAll(content).pipe(Effect.mapError(syntaxFailure));
-		if (documents.length > MAX_PNPM_DOCUMENTS) {
-			return yield* Effect.fail(framingFailure("unexpectedDocuments", documents.length));
-		}
-		const present = (document: unknown): unknown => (isEmptyDocument(document) ? undefined : document);
-		return documents.length === MAX_PNPM_DOCUMENTS
-			? { preamble: present(documents[0]), main: present(documents[1]), documents: documents.length }
-			: { preamble: undefined, main: present(documents[0]), documents: documents.length };
-	});
+export const splitPnpmStream = Effect.fn("splitPnpmStream")(function* (content: string): Effect.fn.Return<PnpmStream, ParseFailure> {
+	const documents = yield* Yaml.parseAll(content).pipe(Effect.mapError(syntaxFailure));
+	if (documents.length > MAX_PNPM_DOCUMENTS) {
+		return yield* Effect.fail(framingFailure("unexpectedDocuments", documents.length));
+	}
+	const present = (document: unknown): unknown => (isEmptyDocument(document) ? undefined : document);
+	return documents.length === MAX_PNPM_DOCUMENTS
+		? { preamble: present(documents[0]), main: present(documents[1]), documents: documents.length }
+		: { preamble: undefined, main: present(documents[0]), documents: documents.length };
+});
 
 /**
  * Select the sole document of a YAML lockfile format that defines **no**
@@ -107,15 +106,14 @@ export const splitPnpmStream = (content: string): Effect.Effect<PnpmStream, Pars
  *
  * @internal
  */
-export const selectSoleDocument = (content: string): Effect.Effect<SelectedDocument, ParseFailure> =>
-	Effect.gen(function* () {
-		const documents = yield* Yaml.parseAll(content).pipe(Effect.mapError(syntaxFailure));
-		if (documents.length > 1) {
-			return yield* Effect.fail(framingFailure("unexpectedDocuments", documents.length));
-		}
-		const document = documents.at(0);
-		if (documents.length === 0 || isEmptyDocument(document)) {
-			return yield* Effect.fail(framingFailure("noLockfileDocument", documents.length));
-		}
-		return { document, documents: documents.length };
-	});
+export const selectSoleDocument = Effect.fn("selectSoleDocument")(function* (content: string): Effect.fn.Return<SelectedDocument, ParseFailure> {
+	const documents = yield* Yaml.parseAll(content).pipe(Effect.mapError(syntaxFailure));
+	if (documents.length > 1) {
+		return yield* Effect.fail(framingFailure("unexpectedDocuments", documents.length));
+	}
+	const document = documents.at(0);
+	if (documents.length === 0 || isEmptyDocument(document)) {
+		return yield* Effect.fail(framingFailure("noLockfileDocument", documents.length));
+	}
+	return { document, documents: documents.length };
+});

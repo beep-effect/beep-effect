@@ -1,3 +1,5 @@
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Match from "effect/Match";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as O from "@beep/utils/Option";
@@ -137,18 +139,14 @@ const dispatch = (
 	format: LockfileFormat,
 	content: string,
 	configOnly: boolean,
-): Effect.Effect<LockfileFields, ParseFailure> => {
-	switch (format) {
-		case "bun":
-			return parseBun(content);
-		case "npm":
-			return parseNpm(content);
-		case "pnpm":
-			return parsePnpm(content, configOnly);
-		case "yarn":
-			return parseYarn(content);
-	}
-};
+): Effect.Effect<LockfileFields, ParseFailure> =>
+	Match.value(format).pipe(
+		Match.when("bun", () => parseBun(content)),
+		Match.when("npm", () => parseNpm(content)),
+		Match.when("pnpm", () => parsePnpm(content, configOnly)),
+		Match.when("yarn", () => parseYarn(content)),
+		Match.exhaustive,
+	);
 
 /**
  * The unified lockfile model all four formats normalize into.
@@ -188,13 +186,13 @@ export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 	extension: S.optionalKey(S.Union([PnpmExtension, BunExtension])).annotateKey({ description: "Optional pnpm- or bun-specific metadata preserved alongside the normalized lockfile model" }),
 }, $I.annote("Lockfile", { description: "The unified lockfile model all four formats normalize into." })) {
 	/** Lazily built name → packages index; deliberately outside the schema, never encodes. */
-	#nameIndex: ReadonlyMap<string, ReadonlyArray<ResolvedPackage>> | undefined;
+	#nameIndex: MutableHashMap.MutableHashMap<string, ReadonlyArray<ResolvedPackage>> | undefined;
 
 	/** Lazily built importer-path → importer index; deliberately outside the schema, never encodes. */
-	#importerIndex: ReadonlyMap<string, LockfileImporter> | undefined;
+	#importerIndex: MutableHashMap.MutableHashMap<string, LockfileImporter> | undefined;
 
 	/** Lazily built instance-id → package index; deliberately outside the schema, never encodes. */
-	#instanceIndex: ReadonlyMap<string, ResolvedPackage> | undefined;
+	#instanceIndex: MutableHashMap.MutableHashMap<string, ResolvedPackage> | undefined;
 
 	/**
 	 * Parse lockfile content of a known format into the unified model — the
@@ -299,18 +297,18 @@ export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 	 */
 	packagesNamed(name: string): ReadonlyArray<ResolvedPackage> {
 		if (this.#nameIndex === undefined) {
-			const index = new Map<string, Array<ResolvedPackage>>();
+			const index = MutableHashMap.empty<string, Array<ResolvedPackage>>();
 			for (const pkg of this.packages) {
-				const bucket = index.get(pkg.name);
+				const bucket = O.getOrUndefined(MutableHashMap.get(index, pkg.name));
 				if (bucket === undefined) {
-					index.set(pkg.name, [pkg]);
+					MutableHashMap.set(index, pkg.name, [pkg]);
 				} else {
 					bucket.push(pkg);
 				}
 			}
 			this.#nameIndex = index;
 		}
-		return this.#nameIndex.get(name) ?? [];
+		return O.getOrUndefined(MutableHashMap.get(this.#nameIndex, name)) ?? [];
 	}
 
 	/**
@@ -325,11 +323,11 @@ export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 	 */
 	importer(path: string): O.Option<LockfileImporter> {
 		if (this.#importerIndex === undefined) {
-			const index = new Map<string, LockfileImporter>();
-			for (const imp of this.importers) index.set(imp.path, imp);
+			const index = MutableHashMap.empty<string, LockfileImporter>();
+			for (const imp of this.importers) MutableHashMap.set(index, imp.path, imp);
 			this.#importerIndex = index;
 		}
-		return O.fromUndefinedOr(this.#importerIndex.get(path));
+		return MutableHashMap.get(this.#importerIndex, path);
 	}
 
 	/**
@@ -351,15 +349,15 @@ export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 	 */
 	packageByInstanceId(instanceId: string): O.Option<ResolvedPackage> {
 		if (this.#instanceIndex === undefined) {
-			const index = new Map<string, ResolvedPackage>();
+			const index = MutableHashMap.empty<string, ResolvedPackage>();
 			// First wins, so the answer is stable if a malformed lockfile repeats
 			// an id rather than depending on iteration order.
 			for (const pkg of this.packages) {
-				if (!index.has(pkg.instanceId)) index.set(pkg.instanceId, pkg);
+				if (!MutableHashMap.has(index, pkg.instanceId)) MutableHashMap.set(index, pkg.instanceId, pkg);
 			}
 			this.#instanceIndex = index;
 		}
-		return O.fromUndefinedOr(this.#instanceIndex.get(instanceId));
+		return MutableHashMap.get(this.#instanceIndex, instanceId);
 	}
 
 	/** The workspace-local packages. */

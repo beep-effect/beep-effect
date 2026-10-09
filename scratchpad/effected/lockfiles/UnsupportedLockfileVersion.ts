@@ -5,6 +5,9 @@
 // import `Lockfile.ts` (noImportCycles), so the shape lives here where both the
 // internals and the public entry point can reach it.
 
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+
 /**
  * The cause a {@link LockfileParseError} carries when a lockfile predates the
  * supported format version.
@@ -69,17 +72,17 @@ export interface UnsupportedLockfileVersion {
  * @public
  */
 export const isUnsupportedLockfileVersion = (cause: unknown): cause is UnsupportedLockfileVersion =>
-	typeof cause === "object" &&
-	cause !== null &&
+	P.isObjectKeyword(cause) &&
+	!P.isFunction(cause) &&
 	// The discriminant is read as an OWN property: a foreign throwable that
 	// inherits a `_tag` from its prototype is not this record, and treating one
 	// as if it were would tell a consumer to upgrade their package manager over
 	// what is actually a malformed file. The remaining checks are value checks
 	// — identity is already settled by this line.
-	Object.hasOwn(cause, "_tag") &&
 	"_tag" in cause &&
+	R.has(cause, "_tag") &&
 	cause._tag === "UnsupportedLockfileVersion" &&
 	"format" in cause &&
-	typeof cause.format === "string" &&
+	P.isString(cause.format) &&
 	"minimumSupported" in cause &&
-	typeof cause.minimumSupported === "number";
+	P.isNumber(cause.minimumSupported);

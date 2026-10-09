@@ -18,7 +18,7 @@
  * Every entrypoint takes content as a string; this package performs no IO.
  *
  * @example
- * ```ts
+ * ```typescript
  * import { Lockfile } from "./index.ts";
  * import * as Effect from "effect/Effect";
  *

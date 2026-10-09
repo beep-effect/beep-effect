@@ -1,3 +1,6 @@
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { ResolvedPackage } from "../ResolvedPackage.ts";
@@ -47,110 +50,106 @@ const YarnMetadata = S.Struct({
  *
  * @internal
  */
-export const parseYarn = (content: string): Effect.Effect<LockfileFields, ParseFailure> =>
-	Effect.gen(function* () {
-		// yarn defines no document framing, so a multi-document yarn.lock fails
-		// typed rather than being silently truncated to its first document.
-		const { document } = yield* selectSoleDocument(content);
-		const raw = yield* S.decodeUnknownEffect(YarnLockfileRaw)(document).pipe(Effect.mapError(validationFailure));
+export const parseYarn = Effect.fn("parseYarn")(function* (content: string): Effect.fn.Return<LockfileFields, ParseFailure> {
+	// yarn defines no document framing, so a multi-document yarn.lock fails
+	// typed rather than being silently truncated to its first document.
+	const { document } = yield* selectSoleDocument(content);
+	const raw = yield* S.decodeUnknownEffect(YarnLockfileRaw)(document).pipe(Effect.mapError(validationFailure));
 
-		// Extract the lockfile version from __metadata; skip it during iteration.
-		const metadata =
-			raw.__metadata === undefined
-				? undefined
-				: yield* S.decodeUnknownEffect(YarnMetadata)(raw.__metadata).pipe(Effect.mapError(validationFailure));
-		const lockfileVersion = metadata?.version === undefined ? "unknown" : String(metadata.version);
+	// Extract the lockfile version from __metadata; skip it during iteration.
+	const metadata =
+		raw.__metadata === undefined
+			? undefined
+			: yield* S.decodeUnknownEffect(YarnMetadata)(raw.__metadata).pipe(Effect.mapError(validationFailure));
+	const lockfileVersion = metadata?.version === undefined ? "unknown" : String(metadata.version);
 
-		// Decode each entry once and cache in a Map.
-		const decoded = new Map<string, YarnEntryType>();
-		for (const [key, value] of R.toEntries(raw)) {
-			if (key === "__metadata") continue;
-			const entry = yield* S.decodeUnknownEffect(YarnEntry)(value).pipe(Effect.mapError(validationFailure));
-			decoded.set(key, entry);
-		}
+	// Decode each entry once and cache in a Map.
+	const decoded = MutableHashMap.empty<string, YarnEntryType>();
+	for (const [key, value] of R.toEntries(raw)) {
+		if (key === "__metadata") continue;
+		const entry = yield* S.decodeUnknownEffect(YarnEntry)(value).pipe(Effect.mapError(validationFailure));
+		MutableHashMap.set(decoded, key, entry);
+	}
 
-		return yield* toFields(lockfileVersion, decoded);
-	});
+	return yield* toFields(lockfileVersion, decoded);
+});
 
 // ── Transform ──────────────────────────────────────────────────────────────
 
-const toFields = (
-	lockfileVersion: string,
-	decoded: ReadonlyMap<string, YarnEntryType>,
-): Effect.Effect<LockfileFields, ParseFailure> =>
-	Effect.gen(function* () {
-		const packages: Array<ResolvedPackage> = [];
-		const workspaceNames = new Set<string>();
-		const workspaceEntries = new Map<string, WorkspaceEntry>();
-		// yarn's own identity is the locator, and its lockfile *is* the
-		// descriptor→locator index — every key lists the descriptors that resolve
-		// to that entry. Building the index is therefore a read, not a guess.
-		const locators = new Map<string, string>();
-		for (const [key, entry] of decoded) {
-			const descriptors = key.split(", ");
-			const locator = entry.resolution ?? descriptors[0];
-			if (locator === undefined || locator === "") continue;
-			for (const descriptor of descriptors) {
-				if (descriptor !== "") locators.set(descriptor, locator);
-			}
+const toFields = Effect.fn("toFields")(function* (lockfileVersion: string, decoded: MutableHashMap.MutableHashMap<string, YarnEntryType>): Effect.fn.Return<LockfileFields, ParseFailure> {
+	const packages: Array<ResolvedPackage> = [];
+	let workspaceNames = HashSet.fromIterable<string>([]);
+	const workspaceEntries = MutableHashMap.empty<string, WorkspaceEntry>();
+	// yarn's own identity is the locator, and its lockfile *is* the
+	// descriptor→locator index — every key lists the descriptors that resolve
+	// to that entry. Building the index is therefore a read, not a guess.
+	const locators = MutableHashMap.empty<string, string>();
+	for (const [key, entry] of decoded) {
+		const descriptors = key.split(", ");
+		const locator = entry.resolution ?? descriptors[0];
+		if (locator === undefined || locator === "") continue;
+		for (const descriptor of descriptors) {
+			if (descriptor !== "") MutableHashMap.set(locators, descriptor, locator);
 		}
+	}
 
-		// First pass: identify workspace names.
-		for (const [key, entry] of decoded) {
-			if (entry.linkType === "soft") {
-				const name = extractYarnPackageName(key);
-				if (name !== undefined) workspaceNames.add(name);
-			}
-		}
-
-		// Second pass: build packages.
-		for (const [key, entry] of decoded) {
+	// First pass: identify workspace names.
+	for (const [key, entry] of decoded) {
+		if (entry.linkType === "soft") {
 			const name = extractYarnPackageName(key);
-			if (name === undefined) continue; // malformed descriptors are skipped, never thrown on
-
-			const isWorkspace = entry.linkType === "soft";
-			const relativePath = isWorkspace ? extractYarnWorkspacePath(key) : undefined;
-			// Yarn Berry's `10c0/<hex>` cache checksums validate as an `IntegrityHash`
-			// (the yarn textual form), so they are preserved; a present but unparseable
-			// checksum fails typed at validation rather than being dropped.
-			const integrity = yield* toIntegrityHash(entry.checksum);
-			const instanceId = entry.resolution ?? key.split(", ")[0] ?? "";
-			if (instanceId === "") continue; // no identity, no row; skip, never throw
-
-			packages.push(
-				ResolvedPackage.make({
-					name,
-					version: entry.version ?? "0.0.0",
-					instanceId,
-					...O.getSomesStruct({ integrity: O.fromUndefinedOr(integrity) }),
-					isWorkspace,
-					...O.getSomesStruct({ relativePath: O.fromUndefinedOr(relativePath) }),
-					// Peer ranges are recorded plainly (no `npm:` protocol prefix),
-					// so unlike the dependency sections they need no cleaning.
-					...peerDeclarations(entry.peerDependencies, entry.peerDependenciesMeta),
-					...resolveYarnEdges(entry, locators),
-				}),
-			);
-
-			if (isWorkspace) {
-				const deps = cleanYarnDeps(entry.dependencies);
-				const devDeps = cleanYarnDeps(entry.devDependencies);
-				const peerDeps = cleanYarnDeps(entry.peerDependencies);
-				const optDeps = cleanYarnDeps(entry.optionalDependencies);
-				workspaceEntries.set(name, {
-					...O.getSomesStruct({ dependencies: O.fromUndefinedOr(deps) }),
-					...O.getSomesStruct({ devDependencies: O.fromUndefinedOr(devDeps) }),
-					...O.getSomesStruct({ peerDependencies: O.fromUndefinedOr(peerDeps) }),
-					...O.getSomesStruct({ optionalDependencies: O.fromUndefinedOr(optDeps) }),
-				});
-			}
+			if (name !== undefined) workspaceNames = HashSet.add(workspaceNames, name);
 		}
+	}
 
-		const workspaceDependencies = extractWorkspaceDeps(workspaceEntries, workspaceNames);
+	// Second pass: build packages.
+	for (const [key, entry] of decoded) {
+		const name = extractYarnPackageName(key);
+		if (name === undefined) continue; // malformed descriptors are skipped, never thrown on
 
-		// yarn does not record importers; the field is always empty.
-		return { lockfileVersion, packages, workspaceDependencies, importers: [] };
-	});
+		const isWorkspace = entry.linkType === "soft";
+		const relativePath = isWorkspace ? extractYarnWorkspacePath(key) : undefined;
+		// Yarn Berry's `10c0/<hex>` cache checksums validate as an `IntegrityHash`
+		// (the yarn textual form), so they are preserved; a present but unparseable
+		// checksum fails typed at validation rather than being dropped.
+		const integrity = yield* toIntegrityHash(entry.checksum);
+		const instanceId = entry.resolution ?? key.split(", ")[0] ?? "";
+		if (instanceId === "") continue; // no identity, no row; skip, never throw
+
+		packages.push(
+			ResolvedPackage.make({
+				name,
+				version: entry.version ?? "0.0.0",
+				instanceId,
+				...O.getSomesStruct({ integrity: O.fromUndefinedOr(integrity) }),
+				isWorkspace,
+				...O.getSomesStruct({ relativePath: O.fromUndefinedOr(relativePath) }),
+				// Peer ranges are recorded plainly (no `npm:` protocol prefix),
+				// so unlike the dependency sections they need no cleaning.
+				...peerDeclarations(entry.peerDependencies, entry.peerDependenciesMeta),
+				...resolveYarnEdges(entry, locators),
+			}),
+		);
+
+		if (isWorkspace) {
+			const deps = cleanYarnDeps(entry.dependencies);
+			const devDeps = cleanYarnDeps(entry.devDependencies);
+			const peerDeps = cleanYarnDeps(entry.peerDependencies);
+			const optDeps = cleanYarnDeps(entry.optionalDependencies);
+			MutableHashMap.set(workspaceEntries, name, {
+				...O.getSomesStruct({ dependencies: O.fromUndefinedOr(deps) }),
+				...O.getSomesStruct({ devDependencies: O.fromUndefinedOr(devDeps) }),
+				...O.getSomesStruct({ peerDependencies: O.fromUndefinedOr(peerDeps) }),
+				...O.getSomesStruct({ optionalDependencies: O.fromUndefinedOr(optDeps) }),
+			});
+		}
+	}
+
+	// All keys are strings: the public backing preserves the sibling native-map contract.
+	const workspaceDependencies = extractWorkspaceDeps(workspaceEntries.backing, workspaceNames);
+
+	// yarn does not record importers; the field is always empty.
+	return { lockfileVersion, packages, workspaceDependencies, importers: [] };
+});
 
 /**
  * Resolve one entry's outgoing edges through the descriptor→locator index.
@@ -177,19 +176,19 @@ const toFields = (
  */
 const resolveYarnEdges = (
 	entry: YarnEntryType,
-	locators: ReadonlyMap<string, string>,
+	locators: MutableHashMap.MutableHashMap<string, string>,
 ): { readonly resolved: Record<string, string>; readonly unresolvedEdges: ReadonlyArray<string> } => {
-	const edges = new Map<string, string>();
-	const unnameable = new Set<string>();
+	const edges = MutableHashMap.empty<string, string>();
+	const unnameable = MutableHashSet.empty<string>();
 	for (const section of [entry.dependencies, entry.optionalDependencies]) {
 		if (section === undefined) continue;
 		for (const [name, range] of R.toEntries(section)) {
 			if (name === "") continue;
-			const locator = locators.get(`${name}@${range}`);
-			if (locator !== undefined) edges.set(name, locator);
+			const locator = O.getOrUndefined(MutableHashMap.get(locators, `${name}@${range}`));
+			if (locator !== undefined) MutableHashMap.set(edges, name, locator);
 			// The descriptor IS the recorded edge; a descriptor the key index does
 			// not name is an inconsistent lockfile, not an absent dependency.
-			else unnameable.add(name);
+			else MutableHashSet.add(unnameable, name);
 		}
 	}
 	// Map-backed until the last step: `Object.fromEntries` defines own data

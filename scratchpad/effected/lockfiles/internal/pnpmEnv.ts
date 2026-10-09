@@ -1,3 +1,5 @@
+import * as MutableHashMap from "effect/MutableHashMap";
+import { $ScratchpadId } from "@beep/identity/packages";
 import { IntegrityHash } from "../../npm/index.ts";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -7,6 +9,15 @@ import { splitPnpmStream } from "./documents.ts";
 import type { ParseFailure } from "./shared.ts";
 import { gatePnpmVersion, validationFailure } from "./shared.ts";
 import * as R from "effect/Record";
+
+const $I = $ScratchpadId.create("effected/lockfiles/internal/pnpmEnv");
+
+/** A well-formed env preamble whose recorded dependency cannot be accounted for. */
+class PnpmEnvPreambleError extends S.TaggedError<PnpmEnvPreambleError>($I`PnpmEnvPreambleError`)(
+	"PnpmEnvPreambleError",
+	{ message: S.String },
+	$I.annote("PnpmEnvPreambleError", { description: "An env preamble whose recorded dependency cannot be accounted for." }),
+) {}
 
 // ── Raw schema (permissive validation scaffolding, not API) ────────────────
 
@@ -66,7 +77,7 @@ const own = <V>(record: Readonly<Record<string, V>> | undefined, key: string): V
  * shape failure of a located document, so it rides the validation channel.
  */
 const unaccounted = (message: string): ParseFailure =>
-	validationFailure(new Error(`pnpm-lock.yaml env preamble: ${message}`));
+	validationFailure(PnpmEnvPreambleError.make({ message: `pnpm-lock.yaml env preamble: ${message}` }));
 
 /**
  * The SRI integrity of `packages["<key>"]`, failing when the entry, its
@@ -108,13 +119,12 @@ const recordedIntegrity = (
  * lockfile version. The one decode every preamble reader shares, so they
  * cannot disagree about which document is the preamble or what shape it has.
  */
-const decodePreamble = (content: string): Effect.Effect<PnpmEnvRawType | undefined, ParseFailure> =>
-	Effect.gen(function* () {
-		const { preamble } = yield* splitPnpmStream(content);
-		if (preamble === undefined) return undefined;
-		yield* gatePnpmVersion(preamble);
-		return yield* S.decodeUnknownEffect(PnpmEnvRaw)(preamble).pipe(Effect.mapError(validationFailure));
-	});
+const decodePreamble = Effect.fn("decodePreamble")(function* (content: string): Effect.fn.Return<PnpmEnvRawType | undefined, ParseFailure> {
+	const { preamble } = yield* splitPnpmStream(content);
+	if (preamble === undefined) return undefined;
+	yield* gatePnpmVersion(preamble);
+	return yield* S.decodeUnknownEffect(PnpmEnvRaw)(preamble).pipe(Effect.mapError(validationFailure));
+});
 
 /**
  * Read the package manager pinned by a `pnpm-lock.yaml`'s env preamble.
@@ -132,30 +142,29 @@ const decodePreamble = (content: string): Effect.Effect<PnpmEnvRawType | undefin
  *
  * @internal
  */
-export const readPnpmPackageManager = (content: string): Effect.Effect<PackageManagerLock | undefined, ParseFailure> =>
-	Effect.gen(function* () {
-		const raw = yield* decodePreamble(content);
-		if (raw === undefined) return undefined;
-		const declared = own(own(raw.importers, ROOT_IMPORTER)?.packageManagerDependencies, PNPM);
-		if (declared === undefined) return undefined;
-		const integrity = yield* recordedIntegrity(raw, PNPM, PNPM, declared.version);
-		const key = `${PNPM}@${declared.version}`;
-		const snapshot = own(raw.snapshots, key);
-		if (snapshot === undefined) {
-			return yield* Effect.fail(unaccounted(`snapshots[${yield* S.encodeEffect(JsonString)(key).pipe(Effect.mapError(validationFailure))}] is missing`));
-		}
-		const natives: Array<readonly [string, string]> = [];
-		for (const [name, version] of R.toEntries(snapshot.optionalDependencies ?? {})) {
-			natives.push([name, yield* integrityOf(raw, `${name}@${version}`)]);
-		}
-		return PackageManagerLock.make({
-			name: PNPM,
-			specifier: declared.specifier,
-			version: declared.version,
-			integrity,
-			nativeIntegrity: R.fromEntries(natives),
-		});
+export const readPnpmPackageManager = Effect.fn("readPnpmPackageManager")(function* (content: string): Effect.fn.Return<PackageManagerLock | undefined, ParseFailure> {
+	const raw = yield* decodePreamble(content);
+	if (raw === undefined) return undefined;
+	const declared = own(own(raw.importers, ROOT_IMPORTER)?.packageManagerDependencies, PNPM);
+	if (declared === undefined) return undefined;
+	const integrity = yield* recordedIntegrity(raw, PNPM, PNPM, declared.version);
+	const key = `${PNPM}@${declared.version}`;
+	const snapshot = own(raw.snapshots, key);
+	if (snapshot === undefined) {
+		return yield* Effect.fail(unaccounted(`snapshots[${yield* S.encodeEffect(JsonString)(key).pipe(Effect.mapError(validationFailure))}] is missing`));
+	}
+	const natives: Array<readonly [string, string]> = [];
+	for (const [name, version] of R.toEntries(snapshot.optionalDependencies ?? {})) {
+		natives.push([name, yield* integrityOf(raw, `${name}@${version}`)]);
+	}
+	return PackageManagerLock.make({
+		name: PNPM,
+		specifier: declared.specifier,
+		version: declared.version,
+		integrity,
+		nativeIntegrity: R.fromEntries(natives),
 	});
+});
 
 /**
  * Read the config dependencies recorded by a `pnpm-lock.yaml`'s env preamble,
@@ -172,20 +181,15 @@ export const readPnpmPackageManager = (content: string): Effect.Effect<PackageMa
  *
  * @internal
  */
-export const readPnpmConfigDependencies = (
-	content: string,
-): Effect.Effect<ReadonlyMap<string, ConfigDependencyLock>, ParseFailure> =>
-	Effect.gen(function* () {
-		const raw = yield* decodePreamble(content);
-		const declared = own(raw?.importers, ROOT_IMPORTER)?.configDependencies;
-		const locks = new Map<string, ConfigDependencyLock>();
-		if (raw === undefined || declared === undefined) return locks;
-		for (const [name, entry] of R.toEntries(declared)) {
-			const integrity = yield* recordedIntegrity(raw, `config dependency ${yield* S.encodeEffect(JsonString)(name).pipe(Effect.mapError(validationFailure))}`, name, entry.version);
-			locks.set(
-				name,
-				ConfigDependencyLock.make({ name, specifier: entry.specifier, version: entry.version, integrity }),
-			);
-		}
-		return locks;
-	});
+export const readPnpmConfigDependencies = Effect.fn("readPnpmConfigDependencies")(function* (content: string): Effect.fn.Return<ReadonlyMap<string, ConfigDependencyLock>, ParseFailure> {
+	const raw = yield* decodePreamble(content);
+	const declared = own(raw?.importers, ROOT_IMPORTER)?.configDependencies;
+	// String keys live in backing; return it to preserve the public ReadonlyMap contract.
+	const locks = MutableHashMap.empty<string, ConfigDependencyLock>();
+	if (raw === undefined || declared === undefined) return locks.backing;
+	for (const [name, entry] of R.toEntries(declared)) {
+		const integrity = yield* recordedIntegrity(raw, `config dependency ${yield* S.encodeEffect(JsonString)(name).pipe(Effect.mapError(validationFailure))}`, name, entry.version);
+		MutableHashMap.set(locks, name, ConfigDependencyLock.make({ name, specifier: entry.specifier, version: entry.version, integrity }));
+	}
+	return locks.backing;
+});

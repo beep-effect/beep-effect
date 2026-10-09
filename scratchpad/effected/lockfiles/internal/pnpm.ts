@@ -1,3 +1,6 @@
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { dual } from "effect/Function";
@@ -121,46 +124,45 @@ type PnpmPackageEntry = NonNullable<PnpmLockfileRawType["packages"]>[string];
 export const parsePnpm: {
 	(configOnly: boolean): (content: string) => Effect.Effect<LockfileFields, ParseFailure>;
 	(content: string, configOnly: boolean): Effect.Effect<LockfileFields, ParseFailure>;
-} = dual(2, (content: string, configOnly: boolean): Effect.Effect<LockfileFields, ParseFailure> =>
-	Effect.gen(function* () {
-		const { preamble, main: document, documents } = yield* splitPnpmStream(content);
-		if (document === undefined) {
-			if (preamble === undefined || !configOnly) {
-				return yield* Effect.fail(framingFailure("noLockfileDocument", documents));
-			}
-			const lockfileVersion = yield* gatePnpmVersion(preamble);
-			return {
-				lockfileVersion,
-				packages: [],
-				workspaceDependencies: [],
-				importers: [],
-				extension: PnpmExtension.make({}),
-			};
+} = dual(2, Effect.fnUntraced(function* (content: string, configOnly: boolean) {
+	const { preamble, main: document, documents } = yield* splitPnpmStream(content);
+	if (document === undefined) {
+		if (preamble === undefined || !configOnly) {
+			return yield* Effect.fail(framingFailure("noLockfileDocument", documents));
 		}
-		// Format-version gate. Deliberately NOT a check for `snapshots:` being
-		// present or populated: a dependency-free v9 workspace legitimately has
-		// zero snapshot entries, so an emptiness guard would reject a valid
-		// lockfile. Version is the format's own identity; emptiness is a
-		// coincidence of content.
-		//
-		// It runs BEFORE the shape decode, and must: a pre-v9 single-project
-		// lockfile carries no `importers` map, so decoding first would report a
-		// too-old lockfile as malformed — losing the distinction the
-		// `UnsupportedLockfileVersion` cause exists to carry.
-		yield* gatePnpmVersion(document);
-		const validated = yield* S.decodeUnknownEffect(PnpmLockfileRaw)(document).pipe(
-			Effect.mapError(validationFailure),
-		);
-		// pnpm always records at least the root importer ".", so a lockfile
-		// document declaring no importers at all describes no workspace. Fail
-		// typed rather than hand back an empty Lockfile — an empty result is
-		// indistinguishable from "this workspace has no packages", which is the
-		// shape that kept the multi-document bug invisible.
-		if (R.keys(validated.importers).length === 0) {
-			return yield* Effect.fail(framingFailure("noImporters", documents));
-		}
-		return yield* toFields(validated);
-	}));
+		const lockfileVersion = yield* gatePnpmVersion(preamble);
+		return {
+			lockfileVersion,
+			packages: [],
+			workspaceDependencies: [],
+			importers: [],
+			extension: PnpmExtension.make({}),
+		};
+	}
+	// Format-version gate. Deliberately NOT a check for `snapshots:` being
+	// present or populated: a dependency-free v9 workspace legitimately has
+	// zero snapshot entries, so an emptiness guard would reject a valid
+	// lockfile. Version is the format's own identity; emptiness is a
+	// coincidence of content.
+	//
+	// It runs BEFORE the shape decode, and must: a pre-v9 single-project
+	// lockfile carries no `importers` map, so decoding first would report a
+	// too-old lockfile as malformed — losing the distinction the
+	// `UnsupportedLockfileVersion` cause exists to carry.
+	yield* gatePnpmVersion(document);
+	const validated = yield* S.decodeUnknownEffect(PnpmLockfileRaw)(document).pipe(
+		Effect.mapError(validationFailure),
+	);
+	// pnpm always records at least the root importer ".", so a lockfile
+	// document declaring no importers at all describes no workspace. Fail
+	// typed rather than hand back an empty Lockfile — an empty result is
+	// indistinguishable from "this workspace has no packages", which is the
+	// shape that kept the multi-document bug invisible.
+	if (R.keys(validated.importers).length === 0) {
+		return yield* Effect.fail(framingFailure("noImporters", documents));
+	}
+	return yield* toFields(validated);
+}));
 
 // ── Transform ──────────────────────────────────────────────────────────────
 
@@ -195,11 +197,11 @@ export const parsePnpm: {
  */
 const resolveEdges = (
 	sections: ReadonlyArray<Readonly<Record<string, string>> | undefined>,
-	instanceIds: ReadonlySet<string>,
-	publishDirTargets: ReadonlyMap<string, string>,
+	instanceIds: MutableHashSet.MutableHashSet<string>,
+	publishDirTargets: MutableHashMap.MutableHashMap<string, string>,
 ): ResolvedEdges => {
-	const edges = new Map<string, string>();
-	const unnameable = new Set<string>();
+	const edges = MutableHashMap.empty<string, string>();
+	const unnameable = MutableHashSet.empty<string>();
 	for (const section of sections) {
 		if (section === undefined) continue;
 		for (const [name, version] of R.toEntries(section)) {
@@ -219,28 +221,28 @@ const resolveEdges = (
 			// ids, where a workspace importer's id is its path.
 			if (version.startsWith(LINK_PREFIX)) {
 				const target = resolveLinkTarget("", version.slice(LINK_PREFIX.length));
-				const publishDirTarget = target === undefined ? undefined : publishDirTargets.get(target);
-				if (target !== undefined && instanceIds.has(target)) edges.set(name, target);
+				const publishDirTarget = target === undefined ? undefined : O.getOrUndefined(MutableHashMap.get(publishDirTargets, target));
+				if (target !== undefined && MutableHashSet.has(instanceIds, target)) MutableHashMap.set(edges, name, target);
 				// A target that is no importer may still be one's DECLARED publish
 				// directory — `link:packages/lib/dist/dev/pkg` where `packages/lib`
 				// declares `publishDirectory: dist/dev/pkg`. The declaration is exact
 				// evidence, so the map is consulted unconditionally.
 				else if (publishDirTarget !== undefined) {
-					edges.set(name, publishDirTarget);
+					MutableHashMap.set(edges, name, publishDirTarget);
 				}
 				// A `link:` into a directory that is no importer and no declared
 				// publish directory — a build output, a vendored stub — names no
 				// instance in this lockfile. The edge is RECORDED, so its absence from
 				// `resolved` must not read as "nothing resolved".
-				else unnameable.add(name);
+				else MutableHashSet.add(unnameable, name);
 				continue;
 			}
 			const bare = `${name}@${version}`;
-			if (instanceIds.has(bare)) edges.set(name, bare);
+			if (MutableHashSet.has(instanceIds, bare)) MutableHashMap.set(edges, name, bare);
 			// The alias reading: the recorded version is the referenced instance's
 			// own key (`realname@realversion(peers)`), which a plain version never is.
-			else if (instanceIds.has(version)) edges.set(name, version);
-			else unnameable.add(name);
+			else if (MutableHashSet.has(instanceIds, version)) MutableHashMap.set(edges, name, version);
+			else MutableHashSet.add(unnameable, name);
 		}
 	}
 	// Map-backed until the last step: `Object.fromEntries` defines own data
@@ -308,11 +310,11 @@ const WORKSPACE_PREFIX = "workspace:";
  *
  * @internal
  */
-const owningImporter = (target: string, importerPaths: ReadonlySet<string>): string | undefined => {
+const owningImporter = (target: string, importerPaths: MutableHashSet.MutableHashSet<string>): string | undefined => {
 	const segments = target.split("/");
 	for (let end = segments.length - 1; end > 0; end--) {
 		const candidate = segments.slice(0, end).join("/");
-		if (importerPaths.has(candidate)) return candidate;
+		if (MutableHashSet.has(importerPaths, candidate)) return candidate;
 	}
 	return undefined;
 };
@@ -348,12 +350,12 @@ const owningImporter = (target: string, importerPaths: ReadonlySet<string>): str
 const resolveImporterEdges = (
 	importer: PnpmImporterType,
 	importerPath: string,
-	instanceIds: ReadonlySet<string>,
-	importerPaths: ReadonlySet<string>,
-	publishDirTargets: ReadonlyMap<string, string>,
+	instanceIds: MutableHashSet.MutableHashSet<string>,
+	importerPaths: MutableHashSet.MutableHashSet<string>,
+	publishDirTargets: MutableHashMap.MutableHashMap<string, string>,
 ): ResolvedEdges => {
-	const edges = new Map<string, string>();
-	const unnameable = new Set<string>();
+	const edges = MutableHashMap.empty<string, string>();
+	const unnameable = MutableHashSet.empty<string>();
 	for (const group of importerDepGroups(importer)) {
 		if (group === undefined) continue;
 		for (const [name, info] of R.toEntries(group)) {
@@ -363,20 +365,20 @@ const resolveImporterEdges = (
 				const owner =
 					target === undefined
 						? undefined
-						: instanceIds.has(target)
+						: MutableHashSet.has(instanceIds, target)
 							? target
-							: (publishDirTargets.get(target) ??
+							: (O.getOrUndefined(MutableHashMap.get(publishDirTargets, target)) ??
 								(info.specifier.startsWith(WORKSPACE_PREFIX) ? owningImporter(target, importerPaths) : undefined));
-				if (owner !== undefined) edges.set(name, owner);
-				else unnameable.add(name);
+				if (owner !== undefined) MutableHashMap.set(edges, name, owner);
+				else MutableHashSet.add(unnameable, name);
 				continue;
 			}
 			const bare = `${name}@${info.version}`;
-			if (instanceIds.has(bare)) edges.set(name, bare);
+			if (MutableHashSet.has(instanceIds, bare)) MutableHashMap.set(edges, name, bare);
 			// The alias reading: the recorded version is the referenced instance's
 			// own key (`realname@realversion(peers)`), which a plain version never is.
-			else if (instanceIds.has(info.version)) edges.set(name, info.version);
-			else unnameable.add(name);
+			else if (MutableHashSet.has(instanceIds, info.version)) MutableHashMap.set(edges, name, info.version);
+			else MutableHashSet.add(unnameable, name);
 		}
 	}
 	// Map-backed until the last step: `Object.fromEntries` defines own data
@@ -396,176 +398,176 @@ const toVersionMap = (
 const importerDepGroups = (importer: PnpmImporterType) =>
 	[importer.dependencies, importer.devDependencies, importer.peerDependencies, importer.optionalDependencies] as const;
 
-const toFields = (raw: PnpmLockfileRawType): Effect.Effect<LockfileFields, ParseFailure> =>
-	Effect.gen(function* () {
-		const workspaceEntries = new Map<string, WorkspaceEntry>();
-		const workspaceNames = new Set<string>();
-		const importers: Array<LockfileImporter> = [];
+const toFields = Effect.fn("toFields")(function* (raw: PnpmLockfileRawType): Effect.fn.Return<LockfileFields, ParseFailure> {
+	const workspaceEntries = MutableHashMap.empty<string, WorkspaceEntry>();
+	let workspaceNames = HashSet.fromIterable<string>([]);
+	const importers: Array<LockfileImporter> = [];
 
-		for (const [importerPath, importer] of R.toEntries(raw.importers)) {
-			if (importerPath === "") continue; // a nameless importer cannot be modeled; skip, never throw
+	for (const [importerPath, importer] of R.toEntries(raw.importers)) {
+		if (importerPath === "") continue; // a nameless importer cannot be modeled; skip, never throw
 
-			// pnpm records `{ specifier, version }` per importer dependency; a blank
-			// version means the section carries only a specifier. The recorded
-			// version may carry a peer-disambiguation suffix — the shared builder
-			// splits it (splitPeerSuffix) into `version` + `peerSuffix`.
-			importers.push(
-				LockfileImporter.make({
-					path: importerPath,
-					dependencies: importerDependencies(importer, (info) => ({
-						specifier: info.specifier,
-						version: info.version,
-					})),
-				}),
-			);
+		// pnpm records `{ specifier, version }` per importer dependency; a blank
+		// version means the section carries only a specifier. The recorded
+		// version may carry a peer-disambiguation suffix — the shared builder
+		// splits it (splitPeerSuffix) into `version` + `peerSuffix`.
+		importers.push(
+			LockfileImporter.make({
+				path: importerPath,
+				dependencies: importerDependencies(importer, (info) => ({
+					specifier: info.specifier,
+					version: info.version,
+				})),
+			}),
+		);
 
-			const deps = toVersionMap(importer.dependencies);
-			const devDeps = toVersionMap(importer.devDependencies);
-			const peerDeps = toVersionMap(importer.peerDependencies);
-			const optDeps = toVersionMap(importer.optionalDependencies);
-			workspaceEntries.set(importerPath, {
-				...O.getSomesStruct({ dependencies: O.fromUndefinedOr(deps) }),
-				...O.getSomesStruct({ devDependencies: O.fromUndefinedOr(devDeps) }),
-				...O.getSomesStruct({ peerDependencies: O.fromUndefinedOr(peerDeps) }),
-				...O.getSomesStruct({ optionalDependencies: O.fromUndefinedOr(optDeps) }),
-			});
+		const deps = toVersionMap(importer.dependencies);
+		const devDeps = toVersionMap(importer.devDependencies);
+		const peerDeps = toVersionMap(importer.peerDependencies);
+		const optDeps = toVersionMap(importer.optionalDependencies);
+		MutableHashMap.set(workspaceEntries, importerPath, {
+			...O.getSomesStruct({ dependencies: O.fromUndefinedOr(deps) }),
+			...O.getSomesStruct({ devDependencies: O.fromUndefinedOr(devDeps) }),
+			...O.getSomesStruct({ peerDependencies: O.fromUndefinedOr(peerDeps) }),
+			...O.getSomesStruct({ optionalDependencies: O.fromUndefinedOr(optDeps) }),
+		});
 
-			for (const group of importerDepGroups(importer)) {
-				if (group === undefined) continue;
-				for (const [name, info] of R.toEntries(group)) {
-					if (name !== "" && info.version.startsWith("link:")) {
-						workspaceNames.add(name);
-					}
+		for (const group of importerDepGroups(importer)) {
+			if (group === undefined) continue;
+			for (const [name, info] of R.toEntries(group)) {
+				if (name !== "" && info.version.startsWith("link:")) {
+					workspaceNames = HashSet.add(workspaceNames, name);
 				}
 			}
 		}
+	}
 
-		for (const path of R.keys(raw.importers)) {
-			if (path !== "." && path !== "") {
-				workspaceNames.add(path);
-			}
+	for (const path of R.keys(raw.importers)) {
+		if (path !== "." && path !== "") {
+			workspaceNames = HashSet.add(workspaceNames, path);
 		}
+	}
 
-		const packages: Array<ResolvedPackage> = [];
+	const packages: Array<ResolvedPackage> = [];
 
-		// One row per *instance*: one per `snapshots:` entry, because `packages:`
-		// is per-*version* metadata and collapses every peer-resolved variant onto
-		// one key. An empty (or absent) `snapshots:` map is valid — a workspace
-		// with no dependencies has no instances to record — and simply yields no
-		// snapshot rows. Importer paths join the id space because a `link:` edge
-		// names one.
-		const snapshots = raw.snapshots;
-		const instanceIds = new Set<string>([
-			...(snapshots !== undefined ? R.keys(snapshots) : []),
-			...(raw.packages !== undefined ? R.keys(raw.packages) : []),
-			...R.keys(raw.importers),
-		]);
-		// Importer paths alone — the ancestor walk that resolves a `linkDirectory`
-		// target must not match a `name@version` key, and must not treat the root
-		// importer as every path's owner.
-		const importerPaths = new Set<string>(R.keys(raw.importers).filter((path) => path !== "." && path !== ""));
-		// Normalized `<importerPath>/<publishDirectory>` → importer instance id,
-		// for every importer that declares one. This is the exact evidence that
-		// names a `link:` into a publish directory: the importer itself declared
-		// which build directory its links point at, so consulting the map is a
-		// lookup of the lockfile's own claim, not a guess — which is why even the
-		// root importer "." participates (its key is the normalized
-		// publishDirectory alone), despite being excluded from the ancestor walk.
-		const publishDirTargets = new Map<string, string>();
-		for (const [importerPath, importer] of R.toEntries(raw.importers)) {
-			if (importerPath === "") continue;
-			if (importer.publishDirectory === undefined) continue;
-			// The root importer's path is "." — resolveLinkTarget skips "." segments,
-			// so passing it through normalizes both shapes identically.
-			const key = resolveLinkTarget(importerPath, importer.publishDirectory);
-			if (key !== undefined) publishDirTargets.set(key, importerPath);
-		}
-		const emitted = new Set<string>();
+	// One row per *instance*: one per `snapshots:` entry, because `packages:`
+	// is per-*version* metadata and collapses every peer-resolved variant onto
+	// one key. An empty (or absent) `snapshots:` map is valid — a workspace
+	// with no dependencies has no instances to record — and simply yields no
+	// snapshot rows. Importer paths join the id space because a `link:` edge
+	// names one.
+	const snapshots = raw.snapshots;
+	const instanceIds = MutableHashSet.fromIterable<string>([
+		...(snapshots !== undefined ? R.keys(snapshots) : []),
+		...(raw.packages !== undefined ? R.keys(raw.packages) : []),
+		...R.keys(raw.importers),
+	]);
+	// Importer paths alone — the ancestor walk that resolves a `linkDirectory`
+	// target must not match a `name@version` key, and must not treat the root
+	// importer as every path's owner.
+	const importerPaths = MutableHashSet.fromIterable<string>(R.keys(raw.importers).filter((path) => path !== "." && path !== ""));
+	// Normalized `<importerPath>/<publishDirectory>` → importer instance id,
+	// for every importer that declares one. This is the exact evidence that
+	// names a `link:` into a publish directory: the importer itself declared
+	// which build directory its links point at, so consulting the map is a
+	// lookup of the lockfile's own claim, not a guess — which is why even the
+	// root importer "." participates (its key is the normalized
+	// publishDirectory alone), despite being excluded from the ancestor walk.
+	const publishDirTargets = MutableHashMap.empty<string, string>();
+	for (const [importerPath, importer] of R.toEntries(raw.importers)) {
+		if (importerPath === "") continue;
+		if (importer.publishDirectory === undefined) continue;
+		// The root importer's path is "." — resolveLinkTarget skips "." segments,
+		// so passing it through normalizes both shapes identically.
+		const key = resolveLinkTarget(importerPath, importer.publishDirectory);
+		if (key !== undefined) MutableHashMap.set(publishDirTargets, key, importerPath);
+	}
+	const emitted = MutableHashSet.empty<string>();
 
-		for (const [importerPath, importer] of R.toEntries(raw.importers)) {
-			if (importerPath === "." || importerPath === "") continue;
-			// No peers here by design: a pnpm lockfile records a workspace
-			// project's *resolved* dependencies only, never its own peer
-			// declarations — probed against pnpm 11.22.0 both with and without
-			// autoInstallPeers. Workspace rows keep the empty peer defaults, and the
-			// importer path is both the name and the instance id.
-			packages.push(
-				ResolvedPackage.make({
-					name: importerPath,
-					version: "0.0.0",
-					instanceId: importerPath,
-					isWorkspace: true,
-					relativePath: importerPath,
-					...resolveImporterEdges(importer, importerPath, instanceIds, importerPaths, publishDirTargets),
-				}),
-			);
-		}
+	for (const [importerPath, importer] of R.toEntries(raw.importers)) {
+		if (importerPath === "." || importerPath === "") continue;
+		// No peers here by design: a pnpm lockfile records a workspace
+		// project's *resolved* dependencies only, never its own peer
+		// declarations — probed against pnpm 11.22.0 both with and without
+		// autoInstallPeers. Workspace rows keep the empty peer defaults, and the
+		// importer path is both the name and the instance id.
+		packages.push(
+			ResolvedPackage.make({
+				name: importerPath,
+				version: "0.0.0",
+				instanceId: importerPath,
+				isWorkspace: true,
+				relativePath: importerPath,
+				...resolveImporterEdges(importer, importerPath, instanceIds, importerPaths, publishDirTargets),
+			}),
+		);
+	}
 
-		const emit = Effect.fn("emit")(function*(
-			instanceId: string,
-			meta: PnpmPackageEntry | undefined,
-			edges: ReadonlyArray<Readonly<Record<string, string>> | undefined>,
-		) {
-			// Keys may carry a peer-resolution suffix — "fdir@6.5.0(picomatch@4.0.4)",
-			// "lib@file:vendor/lib(react@18.3.1)" — whose inner "@" would corrupt
-			// the split; splitPeerSuffix (the one stripping implementation, shared
-			// with the importer path) drops it first.
-			const split = splitNameVersion(splitPeerSuffix(instanceId).plain);
-			if (split === undefined) return; // malformed "name@version" keys are skipped, never thrown on
-			const { name, version } = split;
-			const integrity = yield* toIntegrityHash(meta?.resolution?.integrity);
-			emitted.add(instanceId);
-			packages.push(
-				ResolvedPackage.make({
-					name,
-					version,
-					instanceId,
-					...O.getSomesStruct({ integrity: O.fromUndefinedOr(integrity) }),
-					isWorkspace: false,
-					...peerDeclarations(meta?.peerDependencies, meta?.peerDependenciesMeta),
-					...resolveEdges(edges, instanceIds, publishDirTargets),
-				}),
-			);
-		});
-
-		if (snapshots !== undefined) {
-			for (const [key, snapshot] of R.toEntries(snapshots)) {
-				// Peer declarations live on the matching per-version `packages:` entry,
-				// which is keyed by the plain "name@version" the suffix hangs off.
-				// Own-property lookup, matching the rest of this package: a key-shaped
-				// intermediate is never read through the prototype chain.
-				const plain = splitPeerSuffix(key).plain;
-				const meta = raw.packages !== undefined && R.has(raw.packages, plain) ? raw.packages[plain] : undefined;
-				yield* emit(key, meta, [snapshot.dependencies, snapshot.optionalDependencies]);
-			}
-		}
-
-		// Which `packages:` keys a snapshot already spoke for.
-		const covered = new Set([...emitted].map((key) => splitPeerSuffix(key).plain));
-
-		if (raw.packages !== undefined) {
-			for (const [key, pkg] of R.toEntries(raw.packages)) {
-				// A `packages:` entry no snapshot covers is an orphan — still emitted
-				// rather than dropped, since an unexplained disappearance is the worse
-				// failure. It carries no resolution, which is honest: none was recorded.
-				if (covered.has(key)) continue;
-				yield* emit(key, pkg, [pkg.dependencies, pkg.optionalDependencies]);
-			}
-		}
-
-		const workspaceDependencies = extractWorkspaceDeps(workspaceEntries, workspaceNames);
-
-		const extension = PnpmExtension.make({
-			...O.getSomesStruct({ catalogs: O.fromUndefinedOr(raw.catalogs) }),
-			...O.getSomesStruct({ overrides: O.fromUndefinedOr(raw.overrides) }),
-			...O.getSomesStruct({ settings: O.fromUndefinedOr(raw.settings) }),
-		});
-
-		return {
-			lockfileVersion: String(raw.lockfileVersion),
-			packages,
-			workspaceDependencies,
-			importers,
-			extension,
-		};
+	const emit = Effect.fn("emit")(function*(
+		instanceId: string,
+		meta: PnpmPackageEntry | undefined,
+		edges: ReadonlyArray<Readonly<Record<string, string>> | undefined>,
+	) {
+		// Keys may carry a peer-resolution suffix — "fdir@6.5.0(picomatch@4.0.4)",
+		// "lib@file:vendor/lib(react@18.3.1)" — whose inner "@" would corrupt
+		// the split; splitPeerSuffix (the one stripping implementation, shared
+		// with the importer path) drops it first.
+		const split = splitNameVersion(splitPeerSuffix(instanceId).plain);
+		if (split === undefined) return; // malformed "name@version" keys are skipped, never thrown on
+		const { name, version } = split;
+		const integrity = yield* toIntegrityHash(meta?.resolution?.integrity);
+		MutableHashSet.add(emitted, instanceId);
+		packages.push(
+			ResolvedPackage.make({
+				name,
+				version,
+				instanceId,
+				...O.getSomesStruct({ integrity: O.fromUndefinedOr(integrity) }),
+				isWorkspace: false,
+				...peerDeclarations(meta?.peerDependencies, meta?.peerDependenciesMeta),
+				...resolveEdges(edges, instanceIds, publishDirTargets),
+			}),
+		);
 	});
+
+	if (snapshots !== undefined) {
+		for (const [key, snapshot] of R.toEntries(snapshots)) {
+			// Peer declarations live on the matching per-version `packages:` entry,
+			// which is keyed by the plain "name@version" the suffix hangs off.
+			// Own-property lookup, matching the rest of this package: a key-shaped
+			// intermediate is never read through the prototype chain.
+			const plain = splitPeerSuffix(key).plain;
+			const meta = raw.packages !== undefined && R.has(raw.packages, plain) ? raw.packages[plain] : undefined;
+			yield* emit(key, meta, [snapshot.dependencies, snapshot.optionalDependencies]);
+		}
+	}
+
+	// Which `packages:` keys a snapshot already spoke for.
+	const covered = MutableHashSet.fromIterable([...emitted].map((key) => splitPeerSuffix(key).plain));
+
+	if (raw.packages !== undefined) {
+		for (const [key, pkg] of R.toEntries(raw.packages)) {
+			// A `packages:` entry no snapshot covers is an orphan — still emitted
+			// rather than dropped, since an unexplained disappearance is the worse
+			// failure. It carries no resolution, which is honest: none was recorded.
+			if (MutableHashSet.has(covered, key)) continue;
+			yield* emit(key, pkg, [pkg.dependencies, pkg.optionalDependencies]);
+		}
+	}
+
+	// All keys are strings: the public backing preserves the sibling native-map contract.
+	const workspaceDependencies = extractWorkspaceDeps(workspaceEntries.backing, workspaceNames);
+
+	const extension = PnpmExtension.make({
+		...O.getSomesStruct({ catalogs: O.fromUndefinedOr(raw.catalogs) }),
+		...O.getSomesStruct({ overrides: O.fromUndefinedOr(raw.overrides) }),
+		...O.getSomesStruct({ settings: O.fromUndefinedOr(raw.settings) }),
+	});
+
+	return {
+		lockfileVersion: String(raw.lockfileVersion),
+		packages,
+		workspaceDependencies,
+		importers,
+		extension,
+	};
+});

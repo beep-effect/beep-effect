@@ -2,6 +2,9 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import { DependencyField } from "../npm/index.ts";
 import { Range, SemVer } from "../semver/index.ts";
 import * as Exit from "effect/Exit";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { DEP_TYPES, isWorkspaceSpecifier } from "./internal/shared.ts";
 import type { Lockfile } from "./Lockfile.ts";
@@ -89,18 +92,18 @@ export class LockfileIntegrity extends S.Class<LockfileIntegrity>($I`LockfileInt
 	static compare(lockfile: Lockfile, manifests: ReadonlyArray<WorkspaceManifest>): LockfileIntegrity {
 		const workspacePackages = lockfile.packages.filter((p) => p.isWorkspace && p.relativePath !== undefined);
 
-		const lockfileWsNames = new Set(workspacePackages.map((p) => p.name));
-		const manifestNames = new Set(manifests.map((m) => m.name));
-		const missingWorkspaces = [...manifestNames].filter((n) => !lockfileWsNames.has(n));
-		const extraWorkspaces = [...lockfileWsNames].filter((n) => !manifestNames.has(n));
+		const lockfileWsNames = MutableHashSet.fromIterable(workspacePackages.map((p) => p.name));
+		const manifestNames = MutableHashSet.fromIterable(manifests.map((m) => m.name));
+		const missingWorkspaces = [...manifestNames].filter((n) => !MutableHashSet.has(lockfileWsNames, n));
+		const extraWorkspaces = [...lockfileWsNames].filter((n) => !MutableHashSet.has(manifestNames, n));
 
 		// A lockfile can resolve the same name at several versions; keep them all
 		// so the verdict never depends on entry order.
-		const resolvedIndex = new Map<string, Array<string>>();
+		const resolvedIndex = MutableHashMap.empty<string, Array<string>>();
 		for (const p of lockfile.packages) {
-			const versions = resolvedIndex.get(p.name);
-			if (versions === undefined) resolvedIndex.set(p.name, [p.version]);
-			else versions.push(p.version);
+			const versions = MutableHashMap.get(resolvedIndex, p.name);
+			if (O.isNone(versions)) MutableHashMap.set(resolvedIndex, p.name, [p.version]);
+			else versions.value.push(p.version);
 		}
 
 		const unsatisfiedConstraints: Array<{
@@ -119,13 +122,13 @@ export class LockfileIntegrity extends S.Class<LockfileIntegrity>($I`LockfileInt
 				for (const [dependency, constraint] of R.toEntries(depMap)) {
 					if (isWorkspaceSpecifier(constraint)) continue;
 
-					const candidates = resolvedIndex.get(dependency);
-					if (candidates === undefined) continue;
+					const candidates = MutableHashMap.get(resolvedIndex, dependency);
+					if (O.isNone(candidates)) continue;
 
 					const rangeExit = decodeRange(constraint);
 					if (Exit.isFailure(rangeExit)) continue; // unparseable rows are skipped
 
-					const versions = candidates.map((candidate) => decodeSemVer(candidate)).filter(Exit.isSuccess);
+					const versions = candidates.value.map((candidate) => decodeSemVer(candidate)).filter(Exit.isSuccess);
 					if (versions.length === 0) continue; // unparseable rows are skipped
 
 					if (!versions.some((v) => rangeExit.value.test(v.value))) {
@@ -133,7 +136,7 @@ export class LockfileIntegrity extends S.Class<LockfileIntegrity>($I`LockfileInt
 							workspace: manifest.name,
 							dependency,
 							constraint,
-							resolved: candidates.join(", "),
+							resolved: candidates.value.join(", "),
 							depType,
 						});
 					}

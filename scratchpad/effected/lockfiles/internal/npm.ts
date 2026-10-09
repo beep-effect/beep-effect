@@ -1,3 +1,6 @@
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { LockfileImporter } from "../LockfileImporter.ts";
@@ -105,12 +108,12 @@ const resolveNpmEdges = (
 	sections: ReadonlyArray<Readonly<Record<string, string>> | undefined>,
 	packages: Readonly<Record<string, unknown>>,
 ): Record<string, string> => {
-	const names = new Set<string>();
+	const names = MutableHashSet.empty<string>();
 	for (const section of sections) {
 		if (section === undefined) continue;
-		for (const name of R.keys(section)) if (name !== "") names.add(name);
+		for (const name of R.keys(section)) if (name !== "") MutableHashSet.add(names, name);
 	}
-	if (names.size === 0) return {};
+	if (MutableHashSet.size(names) === 0) return {};
 
 	const prefixes: Array<string> = [];
 	for (let prefix = start; ; ) {
@@ -120,12 +123,12 @@ const resolveNpmEdges = (
 		prefix = slash === -1 ? "" : prefix.slice(0, slash);
 	}
 
-	const edges = new Map<string, string>();
+	const edges = MutableHashMap.empty<string, string>();
 	for (const name of names) {
 		for (const prefix of prefixes) {
 			const candidate = prefix === "" ? `${NODE_MODULES_PREFIX}${name}` : `${prefix}${NESTED_NODE_MODULES}${name}`;
 			if (R.has(packages, candidate)) {
-				edges.set(name, candidate);
+				MutableHashMap.set(edges, name, candidate);
 				break;
 			}
 		}
@@ -146,134 +149,133 @@ const entrySections = (entry: NpmPackageEntryType | undefined) =>
  *
  * @internal
  */
-export const parseNpm = (content: string): Effect.Effect<LockfileFields, ParseFailure> =>
-	Effect.gen(function* () {
-		const raw = yield* decodeJson(content).pipe(Effect.mapError(syntaxFailure));
-		// Format-version gate: npm lockfileVersion 3 and newer. v1/v2 trees record
-		// resolution in a different shape this parser does not model.
-		//
-		// It runs BEFORE the shape decode, and must: a v1 tree carries no
-		// `packages` object at all, so decoding first would report the oldest
-		// format we reject as merely malformed. "Too old" is the more specific
-		// true statement, and the only one a consumer can act on.
-		const probe = yield* S.decodeUnknownEffect(NpmVersionProbe)(raw).pipe(Effect.mapError(validationFailure));
-		yield* requireLockfileVersion("npm", probe.lockfileVersion);
-		const validated = yield* S.decodeUnknownEffect(NpmLockfileRaw)(raw).pipe(Effect.mapError(validationFailure));
-		return yield* toFields(validated);
-	});
+export const parseNpm = Effect.fn("parseNpm")(function* (content: string): Effect.fn.Return<LockfileFields, ParseFailure> {
+	const raw = yield* decodeJson(content).pipe(Effect.mapError(syntaxFailure));
+	// Format-version gate: npm lockfileVersion 3 and newer. v1/v2 trees record
+	// resolution in a different shape this parser does not model.
+	//
+	// It runs BEFORE the shape decode, and must: a v1 tree carries no
+	// `packages` object at all, so decoding first would report the oldest
+	// format we reject as merely malformed. "Too old" is the more specific
+	// true statement, and the only one a consumer can act on.
+	const probe = yield* S.decodeUnknownEffect(NpmVersionProbe)(raw).pipe(Effect.mapError(validationFailure));
+	yield* requireLockfileVersion("npm", probe.lockfileVersion);
+	const validated = yield* S.decodeUnknownEffect(NpmLockfileRaw)(raw).pipe(Effect.mapError(validationFailure));
+	return yield* toFields(validated);
+});
 
 // ── Transform ──────────────────────────────────────────────────────────────
 
-const toFields = (raw: NpmLockfileRawType): Effect.Effect<LockfileFields, ParseFailure> =>
-	Effect.gen(function* () {
-		const packages: Array<ResolvedPackage> = [];
-		const workspaceNames = new Set<string>();
-		const workspaceEntries = new Map<string, WorkspaceEntry>();
-		const importers: Array<LockfileImporter> = [];
+const toFields = Effect.fn("toFields")(function* (raw: NpmLockfileRawType): Effect.fn.Return<LockfileFields, ParseFailure> {
+	const packages: Array<ResolvedPackage> = [];
+	let workspaceNames = HashSet.fromIterable<string>([]);
+	const workspaceEntries = MutableHashMap.empty<string, WorkspaceEntry>();
+	const importers: Array<LockfileImporter> = [];
 
-		// npm records concrete versions on the `node_modules/*` entries, not per
-		// importer, so every importer dependency carries a specifier and no version.
-		// The root manifest is the `""` entry — the `"."` importer.
-		const rootEntry = raw.packages[""];
-		if (rootEntry !== undefined) {
-			importers.push(
-				LockfileImporter.make({ path: ".", dependencies: importerDependencies(rootEntry, (s) => ({ specifier: s })) }),
+	// npm records concrete versions on the `node_modules/*` entries, not per
+	// importer, so every importer dependency carries a specifier and no version.
+	// The root manifest is the `""` entry — the `"."` importer.
+	const rootEntry = raw.packages[""];
+	if (rootEntry !== undefined) {
+		importers.push(
+			LockfileImporter.make({ path: ".", dependencies: importerDependencies(rootEntry, (s) => ({ specifier: s })) }),
+		);
+	}
+
+	// First pass: identify workspace link entries. Name resolution must match
+	// the second pass (wsEntry first) or a link stub disagreeing with its
+	// resolved entry drops inter-workspace edges.
+	for (const [key, entry] of R.toEntries(raw.packages)) {
+		const nameIndex = packageNameIndex(key);
+		if (nameIndex !== -1 && entry.link === true) {
+			const wsEntry = entry.resolved !== undefined ? raw.packages[entry.resolved] : undefined;
+			const name = wsEntry?.name ?? entry.name ?? key.slice(nameIndex);
+			if (name !== "") workspaceNames = HashSet.add(workspaceNames, name);
+		}
+	}
+
+	// Second pass: build packages and workspace entries.
+	for (const [key, entry] of R.toEntries(raw.packages)) {
+		if (key === "") continue; // root entry
+		// Every key that names a package position, at any nesting depth —
+		// `node_modules/x`, `node_modules/x/node_modules/y` and the workspace
+		// form `packages/lib/node_modules/y` alike. A key that names none (a
+		// workspace path entry) is reached through its link entry instead.
+		const nameIndex = packageNameIndex(key);
+		if (nameIndex === -1) continue;
+
+		if (entry.link === true) {
+			// Workspace link — actual package data lives at the resolved path entry.
+			const resolved = entry.resolved;
+			const wsEntry = resolved !== undefined ? raw.packages[resolved] : undefined;
+			const name = wsEntry?.name ?? entry.name ?? key.slice(nameIndex);
+			if (name === "") continue; // a nameless entry cannot be modeled; skip, never throw
+			packages.push(
+				ResolvedPackage.make({
+					name,
+					version: wsEntry?.version ?? "0.0.0",
+					instanceId: key,
+					isWorkspace: true,
+					...O.getSomesStruct({ relativePath: O.fromUndefinedOr(resolved) }),
+					// A workspace link entry is a stub; its manifest sections —
+					// peers included — live on the resolved path entry.
+					...peerDeclarations(wsEntry?.peerDependencies, wsEntry?.peerDependenciesMeta),
+					// Resolution starts from the workspace *directory*, which is where
+					// npm nests a workspace-local copy (`packages/lib/node_modules/x`).
+					resolved: resolveNpmEdges(
+						resolved !== undefined && resolved !== "" ? resolved : key,
+						entrySections(wsEntry),
+						raw.packages,
+					),
+				}),
 			);
-		}
-
-		// First pass: identify workspace link entries. Name resolution must match
-		// the second pass (wsEntry first) or a link stub disagreeing with its
-		// resolved entry drops inter-workspace edges.
-		for (const [key, entry] of R.toEntries(raw.packages)) {
-			const nameIndex = packageNameIndex(key);
-			if (nameIndex !== -1 && entry.link === true) {
-				const wsEntry = entry.resolved !== undefined ? raw.packages[entry.resolved] : undefined;
-				const name = wsEntry?.name ?? entry.name ?? key.slice(nameIndex);
-				if (name !== "") workspaceNames.add(name);
+			if (wsEntry !== undefined) {
+				MutableHashMap.set(workspaceEntries, name, {
+					...O.getSomesStruct({ dependencies: O.fromUndefinedOr(wsEntry.dependencies) }),
+					...O.getSomesStruct({ devDependencies: O.fromUndefinedOr(wsEntry.devDependencies) }),
+					...O.getSomesStruct({ peerDependencies: O.fromUndefinedOr(wsEntry.peerDependencies) }),
+					...O.getSomesStruct({ optionalDependencies: O.fromUndefinedOr(wsEntry.optionalDependencies) }),
+				});
 			}
-		}
-
-		// Second pass: build packages and workspace entries.
-		for (const [key, entry] of R.toEntries(raw.packages)) {
-			if (key === "") continue; // root entry
-			// Every key that names a package position, at any nesting depth —
-			// `node_modules/x`, `node_modules/x/node_modules/y` and the workspace
-			// form `packages/lib/node_modules/y` alike. A key that names none (a
-			// workspace path entry) is reached through its link entry instead.
-			const nameIndex = packageNameIndex(key);
-			if (nameIndex === -1) continue;
-
-			if (entry.link === true) {
-				// Workspace link — actual package data lives at the resolved path entry.
-				const resolved = entry.resolved;
-				const wsEntry = resolved !== undefined ? raw.packages[resolved] : undefined;
-				const name = wsEntry?.name ?? entry.name ?? key.slice(nameIndex);
-				if (name === "") continue; // a nameless entry cannot be modeled; skip, never throw
+			// An empty resolved path is malformed: `LockfileImporter.path` is a
+			// `NonEmptyString`, so constructing one from "" would die as a defect.
+			// Skip the row before construction, per the total-skip discipline.
+			if (resolved !== undefined && resolved !== "") {
+				importers.push(
+					LockfileImporter.make({
+						path: resolved,
+						dependencies: wsEntry !== undefined ? importerDependencies(wsEntry, (s) => ({ specifier: s })) : [],
+					}),
+				);
+			}
+		} else {
+			// Regular resolved package, at any depth.
+			const name = key.slice(nameIndex);
+			if (name !== "" && entry.version !== undefined) {
+				const integrity = yield* toIntegrityHash(entry.integrity);
 				packages.push(
 					ResolvedPackage.make({
 						name,
-						version: wsEntry?.version ?? "0.0.0",
+						version: entry.version,
 						instanceId: key,
-						isWorkspace: true,
-						...O.getSomesStruct({ relativePath: O.fromUndefinedOr(resolved) }),
-						// A workspace link entry is a stub; its manifest sections —
-						// peers included — live on the resolved path entry.
-						...peerDeclarations(wsEntry?.peerDependencies, wsEntry?.peerDependenciesMeta),
-						// Resolution starts from the workspace *directory*, which is where
-						// npm nests a workspace-local copy (`packages/lib/node_modules/x`).
-						resolved: resolveNpmEdges(
-							resolved !== undefined && resolved !== "" ? resolved : key,
-							entrySections(wsEntry),
-							raw.packages,
-						),
+						...O.getSomesStruct({ integrity: O.fromUndefinedOr(integrity) }),
+						isWorkspace: false,
+						dependencies: entry.dependencies ?? {},
+						...peerDeclarations(entry.peerDependencies, entry.peerDependenciesMeta),
+						resolved: resolveNpmEdges(key, entrySections(entry), raw.packages),
 					}),
 				);
-				if (wsEntry !== undefined) {
-					workspaceEntries.set(name, {
-						...O.getSomesStruct({ dependencies: O.fromUndefinedOr(wsEntry.dependencies) }),
-						...O.getSomesStruct({ devDependencies: O.fromUndefinedOr(wsEntry.devDependencies) }),
-						...O.getSomesStruct({ peerDependencies: O.fromUndefinedOr(wsEntry.peerDependencies) }),
-						...O.getSomesStruct({ optionalDependencies: O.fromUndefinedOr(wsEntry.optionalDependencies) }),
-					});
-				}
-				// An empty resolved path is malformed: `LockfileImporter.path` is a
-				// `NonEmptyString`, so constructing one from "" would die as a defect.
-				// Skip the row before construction, per the total-skip discipline.
-				if (resolved !== undefined && resolved !== "") {
-					importers.push(
-						LockfileImporter.make({
-							path: resolved,
-							dependencies: wsEntry !== undefined ? importerDependencies(wsEntry, (s) => ({ specifier: s })) : [],
-						}),
-					);
-				}
-			} else {
-				// Regular resolved package, at any depth.
-				const name = key.slice(nameIndex);
-				if (name !== "" && entry.version !== undefined) {
-					const integrity = yield* toIntegrityHash(entry.integrity);
-					packages.push(
-						ResolvedPackage.make({
-							name,
-							version: entry.version,
-							instanceId: key,
-							...O.getSomesStruct({ integrity: O.fromUndefinedOr(integrity) }),
-							isWorkspace: false,
-							dependencies: entry.dependencies ?? {},
-							...peerDeclarations(entry.peerDependencies, entry.peerDependenciesMeta),
-							resolved: resolveNpmEdges(key, entrySections(entry), raw.packages),
-						}),
-					);
-				}
 			}
 		}
+	}
 
-		const workspaceDependencies = extractWorkspaceDeps(workspaceEntries, workspaceNames);
+	// All keys are strings: the public backing preserves the sibling native-map contract.
+	const workspaceDependencies = extractWorkspaceDeps(workspaceEntries.backing, workspaceNames);
 
-		return {
-			lockfileVersion: String(raw.lockfileVersion),
-			packages,
-			workspaceDependencies,
-			importers,
-		};
-	});
+	return {
+		lockfileVersion: String(raw.lockfileVersion),
+		packages,
+		workspaceDependencies,
+		importers,
+	};
+});

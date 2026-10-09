@@ -2,6 +2,8 @@ import type { DependencyField, IntegrityHashBrand } from "../../npm/index.ts";
 import { DependencySpecifier, IntegrityHash } from "../../npm/index.ts";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as S from "effect/Schema";
 import { dual } from "effect/Function";
 import type { BunExtension } from "../BunExtension.ts";
@@ -222,14 +224,14 @@ export const peerDeclarations: {
 	optionalPeers?: ReadonlyArray<string> | undefined,
 ): PeerDeclarations => {
 	if (peers === undefined && meta === undefined && optionalPeers === undefined) return EMPTY_PEERS;
-	const flags = new Map<string, boolean>();
+	const flags = MutableHashMap.empty<string, boolean>();
 	if (meta !== undefined) {
 		for (const [name, value] of R.toEntries(meta)) {
-			flags.set(name, value?.optional === true);
+			MutableHashMap.set(flags, name, value?.optional === true);
 		}
 	}
 	if (optionalPeers !== undefined) {
-		for (const name of optionalPeers) flags.set(name, true);
+		for (const name of optionalPeers) MutableHashMap.set(flags, name, true);
 	}
 	return {
 		peerDependencies: peers === undefined ? {} : R.fromEntries(R.toEntries(peers)),
@@ -418,18 +420,24 @@ export const isWorkspaceSpecifier = (specifier: string): boolean =>
 /**
  * Extract inter-workspace dependency edges: for every workspace entry and
  * dependency type, emit an edge for each dependency whose name is itself a
- * workspace. Key-bearing intermediates are `Map`/`Set` — lockfile keys are
- * attacker-adjacent strings (`__proto__`, `constructor`) and must never be
- * assigned onto plain objects here.
+ * workspace.
+ *
+ * **Details**
+ *
+ * Workspace names are an immutable `HashSet` of strings, used only for
+ * membership checks. Edges retain workspace-entry, dependency-type and
+ * dependency-map traversal order. Key-bearing intermediates use maps and
+ * hash sets: lockfile keys are attacker-adjacent strings (`__proto__`,
+ * `constructor`) and must never be assigned onto plain objects here.
  *
  * @internal
  */
 export const extractWorkspaceDeps: {
-	(workspaceNames: ReadonlySet<string>): (workspaces: ReadonlyMap<string, WorkspaceEntry>) => ReadonlyArray<WorkspaceDependency>;
-	(workspaces: ReadonlyMap<string, WorkspaceEntry>, workspaceNames: ReadonlySet<string>): ReadonlyArray<WorkspaceDependency>;
+	(workspaces: ReadonlyMap<string, WorkspaceEntry>, workspaceNames: HashSet.HashSet<string>): ReadonlyArray<WorkspaceDependency>;
+	(workspaceNames: HashSet.HashSet<string>): (workspaces: ReadonlyMap<string, WorkspaceEntry>) => ReadonlyArray<WorkspaceDependency>;
 } = dual(2, (
 	workspaces: ReadonlyMap<string, WorkspaceEntry>,
-	workspaceNames: ReadonlySet<string>,
+	workspaceNames: HashSet.HashSet<string>,
 ): ReadonlyArray<WorkspaceDependency> => {
 	const deps: Array<WorkspaceDependency> = [];
 	for (const [from, entry] of workspaces) {
@@ -437,7 +445,7 @@ export const extractWorkspaceDeps: {
 			const depMap = entry[depType];
 			if (depMap === undefined) continue;
 			for (const [name, constraint] of R.toEntries(depMap)) {
-				if (workspaceNames.has(name)) {
+				if (HashSet.has(workspaceNames, name)) {
 					deps.push(WorkspaceDependency.make({ from, to: name, depType, constraint }));
 				}
 			}

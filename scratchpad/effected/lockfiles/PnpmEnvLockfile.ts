@@ -91,7 +91,7 @@ export interface PnpmEnvLockfileReaders {
  * {@link PnpmEnvLockfileReaders}.
  *
  * @example
- * ```ts
+ * ```typescript
  * import { PnpmEnvLockfile } from "./index.ts";
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option";
