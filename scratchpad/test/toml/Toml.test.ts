@@ -12,6 +12,7 @@ import * as S from "effect/Schema";
 import { renderInlineValue } from "../../effected/toml/internal/stringifyValue.ts";
 import { Toml, TomlParseError, TomlStringifyError, TomlStringifyOptions } from "../../effected/toml/Toml.ts";
 import { TomlLocalDate } from "../../effected/toml/TomlDateTime.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 describe("Toml", () => {
 	describe("parse", () => {
@@ -407,7 +408,7 @@ describe("Toml", () => {
 		// a non-carrier throw must escape the sync form as a real throw, the
 		// same way it dies through the Effect form (pinned in hostile.test.ts).
 		it("parseResult rethrows a non-engine defect rather than typing it", () => {
-			assert.throws(() => Toml.parseResult(42 as unknown as string), TypeError);
+			assert.throws(() => Toml.parseResult(deliberatelyInvalid<string>(42)), TypeError);
 		});
 
 		it("stringifyResult rethrows a non-engine defect rather than typing it", () => {

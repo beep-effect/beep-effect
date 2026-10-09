@@ -31,6 +31,7 @@ import { MarkdownDocument } from "../../effected/markdown/MarkdownDocument.ts";
 import { MarkdownEdit } from "../../effected/markdown/MarkdownEdit.ts";
 import { TomlFrontmatter } from "../../effected/markdown/TomlFrontmatter.ts";
 import { YamlFrontmatter } from "../../effected/markdown/YamlFrontmatter.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 const withFrontmatter = MarkdownParseOptions.make({ frontmatter: true });
 const parseDoc = (source: string) => MarkdownDocument.parse(source, withFrontmatter);
@@ -143,7 +144,7 @@ describe("MarkdownFrontmatter.set", () => {
 			Effect.gen(function* () {
 				const document = yield* parseDoc("# Body\n");
 				const error = yield* Effect.flip(
-					MarkdownFrontmatter.set(Meta, YamlFrontmatter)(document, { title: 42, count: "x" } as never),
+					MarkdownFrontmatter.set(Meta, YamlFrontmatter)(document, deliberatelyInvalid<never>({ title: 42, count: "x" })),
 				);
 				assert.instanceOf(error, FrontmatterValidationError);
 				// The issue is the structured v4 issue tree, never a string.

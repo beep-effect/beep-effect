@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { ErrnoFields, thrown } from "./helpers.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 const seeded = MemoryFileSystem.makeHandle({
 	"/d/f.txt": MemoryFileSystem.file("abc", { mtime: 1_000 }),
@@ -187,7 +188,7 @@ describe("sync port faults", () => {
 });
 
 describe("unknown fault keys are a wiring bug", () => {
-	const typo = { readFileSting: () => undefined } as never;
+	const typo = deliberatelyInvalid<never>({ readFileSting: () => undefined });
 
 	it.effect("a port rejects an unknown member name at construction, naming it", () =>
 		Effect.gen(function* () {
@@ -333,7 +334,7 @@ describe("promises port", () => {
 		Effect.gen(function* () {
 			const { volume } = yield* tree;
 			const fsp = MemoryFileSystem.promisesFileSystem(volume);
-			const loose = fsp.readFile as (path: string, options?: unknown) => Promise<unknown>;
+			const loose = deliberatelyInvalid<(path: string, options?: unknown) => Promise<unknown>>(fsp.readFile);
 			assert.instanceOf(yield* Effect.promise(() => loose("/r/file.txt", { flag: "r" })), Uint8Array);
 			assert.instanceOf(yield* Effect.promise(() => loose("/r/file.txt", null)), Uint8Array);
 			assert.strictEqual(yield* Effect.promise(() => loose("/r/file.txt", { encoding: "utf8" })), "hello");

@@ -17,6 +17,7 @@ import * as Terminal from "effect/Terminal";
 import type { Document, FailureDetails, ReportFailuresOptions } from "../../effected/cli/index.ts";
 import { CliDoc, CliLinks, CliLogger, CliRuntime, CliTheme, Doc, Render } from "../../effected/cli/index.ts";
 import { commandLines } from "./helpers/runnerCommands.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 const Json = S.fromJsonString(S.Unknown);
 
@@ -79,13 +80,13 @@ describe("the report's last resort keeps the output policy", () => {
 	constructor(message = "") { super({ message }); }
 
 		[CliDoc](): Document {
-			return [{ _tag: "NotABlock" } as never];
+			return [deliberatelyInvalid<never>({ _tag: "NotABlock" })];
 		}
 	}
 
 	it("control: the renderer really does throw on that document", () => {
 		const ctx = Effect.runSync(Render.context("stderr").pipe(Effect.provide(layers("agent"))));
-		assert.throws(() => Render.plain([{ _tag: "NotABlock" } as never], ctx));
+		assert.throws(() => Render.plain([deliberatelyInvalid<never>({ _tag: "NotABlock" })], ctx));
 	});
 
 	it.effect("when the document cannot be rendered at all, the report is one sanitised, neutralized line", () =>

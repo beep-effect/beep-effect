@@ -17,6 +17,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import { NodeSyncFileSystem } from "../../../effected/memfs/NodeSyncFileSystem.ts";
+import { deliberatelyInvalid } from "../deliberatelyInvalid.ts";
 
 let d: string;
 beforeAll(() => {
@@ -59,7 +60,7 @@ describe("NodeSyncFileSystem agrees with NodeFileSystem", () => {
 	const paths: ReadonlyArray<readonly [label: string, path: () => string]> = [
 		...["f.txt", "dir", "to-dir", "dangling", "nope", "f.txt/child"].map((p) => [p, () => join(d, p)] as const),
 		["NUL byte", () => join(d, "a\0b")],
-		["non-string", () => 42 as unknown as string],
+		["non-string", () => deliberatelyInvalid<string>(42)],
 	];
 	for (const [p, path] of paths) {
 		it.effect(`stat ${p}: File.Info or failure identical`, () =>

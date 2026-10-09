@@ -2,6 +2,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 import * as S from "effect/Schema";
 import { GitHubMarkdown } from "../../effected/github-actions/GitHubMarkdown.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 describe("GitHubMarkdown", () => {
 	describe("table — escaping is the safety argument", () => {
@@ -253,7 +254,7 @@ describe("GitHubMarkdown", () => {
 			// one of them is unconditional.
 			let caught: unknown;
 			try {
-				table.render([{ name: 7 } as unknown as { name: string }]);
+				table.render([deliberatelyInvalid<{ name: string }>({ name: 7 })]);
 			} catch (error) {
 				caught = error;
 			}

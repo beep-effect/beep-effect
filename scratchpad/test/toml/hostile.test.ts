@@ -31,6 +31,7 @@ import * as Result from "effect/Result";
 import { Toml, TomlParseError, TomlStringifyError } from "../../effected/toml/Toml.ts";
 import { TomlDocument } from "../../effected/toml/TomlDocument.ts";
 import { TomlFormat, TomlModificationError } from "../../effected/toml/TomlFormat.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 /**
  * Elapsed-time ceiling for the scale and path-depth rows. The bound is a
@@ -202,7 +203,7 @@ describe("hostile input", () => {
 		// TomlParseError.
 		it.effect("parse lets a non-engine TypeError die instead of masking it as TomlParseError", () =>
 			Effect.gen(function* () {
-				const exit = yield* Effect.exit(Toml.parse(42 as unknown as string));
+				const exit = yield* Effect.exit(Toml.parse(deliberatelyInvalid<string>(42)));
 				if (!Exit.isFailure(exit)) {
 					return assert.fail("expected the misuse to surface as a failure exit");
 				}

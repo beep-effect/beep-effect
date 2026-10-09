@@ -2,6 +2,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as O from "effect/Option";
 import type { CoreStatusName } from "../../effected/cli/index.ts";
 import { Glyphs, Status, Token } from "../../effected/cli/index.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 describe("Status.core", () => {
 	it("holds the six core statuses with their ranks", () => {
@@ -94,28 +95,28 @@ describe("Status.resolve", () => {
 	});
 
 	it("dies on a name the vocabulary does not have, naming it and the names that exist", () => {
-		const unknown = "timeot" as CoreStatusName;
+		const unknown = deliberatelyInvalid<CoreStatusName>("timeot");
 		assert.throws(() => Status.core.resolve(unknown), Error, /"timeot"/);
 		assert.throws(() => Status.core.resolve(unknown), Error, /success, skip, pending, info, warning, failure/);
 	});
 
 	it("an inherited property name is not a status", () => {
 		for (const name of ["toString", "constructor", "__proto__", "hasOwnProperty"]) {
-			assert.throws(() => Status.core.resolve(name as CoreStatusName), Error, name);
+			assert.throws(() => Status.core.resolve(deliberatelyInvalid<CoreStatusName>(name)), Error, name);
 		}
 	});
 });
 
 describe("Status.def", () => {
 	it("dies on a name the vocabulary does not have, as resolve does", () => {
-		const unknown = "timeot" as CoreStatusName;
+		const unknown = deliberatelyInvalid<CoreStatusName>("timeot");
 		assert.throws(() => Status.core.def(unknown), Error, /"timeot"/);
 		assert.throws(() => Status.core.def(unknown), Error, /success, skip, pending, info, warning, failure/);
 	});
 
 	it("an inherited property name is not a status", () => {
 		for (const name of ["toString", "constructor", "__proto__", "hasOwnProperty"]) {
-			assert.throws(() => Status.core.def(name as CoreStatusName), Error, name);
+			assert.throws(() => Status.core.def(deliberatelyInvalid<CoreStatusName>(name)), Error, name);
 		}
 	});
 });

@@ -7,6 +7,7 @@ import * as Result from "effect/Result";
 import { Yaml, YamlEdit } from "../../effected/yaml/index.ts";
 import { composeAllDocuments } from "../../effected/yaml/internal/composer/document.ts";
 import { YamlFormat, YamlFormattingOptions, YamlModificationError } from "../../effected/yaml/YamlFormat.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 const apply = (text: string, edits: ReadonlyArray<YamlEdit>) => YamlEdit.applyAll(text, edits);
 
@@ -303,7 +304,7 @@ describe("YamlFormat", () => {
 			const options = YamlFormattingOptions.make({ indentSequences: true, preserveComments: false });
 			assert.instanceOf(options, YamlFormattingOptions);
 			assert.strictEqual(options.indentSequences, true);
-			assert.throws(() => YamlFormattingOptions.make({ indentSequences: "yes" as unknown as boolean }));
+			assert.throws(() => YamlFormattingOptions.make({ indentSequences: deliberatelyInvalid<boolean>("yes") }));
 		});
 	});
 
@@ -344,7 +345,7 @@ describe("YamlFormat", () => {
 			const options = YamlFormattingOptions.make({ quoteStyle: "double", preserveComments: false });
 			assert.instanceOf(options, YamlFormattingOptions);
 			assert.strictEqual(options.quoteStyle, "double");
-			assert.throws(() => YamlFormattingOptions.make({ quoteStyle: "backtick" as unknown as "single" }));
+			assert.throws(() => YamlFormattingOptions.make({ quoteStyle: deliberatelyInvalid<"single">("backtick") }));
 		});
 	});
 
@@ -486,7 +487,7 @@ describe("YamlFormat", () => {
 		it("YamlFormattingOptions.make validates the requoteScalars field", () => {
 			const options = YamlFormattingOptions.make({ requoteScalars: true });
 			assert.strictEqual(options.requoteScalars, true);
-			assert.throws(() => YamlFormattingOptions.make({ requoteScalars: "yes" as unknown as boolean }));
+			assert.throws(() => YamlFormattingOptions.make({ requoteScalars: deliberatelyInvalid<boolean>("yes") }));
 		});
 	});
 

@@ -16,6 +16,7 @@ import { Cancelled, CliExit } from "../../../effected/cli/index.ts";
 import type { KeyName } from "../../../effected/cli/ui.ts";
 import { CliUi, Select, TextInput } from "../../../effected/cli/ui.ts";
 import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
+import { deliberatelyInvalid } from "../deliberatelyInvalid.ts";
 
 class TestError extends Data.TaggedError("TestError")<{ readonly message: string; readonly cause?: unknown }> {
 	override readonly name = "Error";
@@ -40,12 +41,12 @@ describe("press takes characters as chunk does, and names type for a bare string
 	it.live("a bare string that is not a key name dies naming type(...) and { char }, not a stream error", () =>
 		Effect.gen(function* () {
 			const handle = yield* CliUiTest.render(TextInput.screen({ message: "Name" }));
-			const exit = yield* Effect.exit(handle.press("n" as KeyName));
+			const exit = yield* Effect.exit(handle.press(deliberatelyInvalid<KeyName>("n")));
 			const message = defectMessage(exit);
 			assert.include(message, 'type("n")');
 			assert.include(message, '{ char: "n" }');
 			assert.notInclude(message, "chunk");
-			const chunked = yield* Effect.exit(handle.chunk("x" as KeyName));
+			const chunked = yield* Effect.exit(handle.chunk(deliberatelyInvalid<KeyName>("x")));
 			assert.include(defectMessage(chunked), 'type("x")');
 		}).pipe(Effect.scoped),
 	);

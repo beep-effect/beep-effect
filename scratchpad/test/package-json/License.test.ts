@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { InvalidSpdxLicenseError, SpdxLicense, isValidSpdx, licenseExpressionOf } from "../../effected/package-json/License.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 describe("isValidSpdx", () => {
 	it("accepts identifiers, expressions and npm special cases", () => {
@@ -98,6 +99,6 @@ describe("licenseExpressionOf — the brand/grammar seam", () => {
 	it("an unparseable string the brand would reject yields none rather than throwing", () => {
 		// Total by construction: a caller holding an unbranded cast still gets
 		// an answer instead of a defect.
-		assert.isTrue(O.isNone(licenseExpressionOf("MIT AND" as SpdxLicense)));
+		assert.isTrue(O.isNone(licenseExpressionOf(deliberatelyInvalid<SpdxLicense>("MIT AND"))));
 	});
 });

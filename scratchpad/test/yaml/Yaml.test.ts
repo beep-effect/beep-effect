@@ -16,6 +16,7 @@ import {
 	YamlStringifyError,
 	YamlStringifyOptions,
 } from "../../effected/yaml/index.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 const JsonString = S.fromJsonString(S.String);
 
@@ -719,7 +720,7 @@ describe("Yaml", () => {
 			it("validates the field and reads back off the options class", () => {
 				const options = YamlStringifyOptions.make({ quoteStyle: "double", sortKeys: true });
 				assert.strictEqual(options.quoteStyle, "double");
-				assert.throws(() => YamlStringifyOptions.make({ quoteStyle: "backtick" as unknown as "single" }));
+				assert.throws(() => YamlStringifyOptions.make({ quoteStyle: deliberatelyInvalid<"single">("backtick") }));
 			});
 		});
 
@@ -881,7 +882,7 @@ describe("Yaml", () => {
 			it("validates the field and reads back off the options class", () => {
 				const options = YamlStringifyOptions.make({ quoteCompat: "yaml-1.1" });
 				assert.strictEqual(options.quoteCompat, "yaml-1.1");
-				assert.throws(() => YamlStringifyOptions.make({ quoteCompat: "yaml-9.9" as unknown as "yaml-1.1" }));
+				assert.throws(() => YamlStringifyOptions.make({ quoteCompat: deliberatelyInvalid<"yaml-1.1">("yaml-9.9") }));
 			});
 		});
 
@@ -1128,8 +1129,8 @@ describe("Yaml", () => {
 		});
 
 		it(".make validates its input", () => {
-			assert.throws(() => YamlStringifyOptions.make({ indent: "four" as unknown as number }));
-			assert.throws(() => YamlParseOptions.make({ strict: 1 as unknown as boolean }));
+			assert.throws(() => YamlStringifyOptions.make({ indent: deliberatelyInvalid<number>("four") }));
+			assert.throws(() => YamlParseOptions.make({ strict: deliberatelyInvalid<boolean>(1) }));
 		});
 	});
 

@@ -19,6 +19,7 @@ import {
 	RunnerFileUnavailableError,
 	Secret,
 } from "../../effected/github-actions/index.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 const Json = S.fromJsonString(S.Unknown);
 
@@ -334,7 +335,7 @@ describe("ActionOutputs", () => {
 			/** The output contract: `count` must be an integer. */
 			const Report = S.Struct({ count: S.Int });
 			/** The drift: a projection handing over a string where the schema says Int. */
-			const drifted = { count: "3" as unknown as number };
+			const drifted = { count: deliberatelyInvalid<number>("3") };
 
 			it.effect("the #636 trap: an override that ignores `schema` can no longer hide a drift", () =>
 				Effect.gen(function* () {
@@ -416,7 +417,7 @@ describe("ActionOutputs", () => {
 				const error = yield* Effect.flip(
 					(yield* ActionOutputs).setJson(
 						"result",
-						{ count: "3" as unknown as number },
+						{ count: deliberatelyInvalid<number>("3") },
 						S.Struct({ count: S.Int }),
 					),
 				);

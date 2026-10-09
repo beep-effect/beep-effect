@@ -14,6 +14,7 @@ import { Command, Flag, Prompt } from "effect/cli";
 import { CliInteractive, CliPrompt, CliRuntime } from "../../effected/cli/index.ts";
 import type { TestTerminalHandle } from "../../effected/cli/testing.ts";
 import { TestTerminal } from "../../effected/cli/testing.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 const capturing = () => {
 	const out: string[] = [];
@@ -186,7 +187,7 @@ describe("CliPrompt.fallback otherwise", () => {
 			const { code } = yield* run(
 				app(
 					Flag.String("profile").pipe(
-						Flag.withFallbackPrompt(CliPrompt.fallback(select, { flag: "profile", otherwise: undefined as never })),
+						Flag.withFallbackPrompt(CliPrompt.fallback(select, { flag: "profile", otherwise: deliberatelyInvalid<never>(undefined) })),
 					),
 				),
 				["run"],

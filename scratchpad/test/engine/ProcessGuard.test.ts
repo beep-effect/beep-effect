@@ -3,6 +3,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import type { ProcessGuardHost, ProcessGuardOptions } from "../../effected/engine/guard.ts";
 import { ProcessGuard } from "../../effected/engine/guard.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 // Compile-time: Node's own `process` satisfies the guard's structural host.
 export const nodeFits = (): ProcessGuardOptions => ({
@@ -234,10 +235,10 @@ describe("ProcessGuard.run", () => {
 	it("an injectCrash with an unknown kind or phase raises nothing and still loads", async () => {
 		const { host, exits, stderr } = fakeHost();
 		let loads = 0;
-		for (const injectCrash of [
+		for (const injectCrash of deliberatelyInvalid<ReadonlyArray<ProcessGuardOptions["injectCrash"]>>([
 			{ at: "load", kind: "bogus" },
 			{ at: "later", kind: "uncaughtException" },
-		] as unknown as ReadonlyArray<ProcessGuardOptions["injectCrash"]>) {
+		])) {
 			await ProcessGuard.run({
 				label: "srv",
 				host,

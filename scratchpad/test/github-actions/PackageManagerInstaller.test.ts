@@ -28,6 +28,7 @@ import {
 	ToolInstaller,
 	ToolInstallerError,
 } from "../../effected/github-actions/index.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 const Json = S.fromJsonString(S.Unknown);
 
@@ -909,7 +910,7 @@ describe("PackageManagerInstaller", () => {
 					assert.strictEqual(cachedOf(yield* install("pnpm@7.8.1")).directory, cached);
 					// An untyped caller can hand anything across; the option's type is
 					// not its validation.
-					const garbage = "not-an-integrity" as IntegrityHashBrand;
+					const garbage = deliberatelyInvalid<IntegrityHashBrand>("not-an-integrity");
 					const error = yield* Effect.flip(install("pnpm@7.8.1", { integrity: garbage }));
 					assert.strictEqual(error.reason, "integrityMismatch");
 					assert.isUndefined(error.expected);

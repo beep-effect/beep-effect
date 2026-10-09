@@ -2,6 +2,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as O from "effect/Option";
 import type { CompilerOptions } from "../../effected/tsconfig-json/CompilerOptions.ts";
 import { TsEnumCodec } from "../../effected/tsconfig-json/TsEnumCodec.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 // Exact R1.6 table rows, transcribed verbatim. `canonical: false` marks a
 // forward-only alias: encode must still resolve it, but decode of its value
@@ -193,7 +194,7 @@ describe("TsEnumCodec", () => {
 			// schema decode (e.g. hand-assembled options) — exactly the input
 			// `normalizeLibReference` must tolerate. Cast past the narrower type
 			// to construct that input directly.
-			const encoded = TsEnumCodec.encodeCompilerOptions({ lib: ["ESNext"] } as unknown as CompilerOptions.Type);
+			const encoded = TsEnumCodec.encodeCompilerOptions(deliberatelyInvalid<CompilerOptions.Type>({ lib: ["ESNext"] }));
 			assert.deepStrictEqual(encoded, { lib: ["lib.esnext.d.ts"] });
 		});
 

@@ -3,6 +3,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { BlobEnvelopeError } from "../../effected/github-actions/index.ts";
 import { BlobEnvelope, UnsupportedBlobEnvelopeVersionError } from "../../effected/github-actions/index.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 const Meta = S.Struct({ tag: S.String, durationMs: S.Finite });
 type Meta = typeof Meta.Type;
@@ -119,7 +120,7 @@ describe("BlobEnvelope", () => {
 		});
 
 		it("reports a value that cannot be encoded", () => {
-			const result = BlobEnvelope.encodeResult({ tag: 1 } as never, bytes(), Meta);
+			const result = BlobEnvelope.encodeResult(deliberatelyInvalid<never>({ tag: 1 }), bytes(), Meta);
 			if (!Result.isFailure(result)) {
 				assert.fail("expected encode to fail");
 			}

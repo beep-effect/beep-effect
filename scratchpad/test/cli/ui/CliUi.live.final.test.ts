@@ -11,6 +11,7 @@ import { CliUi } from "../../../effected/cli/ui.ts";
 import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
 import type { Ev, State } from "../helpers/live.ts";
 import { End, Start, frameOf, reduce, tick } from "../helpers/live.ts";
+import { deliberatelyInvalid } from "../deliberatelyInvalid.ts";
 
 const Json = S.fromJsonString(S.Unknown);
 
@@ -277,7 +278,7 @@ describe("CliUi.lazyView", () => {
 			const render = CliUi.lazyView<State>(async () => {
 				const answer = answers[Math.min(attempts, answers.length - 1)] ?? (() => undefined);
 				attempts++;
-				return answer() as typeof frameOf;
+				return deliberatelyInvalid<typeof frameOf>(answer());
 			});
 			const view = yield* CliUiTest.live({ ...base, render, color: "none" }).pipe(
 				Effect.provideService(Console.Console, double),

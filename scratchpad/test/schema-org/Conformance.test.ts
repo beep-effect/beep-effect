@@ -20,6 +20,7 @@ import { Person } from "../../effected/schema-org/Person.ts";
 import { SoftwareSourceCode } from "../../effected/schema-org/SoftwareSourceCode.ts";
 import { TechArticle } from "../../effected/schema-org/TechArticle.ts";
 import { Vocabulary } from "../../effected/schema-org/Vocabulary.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 /** Assemble a graph without going through the identity checks, which are not what this suite is about. */
 const graphOf = (...nodes: ReadonlyArray<JsonLdNode>): JsonLdDocument => JsonLdDocument.make({ "@graph": nodes });
@@ -171,7 +172,7 @@ describe("Conformance.check", () => {
 		// foreign JSON. `check` is total and must survive either.
 		const node = SoftwareSourceCode.make({ "@id": PKG, name: "x", codeRepository: "https://example.com" });
 		const graph = graphOf(node);
-		(node as { "@type": string })["@type"] = "SoftwareSourceCodeRepository";
+		(deliberatelyInvalid<{ "@type": string }>(node))["@type"] = "SoftwareSourceCodeRepository";
 		const issues = Conformance.check(graph);
 		assert.strictEqual(issues.length, 1);
 		const [issue] = issues;

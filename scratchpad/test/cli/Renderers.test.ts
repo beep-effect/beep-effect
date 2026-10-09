@@ -4,6 +4,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { ConfigIssueRenderer } from "../../effected/cli/ConfigIssueRenderer.ts";
 import { SchemaIssueRenderer } from "../../effected/cli/SchemaIssueRenderer.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 /** Decode strictly and hand back the raw issue tree. */
 const issueFrom = <A, I>(schema: S.Codec<A, I>, input: unknown): unknown => {
@@ -88,15 +89,15 @@ describe("ConfigIssueRenderer", () => {
 		// peer, so this suite does not need it installed to run.
 		const error = { _tag: "ConfigValidationError", issue: issueFrom(Config, { ownr: "typo", groups: {} }) };
 
-		assert.include(ConfigIssueRenderer.render(error as never), "unknown key at ownr");
+		assert.include(ConfigIssueRenderer.render(deliberatelyInvalid<never>(error)), "unknown key at ownr");
 	});
 
 	it("yields no lines for an error with no issue tree, or for nothing at all", () => {
 		assert.deepStrictEqual(
-			ConfigIssueRenderer.render({ _tag: "ConfigFileNotFoundError", searched: ["/a"] } as never),
+			ConfigIssueRenderer.render(deliberatelyInvalid<never>({ _tag: "ConfigFileNotFoundError", searched: ["/a"] })),
 			[],
 		);
-		assert.deepStrictEqual(ConfigIssueRenderer.render(undefined as never), []);
-		assert.deepStrictEqual(ConfigIssueRenderer.render(null as never), []);
+		assert.deepStrictEqual(ConfigIssueRenderer.render(deliberatelyInvalid<never>(undefined)), []);
+		assert.deepStrictEqual(ConfigIssueRenderer.render(deliberatelyInvalid<never>(null)), []);
 	});
 });

@@ -10,6 +10,7 @@ import * as PlatformError from "effect/PlatformError";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { runMutation } from "../../effected/memfs/internal/ports.ts";
 import { denied, thrown } from "./helpers.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 describe("MemoryFileSystem.makeHandle", () => {
 	it.effect("returns every view over one volume, seeded", () =>
@@ -293,7 +294,7 @@ describe("MemoryFileSystem.makeSync", () => {
 		assert.strictEqual(rejected, "EACCES");
 		assert.isTrue((await vol.promises.stat("/a.txt")).isFile());
 		assert.throws(
-			() => vol.withFaults({ sync: { readFileSting: () => undefined } as never }),
+			() => vol.withFaults({ sync: deliberatelyInvalid<never>({ readFileSting: () => undefined }) }),
 			RangeError,
 			/readFileSting/,
 		);

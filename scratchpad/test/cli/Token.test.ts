@@ -2,6 +2,7 @@ import { assert, describe, it } from "@effect/vitest";
 import type { NamedColor, Style, TokenName } from "../../effected/cli/index.ts";
 import { Token } from "../../effected/cli/index.ts";
 import { nearest256, paintStyle } from "../../effected/cli/internal/ansi.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 describe("Token", () => {
 	it("builds styles as data", () => {
@@ -47,7 +48,7 @@ describe("Token.defaults and Token.resolve", () => {
 
 	it("a name that is not a token, including an Object.prototype member, is the empty style", () => {
 		for (const name of ["", "nope", "__proto__", "constructor", "toString", "hasOwnProperty"]) {
-			assert.deepStrictEqual(Token.resolve(name as TokenName), {}, name);
+			assert.deepStrictEqual(Token.resolve(deliberatelyInvalid<TokenName>(name)), {}, name);
 		}
 	});
 
@@ -80,7 +81,7 @@ describe("NamedColor spells the bright variants as chalk and Ink do", () => {
 		// Rendered as an unknown name, it is ignored rather than guessed at.
 		assert.strictEqual(paintStyle({ fg: old }, "basic", "x"), "x");
 		for (const name of ["constructor", "__proto__", "toString", ""]) {
-			assert.strictEqual(paintStyle({ fg: name as NamedColor }, "truecolor", "x"), "x", name);
+			assert.strictEqual(paintStyle({ fg: deliberatelyInvalid<NamedColor>(name) }, "truecolor", "x"), "x", name);
 		}
 	});
 });

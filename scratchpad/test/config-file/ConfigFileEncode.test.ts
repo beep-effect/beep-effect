@@ -17,6 +17,7 @@ import { ConfigFile, ConfigValidationError } from "../../effected/config-file/Co
 import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
 import { MergeStrategy } from "../../effected/config-file/MergeStrategy.ts";
 import { TomlCodec } from "../../effected/config-file/TomlCodec.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
@@ -102,7 +103,7 @@ describe("ConfigFile.encode", () => {
 		Effect.gen(function* () {
 			const cfg = yield* DocConfig;
 			// Bypass the constructor's own validation: the schema encode is what must reject this.
-			const bogus = { name: "svc", port: "not-a-number" } as unknown as Doc;
+			const bogus = deliberatelyInvalid<Doc>({ name: "svc", port: "not-a-number" });
 			const error = yield* Effect.flip(cfg.encode(bogus));
 			assert.instanceOf(error, ConfigValidationError);
 			assert.isTrue(S.is(ConfigValidationError)(error));

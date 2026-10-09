@@ -16,6 +16,7 @@ import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
 import { MergeStrategy } from "../../effected/config-file/MergeStrategy.ts";
 import type { RecordingFs } from "./helpers.ts";
 import { recordingFs } from "./helpers.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 class AppShape extends S.Class<AppShape>("AppShape")({ port: S.Finite }) {}
 class AppConfig extends ConfigFile.Service<AppConfig, AppShape>()("test/EventConfig") {}
@@ -309,11 +310,11 @@ describe("ConfigEvents opt-in", () => {
 					// itself when it dereferences a field that does not exist. That throw
 					// is exactly the class of defect `catchDefect` must absorb.
 					Layer.succeed(ConfigEvents, {
-						events: {
+						events: deliberatelyInvalid<PubSub.PubSub<ConfigEvent>>({
 							publish: () => {
 								throw new Error("subscriber exploded");
 							},
-						} as unknown as PubSub.PubSub<ConfigEvent>,
+						}),
 					}),
 					ConfigFile.layer(AppConfig, {
 						schema: AppShape,

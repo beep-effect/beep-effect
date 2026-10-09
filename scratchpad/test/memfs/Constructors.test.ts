@@ -12,6 +12,7 @@ import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { denied } from "./helpers.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 describe("every memory layer publishes Volume", () => {
 	it.effect("layer: Volume inspects the volume backing FileSystem", () =>
@@ -120,7 +121,7 @@ describe("options.faults", () => {
 			const exit = yield* Effect.exit(
 				Effect.provide(
 					Effect.void,
-					MemoryFileSystem.layerWith(undefined, { faults: { readFileSting: () => undefined } as never }),
+					MemoryFileSystem.layerWith(undefined, { faults: deliberatelyInvalid<never>({ readFileSting: () => undefined }) }),
 				),
 			);
 			if (!Exit.isFailure(exit)) return assert.fail("expected the layer build to die");

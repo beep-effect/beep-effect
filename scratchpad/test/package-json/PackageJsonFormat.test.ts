@@ -11,6 +11,7 @@ import * as S from "effect/Schema";
 import { Package } from "../../effected/package-json/Package.ts";
 import type { PackageJsonSyntaxError } from "../../effected/package-json/PackageJsonFormat.ts";
 import { PackageJsonFormat } from "../../effected/package-json/PackageJsonFormat.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 const Json = S.fromJsonString(S.Unknown);
 
@@ -83,9 +84,9 @@ describe("PackageJsonFormat.sortValue (value in, value out)", () => {
 		// Guards a mistyped `Json` union at a call site: an array must not become
 		// an index-keyed object.
 		const array = [1, 2];
-		assert.strictEqual(PackageJsonFormat.sortValue(array as never), array);
-		assert.strictEqual(PackageJsonFormat.sortValue(null as never), null);
-		assert.strictEqual(PackageJsonFormat.sortValue("text" as never), "text");
+		assert.strictEqual(PackageJsonFormat.sortValue(deliberatelyInvalid<never>(array)), array);
+		assert.strictEqual(PackageJsonFormat.sortValue(deliberatelyInvalid<never>(null)), null);
+		assert.strictEqual(PackageJsonFormat.sortValue(deliberatelyInvalid<never>("text")), "text");
 	});
 
 	it("agrees with PackageJsonFormat.formatToString on ordering", () => {
