@@ -609,3 +609,22 @@ on this revision. The normal clean publish retry remains queued.
 
 C-owned Graft queries now total approximately 73,791 tokens saved
 (33,668 prior + 40,123 ownership query); reviewer queries are not included.
+
+### Run 4 current qualified wave and D integration
+
+The schema-codec source and final typed fixture repair have terminal zero
+independent findings on `e51f6ff5c3b39149e6c1fbb241e2085ef7ec89fa`. Docgen
+passes on the unchanged runtime source; the test-only typed decoder repair
+retains that pass. Current admitted qualification records owner freshness=0,
+test-tsgo=0, CI fixtures=0 and Fallow audit/health=0 in
+`.beep/rsc-c-run4-qualified-result.txt`. Full package verification is running.
+
+The publish waiter is restarted only after proving it had not admitted any
+command; it reloads the owner's current shared slot floor (four). C changes no
+cap. The admitted retry stops before push at the stale-base fence, because D's
+#1566 landed during the wait. Main is merged at `17a04eb0e5`; both append-only
+friction histories are preserved and the canonical privacy wording is retained.
+D's manifest-aware release policy now applies: C removes its private package
+changeset note instead of introducing a post-baseline private note. Shared
+package-scripts, cache profile, goals index, tsconfig and fingerprint owners
+regenerate with no tracked diff. Publication will retry from this clean base.

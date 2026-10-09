@@ -92,7 +92,7 @@ dated successor receipt) when it opens.
 pre-runtime shim / install-export-restore ordering under resume ruling 3.
 R24 owner audit is resolved. Exact reviewed-exception candidates are recorded
 for B after V without generated-inventory edits. Main is merged at `c5787ba017`;
-independent source review has zero actionable findings at `dec7e854a0`.
+independent source review has zero actionable findings at `e51f6ff5c3`.
 JSDoc ratchet, knowledge census, refreshed CI fixtures, test-tsgo and Fallow
 audit/health pass. The introduced bootstrap/docgen compatibility findings are
 repaired; full package/docgen qualification is queued through heavy admission.
