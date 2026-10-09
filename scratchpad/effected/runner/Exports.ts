@@ -224,11 +224,24 @@ const assertionKind = (node: Node): O.Option<UnsafeAssertionKind> => {
 
 const TS_IGNORE = /\/\/\s*@ts-ignore/;
 
+const SANCTIONED_TEST_CAST_FILE = /(?:^|\/)scratchpad\/test\/[^/]+\/deliberatelyInvalid\.ts$/;
+
+// Operator ruling 2026-10-09: a module's tests may hand ill-typed input to a runtime check through one
+// helper, `deliberatelyInvalid = <T>(value: unknown): T => value as T`, in scratchpad/test/<m>/. That one
+// cast is the only assertion D15 lets through, and only in exactly that shape and place.
+const isSanctionedTestCast = (node: Node, label: string): boolean =>
+  SANCTIONED_TEST_CAST_FILE.test(label) &&
+  Node.isAsExpression(node) &&
+  node.getText() === "value as T" &&
+  O.exists(O.fromUndefinedOr(node.getFirstAncestorByKind(SyntaxKind.VariableDeclaration)), (declaration) =>
+    declaration.getName() === "deliberatelyInvalid"
+  );
+
 const scanOne = (sourceFile: SourceFile, label: string): ReadonlyArray<UnsafeAssertion> => {
   const findings: Array<UnsafeAssertion> = [];
   sourceFile.forEachDescendant((node) => {
     const kind = assertionKind(node);
-    if (O.isSome(kind)) {
+    if (O.isSome(kind) && !isSanctionedTestCast(node, label)) {
       const position = sourceFile.getLineAndColumnAtPos(node.getStart());
       findings.push(UnsafeAssertion.make({ file: label, line: position.line, column: position.column, kind: kind.value }));
     }

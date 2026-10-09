@@ -312,6 +312,21 @@ describe("source analysis", () => {
         assert.deepStrictEqual(A.sort(kinds, Order.String), ["angle-cast", "any", "as", "non-null", "ts-ignore"]);
       })
     );
+    it.effect("lets through only the sanctioned deliberatelyInvalid helper cast in a module's tests", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const directory = yield* fs.makeTempDirectoryScoped();
+        const helper = `${directory}/deliberatelyInvalid.ts`;
+        yield* fs.writeFileString(
+          helper,
+          ["export const deliberatelyInvalid = <T>(value: unknown): T => value as T;", "export const other = (v: unknown) => v as string;"].join("\n")
+        );
+        const scan = (label: string) => A.map(scanUnsafeAssertions([[helper, label]]), (finding) => finding.line);
+        assert.deepStrictEqual(scan("scratchpad/test/yaml/deliberatelyInvalid.ts"), [2]);
+        assert.deepStrictEqual(scan("scratchpad/effected/yaml/deliberatelyInvalid.ts"), [1, 2]);
+        assert.deepStrictEqual(scan("scratchpad/test/yaml/nested/helper.ts"), [1, 2]);
+      })
+    );
   });
 });
 

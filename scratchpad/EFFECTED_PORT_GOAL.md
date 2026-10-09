@@ -29,6 +29,16 @@ Launch, from a `claude` session in `~/YeeBois/projects/beep-effect` on branch
 > Not yet placed by the operator: the remaining beep laws (`effect-fn`, `terse-effect`,
 > `native-runtime`), the JSDoc conversion (S2) and full coverage (S3). They are not part of
 > steps 2 to 4; ask before starting them.
+>
+> **Operator rulings, 2026-10-09.** The beep laws run after step 4 and before step 5 ("Beep
+> laws, then reviews"). Deliberate wrong-input casts in tests go through one
+> `deliberatelyInvalid<T>` helper per module (`scratchpad/test/<m>/deliberatelyInvalid.ts`);
+> D15's scan lets through that one cast in exactly that shape and place and nothing else.
+> Environment-bound test failures stay failing and recorded in
+> `scratchpad/effected/TESTS_NOT_PASSING.md`; a module with one cannot pass the S1 test gate,
+> so it stays at stage 0 until the operator rules on it. Native-runtime sites that cannot move
+> without changing behaviour or a public contract carry an entry with its reason in
+> `standards/effect-laws.allowlist.jsonc`.
 
 This file is the whole contract. The `/goal` evaluator only reads the
 transcript, so section 0 defines what you print and when. Everything else is
