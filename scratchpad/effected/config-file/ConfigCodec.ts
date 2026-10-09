@@ -1,5 +1,8 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/config-file/ConfigCodec");
 
 /**
  * Indicates that a codec failed to parse or stringify configuration content.
@@ -19,13 +22,13 @@ import * as S from "effect/Schema";
  *
  * @public
  */
-export class ConfigCodecError extends S.TaggedError<ConfigCodecError>()("ConfigCodecError", {
+export class ConfigCodecError extends S.TaggedError<ConfigCodecError>($I`ConfigCodecError`)("ConfigCodecError", {
 	/** The codec that failed, e.g. `"json"`. */
-	codec: S.String,
+	codec: S.String.annotateKey({ description: "The codec that failed, e.g. `\"json\"`." }),
 	/** Which direction failed. */
-	operation: S.Literals(["parse", "stringify"]),
+	operation: S.Literals(["parse", "stringify"]).annotateKey({ description: "Which direction failed." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.Defect(),
+	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
 	/**
 	 * The file the content came from, when a caller knew it.
 	 *
@@ -36,8 +39,8 @@ export class ConfigCodecError extends S.TaggedError<ConfigCodecError>()("ConfigC
 	 * pass over several candidates still names the file that failed. Absent
 	 * only when a codec was driven directly, outside that pipeline.
 	 */
-	path: S.optionalKey(S.String),
-}) {
+	path: S.optionalKey(S.String).annotateKey({ description: "The file the content came from, when a caller knew it." }),
+}, $I.annote("ConfigCodecError", { description: "Indicates that a codec failed to parse or stringify configuration content." })) {
 	override get message(): string {
 		return `${this.codec} ${this.operation} failed`;
 	}

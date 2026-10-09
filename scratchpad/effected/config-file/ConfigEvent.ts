@@ -1,8 +1,11 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as PubSub from "effect/PubSub";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/config-file/ConfigEvent");
 
 /**
  * A reference to one configuration source that contributed to a load.
@@ -15,10 +18,10 @@ import * as S from "effect/Schema";
  */
 export const ConfigSourceRef = S.Struct({
 	/** The filesystem path the value was read from. */
-	path: S.String,
+	path: S.String.annotateKey({ description: "The filesystem path the value was read from." }),
 	/** The name of the resolver that found it. */
-	resolver: S.String,
-});
+	resolver: S.String.annotateKey({ description: "The name of the resolver that found it." }),
+}).pipe($I.annoteSchema("ConfigSourceRef", { description: "A reference to one configuration source that contributed to a load." }));
 
 /**
  * Every event published during config discovery, parsing, validation and
@@ -67,7 +70,7 @@ export const ConfigEventPayload = S.Union([
 	S.TaggedStruct("Saved", { path: S.String }),
 	/** `update` loaded, transformed and persisted a value. Emitted alone. */
 	S.TaggedStruct("Updated", { path: S.String }),
-]);
+]).pipe($I.annoteSchema("ConfigEventPayload", { description: "Every event published during config discovery, parsing, validation and persistence." }));
 
 /**
  * The decoded form of {@link (ConfigEventPayload:variable)}: a tagged union a subscriber
@@ -82,12 +85,12 @@ export type ConfigEventPayload = typeof ConfigEventPayload.Type;
  *
  * @public
  */
-export class ConfigEvent extends S.Class<ConfigEvent>("ConfigEvent")({
+export class ConfigEvent extends S.Class<ConfigEvent>($I`ConfigEvent`)({
 	/** When the event occurred. */
-	timestamp: S.DateTimeUtc,
+	timestamp: S.DateTimeUtc.annotateKey({ description: "When the event occurred." }),
 	/** What happened. */
-	event: ConfigEventPayload,
-}) {}
+	event: ConfigEventPayload.annotateKey({ description: "What happened." }),
+}, $I.annote("ConfigEvent", { description: "A published event: the payload plus the instant it occurred." })) {}
 
 /**
  * The service shape {@link ConfigEvents} provides.
@@ -123,7 +126,7 @@ export interface ConfigEventsShape {
  * @public
  */
 export class ConfigEvents extends Context.Service<ConfigEvents, ConfigEventsShape>()(
-	"@beep/scratchpad/effected/config-file/ConfigEvent/ConfigEvents",
+	$I`ConfigEvents`,
 ) {
 	/**
 	 * An unbounded PubSub of config events.

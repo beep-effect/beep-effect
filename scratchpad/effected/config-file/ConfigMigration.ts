@@ -1,8 +1,11 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { ConfigCodec, ConfigCodecError } from "./ConfigCodec.ts";
+
+const $I = $ScratchpadId.create("effected/config-file/ConfigMigration");
 
 /**
  * Indicates that a versioned config migration failed.
@@ -14,16 +17,16 @@ import type { ConfigCodec, ConfigCodecError } from "./ConfigCodec.ts";
  *
  * @public
  */
-export class ConfigMigrationError extends S.TaggedError<ConfigMigrationError>()("ConfigMigrationError", {
+export class ConfigMigrationError extends S.TaggedError<ConfigMigrationError>($I`ConfigMigrationError`)("ConfigMigrationError", {
 	/** The target version of the step that failed. `0` when reading the version failed. */
-	version: S.Finite,
+	version: S.Finite.annotateKey({ description: "The target version of the step that failed. `0` when reading the version failed." }),
 	/** The name of the step that failed; empty when reading the version failed. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "The name of the step that failed; empty when reading the version failed." }),
 	/** Which stage of a migration step failed. */
-	phase: S.Literals(["read-version", "apply", "write-version"]),
+	phase: S.Literals(["read-version", "apply", "write-version"]).annotateKey({ description: "Which stage of a migration step failed." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("ConfigMigrationError", { description: "Indicates that a versioned config migration failed." })) {
 	override get message(): string {
 		return this.phase === "read-version"
 			? "Failed to read the config version"
@@ -59,7 +62,7 @@ export interface VersionAccess<E = unknown> {
 	readonly set: (raw: unknown, version: number) => Effect.Effect<unknown, E>;
 }
 
-class VersionAccessError extends S.TaggedError<VersionAccessError>()("VersionAccessError", { message: S.String }) {
+class VersionAccessError extends S.TaggedError<VersionAccessError>($I`VersionAccessError`)("VersionAccessError", { message: S.String.annotateKey({ description: "Why the parsed config cannot supply its current version: it is not an object or lacks a numeric `version`" }) }, $I.annote("VersionAccessError", { description: "The default version reader could not read a numeric top-level `version` from the parsed config" })) {
 	override name = "Error";
 }
 

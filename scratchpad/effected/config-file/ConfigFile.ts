@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as SchemaAST from "effect/SchemaAST";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -18,6 +19,8 @@ import type { ConfigMatch, ConfigProbe } from "./ConfigResolver.ts";
 import { ConfigResolver } from "./ConfigResolver.ts";
 import type { ConfigSource, MergeStrategy, NonEmptySources } from "./MergeStrategy.ts";
 
+const $I = $ScratchpadId.create("effected/config-file/ConfigFile");
+
 /**
  * Indicates that the resolver chain produced no configuration source.
  *
@@ -28,9 +31,9 @@ import type { ConfigSource, MergeStrategy, NonEmptySources } from "./MergeStrate
  *
  * @public
  */
-export class ConfigFileNotFoundError extends Schema.TaggedError<ConfigFileNotFoundError>()("ConfigFileNotFoundError", {
+export class ConfigFileNotFoundError extends Schema.TaggedError<ConfigFileNotFoundError>($I`ConfigFileNotFoundError`)("ConfigFileNotFoundError", {
 	/** The names of the resolvers that were probed, in order. */
-	searched: Schema.Array(Schema.String),
+	searched: Schema.Array(Schema.String).annotateKey({ description: "The names of the resolvers that were probed, in order." }),
 	/**
 	 * The candidate paths the chain actually checked on disk, in probe order
 	 * across every resolver — the failure-path mirror of {@link ConfigMatch}.
@@ -42,8 +45,8 @@ export class ConfigFileNotFoundError extends Schema.TaggedError<ConfigFileNotFou
 	 * can be shorter than the true search (or empty for a fully hand-rolled
 	 * chain) — `searched` remains the complete resolver list either way.
 	 */
-	candidates: Schema.Array(Schema.String),
-}) {
+	candidates: Schema.Array(Schema.String).annotateKey({ description: "The candidate paths the chain actually checked on disk, in probe order across every resolver — the failure-path mirror of ConfigMatch." }),
+}, $I.annote("ConfigFileNotFoundError", { description: "Indicates that the resolver chain produced no configuration source." })) {
 	override get message(): string {
 		const count = this.candidates.length;
 		const probed = count === 0 ? "" : ` — ${count} candidate path${count === 1 ? "" : "s"} checked`;
@@ -60,12 +63,12 @@ export class ConfigFileNotFoundError extends Schema.TaggedError<ConfigFileNotFou
  *
  * @public
  */
-export class ConfigFileReadError extends Schema.TaggedError<ConfigFileReadError>()("ConfigFileReadError", {
+export class ConfigFileReadError extends Schema.TaggedError<ConfigFileReadError>($I`ConfigFileReadError`)("ConfigFileReadError", {
 	/** The path that could not be read. */
-	path: Schema.String,
+	path: Schema.String.annotateKey({ description: "The path that could not be read." }),
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.Defect(),
-}) {
+	cause: Schema.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("ConfigFileReadError", { description: "Indicates that a config file could not be read from the filesystem." })) {
 	override get message(): string {
 		return `Failed to read config file at "${this.path}"`;
 	}
@@ -76,12 +79,12 @@ export class ConfigFileReadError extends Schema.TaggedError<ConfigFileReadError>
  *
  * @public
  */
-export class ConfigFileWriteError extends Schema.TaggedError<ConfigFileWriteError>()("ConfigFileWriteError", {
+export class ConfigFileWriteError extends Schema.TaggedError<ConfigFileWriteError>($I`ConfigFileWriteError`)("ConfigFileWriteError", {
 	/** The path that could not be written. */
-	path: Schema.String,
+	path: Schema.String.annotateKey({ description: "The path that could not be written." }),
 	/** The underlying failure, preserved structurally. */
-	cause: Schema.Defect(),
-}) {
+	cause: Schema.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("ConfigFileWriteError", { description: "Indicates that a config file could not be written to the filesystem." })) {
 	override get message(): string {
 		return `Failed to write config file at "${this.path}"`;
 	}
@@ -101,9 +104,9 @@ export class ConfigFileWriteError extends Schema.TaggedError<ConfigFileWriteErro
  *
  * @public
  */
-export class ConfigDefaultPathMissingError extends Schema.TaggedError<ConfigDefaultPathMissingError>()(
+export class ConfigDefaultPathMissingError extends Schema.TaggedError<ConfigDefaultPathMissingError>($I`ConfigDefaultPathMissingError`)(
 	"ConfigDefaultPathMissingError",
-	{},
+	{}, $I.annote("ConfigDefaultPathMissingError", { description: "Indicates that ConfigFileShape.save or ConfigFileShape.update was called on a service configured without a `defaultPath`." }),
 ) {
 	override get message(): string {
 		return "No `defaultPath` configured: `save` and `update` require ConfigFileOptions.defaultPath";
@@ -122,12 +125,12 @@ export class ConfigDefaultPathMissingError extends Schema.TaggedError<ConfigDefa
  *
  * @public
  */
-export class ConfigValidationError extends Schema.TaggedError<ConfigValidationError>()("ConfigValidationError", {
+export class ConfigValidationError extends Schema.TaggedError<ConfigValidationError>($I`ConfigValidationError`)("ConfigValidationError", {
 	/** The offending file, absent when `validate` was called on an in-memory value. */
-	path: Schema.Option(Schema.String),
+	path: Schema.Option(Schema.String).annotateKey({ description: "The offending file, absent when `validate` was called on an in-memory value." }),
 	/** The structured schema issue. Never a string. */
-	issue: Schema.Defect(),
-}) {
+	issue: Schema.Defect().annotateKey({ description: "The structured schema issue. Never a string." }),
+}, $I.annote("ConfigValidationError", { description: "Indicates that parsed config content did not satisfy the schema, or that a caller-supplied `validate` rejected it." })) {
 	override get message(): string {
 		const at = O.match(this.path, { onNone: () => "", onSome: (p) => ` at "${p}"` });
 		return `Config validation failed${at}`;

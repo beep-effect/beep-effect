@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -6,6 +7,8 @@ import { dual } from "effect/Function";
 import type { ConfigCodec } from "./ConfigCodec.ts";
 import type { CryptoFailure } from "./internal/crypto.ts";
 import { IV_LENGTH, decrypt, deriveKey, encrypt, fromBase64, randomIv, toBase64 } from "./internal/crypto.ts";
+
+const $I = $ScratchpadId.create("effected/config-file/EncryptedCodec");
 
 /**
  * Indicates that an encryption, decryption, key-derivation or base64 step
@@ -18,12 +21,12 @@ import { IV_LENGTH, decrypt, deriveKey, encrypt, fromBase64, randomIv, toBase64 
  *
  * @public
  */
-export class ConfigEncryptionError extends S.TaggedError<ConfigEncryptionError>()("ConfigEncryptionError", {
+export class ConfigEncryptionError extends S.TaggedError<ConfigEncryptionError>($I`ConfigEncryptionError`)("ConfigEncryptionError", {
 	/** Which cryptographic stage failed. */
-	phase: S.Literals(["key-derivation", "encrypt", "decrypt", "encoding"]),
+	phase: S.Literals(["key-derivation", "encrypt", "decrypt", "encoding"]).annotateKey({ description: "Which cryptographic stage failed." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("ConfigEncryptionError", { description: "Indicates that an encryption, decryption, key-derivation or base64 step failed." })) {
 	override get message(): string {
 		return `Config encryption failed during ${this.phase}`;
 	}
