@@ -2855,16 +2855,72 @@
       "wave": 2,
       "position": 1,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "tooling/library",
       "upstreamPaths": {
         "src": "packages/walker/src",
         "test": "packages/walker/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "AscendOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CompileAndExpandOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DescendError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DescendOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DescendRecordOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DescendResult",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GlobExpansionError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "UnreadableDirectory",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Walker",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "compileAndExpand",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "descend",
+          "kind": "value",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
       "newDeps": [],
-      "fixturesBytes": 0,
+      "fixturesBytes": 4665,
       "deviations": [],
       "backlog": [],
       "reviewRounds": [],
