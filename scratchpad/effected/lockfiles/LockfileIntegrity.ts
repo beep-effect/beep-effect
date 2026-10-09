@@ -1,9 +1,12 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { DependencyField } from "../npm/index.ts";
 import { Range, SemVer } from "../semver/index.ts";
 import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
 import { DEP_TYPES, isWorkspaceSpecifier } from "./internal/shared.ts";
 import type { Lockfile } from "./Lockfile.ts";
+
+const $I = $ScratchpadId.create("effected/lockfiles/LockfileIntegrity");
 
 /**
  * The minimal manifest shape {@link LockfileIntegrity.compare} checks a
@@ -16,13 +19,13 @@ import type { Lockfile } from "./Lockfile.ts";
  *
  * @public
  */
-export class WorkspaceManifest extends S.Class<WorkspaceManifest>("WorkspaceManifest")({
-	name: S.NonEmptyString,
-	dependencies: S.optionalKey(S.Record(S.String, S.String)),
-	devDependencies: S.optionalKey(S.Record(S.String, S.String)),
-	peerDependencies: S.optionalKey(S.Record(S.String, S.String)),
-	optionalDependencies: S.optionalKey(S.Record(S.String, S.String)),
-}) {}
+export class WorkspaceManifest extends S.Class<WorkspaceManifest>($I`WorkspaceManifest`)({
+	name: S.NonEmptyString.annotateKey({ description: "Workspace package identity used to match its manifest against lockfile workspace entries" }),
+	dependencies: S.optionalKey(S.Record(S.String, S.String)).annotateKey({ description: "Runtime dependency specifiers declared by the workspace manifest" }),
+	devDependencies: S.optionalKey(S.Record(S.String, S.String)).annotateKey({ description: "Development dependency specifiers declared by the workspace manifest" }),
+	peerDependencies: S.optionalKey(S.Record(S.String, S.String)).annotateKey({ description: "Peer dependency specifiers declared by the workspace manifest" }),
+	optionalDependencies: S.optionalKey(S.Record(S.String, S.String)).annotateKey({ description: "Optional dependency specifiers declared by the workspace manifest" }),
+}, $I.annote("WorkspaceManifest", { description: "The minimal manifest shape LockfileIntegrity.compare checks a lockfile against: a package name plus the four optional dependency maps." })) {}
 
 const decodeRange = S.decodeUnknownExit(Range.FromString);
 const decodeSemVer = S.decodeUnknownExit(SemVer.FromString);
@@ -45,10 +48,10 @@ const decodeSemVer = S.decodeUnknownExit(SemVer.FromString);
  *
  * @public
  */
-export class LockfileIntegrity extends S.Class<LockfileIntegrity>("LockfileIntegrity")({
-	valid: S.Boolean,
-	missingWorkspaces: S.Array(S.String),
-	extraWorkspaces: S.Array(S.String),
+export class LockfileIntegrity extends S.Class<LockfileIntegrity>($I`LockfileIntegrity`)({
+	valid: S.Boolean.annotateKey({ description: "Whether comparison found no missing workspaces, extra workspaces or unsatisfied constraints among the rows it checked" }),
+	missingWorkspaces: S.Array(S.String).annotateKey({ description: "Workspace package names declared by manifests but absent from the lockfile's workspace entries" }),
+	extraWorkspaces: S.Array(S.String).annotateKey({ description: "Workspace package names recorded in the lockfile without matching manifests" }),
 	unsatisfiedConstraints: S.Array(
 		S.Struct({
 			workspace: S.String,
@@ -57,8 +60,8 @@ export class LockfileIntegrity extends S.Class<LockfileIntegrity>("LockfileInteg
 			resolved: S.String,
 			depType: DependencyField,
 		}),
-	),
-}) {
+	).annotateKey({ description: "Declared SemVer constraints satisfied by no parseable resolved candidate, with workspace, dependency section and all candidate versions" }),
+}, $I.annote("LockfileIntegrity", { description: "Result of checking a parsed lockfile against the workspace's declared manifests." })) {
 	/**
 	 * Check a lockfile's consistency against workspace manifests — a total,
 	 * pure function: no Effect, no error channel, no IO.

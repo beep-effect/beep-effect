@@ -1,5 +1,8 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { DependencyField, DependencySpecifier } from "../npm/index.ts";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/lockfiles/ImporterDependency");
 
 /**
  * One declared dependency of one workspace importer, as the lockfile records it.
@@ -32,10 +35,10 @@ import * as S from "effect/Schema";
  *
  * @public
  */
-export class ImporterDependency extends S.Class<ImporterDependency>("ImporterDependency")({
-	name: S.NonEmptyString,
-	specifier: DependencySpecifier.FromString,
-	version: S.optionalKey(S.String),
-	peerSuffix: S.optionalKey(S.String),
-	depType: DependencyField,
-}) {}
+export class ImporterDependency extends S.Class<ImporterDependency>($I`ImporterDependency`)({
+	name: S.NonEmptyString.annotateKey({ description: "Dependency package declared by this workspace importer" }),
+	specifier: DependencySpecifier.FromString.annotateKey({ description: "Declared dependency range or protocol, classified for inspection while preserving its exact original spelling when encoded" }),
+	version: S.optionalKey(S.String).annotateKey({ description: "pnpm-recorded resolved version or protocol resolution with peer context removed; absent for bun and npm" }),
+	peerSuffix: S.optionalKey(S.String).annotateKey({ description: "Raw parenthesized peer context following a pnpm importer dependency's resolution, present only when recorded" }),
+	depType: DependencyField.annotateKey({ description: "Dependency section that declared this entry: runtime, development, peer or optional" }),
+}, $I.annote("ImporterDependency", { description: "One declared dependency of one workspace importer, as the lockfile records it." })) {}

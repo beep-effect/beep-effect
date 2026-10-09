@@ -1,6 +1,9 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { IntegrityHash } from "../npm/index.ts";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/lockfiles/ResolvedPackage");
 
 const EMPTY_DEPENDENCIES: { readonly [name: string]: string } = {};
 
@@ -80,31 +83,31 @@ const EMPTY_EDGE_NAMES: ReadonlyArray<string> = [];
  *
  * @public
  */
-export class ResolvedPackage extends S.Class<ResolvedPackage>("ResolvedPackage")({
-	name: S.NonEmptyString,
-	version: S.String,
-	instanceId: S.NonEmptyString,
-	integrity: S.optionalKey(IntegrityHash),
-	isWorkspace: S.Boolean,
-	relativePath: S.optionalKey(S.String),
+export class ResolvedPackage extends S.Class<ResolvedPackage>($I`ResolvedPackage`)({
+	name: S.NonEmptyString.annotateKey({ description: "Resolved package name; pnpm workspace entries initially carry importer paths until rewritten with manifest names" }),
+	version: S.String.annotateKey({ description: "Resolved package version; pnpm workspace entries use `0.0.0` because their actual versions are absent from the lockfile" }),
+	instanceId: S.NonEmptyString.annotateKey({ description: "Opaque, verbatim lockfile identity distinguishing this package instance, including separate peer-resolved variants" }),
+	integrity: S.optionalKey(IntegrityHash).annotateKey({ description: "Package integrity recorded by the lockfile, including SRI hashes and yarn Berry cache checksums" }),
+	isWorkspace: S.Boolean.annotateKey({ description: "Whether this instance represents a workspace-local package" }),
+	relativePath: S.optionalKey(S.String).annotateKey({ description: "Workspace-relative package directory, when recorded by the lockfile" }),
 	dependencies: S.Record(S.String, S.String).pipe(
 		S.withDecodingDefaultKey(Effect.succeed(EMPTY_DEPENDENCIES)),
 		S.withConstructorDefault(Effect.succeed(EMPTY_DEPENDENCIES)),
-	),
+	).annotateKey({ description: "Package dependency entries recorded by the lockfile, keyed by dependency name and defaulting to an empty map" }),
 	peerDependencies: S.Record(S.String, S.String).pipe(
 		S.withDecodingDefaultKey(Effect.succeed(EMPTY_DEPENDENCIES)),
 		S.withConstructorDefault(Effect.succeed(EMPTY_DEPENDENCIES)),
-	),
+	).annotateKey({ description: "Declared peer dependency ranges keyed by package name, independently of which instances actually resolved" }),
 	peerDependenciesMeta: S.Record(S.String, S.Struct({ optional: S.Boolean })).pipe(
 		S.withDecodingDefaultKey(Effect.succeed(EMPTY_PEER_META)),
 		S.withConstructorDefault(Effect.succeed(EMPTY_PEER_META)),
-	),
+	).annotateKey({ description: "Per-peer optionality flags normalized across lockfile formats; peers without metadata are required" }),
 	resolved: S.Record(S.String, S.String).pipe(
 		S.withDecodingDefaultKey(Effect.succeed(EMPTY_DEPENDENCIES)),
 		S.withConstructorDefault(Effect.succeed(EMPTY_DEPENDENCIES)),
-	),
+	).annotateKey({ description: "Dependency and recorded peer names mapped to verified target instance identities in this package's resolution context" }),
 	unresolvedEdges: S.Array(S.String).pipe(
 		S.withDecodingDefaultKey(Effect.succeed(EMPTY_EDGE_NAMES)),
 		S.withConstructorDefault(Effect.succeed(EMPTY_EDGE_NAMES)),
-	),
-}) {}
+	).annotateKey({ description: "Dependency names with recorded lockfile edges whose target instances could not be identified, excluding genuinely absent edges" }),
+}, $I.annote("ResolvedPackage", { description: "A package resolved from a lockfile." })) {}

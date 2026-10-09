@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -13,6 +14,8 @@ import { LockfileImporter } from "./LockfileImporter.ts";
 import { PnpmExtension } from "./PnpmExtension.ts";
 import { ResolvedPackage } from "./ResolvedPackage.ts";
 import { WorkspaceDependency } from "./WorkspaceDependency.ts";
+
+const $I = $ScratchpadId.create("effected/lockfiles/Lockfile");
 
 const EMPTY_IMPORTERS: ReadonlyArray<LockfileImporter> = [];
 
@@ -34,14 +37,14 @@ const EMPTY_IMPORTERS: ReadonlyArray<LockfileImporter> = [];
  *
  * @public
  */
-export class LockfileParseError extends S.TaggedError<LockfileParseError>()("LockfileParseError", {
+export class LockfileParseError extends S.TaggedError<LockfileParseError>($I`LockfileParseError`)("LockfileParseError", {
 	/** The lockfile format that was being parsed. */
-	format: LockfileFormat,
+	format: LockfileFormat.annotateKey({ description: "The lockfile format that was being parsed." }),
 	/** Whether the text itself failed to parse (`"syntax"`) or parsed but had the wrong shape (`"validation"`). */
-	stage: S.Literals(["syntax", "validation"]),
+	stage: S.Literals(["syntax", "validation"]).annotateKey({ description: "Whether the text itself failed to parse (`\"syntax\"`) or parsed but had the wrong shape (`\"validation\"`)." }),
 	/** The underlying engine or schema failure, preserved structurally. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The underlying engine or schema failure, preserved structurally." }),
+}, $I.annote("LockfileParseError", { description: "Failure of `Lockfile.parse`: the given content is not a valid lockfile of the requested format." })) {
 	override get message(): string {
 		return this.stage === "syntax"
 			? `Failed to parse ${this.format} lockfile: the content is not well-formed`
@@ -90,14 +93,14 @@ export class LockfileParseError extends S.TaggedError<LockfileParseError>()("Loc
  *
  * @public
  */
-export class LockfileFramingError extends S.TaggedError<LockfileFramingError>()("LockfileFramingError", {
+export class LockfileFramingError extends S.TaggedError<LockfileFramingError>($I`LockfileFramingError`)("LockfileFramingError", {
 	/** The lockfile format that was being parsed. */
-	format: LockfileFormat,
+	format: LockfileFormat.annotateKey({ description: "The lockfile format that was being parsed." }),
 	/** Which framing check failed; see the class remarks for each. */
-	reason: S.Literals(["noLockfileDocument", "noImporters", "unexpectedDocuments"]),
+	reason: S.Literals(["noLockfileDocument", "noImporters", "unexpectedDocuments"]).annotateKey({ description: "Which framing check failed; see the class remarks for each." }),
 	/** How many YAML documents the stream carried. */
-	documents: S.Int,
-}) {
+	documents: S.Int.annotateKey({ description: "How many YAML documents the stream carried." }),
+}, $I.annote("LockfileFramingError", { description: "Failure of `Lockfile.parse`: the content parsed as text, but no single lockfile document could be located in it." })) {
 	override get message(): string {
 		const detail =
 			this.reason === "noImporters"
@@ -170,20 +173,20 @@ const dispatch = (
  *
  * @public
  */
-export class Lockfile extends S.Class<Lockfile>("Lockfile")({
-	format: LockfileFormat,
-	lockfileVersion: S.String,
-	packages: S.Array(ResolvedPackage),
-	workspaceDependencies: S.Array(WorkspaceDependency),
+export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
+	format: LockfileFormat.annotateKey({ description: "Lockfile format that produced the normalized data: bun, npm, pnpm or yarn Berry" }),
+	lockfileVersion: S.String.annotateKey({ description: "Format version recorded by the lockfile" }),
+	packages: S.Array(ResolvedPackage).annotateKey({ description: "Resolved package instances, including workspace packages and separate instances for different peer contexts" }),
+	workspaceDependencies: S.Array(WorkspaceDependency).annotateKey({ description: "Directed dependency edges between workspace packages, carrying their declared constraints and dependency sections" }),
 	importers: S.Array(LockfileImporter).pipe(
 		// The decoding default is the *encoded* empty array (a fresh `[]` literal,
 		// which is assignable to the encoded side); the constructor default is the
 		// decoded empty array. Both are empty, so the runtime value is identical.
 		S.withDecodingDefaultKey(Effect.succeed([])),
 		S.withConstructorDefault(Effect.succeed(EMPTY_IMPORTERS)),
-	),
-	extension: S.optionalKey(S.Union([PnpmExtension, BunExtension])),
-}) {
+	).annotateKey({ description: "Workspace importers and their declared dependencies, identified by root-relative path; empty for yarn" }),
+	extension: S.optionalKey(S.Union([PnpmExtension, BunExtension])).annotateKey({ description: "Optional pnpm- or bun-specific metadata preserved alongside the normalized lockfile model" }),
+}, $I.annote("Lockfile", { description: "The unified lockfile model all four formats normalize into." })) {
 	/** Lazily built name → packages index; deliberately outside the schema, never encodes. */
 	#nameIndex: ReadonlyMap<string, ReadonlyArray<ResolvedPackage>> | undefined;
 

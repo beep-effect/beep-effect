@@ -1,4 +1,7 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/lockfiles/PackageManagerLock");
 
 /**
  * The package manager a `pnpm-lock.yaml` pins, with the integrity pnpm
@@ -29,10 +32,10 @@ import * as S from "effect/Schema";
  *
  * @public
  */
-export class PackageManagerLock extends S.Class<PackageManagerLock>("PackageManagerLock")({
-	name: S.Literal("pnpm"),
-	specifier: S.String,
-	version: S.String,
-	integrity: S.String,
-	nativeIntegrity: S.Record(S.String, S.String),
-}) {}
+export class PackageManagerLock extends S.Class<PackageManagerLock>($I`PackageManagerLock`)({
+	name: S.Literal("pnpm").annotateKey({ description: "Package manager pinned by the env preamble, always `pnpm`" }),
+	specifier: S.String.annotateKey({ description: "Declared package manager specifier recorded verbatim, potentially retaining a corepack-style integrity suffix" }),
+	version: S.String.annotateKey({ description: "Exact pnpm package version resolved in the lockfile's env preamble" }),
+	integrity: S.String.annotateKey({ description: "SRI checksum recorded for the resolved pnpm package in the lockfile's env preamble" }),
+	nativeIntegrity: S.Record(S.String, S.String).annotateKey({ description: "SRI checksums for pnpm's recorded optional native packages, keyed by unversioned package name; empty for pnpm 11" }),
+}, $I.annote("PackageManagerLock", { description: "The package manager a `pnpm-lock.yaml` pins, with the integrity pnpm recorded for it — read from the lockfile's env preamble by `PnpmEnvLockfile.packageManager`." })) {}
