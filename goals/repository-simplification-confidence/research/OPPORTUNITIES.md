@@ -258,3 +258,7 @@ The final CLI package check remains queued for more than fifteen minutes while o
   manage the submitted monitor through `yeet job` before the final handoff.
 - Prevention: help should distinguish the publish job ceiling from the
   automatically submitted monitor's lifetime, or expose a monitor ceiling.
+
+### E package proof and resource-policy proof differ
+
+The full CLI package audit passed, but Yeet's Effect-Vitest scan still found a new platform import requiring provenance review and a resource layer without a timeout in the governance fixture. Reusing the existing bounded live-workflow security suite preserves the repository files as the subject and removes the duplicate resource boundary. No inventory or exception was refreshed. A focused resource-policy check alongside a new filesystem test would have exposed this before the full package rerun.
