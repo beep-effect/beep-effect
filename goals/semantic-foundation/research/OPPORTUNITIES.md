@@ -94,3 +94,54 @@
   declarations, or direct package-check guidance should name the prerequisite.
 - **Disposition:** build ontology dependencies through Turbo under beep-heavy,
   then rerun the exact check. Preserve all dependency sources and tracked wiring.
+
+## 2026-10-09 — Shared heavy admission has no FIFO ordering
+
+- **What happened:** the loader coverage prerequisite waited over 30 minutes
+  while newer shared-slot holders started; the dependency build also waited.
+  Both lane jobs stayed below the two-job limit and the 32G cap.
+- **Evidence:** the wrapper reported `all 3 slots busy, waiting`; repeated
+  read-only lock and process checks showed three live holders with active
+  children, including holders younger than the waiting coverage request.
+- **What would have prevented it:** a FIFO admission queue with request age
+  and periodic progress output, so earlier prerequisites cannot starve.
+- **Disposition:** keep polling without changing the slot count or touching
+  live owners. Prepare implementation in ignored lane scratch while the
+  committed package snapshot remains stable for the prerequisite measurement.
+
+## 2026-10-09 — Zsh reserves the path loop variable
+
+- **What happened:** an instruction-file read used `path` as a loop variable;
+  zsh treats it as the array tied to PATH, so `cat` stopped resolving.
+- **Evidence:** the read-only command reported `command not found: cat`.
+- **What would have prevented it:** use a task-prefixed shell variable rather
+  than names that are special to the configured shell.
+- **Disposition:** reran the read with `task_guide_path`; no files or persistent
+  environment changed.
+
+## 2026-10-09 — Architecture plan does not route modeling modules
+
+- **What happened:** the required read-only architecture plan for a foundation
+  Classification value proposed the synthetic `foundation-domain` proof tree,
+  rather than modules in the brief's existing `@beep/ontology` target surface.
+- **Evidence:** `beep architecture plan --slice foundation --concept
+  Classification --domain-kind values --stage core` returned operations for
+  `packages/foundation/domain` and legacy proof cleanup.
+- **What would have prevented it:** a modeling-package module plan that names
+  an existing workspace and returns only that workspace's role files.
+- **Disposition:** applied none of those operations. The brief's ontology
+  ownership and source-module contract remain authoritative.
+
+### M2 boundary API defects caught before publication
+
+- Work: first classification runtime coverage and ontology typecheck after dependency declarations were restored.
+- Evidence: the fixture suite failed during pin construction with `ClassificationSchemeKind.$match(...) is not a function`; typecheck identified circular encoded XML interfaces, a nonempty-array refinement that did not narrow a mutable array, and typed-decoder/pipeable-helper requirements. All 73 existing tests passed.
+- Attribution and correction: introduced M2 code. Validate LiteralKit handler semantics as well as Effect signatures before authoring; derive nonrecursive fields from schemas and type only the recursive encoded edge. The corrected wave is queued for coverage and check; no M2 pass is claimed. The live wrapper now reports five shared slots, changed externally; this lane changed no wrapper setting or cap and still runs at most two own jobs.
+- Prevention: a tiny construction/recursive-codec proof admitted before expanding the parser would have caught these defects earlier.
+
+### Shared XML text-node key rejects classification input
+
+- Work: M2 synthetic master-file decoding through the required existing `@beep/schema/Xml` boundary.
+- Evidence: the bounded decoder diagnostic reports `Invalid XML input (Invalid tag name: text).` The reader sets `textNodeName: "text"`; installed fast-xml-parser 5.11.2 rejects a tag equal to that reserved key in `OrderedObjParser.js`. The pinned IPC master actually contains `<text>` elements. Current `origin/main` at `4e82f6d942` retains this configuration, and the installed parser/validator versions match the committed lockfile.
+- Attribution: inherited shared-reader limitation, exercised by the new classification path. Affected ontology fixtures: five failed, 77 passed out of 82. Package verification repeats the same failure after successful build and typecheck.
+- Boundary and prevention: repairing the shared reader is outside this lane scope; no parser bypass or dependency change was made. The orchestrator should route a compatible XML reader repair to its owner on main, with reserved-name and existing consumer tests, then let this lane merge main once and resume. A minimal actual classification XML precondition probe before drafting would have caught this earlier.

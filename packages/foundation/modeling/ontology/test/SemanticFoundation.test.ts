@@ -97,7 +97,7 @@ it.layer(Layer.merge(TaxonomyLoader.layer, BunFileSystem.layer), { timeout: "30 
         const error = yield* loadWith(() =>
           Effect.succeed('{"id":"unknown","format":"xml","loadKind":"unknown"}')
         ).pipe(Effect.flip);
-        assertTrue(isTaxonomyManifestParseError(error));
+        error.pipe(isTaxonomyManifestParseError, assertTrue);
       })
     );
 
