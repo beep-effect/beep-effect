@@ -982,10 +982,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse writer confo
       const oracle = yield* typescriptHarnessHash(root);
       for (const writer of [codexWriterPath, cursorWriterPath]) {
         const hook_event_name = writer === cursorWriterPath ? "sessionStart" : "SessionStart";
-        const run = yield* runWriter(yield* encodeJson({ ...sessionStartPayload(root), hook_event_name }), {
-          writerPath: writer,
-          registeredEvent: writer === cursorWriterPath ? "sessionStart" : undefined,
-        });
+        const run = yield* runWriter(
+          yield* encodeJson({
+            ...sessionStartPayload(root),
+            hook_event_name: writer === cursorWriterPath ? undefined : hook_event_name,
+          }),
+          {
+            writerPath: writer,
+            registeredEvent: writer === cursorWriterPath ? "sessionStart" : undefined,
+          }
+        );
         expect(run.stdout).toBe(writer === cursorWriterPath ? "{}\n" : "");
         expect(run.rows).toHaveLength(1);
         const decoded = yield* decodeHookPulseRow(pipe(A.head(run.rows), O.getOrThrow));

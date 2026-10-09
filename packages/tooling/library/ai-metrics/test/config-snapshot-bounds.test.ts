@@ -408,6 +408,16 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
     );
   });
 
+  it.effect("rejects fractional and negative snapshot limits while allowing an explicit zero budget", () =>
+    Effect.gen(function* () {
+      const decode = S.decodeUnknownOption(AiMetricsConfigSnapshotBudget);
+      for (const maxFiles of [-1, 1.5]) assertNone(decode({ maxFiles }));
+      for (const maxTotalBytes of [-1, 1.5]) assertNone(decode({ maxTotalBytes }));
+      const zero = decode({ maxDepth: 0, maxFiles: 0, maxFileBytes: 0, maxTotalBytes: 0 });
+      expect(O.isSome(zero)).toBe(true);
+    })
+  );
+
   it.effect("preserves optional-key encoding while carrying absence as Option", () =>
     Effect.gen(function* () {
       const input = AiMetricsConfigSnapshotInput.make({ repoRoot: "/repo" });
