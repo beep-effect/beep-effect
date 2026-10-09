@@ -146,7 +146,7 @@ export class TurboEnvironmentHealthWarning extends S.Class<TurboEnvironmentHealt
  *
  * **Details**
  *
- * The hosted `setup-monorepo-ci` policy (`scripts/ci-job-env.mjs`) hands
+ * The hosted `setup-monorepo-ci` policy (`beep ci job-env`) hands
  * fork pull-request jobs a blank credential triple and `TURBO_CACHE=local:rw`;
  * main pushes receive a literal token and a workstation carries a 1Password
  * reference. Code that classifies those

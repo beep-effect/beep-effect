@@ -46,14 +46,14 @@ inputs:
       environment. Trusted main pushes receive read-write access through
       TURBO_TOKEN; same-repository pull requests receive read-only access
       through TURBO_READ_TOKEN; forks and every other event stay local-only.
-      Policy lives in scripts/ci-job-env.mjs.
+      Policy lives in beep ci job-env.
     required: false
     default: "false"
   app-secrets:
     description: >-
       Export the application secret block (DATABASE_URL, AUTH_SECRET, ...) on
       trusted main pushes; every other event exports empty values so Turbo's
-      hashed environment stays stable. Names live in scripts/ci-job-env.mjs.
+      hashed environment stays stable. Names live in beep ci job-env.
     required: false
     default: "false"
   turbo-api:
@@ -66,7 +66,7 @@ inputs:
     default: ""
   # Composite actions cannot read the secrets context, so the calling job
   # passes each secret the policy needs by name. The names below are the
-  # whole allowlist of scripts/ci-job-env.mjs: a `with:` block is echoed in
+  # whole allowlist of beep ci job-env: a `with:` block is echoed in
   # the step's log header (values masked, names intact), so passing the
   # whole secrets context serialized as JSON instead would print the
   # repository's full secret inventory on every job and hand every secret to
@@ -248,43 +248,6 @@ runs:
         node-version: ${{ inputs.node-version }}
         node-version-file: ${{ inputs.node-version == '' && '.nvmrc' || '' }}
 
-    # One definition of the credential policy for every Turbo-backed job.
-    # Runs after the Bun setup (the script needs a runtime) and before the
-    # Turbo restore below, which keys its local fallback on the exported
-    # TURBO_TOKEN / TURBO_TEAM. Only trusted main pushes ever see the write
-    # token or the application secrets.
-    - name: Export job environment
-      if: ${{ inputs.turbo-remote-cache == 'true' || inputs.app-secrets == 'true' }}
-      shell: bash
-      env:
-        BEEP_CI_TURBO_REMOTE_CACHE: ${{ inputs.turbo-remote-cache }}
-        BEEP_CI_APP_SECRETS: ${{ inputs.app-secrets }}
-        BEEP_CI_TURBO_API: ${{ inputs.turbo-api }}
-        BEEP_CI_TURBO_TEAM: ${{ inputs.turbo-team }}
-        BEEP_CI_SECRET_TURBO_TOKEN: ${{ inputs.turbo-token }}
-        BEEP_CI_SECRET_TURBO_READ_TOKEN: ${{ inputs.turbo-read-token }}
-        BEEP_CI_SECRET_DATABASE_URL: ${{ inputs.database-url }}
-        BEEP_CI_SECRET_DATABASE_URL_UNPOOLED: ${{ inputs.database-url-unpooled }}
-        BEEP_CI_SECRET_EMAIL_RESEND_API_KEY: ${{ inputs.email-resend-api-key }}
-        BEEP_CI_SECRET_AUTH_SECRET: ${{ inputs.auth-secret }}
-        BEEP_CI_SECRET_BETTER_AUTH_SECRET: ${{ inputs.better-auth-secret }}
-        BEEP_CI_SECRET_BETTER_AUTH_URL: ${{ inputs.better-auth-url }}
-        BEEP_CI_SECRET_SECURITY_TRUSTED_ORIGINS: ${{ inputs.security-trusted-origins }}
-        BEEP_CI_SECRET_LIVEBLOCKS_SECRET_KEY: ${{ inputs.liveblocks-secret-key }}
-        BEEP_CI_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
-      run: bun scripts/ci-job-env.mjs
-
-    - name: Restore Turbo cache (local fallback only)
-      if: ${{ inputs.cache-turbo == 'true' && (env.TURBO_TOKEN == '' || env.TURBO_TEAM == '') }}
-      id: turbo-cache-restore
-      continue-on-error: true
-      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-      with:
-        path: .turbo/cache
-        key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}
-        restore-keys: |
-          turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-
-
     - name: Install dependencies
       shell: bash
       run: |
@@ -310,6 +273,43 @@ runs:
         done
         install_finished_at="$(date +%s)"
         echo "BEEP_SETUP_INSTALL_SECONDS=$((install_finished_at - install_started_at))" >> "$GITHUB_ENV"
+
+    # One definition of the credential policy for every Turbo-backed job.
+    # Runs after dependency installation (the typed owner needs it) and before the
+    # Turbo restore below, which keys its local fallback on the exported
+    # TURBO_TOKEN / TURBO_TEAM. Only trusted main pushes ever see the write
+    # token or the application secrets.
+    - name: Export job environment
+      if: ${{ inputs.turbo-remote-cache == 'true' || inputs.app-secrets == 'true' }}
+      shell: bash
+      env:
+        BEEP_CI_TURBO_REMOTE_CACHE: ${{ inputs.turbo-remote-cache }}
+        BEEP_CI_APP_SECRETS: ${{ inputs.app-secrets }}
+        BEEP_CI_TURBO_API: ${{ inputs.turbo-api }}
+        BEEP_CI_TURBO_TEAM: ${{ inputs.turbo-team }}
+        BEEP_CI_SECRET_TURBO_TOKEN: ${{ inputs.turbo-token }}
+        BEEP_CI_SECRET_TURBO_READ_TOKEN: ${{ inputs.turbo-read-token }}
+        BEEP_CI_SECRET_DATABASE_URL: ${{ inputs.database-url }}
+        BEEP_CI_SECRET_DATABASE_URL_UNPOOLED: ${{ inputs.database-url-unpooled }}
+        BEEP_CI_SECRET_EMAIL_RESEND_API_KEY: ${{ inputs.email-resend-api-key }}
+        BEEP_CI_SECRET_AUTH_SECRET: ${{ inputs.auth-secret }}
+        BEEP_CI_SECRET_BETTER_AUTH_SECRET: ${{ inputs.better-auth-secret }}
+        BEEP_CI_SECRET_BETTER_AUTH_URL: ${{ inputs.better-auth-url }}
+        BEEP_CI_SECRET_SECURITY_TRUSTED_ORIGINS: ${{ inputs.security-trusted-origins }}
+        BEEP_CI_SECRET_LIVEBLOCKS_SECRET_KEY: ${{ inputs.liveblocks-secret-key }}
+        BEEP_CI_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+      run: bun run beep ci job-env
+
+    - name: Restore Turbo cache (local fallback only)
+      if: ${{ inputs.cache-turbo == 'true' && (env.TURBO_TOKEN == '' || env.TURBO_TEAM == '') }}
+      id: turbo-cache-restore
+      continue-on-error: true
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: .turbo/cache
+        key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}
+        restore-keys: |
+          turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}${{ inputs.turbo-cache-key-suffix }}-
 
     - name: Save Turbo cache (local fallback only)
       if: ${{ inputs.cache-write == 'true' && inputs.cache-turbo == 'true' && (env.TURBO_TOKEN == '' || env.TURBO_TEAM == '') && steps.turbo-cache-restore.outputs.cache-hit != 'true' }}

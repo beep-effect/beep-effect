@@ -690,7 +690,7 @@ a changed-files API response to make routing appear faster.
 
 ### Resource evidence and sizing acceptance
 
-`scripts/ci-runner-resources.sh` wraps each executed heavy lane and appends its
+`beep ci runner-resources` (through the stable `scripts/ci-runner-resources.sh` adapter) wraps each executed heavy lane and appends its
 resource summary to the existing job log and GitHub step summary. It samples
 host memory every five seconds, records elapsed time, CPU busy percentage and
 swap-page deltas, and preserves the lane exit status. It neither enables paid

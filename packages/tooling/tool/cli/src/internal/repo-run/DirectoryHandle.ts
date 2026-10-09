@@ -48,9 +48,18 @@ const heldEntry = (fd: number, name: string): string => `${heldPath(fd)}/${name}
  * @category models
  * @since 0.0.0
  */
-export const DirectoryHandleOperation = LiteralKit(["open", "stat", "list", "unlink", "rmdir", "close"]).pipe(
+export const DirectoryHandleOperation = LiteralKit([
+  "open",
+  "stat",
+  "list",
+  "unlink",
+  "rmdir",
+  "close",
+  "rename",
+  "sync",
+]).pipe(
   $I.annoteSchema("DirectoryHandleOperation", {
-    description: "Descriptor-level directory operation: open, stat, list, unlink, rmdir, or close.",
+    description: "Descriptor-level directory operation including rename and mandatory parent sync.",
   })
 );
 
@@ -434,4 +443,130 @@ export const unlinkBoundFile = Effect.fnUntraced(function* (
   expected: DirectoryIdentity
 ): Effect.fn.Return<BoundRemovalOutcome, never, Path.Path | Scope.Scope> {
   return yield* finishBoundEntry(path, expected, unlinkFinish);
+});
+
+/**
+ * Outcomes of an inode-bound archive move, including durability and destination refusals.
+ *
+ * **Example** (Recognize a durable move)
+ *
+ * ```ts
+ * import { BoundMoveOutcome } from "@beep/repo-cli/test/RepoRun"
+ * console.log(BoundMoveOutcome.is.moved("moved")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const BoundMoveOutcome = LiteralKit([
+  "moved",
+  "moved-unsynced",
+  "destination-occupied",
+  "identity-changed",
+  "move-failed",
+]).pipe(
+  $I.annoteSchema("BoundMoveOutcome", {
+    description: "Inode-bound archive move outcome, including destination and durability refusals.",
+  })
+);
+
+/**
+ * Outcome family of inode-bound archive moves.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BoundMoveOutcome = typeof BoundMoveOutcome.Type;
+
+/**
+ * Fence an assessed inode into a same-filesystem archive and sync both parents.
+ *
+ * **Details**
+ *
+ * Both parent directories are held by descriptor. The destination must be absent
+ * and on the source device. No recursive deletion occurs. Callers must serialize
+ * archive writers and fsync their intent before invoking this operation. A sync
+ * failure may follow a successful rename; the journal can reconcile that case
+ * using the recorded device and inode.
+ *
+ * **Example** (Build a recoverable fence)
+ *
+ * ```ts
+ * import { DirectoryIdentity, renameBoundEntry } from "@beep/repo-cli/test/RepoRun"
+ * import * as Effect from "effect/Effect"
+ * const move = Effect.scoped(renameBoundEntry("/repo/.beep/old", "/repo/.beep/archive/0",
+ *   DirectoryIdentity.make({ dev: 1, ino: 42 })))
+ * console.log(Effect.isEffect(move)) // true
+ * ```
+ *
+ * @param source - Assessed source entry.
+ * @param destination - Absent archive entry under a serialized run directory.
+ * @param expected - Device and inode captured during reassessment.
+ * @returns The bound move outcome; failures leave the intent available for recovery.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const renameBoundEntry = Effect.fnUntraced(function* (
+  source: string,
+  destination: string,
+  expected: DirectoryIdentity
+): Effect.fn.Return<BoundMoveOutcome, never, Path.Path | Scope.Scope> {
+  const path = yield* Path.Path;
+  const fs = nodeFs();
+  const sourceParent = yield* openDirectoryHandle(path.dirname(source));
+  const destinationParent = yield* openDirectoryHandle(path.dirname(destination));
+  if (O.isNone(sourceParent) || O.isNone(destinationParent)) return "move-failed";
+  if (!N.Equivalence(sourceParent.value.identity.dev, destinationParent.value.identity.dev)) return "move-failed";
+  const from = heldEntry(sourceParent.value.fd, path.basename(source));
+  const to = heldEntry(destinationParent.value.fd, path.basename(destination));
+  const stats = yield* attempt("stat", from, () => fs.lstatSync(from)).pipe(Effect.option);
+  if (
+    !O.exists(
+      stats,
+      (info) =>
+        !info.isSymbolicLink() &&
+        sameDirectoryIdentity(expected, DirectoryIdentity.make({ dev: info.dev, ino: info.ino }))
+    )
+  )
+    return "identity-changed";
+  const destinationStatus = yield* attempt("stat", to, () => fs.lstatSync(to, { throwIfNoEntry: false })).pipe(
+    Effect.result
+  );
+  if (Result.isFailure(destinationStatus)) return "move-failed";
+  if (O.isSome(O.fromUndefinedOr(destinationStatus.success))) return "destination-occupied";
+  const renamed = yield* attempt("rename", from, () => fs.renameSync(from, to)).pipe(Effect.result);
+  if (Result.isFailure(renamed)) return "move-failed";
+  const synced = yield* attempt("sync", to, () => {
+    fs.fsyncSync(sourceParent.value.fd);
+    fs.fsyncSync(destinationParent.value.fd);
+  }).pipe(Effect.result);
+  return Result.isFailure(synced) ? "moved-unsynced" : "moved";
+});
+
+/**
+ * Sync a directory through an O_NOFOLLOW descriptor and surface durability failures.
+ *
+ * **Example** (Build a mandatory directory sync)
+ *
+ * ```ts
+ * import { syncDirectoryHandle } from "@beep/repo-cli/test/RepoRun"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(Effect.scoped(syncDirectoryHandle("/repo/.beep")))) // true
+ * ```
+ *
+ * @param path - Directory whose metadata must reach durable storage.
+ * @returns A typed failure if the directory cannot be bound or synced.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const syncDirectoryHandle = Effect.fnUntraced(function* (path: string) {
+  const handle = yield* openDirectoryHandle(path);
+  if (O.isNone(handle))
+    return yield* DirectoryHandleError.make({
+      message: "Cannot bind directory for sync",
+      operation: "sync",
+      path,
+      cause: "unavailable",
+    });
+  yield* attempt("sync", path, () => nodeFs().fsyncSync(handle.value.fd));
 });

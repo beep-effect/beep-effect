@@ -104,9 +104,9 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
       yield* runQualityCommand(["github-checks", "security", "--collect-all"]);
 
       expect(spawned).toEqual([
-        "node --test scripts/test-onnxruntime-installer-patch.mjs",
+        "bun x --no-install vitest run --root packages/drivers/face-detection test/OnnxRuntimeInstall.test.ts",
         expect.stringMatching(/^docker run --rm /),
-        "node --test scripts/test-onnxruntime-installer-patch.mjs",
+        "bun x --no-install vitest run --root packages/drivers/face-detection test/OnnxRuntimeInstall.test.ts",
         expect.stringMatching(/^docker run --rm /),
       ]);
     }).pipe(
@@ -126,7 +126,9 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
       const exit = yield* Effect.exit(runQualityCommand(["github-checks", "security"]));
 
       exit.pipe(Exit.isFailure, assertTrue);
-      expect(spawned).toEqual(["node --test scripts/test-onnxruntime-installer-patch.mjs"]);
+      expect(spawned).toEqual([
+        "bun x --no-install vitest run --root packages/drivers/face-detection test/OnnxRuntimeInstall.test.ts",
+      ]);
     }).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recordingSpawner(spawned, failedHandle)),
       Effect.provideServiceEffect(Console.Console, TestConsole.make)
