@@ -524,6 +524,7 @@ export class ObservedSessionWindow extends S.Class<ObservedSessionWindow>($I`Obs
       )
     ),
     sessionsSkippedDisarmed: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
+    sessionsSkippedRole: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
     sessionsBelowActivityFloor: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
     sessionsByAgentKind: S.Record(HookPulseAgentKind, S.Natural).pipe(
       S.withConstructorDefault(Effect.succeed({ "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 }))
@@ -594,6 +595,7 @@ export class HarnessLedgerPruneReport extends S.Class<HarnessLedgerPruneReport>(
       )
     ),
     sessionsSkippedDisarmed: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
+    sessionsSkippedRole: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
     sessionsBelowActivityFloor: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
     sessionsByAgentKind: S.Record(HookPulseAgentKind, S.Natural).pipe(
       S.withConstructorDefault(Effect.succeed({ "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 }))

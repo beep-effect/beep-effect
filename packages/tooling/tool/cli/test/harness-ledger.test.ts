@@ -819,7 +819,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
         HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 30 })
       );
       expect(report.sessionsObserved).toBe(1);
-      expect(report.sessionsBelowActivityFloor).toBe(1);
+      expect(report.sessionsBelowActivityFloor).toBe(0);
+      expect(report.sessionsSkippedRole).toBe(1);
       expect(report.windowFull).toBe(false);
     }).pipe(Effect.scoped)
   );

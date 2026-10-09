@@ -147,6 +147,7 @@ type ShardScan = {
   shardsRead: number;
   readonly disarmWindows: ReadonlyArray<HookPulseDisarmWindow>;
   readonly openDisarm: boolean;
+  readonly provenDisarmed: boolean;
   readonly refusalsByAgentKind: ObservedSessionWindow["refusalsByAgentKind"];
 };
 
@@ -259,12 +260,27 @@ const windowReport = (
       HashSet.empty<string>(),
       (acc, other) => HashSet.union(acc, other.stamps)
     );
-  const parentSummary = (tally: SessionTally) =>
-    A.reduce(
-      A.filter(ranked, (other) => other.parent === tally.parent),
-      { ...tally, stamps: parentStamps(tally) },
-      (acc, other) => ({ ...acc, minTs: Math.min(acc.minTs, other.minTs), maxTs: Math.max(acc.maxTs, other.maxTs) })
+  const parentSummary = (tally: SessionTally) => {
+    const group = A.filter(ranked, (other) => other.parent === tally.parent);
+    return A.reduce(
+      group,
+      {
+        ...tally,
+        stamps: parentStamps(tally),
+        primary: A.some(group, (other) => other.primary && !other.child),
+        child: A.every(group, (other) => other.child),
+        userTurns: 0,
+        toolEvents: 0,
+      },
+      (acc, other) => ({
+        ...acc,
+        minTs: Math.min(acc.minTs, other.minTs),
+        maxTs: Math.max(acc.maxTs, other.maxTs),
+        userTurns: acc.userTurns + (other.child ? 0 : other.userTurns),
+        toolEvents: acc.toolEvents + (other.child ? 0 : other.toolEvents),
+      })
     );
+  };
   const parentRegime = (tally: SessionTally) => regimeOf(parentSummary(tally), harnessHash);
   const isChild = (tally: SessionTally) =>
     A.some(
@@ -285,13 +301,17 @@ const windowReport = (
       !isChild(tally)
     );
   };
-  const qualifying = A.filter(
-    ranked,
-    (tally) =>
-      parentRegime(tally) === "in-regime" &&
-      !A.some(ranked, (other) => other.parent === tally.parent && other.unknownStart) &&
-      active(tally) &&
-      !overlapsDisarm(parentSummary(tally))
+  const qualifying = pipe(
+    A.filter(
+      ranked,
+      (tally) =>
+        parentRegime(tally) === "in-regime" &&
+        !A.some(ranked, (other) => other.parent === tally.parent && other.unknownStart) &&
+        active(tally) &&
+        !overlapsDisarm(parentSummary(tally))
+    ),
+    A.map(parentSummary),
+    A.sort(byNewestFirst)
   );
   const countFor = (kind: HookPulseAgentKind) =>
     Math.min(window, A.length(A.filter(qualifying, (tally) => tally.agentKind === kind)));
@@ -307,7 +327,7 @@ const windowReport = (
   const rootsForTouches = shared
     ? A.flatten(
         R.values(
-          R.map(counts, () =>
+          R.map(counts, (_count, kind) =>
             A.take(
               A.filter(qualifying, (tally) => tally.agentKind === kind),
               window
@@ -333,9 +353,17 @@ const windowReport = (
     sessionsByAgentKind: counts,
     sessionsSkippedMixedFingerprint: A.length(A.filter(selectedGrouped, (tally) => HashSet.size(tally.stamps) > 1)),
     refusalsByAgentKind: scan.refusalsByAgentKind,
-    clientCoverage: R.map(counts, () => (scan.openDisarm ? O.some(HookPulseClientCoverage.Enum.disabled) : O.none())),
+    clientCoverage: R.map(counts, () =>
+      scan.provenDisarmed ? O.some(HookPulseClientCoverage.Enum.disabled) : O.none()
+    ),
     sessionsSkippedDisarmed: A.length(A.filter(selectedGrouped, overlapsDisarm)),
-    sessionsBelowActivityFloor: A.length(A.filter(selectedRanked, (tally) => !active(tally))),
+    sessionsBelowActivityFloor: A.length(
+      A.filter(
+        selectedGrouped,
+        (tally) => tally.primary && !tally.child && (tally.userTurns < 1 || tally.toolEvents < 1)
+      )
+    ),
+    sessionsSkippedRole: A.length(A.filter(selectedGrouped, (tally) => !tally.primary || tally.child)),
     sessionsSkippedOutOfRegime: countSkipped(selectedGrouped, oldest, harnessHash, SessionRegime.Enum["out-of-regime"]),
     sessionsSkippedUnstamped: countSkipped(selectedGrouped, oldest, harnessHash, SessionRegime.Enum.unstamped),
     windowEnd: pipe(
@@ -398,9 +426,9 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
     Config.withDefault(path.join(root, "hook-pulse.disarmed")),
     Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve disarm sentinel."))
   );
-  const sentinelPresent = yield* fs.exists(sentinel).pipe(Effect.orElseSucceed(() => true));
+  const sentinelPresent = yield* fs.exists(sentinel).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<boolean>));
   const openDisarm =
-    sentinelPresent ||
+    O.getOrElse(sentinelPresent, () => true) ||
     A.some(A.filter(Str.split(windowsText, "\n"), Str.isNonEmpty), (line) =>
       Result.isFailure(HookPulseDisarmWindow.decodeJsonResult(line))
     );
@@ -430,6 +458,7 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
     shardsRead: 0,
     disarmWindows: windows,
     openDisarm,
+    provenDisarmed: O.getOrElse(sentinelPresent, () => false),
     refusalsByAgentKind,
   };
   yield* Effect.forEach(names, (name) => readShard(scan, name), { discard: true });
