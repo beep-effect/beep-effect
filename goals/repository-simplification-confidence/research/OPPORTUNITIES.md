@@ -408,3 +408,14 @@
 - Prevention: test fixtures should observe optional evidence dependencies explicitly;
   local temporary directories can inherit a repository marker from an ancestor and
   hide a CI-only root-discovery regression.
+
+## 2026-10-09 — H2 restarts its unstarted package admission
+
+- Task: complete the required full package handoff gate.
+- Evidence: the lane-owned package wrapper stayed queued for over an hour, with
+  no package log or command start; other lock holders changed during the wait.
+- Recovery: verify the queued wrapper's lane and process, stop only that unstarted
+  unit, and resubmit the same command through the canonical wrapper. H2 retains
+  its two-admission limit and changes no other unit, slot count or wrapper.
+- Prevention: ordered admission with observable queue position; restarting is a
+  retry, not a proven remedy for lock-poll scheduling.
