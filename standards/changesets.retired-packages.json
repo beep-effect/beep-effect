@@ -2,27 +2,23 @@
   "packages": [
     {
       "name": "@beep/messages",
-      "rationale": "Retired workspace package with historical pending changesets retained until release cleanup drains them."
-    },
-    {
-      "name": "@beep/ontology",
-      "rationale": "Retired workspace package with historical pending changesets retained until release cleanup drains them."
+      "rationale": "Retired workspace name reserved against accidental reuse; pending notes were retired by the private release-note reset."
     },
     {
       "name": "@beep/sandbox",
-      "rationale": "Retired workspace package with historical pending changesets retained until release cleanup drains them."
+      "rationale": "Retired workspace name reserved against accidental reuse; pending notes were retired by the private release-note reset."
     },
     {
       "name": "@beep/courtlistener",
-      "rationale": "VERSION-only driver deleted by goals/honest-repo-signal. Historical crispening/docgen changesets retained until release cleanup drains them. Recreate only with a real surface; see goals/honest-repo-signal/research/FOLLOW-UPS.md."
+      "rationale": "VERSION-only driver deleted by goals/honest-repo-signal. Name-reuse guard: recreate only with a real surface; see goals/honest-repo-signal/research/FOLLOW-UPS.md. Pending notes were retired by the private release-note reset."
     },
     {
       "name": "@beep/dol",
-      "rationale": "VERSION-only driver deleted by goals/honest-repo-signal. Historical crispening/docgen changesets retained until release cleanup drains them. Recreate only with a real surface; see goals/honest-repo-signal/research/FOLLOW-UPS.md."
+      "rationale": "VERSION-only driver deleted by goals/honest-repo-signal. Name-reuse guard: recreate only with a real surface; see goals/honest-repo-signal/research/FOLLOW-UPS.md. Pending notes were retired by the private release-note reset."
     },
     {
       "name": "@beep/federal-register",
-      "rationale": "VERSION-only driver deleted by goals/honest-repo-signal. Historical crispening/docgen changesets retained until release cleanup drains them. Recreate only with a real surface; see goals/honest-repo-signal/research/FOLLOW-UPS.md."
+      "rationale": "VERSION-only driver deleted by goals/honest-repo-signal. Name-reuse guard: recreate only with a real surface; see goals/honest-repo-signal/research/FOLLOW-UPS.md. Pending notes were retired by the private release-note reset."
     }
   ]
 }

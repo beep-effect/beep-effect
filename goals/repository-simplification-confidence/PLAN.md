@@ -150,7 +150,7 @@ constraints; the locked dispositions are unchanged.
 | Fleet hand-off | The fleet handoff is snapshotted as `HANDOFF.prev-<UTC>.md` beside `~/.cache/beep/orchestrator/HANDOFF.md` on every take-over (latest: `HANDOFF.prev-20261009T133842Z.md`). Program records never overwrite the fleet handoff: the program writes fleet `HANDOFF.md` only through the orchestrate skill (snapshot first) and never puts program state in it; program handoffs stay under `history/handoffs/`. |
 | Repository changes | Each change lands in a reviewable PR; reverse with `git revert` of the PR. |
 | Local residue (workstream A) | Archive before deletion, recorded in `history/receipts/stage-3-a-local-residue.md` (source, bytes, sha256, destination); restore by moving each archive back to its source path. Residue in a clone where another session is live (at take-over: `beep-effect` for the effected-port session, `beep-effect2` for the build-pipeline session and its #1558 proof) is archived and removed only after the orchestrator notifies that session and confirms no running job or lane uses the path; otherwise the row is recorded as deferred with its owner in `history/receipts/stage-3-a-local-residue.md`. |
-| Release notes | `git checkout <retirement-PR merge commit>^ -- .changeset` restores every note, with that commit recorded in `history/receipts/stage-2-policy.md`. |
+| Release notes | `git checkout <retirement-PR merge commit>^ -- .changeset` restores every note and historical config/README, with that commit recorded in `history/receipts/stage-2-policy.md`; pair it with a revert of the reset policy PR, including the private-note graph guard. |
 | Knip | `git revert <Knip removal PR merge commit>`, or `git show e62411d63f:standards/knip.regression-baseline.jsonc` and `git show e62411d63f:knip.jsonc` to restore the files; the transferred list keeps every finding. |
 | Global configuration | Each owned-field apply writes a timestamped copy of every touched home file to `$HOME/.config-backups/` and records its name in the lane handoff; rollback = `cp` the backup over the file, then rerun the transform's drift check (`bun run beep models check` for model fields). |
 | `.beep` storage | Dry-run report first, written to `history/receipts/stage-5-storage-cleanup.md` (bytes, owner, state, recovery destination, retention reason per row); apply moves to the recorded recovery destination and is recoverable after interruption. Restore: move each row's recovery destination back to its source path as listed in that file. |
@@ -218,7 +218,7 @@ produces them.
 | Script ports | `rsc-c-scripts` | `history/receipts/stage-5-acceptance.md#script-ports` |
 | Sensitive scripts | `rsc-c-scripts` | `history/receipts/stage-5-acceptance.md#sensitive-scripts` |
 | Retained patches | `rsc-a-retire` | `history/receipts/stage-5-acceptance.md#retained-patches` |
-| Release policy | `rsc-d-release` | `history/receipts/stage-2-policy.md` (including `#external-contracts`) |
+| Release policy | `rsc-d-release` | `history/receipts/stage-2-policy.md` (`#external-contracts`, baseline, `#desktop-release` pending E-09); `history/handoffs/rsc-d-release-2026-10-09.md` (gates) |
 | GitHub workflows and hosted configuration (brief 2.E) | `rsc-e-github` | `history/receipts/stage-4-github-audit.md` |
 | Completion receipts | `rsc-h2-completion` | `history/receipts/stage-4-completion-receipts.md` |
 | Catalog and holds (H1) | `rsc-h1-catalog` | `history/receipts/stage-4-h1-catalog.md` |
@@ -309,3 +309,14 @@ been pushed. E/orchestrator retain the coordinated S3 job/ruleset window.
 See `history/handoffs/rsc-a-retire-2026-10-09.md` and
 `history/receipts/knip-cache-policy-review.md`. Waves 2/3 and post-merge residue
 remain open.
+
+### D lane progress (2026-10-09)
+
+D census committed before retirement at `da1a85157d`; one-commit reset at
+`ec2080bb68`, with subsequent review repairs on this branch. Run 2 resumed
+after the workstation crash, merged main and the authorized inherited
+knowledge repair, and completed admitted package/parity proof. PR #1566 is ready; hosted evidence
+and the S11 review/merge gate remain with the orchestrator. Independent
+source/scope review at `3897314253` returned zero actionable findings.
+See `history/handoffs/rsc-d-release-2026-10-09.md` for current terminal results.
+GitHub Packages lacks read:packages; desktop verification remains E-owned.

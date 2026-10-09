@@ -2465,7 +2465,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         category: "changeset-policy",
         subCategory: "changeset-status",
       });
-      expect(issues[0]?.remediation).toContain("each changed package with `patch`");
+      expect(issues[0]?.remediation).toContain("each changed publish-enabled, versioned product package with `patch`");
+      expect(issues[0]?.remediation).toContain("private workspaces");
     });
 
     it("extracts the typos sub-lane hint from hook-style failures", () => {

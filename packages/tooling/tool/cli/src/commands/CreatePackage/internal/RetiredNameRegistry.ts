@@ -3,7 +3,8 @@
  * `create-package --reuse-retired-name`.
  *
  * The retired registry (`standards/changesets.retired-packages.json`) is the
- * changeset-history record of deleted workspace names. Create-package refuses
+ * name-reuse guard for deleted workspace names, independent of pending notes.
+ * Create-package refuses
  * to mint a retired name; when the operator sanctions reuse with
  * `--reuse-retired-name`, this module removes the entry through a
  * schema-decoded rewrite so name provenance is restored with stable

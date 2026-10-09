@@ -53,6 +53,7 @@ class ChangesetGraphWorkspacesObject extends S.Class<ChangesetGraphWorkspacesObj
 class ChangesetGraphPackageJson extends S.Class<ChangesetGraphPackageJson>($I`ChangesetGraphPackageJson`)(
   {
     name: S.optionalKey(S.String),
+    private: S.optionalKey(S.Boolean),
     workspaces: S.optionalKey(S.Union([S.Array(S.String), ChangesetGraphWorkspacesObject])),
   },
   $I.annote("ChangesetGraphPackageJson", {
@@ -306,16 +307,16 @@ export const collectWorkspacePackageJsonFiles = Effect.fn("ChangesetGraph.collec
   );
 });
 
-const collectWorkspacePackageNames = Effect.fn("ChangesetGraph.collectWorkspacePackageNames")(function* (
+const collectWorkspacePackages = Effect.fn("ChangesetGraph.collectWorkspacePackages")(function* (
   repoRoot: string
 ): Effect.fn.Return<
-  ReadonlyArray<string>,
+  ReadonlyArray<ChangesetGraphPackageJson>,
   ChangesetGraphError,
   FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   const packageJsonFiles = yield* collectWorkspacePackageJsonFiles(repoRoot);
-  const names = yield* Effect.forEach(
+  const documents = yield* Effect.forEach(
     packageJsonFiles,
     Effect.fn(function* (file) {
       const document = yield* readPackageJson(path.join(repoRoot, file));
@@ -325,12 +326,12 @@ const collectWorkspacePackageNames = Effect.fn("ChangesetGraph.collectWorkspaceP
           file,
         });
       }
-      return document.name;
+      return document;
     }),
     { concurrency: 8 }
   );
 
-  return pipe(names, A.dedupe, A.sort(Order.String));
+  return documents;
 });
 
 const collectChangesetFiles = Effect.fn("ChangesetGraph.collectChangesetFiles")(function* (
@@ -589,10 +590,35 @@ export const runChangesetGraphCheck = Effect.fn("ChangesetGraph.runChangesetGrap
   ChangesetGraphError,
   FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const workspacePackageNames = yield* collectWorkspacePackageNames(repoRoot);
+  const workspaces = yield* collectWorkspacePackages(repoRoot);
+  const workspacePackageNames = pipe(
+    A.map(workspaces, (document) => O.fromUndefinedOr(document.name)),
+    A.getSomes,
+    A.dedupe,
+    A.sort(Order.String)
+  );
+  const privatePackageNames = pipe(
+    A.map(
+      A.filter(workspaces, (document) => document.private === true),
+      (document) => O.fromUndefinedOr(document.name)
+    ),
+    A.getSomes,
+    A.dedupe,
+    A.sort(Order.String)
+  );
   const allowedMissingPackageNames = yield* readRetiredChangesetPackageNames(repoRoot);
   const changesetFiles = yield* collectChangesetFiles(repoRoot);
   const references = yield* collectChangesetPackageReferences(repoRoot, changesetFiles);
+  const privateReferences = A.filter(references, (reference) => A.contains(privatePackageNames, reference.packageName));
+  if (!A.isReadonlyArrayEmpty(privateReferences)) {
+    yield* Console.error("[changeset-graph] private workspace changesets are forbidden:");
+    for (const reference of privateReferences) {
+      yield* Console.error(`- ${reference.file} :: ${reference.packageName}`);
+    }
+    return yield* ChangesetGraphError.make({
+      message: "Changeset package graph validation failed: private workspaces must not accumulate release notes.",
+    });
+  }
   const summary = makeSummaryWithAllowedMissing(
     workspacePackageNames,
     allowedMissingPackageNames,

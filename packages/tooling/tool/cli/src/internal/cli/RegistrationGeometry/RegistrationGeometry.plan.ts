@@ -161,7 +161,7 @@ export const surfacesForTarget = (target: RegistrationTarget): ReadonlyArray<Reg
       changesetGlob: Glob.make(".changeset/*.md"),
       retiredRegistry: PosixPath.make("standards/changesets.retired-packages.json"),
       packageName: target.packageName,
-      deletionNotePolicy: isLab ? "labs-exempt" : "emit-empty-note",
+      deletionNotePolicy: isLab ? "labs-exempt" : target.private ? "private-exempt" : "emit-empty-note",
     }),
     RuntimeArtifactSurface.make({
       id: "runtime-artifacts",
@@ -216,6 +216,8 @@ const forwardOperation = RegistrationSurface.match({
       operation: "write",
       detail: DeletionNotePolicy.$match(surface.deletionNotePolicy, {
         "emit-empty-note": () => `preserve pending policy for ${surface.packageName}`,
+        "private-exempt": () =>
+          `preserve pending policy for ${surface.packageName}; private packages are changeset-exempt`,
         "labs-exempt": () => `preserve pending policy for ${surface.packageName}; labs are changeset-exempt`,
       }),
     }),
@@ -286,6 +288,8 @@ const inverseOperation = RegistrationSurface.match({
       detail: DeletionNotePolicy.$match(surface.deletionNotePolicy, {
         "emit-empty-note": () =>
           `delete dedicated pending files, strip multi-package key ${surface.packageName}, and emit an empty deletion changeset`,
+        "private-exempt": () =>
+          `delete dedicated pending files and strip multi-package key ${surface.packageName}; private deletion emits no changeset`,
         "labs-exempt": () =>
           `delete dedicated pending files and strip multi-package key ${surface.packageName}; labs deletion emits no changeset (ceremony-exempt)`,
       }),
