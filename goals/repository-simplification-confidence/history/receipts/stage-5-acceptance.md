@@ -1,10 +1,10 @@
 # Workstream A acceptance evidence
 
-This is a partial lane receipt, recorded 2026-10-09 after integrating main `36027982f2`, with wave-1 implementation committed locally and later-wave groundwork still outside that commit. It does not claim program completion or hosted acceptance.
+This is a partial lane receipt, recorded 2026-10-09 with wave 1 published as draft PR #1584 at `b403cd2b9b` and D/E integration merged locally at `2f4979d2e7`; later-wave groundwork remains outside publication. It does not claim program completion or hosted acceptance.
 
 ## Removals
 
-Wave 1: 40 Knip rows fixed and one Govinfo drift oracle documented at `8f29e3528e`; the final patched Knip 6.40.0 cross-check reports only that oracle. The local Knip implementation, dependency/catalog/patch, config, scripts, Turbo task, baseline and CLI wiring are removed. Earlier owner regenerations pass. Main added repo-cli source/tests while the retirement audit ran; that audit was cancelled as unproven. Integrated-tree owner regeneration and final package/parity/coverage remain required. Resume ruling 4 clears S5 for the generated bin-map ordering hunk. Run 5 merges current main, regenerates the JSDoc inventory, schema catalog and policy fingerprint successfully, and passes the ten non-CLI package gates. The final CLI/parity/coverage sequence is active; no pending result is treated as a pass. Separate GPT-6.1-Sol medium source/scope review returns zero actionable findings, including the corrected gate-order snapshot diagnostic. E owns the workflow job removal; the orchestrator owns the required ruleset context. Neither is claimed removed here. Other retirement waves remain open.
+Wave 1: 40 Knip rows fixed and one Govinfo drift oracle documented at `8f29e3528e`; the final patched Knip 6.40.0 cross-check reports only that oracle. The local implementation, dependency/catalog/patch, config, scripts, Turbo task, baseline and CLI wiring are removed. Source-complete draft PR #1584 passes cheap gates and the clean-head install preflight. D #1566 and E #1568 are integrated locally; independent reviews find zero source collisions. E deliberately retains the Knip workflow for the separate S3 window, and the orchestrator owns required-context removal. Post-E owner/package/parity/coverage proof is active; queued or cancelled rows are not passes. Other retirement waves remain open.
 
 ## Retained tools
 
@@ -27,7 +27,7 @@ Verification: the same hashes remain after the ignore edits; `git ls-files harne
 
 ## Package gates
 
-All eleven transfer packages passed default `beep-heavy bun run beep quality package-verify`: box-provisioning, box, freshbooks, occt, pdf-tools, wink, colors, data, repo-ai-metrics, codegen-kit and repo-cli. Repo AI metrics passed after the introduced import-order repair. Knip retirement changes repo-cli again. Its first default audit exposed five introduced expectations, now repaired with a 182-test focused pass; the later full audit was cancelled after main changed source. No final retirement-head pass is claimed. FreshBooks generated references pass quick lint/check after its prior default pass.
+All eleven touched packages passed full run-5 package verification before E's main merge: box-provisioning, box, freshbooks, occt, pdf-tools, wink, colors, data, repo-ai-metrics, codegen-kit and repo-cli. The refreshed post-D CLI audit passed in 785 seconds with docgen in 28 seconds; test TSGo and full docgen also passed. E changes CLI source, so those CLI/parity passes are now historical. Ten unchanged package gates remain valid. Post-E CLI/package/parity/coverage results remain pending until terminal command output exists.
 
 ## Scope
 

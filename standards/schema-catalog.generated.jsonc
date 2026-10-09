@@ -40230,7 +40230,7 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "CiLaneDescriptor",
-      "description": "Machine-readable descriptor for one check.yml CI lane."
+      "description": "Machine-readable descriptor for a hosted CI lane."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",

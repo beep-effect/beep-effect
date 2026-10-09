@@ -523,3 +523,50 @@ gates remain valid on unchanged sources; the pre-D CLI/parity/coverage pass
 is recorded above and is not substituted for the refreshed CLI tree.
 The draft remains owner-pushing until final scoped coverage and proof
 receipts are included. No later-wave groundwork enters this publication.
+
+### Run 5 draft published
+
+Yeet cheap gates and clean-head install preflight pass. Draft PR #1584 is
+published at `b403cd2b9b2cab9a58b1dbaa80aa9841e37fef32`, with
+`ready-for-heavy`. Later-wave residue is restored. Readiness monitor job
+`47b8488e-08c4-48e2-a2d6-3cf9913fa69d` is submitted. GraphQL is rate
+limited; the footer REST readback succeeds, but review-thread/window state
+is unknown. Integrated CLI package/parity/coverage remains running.
+
+### Run 5 hosted dependency red
+
+Read failed Knip job `114016663062` immediately. Its obsolete workflow invokes
+`beep ci lane knip`, which the retired CLI no longer accepts. This is the
+known S3 dependency: E removes the workflow/descriptor, and the orchestrator
+removes the required context at A's merge gate. Inbox row
+`Knip-2a793c3c6cbb` is acknowledged as lane-wontfix with E/orchestrator ownership, not fixed.
+The attempted observed acknowledgement was rejected because it applies only
+to proof-finished/readiness rows; the accepted receipt preserves the S3 hold. Vercel
+`Vercel_todox-9e7ba13646fb` links to `build-rate-limit` and is acknowledged
+environment-only. Hosted acceptance and readiness remain unproven.
+
+### Run 5 E integration refresh
+
+E #1568 lands at `df7d88aad7`; integrated by merge `2f4979d2e7`.
+Two append-only packet conflicts retain both sides; source auto-merges.
+Recovered later-wave files from the retained pre-E stash. The base-conflict
+row `base-conflict-14be9381b53c` is acknowledged with that merge SHA.
+The superseded parity coordinator and its admitted JSDoc child are stopped
+before coverage. Completed CLI package/test-tsgo/full-docgen passes remain
+historical proof; JSDoc and subsequent pending rows are not passes. E changes
+CLI source, so refreshed CLI package/parity and all-eleven scoped coverage
+run on the merged tree. Unchanged ten package gates are retained. E #1568 intentionally retains the Knip workflow for the separate S3 window;
+A still awaits E-owned job removal and orchestrator-owned required context.
+The merged governance change is not the Knip retirement window.
+
+### Run 5 hosted knowledge retirement repair
+
+Read completed Heavy / Lint Policy job `114017372140` immediately. Its sole
+failed step is knowledge semantic delta: five introduced missing-path
+references to the retired Knip baseline, in three standards-remediation
+records and this packet's recovery decision. Rebound those historical spans
+to `e62411d63f:standards/knip.regression-baseline.jsonc`, whose blob is
+verified by `git ls-tree`. Historical counts and reports remain intact.
+Unchanged legacy findings are not copied into this repair. No baseline
+refresh or suppression is used. Verification remains pending until the
+paired-archive semantic check reads the committed repair.

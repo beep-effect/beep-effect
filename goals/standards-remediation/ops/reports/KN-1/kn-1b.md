@@ -42,7 +42,7 @@ as kn-1a's `readlink`/`op`/`beep-cli`/`portless` entries.
 - `packages/foundation/capability/{api-transport,langextract,mcp-kit}/package.json`
 - `packages/foundation/modeling/html/package.json`
 
-No commits made. `standards/knip.regression-baseline.jsonc` was not touched.
+No commits made. `e62411d63f:standards/knip.regression-baseline.jsonc` was not touched.
 
 ## Verification
 

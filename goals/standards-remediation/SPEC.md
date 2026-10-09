@@ -22,7 +22,7 @@ items**, and tighten the gates so zero stays zero. Per item exactly one of:
 | `standards/dual-arity.inventory.jsonc` | 107 candidate + 13 exception | `entries: []`, `ENFORCED_ROOTS` → `["apps","packages","infra"]` |
 | `standards/schema-first.inventory.jsonc` | 326 exception | `entries: []`, zero-entry regression fixture |
 | `standards/jsdoc-documentation.inventory.jsonc` | 78 pkgs needs-remediation; 2,012 missing @example, 91 @category, 91 @since, 71 unsafe, 127 schemaAnnotation, 24 exampleImport, 2 forbidden | all packages `clean`/`no-public-src-surface`; baseline written to zeros; ratchet totals extended |
-| `standards/knip.regression-baseline.jsonc` | 73 findings | empty findings baseline |
+| `e62411d63f:standards/knip.regression-baseline.jsonc` | 73 findings | empty findings baseline |
 | `standards/effect-laws.allowlist.jsonc` | 17 entries | empty (verified-irreplaceable residue requires explicit user approval with driver evidence) |
 
 ## Locked decisions

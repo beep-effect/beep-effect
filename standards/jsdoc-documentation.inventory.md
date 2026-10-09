@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-09T20:21:13.563Z
+Generated: 2026-10-09T21:20:53.983Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 64 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 79 |
-| publicModules | 2788 |
-| publicExports | 19229 |
+| publicModules | 2789 |
+| publicExports | 19237 |
 | openModules | 360 |
 | openExports | 1317 |
 | missingExportExamples | 8 |
@@ -179,7 +179,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 121 | `@beep/docket-intake` | `apps/docket-intake` | clean | 10 | 27 | 0 | 0 |
 | 122 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | needs-remediation | 8 | 40 | 6 | 0 |
 | 123 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
-| 124 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 353 | 2973 | 47 | 23 |
+| 124 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 354 | 2981 | 47 | 23 |
 | 125 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 87 | 0 | 0 |
 | 126 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 123 | 8 | 1 |
 | 127 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 9 | 32 | 1 | 0 |
@@ -2302,8 +2302,8 @@ Export findings:
 - `src/commands/Cache/Cache.command.ts:269` `runCacheWarm` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.command.ts:466` `buildCacheDashboard` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.service.ts:110` `encodeCachePolicyBaselineText` (const) - 1 example import violation(s)
-- `src/commands/Ci/CiLane.ts:378` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
-- `src/commands/Ci/CiLane.ts:1504` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:386` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:1520` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/Corpus/Corpus.errors.ts:303` `CorpusArchiveMoveDigestMismatchError` (class) - 1 example import violation(s)
 - `src/commands/Corpus/Corpus.service.ts:915` `indexMailExportTrees` (const) - missing @example
 - `src/commands/Corpus/Corpus.service.ts:928` `repairAttachmentExtensions` (const) - missing @example

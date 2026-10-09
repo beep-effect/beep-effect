@@ -478,3 +478,57 @@ Human review on PR #1568 identified that Repo Sanity's push-only hosted checks u
 ### E: final review-state read exhausted GitHub GraphQL quota
 
 While verifying the report push for #1568, both `gh pr view` and the complete review-thread query failed with `API rate limit already exceeded`. REST still verified the published head, ready state and existing comment history, but cannot establish thread-resolution state. Preserve unknown status and require a fresh complete GraphQL read at the orchestrator gate. A quota-aware final-read reservation would prevent publication verification from depending on an exhausted shared account budget.
+
+### A run 5: GitHub GraphQL rate limit at draft publication
+
+- Action: Yeet draft publication for PR #1584 at `b403cd2b9b`.
+- Evidence: body-history read returned `graphql_rate_limit`; Yeet verified
+  the provenance footer through REST readback and completed publication.
+- Effect: review-thread/window state remains unknown until a successful read;
+  no merge-readiness claim follows from the structural PR state.
+- Prevention: share API budget across fleet monitors and retain REST fallbacks
+  where they preserve the exact required evidence.
+
+### A run 5: integrated proof superseded by E landing
+
+- Action: finish wave-1 parity after draft publication.
+- Evidence: E #1568 adds CLI source while A's parity runs; GitHub reports
+  `base-conflict-14be9381b53c`.
+- Recovery: cancel superseded pending proof, retain terminal evidence, merge
+  E, refresh affected owners and CLI/package/parity/coverage once.
+- Prevention: serialize final shared-file integration before long package
+  proof; do not count an earlier tree's proof as a later integrated pass.
+
+### A run 5: owner regeneration delayed by fleet admission
+
+- Action: refresh JSDoc inventory after integrating E #1568.
+- Evidence: the admitted owner request waits over 15 minutes while fleet
+  package proofs hold all of its configured slots. No duplicate writer or
+  dead local coordinator is present.
+- Effect: a completed source merge cannot progress to its fresh package and
+  parity proof; completed prior-head proof remains explicitly historical.
+- Prevention: classify owner regeneration separately from long full-package
+  proofs while preserving admission and the workstation memory budget.
+
+The live overrides file now raises the slot floor to five, while A's queued
+JSDoc request captured four. Stopped only that not-started admitted request
+and resubmitted through the unchanged wrapper to inherit the operator's
+approved floor. Its cancellation row is not a source failure or a pass.
+Completed owners are skipped on resumption. No capacity setting was edited.
+
+The stopped queued systemd child returned zero to `systemd-run --wait`,
+so the naive coordinator wrote a zero row without command execution.
+Preserved the raw results, marked that row `cancelled-before-start`, then
+stopped the coordinator and its not-started schema child. Resume starts at
+JSDoc. A terminal wrapper status alone is not command-success proof.
+
+### A run 5: retirement breaks historical bare path references
+
+- Action: publish Knip retirement; read Heavy / Lint Policy job `114017372140`.
+- Evidence: knowledge semantic delta introduces five broken references to
+  the deleted baseline in historical KN-1 records and recovery documentation.
+- Repair: bind each affected span to the verified pre-retirement revision;
+  preserve the record's claims and avoid suppression/baseline refresh.
+- Prevention: audit historical documentation for revision-bound references
+  during tracked artifact retirement, including the semantic-delta lane in
+  focused parity rather than refs alone.

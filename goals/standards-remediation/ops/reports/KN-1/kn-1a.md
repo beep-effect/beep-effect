@@ -1,6 +1,6 @@
 # KN-1a — conflict-free knip burn-down
 
-Lane scope: the conflict-free portion of the knip baseline (`standards/knip.regression-baseline.jsonc`,
+Lane scope: the conflict-free portion of the knip baseline (`e62411d63f:standards/knip.regression-baseline.jsonc`,
 73 findings), package by package, sequentially. Skipped all conflicted scopes named in the task
 (`apps/professional-desktop`, `drivers/{box,ecfr,govinfo,wink}`,
 `capability/{api-transport,langextract,mcp-kit}`, `modeling/html`) — zero edits in
@@ -101,7 +101,7 @@ comments in the file itself):
    `@lexical/list`, `@lexical/rich-text`, `lexical`, `emojibase-data`, `oxlint`.
 5. `ignoreBinaries`: added `readlink`.
 
-`standards/knip.regression-baseline.jsonc` was **not** touched (driver-owned, per instructions).
+`e62411d63f:standards/knip.regression-baseline.jsonc` was **not** touched (driver-owned, per instructions).
 
 ## Files touched (26)
 
