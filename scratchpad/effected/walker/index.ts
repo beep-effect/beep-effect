@@ -1,6 +1,8 @@
 /**
  * Path traversal as Effect primitives.
  *
+ * **Details**
+ *
  * Upward: ascend a directory chain toward the filesystem root and return the
  * first candidate satisfying a predicate. Each probe absorbs its own failure,
  * so one unreadable ancestor never hides a valid match above it.
