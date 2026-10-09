@@ -148,3 +148,28 @@ review correction is one addressed wave, with no package/dependency change.
 The tracked handoff uses a report-base SHA because publication commits the
 handoff itself. The orchestrator must read #1562's current head before its
 gate; a report-base SHA is never an exact-head hosted proof.
+
+## Run 3 (after crash)
+
+lane: rsc-h1-catalog
+head: c299cea79951f1db331632400fb5ff2459077260 (report base; final publication head is PR #1562 headRefOid)
+PR: #1562 (wave 1 OSV: #1562; tsgo ratchet: SPEC Decision Log row "H1 tsgo ratchet deferral")
+package-verify: not applicable (no workspace package edited)
+hosted-parity: test-tsgo: pass (retained terminal result); docgen local: pass (retained noop); jsdoc-ratchet: pass; knowledge refs: fail (inherited, orchestrator repair #1565); fallow audit+health: pass; coverage read: pass (no measured source touched); Security (OSV): pass locally at 18fdc60e50 and hosted at f55e40f7a0; final exact-head hosted result pending
+handoff: goals/repository-simplification-confidence/history/handoffs/rsc-h1-catalog-2026-10-09.md
+open items: OSV holds renewed through 2026-10-30 with fixed-release/dependency-removal exits; #1565 shared repair pending; A Knip merge precedes catalog/register; compatibility waves and explicit tsgo deferral remain owned by H1; no effected-port notification pending for this wave.
+
+- Read the full brief, standing and H1 rulings, saved terminal gate records,
+  handoff and live git state. All three prior monitor jobs are terminal; no
+  passed gate was rerun. The prior publish died before pushing the review fix.
+- Fetched origin and merged origin/main: already up to date with #1564.
+  #1565 remains OPEN at the publication preflight, so the crash-resume ruling
+  directs leaving that repair to the orchestrator rather than rebasing.
+- Confirmed review comment 4232565113 has reply 4232578076 and thread
+  PRRT_kwDOPbO_N86q3zPQ is resolved. Correction c299cea799 keeps the three
+  unchanged H1 decisions inside the Decision Log table.
+- Publish the review-fix and this recovery report as one addressed wave through
+  beep-heavy with TURBO_CONCURRENCY=4. Read the resulting terminal publish and
+  monitor records before yielding; the final report names the remote head.
+- This remains the OSV-wave handoff, not completion of all H1 work. The worker
+  does not merge or retire; the orchestrator owns the merge gate and sequencing.
