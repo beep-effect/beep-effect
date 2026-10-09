@@ -2590,10 +2590,8 @@ const recoverArchiveEntry = Effect.fnUntraced(function* (
       retentionReason: "fleet observation only; recover from the owning checkout",
     });
   const hasIntent = yield* fs.exists(journalPath);
-  if (!hasIntent && !ResidueReapAction.is["archive-move"](entry.action))
-    return yield* recoverWithoutIntent(entry, realOwner, context);
-  const { resolvedSource, resolvedDestination } = yield* resolveRecoveryAddresses(entry, owner, destination, context);
   if (!hasIntent) return yield* recoverWithoutIntent(entry, realOwner, context);
+  const { resolvedSource, resolvedDestination } = yield* resolveRecoveryAddresses(entry, owner, destination, context);
   const intent = yield* decodeIntent(yield* fs.readFileString(journalPath));
   if (
     !Str.Equivalence(intent.lexicalSource, entry.path) ||

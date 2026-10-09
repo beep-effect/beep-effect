@@ -2236,31 +2236,43 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("retention fences", (it)
     )
   );
 
-  it.effect("retains unjournaled skip rows after their source parent disappears", () =>
-    Effect.acquireUseRelease(
-      makeTempDirectory,
-      (root) =>
-        retentionFixture(root).pipe(
-          Effect.flatMap((fixture) =>
-            Effect.gen(function* () {
-              const fs = yield* FileSystem.FileSystem;
-              const path = yield* Path.Path;
-              yield* fs.remove(path.join(fixture.repoRoot, ".beep", "retention", "checkout-generated.json"));
-              const plan = yield* runResidueReap(fixture);
-              expect(candidateByPath(plan, fixture.target).skipReason).toBe("owner-ruling-required");
-              yield* fs.remove(path.dirname(fixture.target), { recursive: true });
-              const resumed = yield* runResidueReap({
-                ...fixture,
-                resume: O.getOrThrow(O.fromUndefinedOr(plan.runId)),
-              });
-              expect(resumed.warnings).toEqual([]);
-              expect(candidateByPath(resumed, fixture.target).action).toBe("skip");
-            })
-          )
-        ),
-      removeTempDirectory
-    )
-  );
+  for (const eligible of [false, true]) {
+    it.effect(
+      eligible
+        ? "retains unjournaled archive rows after their source parent disappears"
+        : "retains unjournaled skip rows after their source parent disappears",
+      () =>
+        Effect.acquireUseRelease(
+          makeTempDirectory,
+          (root) =>
+            retentionFixture(root).pipe(
+              Effect.flatMap((fixture) =>
+                Effect.gen(function* () {
+                  const fs = yield* FileSystem.FileSystem;
+                  const path = yield* Path.Path;
+                  if (!eligible)
+                    yield* fs.remove(path.join(fixture.repoRoot, ".beep", "retention", "checkout-generated.json"));
+                  const plan = yield* runResidueReap(fixture);
+                  expect(candidateByPath(plan, fixture.target).action).toBe(eligible ? "archive-move" : "skip");
+                  yield* fs.remove(path.dirname(fixture.target), { recursive: true });
+                  const restored = yield* runResidueReap({
+                    ...fixture,
+                    restore: O.getOrThrow(O.fromUndefinedOr(plan.runId)),
+                  });
+                  expect(restored.warnings).toEqual([]);
+                  const resumed = yield* runResidueReap({
+                    ...fixture,
+                    resume: O.getOrThrow(O.fromUndefinedOr(plan.runId)),
+                  });
+                  expect(resumed.warnings).toEqual([]);
+                  expect(candidateByPath(resumed, fixture.target).action).toBe("skip");
+                })
+              )
+            ),
+          removeTempDirectory
+        )
+    );
+  }
 
   it.effect("preserves an archive and names an unavailable source parent until it is recreated", () =>
     Effect.acquireUseRelease(
@@ -2277,7 +2289,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("retention fences", (it)
               const destination = O.getOrThrow(
                 O.fromUndefinedOr(candidateByPath(applied, fixture.target).recoveryDestination)
               );
-              yield* fs.remove(path.dirname(fixture.target));
+              yield* fs.remove(path.dirname(fixture.target), { recursive: true });
               const refused = yield* runResidueReap({ ...fixture, restore: id }).pipe(Effect.flip);
               expect(refused.message).toContain("Source parent");
               expect(refused.message).toContain("is unavailable");
