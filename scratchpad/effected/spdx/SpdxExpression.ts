@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -7,6 +8,8 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
 import type { RawExpression, RawSimpleLicense } from "./internal/parser.ts";
 import { parse as parseRaw } from "./internal/parser.ts";
 import { InvalidSpdxExpressionError, License } from "./License.ts";
+
+const $I = $ScratchpadId.create("effected/spdx/SpdxExpression");
 
 /**
  * The structural shape the AST instances and their encoded POJOs share: every
@@ -53,12 +56,12 @@ function serialize(node: SpdxNode): string {
  *
  * @public
  */
-export class LicenseNode extends S.TaggedClass<LicenseNode>()("License", {
+export class LicenseNode extends S.TaggedClass<LicenseNode>($I`LicenseNode`)("License", {
 	/** The SPDX short identifier, e.g. `"MIT"` or `"Apache-2.0"`. */
-	id: S.String,
+	id: S.String.annotateKey({ description: "The SPDX short identifier, e.g. `\"MIT\"` or `\"Apache-2.0\"`." }),
 	/** Whether the trailing `+` "or later" marker is present. */
-	plus: S.Boolean,
-}) {
+	plus: S.Boolean.annotateKey({ description: "Whether the trailing `+` \"or later\" marker is present." }),
+}, $I.annote("LicenseNode", { description: "A simple-license leaf of an SPDX expression: a license identifier with the trailing `+` (\"or later\") marker. This is the expression-level license node, distinct from the catalog License class, which validates and resolves an identifier but does not model the `+` operator." })) {
 	/** The canonical string form: the id, suffixed with `+` when `plus` is set. */
 	override toString(): string {
 		return serialize(this);
@@ -73,12 +76,12 @@ export class LicenseNode extends S.TaggedClass<LicenseNode>()("License", {
  *
  * @public
  */
-export class LicenseRefNode extends S.TaggedClass<LicenseRefNode>()("LicenseRef", {
+export class LicenseRefNode extends S.TaggedClass<LicenseRefNode>($I`LicenseRefNode`)("LicenseRef", {
 	/** The `DocumentRef-` idstring when the reference is document-scoped; absent otherwise. */
-	documentRef: S.optionalKey(S.String),
+	documentRef: S.optionalKey(S.String).annotateKey({ description: "The `DocumentRef-` idstring when the reference is document-scoped; absent otherwise." }),
 	/** The `LicenseRef-` idstring. */
-	ref: S.String,
-}) {
+	ref: S.String.annotateKey({ description: "The `LicenseRef-` idstring." }),
+}, $I.annote("LicenseRefNode", { description: "A `LicenseRef`/`DocumentRef` reference leaf. The `LicenseRef-`/`DocumentRef-` prefixes and the `:` separator are structural and are not stored; only the bare idstrings are kept, so the node round-trips to canonical form without duplicating the grammar." })) {
 	/** The canonical string form, re-attaching the `DocumentRef-…:` prefix when present. */
 	override toString(): string {
 		return serialize(this);
@@ -93,12 +96,12 @@ export class LicenseRefNode extends S.TaggedClass<LicenseRefNode>()("LicenseRef"
  *
  * @public
  */
-export class WithExceptionNode extends S.TaggedClass<WithExceptionNode>()("WithException", {
+export class WithExceptionNode extends S.TaggedClass<WithExceptionNode>($I`WithExceptionNode`)("WithException", {
 	/** The license the exception applies to: a simple license (which may carry the `+` marker) or a `LicenseRef` reference. */
-	license: S.Union([LicenseNode, LicenseRefNode]),
+	license: S.Union([LicenseNode, LicenseRefNode]).annotateKey({ description: "The license the exception applies to: a simple license (which may carry the `+` marker) or a `LicenseRef` reference." }),
 	/** The SPDX exception short identifier, e.g. `"Bison-exception-2.2"`. */
-	exception: S.String,
-}) {
+	exception: S.String.annotateKey({ description: "The SPDX exception short identifier, e.g. `\"Bison-exception-2.2\"`." }),
+}, $I.annote("WithExceptionNode", { description: "A `license WITH exception` node. Per the SPDX grammar, `WITH` binds to a simple expression — a license identifier (optionally `+`) or a `LicenseRef`/`DocumentRef` reference — never a compound expression, so `license` is a LicenseNode or a LicenseRefNode." })) {
 	/** The canonical string form: the license, then `WITH`, then the exception id. */
 	override toString(): string {
 		return serialize(this);
@@ -111,12 +114,12 @@ export class WithExceptionNode extends S.TaggedClass<WithExceptionNode>()("WithE
  *
  * @public
  */
-export class AndNode extends S.TaggedClass<AndNode>()("And", {
+export class AndNode extends S.TaggedClass<AndNode>($I`AndNode`)("And", {
 	/** The left operand. */
-	left: S.suspend((): S.Codec<SpdxExpression> => SpdxExpressionUnion),
+	left: S.suspend((): S.Codec<SpdxExpression> => SpdxExpressionUnion).annotateKey({ description: "The left operand." }),
 	/** The right operand. */
-	right: S.suspend((): S.Codec<SpdxExpression> => SpdxExpressionUnion),
-}) {
+	right: S.suspend((): S.Codec<SpdxExpression> => SpdxExpressionUnion).annotateKey({ description: "The right operand." }),
+}, $I.annote("AndNode", { description: "The conjunction (`AND`) of two sub-expressions. Recursive: its children are any (SpdxExpression:type), expressed via `Schema.suspend`." })) {
 	/** The canonical, fully-parenthesized string form `(left AND right)`. */
 	override toString(): string {
 		return serialize(this);
@@ -129,12 +132,12 @@ export class AndNode extends S.TaggedClass<AndNode>()("And", {
  *
  * @public
  */
-export class OrNode extends S.TaggedClass<OrNode>()("Or", {
+export class OrNode extends S.TaggedClass<OrNode>($I`OrNode`)("Or", {
 	/** The left operand. */
-	left: S.suspend((): S.Codec<SpdxExpression> => SpdxExpressionUnion),
+	left: S.suspend((): S.Codec<SpdxExpression> => SpdxExpressionUnion).annotateKey({ description: "The left operand." }),
 	/** The right operand. */
-	right: S.suspend((): S.Codec<SpdxExpression> => SpdxExpressionUnion),
-}) {
+	right: S.suspend((): S.Codec<SpdxExpression> => SpdxExpressionUnion).annotateKey({ description: "The right operand." }),
+}, $I.annote("OrNode", { description: "The disjunction (`OR`) of two sub-expressions. Recursive: its children are any (SpdxExpression:type), expressed via `Schema.suspend`." })) {
 	/** The canonical, fully-parenthesized string form `(left OR right)`. */
 	override toString(): string {
 		return serialize(this);

@@ -1,8 +1,11 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { DEPRECATED_EXCEPTION_IDS, EXCEPTION_IDS } from "./internal/exceptions.ts";
 import { InvalidSpdxExpressionError } from "./License.ts";
+
+const $I = $ScratchpadId.create("effected/spdx/LicenseException");
 
 /**
  * A validated SPDX license-exception identifier: an Effect `Schema.Class` whose
@@ -33,12 +36,12 @@ import { InvalidSpdxExpressionError } from "./License.ts";
  * @see {@link https://spdx.org/licenses/exceptions-index.html | SPDX Exceptions List}
  * @public
  */
-export class LicenseException extends S.Class<LicenseException>("LicenseException")({
+export class LicenseException extends S.Class<LicenseException>($I`LicenseException`)({
 	/** The SPDX exception short identifier (e.g. `"Classpath-exception-2.0"`). */
-	id: S.String,
+	id: S.String.annotateKey({ description: "The SPDX exception short identifier (e.g. `\"Classpath-exception-2.0\"`)." }),
 	/** Whether `id` is a deprecated SPDX exception identifier. */
-	deprecated: S.Boolean,
-}) {
+	deprecated: S.Boolean.annotateKey({ description: "Whether `id` is a deprecated SPDX exception identifier." }),
+}, $I.annote("LicenseException", { description: "A validated SPDX license-exception identifier: an Effect `Schema.Class` whose `id` is a member of the SPDX exception list. The class doubles as its own schema." })) {
 	// ── Catalog ─────────────────────────────────────────────────────────
 
 	/**

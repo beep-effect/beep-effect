@@ -1,9 +1,12 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { DEPRECATED_LICENSE_IDS, LICENSE_IDS } from "./internal/licenseIds.ts";
 import { LICENSE_META, META_FLAG_FSF_LIBRE, META_FLAG_OSI_APPROVED } from "./internal/licenseMeta.ts";
+
+const $I = $ScratchpadId.create("effected/spdx/License");
 
 /**
  * Indicates that a string is not a valid SPDX expression fragment: an
@@ -19,12 +22,12 @@ import { LICENSE_META, META_FLAG_FSF_LIBRE, META_FLAG_OSI_APPROVED } from "./int
  * @see {@link https://spdx.github.io/spdx-spec/v2.3/SPDX-license-expressions/ | SPDX License Expressions}
  * @public
  */
-export class InvalidSpdxExpressionError extends S.TaggedError<InvalidSpdxExpressionError>()(
+export class InvalidSpdxExpressionError extends S.TaggedError<InvalidSpdxExpressionError>($I`InvalidSpdxExpressionError`)(
 	"InvalidSpdxExpressionError",
 	{
 		/** The raw input string that failed to validate. */
-		input: S.String,
-	},
+		input: S.String.annotateKey({ description: "The raw input string that failed to validate." }),
+	}, $I.annote("InvalidSpdxExpressionError", { description: "Indicates that a string is not a valid SPDX expression fragment: an unrecognized license or exception identifier, or a malformed `LicenseRef-`/`DocumentRef-` reference." }),
 ) {
 	override get message(): string {
 		return `Invalid SPDX expression: "${this.input}"`;
@@ -72,18 +75,18 @@ const LICENSE_REF_PATTERN = /^(?:DocumentRef-[A-Za-z0-9.-]+:)?LicenseRef-[A-Za-z
  * @see {@link https://spdx.org/licenses/ | SPDX License List}
  * @public
  */
-export class License extends S.Class<License>("License")({
+export class License extends S.Class<License>($I`License`)({
 	/**
 	 * The SPDX short identifier (e.g. `"MIT"`) or a `LicenseRef-`/`DocumentRef-`
 	 * reference string.
 	 */
-	id: S.String,
+	id: S.String.annotateKey({ description: "The SPDX short identifier (e.g. `\"MIT\"`) or a `LicenseRef-`/`DocumentRef-` reference string." }),
 	/**
 	 * Whether `id` is a deprecated SPDX identifier. Always `false` for a
 	 * `LicenseRef`/`DocumentRef` reference.
 	 */
-	deprecated: S.Boolean,
-}) {
+	deprecated: S.Boolean.annotateKey({ description: "Whether `id` is a deprecated SPDX identifier. Always `false` for a `LicenseRef`/`DocumentRef` reference." }),
+}, $I.annote("License", { description: "A validated SPDX license identifier: an Effect `Schema.Class` whose `id` is either a member of the SPDX License List or a well-formed `LicenseRef-`/`DocumentRef-` reference. The class doubles as its own schema — there is no `*Schema` suffix." })) {
 	// ── Catalog ─────────────────────────────────────────────────────────
 
 	/**
