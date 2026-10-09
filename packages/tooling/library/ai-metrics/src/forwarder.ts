@@ -40,6 +40,7 @@ import {
   HookPulseDisarmSentinel,
   HookPulseDisarmWindow,
   HookPulseRefusal,
+  HookPulseRefusalReason,
   HookPulseV1,
   hookPulseDisarmSentinelPath,
   hookPulseDisarmWindowsPath,
@@ -183,6 +184,7 @@ const readStampGaps = Effect.fnUntraced(function* (evidenceRoot: string) {
     const text = yield* fs.readFileString(path.join(evidenceRoot, name));
     for (const line of A.filter(Str.split(text, "\n"), Str.isNonEmpty)) {
       const refusal = yield* S.decodeEffect(S.fromJsonString(HookPulseRefusal))(line);
+      if (refusal.reason === HookPulseRefusalReason.Enum["stamp-failed"]) continue;
       const at = O.some(refusal.ts.pipe(DateTime.toEpochMillis));
       gaps.push(
         SessionStampGap.make({

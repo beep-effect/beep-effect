@@ -16,6 +16,7 @@ import {
   HookPulseDisarmWindow,
   HookPulseEvent,
   HookPulseRefusal,
+  HookPulseRefusalReason,
   HookPulseV1,
   hashPrivateIdentifier,
   hookPulseHashSalt,
@@ -124,6 +125,7 @@ type SessionRegime = typeof SessionRegime.Type;
 
 type SessionTally = {
   readonly minTs: number;
+  readonly endedAt: O.Option<number>;
   readonly maxTs: number;
   readonly agentKind: HookPulseAgentKind;
   readonly parent: string;
@@ -180,6 +182,7 @@ const foldPulse = (tallies: ShardScan["tallies"], pulse: HookPulseV1): void => {
   const key = `${parent}:${O.getOrElse(pulse.transcriptPath, () => "no-transcript")}`;
   const tally = O.getOrElse(MutableHashMap.get(tallies, key), () => ({
     minTs: ts,
+    endedAt: O.none<number>(),
     maxTs: ts,
     agentKind: pulse.agentKind,
     parent,
@@ -202,6 +205,10 @@ const foldPulse = (tallies: ShardScan["tallies"], pulse: HookPulseV1): void => {
       ? HashSet.add(tally.freshStarts, ts)
       : tally.freshStarts,
     minTs: Math.min(tally.minTs, ts),
+    endedAt: O.filter(
+      pulse.hookEvent === "SessionEnd" && O.contains(pulse.sessionRole, "primary") ? O.some(ts) : tally.endedAt,
+      (end) => end >= Math.max(tally.maxTs, ts)
+    ),
     userTurns: tally.userTurns + countPrimaryEvent(pulse, HookPulseEvent.is.UserPromptSubmit),
     toolEvents: tally.toolEvents + countPrimaryEvent(pulse, isActivityToolEvent),
     maxTs: Math.max(tally.maxTs, ts),
@@ -278,9 +285,10 @@ const windowReport = (
     A.some(
       scan.refusalRows,
       (row) =>
+        row.reason !== HookPulseRefusalReason.Enum["stamp-failed"] &&
         (row.agentKind === "unknown" || row.agentKind === tally.agentKind) &&
         DateTime.toEpochMillis(row.ts) + 999 >= tally.minTs &&
-        DateTime.toEpochMillis(row.ts) <= tally.maxTs
+        !O.exists(tally.endedAt, (end) => end < DateTime.toEpochMillis(row.ts))
     );
   // Group once: summaries and root selection never scan the complete history
   // from inside a per-transcript predicate.
@@ -304,10 +312,12 @@ const windowReport = (
         unknownStart: A.some(group, (other) => other.unknownStart || missingOpening(other)),
         userTurns: 0,
         toolEvents: 0,
+        endedAt: O.none<number>(),
       },
       (acc, other) => ({
         ...acc,
         minTs: Math.min(acc.minTs, other.minTs),
+        endedAt: isSelectedRoot(other) ? other.endedAt : acc.endedAt,
         maxTs: Math.max(acc.maxTs, other.maxTs),
         userTurns: acc.userTurns + (isSelectedRoot(other) ? other.userTurns : 0),
         toolEvents: acc.toolEvents + (isSelectedRoot(other) ? other.toolEvents : 0),
