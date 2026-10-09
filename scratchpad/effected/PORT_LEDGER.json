@@ -1543,13 +1543,89 @@
       "wave": 1,
       "position": 5,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
         "src": "packages/semver/src",
         "test": "packages/semver/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "Comparator",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ComparatorSet",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "EmptyCacheError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InvalidComparatorError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InvalidRangeError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InvalidVersionError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Range",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SemVer",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SemVerBump",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "UnsatisfiableConstraintError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "UnsatisfiedRangeError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "VersionCache",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "VersionCacheShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "VersionDiff",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "VersionNotFoundError",
+          "kind": "both",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 0,
