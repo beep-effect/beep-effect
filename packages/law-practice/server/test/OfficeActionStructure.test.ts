@@ -300,15 +300,15 @@ it.layer(StateLive)("storage failures remain typed", (it) => {
         outcome: OfficeActionStoredOutcome.cases.failed.make({ reason: "invalid-anchor" }),
       });
       const run = (patched: FileSystem.FileSystem) =>
-        Effect.gen(function* () {
-          const store = yield* OfficeActionStructureStore;
-          return yield* store.append(attempt);
-        }).pipe(
-          Effect.provide(
-            officeActionStructureFileStore("/failures/attempts.jsonl").pipe(
-              Layer.provide(Layer.succeed(FileSystem.FileSystem, patched))
-            )
-          )
+        Effect.scoped(
+          Effect.gen(function* () {
+            const context = yield* Layer.build(
+              officeActionStructureFileStore("/failures/attempts.jsonl").pipe(
+                Layer.provide(Layer.succeed(FileSystem.FileSystem, patched))
+              )
+            );
+            return yield* Context.get(context, OfficeActionStructureStore).append(attempt);
+          })
         );
       const initialization = yield* run({ ...fs, makeDirectory: () => Effect.fail(failure) }).pipe(Effect.flip);
       expect(initialization.message).toContain("initialize");

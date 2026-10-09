@@ -186,3 +186,9 @@
   configuration or cross-package source boundary is weakened.
 - Prevention: share runtime test support through an owned test-utils API when
   such a helper exists; broad test infrastructure consolidation is outside this lane.
+
+- Storage error-path testing passed at runtime but package audit rejected nested
+  `Effect.provide` with `strictEffectProvide`. Build the fault-injection Layer
+  under an explicit scope and retrieve its service context; preserve release
+  boundaries while testing initialization failures. A documented storage-test
+  boundary pattern would prevent the audit/runtime mismatch.
