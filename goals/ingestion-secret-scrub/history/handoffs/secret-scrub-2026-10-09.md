@@ -62,3 +62,18 @@ source absence is checked separately by the existing scanner CLI. This removes t
 resource operation instead of hiding it or refreshing the shared baseline.
 `lint:effect-vitest`: introduced=0, pass. Integrity tests: 2/2 pass. Fixture, integrity
 test and scanner source bytes: exact-canary count 0 each, pass. Publication retry follows.
+
+## P1 started — PR #1570
+
+Wave 1 published at `4a17ab76fd9aba3f91b356f35ad7cecc09819ae1`; PR #1570 is draft
+with ready-for-heavy. All 16 publication cheap gates and head-install preflight pass.
+The obsolete queued P0 quick package proof was canceled before execution; no package
+pass is claimed. Required default package verification will run on implemented code.
+
+## P0 hosted Check repair during P1
+
+PR #1570 Heavy / Check reported introduced `TS377094` at scanner support line 20:
+schema errors must use `.make`, rather than `new`. The exact completed job log was
+read immediately, before waiting for the workflow. Repair changes only the constructor;
+no schema issue or raw input is attached to the error. This signed repair will travel
+with the complete implementation wave. P1 remains in progress.

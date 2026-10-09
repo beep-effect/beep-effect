@@ -17,7 +17,7 @@ class CanaryScanError extends S.TaggedError<CanaryScanError>()("CanaryScanError"
 const readSurface = (file: Bun.BunFile) =>
   Effect.tryPromise({
     try: () => file.text(),
-    catch: () => new CanaryScanError({ message: "Could not read scan surface" }),
+    catch: () => CanaryScanError.make({ message: "Could not read scan surface" }),
   });
 if (import.meta.main) {
   const main = Effect.gen(function* () {
