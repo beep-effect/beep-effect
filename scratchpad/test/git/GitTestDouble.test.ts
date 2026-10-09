@@ -4,7 +4,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
-import { Git, LsTreeEntry } from "../../effected/git/Git.ts";
+import { Git, LsTreeEntry, NotStubbedError } from "../../effected/git/Git.ts";
 
 const cwd = "/repo";
 
@@ -34,7 +34,7 @@ describe("Git.makeTest", () => {
 				const die = exit.cause.reasons.find(Cause.isDieReason);
 				assert.isDefined(die);
 				const defect = die?.defect;
-				assert.instanceOf(defect, Error);
+				assert.instanceOf(defect, NotStubbedError);
 				assert.strictEqual(
 					defect.message,
 					"Git.makeTest: status() was called but not stubbed — no honest default exists for a test double; pass a `status` override.",

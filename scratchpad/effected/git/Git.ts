@@ -1,10 +1,13 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "@beep/utils/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as Result from "effect/Result";
@@ -95,7 +98,7 @@ const OPENSSH_PROGRAM = /(?:^|[\\/])ssh(?:\.exe)?$/i;
  * variants would match git exactly today, at the cost of appending blindly to
  * whatever variant git adds next.
  */
-const OPENSSH_VARIANTS = new Set(["", "auto", "ssh"]);
+const OPENSSH_VARIANTS = HashSet.make("", "auto", "ssh");
 
 /**
  * Whether an ssh command line already decides `BatchMode` for itself.
@@ -1481,7 +1484,7 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     const variant = O.getOrElse(ssh.variant, () => variantFromConfig)
       .trim()
       .toLowerCase();
-    if (!OPENSSH_VARIANTS.has(variant)) {
+    if (!HashSet.has(OPENSSH_VARIANTS, variant)) {
       return { ...BASE_ENV };
     }
 
@@ -1514,20 +1517,19 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd, ref, path });
     yield* rejectOptionLikeRefs(cwd, [ref]);
     const classified = yield* runFor(GitCommand.show(ref, path), cwd, "show");
-    switch (classified._tag) {
-      case "success":
-        return O.some(classified.output);
-      case "absent":
-        return O.none();
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({ ref, cwd });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.show: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.show: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: (classified) => Effect.succeedSome(classified.output),
+      absent: () => Effect.succeedNone,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () => Effect.fail(UnknownRefError.make({ ref, cwd })),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const lsTree = Effect.fn("Git.lsTree")(function* (
@@ -1538,61 +1540,65 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd, ref });
     yield* rejectOptionLikeRefs(cwd, [ref]);
     const classified = yield* runFor(GitCommand.lsTree(ref, options?.pathspec ?? []), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return parseLsTree(classified.output);
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({ ref, cwd });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.lsTree: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.lsTree: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: (classified) => Effect.succeed(parseLsTree(classified.output)),
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () => Effect.fail(UnknownRefError.make({ ref, cwd })),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const refExists = Effect.fn("Git.refExists")(function* (cwd: string, ref: string) {
     yield* Effect.annotateCurrentSpan({ cwd, ref });
     yield* rejectOptionLikeRefs(cwd, [ref]);
     const classified = yield* runFor(GitCommand.refExists(ref), cwd, "refExists");
-    switch (classified._tag) {
-      case "success":
-        return true;
-      case "refMissing":
-        return false;
-      case "unknownRef":
-        // A ref that doesn't resolve IS the negative answer this method
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.refExists: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.succeed(true),
+      absent: unexpected,
+      refMissing: () => Effect.succeed(false),
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: // A ref that doesn't resolve IS the negative answer this method
         // promises — never an error, and never a defect.
-        return false;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.refExists: unexpected classification "${classified._tag}"`);
-    }
+        () => Effect.succeed(false),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const mergeBase = Effect.fn("Git.mergeBase")(function* (cwd: string, a: string, b: string) {
     yield* Effect.annotateCurrentSpan({ cwd, a, b });
     yield* rejectOptionLikeRefs(cwd, [a, b]);
     const classified = yield* runFor(GitCommand.mergeBase(a, b), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return classified.output.trim();
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: `${a}...${b}`,
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.mergeBase: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.mergeBase: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: (classified) => Effect.succeed(classified.output.trim()),
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: `${a}...${b}`,
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const mergeBaseOption = Effect.fn("Git.mergeBaseOption")(function* (cwd: string, a: string, b: string) {
@@ -1604,23 +1610,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     // `Not a valid object name` stderr and stays UnknownRefError; a NOISY
     // exit 1 stays a loud GitCommandError.
     const classified = yield* runFor(GitCommand.mergeBase(a, b), cwd, "quiet");
-    switch (classified._tag) {
-      case "success":
-        return O.some(classified.output.trim());
-      case "absent":
-        return O.none();
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: `${a}...${b}`,
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.mergeBaseOption: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.mergeBaseOption: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: (classified) => Effect.succeedSome(classified.output.trim()),
+      absent: () => Effect.succeedNone,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: `${a}...${b}`,
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const changedFiles = Effect.fn("Git.changedFiles")(function* (
@@ -1640,44 +1648,52 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     });
     yield* rejectOptionLikeRefs(cwd, [options.base, options.head]);
     const classified = yield* runFor(GitCommand.changedFiles(options.base, options.head, relative), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return parseNulSeparated(classified.output);
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: `${options.base}...${options.head}`,
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.changedFiles: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.changedFiles: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: (classified) => Effect.succeed(parseNulSeparated(classified.output)),
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: `${options.base}...${options.head}`,
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   // Runs a NUL-separated, ref-free path listing (the working-tree queries) and
   // classifies through the shared path. No ref is involved, so `unknownRef`
-  // cannot arise in practice — it is handled defensively to keep the switch
+  // cannot arise in practice — it is handled defensively to keep the match
   // exhaustive and the error channel uniform with the ref-taking methods.
   const collectPaths = Effect.fn("collectPaths")(function* (method: string, invocation: GitInvocation, cwd: string) {
     const classified = yield* runFor(invocation, cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return parseNulSeparated(classified.output);
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: "working tree",
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`${method}: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`${method}: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: (classified) => Effect.succeed(parseNulSeparated(classified.output)),
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: "working tree",
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const unstagedChanges = Effect.fn("Git.unstagedChanges")(function* (
@@ -1718,7 +1734,7 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     const unstaged = yield* unstagedChanges(cwd, options);
     const staged = yield* stagedChanges(cwd, options);
     const untracked = yield* untrackedFiles(cwd, options);
-    return [...new Set([...unstaged, ...staged, ...untracked])];
+    return A.dedupe([...unstaged, ...staged, ...untracked]);
   });
 
   const nameStatus = Effect.fn("Git.nameStatus")(function* (
@@ -1738,40 +1754,44 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     });
     yield* rejectOptionLikeRefs(cwd, options.head === undefined ? [options.base] : [options.base, options.head]);
     const classified = yield* runFor(GitCommand.nameStatus(options.base, options.head, relative), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return parseNameStatus(classified.output);
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield*
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.nameStatus: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: (classified) => Effect.succeed(parseNameStatus(classified.output)),
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
           UnknownRefError.make({
             ref: options.head === undefined ? options.base : `${options.base}...${options.head}`,
             cwd,
-          });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.nameStatus: unexpected classification "${classified._tag}"`);
-    }
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const revParse = Effect.fn("Git.revParse")(function* (cwd: string, ref: string) {
     yield* Effect.annotateCurrentSpan({ cwd, ref });
     yield* rejectOptionLikeRefs(cwd, [ref]);
     const classified = yield* runFor(GitCommand.revParse(ref), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return classified.output.trim();
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({ ref, cwd });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.revParse: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.revParse: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: (classified) => Effect.succeed(classified.output.trim()),
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () => Effect.fail(UnknownRefError.make({ ref, cwd })),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const checkout = Effect.fn("Git.checkout")(function* (
@@ -1783,18 +1803,19 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd, ref, detach });
     yield* rejectOptionLikeRefs(cwd, [ref]);
     const classified = yield* runFor(GitCommand.checkout(ref, detach), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({ ref, cwd });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.checkout: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.checkout: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () => Effect.fail(UnknownRefError.make({ ref, cwd })),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const reset = Effect.fn("Git.reset")(function* (
@@ -1814,21 +1835,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       yield* rejectOptionLikeRefs(cwd, [options.ref]);
     }
     const classified = yield* runFor(GitCommand.reset(mode, options?.ref), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: options?.ref ?? "HEAD",
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.reset: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.reset: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: options?.ref ?? "HEAD",
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const clean = Effect.fn("Git.clean")(function* (
@@ -1843,21 +1868,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     const ignored = options?.ignored ?? false;
     yield* Effect.annotateCurrentSpan({ cwd, directories, ignored });
     const classified = yield* runFor(GitCommand.clean(directories, ignored, options?.paths ?? []), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: "working tree",
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.clean: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.clean: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: "working tree",
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const restore = Effect.fn("Git.restore")(function* (
@@ -1882,21 +1911,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       cwd,
       "generic",
     );
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: options?.source ?? "working tree",
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.restore: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.restore: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: options?.source ?? "working tree",
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const branchCreate = Effect.fn("Git.branchCreate")(function* (
@@ -1923,21 +1956,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       cwd,
       "generic",
     );
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: options?.startPoint ?? name,
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.branchCreate: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.branchCreate: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: options?.startPoint ?? name,
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const branchDelete = Effect.fn("Git.branchDelete")(function* (
@@ -1952,36 +1989,38 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     });
     yield* rejectOptionLikeRefs(cwd, [name]);
     const classified = yield* runFor(GitCommand.branchDelete(name, options?.force ?? false), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({ ref: name, cwd });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.branchDelete: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.branchDelete: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () => Effect.fail(UnknownRefError.make({ ref: name, cwd })),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const isShallow = Effect.fn("Git.isShallow")(function* (cwd: string) {
     yield* Effect.annotateCurrentSpan({ cwd });
     const classified = yield* runFor(GitCommand.isShallow(), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        // rev-parse --is-shallow-repository prints exactly "true" or "false".
-        return classified.output.trim() === "true";
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({ ref: "HEAD", cwd });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.isShallow: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.isShallow: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: // rev-parse --is-shallow-repository prints exactly "true" or "false".
+        (classified) => Effect.succeed(classified.output.trim() === "true"),
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () => Effect.fail(UnknownRefError.make({ ref: "HEAD", cwd })),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const fetchUnshallow = Effect.fn("Git.fetchUnshallow")(function* (
@@ -1992,21 +2031,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd });
     yield* rejectOptionLikeRefs(cwd, [remote]);
     const classified = yield* runForNetwork(GitCommand.fetchUnshallow(remote), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: "--unshallow",
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.fetchUnshallow: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.fetchUnshallow: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: "--unshallow",
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const fetch = Effect.fn("Git.fetch")(function* (
@@ -2048,21 +2091,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       cwd,
       "generic",
     );
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: options.ref,
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.fetch: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.fetch: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: options.ref,
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const fetchAny = Effect.fn("Git.fetchAny")(function* (
@@ -2120,21 +2167,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       cwd,
       "generic",
     );
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: "submodule update",
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.submoduleUpdate: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.submoduleUpdate: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: "submodule update",
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const submoduleAdd = Effect.fn("Git.submoduleAdd")(function* (
@@ -2154,21 +2205,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       cwd,
       "generic",
     );
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: options.path,
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.submoduleAdd: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.submoduleAdd: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: options.path,
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const sparseCheckoutSet = Effect.fn("Git.sparseCheckoutSet")(function* (
@@ -2179,21 +2234,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd, cone: options.cone });
     yield* rejectOptionLikeRefs(cwd, patterns);
     const classified = yield* runFor(GitCommand.sparseCheckoutSet(patterns, options.cone), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: "sparse-checkout",
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.sparseCheckoutSet: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.sparseCheckoutSet: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: "sparse-checkout",
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const configSet = Effect.fn("Git.configSet")(function* (
@@ -2215,38 +2274,43 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     // echoed into the error (the redaction policy).
     yield* rejectOptionLikeRefs(cwd, [key, ...(options?.file !== undefined ? [options.file] : [])], [value]);
     const classified = yield* runFor(GitCommand.configSet(key, value, options?.file), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({ ref: key, cwd });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.configSet: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.configSet: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () => Effect.fail(UnknownRefError.make({ ref: key, cwd })),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const add = Effect.fn("Git.add")(function* (cwd: string, paths: ReadonlyArray<string>) {
     yield* Effect.annotateCurrentSpan({ cwd, count: paths.length });
     const classified = yield* runFor(GitCommand.add(paths), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: "working tree",
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.add: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.add: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: "working tree",
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const defaultBranch = Effect.fn("Git.defaultBranch")(function* (cwd: string, options?: {
@@ -2256,100 +2320,111 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd, remote });
     yield* rejectOptionLikeRefs(cwd, [remote]);
     const classified = yield* runFor(GitCommand.defaultBranch(remote), cwd, "quiet");
-    switch (classified._tag) {
-      case "success": {
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.defaultBranch: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: (classified) => {
         const short = classified.output.trim();
         const prefix = `${remote}/`;
-        return O.some(short.startsWith(prefix) ? short.slice(prefix.length) : short);
-      }
-      case "absent":
-        return O.none();
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: `refs/remotes/${remote}/HEAD`,
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.defaultBranch: unexpected classification "${classified._tag}"`);
-    }
+        return Effect.succeedSome(short.startsWith(prefix) ? short.slice(prefix.length) : short);
+      },
+      absent: () => Effect.succeedNone,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: `refs/remotes/${remote}/HEAD`,
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const currentBranch = Effect.fn("Git.currentBranch")(function* (cwd: string) {
     yield* Effect.annotateCurrentSpan({ cwd });
     const classified = yield* runFor(GitCommand.currentBranch(), cwd, "generic");
-    switch (classified._tag) {
-      case "success": {
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.currentBranch: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: (classified) => {
         const name = classified.output.trim();
         // A detached HEAD answers with the literal string "HEAD" (exit 0) —
         // "no current branch" is the honest typed answer, not a fake name.
-        return name === "HEAD" ? O.none() : O.some(name);
-      }
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({ ref: "HEAD", cwd });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.currentBranch: unexpected classification "${classified._tag}"`);
-    }
+        return Effect.succeed(name === "HEAD" ? O.none() : O.some(name));
+      },
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () => Effect.fail(UnknownRefError.make({ ref: "HEAD", cwd })),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const repoRoot = Effect.fn("Git.repoRoot")(function* (cwd: string) {
     yield* Effect.annotateCurrentSpan({ cwd });
     const classified = yield* runFor(GitCommand.repoRoot(), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return classified.output.trim();
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: "working tree",
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.repoRoot: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.repoRoot: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: (classified) => Effect.succeed(classified.output.trim()),
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: "working tree",
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const commonDir = Effect.fn("Git.commonDir")(function* (cwd: string) {
     yield* Effect.annotateCurrentSpan({ cwd });
     const invocation = GitCommand.commonDir();
     const classified = yield* runFor(invocation, cwd, "generic");
-    switch (classified._tag) {
-      case "success": {
+    const unexpected = // rev-parse --git-common-dir names no ref, so no ref-error stderr can reach here.
+      (classified: Classified) => Effect.die(`Git.commonDir: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: Effect.fnUntraced(function* (classified) {
         // Strip only git's terminating newline, never `trim`: the answer is an
         // identity, and a directory name may end in whitespace.
         const answer = classified.output.replace(/\r?\n$/, "");
         // git before 2.31 does not know --path-format: rev-parse echoes the flag
         // to stdout, answers the relative form on the next line, and exits 0.
         if (answer.startsWith("-") || answer.includes("\n")) {
-          return yield*
-            GitCommandError.make({
-              kind: "failed",
-              args: invocation.redactedArgs,
-              cwd,
-              stderr: "",
-              detail: `unparseable common-dir output (--path-format needs git 2.31 or later): ${yield* encodeJsonString(answer).pipe(Effect.orDie)}`,
-            });
+          return yield* GitCommandError.make({
+            kind: "failed",
+            args: invocation.redactedArgs,
+            cwd,
+            stderr: "",
+            detail: `unparseable common-dir output (--path-format needs git 2.31 or later): ${yield* encodeJsonString(answer).pipe(Effect.orDie)}`,
+          });
         }
         return answer;
-      }
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "failure":
-        return yield* classified.error;
-      default:
-        // rev-parse --git-common-dir names no ref, so no ref-error stderr can reach here.
-        return yield* Effect.die(`Git.commonDir: unexpected classification "${classified._tag}"`);
-    }
+      }),
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: unexpected,
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const configGet = Effect.fn("Git.configGet")(function* (
@@ -2364,20 +2439,19 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     });
     yield* rejectOptionLikeRefs(cwd, [key]);
     const classified = yield* runFor(GitCommand.configGet(key, options?.scope), cwd, "quiet");
-    switch (classified._tag) {
-      case "success":
-        return O.some(classified.output.trim());
-      case "absent":
-        return O.none();
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({ ref: key, cwd });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.configGet: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.configGet: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: (classified) => Effect.succeedSome(classified.output.trim()),
+      absent: () => Effect.succeedNone,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () => Effect.fail(UnknownRefError.make({ ref: key, cwd })),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const remoteUrl = Effect.fn("Git.remoteUrl")(function* (cwd: string, options?: {
@@ -2387,20 +2461,19 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd, remote });
     yield* rejectOptionLikeRefs(cwd, [remote]);
     const classified = yield* runFor(GitCommand.remoteUrl(remote), cwd, "noSuchRemote");
-    switch (classified._tag) {
-      case "success":
-        return O.some(classified.output.trim());
-      case "absent":
-        return O.none();
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({ ref: remote, cwd });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.remoteUrl: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.remoteUrl: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: (classified) => Effect.succeedSome(classified.output.trim()),
+      absent: () => Effect.succeedNone,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () => Effect.fail(UnknownRefError.make({ ref: remote, cwd })),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const commitInfo = Effect.fn("Git.commitInfo")(function* (cwd: string, ref?: string) {
@@ -2408,18 +2481,19 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     yield* Effect.annotateCurrentSpan({ cwd, ref: target });
     yield* rejectOptionLikeRefs(cwd, [target]);
     const classified = yield* runFor(GitCommand.commitInfo(target), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return parseCommitInfo(classified.output);
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({ ref: target, cwd });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.commitInfo: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.commitInfo: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: (classified) => Effect.succeed(parseCommitInfo(classified.output)),
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () => Effect.fail(UnknownRefError.make({ ref: target, cwd })),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const log = Effect.fn("Git.log")(function* (
@@ -2452,56 +2526,69 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
         });
     }
     const classified = yield* runFor(invocation, cwd, "log");
-    switch (classified._tag) {
-      case "success": {
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.log: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: Effect.fnUntraced(function* (classified) {
         const parsed = parseLog(classified.output);
         if (Result.isFailure(parsed)) {
-          return yield*
-            GitCommandError.make({
-              kind: "failed",
-              args: invocation.redactedArgs,
-              cwd,
-              stderr: "",
-              detail: `unparseable log output: ${parsed.failure}`,
-            });
+          return yield* GitCommandError.make({
+            kind: "failed",
+            args: invocation.redactedArgs,
+            cwd,
+            stderr: "",
+            detail: `unparseable log output: ${parsed.failure}`,
+          });
         }
         return parsed.success;
-      }
-      case "absent":
-      case "unknownRef":
+      }),
+      absent: () => {
         // An unborn HEAD — however this git spells it — has no history,
         // which is the empty log, never a failure. `Git.log` takes no ref,
         // so there is no ref for an UnknownRefError to name and the error
         // is absent from this member's union by construction.
         const empty: ReadonlyArray<CommitLogEntry> = [];
-        return empty;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.log: unexpected classification "${classified._tag}"`);
-    }
+        return Effect.succeed(empty);
+      },
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () => {
+        // An unborn HEAD — however this git spells it — has no history,
+        // which is the empty log, never a failure. `Git.log` takes no ref,
+        // so there is no ref for an UnknownRefError to name and the error
+        // is absent from this member's union by construction.
+        const empty: ReadonlyArray<CommitLogEntry> = [];
+        return Effect.succeed(empty);
+      },
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const status = Effect.fn("Git.status")(function* (cwd: string) {
     yield* Effect.annotateCurrentSpan({ cwd });
     const classified = yield* runFor(GitCommand.status(), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return parseStatus(classified.output);
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: "working tree",
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.status: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.status: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: (classified) => Effect.succeed(parseStatus(classified.output)),
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: "working tree",
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const submoduleStatus = Effect.fn("Git.submoduleStatus")(function* (
@@ -2520,21 +2607,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       cwd,
       "generic",
     );
-    switch (classified._tag) {
-      case "success":
-        return parseSubmoduleStatus(classified.output);
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: "submodule status",
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.submoduleStatus: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.submoduleStatus: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: (classified) => Effect.succeed(parseSubmoduleStatus(classified.output)),
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: "submodule status",
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const submoduleInit = Effect.fn("Git.submoduleInit")(function* (
@@ -2543,21 +2634,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
   ) {
     yield* Effect.annotateCurrentSpan({ cwd });
     const classified = yield* runFor(GitCommand.submoduleInit(options?.paths ?? []), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: "submodule init",
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.submoduleInit: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.submoduleInit: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: "submodule init",
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const submoduleDeinit = Effect.fn("Git.submoduleDeinit")(function* (
@@ -2584,21 +2679,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
         });
     }
     const classified = yield* runFor(GitCommand.submoduleDeinit(paths, all, options.force ?? false), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: "submodule deinit",
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.submoduleDeinit: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.submoduleDeinit: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: "submodule deinit",
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const submoduleSync = Effect.fn("Git.submoduleSync")(function* (
@@ -2617,21 +2716,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       cwd,
       "generic",
     );
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: "submodule sync",
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.submoduleSync: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.submoduleSync: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: "submodule sync",
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const submoduleSetUrl = Effect.fn("Git.submoduleSetUrl")(function* (cwd: string, path: string, url: string) {
@@ -2639,18 +2742,19 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     // span annotations carry stable identifiers only (the redaction policy).
     yield* Effect.annotateCurrentSpan({ cwd, path });
     const classified = yield* runFor(GitCommand.submoduleSetUrl(path, url), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({ ref: path, cwd });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.submoduleSetUrl: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.submoduleSetUrl: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () => Effect.fail(UnknownRefError.make({ ref: path, cwd })),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const submoduleSetBranch = Effect.fn("Git.submoduleSetBranch")(function* (
@@ -2668,21 +2772,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       yield* rejectOptionLikeRefs(cwd, [branch]);
     }
     const classified = yield* runFor(GitCommand.submoduleSetBranch(path, branch), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: branch ?? path,
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.submoduleSetBranch: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.submoduleSetBranch: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: branch ?? path,
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const submoduleAbsorbgitdirs = Effect.fn("Git.submoduleAbsorbgitdirs")(function* (
@@ -2691,21 +2799,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
   ) {
     yield* Effect.annotateCurrentSpan({ cwd });
     const classified = yield* runFor(GitCommand.submoduleAbsorbgitdirs(options?.paths ?? []), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: "submodule absorbgitdirs",
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.submoduleAbsorbgitdirs: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.submoduleAbsorbgitdirs: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: "submodule absorbgitdirs",
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const submoduleForeach = Effect.fn("Git.submoduleForeach")(function* (
@@ -2721,21 +2833,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     // dash — the same option-injection guard as refs.
     yield* rejectOptionLikeRefs(cwd, [command]);
     const classified = yield* runFor(GitCommand.submoduleForeach(command, options?.recursive ?? false), cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return classified.output;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: "submodule foreach",
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.submoduleForeach: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.submoduleForeach: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: (classified) => Effect.succeed(classified.output),
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: "submodule foreach",
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   // Runs a void-returning invocation and classifies through the shared path,
@@ -2743,21 +2859,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
   // mutating method with no method-specific classification rows.
   const runVoid = Effect.fn("runVoid")(function* (method: string, invocation: GitInvocation, cwd: string, refLabel: string) {
     const classified = yield* runFor(invocation, cwd, "generic");
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: refLabel,
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`${method}: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`${method}: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: refLabel,
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   // Runs a parse-returning invocation and classifies through the shared path.
@@ -2776,26 +2896,30 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     network = false,
   ) {
     const classified = yield* (network ? runForNetwork : runFor)(invocation, cwd, kind);
-    switch (classified._tag) {
-      case "success":
-        return parse(classified.output);
-      case "absent":
+    const unexpected = (classified: Classified) =>
+      Effect.die(`${method}: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: (classified) => Effect.succeed(parse(classified.output)),
+      absent: Effect.fnUntraced(function* () {
         if (absent !== undefined) {
           return absent();
         }
         return yield* Effect.die(`${method}: unexpected classification "absent"`);
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: refLabel,
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`${method}: unexpected classification "${classified._tag}"`);
-    }
+      }),
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: refLabel,
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const lsRemote = Effect.fn("Git.lsRemote")(function* (
@@ -2877,25 +3001,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       yield* Effect.annotateCurrentSpan({ cwd, index: options?.index ?? 0 });
       yield* rejectNonNaturalNumber(cwd, "a stash index", options?.index);
       const classified = yield* runFor(invocation(options?.index), cwd, "merge");
-      switch (classified._tag) {
-        case "success":
-          return undefined;
-        case "dirtyWorktree":
-          return yield* DirtyWorktreeError.make({ cwd });
-        case "mergeConflict":
-          return yield* MergeConflictError.make({ cwd });
-        case "notARepository":
-          return yield* NotARepositoryError.make({ cwd });
-        case "unknownRef":
-          return yield* UnknownRefError.make({
-            ref: "stash",
-            cwd,
-          });
-        case "failure":
-          return yield* classified.error;
-        default:
-          return yield* Effect.die(`${method}: unexpected classification "${classified._tag}"`);
-      }
+      const unexpected = (classified: Classified) =>
+        Effect.die(`${method}: unexpected classification "${classified._tag}"`);
+      return yield* Match.valueTags(classified, {
+        success: () => Effect.void,
+        absent: unexpected,
+        refMissing: unexpected,
+        notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+        unknownRef: () =>
+          Effect.fail(
+            UnknownRefError.make({
+              ref: "stash",
+              cwd,
+            })
+          ),
+        nonFastForward: unexpected,
+        mergeConflict: () => Effect.fail(MergeConflictError.make({ cwd })),
+        dirtyWorktree: () => Effect.fail(DirtyWorktreeError.make({ cwd })),
+        failure: (classified) => Effect.fail(classified.error),
+      });
     });
 
   const stashPop = stashRestore("Git.stashPop", GitCommand.stashPop);
@@ -3070,27 +3194,31 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       cwd,
       "push",
     );
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "nonFastForward":
-        return yield*
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.push: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: options?.refspec ?? "HEAD",
+            cwd,
+          })
+        ),
+      nonFastForward: () =>
+        Effect.fail(
           NonFastForwardError.make({
             cwd,
-            ...(options?.refspec !== undefined ? { refspec: options.refspec } : {}),
-          });
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: options?.refspec ?? "HEAD",
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.push: unexpected classification "${classified._tag}"`);
-    }
+            ...O.getSomesStruct({ refspec: O.fromUndefinedOr(options?.refspec) }),
+          })
+        ),
+      mergeConflict: unexpected,
+      dirtyWorktree: unexpected,
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const pull = Effect.fn("Git.pull")(function* (
@@ -3115,25 +3243,25 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       cwd,
       "merge",
     );
-    switch (classified._tag) {
-      case "success":
-        return undefined;
-      case "dirtyWorktree":
-        return yield* DirtyWorktreeError.make({ cwd });
-      case "mergeConflict":
-        return yield* MergeConflictError.make({ cwd });
-      case "notARepository":
-        return yield* NotARepositoryError.make({ cwd });
-      case "unknownRef":
-        return yield* UnknownRefError.make({
-          ref: options?.ref ?? "(upstream)",
-          cwd,
-        });
-      case "failure":
-        return yield* classified.error;
-      default:
-        return yield* Effect.die(`Git.pull: unexpected classification "${classified._tag}"`);
-    }
+    const unexpected = (classified: Classified) =>
+      Effect.die(`Git.pull: unexpected classification "${classified._tag}"`);
+    return yield* Match.valueTags(classified, {
+      success: () => Effect.void,
+      absent: unexpected,
+      refMissing: unexpected,
+      notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
+      unknownRef: () =>
+        Effect.fail(
+          UnknownRefError.make({
+            ref: options?.ref ?? "(upstream)",
+            cwd,
+          })
+        ),
+      nonFastForward: unexpected,
+      mergeConflict: () => Effect.fail(MergeConflictError.make({ cwd })),
+      dirtyWorktree: () => Effect.fail(DirtyWorktreeError.make({ cwd })),
+      failure: (classified) => Effect.fail(classified.error),
+    });
   });
 
   const configList = Effect.fn("Git.configList")(function* (
@@ -4432,15 +4560,36 @@ export interface GitShape {
 }
 
 /**
+ * A test double invoked a Git method without an explicit stub.
+ *
+ * **Example** (Identify an unstubbed method defect)
+ *
+ * ```ts
+ * import { NotStubbedError } from "./Git.ts";
+ *
+ * const defect = NotStubbedError.make({ message: "A Git method needs a stub." });
+ * console.log(defect._tag, defect.message);
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class NotStubbedError extends S.TaggedError<NotStubbedError>($I`NotStubbedError`)(
+  "NotStubbedError",
+  { message: S.String },
+  $I.annote("NotStubbedError", { description: "A Git test double method was invoked without an explicit stub." }),
+) {}
+
+/**
  * The default for every {@link Git.makeTest} method a test did not stub: a
  * defect naming the method, so an unexercised call fails loudly instead of
  * succeeding with a lie or failing with a dishonest typed error.
  */
 const notStubbed = (method: string) => () =>
   Effect.die(
-    new Error(
-      `Git.makeTest: ${method}() was called but not stubbed — no honest default exists for a test double; pass a \`${method}\` override.`,
-    ),
+    NotStubbedError.make({
+      message: `Git.makeTest: ${method}() was called but not stubbed — no honest default exists for a test double; pass a \`${method}\` override.`,
+    }),
   );
 
 /**

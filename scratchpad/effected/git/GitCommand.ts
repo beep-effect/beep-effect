@@ -1,3 +1,4 @@
+import * as O from "@beep/utils/Option";
 import * as Stream from "effect/Stream";
 import { ChildProcess } from "effect/process";
 import * as P from "effect/Predicate";
@@ -98,7 +99,9 @@ const git = (args: ReadonlyArray<GitArg>, stdin?: string): GitInvocation => {
 			// stdin is baked into the pure command value (check-ignore's --stdin
 			// form): a single UTF-8 chunk, closed when done. Constructors without
 			// stdin leave the option unset entirely.
-			...(stdin !== undefined ? { stdin: Stream.make(new TextEncoder().encode(stdin)) } : {}),
+			...O.getSomesStruct({
+				stdin: O.map(O.fromUndefinedOr(stdin), (input) => Stream.make(new TextEncoder().encode(input))),
+			}),
 		}),
 		redactedArgs,
 	};

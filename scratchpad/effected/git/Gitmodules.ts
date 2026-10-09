@@ -1,5 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
@@ -155,20 +156,23 @@ export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
 		interface Collected {
 			readonly name: string;
 			/** key (lowercased) → raw value; `null` marks git's bare boolean-true shorthand. */
-			readonly fields: Map<string, string | null>;
+			readonly fields: MutableHashMap.MutableHashMap<string, string | null>;
 		}
-		const byName = new Map<string, Collected>();
+		const byName = MutableHashMap.empty<string, Collected>();
 		for (const section of config.sections) {
 			if (section.name.toLowerCase() !== "submodule" || section.subsection === undefined) continue;
-			const collected = byName.get(section.subsection) ?? { name: section.subsection, fields: new Map() };
+			const collected = O.getOrElse(MutableHashMap.get(byName, section.subsection), () => ({
+				name: section.subsection,
+				fields: MutableHashMap.empty<string, string | null>(),
+			}));
 			for (const entry of section.entries) {
-				collected.fields.set(entry.key.toLowerCase(), entry.value ?? null);
+				MutableHashMap.set(collected.fields, entry.key.toLowerCase(), entry.value ?? null);
 			}
-			byName.set(section.subsection, collected);
+			MutableHashMap.set(byName, section.subsection, collected);
 		}
 		const entries: Array<GitmodulesEntry> = [];
-		for (const { name, fields } of byName.values()) {
-			const raw = (key: string): string | null | undefined => fields.get(key);
+		for (const { name, fields } of MutableHashMap.values(byName)) {
+			const raw = (key: string): string | null | undefined => O.getOrUndefined(MutableHashMap.get(fields, key));
 			const invalid = (field: string, value: string | null): GitmodulesDecodeError =>
 				GitmodulesDecodeError.make({
 					name,

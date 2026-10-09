@@ -252,6 +252,15 @@ const fromRaw = (text: string, raw: RawParse): GitConfig =>
     ),
   });
 
+/** A hand-built document violated the clean-text invariant. */
+class GitConfigInvariantError extends S.TaggedError<GitConfigInvariantError>($I`GitConfigInvariantError`)(
+  "GitConfigInvariantError",
+  {
+    message: S.String.annotateKey({ description: "The violated document invariant." }),
+  },
+  $I.annote("GitConfigInvariantError", { description: "A GitConfig document contains text that does not scan cleanly." }),
+) {}
+
 /**
  * Re-scans a document's text, which must be clean: `GitConfig` instances are
  * only ever built from text that scanned without diagnostics, so a failure
@@ -261,9 +270,9 @@ const fromRaw = (text: string, raw: RawParse): GitConfig =>
 const reparse = (text: string): RawParse => {
   const raw = scan(text);
   if (raw.diagnostics.length > 0) {
-    throw new Error(
-      "GitConfig invariant violated: the document text does not scan cleanly. Construct GitConfig via GitConfig.parse / parseResult, never by hand from arbitrary text.",
-    );
+    throw GitConfigInvariantError.make({
+      message: "GitConfig invariant violated: the document text does not scan cleanly. Construct GitConfig via GitConfig.parse / parseResult, never by hand from arbitrary text.",
+    });
   }
   return raw;
 };
