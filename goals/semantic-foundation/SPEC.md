@@ -92,6 +92,11 @@ cannot widen non-goals without a dated `SPEC.md` change.
 - Do not create law-practice package models or document-intake workflow code in
   this packet.
 
+### 2026-10-09 gate amendment
+
+M2 and M3 product gates are met by the Decision Log product pull. M3 code
+starts after M2 tests and the real-artifact proof pass. M4 remains gated.
+
 ## Milestones
 
 | Milestone | Gate | Capability | Exit criteria |
@@ -126,6 +131,21 @@ cannot widen non-goals without a dated `SPEC.md` change.
       `explorations/legal-ontology-landscape`; the removed packet's fence is
       moot as of 2026-07-14.
 
+### M2 acceptance (2026-10-09)
+
+- [ ] Pinned IPC/CPC/Nice editions resolve hierarchy with distinct scheme identities.
+- [ ] Typed failures cover mismatches, unpinned editions, unvetted rows and path escape.
+- [ ] Real manifest decoder preserves M1 admission and skips classification rows (R3).
+- [ ] Real-artifact proof records edition, counts, checksums and three lookups per scheme.
+- [ ] CPC scope and all source reuse evidence are recorded in the licence ledger (R2).
+
+### M3 acceptance (2026-10-09)
+
+- [ ] Docketing, party-kind and legal-role seeds have TTL/JSON-LD/TS parity.
+- [ ] Every IRI uses the repository authority; party kinds and roles remain disjoint.
+- [ ] Replayable CQ 1/5/7/8/18 fixtures resolve versioned concept IRIs.
+- [ ] Frozen vocabulary contract and read-only trademark packet spawn seed are retained.
+
 ## Verification Matrix
 
 | Check | Command or evidence | Required result |
@@ -136,14 +156,17 @@ cannot widen non-goals without a dated `SPEC.md` change.
 | Whitespace | `git diff --check -- goals/semantic-foundation explorations/legal-ontology-landscape explorations/ATLAS.md` | Passes |
 | M1 registry/loader | Package-local tests for `@beep/ontology` and touched target packages | Green |
 | M1 intake loop | Fixture proves sample document -> taxonomy concept -> document class -> filing path with aligned concept IRI | Green |
-| Repo quality | `bun run beep yeet verify` | Green or unrelated failures documented |
+| Repo quality (M2/M3) | hosted CI on the PR | Required checks green on the PR head, or each failure attributed as unrelated in the handoff (RULINGS S11) |
+| M2 lookup tests | Pinned hierarchy and CQ 9/10 fixtures | Green |
+| Real-manifest decode (R3) | Shared decoder test reads the asset-pack manifest without vendor bytes | Zero parse errors; alignment and classification routes asserted |
+| M2 real-artifact proof | Handoff table from beep-heavy runtime proof | All schemes and M1 regression pass |
+| M3 separation and CQs | Seed parity, disjoint kinds/roles and CQ 1/5/7/8/18 fixtures | Green |
 | Reflection closeout | `bun run beep lint reflection-artifacts` | Green before completion |
 
 ## Stop Conditions
 
 - Required source files are missing or materially contradictory.
-- The implementation would exceed M1 or pull M2-M4 work forward without the
-  named gate.
+- The implementation would exceed M1-M3 or pull M4 work forward without the named gate.
 - A change exceeds the ontology-survey scope absorbed from
   `explorations/legal-ontology-landscape` (the former packet was removed
   2026-07-14), or requires touching law-practice domain entities,
@@ -154,6 +177,15 @@ cannot widen non-goals without a dated `SPEC.md` change.
 - Verification requires unnamed credentials, cost, destructive side effects, or
   policy approval.
 - The same blocker repeats after reasonable investigation.
+
+## Decision Log
+
+| Date | Decision | Reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-09 | Reopen for M2 and M3. | The operator requested agent completion of the Corpus Ingestion Run Order on 2026-10-09; the orchestrator explicitly pulled both milestones. M3 implementation waits for M2 tests and real-artifact readiness. | Run `bun run beep goals set-status semantic-foundation completed-retained` and `git revert` the delivery PR. |
+| 2026-10-09 | M4 stays `pending`, routed to legal-document-intake P4. | This lane supplies version-pinned vocabulary slices; M4 has a separate owner. | Reassign M4 in manifest `statusNote`. |
+| 2026-10-09 | Repo-quality proof for M2/M3 is hosted CI on the PR. | AGENTS.md Quality Operator requires push-first publication; hosted CI is authoritative and `bun run beep yeet verify` is on demand. | Restore `bun run beep yeet verify` in the SPEC Verification Matrix, manifest verificationCommands and PLAN verification block; run `beep-heavy bun run beep yeet verify` before completion. |
+| 2026-10-09 | R5 changes both stop-condition surfaces from "The implementation would exceed M1 or pull M2-M4 work forward without the named gate." to "The implementation would exceed M1-M3 or pull M4 work forward without the named gate." | The named product pull admits M2 and M3 while retaining the M4 gate. | Restore the old text in SPEC and manifest together in one commit. |
 
 ## Exception Ledger
 

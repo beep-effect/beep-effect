@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `completed-retained`
+Lifecycle: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -37,9 +37,8 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Closed after M1. The exploration's R1-R4 research feeds are complete. M2-M4
-remain deliberately gated future capabilities and require a separate product
-pull; the M1 launcher explicitly forbids pulling them into this packet.
+Reopened 2026-10-09 for M2 classification schemes, then M3 docketing and
+party-role vocabulary. M4 remains gated and routed to legal-document-intake P4.
 
 ## Latest Evidence
 

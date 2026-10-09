@@ -2,13 +2,12 @@
 
 ## Status
 
-Status: `completed-retained`
+Status: `active`
 
 ## Sequencing
 
-M1 and its R1-R4 exploration research feeds are complete. M2-M4 remain retained
-as future gated capabilities; they are outside this M1 goal's outcome and must
-not start without their named product gates.
+M1 and R1-R4 are complete. The 2026-10-09 product pull reopens M2 and M3;
+M3 code waits for M2 tests and real-artifact readiness. M4 remains gated.
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
@@ -17,8 +16,8 @@ not start without their named product gates.
 | R2 Research Feed: Classification Schemes | complete | Ground IPC/CPC/Nice edition strategy and constant eligibility. | Research report decides M2 seed boundaries, edition metadata, and whether `@beep/rdf` constants are warranted. |
 | R3 Research Feed: Docketing and Party Roles | complete | Ground deadline and role vocabularies without creating domain entities. | Research report separates enduring party identity from time-bounded legal role vocabulary and names M3 prerequisites. |
 | R4 Research Feed: SHACL and Topology | complete | Decide shape-authoring needs and whether any future SPARQL/topology report is warranted. | Research report keeps `UnsupportedSparqlQueryServiceLive` unchanged for v1 or opens a separate gated topology packet. |
-| M2 Classification Schemes | gated | Load IPC/CPC/Nice SKOS schemes with edition tracking and hierarchy lookup. | Gate condition met: August 5 first-user metric or demo-day pull. |
-| M3 Docketing and Party Roles | gated | Add docketing/deadline and party-role vocabulary modules. When the vocabulary stabilizes, spawn a `trademark-docketing-domain` packet to replace the removed stub. | Gate condition met and dependent trademark docketing packet can start. |
+| M2 Classification Schemes | in-progress | Load IPC/CPC/Nice SKOS schemes with edition tracking and hierarchy lookup. | Gate condition met: August 5 first-user metric or demo-day pull. |
+| M3 Docketing and Party Roles | in-progress | Add docketing/deadline and party-role vocabulary modules. When the vocabulary stabilizes, spawn a `trademark-docketing-domain` packet to replace the removed stub. | Gate condition met and dependent trademark docketing packet can start. |
 | M4 ClaimGate Shapes | gated | Author intake/ClaimGate SHACL shapes against bounded semantic-web validator. | Gate condition met; shapes work without semantic-web contract changes. |
 
 ## M1 Work Items
@@ -39,6 +38,26 @@ not start without their named product gates.
    data and projection rules for consumers.
 7. [x] Prove a fixture intake librarian classification loop that emits concept IRI,
    document class, and filing path without implementing the document slice.
+
+## M2 Work Items
+
+- [ ] Record edition pins, scheme identities, bounded seed and deferred schemes.
+- [ ] Check reuse terms and retain a licence ledger before code or manifest rows.
+- [ ] Commit R3 loader kind admission and real-manifest tests before rows.
+- [ ] Add checksum-pinned rows and safe archive fetching.
+- [ ] Author classification schemas, service contract, then XML implementation.
+- [ ] Prove synthetic lookup/CQ fixtures and coverage without lowering baselines.
+- [ ] Prove real IPC/CPC/Nice editions and the M1 real-manifest regression.
+- [ ] Verify packages, add changeset and publish wave 1; record hosted checks.
+
+## M3 Work Items
+
+- [ ] Audit kind/role/deadline/event distinctions.
+- [ ] Add versioned docketing and separate party-kind/legal-role seeds.
+- [ ] Prove seed parity, separation and CQ 1/5/7/8/18 fixtures.
+- [ ] Retain stable vocabulary contract and bootstrap plan; create no downstream packet.
+- [ ] Verify edited packages and commit M3.
+- [ ] Reflect, close P3/P4 and publish final wave ready for orchestrator merge.
 
 ## P4 Closeout Checklist
 
@@ -70,5 +89,5 @@ test "$(wc -m < goals/semantic-foundation/GOAL.md)" -le 4000
 jq . goals/semantic-foundation/ops/manifest.json
 rg -n "semantic-foundation|GOAL.md|agentLaunchers|packetAnchorDocument" goals/semantic-foundation
 git diff --check -- goals/semantic-foundation explorations/legal-ontology-landscape explorations/ATLAS.md
-bun run beep yeet verify
+# repo quality: hosted CI on the PR (SPEC Decision Log 2026-10-09)
 ```

@@ -1,72 +1,51 @@
-# GOAL: Build the semantic foundation for legal intake
+# GOAL: Semantic foundation M2 and M3 ready slices
 
-Repo root: the current working directory - the `beep-effect` checkout you are
-running in. Do not assume an absolute path; several checkouts exist. All paths
-below are repo-relative.
+Repo root: the current working checkout. All paths below are repo-relative.
 
-Outcome: M1 ships a repo-owned SKOS taxonomy seed plus `@beep/ontology`
-registry/loader so an intake librarian loop can classify a sample legal
-document into a concept IRI, document class, and filing path, without adding a
-graph store, SPARQL engine, or law-practice domain entities.
+Outcome: ship version-pinned IPC/CPC/Nice classification schemes and repo-owned
+docketing/deadline, party-kind and legal-role vocabularies for the gated
+oppold-corpus-semantic-ingestion-v2 consumer. M1 remains shipped; M4 stays
+pending and belongs to legal-document-intake P4.
 
-This is a compact `/goal` launcher. Treat the packet files as the detailed
-contract:
+Read README.md, SPEC.md, PLAN.md and ops/manifest.json in this packet, then
+AGENTS.md and explorations/legal-ontology-landscape research and asset metadata.
+SPEC is normative; the 2026-07-08 user-locked non-goals remain binding.
 
-- `goals/semantic-foundation/README.md`
-- `goals/semantic-foundation/SPEC.md`
-- `goals/semantic-foundation/PLAN.md`
-- `goals/semantic-foundation/ops/manifest.json`
-
-Read those first, then `AGENTS.md`, `CLAUDE.md`, and the source exploration:
-`explorations/legal-ontology-landscape/{DECISIONS.md,BRIEF.md,MAP.md}` plus
-the exploration `research/` reports as they land. User-locked 2026-07-08
-decisions in `SPEC.md` outrank later research until the spec is updated.
-
-Scope:
-
-- In: `@beep/ontology` SKOS concept-scheme/taxonomy registry models + loader;
-  repo-owned M1 seed TTL/JSON-LD; concept IRIs under `https://ns.beep.sh/`
-  via `@beep/identity`; FOLIO `skos:exactMatch`/`closeMatch` metadata where
-  vetted; document-class vocabulary (`draft`, `redline`, `filed`, `received`,
-  `privileged`, `extracted-child`); filing-path semantics for local vault +
-  Box mirror; package-local tests/proof for touched target surfaces.
-- Conditional: `@beep/rdf` `Vocab/*` constants only when exploration P1/P2
-  research justifies them; otherwise reuse existing SKOS/RDF constants.
-- Out: SPARQL engine wiring, graph store, FalkorDB, law-practice entities
-  (`TrademarkAsset`, docketing entities), document-intake implementation,
-  ontology-survey work beyond the scope absorbed here from
-  `explorations/legal-ontology-landscape`, package source outside target
-  surfaces, unmanifested third-party TTL/OWL. The old packet fence is moot;
-  that packet was removed 2026-07-14.
+Scope: @beep/ontology schemas, registry/loader, repo-owned seeds and tests;
+manifest/fetch metadata in the exploration asset pack; justified named RDF
+constants and identity composition. No graph store, SPARQL wiring, SHACL,
+law-practice entities, document-intake implementation or downstream packet.
+Third-party archives and XML stay under gitignored assets/vendor/.
 
 Workflow:
+1. Reopen through goals set-status; record gate, verification and R5 decisions.
+2. Record edition/IRI decisions and explicit reuse evidence before code or rows.
+3. Commit R3 loadKind domain and M1 skip/real-manifest proof before M2 rows.
+4. Implement classification schemas, service contract, then XML loading; prove
+   fixtures, coverage and real artifacts through beep-heavy (32G cap).
+5. Publish complete M2 as wave 1; record hosted checks. Only then start M3.
+6. Audit kind/role distinctions; add versioned vocabulary seeds and CQ fixtures.
+7. Retain frozen contracts and a read-only downstream bootstrap plan.
+8. Verify packages, add changesets, reflect and return to completed-retained.
+9. Merge origin/main and publish final wave ready. Orchestrator owns merging.
 
-1. Confirm current target surfaces with live source/barrel searches.
-2. Implement M1 only; do not pull M2-M4 forward without their gates.
-3. Keep vendor ontology material gitignored under the exploration asset pack;
-   track only manifest/fetch metadata there and repo-owned seed data in code.
-4. Add schema-first models, typed errors, and tests before broader consumers.
-5. Prove the sample intake librarian loop as a fixture: document -> taxonomy
-   concept -> document class -> filing path with aligned concept IRI.
-6. Preserve unrelated user/worktree changes and concurrent exploration edits.
-7. At P3 Close, write `history/reflections/<YYYY-MM-DD>-<agent>.md` via
-   `/reflect`; `bun run beep lint reflection-artifacts` must pass.
-
-Acceptance:
-
-- [ ] `SPEC.md` acceptance criteria are satisfied for M1.
-- [ ] `bun run beep yeet verify` passes, or unrelated baseline failures are
-      reproduced and recorded separately.
-- [ ] No unrelated refactors or formatting churn.
+Acceptance: pinned editions preserve IPC/CPC identities and hierarchical
+lookups; typed admission failures fail closed; real manifest preserves M1;
+M3 seed parity, distinct party kinds and roles, versioned CQs and stable
+contracts pass. Cite each proof in SPEC and the append-only handoff.
 
 Verification:
-
 ```sh
 test "$(wc -m < goals/semantic-foundation/GOAL.md)" -le 4000
 jq . goals/semantic-foundation/ops/manifest.json
+rg -n "semantic-foundation|GOAL.md|agentLaunchers|packetAnchorDocument" goals/semantic-foundation
 git diff --check -- goals/semantic-foundation explorations/legal-ontology-landscape explorations/ATLAS.md
-bun run beep yeet verify
+bun run beep lint reflection-artifacts
+# repo quality: hosted CI on the PR
 ```
+
+Run package-verify and hosted parity through beep-heavy; existing coverage rows
+stay unchanged. Follow SPEC Decision Log for verification and gate amendments.
 
 Stop and report before changing public API outside target surfaces,
 dependencies, lockfiles, generated files, SPARQL/graph-store topology, auth,
