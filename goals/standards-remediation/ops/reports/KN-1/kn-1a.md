@@ -1,10 +1,14 @@
 # KN-1a — conflict-free knip burn-down
 
-Lane scope: the conflict-free portion of the knip baseline (`e62411d63f:standards/knip.regression-baseline.jsonc`,
-73 findings), package by package, sequentially. Skipped all conflicted scopes named in the task
+Lane scope: the conflict-free portion of the historical knip baseline
+(73 findings at the original run), package by package, sequentially. Skipped all conflicted scopes named in the task
 (`apps/professional-desktop`, `drivers/{box,ecfr,govinfo,wink}`,
 `capability/{api-transport,langextract,mcp-kit}`, `modeling/html`) — zero edits in
 those trees.
+
+The later pre-retirement recovery artifact is
+`e62411d63f:standards/knip.regression-baseline.jsonc` (41 findings); it does
+not replace this report's original 73-finding census.
 
 ## Root-cause diagnosis (per task note #1)
 

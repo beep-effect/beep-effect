@@ -570,3 +570,9 @@ verified by `git ls-tree`. Historical counts and reports remain intact.
 Unchanged legacy findings are not copied into this repair. No baseline
 refresh or suppression is used. Verification remains pending until the
 paired-archive semantic check reads the committed repair.
+
+The independent doc reviewer found one P2 provenance ambiguity: two revised
+spans paired the later 41-finding blob with the original 73-finding report
+count. Kept the historical counts, labelled the later blob as recovery
+provenance, and explicitly separated the two censuses. All actionable
+findings remain subject to repair regardless of severity.
