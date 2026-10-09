@@ -1,6 +1,9 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/engine/Distribution");
 
 /**
  * The carrier package a tool's bins were installed through.
@@ -14,9 +17,9 @@ import * as S from "effect/Schema";
  * @public
  */
 export const Distribution = S.Struct({
-	name: S.String,
-	version: S.String,
-});
+	name: S.String.annotateKey({ description: "The carrier package that installed and re-exposes the tool's bins" }),
+	version: S.String.annotateKey({ description: "The version of the carrier package that installed the tool's bins" }),
+}).pipe($I.annoteSchema("Distribution", { description: "The carrier package a tool's bins were installed through." }));
 
 /**
  * A decoded {@link (Distribution:variable)}.
@@ -46,7 +49,7 @@ export const DistributionField = S.NullOr(Distribution);
  * @public
  */
 export const CurrentDistribution: Context.Reference<O.Option<Distribution>> = Context.Reference(
-	"@effected/engine/CurrentDistribution",
+	$I`CurrentDistribution`,
 	{ defaultValue: () => O.none() },
 );
 
