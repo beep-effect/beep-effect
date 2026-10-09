@@ -147,6 +147,8 @@ seed implementation without replacing that doctrine.
 | 2026-10-09 (m) | Schema-valid JSON-safe attempt encoding is an invariant; encoder failure becomes a defect. Read, decode, initialization, lock and append failures remain typed storage errors. Reason: the validated receipt contains only finite data, strings and schema-backed collections; a fabricated invalid instance is outside the typed port. Reversal: introduce a typed encoding failure with a real failing fixture if a future receipt codec adds fallible transforms. | P2 uncovered encoder callback; receipt schema and storage tests. |
 | 2026-10-09 (n) | Re-record only the server cache baseline subject through `beep cache baseline --request` for the added provenance edges. Reason: existing reviewed configuration drifted; this changes no cache flag, command, input/output pattern, environment key, qualification scope or remote authority. Reversal: remove the additive dependency, regenerate its lockfile/projections and re-record the resulting subject. | `history/p2/2026-10-09-cache-review.md`; cache policy reports zero blocking findings. |
 
+| 2026-10-09 (o) | Use the explicit inherited publish-fence fallback after collected gates pass 15 lanes and refuse only the unchanged main EV015. Reason: the orchestrator standing ruling authorizes a named commit and direct push, while S11 centralizes inherited repair. No gate, inventory or unowned source is changed. Reversal: return to ordinary Yeet publication after the main repair lands; the published commit remains reviewable. | Wave-2 third refusal; inherited publish-fence ruling 22:01Z; PR #1573. |
+
 ## Acceptance Criteria
 
 - [ ] P0 records an attorney-reviewed, license-safe fixture inventory covering

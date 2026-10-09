@@ -104,3 +104,15 @@ The obsolete P0 Heavy Admit workflow was cancelled after confirming its immutabl
 fixture-only head. Wave 2 requires implementation-head verification; cancelled
 old-head jobs are neither successes nor final-head failures. Decision Log (i)
 records the reason and reversal.
+
+## Final package recheck and inherited publication refusal
+
+At `ef31e18c571ea219b19005ee418861ff4312c87a`, the fixture boundary decoder and
+schema-derived abstention property pass package audit plus docgen: use-cases
+14.7/9.2 s, server 50.1/12.8 s. Production source and the domain package are
+unchanged from the coverage and parity proofs above. Cache-policy and
+schema-first pass. Collected cheap gates pass 15 lanes and fail only the
+inherited epistemic EV015 from main #1572. This supersedes the earlier
+whole-root test-canon pass after main integration; own test canon remains clean.
+The explicit inherited publish-fence ruling authorizes direct publication,
+without claiming the inherited gate green or modifying its owner source.
