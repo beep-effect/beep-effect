@@ -192,3 +192,8 @@
   under an explicit scope and retrieve its service context; preserve release
   boundaries while testing initialization failures. A documented storage-test
   boundary pattern would prevent the audit/runtime mismatch.
+
+- The installed Effect v4 Vitest runner scopes `it.effect` directly; the old
+  `it.scoped` member is incompatible. Package test typecheck caught the runtime
+  callable mismatch. Validate runner members against installed declarations
+  before changing test scope, and use `Effect.fn` for reusable generators.
