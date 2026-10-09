@@ -2650,16 +2650,197 @@
       "wave": 1,
       "position": 14,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "drivers",
       "upstreamPaths": {
         "src": "packages/git/src",
         "test": "packages/git/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "BranchEntry",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CommitInfo",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CommitLogEntry",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ConfigListEntry",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DirtyWorktreeError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Git",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitCommand",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitCommandError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitConfig",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitConfigDiagnostic",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitConfigEditError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitConfigEntry",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitConfigInclude",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitConfigParseError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitConfigScope",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitConfigSection",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitInvocation",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "GitShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Gitmodules",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitmodulesDecodeError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitmodulesEntry",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "GitmodulesParseError",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "LsFilesEntry",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "LsRemoteEntry",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "LsTreeEntry",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MergeConflictError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "NameStatusEntry",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "NonFastForwardError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "NotARepositoryError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RefEntry",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "StashEntry",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "StatusEntry",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "StatusRenderOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "SubmoduleStatusEntry",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "UnknownRefError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WorktreeEntry",
+          "kind": "both",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
       "newDeps": [],
-      "fixturesBytes": 0,
+      "fixturesBytes": 1891,
       "deviations": [],
       "backlog": [],
       "reviewRounds": [],
