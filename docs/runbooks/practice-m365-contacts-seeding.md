@@ -94,7 +94,8 @@ The five `M365_APP_ONLY_*` names in `contacts.env` resolve the existing outbox
 certificate and attorney mailbox. No mailbox flag exists. No other env file is
 needed. The fixed folder name is `Practice contacts (seeded)`, and stored ids
 survive a later rename. The state location defaults to
-`${XDG_STATE_HOME:-~/.local/state}/beep/practice-m365-contacts/`.
+`<state-home>/beep/practice-m365-contacts/`, where `<state-home>` is
+`XDG_STATE_HOME` or the user's default local state directory.
 
 1. Check the references with output suppressed:
 

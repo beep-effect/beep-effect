@@ -79,3 +79,20 @@
   the brief's repeating-blocker condition; both terminal results are explicitly
   `cancelled-before-gate`, `passed: false`. No home configuration, cap or other
   lane was changed. Prevention: fair queued admission rather than lock polling.
+
+## 2026-10-09 — strict fixture qualification on resume
+
+- Activity: repaired driver package verification through the five-slot wrapper.
+- Evidence: dependency builds passed; audit reported `deterministicKeys`,
+  `preferTypedSchemaDecoder`, `unnecessaryFailYieldableError` and
+  `strictEffectProvide` in the new contact fixtures.
+- Attribution: introduced fixture defects. Fix commit `cbb6a545b0` uses the
+  established `it.layer` harness, typed codecs and the deterministic service key.
+  The P0 row is acknowledged with the fix sha; replacement proof remains queued.
+- Prevention: run the test compiler immediately after authoring new fixtures,
+  and compose their layers with the repository test harness from the beginning.
+
+- Current-main knowledge-reference check identified one introduced host-path
+  observation at the seeding runbook's state-directory example. Replaced it
+  with `<state-home>` and the environment-variable/default description. The
+  earlier inherited observation is historical; this run uses the new result.
