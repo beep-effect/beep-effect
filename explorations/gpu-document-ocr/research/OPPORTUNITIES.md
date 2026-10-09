@@ -61,3 +61,34 @@
     digests found in the root manifest; all found in a per-source manifest one
     directory down. Prevention: the list should carry the manifest path, or
     the lookup should read every manifest under the raw directory.
+
+
+## 2026-10-09
+
+1. **Heavy admission lacked the user-session environment.** Doing: generate
+   exploration projections through `beep-heavy`. Evidence: "Failed to
+   connect to user scope bus"; `DBUS_SESSION_BUS_ADDRESS` and
+   `XDG_RUNTIME_DIR` were not defined. Prevention: initialize the standard
+   user bus environment in the lane launcher. Retried through the same
+   wrapper with the user-session variables; no unit or gate started on the
+   failed attempt.
+
+2. **A small projection update queues with heavy proofs.** Doing: close the
+   exploration loop before the docs commit. Evidence: `beep-heavy` reported
+   "all 3 slots busy, waiting" for `explore atlas --write`. Prevention:
+   classify bounded projection commands separately in the admission policy,
+   while preserving the required shared budget for actual heavy work.
+   This lane keeps the mandated wrapper and waits; no budget bypass.
+
+   Resolution: the worker classified this bounded document projection as
+   heavy too conservatively. Stopped its own waiting unit and ran the light
+   projection directly; actual heavy gates and publication retain admission.
+
+3. **An inherited live reference blocks the whole repository check.** Doing:
+   committed-head `CI=true bun run beep knowledge refs --check`. Evidence:
+   one gated `external-mirror-reference` in
+   `goals/repository-simplification-confidence/SPEC.md:374` at initial head
+   `cd13ace5f4`; the same line exists on `origin/main`. No gated observation
+   belongs to this OCR packet. Prevention: consolidate the inherited red on
+   main through its owning lane. This worker leaves that packet untouched
+   and reports the red under S11.

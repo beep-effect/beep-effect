@@ -3,8 +3,8 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `research`
-Status: `active`
+Stage: `align`
+Status: `killed`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -18,14 +18,11 @@ engine can plug in without overwriting what was read before.
 
 ## Next Open Question
 
-Should the first build be a CPU change rather than a GPU one? The measurements
-say most lost text is a pipeline problem: pages rendered to images and read
-by Tesseract directly read the sampled crash and timeout sources at under a
-second per page, and most "low-text" pages have little or no text. The vision
-engine that ran (GLM-OCR) helps on a small share of pages (wrong-language,
-faxed, tabular), omits content on others, and under the current temperature
-line the card serves 5.6 pages per minute. Decide in align: page-level
-Tesseract driver first, GPU as a confidence-routed second reader after.
+None: align is closed by the 2026-10-09 NO-SHIP ruling in
+[`DECISIONS.md`](./DECISIONS.md). Keep the delivered CPU-first path from
+#1481. The GPU second reader does not ship and adds no prerequisite before
+pipeline-v2 scaffolding. CPU selection, language and tuning follow-ups are
+listed in the lane handoff for the orchestrator to route.
 
 ## Read This First
 
@@ -49,3 +46,10 @@ Tesseract driver first, GPU as a confidence-routed second reader after.
   (too hot and too slow; too slow). GLM-OCR and Tesseract compared on 200
   low-text pages from the October run with a duty cycle. Recommendation
   revised: fix the CPU path first.
+
+- 2026-10-09: research -> align loop refreshed #1470/#1481 and P9-P11
+  evidence; all seven questions closed. CPU first confirmed as delivered.
+  Epitaph: GPU second-reader OCR killed because measured gains do not justify
+  omissions, attended duty-cycled passes, and a maintained driver before
+  cheaper CPU gaps are measured. Status `killed`, stage `align`; reversal
+  measurement and CPU follow-ups recorded in DECISIONS and the handoff.
