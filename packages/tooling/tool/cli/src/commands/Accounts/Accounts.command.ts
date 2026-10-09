@@ -76,7 +76,7 @@ const renderCredit = (credit: CreditBalance): string =>
       `${credit.label} ${amount(credit.unit, credit.remaining)}`,
       ...O.toArray(O.map(credit.limit, (limit) => `of ${amount(credit.unit, limit)}`)),
       "left",
-      ...O.toArray(O.map(credit.expiresAt, (at) => `until ${Str.slice(0, 10)(DateTime.formatIso(at))}`)),
+      ...O.toArray(O.map(credit.expiresAt, (at) => `until ${at.pipe(DateTime.formatIso, Str.slice(0, 10))}`)),
     ],
     " "
   );

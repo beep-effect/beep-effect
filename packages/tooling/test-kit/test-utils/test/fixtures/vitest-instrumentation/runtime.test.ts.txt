@@ -1,26 +1,24 @@
 import { fcRuns } from "@beep/fc-runs";
 import { it } from "@beep/test-utils/Vitest";
 import { afterAll, beforeEach, describe, expect, it as originalIt, TestRunner } from "@effect/vitest";
-import {
-  Clock,
-  Config,
-  Console,
-  Context,
-  Deferred,
-  Duration,
-  Effect,
-  Exit,
-  Fiber,
-  Inspectable,
-  Layer,
-  Logger,
-  Ref,
-  Schema,
-  Scope,
-} from "effect";
+import * as Clock from "effect/Clock";
+import * as Config from "effect/Config";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
+import * as Deferred from "effect/Deferred";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
+import * as Ref from "effect/Ref";
+import * as Schema from "effect/Schema";
+import * as Scope from "effect/Scope";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 import * as Arbitrary from "effect/Arbitrary";
 import type { TestContext } from "@effect/vitest";
 

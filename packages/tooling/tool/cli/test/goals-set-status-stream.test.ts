@@ -70,7 +70,7 @@ const listEventFiles = Effect.fnUntraced(function* (slug: string) {
 });
 
 const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {
-  assertTrue(Exit.isFailure(exit));
+  exit.pipe(Exit.isFailure, assertTrue);
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
     expect(Runtime.getErrorExitCode(error)).toBe(1);
@@ -89,7 +89,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             yield* writeStreamPacket("stream-demo");
 
             const first = yield* Effect.exit(runGoalsCommand(["set-status", "stream-demo", "paused"]));
-            assertTrue(Exit.isSuccess(first));
+            first.pipe(Exit.isSuccess, assertTrue);
 
             const afterFirst = yield* listEventFiles("stream-demo");
             expect(A.length(afterFirst)).toBe(2);
@@ -105,7 +105,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             expect(manifest).toContain('"status": "paused"');
 
             const second = yield* Effect.exit(runGoalsCommand(["set-status", "stream-demo", "active"]));
-            assertTrue(Exit.isSuccess(second));
+            second.pipe(Exit.isSuccess, assertTrue);
             const afterSecond = yield* listEventFiles("stream-demo");
             expect(A.length(afterSecond)).toBe(3);
             const traceAfter = yield* fs.readFileString("goals/stream-demo/ops/trace.json");
@@ -126,7 +126,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             yield* writeStreamPacket("preview-demo");
 
             const exit = yield* Effect.exit(runGoalsCommand(["set-status", "preview-demo", "paused", "--preview"]));
-            assertTrue(Exit.isSuccess(exit));
+            exit.pipe(Exit.isSuccess, assertTrue);
 
             expect(A.length(yield* listEventFiles("preview-demo"))).toBe(0);
             const traceExists = yield* fs.exists("goals/preview-demo/ops/trace.json");
@@ -148,7 +148,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             yield* writeStreamPacket("forked-demo");
 
             const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "forked-demo", "paused"]));
-            assertTrue(Exit.isSuccess(seeded));
+            seeded.pipe(Exit.isSuccess, assertTrue);
 
             // Handcraft a second child of the genesis event (a fork).
             const store = yield* PacketEventStore;
@@ -229,7 +229,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const fs = yield* FileSystem.FileSystem;
             yield* writeStreamPacket("idempotent-demo");
             const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "idempotent-demo", "paused"]));
-            assertTrue(Exit.isSuccess(seeded));
+            seeded.pipe(Exit.isSuccess, assertTrue);
 
             const beforeFiles = yield* listEventFiles("idempotent-demo");
             const beforeTrace = yield* fs.readFileString("goals/idempotent-demo/ops/trace.json");
@@ -271,7 +271,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const fs = yield* FileSystem.FileSystem;
             yield* writeStreamPacket("skip-stale-trace-demo");
             const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "skip-stale-trace-demo", "paused"]));
-            assertTrue(Exit.isSuccess(seeded));
+            seeded.pipe(Exit.isSuccess, assertTrue);
 
             const tracePath = "goals/skip-stale-trace-demo/ops/trace.json";
             const freshTrace = yield* fs.readFileString(tracePath);
@@ -314,7 +314,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           Effect.gen(function* () {
             yield* writeStreamPacket("skip-cas-demo");
             const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "skip-cas-demo", "paused"]));
-            assertTrue(Exit.isSuccess(seeded));
+            seeded.pipe(Exit.isSuccess, assertTrue);
 
             const locator = PacketStreamLocator.make({
               packet: "skip-cas-demo",
@@ -347,7 +347,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             expect((yield* writer.commit(concurrent)).appended).toBe(1);
 
             const refused = yield* Effect.exit(writer.commit(stalePlan));
-            assertTrue(Exit.isFailure(refused));
+            refused.pipe(Exit.isFailure, assertTrue);
             if (Exit.isFailure(refused)) {
               expect(String(Cause.squash(refused.cause))).toContain("stream moved between plan and commit");
             }
@@ -365,7 +365,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const fs = yield* FileSystem.FileSystem;
             yield* writeStreamPacket("skip-preview-demo");
             const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "skip-preview-demo", "paused"]));
-            assertTrue(Exit.isSuccess(seeded));
+            seeded.pipe(Exit.isSuccess, assertTrue);
 
             const beforeFiles = yield* listEventFiles("skip-preview-demo");
             const beforeTrace = yield* fs.readFileString("goals/skip-preview-demo/ops/trace.json");
@@ -373,7 +373,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const previewed = yield* Effect.exit(
               runGoalsCommand(["set-status", "skip-preview-demo", "paused", "--preview"])
             );
-            assertTrue(Exit.isSuccess(previewed));
+            previewed.pipe(Exit.isSuccess, assertTrue);
             expect(yield* listEventFiles("skip-preview-demo")).toStrictEqual(beforeFiles);
             expect(yield* fs.readFileString("goals/skip-preview-demo/ops/trace.json")).toBe(beforeTrace);
           })
@@ -390,11 +390,11 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const fs = yield* FileSystem.FileSystem;
             yield* writeStreamPacket("skip-write-demo");
             const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "skip-write-demo", "paused"]));
-            assertTrue(Exit.isSuccess(seeded));
+            seeded.pipe(Exit.isSuccess, assertTrue);
 
             const beforeFiles = yield* listEventFiles("skip-write-demo");
             const repeated = yield* Effect.exit(runGoalsCommand(["set-status", "skip-write-demo", "paused"]));
-            assertTrue(Exit.isSuccess(repeated));
+            repeated.pipe(Exit.isSuccess, assertTrue);
 
             expect(yield* listEventFiles("skip-write-demo")).toStrictEqual(beforeFiles);
             const manifest = yield* fs.readFileString("goals/skip-write-demo/ops/manifest.json");
@@ -417,7 +417,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               at: "2026-08-17T10:00:00.000Z",
             })
           );
-          assertTrue(Exit.isFailure(decoded));
+          decoded.pipe(Exit.isFailure, assertTrue);
           if (Exit.isFailure(decoded)) {
             expect(String(Cause.squash(decoded.cause))).toContain("Expected a non-empty actor");
           }
@@ -433,7 +433,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           Effect.gen(function* () {
             yield* writeStreamPacket("retry-demo");
             const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "retry-demo", "paused"]));
-            assertTrue(Exit.isSuccess(seeded));
+            seeded.pipe(Exit.isSuccess, assertTrue);
 
             // A retry after a partial failure re-reads the manifest before the
             // manifest edit landed: previousStatus arrives stale ("active"),
@@ -499,7 +499,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               body: { type: "packet-created", status: "active" },
             });
             const conflict = yield* Effect.exit(store.append(locator, rival));
-            assertTrue(Exit.isFailure(conflict));
+            conflict.pipe(Exit.isFailure, assertTrue);
             if (Exit.isFailure(conflict)) {
               const error = Cause.squash(conflict.cause);
               expect(String(error)).toContain("revision");

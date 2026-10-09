@@ -43,8 +43,10 @@ const scrapeMarkdown = Effect.fn("Research.scrapeMarkdown")(function* (
   const provided = yield* Effect.serviceOption(Firecrawl);
   return yield* O.match(provided, {
     onNone: () =>
-      Effect.scoped(
-        Layer.build(Firecrawl.layer).pipe(Effect.flatMap((context) => scrapeWithService.pipe(Effect.provide(context))))
+      Firecrawl.layer.pipe(
+        Layer.build,
+        Effect.flatMap((context) => scrapeWithService.pipe(Effect.provide(context))),
+        Effect.scoped
       ),
     onSome: (firecrawl) => firecrawl.scrape(payload),
   }).pipe(ResearchCommandError.mapError(`Firecrawl scrape failed for "${url}".`));

@@ -375,7 +375,9 @@ const withScriptedGh = <A, E, R>(
   use: (calls: Ref.Ref<ReadonlyArray<string>>) => Effect.Effect<A, E, R>
 ) =>
   // The test clock starts at the epoch; put "now" a minute past the recorded window.
-  TestClock.setTime(DateTime.toEpochMillis(windowClosed)).pipe(
+  windowClosed.pipe(
+    DateTime.toEpochMillis,
+    TestClock.setTime,
     Effect.andThen(Ref.make<ReadonlyArray<string>>(A.empty())),
     Effect.flatMap((calls) =>
       use(calls).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, scriptedGh(script, calls)))

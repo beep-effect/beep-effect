@@ -125,7 +125,7 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
     return Effect.gen(function* () {
       const exit = yield* Effect.exit(runQualityCommand(["github-checks", "security"]));
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       expect(spawned).toEqual(["node --test scripts/test-onnxruntime-installer-patch.mjs"]);
     }).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recordingSpawner(spawned, failedHandle)),

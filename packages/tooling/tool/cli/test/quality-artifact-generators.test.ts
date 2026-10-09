@@ -215,9 +215,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("quality a
           Effect.exit
         );
         if (interrupted) {
-          assertTrue(Exit.isFailure(exit));
-          assertTrue(Cause.hasInterrupts(exit.cause));
-          assertTrue(Cause.hasInterruptsOnly(exit.cause));
+          if (!Exit.isFailure(exit)) throw new Error("Expected a failure exit");
+          exit.cause.pipe(Cause.hasInterrupts, assertTrue);
+          exit.cause.pipe(Cause.hasInterruptsOnly, assertTrue);
         } else {
           assertExitFailure(exit, Cause.fail(failure));
         }

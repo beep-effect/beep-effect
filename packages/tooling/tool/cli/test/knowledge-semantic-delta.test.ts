@@ -1011,7 +1011,7 @@ describe("knowledge semantic-delta probe policy", () => {
 
         expect(skipped.probePolicy).toBe("skipped-untrusted-context");
         expect(skipped.introduced).toEqual([]);
-        assertTrue(Exit.isFailure(probed));
+        probed.pipe(Exit.isFailure, assertTrue);
       })
     );
   });

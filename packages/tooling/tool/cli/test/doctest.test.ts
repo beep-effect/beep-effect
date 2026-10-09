@@ -60,7 +60,7 @@ describe("doctest analyzer", () => {
 
   it("keeps Effect runners pure and separates type-only examples", () => {
     expect(classifyDoctestFence("Effect.runSync(Effect.succeed(1))", "ts")._tag).toBe("pure");
-    expect(classifyDoctestFence('import type { A } from "effect"\ntype B = A', "ts")._tag).toBe("typeOnly");
+    expect(classifyDoctestFence('import type * as A from "effect/Array"\ntype B = A', "ts")._tag).toBe("typeOnly");
     expect(classifyDoctestFence('import * as S from "effect/Schema"\nconst X = S.String', "ts")._tag).toBe("pure");
   });
 

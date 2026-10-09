@@ -221,7 +221,7 @@ describe("internal/cli dependency-free boundary", () => {
           "import:./internal/cli/FailureRendering.ts",
           "import:./internal/cli/LintRouting.ts",
           "import():@beep/utils",
-          "import():effect",
+          "import():effect/Function",
         ]);
 
         const beforeFastPath = (mutation: string): string =>

@@ -210,7 +210,7 @@ const withFakeRunner = (recorder: GhRecorder, latency: Duration.Duration, failCe
         const now = yield* Ref.updateAndGet(recorder.inFlight, Num.increment);
         yield* Ref.update(recorder.maxInFlight, Num.max(now));
         // The live clock: the test clock would park the read until adjusted.
-        yield* TestClock.withLive(Effect.sleep(latency));
+        yield* latency.pipe(Effect.sleep, TestClock.withLive);
         yield* Ref.update(recorder.inFlight, Num.decrement);
         yield* Ref.update(recorder.events, A.append(`end ${A.join(A.take(args, 2), " ")}`));
         if (failCensus && census) {

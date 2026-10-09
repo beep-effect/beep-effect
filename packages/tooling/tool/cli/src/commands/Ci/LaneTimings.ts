@@ -853,7 +853,9 @@ const ghApiTransientBaseDelay = (error: CiCommandError | CiGhApiTransientExit): 
 const ghApiTransientRetrySchedule: Schedule.Schedule<Duration.Duration, CiCommandError | CiGhApiTransientExit> =
   Schedule.fromStepWithMetadata(
     Effect.succeed((meta: Schedule.InputMetadata<CiCommandError | CiGhApiTransientExit>) => {
-      const delay = Duration.millis(Duration.toMillis(ghApiTransientBaseDelay(meta.input)) * 2 ** (meta.attempt - 1));
+      const delay = Duration.millis(
+        meta.input.pipe(ghApiTransientBaseDelay, Duration.toMillis) * 2 ** (meta.attempt - 1)
+      );
       return Effect.succeed<[Duration.Duration, Duration.Duration]>([delay, delay]);
     })
   ).pipe(

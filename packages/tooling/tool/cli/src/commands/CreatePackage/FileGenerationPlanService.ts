@@ -790,7 +790,7 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
       const currentTarget = yield* Effect.option(fs.readLink(absolutePath));
       const exists = yield* pipe(
         pathExists(absolutePath),
-        Effect.when(Effect.succeed(O.isNone(currentTarget))),
+        Effect.when(currentTarget.pipe(O.isNone, Effect.succeed)),
         Effect.map(O.getOrElse(thunkTrue))
       );
 

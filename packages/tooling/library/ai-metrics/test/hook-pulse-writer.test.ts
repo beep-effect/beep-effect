@@ -290,8 +290,8 @@ const runWriter = Effect.fnUntraced(function* (
   // the bug worth failing on, so it is left to propagate rather than coerced to success.
   const [stdout, stderr, exitCode] = yield* Effect.all(
     [
-      Stream.mkString(Stream.decodeText(handle.stdout)),
-      Stream.mkString(Stream.decodeText(handle.stderr)),
+      handle.stdout.pipe(Stream.decodeText, Stream.mkString),
+      handle.stderr.pipe(Stream.decodeText, Stream.mkString),
       handle.exitCode,
     ],
     { concurrency: "unbounded" }
@@ -1332,8 +1332,8 @@ const runSwitch = Effect.fnUntraced(function* (store: SwitchStore, args: Readonl
 
   const [stdout, stderr, exitCode] = yield* Effect.all(
     [
-      Stream.mkString(Stream.decodeText(handle.stdout)),
-      Stream.mkString(Stream.decodeText(handle.stderr)),
+      handle.stdout.pipe(Stream.decodeText, Stream.mkString),
+      handle.stderr.pipe(Stream.decodeText, Stream.mkString),
       handle.exitCode,
     ],
     { concurrency: "unbounded" }

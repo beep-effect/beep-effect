@@ -185,15 +185,13 @@ export const docgenCommand = Command.make(
       examplesCompilerOptions,
     });
 
-    return yield* Effect.scoped(
-      Layer.build(Configuration.Configuration.layer(config)).pipe(
-        Effect.flatMap(
-          Effect.fnUntraced(function* (context) {
-            return yield* Core.program.pipe(Effect.provide(context));
-          })
-        )
-      )
-    ).pipe(
+    return yield* Layer.build(Configuration.Configuration.layer(config)).pipe(
+      Effect.flatMap(
+        Effect.fnUntraced(function* (context) {
+          return yield* Core.program.pipe(Effect.provide(context));
+        })
+      ),
+      Effect.scoped,
       Effect.catchTag("DocgenError", (error) =>
         Effect.fail(
           Domain.DocgenError.make({

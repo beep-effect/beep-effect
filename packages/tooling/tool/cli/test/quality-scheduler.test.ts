@@ -1734,7 +1734,7 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               )
             );
             yield* Deferred.await(adopted);
-            const interrupter = yield* Effect.forkChild(Fiber.interrupt(reaper));
+            const interrupter = yield* reaper.pipe(Fiber.interrupt, Effect.forkChild);
             yield* Effect.yieldNow;
             yield* Deferred.succeed(finishAdoption, undefined);
             yield* Fiber.join(interrupter);

@@ -104,7 +104,7 @@ describe("commands/Lint JudgeRubric lens drift", () => {
       const exit = yield* Effect.exit(
         decodeUnknownJudgeRubricDrift({ missingFromPrompt: ["made-up-lens"], unknownInPrompt: [] })
       );
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 

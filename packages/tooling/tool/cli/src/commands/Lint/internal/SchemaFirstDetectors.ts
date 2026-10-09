@@ -1411,8 +1411,7 @@ const wrapperReferenceNames = (sourceFile: SourceFile): HashSet.HashSet<string> 
     ),
   ]);
 
-// Local names bound to the effect/Schema module: `import * as S from "effect/Schema"` or
-// `import { Schema } from "effect"`.
+// Local names bound to the Schema module through its subpath or the legacy root barrel.
 const schemaModuleNames = (sourceFile: SourceFile): HashSet.HashSet<string> =>
   HashSet.fromIterable(
     A.flatMap(sourceFile.getImportDeclarations(), (declaration) =>

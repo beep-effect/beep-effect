@@ -64,7 +64,7 @@ const resolvedConfig = Effect.fn("DoctestTest.resolvedConfig")(function* (root: 
       `
       import { resolveConfig } from "vitest/node";
       import { jsonStringifyPretty } from "@beep/repo-utils/JsonUtils";
-      import { Effect } from "effect";
+      import * as Effect from "effect/Effect";
       const { test: c } = await resolveConfig({ root: process.argv[1], config: process.argv[1] + "/vitest.config.ts", watch: false });
       console.log(await Effect.runPromise(jsonStringifyPretty({
         pool: c.pool, include: c.include, includeSource: c.includeSource ?? [], exclude: c.exclude,

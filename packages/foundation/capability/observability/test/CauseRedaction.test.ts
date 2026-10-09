@@ -161,10 +161,10 @@ describe("CauseRedaction", () => {
         "preserves the original cause",
         Effect.fnUntraced(function* () {
           const original = Cause.fail(new Error("boom"));
-          const exit = yield* Effect.exit(
-            Effect.failCause(original).pipe(
-              tapRedactedCause(LogRedactedCauseOptions.make({ message: "boundary failed" }))
-            )
+          const exit = yield* original.pipe(
+            Effect.failCause,
+            tapRedactedCause(LogRedactedCauseOptions.make({ message: "boundary failed" })),
+            Effect.exit
           );
 
           expect(exit._tag).toBe("Failure");

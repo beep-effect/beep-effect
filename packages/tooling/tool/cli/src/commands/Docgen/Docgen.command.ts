@@ -1077,10 +1077,9 @@ const docgenQualityWorkerRunpodEvalCommand = Command.make(
         allowPublicTemplateSearch,
         ...(O.isSome(templateId) ? { templateId: templateId.value } : {}),
       }).pipe((effect) =>
-        Effect.scoped(
-          Layer.build(Runpod.makeLayer(RunpodConfigInput.make({ apiKey: runpodApiKey }))).pipe(
-            Effect.flatMap((context) => effect.pipe(Effect.provide(context)))
-          )
+        Layer.build(Runpod.makeLayer(RunpodConfigInput.make({ apiKey: runpodApiKey }))).pipe(
+          Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
+          Effect.scoped
         )
       );
       const content = yield* generateQualityWorkerRunpodEvalJson(report);

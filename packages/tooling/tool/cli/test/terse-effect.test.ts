@@ -57,7 +57,7 @@ const writeHelperWrapperFixture = writeDemoSource([
 ]);
 
 const writeFlowThunkFixture = writeDemoSource([
-  'import { pipe } from "effect";',
+  'import { pipe } from "effect/Function";',
   'import * as O from "effect/Option";',
   'import { thunkUndefined } from "@beep/utils";',
   "",
@@ -346,7 +346,7 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
             DemoSourcePath,
             A.join(
               [
-                'import { pipe } from "effect";',
+                'import { pipe } from "effect/Function";',
                 'import * as O from "effect/Option";',
                 "",
                 "declare const maybeParse: O.Option<(input: string) => unknown>;",

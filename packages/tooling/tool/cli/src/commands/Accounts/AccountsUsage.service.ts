@@ -481,7 +481,7 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
 
   const accounts = fs.readDirectory(directory).pipe(
     Effect.catchTag("PlatformError", (error) =>
-      error.reason._tag === "NotFound" ? Effect.succeed(A.empty<string>()) : Effect.fail(mapPlatformError(error))
+      error.reason._tag === "NotFound" ? Effect.succeed(A.empty<string>()) : error.pipe(mapPlatformError, Effect.fail)
     ),
     Effect.map(A.filter(Str.endsWith(".json"))),
     Effect.flatMap(Effect.forEach((name) => accountAt(path.join(directory, name)), { concurrency: POLL_CONCURRENCY })),
@@ -541,7 +541,7 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
 
   const snapshots = fs.readDirectory(snapshotDirectory).pipe(
     Effect.catchTag("PlatformError", (error) =>
-      error.reason._tag === "NotFound" ? Effect.succeed(A.empty<string>()) : Effect.fail(mapPlatformError(error))
+      error.reason._tag === "NotFound" ? Effect.succeed(A.empty<string>()) : error.pipe(mapPlatformError, Effect.fail)
     ),
     Effect.map(A.filter(Str.endsWith(".json"))),
     Effect.flatMap(

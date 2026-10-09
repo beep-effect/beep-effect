@@ -169,7 +169,7 @@ describe("yeet merged tier guards", () => {
         validateMonitorGuards(context, defaultYeetRunOptions({ merged: true, mode: "publish" }))
       );
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
@@ -179,7 +179,7 @@ describe("yeet merged tier guards", () => {
         validateMonitorGuards(context, defaultYeetRunOptions({ merged: true, mode: "verify", tier: "review-fix" }))
       );
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
@@ -189,7 +189,7 @@ describe("yeet merged tier guards", () => {
         validateMonitorGuards(context, defaultYeetRunOptions({ merged: true, mode: "verify", tier: "full" }))
       );
 
-      assertTrue(Exit.isSuccess(exit));
+      exit.pipe(Exit.isSuccess, assertTrue);
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
@@ -199,7 +199,7 @@ describe("yeet merged tier guards", () => {
         validateMonitorGuards(context, defaultYeetRunOptions({ ciParity: true, mode: "verify", tier: "full" }))
       );
 
-      assertTrue(Exit.isSuccess(exit));
+      exit.pipe(Exit.isSuccess, assertTrue);
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 
@@ -212,8 +212,8 @@ describe("yeet merged tier guards", () => {
         validateMonitorGuards(context, defaultYeetRunOptions({ ciParity: true, merged: true, mode: "verify" }))
       );
 
-      assertTrue(Exit.isFailure(publishExit));
-      assertTrue(Exit.isFailure(mergedExit));
+      publishExit.pipe(Exit.isFailure, assertTrue);
+      mergedExit.pipe(Exit.isFailure, assertTrue);
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 });

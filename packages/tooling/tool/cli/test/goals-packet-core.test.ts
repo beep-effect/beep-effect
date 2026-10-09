@@ -505,7 +505,7 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
           // packet-trace-stale, and the next write regenerates it.
           const v1Text = yield* fs.readFileString(`${GOLDEN_PATH}/expected-trace.v1.json`);
           const decoded = yield* Effect.exit(decodePacketTraceProjectionJson(v1Text));
-          assertTrue(Exit.isFailure(decoded));
+          decoded.pipe(Exit.isFailure, assertTrue);
 
           const v2Text = yield* fs.readFileString(`${GOLDEN_PATH}/expected-trace.json`);
           expect(v2Text).not.toBe(v1Text);
@@ -550,7 +550,7 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             body: { type: "status-set", status: "paused", previous: "active" },
           });
           const result = yield* Effect.exit(store.append(locator, next));
-          assertTrue(Exit.isFailure(result));
+          result.pipe(Exit.isFailure, assertTrue);
           if (Exit.isFailure(result)) {
             expect(String(Cause.squash(result.cause))).toContain("forked");
           }
@@ -893,7 +893,7 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
           const missingPath = yield* fs.makeTempDirectoryScoped();
           const missingLocator = PacketStreamLocator.make({ packet: "robust", root: "goals", packetPath: missingPath });
           const missing = yield* Effect.exit(store.append(missingLocator, genesisEvent("robust")));
-          assertTrue(Exit.isFailure(missing));
+          missing.pipe(Exit.isFailure, assertTrue);
           if (Exit.isFailure(missing)) {
             expect(String(Cause.squash(missing.cause))).toContain("ops/events");
           }
@@ -903,7 +903,7 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
           yield* fs.writeFileString(`${brokenPath}/ops/events/junk.json`, "{}");
           const brokenLocator = PacketStreamLocator.make({ packet: "robust", root: "goals", packetPath: brokenPath });
           const broken = yield* Effect.exit(store.append(brokenLocator, genesisEvent("robust")));
-          assertTrue(Exit.isFailure(broken));
+          broken.pipe(Exit.isFailure, assertTrue);
           if (Exit.isFailure(broken)) {
             expect(String(Cause.squash(broken.cause))).toContain("integrity");
           }
@@ -923,7 +923,7 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             body: { type: "status-set", status: "paused", previous: "active" },
           });
           const conflicted = yield* Effect.exit(store.append(parentLocator, wrongParent));
-          assertTrue(Exit.isFailure(conflicted));
+          conflicted.pipe(Exit.isFailure, assertTrue);
           if (Exit.isFailure(conflicted)) {
             expect(String(Cause.squash(conflicted.cause))).toContain("parent digest");
           }

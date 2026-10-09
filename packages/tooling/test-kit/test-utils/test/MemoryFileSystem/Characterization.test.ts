@@ -447,7 +447,7 @@ it.layer(Subject.layer)("public core characterization", (it) => {
       const fs = yield* Fs.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped();
       const path = `${root}/missing`;
-      const error = yield* Effect.flip(Stream.runDrain(fs.watch(path)));
+      const error = yield* fs.watch(path).pipe(Stream.runDrain, Effect.flip);
       strictEqual(error._tag, "PlatformError");
       assertTrue(error.reason._tag === "NotFound");
       strictEqual(error.reason.module, "FileSystem");

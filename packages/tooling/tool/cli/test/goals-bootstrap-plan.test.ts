@@ -602,7 +602,7 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
                 "--json",
               ])
             );
-            assertTrue(Exit.isSuccess(happy));
+            happy.pipe(Exit.isSuccess, assertTrue);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       30_000
@@ -630,12 +630,12 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
             expectReportedExit(missingPlan);
 
             const happy = yield* Effect.exit(runGoalsCommand(["adopt", "fixture-packet", "--plan", "--json"]));
-            assertTrue(Exit.isSuccess(happy));
+            happy.pipe(Exit.isSuccess, assertTrue);
 
             const human = yield* Effect.exit(
               runGoalsCommand(["adopt", "fixture-packet", "--plan", "--toward", "standard-delivery"])
             );
-            assertTrue(Exit.isSuccess(human));
+            human.pipe(Exit.isSuccess, assertTrue);
 
             const notFound = yield* Effect.exit(runGoalsCommand(["adopt", "missing-packet", "--plan"]));
             expectReportedExit(notFound);

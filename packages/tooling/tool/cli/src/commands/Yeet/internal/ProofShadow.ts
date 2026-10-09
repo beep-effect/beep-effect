@@ -580,11 +580,12 @@ const readChangedPackages = Effect.fn("Yeet.ProofShadow.readChangedPackages")(fu
   // `FsUtils` is a layer the CLI builds at its entry point, but the verdict
   // writer's requirement set is fixed by its callers; build it for this one
   // workspace read and let the scope discard it, so nothing upstream widens.
-  const workspaces = yield* Effect.scoped(
-    Layer.build(FsUtilsLive).pipe(
-      Effect.flatMap((fsUtils) => collectWorkspaces(repoRoot).pipe(Effect.provide(fsUtils)))
-    )
-  ).pipe(Effect.mapError(YeetCommandError.new("Failed to read the workspace list.")));
+  const workspaces = yield* FsUtilsLive.pipe(
+    Layer.build,
+    Effect.flatMap((fsUtils) => collectWorkspaces(repoRoot).pipe(Effect.provide(fsUtils))),
+    Effect.scoped,
+    Effect.mapError(YeetCommandError.new("Failed to read the workspace list."))
+  );
   // A catalog that read cleanly but names no workspace maps every path to
   // nothing, which is indistinguishable from "nothing changed" and would leave
   // the tripwire inert. This repository always has workspaces, so an empty one

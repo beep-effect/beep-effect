@@ -87,17 +87,17 @@ export const runWithResearchDb: {
     work: Effect.Effect<A, E, DuckDb>,
     { databasePath, message }: RunWithResearchDbOptions
   ): Effect.Effect<A, ResearchCommandError> =>
-    Effect.scoped(
-      Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))).pipe(
-        Effect.flatMap((context) =>
-          Effect.gen(function* () {
-            const db = yield* DuckDb;
-            yield* db.runMany(CREATE_TABLES);
-            return yield* work;
-          }).pipe(Effect.provide(context))
-        )
-      )
-    ).pipe(ResearchCommandError.mapError(message))
+    Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))).pipe(
+      Effect.flatMap((context) =>
+        Effect.gen(function* () {
+          const db = yield* DuckDb;
+          yield* db.runMany(CREATE_TABLES);
+          return yield* work;
+        }).pipe(Effect.provide(context))
+      ),
+      Effect.scoped,
+      ResearchCommandError.mapError(message)
+    )
 );
 
 class CountRow extends S.Class<CountRow>($I`CountRow`)(

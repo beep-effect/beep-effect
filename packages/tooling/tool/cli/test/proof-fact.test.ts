@@ -117,7 +117,11 @@ describe("ProofFact schemas", () => {
     ({ value }) =>
       expect(
         S.toEquivalence(ProofLedgerRow)(
-          Result.getOrThrow(decodeUnknownProofLedgerRowResult(Result.getOrThrow(encodeProofLedgerRowResult(value)))),
+          encodeProofLedgerRowResult(value).pipe(
+            Result.getOrThrow,
+            decodeUnknownProofLedgerRowResult,
+            Result.getOrThrow
+          ),
           value
         )
       ).toBe(true),

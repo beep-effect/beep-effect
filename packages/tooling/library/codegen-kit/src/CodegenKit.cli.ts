@@ -53,10 +53,10 @@ const runCli = (config: GenerateConfig, options: GenerateCliOptions = {}): void 
   const platform = Layer.merge(NodeServices.layer, FetchHttpClient.layer);
   const kit = CodegenKit.layer(options.extraRenderers).pipe(Layer.provide(platform));
   const runtime = Layer.merge(platform, kit);
-  const program = Effect.scoped(
-    Layer.build(runtime).pipe(
-      Effect.flatMap((context) => Command.run(command, { version: "0.0.0" }).pipe(Effect.provide(context)))
-    )
+  const program = runtime.pipe(
+    Layer.build,
+    Effect.flatMap((context) => Command.run(command, { version: "0.0.0" }).pipe(Effect.provide(context))),
+    Effect.scoped
   );
   NodeRuntime.runMain(program);
 };

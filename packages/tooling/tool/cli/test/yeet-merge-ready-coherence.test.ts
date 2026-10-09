@@ -90,7 +90,7 @@ describe("YeetMergeReady coherence", () => {
         })
       );
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 
@@ -104,7 +104,7 @@ describe("YeetMergeReady coherence", () => {
         })
       );
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 
@@ -117,7 +117,7 @@ describe("YeetMergeReady coherence", () => {
         })
       );
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 
@@ -130,7 +130,7 @@ describe("YeetMergeReady coherence", () => {
         })
       );
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 
@@ -255,7 +255,7 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
         )
       );
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 });

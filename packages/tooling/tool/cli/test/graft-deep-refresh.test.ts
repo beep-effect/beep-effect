@@ -484,16 +484,12 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
         // run must degrade rather than interrupt the clones still rebuilding.
         intercept: (step) =>
           step.phase === "rebuild" && step.cwd === stalled
-            ? O.some(
-                Effect.fail(
-                  GraftDeepStepError.make({
-                    step: "rebuild",
-                    exitCode: 1,
-                    log: "",
-                    message: `graft build timed out in ${stalled}.`,
-                  })
-                )
-              )
+            ? GraftDeepStepError.make({
+                step: "rebuild",
+                exitCode: 1,
+                log: "",
+                message: `graft build timed out in ${stalled}.`,
+              }).pipe(Effect.fail, O.some)
             : O.none(),
         replies: happyReplies(owner, FULL_COVERAGE),
       });
@@ -828,16 +824,12 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
             calls: [],
             intercept: (step) =>
               step.command === "mise"
-                ? O.some(
-                    Effect.fail(
-                      GraftDeepStepError.make({
-                        step: "preflight",
-                        exitCode: 1,
-                        log: "",
-                        message: "mise trust --show could not spawn.",
-                      })
-                    )
-                  )
+                ? GraftDeepStepError.make({
+                    step: "preflight",
+                    exitCode: 1,
+                    log: "",
+                    message: "mise trust --show could not spawn.",
+                  }).pipe(Effect.fail, O.some)
                 : O.none(),
             replies: happyReplies(owner, FULL_COVERAGE),
           })

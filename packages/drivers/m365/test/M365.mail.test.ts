@@ -204,7 +204,8 @@ const sameBytes = (actual: O.Option<Uint8Array>, expected: Uint8Array): boolean 
 const roundTrip = <Sch extends S.ConstraintCodec<unknown, unknown, never, never>>(
   schema: Sch,
   value: Sch["Type"]
-): Sch["Type"] => Result.getOrThrow(S.decodeUnknownResult(schema)(Result.getOrThrow(S.encodeResult(schema)(value))));
+): Sch["Type"] =>
+  S.encodeResult(schema)(value).pipe(Result.getOrThrow, S.decodeUnknownResult(schema), Result.getOrThrow);
 
 const mailDraft = M365MailDraft.make({
   body: M365MailBody.make({ content: "Synthetic body for a fixture.", contentType: "text" }),

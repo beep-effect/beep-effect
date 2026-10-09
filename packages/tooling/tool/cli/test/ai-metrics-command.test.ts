@@ -85,7 +85,7 @@ const expectAiMetricsCommandFailure = Effect.fn("AIMetricsCommandTest.expectAiMe
   args: ReadonlyArray<string>
 ) {
   const exit = yield* Effect.exit(runAiMetricsCommand(args));
-  assertTrue(Exit.isFailure(exit));
+  exit.pipe(Exit.isFailure, assertTrue);
 
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
@@ -729,7 +729,7 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("ai-met
         );
 
         const doctor = yield* decodeInstallDoctor(yield* lastLoggedLine());
-        assertTrue(Exit.isFailure(exit));
+        exit.pipe(Exit.isFailure, assertTrue);
         expect(doctor.status).toBe("failed");
         expect(doctor.availableSourceCount).toBe(0);
       })

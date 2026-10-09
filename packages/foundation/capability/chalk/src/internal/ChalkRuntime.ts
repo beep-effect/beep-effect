@@ -132,8 +132,10 @@ class MissingBuilderMetadataError extends S.TaggedError<MissingBuilderMetadataEr
 ) {}
 
 const normalizeColorSupportLevel = (level: unknown): ColorSupportLevelType =>
-  Result.getOrThrow(
-    S.decodeUnknownResult(ColorSupportLevel)(Result.getOrThrow(S.decodeUnknownResult(ColorSupportLevelInput)(level)))
+  S.decodeUnknownResult(ColorSupportLevelInput)(level).pipe(
+    Result.getOrThrow,
+    S.decodeUnknownResult(ColorSupportLevel),
+    Result.getOrThrow
   );
 
 const setChalkStateLevel = (state: ChalkState, level: unknown): void => {

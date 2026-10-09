@@ -163,7 +163,7 @@ describe("internal/cli/Json printCommandJson", () => {
     const moduleUrl = new URL("../src/internal/cli/Json.ts", import.meta.url).href;
     const program = [
       `import { printCommandJson } from ${JSON.stringify(moduleUrl)};`,
-      'import { Effect } from "effect";',
+      'import * as Effect from "effect/Effect";',
       "const rawWrite = process.stdout.write.bind(process.stdout);",
       "process.stdout.write = (chunk, ...args) => {",
       '  const bytes = typeof chunk === "string" ? new TextEncoder().encode(chunk) : chunk;',

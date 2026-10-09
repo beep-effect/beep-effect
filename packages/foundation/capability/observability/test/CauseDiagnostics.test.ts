@@ -30,9 +30,9 @@ describe("CauseDiagnostics", () => {
     const summary = summarizeCause(cause);
 
     expect(fingerprint.value).toContain("failure");
-    const equivalent = fingerprintCause(Cause.fail(TestCauseError.make({ message: "boom" })));
-    const differentMessage = fingerprintCause(Cause.fail(TestCauseError.make({ message: "kapow" })));
-    const differentClassification = fingerprintCause(Cause.die(TestCauseError.make({ message: "boom" })));
+    const equivalent = TestCauseError.make({ message: "boom" }).pipe(Cause.fail, fingerprintCause);
+    const differentMessage = TestCauseError.make({ message: "kapow" }).pipe(Cause.fail, fingerprintCause);
+    const differentClassification = TestCauseError.make({ message: "boom" }).pipe(Cause.die, fingerprintCause);
     expect(equivalent.value).toBe(fingerprint.value);
     expect(differentMessage.value).not.toBe(fingerprint.value);
     expect(differentClassification.value).not.toBe(fingerprint.value);
@@ -42,7 +42,7 @@ describe("CauseDiagnostics", () => {
 
   it("summarizes success and failure exits", () => {
     const success = summarizeExit(Exit.succeed("ok"));
-    const failure = summarizeExit(Exit.failCause(Cause.fail(TestCauseError.make({ message: "boom" }))));
+    const failure = TestCauseError.make({ message: "boom" }).pipe(Cause.fail, Exit.failCause, summarizeExit);
 
     expect(success.outcome).toBe("success");
     expect(failure.outcome).toBe("failure");

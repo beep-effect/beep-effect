@@ -46,7 +46,7 @@ const fixture = Effect.fn("LawsPackageTest.fixture")(function* (directory: strin
     A.join(
       [
         'import * as A from "effect/Array";',
-        'import { Effect } from "effect";',
+        'import * as Effect from "effect/Effect";',
         'import { value } from "../../upstream/src/index.ts";',
         "export const helper = { onNone: () => A.empty<string>() };",
         "export const native = new Set();",

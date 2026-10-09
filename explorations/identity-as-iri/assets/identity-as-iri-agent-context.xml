@@ -1119,7 +1119,8 @@ If it'd be useful, I'm happy to sketch the AST-walk that emits the JSON-LD `@con
 * @since 0.0.0
   */
 
-import { Function as Fn, flow, pipe } from "effect";
+import * as Fn from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";

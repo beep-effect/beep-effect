@@ -1638,9 +1638,12 @@ describe("worktree git operations", () => {
             // service so this invocation captures the stub probe instead.
             Effect.provideServiceEffect(
               WorktreeRemovalService,
-              Layer.build(
-                Layer.fresh(WorktreeRemovalServiceLayer).pipe(Layer.provide([NodeServices.layer, probe]))
-              ).pipe(Effect.map(Context.get(WorktreeRemovalService)))
+              WorktreeRemovalServiceLayer.pipe(
+                Layer.fresh,
+                Layer.provide([NodeServices.layer, probe]),
+                Layer.build,
+                Effect.map(Context.get(WorktreeRemovalService))
+              )
             ),
             Effect.scoped,
             Effect.provideService(ConfigProvider.ConfigProvider, residueConfigProvider(context.worktreesRoot))

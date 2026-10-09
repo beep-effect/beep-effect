@@ -60,7 +60,7 @@ it.layer(NodeCrypto.layer, { timeout: "5 seconds" })("FileSystem sync wrappers",
       expect(fileInfo.type).toBe("File");
       expect(typeof fileInfo.size).toBe("bigint");
       expect(fileInfo.size).toBe(5n);
-      assertTrue(Option.isSome(fileInfo.mtime));
+      assertTrue(fileInfo.mtime.pipe(Option.isSome));
 
       const dirInfo = yield* FileSystem.statSync(dir);
       expect(dirInfo.type).toBe("Directory");

@@ -24,14 +24,13 @@ import * as Domain from "./Domain.ts";
 const $I = $RepoDocgenId.create("Parser");
 
 const withSource = <A, E, R>(source: SourceShape, effect: Effect.Effect<A, E, R | Source>) =>
-  Effect.scoped(
-    Layer.build(Source.layer(source)).pipe(
-      Effect.flatMap(
-        Effect.fnUntraced(function* (context) {
-          return yield* effect.pipe(Effect.provide(context));
-        })
-      )
-    )
+  Layer.build(Source.layer(source)).pipe(
+    Effect.flatMap(
+      Effect.fnUntraced(function* (context) {
+        return yield* effect.pipe(Effect.provide(context));
+      })
+    ),
+    Effect.scoped
   );
 
 /**

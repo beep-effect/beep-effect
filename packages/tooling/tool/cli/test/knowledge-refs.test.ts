@@ -663,7 +663,7 @@ describe("knowledge refs check gate", () => {
           "Run it from /home/example/checkouts/beep-effect and sync the mirror at ~/mirrors/firecrawl.\n",
       });
       const exit = yield* Effect.exit(applyKnowledgeRefsCheck(report, { json: false }));
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       const logs = yield* TestConsole.logLines;
       expect(A.some(logs, (line) => Str.startsWith("check: 2 live gated observation(s)")(Str.trim(String(line))))).toBe(
         true

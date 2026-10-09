@@ -130,7 +130,7 @@ export const commitVault = Effect.fn("Research.commitVault")(function* (
       message: `git diff --cached --quiet exited with ${status} in the vault.`,
     });
   }
-  const date = Str.slice(0, 10)(DateTime.formatIso(yield* DateTime.now));
+  const date = (yield* DateTime.now).pipe(DateTime.formatIso, Str.slice(0, 10));
   yield* run(["-c", "commit.gpgsign=false", "commit", "-q", "-m", `capture ${date}`]);
   yield* Console.log(`research daily: committed vault as "capture ${date}".`);
 });

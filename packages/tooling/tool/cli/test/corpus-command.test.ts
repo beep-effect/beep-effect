@@ -251,23 +251,15 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus evidence schemas", (it) =
   });
 
   it("decodes inherited collector failures and secret exclusions without destination fields", () => {
-    assertTrue(
-      Result.isSuccess(
-        decodeUnknownCollectorManifestRecordResult({
-          reason: "source unreadable",
-          src: "C:\\source\\unreadable.bin",
-          status: "error",
-        })
-      )
-    );
-    assertTrue(
-      Result.isSuccess(
-        decodeUnknownCollectorManifestRecordResult({
-          src: "C:\\source\\excluded.bin",
-          status: "excluded-secret",
-        })
-      )
-    );
+    decodeUnknownCollectorManifestRecordResult({
+      reason: "source unreadable",
+      src: "C:\\source\\unreadable.bin",
+      status: "error",
+    }).pipe(Result.isSuccess, assertTrue);
+    decodeUnknownCollectorManifestRecordResult({
+      src: "C:\\source\\excluded.bin",
+      status: "excluded-secret",
+    }).pipe(Result.isSuccess, assertTrue);
   });
 });
 
@@ -3280,7 +3272,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
       const childProgram = `
           import { withRestorationWriterClaim } from "@beep/repo-cli/test/Corpus";
           import { NodeServices } from "@effect/platform-node";
-          import { Console, Effect } from "effect";
+          import * as Console from "effect/Console";
+          import * as Effect from "effect/Effect";
 
           await Effect.runPromise(
             withRestorationWriterClaim(

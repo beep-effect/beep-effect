@@ -151,153 +151,141 @@ describe("lab identity segment", () => {
   });
 
   it("syncs a new lab into empty regions and is idempotent afterwards", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          yield* writeLabsFixture({
-            labPackages: ["probe-lab"],
-            registryContent: registryWithRegions(["const generatedLabComposers = {};"], []),
-          });
+    withTempWorkingDirectory(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        yield* writeLabsFixture({
+          labPackages: ["probe-lab"],
+          registryContent: registryWithRegions(["const generatedLabComposers = {};"], []),
+        });
 
-          const first = yield* LabIdentitySegment.syncLabIdentitySegment(".");
-          const afterFirst = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
+        const first = yield* LabIdentitySegment.syncLabIdentitySegment(".");
+        const afterFirst = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
 
-          expect(first.changed).toBe(true);
-          expect(first.state.expectedSlugs).toEqual(["probe-lab"]);
-          expect(first.state.actualComposerSlugs).toEqual(["probe-lab"]);
-          expect(first.state.actualExportSlugs).toEqual(["probe-lab"]);
-          expect(first.state.misplacedSlugs).toEqual([]);
-          expect(afterFirst).toContain(LabIdentitySegment.renderLabComposersRegion(["probe-lab"]));
-          expect(afterFirst).toContain(LabIdentitySegment.renderLabExportsRegion(["probe-lab"]));
+        expect(first.changed).toBe(true);
+        expect(first.state.expectedSlugs).toEqual(["probe-lab"]);
+        expect(first.state.actualComposerSlugs).toEqual(["probe-lab"]);
+        expect(first.state.actualExportSlugs).toEqual(["probe-lab"]);
+        expect(first.state.misplacedSlugs).toEqual([]);
+        expect(afterFirst).toContain(LabIdentitySegment.renderLabComposersRegion(["probe-lab"]));
+        expect(afterFirst).toContain(LabIdentitySegment.renderLabExportsRegion(["probe-lab"]));
 
-          const second = yield* LabIdentitySegment.syncLabIdentitySegment(".");
-          const afterSecond = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
+        const second = yield* LabIdentitySegment.syncLabIdentitySegment(".");
+        const afterSecond = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
 
-          expect(second.changed).toBe(false);
-          expect(afterSecond).toBe(afterFirst);
-        })
-      ).pipe(provideScopedLayer(segmentLayer))
-    ));
+        expect(second.changed).toBe(false);
+        expect(afterSecond).toBe(afterFirst);
+      })
+    ).pipe(provideScopedLayer(segmentLayer), Effect.runPromise));
 
   it("replaces the whole region in one pass and preserves authored text", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          yield* writeLabsFixture({
-            labPackages: ["probe-lab", "zeta-lab"],
-            registryContent: registryWithRegions(
-              ['const generatedLabComposers = $I.compose("zeta-lab", "ghost-lab");'],
-              ["export const $GhostLabId = composers.$GhostLabId;"]
-            ),
-          });
+    withTempWorkingDirectory(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        yield* writeLabsFixture({
+          labPackages: ["probe-lab", "zeta-lab"],
+          registryContent: registryWithRegions(
+            ['const generatedLabComposers = $I.compose("zeta-lab", "ghost-lab");'],
+            ["export const $GhostLabId = composers.$GhostLabId;"]
+          ),
+        });
 
-          const before = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
-          const result = yield* LabIdentitySegment.syncLabIdentitySegment(".");
-          const after = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
+        const before = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
+        const result = yield* LabIdentitySegment.syncLabIdentitySegment(".");
+        const after = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
 
-          expect(result.changed).toBe(true);
-          expect(after).toContain(LabIdentitySegment.renderLabComposersRegion(["probe-lab", "zeta-lab"]));
-          expect(after).toContain(LabIdentitySegment.renderLabExportsRegion(["probe-lab", "zeta-lab"]));
-          expect(Str.includes('"ghost-lab"')(after)).toBe(false);
-          expect(Str.includes("$GhostLabId")(after)).toBe(false);
+        expect(result.changed).toBe(true);
+        expect(after).toContain(LabIdentitySegment.renderLabComposersRegion(["probe-lab", "zeta-lab"]));
+        expect(after).toContain(LabIdentitySegment.renderLabExportsRegion(["probe-lab", "zeta-lab"]));
+        expect(Str.includes('"ghost-lab"')(after)).toBe(false);
+        expect(Str.includes("$GhostLabId")(after)).toBe(false);
 
-          const prefixOf = (content: string) => Str.slice(0, markerIndex(LAB_COMPOSERS_START_MARKER)(content))(content);
-          const tailOf = (content: string) => Str.slice(markerIndex(AUTHORED_TAIL_ANCHOR)(content))(content);
-          expect(prefixOf(after)).toBe(prefixOf(before));
-          expect(tailOf(after)).toBe(tailOf(before));
-        })
-      ).pipe(provideScopedLayer(segmentLayer))
-    ));
+        const prefixOf = (content: string) => Str.slice(0, markerIndex(LAB_COMPOSERS_START_MARKER)(content))(content);
+        const tailOf = (content: string) => Str.slice(markerIndex(AUTHORED_TAIL_ANCHOR)(content))(content);
+        expect(prefixOf(after)).toBe(prefixOf(before));
+        expect(tailOf(after)).toBe(tailOf(before));
+      })
+    ).pipe(provideScopedLayer(segmentLayer), Effect.runPromise));
 
   it("fails with the substrate remediation when a marker is missing", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
-        Effect.gen(function* () {
-          const withoutExportsStart = A.join(
-            A.filter(
-              Str.split(registryWithRegions(["const generatedLabComposers = {};"], []), "\n"),
-              (line) => !Str.startsWith(LAB_EXPORTS_START_MARKER)(line)
-            ),
-            "\n"
-          );
-          yield* writeLabsFixture({ labPackages: [], registryContent: withoutExportsStart });
+    withTempWorkingDirectory(
+      Effect.gen(function* () {
+        const withoutExportsStart = A.join(
+          A.filter(
+            Str.split(registryWithRegions(["const generatedLabComposers = {};"], []), "\n"),
+            (line) => !Str.startsWith(LAB_EXPORTS_START_MARKER)(line)
+          ),
+          "\n"
+        );
+        yield* writeLabsFixture({ labPackages: [], registryContent: withoutExportsStart });
 
-          const outcome = yield* LabIdentitySegment.syncLabIdentitySegment(".").pipe(Effect.flip);
+        const outcome = yield* LabIdentitySegment.syncLabIdentitySegment(".").pipe(Effect.flip);
 
-          expect(outcome.message).toContain(LAB_EXPORTS_START_MARKER);
-          expect(outcome.message).toContain("is missing");
-          expect(outcome.message).toContain("bun run beep lint identity-registry --fix");
-        })
-      ).pipe(provideScopedLayer(segmentLayer))
-    ));
+        expect(outcome.message).toContain(LAB_EXPORTS_START_MARKER);
+        expect(outcome.message).toContain("is missing");
+        expect(outcome.message).toContain("bun run beep lint identity-registry --fix");
+      })
+    ).pipe(provideScopedLayer(segmentLayer), Effect.runPromise));
 
   it("fails when a marker appears more than once", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
-        Effect.gen(function* () {
-          const duplicated = Str.concat(
-            registryWithRegions(["const generatedLabComposers = {};"], []),
-            `${LAB_COMPOSERS_START_MARKER}\n`
-          );
-          yield* writeLabsFixture({ labPackages: [], registryContent: duplicated });
+    withTempWorkingDirectory(
+      Effect.gen(function* () {
+        const duplicated = Str.concat(
+          registryWithRegions(["const generatedLabComposers = {};"], []),
+          `${LAB_COMPOSERS_START_MARKER}\n`
+        );
+        yield* writeLabsFixture({ labPackages: [], registryContent: duplicated });
 
-          const outcome = yield* LabIdentitySegment.diffLabIdentitySegment(".").pipe(Effect.flip);
+        const outcome = yield* LabIdentitySegment.diffLabIdentitySegment(".").pipe(Effect.flip);
 
-          expect(outcome.message).toContain(LAB_COMPOSERS_START_MARKER);
-          expect(outcome.message).toContain("appears more than once");
-        })
-      ).pipe(provideScopedLayer(segmentLayer))
-    ));
+        expect(outcome.message).toContain(LAB_COMPOSERS_START_MARKER);
+        expect(outcome.message).toContain("appears more than once");
+      })
+    ).pipe(provideScopedLayer(segmentLayer), Effect.runPromise));
 
   it("reports live labs registered outside the generated regions as misplaced", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
-        Effect.gen(function* () {
-          const misplacedRegistry = A.join(
-            [
-              'const generatedComposers = $I.compose("identity", "widget", "probe-lab");',
-              "",
-              LAB_COMPOSERS_START_MARKER,
-              "const generatedLabComposers = {};",
-              LAB_COMPOSERS_END_MARKER,
-              "",
-              "export const $IdentityId = composers.$IdentityId;",
-              "export const $ProbeLabId = composers.$ProbeLabId;",
-              "",
-              LAB_EXPORTS_START_MARKER,
-              LAB_EXPORTS_END_MARKER,
-              "",
-            ],
-            "\n"
-          );
-          yield* writeLabsFixture({ labPackages: ["probe-lab"], registryContent: misplacedRegistry });
+    withTempWorkingDirectory(
+      Effect.gen(function* () {
+        const misplacedRegistry = A.join(
+          [
+            'const generatedComposers = $I.compose("identity", "widget", "probe-lab");',
+            "",
+            LAB_COMPOSERS_START_MARKER,
+            "const generatedLabComposers = {};",
+            LAB_COMPOSERS_END_MARKER,
+            "",
+            "export const $IdentityId = composers.$IdentityId;",
+            "export const $ProbeLabId = composers.$ProbeLabId;",
+            "",
+            LAB_EXPORTS_START_MARKER,
+            LAB_EXPORTS_END_MARKER,
+            "",
+          ],
+          "\n"
+        );
+        yield* writeLabsFixture({ labPackages: ["probe-lab"], registryContent: misplacedRegistry });
 
-          const state = yield* LabIdentitySegment.diffLabIdentitySegment(".");
+        const state = yield* LabIdentitySegment.diffLabIdentitySegment(".");
 
-          expect(state.expectedSlugs).toEqual(["probe-lab"]);
-          expect(state.actualComposerSlugs).toEqual([]);
-          expect(state.actualExportSlugs).toEqual([]);
-          expect(state.misplacedSlugs).toEqual(["probe-lab"]);
-        })
-      ).pipe(provideScopedLayer(segmentLayer))
-    ));
+        expect(state.expectedSlugs).toEqual(["probe-lab"]);
+        expect(state.actualComposerSlugs).toEqual([]);
+        expect(state.actualExportSlugs).toEqual([]);
+        expect(state.misplacedSlugs).toEqual(["probe-lab"]);
+      })
+    ).pipe(provideScopedLayer(segmentLayer), Effect.runPromise));
 
   it("derives expected lab slugs from the labs workspace path only", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
-        Effect.gen(function* () {
-          yield* writeLabsFixture({
-            labPackages: ["probe"],
-            extraPackages: ["widget"],
-            registryContent: registryWithRegions(["const generatedLabComposers = {};"], []),
-          });
+    withTempWorkingDirectory(
+      Effect.gen(function* () {
+        yield* writeLabsFixture({
+          labPackages: ["probe"],
+          extraPackages: ["widget"],
+          registryContent: registryWithRegions(["const generatedLabComposers = {};"], []),
+        });
 
-          const slugs = yield* LabIdentitySegment.expectedLabSlugs(".");
+        const slugs = yield* LabIdentitySegment.expectedLabSlugs(".");
 
-          expect(slugs).toEqual(["probe"]);
-        })
-      ).pipe(provideScopedLayer(segmentLayer))
-    ));
+        expect(slugs).toEqual(["probe"]);
+      })
+    ).pipe(provideScopedLayer(segmentLayer), Effect.runPromise));
 });

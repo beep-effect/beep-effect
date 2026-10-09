@@ -122,7 +122,7 @@ describe("yeet resume", () => {
   });
 
   it("rejects a pull-request URL whose host is not github.com", () => {
-    assertTrue(Result.isFailure(decodePrRefResult("https://gitlab.com/beep-effect/beep-effect/pull/42")));
+    decodePrRefResult("https://gitlab.com/beep-effect/beep-effect/pull/42").pipe(Result.isFailure, assertTrue);
   });
 
   it.layer(TestLayer, { timeout: "10 seconds" })((it) => {

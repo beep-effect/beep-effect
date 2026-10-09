@@ -541,7 +541,7 @@ const readRequiredRedactedConfig = (key: string): Effect.Effect<Redacted.Redacte
       })
     ),
     Effect.filterOrFail(
-      (value) => Str.isNonEmpty(normalizeWhitespace(Redacted.value(value))),
+      (value) => Str.isNonEmpty(value.pipe(Redacted.value, normalizeWhitespace)),
       constant(
         SyncDataToTsError.make({
           message: `${key} is required for the authenticated ISO 3166 sync target.`,
@@ -578,7 +578,7 @@ const authHeadersFromConfig = Effect.fn("SyncDataToTs.Iso3166.authHeadersFromCon
 
   return pipe(
     authHeader,
-    O.flatMap((value) => parseAuthHeader(Redacted.value(value))),
+    O.flatMap((value) => value.pipe(Redacted.value, parseAuthHeader)),
     O.map(([name, value]) => ({ [name]: value })),
     O.getOrElse((): Readonly<Record<string, string>> => ({}))
   );

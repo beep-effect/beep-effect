@@ -461,6 +461,7 @@ const EFFECT_PACKAGE_JSON_PATH = NodeUrl.fileURLToPath(import.meta.resolve("effe
 
 const CODE_GLOBS = [
   "apps/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+  "apps/storybook/.storybook/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
   "packages/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
   "infra/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
   "scripts/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",

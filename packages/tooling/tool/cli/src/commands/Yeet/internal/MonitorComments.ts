@@ -1634,7 +1634,7 @@ export const runYeetPullRequestCommentMonitor = Effect.fn("Yeet.runPullRequestCo
   // resumes: the collections advance independently, so quoting one of them
   // would understate how far back the other still reaches.
   const persisted = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber);
-  yield* Console.log(renderYeetMonitorCommentStreamStart(O.map(persisted, earliestWatermarkAt)));
+  yield* persisted.pipe(O.map(earliestWatermarkAt), renderYeetMonitorCommentStreamStart, Console.log);
   const watermarkRef = yield* openYeetMonitorCommentStream(context, pullRequestNumber);
   const failuresRef = yield* Ref.make(0);
   return yield* Effect.forever(

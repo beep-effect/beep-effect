@@ -2155,14 +2155,12 @@ const executeWithRetry = Effect.fnUntraced(function* (
     Effect.catchIf(
       (error) => isRetryable(error) && remaining > 0,
       (error) =>
-        Effect.sleep(
-          Duration.seconds(
-            pipe(
-              error.retryAfterSeconds,
-              O.getOrElse(() => DEFAULT_THROTTLE_RETRY_AFTER_SECONDS)
-            )
-          )
-        ).pipe(Effect.flatMap(() => executeWithRetry(client, makeRequest, resource, url, remaining - 1, isRetryable)))
+        error.retryAfterSeconds.pipe(
+          O.getOrElse(() => DEFAULT_THROTTLE_RETRY_AFTER_SECONDS),
+          Duration.seconds,
+          Effect.sleep,
+          Effect.flatMap(() => executeWithRetry(client, makeRequest, resource, url, remaining - 1, isRetryable))
+        )
     )
   );
 });

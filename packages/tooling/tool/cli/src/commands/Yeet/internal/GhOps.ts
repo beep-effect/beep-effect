@@ -546,8 +546,9 @@ export class YeetGhCommonOptions extends S.Class<YeetGhCommonOptions>($I`YeetGhC
  * @since 0.0.0
  */
 export const layerYeetGh = ({ tokenRef }: YeetGhCommonOptions) =>
-  Layer.unwrap(
-    Effect.map(selectGithubIdentity(tokenRef), (identity) =>
+  tokenRef.pipe(
+    selectGithubIdentity,
+    Effect.map((identity) =>
       Layer.mergeAll(layerGithubRest, layerGraphqlBudget).pipe(
         Layer.provideMerge(
           Layer.mergeAll(
@@ -556,7 +557,8 @@ export const layerYeetGh = ({ tokenRef }: YeetGhCommonOptions) =>
           )
         )
       )
-    )
+    ),
+    Layer.unwrap
   );
 
 /**
@@ -590,11 +592,9 @@ export const withYeetGh =
   <A, E>(
     program: Effect.Effect<A, E, GithubRest | GraphqlBudget | GitHubClient | Repo>
   ): Effect.Effect<A, E | GithubIdentityError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
-    Effect.scoped(
-      Effect.flatMap(Layer.build(layerYeetGh(YeetGhCommonOptions.make({ tokenRef }))), (context) =>
-        Effect.provideContext(program, context)
-      )
-    );
+    Effect.flatMap(Layer.build(layerYeetGh(YeetGhCommonOptions.make({ tokenRef }))), (context) =>
+      Effect.provideContext(program, context)
+    ).pipe(Effect.scoped);
 
 /**
  * Flip a draft pull request to ready through the GraphQL budget guard, reading

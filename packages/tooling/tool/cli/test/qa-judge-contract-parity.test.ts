@@ -135,7 +135,7 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("commands/Qa cited-artifact t
       const exit = yield* Effect.exit(evaluateCitedArtifactExists(input));
       const verdict = yield* evaluateCitedArtifactExists(input);
 
-      assertTrue(Exit.isSuccess(exit));
+      exit.pipe(Exit.isSuccess, assertTrue);
       expect(verdict.verdict).toBe("denied");
       expect(verdict.audit.detail.checkedPaths).toEqual(input.citedPaths);
       expect(missingPathsOf(verdict)).toEqual([
@@ -162,7 +162,7 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("commands/Qa cited-artifact t
       const exit = yield* Effect.exit(evaluateCitedArtifactExists(input));
       const verdict = yield* evaluateCitedArtifactExists(input);
 
-      assertTrue(Exit.isSuccess(exit));
+      exit.pipe(Exit.isSuccess, assertTrue);
       expect(verdict.verdict).toBe("denied");
       expect(missingPathsOf(verdict)).toEqual(["frames/ghost.png"]);
     })

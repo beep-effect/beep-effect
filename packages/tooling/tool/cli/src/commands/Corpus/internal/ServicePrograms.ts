@@ -1989,20 +1989,20 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
   });
 
   const fileProcessingLayer = makeFileProcessingServiceLayer(engines);
-  const outcomes = yield* Effect.scoped(
-    Layer.build(fileProcessingLayer).pipe(
-      Effect.flatMap((context) =>
-        Effect.forEach(
-          sourceStates,
-          ([record, completed]) =>
-            O.match(completed, {
-              onNone: () => processOneSource(record).pipe(Effect.provide(context)),
-              onSome: Effect.succeed,
-            }),
-          { concurrency }
-        )
+  const outcomes = yield* fileProcessingLayer.pipe(
+    Layer.build,
+    Effect.flatMap((context) =>
+      Effect.forEach(
+        sourceStates,
+        ([record, completed]) =>
+          O.match(completed, {
+            onNone: () => processOneSource(record).pipe(Effect.provide(context)),
+            onSome: Effect.succeed,
+          }),
+        { concurrency }
       )
-    )
+    ),
+    Effect.scoped
   );
 
   const { failureRecords, sourceRecords } = collectSourceOutcomeRecords(outcomes);
@@ -3548,9 +3548,13 @@ const enrichCorpusImpl = Effect.fn("CorpusCommandService.enrichCorpus")(function
     );
   });
 
-  const records = yield* Effect.scoped(
-    Layer.build(Uspto.layer).pipe(Effect.flatMap((context) => lookups.pipe(Effect.provide(context))))
-  ).pipe(CorpusCommandError.mapError("USPTO enrichment lookups failed."));
+  const records = yield* CorpusCommandError.mapError("USPTO enrichment lookups failed.")(
+    Uspto.layer.pipe(
+      Layer.build,
+      Effect.flatMap((context) => lookups.pipe(Effect.provide(context))),
+      Effect.scoped
+    )
+  );
 
   const manifestLines = yield* Effect.forEach(records, (record) =>
     encodeCorpusEnrichmentRecordJson(record).pipe(

@@ -1712,7 +1712,9 @@ export const printYeetEconomicsCloseoutSummary = Effect.fn("Yeet.printEconomicsC
     Effect.flatMap((journals) => reportFor(request, journals)),
     Effect.map(renderYeetEconomicsCloseoutSummary),
     Effect.catchTag("YeetEconomicsError", (error) => Effect.succeed(A.of(`economics: ${error.message}`))),
-    Effect.catchDefect((defect) => Effect.succeed(A.of(`economics: ${firstLine(Cause.pretty(Cause.die(defect)))}`)))
+    Effect.catchDefect((defect) =>
+      Effect.succeed(A.of(`economics: ${Cause.die(defect).pipe(Cause.pretty, firstLine)}`))
+    )
   );
   yield* Effect.forEach(lines, (line) => Console.log(`[yeet] ${line}`), { discard: true });
 });

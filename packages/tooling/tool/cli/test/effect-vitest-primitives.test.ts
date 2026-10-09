@@ -288,8 +288,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("pinned primitive graph"
         const actual = HashMap.get(byName, expected.name);
         assertTrue(O.isSome(actual), `Missing pinned primitive for ${expected.name}`);
         strictEqual(actual.value.file, expected.file);
-        strictEqual(actual.value.startLine, expected.startLine);
-        strictEqual(actual.value.endLine, expected.endLine);
+        strictEqual(actual.value.startLine, expected.startLine, expected.name);
+        strictEqual(actual.value.endLine, expected.endLine, expected.name);
       }
     })
   );

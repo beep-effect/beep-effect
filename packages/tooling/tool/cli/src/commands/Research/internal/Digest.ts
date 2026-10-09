@@ -68,7 +68,7 @@ export const digestImpl = Effect.fn("Research.digestImpl")(function* (
   const path = yield* Path.Path;
   const databasePath = yield* catalogDbPath(options.vaultRoot);
   const now = yield* DateTime.now;
-  const date = options.date ?? Str.slice(0, 10)(DateTime.formatIso(now));
+  const date = options.date ?? now.pipe(DateTime.formatIso, Str.slice(0, 10));
   const cutoffIso = DateTime.formatIso(DateTime.subtract(now, { hours: 24 }));
 
   const { backlogRows, inboxBacklog, newRows, pendingCognify } = yield* runWithResearchDb(

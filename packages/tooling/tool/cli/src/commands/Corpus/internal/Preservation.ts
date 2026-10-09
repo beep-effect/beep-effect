@@ -329,7 +329,7 @@ const terminalManifestRows = (rows: ReadonlyArray<PreservationManifestRow>): Rea
   for (const row of rows) {
     MutableHashMap.set(terminal, occurrenceKey(row), row);
   }
-  return A.fromIterable(MutableHashMap.values(terminal));
+  return terminal.pipe(MutableHashMap.values, A.fromIterable);
 };
 
 /**

@@ -156,17 +156,17 @@ export const readProfileHistory = Effect.fn("BrowserHistory.readProfileHistory")
     WHERE last_visit_time > ${Math.floor(sinceChromeEpochMicros)}
     ORDER BY last_visit_time ASC`;
 
-  const rows = yield* Effect.scoped(
-    Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))).pipe(
-      Effect.flatMap((context) =>
-        Effect.gen(function* () {
-          const db = yield* DuckDb;
-          yield* db.runMany(["INSTALL sqlite", "LOAD sqlite"]);
-          return yield* db.query(statement);
-        }).pipe(Effect.provide(context))
-      )
-    )
+  const rows = yield* Layer.build(
+    DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))
   ).pipe(
+    Effect.flatMap((context) =>
+      Effect.gen(function* () {
+        const db = yield* DuckDb;
+        yield* db.runMany(["INSTALL sqlite", "LOAD sqlite"]);
+        return yield* db.query(statement);
+      }).pipe(Effect.provide(context))
+    ),
+    Effect.scoped,
     ResearchCommandError.mapError(`Failed scanning history copy "${copyPath}".`),
     Effect.ensuring(fs.remove(copyPath).pipe(Effect.ignore))
   );

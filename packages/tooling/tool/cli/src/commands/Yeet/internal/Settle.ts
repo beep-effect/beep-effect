@@ -1405,8 +1405,9 @@ const renderCensusTail = (verdict: YeetSettleVerdict): ReadonlyArray<string> => 
  * @since 0.0.0
  */
 export const renderYeetSettleDetail = (verdict: YeetSettleVerdict): string =>
-  pipe(
-    Match.value(O.getOrNull(verdict.reason)),
+  verdict.reason.pipe(
+    O.getOrNull,
+    Match.value,
     Match.when(null, () => [
       "settle: settled; closeout bound",
       ...renderNames("tolerated matrix parents", verdict.census.unmatched),

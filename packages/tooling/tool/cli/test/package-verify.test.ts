@@ -395,7 +395,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           })
         );
 
-        assertTrue(Exit.isFailure(exit));
+        exit.pipe(Exit.isFailure, assertTrue);
         if (Exit.isFailure(exit)) {
           const error = Cause.squash(exit.cause);
           expect(error).toMatchObject({

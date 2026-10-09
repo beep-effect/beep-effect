@@ -17,10 +17,11 @@ const readFixture = Effect.fnUntraced(function* (name: string) {
 });
 
 const fixture = (name: string): Promise<string> =>
-  Effect.runPromise(
-    Effect.scoped(
-      Layer.build(NodeServices.layer).pipe(Effect.flatMap((context) => readFixture(name).pipe(Effect.provide(context))))
-    )
+  NodeServices.layer.pipe(
+    Layer.build,
+    Effect.flatMap((context) => readFixture(name).pipe(Effect.provide(context))),
+    Effect.scoped,
+    Effect.runPromise
   );
 
 // Real bodies captured from PR #1184: a CodeRabbit review and two

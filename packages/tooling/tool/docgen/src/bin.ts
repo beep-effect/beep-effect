@@ -20,15 +20,15 @@ const BaseLayers = Layer.mergeAll(BunServices.layer, Domain.Process.layer);
 
 const DerivedLayers = FsUtilsLive.pipe(Layer.provideMerge(BaseLayers));
 
-const program = Effect.scoped(
-  Layer.build(DerivedLayers).pipe(
-    Effect.flatMap(
-      Effect.fnUntraced(function* (context) {
-        const version = yield* Version.readModuleVersion().pipe(Effect.provide(context));
-        return yield* Command.run(docgenCommand, { version: `v${version}` }).pipe(Effect.provide(context));
-      })
-    )
-  )
+const program = DerivedLayers.pipe(
+  Layer.build,
+  Effect.flatMap(
+    Effect.fnUntraced(function* (context) {
+      const version = yield* Version.readModuleVersion().pipe(Effect.provide(context));
+      return yield* Command.run(docgenCommand, { version: `v${version}` }).pipe(Effect.provide(context));
+    })
+  ),
+  Effect.scoped
 );
 
 // The platform runner only hard-exits on failure or signal; a successful run

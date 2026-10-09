@@ -285,7 +285,7 @@ const makeGraphqlBudget = Effect.gen(function* () {
       })
     ),
     Effect.catchTag("GitHubGraphQLError", (error) =>
-      error.kind === "rateLimited" ? restFallback : Effect.fail(graphqlErrorToGitHubError(error))
+      error.kind === "rateLimited" ? restFallback : error.pipe(graphqlErrorToGitHubError, Effect.fail)
     )
   );
 

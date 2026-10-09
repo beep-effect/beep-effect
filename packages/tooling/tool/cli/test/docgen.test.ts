@@ -141,7 +141,7 @@ const rangeRejectingSpawner = (spawned: Array<string>) =>
   );
 
 const expectReportedExit = (exit: Exit.Exit<unknown, unknown>, exitCode = 1) => {
-  assertTrue(Exit.isFailure(exit));
+  exit.pipe(Exit.isFailure, assertTrue);
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
     expect(Runtime.getErrorExitCode(error)).toBe(exitCode);
@@ -922,7 +922,7 @@ export const ProofFixture = 1;
         }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, rangeRejectingSpawner(spawned)))
       );
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       expect(A.some(spawned, Str.includes("git diff --no-renames --name-only origin/main...HEAD"))).toBe(true);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
   });
@@ -1077,7 +1077,7 @@ export const ProofFixture = 1;
         }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recordingSpawner(spawned)))
       );
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         expect(Cause.squash(exit.cause)).toMatchObject({
           _tag: "DomainError",
@@ -1609,7 +1609,7 @@ export const ProofFixture = 1;
       const aggregatedPath = path.join(tmpDir, "docs", "generated", "foundation", "modeling", "schema");
       const aggregatedExists = yield* fs.exists(aggregatedPath);
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       expect(aggregatedExists).toBe(false);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
@@ -3702,7 +3702,7 @@ export const parseValue = (value: string): string => value.trim();
         Effect.exit
       );
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       expect(yield* Ref.get(stoppedPodIds)).toEqual(["pod-recovered"]);
       expect(yield* Ref.get(deletedPodIds)).toEqual(["pod-recovered"]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -3849,7 +3849,7 @@ export const parseValue = (value: string): string => value.trim();
 
       const exit = yield* analyzePackageDocumentation(target!).pipe(Effect.exit);
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 

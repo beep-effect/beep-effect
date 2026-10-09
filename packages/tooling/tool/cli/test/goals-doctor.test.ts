@@ -37,7 +37,7 @@ const testLayer = Layer.mergeAll(
 );
 
 const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {
-  assertTrue(Exit.isFailure(exit));
+  exit.pipe(Exit.isFailure, assertTrue);
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
     expect(Runtime.getErrorExitCode(error)).toBe(1);
@@ -129,7 +129,7 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         yield* writeProjectFile("goals/.idea/workspace.xml", "<project />\n");
         yield* writeBaseline([]);
         const exit = yield* Effect.exit(runGoalsCommand(["doctor"]));
-        assertTrue(Exit.isSuccess(exit));
+        exit.pipe(Exit.isSuccess, assertTrue);
       }),
     20_000
   );
@@ -155,7 +155,7 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         yield* writeDriftedPacket("demo");
         yield* writeBaseline(["demo lifecycle-mismatch"]);
         const exit = yield* Effect.exit(runGoalsCommand(["doctor"]));
-        assertTrue(Exit.isSuccess(exit));
+        exit.pipe(Exit.isSuccess, assertTrue);
       }),
     20_000
   );

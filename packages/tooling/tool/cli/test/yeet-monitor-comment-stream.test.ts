@@ -401,9 +401,11 @@ describe("yeet monitor comment cursor persistence", () => {
             // position — not since its own start — or a comment posted between the
             // two runs is invisible to both.
             const firstRunCommandCount = A.length(yield* Ref.get(commandsRef));
-            yield* Effect.raceFirst(
-              until(Effect.map(Ref.get(commandsRef), (commands) => A.length(commands) >= firstRunCommandCount + 2)),
-              runYeetPullRequestCommentMonitor(context, PR_NUMBER)
+            yield* commandsRef.pipe(
+              Ref.get,
+              Effect.map((commands) => A.length(commands) >= firstRunCommandCount + 2),
+              until,
+              Effect.raceFirst(runYeetPullRequestCommentMonitor(context, PR_NUMBER))
             );
 
             const secondRunCommands = A.drop(yield* Ref.get(commandsRef), firstRunCommandCount);

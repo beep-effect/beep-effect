@@ -65,32 +65,31 @@ const seedHistory = Effect.fn("ResearchHistorySiftTest.seedHistory")(function* (
   historyPath: string,
   rows: ReadonlyArray<HistoryRow>
 ) {
-  yield* Effect.scoped(
-    Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))).pipe(
-      Effect.flatMap((context) =>
-        Effect.gen(function* () {
-          const db = yield* DuckDb;
-          yield* db.runMany([
-            "INSTALL sqlite",
-            "LOAD sqlite",
-            `ATTACH '${historyPath}' AS history (TYPE sqlite)`,
-            "CREATE TABLE history.urls (url VARCHAR, title VARCHAR, visit_count BIGINT, last_visit_time BIGINT)",
-          ]);
-          yield* Effect.forEach(
-            rows,
-            (row) =>
-              db.run("INSERT INTO history.urls VALUES (?, ?, ?, ?)", [
-                row.url,
-                row.title,
-                row.visitCount,
-                row.lastVisitTime,
-              ]),
-            { discard: true }
-          );
-          yield* db.run("DETACH history");
-        }).pipe(Effect.provide(context))
-      )
-    )
+  yield* Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))).pipe(
+    Effect.flatMap((context) =>
+      Effect.gen(function* () {
+        const db = yield* DuckDb;
+        yield* db.runMany([
+          "INSTALL sqlite",
+          "LOAD sqlite",
+          `ATTACH '${historyPath}' AS history (TYPE sqlite)`,
+          "CREATE TABLE history.urls (url VARCHAR, title VARCHAR, visit_count BIGINT, last_visit_time BIGINT)",
+        ]);
+        yield* Effect.forEach(
+          rows,
+          (row) =>
+            db.run("INSERT INTO history.urls VALUES (?, ?, ?, ?)", [
+              row.url,
+              row.title,
+              row.visitCount,
+              row.lastVisitTime,
+            ]),
+          { discard: true }
+        );
+        yield* db.run("DETACH history");
+      }).pipe(Effect.provide(context))
+    ),
+    Effect.scoped
   );
 });
 

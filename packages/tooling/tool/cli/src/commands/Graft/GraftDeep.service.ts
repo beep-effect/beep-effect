@@ -884,7 +884,7 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
   // here would interrupt the sibling rebuilds still running and throw away
   // every result the night already earned.
   const rebuildClone = Effect.fnUntraced(function* (ctx: RefreshContext, root: string) {
-    const [elapsed, attempted] = yield* Effect.timed(Effect.result(ctx.step(siblingBuildStep(root))));
+    const [elapsed, attempted] = yield* ctx.step(siblingBuildStep(root)).pipe(Effect.result, Effect.timed);
     return GraftDeepSiblingRebuild.make({
       root,
       exitCode: Result.isSuccess(attempted) ? exitCodeOf(attempted.success.exitCode) : REBUILD_UNFINISHED_EXIT,

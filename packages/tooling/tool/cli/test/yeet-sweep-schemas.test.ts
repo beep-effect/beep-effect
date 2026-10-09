@@ -113,7 +113,7 @@ describe("SweepPlan", () => {
           '{"schemaVersion":"yeet-sweep-plan/v1","createdAt":"2026-08-04T00:00:00.000Z","branch":"feat/merge-loop","steps":[{"id":"rm-rf-node-modules","action":"nope","preconditions":[],"requiresOperator":false}]}'
         )
       );
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 });

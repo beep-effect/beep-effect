@@ -127,8 +127,9 @@ describe("check-census gate parser", () => {
 
   it.effect("refuses a sample whose output contains an error TS diagnostic", () =>
     Effect.gen(function* () {
-      const error = yield* Effect.flip(
-        Effect.fromResult(parseCheckCensusSample({ exitCode: 2, output: failingRun }, "typeperf"))
+      const error = yield* parseCheckCensusSample({ exitCode: 2, output: failingRun }, "typeperf").pipe(
+        Effect.fromResult,
+        Effect.flip
       );
 
       assertInstanceOf(error, CheckCensusSampleRefused);
@@ -141,8 +142,9 @@ describe("check-census gate parser", () => {
 
   it.effect("refuses a non-zero exit even when no diagnostic line was printed", () =>
     Effect.gen(function* () {
-      const error = yield* Effect.flip(
-        Effect.fromResult(parseCheckCensusSample({ exitCode: 1, output: cleanRun }, "@beep/schema"))
+      const error = yield* parseCheckCensusSample({ exitCode: 1, output: cleanRun }, "@beep/schema").pipe(
+        Effect.fromResult,
+        Effect.flip
       );
 
       assertInstanceOf(error, CheckCensusSampleRefused);
@@ -157,8 +159,9 @@ describe("check-census gate parser", () => {
         A.filter(Str.split(cleanRun, "\n"), (line) => !Str.startsWith("Check time")(line)),
         "\n"
       );
-      const error = yield* Effect.flip(
-        Effect.fromResult(parseCheckCensusSample({ exitCode: 0, output: truncated }, "@beep/schema"))
+      const error = yield* parseCheckCensusSample({ exitCode: 0, output: truncated }, "@beep/schema").pipe(
+        Effect.fromResult,
+        Effect.flip
       );
 
       assertInstanceOf(error, CheckCensusMetricMissing);

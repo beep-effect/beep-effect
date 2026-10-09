@@ -84,7 +84,7 @@ describe("commands/Qa Inventory.schemas", () => {
       const exit = yield* Effect.exit(
         decodeQaInventory(inventoryInput([finding("R4-01", "P0", "frames/a.png", [2])], 0))
       );
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 
@@ -93,7 +93,7 @@ describe("commands/Qa Inventory.schemas", () => {
       const exit = yield* Effect.exit(
         decodeQaInventory(inventoryInput([finding("R4-1", "P0", "frames/a.png", [2])], 1))
       );
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 

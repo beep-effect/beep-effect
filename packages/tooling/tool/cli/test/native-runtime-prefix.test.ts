@@ -61,7 +61,7 @@ describe("native-runtime prefix command", { concurrent: false }, () => {
         Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
         Effect.exit
       );
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     }, providePlatform)
   );
 

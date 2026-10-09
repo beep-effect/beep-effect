@@ -1048,7 +1048,7 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
       const linked = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-live-" });
       yield* fs.makeDirectory(path.join(linked, ".repos"));
       yield* fs.symlink(repositoryRoot, path.join(linked, ".repos", "effect"));
-      assertTrue(Layer.isLayer(EffectSchemaInventorySource.layer(linked)));
+      EffectSchemaInventorySource.layer(linked).pipe(Layer.isLayer, assertTrue);
       const live = yield* EffectSchemaInventorySource.make(linked);
       yield* live.verifyPin(head);
       assertInclude(yield* live.readPinned(head, "package.json"), '"name": "@beep/root"');

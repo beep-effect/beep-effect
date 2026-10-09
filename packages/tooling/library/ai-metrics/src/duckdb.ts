@@ -94,9 +94,8 @@ export const withAiMetricsDuckDb: {
 } = dual(
   2,
   <A, E, R>(effect: Effect.Effect<A, E, R>, databasePath: string): Effect.Effect<A, E, Exclude<R, DuckDb>> =>
-    Effect.scoped(
-      Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))).pipe(
-        Effect.flatMap((context) => effect.pipe(Effect.provide(context)))
-      )
+    Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))).pipe(
+      Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
+      Effect.scoped
     )
 );

@@ -52,34 +52,34 @@ beforeAll(() => {
     return;
   }
 
-  return Effect.runPromise(
-    Effect.scoped(
-      makePgliteTestcontainerResource({
-        startupTimeoutMs: PgliteProbeStartupTimeoutMs,
-      }).pipe(
-        Effect.timeoutOption(Duration.millis(PgliteProbeTimeoutMs)),
-        Effect.tap((availability) =>
-          O.isNone(availability)
-            ? Console.warn(
-                `[sql-test] PGLite Testcontainers probe gave up after ${PgliteProbeTimeoutMs} ms; Testcontainers tests will skip.`
-              )
-            : Effect.void
-        ),
-        Effect.tapCause((cause) =>
-          Console.warn(
-            `[sql-test] PGLite Testcontainers probe failed; Testcontainers tests will skip.\n${Cause.pretty(cause)}`
-          )
+  return makePgliteTestcontainerResource({
+    startupTimeoutMs: PgliteProbeStartupTimeoutMs,
+  })
+    .pipe(
+      Effect.timeoutOption(Duration.millis(PgliteProbeTimeoutMs)),
+      Effect.tap((availability) =>
+        O.isNone(availability)
+          ? Console.warn(
+              `[sql-test] PGLite Testcontainers probe gave up after ${PgliteProbeTimeoutMs} ms; Testcontainers tests will skip.`
+            )
+          : Effect.void
+      ),
+      Effect.tapCause((cause) =>
+        Console.warn(
+          `[sql-test] PGLite Testcontainers probe failed; Testcontainers tests will skip.\n${Cause.pretty(cause)}`
         )
-      )
+      ),
+      Effect.scoped,
+      Effect.runPromise
     )
-  ).then(
-    (availability) => {
-      pgliteTestcontainersAvailable = O.isSome(availability);
-    },
-    () => {
-      pgliteTestcontainersAvailable = false;
-    }
-  );
+    .then(
+      (availability) => {
+        pgliteTestcontainersAvailable = O.isSome(availability);
+      },
+      () => {
+        pgliteTestcontainersAvailable = false;
+      }
+    );
 }, PgliteProbeTimeoutMs + 30_000);
 
 const skipWhenNoSharedDatabase = (ctx: { readonly skip: (message?: string) => void }) =>

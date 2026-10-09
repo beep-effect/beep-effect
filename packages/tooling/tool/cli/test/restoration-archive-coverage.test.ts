@@ -453,7 +453,7 @@ describe("restoration archive boundary helpers", () => {
         (yield* preserveRestorationArchive(options).pipe(
           Effect.provideServiceEffect(
             CorpusCommandService,
-            Layer.build(Layer.fresh(layer)).pipe(Effect.map(Context.get(CorpusCommandService)))
+            layer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(CorpusCommandService)))
           ),
           Effect.scoped,
           Effect.exit
@@ -529,7 +529,7 @@ describe("restoration archive boundary helpers", () => {
           (yield* preserveRestorationArchive(options).pipe(
             Effect.provideServiceEffect(
               CorpusCommandService,
-              Layer.build(Layer.fresh(layer)).pipe(Effect.map(Context.get(CorpusCommandService)))
+              layer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(CorpusCommandService)))
             ),
             Effect.scoped,
             Effect.exit
@@ -605,7 +605,7 @@ describe("restoration archive boundary helpers", () => {
         const outcome = yield* preserveRestorationArchive(options).pipe(
           Effect.provideServiceEffect(
             CorpusCommandService,
-            Layer.build(Layer.fresh(layer)).pipe(Effect.map(Context.get(CorpusCommandService)))
+            layer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(CorpusCommandService)))
           ),
           Effect.scoped,
           Effect.exit

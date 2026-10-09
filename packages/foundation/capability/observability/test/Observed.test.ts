@@ -58,7 +58,7 @@ describe("Observed", () => {
   it.effect(
     "round-trips a failed Exit through the observed schema",
     Effect.fnUntraced(function* () {
-      const exit = Exit.failCause(Cause.fail(TestObservedError.make({ message: "kapow" })));
+      const exit = TestObservedError.make({ message: "kapow" }).pipe(Cause.fail, Exit.failCause);
       const encoded = yield* encodeToCodecJsonObservedExit(exit);
       const encodedTag = yield* decodeUnknownStructInlineSchema(encoded);
 

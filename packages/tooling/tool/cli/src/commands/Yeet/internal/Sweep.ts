@@ -1328,7 +1328,7 @@ export const runTmpfsWorktreesStep = Effect.fn("Yeet.runTmpfsWorktreesStep")(fun
   }).pipe(
     Effect.matchCause({
       onFailure: (cause): SweepStepOutcome =>
-        SweepStepSkipped.make({ reason: `tmpfs worktree scan failed: ${firstLine(Cause.pretty(cause))}` }),
+        SweepStepSkipped.make({ reason: `tmpfs worktree scan failed: ${cause.pipe(Cause.pretty, firstLine)}` }),
       onSuccess: (report): SweepStepOutcome => {
         if (report.reapedCount > 0) {
           return SweepStepExecuted.make({

@@ -132,41 +132,39 @@ describe("identity registration removal", () => {
     ));
 
   it("regenerates the empty labs state after the last lab is gone from the catalog", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          yield* fs.writeFileString("bun.lock", "");
-          yield* fs.writeFileString(
-            "package.json",
-            `${encodeJson({
-              name: "fixture-root",
-              private: true,
-              type: "module",
-              workspaces: ["packages/*", "apps/labs/*"],
-            })}\n`
-          );
-          yield* fs.makeDirectory(path.join("packages", "identity", "src"), { recursive: true });
-          yield* fs.writeFileString(
-            path.join("packages", "identity", "package.json"),
-            `${encodeJson({ name: "@beep/identity", version: "0.0.0", type: "module" })}\n`
-          );
-          yield* fs.writeFileString(path.join("packages", "identity", "src", "packages.ts"), REGISTRY_FIXTURE);
+    withTempWorkingDirectory(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fs.writeFileString("bun.lock", "");
+        yield* fs.writeFileString(
+          "package.json",
+          `${encodeJson({
+            name: "fixture-root",
+            private: true,
+            type: "module",
+            workspaces: ["packages/*", "apps/labs/*"],
+          })}\n`
+        );
+        yield* fs.makeDirectory(path.join("packages", "identity", "src"), { recursive: true });
+        yield* fs.writeFileString(
+          path.join("packages", "identity", "package.json"),
+          `${encodeJson({ name: "@beep/identity", version: "0.0.0", type: "module" })}\n`
+        );
+        yield* fs.writeFileString(path.join("packages", "identity", "src", "packages.ts"), REGISTRY_FIXTURE);
 
-          const result = yield* LabIdentitySegment.syncLabIdentitySegment(".");
-          const next = yield* fs.readFileString(path.join("packages", "identity", "src", "packages.ts"));
+        const result = yield* LabIdentitySegment.syncLabIdentitySegment(".");
+        const next = yield* fs.readFileString(path.join("packages", "identity", "src", "packages.ts"));
 
-          expect(result.changed).toBe(true);
-          expect(result.state.expectedSlugs).toEqual([]);
-          expect(Str.includes("const generatedLabComposers = {};")(next)).toBe(true);
-          expect(Str.includes('"gamma-lab"')(next)).toBe(false);
-          expect(Str.includes("$GammaLabId")(next)).toBe(false);
-          expect(Str.includes(LAB_COMPOSERS_START_MARKER)(next)).toBe(true);
-          expect(Str.includes(LAB_EXPORTS_END_MARKER)(next)).toBe(true);
-        })
-      ).pipe(provideScopedLayer(removalLayer))
-    ));
+        expect(result.changed).toBe(true);
+        expect(result.state.expectedSlugs).toEqual([]);
+        expect(Str.includes("const generatedLabComposers = {};")(next)).toBe(true);
+        expect(Str.includes('"gamma-lab"')(next)).toBe(false);
+        expect(Str.includes("$GammaLabId")(next)).toBe(false);
+        expect(Str.includes(LAB_COMPOSERS_START_MARKER)(next)).toBe(true);
+        expect(Str.includes(LAB_EXPORTS_END_MARKER)(next)).toBe(true);
+      })
+    ).pipe(provideScopedLayer(removalLayer), Effect.runPromise));
 
   it("filters slugs missing a compose segment or dedicated export", () => {
     expect(
@@ -181,16 +179,14 @@ describe("identity registration removal", () => {
   });
 
   it("fails to resolve the registry path when no identity workspace exists", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          yield* fs.writeFileString("bun.lock", "");
-          yield* fs.writeFileString("package.json", '{ "name": "fixture", "private": true, "workspaces": [] }\n');
+    withTempWorkingDirectory(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        yield* fs.writeFileString("bun.lock", "");
+        yield* fs.writeFileString("package.json", '{ "name": "fixture", "private": true, "workspaces": [] }\n');
 
-          const exit = yield* Effect.exit(CreatePackageIdentityRegistration.resolveIdentityPackagesFilePath("."));
-          expect(exit._tag).toBe("Failure");
-        })
-      ).pipe(provideScopedLayer(removalLayer))
-    ));
+        const exit = yield* Effect.exit(CreatePackageIdentityRegistration.resolveIdentityPackagesFilePath("."));
+        expect(exit._tag).toBe("Failure");
+      })
+    ).pipe(provideScopedLayer(removalLayer), Effect.runPromise));
 });

@@ -589,7 +589,7 @@ const policyStepCommand = (step: QualityTaskStep) => {
 
 // A red policy run fails as one group whose failures name exactly the red planned label.
 const expectPolicyGroupFailure = (exit: Exit.Exit<unknown, unknown>, failedLabel: string): void => {
-  assertTrue(Exit.isFailure(exit));
+  exit.pipe(Exit.isFailure, assertTrue);
   if (Exit.isFailure(exit)) {
     const failure = Cause.squash(exit.cause);
     expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
@@ -3987,7 +3987,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             Effect.exit(runRootLintPolicyTask(true))
           );
 
-          assertTrue(Exit.isSuccess(exit));
+          exit.pipe(Exit.isSuccess, assertTrue);
 
           const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
           // Derived from the same plan the runtime executes: a lint policy step
@@ -6467,7 +6467,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                 )
               )
             );
-            assertTrue(Exit.isSuccess(exit));
+            exit.pipe(Exit.isSuccess, assertTrue);
           })
         ).pipe(
           Effect.provideServiceEffect(Console.Console, TestConsole.make),
@@ -7814,7 +7814,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           );
 
           expect(released).toBe(true);
-          assertTrue(Exit.isFailure(exit));
+          exit.pipe(Exit.isFailure, assertTrue);
           if (Exit.isFailure(exit)) {
             const failure = Cause.squash(exit.cause);
             expect(failure).toBeInstanceOf(QualityTaskFailed);
@@ -7897,7 +7897,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             )
           );
 
-          assertTrue(Exit.isFailure(exit));
+          exit.pipe(Exit.isFailure, assertTrue);
           if (Exit.isFailure(exit)) {
             const failure = Cause.squash(exit.cause);
             expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
@@ -7943,7 +7943,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           );
 
           expect(yield* fs.exists(markerPath)).toBe(true);
-          assertTrue(Exit.isFailure(exit));
+          exit.pipe(Exit.isFailure, assertTrue);
           if (Exit.isFailure(exit)) {
             const failure = Cause.squash(exit.cause);
             expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
@@ -8072,7 +8072,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             Effect.exit(runQualityTaskStreamingStepGroupForTesting("test:stream", [step]))
           );
 
-          assertTrue(Exit.isFailure(exit));
+          exit.pipe(Exit.isFailure, assertTrue);
           expect(yield* fs.readFileString(statePath)).toBe("3");
           expect(yield* fs.exists(path.join(process.cwd(), FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH))).toBe(false);
 
@@ -8132,7 +8132,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             Effect.exit(runQualityTask(getInvocation(["lint"])))
           );
 
-          assertTrue(Exit.isFailure(exit));
+          exit.pipe(Exit.isFailure, assertTrue);
           if (Exit.isFailure(exit)) {
             const failure = Cause.squash(exit.cause);
             expect(failure).toBeInstanceOf(QualityTaskGroupFailed);

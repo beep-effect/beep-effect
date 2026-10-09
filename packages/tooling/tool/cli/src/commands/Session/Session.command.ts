@@ -218,7 +218,7 @@ export const sessionOpenCommand = Command.make(
       yield* Console.log(
         `[session] ${A.length(rows)} live session(s) for ${facts.repository.owner}/${facts.repository.name}:`
       );
-      yield* Console.log(renderSessionOrchestrator(sessionOrchestrator(rows)));
+      yield* sessionOrchestrator(rows).pipe(renderSessionOrchestrator, Console.log);
       yield* Effect.forEach(rows, (row) => Console.log(renderSessionRow(row)), { discard: true });
     });
     yield* reportSessionFailure(program);

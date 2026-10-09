@@ -267,8 +267,8 @@ const runNotifier = Effect.fnUntraced(function* (
 
   const [stdout, stderr, exitCode] = yield* Effect.all(
     [
-      Stream.mkString(Stream.decodeText(handle.stdout)),
-      Stream.mkString(Stream.decodeText(handle.stderr)),
+      handle.stdout.pipe(Stream.decodeText, Stream.mkString),
+      handle.stderr.pipe(Stream.decodeText, Stream.mkString),
       handle.exitCode,
     ],
     { concurrency: "unbounded" }
@@ -319,8 +319,8 @@ const runWriter = Effect.fnUntraced(function* (
 
   const [stdout, stderr, exitCode] = yield* Effect.all(
     [
-      Stream.mkString(Stream.decodeText(handle.stdout)),
-      Stream.mkString(Stream.decodeText(handle.stderr)),
+      handle.stdout.pipe(Stream.decodeText, Stream.mkString),
+      handle.stderr.pipe(Stream.decodeText, Stream.mkString),
       handle.exitCode,
     ],
     { concurrency: "unbounded" }
@@ -462,14 +462,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("sequence-break notifica
       "round-trips schema-derived notification and damping states",
       [Arbitrary.schema(SequenceBreakNotificationV1), Arbitrary.schema(SequenceBreakDampingV1)],
       ([notification, damping]) => {
-        const decodedNotification = Result.getOrThrow(
-          decodeUnknownSequenceBreakNotificationV1Result(
-            Result.getOrThrow(encodeSequenceBreakNotificationV1Result(notification))
-          )
+        const decodedNotification = encodeSequenceBreakNotificationV1Result(notification).pipe(
+          Result.getOrThrow,
+          decodeUnknownSequenceBreakNotificationV1Result,
+          Result.getOrThrow
         );
 
-        const decodedDamping = Result.getOrThrow(
-          decodeUnknownSequenceBreakDampingV1Result(Result.getOrThrow(encodeSequenceBreakDampingV1Result(damping)))
+        const decodedDamping = encodeSequenceBreakDampingV1Result(damping).pipe(
+          Result.getOrThrow,
+          decodeUnknownSequenceBreakDampingV1Result,
+          Result.getOrThrow
         );
 
         pipe(notificationEquivalent(decodedNotification, notification), assertTrue);

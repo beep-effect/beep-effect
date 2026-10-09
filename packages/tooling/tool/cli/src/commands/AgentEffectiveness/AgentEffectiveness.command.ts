@@ -136,13 +136,13 @@ const provideAgentEffectivenessLayers: {
   Effect.fn("AgentEffectiveness.provideLayers")(function* <A, E, R>(effect: Effect.Effect<A, E, R>, dataRoot: string) {
     const path = yield* Path.Path;
     const duckDbPath = path.resolve(dataRoot, "derived", "ai-metrics.duckdb");
-    return yield* Effect.scoped(
-      Layer.build(
-        Layer.mergeAll(
-          DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath })),
-          FetchHttpClient.layer
-        )
-      ).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context))))
+    return yield* Layer.mergeAll(
+      DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath })),
+      FetchHttpClient.layer
+    ).pipe(
+      Layer.build,
+      Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
+      Effect.scoped
     );
   })
 );
@@ -168,14 +168,14 @@ const provideAgentEffectivenessPhoenixLayers: {
   ) {
     const path = yield* Path.Path;
     const duckDbPath = path.resolve(dataRoot, "derived", "ai-metrics.duckdb");
-    return yield* Effect.scoped(
-      Layer.build(
-        Layer.mergeAll(
-          DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath })),
-          FetchHttpClient.layer,
-          Phoenix.makeLayer(PhoenixConfigInput.make({ baseUrl: phoenixBaseUrl }))
-        )
-      ).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context))))
+    return yield* Layer.mergeAll(
+      DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath })),
+      FetchHttpClient.layer,
+      Phoenix.makeLayer(PhoenixConfigInput.make({ baseUrl: phoenixBaseUrl }))
+    ).pipe(
+      Layer.build,
+      Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
+      Effect.scoped
     );
   })
 );

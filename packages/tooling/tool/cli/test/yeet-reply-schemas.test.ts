@@ -106,7 +106,7 @@ describe("ReplyDrafts", () => {
       const exit = yield* Effect.exit(
         ReplyDraftsJson.decode('{"schemaVersion":"yeet-reply-drafts/v1","prNumber":558,"drafts":[{"body":"ack"}]}')
       );
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 
@@ -117,7 +117,7 @@ describe("ReplyDrafts", () => {
           '{"schemaVersion":"yeet-reply-drafts/v1","prNumber":558,"drafts":[{"threadId":"PRRC_kwDOKq9lNc5b8Xy1","body":"ack"}]}'
         )
       );
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 
@@ -128,7 +128,7 @@ describe("ReplyDrafts", () => {
           '{"schemaVersion":"yeet-reply-drafts/v1","prNumber":558,"drafts":[{"threadId":"PRRT_kwDOKq9lNc5b8Xy1","body":""}]}'
         )
       );
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 });

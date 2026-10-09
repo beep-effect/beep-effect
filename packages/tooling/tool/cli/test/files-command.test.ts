@@ -119,7 +119,7 @@ const expectFilesCommandFailure = Effect.fn("FilesCommandTest.expectFilesCommand
   args: ReadonlyArray<string>
 ) {
   const exit = yield* Effect.exit(runFilesCommand(args));
-  assertTrue(Exit.isFailure(exit));
+  exit.pipe(Exit.isFailure, assertTrue);
 
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
@@ -1359,7 +1359,7 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
                   })
                 )
               );
-              assertTrue(Exit.isFailure(exit));
+              exit.pipe(Exit.isFailure, assertTrue);
               if (Exit.isFailure(exit)) {
                 const error = Cause.squash(exit.cause);
                 expect(P.hasProperty(error, "exitCode") && error.exitCode === 2).toBe(true);
@@ -2851,7 +2851,7 @@ exit 74
           "--overwrite",
         ]).pipe(Effect.provideService(FileSystem.FileSystem, failingFileSystem), Effect.exit)
       );
-      assertTrue(Exit.isFailure(rollbackExit));
+      rollbackExit.pipe(Exit.isFailure, assertTrue);
       expect(stagedRenameCount).toBe(2);
       expect(linkCallCount).toBe(0);
       expect(yield* fs.readFileString(acceptedTarget)).toBe("previous solo");

@@ -104,7 +104,7 @@ describe("internal/ratchet/RatchetLifecycle enforceRatchet", () => {
         })
       );
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         expect(exit.cause.toString()).toContain("baseline grew");
       }
@@ -122,7 +122,7 @@ describe("internal/ratchet/RatchetLifecycle enforceRatchet", () => {
         })
       );
 
-      assertTrue(Exit.isSuccess(exit));
+      exit.pipe(Exit.isSuccess, assertTrue);
     })
   );
 });

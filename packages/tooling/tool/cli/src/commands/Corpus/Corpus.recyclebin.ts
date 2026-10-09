@@ -43,7 +43,7 @@ const filetimeToIso = (filetime: bigint): Effect.Effect<string, CorpusCommandErr
   const epochMilliseconds = (filetime - filetimeUnixEpochDiff) / filetimeTicksPerMillisecond;
   return epochMilliseconds > maxDateMilliseconds || epochMilliseconds < -maxDateMilliseconds
     ? Effect.fail(metadataParseError(`deletion FILETIME ${filetime} is outside the representable date range`))
-    : Effect.succeed(DateTime.formatIso(DateTime.makeUnsafe(Number(epochMilliseconds))));
+    : DateTime.makeUnsafe(Number(epochMilliseconds)).pipe(DateTime.formatIso, Effect.succeed);
 };
 
 const originalNameFromPath = (originalPath: string): string =>

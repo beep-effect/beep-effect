@@ -130,7 +130,7 @@ describe("AI metrics encrypted raw archive envelope", () => {
   it("rejects malformed cryptographic encodings and identities", () => {
     const fixture = Result.getOrThrow(decodeUnknownJson(currentEncoderFixture));
     const decodeFixture = (override: Record<string, unknown>) =>
-      decodeArchiveEnvelope(Result.getOrThrow(encodeUnknownJson({ ...fixture, ...override })));
+      encodeUnknownJson({ ...fixture, ...override }).pipe(Result.getOrThrow, decodeArchiveEnvelope);
 
     pipe(decodeFixture({ algorithm: "AES-128-GCM" }), Result.isFailure, assertTrue);
     pipe(decodeFixture({ archiveObjectId: "raw-not-a-sha256" }), Result.isFailure, assertTrue);

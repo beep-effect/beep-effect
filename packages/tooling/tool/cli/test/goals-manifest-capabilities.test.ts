@@ -215,7 +215,7 @@ layer(NodeServices.layer)("GoalManifest capability fields", (it) => {
       ];
 
       for (const input of invalidInputs) {
-        assertTrue(Exit.isFailure(yield* Effect.exit(decodeGoalManifest(input))));
+        (yield* Effect.exit(decodeGoalManifest(input))).pipe(Exit.isFailure, assertTrue);
       }
 
       const selfCycleError = yield* decodeGoalManifest({

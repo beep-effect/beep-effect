@@ -40,7 +40,7 @@ it.layer(NodeServices.layer, { timeout: "5 seconds" })("allowlist-check", (it) =
   it("formats schema diagnostics with path labels and optional redaction", () => {
     const result = decodeUnknownStructInlineSchemaResult({ token: "sk-test-secret" });
 
-    assertTrue(Result.isFailure(result));
+    result.pipe(Result.isFailure, assertTrue);
 
     if (Result.isFailure(result)) {
       const diagnostics = formatSchemaDiagnostics(result.failure);

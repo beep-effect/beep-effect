@@ -96,22 +96,17 @@ describe("PhaseProfiler", () => {
       const failed = Metric.counter("test_phase_failed_outcomes_total");
 
       const expectedError = TestPhaseError.make({ message: "boom" });
-      const exit = yield* Effect.exit(
-        profilePhase(
-          {
-            phase: "indexing",
-            attributes: { run_kind: "index" },
-            failed,
-          },
-          Effect.fail(expectedError)
-        )
+      const exit = yield* expectedError.pipe(
+        Effect.fail,
+        profilePhase({ phase: "indexing", attributes: { run_kind: "index" }, failed }),
+        Effect.exit
       );
 
       const failedState = yield* Metric.value(
         Metric.withAttributes(failed, { phase: "indexing", run_kind: "index", outcome: "failed" })
       );
 
-      assertTrue(Exit.isFailure(exit));
+      if (!Exit.isFailure(exit)) throw new Error("Expected a failure exit");
       expect(exit.cause.reasons).toHaveLength(1);
       const reason = exit.cause.reasons[0];
       assertDefined(reason);
@@ -145,8 +140,8 @@ describe("PhaseProfiler", () => {
             Metric.withAttributes(interrupted, { phase: "stream", outcome: "interrupted" })
           );
 
-          assertTrue(Exit.isFailure(exit));
-          assertTrue(Cause.hasInterruptsOnly(exit.cause));
+          if (!Exit.isFailure(exit)) throw new Error("Expected a failure exit");
+          assertTrue(exit.cause.pipe(Cause.hasInterruptsOnly));
           expect(interruptedState.count).toBe(1);
           expect(annotations).toHaveLength(1);
           expect(annotations[0]?.cause_classification).toBe("interrupted");

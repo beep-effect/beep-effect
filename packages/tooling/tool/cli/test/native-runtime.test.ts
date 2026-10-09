@@ -246,7 +246,7 @@ it.layer(NodeTestLayer)("native runtime laws", (it) => {
           yield* writeDefaultTsconfig;
           yield* writeProjectFile(
             "scratchpad/effect-ontology/Runtime/RateLimitedLanguageModel.ts",
-            'import { Effect } from "effect";\nexport const fail = Effect.die(new Error("boom"));\n'
+            'import * as Effect from "effect/Effect";\nexport const fail = Effect.die(new Error("boom"));\n'
           );
 
           const summary = yield* runNoNativeRuntimeRules(

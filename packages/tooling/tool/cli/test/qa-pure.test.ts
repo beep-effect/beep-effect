@@ -223,7 +223,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         const exit = yield* Effect.exit(
           resolveCaptureTarget("/repo", CaptureTargetRequest.make({ app: O.none(), url: O.none() }))
         );
-        assertTrue(Exit.isFailure(exit));
+        exit.pipe(Exit.isFailure, assertTrue);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
@@ -232,7 +232,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         const exit = yield* Effect.exit(
           resolveCaptureTarget("/repo", CaptureTargetRequest.make({ app: O.none(), url: O.some("not-a-url") }))
         );
-        assertTrue(Exit.isFailure(exit));
+        exit.pipe(Exit.isFailure, assertTrue);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });
@@ -704,11 +704,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         const clean = yield* Effect.exit(
           raiseCrossCheckFailure(1, EvidenceCrossCheck.make({ missingEventIds: [], missingPaths: [] }))
         );
-        assertTrue(Exit.isSuccess(clean));
+        clean.pipe(Exit.isSuccess, assertTrue);
         const dirty = yield* Effect.exit(
           raiseCrossCheckFailure(1, EvidenceCrossCheck.make({ missingEventIds: [9], missingPaths: [] }))
         );
-        assertTrue(Exit.isFailure(dirty));
+        dirty.pipe(Exit.isFailure, assertTrue);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });

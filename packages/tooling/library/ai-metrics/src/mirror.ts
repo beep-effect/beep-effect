@@ -982,11 +982,13 @@ export const buildAiMetricsMirrorBundle = Effect.fn("AiMetrics.buildAiMetricsMir
     .makeDirectory(mirrorWorkDir, { recursive: true })
     .pipe(Effect.mapError((cause) => mirrorFailure("Failed to create AI metrics mirror working directory.", cause)));
 
-  const tables = yield* Effect.scoped(
-    Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: mirrorDuckDbPath }))).pipe(
-      Effect.flatMap((context) => buildMirrorTables({ parquetDir, sourceDuckDbPath }).pipe(Effect.provide(context)))
-    )
-  ).pipe(Effect.mapError((cause) => mirrorFailure("Failed to build AI metrics mirror tables.", cause)));
+  const tables = yield* Layer.build(
+    DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: mirrorDuckDbPath }))
+  ).pipe(
+    Effect.flatMap((context) => buildMirrorTables({ parquetDir, sourceDuckDbPath }).pipe(Effect.provide(context))),
+    Effect.scoped,
+    Effect.mapError((cause) => mirrorFailure("Failed to build AI metrics mirror tables.", cause))
+  );
   const status = mirrorStatusFor(input, bundleId, createdAtEpochMillis, tables);
   const statusJson = yield* AiMetricsMirrorStatus.encodeJsonEffect(status).pipe(
     Effect.mapError((cause) => mirrorFailure("Failed to encode AI metrics mirror status JSON.", cause))

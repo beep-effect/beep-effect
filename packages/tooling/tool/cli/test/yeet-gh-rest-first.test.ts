@@ -202,8 +202,9 @@ it.layer(
   it.effect("fails with resetAt under no-wait, falling back to REST when the probe itself is rate limited", () =>
     Effect.gen(function* () {
       const budget = yield* GraphqlBudget;
-      const error = yield* Effect.flip(
-        budget.guard("markPullRequestReadyForReview", GraphqlBudgetPolicy.noWait)(Effect.succeed("ran"))
+      const error = yield* Effect.succeed("ran").pipe(
+        budget.guard("markPullRequestReadyForReview", GraphqlBudgetPolicy.noWait),
+        Effect.flip
       );
       assertInstanceOf(error, GraphqlBudgetExhausted);
       expect(error.remaining).toBe(0);
@@ -234,7 +235,10 @@ it.layer(resettingBudget, { timeout: "30 seconds" })("GraphqlBudget guard across
   it.effect("waits until the reset, then runs once the re-probe has budget", () =>
     Effect.gen(function* () {
       const budget = yield* GraphqlBudget;
-      const fiber = yield* Effect.forkChild(budget.guard("op", GraphqlBudgetPolicy.default)(Effect.succeed("ran")));
+      const fiber = yield* Effect.succeed("ran").pipe(
+        budget.guard("op", GraphqlBudgetPolicy.default),
+        Effect.forkChild
+      );
       yield* TestClock.adjust(Duration.minutes(11));
       expect(yield* Fiber.join(fiber)).toBe("ran");
     })

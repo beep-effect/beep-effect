@@ -433,12 +433,11 @@ const readCapturedThreads = Effect.fnUntraced(function* () {
   return yield* fs.readFileString(new URL("./fixtures/pr-review-bodies/pr1184-threads.json", import.meta.url).pathname);
 });
 
-const capturedThreadsText = await Effect.runPromise(
-  Effect.scoped(
-    Layer.build(NodeServices.layer).pipe(
-      Effect.flatMap((context) => readCapturedThreads().pipe(Effect.provide(context)))
-    )
-  )
+const capturedThreadsText = await NodeServices.layer.pipe(
+  Layer.build,
+  Effect.flatMap((context) => readCapturedThreads().pipe(Effect.provide(context))),
+  Effect.scoped,
+  Effect.runPromise
 );
 
 const capturedThreadsPayload = (): string => {

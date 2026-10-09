@@ -213,7 +213,9 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
           }),
         });
         const applier = Context.get(
-          yield* Layer.build(Layer.fresh(PacketForkRepairApplierLive)).pipe(
+          yield* PacketForkRepairApplierLive.pipe(
+            Layer.fresh,
+            Layer.build,
             Effect.provideService(FileSystem.FileSystem, pausingFs)
           ),
           PacketForkRepairApplier
@@ -306,7 +308,9 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
           ),
         });
         const isolated = Context.get(
-          yield* Layer.build(Layer.fresh(PacketEventStoreLive)).pipe(
+          yield* PacketEventStoreLive.pipe(
+            Layer.fresh,
+            Layer.build,
             Effect.provideService(FileSystem.FileSystem, unreadableFs)
           ),
           PacketEventStore
@@ -344,7 +348,9 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
           ),
         });
         const isolated = Context.get(
-          yield* Layer.build(Layer.fresh(PacketEventStoreLive)).pipe(
+          yield* PacketEventStoreLive.pipe(
+            Layer.fresh,
+            Layer.build,
             Effect.provideService(FileSystem.FileSystem, unreadableFs)
           ),
           PacketEventStore

@@ -3525,7 +3525,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const now = DateTime.makeUnsafe("2026-09-03T12:00:00.000Z");
-        yield* TestClock.setTime(DateTime.toEpochMillis(now));
+        yield* now.pipe(DateTime.toEpochMillis, TestClock.setTime);
         const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
         const journalPath = yield* attemptJournalPath(tempContext);
         const youngAttemptId = yield* attemptUuid("00000000-0000-4000-8011-000000000005");

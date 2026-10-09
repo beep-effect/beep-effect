@@ -67,17 +67,15 @@ describe("roadmap-refs lint command", { concurrent: false }, () => {
   it(
     "accepts deterministic projections that are intentionally absent from Git",
     () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
-          Effect.gen(function* () {
-            yield* writeFixture(
-              "# Roadmap\n\n- [Exploration Atlas](../explorations/ATLAS.md)\n- [Goals index](../goals/INDEX.md)\n"
-            );
-            const exit = yield* Effect.exit(runLintCommand(["roadmap-refs"]));
-            assertTrue(Exit.isSuccess(exit));
-          })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeFixture(
+            "# Roadmap\n\n- [Exploration Atlas](../explorations/ATLAS.md)\n- [Goals index](../goals/INDEX.md)\n"
+          );
+          const exit = yield* Effect.exit(runLintCommand(["roadmap-refs"]));
+          if (!Exit.isSuccess(exit)) throw new Error("Expected a success exit");
+        })
+      ).pipe(provideScopedLayer(testLayer), Effect.runPromise),
     20_000
   );
 
@@ -96,7 +94,7 @@ describe("roadmap-refs lint command", { concurrent: false }, () => {
               yield* writeFixture(roadmap);
               const exit = yield* Effect.exit(runLintCommand(["roadmap-refs"]));
               expectReportedExit(exit);
-              assertTrue(Exit.isFailure(exit));
+              exit.pipe(Exit.isFailure, assertTrue);
 
               const issueLines = pipe(
                 yield* TestConsole.errorLines,

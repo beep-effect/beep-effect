@@ -21,7 +21,7 @@ const encodeUnknownProofManifestDocgenProofManifestFileResult = S.encodeUnknownR
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
   const encode = S.encodeUnknownResult(schema);
   const decode = S.decodeUnknownResult(schema);
-  expect(S.toEquivalence(schema)(Result.getOrThrow(decode(Result.getOrThrow(encode(value)))), value)).toBe(true);
+  expect(S.toEquivalence(schema)(encode(value).pipe(Result.getOrThrow, decode, Result.getOrThrow), value)).toBe(true);
 };
 
 describe("schema parity", () => {

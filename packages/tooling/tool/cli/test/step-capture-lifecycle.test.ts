@@ -96,7 +96,7 @@ const makeStuckSpawner = Effect.fnUntraced(function* (options: {
   const closed = yield* Deferred.make<void>();
   const killCount = yield* Ref.make(0);
   const pipe = Stream.make(encoder.encode(options.output)).pipe(
-    Stream.concat(Stream.fromEffect(Deferred.await(closed)).pipe(Stream.drain))
+    Stream.concat(closed.pipe(Deferred.await, Stream.fromEffect, Stream.drain))
   );
   const handle = ChildProcessSpawner.makeHandle({
     all: pipe,
@@ -137,7 +137,7 @@ const makeNeverExitSpawner = Effect.fnUntraced(function* (killCompletes?: boolea
   const killOptions = yield* Ref.make<ReadonlyArray<ChildProcess.KillOptions>>([]);
   const killBlocked = yield* Deferred.make<void>();
   const pipe = Stream.make(encoder.encode("started")).pipe(
-    Stream.concat(Stream.fromEffect(Deferred.await(closed)).pipe(Stream.drain))
+    Stream.concat(closed.pipe(Deferred.await, Stream.fromEffect, Stream.drain))
   );
   const handle = ChildProcessSpawner.makeHandle({
     all: pipe,
@@ -540,7 +540,7 @@ describe("StepExec capture pipe lifecycle", () => {
                 const nestedSource = `
 import { runCaptured } from "@beep/repo-cli/test/Process";
 import { BunRuntime, BunServices } from "@effect/platform-bun";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 
 BunRuntime.runMain(
   runCaptured({
@@ -653,7 +653,7 @@ BunRuntime.runMain(
         yield* TestClock.adjust("3 seconds");
 
         const exit = yield* Fiber.await(fiber);
-        assertTrue(Exit.isFailure(exit));
+        exit.pipe(Exit.isFailure, assertTrue);
         const rendered = Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
         expect(rendered).toContain("CapturePipeWedgedError");
         expect(rendered).toContain("fake-step --flag");
@@ -698,7 +698,7 @@ BunRuntime.runMain(
         yield* TestClock.adjust("1 minute");
 
         const exit = yield* Fiber.await(fiber);
-        assertTrue(Exit.isFailure(exit));
+        exit.pipe(Exit.isFailure, assertTrue);
         const rendered = Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
         expect(rendered).toContain("CaptureCommandTimedOutError");
         expect(rendered).toContain("fake-step --flag");
@@ -714,15 +714,13 @@ BunRuntime.runMain(
       "interrupts and reaps a captured command when its external watchdog fails",
       Effect.fnUntraced(function* () {
         const { killCount, spawner } = yield* makeNeverExitSpawner();
-        const fiber = yield* Effect.forkChild(
-          Effect.flip(
-            runCaptured({
-              command: "fake-step",
-              args: ["--flag"],
-              abortWhen: Effect.sleep("1 minute").pipe(Effect.andThen(Effect.fail("watchdog tripped"))),
-            }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner), Effect.scoped)
-          )
-        );
+        const fiber = yield* Effect.flip(
+          runCaptured({
+            command: "fake-step",
+            args: ["--flag"],
+            abortWhen: Effect.sleep("1 minute").pipe(Effect.andThen(Effect.fail("watchdog tripped"))),
+          }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner), Effect.scoped)
+        ).pipe(Effect.forkChild);
 
         yield* TestClock.adjust("1 minute");
 
@@ -737,16 +735,14 @@ BunRuntime.runMain(
       "returns a typed timeout after bounded cleanup when the child never reports exit",
       Effect.fnUntraced(function* () {
         const { killCount, spawner, unrefCount } = yield* makeNeverExitSpawner(false);
-        const fiber = yield* Effect.forkChild(
-          Effect.flip(
-            runCaptured({
-              command: "fake-step",
-              args: ["--flag"],
-              timeout: "1 minute",
-              forceKillAfter: "1 second",
-            }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner), Effect.scoped)
-          )
-        );
+        const fiber = yield* Effect.flip(
+          runCaptured({
+            command: "fake-step",
+            args: ["--flag"],
+            timeout: "1 minute",
+            forceKillAfter: "1 second",
+          }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner), Effect.scoped)
+        ).pipe(Effect.forkChild);
 
         yield* TestClock.adjust("1 minute");
         yield* TestClock.adjust("2 seconds");

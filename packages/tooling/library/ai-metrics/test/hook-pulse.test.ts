@@ -1347,23 +1347,19 @@ describe("HookPulseV1", () => {
       );
       const withUnreadableSalt = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
         Effect.provideService(effect, ConfigProvider.ConfigProvider, unreadable);
-      const raw = yield* Effect.flip(withUnreadableSalt(decodeHookPulseFromRaw(stop)));
-      const legacy = yield* Effect.flip(
-        withUnreadableSalt(
-          decodeHookPulseFromLegacy({
-            schemaVersion: "hook-pulse/v1",
-            ts: "2026-08-01T09:06:00.000Z",
-            sessionId: "legacy-session-unreadable-salt",
-            agentKind: "claude-code",
-            hookEvent: "Stop",
-            cwd: "/workspace/legacy-checkout",
-            notifierRev: "spike-0",
-            instrumentClass: "spike",
-            evidenceTier: "observed",
-            waitReason: "none",
-          })
-        )
-      );
+      const raw = yield* decodeHookPulseFromRaw(stop).pipe(withUnreadableSalt, Effect.flip);
+      const legacy = yield* decodeHookPulseFromLegacy({
+        schemaVersion: "hook-pulse/v1",
+        ts: "2026-08-01T09:06:00.000Z",
+        sessionId: "legacy-session-unreadable-salt",
+        agentKind: "claude-code",
+        hookEvent: "Stop",
+        cwd: "/workspace/legacy-checkout",
+        notifierRev: "spike-0",
+        instrumentClass: "spike",
+        evidenceTier: "observed",
+        waitReason: "none",
+      }).pipe(withUnreadableSalt, Effect.flip);
 
       expect(raw.message).toContain("Failed to hash private hook-pulse identifiers");
       expect(legacy.message).toContain("Failed to migrate private identifiers from a legacy hook-pulse/v1 row");

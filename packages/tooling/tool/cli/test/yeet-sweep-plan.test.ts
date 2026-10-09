@@ -1019,7 +1019,7 @@ describe("sweep branch override", () => {
   it.effect("refuses an option-like branch name instead of passing it to git", () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(overrideSweepBranch(contextAt("main"), "--upload-pack=touch /tmp/pwn"));
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 });

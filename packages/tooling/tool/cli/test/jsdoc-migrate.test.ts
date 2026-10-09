@@ -683,7 +683,7 @@ layer(BunCrypto.layer)("JSDocMigrateTitles response validation", (it) => {
       const pending = yield* pendingExtract();
       const content = encodeUnknownJson(pending.map((record) => ({ anchor: record.anchor, titles: ["One", "Two"] })));
       const exit = yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(content, pending));
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 
@@ -692,7 +692,7 @@ layer(BunCrypto.layer)("JSDocMigrateTitles response validation", (it) => {
       const pending = yield* pendingExtract();
       const content = encodeUnknownJson([{ anchor: pending[0]?.anchor, titles: ["Only one"] }]);
       const exit = yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(content, pending));
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 
@@ -700,7 +700,7 @@ layer(BunCrypto.layer)("JSDocMigrateTitles response validation", (it) => {
     Effect.gen(function* () {
       const pending = yield* pendingExtract();
       const exit = yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse("not json", pending));
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 
@@ -729,9 +729,12 @@ layer(BunCrypto.layer)("JSDocMigrateTitles response validation", (it) => {
       const duplicate = encodeUnknownJson(
         twoExample.map((record) => ({ anchor: record.anchor, titles: ["Same", "Same"] }))
       );
-      assertTrue(Exit.isFailure(yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(duplicate, twoExample))));
+      (yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(duplicate, twoExample))).pipe(
+        Exit.isFailure,
+        assertTrue
+      );
       const empty = encodeUnknownJson(twoExample.map((record) => ({ anchor: record.anchor, titles: ["Fine", "  "] })));
-      assertTrue(Exit.isFailure(yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(empty, twoExample))));
+      (yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(empty, twoExample))).pipe(Exit.isFailure, assertTrue);
     })
   );
 
@@ -745,16 +748,19 @@ layer(BunCrypto.layer)("JSDocMigrateTitles response validation", (it) => {
         pending.map((record) => ({ anchor: record.anchor, titles: ["Close */ const injected = true"] }))
       );
 
-      assertTrue(Exit.isFailure(yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(multiline, pending))));
-      assertTrue(Exit.isFailure(yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(commentClosing, pending))));
+      (yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(multiline, pending))).pipe(Exit.isFailure, assertTrue);
+      (yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(commentClosing, pending))).pipe(
+        Exit.isFailure,
+        assertTrue
+      );
     })
   );
 
   it("accepts only literal loopback HTTP proxy URLs", () => {
-    assertTrue(Exit.isSuccess(Effect.runSyncExit(decodeUnknownJSDocMigrateProxyUrl("http://127.0.0.1:8317"))));
-    assertTrue(Exit.isSuccess(Effect.runSyncExit(decodeUnknownJSDocMigrateProxyUrl("http://[::1]:8317"))));
-    assertTrue(Exit.isFailure(Effect.runSyncExit(decodeUnknownJSDocMigrateProxyUrl("https://example.com"))));
-    assertTrue(Exit.isFailure(Effect.runSyncExit(decodeUnknownJSDocMigrateProxyUrl("http://localhost:8317"))));
+    decodeUnknownJSDocMigrateProxyUrl("http://127.0.0.1:8317").pipe(Effect.runSyncExit, Exit.isSuccess, assertTrue);
+    decodeUnknownJSDocMigrateProxyUrl("http://[::1]:8317").pipe(Effect.runSyncExit, Exit.isSuccess, assertTrue);
+    decodeUnknownJSDocMigrateProxyUrl("https://example.com").pipe(Effect.runSyncExit, Exit.isFailure, assertTrue);
+    decodeUnknownJSDocMigrateProxyUrl("http://localhost:8317").pipe(Effect.runSyncExit, Exit.isFailure, assertTrue);
   });
 
   it.effect("rejects a see-purpose count that disagrees with the block", () =>
@@ -778,7 +784,10 @@ layer(BunCrypto.layer)("JSDocMigrateTitles response validation", (it) => {
       const missingPurpose = encodeUnknownJson(
         withSee.map((record) => ({ anchor: record.anchor, titles: ["Use it"] }))
       );
-      assertTrue(Exit.isFailure(yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(missingPurpose, withSee))));
+      (yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(missingPurpose, withSee))).pipe(
+        Exit.isFailure,
+        assertTrue
+      );
       const withPurpose = encodeUnknownJson(
         withSee.map((record) => ({ anchor: record.anchor, titles: ["Use it"], seePurposes: ["for the helper."] }))
       );

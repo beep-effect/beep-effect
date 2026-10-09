@@ -963,7 +963,7 @@ const materializeInitialWorkerEnvironment = Effect.fn("Files.PersonMatchWorker.m
       Effect.catchTag("MatchPersonWorkerEnvironmentSetupError", (error) =>
         shouldRetryAdaFaceSetupOnCpu(options, error.environment)
           ? writeAdaFaceSetupFallback(error).pipe(Effect.andThen(materializeWorkerEnvironment(options, inputs, "cpu")))
-          : Effect.fail(setupErrorToServiceError(error))
+          : error.pipe(setupErrorToServiceError, Effect.fail)
       ),
       Effect.catchTag("MatchPersonWorkerEnvironmentSetupError", flow(setupErrorToServiceError, Effect.fail))
     );

@@ -190,7 +190,8 @@ const eventResponse = { categories: ["Docket - unverified"], id: "event-id", tra
 const roundTrip = <Sch extends S.ConstraintCodec<unknown, unknown, never, never>>(
   schema: Sch,
   value: Sch["Type"]
-): Sch["Type"] => Result.getOrThrow(S.decodeUnknownResult(schema)(Result.getOrThrow(S.encodeResult(schema)(value))));
+): Sch["Type"] =>
+  S.encodeResult(schema)(value).pipe(Result.getOrThrow, S.decodeUnknownResult(schema), Result.getOrThrow);
 
 const isNamedBody = S.is(S.Struct({ displayName: S.String }));
 

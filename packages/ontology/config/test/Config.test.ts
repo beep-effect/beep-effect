@@ -45,11 +45,11 @@ describe("OntologyConfigLive", () => {
     "keeps missing and empty configuration in the typed failure channel",
     Effect.fnUntraced(function* () {
       for (const configuration of [{}, { ONTOLOGY_WORKSPACE_ROOT: "" }]) {
-        const exit = yield* Effect.exit(Layer.build(configLayer(configuration)));
+        const exit = yield* configLayer(configuration).pipe(Layer.build, Effect.exit);
 
-        assertTrue(Exit.isFailure(exit));
-        assertTrue(Cause.hasFails(exit.cause));
-        assertFalse(Cause.hasDies(exit.cause));
+        if (!Exit.isFailure(exit)) throw new Error("Expected a failure exit");
+        assertTrue(exit.cause.pipe(Cause.hasFails));
+        assertFalse(exit.cause.pipe(Cause.hasDies));
       }
     })
   );
@@ -86,11 +86,11 @@ describe("OntologyMcpConfigLive", () => {
     Effect.fnUntraced(function* () {
       // Silently reading a typo as `false` would be safe but dishonest: the
       // operator asked for something and got no signal that it was ignored.
-      const exit = yield* Effect.exit(Layer.build(mcpConfigLayer({ ONTOLOGY_MCP_MUTATIONS_ENABLED: "maybe" })));
+      const exit = yield* mcpConfigLayer({ ONTOLOGY_MCP_MUTATIONS_ENABLED: "maybe" }).pipe(Layer.build, Effect.exit);
 
-      assertTrue(Exit.isFailure(exit));
-      assertTrue(Cause.hasFails(exit.cause));
-      assertFalse(Cause.hasDies(exit.cause));
+      if (!Exit.isFailure(exit)) throw new Error("Expected a failure exit");
+      assertTrue(exit.cause.pipe(Cause.hasFails));
+      assertFalse(exit.cause.pipe(Cause.hasDies));
     })
   );
 });

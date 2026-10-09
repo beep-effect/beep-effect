@@ -377,7 +377,7 @@ export const workspaceCoverageScopeOwners = Effect.fn("CoverageScope.workspaceCo
   const packageMap = yield* discoverWorkspacePackages(repoRoot, path).pipe(
     QualityTaskConfigurationError.mapError("Failed to discover workspace packages for coverage scope planning.")
   );
-  const workspaceNames = MutableHashSet.fromIterable(MutableHashMap.keys(packageMap));
+  const workspaceNames = packageMap.pipe(MutableHashMap.keys, MutableHashSet.fromIterable);
 
   return pipe(
     A.fromIterable(MutableHashMap.values(packageMap)),

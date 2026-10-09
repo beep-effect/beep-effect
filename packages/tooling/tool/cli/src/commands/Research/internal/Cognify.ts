@@ -124,7 +124,7 @@ export const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
     MutableHashMap.set(byDataset, dataset, uploads);
   }
 
-  const datasets = A.sort(A.fromIterable(MutableHashMap.keys(byDataset)), Order.String);
+  const datasets = A.sort(byDataset.pipe(MutableHashMap.keys, A.fromIterable), Order.String);
   const cardsPushed = A.reduce(MutableHashMap.values(byDataset), 0, (total, uploads) => total + A.length(uploads));
 
   if (options.dryRun || cardsPushed === 0) {

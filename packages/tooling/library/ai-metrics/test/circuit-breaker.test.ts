@@ -85,8 +85,8 @@ const runBreaker = Effect.fnUntraced(function* (
 
   const [stdout, stderr, exitCode] = yield* Effect.all(
     [
-      Stream.mkString(Stream.decodeText(handle.stdout)),
-      Stream.mkString(Stream.decodeText(handle.stderr)),
+      handle.stdout.pipe(Stream.decodeText, Stream.mkString),
+      handle.stderr.pipe(Stream.decodeText, Stream.mkString),
       handle.exitCode,
     ],
     { concurrency: "unbounded" }

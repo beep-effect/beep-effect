@@ -60,7 +60,8 @@ export const withDuckDb: {
     effect: Effect.Effect<A, E, R>,
     options: DuckDbConnectionOptions
   ): Effect.Effect<A, E, Exclude<R, DuckDb>> =>
-    Effect.scoped(
-      Layer.build(DuckDb.makeNodeLayer(options)).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context))))
+    Layer.build(DuckDb.makeNodeLayer(options)).pipe(
+      Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
+      Effect.scoped
     )
 );

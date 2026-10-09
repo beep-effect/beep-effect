@@ -101,10 +101,9 @@ const timerCommand = Command.make(
     );
     yield* Console.log(
       A.join(
-        yield* Effect.scoped(
-          Layer.build(referenceWorkspaceLayer(owner)).pipe(
-            Effect.flatMap((context) => install.pipe(Effect.provide(context)))
-          )
+        yield* Layer.build(referenceWorkspaceLayer(owner)).pipe(
+          Effect.flatMap((context) => install.pipe(Effect.provide(context))),
+          Effect.scoped
         ),
         "\n"
       )

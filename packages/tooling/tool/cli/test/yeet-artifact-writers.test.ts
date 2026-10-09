@@ -159,7 +159,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("writeRunVerdict", (it) 
       const reportPath = yield* runArtifactPathForContext(context, "inner-lanes.ndjson");
       yield* fs.makeDirectory(path.dirname(reportPath), { recursive: true });
       yield* fs.writeFileString(reportPath, `${yield* encodeQualityTaskLaneRunReportJson(report)}\n`);
-      const extras = yield* Ref.make<YeetVerdictExtrasForTesting>(extrasWith(O.some(blockedMergeReady)));
+      const extras = yield* O.some(blockedMergeReady).pipe(extrasWith, Ref.make);
 
       yield* writeRunVerdictForTesting(
         plan,
@@ -213,7 +213,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("writeRunVerdict", (it) 
       const context = contextForRoot(tmpDir);
       const plan = RepoRunPlan.make({ context, steps: A.empty() });
       const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
-      const extras = yield* Ref.make<YeetVerdictExtrasForTesting>(extrasWith(O.none()));
+      const extras = yield* O.none().pipe(extrasWith, Ref.make);
 
       yield* writeRunVerdictForTesting(
         plan,

@@ -116,7 +116,7 @@ export const expectReportedExit: {
   (args) => Exit.isExit(args[0]),
   (exit: Exit.Exit<unknown, unknown>, exitCode = 1): void => {
     const failure = Exit.match(exit, {
-      onFailure: (cause) => O.some(Cause.squash(cause)),
+      onFailure: (cause) => cause.pipe(Cause.squash, O.some),
       onSuccess: () => O.none(),
     });
 

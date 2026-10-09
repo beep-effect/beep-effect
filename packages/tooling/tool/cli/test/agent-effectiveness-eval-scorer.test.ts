@@ -687,7 +687,7 @@ it.layer(TestLayer, { concurrent: false, timeout: "10 seconds" })("agent-effecti
         Effect.exit
       );
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       const error = Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined;
       expect(error).toBeInstanceOf(AgentEffectivenessEvalScorerError);
       expect(isScorerError(error) ? error.message : "").toContain(

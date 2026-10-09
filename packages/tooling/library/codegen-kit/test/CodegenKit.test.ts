@@ -420,7 +420,7 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit", (i
         output: { path: "http.gen.ts" },
       });
       const raw = [
-        'import { Effect } from "effect";',
+        'import * as Effect from "effect/Effect";',
         'import * as Schema from "effect/Schema";',
         'import { HttpApi, HttpApiSchema } from "effect/http-api";',
         'import { unused } from "fixture";',
@@ -435,7 +435,7 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit", (i
       expect(output).toContain("@packageDocumentation");
       expect(output).toContain("Do not edit manually");
       expect(output).toContain("\\@beep/codegen-kit-fixture");
-      expect(output).toContain('import { Effect } from "effect";');
+      expect(output).toContain('import * as Effect from "effect/Effect";');
       expect(output).toContain('import { $CodegenKitId } from "@beep/identity";');
       expect(output).not.toContain('from "fixture"');
       expect(output).toContain('const $I = $CodegenKitId.create("fixture/http.gen");');

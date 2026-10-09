@@ -199,7 +199,7 @@ const stubService = (fresh: boolean) => ({
   plan: Effect.succeed(makePlan()),
   check: () => Effect.succeed(checkReport(fresh)),
   checkManifest: () => Effect.succeed(checkReport(fresh)),
-  bake: () => Effect.succeed(report(O.none())),
+  bake: () => O.none().pipe(report, Effect.succeed),
 });
 
 const runWithStubService = (fresh: boolean, options: ReturnType<typeof bakeOptions>) =>
@@ -320,7 +320,7 @@ describe("runner image manifest checks", () => {
           }).pipe(
             Effect.provideServiceEffect(
               RunnersService,
-              Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+              testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
             ),
             Effect.scoped
           );
@@ -530,7 +530,7 @@ describe("runner bake planning and argv", () => {
       }).pipe(
         Effect.provideServiceEffect(
           RunnersService,
-          Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+          testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
         ),
         Effect.scoped
       );
@@ -579,7 +579,7 @@ describe("runner bake planning and argv", () => {
           }).pipe(
             Effect.provideServiceEffect(
               RunnersService,
-              Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+              testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
             ),
             Effect.scoped
           );
@@ -708,7 +708,7 @@ describe("runner bake planning and argv", () => {
           }).pipe(
             Effect.provideServiceEffect(
               RunnersService,
-              Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+              testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
             ),
             Effect.scoped
           );
@@ -743,7 +743,7 @@ describe("runner bake planning and argv", () => {
           }).pipe(
             Effect.provideServiceEffect(
               RunnersService,
-              Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+              testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
             ),
             Effect.scoped
           );
@@ -780,7 +780,7 @@ describe("runner bake planning and argv", () => {
           }).pipe(
             Effect.provideServiceEffect(
               RunnersService,
-              Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+              testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
             ),
             Effect.scoped
           );
@@ -818,7 +818,7 @@ describe("runner bake planning and argv", () => {
       }).pipe(
         Effect.provideServiceEffect(
           RunnersService,
-          Layer.build(Layer.fresh(testLayer)).pipe(Effect.map(Context.get(RunnersService)))
+          testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
         ),
         Effect.scoped
       );

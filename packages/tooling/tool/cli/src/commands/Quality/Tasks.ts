@@ -1416,7 +1416,7 @@ const runStepCapturedForQuarantine = Effect.fn("QualityTasks.runStepCapturedForQ
     bound: flakeQuarantineOutputBound,
     tee: true,
   }).pipe(
-    Effect.catchTag("CaptureCommandTimedOutError", (error) => Effect.succeed(capturedTimeoutResult(error))),
+    Effect.catchTag("CaptureCommandTimedOutError", (error) => error.pipe(capturedTimeoutResult, Effect.succeed)),
     QualityTaskConfigurationError.mapError(`Failed to spawn ${command}`)
   );
 
@@ -1982,12 +1982,12 @@ const resolveLaneInputDigestSource = Effect.fn("QualityTasks.resolveLaneInputDig
   }
   if (isWrapperLaneStep(outcome.step)) {
     return yield* O.match(ledger, {
-      onNone: () => Effect.succeed(unscopedLaneInputs(O.none())),
+      onNone: () => O.none().pipe(unscopedLaneInputs, Effect.succeed),
       onSome: (ledgerPath) => readLaneInputs(readTurboLaneLedger(ledgerPath)),
     });
   }
   return yield* O.match(directTurboTaskNames(outcome.step), {
-    onNone: () => Effect.succeed(unscopedLaneInputs(O.none())),
+    onNone: () => O.none().pipe(unscopedLaneInputs, Effect.succeed),
     onSome: (tasks) => readLaneInputs(readTurboLaneDigest(outcome.step.cwd, outcome.startedAt, tasks)),
   });
 });
@@ -2504,7 +2504,7 @@ const collectResolvedStepOutput = Effect.fn("QualityTasks.collectResolvedStepOut
           timeout: captureTimeout,
         }),
   }).pipe(
-    Effect.catchTag("CaptureCommandTimedOutError", (error) => Effect.succeed(capturedTimeoutResult(error))),
+    Effect.catchTag("CaptureCommandTimedOutError", (error) => error.pipe(capturedTimeoutResult, Effect.succeed)),
     QualityTaskConfigurationError.mapError(`Failed to spawn ${command}`)
   );
 

@@ -246,7 +246,7 @@ describe("SqlTest offline coverage", () => {
 
   it.effect("maps mocked Testcontainers startup failure without Docker", () =>
     Effect.gen(function* () {
-      const exit = yield* Effect.exit(Effect.scoped(makePgliteTestcontainerResource()));
+      const exit = yield* makePgliteTestcontainerResource().pipe(Effect.scoped, Effect.exit);
 
       expect(Exit.isFailure(exit)).toBe(true);
       if (Exit.isFailure(exit)) {

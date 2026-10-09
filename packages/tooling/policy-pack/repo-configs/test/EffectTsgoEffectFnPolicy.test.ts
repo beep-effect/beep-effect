@@ -79,7 +79,7 @@ const bootstrapTsgoProject = Effect.fn(function* (projectDir: string) {
     "src/index.ts",
     pipe(
       [
-        'import { Effect } from "effect";',
+        'import * as Effect from "effect/Effect";',
         "",
         "export const shouldError = (value: string) => {",
         "  return Effect.gen(function* () {",

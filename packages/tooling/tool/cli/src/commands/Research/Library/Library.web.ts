@@ -81,7 +81,7 @@ const readBoundedPaperBody = Effect.fn("Library.paper.readBoundedBody")(function
   const declaredLimit = pdfAllowed ? 50_000_000 : 5_000_000;
   const declared = S.decodeUnknownOption(S.FiniteFromString)(response.headers["content-length"]);
   if (O.isSome(declared) && declared.value > declaredLimit) {
-    yield* Effect.scoped(Stream.toPull(response.stream).pipe(Effect.asVoid));
+    yield* response.stream.pipe(Stream.toPull, Effect.asVoid, Effect.scoped);
     return yield* LibraryError.make({
       cause: "body-bound",
       message: `Paper HTTP body declared ${declared.value} bytes above the ${declaredLimit}-byte limit.`,
@@ -194,8 +194,10 @@ export const acquireLibraryWeb = Effect.fn("Library.acquireWeb")(function* (
   const provided = yield* Effect.serviceOption(Firecrawl);
   const success = yield* O.isSome(provided)
     ? request
-    : Effect.scoped(
-        Layer.build(Firecrawl.layer).pipe(Effect.flatMap((context) => request.pipe(Effect.provide(context))))
+    : Firecrawl.layer.pipe(
+        Layer.build,
+        Effect.flatMap((context) => request.pipe(Effect.provide(context))),
+        Effect.scoped
       );
   const response = yield* encodeLibraryJson(success);
   const raw = yield* saveLibraryText(root, `${prefix}/response.json`, response, "application/json", "raw-response");

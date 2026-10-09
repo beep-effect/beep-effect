@@ -73,12 +73,12 @@ export const handleVersionSync: (
   VersionSyncError | VersionSyncDriftError | NoSuchFileError,
   FileSystem.FileSystem | Path.Path | HttpClient.HttpClient | FsUtils
 > = (options) =>
-  Effect.scoped(
-    Layer.build(VersionSyncServicesLive).pipe(
-      Effect.flatMap(
-        Effect.fnUntraced(function* (context) {
-          return yield* handleVersionSyncProgram(options).pipe(Effect.provide(context));
-        })
-      )
-    )
+  VersionSyncServicesLive.pipe(
+    Layer.build,
+    Effect.flatMap(
+      Effect.fnUntraced(function* (context) {
+        return yield* handleVersionSyncProgram(options).pipe(Effect.provide(context));
+      })
+    ),
+    Effect.scoped
   );

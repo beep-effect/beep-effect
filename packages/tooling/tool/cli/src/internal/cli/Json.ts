@@ -284,7 +284,7 @@ export const renderPrettyCommandJson: {
  * @since 0.0.0
  */
 export const formatJsonValue = (value: unknown): string =>
-  renderPrettyCommandJson(Result.getOrThrow(encodeJsonResult(value)));
+  encodeJsonResult(value).pipe(Result.getOrThrow, renderPrettyCommandJson);
 
 /**
  * Encode and print an arbitrary JSON-compatible command payload.

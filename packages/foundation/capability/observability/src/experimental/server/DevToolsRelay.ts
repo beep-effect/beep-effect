@@ -174,7 +174,7 @@ export const makeDevToolsRelayService: Effect.Effect<
       });
 
       return DevToolsSnapshot.make({
-        spanCount: decodeNonNegativeInt(HashMap.size(current.spans)),
+        spanCount: decodeNonNegativeInt(current.spans.pipe(HashMap.size)),
         spanEventCount: decodeNonNegativeInt(current.spanEvents.length),
         metricCount: decodeNonNegativeInt(metricCount),
         lastUpdatedAtMs: decodeNonNegativeInt(current.lastUpdatedAtMs),

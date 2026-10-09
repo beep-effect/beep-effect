@@ -327,8 +327,8 @@ layer(TestLayer)("skills provenance service", (it) => {
       });
 
       expect((yield* decodeSkillSnapshot(snapshot(1))).fileCount).toBe(1);
-      assertTrue(Exit.isFailure(yield* Effect.exit(decodeSkillSnapshot(snapshot(0)))));
-      assertTrue(Exit.isFailure(yield* Effect.exit(decodeSkillSnapshot(snapshot(2)))));
+      (yield* Effect.exit(decodeSkillSnapshot(snapshot(0)))).pipe(Exit.isFailure, assertTrue);
+      (yield* Effect.exit(decodeSkillSnapshot(snapshot(2)))).pipe(Exit.isFailure, assertTrue);
     })
   );
 

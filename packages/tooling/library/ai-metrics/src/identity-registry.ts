@@ -659,7 +659,7 @@ const claimRegistryLock = Effect.fnUntraced(function* (lockPath: string, token: 
     Effect.catchTag("PlatformError", (error) =>
       Eq.equals(error.reason._tag, "AlreadyExists")
         ? Effect.succeed(false)
-        : Effect.fail(identityRegistryFailure("Failed to create the AI metrics identity registry lock.")(error))
+        : error.pipe(identityRegistryFailure("Failed to create the AI metrics identity registry lock."), Effect.fail)
     )
   );
 });
