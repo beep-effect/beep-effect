@@ -1832,7 +1832,6 @@ const makeKnowledgeService = Effect.fn("KnowledgeService.make")(function* () {
  * ```
  *
  * @see {@link KnowledgeService} for the tag this layer satisfies.
- *
  * @category layers
  * @since 0.0.0
  */
