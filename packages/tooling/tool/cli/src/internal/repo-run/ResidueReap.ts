@@ -2654,10 +2654,7 @@ const recoverArchiveRun = Effect.fnUntraced(function* (settings: ResidueReapSett
     { concurrency: 1 }
   );
   const warnings = A.flatMap(rows, (row) => row.warnings);
-  const refusalWarnings = A.flatMap(
-    A.filter(rows, (row) => row.refused),
-    (row) => row.warnings
-  );
+  const refusalWarnings = A.flatMap(rows, (row) => (row.refused ? row.warnings : []));
   const crypto = yield* Crypto.Crypto;
   const recoveryPath = path.join(root, `recovery-${yield* crypto.randomUUIDv4}.json`);
   const result = ResidueReapReport.make({
