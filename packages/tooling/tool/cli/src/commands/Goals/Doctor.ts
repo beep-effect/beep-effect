@@ -779,6 +779,26 @@ const gitAdvisories = Effect.fn("Goals.gitAdvisories")(function* (packets: Reado
 
 const findingLine = (item: GoalDoctorFinding): string => `- ${item.slug} [${item.kind}] ${item.message}`;
 
+const completionReceiptFindings = (
+  slug: string,
+  final: GoalPullRequestRef,
+  receipt: O.Option<GoalCompletionReceipt>
+) => {
+  const outcome = O.isSome(receipt) ? receipt.value.outcome : "unknown";
+  const findings =
+    outcome === "verified"
+      ? A.empty<GoalDoctorFinding>()
+      : A.of(
+          finding(
+            slug,
+            outcome === "unknown" ? "completion-gate-unknown" : "completion-gate-unsatisfied",
+            "advisory",
+            `Final PR #${final.number}: ${outcome}. ${O.isNone(receipt) ? "No matching clone receipt; use doctor --online (read-only) or completion refresh (explicit writer)." : "See head-bound completion evidence; lifecycle is unchanged."}`
+          )
+        );
+  return findings;
+};
+
 const completionEvidenceAdvisory = Effect.fn("Goals.completionEvidenceAdvisory")(function* (
   packet: DoctorPacket,
   root: string,
@@ -790,18 +810,7 @@ const completionEvidenceAdvisory = Effect.fn("Goals.completionEvidenceAdvisory")
     ? O.some(yield* observeGoalCompletion(root, packet.record.slug, manifest, final))
     : yield* storedGoalCompletion(root, packet.record.slug, manifest, final).pipe(Effect.orElseSucceed(O.none));
   if (O.isNone(receipt) && manifest.completionGate.pullRequests === undefined && !online) return O.none();
-  const outcome = O.isSome(receipt) ? receipt.value.outcome : "unknown";
-  const findings =
-    outcome === "verified"
-      ? A.empty<GoalDoctorFinding>()
-      : A.of(
-          finding(
-            packet.record.slug,
-            outcome === "unknown" ? "completion-gate-unknown" : "completion-gate-unsatisfied",
-            "advisory",
-            `Final PR #${final.number}: ${outcome}. ${O.isNone(receipt) ? "No matching clone receipt; use doctor --online (read-only) or completion refresh (explicit writer)." : "See head-bound completion evidence; lifecycle is unchanged."}`
-          )
-        );
+  const findings = completionReceiptFindings(packet.record.slug, final, receipt);
   return O.some({ slug: packet.record.slug, findings });
 });
 

@@ -161,3 +161,13 @@
   single repair; H2 records the inherited red rather than copying a lane-local fix.
 - Would have prevented it: early static graph qualification after adding cross-command
   schema reuse, and audit-pattern classification for path-policy literals.
+
+## 2026-10-09: H2 requalification waits behind the program's heavy admissions
+
+- Doing: repeating Fallow and the stable-head qualification bundle after remediation.
+- Evidence: both wrapper logs remain at `beep-heavy: all 3 slots busy, waiting`
+  for more than ten minutes. The lane respects its two-admission limit and does
+  not stop another lane's work.
+- Would have prevented it: program scheduling that reserves a short remediation
+  slot, or shared immutable proof reuse where the command's inputs match. The
+  admission cap itself is retained; no bypass is used.

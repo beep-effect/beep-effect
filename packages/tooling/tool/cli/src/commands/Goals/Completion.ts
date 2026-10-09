@@ -428,6 +428,25 @@ const readAcceptedManifest = Effect.fn("Goals.Completion.acceptedManifest")(func
   return acceptedManifest;
 });
 
+const readDeclaredEvidence = Effect.fn("Goals.Completion.declaredEvidence")(function* (
+  root: string,
+  manifest: GoalManifest,
+  head: string,
+  gatingOutcome: GoalCompletionOutcome,
+  initial: ReadonlyArray<GoalEvidenceCheck>
+) {
+  let evidence = initial;
+  for (const ref of manifest.completionGate.acceptanceEvidence ?? []) {
+    evidence = A.append(
+      evidence,
+      ref.kind === "hosted-required-checks"
+        ? evidenceCheck(ref, gatingOutcome, O.some(head), "Hosted required checks at accepted head.")
+        : yield* readLocalEvidence(root, ref, head)
+    );
+  }
+  return evidence;
+});
+
 /**
  * Observes a final PR on GitHub without writing receipt or manifest state.
  *
@@ -545,7 +564,7 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
             : "verified";
       },
     });
-    let evidence = A.of(
+    const hostedEvidence = A.of(
       evidenceCheck(
         hostedRef,
         gatingOutcome,
@@ -553,14 +572,7 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
         `Required contexts observed at accepted head before merge; ${O.getOrElse(O.map(required, A.length), () => 0)} contexts. Versioned GitHub ruleset history supplies the required-context names; unavailable history is unknown.`
       )
     );
-    for (const ref of manifest.completionGate.acceptanceEvidence ?? []) {
-      evidence = A.append(
-        evidence,
-        ref.kind === "hosted-required-checks"
-          ? evidenceCheck(ref, gatingOutcome, O.some(head), "Hosted required checks at accepted head.")
-          : yield* readLocalEvidence(root, ref, head)
-      );
-    }
+    const evidence = yield* readDeclaredEvidence(root, manifest, head, gatingOutcome, hostedEvidence);
     const conclusion = (check: typeof TimedCheck.Type, atMerge: boolean): GoalCheckConclusion =>
       atMerge &&
       !O.exists(check.completed_at, (time) => DateTime.toEpochMillis(time) <= DateTime.toEpochMillis(mergedAt))

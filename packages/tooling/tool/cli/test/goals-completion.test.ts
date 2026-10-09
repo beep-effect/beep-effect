@@ -149,13 +149,12 @@ describe("pure goal completion resolver", () => {
       expect(O.map(receipt.merge, (merge) => merge.method)).toEqual(O.some(O.some("squash")));
     })
   );
-  for (const method of ["merge", "rebase"]) {
+  for (const method of GoalMergeMethod.literals) {
     it.effect(`verifies GitHub-bound ${method} results`, () =>
       Effect.gen(function* () {
         const observation = fixture();
         const merge = O.getOrThrow(observation.merge);
-        const parsedMethod = yield* S.decodeEffect(GoalMergeMethod)(method);
-        const parsed = GoalMergeResult.make({ ...merge, method: O.some(parsedMethod) });
+        const parsed = GoalMergeResult.make({ ...merge, method: O.some(method) });
         expect(
           (yield* GoalCompletionVerifier.resolve(
             GoalCompletionObservation.make({ ...observation, merge: O.some(parsed) })
