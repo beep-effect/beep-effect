@@ -18,9 +18,24 @@ import { BOM_FORMAT, Component, SPEC_VERSION, SbomDocument, SbomMetadata, docume
 const $I = $ScratchpadId.create("effected/sbom/Sbom");
 
 /**
- * Input to {@link Sbom.generate}.
+ * Defines the root, dependencies and metadata used to assemble an SBOM with {@link Sbom.generate}.
+ *
+ * **Example** (Decode the root and dependency input)
+ *
+ * ```ts
+ * import { SbomInput } from "@beep/scratchpad/effected/sbom/Sbom"
+ * import * as S from "effect/Schema"
+ *
+ * const input = S.decodeUnknownSync(SbomInput)({
+ *   root: { type: "application", name: "app" },
+ *   components: []
+ * })
+ * console.log(input.root.name) // app
+ * ```
  *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const SbomInput = S.Struct({
 	/** The component the BOM is about. */
@@ -31,18 +46,42 @@ export const SbomInput = S.Struct({
 	metadata: S.optional(SbomMetadata).annotateKey({ description: "Document metadata. `root` is threaded onto it automatically." }),
 }).pipe($I.annoteSchema("SbomInput", { description: "Input to Sbom.generate." }));
 
+/**
+ * Decoded root, dependencies and optional metadata accepted by {@link Sbom.generate}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SbomInput = typeof SbomInput.Type;
 
 /**
- * Options for {@link Sbom.toJson}.
+ * Controls the JSON indentation used by {@link Sbom.toJson}.
+ *
+ * **Example** (Choose compact JSON indentation)
+ *
+ * ```ts
+ * import { SbomJsonOptions } from "@beep/scratchpad/effected/sbom/Sbom"
+ * import * as S from "effect/Schema"
+ *
+ * const options = S.decodeUnknownSync(SbomJsonOptions)({ space: 0 })
+ * console.log(options.space) // 0
+ * ```
  *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const SbomJsonOptions = S.Struct({
 	/** `JSON.stringify` indentation. Defaults to `2`; `0` emits one line. */
 	space: S.optional(S.Finite).annotateKey({ description: "JSON.stringify indentation. Defaults to 2; 0 emits one line." }),
 }).pipe($I.annoteSchema("SbomJsonOptions", { description: "Options for Sbom.toJson." }));
 
+/**
+ * Decoded indentation options accepted by {@link Sbom.toJson}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SbomJsonOptions = typeof SbomJsonOptions.Type;
 
 /**
@@ -53,7 +92,18 @@ export type SbomJsonOptions = typeof SbomJsonOptions.Type;
  * The package's **only** error, and it is the filesystem's rather than the
  * emitter's — assembling and serializing a document cannot fail.
  *
+ * **Example** (Identify a failed output path)
+ *
+ * ```ts
+ * import { SbomWriteError } from "@beep/scratchpad/effected/sbom/Sbom"
+ *
+ * const error = SbomWriteError.make({ path: "bom.json", cause: new Error("Read-only filesystem") })
+ * console.log(error.message) // Failed to write the SBOM to bom.json
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class SbomWriteError extends S.TaggedError<SbomWriteError>($I`SbomWriteError`)("SbomWriteError", {
 	/** The path that could not be written. */
@@ -61,6 +111,21 @@ export class SbomWriteError extends S.TaggedError<SbomWriteError>($I`SbomWriteEr
 	/** The underlying failure, preserved structurally. */
 	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("SbomWriteError", { description: "Raised when a BOM cannot be written to disk." })) {
+	/**
+	 * Describes the output path whose write failed.
+	 *
+	 * **Example** (Read the filesystem failure message)
+	 *
+	 * ```ts
+	 * import { SbomWriteError } from "@beep/scratchpad/effected/sbom/Sbom"
+	 *
+	 * const error = SbomWriteError.make({ path: "output/bom.json", cause: new Error("Missing directory") })
+	 * console.log(error.message) // Failed to write the SBOM to output/bom.json
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Failed to write the SBOM to ${this.path}`;
 	}
@@ -82,6 +147,8 @@ const generate = (input: SbomInput): SbomDocument =>
 /**
  * Thread the root component onto the caller's metadata, or synthesize metadata
  * carrying it.
+ *
+ * **Details**
  *
  * Rebuilt through `SbomMetadata.make` rather than spread into a plain object:
  * a spread of a `Schema.Class` instance loses its prototype, and a plain object
@@ -119,49 +186,104 @@ const write = Effect.fn("Sbom.write")(function* (document: SbomDocument, path: s
  * **Example** (Generate and serialize a CycloneDX SBOM)
  *
  * ```ts
- * import { Component, Sbom } from "./index.ts";
+ * import { Component } from "@beep/scratchpad/effected/sbom/SbomDocument"
+ * import { Sbom } from "@beep/scratchpad/effected/sbom/Sbom"
  *
- * const root = Component.make({ type: "application", name: "app", version: "1.0.0" });
- * const document = Sbom.generate({ root, components: [] });
- * const json = Sbom.toJson(document); // CycloneDX 1.6 JSON text
+ * const root = Component.make({ type: "application", name: "app", version: "1.0.0" })
+ * const document = Sbom.generate({ root, components: [] })
+ * const json = Sbom.toJson(document) // CycloneDX 1.6 JSON text
+ * console.log(json.includes('"specVersion": "1.6"')) // true
  * ```
  *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class Sbom {
 	private constructor() {}
 
 	/**
-  * Assemble a CycloneDX 1.6 document.
-  *
-  * **Details**
-  *
-  * **Total** — no error channel, because there is nothing here that can fail.
-  * Components are sorted by name so two runs over the same inputs produce the
-  * same bytes: an SBOM's digest becomes an attestation subject, and a document
-  * that reordered itself between runs would change that digest for no reason.
-  */
+	 * Assemble a CycloneDX 1.6 document.
+	 *
+	 * **Details**
+	 *
+	 * **Total** — no error channel, because there is nothing here that can fail.
+	 * Components are sorted by name so two runs over the same inputs produce the
+	 * same bytes: an SBOM's digest becomes an attestation subject, and a document
+	 * that reordered itself between runs would change that digest for no reason.
+	 *
+	 * **Example** (Generate a document with sorted dependencies)
+	 *
+	 * ```ts
+	 * import { Component } from "@beep/scratchpad/effected/sbom/SbomDocument"
+	 * import { Sbom } from "@beep/scratchpad/effected/sbom/Sbom"
+	 *
+	 * const root = Component.make({ type: "application", name: "app" })
+	 * const document = Sbom.generate({
+	 *   root,
+	 *   components: [
+	 *     Component.make({ type: "library", name: "zlib" }),
+	 *     Component.make({ type: "library", name: "alpha" })
+	 *   ]
+	 * })
+	 * console.log(document.components.map((component) => component.name).join(", ")) // alpha, zlib
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly generate = generate;
 
 	/**
-  * Serialize a document to canonical CycloneDX 1.6 JSON.
-  *
-  * **Details**
-  *
-  * **Total.** Absent optional fields are omitted rather than emitted as `null`,
-  * and `bomRef` becomes the specification's hyphenated `bom-ref`.
-  */
+	 * Serialize a document to canonical CycloneDX 1.6 JSON.
+	 *
+	 * **Details**
+	 *
+	 * **Total.** Absent optional fields are omitted rather than emitted as `null`,
+	 * and `bomRef` becomes the specification's hyphenated `bom-ref`.
+	 *
+	 * **Example** (Serialize a renamed component reference)
+	 *
+	 * ```ts
+	 * import { Component } from "@beep/scratchpad/effected/sbom/SbomDocument"
+	 * import { Sbom } from "@beep/scratchpad/effected/sbom/Sbom"
+	 *
+	 * const root = Component.make({ type: "library", name: "lib", bomRef: "pkg:npm/lib@1.0.0" })
+	 * const document = Sbom.generate({ root, components: [] })
+	 * const json = Sbom.toJson(document, { space: 0 })
+	 * console.log(json.includes('"bom-ref":"pkg:npm/lib@1.0.0"')) // true
+	 * ```
+	 *
+	 * @category serialization
+	 * @since 0.0.0
+	 */
 	static readonly toJson = toJson;
 
 	/**
-  * Write a document to `path` as canonical JSON.
-  *
-  * **Details**
-  *
-  * The one fallible member; it fails with {@link SbomWriteError} and requires
-  * `FileSystem` in `R`. It does not create parent directories — a caller
-  * that wants one creates it, so the failure mode stays "the path you gave me
-  * is not writable" rather than "something was created somewhere".
-  */
+	 * Write a document to `path` as canonical JSON.
+	 *
+	 * **Details**
+	 *
+	 * The one fallible member; it fails with {@link SbomWriteError} and requires
+	 * `FileSystem` in `R`. It does not create parent directories — a caller
+	 * that wants one creates it, so the failure mode stays "the path you gave me
+	 * is not writable" rather than "something was created somewhere".
+	 *
+	 * **Example** (Construct a filesystem-dependent SBOM write)
+	 *
+	 * ```ts
+	 * import { Component } from "@beep/scratchpad/effected/sbom/SbomDocument"
+	 * import { Sbom } from "@beep/scratchpad/effected/sbom/Sbom"
+	 * import * as Effect from "effect/Effect"
+	 *
+	 * const root = Component.make({ type: "application", name: "app" })
+	 * const document = Sbom.generate({ root, components: [] })
+	 * const program = Sbom.write(document, "bom.json")
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly write = write;
 }

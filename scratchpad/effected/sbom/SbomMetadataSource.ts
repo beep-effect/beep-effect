@@ -62,7 +62,18 @@ const npmPurl = (name: string, version?: string): string => {
  * `authors` and `timestamp` are explicit-only. Deriving them would fabricate
  * three of the seven NTIA minimum elements.
  *
+ * **Example** (Validate explicit assembly metadata)
+ *
+ * ```ts
+ * import { SbomMetadataOptions } from "@beep/scratchpad/effected/sbom/SbomMetadataSource";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(SbomMetadataOptions)({ timestamp: "2026-01-01T00:00:00Z" })) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const SbomMetadataOptions = S.Struct({
 	/** The supplying organization — NTIA minimum element 1. */
@@ -83,12 +94,29 @@ export const SbomMetadataOptions = S.Struct({
 	description: "What a manifest cannot supply, and the two places an explicit value wins.",
 }));
 
+/**
+ * Decoded explicit metadata and root-component overrides accepted by the derivation helpers.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SbomMetadataOptions = typeof SbomMetadataOptions.Type;
 
 /**
  * The fields a dependency contributes to its component entry.
  *
+ * **Example** (Validate a dependency without a resolved version)
+ *
+ * ```ts
+ * import { ComponentInput } from "@beep/scratchpad/effected/sbom/SbomMetadataSource";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(ComponentInput)({ name: "@acme/core" })) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ComponentInput = S.Struct({
 	/** The package name, scope included. */
@@ -108,12 +136,29 @@ export const ComponentInput = S.Struct({
 	type: S.optional(ComponentType).annotateKey({ description: "The component type. Defaults to library." }),
 }).pipe($I.annoteSchema("ComponentInput", { description: "The fields a dependency contributes to its component entry." }));
 
+/**
+ * Decoded dependency fields used to construct a CycloneDX component.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ComponentInput = typeof ComponentInput.Type;
 
 /**
  * The years a copyright statement spans.
  *
+ * **Example** (Validate an explicit year range)
+ *
+ * ```ts
+ * import { CopyrightYears } from "@beep/scratchpad/effected/sbom/SbomMetadataSource";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(CopyrightYears)({ startYear: 2020, year: 2026 })) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const CopyrightYears = S.Struct({
 	/** The first year of the range. Omit for a single-year statement. */
@@ -122,6 +167,12 @@ export const CopyrightYears = S.Struct({
 	year: S.Finite.annotateKey({ description: "The year the statement is current through, supplied by the caller." }),
 }).pipe($I.annoteSchema("CopyrightYears", { description: "The years a copyright statement spans." }));
 
+/**
+ * Decoded caller-supplied years used to format a deterministic copyright statement.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CopyrightYears = typeof CopyrightYears.Type;
 
 const contactOf = (person: Person): Contact =>
@@ -248,7 +299,9 @@ const merge = (base: SbomMetadata, override: SbomMetadata): SbomMetadata => {
  * **Example** (Generate an SBOM from package metadata and an explicit supplier)
  *
  * ```ts
- * import { Package, Sbom, SbomMetadataSource, Supplier } from "./index.ts";
+ * import { Package, Sbom } from "@beep/scratchpad/effected/sbom/index";
+ * import { SbomMetadataSource } from "@beep/scratchpad/effected/sbom/SbomMetadataSource";
+ * import { Supplier } from "@beep/scratchpad/effected/sbom/SbomDocument";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
@@ -258,103 +311,194 @@ const merge = (base: SbomMetadata, override: SbomMetadata): SbomMetadata => {
  *   const metadata = SbomMetadataSource.fromPackage(pkg, { supplier, timestamp: "2026-01-01T00:00:00Z" });
  *   return Sbom.generate({ root, components: [], metadata });
  * });
+ *
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class SbomMetadataSource {
 	private constructor() {}
 
 	/**
-  * The canonical npm package URL for a name and optional version.
-  *
-  * **Details**
-  *
-  * The NTIA's "unique identifier" element, and the identifier an in-toto
-  * subject names. Exposed because a caller assembling its own components —
-  * or a statement subject — needs the same encoding this module applies.
-  */
+	 * The canonical npm package URL for a name and optional version.
+	 *
+	 * **Details**
+	 *
+	 * The NTIA's "unique identifier" element, and the identifier an in-toto
+	 * subject names. Exposed because a caller assembling its own components —
+	 * or a statement subject — needs the same encoding this module applies.
+	 *
+	 * **Example** (Encode a scoped npm identifier)
+	 *
+	 * ```ts
+	 * import { SbomMetadataSource } from "@beep/scratchpad/effected/sbom/SbomMetadataSource";
+	 *
+	 * console.log(SbomMetadataSource.npmPurl("@acme/core", "1.2.3")) // pkg:npm/%40acme/core@1.2.3
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly npmPurl = npmPurl;
 
 	/**
-  * A component entry for one resolved dependency.
-  *
-  * **Details**
-  *
-  * The caller assembles the component list — the kit has no second merge
-  * rule for sibling packages released in the same wave, because which
-  * versions are in flight is release planning and `@effected/workspaces`
-  * already knows it. This is the mapping that would otherwise be
-  * re-derived at every call site.
-  */
+	 * A component entry for one resolved dependency.
+	 *
+	 * **Details**
+	 *
+	 * The caller assembles the component list — the kit has no second merge
+	 * rule for sibling packages released in the same wave, because which
+	 * versions are in flight is release planning and `@effected/workspaces`
+	 * already knows it. This is the mapping that would otherwise be
+	 * re-derived at every call site.
+	 *
+	 * **Example** (Derive an unversioned dependency component)
+	 *
+	 * ```ts
+	 * import { SbomMetadataSource } from "@beep/scratchpad/effected/sbom/SbomMetadataSource";
+	 *
+	 * const component = SbomMetadataSource.componentFor({ name: "@acme/core" });
+	 * console.log(component.purl) // pkg:npm/%40acme/core
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly componentFor = componentFor;
 
 	/**
-  * The root component the BOM is about, derived from its own manifest.
-  *
-  * **Details**
-  *
-  * `publisher` resolves explicit → supplier name → the manifest's author,
-  * which is what lets NTIA element 6 be satisfied from a manifest alone.
-  */
+	 * The root component the BOM is about, derived from its own manifest.
+	 *
+	 * **Details**
+	 *
+	 * `publisher` resolves explicit → supplier name → the manifest's author,
+	 * which is what lets NTIA element 6 be satisfied from a manifest alone.
+	 *
+	 * **Example** (Derive the root package identifier)
+	 *
+	 * ```ts
+	 * import { SbomMetadataSource } from "@beep/scratchpad/effected/sbom/SbomMetadataSource";
+	 * import { Package } from "@beep/scratchpad/effected/sbom/index";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "@acme/app", version: "1.0.0", license: "MIT", homepage: "https://example.com/docs" }));
+	 *
+	 * console.log(SbomMetadataSource.rootComponent(pkg).bomRef) // @acme/app@1.0.0
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly rootComponent = rootComponent;
 
 	/**
-  * The manifest's outward links, as CycloneDX external references.
-  *
-  * **Details**
-  *
-  * Four of the specification's 43 types, one per manifest field: `vcs` ←
-  * `repository`, `issue-tracker` ← `bugs`, `documentation` ← `homepage`,
-  * `website` ← the supplier's first URL.
-  *
-  * A `repository` value the package-json model cannot interpret produces
-  * **no** reference rather than a passed-through string: CycloneDX's
-  * `externalReference.url` is a URL, and emitting `owner/name` there is a
-  * document that validates and misleads.
-  */
+	 * The manifest's outward links, as CycloneDX external references.
+	 *
+	 * **Details**
+	 *
+	 * Four of the specification's 43 types, one per manifest field: `vcs` ←
+	 * `repository`, `issue-tracker` ← `bugs`, `documentation` ← `homepage`,
+	 * `website` ← the supplier's first URL.
+	 *
+	 * A `repository` value the package-json model cannot interpret produces
+	 * **no** reference rather than a passed-through string: CycloneDX's
+	 * `externalReference.url` is a URL, and emitting `owner/name` there is a
+	 * document that validates and misleads.
+	 *
+	 * **Example** (Map a homepage to a documentation reference)
+	 *
+	 * ```ts
+	 * import { SbomMetadataSource } from "@beep/scratchpad/effected/sbom/SbomMetadataSource";
+	 * import { Package } from "@beep/scratchpad/effected/sbom/index";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "@acme/app", version: "1.0.0", license: "MIT", homepage: "https://example.com/docs" }));
+	 *
+	 * console.log(SbomMetadataSource.externalReferences(pkg)[0]?.type) // documentation
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly externalReferences = externalReferences;
 
 	/**
-  * Document-level metadata for a manifest.
-  *
-  * **Details**
-  *
-  * The root component is **not** on the returned value: `Sbom.generate`
-  * threads its `root` argument onto the metadata itself, so setting it
-  * here would only be overwritten. Build the root with
-  * {@link SbomMetadataSource.rootComponent} and pass both.
-  *
-  * When the caller supplies a supplier with no contacts, the manifest's
-  * maintainers fill them — the one derivation that crosses from manifest
-  * vocabulary into supplier vocabulary, and only where the caller left a
-  * hole.
-  *
-  * `pkg` is a `@effected/package-json` `Package`, re-exported from
-  * this package's entry point so a caller can name the parameter type
-  * without adding `@effected/package-json` as an undeclared dependency.
-  */
+	 * Document-level metadata for a manifest.
+	 *
+	 * **Details**
+	 *
+	 * The root component is **not** on the returned value: `Sbom.generate`
+	 * threads its `root` argument onto the metadata itself, so setting it
+	 * here would only be overwritten. Build the root with
+	 * {@link SbomMetadataSource.rootComponent} and pass both.
+	 *
+	 * When the caller supplies a supplier with no contacts, the manifest's
+	 * maintainers fill them — the one derivation that crosses from manifest
+	 * vocabulary into supplier vocabulary, and only where the caller left a
+	 * hole.
+	 *
+	 * `pkg` is a `@effected/package-json` `Package`, re-exported from
+	 * this package's entry point so a caller can name the parameter type
+	 * without adding `@effected/package-json` as an undeclared dependency.
+	 *
+	 * **Example** (Keep assembly time explicit)
+	 *
+	 * ```ts
+	 * import { SbomMetadataSource } from "@beep/scratchpad/effected/sbom/SbomMetadataSource";
+	 * import { Package } from "@beep/scratchpad/effected/sbom/index";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pkg = Effect.runSync(Package.decode({ name: "@acme/app", version: "1.0.0", license: "MIT", homepage: "https://example.com/docs" }));
+	 *
+	 * const metadata = SbomMetadataSource.fromPackage(pkg, { timestamp: "2026-01-01T00:00:00Z" });
+	 * console.log(metadata.timestamp) // 2026-01-01T00:00:00Z
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly fromPackage = fromPackage;
 
 	/**
-  * A copyright statement for a holder and a year, or a span of years.
-  *
-  * **Details**
-  *
-  * The year is an **argument**: nothing here reads the clock, so the output is
-  * deterministic. Read the ambient year at the caller's edge.
-  */
+	 * A copyright statement for a holder and a year, or a span of years.
+	 *
+	 * **Details**
+	 *
+	 * The year is an **argument**: nothing here reads the clock, so the output is
+	 * deterministic. Read the ambient year at the caller's edge.
+	 *
+	 * **Example** (Format a caller-supplied year range)
+	 *
+	 * ```ts
+	 * import { SbomMetadataSource } from "@beep/scratchpad/effected/sbom/SbomMetadataSource";
+	 *
+	 * console.log(SbomMetadataSource.formatCopyright("Acme Inc.", { startYear: 2020, year: 2026 })) // Copyright 2020-2026 Acme Inc.
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly formatCopyright = formatCopyright;
 
 	/**
-  * Field-wise metadata merge: every field the override carries wins.
-  *
-  * **Details**
-  *
-  * A helper, not a policy. Which side is the override — a config file over
-  * inferred values, or the reverse — is the consumer's precedence rule,
-  * and a library that decided it would be encoding one repository's
-  * release policy.
-  */
+	 * Field-wise metadata merge: every field the override carries wins.
+	 *
+	 * **Details**
+	 *
+	 * A helper, not a policy. Which side is the override — a config file over
+	 * inferred values, or the reverse — is the consumer's precedence rule,
+	 * and a library that decided it would be encoding one repository's
+	 * release policy.
+	 *
+	 * **Example** (Override the assembly timestamp)
+	 *
+	 * ```ts
+	 * import { SbomMetadataSource } from "@beep/scratchpad/effected/sbom/SbomMetadataSource";
+	 * import { SbomMetadata } from "@beep/scratchpad/effected/sbom/SbomDocument";
+	 *
+	 * const base = SbomMetadata.make({ timestamp: "2025-01-01T00:00:00Z" });
+	 * const override = SbomMetadata.make({ timestamp: "2026-01-01T00:00:00Z" });
+	 * console.log(SbomMetadataSource.merge(base, override).timestamp) // 2026-01-01T00:00:00Z
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly merge = merge;
 }

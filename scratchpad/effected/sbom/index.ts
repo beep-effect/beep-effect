@@ -3,11 +3,22 @@
  * NTIA minimum-elements report, in-toto statements and SLSA provenance, and
  * Sigstore DSSE signing.
  *
+ * **Details**
+ *
  * The SBOM half is pure and reaches no external dependency; only
  * `SigstoreSigner` imports `@sigstore/*`, so a consumer that emits an SBOM
  * never pulls Fulcio's transport into its bundle.
  *
+ * **Example** (Read the SLSA predicate identifier from the entry point)
+ *
+ * ```ts
+ * import { SLSA_PROVENANCE_V1 } from "@beep/scratchpad/effected/sbom/index";
+ *
+ * console.log(SLSA_PROVENANCE_V1) // https://slsa.dev/provenance/v1
+ * ```
+ *
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 export { Package, Person, Repository } from "../package-json/index.ts";

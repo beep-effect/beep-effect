@@ -37,14 +37,35 @@ const $I = $ScratchpadId.create("effected/sbom/SigstoreSigner");
  * {@link SigstoreSignerShape.sign} takes only a statement and asks the identity
  * contract for a token.
  *
+ * **Example** (Identify the certificate authority audience)
+ *
+ * ```ts
+ * import { SIGSTORE_OIDC_AUDIENCE } from "@beep/scratchpad/effected/sbom/SigstoreSigner";
+ *
+ * console.log(SIGSTORE_OIDC_AUDIENCE) // sigstore
+ * ```
+ *
  * @public
+ * @category constants
+ * @since 0.0.0
  */
 export const SIGSTORE_OIDC_AUDIENCE = "sigstore" as const;
 
 /**
  * Which step of signing failed.
  *
+ * **Example** (Recognize a signing failure step)
+ *
+ * ```ts
+ * import { SigningErrorKind } from "@beep/scratchpad/effected/sbom/SigstoreSigner";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(SigningErrorKind)("certificate")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const SigningErrorKind = LiteralKit(["identity", "certificate", "transparencyLog", "bundle"]).pipe($I.annoteSchema("SigningErrorKind", { description: "Which step of signing failed." }));
 
@@ -52,6 +73,8 @@ export const SigningErrorKind = LiteralKit(["identity", "certificate", "transpar
  * The decoded type of {@link (SigningErrorKind:variable)}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type SigningErrorKind = typeof SigningErrorKind.Type;
 
@@ -65,7 +88,18 @@ export type SigningErrorKind = typeof SigningErrorKind.Type;
  * `bundle` is everything else about assembling the result. The original failure
  * is preserved structurally on `cause` rather than flattened into a message.
  *
+ * **Example** (Inspect an attributed certificate failure)
+ *
+ * ```ts
+ * import { SigningError } from "@beep/scratchpad/effected/sbom/SigstoreSigner";
+ *
+ * const error = SigningError.make({ kind: "certificate", cause: new Error("Certificate request failed") });
+ * console.log(error.kind) // certificate
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class SigningError extends S.TaggedError<SigningError>($I`SigningError`)("SigningError", {
 	/** Which step failed. */
@@ -73,6 +107,20 @@ export class SigningError extends S.TaggedError<SigningError>($I`SigningError`)(
 	/** The underlying failure, preserved structurally. */
 	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
 }, $I.annote("SigningError", { description: "Raised when a statement cannot be signed." })) {
+	/**
+	 * Describes the signing step that failed without flattening the underlying cause.
+	 *
+	 * **Example** (Read the signing failure message)
+	 *
+	 * ```ts
+	 * import { SigningError } from "@beep/scratchpad/effected/sbom/SigstoreSigner";
+	 *
+	 * const error = SigningError.make({ kind: "certificate", cause: new Error("Certificate request failed") });
+	 * console.log(error.message) // Failed to sign the statement (certificate)
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Failed to sign the statement (${this.kind})`;
 	}
@@ -107,6 +155,8 @@ const kindOf = (cause: unknown): SigningErrorKind => {
  * **real** `DSSEBundleBuilder` with no network, no keys and no OIDC.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface SigstoreSignerOptions {
 	/** Fulcio's base URL. Defaults to the public-good instance. */
@@ -123,17 +173,35 @@ export interface SigstoreSignerOptions {
  * The signing surface.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface SigstoreSignerShape {
 	/**
-  * Sign a statement into a DSSE bundle.
-  *
-  * **Details**
-  *
-  * The identity token is fetched, used and discarded inside this call; it is
-  * `Redacted` from the contract to the moment it is handed to Fulcio, and
-  * declassified exactly once, here.
-  */
+	 * Sign a statement into a DSSE bundle.
+	 *
+	 * **Details**
+	 *
+	 * The identity token is fetched, used and discarded inside this call; it is
+	 * `Redacted` from the contract to the moment it is handed to Fulcio, and
+	 * declassified exactly once, here.
+	 *
+	 * **Example** (Compose a statement signing effect)
+	 *
+	 * ```ts
+	 * import { SigningError } from "@beep/scratchpad/effected/sbom/SigstoreSigner";
+	 * import { SigstoreSigner } from "@beep/scratchpad/effected/sbom/SigstoreSigner";
+	 * import { InTotoStatement } from "@beep/scratchpad/effected/sbom/InTotoStatement";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const statement = InTotoStatement.of({ subject: [], predicateType: "https://example.com/predicate", predicate: {} });
+	 * const signer = SigstoreSigner.makeTest({ sign: () => Effect.fail(SigningError.make({ kind: "identity", cause: new Error("Missing token") })) });
+	 * const program = signer.sign(statement);
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	readonly sign: (statement: InTotoStatement) => Effect.Effect<SigstoreBundle, SigningError>;
 }
 
@@ -203,8 +271,9 @@ const unstubbed = (): never => {
  * **Example** (Sign a statement with a static OIDC token)
  *
  * ```ts
- * import type { InTotoStatement } from "./index.ts";
- * import { IdentityToken, SigstoreSigner } from "./index.ts";
+ * import { InTotoStatement } from "@beep/scratchpad/effected/sbom/InTotoStatement";
+ * import { IdentityToken } from "@beep/scratchpad/effected/sbom/IdentityToken";
+ * import { SigstoreSigner } from "@beep/scratchpad/effected/sbom/SigstoreSigner";
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
  * import * as Redacted from "effect/Redacted";
@@ -216,22 +285,54 @@ const unstubbed = (): never => {
  *   });
  *
  * const live = SigstoreSigner.layer.pipe(
- *   Layer.provide(IdentityToken.layerStatic(Redacted.make(process.env.OIDC_TOKEN ?? ""))),
+ *   Layer.provide(IdentityToken.layerStatic(Redacted.make("example-oidc-token"))),
  * );
+ * const statement = InTotoStatement.of({ subject: [], predicateType: "https://example.com/predicate", predicate: {} });
+ * console.log(Effect.isEffect(Effect.provide(sign(statement), live))) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class SigstoreSigner extends Context.Service<SigstoreSigner, SigstoreSignerShape>()(
 	$I`SigstoreSigner`,
 ) {
-	/** Signing against the public-good Fulcio and Rekor instances. */
+	/**
+	 * Signing against the public-good Fulcio and Rekor instances.
+	 *
+	 * **Example** (Compose the public Sigstore signer layer)
+	 *
+	 * ```ts
+	 * import { SigstoreSigner } from "@beep/scratchpad/effected/sbom/SigstoreSigner";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.provide(SigstoreSigner, SigstoreSigner.layer);
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<SigstoreSigner, never, IdentityToken> = Layer.effect(
 		this,
 		Effect.map(IdentityToken, (identity) => make(identity, {})),
 	);
 
-	/** {@link (SigstoreSigner:class).layer} with the signing endpoints, or the signer and witnesses, replaced. */
+	/**
+	 * {@link (SigstoreSigner:class).layer} with the signing endpoints, or the signer and witnesses, replaced.
+	 *
+	 * **Example** (Select staging signing endpoints)
+	 *
+	 * ```ts
+	 * import { SigstoreSigner } from "@beep/scratchpad/effected/sbom/SigstoreSigner";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const layer = SigstoreSigner.layerWith({ fulcioBaseUrl: "https://fulcio.sigstage.dev", rekorBaseUrl: "https://rekor.sigstage.dev" });
+	 * console.log(Effect.isEffect(Effect.provide(SigstoreSigner, layer))) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly layerWith = (options: SigstoreSignerOptions): Layer.Layer<SigstoreSigner, never, IdentityToken> =>
 		Layer.effect(
 			SigstoreSigner,
@@ -239,21 +340,51 @@ export class SigstoreSigner extends Context.Service<SigstoreSigner, SigstoreSign
 		);
 
 	/**
-  * An in-memory double whose `sign` **dies** unless stubbed.
-  *
-  * **Gotchas**
-  *
-  * The strongest case in the kit for the die-loudly default: no honest
-  * fabricated answer exists, because a bundle that looks signed and is not is
-  * exactly the failure an attestation exists to prevent. A test that wants a
-  * real bundle without a network drives the real builder through
-  * {@link (SigstoreSigner:class).layerWith}.
-  */
+	 * An in-memory double whose `sign` **dies** unless stubbed.
+	 *
+	 * **Gotchas**
+	 *
+	 * The strongest case in the kit for the die-loudly default: no honest
+	 * fabricated answer exists, because a bundle that looks signed and is not is
+	 * exactly the failure an attestation exists to prevent. A test that wants a
+	 * real bundle without a network drives the real builder through
+	 * {@link (SigstoreSigner:class).layerWith}.
+	 *
+	 * **Example** (Stub signing with an explicit typed failure)
+	 *
+	 * ```ts
+	 * import { SigningError } from "@beep/scratchpad/effected/sbom/SigstoreSigner";
+	 * import { SigstoreSigner } from "@beep/scratchpad/effected/sbom/SigstoreSigner";
+	 * import { InTotoStatement } from "@beep/scratchpad/effected/sbom/InTotoStatement";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const statement = InTotoStatement.of({ subject: [], predicateType: "https://example.com/predicate", predicate: {} });
+	 * const signer = SigstoreSigner.makeTest({ sign: () => Effect.fail(SigningError.make({ kind: "identity", cause: new Error("Missing token") })) });
+	 * const program = signer.sign(statement);
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly makeTest = (overrides: Partial<SigstoreSignerShape> = {}): SigstoreSignerShape => ({
 		sign: overrides.sign ?? unstubbed,
 	});
 
-	/** {@link (SigstoreSigner:class).makeTest} behind a `Layer`. */
+	/**
+	 * {@link (SigstoreSigner:class).makeTest} behind a `Layer`.
+	 *
+	 * **Example** (Provide a signer double for service acquisition)
+	 *
+	 * ```ts
+	 * import { SigstoreSigner } from "@beep/scratchpad/effected/sbom/SigstoreSigner";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.provide(SigstoreSigner, SigstoreSigner.layerTest());
+	 * console.log(typeof Effect.runSync(program).sign) // function
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<SigstoreSignerShape> = {}): Layer.Layer<SigstoreSigner> =>
 		Layer.succeed(SigstoreSigner, SigstoreSigner.makeTest(overrides));
 }

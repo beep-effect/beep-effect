@@ -30,7 +30,18 @@ const $I = $ScratchpadId.create("effected/sbom/NtiaReport");
  * A literal union rather than free text: this is what a consumer branches on,
  * and a display name is what it renders afterwards.
  *
+ * **Example** (Decode a stable NTIA element identifier)
+ *
+ * ```ts
+ * import { NtiaElementId } from "@beep/scratchpad/effected/sbom/NtiaReport"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(NtiaElementId)("supplierName")) // supplierName
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const NtiaElementId = LiteralKit([
 	"supplierName",
@@ -46,13 +57,26 @@ export const NtiaElementId = LiteralKit([
  * The decoded type of {@link (NtiaElementId:variable)}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type NtiaElementId = typeof NtiaElementId.Type;
 
 /**
  * One element's verdict.
  *
+ * **Example** (Record a satisfied component name)
+ *
+ * ```ts
+ * import { NtiaElement } from "@beep/scratchpad/effected/sbom/NtiaReport"
+ *
+ * const verdict = NtiaElement.make({ id: "componentName", satisfied: true, value: "lib" })
+ * console.log(verdict.value) // lib
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class NtiaElement extends S.Class<NtiaElement>($I`NtiaElement`)({
 	/** Which element this is. */
@@ -102,6 +126,8 @@ const componentVersion = (document: SbomDocument): NtiaElement =>
 /**
  * Element 4: an identifier that is unique across suppliers — a package URL.
  *
+ * **Details**
+ *
  * Present-and-non-empty is not enough: a homepage URL in the `purl` field is a
  * string, and identifies the component to nobody.
  */
@@ -112,6 +138,8 @@ const uniqueIdentifier = (document: SbomDocument): NtiaElement => {
 
 /**
  * Element 5: how the components relate to the thing the BOM is about.
+ *
+ * **Details**
  *
  * A flat component list plus a declared root IS that relationship in this
  * version — the CycloneDX `dependencies` graph is deferred until a consumer
@@ -133,6 +161,8 @@ const dependencyRelationship = (document: SbomDocument): NtiaElement => {
 /**
  * Element 6: who assembled the BOM.
  *
+ * **Details**
+ *
  * Named authors first; a supplier or a publisher is the honest fallback, since
  * both identify an entity that stood behind the document.
  */
@@ -148,6 +178,8 @@ const parseTimestamp = S.decodeUnknownResult(S.DateFromString);
 /**
  * Element 7: when the BOM was assembled.
  *
+ * **Details**
+ *
  * Parsed, not merely present — a field holding `last tuesday` records nothing,
  * and this is the cheapest place to notice.
  */
@@ -162,34 +194,87 @@ const timestamp = (document: SbomDocument): NtiaElement => {
  * **Example** (Check an SBOM for missing NTIA elements)
  *
  * ```ts
- * import { Component, NtiaReport, Sbom } from "./index.ts";
+ * import { Component } from "@beep/scratchpad/effected/sbom/SbomDocument"
+ * import { NtiaReport } from "@beep/scratchpad/effected/sbom/NtiaReport"
+ * import { Sbom } from "@beep/scratchpad/effected/sbom/Sbom"
  *
- * const root = Component.make({ type: "library", name: "lib", version: "1.0.0" });
- * const report = NtiaReport.of(Sbom.generate({ root, components: [] }));
+ * const root = Component.make({ type: "library", name: "lib", version: "1.0.0" })
+ * const report = NtiaReport.of(Sbom.generate({ root, components: [] }))
  *
- * report.compliant; // => false
- * report.missing; // => ["supplierName", "uniqueIdentifier", "sbomAuthor", "timestamp"]
+ * console.log(report.compliant) // false
+ * console.log(report.missing.join(", ")) // supplierName, uniqueIdentifier, sbomAuthor, timestamp
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class NtiaReport extends S.Class<NtiaReport>($I`NtiaReport`)({
 	/** One verdict per element, in the published order. */
 	elements: S.Array(NtiaElement).annotateKey({ description: "One verdict per element, in the published order." }),
 }, $I.annote("NtiaReport", { description: "A document's standing against the NTIA minimum elements." })) {
-	/** Whether every element is satisfied. */
+	/**
+	 * Whether every element is satisfied.
+	 *
+	 * **Example** (Inspect a report with no unsatisfied verdicts)
+	 *
+	 * ```ts
+	 * import { NtiaReport } from "@beep/scratchpad/effected/sbom/NtiaReport"
+	 *
+	 * const report = NtiaReport.make({ elements: [] })
+	 * console.log(report.compliant) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	get compliant(): boolean {
 		return this.elements.every((entry) => entry.satisfied);
 	}
 
-	/** The elements the document does not satisfy, by id. */
+	/**
+	 * The elements the document does not satisfy, by id.
+	 *
+	 * **Example** (Find an unsatisfied supplier element)
+	 *
+	 * ```ts
+	 * import { NtiaElement, NtiaReport } from "@beep/scratchpad/effected/sbom/NtiaReport"
+	 *
+	 * const report = NtiaReport.make({
+	 *   elements: [NtiaElement.make({ id: "supplierName", satisfied: false })]
+	 * })
+	 * console.log(report.missing.join(", ")) // supplierName
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get missing(): ReadonlyArray<NtiaElementId> {
 		return this.elements.filter((entry) => !entry.satisfied).map((entry) => entry.id);
 	}
 
 	/**
-	 * Check a document. **Total** — a report is the answer for every input,
+	 * Check a document against the seven NTIA minimum elements.
+	 *
+	 * **Details**
+	 *
+	 * **Total** — a report is the answer for every input,
 	 * including a document that satisfies nothing.
+	 *
+	 * **Example** (Report missing elements for a minimal document)
+	 *
+	 * ```ts
+	 * import { Component } from "@beep/scratchpad/effected/sbom/SbomDocument"
+	 * import { NtiaReport } from "@beep/scratchpad/effected/sbom/NtiaReport"
+	 * import { Sbom } from "@beep/scratchpad/effected/sbom/Sbom"
+	 *
+	 * const root = Component.make({ type: "library", name: "lib" })
+	 * const report = NtiaReport.of(Sbom.generate({ root, components: [] }))
+	 * console.log(report.missing.includes("componentVersion")) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static of(document: SbomDocument): NtiaReport {
 		return NtiaReport.make({

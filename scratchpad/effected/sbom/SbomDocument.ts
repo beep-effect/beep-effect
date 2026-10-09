@@ -16,10 +16,38 @@ import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/sbom/SbomDocument");
 
-/** The BOM format discriminator. CycloneDX requires this exact string. */
+/**
+ * The BOM format discriminator. CycloneDX requires this exact string.
+ *
+
+ * **Example** (Inspect the BOM format)
+ *
+ * ```ts
+ * import { BOM_FORMAT } from "@beep/scratchpad/effected/sbom/SbomDocument"
+ *
+ * console.log(BOM_FORMAT) // CycloneDX
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const BOM_FORMAT = "CycloneDX" as const;
 
-/** The only specification version this package emits. */
+/**
+ * The only specification version this package emits.
+ *
+
+ * **Example** (Inspect the emitted specification version)
+ *
+ * ```ts
+ * import { SPEC_VERSION } from "@beep/scratchpad/effected/sbom/SbomDocument"
+ *
+ * console.log(SPEC_VERSION) // 1.6
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const SPEC_VERSION = "1.6" as const;
 
 /**
@@ -31,7 +59,19 @@ export const SPEC_VERSION = "1.6" as const;
  * libraries and applications. The full enum is available in the schema; adding
  * a member here is a one-line change when something needs one.
  *
+
+ * **Example** (Decode a library component type)
+ *
+ * ```ts
+ * import { ComponentType } from "@beep/scratchpad/effected/sbom/SbomDocument"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(ComponentType)("library")) // library
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ComponentType = LiteralKit(["library", "application", "framework"]).pipe($I.annoteSchema("ComponentType", { description: "The CycloneDX component types this package emits." }));
 
@@ -39,6 +79,8 @@ export const ComponentType = LiteralKit(["library", "application", "framework"])
  * The decoded type of {@link (ComponentType:variable)}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type ComponentType = typeof ComponentType.Type;
 
@@ -51,7 +93,19 @@ export type ComponentType = typeof ComponentType.Type;
  * corresponds to a `package.json` field: `vcs` ← `repository`,
  * `issue-tracker` ← `bugs`, `website` and `documentation` ← `homepage`.
  *
+
+ * **Example** (Decode a source repository reference kind)
+ *
+ * ```ts
+ * import { ExternalReferenceType } from "@beep/scratchpad/effected/sbom/SbomDocument"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(ExternalReferenceType)("vcs")) // vcs
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ExternalReferenceType = LiteralKit(["vcs", "issue-tracker", "website", "documentation"]).pipe($I.annoteSchema("ExternalReferenceType", { description: "An external reference's kind." }));
 
@@ -59,13 +113,30 @@ export const ExternalReferenceType = LiteralKit(["vcs", "issue-tracker", "websit
  * The decoded type of {@link (ExternalReferenceType:variable)}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type ExternalReferenceType = typeof ExternalReferenceType.Type;
 
 /**
  * A link from a component to something outside the BOM.
  *
+
+ * **Example** (Preserve an external reference URL)
+ *
+ * ```ts
+ * import { ExternalReference } from "@beep/scratchpad/effected/sbom/SbomDocument"
+ *
+ * const reference = ExternalReference.make({
+ *   type: "vcs",
+ *   url: "https://example.com/source"
+ * })
+ * console.log(reference.url) // https://example.com/source
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class ExternalReference extends S.Class<ExternalReference>($I`ExternalReference`)({
 	/** The reference kind. */
@@ -77,7 +148,19 @@ export class ExternalReference extends S.Class<ExternalReference>($I`ExternalRef
 /**
  * A point of contact — a person at a supplier, or an author of the BOM.
  *
+
+ * **Example** (Construct an author contact)
+ *
+ * ```ts
+ * import { Contact } from "@beep/scratchpad/effected/sbom/SbomDocument"
+ *
+ * const author = Contact.make({ name: "Ada", email: "ada@example.com" })
+ * console.log(author.name) // Ada
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class Contact extends S.Class<Contact>($I`Contact`)({
 	/** The contact's name. */
@@ -96,7 +179,19 @@ export class Contact extends S.Class<Contact>($I`Contact`)({
  * `name` is required because `metadata.supplier.name` is **NTIA minimum
  * element 1**; a supplier without one satisfies nothing.
  *
+
+ * **Example** (Identify the supplying organization)
+ *
+ * ```ts
+ * import { Supplier } from "@beep/scratchpad/effected/sbom/SbomDocument"
+ *
+ * const supplier = Supplier.make({ name: "Example Corp" })
+ * console.log(supplier.name) // Example Corp
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class Supplier extends S.Class<Supplier>($I`Supplier`)({
 	/** The supplier organization's name. */
@@ -116,7 +211,23 @@ export class Supplier extends S.Class<Supplier>($I`Supplier`)({
  * `Sbom.toJson`. Emitting `bomRef` produces a document that looks
  * correct and validates wrong.
  *
+
+ * **Example** (Identify a library component)
+ *
+ * ```ts
+ * import { Component } from "@beep/scratchpad/effected/sbom/SbomDocument"
+ *
+ * const component = Component.make({
+ *   type: "library",
+ *   name: "example-library",
+ *   bomRef: "pkg:npm/example-library@1.0.0"
+ * })
+ * console.log(component.bomRef) // pkg:npm/example-library@1.0.0
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class Component extends S.Class<Component>($I`Component`)({
 	/** What kind of component this is. */
@@ -148,7 +259,19 @@ export class Component extends S.Class<Component>($I`Component`)({
 /**
  * Document-level metadata: who made the BOM, when, and about what.
  *
+
+ * **Example** (Record the BOM assembly time)
+ *
+ * ```ts
+ * import { SbomMetadata } from "@beep/scratchpad/effected/sbom/SbomDocument"
+ *
+ * const metadata = SbomMetadata.make({ timestamp: "2026-01-01T00:00:00Z" })
+ * console.log(metadata.timestamp) // 2026-01-01T00:00:00Z
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class SbomMetadata extends S.Class<SbomMetadata>($I`SbomMetadata`)({
 	/** When the BOM was assembled — NTIA minimum element 7. */
@@ -170,7 +293,24 @@ export class SbomMetadata extends S.Class<SbomMetadata>($I`SbomMetadata`)({
  * total functions, because an owned model over validated values has nothing to
  * fail at.
  *
+
+ * **Example** (Construct an empty CycloneDX document)
+ *
+ * ```ts
+ * import { BOM_FORMAT, SPEC_VERSION, SbomDocument } from "@beep/scratchpad/effected/sbom/SbomDocument"
+ *
+ * const document = SbomDocument.make({
+ *   bomFormat: BOM_FORMAT,
+ *   specVersion: SPEC_VERSION,
+ *   version: 1,
+ *   components: []
+ * })
+ * console.log(document.components.length) // 0
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class SbomDocument extends S.Class<SbomDocument>($I`SbomDocument`)({
 	/** Always `"CycloneDX"`. */
@@ -196,6 +336,8 @@ const compact = <T extends Record<string, unknown>>(value: T): Record<string, un
 
 /**
  * The `licenses` array in one of the three shapes CycloneDX permits.
+ *
+ * **Details**
  *
  * A manifest's `license` field is an SPDX **expression** field: `MIT`,
  * `MIT OR Apache-2.0` and `UNLICENSED` are all legal values of it, and the
@@ -247,7 +389,28 @@ const componentJson = (component: Component): Record<string, unknown> =>
 /**
  * The document as a plain JSON value, in CycloneDX's key shapes.
  *
+
+ * **Example** (Emit the CycloneDX component reference key)
+ *
+ * ```ts
+ * import { BOM_FORMAT, SPEC_VERSION, Component, SbomDocument, documentJson } from "@beep/scratchpad/effected/sbom/SbomDocument"
+ *
+ * const document = SbomDocument.make({
+ *   bomFormat: BOM_FORMAT,
+ *   specVersion: SPEC_VERSION,
+ *   version: 1,
+ *   components: [Component.make({
+ *     type: "library",
+ *     name: "example-library",
+ *     bomRef: "pkg:npm/example-library@1.0.0"
+ *   })]
+ * })
+ * console.log(JSON.stringify(documentJson(document))) // {"bomFormat":"CycloneDX","specVersion":"1.6","version":1,"components":[{"type":"library","bom-ref":"pkg:npm/example-library@1.0.0","name":"example-library"}]}
+ * ```
+ *
  * @internal
+ * @category serialization
+ * @since 0.0.0
  */
 export const documentJson = (document: SbomDocument): Record<string, unknown> =>
 	compact({

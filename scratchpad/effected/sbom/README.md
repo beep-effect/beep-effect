@@ -1,23 +1,7 @@
 # sbom (lab port of @effected/sbom)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Fsbom?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/sbom)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
 
 Supply-chain artifacts for [Effect](https://effect.website) v4: a CycloneDX 1.6 SBOM, an NTIA minimum-elements report, in-toto statements, SLSA provenance, and Sigstore DSSE signing. `Sbom.generate` and `Sbom.toJson` are total, plain functions — assembling and serializing a document cannot fail, so the package's only error channel belongs to `Sbom.write`, the one member that touches a filesystem. Signing is a separate, deliberately walled-off capability: a consumer that only ever emits an SBOM never reaches `@sigstore/*` or its Fulcio/Rekor network calls.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/sbom
 
@@ -27,18 +11,6 @@ Emitting an SBOM and signing one are different kinds of work — pure computatio
 
 A license is a CycloneDX **expression** field with three legal shapes — `{license:{id}}` for a catalog identifier, a one-element `[{expression}]` tuple for an expression like `MIT OR Apache-2.0`, and `{license:{name}}` for anything else — and choosing between them is `@effected/spdx`'s job (`License.isKnownId`, `isValidExpression`), never a local regex. Emitting every value as an `id` produces a document that looks right and fails validation.
 
-## Install
-
-```bash
-npm install @effected/sbom effect
-```
-
-```bash
-pnpm add @effected/sbom effect
-```
-
-Requires Node.js >=24.11.0. `effect` v4 is a peer dependency.
-
 All `@effected/*` packages are ESM-only: the exports maps publish only `import` conditions, so `require()` — including tools that resolve in CJS mode — fails with Node's `ERR_PACKAGE_PATH_NOT_EXPORTED` rather than loading a CJS build that does not exist. Import from an ES module.
 
 ## Quick start
@@ -46,7 +18,7 @@ All `@effected/*` packages are ESM-only: the exports maps publish only `import` 
 Generating an SBOM needs no layer, no service and no network call:
 
 ```ts
-import { Package, Sbom, SbomMetadataSource } from "@effected/sbom";
+import { Package, Sbom, SbomMetadataSource } from "@beep/scratchpad/effected/sbom/index";
 
 declare const pkg: Package;
 
@@ -71,8 +43,8 @@ Components are sorted by name so the document's digest — which becomes an atte
 `NtiaReport.of` is total: it answers for every document, including one that satisfies nothing.
 
 ```ts
-import { NtiaReport, SbomDocument } from "@effected/sbom";
-import { Effect } from "effect";
+import { NtiaReport, SbomDocument } from "@beep/scratchpad/effected/sbom/index";
+import * as Effect from "effect/Effect";
 
 declare const document: SbomDocument;
 
@@ -91,8 +63,8 @@ const program = Effect.gen(function* () {
 `InTotoStatement` and `SlsaProvenance` build the predicate an attestation wraps around an SBOM or a build. Both are pure projections of their input — nothing is read from the environment, and nothing can fail:
 
 ```ts
-import { InTotoStatement, Sha256Digest, SbomMetadataSource, SlsaProvenance } from "@effected/sbom";
-import { Effect } from "effect";
+import { InTotoStatement, Sha256Digest, SbomMetadataSource, SlsaProvenance } from "@beep/scratchpad/effected/sbom/index";
+import * as Effect from "effect/Effect";
 
 const program = Effect.gen(function* () {
   const digest = yield* Sha256Digest.parse("a".repeat(64));
@@ -125,8 +97,9 @@ const program = Effect.gen(function* () {
 `SigstoreSigner` fetches an identity token, exchanges it with Fulcio for a certificate, signs the statement, and (unless `witnesses: []`) logs it to Rekor — all behind one method, `sign`, over `IdentityToken`:
 
 ```ts
-import { IdentityToken, InTotoStatement, SigstoreSigner } from "@effected/sbom";
-import { Effect, Layer } from "effect";
+import { IdentityToken, InTotoStatement, SigstoreSigner } from "@beep/scratchpad/effected/sbom/index";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 declare const oidcToken: string;
 declare const statement: InTotoStatement;
@@ -149,8 +122,8 @@ Effect.runPromise(program.pipe(Effect.provide(SignerLayer))).then(console.log);
 `SigningError.kind` names which step failed — `identity` (a workflow permissions problem), `certificate` (Fulcio), `transparencyLog` (Rekor), or `bundle` (assembly) — with the original failure preserved structurally on `cause` rather than flattened into a message:
 
 ```ts
-import { SigningError } from "@effected/sbom";
-import { Effect } from "effect";
+import { SigningError } from "@beep/scratchpad/effected/sbom/index";
+import * as Effect from "effect/Effect";
 
 declare const sign: Effect.Effect<unknown, SigningError>;
 
@@ -164,8 +137,8 @@ const program = sign.pipe(Effect.catchTag("SigningError", (error) => Effect.logE
 `SigstoreSigner.makeTest().sign` **dies** rather than fabricating a bundle: a signature-shaped lie is exactly the failure an attestation exists to prevent. A test that needs a real bundle without a network drives the real `DSSEBundleBuilder` through `SigstoreSigner.layerWith({ signer, witnesses })`. `IdentityToken.makeTest`, by contrast, **answers** — a fabricated OIDC token is a real answer to "give me a token":
 
 ```ts
-import { IdentityToken } from "@effected/sbom";
-import { Effect } from "effect";
+import { IdentityToken } from "@beep/scratchpad/effected/sbom/index";
+import * as Effect from "effect/Effect";
 
 const TestToken = IdentityToken.layerTest({
   token: () => Effect.succeed("test-token"),

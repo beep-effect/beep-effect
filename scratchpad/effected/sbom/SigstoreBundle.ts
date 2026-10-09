@@ -19,7 +19,17 @@ const $I = $ScratchpadId.create("effected/sbom/SigstoreBundle");
  * v0.3 with a single certificate — what `DSSEBundleBuilder` emits by default,
  * and what GitHub's `POST /repos/{owner}/{repo}/attestations` accepts.
  *
+ * **Example** (Identify the emitted bundle format)
+ *
+ * ```ts
+ * import { SIGSTORE_BUNDLE_V0_3_MEDIA_TYPE } from "@beep/scratchpad/effected/sbom/SigstoreBundle";
+ *
+ * console.log(SIGSTORE_BUNDLE_V0_3_MEDIA_TYPE) // application/vnd.dev.sigstore.bundle.v0.3+json
+ * ```
+ *
  * @public
+ * @category constants
+ * @since 0.0.0
  */
 export const SIGSTORE_BUNDLE_V0_3_MEDIA_TYPE = "application/vnd.dev.sigstore.bundle.v0.3+json" as const;
 
@@ -27,7 +37,17 @@ export const SIGSTORE_BUNDLE_V0_3_MEDIA_TYPE = "application/vnd.dev.sigstore.bun
  * The DSSE payload type for an in-toto statement, per the GitHub attestations
  * specification.
  *
+ * **Example** (Identify the signed statement payload)
+ *
+ * ```ts
+ * import { IN_TOTO_PAYLOAD_TYPE } from "@beep/scratchpad/effected/sbom/SigstoreBundle";
+ *
+ * console.log(IN_TOTO_PAYLOAD_TYPE) // application/vnd.in-toto+json
+ * ```
+ *
  * @public
+ * @category constants
+ * @since 0.0.0
  */
 export const IN_TOTO_PAYLOAD_TYPE = "application/vnd.in-toto+json" as const;
 
@@ -45,8 +65,23 @@ export const IN_TOTO_PAYLOAD_TYPE = "application/vnd.in-toto+json" as const;
  * asserted — the version is the producer's statement about the bundle, and a
  * literal here would quietly lie the day a builder emits a different one.
  *
+ * **Example** (Carry opaque signing material)
+ *
+ * ```ts
+ * import { SIGSTORE_BUNDLE_V0_3_MEDIA_TYPE, SigstoreBundle } from "@beep/scratchpad/effected/sbom/SigstoreBundle";
+ *
+ * const bundle = SigstoreBundle.make({
+ *   mediaType: SIGSTORE_BUNDLE_V0_3_MEDIA_TYPE,
+ *   verificationMaterial: {},
+ *   dsseEnvelope: {},
+ * });
+ * console.log(bundle.mediaType) // application/vnd.dev.sigstore.bundle.v0.3+json
+ * ```
+ *
  * @see {@link https://github.com/sigstore/protobuf-specs/blob/main/protos/sigstore_bundle.proto | sigstore_bundle.proto} for the bundle wire format
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class SigstoreBundle extends S.Class<SigstoreBundle>($I`SigstoreBundle`)({
 	/** The bundle's media type, usually {@link SIGSTORE_BUNDLE_V0_3_MEDIA_TYPE}. */
