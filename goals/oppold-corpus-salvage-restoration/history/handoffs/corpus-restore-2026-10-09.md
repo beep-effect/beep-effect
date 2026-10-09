@@ -210,3 +210,16 @@ SPEC records every term, the freeze-manifest decision, and the P1 output authori
   classifier or baseline changed; a fresh checked census is required after committing.
 - The attribution-only JSON projection was invoked directly; the authoritative parity run
   was wrapped. Subsequent checked censuses use beep-heavy as required by Mechanics.
+
+- Fresh CLI scoped coverage passed: 295 files, 5,890 tests, 1,737.14 seconds.
+  Current/baseline percentages: lines 86.37/85.11, statements 86.05/84.91,
+  branches 78.61/76.56, functions 82.95/81.10. RestorationTransformations is
+  100% in all four metrics, including the new exhausted-budget guard. Libpff remains
+  above all four package and touched-file percentage baselines; no baseline changed.
+- Fresh test-tsgo passes after the pipeable assertion repair. Authoritative wrapped
+  knowledge refs passes with 45,465 observations and zero gated references. Earlier
+  batch failures are superseded by these fresh successful checks. Both full package
+  verifications, docgen-local, JSDoc ratchet, Fallow audit/health, and scoped coverage pass.
+- All verification units ended. Required main merge brought in 45f334e3c2 with no
+  touched Corpus/libpff surface change. Its lockfile changed; frozen install passed.
+  The final addressed wave is being submitted through Yeet; the live slice is unlaunched.
