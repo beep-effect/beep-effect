@@ -61,3 +61,7 @@ Read-only `ci settings --check`, `ci ruleset --check` and `ci held-group` passed
 ## Recovery
 
 For rulesets, extract the prior JSON from the immediately preceding snapshot and PUT only writable fields (`name`, `target`, `enforcement`, `conditions`, `bypass_actors`, `rules`) to `repos/beep-effect/beep-effect/rulesets/10240248`. Preserve Knip until its coordinated gate. Restore security state with the prior `security_and_analysis` payload. Re-enable dormant workflows with `gh workflow enable data-sync.yml` or `gh workflow enable 231729043`. Desktop environment did not previously exist: reversal deletes the new tag policy and environment; the workflow remains enabled. Workflow/source rollback is a PR revert. No secret values were exported.
+
+## Oversized remote artifacts (G follow-up)
+
+Trusted writer run [37471280558](https://github.com/beep-effect/beep-effect/actions/runs/37471280558), Heavy / Build job 112295820531, recorded three `413 Request Entity Too Large` responses. Its three misses were `@beep/todox#build` (`4b8649007d714969`), `@beep/oip-web#build` (`1887a16dc1aaef26`) and `@beep/storybook#build` (`0ee8fd91d7c880a0`). Interleaved logs do not prove a response-to-task mapping. These are expected potentially non-cacheable remote artifacts under the documented API Gateway/Lambda payload limits; no output narrowing is justified without per-task size evidence. Local cache remains available. Future trusted-push summary uploads preserve remote-hit evidence; this receipt does not claim those large builds were uploaded successfully.

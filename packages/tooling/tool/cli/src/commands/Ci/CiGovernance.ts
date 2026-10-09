@@ -147,7 +147,7 @@ const jobCredentialRecords = (job: WorkflowJob) => [
   ...A.flatMap(job.steps ?? [], (step) => [step.with ?? emptyRecord, step.env ?? emptyRecord]),
 ];
 const callerGuardDiagnostics = (id: string, step: WorkflowStep) =>
-  A.flatMap(R.values(step.with ?? emptyRecord), (value) =>
+  A.flatMap([...R.values(step.with ?? emptyRecord), ...R.values(step.env ?? emptyRecord)], (value) =>
     O.exists(
       strings(value),
       (text) => Str.includes("secrets.TURBO_TOKEN")(text) && !Str.includes("github.event_name == 'push'")(text)

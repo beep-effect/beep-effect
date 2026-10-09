@@ -62,3 +62,11 @@ Scoped coverage baseline read (percentages in lines/statements/branches/function
 Resume in this lane: merge `origin/main`, integrate the single shared repairs, regenerate the ruleset capture through its command, run all proof through `beep-heavy`, then retry `beep-heavy bun run beep yeet publish`. Complete the hosted probes and review waves before sending `final <sha> #<pr>` to the orchestrator. The lane must not merge or retire itself before the orchestrator directs it.
 
 Scope: source changes are limited to GitHub workflows/action configuration, CI/admission/governance and their fixtures, the desktop updater endpoint, required packet/runbook/changeset evidence, and the generated ruleset capture. No secret values, unrelated refactors, baseline suppressions or broad formatting changes were introduced. Graft reported approximately 93,960 tokens saved across the two context queries.
+
+## Run 2 (after crash)
+
+Recovered the clean lane and all ignored proof logs; no prior queued gate had a terminal result. Merged the landed packet (`83d8967a03`) using the original packet base (`3dbf109066`) to preserve both stage-1 closure and E additions. Integrated the single knowledge-reference repair (`9356b63b6e`) from its published branch under the crash ruling, then merged main with the landed effect-imports repair (`9914e98a86`, #1564). No shared repair was duplicated.
+
+The first two re-submissions failed before execution because the user bus environment was absent. Re-submitted with the user runtime and bus explicitly supplied. Only two E heavy commands are outstanding: fixtures/scoped compiler and hosted parity. Both obey `beep-heavy`; queued commands are not proof. Independent read-only review is in progress under the PLAN route, GPT-6.1-Sol medium.
+
+Independent review found and repaired two actionable issues: step-level writer credentials now require caller guards, and hosted-job inventory enumerates every workflow with workflow-qualified orchestration exemptions. The separate GPT-6.1-Sol medium review returned terminal zero actionable findings on the revised source tree. This is source-review proof only; execution remains queued. Biome and diff hygiene pass. G's three oversized remote-upload responses are recorded as potentially non-cacheable, without manufacturing per-task attribution.

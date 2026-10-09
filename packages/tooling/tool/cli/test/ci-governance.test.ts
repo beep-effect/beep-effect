@@ -14,6 +14,7 @@ import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Str from "effect/String";
 
 const writer = (environment: string, token = "${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}") =>
   `on: push\njobs:\n  writer:\n    environment: "${environment}"\n    steps:\n      - uses: ./.github/actions/setup-monorepo-ci\n        with:\n          turbo-token: "${token}"\n`;
@@ -32,6 +33,15 @@ describe("CI governance policy", () => {
       expect(
         yield* workflowPolicyDiagnostics("fixture.yml", writer("turbo-cache-write", "${{ secrets.TURBO_TOKEN }}"))
       ).toContain("writer: writer input must stay guarded in the caller workflow");
+    })
+  );
+  it.effect("rejects an unguarded step environment writer token", () =>
+    Effect.gen(function* () {
+      const text =
+        'on: push\njobs:\n  writer:\n    environment: turbo-cache-write\n    steps:\n      - run: bun run check\n        env:\n          TURBO_TOKEN: "${{ secrets.TURBO_TOKEN }}"\n';
+      expect(yield* workflowPolicyDiagnostics("fixture.yml", text)).toContain(
+        "writer: writer input must stay guarded in the caller workflow"
+      );
     })
   );
   it.effect("rejects a matrix writer without the Turbo-only condition", () =>
@@ -131,19 +141,33 @@ describe("CI governance policy", () => {
 // workflow names are deliberate orchestration surfaces, not runnable lane bodies.
 
 describe("hosted workflow inventory", () => {
-  it.effect("maps every check, heavy and storybook job to a descriptor or explicit orchestration exemption", () =>
+  it.effect("maps every hosted job to a descriptor or explicit orchestration exemption", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = new URL("../../../../..", import.meta.url).pathname;
       const exemptions = [
-        "Heavy Admission",
-        "Heavy",
-        "Lint (${{ matrix.partition }})",
-        "Test Unit (${{ matrix.partition }})",
-        "Fallow Advisory",
+        "check.yml:Heavy Admission",
+        "check.yml:Heavy",
+        "check.yml:Lint (${{ matrix.partition }})",
+        "check.yml:Test Unit (${{ matrix.partition }})",
+        "cache-warm.yml:Warm Turbo cache",
+        "data-sync.yml:Sync Official Data",
+        "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
+        "fleet-shadow-check.yml:Shadow Probe",
+        "heavy-admit.yml:Heavy Admission",
+        "heavy-admit.yml:Heavy",
+        "property-laws-nightly.yml:Property Laws Sweep",
+        "release-desktop.yml:Validate desktop release inputs",
+        "release-desktop.yml:macOS arm64",
+        "release-desktop.yml:macOS x64",
+        "release-desktop.yml:Linux x64",
+        "release-desktop.yml:Windows x64",
+        "release-desktop.yml:Desktop release draft ready",
+        "rerun-runner-loss.yml:Rerun Runner Loss",
       ];
-      for (const workflow of ["check", "heavy", "storybook"]) {
-        const file = `${workflow}.yml`;
+      const files = A.filter(yield* fs.readDirectory(`${root}/.github/workflows`), Str.endsWith(".yml"));
+      for (const file of files) {
+        const workflow = Str.replace(/\.yml$/, "")(file);
         const text = yield* fs.readFileString(`${root}/.github/workflows/${file}`);
         expect(yield* workflowPolicyDiagnostics(file, text)).toEqual([]);
         const contexts = yield* workflowJobContexts(file, text);
@@ -152,7 +176,10 @@ describe("hosted workflow inventory", () => {
           (row) => row.contextName
         );
         expect(
-          A.filter(contexts, (context) => !A.contains(declared, context) && !A.contains(exemptions, context))
+          A.filter(
+            contexts,
+            (context) => !A.contains(declared, context) && !A.contains(exemptions, `${file}:${context}`)
+          )
         ).toEqual([]);
         expect(A.filter(declared, (context) => !A.contains(contexts, context))).toEqual([]);
       }
