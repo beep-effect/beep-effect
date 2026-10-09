@@ -1,5 +1,6 @@
 // Port of Node v26.10.0 lib/internal/tty.js getColorDepth (MIT). Differences: the win32 branch reads OS=Windows_NT
 // rather than process.platform and the OS release, no warning side effect, TTY gate applied here.
+import { dual } from "effect/Function";
 import type { ColorLevel } from "../ColorLevel.ts";
 import type { Env } from "./types.ts";
 
@@ -68,7 +69,7 @@ const fromTable = (env: Env): ColorLevel => {
 	// Where Node's win32 branch sits: after the disable checks, before every TMUX, CI and TERM row.
 	if (env.OS === "Windows_NT") return "truecolor";
 
-	if (env.TMUX) return "truecolor";
+	if ((env.TMUX ?? "") !== "") return "truecolor";
 
 	// Azure DevOps
 	if (env.TF_BUILD !== undefined && env.AGENT_NAME !== undefined) return "basic";
@@ -87,7 +88,7 @@ const fromTable = (env: Env): ColorLevel => {
 
 	switch (env.TERM_PROGRAM) {
 		case "iTerm.app":
-			if (!env.TERM_PROGRAM_VERSION || /^[0-2]\./.test(env.TERM_PROGRAM_VERSION)) return "256";
+			if ((env.TERM_PROGRAM_VERSION === undefined || env.TERM_PROGRAM_VERSION === "") || /^[0-2]\./.test(env.TERM_PROGRAM_VERSION)) return "256";
 			return "truecolor";
 		case "HyperTerm":
 		case "MacTerm":
@@ -98,7 +99,7 @@ const fromTable = (env: Env): ColorLevel => {
 
 	if (env.COLORTERM === "truecolor" || env.COLORTERM === "24bit") return "truecolor";
 
-	if (env.TERM) {
+	if (env.TERM !== undefined && env.TERM !== "") {
 		if (/truecolor/.test(env.TERM)) return "truecolor";
 		if (/^xterm-256/.test(env.TERM)) return "256";
 
@@ -109,7 +110,7 @@ const fromTable = (env: Env): ColorLevel => {
 		if (TERM_ENVS_REG_EXP.some((re) => re.test(term))) return "basic";
 	}
 	// Move 16 colour COLORTERM below 16m and 256
-	if (env.COLORTERM) return "basic";
+	if ((env.COLORTERM ?? "") !== "") return "basic";
 	return "none";
 };
 
@@ -120,7 +121,10 @@ const fromTable = (env: Env): ColorLevel => {
  *
  * @internal
  */
-export const colorDepth = (env: Env, isTTY: boolean): ColorLevel => {
+export const colorDepth: {
+	(isTTY: boolean): (env: Env) => ColorLevel;
+	(env: Env, isTTY: boolean): ColorLevel;
+} = dual(2, (env: Env, isTTY: boolean): ColorLevel => {
 	if (env.FORCE_COLOR !== undefined) {
 		switch (env.FORCE_COLOR) {
 			case "":
@@ -137,7 +141,7 @@ export const colorDepth = (env: Env, isTTY: boolean): ColorLevel => {
 	}
 	if (!isTTY) return "none";
 	return fromTable(env);
-};
+});
 
 /**
  * Every environment variable name {@link colorDepth} reads, including the CI provider table.

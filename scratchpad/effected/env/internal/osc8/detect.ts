@@ -1,5 +1,6 @@
 // Ported from std-osc8 v0.2.0 (MIT, C. Spencer Beggs), src/detect.ts. Pure: no process reads.
 import { Option } from "effect";
+import { dual } from "effect/Function";
 import type { Env } from "../types.ts";
 import { envIsTruthy } from "./env.ts";
 import { compareSemver } from "./semver.ts";
@@ -76,7 +77,7 @@ const explanationFor = (
 		case "wrapper-strips":
 			return `inside ${wrapper?.name ?? "wrapper"}; passthrough not verifiable without subprocess`;
 		case "terminal-known-supported":
-			return `detected ${terminal}${terminalVersion ? ` ${terminalVersion}` : ""}`;
+			return `detected ${terminal}${terminalVersion !== null && terminalVersion !== "" ? ` ${terminalVersion}` : ""}`;
 		case "terminal-known-unsupported":
 			return `detected ${terminal}; terminal does not support OSC8`;
 		case "terminal-known-too-old":
@@ -109,11 +110,11 @@ const evaluateGate = (
 	if (noHyperlink) return { supported: false, reason: "no-hyperlink-env", override: "no-hyperlink" };
 	if (noColor) return { supported: false, reason: "no-color-env", override: "no-color" };
 	if (!isTTY) return { supported: false, reason: "not-a-tty", override: null };
-	if (wrapper) return { supported: false, reason: "wrapper-strips", override: null };
-	if (!match) return { supported: false, reason: "terminal-unknown", override: null };
+	if (wrapper !== null) return { supported: false, reason: "wrapper-strips", override: null };
+	if (match === null) return { supported: false, reason: "terminal-unknown", override: null };
 	if (!match.entry.supported) return { supported: false, reason: "terminal-known-unsupported", override: null };
 	if (
-		match.entry.minVersion &&
+		match.entry.minVersion !== null && match.entry.minVersion !== "" &&
 		(match.identify.version === null || compareSemver(match.identify.version, match.entry.minVersion) < 0)
 	) {
 		return { supported: false, reason: "terminal-known-too-old", override: null };
@@ -176,7 +177,10 @@ export interface Osc8Detection {
  * `stdout`, `supportedForStderr` becomes `stderr`, and the terminal name and
  * version become an `Option`.
  */
-export const detectOsc8 = (env: Env, isStdoutTTY: boolean, isStderrTTY: boolean): Osc8Detection => {
+export const detectOsc8: {
+	(isStdoutTTY: boolean, isStderrTTY: boolean): (env: Env) => Osc8Detection;
+	(env: Env, isStdoutTTY: boolean, isStderrTTY: boolean): Osc8Detection;
+} = dual(3, (env: Env, isStdoutTTY: boolean, isStderrTTY: boolean): Osc8Detection => {
 	const info = detect({ env, isStdoutTTY, isStderrTTY });
 	return {
 		stdout: info.supported,
@@ -186,7 +190,7 @@ export const detectOsc8 = (env: Env, isStdoutTTY: boolean, isStderrTTY: boolean)
 			version: Option.fromNullishOr(info.terminalVersion),
 		})),
 	};
-};
+});
 
 /**
  * Every environment variable name the ported detectors read. A caller that

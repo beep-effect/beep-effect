@@ -1,7 +1,9 @@
 // @effect-diagnostics strictEffectProvide:skip-file processEnv:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { ConfigProvider, Context, Effect, Layer, Option, Schema } from "effect";
+import { ConfigProvider, Context, Effect, Layer, Option, Result, Schema } from "effect";
 import { CurrentRuntimeEnv, RuntimeEnv } from "../../effected/env/RuntimeEnv.ts";
+
+const runtimeEnvJson = Schema.fromJsonString(RuntimeEnv);
 
 const withEnv = (env: Record<string, string>) =>
 	Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env));
@@ -67,9 +69,9 @@ describe("RuntimeEnv", () => {
 			ci: Option.none(),
 			terminal: Option.some({ name: "iTerm.app", version: Option.some("3.5.0") }),
 		});
-		const json = Schema.encodeSync(codec)(value);
+		const json = Result.getOrThrow(Schema.encodeResult(codec)(value));
 		assert.strictEqual(json, '{"agent":"claude","ci":null,"terminal":{"name":"iTerm.app","version":"3.5.0"}}');
-		assert.deepStrictEqual(Schema.decodeSync(codec)(json), value);
+		assert.deepStrictEqual(Result.getOrThrow(Schema.decodeResult(codec)(json)), value);
 	});
 
 	// The frozen 0.1.0 wire form, exactly as that version's encoder emits it. A snapshot persisted then must keep
@@ -77,11 +79,11 @@ describe("RuntimeEnv", () => {
 	const FROZEN_0_1_0 = '{"agent":"claude","ci":null,"terminal":{"name":"iTerm.app","version":"3.5.0"}}';
 
 	it("decodes the frozen 0.1.0 wire literal", () => {
-		const decoded = Schema.decodeSync(Schema.fromJsonString(RuntimeEnv))(FROZEN_0_1_0);
+		const decoded = Result.getOrThrow(Schema.decodeResult(runtimeEnvJson)(FROZEN_0_1_0));
 		assert.deepStrictEqual(decoded.agent, Option.some("claude"));
 		assert.deepStrictEqual(decoded.ci, Option.none());
 		assert.deepStrictEqual(decoded.terminal, Option.some({ name: "iTerm.app", version: Option.some("3.5.0") }));
-		assert.strictEqual(Schema.encodeSync(Schema.fromJsonString(RuntimeEnv))(decoded), FROZEN_0_1_0);
+		assert.strictEqual(Result.getOrThrow(Schema.encodeResult(runtimeEnvJson)(decoded)), FROZEN_0_1_0);
 	});
 
 	// A second frozen 0.1.0 literal, with a CI named: `ci` was a plain string then, and `github-actions` is one of the
@@ -89,35 +91,35 @@ describe("RuntimeEnv", () => {
 	const FROZEN_0_1_0_CI = '{"agent":"codex","ci":"github-actions","terminal":null}';
 
 	it("decodes the frozen 0.1.0 wire literal that names a CI, and encodes it back identically", () => {
-		const decoded = Schema.decodeSync(Schema.fromJsonString(RuntimeEnv))(FROZEN_0_1_0_CI);
+		const decoded = Result.getOrThrow(Schema.decodeResult(runtimeEnvJson)(FROZEN_0_1_0_CI));
 		assert.deepStrictEqual(decoded.agent, Option.some("codex"));
 		assert.deepStrictEqual(decoded.ci, Option.some("github-actions"));
 		assert.deepStrictEqual(decoded.terminal, Option.none());
-		assert.strictEqual(Schema.encodeSync(Schema.fromJsonString(RuntimeEnv))(decoded), FROZEN_0_1_0_CI);
+		assert.strictEqual(Result.getOrThrow(Schema.encodeResult(runtimeEnvJson)(decoded)), FROZEN_0_1_0_CI);
 	});
 
 	it("every field decodes when its key is absent, so an older or sparser snapshot keeps decoding", () => {
 		const codec = Schema.fromJsonString(RuntimeEnv);
-		const empty = Schema.decodeSync(codec)("{}");
+		const empty = Result.getOrThrow(Schema.decodeResult(codec)("{}"));
 		assert.deepStrictEqual([empty.agent, empty.ci, empty.terminal], [Option.none(), Option.none(), Option.none()]);
-		const partial = Schema.decodeSync(codec)('{"agent":"claude"}');
+		const partial = Result.getOrThrow(Schema.decodeResult(codec)('{"agent":"claude"}'));
 		assert.deepStrictEqual(partial.agent, Option.some("claude"));
 		assert.deepStrictEqual(partial.ci, Option.none());
 		assert.deepStrictEqual(partial.terminal, Option.none());
-		const noVersion = Schema.decodeSync(codec)('{"terminal":{"name":"kitty"}}');
+		const noVersion = Result.getOrThrow(Schema.decodeResult(codec)('{"terminal":{"name":"kitty"}}'));
 		assert.deepStrictEqual(noVersion.terminal, Option.some({ name: "kitty", version: Option.none() }));
 	});
 
 	it("ci is the literal union github-actions | generic: both decode and encode, and anything else is rejected", () => {
 		const codec = Schema.fromJsonString(RuntimeEnv);
 		for (const ci of ["github-actions", "generic"] as const) {
-			const decoded = Schema.decodeSync(codec)(`{"agent":null,"ci":"${ci}","terminal":null}`);
+			const decoded = Result.getOrThrow(Schema.decodeResult(codec)(`{"agent":null,"ci":"${ci}","terminal":null}`));
 			assert.deepStrictEqual(decoded.ci, Option.some(ci));
-			assert.strictEqual(Schema.encodeSync(codec)(decoded), `{"agent":null,"ci":"${ci}","terminal":null}`);
+			assert.strictEqual(Result.getOrThrow(Schema.encodeResult(codec)(decoded)), `{"agent":null,"ci":"${ci}","terminal":null}`);
 		}
 		for (const bad of ["jenkins", "", "GITHUB-ACTIONS", "true"]) {
 			assert.throws(
-				() => Schema.decodeSync(codec)(`{"agent":null,"ci":"${bad}","terminal":null}`),
+				() => Result.getOrThrow(Schema.decodeResult(codec)(`{"agent":null,"ci":"${bad}","terminal":null}`)),
 				Error,
 				"github-actions",
 				bad,
@@ -155,8 +157,8 @@ describe("RuntimeEnv", () => {
 	it("round-trips the all-none snapshot", () => {
 		const codec = Schema.fromJsonString(RuntimeEnv);
 		const value = RuntimeEnv.make({ agent: Option.none(), ci: Option.none(), terminal: Option.none() });
-		assert.strictEqual(Schema.encodeSync(codec)(value), '{"agent":null,"ci":null,"terminal":null}');
-		assert.deepStrictEqual(Schema.decodeSync(codec)('{"agent":null,"ci":null,"terminal":null}'), value);
+		assert.strictEqual(Result.getOrThrow(Schema.encodeResult(codec)(value)), '{"agent":null,"ci":null,"terminal":null}');
+		assert.deepStrictEqual(Result.getOrThrow(Schema.decodeResult(codec)('{"agent":null,"ci":null,"terminal":null}')), value);
 	});
 });
 
@@ -210,9 +212,7 @@ describe("RuntimeEnv.fromRecord", () => {
 describe("CurrentRuntimeEnv.layerFrom", () => {
 	class First extends Context.Service<First, Option.Option<string>>()("@beep/scratchpad/test/env/RuntimeEnv.test/First") {}
 	class Second extends Context.Service<Second, Option.Option<string>>()("@beep/scratchpad/test/env/RuntimeEnv.test/Second") {}
-	const envOf = Effect.gen(function* () {
-		return yield* CurrentRuntimeEnv;
-	});
+	const envOf = CurrentRuntimeEnv;
 	const agentOf = Effect.map(envOf, (env) => env.agent);
 
 	it.effect("a record source is read without the ambient provider", () =>

@@ -128,10 +128,9 @@ describe("TerminalEnv.layer", () => {
 
 	it.effect("COLUMNS must be a positive integer: anything else falls back", () =>
 		Effect.map(
-			Effect.all(
-				["-5", "0", "100abc", "abc", "1.5", " 100", "1e3"].map((value) =>
-					read({ COLUMNS: value }, { stdout: true }, (t) => t.width(60)),
-				),
+			Effect.forEach(
+				["-5", "0", "100abc", "abc", "1.5", " 100", "1e3"],
+				(value) => read({ COLUMNS: value }, { stdout: true }, (t) => t.width(60)),
 			),
 			(widths) => assert.deepStrictEqual(widths, [60, 60, 60, 60, 60, 60, 60]),
 		),

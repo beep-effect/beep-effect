@@ -25,9 +25,7 @@ const runtime = (fields: { agent?: string; ci?: "github-actions" | "generic" }) 
 
 /** `Audience.layer` fed by the real `CurrentRuntimeEnv.layer`, so the whole chain reads one environment. */
 const audienceFrom = (env: Record<string, string>, envVar = "OKFIT_AUDIENCE") =>
-	Effect.gen(function* () {
-		return yield* Audience;
-	}).pipe(Effect.provide(Layer.provide(Audience.layer({ envVar }), CurrentRuntimeEnv.layer)), withEnv(env));
+	Audience.pipe(Effect.provide(Layer.provide(Audience.layer({ envVar }), CurrentRuntimeEnv.layer)), withEnv(env));
 
 describe("Audience.detect", () => {
 	it("agent beats CI (an agent inside a CI job gets agent output)", () =>
@@ -103,9 +101,7 @@ describe("Audience.layer", () => {
 
 	it.effect("an empty override is unset even when the provider preserves empty strings", () => {
 		const lines: Array<{ readonly level: string; readonly text: string }> = [];
-		return Effect.gen(function* () {
-			return yield* Audience;
-		}).pipe(
+		return Audience.pipe(
 			Effect.provide(Layer.provide(Audience.layer({ envVar: "OKFIT_AUDIENCE" }), CurrentRuntimeEnv.layer)),
 			Effect.provide(capture(lines)),
 			Effect.provideService(

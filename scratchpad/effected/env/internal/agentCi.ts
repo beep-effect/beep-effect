@@ -7,7 +7,7 @@ type AgentRule =
 	| readonly [name: string, keys: ReadonlyArray<string>]
 	| readonly [name: string, test: (env: Env) => boolean];
 
-const matches = (value: string | undefined, pattern: RegExp): boolean => !!value && pattern.test(value);
+const matches = (value: string | undefined, pattern: RegExp): boolean => value !== undefined && value !== "" && pattern.test(value);
 
 // std-env's order decides between two matching rows. `pi` and `devin` match a pattern on a variable every
 // shell sets, so they test the value rather than its presence.
@@ -51,14 +51,17 @@ const familyOf = (value: string): string =>
  * @internal
  */
 export const detectAgent = (env: Env): Option.Option<string> => {
-	if (env.AI_AGENT) {
+	if (env.AI_AGENT !== undefined && env.AI_AGENT !== "") {
 		const name = env.AI_AGENT.toLowerCase();
 		return Option.some(
 			name === "github_copilot_vscode_agent" || name === "github_copilot_cloud_agent" ? "copilot" : familyOf(name),
 		);
 	}
 	for (const [name, rule] of AGENT_RULES) {
-		if (typeof rule === "function" ? rule(env) : rule.some((key) => !!env[key])) return Option.some(name);
+		if (typeof rule === "function" ? rule(env) : rule.some((key) => {
+			const value = env[key];
+			return value !== undefined && value !== "";
+		})) return Option.some(name);
 	}
 	return Option.none();
 };

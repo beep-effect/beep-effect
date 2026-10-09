@@ -117,7 +117,7 @@ const TERMINALS: readonly TerminalEntry[] = [
 		// Source: https://github.com/Alhadis/OSC8-Adoption (VTE row)
 		name: "VTE",
 		identify: (env) =>
-			env.VTE_VERSION
+			env.VTE_VERSION !== undefined && env.VTE_VERSION !== ""
 				? {
 						version: parseVteVersion(env.VTE_VERSION),
 						rawIdentifier: env.VTE_VERSION,
@@ -133,7 +133,7 @@ const TERMINALS: readonly TerminalEntry[] = [
 		// Source: https://github.com/Alhadis/OSC8-Adoption (Konsole row)
 		name: "Konsole",
 		identify: (env) =>
-			env.KONSOLE_VERSION
+			env.KONSOLE_VERSION !== undefined && env.KONSOLE_VERSION !== ""
 				? {
 						version: parseKonsoleVersion(env.KONSOLE_VERSION),
 						rawIdentifier: env.KONSOLE_VERSION,
@@ -163,7 +163,7 @@ const TERMINALS: readonly TerminalEntry[] = [
 			if (env.TERM === "xterm-kitty") {
 				return { version: null, rawIdentifier: env.TERM };
 			}
-			if (env.KITTY_WINDOW_ID) {
+			if (env.KITTY_WINDOW_ID !== undefined && env.KITTY_WINDOW_ID !== "") {
 				return { version: null, rawIdentifier: env.KITTY_WINDOW_ID };
 			}
 			return null;
@@ -213,7 +213,7 @@ const TERMINALS: readonly TerminalEntry[] = [
 		// Windows Terminal — supports OSC8 in all current versions.
 		// Source: https://github.com/Alhadis/OSC8-Adoption (Windows Terminal row)
 		name: "WindowsTerminal",
-		identify: (env) => (env.WT_SESSION ? { version: null, rawIdentifier: env.WT_SESSION } : null),
+		identify: (env) => (env.WT_SESSION !== undefined && env.WT_SESSION !== "" ? { version: null, rawIdentifier: env.WT_SESSION } : null),
 		supported: true,
 		minVersion: null,
 		capabilities: { params: false, fileUrls: true, fileUrlsRemoteUnsafe: false },
@@ -303,7 +303,7 @@ const TERMINALS: readonly TerminalEntry[] = [
 		// ConEmu / cmder (Windows).
 		// Source: https://github.com/Alhadis/OSC8-Adoption (ConEmu row)
 		name: "ConEmu",
-		identify: (env) => (env.ConEmuPID ? { version: null, rawIdentifier: env.ConEmuPID } : null),
+		identify: (env) => (env.ConEmuPID !== undefined && env.ConEmuPID !== "" ? { version: null, rawIdentifier: env.ConEmuPID } : null),
 		supported: true,
 		minVersion: null,
 		capabilities: { params: false, fileUrls: true, fileUrlsRemoteUnsafe: false },
@@ -349,7 +349,7 @@ const TERMINALS: readonly TerminalEntry[] = [
 export const lookupTerminal = (env: Env): TerminalMatch | null => {
 	for (const entry of TERMINALS) {
 		const id = entry.identify(env);
-		if (id) return { entry, identify: id };
+		if (id !== null) return { entry, identify: id };
 	}
 	return null;
 };
