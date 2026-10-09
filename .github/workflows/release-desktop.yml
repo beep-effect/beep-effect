@@ -8,7 +8,7 @@
 # `rustc -vV` host target triple (see `scripts/build-sidecar.ts`).
 #
 # Triggered by pushing a tag matching `professional-desktop-v*` (kept distinct
-# from the npm/changeset release tags), or manually via workflow_dispatch.
+# from any future npm publication lane; internal changesets are dormant), or manually via workflow_dispatch.
 #
 # REQUIRED secrets (auto-updater signing — ALWAYS applied):
 #   TAURI_SIGNING_PRIVATE_KEY           — minisign private key for the updater.
