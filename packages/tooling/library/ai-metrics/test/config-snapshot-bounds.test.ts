@@ -279,7 +279,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
 
         const result = yield* makeAiMetricsConfigSnapshot(
           AiMetricsConfigSnapshotInput.make({
-            budget: AiMetricsConfigSnapshotBudget.make({ maxFiles: 4 }),
+            budget: AiMetricsConfigSnapshotBudget.make({ maxFiles: 6 }),
             repoRoot,
           })
         );

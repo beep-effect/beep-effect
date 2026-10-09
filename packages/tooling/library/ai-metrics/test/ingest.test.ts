@@ -1562,10 +1562,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics",
       expect(plan.serviceUnit).toContain("flock -n");
       expect(plan.serviceUnit).toContain('"status":"failed"');
       expect(plan.serviceUnit).toContain("json.dumps");
-      expect(plan.serviceUnit).toContain('decode("utf-8","replace")');
+      expect(plan.serviceUnit).toContain("forwarder-command-failed");
+      expect(plan.serviceUnit).toContain("2>/dev/null");
+      expect(plan.serviceUnit).not.toContain("stderr.tmp");
       expect(plan.serviceUnit).toContain("uses the resolved Bun executable");
       expect(plan.serviceUnit).toContain("'/home/example/.bun/bin/bun'");
-      expect(plan.serviceUnit).toMatch(/exit_code=0; > .*latest\.json\.stderr\.tmp.*; if flock -n/su);
+      expect(plan.serviceUnit).toMatch(/exit_code=0; if flock -n/su);
       expect(plan.serviceUnit).not.toContain("sed 's/");
       expect(plan.serviceUnit).toContain("StartLimitBurst=3\nStartLimitIntervalSec=30m\n\n[Service]");
       expect(plan.serviceUnit).toContain("Restart=on-failure");

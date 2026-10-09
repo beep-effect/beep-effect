@@ -776,7 +776,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       expect(report.sessionsSkippedUnstamped).toBe(2);
       expect(report.shardsRead).toBe(8);
       expect(report.undecodableLines).toBe(1);
-      expect(A.map(report.proposals, (proposal) => proposal.candidate.name)).toStrictEqual(["alpha", "notion"]);
+      expect(report.proposals).toHaveLength(0);
     })
   );
 

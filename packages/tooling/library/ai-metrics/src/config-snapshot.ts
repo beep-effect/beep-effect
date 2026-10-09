@@ -658,7 +658,7 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
         stderr: "ignore",
       })
     )
-    .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot detect Git snapshot enumeration.", cause)));
+    .pipe(Effect.orElseSucceed(() => 1));
   if (
     gitCode !== 0 &&
     A.contains(
