@@ -197,3 +197,20 @@
   and published no incomplete wave.
 - Prevention: announce a fetchable owner commit with its SHA before resuming a
   dependent lane, or provide a revised dependency-wait budget in its brief.
+
+## Reader fix carries an unlanded dependency (2026-10-09)
+
+- Work: admit the published XML-reader owner fix for the corrected resume.
+- Evidence: owner branch head `1b26273832` is fetchable; PR #1594 is open and
+  unmerged. Its source fix `288f402edf` adds `fast-xml-builder` to the schema
+  devDependencies, root catalog and lockfile, and imports it in the regression
+  test. Fresh main `3200e01946` does not contain those additions.
+- Attribution: separately owned prerequisite, not a dependency introduced by
+  this lane. The brief permits fetching the fix commits but explicitly stops
+  on a dependency not on main and on unplanned dependency/lockfile changes.
+- Response: merged main, retained the committed M2 candidate, and stopped
+  before cherry-picking, running dependent proof or publishing an incomplete
+  wave. No shared-reader fix was authored or partially imported here.
+- Prevention: land dependency-bearing prerequisite PRs on main before sending
+  dependent lanes a cherry-pick instruction, or explicitly reconcile that
+  instruction with the dependent lane's dependency admission rule.
