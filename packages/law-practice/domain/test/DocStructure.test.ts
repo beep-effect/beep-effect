@@ -68,6 +68,7 @@ describe("office-action pure raw rule v1", () => {
     expect(recognizeOfficeActionPair(`Attachment: prior action\n${positive}`, "direct-text")).toMatchObject({
       code: "absent",
     });
+    expect(recognizeOfficeActionPair(`${positive}\n${period}`, "direct-text")).toMatchObject({ code: "ambiguous" });
     expect(recognizeOfficeActionPair(positive, "layout-derived")).toMatchObject({ code: "low-quality-source" });
     expect(recognizeOfficeActionPair(positive, "embedded-pdf-text").status).toBe("recognized");
     expect(recognizeOfficeActionPair(`This action is NON-FINAL.\n${period}`, "direct-text")).toMatchObject({

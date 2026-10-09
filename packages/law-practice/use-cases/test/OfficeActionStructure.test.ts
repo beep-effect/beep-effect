@@ -140,6 +140,10 @@ it.layer(TestCrypto, { timeout: "10 seconds" })("office-action exact paired extr
         },
       });
       expect(yield* structure.fromExtractions(input, [other, period])).toMatchObject({ code: "rule-not-covered" });
+      const otherPeriod = GroundedExtraction.cases.match_exact.make({ ...other, label: "shortened-statutory-period" });
+      expect(yield* structure.fromExtractions(input, [finality, otherPeriod])).toMatchObject({
+        code: "rule-not-covered",
+      });
 
       const encodedFinality = yield* S.encodeEffect(GroundedExtraction.cases.match_exact)(
         candidate("action-finality", raw.finalityAnchor)
