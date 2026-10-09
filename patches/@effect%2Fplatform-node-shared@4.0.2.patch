@@ -1,8 +1,6 @@
-diff --git a/dist/NodeFileSystem.js b/dist/NodeFileSystem.js
-index a94f50e..597a676 100644
 --- a/dist/NodeFileSystem.js
 +++ b/dist/NodeFileSystem.js
-@@ -232,7 +232,7 @@ const makeFile = /*#__PURE__*/(() => {
+@@ -233,7 +233,7 @@
      write(buffer) {
        return Effect.suspend(() => {
          const position = this.position;
@@ -11,7 +9,7 @@ index a94f50e..597a676 100644
            if (!this.append) {
              this.position = position + BigInt(bytesWritten);
            }
-@@ -243,7 +243,7 @@ const makeFile = /*#__PURE__*/(() => {
+@@ -244,7 +244,7 @@
      writeAllChunk(buffer) {
        return Effect.suspend(() => {
          const position = this.position;
@@ -20,11 +18,9 @@ index a94f50e..597a676 100644
            if (bytesWritten === 0) {
              return Effect.fail(Error.systemError({
                module: "FileSystem",
-diff --git a/src/NodeFileSystem.ts b/src/NodeFileSystem.ts
-index 19fabb0..4aed757 100644
 --- a/src/NodeFileSystem.ts
 +++ b/src/NodeFileSystem.ts
-@@ -371,7 +371,7 @@ const makeFile = (() => {
+@@ -372,7 +372,7 @@
            this.append ? Effect.succeed(undefined) : positionToNumber(position, "write"),
            (nodePosition) =>
              Effect.map(
@@ -33,7 +29,7 @@ index 19fabb0..4aed757 100644
                (bytesWritten) => {
                  if (!this.append) {
                    this.position = position + BigInt(bytesWritten)
-@@ -390,7 +390,7 @@ const makeFile = (() => {
+@@ -391,7 +391,7 @@
            this.append ? Effect.succeed(undefined) : positionToNumber(position, "writeAll"),
            (nodePosition) =>
              Effect.flatMap(

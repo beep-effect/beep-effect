@@ -1,5 +1,9 @@
 # Per-Module Imports
 
+This packet records the migration decisions made at the time. The current
+repository import law is `standards/effect-laws-v1.md`; it requires
+`effect/<Module>` imports in first-party code and examples.
+
 ## Status
 
 Lifecycle: `completed-retained`
