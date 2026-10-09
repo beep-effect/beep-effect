@@ -4,10 +4,12 @@
     "slug": "build-pipeline-simplification",
     "title": "Build Pipeline Simplification",
     "status": "active",
-    "stage": "capture",
+    "stage": "research",
     "openQuestions": [
-      "Does the operator accept the deep-research framing (declaration pipeline; no bun build for libraries; two-tier tsgo + tsdown-for-public shape) before research formalises the inventory?",
-      "SchemaCompiler: operator believes bundle-size and runtime wins are larger than the report records (+2 KB AOT / +7 KB JIT over baseline; 1.2x-1.5x on S.Class rows). Which mechanism or newer numbers support that, and does it change the per-app-vs-per-library placement?"
+      "Does the operator accept the deep-research framing (library build = declaration pipeline; no bun build for libraries; two-tier effect-tsgo emit + tsdown only for public packages)? Both experiments came back as the framing predicted.",
+      "SchemaCompiler: the operator believes bundle-size and runtime wins exceed what is on file (+2 KB AOT / +7 KB JIT over an 18 KB baseline; 1.2x-1.5x on S.Class rows). Which mechanism or newer numbers support that, and does it move the compiler from per-app to per-library placement?",
+      "Should a shared build-kit package (NET-NEW) own the generated beep:build script, the dist/.d.ts assertion and the tsbuildinfo purge, replacing the two-line tsc && babel pair in 123 manifests?",
+      "Is the Babel annotate-pure-calls pass (1,808 markers on @beep/schema; the only pure-annotation source measured) worth keeping for private packages, or only for publishConfig.access public ones?"
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
