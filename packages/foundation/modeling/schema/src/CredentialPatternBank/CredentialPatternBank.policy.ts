@@ -333,7 +333,7 @@ export const maskCredentialMatches: {
 });
 
 /**
- * Mask one category's union of original value spans without rewriting its surrounding syntax.
+ * Mask one category's complete value spans without rewriting its surrounding syntax.
  *
  * **Example** (Mask a category on public text)
  * ```ts import.meta.vitest name="Mask a category on public text"
@@ -348,8 +348,9 @@ export const maskCredentialCategory: {
   (text: string, category: CredentialCategory): string;
   (category: CredentialCategory): (text: string) => string;
 } = dual(2, (text: string, category: CredentialCategory) =>
-  maskCredentialMatches(
-    text,
-    A.filter(detectCredentials(text), (match) => match.category === category)
+  pipe(
+    categoryRule(category),
+    O.map((grammar) => maskCredentialMatches(text, completeMatches(text, grammar))),
+    O.getOrElse(() => text)
   )
 );

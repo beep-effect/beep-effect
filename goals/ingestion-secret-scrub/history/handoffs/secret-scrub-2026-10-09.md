@@ -141,3 +141,12 @@ deduplicating equal value offsets and counting distinct original extents. Reason
 and reversal are recorded in SPEC. Updated schema/file-processing and consumer
 default proofs are queued under the unchanged shared budget. PR #1570 remains
 draft; no content-final or merge-readiness claim is made.
+
+### 2026-10-09 — legacy partial-form boundary
+
+The canonical consumer mask adapter now selects complete matches. Ingestion still
+masks all findings and blocks partial residue. A bank regression assertion proves
+that distinction using runtime-built synthetic input. Reason: avoid changing
+legacy output beyond R5 union coverage. Reversal: restore the previous adapter
+and remove that assertion; retain fail-closed ingestion. The final adapter will
+receive a package proof after the current parity job releases its owned slot.

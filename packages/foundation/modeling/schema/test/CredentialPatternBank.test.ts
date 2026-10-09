@@ -70,5 +70,10 @@ describe("canonical credential bank", () => {
     const partial = A.join(["s", "k", "-", "short"], "");
     expect(A.some(Bank.detectCredentials(partial), (match) => match.state === "residue")).toBe(true);
     expect(A.isReadonlyArrayEmpty(Bank.detectCredentials("public text"))).toBe(true);
+    const unfinished = `${A.join(["API", "_KEY"], "")}="${secret()} public tail`;
+    expect(Bank.maskCredentialCategory(unfinished, "secret-assignment") === "API_KEY=[REDACTED] public tail").toBe(
+      true
+    );
+    expect(Bank.maskCredentialMatches(unfinished, Bank.detectCredentials(unfinished)) === "[REDACTED]").toBe(true);
   });
 });

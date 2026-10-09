@@ -251,3 +251,9 @@ only a final formatting step after masking. Reason: preserve R5 coverage across
 quoted multiline and header overlaps. Raw counts include both distinct assignment
 value extents in the quoted-header fixture. Reversal: restore the original
 per-consumer bank and remove the overlap fixtures together.
+
+The consumer mask adapter uses complete matches only; ingestion alone additionally
+masks partial residue extents and fails prompt admission. Reason: retain the
+legacy category/rendering coverage contract while enforcing ingestion's stricter
+partial-form boundary. Reversal: restore the former adapter and its consumer
+fixtures together; the ingestion gate remains fail-closed.
