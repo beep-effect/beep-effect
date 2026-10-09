@@ -541,7 +541,7 @@ END {
 
   # Keep indexed configuration plus settings.local.json. Non-git fixtures
   # use the same bounded fallback as the TypeScript snapshot.
-  if tracked="$(git -c core.quotepath=false ls-files -- ':(glob)**/AGENTS.md' ':(glob)**/CLAUDE.md' .mcp.json .claude .codex .cursor .agents .junie .grok 2>/dev/null)"; then
+  if tracked="$(git -c core.quotepath=false ls-files -- ':(glob)**/AGENTS.md' ':(glob)**/CLAUDE.md' .mcp.json .claude .codex .ai .aiassistant .cursor .agents .junie .grok 2>/dev/null)"; then
     case "${tracked}" in *'"'*) return 1 ;; esac
     collected="$(awk -F "${tab}" 'NR == FNR { tracked[$0] = 1; next }
       ($1 in tracked) || $1 == ".claude/settings.local.json" { print }' \

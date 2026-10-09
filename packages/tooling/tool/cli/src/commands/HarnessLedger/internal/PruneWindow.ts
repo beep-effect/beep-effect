@@ -326,7 +326,7 @@ const windowReport = (
       ranked,
       (tally) =>
         parentRegime(tally) === "in-regime" &&
-        !A.some(ranked, (other) => other.parent === tally.parent && other.unknownStart) &&
+        !parentSummary(tally).unknownStart &&
         active(tally) &&
         !overlapsDisarm(parentSummary(tally))
     ),
@@ -695,9 +695,9 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
   const sessionHooks = MutableHashMap.empty<string, number>();
   let undecodableLines = yield* readReconciliationHooks(stateDir, agentKind, sessionHooks, hooks);
   const fs = yield* FileSystem.FileSystem;
-  const canonical = yield* fs
-    .realPath(transcriptDir)
-    .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve transcript root.")));
+  const path = yield* Path.Path;
+  const canonical = path.resolve(transcriptDir);
+  yield* fs.realPath(canonical).pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve transcript root.")));
   const files = yield* reconciliationTranscriptFiles(canonical);
   const sessions = MutableHashMap.empty<string, number>();
   const transcriptPaths = MutableHashMap.empty<string, number>();
