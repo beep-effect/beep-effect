@@ -1617,7 +1617,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("checkout retention arch
               yield* runFixtureCommand(nested, "git", ["commit", "--quiet", "-m", "clean nested"]);
               yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
               const applied = yield* runResidueReap({ ...fixture, apply: true });
-              expect(candidateByPath(applied, fixture.target).applied).toBe(true);
+              expect(applied.reapedCount).toBe(1);
+              expect(candidateByPath(applied, fixture.target).action).toBe("archive-move");
               expect(yield* fs.exists(fixture.target)).toBe(false);
               yield* runResidueReap({ ...fixture, restore: O.getOrThrow(O.fromUndefinedOr(applied.runId)) });
               expect(yield* fs.readFileString(path.join(nested, "tracked.txt"))).toBe("nested payload");
