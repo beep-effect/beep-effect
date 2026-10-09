@@ -1,0 +1,77 @@
+---
+lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    configDependencies:
+      '@effected/pnpm-plugin-effect':
+        specifier: 0.1.0
+        version: 0.1.0
+
+packages:
+
+  '@effected/pnpm-plugin-effect@0.1.0':
+    resolution: {integrity: sha512-cfgDepPreambleOnlyDoNotReadThisDocumentAsTheLockfileAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==}
+
+snapshots:
+
+  '@effected/pnpm-plugin-effect@0.1.0': {}
+
+---
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+overrides:
+  lodash: 4.17.21
+
+catalogs:
+  effect:
+    effect:
+      specifier: 4.0.0-beta.94
+      version: 4.0.0-beta.94
+
+importers:
+
+  .:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.2
+
+  packages/core:
+    dependencies:
+      '@test-monorepo/utils':
+        specifier: workspace:*
+        version: link:../utils
+      chalk:
+        specifier: ^5.3.0
+        version: 5.6.2
+
+  packages/utils:
+    dependencies:
+      effect:
+        specifier: 'catalog:effect'
+        version: 4.0.0-beta.94
+
+packages:
+
+  chalk@5.6.2:
+    resolution: {integrity: sha512-chalkChalkChalkChalkChalkChalkChalkChalkChalkChalkChalkChalkChalkChalkChalkChalkChalkChalkChalkChalkAA==}
+
+  effect@4.0.0-beta.94:
+    resolution: {integrity: sha512-effectEffectEffectEffectEffectEffectEffectEffectEffectEffectEffectEffectEffectEffectEffectEffectEfAA==}
+
+  typescript@5.9.2:
+    resolution: {integrity: sha512-typescriptTypescriptTypescriptTypescriptTypescriptTypescriptTypescriptTypescriptTypescriptTypescriAA==}
+
+snapshots:
+
+  chalk@5.6.2: {}
+
+  effect@4.0.0-beta.94: {}
+
+  typescript@5.9.2: {}

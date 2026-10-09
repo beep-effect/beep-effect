@@ -4674,16 +4674,127 @@
       "wave": 3,
       "position": 1,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
         "src": "packages/lockfiles/src",
         "test": "packages/lockfiles/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "BunExtension",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ConfigDependencyLock",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ImporterDependency",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Lockfile",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "LockfileFormat",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "LockfileFramingError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "LockfileImporter",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "LockfileIntegrity",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "LockfileParseError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PackageManagerLock",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "PnpmCatalogs",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PnpmEnvLockfile",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "PnpmEnvLockfileReaders",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PnpmExtension",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ResolvedPackage",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "UnsupportedLockfileVersion",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceDependency",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WorkspaceManifest",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "filenameFor",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "filenamesFor",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "fromFilename",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "isUnsupportedLockfileVersion",
+          "kind": "value",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
       "newDeps": [],
-      "fixturesBytes": 0,
+      "fixturesBytes": 259531,
       "deviations": [],
       "backlog": [],
       "reviewRounds": [],
