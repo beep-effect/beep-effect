@@ -1,4 +1,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import * as HashSet from "effect/HashSet";
+import * as R from "effect/Record";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -12,6 +15,10 @@ import { Repo } from "./Repo.ts";
 import type * as Rest from "./Rest.ts";
 
 const $I = $ScratchpadId.create("effected/github/GitHubRepository");
+
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}) {}
 
 /**
  * Everything GitHub reports about a repository.
@@ -85,7 +92,7 @@ export type RepositoryPatchDraft = {
  */
 export const repositoryPatch = (draft: RepositoryPatchDraft): RepositoryPatch => {
 	const out: Record<string, unknown> = {};
-	for (const [key, value] of Object.entries(draft)) {
+	for (const [key, value] of R.toEntries<string, unknown>(draft)) {
 		if (value !== undefined) out[key] = value;
 	}
 	return out;
@@ -107,7 +114,7 @@ export type OwnerType = "User" | "Organization";
  *
  * @public
  */
-export const SECURITY_ANALYSIS_STATUS_FIELDS: ReadonlySet<string> = new Set([
+export const SECURITY_ANALYSIS_STATUS_FIELDS: HashSet.HashSet<string> = HashSet.make(
 	"advanced_security",
 	"code_security",
 	"secret_scanning",
@@ -117,7 +124,7 @@ export const SECURITY_ANALYSIS_STATUS_FIELDS: ReadonlySet<string> = new Set([
 	"secret_scanning_delegated_alert_dismissal",
 	"secret_scanning_delegated_bypass",
 	"dependabot_security_updates",
-]);
+);
 
 /**
  * Settings reachable **only** through the GraphQL `updateRepository` mutation,
@@ -172,26 +179,26 @@ const isStatusObject = (raw: unknown): raw is { readonly status: "enabled" | "di
 export const transformSecurityAndAnalysis = (value: unknown): Record<string, unknown> | undefined => {
 	if (!P.isObjectOrArray(value)) return undefined;
 
-	const input = value;
+	const input: Record<string, unknown> = { ...value };
 	const out: Record<string, unknown> = {};
 
-	for (const [key, raw] of Object.entries(input)) {
+	for (const [key, raw] of R.toEntries(input)) {
 		if (raw === undefined) continue;
-		if (SECURITY_ANALYSIS_STATUS_FIELDS.has(key) && (raw === "enabled" || raw === "disabled")) {
+		if (HashSet.has(SECURITY_ANALYSIS_STATUS_FIELDS, key) && (raw === "enabled" || raw === "disabled")) {
 			out[key] = { status: raw };
-		} else if (SECURITY_ANALYSIS_STATUS_FIELDS.has(key) && isStatusObject(raw)) {
+		} else if (HashSet.has(SECURITY_ANALYSIS_STATUS_FIELDS, key) && isStatusObject(raw)) {
 			// Already the shape GitHub wants, which is also the shape
 			// `RepositoryPatch` types. Passing it through is not a convenience:
 			// without this branch a type-correct caller has the block silently
 			// dropped, because the wrapping branch above only matches a bare
 			// string. That is data loss on the input the type asks for.
 			out[key] = raw;
-		} else if (key === "delegated_bypass_reviewers" && Array.isArray(raw) && raw.length > 0) {
+		} else if (key === "delegated_bypass_reviewers" && A.isArray(raw) && raw.length > 0) {
 			out.secret_scanning_delegated_bypass_options = { reviewers: raw };
 		}
 	}
 
-	return Object.keys(out).length > 0 ? out : undefined;
+	return R.keys(out).length > 0 ? out : undefined;
 };
 
 /** The mutation's answer. Only its shape matters — the id is never read. */
@@ -249,7 +256,7 @@ const preparePatch = (patch: Record<string, unknown>): Record<string, unknown> =
 		out.security_and_analysis = securityAndAnalysis;
 	}
 
-	for (const [strategy, dependents] of Object.entries(DEPENDENT_MERGE_KEYS)) {
+	for (const [strategy, dependents] of R.toEntries(DEPENDENT_MERGE_KEYS)) {
 		if (out[strategy] === false) {
 			for (const dependent of dependents) delete out[dependent];
 		}
@@ -399,7 +406,7 @@ export class GitHubRepository extends Context.Service<GitHubRepository, GitHubRe
 }
 
 const unstubbed = (member: string): never => {
-	throw new Error(`GitHubRepository.makeTest: ${member} was read but not stubbed — pass an override.`);
+	throw UnstubbedError.make({ message: `GitHubRepository.makeTest: ${member} was read but not stubbed — pass an override.` });
 };
 
 const make = (client: GitHubClient["Service"]): GitHubRepositoryShape => {
@@ -420,7 +427,7 @@ const make = (client: GitHubClient["Service"]): GitHubRepositoryShape => {
 		settings,
 		updateSettings: Effect.fn("GitHubRepository.updateSettings")(function* (patch: RepositoryPatch) {
 			const { owner, repo } = yield* Repo;
-			yield* Effect.annotateCurrentSpan({ owner, repo, fields: Object.keys(patch).length });
+			yield* Effect.annotateCurrentSpan({ owner, repo, fields: R.keys<string, unknown>(patch).length });
 			return yield* client.request("PATCH /repos/{owner}/{repo}", { ...preparePatch({ ...patch }), owner, repo });
 		}),
 		defaultBranch: Effect.map(settings, (repository) => repository.default_branch),
@@ -436,12 +443,12 @@ const make = (client: GitHubClient["Service"]): GitHubRepositoryShape => {
 			// vocabulary rather than the wire's.
 			const graphqlKeys: Array<string> = [];
 
-			for (const [key, value] of Object.entries(input)) {
-				// `Object.hasOwn`, not a bare index: the map is open by design, so a
+			for (const [key, value] of R.toEntries(input)) {
+				// `R.has` checks own keys: the map is open by design, so a
 				// caller key of `toString` or `constructor` would otherwise resolve
 				// through the prototype chain to a FUNCTION, and that function would
 				// be sent as a GraphQL input field name and reported as applied.
-				const graphqlField = Object.hasOwn(GRAPHQL_ONLY_SETTINGS, key) ? GRAPHQL_ONLY_SETTINGS[key] : undefined;
+				const graphqlField = R.has(GRAPHQL_ONLY_SETTINGS, key) ? GRAPHQL_ONLY_SETTINGS[key] : undefined;
 				if (graphqlField !== undefined) {
 					graphql[graphqlField] = value;
 					graphqlKeys.push(key);
@@ -460,7 +467,7 @@ const make = (client: GitHubClient["Service"]): GitHubRepositoryShape => {
 			// then fires a PATCH carrying only `owner` and `repo`, while the report
 			// below truthfully says nothing was sent. The report contradicting the
 			// wire is the one failure `AppliedSettings` exists to prevent.
-			const restKeys = Object.keys(prepared);
+			const restKeys = R.keys(prepared);
 
 			if (restKeys.length > 0) {
 				yield* client.request("PATCH /repos/{owner}/{repo}", {
@@ -470,7 +477,7 @@ const make = (client: GitHubClient["Service"]): GitHubRepositoryShape => {
 				});
 			}
 
-			if (Object.keys(graphql).length > 0) {
+			if (R.keys(graphql).length > 0) {
 				// Only now is the node id worth a round trip.
 				const repository = yield* client.request("GET /repos/{owner}/{repo}", { owner, repo });
 				yield* client.graphql(UpdateRepository, {

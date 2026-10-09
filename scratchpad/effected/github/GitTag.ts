@@ -14,6 +14,10 @@ import type { PageOptions } from "./Rest.ts";
 
 const $I = $ScratchpadId.create("effected/github/GitTag");
 
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
+
 /** How many annotated-tag dereferences to follow before giving up. */
 const MAX_TAG_PEEL = 5;
 
@@ -171,7 +175,7 @@ export class GitTag extends Context.Service<GitTag, GitTagShape>()($I`GitTag`) {
 }
 
 const unstubbed = (member: string): never => {
-	throw new Error(`GitTag.makeTest: ${member}() was called but not stubbed — pass an override.`);
+	throw UnstubbedError.make({ message: `GitTag.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 const shortTag = (tag: string): string => tag.replace(/^refs\/tags\//, "").replace(/^tags\//, "");

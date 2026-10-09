@@ -15,6 +15,15 @@ import type { PageOptions } from "./Rest.ts";
 
 const $I = $ScratchpadId.create("effected/github/GitHubCommit");
 
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}) {}
+
+class CommitFileDecodeError extends S.TaggedError<CommitFileDecodeError>($I`CommitFileDecodeError`)("CommitFileDecodeError", {
+	message: S.String,
+	cause: S.Defect({ includeStack: true }),
+}) {}
+
 /**
  * A commit, projected to what callers read.
  *
@@ -174,7 +183,7 @@ export class GitHubCommit extends Context.Service<GitHubCommit, GitHubCommitShap
 }
 
 const unstubbed = (member: string): never => {
-	throw new Error(`GitHubCommit.makeTest: ${member}() was called but not stubbed — pass an override.`);
+	throw UnstubbedError.make({ message: `GitHubCommit.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 /**
@@ -198,7 +207,7 @@ const summarize = (raw: RawCommit): CommitSummary =>
 		sha: raw.sha,
 		message: raw.commit.message,
 		author: raw.commit.author?.name ?? "Unknown",
-		...(raw.author?.login !== undefined ? { authorLogin: raw.author.login } : {}),
+		...O.getSomesStruct({ authorLogin: O.fromUndefinedOr(raw.author?.login) }),
 		url: raw.html_url,
 		parents: raw.parents.map((parent) => parent.sha),
 	});
@@ -230,7 +239,7 @@ export const fileOf = (raw: RawFile): CommitFile =>
 			deletions: raw.deletions,
 			...O.getSomesStruct({ previousPath: O.fromUndefinedOr(raw.previous_filename) }),
 		}),
-		(error) => new Error("Schema validation failed", { cause: error.issue }),
+		(error) => CommitFileDecodeError.make({ message: "Schema validation failed", cause: error.issue }),
 	);
 
 const make = (client: GitHubClient["Service"]): GitHubCommitShape => ({
@@ -253,8 +262,8 @@ const make = (client: GitHubClient["Service"]): GitHubCommitShape => ({
 			{
 				owner,
 				repo,
-				...(options?.ref !== undefined ? { sha: options.ref } : {}),
-				...(options?.path !== undefined ? { path: options.path } : {}),
+				...O.getSomesStruct({ sha: O.fromUndefinedOr(options?.ref) }),
+				...O.getSomesStruct({ path: O.fromUndefinedOr(options?.path) }),
 			},
 			options?.page,
 		);

@@ -12,6 +12,10 @@ import type { PageOptions } from "./Rest.ts";
 
 const $I = $ScratchpadId.create("effected/github/PullRequestComment");
 
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
+
 /**
  * The hidden marker that makes a comment findable again.
  *
@@ -134,7 +138,7 @@ export class PullRequestComment extends Context.Service<PullRequestComment, Pull
 }
 
 const unstubbed = (member: string): never => {
-	throw new Error(`PullRequestComment.makeTest: ${member}() was called but not stubbed — pass an override.`);
+	throw UnstubbedError.make({ message: `PullRequestComment.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 const recordOf = (raw: { id: number | bigint; body?: string | null; html_url: string }): CommentRecord =>

@@ -15,6 +15,10 @@ import { PageOptions } from "./Rest.ts";
 
 const $I = $ScratchpadId.create("effected/github/WorkflowDispatch");
 
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
+
 /**
  * Where a workflow run has got to.
  *
@@ -177,7 +181,7 @@ export class WorkflowDispatch extends Context.Service<WorkflowDispatch, Workflow
 }
 
 const unstubbed = (member: string): never => {
-  throw new Error(`WorkflowDispatch.makeTest: ${member}() was called but not stubbed — pass an override.`);
+  throw UnstubbedError.make({ message: `WorkflowDispatch.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 const statusOf = (raw: {

@@ -2,12 +2,17 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
 import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/github/CodeScanning");
+
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
 
 /**
  * A CodeQL default-setup configuration.
@@ -109,7 +114,7 @@ export class CodeScanning extends Context.Service<CodeScanning, CodeScanningShap
 }
 
 const unstubbed = (member: string): never => {
-	throw new Error(`CodeScanning.makeTest: ${member}() was called but not stubbed — pass an override.`);
+	throw UnstubbedError.make({ message: `CodeScanning.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 const SETUP_KEYS = [

@@ -2,11 +2,16 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
 
 const $I = $ScratchpadId.create("effected/github/RepositorySecurity");
+
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
 
 /**
  * Read and toggle the three repository security features that have their own
@@ -109,7 +114,7 @@ export class RepositorySecurity extends Context.Service<RepositorySecurity, Repo
 }
 
 const unstubbed = (member: string): never => {
-  throw new Error(`RepositorySecurity.makeTest: ${member}() was called but not stubbed — pass an override.`);
+  throw UnstubbedError.make({ message: `RepositorySecurity.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 const make = (client: GitHubClient["Service"]): RepositorySecurityShape => {

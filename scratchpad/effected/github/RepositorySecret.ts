@@ -2,6 +2,7 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import { GitHubClient } from "./GitHubClient.ts";
@@ -10,6 +11,10 @@ import { encryptSecret } from "./internal/crypto.ts";
 import { Repo } from "./Repo.ts";
 
 const $I = $ScratchpadId.create("effected/github/RepositorySecret");
+
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
 
 /**
  * Which secret store an operation acts on.
@@ -157,7 +162,7 @@ export class RepositorySecret extends Context.Service<RepositorySecret, Reposito
 }
 
 const unstubbed = (member: string): never => {
-  throw new Error(`RepositorySecret.makeTest: ${member}() was called but not stubbed — pass an override.`);
+  throw UnstubbedError.make({ message: `RepositorySecret.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 /**

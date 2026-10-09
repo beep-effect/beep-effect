@@ -11,6 +11,10 @@ import type { PageOptions } from "./Rest.ts";
 
 const $I = $ScratchpadId.create("effected/github/GitHubRelease");
 
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
+
 /**
  * A release, projected to the fields callers read.
  *
@@ -156,7 +160,7 @@ export class GitHubRelease extends Context.Service<GitHubRelease, GitHubReleaseS
 }
 
 const unstubbed = (member: string): never => {
-	throw new Error(`GitHubRelease.makeTest: ${member}() was called but not stubbed — pass an override.`);
+	throw UnstubbedError.make({ message: `GitHubRelease.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 interface RawRelease {

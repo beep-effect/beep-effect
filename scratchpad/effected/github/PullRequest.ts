@@ -16,6 +16,10 @@ import { PageOptions } from "./Rest.ts";
 
 const $I = $ScratchpadId.create("effected/github/PullRequest");
 
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}) {}
+
 /** How a pull request is merged. @public */
 export const MergeMethod = S.Literals(["merge", "squash", "rebase"]).pipe($I.annoteSchema("MergeMethod", { description: "How a pull request is merged." }));
 
@@ -274,7 +278,7 @@ export class PullRequest extends Context.Service<PullRequest, PullRequestShape>(
 }
 
 const unstubbed = (member: string): never => {
-	throw new Error(`PullRequest.makeTest: ${member}() was called but not stubbed — pass an override.`);
+	throw UnstubbedError.make({ message: `PullRequest.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 /**
@@ -341,9 +345,9 @@ const make = (client: GitHubClient["Service"]): PullRequestShape => {
 			{
 				owner,
 				repo,
-				...(options?.state !== undefined ? { state: options.state } : {}),
-				...(options?.head !== undefined ? { head: qualifyHead(owner, options.head) } : {}),
-				...(options?.base !== undefined ? { base: options.base } : {}),
+				...O.getSomesStruct({ state: O.fromUndefinedOr(options?.state) }),
+				...O.getSomesStruct({ head: O.map(O.fromUndefinedOr(options?.head), (head) => qualifyHead(owner, head)) }),
+				...O.getSomesStruct({ base: O.fromUndefinedOr(options?.base) }),
 			},
 			options?.page,
 		);
@@ -481,9 +485,9 @@ const make = (client: GitHubClient["Service"]): PullRequestShape => {
 				owner,
 				repo,
 				pull_number: number,
-				...(options?.method !== undefined ? { merge_method: options.method } : {}),
-				...(options?.commitTitle !== undefined ? { commit_title: options.commitTitle } : {}),
-				...(options?.commitMessage !== undefined ? { commit_message: options.commitMessage } : {}),
+				...O.getSomesStruct({ merge_method: O.fromUndefinedOr(options?.method) }),
+				...O.getSomesStruct({ commit_title: O.fromUndefinedOr(options?.commitTitle) }),
+				...O.getSomesStruct({ commit_message: O.fromUndefinedOr(options?.commitMessage) }),
 			});
 			return merged.sha;
 		}),
@@ -512,8 +516,8 @@ const make = (client: GitHubClient["Service"]): PullRequestShape => {
 				owner,
 				repo,
 				pull_number: number,
-				...(reviewers.users !== undefined ? { reviewers: [...reviewers.users] } : {}),
-				...(reviewers.teams !== undefined ? { team_reviewers: [...reviewers.teams] } : {}),
+				...O.getSomesStruct({ reviewers: O.map(O.fromUndefinedOr(reviewers.users), (values) => [...values]) }),
+				...O.getSomesStruct({ team_reviewers: O.map(O.fromUndefinedOr(reviewers.teams), (values) => [...values]) }),
 			});
 		}),
 

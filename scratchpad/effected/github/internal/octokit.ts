@@ -88,10 +88,10 @@ const makeOctokit = (options: TransportOptions): Octokit =>
 	new Octokit({
 		// The one deliberate unwrap in this package: octokit needs the string.
 		// Nothing downstream re-exposes it — errors, spans and logs never carry it.
-		...(options.token !== undefined ? { auth: Redacted.value(options.token) } : {}),
+		...O.getSomesStruct({ auth: O.map(O.fromUndefinedOr(options.token), Redacted.value) }),
 		...O.getSomesStruct({ baseUrl: O.fromUndefinedOr(options.baseUrl) }),
 		...O.getSomesStruct({ userAgent: O.fromUndefinedOr(options.userAgent) }),
-		...(options.fetch !== undefined ? { request: { fetch: options.fetch } } : {}),
+		...O.getSomesStruct({ request: O.map(O.fromUndefinedOr(options.fetch), (fetch) => ({ fetch })) }),
 		log: SILENT_LOG,
 	});
 
@@ -102,8 +102,7 @@ const makeOctokit = (options: TransportOptions): Octokit =>
  * The rate-limit cell lives here, in the closure of the layer that writes it,
  * so the writer and the reader can never see different cells.
  */
-export const makeTransport = (options: TransportOptions): Effect.Effect<Transport> =>
-	Effect.gen(function* () {
+export const makeTransport = Effect.fn("makeTransport")(function* (options: TransportOptions): Effect.fn.Return<Transport> {
 		const octokit = makeOctokit(options);
 		const snapshot = yield* Ref.make(O.none<RateLimitSnapshot>());
 		const policy = options.retry;
@@ -126,13 +125,11 @@ export const makeTransport = (options: TransportOptions): Effect.Effect<Transpor
 			classify: (error: unknown, nowMillis: number) => E,
 		): Effect.Effect<A, E> =>
 			Effect.tryPromise({ try: call, catch: (error) => new TransportFailure({ error }) }).pipe(
-				Effect.catch(({ error }) =>
-					Effect.gen(function* () {
+				Effect.catch(Effect.fnUntraced(function* ({ error }) {
 						const now = yield* Clock.currentTimeMillis;
 						yield* record(readThrownHeaders(error));
 						return yield* Effect.fail(classify(error, now));
-					}),
-				),
+				})),
 			);
 
 		const withRetry = <A, E extends RetryableFailure>(
@@ -206,7 +203,7 @@ export const makeTransport = (options: TransportOptions): Effect.Effect<Transpor
 
 /** Merge our abort signal into octokit's per-request options without clobbering them. */
 const withSignal = (params: Record<string, unknown>, signal: AbortSignal): Record<string, unknown> => {
-	const existing = typeof params.request === "object" && params.request !== null ? params.request : {};
+	const existing = P.isObjectKeyword(params.request) && !P.isFunction(params.request) ? params.request : {};
 	return { ...params, request: { ...existing, signal } };
 };
 

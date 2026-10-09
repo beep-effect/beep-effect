@@ -11,6 +11,10 @@ import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/github/ArtifactMetadata");
 
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
+
 /**
  * What to record about a published artifact.
  *
@@ -79,7 +83,7 @@ export class ArtifactMetadata extends Context.Service<ArtifactMetadata, Artifact
 }
 
 const unstubbed = (member: string): never => {
-	throw new Error(`ArtifactMetadata.makeTest: ${member}() was called but not stubbed — pass an override.`);
+	throw UnstubbedError.make({ message: `ArtifactMetadata.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 const make = (client: GitHubClient["Service"]): ArtifactMetadataShape => ({

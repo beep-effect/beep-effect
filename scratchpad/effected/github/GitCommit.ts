@@ -10,6 +10,10 @@ import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/github/GitCommit");
 
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
+
 /**
  * A blob's file mode, as the Git Database API spells it.
  *
@@ -162,7 +166,7 @@ export class GitCommit extends Context.Service<GitCommit, GitCommitShape>()($I`G
 }
 
 const unstubbed = (member: string): never => {
-	throw new Error(`GitCommit.makeTest: ${member}() was called but not stubbed — pass an override.`);
+	throw UnstubbedError.make({ message: `GitCommit.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 /** The Git Database tree entry for one change. */

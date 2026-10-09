@@ -4,6 +4,7 @@ import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -19,6 +20,14 @@ import type * as Rest from "./Rest.ts";
 import type { PageOptions } from "./Rest.ts";
 
 const $I = $ScratchpadId.create("effected/github/GitHubClient");
+
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}) {}
+
+class FixtureError extends S.TaggedError<FixtureError>($I`FixtureError`)("FixtureError", {
+	message: S.String,
+}) {}
 
 /** GitHub's own maximum page size, and the default this package requests. */
 const DEFAULT_PER_PAGE = 100;
@@ -234,9 +243,9 @@ const resolvePolicy = (retry: RetryPolicy | "off" | undefined): RetryPolicy =>
 const perPageOf = (options: PageOptions | undefined): number => options?.perPage ?? DEFAULT_PER_PAGE;
 
 const unstubbed = (member: string): never => {
-	throw new Error(
-		`GitHubClient.makeTest: ${member}() was called but not stubbed — pass an override, or use GitHubClient.layerFixture for recorded responses.`,
-	);
+	throw UnstubbedError.make({
+		message: `GitHubClient.makeTest: ${member}() was called but not stubbed — pass an override, or use GitHubClient.layerFixture for recorded responses.`,
+	});
 };
 
 /**
@@ -360,10 +369,9 @@ export class GitHubClient extends Context.Service<GitHubClient, GitHubClientShap
  *
  * @internal
  */
-export const makeClientShape = (
+export const makeClientShape = Effect.fn("makeClientShape")(function* (
 	options: Omit<GitHubClientOptions, "token"> & { readonly token?: Redacted.Redacted<string> | undefined },
-): Effect.Effect<GitHubClientShape> =>
-	Effect.gen(function* () {
+): Effect.fn.Return<GitHubClientShape> {
 		const transport = yield* makeTransport({
 			token: options.token,
 			retry: resolvePolicy(options.retry),
@@ -460,29 +468,24 @@ const makeFixture = (fixtures: GitHubFixtures): GitHubClientShape => {
 
 		const recorded: Result.Result<ReadonlyArray<Rest.Item<R>>, GitHubError> | undefined = fixtures.paginate?.[route];
 		if (recorded === undefined) {
-			switch (fixtures.unstubbed ?? "die") {
-				case "fail":
-					return Stream.fail(GitHubError.notFound("GitHubClient.paginate", `fixture for ${route}`));
-				case "empty":
-					return Stream.empty;
-				default:
-					return Stream.die(new Error(`GitHubClient.paginate: no fixture for ${route}`));
-			}
+			return Match.value(fixtures.unstubbed ?? "die").pipe(
+				Match.when("fail", () => Stream.fail(GitHubError.notFound("GitHubClient.paginate", `fixture for ${route}`))),
+				Match.when("empty", () => Stream.empty),
+				Match.when("die", () => Stream.die(FixtureError.make({ message: `GitHubClient.paginate: no fixture for ${route}` }))),
+				Match.exhaustive,
+			);
 		}
 		if (Result.isFailure(recorded)) return Stream.fail(recorded.failure);
 		return paginate<Rest.Item<R>>(() => fromArray(recorded.success, perPage), options?.maxPages);
 	};
 
 	// A missing fixture is wiring, not a domain condition — see `unstubbed`.
-	const missing = (method: string, route: string): Effect.Effect<never, GitHubError> => {
-		switch (fixtures.unstubbed ?? "die") {
-			case "fail":
-			case "empty":
-				return Effect.fail(GitHubError.notFound(method, `fixture for ${route}`));
-			default:
-				return Effect.die(new Error(`${method}: no fixture for ${route}`));
-		}
-	};
+	const missing = (method: string, route: string): Effect.Effect<never, GitHubError> =>
+		Match.value(fixtures.unstubbed ?? "die").pipe(
+			Match.when(Match.is("fail", "empty"), () => Effect.fail(GitHubError.notFound(method, `fixture for ${route}`))),
+			Match.when("die", () => Effect.die(FixtureError.make({ message: `${method}: no fixture for ${route}` }))),
+			Match.exhaustive,
+		);
 
 	return {
 		request: <R extends Rest.Route>(route: R, params: Rest.Params<R>) => {
@@ -510,7 +513,7 @@ const makeFixture = (fixtures: GitHubFixtures): GitHubClientShape => {
 			requested?.push({ kind: "graphql", route: document.name, params: variables });
 			const raw = fixtures.graphql?.[document.name];
 			return raw === undefined
-				? Effect.die(new Error(`GitHubClient.layerFixture: no graphql fixture for ${document.name}`))
+				? Effect.die(FixtureError.make({ message: `GitHubClient.layerFixture: no graphql fixture for ${document.name}` }))
 				: document
 						.decode(raw)
 						.pipe(

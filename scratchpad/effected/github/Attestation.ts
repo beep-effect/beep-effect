@@ -10,6 +10,10 @@ import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/github/Attestation");
 
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
+
 /**
  * The api-version this surface pins.
  *
@@ -111,7 +115,7 @@ export class Attestation extends Context.Service<Attestation, AttestationShape>(
 }
 
 const unstubbed = (member: string): never => {
-	throw new Error(`Attestation.makeTest: ${member}() was called but not stubbed — pass an override.`);
+	throw UnstubbedError.make({ message: `Attestation.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 const make = (client: GitHubClient["Service"]): AttestationShape => ({
@@ -143,7 +147,7 @@ const make = (client: GitHubClient["Service"]): AttestationShape => ({
 					owner,
 					repo,
 					subject_digest: digest,
-					...(options?.predicateType !== undefined ? { predicate_type: options.predicateType } : {}),
+					...O.getSomesStruct({ predicate_type: O.fromUndefinedOr(options?.predicateType) }),
 					headers: { "x-github-api-version": API_VERSION },
 				},
 				ListResponse,

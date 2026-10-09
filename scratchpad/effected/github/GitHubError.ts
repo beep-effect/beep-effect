@@ -1,6 +1,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as HashSet from "effect/HashSet";
 import { headerNumber, headerString, retryAfterMillisFrom } from "./internal/headers.ts";
 import * as A from "effect/Array";
 import * as O from "@beep/utils/Option";
@@ -224,8 +225,8 @@ export class GitHubError extends S.TaggedError<GitHubError>($I`GitHubError`)("Gi
 	 * ```
 	 */
 	static hasKind(...kinds: ReadonlyArray<(typeof GitHubErrorKind.literals)[number]>): (error: GitHubError) => boolean {
-		const set = new Set<string>(kinds);
-		return (error) => set.has(error.kind);
+		const set = HashSet.fromIterable<string>(kinds);
+		return (error) => HashSet.has(set, error.kind);
 	}
 
 	/**
@@ -251,8 +252,8 @@ export class GitHubError extends S.TaggedError<GitHubError>($I`GitHubError`)("Gi
 	static hasValidationCode(
 		...codes: ReadonlyArray<(typeof GitHubValidationCode.literals)[number]>
 	): (error: GitHubError) => boolean {
-		const set = new Set<string>(codes);
-		return (error) => error.validation?.some((entry) => entry.code !== undefined && set.has(entry.code)) ?? false;
+		const set = HashSet.fromIterable<string>(codes);
+		return (error) => error.validation?.some((entry) => entry.code !== undefined && HashSet.has(set, entry.code)) ?? false;
 	}
 }
 

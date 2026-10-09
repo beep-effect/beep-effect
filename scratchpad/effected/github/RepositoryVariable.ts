@@ -2,12 +2,17 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
 import type * as Rest from "./Rest.ts";
 
 const $I = $ScratchpadId.create("effected/github/RepositoryVariable");
+
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
 
 /**
  * A variable's name and value, as listing returns it.
@@ -137,7 +142,7 @@ export class RepositoryVariable extends Context.Service<RepositoryVariable, Repo
 }
 
 const unstubbed = (member: string): never => {
-  throw new Error(`RepositoryVariable.makeTest: ${member}() was called but not stubbed — pass an override.`);
+  throw UnstubbedError.make({ message: `RepositoryVariable.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 const make = (client: GitHubClient["Service"]): RepositoryVariableShape => {

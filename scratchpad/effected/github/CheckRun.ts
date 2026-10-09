@@ -15,6 +15,10 @@ import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/github/CheckRun");
 
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+  message: S.String,
+}) {}
+
 /** How a check run finished. @public */
 export const CheckConclusion = S.Literals([
   "success",
@@ -88,8 +92,8 @@ export class CheckRunOutput extends S.Class<CheckRunOutput>($I`CheckRunOutput`)(
     return CheckRunOutput.make({
       title: this.title,
       summary: capBytes(this.summary),
-      ...(this.text !== undefined ? { text: capBytes(this.text) } : {}),
-      ...(annotations !== undefined ? { annotations: annotations.slice(0, CheckRunOutput.MAX_ANNOTATIONS) } : {}),
+      ...O.getSomesStruct({ text: O.map(O.fromUndefinedOr(this.text), capBytes) }),
+      ...O.getSomesStruct({ annotations: O.map(O.fromUndefinedOr(annotations), (values) => values.slice(0, CheckRunOutput.MAX_ANNOTATIONS)) }),
     });
   }
 }
@@ -255,7 +259,7 @@ export class CheckRun extends Context.Service<CheckRun, CheckRunShape>()($I`Chec
 }
 
 const unstubbed = (member: string): never => {
-  throw new Error(`CheckRun.makeTest: ${member}() was called but not stubbed — pass an override.`);
+  throw UnstubbedError.make({ message: `CheckRun.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 const wireOutput = (output: CheckRunOutput) => {
@@ -264,18 +268,16 @@ const wireOutput = (output: CheckRunOutput) => {
     title: capped.title,
     summary: capped.summary,
     ...O.getSomesStruct({ text: O.fromUndefinedOr(capped.text) }),
-    ...(capped.annotations !== undefined
-      ? {
-        annotations: capped.annotations.map((annotation) => ({
+    ...O.getSomesStruct({
+      annotations: O.map(O.fromUndefinedOr(capped.annotations), (annotations) => annotations.map((annotation) => ({
           path: annotation.path,
           start_line: annotation.startLine,
           end_line: annotation.endLine,
           annotation_level: annotation.level,
           message: annotation.message,
           ...O.getSomesStruct({ title: O.fromUndefinedOr(annotation.title) }),
-        })),
-      }
-      : {}),
+      }))),
+    }),
   };
 };
 
@@ -388,7 +390,7 @@ const make = (client: GitHubClient["Service"]): CheckRunShape => {
       status: "completed",
       conclusion,
       completed_at: DateTime.formatIso(yield* DateTime.now),
-      ...(output !== undefined ? { output: wireOutput(output) } : {}),
+      ...O.getSomesStruct({ output: O.map(O.fromUndefinedOr(output), wireOutput) }),
     });
   });
 

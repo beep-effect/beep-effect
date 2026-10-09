@@ -2,7 +2,7 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import { GitHubError } from "./GitHubError.ts";
@@ -10,6 +10,10 @@ import { Repo } from "./Repo.ts";
 import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effected/github/GitHubContent");
+
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
 
 const JsonValue = S.fromJsonString(S.String);
 
@@ -83,7 +87,7 @@ export class GitHubContent extends Context.Service<GitHubContent, GitHubContentS
 }
 
 const unstubbed = (member: string): never => {
-	throw new Error(`GitHubContent.makeTest: ${member}() was called but not stubbed — pass an override.`);
+	throw UnstubbedError.make({ message: `GitHubContent.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 const make = (client: GitHubClient["Service"]): GitHubContentShape => {
@@ -97,7 +101,7 @@ const make = (client: GitHubClient["Service"]): GitHubContentShape => {
 			owner,
 			repo,
 			path,
-			...(options?.ref !== undefined ? { ref: options.ref } : {}),
+			...O.getSomesStruct({ ref: O.fromUndefinedOr(options?.ref) }),
 		});
 		// A directory comes back as an array. Reading one as a file would be a
 		// silent type confusion.

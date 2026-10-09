@@ -11,6 +11,10 @@ import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/github/Ruleset");
 
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
+
 /**
  * A ruleset, as listing returns it.
  *
@@ -391,7 +395,7 @@ export class Ruleset extends Context.Service<Ruleset, RulesetShape>()($I`Ruleset
 }
 
 const unstubbed = (member: string): never => {
-  throw new Error(`Ruleset.makeTest: ${member}() was called but not stubbed — pass an override.`);
+  throw UnstubbedError.make({ message: `Ruleset.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 /** An inherited ruleset belongs to the organization and is not this repository's to write. */

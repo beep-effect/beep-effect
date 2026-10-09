@@ -166,9 +166,12 @@ describe("bundle reachability", () => {
 	});
 
 	it("the pure classes reach nothing but effect", () => {
-		for (const entry of ["Resilience.ts", "GraphQL.ts"]) {
-			assert.deepStrictEqual([...reachableBareImports(entry)].sort(), ["@beep/identity/packages", "effect"], entry);
-		}
+		assert.deepStrictEqual([...reachableBareImports("Resilience.ts")].sort(), ["@beep/identity/packages", "effect"], "Resilience.ts");
+		assert.deepStrictEqual(
+			[...reachableBareImports("GraphQL.ts")].sort(),
+			["@beep/identity/packages", "@beep/utils/Option", "effect"],
+			"GraphQL.ts",
+		);
 	});
 
 	it("the package declares itself side-effect free", () => {

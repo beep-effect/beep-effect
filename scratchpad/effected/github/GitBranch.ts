@@ -12,6 +12,10 @@ import { Repo } from "./Repo.ts";
 
 const $I = $ScratchpadId.create("effected/github/GitBranch");
 
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
+
 const CreateLinkedBranch = GraphQLDocument.make({
   name: "createLinkedBranch",
   document: `mutation ($issueId: ID!, $name: String!, $oid: GitObjectID!, $repositoryId: ID!) {
@@ -157,7 +161,7 @@ export class GitBranch extends Context.Service<GitBranch, GitBranchShape>()($I`G
 }
 
 const unstubbed = (member: string): never => {
-  throw new Error(`GitBranch.makeTest: ${member}() was called but not stubbed — pass an override.`);
+  throw UnstubbedError.make({ message: `GitBranch.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 /**

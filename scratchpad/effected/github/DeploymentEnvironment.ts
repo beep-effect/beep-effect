@@ -2,11 +2,16 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
 
 const $I = $ScratchpadId.create("effected/github/DeploymentEnvironment");
+
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
 
 /**
  * A deployment environment, as listing returns it.
@@ -104,7 +109,7 @@ export class DeploymentEnvironment extends Context.Service<DeploymentEnvironment
 }
 
 const unstubbed = (member: string): never => {
-	throw new Error(`DeploymentEnvironment.makeTest: ${member}() was called but not stubbed — pass an override.`);
+	throw UnstubbedError.make({ message: `DeploymentEnvironment.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 const make = (client: GitHubClient["Service"]): DeploymentEnvironmentShape => {

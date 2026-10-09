@@ -1,6 +1,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
@@ -16,6 +17,10 @@ import * as P from "effect/Predicate";
 import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/github/GitHubIssue");
+
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
 
 /**
  * An issue, projected to what callers read.
@@ -263,7 +268,7 @@ export class GitHubIssue extends Context.Service<GitHubIssue, GitHubIssueShape>(
 }
 
 const unstubbed = (member: string): never => {
-	throw new Error(`GitHubIssue.makeTest: ${member}() was called but not stubbed — pass an override.`);
+	throw UnstubbedError.make({ message: `GitHubIssue.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 /**
@@ -338,8 +343,10 @@ const make = (client: GitHubClient["Service"]): GitHubIssueShape => ({
 			{
 				owner,
 				repo,
-				...(options?.state !== undefined ? { state: options.state } : {}),
-				...(options?.labels !== undefined ? { labels: options.labels.join(",") } : {}),
+				...O.getSomesStruct({
+					state: O.fromUndefinedOr(options?.state),
+					labels: O.map(O.fromUndefinedOr(options?.labels), (labels) => labels.join(",")),
+				}),
 				headers: API_VERSION_HEADERS,
 			},
 			options?.page,
@@ -410,7 +417,7 @@ const make = (client: GitHubClient["Service"]): GitHubIssueShape => ({
 		const { owner, repo } = yield* Repo;
 		yield* Effect.annotateCurrentSpan({ owner, repo, prNumber });
 		const result = yield* client.graphql(LinkedIssuesDocument, { owner, repo, prNumber });
-		const manual = new Set(result.repository.pullRequest.manuallyLinked.nodes.map((node) => node.number));
+		const manual = HashSet.fromIterable(result.repository.pullRequest.manuallyLinked.nodes.map((node) => node.number));
 		return result.repository.pullRequest.allLinked.nodes.map((node) =>
 			LinkedIssue.make({
 				number: node.number,
@@ -418,7 +425,7 @@ const make = (client: GitHubClient["Service"]): GitHubIssueShape => ({
 				state: node.state,
 				url: node.url,
 				nodeId: node.id,
-				userLinked: manual.has(node.number),
+				userLinked: HashSet.has(manual, node.number),
 			}),
 		);
 	}),

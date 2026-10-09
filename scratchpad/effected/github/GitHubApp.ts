@@ -10,6 +10,7 @@ import * as O from "@beep/utils/Option";
 import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import githubAppJwt from "universal-github-app-jwt";
@@ -21,6 +22,10 @@ import { numericId } from "./internal/ids.ts";
 import type { RetryPolicy } from "./Resilience.ts";
 
 const $I = $ScratchpadId.create("effected/github/GitHubApp");
+
+class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
+	message: S.String,
+}, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
 
 /**
  * A GitHub App call failed.
@@ -399,7 +404,7 @@ export interface GitHubAppShape {
 }
 
 const unstubbed = (member: string): never => {
-	throw new Error(`GitHubApp.makeTest: ${member}() was called but not stubbed — pass an override.`);
+	throw UnstubbedError.make({ message: `GitHubApp.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
 /** Mint an app JWT. The only cryptography in this package, and it is a leaf call. */
@@ -523,8 +528,9 @@ function makeApp(options: GitHubAppOptions): Effect.Effect<GitHubAppShape> {
 const normalizePermissions = (raw: unknown): Record<string, string> => {
 	if (!P.isObjectOrArray(raw)) return {};
 	const out: Record<string, string> = {};
-	for (const [key, value] of Object.entries(raw)) {
-		if (typeof value === "string") out[key] = value;
+	const entries = P.isObject(raw) ? R.toEntries(raw) : R.toEntries<keyof typeof raw & string, unknown>(raw);
+	for (const [key, value] of entries) {
+		if (P.isString(value)) out[key] = value;
 	}
 	return out;
 };
@@ -538,84 +544,83 @@ const normalizePermissions = (raw: unknown): Record<string, string> => {
  * expiry". Rotating revokes the token it replaces, so at most one live token
  * exists at a time and the scope's release revokes the last of them.
  */
-const makeRotatingClient = (
+const makeRotatingClient = Effect.fn("makeRotatingClient")(function* (
 	app: GitHubAppShape,
 	request: TokenRequest,
 	options: GitHubAppOptions,
-): Effect.Effect<GitHubClientShape, GitHubAppError, Scope.Scope> =>
-	Effect.gen(function* () {
-		const held = yield* Ref.make(O.none<{ token: InstallationToken; client: GitHubClientShape }>());
+): Effect.fn.Return<GitHubClientShape, GitHubAppError, Scope.Scope> {
+	const held = yield* Ref.make(O.none<{ token: InstallationToken; client: GitHubClientShape }>());
 
-		const revokeHeld = Effect.flatMap(Ref.get(held), (current) =>
-			O.isSome(current) ? Effect.ignore(app.revoke(current.value.token.token)) : Effect.void,
-		);
+	const revokeHeld = Effect.flatMap(Ref.get(held), (current) =>
+		O.isSome(current) ? Effect.ignore(app.revoke(current.value.token.token)) : Effect.void,
+	);
 
-		const rotate = Effect.gen(function* () {
-			yield* revokeHeld;
-			const minted = yield* app.token(request);
-			const client = yield* makeClientShape({ ...options, token: minted.token });
-			yield* Ref.set(held, O.some({ token: minted, client }));
-			return client;
-		});
+	const rotate = Effect.gen(function* () {
+		yield* revokeHeld;
+		const minted = yield* app.token(request);
+		const client = yield* makeClientShape({ ...options, token: minted.token });
+		yield* Ref.set(held, O.some({ token: minted, client }));
+		return client;
+	});
 
-		// Mint eagerly so a misconfigured app fails at layer construction, where
-		// the error is a `GitHubAppError` a caller can read, rather than on the
-		// first request as an opaque authorization failure.
-		yield* rotate;
-		yield* Effect.addFinalizer(() => revokeHeld);
+	// Mint eagerly so a misconfigured app fails at layer construction, where
+	// the error is a `GitHubAppError` a caller can read, rather than on the
+	// first request as an opaque authorization failure.
+	yield* rotate;
+	yield* Effect.addFinalizer(() => revokeHeld);
 
-		/** The live client, re-minting first if the held token is spent. */
-		const fresh: Effect.Effect<GitHubClientShape, GitHubAppError> = Effect.gen(function* () {
-			const now = yield* Clock.currentTimeMillis;
-			const state = yield* Ref.get(held);
-			if (O.isSome(state) && !state.value.token.isExpired(now)) return state.value.client;
-			return yield* rotate;
-		});
+	/** The live client, re-minting first if the held token is spent. */
+	const fresh: Effect.Effect<GitHubClientShape, GitHubAppError> = Effect.gen(function* () {
+		const now = yield* Clock.currentTimeMillis;
+		const state = yield* Ref.get(held);
+		if (O.isSome(state) && !state.value.token.isExpired(now)) return state.value.client;
+		return yield* rotate;
+	});
 
-		// A credential failure is reported in the channel the caller is already
-		// handling: "could not authenticate" IS an authorization failure from a
-		// request's point of view, and widening every method's error type to add a
-		// GitHubAppError would tax every caller for a case only this layer can
-		// produce.
-		const current: Effect.Effect<GitHubClientShape, GitHubError> = fresh.pipe(
-			Effect.catchTag("GitHubAppError", (error) =>
-				Effect.fail(
-					GitHubError.make({
+	// A credential failure is reported in the channel the caller is already
+	// handling: "could not authenticate" IS an authorization failure from a
+	// request's point of view, and widening every method's error type to add a
+	// GitHubAppError would tax every caller for a case only this layer can
+	// produce.
+	const current: Effect.Effect<GitHubClientShape, GitHubError> = fresh.pipe(
+		Effect.catchTag("GitHubAppError", (error) =>
+			Effect.fail(
+				GitHubError.make({
     kind: "unauthorized",
     operation: "GitHubApp.clientLayer",
     reason: error.reason,
     cause: error,
 }),
-				),
 			),
-		);
+		),
+	);
 
-		const currentForGraphQL: Effect.Effect<GitHubClientShape, GitHubGraphQLError> = fresh.pipe(
-			Effect.catchTag("GitHubAppError", (error) =>
-				Effect.fail(
-					GitHubGraphQLError.make({
+	const currentForGraphQL: Effect.Effect<GitHubClientShape, GitHubGraphQLError> = fresh.pipe(
+		Effect.catchTag("GitHubAppError", (error) =>
+			Effect.fail(
+				GitHubGraphQLError.make({
     kind: "unauthorized",
     operation: "GitHubApp.clientLayer",
     reason: error.reason,
     errors: [],
     cause: error,
 }),
-				),
 			),
-		);
+		),
+	);
 
-		return {
-			request: (route, params) => Effect.flatMap(current, (client) => client.request(route, params)),
-			requestDecoded: (route, params, schema) =>
-				Effect.flatMap(current, (client) => client.requestDecoded(route, params, schema)),
-			paginate: (route, params, pageOptions) =>
-				Effect.flatMap(current, (client) => client.paginate(route, params, pageOptions)),
-			paginateStream: (route, params, pageOptions) =>
-				Stream.unwrap(Effect.map(current, (client) => client.paginateStream(route, params, pageOptions))),
-			graphql: (document, variables) =>
-				Effect.flatMap(currentForGraphQL, (client) => client.graphql(document, variables)),
-			rateLimit: Effect.flatMap(Ref.get(held), (state) =>
-				O.isSome(state) ? state.value.client.rateLimit : Effect.succeedNone,
-			),
-		} satisfies GitHubClientShape;
-	});
+	return {
+		request: (route, params) => Effect.flatMap(current, (client) => client.request(route, params)),
+		requestDecoded: (route, params, schema) =>
+			Effect.flatMap(current, (client) => client.requestDecoded(route, params, schema)),
+		paginate: (route, params, pageOptions) =>
+			Effect.flatMap(current, (client) => client.paginate(route, params, pageOptions)),
+		paginateStream: (route, params, pageOptions) =>
+			Stream.unwrap(Effect.map(current, (client) => client.paginateStream(route, params, pageOptions))),
+		graphql: (document, variables) =>
+			Effect.flatMap(currentForGraphQL, (client) => client.graphql(document, variables)),
+		rateLimit: Effect.flatMap(Ref.get(held), (state) =>
+			O.isSome(state) ? state.value.client.rateLimit : Effect.succeedNone,
+		),
+	} satisfies GitHubClientShape;
+});
