@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` — P0 complete; P1 implemented locally with package proof queued.
+Status: `active` — P0 complete; P1 implemented locally, blocked by the new private-changeset policy. Final package retries were canceled before execution.
 
 ## Phases
 

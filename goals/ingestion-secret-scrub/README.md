@@ -34,14 +34,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 complete. P1 implementation is in progress: the canonical bank, scrub transform
-and FilingDecisionLlm gate are implemented locally; required package proof is queued.
+P0 complete. P1 is implemented locally and blocked before its implementation push.
+Main PR #1566 now forbids changesets for private workspaces, while the lane brief
+requires six such notes. `beep quality changeset-graph` rejects all six. The
+orchestrator must reconcile that requirement; the lane retains the required notes.
+PR #1570 remains draft at the wave-1 head. No completion or merge-readiness claim.
 
 ## Latest Evidence
 
 P0 audit baseline: `36027982f2`. All declared prerequisites re-confirmed; adoption
 plan reports zero conflicts. Rule inventory and autonomy decisions are recorded.
-Synthetic fixtures: 25 scrub cases and 7 old/new consumer cases. Single-file fixture
+Wave-1 synthetic fixtures: 25 scrub cases and 7 old/new consumer cases. Single-file fixture
 integrity: 2 tests pass. Live legacy-rendering comparison: 0 mismatches. Exact-canary
 scan of fixture/test/scanner source, inventory, friction receipt, SPEC and handoff:
 each count 0, pass. Direct fixture gitleaks scan: pass. Commit-range secrets lane
@@ -57,7 +60,15 @@ scrub results and evidence contain zero tested canaries; no TextAnchor is emitte
 The TestClock proves seven-day raw, thirty-day proof, pin/purpose decisions and
 twelve calendar months across a leap year. Persisted exact-canary scans cover six
 fixture/test sources, five focused-test output files and five packet support files:
-each count 0, pass. Package/default proof and hosted parity remain pending.
+each count 0, pass. The expanded matrix has 27 scrub and 9 renderer fixtures.
+The latest exact scan covers all 81 accumulated local log surfaces, including
+failure output: every count is 0, pass. Schema and file-processing default audits,
+test-tsgo and coverage passed before the final compatibility/parser delta; that
+delta and the three consumer default proofs remain pending. Documents-domain
+package-verify, test-tsgo and coverage pass. Local docgen and the regenerated
+JSDoc ratchet passed before the parser delta; the current final parity run is
+still active. Fallow's introduced parser-complexity finding is repaired and
+awaits re-verification.
 
 First-wave hosted Check: introduced scanner error construction repaired locally
 with schema `.make`. First-wave hosted Lint Policy and local knowledge references:
@@ -68,3 +79,27 @@ the orchestrator owns its consolidated repair. The lane changes no shared policy
 
 Injection findings are the next gated increment. PII/OOXML, sanitizer, guarded
 fetch, resolver, and credential vault work remain outside this packet.
+
+### Latest detached proof and blocker
+
+Observability, ai-metrics and documents-domain default package-verify, test-tsgo
+and scoped coverage pass. Schema and file-processing default package-verify,
+test-tsgo and coverage passed before the final internal parser/consumer-adapter
+delta; their final retry was canceled while still waiting for admission. The
+last documents-server audit failed on an introduced synthetic-model Effect.fn
+policy error. Signed repair `0b100e151782912334784cfafae3d0865ceed1c7` fixes it;
+all five focused gate tests pass, and the inbox row is acknowledged. Its default
+retry was canceled before execution because of the confirmed release-policy
+blocker. All six prior scoped test-tsgo runs passed; final deltas remain unproven
+by default package checks.
+
+Local docgen passes before the final internal parser delta. Regenerated JSDoc
+ratchet passes. Fallow audit and health pass with zero introduced findings after
+the parser complexity repair. Scoped coverage passed for all six packages on
+those recorded runs; the final schema/file-processing/server retries did not run.
+The post-merge knowledge-reference check passes with zero gated observations;
+the earlier inherited observation is cleared by main. Initial hosted
+Coverage Regression failures concern unchanged CLI files, and initial hosted
+Check's scanner-construction error is repaired locally. Current implementation
+has not been pushed, so none of those old hosted results proves the local head.
+All owned jobs are stopped or terminal; no queued proof is reported as executed.

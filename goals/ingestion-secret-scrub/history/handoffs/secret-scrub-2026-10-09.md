@@ -168,3 +168,48 @@ function-policy error in the synthetic model mock. It now uses named Effect.fn,
 with unchanged behavior. Reversal: restore the previous mock; compiler policy
 would reject it again. A signed fix acknowledges the new inbox row; its default
 package proof is being retried before the implementation push.
+
+### 2026-10-09 — blocked after main release-policy merge
+
+Phase reached: P1 implemented locally; P1 remains in progress, P2/P3 pending.
+Merged origin/main `35ed1b5dda91b37a251ddef652cbf95390e631e4` without rebase or
+conflicts. Main PR #1566 rejects changesets naming live private workspaces.
+`bun run beep quality changeset-graph` fails on exactly the six notes required
+by the worker brief. The brief predates that policy and still requires those
+notes, including the major documents-server compatibility note. An orchestrator
+ruling is needed; dropping required deliverables or changing shared policy would
+violate the lane instructions. Decision: retain the notes and stop under the
+named policy-approval condition. Reason: requirements cannot both pass the new
+release guard. Reversal: reconcile the brief and resume its implementation wave.
+
+Proof: observability, repo-ai-metrics and documents-domain default package-verify,
+test-tsgo and coverage pass. Schema/file-processing default proofs, test-tsgo and
+coverage pass before the last internal parser/adapter delta. Documents-server's
+last default audit failed an introduced model-mock function-policy check; signed
+repair `0b100e151782912334784cfafae3d0865ceed1c7` and its five focused gate tests
+pass, and the inbox row is acknowledged. Final schema/file-processing and server
+retries were still in their admission wrappers, without command logs/results;
+stopped those two owned units because of the policy blocker. No canceled job is
+claimed as a pass. Local docgen passes before the internal parser delta; the
+regenerated JSDoc ratchet and repaired Fallow audit/health pass. Knowledge refs
+still has the inherited other-goal observation. Initial hosted CLI coverage reds
+are unrelated; hosted Check's scanner error is repaired locally. Hosted results
+at the wave-1 head do not prove this unpublished implementation.
+
+The wave-1 detached readiness monitor was intentionally canceled and its terminal
+inbox receipt acknowledged, ready for a bounded final monitor after a valid
+implementation/content-final push. All owned units are inactive. Exact scans of
+81 accumulated local logs returned zero on every surface before this blocker;
+final support/output and PR-text scans are recorded below before the final report.
+PR #1570 stays open/draft at the wave-1 remote head. No wave-2 or content-final
+push, packet completion flip, or merge was performed. Resume requires a release
+ruling, the canceled final default proofs, then P1 publication and P2/P3 closeout.
+
+Blocked closeout exact-canary scan: 105 persisted log/support surfaces,
+each count zero, pass. This includes the updated blocked README, PLAN, SPEC,
+manifest, inventory, friction receipt and handoff. No AC4 completion box is ticked
+because P2/P3 and the final reflection are still pending.
+
+Post-merge correction: the latest `bun run knowledge:refs-check` passes with zero
+live gated observations. The earlier inherited knowledge red described above is
+cleared by main. The six-note private-changeset graph failure remains the blocker.

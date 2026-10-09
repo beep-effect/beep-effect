@@ -79,3 +79,19 @@ judgment route for new canonical platform tests would have prevented this detour
 - Attribution: introduced; repair and retry the default audit.
 - Prevention: use Effect.fn for effectful test service implementations from the
   first draft, even when focused runtime tests accept Effect.gen callbacks.
+
+## 2026-10-09 — lane brief conflicts with new release policy
+
+- Work: required main merge before publication and final proof.
+- Evidence: main PR #1566 introduced a private-workspace changeset prohibition.
+  `bun run beep quality changeset-graph` rejects the six lane-required notes with
+  `private workspace changesets are forbidden`. `changeset-status` skips all six
+  private packages, but the graph guard still rejects their notes.
+- Attribution: lane-added references now fail a newly inherited shared policy.
+  The brief explicitly requires one note per edited package and a major note for
+  the changed standalone layer contract; it has not been updated for this policy.
+- Decision: stop under the named policy-approval condition, preserve the six notes
+  and request an orchestrator ruling through the handoff. The lane changes no
+  shared policy. Reversal: resume after the brief reconciles the note requirement.
+- Prevention: invalidate or refresh active lane briefs when a shared release
+  policy changes their required deliverables.
