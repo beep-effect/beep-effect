@@ -207,8 +207,7 @@ const make = (
 
 		/** The cache service, for one key: every failure names it. */
 		const cacheService = (key: string): CacheServiceClient<ActionCacheError> => ({
-			call: (method, body) =>
-				Effect.gen(function* () {
+			call: Effect.fn("call")(function*(method, body) {
 					const { baseUrl, token } = yield* backend;
 					return yield* twirpCall({ http, baseUrl, service: CACHE_SERVICE, token, method, body }).pipe(
 						Effect.mapError((failure) => ActionCacheError.make({ ...twirpFailureFields(failure), key })),
@@ -230,8 +229,7 @@ const make = (
 		 * (`internal/spawn.ts` — the spawner's convenience members each spawn
 		 * independently, so reading both from them would run `tar` twice).
 		 */
-		const tar = (args: ReadonlyArray<string>, key: string, tolerateWarnings: boolean) =>
-			Effect.gen(function* () {
+		const tar = Effect.fn("tar")(function*(args: ReadonlyArray<string>, key: string, tolerateWarnings: boolean) {
 				const { output, code } = yield* spawnOnce(spawner, ChildProcess.make("tar", [...args])).pipe(
 					Effect.mapError(archiveFailed(key)),
 				);

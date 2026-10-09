@@ -16,7 +16,7 @@ import { settle } from "./results.ts";
 /** A scratch tool-cache root, removed by the test that made it. */
 const scratch = () => mkdtempSync(join(tmpdir(), "effected-toolcache-"));
 
-const alwaysFails: typeof globalThis.fetch = async () => new Response("no", { status: 500 });
+const alwaysFails: typeof globalThis.fetch = Object.assign(async () => new Response("no", { status: 500 }), { preconnect: () => {} });
 
 /**
  * The real thing: real filesystem, real `tar`, real `unzip`.
@@ -157,10 +157,10 @@ const exdev = (from: string, to: string) =>
 /** A fetch that counts its calls — the observable for "did it download?". */
 const countingFetch = (respond: () => Response) => {
 	let count = 0;
-	const fetch: typeof globalThis.fetch = async () => {
+	const fetch: typeof globalThis.fetch = Object.assign(async () => {
 		count += 1;
 		return respond();
-	};
+	}, { preconnect: () => {} });
 	return { fetch, count: () => count };
 };
 
@@ -524,7 +524,7 @@ describe("ToolInstaller", () => {
 						const file = yield* (yield* ToolInstaller).download("https://example.test/tool.tar.gz");
 						assert.strictEqual(readFileSync(file, "utf8"), "archive-bytes");
 					}),
-				{ fetch: async () => new Response("archive-bytes", { status: 200 }) },
+				{ fetch: Object.assign(async () => new Response("archive-bytes", { status: 200 }), { preconnect: () => {} }) },
 			),
 		);
 
@@ -539,7 +539,7 @@ describe("ToolInstaller", () => {
 						assert.strictEqual(error.status, 404);
 						assert.isFalse(error.retryable);
 					}),
-				{ fetch: async () => new Response("gone", { status: 404 }) },
+				{ fetch: Object.assign(async () => new Response("gone", { status: 404 }), { preconnect: () => {} }) },
 			),
 		);
 
@@ -568,7 +568,7 @@ describe("ToolInstaller", () => {
 				// the virtual clock the default five-minute budget (plus the two
 				// retries it makes possible) elapses instantly.
 				const root = scratch();
-				const stalled: typeof globalThis.fetch = () => new Promise<Response>(() => {});
+				const stalled: typeof globalThis.fetch = Object.assign(() => new Promise<Response>(() => {}), { preconnect: () => {} });
 				const exit = yield* settle(
 					Effect.flip(
 						Effect.flatMap(ToolInstaller, (installer) => installer.download("https://example.test/stall")).pipe(
@@ -613,7 +613,7 @@ describe("ToolInstaller", () => {
 						// ships a binary the runner cannot execute.
 						assert.strictEqual(statSync(file).mode & 0o777, 0o755);
 					}),
-				{ fetch: async () => new Response(binaryBody, { status: 200 }) },
+				{ fetch: Object.assign(async () => new Response(binaryBody, { status: 200 }), { preconnect: () => {} }) },
 			),
 		);
 
@@ -671,7 +671,7 @@ describe("ToolInstaller", () => {
 				assert.strictEqual(provisioned.binDir, provisioned.directory);
 			}).pipe(
 				Effect.provide(
-					liveWithFileSystem(root, spying, async () => new Response(binaryBody, { status: 200 }), {
+					liveWithFileSystem(root, spying, Object.assign(async () => new Response(binaryBody, { status: 200 }), { preconnect: () => {} }), {
 						RUNNER_OS: "Windows",
 					}),
 				),
@@ -694,7 +694,7 @@ describe("ToolInstaller", () => {
 				assert.lengthOf(chmods, 1, "the Windows test's spy must be able to see a chmod at all");
 				assert.isTrue(chmods[0]?.endsWith("download"), "the chmod lands on the downloaded file, before caching");
 			}).pipe(
-				Effect.provide(liveWithFileSystem(root, spying, async () => new Response(binaryBody, { status: 200 }))),
+				Effect.provide(liveWithFileSystem(root, spying, Object.assign(async () => new Response(binaryBody, { status: 200 }), { preconnect: () => {} }))),
 				Effect.ensuring(Effect.sync(() => rmSync(root, { recursive: true, force: true }))),
 			);
 		});
@@ -717,7 +717,7 @@ describe("ToolInstaller", () => {
 				const found = yield* Effect.flatMap(ToolInstaller, (installer) => installer.find("biome", "2.3.4"));
 				assert.isTrue(Option.isNone(found));
 			}).pipe(
-				Effect.provide(liveWithFileSystem(root, failing, async () => new Response(binaryBody, { status: 200 }))),
+				Effect.provide(liveWithFileSystem(root, failing, Object.assign(async () => new Response(binaryBody, { status: 200 }), { preconnect: () => {} }))),
 				Effect.ensuring(Effect.sync(() => rmSync(root, { recursive: true, force: true }))),
 			);
 		});

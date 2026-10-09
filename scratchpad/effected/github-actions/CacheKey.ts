@@ -379,13 +379,12 @@ export class CacheKey extends Schema.Class<CacheKey>("CacheKey")(
 		if (ordered.length === 0) {
 			return Option.none<string>();
 		}
-		const digests = yield* Effect.all(
-			ordered.map((path) =>
+		const digests = yield* Effect.forEach(
+			ordered, (path) =>
 				fs.readFile(path).pipe(
 					Effect.mapError((cause) => CacheKeyReadError.make({ path, cause })),
 					Effect.map(sha256),
 				),
-			),
 			// The `concurrency` option is load-bearing, not a tuning knob: `Effect.all`
 			// defaults to `concurrency: 1`, so omitting it reads every file one at a
 			// time and this whole shape buys nothing over a sequential loop. Bounded rather than `"unbounded"` because a pattern set can
@@ -476,7 +475,7 @@ export class CacheKey extends Schema.Class<CacheKey>("CacheKey")(
 			// Absent is a miss; unreadable is not, because a key computed without a file the caller asked for
 			// silently restores the wrong cache.
 			const info = yield* fs.stat(target).pipe(
-				Effect.map(Option.some),
+				Effect.asSome,
 				Effect.catchIf(
 					(error) => error.reason._tag === "NotFound",
 					() => Effect.succeedNone,

@@ -264,7 +264,7 @@ describe("GitHubMarkdown", () => {
 		});
 
 		it("a user-supplied format function is the other way a render can throw", () => {
-			const Row = Schema.Struct({ count: Schema.Number });
+			const Row = Schema.Struct({ count: Schema.Finite });
 			// `format` bypasses the codec entirely, so its totality is the caller's
 			// to guarantee — the no-wrapping guidance covers the writer's own
 			// machinery, not arbitrary user code the writer calls.

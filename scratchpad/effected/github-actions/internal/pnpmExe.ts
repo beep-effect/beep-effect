@@ -10,7 +10,7 @@
 // `@pnpm/exe.*` package), never by major version — pnpm 11 and earlier ship
 // no such dependency and keep their Node entry points.
 
-import { Option, Result } from "effect";
+import { Option, Result, Function } from "effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as Hex from "effect/encoding/Hex";
 
@@ -56,14 +56,17 @@ const RUNNER_OS_TO_PLATFORM: Readonly<Record<string, string>> = {
  *
  * @internal
  */
-export const pnpmExeTarget = (runnerOs: string, arch: string, musl: boolean): Option.Option<string> => {
+export const pnpmExeTarget: {
+	(runnerOs: string, arch: string, musl: boolean): Option.Option<string>;
+	(arch: string, musl: boolean): (runnerOs: string) => Option.Option<string>;
+} = Function.dual(3, (runnerOs: string, arch: string, musl: boolean): Option.Option<string> => {
 	const platform = RUNNER_OS_TO_PLATFORM[runnerOs.toLowerCase()];
 	if (platform === undefined) {
 		return Option.none();
 	}
 	const target = `${platform}-${arch}${platform === "linux" && musl ? "-musl" : ""}`;
 	return PNPM_EXE_TARGETS.has(target) ? Option.some(target) : Option.none();
-};
+});
 
 /**
  * Whether the HOST libc is musl, the way the wrapper's `native-binary.mjs`

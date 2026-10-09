@@ -1,8 +1,10 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file processEnvInEffect:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Effect, Latch, Layer, Option } from "effect";
-import { ActionEnvironment } from "../../effected/github-actions/index.ts";
+import { Effect, Latch, Layer, Option, Schema, Result } from "effect";
+import { ActionEnvironment, ActionEnvironmentError } from "../../effected/github-actions/index.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 const BASE = {
 	GITHUB_REPOSITORY: "owner/repo",
@@ -192,19 +194,19 @@ describe("ActionEnvironment", () => {
 					const env = yield* ActionEnvironment;
 					// The type is the assertion: `payload` carries no FileSystem in R,
 					// so a caller never has to re-inject one.
-					const payload: Effect.Effect<unknown, unknown> = env.payload;
+					const payload: Effect.Effect<unknown, ActionEnvironmentError> = env.payload;
 					const value = (yield* payload) as { readonly action?: string };
 					assert.strictEqual(value.action, "opened");
 				}),
 				{ ...BASE, GITHUB_EVENT_PATH: "/event.json" },
-				{ "/event.json": JSON.stringify({ action: "opened" }) },
+				{ "/event.json": Result.getOrThrowWith(Schema.encodeResult(Json)({ action: "opened" }), (error) => error) },
 			),
 		);
 
 		it.effect("fails typed when the payload file is not valid JSON", () =>
 			live(
 				Effect.gen(function* () {
-					const error = yield* Effect.flip((yield* ActionEnvironment).payload);
+					const error = yield* Effect.flip(Effect.asVoid((yield* ActionEnvironment).payload));
 					assert.strictEqual(error.reason, "malformed");
 					assert.strictEqual(error.name, "GITHUB_EVENT_PATH");
 				}),
@@ -216,7 +218,7 @@ describe("ActionEnvironment", () => {
 		it.effect("fails typed when GITHUB_EVENT_PATH is not set", () =>
 			live(
 				Effect.gen(function* () {
-					const error = yield* Effect.flip((yield* ActionEnvironment).payload);
+					const error = yield* Effect.flip(Effect.asVoid((yield* ActionEnvironment).payload));
 					assert.strictEqual(error.name, "GITHUB_EVENT_PATH");
 				}),
 			),
@@ -341,7 +343,7 @@ describe("ActionEnvironment", () => {
 				// The type is half the assertion: an event-driven suite gets its payload
 				// from the STANDARD double, without dropping to makeTest and hand-rolling
 				// a filesystem stub at every site.
-				const payload: Effect.Effect<unknown, unknown> = env.payload;
+				const payload: Effect.Effect<unknown, ActionEnvironmentError> = env.payload;
 				const value = (yield* payload) as { readonly pull_request?: { readonly number?: number } };
 				assert.strictEqual(value.pull_request?.number, 42);
 			}).pipe(
@@ -367,7 +369,7 @@ describe("ActionEnvironment", () => {
 				// TEST_DEFAULTS omits GITHUB_EVENT_PATH on purpose: a suite that forgot
 				// to arrange a payload gets a loud failure naming what is missing, not a
 				// plausible empty object.
-				const error = yield* Effect.flip((yield* ActionEnvironment).payload);
+				const error = yield* Effect.flip(Effect.asVoid((yield* ActionEnvironment).payload));
 				assert.strictEqual(error.name, "GITHUB_EVENT_PATH");
 			}).pipe(Effect.provide(ActionEnvironment.layerTest())),
 		);
@@ -388,7 +390,7 @@ describe("ActionEnvironment", () => {
 			const layer = Layer.effect(
 				ActionEnvironment,
 				ActionEnvironment.makeTest({ GITHUB_EVENT_PATH: "/event.json" }),
-			).pipe(Layer.provide(MemoryFileSystem.layerWith({ "/event.json": JSON.stringify({ action: "opened" }) })));
+			).pipe(Layer.provide(MemoryFileSystem.layerWith({ "/event.json": Result.getOrThrowWith(Schema.encodeResult(Json)({ action: "opened" }), (error) => error) })));
 			return Effect.gen(function* () {
 				const env = yield* ActionEnvironment;
 				assert.deepStrictEqual(yield* env.payload, { action: "opened" });
@@ -404,7 +406,7 @@ describe("ActionEnvironment", () => {
 				ActionEnvironment.makeTest({ GITHUB_EVENT_PATH: "/event.json" }),
 			).pipe(Layer.provide(MemoryFileSystem.layer));
 			return Effect.gen(function* () {
-				const error = yield* Effect.flip((yield* ActionEnvironment).payload);
+				const error = yield* Effect.flip(Effect.asVoid((yield* ActionEnvironment).payload));
 				assert.strictEqual(error.reason, "malformed");
 				assert.strictEqual(error.name, "GITHUB_EVENT_PATH");
 			}).pipe(Effect.provide(layer));

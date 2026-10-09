@@ -1,5 +1,5 @@
 import type { Redacted } from "effect";
-import { Context, Effect, Layer, Option, Schema } from "effect";
+import { Context, Effect, Layer, Option, Schema, DateTime } from "effect";
 import { HttpClient, HttpClientRequest } from "effect/http";
 import type { ActionOutputs } from "./ActionOutputs.ts";
 import type { BlobEnvelopeError } from "./BlobEnvelope.ts";
@@ -185,20 +185,20 @@ export class BlobStore extends Context.Service<BlobStore, BlobStoreShape>()("@be
 	static readonly layerMemory: Layer.Layer<BlobStore> = Layer.sync(BlobStore, () => {
 		const entries = new Map<string, Uint8Array>();
 		return {
-			get: <A, I>(key: string, schema: Schema.Codec<A, I>) =>
+			get: Effect.fn("BlobStore.get")(<A, I>(key: string, schema: Schema.Codec<A, I>) =>
 				Effect.suspend(() => {
 					const stored = entries.get(key);
 					return stored === undefined
 						? Effect.succeed(Option.none<StoredBlob<A>>())
-						: Effect.map(Effect.fromResult(BlobEnvelope.decodeResult(stored, schema)), Option.some);
-				}),
-			put: <A, I>(key: string, blob: StoredBlob<A>, schema: Schema.Codec<A, I>) =>
+						: Effect.asSome(Effect.fromResult(BlobEnvelope.decodeResult(stored, schema)));
+				})),
+			put: Effect.fn("BlobStore.put")(<A, I>(key: string, blob: StoredBlob<A>, schema: Schema.Codec<A, I>) =>
 				Effect.suspend(() =>
 					Effect.map(Effect.fromResult(BlobEnvelope.encodeResult(blob.metadata, blob.body, schema)), (framed) => {
 						entries.set(key, framed);
 					}),
-				),
-			has: (key: string) => Effect.sync(() => entries.has(key)),
+				)),
+			has: Effect.fn("BlobStore.has")((key: string) => Effect.sync(() => entries.has(key))),
 		};
 	});
 }
@@ -230,7 +230,7 @@ const makeS3 = (config: S3Config): Effect.Effect<BlobStoreShape, never, HttpClie
 		const request = (method: string, key: string, body: Uint8Array) => {
 			const path = objectPath(key);
 			const headers = sign(
-				{ method, path, host, headers: {}, body, now: new Date() },
+				{ method, path, host, headers: {}, body, now: DateTime.toDateUtc(DateTime.nowUnsafe()) },
 				{
 					accessKeyId: config.accessKeyId,
 					secretAccessKey,
@@ -257,8 +257,7 @@ const makeS3 = (config: S3Config): Effect.Effect<BlobStoreShape, never, HttpClie
 			status < 200 || status >= 300 ? Effect.fail(BlobStoreError.make({ reason: "refused", key, status })) : Effect.void;
 
 		return {
-			get: <A, I>(key: string, schema: Schema.Codec<A, I>) =>
-				Effect.gen(function* () {
+			get: Effect.fn("get")(function*<A, I>(key: string, schema: Schema.Codec<A, I>) {
 					const response = yield* send("GET", key, new Uint8Array(0));
 					// A miss is not a failure: it is the answer the caller asked for.
 					if (response.status === 404) {
@@ -271,15 +270,13 @@ const makeS3 = (config: S3Config): Effect.Effect<BlobStoreShape, never, HttpClie
 					return Option.some(yield* Effect.fromResult(BlobEnvelope.decodeResult(new Uint8Array(buffer), schema)));
 				}),
 
-			put: <A, I>(key: string, blob: StoredBlob<A>, schema: Schema.Codec<A, I>) =>
-				Effect.gen(function* () {
+			put: Effect.fn("put")(function*<A, I>(key: string, blob: StoredBlob<A>, schema: Schema.Codec<A, I>) {
 					const framed = yield* Effect.fromResult(BlobEnvelope.encodeResult(blob.metadata, blob.body, schema));
 					const response = yield* send("PUT", key, framed);
 					yield* accepted(key, response.status);
 				}),
 
-			has: (key: string) =>
-				Effect.gen(function* () {
+			has: Effect.fn("has")(function*(key: string) {
 					const response = yield* send("HEAD", key, new Uint8Array(0));
 					if (response.status === 404) {
 						return false;

@@ -1,8 +1,10 @@
-import { Context, Effect, FileSystem, Layer, Option, Schema } from "effect";
+import { Context, Effect, FileSystem, Layer, Option, Schema, Result } from "effect";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
 import { ActionOutputs } from "./ActionOutputs.ts";
 import { heredocBlock, isUsableName } from "./internal/runnerFile.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 /**
  * Raised when action state cannot be saved, read or decoded across the phase
@@ -116,8 +118,7 @@ const make = Effect.gen(function* () {
 			return Option.some(decoded);
 		});
 
-	const save = <A, I>(key: string, value: A, schema: Schema.Codec<A, I>) =>
-		Effect.gen(function* () {
+	const save = Effect.fn("save")(function*<A, I>(key: string, value: A, schema: Schema.Codec<A, I>) {
 			const encoded = yield* Schema.encodeUnknownEffect(schema)(value).pipe(
 				Effect.mapError((cause) => ActionStateError.make({ reason: "malformed", key, cause })),
 			);
@@ -130,8 +131,8 @@ const make = Effect.gen(function* () {
 			// noise next to the file append.
 			const { parsed, serialized } = yield* Effect.try({
 				try: () => {
-					const serialized = JSON.stringify(encoded);
-					return { parsed: JSON.parse(serialized) as unknown, serialized };
+					const serialized = Result.getOrThrowWith(Schema.encodeResult(Json)(encoded), (error) => error);
+					return { parsed: Result.getOrThrowWith(Schema.decodeResult(Json)(serialized), (error) => error) as unknown, serialized };
 				},
 				catch: (cause) => ActionStateError.make({ reason: "notPlainJson", key, cause }),
 			});
@@ -146,13 +147,11 @@ const make = Effect.gen(function* () {
 		getOptional: read,
 		get: <A, I>(key: string, schema: Schema.Codec<A, I>) =>
 			Effect.flatMap(read(key, schema), (found) =>
-				Option.isSome(found)
-					? Effect.succeed(found.value)
-					: Effect.fail(ActionStateError.make({ reason: "missing", key })),
+				Effect.fromOption(found, () => ActionStateError.make({ reason: "missing", key })),
 			),
 		saveSecret: (key: string, secret: string) =>
 			// Mask first, then persist. The ordering is the guarantee.
-			Effect.flatMap(outputs.setSecret(secret), () => write(key, JSON.stringify(secret))),
+			Effect.flatMap(outputs.setSecret(secret), () => write(key, Result.getOrThrowWith(Schema.encodeResult(Json)(secret), (error) => error))),
 	} satisfies ActionStateShape;
 });
 

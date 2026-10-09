@@ -78,11 +78,10 @@ describe("ActionLogger", () => {
 	});
 
 	describe("the workflow-command logger", () => {
-		const logged = <A, E>(program: Effect.Effect<A, E>) =>
-			Effect.gen(function* () {
+		const logged = Effect.fn("logged")(function*<A, E>(program: Effect.Effect<A, E>) {
 				yield* program;
 				return yield* lines;
-			}).pipe(Effect.provide(ActionLogger.layerLogger));
+			}, Effect.provide(ActionLogger.layerLogger));
 
 		it.effect("maps error to ::error::", () =>
 			Effect.gen(function* () {

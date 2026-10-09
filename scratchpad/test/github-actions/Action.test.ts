@@ -2,9 +2,9 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Cause, Config, ConfigProvider, Context, Effect, FileSystem, Layer, References, Schema } from "effect";
 import { vi } from "vitest";
-import { Action, ActionEnvironment, ActionInput, ActionOutputs, ActionRuntime, describeCause } from "../../effected/github-actions/index.ts";
+import { Action, ActionEnvironment, ActionEnvironmentError, ActionInput, ActionOutputs, ActionRuntime, describeCause } from "../../effected/github-actions/index.ts";
 
-class Extra extends Context.Service<Extra, { readonly describe: Effect.Effect<string, unknown> }>()("@beep/scratchpad/test/github-actions/Action.test/Extra") {}
+class Extra extends Context.Service<Extra, { readonly describe: Effect.Effect<string, ActionEnvironmentError> }>()("@beep/scratchpad/test/github-actions/Action.test/Extra") {}
 
 class Boom extends Schema.TaggedError<Boom>()("Boom", { detail: Schema.String }) {
 	override get message(): string {

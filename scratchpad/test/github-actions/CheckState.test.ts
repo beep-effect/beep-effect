@@ -1,17 +1,17 @@
 import { assert, describe, it } from "@effect/vitest";
 import { CheckConclusion } from "../../effected/github/index.ts";
-import { Schema } from "effect";
+import { Schema, Result, flow } from "effect";
 import { CheckState, projectCheckState } from "../../effected/github-actions/CheckState.ts";
 
 describe("CheckState", () => {
 	it("decodes every state in the vocabulary", () => {
 		for (const state of CheckState.literals) {
-			assert.strictEqual(Schema.decodeSync(CheckState)(state), state);
+			assert.strictEqual(flow(Schema.decodeResult(CheckState), Result.getOrThrowWith((error) => error))(state), state);
 		}
 	});
 
 	it("rejects GitHub's cancelled — it is not a state a pipeline reports", () => {
-		assert.throws(() => Schema.decodeUnknownSync(CheckState)("cancelled"));
+		assert.throws(() => flow(Schema.decodeUnknownResult(CheckState), Result.getOrThrowWith((error) => error))("cancelled"));
 	});
 
 	it("projects every state onto the wire, exhaustively", () => {

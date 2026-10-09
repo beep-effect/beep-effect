@@ -1,11 +1,13 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Effect, Layer, Option, Schema } from "effect";
+import { Effect, Layer, Option, Schema, Result } from "effect";
 import { TestConsole } from "effect/testing";
 import { ActionEnvironment, ActionOutputs, ActionState } from "../../effected/github-actions/index.ts";
 
-const Token = Schema.Struct({ value: Schema.String, expires: Schema.Number });
+const Json = Schema.fromJsonString(Schema.Unknown);
+
+const Token = Schema.Struct({ value: Schema.String, expires: Schema.Finite });
 
 /**
  * A real in-memory volume for the runner files, fresh per test — the shape
@@ -212,7 +214,7 @@ describe("ActionState", () => {
 			);
 			return Effect.gen(function* () {
 				yield* run;
-				const lines = JSON.stringify(yield* TestConsole.logLines);
+				const lines = Result.getOrThrowWith(Schema.encodeResult(Json)(yield* TestConsole.logLines), (error) => error);
 				assert.include(lines, "::add-mask::ghs_abc123");
 				// GITHUB_STATE is plaintext by GitHub's protocol; the mask is the only
 				// available defense, so it must have happened.

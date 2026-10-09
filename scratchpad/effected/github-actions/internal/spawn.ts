@@ -17,7 +17,7 @@
 // its own exit-code policy (the cache tolerates `tar -k`'s exit 1) and maps
 // the `PlatformError` into its own error class.
 import type { PlatformError } from "effect";
-import { Effect, Stream } from "effect";
+import { Effect, Stream, Function } from "effect";
 import type { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 /** What one run produced: stdout and stderr interleaved, and the exit code. */
@@ -31,7 +31,10 @@ export interface SpawnOnceResult {
  * the same handle. Never fails on a non-zero exit — that is the caller's
  * policy.
  */
-export const spawnOnce = (
+export const spawnOnce: {
+	(spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], command: ChildProcess.Command): Effect.Effect<SpawnOnceResult, PlatformError.PlatformError>;
+	(command: ChildProcess.Command): (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"]) => Effect.Effect<SpawnOnceResult, PlatformError.PlatformError>;
+} = Function.dual(2, (
 	spawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
 	command: ChildProcess.Command,
 ): Effect.Effect<SpawnOnceResult, PlatformError.PlatformError> =>
@@ -42,4 +45,4 @@ export const spawnOnce = (
 			const code = yield* handle.exitCode;
 			return { output, code };
 		}),
-	);
+	));

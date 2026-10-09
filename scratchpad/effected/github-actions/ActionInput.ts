@@ -1,5 +1,7 @@
 import type { Layer, Redacted } from "effect";
-import { Config, ConfigProvider, Context, Effect, Schema, SchemaIssue } from "effect";
+import { Config, ConfigProvider, Context, Effect, Schema, SchemaIssue, Result } from "effect";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 /**
  * The variable name the runner publishes an input under.
@@ -319,7 +321,7 @@ export class ActionInput {
 				}
 				if (trimmed.startsWith("[")) {
 					try {
-						const parsed: unknown = JSON.parse(trimmed);
+						const parsed: unknown = Result.getOrThrowWith(Schema.decodeResult(Json)(trimmed), (error) => error);
 						if (Array.isArray(parsed) && parsed.every((item) => typeof item === "string")) {
 							return Effect.succeed<ReadonlyArray<string>>(parsed as ReadonlyArray<string>);
 						}
@@ -411,7 +413,7 @@ export class ActionInput {
 			Config.mapEffect((raw) => {
 				let parsed: unknown;
 				try {
-					parsed = JSON.parse(raw);
+					parsed = Result.getOrThrowWith(Schema.decodeResult(Json)(raw), (error) => error);
 				} catch {
 					return Effect.fail(configError(`Input "${name}" is not valid JSON`, raw));
 				}
@@ -567,7 +569,7 @@ export class ActionInput {
 				// The attempt resolves through `ambient` rather than reading an
 				// environment of its own, so there is exactly one source of values and
 				// exactly one spelling of the derivation (`inputVariable`).
-				return typeof name === "string" ? ambient.load([inputVariable(name)]) : Effect.succeed(undefined);
+				return typeof name === "string" ? ambient.load([inputVariable(name)]) : Effect.as(Effect.void, undefined);
 			}),
 			ambient,
 		);

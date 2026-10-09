@@ -191,13 +191,13 @@ export type CheckFlushOutcome = "written" | "unchanged" | "stale";
  *
  * @public
  */
-export type CheckDocumentSink =
-	| ((rendered: string) => Effect.Effect<unknown, unknown>)
+export type CheckDocumentSink<E = unknown> =
+	| ((rendered: string) => Effect.Effect<unknown, E>)
 	| {
 			/** Write one rendered document. */
-			readonly write: (rendered: string) => Effect.Effect<unknown, unknown>;
+			readonly write: (rendered: string) => Effect.Effect<unknown, E>;
 			/** The live document's current text, or `undefined` for none yet. */
-			readonly read?: Effect.Effect<string | undefined, unknown> | undefined;
+			readonly read?: Effect.Effect<string | undefined, E> | undefined;
 	  };
 
 /**
@@ -205,7 +205,7 @@ export type CheckDocumentSink =
  *
  * @public
  */
-export interface CheckDocumentOptions {
+export interface CheckDocumentOptions<E = unknown> {
 	/** The managed document's namespace, e.g. your action's name. */
 	readonly namespace: string;
 	/** Which document, within that namespace. */
@@ -229,7 +229,7 @@ export interface CheckDocumentOptions {
 	 */
 	readonly render: (checks: ReadonlyMap<string, CheckReport>) => ReadonlyArray<readonly [key: string, content: string]>;
 	/** Where the rendered document goes. */
-	readonly sink: CheckDocumentSink;
+	readonly sink: CheckDocumentSink<E>;
 	/**
 	 * This run's identity, for staleness ordering against other runs.
 	 *
@@ -366,7 +366,7 @@ export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentS
 	 * logs a structured warning and leaves the registry intact — the next
 	 * report retries it; only `flush` surfaces the typed error.
 	 */
-	static layer(options: CheckDocumentOptions): Layer.Layer<CheckDocument> {
+	static layer<E>(options: CheckDocumentOptions<E>): Layer.Layer<CheckDocument> {
 		return Layer.effect(
 			CheckDocument,
 			Effect.gen(function* () {

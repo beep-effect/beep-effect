@@ -9,7 +9,7 @@
 
 import { createHash } from "node:crypto";
 import type { FileSystem, PlatformError } from "effect";
-import { Effect, Stream } from "effect";
+import { Effect, Stream, Function } from "effect";
 import * as Hex from "effect/encoding/Hex";
 
 /** The raw SHA-256 of a string or byte array held in memory. @internal */
@@ -30,7 +30,10 @@ export const sha256Hex = (value: string | Uint8Array): string => createHash("sha
  *
  * @internal
  */
-export const digestFile = (
+export const digestFile: {
+	(fs: FileSystem.FileSystem, file: string, algorithm: string): Effect.Effect<Uint8Array, PlatformError.PlatformError>;
+	(file: string, algorithm: string): (fs: FileSystem.FileSystem) => Effect.Effect<Uint8Array, PlatformError.PlatformError>;
+} = Function.dual(3, (
 	fs: FileSystem.FileSystem,
 	file: string,
 	algorithm: string,
@@ -42,11 +45,14 @@ export const digestFile = (
 				accumulator.update(chunk);
 			}),
 		).pipe(Effect.map(() => new Uint8Array(accumulator.digest())));
-	});
+	}));
 
 /** {@link digestFile}, as hex. @internal */
-export const digestFileHex = (
+export const digestFileHex: {
+	(fs: FileSystem.FileSystem, file: string, algorithm: string): Effect.Effect<string, PlatformError.PlatformError>;
+	(file: string, algorithm: string): (fs: FileSystem.FileSystem) => Effect.Effect<string, PlatformError.PlatformError>;
+} = Function.dual(3, (
 	fs: FileSystem.FileSystem,
 	file: string,
 	algorithm: string,
-): Effect.Effect<string, PlatformError.PlatformError> => Effect.map(digestFile(fs, file, algorithm), Hex.encode);
+): Effect.Effect<string, PlatformError.PlatformError> => Effect.map(digestFile(fs, file, algorithm), Hex.encode));

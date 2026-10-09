@@ -515,7 +515,7 @@ describe("ActionCache", () => {
 					const real = yield* ChildProcessSpawner.ChildProcessSpawner;
 					return {
 						...real,
-						spawn: (...spawnArgs: Parameters<typeof real.spawn>) => {
+						spawn: Effect.fn("ChildProcessSpawner.ChildProcessSpawner.spawn")((...spawnArgs: Parameters<typeof real.spawn>) => {
 							const [command] = spawnArgs;
 							if ("args" in command) {
 								const args = [...command.args];
@@ -527,7 +527,7 @@ describe("ActionCache", () => {
 								});
 							}
 							return real.spawn(...spawnArgs);
-						},
+						}),
 					};
 				}),
 			).pipe(Layer.provide(NodeServices.layer));
@@ -543,10 +543,10 @@ describe("ActionCache", () => {
 					const real = yield* FileSystem.FileSystem;
 					return {
 						...real,
-						readDirectory: (...readArgs: Parameters<typeof real.readDirectory>) => {
+						readDirectory: Effect.fn("FileSystem.FileSystem.readDirectory")((...readArgs: Parameters<typeof real.readDirectory>) => {
 							reads += 1;
 							return real.readDirectory(...readArgs);
-						},
+						}),
 					};
 				}),
 			).pipe(Layer.provide(NodeServices.layer));

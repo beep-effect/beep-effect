@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, Redacted, Schema } from "effect";
+import { Context, Effect, Layer, Redacted, Schema, Result, flow } from "effect";
 import { HttpClient, HttpClientRequest } from "effect/http";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
@@ -254,7 +254,7 @@ export class OidcTokenIssuer extends Context.Service<OidcTokenIssuer, OidcTokenI
 	 * structurally unreachable in a test.
 	 */
 	static readonly unsignedTokenFor = (claims: OidcClaims): Redacted.Redacted<string> =>
-		Redacted.make(unsignedJwt({ alg: "RS256", typ: "JWT" }, Schema.encodeUnknownSync(OidcClaims)(claims)));
+		Redacted.make(unsignedJwt({ alg: "RS256", typ: "JWT" }, flow(Schema.encodeUnknownResult(OidcClaims), Result.getOrThrowWith((error) => error))(claims)));
 
 	/** A test double. Unstubbed members die rather than answering with a non-token. */
 	static readonly makeTest = (overrides: Partial<OidcTokenIssuerShape> = {}): OidcTokenIssuerShape => ({
@@ -279,7 +279,7 @@ export class OidcTokenIssuer extends Context.Service<OidcTokenIssuer, OidcTokenI
 	 */
 	static readonly layerFor = (claims: OidcClaims): Layer.Layer<OidcTokenIssuer> =>
 		Layer.succeed(OidcTokenIssuer, {
-			token: () => Effect.succeed(OidcTokenIssuer.unsignedTokenFor(claims)),
-			claims: () => Effect.succeed(claims),
+			token: Effect.fn("OidcTokenIssuer.token")(() => Effect.succeed(OidcTokenIssuer.unsignedTokenFor(claims))),
+			claims: Effect.fn("OidcTokenIssuer.claims")(() => Effect.succeed(claims)),
 		});
 }

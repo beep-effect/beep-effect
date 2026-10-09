@@ -7,7 +7,7 @@
 // reports is about *its* operation, not about HTTP.
 
 import type { Redacted } from "effect";
-import { Effect, Schedule } from "effect";
+import { Effect, Schedule, Function } from "effect";
 import type { HttpClient } from "effect/http";
 import { HttpClientRequest } from "effect/http";
 
@@ -155,20 +155,26 @@ export const twirpCall = (options: {
  *
  * @internal
  */
-export const field = (body: unknown, name: string): unknown => {
+export const field: {
+	(body: unknown, name: string): unknown;
+	(name: string): (body: unknown) => unknown;
+} = Function.dual(2, (body: unknown, name: string): unknown => {
 	if (typeof body !== "object" || body === null) {
 		return undefined;
 	}
 	const record = body as Record<string, unknown>;
 	const snake = name.replaceAll(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 	return record[name] ?? record[snake];
-};
+});
 
 /** {@link field}, as a string, or `undefined` when absent or empty. @internal */
-export const stringField = (body: unknown, name: string): string | undefined => {
+export const stringField: {
+	(body: unknown, name: string): string | undefined;
+	(name: string): (body: unknown) => string | undefined;
+} = Function.dual(2, (body: unknown, name: string): string | undefined => {
 	const value = field(body, name);
 	return typeof value === "string" && value !== "" ? value : undefined;
-};
+});
 
 /** Whether a Twirp response carries `ok: true`. @internal */
 export const isOk = (body: unknown): boolean => field(body, "ok") === true;

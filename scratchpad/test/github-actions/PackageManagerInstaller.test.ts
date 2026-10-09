@@ -8,7 +8,7 @@ import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import type { IntegrityHashBrand } from "../../effected/npm/index.ts";
 import { CorepackIntegrityHash, IntegrityHash, PackageManagerPin } from "../../effected/npm/index.ts";
-import { Effect, Layer, Logger, Option, PlatformError, Schema, Stream } from "effect";
+import { Effect, Layer, Logger, PlatformError, Schema, Stream, Result, flow } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import {
@@ -22,20 +22,22 @@ import {
 	ToolInstallerError,
 } from "../../effected/github-actions/index.ts";
 
+const Json = Schema.fromJsonString(Schema.Unknown);
+
 /** A scratch tool-cache root, removed by the test that made it. */
 const scratch = () => mkdtempSync(join(tmpdir(), "effected-pminstall-"));
 
-const alwaysFails: typeof globalThis.fetch = async () => new Response("no", { status: 500 });
+const alwaysFails: typeof globalThis.fetch = Object.assign(async () => new Response("no", { status: 500 }), { preconnect: () => {} });
 
 /** A fetch scripted by exact url, recording every request it sees. */
 const scriptedFetch = (replies: Readonly<Record<string, () => Response>>) => {
 	const calls: Array<string> = [];
-	const fetch: typeof globalThis.fetch = async (input) => {
+	const fetch: typeof globalThis.fetch = Object.assign(async (input: Parameters<typeof globalThis.fetch>[0]) => {
 		const url = String(input);
 		calls.push(url);
 		const reply = replies[url];
 		return reply === undefined ? new Response("not scripted", { status: 404 }) : reply();
-	};
+	}, { preconnect: () => {} });
 	return { calls, fetch };
 };
 
@@ -104,12 +106,12 @@ const makeManagerTarball = (
 	if (options.omitManifest !== true) {
 		writeFileSync(
 			join(packageDir, "package.json"),
-			JSON.stringify({
+			Result.getOrThrowWith(Schema.encodeResult(Json)({
 				name: options.name,
 				version: options.version,
-				...(options.bin ? { bin: options.bin } : {}),
+				...(options.bin !== undefined ? { bin: options.bin } : {}),
 				...options.manifest,
-			}),
+			}), (error) => error),
 		);
 	}
 	for (const [file, contents] of Object.entries(options.files ?? {})) {
@@ -226,18 +228,18 @@ const pnpm12Urls = (version: string, target: string, registry = "https://registr
 });
 
 const jsonResponse = (body: unknown) => () =>
-	new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
+	new Response(Result.getOrThrowWith(Schema.encodeResult(Json)(body), (error) => error), { status: 200, headers: { "content-type": "application/json" } });
 
 /** A spawner whose `string` is scripted and whose other members die loudly. */
 const scriptedSpawner = (
 	string: () => Effect.Effect<string, PlatformError.PlatformError>,
 ): Layer.Layer<ChildProcessSpawner.ChildProcessSpawner> =>
 	Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, {
-		spawn: () => Effect.die("scriptedSpawner: spawn was called but not scripted"),
-		exitCode: () => Effect.die("scriptedSpawner: exitCode was called but not scripted"),
+		spawn: Effect.fn("ChildProcessSpawner.ChildProcessSpawner.spawn")(() => Effect.die("scriptedSpawner: spawn was called but not scripted")),
+		exitCode: Effect.fn("ChildProcessSpawner.ChildProcessSpawner.exitCode")(() => Effect.die("scriptedSpawner: exitCode was called but not scripted")),
 		streamString: () => Stream.fromEffect(Effect.die("scriptedSpawner: streamString was called but not scripted")),
 		streamLines: () => Stream.fromEffect(Effect.die("scriptedSpawner: streamLines was called but not scripted")),
-		lines: () => Effect.die("scriptedSpawner: lines was called but not scripted"),
+		lines: Effect.fn("ChildProcessSpawner.ChildProcessSpawner.lines")(() => Effect.die("scriptedSpawner: lines was called but not scripted")),
 		string,
 	});
 
@@ -283,7 +285,7 @@ const install = (
 ) => Effect.flatMap(PackageManagerInstaller, (installer) => installer.install(pin(spec), options));
 
 /** A corepack `<algo>.<hex>` integrity, decoded through the same schema a pin's tail is. */
-const corepack = (value: string): IntegrityHashBrand => Schema.decodeSync(CorepackIntegrityHash)(value);
+const corepack = (value: string): IntegrityHashBrand => flow(Schema.decodeResult(CorepackIntegrityHash), Result.getOrThrowWith((error) => error))(value);
 
 /** Narrow to the tool-cache variant or fail the test loudly. */
 const cachedOf = (installed: InstalledPackageManager): CachedPackageManager => {
@@ -303,7 +305,7 @@ describe("PackageManagerInstaller", () => {
 					// the shims must be regenerated into the entry.
 					const cached = ToolInstaller.cachePath({ root, tool: "pnpm", version: "7.7.7", arch: process.arch });
 					mkdirSync(join(cached, "bin"), { recursive: true });
-					writeFileSync(join(cached, "package.json"), JSON.stringify({ bin: { pnpm: "bin/pnpm.cjs" } }));
+					writeFileSync(join(cached, "package.json"), Result.getOrThrowWith(Schema.encodeResult(Json)({ bin: { pnpm: "bin/pnpm.cjs" } }), (error) => error));
 					writeFileSync(join(cached, "bin", "pnpm.cjs"), "console.log('pnpm')");
 
 					const installed = cachedOf(yield* install("pnpm@7.7.7"));
@@ -328,7 +330,7 @@ describe("PackageManagerInstaller", () => {
 					const cached = ToolInstaller.cachePath({ root, tool: "pnpm", version: "7.7.9", arch: process.arch });
 					mkdirSync(join(cached, "bin"), { recursive: true });
 					mkdirSync(join(cached, ".bin"), { recursive: true });
-					writeFileSync(join(cached, "package.json"), JSON.stringify({ bin: { pnpm: "bin/pnpm.cjs" } }));
+					writeFileSync(join(cached, "package.json"), Result.getOrThrowWith(Schema.encodeResult(Json)({ bin: { pnpm: "bin/pnpm.cjs" } }), (error) => error));
 					writeFileSync(join(cached, "bin", "pnpm.cjs"), "console.log('pnpm')");
 					writeFileSync(join(cached, ".bin", "pnpm"), "#!/bin/sh\n# sentinel: a foreign shim\n");
 
@@ -343,7 +345,7 @@ describe("PackageManagerInstaller", () => {
 				Effect.gen(function* () {
 					const cached = ToolInstaller.cachePath({ root, tool: "pnpm", version: "7.8.0", arch: process.arch });
 					mkdirSync(join(cached, "bin"), { recursive: true });
-					writeFileSync(join(cached, "package.json"), JSON.stringify({ bin: { pnpm: "bin/pnpm.cjs" } }));
+					writeFileSync(join(cached, "package.json"), Result.getOrThrowWith(Schema.encodeResult(Json)({ bin: { pnpm: "bin/pnpm.cjs" } }), (error) => error));
 					writeFileSync(join(cached, "bin", "pnpm.cjs"), "console.log('pnpm')");
 					chmodSync(cached, 0o555); // read-only entry: the .bin mkdir must fail
 					const error = yield* Effect.flip(install("pnpm@7.8.0"));
@@ -376,7 +378,7 @@ describe("PackageManagerInstaller", () => {
 					// containment guard can refuse this one.
 					const cached = ToolInstaller.cachePath({ root, tool: "pnpm", version: "7.9.0", arch: process.arch });
 					mkdirSync(cached, { recursive: true });
-					writeFileSync(join(cached, "package.json"), JSON.stringify({ bin: { pnpm: "../../../evil.js" } }));
+					writeFileSync(join(cached, "package.json"), Result.getOrThrowWith(Schema.encodeResult(Json)({ bin: { pnpm: "../../../evil.js" } }), (error) => error));
 					// `<root>/pnpm/7.9.0/<arch>/../../../evil.js` is `<root>/evil.js`.
 					writeFileSync(join(root, "evil.js"), "console.log('payload')");
 					const error = yield* Effect.flip(install("pnpm@7.9.0"));
@@ -423,7 +425,7 @@ describe("PackageManagerInstaller", () => {
 				const root = scratch();
 				const extracted = join(root, "extracted", "package");
 				mkdirSync(join(extracted, "bin"), { recursive: true });
-				writeFileSync(join(extracted, "package.json"), JSON.stringify({ bin: { npm: "bin/npm-cli.js" } }));
+				writeFileSync(join(extracted, "package.json"), Result.getOrThrowWith(Schema.encodeResult(Json)({ bin: { npm: "bin/npm-cli.js" } }), (error) => error));
 				writeFileSync(join(extracted, "bin", "npm-cli.js"), "console.log('npm')");
 				const destination = ToolInstaller.cachePath({ root, tool: "npm", version: "9.9.9", arch: process.arch });
 
@@ -482,7 +484,7 @@ describe("PackageManagerInstaller", () => {
 				mkdirSync(join(extracted, "bin"), { recursive: true });
 				writeFileSync(
 					join(extracted, "package.json"),
-					JSON.stringify({ bin: { npm: "bin/npm-cli.js", npx: "bin/npx-cli.js" } }),
+					Result.getOrThrowWith(Schema.encodeResult(Json)({ bin: { npm: "bin/npm-cli.js", npx: "bin/npx-cli.js" } }), (error) => error),
 				);
 				writeFileSync(join(extracted, "bin", "npm-cli.js"), "console.log('npm')");
 				writeFileSync(join(extracted, "bin", "npx-cli.js"), "console.log('npx')");
@@ -548,7 +550,7 @@ describe("PackageManagerInstaller", () => {
 				const root = scratch();
 				const extracted = join(root, "extracted", "package");
 				mkdirSync(join(extracted, "bin"), { recursive: true });
-				writeFileSync(join(extracted, "package.json"), JSON.stringify({ bin: { npm: "bin/npm-cli.js" } }));
+				writeFileSync(join(extracted, "package.json"), Result.getOrThrowWith(Schema.encodeResult(Json)({ bin: { npm: "bin/npm-cli.js" } }), (error) => error));
 				writeFileSync(join(extracted, "bin", "npm-cli.js"), "console.log('npm')");
 
 				// The stub answers with the destination the module derives, so the
@@ -631,7 +633,7 @@ describe("PackageManagerInstaller", () => {
 					const output = yield* spawner.string(
 						ChildProcess.make(join(installed.binDir, "pnpm"), ["a b", "--flag", "c"]),
 					);
-					assert.deepStrictEqual(JSON.parse(output.trim()), ["a b", "--flag", "c"]);
+					assert.deepStrictEqual(Result.getOrThrowWith(Schema.decodeResult(Json)(output.trim()), (error) => error), ["a b", "--flag", "c"]);
 				});
 				yield* program.pipe(
 					Effect.provide(Layer.mergeAll(live(root, script.fetch), NodeServices.layer)),
@@ -834,8 +836,7 @@ describe("PackageManagerInstaller", () => {
 				// Both directions, each with a real tarball the RIGHT value would
 				// verify: a mutant that silently prefers either side installs in one
 				// of them instead of failing.
-				const attempt = (version: string, side: "pin-right" | "option-right") =>
-					Effect.gen(function* () {
+				const attempt = Effect.fn("attempt")(function*(version: string, side: "pin-right" | "option-right") {
 						const root = scratch();
 						const { archive, script } = served(root, version);
 						const right = `sha512.${sha512Hex(archive)}`;
@@ -867,7 +868,7 @@ describe("PackageManagerInstaller", () => {
 				const { archive, script } = served(root, "1.1.5");
 				// The tarball's CORRECT digest, in the SRI spelling a lockfile records:
 				// the form is refused, not the value.
-				const sri = Schema.decodeSync(IntegrityHash)(sha512Sri(archive));
+				const sri = flow(Schema.decodeResult(IntegrityHash), Result.getOrThrowWith((error) => error))(sha512Sri(archive));
 				const error = yield* Effect.flip(
 					install("pnpm@1.1.5", { integrity: sri }).pipe(
 						Effect.provide(live(root, script.fetch)),
@@ -892,7 +893,7 @@ describe("PackageManagerInstaller", () => {
 					// unvalidated option would be laundered by the cache hit.
 					const cached = ToolInstaller.cachePath({ root, tool: "pnpm", version: "7.8.1", arch: process.arch });
 					mkdirSync(join(cached, "bin"), { recursive: true });
-					writeFileSync(join(cached, "package.json"), JSON.stringify({ bin: { pnpm: "bin/pnpm.cjs" } }));
+					writeFileSync(join(cached, "package.json"), Result.getOrThrowWith(Schema.encodeResult(Json)({ bin: { pnpm: "bin/pnpm.cjs" } }), (error) => error));
 					writeFileSync(join(cached, "bin", "pnpm.cjs"), "console.log('pnpm')");
 					// Control: the same pin with no option IS answered from the cache.
 					assert.strictEqual(cachedOf(yield* install("pnpm@7.8.1")).directory, cached);
@@ -913,7 +914,7 @@ describe("PackageManagerInstaller", () => {
 					// The fetch always fails, so the only way to answer is the cache.
 					const cached = ToolInstaller.cachePath({ root, tool: "pnpm", version: "7.8.0", arch: process.arch });
 					mkdirSync(join(cached, "bin"), { recursive: true });
-					writeFileSync(join(cached, "package.json"), JSON.stringify({ bin: { pnpm: "bin/pnpm.cjs" } }));
+					writeFileSync(join(cached, "package.json"), Result.getOrThrowWith(Schema.encodeResult(Json)({ bin: { pnpm: "bin/pnpm.cjs" } }), (error) => error));
 					writeFileSync(join(cached, "bin", "pnpm.cjs"), "console.log('pnpm')");
 					// Control: the same bare pin without the option is still refused
 					// before the cache is consulted.
@@ -1285,8 +1286,7 @@ describe("PackageManagerInstaller", () => {
 				Effect.gen(function* () {
 					const version = "12.0.3";
 					const urls = pnpm12Urls(version, "darwin-arm64");
-					const attempt = (packument: () => Response) =>
-						Effect.gen(function* () {
+					const attempt = Effect.fn("attempt")(function*(packument: () => Response) {
 							const root = scratch();
 							const wrapper = makePnpm12Wrapper(root, version);
 							const script = scriptedFetch({ [urls.wrapper]: tgzResponse(wrapper), [urls.packument]: packument });
@@ -1378,8 +1378,7 @@ describe("PackageManagerInstaller", () => {
 				Effect.gen(function* () {
 					const version = "12.1.2";
 					const urls = pnpm12Urls(version, "darwin-arm64");
-					const attempt = (nativeIntegrity: Readonly<Record<string, string>>) =>
-						Effect.gen(function* () {
+					const attempt = Effect.fn("attempt")(function*(nativeIntegrity: Readonly<Record<string, string>>) {
 							const root = scratch();
 							const wrapper = makePnpm12Wrapper(root, version);
 							const script = scriptedFetch({ [urls.wrapper]: tgzResponse(wrapper) });
@@ -1506,12 +1505,12 @@ describe("PackageManagerInstaller", () => {
 				mkdirSync(join(cached, "bin"), { recursive: true });
 				writeFileSync(
 					join(cached, "package.json"),
-					JSON.stringify({
+					Result.getOrThrowWith(Schema.encodeResult(Json)({
 						name: "pnpm",
 						version,
 						bin: { pnpm: "pnpm", pn: "pn", pnpx: "pnpx", pnx: "pnx" },
 						optionalDependencies: { "@pnpm/exe.darwin-arm64": version },
-					}),
+					}), (error) => error),
 				);
 				writeFileSync(join(cached, "pnpm"), PNPM_PLACEHOLDER);
 				for (const alias of ["pn", "pnpx", "pnx"]) {
@@ -1562,10 +1561,10 @@ describe("PackageManagerInstaller", () => {
 					mkdirSync(cached, { recursive: true });
 					writeFileSync(
 						join(cached, "package.json"),
-						JSON.stringify({
+						Result.getOrThrowWith(Schema.encodeResult(Json)({
 							bin: { pnpm: "pnpm", pn: "pn" },
 							optionalDependencies: { "@pnpm/exe.darwin-arm64": version },
-						}),
+						}), (error) => error),
 					);
 					writeFileSync(join(cached, "pnpm"), head);
 					writeFileSync(join(cached, "pn"), pnpmAlias("pn"));
@@ -1599,7 +1598,7 @@ describe("PackageManagerInstaller", () => {
 				const wrapper = makePnpm12Wrapper(root, version);
 				const exeStaging = join(root, "exe-staging", "package");
 				mkdirSync(exeStaging, { recursive: true });
-				writeFileSync(join(exeStaging, "package.json"), JSON.stringify({ name: "@pnpm/exe.win32-x64", version }));
+				writeFileSync(join(exeStaging, "package.json"), Result.getOrThrowWith(Schema.encodeResult(Json)({ name: "@pnpm/exe.win32-x64", version }), (error) => error));
 				writeFileSync(join(exeStaging, "pnpm.exe"), "MZ-native-pnpm-win32");
 				const exe = join(root, "exe-win32-x64.tgz");
 				execFileSync("tar", ["czf", exe, "-C", join(root, "exe-staging"), "package"]);
@@ -1708,7 +1707,7 @@ describe("PackageManagerInstaller", () => {
 				const root = scratch();
 				const extracted = join(root, "extracted", "package");
 				mkdirSync(join(extracted, "bin"), { recursive: true });
-				writeFileSync(join(extracted, "package.json"), JSON.stringify({ bin: { pnpm: "bin/pnpm.cjs" } }));
+				writeFileSync(join(extracted, "package.json"), Result.getOrThrowWith(Schema.encodeResult(Json)({ bin: { pnpm: "bin/pnpm.cjs" } }), (error) => error));
 				writeFileSync(join(extracted, "bin", "pnpm.cjs"), "console.log('pnpm')");
 				const error = yield* Effect.flip(
 					install("pnpm@2.0.5").pipe(
@@ -1741,7 +1740,7 @@ describe("PackageManagerInstaller", () => {
 				const extracted = join(root, "extracted", "package");
 				const target = join(root, "sentinel-target");
 				mkdirSync(join(extracted, "bin"), { recursive: true });
-				writeFileSync(join(extracted, "package.json"), JSON.stringify({ bin: { pnpm: "bin/pnpm.cjs" } }));
+				writeFileSync(join(extracted, "package.json"), Result.getOrThrowWith(Schema.encodeResult(Json)({ bin: { pnpm: "bin/pnpm.cjs" } }), (error) => error));
 				writeFileSync(join(extracted, "bin", "pnpm.cjs"), "console.log('pnpm')");
 				const asked: Array<string> = [];
 				const installed = cachedOf(
@@ -1812,8 +1811,8 @@ describe("PackageManagerInstaller", () => {
 
 				const encode = Schema.encodeUnknownEffect(InstalledPackageManager);
 				const decode = Schema.decodeUnknownEffect(InstalledPackageManager);
-				const cachedBack = yield* decode(JSON.parse(JSON.stringify(yield* encode(cached))));
-				const ambientBack = yield* decode(JSON.parse(JSON.stringify(yield* encode(ambient))));
+				const cachedBack = yield* decode(Result.getOrThrowWith(Schema.decodeResult(Json)(Result.getOrThrowWith(Schema.encodeResult(Json)(yield* encode(cached)), (error) => error)), (error) => error));
+				const ambientBack = yield* decode(Result.getOrThrowWith(Schema.decodeResult(Json)(Result.getOrThrowWith(Schema.encodeResult(Json)(yield* encode(ambient)), (error) => error)), (error) => error));
 
 				assert.instanceOf(cachedBack, CachedPackageManager);
 				assert.instanceOf(ambientBack, AmbientPackageManager);

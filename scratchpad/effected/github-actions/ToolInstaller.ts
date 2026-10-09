@@ -1,5 +1,5 @@
 import type { Duration, PlatformError } from "effect";
-import { Context, Effect, FileSystem, Layer, Option, Path, Schedule, Schema, Stream } from "effect";
+import { Config, ConfigProvider, Context, Effect, FileSystem, Layer, Option, Path, Schedule, Schema, Stream } from "effect";
 import { HttpClient } from "effect/http";
 import type { ChildProcess } from "effect/process";
 import { ChildProcessSpawner } from "effect/process";
@@ -494,7 +494,10 @@ const dies = unstubbed("ToolInstaller.makeTest");
  * spells on POSIX, which is the only place a test double runs. Test-double
  * only.
  */
-const testRoot = (): string => process.env.RUNNER_TOOL_CACHE ?? "/tmp/runner-tool-cache";
+const testRoot = (): string => Effect.runSync(
+	Config.String("RUNNER_TOOL_CACHE").pipe(Config.withDefault("/tmp/runner-tool-cache"))
+		.parse(ConfigProvider.fromEnv({ preserveEmptyStrings: true })),
+);
 
 /**
  * Download, extract and cache a toolchain in the runner's tool cache.

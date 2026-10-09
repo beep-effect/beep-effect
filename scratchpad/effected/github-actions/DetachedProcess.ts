@@ -406,7 +406,7 @@ export class DetachedProcess {
 	static readonly httpProbe = (url: string | URL): Effect.Effect<boolean, never, HttpClient.HttpClient> =>
 		HttpClient.get(url).pipe(
 			Effect.map((response) => response.status >= 200 && response.status < 300),
-			Effect.catch(() => Effect.succeed(false)),
+			Effect.orElseSucceed(() => false),
 		);
 
 	/**

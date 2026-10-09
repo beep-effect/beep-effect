@@ -2,7 +2,7 @@
 // ask before deciding whether to reinstall, skip or fail typed.
 
 import type { FileSystem } from "effect";
-import { Effect } from "effect";
+import { Effect, Function } from "effect";
 
 /**
  * The entry's type, or `undefined` when nothing readable is there. Absence
@@ -11,8 +11,11 @@ import { Effect } from "effect";
  *
  * @internal
  */
-export const typeAt = (fs: FileSystem.FileSystem, path: string): Effect.Effect<FileSystem.File.Type | undefined> =>
-	Effect.map(Effect.option(fs.stat(path)), (info) => (info._tag === "Some" ? info.value.type : undefined));
+export const typeAt: {
+	(fs: FileSystem.FileSystem, path: string): Effect.Effect<FileSystem.File.Type | undefined>;
+	(path: string): (fs: FileSystem.FileSystem) => Effect.Effect<FileSystem.File.Type | undefined>;
+} = Function.dual(2, (fs: FileSystem.FileSystem, path: string): Effect.Effect<FileSystem.File.Type | undefined> =>
+	Effect.map(Effect.option(fs.stat(path)), (info) => (info._tag === "Some" ? info.value.type : undefined)));
 
 /**
  * Whether a thrown value is a Node errno error with the given code — the
@@ -21,5 +24,8 @@ export const typeAt = (fs: FileSystem.FileSystem, path: string): Effect.Effect<F
  *
  * @internal
  */
-export const isErrno = (cause: unknown, code: string): boolean =>
-	typeof cause === "object" && cause !== null && (cause as { code?: unknown }).code === code;
+export const isErrno: {
+	(cause: unknown, code: string): boolean;
+	(code: string): (cause: unknown) => boolean;
+} = Function.dual(2, (cause: unknown, code: string): boolean =>
+	typeof cause === "object" && cause !== null && (cause as { code?: unknown }).code === code);

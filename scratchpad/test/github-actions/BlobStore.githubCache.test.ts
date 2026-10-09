@@ -7,7 +7,7 @@ import type { DataBlobTransfer } from "../../effected/github-actions/index.ts";
 import { BlobStore, BlobStoreError, BlobTransferError, GitHubCacheBlobStore } from "../../effected/github-actions/index.ts";
 import { json, resultsEnv, settle, twirpFetch } from "./results.ts";
 
-class Meta extends Schema.Class<Meta>("Meta")({ tag: Schema.String, durationMs: Schema.Number }) {}
+class Meta extends Schema.Class<Meta>("Meta")({ tag: Schema.String, durationMs: Schema.Finite }) {}
 
 /** A transport that keeps what it was given, keyed by the url it was given it at. */
 const memoryTransfer = () => {

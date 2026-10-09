@@ -1,8 +1,10 @@
 // @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer, Redacted } from "effect";
+import { Effect, Layer, Redacted, Schema, Result } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { ActionEnvironment, OidcClaims, OidcTokenIssuer } from "../../effected/github-actions/index.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 const TOKEN_ENV = {
 	ACTIONS_ID_TOKEN_REQUEST_TOKEN: "runner-bearer",
@@ -26,12 +28,12 @@ const CLAIMS = OidcClaims.make({
 
 /** A JWT whose payload is `claims`, built the way the runner would. */
 const jwtFor = (claims: unknown, signature = "sig"): string => {
-	const segment = (value: unknown): string => Buffer.from(JSON.stringify(value), "utf8").toString("base64url");
+	const segment = (value: unknown): string => Buffer.from(Result.getOrThrowWith(Schema.encodeResult(Json)(value), (error) => error), "utf8").toString("base64url");
 	return `${segment({ alg: "RS256", typ: "JWT" })}.${segment(claims)}.${signature}`;
 };
 
 const json = (body: unknown, init: ResponseInit = {}): Response =>
-	new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" }, ...init });
+	new Response(Result.getOrThrowWith(Schema.encodeResult(Json)(body), (error) => error), { status: 200, headers: { "content-type": "application/json" }, ...init });
 
 /**
  * The test seam: a fake `fetch` under the real client, so request construction,
@@ -52,10 +54,10 @@ describe("OidcTokenIssuer", () => {
 		it.effect("authenticates with the runner's bearer token", () =>
 			Effect.gen(function* () {
 				const seen: Array<{ url: string; authorization: string | null }> = [];
-				const fake: typeof globalThis.fetch = async (input, init) => {
+				const fake: typeof globalThis.fetch = Object.assign(async (input: Parameters<typeof globalThis.fetch>[0], init: Parameters<typeof globalThis.fetch>[1]) => {
 					seen.push({ url: String(input), authorization: new Headers(init?.headers).get("authorization") });
 					return json({ value: jwtFor(CLAIMS) });
-				};
+				}, { preconnect: () => {} });
 				const token = yield* Effect.gen(function* () {
 					return yield* (yield* OidcTokenIssuer).token();
 				}).pipe(Effect.provide(live(fake)));
@@ -69,10 +71,10 @@ describe("OidcTokenIssuer", () => {
 		it.effect("appends the audience with & because the runner's url already has a query", () =>
 			Effect.gen(function* () {
 				const seen: Array<string> = [];
-				const fake: typeof globalThis.fetch = async (input) => {
+				const fake: typeof globalThis.fetch = Object.assign(async (input: Parameters<typeof globalThis.fetch>[0]) => {
 					seen.push(String(input));
 					return json({ value: jwtFor(CLAIMS) });
-				};
+				}, { preconnect: () => {} });
 				yield* Effect.gen(function* () {
 					return yield* (yield* OidcTokenIssuer).token("sigstore");
 				}).pipe(Effect.provide(live(fake)));
@@ -86,10 +88,10 @@ describe("OidcTokenIssuer", () => {
 		it.effect("url-encodes an audience that needs it", () =>
 			Effect.gen(function* () {
 				const seen: Array<string> = [];
-				const fake: typeof globalThis.fetch = async (input) => {
+				const fake: typeof globalThis.fetch = Object.assign(async (input: Parameters<typeof globalThis.fetch>[0]) => {
 					seen.push(String(input));
 					return json({ value: jwtFor(CLAIMS) });
-				};
+				}, { preconnect: () => {} });
 				yield* Effect.gen(function* () {
 					return yield* (yield* OidcTokenIssuer).token("https://example.test/a b");
 				}).pipe(Effect.provide(live(fake)));
@@ -100,10 +102,10 @@ describe("OidcTokenIssuer", () => {
 		it.effect("sends no audience parameter at all when none is asked for", () =>
 			Effect.gen(function* () {
 				const seen: Array<string> = [];
-				const fake: typeof globalThis.fetch = async (input) => {
+				const fake: typeof globalThis.fetch = Object.assign(async (input: Parameters<typeof globalThis.fetch>[0]) => {
 					seen.push(String(input));
 					return json({ value: jwtFor(CLAIMS) });
-				};
+				}, { preconnect: () => {} });
 				yield* Effect.gen(function* () {
 					return yield* (yield* OidcTokenIssuer).token();
 				}).pipe(Effect.provide(live(fake)));
@@ -120,7 +122,7 @@ describe("OidcTokenIssuer", () => {
 
 		it.effect("fails typed when the workflow did not grant id-token: write", () =>
 			Effect.gen(function* () {
-				const fake: typeof globalThis.fetch = async () => json({ value: jwtFor(CLAIMS) });
+				const fake: typeof globalThis.fetch = Object.assign(async () => json({ value: jwtFor(CLAIMS) }), { preconnect: () => {} });
 				const error = yield* failing(
 					Effect.flatMap(OidcTokenIssuer, (issuer) => issuer.token()),
 					live(fake, {}),
@@ -132,7 +134,7 @@ describe("OidcTokenIssuer", () => {
 
 		it.effect("fails typed on a non-2xx status, carrying it", () =>
 			Effect.gen(function* () {
-				const fake: typeof globalThis.fetch = async () => new Response("nope", { status: 403 });
+				const fake: typeof globalThis.fetch = Object.assign(async () => new Response("nope", { status: 403 }), { preconnect: () => {} });
 				const error = yield* failing(
 					Effect.flatMap(OidcTokenIssuer, (issuer) => issuer.token()),
 					live(fake),
@@ -144,9 +146,9 @@ describe("OidcTokenIssuer", () => {
 
 		it.effect("fails typed when the transport itself fails", () =>
 			Effect.gen(function* () {
-				const fake: typeof globalThis.fetch = async () => {
+				const fake: typeof globalThis.fetch = Object.assign(async () => {
 					throw new Error("connection reset");
-				};
+				}, { preconnect: () => {} });
 				const error = yield* failing(
 					Effect.flatMap(OidcTokenIssuer, (issuer) => issuer.token()),
 					live(fake),
@@ -157,7 +159,7 @@ describe("OidcTokenIssuer", () => {
 
 		it.effect("fails typed when the envelope is the wrong shape", () =>
 			Effect.gen(function* () {
-				const fake: typeof globalThis.fetch = async () => json({ token: "wrong-key" });
+				const fake: typeof globalThis.fetch = Object.assign(async () => json({ token: "wrong-key" }), { preconnect: () => {} });
 				const error = yield* failing(
 					Effect.flatMap(OidcTokenIssuer, (issuer) => issuer.token()),
 					live(fake),
@@ -168,7 +170,7 @@ describe("OidcTokenIssuer", () => {
 
 		it.effect("fails typed when the token is not a three-segment JWT", () =>
 			Effect.gen(function* () {
-				const fake: typeof globalThis.fetch = async () => json({ value: "not-a-jwt" });
+				const fake: typeof globalThis.fetch = Object.assign(async () => json({ value: "not-a-jwt" }), { preconnect: () => {} });
 				const error = yield* failing(
 					Effect.flatMap(OidcTokenIssuer, (issuer) => issuer.claims()),
 					live(fake),
@@ -180,7 +182,7 @@ describe("OidcTokenIssuer", () => {
 
 		it.effect("fails typed when the payload is not base64url JSON", () =>
 			Effect.gen(function* () {
-				const fake: typeof globalThis.fetch = async () => json({ value: "aaa.!!!not-base64!!!.ccc" });
+				const fake: typeof globalThis.fetch = Object.assign(async () => json({ value: "aaa.!!!not-base64!!!.ccc" }), { preconnect: () => {} });
 				const error = yield* failing(
 					Effect.flatMap(OidcTokenIssuer, (issuer) => issuer.claims()),
 					live(fake),
@@ -191,7 +193,7 @@ describe("OidcTokenIssuer", () => {
 
 		it.effect("fails typed when the claims a provenance statement needs are absent", () =>
 			Effect.gen(function* () {
-				const fake: typeof globalThis.fetch = async () => json({ value: jwtFor({ iss: "https://x", ref: "main" }) });
+				const fake: typeof globalThis.fetch = Object.assign(async () => json({ value: jwtFor({ iss: "https://x", ref: "main" }) }), { preconnect: () => {} });
 				const error = yield* failing(
 					Effect.flatMap(OidcTokenIssuer, (issuer) => issuer.claims()),
 					live(fake),
@@ -208,7 +210,7 @@ describe("OidcTokenIssuer", () => {
 				// documented choice: the token came from the runner's own endpoint over
 				// TLS, and the claims populate a provenance predicate rather than a
 				// trust decision.
-				const fake: typeof globalThis.fetch = async () => json({ value: jwtFor(CLAIMS, "not-a-real-signature") });
+				const fake: typeof globalThis.fetch = Object.assign(async () => json({ value: jwtFor(CLAIMS, "not-a-real-signature") }), { preconnect: () => {} });
 				const claims = yield* Effect.gen(function* () {
 					return yield* (yield* OidcTokenIssuer).claims();
 				}).pipe(Effect.provide(live(fake)));
@@ -225,7 +227,7 @@ describe("OidcTokenIssuer", () => {
 				const urlSafe = OidcClaims.make({ ...CLAIMS, ref: "refs/heads/~~~??>>>" });
 				const token = jwtFor(urlSafe);
 				assert.match(token.split(".")[1] ?? "", /[-_]/, "the fixture must actually exercise the url alphabet");
-				const fake: typeof globalThis.fetch = async () => json({ value: token });
+				const fake: typeof globalThis.fetch = Object.assign(async () => json({ value: token }), { preconnect: () => {} });
 				const claims = yield* Effect.gen(function* () {
 					return yield* (yield* OidcTokenIssuer).claims();
 				}).pipe(Effect.provide(live(fake)));
@@ -238,7 +240,7 @@ describe("OidcTokenIssuer", () => {
 				// Segment lengths that are not a multiple of four are the common case,
 				// and a decoder that demands padding fails on most real tokens.
 				const padded = OidcClaims.make({ ...CLAIMS, run_id: "31415926535" });
-				const fake: typeof globalThis.fetch = async () => json({ value: jwtFor(padded) });
+				const fake: typeof globalThis.fetch = Object.assign(async () => json({ value: jwtFor(padded) }), { preconnect: () => {} });
 				const claims = yield* Effect.gen(function* () {
 					return yield* (yield* OidcTokenIssuer).claims();
 				}).pipe(Effect.provide(live(fake)));
@@ -257,7 +259,7 @@ describe("OidcTokenIssuer", () => {
 				// same claims the service reports, or the path stays untested while
 				// looking tested.
 				const payload = Redacted.value(token).split(".")[1] ?? "";
-				const decoded = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as {
+				const decoded = Result.getOrThrowWith(Schema.decodeResult(Json)(Buffer.from(payload, "base64url").toString("utf8")), (error) => error) as {
 					job_workflow_ref?: string;
 				};
 				assert.strictEqual(decoded.job_workflow_ref, CLAIMS.job_workflow_ref);

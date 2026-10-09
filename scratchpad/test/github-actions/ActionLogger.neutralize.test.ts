@@ -1,10 +1,12 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { WorkflowCommand } from "../../effected/github-commands/index.ts";
-import { Effect, Layer, References } from "effect";
+import { Effect, Layer, References, Schema, Result } from "effect";
 import { TestConsole } from "effect/testing";
 import { ActionEnvironment, ActionLogger, ActionOutputs } from "../../effected/github-actions/index.ts";
 import { commandLines, isCommand } from "./helpers/runnerCommands.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 const ZWSP = String.fromCodePoint(0x200b);
 
@@ -24,11 +26,10 @@ const HOSTILE = [
 const live = <A, E>(program: Effect.Effect<A, E, ActionLogger>) =>
 	program.pipe(Effect.provide(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({})))));
 
-const logged = <A, E>(program: Effect.Effect<A, E>) =>
-	Effect.gen(function* () {
+const logged = Effect.fn("logged")(function*<A, E>(program: Effect.Effect<A, E>) {
 		yield* program;
 		return yield* lines;
-	}).pipe(Effect.provide(ActionLogger.layerLogger));
+	}, Effect.provide(ActionLogger.layerLogger));
 
 describe("ActionLogger neutralizes the plain text it writes", () => {
 	it("the oracle flags real commands and a mid-line legacy form (positive controls)", () => {
@@ -37,10 +38,10 @@ describe("ActionLogger neutralizes the plain text it writes", () => {
 	});
 
 	for (const text of HOSTILE) {
-		it.effect(`Effect.logInfo(${JSON.stringify(text)}) reaches stdout with no command line`, () =>
+		it.effect(`Effect.logInfo(${Result.getOrThrowWith(Schema.encodeResult(Json)(text), (error) => error)}) reaches stdout with no command line`, () =>
 			Effect.gen(function* () {
 				const captured = yield* logged(Effect.logInfo(text));
-				assert.deepStrictEqual(commandLines(captured.join("\n")), [], JSON.stringify(captured));
+				assert.deepStrictEqual(commandLines(captured.join("\n")), [], Result.getOrThrowWith(Schema.encodeResult(Json)(captured), (error) => error));
 				assert.isAbove(captured.length, 0);
 			}),
 		);
@@ -134,7 +135,7 @@ describe("the buffered transcript and the step line are neutralized too", () => 
 				const logger = yield* ActionLogger;
 				yield* Effect.flip(logger.withStep("name\n::error::x ##[add-mask]y", Effect.fail("boom")));
 				const captured = yield* lines;
-				assert.deepStrictEqual(commandLines(captured.join("\n")), [], JSON.stringify(captured));
+				assert.deepStrictEqual(commandLines(captured.join("\n")), [], Result.getOrThrowWith(Schema.encodeResult(Json)(captured), (error) => error));
 			}),
 		),
 	);
@@ -146,7 +147,7 @@ describe("a detached worker's setFailed degrades to a neutralized plain line", (
 			const outputs = yield* ActionOutputs;
 			yield* outputs.setFailed("bad\n::error::x ##[stop-commands]y");
 			const errors = (yield* TestConsole.errorLines).map(String);
-			assert.deepStrictEqual(commandLines(errors.join("\n")), [], JSON.stringify(errors));
+			assert.deepStrictEqual(commandLines(errors.join("\n")), [], Result.getOrThrowWith(Schema.encodeResult(Json)(errors), (error) => error));
 			assert.isAbove(errors.length, 0);
 		}).pipe(Effect.provide(ActionOutputs.layerDetached)),
 	);

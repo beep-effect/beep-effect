@@ -1,6 +1,6 @@
 import { NodeServices } from "@effect/platform-node";
 import { WorkflowCommand } from "../github-commands/index.ts";
-import { Cause, Effect, Exit, Layer, LogLevel, Option, References, Result } from "effect";
+import { Cause, Console, Effect, Exit, Layer, LogLevel, Option, References, Result } from "effect";
 import type { HttpClient } from "effect/http";
 import { FetchHttpClient } from "effect/http";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
@@ -244,21 +244,22 @@ export class Action {
 		// including a caller's `layer` — actually installed.
 		const leveled = options.stepDebugLogLevel === false ? program : withStepDebugLogLevel(program);
 
-		const runnable = leveled.pipe(
-			Effect.provide(composed),
+		const runnable = Effect.scopedWith((scope) =>
+			Effect.flatMap(Layer.buildWithScope(composed, scope), (context) => Effect.provideContext(leveled, context)),
+		).pipe(
 			Effect.exit,
 			Effect.flatMap((exit) =>
 				Exit.isSuccess(exit)
 					? Effect.void
-					: Effect.sync(() => {
+					: Effect.gen(function* () {
 							// Written with the workflow-command renderer rather than through
 							// the `Logger`, because this runs after the program — and after
 							// whatever went wrong with it.
 							const detail = Cause.pretty(exit.cause);
 							if (detail.trim() !== "") {
-								console.log(WorkflowCommand.render("debug", {}, detail));
+								yield* Console.log(WorkflowCommand.render("debug", {}, detail));
 							}
-							console.log(WorkflowCommand.render("error", {}, `Action failed: ${describeCause(exit.cause)}`));
+							yield* Console.log(WorkflowCommand.render("error", {}, `Action failed: ${describeCause(exit.cause)}`));
 							process.exitCode = 1;
 						}),
 			),

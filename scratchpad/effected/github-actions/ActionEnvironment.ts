@@ -1,4 +1,6 @@
-import { Context, Effect, FileSystem, Layer, Option, Schema } from "effect";
+import { Context, Effect, FileSystem, Layer, Option, Schema, Result } from "effect";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 /**
  * Raised when the runner environment does not say what an action needs.
@@ -196,9 +198,7 @@ const make = (
 
 		const get = (name: string): Effect.Effect<string, ActionEnvironmentError> =>
 			Effect.flatMap(lookup(name), (found) =>
-				Option.isSome(found)
-					? Effect.succeed(found.value)
-					: Effect.fail(ActionEnvironmentError.make({ reason: "missing", name })),
+				Effect.fromOption(found, () => ActionEnvironmentError.make({ reason: "missing", name })),
 			);
 
 		return {
@@ -254,7 +254,7 @@ const make = (
 					),
 				);
 				return yield* Effect.try({
-					try: () => JSON.parse(raw) as unknown,
+					try: () => Result.getOrThrowWith(Schema.decodeResult(Json)(raw), (error) => error) as unknown,
 					catch: (cause) =>
 						ActionEnvironmentError.make({
 							reason: "malformed",

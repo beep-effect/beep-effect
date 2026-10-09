@@ -1,7 +1,7 @@
 // @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import type { Duration } from "effect";
-import { Effect, Fiber, Logger, Option, Ref, Result } from "effect";
+import { Effect, Fiber, Logger, Option, Ref, Result, MutableRef } from "effect";
 import { TestClock } from "effect/testing";
 import { CheckDocument, CheckDocumentError, CheckDocumentStamp, CheckReport } from "../../effected/github-actions/CheckDocument.ts";
 import { ManagedDocument } from "../../effected/github-actions/ManagedDocument.ts";
@@ -26,8 +26,7 @@ interface HarnessOptions {
 }
 
 /** A recording sink plus the layer wired to it. */
-const harness = (options: HarnessOptions = {}) =>
-	Effect.gen(function* () {
+const harness = Effect.fn("harness")(function*(options: HarnessOptions = {}) {
 		const writes = yield* Ref.make<ReadonlyArray<string>>([]);
 		const layer = CheckDocument.layer({
 			namespace: NS,
@@ -179,8 +178,7 @@ describe("CheckDocument", () => {
 					namespace: NS,
 					key: KEY,
 					render: perCheck,
-					sink: (rendered) =>
-						Effect.gen(function* () {
+					sink: Effect.fn("sink")(function*(rendered) {
 							if (yield* Ref.get(broken)) {
 								return yield* Effect.fail("the API said no");
 							}
@@ -345,11 +343,10 @@ describe("CheckDocument", () => {
 		 * other layer wrote, which is exactly the two-runs-one-document race the
 		 * guard exists for. Each layer records its own writes.
 		 */
-		const sharedHarness = (
+		const sharedHarness = Effect.fn("sharedHarness")(function*(
 			remote: Ref.Ref<string | undefined>,
 			stamp?: { readonly at: string; readonly runId: string },
-		) =>
-			Effect.gen(function* () {
+		) {
 				const writes = yield* Ref.make<ReadonlyArray<string>>([]);
 				const layer = CheckDocument.layer({
 					namespace: NS,
@@ -400,7 +397,7 @@ describe("CheckDocument", () => {
 			Effect.gen(function* () {
 				const lines = yield* Ref.make<ReadonlyArray<string>>([]);
 				const collector = Logger.make((entry) =>
-					Effect.runSync(Ref.update(lines, (all) => [...all, String(entry.message)])),
+					MutableRef.update(lines.ref, (all) => [...all, String(entry.message)]),
 				);
 				const remote = yield* Ref.make<string | undefined>(undefined);
 				const newer = yield* sharedHarness(remote, NEWER);

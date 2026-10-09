@@ -3,7 +3,7 @@ import { Result, Schema } from "effect";
 import type { BlobEnvelopeError } from "../../effected/github-actions/index.ts";
 import { BlobEnvelope, UnsupportedBlobEnvelopeVersionError } from "../../effected/github-actions/index.ts";
 
-const Meta = Schema.Struct({ tag: Schema.String, durationMs: Schema.Number });
+const Meta = Schema.Struct({ tag: Schema.String, durationMs: Schema.Finite });
 type Meta = typeof Meta.Type;
 
 const bytes = (...values: ReadonlyArray<number>) => Uint8Array.from(values);

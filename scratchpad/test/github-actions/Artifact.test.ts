@@ -6,12 +6,14 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer, Option, Sink, Stream } from "effect";
+import { Effect, Layer, Option, Sink, Stream, Schema, Result, Clock } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
 import type { FileBlobTransfer } from "../../effected/github-actions/index.ts";
 import { Artifact, ArtifactError, BlobTransferError } from "../../effected/github-actions/index.ts";
 import { json, resultsEnv, runtimeToken, twirpFetch } from "./results.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 const fileTransfer = () => {
 	const blobs = new Map<string, Uint8Array>();
@@ -258,7 +260,7 @@ describe("Artifact", () => {
 					),
 				);
 				assert.strictEqual(error.reason, "invalidOptions");
-				assert.include(error.message, JSON.stringify("a\nb.txt"));
+				assert.include(error.message, Result.getOrThrowWith(Schema.encodeResult(Json)("a\nb.txt"), (error) => error));
 				assert.lengthOf(calls, 0);
 			}),
 		),
@@ -362,7 +364,7 @@ describe("Artifact", () => {
 				).pipe(Effect.provide(live(fetch, transfer)));
 				const expiry = calls.find((call) => call.method === "FinalizeArtifact")?.body.expiresAt;
 				assert.isString(expiry);
-				assert.isAbove(Date.parse(String(expiry)), Date.now());
+				assert.isAbove(Date.parse(String(expiry)), (yield* Clock.currentTimeMillis));
 			}),
 		),
 	);

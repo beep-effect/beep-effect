@@ -282,8 +282,7 @@ const make = Effect.gen(function* () {
 
 	const flushActive = Effect.flatMap(ActiveBuffer, (state) => (state === null ? Effect.void : flush(state)));
 
-	const withBuffer = <A, E, R>(label: string, effect: Effect.Effect<A, E, R>, options?: WithBufferOptions) =>
-		Effect.gen(function* () {
+	const withBuffer = Effect.fn("withBuffer")(function*<A, E, R>(label: string, effect: Effect.Effect<A, E, R>, options?: WithBufferOptions) {
 			const minimum = yield* References.MinimumLogLevel;
 			const stepDebug = yield* env.isDebug;
 			if (stepDebug || LogLevel.isLessThanOrEqualTo(minimum, "Debug")) {

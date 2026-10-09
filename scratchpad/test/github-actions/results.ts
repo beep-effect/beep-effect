@@ -7,11 +7,13 @@
 // backend-id decoder rejects, and the divergence would only show up in
 // production.
 
-import { Effect, Fiber } from "effect";
+import { Effect, Fiber, Schema, Result } from "effect";
 import { ActionEnvironment } from "../../effected/github-actions/index.ts";
 
+const Json = Schema.fromJsonString(Schema.Unknown);
+
 /** A base64url segment, as a JWT carries them. */
-const segment = (value: unknown): string => Buffer.from(JSON.stringify(value)).toString("base64url");
+const segment = (value: unknown): string => Buffer.from(Result.getOrThrowWith(Schema.encodeResult(Json)(value), (error) => error)).toString("base64url");
 
 /**
  * A runtime token shaped like the one the runner injects: a three-segment JWT
@@ -43,7 +45,7 @@ export interface Rpc {
 
 /** A JSON body, as the backend answers one. */
 export const json = (value: unknown, status = 200): Response =>
-	new Response(JSON.stringify(value), { status, headers: { "content-type": "application/json" } });
+	new Response(Result.getOrThrowWith(Schema.encodeResult(Json)(value), (error) => error), { status, headers: { "content-type": "application/json" } });
 
 /**
  * A `fetch` that routes on the Twirp method — the last path segment — and
@@ -59,7 +61,7 @@ export const twirpFetch = (
 	handlers: Readonly<Record<string, (body: Record<string, unknown>, index: number) => Response>>,
 ): { readonly calls: Array<Rpc>; readonly fetch: typeof globalThis.fetch } => {
 	const calls: Array<Rpc> = [];
-	const fetch: typeof globalThis.fetch = async (input, init) => {
+	const fetch: typeof globalThis.fetch = Object.assign(async (input: Parameters<typeof globalThis.fetch>[0], init: Parameters<typeof globalThis.fetch>[1]) => {
 		const url = String(input);
 		const method = url.slice(url.lastIndexOf("/") + 1);
 		// Decoded through `Response` rather than `String(init.body)`: the request
@@ -72,13 +74,12 @@ export const twirpFetch = (
 		calls.push({ url, method, body, authorization: new Headers(init?.headers).get("authorization") });
 		const handler = handlers[method];
 		return handler === undefined ? new Response(null, { status: 501 }) : handler(body, index);
-	};
+	}, { preconnect: () => {} });
 	return { calls, fetch };
 };
 
 /** Run a fiber to completion while a virtual clock drives its retry sleeps. */
-export const settle = <A, E>(effect: Effect.Effect<A, E>, adjust: Effect.Effect<void>) =>
-	Effect.gen(function* () {
+export const settle = Effect.fn("settle")(function*<A, E>(effect: Effect.Effect<A, E>, adjust: Effect.Effect<void>) {
 		const fiber = yield* Effect.forkChild(effect);
 		// Bounded rather than `while (true)`: a fiber blocked on something that is
 		// not a sleep would otherwise hang to the vitest timeout with no clue why.

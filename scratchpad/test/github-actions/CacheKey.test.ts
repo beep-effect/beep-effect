@@ -3,7 +3,7 @@ import { assert, describe, it } from "@effect/vitest";
 import type { MemoryFileSystemOptions, MemoryFileSystemSeedEntry } from "../../effected/memfs/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import type { FileSystem } from "effect";
-import { Effect, Layer, Option, Path, Schema } from "effect";
+import { Effect, Layer, Option, Path, Schema, Result, flow } from "effect";
 import { systemError } from "effect/PlatformError";
 import { CacheKey, CacheKeyBadPatternError, CacheKeyReadError } from "../../effected/github-actions/index.ts";
 
@@ -128,8 +128,8 @@ describe("CacheKey", () => {
 		it("survives a schema round-trip without regaining a ladder", () => {
 			// The policy is a plain field, so a key that crossed a serialization
 			// boundary (state, JSON output) keeps meaning "exact match only".
-			const encoded = Schema.encodeSync(CacheKey)(CacheKey.of("Linux", "pnpm-store").withoutRestoreKeys());
-			const decoded = Schema.decodeSync(CacheKey)(encoded);
+			const encoded = flow(Schema.encodeResult(CacheKey), Result.getOrThrowWith((error) => error))(CacheKey.of("Linux", "pnpm-store").withoutRestoreKeys());
+			const decoded = flow(Schema.decodeResult(CacheKey), Result.getOrThrowWith((error) => error))(encoded);
 			assert.deepStrictEqual(decoded.restoreKeys, []);
 			assert.strictEqual(decoded.key, "Linux-pnpm-store");
 		});
@@ -313,8 +313,7 @@ describe("CacheKey", () => {
 				// seed, the fault only counts reads in flight.
 				const observed = MemoryFileSystem.layerWith(FILES, {
 					faults: (base) => ({
-						readFile: (path) =>
-							Effect.gen(function* () {
+						readFile: Effect.fn("readFile")(function*(path) {
 								active += 1;
 								if (active > 1) {
 									overlapped = true;

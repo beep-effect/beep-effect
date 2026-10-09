@@ -6,7 +6,7 @@
 // a heavy import leaks into a light module's graph, so the one piece those
 // three modules share is the piece with no dependencies.
 
-import { Effect, Option, Redacted, Result } from "effect";
+import { Effect, Option, Redacted, Result, Function } from "effect";
 import type { ActionEnvironmentShape } from "../ActionEnvironment.ts";
 import { payloadOf } from "./jwt.ts";
 
@@ -62,8 +62,11 @@ export const RUNTIME_TOKEN = "ACTIONS_RUNTIME_TOKEN";
  *
  * @internal
  */
-export const misconfiguredDetail = (variable: string, service: string): string =>
-	`${variable} is not set — the ${service} is only reachable from a \`uses:\` step, never from \`run:\``;
+export const misconfiguredDetail: {
+	(variable: string, service: string): string;
+	(service: string): (variable: string) => string;
+} = Function.dual(2, (variable: string, service: string): string =>
+	`${variable} is not set — the ${service} is only reachable from a \`uses:\` step, never from \`run:\``);
 
 /**
  * The run and job ids the artifact protocol needs, from the runtime token's

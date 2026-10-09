@@ -2,9 +2,11 @@
 import { assert, describe, it } from "@effect/vitest";
 import type { GitHubAppShape } from "../../effected/github/index.ts";
 import { AppIdentity, GitHubApp, GitHubAppError, GitHubClient, InstallationToken } from "../../effected/github/index.ts";
-import { DateTime, Duration, Effect, Layer, Option, Redacted, Schema } from "effect";
+import { DateTime, Duration, Effect, Layer, Redacted, Schema, Result } from "effect";
 import { TestClock } from "effect/testing";
 import { ActionOutputs, ActionState, ActionStateError, GitHubToken, GitHubTokenError } from "../../effected/github-actions/index.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 /** A fixed instant to reason about expiry from — the clock starts at the epoch otherwise. */
 const NOW = Date.parse("2026-07-25T12:00:00.000Z");
@@ -50,24 +52,23 @@ const rig = (
 		...options.outputs,
 	});
 	const state = ActionState.layerTest({
-		save: (key, value, schema) =>
-			Effect.gen(function* () {
+		save: Effect.fn("save")(function*(key, value, schema) {
 				events.push(`save:${key}`);
-				saved.set(key, JSON.stringify(yield* Schema.encodeUnknownEffect(schema)(value)));
-			}).pipe(Effect.orDie),
+				saved.set(key, Result.getOrThrowWith(Schema.encodeResult(Json)(yield* Schema.encodeUnknownEffect(schema)(value)), (error) => error));
+			}, Effect.orDie),
 		get: (key, schema) =>
 			Effect.suspend(() => {
 				const found = saved.get(key);
 				return found === undefined
 					? Effect.die(new Error(`nothing saved under ${key}`))
-					: Effect.orDie(Schema.decodeUnknownEffect(schema)(JSON.parse(found)));
+					: Effect.orDie(Schema.decodeUnknownEffect(schema)(Result.getOrThrowWith(Schema.decodeResult(Json)(found), (error) => error)));
 			}),
 		getOptional: (key, schema) =>
 			Effect.suspend(() => {
 				const found = saved.get(key);
 				return found === undefined
 					? Effect.succeedNone
-					: Effect.map(Effect.orDie(Schema.decodeUnknownEffect(schema)(JSON.parse(found))), Option.some);
+					: Effect.asSome(Effect.orDie(Schema.decodeUnknownEffect(schema)(Result.getOrThrowWith(Schema.decodeResult(Json)(found), (error) => error))));
 			}),
 	});
 	return { events, saved, revoked, layer: Layer.mergeAll(app, outputs, state) };
@@ -274,13 +275,13 @@ describe("GitHubToken", () => {
 				yield* TestClock.setTime(NOW);
 				yield* harness.seed;
 				const seen: Array<string | null> = [];
-				const fetch: typeof globalThis.fetch = async (_input, init) => {
+				const fetch: typeof globalThis.fetch = Object.assign(async (_input: Parameters<typeof globalThis.fetch>[0], init: Parameters<typeof globalThis.fetch>[1]) => {
 					seen.push(new Headers(init?.headers).get("authorization"));
 					return new Response(JSON.stringify({ login: "acme" }), {
 						status: 200,
 						headers: { "content-type": "application/json" },
 					});
-				};
+				}, { preconnect: () => {} });
 				// Built through `GitHubClient.layerFromToken`, not through `GitHubApp`:
 				// the App path links a JWT signer and needs the private key, which a
 				// later phase neither has nor should have.

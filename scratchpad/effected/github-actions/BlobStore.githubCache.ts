@@ -69,8 +69,7 @@ const make = (
 
 		/** The cache service, for one key: every failure names it. */
 		const cacheService = (key: string): CacheServiceClient<BlobStoreError> => ({
-			call: (method, body) =>
-				Effect.gen(function* () {
+			call: Effect.fn("call")(function*(method, body) {
 					const { baseUrl, token } = yield* backend;
 					return yield* twirpCall({ http, baseUrl, service: CACHE_SERVICE, token, method, body }).pipe(
 						Effect.mapError((failure) => BlobStoreError.make({ ...twirpFailureFields(failure), key })),
@@ -90,8 +89,7 @@ const make = (
 			Effect.mapError((cause: BlobTransferError) => BlobStoreError.make({ reason: "unreachable", key, cause }));
 
 		return {
-			get: <A, I>(key: string, schema: Schema.Codec<A, I>) =>
-				Effect.gen(function* () {
+			get: Effect.fn("get")(function*<A, I>(key: string, schema: Schema.Codec<A, I>) {
 					const url = yield* download(key);
 					if (Option.isNone(url)) {
 						return Option.none<StoredBlob<A>>();
@@ -100,8 +98,7 @@ const make = (
 					return Option.some(yield* Effect.fromResult(BlobEnvelope.decodeResult(bytes, schema)));
 				}),
 
-			put: <A, I>(key: string, blob: StoredBlob<A>, schema: Schema.Codec<A, I>) =>
-				Effect.gen(function* () {
+			put: Effect.fn("put")(function*<A, I>(key: string, blob: StoredBlob<A>, schema: Schema.Codec<A, I>) {
 					const framed = yield* Effect.fromResult(BlobEnvelope.encodeResult(blob.metadata, blob.body, schema));
 					const service = cacheService(key);
 					// None: another job wrote this key first. The entry is immutable,

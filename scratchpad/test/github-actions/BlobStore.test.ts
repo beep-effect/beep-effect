@@ -1,12 +1,12 @@
 // @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer, Option, Redacted, Schema } from "effect";
+import { Effect, Layer, Option, Redacted, Schema, DateTime } from "effect";
 import { FetchHttpClient } from "effect/http";
 import type { S3Config } from "../../effected/github-actions/index.ts";
 import { ActionOutputs, BlobStore, BlobStoreError, NotABlobEnvelopeError } from "../../effected/github-actions/index.ts";
 import { canonicalize, digestHex, sign, signingKey, uriEncode } from "../../effected/github-actions/internal/sigv4.ts";
 
-class Meta extends Schema.Class<Meta>("Meta")({ tag: Schema.String, durationMs: Schema.Number }) {}
+class Meta extends Schema.Class<Meta>("Meta")({ tag: Schema.String, durationMs: Schema.Finite }) {}
 
 const CONFIG: S3Config = {
 	bucket: "cache",
@@ -57,7 +57,7 @@ describe("SigV4", () => {
 				host: "examplebucket.s3.amazonaws.com",
 				headers: { range: "bytes=0-9" },
 				body: new Uint8Array(0),
-				now: new Date("2013-05-24T00:00:00.000Z"),
+				now: DateTime.toDateUtc(DateTime.makeUnsafe("2013-05-24T00:00:00.000Z")),
 			},
 			{
 				accessKeyId: "AKIAIOSFODNN7EXAMPLE",
@@ -94,7 +94,7 @@ describe("SigV4", () => {
 				host: "example.test",
 				headers: {},
 				body: new Uint8Array([1, 2, 3]),
-				now: new Date("2024-01-01T00:00:00.000Z"),
+				now: DateTime.toDateUtc(DateTime.makeUnsafe("2024-01-01T00:00:00.000Z")),
 			},
 			{ accessKeyId: "AK", secretAccessKey: "SK", region: "us-east-1", service: "s3", sessionToken: "ST" },
 		);
@@ -112,7 +112,7 @@ describe("SigV4", () => {
 			path: "bucket/key",
 			host: "example.test",
 			body: new Uint8Array(0),
-			now: new Date("2024-01-01T00:00:00.000Z"),
+			now: DateTime.toDateUtc(DateTime.makeUnsafe("2024-01-01T00:00:00.000Z")),
 		};
 		const credentials = { accessKeyId: "AK", secretAccessKey: "SK", region: "us-east-1", service: "s3" };
 		const first = canonicalize({ ...request, headers: { "z-last": "1", "a-first": "2" } }, credentials);
@@ -128,14 +128,14 @@ describe("BlobStore", () => {
 		it.effect("puts a framed blob at a path-style url", () =>
 			Effect.gen(function* () {
 				const seen: Array<{ url: string; method: string; authorization: string | null }> = [];
-				const fake: typeof globalThis.fetch = async (input, init) => {
+				const fake: typeof globalThis.fetch = Object.assign(async (input: Parameters<typeof globalThis.fetch>[0], init: Parameters<typeof globalThis.fetch>[1]) => {
 					seen.push({
 						url: String(input),
 						method: init?.method ?? "GET",
 						authorization: new Headers(init?.headers).get("authorization"),
 					});
 					return new Response(null, { status: 200 });
-				};
+				}, { preconnect: () => {} });
 				yield* Effect.gen(function* () {
 					yield* (yield* BlobStore).put(
 						"build/1",
@@ -155,10 +155,10 @@ describe("BlobStore", () => {
 		it.effect("applies the key prefix", () =>
 			Effect.gen(function* () {
 				const seen: Array<string> = [];
-				const fake: typeof globalThis.fetch = async (input) => {
+				const fake: typeof globalThis.fetch = Object.assign(async (input: Parameters<typeof globalThis.fetch>[0]) => {
 					seen.push(String(input));
 					return new Response(null, { status: 200 });
-				};
+				}, { preconnect: () => {} });
 				yield* Effect.gen(function* () {
 					yield* (yield* BlobStore).has("k");
 				}).pipe(Effect.provide(s3(fake, { ...CONFIG, prefix: "ci" })));
@@ -168,7 +168,7 @@ describe("BlobStore", () => {
 
 		it.effect("reports a miss as nothing, not as a failure", () =>
 			Effect.gen(function* () {
-				const fake: typeof globalThis.fetch = async () => new Response("", { status: 404 });
+				const fake: typeof globalThis.fetch = Object.assign(async () => new Response("", { status: 404 }), { preconnect: () => {} });
 				const found = yield* Effect.gen(function* () {
 					return yield* (yield* BlobStore).get("absent", Meta);
 				}).pipe(Effect.provide(s3(fake)));
@@ -178,8 +178,8 @@ describe("BlobStore", () => {
 
 		it.effect("has() is false for 404 and true for 200", () =>
 			Effect.gen(function* () {
-				const present: typeof globalThis.fetch = async () => new Response(null, { status: 200 });
-				const absent: typeof globalThis.fetch = async () => new Response(null, { status: 404 });
+				const present: typeof globalThis.fetch = Object.assign(async () => new Response(null, { status: 200 }), { preconnect: () => {} });
+				const absent: typeof globalThis.fetch = Object.assign(async () => new Response(null, { status: 404 }), { preconnect: () => {} });
 				assert.isTrue(
 					yield* Effect.gen(function* () {
 						return yield* (yield* BlobStore).has("k");
@@ -195,7 +195,7 @@ describe("BlobStore", () => {
 
 		it.effect("fails typed, carrying the status, when the store refuses", () =>
 			Effect.gen(function* () {
-				const fake: typeof globalThis.fetch = async () => new Response("denied", { status: 403 });
+				const fake: typeof globalThis.fetch = Object.assign(async () => new Response("denied", { status: 403 }), { preconnect: () => {} });
 				const error = yield* Effect.flip(
 					Effect.flatMap(BlobStore, (store) => store.get("k", Meta)).pipe(Effect.provide(s3(fake))),
 				);
@@ -207,7 +207,7 @@ describe("BlobStore", () => {
 		it.effect("round-trips metadata and body through the real frame", () =>
 			Effect.gen(function* () {
 				const stored = new Map<string, Uint8Array>();
-				const fake: typeof globalThis.fetch = async (input, init) => {
+				const fake: typeof globalThis.fetch = Object.assign(async (input: Parameters<typeof globalThis.fetch>[0], init: Parameters<typeof globalThis.fetch>[1]) => {
 					const key = String(input);
 					if ((init?.method ?? "GET") === "PUT") {
 						stored.set(key, new Uint8Array(await new Response(init?.body).arrayBuffer()));
@@ -215,7 +215,7 @@ describe("BlobStore", () => {
 					}
 					const found = stored.get(key);
 					return found === undefined ? new Response(null, { status: 404 }) : new Response(found, { status: 200 });
-				};
+				}, { preconnect: () => {} });
 				const layer = s3(fake);
 				yield* Effect.gen(function* () {
 					const store = yield* BlobStore;
@@ -239,8 +239,8 @@ describe("BlobStore", () => {
 				// The reason the magic prefix exists: a store holding pre-envelope
 				// entries must produce a clean, named failure rather than decoding
 				// arbitrary bytes as metadata.
-				const fake: typeof globalThis.fetch = async () =>
-					new Response(new Uint8Array([1, 2, 3, 4, 5]), { status: 200 });
+				const fake: typeof globalThis.fetch = Object.assign(async () =>
+					new Response(new Uint8Array([1, 2, 3, 4, 5]), { status: 200 }), { preconnect: () => {} });
 				const error = yield* Effect.flip(
 					Effect.flatMap(BlobStore, (store) => store.get("legacy", Meta)).pipe(Effect.provide(s3(fake))),
 				);
@@ -251,7 +251,7 @@ describe("BlobStore", () => {
 		it.effect("masks the signing key once, at layer construction", () =>
 			Effect.gen(function* () {
 				const outputs = recordingOutputs();
-				const fake: typeof globalThis.fetch = async () => new Response(null, { status: 200 });
+				const fake: typeof globalThis.fetch = Object.assign(async () => new Response(null, { status: 200 }), { preconnect: () => {} });
 				const layer = s3(fake, { ...CONFIG, sessionToken: Redacted.make("session") }, outputs);
 				yield* Effect.gen(function* () {
 					const store = yield* BlobStore;

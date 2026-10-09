@@ -12,7 +12,7 @@ import {
 	TableCell,
 	TableRow,
 } from "../markdown/index.ts";
-import { Result, Schema, SchemaAST } from "effect";
+import { Result, Schema, SchemaAST, flow } from "effect";
 
 /**
  * A heading level GitHub renders, `1` through `6`.
@@ -315,7 +315,7 @@ export class GitHubMarkdown {
 			// The caller's `format` wins; otherwise the field's own encoder renders
 			// the cell (an encoder yielding nothing is an empty cell). Built once
 			// per column, not per cell — this is the one path that renders in a loop.
-			const encode = Schema.encodeSync(field as Schema.ConstraintEncoder<string | undefined>);
+			const encode = flow(Schema.encodeResult(field as Schema.ConstraintEncoder<string | undefined>), Result.getOrThrowWith((error) => error));
 			const project: (value: unknown) => string = column?.format ?? ((value) => encode(value) ?? "");
 			return {
 				key,

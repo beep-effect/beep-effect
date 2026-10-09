@@ -1,10 +1,11 @@
 // @effect-diagnostics strictEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Cause, Effect, Layer, Redacted, Schema } from "effect";
+import { Cause, Effect, Layer, Redacted, Schema, Result, DateTime } from "effect";
 import { TestConsole } from "effect/testing";
 import {
 	ActionEnvironment,
+	type ActionOutputError,
 	ActionOutputs,
 	DetachedOutputError,
 	InvalidOutputNameError,
@@ -12,6 +13,8 @@ import {
 	RunnerFileUnavailableError,
 	Secret,
 } from "../../effected/github-actions/index.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 const FILES = {
 	GITHUB_OUTPUT: "/rf/output",
@@ -124,7 +127,7 @@ describe("ActionOutputs", () => {
 
 		it.effect("encodes setJson through the schema", () => {
 			const files = runnerFiles();
-			const Payload = Schema.Struct({ count: Schema.Number, tag: Schema.String });
+			const Payload = Schema.Struct({ count: Schema.Finite, tag: Schema.String });
 			return live(
 				Effect.gen(function* () {
 					yield* (yield* ActionOutputs).setJson("result", { count: 2, tag: "x" }, Payload);
@@ -177,11 +180,11 @@ describe("ActionOutputs", () => {
 					assert.instanceOf(forHeredoc, InvalidOutputNameError);
 					const forEnv = yield* Effect.flip((yield* ActionOutputs).exportVariable("bad=name", "1"));
 					assert.instanceOf(forEnv, InvalidOutputNameError);
-					const forJson = yield* Effect.flip((yield* ActionOutputs).setJson("bad<<name", 1, Schema.Number));
+					const forJson = yield* Effect.flip((yield* ActionOutputs).setJson("bad<<name", 1, Schema.Finite));
 					assert.instanceOf(forJson, InvalidOutputNameError);
 					const forTrailing = yield* Effect.flip((yield* ActionOutputs).set("bad<", "1"));
 					assert.instanceOf(forTrailing, InvalidOutputNameError);
-					const forJsonTrailing = yield* Effect.flip((yield* ActionOutputs).setJson("<", 1, Schema.Number));
+					const forJsonTrailing = yield* Effect.flip((yield* ActionOutputs).setJson("<", 1, Schema.Finite));
 					assert.instanceOf(forJsonTrailing, InvalidOutputNameError);
 					assert.strictEqual(files.written.paths().length, 0, "nothing may be written when the name is refused");
 				}),
@@ -197,7 +200,7 @@ describe("ActionOutputs", () => {
 				Effect.gen(function* () {
 					yield* (yield* ActionOutputs).setSecret("s3cr3t");
 					const lines = yield* TestConsole.logLines;
-					assert.include(JSON.stringify(lines), "::add-mask::s3cr3t");
+					assert.include(Result.getOrThrowWith(Schema.encodeResult(Json)(lines), (error) => error), "::add-mask::s3cr3t");
 				}),
 				files,
 			);
@@ -209,7 +212,7 @@ describe("ActionOutputs", () => {
 				Effect.gen(function* () {
 					yield* (yield* ActionOutputs).setSecret("a\nb");
 					const lines = yield* TestConsole.logLines;
-					assert.include(JSON.stringify(lines), "::add-mask::a%0Ab");
+					assert.include(Result.getOrThrowWith(Schema.encodeResult(Json)(lines), (error) => error), "::add-mask::a%0Ab");
 				}),
 				files,
 			);
@@ -221,7 +224,7 @@ describe("ActionOutputs", () => {
 				Effect.gen(function* () {
 					yield* (yield* ActionOutputs).setFailed("it broke");
 					const lines = yield* TestConsole.logLines;
-					assert.include(JSON.stringify(lines), "::error::it broke");
+					assert.include(Result.getOrThrowWith(Schema.encodeResult(Json)(lines), (error) => error), "::error::it broke");
 				}),
 				files,
 			);
@@ -234,7 +237,7 @@ describe("ActionOutputs", () => {
 
 		/** Everything this process wrote to its console, as one string. */
 		const captured = Effect.map(Effect.zip(TestConsole.logLines, TestConsole.errorLines), ([logs, errors]) =>
-			JSON.stringify([...logs, ...errors]),
+			Result.getOrThrowWith(Schema.encodeResult(Json)([...logs, ...errors]), (error) => error),
 		);
 
 		it.effect("the incident, as regression: a signing secret never reaches a detached worker's log", () =>
@@ -277,9 +280,9 @@ describe("ActionOutputs", () => {
 		it.effect("every runner-file member fails typed, naming its file", () =>
 			Effect.gen(function* () {
 				const outputs = yield* ActionOutputs;
-				const cases: ReadonlyArray<readonly [Effect.Effect<void, unknown>, string]> = [
+				const cases: ReadonlyArray<readonly [Effect.Effect<void, ActionOutputError>, string]> = [
 					[outputs.set("version", "1.2.3"), "GITHUB_OUTPUT"],
-					[outputs.setJson("result", { a: 1 }, Schema.Struct({ a: Schema.Number })), "GITHUB_OUTPUT"],
+					[outputs.setJson("result", { a: 1 }, Schema.Struct({ a: Schema.Finite })), "GITHUB_OUTPUT"],
 					[outputs.exportVariable("FOO", "bar"), "GITHUB_ENV"],
 					[outputs.addPath("/opt/bin"), "GITHUB_PATH"],
 					[outputs.summary("## Results\n"), "GITHUB_STEP_SUMMARY"],
@@ -299,7 +302,7 @@ describe("ActionOutputs", () => {
 			Effect.gen(function* () {
 				yield* (yield* ActionOutputs).setFailed("it broke");
 				const errors = yield* TestConsole.errorLines;
-				assert.include(JSON.stringify(errors), "it broke");
+				assert.include(Result.getOrThrowWith(Schema.encodeResult(Json)(errors), (error) => error), "it broke");
 				// The ::error:: protocol means nothing in a worker's log file —
 				// emitting it would be pretending a runner is listening.
 				assert.notInclude(yield* captured, "::error::");
@@ -390,7 +393,7 @@ describe("ActionOutputs", () => {
 		it.effect("setJson records the ENCODED JSON string, not the decoded value", () => {
 			const recorder = ActionOutputs.recording();
 			const Stamped = Schema.Struct({ at: Schema.DateFromString });
-			const at = new Date("2026-09-13T00:00:00.000Z");
+			const at = DateTime.toDateUtc(DateTime.makeUnsafe("2026-09-13T00:00:00.000Z"));
 			return Effect.gen(function* () {
 				yield* (yield* ActionOutputs).setJson("result", { at }, Stamped);
 				const entries = recorder.entries();
@@ -426,7 +429,7 @@ describe("ActionOutputs", () => {
 				yield* outputs.summary("## Results\n");
 				yield* outputs.setFailed("it broke");
 				yield* outputs.setSecret("s3cr3t");
-				yield* outputs.setJson("n", 2, Schema.Number);
+				yield* outputs.setJson("n", 2, Schema.Finite);
 				assert.deepStrictEqual(
 					recorder.entries().map((entry) => [entry.member, entry.name, entry.value]),
 					[
@@ -473,17 +476,17 @@ describe("ActionOutputs", () => {
 				assert.instanceOf(forSet, InvalidOutputNameError);
 				const forEnv = yield* Effect.flip(outputs.exportVariable("", "1"));
 				assert.instanceOf(forEnv, InvalidOutputNameError);
-				const forJson = yield* Effect.flip(outputs.setJson("bad\nname", 1, Schema.Number));
+				const forJson = yield* Effect.flip(outputs.setJson("bad\nname", 1, Schema.Finite));
 				assert.instanceOf(forJson, InvalidOutputNameError);
 				const forEquals = yield* Effect.flip(outputs.set("bad=name", "1"));
 				assert.instanceOf(forEquals, InvalidOutputNameError);
 				const forSeparator = yield* Effect.flip(outputs.exportVariable("bad<<name", "1"));
 				assert.instanceOf(forSeparator, InvalidOutputNameError);
-				const forJsonSeparator = yield* Effect.flip(outputs.setJson("bad=name", 1, Schema.Number));
+				const forJsonSeparator = yield* Effect.flip(outputs.setJson("bad=name", 1, Schema.Finite));
 				assert.instanceOf(forJsonSeparator, InvalidOutputNameError);
 				const forTrailing = yield* Effect.flip(outputs.set("bad<", "1"));
 				assert.instanceOf(forTrailing, InvalidOutputNameError);
-				const forTrailingJson = yield* Effect.flip(outputs.setJson("bad<", 1, Schema.Number));
+				const forTrailingJson = yield* Effect.flip(outputs.setJson("bad<", 1, Schema.Finite));
 				assert.instanceOf(forTrailingJson, InvalidOutputNameError);
 				assert.strictEqual(recorder.entries().length, 0);
 			}).pipe(Effect.provide(recorder.layer));

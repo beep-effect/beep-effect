@@ -1,5 +1,5 @@
 import { BlobClient, BlockBlobClient } from "@azure/storage-blob";
-import { Context, Effect, FileSystem, Layer, Option, Path, Result, Schema } from "effect";
+import { Context, Effect, FileSystem, Layer, Option, Path, Result, Schema, Clock, DateTime } from "effect";
 import { HttpClient } from "effect/http";
 import type { ChildProcess } from "effect/process";
 import { ChildProcessSpawner } from "effect/process";
@@ -14,6 +14,8 @@ import { isWindowsRunner } from "./internal/runner.ts";
 import { spawnOnce } from "./internal/spawn.ts";
 import { CONFLICT, field, isOk, stringField, twirpCall, twirpFailureFields } from "./internal/twirp.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 /**
  * Raised when an artifact cannot be uploaded, listed, downloaded or deleted.
@@ -288,8 +290,7 @@ const make = (
 				),
 			);
 
-		const call = (method: string, body: (ids: BackendIds) => Record<string, unknown>, artifact: string) =>
-			Effect.gen(function* () {
+		const call = Effect.fn("call")(function*(method: string, body: (ids: BackendIds) => Record<string, unknown>, artifact: string) {
 				const { baseUrl, ids, token } = yield* backend(artifact);
 				return yield* twirpCall({
 					http,
@@ -314,8 +315,7 @@ const make = (
 			);
 
 		/** Run an archiving command ONCE (`internal/spawn.ts`), keeping its stderr. */
-		const archive = (command: ChildProcess.Command, artifact: string) =>
-			Effect.gen(function* () {
+		const archive = Effect.fn("archive")(function*(command: ChildProcess.Command, artifact: string) {
 				const { output, code } = yield* spawnOnce(spawner, command).pipe(
 					Effect.mapError((cause) => ArtifactError.make({ reason: "archiveFailed", artifact, cause })),
 				);
@@ -352,13 +352,13 @@ const make = (
 		const moved = (artifact: string) =>
 			Effect.mapError((cause: BlobTransferError) => ArtifactError.make({ reason: "transferFailed", artifact, cause }));
 
-		const zip = (files: ReadonlyArray<string>, root: string, destination: string, level: number, artifact: string) =>
+		const zip = Effect.fn("zip")(function*(files: ReadonlyArray<string>, root: string, destination: string, level: number, artifact: string)
 			// Stored relative to `rootDirectory`: `zip` records the paths exactly
 			// as given, and the Windows script states each entry name explicitly
 			// from the same relative path, so the two archives have one structure
 			// — and absolute inputs would extract into a tree named after the
 			// runner that produced them.
-			Effect.gen(function* () {
+			{
 				const relative = files.map((file) => path.relative(root, file));
 				// The Windows list travels one path per line (`internal/archiveCommands.ts`
 				// says why), so a path holding a line break cannot be represented.
@@ -369,7 +369,7 @@ const make = (
 					return yield* ArtifactError.make({
 							reason: "invalidOptions",
 							artifact,
-							detail: `a file path may not contain a line break: ${JSON.stringify(unrepresentable)}`,
+							detail: `a file path may not contain a line break: ${Result.getOrThrowWith(Schema.encodeResult(Json)(unrepresentable), (error) => error)}`,
 						});
 				}
 				// Beside the archive inside the scratch directory, so `scratch`'s
@@ -443,6 +443,7 @@ const make = (
 							.stat(packed)
 							.pipe(Effect.mapError((cause) => ArtifactError.make({ reason: "archiveFailed", artifact: name, cause })));
 						const digest = yield* digestOf(packed, name);
+						const now = options?.retentionDays === undefined ? undefined : yield* Clock.currentTimeMillis;
 						const finalized = yield* call(
 							"FinalizeArtifact",
 							() => ({
@@ -451,7 +452,7 @@ const make = (
 								hash: `sha256:${digest}`,
 								...(options?.retentionDays === undefined
 									? {}
-									: { expiresAt: new Date(Date.now() + options.retentionDays * 86_400_000).toISOString() }),
+									: { expiresAt: DateTime.formatIso(DateTime.makeUnsafe((now ?? 0) + options.retentionDays * 86_400_000)) }),
 							}),
 							name,
 						);

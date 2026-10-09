@@ -1,3 +1,4 @@
+import { Function } from "effect";
 import { createHmac } from "node:crypto";
 import { sha256Hex } from "./digest.ts";
 
@@ -79,7 +80,22 @@ const timestamps = (now: Date): { readonly amzDate: string; readonly dateStamp: 
  * **own documented** canonical request rather than against this
  * implementation's output.
  */
-export const canonicalize = (
+export const canonicalize: {
+	(request: SigV4Request, credentials: SigV4Credentials): {
+	readonly headers: Record<string, string>;
+	readonly canonicalRequest: string;
+	readonly signedHeaders: string;
+	readonly amzDate: string;
+	readonly dateStamp: string;
+};
+	(credentials: SigV4Credentials): (request: SigV4Request) => {
+	readonly headers: Record<string, string>;
+	readonly canonicalRequest: string;
+	readonly signedHeaders: string;
+	readonly amzDate: string;
+	readonly dateStamp: string;
+};
+} = Function.dual(2, (
 	request: SigV4Request,
 	credentials: SigV4Credentials,
 ): {
@@ -124,7 +140,7 @@ export const canonicalize = (
 		dateStamp,
 		canonicalRequest: [request.method, canonicalPath, "", canonicalHeaders, signedHeaders, payloadHash].join("\n"),
 	};
-};
+});
 
 /**
  * Derive a signing key.
@@ -133,8 +149,11 @@ export const canonicalize = (
  * Four nested HMACs over date, region, service and the literal `aws4_request`.
  * Exported so a test can reproduce AWS's documented derivation example.
  */
-export const signingKey = (secretAccessKey: string, dateStamp: string, region: string, service: string): Uint8Array =>
-	hmac(hmac(hmac(hmac(`AWS4${secretAccessKey}`, dateStamp), region), service), "aws4_request");
+export const signingKey: {
+	(secretAccessKey: string, dateStamp: string, region: string, service: string): Uint8Array;
+	(dateStamp: string, region: string, service: string): (secretAccessKey: string) => Uint8Array;
+} = Function.dual(4, (secretAccessKey: string, dateStamp: string, region: string, service: string): Uint8Array =>
+	hmac(hmac(hmac(hmac(`AWS4${secretAccessKey}`, dateStamp), region), service), "aws4_request"));
 
 /**
  * Sign a request, returning the headers to send.
@@ -145,7 +164,10 @@ export const signingKey = (secretAccessKey: string, dateStamp: string, region: s
  * `x-amz-security-token` and `authorization` — so a caller sends exactly what
  * was signed rather than assembling a second, subtly different set.
  */
-export const sign = (request: SigV4Request, credentials: SigV4Credentials): Record<string, string> => {
+export const sign: {
+	(request: SigV4Request, credentials: SigV4Credentials): Record<string, string>;
+	(credentials: SigV4Credentials): (request: SigV4Request) => Record<string, string>;
+} = Function.dual(2, (request: SigV4Request, credentials: SigV4Credentials): Record<string, string> => {
 	const { headers, canonicalRequest, signedHeaders, amzDate, dateStamp } = canonicalize(request, credentials);
 	const scope = `${dateStamp}/${credentials.region}/${credentials.service}/aws4_request`;
 	const stringToSign = [ALGORITHM, amzDate, scope, sha256Hex(canonicalRequest)].join("\n");
@@ -156,7 +178,7 @@ export const sign = (request: SigV4Request, credentials: SigV4Credentials): Reco
 		...headers,
 		authorization: `${ALGORITHM} Credential=${credentials.accessKeyId}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`,
 	};
-};
+});
 
 /** The hex SHA-256 of a string, for tests that pin an intermediate. */
 export { sha256Hex as digestHex };

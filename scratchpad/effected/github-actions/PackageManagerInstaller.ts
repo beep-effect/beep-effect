@@ -1,6 +1,6 @@
 import type { IntegrityHashBrand } from "../npm/index.ts";
 import { CorepackIntegrityHash, DEFAULT_REGISTRY, PackageManagerPin, PackageManagerPinName } from "../npm/index.ts";
-import { Context, Effect, FileSystem, Layer, Option, Path, Schema } from "effect";
+import { Context, Effect, FileSystem, Layer, Option, Path, Schema, Result } from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
 import { digestFileHex } from "./internal/digest.ts";
@@ -10,6 +10,8 @@ import { isWindowsRunner } from "./internal/runner.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
 import type { ToolInstallerError } from "./ToolInstaller.ts";
 import { ToolInstaller } from "./ToolInstaller.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 /**
  * Raised when a package manager cannot be provisioned on the runner.
@@ -519,7 +521,7 @@ const make = Effect.gen(function* () {
 					Effect.mapError((cause) => errorFor(pin)({ reason: "layoutUnexpected", subject: "no package.json", cause })),
 				);
 			const manifest = yield* Effect.try({
-				try: () => JSON.parse(raw) as { readonly bin?: unknown; readonly optionalDependencies?: unknown },
+				try: () => Result.getOrThrowWith(Schema.decodeResult(Json)(raw), (error) => error) as { readonly bin?: unknown; readonly optionalDependencies?: unknown },
 				catch: (cause) => errorFor(pin)({ reason: "layoutUnexpected", subject: "unparseable package.json", cause }),
 			});
 			const bins = Option.getOrUndefined(normalizeBins(manifest.bin, pin.name));
@@ -713,10 +715,7 @@ const make = Effect.gen(function* () {
 		sri: unknown,
 		subject: string,
 	): Effect.Effect<ExpectedDigest, PackageManagerInstallerError> =>
-		Option.match(typeof sri === "string" ? strongestSri(sri) : Option.none(), {
-			onNone: () => Effect.fail(errorFor(pin)({ reason: "integrityMismatch", subject })),
-			onSome: Effect.succeed,
-		});
+		Effect.fromOption(typeof sri === "string" ? strongestSri(sri) : Option.none(), () => errorFor(pin)({ reason: "integrityMismatch", subject }));
 
 	/**
 	 * The expected integrity of a native package as its registry packument
@@ -739,7 +738,7 @@ const make = Effect.gen(function* () {
 				Effect.mapError(unverifiable),
 				Effect.flatMap((raw) =>
 					Effect.try({
-						try: () => JSON.parse(raw) as { readonly dist?: { readonly integrity?: unknown } },
+						try: () => Result.getOrThrowWith(Schema.decodeResult(Json)(raw), (error) => error) as { readonly dist?: { readonly integrity?: unknown } },
 						catch: unverifiable,
 					}),
 				),

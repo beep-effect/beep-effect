@@ -8,7 +8,7 @@
 // Actions never fails.
 
 import type { Path } from "effect";
-import { Effect, Option } from "effect";
+import { Effect, Option, Function } from "effect";
 import type { ActionEnvironmentShape } from "../ActionEnvironment.ts";
 
 /**
@@ -36,7 +36,10 @@ export const isWindowsRunner = (env: ActionEnvironmentShape): Effect.Effect<bool
  *
  * @internal
  */
-export const toolCacheRoot = (env: ActionEnvironmentShape, path: Path.Path): Effect.Effect<string> =>
+export const toolCacheRoot: {
+	(env: ActionEnvironmentShape, path: Path.Path): Effect.Effect<string>;
+	(path: Path.Path): (env: ActionEnvironmentShape) => Effect.Effect<string>;
+} = Function.dual(2, (env: ActionEnvironmentShape, path: Path.Path): Effect.Effect<string> =>
 	Effect.map(env.getOptional("RUNNER_TOOL_CACHE"), (found) =>
 		Option.getOrElse(found, () => path.join("/tmp", "runner-tool-cache")),
-	);
+	));

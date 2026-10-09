@@ -6,7 +6,7 @@ import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Effect, Exit, Fiber, Schema } from "effect";
+import { Cause, Effect, Exit, Fiber, Schema, Result } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 import { vi } from "vitest";
@@ -19,6 +19,8 @@ import {
 	InvalidPidError,
 	ProcessId,
 } from "../../effected/github-actions/index.ts";
+
+const Json = Schema.fromJsonString(Schema.Unknown);
 
 /** A fresh scratch directory per use, removed by the test that made it. */
 const scratch = () => mkdtempSync(join(tmpdir(), "effected-detached-"));
@@ -441,7 +443,7 @@ describe("DetachedProcess", () => {
 					}),
 				);
 				assert.isTrue(wrote, "the child must have printed its environment");
-				const seen = JSON.parse(readFileSync(logFile, "utf8")) as Record<string, string>;
+				const seen = Result.getOrThrowWith(Schema.decodeResult(Json)(readFileSync(logFile, "utf8")), (error) => error) as Record<string, string>;
 				assert.strictEqual(seen.ONLY, "1");
 				assert.strictEqual(seen.X, "y");
 				assert.strictEqual(seen.PATH, process.env.PATH);
@@ -481,7 +483,7 @@ describe("DetachedProcess", () => {
 					}),
 				);
 				assert.isTrue(wrote, "the child must have printed its environment");
-				const seen = JSON.parse(readFileSync(logFile, "utf8")) as Record<string, string>;
+				const seen = Result.getOrThrowWith(Schema.decodeResult(Json)(readFileSync(logFile, "utf8")), (error) => error) as Record<string, string>;
 				assert.strictEqual(seen.KEY, "from-env");
 			}).pipe(Effect.ensuring(Effect.sync(() => rmSync(directory, { recursive: true, force: true }))));
 		});

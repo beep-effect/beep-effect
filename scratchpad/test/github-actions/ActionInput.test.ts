@@ -353,20 +353,20 @@ describe("ActionInput", () => {
 
 		it.effect("decodes a JSON input through its schema", () =>
 			Effect.gen(function* () {
-				const Cfg = Schema.Struct({ level: Schema.Number });
+				const Cfg = Schema.Struct({ level: Schema.Finite });
 				const value = yield* readOk(ActionInput.schema("cfg", Cfg), { INPUT_CFG: '{"level":3}' });
 				assert.deepStrictEqual(value, { level: 3 });
 			}),
 		);
 
 		it.effect("rejects a JSON input that does not satisfy its schema", () =>
-			readFails(ActionInput.schema("cfg", Schema.Struct({ level: Schema.Number })), {
+			readFails(ActionInput.schema("cfg", Schema.Struct({ level: Schema.Finite })), {
 				INPUT_CFG: '{"level":"three"}',
 			}),
 		);
 
 		it.effect("rejects an input that is not JSON at all", () =>
-			readFails(ActionInput.schema("cfg", Schema.Struct({ level: Schema.Number })), { INPUT_CFG: "nope" }),
+			readFails(ActionInput.schema("cfg", Schema.Struct({ level: Schema.Finite })), { INPUT_CFG: "nope" }),
 		);
 
 		it.effect("reads an integer input", () =>

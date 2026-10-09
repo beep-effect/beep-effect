@@ -10,7 +10,7 @@
 // the bytes between the two RPCs stays in the three modules licensed to import
 // it (`__test__/reachability.test.ts`).
 
-import { Effect, Option } from "effect";
+import { Effect, Option, Function } from "effect";
 import type { TwirpResult } from "./twirp.ts";
 import { CONFLICT, isOk, stringField } from "./twirp.ts";
 
@@ -35,7 +35,10 @@ export interface CacheServiceClient<E> {
  *
  * @internal
  */
-export const reserveUpload = <E>(
+export const reserveUpload: {
+	<E>(client: CacheServiceClient<E>, key: string, version: string): Effect.Effect<Option.Option<string>, E>;
+	(key: string, version: string): <E>(client: CacheServiceClient<E>) => Effect.Effect<Option.Option<string>, E>;
+} = Function.dual(3, <E>(
 	client: CacheServiceClient<E>,
 	key: string,
 	version: string,
@@ -48,7 +51,7 @@ export const reserveUpload = <E>(
 		return !isOk(created) || url === undefined
 			? Effect.fail(client.refused("CreateCacheEntry returned no upload url"))
 			: Effect.succeedSome(url);
-	});
+	}));
 
 /**
  * Confirm an upload. Not folded in with the reservation: an unfinalized upload
@@ -57,7 +60,10 @@ export const reserveUpload = <E>(
  *
  * @internal
  */
-export const finalizeUpload = <E>(
+export const finalizeUpload: {
+	<E>(client: CacheServiceClient<E>, key: string, version: string, sizeBytes: number | bigint): Effect.Effect<void, E>;
+	(key: string, version: string, sizeBytes: number | bigint): <E>(client: CacheServiceClient<E>) => Effect.Effect<void, E>;
+} = Function.dual(4, <E>(
 	client: CacheServiceClient<E>,
 	key: string,
 	version: string,
@@ -69,7 +75,7 @@ export const finalizeUpload = <E>(
 			finalized === CONFLICT || !isOk(finalized)
 				? Effect.fail(client.refused("FinalizeCacheEntryUpload did not confirm the upload"))
 				: Effect.void,
-	);
+	));
 
 /** A hit: where to download from, and which key in the ladder matched. @internal */
 export interface CacheHit {
@@ -84,7 +90,10 @@ export interface CacheHit {
  *
  * @internal
  */
-export const lookupDownload = <E>(
+export const lookupDownload: {
+	<E>(client: CacheServiceClient<E>, key: string, restoreKeys: ReadonlyArray<string>, version: string): Effect.Effect<Option.Option<CacheHit>, E>;
+	(key: string, restoreKeys: ReadonlyArray<string>, version: string): <E>(client: CacheServiceClient<E>) => Effect.Effect<Option.Option<CacheHit>, E>;
+} = Function.dual(4, <E>(
 	client: CacheServiceClient<E>,
 	key: string,
 	restoreKeys: ReadonlyArray<string>,
@@ -96,4 +105,4 @@ export const lookupDownload = <E>(
 		}
 		const url = stringField(found, "signedDownloadUrl");
 		return url === undefined ? Option.none() : Option.some({ url, matchedKey: stringField(found, "matchedKey") });
-	});
+	}));
