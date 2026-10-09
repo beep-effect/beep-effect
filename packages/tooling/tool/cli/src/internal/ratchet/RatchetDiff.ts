@@ -218,10 +218,11 @@ export class DiffTotalsInput extends S.Class<DiffTotalsInput>($I`DiffTotalsInput
  * **Details**
  *
  * Reproduces `JSDocRatchet.compareTotals`: it walks the baseline metric names
- * in sorted order, computes a delta for each metric present in the current
- * totals (treating an absent baseline entry as `0`), and partitions the deltas
- * into increased and decreased. Baseline metrics with no current entry are
- * reported as `missing`.
+ * in sorted order, computes a delta for each tracked metric present in the
+ * current totals, and partitions the deltas into increased and decreased.
+ * Baseline metrics with no current entry are reported as `missing`. Current
+ * metrics absent from the baseline contribute to `currentTotalCount` but do
+ * not produce deltas; an explicit baseline value of `0` does participate.
  *
  * **Example** (Diff totals)
  *
