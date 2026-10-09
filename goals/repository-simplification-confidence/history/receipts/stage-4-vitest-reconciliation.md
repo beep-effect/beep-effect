@@ -291,3 +291,21 @@ private-workspace changeset. The lane note is removed from `.changeset` and
 its exact bytes remain in `rsc-v-retired-private-changeset.md`, SHA256
 `c130e6f5a0dd1d3b0b8b2c807fd0bdc4ac2bf4e5b81215d698fe6f40ff2cbe07`. No package version or release policy
 is changed. Restore the archived note only when reversing the private policy.
+
+### Hosted review dispositions
+
+- Private-package changeset: fixed in `4be0599a18`, exact note archived and
+  changeset graph validation passed with zero missing references.
+- Stage 5 unchanged-source claim: corrected to 35 files matching R7 and two
+  separately reviewed files; earlier package receipts stay tied to their SHA.
+- Advisory shared fault-injection harness: assessed and retained as separate
+  scenario tests. Merge-driver faults `writeFileString` and `readFileString`,
+  security faults `makeDirectory` and `readDirectory`, archive asserts nested
+  target and recursive options, and guard asserts the canonical root target.
+  The archive/guard populations omit body-failure mode; each local oracle
+  explicitly rejects extra failures and defects. No failing behavior or gate
+  was identified; independent source review is terminal zero and Fallow audit
+  reports zero introduced findings. A generic helper would add an abstraction
+  over these separately qualified platform scenarios in a preservation wave.
+  Reconsider the consolidation when these resource cohorts are next changed
+  under R102, preserving every local path/options assertion and cause oracle.
