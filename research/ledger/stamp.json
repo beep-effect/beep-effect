@@ -1,12 +1,12 @@
 {
-  "lastSuccessfulRun": "2026-10-06T08:30:00-05:00",
-  "lastSuccessfulPacket": "research/2026-10-06",
-  "lastSuccessfulPr": 1497,
-  "lastAttemptedRun": "2026-10-08T08:30:00-05:00",
+  "lastSuccessfulRun": "2026-10-08T08:30:00-05:00",
+  "lastSuccessfulPacket": "research/2026-10-08",
+  "lastSuccessfulPr": 1551,
+  "lastAttemptedRun": "2026-10-09T08:45:00-05:00",
   "lastAttemptedStatus": "partial",
-  "lastAttemptedPacket": "research/2026-10-08",
-  "lastAttemptedPr": 1551,
-  "note": "Draft until human merge of research/2026-10-08 nightly packet (~48h window from 2026-10-06T08:30 CT; Thursday, no weekly; no tombstones). Never auto-merge. Partial: no blinded verifier (X available, transient 429). lastSuccessful* promoted to #1497 (merged 2026-10-06T19:03:55Z, f82d29bc). Do NOT set lastSuccessful* to this packet until human merges.",
+  "lastAttemptedPacket": "research/2026-10-09",
+  "lastAttemptedPr": 1559,
+  "note": "Draft until human merge of research/2026-10-09 nightly packet (~24h15m window from 2026-10-08T08:30 CT; Friday, no weekly; no tombstones). Never auto-merge. Partial: no blinded verifier (X available; arXiv export API timeout). lastSuccessful* promoted to #1551 (merged 2026-10-09T03:33:04Z, 8a5ba57c). Do NOT set lastSuccessful* to this packet until human merges. lastAttemptedPr is 1559.",
   "excludedUnmergedPackets": [
     {
       "date": "2026-08-27",
