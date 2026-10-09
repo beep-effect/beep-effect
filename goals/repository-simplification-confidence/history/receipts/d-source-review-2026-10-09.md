@@ -46,3 +46,24 @@ verification remain pending. No source/scope defect was found in that
 incremental diff. The existing Yeet remedy assertion was subsequently updated
 at fde1791bfe after the expanded cohort exposed it. Final-head review and proof
 remain part of resumption; this blocked receipt claims no final readiness.
+
+## Run 2 independent source and scope review
+
+Separate Codex `gpt-6.1-sol`, medium session, read-only, at
+`3897314253436345cfd578c5a7735884b1992c81`: **zero actionable P0–P3 findings**.
+Current main PLAN routes ordinary lane review through a separate Codex session;
+the prior Opus subscription review remains historical evidence. No heavy
+commands were run by the reviewer.
+
+The reviewer checked private/absent/false manifest semantics; status filtering
+and the activation fixture; graph rejection before retired allowances; private
+and public deletion/geometry policies; activation obligations; census-before-
+reset ordering; exact equality of the 939 parent notes and deleted paths; tree
+identity; 152 census records; and unchanged versions. D-only manifest diff is
+empty. The reset-parent manifest diff contains the inherited #1564 tinyglobby
+dependency addition, with no version-field changes. That inherited repair is
+excluded from D scope. No unrelated D production refactor or formatting churn.
+
+This source/scope review does not attest to execution of package/parity gates.
+The root refreshes their evidence separately; earlier blocked validation prose
+is superseded by the Run 2 records.

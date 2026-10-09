@@ -1,4 +1,14 @@
 lane: rsc-d-release
+head: 3897314253436345cfd578c5a7735884b1992c81 (Run 2 source-review snapshot)   PR: pending publication
+retired: 939 notes; parent da1a85157d7c8cc6b72fe43f12d01389db811ce9; tree d839776128c29c6c4cc7c2937329942d873b973c
+package-verify: @beep/repo-cli running; Run 2 terminal result pending
+hosted-parity: test-tsgo pass / docgen local pass / jsdoc-ratchet pass / knowledge refs pass / fallow audit+health pass / coverage startup cache collision; serial rerun pending
+handoff: goals/repository-simplification-confidence/history/handoffs/rsc-d-release-2026-10-09.md
+open: GitHub Packages lacks read:packages; local consumer census negative, remote mirrors/deploys not establishable; E-09 pending E-owned citation (R35); AGENTS.md exact replacement awaits rsc-shared (R33); package/serial coverage and publication in progress
+
+## Run 1 report (historical; superseded by Run 2)
+
+lane: rsc-d-release
 head: fde1791bfe43980d3138a0fcfd8038f9ed7a7c9d (pre-handoff snapshot)   PR: none (not published)
 retired: 939 notes; parent da1a85157d7c8cc6b72fe43f12d01389db811ce9; tree d839776128c29c6c4cc7c2937329942d873b973c
 package-verify: @beep/repo-cli pending; admitted and running, no terminal result
@@ -13,8 +23,9 @@ Census committed first at `da1a85157d`, before the single retirement commit
 that commit together with the gate, policy and reset baseline. Original counts:
 784 package notes, 148 empty-object notes, 7 empty-frontmatter notes.
 `standards/changesets.reset-baseline.json` records the parent, original tree,
-counts by kind/month and recovery commands. All package manifests/versions
-remain unchanged (`git diff da1a85157d HEAD -- '**/package.json'` is empty).
+counts by kind/month and recovery commands. All package versions remain unchanged. The D-only manifest diff is empty;
+after the Run 2 main merge the reset-parent manifest diff includes only the
+inherited #1564 tinyglobby dependency addition, not a version change.
 The 60 historical changelogs and dormant Changesets config/dependencies/
 changelog adapter remain. No version command was run. The live ontology name
 was removed from the retired registry; the five other entries remain reuse
@@ -127,3 +138,24 @@ PR, including the private-note graph guard; restored private notes alone fail
 current validation deliberately. `git ls-tree --name-only d839776128c29c6c4cc7c2937329942d873b973c`
 and `git show <parent>:.changeset/<name>.md` inspect history without changing it.
 The orchestrator records the post-merge SHA (R34).
+
+## Run 2 (after crash)
+
+Resumed from `a30822664f`; no pre-existing uncommitted edits. Required fetch/main
+merge reconciled the squash-packet add/add conflicts against `3dbf109066`,
+retaining D decisions and main's stage-1 closure at merge `40f9ecb051`.
+Authorized knowledge repair branch merged at `450e477efd` while #1565 is open.
+No local edit to the inherited research file was made. Final expanded coverage
+from the prior run has a terminal exit=0 record and 316/316 tests; package log
+has successful audit/docgen but no separately persisted exit row. Both package
+and parity are therefore rerunning through beep-heavy with explicit exit files.
+This section supersedes the earlier live-job state; results follow below.
+
+Run 2 parity terminal records at `.beep/rsc-d-run2-parity-results.txt`: test-tsgo,
+docgen, jsdoc-ratchet, knowledge refs, Fallow audit and health all exit 0.
+Knowledge has zero live gated observations. Fallow audit has zero introduced
+findings and one inherited-adjacent advisory; health has zero findings.
+Coverage stopped before tests with a shared `.vitest-cache` ENOTEMPTY startup
+collision; rerun is serialized after package audit, not counted as a test red.
+Independent source/scope review at `3897314253`: zero actionable P0–P3 findings;
+receipt updated. Both main merges preserved the single retirement commit.

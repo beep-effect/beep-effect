@@ -297,9 +297,9 @@ bun run beep quality package-verify <@beep/package>
 ### D lane progress (2026-10-09)
 
 D census committed before retirement at `da1a85157d`; one-commit reset at
-`ec2080bb68`, with subsequent review repairs on this branch. Status: **blocked**
-on the inherited main knowledge-reference row in build-pipeline RESEARCH:194.
-Earlier parity passes and scoped coverage are recorded; latest test-only
-changes, queued package verification and hosted evidence are not final proof.
-See `history/handoffs/rsc-d-release-2026-10-09.md` for live jobs and resumption.
+`ec2080bb68`, with subsequent review repairs on this branch. Run 2 resumed
+after the workstation crash, merged main and the authorized inherited
+knowledge repair, and is collecting admitted package/parity proof. Independent
+source/scope review at `3897314253` returned zero actionable findings.
+See `history/handoffs/rsc-d-release-2026-10-09.md` for current terminal results.
 GitHub Packages lacks read:packages; desktop verification remains E-owned.

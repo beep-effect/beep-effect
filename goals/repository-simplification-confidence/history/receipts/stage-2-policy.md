@@ -44,21 +44,22 @@ The orchestrator records the post-merge SHA here (R34).
 ## Validation
 
 Implementation and note retirement are committed at `ec2080bb68`, with
-review repairs on this branch. The package-version diff from the reset parent
-is empty; exactly 939 deleted notes match its enumeration and tree.
+review repairs on this branch. All version fields remain unchanged from the reset parent; exactly 939 deleted
+notes match its enumeration and tree. The D-only manifest diff is empty; the
+reset-parent manifest diff contains only the inherited #1564 tinyglobby
+dependency addition in repo-cli, not a version change.
 
-Earlier source-snapshot passes: test-tsgo, docgen local (2312 examples),
-jsdoc-ratchet, Fallow audit and health. These precede the latest test-only
-commits and are not final-head proof of those new assertions. The initial
-131-test scoped coverage run passed; the expanded 316-test cohort found one
-old Yeet remedy assertion (315 passed), updated at `fde1791bfe`; rerun queued.
-Package verification is admitted and running, with no terminal result. Hosted evidence and PR are absent.
-Details and live-job logs are in the [lane handoff](../handoffs/rsc-d-release-2026-10-09.md).
+Run 2 (after crash) merged current main and the authorized #1565 knowledge
+repair branch. The inherited knowledge row is repaired by its owner; D made
+no local correction to that file. Required package and parity gates are
+rerunning through beep-heavy with explicit terminal result records. Earlier
+passes remain historical evidence, not the final resumed proof.
 
-Knowledge refs rerun has exactly one red: inherited build-pipeline RESEARCH:194
-host-path reference, identical on origin/main. Its owner/orchestrator fixes it
-once on main, then D merges main. Packet SPEC's literal prohibition example
-was repaired and no longer appears. The lane is blocked, not merge-ready.
+Independent source/scope review at `3897314253`: zero actionable P0–P3 findings.
+No unrelated D production refactor or formatting churn. The reviewer excluded
+the inherited #1564 EffectImports repair. See the
+[review receipt](d-source-review-2026-10-09.md) and
+[lane handoff](../handoffs/rsc-d-release-2026-10-09.md).
 
 Full-directory recovery restores historical config and README as well as notes.
 Pair it with a revert of the reset policy PR (including the graph guard);

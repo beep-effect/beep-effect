@@ -144,3 +144,20 @@
   publish-enabled/private-exempt policy and queued the same cohort again.
   Searching the old user-facing remedy string in tests at edit time would
   prevent this stale contract assertion.
+
+## 2026-10-09 — D crash resumption
+
+- Required main merge produced packet add/add conflicts because the original
+  packet branch was squash-merged. Three-way reconciliation against packet
+  decision commit `3dbf109066` preserved both the D records and stage-1 closure.
+  Keeping a packet merge-base receipt would prevent manual reconstruction.
+- Heavy admission initially failed before launching commands: `Failed to connect
+  to user scope bus`, because user-session variables were absent. Supplying the
+  existing user runtime and bus fixed admission; no queue bypass. A wrapper that
+  discovers the existing session bus would prevent this environment-only failure.
+
+- Run 2 scoped coverage failed before tests at Vitest startup: `ENOTEMPTY`
+  removing the package `.vitest-cache` while package-verify was auditing the
+  same workspace. This is a concurrent verification-cache collision, not a
+  source-test failure. Serialize the scoped rerun after package verification;
+  separate per-command cache directories would prevent this collision.
