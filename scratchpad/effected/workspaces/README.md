@@ -584,11 +584,43 @@ A name miss in the derived `getPackage` fails with the service's own typed `Pack
 
 ### Added exports
 
-None.
+| Export | Facets | Why |
+| --- | --- | --- |
+| `WorkspaceEnumerationDepthError` | value, type | Added by review round 1; see the deviations below. |
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — Effect hash collections and own-key-safe records replace native collections, frozen/null-prototype defaults and Object.* operations, with explicit snapshot version order (scratchpad/test/workspaces/DependencyGraph.test.ts:34; scratchpad/test/workspaces/PackedInstallPlan.test.ts:325; scratchpad/test/workspaces/WorkspaceSnapshots.test.ts:768; scratchpad/test/workspaces/WorkspacePackage.test.ts:331).
+- **identity-keys** — Service-owned latest-snapshot fields with === comparisons replace WorkspaceDiscovery’s three identity-keyed WeakMap caches (scratchpad/test/workspaces/WorkspaceDiscovery.test.ts:801; scratchpad/test/workspaces/WorkspaceDiscovery.test.ts:896; scratchpad/test/workspaces/WorkspaceDiscovery.test.ts:905).
+- **tagged-errors** — Tagged schema errors replace plain Error/RangeError failures and defects, and the three originating-cause error schemas preserve encoded stacks (scratchpad/test/workspaces/WorkspacesSync.test.ts:209; scratchpad/test/workspaces/LockfileReader.test.ts:278; scratchpad/test/workspaces/entrypoints.test.ts:35).
+- **schema-first** — Executable annotated schemas, LiteralKit domains, derived guards and JSON codecs replace type-only payloads, repeated literals, manual guards and parsing, changing forced JSON error causes to SchemaError (scratchpad/test/workspaces/SourceBoundary.test.ts:360; scratchpad/test/workspaces/WorkspaceCatalogsPmAware.test.ts; scratchpad/test/workspaces/WorkspaceSnapshots.test.ts:804; scratchpad/test/workspaces/ConfigDependencySpec.test.ts).
+- **numeric-domains** — S.Finite rejects non-finite offence coordinates and layering counts accepted by Schema.Number, while a schema-derived integer-depth guard preserves traversal acceptance (scratchpad/test/workspaces/SourceBoundary.test.ts; scratchpad/test/workspaces/WorkspaceLayering.test.ts:56; scratchpad/test/workspaces/WorkspaceDiscovery.test.ts:275; scratchpad/test/workspaces/WorkspacesSync.test.ts:209).
+- **type-safety** — Schema and Predicate narrowing with typed Record/Option access replace unchecked runtime casts in hooks, manifest readers and planning helpers (module suite scratchpad/test/workspaces/**).
+- **tsgo-diagnostics** — Tsgo forces zero-argument service thunks to Effect values, adds dual helper overloads and pipeable expressions, and reroutes four synchronous fs/path bindings through getBuiltinModule (scratchpad/test/workspaces/LockfileReader.test.ts:58; scratchpad/test/workspaces/WorkspaceDiscovery.test.ts:842; scratchpad/test/workspaces/WorkspaceCatalogs.test.ts:568; scratchpad/test/workspaces/WorkspaceSnapshots.test.ts; scratchpad/test/workspaces/WorkspacesSync.test.ts).
+- **effect-first** — Effect.fn/fnUntraced operations, Effect helper sorts/orders and scoped layer/context composition replace arrow-wrapped generators and native helper patterns (module suite scratchpad/test/workspaces/**).
+- **effect-imports** — Per-module effect/* imports replace the root effect barrel in source, tests and examples (module suite scratchpad/test/workspaces/**).
+- **identity-annotations** — Beep $I annotations replace local schema identifiers and retarget JSON Schema definitions to namespaced keys (scratchpad/test/workspaces/LayerPolicy.test.ts:102; scratchpad/test/workspaces/ConfigDependencySpec.test.ts; scratchpad/test/workspaces/VersioningStrategy.test.ts).
+- **test-environment** — Bun workspace discovery, Beep package names, lab-derived layering fixtures and bunx context replace upstream pnpm-monorepo test assumptions (scratchpad/test/workspaces/e2e/PackedInstall.e2e.test.ts; scratchpad/test/workspaces/integration/layering.int.test.ts; scratchpad/test/workspaces/integration/node-sync.int.test.ts; scratchpad/test/workspaces/integration/peerClosure.int.test.ts; scratchpad/test/workspaces/integration/self.int.test.ts).
+- **upstream-bug** — Escaping root links retain unmatched .. segments and unresolvedEdge instead of borrowing an unrelated internal package’s peers (scratchpad/test/workspaces/PeerCheck.test.ts:747).
+- **upstream-bug** — Each logical directory alias receives its own waiver evaluation instead of the first realpath visit suppressing other aliases (scratchpad/test/workspaces/SourceBoundaryScan.test.ts:100; scratchpad/test/workspaces/SourceBoundaryScan.test.ts:108).
+- **upstream-bug** — Wrongly named or unnamed workspace tarballs fail PackFailed before install instead of passing under the requested package identity (scratchpad/test/workspaces/PackedInstall.test.ts:422).
+- **upstream-bug** — Unrepresentable numeric version fields make TrackingTag.forVersion return [] instead of throwing during construction (scratchpad/test/workspaces/TrackingTag.test.ts:119).
+- **upstream-bug** — Unrepresentable tracking-tag fields make classifyTag return unrecognized instead of throwing (scratchpad/test/workspaces/TrackingTag.test.ts:231).
+- **upstream-bug** — Malformed version suffixes derive no tracking aliases instead of being discarded before core validation (scratchpad/test/workspaces/TrackingTag.test.ts:133).
+- **upstream-bug** — Malformed version suffixes classify as unrecognized instead of releases across all supported tag styles (scratchpad/test/workspaces/TrackingTag.test.ts:245).
+- **upstream-bug** — CatalogSet.rangeOf returns None for inherited catalog/dependency names instead of fabricating values or suppressing valid snapshot fallback (scratchpad/test/workspaces/WorkspaceCatalogs.test.ts:594; scratchpad/test/workspaces/WorkspaceCatalogs.test.ts:599; scratchpad/test/workspaces/WorkspaceStateSnapshotSeed.test.ts:275).
+- **upstream-bug** — CatalogSet.resolveSpecifier checks own-key membership and returns None for inherited names instead of throwing through pnpm (scratchpad/test/workspaces/WorkspaceCatalogs.test.ts:594; scratchpad/test/workspaces/WorkspaceCatalogs.test.ts:599; scratchpad/test/workspaces/WorkspaceCatalogs.test.ts:606).
+- **upstream-bug** — WorkspaceStateSnapshot.resolveIn requires own importer and dependency keys instead of fabricating versions from prototypes (scratchpad/test/workspaces/importerVersions.test.ts:186; scratchpad/test/workspaces/importerVersions.test.ts:191).
+- **upstream-bug** — WorkspacePackage.dependencyDiff preserves an own __proto__ addition instead of losing it (scratchpad/test/workspaces/WorkspacePackage.test.ts:307).
+- **upstream-bug** — WorkspacePackage.dependencyDiff preserves an own __proto__ removal instead of losing it (scratchpad/test/workspaces/WorkspacePackage.test.ts:315).
+- **upstream-bug** — WorkspacePackage.dependencyDiff preserves an own __proto__ change payload instead of mutating the result prototype (scratchpad/test/workspaces/WorkspacePackage.test.ts:323).
+- **upstream-bug** — WorkspaceRoot discovery passes a nearer null manifest and finds a valid ancestor instead of aborting with a property-access defect (scratchpad/test/workspaces/WorkspaceRoot.test.ts:116).
+- **upstream-bug** — Escaped module specifiers are cooked for matching instead of bypassing import rules, while raw lexer text and UTF-16 offsets remain intact (scratchpad/test/workspaces/SourceBoundary.test.ts:370; scratchpad/test/workspaces/sourceText.test.ts:41; scratchpad/test/workspaces/sourceText.test.ts:64; scratchpad/test/workspaces/sourceText.test.ts:69).
+- **upstream-bug** — Complete Unicode code points determine identifier boundaries instead of surrogate halves creating false forbidden-reference matches (scratchpad/test/workspaces/SourceBoundary.test.ts:381; scratchpad/test/workspaces/SourceBoundary.test.ts:387; scratchpad/test/workspaces/sourceText.test.ts:73).
+- **upstream-bug** — All ECMAScript line terminators end comments and contribute correct locations instead of LF-only handling hiding executable code (scratchpad/test/workspaces/SourceBoundary.test.ts:394; scratchpad/test/workspaces/sourceText.test.ts:80).
+- **upstream-bug** — Top-level Bun default/named catalogs are validated and merged instead of being ignored when catalogs are outside the workspaces object (scratchpad/test/workspaces/WorkspaceCatalogsPmAware.test.ts:21; scratchpad/test/workspaces/WorkspaceCatalogsPmAware.test.ts:34; scratchpad/test/workspaces/integration/self.int.test.ts:110).
 
 ### Dependency backlog
 

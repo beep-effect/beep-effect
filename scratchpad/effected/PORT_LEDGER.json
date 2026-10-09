@@ -10917,7 +10917,13 @@
           "entry": "./testing"
         }
       ],
-      "exportsAdded": [],
+      "exportsAdded": [
+        {
+          "name": "WorkspaceEnumerationDepthError",
+          "kind": "both",
+          "entry": "."
+        }
+      ],
       "newDeps": [
         {
           "name": "@pnpm/catalogs.config",
@@ -10945,9 +10951,366 @@
         }
       ],
       "fixturesBytes": 114660,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/workspaces/DependencyGraph.test.ts:34; scratchpad/test/workspaces/PackedInstallPlan.test.ts:325; scratchpad/test/workspaces/WorkspaceSnapshots.test.ts:768; scratchpad/test/workspaces/WorkspacePackage.test.ts:331",
+          "upstreamBehaviour": "Native Set/Map indexes and public ReadonlyMap adjacency, importer and version maps; frozen null-prototype defaults/dictionaries; Object.* record construction and iteration, including Object.assign in CatalogSet.fromBunBlocks.",
+          "labBehaviour": "Effect hash collections replace native collections; adjacency is HashMap of HashSet, importerMap and versions are HashMap, and versionNames preserves order. ConfigDependencyHooks, WorkspacePackage and PackageStateSnapshot defaults are readonly but unfrozen ordinary records. catalogs, importerVersions and packedInstallPlan use own-key-safe Record operations; fromBunBlocks retains own __proto__ catalogs.",
+          "reason": "native-runtime: Effect hash collections and Record helpers replace native Set/Map/Object.*; the 2026-10-09 grilling ruling removes all effected allowlist sites, drops runtime freezing and replaces null-prototype dictionaries with ordered Record.fromEntries records and Record.get lookups."
+        },
+        {
+          "test": "scratchpad/test/workspaces/WorkspaceDiscovery.test.ts:801; scratchpad/test/workspaces/WorkspaceDiscovery.test.ts:896; scratchpad/test/workspaces/WorkspaceDiscovery.test.ts:905",
+          "upstreamBehaviour": "WorkspaceDiscovery caches longest-prefix owners, package-name indexes and resolver version indexes in three WeakMaps keyed by package-array identity.",
+          "labBehaviour": "WorkspaceDiscovery indexOwner.ownerIndex, indexOwner.packageIndex and resolverOwner.versionIndex each retain the latest array plus its index, compare arrays with === and preserve first-match lookup; discovery refresh clears its owner/package fields.",
+          "reason": "identity-keys: the 2026-10-09 per-structure ruling replaces weak identity caches with fields on their owning services; fix-workspaces-g6.md:9 identifies all three caches and the S0 diff confirms their removal."
+        },
+        {
+          "test": "scratchpad/test/workspaces/WorkspacesSync.test.ts:209; scratchpad/test/workspaces/LockfileReader.test.ts:278; scratchpad/test/workspaces/entrypoints.test.ts:35",
+          "upstreamBehaviour": "Plain Error/RangeError failures and defects in sync discovery, enumeration, hook replay, manifest planning and resolution; existing tagged error cause schemas use Defect() without stack encoding.",
+          "labBehaviour": "WorkspaceSyncManifestError, WorkspaceEnumerationDepthError, EnumerationOptionsError, PackedManifestError, ConfigDependencyResolutionError and replay/test-double/catalog/detector errors are tagged schema errors. Existing messages are retained; LockfileReadError, ChangeDetectionError and LayerPolicyError encode originating stacks. The depth error is exported by index.ts.",
+          "reason": "tagged-errors: effect-laws-v1 law 7 and the tagged-error ruling require typed schema failures instead of native Error/RangeError; error-schema law requires Defect({ includeStack: true }) at the three originating-cause schemas, as pinned by fix-workspaces-g1.md:15."
+        },
+        {
+          "test": "scratchpad/test/workspaces/SourceBoundary.test.ts:360; scratchpad/test/workspaces/WorkspaceCatalogsPmAware.test.ts; scratchpad/test/workspaces/WorkspaceSnapshots.test.ts:804; scratchpad/test/workspaces/ConfigDependencySpec.test.ts",
+          "upstreamBehaviour": "Type-only hook/options/classification/closure/boundary payloads, repeated literal domains and handwritten guards; JSON.parse boundaries expose SyntaxError causes.",
+          "labBehaviour": "Annotated structural schemas own hook/replay data, LockfileReaderOptions, ManagerHint, TagClassification, ClassifyOptions, PackageRelease, Replacement/ClosurePlan, BoundaryRule/Fixture and ManifestVersion. LiteralKit owns named tag, manager, peer, offence and discovery domains. Schema guards and JSON codecs replace casts/manual parsing; forced decode failures carry SchemaError causes while tolerant snapshot fallbacks remain.",
+          "reason": "schema-first: EF-33, D5, schema-first laws and preferSchemaOverJson require executable schema models, LiteralKit domains and schema-derived guards/codecs; inventory c02 records JSON cause/message changes and g1/g3/g4/g5/g6/g7/g8 reports ground the modeled symbols."
+        },
+        {
+          "test": "scratchpad/test/workspaces/SourceBoundary.test.ts; scratchpad/test/workspaces/WorkspaceLayering.test.ts:56; scratchpad/test/workspaces/WorkspaceDiscovery.test.ts:275; scratchpad/test/workspaces/WorkspacesSync.test.ts:209",
+          "upstreamBehaviour": "Offence.line/column and LayeringReport.edgeCount use Schema.Number, accepting NaN and infinities; traversal validates maxDepth with a handwritten integer predicate and HookConfig exists only as a number-bearing interface.",
+          "labBehaviour": "Offence coordinates and LayeringReport.edgeCount use S.Finite. HookConfig.minimumReleaseAge has a finite schema domain, and an annotated finite integer/minimum-one MaxDepth schema derives the traversal guard while preserving upstream integer-range acceptance.",
+          "reason": "numeric-domains: @effect/tsgo schemaNumber and the 2026-10-09 systemic-class ruling require finite numeric domains; inventory c04 names the changed coordinate/count acceptance. The explicit non-finite Offence rejection assertion remains S3 backlog b25."
+        },
+        {
+          "test": "module suite scratchpad/test/workspaces/**",
+          "upstreamBehaviour": "Runtime code uses unchecked record/function casts and assertion-based access in ConfigDependencyHooks, LockfileReader, PackedInstall, WorkspacesSync and internal manifest/catalog/pattern readers.",
+          "labBehaviour": "Predicate narrowing, schema-derived guards, schema decoding and typed Record/Option lookups remove those unchecked casts; imported hook functions are narrowed through their schema and publishConfig is decoded directly from unknown.",
+          "reason": "type-safety: D15 forbids unchecked casts and assertion escapes; the S0 diff shows cast removal in hook threading, manifest readers, packedInstallPlan, patterns and catalog helpers. g6 r53 specifically removes the publishConfig assertion."
+        },
+        {
+          "test": "scratchpad/test/workspaces/LockfileReader.test.ts:58; scratchpad/test/workspaces/WorkspaceDiscovery.test.ts:842; scratchpad/test/workspaces/WorkspaceCatalogs.test.ts:568; scratchpad/test/workspaces/WorkspaceSnapshots.test.ts; scratchpad/test/workspaces/WorkspacesSync.test.ts",
+          "upstreamBehaviour": "Zero-argument service operations are () => Effect thunks, multi-argument helpers expose only data-first forms, and synchronous fs/path modules use static node imports.",
+          "labBehaviour": "LockfileReader.read/integrity/refresh, WorkspaceDiscovery.info/listPackages/importerMap/refresh, WorkspaceCatalogs.set/releaseAgeGate/peerDependencyRules/importerVersions/hookReplays/refresh, WorkspaceSnapshots.worktree and Publishability.detect are Effect values. WorkspacesSync and internal helpers gain dual overloads; pipeable expressions satisfy tsgo. Four synchronous fs/path bindings use process.getBuiltinModule.",
+          "reason": "tsgo-diagnostics: lazyEffect, missingPipeableSignature/missedPipeableOpportunity and nodeBuiltinImport force these API/compiler shapes; inventory c01 and repair-workspaces.md:34 document migrations. Public thunk-to-value test calls are retargeted; b24 retains scanner/exception-registry follow-up for builtin bindings."
+        },
+        {
+          "test": "module suite scratchpad/test/workspaces/**",
+          "upstreamBehaviour": "Several Effect-returning operations use arrow-wrapped Effect.gen, handwritten sorts/comparators and Effect.provide with a per-call resolver layer.",
+          "labBehaviour": "ChangeDetector, LockfileReader.make, hook replay/injection, PackedInstall planning/gating, resolver services, enumeration and config-dependency operations use Effect.fn/fnUntraced. Array/Order/Record/Predicate helpers replace native equivalents. Workspaces.resolveManifest scopes Layer.build and provides its context explicitly.",
+          "reason": "effect-first: Effect function/service composition and terse helper laws require Effect.fn/fnUntraced, supported service boundaries and Effect-native helpers; g1/g2/g4/g5/g6/g7/g8 fix reports and the S0 diff pin sort/order rewrites and typed generator shapes."
+        },
+        {
+          "test": "module suite scratchpad/test/workspaces/**",
+          "upstreamBehaviour": "Source files, tests and examples import Effect modules from the root effect barrel.",
+          "labBehaviour": "Source files, tests and examples import modules from effect/Effect, effect/Schema, effect/Context, effect/Layer, effect/Function and other effect/* paths; Option helpers also use the approved Beep subpath where needed.",
+          "reason": "effect-imports: step 3 and the effect-imports law require per-module effect/* imports instead of the root barrel; the S0 diff shows the migration across workspaces and its suite."
+        },
+        {
+          "test": "scratchpad/test/workspaces/LayerPolicy.test.ts:102; scratchpad/test/workspaces/ConfigDependencySpec.test.ts; scratchpad/test/workspaces/VersioningStrategy.test.ts",
+          "upstreamBehaviour": "Schemas/classes use local names such as LayerPolicyEncoded for identifiers and JSON Schema definitions, without Beep identity annotations.",
+          "labBehaviour": "Workspaces schemas/classes use $ScratchpadId-created $I identifiers and descriptions/key annotations. LayerPolicy, ConfigDependencySpec and VersioningStrategy JSON Schema expectations use namespaced @beep/scratchpad/effected/workspaces/... definition keys.",
+          "reason": "identity-annotations: step 4 requires @beep/identity $I annotations; inventory c05 records the JSON Schema key retargets. These are schema identifiers, distinct from the WeakMap identity-key cache migration."
+        },
+        {
+          "test": "scratchpad/test/workspaces/e2e/PackedInstall.e2e.test.ts; scratchpad/test/workspaces/integration/layering.int.test.ts; scratchpad/test/workspaces/integration/node-sync.int.test.ts; scratchpad/test/workspaces/integration/peerClosure.int.test.ts; scratchpad/test/workspaces/integration/self.int.test.ts",
+          "upstreamBehaviour": "Integration tests assume the upstream pnpm monorepo, @effected workspace names, lib/configs/layers.json and pnpm launch context; copied imports/fixture readers assume the upstream package layout.",
+          "labBehaviour": "Tests use the containing Bun workspace, @beep package names, bun.lock and bunx launch context. Layering discovers a Bun fixture derived from lab module imports with lab-layers.json, retaining edge counts, six forbidden-edge controls and devDependency coverage. Source/fixture imports and repository roots are retargeted to the lab layout.",
+          "reason": "test-environment: D9 and the 2026-10-09 grilling ruling require lab equivalents for the 15 pnpm-monorepo cases; env-workspaces.md:30-58 records each retarget, and the S0 diff confirms the five integration/e2e files and lab-layers fixture."
+        },
+        {
+          "test": "scratchpad/test/workspaces/PeerCheck.test.ts:747",
+          "upstreamBehaviour": "A root link such as link:../packages/a discards unmatched .. and joins the unrelated internal packages/a manifest, falsely reporting its peers without unresolvedEdge.",
+          "labBehaviour": "PeerCheck.linkTargetPath preserves unmatched leading .., so escaping links remain uncovered and retain unresolvedEdge without fabricated peers.",
+          "reason": "upstream-bug: inventory r16 and fix-workspaces-g2.md:18 cite pinned-oracle pnpm probes for ../packages/a and ../../packages/a; the added regression covers both and ../outside/../packages/a."
+        },
+        {
+          "test": "scratchpad/test/workspaces/SourceBoundaryScan.test.ts:100; scratchpad/test/workspaces/SourceBoundaryScan.test.ts:108",
+          "upstreamBehaviour": "SourceBoundary.scan globally visits each real directory once; an allowed symlink alias encountered first can suppress an offence under another logical path.",
+          "labBehaviour": "Each logical path receives its own allow/allowRules evaluation; per-path real-directory ancestry terminates cycles without discarding other aliases.",
+          "reason": "upstream-bug: inventory r17 reproduces lost src/a.ts offences with a zallowed symlink against the pinned oracle; fix-workspaces-g4.md:29 and the two cyclic-alias tests pin both waiver modes."
+        },
+        {
+          "test": "scratchpad/test/workspaces/PackedInstall.test.ts:422",
+          "upstreamBehaviour": "PackedInstall accepts a workspace carrier or closure tarball with a different or missing manifest name and labels it with the requested package identity.",
+          "labBehaviour": "Every workspace tarball must name its requested closure package; a mismatch or missing name fails PackFailed before any consumer install.",
+          "reason": "upstream-bug: inventory r18 documents a MemoryFileSystem/ScriptedSpawner pinned-oracle probe accepting wrong-package as carrier; fix-workspaces-g5.md:11 and four regressions verify requested identity, failure message and no install."
+        },
+        {
+          "test": "scratchpad/test/workspaces/TrackingTag.test.ts:119",
+          "upstreamBehaviour": "TrackingTag.forVersion(\"9007199254740992.2.3\") throws when the digit grammar produces fields outside TrackingTag Int construction.",
+          "labBehaviour": "Alias derivation checks the existing major/minor schemas and returns [] without throwing for unsafe integers or Infinity-producing fields.",
+          "reason": "upstream-bug: inventory r19 reproduces the synchronous validation exception against the pinned oracle; fix-workspaces-g3.md:14 and the regression also preserve safe boundary and prerelease controls."
+        },
+        {
+          "test": "scratchpad/test/workspaces/TrackingTag.test.ts:231",
+          "upstreamBehaviour": "classifyTag(\"v9007199254740992\") throws constructing an out-of-range TrackingTag instead of answering an arbitrary tag query.",
+          "labBehaviour": "Tracking classification validates numeric fields before construction and returns unrecognized for unrepresentable bare or scoped aliases.",
+          "reason": "upstream-bug: inventory r19 pins the oracle exception for v9007199254740992; fix-workspaces-g3.md:15 and the regression cover major/minor overflow and valid integer boundaries."
+        },
+        {
+          "test": "scratchpad/test/workspaces/TrackingTag.test.ts:133",
+          "upstreamBehaviour": "TrackingTag.forVersion discards malformed build/prerelease suffixes before validation and can derive stable aliases from invalid versions such as 1.2.3+ or 1.2.3+bad/path.",
+          "labBehaviour": "The complete VersionText grammar runs before core extraction; malformed suffixes return [] even with includePrerelease, while valid suffixes retain their aliases.",
+          "reason": "upstream-bug: inventory r20 compares rejecting SemVer.parseResult probes with pinned-oracle alias derivation; fix-workspaces-g3.md:16 and the added suffix matrix reproduce the defect."
+        },
+        {
+          "test": "scratchpad/test/workspaces/TrackingTag.test.ts:245",
+          "upstreamBehaviour": "classifyTag accepts malformed suffixes such as 1.2.3+, 1.2.3+bad/path, 1.2.3- and 1.2.3-01 as releases.",
+          "labBehaviour": "Full-version grammar validation returns unrecognized for malformed versions in bare, v-prefixed, unscoped and scoped release styles; valid prerelease/build syntax remains accepted.",
+          "reason": "upstream-bug: inventory r20 shows SemVer.parseResult rejects the strings the pinned oracle calls releases; fix-workspaces-g3.md:16 and the style/suffix matrix pin the correction."
+        },
+        {
+          "test": "scratchpad/test/workspaces/WorkspaceCatalogs.test.ts:594; scratchpad/test/workspaces/WorkspaceCatalogs.test.ts:599; scratchpad/test/workspaces/WorkspaceStateSnapshotSeed.test.ts:275",
+          "upstreamBehaviour": "CatalogSet.rangeOf reads inherited catalog/dependency properties, returning Some(function) for constructor and suppressing valid seed/importer fallback.",
+          "labBehaviour": "rangeOf requires own keys at both levels and returns None on misses; declared constructor keys and snapshot seed/importer fallback still resolve.",
+          "reason": "upstream-bug: inventory r28 reproduces Some(function) from an empty default catalog against the pinned oracle; fix-workspaces-g7.md:37 and inherited-name negatives/declared-key positives pin the fix."
+        },
+        {
+          "test": "scratchpad/test/workspaces/WorkspaceCatalogs.test.ts:594; scratchpad/test/workspaces/WorkspaceCatalogs.test.ts:599; scratchpad/test/workspaces/WorkspaceCatalogs.test.ts:606",
+          "upstreamBehaviour": "CatalogSet.resolveSpecifier passes inherited dependency values to pnpm and throws TypeError for constructor with catalog: instead of returning a missing result.",
+          "labBehaviour": "internal/catalogs.rangeOf checks own catalog/dependency membership before delegation, so resolveSpecifier returns None for inherited names and still resolves explicit declarations.",
+          "reason": "upstream-bug: inventory r28 reproduces bareSpecifier.startsWith is not a function in the pinned oracle; fix-workspaces-g7.md:1 and the shared resolution regressions verify total own-key lookup."
+        },
+        {
+          "test": "scratchpad/test/workspaces/importerVersions.test.ts:186; scratchpad/test/workspaces/importerVersions.test.ts:191",
+          "upstreamBehaviour": "WorkspaceStateSnapshot.resolveIn traverses importer/dependency prototypes, fabricating Some(function) for an absent constructor dependency or Some(\"Object\") for an absent constructor importer.",
+          "labBehaviour": "resolveIn uses nested own-key Record.get lookups, returning None whenever either key is absent and preserving explicitly declared hostile-key importer versions.",
+          "reason": "upstream-bug: inventory r29 reproduces both fabricated resolutions against the pinned oracle; fix-workspaces-g7.md:38 and inherited-importer/dependency negatives with own-key positives pin the correction."
+        },
+        {
+          "test": "scratchpad/test/workspaces/WorkspacePackage.test.ts:307",
+          "upstreamBehaviour": "A schema-accepted own __proto__ dependency added by WorkspacePackage.dependencyDiff disappears from the added record.",
+          "labBehaviour": "dependencyDiff constructs added entries with Record.fromEntries, preserving an enumerable own __proto__ addition.",
+          "reason": "upstream-bug: inventory r30 reproduces lost additions/removals and prototype-mutating changes against the pinned oracle; fix-workspaces-g7.md:39 and the dedicated addition regression pin the own-key result."
+        },
+        {
+          "test": "scratchpad/test/workspaces/WorkspacePackage.test.ts:315",
+          "upstreamBehaviour": "An own __proto__ dependency removed by WorkspacePackage.dependencyDiff disappears from the removed record.",
+          "labBehaviour": "dependencyDiff constructs removed entries with Record.fromEntries, preserving an enumerable own __proto__ removal.",
+          "reason": "upstream-bug: inventory r30 reproduces lost additions/removals and prototype-mutating changes against the pinned oracle; fix-workspaces-g7.md:39 and the dedicated removal regression pin the own-key result."
+        },
+        {
+          "test": "scratchpad/test/workspaces/WorkspacePackage.test.ts:323",
+          "upstreamBehaviour": "Changing an own __proto__ dependency mutates the changed record prototype and leaves the serialized dependency diff empty.",
+          "labBehaviour": "dependencyDiff constructs changed entries with Record.fromEntries, preserving the own __proto__ from/to payload and ordinary result prototype.",
+          "reason": "upstream-bug: inventory r30 reproduces lost additions/removals and prototype-mutating changes against the pinned oracle; fix-workspaces-g7.md:39 and the dedicated change regression pin the own-key result."
+        },
+        {
+          "test": "scratchpad/test/workspaces/WorkspaceRoot.test.ts:116",
+          "upstreamBehaviour": "A nearer package.json containing null triggers a TypeError defect while reading workspaces, preventing discovery of a valid ancestor root.",
+          "labBehaviour": "WorkspaceRoot.isWorkspaceRoot treats null as not a root and continues ascending to the valid pnpm/Bun workspace marker.",
+          "reason": "upstream-bug: inventory r31 reproduces the pinned-oracle null-manifest defect with a virtual filesystem; fix-workspaces-g8.md:7 and the /ws/packages/a null-manifest test verify resolution to /ws."
+        },
+        {
+          "test": "scratchpad/test/workspaces/SourceBoundary.test.ts:370; scratchpad/test/workspaces/sourceText.test.ts:41; scratchpad/test/workspaces/sourceText.test.ts:64; scratchpad/test/workspaces/sourceText.test.ts:69",
+          "upstreamBehaviour": "SourceBoundary matches raw escaped module names, so an import of \"\\u006eode:process\" evades node:process and forbidImports rules.",
+          "labBehaviour": "Module-specifier extraction cooks ECMAScript escape values for matching while lex preserves raw literals, UTF-16 widths and opening-quote positions; computed literals remain excluded.",
+          "reason": "upstream-bug: inventory r42 reproduces zero offences and raw specifiers in the pinned oracle while JavaScript loads node:process; fix-workspaces-g4.md:30 and raw/cooked/offset regressions pin the correction."
+        },
+        {
+          "test": "scratchpad/test/workspaces/SourceBoundary.test.ts:381; scratchpad/test/workspaces/SourceBoundary.test.ts:387; scratchpad/test/workspaces/sourceText.test.ts:73",
+          "upstreamBehaviour": "UTF-16-half identifier checks falsely flag process inside valid astral-prefixed/suffixed identifiers and misread related receiver/member/token/backward boundaries.",
+          "labBehaviour": "Complete code points define identifier boundaries and backward scans; astral lookalikes are excluded while offence offsets remain UTF-16 and real longer console/ignore-token members retain their proper treatment.",
+          "reason": "upstream-bug: inventory r43 reproduces false process offences in the pinned oracle and executes both valid identifiers; fix-workspaces-g4.md:31 and boundary/backward-scan tests pin the fix."
+        },
+        {
+          "test": "scratchpad/test/workspaces/SourceBoundary.test.ts:394; scratchpad/test/workspaces/sourceText.test.ts:80",
+          "upstreamBehaviour": "Line comments end only at LF, hiding executable references after CR, U+2028 or U+2029; location accounting counts only LF.",
+          "labBehaviour": "The lexer preserves all four ECMAScript terminators, ends comments before executable code and locates it correctly; CRLF counts as one line break.",
+          "reason": "upstream-bug: inventory r44 executes process.touch after each alternative terminator while the pinned oracle reports no offence; fix-workspaces-g4.md:32 and lexer/location regressions pin the correction."
+        },
+        {
+          "test": "scratchpad/test/workspaces/WorkspaceCatalogsPmAware.test.ts:21; scratchpad/test/workspaces/WorkspaceCatalogsPmAware.test.ts:34; scratchpad/test/workspaces/integration/self.int.test.ts:110",
+          "upstreamBehaviour": "CatalogSet.fromManifestWorkspaces reads catalog/catalogs only inside workspaces objects, ignoring valid top-level Bun catalogs used by the lab repository.",
+          "labBehaviour": "Top-level default/named catalogs are validated and merged with workspaces-object catalogs, whose later entries win; malformed top-level entries fail typed instead of being ignored.",
+          "reason": "upstream-bug: repair-workspaces.md:10,25,29,36 identifies the ignored real repository catalog and passing regression tests; the S0 implementation returns only fromBunBlocks(manifestCatalogBlocks(manifest.workspaces))."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "b01 — Canonical exported JSDoc and examples (scratchpad/effected/workspaces/ChangeDetector.ts:29)",
+          "reason": "jsdoc: During S2, convert every cited legacy carrier to titled Example (Title)/Details, supply canonical category/since metadata and missing runtime examples, and make examples independently compilable. Preserve the upstream prose, including Workspaces.layer's platform-layer example."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b02 — Describe read as an Effect value (scratchpad/effected/workspaces/LockfileReader.ts:97)",
+          "reason": "jsdoc: In both remarks, describe  read  as the effect value. Leave the unstubbed(\"read\") die text alone; the double tests assert that string."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "b03 — Use a valid integrity example (scratchpad/effected/workspaces/ConfigDependencySpec.ts:103)",
+          "reason": "docs: Replace the abbreviated integrity with a complete valid SRI string, such as the existing test fixture value, and verify the example during S2."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "b04 — Add schema and parser properties (scratchpad/test/workspaces/ConfigDependencySpec.test.ts:116)",
+          "reason": "test: At S3 add generated schema/codec encode-decode round trips and parser/formatter fidelity/idempotence properties using Effect Arbitrary and fcRuns. Retain every upstream example/oracle suite."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "b05 — Use canonical Result and Option assertions (scratchpad/test/workspaces/ConfigDependencySpec.test.ts:28)",
+          "reason": "test: At S3 use the canonical assertSuccess/assertFailure/assertSome/assertNone helpers for the cited Result/Option assertions while retaining every expected payload and negative case."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b06 — Migrate test layers and fixture reads (scratchpad/test/workspaces/ConfigDependencyHooksSubprocess.test.ts:1)",
+          "reason": "test: At S3 migrate the cited test-layer composition and fixture reads through canonical Effect testers/platform services and remove the file-wide directives where resolved. Keep all oracle assertions. Any shared tsconfig/vitest or DIAGNOSTIC_EXCEPTIONS registry adjustment is a separate central follow-up outside the port's write surface."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b07 — Remove unreachable indexed-access branches (scratchpad/effected/workspaces/DependencyGraph.ts:193)",
+          "reason": "test: At S3 replace the proven nonempty stack/dependency/release indexed accesses with total Array/nonempty operations and remove unreachable fallback branches without ignores or non-null assertions."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "b08 — Migrate effectful catalog tests (scratchpad/test/workspaces/WorkspaceCatalogs.test.ts:35)",
+          "reason": "test: During S3, migrate Effect-returning cases to it.effect; use the canonical layer tester for shared effectful construction where applicable. Keep the existing behavioral assertions."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b09 — Simplify affected package filtering (scratchpad/effected/workspaces/ChangeDetector.ts:233)",
+          "reason": "effect-idiom: const affected = A.filterMap(names, (name) => MutableHashMap.get(byName, name));"
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b10 — Standardize trace naming (scratchpad/effected/workspaces/LockfileReader.ts:174)",
+          "reason": "effect-idiom: If trace naming is standardized later, qualify the cited constructor/internal span names or choose fnUntraced for deliberately untraced helpers, preserving operation timing and scope."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b11 — Simplify read and integrity wrappers (scratchpad/effected/workspaces/LockfileReader.ts:267)",
+          "reason": "effect-idiom: read: Effect.withSpan(memo, \"LockfileReader.read\") and integrity: Effect.withSpan(Effect.gen(...), \"LockfileReader.integrity\") (or keep the Effect.fn body and drop the outer Effect.suspend, which Effect.fn already defers)."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b12 — Avoid duplicate-check queue shifting (scratchpad/effected/workspaces/DuplicateCheck.ts:281)",
+          "reason": "perf: for (let head = 0; head < queue.length; head += 1) { const current = queue[head]; ... } as affectedBy does."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b13 — Consolidate equivalent stock predicates (scratchpad/effected/workspaces/PackedInstall.ts:312)",
+          "reason": "effect-idiom: If consolidated later, replace only the proven-equivalent predicate combinations with the corresponding stock Predicate helper, retaining array acceptance where upstream accepts arrays and avoiding stricter decoding."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b14 — Use immutable read-only vocabularies (scratchpad/effected/workspaces/PeerCheck.ts:240)",
+          "reason": "effect-idiom: If constants are standardized later, use immutable HashSet for the cited read-only peer/scanner/lexer/scrub vocabularies while retaining per-call mutable working sets."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b15 — Simplify package-name deduplication (scratchpad/effected/workspaces/VersioningStrategy.ts:148)",
+          "reason": "effect-idiom: const packages = A.sort(A.dedupe(options.packages), Str.Order); and drop the MutableHashSet import."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b16 — Remove obsolete README port note (scratchpad/effected/workspaces/README.md:580)",
+          "reason": "docs: Delete README.md:580-582."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b17 — Record pnpm catalog replacement candidates (scratchpad/effected/workspaces/README.md:595)",
+          "reason": "docs: Central dependency-ledger maintenance should add the four @pnpm catalog dependency replacement candidates and mirror the README dependency-backlog text. Do not assign PORT_LEDGER.json or README Port notes to a repair group."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b18 — Group catalog imports below header (scratchpad/effected/workspaces/WorkspaceCatalogs.ts:1)",
+          "reason": "docs: Move the two imports into the import block below the header and group the effect module imports together."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b19 — Review per-call resolver provisioning exception (scratchpad/effected/workspaces/Workspaces.ts:241)",
+          "reason": "effect-idiom: Leave the diagnostic-forced Layer.build/provideContext composition in the module fix wave. If the per-call provisioning exception is reconsidered centrally, verify the diagnostic contract and update DIAGNOSTIC_EXCEPTIONS.md there; this inventory assigns no exception-registry or shared-config writes."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b20 — Simplify catalog normalization safely (scratchpad/effected/workspaces/internal/catalogs.ts:54)",
+          "reason": "effect-idiom: If simplified later, keep all own enumerable key/value pairs currently accepted from array and object catalog inputs, including sparse arrays and extra enumerable properties. Do not narrow catalog acceptance merely for a simpler helper; coordinate any implementation with r41."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b21 — Document tagged errors and data-last overloads (scratchpad/effected/workspaces/internal/traverse.ts:49)",
+          "reason": "docs: Update the two sentences alongside the fable-1-1 deviation entry and add one line per sync entry point naming the (options)(cwd) form."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b22 — Update README service-value examples (scratchpad/effected/workspaces/README.md:211)",
+          "reason": "law: During S2 change stale WorkspaceCatalogs.set()/releaseAgeGate() examples to the current Effect-value spelling. Leave README Port notes bookkeeping to the central codemod."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b23 — Detect Object.defineProperty in law checker (packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts:OBJECT_METHODS)",
+          "reason": "law: Central law-checker work should recognize Object.defineProperty and test that scanner coverage. The in-surface catalog implementation repair is r41; do not add an effected allowlist exception."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b24 — Detect getBuiltinModule and reconcile exceptions (scratchpad/effected/workspaces/node-sync.ts:30)",
+          "reason": "law: Central diagnostic/law-checker maintenance must decide and implement detection of process.getBuiltinModule native fs/path bindings and reconcile the stale DIAGNOSTIC_EXCEPTIONS.md rows. Keep this outside module repair groups. Do not add new effected allowlist entries; that proposal is rejected in x08."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b25 — Test non-finite offence coordinates (scratchpad/test/workspaces/SourceBoundary.test.ts)",
+          "reason": "law: During S3 add an Offence non-finite line/column rejection assertion without restoring S.Number."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "b26 — Test own __proto__ Bun catalog (scratchpad/test/workspaces/WorkspaceCatalogs.test.ts:112)",
+          "reason": "bug: During S3 add the own __proto__ catalog case for fromBunBlocks, retaining the law-forced own-key-safe representation."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "b27 — Simplify rootOf local thunk (scratchpad/effected/workspaces/ChangeDetector.ts:197)",
+          "reason": "effect-idiom: const rootOf = Effect.map(discovery.info, (info) => info.root); and yield* rootOf at the two call sites."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 14,
+              "backlog": 10
+            },
+            "sol": {
+              "required": 25,
+              "backlog": 12
+            },
+            "fable": {
+              "required": 30,
+              "backlog": 33
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,
