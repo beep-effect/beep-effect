@@ -324,7 +324,7 @@ find_repo_root() {
       ;;
     *) probe="" ;;
   esac
-  while [ -n "${probe}" ] && [ "${probe}" != "/" ]; do
+  while [ -n "${probe}" ]; do
     if [ -e "${probe}/.git" ] || [ -L "${probe}/.git" ]; then
       [ ! -e "${probe}/AGENTS.md" ] || found_repo_root="${probe}"
       return 0
