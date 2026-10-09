@@ -167,10 +167,12 @@
 
 - Doing: repeating Fallow and the stable-head qualification bundle after remediation.
 - Evidence: both wrapper logs remain at `beep-heavy: all 3 slots busy, waiting`
-  for more than ten minutes. The lane respects its two-admission limit and does
-  not stop another lane's work.
-- Would have prevented it: program scheduling that reserves a short remediation
-  slot, or shared immutable proof reuse where the command's inputs match. The
+  for more than ten minutes. The later fixture-law repeat remained queued from
+  18:38Z through 19:03Z while a read-only lock check observed slot ownership change.
+  The wrapper polls available locks without FIFO ordering. The lane respects its
+  two-admission limit and does not stop another lane's work.
+- Would have prevented it: FIFO admission or program scheduling that reserves a
+  short remediation slot, or shared immutable proof reuse where inputs match. The
   admission cap itself is retained; no bypass is used.
 
 ## 2026-10-09: publish runtime flag is not the default monitor's runtime flag
