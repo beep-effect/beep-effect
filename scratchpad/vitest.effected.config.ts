@@ -15,6 +15,13 @@ export default defineConfig({
     include,
     includeSource: [`scratchpad/effected/${target}/**/*.ts`],
     passWithNoTests: false,
+    // engine: upstream's test task runs after build:dev; the entrypoint suite walks its output.
+    globalSetup: target === "engine" ? ["scratchpad/test/engine/build.setup.ts"] : [],
+    // cli registers its snapshot serializer through the config, as upstream's root config does (effected#909).
+    snapshotSerializers: target === "cli" ? ["scratchpad/effected/cli/ui-testing-serializer.ts"] : [],
+    // memfs: the node-adapter errno parity fixtures assume tmpfs semantics (btrfs lets
+    // copyFile read an empty directory, where the asserted EISDIR comes from tmpfs).
+    env: target === "memfs" ? { TMPDIR: "/tmp" } : {},
     coverage: {
       provider: "v8",
       include: [`scratchpad/effected/${target}/**/*.ts`],

@@ -88,6 +88,14 @@ Launch, from a `claude` session in `~/YeeBois/projects/beep-effect` on branch
 > explicit delegating objects; both `Logger.CurrentLoggers` sites use `Logger.layer` through
 > `Effect.scopedWith` + `Layer.buildWithScope` + `Effect.provideContext`. jsonl's four older
 > entries go too: the allowlist ends with no `scratchpad/effected` entry.
+>
+> **Build tools, 2026-10-09.** "If something requires rolldown or [some] build tool we can just
+> remove that module." Asked which: only `scratchpad/test/cli/declarations.test.ts` (the rolled-up
+> `.d.ts` and API Extractor gates, 12 of cli's tests) needs a bundler; cli's source and its other
+> tests need none. Ruling: delete that test file (recorded as a cli `test-environment` deviation);
+> cli stays in the port and the ledger keeps 29 rows. Engine's built-guard test keeps its vitest
+> global setup, which emits `dist/dev/pkg` with tsgo, the repo's own compiler (upstream runs
+> `build:dev` before tests). Rejected: dropping the whole cli module; dropping engine's test.
 
 This file is the whole contract. The `/goal` evaluator only reads the
 transcript, so section 0 defines what you print and when. Everything else is

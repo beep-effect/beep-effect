@@ -4,3 +4,7 @@ docgen.*.json
 !docgen.effected.template.json
 !docgen.effect-ontology.json
 .tsgo-lanes/
+# Raw reviewer seat logs (Codex/Grok streams) stay local; the seat reports, merged
+# inventories and required.json under effected/<m>/.review/ are the committed evidence.
+effected/*/.review/**/*.log
+effected/*/.review/**/*.err
