@@ -1,5 +1,9 @@
 # Lane G1 — Effect community & upstream guidance: barrel vs per-module imports
 
+This is research from 2026-08-23, not the current repository import policy.
+The current law in `standards/effect-laws-v1.md` requires `effect/<Module>`
+imports in all first-party code and examples, including bundled app UI.
+
 **Research question:** Is the premise `import { Effect } from "<legacy-effect-barrel>"` is less optimal than `import * as Effect from "effect/Effect"` actually true for Effect — especially Effect v4 (the effect-smol codebase) — and under what conditions?
 
 **Lane:** web / X research only. No repository exploration.
