@@ -181,3 +181,31 @@ this is packet-base debt rather than an H1 source regression. The packet
 orchestrator/lane C owns the single repair. Inbox acknowledgement
 `Heavy_Lint_Policy-56353dbb127a` records `--wontfix` in H1 with the owning
 repair and rerun required; it grants no waiver and the PR remains blocked.
+
+## Run 2 (after crash)
+
+Fetched and merged `origin/main` at `42720cfb66`; already up to date. Clean
+resume head: `f55e40f7a0`. Read terminal results under `.beep/`; the seven
+parity rows remain six passes and the inherited knowledge-reference fail.
+No completed passing gate was rerun. Dependency manifests, lockfile and OSV
+configuration are byte-identical to proved implementation `18fdc60e50`.
+
+Exact-head hosted [Security at f55e40f7a0](https://github.com/beep-effect/beep-effect/actions/runs/37959581690/job/113919059036)
+passed. Completed [Lint Policy job 113919634320](https://github.com/beep-effect/beep-effect/actions/runs/37959581690/job/113919634320)
+was read immediately: the same two host-path gates and three inherited packet
+semantic findings remain. Required contexts were green at the resume read;
+optional Lint Policy was red and Coverage Regression pending. Every red
+still gates the orchestrator's merge under the brief.
+
+Proof job `f8d5ad78-1177-409e-b399-2baea41d1ddf` ended by its 45-minute
+ceiling at 16:38Z, before the workstation crash. Its inbox row was
+acknowledged with `--observed`, using the full `proof-job-` row id.
+`bun run beep yeet ready` flipped #1562 ready on this resume. Remote status
+reported zero unresolved review threads; the flip starts the review window.
+The subsequent report push requires fresh exact-head hosted proof.
+
+The shared baseline repair has not landed; do not rerun its failing local
+gate before merging the repair. R73 still holds catalog/register publication
+after A's Knip merge. These are explicit sequencing blockers, not H1
+acceptance. The next owner resumes with the main merge, detector, register,
+removals, compatibility wave and separately deferred tsgo ratchet.

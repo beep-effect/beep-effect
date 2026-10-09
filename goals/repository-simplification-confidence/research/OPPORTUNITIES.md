@@ -157,3 +157,18 @@
   evidence; the gate is retained, with no suppression or waiver.
 - Prevention: prove the packet itself against the hosted knowledge lanes
   before it becomes the required starting point for every worker lane.
+
+## 2026-10-09 — H1 crash-resume monitor and acknowledgement recovery
+
+- Task: recover the OSV wave after workstation memory exhaustion.
+- Evidence: proof job `f8d5ad78-1177-409e-b399-2baea41d1ddf` has terminal
+  phase `terminated`, reason `timeout`, exit 130 at 16:38Z. Its 45-minute
+  ceiling expired before the later crash; no passed parity result was lost.
+- Recovery: read the terminal record and logs before acknowledging
+  `proof-job-f8d5ad78-1177-409e-b399-2baea41d1ddf` with `--observed`. The
+  bare job UUID is not the inbox row id and is rejected without mutation.
+- Prevention: use the exact `inbox list` row id and bounded readiness jobs;
+  distinguish a monitor timeout from a killed proof or a failed code gate.
+- Hosted attribution: latest Lint Policy job 113919634320 still reports the
+  same two host-path and three packet semantic findings; the shared repair
+  remains with the orchestrator/lane C. No H1 suppression or duplicate fix.

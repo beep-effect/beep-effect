@@ -89,3 +89,29 @@ The report/evidence push was published at `3fba269ec7`; its cheap gates and
 head-install preflight passed. The final attribution/main-sync push is the
 latest PR head (resolve it with `gh pr view 1562 --json headRefOid`). All
 source/manifest/lockfile and OSV bytes are unchanged from the proved OSV wave.
+
+## Run 2 (after crash)
+
+lane: rsc-h1-catalog
+head: f55e40f7a0af7e75bb4e5d89b208c313cc2d1664 (resume/report base; the report publication advances this branch)
+PR: #1562 (wave 1 OSV: #1562; tsgo ratchet: SPEC Decision Log row "H1 tsgo ratchet deferral")
+package-verify: not applicable (no workspace package edited)
+hosted-parity: test-tsgo: pass (retained terminal result); docgen local: pass (retained noop); jsdoc-ratchet: pass; knowledge refs: fail (inherited, orchestrator/lane C); fallow audit+health: pass; coverage read: pass (no measured source touched); Security (OSV): pass locally at 18fdc60e50 and hosted at f55e40f7a0, fresh report-head result required
+handoff: goals/repository-simplification-confidence/history/handoffs/rsc-h1-catalog-2026-10-09.md
+open items: OSV holds renewed through 2026-10-30 with documented fixed-release/removal exits; shared knowledge/packet repair and A Knip merge pending; catalog/register and compatibility waves blocked by sequence; tsgo ratchet explicitly deferred to this lane; no notification pending for this docs-only resume.
+
+- Mechanics step 0 repeated: clean lane, fetch and merge main; already current
+  at `42720cfb66`. Read all recorded result envelopes and parity rows.
+- The old readiness job timed out at 16:38Z, before the later crash. Read its
+  terminal log/record and acknowledged its exact inbox row with `--observed`.
+  No passed heavy gate rerun and no heavy unit started outside admission.
+- Read exact-head Lint Policy log 113919634320: same inherited failures,
+  shared repair owner unchanged. Hosted Security passes at resume head.
+- PR #1562 is ready for review; zero unresolved threads at the remote read.
+  No merge-ready claim: inherited red, pending coverage, review window and
+  fresh report-head CI still need the orchestrator's gate.
+- A bounded replacement readiness monitor is used for this publication;
+  resubmit after the shared repair/main merge. Its terminal record and any
+  new inbox rows must be read and acknowledged before yielding.
+- Later waves remain open in the existing blocker list. Reversal remains
+  revert of #1562; worker does not merge or retire.
