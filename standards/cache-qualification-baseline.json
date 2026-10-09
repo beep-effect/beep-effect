@@ -906,11 +906,11 @@
       }
     },
     "@beep/rdf": {
-      "reviewer": "Claude Fable 5.1 (cache baseline merge-friendly lane, fix/cache-baseline-merge-friendly)",
-      "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
+      "reviewer": "Codex (spar-wire, D16)",
+      "reason": "Record only the RDF-to-Md dependency edge and its six RDF computation identities under D16; retain commands, inputs, outputs, environment keys and cache flags, and grant no qualification.",
       "basis": {
-        "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
+        "path": "goals/spar-document-annotation-wire/research/cache-policy-review.md",
+        "sha256": "6d165bc3bc2478b4f46ab50b6741caa668fa47afcb111b2040f9cf7d32290751"
       }
     },
     "@beep/rdf-canonize": {
@@ -78287,6 +78287,7 @@
         "commandDigest": "5dee3785e2aa6a4827082fa95b9146e4a67f2b81ad794e973cc4927215d9c61c",
         "dependencies": [
           "@beep/identity#audit",
+          "@beep/md#audit",
           "@beep/schema#audit",
           "@beep/test-runner#audit",
           "@beep/test-utils#audit",
@@ -78352,6 +78353,7 @@
         "commandDigest": "5dee3785e2aa6a4827082fa95b9146e4a67f2b81ad794e973cc4927215d9c61c",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/md#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
@@ -78404,6 +78406,7 @@
         "commandDigest": "5dee3785e2aa6a4827082fa95b9146e4a67f2b81ad794e973cc4927215d9c61c",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/md#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
@@ -78443,6 +78446,7 @@
         "commandDigest": "5dee3785e2aa6a4827082fa95b9146e4a67f2b81ad794e973cc4927215d9c61c",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/md#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
@@ -78533,6 +78537,7 @@
         "commandDigest": "5dee3785e2aa6a4827082fa95b9146e4a67f2b81ad794e973cc4927215d9c61c",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/md#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -78619,6 +78624,7 @@
         "dependencies": [
           "//#lint:policy-fingerprint",
           "@beep/identity#transit",
+          "@beep/md#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -78829,6 +78835,7 @@
         "commandDigest": "5dee3785e2aa6a4827082fa95b9146e4a67f2b81ad794e973cc4927215d9c61c",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/md#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -78874,6 +78881,7 @@
         "commandDigest": "5dee3785e2aa6a4827082fa95b9146e4a67f2b81ad794e973cc4927215d9c61c",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/md#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -78922,6 +78930,7 @@
         "commandDigest": "5dee3785e2aa6a4827082fa95b9146e4a67f2b81ad794e973cc4927215d9c61c",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/md#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
