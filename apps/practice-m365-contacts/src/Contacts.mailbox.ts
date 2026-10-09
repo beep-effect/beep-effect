@@ -22,7 +22,7 @@ import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { ContactsError } from "./Contacts.schemas.ts";
+import { ContactsError, seedFolderName } from "./Contacts.schemas.ts";
 import type { M365ContactDraft, M365Error } from "@beep/m365";
 
 const $I = $PracticeM365ContactsId.create("Contacts.mailbox");
@@ -180,7 +180,7 @@ export const contactsMailboxLayer = (mailbox: string) =>
       return ContactsMailbox.of({
         inventory: inventory(),
         createFolder: m365.createContactFolder(
-          M365CreateContactFolderRequest.make({ userId, displayName: "Practice contacts (seeded)" })
+          M365CreateContactFolderRequest.make({ userId, displayName: seedFolderName })
         ),
         create: (folderId, contact) =>
           m365.createContact(M365CreateContactRequest.make({ userId, folderId: O.some(folderId), contact })),

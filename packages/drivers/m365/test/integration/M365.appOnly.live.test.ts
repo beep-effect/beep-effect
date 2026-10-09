@@ -29,6 +29,7 @@ import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 
 // Absent, blank, or unresolved `op://` values count as absent, so the suite
 // skips instead of authenticating with a placeholder.
@@ -90,7 +91,7 @@ pipe(
             "contacts smoke: creates one marked synthetic contact, reads it back, and deletes it (M365_LIVE_CONTACTS_WRITE=1)",
             Effect.fnUntraced(function* () {
               const m365 = yield* M365;
-              const marker = `smoke-${yield* Clock.currentTimeMillis}`;
+              const marker = `smoke-${yield* TestClock.withLive(Clock.currentTimeMillis)}`;
               const created = yield* m365.createContact(
                 M365CreateContactRequest.make({
                   userId,

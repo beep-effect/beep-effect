@@ -382,6 +382,20 @@ describe("contact seeding", () => {
       })
     )
   );
+  it.effect("category undo reports a missing edit baseline without claiming a confirmed edit", () =>
+    withFiles(
+      Effect.fnUntraced(function* (root) {
+        const marked = stored("untracked", "Fixture", "fixture@example.test", O.some("missing-journal"));
+        const result = yield* overJob(
+          root,
+          inventoryOf([marked]),
+          ContactSeeding.use((job) => job.undo(O.none(), true, true, false))
+        );
+        expect(result.result).toMatchObject({ deleted: 1, edited: 0, unverifiable: 1 });
+        expect(result.deleted).toHaveLength(0);
+      })
+    )
+  );
   it.effect("locks writers exclusively and validates malformed journals", () =>
     withFiles(
       Effect.fnUntraced(function* (root) {

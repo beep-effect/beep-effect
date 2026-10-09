@@ -13,7 +13,8 @@ import { makeContactsCommand } from "./Contacts.command.ts";
 
 const program = Effect.gen(function* () {
   const path = yield* Path.Path;
-  return yield* Command.run(makeContactsCommand(path.resolve(import.meta.dir, "../../..")), { version: "0.0.0" });
+  const checkoutRoot = yield* path.fromFileUrl(new URL("../../../", import.meta.url));
+  return yield* Command.run(makeContactsCommand(checkoutRoot), { version: "0.0.0" });
 }).pipe(Effect.provide(BunServices.layer), Effect.provideService(Logger.LogToStderr, true));
 /** Run the contact CLI through the Bun process boundary.
  * **Example** (Inspect the entrypoint)

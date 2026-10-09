@@ -95,6 +95,10 @@ export class ContactReport extends S.Class<ContactReport>($I`ContactReport`)(
     created: S.Natural,
     failed: S.Natural,
     edited: S.Natural,
+    unverifiable: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
+    ),
     deleted: S.Natural,
   },
   $I.annote("ContactReport", { description: "Counts only; never names, addresses or paths." })

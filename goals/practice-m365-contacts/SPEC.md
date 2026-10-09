@@ -161,6 +161,18 @@ This spec binds to them without restating.
   Reversal: remove the synthesized relationship only after Graph provides a stable
   equivalent relationship in every page response.
 
+- **Rollback evidence.** Report missing original receipts or current change keys
+  as `unverifiable`, separately from confirmed edits. Without a journal the
+  job cannot prove whether a tagged contact changed. Per-run undo preserves
+  unverifiable contacts; category undo remains the explicit full reversal.
+  Reversal: remove the separate counter after a reliable independent baseline
+  exists for every tagged contact.
+
+- **Smoke clock.** Read wall-clock milliseconds with `TestClock.withLive` for
+  the smoke marker. Test effects otherwise receive a virtual clock, so a marker
+  could repeat between sessions. Reversal: remove the override only if the
+  live test runner always supplies the wall clock.
+
 ## Acceptance Criteria
 
 - [ ] Either auth lane injects into the unchanged REST service boundary in

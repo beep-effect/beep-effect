@@ -158,7 +158,9 @@ contacts are never patched. Per-run undo removes only recorded contacts that
 still carry their marker and whose change key matches; edited contacts are
 reported and preserved. Category undo is the complete R3c reversal and deletes
 every tagged contact in every folder, reporting edited contacts as a count.
-It does not require a journal. Both remove an empty folder only if a journal
+It does not require a journal. Missing receipts or change keys are counted as
+`unverifiable`, separately from confirmed edits; per-run undo preserves them.
+Both remove an empty folder only if a journal
 records that this job created it, and never remove folders with child folders.
 
 ```sh

@@ -240,13 +240,17 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
                 return yield* Effect.fail(ContactsError.make({ reason: "state" }));
               const receipts = A.flatMap(selectedRuns, (journal) => journal.contacts);
               let edited = 0;
+              let unverifiable = 0;
               const selected = A.filter(inventory.contacts, (row) => {
                 const receipt = A.findFirst(receipts, (entry) => entry.contactId === row.contact.id);
                 const changed = O.isNone(receipt) || !O.contains(receipt.value.changeKey)(row.contact.changeKey);
                 const owned = byCategory
                   ? hasTag(row)
                   : O.isSome(receipt) && O.exists(markerOf(row.contact), (value) => O.contains(value)(run));
-                if (owned && changed) edited++;
+                if (owned) {
+                  if (O.isNone(receipt) || O.isNone(row.contact.changeKey)) unverifiable++;
+                  else if (changed) edited++;
+                }
                 return owned && (byCategory || !changed);
               });
               if (!dryRun) {
@@ -291,6 +295,7 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
                 ),
                 deleted: A.length(selected),
                 edited,
+                unverifiable,
               });
             })
           )
