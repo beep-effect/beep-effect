@@ -39,9 +39,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
 import { CiCommandError } from "./Ci.errors.ts";
-
-import ciPatterns = require("./CiOperational.patterns.json");
-
+import { ciOperationalPatterns } from "./CiOperational.schemas.ts";
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
 
@@ -284,7 +282,10 @@ export class HeavyAdmission extends S.Class<HeavyAdmission>($I`HeavyAdmission`)(
  * @category constants
  * @since 0.0.0
  */
-export const heavyDocsOnlyPattern: RegExp = new RegExp(`${ciPatterns.goals}|${ciPatterns.docs}`, "u");
+export const heavyDocsOnlyPattern: RegExp = new RegExp(
+  `${ciOperationalPatterns.goals}|${ciOperationalPatterns.docs}`,
+  "u"
+);
 
 /**
  * Whether one repo-relative path is docs-only under {@link heavyDocsOnlyPattern}.

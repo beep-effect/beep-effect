@@ -364,3 +364,11 @@ are available. Cancellation is not a proof failure or a package pass.
   bounded cheap-publication lane would prevent starvation without weakening
   the three-slot resource limit. The wrapper and workstation are outside C's
   ownership; this is a follow-up receipt, not an unreviewed scheduler change.
+
+- C Run 4 correction: the actual managed docgen compiler is ES2022 with
+  erasableSyntaxOnly, not CommonJS. Typed import assignment therefore fails
+  TS1202/TS1294. Inspecting its canonical owner before selecting syntax would
+  have prevented the failed rerun. C keeps that policy intact: the schema
+  module owns patterns, and a checked JSON projection serves pre-runtime
+  Node/Bun. Owner command: `beep ci patterns --write`; freshness fixture
+  protects the root-input gap instead of changing generated compiler policy.

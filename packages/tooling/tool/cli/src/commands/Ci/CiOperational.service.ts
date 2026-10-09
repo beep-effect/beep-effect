@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { findRepoRoot } from "@beep/repo-utils/Root";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
@@ -32,6 +33,7 @@ import {
   CiEnvironmentSelection,
   CiGoalDocument,
   CiResourceSample,
+  ciOperationalPatterns,
 } from "./CiOperational.schemas.ts";
 import type * as Scope from "effect/Scope";
 
@@ -71,6 +73,7 @@ const unavailable = Console.error("::warning::Runner resource measurement unavai
 export class CiOperational extends Context.Service<
   CiOperational,
   {
+    readonly patterns: (write: boolean) => Effect.Effect<void, CiCommandError>;
     readonly changeProfile: (base: string) => Effect.Effect<void, CiCommandError>;
     readonly jobEnvironment: Effect.Effect<void, CiCommandError>;
     readonly runnerResources: (
@@ -103,6 +106,21 @@ export const CiOperationalLive = Layer.effect(
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
     const context = yield* Effect.context<Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>();
     const append = (target: string, body: string) => fs.writeFileString(target, body, { flag: "a" });
+    const patterns = Effect.fn("Ci.patterns")(
+      function* (write: boolean) {
+        const root = yield* findRepoRoot().pipe(
+          Effect.provideService(FileSystem.FileSystem, fs),
+          Effect.provideService(Path.Path, path)
+        );
+        const target = path.join(root, "packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json");
+        const projection = `${JSON.stringify(ciOperationalPatterns, null, 2)}\n`;
+        if (write) yield* fs.writeFileString(target, projection);
+        else if ((yield* fs.readFileString(target)) !== projection)
+          return yield* Effect.fail(CiCommandError.make({ message: "CI pattern projection is stale." }));
+        yield* Console.log(write ? "CI pattern projection written." : "CI pattern projection is in sync.");
+      },
+      Effect.mapError(CiCommandError.new("Failed to synchronize CI patterns. Run bun run beep ci patterns --write."))
+    );
     const changeProfile = Effect.fn("Ci.changeProfile")(
       function* (base: string) {
         const event = yield* text("GITHUB_EVENT_NAME");
@@ -321,6 +339,6 @@ export const CiOperationalLive = Layer.effect(
       },
       Effect.mapError(CiCommandError.new("Failed to execute the CI lane."))
     );
-    return { changeProfile, jobEnvironment, runnerResources };
+    return { patterns, changeProfile, jobEnvironment, runnerResources };
   })
 );

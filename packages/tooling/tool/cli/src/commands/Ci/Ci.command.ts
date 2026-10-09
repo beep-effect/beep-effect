@@ -338,6 +338,14 @@ const operationalFailure = <A, R>(effect: Effect.Effect<A, CiCommandError, R>) =
       Console.error(error.message).pipe(Effect.andThen(failWithReportedExit(error.message)))
     )
   );
+const patternsCommand = Command.make(
+  "patterns",
+  { write: Flag.Boolean("write").pipe(Flag.withDefault(false)) },
+  ({ write }) => CiOperational.use((service) => operationalFailure(service.patterns(write)))
+).pipe(
+  Command.withDescription("Check the pre-runtime CI pattern projection, or regenerate with --write"),
+  Command.provide(CiOperationalLive)
+);
 const changeProfileCommand = Command.make(
   "change-profile",
   {
@@ -407,6 +415,7 @@ export const ciCommand = Command.make("ci", {}, () =>
 ).pipe(
   Command.withDescription("Continuous integration helper commands"),
   Command.withSubcommands([
+    patternsCommand,
     changeProfileCommand,
     jobEnvironmentCommand,
     runnerResourcesCommand,

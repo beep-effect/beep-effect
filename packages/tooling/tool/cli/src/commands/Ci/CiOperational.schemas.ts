@@ -9,9 +9,51 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
-import patterns = require("./CiOperational.patterns.json");
-
 const $I = $RepoCliId.create("commands/Ci/CiOperational.schemas");
+
+/**
+ * Shared pattern data owned by the schema module and projected for bootstrap use.
+ *
+ * **Example** (Construct pattern data)
+ *
+ * ```ts
+ * import { CiOperationalPatterns } from "@beep/repo-cli/commands/Ci"
+ * const patterns = CiOperationalPatterns.make({ goals: "^goals/", desktop: "^apps/", docs: "^docs/" })
+ * console.log(patterns.docs) // "^docs/"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiOperationalPatterns extends S.Class<CiOperationalPatterns>($I`CiOperationalPatterns`)(
+  {
+    goals: S.NonEmptyString.annotateKey({ description: "Convention-owned goal prose pattern." }),
+    desktop: S.NonEmptyString.annotateKey({ description: "Desktop Cargo and gate-owner pattern." }),
+    docs: S.NonEmptyString.annotateKey({ description: "Additional Heavy docs-only paths." }),
+  },
+  $I.annote("CiOperationalPatterns", { description: "Canonical pattern data for hosted and bootstrap CI profiles." })
+) {}
+
+/**
+ * Canonical CI patterns; `ci patterns --write` owns their pre-runtime JSON projection.
+ *
+ * **Example** (Read the shared docs pattern)
+ *
+ * ```ts
+ * import { ciOperationalPatterns } from "@beep/repo-cli/commands/Ci"
+ * console.log(ciOperationalPatterns.docs.startsWith("^docs/")) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const ciOperationalPatterns = CiOperationalPatterns.make({
+  goals:
+    "^(goals/(INDEX|README)\\.md|goals/[^/]+/(GOAL|PLAN|README|SPEC|DECISIONS)\\.md|goals/[^/]+/ops/manifest\\.json)$",
+  desktop:
+    "^(apps/professional-desktop/src-tauri/|\\.github/workflows/check\\.yml$|scripts/ci-change-profile\\.sh$|packages/tooling/tool/cli/src/commands/Ci/CiOperational)",
+  docs: "^docs/|^explorations/|^research/|^\\.changeset/[^/]+\\.md$|\\.md$",
+});
 
 /**
  * Convention-owned goal prose accepted by the pre-runtime profile adapter.
@@ -27,7 +69,7 @@ const $I = $RepoCliId.create("commands/Ci/CiOperational.schemas");
  * @category models
  * @since 0.0.0
  */
-export const CiGoalDocument = S.String.check(S.isPattern(new RegExp(patterns.goals, "u"))).annotate(
+export const CiGoalDocument = S.String.check(S.isPattern(new RegExp(ciOperationalPatterns.goals, "u"))).annotate(
   $I.annote("CiGoalDocument", { description: "Goal prose paths shared with the pre-runtime adapter." })
 );
 /**
@@ -60,7 +102,7 @@ export type CiGoalDocument = typeof CiGoalDocument.Type;
  * @category models
  * @since 0.0.0
  */
-export const CiDesktopInput = S.String.check(S.isPattern(new RegExp(patterns.desktop, "u"))).annotate(
+export const CiDesktopInput = S.String.check(S.isPattern(new RegExp(ciOperationalPatterns.desktop, "u"))).annotate(
   $I.annote("CiDesktopInput", { description: "Paths affecting the desktop Rust gate." })
 );
 /**

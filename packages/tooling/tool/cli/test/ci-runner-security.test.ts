@@ -1,3 +1,4 @@
+import { ciOperationalPatterns } from "@beep/repo-cli/commands/Ci";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
@@ -265,6 +266,18 @@ const assertTurboJobSetup = (jobs: WorkflowJobs, jobId: string, appSecrets: bool
 };
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (it) => {
+  it.effect(
+    "keeps the pre-runtime pattern projection synchronized with its schema owner",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* findRepoRoot();
+      const projection = yield* fs.readFileString(
+        path.join(root, "packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json")
+      );
+      assert.strictEqual(projection, `${JSON.stringify(ciOperationalPatterns, null, 2)}\n`);
+    })
+  );
   it.effect(
     "preserves the requested PR lane when an older checkout has no resource helper",
     Effect.fnUntraced(function* () {
