@@ -232,9 +232,9 @@
           "reason": "upstream-bug: probe 04 (local append after completion publishes [3] upstream vs [2,3] lab) and probe 28 (the :280 scenario: upstream latest stays at round 1 permanently); upstream CLAUDE.md 'the offset holds until the line completes'"
         },
         {
-          "test": "scratchpad/test/jsonl/Journal.regressions.test.ts:413 (replacement during the seed read, stricter than the probe's post-build window; live reader fails JournalResync replaced, later appends land on the current file); extends upstream __test__/Watcher.test.ts:271",
+          "test": "scratchpad/test/jsonl/Journal.regressions.test.ts:413 (replacement during the seed read, stricter than the probe's post-build window; live reader fails JournalResync replaced, later appends land on the current file), scratchpad/test/jsonl/JournalDeviations.test.ts:400 (a BOM file replaced by a BOM-less one right after the seed's BOM probe: a live reader fails JournalResync replaced, then append and query agree on the replacement's offsets); extends upstream __test__/Watcher.test.ts:271",
           "upstreamBehaviour": "identity (dev:ino) is recorded at watcher activation; a larger replacement between layer build and first catch-up is ingested as growth: subscriber receives only record 8 (offset 91, or 88 with a BOM), record 7 is dropped, no JournalResync",
-          "labBehaviour": "identity capture deliberately moved to construction, before the seed read; the same replacement fails live subscribers with JournalResync {reason:'replaced', expected:84, actual:182}",
+          "labBehaviour": "identity capture deliberately moved to construction, before the seed read; the same replacement fails live subscribers with JournalResync {reason:'replaced', expected:84, actual:182}; the seed reads the BOM width through the handle that supplies the identity, so a replacement cannot inherit the old file's width",
           "reason": "upstream-bug: probe 03b shows record 7 dropped silently; okf jsonl-journal.md requires a shrink or replacement to raise a typed resync 'rather than silently reconciling'"
         },
         {
@@ -268,9 +268,9 @@
           "reason": "upstream-bug: probe 08; offsets are persisted UTF-8 byte cursors (upstream LineSlice TSDoc) and lossy decoding breaks the byte/cursor correspondence"
         },
         {
-          "test": "scratchpad/test/jsonl/Journal.regressions.test.ts:171; extends upstream __test__/Journal.test.ts:732",
+          "test": "scratchpad/test/jsonl/Journal.regressions.test.ts:171, scratchpad/test/jsonl/JournalDeviations.test.ts:375 (a BOM file replaced by a BOM-less one right after a read's BOM probe: the old width is never applied to the replacement), :400 (the same replacement right after the seed's BOM probe), scratchpad/test/jsonl/Helpers.test.ts:312 (the width is read through a handle, so it survives a rename over the path); extends upstream __test__/Journal.test.ts:732",
           "upstreamBehaviour": "BOM probed only at construction: when a missing journal later appears with a BOM, append returns 87 for a record query() reports at 84, and query({cursor:87}) reports it at 87; query() says 84 only because the default TextDecoder strips the BOM while the recorded BOM width is still 0",
-          "labBehaviour": "BOM re-probed for each read and reconciliation; append and query both report 84",
+          "labBehaviour": "BOM re-probed on every read, and on reconciliation after a replacement, a shrink or an unknown identity (an unchanged known file keeps the recorded width, as upstream); a read and the seed take the width through the handle that also samples the size and the identity (internal/tail.ts handleBomBytes); append and query both report 84",
           "reason": "upstream-bug: probe 07; okf jsonl-journal.md 'Offsets are logical post-BOM on every path'"
         },
         {
@@ -280,16 +280,16 @@
           "reason": "upstream-bug: probe 17; okf jsonl-journal.md 'a BOM code point anywhere else in the file is content'"
         },
         {
-          "test": "scratchpad/test/jsonl/Journal.regressions.test.ts:133 (append injected between sampling and reading moves neither end of query or replay, BOM and no BOM); extends upstream __test__/ReadSurfaces.test.ts:110",
+          "test": "scratchpad/test/jsonl/Journal.regressions.test.ts:133 (append injected between sampling and reading moves neither end of query or replay, BOM and no BOM), scratchpad/test/jsonl/JournalDeviations.test.ts:375 (a rename-over inside the sample cannot pair one file's BOM width with another file's size); extends upstream __test__/ReadSurfaces.test.ts:110",
           "upstreamBehaviour": "readFrom stats, then readTail stats again and reads the last N bytes of the new size; an append between them shifts the window: query({cursor:0}) returns [2,3] instead of [1,2], query({cursor:84}) [3] instead of [2]",
-          "labBehaviour": "one sampled [cursor, EOF) byte interval per read: [1,2] and [2]; fixed against appends (replacement/truncation during the read: next row)",
+          "labBehaviour": "one sampled [cursor, EOF) byte interval per read: [1,2] and [2]; one handle supplies the BOM width, the size and the identity of the sample; fixed against appends (replacement/truncation during the read: next row)",
           "reason": "upstream-bug: probe 09; okf jsonl-slice.md promises a resumed consumer exactly the unprocessed remainder with no gap"
         },
         {
-          "test": "scratchpad/test/jsonl/JournalDeviations.test.ts:242 (query truncated mid-read emits a contiguous prefix then fails JournalResync {truncated, sampled size, 0}), :267 (replay half of changes({cursor}) fails the same way), :284 (rename-over mid-read returns all 300 sampled records, as upstream), :304 (replacement between sampling and opening fails JournalResync replaced); no upstream test changes a file beneath a read",
+          "test": "scratchpad/test/jsonl/JournalDeviations.test.ts:242 (query truncated mid-read emits a contiguous prefix then fails JournalResync {truncated, sampled size, 0}), :267 (replay half of changes({cursor}) fails the same way), :284 (rename-over mid-read returns all 300 sampled records, as upstream), :304 (replacement between sampling and opening fails JournalResync replaced), :375 (a BOM file replaced by a BOM-less one right after the sample's BOM probe fails JournalResync replaced with the replacement's own logical size as actual; a retry reads the replacement from offset 0); no upstream test changes a file beneath a read",
           "upstreamBehaviour": "readFrom reads the whole sampled region in one allocation and buffers matches: truncation or replacement after sampling still returns every sampled record (probe 26: 2000 old records), and an unsliced query() holds the whole journal in memory",
-          "labBehaviour": "samples the range, opens the file once, checks the handle's dev:ino against the sample, reads every page through that handle (internal/tail.ts readSampledWindow); memory follows page/record size; replacement cannot reach the pinned handle (sampled history returned); a page shorter than the sample fails JournalResync truncated (actual = handle size minus sampled BOM) after earlier pages were emitted (probe 26 rerun: 97 records then JournalResync)",
-          "reason": "upstream-bug: upstream names the whole-region read an open defect (packages/jsonl/CLAUDE.md:94 and the query TSDoc at src/Journal.ts:141, spencerbeggs/effected#233); paging fixes the memory bound but cannot return truncated bytes, so the lab fails typed instead of ending early or splicing files (probe 26 before pinning: 97 records with no error; 97 old + 1903 new after rename-over)"
+          "labBehaviour": "samples the BOM width, the size and the dev:ino identity through one handle, opens the paging handle, checks its dev:ino against the sample, reads every page through that handle (internal/tail.ts readSampledWindow); memory follows page/record size; replacement cannot reach the pinned handle (sampled history returned); a page shorter than the sample fails JournalResync truncated (actual = handle size minus sampled BOM) after earlier pages were emitted (probe 26 rerun: 97 records then JournalResync); a replacement before the pin fails JournalResync replaced (actual = the pinned file's size minus its own BOM)",
+          "reason": "upstream-bug: upstream names the whole-region read an open defect (packages/jsonl/CLAUDE.md:94 and the query TSDoc at src/Journal.ts:141, spencerbeggs/effected#233); paging fixes the memory bound but cannot return truncated bytes, so the lab fails typed instead of ending early or splicing files (probe 26 before pinning: 97 records with no error; 97 old + 1903 new after rename-over); before the sample came from one handle, a rename-over between the BOM probe and the size sample made query() fail MalformedLine at offset 0 on a healthy file (review round 1, sol-1-1)"
         },
         {
           "test": "scratchpad/test/jsonl/Journal.regressions.test.ts:102 (0, -1, 1.5, NaN, Infinity each fail with tag InvalidJournalConfig); no upstream test",
@@ -328,10 +328,10 @@
           "reason": "law:22 + law:EF-14 (Effect-returning functions use Effect.fn); upstream-bug: probe 23 reproduces the construction-time throw upstream's own test calls a trap (__test__/Envelope.test.ts:398, merely building the Effect must be safe)"
         },
         {
-          "test": "scratchpad/test/jsonl/Journal.edges.test.ts:227; no upstream test",
+          "test": "scratchpad/test/jsonl/Journal.edges.test.ts:227 (gone at the seed read's own existence check), :362 (gone when the seed samples the BOM width and identity, when the tail read stats the path, and when it opens it; each step reports a platform NotFound), scratchpad/test/jsonl/Journal.regressions.test.ts:659 (a NotFound for a journal that still exists fails construction); no upstream test",
           "upstreamBehaviour": "when the file vanishes after the existence check, the seed read's JournalNotFound is caught but the following stat is not (src/Journal.ts:929-930): layer construction fails PlatformError (NotFound, method stat)",
-          "labBehaviour": "constructs a missing journal: latest none, append fails JournalNotFound, after create an append lands at offset 0",
-          "reason": "upstream-bug: probe 21; okf jsonl-journal.md 'layer construction never fails on a missing journal file' and upstream's own comment allowing the file to vanish between check and read"
+          "labBehaviour": "constructs a missing journal: latest none, append fails JournalNotFound, after create an append lands at offset 0; this holds at every seed step after the existence check, for JournalNotFound and for a PlatformError whose reason is NotFound; a platform NotFound counts only when the file is in fact gone, and every other platform failure fails construction untranslated",
+          "reason": "upstream-bug: probe 21; okf jsonl-journal.md 'layer construction never fails on a missing journal file' and upstream's own comment allowing the file to vanish between check and read; before those steps recovered the same way, construction failed PlatformError {reason: NotFound, method: stat} (review round 1, sol-1-2)"
         },
         {
           "test": "scratchpad/test/jsonl/ErrorDeviations.test.ts:82",
@@ -352,8 +352,46 @@
           "reason": "law:EF-15 (effects observable through logs and annotations on key workflows)"
         }
       ],
-      "backlog": [],
-      "reviewRounds": [],
+      "backlog": [
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-9 Journal.integration.test.ts restates four upstream integration cases that integration/Journal.int.test.ts now carries verbatim, with its own 10 and 15 second timeouts",
+          "reason": "retiring a lab-authored duplicate is a test deletion and needs an explicit decision (section 16); the timeouts predate the retrofit and were not raised as a flake remedy"
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-6 reconcile re-probes the BOM only after a replacement, a shrink or an unknown identity, so a BOM landing on a journal that existed empty at construction is ingested with width 0 (upstream-equivalent today)",
+          "reason": "no executed probe yet (section 14); README Deviation 10 now states exactly when the lab re-probes; candidate fix is to re-probe while consumed is 0"
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "follow-up to sol-1-1: reconcile takes the identity from fs.stat(path) and, when it probes, the BOM width from a separate open",
+          "reason": "found by reading while fixing sol-1-1, not probed; a mismatched pair is caught as replaced at the next reconciliation"
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "e0500aea7d27cca0d942a4da8cbde89b1b516681",
+          "seats": {
+            "grok": {
+              "required": 0,
+              "backlog": 0
+            },
+            "sol": {
+              "required": 2,
+              "backlog": 0
+            },
+            "fable": {
+              "required": 5,
+              "backlog": 4
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

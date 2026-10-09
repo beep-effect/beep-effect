@@ -1,8 +1,8 @@
 import { InvalidUtf8 } from "../../effected/jsonl/JsonlError.ts";
 import { ByteCount, LineSlice } from "../../effected/jsonl/LineSlice.ts";
-import { TailWindow } from "../../effected/jsonl/internal/tail.ts";
+import { fcRuns } from "@beep/fc-runs";
 import { CursoredSlice, Slice, matchesFrame } from "../../effected/jsonl/Slice.ts";
-import { probeBomBytes, readRangeWindow, readTail } from "../../effected/jsonl/internal/tail.ts";
+import { handleBomBytes, probeBomBytes, readRangeWindow, readTail, TailWindow } from "../../effected/jsonl/internal/tail.ts";
 import { utf8Length } from "../../effected/jsonl/internal/utf8.ts";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { assertFailure, assertSome } from "@effect/vitest/utils";
@@ -22,7 +22,7 @@ const Utf16Text = S.String;
 describe("JSONL helper boundaries", () => {
   it.prop("matches TextEncoder for arbitrary UTF-16 strings", [Utf16Text], ([text]) => {
     assert.strictEqual(utf8Length(text), new TextEncoder().encode(text).length);
-  });
+  }, { arbitrary: fcRuns(100) });
   it.each(["\ud800", "\udc00", "\ud800a", "\ud800\ud800", "\ud800\udfff", "é", "€"])(
     "counts isolated and paired code units %s",
     (text) => {
@@ -304,5 +304,21 @@ it.effect("rejects overlong, surrogate and isolated continuation encodings befor
         "the error identifies the physical decoded range start, not the precise corrupt byte"
       );
     }
+  })
+);
+
+// Review round 1 (R1): the BOM width is read through a handle, so it describes
+// the file that handle names even after another file is renamed over the path.
+it.effect("reads a BOM width through a handle that outlives a rename over its path", () =>
+  Effect.gen(function* () {
+    const fs = yield* MemoryFileSystem.make;
+    yield* fs.writeFileString("/journal", "\ufeff42\n");
+    const file = yield* fs.open("/journal", { flag: "r" });
+    yield* fs.writeFileString("/next", "42\n");
+    yield* fs.rename("/next", "/journal");
+    // Rewound before each read: the answer does not depend on the handle's position.
+    assert.strictEqual(yield* handleBomBytes(file), 3);
+    assert.strictEqual(yield* handleBomBytes(file), 3);
+    assert.strictEqual(yield* probeBomBytes(fs, "/journal"), 0);
   })
 );

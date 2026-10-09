@@ -331,3 +331,49 @@ it.effect("a completed truncation resync clears latest and resumes writes on the
     assert.strictEqual((yield* journal.append("noted", { round: 3, label: "new file" })).line.offset, 0);
   })
 );
+
+// Review round 1 (R2): after the existence check the journal can vanish at
+// any later seed step. Each is a missing journal, whether the step reports it
+// as JournalNotFound or as a PlatformError whose reason is NotFound. The seed
+// opens the file to sample its BOM width and identity, then the tail read
+// stats the path and opens it again; `opens` and `stats` pick which of those
+// calls finds the file gone.
+const vanishingAt = (fs: FileSystem.FileSystem, opens: number, stats: number): FileSystem.FileSystem => {
+  let opened = 0;
+  let sampled = 0;
+  return {
+    ...fs,
+    watch: () => Stream.never,
+    open: Effect.fn("JsonlTest.removeBeforeOpen")(function* (target, options) {
+      if (++opened === opens) yield* fs.remove(target);
+      return yield* fs.open(target, options);
+    }),
+    stat: Effect.fn("JsonlTest.removeBeforeStat")(function* (target) {
+      if (++sampled === stats) yield* fs.remove(target);
+      return yield* fs.stat(target);
+    }),
+  };
+};
+for (const [step, opens, stats] of [
+  ["BOM and identity sample", 1, 0],
+  ["tail size sample", 0, 1],
+  ["tail read", 2, 0],
+] as const) {
+  it.effect(`a file disappearing before the seed ${step} remains a missing journal`, () =>
+    Effect.gen(function* () {
+      const fs = yield* memory();
+      yield* fs.writeFileString(path, "\ufeff" + line(1));
+      const journal = yield* open(vanishingAt(fs, opens, stats));
+      assert.isFalse(yield* fs.exists(path), "the journal vanished during the seed");
+      assertNone(yield* SubscriptionRef.get(journal.latest));
+      assertFailure(
+        (yield* Effect.result(journal.append("noted", { round: 1, label: "missing" }))).pipe(
+          Result.mapError((error) => error._tag)
+        ),
+        "JournalNotFound"
+      );
+      yield* journal.create;
+      assert.strictEqual((yield* journal.append("noted", { round: 1, label: "recreated" })).line.offset, 0);
+    })
+  );
+}

@@ -17,7 +17,7 @@ import {
 import { canMerge, shallowMerge } from "../effected/jsonl/internal/merge.ts";
 import { probeBomBytes, readTailUntil } from "../effected/jsonl/internal/tail.ts";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, expectTypeOf, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { assertFailure, assertNone, assertSome, assertSuccess } from "@effect/vitest/utils";
 import { pipe } from "effect/Function";
@@ -34,7 +34,6 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 import * as Tuple from "effect/Tuple";
-import { expectTypeOf } from "vitest";
 
 const $I = $ScratchpadId.create("test/jsonl");
 const Updated = JsonlEvent.make("updated", { data: S.Struct({ count: S.Finite, label: S.String }) });
@@ -334,7 +333,7 @@ describe("JSONL generic engine", () => {
         expect(patched.data.label).toBe("seed");
         expect(patched.data.count).toBe(2);
       }).pipe(Effect.provideContext(context));
-    }).pipe(Effect.scoped)
+    })
   );
 });
 

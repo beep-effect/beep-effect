@@ -40,7 +40,14 @@ import type { EnvelopeUnion, EnvelopeWithTag } from "./Envelope.ts";
 import { Envelope } from "./Envelope.ts";
 import { canMerge, isRecordLike, shallowMerge } from "./internal/merge.ts";
 import type { TailWindow } from "./internal/tail.ts";
-import { DEFAULT_WINDOW, probeBomBytes, readRangeWindow, readSampledWindow, readTailUntil } from "./internal/tail.ts";
+import {
+  DEFAULT_WINDOW,
+  handleBomBytes,
+  probeBomBytes,
+  readRangeWindow,
+  readSampledWindow,
+  readTailUntil,
+} from "./internal/tail.ts";
 import type { InvalidData, JsonlError, MalformedLine, UnknownEvent, UnserializableData } from "./JsonlError.ts";
 import {
   InvalidJournalConfig,
@@ -544,6 +551,8 @@ const parentOf = (path: string): string => {
   return separator === 0 ? Str.slice(0, 1)(path) : Str.slice(0, separator)(path);
 };
 
+const textEncoder = new TextEncoder();
+
 /**
  * The last valid envelope in a tail window, with its offsets rebased onto the
  * journal.
@@ -557,8 +566,6 @@ const parentOf = (path: string): string => {
  * adds is the one thing the pure core cannot know: the window's text begins at
  * `window.start`, so every offset inside it is relative to that.
  */
-const textEncoder = new TextEncoder();
-
 const decodeWindow = <R extends JsonlEvent.Registry>(events: R, window: TailWindow): O.Option<EnvelopeUnion<R>> =>
   O.map(Envelope.lastValidResult(window.text, events), (envelope) => ({
     ...envelope,
@@ -689,6 +696,23 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
   });
 
   const identityOf = (info: FileSystem.File.Info): O.Option<string> => O.map(info.ino, (ino) => `${info.dev}:${ino}`);
+
+  /**
+   * The journal's BOM width and metadata, sampled through ONE handle.
+   *
+   * **Details**
+   *
+   * The width, the size and the identity then describe the same file. Probing
+   * the path once for the BOM and again for the metadata can straddle a
+   * rename-over: the old file's BOM width is paired with the replacement's
+   * identity, so nothing looks replaced while every offset is three bytes off.
+   */
+  const sampleFile = Effect.scoped(
+    Effect.gen(function* () {
+      const sample = yield* fs.open(config.path, { flag: "r" });
+      return Tuple.make(yield* handleBomBytes(sample), yield* sample.stat);
+    })
+  );
 
   // Caller owns writePermit. This stage changes state but never waits on a
   // subscriber. Both local writes and watch pokes reconcile through it.
@@ -854,16 +878,22 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
     }).pipe(Effect.ensuring(Deferred.done(mine, Exit.void)));
   });
 
+  const decodeSelection = S.decodeUnknownEffect(S.UndefinedOr(CursoredSlice(S.String)));
+  const validateSelection = Effect.fn("Journal.validateSelection")((slice: unknown) =>
+    decodeSelection(slice).pipe(Effect.mapError((error) => InvalidSlice.make({ error })))
+  );
+
   /**
    * Read the file from `cursor`, frame-filtered before payload decode.
    *
    * **Details**
    *
-   * Captures one file end and opens the file once, then reads bounded
-   * complete-record pages through that handle. A page widens only when no
-   * complete record fits, including a cursor fragment. Frame filtering still
-   * precedes payload decoding; a failed record follows all earlier selected
-   * records in the stream.
+   * Samples the BOM width, the file end and the identity through one handle,
+   * then pins the file with a second handle whose identity must match the
+   * sample, and reads bounded complete-record pages through it. A page widens
+   * only when no complete record fits, including a cursor fragment. Frame
+   * filtering still precedes payload decoding; a failed record follows all
+   * earlier selected records in the stream.
    *
    * Upstream reads the whole sampled region in one allocation, which is a
    * snapshot by construction and holds the entire history in memory
@@ -871,11 +901,6 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
    * has to be kept explicitly: the handle pins the sampled file against a
    * replacement, and a page shorter than the sample fails `JournalResync`.
    */
-  const decodeSelection = S.decodeUnknownEffect(S.UndefinedOr(CursoredSlice(S.String)));
-  const validateSelection = Effect.fn("Journal.validateSelection")((slice: unknown) =>
-    decodeSelection(slice).pipe(Effect.mapError((error) => InvalidSlice.make({ error })))
-  );
-
   const readFrom = (
     input: CursoredSlice<R, JsonlEvent.Tag<R>> | undefined
   ): Stream.Stream<EnvelopeUnion<R>, JournalReadError | JsonlError> =>
@@ -884,8 +909,10 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
         const slice = yield* validateSelection(input);
         yield* requireFile;
         const from = slice?.cursor ?? 0;
-        const bom = yield* probeBomBytes(fs, config.path);
-        const info = yield* fs.stat(config.path);
+        // One handle supplies the BOM width, the size and the identity. With a
+        // width from one file and a size from its replacement, a healthy first
+        // record read as malformed.
+        const [bom, info] = yield* sampleFile;
         const logicalSize = ByteSize.toNumberUnsafe(info.size) - bom;
         if (from >= logicalSize) {
           return Stream.empty;
@@ -893,7 +920,7 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
         // Pin the sampled file. Every page is read through this one handle, so
         // a file renamed over the path later cannot leak into the range, and
         // a truncation surfaces as a short page instead of an early end. A
-        // replacement between the stat above and this open is caught here.
+        // replacement between the sample above and this open is caught here.
         const file = yield* fs.open(config.path, { flag: "r" });
         const pinned = yield* file.stat;
         const sampledIdentity = identityOf(info);
@@ -903,11 +930,13 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
           O.isSome(pinnedIdentity) &&
           sampledIdentity.value !== pinnedIdentity.value
         ) {
+          // The replacement's logical size is measured with its own BOM width,
+          // read through the handle that names it.
           return yield* JournalResync.make({
             path: config.path,
             reason: JournalResyncReason.Enum.replaced,
             expected: logicalSize,
-            actual: Math.max(0, ByteSize.toNumberUnsafe(pinned.size) - bom),
+            actual: Math.max(0, ByteSize.toNumberUnsafe(pinned.size) - (yield* handleBomBytes(file))),
           });
         }
         // Capture one absolute range. Growth after this snapshot must not
@@ -1169,14 +1198,22 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
   // never fail on one.
   const present = yield* exists;
   if (present) {
+    // What a journal that vanished during the seed leaves behind: no BOM
+    // width, and the cursor, identity and `latest` still at their empty start.
+    const missing = Effect.sync(() => {
+      bomBytes = 0;
+    });
     yield* Effect.gen(function* () {
-      bomBytes = yield* probeBomBytes(fs, config.path);
-      // Narrowed to JournalNotFound only: a permissions error or a bad handle
-      // must NOT present as an empty journal. Anything other than "the file
-      // vanished between the check and the read" is a real failure.
+      // Narrowed to the vanished file only: a permissions error or a bad
+      // handle must NOT present as an empty journal. Anything other than "the
+      // file vanished between the check and the read" is a real failure.
       // Sample identity before the seed read: a replacement during that
-      // read must not attach its old cursor to the replacement's inode.
-      const info = yield* fs.stat(config.path);
+      // read must not attach its old cursor to the replacement's inode. The
+      // BOM width comes from the same handle as that identity, so a
+      // replacement cannot inherit the old file's width either: the first
+      // reconciliation sees a different identity and resynchronizes.
+      const [bom, info] = yield* sampleFile;
+      bomBytes = bom;
       const seed = yield* refresh;
       // Resume at the same completed seed record, never at a later stat EOF:
       // a torn suffix or unread growth must remain pending for reconciliation.
@@ -1187,10 +1224,14 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
       // Detect replacement even before the supervisor's first catch-up read.
       identity = identityOf(info);
     }).pipe(
-      Effect.catchTag("JournalNotFound", () =>
-        Effect.sync(() => {
-          bomBytes = 0;
-        })
+      // The seed read's own existence check saw the file gone.
+      Effect.catchTag("JournalNotFound", () => missing),
+      // The same disappearance, reported by the step that met it instead: the
+      // sample and the tail read each fail with a platform `NotFound`. It is a
+      // missing journal only when the file is in fact gone; a `NotFound` for a
+      // journal that still exists is a real failure and propagates untranslated.
+      Effect.catchReason("PlatformError", "NotFound", (_reason, error) =>
+        Effect.flatMap(exists, (stillPresent) => (stillPresent ? Effect.fail(error) : missing))
       )
     );
   }
@@ -1378,14 +1419,6 @@ export interface JournalClass<Self, Id extends string, R extends JsonlEvent.Regi
   /**
    * Build the layer for this journal.
    *
-   * **Construction can fail with a `PlatformError`, and that is deliberate.** A
-   * journal file that does not exist yet is a legal state and constructs
-   * cleanly — but a file that exists and cannot be read (`EACCES`, a bad
-   * handle) is a real failure, and typing this channel `never` would have made
-   * it arrive as an untypeable defect that no caller could catch.
-   *
-   * **Bind the result to a const and provide that const.**
-   *
    * **Details**
    *
    * Configuration is decoded before acquisition; invalid input fails with
@@ -1395,6 +1428,16 @@ export interface JournalClass<Self, Id extends string, R extends JsonlEvent.Regi
    * appends are not serialized against each other. That is the in-process form
    * of exactly the interleaving the cooperative-writer rules exist to prevent,
    * and it typechecks perfectly.
+   *
+   * **Gotchas**
+   *
+   * Construction can fail with a `PlatformError`, and that is deliberate. A
+   * journal file that does not exist yet is a legal state and constructs
+   * cleanly — but a file that exists and cannot be read (`EACCES`, a bad
+   * handle) is a real failure, and typing this channel `never` would have made
+   * it arrive as an untypeable defect that no caller could catch.
+   *
+   * Bind the result to a const and provide that const.
    *
    * **Example** (Share one journal layer across consumers)
    *

@@ -1,5 +1,6 @@
 // Adapted from upstream Line.test.ts and LineProperty.test.ts (MIT).
 import { Line, LineSlice, MalformedLine, ParsedLine } from "../../effected/jsonl/index.ts";
+import { fcRuns } from "@beep/fc-runs";
 import { assert, describe, it } from "@effect/vitest";
 import { assertFailure, assertNone, assertSome, assertSuccess } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -9,6 +10,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+/** The property run floor; `BEEP_FC_NUM_RUNS` can raise it, never lower it. */
+const runs = { arbitrary: fcRuns(100) };
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 const first = (text: string) => O.getOrThrow(A.head(Line.split(text)));
@@ -158,7 +161,7 @@ describe("Line boundaries", () => {
 describe("Line properties", () => {
   it.prop("byteLength agrees with TextEncoder including lone surrogates", [textArb], ([text]) => {
     assert.strictEqual(Line.byteLength(text), encoder.encode(text).length);
-  });
+  }, runs);
   it.prop("slices address their encoded text and tile all source bytes", [anyText], ([text]) => {
     const bytes = encoder.encode(text);
     let end = 0;
@@ -171,7 +174,7 @@ describe("Line properties", () => {
       end = line.end;
     }
     assert.strictEqual(end, bytes.length);
-  });
+  }, runs);
   it.prop("reports every nonblank line and leaves the unterminated tail unconsumed", [anyText], ([text]) => {
     const lines = Line.split(text);
     assert.strictEqual(Line.parseAll(text).length, A.filter(lines, (line) => !Str.isEmpty(Str.trim(line.text))).length);
@@ -180,20 +183,20 @@ describe("Line properties", () => {
       Line.consumedOffset(text),
       O.getOrElse(expected, () => 0)
     );
-  });
+  }, runs);
   it.prop("lastValid is exactly the last successful parse", [anyText], ([text]) => {
     const successes = A.filterMap(Line.parseAll(text), (result) => result);
     A.match(successes, {
       onEmpty: () => assertNone(Line.lastValid(text)),
       onNonEmpty: (rows) => assertSome(Line.lastValid(text), A.lastNonEmpty(rows)),
     });
-  });
+  }, runs);
   it.prop("a complete appended line becomes the last valid line", [anyText, payload], ([prefix, text]) => {
     assertSome(
       O.map(Line.lastValid(`${prefix}\n${text}\n`), (row) => row.value),
       Result.getOrThrow(json(text))
     );
-  });
+  }, runs);
   it.prop(
     "truncating the final object recovers the previous object",
     [S.Array(objectPayload).check(S.isBetweenLength(2, 8)), S.Int.check(S.isBetween({ minimum: 0, maximum: 100000 }))],
@@ -206,7 +209,8 @@ describe("Line properties", () => {
         O.map(Line.lastValid(text), (row) => row.value),
         Result.getOrThrow(json(previous))
       );
-    }
+    },
+    runs
   );
   it.prop("all pure read surfaces are total", [anyText], ([text]) => {
     assert.doesNotThrow(() => {
@@ -215,5 +219,5 @@ describe("Line properties", () => {
       Line.lastValid(text);
       Line.consumedOffset(text);
     });
-  });
+  }, runs);
 });

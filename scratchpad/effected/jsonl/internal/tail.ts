@@ -17,7 +17,6 @@
 // range fails `JournalResync` instead of ending the read early.
 
 import { $ScratchpadId } from "@beep/identity/packages";
-import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
 import * as Effect from "effect/Effect";
 import type * as FileSystem from "effect/FileSystem";
@@ -101,6 +100,12 @@ const readBytes = Effect.fn("Jsonl.readBytes")(function* (file: FileSystem.File,
   return bytes.subarray(0, offset);
 });
 
+/** Index just past the first newline, or the buffer length when it holds none. */
+const afterFirstNewline = (bytes: Uint8Array): number => {
+  const newline = bytes.indexOf(LF);
+  return newline === -1 ? bytes.length : newline + 1;
+};
+
 /** Decode the bytes read at `from` into a window with logical offsets. */
 const windowOf = Effect.fn("Jsonl.windowOf")(function* (
   path: string,
@@ -111,18 +116,12 @@ const windowOf = Effect.fn("Jsonl.windowOf")(function* (
   skipPartialLine: boolean,
   completeOnly: boolean,
 ): Effect.fn.Return<TailWindow, InvalidUtf8> {
-  const cursor = skipPartialLine
-    ? A.findFirstIndex(bytes, (byte) => byte === LF).pipe(
-      O.map((newline) => newline + 1),
-      O.getOrElse(() => bytes.length),
-    )
-    : 0;
-  const end = completeOnly
-    ? A.findLastIndex(bytes, (byte) => byte === LF).pipe(
-      O.map((newline) => newline + 1),
-      O.getOrElse(() => 0),
-    )
-    : bytes.length;
+  // Both scans use the typed-array natives, as upstream does: they search the
+  // bytes in place, where an Array helper first copies the whole window into a
+  // Number array. `lastIndexOf` returns -1 for a window without a newline, so
+  // `end` is then 0 and nothing of the unfinished line is decoded.
+  const cursor = skipPartialLine ? afterFirstNewline(bytes) : 0;
+  const end = completeOnly ? bytes.lastIndexOf(LF) + 1 : bytes.length;
   // Discard byte fragments before decoding. A cursor can point into a UTF-8
   // sequence, and an unfinished suffix can contain a pending multi-byte code point.
   const text = yield* Effect.try({
@@ -327,6 +326,47 @@ export const readSampledWindow: {
 );
 
 /**
+ * The BOM width of an open file, read through its handle.
+ *
+ * **Details**
+ *
+ * A reader that takes the BOM width, the size and the identity from one handle
+ * holds three facts about one file. Probing the path again for any of them can
+ * describe a file that was renamed over it in between, and a BOM width applied
+ * to the wrong file shifts every offset it yields by three bytes. The handle is
+ * left positioned just past the bytes it read.
+ *
+ * **Example** (Read a BOM width through an open handle)
+ * ```ts
+ * import { handleBomBytes } from "@beep/scratchpad/effected/jsonl/internal/tail";
+ * import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
+ * import * as Effect from "effect/Effect";
+ * const program = Effect.gen(function* () {
+ *   const fs = yield* MemoryFileSystem.make;
+ *   yield* fs.writeFileString("/events.jsonl", "\ufeff42\n");
+ *   const file = yield* fs.open("/events.jsonl", { flag: "r" });
+ *   // A rename over the path cannot change what this handle reports.
+ *   yield* fs.writeFileString("/next.jsonl", "42\n");
+ *   yield* fs.rename("/next.jsonl", "/events.jsonl");
+ *   const bytes = yield* handleBomBytes(file);
+ *   bytes // => 3
+ * });
+ * await Effect.runPromise(Effect.scoped(program));
+ * ```
+ *
+ * @internal
+ * @category resource-management
+ * @since 0.0.0
+ */
+export const handleBomBytes: (file: FileSystem.File) => Effect.Effect<number, PlatformError.PlatformError> = Effect.fn(
+  "Jsonl.handleBomBytes",
+)(function* (file: FileSystem.File) {
+  yield* file.seek(BigInt(0), "start");
+  const bytes = yield* readBytes(file, BOM.length);
+  return hasBom(bytes) ? BOM.length : 0;
+});
+
+/**
  * Probe the first three bytes of a file for a BOM.
  *
  * **Details**
@@ -366,8 +406,7 @@ export const probeBomBytes: {
     path: string,
   ): Effect.fn.Return<number, PlatformError.PlatformError, Scope.Scope> {
     const file = yield* fs.open(path, { flag: "r" });
-    const bytes = yield* readBytes(file, BOM.length);
-    return hasBom(bytes) ? BOM.length : 0;
+    return yield* handleBomBytes(file);
   }, Effect.scoped),
 );
 

@@ -12,7 +12,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
-import type * as FileSystem from "effect/FileSystem";
+import * as FileSystem from "effect/FileSystem";
 import { identity } from "effect/Function";
 import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
@@ -328,6 +328,133 @@ it.effect("a replacement between sampling a range and pinning it fails JournalRe
     assert.deepStrictEqual(
       failure._tag === "JournalResync" ? [failure.reason, failure.expected, failure.actual] : failure._tag,
       ["replaced", byteLength(sampled), byteLength(replacement)]
+    );
+  })
+);
+
+// Review round 1 (R1): a reader takes the BOM width and the identity of a file
+// through one handle. Probing the path for the BOM and again for the metadata
+// straddled a rename-over, and the old file's BOM width was then applied to the
+// replacement: three bytes off, on a file whose identity looked unchanged.
+//
+// The decoration renames a BOM-less file over the journal as soon as the next
+// armed read returns. The first read of a query, and of the seed, is the BOM
+// probe, so the rename lands inside the sample.
+const replacingAfterNextRead = (
+  fs: FileSystem.FileSystem,
+  replacement: string,
+  trigger: { armed: boolean }
+): FileSystem.FileSystem => ({
+  ...fs,
+  watch: () => Stream.never,
+  open: (target, options) =>
+    fs.open(target, options).pipe(
+      Effect.map(
+        (handle): FileSystem.File => ({
+          [FileSystem.FileTypeId]: FileSystem.FileTypeId,
+          stat: handle.stat,
+          sync: handle.sync,
+          seek: (offset, from) => handle.seek(offset, from),
+          read: (buffer) => handle.read(buffer),
+          write: (buffer) => handle.write(buffer),
+          writeAll: (bytes) => handle.writeAll(bytes),
+          truncate: (length) => handle.truncate(length),
+          readAlloc: Effect.fn("JsonlTest.replaceAfterBomProbe")(function* (size) {
+            const bytes = yield* handle.readAlloc(size);
+            if (trigger.armed) {
+              trigger.armed = false;
+              yield* fs.writeFileString(next, replacement);
+              yield* fs.rename(next, path);
+            }
+            return bytes;
+          }),
+        })
+      )
+    ),
+});
+it.effect("a BOM file replaced by a BOM-less one after its BOM probe fails JournalResync, then reads logically", () =>
+  Effect.gen(function* () {
+    const fs = yield* memory();
+    const replacement = line(7);
+    yield* fs.writeFileString(path, "\ufeff" + line(1));
+    const trigger = { armed: false };
+    const journal = yield* open(replacingAfterNextRead(fs, replacement, trigger));
+    trigger.armed = true;
+    const failure = yield* journal.query().pipe(Stream.runCollect, Effect.flip);
+    assert.isFalse(trigger.armed, "the replacement landed between the BOM probe and the rest of the sample");
+    assert.deepStrictEqual(
+      failure._tag === "JournalResync" ? [failure.reason, failure.expected, failure.actual] : failure._tag,
+      ["replaced", byteLength(line(1)), byteLength(replacement)]
+    );
+    // A retry over the now stable replacement reads it at its own logical offsets.
+    assert.deepStrictEqual(
+      A.map(yield* journal.query({ events: ["noted"] }).pipe(Stream.runCollect), (row) => [
+        row.data.round,
+        row.line.offset,
+        row.line.end,
+      ]),
+      [[7, 0, byteLength(replacement)]]
+    );
+  })
+);
+it.effect("a BOM file replaced by a BOM-less one after the seed's BOM probe resyncs, then appends logically", () =>
+  Effect.gen(function* () {
+    const fs = yield* memory();
+    const replacement = line(7);
+    yield* fs.writeFileString(path, "\ufeff" + line(1));
+    const observed = yield* Deferred.make<void>();
+    const release = yield* Deferred.make<void>();
+    const trigger = { armed: true };
+    let watching = false;
+    let gated = false;
+    const replacing = replacingAfterNextRead(fs, replacement, trigger);
+    const journal = yield* open({
+      ...replacing,
+      watch: () => {
+        watching = true;
+        return Stream.never;
+      },
+      // Park the supervisor's first catch-up at its metadata sample, so a live
+      // reader can subscribe before that catch-up reports what it finds.
+      stat: Effect.fn("JsonlTest.gateCatchUpStat")(function* (target) {
+        if (watching && !gated) {
+          gated = true;
+          yield* Deferred.succeed(observed, undefined);
+          yield* Deferred.await(release);
+        }
+        return yield* fs.stat(target);
+      }),
+    });
+    assert.isFalse(trigger.armed, "the replacement landed inside the seed's sample");
+    yield* Deferred.await(observed);
+    const reader = yield* journal
+      .changes()
+      .pipe(Stream.take(1), Stream.runCollect, Effect.result, Effect.forkChild({ startImmediately: true }));
+    yield* Deferred.succeed(release, undefined);
+    const appended = yield* journal.append("noted", { round: 8, label: "ours" });
+    // The seed kept the identity of the file whose BOM it read, so the catch-up
+    // sees the replacement instead of reading it with the old file's BOM width.
+    assertFailure(
+      Result.mapError(yield* Fiber.join(reader), (error) =>
+        error._tag === "JournalResync" ? [error.reason, error.expected, error.actual] : error._tag
+      ),
+      ["replaced", 0, byteLength(replacement)]
+    );
+    // Append and query then agree on the replacement's logical offsets.
+    assert.deepStrictEqual(
+      [appended.line.offset, appended.line.end],
+      [byteLength(replacement), byteLength(replacement) + byteLength(line(8, "ours"))]
+    );
+    assert.deepStrictEqual(
+      A.map(yield* journal.query({ events: ["noted"] }).pipe(Stream.runCollect), (row) => [
+        row.data.round,
+        row.line.offset,
+        row.line.end,
+      ]),
+      [
+        [7, 0, byteLength(replacement)],
+        [8, appended.line.offset, appended.line.end],
+      ]
     );
   })
 );

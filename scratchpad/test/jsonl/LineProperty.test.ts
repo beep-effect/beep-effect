@@ -1,4 +1,5 @@
 // Restored from upstream jsonl/__test__/LineProperty.test.ts (MIT).
+import { fcRuns } from "@beep/fc-runs";
 import { assert, describe, it } from "@effect/vitest";
 import { assertDefined, assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
@@ -11,6 +12,8 @@ import { Line } from "../../effected/jsonl/index.ts";
 // Array form ONLY: the named-record form of it.effect.prop silently discards
 // Schema conversion (see packages/glob/__test__/compliance.test.ts).
 
+/** The property run floor; `BEEP_FC_NUM_RUNS` can raise it, never lower it. */
+const runs = { arbitrary: fcRuns(100) };
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 const byteLength = (text: string): number => encoder.encode(text).length;
@@ -119,7 +122,8 @@ describe("Line properties", () => {
   it.effect.prop("byteLength agrees with TextEncoder for any string", [codeUnitText], ([text]) =>
     Effect.sync(() => {
       assert.strictEqual(Line.byteLength(text), byteLength(text));
-    })
+    }),
+    runs
   );
 
   it.effect.prop("every slice's byte offsets address its own text in the source", [anyText], ([text]) =>
@@ -132,7 +136,8 @@ describe("Line properties", () => {
         // the wrong oracle for exactly the inputs this property exists to cover.
         assert.strictEqual(decoded, utf8RoundTrip(line.text), `offset ${line.offset} of ${stringifyJson(text)}`);
       }
-    })
+    }),
+    runs
   );
 
   it.effect.prop("slices tile the source: each end is the next offset, the last is the length", [anyText], ([text]) =>
@@ -147,14 +152,16 @@ describe("Line properties", () => {
         assert.strictEqual(lines[i]?.end, lines[i + 1]?.offset, "no gap and no overlap between lines");
       }
       assert.strictEqual(lines.at(-1)?.end, byteLength(text), "the last line ends at the end of the source");
-    })
+    }),
+    runs
   );
 
   it.effect.prop("no non-blank line is ever silently dropped", [anyText], ([text]) =>
     Effect.sync(() => {
       const nonBlank = Line.split(text).filter((line) => line.text.trim() !== "");
       assert.strictEqual(Line.parseAll(text).length, nonBlank.length);
-    })
+    }),
+    runs
   );
 
   it.effect.prop("consumedOffset never consumes an unterminated tail's bytes", [anyText], ([text]) =>
@@ -169,7 +176,8 @@ describe("Line properties", () => {
       } else {
         assert.strictEqual(consumed, byteLength(text));
       }
-    })
+    }),
+    runs
   );
 
   it.effect.prop("lastValid is exactly the last success of parseAll", [anyText], ([text]) =>
@@ -181,7 +189,8 @@ describe("Line properties", () => {
         return;
       }
       assertSome(O.map(last, (row) => row.line.offset), successes.at(-1)?.success.line.offset);
-    })
+    }),
+    runs
   );
 
   it.effect.prop(
@@ -193,7 +202,8 @@ describe("Line properties", () => {
         // the dogfood journal's correction-by-append rule requires.
         const source = `${prefix}${prefix === "" || prefix.endsWith("\n") ? "" : "\n"}${line}\n`;
         assertSome(O.map(Line.lastValid(source), (row) => row.value), parseJson(line));
-      })
+      }),
+    runs
   );
 
   it.effect.prop(
@@ -216,7 +226,8 @@ describe("Line properties", () => {
         const expected = payloads.at(-2);
         assertDefined(expected);
         assertSome(O.map(Line.lastValid(torn), (row) => row.value), parseJson(expected));
-      })
+      }),
+    runs
   );
 
   it.effect.prop("is total: no input throws", [anyText], ([text]) =>
@@ -228,6 +239,7 @@ describe("Line properties", () => {
         Line.consumedOffset(text);
         Line.byteLength(text);
       });
-    })
+    }),
+    runs
   );
 });
