@@ -336,7 +336,11 @@ export type HookPulseSwitchAction = typeof HookPulseSwitchAction.Type;
  * @since 0.0.0
  */
 export class HookPulseRefusal extends S.Class<HookPulseRefusal>($I`HookPulseRefusal`)(
-  { ts: S.DateTimeUtcFromString, agentKind: S.String, reason: HookPulseRefusalReason },
+  {
+    ts: S.DateTimeUtcFromString,
+    agentKind: S.Literals([...HookPulseAgentKind.literals, "unknown"]),
+    reason: HookPulseRefusalReason,
+  },
   $I.annote("HookPulseRefusal", {
     description: "Payload-free writer refusal; unknown client names are normalized to unknown.",
   })

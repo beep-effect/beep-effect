@@ -9,6 +9,7 @@
 
 import {
   contextSurfaceId,
+  HookPulseAgentKind,
   HookPulseClientCoverage,
   HookPulseDisarmWindow,
   HookPulseEvent,
@@ -39,7 +40,7 @@ import {
   PruneSurfaceCandidate,
 } from "../HarnessLedger.schemas.ts";
 import { listDirectorySorted } from "./Fs.ts";
-import type { HarnessHash, HookPulseAgentKind } from "@beep/repo-ai-metrics";
+import type { HarnessHash } from "@beep/repo-ai-metrics";
 
 const McpConfig = S.fromJsonString(
   S.Struct({
@@ -101,6 +102,7 @@ export const enumeratePruneCandidates = Effect.fn("HarnessLedger.enumeratePruneC
 
 const ActivityToolEvent = HookPulseEvent.pick(["PreToolUse", "PostToolUse", "PostToolUseFailure"]);
 const TerminalToolEvent = HookPulseEvent.pick(["PostToolUse", "PostToolUseFailure"]);
+const isSupportedAgentKind = S.is(HookPulseAgentKind);
 const isActivityToolEvent = S.is(ActivityToolEvent);
 const isTerminalToolEvent = S.is(TerminalToolEvent);
 const isUnknownStart = (pulse: HookPulseV1) => pulse.hookEvent === "SessionStart" && O.isNone(pulse.harnessHash);
@@ -407,20 +409,15 @@ const readRefusals = Effect.fn("HarnessLedger.readRefusals")(function* (root: st
       .readFileString(path.join(root, name))
       .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot read payload-free refusal ledger.")));
     for (const line of A.filter(Str.split(text, "\n"), Str.isNonEmpty)) {
-      const row = HookPulseRefusal.decodeJsonResult(line);
-      if (Result.isFailure(row)) {
-        refusalUndecodableLines += 1;
-        continue;
-      }
-      writerRefusalsTotal += 1;
-      if (
-        Result.isSuccess(row) &&
-        (row.success.agentKind === "claude-code" ||
-          row.success.agentKind === "codex-cli" ||
-          row.success.agentKind === "cursor-cli")
-      ) {
-        refusalsByAgentKind[row.success.agentKind] += 1;
-      }
+      Result.match(HookPulseRefusal.decodeJsonResult(line), {
+        onFailure: () => {
+          refusalUndecodableLines += 1;
+        },
+        onSuccess: (row) => {
+          writerRefusalsTotal += 1;
+          if (isSupportedAgentKind(row.agentKind)) refusalsByAgentKind[row.agentKind] += 1;
+        },
+      });
     }
   }
   return { refusalUndecodableLines, writerRefusalsTotal, refusalsByAgentKind };
@@ -648,6 +645,16 @@ const readTranscriptCounts = Effect.fn("HarnessLedger.readTranscriptCounts")(fun
   });
 });
 
+const reconciliationBasis = HookPulseAgentKind.$match({
+  "codex-cli": F.constant(
+    "failed-or-interrupted: exec wrappers are not one-to-one with inner hook calls; non-use unqualified"
+  ),
+  "cursor-cli": F.constant("unsupported transcript format; non-use unqualified"),
+  "claude-code": F.constant(
+    "aggregate ratio is advisory; per-tool identity, current window, and surface coverage remain unqualified"
+  ),
+});
+
 /**
  * Reconcile every transcript file beneath a caller-selected root, including
  * nested Workflow and subagent files, against complete production hook shards.
@@ -701,11 +708,6 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
     undecodableLines,
     ratio: transcriptToolEvents > 0 ? O.some(hookedToolEvents / transcriptToolEvents) : O.none<number>(),
     qualifiedForNonUse: false,
-    basis:
-      agentKind === "codex-cli"
-        ? "failed-or-interrupted: exec wrappers are not one-to-one with inner hook calls; non-use unqualified"
-        : agentKind === "cursor-cli"
-          ? "unsupported transcript format; non-use unqualified"
-          : "aggregate ratio is advisory; per-tool identity, current window, and surface coverage remain unqualified",
+    basis: reconciliationBasis(agentKind),
   });
 });
