@@ -508,3 +508,11 @@ While verifying the report push for #1568, both `gh pr view` and the complete re
 
 - 2026-10-09 G admitted compiler/docgen proof still found `unknown[]` in nested filter/flatMap refusal-warning collection, despite source-only review and an explicit RecoveryRow array. Replaced the nested expression with one typed-input flatMap; no schema, runtime warning order or refusal semantics changed. Preventive improvement: finish the actual compiler check before treating contextual inference repairs as complete.
 - 2026-10-09 G changed-input build returned success but restored only 23 rather than 28 outputs. Removing `dist` alone retained `node_modules/.tmp/tsconfig.tsbuildinfo`, so incremental compilation skipped unchanged declarations and the public index. Correct the owned clean-output fixture by resetting its incremental file too; compare a fresh cold build with the cached manifest. The inherited generated build-script/output coupling is a shared-owner follow-up, not a new cache-hit claim.
+
+- 2026-10-09T21:15Z G final publication did not start: the noninteractive shell
+  lacked the user-manager bus environment (`$DBUS_SESSION_BUS_ADDRESS and
+  $XDG_RUNTIME_DIR not defined`). The wrapper returned before admission or
+  cheap gates. Supply the canonical UID-1000 runtime directory and user bus
+  address only to the retry; no persistent configuration or caps change.
+  Preventive improvement: the admission wrapper should resolve the local
+  user-manager transport explicitly for noninteractive sessions.
