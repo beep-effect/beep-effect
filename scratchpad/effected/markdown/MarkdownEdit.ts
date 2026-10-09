@@ -18,7 +18,10 @@
 // The `format` range-filter posture still diverges: this module and toml use
 // owning-node/expression intersection, yaml requires edits fully within range.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/markdown/MarkdownEdit");
 
 /**
  * A single path segment: a `number` for child indices in the node tree, or a
@@ -43,10 +46,10 @@ export type MarkdownPath = ReadonlyArray<MarkdownSegment>;
  *
  * @public
  */
-export class MarkdownRange extends S.Class<MarkdownRange>("MarkdownRange")({
-	offset: S.Finite,
-	length: S.Finite,
-}) {}
+export class MarkdownRange extends S.Class<MarkdownRange>($I`MarkdownRange`)({
+	offset: S.Finite.annotateKey({ description: "Zero-based start of the formatting region in the source string, measured in UTF-16 code units" }),
+	length: S.Finite.annotateKey({ description: "Extent of the formatting region in UTF-16 code units, used to select intersecting nodes" }),
+}, $I.annote("MarkdownRange", { description: "A range within a markdown document, expressed as a zero-based character `offset` and a `length` in UTF-16 code units. Pass to `MarkdownFormat.format` to restrict formatting to a region." })) {}
 
 /**
  * A non-mutating text edit: replace the span `[offset, offset + length)` with
@@ -60,11 +63,11 @@ export class MarkdownRange extends S.Class<MarkdownRange>("MarkdownRange")({
  *
  * @public
  */
-export class MarkdownEdit extends S.Class<MarkdownEdit>("MarkdownEdit")({
-	offset: S.Finite,
-	length: S.Finite,
-	content: S.String,
-}) {
+export class MarkdownEdit extends S.Class<MarkdownEdit>($I`MarkdownEdit`)({
+	offset: S.Finite.annotateKey({ description: "Zero-based start of the span to replace in the original source, measured in UTF-16 code units" }),
+	length: S.Finite.annotateKey({ description: "Number of UTF-16 code units to replace in the original source; `0` inserts without removing text" }),
+	content: S.String.annotateKey({ description: "Replacement text for the source span; an empty string deletes the span" }),
+}, $I.annote("MarkdownEdit", { description: "A non-mutating text edit: replace the span `[offset, offset + length)` with `content`. Set `length` to `0` to insert, `content` to `\"\"` to delete." })) {
 	/**
 	 * Apply `edits` to `text`, producing a new string. Edits are applied in
 	 * reverse-offset order so earlier offsets stay valid; the input `edits`

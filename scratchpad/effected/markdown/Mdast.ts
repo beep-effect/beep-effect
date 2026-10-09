@@ -2,6 +2,7 @@
 // node classes and plain mdast JSON. The emission conventions are documented on
 // the exported `Mdast` class.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -17,6 +18,8 @@ import type {
 	Position,
 } from "./MarkdownNode.ts";
 import { Root } from "./MarkdownNode.ts";
+
+const $I = $ScratchpadId.create("effected/markdown/Mdast");
 
 /**
  * A plain mdast node: a `type` tag plus whatever fields that type carries.
@@ -45,10 +48,10 @@ export interface MdastNode {
  *
  * @public
  */
-export class MdastDecodeError extends S.TaggedError<MdastDecodeError>()("MdastDecodeError", {
+export class MdastDecodeError extends S.TaggedError<MdastDecodeError>($I`MdastDecodeError`)("MdastDecodeError", {
 	/** The structured schema issue. Never a string. */
-	issue: S.Defect(),
-}) {
+	issue: S.Defect().annotateKey({ description: "The structured schema issue. Never a string." }),
+}, $I.annote("MdastDecodeError", { description: "Indicates that foreign mdast input failed to decode into the package's node classes." })) {
 	override get message(): string {
 		return "mdast input failed to decode into markdown nodes";
 	}

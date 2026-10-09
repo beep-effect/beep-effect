@@ -13,12 +13,15 @@
 // yaml and toml engines into their bundle (the config-file tree-shaking
 // rule, applied verbatim).
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type { MarkdownDocument } from "./MarkdownDocument.ts";
 import { MarkdownEdit } from "./MarkdownEdit.ts";
 import type { Frontmatter as FrontmatterNode } from "./MarkdownNode.ts";
 import { FrontmatterFormat } from "./MarkdownNode.ts";
+
+const $I = $ScratchpadId.create("effected/markdown/Frontmatter");
 
 /**
  * Indicates that a frontmatter codec was handed a capture of a different
@@ -31,14 +34,14 @@ import { FrontmatterFormat } from "./MarkdownNode.ts";
  *
  * @public
  */
-export class FrontmatterFormatMismatchError extends S.TaggedError<FrontmatterFormatMismatchError>()(
+export class FrontmatterFormatMismatchError extends S.TaggedError<FrontmatterFormatMismatchError>($I`FrontmatterFormatMismatchError`)(
 	"FrontmatterFormatMismatchError",
 	{
 		/** The format the codec decodes. */
-		expected: FrontmatterFormat,
+		expected: FrontmatterFormat.annotateKey({ description: "The format the codec decodes." }),
 		/** The format the capture node actually carries. */
-		actual: FrontmatterFormat,
-	},
+		actual: FrontmatterFormat.annotateKey({ description: "The format the capture node actually carries." }),
+	}, $I.annote("FrontmatterFormatMismatchError", { description: "Indicates that a frontmatter codec was handed a capture of a different format — a yaml codec applied to a `+++` toml capture, for example." }),
 ) {
 	override get message(): string {
 		return `frontmatter format mismatch: the ${this.expected} codec cannot decode a ${this.actual} capture`;
@@ -57,12 +60,12 @@ export class FrontmatterFormatMismatchError extends S.TaggedError<FrontmatterFor
  *
  * @public
  */
-export class FrontmatterDecodeError extends S.TaggedError<FrontmatterDecodeError>()("FrontmatterDecodeError", {
+export class FrontmatterDecodeError extends S.TaggedError<FrontmatterDecodeError>($I`FrontmatterDecodeError`)("FrontmatterDecodeError", {
 	/** The format that failed to parse. */
-	format: FrontmatterFormat,
+	format: FrontmatterFormat.annotateKey({ description: "The format that failed to parse." }),
 	/** The underlying format-package failure, preserved structurally. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The underlying format-package failure, preserved structurally." }),
+}, $I.annote("FrontmatterDecodeError", { description: "Indicates that a frontmatter capture's content failed to parse in its declared format." })) {
 	override get message(): string {
 		return `frontmatter ${this.format} content failed to parse`;
 	}
@@ -80,12 +83,12 @@ export class FrontmatterDecodeError extends S.TaggedError<FrontmatterDecodeError
  *
  * @public
  */
-export class FrontmatterEncodeError extends S.TaggedError<FrontmatterEncodeError>()("FrontmatterEncodeError", {
+export class FrontmatterEncodeError extends S.TaggedError<FrontmatterEncodeError>($I`FrontmatterEncodeError`)("FrontmatterEncodeError", {
 	/** The format that failed to serialize. */
-	format: FrontmatterFormat,
+	format: FrontmatterFormat.annotateKey({ description: "The format that failed to serialize." }),
 	/** The underlying format-package failure, preserved structurally. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The underlying format-package failure, preserved structurally." }),
+}, $I.annote("FrontmatterEncodeError", { description: "Indicates that frontmatter data failed to serialize in a codec's format." })) {
 	override get message(): string {
 		return `frontmatter ${this.format} content failed to serialize`;
 	}
@@ -142,7 +145,7 @@ export interface FrontmatterCodec {
  *
  * @public
  */
-export const FrontmatterMissingReason = S.Literals(["absent", "captureDisabled"]);
+export const FrontmatterMissingReason = S.Literals(["absent", "captureDisabled"]).pipe($I.annoteSchema("FrontmatterMissingReason", { description: "Why a frontmatter decoder found no capture on a document." }));
 
 /**
  * Why a frontmatter decoder found no capture on a document.
@@ -171,10 +174,10 @@ export type FrontmatterMissingReason = typeof FrontmatterMissingReason.Type;
  *
  * @public
  */
-export class FrontmatterMissingError extends S.TaggedError<FrontmatterMissingError>()("FrontmatterMissingError", {
+export class FrontmatterMissingError extends S.TaggedError<FrontmatterMissingError>($I`FrontmatterMissingError`)("FrontmatterMissingError", {
 	/** Why there is no capture: no block at all, or capture left off. */
-	reason: FrontmatterMissingReason,
-}) {
+	reason: FrontmatterMissingReason.annotateKey({ description: "Why there is no capture: no block at all, or capture left off." }),
+}, $I.annote("FrontmatterMissingError", { description: "Indicates that a document handed to a frontmatter decoder carries no frontmatter capture." })) {
 	override get message(): string {
 		return this.reason === "captureDisabled"
 			? "the source opens with a frontmatter block, but it was not captured; parse with `frontmatter: true`"
@@ -194,12 +197,12 @@ export class FrontmatterMissingError extends S.TaggedError<FrontmatterMissingErr
  *
  * @public
  */
-export class FrontmatterValidationError extends S.TaggedError<FrontmatterValidationError>()(
+export class FrontmatterValidationError extends S.TaggedError<FrontmatterValidationError>($I`FrontmatterValidationError`)(
 	"FrontmatterValidationError",
 	{
 		/** The structured schema issue. Never a string. */
-		issue: S.Defect(),
-	},
+		issue: S.Defect().annotateKey({ description: "The structured schema issue. Never a string." }),
+	}, $I.annote("FrontmatterValidationError", { description: "Indicates that decoded frontmatter data did not satisfy the consumer's schema." }),
 ) {
 	override get message(): string {
 		return "frontmatter data failed schema validation";

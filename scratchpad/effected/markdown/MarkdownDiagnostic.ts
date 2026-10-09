@@ -7,8 +7,11 @@
 // against the source text. The dependency edge runs public modules ->
 // engine only (toml src/TomlDiagnostic.ts precedent).
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { MARKDOWN_PARSE_ERROR_CODES } from "./internal/carriers.ts";
+
+const $I = $ScratchpadId.create("effected/markdown/MarkdownDiagnostic");
 
 /**
  * Error codes `Markdown.parse`/`MarkdownDocument.parse` can fail with.
@@ -17,7 +20,7 @@ import { MARKDOWN_PARSE_ERROR_CODES } from "./internal/carriers.ts";
  *
  * @public
  */
-export const MarkdownParseErrorCode = S.Literals(MARKDOWN_PARSE_ERROR_CODES);
+export const MarkdownParseErrorCode = S.Literals(MARKDOWN_PARSE_ERROR_CODES).pipe($I.annoteSchema("MarkdownParseErrorCode", { description: "Error codes `Markdown.parse`/`MarkdownDocument.parse` can fail with. Currently exactly one, `\"NestingDepthExceeded\"`, the hardening-guard trip; the union may widen as new fatal conditions are identified." }));
 
 /**
  * The union of all markdown parse-error code string literals.
@@ -43,14 +46,14 @@ export type MarkdownParseErrorCode = typeof MarkdownParseErrorCode.Type;
  *
  * @public
  */
-export class MarkdownDiagnostic extends S.Class<MarkdownDiagnostic>("MarkdownDiagnostic")({
-	code: MarkdownParseErrorCode,
-	message: S.String,
-	offset: S.Finite,
-	length: S.Finite,
-	line: S.Finite,
-	character: S.Finite,
-}) {
+export class MarkdownDiagnostic extends S.Class<MarkdownDiagnostic>($I`MarkdownDiagnostic`)({
+	code: MarkdownParseErrorCode.annotateKey({ description: "Fatal condition identifier, currently `NestingDepthExceeded` for a nesting guard violation" }),
+	message: S.String.annotateKey({ description: "Human-readable explanation of the reported condition" }),
+	offset: S.Finite.annotateKey({ description: "Zero-based UTF-16 source offset of the reported condition" }),
+	length: S.Finite.annotateKey({ description: "Extent of the reported source span in UTF-16 code units; nesting guard violations use zero" }),
+	line: S.Finite.annotateKey({ description: "Zero-based source line containing the reported offset, counting CRLF as one line break" }),
+	character: S.Finite.annotateKey({ description: "Zero-based UTF-16 position within the source line at the reported offset" }),
+}, $I.annote("MarkdownDiagnostic", { description: "One structured diagnostic: its (MarkdownParseErrorCode:type), a human-readable `message`, and its exact position (`offset`/`length`, plus zero-based `line`/`character`)." })) {
 	/**
 	 * Materialize an engine record, deriving zero-based `line`/`character`
 	 * from `offset` against the source text. Advanced — the parse entry

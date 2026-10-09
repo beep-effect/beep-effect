@@ -6,6 +6,7 @@
 // bare-tree entry points agree exactly on what is a typed failure and what is
 // a defect.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -32,6 +33,8 @@ import type {
 	PhrasingContent,
 } from "./MarkdownNode.ts";
 import { Definition, Root } from "./MarkdownNode.ts";
+
+const $I = $ScratchpadId.create("effected/markdown/MarkdownDocument");
 
 /**
  * A heading entry from {@link MarkdownDocument.headings}: the {@link Heading}
@@ -319,12 +322,12 @@ const phrasingText = (nodes: ReadonlyArray<PhrasingContent>): string => {
  *
  * @public
  */
-export class MarkdownDocument extends S.Class<MarkdownDocument>("MarkdownDocument")({
-	source: S.String,
-	root: Root,
-	diagnostics: S.Array(MarkdownDiagnostic),
-	definitions: S.ReadonlyMap(S.String, Definition),
-}) {
+export class MarkdownDocument extends S.Class<MarkdownDocument>($I`MarkdownDocument`)({
+	source: S.String.annotateKey({ description: "Original markdown text retained so tree positions and surgical edits refer to the exact parsed source" }),
+	root: Root.annotateKey({ description: "Parsed mdast-shaped document tree carrying source positions and fidelity details" }),
+	diagnostics: S.Array(MarkdownDiagnostic).annotateKey({ description: "Non-fatal conditions reported during parsing; currently empty for every accepted document" }),
+	definitions: S.ReadonlyMap(S.String, Definition).annotateKey({ description: "Link-reference definitions indexed by normalized, case-folded label, with the first definition winning and nodes retained in the tree" }),
+}, $I.annote("MarkdownDocument", { description: "A parsed markdown document: the original `source`, the mdast-shaped Root tree, the non-fatal MarkdownDiagnostics the parse produced, and the link-reference `definitions` index." })) {
 	/**
 	 * The document's frontmatter capture, or `undefined` when there is none.
 	 *

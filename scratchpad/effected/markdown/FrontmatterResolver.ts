@@ -10,9 +10,12 @@
 // Resolution is EXACT version-segment equality. Prefix resolution (`skill@2`
 // selecting the highest registered `2.y.z`) is not offered.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/markdown/FrontmatterResolver");
 
 /**
  * A `$schema` declaration referencing a schema by URL — any string containing
@@ -25,10 +28,10 @@ import * as S from "effect/Schema";
  *
  * @public
  */
-export class SchemaDeclarationByUrl extends S.TaggedClass<SchemaDeclarationByUrl>()("ByUrl", {
+export class SchemaDeclarationByUrl extends S.TaggedClass<SchemaDeclarationByUrl>($I`SchemaDeclarationByUrl`)("ByUrl", {
 	/** The URL as written in the declaration. */
-	url: S.String,
-}) {}
+	url: S.String.annotateKey({ description: "The URL as written in the declaration." }),
+}, $I.annote("SchemaDeclarationByUrl", { description: "A `$schema` declaration referencing a schema by URL — any string containing `://`." })) {}
 
 /**
  * A `$schema` declaration referencing a schema by path — any string starting
@@ -39,10 +42,10 @@ export class SchemaDeclarationByUrl extends S.TaggedClass<SchemaDeclarationByUrl
  *
  * @public
  */
-export class SchemaDeclarationByPath extends S.TaggedClass<SchemaDeclarationByPath>()("ByPath", {
+export class SchemaDeclarationByPath extends S.TaggedClass<SchemaDeclarationByPath>($I`SchemaDeclarationByPath`)("ByPath", {
 	/** The path as written in the declaration. */
-	path: S.String,
-}) {}
+	path: S.String.annotateKey({ description: "The path as written in the declaration." }),
+}, $I.annote("SchemaDeclarationByPath", { description: "A `$schema` declaration referencing a schema by path — any string starting `./`, `../` or `/` (a bundle- or file-relative reference)." })) {}
 
 /**
  * A `$schema` declaration carrying an inline JSON-Schema-like document — the
@@ -56,10 +59,10 @@ export class SchemaDeclarationByPath extends S.TaggedClass<SchemaDeclarationByPa
  *
  * @public
  */
-export class SchemaDeclarationInline extends S.TaggedClass<SchemaDeclarationInline>()("Inline", {
+export class SchemaDeclarationInline extends S.TaggedClass<SchemaDeclarationInline>($I`SchemaDeclarationInline`)("Inline", {
 	/** The inline schema document, exactly as decoded from the frontmatter. */
-	document: S.Unknown,
-}) {}
+	document: S.Unknown.annotateKey({ description: "The inline schema document, exactly as decoded from the frontmatter." }),
+}, $I.annote("SchemaDeclarationInline", { description: "A `$schema` declaration carrying an inline JSON-Schema-like document — the declaration value is itself a mapping." })) {}
 
 /**
  * A `$schema` declaration referencing a registered schema by name — any other
@@ -75,12 +78,12 @@ export class SchemaDeclarationInline extends S.TaggedClass<SchemaDeclarationInli
  *
  * @public
  */
-export class SchemaDeclarationByName extends S.TaggedClass<SchemaDeclarationByName>()("ByName", {
+export class SchemaDeclarationByName extends S.TaggedClass<SchemaDeclarationByName>($I`SchemaDeclarationByName`)("ByName", {
 	/** The name as written, scope included. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "The name as written, scope included." }),
 	/** The version as written, when the declaration carries one. */
-	version: S.optionalKey(S.String),
-}) {}
+	version: S.optionalKey(S.String).annotateKey({ description: "The version as written, when the declaration carries one." }),
+}, $I.annote("SchemaDeclarationByName", { description: "A `$schema` declaration referencing a registered schema by name — any other string, with the committed `name[@version]` grammar." })) {}
 
 /**
  * The classified `$schema` declaration union — the full grammar contract for
@@ -93,7 +96,7 @@ export const SchemaDeclaration = S.Union([
 	SchemaDeclarationByPath,
 	SchemaDeclarationInline,
 	SchemaDeclarationByName,
-]);
+]).pipe($I.annoteSchema("SchemaDeclaration", { description: "The classified `$schema` declaration union — the full grammar contract for how a frontmatter block may self-describe its schema." }));
 
 /**
  * The union of all classified `$schema` declaration shapes.
@@ -113,14 +116,14 @@ export type SchemaDeclaration =
  *
  * @public
  */
-export class SchemaDeclarationInvalidError extends S.TaggedError<SchemaDeclarationInvalidError>()(
+export class SchemaDeclarationInvalidError extends S.TaggedError<SchemaDeclarationInvalidError>($I`SchemaDeclarationInvalidError`)(
 	"SchemaDeclarationInvalidError",
 	{
 		/** Why the value failed to classify. */
-		reason: S.String,
+		reason: S.String.annotateKey({ description: "Why the value failed to classify." }),
 		/** The offending value, preserved structurally. */
-		value: S.Defect(),
-	},
+		value: S.Defect().annotateKey({ description: "The offending value, preserved structurally." }),
+	}, $I.annote("SchemaDeclarationInvalidError", { description: "Indicates that a `$schema` value does not classify: not a string or a mapping, an empty string, or a name whose version segment falls outside the committed `X[.Y[.Z]]` grammar." }),
 ) {
 	override get message(): string {
 		return `invalid $schema declaration: ${this.reason}`;
@@ -134,9 +137,9 @@ export class SchemaDeclarationInvalidError extends S.TaggedError<SchemaDeclarati
  *
  * @public
  */
-export class SchemaDeclarationMissingError extends S.TaggedError<SchemaDeclarationMissingError>()(
+export class SchemaDeclarationMissingError extends S.TaggedError<SchemaDeclarationMissingError>($I`SchemaDeclarationMissingError`)(
 	"SchemaDeclarationMissingError",
-	{},
+	{}, $I.annote("SchemaDeclarationMissingError", { description: "Indicates that frontmatter data carries no `$schema` declaration where one is required — the `requireDeclaration` strictness knob, or a registry resolver that has nothing to dispatch on." }),
 ) {
 	override get message(): string {
 		return "the frontmatter data carries no $schema declaration";
@@ -150,10 +153,10 @@ export class SchemaDeclarationMissingError extends S.TaggedError<SchemaDeclarati
  *
  * @public
  */
-export class SchemaNameUnknownError extends S.TaggedError<SchemaNameUnknownError>()("SchemaNameUnknownError", {
+export class SchemaNameUnknownError extends S.TaggedError<SchemaNameUnknownError>($I`SchemaNameUnknownError`)("SchemaNameUnknownError", {
 	/** The declaration that failed to resolve, when one exists. */
-	declaration: S.optionalKey(SchemaDeclaration),
-}) {
+	declaration: S.optionalKey(SchemaDeclaration).annotateKey({ description: "The declaration that failed to resolve, when one exists." }),
+}, $I.annote("SchemaNameUnknownError", { description: "Indicates that a declaration named a schema the resolver does not know — an unregistered name, or a URL/path/inline declaration handed to the name-keyed registry resolver." })) {
 	override get message(): string {
 		return "the $schema declaration names no registered schema";
 	}
@@ -168,14 +171,14 @@ export class SchemaNameUnknownError extends S.TaggedError<SchemaNameUnknownError
  *
  * @public
  */
-export class SchemaVersionUnresolvableError extends S.TaggedError<SchemaVersionUnresolvableError>()(
+export class SchemaVersionUnresolvableError extends S.TaggedError<SchemaVersionUnresolvableError>($I`SchemaVersionUnresolvableError`)(
 	"SchemaVersionUnresolvableError",
 	{
 		/** The registered name whose version could not be satisfied. */
-		name: S.String,
+		name: S.String.annotateKey({ description: "The registered name whose version could not be satisfied." }),
 		/** The requested version, when the declaration carried one. */
-		version: S.optionalKey(S.String),
-	},
+		version: S.optionalKey(S.String).annotateKey({ description: "The requested version, when the declaration carried one." }),
+	}, $I.annote("SchemaVersionUnresolvableError", { description: "Indicates that a declaration's name is registered but its version segments match no registration exactly — distinct from SchemaNameUnknownError by design, so a legal-but-unsatisfied partial version (`skill@2` against a `skill@2.1.0` registration) is diagnosable as a version problem, not an unknown schema." }),
 ) {
 	override get message(): string {
 		return this.version === undefined

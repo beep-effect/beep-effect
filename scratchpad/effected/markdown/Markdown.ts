@@ -11,6 +11,7 @@
 // failure. The dependency edge runs facade -> engine only, so
 // `noImportCycles` stays satisfied.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import { isString } from "effect/Predicate";
 import * as Effect from "effect/Effect";
@@ -27,6 +28,8 @@ import { MarkdownDiagnostic } from "./MarkdownDiagnostic.ts";
 import type { PhrasingContent } from "./MarkdownNode.ts";
 import { Root } from "./MarkdownNode.ts";
 
+const $I = $ScratchpadId.create("effected/markdown/Markdown");
+
 /**
  * The markdown dialects the parser can be pointed at. `"gfm"` — CommonMark
  * 0.31.2 plus the GitHub extensions (tables, strikethrough, autolink
@@ -37,7 +40,7 @@ import { Root } from "./MarkdownNode.ts";
  *
  * @public
  */
-export const MarkdownDialect = S.Literals(["commonmark", "gfm"]);
+export const MarkdownDialect = S.Literals(["commonmark", "gfm"]).pipe($I.annoteSchema("MarkdownDialect", { description: "The markdown dialects the parser can be pointed at. `\"gfm\"` — CommonMark 0.31.2 plus the GitHub extensions (tables, strikethrough, autolink literals, task-list items, footnotes, and the tagfilter's output contract) — is the default; `\"commonmark\"` opts out of every extension. A dialect is a registry composition in the engine, so widening this union is additive and never changes an existing dialect's behavior." }));
 
 /**
  * The union of all markdown dialect string literals.
@@ -63,10 +66,10 @@ export type MarkdownDialect = typeof MarkdownDialect.Type;
  *
  * @public
  */
-export class MarkdownParseOptions extends S.Class<MarkdownParseOptions>("MarkdownParseOptions")({
-	dialect: S.optionalKey(MarkdownDialect),
-	frontmatter: S.optionalKey(S.Boolean),
-}) {}
+export class MarkdownParseOptions extends S.Class<MarkdownParseOptions>($I`MarkdownParseOptions`)({
+	dialect: S.optionalKey(MarkdownDialect).annotateKey({ description: "Markdown grammar to apply: `gfm` by default, or `commonmark` without GitHub extensions" }),
+	frontmatter: S.optionalKey(S.Boolean).annotateKey({ description: "Whether to capture an opening YAML, TOML or JSON frontmatter block as a raw node; disabled by default" }),
+}, $I.annote("MarkdownParseOptions", { description: "Options controlling parse behavior: `dialect` (omitted, `\"gfm\"`) and `frontmatter` (omitted, `false` — capture is opt-in)." })) {}
 
 /**
  * Parse failure: the {@link MarkdownDiagnostic} describing why the document
@@ -87,9 +90,9 @@ export class MarkdownParseOptions extends S.Class<MarkdownParseOptions>("Markdow
  *
  * @public
  */
-export class MarkdownParseError extends S.TaggedError<MarkdownParseError>()("MarkdownParseError", {
-	diagnostic: MarkdownDiagnostic,
-}) {
+export class MarkdownParseError extends S.TaggedError<MarkdownParseError>($I`MarkdownParseError`)("MarkdownParseError", {
+	diagnostic: MarkdownDiagnostic.annotateKey({ description: "Fatal parse condition and its source position, currently a nesting-depth guard violation" }),
+}, $I.annote("MarkdownParseError", { description: "Parse failure: the MarkdownDiagnostic describing why the document was rejected." })) {
 	override get message(): string {
 		const { code, line, character, message } = this.diagnostic;
 		return `Markdown parse failed: ${code} at ${line + 1}:${character + 1} ${message}`;
@@ -111,9 +114,9 @@ export class MarkdownParseError extends S.TaggedError<MarkdownParseError>()("Mar
  *
  * @public
  */
-export class MarkdownStringifyError extends S.TaggedError<MarkdownStringifyError>()("MarkdownStringifyError", {
-	diagnostic: MarkdownDiagnostic,
-}) {
+export class MarkdownStringifyError extends S.TaggedError<MarkdownStringifyError>($I`MarkdownStringifyError`)("MarkdownStringifyError", {
+	diagnostic: MarkdownDiagnostic.annotateKey({ description: "Nesting-depth guard violation preventing serialization, carrying the offending node's claimed offset and zero line and character positions" }),
+}, $I.annote("MarkdownStringifyError", { description: "Stringify failure: the MarkdownDiagnostic describing why the tree was refused." })) {
 	override get message(): string {
 		const { code, message } = this.diagnostic;
 		return `Markdown stringify failed: ${code} ${message}`;

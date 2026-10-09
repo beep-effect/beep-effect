@@ -29,6 +29,7 @@
 // parseResult`/`Markdown.stringifyResult`) and the node classes; it never
 // imports the engine.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -58,6 +59,8 @@ import {
 	ThematicBreakChar,
 } from "./MarkdownNode.ts";
 
+const $I = $ScratchpadId.create("effected/markdown/MarkdownFormat");
+
 /**
  * A range accepted at the `format`/`formatToString` call sites: either a
  * {@link MarkdownRange} instance or a plain `{ offset, length }` literal (the
@@ -79,7 +82,7 @@ export type MarkdownRangeLike = MarkdownRange | { readonly offset: number; reado
  *
  * @public
  */
-export const CodeBlockStyle = S.Literals(["fenced", "indented"]);
+export const CodeBlockStyle = S.Literals(["fenced", "indented"]).pipe($I.annoteSchema("CodeBlockStyle", { description: "The two ways CommonMark spells a code block: `fenced` (a backtick or tilde fence) and `indented` (four-space indentation)." }));
 
 /**
  * The union of all code-block-style string literals.
@@ -118,16 +121,16 @@ export type CodeBlockStyle = typeof CodeBlockStyle.Type;
  *
  * @public
  */
-export class MarkdownFormattingOptions extends S.Class<MarkdownFormattingOptions>("MarkdownFormattingOptions")({
-	dialect: S.optionalKey(MarkdownDialect),
-	frontmatter: S.optionalKey(S.Boolean),
-	headingStyle: S.optionalKey(HeadingStyle),
-	bulletChar: S.optionalKey(BulletChar),
-	emphasisChar: S.optionalKey(EmphasisChar),
-	fenceChar: S.optionalKey(FenceChar),
-	thematicBreakChar: S.optionalKey(ThematicBreakChar),
-	codeBlockStyle: S.optionalKey(CodeBlockStyle),
-}) {}
+export class MarkdownFormattingOptions extends S.Class<MarkdownFormattingOptions>($I`MarkdownFormattingOptions`)({
+	dialect: S.optionalKey(MarkdownDialect).annotateKey({ description: "Markdown syntax used to parse the source before formatting; defaults to `gfm`" }),
+	frontmatter: S.optionalKey(S.Boolean).annotateKey({ description: "Whether to capture an opening frontmatter block while parsing for formatting; disabled by default" }),
+	headingStyle: S.optionalKey(HeadingStyle).annotateKey({ description: "Requested `atx` or `setext` heading spelling, applied only where conversion is safe; omission preserves existing spelling" }),
+	bulletChar: S.optionalKey(BulletChar).annotateKey({ description: "Requested unordered-list marker, applied only where normalization is safe; omission preserves existing markers" }),
+	emphasisChar: S.optionalKey(EmphasisChar).annotateKey({ description: "Requested delimiter character for emphasis and strong emphasis, applied only where normalization is safe; omission preserves existing delimiters" }),
+	fenceChar: S.optionalKey(FenceChar).annotateKey({ description: "Requested code-fence character for safe fence normalization and conversion to fenced blocks; omission preserves existing fences" }),
+	thematicBreakChar: S.optionalKey(ThematicBreakChar).annotateKey({ description: "Requested thematic-break marker character, applied only where normalization is safe; omission preserves existing markers" }),
+	codeBlockStyle: S.optionalKey(CodeBlockStyle).annotateKey({ description: "Requested fenced or indented spelling for safe conversion of root-level, flush-left code blocks without language or metadata" }),
+}, $I.annote("MarkdownFormattingOptions", { description: "Options controlling formatting: which concrete-syntax markers to normalize, plus the parse knobs (`dialect`, `frontmatter`) the formatter parses the source with (same defaults as `Markdown.parse`). Every marker option is optional and independent; an absent option normalizes nothing." })) {}
 
 /**
  * Error codes `MarkdownFormat.modify` can fail with.
@@ -139,7 +142,7 @@ export const MarkdownModificationErrorCode = S.Literals([
 	"UnsupportedTarget",
 	"FragmentCategoryMismatch",
 	"FragmentUnrenderable",
-]);
+]).pipe($I.annoteSchema("MarkdownModificationErrorCode", { description: "Error codes `MarkdownFormat.modify` can fail with." }));
 
 /**
  * The union of all modification-error code string literals.
@@ -160,14 +163,14 @@ export type MarkdownModificationErrorCode = typeof MarkdownModificationErrorCode
  *
  * @public
  */
-export class MarkdownModificationError extends S.TaggedError<MarkdownModificationError>()(
+export class MarkdownModificationError extends S.TaggedError<MarkdownModificationError>($I`MarkdownModificationError`)(
 	"MarkdownModificationError",
 	{
-		code: MarkdownModificationErrorCode,
-		detail: S.String,
-		offset: S.Finite,
-		length: S.Finite,
-	},
+		code: MarkdownModificationErrorCode.annotateKey({ description: "Reason replacement failed: target absent, unsupported target or context, incompatible fragment category, or unrenderable fragment" }),
+		detail: S.String.annotateKey({ description: "Explanation of the replacement failure, included in the error message" }),
+		offset: S.Finite.annotateKey({ description: "Zero-based source position reported by the target node, measured in UTF-16 code units" }),
+		length: S.Finite.annotateKey({ description: "Extent of the target node's reported source span, measured in UTF-16 code units" }),
+	}, $I.annote("MarkdownModificationError", { description: "Raised when `MarkdownFormat.modify` cannot perform the requested replacement: the target node is not in the document (`NodeNotInDocument`), the target kind or splice context is outside the supported scope (`UnsupportedTarget`), the fragment's content category does not fit the target's slot (`FragmentCategoryMismatch`), or the fragment trips the stringifier's hardening guard (`FragmentUnrenderable`). Carries the typed `code` plus the target's `offset`/`length` where known — never a collapsed reason string alone." }),
 ) {
 	override get message(): string {
 		return `Markdown modification failed: ${this.code} ${this.detail}`;
