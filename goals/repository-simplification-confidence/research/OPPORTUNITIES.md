@@ -110,3 +110,24 @@
 - Would have prevented it: a review-lens contract that separates material
   defects from wording findings up front, and a mechanical verbatim-section
   checker against the brief so copy drift is caught by a validator.
+
+## 2026-10-09: heavy admission needs the user-session bus environment
+
+- Doing: running retained-script fixtures through `beep-heavy`.
+- Evidence: wrapper exited 1 before admission: `XDG_RUNTIME_DIR` and
+  `DBUS_SESSION_BUS_ADDRESS` were not defined. No test ran.
+- Would have prevented it: documenting the user-session environment in lane
+  launchers. Retry sets the runtime directory and user bus address explicitly;
+  the admission wrapper and shared slot queue remain in use.
+
+## 2026-10-09: C inherited knowledge census red crosses another owner's boundary
+
+- Doing: running `bun run beep knowledge refs --check` before committing C's ports.
+- Evidence: HEAD's census reports two live gated observations: the public packet's
+  absolute-home policy example and the separately owned build-pipeline RESEARCH
+  document's home-relative admission-wrapper invocation.
+- Attribution: inherited at the imported packet head; no C source introduced either.
+  C rewords its packet example without changing the policy. The build-pipeline
+  document remains with its owner and is reported to the orchestrator.
+- Would have prevented it: stage-1 packet census validation and owner-qualified
+  prose that names the admission wrapper without a workstation location.

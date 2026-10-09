@@ -65,6 +65,11 @@ state are recorded; stage 1 closes when every lane owner and recovery path in
 (14 sweeps and 19 gap follow-ups); Knip reconciliation at `e62411d63f`
 (41 of 41 rows reproduced, `research/knip-findings-2026-10-09.md`).
 
+C implementation evidence (partial, 2026-10-09):
+[`history/handoffs/rsc-c-scripts-2026-10-09.md`](history/handoffs/rsc-c-scripts-2026-10-09.md)
+and [`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).
+Ci coordination and final verification remain open; no C acceptance row is closed.
+
 ## Notes
 
 - Orchestrator: the program's Claude Fable orchestrator session, which commits for the

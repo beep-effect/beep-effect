@@ -15,6 +15,67 @@ import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Knowledge/Knowledge.schemas");
 
+/**
+ * A reviewed literal replacement pinned to one repository-relative path and count.
+ *
+ * **Example** (Pin a replacement)
+ * ```ts
+ * import { KnowledgeRewriteRule } from "@beep/repo-cli/commands/Knowledge"
+ * import * as O from "effect/Option"
+ * KnowledgeRewriteRule.make({ path: "docs/example.md", find: "old", replace: "new", count: 1, note: O.none() }).count // => 1
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class KnowledgeRewriteRule extends S.Class<KnowledgeRewriteRule>($I`KnowledgeRewriteRule`)(
+  {
+    path: S.NonEmptyString.check(S.isPattern(/^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[^\p{Cc}]+$/u)),
+    find: S.NonEmptyString,
+    replace: S.String,
+    count: S.Int.check(S.isGreaterThan(0)),
+    note: S.OptionFromOptionalKey(S.String),
+  },
+  $I.annote("KnowledgeRewriteRule", { description: "Exact-count literal rewrite; paths cannot escape the repository." })
+) {}
+
+/**
+ * The versioned, reviewed rule file retained under scripts.
+ *
+ * **Example** (Decode the pinned version)
+ * ```ts
+ * import { KnowledgeRewriteRules } from "@beep/repo-cli/commands/Knowledge"
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ * Effect.isEffect(S.decodeUnknownEffect(KnowledgeRewriteRules)({ schemaVersion: "knowledge-refs-rewrite/v1", rules: [] })) // => true
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class KnowledgeRewriteRules extends S.Class<KnowledgeRewriteRules>($I`KnowledgeRewriteRules`)(
+  { schemaVersion: S.Literal("knowledge-refs-rewrite/v1"), rules: S.Array(KnowledgeRewriteRule) },
+  $I.annote("KnowledgeRewriteRules", {
+    description: "Versioned literal rewrite contract; rules execute in file order.",
+  })
+) {}
+
+/**
+ * Exact rewrite counts and failures, including dry runs that wrote no files.
+ *
+ * **Example** (Report an idempotent run)
+ * ```ts
+ * import { KnowledgeRewriteReport } from "@beep/repo-cli/commands/Knowledge"
+ * KnowledgeRewriteReport.make({ applied: 0, skipped: 2, failures: [], dryRun: true }).applied // => 0
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class KnowledgeRewriteReport extends S.Class<KnowledgeRewriteReport>($I`KnowledgeRewriteReport`)(
+  { applied: S.Natural, skipped: S.Natural, failures: S.Array(S.String), dryRun: S.Boolean },
+  $I.annote("KnowledgeRewriteReport", {
+    description: "Per-rule counts and drift diagnostics; failed files remain untouched.",
+  })
+) {}
+
 const KnowledgePublicText = S.String.check(
   S.isPattern(/^[^\p{Cc}\p{Cf}]*$/u, {
     identifier: $I`KnowledgePublicTextCheck`,

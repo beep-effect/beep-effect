@@ -416,7 +416,7 @@
     "infra:prepare-gha-runners": "node infra/node_modules/@pulumi/gharunners/scripts/build.js --compiler node_modules/typescript/bin/tsc",
     "jsdoc:inventory": "bun run beep quality jsdoc-inventory",
     "knip": "knip-bun",
-    "knowledge:refs-rewrite": "bun scripts/knowledge-refs-rewrite.ts",
+    "knowledge:refs-rewrite": "bun run beep knowledge refs rewrite",
     "lint": "beep-cli lint",
     "lint:deprecated-apis": "beep-cli lint deprecated-apis",
     "lint:fix": "beep-cli lint --fix",

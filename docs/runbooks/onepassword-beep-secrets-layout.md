@@ -15,21 +15,21 @@ resolving. Laid out 2026-09-22.
   each section. The note body stays at the top, outside any section.
 - **New field:** give it one of those prefixes and it routes itself. A label
   with no recognised prefix makes the layout script fail rather than create a
-  catch-all section. Either add a prefix or map it in `unprefixed` in the jq
-  file, which also records its future prefix (see the rename table).
+  catch-all section. Either add a prefix or map it in `unprefixed` in
+  `AccountsSecretsLayout.service.ts`, which also records its future prefix (see the rename table).
 - **References use the three-part form** `op://BEEP_SECRETS/BEEP_SECRETS/<LABEL>`.
   Never the section-qualified four-part form: sections are layout, not
   identity, and the layout may change.
 
 ## Applying the layout
 
-The script only changes section membership and field order. It hashes every
+The typed command only changes section membership and field order. It hashes every
 field's id, label, type and value before and after the transform and refuses
 to write if they differ.
 
 ```sh
-scripts/onepassword/beep-secrets-layout.sh            # dry run, prints the layout
-OP_BIN=op-human scripts/onepassword/beep-secrets-layout.sh --apply
+bun run beep accounts secrets-layout            # dry run, prints the layout
+OP_BIN=op-human bun run beep accounts secrets-layout --apply
 ```
 
 The agent service account is read-only on the vault (even a no-op title edit

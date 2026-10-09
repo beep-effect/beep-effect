@@ -253,7 +253,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          bash scripts/setup-regenerate-merge-driver.sh "$PWD"
+          bun run beep worktree prepare
           configured="$(git config --local --get merge.regenerate.driver)"
           [[ "$configured" == *"scripts/regenerate-merge-driver.sh"* ]]
           [[ "$(git check-attr merge -- tsconfig.json)" == "tsconfig.json: merge: regenerate" ]]
@@ -1070,10 +1070,10 @@ jobs:
         with:
           node-version-file: .nvmrc
 
-      - name: Verify ONNX installer mitigation before accepting the OSV exception
+      - name: Verify owning-package ONNX installer regression before the OSV exception
         run: |
           bun install --frozen-lockfile --ignore-scripts
-          node --test scripts/test-onnxruntime-installer-patch.mjs
+          bun x --no-install vitest run --root packages/drivers/face-detection test/OnnxRuntimeInstall.test.ts
 
       - name: OSV vulnerability scan
         uses: google/osv-scanner-action/osv-scanner-action@c5996e0193a3df57d695c1b8a1dec2a4c62e8730 # v2.3.3

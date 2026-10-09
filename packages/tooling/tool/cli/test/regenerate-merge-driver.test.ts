@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import { installRegenerateMergeDriver } from "@beep/repo-cli/commands/Worktree";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
@@ -9,7 +10,6 @@ import * as Path from "effect/Path";
 
 const sourceRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 const driverPath = `${sourceRoot}scripts/regenerate-merge-driver.sh`;
-const setupPath = `${sourceRoot}scripts/setup-regenerate-merge-driver.sh`;
 const provideNodeServices = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   NodeServices.layer.pipe(
     Layer.build,
@@ -49,13 +49,10 @@ describe("regenerate merge driver", () => {
       });
       expect(refused.exitCode).not.toBe(0);
       expect(refused.stderr.toString()).toContain("refused non-projection path: bun.lock");
-      const installed = Bun.spawnSync({
-        cmd: [setupPath, root],
-        cwd: root,
-        stderr: "pipe",
-        stdout: "pipe",
-      });
-      expect(installed.exitCode, installed.stderr.toString()).toBe(0);
+      yield* fs.makeDirectory(path.join(root, "scripts"));
+      yield* fs.copyFile(driverPath, path.join(root, "scripts", "regenerate-merge-driver.sh"));
+      yield* installRegenerateMergeDriver(root);
+      yield* installRegenerateMergeDriver(root);
       const configured = git(["config", "--local", "--get", "merge.regenerate.driver"]);
       expect(configured.exitCode).toBe(0);
       expect(configured.stdout.toString()).toContain("scripts/regenerate-merge-driver.sh");

@@ -81,6 +81,15 @@ Lane names are planned; each lane is recorded in
 [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md) (or a
 dated successor receipt) when it opens.
 
+### C lane status — 2026-10-09
+
+`rsc-c-scripts`: command ports and retained-adapter fixtures implemented; final
+Ci group, R24 cloud owner confirmation, independent review and terminal package /
+hosted parity remain open. Evidence and coordination requests:
+[`history/handoffs/rsc-c-scripts-2026-10-09.md`](history/handoffs/rsc-c-scripts-2026-10-09.md),
+[`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).
+This status does not mark the Script ports or Sensitive scripts rows accepted.
+
 ### Lane inputs
 
 Each lane reads its sweep files and brief sections before editing. Paths

@@ -14,6 +14,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
@@ -25,6 +26,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { extract as extractTar } from "tar";
+import { readContainedFileBytesNoFollow, writeContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { OutputBound, runCapturedStreams } from "../../internal/process/StepExec.ts";
 import {
   gitArchiveEnv,
@@ -70,6 +72,8 @@ import {
   KnowledgeIndexBytes,
   KnowledgeProbePolicy,
   KnowledgeRename,
+  KnowledgeRewriteReport,
+  KnowledgeRewriteRules,
   KnowledgeSemanticDeltaReport,
   KnowledgeTrackedEntry,
 } from "./Knowledge.schemas.ts";
@@ -79,7 +83,7 @@ import type { CapturedStreams } from "../../internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
 import type { KnowledgeStaticCommandTree } from "./Knowledge.command-surface.ts";
 import type { KnowledgeInlineSpan, KnowledgeRefsReport, KnowledgeTreeOracle } from "./Knowledge.refs.ts";
-import type { KnowledgeCommandProbeResult } from "./Knowledge.schemas.ts";
+import type { KnowledgeCommandProbeResult, KnowledgeRewriteRule } from "./Knowledge.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Knowledge/Knowledge.service");
 
@@ -246,6 +250,7 @@ export interface KnowledgeServiceShape {
   readonly refsTree: (
     treeish: string
   ) => Effect.Effect<KnowledgeRefsReport, KnowledgeOperationalError | KnowledgeCloneAttributesError>;
+  readonly rewriteRefs: (dryRun: boolean) => Effect.Effect<KnowledgeRewriteReport, KnowledgeOperationalError>;
   readonly scanPair: (
     input: KnowledgePairedOracleInput
   ) => Effect.Effect<KnowledgeSemanticDeltaReport, KnowledgeOperationalError>;
@@ -1699,9 +1704,84 @@ type KnowledgeServiceRequirements =
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner;
 
+/**
+ * Applies reviewed literal rules to one working tree, refusing each drifted file.
+ *
+ * **Details**
+ * Dry runs report the same counts without writes. A file with any failed rule
+ * remains unchanged; independent files retain the original runner's progress semantics.
+ *
+ * **Example** (Prepare a dry run)
+ * ```ts
+ * import { rewriteKnowledgeReferences } from "@beep/repo-cli/commands/Knowledge"
+ * import * as Effect from "effect/Effect"
+ * Effect.isEffect(rewriteKnowledgeReferences("/checkout", true)) // => true
+ * ```
+ * @category commands
+ * @since 0.0.0
+ */
+export const rewriteKnowledgeReferences = Effect.fn("Knowledge.rewriteReferences")(
+  function* (root: string, dryRun: boolean) {
+    const path = yield* Path.Path;
+    const fs = yield* FileSystem.FileSystem;
+    const rulesText = yield* fs.readFileString(path.join(root, "scripts", "knowledge-refs-rewrite.rules.json"));
+    const input = yield* S.decodeUnknownEffect(S.fromJsonString(KnowledgeRewriteRules))(rulesText);
+    const grouped = A.reduce(
+      input.rules,
+      HashMap.empty<string, ReadonlyArray<KnowledgeRewriteRule>>(),
+      (groups, rule) =>
+        HashMap.set(groups, rule.path, [
+          ...O.getOrElse(HashMap.get(groups, rule.path), A.empty<KnowledgeRewriteRule>),
+          rule,
+        ])
+    );
+    let applied = 0;
+    let skipped = 0;
+    let failures: ReadonlyArray<string> = A.empty();
+    for (const [relative, rules] of grouped) {
+      const target = path.join(root, relative);
+      const original = yield* readContainedFileBytesNoFollow(root, target, S.Natural.make(8 * 1024 * 1024)).pipe(
+        Effect.flatMap((read) =>
+          O.match(read.contents, {
+            onNone: () => Effect.fail(KnowledgeOperationalError.make({ message: "unreadable" })),
+            onSome: (bytes) => decodeKnowledgeUtf8(bytes, "unreadable"),
+          })
+        ),
+        Effect.option
+      );
+      if (O.isNone(original)) {
+        failures = A.append(failures, `${relative}: unreadable`);
+        continue;
+      }
+      let next = original.value;
+      let failed = false;
+      for (const rule of rules) {
+        const occurrences = A.length(Str.split(next, rule.find)) - 1;
+        if (occurrences === 0) {
+          skipped += 1;
+          continue;
+        }
+        if (occurrences !== rule.count) {
+          failures = A.append(failures, `${relative}: expected ${rule.count} occurrence(s), found ${occurrences}`);
+          failed = true;
+          continue;
+        }
+        next = A.join(Str.split(next, rule.find), rule.replace);
+        applied += 1;
+      }
+      if (!failed && next !== original.value && !dryRun) yield* writeContainedFileString(root, target, next);
+    }
+    return KnowledgeRewriteReport.make({ applied, skipped, failures, dryRun });
+  },
+  Effect.mapError(KnowledgeOperationalError.new("Cannot execute reviewed knowledge reference rewrites."))
+);
+
 const makeKnowledgeService = Effect.fn("KnowledgeService.make")(function* () {
   const runtime = yield* Effect.context<KnowledgeServiceRequirements>();
   return KnowledgeService.of({
+    rewriteRefs: Effect.fn("KnowledgeService.rewriteRefs")((dryRun) =>
+      Effect.flatMap(findRepoRoot(), (root) => rewriteKnowledgeReferences(root, dryRun)).pipe(Effect.provide(runtime))
+    ),
     scanPair: Effect.fn("KnowledgeService.scanPair")((input) => scanKnowledgePair(input).pipe(Effect.provide(runtime))),
     semanticDelta: Effect.fn("KnowledgeService.semanticDelta")((baseRef) =>
       semanticDeltaLive(baseRef).pipe(Effect.provide(runtime))

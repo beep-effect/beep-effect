@@ -32,6 +32,8 @@ export * from "./Accounts.schemas.ts";
  * @since 0.0.0
  */
 export * from "./Accounts.wire.schemas.ts";
+export * from "./AccountsSecretsLayout.schemas.ts";
+export * from "./AccountsSecretsLayout.service.ts";
 /**
  * Public account usage poller exports.
  *
