@@ -654,12 +654,15 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
       () =>
         Effect.gen(function* () {
           const repoRoot = yield* findRepoRoot();
-          const porcelain = (): string =>
-            Bun.spawnSync(["git", "status", "--porcelain"], {
+          const porcelain = (): string => {
+            const result = Bun.spawnSync(["git", "status", "--porcelain"], {
               cwd: repoRoot,
               stdout: "pipe",
               stderr: "pipe",
-            }).stdout.toString();
+            });
+            expect(result.exitCode, "git status --porcelain must succeed").toBe(0);
+            return result.stdout.toString();
+          };
           const before = porcelain();
           const snapshot = yield* readPacketSnapshot(PILOT_SLUG, repoRoot);
           yield* compileAdoptionPlan(snapshot, O.none());
