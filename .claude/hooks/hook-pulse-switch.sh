@@ -138,9 +138,9 @@ case "${1:-status}" in
     jq -c -n --slurpfile sentinelDoc "${claimed}" --arg rearmedAt "$(now)" \
       '{
          schemaVersion: "hook-pulse-disarm-window/v1",
-         disarmedAt: ($sentinelDoc[0].disarmedAt? // null),
+         disarmedAt: ($sentinelDoc[0].disarmedAt? | if type == "string" and test("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$") and . <= $rearmedAt and (try (fromdateiso8601 | strftime("%Y-%m-%dT%H:%M:%SZ")) == . catch false) then . else null end),
          rearmedAt: $rearmedAt,
-         reason: ($sentinelDoc[0].reason? // null),
+         reason: ($sentinelDoc[0].reason? | if type == "string" then . else null end),
          evidenceTier: "unknown"
        }' 2>/dev/null >>"${windows}" ||
       jq -c -n --arg rearmedAt "$(now)" \
