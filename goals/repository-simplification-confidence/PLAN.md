@@ -92,8 +92,9 @@ dated successor receipt) when it opens.
 owner audit is resolved by the orchestrator's 17:24Z ruling; draft publication is
 authorized for E's ONNX/merge-driver workflow review and Ci ordering co-sign.
 Focused fixtures, test-tsgo, package docgen and knowledge census have local passes.
-Run 3 resumes full package audit and scoped docgen through the heavy wrapper,
-then independent review and publication. The Ci group stays intact for its
+Run 3 passes full package verification (audit 777.6s, docgen 25.2s), scoped
+docgen, repaired Cache fixtures and independent zero-findings review. Draft
+publication and local policy check are queued through the heavy wrapper. The Ci group stays intact for its
 coordinated follow-up wave. Evidence:
 [`history/handoffs/rsc-c-scripts-2026-10-09.md`](history/handoffs/rsc-c-scripts-2026-10-09.md),
 [`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).

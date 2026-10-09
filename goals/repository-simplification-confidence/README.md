@@ -68,7 +68,9 @@ nothing was adopted or discarded. P0 Research is complete.
 C implementation evidence (partial, 2026-10-09):
 [`history/handoffs/rsc-c-scripts-2026-10-09.md`](history/handoffs/rsc-c-scripts-2026-10-09.md)
 and [`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).
-Ci coordination and final verification remain open; no C acceptance row is closed.
+C full package verification and independent zero-findings review pass locally.
+Ci coordination, draft publication and hosted proof remain open; no C acceptance
+row is closed.
 
 ## Notes
 

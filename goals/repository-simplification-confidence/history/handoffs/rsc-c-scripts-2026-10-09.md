@@ -328,3 +328,15 @@ has zero live caller matches for all 9 removed script paths, recorded in
 `.beep/rsc-c-run3-removed-callers.txt`. Full package verification is running,
 not yet a pass. Draft publication is submitted through beep-heavy under S12
 so E can review the workflow hunks; C is not declaring content-final or merging.
+
+### Run 3 full package qualification
+
+`beep quality package-verify @beep/repo-cli` has a terminal pass: audit 777.6
+seconds and docgen 25.2 seconds (`.beep/rsc-c-run3-package-final-result.txt`: 0).
+It includes the repaired Cache source and runtime fixture. The earlier interrupted
+Run 3 audit has no verdict and is superseded by this explicit rerun.
+
+Draft publication and the unfinished `beep lint policy --base origin/main` are
+queued through beep-heavy; no PR exists yet. E's workflow review and Ci co-sign
+remain external dependencies. The caller census, root-input inventory and
+terminal independent review stay preserved. No running unit is abandoned.

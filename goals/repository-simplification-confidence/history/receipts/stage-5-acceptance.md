@@ -131,3 +131,8 @@ Full package qualification and draft publication are active or queued through
 the authorized heavy wrapper; terminal verdicts and E workflow review remain
 required. None of these partial results closes the coordinated Ci group or
 claims hosted readiness.
+
+Run 3 full package verification now passes: audit 777.6 seconds and docgen 25.2
+seconds, including the Cache relative-root repair and new fixture. Publication,
+local changed-scope policy proof and E review remain queued/open; the Ci group
+remains coordinated follow-up scope. Hosted parity is not inferred from this pass.
