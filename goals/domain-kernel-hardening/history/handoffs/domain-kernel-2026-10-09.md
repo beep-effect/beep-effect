@@ -525,3 +525,73 @@ hosted-parity: test-tsgo: not run (queued batch cancelled after D15 scope stop) 
 handoff: goals/domain-kernel-hardening/history/handoffs/domain-kernel-2026-10-09.md
 open items: Reconcile ownership of PracticeKg.claims.ts production DDL and carry projections, or land the KG-owner fix on main, then rerun law-practice tests and hosted parity before publishing P1. Retained mechanical count 71; 137/137 dependent checks pass; 64 explicit in-process migration-replay tests pass; the exact six-server gate still has one introduced law-practice schema-column failure. P1 in-progress, P2/P3 pending, lifecycle active; no P1 push and no own running unit. D13/D14 reverse mechanical repairs with kernel rollback; D15 hold reverses on reconciled scope or owner fix; D10 reverses amendment/implementation without changing privacy; D11 reverses proof entries with migration removal and bundle regeneration. Orchestrator owns stale docs/ROADMAP.md platform re-entry bullet (~349), Parked packets row (~383), and cohort prose (~406). Follow-ups: stale DomainModel.make detector and desktop migration rollout. Graft saved approximately 167,761 tokens across six successful queries.
 blocked: Production KG bundle DDL/carry repair exceeds the lane's converter and test-fixture ownership
+
+## Run 4 — external practice-kg physical schema (D16)
+
+The run-4 ruling lifts D15 without changing bundle DDL or carry projections.
+Declared the bundle's candidate/evidence physical columns explicitly in
+PracticeKg.claims.ts, excluding exactly the two soft-delete columns. The exact
+parity assertion now compares every physical column against that external
+contract. Db-admin still aggregates the repo-owned tables and migrates both;
+external bundle schemas never enter its migration generator. No slice entity
+model/behavior or shipped bundle was changed. The carry projections already
+enumerate the external contract. D16 reverses only alongside a qualified future
+bundle migration/carry upgrade, preserving legacy-bundle load and serving.
+
+Mechanical count: 71 retained migration-following sites plus one external
+parity-assertion site = 72; the production marker is separately authorized by
+run-4 D16, not counted as a mechanical fixture repair. PR 1 #1577 is MERGED;
+PR-1 ancestor and packet equality checks pass; main merge is already current.
+
+| Package | Change | Why it would have been major | Reversal |
+| --- | --- | --- | --- |
+| @beep/law-practice-server (private) | Explicit external column contract and exact bundle parity assertion | The bundle persistence boundary is now distinguished from repo migrations | Remove marker/assertion adjustment with a qualified bundle upgrade |
+
+Qualification is pending; no repaired-gate result claimed yet.
+
+### Run-4 preliminary proof
+
+Before heavy admission: schema-first and schema-topology pass; adopt plan has
+conflicts=[] and no report action; ordered packet verification passes (GOAL
+size 3,521; jq; anchor scan; diff whitespace; reflection-artifacts). Doctor
+reports blocking_new=0, blocking_inherited=0 and the same three unrelated
+completion-gate advisories (document-ast-pattern-classification,
+practice-box-onboarding, push-first-publish). No packet-* finding for this slug:
+
+```text
+- goals/domain-kernel-hardening: revision=2 tip=2@97ceca70c0e7 status=active furthest=P0 resume=P0
+```
+
+The latest separate-phase ruling keeps completed-retained reserved for P3;
+no completed-retained stream proof is claimed at P1. Fresh migration inspection
+confirms 52 nullable ADD COLUMN statements across 26 repo-owned audited tables.
+The two heavy batches remain queued, with no payload result yet. No P1 PR exists.
+
+### Run-4 repaired six-server gate
+
+The first admitted command failed at import because Record.omit does not exist
+in the installed Effect v4. Attributed to this run; replaced with the verified
+Struct.omit(self, keys) API. The rerun passes all six tasks (five unchanged
+cached tasks plus a fresh law-practice suite). Law-practice: 29 files pass,
+284 tests pass, one skipped. This clears run-3's exact physical-column failure
+without changing CREATE/insert/carry SQL or the shipped bundle. The suite also
+covers legacy-shape loading, MCP serving and claims carry. Default law-practice
+package-verify is running; hosted parity remains queued. Neither is claimed
+passed yet. No extra push was used.
+
+Default @beep/law-practice-server package-verify passes: audit 68.2s, docgen
+21.1s. All eleven edited private workspaces now have passing default package
+proofs (ten retained run-3 proofs on unchanged surfaces, fresh law-practice proof
+on D16). The six-server/package batch is terminal. Hosted parity still awaits
+admission. Package privacy and release policy remain unchanged; no changeset
+is authored for private packages under D10/#1566.
+
+### Run-4 scoped coverage
+
+Scoped shared-domain coverage passes: nine files, 120 tests; 100% lines,
+statements, branches and functions for the measured executable entity modules,
+including EntityRef.errors.ts. Compared every existing src/entity baseline row
+against coverage-summary.json: no percentage/count regression. The export-only
+entity/index.ts has zero totals; CoverageRegression.ts:1066-1069 normalizes that
+to HUNDRED_PERCENTAGE, matching its baseline. No baseline was edited. Coverage
+batch is terminal; parity batch has now started test-tsgo.

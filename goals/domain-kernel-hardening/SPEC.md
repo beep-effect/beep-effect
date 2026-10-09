@@ -68,6 +68,8 @@ the first packet that actually consumes them (see the exploration MAP).
 - `apps/professional-desktop/src/runtime/Migrations.gen.ts`: owner-command resync.
 - `packages/tooling/tool/cli/src/commands/Architecture/internal/AcceptedProofManifest.ts`:
   accepted proof entry only if required by the migration proof.
+- `packages/law-practice/server/src/PracticeKg.claims.ts` external physical-column
+  marker and its exact parity assertion (run-4 ruling); no DDL or carry SQL edits.
 - `.changeset/<name>.md`: published packages only under #1566; private workspace
   changes are recorded with compatibility impact and reversal in the handoff.
 
@@ -120,7 +122,7 @@ the first packet that actually consumes them (see the exploration MAP).
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| None | N/A | N/A | N/A | N/A |
+| External physical schema | Bundle-owned practice-kg candidate/evidence tables only | Practice-kg bundle owner | Run-4 ruling: shipped schemas stay outside db-admin and exclude the new nullable pair | Qualified bundle migration and carry upgrade with legacy load/serve proof |
 
 ## Decision Log
 
@@ -141,3 +143,4 @@ the first packet that actually consumes them (see the exploration MAP).
 | 2026-10-09 | D13: Resume ruling raises the P1 mechanical bound to 90; final measured total is 71 sites: 37 retained, 31 authored docgen row subjects, two exact-column maps and one isolated PGlite table-fixture column definition. No slice model/behavior edits. | The 2026-10-09 run-3 ruling authorizes proportional migration-following repairs. Package docgen compiles authored JSDoc; no fixture-update owner command exists for these blocks. | Revert the mechanical repairs and kernel migration together; retain D12 as historical evidence. |
 | 2026-10-09 | D14: Add the nullable column pair to the isolated ProviderInstance PGlite table fixture; final mechanical count is 71, below 90. | Four introduced integration failures share a hand-created table lacking both columns while the inherited Drizzle table now projects them. This is a mechanical fixture-column definition only; no repository or slice behavior changes. | Remove the two test DDL columns together with the kernel rollback. |
 | 2026-10-09 | D15: Stop before editing production PracticeKg.claims.ts table DDL or carry projections; no P1 publication or phase completion. | The exact server gate has one introduced law-practice failure: bundle-owned candidate/evidence CREATE TABLE definitions lack both columns, while their current Drizzle declarations include them. Production KG DDL/carry surfaces are outside this lane's converter/test-fixture ownership. | Resume on an explicit scope reconciliation or an owner-landed fix on main, then rerun qualification; alternatively revert the kernel fields and generated migration/bundle. |
+| 2026-10-09 | D16: Run-4 ruling declares bundle-backed claims/evidence tables external physical schemas. practiceKgClaimsPhysicalColumns explicitly excludes only deletedAt/deletedByPrincipal from their column contract; CREATE, insert, carry SQL and shipped bundle bytes remain unchanged. Repo-owned tables still receive the additive migration. | The shipped practice-kg bundle is independently versioned outside db-admin. Exact parity must compare its external contract, not the current repo migration schema; no slice model/behavior edit is needed. | Remove the external marker only with a separately qualified bundle migration and carry upgrade; retain legacy-bundle load/serve proof. |

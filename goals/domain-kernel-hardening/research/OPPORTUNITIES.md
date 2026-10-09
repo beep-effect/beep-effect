@@ -145,3 +145,33 @@
   assertion. Cancel only the own still-queued parity unit; no payload result.
 - Prevention: census independent production DDL and carry contracts during P0;
   use canonical metadata or owner-generated migration replay where appropriate.
+
+## Run 4: shell lacked user-manager bus environment
+
+Both beep-heavy launches exited before admission: "Failed to connect to user
+scope bus" because XDG_RUNTIME_DIR and DBUS_SESSION_BUS_ADDRESS were absent.
+Verified the current user's runtime bus socket and resubmitted with its explicit
+runtime directory and bus address. No payload or unit was started by the failed
+calls. A lane shell bootstrap that carries the user-manager environment would
+prevent this avoidable launch failure. Reversal: remove the invocation-local
+exports; no persistent configuration was changed.
+
+## Run 4: heavy admission can starve existing waiters
+
+The two beep-heavy batches remained queued for more than twelve minutes,
+without a payload log or result file, while the five slot holders changed.
+Metadata-only user-unit inspection shows both own waiters active with roughly
+one MiB of memory each; no test had started. The wrapper retries flock every
+five seconds without FIFO ordering, so slot turnover does not guarantee older
+waiters progress. A FIFO admission queue with a waiting receipt would make
+bounded lane qualification predictable. No budget or wrapper was changed;
+reversal of any own retry is cancellation of that own unit only.
+
+## Run 4: verify the installed Effect helper before coding
+
+The first admitted six-server command failed at module import: "omit is not a
+function". Record.omit is absent in the installed Effect v4. Replaced it with
+Struct.omit after reading its installed signature and the local reference.
+This was introduced by this run, not a bundle-schema failure. Checking the
+installed helper surface before the edit would have prevented the failed gate
+and re-admission delay. Reversal: revert the marker; no package pin changes.
