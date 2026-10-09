@@ -34,21 +34,36 @@ type Path = ReadonlyArray<string | number>;
 // Event records
 // ---------------------------------------------------------------------------
 
-/** Emitted when the CST visitor enters a document node. */
+/**
+ * Emitted when the CST visitor enters a document node.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstDocumentStartEvent {
 	readonly _tag: "CstDocumentStartEvent";
 	readonly path: Path;
 	readonly depth: number;
 }
 
-/** Emitted when the CST visitor exits a document node. */
+/**
+ * Emitted when the CST visitor exits a document node.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstDocumentEndEvent {
 	readonly _tag: "CstDocumentEndEvent";
 	readonly path: Path;
 	readonly depth: number;
 }
 
-/** Emitted when the CST visitor enters a block-map or flow-map node. */
+/**
+ * Emitted when the CST visitor enters a block-map or flow-map node.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstMapStartEvent {
 	readonly _tag: "CstMapStartEvent";
 	readonly path: Path;
@@ -56,14 +71,24 @@ export interface CstMapStartEvent {
 	readonly source: string;
 }
 
-/** Emitted when the CST visitor exits a block-map or flow-map node. */
+/**
+ * Emitted when the CST visitor exits a block-map or flow-map node.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstMapEndEvent {
 	readonly _tag: "CstMapEndEvent";
 	readonly path: Path;
 	readonly depth: number;
 }
 
-/** Emitted when the CST visitor enters a block-seq or flow-seq node. */
+/**
+ * Emitted when the CST visitor enters a block-seq or flow-seq node.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstSeqStartEvent {
 	readonly _tag: "CstSeqStartEvent";
 	readonly path: Path;
@@ -71,14 +96,24 @@ export interface CstSeqStartEvent {
 	readonly source: string;
 }
 
-/** Emitted when the CST visitor exits a block-seq or flow-seq node. */
+/**
+ * Emitted when the CST visitor exits a block-seq or flow-seq node.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstSeqEndEvent {
 	readonly _tag: "CstSeqEndEvent";
 	readonly path: Path;
 	readonly depth: number;
 }
 
-/** Emitted when the CST visitor encounters a scalar that is a map key. */
+/**
+ * Emitted when the CST visitor encounters a scalar that is a map key.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstKeyEvent {
 	readonly _tag: "CstKeyEvent";
 	readonly path: Path;
@@ -86,7 +121,12 @@ export interface CstKeyEvent {
 	readonly source: string;
 }
 
-/** Emitted when the CST visitor encounters a scalar that is a map value. */
+/**
+ * Emitted when the CST visitor encounters a scalar that is a map value.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstValueEvent {
 	readonly _tag: "CstValueEvent";
 	readonly path: Path;
@@ -97,6 +137,9 @@ export interface CstValueEvent {
 /**
  * Emitted when the CST visitor encounters a standalone scalar (not a map key
  * or value — e.g., a sequence item or bare document scalar).
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CstScalarEvent {
 	readonly _tag: "CstScalarEvent";
@@ -105,7 +148,12 @@ export interface CstScalarEvent {
 	readonly source: string;
 }
 
-/** Emitted when the CST visitor encounters an alias reference node (including the leading `*`). */
+/**
+ * Emitted when the CST visitor encounters an alias reference node (including the leading `*`).
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstAliasEvent {
 	readonly _tag: "CstAliasEvent";
 	readonly path: Path;
@@ -113,7 +161,12 @@ export interface CstAliasEvent {
 	readonly source: string;
 }
 
-/** Emitted when the CST visitor encounters a comment node (including the leading `#`). */
+/**
+ * Emitted when the CST visitor encounters a comment node (including the leading `#`).
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstCommentEvent {
 	readonly _tag: "CstCommentEvent";
 	readonly path: Path;
@@ -121,7 +174,12 @@ export interface CstCommentEvent {
 	readonly source: string;
 }
 
-/** Emitted when the CST visitor encounters a directive node (e.g., `%YAML 1.2`). */
+/**
+ * Emitted when the CST visitor encounters a directive node (e.g., `%YAML 1.2`).
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstDirectiveEvent {
 	readonly _tag: "CstDirectiveEvent";
 	readonly path: Path;
@@ -129,7 +187,12 @@ export interface CstDirectiveEvent {
 	readonly source: string;
 }
 
-/** Emitted when the CST visitor encounters an error node in the CST. */
+/**
+ * Emitted when the CST visitor encounters an error node in the CST.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CstErrorEvent {
 	readonly _tag: "CstErrorEvent";
 	readonly path: Path;
@@ -137,7 +200,12 @@ export interface CstErrorEvent {
 	readonly source: string;
 }
 
-/** A discriminated union of all thirteen SAX-style YAML CST visitor events. */
+/**
+ * A discriminated union of all thirteen SAX-style YAML CST visitor events.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CstVisitorEvent =
 	| CstDocumentStartEvent
 	| CstDocumentEndEvent
@@ -160,6 +228,8 @@ export type CstVisitorEvent =
 /**
  * Test whether a CST node is structural trivia (whitespace, newline, anchor, or tag).
  *
+ * **Details**
+ *
  * Trivia nodes are skipped during traversal — they carry no semantic content
  * and are only meaningful for source fidelity. Anchors and tags are classified
  * as trivia here because they are metadata attached to the following content
@@ -172,6 +242,8 @@ function isTriviaCstNode(node: CstNode): boolean {
 /**
  * Test whether a CST node is a scalar (flow-scalar or block-scalar).
  *
+ * **Details**
+ *
  * Both flow and block scalars carry raw source text. The distinction matters
  * for the parser but not for the visitor's key/value classification logic.
  */
@@ -181,6 +253,8 @@ function isScalarCstNode(node: CstNode): boolean {
 
 /**
  * Test whether a CST node is specifically a block-map.
+ *
+ * **Details**
  *
  * Distinguished from {@link isMapCstNode} because the "scalar followed by
  * block-map" sibling pattern only applies to block maps, not flow maps.
@@ -192,6 +266,8 @@ function isBlockMapCstNode(node: CstNode): boolean {
 /**
  * Test whether a CST node is any kind of map (block-map or flow-map).
  *
+ * **Details**
+ *
  * Used when the traversal needs to emit MapStart/MapEnd events regardless
  * of the map's block vs flow representation.
  */
@@ -201,6 +277,8 @@ function isMapCstNode(node: CstNode): boolean {
 
 /**
  * Test whether a CST node is any kind of sequence (block-seq or flow-seq).
+ *
+ * **Details**
  *
  * Sequences are walked via {@link walkSiblings} for their children, as
  * sequence entries do not have the key/value alternation of maps.
@@ -216,6 +294,8 @@ function isSeqCstNode(node: CstNode): boolean {
 
 /**
  * Walk an ordered list of sibling CST nodes, emitting events.
+ *
+ * **Details**
  *
  * This is the core traversal used for document-level children and for
  * sequence entry content. It detects the "scalar immediately followed by a
@@ -302,6 +382,8 @@ function* walkSiblings(nodes: ReadonlyArray<CstNode>, path: Path, depth: number)
 /**
  * Look ahead past trivia and comment nodes to find the next content node.
  *
+ * **Details**
+ *
  * Used by {@link walkSiblings} and {@link walkBlockMapChildren} to detect
  * the "scalar followed by block-map" pattern. Returns `undefined` when no
  * content node exists after `startIdx`, which means the scalar is a
@@ -334,6 +416,8 @@ function findMapContent(nodes: ReadonlyArray<CstNode>, startIdx: number): CstNod
 
 /**
  * Walk children of a `block-map` node.
+ *
+ * **Details**
  *
  * A leading ':' means the first key was emitted by the parent as a sibling;
  * compact sequence mappings include that key in their children instead.
@@ -449,6 +533,8 @@ function* walkBlockMapChildren(
 /**
  * Walk children of a `flow-map` node.
  *
+ * **Details**
+ *
  * Flow maps include all their content (including the opening `{` key scalars,
  * `:` separators, and closing `}`) as children. All structural punctuation
  * is typed as `whitespace`. Scalars alternate key/value starting with key.
@@ -529,6 +615,8 @@ function* walkFlowMapChildren(children: ReadonlyArray<CstNode>, path: Path, dept
 /**
  * Generator that yields all CST visitor events for a single document node.
  *
+ * **Details**
+ *
  * Wraps the document's children in CstDocumentStartEvent / CstDocumentEndEvent
  * and delegates child traversal to {@link walkSiblings}. The root path is an
  * empty array, and child depth starts at 1 (the document itself is at depth 0).
@@ -547,8 +635,10 @@ function* walkDocument(doc: CstNode): Generator<CstVisitorEvent> {
 // ---------------------------------------------------------------------------
 
 /**
- * Walk YAML source text at the CST level and yield {@link CstVisitorEvent}
+ * Walks YAML source text at the CST level and yields {@link CstVisitorEvent}
  * values in document order.
+ *
+ * **Details**
  *
  * Events are emitted for every CST node encountered during traversal,
  * including `CstDocumentStartEvent`/`CstDocumentEndEvent` pairs, collection
@@ -558,6 +648,18 @@ function* walkDocument(doc: CstNode): Generator<CstVisitorEvent> {
  * All content is delivered as raw source strings — `true` is still the string
  * `"true"`. CST-level errors are surfaced as {@link CstErrorEvent} records;
  * the generator never throws.
+ *
+ * **Example** (Observe document boundaries around a scalar)
+ *
+ * ```ts
+ * import { cstEvents } from "@beep/scratchpad/effected/yaml/internal/cst-visitor"
+ *
+ * const tags = Array.from(cstEvents("true"), event => event._tag)
+ * console.log(tags.join(",")) // CstDocumentStartEvent,CstScalarEvent,CstDocumentEndEvent
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export function* cstEvents(text: string): Generator<CstVisitorEvent, void, undefined> {
 	for (const doc of parseCSTAll(text)) {

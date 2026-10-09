@@ -15,10 +15,26 @@ const $I = $ScratchpadId.create("effected/yaml/internal/rules/colon-spacing");
 
 /**
  * Options for `colon-spacing`: `maxSpacesBefore` (default 0) and
- * `maxSpacesAfter` (default 1) around the `:` indicator. `maxSpacesBefore: 0`
- * is legal (`key:` needs no space before the colon), but at least one
- * separation space must FOLLOW it — `0` would make the fix emit `a:val`, a
- * plain scalar, not a mapping entry.
+ * `maxSpacesAfter` (default 1) around the `:` indicator.
+ *
+ * **Gotchas**
+ *
+ * `maxSpacesBefore: 0` is legal (`key:` needs no space before the colon),
+ * but at least one separation space must FOLLOW it — `0` would make the fix
+ * emit `a:val`, a plain scalar, not a mapping entry.
+ *
+ * **Example** (Decode colon-spacing options)
+ *
+ * ```ts
+ * import { colonSpacingOptions } from "@beep/scratchpad/effected/yaml/internal/rules/colon-spacing";
+ * import * as S from "effect/Schema";
+ *
+ * const options = S.decodeUnknownSync(colonSpacingOptions)({ maxSpacesBefore: 0, maxSpacesAfter: 1 });
+ * console.log(options.maxSpacesAfter); // 1
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const colonSpacingOptions = S.Struct({
 	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for colon-spacing findings, defaulting to `error`" }),
@@ -26,10 +42,37 @@ export const colonSpacingOptions = S.Struct({
 	maxSpacesAfter: S.optionalKey(positiveIntegerOption).annotateKey({ description: "Maximum spaces between a block-mapping `:` and its same-line value, at least 1 and defaulting to 1" }),
 }).pipe($I.annoteSchema("colonSpacingOptions", { description: "Options for `colon-spacing`: `maxSpacesBefore` (default 0) and `maxSpacesAfter` (default 1) around the `:` indicator. `maxSpacesBefore: 0` is legal (`key:` needs no space before the colon), but at least one separation space must FOLLOW it — `0` would make the fix emit `a:val`, a plain scalar, not a mapping entry." }));
 
-/** Decoded options for block-mapping colon spacing. */
+/**
+ * Decoded options for block-mapping colon spacing.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type colonSpacingOptions = typeof colonSpacingOptions.Type;
 
-/** Spacing around the block-mapping `:` indicator. */
+/**
+ * Enforces spacing around the block-mapping `:` indicator.
+ *
+ * **Details**
+ *
+ * The default permits no spaces before the colon and at most one after it.
+ * An explicit-value colon at the head of its line is structure rather than
+ * spacing; a comment after the colon belongs to the comments-spacing rule.
+ *
+ * **Example** (Report colon-spacing violations)
+ *
+ * ```ts
+ * import { colonSpacing } from "@beep/scratchpad/effected/yaml/internal/rules/colon-spacing";
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/effected/yaml/YamlLint";
+ *
+ * const config = YamlLintConfig.make({ rules: { "colon-spacing": "error" } });
+ * const diagnostics = YamlLint.run("a:  1\n", [colonSpacing], config);
+ * console.log(diagnostics[0]?.message); // Too many spaces after ":" (2 > 1)
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export const colonSpacing: YamlRule = {
 	id: "colon-spacing",
 	check: (ctx, options) => {

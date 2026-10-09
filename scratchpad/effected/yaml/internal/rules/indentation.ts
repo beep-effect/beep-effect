@@ -23,9 +23,26 @@ import * as P from "effect/Predicate";
 const $I = $ScratchpadId.create("effected/yaml/internal/rules/indentation");
 
 /**
+ * Configure the indentation unit and placement of sequences beneath mapping keys.
+ *
+ * **Details**
+ *
  * Options for `indentation`: `spaces` per level (number or "consistent",
  * default "consistent") and `indentSequences` (boolean or "consistent",
  * default "consistent").
+ *
+ * **Example** (Decode indentation options)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { indentationOptions } from "@beep/scratchpad/effected/yaml/internal/rules/indentation";
+ *
+ * const options = S.decodeUnknownSync(indentationOptions)({ spaces: 2, indentSequences: true });
+ * console.log(options.spaces) // 2
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const indentationOptions = S.Struct({
 	severity: S.optionalKey(YamlLintSeverity).annotateKey({
@@ -46,6 +63,12 @@ export const indentationOptions = S.Struct({
 	}),
 );
 
+/**
+ * Decoded options for the `indentation` lint rule.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type indentationOptions = typeof indentationOptions.Type;
 
 interface ContentLine {
@@ -147,7 +170,38 @@ const isKeyThenSeqEntry = (
 	return curr.indent === keyIndent || curr.indent === keyIndent + (unit ?? curr.indent - keyIndent);
 };
 
-/** Block-structure indent style. */
+/**
+ * Check block-structure indentation style.
+ *
+ * **Details**
+ *
+ * The rule checks the indentation unit and sequence placement under mapping
+ * keys. In consistent mode, the first observed increase determines the unit
+ * and the first key-to-sequence pair determines sequence placement. Scalar
+ * continuations and flow collections are skipped. Inference votes on the same
+ * content lines used by the check.
+ *
+ * **Gotchas**
+ *
+ * Structural legality belongs to the parser. This rule reports style drift
+ * and offers no fix: reindenting is formatting.
+ *
+ * **Example** (Find an indentation-unit mismatch)
+ *
+ * ```ts
+ * import { indentation } from "@beep/scratchpad/effected/yaml/internal/rules/indentation";
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/effected/yaml/YamlLint";
+ *
+ * const config = YamlLintConfig.make({
+ *   rules: { "indentation": { spaces: 2 } },
+ * });
+ * const diagnostics = YamlLint.run("parent:\n    child: value\n", [indentation], config);
+ * console.log(diagnostics.length) // 1
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export const indentation: YamlRule = {
 	id: "indentation",
 	check: (ctx, options) => {

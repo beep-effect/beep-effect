@@ -92,6 +92,8 @@ function validateAnchorTagNotFollowedBySeqDashOnSameLine(
  * on the same line. YAML 1.2 §9.1.4/§9.2 require these markers to be on
  * their own line (followed only by whitespace/comments).
  *
+ * **Details**
+ *
  * Checks within a single document's children AND across document boundaries
  * (e.g. `... invalid` where `...` ends doc 1 and `invalid` starts doc 2).
  */
@@ -214,6 +216,36 @@ function checkTrailingContentAfterDocValue(
 // Compose document
 // ---------------------------------------------------------------------------
 
+/**
+ * Composes a document CST into YAML nodes, directives, comments, and recovery diagnostics.
+ *
+ * **Details**
+ *
+ * The supplied state collects anchors, tag handles, errors, and warnings during
+ * the walk. Pass the following document CST when document-end validation must
+ * check content across the document boundary.
+ *
+ * **Example** (Compose a parsed scalar document)
+ *
+ * ```ts
+ * import { composeDocument } from "@beep/scratchpad/effected/yaml/internal/composer/document"
+ * import { YamlScalar } from "@beep/scratchpad/effected/yaml/YamlNode"
+ * import * as S from "effect/Schema"
+ * import { parseCSTAll } from "@beep/scratchpad/effected/yaml/internal/cst-parser"
+ * import { createState } from "@beep/scratchpad/effected/yaml/internal/composer/state"
+ * import { composeFlowMap, composeFlowSeq } from "@beep/scratchpad/effected/yaml/internal/composer/flow"
+ *
+ * const text = "hello"
+ * const cst = parseCSTAll(text)[0]
+ * if (cst === undefined) throw new Error("Expected a document")
+ * const state = createState(text, { composeFlowMap, composeFlowSeq })
+ * const document = composeDocument(cst, state)
+ * console.log(S.is(YamlScalar)(document.contents)) // true
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const composeDocument: {
 	(state: ComposerState, hasSubsequentDocuments?: boolean, nextDocCst?: CstNode): (cst: CstNode) => RawYamlDocument;
 	(cst: CstNode, state: ComposerState, hasSubsequentDocuments?: boolean, nextDocCst?: CstNode): RawYamlDocument;
@@ -757,7 +789,7 @@ export const composeDocument: {
 
 /**
  * Validate YAML directive rules within a single document's CST.
- * Pushes errors into state.errors for any violations found.
+ * Pushes errors into state.errors for violations found.
  */
 function validateDirectives(
 	directives: RawDirective[],
@@ -927,12 +959,38 @@ function findNestedDirective(node: CstNode): CstNode | null {
 }
 
 /**
- * Validate directive placement across a multi-document CST stream.
+ * Validates directive placement across a multi-document CST stream.
+ *
+ * **Details**
  *
  * YAML 1.2 requires that directives appearing between documents must be
  * preceded by a document-end marker (`...`). This function checks each
  * CST document node after the first: if it contains directives, the
  * preceding document must have ended with `...`.
+ *
+ * **Example** (Report a directive without a preceding end marker)
+ *
+ * ```ts
+ * import { validateCrossDocumentDirectives } from "@beep/scratchpad/effected/yaml/internal/composer/document"
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst"
+ * import { createState } from "@beep/scratchpad/effected/yaml/internal/composer/state"
+ * import { composeFlowMap, composeFlowSeq } from "@beep/scratchpad/effected/yaml/internal/composer/flow"
+ *
+ * const text = "first\n%YAML 1.2\n---\nsecond\n"
+ * const documents: ReadonlyArray<CstNode> = [
+ *   { type: "document", source: "first\n", offset: 0, length: 6, children: [] },
+ *   {
+ *     type: "document", source: text.slice(6), offset: 6, length: text.length - 6,
+ *     children: [{ type: "directive", source: "%YAML 1.2", offset: 6, length: 9 }]
+ *   }
+ * ]
+ * const state = createState(text, { composeFlowMap, composeFlowSeq })
+ * validateCrossDocumentDirectives(documents, state)
+ * console.log(state.errors.some(error => error.code === "InvalidDirective")) // true
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
  */
 export const validateCrossDocumentDirectives: {
 	(state: ComposerState): (cstNodes: readonly CstNode[]) => void;
@@ -995,6 +1053,8 @@ export const validateCrossDocumentDirectives: {
 /**
  * Walk the AST and stamp `sourceMultiline: true` on every YamlScalar/Map/Seq
  * whose source span (offset..offset+length in `text`) contains a newline.
+ *
+ * **Details**
  *
  * The composer uses this single post-pass instead of threading the flag
  * through dozens of construction sites. Nodes whose span is single-line are
@@ -1102,6 +1162,21 @@ function decorateDocumentSourceMultiline(doc: RawYamlDocument, text: string): Ra
 // Engine entry points
 // ---------------------------------------------------------------------------
 
+/**
+ * Provides the empty document result when parsing finds no document CST.
+ *
+ * **Example** (Inspect an empty document result)
+ *
+ * ```ts
+ * import { EMPTY_DOCUMENT } from "@beep/scratchpad/effected/yaml/internal/composer/document"
+ *
+ * console.log(EMPTY_DOCUMENT.contents) // null
+ * console.log(EMPTY_DOCUMENT.errors.length) // 0
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const EMPTY_DOCUMENT: RawYamlDocument = {
 	contents: null,
 	errors: [],
@@ -1113,11 +1188,29 @@ export const EMPTY_DOCUMENT: RawYamlDocument = {
 };
 
 /**
- * Compose the first document of `text` with full error recovery, with no
- * fatal-code filtering (the facade applies `isFatalCode` to the returned
- * diagnostics).
- * Cross-document directive-placement errors are validated into the same
- * state and therefore appear in the returned document's `errors`.
+ * Composes the first document of `text` with full error recovery.
+ *
+ * **Details**
+ *
+ * There is no fatal-code filtering (the facade applies `isFatalCode` to the
+ * returned diagnostics). Cross-document directive-placement errors are
+ * validated into the same state and therefore appear in the returned
+ * document's `errors`.
+ *
+ * **Example** (Compose the first value in a stream)
+ *
+ * ```ts
+ * import { composeFirstDocument } from "@beep/scratchpad/effected/yaml/internal/composer/document"
+ * import { YamlScalar } from "@beep/scratchpad/effected/yaml/YamlNode"
+ * import * as S from "effect/Schema"
+ *
+ * const document = composeFirstDocument("---\nfirst\n---\nsecond\n")
+ * console.log(S.is(YamlScalar)(document.contents)) // true
+ * console.log(document.errors.length) // 0
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const composeFirstDocument: {
 	(options?: ParseOptionsInput): (text: string) => RawYamlDocument;
@@ -1125,12 +1218,27 @@ export const composeFirstDocument: {
 } = dual((args) => P.isString(args[0]), (text: string, options?: ParseOptionsInput): RawYamlDocument => composeFirstDocumentCounted(text, options).document);
 
 /**
- * {@link composeFirstDocument} plus the CST-level document count of the whole
- * stream, from the single CST parse the compose already performs — no second
- * walk, and correct where a regex on `---` is not (a `---` inside a block
- * scalar or quoted string is content, not a document marker). Callers that
- * must refuse multi-document input (the `YamlFormat` single-document
- * contract) read `documentCount` instead of re-parsing.
+ * Composes the first document and reports the CST-level document count of the whole stream.
+ *
+ * **Details**
+ *
+ * Uses the single CST parse that {@link composeFirstDocument} already
+ * performs — no second walk, and correct where a regex on `---` is not (a
+ * `---` inside a block scalar or quoted string is content, not a document
+ * marker). Callers that must refuse multi-document input (the `YamlFormat`
+ * single-document contract) read `documentCount` instead of re-parsing.
+ *
+ * **Example** (Count documents without counting scalar content)
+ *
+ * ```ts
+ * import { composeFirstDocumentCounted } from "@beep/scratchpad/effected/yaml/internal/composer/document"
+ *
+ * const result = composeFirstDocumentCounted("---\n|\n  ---\n---\nsecond\n")
+ * console.log(result.documentCount) // 2
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const composeFirstDocumentCounted: {
 	(options?: ParseOptionsInput): (text: string) => { readonly document: RawYamlDocument; readonly documentCount: number };
@@ -1152,10 +1260,27 @@ export const composeFirstDocumentCounted: {
 });
 
 /**
- * Compose every document of `text` with full error recovery, with no
- * fatal-code filtering. Each document is composed with a fresh state; the
- * cross-document directive validation runs in its own state whose errors
- * are returned unfiltered as `streamErrors` (the facade applies its filter).
+ * Composes every document of `text` with full error recovery.
+ *
+ * **Details**
+ *
+ * There is no fatal-code filtering. Each document is composed with a fresh
+ * state; the cross-document directive validation runs in its own state whose
+ * errors are returned unfiltered as `streamErrors` (the facade applies its
+ * filter).
+ *
+ * **Example** (Compose all values in a stream)
+ *
+ * ```ts
+ * import { composeAllDocuments } from "@beep/scratchpad/effected/yaml/internal/composer/document"
+ *
+ * const result = composeAllDocuments("---\nfirst\n---\nsecond\n")
+ * console.log(result.documents.length) // 2
+ * console.log(result.streamErrors.length) // 0
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const composeAllDocuments: {
 	(options?: ParseOptionsInput): (text: string) => { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> };
@@ -1184,7 +1309,7 @@ export const composeAllDocuments: {
  * first pair's key for a mapping, the first item for a sequence, the node
  * itself for a scalar. Without a `---` boundary the header is just the first
  * own-line comment in the document's item stream, so it forward-attributes
- * like any other.
+ * like other own-line comments.
  */
 function attachHeaderToFirstEntry(contents: YamlNode, header: string): YamlNode {
 	if (isYamlMap(contents) && contents.items.length > 0) {

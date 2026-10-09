@@ -28,7 +28,18 @@ const $I = $ScratchpadId.create("effected/yaml/YamlDiagnostic");
 /**
  * Error codes emitted by the lexer stage.
  *
+ * **Example** (Validate a lexer diagnostic code)
+ *
+ * ```ts
+ * import { YamlLexErrorCode } from "@beep/scratchpad/effected/yaml/YamlDiagnostic"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(YamlLexErrorCode)("UnexpectedCharacter")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const YamlLexErrorCode = LiteralKit(YAML_LEX_ERROR_CODES).pipe($I.annoteSchema("YamlLexErrorCode", { description: "Error codes emitted by the lexer stage." }));
 
@@ -36,13 +47,26 @@ export const YamlLexErrorCode = LiteralKit(YAML_LEX_ERROR_CODES).pipe($I.annoteS
  * The union of all lexer-stage error code string literals.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlLexErrorCode = typeof YamlLexErrorCode.Type;
 
 /**
  * Error codes emitted by the CST-parser stage.
  *
+ * **Example** (Validate a parser diagnostic code)
+ *
+ * ```ts
+ * import { YamlParseErrorCode } from "@beep/scratchpad/effected/yaml/YamlDiagnostic"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(YamlParseErrorCode)("DuplicateKey")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const YamlParseErrorCode = LiteralKit(YAML_PARSE_ERROR_CODES).pipe($I.annoteSchema("YamlParseErrorCode", { description: "Error codes emitted by the CST-parser stage." }));
 
@@ -50,13 +74,26 @@ export const YamlParseErrorCode = LiteralKit(YAML_PARSE_ERROR_CODES).pipe($I.ann
  * The union of all parser-stage error code string literals.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlParseErrorCode = typeof YamlParseErrorCode.Type;
 
 /**
  * Error codes emitted by the composer stage.
  *
+ * **Example** (Validate a composer diagnostic code)
+ *
+ * ```ts
+ * import { YamlComposerErrorCode } from "@beep/scratchpad/effected/yaml/YamlDiagnostic"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(YamlComposerErrorCode)("UndefinedAlias")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const YamlComposerErrorCode = LiteralKit(YAML_COMPOSE_ERROR_CODES).pipe($I.annoteSchema("YamlComposerErrorCode", { description: "Error codes emitted by the composer stage." }));
 
@@ -64,13 +101,26 @@ export const YamlComposerErrorCode = LiteralKit(YAML_COMPOSE_ERROR_CODES).pipe($
  * The union of all composer-stage error code string literals.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlComposerErrorCode = typeof YamlComposerErrorCode.Type;
 
 /**
  * Error codes emitted by the stringifier (the circular-reference guard).
  *
+ * **Example** (Validate a stringifier diagnostic code)
+ *
+ * ```ts
+ * import { YamlStringifyErrorCode } from "@beep/scratchpad/effected/yaml/YamlDiagnostic"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(YamlStringifyErrorCode)("CircularReference")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const YamlStringifyErrorCode = LiteralKit(YAML_STRINGIFY_ERROR_CODES).pipe($I.annoteSchema("YamlStringifyErrorCode", { description: "Error codes emitted by the stringifier (the circular-reference guard)." }));
 
@@ -78,6 +128,8 @@ export const YamlStringifyErrorCode = LiteralKit(YAML_STRINGIFY_ERROR_CODES).pip
  * The union of all stringifier-stage error code string literals.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlStringifyErrorCode = typeof YamlStringifyErrorCode.Type;
 
@@ -85,7 +137,18 @@ export type YamlStringifyErrorCode = typeof YamlStringifyErrorCode.Type;
  * Error codes emitted by `YamlFormat.modify`'s path navigation against an
  * already-composed AST — not raised by the parser/composer/stringifier.
  *
+ * **Example** (Validate a modify diagnostic code)
+ *
+ * ```ts
+ * import { YamlModifyErrorCode } from "@beep/scratchpad/effected/yaml/YamlDiagnostic"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(YamlModifyErrorCode)("PathNotFound")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const YamlModifyErrorCode = LiteralKit(YAML_MODIFY_ERROR_CODES).pipe($I.annoteSchema("YamlModifyErrorCode", { description: "Error codes emitted by `YamlFormat.modify`'s path navigation against an already-composed AST — not raised by the parser/composer/stringifier." }));
 
@@ -93,6 +156,8 @@ export const YamlModifyErrorCode = LiteralKit(YAML_MODIFY_ERROR_CODES).pipe($I.a
  * The union of all modify-stage error code string literals.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlModifyErrorCode = typeof YamlModifyErrorCode.Type;
 
@@ -100,7 +165,18 @@ export type YamlModifyErrorCode = typeof YamlModifyErrorCode.Type;
  * Union of all YAML error codes across all pipeline stages. Stage
  * discrimination lives here (in the code), not in separate error classes.
  *
+ * **Example** (Validate a pipeline diagnostic code)
+ *
+ * ```ts
+ * import { YamlErrorCode } from "@beep/scratchpad/effected/yaml/YamlDiagnostic"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(YamlErrorCode)("UnexpectedToken")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const YamlErrorCode = S.Union([
 	YamlLexErrorCode,
@@ -114,6 +190,8 @@ export const YamlErrorCode = S.Union([
  * The union of all YAML error code string literals.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlErrorCode = typeof YamlErrorCode.Type;
 
@@ -129,7 +207,21 @@ export type YamlErrorCode = typeof YamlErrorCode.Type;
  * is structurally identical to `@effected/jsonc`'s parse-error detail shape;
  * `message` is this package's additive extra.
  *
+ * **Example** (Construct a positioned diagnostic)
+ *
+ * ```ts
+ * import { YamlDiagnostic } from "@beep/scratchpad/effected/yaml/YamlDiagnostic"
+ *
+ * const diagnostic = YamlDiagnostic.make({
+ *   code: "DuplicateKey", message: "Repeated mapping key",
+ *   offset: 8, length: 4, line: 1, character: 0
+ * })
+ * console.log(diagnostic.message) // Repeated mapping key
+ * ```
+ *
  * @public
+ * @category diagnostics
+ * @since 0.0.0
  */
 export class YamlDiagnostic extends S.Class<YamlDiagnostic>($I`YamlDiagnostic`)({
 	code: YamlErrorCode.annotateKey({ description: "Pipeline error identifier used to classify the diagnostic and determine whether it is fatal" }),
@@ -144,8 +236,19 @@ export class YamlDiagnostic extends S.Class<YamlDiagnostic>($I`YamlDiagnostic`)(
 	 * abort a parse (vs. being recoverable warnings-as-data). Declared once,
 	 * as a property of the code.
 	 *
+	 * **Example** (Distinguish fatal and recoverable codes)
+	 *
+	 * ```ts
+	 * import { YamlDiagnostic } from "@beep/scratchpad/effected/yaml/YamlDiagnostic"
+	 *
+	 * console.log(YamlDiagnostic.isFatal("UndefinedAlias")) // true
+	 * console.log(YamlDiagnostic.isFatal("DuplicateKey")) // false
+	 * ```
+	 *
 	 * @param code - The diagnostic code to classify.
 	 * @returns `true` when diagnostics with `code` abort a parse.
+	 * @category predicates
+	 * @since 0.0.0
 	 */
 	static isFatal(code: YamlErrorCode): boolean {
 		return isFatalCode(code);
@@ -156,9 +259,22 @@ export class YamlDiagnostic extends S.Class<YamlDiagnostic>($I`YamlDiagnostic`)(
 	 * deriving `line`/`character` from `offset` against the source `text`.
 	 * Advanced — the parse/stringify entry points call this for you.
 	 *
+	 * **Example** (Derive a position after a line break)
+	 *
+	 * ```ts
+	 * import { YamlDiagnostic } from "@beep/scratchpad/effected/yaml/YamlDiagnostic"
+	 *
+	 * const diagnostic = YamlDiagnostic.fromRaw({
+	 *   code: "DuplicateKey", message: "Repeated key", offset: 5, length: 1
+	 * }, "a: 1\nb: 2\n")
+	 * console.log(diagnostic.line, diagnostic.character) // 1 0
+	 * ```
+	 *
 	 * @param raw - The engine record: `code`, `message`, `offset` and `length`.
 	 * @param text - The source text the record's `offset` indexes into.
 	 * @returns The diagnostic with `line` and `character` filled in.
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static fromRaw(
 		raw: { readonly code: YamlErrorCode; readonly message: string; readonly offset: number; readonly length: number },

@@ -21,7 +21,18 @@ const $I = $ScratchpadId.create("effected/yaml/YamlNode");
 /**
  * YAML scalar presentation styles.
  *
+ * **Example** (Decode ScalarStyle vocabulary)
+ *
+ * ```ts
+ * import { ScalarStyle } from "@beep/scratchpad/effected/yaml/YamlNode"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(ScalarStyle)("block-literal")) // block-literal
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ScalarStyle = LiteralKit([
 	"plain",
@@ -35,13 +46,26 @@ export const ScalarStyle = LiteralKit([
  * The union of all scalar style string literals.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type ScalarStyle = typeof ScalarStyle.Type;
 
 /**
  * YAML collection presentation styles.
  *
+ * **Example** (Decode CollectionStyle vocabulary)
+ *
+ * ```ts
+ * import { CollectionStyle } from "@beep/scratchpad/effected/yaml/YamlNode"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(CollectionStyle)("flow")) // flow
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const CollectionStyle = LiteralKit(["block", "flow"]).pipe($I.annoteSchema("CollectionStyle", { description: "YAML collection presentation styles." }));
 
@@ -49,6 +73,8 @@ export const CollectionStyle = LiteralKit(["block", "flow"]).pipe($I.annoteSchem
  * The union of all collection style string literals.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type CollectionStyle = typeof CollectionStyle.Type;
 
@@ -59,7 +85,18 @@ export type CollectionStyle = typeof CollectionStyle.Type;
  * unlike `ScalarStyle` it is a stringify-option vocabulary, never a property
  * of a composed node.
  *
+ * **Example** (Decode QuoteStyle vocabulary)
+ *
+ * ```ts
+ * import { QuoteStyle } from "@beep/scratchpad/effected/yaml/YamlNode"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(QuoteStyle)("double")) // double
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const QuoteStyle = LiteralKit(["single", "double"]).pipe($I.annoteSchema("QuoteStyle", { description: "Quote characters available to the stringifier's plain-scalar fallback: the style a `plain`-styled scalar is rendered in when it turns out to require quoting. Referenced by the `quoteStyle` field of `YamlStringifyOptions`; unlike `ScalarStyle` it is a stringify-option vocabulary, never a property of a composed node." }));
 
@@ -67,6 +104,8 @@ export const QuoteStyle = LiteralKit(["single", "double"]).pipe($I.annoteSchema(
  * The union of all fallback quote style string literals.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type QuoteStyle = typeof QuoteStyle.Type;
 
@@ -82,7 +121,18 @@ export type QuoteStyle = typeof QuoteStyle.Type;
  * `QuoteStyle` it is a stringify-option vocabulary, never a property of a
  * composed node.
  *
+ * **Example** (Decode QuoteCompat vocabulary)
+ *
+ * ```ts
+ * import { QuoteCompat } from "@beep/scratchpad/effected/yaml/YamlNode"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(QuoteCompat)("yaml-1.1")) // yaml-1.1
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const QuoteCompat = LiteralKit(["yaml-1.1"]).pipe($I.annoteSchema("QuoteCompat", { description: "Foreign resolution dialects the stringifier's plain-scalar fallback can defend against: setting the `quoteCompat` field of `YamlStringifyOptions` to `\"yaml-1.1\"` additionally quotes every plain scalar a YAML 1.1 parser (js-yaml, PyYAML, libyaml, and the `yaml` npm package's YAML 1.1 schema, whose lenient resolvers set the outer bound) would implicitly resolve to a non-string — `yes`/`no`/`on`/`off` booleans, ISO 8601 and space-separated timestamps, sexagesimal `1:30`, underscored `1_000` and base-2/8/16 numbers. Like `QuoteStyle` it is a stringify-option vocabulary, never a property of a composed node." }));
 
@@ -90,6 +140,8 @@ export const QuoteCompat = LiteralKit(["yaml-1.1"]).pipe($I.annoteSchema("QuoteC
  * The union of all quote-compat dialect string literals.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type QuoteCompat = typeof QuoteCompat.Type;
 
@@ -97,7 +149,18 @@ export type QuoteCompat = typeof QuoteCompat.Type;
  * Block-scalar chomping indicators (`-` strip, default clip, `+` keep).
  * Referenced by the {@link YamlScalar} `chomp` field schema.
  *
+ * **Example** (Decode ScalarChomp vocabulary)
+ *
+ * ```ts
+ * import { ScalarChomp } from "@beep/scratchpad/effected/yaml/YamlNode"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(ScalarChomp)("strip")) // strip
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ScalarChomp = LiteralKit(["strip", "clip", "keep"]).pipe($I.annoteSchema("ScalarChomp", { description: "Block-scalar chomping indicators (`-` strip, default clip, `+` keep). Referenced by the YamlScalar `chomp` field schema." }));
 
@@ -105,12 +168,16 @@ export const ScalarChomp = LiteralKit(["strip", "clip", "keep"]).pipe($I.annoteS
  * The union of all block-scalar chomping indicator string literals.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type ScalarChomp = typeof ScalarChomp.Type;
 
 /**
  * A YAML scalar AST node, representing a leaf value such as a string,
  * number, boolean, or null.
+ *
+ * **Details**
  *
  * - `value` — the resolved JavaScript value (null, boolean, number, bigint or
  *   string).
@@ -134,7 +201,18 @@ export type ScalarChomp = typeof ScalarChomp.Type;
  *   absent on synthetic nodes.
  * - `offset` / `length` — the node's span in the source.
  *
+ * **Example** (Extract a scalar value)
+ *
+ * ```ts
+ * import { YamlScalar } from "@beep/scratchpad/effected/yaml/YamlNode"
+ *
+ * const scalar = YamlScalar.make({ value: "hello", style: "plain", offset: 0, length: 5 })
+ * console.log(scalar.toValue()) // hello
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class YamlScalar extends S.TaggedClass<YamlScalar>($I`YamlScalar`)("YamlScalar", {
 	value: S.Unknown.annotateKey({ description: "Resolved scalar content used when reconstructing the document's plain JavaScript value" }),
@@ -155,6 +233,18 @@ export class YamlScalar extends S.TaggedClass<YamlScalar>($I`YamlScalar`)("YamlS
 	 * Navigate to a descendant by path (string segments for mapping keys,
 	 * numbers for sequence indices). `Option.none()` when any segment cannot
 	 * be resolved. Pure.
+	 *
+	 * **Example** (Resolve the empty path)
+	 *
+	 * ```ts
+	 * import { YamlScalar } from "@beep/scratchpad/effected/yaml/YamlNode"
+	 * import * as O from "effect/Option"
+	 *
+	 * const node = YamlScalar.make({ value: "hello", style: "plain", offset: 0, length: 5 })
+	 * console.log(O.isSome(node.find([]))) // true
+	 * ```
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	find(path: YamlPath): O.Option<YamlNode> {
 		return findByPath(this, path);
@@ -163,6 +253,18 @@ export class YamlScalar extends S.TaggedClass<YamlScalar>($I`YamlScalar`)("YamlS
 	/**
 	 * Find the deepest node whose span contains `offset` (half-open interval),
 	 * or `Option.none()` when the offset falls outside this subtree. Pure.
+	 *
+	 * **Example** (Exclude the end of the source span)
+	 *
+	 * ```ts
+	 * import { YamlScalar } from "@beep/scratchpad/effected/yaml/YamlNode"
+	 * import * as O from "effect/Option"
+	 *
+	 * const node = YamlScalar.make({ value: "hello", style: "plain", offset: 0, length: 5 })
+	 * console.log(O.isNone(node.findAtOffset(node.offset + node.length))) // true
+	 * ```
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	findAtOffset(offset: number): O.Option<YamlNode> {
 		return findDeepestAtOffset(this, offset);
@@ -171,17 +273,53 @@ export class YamlScalar extends S.TaggedClass<YamlScalar>($I`YamlScalar`)("YamlS
 	/**
 	 * Return the path from this node to the given descendant node (matched by
 	 * reference identity), or `Option.none()` when it is not in this subtree.
+	 *
+	 * **Details**
+	 *
 	 * The inverse of {@link YamlScalar.find}. Pure.
+	 *
+	 * **Example** (Locate the root by identity)
+	 *
+	 * ```ts
+	 * import { YamlScalar } from "@beep/scratchpad/effected/yaml/YamlNode"
+	 * import * as O from "effect/Option"
+	 *
+	 * const node = YamlScalar.make({ value: "hello", style: "plain", offset: 0, length: 5 })
+	 * console.log(JSON.stringify(O.getOrNull(node.pathOf(node)))) // []
+	 * ```
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	pathOf(node: YamlNode): O.Option<YamlPath> {
 		return pathToNode(this, node);
 	}
 
 	/**
-	 * Reconstruct the plain JavaScript value of this subtree. Aliases resolve
+	 * Reconstruct the plain JavaScript value of this subtree.
+	 *
+	 * **Details**
+	 *
+	 * Aliases resolve
 	 * through `anchors` (anchors encountered during the walk register
 	 * incrementally, so an alias sees the most recent definition at its point
 	 * of use); unresolvable aliases yield `null`. Pure and total.
+	 *
+	 * **Gotchas**
+	 *
+	 * Providing an anchor map registers encountered anchors in that map. Alias
+	 * expansion can throw {@link AliasExpansionBudgetExceeded} when the default
+	 * output-node budget is exceeded.
+	 *
+	 * **Example** (Extract the node value)
+	 *
+	 * ```ts
+	 * import { YamlScalar } from "@beep/scratchpad/effected/yaml/YamlNode"
+	 *
+	 * const node = YamlScalar.make({ value: "hello", style: "plain", offset: 0, length: 5 })
+	 * console.log(node.toValue()) // hello
+	 * ```
+	 * @category decoding
+	 * @since 0.0.0
 	 */
 	toValue(anchors?: MutableHashMap.MutableHashMap<string, YamlNode>): unknown {
 		return nodeToValue(this, anchors, defaultBudget());
@@ -192,11 +330,27 @@ export class YamlScalar extends S.TaggedClass<YamlScalar>($I`YamlScalar`)("YamlS
  * A YAML alias AST node, referencing a previously defined anchor by name
  * (without the leading `*`).
  *
+ * **Details**
+ *
  * Carries the same comment triple as every other node class — see
  * {@link YamlScalar} for the field semantics. An alias is a node like any
  * other and a comment can legally sit above or after one.
  *
+ * **Example** (Resolve an anchored scalar)
+ *
+ * ```ts
+ * import { YamlAlias, YamlScalar, YamlNode } from "@beep/scratchpad/effected/yaml/YamlNode"
+ * import * as MutableHashMap from "effect/MutableHashMap"
+ *
+ * const anchors = MutableHashMap.empty<string, YamlNode>()
+ * MutableHashMap.set(anchors, "greeting", YamlScalar.make({ value: "hello", style: "plain", offset: 0, length: 5 }))
+ * const alias = YamlAlias.make({ name: "greeting", offset: 0, length: 9 })
+ * console.log(alias.toValue(anchors)) // hello
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class YamlAlias extends S.TaggedClass<YamlAlias>($I`YamlAlias`)("YamlAlias", {
 	name: S.String.annotateKey({ description: "Identifier of the previously defined anchor referenced by this alias, without the leading `*`" }),
@@ -206,22 +360,107 @@ export class YamlAlias extends S.TaggedClass<YamlAlias>($I`YamlAlias`)("YamlAlia
 	comment: S.optionalKey(S.String).annotateKey({ description: "Trailing comment text on the alias's line" }),
 	spaceBefore: S.optionalKey(S.Boolean).annotateKey({ description: "Whether a blank line precedes the alias and any leading comment block in the source" }),
 }, $I.annote("YamlAlias", { description: "A YAML alias AST node, referencing a previously defined anchor by name (without the leading `*`)." })) {
-	/** See `YamlScalar.find`. Pure. */
+	/**
+	 * Navigate to a descendant by mapping-key or sequence-index path.
+	 *
+	 * **Details**
+	 *
+	 * See `YamlScalar.find`. Pure.
+	 *
+	 * **Example** (Resolve the empty path)
+	 *
+	 * ```ts
+	 * import { YamlAlias } from "@beep/scratchpad/effected/yaml/YamlNode"
+	 * import * as O from "effect/Option"
+	 *
+	 * const node = YamlAlias.make({ name: "missing", offset: 0, length: 8 })
+	 * console.log(O.isSome(node.find([]))) // true
+	 * ```
+	 *
+	 * @see {@link YamlScalar.find} for the shared navigation and extraction semantics.
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	find(path: YamlPath): O.Option<YamlNode> {
 		return findByPath(this, path);
 	}
 
-	/** See `YamlScalar.findAtOffset`. Pure. */
+	/**
+	 * Find the deepest node containing a source offset.
+	 *
+	 * **Details**
+	 *
+	 * See `YamlScalar.findAtOffset`. Pure.
+	 *
+	 * **Example** (Exclude the end of the source span)
+	 *
+	 * ```ts
+	 * import { YamlAlias } from "@beep/scratchpad/effected/yaml/YamlNode"
+	 * import * as O from "effect/Option"
+	 *
+	 * const node = YamlAlias.make({ name: "missing", offset: 0, length: 8 })
+	 * console.log(O.isNone(node.findAtOffset(node.offset + node.length))) // true
+	 * ```
+	 *
+	 * @see {@link YamlScalar.findAtOffset} for the shared navigation and extraction semantics.
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	findAtOffset(offset: number): O.Option<YamlNode> {
 		return findDeepestAtOffset(this, offset);
 	}
 
-	/** See `YamlScalar.pathOf`. Pure. */
+	/**
+	 * Locate a descendant by reference identity.
+	 *
+	 * **Details**
+	 *
+	 * See `YamlScalar.pathOf`. Pure.
+	 *
+	 * **Example** (Locate the root by identity)
+	 *
+	 * ```ts
+	 * import { YamlAlias } from "@beep/scratchpad/effected/yaml/YamlNode"
+	 * import * as O from "effect/Option"
+	 *
+	 * const node = YamlAlias.make({ name: "missing", offset: 0, length: 8 })
+	 * console.log(JSON.stringify(O.getOrNull(node.pathOf(node)))) // []
+	 * ```
+	 *
+	 * @see {@link YamlScalar.pathOf} for the shared navigation and extraction semantics.
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	pathOf(node: YamlNode): O.Option<YamlPath> {
 		return pathToNode(this, node);
 	}
 
-	/** See `YamlScalar.toValue`. Pure and total. */
+	/**
+	 * Reconstruct the plain JavaScript value of this subtree.
+	 *
+	 * **Details**
+	 *
+	 * See `YamlScalar.toValue`. Pure and total.
+	 *
+	 * **Gotchas**
+	 *
+	 * Providing an anchor map registers encountered anchors in that map. Alias
+	 * expansion can throw {@link AliasExpansionBudgetExceeded} when the default
+	 * output-node budget is exceeded.
+	 *
+	 * **Example** (Extract the node value)
+	 *
+	 * ```ts
+	 * import { YamlAlias } from "@beep/scratchpad/effected/yaml/YamlNode"
+	 *
+	 * const node = YamlAlias.make({ name: "missing", offset: 0, length: 8 })
+	 * console.log(node.toValue()) // null
+	 * ```
+	 *
+	 * @see {@link YamlScalar.toValue} for the shared navigation and extraction semantics.
+	 * @category decoding
+	 * @since 0.0.0
+	 */
 	toValue(anchors?: MutableHashMap.MutableHashMap<string, YamlNode>): unknown {
 		return nodeToValue(this, anchors, defaultBudget());
 	}
@@ -233,6 +472,8 @@ export class YamlAlias extends S.TaggedClass<YamlAlias>($I`YamlAlias`)("YamlAlia
  * codec can state its encoded side without a circular type annotation.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface YamlScalarEncoded extends S.Codec.Encoded<typeof YamlScalar> {}
 
@@ -241,6 +482,8 @@ export interface YamlScalarEncoded extends S.Codec.Encoded<typeof YamlScalar> {}
  * {@link YamlScalarEncoded} for why the encoded forms are named interfaces.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface YamlMapEncoded extends S.Codec.Encoded<typeof YamlMap> {}
 
@@ -249,6 +492,8 @@ export interface YamlMapEncoded extends S.Codec.Encoded<typeof YamlMap> {}
  * {@link YamlScalarEncoded} for why the encoded forms are named interfaces.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface YamlSeqEncoded extends S.Codec.Encoded<typeof YamlSeq> {}
 
@@ -257,12 +502,18 @@ export interface YamlSeqEncoded extends S.Codec.Encoded<typeof YamlSeq> {}
  * {@link YamlScalarEncoded} for why the encoded forms are named interfaces.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface YamlAliasEncoded extends S.Codec.Encoded<typeof YamlAlias> {}
 
 /**
  * A discriminated-union schema covering all four YAML AST value node types:
  * {@link YamlScalar}, {@link YamlMap}, {@link YamlSeq} and {@link YamlAlias}.
+ *
+ *
+ * **Details**
+ *
  * Defined lazily via `Schema.suspend` to break the recursive reference chain
  * `YamlNode → YamlMap → YamlPair → YamlNode`.
  *
@@ -273,7 +524,19 @@ export interface YamlAliasEncoded extends S.Codec.Encoded<typeof YamlAlias> {}
  * composer's hot-path `new` construction is the one recorded exception, kept
  * internal to the engine for its allocation-sensitive walk.
  *
+ * **Example** (Recognize a scalar union member)
+ *
+ * ```ts
+ * import { YamlNode, YamlScalar } from "@beep/scratchpad/effected/yaml/YamlNode"
+ * import * as S from "effect/Schema"
+ *
+ * const scalar = YamlScalar.make({ value: "hello", style: "plain", offset: 0, length: 5 })
+ * console.log(S.is(YamlNode)(scalar)) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const YamlNode: S.Codec<
 	YamlScalar | YamlMap | YamlSeq | YamlAlias,
@@ -286,12 +549,16 @@ export const YamlNode: S.Codec<
  * The union of all YAML AST value node types.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlNode = YamlScalar | YamlMap | YamlSeq | YamlAlias;
 
 /**
  * A YAML key-value pair AST node, representing one entry within a mapping.
  * `value` is `null` when absent (e.g. `key:` with no value).
+ *
+ * **Details**
  *
  * A pair carries **no comment fields**. Comments belong to the pair's `key`
  * and `value` nodes, which have one comment slot each: an own-line comment
@@ -300,7 +567,18 @@ export type YamlNode = YamlScalar | YamlMap | YamlSeq | YamlAlias;
  * its comment where the author wrote it instead of relocating it onto the
  * value's line.
  *
+ * **Example** (Represent an entry without a value)
+ *
+ * ```ts
+ * import { YamlPair, YamlScalar } from "@beep/scratchpad/effected/yaml/YamlNode"
+ *
+ * const pair = YamlPair.make({ key: YamlScalar.make({ value: "hello", style: "plain", offset: 0, length: 5 }), value: null })
+ * console.log(pair.value) // null
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class YamlPair extends S.TaggedClass<YamlPair>($I`YamlPair`)("YamlPair", {
 	key: S.suspend((): typeof YamlNode => YamlNode).annotateKey({ description: "Node identifying the mapping entry, carrying any own-line comments above that entry" }),
@@ -311,6 +589,8 @@ export class YamlPair extends S.TaggedClass<YamlPair>($I`YamlPair`)("YamlPair", 
  * A YAML mapping AST node, representing a collection of {@link YamlPair}
  * entries.
  *
+ * **Details**
+ *
  * - `style` — the presentation style: `"block"` or `"flow"`.
  * - `commentBefore` — own-line comment text directly above the mapping.
  * - `comment` — trailing comment text: own-line comment lines after the
@@ -320,7 +600,18 @@ export class YamlPair extends S.TaggedClass<YamlPair>($I`YamlPair`)("YamlPair", 
  * - `sourceMultiline` — `true` when the source span covers two or more lines;
  *   used by the canonical stringifier. Absent on synthetic nodes.
  *
+ * **Example** (Extract an empty mapping)
+ *
+ * ```ts
+ * import { YamlMap } from "@beep/scratchpad/effected/yaml/YamlNode"
+ *
+ * const mapping = YamlMap.make({ items: [], style: "block", offset: 0, length: 2 })
+ * console.log(JSON.stringify(mapping.toValue())) // {}
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class YamlMap extends S.TaggedClass<YamlMap>($I`YamlMap`)("YamlMap", {
 	items: S.Array(S.suspend((): typeof YamlPair => YamlPair)).annotateKey({ description: "Key-value entries in their stored order within the YAML mapping" }),
@@ -334,22 +625,107 @@ export class YamlMap extends S.TaggedClass<YamlMap>($I`YamlMap`)("YamlMap", {
 	offset: S.Finite.annotateKey({ description: "Zero-based start of the mapping's source span, measured in UTF-16 code units" }),
 	length: S.Finite.annotateKey({ description: "Extent of the mapping's source span, measured in UTF-16 code units" }),
 }, $I.annote("YamlMap", { description: "A YAML mapping AST node, representing a collection of YamlPair entries." })) {
-	/** See `YamlScalar.find`. Pure. */
+	/**
+	 * Navigate to a descendant by mapping-key or sequence-index path.
+	 *
+	 * **Details**
+	 *
+	 * See `YamlScalar.find`. Pure.
+	 *
+	 * **Example** (Resolve the empty path)
+	 *
+	 * ```ts
+	 * import { YamlMap } from "@beep/scratchpad/effected/yaml/YamlNode"
+	 * import * as O from "effect/Option"
+	 *
+	 * const node = YamlMap.make({ items: [], style: "block", offset: 0, length: 2 })
+	 * console.log(O.isSome(node.find([]))) // true
+	 * ```
+	 *
+	 * @see {@link YamlScalar.find} for the shared navigation and extraction semantics.
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	find(path: YamlPath): O.Option<YamlNode> {
 		return findByPath(this, path);
 	}
 
-	/** See `YamlScalar.findAtOffset`. Pure. */
+	/**
+	 * Find the deepest node containing a source offset.
+	 *
+	 * **Details**
+	 *
+	 * See `YamlScalar.findAtOffset`. Pure.
+	 *
+	 * **Example** (Exclude the end of the source span)
+	 *
+	 * ```ts
+	 * import { YamlMap } from "@beep/scratchpad/effected/yaml/YamlNode"
+	 * import * as O from "effect/Option"
+	 *
+	 * const node = YamlMap.make({ items: [], style: "block", offset: 0, length: 2 })
+	 * console.log(O.isNone(node.findAtOffset(node.offset + node.length))) // true
+	 * ```
+	 *
+	 * @see {@link YamlScalar.findAtOffset} for the shared navigation and extraction semantics.
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	findAtOffset(offset: number): O.Option<YamlNode> {
 		return findDeepestAtOffset(this, offset);
 	}
 
-	/** See `YamlScalar.pathOf`. Pure. */
+	/**
+	 * Locate a descendant by reference identity.
+	 *
+	 * **Details**
+	 *
+	 * See `YamlScalar.pathOf`. Pure.
+	 *
+	 * **Example** (Locate the root by identity)
+	 *
+	 * ```ts
+	 * import { YamlMap } from "@beep/scratchpad/effected/yaml/YamlNode"
+	 * import * as O from "effect/Option"
+	 *
+	 * const node = YamlMap.make({ items: [], style: "block", offset: 0, length: 2 })
+	 * console.log(JSON.stringify(O.getOrNull(node.pathOf(node)))) // []
+	 * ```
+	 *
+	 * @see {@link YamlScalar.pathOf} for the shared navigation and extraction semantics.
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	pathOf(node: YamlNode): O.Option<YamlPath> {
 		return pathToNode(this, node);
 	}
 
-	/** See `YamlScalar.toValue`. Pure and total. */
+	/**
+	 * Reconstruct the plain JavaScript value of this subtree.
+	 *
+	 * **Details**
+	 *
+	 * See `YamlScalar.toValue`. Pure and total.
+	 *
+	 * **Gotchas**
+	 *
+	 * Providing an anchor map registers encountered anchors in that map. Alias
+	 * expansion can throw {@link AliasExpansionBudgetExceeded} when the default
+	 * output-node budget is exceeded.
+	 *
+	 * **Example** (Extract the node value)
+	 *
+	 * ```ts
+	 * import { YamlMap } from "@beep/scratchpad/effected/yaml/YamlNode"
+	 *
+	 * const node = YamlMap.make({ items: [], style: "block", offset: 0, length: 2 })
+	 * console.log(JSON.stringify(node.toValue())) // {}
+	 * ```
+	 *
+	 * @see {@link YamlScalar.toValue} for the shared navigation and extraction semantics.
+	 * @category decoding
+	 * @since 0.0.0
+	 */
 	toValue(anchors?: MutableHashMap.MutableHashMap<string, YamlNode>): unknown {
 		return nodeToValue(this, anchors, defaultBudget());
 	}
@@ -359,13 +735,26 @@ export class YamlMap extends S.TaggedClass<YamlMap>($I`YamlMap`)("YamlMap", {
  * A YAML sequence AST node, representing an ordered list of
  * {@link (YamlNode:type)} values.
  *
+ * **Details**
+ *
  * - `commentBefore` — own-line comment text directly above the sequence.
  * - `comment` — trailing comment text: own-line comment lines after the
  *   sequence's last item (still at the sequence's item indent), or a
  *   same-line trailing comment for a flow sequence.
  * - `spaceBefore` — `true` when a blank line precedes the sequence.
  *
+ * **Example** (Extract sequence items in order)
+ *
+ * ```ts
+ * import { YamlSeq, YamlScalar } from "@beep/scratchpad/effected/yaml/YamlNode"
+ *
+ * const sequence = YamlSeq.make({ items: [YamlScalar.make({ value: "hello", style: "plain", offset: 0, length: 5 })], style: "flow", offset: 0, length: 7 })
+ * console.log(JSON.stringify(sequence.toValue())) // ["hello"]
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class YamlSeq extends S.TaggedClass<YamlSeq>($I`YamlSeq`)("YamlSeq", {
 	items: S.Array(S.suspend((): typeof YamlNode => YamlNode)).annotateKey({ description: "Child nodes in YAML sequence order, addressed by their zero-based positions" }),
@@ -379,22 +768,107 @@ export class YamlSeq extends S.TaggedClass<YamlSeq>($I`YamlSeq`)("YamlSeq", {
 	offset: S.Finite.annotateKey({ description: "Zero-based start of the sequence's source span, measured in UTF-16 code units" }),
 	length: S.Finite.annotateKey({ description: "Extent of the sequence's source span, measured in UTF-16 code units" }),
 }, $I.annote("YamlSeq", { description: "A YAML sequence AST node, representing an ordered list of (YamlNode:type) values." })) {
-	/** See `YamlScalar.find`. Pure. */
+	/**
+	 * Navigate to a descendant by mapping-key or sequence-index path.
+	 *
+	 * **Details**
+	 *
+	 * See `YamlScalar.find`. Pure.
+	 *
+	 * **Example** (Resolve the empty path)
+	 *
+	 * ```ts
+	 * import { YamlSeq } from "@beep/scratchpad/effected/yaml/YamlNode"
+	 * import * as O from "effect/Option"
+	 *
+	 * const node = YamlSeq.make({ items: [], style: "flow", offset: 0, length: 2 })
+	 * console.log(O.isSome(node.find([]))) // true
+	 * ```
+	 *
+	 * @see {@link YamlScalar.find} for the shared navigation and extraction semantics.
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	find(path: YamlPath): O.Option<YamlNode> {
 		return findByPath(this, path);
 	}
 
-	/** See `YamlScalar.findAtOffset`. Pure. */
+	/**
+	 * Find the deepest node containing a source offset.
+	 *
+	 * **Details**
+	 *
+	 * See `YamlScalar.findAtOffset`. Pure.
+	 *
+	 * **Example** (Exclude the end of the source span)
+	 *
+	 * ```ts
+	 * import { YamlSeq } from "@beep/scratchpad/effected/yaml/YamlNode"
+	 * import * as O from "effect/Option"
+	 *
+	 * const node = YamlSeq.make({ items: [], style: "flow", offset: 0, length: 2 })
+	 * console.log(O.isNone(node.findAtOffset(node.offset + node.length))) // true
+	 * ```
+	 *
+	 * @see {@link YamlScalar.findAtOffset} for the shared navigation and extraction semantics.
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	findAtOffset(offset: number): O.Option<YamlNode> {
 		return findDeepestAtOffset(this, offset);
 	}
 
-	/** See `YamlScalar.pathOf`. Pure. */
+	/**
+	 * Locate a descendant by reference identity.
+	 *
+	 * **Details**
+	 *
+	 * See `YamlScalar.pathOf`. Pure.
+	 *
+	 * **Example** (Locate the root by identity)
+	 *
+	 * ```ts
+	 * import { YamlSeq } from "@beep/scratchpad/effected/yaml/YamlNode"
+	 * import * as O from "effect/Option"
+	 *
+	 * const node = YamlSeq.make({ items: [], style: "flow", offset: 0, length: 2 })
+	 * console.log(JSON.stringify(O.getOrNull(node.pathOf(node)))) // []
+	 * ```
+	 *
+	 * @see {@link YamlScalar.pathOf} for the shared navigation and extraction semantics.
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	pathOf(node: YamlNode): O.Option<YamlPath> {
 		return pathToNode(this, node);
 	}
 
-	/** See `YamlScalar.toValue`. Pure and total. */
+	/**
+	 * Reconstruct the plain JavaScript value of this subtree.
+	 *
+	 * **Details**
+	 *
+	 * See `YamlScalar.toValue`. Pure and total.
+	 *
+	 * **Gotchas**
+	 *
+	 * Providing an anchor map registers encountered anchors in that map. Alias
+	 * expansion can throw {@link AliasExpansionBudgetExceeded} when the default
+	 * output-node budget is exceeded.
+	 *
+	 * **Example** (Extract the node value)
+	 *
+	 * ```ts
+	 * import { YamlSeq } from "@beep/scratchpad/effected/yaml/YamlNode"
+	 *
+	 * const node = YamlSeq.make({ items: [], style: "flow", offset: 0, length: 2 })
+	 * console.log(JSON.stringify(node.toValue())) // []
+	 * ```
+	 *
+	 * @see {@link YamlScalar.toValue} for the shared navigation and extraction semantics.
+	 * @category decoding
+	 * @since 0.0.0
+	 */
 	toValue(anchors?: MutableHashMap.MutableHashMap<string, YamlNode>): unknown {
 		return nodeToValue(this, anchors, defaultBudget());
 	}
@@ -546,13 +1020,41 @@ function setOwnProperty(obj: Record<string, unknown>, key: string, value: unknow
  * count stays small, so the composer's per-token `maxAliasCount` limit does
  * not catch it; only bounding the expanded node count does.
  *
+ * **Details**
+ *
  * Not re-exported from the package entry point (`index.ts`) — the facade
  * catches it and materializes a fatal `AliasCountExceeded` `YamlParseError`
  * (or, for `Yaml.equals`, treats the input as malformed).
+ *
+ * **Example** (Inspect an expansion budget failure)
+ *
+ * ```ts
+ * import { AliasExpansionBudgetExceeded } from "@beep/scratchpad/effected/yaml/YamlNode"
+ *
+ * const error = AliasExpansionBudgetExceeded.make({ message: "Alias expansion exceeded budget of 10000 nodes" })
+ * console.log(error.message) // Alias expansion exceeded budget of 10000 nodes
+ * ```
+ * @category errors
+ * @since 0.0.0
  */
 export class AliasExpansionBudgetExceeded extends S.TaggedError<AliasExpansionBudgetExceeded>($I`AliasExpansionBudgetExceeded`)("AliasExpansionBudgetExceeded", {
 	message: S.String.annotateKey({ description: "Alias expansion budget failure message, including the output-node limit." }),
 }, $I.annote("AliasExpansionBudgetExceeded", { description: "Value extraction exceeded its alias-expanded output-node budget." })) {
+	/**
+	 * Identifies an alias-expansion budget failure in error reports.
+	 *
+	 * **Example** (Read the expansion error name)
+	 *
+	 * ```ts
+	 * import { AliasExpansionBudgetExceeded } from "@beep/scratchpad/effected/yaml/YamlNode"
+	 *
+	 * const error = AliasExpansionBudgetExceeded.make({ message: "Expansion budget exceeded" })
+	 * console.log(error.name) // AliasExpansionBudgetExceeded
+	 * ```
+	 *
+	 * @category errors
+	 * @since 0.0.0
+	 */
 	override readonly name = "AliasExpansionBudgetExceeded";
 }
 
@@ -566,7 +1068,19 @@ export class AliasExpansionBudgetExceeded extends S.TaggedError<AliasExpansionBu
  */
 const ALIAS_EXPANSION_FACTOR = 10_000;
 
-/** The output-node cap for a given `maxAliasCount`. */
+/**
+ * The output-node cap for a given `maxAliasCount`.
+ *
+ * **Example** (Calculate the output node budget)
+ *
+ * ```ts
+ * import { aliasExpansionLimit } from "@beep/scratchpad/effected/yaml/YamlNode"
+ *
+ * console.log(aliasExpansionLimit(100)) // 1010000
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
 export function aliasExpansionLimit(maxAliasCount: number): number {
 	return (maxAliasCount + 1) * ALIAS_EXPANSION_FACTOR;
 }
@@ -591,6 +1105,19 @@ function defaultBudget(): ExpansionBudget {
  * options bounds the "billion laughs" expansion; throws
  * {@link AliasExpansionBudgetExceeded} when the cap is exceeded. Not
  * re-exported from the package entry point.
+ *
+ * **Example** (Extract a scalar with an explicit budget)
+ *
+ * ```ts
+ * import { nodeToJsValue, YamlScalar, YamlNode } from "@beep/scratchpad/effected/yaml/YamlNode"
+ * import * as MutableHashMap from "effect/MutableHashMap"
+ *
+ * const anchors = MutableHashMap.empty<string, YamlNode>()
+ * const scalar = YamlScalar.make({ value: "hello", style: "plain", offset: 0, length: 5 })
+ * console.log(nodeToJsValue(scalar, anchors, 100)) // hello
+ * ```
+ * @category decoding
+ * @since 0.0.0
  */
 export const nodeToJsValue: {
 	(node: YamlNode | null, anchors: MutableHashMap.MutableHashMap<string, YamlNode>, maxAliasCount: number): unknown;

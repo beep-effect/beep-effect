@@ -23,34 +23,175 @@ const simpleEscapes: Readonly<Record<string, string>> = {
 /**
  * A stateful YAML scanner that produces tokens one at a time.
  *
+ * **Details**
+ *
  * Provides a pull-based accessor API: call {@link YamlScanner.scan} to advance
  * to the next token, then use the `getToken*` methods to inspect the current
  * token without advancing again.
+ *
+ * **Example** (Inspect a scanner through its interface)
+ *
+ * ```ts
+ * import type { YamlScanner } from "@beep/scratchpad/effected/yaml/internal/lexer"
+ * import { createScanner } from "@beep/scratchpad/effected/yaml/internal/lexer"
+ * const scanner: YamlScanner = createScanner("hello")
+ * console.log(scanner.scan()) // scalar
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface YamlScanner {
-	/** Advance to the next token and return its kind, or `null` at end-of-input. */
+	/**
+	 * Advance to the next token and return its kind, or `null` at end-of-input.
+	 *
+	 * **Example** (Advance to a scalar)
+	 *
+	 * ```ts
+	 * import { createScanner } from "@beep/scratchpad/effected/yaml/internal/lexer"
+	 *
+	 * const scanner = createScanner("hello")
+	 * console.log(scanner.scan()) // scalar
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	scan(): YamlTokenKind | null;
-	/** Return the kind of the current token without advancing, or `null` before any scan. */
+	/**
+	 * Return the kind of the current token without advancing, or `null` before scanning.
+	 *
+	 * **Example** (Inspect without advancing)
+	 *
+	 * ```ts
+	 * import { createScanner } from "@beep/scratchpad/effected/yaml/internal/lexer"
+	 *
+	 * const scanner = createScanner("hello")
+	 * scanner.scan()
+	 * console.log(scanner.getToken()) // scalar
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	getToken(): YamlTokenKind | null;
-	/** Return the value string of the current token. */
+	/**
+	 * Return the value string of the current token.
+	 *
+	 * **Example** (Read scalar content)
+	 *
+	 * ```ts
+	 * import { createScanner } from "@beep/scratchpad/effected/yaml/internal/lexer"
+	 *
+	 * const scanner = createScanner("hello")
+	 * scanner.scan()
+	 * console.log(scanner.getTokenValue()) // hello
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	getTokenValue(): string;
-	/** Return the zero-based character offset of the current token start. */
+	/**
+	 * Return the zero-based character offset of the current token start.
+	 *
+	 * **Example** (Locate scalar content)
+	 *
+	 * ```ts
+	 * import { createScanner } from "@beep/scratchpad/effected/yaml/internal/lexer"
+	 *
+	 * const scanner = createScanner("hello")
+	 * scanner.scan()
+	 * console.log(scanner.getTokenOffset()) // 0
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	getTokenOffset(): number;
-	/** Return the character length of the current token span. */
+	/**
+	 * Return the character length of the current token span.
+	 *
+	 * **Example** (Measure a scalar span)
+	 *
+	 * ```ts
+	 * import { createScanner } from "@beep/scratchpad/effected/yaml/internal/lexer"
+	 *
+	 * const scanner = createScanner("hello")
+	 * scanner.scan()
+	 * console.log(scanner.getTokenLength()) // 5
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	getTokenLength(): number;
-	/** Return the zero-based line number of the current token start. */
+	/**
+	 * Return the zero-based line number of the current token start.
+	 *
+	 * **Example** (Locate the scalar line)
+	 *
+	 * ```ts
+	 * import { createScanner } from "@beep/scratchpad/effected/yaml/internal/lexer"
+	 *
+	 * const scanner = createScanner("hello")
+	 * scanner.scan()
+	 * console.log(scanner.getTokenLine()) // 0
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	getTokenLine(): number;
-	/** Return the zero-based column of the current token start. */
+	/**
+	 * Return the zero-based column of the current token start.
+	 *
+	 * **Example** (Locate the scalar column)
+	 *
+	 * ```ts
+	 * import { createScanner } from "@beep/scratchpad/effected/yaml/internal/lexer"
+	 *
+	 * const scanner = createScanner("hello")
+	 * scanner.scan()
+	 * console.log(scanner.getTokenColumn()) // 0
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	getTokenColumn(): number;
-	/** Return the current scanner position (next character to be scanned). */
+	/**
+	 * Return the current scanner position (next character to be scanned).
+	 *
+	 * **Example** (Inspect consumed source length)
+	 *
+	 * ```ts
+	 * import { createScanner } from "@beep/scratchpad/effected/yaml/internal/lexer"
+	 *
+	 * const scanner = createScanner("hello")
+	 * scanner.scan()
+	 * console.log(scanner.getPosition()) // 5
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	getPosition(): number;
 	/**
 	 * Reset the scanner to the given character offset and rescan from there.
+	 *
+	 * **Gotchas**
 	 *
 	 * All block-structure state (indentation, flow depth, pending tokens) is
 	 * reset. For reliable results, pass an offset previously returned by
 	 * {@link YamlScanner.getTokenOffset} rather than an arbitrary mid-token
 	 * position.
+	 *
+	 * **Example** (Rescan from a recorded token offset)
+	 *
+	 * ```ts
+	 * import { createScanner } from "@beep/scratchpad/effected/yaml/internal/lexer"
+	 *
+	 * const scanner = createScanner("hello")
+	 * scanner.scan()
+	 * const offset = scanner.getTokenOffset()
+	 * scanner.setPosition(offset)
+	 * console.log(scanner.scan()) // scalar
+	 * ```
+	 *
+	 * @since 0.0.0
 	 */
 	setPosition(pos: number): void;
 }
@@ -58,8 +199,23 @@ export interface YamlScanner {
 /**
  * Create a new YAML scanner for the given source text.
  *
+ * **Details**
+ *
  * Returns a stateful, pull-based scanner. Call {@link YamlScanner.scan} to
  * advance to the next token, then use `getToken*` methods to inspect it.
+ *
+ * **Example** (Read a scalar token)
+ *
+ * ```ts
+ * import { createScanner } from "@beep/scratchpad/effected/yaml/internal/lexer"
+ *
+ * const scanner = createScanner("hello")
+ * console.log(scanner.scan()) // scalar
+ * console.log(scanner.getTokenValue()) // hello
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export function createScanner(text: string): YamlScanner {
 	let pos = 0;
@@ -1442,8 +1598,23 @@ export function createScanner(text: string): YamlScanner {
 /**
  * Tokenize a YAML source string into an array of {@link YamlToken} records.
  *
+ * **Details**
+ *
  * Lexer errors are embedded as `"error"` tokens in the result; the downstream
  * parser/composer collects them and records diagnostics as needed.
+ *
+ * **Example** (Collect source tokens)
+ *
+ * ```ts
+ * import { lexAll } from "@beep/scratchpad/effected/yaml/internal/lexer"
+ *
+ * const tokens = lexAll("hello")
+ * console.log(tokens.length) // 1
+ * console.log(tokens[0]?.value) // hello
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export function lexAll(text: string): ReadonlyArray<YamlToken> {
 	const scanner = createScanner(text);

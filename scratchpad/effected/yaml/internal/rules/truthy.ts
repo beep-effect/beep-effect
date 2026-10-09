@@ -22,9 +22,25 @@ import * as O from "@beep/utils/Option";
 const $I = $ScratchpadId.create("effected/yaml/internal/rules/truthy");
 
 /**
+ * Validates allowed boolean spellings and whether mapping keys are checked.
+ *
+ * **Details**
+ *
  * Options for `truthy`: the `allowed` boolean spellings (default
  * `["true", "false"]`) and whether mapping keys are checked (`checkKeys`,
  * default `true` — the workflow `on:` key is the point).
+ *
+ * **Example** (Validate value-only boolean spelling checks)
+ *
+ * ```ts
+ * import { truthyOptions } from "@beep/scratchpad/effected/yaml/internal/rules/truthy"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(truthyOptions)({ allowed: ["true", "false"], checkKeys: false })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const truthyOptions = S.Struct({
 	severity: S.optionalKey(YamlLintSeverity).annotateKey({
@@ -44,6 +60,14 @@ export const truthyOptions = S.Struct({
 	}),
 );
 
+/**
+ * The decoded spelling and key-checking options accepted by the truthy rule.
+ *
+ * @see {@link truthyOptions} for the options validation schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type truthyOptions = typeof truthyOptions.Type;
 
 /** The YAML 1.1 boolean family, per spelling case the 1.1 grammar admits. */
@@ -70,7 +94,32 @@ const TRUTHY = HashSet.fromIterable([
 
 const TRUE_SET = HashSet.fromIterable(["yes", "on", "true"]);
 
-/** YAML 1.1 truthy spellings outside the allowed list. */
+/**
+ * Reports YAML 1.1 truthy spellings outside the allowed list.
+ *
+ * **Details**
+ *
+ * Checks plain scalars, including mapping keys by default. YAML 1.2 treats
+ * `yes`, `no`, `on`, and `off` as strings, while readers may interpret them
+ * as booleans. Boolean spellings such as `True` and `FALSE` are also checked.
+ *
+ * **Gotchas**
+ *
+ * Fixes preserve the parsed value: a real boolean is respelled only when
+ * the canonical spelling of the same truth value is allowed, and a string
+ * lookalike is quoted. Tagged scalars express explicit intent and are never flagged.
+ *
+ * **Example** (Identify the boolean spelling rule)
+ *
+ * ```ts
+ * import { truthy } from "@beep/scratchpad/effected/yaml/internal/rules/truthy"
+ *
+ * console.log(truthy.id) // truthy
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export const truthy: YamlRule = {
 	id: "truthy",
 	check: (ctx: LintContext, options) => {

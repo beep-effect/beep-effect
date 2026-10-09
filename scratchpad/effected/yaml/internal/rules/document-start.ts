@@ -18,13 +18,33 @@ import type { YamlToken } from "../../YamlToken.ts";
 
 const $I = $ScratchpadId.create("effected/yaml/internal/rules/document-start");
 
-/** Options for `document-start`: require (`true`, default) or forbid the marker. */
+/**
+ * Options for `document-start`: require (`true`, default) or forbid the marker.
+ *
+ * **Example** (Decode document-start options)
+ *
+ * ```ts
+ * import { documentStartOptions } from "@beep/scratchpad/effected/yaml/internal/rules/document-start";
+ * import * as S from "effect/Schema";
+ *
+ * const options = S.decodeUnknownSync(documentStartOptions)({ present: false });
+ * console.log(options.present); // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const documentStartOptions = S.Struct({
 	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for document-start marker findings, defaulting to `error`" }),
 	present: S.optionalKey(S.Boolean).annotateKey({ description: "Whether the stream's initial `---` marker is required (`true`, default) or forbidden (`false`)" }),
 }).pipe($I.annoteSchema("documentStartOptions", { description: "Options for `document-start`: require (`true`, default) or forbid the marker." }));
 
-/** Decoded options for the stream's document start marker. */
+/**
+ * Decoded options for the stream's document start marker.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type documentStartOptions = typeof documentStartOptions.Type;
 
 const TRIVIA = HashSet.fromIterable(["newline", "whitespace", "comment", "byte-order-mark", "directive"]);
@@ -35,7 +55,36 @@ const hasDirectives = (ctx: LintContext): boolean => ctx.tokens.some((t) => t.ki
 /** The first non-trivia token: it decides whether the stream is headed by `---`. */
 const headToken = (ctx: LintContext): YamlToken | undefined => ctx.tokens.find((t) => !HashSet.has(TRIVIA, t.kind));
 
-/** The `---` marker at the head of the stream. */
+/**
+ * Checks the `---` marker at the head of the stream.
+ *
+ * **Details**
+ *
+ * The rule requires the marker by default when enabled, or forbids it with
+ * `present: false`. It is opt-in and absent from both presets because many
+ * real-world corpora, especially workflow files, never carry the marker.
+ *
+ * **Gotchas**
+ *
+ * Separators between documents are structure, not style: removing one
+ * would merge two documents. Streams with directives require a start marker;
+ * the rule does not synthesize or remove markers in those streams. Removal
+ * fixes also require a marker alone on its line.
+ *
+ * **Example** (Report document-start violations)
+ *
+ * ```ts
+ * import { documentStart } from "@beep/scratchpad/effected/yaml/internal/rules/document-start";
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/effected/yaml/YamlLint";
+ *
+ * const config = YamlLintConfig.make({ rules: { "document-start": "error" } });
+ * const diagnostics = YamlLint.run("a: 1\n", [documentStart], config);
+ * console.log(diagnostics[0]?.message); // Missing "---" document start marker
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export const documentStart: YamlRule = {
 	id: "document-start",
 	check: (ctx, options) => {

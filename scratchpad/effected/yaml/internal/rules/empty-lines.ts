@@ -14,9 +14,26 @@ import { insideScalarSpan, nonNegativeIntegerOption } from "./util.ts";
 const $I = $ScratchpadId.create("effected/yaml/internal/rules/empty-lines");
 
 /**
+ * Limit consecutive blank lines in the body and at document boundaries.
+ *
+ * **Details**
+ *
  * Options for `empty-lines`: `max` consecutive blank lines in the body
  * (default 2), `maxStart` at the document start and `maxEnd` at the end
  * (both default 0).
+ *
+ * **Example** (Decode empty-lines options)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { emptyLinesOptions } from "@beep/scratchpad/effected/yaml/internal/rules/empty-lines";
+ *
+ * const options = S.decodeUnknownSync(emptyLinesOptions)({ max: 1, maxStart: 0, maxEnd: 0 });
+ * console.log(options.max) // 1
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const emptyLinesOptions = S.Struct({
 	severity: S.optionalKey(YamlLintSeverity).annotateKey({
@@ -38,9 +55,39 @@ export const emptyLinesOptions = S.Struct({
 	}),
 );
 
+/**
+ * Decoded options for the `empty-lines` lint rule.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type emptyLinesOptions = typeof emptyLinesOptions.Type;
 
-/** Runs of blank lines beyond the configured caps, with a deleting fix. */
+/**
+ * Report runs of blank lines beyond the configured caps, with a deleting fix.
+ *
+ * **Details**
+ *
+ * Blank lines inside scalar content are skipped. Deletions cover whole line
+ * terminators, including CRLF. Inference records the longest body run as a
+ * floor; it does not infer the caps.
+ *
+ * **Example** (Count an excessive blank-line run)
+ *
+ * ```ts
+ * import { emptyLines } from "@beep/scratchpad/effected/yaml/internal/rules/empty-lines";
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/effected/yaml/YamlLint";
+ *
+ * const config = YamlLintConfig.make({
+ *   rules: { "empty-lines": { max: 1 } },
+ * });
+ * const diagnostics = YamlLint.run("name: Ada\n\n\n\nnext: item\n", [emptyLines], config);
+ * console.log(diagnostics.length) // 1
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export const emptyLines: YamlRule = {
 	id: "empty-lines",
 	check: (ctx: LintContext, options) => {

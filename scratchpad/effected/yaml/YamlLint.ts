@@ -36,7 +36,18 @@ const $I = $ScratchpadId.create("effected/yaml/YamlLint");
  * case), `"off"` to disable, or a typed per-rule options object (the tuning
  * case; may carry its own `severity`).
  *
+ * **Example** (Decode a disabled rule)
+ *
+ * ```ts
+ * import { YamlLintRuleSetting } from "@beep/scratchpad/effected/yaml/YamlLint";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.decodeUnknownSync(YamlLintRuleSetting)("off")); // off
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const YamlLintRuleSetting = S.Union([
 	S.Literals(["error", "warning", "off"]),
@@ -47,6 +58,8 @@ export const YamlLintRuleSetting = S.Union([
  * The union type of one `rules`-map entry.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlLintRuleSetting = typeof YamlLintRuleSetting.Type;
 
@@ -91,6 +104,8 @@ const validateRulesMap = (rules: { readonly [id: string]: YamlLintRuleSetting })
  * The lint configuration: a `rules` map keying rule ids (built-in or custom)
  * to a severity literal or a typed per-rule options object.
  *
+ * **Details**
+ *
  * Validation is rule-aware for the built-in catalog — a mistyped option on a
  * built-in rule fails schema validation with a typed error naming the rule,
  * and any attempt to demote or disable the always-on `parse-validity` rule
@@ -102,7 +117,20 @@ const validateRulesMap = (rules: { readonly [id: string]: YamlLintRuleSetting })
  * static, not an `extends` string resolution step (this package owns no
  * config-file loader).
  *
+ * **Example** (Compose a preset with a disabled style rule)
+ *
+ * ```ts
+ * import { YamlLintConfig } from "@beep/scratchpad/effected/yaml/YamlLint";
+ *
+ * const config = YamlLintConfig.make({
+ *   rules: { ...YamlLintConfig.default.rules, "line-length": "off" },
+ * });
+ * console.log(config.rules["line-length"]); // off
+ * ```
+ *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export class YamlLintConfig extends S.Class<YamlLintConfig>($I`YamlLintConfig`)({
 	rules: S.Record(S.String, YamlLintRuleSetting).pipe(S.check(S.makeFilter(validateRulesMap))).annotateKey({ description: "Rule identifiers mapped to severities, `off`, or per-rule options, with built-in options validated and `parse-validity` always enforced" }),
@@ -110,6 +138,17 @@ export class YamlLintConfig extends S.Class<YamlLintConfig>($I`YamlLintConfig`)(
 	/**
 	 * The default preset: the built-in rules at their default settings. The
 	 * `quoted-strings` rule defaults to DOUBLE quotes here.
+	 *
+	 * **Example** (Inspect the default line-length severity)
+	 *
+	 * ```ts
+	 * import { YamlLintConfig } from "@beep/scratchpad/effected/yaml/YamlLint";
+	 *
+	 * console.log(YamlLintConfig.default.rules["line-length"]); // error
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
 	 */
 	static readonly default: YamlLintConfig = YamlLintConfig.make({
 		rules: {
@@ -127,7 +166,21 @@ export class YamlLintConfig extends S.Class<YamlLintConfig>($I`YamlLintConfig`)(
 		},
 	});
 
-	/** The relaxed preset: style rules demoted to warnings. */
+	/**
+	 * The relaxed preset: style rules demoted to warnings.
+	 *
+	 * **Example** (Inspect relaxed style and duplicate-key severities)
+	 *
+	 * ```ts
+	 * import { YamlLintConfig } from "@beep/scratchpad/effected/yaml/YamlLint";
+	 *
+	 * console.log(YamlLintConfig.relaxed.rules["line-length"]); // warning
+	 * console.log(YamlLintConfig.relaxed.rules["key-duplicates"]); // error
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
+	 */
 	static readonly relaxed: YamlLintConfig = YamlLintConfig.make({
 		rules: {
 			"line-length": "warning",
@@ -210,7 +263,19 @@ const encodeStyleCandidateJson = S.encodeResult(S.fromJsonString(StyleCandidateV
  * FIRST occurrence seen (merging keeps the left operand's position, so on a
  * multi-file merge the first file that exhibited the spelling names it).
  *
+ * **Example** (Retain a spelling count and first position)
+ *
+ * ```ts
+ * import { StyleVoteTally } from "@beep/scratchpad/effected/yaml/YamlLint";
+ *
+ * const tally = StyleVoteTally.make({ rule: "quoted-strings", dimension: "quoteType", value: "double", count: 2, offset: 0, length: 3, line: 0, character: 0 });
+ * console.log(tally.count); // 2
+ * console.log(tally.line); // 0
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class StyleVoteTally extends S.Class<StyleVoteTally>($I`StyleVoteTally`)({
 	rule: S.String.annotateKey({ description: "Identifier of the lint rule that supplied the accumulated style observations" }),
@@ -229,7 +294,18 @@ export class StyleVoteTally extends S.Class<StyleVoteTally>($I`StyleVoteTally`)(
  * takes the maximum. Floors are informational — never resolved into config
  * options (see {@link StyleFloor}).
  *
+ * **Example** (Record a measured lower bound)
+ *
+ * ```ts
+ * import { StyleFloorTally } from "@beep/scratchpad/effected/yaml/YamlLint";
+ *
+ * const floor = StyleFloorTally.make({ rule: "line-length", dimension: "max", value: 80 });
+ * console.log(floor.value); // 80
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class StyleFloorTally extends S.Class<StyleFloorTally>($I`StyleFloorTally`)({
 	rule: S.String.annotateKey({ description: "Identifier of the lint rule that supplied the measured lower bound" }),
@@ -256,6 +332,8 @@ const byDescendingCount = Order.mapInput(Order.flip(Order.Number), (tally: Style
  * each inferable `(rule, dimension)` — vote histograms with first-seen
  * positions, and measured floors.
  *
+ * **Details**
+ *
  * Evidence is a MONOID: {@link StyleEvidence.empty} is the identity and
  * {@link StyleEvidence.combine} is associative, so multi-file inference is
  * observe-per-file, merge, resolve — and the N-file loop stays the caller's
@@ -265,19 +343,57 @@ const byDescendingCount = Order.mapInput(Order.flip(Order.Number), (tally: Style
  * every value `observe`/`combine`/`fromObservations` produces is canonical
  * and the monoid laws hold structurally over them.
  *
+ * **Example** (Merge evidence from two sources)
+ *
+ * ```ts
+ * import { StyleEvidence, StyleVoteTally } from "@beep/scratchpad/effected/yaml/YamlLint";
+ *
+ * const source = StyleEvidence.make({ votes: [StyleVoteTally.make({ rule: "quoted-strings", dimension: "quoteType", value: "double", count: 2, offset: 0, length: 3, line: 0, character: 0 })], floors: [] });
+ * const merged = StyleEvidence.combine(source, source);
+ * console.log(merged.votes[0]?.count); // 4
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class StyleEvidence extends S.Class<StyleEvidence>($I`StyleEvidence`)({
 	votes: S.Array(StyleVoteTally).annotateKey({ description: "Accumulated option-choice counts and first-seen source positions used to resolve inferred lint settings" }),
 	floors: S.Array(StyleFloorTally).annotateKey({ description: "Measured lower bounds per rule option, retained for inspection without resolving them into configuration" }),
 }, $I.annote("StyleEvidence", { description: "Per-dimension style evidence: what the observed sources say about each inferable `(rule, dimension)` — vote histograms with first-seen positions, and measured floors." })) {
-	/** The monoid identity: no observations. */
+	/**
+	 * The monoid identity: no observations.
+	 *
+	 * **Example** (Inspect the identity evidence)
+	 *
+	 * ```ts
+	 * import { StyleEvidence } from "@beep/scratchpad/effected/yaml/YamlLint";
+	 *
+	 * console.log(StyleEvidence.empty.votes.length); // 0
+	 * console.log(StyleEvidence.empty.floors.length); // 0
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	static readonly empty: StyleEvidence = StyleEvidence.make({ votes: [], floors: [] });
 
 	/**
 	 * Merge two bodies of evidence (associative; {@link StyleEvidence.empty}
 	 * is the identity). Vote counts add, the left operand's first-seen
 	 * position wins per spelling, floors take the maximum.
+	 *
+	 * **Example** (Add counts for the same observed spelling)
+	 *
+	 * ```ts
+	 * import { StyleEvidence, StyleVoteTally } from "@beep/scratchpad/effected/yaml/YamlLint";
+	 *
+	 * const source = StyleEvidence.make({ votes: [StyleVoteTally.make({ rule: "quoted-strings", dimension: "quoteType", value: "double", count: 2, offset: 0, length: 3, line: 0, character: 0 })], floors: [] });
+	 * console.log(StyleEvidence.combine(source, source).votes[0]?.count); // 4
+	 * ```
+	 *
+	 * @category combinators
+	 * @since 0.0.0
 	 */
 	static combine(a: StyleEvidence, b: StyleEvidence): StyleEvidence {
 		const votes = MutableHashMap.empty<string, StyleVoteTally>();
@@ -305,6 +421,20 @@ export class StyleEvidence extends S.Class<StyleEvidence>($I`StyleEvidence`)({
 	 * `combine(fromObservations(r, a), fromObservations(r, b))`). `observe`
 	 * uses it per rule; it is public so custom tooling can construct evidence
 	 * without a {@link LintContext}.
+	 *
+	 * **Example** (Tally custom-rule observations)
+	 *
+	 * ```ts
+	 * import { StyleEvidence } from "@beep/scratchpad/effected/yaml/YamlLint";
+	 *
+	 * const evidence = StyleEvidence.fromObservations("custom", [
+	 *   { _tag: "StyleVote", dimension: "spacing", value: 2, offset: 0, length: 2, line: 0, character: 0 },
+	 * ]);
+	 * console.log(evidence.votes[0]?.count); // 1
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static fromObservations(rule: string, observations: Iterable<StyleObservation>): StyleEvidence {
 		let acc = StyleEvidence.empty;
@@ -345,7 +475,20 @@ export class StyleEvidence extends S.Class<StyleEvidence>($I`StyleEvidence`)({
  * spellings disagree. `candidates` carries every spelling with its count and
  * first-seen position, ordered by count descending (dominant first).
  *
+ * **Example** (Inspect a conflicting dimension)
+ *
+ * ```ts
+ * import { StyleConflict, StyleVoteTally } from "@beep/scratchpad/effected/yaml/YamlLint";
+ *
+ * const conflict = StyleConflict.make({
+ *   rule: "quoted-strings", dimension: "quoteType", candidates: [StyleVoteTally.make({ rule: "quoted-strings", dimension: "quoteType", value: "double", count: 2, offset: 0, length: 3, line: 0, character: 0 })],
+ * });
+ * console.log(conflict.dimension); // quoteType
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class StyleConflict extends S.Class<StyleConflict>($I`StyleConflict`)({
 	rule: S.String.annotateKey({ description: "Identifier of the lint rule whose observed option choices disagree" }),
@@ -367,11 +510,45 @@ export class StyleConflict extends S.Class<StyleConflict>($I`StyleConflict`)({
  * (`line + 1:character + 1`) for human readers; the structured
  * {@link StyleVoteTally} `line`/`character` fields stay 0-based.
  *
+ * **Example** (Inspect structured conflict evidence)
+ *
+ * ```ts
+ * import { YamlStyleConflictError, StyleConflict } from "@beep/scratchpad/effected/yaml/YamlLint";
+ *
+ * const conflict = StyleConflict.make({ rule: "quoted-strings", dimension: "quoteType", candidates: [] });
+ * const error = YamlStyleConflictError.make({ conflicts: [conflict] });
+ * console.log(error.conflicts[0]?.dimension); // quoteType
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class YamlStyleConflictError extends S.TaggedError<YamlStyleConflictError>($I`YamlStyleConflictError`)("YamlStyleConflictError", {
 	conflicts: S.Array(StyleConflict).annotateKey({ description: "Every rule option with disagreeing observations that prevents strict configuration inference" }),
 }, $I.annote("YamlStyleConflictError", { description: "Raised by strict config inference when observed evidence is not unanimous: carries every conflicting `(rule, dimension)` as a structured StyleConflict — dimension, all spellings, counts and positions — never a collapsed `reason` string (the structure-preserving-errors house rule). Unobserved dimensions never conflict: they fall back to the base config's defaults." })) {
+	/**
+	 * Renders conflicts with spelling counts and human-readable first-seen positions.
+	 *
+	 * **Details**
+	 *
+	 * Positions in this message are 1-based; the structured tally fields remain 0-based.
+	 *
+	 * **Example** (Render a candidate position)
+	 *
+	 * ```ts
+	 * import { StyleConflict, StyleVoteTally, YamlStyleConflictError } from "@beep/scratchpad/effected/yaml/YamlLint";
+	 *
+	 * const conflict = StyleConflict.make({
+	 *   rule: "quoted-strings", dimension: "quoteType", candidates: [StyleVoteTally.make({ rule: "quoted-strings", dimension: "quoteType", value: "double", count: 2, offset: 0, length: 3, line: 0, character: 0 })],
+	 * });
+	 * const error = YamlStyleConflictError.make({ conflicts: [conflict] });
+	 * console.log(error.message); // Conflicting style for quoted-strings.quoteType: "double" (2×, first at 1:1)
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return this.conflicts
 			.map(
@@ -483,6 +660,8 @@ const resolveLenientEvidence = (evidence: StyleEvidence, base: YamlLintConfig): 
  * config, and the places that do not match it").
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface YamlLintInference {
 	readonly config: YamlLintConfig;
@@ -543,21 +722,20 @@ const runRules = (
  * **Example** (Find and fix YAML spacing violations)
  *
  * ```ts
- * import { YamlLint, YamlLintConfig } from "./index.ts";
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/effected/yaml/YamlLint";
  * import * as Result from "effect/Result";
  *
  * const text = "a:   1\nb: 2   \n";
- *
  * const diagnostics = YamlLint.run(text, YamlLint.builtins, YamlLintConfig.default);
- * // => a colon-spacing finding on line 0 and a trailing-spaces finding on line 1 (zero-based)
- *
+ * // A colon-spacing finding on line 0 and a trailing-spaces finding on line 1 (zero-based).
+ * console.log(diagnostics.map((finding) => `${finding.rule}:${finding.line}`).join(", ")); // colon-spacing:0, trailing-spaces:1
  * const fixed = YamlLint.fix(text, YamlLint.builtins, YamlLintConfig.default);
- * if (Result.isSuccess(fixed)) {
- *   fixed.success; // "a: 1\nb: 2\n"
- * }
+ * console.log(JSON.stringify(Result.getOrThrow(fixed))); // "a: 1\nb: 2\n"
  * ```
  *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class YamlLint {
 	private constructor() {}
@@ -565,12 +743,25 @@ export class YamlLint {
 	/**
 	 * The built-in rule catalog. Custom usage is array concatenation:
 	 * `YamlLint.run(text, [...YamlLint.builtins, myRule], config)`.
+	 *
+	 * **Example** (Find the always-on parse rule)
+	 *
+	 * ```ts
+	 * import { YamlLint } from "@beep/scratchpad/effected/yaml/YamlLint";
+	 *
+	 * console.log(YamlLint.builtins.some((rule) => rule.id === "parse-validity")); // true
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
 	 */
 	static readonly builtins: ReadonlyArray<YamlRule> = builtinRules;
 
 	/**
 	 * Run `rules` over `text` under `config`, returning every finding sorted
 	 * by position.
+	 *
+	 * **Details**
 	 *
 	 * Document-driven rules see the FIRST document of the stream (matching
 	 * `Yaml.parse`; split the stream `Yaml.parseAll`-style to lint every
@@ -584,11 +775,24 @@ export class YamlLint {
 	 * for `parse-validity`, whose bridged engine diagnostics keep the
 	 * engine's own grading.
 	 *
+	 * **Example** (Report a trailing-space finding)
+	 *
+	 * ```ts
+	 * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/effected/yaml/YamlLint";
+	 *
+	 * const config = YamlLintConfig.make({ rules: { "trailing-spaces": "warning" } });
+	 * const findings = YamlLint.run("a: 1   \n", YamlLint.builtins, config);
+	 * console.log(findings[0]?.rule); // trailing-spaces
+	 * console.log(findings[0]?.severity); // warning
+	 * ```
+	 *
 	 * @param text - The YAML source to lint.
 	 * @param rules - The rules to run, e.g. {@link YamlLint.builtins}.
 	 * @param config - The {@link YamlLintConfig} choosing each rule's severity
 	 *   and options.
 	 * @returns Every finding, sorted by position.
+	 * @category validation
+	 * @since 0.0.0
 	 */
 	static run(text: string, rules: ReadonlyArray<YamlRule>, config: YamlLintConfig): ReadonlyArray<YamlLintDiagnostic> {
 		return runRules(buildContext(text), rules, config);
@@ -607,12 +811,25 @@ export class YamlLint {
 	 * {@link YamlLint.run} order (position, then rule id) wins and the later
 	 * is dropped (its diagnostic remains reported by {@link YamlLint.run}).
 	 *
+	 * **Example** (Remove trailing spaces without reformatting)
+	 *
+	 * ```ts
+	 * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/effected/yaml/YamlLint";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const config = YamlLintConfig.make({ rules: { "trailing-spaces": "error" } });
+	 * const fixed = YamlLint.fix("a: 1   \n", YamlLint.builtins, config);
+	 * console.log(JSON.stringify(Result.getOrThrow(fixed))); // "a: 1\n"
+	 * ```
+	 *
 	 * @param text - The YAML source to fix.
 	 * @param rules - The rules to run, e.g. {@link YamlLint.builtins}.
 	 * @param config - The {@link YamlLintConfig} choosing each rule's severity
 	 *   and options.
 	 * @returns A `Result` succeeding with the fixed text, or failing with
 	 *   {@link YamlParseError}.
+	 * @category formatting
+	 * @since 0.0.0
 	 */
 	static fix(
 		text: string,
@@ -651,6 +868,18 @@ export class YamlLint {
 	 * strings in, evidence out; observing N files is N `observe` calls merged
 	 * with {@link StyleEvidence.combine}, and the N-file loop stays the
 	 * caller's (no IO enters the package).
+	 *
+	 * **Example** (Observe style in an empty source)
+	 *
+	 * ```ts
+	 * import { YamlLint } from "@beep/scratchpad/effected/yaml/YamlLint";
+	 *
+	 * const evidence = YamlLint.observe("", YamlLint.builtins);
+	 * console.log(evidence.votes.length); // 0
+	 * ```
+	 *
+	 * @category diagnostics
+	 * @since 0.0.0
 	 */
 	static observe(text: string, rules: ReadonlyArray<YamlRule>): StyleEvidence {
 		return observeContext(buildContext(text), rules);
@@ -666,6 +895,19 @@ export class YamlLint {
 	 * `comments-spacing`, so that dimension falls back to `base` rather than
 	 * failing. A rule `base` sets to `"off"` stays off — an explicit disable
 	 * outranks inference.
+	 *
+	 * **Example** (Keep defaults for unobserved dimensions)
+	 *
+	 * ```ts
+	 * import { YamlLint, StyleEvidence } from "@beep/scratchpad/effected/yaml/YamlLint";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const resolved = YamlLint.resolveStrict(StyleEvidence.empty);
+	 * console.log(Result.getOrThrow(resolved).rules["line-length"]); // error
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
 	 */
 	static resolveStrict(
 		evidence: StyleEvidence,
@@ -681,6 +923,19 @@ export class YamlLint {
 	 * value order. Total — lenient resolution cannot fail; the places that do
 	 * not match the inferred config surface as the residual report (run the
 	 * lint with the inferred config, or use {@link YamlLint.inferLenient}).
+	 *
+	 * **Example** (Apply an observed quote preference)
+	 *
+	 * ```ts
+	 * import { YamlLint, YamlLintConfig, StyleEvidence, StyleVoteTally } from "@beep/scratchpad/effected/yaml/YamlLint";
+	 *
+	 * const evidence = StyleEvidence.make({ votes: [StyleVoteTally.make({ rule: "quoted-strings", dimension: "quoteType", value: "double", count: 2, offset: 0, length: 3, line: 0, character: 0 })], floors: [] });
+	 * const config = YamlLint.resolveLenient(evidence, YamlLintConfig.make({ rules: {} }));
+	 * console.log(JSON.stringify(config.rules["quoted-strings"])); // {"quoteType":"double"}
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
 	 */
 	static resolveLenient(evidence: StyleEvidence, base: YamlLintConfig = YamlLintConfig.default): YamlLintConfig {
 		return resolveLenientEvidence(evidence, base);
@@ -690,6 +945,19 @@ export class YamlLint {
 	 * Single-text strict inference: `observe` then {@link YamlLint.resolveStrict}
 	 * in one step. Multi-file callers observe each file and merge with
 	 * {@link StyleEvidence.combine} before resolving.
+	 *
+	 * **Example** (Infer defaults from an empty source)
+	 *
+	 * ```ts
+	 * import { YamlLint } from "@beep/scratchpad/effected/yaml/YamlLint";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const inferred = YamlLint.inferStrict("", YamlLint.builtins);
+	 * console.log(Result.getOrThrow(inferred).rules["line-length"]); // error
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
 	 */
 	static inferStrict(
 		text: string,
@@ -707,6 +975,18 @@ export class YamlLint {
 	 * the observation and the residual run. Multi-file callers compose the
 	 * primitives instead: observe each file, {@link StyleEvidence.combine},
 	 * {@link YamlLint.resolveLenient}, then {@link YamlLint.run} per file.
+	 *
+	 * **Example** (Inspect the residual lint report)
+	 *
+	 * ```ts
+	 * import { YamlLint } from "@beep/scratchpad/effected/yaml/YamlLint";
+	 *
+	 * const report = YamlLint.inferLenient("a: 1   \n", YamlLint.builtins);
+	 * console.log(report.residual.some((finding) => finding.rule === "trailing-spaces")); // true
+	 * ```
+	 *
+	 * @category configuration
+	 * @since 0.0.0
 	 */
 	static inferLenient(
 		text: string,

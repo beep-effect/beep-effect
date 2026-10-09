@@ -71,11 +71,30 @@ const $I = $ScratchpadId.create("effected/yaml/internal/composer/block");
 /**
  * Compose a block map from its CST children, with an optional external first key.
  *
+ * **Details**
+ *
  * CST pattern for `a: 1, b: true`:
  *   `[flow-scalar("a"), block-map(children: [":"," ","1","\\n","b",":"," ","true"])]`
  *
  * The first key is external (sibling before block-map in document/parent).
  * Subsequent keys are inside the block-map children.
+ *
+ * **Example** (Compose an empty anchored mapping)
+ *
+ * ```ts
+ * import { composeBlockMap } from "@beep/scratchpad/effected/yaml/internal/composer/block"
+ * import { createState } from "@beep/scratchpad/effected/yaml/internal/composer/state"
+ * import { composeFlowMap, composeFlowSeq } from "@beep/scratchpad/effected/yaml/internal/composer/flow"
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst"
+ *
+ * const state = createState("", { composeFlowMap, composeFlowSeq })
+ * const source: CstNode = { type: "block-map", source: "", offset: 0, length: 0 }
+ * const map = composeBlockMap(source, state, undefined, { anchor: "config" })
+ * console.log(`${map.style}:${map.items.length}:${map.anchor}`) // block:0:config
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const composeBlockMap: {
 	(state: ComposerState, externalFirstKey?: YamlNode, meta?: NodeMeta): (blockMapCst: CstNode) => YamlMap;
@@ -161,6 +180,8 @@ function composeBlockMapInner(
  * Narrow a block collection's raw CST span so it stops before any trailing
  * comment line the collection's own comment model has already DISOWNED.
  *
+ * **Details**
+ *
  * The CST length of a block map/seq runs to the end of the last physical line
  * the parser consumed, which includes a floating comment sitting at a column
  * shallower than the collection's content. The comment model deliberately
@@ -208,6 +229,28 @@ function trimDisownedTrailingComments(
 	return cut;
 }
 
+/**
+ * Describes the semantic tokens used to pair composed mapping keys and values.
+ *
+ * **Details**
+ *
+ * Key markers may omit their node for an empty explicit key. Value separators
+ * carry a source offset, content tokens carry a YAML node, and comment tokens
+ * carry raw comment text and its source offset.
+ *
+ * **Example** (Decode a structural value separator)
+ *
+ * ```ts
+ * import { SemanticItem } from "@beep/scratchpad/effected/yaml/internal/composer/block"
+ * import * as S from "effect/Schema"
+ *
+ * const item = S.decodeUnknownSync(SemanticItem)({ kind: "value-sep", offset: 4 })
+ * console.log(item.kind) // value-sep
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const SemanticItem = S.Union([
 	S.Struct({
 		kind: S.Literal("key")
@@ -251,8 +294,42 @@ export const SemanticItem = S.Union([
 			description: "Composition tokens with kind-specific payloads; explicit keys may be node-less.",
 		}),
 	);
+/**
+ * Represents a decoded mapping token, including empty explicit keys, value separators, content nodes, and comments.
+ *
+ * **Details**
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SemanticItem = typeof SemanticItem.Type;
 
+/**
+ * Converts block mapping CST children into semantic tokens for pair construction.
+ *
+ * **Details**
+ *
+ * Pending tags and anchors are attached during composition. External key columns
+ * and offsets provide the parent context for indentation checks; diagnostics are
+ * accumulated in the supplied state.
+ *
+ * **Example** (Flatten a plain scalar token)
+ *
+ * ```ts
+ * import { flattenBlockMapChildren } from "@beep/scratchpad/effected/yaml/internal/composer/block"
+ * import { createState } from "@beep/scratchpad/effected/yaml/internal/composer/state"
+ * import { composeFlowMap, composeFlowSeq } from "@beep/scratchpad/effected/yaml/internal/composer/flow"
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst"
+ *
+ * const state = createState("name", { composeFlowMap, composeFlowSeq })
+ * const children: CstNode[] = [{ type: "flow-scalar", source: "name", offset: 0, length: 4 }]
+ * const items = flattenBlockMapChildren(children, state)
+ * console.log(items.map((item) => item.kind).join(",")) // node
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const flattenBlockMapChildren: {
 	(state: ComposerState, externalKeyColumn?: number, externalKeyOffset?: number): (children: readonly CstNode[]) => SemanticItem[];
 	(children: readonly CstNode[], state: ComposerState, externalKeyColumn?: number, externalKeyOffset?: number): SemanticItem[];
@@ -915,6 +992,9 @@ export const flattenBlockMapChildren: {
 
 /**
  * Build pairs from a semantic item stream.
+ *
+ * **Details**
+ *
  * Pattern: node, value-sep, node produces a key:value pair.
  * Pattern: node, value-sep (no node) produces a key:null pair.
  * Pattern: value-sep, node produces a null:value pair.
@@ -926,6 +1006,22 @@ export const flattenBlockMapChildren: {
  * `commentBefore` block) sets `spaceBefore`. Own-line comments left over
  * after the last pair are returned so the caller can attach them as the
  * containing collection's trailing `comment`.
+ *
+ * **Example** (Build a mapping entry with a null value)
+ *
+ * ```ts
+ * import { buildPairs } from "@beep/scratchpad/effected/yaml/internal/composer/block"
+ * import { YamlScalar } from "@beep/scratchpad/effected/yaml/YamlNode"
+ * import type { YamlPair } from "@beep/scratchpad/effected/yaml/YamlNode"
+ *
+ * const key = YamlScalar.make({ value: "name", style: "plain", offset: 0, length: 4 })
+ * const pairs: YamlPair[] = []
+ * buildPairs([{ kind: "node", node: key }, { kind: "value-sep", offset: 4 }], pairs, "name:")
+ * console.log(pairs[0]?.value === null) // true
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const buildPairs: {
 	(pairs: YamlPair[], text: string, escaped?: Array<EscapedComment>): (items: SemanticItem[]) => string | undefined;
@@ -1341,13 +1437,31 @@ function consumeValueNodeForNullKey(
 }
 
 /**
- * Canonical duplicate-key identity for a scalar key. Two keys collide only if
+ * Canonical duplicate-key identity for a scalar key.
+ *
+ * **Details**
+ *
+ * Two keys collide only if
  * they are the same YAML node: same type *and* value. Resolved JS values alone
  * are ambiguous for numbers — `!!int 1` and `!!float 1.0` both become the JS
  * number `1` yet are distinct keys — so the number branch disambiguates int
  * from float via the source form (or an explicit tag). String/bool/null keys
  * are distinguished by their type prefix, so `1` (int) never collides with
  * `"1"` (string) or `true`.
+ *
+ * **Example** (Distinguish integer and floating keys)
+ *
+ * ```ts
+ * import { keyIdentity } from "@beep/scratchpad/effected/yaml/internal/composer/block"
+ * import { YamlScalar } from "@beep/scratchpad/effected/yaml/YamlNode"
+ *
+ * const integer = YamlScalar.make({ value: 1, style: "plain", offset: 0, length: 1 })
+ * const floating = YamlScalar.make({ value: 1, style: "plain", offset: 0, length: 3 })
+ * console.log(`${keyIdentity(integer, "1")},${keyIdentity(floating, "1.0")}`) // i:1,f:1
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const keyIdentity: {
 	(text: string): (key: YamlScalar) => string;
@@ -1372,6 +1486,32 @@ export const keyIdentity: {
 	);
 });
 
+/**
+ * Appends duplicate-key warnings for repeated scalar key identities in a mapping.
+ *
+ * **Details**
+ *
+ * Collection keys are skipped. Repeated scalar keys are compared using
+ * `keyIdentity`, and each repetition contributes a warning at that key's source span.
+ *
+ * **Example** (Report a repeated string key)
+ *
+ * ```ts
+ * import { checkDuplicateKeys } from "@beep/scratchpad/effected/yaml/internal/composer/block"
+ * import { createState } from "@beep/scratchpad/effected/yaml/internal/composer/state"
+ * import { composeFlowMap, composeFlowSeq } from "@beep/scratchpad/effected/yaml/internal/composer/flow"
+ * import { YamlPair, YamlScalar } from "@beep/scratchpad/effected/yaml/YamlNode"
+ *
+ * const state = createState("name", { composeFlowMap, composeFlowSeq })
+ * const key = YamlScalar.make({ value: "name", style: "plain", offset: 0, length: 4 })
+ * const pair = YamlPair.make({ key, value: null })
+ * checkDuplicateKeys([pair, pair], state)
+ * console.log(state.warnings[0]?.code) // DuplicateKey
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export const checkDuplicateKeys: {
 	(state: ComposerState): (pairs: YamlPair[]) => void;
 	(pairs: YamlPair[], state: ComposerState): void;
@@ -1396,6 +1536,8 @@ export const checkDuplicateKeys: {
 /**
  * Inspect the slice of children after a `?` indicator to decide how the
  * explicit key should be composed.
+ *
+ * **Details**
  *
  * - `terminated` — found a matching `:` at `qCol`; the key is the slice
  *   between `?` and that `:`. Existing per-node logic handles this.
@@ -1449,6 +1591,8 @@ function scanExplicitKeyShape(
  * explicit-key indicator. Scans backward through whitespace and newlines
  * looking for a `?` at the start of a line (not part of a scalar).
  *
+ * **Details**
+ *
  * Named verbosely to avoid colliding with the local `isExplicitKey`
  * boolean in `flattenBlockMapChildren` (used for multi-line key
  * continuation detection — different concept).
@@ -1476,7 +1620,27 @@ function wasIntroducedByExplicitKeyIndicator(text: string, offset: number): bool
 
 /**
  * Validate that implicit mapping keys do not span multiple lines.
+ *
+ * **Details**
+ *
  * YAML 1.2 §7.4.2 requires implicit keys to fit on a single line.
+ *
+ * **Example** (Reject a multiline quoted key)
+ *
+ * ```ts
+ * import { checkMultilineImplicitKeys } from "@beep/scratchpad/effected/yaml/internal/composer/block"
+ * import { createState } from "@beep/scratchpad/effected/yaml/internal/composer/state"
+ * import { composeFlowMap, composeFlowSeq } from "@beep/scratchpad/effected/yaml/internal/composer/flow"
+ * import { YamlPair, YamlScalar } from "@beep/scratchpad/effected/yaml/YamlNode"
+ *
+ * const state = createState("'a\nb'", { composeFlowMap, composeFlowSeq })
+ * const key = YamlScalar.make({ value: "a b", style: "single-quoted", offset: 0, length: 5 })
+ * checkMultilineImplicitKeys([YamlPair.make({ key, value: null })], state)
+ * console.log(state.errors[0]?.message) // Implicit mapping key must not span multiple lines
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
  */
 export const checkMultilineImplicitKeys: {
 	(state: ComposerState, items?: readonly SemanticItem[]): (pairs: readonly YamlPair[]) => void;
@@ -1551,9 +1715,30 @@ export const checkMultilineImplicitKeys: {
 
 /**
  * Check for non-trivial CST content on the same line after a completed value node.
+ *
+ * **Details**
+ *
  * Used to detect trailing content after quoted scalars and flow collections.
  * Skips if the next non-trivia content is a ":" (value-sep), since that means
  * this node is actually a key, not a value.
+ *
+ * **Example** (Detect text after a quoted value)
+ *
+ * ```ts
+ * import { checkTrailingContentOnSameLine } from "@beep/scratchpad/effected/yaml/internal/composer/block"
+ * import { createState } from "@beep/scratchpad/effected/yaml/internal/composer/state"
+ * import { composeFlowMap, composeFlowSeq } from "@beep/scratchpad/effected/yaml/internal/composer/flow"
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst"
+ *
+ * const state = createState("'a' b", { composeFlowMap, composeFlowSeq })
+ * const value: CstNode = { type: "flow-scalar", source: "'a'", offset: 0, length: 3 }
+ * const next: CstNode = { type: "flow-scalar", source: "b", offset: 4, length: 1 }
+ * checkTrailingContentOnSameLine([next], 0, value, state)
+ * console.log(state.errors[0]?.message) // Trailing content after value on same line
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
  */
 export const checkTrailingContentOnSameLine: {
 	(startIdx: number, valueNode: CstNode, state: ComposerState): (children: readonly CstNode[]) => void;
@@ -1745,6 +1930,32 @@ function validatePropertyContinuationColumn(
 // Compose block seq
 // ---------------------------------------------------------------------------
 
+/**
+ * Composes block sequence entries while retaining metadata, comments, and source spans.
+ *
+ * **Details**
+ *
+ * Empty entries become null scalars. Nested collections use the shared composer
+ * state, and terminal comments belonging to an enclosing scope are passed back
+ * through its escaped-comment queue.
+ *
+ * **Example** (Compose an empty tagged sequence)
+ *
+ * ```ts
+ * import { composeBlockSeq } from "@beep/scratchpad/effected/yaml/internal/composer/block"
+ * import { createState } from "@beep/scratchpad/effected/yaml/internal/composer/state"
+ * import { composeFlowMap, composeFlowSeq } from "@beep/scratchpad/effected/yaml/internal/composer/flow"
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst"
+ *
+ * const state = createState("", { composeFlowMap, composeFlowSeq })
+ * const source: CstNode = { type: "block-seq", source: "", offset: 0, length: 0 }
+ * const seq = composeBlockSeq(source, state, { tag: "!!seq" })
+ * console.log(`${seq.style}:${seq.items.length}:${seq.tag}`) // block:0:!!seq
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const composeBlockSeq: {
 	(state: ComposerState, meta?: NodeMeta): (cst: CstNode) => YamlSeq;
 	(cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlSeq;
@@ -2115,7 +2326,30 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 
 /**
  * Compose a block map from flat document children (no block-map wrapper node).
+ *
+ * **Details**
+ *
  * This happens in multi-document scenarios where the parser doesn't create a block-map node.
+ *
+ * **Example** (Compose an external key without a wrapper)
+ *
+ * ```ts
+ * import { composeFlatBlockMap } from "@beep/scratchpad/effected/yaml/internal/composer/block"
+ * import { createState } from "@beep/scratchpad/effected/yaml/internal/composer/state"
+ * import { composeFlowMap, composeFlowSeq } from "@beep/scratchpad/effected/yaml/internal/composer/flow"
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst"
+ * import { YamlScalar } from "@beep/scratchpad/effected/yaml/YamlNode"
+ *
+ * const state = createState("name:", { composeFlowMap, composeFlowSeq })
+ * const parent: CstNode = { type: "document", source: "name:", offset: 0, length: 5 }
+ * const children: CstNode[] = [{ type: "whitespace", source: ":", offset: 4, length: 1 }]
+ * const key = YamlScalar.make({ value: "name", style: "plain", offset: 0, length: 4 })
+ * const map = composeFlatBlockMap(children, 0, parent, state, key)
+ * console.log(`${map.items.length}:${map.length}`) // 1:5
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const composeFlatBlockMap: {
 	(startIdx: number, parentCst: CstNode, state: ComposerState, externalFirstKey: YamlNode, meta?: NodeMeta): (children: readonly CstNode[]) => YamlMap;

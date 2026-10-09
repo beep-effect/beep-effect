@@ -17,10 +17,35 @@ import { positionAt } from "./util.ts";
 
 const $I = $ScratchpadId.create("effected/yaml/internal/rules/key-duplicates");
 
-/** Options for `key-duplicates` (severity only — duplicates are duplicates). */
+/**
+ * Configure the reporting severity for duplicate mapping keys.
+ *
+ * **Details**
+ *
+ * Options for `key-duplicates` (severity only — duplicates are duplicates).
+ *
+ * **Example** (Decode key-duplicates options)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { keyDuplicatesOptions } from "@beep/scratchpad/effected/yaml/internal/rules/key-duplicates";
+ *
+ * const options = S.decodeUnknownSync(keyDuplicatesOptions)({ severity: "warning" });
+ * console.log(options.severity) // warning
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const keyDuplicatesOptions = S.Struct({
 	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for duplicate mapping-key findings, defaulting to `error`" }),
 }).pipe($I.annoteSchema("keyDuplicatesOptions", { description: "Options for `key-duplicates` (severity only — duplicates are duplicates)." }));
+/**
+ * Decoded options for the `key-duplicates` lint rule.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type keyDuplicatesOptions = typeof keyDuplicatesOptions.Type;
 
 const walk = (node: YamlNode | null, text: string, out: Array<YamlLintDiagnostic>, ctx: LintContext): void => {
@@ -56,7 +81,36 @@ const walk = (node: YamlNode | null, text: string, out: Array<YamlLintDiagnostic
 	}
 };
 
-/** Duplicate mapping keys anywhere in the document. */
+/**
+ * Report duplicate mapping keys anywhere in the document.
+ *
+ * **Details**
+ *
+ * Every occurrence after the first is reported within its mapping. Key
+ * identity includes type and value, so an integer key `1` does not collide
+ * with the string key `"1"`. The lint context composes with engine duplicate
+ * checks disabled so this rule owns the policy.
+ *
+ * **Gotchas**
+ *
+ * There is no fix: dropping a mapping pair changes the document's meaning.
+ *
+ * **Example** (Find a repeated mapping key)
+ *
+ * ```ts
+ * import { keyDuplicates } from "@beep/scratchpad/effected/yaml/internal/rules/key-duplicates";
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/effected/yaml/YamlLint";
+ *
+ * const config = YamlLintConfig.make({
+ *   rules: { "key-duplicates": {} },
+ * });
+ * const diagnostics = YamlLint.run("name: Ada\nname: Grace\n", [keyDuplicates], config);
+ * console.log(diagnostics.length) // 1
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export const keyDuplicates: YamlRule = {
 	id: "key-duplicates",
 	check: (ctx) => {

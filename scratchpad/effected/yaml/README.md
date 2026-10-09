@@ -1,23 +1,6 @@
 # yaml (lab port of @effected/yaml)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Fyaml?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/yaml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
-
 Zero-dependency YAML 1.2 parsing, editing, formatting and linting expressed as Effect schemas and pure functions. Parse a single document or a multi-document stream into plain values or an offset-preserving AST, resolve anchors and aliases, read and preserve per-node comments, strip comments, compute byte-minimal edits, format, modify by path, walk a document as a `Stream` of AST events or positioned tokens, lint it against a rule catalog with surgical autofix — inferring the lint config from files you already have — and decode straight into a validated domain schema.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/yaml
 
@@ -27,33 +10,20 @@ This package treats that as a first-class requirement rather than a footnote. An
 
 The rest follows from the same discipline. Parsing recovers from errors and aggregates every diagnostic into one failure rather than throwing on the first. Modifications are computed as edits against the original bytes, so comments and layout survive a change. Everything is a pure function or a schema: no IO, no services and no runtime dependency other than `effect` — the lexer, CST parser, composer and stringifier are vendored into the package with attribution rather than taken as a dependency. It is the largest package in the repo, and it earns that by owning its engine.
 
-## Install
-
-```bash
-npm install @effected/yaml effect
-```
-
-```bash
-pnpm add @effected/yaml effect
-```
-
-Requires Node.js >=24.11.0. `effect` v4 is a peer dependency; the package itself adds no other runtime dependencies.
-
-All `@effected/*` packages are ESM-only: the exports maps publish only `import` conditions, so `require()` — including tools that resolve in CJS mode — fails with Node's `ERR_PACKAGE_PATH_NOT_EXPORTED` rather than loading a CJS build that does not exist. Import from an ES module.
-
 ## Quick start
 
 Compose your schema with `Yaml.schema` to decode YAML straight into a validated domain value:
 
 ```ts
-import { Yaml } from "@effected/yaml";
-import { Effect, Schema } from "effect";
+import { Yaml } from "@beep/scratchpad/effected/yaml/Yaml";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 
-const Config = Schema.Struct({ port: Schema.Number });
+const Config = S.Struct({ port: S.Number });
 const ConfigFromYaml = Yaml.schema(Config);
 
 const program = Effect.gen(function* () {
-  return yield* Schema.decodeUnknownEffect(ConfigFromYaml)("port: 3000 # dev server");
+  return yield* S.decodeUnknownEffect(ConfigFromYaml)("port: 3000 # dev server");
 });
 
 Effect.runPromise(program).then(console.log);
@@ -63,8 +33,8 @@ Effect.runPromise(program).then(console.log);
 `Yaml.stringify` goes the other way, failing typed on circular references rather than throwing:
 
 ```ts
-import { Yaml } from "@effected/yaml";
-import { Effect } from "effect";
+import { Yaml } from "@beep/scratchpad/effected/yaml/Yaml";
+import * as Effect from "effect/Effect";
 
 Effect.runPromise(Yaml.stringify({ port: 3000, hosts: ["a", "b"] })).then(console.log);
 // port: 3000
@@ -76,8 +46,8 @@ Effect.runPromise(Yaml.stringify({ port: 3000, hosts: ["a", "b"] })).then(consol
 Both directions have a synchronous counterpart that returns a `Result` for callers that cannot await an Effect, a `vitest.config.ts` being the motivating case. `Yaml.parse` is defined in terms of `Yaml.parseResult`, so the two forms cannot disagree about what a document means:
 
 ```ts
-import { Yaml } from "@effected/yaml";
-import { Result } from "effect";
+import { Yaml } from "@beep/scratchpad/effected/yaml/Yaml";
+import * as Result from "effect/Result";
 
 const result = Yaml.parseResult("port: 3000 # dev server");
 console.log(Result.isSuccess(result) ? result.success : result.failure);
@@ -89,8 +59,8 @@ console.log(Result.isSuccess(result) ? result.success : result.failure);
 An alias bomb — nested anchors whose expansion multiplies at every level — is bounded by an expansion budget and surfaces as a `YamlParseError`, not as an out-of-memory kill:
 
 ```ts
-import { Yaml } from "@effected/yaml";
-import { Effect } from "effect";
+import { Yaml } from "@beep/scratchpad/effected/yaml/Yaml";
+import * as Effect from "effect/Effect";
 
 const bomb = [
   "a: &a [x,x,x,x,x,x,x,x,x]",
@@ -111,7 +81,7 @@ Collection nesting past the depth cap behaves the same way, yielding a `NestingD
 A YAML file a human maintains is mostly explanation, and the explanation is the part a round-trip usually loses. `YamlFormat` computes its edits against the original bytes, so changing a value rewrites the value and leaves the header block, the trailing `# LTS`, the blank line and the indentation where they were. Setting `preserveComments: false` is how you ask for the other behavior:
 
 ```ts
-import { YamlFormat, YamlFormattingOptions } from "@effected/yaml";
+import { YamlFormat, YamlFormattingOptions } from "@beep/scratchpad/effected/yaml/YamlFormat";
 
 const source = 'node: "20.11.0" # LTS\n\n# why the port\nport: 3000\n';
 
@@ -135,8 +105,8 @@ Which node a comment lands on follows one rule. An own-line comment above an ent
 `YamlLint.run` checks a string against a rule catalog and returns positioned diagnostics; `YamlLint.fix` applies the fixes that can be expressed as surgical edits and returns the fixed text. Both are pure and synchronous. This is the lint engine, not a runner — no file discovery, no config-file loading, nothing written to disk:
 
 ```ts
-import { YamlLint, YamlLintConfig } from "@effected/yaml";
-import { Result } from "effect";
+import { YamlLint, YamlLintConfig } from "@beep/scratchpad/effected/yaml/YamlLint";
+import * as Result from "effect/Result";
 
 const source = "# pinned\nname:  demo   \nport: yes\n";
 
@@ -159,7 +129,7 @@ Positions are zero-based throughout, so the first finding above sits on the seco
 A repo with no lint config yet can infer one from what its files already do. `YamlLint.inferLenient` observes a text's style — quote type, indentation width, document markers and the rest — and returns the config the dominant style implies, plus the residual: the diagnostics that config still produces on the same text.
 
 ```ts
-import { YamlLint } from "@effected/yaml";
+import { YamlLint } from "@beep/scratchpad/effected/yaml/YamlLint";
 
 const workflow = ["---", "name: ci", "on:", "  push:", "    branches: ['main']", "jobs:", "  build:", "    runs-on: ubuntu-latest", ""].join("\n");
 
@@ -198,8 +168,8 @@ Multi-document streams — a Kubernetes manifest, or the two-document `pnpm-lock
 YAML 1.2's Core Schema resolves fewer plain scalars to non-strings than YAML 1.1 does. A plain `on` or `yes` round-trips as a string under this package's own parser but becomes a boolean the moment a YAML 1.1 consumer — js-yaml, PyYAML, libyaml, the `yaml` npm package's YAML 1.1 schema, most CI systems' native YAML support — reads it back: the "Norway problem". `quoteCompat: "yaml-1.1"` closes that gap on the way out, quoting every plain scalar a 1.1 resolver would re-type: the extended booleans (`y`/`yes`/`no`/`on`/`off` and case variants), 1.1 timestamps, sexagesimal numbers (`1:30`), underscore-grouped numbers (`1_000`) and the octal/hex/binary integer forms (`0777`, `0x_FF`, `0b1010_0111`). It is strictly additive — nothing the 1.2 rules already quote loses a quote, and no string outside that list gains one — and composes with `quoteStyle` for the quote character and `lineWidth` for folding:
 
 ```ts
-import { Yaml, YamlStringifyOptions } from "@effected/yaml";
-import { Effect } from "effect";
+import { Yaml, YamlStringifyOptions } from "@beep/scratchpad/effected/yaml/Yaml";
+import * as Effect from "effect/Effect";
 
 const frontmatter = { node: "on", released: "2024-01-15", port: "yes" };
 const options = YamlStringifyOptions.make({ lineWidth: 0, quoteCompat: "yaml-1.1", quoteStyle: "double" });

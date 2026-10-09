@@ -3,10 +3,10 @@
   "effectedCommit": "af7566a9da2eff169cb74955efcc5ede1e5de9f8",
   "startedAt": "2026-10-07T06:36:54.420Z",
   "lastCheckpoint": {
-    "module": "memfs",
+    "module": "yaml",
     "stage": 2,
     "commit": null,
-    "at": "2026-10-09T16:17:26.260Z"
+    "at": "2026-10-09T16:17:34.068Z"
   },
   "rows": [
     {
@@ -1089,7 +1089,7 @@
       "module": "yaml",
       "wave": 1,
       "position": 2,
-      "stage": 1,
+      "stage": 2,
       "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
@@ -1800,12 +1800,17 @@
       "commits": [
         {
           "stage": 0,
+          "sha": "d0520cffbc9364d2e00d0461c91a7694cbf80316"
+        },
+        {
+          "stage": 1,
           "sha": null
         }
       ],
       "blocked": null,
       "notes": [
-        "2026-10-09T11:20:24.365Z S1: green under tsgo, oxlint and the four beep laws; upstream tests pass; audit green (parity strict)"
+        "2026-10-09T11:20:24.365Z S1: green under tsgo, oxlint and the four beep laws; upstream tests pass; audit green (parity strict)",
+        "2026-10-09T16:17:34.068Z S2: S2 green: docgen with all enforcement flags and the JSDoc law; carriers converted; README adapted (section 10.3)"
       ],
       "closedAt": null
     },

@@ -18,6 +18,10 @@ class FoldFailure extends S.TaggedError<FoldFailure>($I`FoldFailure`)(
 ) {}
 
 /**
+ * Folds a logical scalar line at safe spaces while preserving its YAML value.
+ *
+ * **Details**
+ *
  * Column-based line folding for a single logical scalar line (YAML 1.2 flow
  * folding, §7.3 / §8.2.1). Breaks the content at "safe" single-space
  * boundaries — a space whose neighbours are both non-space — so each inserted
@@ -32,10 +36,23 @@ class FoldFailure extends S.TaggedError<FoldFailure>($I`FoldFailure`)(
  * used only to budget the first line; it is approximate because the caller's
  * exact column (after a `key: ` prefix, say) is not known here.
  *
+ * **Gotchas**
+ *
  * Only breaks where a break is safe. When no safe break point exists before the
  * width limit, the line overflows unwrapped rather than corrupting the value —
  * width folding is a best-effort presentation concern, never a correctness one.
  * A non-positive `lineWidth` (the default) returns the text unchanged.
+ *
+ * **Example** (Fold at a safe space)
+ *
+ * ```ts
+ * import { foldScalarLine } from "@beep/scratchpad/effected/yaml/internal/fold"
+ *
+ * console.log(JSON.stringify(foldScalarLine("hello world", "  ", 8, 0))) // "hello\n  world"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export function foldScalarLine(
 	text: string,
@@ -78,6 +95,10 @@ export function foldScalarLine(
 }
 
 /**
+ * Applies value-preserving width folding according to a rendered scalar's style.
+ *
+ * **Details**
+ *
  * Apply {@link foldScalarLine} to an already-rendered scalar according to its
  * style, inferred from the leading character:
  *
@@ -93,6 +114,17 @@ export function foldScalarLine(
  *
  * `indent` is one indentation level (the continuation prefix); `lineWidth` is
  * the target column. A non-positive `lineWidth` returns the text unchanged.
+ *
+ * **Example** (Keep literal block bytes)
+ *
+ * ```ts
+ * import { foldRenderedScalar } from "@beep/scratchpad/effected/yaml/internal/fold"
+ *
+ * console.log(JSON.stringify(foldRenderedScalar("|-\n  hello world", "  ", 8))) // "|-\n  hello world"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export function foldRenderedScalar(
 	rendered: string,
@@ -138,6 +170,18 @@ export function foldRenderedScalar(
 
 /**
  * C0 control characters (except TAB) that must be escaped in double-quoted scalars.
+ *
+ * **Example** (Distinguish controls from tabs)
+ *
+ * ```ts
+ * import { isControlChar } from "@beep/scratchpad/effected/yaml/internal/fold"
+ *
+ * console.log(isControlChar(0x00)) // true
+ * console.log(isControlChar(0x09)) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export function isControlChar(code: number): boolean {
 	return (code >= 0x00 && code <= 0x08) || code === 0x0b || code === 0x0c || (code >= 0x0e && code <= 0x1f);
@@ -149,6 +193,18 @@ export function isControlChar(code: number): boolean {
  * `/[\t ]\n/.test(s) && s.replace(/\n+$/, "").includes("\n")` but uses linear
  * imperative scans to avoid polynomial-time regex behaviour on adversarial
  * inputs containing many trailing newlines.
+ *
+ * **Example** (Detect interior trailing spaces)
+ *
+ * ```ts
+ * import { hasInteriorTrailingWhitespace } from "@beep/scratchpad/effected/yaml/internal/fold"
+ *
+ * console.log(hasInteriorTrailingWhitespace("a \nb")) // true
+ * console.log(hasInteriorTrailingWhitespace("a \n")) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export function hasInteriorTrailingWhitespace(s: string): boolean {
 	let firstWsBeforeNl = -1;
@@ -178,6 +234,18 @@ export function hasInteriorTrailingWhitespace(s: string): boolean {
  * Returns true when the value contains a newline followed by one or more
  * spaces and then a tab — mixed leading whitespace on a continuation line
  * that block style cannot represent unambiguously.
+ *
+ * **Example** (Detect mixed continuation indentation)
+ *
+ * ```ts
+ * import { hasNewlineSpacesTab } from "@beep/scratchpad/effected/yaml/internal/fold"
+ *
+ * console.log(hasNewlineSpacesTab("a\n \tb")) // true
+ * console.log(hasNewlineSpacesTab("a\n\tb")) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export function hasNewlineSpacesTab(s: string): boolean {
 	for (let i = 0; i < s.length - 2; i++) {
@@ -192,6 +260,8 @@ export function hasNewlineSpacesTab(s: string): boolean {
 /**
  * Renders a multi-line value as a single-quoted scalar with proper fold encoding.
  *
+ * **Details**
+ *
  * Single-quoted scalars use line folding rules (YAML 1.2 §7.4): bare newlines
  * between non-empty lines fold to a space; empty lines preserve as literal
  * newlines. To round-trip a value with N consecutive literal newlines, the
@@ -202,8 +272,21 @@ export function hasNewlineSpacesTab(s: string): boolean {
  * on continuation lines after the indent is preserved as part of the content
  * because empty lines precede them, suppressing the fold-to-space rule.
  *
+ * **Gotchas**
+ *
  * Returns null if the content cannot safely be represented as single-quoted
  * (carriage returns or non-tab control characters).
+ *
+ * **Example** (Encode a literal newline in single quotes)
+ *
+ * ```ts
+ * import { renderSingleQuotedMultiline } from "@beep/scratchpad/effected/yaml/internal/fold"
+ *
+ * console.log(JSON.stringify(renderSingleQuotedMultiline("a\nb", "  "))) // "'a\n\n  b'"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export function renderSingleQuotedMultiline(s: string, ...[indent]: [indent: string]): string | null {
 	// CR or non-tab control chars cannot be represented in single-quoted
@@ -241,6 +324,15 @@ export function renderSingleQuotedMultiline(s: string, ...[indent]: [indent: str
 /**
  * Renders a string scalar using block literal style (pipe `|`).
  *
+ *
+ * **Example** (Strip absent trailing newlines)
+ *
+ * ```ts
+ * import { renderBlockLiteral } from "@beep/scratchpad/effected/yaml/internal/fold"
+ *
+ * console.log(JSON.stringify(renderBlockLiteral("hello", "  "))) // "|-\n  hello"
+ * ```
+ *
  * @param explicitChomp - Original chomp indicator from the AST, when known.
  * `keep` (`+`) and `strip` (`-`) preserve trailing-newline semantics that
  * cannot be inferred from the resolved value alone.
@@ -249,6 +341,8 @@ export function renderSingleQuotedMultiline(s: string, ...[indent]: [indent: str
  * fidelity-path header preservation; canonical mode passes false.
  * @param explicitIndent - Explicit indentation-indicator digit from the AST,
  * re-emitted only when it matches the rendered indent (fidelity path).
+ * @category formatting
+ * @since 0.0.0
  */
 export function renderBlockLiteral(
 	s: string,
@@ -310,10 +404,23 @@ export function renderBlockLiteral(
 /**
  * Renders a string scalar using block folded style (greater-than `>`).
  *
+ * **Details**
+ *
  * In folded block scalars, a single newline between content lines is folded
  * into a space by the reader. To preserve a literal newline in the value,
  * the output must contain an empty line (double newline). Each empty line
  * in the value already produces the correct number of blank lines.
+ *
+ * **Example** (Preserve a newline in folded output)
+ *
+ * ```ts
+ * import { renderBlockFolded } from "@beep/scratchpad/effected/yaml/internal/fold"
+ *
+ * console.log(JSON.stringify(renderBlockFolded("a\nb", "  "))) // ">-\n  a\n\n  b"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export function renderBlockFolded(
 	s: string,

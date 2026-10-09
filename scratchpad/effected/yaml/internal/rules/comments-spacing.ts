@@ -20,6 +20,19 @@ const $I = $ScratchpadId.create("effected/yaml/internal/rules/comments-spacing")
  * Options for `comments-spacing`: `minSpacesBefore` between content and a
  * trailing `#` (default 1 — the kit's own emission spelling) and
  * `requireSpaceAfter` the `#` (default `true`).
+ *
+ * **Example** (Decode comments-spacing options)
+ *
+ * ```ts
+ * import { commentsSpacingOptions } from "@beep/scratchpad/effected/yaml/internal/rules/comments-spacing";
+ * import * as S from "effect/Schema";
+ *
+ * const options = S.decodeUnknownSync(commentsSpacingOptions)({ minSpacesBefore: 2, requireSpaceAfter: true });
+ * console.log(options.minSpacesBefore); // 2
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const commentsSpacingOptions = S.Struct({
 	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for comment-spacing findings, defaulting to `error`" }),
@@ -27,7 +40,12 @@ export const commentsSpacingOptions = S.Struct({
 	requireSpaceAfter: S.optionalKey(S.Boolean).annotateKey({ description: "Whether nonempty comments require a space or tab after `#`, defaulting to `true` and exempting an initial shebang" }),
 }).pipe($I.annoteSchema("commentsSpacingOptions", { description: "Options for `comments-spacing`: `minSpacesBefore` between content and a trailing `#` (default 1 — the kit's own emission spelling) and `requireSpaceAfter` the `#` (default `true`)." }));
 
-/** Decoded options for comment spacing. */
+/**
+ * Decoded options for comment spacing.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type commentsSpacingOptions = typeof commentsSpacingOptions.Type;
 
 /**
@@ -51,10 +69,32 @@ const spacingBefore = (
 	};
 };
 
-/** Shebang exemption: `#!` at the very start of the stream. */
+/** Recognizes a shebang (hash followed by an exclamation mark) at the very start of the stream. */
 const isShebang = (token: YamlToken): boolean => token.offset === 0 && token.text.startsWith("#!");
 
-/** Comment spacing: after the `#`, and before a trailing comment's `#`. */
+/**
+ * Enforces spacing after the `#`, and before a trailing comment's `#`.
+ *
+ * **Details**
+ *
+ * Spaces or tabs separate comment prose from the hash and trailing comments
+ * from preceding line content. Own-line comments do not contribute
+ * before-spacing evidence. A shebang at the very start of the stream is exempt.
+ *
+ * **Example** (Report comments-spacing violations)
+ *
+ * ```ts
+ * import { commentsSpacing } from "@beep/scratchpad/effected/yaml/internal/rules/comments-spacing";
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/effected/yaml/YamlLint";
+ *
+ * const config = YamlLintConfig.make({ rules: { "comments-spacing": "error" } });
+ * const diagnostics = YamlLint.run("a: 1 #text\n", [commentsSpacing], config);
+ * console.log(diagnostics[0]?.message); // Missing space after "#"
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export const commentsSpacing: YamlRule = {
 	id: "comments-spacing",
 	check: (ctx, options) => {

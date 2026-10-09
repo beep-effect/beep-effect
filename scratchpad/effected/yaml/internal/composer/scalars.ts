@@ -45,12 +45,26 @@ function safeParseInt(value: string, radix: number): number | bigint {
 }
 
 /**
- * Classify a plain scalar's numeric form for duplicate-key identity. `1` is an
- * `!!int` and `1.0` an `!!float` even though both resolve to the JS number `1`,
+ * Classifies a plain scalar's numeric form for duplicate-key identity.
+ *
+ * **Details**
+ *
+ * `1` is an `!!int` and `1.0` an `!!float` even though both resolve to the JS number `1`,
  * so they are distinct mapping keys; `1` and `0x1` are both `!!int 1` and so
  * are the same key. Returns `null` for non-numeric plain text. Uses the same
  * regexes as {@link resolvePlainScalar} so the classification always agrees
  * with how the value was resolved.
+ *
+ * **Example** (Distinguish integer and floating keys)
+ *
+ * ```ts
+ * import { classifyPlainNumeric } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ *
+ * console.log(classifyPlainNumeric("1"), classifyPlainNumeric("1.0"), classifyPlainNumeric("0x1")) // int float int
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export function classifyPlainNumeric(raw: string): "int" | "float" | null {
 	const t = raw.trim();
@@ -102,6 +116,26 @@ function resolveTaggedScalar(rawValue: string, tag: string): unknown {
 
 type ResolveScalarContext = readonly [style: ScalarStyle, tag?: string | undefined, state?: ComposerState | undefined];
 
+/**
+ * Resolves scalar text using an explicit YAML tag or the plain-style Core Schema rules.
+ *
+ * **Details**
+ *
+ * Without a tag, quoted and block styles retain their string values. With a composer
+ * state, tag handles are expanded before resolution. Plain integers beyond the safe
+ * integer range resolve to bigint to avoid silent precision loss.
+ *
+ * **Example** (Resolve plain and quoted numbers)
+ *
+ * ```ts
+ * import { resolveScalar } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ *
+ * console.log(resolveScalar("42", ["plain"]), resolveScalar("42", ["double-quoted"])) // 42 42
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const resolveScalar: {
 	([style, tag, state]: ResolveScalarContext): (rawValue: string) => unknown;
 	(rawValue: string, [style, tag, state]: ResolveScalarContext): unknown;
@@ -118,6 +152,22 @@ export const resolveScalar: {
 // Scalar decoding
 // ---------------------------------------------------------------------------
 
+/**
+ * Identifies plain, quoted, literal, or folded scalar syntax from a CST source slice.
+ *
+ * **Example** (Identify single quoted syntax)
+ *
+ * ```ts
+ * import { getScalarStyle } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ *
+ * const node: CstNode = { type: "flow-scalar", source: "'hello'", offset: 0, length: 7 };
+ * console.log(getScalarStyle(node)) // single-quoted
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export function getScalarStyle(node: CstNode): ScalarStyle {
 	if (node.type === "block-scalar") {
 		const ch = node.source.trimStart()[0];
@@ -131,8 +181,24 @@ export function getScalarStyle(node: CstNode): ScalarStyle {
 
 /**
  * Extracts the chomp indicator from a block scalar's header.
+ *
+ * **Details**
+ *
  * Returns "strip" for `-`, "keep" for `+`, "clip" otherwise (default).
  * Returns undefined for non-block scalars.
+ *
+ * **Example** (Read the keep indicator)
+ *
+ * ```ts
+ * import { getBlockChomp } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ *
+ * const node: CstNode = { type: "block-scalar", source: "|+", offset: 0, length: 2 };
+ * console.log(getBlockChomp(node)) // keep
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export function getBlockChomp(node: CstNode): "strip" | "clip" | "keep" | undefined {
 	if (node.type !== "block-scalar") return undefined;
@@ -146,11 +212,27 @@ export function getBlockChomp(node: CstNode): "strip" | "clip" | "keep" | undefi
 }
 
 /**
- * Extracts the EXPLICIT indentation-indicator digit from a block scalar's
- * header (`|2`, `>1+`), or undefined when the header carries none (the
- * reader auto-detects) or the node is not a block scalar. Inspects only the
- * indicator run — see {@link getBlockChomp} for why the rest of the header
- * line (a comment can contain digits) must not be read.
+ * Extracts the explicit indentation-indicator digit from a block scalar's header.
+ *
+ * **Details**
+ *
+ * Headers such as `|2` and `>1+` carry an explicit digit. Returns undefined when
+ * the header carries none (the reader auto-detects) or the node is not a block
+ * scalar. Inspects only the indicator run — see {@link getBlockChomp} for why
+ * the rest of the header line (a comment can contain digits) must not be read.
+ *
+ * **Example** (Read explicit block indentation)
+ *
+ * ```ts
+ * import { getBlockIndent } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ *
+ * const node: CstNode = { type: "block-scalar", source: "|2", offset: 0, length: 2 };
+ * console.log(getBlockIndent(node)) // 2
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export function getBlockIndent(node: CstNode): number | undefined {
 	if (node.type !== "block-scalar") return undefined;
@@ -180,6 +262,27 @@ function blockScalarHeaderComment(cst: CstNode): string | undefined {
 	return rawCommentText(header.slice(hash));
 }
 
+/**
+ * Decodes a CST scalar into text by removing syntax, unescaping quotes, and folding lines.
+ *
+ * **Details**
+ *
+ * For block scalars with explicit indentation, supply the full document text so
+ * the indentation digit is interpreted relative to the parent block context.
+ *
+ * **Example** (Decode a plain scalar)
+ *
+ * ```ts
+ * import { getScalarValue } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ *
+ * const node: CstNode = { type: "flow-scalar", source: " hello ", offset: 0, length: 7 };
+ * console.log(getScalarValue(node)) // hello
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const getScalarValue: {
 	(fullText?: string): (node: CstNode) => string;
 	(node: CstNode, fullText?: string): string;
@@ -324,11 +427,25 @@ function decodeDoubleQuoted(raw: string): string {
 }
 
 /**
- * Apply YAML 1.2 §6.5 flow line folding to a string.
+ * Applies YAML 1.2 §6.5 flow line folding to a string.
+ *
+ * **Details**
+ *
  * - Split into lines, trim trailing whitespace from each
  * - Newline between non-empty lines becomes a space
  * - Empty line preserved as newline in output
  * - Leading whitespace (indentation) on continuation lines trimmed
+ *
+ * **Example** (Fold a continuation line)
+ *
+ * ```ts
+ * import { foldFlowLines } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ *
+ * console.log(foldFlowLines("hello\n  world")) // hello world
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export function foldFlowLines(text: string): string {
 	const lines = text.split("\n");
@@ -369,10 +486,26 @@ export function foldFlowLines(text: string): string {
 }
 
 /**
- * Collect a multi-line plain scalar key from consecutive CST children.
+ * Collects a multi-line plain scalar key from consecutive CST children.
+ *
+ * **Details**
+ *
  * Like `collectMultilinePlainScalar`, but for keys: collects plain scalars
  * up until the `:` value separator, merging them with flow line folding.
  * Returns the folded key text and the index after the last consumed child.
+ *
+ * **Example** (Collect a key fragment)
+ *
+ * ```ts
+ * import { collectMultilineKey } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ *
+ * const node: CstNode = { type: "flow-scalar", source: "hello", offset: 0, length: 5 };
+ * console.log(collectMultilineKey([node], 0).value) // hello
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const collectMultilineKey: {
 	(startIdx: number): (children: readonly CstNode[]) => { value: string; nextIdx: number };
@@ -449,7 +582,10 @@ function skipChildrenOnLine(children: readonly CstNode[], startIdx: number, line
 }
 
 /**
- * Collect a multi-line plain scalar from consecutive CST children.
+ * Collects a multi-line plain scalar from consecutive CST children.
+ *
+ * **Details**
+ *
  * Starting from a plain flow-scalar at `startIdx`, look ahead through
  * newlines and whitespace for more plain flow-scalars that continue the
  * same value. Returns the folded scalar text and the index after the last
@@ -468,6 +604,19 @@ function skipChildrenOnLine(children: readonly CstNode[], startIdx: number, line
  * `endOffset` is the source end of the last consumed fragment, so callers
  * can span the composed scalar node across the whole folded value (the
  * sourceMultiline decoration pass then stamps it from the span).
+ *
+ * **Example** (Collect a scalar fragment)
+ *
+ * ```ts
+ * import { collectMultilinePlainScalar } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ *
+ * const node: CstNode = { type: "flow-scalar", source: "hello", offset: 0, length: 5 };
+ * console.log(collectMultilinePlainScalar([node], 0).value) // hello
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const collectMultilinePlainScalar: {
 	(startIdx: number, minContinuationColumn?: number, sourceText?: string): (children: readonly CstNode[]) => { value: string; nextIdx: number; partsCount: number; endOffset: number };
@@ -622,9 +771,25 @@ export const collectMultilinePlainScalar: {
 // ---------------------------------------------------------------------------
 
 /**
- * Find the index of the next non-trivia child (skips newline, whitespace, comment).
+ * Finds the index of the next non-trivia child, skipping newline, whitespace, and comment nodes.
+ *
+ * **Details**
+ *
  * If `stopAtDash` is true, returns null when a `-` indicator is encountered before
- * any significant child (used to avoid merging across sequence entry boundaries).
+ * a significant child (used to avoid merging across sequence entry boundaries).
+ *
+ * **Example** (Skip a newline before content)
+ *
+ * ```ts
+ * import { findNextSignificantChild } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ *
+ * const node: CstNode = { type: "flow-scalar", source: "hello", offset: 0, length: 5 };
+ * console.log(findNextSignificantChild([{ type: "newline", source: "\n", offset: 0, length: 1 }, node], 0)) // 1
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const findNextSignificantChild: {
 	(startIdx: number, stopAtDash?: boolean): (children: readonly CstNode[]) => number | null;
@@ -644,8 +809,20 @@ export const findNextSignificantChild: {
 });
 
 /**
- * Check if a value separator (`:`) follows in a CST children list,
- * skipping whitespace and newlines.
+ * Checks whether a value separator (`:`) follows in a CST children list, skipping whitespace and newlines.
+ *
+ * **Example** (Detect a following separator)
+ *
+ * ```ts
+ * import { hasValueSepAfterInList } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ *
+ * const node: CstNode = { type: "whitespace", source: ":", offset: 0, length: 1 };
+ * console.log(hasValueSepAfterInList([node], 0)) // true
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const hasValueSepAfterInList: {
 	(startIdx: number): (children: readonly CstNode[]) => boolean;
@@ -653,10 +830,26 @@ export const hasValueSepAfterInList: {
 } = dual(2, (children: readonly CstNode[], startIdx: number): boolean => findValueSepOffset(children, startIdx) >= 0);
 
 /**
- * Check if the next non-trivia child is a block-map (indicating that the
- * preceding scalar is the first key of a nested implicit mapping). Returns
- * false if a sibling `:` value-sep is encountered first, since that means
- * the scalar is a key at the current level (not a nested mapping start).
+ * Checks whether the next non-trivia child starts a nested implicit mapping.
+ *
+ * **Details**
+ *
+ * A block-map indicates that the preceding scalar is the first key of a nested
+ * implicit mapping. Returns false if a sibling `:` value-sep is encountered first,
+ * since that means the scalar is a key at the current level (not a nested mapping start).
+ *
+ * **Example** (Detect a nested block map)
+ *
+ * ```ts
+ * import { hasBlockMapAfterInList } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ *
+ * const node: CstNode = { type: "block-map", source: "", offset: 0, length: 0 };
+ * console.log(hasBlockMapAfterInList([node], 0)) // true
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const hasBlockMapAfterInList: {
 	(startIdx: number): (children: readonly CstNode[]) => boolean;
@@ -675,7 +868,22 @@ export const hasBlockMapAfterInList: {
 	return false;
 });
 
-/** Find the offset of the next ":" value separator in a CST children list, or -1 if none. */
+/**
+ * Finds the offset of the next `:` value separator in a CST children list, or -1 if none.
+ *
+ * **Example** (Locate a separator offset)
+ *
+ * ```ts
+ * import { findValueSepOffset } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ *
+ * const node: CstNode = { type: "whitespace", source: ":", offset: 4, length: 1 };
+ * console.log(findValueSepOffset([node], 0)) // 4
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const findValueSepOffset: {
 	(startIdx: number): (children: readonly CstNode[]) => number;
 	(children: readonly CstNode[], startIdx: number): number;
@@ -693,7 +901,22 @@ export const findValueSepOffset: {
 	return -1;
 });
 
-/** Check if a ":" value-sep exists between startIdx (inclusive) and endIdx (exclusive). */
+/**
+ * Checks whether a `:` value separator exists between startIdx (inclusive) and endIdx (exclusive).
+ *
+ * **Example** (Search a bounded child range)
+ *
+ * ```ts
+ * import { hasValueSepBetween } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ *
+ * const node: CstNode = { type: "whitespace", source: ":", offset: 0, length: 1 };
+ * console.log(hasValueSepBetween([node], 0, 1)) // true
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 export const hasValueSepBetween: {
 	(startIdx: number, endIdx: number): (children: readonly CstNode[]) => boolean;
 	(children: readonly CstNode[], startIdx: number, endIdx: number): boolean;
@@ -707,10 +930,27 @@ export const hasValueSepBetween: {
 });
 
 /**
- * Returns true when the first non-trivia child of a block-map CST node is a
- * `:` value separator (i.e., the block map begins with an implicit empty key
- * followed by a value indicator). Used to decide whether a pending anchor/tag
- * belongs to that empty key rather than to the block map itself.
+ * Detects a block map whose first non-trivia child is a `:` value separator.
+ *
+ * **Details**
+ *
+ * The block map begins with an implicit empty key followed by a value indicator.
+ * Used to decide whether a pending anchor/tag belongs to that empty key rather
+ * than to the block map itself.
+ *
+ * **Example** (Detect an implicit empty key)
+ *
+ * ```ts
+ * import { blockMapStartsWithValueSep } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ *
+ * const node: CstNode = { type: "whitespace", source: ":", offset: 0, length: 1 };
+ * const map: CstNode = { type: "block-map", source: ":", offset: 0, length: 1, children: [node] };
+ * console.log(blockMapStartsWithValueSep(map)) // true
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export function blockMapStartsWithValueSep(blockMap: CstNode): boolean {
 	for (const c of blockMap.children ?? []) {
@@ -727,11 +967,33 @@ export function blockMapStartsWithValueSep(blockMap: CstNode): boolean {
 }
 
 /**
+ * Detects a value separator beyond plain scalar continuation lines.
+ *
+ * **Details**
+ *
  * Like `hasValueSepAfterInList`, but also skips over plain flow-scalars
  * that appear after a newline. Used to detect multi-line keys:
  * `multi\n  line: value` where `:` comes after continuation plain scalars.
  * Only allows skipping plain scalars that were preceded by a newline,
  * preventing false matches across comma-delimited entries on the same line.
+ *
+ * **Example** (Find a separator after a continuation)
+ *
+ * ```ts
+ * import { hasValueSepThroughPlainScalars } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ *
+ * const node: CstNode = { type: "flow-scalar", source: "line", offset: 0, length: 4 };
+ * const children: CstNode[] = [
+ *   { type: "newline", source: "\n", offset: 0, length: 1 },
+ *   node,
+ *   { type: "whitespace", source: ":", offset: 5, length: 1 },
+ * ];
+ * console.log(hasValueSepThroughPlainScalars(children, 0)) // true
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const hasValueSepThroughPlainScalars: {
 	(startIdx: number): (children: readonly CstNode[]) => boolean;
@@ -759,7 +1021,22 @@ export const hasValueSepThroughPlainScalars: {
 	return false;
 });
 
-/** Find the next non-trivia CST child in a list, returning the node and its index. */
+/**
+ * Finds the next non-trivia CST child in a list, returning the node and its index.
+ *
+ * **Example** (Read the next content index)
+ *
+ * ```ts
+ * import { findNextContentInList } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ *
+ * const node: CstNode = { type: "flow-scalar", source: "hello", offset: 0, length: 5 };
+ * console.log(findNextContentInList([node], 0)?.idx) // 0
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const findNextContentInList: {
 	(startIdx: number): (children: readonly CstNode[]) => { node: CstNode; idx: number } | null;
 	(children: readonly CstNode[], startIdx: number): { node: CstNode; idx: number } | null;
@@ -773,6 +1050,26 @@ export const findNextContentInList: {
 	return null;
 });
 
+/**
+ * Finds the first child other than a newline or blank whitespace.
+ *
+ * **Details**
+ *
+ * Comments and structural whitespace indicators count as content.
+ *
+ * **Example** (Read the first content slice)
+ *
+ * ```ts
+ * import { findFirstContent } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ *
+ * const node: CstNode = { type: "flow-scalar", source: "hello", offset: 0, length: 5 };
+ * console.log(findFirstContent([node])?.source) // hello
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export function findFirstContent(children: readonly CstNode[]): CstNode | undefined {
 	for (const c of children) {
 		if (c === undefined) continue;
@@ -783,6 +1080,26 @@ export function findFirstContent(children: readonly CstNode[]): CstNode | undefi
 	return undefined;
 }
 
+/**
+ * Finds the last child other than a newline or blank whitespace.
+ *
+ * **Details**
+ *
+ * Comments and structural whitespace indicators count as content.
+ *
+ * **Example** (Read the last content slice)
+ *
+ * ```ts
+ * import { findLastContent } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ *
+ * const node: CstNode = { type: "flow-scalar", source: "hello", offset: 0, length: 5 };
+ * console.log(findLastContent([node])?.source) // hello
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export function findLastContent(children: readonly CstNode[]): CstNode | undefined {
 	for (let i = children.length - 1; i >= 0; i--) {
 		const c = children[i];
@@ -795,8 +1112,24 @@ export function findLastContent(children: readonly CstNode[]): CstNode | undefin
 }
 
 /**
- * Find the next content child (skipping trivia AND anchor/tag properties),
- * or null. Used at the document level where properties precede content.
+ * Finds the next content child, skipping trivia and anchor/tag properties, or null.
+ *
+ * **Details**
+ *
+ * Used at the document level where properties precede content.
+ *
+ * **Example** (Skip properties before document content)
+ *
+ * ```ts
+ * import { findNextContentChild } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ *
+ * const node: CstNode = { type: "flow-scalar", source: "hello", offset: 0, length: 5 };
+ * console.log(findNextContentChild([node], 0)?.source) // hello
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const findNextContentChild: {
 	(startIdx: number): (children: readonly CstNode[]) => CstNode | null;
@@ -818,6 +1151,22 @@ export const findNextContentChild: {
 	return null;
 });
 
+/**
+ * Locates a CST child by object identity, returning -1 when absent.
+ *
+ * **Example** (Locate a child reference)
+ *
+ * ```ts
+ * import { indexOfChild } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ *
+ * const node: CstNode = { type: "flow-scalar", source: "hello", offset: 0, length: 5 };
+ * console.log(indexOfChild([node], node)) // 0
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const indexOfChild: {
 	(target: CstNode): (children: readonly CstNode[]) => number;
 	(children: readonly CstNode[], target: CstNode): number;
@@ -828,7 +1177,26 @@ export const indexOfChild: {
 	return -1;
 });
 
-/** Check if there's a value separator ":" after startIdx (skipping only whitespace). */
+/**
+ * Checks whether a `:` value separator follows startIdx through whitespace and newlines.
+ *
+ * **Details**
+ *
+ * The scan skips whitespace and newlines, but stops at other node types, including comments.
+ *
+ * **Example** (Detect a separator after whitespace)
+ *
+ * ```ts
+ * import { hasValueSepAfter } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ *
+ * const node: CstNode = { type: "whitespace", source: ":", offset: 0, length: 1 };
+ * console.log(hasValueSepAfter([node], 0)) // true
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 export const hasValueSepAfter: {
 	(startIdx: number): (children: readonly CstNode[]) => boolean;
 	(children: readonly CstNode[], startIdx: number): boolean;
@@ -1180,6 +1548,31 @@ function validateBlockScalarLeadingEmpties(cst: CstNode, state: ComposerState): 
 	}
 }
 
+/**
+ * Constructs a resolved YAML scalar while retaining source metadata and recording composition diagnostics.
+ *
+ * **Details**
+ *
+ * Block scalars retain their chomp and indentation indicators and header-line comments.
+ * Leading empty lines are validated before decoding. Anchored scalars are registered
+ * in composer state. Noncanonical plain numeric spelling is retained for round trips.
+ *
+ * **Example** (Compose a numeric scalar)
+ *
+ * ```ts
+ * import { makeScalar } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ * import type { CstNode } from "@beep/scratchpad/effected/yaml/internal/cst";
+ * import { createState } from "@beep/scratchpad/effected/yaml/internal/composer/state";
+ * import { composeFlowMap, composeFlowSeq } from "@beep/scratchpad/effected/yaml/internal/composer/flow";
+ *
+ * const node: CstNode = { type: "flow-scalar", source: "42", offset: 0, length: 2 };
+ * const state = createState("42", { composeFlowMap, composeFlowSeq });
+ * console.log(makeScalar(node, state).value) // 42
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const makeScalar: {
 	(state: ComposerState, meta?: NodeMeta): (cst: CstNode) => YamlScalar;
 	(cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlScalar;
@@ -1225,14 +1618,27 @@ export const makeScalar: {
 });
 
 /**
- * Returns true when the scalar's source representation should be preserved
- * for canonical round-trip — i.e. the source form differs from `String(value)`
- * but resolves to the same value.
+ * Determines whether a scalar's source representation should be preserved for canonical round-trip.
+ *
+ * **Details**
+ *
+ * The source form differs from `String(value)` but resolves to the same value.
  *
  * Special-float values (NaN, +/-Infinity) are excluded: their canonical YAML
  * spelling is the lowercase `.inf` / `.nan` form per spec §10.3, so source
  * variants like `.INF` or `.NaN` should normalize on round-trip rather than
  * preserve.
+ *
+ * **Example** (Preserve hexadecimal spelling)
+ *
+ * ```ts
+ * import { shouldPreserveRaw } from "@beep/scratchpad/effected/yaml/internal/composer/scalars";
+ *
+ * console.log(shouldPreserveRaw("0x10", 16), shouldPreserveRaw("16", 16)) // true false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const shouldPreserveRaw: {
 	(value: unknown): (rawValue: string) => boolean;

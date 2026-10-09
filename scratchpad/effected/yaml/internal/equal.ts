@@ -7,6 +7,9 @@ import * as R from "effect/Record";
 
 /**
  * Deep-compare two plain JS values for structural equality.
+ *
+ * **Details**
+ *
  * Object key order is ignored (recursively at all nesting levels).
  * Array order is significant.
  *
@@ -15,6 +18,19 @@ import * as R from "effect/Record";
  * equivalent. Object comparison checks that both objects have the same set
  * of keys and recursively compares values by key, matching YAML's semantics
  * where mapping key order is not significant.
+ *
+ * **Example** (Compare mapping order, array order, and NaN)
+ *
+ * ```ts
+ * import { deepEqual } from "@beep/scratchpad/effected/yaml/internal/equal"
+ *
+ * console.log(deepEqual({ name: "Ada", age: 30 }, { age: 30, name: "Ada" })) // true
+ * console.log(deepEqual([1, 2], [2, 1])) // false
+ * console.log(deepEqual(Number.NaN, Number.NaN)) // true
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export function deepEqual(a: unknown, ...[b]: [b: unknown]): boolean {
 	if (a === b) return true;

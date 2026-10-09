@@ -55,7 +55,22 @@ const isYamlScalar = S.is(YamlScalar);
 const isYamlSeq = S.is(YamlSeq);
 const $I = $ScratchpadId.create("effected/yaml/internal/composer/comments");
 
-/** The comment field triple accepted by {@link withCommentFields}. */
+/**
+ * The comment field triple accepted by {@link withCommentFields}.
+ *
+ * **Example** (Decode optional node comments)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CommentFields } from "@beep/scratchpad/effected/yaml/internal/composer/comments"
+ *
+ * const fields = S.decodeUnknownSync(CommentFields)({ commentBefore: " heading", spaceBefore: true })
+ * console.log(fields.commentBefore, fields.spaceBefore) //  heading true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const CommentFields = S.Struct({
 	commentBefore: S.String.pipe(S.optionalKey, S.mutableKey).annotate(
 		$I.annote("CommentFields.commentBefore", { description: "Own-line comments leading the node." }),
@@ -67,12 +82,31 @@ export const CommentFields = S.Struct({
 		$I.annote("CommentFields.spaceBefore", { description: "A stylistic blank line preceding the node." }),
 	),
 }).annotate($I.annote("CommentFields", { description: "Optional node comment fields merged during composition." }));
+/**
+ * Comment fields accepted by {@link withCommentFields} after schema decoding.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CommentFields = typeof CommentFields.Type;
 
 /**
  * True when the source text between `start` (exclusive of its line) and `end`
  * contains at least one blank line (a newline followed, after optional
  * horizontal whitespace, by another newline).
+ *
+ * **Example** (Detect a blank line between source spans)
+ *
+ * ```ts
+ * import { hasBlankLineBetween } from "@beep/scratchpad/effected/yaml/internal/composer/comments"
+ *
+ * const text = "a: 1\n \n b: 2"
+ * console.log(hasBlankLineBetween(text, 4, 8)) // true
+ * console.log(hasBlankLineBetween(text, 0, 4)) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const hasBlankLineBetween: {
 	(start: number, end: number): (text: string) => boolean;
@@ -83,7 +117,22 @@ export const hasBlankLineBetween: {
 	return /\n[ \t\r]*\n/.test(gap);
 });
 
-/** True when there is no line break between `start` and `end` in `text`. */
+/**
+ * True when there is no line break between `start` and `end` in `text`.
+ *
+ * **Example** (Compare spans across a line break)
+ *
+ * ```ts
+ * import { sameLineSpan } from "@beep/scratchpad/effected/yaml/internal/composer/comments"
+ *
+ * const text = "a: 1\nb: 2"
+ * console.log(sameLineSpan(text, 0, 4)) // true
+ * console.log(sameLineSpan(text, 0, 6)) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 export const sameLineSpan: {
 	(start: number, end: number): (text: string) => boolean;
 	(text: string, start: number, end: number): boolean;
@@ -94,8 +143,24 @@ export const sameLineSpan: {
 
 /**
  * True when only horizontal whitespace precedes `offset` on its line — i.e.
- * the token at `offset` starts its own line. Purely local, so it stays
+ * the token at `offset` starts its own line.
+ *
+ * **Details**
+ *
+ * Purely local, so it stays
  * correct even when a preceding node's span over-extends past line ends.
+ *
+ * **Example** (Distinguish leading and trailing comments)
+ *
+ * ```ts
+ * import { isOwnLineAt } from "@beep/scratchpad/effected/yaml/internal/composer/comments"
+ *
+ * console.log(isOwnLineAt("  # heading", 2)) // true
+ * console.log(isOwnLineAt("a: 1 # tail", 5)) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const isOwnLineAt: {
 	(offset: number): (text: string) => boolean;
@@ -115,10 +180,26 @@ export const isOwnLineAt: {
 
 /**
  * True when the only thing before `offset` on its line is a block indicator —
- * `?`, `:` or `-` — plus whitespace. Such a comment sits on an indicator line
+ * `?`, `:` or `-` — plus whitespace.
+ *
+ * **Details**
+ *
+ * Such a comment sits on an indicator line
  * with its node BELOW, so it leads that node rather than trailing whatever
  * came before (`? # c` / ` - seq1`). Without this, the `? ` prefix makes the
  * comment look like a trailing comment on the previous entry.
+ *
+ * **Example** (Recognize a comment following an indicator)
+ *
+ * ```ts
+ * import { isAfterIndicatorOnly } from "@beep/scratchpad/effected/yaml/internal/composer/comments"
+ *
+ * console.log(isAfterIndicatorOnly("? # key comment", 2)) // true
+ * console.log(isAfterIndicatorOnly("a: # value comment", 3)) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const isAfterIndicatorOnly: {
 	(offset: number): (text: string) => boolean;
@@ -144,8 +225,24 @@ export const isAfterIndicatorOnly: {
 
 /**
  * True when the line immediately above the line containing `offset` is blank
- * (empty or horizontal whitespace only). Purely local — see
+ * (empty or horizontal whitespace only).
+ *
+ * **Details**
+ *
+ * Purely local — see
  * {@link isOwnLineAt} for why span-based gap checks are not used.
+ *
+ * **Example** (Inspect the line preceding a comment)
+ *
+ * ```ts
+ * import { hasBlankLineAbove } from "@beep/scratchpad/effected/yaml/internal/composer/comments"
+ *
+ * console.log(hasBlankLineAbove("a: 1\n \n# next", 8)) // true
+ * console.log(hasBlankLineAbove("a: 1\n# next", 5)) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const hasBlankLineAbove: {
 	(offset: number): (text: string) => boolean;
@@ -157,6 +254,18 @@ export const hasBlankLineAbove: {
  * `offset`, or `-1` when that line is not blank. The offset form of
  * {@link hasBlankLineAbove}, for callers that must locate the blank line
  * (e.g. to test whether it falls inside a preceding scalar token's span).
+ *
+ * **Example** (Locate a preceding stylistic blank line)
+ *
+ * ```ts
+ * import { blankLineAboveStart } from "@beep/scratchpad/effected/yaml/internal/composer/comments"
+ *
+ * console.log(blankLineAboveStart("a: 1\n \n# next", 8)) // 5
+ * console.log(blankLineAboveStart("a: 1\n# next", 5)) // -1
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
  */
 export const blankLineAboveStart: {
 	(offset: number): (text: string) => number;
@@ -196,7 +305,11 @@ function deepestTrailingScalar(node: YamlNode): YamlScalar | undefined {
 
 /**
  * True when the blank line immediately above `offset` is CONTENT of the
- * preceding keep-chomp block scalar, not a stylistic blank. Under `+`
+ * preceding keep-chomp block scalar, not a stylistic blank.
+ *
+ * **Details**
+ *
+ * Under `+`
  * chomping the trailing line breaks are part of the scalar's VALUE (the
  * composer already stores them there), so recording the same blank line as
  * `spaceBefore` (or a leading-blank embed on a terminal comment run) would
@@ -208,6 +321,23 @@ function deepestTrailingScalar(node: YamlNode): YamlScalar | undefined {
  * `prev` is the last composed node before `offset` (a pair's value, a seq
  * item); the check descends to its deepest trailing scalar and requires the
  * blank line to start inside that scalar's token span.
+ *
+ * **Example** (Identify a blank line owned by a keep-chomp scalar)
+ *
+ * ```ts
+ * import { blankAboveIsKeepChompContent } from "@beep/scratchpad/effected/yaml/internal/composer/comments"
+ * import { YamlScalar } from "@beep/scratchpad/effected/yaml/YamlNode"
+ *
+ * const text = "a: |+\n  value\n\nb: 2"
+ * const scalar = YamlScalar.make({
+ *   value: "value\n\n", style: "block-literal", chomp: "keep", offset: 3, length: 12
+ * })
+ * console.log(blankAboveIsKeepChompContent(text, 15, scalar)) // true
+ * console.log(blankAboveIsKeepChompContent(text, 15, undefined)) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const blankAboveIsKeepChompContent: {
 	(offset: number, prev: YamlNode | undefined): (text: string) => boolean;
@@ -224,9 +354,25 @@ export const blankAboveIsKeepChompContent: {
 /**
  * True when the line immediately below the line containing `offset` is blank
  * (empty or horizontal whitespace only) AND is itself followed by another
- * line. Purely local, the mirror of {@link hasBlankLineAbove} — used to embed
+ * line.
+ *
+ * **Details**
+ *
+ * Purely local, the mirror of {@link hasBlankLineAbove} — used to embed
  * a blank line AFTER a comment run as a trailing empty line in the stored
  * comment string.
+ *
+ * **Example** (Require a line after the blank below a comment)
+ *
+ * ```ts
+ * import { hasBlankLineBelow } from "@beep/scratchpad/effected/yaml/internal/composer/comments"
+ *
+ * console.log(hasBlankLineBelow("# heading\n\na: 1", 0)) // true
+ * console.log(hasBlankLineBelow("# heading\n", 0)) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const hasBlankLineBelow: {
 	(offset: number): (text: string) => boolean;
@@ -244,6 +390,8 @@ export const hasBlankLineBelow: {
  * parity with the `yaml` npm package — `# section` stores `" section"`,
  * `#no-space` stores `"no-space"`, `#   aligned` keeps its alignment.
  *
+ * **Details**
+ *
  * The one reserved string is `""`, which encodes an embedded blank line
  * inside a joined comment run — so a spaces-only raw slice stores with ONE
  * extra trailing space and the renderers strip it back off. A bare `#`
@@ -251,23 +399,65 @@ export const hasBlankLineBelow: {
  * escape is injective, so every comment spelling roundtrips byte-intact.
  * Raw storage is what makes byte-intact roundtrip possible; trimming would
  * canonicalize every comment to `# text`.
+ *
+ * **Example** (Preserve comment spacing and escape a bare marker)
+ *
+ * ```ts
+ * import { rawCommentText } from "@beep/scratchpad/effected/yaml/internal/composer/comments"
+ *
+ * console.log(JSON.stringify(rawCommentText("# section"))) // " section"
+ * console.log(JSON.stringify(rawCommentText("#"))) // " "
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export function rawCommentText(source: string): string {
 	const raw = source.startsWith("#") ? source.slice(1) : source;
 	return /^ *$/.test(raw) ? `${raw} ` : raw;
 }
 
-/** Join two optional comment blocks with a newline. */
+/**
+ * Join two optional comment blocks with a newline.
+ *
+ * **Example** (Join a leading comment run)
+ *
+ * ```ts
+ * import { joinComments } from "@beep/scratchpad/effected/yaml/internal/composer/comments"
+ *
+ * console.log(JSON.stringify(joinComments(" first", " second"))) // " first\n second"
+ * console.log(joinComments(undefined, " heading")) //  heading
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
 export const joinComments: {
 	(b: string): (a: string | undefined) => string;
 	(a: string | undefined, b: string): string;
 } = dual(2, (a: string | undefined, b: string): string => a === undefined ? b : `${a}\n${b}`);
 
 /**
- * Zero-based column of `offset` within its line. A byte-order mark at the
+ * Zero-based column of `offset` within its line.
+ *
+ * **Details**
+ *
+ * A byte-order mark at the
  * line start occupies no column — the lexer's convention — so a
  * BOM-prefixed root mapping's content column is `0`, not `1`, and its
  * terminal own-line comment is not mistaken for one escaping a nested map.
+ *
+ * **Example** (Ignore a byte-order mark at the line start)
+ *
+ * ```ts
+ * import { columnAt } from "@beep/scratchpad/effected/yaml/internal/composer/comments"
+ *
+ * console.log(columnAt("\uFEFFa: 1", 1)) // 0
+ * console.log(columnAt("a: 1\n  b: 2", 7)) // 2
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
  */
 export const columnAt: {
 	(offset: number): (text: string) => number;
@@ -284,8 +474,25 @@ export const columnAt: {
  * entry at a column SHALLOWER than the collection's content, so it belongs
  * to an outer scope (reference parity — a column-0 `# tail` between a nested
  * block and the next root key documents the next root key, not the nested
- * block). Escaped comments ride `ComposerState` up one level, where the
+ * block).
+ *
+ * **Details**
+ *
+ * Escaped comments ride `ComposerState` up one level, where the
  * enclosing composer re-injects them into its own item stream.
+ *
+ * **Example** (Decode a comment escaping to an outer scope)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { EscapedComment } from "@beep/scratchpad/effected/yaml/internal/composer/comments"
+ *
+ * const comment = S.decodeUnknownSync(EscapedComment)({ text: " tail", offset: 24 })
+ * console.log(JSON.stringify(comment.text), comment.offset) // " tail" 24
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const EscapedComment = S.Struct({
 	text: S.String.annotate($I.annote("EscapedComment.text", { description: "Raw post-indicator comment text." })),
@@ -293,6 +500,12 @@ export const EscapedComment = S.Struct({
 		$I.annote("EscapedComment.offset", { description: "Source offset of the disowned comment." }),
 	),
 }).annotate($I.annote("EscapedComment", { description: "Comment disowned by a collection for its enclosing scope." }));
+/**
+ * Decoded text and source offset of a comment passed to an enclosing composer.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type EscapedComment = typeof EscapedComment.Type;
 
 /**
@@ -300,6 +513,23 @@ export type EscapedComment = typeof EscapedComment.Type;
  * kept unless overridden; `commentBefore`/`comment` join with a newline when
  * both sides are present). Every node class carries the triple, aliases
  * included.
+ *
+ * **Example** (Merge trailing comments without mutating the scalar)
+ *
+ * ```ts
+ * import { withCommentFields } from "@beep/scratchpad/effected/yaml/internal/composer/comments"
+ * import { YamlScalar } from "@beep/scratchpad/effected/yaml/YamlNode"
+ *
+ * const scalar = YamlScalar.make({
+ *   value: "value", style: "plain", comment: " first", offset: 0, length: 5
+ * })
+ * const rebuilt = withCommentFields(scalar, { comment: " second", spaceBefore: true })
+ * console.log(JSON.stringify(rebuilt.comment), rebuilt.spaceBefore) // " first\n second" true
+ * console.log(scalar.comment) //  first
+ * ```
+ *
+ * @category mapping
+ * @since 0.0.0
  */
 export const withCommentFields: {
 	(fields: CommentFields): (node: YamlNode) => YamlNode;

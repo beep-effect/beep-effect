@@ -100,6 +100,8 @@ function makeContainerNode(type: CstNodeType, children: CstNode[], text: string)
 /**
  * Create a leaf CstNode from a token, using the raw source text.
  *
+ * **Details**
+ *
  * We slice from the original text rather than using `token.value` because
  * the lexer decodes certain tokens (e.g. quoted scalars have quotes stripped
  * and escape sequences resolved in `value`), but the CST must preserve
@@ -1071,11 +1073,27 @@ function parseDocuments(tokens: ReadonlyArray<YamlToken>, text: string): CstNode
 // ---------------------------------------------------------------------------
 
 /**
- * Parse YAML source text and collect all CST document nodes into an array.
+ * Parses YAML source text and collects all CST document nodes into an array.
+ *
+ * **Details**
  *
  * Each CST node preserves every character of the original input, including
  * whitespace, comments, and structural indicators. No value interpretation
  * occurs at this stage — `true` is still the string `"true"`.
+ *
+ * **Example** (Inspect an uninterpreted scalar)
+ *
+ * ```ts
+ * import { parseCSTAll } from "@beep/scratchpad/effected/yaml/internal/cst-parser"
+ *
+ * const documents = parseCSTAll("true")
+ * console.log(documents.length) // 1
+ * console.log(documents[0]?.children?.[0]?.type) // flow-scalar
+ * console.log(documents[0]?.children?.[0]?.source) // true
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export function parseCSTAll(text: string): ReadonlyArray<CstNode> {
 	return parseDocuments(lexAll(text), text);

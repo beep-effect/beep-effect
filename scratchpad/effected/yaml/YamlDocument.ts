@@ -35,7 +35,18 @@ const $I = $ScratchpadId.create("effected/yaml/YamlDocument");
  * spec-defined directives; any other name is a reserved directive preserved
  * for round-trip fidelity.
  *
+ * **Example** (Construct a YAML version directive)
+ *
+ * ```ts
+ * import { YamlDirective } from "@beep/scratchpad/effected/yaml/YamlDocument"
+ *
+ * const directive = YamlDirective.make({ name: "YAML", parameters: ["1.2"] })
+ * console.log(directive.parameters[0]) // 1.2
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class YamlDirective extends S.Class<YamlDirective>($I`YamlDirective`)({
 	name: S.String.annotateKey({ description: "Directive identifier without the leading `%`, such as `YAML`, `TAG`, or a reserved directive" }),
@@ -62,16 +73,19 @@ export class YamlDirective extends S.Class<YamlDirective>($I`YamlDirective`)({
  * **Example** (Parse a YAML document and inspect recovered errors)
  *
  * ```ts
- * import { YamlDocument } from "./index.ts";
- * import * as Effect from "effect/Effect";
+ * import { YamlDocument } from "@beep/scratchpad/effected/yaml/YamlDocument"
+ * import * as Effect from "effect/Effect"
  *
  * const program = Effect.gen(function* () {
- *   const doc = yield* YamlDocument.parse("# header\nname: Alice\n");
+ *   const doc = yield* YamlDocument.parse("# header\nname: Alice\n")
  *   return doc.errors.length; // 0 — no recovered errors
- * });
+ * })
+ * console.log(Effect.runSync(program)) // 0
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class YamlDocument extends S.Class<YamlDocument>($I`YamlDocument`)({
 	contents: S.NullOr(S.suspend((): S.Schema<YamlNodeType> => YamlNode)).annotateKey({ description: "Root YAML syntax node, or `null` for an empty document" }),
@@ -90,11 +104,23 @@ export class YamlDocument extends S.Class<YamlDocument>($I`YamlDocument`)({
 	 * when any fatal-code diagnostic is present; non-fatal diagnostics are
 	 * data on the returned document.
 	 *
+	 * **Example** (Parse one document with its framing)
+	 *
+	 * ```ts
+	 * import { YamlDocument } from "@beep/scratchpad/effected/yaml/YamlDocument"
+	 * import * as Effect from "effect/Effect"
+	 *
+	 * const document = Effect.runSync(YamlDocument.parse("---\nname: Alice\n"))
+	 * console.log(document.hasDocumentStart) // true
+	 * ```
+	 *
 	 * @param text - The YAML source to parse.
 	 * @param options - Optional {@link YamlParseOptions}; defaults apply for
 	 *   omitted fields.
 	 * @returns An `Effect` that succeeds with the {@link YamlDocument}, or fails
 	 *   with {@link YamlParseError}.
+	 * @category parsing
+	 * @since 0.0.0
 	 */
 	static readonly parse = Effect.fn("YamlDocument.parse")(function* (text: string, options?: YamlParseOptions) {
 		const raw = composeFirstDocument(text, toParseInput(options));
@@ -113,11 +139,23 @@ export class YamlDocument extends S.Class<YamlDocument>($I`YamlDocument`)({
 	 * document. Any fatal diagnostic in any document — or a stream-level
 	 * directive-placement error — fails the whole Effect.
 	 *
+	 * **Example** (Parse a two document stream)
+	 *
+	 * ```ts
+	 * import { YamlDocument } from "@beep/scratchpad/effected/yaml/YamlDocument"
+	 * import * as Effect from "effect/Effect"
+	 *
+	 * const documents = Effect.runSync(YamlDocument.parseAll("---\na: 1\n---\nb: 2\n"))
+	 * console.log(documents.length) // 2
+	 * ```
+	 *
 	 * @param text - The YAML stream to parse.
 	 * @param options - Optional {@link YamlParseOptions}; defaults apply for
 	 *   omitted fields.
 	 * @returns An `Effect` that succeeds with one {@link YamlDocument} per
 	 *   document, or fails with {@link YamlParseError}.
+	 * @category parsing
+	 * @since 0.0.0
 	 */
 	static readonly parseAll = Effect.fn("YamlDocument.parseAll")(function* (text: string, options?: YamlParseOptions) {
 		const { documents, streamErrors } = composeAllDocuments(text, toParseInput(options));
@@ -139,12 +177,27 @@ export class YamlDocument extends S.Class<YamlDocument>($I`YamlDocument`)({
 	 * document (AST, directives, diagnostics) and encoding a document back to
 	 * YAML text.
 	 *
+	 * **Details**
+	 *
 	 * Schema-producing: each call returns a fresh schema whose derivation
 	 * caches are not shared across calls; bind the result to a `const` on hot
 	 * paths.
 	 *
+	 * **Example** (Decode YAML through a document codec)
+	 *
+	 * ```ts
+	 * import { YamlDocument } from "@beep/scratchpad/effected/yaml/YamlDocument"
+	 * import * as S from "effect/Schema"
+	 *
+	 * const schema = YamlDocument.schema()
+	 * const document = S.decodeUnknownSync(schema)("name: Alice\n")
+	 * console.log(document.errors.length) // 0
+	 * ```
+	 *
 	 * @param options - Optional {@link YamlParseOptions} applied on decode.
 	 * @returns A `Schema.Codec<YamlDocument, string>`.
+	 * @category schemas
+	 * @since 0.0.0
 	 */
 	static schema(options?: YamlParseOptions): S.Codec<YamlDocument, string> {
 		return S.String.pipe(
@@ -165,30 +218,42 @@ export class YamlDocument extends S.Class<YamlDocument>($I`YamlDocument`)({
 	}
 
 	/**
-  * Stringify this document (contents, directives and framing) as YAML.
-  * Fails with {@link YamlStringifyError} on circular references introduced
-  * into a synthetic AST (`CircularReference`) or on a synthetic AST nested
-  * deeper than the stringifier's recursion budget (`NestingDepthExceeded`)
-  * — both surface through the typed error channel rather than as an
-  * unhandled stack-overflow defect.
-  *
-  * **Gotchas**
-  *
-  * `YamlStringifyOptions.lineWidth` is not honored here: column-based
-  * scalar folding exists only on the value path, through the entry points
-  * that accept stringify options ({@link Yaml.stringify} and
-  * {@link Yaml.stringifyResult}). The
-  * document/node path threads `lineWidth` into its render context but
-  * never reads it, so long scalars are emitted unfolded regardless of the
-  * option. Callers that need folding should render the plain value
-  * instead — `Yaml.stringify(doc.toValue(), options)` — at the cost of
-  * the document-level framing and styles this path preserves.
-  *
-  * @param options - Optional {@link YamlStringifyOptions}; defaults apply for
-  *   omitted fields.
-  * @returns An `Effect` that succeeds with the YAML text, or fails with
-  *   {@link YamlStringifyError}.
-  */
+	 * Stringify this document (contents, directives and framing) as YAML.
+	 * Fails with {@link YamlStringifyError} on circular references introduced
+	 * into a synthetic AST (`CircularReference`) or on a synthetic AST nested
+	 * deeper than the stringifier's recursion budget (`NestingDepthExceeded`)
+	 * — both surface through the typed error channel rather than as an
+	 * unhandled stack-overflow defect.
+	 *
+	 * **Gotchas**
+	 *
+	 * `YamlStringifyOptions.lineWidth` is not honored here: column-based
+	 * scalar folding exists only on the value path, through the entry points
+	 * that accept stringify options ({@link Yaml.stringify} and
+	 * {@link Yaml.stringifyResult}). The
+	 * document/node path threads `lineWidth` into its render context but
+	 * never reads it, so long scalars are emitted unfolded regardless of the
+	 * option. Callers that need folding should render the plain value
+	 * instead — `Yaml.stringify(doc.toValue(), options)` — at the cost of
+	 * the document-level framing and styles this path preserves.
+	 *
+	 * **Example** (Render document framing as YAML)
+	 *
+	 * ```ts
+	 * import { YamlDocument } from "@beep/scratchpad/effected/yaml/YamlDocument"
+	 * import * as Effect from "effect/Effect"
+	 *
+	 * const document = Effect.runSync(YamlDocument.parse("---\nname: Alice\n"))
+	 * console.log(JSON.stringify(Effect.runSync(document.stringify()))) // "---\nname: Alice\n"
+	 * ```
+	 *
+	 * @param options - Optional {@link YamlStringifyOptions}; defaults apply for
+	 *   omitted fields.
+	 * @returns An `Effect` that succeeds with the YAML text, or fails with
+	 *   {@link YamlStringifyError}.
+	 * @category serialization
+	 * @since 0.0.0
+	 */
 	stringify(options?: YamlStringifyOptions): Effect.Effect<string, YamlStringifyError> {
 		return Effect.try({
 			try: () => stringifyDocument(toRawDocument(this), toStringifyInput(options)),
@@ -235,6 +300,20 @@ export class YamlDocument extends S.Class<YamlDocument>($I`YamlDocument`)({
 	 * Reconstruct the plain JavaScript value of this document's contents,
 	 * resolving anchors and aliases. `null` for an empty document. Pure and
 	 * total.
+	 *
+	 * **Example** (Read the value of an empty document)
+	 *
+	 * ```ts
+	 * import { YamlDocument } from "@beep/scratchpad/effected/yaml/YamlDocument"
+	 *
+	 * const document = YamlDocument.make({
+	 *   contents: null, errors: [], warnings: [], directives: []
+	 * })
+	 * console.log(document.toValue()) // null
+	 * ```
+	 *
+	 * @category destructors
+	 * @since 0.0.0
 	 */
 	toValue(): unknown {
 		if (this.contents === null) return null;
@@ -277,7 +356,21 @@ const toStringifyInput = (options?: YamlStringifyOptions) =>
  * malformed input; it is NOT a second public parse entry point (not
  * re-exported from the package index).
  *
+ * **Example** (Materialize a raw empty document)
+ *
+ * ```ts
+ * import { documentFromRaw } from "@beep/scratchpad/effected/yaml/YamlDocument"
+ *
+ * const document = documentFromRaw({
+ *   contents: null, errors: [], warnings: [], directives: [],
+ *   hasDocumentStart: false, hasDocumentEnd: false, hasDocumentStartTab: false
+ * }, "")
+ * console.log(document.contents) // null
+ * ```
+ *
  * @internal
+ * @category constructors
+ * @since 0.0.0
  */
 export const documentFromRaw: {
 	(raw: RawYamlDocument, text: string): YamlDocument;

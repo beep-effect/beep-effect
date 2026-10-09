@@ -17,13 +17,33 @@ import type { YamlToken } from "../../YamlToken.ts";
 
 const $I = $ScratchpadId.create("effected/yaml/internal/rules/document-end");
 
-/** Options for `document-end`: require (`true`, default) or forbid the marker. */
+/**
+ * Options for `document-end`: require (`true`, default) or forbid the marker.
+ *
+ * **Example** (Decode document-end options)
+ *
+ * ```ts
+ * import { documentEndOptions } from "@beep/scratchpad/effected/yaml/internal/rules/document-end";
+ * import * as S from "effect/Schema";
+ *
+ * const options = S.decodeUnknownSync(documentEndOptions)({ present: false });
+ * console.log(options.present); // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const documentEndOptions = S.Struct({
 	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for document-end marker findings, defaulting to `error`" }),
 	present: S.optionalKey(S.Boolean).annotateKey({ description: "Whether the stream's final `...` marker is required (`true`, default) or forbidden (`false`)" }),
 }).pipe($I.annoteSchema("documentEndOptions", { description: "Options for `document-end`: require (`true`, default) or forbid the marker." }));
 
-/** Decoded options for the stream's document end marker. */
+/**
+ * Decoded options for the stream's document end marker.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type documentEndOptions = typeof documentEndOptions.Type;
 
 const TRIVIA = HashSet.fromIterable(["newline", "whitespace", "comment", "byte-order-mark"]);
@@ -34,7 +54,11 @@ const tailToken = (ctx: LintContext): YamlToken | undefined =>
 
 /**
  * The end-of-stream position, shared by the missing-marker diagnostic and
- * the absent-marker vote so the two cannot drift apart. `line`/`character`
+ * the absent-marker vote so the two cannot drift apart.
+ *
+ * **Details**
+ *
+ * `line`/`character`
  * must agree with `offset` (= text length): when the text ends with a
  * newline, that offset sits at the head of the line AFTER the last content
  * line `buildLines` kept.
@@ -52,7 +76,29 @@ const endOfStreamPosition = (
 	};
 };
 
-/** The `...` marker at the tail of the stream. */
+/**
+ * Checks the `...` marker at the tail of the stream.
+ *
+ * **Details**
+ *
+ * The rule requires the marker by default when enabled, or forbids it with
+ * `present: false`. Only the stream tail is checked; mid-stream markers
+ * are document structure. The rule is opt-in and absent from both presets.
+ *
+ * **Example** (Report document-end violations)
+ *
+ * ```ts
+ * import { documentEnd } from "@beep/scratchpad/effected/yaml/internal/rules/document-end";
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/effected/yaml/YamlLint";
+ *
+ * const config = YamlLintConfig.make({ rules: { "document-end": "error" } });
+ * const diagnostics = YamlLint.run("a: 1\n", [documentEnd], config);
+ * console.log(diagnostics[0]?.message); // Missing "..." document end marker
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export const documentEnd: YamlRule = {
 	id: "document-end",
 	check: (ctx, options) => {

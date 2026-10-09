@@ -20,7 +20,18 @@ const $I = $ScratchpadId.create("effected/yaml/YamlLintRule");
  * Lint diagnostic severities. `"off"` is a config-level disable only and
  * never reaches a diagnostic — a rule set to `"off"` is not run.
  *
+ * **Example** (Decode a reporting severity)
+ *
+ * ```ts
+ * import { YamlLintSeverity } from "@beep/scratchpad/effected/yaml/YamlLintRule"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(YamlLintSeverity)("warning")) // warning
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const YamlLintSeverity = LiteralKit(["error", "warning"]).pipe($I.annoteSchema("YamlLintSeverity", { description: "Lint diagnostic severities. `\"off\"` is a config-level disable only and never reaches a diagnostic — a rule set to `\"off\"` is not run." }));
 
@@ -28,6 +39,8 @@ export const YamlLintSeverity = LiteralKit(["error", "warning"]).pipe($I.annoteS
  * The union of lint severity string literals.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlLintSeverity = typeof YamlLintSeverity.Type;
 
@@ -35,13 +48,35 @@ export type YamlLintSeverity = typeof YamlLintSeverity.Type;
  * A single lint finding: the reporting rule, its severity, a positioned span
  * and optionally a surgical fix.
  *
+ * **Details**
+ *
  * Deliberately separate from the engine's `YamlDiagnostic`: that type is the
  * lexer/parser/composer/stringifier error-code union and the single source
  * of truth for engine fatality — it carries no severity and no fix, and
  * lint-layer concerns must not pollute it. The `parse-validity` rule bridges
  * the two by mapping engine diagnostics into this shape.
  *
+ * **Example** (Construct a positioned lint finding)
+ *
+ * ```ts
+ * import { YamlLintDiagnostic } from "@beep/scratchpad/effected/yaml/YamlLintRule"
+ *
+ * const diagnostic = YamlLintDiagnostic.make({
+ *   rule: "trailing-spaces",
+ *   severity: "warning",
+ *   message: "Remove trailing spaces",
+ *   offset: 8,
+ *   length: 2,
+ *   line: 0,
+ *   character: 8
+ * })
+ *
+ * console.log(diagnostic.message) // Remove trailing spaces
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class YamlLintDiagnostic extends S.Class<YamlLintDiagnostic>($I`YamlLintDiagnostic`)({
 	rule: S.String.annotateKey({ description: "Identifier of the lint rule reporting the finding" }),
@@ -60,6 +95,8 @@ export class YamlLintDiagnostic extends S.Class<YamlLintDiagnostic>($I`YamlLintD
  * its first character, and its zero-based line number.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface LintLine {
 	readonly text: string;
@@ -68,7 +105,11 @@ export interface LintLine {
 }
 
 /**
- * The context handed to every rule. The engine tokenizes ONCE and every rule
+ * The context handed to every rule.
+ *
+ * **Details**
+ *
+ * The engine tokenizes ONCE and every rule
  * shares the one materialized `tokens` array — linting is inherently
  * multi-pass and random-access (layout rules need lookahead and lookbehind),
  * so the context is eager by nature; the streaming token form exists for
@@ -82,6 +123,8 @@ export interface LintLine {
  * `parse-validity` rule reports them).
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface LintContext {
 	readonly text: string;
@@ -93,6 +136,8 @@ export interface LintContext {
 /**
  * One categorical style observation: a single occurrence of a style
  * choice in the source, voting a `value` for an inference `dimension`.
+ *
+ * **Details**
  *
  * The `dimension` IS the rule's option key and the `value` IS that option's
  * value (`"double"` for `quoteType`, `2` for `spaces`, `false` for
@@ -108,7 +153,26 @@ export interface LintContext {
  * builder must still sort it into the right tally without `instanceof`.
  * `.make` defaults it — construction sites never pass `_tag`.
  *
+ * **Example** (Record an indentation style vote)
+ *
+ * ```ts
+ * import { StyleVote } from "@beep/scratchpad/effected/yaml/YamlLintRule"
+ *
+ * const vote = StyleVote.make({
+ *   dimension: "spaces",
+ *   value: 2,
+ *   offset: 9,
+ *   length: 2,
+ *   line: 1,
+ *   character: 0
+ * })
+ *
+ * console.log(vote.value) // 2
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class StyleVote extends S.TaggedClass<StyleVote>($I`StyleVote`)("StyleVote", {
 	dimension: S.String.annotateKey({ description: "Rule option key supported by this source observation, such as `quoteType`, `spaces`, or `present`" }),
@@ -123,14 +187,32 @@ export class StyleVote extends S.TaggedClass<StyleVote>($I`StyleVote`)("StyleVot
  * One measured style floor: a value the source PROVES is at least
  * `value`, without proving what the configured limit should be — the longest
  * observed line proves `line-length.max` is at least that long, not what it
- * is. Floors are carried in the evidence for callers that want them and are
- * never resolved into config options; fabricating a max from the largest
- * value one happened to see would be lying with a straight face.
+ * is.
+ *
+ * **Details**
  *
  * The `_tag` literal discriminates a floor from a {@link StyleVote} at
  * runtime (see there); `.make` defaults it.
  *
+ * **Gotchas**
+ *
+ * Floors are carried in the evidence for callers that want them and are
+ * never resolved into config options; fabricating a max from the largest
+ * value one happened to see would be lying with a straight face.
+ *
+ * **Example** (Record a measured line length floor)
+ *
+ * ```ts
+ * import { StyleFloor } from "@beep/scratchpad/effected/yaml/YamlLintRule"
+ *
+ * const floor = StyleFloor.make({ dimension: "max", value: 80 })
+ *
+ * console.log(floor.value) // 80
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class StyleFloor extends S.TaggedClass<StyleFloor>($I`StyleFloor`)("StyleFloor", {
 	dimension: S.String.annotateKey({ description: "Rule option key for which the source establishes a measured lower bound" }),
@@ -142,6 +224,8 @@ export class StyleFloor extends S.TaggedClass<StyleFloor>($I`StyleFloor`)("Style
  * {@link StyleVote} or a measured {@link StyleFloor}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type StyleObservation = StyleVote | StyleFloor;
 
@@ -149,6 +233,8 @@ export type StyleObservation = StyleVote | StyleFloor;
  * The public rule interface — built-ins and custom rules are the same
  * shape, and config references either by `id`; there is no privileged
  * built-in mechanism a custom rule cannot reach.
+ *
+ * **Details**
  *
  * `options` is the validated per-rule options object from the config entry
  * (or `undefined` when the entry was a bare severity literal); built-in
@@ -163,6 +249,8 @@ export type StyleObservation = StyleVote | StyleFloor;
  * stay default-driven under every resolver.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface YamlRule {
 	readonly id: string;

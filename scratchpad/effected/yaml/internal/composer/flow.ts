@@ -52,10 +52,11 @@ type PendingFlowComment = typeof PendingFlowComment.Type;
 /**
  * Validate that flow collection entries are separated by commas.
  *
+ * **Details**
+ *
  * Detects the specific pattern: content, `:`, content, content (no comma).
  * This catches `{foo: 1 bar: 2}` while allowing multiline plain scalars
  * like `{multi\n  line: value}` (consecutive scalars without colon between).
- *
  * State machine: idle → saw-colon → saw-value → error-if-no-comma
  */
 function validateFlowSeparators(
@@ -208,6 +209,34 @@ function isClosersOnly(text: string, start: number, end: number): boolean {
 // Compose flow map
 // ---------------------------------------------------------------------------
 
+/**
+ * Composes a flow mapping CST into YAML nodes with metadata and recovery diagnostics.
+ *
+ * **Details**
+ *
+ * Collection nesting is bounded; exceeding the limit records a diagnostic
+ * and returns an empty flow collection. Supply the parent block column to
+ * validate the indentation of continuation lines. Document-root callers
+ * omit that column.
+ *
+ * **Example** (Compose a flow mapping)
+ *
+ * ```ts
+ * import { composeFlowMap, composeFlowSeq } from "@beep/scratchpad/effected/yaml/internal/composer/flow"
+ * import { parseCSTAll } from "@beep/scratchpad/effected/yaml/internal/cst-parser"
+ * import { createState } from "@beep/scratchpad/effected/yaml/internal/composer/state"
+ *
+ * const text = "{answer: 42}"
+ * const cst = parseCSTAll(text)[0]?.children?.find(child => child.type === "flow-map")
+ * if (cst === undefined) throw new Error("Expected a flow collection")
+ * const state = createState(text, { composeFlowMap, composeFlowSeq })
+ * const collection = composeFlowMap(cst, state)
+ * console.log(collection.items.length) // 1
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const composeFlowMap: {
 	(state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): (cst: CstNode) => YamlMap;
 	(cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlMap;
@@ -281,6 +310,33 @@ function composeFlowMapInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 	return map;
 }
 
+/**
+ * Transforms flow CST children into semantic nodes, keys, value separators, and comments.
+ *
+ * **Details**
+ *
+ * Anchors and tags are carried to the following node. At a comma, pending
+ * metadata becomes an empty scalar and a node-less explicit key becomes a
+ * null key, keeping each entry's metadata within its own boundary.
+ *
+ * **Example** (Flatten a mapping entry into semantic items)
+ *
+ * ```ts
+ * import { composeFlowMap, composeFlowSeq, flattenFlowChildren } from "@beep/scratchpad/effected/yaml/internal/composer/flow"
+ * import { parseCSTAll } from "@beep/scratchpad/effected/yaml/internal/cst-parser"
+ * import { createState } from "@beep/scratchpad/effected/yaml/internal/composer/state"
+ *
+ * const text = "{answer: 42}"
+ * const cst = parseCSTAll(text)[0]?.children?.find(child => child.type === "flow-map")
+ * if (cst === undefined) throw new Error("Expected a flow mapping")
+ * const state = createState(text, { composeFlowMap, composeFlowSeq })
+ * const items = flattenFlowChildren(cst.children ?? [], state)
+ * console.log(items.map(item => item.kind).join(",")) // node,value-sep,node
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const flattenFlowChildren: {
 	(state: ComposerState): (children: readonly CstNode[]) => SemanticItem[];
 	(children: readonly CstNode[], state: ComposerState): SemanticItem[];
@@ -515,6 +571,34 @@ export const flattenFlowChildren: {
 // Compose flow seq
 // ---------------------------------------------------------------------------
 
+/**
+ * Composes a flow sequence CST into YAML nodes with metadata and recovery diagnostics.
+ *
+ * **Details**
+ *
+ * Collection nesting is bounded; exceeding the limit records a diagnostic
+ * and returns an empty flow collection. Supply the parent block column to
+ * validate the indentation of continuation lines. Document-root callers
+ * omit that column.
+ *
+ * **Example** (Compose a flow sequence)
+ *
+ * ```ts
+ * import { composeFlowMap, composeFlowSeq } from "@beep/scratchpad/effected/yaml/internal/composer/flow"
+ * import { parseCSTAll } from "@beep/scratchpad/effected/yaml/internal/cst-parser"
+ * import { createState } from "@beep/scratchpad/effected/yaml/internal/composer/state"
+ *
+ * const text = "[1, 2]"
+ * const cst = parseCSTAll(text)[0]?.children?.find(child => child.type === "flow-seq")
+ * if (cst === undefined) throw new Error("Expected a flow collection")
+ * const state = createState(text, { composeFlowMap, composeFlowSeq })
+ * const collection = composeFlowSeq(cst, state)
+ * console.log(collection.items.length) // 2
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const composeFlowSeq: {
 	(state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): (cst: CstNode) => YamlSeq;
 	(cst: CstNode, state: ComposerState, meta?: NodeMeta, parentBlockColumn?: number): YamlSeq;

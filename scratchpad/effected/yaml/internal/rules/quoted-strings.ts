@@ -22,9 +22,25 @@ import * as O from "@beep/utils/Option";
 const $I = $ScratchpadId.create("effected/yaml/internal/rules/quoted-strings");
 
 /**
+ * Validates quote-style preferences and whether plain string scalars require quotes.
+ *
+ * **Details**
+ *
  * Options for `quoted-strings`: the preferred `quoteType` (default
  * `"double"`) and whether plain string scalars are `required` to be quoted
  * at all (default `false` — only already-quoted scalars are policed).
+ *
+ * **Example** (Validate required single quotes)
+ *
+ * ```ts
+ * import { quotedStringsOptions } from "@beep/scratchpad/effected/yaml/internal/rules/quoted-strings"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(quotedStringsOptions)({ quoteType: "single", required: true })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const quotedStringsOptions = S.Struct({
 	severity: S.optionalKey(YamlLintSeverity).annotateKey({
@@ -45,10 +61,21 @@ export const quotedStringsOptions = S.Struct({
 	}),
 );
 
+/**
+ * The decoded quote-style and reporting options accepted by the quoted-strings rule.
+ *
+ * @see {@link quotedStringsOptions} for the options validation schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type quotedStringsOptions = typeof quotedStringsOptions.Type;
 
 /**
  * A value-preserving requote/wrap edit, or undefined when none is safe.
+ *
+ * **Details**
+ *
  * Delegates to the shared helper's CONSERVATIVE mode — the shipped
  * fix behavior stays exactly as released; the escaping-capable mode belongs
  * to the format path's opt-in `requoteScalars`, not the lint fix.
@@ -59,7 +86,31 @@ const safeQuoteFix = (ctx: LintContext, scalar: YamlScalar, quote: '"' | "'"): Y
 	return YamlEdit.make({ offset: scalar.offset, length: scalar.length, content });
 };
 
-/** Quote-style policy for string value scalars. */
+/**
+ * Enforces quote-style policy for string value scalars and sequence items.
+ *
+ * **Details**
+ *
+ * Mapping keys are outside this rule's scope. Already-quoted string values
+ * vote their quote style during inference; plain scalars do not vote.
+ *
+ * **Gotchas**
+ *
+ * A quote swap or wrap has a fix only when it preserves the parsed value:
+ * the scalar must be single-line, without escapes, target-style quote
+ * characters, tags, or anchors. Otherwise the diagnostic has no fix.
+ *
+ * **Example** (Identify the string quoting rule)
+ *
+ * ```ts
+ * import { quotedStrings } from "@beep/scratchpad/effected/yaml/internal/rules/quoted-strings"
+ *
+ * console.log(quotedStrings.id) // quoted-strings
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export const quotedStrings: YamlRule = {
 	id: "quoted-strings",
 	check: (ctx, options) => {

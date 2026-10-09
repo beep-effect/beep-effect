@@ -2,7 +2,12 @@
 // (original, modified) into minimal raw edit records. The facade
 // materializes public `YamlEdit` instances from these.
 
-/** A raw text-edit record: replace `[offset, offset + length)` with `content`. */
+/**
+ * A raw text-edit record: replace `[offset, offset + length)` with `content`.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface RawEdit {
 	readonly offset: number;
 	readonly length: number;
@@ -11,6 +16,8 @@ export interface RawEdit {
 
 /**
  * Compute edits by diffing two strings character by character.
+ *
+ * **Details**
  *
  * Walks both strings from each end inward to find the common prefix and
  * suffix, then emits a single edit covering the changed region in the
@@ -23,6 +30,18 @@ export interface RawEdit {
  * This relies on the assumption that both strings share an identical
  * structural skeleton (they were produced from the same AST); a simple
  * prefix/suffix match is sufficient and a full Myers diff is unnecessary.
+ *
+ * **Example** (Inspect a changed scalar and unchanged text)
+ *
+ * ```ts
+ * import { computeEdits } from "@beep/scratchpad/effected/yaml/internal/diff"
+ *
+ * console.log(JSON.stringify(computeEdits("name: Ada", "name: Eva"))) // [{"offset":6,"length":2,"content":"Ev"}]
+ * console.log(computeEdits("name: Ada", "name: Ada").length) // 0
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export function computeEdits(original: string, ...[modified]: [modified: string]): ReadonlyArray<RawEdit> {
 	if (original === modified) return [];

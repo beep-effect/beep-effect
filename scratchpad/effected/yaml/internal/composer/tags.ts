@@ -12,11 +12,30 @@ import * as O from "effect/Option";
 import { lexAll } from "../lexer.ts";
 
 /**
- * Resolve a tag shorthand using the document's %TAG directives.
+ * Resolves a tag shorthand using the document's `%TAG` directives.
+ *
+ * **Details**
+ *
  * For example, with `%TAG !! tag:example.com,2000:app/`, the tag `!!int`
  * resolves to `tag:example.com,2000:app/int`.
  *
  * Returns the resolved tag URI, or the original tag if no directive matches.
+ *
+ * **Example** (Resolve a custom secondary tag)
+ *
+ * ```ts
+ * import * as MutableHashMap from "effect/MutableHashMap"
+ * import { resolveTagHandle } from "@beep/scratchpad/effected/yaml/internal/composer/tags"
+ * import { createState } from "@beep/scratchpad/effected/yaml/internal/composer/state"
+ * import { composeFlowMap, composeFlowSeq } from "@beep/scratchpad/effected/yaml/internal/composer/flow"
+ *
+ * const state = createState("", { composeFlowMap, composeFlowSeq })
+ * MutableHashMap.set(state.tagMap, "!!", "tag:example.com,2000:app/")
+ * console.log(resolveTagHandle("!!int", state)) // tag:example.com,2000:app/int
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export function resolveTagHandle(...[tag, state]: [tag: string, state: ComposerState]): string {
 	// Verbatim tags: !<...> — return the content as-is
@@ -79,6 +98,28 @@ function decodeTagSuffix(suffix: string, tag: string, state: ComposerState): str
 	}
 }
 
+/**
+ * Extracts a directive name and parameters from source text beginning with `%`.
+ *
+ * **Details**
+ *
+ * Leading and trailing whitespace is trimmed, and parameters stop at a trailing
+ * comment. Source without a directive marker or name returns `null`.
+ *
+ * **Example** (Read directive parameters before a comment)
+ *
+ * ```ts
+ * import { parseDirective } from "@beep/scratchpad/effected/yaml/internal/composer/tags"
+ *
+ * const directive = parseDirective("%YAML 1.2 # version")
+ * console.log(directive?.name) // YAML
+ * console.log(directive?.parameters.join(",")) // 1.2
+ * console.log(parseDirective("plain scalar")) // null
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export function parseDirective(source: string): RawDirective | null {
 	const trimmed = source.trim();
 	if (!trimmed.startsWith("%")) return null;
@@ -95,10 +136,33 @@ export function parseDirective(source: string): RawDirective | null {
 }
 
 /**
- * QLJ7: validate that any `!handle!suffix` tag reference in this document
- * is declared by a `%TAG` directive in the SAME document. %TAG directives
- * are local to a single document and do not leak across `---` boundaries.
- * The `!!` shorthand and the primary `!` handle are always available.
+ * Validates that each `!handle!suffix` tag reference in this document is
+ * declared by a `%TAG` directive in the same document (QLJ7).
+ *
+ * **Details**
+ *
+ * `%TAG` directives are local to a single document and do not leak across `---`
+ * boundaries. The `!!` shorthand and the primary `!` handle are always available.
+ * Undeclared handles and malformed percent encoding append diagnostics to `state.errors`.
+ *
+ * **Example** (Report an undeclared document tag)
+ *
+ * ```ts
+ * import { validateTagHandlesInDocument } from "@beep/scratchpad/effected/yaml/internal/composer/tags"
+ * import { createState } from "@beep/scratchpad/effected/yaml/internal/composer/state"
+ * import { composeFlowMap, composeFlowSeq } from "@beep/scratchpad/effected/yaml/internal/composer/flow"
+ * import { parseCSTAll } from "@beep/scratchpad/effected/yaml/internal/cst-parser"
+ *
+ * const text = "!app!value hello"
+ * const state = createState(text, { composeFlowMap, composeFlowSeq })
+ * for (const document of parseCSTAll(text)) {
+ *   validateTagHandlesInDocument(document, state)
+ * }
+ * console.log(state.errors[0]?.code) // UnresolvedTag
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
  */
 export function validateTagHandlesInDocument(...[docCst, state]: [docCst: CstNode, state: ComposerState]): void {
 	const children = docCst.children ?? [];

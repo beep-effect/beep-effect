@@ -63,6 +63,8 @@ class YamlFormatInvariantFailure extends S.TaggedError<YamlFormatInvariantFailur
  * are structurally interchangeable — only `offset`/`length` are read).
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlRangeLike = YamlRange | { readonly offset: number; readonly length: number };
 
@@ -99,16 +101,16 @@ export type YamlRangeLike = YamlRange | { readonly offset: number; readonly leng
  * **Example** (Format a mapping with indented sequence items)
  *
  * ```ts
- * import { YamlFormat, YamlFormattingOptions } from "./index.ts";
+ * import { YamlFormat, YamlFormattingOptions } from "@beep/scratchpad/effected/yaml/YamlFormat";
  *
  * const options = YamlFormattingOptions.make({ indentSequences: true });
  * const formatted = YamlFormat.formatToString("key:\n- a\n- b\n", undefined, options);
- * // key:
- * //   - a
- * //   - b
+ * console.log(JSON.stringify(formatted)) // "key:\n  - a\n  - b\n"
  * ```
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export class YamlFormattingOptions extends S.Class<YamlFormattingOptions>($I`YamlFormattingOptions`)({
 	...YamlStringifyOptions.fields,
@@ -155,17 +157,52 @@ const echoErrorPath = (path: YamlPath) => A.map(path, (segment) =>
  * or the document carries `%YAML`/`%TAG` directives
  * (`DirectiveCarryingDocument` — modify does not re-emit directive lines, and
  * dropping a `%TAG` would orphan the shorthand tags that depend on it).
+ *
+ * **Details**
+ *
  * Carries structured {@link YamlDiagnostic} entries — never a collapsed
  * `reason` string (the structure-preserving-errors house rule). The error
  * itself has no `code` field: read the code from the diagnostics —
  * `error.diagnostics[0].code` is the primary failure.
  *
+ * **Example** (Inspect a structured modification failure)
+ *
+ * ```ts
+ * import { YamlModificationError } from "@beep/scratchpad/effected/yaml/YamlFormat";
+ * import { YamlDiagnostic } from "@beep/scratchpad/effected/yaml/YamlDiagnostic";
+ *
+ * const error = YamlModificationError.make({
+ *   path: ["port"],
+ *   diagnostics: [YamlDiagnostic.fromRaw({
+ *     code: "PathNotFound", message: "Missing port", offset: 0, length: 0,
+ *   }, "")],
+ * });
+ * console.log(error.message) // Modification failed at path [port]: Missing port
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class YamlModificationError extends S.TaggedError<YamlModificationError>($I`YamlModificationError`)("YamlModificationError", {
 	path: S.Array(S.Union([S.String, S.Finite, NonFiniteIndex])).annotateKey({ description: "Requested modification location, expressed as mapping keys, finite sequence indices, or tagged non-finite indices" }),
 	diagnostics: S.Array(YamlDiagnostic).annotateKey({ description: "Structured failure details explaining why modification failed; the first diagnostic identifies the primary failure" }),
 }, $I.annote("YamlModificationError", { description: "Raised when `YamlFormat.modify` cannot navigate the requested path against the composed AST (a structural mismatch), the source fails to parse, the source is a multi-document stream (`MultiDocumentStream` — a path names no particular document of a stream, so modify refuses rather than guessing), or the document carries `%YAML`/`%TAG` directives (`DirectiveCarryingDocument` — modify does not re-emit directive lines, and dropping a `%TAG` would orphan the shorthand tags that depend on it). Carries structured YamlDiagnostic entries — never a collapsed `reason` string (the structure-preserving-errors house rule). The error itself has no `code` field: read the code from the diagnostics — `error.diagnostics[0].code` is the primary failure." })) {
+	/**
+	 * Summarizes the requested path and all diagnostic messages for display.
+	 *
+	 * **Example** (Read the display summary)
+	 *
+	 * ```ts
+	 * import { YamlModificationError } from "@beep/scratchpad/effected/yaml/YamlFormat";
+	 *
+	 * const error = YamlModificationError.make({ path: ["port"], diagnostics: [] });
+	 * console.log(JSON.stringify(error.message)) // "Modification failed at path [port]: "
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		const summary = this.diagnostics.map((d) => d.message).join("; ");
 		return `Modification failed at path [${this.path.join(", ")}]: ${summary}`;
@@ -354,6 +391,8 @@ function formatDocument(text: string, options: YamlFormattingOptions | undefined
  * composition {@link formatDocument} already performed. Returns `undefined`
  * — no edits — when the stream cannot be re-emitted faithfully:
  *
+ * **Gotchas**
+ *
  * - any document (or the stream itself) carries a fatal diagnostic, the same
  *   posture as the single-document path;
  * - any document carries `%YAML`/`%TAG` directives — `stringifyDocument`
@@ -397,6 +436,8 @@ function formatStream(
 /**
  * Lower a plain JavaScript value into synthetic AST nodes (offset/length are
  * irrelevant — the result is immediately re-stringified).
+ *
+ * **Details**
  *
  * Recursive by design: an array becomes a block {@link YamlSeq} and any other
  * non-null object a block {@link YamlMap} over its own enumerable string keys,
@@ -827,74 +868,89 @@ function tryRegionalScalarEdit(
  * **Example** (Format YAML and update a value while preserving comments)
  *
  * ```ts
- * import { YamlFormat } from "./index.ts";
+ * import { YamlFormat } from "@beep/scratchpad/effected/yaml/YamlFormat";
  * import * as Effect from "effect/Effect";
  *
  * const formatted = YamlFormat.formatToString("a:   1\nb:\n    - x\n    - y # c\n");
- * // => "a: 1\nb:\n- x\n- y # c\n"
+ * console.log(JSON.stringify(formatted)) // "a: 1\nb:\n- x\n- y # c\n"
  *
  * const program = Effect.gen(function* () {
  *   return yield* YamlFormat.modifyToString("port: 3000 # dev\n", ["port"], 8080);
- *   // => "port: 8080 # dev\n"
  * });
+ * console.log(JSON.stringify(Effect.runSync(program))) // "port: 8080 # dev\n"
  * ```
  *
  * @public
+ * @category formatting
+ * @since 0.0.0
  */
 export class YamlFormat {
 	private constructor() {}
 
 	/**
-  * Compute formatting edits for a YAML document. Non-mutating — apply the
-  * result with `YamlEdit.applyAll` (or use {@link YamlFormat.formatToString}).
-  * Pure and total: malformed input (a fatal parse error) yields `[]` rather
-  * than corrupting the document.
-  *
-  * **Details**
-  *
-  * **Multi-document streams format whole.** Input containing more than one
-  * document (a `---`-separated stream — a Kubernetes manifest, a pnpm 11
-  * `pnpm-lock.yaml` with a config-dependency preamble) formats every
-  * document in order, re-emitting each document's own framing (`---`,
-  * `...`, comment blocks); no document is ever dropped. Document detection
-  * is CST-level, so a `---` inside a block scalar or quoted string is
-  * content, not a document boundary. Two multi-document shapes yield `[]`
-  * (untouched) because they cannot be re-emitted faithfully: a stream with
-  * a fatal diagnostic in any document (the same posture as single-document
-  * input) and a stream carrying `%YAML`/`%TAG` directives.
-  *
-  * **Directive-carrying documents yield `[]` on the single-document path
-  * too.** Directive lines are not re-emitted, and dropping a `%TAG` while
-  * keeping the shorthand tags that depend on it would turn a valid document
-  * into an unparseable one — so a document carrying `%YAML`/`%TAG`
-  * directives is left untouched. Detection is directive-token-level: a
-  * literal `%TAG` inside a scalar is content and formats normally.
-  *
-  * The positional `range` argument takes precedence over
-  * `options?.range` when both are given; either accepts a plain
-  * `{ offset, length }` object as well as a {@link YamlRange} instance, so
-  * callers do not need `YamlRange.make(...)` for the common case.
-  *
-  * Formatting preserves an existing scalar's own quote style by default —
-  * `quoteStyle` governs only quotes the stringifier introduces. The opt-in
-  * `options.requoteScalars` makes `quoteStyle` apply to already-quoted
-  * source scalars too, re-quoting only where the parsed value is provably
-  * preserved; see {@link YamlFormattingOptions} for the exact skip rules.
-  *
-  * A plain `<<` mapping key is preserved unquoted, keeping its merge-key
-  * meaning (`tag:yaml.org,2002:merge`) — quoting it to `'<<'` would produce
-  * an ordinary string key that merges nothing, changing what the document
-  * means with no error raised. A key the author quoted explicitly keeps its
-  * quotes, since that is a literal string key they wrote deliberately. Note
-  * that {@link Yaml.stringify} is deliberately the other way round for a
-  * `"<<"` key on a plain JavaScript object.
-  *
-  * @param text - The YAML source to format.
-  * @param range - Optional sub-range; only edits fully within it are returned.
-  * @param options - Optional {@link YamlFormattingOptions}.
-  * @returns The edits that bring `text` to canonical shape; apply them with
-  *   `YamlEdit.applyAll`. Empty when the input cannot be formatted faithfully.
-  */
+	 * Compute formatting edits for a YAML document. Non-mutating — apply the
+	 * result with `YamlEdit.applyAll` (or use {@link YamlFormat.formatToString}).
+	 * Pure and total: malformed input (a fatal parse error) yields `[]` rather
+	 * than corrupting the document.
+	 *
+	 * **Details**
+	 *
+	 * **Multi-document streams format whole.** Input containing more than one
+	 * document (a `---`-separated stream — a Kubernetes manifest, a pnpm 11
+	 * `pnpm-lock.yaml` with a config-dependency preamble) formats every
+	 * document in order, re-emitting each document's own framing (`---`,
+	 * `...`, comment blocks); no document is ever dropped. Document detection
+	 * is CST-level, so a `---` inside a block scalar or quoted string is
+	 * content, not a document boundary. Two multi-document shapes yield `[]`
+	 * (untouched) because they cannot be re-emitted faithfully: a stream with
+	 * a fatal diagnostic in any document (the same posture as single-document
+	 * input) and a stream carrying `%YAML`/`%TAG` directives.
+	 *
+	 * **Directive-carrying documents yield `[]` on the single-document path
+	 * too.** Directive lines are not re-emitted, and dropping a `%TAG` while
+	 * keeping the shorthand tags that depend on it would turn a valid document
+	 * into an unparseable one — so a document carrying `%YAML`/`%TAG`
+	 * directives is left untouched. Detection is directive-token-level: a
+	 * literal `%TAG` inside a scalar is content and formats normally.
+	 *
+	 * The positional `range` argument takes precedence over
+	 * `options?.range` when both are given; either accepts a plain
+	 * `{ offset, length }` object as well as a {@link YamlRange} instance, so
+	 * callers do not need `YamlRange.make(...)` for the common case.
+	 *
+	 * Formatting preserves an existing scalar's own quote style by default —
+	 * `quoteStyle` governs only quotes the stringifier introduces. The opt-in
+	 * `options.requoteScalars` makes `quoteStyle` apply to already-quoted
+	 * source scalars too, re-quoting only where the parsed value is provably
+	 * preserved; see {@link YamlFormattingOptions} for the exact skip rules.
+	 *
+	 * A plain `<<` mapping key is preserved unquoted, keeping its merge-key
+	 * meaning (`tag:yaml.org,2002:merge`) — quoting it to `'<<'` would produce
+	 * an ordinary string key that merges nothing, changing what the document
+	 * means with no error raised. A key the author quoted explicitly keeps its
+	 * quotes, since that is a literal string key they wrote deliberately. Note
+	 * that {@link Yaml.stringify} is deliberately the other way round for a
+	 * `"<<"` key on a plain JavaScript object.
+	 *
+	 * **Example** (Apply computed formatting edits)
+	 *
+	 * ```ts
+	 * import { YamlFormat } from "@beep/scratchpad/effected/yaml/YamlFormat";
+	 * import { YamlEdit } from "@beep/scratchpad/effected/yaml/YamlEdit";
+	 *
+	 * const source = "a:   1\n";
+	 * const edits = YamlFormat.format(source);
+	 * console.log(JSON.stringify(YamlEdit.applyAll(source, edits))) // "a: 1\n"
+	 * ```
+	 *
+	 * @param text - The YAML source to format.
+	 * @param range - Optional sub-range; only edits fully within it are returned.
+	 * @param options - Optional {@link YamlFormattingOptions}.
+	 * @returns The edits that bring `text` to canonical shape; apply them with
+	 *   `YamlEdit.applyAll`. Empty when the input cannot be formatted faithfully.
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	static format(text: string, range?: YamlRangeLike, options?: YamlFormattingOptions): ReadonlyArray<YamlEdit> {
 		const formatted = formatDocument(text, options);
 		if (formatted === undefined) return [];
@@ -915,6 +971,8 @@ export class YamlFormat {
 	 * Format `text` and apply the resulting edits in one step
 	 * (`YamlEdit.applyAll ∘ format`). Pure and total.
 	 *
+	 * **Details**
+	 *
 	 * Inherits the {@link YamlFormat.format} contract: a multi-document stream
 	 * is formatted whole — every document re-emitted in order — and input
 	 * that cannot be formatted faithfully (a fatal parse error, or any
@@ -922,88 +980,112 @@ export class YamlFormat {
 	 * is returned byte-identical — never a truncated first document, never a
 	 * document re-emitted without the directive its tags depend on.
 	 *
+	 * **Example** (Format a mapping in one step)
+	 *
+	 * ```ts
+	 * import { YamlFormat } from "@beep/scratchpad/effected/yaml/YamlFormat";
+	 *
+	 * console.log(JSON.stringify(YamlFormat.formatToString("a:   1\n"))) // "a: 1\n"
+	 * ```
+	 *
 	 * @param text - The YAML source to format.
 	 * @param range - Optional sub-range; only edits fully within it are applied.
 	 * @param options - Optional {@link YamlFormattingOptions}.
 	 * @returns The formatted text, or `text` unchanged when it cannot be
 	 *   formatted faithfully.
+	 * @category formatting
+	 * @since 0.0.0
 	 */
 	static formatToString(text: string, range?: YamlRangeLike, options?: YamlFormattingOptions): string {
 		return YamlEdit.applyAll(text, YamlFormat.format(text, range, options));
 	}
 
 	/**
-  * Compute the edits that insert, replace, or remove a value at `path`.
-  * Passing `value === undefined` removes the target key/element; a missing
-  * insertion target appends after the last pair/element. Fails with
-  * {@link YamlModificationError} on a fatal parse error or a structural
-  * navigation mismatch.
-  *
-  * **Details**
-  *
-  * **`value` may be a whole object graph.** An array is written as a block
-  * sequence and any other non-null object as a block mapping over its own
-  * enumerable string keys, recursively — the same lowering
-  * {@link Yaml.stringify} applies to the same value, so `modify` and
-  * `stringify` agree on what a given JavaScript value means. For a synthesized
-  * subtree (an object/array value) only the surrounding document is
-  * preserved byte-for-byte; the subtree carries no comments and takes the
-  * stringifier's styles.
-  *
-  * **Scalar replacement is region-confined and quote-preserving.**
-  * When the path resolves to an existing single-line `plain`,
-  * `single-quoted`, or `double-quoted` scalar with no tag or anchor, and
-  * the replacement is a string, number, or boolean, `modify` splices
-  * ONLY the target scalar's source span and emits a single edit: a string
-  * into a quoted scalar keeps the original quote character, a non-string
-  * renders plain (quoting it would change the resolved type), and every
-  * byte outside the span — line endings included, so a CRLF document keeps
-  * its CRLFs and a same-line trailing comment survives — is untouched. The
-  * splice is taken only when the rendered text re-parses to exactly the
-  * caller's value and renders as a single line; a no-op replacement yields
-  * no edits. Anything else — removals (`value === undefined`), nulls,
-  * insertions, object/array values, block or multi-line scalars, tagged or anchored
-  * targets, or any document-shaping / explicit-style option
-  * (`defaultScalarStyle`, `forceDefaultStyles`, `sortKeys`, `indent`,
-  * `indentSequences`, `finalNewline`) — falls back to re-serialising the
-  * whole document, which normalises line endings to LF, applies those
-  * options, and renders the replacement in the stringifier's styles.
-  *
-  * Two replacement values have no finite rendering and fail typed rather
-  * than hanging or overflowing the stack: one containing a circular
-  * reference (`CircularReference`) and one nesting deeper than 256 levels
-  * (`NestingDepthExceeded`).
-  *
-  * **Single-document contract.** A `path` carries no document index, so on
-  * a multi-document stream there is no rule for which document it names —
-  * `modify` fails with {@link YamlModificationError} carrying a
-  * `MultiDocumentStream` diagnostic rather than guessing document 1 (and
-  * unlike {@link YamlFormat.format}, which formats a stream whole because
-  * formatting needs no target). Detection is CST-level: a `---` inside a
-  * block scalar or quoted string is content, not a document boundary.
-  *
-  * **Directive-carrying documents are refused.** A document carrying
-  * `%YAML`/`%TAG` directives fails with {@link YamlModificationError}
-  * carrying a `DirectiveCarryingDocument` diagnostic: modify re-emits the
-  * whole document and does not re-emit directive lines, so applying it
-  * would drop the `%TAG` while keeping the shorthand tags that depend on
-  * it — unparseable output. A typed refusal beats silent corruption;
-  * directive re-emission is unimplemented, not undesired. A literal
-  * `%TAG` inside a scalar is content and does not trigger the refusal.
-  *
-  * `options` is a bare {@link YamlStringifyOptions} — it controls only the
-  * internal re-stringify step, not a range (there is no range to restrict
-  * for a path-targeted modification).
-  *
-  * @param text - The YAML source to modify.
-  * @param path - The location to insert, replace or remove.
-  * @param value - The JavaScript value to write; `undefined` removes the
-  *   target instead.
-  * @param options - Optional {@link YamlStringifyOptions} for the
-  *   re-stringify step.
-  * @returns An `Effect` that succeeds with the edits to apply (via
-  *   `YamlEdit.applyAll`), or fails with {@link YamlModificationError}.
-  */
+	 * Compute the edits that insert, replace, or remove a value at `path`.
+	 * Passing `value === undefined` removes the target key/element; a missing
+	 * insertion target appends after the last pair/element. Fails with
+	 * {@link YamlModificationError} on a fatal parse error or a structural
+	 * navigation mismatch.
+	 *
+	 * **Details**
+	 *
+	 * **`value` may be a whole object graph.** An array is written as a block
+	 * sequence and any other non-null object as a block mapping over its own
+	 * enumerable string keys, recursively — the same lowering
+	 * {@link Yaml.stringify} applies to the same value, so `modify` and
+	 * `stringify` agree on what a given JavaScript value means. For a synthesized
+	 * subtree (an object/array value) only the surrounding document is
+	 * preserved byte-for-byte; the subtree carries no comments and takes the
+	 * stringifier's styles.
+	 *
+	 * **Scalar replacement is region-confined and quote-preserving.**
+	 * When the path resolves to an existing single-line `plain`,
+	 * `single-quoted`, or `double-quoted` scalar with no tag or anchor, and
+	 * the replacement is a string, number, or boolean, `modify` splices
+	 * ONLY the target scalar's source span and emits a single edit: a string
+	 * into a quoted scalar keeps the original quote character, a non-string
+	 * renders plain (quoting it would change the resolved type), and every
+	 * byte outside the span — line endings included, so a CRLF document keeps
+	 * its CRLFs and a same-line trailing comment survives — is untouched. The
+	 * splice is taken only when the rendered text re-parses to exactly the
+	 * caller's value and renders as a single line; a no-op replacement yields
+	 * no edits. Anything else — removals (`value === undefined`), nulls,
+	 * insertions, object/array values, block or multi-line scalars, tagged or anchored
+	 * targets, or any document-shaping / explicit-style option
+	 * (`defaultScalarStyle`, `forceDefaultStyles`, `sortKeys`, `indent`,
+	 * `indentSequences`, `finalNewline`) — falls back to re-serialising the
+	 * whole document, which normalises line endings to LF, applies those
+	 * options, and renders the replacement in the stringifier's styles.
+	 *
+	 * Two replacement values have no finite rendering and fail typed rather
+	 * than hanging or overflowing the stack: one containing a circular
+	 * reference (`CircularReference`) and one nesting deeper than 256 levels
+	 * (`NestingDepthExceeded`).
+	 *
+	 * **Single-document contract.** A `path` carries no document index, so on
+	 * a multi-document stream there is no rule for which document it names —
+	 * `modify` fails with {@link YamlModificationError} carrying a
+	 * `MultiDocumentStream` diagnostic rather than guessing document 1 (and
+	 * unlike {@link YamlFormat.format}, which formats a stream whole because
+	 * formatting needs no target). Detection is CST-level: a `---` inside a
+	 * block scalar or quoted string is content, not a document boundary.
+	 *
+	 * **Directive-carrying documents are refused.** A document carrying
+	 * `%YAML`/`%TAG` directives fails with {@link YamlModificationError}
+	 * carrying a `DirectiveCarryingDocument` diagnostic: modify re-emits the
+	 * whole document and does not re-emit directive lines, so applying it
+	 * would drop the `%TAG` while keeping the shorthand tags that depend on
+	 * it — unparseable output. A typed refusal beats silent corruption;
+	 * directive re-emission is unimplemented, not undesired. A literal
+	 * `%TAG` inside a scalar is content and does not trigger the refusal.
+	 *
+	 * `options` is a bare {@link YamlStringifyOptions} — it controls only the
+	 * internal re-stringify step, not a range (there is no range to restrict
+	 * for a path-targeted modification).
+	 *
+	 * **Example** (Compute a scalar replacement edit)
+	 *
+	 * ```ts
+	 * import { YamlFormat } from "@beep/scratchpad/effected/yaml/YamlFormat";
+	 * import { YamlEdit } from "@beep/scratchpad/effected/yaml/YamlEdit";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const source = "port: 3000 # dev\n";
+	 * const edits = Effect.runSync(YamlFormat.modify(source, ["port"], 8080));
+	 * console.log(JSON.stringify(YamlEdit.applyAll(source, edits))) // "port: 8080 # dev\n"
+	 * ```
+	 *
+	 * @param text - The YAML source to modify.
+	 * @param path - The location to insert, replace or remove.
+	 * @param value - The JavaScript value to write; `undefined` removes the
+	 *   target instead.
+	 * @param options - Optional {@link YamlStringifyOptions} for the
+	 *   re-stringify step.
+	 * @returns An `Effect` that succeeds with the edits to apply (via
+	 *   `YamlEdit.applyAll`), or fails with {@link YamlModificationError}.
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly modify = Effect.fn("YamlFormat.modify")(function* (
 		text: string,
 		path: YamlPath,
@@ -1090,6 +1172,16 @@ export class YamlFormat {
 	 * `MultiDocumentStream` refusal and the `DirectiveCarryingDocument`
 	 * refusal of `%YAML`/`%TAG`-carrying documents.
 	 *
+	 * **Example** (Update a value and keep its comment)
+	 *
+	 * ```ts
+	 * import { YamlFormat } from "@beep/scratchpad/effected/yaml/YamlFormat";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const result = Effect.runSync(YamlFormat.modifyToString("port: 3000 # dev\n", ["port"], 8080));
+	 * console.log(JSON.stringify(result)) // "port: 8080 # dev\n"
+	 * ```
+	 *
 	 * @param text - The YAML source to modify.
 	 * @param path - The location to insert, replace or remove.
 	 * @param value - The JavaScript value to write; `undefined` removes the
@@ -1098,6 +1190,8 @@ export class YamlFormat {
 	 *   re-stringify step.
 	 * @returns An `Effect` that succeeds with the modified text, or fails with
 	 *   {@link YamlModificationError}.
+	 * @category utilities
+	 * @since 0.0.0
 	 */
 	static readonly modifyToString = Effect.fn("YamlFormat.modifyToString")(function* (
 		text: string,

@@ -45,11 +45,56 @@ const catalog: ReadonlyArray<readonly [YamlRule, S.Codec<unknown, unknown>]> = [
 	[indentation, indentationOptions],
 ];
 
-/** The built-in rules, in catalog order (parse-validity is rule `#1`). */
+/**
+ * The built-in rules, in catalog order (parse-validity is rule `#1`).
+ *
+ * **Example** (Inspect the first built-in rule)
+ *
+ * ```ts
+ * import { builtinRules } from "@beep/scratchpad/effected/yaml/internal/rules/catalog";
+ *
+ * console.log(builtinRules[0]?.id); // parse-validity
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const builtinRules: ReadonlyArray<YamlRule> = catalog.map(([rule]) => rule);
 
-/** Per-rule options schemas in catalog order, matching {@link builtinRules}. */
+/**
+ * Per-rule options schemas in catalog order, matching {@link builtinRules}.
+ *
+ * **Example** (Inspect the first options entry)
+ *
+ * ```ts
+ * import { builtinOptionsEntries } from "@beep/scratchpad/effected/yaml/internal/rules/catalog";
+ *
+ * console.log(builtinOptionsEntries[0]?.[0]); // parse-validity
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const builtinOptionsEntries: ReadonlyArray<readonly [string, S.Codec<unknown, unknown>]> = catalog.map(([rule, options]) => [rule.id, options]);
 
-/** Per-rule options schemas — the rule-aware half of config validation. */
+/**
+ * Per-rule options schemas — the rule-aware half of config validation.
+ *
+ * **Details**
+ *
+ * The map and ordered rule list are derived from the same catalog, so every
+ * built-in rule is registered with an options schema.
+ *
+ * **Example** (Find the colon-spacing options schema)
+ *
+ * ```ts
+ * import { builtinOptionsSchemas } from "@beep/scratchpad/effected/yaml/internal/rules/catalog";
+ * import * as HashMap from "effect/HashMap";
+ *
+ * console.log(HashMap.has(builtinOptionsSchemas, "colon-spacing")); // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const builtinOptionsSchemas = HashMap.fromIterable(builtinOptionsEntries);

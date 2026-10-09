@@ -84,6 +84,8 @@ const visitorEvent = S.TaggedUnion({
  * every diagnostic recorded while composing the document — fatal or not.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlVisitorEvent = typeof visitorEvent.Type;
 
@@ -92,7 +94,19 @@ export type YamlVisitorEvent = typeof visitorEvent.Type;
  * `YamlVisitorEvent.Scalar({ path, depth, value, style })`,
  * `YamlVisitorEvent.$is("MapStart")`).
  *
+
+ * **Example** (Construct and identify a scalar event)
+ *
+ * ```ts
+ * import { YamlVisitorEvent } from "@beep/scratchpad/effected/yaml/YamlVisitor";
+ *
+ * const event = YamlVisitorEvent.Scalar({ path: [], depth: 0, value: "hello", style: "plain" });
+ * console.log(YamlVisitorEvent.$is("Scalar")(event)) // true
+ * ```
+ *
  * @public
+ * @category constructors
+ * @since 0.0.0
  */
 export const YamlVisitorEvent = Data.taggedEnum<YamlVisitorEvent>();
 
@@ -104,7 +118,7 @@ export const YamlVisitorEvent = Data.taggedEnum<YamlVisitorEvent>();
  * **Example** (Collect YAML mapping keys and scalar values)
  *
  * ```ts
- * import { YamlVisitor, YamlVisitorEvent } from "./index.ts";
+ * import { YamlVisitor, YamlVisitorEvent } from "@beep/scratchpad/effected/yaml/YamlVisitor";
  * import * as Effect from "effect/Effect";
  * import * as Stream from "effect/Stream";
  *
@@ -114,33 +128,53 @@ export const YamlVisitorEvent = Data.taggedEnum<YamlVisitorEvent>();
  *   Stream.map((event) => event.value),
  *   Stream.runCollect,
  * );
- * // Effect.runSync(scalars) // => ["a", 1, "b", "x"]
+ * console.log(JSON.stringify(await Effect.runPromise(scalars))) // ["a",1,"b","x"]
  * ```
  *
  * @public
+ * @category parsing
+ * @since 0.0.0
  */
 export class YamlVisitor {
 	private constructor() {}
 
 	/**
-  * Create a lazy `Stream` of `YamlVisitorEvent` from YAML text, in document
-  * order. Multi-document streams (separated by `---`) produce a separate
-  * `DocumentStart`/`DocumentEnd` pair per document. Events are produced on
-  * demand, so combining with `Stream.take` allows efficient partial scans
-  * of large documents without materializing the whole event sequence.
-  *
-  * **Details**
-  *
-  * Infallible at the type level: diagnostics recorded while composing
-  * (fatal or not, including an exceeded `maxAliasCount`, recorded as
-  * `AliasCountExceeded`) surface as `Error` events inside the stream rather
-  * than failing it.
-  *
-  * @param text - The YAML source to visit.
-  * @param options - Optional {@link YamlParseOptions} controlling composition.
-  * @returns A lazy `Stream` of `YamlVisitorEvent`, infallible at the type
-  *   level.
-  */
+ * Create a lazy `Stream` of `YamlVisitorEvent` from YAML text, in document
+ * order.
+ *
+ * **Details**
+ *
+ * Multi-document streams (separated by `---`) produce a separate
+ * `DocumentStart`/`DocumentEnd` pair per document. Events are produced on
+ * demand, so combining with `Stream.take` allows efficient partial scans
+ * of large documents without materializing the whole event sequence.
+ *
+ * Infallible at the type level: diagnostics recorded while composing
+ * (fatal or not, including an exceeded `maxAliasCount`, recorded as
+ * `AliasCountExceeded`) surface as `Error` events inside the stream rather
+ * than failing it.
+ *
+ * **Example** (Visit the first document event)
+ *
+ * ```ts
+ * import { YamlVisitor } from "@beep/scratchpad/effected/yaml/YamlVisitor";
+ * import * as A from "effect/Array";
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
+ *
+ * const events = await Effect.runPromise(
+ *   YamlVisitor.visit("a: 1\n").pipe(Stream.take(1), Stream.runCollect),
+ * );
+ * console.log(JSON.stringify(A.map(events, (event) => event._tag))) // ["DocumentStart"]
+ * ```
+ *
+ * @param text - The YAML source to visit.
+ * @param options - Optional {@link YamlParseOptions} controlling composition.
+ * @returns A lazy `Stream` of `YamlVisitorEvent`, infallible at the type
+ *   level.
+ * @category streams
+ * @since 0.0.0
+ */
 	static visit(text: string, options?: YamlParseOptions): Stream.Stream<YamlVisitorEvent> {
 		return Stream.fromIterable(visitGen(text, options));
 	}

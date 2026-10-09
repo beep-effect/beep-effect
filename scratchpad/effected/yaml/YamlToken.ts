@@ -21,7 +21,19 @@ const $I = $ScratchpadId.create("effected/yaml/YamlToken");
 /**
  * The 22 lexical token kinds produced by the YAML tokenizer.
  *
+
+ * **Example** (Recognize lexical token categories)
+ *
+ * ```ts
+ * import { YamlTokenKind } from "@beep/scratchpad/effected/yaml/YamlToken";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(YamlTokenKind)("scalar")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const YamlTokenKind = InternalTokenKind;
 
@@ -29,11 +41,15 @@ export const YamlTokenKind = InternalTokenKind;
  * The union of all lexical token kind string literals.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlTokenKind = typeof YamlTokenKind.Type;
 
 /**
- * A single positioned YAML lexical token.
+ * Preserves a YAML lexical token together with its exact source span and position.
+ *
+ * **Details**
  *
  * - `kind` — the {@link (YamlTokenKind:type)}.
  * - `text` — the raw source slice the token covers; the position-fidelity
@@ -42,7 +58,21 @@ export type YamlTokenKind = typeof YamlTokenKind.Type;
  * - `line` / `character` — the zero-based position of the token's start,
  *   matching the `YamlDiagnostic` position vocabulary.
  *
+
+ * **Example** (Construct a positioned scalar token)
+ *
+ * ```ts
+ * import { YamlToken } from "@beep/scratchpad/effected/yaml/YamlToken";
+ *
+ * const token = YamlToken.make({
+ *   kind: "scalar", text: "hello", offset: 0, length: 5, line: 0, character: 0,
+ * });
+ * console.log(token.text) // hello
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class YamlToken extends S.Class<YamlToken>($I`YamlToken`)({
 	kind: YamlTokenKind.annotateKey({ description: "Lexical category assigned by the YAML tokenizer" }),
@@ -55,6 +85,8 @@ export class YamlToken extends S.Class<YamlToken>($I`YamlToken`)({
 
 /**
  * Promote the internal lexer tokens to the public shape.
+ *
+ * **Details**
  *
  * `line`/`character` are DERIVED from each token's offset against a
  * line-start index rather than copied from the internal token: the internal
@@ -105,56 +137,86 @@ const promoteAll = (text: string, tokens: ReadonlyArray<InternalToken>): Readonl
  * `Stream`, for lint- and editor-class consumers. Never fails on malformed
  * input: lexical errors arrive as `"error"`-kind tokens. Not instantiable.
  *
+
+ * **Example** (Tokenize malformed YAML without failing)
+ *
+ * ```ts
+ * import { YamlTokens } from "@beep/scratchpad/effected/yaml/YamlToken";
+ * import * as Result from "effect/Result";
+ *
+ * console.log(Result.isSuccess(YamlTokens.tokenize('"unterminated'))) // true
+ * ```
+ *
  * @public
+ * @category parsing
+ * @since 0.0.0
  */
 export class YamlTokens {
 	private constructor() {}
 
 	/**
-  * Tokenize YAML text into the full positioned token array — the sync
-  * `Result` primitive (tokenizing is a pure batch transform; the
-  * {@link YamlTokens.stream} form is derived from this one).
-  *
-  * **Gotchas**
-  *
-  * The failure channel is **reserved** for input-hardening guards and never
-  * fires today: the lexer is total, and lexical errors surface as
-  * `"error"`-kind tokens **in the success array** so that linting can run
-  * on malformed input — the `parse-validity` lint rule exists precisely for
-  * documents that do not parse. Do not "fix" this method to fail on
-  * `"error"` tokens; that would make malformed documents unlintable.
-  *
-  * **Example** (Inspect token kinds in a YAML mapping)
-  *
-  * ```ts
-  * import { YamlTokens } from "./index.ts";
-  * import * as Result from "effect/Result";
-  *
-  * const result = YamlTokens.tokenize("a: 1\n");
-  * if (Result.isSuccess(result)) {
-  *   result.success.map((t) => t.kind); // ["scalar", "block-map-start", ...]
-  * }
-  * ```
-  *
-  * @param text - The YAML source to tokenize.
-  * @returns A `Result` succeeding with every token in source order.
-  */
+ * Tokenize YAML text into the full positioned token array — the sync
+ * `Result` primitive (tokenizing is a pure batch transform; the
+ * {@link YamlTokens.stream} form is derived from this one).
+ *
+ * **Gotchas**
+ *
+ * The failure channel is **reserved** for input-hardening guards and never
+ * fires today: the lexer is total, and lexical errors surface as
+ * `"error"`-kind tokens **in the success array** so that linting can run
+ * on malformed input — the `parse-validity` lint rule exists precisely for
+ * documents that do not parse. Do not "fix" this method to fail on
+ * `"error"` tokens; that would make malformed documents unlintable.
+ *
+ * **Example** (Inspect the source text of mapping tokens)
+ *
+ * ```ts
+ * import { YamlTokens } from "@beep/scratchpad/effected/yaml/YamlToken";
+ * import * as A from "effect/Array";
+ * import * as Result from "effect/Result";
+ *
+ * const result = YamlTokens.tokenize("a: 1\n");
+ * if (Result.isSuccess(result)) {
+ *   console.log(JSON.stringify(A.map(result.success, (token) => token.text).join(""))) // "a: 1\n"
+ * }
+ * ```
+ *
+ * @param text - The YAML source to tokenize.
+ * @returns A `Result` succeeding with every token in source order.
+ * @category parsing
+ * @since 0.0.0
+ */
 	static tokenize(text: string): Result.Result<ReadonlyArray<YamlToken>, YamlParseError> {
 		return Result.succeed(promoteAll(text, lexAll(text)));
 	}
 
 	/**
-  * Tokenize YAML text as a lazy `Stream` of tokens — the derived form of
-  * {@link YamlTokens.tokenize} for genuinely incremental (SAX-style)
-  * consumers, parallel to `YamlVisitor.visit`.
-  *
-  * **Details**
-  *
-  * Derived from the sync primitive, so it shares its contract: lexical
-  * errors arrive as `"error"`-kind tokens in the stream, never as a stream
-  * failure. (The primitive's reserved failure channel would surface as a
-  * defect here; it never fires today.)
-  */
+ * Tokenize YAML text as a lazy `Stream` of tokens — the derived form of
+ * {@link YamlTokens.tokenize} for genuinely incremental (SAX-style)
+ * consumers, parallel to `YamlVisitor.visit`.
+ *
+ * **Details**
+ *
+ * Derived from the sync primitive, so it shares its contract: lexical
+ * errors arrive as `"error"`-kind tokens in the stream, never as a stream
+ * failure. (The primitive's reserved failure channel would surface as a
+ * defect here; it never fires today.)
+
+ * **Example** (Collect token text from a stream)
+ *
+ * ```ts
+ * import { YamlTokens } from "@beep/scratchpad/effected/yaml/YamlToken";
+ * import * as A from "effect/Array";
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
+ *
+ * const tokens = await Effect.runPromise(Stream.runCollect(YamlTokens.stream("hello")));
+ * console.log(A.map(tokens, (token) => token.text).join("")) // hello
+ * ```
+ *
+ * @category streams
+ * @since 0.0.0
+ */
 	static stream(text: string): Stream.Stream<YamlToken> {
 		return Stream.suspend(() =>
 			Result.match(YamlTokens.tokenize(text), {

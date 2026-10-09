@@ -37,6 +37,17 @@ import * as P from "effect/Predicate";
  * The structural slice of a scalar node the re-quoting decision reads —
  * satisfied by a public `YamlScalar` without this module depending on the
  * class itself.
+ *
+ * **Example** (Describe a source scalar span)
+ *
+ * ```ts
+ * import type { RequoteScalarInput } from "@beep/scratchpad/effected/yaml/internal/requote"
+ * const scalar: RequoteScalarInput = { value: "hello", style: "plain", offset: 0, length: 5 }
+ * console.log(scalar.length) // 5
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface RequoteScalarInput {
 	readonly value: unknown;
@@ -47,12 +58,29 @@ export interface RequoteScalarInput {
 	readonly length: number;
 }
 
-/** See the module header: `"conservative"` = lint-fix semantics, `"escaping"` = format-path semantics. */
+/**
+ * Selects the safety policy for changing a scalar's quote style.
+ *
+ * **Details**
+ *
+ * See the module header: `"conservative"` = lint-fix semantics, `"escaping"` = format-path semantics.
+ *
+ * **Example** (Choose value-based quote escaping)
+ *
+ * ```ts
+ * import type { RequoteMode } from "@beep/scratchpad/effected/yaml/internal/requote"
+ * const mode: RequoteMode = "escaping"
+ * console.log(mode) // escaping
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RequoteMode = "conservative" | "escaping";
 
 /**
  * True when `value` can be carried by a single-quoted flow scalar on one
- * line. Single-quoted style has exactly one escape (`''`), so any character
+ * line. Single-quoted style has exactly one escape (`''`), so a character
  * double-quote escape sequences exist to encode — newline, carriage return,
  * tab, C0 controls, DEL and the C1 range — has no single-quoted spelling and
  * makes the conversion impossible rather than lossy-but-tempting.
@@ -71,6 +99,19 @@ function isSingleQuotable(value: string): boolean {
  * The replacement raw text that re-quotes `scalar` with `quote`, or
  * `undefined` when no value-preserving replacement exists under `mode`
  * (skipping is always correct; corrupting never is).
+ *
+ * **Example** (Convert a single-quoted scalar)
+ *
+ * ```ts
+ * import { requoteScalarText } from "@beep/scratchpad/effected/yaml/internal/requote"
+ * import type { RequoteScalarInput } from "@beep/scratchpad/effected/yaml/internal/requote"
+ *
+ * const scalar = { value: "hello", style: "single-quoted", offset: 0, length: 7 } satisfies RequoteScalarInput
+ * console.log(requoteScalarText("'hello'", scalar, '"', "escaping")) // "hello"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export function requoteScalarText(
 	text: string,

@@ -14,13 +14,56 @@ import { YamlLintDiagnostic } from "../../YamlLintRule.ts";
 const $I = $ScratchpadId.create("effected/yaml/internal/rules/parse-validity");
 
 /**
+ * Validates the empty options object for the always-on parse-validity rule.
+ *
+ * **Details**
+ *
  * parse-validity accepts no options; the config layer additionally rejects
- * any attempt to set a severity or `"off"` on this rule.
+ * every attempt to set a severity or `"off"` on this rule.
+ *
+ * **Example** (Validate empty parse-validity options)
+ *
+ * ```ts
+ * import { parseValidityOptions } from "@beep/scratchpad/effected/yaml/internal/rules/parse-validity"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(parseValidityOptions)({})) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const parseValidityOptions = S.Struct({}).pipe($I.annoteSchema("parseValidityOptions", { description: "parse-validity accepts no options; the config layer additionally rejects any attempt to set a severity or `\"off\"` on this rule." }));
+/**
+ * The decoded empty options object accepted by the parse-validity rule.
+ *
+ * @see {@link parseValidityOptions} for the options validation schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type parseValidityOptions = typeof parseValidityOptions.Type;
 
-/** The always-on parse-validity rule. */
+/**
+ * Bridges recovered parser diagnostics into the always-on parse-validity lint rule.
+ *
+ * **Details**
+ *
+ * Engine errors remain lint errors, and engine warnings remain warnings.
+ * This bridge lets linting report findings on documents that do not parse.
+ * Duplicate-key policy belongs to the configurable key-duplicates rule.
+ *
+ * **Example** (Identify the mandatory parser rule)
+ *
+ * ```ts
+ * import { parseValidity } from "@beep/scratchpad/effected/yaml/internal/rules/parse-validity"
+ *
+ * console.log(parseValidity.id) // parse-validity
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export const parseValidity: YamlRule = {
 	id: "parse-validity",
 	check: (ctx: LintContext) => [

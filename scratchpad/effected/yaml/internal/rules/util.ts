@@ -12,9 +12,26 @@ import type { YamlToken } from "../../YamlToken.ts";
 const $I = $ScratchpadId.create("effected/yaml/internal/rules/util");
 
 /**
- * A non-negative integer — the shape every numeric rule option takes.
+ * Validates non-negative integer options used by numeric lint rules.
+ *
+ * **Details**
+ *
+ * A non-negative integer is the shape every numeric rule option takes.
  * Rejects NaN, negatives and fractions with a message naming the constraint;
  * the config layer's wrapper names the rule and the field.
+ *
+ * **Example** (Validate a zero-valued rule option)
+ *
+ * ```ts
+ * import { nonNegativeIntegerOption } from "@beep/scratchpad/effected/yaml/internal/rules/util"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(nonNegativeIntegerOption)(0)) // 0
+ * console.log(S.is(nonNegativeIntegerOption)(-1)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const nonNegativeIntegerOption = S.Number.annotate(
 	$I.annote("nonNegativeIntegerOption", {
@@ -33,13 +50,36 @@ export const nonNegativeIntegerOption = S.Number.annotate(
 	S.isFinite(),
 );
 
+/**
+ * The decoded non-negative integer accepted by numeric lint-rule options.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type nonNegativeIntegerOption = typeof nonNegativeIntegerOption.Type;
 
 /**
- * A positive integer — for the `maxSpacesAfter` options, where `0` would make
+ * Validates positive integer options that preserve separation after YAML indicators.
+ *
+ * **Gotchas**
+ *
+ * A positive integer is required for the `maxSpacesAfter` options, where `0` would make
  * the fix delete the separation space after an indicator and fuse it with its
  * content (`- item` → `-item`, `a: val` → `a:val` — different tokens, not a
  * spacing change).
+ *
+ * **Example** (Require at least one separation space)
+ *
+ * ```ts
+ * import { positiveIntegerOption } from "@beep/scratchpad/effected/yaml/internal/rules/util"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(positiveIntegerOption)(1)) // 1
+ * console.log(S.is(positiveIntegerOption)(0)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const positiveIntegerOption = S.Number.annotate(
 	$I.annote("positiveIntegerOption", {
@@ -58,9 +98,29 @@ export const positiveIntegerOption = S.Number.annotate(
 	S.isFinite(),
 );
 
+/**
+ * The decoded positive integer accepted by separation-preserving lint-rule options.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type positiveIntegerOption = typeof positiveIntegerOption.Type;
 
-/** Where a scalar sits in its parent construct. */
+/**
+ * Identifies where a scalar sits in its parent construct.
+ *
+ * **Example** (Decode a mapping-key role)
+ *
+ * ```ts
+ * import { ScalarRole } from "@beep/scratchpad/effected/yaml/internal/rules/util"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(ScalarRole)("key")) // key
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const ScalarRole = LiteralKit(["key", "value", "item", "root"]).pipe(
 	$I.annoteSchema("ScalarRole", {
 		title: "Scalar role",
@@ -68,9 +128,38 @@ export const ScalarRole = LiteralKit(["key", "value", "item", "root"]).pipe(
 	}),
 );
 
+/**
+ * The structural role assigned to a scalar during traversal.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ScalarRole = typeof ScalarRole.Type;
 
-/** Depth-first walk over every scalar node with its structural role. */
+/**
+ * Walks every scalar node depth-first and supplies its structural role to the visitor.
+ *
+ * **Details**
+ *
+ * Mapping keys and values receive their respective roles; sequence elements receive
+ * the `item` role. A scalar at the starting node receives the supplied role.
+ * Null nodes and aliases are skipped.
+ *
+ * **Example** (Visit a root scalar)
+ *
+ * ```ts
+ * import { walkScalars } from "@beep/scratchpad/effected/yaml/internal/rules/util"
+ * import { YamlScalar } from "@beep/scratchpad/effected/yaml/YamlNode"
+ *
+ * const node = YamlScalar.make({ value: "hello", style: "plain", offset: 0, length: 5 })
+ * let visitedRole = ""
+ * walkScalars(node, "root", (_scalar, role) => { visitedRole = role })
+ * console.log(visitedRole) // root
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const walkScalars: {
 	(role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void): (node: YamlNode | null) => void;
 	(node: YamlNode | null, role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void): void;
@@ -93,10 +182,29 @@ export const walkScalars: {
 });
 
 /**
- * True when the first content of a line is the CONTINUATION of a scalar
- * token that began on an earlier line — block-scalar bodies and multi-line
- * plain/quoted scalars. The indentation rule skips such lines: their layout
- * is the value's, not block structure's.
+ * Detects when the first content of a line continues a scalar token that began on an earlier line.
+ *
+ * **Details**
+ *
+ * This includes block-scalar bodies and multi-line plain/quoted scalars.
+ * The indentation rule skips such lines: their layout is the value's,
+ * not block structure's.
+ *
+ * **Example** (Recognize a multi-line scalar continuation)
+ *
+ * ```ts
+ * import { isScalarContinuationLine } from "@beep/scratchpad/effected/yaml/internal/rules/util"
+ * import { YamlToken } from "@beep/scratchpad/effected/yaml/YamlToken"
+ *
+ * const token = YamlToken.make({
+ *   kind: "scalar", text: '"a\nb"', offset: 0, length: 5, line: 0, character: 0
+ * })
+ * console.log(isScalarContinuationLine([token], 3, 3)) // true
+ * console.log(isScalarContinuationLine([token], 0, 0)) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const isScalarContinuationLine: {
 	(lineOffset: number, probeOffset: number): (tokens: ReadonlyArray<YamlToken>) => boolean;
@@ -106,7 +214,30 @@ export const isScalarContinuationLine: {
 	return token !== undefined && token.kind === "scalar" && token.offset < lineOffset;
 });
 
-/** The token whose span covers `offset`, when one does. */
+/**
+ * Finds the token whose span covers an offset, when one does.
+ *
+ * **Details**
+ *
+ * Binary search requires tokens ordered by offset. A span includes its start and
+ * excludes its end; uncovered offsets return `undefined`.
+ *
+ * **Example** (Find a token within its half-open span)
+ *
+ * ```ts
+ * import { coveringToken } from "@beep/scratchpad/effected/yaml/internal/rules/util"
+ * import { YamlToken } from "@beep/scratchpad/effected/yaml/YamlToken"
+ *
+ * const token = YamlToken.make({
+ *   kind: "scalar", text: "hello", offset: 0, length: 5, line: 0, character: 0
+ * })
+ * console.log(coveringToken([token], 2)?.text) // hello
+ * console.log(coveringToken([token], 5)) // undefined
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
+ */
 export const coveringToken: {
 	(offset: number): (tokens: ReadonlyArray<YamlToken>) => YamlToken | undefined;
 	(tokens: ReadonlyArray<YamlToken>, offset: number): YamlToken | undefined;
@@ -129,10 +260,29 @@ export const coveringToken: {
 });
 
 /**
- * True when `offset` falls inside a scalar token's span. Layout rules use
- * this to stay off scalar CONTENT — trailing whitespace or blank lines
+ * Detects when an offset falls inside a scalar token's span.
+ *
+ * **Gotchas**
+ *
+ * Layout rules use this to stay off scalar CONTENT — trailing whitespace or blank lines
  * inside a block scalar are part of the parsed value, and a lint layer that
  * edits content under the banner of layout is corrupting, not fixing.
+ *
+ * **Example** (Protect scalar content from layout edits)
+ *
+ * ```ts
+ * import { insideScalarSpan } from "@beep/scratchpad/effected/yaml/internal/rules/util"
+ * import { YamlToken } from "@beep/scratchpad/effected/yaml/YamlToken"
+ *
+ * const token = YamlToken.make({
+ *   kind: "scalar", text: "hello", offset: 0, length: 5, line: 0, character: 0
+ * })
+ * console.log(insideScalarSpan([token], 2)) // true
+ * console.log(insideScalarSpan([token], 5)) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const insideScalarSpan: {
 	(offset: number): (tokens: ReadonlyArray<YamlToken>) => boolean;
@@ -140,9 +290,30 @@ export const insideScalarSpan: {
 } = dual(2, (tokens: ReadonlyArray<YamlToken>, offset: number): boolean => coveringToken(tokens, offset)?.kind === "scalar");
 
 /**
- * The line containing `offset` and the character index within it — a binary
- * search over the ordered `LintLine` array (lines are ordered by `offset`,
- * the same invariant {@link coveringToken} rests on for tokens).
+ * Locates the line containing an offset and the character index within it.
+ *
+ * **Details**
+ *
+ * Uses a binary search over the ordered `LintLine` array (lines are ordered by
+ * `offset`, the same invariant {@link coveringToken} rests on for tokens).
+ * Returns line zero and character zero when no line starts at or before the offset.
+ *
+ * **Example** (Locate a character on the second line)
+ *
+ * ```ts
+ * import { positionAt } from "@beep/scratchpad/effected/yaml/internal/rules/util"
+ *
+ * const lines = [
+ *   { text: "a", offset: 0, number: 0 },
+ *   { text: "hello", offset: 2, number: 1 }
+ * ]
+ * const position = positionAt(lines, 4)
+ * console.log(position.line) // 1
+ * console.log(position.character) // 2
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
  */
 export const positionAt: {
 	(offset: number): (lines: ReadonlyArray<LintLine>) => { readonly line: number; readonly character: number };

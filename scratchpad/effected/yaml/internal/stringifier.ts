@@ -50,6 +50,18 @@ class StringifierInvariantFailure extends S.TaggedError<StringifierInvariantFail
 /**
  * Thrown by the stringifier on its failure paths (circular references). The
  * facade catches this and materializes the public stringify error.
+ *
+ * **Example** (Inspect a circular-reference failure)
+ *
+ * ```ts
+ * import { StringifyFailure } from "@beep/scratchpad/effected/yaml/internal/stringifier"
+ *
+ * const failure = StringifyFailure.new("Circular reference detected")
+ * console.log(failure.reason) // Circular reference detected
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class StringifyFailure extends S.TaggedError<StringifyFailure>($I`StringifyFailure`)(
 	"StringifyFailure",
@@ -59,13 +71,46 @@ export class StringifyFailure extends S.TaggedError<StringifyFailure>($I`Stringi
 	},
 	$I.annote("StringifyFailure", { description: "A value that cannot be rendered as YAML." }),
 ) {
+	/**
+	 * Identifies this failure by its stable error name.
+	 *
+	 * **Example** (Read the StringifyFailure error name)
+	 *
+	 * ```ts
+	 * import { StringifyFailure } from "@beep/scratchpad/effected/yaml/internal/stringifier"
+	 *
+	 * console.log(StringifyFailure.new("Circular reference detected").name) // StringifyFailure
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override readonly name = "StringifyFailure";
+	/**
+	 * Creates a stringification failure whose message and reason both contain the supplied explanation.
+	 *
+	 * **Example** (Construct a failure with matching diagnostic fields)
+	 *
+	 * ```ts
+	 * import { StringifyFailure } from "@beep/scratchpad/effected/yaml/internal/stringifier"
+	 *
+	 * const failure = StringifyFailure.new("Circular reference detected")
+	 * console.log(failure.message === failure.reason) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static new(reason: string): StringifyFailure {
 		return StringifyFailure.make({ message: reason, reason });
 	}
 }
 
 /**
+ * Guards YAML rendering against values or ASTs that exceed the nesting limit.
+ *
+ * **Details**
+ *
  * Thrown by the value-stringifier trio when its mutual recursion exceeds
  * {@link MAX_NESTING_DEPTH}. A deeply-nested acyclic value (e.g. a 50 000-deep
  * array) would otherwise overflow the call stack as an unhandled `RangeError`
@@ -73,6 +118,17 @@ export class StringifyFailure extends S.TaggedError<StringifyFailure>($I`Stringi
  * `YamlStringifyError` (a `NestingDepthExceeded` diagnostic), keeping the
  * failure on the typed error channel — the stringify mirror of the composer's
  * nesting-depth guard.
+ *
+ * **Example** (Inspect the nesting-depth diagnostic)
+ *
+ * ```ts
+ * import { StringifyDepthExceeded } from "@beep/scratchpad/effected/yaml/internal/stringifier"
+ *
+ * console.log(StringifyDepthExceeded.new().message) // Nesting depth exceeded maximum of 256
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class StringifyDepthExceeded extends S.TaggedError<StringifyDepthExceeded>($I`StringifyDepthExceeded`)(
 	"StringifyDepthExceeded",
@@ -81,7 +137,35 @@ export class StringifyDepthExceeded extends S.TaggedError<StringifyDepthExceeded
 	},
 	$I.annote("StringifyDepthExceeded", { description: "YAML rendering exceeded its nesting-depth limit." }),
 ) {
+	/**
+	 * Identifies this failure by its stable error name.
+	 *
+	 * **Example** (Read the StringifyDepthExceeded error name)
+	 *
+	 * ```ts
+	 * import { StringifyDepthExceeded } from "@beep/scratchpad/effected/yaml/internal/stringifier"
+	 *
+	 * console.log(StringifyDepthExceeded.new().name) // StringifyDepthExceeded
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override readonly name = "StringifyDepthExceeded";
+	/**
+	 * Creates a nesting-depth failure with the shared YAML nesting limit in its message.
+	 *
+	 * **Example** (Construct a nesting-depth failure)
+	 *
+	 * ```ts
+	 * import { StringifyDepthExceeded } from "@beep/scratchpad/effected/yaml/internal/stringifier"
+	 *
+	 * console.log(StringifyDepthExceeded.new().name) // StringifyDepthExceeded
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static new(): StringifyDepthExceeded {
 		return StringifyDepthExceeded.make({ message: `Nesting depth exceeded maximum of ${MAX_NESTING_DEPTH}` });
 	}
@@ -131,6 +215,8 @@ const INDICATOR_CHARS = ":#{}[],&*?|-<>=!%@`\"'";
 
 /**
  * Returns true if a string value would be mis-resolved as a non-string YAML type.
+ *
+ * **Details**
  *
  * Tests against all YAML 1.2 Core Schema type patterns (null, bool, int, float,
  * inf, nan). Any string matching these patterns must be quoted to preserve its
@@ -205,6 +291,8 @@ function wouldBeResolved11(s: string): boolean {
 
 /**
  * Returns true if a string requires quoting to be safely represented as a plain scalar.
+ *
+ * **Details**
  *
  * Checks multiple conditions beyond type-conflict detection: empty strings,
  * embedded newlines, leading indicator characters or whitespace, and inline
@@ -290,9 +378,22 @@ function hasNonAscii(s: string): boolean {
 /**
  * Renders a string scalar using double-quote style.
  *
+ * **Details**
+ *
  * When `canonical` is true, non-ASCII characters are escaped as `\uXXXX`
  * (or `\UXXXXXXXX` for supplementary plane) and C0 control characters use
  * named escapes where YAML 1.2 defines them (`\b`, `\0`, `\a`, `\v`, `\e`).
+ *
+ * **Example** (Escape a line break in a quoted scalar)
+ *
+ * ```ts
+ * import { renderDoubleQuoted } from "@beep/scratchpad/effected/yaml/internal/stringifier"
+ *
+ * console.log(renderDoubleQuoted("hello\nworld")) // "hello\nworld"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export function renderDoubleQuoted(s: string, ...[canonical = false]: [canonical?: boolean]): string {
 	let escaped = s
@@ -344,6 +445,17 @@ export function renderDoubleQuoted(s: string, ...[canonical = false]: [canonical
 
 /**
  * Renders a string scalar using single-quote style.
+ *
+ * **Example** (Escape an apostrophe in a quoted scalar)
+ *
+ * ```ts
+ * import { renderSingleQuoted } from "@beep/scratchpad/effected/yaml/internal/stringifier"
+ *
+ * console.log(renderSingleQuoted("it's YAML")) // 'it''s YAML'
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export function renderSingleQuoted(s: string): string {
 	return `'${s.replace(/'/g, "''")}'`;
@@ -394,6 +506,8 @@ const stringStyleRenderers: Record<ScalarStyle, (input: StringRenderContext) => 
 /**
  * Renders a string value as a YAML scalar using the requested style.
  * Falls back to double-quoted if the requested style is unsafe for the value.
+ *
+ * **Details**
  *
  * Multi-line strings are routed to block styles regardless of the requested
  * style (except double-quoted). For single-line strings, plain style delegates
@@ -502,6 +616,8 @@ function renderString(
  * up to the next document marker, so an explicit `...` is required for the
  * reader to know where the value ends.
  *
+ * **Details**
+ *
  * Detects the most recent `|` or `>` indicator on a header line (matching
  * the form `|<digits>?<chomp>?$` after optional indent and node prefixes)
  * and returns true when the chomp indicator is `+`.
@@ -520,6 +636,8 @@ function endsWithKeepChomp(rendered: string): boolean {
 
 /**
  * Renders a number value as a YAML scalar string.
+ *
+ * **Details**
  *
  * Maps JavaScript special number values to their YAML 1.2 Core Schema
  * equivalents: `NaN` becomes `.nan`, positive infinity becomes `.inf`,
@@ -605,6 +723,8 @@ function createContext(options?: StringifyOptionsInput): StringifyContext {
 
 /**
  * Recursively stringifies a JavaScript value into YAML lines.
+ *
+ * **Details**
  *
  * Returns an array of lines with NO leading indentation — the caller is
  * responsible for prepending the appropriate indentation prefix to each line.
@@ -892,6 +1012,8 @@ function buildTagMap(directives: ReadonlyArray<RawDirective>): MutableHashMap.Mu
 /**
  * Normalize a tag for canonical output.
  *
+ * **Details**
+ *
  * - Resolves custom handles using the tag map from directives
  * - Abbreviates `tag:yaml.org,2002:XXX` URIs to `!!XXX`
  * - Simplifies verbatim `!<!XXX>` to `!XXX`
@@ -1023,7 +1145,27 @@ function normalizeNodeTags(node: YamlNode, tagMap: MutableHashMap.MutableHashMap
 
 /**
  * Recursively strips all comment fields from AST nodes.
+ *
+ *
+ * **Details**
+ *
  * Used when forceDefaultStyles is true to produce canonical output.
+ *
+ * **Example** (Remove a scalar comment while retaining its value)
+ *
+ * ```ts
+ * import { stripNodeComments } from "@beep/scratchpad/effected/yaml/internal/stringifier"
+ * import { YamlScalar } from "@beep/scratchpad/effected/yaml/YamlNode"
+ *
+ * const node = YamlScalar.make({
+ *   value: "hello", style: "plain", offset: 0, length: 5, comment: " note"
+ * })
+ * const stripped = stripNodeComments(node)
+ * console.log(stripped.comment) // undefined
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export function stripNodeComments(node: YamlNode, ...[depth = 0]: [depth?: number]): YamlNode {
 	if (depth > MAX_NESTING_DEPTH)
@@ -1179,6 +1321,8 @@ const MERGE_KEY = "<<";
  * True when a mapping key must be emitted plain because quoting it would
  * change what the document means.
  *
+ * **Details**
+ *
  * The merge key is the only scalar in this position where the plain and
  * quoted forms resolve to different YAML types: a plain `<<` key resolves to
  * `tag:yaml.org,2002:merge` and splices the aliased mapping into its parent,
@@ -1272,6 +1416,8 @@ function pairSpaceBefore(pair: YamlPair): boolean | undefined {
  * The trailing comment to place on an entry's own line, given how its value
  * actually rendered.
  *
+ * **Details**
+ *
  * A collection's `comment` field carries its TERMINAL comment run — the
  * own-line comments after its last entry — and the collection emits those
  * itself, after that last entry. Only when the collection renders on a single
@@ -1327,6 +1473,8 @@ function renderTrailingComment(comment: string): string {
  * continuation lines indented to align). Shared by the complex-key branch and
  * the implicit-key length spill; `indentSequences` deliberately does not reach
  * this branch (sequence values always align compactly under `: `).
+ *
+ * **Details**
  *
  * Returns the `lines` index that can safely carry the pair's trailing
  * comment (the line where an inline value ends), or `-1` when no line is
@@ -1966,9 +2114,22 @@ function stringifySeqNodeLines(node: YamlSeq, ctx: StringifyContext, depth: numb
 /**
  * Converts a JavaScript value into a YAML text string.
  *
+ * **Details**
+ *
  * Handles all primitive types, arrays, and plain objects. Special numbers
  * (`Infinity`, `-Infinity`, `NaN`) are rendered as `.inf`, `-.inf`, and
  * `.nan` respectively. Circular references throw {@link StringifyFailure}.
+ *
+ * **Example** (Render a mapping without a final newline)
+ *
+ * ```ts
+ * import { stringifyValue } from "@beep/scratchpad/effected/yaml/internal/stringifier"
+ *
+ * console.log(stringifyValue({ greeting: "hello" }, { finalNewline: false })) // greeting: hello
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export function stringifyValue(value: unknown, ...[options]: [options?: StringifyOptionsInput]): string {
 	const ctx = createContext(options);
@@ -1980,9 +2141,31 @@ export function stringifyValue(value: unknown, ...[options]: [options?: Stringif
  * Converts a composed YAML document AST into a YAML text string, preserving
  * the style metadata encoded in each AST node.
  *
+ * **Details**
+ *
  * Scalar nodes use their `style` field to control rendering; collection
  * nodes use their `style` field (`"block"` or `"flow"`). Nodes without an
  * explicit style fall back to the defaults in `options`.
+ *
+ * **Example** (Preserve a flow sequence in a composed document)
+ *
+ * ```ts
+ * import { stringifyDocument } from "@beep/scratchpad/effected/yaml/internal/stringifier"
+ * import { YamlScalar, YamlSeq } from "@beep/scratchpad/effected/yaml/YamlNode"
+ *
+ * const doc = {
+ *   contents: YamlSeq.make({
+ *     items: [YamlScalar.make({ value: "hello", style: "plain", offset: 1, length: 5 })],
+ *     style: "flow", offset: 0, length: 7
+ *   }),
+ *   errors: [], warnings: [], directives: [],
+ *   hasDocumentStart: false, hasDocumentEnd: false, hasDocumentStartTab: false
+ * }
+ * console.log(stringifyDocument(doc, { finalNewline: false })) // [hello]
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export function stringifyDocument(doc: RawYamlDocument, ...[options]: [options?: StringifyOptionsInput]): string {
 	const ctx = createContext(options);

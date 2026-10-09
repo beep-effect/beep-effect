@@ -28,6 +28,8 @@ class YamlEditFailure extends S.TaggedError<YamlEditFailure>($I`YamlEditFailure`
  * sequence indices.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlSegment = string | number;
 
@@ -36,6 +38,8 @@ export type YamlSegment = string | number;
  * location within a YAML document tree.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type YamlPath = ReadonlyArray<YamlSegment>;
 
@@ -44,7 +48,18 @@ export type YamlPath = ReadonlyArray<YamlSegment>;
  * `offset` and a `length` in UTF-16 code units. Pass to `YamlFormat.format`
  * to restrict formatting to a region.
  *
+ * **Example** (Select a formatting region)
+ *
+ * ```ts
+ * import { YamlRange } from "@beep/scratchpad/effected/yaml/YamlEdit";
+ *
+ * const range = YamlRange.make({ offset: 5, length: 3 });
+ * console.log(range.offset + range.length) // 8
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class YamlRange extends S.Class<YamlRange>($I`YamlRange`)({
 	offset: S.Finite.annotateKey({ description: "Zero-based start of the source region to format, measured in UTF-16 code units" }),
@@ -62,7 +77,18 @@ export class YamlRange extends S.Class<YamlRange>($I`YamlRange`)({
  * semantics), so consumer code can be written once over "a document codec's
  * Edit/Range/Path".
  *
+ * **Example** (Replace a source span)
+ *
+ * ```ts
+ * import { YamlEdit } from "@beep/scratchpad/effected/yaml/YamlEdit";
+ *
+ * const edit = YamlEdit.make({ offset: 3, length: 1, content: "2" });
+ * console.log(YamlEdit.applyAll("a: 1", [edit])) // a: 2
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class YamlEdit extends S.Class<YamlEdit>($I`YamlEdit`)({
 	offset: S.Finite.annotateKey({ description: "Zero-based start of the replacement span in the original source, measured in UTF-16 code units" }),
@@ -70,14 +96,36 @@ export class YamlEdit extends S.Class<YamlEdit>($I`YamlEdit`)({
 	content: S.String.annotateKey({ description: "Replacement text for the selected source span; an empty string deletes the span" }),
 }, $I.annote("YamlEdit", { description: "A non-mutating text edit: replace the span `[offset, offset + length)` with `content`. Set `length` to `0` to insert, `content` to `\"\"` to delete." })) {
 	/**
-	 * Apply `edits` to `text`, producing a new string. Edits are applied in
+	 * Apply `edits` to `text`, producing a new string.
+	 *
+	 * **Details**
+	 *
+	 * Edits are applied in
 	 * reverse-offset order so earlier offsets stay valid; the input `edits`
-	 * array is not mutated. Overlapping edits are a programmer error and throw
+	 * array is not mutated.
+	 *
+	 * **Gotchas**
+	 *
+	 * Overlapping edits are a programmer error and throw
 	 * as a defect — `YamlFormat` never produces them.
+	 *
+	 * **Example** (Apply edits supplied in source order)
+	 *
+	 * ```ts
+	 * import { YamlEdit } from "@beep/scratchpad/effected/yaml/YamlEdit";
+	 *
+	 * const edits = [
+	 *   YamlEdit.make({ offset: 3, length: 1, content: "2" }),
+	 *   YamlEdit.make({ offset: 8, length: 1, content: "4" }),
+	 * ];
+	 * console.log(JSON.stringify(YamlEdit.applyAll("a: 1\nb: 3\n", edits))) // "a: 2\nb: 4\n"
+	 * ```
 	 *
 	 * @param text - The source text to edit.
 	 * @param edits - The edits to apply, in any order.
 	 * @returns The edited text.
+	 * @category utilities
+	 * @since 0.0.0
 	 */
 	static applyAll(text: string, edits: ReadonlyArray<YamlEdit>): string {
 		const sorted = A.sort(edits, Order.flip(Order.mapInput(Order.Number, (edit: YamlEdit) => edit.offset)));

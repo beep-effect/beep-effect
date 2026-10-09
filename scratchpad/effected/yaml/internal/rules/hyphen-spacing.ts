@@ -14,19 +14,69 @@ import { positiveIntegerOption } from "./util.ts";
 const $I = $ScratchpadId.create("effected/yaml/internal/rules/hyphen-spacing");
 
 /**
+ * Limit spaces after the block-sequence hyphen indicator.
+ *
+ * **Details**
+ *
  * Options for `hyphen-spacing`: `maxSpacesAfter` (default 1) after the `-`.
+ *
+ * **Gotchas**
+ *
  * At least one separation space must follow the indicator — `0` would make
  * the fix emit `-item`, a plain scalar, not a sequence entry.
+ *
+ * **Example** (Decode hyphen-spacing options)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { hyphenSpacingOptions } from "@beep/scratchpad/effected/yaml/internal/rules/hyphen-spacing";
+ *
+ * const options = S.decodeUnknownSync(hyphenSpacingOptions)({ maxSpacesAfter: 1 });
+ * console.log(options.maxSpacesAfter) // 1
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const hyphenSpacingOptions = S.Struct({
 	severity: S.optionalKey(YamlLintSeverity).annotateKey({ description: "Reporting level for sequence-entry spacing findings, defaulting to `error`" }),
 	maxSpacesAfter: S.optionalKey(positiveIntegerOption).annotateKey({ description: "Maximum spaces between a block-sequence `-` and its same-line item, at least 1 and defaulting to 1" }),
 }).pipe($I.annoteSchema("hyphenSpacingOptions", { description: "Options for `hyphen-spacing`: `maxSpacesAfter` (default 1) after the `-`. At least one separation space must follow the indicator — `0` would make the fix emit `-item`, a plain scalar, not a sequence entry." }));
 
-/** Decoded options for block-sequence hyphen spacing. */
+/**
+ * Decoded options for block-sequence hyphen spacing.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type hyphenSpacingOptions = typeof hyphenSpacingOptions.Type;
 
-/** Spacing after the block-sequence `-` indicator. */
+/**
+ * Check spacing after the block-sequence `-` indicator.
+ *
+ * **Details**
+ *
+ * Spaces before the hyphen belong to indentation; comments after it belong
+ * to comment spacing. Excess spaces can be deleted while preserving at least
+ * one separation space. A finding has no fix when moving a compact block
+ * collection would change the indentation of its continuation entries.
+ *
+ * **Example** (Find excess sequence-entry spacing)
+ *
+ * ```ts
+ * import { hyphenSpacing } from "@beep/scratchpad/effected/yaml/internal/rules/hyphen-spacing";
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/effected/yaml/YamlLint";
+ *
+ * const config = YamlLintConfig.make({
+ *   rules: { "hyphen-spacing": { maxSpacesAfter: 1 } },
+ * });
+ * const diagnostics = YamlLint.run("-   item\n", [hyphenSpacing], config);
+ * console.log(diagnostics.length) // 1
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
 export const hyphenSpacing: YamlRule = {
 	id: "hyphen-spacing",
 	check: (ctx, options) => {
