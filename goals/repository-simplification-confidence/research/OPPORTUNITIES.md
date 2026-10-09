@@ -187,3 +187,17 @@ are available. Cancellation is not a proof failure or a package pass.
 - Would have prevented it: exercise supported relative CLI paths alongside
   absolute fixture paths before package qualification. The in-flight old audit
   was stopped and resubmitted so its proof cannot precede the repair.
+
+
+## 2026-10-09: qualified C wave waits for publication admission
+
+- Doing: publish the qualified C wave as a draft for E workflow review and run
+  the unfinished local changed-scope policy check.
+- Evidence: `beep-heavy` reports all three slots busy; publication has waited
+  over 15 minutes before its command starts. A read-only `lslocks` check confirms
+  all three heavy-slot files remain held. No publish log, push or PR exists.
+- Boundary: full package verification already passes (audit 777.6s, docgen
+  25.2s), and the independent review has zero actionable findings. The delay
+  is admission, not a failed source proof. No other lane's process is stopped.
+- Would have prevented it: a serialized publication window or admission with
+  an observable fair queue and a bounded waiting receipt.
