@@ -517,37 +517,16 @@ END {
     [ ! -f .claude/settings.local.json ] || indexed_paths+=(.claude/settings.local.json)
   fi
 
-  # One record per NUL-terminated line: `RG`/`CG` name a directory holding
-  # `.git` in the root/config walk, `RF`/`CF` a collected file with its size.
-  # Newlines inside names become `\001` so they fail the printable check.
+  # Fallback walks prune nested checkouts before descending. Metadata is
+  # validated only for included files; unsupported included names fail closed.
   collect_program='
-($1 == "RF" || $1 == "CF") {
-  if (NF != 3) { bad = 1; next }
+($1 == "RF" || $1 == "CF") && NF == 3 {
+  if ($3 ~ /[^ -~]/ || index($3, "\\")) exit 1
   rel = $3; sub(/^\.\//, "", rel)
+  print rel "\t" $2
+  next
 }
-/[^ -~\t]/ || index($0, "\\") { bad = 1; next }
-$1 == "RG" && NF == 2 { rg[$2] = 1; next }
-$1 == "CG" && NF == 2 { cg[$2] = 1; next }
-($1 == "RF" || $1 == "CF") && NF == 3 { n++; kind[n] = $1; size[n] = $2; path[n] = $3; next }
-{ bad = 1 }
-END {
-  if (bad) exit 1
-  kept = 0
-  for (i = 1; i <= n; i++) {
-    k = split(path[i], seg, "/")
-    prefix = seg[1]
-    nested = 0
-    for (j = 2; j < k; j++) {
-      prefix = prefix "/" seg[j]
-      if ((kind[i] == "RF" && (prefix in rg)) || (kind[i] == "CF" && (prefix in cg))) { nested = 1; break }
-    }
-    if (nested) continue
-    kept++
-    rel = path[i]
-    sub(/^\.\//, "", rel)
-    print rel "\t" size[i]
-  }
-}
+{ exit 1 }
 '
   if [ "${indexed}" = "1" ]; then
     collected="$(
@@ -569,8 +548,8 @@ END {
           if [ "${part}" -lt "$((${#segments[@]}-1))" ] && [ -e "${parent}/.git" ]; then skip=1; break; fi
         done
         [ "${skip}" = "0" ] || continue
-        case "${candidate}" in *[!\ -~]*|*\\*) exit 1 ;; esac
         [ -e "${candidate}" ] || [ -L "${candidate}" ] || continue
+        case "${candidate}" in *[!\ -~]*|*\\*) exit 1 ;; esac
         # Inspect only an indexed candidate, never its surrounding untracked tree.
         find -L "${candidate}" -maxdepth 0 -type f -printf '%p\t%s\n' 2>/dev/null || exit 1
       done
@@ -579,12 +558,12 @@ END {
   collected="$(
     {
       find -L . -mindepth 1 -maxdepth 8 \
-        -name .git ! -type l -printf 'RG\t%h\0' -prune -o \
+        -type d ! -path . -exec test -e '{}/.git' \; -prune -o \
         \( "${excluded[@]}" \) -prune -o \
         -type f \( -name AGENTS.md -o -name CLAUDE.md \) -printf 'RF\t%s\t%p\0' &&
         if [ "${#config_roots[@]}" -gt 0 ]; then
           find -L "${config_roots[@]}" -maxdepth 8 \
-            -name .git ! -type l -printf 'CG\t%h\0' -prune -o \
+            -type d -exec test -e '{}/.git' \; -prune -o \
             \( "${excluded[@]}" \) -prune -o \
             -type f -printf 'CF\t%s\t%p\0'
         fi

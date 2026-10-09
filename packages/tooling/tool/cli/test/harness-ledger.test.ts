@@ -966,7 +966,9 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const root = yield* makeRepo();
       const current = yield* repoHarnessHash(root);
       const stateDir = yield* makeHookStateDir("harness-primary-conflict-");
-      const start = yield* HookPulseV1.decodeJsonEffect(yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current));
+      const start = yield* HookPulseV1.decodeJsonEffect(
+        yield* pulseRow(sessionA, "2026-10-09T10:00:00Z", "SessionStart", O.none(), O.some(current))
+      );
       const second = HookPulseV1.make({ ...start, transcriptPath: O.some(Sha256Hex.make("e".repeat(64))) });
       yield* writeShard(stateDir, "2026-10-09", sessionA, [
         yield* HookPulseV1.encodeJsonEffect(start),
