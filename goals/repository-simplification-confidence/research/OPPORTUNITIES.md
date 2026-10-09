@@ -383,3 +383,15 @@
   admission; the test set, instrumentation and coverage baseline stay unchanged.
 - Prevention: verification commands should allocate separate module-cache directories
   when the full package audit and scoped coverage can overlap.
+
+## 2026-10-09 — H2 property-generator import provenance
+
+- Task: qualify the added schema-derived fixture properties after publication.
+- Evidence: test-tsgo rejects `effect/testing/Arbitrary` in both new fixture files.
+  The pinned Effect source and existing goal properties import `effect/Arbitrary`.
+  A separate review missed the invalid module path; its API assurance does not replace
+  the compiler result.
+- Recovery: correct both imports and repeat test-tsgo and scoped fixtures before the
+  addressed publication wave. No suppression or baseline update.
+- Prevention: inspect the import line in the reference example, not only the generator
+  call, and require the dedicated test compiler alongside schema-property review.

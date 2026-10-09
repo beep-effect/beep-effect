@@ -14,11 +14,11 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/testing/Arbitrary";
 
 const time = DateTime.makeUnsafe("2026-10-06T00:55:25Z");
 const gate = GoalCompletionGate.make({
