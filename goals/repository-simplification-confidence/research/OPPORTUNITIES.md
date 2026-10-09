@@ -335,3 +335,12 @@ recovery. Opaque-leaf membership uses Effect HashSet rather than linear array
 lookups, failed ancestor probes name stat-failed, and restore/report wording
 names the actual operation. The next source review and admitted runtime gates
 remain required before final.
+
+### G publish-before-proof admission correction
+
+The package rerun waited almost fifty minutes in admission without starting
+its command (no result log, approximately one MiB unit memory). It was stopped
+before execution and replaced by Yeet publication under the same two-owned-job
+limit. The expanded test remains admitted. This follows the canonical rule
+that a queued full local proof must not hold publication; package verification
+and parity remain required before final handoff. No other lane unit was stopped.

@@ -1,79 +1,57 @@
-# G retention wave — in progress, 2026-10-09
+# G source wave — qualification in progress, 2026-10-09
 
 ```text
 lane: rsc-g-storage
-head: 4decfe96d35fdd2802db7d7567449af2408da99b + review corrections   pr: none
-package-verify: @beep/repo-cli pending heavy admission
+head: a1363f237b38bf694429a86e3cdb09b84d303857   pr: none
+package-verify: @beep/repo-cli initial fail, introduced diagnostics repaired; rerun stopped before execution to admit publication
 hosted-parity: test-tsgo pending | docgen local pending | jsdoc-ratchet pending | knowledge refs pending | fallow audit/health pending | coverage (ResidueReap rows) pending
 cache claims: remote-hit 0d8ccf62fa69d324/7d05d61faf1b47a2 unsupported external condition | local-hit 3ca643e559fb1d3a/f8b314d6bfaf4138 LOCAL HIT | cross-checkout fixtures prepared, execution pending | changed-input pending
-storage: dry-run rows 2475 | applied 0 | reclaimed apparent/exclusive 0/0 MiB | deferred 2475, owner-unverified and census-failed
+storage: dry-run rows 2475 | applied 0 | reclaimed apparent/exclusive 0/0 MiB | deferred 2475, owner-unverified/foreign owners and census-failed
 handoff: goals/repository-simplification-confidence/history/handoffs/rsc-g-storage-2026-10-09.md
-open items: queued gates and independent review; cache fixtures; v3 apply acknowledgement and live-clone owner notices; source qualification/publication; read-only token and home-writer/shared-script dependencies
+open items: admitted expanded tests and publication; package/parity/coverage; cross-checkout and changed-input fixtures; real apply acknowledgement and owner notices; remote read reference and deferred home/shared-route work
 ```
 
-Resume ruling 1 reconciles the prior fixture scope blocker. The default
-service-account read-only reference retry failed with `"BEEP_CI" isn't a
-vault in this account.` `op-doctor` ran once. No write token or secret value
-was used. Remote-hit evidence remains unavailable under that ruling.
+Source review is terminal zero at the head above: the seventh separate
+`claude-opus-5-5` medium, read-only session found no actionable High, Medium
+or Low issues. Earlier findings were fixed and their dispositions retained.
+This is source review, not runtime or hosted proof. The first package gate's
+introduced compiler diagnostics were repaired; its inbox rows were acknowledged
+with `4decfe96d3`, which does not claim a passing rerun. The first admitted test
+selection found no tests. The package-relative suite ran 39 tests, 36 passing;
+three fixture errors were corrected and the expanded suite is admitted/queued.
+The package rerun waited almost fifty minutes without starting and was stopped
+to admit publication under the two-owned-job limit. It must rerun before final.
 
-The implementation now includes checkout QA, qualification, generated output,
-terminal job, legacy ledger, stale PID and owner-required material classes;
-explicit owner/terminal/evidence/regeneration rulings; protected-state,
-citation, dirty-tree, recent-write, PID and held-descriptor gates; persisted
-v3 dry runs; inode-bound archive moves with intents; and resume/restore.
-Seven days is the recorded recent-write floor. Archive moves count zero
-physically reclaimed blocks while the archive remains. Regression tests
-include both SIGKILL boundaries, occupied restores, citations, dirty state,
-active/paused owners, recent writes, live PIDs and held descriptors. These
-are implementation statements, not passing-gate claims.
+The implementation includes checkout QA, qualification, generated output,
+terminal jobs, legacy ledgers and stale PID archives, with owner/terminal/
+regeneration rulings bound to identical tracked JSON proof. It preserves
+protected state, dirty and linked nested worktrees, citations, recent operational
+writes, live cwd/PIDs and held descriptors. Immutable plans precede inode-bound,
+same-filesystem moves; initial reports remain unchanged, recovery appends new
+receipts, and fenced-live intents require restore. Archive movement counts zero
+physically reclaimed blocks. Foreign fleet owners are observed without writes.
 
-A complete fleet dry-run report was published privately and its sanitized
-largest rows are in `history/receipts/stage-5-storage-cleanup.md`. All rows
-remain deferred; there is no real cleanup apply to acknowledge yet. Once
-owner rulings make rows eligible, regenerate and publish that dry run before
-requesting the orchestrator's apply acknowledgement and owner notifications.
+The refreshed report has 2,475 v3 rows across 262 roots. All are deferred, and
+sanitized largest rows are in the storage receipt. No real cleanup is eligible
+or acknowledged. Regenerate the reviewed owner report once rulings exist;
+obtain orchestrator acknowledgement and live-clone owner notices before apply.
+Research/corpus/runtime material remains owner-required.
 
-Two heavy commands are queued through `beep-heavy`: the retention fixture
-suite and full `@beep/repo-cli` package verification. No workload has reported
-a terminal result yet. A separate `claude-opus-5-5` medium, read-only review
-is running; review closure is not claimed. The direct package tsgo probe
-failed with missing built dependency outputs and cascading errors, so it
-is not source parity evidence.
+The approved suppressed default-backend read-only reference retry failed with
+`"BEEP_CI" isn't a vault in this account.` `op-doctor` ran once. Remote-hit
+remains unsupported, not a miss. No write token or secret value was used.
+Local cold MISS and warm LOCAL HIT summaries are copied privately; fc-runs
+output restoration is verified, and actual types restoration remains pending.
+Owned linked and fresh-clone fixtures at the same revision are prepared under
+the approved sibling/cache roots. No TTC reuse or remote writes are enabled.
 
-Cache fixtures have recorded cold MISS and warm LOCAL HIT summaries; the
-`fc-runs` output tree restored after removal. Detached linked and fresh-clone
-fixtures are prepared at the same source revision, owned by this lane, under
-the approved sibling root and private cache. They have not executed tasks yet.
-The actual `types/dist` tree still needs its restoration fixture.
+The current-process `turbo config` inventory succeeded at 261 of 262 roots;
+all successes used `~/.cache/beep/turbo`. This does not establish other harness
+child environments or workstation-wide remote posture. Home writes remain
+deferred. Operator-run proposal: `history/receipts/stage-5-cache-environment.sh`;
+synthetic dry-run, idempotence, backup and refusal checks passed, actual home
+unchanged. F owns the Codex writable-root field, shared owns root bare-Turbo
+routing, and E owns remote posture, summary upload and prior 413 attribution.
 
-Home configuration is deferred. Operator-run proposal:
-`history/receipts/stage-5-cache-environment.sh` (syntax validated; not applied).
-It owns only `~/.config/environment.d/90-beep-turbo-cache.conf`, defaults to
-dry run, preserves explicit overrides, refuses symlinks/unowned fields,
-backs up under `~/.config-backups/`, and prints rollback. F owns the Codex
-writable-root field; shared owns root bare-Turbo routing; E owns remote
-writer posture, durable summary upload and prior 413 attribution.
-
-No PR is final or ready. No merge or lane retirement is requested. This
-handoff will be replaced with the terminal report after the queued work ends.
-
-## Live correction status
-
-The first source package gate completed red with introduced compiler diagnostics;
-those were repaired in `4decfe96d3`, and its two inbox rows were acknowledged
-with that fix SHA. Acknowledgement is not a passing rerun. The full package
-rerun remains admitted/queued. The package-relative residue suite executed
-39 tests: 36 passed; three fixture errors were attributed and corrected.
-The corrected suite is admitted/queued. Independent Opus 5.5 medium rounds
-1–3 found actionable issues and triggered corrective waves; round 4 is running.
-No terminal zero-findings review is claimed.
-
-Latest source preserves immutable plans and initial reports and appends recovery
-receipts. Foreign fleet owners are observation-only, including locks. It treats
-embedded/dependency trees as opaque, uses canonical literal evidence paths and
-checks linked nested clones. Regression fixtures now cover sibling movement,
-archive census pruning, Unicode citations, nonexistent recovery, nested dirty/
-linked worktrees, rollback refusal after a writer fence, sync failure, symlinked
-checkout ancestors, file-shaped stale PIDs, and recovery past a failing row.
-Real cleanup remains zero. The home writer also passed synthetic idempotence,
-backup and refusal tests; actual home configuration remains unchanged.
+No PR is final or ready. No merge or retirement is requested. This file will
+be replaced by the final report after qualification and publication settle.
