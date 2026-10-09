@@ -585,3 +585,27 @@ written receipt edits are unstaged. No push or PR occurs. Main advanced by
 regeneration and a receipt commit make the retry a clean reviewed wave.
 Independent review is terminal zero findings on source `a381e32a31`; the main
 merge does not change that source.
+
+### Run 4 compiler-boundary correction
+
+The typed-import experiment fails docgen TS1202/TS1294. Inspection of the
+actual canonical configuration corrects the earlier CommonJS inference:
+examples use ES2022/bundler with erasableSyntaxOnly; package builds use
+NodeNext. C does not alter that centrally generated compiler policy.
+
+Source `dec7e854a06c62b1da5979c3587aeff97d454cb7` instead makes the schema module
+the sole pattern owner and generates the unchanged pre-runtime JSON via
+`beep ci patterns --write`. `beep ci patterns` checks freshness. Both commands
+pass, the JSON has no byte diff, and a CI fixture protects the projection.
+Typed guards and Heavy admission use the same schema-owned instance; the
+no-longer-needed JSON tsconfig include is removed. Independent review reports
+terminal zero actionable findings on this exact source commit.
+
+The new admitted/queued qualification sequence is
+`.beep/rsc-c-run4-projection.sh`: owner freshness, scoped docgen, test-tsgo,
+Bun-runtime CI fixtures, Fallow audit/health and full package verification.
+The earlier docgen experiments are failed/superseded evidence, not passes
+on this revision. The normal clean publish retry remains queued.
+
+C-owned Graft queries now total approximately 73,791 tokens saved
+(33,668 prior + 40,123 ownership query); reviewer queries are not included.

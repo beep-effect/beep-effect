@@ -75,7 +75,7 @@ C implementation evidence (partial, 2026-10-09):
 [`history/handoffs/rsc-c-scripts-2026-10-09.md`](history/handoffs/rsc-c-scripts-2026-10-09.md)
 and [`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).
 C now includes the coordinated Ci group and pre-runtime adapters. Independent
-source review has zero actionable findings at `93f78873b8`; JSDoc ratchet and
+source review has zero actionable findings at `dec7e854a0`; JSDoc ratchet and
 knowledge census, refreshed CI fixtures, type proof and Fallow audit/health
 pass. Current full package/docgen qualification, E's workflow co-sign,
 publication and hosted proof remain open. B receives the occurrence-specific

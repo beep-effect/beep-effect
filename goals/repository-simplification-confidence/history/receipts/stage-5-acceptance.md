@@ -143,7 +143,9 @@ remains coordinated follow-up scope. Hosted parity is not inferred from this pas
 The Ci group is implemented together with its composite-action callers. The
 Effect service owns change-profile, job-env and runner-resources. Shared goals/
 docs pattern data belongs to Ci schemas; the minimal pre-runtime profile adapter
-reads it before Bun/dependencies exist. Setup installs dependencies before typed
+reads the generated JSON projection before Bun/dependencies exist.
+`beep ci patterns --write` owns the projection; the freshness fixture checks it
+against the schema-owned instance without changing managed compiler policy. Setup installs dependencies before typed
 environment export, then restores Turbo using exported credentials. Secret inputs
 remain explicit trusted-caller expressions. The resource adapter retains stable
 caller and shutdown behavior, including heavy.yml's older-checkout fallback.
@@ -154,7 +156,7 @@ the synthetic event/credential matrix and multiline heredocs, assert no secret
 values in logs, verify synthetic procfs counters, and cover TERM/INT/KILL,
 stdin, output-storage failure and recovered periodic-sample failure. These tests
 are outside the assumption that package source selection proves root adapters.
-Independent source review has zero actionable findings at `f0d88dd5bd`; current
+Independent source review has zero actionable findings at `dec7e854a0`; current
 runtime/full-package proof is pending. This row does not claim hosted acceptance.
 
 R24 is resolved by the orchestrator-of-record audit. Resume ruling 3 treats locked
