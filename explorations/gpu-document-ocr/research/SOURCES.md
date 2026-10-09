@@ -44,11 +44,13 @@ server; no upstream code is copied.
 | Brick | Path | Disposition |
 | --- | --- | --- |
 | `@beep/file-processing` Service, Artifact, Strategy, Extraction | `packages/foundation/capability/file-processing/src` | reuse |
-| `@beep/file-processing/PageOcr` | `packages/foundation/capability/file-processing/src/PageOcr` | NET-NEW (this packet) |
+| `@beep/file-processing/PageOcr` | `packages/foundation/capability/file-processing/src/PageOcr` | reuse (#1470, `3778ac719d`) |
 | `@beep/tika` tika-app engine | `packages/drivers/tika/src/Tika.tikaapp.ts` | reuse, unchanged |
 | `@beep/openai-compat` | `packages/drivers/openai-compat/src` | reuse (planned) |
 | `@beep/provenance` `SourceTextExtractor` | `packages/foundation/modeling/provenance` | reuse (mapping target) |
-| corpus extract | `packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts` | extend later; untouched by the first PR |
+| `@beep/tesseract` | `packages/drivers/tesseract/src` | reuse (#1481): page OCR, word confidence, script detection, language planning |
+| `@beep/poppler` | `packages/drivers/poppler/src` | reuse (#1481): `pdfinfo` and `pdftoppm`; class D probe NOT FOUND |
+| corpus extract | `packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts` | reuse (`corpus extract --ocr`, #1481, `2dffb2827c`) |
 
 ## 5. Cross-links & provenance
 

@@ -6,17 +6,21 @@ The shared-kernel persisted-entity base carries soft-delete and is the single
 canonical audit base, with the typed-error convention in place for the rest of the
 domain-layer hardening:
 
-1. `BaseEntity` gains `deletedAt` and `deletedByPrincipal` (rich `Principal`
-   actor, not `String`), modeled with normal Effect Schema optional/nullish codecs
-   (e.g. `S.OptionFromNullOr`) and an `EntitySchema.persist.*` descriptor; SQL row
-   absence encodes as `null`. (These are fields on the already-shared `BaseEntity`
-   export, not a new shared export — no new promotion record is required.)
-2. `@beep/schema/DomainModel` is retired (or reduced to a deprecated alias with a
-   migration note), so there is one audit base, not two. `rowVersion` already
-   covers `DomainModel.version` — no second version field is introduced.
-3. A `.errors.ts` convention exists, demonstrated by extracting/keeping at least
-   the kernel's own tagged error in the canonical `TaggedErrorClass` shape with a
-   smart constructor + error union (the epistemic `ClaimInvalidTransition` pattern).
+1. `EntityKit.auditColumns` gains nullable `deletedAt` and
+   `deletedByPrincipal` (rich `Principal` actor), inherited by Audit, Org and
+   Product tiers. Effect-drizzle metadata persists epoch milliseconds as bigint
+   and the actor as jsonb; SQL absence encodes as `null` and decodes to `Option`.
+   Base remains timestamps plus row version. Amend the existing ProductEntity
+   promotion record; introduce no new audit base.
+2. `@beep/schema/DomainModel` is already retired by #720 (`1e9d946750`), recorded
+   in the historical `.changeset/housekeeping-entity-stack.md` Git blob at that
+   commit (the release baseline #1566 removed the working-tree note). Evidence
+   satisfies this criterion;
+   no schema-package edit or second version field is needed.
+3. Extract the existing invariant into `entity/EntityRef.errors.ts` as direct
+   `S.TaggedError`, preserving its tag, fields and opaque `actualId` equivalence.
+   Add a static smart constructor and `EntityRefError` union; re-export both
+   through the existing EntityRef surface.
 
 The `TemporalValidity` and `DomainEvent` value objects are deliberately **out of
 this packet** (review finding): a shared-kernel export needs >=2 *current*
@@ -52,9 +56,20 @@ the first packet that actually consumes them (see the exploration MAP).
 
 ## Target Surfaces
 
-- `packages/shared/domain/src/entity/ProductEntity.ts` (soft-delete fields + persisted).
-- `packages/foundation/modeling/schema/src/index.ts` (retire/deprecate).
-- Tests + docgen examples for any new/changed exported behavior.
+- `packages/shared/domain/src/entity/EntityKit.ts` `auditColumns`: the two
+  soft-delete fields, an additive public API change inherited by audited kits.
+- `packages/shared/domain/src/entity/ProductEntity.ts`: inherited fields and docs.
+- `packages/shared/domain/src/entity/EntityRef.errors.ts`: new public exports
+  `EntityRefInvariantError` and `EntityRefError`; `EntityRef.ts` imports/re-exports.
+- `packages/shared/domain/test/**` and the existing ProductEntity promotion record
+  in `packages/shared/domain/README.md`.
+- `packages/_internal/db-admin/drizzle/<timestamp>_audit_soft_delete/`: generated,
+  additive nullable migration with no backfill, drops or renames.
+- `apps/professional-desktop/src/runtime/Migrations.gen.ts`: owner-command resync.
+- `packages/tooling/tool/cli/src/commands/Architecture/internal/AcceptedProofManifest.ts`:
+  accepted proof entry only if required by the migration proof.
+- `.changeset/<name>.md`: changed versioned packages; major if consumer edits break
+  compatibility, otherwise patch.
 
 ## Constraints
 
@@ -62,7 +77,7 @@ the first packet that actually consumes them (see the exploration MAP).
 
 - Soft-delete is a field pair only; no repository/read-model filtering in this packet.
 - Promotion records gate only *new shared exports* with >=2 current consumers
-  (`02-shared-kernel.md:189`); adding fields to the already-shared `BaseEntity` does
+  (`02-shared-kernel.md:189`); adding fields to the already-shared `ProductEntity` does
   not create a new export, so this packet needs none. (Do not add a promotion record
   for a zero-consumer export — that is what excludes the VOs from this packet.)
 - Domain stays driver-free (no `Sql`/`HttpClient`/`FileSystem`/`Config` in `R`).
@@ -71,11 +86,15 @@ the first packet that actually consumes them (see the exploration MAP).
 
 ## Acceptance Criteria
 
-- [ ] `BaseEntity.fields`/`persisted` include `deletedAt` + `deletedByPrincipal`
-      (Principal-typed, nullable→`null`), with passing decode/encode tests.
-- [ ] `@beep/schema/DomainModel` is retired or deprecated-aliased; no product entity
-      references it; the change is documented.
-- [ ] The `.errors.ts` convention is demonstrated in the kernel.
+- [ ] `EntityKit.auditColumns`, `ProductEntity.fields` and every audited kit include
+      `deletedAt` + `deletedByPrincipal` (Principal-typed, nullable→`null`), with
+      null/populated decode, encode and schema-derived property tests.
+- [x] `@beep/schema/DomainModel` is retired by #720 and its changeset; no product
+      entity references it.
+- [ ] The `.errors.ts` convention is demonstrated in the kernel and the existing
+      TaggedError equivalence regression stays green.
+- [ ] The generated migration contains only `ADD COLUMN` for the two nullable
+      soft-delete columns, and `migrations:check` plus desktop `codegen:check` pass.
 - [ ] `bun run check`, `bun run test`, `bun run docgen`, `bun run lint` pass for the
       touched packages; schema-first + schema-topology lint stay green.
 - [ ] No unrelated refactors or formatting churn; no slice-entity edits.
@@ -102,3 +121,16 @@ the first packet that actually consumes them (see the exploration MAP).
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | None | N/A | N/A | N/A | N/A |
+
+## Decision Log
+
+| Date | Decision | Reason | Reversal |
+| --- | --- | --- | --- |
+| 2026-10-09 | D1: Map historical BaseEntity fields/persisted to EntityKit.auditColumns flowing through the audited kits and ProductEntity.fields; EntitySchema.persist maps to effect-drizzle metadata; TaggedErrorClass maps to direct S.TaggedError. | #720 replaced the packet's original API; live source is authoritative. | Revert this reconciliation if restoring the historical stack. |
+| 2026-10-09 | D2: Criterion 2 is already met by #720, commit 1e9d946750, and its historical housekeeping-entity-stack.md Git blob; #1566 removed the working-tree note. | DomainModel is deleted; no product reference or second audit base remains. | Restore the deleted model only through a separately scoped contract change. |
+| 2026-10-09 | D3: Extend auditColumns, inherited by Audit, Org and Product; keep Base timestamps/version only. | One canonical audit pack, no new entity base or promotion record; amend the ProductEntity record. | Revert the new columns and promotion-record amendment. |
+| 2026-10-09 | D4: Choose GeneratedByApp(OptionFromNullOr(codec)) with constructor default succeedNone and missing-key decoding default null. Timestamp uses epoch-millis bigint, principal jsonb. No paired-nullness CHECK. | Constructor omissions remain accepted and JSON writes omit audit fields; a CHECK would exceed the columns-only migration contract. Measured: 32 fixture diagnostics in 8 test files, 4 explicit converter projections; no model or behavior edits. FieldOption adds a production fixture failure and exposes JSON writes. | Revert the field additions; reassess encoding before migration generation. |
+| 2026-10-09 | D5: Generate an additive nullable migration without backfill and resync the desktop bundle through codegen. | All audited tables inherit new columns; existing rows read null. The baseline records zero users; no live database is touched here. | Revert the PR and generate a drop-columns migration; preserve any later data before rollback. |
+| 2026-10-09 | D6: EntityRef.errors uses the entity/EntityRef.errors identity composer; import and re-export via EntityRef.ts. Preserve the tag, fields and actualId equivalence. | Existing public path and wildcard exports reach the module; no new exports-map subpath is necessary. | Move the class back and remove the new error union and re-exports. |
+| 2026-10-09 | D7: SPEC explicitly requires auditColumns soft-delete fields, EntityRef.errors exports, additive nullable drizzle migration and generated Migrations.gen.ts. Amend the GOAL stop line to name them. | These exact surfaces satisfy the stop line's SPEC exception. Under AGENTS autonomy only money escalates; other calls are recorded here. Auth, infra, security, dependencies, lockfiles, other generated/public APIs and non-additive migrations still stop this lane. | Revert GOAL and SPEC contract edits. |
+| 2026-10-09 | D8: Author research/SOURCES.md and register researchReports in place (R3). | The adopt plan had one report row; after authoring it has none and conflicts is empty. Unknown manifest keys are preserved. | Remove SOURCES.md and researchReports; the report row returns and doctor still supports the packet. |
