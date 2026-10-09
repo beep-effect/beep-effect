@@ -337,5 +337,30 @@
     "packages/tooling/tool/cli/test/yeet-monitor-loop.test.ts": "fe56053f0c9b321699774f4d80164737f3c6bec8e971646c513357cd8d9ff6cf",
     "packages/tooling/tool/cli/test/yeet-pr-provenance.test.ts": "595177523d1b1e4ca90e003c1a8aeace8b7e0daa381cfd51f8fb00b428a2a733",
     "packages/tooling/tool/cli/test/yeet.test.ts": "544a715d96d79fb03c41712275ae5869a069075bc6bdf90388696d7cc39d7ae1"
+  },
+  "run5MainRefresh": {
+    "previousHead": "2acc2a5215ccf183e62cea53e39312f7a5f9e61b",
+    "main": "df7d88aad700c442d31f9c7c52094b6dd094470a",
+    "results": [
+      {
+        "lane": "knowledge-refs",
+        "exit": 0,
+        "durationSeconds": 30.485
+      },
+      {
+        "lane": "goals-doctor",
+        "exit": 0,
+        "durationSeconds": 3.171
+      },
+      {
+        "lane": "goals-index",
+        "exit": 0,
+        "durationSeconds": 1.667
+      }
+    ],
+    "conflictResolution": "Both parent documents retained in order; all nonblank parent lines verified.",
+    "reviewedSourceDigestsMatched": 37,
+    "inventoryChanged": false,
+    "sourceProofBoundary": "Run 4 proofs retained; landed E source arrives through main and is not independently re-proved by this packet-only refresh."
   }
 }

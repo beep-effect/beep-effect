@@ -727,3 +727,36 @@ without claiming completion.
 
 | 2026-10-09 | V completes its CLI integration publication under the 20:30Z direct-cgroup ruling; goal remains active for R105 and R102. | PR #1575 is ready, full repo-cli proof and local parity pass, inventory is regenerated after final main merge, and source hashes remain unchanged. Merge and retirement belong to the fleet orchestrator. | Revert #1575; preserve archived source patches and regenerate the inventory. |
 | 2026-10-09 | V retains separately qualified scenario fault harnesses after assessing the advisory consolidation suggestion. | The four harnesses have different fault methods, body-failure populations, target/options checks and explicit local cause oracles; no failing behavior or quality gate was identified. Evidence and re-evaluation boundary are in the Stage 4 hosted-review disposition. | Consolidate when those R102 resource cohorts are next touched, retaining every distinct oracle and rerunning Node/Bun, full package and independent review. |
+
+### 2026-10-09 — E/C pre-runtime credential ordering
+
+The Ci group port keeps change-profile classification available before runtime installation and exports job environment after the runtime exists, before cache fallback selection. Secret expressions stay in the trusted caller workflow; neither the composite action nor `ci-job-env` may acquire secrets from GitHub. Only main-push Turbo lanes receive writer credentials. The port's acceptance criteria include the push/ref, same-repo PR, fork, schedule and dispatch credential matrix, stable blank app exports, and parity with the shared documentation classifier. Reason: PR-controlled setup code must never widen the trusted caller boundary (E-03/E-15/E-25/E-32). Reverse by reverting the port and restoring the prior script with the same caller guards.
+
+### 2026-10-09 — E hosted configuration decisions
+
+- Keep desktop releases enabled as a dormant but live path (R42); create the operator-reviewed environment and tag policy. Missing signing keys are externally blocked. Reason: never-run is not evidence of obsolescence. Reverse environment changes using the prior snapshot; workflow reversal is `gh workflow enable release-desktop.yml`.
+- Disable Official Data Sync, remove its schedule and workflow write grants, remove the default-token PR fallback, and retain explicit read-only setup. Reconsider when a dedicated App or fine-grained token and authenticated source configuration exist (R44). Reverse with the prior settings snapshot, `gh workflow enable data-sync.yml`, and workflow revert.
+- Disable ghost `repo-law` registration; reverse with `gh workflow enable 231729043`. Enable secret-scanning push protection; reverse with the prior `security_and_analysis` payload.
+- Preserve the existing non-required Coverage Regression and Lint Policy posture (R43), keep JSDoc Ratchet required and reconcile descriptors to the live settings. Historical actor is unknown; runner-loss evidence supports retaining demotion, without attributing the original decision. Reverse via ruleset PUT plus descriptor revert and recapture.
+- Bind every required context to GitHub Actions (15368) and require review-thread resolution. Keep the admin bypass and zero human approvals as the single-operator posture; reconsider when a second independent maintainer is available. CODEOWNERS remains an ownership map with no blocking code-owner review. Reverse with the prior full ruleset PUT.
+- Fork Heavy admission requires both `ready-for-heavy` and `ready-for-heavy-fork`; forks never satisfy contexts through docs-only skips. Reason: ordinary admission approval must not implicitly approve untrusted code on the self-hosted pool. Reverse the admission and workflow change together.
+
+### 2026-10-09 — E admitted publication memory envelope
+
+Use the wrapper's supported per-command 24 GiB cap for the E publication retry after the default 16 GiB unit was OOM-killed during cheap gates. Reason: the exact unit journal establishes cap exhaustion rather than a source verdict, and available memory supports the bounded retry. Admission and the two-job E limit remain in force. Reverse by allowing that transient unit to exit or stopping it, then omit the override; no global wrapper configuration changes.
+
+### 2026-10-09 — E publication follows S12 amendment
+
+The 24 GiB retry was also cap-killed. Use the orchestrator-owned wrapper floor and concurrency defaults in S12 for the next admitted publication attempt; E does not alter global limits. Reason: repeated unit OOM evidence requires a bounded resource/fan-out correction before publication can yield a verdict. Reversal remains terminating the transient job; the orchestrator owns any rollback of its shared wrapper configuration.
+
+### 2026-10-09 — E runner group called-workflow probe
+
+Program PR #1568 Heavy Admit run 37974783576 used the unlisted caller `heavy-admit.yml` and assigned all seven reusable Heavy jobs to runner group 4 (`beep-ec2-heavy`). Remove only the unused `check.yml@refs/heads/main` entry; retain `heavy.yml@main`, Cache Warm, fleet health and red-team probes. Reason: this concrete program-PR probe proves the called-workflow boundary before narrowing (E-20). The full immediately preceding settings export is `history/receipts/stage-3-github-settings.md#before-runner-group-narrowing`. Reverse with PATCH `orgs/beep-effect/actions/runner-groups/4`, restoring that snapshot's `restricted_to_workflows` and `selected_workflows`; no runner is removed.
+
+### 2026-10-09 — E publication allowlist after D policy
+
+After D's release-policy PR #1566 lands, remove the unused `changesets/action@*` Actions allowlist pattern (E-19). No current workflow references that action, and private publication machinery is dormant under D's recorded reactivation policy. Keep every other allowlist field and pattern. The immediately preceding full export is `history/receipts/stage-3-github-settings.md#before-changesets-action-allowlist`. Reverse with PUT `repos/beep-effect/beep-effect/actions/permissions/selected-actions` restoring the snapshot's `github_owned_allowed`, `verified_allowed` and `patterns_allowed`; publication activation must deliberately restore its action permission.
+
+### 2026-10-09 — E hosted governance job-token proof
+
+Move live ruleset, desktop settings and held-main reads from the contents-only verification matrix to the existing Security job, adding only `actions: read` there. Keep pure workflow lint in Repo Sanity. Reason: human review found the push-only Actions API calls unproven under GITHUB_TOKEN, despite successful personal-token probes. Run the hosted reads on PRs too, after dependency review, to establish that exact job-token path before merge. A held-main failure is repository-state evidence and must be attributed accordingly. Reverse the workflow/test change together; no writer credential, environment attachment or other job permission is broadened.

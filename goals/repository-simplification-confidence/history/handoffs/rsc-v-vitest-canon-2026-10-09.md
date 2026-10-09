@@ -301,3 +301,69 @@ inventory did not move, so the run-4 ruling requires no further regeneration.
 The preceding linkage retains its explicit generation snapshot. This addendum
 and merge are published as one complete final wave; the final report supplies
 its exact receipt-successor SHA. The orchestrator must use that latest PR head.
+
+### Run 5 main refresh
+
+Merged `origin/main` at `df7d88aad7` once under the 20:50Z ruling to bring
+landed E PR #1568 into #1575. Resolved the two packet conflicts in SPEC and
+OPPORTUNITIES by retaining both sides in document order; an ordered-line
+comparison confirms every nonblank line from both parents survives. This run
+adds no source change; E source changes arrive only through its landed main
+commit. The inventory did not move, so its existing owner-generation receipt
+and counts remain unchanged. Only knowledge-reference and packet checks are
+rerun through `beep-heavy`; the Run 4 source gates retain their recorded
+qualification boundary. The admitted knowledge-reference check passed in 30.485 s with zero live
+gated observations; goals doctor passed in 3.171 s with zero blocking findings
+and three unrelated nonfatal advisories; goals index passed in 1.667 s. The
+published successor head is supplied in the final worker report. The orchestrator retains merge and retirement ownership.
+
+### Run 5 report
+
+- **Lane:** `rsc-v-vitest-canon`, branch `chore/rsc-v-vitest-canon`, checkout
+  `effect-vitest-canon-integrate`, clone `beep-effect2`.
+- **Head SHA:** this merge commit's published successor to
+  `2acc2a5215ccf183e62cea53e39312f7a5f9e61b`, with second parent
+  `df7d88aad700c442d31f9c7c52094b6dd094470a`; the final worker report pins the
+  exact resulting SHA. This committed report cannot contain its own commit
+  hash. All 37 reviewed V source digests match Run 4.
+- **PR(s):** #1575, already ready for review. This run carries one main-merge
+  update and packet evidence. The orchestrator owns the merge gate; the push
+  renews the review window. GitHub structural mergeability is checked after
+  publication and reported by the worker, without implying complete readiness.
+- **Package-verify per package:** retained default `@beep/repo-cli` PASS,
+  **781.746 s** at `4be0599a18` (audit 750.5 s, docgen 29.6 s). No newly
+  authored package change in Run 5. E source arrives through landed #1568;
+  Run 4 receipts do not claim fresh proof of E's incoming changes. Original
+  RDF PASS **12.064 s** / Pacer PASS **10.024 s** remain historical preserved
+  patch evidence, excluded from #1575 and insufficient for the R105 preview.
+- **Hosted-parity results:** retained Run 4 test-tsgo PASS **19.751 s**,
+  docgen local PASS **5.926 s**, jsdoc-ratchet PASS **318.955 s**, Fallow audit
+  PASS **9.285 s** / health PASS **4.473 s**. Fresh Run 5 knowledge refs PASS
+  **30.485 s**, zero live gated observations; goals doctor PASS **3.171 s**,
+  zero blocking findings; goals index PASS **1.667 s**. Checks ran through
+  `beep-heavy`, after requeueing to observe the live five-slot configuration.
+  Scoped coverage retained: RatchetDiff lines 90%, statements 90.9%, branches
+  100%, functions 85.71%; Research.test-kit has zero executable statements.
+  This is local parity evidence; final-head hosted checks remain the gate's
+  responsibility.
+- **Inventory before→after:** **1,879 / 741 open / 1,138 exceptions →
+  1,853 / 716 open / 1,137 exceptions** under 4.0.2. The main merge did not
+  move the inventory, so no regeneration was required by the Run 5 ruling.
+  SHA256 remains `c071e14c088ed76ec6e8b967595bf2d7ffb0302e1b35d8608420e94b855ab990`.
+  All 15,513 historical ledger IDs remain preserved.
+- **Disposition counts:** **5 port / 41 superseded / 0 discard worktrees**;
+  stale Pacer changeset separately discarded as an artifact. All 17 preserved
+  exports remain verified; this run modifies no source worktree.
+- **Handoff path:**
+  `goals/repository-simplification-confidence/history/handoffs/rsc-v-vitest-canon-2026-10-09.md`.
+- **Retirement list:** all 46 source worktrees (six canon, 34 published, six
+  gap-19), `effect-vitest-inventory-next` residue, and 22 remote candidates
+  in `history/receipts/stage-4-vitest-reconciliation.md#retirement`. Retirement
+  stays with the orchestrator after merges, notification and liveness/tip
+  checks. This worker retires nothing.
+- **Open items:** orchestrator final-head review/gate/merge of #1575; R105
+  RDF/Pacer follow-up after merge with fresh qualification and terminal-zero
+  independent review; R102's 716 open rows; B's 1,137 exception reviews; timing
+  and reference receipts, reflection and completed-retained closeout.
+  The canon goal remains active. Recovery is revert of the integration PR,
+  retained preservation exports and owner-command inventory regeneration.
