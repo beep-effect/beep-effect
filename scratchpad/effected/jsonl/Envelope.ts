@@ -291,7 +291,7 @@ const encode: {
  * returns its pipeable form. Selected decoding filters the frame before data.
  *
  * **Example** (Decode in a pipeline)
- * ```ts
+ * ```ts import.meta.vitest name="Decode in a pipeline"
  * import { Envelope, JsonlEvent, Line } from "@beep/scratchpad/effected/jsonl/index";
  * import { pipe } from "effect/Function";
  * import * as A from "effect/Array";
@@ -366,7 +366,7 @@ export const Envelope = {
    *
    * **Example** (Pipe a line through its registry)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Pipe a line through its registry"
    * import { Envelope, JsonlEvent, Line } from "@beep/scratchpad/effected/jsonl/index";
    * import * as A from "effect/Array";
    * import * as O from "effect/Option";
@@ -465,7 +465,7 @@ export const Envelope = {
    *
    * **Example** (Decode a line in Effect)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Decode a line in Effect"
    * import { Envelope, JsonlEvent, Line } from "@beep/scratchpad/effected/jsonl/index";
    * import * as A from "effect/Array";
    * import * as O from "effect/Option";
@@ -490,7 +490,7 @@ export const Envelope = {
    *
    * **Example** (Encode a payload lazily)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Encode a payload lazily"
    * import { Envelope, JsonlEvent } from "@beep/scratchpad/effected/jsonl/index";
    * import * as S from "effect/Schema";
    * const events = [JsonlEvent.make("started", { data: S.String })];

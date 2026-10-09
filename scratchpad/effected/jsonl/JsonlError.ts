@@ -189,7 +189,7 @@ export class UnknownEvent extends S.TaggedError<UnknownEvent>($I`UnknownEvent`)(
  * eagerly after those schema fields and formats the retained issue tree.
  *
  * **Example** (Inspect invalid payload details)
- * ```ts
+ * ```ts import.meta.vitest name="Inspect invalid payload details"
  * import { pipe } from "effect/Function";
  * import { Envelope, JsonlEvent, Line } from "@beep/scratchpad/effected/jsonl/index";
  * import * as A from "effect/Array";
@@ -242,7 +242,7 @@ export class InvalidData extends S.TaggedError<InvalidData>($I`InvalidData`)(
    * Human-readable context for this failure; structured fields retain its details.
    *
    * **Example** (Read the invalid-payload message)
-   * ```ts
+   * ```ts import.meta.vitest name="Read the invalid-payload message"
    * import { pipe } from "effect/Function";
    * import { Envelope, JsonlEvent, Line } from "@beep/scratchpad/effected/jsonl/index";
    * import * as A from "effect/Array";
@@ -422,7 +422,7 @@ export class UnserializableData extends S.TaggedError<UnserializableData>($I`Uns
    * Human-readable context for this failure; structured fields retain its details.
    *
    * **Example** (Read the serialization message)
-   * ```ts
+   * ```ts import.meta.vitest name="Read the serialization message"
    * import { Envelope, JsonlEvent } from "@beep/scratchpad/effected/jsonl/index";
    * import * as DateTime from "effect/DateTime";
    * import * as Result from "effect/Result";
