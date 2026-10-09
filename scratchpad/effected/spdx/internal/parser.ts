@@ -5,6 +5,8 @@ import { LicenseException } from "../LicenseException.ts";
  * The maximum expression nesting depth the recursive-descent parser will
  * accept before it refuses the input.
  *
+ * **Details**
+ *
  * This is the input-hardening cap: without it, adversarial input such as
  * thousands of nested parentheses (`"(".repeat(5000) + …`) or a pathological
  * `AND`/`OR` chain would exhaust the JavaScript call stack and surface a
@@ -14,30 +16,52 @@ import { LicenseException } from "../LicenseException.ts";
  * that built it — the depth of every subsequent walk of the AST
  * (materialization and `toString`). Set to the kit-wide `MAX_NESTING_DEPTH`.
  *
+ * **Example** (Inspect the parser depth cap)
+ *
+ * ```ts
+ * import { MAX_NESTING_DEPTH } from "@beep/scratchpad/effected/spdx/internal/parser"
+ *
+ * console.log(MAX_NESTING_DEPTH) // 256
+ * ```
+ *
  * @internal
+ * @category constants
+ * @since 0.0.0
  */
 export const MAX_NESTING_DEPTH = 256;
 
 /**
  * A raw, engine-level simple-expression leaf: a cataloged SPDX identifier with
  * the trailing `+` ("or later") marker, or a `LicenseRef`/`DocumentRef`
- * reference. This is the SPDX ABNF's `simple-expression`, and therefore the
+ * reference.
+ *
+ * **Details**
+ *
+ * This is the SPDX ABNF's `simple-expression`, and therefore the
  * shape a `WITH` clause may bind to. Emitted by the parser and materialized
  * into the public AST by the facade; carries no validation behavior of its own.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export type RawSimpleLicense =
 	| { readonly kind: "license"; readonly id: string; readonly plus: boolean }
 	| { readonly kind: "licenseRef"; readonly documentRef: string | undefined; readonly ref: string };
 
 /**
- * The raw expression tree the parser emits. It is a plain-object mirror of the
+ * The raw expression tree the parser emits.
+ *
+ * **Details**
+ *
+ * It is a plain-object mirror of the
  * public {@link SpdxExpression} AST, deliberately free of any Schema class so
  * the engine module carries no edge back to the facade (the cycle firewall):
  * the parser produces these records, the facade materializes the typed classes.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export type RawExpression =
 	| RawSimpleLicense
@@ -89,7 +113,11 @@ function isIdChar(code: number): boolean {
 }
 
 /**
- * Scan an SPDX expression into a flat token stream. Iterative — no recursion,
+ * Scan an SPDX expression into a flat token stream.
+ *
+ * **Details**
+ *
+ * Iterative — no recursion,
  * so it cannot overflow the stack regardless of input length. Returns
  * `undefined` on the first unexpected character (or a `+` preceded by a space,
  * which SPDX forbids) rather than throwing, so malformed input flows through
@@ -155,6 +183,8 @@ function scan(source: string): ReadonlyArray<Token> | undefined {
  * Parse an SPDX license expression into a {@link RawExpression} tree, or
  * `undefined` when the input is not a valid expression.
  *
+ * **Details**
+ *
  * A hardened, recursive-descent parser over the {@link scan} token stream,
  * following `spdx-expression-parse`'s operator precedence (`WITH` binds
  * tightest, then `AND`, then `OR`). It **never throws**: every malformation —
@@ -165,7 +195,29 @@ function scan(source: string): ReadonlyArray<Token> | undefined {
  * released in `finally`, caps the recursion so hostile nesting is rejected
  * cleanly rather than overflowing the stack.
  *
+ * **Example** (Inspect operator precedence)
+ *
+ * ```ts
+ * import { parse } from "@beep/scratchpad/effected/spdx/internal/parser"
+ *
+ * const expression = parse("MIT OR Apache-2.0 AND BSD-3-Clause")
+ * console.log(expression?.kind) // or
+ * console.log(expression?.kind === "or" && expression.right.kind) // and
+ * ```
+ *
+ * **Example** (Reject malformed and deeply nested input)
+ *
+ * ```ts
+ * import { MAX_NESTING_DEPTH, parse } from "@beep/scratchpad/effected/spdx/internal/parser"
+ *
+ * const nested = "(".repeat(MAX_NESTING_DEPTH) + "MIT" + ")".repeat(MAX_NESTING_DEPTH)
+ * console.log(parse("MIT AND")) // undefined
+ * console.log(parse(nested)) // undefined
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export function parse(input: string): RawExpression | undefined {
 	const tokens = scan(input);

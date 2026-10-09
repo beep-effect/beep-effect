@@ -8,7 +8,22 @@ import * as HashSet from "effect/HashSet";
 // arrays by hand — run the generator to refresh them, which rewrites only
 // the byte span between each pair of markers.
 
-/** @internal */
+/**
+ * Active SPDX license identifiers in the vendored catalog. Deprecated identifiers are kept separately.
+ *
+ * **Example** (Check a current license identifier)
+ *
+ * ```ts
+ * import { ACTIVE_LICENSE_IDS } from "@beep/scratchpad/effected/spdx/internal/licenseIds";
+ * import * as A from "effect/Array";
+ *
+ * console.log(A.some(ACTIVE_LICENSE_IDS, (id) => id === "MIT")); // true
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const ACTIVE_LICENSE_IDS = [
 	// spdx:license-ids:active:start
 	"0BSD",
@@ -709,7 +724,22 @@ export const ACTIVE_LICENSE_IDS = [
 	// spdx:license-ids:active:end
 ] as const;
 
-/** @internal */
+/**
+ * Deprecated SPDX license identifiers in the vendored catalog.
+ *
+ * **Example** (Check a deprecated license identifier)
+ *
+ * ```ts
+ * import { DEPRECATED_LICENSE_ID_LIST } from "@beep/scratchpad/effected/spdx/internal/licenseIds";
+ * import * as A from "effect/Array";
+ *
+ * console.log(A.some(DEPRECATED_LICENSE_ID_LIST, (id) => id === "GPL-2.0")); // true
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const DEPRECATED_LICENSE_ID_LIST = [
 	// spdx:license-ids:deprecated:start
 	"AGPL-1.0",
@@ -741,8 +771,38 @@ export const DEPRECATED_LICENSE_ID_LIST = [
 	// spdx:license-ids:deprecated:end
 ] as const;
 
-/** @internal */
+/**
+ * Active SPDX license identifiers stored in a set for membership checks. Deprecated identifiers are kept separately.
+ *
+ * **Example** (Check a current license identifier)
+ *
+ * ```ts
+ * import { LICENSE_IDS } from "@beep/scratchpad/effected/spdx/internal/licenseIds";
+ * import * as HashSet from "effect/HashSet";
+ *
+ * console.log(HashSet.has(LICENSE_IDS, "MIT")); // true
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const LICENSE_IDS: HashSet.HashSet<string> = HashSet.fromIterable(ACTIVE_LICENSE_IDS);
 
-/** @internal */
+/**
+ * Deprecated SPDX license identifiers stored in a set for membership checks.
+ *
+ * **Example** (Check a deprecated license identifier)
+ *
+ * ```ts
+ * import { DEPRECATED_LICENSE_IDS } from "@beep/scratchpad/effected/spdx/internal/licenseIds";
+ * import * as HashSet from "effect/HashSet";
+ *
+ * console.log(HashSet.has(DEPRECATED_LICENSE_IDS, "GPL-2.0")); // true
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const DEPRECATED_LICENSE_IDS: HashSet.HashSet<string> = HashSet.fromIterable(DEPRECATED_LICENSE_ID_LIST);

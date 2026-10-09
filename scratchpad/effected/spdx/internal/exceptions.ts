@@ -8,7 +8,22 @@ import * as HashSet from "effect/HashSet";
 // Do not edit the arrays by hand — run the generator to refresh them, which
 // rewrites only the byte span between each pair of markers.
 
-/** @internal */
+/**
+ * Active SPDX exception identifiers in the vendored catalog. Deprecated identifiers are kept separately.
+ *
+ * **Example** (Check a current exception identifier)
+ *
+ * ```ts
+ * import { ACTIVE_EXCEPTION_IDS } from "@beep/scratchpad/effected/spdx/internal/exceptions";
+ * import * as A from "effect/Array";
+ *
+ * console.log(A.some(ACTIVE_EXCEPTION_IDS, (id) => id === "Bison-exception-2.2")); // true
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const ACTIVE_EXCEPTION_IDS = [
 	// spdx:exceptions:active:start
 	"389-exception",
@@ -80,15 +95,60 @@ export const ACTIVE_EXCEPTION_IDS = [
 	// spdx:exceptions:active:end
 ] as const;
 
-/** @internal */
+/**
+ * Deprecated SPDX exception identifiers in the vendored catalog.
+ *
+ * **Example** (Check a deprecated exception identifier)
+ *
+ * ```ts
+ * import { DEPRECATED_EXCEPTION_ID_LIST } from "@beep/scratchpad/effected/spdx/internal/exceptions";
+ * import * as A from "effect/Array";
+ *
+ * console.log(A.some(DEPRECATED_EXCEPTION_ID_LIST, (id) => id === "Nokia-Qt-exception-1.1")); // true
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const DEPRECATED_EXCEPTION_ID_LIST = [
 	// spdx:exceptions:deprecated:start
 	"Nokia-Qt-exception-1.1",
 	// spdx:exceptions:deprecated:end
 ] as const;
 
-/** @internal */
+/**
+ * Active SPDX exception identifiers stored in a set for membership checks. Deprecated identifiers are kept separately.
+ *
+ * **Example** (Check a current exception identifier)
+ *
+ * ```ts
+ * import { EXCEPTION_IDS } from "@beep/scratchpad/effected/spdx/internal/exceptions";
+ * import * as HashSet from "effect/HashSet";
+ *
+ * console.log(HashSet.has(EXCEPTION_IDS, "Bison-exception-2.2")); // true
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const EXCEPTION_IDS: HashSet.HashSet<string> = HashSet.fromIterable(ACTIVE_EXCEPTION_IDS);
 
-/** @internal */
+/**
+ * Deprecated SPDX exception identifiers stored in a set for membership checks.
+ *
+ * **Example** (Check a deprecated exception identifier)
+ *
+ * ```ts
+ * import { DEPRECATED_EXCEPTION_IDS } from "@beep/scratchpad/effected/spdx/internal/exceptions";
+ * import * as HashSet from "effect/HashSet";
+ *
+ * console.log(HashSet.has(DEPRECATED_EXCEPTION_IDS, "Nokia-Qt-exception-1.1")); // true
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const DEPRECATED_EXCEPTION_IDS: HashSet.HashSet<string> = HashSet.fromIterable(DEPRECATED_EXCEPTION_ID_LIST);

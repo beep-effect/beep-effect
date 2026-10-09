@@ -18,10 +18,38 @@ import * as HashMap from "effect/HashMap";
 // against upstream for every id and fails loudly on any deviation, which
 // keeps the templating a checked invariant rather than an assumption.
 
-/** Bit set in a metadata entry's `flags` when the license is OSI-approved. @internal */
+/**
+ * Bit set in a metadata entry's `flags` when the license is OSI-approved.
+ *
+ * **Example** (Inspect the approval bit)
+ *
+ * ```ts
+ * import { META_FLAG_OSI_APPROVED } from "@beep/scratchpad/effected/spdx/internal/licenseMeta";
+ *
+ * console.log(META_FLAG_OSI_APPROVED); // 1
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const META_FLAG_OSI_APPROVED = 1;
 
-/** Bit set in a metadata entry's `flags` when the license is FSF-libre. @internal */
+/**
+ * Bit set in a metadata entry's `flags` when the license is FSF-libre.
+ *
+ * **Example** (Inspect the approval bit)
+ *
+ * ```ts
+ * import { META_FLAG_FSF_LIBRE } from "@beep/scratchpad/effected/spdx/internal/licenseMeta";
+ *
+ * console.log(META_FLAG_FSF_LIBRE); // 2
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
 export const META_FLAG_FSF_LIBRE = 2;
 
 /**
@@ -29,6 +57,8 @@ export const META_FLAG_FSF_LIBRE = 2;
  * approval bitfield ({@link META_FLAG_OSI_APPROVED} | {@link META_FLAG_FSF_LIBRE}).
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export type LicenseMetaEntry = readonly [id: string, name: string, flags: number];
 
@@ -44,7 +74,17 @@ export type LicenseMetaEntry = readonly [id: string, name: string, flags: number
  * back. Neither shape is a fixpoint and regeneration reports a spurious diff
  * forever. TAB cannot occur in an SPDX name, so the split is unambiguous.
  *
+ * **Example** (Read the first encoded metadata row)
+ *
+ * ```ts
+ * import { LICENSE_META_ROWS } from "@beep/scratchpad/effected/spdx/internal/licenseMeta";
+ *
+ * console.log(LICENSE_META_ROWS[0]?.split("\t").join(" | ")); // 0BSD | BSD Zero Clause License | 1
+ * ```
+ *
  * @internal
+ * @category constants
+ * @since 0.0.0
  */
 export const LICENSE_META_ROWS: readonly string[] = [
 	// spdx:license-meta:start
@@ -777,7 +817,21 @@ export const LICENSE_META_ROWS: readonly string[] = [
  * by identifier. A `LicenseRef`/`DocumentRef` reference is not a catalog
  * member and has no entry.
  *
+ *
+ * **Example** (Look up a license title)
+ *
+ * ```ts
+ * import { LICENSE_META } from "@beep/scratchpad/effected/spdx/internal/licenseMeta";
+ * import * as HashMap from "effect/HashMap";
+ * import * as O from "effect/Option";
+ *
+ * const title = O.map(HashMap.get(LICENSE_META, "MIT"), (entry) => entry[1]);
+ * console.log(O.getOrElse(title, () => "missing")); // MIT License
+ * ```
+ *
  * @internal
+ * @category constants
+ * @since 0.0.0
  */
 export const LICENSE_META: HashMap.HashMap<string, LicenseMetaEntry> = HashMap.fromIterable(
 	A.map(LICENSE_META_ROWS, (row): readonly [string, LicenseMetaEntry] => {

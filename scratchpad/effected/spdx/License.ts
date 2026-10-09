@@ -24,16 +24,54 @@ const $I = $ScratchpadId.create("effected/spdx/License");
  * `LicenseException.parse` raise it, and the recursive expression parser reuses
  * it for the whole grammar.
  *
+ * **Example** (Inspect a typed validation error)
+ *
+ * ```ts
+ * import { InvalidSpdxExpressionError } from "@beep/scratchpad/effected/spdx/License";
+ *
+ * const error = InvalidSpdxExpressionError.make({ input: "unknown" });
+ * console.log(error.message); // Invalid SPDX expression: "unknown"
+ * ```
+ *
  * @see {@link https://spdx.github.io/spdx-spec/v2.3/SPDX-license-expressions/ | SPDX License Expressions} for the SPDX expression grammar
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class InvalidSpdxExpressionError extends S.TaggedError<InvalidSpdxExpressionError>($I`InvalidSpdxExpressionError`)(
 	"InvalidSpdxExpressionError",
 	{
-		/** The raw input string that failed to validate. */
+		/**
+		 * The raw input string that failed to validate.
+		 *
+		 * **Example** (Inspect the rejected input)
+		 *
+		 * ```ts
+		 * import { InvalidSpdxExpressionError } from "@beep/scratchpad/effected/spdx/License";
+		 *
+		 * console.log(InvalidSpdxExpressionError.make({ input: "unknown" }).input); // unknown
+		 * ```
+		 *
+		 * @category models
+		 * @since 0.0.0
+		 */
 		input: S.String.annotateKey({ description: "The raw input string that failed to validate." }),
 	}, $I.annote("InvalidSpdxExpressionError", { description: "Indicates that a string is not a valid SPDX expression fragment: an unrecognized license or exception identifier, or a malformed `LicenseRef-`/`DocumentRef-` reference." }),
 ) {
+	/**
+	 * Formats the rejected input as the validation error's diagnostic message.
+	 *
+	 * **Example** (Read the validation diagnostic)
+	 *
+	 * ```ts
+	 * import { InvalidSpdxExpressionError } from "@beep/scratchpad/effected/spdx/License";
+	 *
+	 * console.log(InvalidSpdxExpressionError.make({ input: "unknown" }).message); // Invalid SPDX expression: "unknown"
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Invalid SPDX expression: "${this.input}"`;
 	}
@@ -82,30 +120,53 @@ const isLicenseRefId = S.is(LicenseRefId);
  * **Example** (Parse a license identifier and inspect its deprecation flag)
  *
  * ```ts
- * import { License } from "./index.ts";
+ * import { License } from "@beep/scratchpad/effected/spdx/License";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const mit = yield* License.parse("MIT");
- *   return [mit.id, mit.deprecated] as const;
+ *   return [mit.id, mit.deprecated];
  * });
  *
- * console.log(Effect.runSync(program));
- * // => ["MIT", false]
+ * console.log(JSON.stringify(Effect.runSync(program))); // ["MIT",false]
  * ```
  *
  * @see {@link https://spdx.org/licenses/ | SPDX License List} for the catalog of SPDX license identifiers
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class License extends S.Class<License>($I`License`)({
 	/**
 	 * The SPDX short identifier (e.g. `"MIT"`) or a `LicenseRef-`/`DocumentRef-`
 	 * reference string.
+	 *
+	 * **Example** (Read the SPDX identifier)
+	 *
+	 * ```ts
+	 * import { License } from "@beep/scratchpad/effected/spdx/License";
+	 *
+	 * console.log(License.of("MIT").id); // MIT
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
 	 */
 	id: S.String.annotateKey({ description: "The SPDX short identifier (e.g. `\"MIT\"`) or a `LicenseRef-`/`DocumentRef-` reference string." }),
 	/**
 	 * Whether `id` is a deprecated SPDX identifier. Always `false` for a
 	 * `LicenseRef`/`DocumentRef` reference.
+	 *
+	 * **Example** (Read the deprecation flag)
+	 *
+	 * ```ts
+	 * import { License } from "@beep/scratchpad/effected/spdx/License";
+	 *
+	 * console.log(License.of("MIT").deprecated); // false
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
 	 */
 	deprecated: S.Boolean.annotateKey({ description: "Whether `id` is a deprecated SPDX identifier. Always `false` for a `LicenseRef`/`DocumentRef` reference." }),
 }, $I.annote("License", { description: "A validated SPDX license identifier: an Effect `Schema.Class` whose `id` is either a member of the SPDX License List or a well-formed `LicenseRef-`/`DocumentRef-` reference. The class doubles as its own schema — there is no `*Schema` suffix." })) {
@@ -116,6 +177,18 @@ export class License extends S.Class<License>($I`License`)({
 	 * {@link License} domain objects for every active and deprecated id. Built
 	 * once from the vendored datasets at module load; references are not
 	 * catalog members.
+	 *
+	 * **Example** (Find an identifier in the catalog)
+	 *
+	 * ```ts
+	 * import { License } from "@beep/scratchpad/effected/spdx/License";
+	 * import * as HashMap from "effect/HashMap";
+	 *
+	 * console.log(HashMap.has(License.catalog, "MIT")); // true
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
 	 */
 	static readonly catalog: HashMap.HashMap<string, License> = HashMap.fromIterable([
 		...A.map(ACTIVE_LICENSE_IDS, (id): readonly [string, License] => [
@@ -132,12 +205,37 @@ export class License extends S.Class<License>($I`License`)({
 	 * Whether `id` is a recognized SPDX license identifier — active or
 	 * deprecated. A grammatically valid `LicenseRef`/`DocumentRef` is not a
 	 * catalog member and returns `false`.
+	 *
+	 * **Example** (Distinguish catalog membership)
+	 *
+	 * ```ts
+	 * import { License } from "@beep/scratchpad/effected/spdx/License";
+	 *
+	 * console.log(License.isKnownId("MIT")); // true
+	 * console.log(License.isKnownId("LicenseRef-Acme")); // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
 	 */
 	static isKnownId(id: string): boolean {
 		return HashMap.has(License.catalog, id);
 	}
 
-	/** Whether `id` is specifically a deprecated SPDX license identifier. */
+	/**
+	 * Whether `id` is specifically a deprecated SPDX license identifier.
+	 *
+	 * **Example** (Check an active identifier for deprecation)
+	 *
+	 * ```ts
+	 * import { License } from "@beep/scratchpad/effected/spdx/License";
+	 *
+	 * console.log(License.isDeprecatedId("MIT")); // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	static isDeprecatedId(id: string): boolean {
 		return HashSet.has(DEPRECATED_LICENSE_IDS, id);
 	}
@@ -146,6 +244,18 @@ export class License extends S.Class<License>($I`License`)({
 	 * Whether `id` matches the `LicenseRef-`/`DocumentRef-` reference grammar.
 	 * A reference is valid without catalog membership; this is the grammar
 	 * predicate the expression parser consults.
+	 *
+	 * **Example** (Recognize a document-scoped reference)
+	 *
+	 * ```ts
+	 * import { License } from "@beep/scratchpad/effected/spdx/License";
+	 *
+	 * console.log(License.isLicenseRef("DocumentRef-Acme:LicenseRef-Custom")); // true
+	 * console.log(License.isLicenseRef("LicenseRef-")); // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
 	 */
 	static isLicenseRef(id: string): boolean {
 		return isLicenseRefId(id);
@@ -154,22 +264,34 @@ export class License extends S.Class<License>($I`License`)({
 	// ── Construction ────────────────────────────────────────────────────
 
 	/**
-  * Validate a license identifier synchronously, returning a `Result`. The
-  * `id` is accepted when it is a catalog member (active or deprecated) or a
-  * well-formed `LicenseRef`/`DocumentRef` reference; anything else fails with
-  * {@link InvalidSpdxExpressionError}.
-  *
-  * **Details**
-  *
-  * {@link License.parse} is defined in terms of this function; the two never
-  * diverge. Reach for the `Effect` variant inside Effect code — it carries
-  * the `License.parse` tracing span — and for this one at synchronous
-  * boundaries.
-  *
-  * @param id - the license identifier to validate
-  * @returns a `Result` succeeding with the resolved {@link License}, or
-  * failing with {@link InvalidSpdxExpressionError}.
-  */
+	 * Validate a license identifier synchronously, returning a `Result`. The
+	 * `id` is accepted when it is a catalog member (active or deprecated) or a
+	 * well-formed `LicenseRef`/`DocumentRef` reference; anything else fails with
+	 * {@link InvalidSpdxExpressionError}.
+	 *
+	 * **Details**
+	 *
+	 * {@link License.parse} is defined in terms of this function; the two never
+	 * diverge. Reach for the `Effect` variant inside Effect code — it carries
+	 * the `License.parse` tracing span — and for this one at synchronous
+	 * boundaries.
+	 *
+	 * **Example** (Validate an identifier synchronously)
+	 *
+	 * ```ts
+	 * import { License } from "@beep/scratchpad/effected/spdx/License";
+	 * import * as Result from "effect/Result";
+	 *
+	 * console.log(Result.isSuccess(License.parseResult("MIT"))); // true
+	 * console.log(Result.isFailure(License.parseResult("unknown"))); // true
+	 * ```
+	 *
+	 * @param id - the license identifier to validate
+	 * @returns a `Result` succeeding with the resolved {@link License}, or
+	 * failing with {@link InvalidSpdxExpressionError}.
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	static parseResult(id: string): Result.Result<License, InvalidSpdxExpressionError> {
 		const known = HashMap.get(License.catalog, id);
 		if (O.isSome(known)) return Result.succeed(known.value);
@@ -182,10 +304,21 @@ export class License extends S.Class<License>($I`License`)({
 	 * {@link License.parseResult} — synchronous callers can use that variant
 	 * directly.
 	 *
+	 * **Example** (Validate an identifier in an Effect)
+	 *
+	 * ```ts
+	 * import { License } from "@beep/scratchpad/effected/spdx/License";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * console.log(Effect.runSync(License.parse("MIT")).id); // MIT
+	 * ```
+	 *
 	 * @param id - the license identifier to validate
 	 * @returns the resolved {@link License}. Fails with
 	 * {@link InvalidSpdxExpressionError} when `id` is neither a catalog member
 	 * nor a valid reference.
+	 * @category parsing
+	 * @since 0.0.0
 	 */
 	static readonly parse = Effect.fn("License.parse")((id: string) => Effect.fromResult(License.parseResult(id)));
 
@@ -197,10 +330,20 @@ export class License extends S.Class<License>($I`License`)({
 	 * reference. Reach for {@link License.parse} or {@link License.parseResult}
 	 * when the `id` is untrusted and must be validated.
 	 *
+	 * **Example** (Construct an identifier without catalog validation)
+	 *
+	 * ```ts
+	 * import { License } from "@beep/scratchpad/effected/spdx/License";
+	 *
+	 * console.log(License.of("unknown").id); // unknown
+	 * ```
+	 *
 	 * @param id - the SPDX short identifier or `LicenseRef`/`DocumentRef` reference
 	 * @param deprecated - whether `id` is a deprecated identifier; defaults to
 	 * `false`
 	 * @returns the constructed {@link License}
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static of(id: string, deprecated = false): License {
 		return License.make({ id, deprecated });
@@ -209,29 +352,30 @@ export class License extends S.Class<License>($I`License`)({
 	// ── Catalog metadata ────────────────────────────────────────────────
 
 	/**
-  * The canonical SPDX web page for this license — for example
-  * `https://spdx.org/licenses/MIT.html` — or `Option.none()` when `id` is not
-  * a catalog member.
-  *
-  * **Details**
-  *
-  * A `LicenseRef-`/`DocumentRef-` reference names a license that lives in the
-  * consuming document, not on spdx.org, and so has no page; the same holds
-  * for an id this catalog does not know. `None` is the honest answer there —
-  * templating the URL anyway would hand callers a confidently broken link.
-  *
-  * **Example** (Look up a catalog license URL and handle a custom reference)
-  *
-  * ```ts
-  * import { License } from "./index.ts";
-  * import * as O from "effect/Option";
-  *
-  * console.log(O.getOrNull(License.of("MIT").referenceUrl));
-  * // => "https://spdx.org/licenses/MIT.html"
-  * console.log(O.getOrNull(License.of("LicenseRef-Acme").referenceUrl));
-  * // => null
-  * ```
-  */
+	 * The canonical SPDX web page for this license — for example
+	 * `https://spdx.org/licenses/MIT.html` — or `Option.none()` when `id` is not
+	 * a catalog member.
+	 *
+	 * **Details**
+	 *
+	 * A `LicenseRef-`/`DocumentRef-` reference names a license that lives in the
+	 * consuming document, not on spdx.org, and so has no page; the same holds
+	 * for an id this catalog does not know. `None` is the honest answer there —
+	 * templating the URL anyway would hand callers a confidently broken link.
+	 *
+	 * **Example** (Look up a catalog license URL and handle a custom reference)
+	 *
+	 * ```ts
+	 * import { License } from "@beep/scratchpad/effected/spdx/License";
+	 * import * as O from "effect/Option";
+	 *
+	 * console.log(O.getOrNull(License.of("MIT").referenceUrl)); // https://spdx.org/licenses/MIT.html
+	 * console.log(O.getOrNull(License.of("LicenseRef-Acme").referenceUrl)); // null
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get referenceUrl(): O.Option<string> {
 		// Templated rather than vendored: every upstream entry's `reference` is
 		// exactly this form, and lib/scripts/generate-data.ts asserts that for every
@@ -243,6 +387,19 @@ export class License extends S.Class<License>($I`License`)({
 	 * The license's full title from the SPDX License List — `"MIT License"` for
 	 * `MIT` — or `Option.none()` when `id` is not a catalog member, including
 	 * every `LicenseRef-`/`DocumentRef-` reference.
+	 *
+	 * **Example** (Read the title and handle a custom reference)
+	 *
+	 * ```ts
+	 * import { License } from "@beep/scratchpad/effected/spdx/License";
+	 * import * as O from "effect/Option";
+	 *
+	 * console.log(O.getOrNull(License.of("MIT").name)); // MIT License
+	 * console.log(O.getOrNull(License.of("LicenseRef-Acme").name)); // null
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	get name(): O.Option<string> {
 		return O.map(HashMap.get(LICENSE_META, this.id), (meta) => meta[1]);
@@ -252,28 +409,67 @@ export class License extends S.Class<License>($I`License`)({
 	 * Whether the OSI has approved this license. `false` for a reference and for
 	 * any uncataloged id — the flag is an assertion about a known license, so
 	 * the absence of a catalog entry is never "approved".
+	 *
+	 * **Example** (Check OSI approval and a custom reference)
+	 *
+	 * ```ts
+	 * import { License } from "@beep/scratchpad/effected/spdx/License";
+	 *
+	 * console.log(License.of("MIT").osiApproved); // true
+	 * console.log(License.of("LicenseRef-Acme").osiApproved); // false
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	get osiApproved(): boolean {
 		return O.exists(HashMap.get(LICENSE_META, this.id), (meta) => (meta[2] & META_FLAG_OSI_APPROVED) !== 0);
 	}
 
 	/**
-  * Whether the FSF lists this license as libre. `false` for a reference and
-  * for any uncataloged id.
-  *
-  * **Gotchas**
-  *
-  * The FSF's list is much shorter than the OSI's and the two disagree in both
-  * directions: `0BSD` is OSI-approved and not FSF-libre, `Apache-1.0` is
-  * FSF-libre and not OSI-approved. Never derive one flag from the other.
-  */
+	 * Whether the FSF lists this license as libre. `false` for a reference and
+	 * for any uncataloged id.
+	 *
+	 * **Gotchas**
+	 *
+	 * The FSF's list is much shorter than the OSI's and the two disagree in both
+	 * directions: `0BSD` is OSI-approved and not FSF-libre, `Apache-1.0` is
+	 * FSF-libre and not OSI-approved. Never derive one flag from the other.
+	 *
+	 * **Example** (Inspect independent FSF and OSI flags)
+	 *
+	 * ```ts
+	 * import { License } from "@beep/scratchpad/effected/spdx/License";
+	 *
+	 * console.log(License.of("0BSD").osiApproved); // true
+	 * console.log(License.of("0BSD").fsfLibre); // false
+	 * console.log(License.of("Apache-1.0").fsfLibre); // true
+	 * console.log(License.of("Apache-1.0").osiApproved); // false
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	get fsfLibre(): boolean {
 		return O.exists(HashMap.get(LICENSE_META, this.id), (meta) => (meta[2] & META_FLAG_FSF_LIBRE) !== 0);
 	}
 
 	// ── Display ─────────────────────────────────────────────────────────
 
-	/** The identifier string. */
+	/**
+	 * Returns the SPDX identifier for display without adding expression operators.
+	 *
+	 * **Example** (Display the identifier)
+	 *
+	 * ```ts
+	 * import { License } from "@beep/scratchpad/effected/spdx/License";
+	 *
+	 * console.log(License.of("MIT").toString()); // MIT
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	override toString(): string {
 		return this.id;
 	}

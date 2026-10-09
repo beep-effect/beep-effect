@@ -18,7 +18,7 @@
  * **Example** (Parse and serialize a license choice and reject an incomplete conjunction)
  *
  * ```ts
- * import { isValidExpression, SpdxExpression } from "./index.ts";
+ * import { isValidExpression, SpdxExpression } from "@beep/scratchpad/effected/spdx/index";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
