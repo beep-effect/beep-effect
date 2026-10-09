@@ -23,6 +23,7 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { formatDurationSeconds, makeTaggedLogger, printLines } from "../../internal/cli/Printer.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import { ciAdmissionCommand } from "./CiAdmission.ts";
+import { ciGovernanceCommands } from "./CiGovernance.ts";
 import { ciLaneCommand, ciLocalCommand } from "./CiLane.ts";
 import { ciRerunRunnerLossCommand } from "./CiRerunRunnerLoss.ts";
 import { ciLaneTimingsCommand } from "./LaneTimings.ts";
@@ -358,6 +359,7 @@ export const ciCommand = Command.make("ci", {}, () =>
 ).pipe(
   Command.withDescription("Continuous integration helper commands"),
   Command.withSubcommands([
+    ...ciGovernanceCommands,
     ciAdmissionCommand,
     appendTurboSummaryCommand,
     ciLaneCommand,

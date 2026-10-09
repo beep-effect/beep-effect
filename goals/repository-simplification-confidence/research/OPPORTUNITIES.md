@@ -110,3 +110,15 @@
 - Would have prevented it: a review-lens contract that separates material
   defects from wording findings up front, and a mechanical verbatim-section
   checker against the brief so copy drift is caught by a validator.
+
+### 2026-10-09 — E admission wrapper needs user-session bus
+
+- Work: run the heavy-admission regression through `beep-heavy`.
+- Evidence: wrapper failed before the test with `DBUS_SESSION_BUS_ADDRESS and XDG_RUNTIME_DIR not defined`.
+- Prevention: propagate the user-session bus environment to headless workers. Retry through the same wrapper with `XDG_RUNTIME_DIR=/run/user/1000` and `DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus`; no queue bypass.
+
+### 2026-10-09 — E shared main proof remains red
+
+- Work: establish the trusted-main-writer safety gate before removing the repository cache writer token.
+- Evidence: main Check run 37944257965, Heavy / Lint Policy job 113897913572, failed in `knowledge:refs-check` with existing `broken-target` references (including `explorations/ATLAS.md`).
+- Attribution: inherited on `origin/main` before the E workflow wave. Route one shared knowledge-reference repair to the orchestrator; do not duplicate it in dependent lanes. Token deletion stays gated until a successful trusted writer proof.

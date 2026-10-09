@@ -25,7 +25,7 @@
 #   The matching PUBLIC key must live in `src-tauri/tauri.conf.json`
 #   (plugins.updater.pubkey). The updater endpoint there points at this repo's
 #   GitHub Releases `latest.json`
-#   (https://github.com/kriegcloud/beep-effect/releases/latest/download/latest.json),
+#   (https://github.com/beep-effect/beep-effect/releases/latest/download/latest.json),
 #   so the draft Release staged by this workflow is what clients auto-update
 #   from after it is manually published.
 #
@@ -126,6 +126,7 @@ jobs:
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
+          persist-credentials: false
           ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.version) || github.ref }}
 
       - name: Verify release tag checkout
@@ -205,7 +206,7 @@ jobs:
 
       - name: Build desktop bundle
         id: tauri
-        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5
+        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # action-v0.6.2
         env:
           # Auto-provisioned; retained for tauri-action compatibility. Matrix
           # jobs intentionally omit tagName/releaseId, so they cannot mutate
@@ -353,12 +354,14 @@ jobs:
       - name: Upload desktop bundle artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
+          retention-days: 7
           name: desktop-release-${{ matrix.release-target }}
           path: ${{ runner.temp }}/desktop-release-${{ matrix.release-target }}
           if-no-files-found: error
 
   release-desktop-ready:
     name: Desktop release draft ready
+    timeout-minutes: 15
     runs-on: ubuntu-22.04
     environment: professional-desktop-release
     permissions:
@@ -375,6 +378,7 @@ jobs:
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 1
+          persist-credentials: false
 
       - name: Verify every desktop target completed
         shell: bash

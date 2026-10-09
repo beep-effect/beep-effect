@@ -19,34 +19,27 @@ permissions:
 jobs:
   pr-size:
     name: PR Size Label
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
-    timeout-minutes: 4
+    timeout-minutes: 15
     permissions:
+      contents: read
       pull-requests: write
     steps:
-      - name: Label PR by size
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      - name: Checkout repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
-          script: |
-            const files = await github.paginate(github.rest.pulls.listFiles, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number,
-              per_page: 100
-            });
-            const count = files.length;
-            let label = 'size/S';
-            if (count > 50) label = 'size/XL';
-            else if (count > 20) label = 'size/L';
-            else if (count > 10) label = 'size/M';
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              labels: [label]
-            });
-            await core.summary.addRaw(`Changed files: ${count}; applied label: ${label}`).write();
+          persist-credentials: false
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "false"
+          cache-write: "false"
+      - name: Replace PR size label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: bun run beep ci pr-size "$PR_NUMBER"
 
   # Tier-2 admission (time-to-certainty B8, rulings 50–57). One hosted job
   # decides, before the reusable workflow is called, whether the heavy matrix
@@ -135,7 +128,7 @@ jobs:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: ${{ matrix.timeout_minutes }}
-    environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
+    environment: ${{ github.event_name == 'push' && matrix.uses_turbo == 'true' && 'turbo-cache-write' || null }}
     permissions:
       contents: read
     strategy:
@@ -233,11 +226,11 @@ jobs:
           cache-write: "false"
           turbo-cache-key-suffix: -${{ matrix.id }}
           free-disk: "true"
-          turbo-remote-cache: "true"
+          turbo-remote-cache: ${{ matrix.uses_turbo }}
           app-secrets: "true"
           turbo-api: ${{ vars.TURBO_API }}
           turbo-team: ${{ vars.TURBO_TEAM }}
-          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
+          turbo-token: ${{ github.event_name == 'push' && matrix.uses_turbo == 'true' && secrets.TURBO_TOKEN || '' }}
           turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
           database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
           database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
@@ -247,6 +240,18 @@ jobs:
           better-auth-url: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_URL || '' }}
           security-trusted-origins: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
           liveblocks-secret-key: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
+
+      - name: Check workflow and hosted settings policy
+        if: matrix.id == 'repo-sanity' && steps.lane-gate.outputs.should_run == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          bun run beep ci workflow-lint
+          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+            bun run beep ci ruleset --check
+            bun run beep ci settings --check
+            bun run beep ci held-group
+          fi
 
       - name: Verify regenerate merge-driver bootstrap
         if: matrix.id == 'codegen' && steps.lane-gate.outputs.should_run == 'true'
@@ -323,10 +328,19 @@ jobs:
         run: |
           bun run beep ci append-turbo-summary
 
+      - name: Upload trusted Turbo summaries
+        if: github.event_name == 'push' && hashFiles('.turbo/runs/*.json') != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: turbo-summary-${{ github.job }}-${{ matrix.id || matrix.partition || 'single' }}
+          path: .turbo/runs/*.json
+          retention-days: 7
+          if-no-files-found: warn
+
       - name: Save post-lane Turbo fallback
         if: github.event_name == 'push' && matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && success()
         continue-on-error: true
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .turbo/cache
           key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ matrix.id }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}-${{ github.sha }}
@@ -429,10 +443,19 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
 
+      - name: Upload trusted Turbo summaries
+        if: github.event_name == 'push' && hashFiles('.turbo/runs/*.json') != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: turbo-summary-${{ github.job }}-${{ matrix.id || matrix.partition || 'single' }}
+          path: .turbo/runs/*.json
+          retention-days: 7
+          if-no-files-found: warn
+
       - name: Save post-lane Turbo fallback
         if: github.event_name == 'push' && steps.lane-gate.outputs.should_run == 'true' && success()
         continue-on-error: true
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .turbo/cache
           key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ matrix.partition }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}-${{ github.sha }}
@@ -443,6 +466,7 @@ jobs:
 
   lint:
     name: Lint
+    timeout-minutes: 5
     needs: [lint-shard]
     if: ${{ always() }}
     runs-on: ubuntu-24.04
@@ -543,10 +567,19 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
 
+      - name: Upload trusted Turbo summaries
+        if: github.event_name == 'push' && hashFiles('.turbo/runs/*.json') != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: turbo-summary-${{ github.job }}-${{ matrix.id || matrix.partition || 'single' }}
+          path: .turbo/runs/*.json
+          retention-days: 7
+          if-no-files-found: warn
+
       - name: Save post-lane Turbo fallback
         if: github.event_name == 'push' && steps.lane-gate.outputs.should_run == 'true' && success()
         continue-on-error: true
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .turbo/cache
           key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ matrix.partition }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}-${{ github.sha }}
@@ -557,6 +590,7 @@ jobs:
 
   test-unit:
     name: Test Unit
+    timeout-minutes: 5
     needs: [test-unit-shard]
     if: ${{ always() }}
     runs-on: ubuntu-24.04
@@ -746,6 +780,15 @@ jobs:
         if: always()
         run: bun run beep ci append-turbo-summary
 
+      - name: Upload trusted Turbo summaries
+        if: github.event_name == 'push' && hashFiles('.turbo/runs/*.json') != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: turbo-summary-${{ github.job }}-${{ matrix.id || matrix.partition || 'single' }}
+          path: .turbo/runs/*.json
+          retention-days: 7
+          if-no-files-found: warn
+
   fallow-advisory:
     name: Fallow Advisory Envelopes
     runs-on: ubuntu-24.04
@@ -851,6 +894,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
+          retention-days: 7
           name: fallow-envelopes-${{ github.event_name }}-${{ github.run_attempt }}
           path: .beep/fallow/**
           if-no-files-found: error
@@ -1070,7 +1114,7 @@ jobs:
         with:
           node-version-file: .nvmrc
 
-      - name: Verify ONNX installer mitigation before accepting the OSV exception
+      - name: Verify ONNX installer version pin and before-after mitigation contract
         run: |
           bun install --frozen-lockfile --ignore-scripts
           node --test scripts/test-onnxruntime-installer-patch.mjs
@@ -1082,66 +1126,8 @@ jobs:
             --lockfile=bun.lock
             --config=osv-scanner.toml
 
-      - name: Check dependency graph availability
-        if: github.event_name == 'pull_request'
-        id: dependency-graph
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-
-          # Security property (CSF-022): never silently FAIL OPEN on a
-          # transient/attacker-induced gh-api error. The real attack vector is an
-          # unreachable or failing API call, so an actual `gh api` COMMAND failure
-          # (non-zero exit) fails CLOSED below.
-          #
-          # We capture the gh exit code explicitly instead of letting `set -e`
-          # abort, so we can distinguish a genuine api failure (fail closed) from
-          # a benign condition where the api SUCCEEDS but the
-          # security_and_analysis.dependency_graph.status field is absent — e.g.
-          # the GITHUB_TOKEN lacks permission to read it, or the feature config is
-          # not exposed. That benign case must NOT hard-fail; the
-          # dependency-review action that runs afterward is the real gate.
-          set +e
-          status="$(
-            gh api "repos/${GITHUB_REPOSITORY}" \
-              --jq '.security_and_analysis.dependency_graph.status // "unavailable"'
-          )"
-          gh_exit=$?
-          set -e
-
-          if [ "$gh_exit" -ne 0 ]; then
-            echo "::error::gh api call to read dependency graph status failed (exit ${gh_exit}); failing closed instead of skipping the dependency review gate."
-            exit 1
-          fi
-
-          case "$status" in
-            enabled)
-              echo "enabled=true" >> "$GITHUB_OUTPUT"
-              ;;
-            disabled)
-              echo "enabled=false" >> "$GITHUB_OUTPUT"
-              echo "::notice::Skipping dependency review because GitHub dependency graph is explicitly disabled for this repository."
-              ;;
-            *)
-              # api ok but status absent/unavailable: benign token-permission or
-              # feature-config condition (the CI token cannot read
-              # security_and_analysis, or the feature config is not exposed). The
-              # actions/dependency-review-action HARD-FAILS when dependency graph
-              # is not actually enabled for the repo, so running it here would fail
-              # on a non-finding condition rather than perform a real review.
-              # SKIP it instead (fail open on undetectable availability); a genuine
-              # gh api COMMAND failure still fails closed above, and OSV scanning
-              # continues to cover dependency vulnerabilities. Enable Dependency
-              # graph in repo Settings -> Security & analysis to activate this gate.
-              echo "enabled=false" >> "$GITHUB_OUTPUT"
-              echo "::warning::Dependency graph status could not be determined (got '${status:-unavailable}'); skipping the dependency-review gate (OSV still covers dependency vulns). Enable Dependency graph in repo settings to activate it."
-              ;;
-          esac
-
       - name: Dependency review
-        if: github.event_name == 'pull_request' && steps.dependency-graph.outputs.enabled == 'true'
+        if: github.event_name == 'pull_request'
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: high
@@ -1167,23 +1153,14 @@ jobs:
           cache-write: "false"
 
       - name: Install Nix
-        uses: cachix/install-nix-action@08dcb3a5e62fa31e2da3d490afc4176ef55ecd72 # v30
+        uses: cachix/install-nix-action@b85815f71a6de0ddee80b8a80a98d43f4bcc66c7 # v31
         with:
           nix_path: nixpkgs=channel:nixos-unstable
 
       - name: Setup Cachix (read-only)
-        if: github.event_name != 'push'
         uses: cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71 # v17
         with:
           name: beep-effect
-        continue-on-error: true
-
-      - name: Setup Cachix (trusted push)
-        if: github.event_name == 'push'
-        uses: cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71 # v17
-        with:
-          name: beep-effect
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
         continue-on-error: true
 
       - name: Run Nix checks
@@ -1195,7 +1172,6 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: read
-      security-events: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0

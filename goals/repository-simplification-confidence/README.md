@@ -4,6 +4,8 @@
 
 Lifecycle: `active`
 
+Latest E evidence: [GitHub audit](./history/receipts/stage-4-github-audit.md), [settings snapshots](./history/receipts/stage-3-github-settings.md), and [lane handoff](./history/handoffs/rsc-e-github-2026-10-09.md). The workflow wave is prepared; package proof, hosted behavior and cross-lane gates remain open.
+
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission
