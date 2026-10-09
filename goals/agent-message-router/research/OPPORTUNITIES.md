@@ -120,3 +120,17 @@ this branch's now-rejected private-package changeset. Package publication remain
 dormant. The prior full CLI proof belongs to implementation commit `1565951a24`;
 final hosted checks qualify the integrated head. No message-router or provider
 implementation is changed by this merge.
+
+## 2026-10-09 — Transient SQLite contention tears down an owned session
+
+Hosted review on PR #1571 identified that one `RouterError` escapes the repeated
+serve iteration. A real SQLite lock held beyond the 250 ms busy timeout confirmed
+that `store.complete` fails with the sanitized `LockTimeoutError`, the iteration
+exits, and the owned scope finalizer runs. Same-generation restart rejects the
+changed native identity; a newer generation remains fenced by the uncertain claim.
+This is a P1 availability failure, independent of the review-round cap.
+
+Prevention: retry the precisely classified transient store operation while
+retaining its native result; never retry an entire submitted turn. Add contention,
+no-resubmission, fatal-error and cancellation regression proof. Evidence uses a
+private disposable database and synthetic scope finalizer, with no model calls.

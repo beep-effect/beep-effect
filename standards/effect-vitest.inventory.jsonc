@@ -3814,6 +3814,28 @@
       "reason": "The test supplies each real private, invalid or symlinked path to the production SQLite layer and races independent first-open calls. Dynamic Layer.build contexts are intentional; a shared static layer would change the ownership and creation-race subject. Outer it.layer supplies platform services and scope."
     },
     {
+      "id": "EV002:packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts:254:provide@16#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts",
+      "line": 254,
+      "endLine": 254,
+      "symbol": "provide",
+      "occurrence": "v2:c6960dbcdf3ed5c0afb8be7144a85bfe8a512f96736ec90fa92b7377caa55415",
+      "class": "unresolved-layer-provide",
+      "evidence": "Effect.provide(context)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The managed port has a context-free service contract; this fixture supplies the already acquired test Scope and ChildProcessSpawner context to the external SQLite lock-holder callback. It does not instantiate a per-call layer. The actual store, transient lock and single-submission oracle remain the subject."
+    },
+    {
       "id": "EV002:packages/tooling/tool/cli/test/AgentMessage.tools.test.ts:111:fixture@6#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -15479,6 +15501,50 @@
       "reason": "Retained intentionally shorter scope: closes descriptor/temp root/native database/container or assertion helper before post-close assertions, or retains native worker evidence before temporary fixture cleanup. Test-level outer scope is not equivalent. Scope acquisition gets fallback finalizer where saved lens required it."
     },
     {
+      "id": "EV004:packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts:157:scoped@31#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts",
+      "line": 157,
+      "endLine": 175,
+      "symbol": "scoped",
+      "occurrence": "v2:0c63d418ce9d47364bf3159881babb1bfc14635e8757da13da730608f08dba70",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const child = yield* ChildProcess.make(process.execPath, [\"-e\", \"setInterval(() => {}, 1000)\"], { stdout: \"ignore\", stderr: \"inherit\", }); yield* Deferred.succ",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "This deliberately shorter scope is the runtime ownership subject: one case interrupts its child-owning loop scope and asserts the real child stopped; the other observes immediate scope finalization on permanent storage/policy failure. Replacing with the outer test scope would invalidate those cleanup assertions."
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts:216:scoped@22#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts",
+      "line": 216,
+      "endLine": 216,
+      "symbol": "scoped",
+      "occurrence": "v2:a0afa5196773ae2655f93522b5da4b59586711f18c43b935ccb07a725b87a96c",
+      "class": "shared-helper-scope-lifetime-review",
+      "evidence": "Effect.scoped",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "This deliberately shorter scope is the runtime ownership subject: one case interrupts its child-owning loop scope and asserts the real child stopped; the other observes immediate scope finalization on permanent storage/policy failure. Replacing with the outer test scope would invalidate those cleanup assertions."
+    },
+    {
       "id": "EV004:packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts:198:scoped@21#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -25804,6 +25870,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Real filesystem and process services are the test subject: private path modes, symlink refusal, SQLite file persistence, or owned native stdio lifecycle. The bounded outer it.layer owns these resources; a mocked filesystem or omitted process service would not exercise those boundaries."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts:11:@effect/platform-bun@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts",
+      "line": 11,
+      "endLine": 11,
+      "symbol": "@effect/platform-bun",
+      "occurrence": "v2:9e77cd79daa758d2a326930d4f4108c2b730c00f6d783ae85924e284823dafba",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { BunServices } from \"@effect/platform-bun\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Outer it.layer supplies Bun filesystem, path and process-spawner services used by the real private SQLite fixture, external writer and owned process cleanup. A fake filesystem or detached process would change the integration subject."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/AgentMessage.tools.test.ts:17:@effect/platform-bun@0#1",
@@ -41039,6 +41127,50 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "open"
+    },
+    {
+      "id": "EV015:packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts:133:TestClock.adjust@17#1",
+      "lens": "resource",
+      "ruleId": "EV015",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts",
+      "line": 133,
+      "endLine": 133,
+      "symbol": "TestClock.adjust",
+      "occurrence": "v2:e8f89374d90127e038fe9e40fbe70a53e2da90bddcb5bf0e2eb647f23269ccb0",
+      "class": "shared-test-clock-adjustment",
+      "evidence": "TestClock.adjust(Duration.seconds(2))",
+      "replacement": {
+        "primitive": "TestClock.adjust",
+        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "These are sequential non-concurrent tests in one it.layer block. Each forked loop is interrupted and joined before the next test, so no timer fiber survives a clock adjustment. The deterministic clock tests bounded storage retries; the real SQLite contention case explicitly uses TestClock.withLive and does not adjust it."
+    },
+    {
+      "id": "EV015:packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts:177:TestClock.adjust@17#1",
+      "lens": "resource",
+      "ruleId": "EV015",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts",
+      "line": 177,
+      "endLine": 177,
+      "symbol": "TestClock.adjust",
+      "occurrence": "v2:71859a5e4c6d63a9807bf00be676ea9d250effecc965e868c21bf5f3e207ffc1",
+      "class": "shared-test-clock-adjustment",
+      "evidence": "TestClock.adjust(Duration.seconds(3))",
+      "replacement": {
+        "primitive": "TestClock.adjust",
+        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "These are sequential non-concurrent tests in one it.layer block. Each forked loop is interrupted and joined before the next test, so no timer fiber survives a clock adjustment. The deterministic clock tests bounded storage retries; the real SQLite contention case explicitly uses TestClock.withLive and does not adjust it."
     },
     {
       "id": "EV015:packages/tooling/tool/cli/test/cache-acceptance.test.ts:532:TestClock.adjust@15#1",

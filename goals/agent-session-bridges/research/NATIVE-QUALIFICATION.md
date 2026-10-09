@@ -191,3 +191,36 @@ passed the JSDoc ratchet: 21 tracked totals, zero increases, and zero legacy
 non-generated findings. Missing export examples decreased from nine to eight;
 no baseline was weakened. The final hosted head remains the merge gate for the
 corrective wave.
+
+## Hosted transient-storage correction
+
+Review of PR #1571 reproduced a P1 with a real SQLite lock exceeding the 250 ms
+busy timeout. A failed completion write escaped the serve loop and closed the
+owned native scope. The correction retries only classified lock timeouts around
+recovery, claim and completion operations. A known completion is retained across
+its initial write plus eight retries at 250 ms spacing; native submission is not
+repeated. Other storage and policy errors remain fatal.
+
+If all nine completion attempts fail, the scope stays alive and the durable claim
+remains fenced. The local result is then discarded; lease recovery can turn the
+claim into an ambiguity hold. This bounded retry is not a universal reconciliation
+mechanism. Evidence-backed resolution of that hold remains tracked in
+[#1579](https://github.com/beep-effect/beep-effect/issues/1579).
+
+The original live Codex/Grok and Codex/Claude receipts remain tied to their
+recorded source snapshots. This subsequent runtime correction requires separate
+focused storage/dispatch proof and final-head hosted checks; it does not reassign
+the live receipts to new source hashes or claim another model run.
+
+The frozen correction passed 48 combined router tests, CLI quick lint/check
+(4.0 and 9.4 seconds), test type-checking, scoped dead-code analysis and CLI
+package docgen (363 modules and 2,356 compiled examples). Independent review
+reported zero actionable findings. Its source bindings are:
+
+- Runtime: `f24ded1f99bf61f7016a2e1aeeea5087294cace515bad17d08971e5c35a9a5dd`
+- Runtime test: `6171e31cc7df719e0fdc48f8738dcc21a9bef7e0fe8086c72bd4f2ea24630280`
+
+A fresh repository-wide JSDoc inventory/ratchet also passed after this repair
+(21 tracked totals, zero increases, zero legacy non-generated findings). The six
+new Effect Vitest rows are individually reviewed resource/clock ownership
+judgments; all prior inventory rows and metadata remain unchanged.

@@ -4,7 +4,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { AiProviderCliSession, ManagedLaunchProfile, ManagedSessionMessage } from "@beep/ai-provider-cli";
+import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
@@ -21,6 +23,84 @@ import { agentMessageStoreLayer, requirePrivateAgentPath } from "./AgentMessage.
 import { EndpointBinding, Envelope, Receipt, RouterError } from "./AgentMessage.models.ts";
 import { EndpointDispatch, makeAgentMessageRouter } from "./AgentMessage.service.ts";
 import { AgentMessageStore } from "./AgentMessage.store.ts";
+
+const ReceiptJson = S.fromJsonString(Receipt);
+const EnvelopeJson = S.fromJsonString(Envelope);
+const ProfileJson = S.fromJsonString(ManagedLaunchProfile);
+const BindingJson = S.fromJsonString(EndpointBinding);
+const $I = $RepoCliId.create("commands/AgentMessage/AgentMessage.runtime");
+const isMailboxLockTimeout = S.is(
+  S.Struct({
+    code: S.Literal("storage"),
+    message: S.Literal("Agent message SQL operation failed: LockTimeoutError."),
+  }).annotate($I.annote("MailboxLockTimeout", { description: "Sanitized retryable mailbox write contention." }))
+);
+const retryMailboxLock = <A, R>(operation: Effect.Effect<A, RouterError, R>) =>
+  operation.pipe(
+    Effect.tapError((error) =>
+      isMailboxLockTimeout(error)
+        ? Effect.logWarning("Mailbox write contention; retrying the same storage operation.")
+        : Effect.void
+    ),
+    Effect.retry({ while: isMailboxLockTimeout, times: 8, schedule: Schedule.spaced(Duration.millis(250)) })
+  );
+
+/**
+ * Keep an owned dispatcher alive across classified mailbox contention.
+ *
+ * **Details**
+ * Each storage operation has eight bounded retries. Completion retries retain
+ * the original claim and native result without repeating provider submission.
+ * Exhausted contention discards the local result and defers the iteration while
+ * the committed claim fences replay. Lease recovery then requires explicit
+ * ambiguity reconciliation; there is no later automatic completion retry.
+ * Policy, ownership and permanent storage errors remain fatal.
+ *
+ * **Example** (Compose an injected dispatcher)
+ * ```ts
+ * import { runAgentMessageDispatchLoop } from "@beep/repo-cli/commands/AgentMessage"
+ * import * as Effect from "effect/Effect"
+ * const loop = runAgentMessageDispatchLoop("peer", "owned-worker")
+ * console.log(Effect.isEffect(loop)) // true
+ * ```
+ * @internal
+ * @category operations
+ * @since 0.0.0
+ */
+export const runAgentMessageDispatchLoop = Effect.fn("AgentMessage.dispatchLoop")(function* (
+  endpointId: string,
+  ownerId: string
+) {
+  const store = yield* AgentMessageStore;
+  const router = yield* makeAgentMessageRouter.pipe(
+    Effect.provideService(AgentMessageStore, {
+      ...store,
+      recover: (now) => retryMailboxLock(store.recover(now)),
+      claimNext: (endpoint, owner, now, leaseUntil) =>
+        retryMailboxLock(store.claimNext(endpoint, owner, now, leaseUntil)),
+      complete: (claim, status, now, detail) => retryMailboxLock(store.complete(claim, status, now, detail)),
+    })
+  );
+  return yield* Effect.gen(function* () {
+    const at = yield* Clock.currentTimeMillis;
+    yield* router.recover(at);
+    const receipt = yield* router.dispatchOne(
+      endpointId,
+      ownerId,
+      at,
+      at + Duration.toMillis(Duration.minutes(3)),
+      () => Clock.currentTimeMillis
+    );
+    if (O.isSome(receipt)) yield* Console.log(yield* S.encodeEffect(ReceiptJson)(receipt.value));
+  }).pipe(
+    Effect.catchTag("RouterError", (error) =>
+      isMailboxLockTimeout(error)
+        ? Effect.logWarning("Mailbox lock retry budget exhausted; deferring with the owned session and claim retained.")
+        : error
+    ),
+    Effect.repeat(Schedule.spaced(Duration.millis(250)))
+  );
+});
 
 /**
  * Run one explicitly owned native endpoint and serialize its queued delivery.
@@ -61,9 +141,7 @@ export const agentMessageServeCommand = Command.make(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       yield* requirePrivateAgentPath(profileFile, "File");
-      const profile = yield* S.decodeEffect(S.fromJsonString(ManagedLaunchProfile))(
-        yield* fs.readFileString(profileFile)
-      );
+      const profile = yield* S.decodeEffect(ProfileJson)(yield* fs.readFileString(profileFile));
       yield* requirePrivateAgentPath(profile.profileRoot, "Directory");
       if (profile.provider === "grok") {
         const canonicalState = yield* fs.realPath(stateDir);
@@ -135,7 +213,7 @@ export const agentMessageServeCommand = Command.make(
             message: "Native ownership or policy changed before inference.",
           });
         }
-        const body = yield* S.encodeEffect(S.fromJsonString(Envelope))(claim.envelope).pipe(
+        const body = yield* S.encodeEffect(EnvelopeJson)(claim.envelope).pipe(
           Effect.mapError(() => RouterError.make({ code: "storage", message: "Queued envelope could not be encoded." }))
         );
         const response = yield* session
@@ -168,20 +246,10 @@ export const agentMessageServeCommand = Command.make(
           message: "Native turn ended without a successful terminal status; reconciliation is required before retry.",
         });
       });
-      const router = yield* makeAgentMessageRouter.pipe(Effect.provideService(EndpointDispatch, { submit }));
-      yield* Console.log(yield* S.encodeEffect(S.fromJsonString(EndpointBinding))(binding));
-      return yield* Effect.gen(function* () {
-        const at = yield* Clock.currentTimeMillis;
-        yield* router.recover(at);
-        const receipt = yield* router.dispatchOne(
-          endpointId,
-          ownerId,
-          at,
-          at + Duration.toMillis(Duration.minutes(3)),
-          () => Clock.currentTimeMillis
-        );
-        if (O.isSome(receipt)) yield* Console.log(yield* S.encodeEffect(S.fromJsonString(Receipt))(receipt.value));
-      }).pipe(Effect.repeat(Schedule.spaced(Duration.millis(250))));
+      yield* Console.log(yield* S.encodeEffect(BindingJson)(binding));
+      return yield* runAgentMessageDispatchLoop(endpointId, ownerId).pipe(
+        Effect.provideService(EndpointDispatch, { submit })
+      );
     }).pipe(Effect.scoped)
 ).pipe(
   Command.provide(({ stateDir }) => Layer.mergeAll(AiProviderCliSession.layer, agentMessageStoreLayer(stateDir))),

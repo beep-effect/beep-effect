@@ -93,6 +93,13 @@ Acceptance commits before dispatch. A claim records the owner, attempt and lease
 before native inference, outside the SQLite transaction. Competing dispatchers
 cannot claim the same active endpoint. The provider call has a bounded lifetime.
 
+The serve loop retries classified SQLite lock timeouts for recovery, claiming and
+completion writes, up to eight retries at 250 ms spacing after the initial attempt.
+Completion retries retain the known native result and never resubmit the prompt.
+If the budget is exhausted, the owned session stays alive and the claim stays
+fenced; the local result is discarded and later lease recovery can leave an
+ambiguity hold. Other storage and policy errors terminate the command.
+
 Acknowledgement proves participant consumption; it does not prove the provider
 turn has finished or its work succeeded. Acknowledging during an active turn keeps
 the dispatch fence until a known terminal result. An uncertain call retains that

@@ -100,6 +100,10 @@ intended merged state and remain unfulfilled on this branch until the gate above
 
 | 2026-10-09 | Carry prospective merged-state lifecycle, phases and reflection in PR #1571 | Same-PR packet-state law requires closeout artifacts with final implementation; local full proofs passed, while final hosted checks/review/window and merge remain conditional | Before merge retain external open status; if publication/gate fails restore active manifest/phase values without discarding receipts; never infer merge from local projection |
 
+| 2026-10-09 | Retry classified transient storage operations within the owned runtime | Hosted P1 and real SQLite contention prove completion-write failure can close the native scope; retrying the complete dispatch risks repeating inference | Revert the narrow retry integration if it violates fencing; retain accepted mail and ambiguous holds, and disable affected enrollment |
+
+| 2026-10-09 | Update relevant skills after runtime qualification so Codex and Claude can both orchestrate and discover cross-provider messaging | Operator explicitly requested dual-orchestrator/tool guidance; existing skill names Claude-only controls and an outdated blanket Codex commit restriction | Revert guidance independently if a tool route is unsupported; retain provider pins, permission continuity and managed-versus-existing-app evidence boundaries |
+
 Primary dated decisions and rejected alternatives remain in the [source log](../../explorations/cross-provider-agent-communication/DECISIONS.md).
 
 ## Exception Ledger

@@ -52,10 +52,21 @@ Output of `bun run beep session register list --markdown`, pasted at write time.
 | kind | address | owns | state | waiting on orchestrator | last contact | orphan plan |
 | --- | --- | --- | --- | --- | --- | --- |
 
+## Communication routes
+
+| Unit address | Provider/route | Enrollment generation and scope, if managed | Authorized contact | Last receipt / ambiguity hold | Orphan plan |
+| --- | --- | --- | --- | --- | --- |
+
+Record private managed state/profile/grant paths only in this private handoff.
+Preserve the originating orchestrator's fallback policy and approved model pins.
+A messaging ACK proves consumption, not role takeover or native turn completion.
+Existing Desktop attachment remains a separate qualification and permission check.
+
 ## Broadcast
 
-Sent by the successor at take-over to every register row (SendMessage for desktop sessions, a PR
-comment starting `orchestrator:` for Codex lanes, the fleet desk for people):
+Sent by the successor to authorized units through their recorded native or enrolled messaging
+route. Registration alone does not authorize an app continuation, new task, PR comment or
+message to an external person. Record unreachable units and retain their briefs on disk:
 
 > orchestrator: the role moved to <successor title> (<successor id>) at <instant>. Report
 > blockers, "final <sha>", and review-thread fixes there. Rulings in force are unchanged:

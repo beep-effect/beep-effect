@@ -26,3 +26,20 @@
   store review reports one tracked P2, not zero findings.
 - Reversal for a later fix: revert the stricter enrollment rejection while
   retaining the existing pre-inference dispatcher fence and all mailbox receipts.
+
+## Hosted review follow-ups for PR #1571
+
+After the second review round, the repository policy requires P2 findings to be
+tracked and answered instead of starting another implementation wave. These
+issues preserve the evidence and acceptance criteria:
+
+| Issue | Boundary and follow-up |
+| --- | --- |
+| [#1576](https://github.com/beep-effect/beep-effect/issues/1576) | Normal terminal completion after a mid-turn ACK can release its hold without appending the terminal receipt; retain that outcome and diagnostic in history. |
+| [#1578](https://github.com/beep-effect/beep-effect/issues/1578) | Trusted launch-profile environment denylist misses provider-specific keys; add per-provider allowlists and rejection-before-spawn proof. No peer profile-mutation route was demonstrated. |
+| [#1579](https://github.com/beep-effect/beep-effect/issues/1579) | Extend the explicitly bounded slice with original-runtime evidence-backed ambiguity reconciliation and per-endpoint capacity fairness; preserve safe holds until that contract is qualified. |
+| [#1581](https://github.com/beep-effect/beep-effect/issues/1581) | Retain decoded batches in the historical Claude probe, strengthen historical Grok ACK payload correlation, and date copied research-state text. Original receipts keep their original scope and source hashes. |
+| [#1582](https://github.com/beep-effect/beep-effect/issues/1582) | Give proposed same-PR closeout and operative completion separate machine-readable states; current feature-branch declarations do not establish hosted readiness or merge. |
+
+The transient SQLite completion-write teardown was independently reproduced as
+P1 and is repaired in this PR; it is not deferred by the review-round limit.

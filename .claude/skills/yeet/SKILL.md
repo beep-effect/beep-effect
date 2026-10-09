@@ -11,6 +11,11 @@ for End-to-End Green: deterministic local repair, cheap-gates before the push,
 reviewed commit, push to a draft PR, hosted checks and review as the
 authoritative proof, review closeout, and merge readiness.
 
+For multi-session coordination, use [the orchestrate skill](../orchestrate/SKILL.md).
+Claude and Codex can both own that role. Its native and enrolled cross-provider
+message routes carry briefs and receipts; messages do not grant merge authority
+or bypass Yeet's exact-head checks and review window.
+
 ## Ground First
 
 1. Inspect the current branch and worktree:

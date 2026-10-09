@@ -160,3 +160,25 @@ busy-state reliability. The full backend/remote comparison remains deferred.
 **Deferred frontier:** Native Desktop enrollment and app-wide continuity move to `agent-existing-session-enrollment`; a deployable browser bridge moves to `agent-browser-session-bridge`; cross-host operation moves to `agent-communication-federation`; production role handoff and Yeet producers move to `orchestrator-live-coordination`. Reopen at decompose when the gates in MAP fire. Cursor generation remains blocked on existing-plan access; no billing/model change is authorized.
 
 **Rejected:** Keeping the exploration open until every requested app has a production adapter; that would hide executable work already established. Also rejected treating the browser controller or managed workers as native Desktop attachment.
+
+## 2026-10-09 — Native desktop orchestration is the next capability gate
+
+The operator clarified that web-app integration is optional and selected
+"Claude Code in Desktop ↔ Codex/local coding chats in ChatGPT Desktop" as the
+first native target. Either visible coding session should be able to orchestrate
+and exchange messages with the other. T3 Code is an authorized alternative to
+compare if its session control is stronger.
+
+The managed router/bridge implementation remains a foundation, not proof of this
+native desktop outcome. Evaluate extensions, plugins, MCP integration and desktop
+modifications for existing-session attachment, bidirectional context consumption,
+idle wake, active-turn delivery and permission continuity. Distinguish an app
+hosting a newly launched provider session from attaching the same conversation in
+another app. Do not default to a provider solely because its model has messaging
+tools. The native acceptance gate controls the recommendation; a browser route is
+not required to complete it.
+
+The operator also requested skill updates so both Codex and Claude can orchestrate
+and discover the cross-provider tools. Shared skill routing can be updated once
+the managed implementation is qualified, while explicitly preserving the separate
+native-app gate and provider-specific fallback rules.
