@@ -1,0 +1,19 @@
+{
+  "roots": ["~/YeeBois", "~/ai", "~/Documents", "~/dev"],
+  "depth": "unbounded",
+  "pruned": [
+    ".cache",
+    ".git",
+    ".repos",
+    ".venv",
+    "build",
+    "dist",
+    "graft",
+    "node_modules",
+    "target",
+    "venv"
+  ],
+  "manifests": 61378,
+  "errors": [],
+  "hits": []
+}
