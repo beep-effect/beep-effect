@@ -41,3 +41,15 @@ package-verify: none edited
 hosted-parity: test-tsgo | docgen local | jsdoc-ratchet | fallow audit+health | scoped coverage: not run (docs-only, no TS or package touched); knowledge refs: pending; explore atlas --check: pending
 handoff: explorations/evidence-source-policy-calibration/history/handoffs/evidence-policy-2026-10-09.md
 open items: run gates and publish/ready; no blocking field-design questions; G3 implementation remains; decisions and reversals recorded above
+
+## Qualification receipt for documentation head 2911c1d4d0
+
+- `bun run lint:typos`: pass, including commit hook typos.
+- `bun run beep explore atlas --write` and `--check`: pass.
+- `bun run beep explore --check`: pass, zero findings (advisory).
+- `CI=true bun run beep knowledge refs --check`: exit 1; exactly one live
+  gated observation inherited from base 36027982f2 in the repository-simplification
+  SPEC line 374. No gated finding in lane documents. Base text verified by git show.
+- Semantic-delta: queued through beep-heavy after repairing environment-only
+  missing user-session bus; receipt will follow. No admission bypass.
+- Gitleaks and commitlint hooks: pass. No packages edited; no changeset needed.
