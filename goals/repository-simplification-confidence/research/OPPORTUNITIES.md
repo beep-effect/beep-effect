@@ -344,3 +344,5 @@ before execution and replaced by Yeet publication under the same two-owned-job
 limit. The expanded test remains admitted. This follows the canonical rule
 that a queued full local proof must not hold publication; package verification
 and parity remain required before final handoff. No other lane unit was stopped.
+
+- 2026-10-09 G runtime/gate friction: source-only review missed the installed Effect comparison export and canonical-parent fsync path. The admitted retention suite reported 19 failures; Yeet cheap gates also reported the missing schema-derived property test, six complex functions, one duplicate parser and 27 new test-policy rows. Fixed the API/path/property errors at `d881c6e2e0`; ordered a diagnostic export and split traversal/recovery stages instead of suppressing findings. Preventive improvement: an admitted focused runtime gate before declaring source review closure. Proof remains pending until rerun.
