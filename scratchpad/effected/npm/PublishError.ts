@@ -1,5 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import * as Match from "effect/Match";
 
 const $I = $ScratchpadId.create("effected/npm/PublishError");
 
@@ -40,19 +41,14 @@ export class PublishError extends S.TaggedError<PublishError>($I`PublishError`)(
 		const where = this.subject === undefined ? "" : ` for ${this.subject}`;
 		const code = this.exitCode === undefined ? "" : ` (exit ${this.exitCode})`;
 		const tail = this.output === undefined || this.output.trim() === "" ? "" : `:\n${this.output.trim()}`;
-		switch (this.kind) {
-			case "auth":
-				return `Could not write npm auth for ${this.registry ?? "the registry"}${tail}`;
-			case "pack":
-				return `npm pack failed${where}${code}${tail}`;
-			case "publish":
-				return `npm publish failed${where}${code}${tail}`;
-			case "output":
-				return `npm produced unreadable output${where}${tail}`;
-			case "digest":
-				return `Packed tarball could not be read for hashing${where}${tail}`;
-			default:
-				return "A pinned npm was requested, but this project has no launcher to fetch it";
-		}
+		return Match.value(this.kind).pipe(
+			Match.when("auth", () => `Could not write npm auth for ${this.registry ?? "the registry"}${tail}`),
+			Match.when("pack", () => `npm pack failed${where}${code}${tail}`),
+			Match.when("publish", () => `npm publish failed${where}${code}${tail}`),
+			Match.when("output", () => `npm produced unreadable output${where}${tail}`),
+			Match.when("digest", () => `Packed tarball could not be read for hashing${where}${tail}`),
+			Match.when("executor", () => "A pinned npm was requested, but this project has no launcher to fetch it"),
+			Match.exhaustive,
+		);
 	}
 }

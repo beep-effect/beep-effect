@@ -1,6 +1,30 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 import * as Redacted from "effect/Redacted";
 import * as Base64 from "effect/encoding/Base64";
 import { dual } from "effect/Function";
+
+const $I = $ScratchpadId.create("effected/npm/RegistryCredential");
+
+/**
+ * A basic-auth username contains the credential separator.
+ *
+ * **Example** (Inspecting a rejected username)
+ * ```ts
+ * import { InvalidBasicAuthUsernameError } from "./RegistryCredential.ts";
+ * const error = InvalidBasicAuthUsernameError.make({ message: "A basic-auth username cannot contain a colon" });
+ * error.message;
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ * @public
+ */
+export class InvalidBasicAuthUsernameError extends S.TaggedError<InvalidBasicAuthUsernameError>($I`InvalidBasicAuthUsernameError`)(
+	"InvalidBasicAuthUsernameError",
+	{ message: S.String },
+	$I.annote("InvalidBasicAuthUsernameError", { description: "A basic-auth username contains the credential separator." }),
+) {}
 
 /**
  * A bearer token — npm's `_authToken`, and the form every modern registry
@@ -66,7 +90,7 @@ export type RegistryCredential = TokenCredential | BasicCredential;
  *   auth and is refused rather than silently corrupting the credential.
  * @param password - The password half.
  * @returns The encoded credential.
- * @throws RangeError - when `username` contains a `:`.
+ * @throws InvalidBasicAuthUsernameError - when `username` contains a `:`.
  *
  * @public
  */
@@ -78,7 +102,7 @@ export const basicCredentialFromPair: {
 		// The separator is positional and unescapable: a colon in the user half
 		// would re-split into a different pair on the server. Failing loudly beats
 		// minting a credential that authenticates as someone else.
-		throw new RangeError("A basic-auth username cannot contain a colon");
+		throw InvalidBasicAuthUsernameError.make({ message: "A basic-auth username cannot contain a colon" });
 	}
 	return {
 		kind: "basic",

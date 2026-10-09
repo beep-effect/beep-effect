@@ -13,6 +13,7 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as O from "@beep/utils/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -83,7 +84,7 @@ const RawManifest = S.Record(S.String, S.Unknown);
 
 // The keys the wire codec partitions into typed members; everything else
 // rides through `rest`.
-const DEPENDENCY_FIELDS: ReadonlySet<string> = new Set(DependencyField.literals);
+const DEPENDENCY_FIELDS = HashSet.fromIterable<string>(DependencyField.literals);
 
 // Build the open-record ↔ class wire codec: on decode the four dependency
 // field names become typed members and everything else lands in `rest`; on
@@ -104,7 +105,7 @@ const makeWire = (
 					const known: Record<string, unknown> = {};
 					const rest: Record<string, unknown> = {};
 					for (const [key, value] of R.toEntries(raw)) {
-						if (DEPENDENCY_FIELDS.has(key)) known[key] = value;
+						if (HashSet.has(DEPENDENCY_FIELDS, key)) known[key] = value;
 						else rest[key] = value;
 					}
 					return { ...known, rest };

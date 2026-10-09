@@ -14,6 +14,7 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import * as Match from "effect/Match";
 
 const $I = $ScratchpadId.create("effected/npm/PackageManagerCache");
 
@@ -121,29 +122,25 @@ export class PackageManagerCache {
 	static defaultDirectory(manager: CachingPackageManager, options: DefaultCacheDirectoryOptions): string {
 		const windows = options.platform === "win32";
 		const darwin = options.platform === "darwin";
-		switch (manager) {
-			case "npm":
-				return windows
+		return Match.value(manager).pipe(
+			Match.when("npm", () => windows
 					? under(options.home, windows, "AppData", "Local", "npm-cache")
-					: under(options.home, windows, ".npm");
-			case "pnpm":
-				return windows
+					: under(options.home, windows, ".npm")),
+			Match.when("pnpm", () => windows
 					? under(options.home, windows, "AppData", "Local", "pnpm", "store")
 					: darwin
 						? under(options.home, windows, "Library", "pnpm", "store")
-						: under(options.home, windows, ".local", "share", "pnpm", "store");
-			case "yarn-classic":
-				return windows
+						: under(options.home, windows, ".local", "share", "pnpm", "store")),
+			Match.when("yarn-classic", () => windows
 					? under(options.home, windows, "AppData", "Local", "Yarn", "Cache")
 					: darwin
 						? under(options.home, windows, "Library", "Caches", "Yarn")
-						: under(options.home, windows, ".cache", "yarn");
-			case "yarn-berry":
-				return windows
+						: under(options.home, windows, ".cache", "yarn")),
+			Match.when("yarn-berry", () => windows
 					? under(options.home, windows, "AppData", "Local", "Yarn", "Berry", "cache")
-					: under(options.home, windows, ".yarn", "berry", "cache");
-			case "bun":
-				return under(options.home, windows, ".bun", "install", "cache");
-		}
+					: under(options.home, windows, ".yarn", "berry", "cache")),
+			Match.when("bun", () => under(options.home, windows, ".bun", "install", "cache")),
+			Match.exhaustive,
+		);
 	}
 }

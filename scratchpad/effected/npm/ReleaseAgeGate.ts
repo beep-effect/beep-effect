@@ -19,11 +19,19 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
+import * as A from "effect/Array";
+import * as HashSet from "effect/HashSet";
+import * as Str from "effect/String";
+import * as DateTime from "effect/DateTime";
+import * as O from "effect/Option";
 
 const $I = $ScratchpadId.create("effected/npm/ReleaseAgeGate");
 
 // pnpm's release-age is measured in minutes; the filter converts to ms.
 const MS_PER_MINUTE = 60_000;
+
+// Preserve native string-date parsing, including local-time strings without a zone.
+const decodePublishDate = S.decodeOption(S.DateFromString);
 
 /**
  * A source's partial contribution to a {@link ReleaseAgeGate}: the effective
@@ -160,7 +168,7 @@ export class ReleaseAgeGate extends S.Class<ReleaseAgeGate>($I`ReleaseAgeGate`)(
 			.map((contribution) => contribution.ageMinutes)
 			.filter((age): age is number => P.isNumber(age) && Number.isFinite(age));
 		const ageMinutes = ages.length > 0 ? Math.max(0, ...ages) : 0;
-		const exclude = [...new Set(contributions.flatMap((contribution) => contribution.exclude ?? []))].sort();
+		const exclude = A.sort(A.fromIterable(HashSet.fromIterable(contributions.flatMap((contribution) => contribution.exclude ?? []))), Str.Order);
 		return ReleaseAgeGate.make({ ageMinutes, exclude });
 	}
 
@@ -225,8 +233,10 @@ export class ReleaseAgeGate extends S.Class<ReleaseAgeGate>($I`ReleaseAgeGate`)(
 		return versions.filter((version) => {
 			const time = times[version];
 			if (time === undefined) return false;
-			const published = Date.parse(time);
-			return Number.isFinite(published) && published <= cutoff;
+			return O.exists(
+				O.flatMap(decodePublishDate(time), DateTime.make),
+				(published) => DateTime.toEpochMillis(published) <= cutoff,
+			);
 		});
 	}
 }

@@ -8,6 +8,25 @@ import { PublishError } from "./PublishError.ts";
 
 const $I = $ScratchpadId.create("effected/npm/NpmExecutor");
 
+/** Build the pinned command through the project-local launcher. */
+const command = Effect.fn("command")(function* (
+	spec: string,
+	all: ReadonlyArray<string>,
+): Effect.fn.Return<ChildProcess.StandardCommand, PublishError, LocalExec> {
+	const local = yield* LocalExec;
+	const context = yield* local.context.pipe(
+		Effect.mapError((cause) => PublishError.make({ kind: "executor", cause })),
+	);
+	if (O.isNone(context)) {
+		return yield* PublishError.make({ kind: "executor" });
+	}
+	const dlx = context.value.applyDlx(ChildProcess.make(spec, all));
+	if (!ChildProcess.isStandardCommand(dlx)) {
+		return yield* PublishError.make({ kind: "executor" });
+	}
+	return dlx;
+});
+
 /**
  * Which `npm` runs a publish command.
  *
@@ -132,19 +151,6 @@ export class NpmExecutor extends S.Class<NpmExecutor>($I`NpmExecutor`)({
 		const spec = this.spec;
 		const all = this.#allArgs(args);
 		if (spec === undefined) return Effect.succeed(ChildProcess.make("npm", all));
-		return Effect.gen(function* () {
-			const local = yield* LocalExec;
-			const context = yield* local.context.pipe(
-				Effect.mapError((cause) => PublishError.make({ kind: "executor", cause })),
-			);
-			if (O.isNone(context)) {
-				return yield* PublishError.make({ kind: "executor" });
-			}
-			const dlx = context.value.applyDlx(ChildProcess.make(spec, all));
-			if (!ChildProcess.isStandardCommand(dlx)) {
-				return yield* PublishError.make({ kind: "executor" });
-			}
-			return dlx;
-		});
+		return command(spec, all);
 	}
 }

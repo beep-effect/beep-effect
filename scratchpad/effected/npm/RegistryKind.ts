@@ -1,5 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import * as Match from "effect/Match";
 
 const $I = $ScratchpadId.create("effected/npm/RegistryKind");
 
@@ -150,18 +151,14 @@ export const registryHost = (registry: string): string => {
  *
  * @public
  */
-export const registryShortLabel = (registry: string): string => {
-	switch (classifyRegistry(registry)) {
-		case "npm":
-			return "npm";
-		case "github-packages":
-			return "github";
-		case "jsr":
-			return "jsr";
-		default:
-			return registryHost(registry);
-	}
-};
+export const registryShortLabel = (registry: string): string =>
+	Match.value(classifyRegistry(registry)).pipe(
+		Match.when("npm", () => "npm"),
+		Match.when("github-packages", () => "github"),
+		Match.when("jsr", () => "jsr"),
+		Match.when("custom", () => registryHost(registry)),
+		Match.exhaustive,
+	);
 
 /**
  * A human-readable display name for a registry: `npm`, `GitHub Packages`,
@@ -184,14 +181,11 @@ export const registryShortLabel = (registry: string): string => {
  */
 export const registryDisplayName = (registry: string | null | undefined): string => {
 	if (registry === null || registry === undefined || registry === "") return "npm";
-	switch (classifyRegistry(registry)) {
-		case "npm":
-			return "npm";
-		case "github-packages":
-			return "GitHub Packages";
-		case "jsr":
-			return "JSR";
-		default:
-			return registryHost(registry);
-	}
+	return Match.value(classifyRegistry(registry)).pipe(
+		Match.when("npm", () => "npm"),
+		Match.when("github-packages", () => "GitHub Packages"),
+		Match.when("jsr", () => "JSR"),
+		Match.when("custom", () => registryHost(registry)),
+		Match.exhaustive,
+	);
 };

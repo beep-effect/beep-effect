@@ -1,5 +1,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LocalExec, Run } from "../commands/index.ts";
+import * as A from "effect/Array";
+import * as R from "effect/Record";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -230,7 +232,7 @@ const make = Effect.fnUntraced(function* () {
 		);
 
 	const hex = (bytes: Uint8Array): string =>
-		Array.from(bytes)
+		A.fromIterable(bytes)
 			.map((byte) => byte.toString(16).padStart(2, "0"))
 			.join("");
 
@@ -275,13 +277,9 @@ const make = Effect.fnUntraced(function* () {
 				),
 			),
 			Effect.flatMap((decoded) => {
-				// Annotated on purpose: `Array.isArray`'s `arg is any[]` cannot narrow
-				// the union's `ReadonlyArray` member, so the true branch degrades to
-				// `any[]` and would turn every field read off the entry into an
-				// unchecked `any`.
-				const entries: ReadonlyArray<typeof PackJsonEntry.Type> = Array.isArray(decoded)
+				const entries: ReadonlyArray<typeof PackJsonEntry.Type> = A.isArray<typeof decoded>(decoded)
 					? decoded
-					: Object.values(decoded);
+					: R.values(decoded);
 				const entry = entries[0];
 				return entry === undefined
 					? Effect.fail(PublishError.make({ kind: "output", subject, output: stdout }))
@@ -441,19 +439,20 @@ const make = Effect.fnUntraced(function* () {
 
 /** The `integrity` field, present only when npm's value classifies. */
 const integrityField = (raw: string | undefined): { integrity?: typeof IntegrityHash.Type } =>
-	raw === undefined
-		? {}
-		: O.match(S.decodeOption(IntegrityHash)(raw), {
-				onNone: () => ({}),
-				onSome: (integrity) => ({ integrity }),
-			});
+	O.getSomesStruct({ integrity: O.flatMap(O.fromUndefinedOr(raw), S.decodeOption(IntegrityHash)) });
+
+class UnstubbedPublishMethodError extends S.TaggedError<UnstubbedPublishMethodError>($I`UnstubbedPublishMethodError`)(
+	"UnstubbedPublishMethodError",
+	{ message: S.String },
+	$I.annote("UnstubbedPublishMethodError", { description: "An unstubbed publish test-double method was invoked." }),
+) {}
 
 /** The default for an unstubbed {@link PackagePublish.makeTest} member. */
 const notStubbed = (method: string) => () =>
 	Effect.die(
-		new Error(
-			`PackagePublish.makeTest: ${method}() was called but not stubbed — no honest default exists for a test double; pass a \`${method}\` override.`,
-		),
+		UnstubbedPublishMethodError.make({
+			message: `PackagePublish.makeTest: ${method}() was called but not stubbed — no honest default exists for a test double; pass a \`${method}\` override.`,
+		}),
 	);
 
 /**

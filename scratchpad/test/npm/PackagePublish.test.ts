@@ -12,7 +12,7 @@ import * as S from "effect/Schema";
 import { NpmExecutor } from "../../effected/npm/NpmExecutor.ts";
 import { PackagePublish, PackedTarball } from "../../effected/npm/PackagePublish.ts";
 import { PublishError } from "../../effected/npm/PublishError.ts";
-import { basicCredentialFromPair } from "../../effected/npm/RegistryCredential.ts";
+import { basicCredentialFromPair, InvalidBasicAuthUsernameError } from "../../effected/npm/RegistryCredential.ts";
 import type { ScriptResult } from "./publish-fixtures.ts";
 import { fakeCrypto, scripted } from "./publish-fixtures.ts";
 
@@ -647,7 +647,7 @@ describe("basicCredentialFromPair", () => {
 	it("refuses a colon in the username rather than minting a mis-split credential", () => {
 		// The separator is positional and unescapable: "a:b" + ":" + "c" re-splits
 		// on the server as user "a", password "b:c".
-		assert.throws(() => basicCredentialFromPair("a:b", Redacted.make("c")), RangeError);
+		assert.throws(() => basicCredentialFromPair("a:b", Redacted.make("c")), InvalidBasicAuthUsernameError);
 	});
 
 	it("keeps the encoded credential out of any loggable value", () => {

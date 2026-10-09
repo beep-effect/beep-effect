@@ -6,6 +6,7 @@ import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Base64 from "effect/encoding/Base64";
@@ -55,18 +56,14 @@ export class TarballError extends S.TaggedError<TarballError>($I`TarballError`)(
 }, $I.annote("TarballError", { description: "Raised when a published tarball cannot be fetched, verified or extracted." })) {
 	override get message(): string {
 		const what = `${this.package}@${this.version}`;
-		switch (this.reason) {
-			case "notFound":
-				return `No published tarball for ${what}`;
-			case "http":
-				return `Could not download the tarball for ${what}${this.status === undefined ? "" : ` (HTTP ${this.status})`}`;
-			case "integrityMismatch":
-				return `The tarball for ${what} did not match the integrity the registry published (expected ${this.expected ?? "unknown"}, got ${this.actual ?? "unknown"})`;
-			case "integrityUnverifiable":
-				return `Could not compute a digest to verify ${what}, so its integrity was never checked (expected ${this.expected ?? "unknown"})`;
-			default:
-				return `Could not extract the tarball for ${what}`;
-		}
+		return Match.value(this.reason).pipe(
+			Match.when("notFound", () => `No published tarball for ${what}`),
+			Match.when("http", () => `Could not download the tarball for ${what}${this.status === undefined ? "" : ` (HTTP ${this.status})`}`),
+			Match.when("integrityMismatch", () => `The tarball for ${what} did not match the integrity the registry published (expected ${this.expected ?? "unknown"}, got ${this.actual ?? "unknown"})`),
+			Match.when("integrityUnverifiable", () => `Could not compute a digest to verify ${what}, so its integrity was never checked (expected ${this.expected ?? "unknown"})`),
+			Match.when("extractFailed", () => `Could not extract the tarball for ${what}`),
+			Match.exhaustive,
+		);
 	}
 }
 
@@ -88,20 +85,14 @@ export interface PackageTarballShape {
 }
 
 /** Map an SRI algorithm name onto core's digest algorithm spelling. */
-const digestAlgorithmOf = (algorithm: string): Crypto.DigestAlgorithm | undefined => {
-	switch (algorithm) {
-		case "sha1":
-			return "SHA-1";
-		case "sha256":
-			return "SHA-256";
-		case "sha384":
-			return "SHA-384";
-		case "sha512":
-			return "SHA-512";
-		default:
-			return undefined;
-	}
-};
+const digestAlgorithmOf = (algorithm: string): Crypto.DigestAlgorithm | undefined =>
+	Match.value(algorithm).pipe(
+		Match.when("sha1", () => "SHA-1" as const),
+		Match.when("sha256", () => "SHA-256" as const),
+		Match.when("sha384", () => "SHA-384" as const),
+		Match.when("sha512", () => "SHA-512" as const),
+		Match.orElse(() => undefined),
+	);
 
 /** An SRI value without its base64 padding, for a padding-insensitive compare. */
 const unpadded = (value: string): string => value.replace(/=+$/, "");

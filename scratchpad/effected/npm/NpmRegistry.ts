@@ -3,6 +3,8 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as HashSet from "effect/HashSet";
 import * as O from "@beep/utils/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
@@ -124,14 +126,12 @@ export class RegistryReadError extends S.TaggedError<RegistryReadError>($I`Regis
 }, $I.annote("RegistryReadError", { description: "A registry read failed." })) {
 	override get message(): string {
 		const where = `${this.package} on ${this.registry}`;
-		switch (this.kind) {
-			case "transport":
-				return `Could not reach the registry for ${where}`;
-			case "status":
-				return `Registry read for ${where} failed with status ${this.status ?? "unknown"}`;
-			default:
-				return `Registry read for ${where} returned an unreadable body`;
-		}
+		return Match.value(this.kind).pipe(
+			Match.when("transport", () => `Could not reach the registry for ${where}`),
+			Match.when("status", () => `Registry read for ${where} failed with status ${this.status ?? "unknown"}`),
+			Match.when("decode", () => `Registry read for ${where} returned an unreadable body`),
+			Match.exhaustive,
+		);
 	}
 }
 
@@ -170,7 +170,7 @@ const Packument = S.Struct({
 });
 
 /** The two `time` keys that are not versions. */
-const NON_VERSION_TIME_KEYS = new Set(["created", "modified"]);
+const NON_VERSION_TIME_KEYS = HashSet.make("created", "modified");
 
 /**
  * The `integrity` field for a `PublishedVersion`, present only when the raw
@@ -184,12 +184,7 @@ const NON_VERSION_TIME_KEYS = new Set(["created", "modified"]);
  * constructors reject).
  */
 const integrityField = (raw: string | undefined): { integrity?: typeof IntegrityHash.Type } =>
-	raw === undefined
-		? {}
-		: O.match(S.decodeOption(IntegrityHash)(raw), {
-				onNone: () => ({}),
-				onSome: (integrity) => ({ integrity }),
-			});
+	O.getSomesStruct({ integrity: O.flatMap(O.fromUndefinedOr(raw), S.decodeOption(IntegrityHash)) });
 
 /** `https://host` + `/@scope%2Fname` — the slash in a scoped name must be encoded. */
 const packageUrl = (registry: string, name: string, version?: string): string => {
@@ -333,7 +328,7 @@ const make = Effect.fnUntraced(function* () {
 				name: found.name,
 				version: found.version,
 				...integrityField(found.dist?.integrity),
-				...(found.dist?.tarball === undefined ? {} : { tarball: found.dist.tarball }),
+				...O.getSomesStruct({ tarball: O.fromUndefinedOr(found.dist?.tarball) }),
 			}),
 		);
 	});
@@ -350,10 +345,7 @@ const make = Effect.fnUntraced(function* () {
 	const distTags = Effect.fn("NpmRegistry.distTags")(function* (name: string, target?: RegistryTarget) {
 		yield* Effect.annotateCurrentSpan({ package: name, registry: target?.registry ?? DEFAULT_REGISTRY });
 		const document = yield* packument(name, target);
-		return O.match(document, {
-			onNone: (): Record<string, string> => ({}),
-			onSome: (found) => ({ ...(found["dist-tags"] ?? {}) }),
-		});
+		return O.getOrElse(O.map(document, (found) => ({ ...(found["dist-tags"] ?? {}) })), () => ({}));
 	});
 
 	const publishTimes = Effect.fn("NpmRegistry.publishTimes")(function* (name: string, target?: RegistryTarget) {
@@ -364,7 +356,7 @@ const make = Effect.fnUntraced(function* () {
 			onSome: (found) => {
 				const entries: Array<PublishTime> = [];
 				for (const [key, value] of R.toEntries(found.time ?? {})) {
-					if (NON_VERSION_TIME_KEYS.has(key)) continue;
+					if (HashSet.has(NON_VERSION_TIME_KEYS, key)) continue;
 					// An unparseable timestamp drops the entry rather than failing the
 					// read: the caller's question is "when were these published", and
 					// one malformed row is not a reason to answer nothing.
@@ -380,12 +372,18 @@ const make = Effect.fnUntraced(function* () {
 	return { version, versions, distTags, publishTimes } satisfies NpmRegistryShape;
 });
 
+class UnstubbedRegistryMethodError extends S.TaggedError<UnstubbedRegistryMethodError>($I`UnstubbedRegistryMethodError`)(
+	"UnstubbedRegistryMethodError",
+	{ message: S.String },
+	$I.annote("UnstubbedRegistryMethodError", { description: "An unstubbed registry test-double method was invoked." }),
+) {}
+
 /** The default for an unstubbed {@link NpmRegistry.makeTest} member. */
 const notStubbed = (method: string) => () =>
 	Effect.die(
-		new Error(
-			`NpmRegistry.makeTest: ${method}() was called but not stubbed — no honest default exists for a test double; pass a \`${method}\` override, or use NpmRegistry.layerSeeded.`,
-		),
+		UnstubbedRegistryMethodError.make({
+			message: `NpmRegistry.makeTest: ${method}() was called but not stubbed — no honest default exists for a test double; pass a \`${method}\` override, or use NpmRegistry.layerSeeded.`,
+		}),
 	);
 
 /**
