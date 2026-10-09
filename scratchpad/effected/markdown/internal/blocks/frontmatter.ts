@@ -174,7 +174,7 @@ export const scanRawFrontmatter = (source: string): RawFrontmatterCapture | null
 	while (index < source.length && terminatorAt(source, index) === null) {
 		index += 1;
 	}
-	const openNewline = index < source.length ? (terminatorAt(source, index) as RawNewline) : null;
+	const openNewline = index < source.length ? terminatorAt(source, index) : null;
 	const rule = FENCES.get(source.slice(0, index));
 	if (rule === undefined || openNewline === null) {
 		return null;

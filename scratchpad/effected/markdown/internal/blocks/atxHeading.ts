@@ -13,7 +13,8 @@
 // block's segment table with its absolute source offset, so the inline pass
 // can place real offsets inside the heading.
 
-import type { HeadingDepth } from "../../MarkdownNode.ts";
+import * as S from "effect/Schema";
+import { HeadingDepth } from "../../MarkdownNode.ts";
 import { Heading } from "../../MarkdownNode.ts";
 import type { BlockConstruct, BlockStart } from "../blockTypes.ts";
 
@@ -22,7 +23,8 @@ const reOnlyTrailingHashes = /^[ \t]*#+[ \t]*$/;
 const reClosingHashes = /[ \t]+#+[ \t]*$/;
 
 /** Narrow a `#`-run length to the schema's depth literal; the regex caps it at 6. */
-const headingDepth = (hashes: number): HeadingDepth => (hashes < 1 ? 1 : hashes > 6 ? 6 : (hashes as HeadingDepth));
+const headingDepth = (hashes: number): HeadingDepth =>
+	hashes < 1 ? 1 : hashes > 6 ? 6 : S.is(HeadingDepth)(hashes) ? hashes : 1;
 
 /** Heading: never spans more than one line, and contains no blocks. */
 export const headingConstruct: BlockConstruct = {

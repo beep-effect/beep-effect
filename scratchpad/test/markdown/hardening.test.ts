@@ -224,7 +224,8 @@ describe("prototype pollution", () => {
 
 		assert.deepStrictEqual(Object.getOwnPropertyNames(Object.prototype).sort(), before);
 		assert.strictEqual(Object.getPrototypeOf({}), Object.prototype);
-		assert.isUndefined(({} as Record<string, unknown>).url);
+		const plain: Record<string, unknown> = {};
+		assert.isUndefined(plain.url);
 	});
 
 	it("keys the refmap through a real Map, not an object", () => {

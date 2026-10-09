@@ -9,29 +9,9 @@
 // `@types/commonmark` is pinned at 0.27, three minors behind the runtime we
 // installed, so it would describe a different API than the one we call).
 // Rather than depend on stale types, the two calls we make are declared
-// locally and loaded through `createRequire` — the surface is two classes and
-// two methods.
+// locally in commonmark.d.ts — the surface is two classes and two methods.
 
-import { createRequire } from "node:module";
-
-interface CommonMarkNode {
-	readonly _type: string;
-}
-
-interface CommonMarkParser {
-	parse(input: string): CommonMarkNode;
-}
-
-interface CommonMarkHtmlRenderer {
-	render(node: CommonMarkNode): string;
-}
-
-interface CommonMarkModule {
-	readonly Parser: new () => CommonMarkParser;
-	readonly HtmlRenderer: new () => CommonMarkHtmlRenderer;
-}
-
-const commonmark = createRequire(import.meta.url)("commonmark") as CommonMarkModule;
+import * as commonmark from "commonmark";
 
 const parser = new commonmark.Parser();
 const renderer = new commonmark.HtmlRenderer();

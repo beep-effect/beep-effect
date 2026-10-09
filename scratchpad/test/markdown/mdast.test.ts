@@ -11,17 +11,29 @@ import { Markdown, MarkdownParseOptions } from "../../effected/markdown/Markdown
 import { Frontmatter, Root } from "../../effected/markdown/MarkdownNode.ts";
 import { Mdast, MdastDecodeError } from "../../effected/markdown/Mdast.ts";
 
+const isRecord = S.is(S.Record(S.String, S.Unknown));
+
 const gfm = (text: string): Root => {
 	const parsed = Markdown.parseResult(text);
 	assert.isTrue(Result.isSuccess(parsed));
-	return Result.isSuccess(parsed) ? parsed.success : (undefined as never);
+	if (Result.isFailure(parsed)) assert.fail("expected a successful parse");
+	return parsed.success;
 };
 
 const first = (tree: unknown): Record<string, unknown> => {
-	const root = tree as { children: Array<Record<string, unknown>> };
+	if (!isRecord(tree)) assert.fail("expected a record");
+	const children = tree.children;
+	if (!Array.isArray(children)) assert.fail("expected children");
+	const child: unknown = children[0];
+	assert.isDefined(child);
+	if (!isRecord(child)) assert.fail("expected a child record");
+	return child;
+};
+
+const firstTypedChild = (root: Root) => {
 	const child = root.children[0];
 	assert.isDefined(child);
-	return child as Record<string, unknown>;
+	return child;
 };
 
 describe("Mdast.toMdast", () => {
@@ -45,7 +57,7 @@ describe("Mdast.toMdast", () => {
 		assert.strictEqual(list.ordered, false);
 		assert.strictEqual(list.start, null);
 		assert.strictEqual(list.spread, false);
-		const item = (list.children as Array<Record<string, unknown>>)[0];
+		const item = first(list);
 		assert.isDefined(item);
 		assert.strictEqual(item?.spread, false);
 		assert.strictEqual(item?.checked, null);
@@ -71,7 +83,8 @@ describe("Mdast.toMdast", () => {
 
 	it("emits task-list state through checked", () => {
 		const list = first(Mdast.toMdast(gfm("- [x] done\n- [ ] open\n")));
-		const children = list.children as Array<Record<string, unknown>>;
+		const children = list.children;
+		if (!Array.isArray(children) || !children.every(isRecord)) assert.fail("expected child records");
 		assert.strictEqual(children[0]?.checked, true);
 		assert.strictEqual(children[1]?.checked, false);
 	});
@@ -79,7 +92,7 @@ describe("Mdast.toMdast", () => {
 	it("decodes escapes and references in labels, keeping identifiers source-form", () => {
 		const tree = Mdast.toMdast(gfm("[&semi;]\n\n[&semi;]: /x\n"));
 		const reference = first(tree);
-		const link = (reference.children as Array<Record<string, unknown>>)[0];
+		const link = first(reference);
 		assert.strictEqual(link?.label, ";");
 		assert.strictEqual(link?.identifier, "&semi;");
 	});
@@ -139,7 +152,7 @@ describe("Mdast.fromMdast", () => {
 				assert.isFalse(Object.hasOwn(list, "start"));
 				const item = list.children[0];
 				assert.isDefined(item);
-				assert.isFalse(Object.hasOwn(item as object, "checked"));
+				assert.isFalse(Object.hasOwn(item, "checked"));
 				// Explicit false is a value, not absence.
 				assert.strictEqual(list.ordered, false);
 			}
@@ -219,7 +232,7 @@ describe("Mdast.fromMdast", () => {
 		});
 		assert.isTrue(Result.isSuccess(back));
 		if (Result.isSuccess(back)) {
-			assert.isFalse(Object.hasOwn(back.success.children[0] as object, "data"));
+			assert.isFalse(Object.hasOwn(firstTypedChild(back.success), "data"));
 		}
 	});
 
@@ -244,7 +257,7 @@ describe("Mdast.fromMdast", () => {
 	it("agrees with the Effect twin on both channels", () => {
 		const good = { type: "root", children: [] };
 		const bad = { type: "widget" };
-		assert.deepStrictEqual(Mdast.fromMdast(good).pipe(Effect.result, Effect.runSync), Mdast.fromMdastResult(good) as never);
+		assert.deepStrictEqual(Mdast.fromMdast(good).pipe(Effect.result, Effect.runSync), Mdast.fromMdastResult(good));
 		const effectFailure = Mdast.fromMdast(bad).pipe(Effect.flip, Effect.result, Effect.runSync);
 		assert.isTrue(Result.isSuccess(effectFailure));
 	});

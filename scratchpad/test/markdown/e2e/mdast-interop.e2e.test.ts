@@ -30,6 +30,7 @@
 //    (`"\n  1\n"`).
 
 import { assert, describe, it } from "@effect/vitest";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import { Markdown, MarkdownParseOptions } from "../../../effected/markdown/Markdown.ts";
 import { Mdast } from "../../../effected/markdown/Mdast.ts";
@@ -47,10 +48,10 @@ const normalizeForComparison = (node: unknown): unknown => {
 	if (Array.isArray(node)) {
 		return node.map(normalizeForComparison);
 	}
-	if (node === null || typeof node !== "object") {
+	if (!P.isObject(node)) {
 		return node;
 	}
-	const record = node as Record<string, unknown>;
+	const record = node;
 	const out: Record<string, unknown> = {};
 	for (const [key, value] of Object.entries(record)) {
 		if (key === "value" && record.type === "inlineCode" && typeof value === "string") {
@@ -72,7 +73,8 @@ const normalizeForComparison = (node: unknown): unknown => {
 const parseFixture = (markdown: string) => {
 	const parsed = Markdown.parseResult(markdown, options);
 	assert.isTrue(Result.isSuccess(parsed));
-	return Result.isSuccess(parsed) ? Mdast.toMdast(parsed.success) : ({} as never);
+	if (Result.isFailure(parsed)) assert.fail("expected a successful fixture parse");
+	return Mdast.toMdast(parsed.success);
 };
 
 const values = (tree: unknown, type: string, field: "value" | "label"): string[] => {
@@ -84,8 +86,8 @@ const values = (tree: unknown, type: string, field: "value" | "label"): string[]
 			}
 			return;
 		}
-		if (n !== null && typeof n === "object") {
-			const record = n as Record<string, unknown>;
+		if (P.isObject(n)) {
+			const record = n;
 			if (record.type === type && typeof record[field] === "string") {
 				out.push(record[field]);
 			}
@@ -111,7 +113,7 @@ describe("mdast interop corpus", () => {
 		const fixture = (name: string) => {
 			const pair = pairs.find((candidate) => candidate.name === name);
 			assert.isDefined(pair);
-			return pair as NonNullable<typeof pair>;
+			return pair;
 		};
 
 		it("pins the inlineCode line-ending divergence on code-text", () => {

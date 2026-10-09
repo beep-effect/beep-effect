@@ -28,6 +28,8 @@
 // Imports node classes from `../MarkdownNode.js` (the sanctioned exception to
 // the cycle firewall) and nothing else public.
 
+import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import type { Definition } from "../MarkdownNode.ts";
 import { Frontmatter, Point, Position, Root } from "../MarkdownNode.ts";
 import type { MarkdownDialect } from "./blockRegistry.ts";
@@ -665,10 +667,11 @@ class BlockParser implements BlockScanner {
 // `dialectOf`. The facade always passes its resolved dialect explicitly, so
 // this default only ever serves engine-level callers (tests, mostly) that
 // mean "the substrate".
-// A dialect string can also be input text, so optional arguments make the two call forms ambiguous.
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const parseBlocks = (
-	text: string,
-	dialect: MarkdownDialect = "commonmark",
-	frontmatter = false,
-): BlockPassResult => new BlockParser(text, blockDialect(dialect), dialect, frontmatter).parse();
+export const parseBlocks: {
+	(text: string, dialect?: MarkdownDialect, frontmatter?: boolean): BlockPassResult;
+	(dialect?: MarkdownDialect, frontmatter?: boolean): (text: string) => BlockPassResult;
+} = dual(
+	(args) => P.isString(args[0]) && !P.isBoolean(args[1]),
+	(text: string, dialect: MarkdownDialect = "commonmark", frontmatter: boolean = false): BlockPassResult =>
+		new BlockParser(text, blockDialect(dialect), dialect, frontmatter).parse(),
+);

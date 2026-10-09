@@ -123,7 +123,7 @@ describe("the default is make-only (controls)", () => {
 	it("encode of a synthesized node still emits the position", () => {
 		const encoded = S.encodeUnknownResult(Text)(Text.make({ value: "x" }));
 		assert.isTrue(Result.isSuccess(encoded));
-		const plain = Result.getOrThrow(encoded) as { position?: unknown };
+		const plain = Result.getOrThrow(encoded);
 		assert.deepStrictEqual(plain.position, {
 			start: { line: 1, column: 1, offset: 0 },
 			end: { line: 1, column: 1, offset: 0 },

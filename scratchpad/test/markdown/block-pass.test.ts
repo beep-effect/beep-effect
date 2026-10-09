@@ -155,8 +155,10 @@ describe("block pass", () => {
 			const { root } = parseBlocks(source);
 			const [heading, paragraph] = root.children;
 
-			assert.strictEqual(sliceOf(source, heading as never), "# Title");
-			assert.strictEqual(sliceOf(source, paragraph as never), "Hello\nworld");
+			assert.isDefined(heading);
+			assert.isDefined(paragraph);
+			assert.strictEqual(sliceOf(source, heading), "# Title");
+			assert.strictEqual(sliceOf(source, paragraph), "Hello\nworld");
 		});
 
 		it("pulls an indented code block's end back past its trailing blank lines", () => {
@@ -168,7 +170,8 @@ describe("block pass", () => {
 			// indentation are part of the block's source extent (the interop
 			// corpus pins mdast-util's convention); only the value excludes
 			// them. The end still excludes the trailing blank lines.
-			assert.strictEqual(sliceOf(source, code as never), "    foo");
+			assert.isDefined(code);
+			assert.strictEqual(sliceOf(source, code), "    foo");
 			assert.strictEqual(code?.type === "code" ? code.value : "", "foo\n");
 		});
 

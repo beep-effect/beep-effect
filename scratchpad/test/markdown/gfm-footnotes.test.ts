@@ -113,7 +113,8 @@ const definitionParagraph = (definition: FootnoteDefinition, index = 0): Paragra
 	const child = definition.children[index];
 	assert.isDefined(child, `expected a child at ${String(index)}`);
 	assert.strictEqual(child.type, "paragraph");
-	return child as Paragraph;
+	if (child.type !== "paragraph") assert.fail("expected a paragraph");
+	return child;
 };
 
 /** A paragraph's flattened text. */

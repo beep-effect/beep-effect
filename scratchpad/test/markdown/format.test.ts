@@ -314,7 +314,11 @@ describe("MarkdownFormat.format", () => {
 });
 
 describe("MarkdownFormat.modify", () => {
-	const firstChild = (doc: MarkdownDocument): MarkdownNode => doc.root.children[0] as MarkdownNode;
+	const firstChild = (doc: MarkdownDocument): MarkdownNode => {
+		const child = doc.root.children[0];
+		assert.isDefined(child);
+		return child;
+	};
 
 	it.effect("replaces a flow node with plain text, block-wrapped", () =>
 		Effect.gen(function* () {
@@ -340,8 +344,10 @@ describe("MarkdownFormat.modify", () => {
 	it.effect("escapes plain-text replacement of a phrasing node", () =>
 		Effect.gen(function* () {
 			const doc = yield* parseDoc("before *target* after\n");
-			const para = firstChild(doc) as Paragraph;
-			const target = para.children[1] as MarkdownNode;
+			const para = firstChild(doc);
+			if (para.type !== "paragraph") assert.fail("expected a paragraph");
+			const target = para.children[1];
+			assert.isDefined(target);
 			const out = yield* MarkdownFormat.modifyToString(doc, target, "a *b*");
 			const reparsed = yield* parseDoc(out);
 			assert.strictEqual(renderHtml(reparsed.root, { gfm: true }), "<p>before a *b* after</p>\n");
@@ -351,7 +357,8 @@ describe("MarkdownFormat.modify", () => {
 	it.effect("replaces table-cell content with pipe-safe text", () =>
 		Effect.gen(function* () {
 			const doc = yield* parseDoc("| h |\n| - |\n| x |\n");
-			const table = doc.root.children[0] as { children: ReadonlyArray<{ children: ReadonlyArray<MarkdownNode> }> };
+			const table = firstChild(doc);
+			if (table.type !== "table") assert.fail("expected a table");
 			const row = table.children[1];
 			assert.isDefined(row);
 			if (row === undefined) assert.fail("expected a table row");
@@ -386,7 +393,8 @@ describe("MarkdownFormat.modify", () => {
 	it.effect("refuses an unsupported target kind", () =>
 		Effect.gen(function* () {
 			const doc = yield* parseDoc("- a\n");
-			const list = doc.root.children[0] as { children: ReadonlyArray<MarkdownNode> };
+			const list = firstChild(doc);
+			if (list.type !== "list") assert.fail("expected a list");
 			const item = list.children[0];
 			if (item === undefined) assert.fail("expected a list item");
 			const error = yield* Effect.flip(MarkdownFormat.modify(doc, item, "x"));
@@ -398,7 +406,8 @@ describe("MarkdownFormat.modify", () => {
 	it.effect("refuses a multi-line replacement inside a container", () =>
 		Effect.gen(function* () {
 			const doc = yield* parseDoc("> p\n");
-			const quote = doc.root.children[0] as { children: ReadonlyArray<MarkdownNode> };
+			const quote = firstChild(doc);
+			if (quote.type !== "blockquote") assert.fail("expected a blockquote");
 			const target = quote.children[0];
 			if (target === undefined) assert.fail("expected a blockquote child");
 			const fragment = Blockquote.make({
@@ -417,7 +426,8 @@ describe("MarkdownFormat.modify", () => {
 	it.effect("single-line replacement inside a container works", () =>
 		Effect.gen(function* () {
 			const doc = yield* parseDoc("> p\n");
-			const quote = doc.root.children[0] as { children: ReadonlyArray<MarkdownNode> };
+			const quote = firstChild(doc);
+			if (quote.type !== "blockquote") assert.fail("expected a blockquote");
 			const target = quote.children[0];
 			if (target === undefined) assert.fail("expected a blockquote child");
 			const out = yield* MarkdownFormat.modifyToString(doc, target, "q");

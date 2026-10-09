@@ -32,7 +32,7 @@ const emphasisBomb = `${"*".repeat(2 * MAX_NESTING_DEPTH + 20)}a${"*".repeat(2 *
 /** Walk every node of a tree, children-first-agnostic, yielding each node. */
 const walk = (node: MarkdownNode, visit: (n: MarkdownNode) => void): void => {
 	visit(node);
-	const children = (node as { readonly children?: ReadonlyArray<MarkdownNode> }).children;
+	const children = "children" in node ? node.children : undefined;
 	if (children !== undefined) {
 		for (const child of children) {
 			walk(child, visit);

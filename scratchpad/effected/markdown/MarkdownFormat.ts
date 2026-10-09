@@ -36,7 +36,17 @@ import { Markdown, MarkdownDialect, MarkdownParseOptions } from "./Markdown.ts";
 import type { MarkdownDocument } from "./MarkdownDocument.ts";
 import type { MarkdownRange } from "./MarkdownEdit.ts";
 import { MarkdownEdit } from "./MarkdownEdit.ts";
-import type { Code, FlowContent, Heading, List, MarkdownNode, PhrasingContent } from "./MarkdownNode.ts";
+import type {
+	Code,
+	Emphasis,
+	FlowContent,
+	Heading,
+	List,
+	MarkdownNode,
+	PhrasingContent,
+	Strong,
+	ThematicBreak,
+} from "./MarkdownNode.ts";
 import {
 	BulletChar,
 	EmphasisChar,
@@ -166,11 +176,8 @@ export class MarkdownModificationError extends S.TaggedError<MarkdownModificatio
 
 // ── Internal: tree walking ──────────────────────────────────────────────────
 
-interface WithChildren {
-	readonly children?: ReadonlyArray<MarkdownNode>;
-}
-
-const childrenOf = (node: MarkdownNode): ReadonlyArray<MarkdownNode> => (node as WithChildren).children ?? [];
+const childrenOf = (node: MarkdownNode): ReadonlyArray<MarkdownNode> =>
+	"children" in node ? node.children : [];
 
 /** Walk the tree, invoking `visit` with each node, its parent and its siblings. */
 const walk = (
@@ -249,7 +256,7 @@ const longestRun = (value: string, char: string): number => {
 	return longest;
 };
 
-const isUnorderedList = (node: MarkdownNode): node is List => node.type === "list" && (node as List).ordered !== true;
+const isUnorderedList = (node: MarkdownNode): node is List => node.type === "list" && node.ordered !== true;
 
 /** True when only blank text separates the two spans. */
 const adjacentSpans = (source: string, endOfFirst: number, startOfSecond: number): boolean => {
@@ -291,10 +298,10 @@ class FormatEmitter {
 const formatThematicBreak = (
 	source: string,
 	emit: FormatEmitter,
-	node: MarkdownNode,
+	node: ThematicBreak,
 	target: ThematicBreakChar,
 ): void => {
-	const fidelity = (node as { markerChar?: ThematicBreakChar }).markerChar ?? "*";
+	const fidelity = node.markerChar ?? "*";
 	if (fidelity === target) {
 		return;
 	}
@@ -361,17 +368,17 @@ const formatList = (
 	}
 };
 
-const isEmphasisLike = (node: MarkdownNode): boolean => node.type === "emphasis" || node.type === "strong";
+const isEmphasisLike = (node: MarkdownNode): node is Emphasis | Strong => node.type === "emphasis" || node.type === "strong";
 
 const formatEmphasis = (
 	source: string,
 	emit: FormatEmitter,
-	node: MarkdownNode,
+	node: Emphasis | Strong,
 	siblings: ReadonlyArray<MarkdownNode>,
 	index: number,
 	target: EmphasisChar,
 ): void => {
-	const fidelity = (node as { markerChar?: EmphasisChar }).markerChar ?? "*";
+	const fidelity = node.markerChar ?? "*";
 	if (fidelity === target) {
 		return;
 	}
@@ -436,7 +443,7 @@ const BLANK_LINE = /^[ \t]*$/;
 
 /** Whether a sibling is a code block with no info string (either spelling). */
 const isLanguagelessCode = (node: MarkdownNode): boolean =>
-	node.type === "code" && (node as Code).lang === undefined && (node as Code).meta === undefined;
+	node.type === "code" && node.lang === undefined && node.meta === undefined;
 
 /**
  * Convert a language-less code block toward the requested style. Returns
@@ -538,6 +545,10 @@ const PHRASING_TYPES: ReadonlySet<string> = new Set([
 	"strong",
 	"text",
 ]);
+
+const isFlowReplacement = (node: MarkdownNode): node is FlowContent => FLOW_TYPES.has(node.type);
+
+const isPhrasingReplacement = (node: MarkdownNode): node is PhrasingContent => PHRASING_TYPES.has(node.type);
 
 /** Parent types whose child slot holds flow content. */
 const FLOW_PARENTS: ReadonlySet<string> = new Set(["root", "blockquote", "listItem", "footnoteDefinition"]);
@@ -668,10 +679,10 @@ export class MarkdownFormat {
 				formatThematicBreak(text, emit, node, options.thematicBreakChar);
 			}
 			if (options?.headingStyle !== undefined && node.type === "heading") {
-				formatHeading(text, emit, node as Heading, options.headingStyle);
+				formatHeading(text, emit, node, options.headingStyle);
 			}
 			if (options?.bulletChar !== undefined && node.type === "list") {
-				formatList(text, emit, node as List, siblings, index, options.bulletChar);
+				formatList(text, emit, node, siblings, index, options.bulletChar);
 			}
 			if (options?.emphasisChar !== undefined && isEmphasisLike(node)) {
 				formatEmphasis(text, emit, node, siblings, index, options.emphasisChar);
@@ -684,7 +695,7 @@ export class MarkdownFormat {
 					formatCodeBlockStyle(
 						text,
 						emit,
-						node as Code,
+						node,
 						parent,
 						siblings,
 						index,
@@ -692,7 +703,7 @@ export class MarkdownFormat {
 						options.fenceChar,
 					);
 				if (!converted && options?.fenceChar !== undefined) {
-					formatFence(text, emit, node as Code, options.fenceChar);
+					formatFence(text, emit, node, options.fenceChar);
 				}
 			}
 		});
@@ -776,21 +787,21 @@ export class MarkdownFormat {
 			const paragraph = Paragraph.make({ children: [textNode] });
 			renderRoot = Root.make({ children: [paragraph] });
 		} else if (slot === "flow") {
-			if (!FLOW_TYPES.has(replacement.type)) {
+			if (!isFlowReplacement(replacement)) {
 				return yield* fail(
 					"FragmentCategoryMismatch",
 					`a ${replacement.type} fragment does not fit a flow slot — pass flow content or a plain string`,
 				);
 			}
-			renderRoot = Root.make({ children: [replacement as FlowContent] });
+			renderRoot = Root.make({ children: [replacement] });
 		} else {
-			if (!PHRASING_TYPES.has(replacement.type)) {
+			if (!isPhrasingReplacement(replacement)) {
 				return yield* fail(
 					"FragmentCategoryMismatch",
 					`a ${replacement.type} fragment does not fit a phrasing slot — pass phrasing content or a plain string`,
 				);
 			}
-			const paragraph = Paragraph.make({ children: [replacement as PhrasingContent] });
+			const paragraph = Paragraph.make({ children: [replacement] });
 			renderRoot = Root.make({ children: [paragraph] });
 		}
 		const rendered = Markdown.stringifyResult(renderRoot);
@@ -804,7 +815,8 @@ export class MarkdownFormat {
 				"a multi-line replacement cannot be spliced inside a container whose continuation lines carry a prefix",
 			);
 		}
-		return [MarkdownEdit.make({ offset: start, length: end - start, content })] as ReadonlyArray<MarkdownEdit>;
+		const edits: ReadonlyArray<MarkdownEdit> = [MarkdownEdit.make({ offset: start, length: end - start, content })];
+		return edits;
 	});
 
 	/**

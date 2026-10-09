@@ -13,6 +13,7 @@
 // prefix so the package index stays collision-free.
 
 import { assert, describe, it } from "@effect/vitest";
+import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -347,10 +348,8 @@ describe("the resolver seam", () => {
 			// keys on OKF's `type` field, ignoring $schema entirely — no OKF code
 			// in this package.
 			const okf: FrontmatterSchemaResolver = {
-				resolve: (_declaration, data) => {
-					const record = data as { readonly type?: string };
-					return record.type === "concept" ? Effect.succeed(Skill) : Effect.fail(SchemaDeclarationMissingError.make());
-				},
+				resolve: (_declaration, data) =>
+					P.isObject(data) && data.type === "concept" ? Effect.succeed(Skill) : Effect.fail(SchemaDeclarationMissingError.make()),
 			};
 			const schema = yield* okf.resolve(undefined, { type: "concept", title: "t" });
 			assert.strictEqual(schema, Skill);

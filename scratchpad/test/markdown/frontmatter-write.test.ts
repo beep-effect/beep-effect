@@ -16,6 +16,7 @@
 // rightly treats as the closing fence — fence semantics, not a codec defect.
 
 import { assert, describe, it } from "@effect/vitest";
+import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import {
@@ -76,7 +77,9 @@ describe("codec encode", () => {
 			assert.strictEqual(error._tag, "FrontmatterEncodeError");
 			assert.strictEqual(error.format, "json");
 			// The cause is the jsonc engine's typed stringify error, never a string.
-			assert.strictEqual((error.cause as { readonly _tag: string })._tag, "JsoncStringifyError");
+			const cause = error.cause;
+			if (!P.isObject(cause)) assert.fail("expected a structured cause");
+			assert.strictEqual(cause._tag, "JsoncStringifyError");
 		}),
 	);
 });
@@ -145,7 +148,9 @@ describe("MarkdownFrontmatter.set", () => {
 				assert.instanceOf(error, FrontmatterValidationError);
 				// The issue is the structured v4 issue tree, never a string.
 				assert.isObject(error.issue);
-				assert.isString((error.issue as { readonly _tag: string })._tag);
+				const issue = error.issue;
+				if (!P.isObject(issue)) assert.fail("expected a structured issue");
+				assert.isString(issue._tag);
 			}),
 	);
 

@@ -10,6 +10,8 @@
  * `extensions.txt` corpus (including the only official footnote examples).
  */
 
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -28,14 +30,17 @@ export interface SpecExample {
 }
 
 /** Shape of a `spec.json` entry as produced by upstream's `spec_tests.py --dump-tests`. */
-interface RawSpecExample {
-	readonly markdown: string;
-	readonly html: string;
-	readonly example: number;
-	readonly start_line: number;
-	readonly end_line: number;
-	readonly section: string;
-}
+const RawSpecExample = S.Struct({
+	markdown: S.String,
+	html: S.String,
+	example: S.Finite,
+	start_line: S.Finite,
+	end_line: S.Finite,
+	section: S.String,
+});
+
+const decodeExamples = RawSpecExample.pipe(S.Array, S.fromJsonString, S.decodeResult);
+const decodeTree = S.Unknown.pipe(S.fromJsonString, S.decodeResult);
 
 /**
  * Load the 652-example CommonMark 0.31.2 conformance corpus from the
@@ -45,7 +50,7 @@ interface RawSpecExample {
  */
 export const loadSpecExamples = (): ReadonlyArray<SpecExample> => {
 	const raw = readFileSync(resolve(COMMONMARK_FIXTURES_DIR, "spec.json"), "utf8");
-	const examples = JSON.parse(raw) as ReadonlyArray<RawSpecExample>;
+	const examples = Result.getOrThrow(decodeExamples(raw));
 	return examples.map(({ markdown, html, example, section }) => ({ markdown, html, example, section }));
 };
 
@@ -60,7 +65,7 @@ export const loadSpecExamples = (): ReadonlyArray<SpecExample> => {
  */
 export const loadGfmSpecExtensionExamples = (): ReadonlyArray<SpecExample> => {
 	const raw = readFileSync(resolve(GFM_FIXTURES_DIR, "spec-extensions.json"), "utf8");
-	const examples = JSON.parse(raw) as ReadonlyArray<RawSpecExample>;
+	const examples = Result.getOrThrow(decodeExamples(raw));
 	return examples.map(({ markdown, html, example, section }) => ({ markdown, html, example, section }));
 };
 
@@ -72,7 +77,7 @@ export const loadGfmSpecExtensionExamples = (): ReadonlyArray<SpecExample> => {
  */
 export const loadGfmExtensionsExamples = (): ReadonlyArray<SpecExample> => {
 	const raw = readFileSync(resolve(GFM_FIXTURES_DIR, "extensions.json"), "utf8");
-	const examples = JSON.parse(raw) as ReadonlyArray<RawSpecExample>;
+	const examples = Result.getOrThrow(decodeExamples(raw));
 	return examples.map(({ markdown, html, example, section }) => ({ markdown, html, example, section }));
 };
 
@@ -100,5 +105,5 @@ export const loadMdastFixturePairs = (): ReadonlyArray<MdastFixturePair> =>
 		.map((name) => ({
 			name,
 			markdown: readFileSync(resolve(MDAST_FIXTURES_DIR, `${name}.md`), "utf8"),
-			tree: JSON.parse(readFileSync(resolve(MDAST_FIXTURES_DIR, `${name}.json`), "utf8")) as unknown,
+			tree: Result.getOrThrow(decodeTree(readFileSync(resolve(MDAST_FIXTURES_DIR, `${name}.json`), "utf8"))),
 		}));

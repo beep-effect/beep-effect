@@ -12,6 +12,7 @@
 // markdown inside it is ours.
 
 import { assert, describe, it } from "@effect/vitest";
+import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { Markdown } from "../../effected/markdown/Markdown.ts";
 import { MarkdownDocument } from "../../effected/markdown/MarkdownDocument.ts";
@@ -36,6 +37,9 @@ import {
 	Text,
 } from "../../effected/markdown/MarkdownNode.ts";
 import { Mdast } from "../../effected/markdown/Mdast.ts";
+
+const ProjectedRecords = S.Array(S.Record(S.String, S.Unknown));
+const isRecords = S.is(ProjectedRecords);
 
 const text = (value: string): Text => Text.make({ value });
 
@@ -365,22 +369,21 @@ describe("mdx nodes", () => {
 				),
 				MdxjsEsm.make({ value: "export const a = 1" }),
 			);
-			const projected = Mdast.toMdast(tree) as unknown as {
-				children: ReadonlyArray<Record<string, unknown>>;
-			};
-			const element = projected.children[0] as {
-				type: string;
-				name: string | null;
-				attributes: ReadonlyArray<Record<string, unknown>>;
-			};
+			const projected = Mdast.toMdast(tree);
+			const children = projected.children;
+			if (!isRecords(children)) assert.fail("expected projected children");
+			const element = children[0];
+			assert.isDefined(element);
+			const attributes = element.attributes;
+			if (!isRecords(attributes)) assert.fail("expected projected attributes");
 			assert.strictEqual(element.type, "mdxJsxFlowElement");
 			assert.strictEqual(element.name, "x");
 			// A bare attribute projects `value: null` (the parser's spelling);
 			// a value expression projects without a position (ditto).
-			assert.deepStrictEqual(element.attributes[0]?.value, null);
-			assert.deepStrictEqual(element.attributes[1]?.value, { type: "mdxJsxAttributeValueExpression", value: "c" });
-			assert.deepStrictEqual(element.attributes[2]?.type, "mdxJsxExpressionAttribute");
-			assert.strictEqual(projected.children[1]?.type, "mdxjsEsm");
+			assert.deepStrictEqual(attributes[0]?.value, null);
+			assert.deepStrictEqual(attributes[1]?.value, { type: "mdxJsxAttributeValueExpression", value: "c" });
+			assert.deepStrictEqual(attributes[2]?.type, "mdxJsxExpressionAttribute");
+			assert.strictEqual(children[1]?.type, "mdxjsEsm");
 		});
 
 		it("admits foreign MDX trees, synthesizing positions and dropping estree data", () => {

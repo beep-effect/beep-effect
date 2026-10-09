@@ -951,9 +951,9 @@ describe("Markdown.stringify", () => {
 
 	describe("guard and facade posture", () => {
 		it("depth past the cap fails typed, never a RangeError", () => {
-			let tree: Root["children"][number] = paragraph(text("x"));
+			let tree: Paragraph | Blockquote = paragraph(text("x"));
 			for (let i = 0; i < 300; i += 1) {
-				tree = Blockquote.make({ children: [tree as never], position: span() });
+				tree = Blockquote.make({ children: [tree], position: span() });
 			}
 			const result = Markdown.stringifyResult(rootOf(tree));
 			assert.isTrue(Result.isFailure(result));

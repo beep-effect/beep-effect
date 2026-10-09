@@ -76,7 +76,6 @@ import type {
 	PhrasingContent,
 	Root,
 	Table,
-	Text,
 } from "../MarkdownNode.ts";
 import { GuardExceeded } from "./carriers.ts";
 import { MAX_NESTING_DEPTH } from "./limits.ts";
@@ -154,7 +153,7 @@ const isWwwDot = (value: string, index: number): boolean => {
 /** Whether the run of letters ending at `value[index]` is a scheme word. */
 const isSchemeColon = (value: string, index: number): boolean => {
 	let start = index;
-	while (start > 0 && /[a-zA-Z]/.test(value[start - 1] as string)) start -= 1;
+	while (start > 0 && /[a-zA-Z]/.test(value.charAt(start - 1))) start -= 1;
 	return SCHEME_WORDS.has(value.slice(start, index).toLowerCase());
 };
 
@@ -202,7 +201,7 @@ const escapeText = (
 	let out = "";
 	let lineStart = atLineStart;
 	for (let index = 0; index < value.length; index += 1) {
-		const char = value[index] as string;
+		const char = value.charAt(index);
 		if (char === "\n") {
 			// A soft break survives as a plain newline, INCLUDING at a Text
 			// value's boundary (index 0 or the last index) — that is exactly
@@ -398,7 +397,7 @@ const literalText = (
 	let out = "";
 	let lineStart = atLineStart;
 	for (let index = 0; index < value.length; index += 1) {
-		const char = value[index] as string;
+		const char = value.charAt(index);
 		if (char === "\n") {
 			// The canonical newline rules, unchanged: they are all structural.
 			const adjacent = value[index - 1] === "\n" || value[index + 1] === "\n";
@@ -503,10 +502,10 @@ const escapeLabel = (label: string): string => label.replace(/(?<!\\)([[\]])/g, 
 
 /** Whether a destination character forces the pointy-bracket form. */
 const forcesPointy = (char: string): boolean => {
-	const codePoint = char.codePointAt(0) as number;
+	const codePoint = char.codePointAt(0);
 	// Controls and space (a bare destination allows neither), plus the
 	// bracket/backslash set whose bare spelling is ambiguous.
-	return codePoint <= 0x20 || char === "<" || char === ">" || char === "[" || char === "]" || char === "\\";
+	return (codePoint !== undefined && codePoint <= 0x20) || char === "<" || char === ">" || char === "[" || char === "]" || char === "\\";
 };
 
 /** Wrap a link/image destination, pointy-bracketed when it needs it. */
@@ -612,8 +611,10 @@ const serializeInlines = (
 			case "text": {
 				let followingText = "";
 				let next = index + 1;
-				while (next < children.length && children[next]?.type === "text") {
-					followingText += (children[next] as Text).value;
+				while (next < children.length) {
+					const following = children[next];
+					if (following?.type !== "text") break;
+					followingText += following.value;
 					next += 1;
 				}
 				const escaped = (child.escapeStyle === "literal" ? literalText : escapeText)(
@@ -760,7 +761,8 @@ interface WalkableNode {
 const treeContainsMdx = (root: WalkableNode): boolean => {
 	const stack: WalkableNode[] = [root];
 	while (stack.length > 0) {
-		const node = stack.pop() as WalkableNode;
+		const node = stack.pop();
+		if (node === undefined) break;
 		if (MDX_NODE_TYPES.has(node.type)) {
 			return true;
 		}
@@ -1226,11 +1228,13 @@ const serializeBlocks = (children: ReadonlyArray<Block>, state: StringifyState, 
 	let out = "";
 	for (let index = 0; index < parts.length; index += 1) {
 		if (index > 0) {
-			const prev = nodes[index - 1] as Block;
-			const next = nodes[index] as Block;
-			out += canJoinWithoutBlank(prev, next) ? "\n" : "\n\n";
+			const prev = nodes[index - 1];
+			const next = nodes[index];
+			if (prev !== undefined && next !== undefined) {
+				out += canJoinWithoutBlank(prev, next) ? "\n" : "\n\n";
+			}
 		}
-		out += parts[index] as string;
+		out += parts[index] ?? "";
 	}
 	return out;
 };

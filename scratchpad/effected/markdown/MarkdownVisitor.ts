@@ -136,9 +136,10 @@ function* walkNode(node: MarkdownNode, path: MarkdownPath, depth: number): Gener
 	yield MarkdownVisitorEvent.Enter({ node, path, depth });
 
 	if ("children" in node) {
-		const children = node.children as ReadonlyArray<MarkdownNode>;
+		const children = node.children;
 		for (let index = 0; index < children.length; index++) {
-			const child = children[index] as MarkdownNode;
+			const child = children[index];
+			if (child === undefined) continue;
 			const events = walkNode(child, [...path, index], depth + 1);
 			for (const event of events) {
 				yield event;

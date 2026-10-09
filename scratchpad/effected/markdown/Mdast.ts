@@ -104,7 +104,7 @@ const listSpread = (node: List): boolean => {
 
 // One arm per node type. Field order mirrors mdast-util-from-markdown's
 // emission for readability of test diffs; deep equality does not depend on it.
-const projectNode = (node: AnyNode): Record<string, unknown> => {
+const projectNode = (node: AnyNode): MdastNode => {
 	const position = projectPosition(node.position);
 	switch (node.type) {
 		case "root":
@@ -311,7 +311,9 @@ const admittedFields: Readonly<Record<string, ReadonlyArray<string>>> = {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null && !Array.isArray(value);
 
-const completePoint = (value: unknown): boolean =>
+const completePoint = (
+	value: unknown,
+): value is { readonly line: number; readonly column: number; readonly offset: number } =>
 	isRecord(value) &&
 	typeof value.line === "number" &&
 	typeof value.column === "number" &&
@@ -319,8 +321,8 @@ const completePoint = (value: unknown): boolean =>
 
 const normalizePosition = (value: unknown): Record<string, unknown> => {
 	if (isRecord(value) && completePoint(value.start) && completePoint(value.end)) {
-		const start = value.start as Record<string, unknown>;
-		const end = value.end as Record<string, unknown>;
+		const start = value.start;
+		const end = value.end;
 		return {
 			start: { line: start.line, column: start.column, offset: start.offset },
 			end: { line: end.line, column: end.column, offset: end.offset },
@@ -484,7 +486,7 @@ export class Mdast {
 	 * @returns A plain mdast `root` object with unist positions.
 	 */
 	static toMdast(root: Root): MdastNode {
-		return projectNode(root) as unknown as MdastNode;
+		return projectNode(root);
 	}
 
 	/**

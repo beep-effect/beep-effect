@@ -6,6 +6,7 @@
 // literal path touches.
 
 import { assert, describe, it } from "@effect/vitest";
+import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { Markdown } from "../../effected/markdown/Markdown.ts";
 import {
@@ -21,6 +22,9 @@ import {
 	Text,
 } from "../../effected/markdown/MarkdownNode.ts";
 import { Mdast } from "../../effected/markdown/Mdast.ts";
+
+const ProjectedRecords = S.Array(S.Record(S.String, S.Unknown));
+const isRecords = S.is(ProjectedRecords);
 
 type EscapeStyle = "canonical" | "literal";
 
@@ -399,10 +403,14 @@ describe("Text escapeStyle: literal", () => {
 		});
 
 		it("Mdast.toMdast projects escapeStyle only when present", () => {
-			const projected = Mdast.toMdast(paragraphOf(literal("a"), canonical("b"))) as unknown as {
-				children: ReadonlyArray<{ children: ReadonlyArray<Record<string, unknown>> }>;
-			};
-			const [first, second] = projected.children[0]?.children ?? [];
+			const projected = Mdast.toMdast(paragraphOf(literal("a"), canonical("b")));
+			const children = projected.children;
+			if (!isRecords(children)) assert.fail("expected projected children");
+			const paragraph = children[0];
+			assert.isDefined(paragraph);
+			const textChildren = paragraph.children;
+			if (!isRecords(textChildren)) assert.fail("expected projected text children");
+			const [first, second] = textChildren;
 			assert.strictEqual(first?.escapeStyle, "literal");
 			assert.isFalse(second !== undefined && "escapeStyle" in second);
 		});

@@ -21,6 +21,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { Jsonc } from "../../effected/jsonc/index.ts";
 import { Toml } from "../../effected/toml/index.ts";
 import { Yaml } from "../../effected/yaml/index.ts";
+import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { FrontmatterMissingError, FrontmatterValidationError, MarkdownFrontmatter } from "../../effected/markdown/Frontmatter.ts";
@@ -123,7 +124,9 @@ describe("MarkdownFrontmatter.schema", () => {
 			assert.instanceOf(error, FrontmatterValidationError);
 			// The issue is the structured v4 issue tree, never a string.
 			assert.isObject(error.issue);
-			assert.isString((error.issue as { readonly _tag: string })._tag);
+			const issue = error.issue;
+			if (!P.isObject(issue)) assert.fail("expected a structured issue");
+			assert.isString(issue._tag);
 		}),
 	);
 });
