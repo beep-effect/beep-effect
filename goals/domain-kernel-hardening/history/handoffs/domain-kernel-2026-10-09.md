@@ -650,3 +650,16 @@ Orchestrator still owns stale ROADMAP platform re-entry bullet (~349), Parked
 packets row (~383), and cohort prose (~406). Follow-ups: stale DomainModel.make
 detector and the desktop release applying the migration on installs.
 Graft estimate: 76,761 tokens saved across three retrieval calls this run.
+
+### Final P1 base refresh and packet proof
+
+P1 qualification commit is 58771f1bb0. Final base refresh merged #1580
+(2d4a81216f), the owner-aware residue retention module, cleanly. It changes
+unrelated CLI storage code and its tests; no owned kernel, converter, migration,
+proof-manifest or packet surface changed in this merge. The repo-cli default
+proof above is explicitly from the preceding base, not a claimed rerun of
+#1580's storage suite. That owner/main integration is covered by hosted CI after
+publish. No conflict and no extra push; both main merges ride the initial
+publish push. No additional migration generation or desktop codegen required.
+The post-merge stream still matches the active packet with no packet finding;
+ordered packet verification and doctor are rerun below before publication.
