@@ -327,7 +327,7 @@ describe("marker attributes", () => {
 		// were generated and the round trip would compare against the wrong map.
 		const attrsArb = Arbitrary.schema(
 			S.Array(S.Tuple([Name, Value])).check(S.isUniqueKey(), S.isMaxLength(3)),
-		).pipe(Arbitrary.map((pairs) => Object.fromEntries(pairs) as Record<string, string>));
+		).pipe(Arbitrary.map((pairs) => Object.fromEntries(pairs)));
 		const Content = S.Literals(["", "echo hi", "a\nb", "  indented"]);
 		const Document = S.Literals(["", "#!/bin/sh\n", "user line\nsecond\n"]);
 

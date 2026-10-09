@@ -1,5 +1,6 @@
 import type * as O from "effect/Option";
 import type * as PlatformError from "effect/PlatformError";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -195,7 +196,10 @@ const make = (options: ManagedSectionOptions = {}): Effect.Effect<ManagedSection
 				yield* Effect.annotateCurrentSpan({ path, key: section.key });
 				const outcomes = yield* syncAll(path, [section]);
 				// syncAll returns one outcome per declared section.
-				return outcomes[0] as SyncOutcome;
+				if (!A.isReadonlyArrayNonEmpty(outcomes)) {
+					return yield* Effect.die("ManagedSection.sync: expected one outcome for the declared section");
+				}
+				return A.headNonEmpty(outcomes);
 			}),
 
 			syncAll,

@@ -302,7 +302,11 @@ describe("ManagedSection", () => {
 				assert.isTrue(Cause.hasDies(exit.cause), "must be a defect, not a typed failure");
 				assert.isFalse(Cause.hasFails(exit.cause), "must not be laundered into the error channel");
 				const die = exit.cause.reasons.find(Cause.isDieReason);
-				assert.include(String((die?.defect as Error)?.message), "read");
+				const defect = die?.defect;
+				if (!(defect instanceof Error)) {
+					assert.fail("expected the unstubbed member's defect to be an Error");
+				}
+				assert.include(String(defect.message), "read");
 			}).pipe(Effect.provide(ManagedSection.layerTest())),
 		);
 	});
