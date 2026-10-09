@@ -9,18 +9,26 @@ Launch, from a `claude` session in `~/YeeBois/projects/beep-effect` on branch
 
 > **Operator revision, 2026-10-08. Where it conflicts with the text below, this wins.**
 >
-> Work breadth first, in three phases:
+> Work breadth first, across all modules, in this order. Tests keep passing at every step.
 >
-> 1. **Copy.** Run S0 (copy verbatim) for every remaining module, in ledger order, one commit
->    each. No fixing, no crispening, no documentation work.
-> 2. **Green.** Then bring the copied modules up to the repo standards: check (tsgo), lint and the
->    laws with upstream tests passing (S1), then documentation (S2) and coverage (S3).
-> 3. **Review.** Review rounds (S4, section 12) start only after everything passes those
->    standards.
+> 1. **Copy.** S0 (copy verbatim) for every module, in ledger order, one commit each. No fixing,
+>    no crispening, no documentation work. *Done 2026-10-08: 27 modules, 4,066 files, each
+>    identical to upstream apart from import specifiers.*
+> 2. **Green.** Change nothing except what it takes to clear every type error, lint error and
+>    `@effect/tsgo` diagnostic, with the upstream tests passing.
+> 3. **Imports.** Rewrite imports to the beep-effect style, one Effect module per import
+>    (`import * as Effect from "effect/Effect";`).
+> 4. **Identity.** Every schema and `Context.Service` takes its identity from the
+>    `@beep/identity` IdentityComposer, with annotations on fields and schemas.
+> 5. **Review.** Review rounds (S4, section 12) start only after everything above passes.
 >
-> No review round runs before phase 3. D18 (two modules in flight) and D19 (wave-0 confirmation
-> round) do not gate phases 1 and 2. The `jsonc` round-3 and `jsonl` round-2 reports already on
-> disk are input for phase 3, not work to do now. The end state (section 0.1) is unchanged.
+> No review round runs before step 5. D18 (two modules in flight) and D19 (wave-0 confirmation
+> round) do not gate steps 1 to 4. The `jsonc` round-3 and `jsonl` round-2 reports already on
+> disk are input for step 5, not work to do now. The end state (section 0.1) is unchanged.
+>
+> Not yet placed by the operator: the remaining beep laws (`effect-fn`, `terse-effect`,
+> `native-runtime`), the JSDoc conversion (S2) and full coverage (S3). They are not part of
+> steps 2 to 4; ask before starting them.
 
 This file is the whole contract. The `/goal` evaluator only reads the
 transcript, so section 0 defines what you print and when. Everything else is
