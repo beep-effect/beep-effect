@@ -2,9 +2,11 @@
 // `makeFaulty`, `layerFaulty` and `options.faults`: handlers run first, and a
 // handler answering `undefined` delegates to the wrapped filesystem.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import type {
@@ -13,9 +15,30 @@ import type {
 	MemoryFileSystemTransientFault,
 } from "../MemoryFileSystem.ts";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/memfs/internal/faults");
 
 /**
- * Throws a `RangeError` naming any fault key that is not a function-valued
+ * Reports a fault key that does not name a function-valued filesystem member.
+ *
+ * **Example** (Inspect an unknown fault key)
+ *
+ * ```ts
+ * const error = UnknownFaultKeyError.make({ message: "Unknown fault key: readFileSting" });
+ * console.log(error.message);
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class UnknownFaultKeyError extends S.TaggedError<UnknownFaultKeyError>($I`UnknownFaultKeyError`)(
+	"UnknownFaultKeyError",
+	{ message: S.String },
+) {}
+
+/**
+ * Throws an `UnknownFaultKeyError` naming any fault key that is not a function-valued
  * member of `target`. A misspelled key would otherwise be ignored silently and
  * the test would pass without its fault ever firing — a wiring bug, surfaced at
  * construction like `failTimes`' invalid counts.
@@ -24,14 +47,14 @@ export const assertKnownFaultKeys: {
 	(target: object, subject: string): (faults: object) => void;
 	(faults: object, target: object, subject: string): void;
 } = dual(3, (faults: object, target: object, subject: string): void => {
-	const members = new Set(
+	const members = HashSet.fromIterable(
 		R.keys(target).filter((key) => P.hasProperty(target, key) && P.isFunction(target[key])),
 	);
-	const unknown = R.keys(faults).filter((key) => !members.has(key));
+	const unknown = R.keys(faults).filter((key) => !HashSet.has(members, key));
 	if (unknown.length > 0) {
-		throw new RangeError(
-			`${subject}: unknown fault key(s) ${unknown.map((key) => `"${key}"`).join(", ")}; expected one of ${[...members].sort().join(", ")}`,
-		);
+		throw UnknownFaultKeyError.make({
+			message: `${subject}: unknown fault key(s) ${unknown.map((key) => `"${key}"`).join(", ")}; expected one of ${[...members].sort().join(", ")}`,
+		});
 	}
 });
 
@@ -42,7 +65,7 @@ export const wrapFaulty: {
 	base: FileSystem.FileSystem,
 	registration: MemoryFileSystemFaults | MemoryFileSystemFaultsFactory,
 ): FileSystem.FileSystem => {
-	const faults = Object.assign({}, P.isFunction(registration) ? registration(base) : registration);
+	const faults = { ...(P.isFunction(registration) ? registration(base) : registration) };
 	assertKnownFaultKeys(faults, base, "MemoryFileSystem faults");
 	// Each wrapper keeps its method's arguments, success and environment types.
 	// Transient state is armed once here, then consulted on every execution.

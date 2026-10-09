@@ -4,6 +4,8 @@
 // node-shaped ports (ports.ts), fault injection (faults.ts) and errno
 // (errno.ts) — all extensions beyond the vendored port.
 
+import * as O from "@beep/utils/Option";
+import * as S from "effect/Schema";
 import { $ScratchpadId } from "@beep/identity/packages";
 import type * as PlatformError from "effect/PlatformError";
 import * as Context from "effect/Context";
@@ -28,6 +30,26 @@ import * as internal from "./internal/volume.ts";
 import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/memfs/MemoryFileSystem");
+
+/**
+ * Reports an invalid failure count passed to `MemoryFileSystem.failTimes`.
+ *
+ * **Example** (Inspect an invalid count)
+ *
+ * ```ts
+ * const error = InvalidFaultCountError.make({
+ *   message: "failTimes: times must be a non-negative integer, got -1",
+ * });
+ * console.log(error.message);
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class InvalidFaultCountError extends S.TaggedError<InvalidFaultCountError>($I`InvalidFaultCountError`)(
+	"InvalidFaultCountError",
+	{ message: S.String },
+) {}
 
 /**
  * Synchronous, read-only inspection of one memory volume — the write-path
@@ -674,111 +696,110 @@ const handleContext = ({
 // beneath any faults), view, then the optional fault wrapper over the service.
 // The mutators and ports use the RAW filesystem and view — they are setup and
 // inspection, not the code under test.
-const buildHandle = (
+const buildHandle: (
 	seed: MemoryFileSystemSeed,
 	options: MemoryFileSystemOptions | undefined,
-): Effect.Effect<MemoryFileSystemHandle, PlatformError.PlatformError> =>
-	Effect.gen(function* () {
-		const engine = yield* internal.makeInspectableWith(engineOptions(options));
-		const raw = engine.fileSystem;
-		yield* seedWith(raw, seed, options);
-		const volume = makeVolumeService(engine);
-		const fileSystem = options?.faults === undefined ? raw : wrapFaulty(raw, options.faults);
-		// `seedWith` has already rejected a relative root, so this is the normalized join base.
-		const root = options?.root === undefined ? undefined : normalizeAbsolute(options.root);
-		// A mutator path: absolute as given; relative joined to the root (or to
-		// "/" without one). The join is deliberately NOT normalized: the engine
-		// resolves "." and ".." AFTER following links, POSIX-style, so
-		// "link/../x" lands where the link leads — as the host and the absolute
-		// spelling do. (Seed keys, by contrast, join lexically.) Errors still
-		// report the caller's own path.
-		const at = (path: string) => (path.startsWith("/") ? path : `${root ?? ""}/${path}`);
-		const parentOf = (path: string) => path.slice(0, Math.max(1, path.lastIndexOf("/")));
-		const sync = makeSyncFileSystem(volume);
-		// Only creates a parent that is absent: an existing parent that is a file
-		// must reach the write itself, which fails ENOTDIR as `writeFileSync` does
-		// (a recursive mkdir over an existing file would say EEXIST instead).
-		// Presence is checked with the port's `lstat`: intermediate links and
-		// ".." resolve (so it agrees with the engine on an unnormalized path —
-		// never the lexical view), but the FINAL component is not followed. A
-		// dangling or looping link AS the parent is therefore present, so the
-		// write itself fails ENOENT / ELOOP, as `writeFileSync` does — never a
-		// mkdir over the link (EEXIST).
-		const present = (path: string) => {
-			try {
-				sync.lstat(path);
-				return true;
-			} catch {
-				return false;
-			}
-		};
-		// errno fidelity: a recursive mkdir fails with an errno only when some component blocks
-		// it — a non-directory, or a dangling or looping link HIGHER up (which
-		// makes `lstat` of the parent fail too). The call that follows walks
-		// the same component, so it is bound to fail on it: swallow the mkdir's
-		// errno and let that call report node's own errno and syscall (ENOENT /
-		// ELOOP / ENOTDIR on `open` or `symlink`, never the mkdir's).
-		const ensureParent = (path: string) => {
-			const parent = parentOf(path);
-			return present(parent)
-				? Effect.void
-				: raw
-						.makeDirectory(parent, { recursive: true })
-						.pipe(
-							Effect.catchIf((error) => error.reason.cause instanceof ErrnoException, () => Effect.void),
-						);
-		};
-		// `mkdir` stands in for `mkdirSync(p, { recursive: true })`, whose walk
-		// reports a dangling link EARLIER in the path as ENOENT; the engine
-		// models the node adapter's callback `fs.mkdir`, which says ENOTDIR
-		// there. The first component that does not resolve tells them apart:
-		// ENOENT from it can only be a dangling link (mkdir -p creates anything
-		// merely missing), while a file or a link through one answers ENOTDIR,
-		// as `mkdirSync` does.
-		const mkdirSync = (path: string) =>
-			raw.makeDirectory(path, { recursive: true }).pipe(
-				Effect.mapError((error) => {
-					const cause = error.reason.cause;
-					if (!(cause instanceof ErrnoException) || cause.code !== "ENOTDIR") return error;
-					const pieces = path.split("/");
-					for (let index = 1; index < pieces.length; index++) {
-						const prefix = pieces.slice(0, index + 1).join("/");
-						const resolved = resolvePath(volume, prefix === "" ? "/" : prefix);
-						if ("code" in resolved) {
-							return resolved.code === "ENOENT" ? errnoError("makeDirectory", path, "ENOENT", undefined) : error;
-						}
+) => Effect.Effect<MemoryFileSystemHandle, PlatformError.PlatformError> = Effect.fn("buildHandle")(function* (seed, options) {
+	const engine = yield* internal.makeInspectableWith(engineOptions(options));
+	const raw = engine.fileSystem;
+	yield* seedWith(raw, seed, options);
+	const volume = makeVolumeService(engine);
+	const fileSystem = options?.faults === undefined ? raw : wrapFaulty(raw, options.faults);
+	// `seedWith` has already rejected a relative root, so this is the normalized join base.
+	const root = options?.root === undefined ? undefined : normalizeAbsolute(options.root);
+	// A mutator path: absolute as given; relative joined to the root (or to
+	// "/" without one). The join is deliberately NOT normalized: the engine
+	// resolves "." and ".." AFTER following links, POSIX-style, so
+	// "link/../x" lands where the link leads — as the host and the absolute
+	// spelling do. (Seed keys, by contrast, join lexically.) Errors still
+	// report the caller's own path.
+	const at = (path: string) => (path.startsWith("/") ? path : `${root ?? ""}/${path}`);
+	const parentOf = (path: string) => path.slice(0, Math.max(1, path.lastIndexOf("/")));
+	const sync = makeSyncFileSystem(volume);
+	// Only creates a parent that is absent: an existing parent that is a file
+	// must reach the write itself, which fails ENOTDIR as `writeFileSync` does
+	// (a recursive mkdir over an existing file would say EEXIST instead).
+	// Presence is checked with the port's `lstat`: intermediate links and
+	// ".." resolve (so it agrees with the engine on an unnormalized path —
+	// never the lexical view), but the FINAL component is not followed. A
+	// dangling or looping link AS the parent is therefore present, so the
+	// write itself fails ENOENT / ELOOP, as `writeFileSync` does — never a
+	// mkdir over the link (EEXIST).
+	const present = (path: string) => {
+		try {
+			sync.lstat(path);
+			return true;
+		} catch {
+			return false;
+		}
+	};
+	// errno fidelity: a recursive mkdir fails with an errno only when some component blocks
+	// it — a non-directory, or a dangling or looping link HIGHER up (which
+	// makes `lstat` of the parent fail too). The call that follows walks
+	// the same component, so it is bound to fail on it: swallow the mkdir's
+	// errno and let that call report node's own errno and syscall (ENOENT /
+	// ELOOP / ENOTDIR on `open` or `symlink`, never the mkdir's).
+	const ensureParent = (path: string) => {
+		const parent = parentOf(path);
+		return present(parent)
+			? Effect.void
+			: raw
+					.makeDirectory(parent, { recursive: true })
+					.pipe(
+						Effect.catchIf((error) => error.reason.cause instanceof ErrnoException, () => Effect.void),
+					);
+	};
+	// `mkdir` stands in for `mkdirSync(p, { recursive: true })`, whose walk
+	// reports a dangling link EARLIER in the path as ENOENT; the engine
+	// models the node adapter's callback `fs.mkdir`, which says ENOTDIR
+	// there. The first component that does not resolve tells them apart:
+	// ENOENT from it can only be a dangling link (mkdir -p creates anything
+	// merely missing), while a file or a link through one answers ENOTDIR,
+	// as `mkdirSync` does.
+	const mkdirSync = (path: string) =>
+		raw.makeDirectory(path, { recursive: true }).pipe(
+			Effect.mapError((error) => {
+				const cause = error.reason.cause;
+				if (!(cause instanceof ErrnoException) || cause.code !== "ENOTDIR") return error;
+				const pieces = path.split("/");
+				for (let index = 1; index < pieces.length; index++) {
+					const prefix = pieces.slice(0, index + 1).join("/");
+					const resolved = resolvePath(volume, prefix === "" ? "/" : prefix);
+					if ("code" in resolved) {
+						return resolved.code === "ENOENT" ? errnoError("makeDirectory", path, "ENOENT", undefined) : error;
 					}
-					return error;
-				}),
-			);
-		const handle: MemoryFileSystemHandle = {
-			fileSystem,
-			volume,
-			layer: Layer.merge(Layer.succeedContext(handleContext({ fileSystem, volume })), Path.layer),
-			sync,
-			promises: makePromisesFileSystem(volume),
-			root,
-			withFaults: (faults) => ({
-				sync: MemoryFileSystem.syncFileSystem(volume, { faults: faults.sync }),
-				promises: MemoryFileSystem.promisesFileSystem(volume, { faults: faults.promises }),
+				}
+				return error;
 			}),
-			write: (path, content) =>
-				runMutation(
-					Effect.andThen(
-						ensureParent(at(path)),
-						P.isString(content) ? raw.writeFileString(at(path), content) : raw.writeFile(at(path), content),
-					),
-					"writeFile",
-					path,
+		);
+	const handle: MemoryFileSystemHandle = {
+		fileSystem,
+		volume,
+		layer: Layer.merge(Layer.succeedContext(handleContext({ fileSystem, volume })), Path.layer),
+		sync,
+		promises: makePromisesFileSystem(volume),
+		root,
+		withFaults: (faults) => ({
+			sync: MemoryFileSystem.syncFileSystem(volume, { faults: faults.sync }),
+			promises: MemoryFileSystem.promisesFileSystem(volume, { faults: faults.promises }),
+		}),
+		write: (path, content) =>
+			runMutation(
+				Effect.andThen(
+					ensureParent(at(path)),
+					P.isString(content) ? raw.writeFileString(at(path), content) : raw.writeFile(at(path), content),
 				),
-			mkdir: (path) => runMutation(mkdirSync(at(path)), "makeDirectory", path),
-			remove: (path) => runMutation(raw.remove(at(path), { recursive: true }), "remove", path),
-			// Only the link's own path resolves against the root; the target text is stored verbatim.
-			symlink: (target, path) =>
-				runMutation(Effect.andThen(ensureParent(at(path)), raw.symlink(target, at(path))), "symlink", path),
-		};
-		return handle;
-	});
+				"writeFile",
+				path,
+			),
+		mkdir: (path) => runMutation(mkdirSync(at(path)), "makeDirectory", path),
+		remove: (path) => runMutation(raw.remove(at(path), { recursive: true }), "remove", path),
+		// Only the link's own path resolves against the root; the target text is stored verbatim.
+		symlink: (target, path) =>
+			runMutation(Effect.andThen(ensureParent(at(path)), raw.symlink(target, at(path))), "symlink", path),
+	};
+	return handle;
+});
 
 /**
  * An in-memory implementation of core Effect's `FileSystem` service: an
@@ -1062,7 +1083,7 @@ export class MemoryFileSystem {
 	 */
 	static readonly failTimes = (times: number, error: PlatformError.PlatformError): MemoryFileSystemTransientFault => {
 		if (!Number.isInteger(times) || times < 0) {
-			throw new RangeError(`failTimes: times must be a non-negative integer, got ${String(times)}`);
+			throw InvalidFaultCountError.make({ message: `failTimes: times must be a non-negative integer, got ${String(times)}` });
 		}
 		return { _tag: "MemoryFileSystemTransientFault", times, error };
 	};
@@ -1120,8 +1141,10 @@ export class MemoryFileSystem {
 	): MemoryFileSystemSeedFile => ({
 		_tag: "MemoryFileSystemSeedFile",
 		content,
-		...(options?.mode !== undefined ? { mode: options.mode } : {}),
-		...(options?.mtime !== undefined ? { mtime: options.mtime } : {}),
+		...O.getSomesStruct({
+			mode: O.fromUndefinedOr(options?.mode),
+			mtime: O.fromUndefinedOr(options?.mtime),
+		}),
 	});
 
 	/**
@@ -1137,7 +1160,7 @@ export class MemoryFileSystem {
 	 */
 	static readonly directory = (options?: { readonly mode?: number | undefined }): MemoryFileSystemSeedDirectory => ({
 		_tag: "MemoryFileSystemSeedDirectory",
-		...(options?.mode !== undefined ? { mode: options.mode } : {}),
+		...O.getSomesStruct({ mode: O.fromUndefinedOr(options?.mode) }),
 	});
 
 	/**

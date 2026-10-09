@@ -8,6 +8,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
+import { UnknownFaultKeyError } from "../../effected/memfs/internal/faults.ts";
 import { runMutation } from "../../effected/memfs/internal/ports.ts";
 import { denied, thrown } from "./helpers.ts";
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
@@ -295,7 +296,7 @@ describe("MemoryFileSystem.makeSync", () => {
 		assert.isTrue((await vol.promises.stat("/a.txt")).isFile());
 		assert.throws(
 			() => vol.withFaults({ sync: deliberatelyInvalid<never>({ readFileSting: () => undefined }) }),
-			RangeError,
+			UnknownFaultKeyError,
 			/readFileSting/,
 		);
 	});

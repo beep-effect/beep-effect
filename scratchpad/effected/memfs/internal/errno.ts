@@ -14,6 +14,7 @@
 // - Thrown errors (the ports, `makeSync`): `nodeErrno` builds what a sync
 //   `node:fs` call throws — `code`, `syscall`, and `path` when the syscall is
 //   path-based — with node's message format.
+import * as Match from "effect/Match";
 import * as Data from "effect/Data";
 import { dual } from "effect/Function";
 import type { PlatformError, SystemErrorTag } from "effect/PlatformError";
@@ -58,41 +59,25 @@ export const errnoMessages: { readonly [Code in ErrnoCode]: string } = {
 
 // Mirrors `handleErrnoException` in @effect/platform-node-shared: only these
 // codes map to a specific tag, everything else is "Unknown".
-export const errnoTag = (code: string | undefined): SystemErrorTag => {
-	switch (code) {
-		case "ENOENT":
-			return "NotFound";
-		case "EACCES":
-			return "PermissionDenied";
-		case "EEXIST":
-			return "AlreadyExists";
-		case "EISDIR":
-		case "ENOTDIR":
-		case "ELOOP":
-			return "BadResource";
-		case "EBUSY":
-			return "Busy";
-		default:
-			return "Unknown";
-	}
-};
+export const errnoTag = Match.type<string | undefined>().pipe(
+	Match.when("ENOENT", (): SystemErrorTag => "NotFound"),
+	Match.when("EACCES", (): SystemErrorTag => "PermissionDenied"),
+	Match.when("EEXIST", (): SystemErrorTag => "AlreadyExists"),
+	Match.whenOr("EISDIR", "ENOTDIR", "ELOOP", (): SystemErrorTag => "BadResource"),
+	Match.when("EBUSY", (): SystemErrorTag => "Busy"),
+	Match.orElse((): SystemErrorTag => "Unknown"),
+);
 
 // The code to REPORT for a failure that carries no errno of its own (an
 // injected fault, a model limit). NOT the inverse of `errnoTag`, which is
 // many-to-one (EISDIR/ENOTDIR/ELOOP all map to BadResource): only the three
 // tags with one obvious code get it, and everything else is `EIO`.
-export const fallbackErrnoForTag = (tag: string): string => {
-	switch (tag) {
-		case "NotFound":
-			return "ENOENT";
-		case "AlreadyExists":
-			return "EEXIST";
-		case "PermissionDenied":
-			return "EACCES";
-		default:
-			return "EIO";
-	}
-};
+export const fallbackErrnoForTag = Match.type<string>().pipe(
+	Match.when("NotFound", () => "ENOENT"),
+	Match.when("AlreadyExists", () => "EEXIST"),
+	Match.when("PermissionDenied", () => "EACCES"),
+	Match.orElse(() => "EIO"),
+);
 
 /** The `cause` of an errno-backed failure: an `Error` carrying node's `code` (and `path` for path operations). */
 export class ErrnoException extends Data.TaggedError("ErrnoException")<{ readonly code: ErrnoCode; readonly path: string | undefined; readonly message: string }> {

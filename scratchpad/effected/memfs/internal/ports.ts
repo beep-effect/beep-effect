@@ -125,7 +125,7 @@ const settle = <A>(f: () => A): Promise<Awaited<A>> => {
 /**
  * Wraps each named member of `port` so its handler runs first: a handler may
  * throw, return a replacement, or return `undefined` to delegate. An unknown
- * member name throws `RangeError` at construction. With `async`, the whole
+ * member name throws `UnknownFaultKeyError` at construction. With `async`, the whole
  * interception runs inside `settle`, so a handler that throws synchronously
  * REJECTS — as a real `fs/promises` call does — instead of throwing.
  */
@@ -140,7 +140,7 @@ export const withFaults: {
 ): Port => {
 	if (faults === undefined) return port;
 	assertKnownFaultKeys(faults, port, subject);
-	const out = Object.assign({}, port);
+	const out = { ...port };
 	const entries: ReadonlyArray<readonly [string, unknown]> = R.toEntries(faults);
 	for (const [name, handler] of entries) {
 		if (!P.hasProperty(port, name)) continue;

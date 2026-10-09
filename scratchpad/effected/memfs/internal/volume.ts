@@ -40,6 +40,10 @@
 //   bytes, glob roots, negative truncate).
 // - Case folding: State.caseSensitive, lookupEntry, case-only rename.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import * as HashSet from "effect/HashSet";
+import * as S from "effect/Schema";
 import type * as Cause from "effect/Cause";
 import * as Brand from "effect/Brand";
 import * as ByteSize from "effect/ByteSize";
@@ -58,6 +62,10 @@ import * as Stream from "effect/Stream";
 import type { ErrnoCode } from "./errno.ts";
 import { ErrnoException, errnoError } from "./errno.ts";
 import * as P from "effect/Predicate";
+
+const $I = $ScratchpadId.create("effected/memfs/internal/volume");
+
+class VolumeInvariantError extends S.TaggedError<VolumeInvariantError>($I`VolumeInvariantError`)("VolumeInvariantError", { message: S.String }) {}
 
 const { badArgument, systemError } = PlatformErrorNs;
 type PlatformError = PlatformErrorNs.PlatformError;
@@ -878,8 +886,8 @@ const makeDirectory = (volume: Volume) =>
 	) {
 		const method = "makeDirectory";
 		yield* validateMode(method, options?.mode);
-		return yield* volume.mutate((state) =>
-			Effect.gen(function* () {
+		return yield* volume.mutate(
+			Effect.fnUntraced(function* (state) {
 				let nextState = state;
 				const recursive = options?.recursive === true;
 				const pieces = path.split("/").filter((piece) => piece.length > 0);
@@ -964,8 +972,8 @@ const makeDirectory = (volume: Volume) =>
 const link = (volume: Volume) =>
 	Effect.fnUntraced(function* (fromPath: string, toPath: string) {
 		const method = "link";
-		return yield* volume.mutate((state) =>
-			Effect.gen(function* () {
+		return yield* volume.mutate(
+			Effect.fnUntraced(function* (state) {
 				const source = yield* resolve(state, fromPath, { method }).pipe(
 					Effect.mapError((error) => withSystemErrorPath(error, method, fromPath)),
 				);
@@ -986,8 +994,8 @@ const link = (volume: Volume) =>
 const symlink = (volume: Volume) =>
 	Effect.fnUntraced(function* (target: string, path: string) {
 		const method = "symlink";
-		return yield* volume.mutate((state) =>
-			Effect.gen(function* () {
+		return yield* volume.mutate(
+			Effect.fnUntraced(function* (state) {
 				const parent = yield* resolveParent(state, path, method);
 				if (target.includes("\0")) {
 					return yield* argumentError(method, "target must not contain a null byte");
@@ -1008,8 +1016,8 @@ const symlink = (volume: Volume) =>
 
 const readLink = (volume: Volume) =>
 	Effect.fnUntraced(function* (path: string) {
-		return yield* volume.withState((state) =>
-			Effect.gen(function* () {
+		return yield* volume.withState(
+			Effect.fnUntraced(function* (state) {
 				const resolved = yield* resolve(state, path, { followFinalSymbolicLink: false, method: "readLink" });
 				if (resolved.entry._tag !== "SymbolicLink") {
 					return yield* errnoError("readLink", path, "EINVAL", "Not a symbolic link");
@@ -1030,8 +1038,8 @@ const remove = (volume: Volume) =>
 		options?: { readonly recursive?: boolean | undefined; readonly force?: boolean | undefined },
 	) {
 		const method = "remove";
-		return yield* volume.mutate((state) =>
-			Effect.gen(function* () {
+		return yield* volume.mutate(
+			Effect.fnUntraced(function* (state) {
 				const target = yield* Effect.result(resolveEntry(state, path, method));
 				if (target._tag === "Failure") {
 					if (options?.force === true && target.failure.reason._tag === "NotFound") {
@@ -1074,8 +1082,8 @@ const containsDirectory = (state: State, ancestor: Inode, candidate: Inode): boo
 const rename = (volume: Volume) =>
 	Effect.fnUntraced(function* (oldPath: string, newPath: string) {
 		const method = "rename";
-		return yield* volume.mutate((state) =>
-			Effect.gen(function* () {
+		return yield* volume.mutate(
+			Effect.fnUntraced(function* (state) {
 				const source = yield* resolveEntry(state, oldPath, method);
 				// A directory may be renamed onto a trailing-slash path that does not
 				// exist yet; a non-directory cannot (ENOTDIR on Linux).
@@ -1522,8 +1530,8 @@ const copyEntryUnlocked = Effect.fnUntraced(function* (
 
 const copyFile = (volume: Volume) =>
 	Effect.fnUntraced(function* (fromPath: string, toPath: string) {
-		return yield* volume.mutate((state) =>
-			Effect.gen(function* () {
+		return yield* volume.mutate(
+			Effect.fnUntraced(function* (state) {
 				const existing = yield* Effect.result(resolve(state, toPath, { method: "copyFile" }));
 				const [nextState, changed] = yield* copyFileUnlocked(state, fromPath, toPath);
 				if (!changed) return transitionResult(nextState, undefined);
@@ -1545,8 +1553,8 @@ const copy = (volume: Volume) =>
 		toPath: string,
 		options?: { readonly overwrite?: boolean | undefined; readonly preserveTimestamps?: boolean | undefined },
 	) {
-		return yield* volume.mutate((state) =>
-			Effect.gen(function* () {
+		return yield* volume.mutate(
+			Effect.fnUntraced(function* (state) {
 				const existing = yield* Effect.result(
 					resolve(state, toPath, {
 						followFinalSymbolicLink: false,
@@ -1649,7 +1657,7 @@ const openDescriptorUnlocked: (
 			nextState = createdState;
 			let created = yield* getInode(nextState, inode, "open", path);
 			if (created._tag !== "File") {
-				return yield* Effect.die(new Error("MemoryFileSystem.createFile produced a non-file inode"));
+				return yield* Effect.die(VolumeInvariantError.make({ message: "MemoryFileSystem.createFile produced a non-file inode" }));
 			}
 			if (options?.mode !== undefined) {
 				created = {
@@ -1669,7 +1677,7 @@ const openDescriptorUnlocked: (
 			nextState = linked.success;
 			const linkedEntry = yield* getInode(nextState, inode, "open", path);
 			if (linkedEntry._tag !== "File") {
-				return yield* Effect.die(new Error("MemoryFileSystem.linkInode produced a non-file inode"));
+				return yield* Effect.die(VolumeInvariantError.make({ message: "MemoryFileSystem.linkInode produced a non-file inode" }));
 			}
 			entry = linkedEntry;
 		}
@@ -1703,8 +1711,8 @@ const openDescriptor: (
 	path: string,
 	options?: OpenOptions,
 ) => Effect.Effect<FileDescriptor, PlatformError> = Effect.fnUntraced(function* (volume, path, options) {
-	return yield* volume.mutate((state) =>
-		Effect.gen(function* () {
+	return yield* volume.mutate(
+		Effect.fnUntraced(function* (state) {
 			const existing = yield* Effect.result(resolve(state, path, { method: "open" }));
 			const [nextState, descriptor] = yield* openDescriptorUnlocked(state, path, options);
 			const mode = openMode(options?.flag ?? "r");
@@ -1853,8 +1861,8 @@ const writeDescriptorUnlocked = Effect.fnUntraced(function* (
 });
 
 const writeDescriptor = (volume: Volume, fd: FileDescriptor, buffer: Uint8Array, method: string) =>
-	volume.mutate((state) =>
-		Effect.gen(function* () {
+	volume.mutate(
+		Effect.fnUntraced(function* (state) {
 			const [nextState, written] = yield* writeDescriptorUnlocked(state, fd, buffer, method);
 			if (written === 0) return transitionResult(nextState, written);
 			const descriptor = O.getOrUndefined(HashMap.get(nextState.descriptors, fd));
@@ -1934,8 +1942,8 @@ class MemoryFile implements FileSystem.File {
 		const volume = this.volume;
 		const fd = this.fd;
 		return Effect.flatMap(validateSize("truncate", length), (size) =>
-			volume.mutate((state) =>
-				Effect.gen(function* () {
+			volume.mutate(
+				Effect.fnUntraced(function* (state) {
 					const [descriptor, entry] = yield* getOpenFile(state, fd, "truncate", "writable");
 					const now = yield* DateTime.now;
 					const data = yield* allocateBytes(size, fd, "truncate");
@@ -2030,8 +2038,8 @@ const collectDirectoryEntries = (
 
 const readDirectory = (volume: Volume) =>
 	Effect.fnUntraced(function* (path: string, options?: { readonly recursive?: boolean | undefined }) {
-		return yield* volume.mutate((state) =>
-			Effect.gen(function* () {
+		return yield* volume.mutate(
+			Effect.fnUntraced(function* (state) {
 				const resolved = yield* resolve(state, path, { method: "readDirectory" });
 				if (resolved.entry._tag !== "Directory") {
 					return yield* badResource("readDirectory", path, "ENOTDIR");
@@ -2047,8 +2055,8 @@ const readDirectory = (volume: Volume) =>
 
 const readFile = (volume: Volume) =>
 	Effect.fnUntraced(function* (path: string) {
-		return yield* volume.mutate((state) =>
-			Effect.gen(function* () {
+		return yield* volume.mutate(
+			Effect.fnUntraced(function* (state) {
 				const resolved = yield* resolve(state, path, { method: "readFile" });
 				if (resolved.entry._tag !== "File") {
 					return yield* badResource("readFile", path, "EISDIR");
@@ -2067,8 +2075,8 @@ const writeFile =
 		options?: { readonly flag?: FileSystem.OpenFlag | undefined; readonly mode?: number | undefined },
 	): Effect.Effect<void, PlatformError> =>
 		volume
-			.mutate((state) =>
-				Effect.gen(function* () {
+			.mutate(
+				Effect.fnUntraced(function* (state) {
 					const existing = yield* Effect.result(resolve(state, path, { method: "writeFile" }));
 					let [nextState, descriptor] = yield* openDescriptorUnlocked(state, path, {
 						flag: options?.flag ?? "w",
@@ -2108,8 +2116,8 @@ const allocatePathBytes = (length: number, method: string, path: string) =>
 const truncate = (volume: Volume) =>
 	Effect.fnUntraced(function* (path: string, length?: number) {
 		const size = yield* validateSize("truncate", length);
-		return yield* volume.mutate((state) =>
-			Effect.gen(function* () {
+		return yield* volume.mutate(
+			Effect.fnUntraced(function* (state) {
 				const resolved = yield* resolve(state, path, { method: "truncate" });
 				if (resolved.entry._tag !== "File") {
 					return yield* badResource("truncate", path, "EISDIR");
@@ -2138,8 +2146,8 @@ const stat = (volume: Volume) =>
 const chmod = (volume: Volume) =>
 	Effect.fnUntraced(function* (path: string, mode: number) {
 		yield* validateMode("chmod", mode);
-		return yield* volume.mutate((state) =>
-			Effect.gen(function* () {
+		return yield* volume.mutate(
+			Effect.fnUntraced(function* (state) {
 				const resolved = yield* resolve(state, path, { method: "chmod" });
 				const now = yield* DateTime.now;
 				const nextState = setInode(state, {
@@ -2161,8 +2169,8 @@ const chown = (volume: Volume) =>
 	Effect.fnUntraced(function* (path: string, uid: number, gid: number) {
 		yield* validateOwner("chown", "uid", uid);
 		yield* validateOwner("chown", "gid", gid);
-		return yield* volume.mutate((state) =>
-			Effect.gen(function* () {
+		return yield* volume.mutate(
+			Effect.fnUntraced(function* (state) {
 				const resolved = yield* resolve(state, path, { method: "chown" });
 				const now = yield* DateTime.now;
 				const nextState = setInode(state, {
@@ -2189,8 +2197,8 @@ const utimes = (volume: Volume) =>
 	Effect.fnUntraced(function* (path: string, atime: Date | number, mtime: Date | number) {
 		const accessTime = yield* dateTimeInput("utime", "atime", atime);
 		const modificationTime = yield* dateTimeInput("utime", "mtime", mtime);
-		return yield* volume.mutate((state) =>
-			Effect.gen(function* () {
+		return yield* volume.mutate(
+			Effect.fnUntraced(function* (state) {
 				const resolved = yield* resolve(state, path, { method: "utime" });
 				const now = yield* DateTime.now;
 				const nextState = setInode(state, {
@@ -2381,7 +2389,7 @@ interface GlobCharacterClassAtom {
 	readonly escaped: boolean;
 }
 
-const globSyntaxCharacters = new Set(["*", "?", "[", "]", "{", "}", ",", "\\"]);
+const globSyntaxCharacters: HashSet.HashSet<string> = HashSet.make("*", "?", "[", "]", "{", "}", ",", "\\");
 
 const findBraceExpansion = (pattern: string): BraceExpansion | undefined => {
 	for (let start = 0; start < pattern.length; start++) {
@@ -2550,7 +2558,7 @@ const parseGlobSegment = Effect.fnUntraced(function* (method: string, segment: s
 				return yield* argumentError(method, "patterns must not end with an escape");
 			}
 			const value = segment.charAt(index);
-			if (globSyntaxCharacters.has(value)) {
+			if (HashSet.has(globSyntaxCharacters, value)) {
 				tokens.push(GlobToken.Literal({ value }));
 			} else {
 				tokens.push(GlobToken.Literal({ value: "\\" }));
@@ -2655,9 +2663,9 @@ const matchesGlob = (
 	fold = false,
 ): boolean => {
 	if (pattern.directoryOnly && !directory) return false;
-	let next = Array.from({ length: path.length + 1 }, (_, index) => index === path.length);
+	let next = A.makeBy(path.length + 1, (index) => index === path.length);
 	for (let patternIndex = pattern.segments.length - 1; patternIndex >= 0; patternIndex--) {
-		const current = Array.from({ length: path.length + 1 }, () => false);
+		const current = A.makeBy(path.length + 1, () => false);
 		const segment = pattern.segments[patternIndex];
 		if (segment === undefined) continue;
 		if (segment._tag === "Globstar") {
@@ -2686,8 +2694,8 @@ const glob = (volume: Volume) =>
 			compileGlobPatterns("glob", excluded),
 		).pipe(Effect.map((patterns) => patterns.flat()));
 		const rootPath = options?.root ?? "/";
-		return yield* volume.withState((state) =>
-			Effect.gen(function* () {
+		return yield* volume.withState(
+			Effect.fnUntraced(function* (state) {
 				// KIT EXTENSION (errno fidelity): node's `fs.glob` answers an empty
 				// match set for a root that is missing, not a directory, or
 				// unresolvable — it never fails on the root. A malformed root (a NUL
@@ -2805,8 +2813,8 @@ const watch = (volume: Volume) => (path: string, options?: FileSystem.WatchOptio
 	Stream.unwrap(
 		Effect.map(
 			Effect.acquireRelease(
-				volume.withState((state) =>
-					Effect.gen(function* () {
+				volume.withState(
+					Effect.fnUntraced(function* (state) {
 						const resolved = yield* resolve(state, path, { method: "stat" });
 						const subscription: WatchSubscription = {
 							path: resolved.path,
@@ -2874,12 +2882,11 @@ const toFileSystem = (volume: Volume): FileSystem.FileSystem =>
 		writeFile: writeFile(volume),
 	});
 
-const makeReadyVolume = (options: EngineOptions): Effect.Effect<Volume> =>
-	Effect.gen(function* () {
-		const volume = yield* makeVolume(options);
-		yield* Effect.orDie(makeDirectory(volume)(TEMP_DIR, { recursive: true }));
-		return volume;
-	});
+const makeReadyVolume: (options: EngineOptions) => Effect.Effect<Volume> = Effect.fn("makeReadyVolume")(function* (options) {
+	const volume = yield* makeVolume(options);
+	yield* Effect.orDie(makeDirectory(volume)(TEMP_DIR, { recursive: true }));
+	return volume;
+});
 
 /** @internal */
 export const make: Effect.Effect<FileSystem.FileSystem> = Effect.map(

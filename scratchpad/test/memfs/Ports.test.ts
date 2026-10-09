@@ -3,6 +3,7 @@ import * as S from "effect/Schema";
 import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
+import { UnknownFaultKeyError } from "../../effected/memfs/internal/faults.ts";
 import { ErrnoFields, thrown } from "./helpers.ts";
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
@@ -193,16 +194,16 @@ describe("unknown fault keys are a wiring bug", () => {
 	it.effect("a port rejects an unknown member name at construction, naming it", () =>
 		Effect.gen(function* () {
 			const { volume } = yield* tree;
-			assert.throws(() => MemoryFileSystem.syncFileSystem(volume, { faults: typo }), RangeError, /readFileSting/);
-			assert.throws(() => MemoryFileSystem.promisesFileSystem(volume, { faults: typo }), RangeError, /readFileSting/);
+			assert.throws(() => MemoryFileSystem.syncFileSystem(volume, { faults: typo }), UnknownFaultKeyError, /readFileSting/);
+			assert.throws(() => MemoryFileSystem.promisesFileSystem(volume, { faults: typo }), UnknownFaultKeyError, /readFileSting/);
 		}),
 	);
 
 	it.effect("makeFaulty rejects an unknown method name at construction, naming it", () =>
 		Effect.gen(function* () {
 			const fs = yield* MemoryFileSystem.make;
-			assert.throws(() => MemoryFileSystem.makeFaulty(fs, typo), RangeError, /readFileSting/);
-			assert.throws(() => MemoryFileSystem.makeFaulty(fs, () => typo), RangeError, /readFileSting/);
+			assert.throws(() => MemoryFileSystem.makeFaulty(fs, typo), UnknownFaultKeyError, /readFileSting/);
+			assert.throws(() => MemoryFileSystem.makeFaulty(fs, () => typo), UnknownFaultKeyError, /readFileSting/);
 		}),
 	);
 });

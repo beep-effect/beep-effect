@@ -16,6 +16,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
+import { InvalidFaultCountError } from "../../effected/memfs/MemoryFileSystem.ts";
 import { denied } from "./helpers.ts";
 
 // The downstream lockdown shape: a real tree the walk must recurse into.
@@ -303,9 +304,9 @@ describe("MemoryFileSystem.failTimes", () => {
 	);
 
 	it("rejects a negative or fractional count at construction — a wiring bug, not runtime input", () => {
-		assert.throws(() => MemoryFileSystem.failTimes(-1, busy), RangeError);
-		assert.throws(() => MemoryFileSystem.failTimes(1.5, busy), RangeError);
-		assert.throws(() => MemoryFileSystem.failTimes(Number.NaN, busy), RangeError);
+		assert.throws(() => MemoryFileSystem.failTimes(-1, busy), InvalidFaultCountError);
+		assert.throws(() => MemoryFileSystem.failTimes(1.5, busy), InvalidFaultCountError);
+		assert.throws(() => MemoryFileSystem.failTimes(Number.NaN, busy), InvalidFaultCountError);
 	});
 
 	it.effect("failTimes(0) never fails — it delegates from the first call", () =>

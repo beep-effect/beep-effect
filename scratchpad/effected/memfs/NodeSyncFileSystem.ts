@@ -11,6 +11,8 @@
  * @packageDocumentation
  */
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 import type * as PlatformErrorNs from "effect/PlatformError";
 import * as BI from "effect/BigInt";
 import * as ByteSize from "effect/ByteSize";
@@ -27,6 +29,23 @@ import { errnoTag } from "./internal/errno.ts";
 const NFS = process.getBuiltinModule("node:fs");
 
 type PlatformErrorType = PlatformErrorNs.PlatformError;
+
+const $I = $ScratchpadId.create("effected/memfs/NodeSyncFileSystem");
+
+class UnsafeIntegerError extends S.TaggedError<UnsafeIntegerError>($I`UnsafeIntegerError`)("UnsafeIntegerError", {
+	message: S.String,
+}) {}
+
+class ReadOnlyFileSystemError extends S.TaggedError<ReadOnlyFileSystemError>($I`ReadOnlyFileSystemError`)("ReadOnlyFileSystemError", {
+	message: S.String,
+}) {}
+
+class InvalidPathArgumentError extends S.TaggedError<InvalidPathArgumentError>($I`InvalidPathArgumentError`)("InvalidPathArgumentError", {
+	message: S.String,
+	code: S.Literal("ERR_INVALID_ARG_TYPE"),
+}) {
+	override readonly name = "TypeError";
+}
 
 // Mirrors @effect/platform-node-shared's `handleErrnoException`: the tag comes
 // from the code through the shared `errnoTag` mapping (anything unmapped,
@@ -63,7 +82,7 @@ const attempt = <A>(method: string, path: string, f: () => A): Effect.Effect<A, 
 const bigintToNumber = (value: bigint, field: string): number => {
 	const number = Number(value);
 	if (!Number.isSafeInteger(number)) {
-		throw new RangeError(`${field} exceeds the safe integer range: ${value}`);
+		throw UnsafeIntegerError.make({ message: `${field} exceeds the safe integer range: ${value}` });
 	}
 	return number;
 };
@@ -107,7 +126,7 @@ const fileInfo = (stat: import("node:fs").BigIntStats): FileSystem.File.Info => 
 // program handed this filesystem that tries to write has a wiring bug, and a
 // typed failure (what `FileSystem.makeNoop` answers) could be caught and
 // silently absorbed as "not found".
-const readOnly = (member: string) => new Error(`NodeSyncFileSystem is read-only: ${member} is not supported`);
+const readOnly = (member: string) => ReadOnlyFileSystemError.make({ message: `NodeSyncFileSystem is read-only: ${member} is not supported` });
 const unsupported = (member: string) => () => Effect.die(readOnly(member));
 
 const make: FileSystem.FileSystem = FileSystem.make({
@@ -143,7 +162,8 @@ const make: FileSystem.FileSystem = FileSystem.make({
 					errnoException(
 						"readFile",
 						path,
-						Object.assign(new TypeError(`The "path" argument must be of type string. Received ${typeof path}`), {
+						InvalidPathArgumentError.make({
+							message: `The "path" argument must be of type string. Received ${typeof path}`,
 							code: "ERR_INVALID_ARG_TYPE",
 						}),
 					),
