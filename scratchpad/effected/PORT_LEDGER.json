@@ -3,10 +3,10 @@
   "effectedCommit": "af7566a9da2eff169cb74955efcc5ede1e5de9f8",
   "startedAt": "2026-10-07T06:36:54.420Z",
   "lastCheckpoint": {
-    "module": "github-actions",
-    "stage": 2,
-    "commit": "d60d476ac65f3c98600a8616b0a7f3957d2e1faa",
-    "at": "2026-10-09T16:24:06.816Z"
+    "module": "github-commands",
+    "stage": 3,
+    "commit": null,
+    "at": "2026-10-09T16:49:32.680Z"
   },
   "rows": [
     {
@@ -3580,7 +3580,7 @@
       "module": "github-commands",
       "wave": 1,
       "position": 9,
-      "stage": 2,
+      "stage": 3,
       "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
@@ -3710,13 +3710,18 @@
         },
         {
           "stage": 1,
+          "sha": "27c4f64603123dee96008f6f4d87d518e9509c94"
+        },
+        {
+          "stage": 2,
           "sha": null
         }
       ],
       "blocked": null,
       "notes": [
         "2026-10-09T11:19:57.753Z S1: green under tsgo, oxlint and the four beep laws; upstream tests pass; audit green (parity strict)",
-        "2026-10-09T16:02:11.694Z S2: S2 green: docgen with all enforcement flags and the JSDoc law; carriers converted; README adapted (section 10.3)"
+        "2026-10-09T16:02:11.694Z S2: S2 green: docgen with all enforcement flags and the JSDoc law; carriers converted; README adapted (section 10.3)",
+        "2026-10-09T16:49:32.680Z S3: S3 green: per-file 100 percent coverage, canon detectors clean (0 ledgered exceptions), property floor"
       ],
       "closedAt": null
     },
