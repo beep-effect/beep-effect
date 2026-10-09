@@ -1,4 +1,5 @@
 import {
+  decodeEffectVitestFindingJson,
   EffectVitestFinding,
   EffectVitestReplacement,
   readEffectVitestInventory,
@@ -7,7 +8,7 @@ import {
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
-import { assertFalse, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
+import { assertFalse, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
@@ -89,6 +90,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("rows filesystem", (it) 
       );
       assertTrue(O.isSome(generated), "Expected the detector-owned JSONL file alongside unrelated files");
       const first = yield* fs.readFileString(path.join(output, generated.value));
+      assertSome(decodeEffectVitestFindingJson(first), row);
 
       yield* writeEffectVitestRows(root, "rows", [row]);
       const second = yield* fs.readFileString(path.join(output, generated.value));

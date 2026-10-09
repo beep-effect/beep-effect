@@ -754,6 +754,44 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })((it) => {
           });
           const reporterVocabulary = yield* projectReporterVocabulary(reporterData.reporters, []);
 
+          expect(courtVocabulary).toHaveLength(2);
+          expect(reporterVocabulary).toHaveLength(2);
+          expect(
+            A.map(courtVocabulary, ({ id, semanticKey, contextualAliases }) => ({ id, semanticKey, contextualAliases }))
+          ).toEqual(
+            expect.arrayContaining([
+              {
+                id: "first",
+                semanticKey: "court:first",
+                contextualAliases: [{ alias: "Shared", context: "One: First Court" }],
+              },
+              {
+                id: "second",
+                semanticKey: "court:second",
+                contextualAliases: [{ alias: "Shared", context: "Two: Second Court" }],
+              },
+            ])
+          );
+          expect(
+            A.map(reporterVocabulary, ({ id, semanticKey, contextualAliases }) => ({
+              id,
+              semanticKey,
+              contextualAliases,
+            }))
+          ).toEqual(
+            expect.arrayContaining([
+              {
+                id: "reporter:1bde066d21114aebbc288a9c",
+                semanticKey: "Shared\u001fstate\u001fFirst Reporter",
+                contextualAliases: [{ alias: "Shared", context: "First Reporter; cite-type=state; editions=" }],
+              },
+              {
+                id: "reporter:c5c83b9042036ff662faa572",
+                semanticKey: "Shared\u001ffederal\u001fSecond Reporter",
+                contextualAliases: [{ alias: "Shared", context: "Second Reporter; cite-type=federal; editions=" }],
+              },
+            ])
+          );
           expect(courtVocabulary.every(({ contextualAliases }) => contextualAliases.length === 1)).toBe(true);
           expect(reporterVocabulary.every(({ contextualAliases }) => contextualAliases.length === 1)).toBe(true);
         },

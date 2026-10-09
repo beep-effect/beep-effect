@@ -61,6 +61,8 @@ nothing was adopted or discarded. P0 Research is complete.
 
 ## Latest Evidence
 
+Lane V [PR #1575](https://github.com/beep-effect/beep-effect/pull/1575) is published and ready. [Stage 4 reconciliation](./history/receipts/stage-4-vitest-reconciliation.md) preserves all 46 source worktrees, records every disposition, and ties the generated 1,853 / 716 open / 1,137 exceptions inventory to final code. Full repo-cli verification and every local parity stage pass; independent source review is terminal zero and both actionable hosted threads are resolved. The R105 repair preview, 716-row R102 frontier, hosted merge gate and retirement remain separate open work.
+
 H1 OSV wave [PR #1562](https://github.com/beep-effect/beep-effect/pull/1562) ready for review;
 Run 4 integrates main repairs #1564/#1565, corrects the stored-response cache proof
 and repairs the census table; saved terminal parity remains attributed to its proof heads;

@@ -1,3 +1,42 @@
+> Run 4 integration publication: [PR #1575](https://github.com/beep-effect/beep-effect/pull/1575) is ready. Full repo-cli verification and every local parity stage pass at source `4be0599a18`; final main merge `7ef36e8020` changes only exploration documents. Final inventory: 1,853 / 716 open / 1,137 exceptions. Source worktrees remain preserved. Hosted merge, separate R105 ports and R102 remediation remain open; P1/P2 active and P3 pending. Earlier proof banners describe their original snapshots.
+
+> Integration resumed, 2026-10-09: lane `rsc-v-vitest-canon` transfers the
+> unpublished continuation delta after #1506 and the six-file detector WIP onto
+> current main under Effect/Vitest 4.0.2. #1506 merged `c921d9e11d` as
+> `705ab128c0`; local consolidation `e4c608f9c1` was never its PR head.
+> P1/P2 remain active, P3 pending. Historical proof banners below describe their
+> original bases. See [the reconciliation receipt](../repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md).
+
+> Property-boundaries C4 qualified locally, 2026-10-06: source `5ba9351314`
+> fixes fourteen historical property rows. Node/Bun retain 915 original cases
+> plus four controls; typing and full package audit/docgen pass. Three wrapper
+> candidates remain open; one native-import exception is added. The baseline
+> remains 1,867 findings; P1/P2 active, P3 pending. See
+> [the final proof and limits](research/cli-property-boundaries-proof.md).
+
+> Property-boundaries C4 preparation, 2026-10-06: all fourteen historical human
+> rows remain open. The final calendar-exact source snapshot passes 919 cases
+> on Node/Bun and qualified direct typing; full package proof and parent review
+> acceptance remain pending. Detector/baseline mapping is proposed, unapplied.
+> See [the draft proof and its limits](research/cli-property-boundaries-proof.md).
+> Lifecycle and all P1/P2/P3 gates remain unchanged.
+
+> Native resource continuation, 2026-10-06: source `b286f35a4d` qualifies the
+> remaining nine historical resource findings. Node/Bun each pass 479 cases;
+> full package audit/docgen and independent review pass. The updated ledger
+> retains 212 open detector and 30 actionable human rows; the live baseline
+> remains 1,866 findings. This second source batch is not yet published.
+> See [its proof and limits](research/cli-resource-next-proof.md).
+> P1/P2 remain in progress and P3 remains pending.
+
+> C3 property-values reconciliation, 2026-10-06: source `9d74894c…` fixes seven
+> historical property rows after independent R3 closes the launcher P1 and
+> final Node/Bun137-case, compiler and full package proofs pass. Six selected
+> detector rows and the nonempty baseline are unchanged; lifecycle gates remain
+> open. See [current bounded proof](research/cli-property-values-proof.md) and
+> [exact lineage](research/cli-property-values-lineage.json). Older cohort and
+> status receipts below retain their dated provenance.
+
 > Continuation, 2026-10-06: work the existing repo-cli backlog in
 > `codex/effect-vitest-canon-continuation` on the installed 4.0.1 cohort.
 > PRs #1390, #1467 and #1468 are merged. P1/P2 remain in progress; P3 is pending.
@@ -22,7 +61,7 @@ The machine-readable state is in [ops/manifest.json](./ops/manifest.json).
 
 ## Mission
 
-Bring every in-scope test to canonical Effect Vitest rc.113 idioms, prove resource
+Bring every in-scope test to canonical Effect Vitest 4.0.2 idioms, prove resource
 and timing behavior, and enforce the result through a syntax-only lint ratchet.
 
 ## Read first

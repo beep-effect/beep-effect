@@ -20,26 +20,34 @@ import {
   YeetEnsuredPullRequest,
   YeetRunPlanModeOptions,
 } from "@beep/repo-cli/test/Yeet";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
 import { Command } from "effect/cli";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import { ChildProcessSpawner } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
+import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 import type { YeetExecutedStep, YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
 
 const runYeetCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
@@ -153,30 +161,101 @@ describe("yeet merge-loop command wiring", () => {
   });
 
   it.effect("dispatches the top-level publish and repair planners", () =>
-    Effect.forEach(
-      [
-        ["--plan"],
-        ["--plan", "--state-root", "/tmp/yeet-command-wiring-state"],
-        ["monitor", "--plan", "--state-root", "/tmp/yeet-command-wiring-state"],
-        ["repair", "--plan"],
-        ["status", "--plan"],
-        ["sweep", "--plan"],
-        ["pre-push-hook", "--plan"],
-      ],
-      // Hosted runners check out a detached HEAD, where publish/monitor refuse with a
-      // PR-branch-only guard after dispatch; this test proves dispatch, not the guard.
-      //
-      // Known residual: how far past the guard each route runs still depends on
-      // the checkout, so a workstation feature branch executes more of
-      // `Handler`/`Planner` here than a detached hosted HEAD does. The rows that
-      // difference can mint are the #1068 class. The publish plan — the one row
-      // it actually minted — is pinned deterministically by the
-      // "yeet publish plan wiring" block below; closing the rest needs a temp
-      // repository on a fixed branch plus a Turbo snapshot seam for
-      // `hydrateYeetRunContext`, which is its own change.
-      (args) => runYeetCommand(args).pipe(Effect.catchTag("YeetCommandError", () => Effect.void)),
-      { discard: true }
-    ).pipe(provideScopedLayer(commandTestLayer))
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* temporaryWorkingDirectory;
+      yield* fs.writeFileString(`${root}/bun.lock`, "");
+      yield* fs.writeFileString(
+        `${root}/package.json`,
+        yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))({ name: "yeet-command-fixture", workspaces: [] })
+      );
+      const encoder = new TextEncoder();
+      const handle = (output: string) =>
+        ChildProcessSpawner.makeHandle({
+          all: Stream.make(encoder.encode(output)),
+          exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+          getInputFd: () => Sink.drain,
+          getOutputFd: () => Stream.empty,
+          isRunning: Effect.succeed(false),
+          kill: () => Effect.void,
+          pid: ChildProcessSpawner.ProcessId(1),
+          stderr: Stream.empty,
+          stdin: Sink.drain,
+          stdout: Stream.make(encoder.encode(output)),
+          unref: Effect.succeed(Effect.void),
+        });
+      const spawner = ChildProcessSpawner.make((command) => {
+        if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected planner pipe");
+        const line = A.join([command.command, ...command.args], " ");
+        const responseFor = (responses: ReadonlyArray<readonly [string, string]>) =>
+          A.findFirst(responses, ([argument]) => A.contains(command.args, argument)).pipe(
+            O.map(([, output]) => output)
+          );
+        const response = Match.value(command.command).pipe(
+          Match.when("git", () =>
+            responseFor([
+              ["--abbrev-ref", "feat/yeet-command-wiring\n"],
+              ["--show-toplevel", `${root}\n`],
+              ["rev-parse", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n"],
+              ["diff", ""],
+              ["status", ""],
+              ["worktree", ""],
+              ["merge-base", ""],
+            ])
+          ),
+          Match.when("gh", () =>
+            responseFor([
+              [
+                "view",
+                '{"number":1,"headRefName":"feat/yeet-command-wiring","state":"OPEN","headRefOid":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}',
+              ],
+            ])
+          ),
+          Match.orElse(() =>
+            Str.includes("turbo")(line)
+              ? responseFor([
+                  ["--version", "2.5.0\n"],
+                  ["ls", '{"packages":{"count":0,"items":[]}}'],
+                  ["affected", '{"data":{"affectedTasks":{"length":0,"items":[]}}}'],
+                ])
+              : O.none()
+          )
+        );
+        return response.pipe(
+          O.match({
+            onNone: () => Effect.die(`unexpected planner invocation: ${line}`),
+            onSome: (output) => Effect.succeed(handle(output)),
+          })
+        );
+      });
+      yield* Effect.forEach(
+        [
+          ["--plan"],
+          ["--plan", "--state-root", "/tmp/yeet-command-wiring-state"],
+          ["monitor", "--plan", "--state-root", "/tmp/yeet-command-wiring-state"],
+          ["repair", "--plan"],
+          ["status", "--plan"],
+          ["sweep", "--plan"],
+          ["pre-push-hook", "--plan"],
+        ],
+        Effect.fnUntraced(function* (args) {
+          const logged = A.length(yield* TestConsole.logLines);
+          yield* runYeetCommand(args);
+          const lines = A.drop(yield* TestConsole.logLines, logged);
+          expect(
+            A.some(
+              lines,
+              (line) => line === "yeet plan" || (S.is(S.String)(line) && Str.startsWith("[yeet] sweep plan")(line))
+            )
+          ).toBe(true);
+        }),
+        { discard: true, concurrency: 1 }
+      ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+    }).pipe(
+      Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
+      Effect.provideServiceEffect(Console.Console, TestConsole.make),
+      provideScopedLayer(commandTestLayer)
+    )
   );
 
   it.each(["sweep", "merge", "reply"])("registers the %s subcommand", (name) => {
@@ -313,6 +392,21 @@ describe("yeet push-first publish plan wiring", () => {
     );
     return A.join(chunks, "");
   });
+
+  it.effect.prop(
+    "printed plans preserve schema-generated context and ordered command data",
+    [Arbitrary.schema(RepoRunPlan)],
+    Effect.fnUntraced(function* ([plan]) {
+      const decoded = yield* decodePlan(yield* printedPlan(plan));
+      const stepsWithoutEnvironment = (value: RepoRunPlan) =>
+        A.map(value.steps, ({ env: _env, ...step }) => RepoPlanStep.make(step));
+      return (
+        S.toEquivalence(RepoRunContext)(decoded.context, plan.context) &&
+        S.toEquivalence(S.Array(RepoPlanStep))(stepsWithoutEnvironment(decoded), stepsWithoutEnvironment(plan))
+      );
+    }),
+    { arbitrary: fcRuns(25) }
+  );
 
   it("plans the default publish as cheap-gates, preflight, push, draft PR, label, stamp, detached monitor", () => {
     expect(stepIds(publishPlan({ pr: true }))).toEqual([
