@@ -160,9 +160,10 @@ export class PackageJsonFormat {
 	 * // => { name: "p", version: "1.0.0" }
 	 * ```
 	 */
-	static sortValue<T extends { readonly [k: string]: unknown }>(value: T): T {
+	static sortValue<T extends { readonly [k: string]: unknown }>(value: T): T;
+	static sortValue(value: { readonly [k: string]: unknown }): { readonly [k: string]: unknown } {
 		if (!isJsonObject(value)) return value;
-		return sortKeys(value) as T;
+		return sortKeys(value);
 	}
 
 	/**
@@ -205,7 +206,7 @@ export class PackageJsonFormat {
 		// points cannot drift in ordering.
 		let parsed: unknown;
 		try {
-			parsed = JSON.parse(source) as unknown;
+			parsed = JSON.parse(source);
 		} catch (cause) {
 			return Result.fail(PackageJsonSyntaxError.make({ reason: "invalid-json", cause }));
 		}

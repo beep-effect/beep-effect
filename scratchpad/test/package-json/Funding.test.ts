@@ -18,11 +18,15 @@
 
 import { readFileSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
+import { assertDefined, assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
+import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { Funding, LenientManifest, Package, PackageManifest } from "../../effected/package-json/index.ts";
 
 const Json = S.fromJsonString(S.Unknown);
+const JsonObject = S.fromJsonString(S.Record(S.String, S.Unknown));
 
 const decode = <A, I>(schema: S.Codec<A, I>, input: unknown) => S.decodeUnknownEffect(schema)(input);
 const encode = <A, I>(schema: S.Codec<A, I>, value: A) => S.encodeUnknownEffect(schema)(value);
@@ -137,7 +141,8 @@ describe("Funding.FromField — wire fidelity", () => {
 			// Mutated IN PLACE — rebuilding the array would produce a value with no
 			// provenance and never reach the replay path at all.
 			const entries = yield* decode(field, "https://a.example");
-			const mutable = entries as Array<Funding>;
+			const mutable = entries;
+			assertTrue(A.isArray(mutable));
 			mutable.push(Funding.make({ url: "https://b.example" }));
 			assert.deepStrictEqual<unknown>(yield* encode(field, entries), [
 				"https://a.example",
@@ -152,8 +157,8 @@ describe("Funding.FromField — wire fidelity", () => {
 			// write the ORIGINAL wire back and discard the edit.
 			const entries = yield* decode(field, "https://old.example");
 			const entry = entries[0];
-			assert.isDefined(entry);
-			(entry as { url: string }).url = "https://new.example";
+			assertDefined(entry);
+			Object.assign(entry, { url: "https://new.example" } satisfies Partial<Funding>);
 			assert.deepStrictEqual<unknown>(yield* encode(field, entries), "https://new.example");
 		}),
 	);
@@ -164,8 +169,8 @@ describe("Funding.FromField — wire fidelity", () => {
 			// fidelity in the one case where they conflict.
 			const entries = yield* decode(field, "https://example.com/sponsor");
 			const entry = entries[0];
-			assert.isDefined(entry);
-			(entry as { type?: string }).type = "github";
+			assertDefined(entry);
+			Object.assign(entry, { type: "github" } satisfies Partial<Funding>);
 			assert.deepStrictEqual<unknown>(yield* encode(field, entries), {
 				type: "github",
 				url: "https://example.com/sponsor",
@@ -187,8 +192,8 @@ describe("Funding — unknown keys", () => {
 		Effect.gen(function* () {
 			const entries = yield* decode(field, [{ url: "https://a.example" }]);
 			const entry = entries[0];
-			assert.isDefined(entry);
-			(entry as { rest?: Record<string, unknown> }).rest = { platform: "ko-fi" };
+			assertDefined(entry);
+			Object.assign(entry, { rest: { platform: "ko-fi" } } satisfies Partial<Funding>);
 			assert.deepStrictEqual<unknown>(yield* encode(field, entries), [{ url: "https://a.example", platform: "ko-fi" }]);
 		}),
 	);
@@ -228,9 +233,10 @@ describe("Funding — `url` is required", () => {
 });
 
 describe("funding — the manifest tiers", () => {
-	const fixture = JSON.parse(
+	const fixture: unknown = JSON.parse(
 		readFileSync(new URL("./fixtures/package-json.input.json", import.meta.url), "utf8"),
-	) as Record<string, unknown>;
+	);
+	assertTrue(P.isObject(fixture));
 
 	it.effect("Package decodes and round-trips a real manifest's funding field", () =>
 		Effect.gen(function* () {
@@ -238,7 +244,7 @@ describe("funding — the manifest tiers", () => {
 			const raw = { ...fixture, private: false, funding: "https://github.com/sponsors/spencerbeggs" };
 			const pkg = yield* Package.decode(raw);
 			assert.strictEqual(pkg.funding?.[0]?.url, "https://github.com/sponsors/spencerbeggs");
-			const encoded = (yield* encode(Package.schema, pkg)) as Record<string, unknown>;
+			const encoded = (yield* encode(Package.schema, pkg));
 			assert.deepStrictEqual<unknown>(encoded.funding, "https://github.com/sponsors/spencerbeggs");
 			// And it is a modeled field now, not an unknown key parked in `rest`.
 			assert.isUndefined(pkg.rest?.funding);
@@ -282,7 +288,7 @@ describe("funding — the manifest tiers", () => {
 				license: "MIT",
 				repository: "dee/pkg",
 			})).toJsonString();
-			const keys = Object.keys((yield* S.decodeEffect(Json)(json)) as Record<string, unknown>);
+			const keys = Object.keys((yield* S.decodeEffect(JsonObject)(json)));
 			assert.isTrue(keys.indexOf("funding") > keys.indexOf("repository"));
 			assert.isTrue(keys.indexOf("funding") < keys.indexOf("license"));
 		}),
@@ -292,7 +298,7 @@ describe("funding — the manifest tiers", () => {
 		Effect.gen(function* () {
 			const pkg = yield* Package.decode({ name: "pkg", version: "1.0.0" });
 			assert.isUndefined(pkg.funding);
-			assert.isFalse("funding" in ((yield* encode(Package.schema, pkg)) as Record<string, unknown>));
+			assert.isFalse("funding" in ((yield* encode(Package.schema, pkg))));
 		}),
 	);
 });

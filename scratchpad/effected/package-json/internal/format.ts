@@ -177,18 +177,18 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> =>
  * alphabetically) and alphabetize the {@link SORTED_MAP_KEYS} map entries.
  */
 export const sortKeys = (obj: Record<string, unknown>): Record<string, unknown> => {
-	const known: Array<[string, unknown]> = [];
+	const known: Array<[string, unknown, number]> = [];
 	const restPublic: Array<[string, unknown]> = [];
 	const restPrivate: Array<[string, unknown]> = [];
 
 	for (const key of Object.keys(obj)) {
-		if (KEY_INDEX.has(key)) known.push([key, obj[key]]);
+		const index = KEY_INDEX.get(key);
+		if (index !== undefined) known.push([key, obj[key], index]);
 		else if (key.startsWith("_")) restPrivate.push([key, obj[key]]);
 		else restPublic.push([key, obj[key]]);
 	}
 
-	// biome-ignore lint/style/noNonNullAssertion: keys in `known` are all present in KEY_INDEX
-	known.sort((a, b) => KEY_INDEX.get(a[0])! - KEY_INDEX.get(b[0])!);
+	known.sort((a, b) => a[2] - b[2]);
 	restPublic.sort((a, b) => byCodePoint(a[0], b[0]));
 	restPrivate.sort((a, b) => byCodePoint(a[0], b[0]));
 
@@ -232,9 +232,8 @@ const DEFAULT_INDENT = 2;
 export const detectIndent = (source: string): string | undefined => {
 	for (const line of source.split("\n")) {
 		const match = /^(\t+| +)\S/.exec(line);
-		if (match !== null) {
-			// biome-ignore lint/style/noNonNullAssertion: the group is non-optional in a successful match
-			const indent = match[1]!;
+		const indent = match?.[1];
+		if (indent !== undefined) {
 			return indent.startsWith("\t") ? "\t" : indent;
 		}
 	}

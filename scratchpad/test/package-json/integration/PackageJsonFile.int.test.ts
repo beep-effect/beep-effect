@@ -12,7 +12,7 @@ import * as S from "effect/Schema";
 import { Package } from "../../../effected/package-json/Package.ts";
 import { PackageJsonFile } from "../../../effected/package-json/PackageJsonFile.ts";
 
-const Json = S.fromJsonString(S.Unknown);
+const Json = S.fromJsonString(S.Record(S.String, S.Unknown));
 
 const FIXTURES = resolve(import.meta.dirname, "fixtures");
 const fixturePath = (name: string) => resolve(FIXTURES, name, "package.json");
@@ -104,7 +104,7 @@ describe("PackageJsonFile round-trip", () => {
 			const outPath = join(dir, "package.json");
 			const pkg = yield* file.read(fixturePath(fixture));
 			yield* file.write(outPath, pkg);
-			const written = (yield* S.decodeEffect(Json)(readFileSync(outPath, "utf-8"))) as Record<string, unknown>;
+			const written = (yield* S.decodeEffect(Json)(readFileSync(outPath, "utf-8")));
 			rmSync(dir, { recursive: true, force: true });
 			return written;
 		});
@@ -166,7 +166,7 @@ describe("PackageJsonFile round-trip", () => {
 					dependencies: { lib: "workspace:*" },
 				});
 				yield* file.write(outPath, pkg);
-				const written = (yield* S.decodeEffect(Json)(readFileSync(outPath, "utf-8"))) as Record<string, unknown>;
+				const written = (yield* S.decodeEffect(Json)(readFileSync(outPath, "utf-8")));
 				rmSync(dir, { recursive: true, force: true });
 				assert.strictEqual(written.customX, "preserved");
 				assert.deepStrictEqual(written.dependencies, { lib: "workspace:*" });
@@ -260,7 +260,7 @@ describe("PackageJsonFile manifest and modify", () => {
 				writeFileSync(path, PRIVATE_ROOT_TEXT);
 				const manifest = yield* file.readManifest(path);
 				yield* file.writeManifest(path, manifest, { indent: "preserve" });
-				const written = (yield* S.decodeEffect(Json)(readFileSync(path, "utf-8"))) as Record<string, unknown>;
+				const written = (yield* S.decodeEffect(Json)(readFileSync(path, "utf-8")));
 				const raw = readFileSync(path, "utf-8");
 				rmSync(dir, { recursive: true, force: true });
 				assert.isFalse("name" in written);

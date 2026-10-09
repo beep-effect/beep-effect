@@ -1,3 +1,5 @@
+import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
@@ -175,45 +177,49 @@ const resolveConditions = (
  *
  * @public
  */
-// Manifest and options are both optional-field objects, so even an empty object makes the call forms ambiguous.
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const resolveEntryPoint = (
-	manifest: EntryPointManifest,
-	options?: ResolveEntryPointOptions,
-): Result.Result<string, UnresolvedEntryPointError> => {
-	const conditions = options?.conditions ?? DEFAULT_CONDITIONS;
-	const exportsField = manifest.exports;
+export const resolveEntryPoint: {
+	(manifest: EntryPointManifest, options?: ResolveEntryPointOptions): Result.Result<string, UnresolvedEntryPointError>;
+	(options?: ResolveEntryPointOptions): (manifest: EntryPointManifest) => Result.Result<string, UnresolvedEntryPointError>;
+} = dual(
+	(args) =>
+		args.length >= 2 ||
+		(args[0] !== undefined &&
+			(P.hasProperty(args[0], "exports") || P.hasProperty(args[0], "main") || !P.hasProperty(args[0], "conditions"))),
+	(manifest: EntryPointManifest, options?: ResolveEntryPointOptions): Result.Result<string, UnresolvedEntryPointError> => {
+		const conditions = options?.conditions ?? DEFAULT_CONDITIONS;
+		const exportsField = manifest.exports;
 
-	if (typeof exportsField === "string") {
-		return Result.succeed(exportsField);
-	}
-
-	if (isPlainObject(exportsField)) {
-		if (isRootConditions(exportsField)) {
-			const resolved = resolveConditions(exportsField, conditions);
-			return resolved === undefined
-				? Result.fail(UnresolvedEntryPointError.make({ reason: "noConditionMatched", conditions }))
-				: Result.succeed(resolved);
+		if (typeof exportsField === "string") {
+			return Result.succeed(exportsField);
 		}
-		const dot = exportsField["."];
-		if (typeof dot === "string") {
-			return Result.succeed(dot);
-		}
-		if (isPlainObject(dot)) {
-			const resolved = resolveConditions(dot, conditions);
-			return resolved === undefined
-				? Result.fail(UnresolvedEntryPointError.make({ reason: "noConditionMatched", conditions }))
-				: Result.succeed(resolved);
-		}
-		// A subpath map with no usable "." entry exports no root entry point.
-		return Result.fail(UnresolvedEntryPointError.make({ reason: "noRootExport" }));
-	}
 
-	// An array fallback list, or any other non-string non-object value, is an
-	// `exports` this resolver does not implement — encapsulation still applies.
-	if (exportsField !== undefined) {
-		return Result.fail(UnresolvedEntryPointError.make({ reason: "unsupportedExportsForm" }));
-	}
+		if (isPlainObject(exportsField)) {
+			if (isRootConditions(exportsField)) {
+				const resolved = resolveConditions(exportsField, conditions);
+				return resolved === undefined
+					? Result.fail(UnresolvedEntryPointError.make({ reason: "noConditionMatched", conditions }))
+					: Result.succeed(resolved);
+			}
+			const dot = exportsField["."];
+			if (typeof dot === "string") {
+				return Result.succeed(dot);
+			}
+			if (isPlainObject(dot)) {
+				const resolved = resolveConditions(dot, conditions);
+				return resolved === undefined
+					? Result.fail(UnresolvedEntryPointError.make({ reason: "noConditionMatched", conditions }))
+					: Result.succeed(resolved);
+			}
+			// A subpath map with no usable "." entry exports no root entry point.
+			return Result.fail(UnresolvedEntryPointError.make({ reason: "noRootExport" }));
+		}
 
-	return Result.succeed(typeof manifest.main === "string" && manifest.main !== "" ? manifest.main : "index.js");
-};
+		// An array fallback list, or any other non-string non-object value, is an
+		// `exports` this resolver does not implement — encapsulation still applies.
+		if (exportsField !== undefined) {
+			return Result.fail(UnresolvedEntryPointError.make({ reason: "unsupportedExportsForm" }));
+		}
+
+		return Result.succeed(typeof manifest.main === "string" && manifest.main !== "" ? manifest.main : "index.js");
+	},
+);

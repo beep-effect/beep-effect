@@ -6,11 +6,13 @@
 
 import { readFileSync } from "node:fs";
 import { assert, describe, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { Package } from "../../effected/package-json/Package.ts";
 
-const Json = S.fromJsonString(S.Unknown);
+const Json = S.fromJsonString(S.Record(S.String, S.Unknown));
+const StringRecord = S.Record(S.String, S.String);
 
 const minimal = { name: "my-pkg", version: "1.0.0" };
 
@@ -86,7 +88,7 @@ describe("canonical top-level key order (sort-package-json@4.0.0)", () => {
 				engines: { node: ">=24" },
 				packageManager: "pnpm@10.0.0",
 			});
-			const keys = Object.keys((yield* S.decodeEffect(Json)(json)) as Record<string, unknown>);
+			const keys = Object.keys((yield* S.decodeEffect(Json)(json)));
 			assert.isBelow(keys.indexOf("packageManager"), keys.indexOf("engines"));
 			assert.isBelow(keys.indexOf("engines"), keys.indexOf("devEngines"));
 		}),
@@ -100,7 +102,7 @@ describe("canonical top-level key order (sort-package-json@4.0.0)", () => {
 				sideEffects: false,
 				author: "C. Spencer Beggs",
 			});
-			const keys = Object.keys((yield* S.decodeEffect(Json)(json)) as Record<string, unknown>);
+			const keys = Object.keys((yield* S.decodeEffect(Json)(json)));
 			assert.isBelow(keys.indexOf("author"), keys.indexOf("sideEffects"));
 			assert.isBelow(keys.indexOf("sideEffects"), keys.indexOf("type"));
 		}),
@@ -114,7 +116,7 @@ describe("canonical top-level key order (sort-package-json@4.0.0)", () => {
 				cpu: ["arm64"],
 				os: ["darwin"],
 			});
-			const keys = Object.keys((yield* S.decodeEffect(Json)(json)) as Record<string, unknown>);
+			const keys = Object.keys((yield* S.decodeEffect(Json)(json)));
 			assert.isBelow(keys.indexOf("os"), keys.indexOf("cpu"));
 			assert.isBelow(keys.indexOf("cpu"), keys.indexOf("publishConfig"));
 		}),
@@ -129,7 +131,7 @@ describe("canonical top-level key order (sort-package-json@4.0.0)", () => {
 				_meta: 3,
 				pnpm: { overrides: {} },
 			});
-			const keys = Object.keys((yield* S.decodeEffect(Json)(json)) as Record<string, unknown>);
+			const keys = Object.keys((yield* S.decodeEffect(Json)(json)));
 			// `pnpm` is a known key; the unknowns follow it: public sorted, then private.
 			assert.isBelow(keys.indexOf("pnpm"), keys.indexOf("aardvark"));
 			assert.isBelow(keys.indexOf("aardvark"), keys.indexOf("zebra"));
@@ -145,11 +147,10 @@ describe("canonical top-level key order (sort-package-json@4.0.0)", () => {
 				engines: { pnpm: ">=10", node: ">=24" },
 				bin: { zzz: "./z.js", aaa: "./a.js" },
 			});
-			const parsed = (yield* S.decodeEffect(Json)(json)) as {
-				scripts: Record<string, string>;
-				engines: Record<string, string>;
-				bin: Record<string, string>;
-			};
+			const parsed = (yield* S.decodeEffect(Json)(json));
+			assertTrue(S.is(StringRecord)(parsed.scripts));
+			assertTrue(S.is(StringRecord)(parsed.engines));
+			assertTrue(S.is(StringRecord)(parsed.bin));
 			assert.deepStrictEqual(Object.keys(parsed.scripts), ["build", "lint", "test"]);
 			assert.deepStrictEqual(Object.keys(parsed.engines), ["node", "pnpm"]);
 			assert.deepStrictEqual(Object.keys(parsed.bin), ["aaa", "zzz"]);
@@ -159,7 +160,7 @@ describe("canonical top-level key order (sort-package-json@4.0.0)", () => {
 	it.effect("strips a defaulted empty scripts map like the dependency maps", () =>
 		Effect.gen(function* () {
 			const json = yield* decodeAndRender(minimal);
-			const parsed = (yield* S.decodeEffect(Json)(json)) as Record<string, unknown>;
+			const parsed = (yield* S.decodeEffect(Json)(json));
 			assert.isFalse("scripts" in parsed);
 			assert.isFalse("dependencies" in parsed);
 		}),
@@ -186,7 +187,7 @@ describe("people-field wire form survives the strict format path", () => {
 				{ ...minimal, contributors: ["Bo <bo@x.dev>", { name: "Cy", role: "reviewer" }] },
 				{ newline: false },
 			);
-			const parsed = (yield* S.decodeEffect(Json)(json)) as { contributors: ReadonlyArray<unknown> };
+			const parsed = (yield* S.decodeEffect(Json)(json));
 			assert.deepStrictEqual(parsed.contributors, ["Bo <bo@x.dev>", { name: "Cy", role: "reviewer" }]);
 		}),
 	);
@@ -194,7 +195,7 @@ describe("people-field wire form survives the strict format path", () => {
 	it.effect("unknown keys on an object-form author are not dropped", () =>
 		Effect.gen(function* () {
 			const json = yield* decodeAndRender({ ...minimal, author: { name: "Dee", twitter: "@dee" } }, { newline: false });
-			const parsed = (yield* S.decodeEffect(Json)(json)) as { author: Record<string, unknown> };
+			const parsed = (yield* S.decodeEffect(Json)(json));
 			assert.deepStrictEqual(parsed.author, { name: "Dee", twitter: "@dee" });
 		}),
 	);
@@ -204,7 +205,7 @@ describe("people-field wire form survives the strict format path", () => {
 			// The consumer's actual flow: read, change something unrelated, write.
 			const pkg = yield* Package.decode({ ...minimal, author: "Ann Lee <ann@x.dev>" });
 			const bumped = yield* Package.setVersion(pkg, "1.1.0");
-			const parsed = (yield* S.decodeEffect(Json)(bumped.toJsonString())) as Record<string, unknown>;
+			const parsed = (yield* S.decodeEffect(Json)(bumped.toJsonString()));
 			assert.strictEqual(parsed.version, "1.1.0");
 			assert.strictEqual(parsed.author, "Ann Lee <ann@x.dev>");
 		}),
@@ -213,7 +214,7 @@ describe("people-field wire form survives the strict format path", () => {
 	it.effect("a manifest with a string author round-trips byte-identically", () =>
 		Effect.gen(function* () {
 			const source = '{\n\t"name": "my-pkg",\n\t"version": "1.0.0",\n\t"author": "Ann Lee <ann@x.dev>"\n}\n';
-			const raw = (yield* S.decodeEffect(Json)(source)) as Record<string, unknown>;
+			const raw = (yield* S.decodeEffect(Json)(source));
 			const output = yield* decodeAndRender(raw, { indent: "preserve", sourceText: source });
 			assert.strictEqual(output, source);
 		}),
@@ -230,7 +231,7 @@ describe("byte parity with sort-package-json@4.0.0 on real manifests", () => {
 			Effect.gen(function* () {
 				const input = read(`${name}.input.json`);
 				const expected = read(`${name}.expected.json`);
-				const raw = (yield* S.decodeEffect(Json)(input)) as Record<string, unknown>;
+				const raw = (yield* S.decodeEffect(Json)(input));
 				const output = yield* decodeAndRender(raw, { indent: "preserve", sourceText: input });
 				assert.strictEqual(output, expected);
 			}),
@@ -240,7 +241,7 @@ describe("byte parity with sort-package-json@4.0.0 on real manifests", () => {
 	it.effect('tab-indented sources produce identical output via indent: "tab"', () =>
 		Effect.gen(function* () {
 			const input = read("root.input.json");
-			const raw = (yield* S.decodeEffect(Json)(input)) as Record<string, unknown>;
+			const raw = (yield* S.decodeEffect(Json)(input));
 			const viaPreserve = yield* decodeAndRender(raw, { indent: "preserve", sourceText: input });
 			const viaTab = yield* decodeAndRender(raw, { indent: "tab" });
 			assert.strictEqual(viaTab, viaPreserve);

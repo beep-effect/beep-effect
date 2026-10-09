@@ -1,4 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -89,7 +91,8 @@ describe("Person wire-form preservation", () => {
 	it.effect("preserves the key order of the object form", () =>
 		Effect.gen(function* () {
 			const encoded = yield* roundTrip({ email: "e@x.dev", name: "Eve" });
-			assert.deepStrictEqual(Object.keys(encoded as Record<string, unknown>), ["email", "name"]);
+			assertTrue(P.isObject(encoded));
+			assert.deepStrictEqual(Object.keys(encoded), ["email", "name"]);
 		}),
 	);
 
@@ -188,7 +191,7 @@ describe("Person — stale wire provenance", () => {
 		Effect.gen(function* () {
 			const person = yield* S.decodeEffect(Person.FromValue)("Ann <ann@x.dev>");
 			// In place: same instance, so the WeakMap entry survives the edit.
-			(person as { email: string }).email = "new@x.dev";
+			Object.assign(person, { email: "new@x.dev" } satisfies Partial<Person>);
 			const encoded = yield* S.encodeUnknownEffect(Person.FromValue)(person);
 			assert.notStrictEqual(encoded, "Ann <ann@x.dev>", "the stale shorthand must not be replayed");
 			assert.strictEqual(encoded, "Ann <new@x.dev>");
@@ -198,7 +201,7 @@ describe("Person — stale wire provenance", () => {
 	it.effect("a MUTATED name is reflected too", () =>
 		Effect.gen(function* () {
 			const person = yield* S.decodeEffect(Person.FromValue)("Ann <ann@x.dev>");
-			(person as { name: string }).name = "Bea";
+			Object.assign(person, { name: "Bea" } satisfies Partial<Person>);
 			const encoded = yield* S.encodeUnknownEffect(Person.FromValue)(person);
 			assert.notStrictEqual(encoded, "Ann <ann@x.dev>");
 			assert.strictEqual(encoded, "Bea <ann@x.dev>");
@@ -208,7 +211,7 @@ describe("Person — stale wire provenance", () => {
 	it.effect("a MUTATED url is reflected too", () =>
 		Effect.gen(function* () {
 			const person = yield* S.decodeEffect(Person.FromValue)("Ann (https://old.dev)");
-			(person as { url: string }).url = "https://new.dev";
+			Object.assign(person, { url: "https://new.dev" } satisfies Partial<Person>);
 			const encoded = yield* S.encodeUnknownEffect(Person.FromValue)(person);
 			assert.notStrictEqual(encoded, "Ann (https://old.dev)");
 			assert.strictEqual(encoded, "Ann (https://new.dev)");
@@ -218,7 +221,7 @@ describe("Person — stale wire provenance", () => {
 	it.effect("the same guard holds on the FromString codec", () =>
 		Effect.gen(function* () {
 			const person = yield* S.decodeEffect(Person.FromString)("Ann <ann@x.dev>");
-			(person as { email: string }).email = "new@x.dev";
+			Object.assign(person, { email: "new@x.dev" } satisfies Partial<Person>);
 			assert.strictEqual(yield* S.encodeUnknownEffect(Person.FromString)(person), "Ann <new@x.dev>");
 		}),
 	);
@@ -226,7 +229,7 @@ describe("Person — stale wire provenance", () => {
 	it.effect("a MUTATED object-decoded person does not re-emit the stale object", () =>
 		Effect.gen(function* () {
 			const person = yield* S.decodeEffect(Person.FromValue)({ name: "Ann", email: "ann@x.dev" });
-			(person as { email: string }).email = "new@x.dev";
+			Object.assign(person, { email: "new@x.dev" } satisfies Partial<Person>);
 			assert.deepStrictEqual<unknown>(yield* S.encodeUnknownEffect(Person.FromValue)(person), {
 				name: "Ann",
 				email: "new@x.dev",
@@ -239,7 +242,7 @@ describe("Person — stale wire provenance", () => {
 		// is what covers it.
 		Effect.gen(function* () {
 			const person = yield* S.decodeEffect(Person.FromValue)({ name: "Ann", twitter: "@ann" });
-			(person as { rest: Record<string, unknown> }).rest = { twitter: "@bea" };
+			Object.assign(person, { rest: { twitter: "@bea" } } satisfies Partial<Person>);
 			assert.deepStrictEqual<unknown>(yield* S.encodeUnknownEffect(Person.FromValue)(person), {
 				twitter: "@bea",
 				name: "Ann",
@@ -255,7 +258,7 @@ describe("Person — stale wire provenance", () => {
 		// class, reached through the field nobody thinks to check.
 		Effect.gen(function* () {
 			const person = yield* S.decodeEffect(Person.FromValue)("Ann");
-			(person as { rest: Record<string, unknown> }).rest = { twitter: "@ann" };
+			Object.assign(person, { rest: { twitter: "@ann" } } satisfies Partial<Person>);
 			const encoded = yield* S.encodeUnknownEffect(Person.FromValue)(person);
 			assert.notStrictEqual(encoded, "Ann", "the shorthand cannot carry rest and must not be replayed");
 			// The ONE case where the object form is right: the shorthand genuinely
@@ -269,7 +272,7 @@ describe("Person — stale wire provenance", () => {
 		// must not force an unrelated person out of its shorthand.
 		Effect.gen(function* () {
 			const person = yield* S.decodeEffect(Person.FromValue)("Ann <ann@x.dev>");
-			(person as { rest: Record<string, unknown> }).rest = {};
+			Object.assign(person, { rest: {} } satisfies Partial<Person>);
 			assert.strictEqual(yield* S.encodeUnknownEffect(Person.FromValue)(person), "Ann <ann@x.dev>");
 		}),
 	);

@@ -146,14 +146,14 @@ const isStringExpressibleBugs = (bugs: Bugs): boolean =>
 	bugs.email === undefined && Object.keys(bugs.rest ?? {}).length === 0;
 
 const isFaithfulRepository = (wire: { readonly [k: string]: unknown }, repository: Repository): boolean =>
-	(wire.url as unknown) === repository.url &&
-	(wire.type as unknown) === repository.type &&
-	(wire.directory as unknown) === repository.directory &&
+	wire.url === repository.url &&
+	wire.type === repository.type &&
+	wire.directory === repository.directory &&
 	sameRest(restOf(wire, KNOWN_REPOSITORY_KEYS), repository.rest);
 
 const isFaithfulBugs = (wire: { readonly [k: string]: unknown }, bugs: Bugs): boolean =>
-	(wire.url as unknown) === bugs.url &&
-	(wire.email as unknown) === bugs.email &&
+	wire.url === bugs.url &&
+	wire.email === bugs.email &&
 	sameRest(restOf(wire, KNOWN_BUGS_KEYS), bugs.rest);
 
 /**

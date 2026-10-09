@@ -1,4 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess } from "@effect/vitest/utils";
+import { pipe } from "effect/Function";
 import * as Result from "effect/Result";
 import { resolveEntryPoint } from "../../effected/package-json/EntryPoint.ts";
 
@@ -18,6 +20,14 @@ const reason = (manifest: { exports?: unknown; main?: unknown }, conditions?: Re
 };
 
 describe("resolveEntryPoint", () => {
+	it("supports one-argument manifests and pipeable options", () => {
+		const manifest = { exports: { import: "./esm.js", require: "./cjs.js" } };
+		assertSuccess(pipe(manifest, resolveEntryPoint()), "./esm.js");
+		assertSuccess(resolveEntryPoint({ exports: "./a.js" }), "./a.js");
+		assertSuccess(resolveEntryPoint({ main: "./m.js" }), "./m.js");
+		assertSuccess(pipe(manifest, resolveEntryPoint({ conditions: ["require"] })), "./cjs.js");
+	});
+
 	describe("the three legal exports spellings", () => {
 		it("reads the string shorthand", () => {
 			assert.strictEqual(entry({ exports: "./index.js" }), "./index.js");

@@ -25,6 +25,7 @@
 // than as a degradation, which is `LenientManifest`'s job alone.
 
 import type * as SchemaIssue from "effect/SchemaIssue";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
@@ -201,8 +202,8 @@ export class Funding extends S.Class<Funding>("Funding")({
 				decode: (
 					input: string | { readonly [k: string]: unknown } | ReadonlyArray<string | { readonly [k: string]: unknown }>,
 				) => {
-					const bare = !Array.isArray(input);
-					const values = (bare ? [input] : input) as ReadonlyArray<EntryWire>;
+					const bare = !A.isArray<typeof input>(input);
+					const values = bare ? [input] : input;
 					return Effect.map(Effect.forEach(values, decodeEntry), (entries) => {
 						const only = entries[0];
 						if (bare && only !== undefined) bareEntries.add(only);

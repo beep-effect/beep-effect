@@ -7,7 +7,7 @@ import * as S from "effect/Schema";
 import { Dependency } from "../../effected/package-json/Dependency.ts";
 import { Package, PackageDecodeError } from "../../effected/package-json/Package.ts";
 
-const Json = S.fromJsonString(S.Unknown);
+const Json = S.fromJsonString(S.Record(S.String, S.Unknown));
 
 const minimal = { name: "my-pkg", version: "1.0.0" };
 const full = {
@@ -164,7 +164,7 @@ describe("Package wire transform + rest", () => {
 		Effect.gen(function* () {
 			const decoded = yield* Package.decode({ name: "p", version: "1.0.0", customField: "kept", arr: [1, 2, 3] });
 			assert.deepStrictEqual(decoded.rest, { customField: "kept", arr: [1, 2, 3] });
-			const encoded = (yield* S.encodeUnknownEffect(Package.schema)(decoded)) as Record<string, unknown>;
+			const encoded = (yield* S.encodeUnknownEffect(Package.schema)(decoded));
 			assert.strictEqual(encoded.customField, "kept");
 			assert.deepStrictEqual(encoded.arr, [1, 2, 3]);
 			assert.isFalse("rest" in encoded);
@@ -179,16 +179,17 @@ describe("Package wire transform + rest", () => {
 			// (which on a plain object MUTATES the prototype and loses the key).
 			const raw = (yield* S.decodeEffect(Json)(
 				'{"name":"proto-carrier","version":"1.0.0","__proto__":{"polluted":true},"custom":"kept"}',
-			)) as Record<string, unknown>;
+			));
 
 			const decoded = yield* Package.decode(raw);
 			const restProto = Object.getOwnPropertyDescriptor(decoded.rest, "__proto__");
 			assert.deepStrictEqual(restProto?.value, { polluted: true });
 			// No pollution anywhere: fresh objects must not have inherited the key.
 			assert.isFalse("polluted" in {});
-			assert.isUndefined(({} as Record<string, unknown>).polluted);
+			const fresh: { readonly polluted?: boolean } = {};
+			assert.isUndefined(fresh.polluted);
 
-			const encoded = (yield* S.encodeUnknownEffect(Package.schema)(decoded)) as Record<string, unknown>;
+			const encoded = (yield* S.encodeUnknownEffect(Package.schema)(decoded));
 			const encodedProto = Object.getOwnPropertyDescriptor(encoded, "__proto__");
 			assert.deepStrictEqual(encodedProto?.value, { polluted: true });
 			assert.strictEqual(encoded.custom, "kept");
@@ -204,7 +205,7 @@ describe("Package wire transform + rest", () => {
 			// A decode never lands a known key in `rest`; only a hand-built patch
 			// can smuggle one. The typed member must win on encode.
 			const smuggled = decoded.copyWith({ rest: { description: "shadow", other: 1 } });
-			const encoded = (yield* S.encodeUnknownEffect(Package.schema)(smuggled)) as Record<string, unknown>;
+			const encoded = (yield* S.encodeUnknownEffect(Package.schema)(smuggled));
 			assert.strictEqual(encoded.description, "real");
 			assert.strictEqual(encoded.other, 1);
 			assert.isFalse("rest" in encoded);
@@ -233,7 +234,7 @@ describe("Package wire transform + rest", () => {
 			});
 			assert.strictEqual(decoded.myTool, "configured");
 			assert.deepStrictEqual(decoded.rest, { other: 1 });
-			const encoded = (yield* S.encodeUnknownEffect(wire)(decoded)) as Record<string, unknown>;
+			const encoded = (yield* S.encodeUnknownEffect(wire)(decoded));
 			assert.strictEqual(encoded.myTool, "configured");
 			assert.strictEqual(encoded.other, 1);
 		}),
@@ -257,7 +258,7 @@ describe("Package.toJsonString", () => {
 			const pkg = yield* Package.decode(full);
 			const json = pkg.toJsonString();
 			assert.isTrue(json.endsWith("\n"));
-			const parsed = (yield* S.decodeEffect(Json)(json)) as Record<string, unknown>;
+			const parsed = (yield* S.decodeEffect(Json)(json));
 			const keys = Object.keys(parsed);
 			assert.isTrue(keys.indexOf("name") < keys.indexOf("version"));
 			assert.isTrue(keys.indexOf("version") < keys.indexOf("description"));

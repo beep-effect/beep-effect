@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import type { SpdxExpression } from "../../effected/spdx/index.ts";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -38,19 +38,24 @@ describe("InvalidSpdxLicenseError", () => {
 });
 
 describe("licenseExpressionOf — the brand/grammar seam", () => {
-	const brand = (value: string) => value as SpdxLicense;
+	const brand = (value: string): SpdxLicense => {
+		assertTrue(S.is(SpdxLicense)(value));
+		return value;
+	};
 
 	it("parses an ordinary identifier", () => {
 		const expr = licenseExpressionOf(brand("MIT"));
-		assert.isTrue(O.isSome(expr));
-		assert.strictEqual(String((expr as O.Some<SpdxExpression>).value), "MIT");
+		const present = O.isSome(expr);
+		assertTrue(present);
+		assert.strictEqual(String(expr.value), "MIT");
 	});
 
 	it("parses a compound expression", () => {
 		const expr = licenseExpressionOf(brand("MIT OR Apache-2.0"));
-		assert.isTrue(O.isSome(expr));
+		const present = O.isSome(expr);
+		assertTrue(present);
 		// SpdxExpression round-trips fully parenthesized; that is canonical here.
-		assert.strictEqual(String((expr as O.Some<SpdxExpression>).value), "(MIT OR Apache-2.0)");
+		assert.strictEqual(String(expr.value), "(MIT OR Apache-2.0)");
 	});
 
 	it("UNLICENSED is a legal manifest value and not an expression", () => {
@@ -86,12 +91,13 @@ describe("licenseExpressionOf — the brand/grammar seam", () => {
 
 	it("a LicenseRef parses — it is grammatical, unlike the two npm spellings", () => {
 		const expr = licenseExpressionOf(brand("LicenseRef-Acme"));
-		assert.isTrue(O.isSome(expr));
+		const present = O.isSome(expr);
+		assertTrue(present);
 	});
 
 	it("an unparseable string the brand would reject yields none rather than throwing", () => {
 		// Total by construction: a caller holding an unbranded cast still gets
 		// an answer instead of a defect.
-		assert.isTrue(O.isNone(licenseExpressionOf(brand("MIT AND"))));
+		assert.isTrue(O.isNone(licenseExpressionOf("MIT AND" as SpdxLicense)));
 	});
 });

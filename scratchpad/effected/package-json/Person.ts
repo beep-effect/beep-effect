@@ -91,9 +91,9 @@ const isFaithful = (wire: PersonWire, person: Person): boolean => {
 	}
 	const rest = restOf(wire);
 	return (
-		(wire.name as unknown) === person.name &&
-		(wire.email as unknown) === person.email &&
-		(wire.url as unknown) === person.url &&
+		wire.name === person.name &&
+		wire.email === person.email &&
+		wire.url === person.url &&
 		sameRest(rest, person.rest)
 	);
 };

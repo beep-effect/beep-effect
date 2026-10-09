@@ -123,8 +123,7 @@ const FIELD_GUARDS: ReadonlyMap<string, FieldGuard> = new Map<string, FieldGuard
 // Partition a raw manifest object: keys matching their permissive shape become
 // typed members; unknown keys AND malformed known keys flow verbatim into
 // `rest` (a malformed known field is treated as an unknown key), with each
-// degradation recorded as an issue. Guards establish the field invariants the
-// final cast asserts.
+// degradation recorded as an issue. The field guards establish the constructor invariants.
 const sift = (raw: Record<string, unknown>): LenientManifest => {
 	const known: Record<string, unknown> = {};
 	// Null-prototype for the same reason as the strict wire transform: an own
@@ -144,8 +143,8 @@ const sift = (raw: Record<string, unknown>): LenientManifest => {
 		}
 	}
 	// The guards above are exactly the field schemas' permissive shapes, so the
-	// sifted knowns satisfy `make`'s validation; the cast only names that fact.
-	return LenientManifest.make({ ...known, rest, issues } as Parameters<typeof LenientManifest.make>[0]);
+	// sifted knowns satisfy `make`'s validation.
+	return LenientManifest.make({ ...known, rest, issues });
 };
 
 const decodeRecord = S.decodeUnknownExit(UnknownRecord);
@@ -280,7 +279,7 @@ export class LenientManifest extends S.Class<LenientManifest>("LenientManifest")
 	static parseResult(text: string): Result.Result<LenientManifest, PackageJsonSyntaxError> {
 		let raw: unknown;
 		try {
-			raw = JSON.parse(text) as unknown;
+			raw = JSON.parse(text);
 		} catch (cause) {
 			return Result.fail(PackageJsonSyntaxError.make({ reason: "invalid-json", cause }));
 		}

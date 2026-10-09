@@ -10,20 +10,21 @@
 //     non-object document stay typed errors.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import { LenientManifest } from "../../effected/package-json/LenientManifest.ts";
-import type { PackageJsonSyntaxError } from "../../effected/package-json/PackageJsonFormat.ts";
 import { PackageManifest } from "../../effected/package-json/PackageManifest.ts";
 
 const unwrap = <A, E>(result: Result.Result<A, E>): A => {
-	assert.isTrue(Result.isSuccess(result), "expected the lenient decode to succeed");
-	return (result as Result.Success<A, E>).success;
+	assertTrue(Result.isSuccess(result), "expected the lenient decode to succeed");
+	return result.success;
 };
 
 const unwrapFailure = <A, E>(result: Result.Result<A, E>): E => {
-	assert.isTrue(Result.isFailure(result), "expected the lenient decode to fail");
-	return (result as Result.Failure<A, E>).failure;
+	assertTrue(Result.isFailure(result), "expected the lenient decode to fail");
+	return result.failure;
 };
 
 describe("LenientManifest.decodeResult", () => {
@@ -176,7 +177,8 @@ describe("LenientManifest.decodeResult", () => {
 		for (const input of [null, ["a"], 42, "text"]) {
 			const error = unwrapFailure(LenientManifest.decodeResult(input));
 			assert.strictEqual(error._tag, "PackageDecodeError");
-			assert.strictEqual((error.cause as { _tag?: string })?._tag, "SchemaError");
+			assertTrue(P.hasProperty(error.cause, "_tag"));
+			assert.strictEqual(error.cause._tag, "SchemaError");
 		}
 	});
 });
@@ -218,21 +220,22 @@ describe("LenientManifest.parseResult", () => {
 		// prototype accessor, which is the very thing this test proves inert).
 		const protoEntry = Object.getOwnPropertyDescriptor(manifest.rest ?? {}, "__proto__")?.value;
 		assert.deepStrictEqual(protoEntry, { polluted: true });
-		assert.strictEqual(({} as { polluted?: boolean }).polluted, undefined);
+		const fresh: { readonly polluted?: boolean } = {};
+		assert.strictEqual(fresh.polluted, undefined);
 		assert.deepStrictEqual(manifest.issues, []);
 	});
 
 	it("fails typed on invalid JSON text", () => {
 		const error = unwrapFailure(LenientManifest.parseResult("{not json"));
 		assert.strictEqual(error._tag, "PackageJsonSyntaxError");
-		assert.strictEqual((error as PackageJsonSyntaxError).reason, "invalid-json");
+		assert.strictEqual(error.reason, "invalid-json");
 	});
 
 	it("fails typed on JSON text that is not an object", () => {
 		for (const text of ["[1,2]", "42", '"str"', "null"]) {
 			const error = unwrapFailure(LenientManifest.parseResult(text));
 			assert.strictEqual(error._tag, "PackageJsonSyntaxError");
-			assert.strictEqual((error as PackageJsonSyntaxError).reason, "not-an-object");
+			assert.strictEqual(error.reason, "not-an-object");
 		}
 	});
 });

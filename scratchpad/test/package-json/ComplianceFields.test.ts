@@ -63,7 +63,7 @@ describe("maintainers", () => {
 			// completeness guard below — those fail when the field is removed.
 			const wire = [{ name: "Dee", email: "dee@example.com" }, "Ray <ray@example.com>"];
 			const encoded = yield* encode(yield* decode({ maintainers: wire }));
-			assert.deepStrictEqual<unknown>((encoded as { maintainers: unknown }).maintainers, wire);
+			assert.deepStrictEqual<unknown>((encoded).maintainers, wire);
 		}),
 	);
 
@@ -71,7 +71,7 @@ describe("maintainers", () => {
 		Effect.gen(function* () {
 			const wire = [{ name: "Dee", github: "@dee" }];
 			const encoded = yield* encode(yield* decode({ maintainers: wire }));
-			assert.deepStrictEqual<unknown>((encoded as { maintainers: unknown }).maintainers, wire);
+			assert.deepStrictEqual<unknown>((encoded).maintainers, wire);
 		}),
 	);
 
@@ -100,14 +100,14 @@ describe("keywords", () => {
 			// rewrite of legal input.
 			const wire = ["zebra", "alpha", "middle"];
 			const encoded = yield* encode(yield* decode({ keywords: wire }));
-			assert.deepStrictEqual<unknown>((encoded as { keywords: unknown }).keywords, wire);
+			assert.deepStrictEqual<unknown>((encoded).keywords, wire);
 		}),
 	);
 
 	it.effect("an empty array stays an empty array, not an absent key", () =>
 		Effect.gen(function* () {
 			const encoded = yield* encode(yield* decode({ keywords: [] }));
-			assert.deepStrictEqual<unknown>((encoded as { keywords: unknown }).keywords, []);
+			assert.deepStrictEqual<unknown>((encoded).keywords, []);
 		}),
 	);
 

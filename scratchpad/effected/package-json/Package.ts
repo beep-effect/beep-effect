@@ -21,7 +21,7 @@ import { DevEnginesSchema } from "./DevEngines.ts";
 import { Funding } from "./Funding.ts";
 import { renderJson, resolveFormatOptions } from "./internal/format.ts";
 import { makeWire } from "./internal/wire.ts";
-import { InvalidSpdxLicenseError, SpdxLicense, isValidSpdx } from "./License.ts";
+import { InvalidSpdxLicenseError, SpdxLicense } from "./License.ts";
 import { PackageManager } from "./PackageManager.ts";
 import { InvalidPackageNameError, PackageName } from "./PackageName.ts";
 import { Person } from "./Person.ts";
@@ -45,7 +45,7 @@ const toHashMap = SchemaTransformation.transform({
  * @public
  */
 export const DependencyMapField = S.Record(S.String, S.String).pipe(
-	S.withDecodingDefaultKey(Effect.succeed({} as { readonly [x: string]: string })),
+	S.withDecodingDefaultKey(Effect.succeed<{ readonly [x: string]: string }>({})),
 	S.decodeTo(S.HashMap(S.String, S.String), toHashMap),
 );
 
@@ -255,10 +255,9 @@ export class Package extends S.Class<Package>("Package")({
 	 * @param Class - the extended `Schema.Class`, carrying its own `fields`
 	 * @returns a codec between an open JSON object and `Class` instances
 	 */
-	static wireFor<Self extends Package>(
-		// biome-ignore lint/suspicious/noExplicitAny: invariant Encoded slot — see makeWire
-		Class: S.Codec<Self, any, any, any> & { readonly fields: Record<string, unknown> },
-	): S.Codec<Self, { readonly [k: string]: unknown }> {
+	static wireFor<Self extends Package, RD = never, RE = never>(
+		Class: S.Codec<Self, unknown, RD, RE> & { readonly fields: Record<string, unknown> },
+	): S.Codec<Self, { readonly [k: string]: unknown }, RD, RE> {
 		return makeWire(Class);
 	}
 
@@ -356,10 +355,10 @@ export class Package extends S.Class<Package>("Package")({
 	} = Fn.dual(
 		2,
 		Effect.fn("Package.setName")(function* (pkg: Package, name: string) {
-			if (!PackageName.isValid(name)) {
+			if (!S.is(PackageName)(name)) {
 				return yield* InvalidPackageNameError.make({ input: name });
 			}
-			return pkg.copyWith({ name: name as PackageName });
+			return pkg.copyWith({ name });
 		}),
 	);
 
@@ -370,10 +369,10 @@ export class Package extends S.Class<Package>("Package")({
 	} = Fn.dual(
 		2,
 		Effect.fn("Package.setLicense")(function* (pkg: Package, license: string) {
-			if (!isValidSpdx(license)) {
+			if (!S.is(SpdxLicense)(license)) {
 				return yield* InvalidSpdxLicenseError.make({ input: license });
 			}
-			return pkg.copyWith({ license: license as SpdxLicense });
+			return pkg.copyWith({ license });
 		}),
 	);
 

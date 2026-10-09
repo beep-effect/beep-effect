@@ -18,16 +18,14 @@ const RawJson = S.Record(S.String, S.Unknown);
  * `.extend()`ed subclasses and `PackageManifest` all share the one
  * implementation and cannot drift.
  */
-export const makeWire = <Self>(
-	// biome-ignore lint/suspicious/noExplicitAny: invariant Encoded slot — a concrete type is rejected by the class-factory generics
-	Class: S.Codec<Self, any, any, any> & { readonly fields: Record<string, unknown> },
-): S.Codec<Self, { readonly [k: string]: unknown }> => {
+export const makeWire = <Self, RD = never, RE = never>(
+	Class: S.Codec<Self, unknown, RD, RE> & { readonly fields: Record<string, unknown> },
+): S.Codec<Self, { readonly [k: string]: unknown }, RD, RE> => {
 	const knownKeys = new Set(Object.keys(Class.fields).filter((k) => k !== "rest"));
-	const wire = RawJson.pipe(
-		S.decodeTo(
-			Class,
+	return RawJson.pipe(
+		S.decode(
 			SchemaTransformation.transform({
-				decode: (raw: { readonly [k: string]: unknown }) => {
+				decode: (raw: { readonly [k: string]: unknown }): Record<string, unknown> => {
 					const known: Record<string, unknown> = {};
 					// A null-prototype record: on a plain object, `rest["__proto__"] = v`
 					// MUTATES the prototype instead of storing data, so a manifest
@@ -44,16 +42,17 @@ export const makeWire = <Self>(
 					return { ...known, rest };
 				},
 				encode: (encoded: Record<string, unknown>) => {
-					const { rest, ...known } = encoded as Record<string, unknown> & { rest?: Record<string, unknown> };
+					const { rest, ...known } = encoded;
 					// Typed fields win on a key collision: a hand-built instance whose
 					// `rest` smuggles a known key (including an .extend()ed subclass
 					// field — this is the one shared wire implementation behind
 					// `Package.schema`, `Package.wireFor` and `PackageManifest.schema`)
 					// must not shadow the typed member on the wire.
-					return { ...(rest ?? {}), ...known };
+					const flattened: Record<string, unknown> = Object.create(null);
+					return { ...Object.assign(flattened, rest ?? {}, known) };
 				},
 			}),
 		),
+		S.decodeTo(Class),
 	);
-	return wire as unknown as S.Codec<Self, { readonly [k: string]: unknown }>;
 };

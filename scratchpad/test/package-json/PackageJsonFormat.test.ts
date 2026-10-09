@@ -4,6 +4,7 @@
 // shape" mirror the `sort-package-json` call sites a consumer is replacing.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -15,14 +16,14 @@ const Json = S.fromJsonString(S.Unknown);
 
 const format = (source: string, options?: Parameters<typeof PackageJsonFormat.formatToString>[1]): string => {
 	const result = PackageJsonFormat.formatToString(source, options);
-	assert.isTrue(Result.isSuccess(result), "expected formatting to succeed");
-	return (result as Result.Success<string, PackageJsonSyntaxError>).success;
+	assertTrue(Result.isSuccess(result), "expected formatting to succeed");
+	return result.success;
 };
 
 const failure = (source: string): PackageJsonSyntaxError => {
 	const result = PackageJsonFormat.formatToString(source);
-	assert.isTrue(Result.isFailure(result), "expected formatting to fail");
-	return (result as Result.Failure<string, PackageJsonSyntaxError>).failure;
+	assertTrue(Result.isFailure(result), "expected formatting to fail");
+	return result.failure;
 };
 
 describe("PackageJsonFormat.sortValue (value in, value out)", () => {
@@ -38,8 +39,8 @@ describe("PackageJsonFormat.sortValue (value in, value out)", () => {
 			scripts: { test: "vitest", build: "tsc" },
 			dependencies: { zod: "1", axios: "2" },
 		});
-		assert.deepStrictEqual(Object.keys(sorted.scripts as Record<string, unknown>), ["build", "test"]);
-		assert.deepStrictEqual(Object.keys(sorted.dependencies as Record<string, unknown>), ["axios", "zod"]);
+		assert.deepStrictEqual(Object.keys(sorted.scripts), ["build", "test"]);
+		assert.deepStrictEqual(Object.keys(sorted.dependencies), ["axios", "zod"]);
 	});
 
 	it("accepts a version-less root and a private-only root", () => {
@@ -82,9 +83,9 @@ describe("PackageJsonFormat.sortValue (value in, value out)", () => {
 		// Guards a mistyped `Json` union at a call site: an array must not become
 		// an index-keyed object.
 		const array = [1, 2];
-		assert.strictEqual(PackageJsonFormat.sortValue(array as never), array as never);
-		assert.strictEqual(PackageJsonFormat.sortValue(null as never), null as never);
-		assert.strictEqual(PackageJsonFormat.sortValue("text" as never), "text" as never);
+		assert.strictEqual(PackageJsonFormat.sortValue(array as never), array);
+		assert.strictEqual(PackageJsonFormat.sortValue(null as never), null);
+		assert.strictEqual(PackageJsonFormat.sortValue("text" as never), "text");
 	});
 
 	it("agrees with PackageJsonFormat.formatToString on ordering", () => {
@@ -143,7 +144,7 @@ describe("PackageJsonFormat.formatToString canonical ordering", () => {
 			'{\n  "version": "1.0.0",\n  "name": "p",\n  "dependencies": {\n    "b": "1",\n    "a": "2"\n  }\n}\n';
 		const tolerant = format(source);
 		const strict = Effect.runSync(
-			Effect.map(Package.decode(JSON.parse(source) as Record<string, unknown>), (pkg) =>
+			Effect.map(Package.decode(JSON.parse(source)), (pkg) =>
 				pkg.toJsonString({ indent: "preserve", sourceText: source }),
 			),
 		);

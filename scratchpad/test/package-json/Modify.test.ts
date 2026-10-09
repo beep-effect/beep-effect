@@ -9,7 +9,9 @@
 // there); these fixtures can.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { PackageJsonFormat, PackageJsonModifyError, PackageJsonSyntaxError } from "../../effected/package-json/PackageJsonFormat.ts";
 
@@ -131,7 +133,8 @@ describe("PackageJsonFormat.modifyToString", () => {
 			}
 			assert.deepStrictEqual(error.path, ["name", "sub"]);
 			// The structured cause is the underlying JsoncModificationError.
-			assert.strictEqual((error.cause as { readonly _tag?: string })._tag, "JsoncModificationError");
+			assertTrue(P.hasProperty(error.cause, "_tag"));
+			assert.strictEqual(error.cause._tag, "JsoncModificationError");
 		}),
 	);
 });

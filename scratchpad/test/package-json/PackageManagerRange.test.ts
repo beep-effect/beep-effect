@@ -6,6 +6,7 @@
 // control.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -13,6 +14,8 @@ import * as S from "effect/Schema";
 import { DevEngine } from "../../effected/package-json/DevEngines.ts";
 import { PackageManager } from "../../effected/package-json/PackageManager.ts";
 import { InvalidPackageManagerRangeError, PackageManagerRange } from "../../effected/package-json/PackageManagerRange.ts";
+
+const DevEngineEntry = S.Struct({ name: S.String, version: S.optionalKey(S.String) });
 
 const decode = S.decodeUnknownEffect(PackageManagerRange.FromString);
 const encode = S.encodeUnknownEffect(PackageManagerRange.FromString);
@@ -196,7 +199,8 @@ describe("PackageManagerRange.fromDevEngine", () => {
 describe("PackageManagerRange devEngines entry as a plain object", () => {
 	it("accepts the encoded shape read straight off disk, with no DevEngine construction", () => {
 		const raw: unknown = JSON.parse('{"name":"pnpm","version":"^12.6.0","onFail":"download"}');
-		const read = PackageManagerRange.fromDevEngineResult(raw as { name: string; version?: string });
+		assertTrue(S.is(DevEngineEntry)(raw));
+		const read = PackageManagerRange.fromDevEngineResult(raw);
 		assert.isTrue(Result.isSuccess(read) && read.success.range === "^12.6.0");
 		const missing = PackageManagerRange.fromDevEngineResult({ name: "pnpm" });
 		assert.isTrue(Result.isFailure(missing) && missing.failure.reason === "range");
