@@ -11,9 +11,17 @@ import { failure } from "./AiProviderCliSession.profile.service.ts";
 import { GrokIdentity } from "./AiProviderCliSession.wire.models.ts";
 
 /**
- * Private implementation boundary used by the managed session facade.
+ * Verifies Grok model and effort readback and binds the declared sandbox policy hash.
+ *
+ * **Example** (Verify a synthetic Grok identity)
+ * ```ts
+ * import { verifyGrok } from "../../src/AiProviderCliSession.grok.service.ts"
+ * import * as Effect from "effect/Effect"
+ * const identity = Effect.runSync(verifyGrok({ sessionId: "owned-grok", models: { currentModelId: "grok-4.7" }, configOptions: [{ id: "reasoning_effort", currentValue: "medium" }] }, "synthetic-policy-hash"))
+ * console.log(identity.effort) // medium
+ * ```
  * @internal
- * @category internals
+ * @category validation
  * @since 0.0.0
  */
 export const verifyGrok = Effect.fn("ManagedGrok.verifyIdentity")(function* (started: unknown, sandboxHash: string) {
@@ -35,9 +43,16 @@ export const verifyGrok = Effect.fn("ManagedGrok.verifyIdentity")(function* (sta
 });
 
 /**
- * Provider-specific launch and identity boundary.
+ * Pins Grok ACP launch policy to the named sandbox and the two MCP mediator tools.
+ *
+ * **Example** (Inspect the mediator whitelist)
+ * ```ts
+ * import { grokArguments } from "../../src/AiProviderCliSession.grok.service.ts"
+ * import * as A from "effect/Array"
+ * console.log(A.contains(grokArguments, "search_tool,use_tool")) // true
+ * ```
  * @internal
- * @category internals
+ * @category configuration
  * @since 0.0.0
  */
 export const grokArguments = [

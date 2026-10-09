@@ -46,9 +46,23 @@ import type {
 import type { ManagedSession } from "./AiProviderCliSession.service.ts";
 
 /**
- * Private implementation boundary used by the managed session facade.
+ * Opens a scoped native stdio session with bounded requests and turn correlation.
+ *
+ * **Example** (Compose an owned stdio launch)
+ * ```ts
+ * import { openStdio } from "../../src/AiProviderCliSession.stdio.service.ts"
+ * import * as Effect from "effect/Effect"
+ * import { ManagedLaunchProfile } from "@beep/ai-provider-cli"
+ * const profile = ManagedLaunchProfile.make({
+ *   provider: "codex", executable: "codex", prefixArgs: [],
+ *   workspace: "/owned/workspace", profileRoot: "/owned/profile",
+ *   env: { HOME: "/owned/profile" }, authLane: "existing-subscription", tools: []
+ * })
+ * const operation = openStdio(profile, "synthetic-policy-hash")
+ * console.log(Effect.isEffect(operation)) // true; no process or filesystem effect runs
+ * ```
  * @internal
- * @category internals
+ * @category resource-management
  * @since 0.0.0
  */
 export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (

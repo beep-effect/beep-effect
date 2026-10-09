@@ -11,9 +11,16 @@ import { CodexStart } from "./AiProviderCliSession.wire.models.ts";
 import type { ManagedSessionError } from "./AiProviderCliSession.errors.ts";
 import type { ManagedLaunchProfile } from "./AiProviderCliSession.models.ts";
 /**
- * Provider-specific launch and identity boundary.
+ * Pins the Codex model and reasoning effort for the owned app-server process.
+ *
+ * **Example** (Inspect the model pin)
+ * ```ts
+ * import { codexArguments } from "../../src/AiProviderCliSession.codex.service.ts"
+ * import * as A from "effect/Array"
+ * console.log(A.contains(codexArguments, "gpt-6.1-sol")) // true
+ * ```
  * @internal
- * @category internals
+ * @category configuration
  * @since 0.0.0
  */
 export const codexArguments = [
@@ -26,9 +33,27 @@ export const codexArguments = [
   "stdio://",
 ];
 /**
- * Provider-specific launch and identity boundary.
+ * Initializes an owned Codex thread and verifies the returned model and permission policy.
+ *
+ * **Example** (Verify a synthetic policy readback)
+ * ```ts
+ * import { negotiateCodex } from "../../src/AiProviderCliSession.codex.service.ts"
+ * import * as Effect from "effect/Effect"
+ * import { ManagedLaunchProfile } from "@beep/ai-provider-cli"
+ * const profile = ManagedLaunchProfile.make({
+ *   provider: "codex", executable: "codex", prefixArgs: [],
+ *   workspace: "/owned/workspace", profileRoot: "/owned/profile",
+ *   env: { HOME: "/owned/profile" }, authLane: "existing-subscription", tools: []
+ * })
+ * const readback = {
+ *   thread: { id: "owned-thread" }, model: "gpt-6.1-sol", reasoningEffort: "medium",
+ *   approvalPolicy: "never", sandbox: { type: "readOnly", networkAccess: false }
+ * }
+ * const identity = Effect.runSync(negotiateCodex(profile, () => Effect.succeed(readback), Effect.void))
+ * console.log(identity.policyEvidence) // runtime-reported
+ * ```
  * @internal
- * @category internals
+ * @category protocols
  * @since 0.0.0
  */
 export const negotiateCodex = Effect.fn("ManagedCodex.negotiate")(function* (

@@ -9,9 +9,17 @@ import * as S from "effect/Schema";
 
 const $I = $AiProviderCliId.create("AiProviderCliSession.wire.models");
 /**
- * Private implementation boundary used by the managed session facade.
+ * Verifies the Codex thread identity, pinned model and effective read-only permission policy.
+ *
+ * **Example** (Decode a synthetic CodexStart envelope)
+ * ```ts
+ * import { CodexStart } from "../../src/AiProviderCliSession.wire.models.ts"
+ * import * as S from "effect/Schema"
+ * const decoded = S.decodeUnknownSync(CodexStart)({ thread: { id: "owned-thread" }, model: "gpt-6.1-sol", reasoningEffort: "medium", approvalPolicy: "never", sandbox: { type: "readOnly", networkAccess: false } })
+ * console.log(decoded.approvalPolicy) // never
+ * ```
  * @internal
- * @category internals
+ * @category schemas
  * @since 0.0.0
  */
 export class CodexStart extends S.Class<CodexStart>($I`CodexStart`)(
@@ -22,22 +30,40 @@ export class CodexStart extends S.Class<CodexStart>($I`CodexStart`)(
     approvalPolicy: S.Literal("never"),
     sandbox: S.Struct({ type: S.Literal("readOnly"), networkAccess: S.Literal(false) }),
   },
-  $I.annote("CodexStart", { description: "Validated partial CodexStart provider wire envelope." })
+  $I.annote("CodexStart", {
+    description: "Verifies the Codex thread identity, pinned model and effective read-only permission policy.",
+  })
 ) {}
 /**
- * Private implementation boundary used by the managed session facade.
+ * Decodes the owned turn identifier returned by Codex turn/start.
+ *
+ * **Example** (Decode a synthetic CodexTurn envelope)
+ * ```ts
+ * import { CodexTurn } from "../../src/AiProviderCliSession.wire.models.ts"
+ * import * as S from "effect/Schema"
+ * const decoded = S.decodeUnknownSync(CodexTurn)({ turn: { id: "owned-turn" } })
+ * console.log(decoded.turn.id) // owned-turn
+ * ```
  * @internal
- * @category internals
+ * @category schemas
  * @since 0.0.0
  */
 export class CodexTurn extends S.Class<CodexTurn>($I`CodexTurn`)(
   { turn: S.Struct({ id: S.NonEmptyString }) },
-  $I.annote("CodexTurn", { description: "Validated partial CodexTurn provider wire envelope." })
+  $I.annote("CodexTurn", { description: "Decodes the owned turn identifier returned by Codex turn/start." })
 ) {}
 /**
- * Private implementation boundary used by the managed session facade.
+ * Correlates a Codex assistant text item with its owning thread and turn.
+ *
+ * **Example** (Decode a synthetic CodexItem envelope)
+ * ```ts
+ * import { CodexItem } from "../../src/AiProviderCliSession.wire.models.ts"
+ * import * as S from "effect/Schema"
+ * const decoded = S.decodeUnknownSync(CodexItem)({ threadId: "owned-thread", turnId: "owned-turn", item: { type: "agentMessage", text: "synthetic reply" } })
+ * console.log(decoded.item.text) // synthetic reply
+ * ```
  * @internal
- * @category internals
+ * @category schemas
  * @since 0.0.0
  */
 export class CodexItem extends S.Class<CodexItem>($I`CodexItem`)(
@@ -46,12 +72,20 @@ export class CodexItem extends S.Class<CodexItem>($I`CodexItem`)(
     turnId: S.String,
     item: S.Struct({ type: S.Literal("agentMessage"), text: S.String }),
   },
-  $I.annote("CodexItem", { description: "Validated partial CodexItem provider wire envelope." })
+  $I.annote("CodexItem", { description: "Correlates a Codex assistant text item with its owning thread and turn." })
 ) {}
 /**
- * Private implementation boundary used by the managed session facade.
+ * Decodes Codex terminal status together with the thread and turn identifiers.
+ *
+ * **Example** (Decode a synthetic CodexComplete envelope)
+ * ```ts
+ * import { CodexComplete } from "../../src/AiProviderCliSession.wire.models.ts"
+ * import * as S from "effect/Schema"
+ * const decoded = S.decodeUnknownSync(CodexComplete)({ threadId: "owned-thread", turn: { id: "owned-turn", status: "completed" } })
+ * console.log(decoded.turn.status) // completed
+ * ```
  * @internal
- * @category internals
+ * @category schemas
  * @since 0.0.0
  */
 export class CodexComplete extends S.Class<CodexComplete>($I`CodexComplete`)(
@@ -59,12 +93,22 @@ export class CodexComplete extends S.Class<CodexComplete>($I`CodexComplete`)(
     threadId: S.String,
     turn: S.Struct({ id: S.NonEmptyString, status: S.NonEmptyString }),
   },
-  $I.annote("CodexComplete", { description: "Validated partial CodexComplete provider wire envelope." })
+  $I.annote("CodexComplete", {
+    description: "Decodes Codex terminal status together with the thread and turn identifiers.",
+  })
 ) {}
 /**
- * Private implementation boundary used by the managed session facade.
+ * Decodes an ACP assistant text chunk with its owning session identifier.
+ *
+ * **Example** (Decode a synthetic AcpText envelope)
+ * ```ts
+ * import { AcpText } from "../../src/AiProviderCliSession.wire.models.ts"
+ * import * as S from "effect/Schema"
+ * const decoded = S.decodeUnknownSync(AcpText)({ sessionId: "owned-session", update: { sessionUpdate: "agent_message_chunk", content: { type: "text", text: "synthetic reply" } } })
+ * console.log(decoded.update.content.text) // synthetic reply
+ * ```
  * @internal
- * @category internals
+ * @category schemas
  * @since 0.0.0
  */
 export class AcpText extends S.Class<AcpText>($I`AcpText`)(
@@ -75,12 +119,20 @@ export class AcpText extends S.Class<AcpText>($I`AcpText`)(
       content: S.Struct({ type: S.Literal("text"), text: S.String }),
     }),
   },
-  $I.annote("AcpText", { description: "Validated partial AcpText provider wire envelope." })
+  $I.annote("AcpText", { description: "Decodes an ACP assistant text chunk with its owning session identifier." })
 ) {}
 /**
- * Private implementation boundary used by the managed session facade.
+ * Verifies the Cursor session model identifier including context, effort and fast-mode qualifiers.
+ *
+ * **Example** (Decode a synthetic CursorIdentity envelope)
+ * ```ts
+ * import { CursorIdentity } from "../../src/AiProviderCliSession.wire.models.ts"
+ * import * as S from "effect/Schema"
+ * const decoded = S.decodeUnknownSync(CursorIdentity)({ sessionId: "owned-cursor", models: { currentModelId: "claude-opus-5-5[context=300k,effort=medium,fast=false]" } })
+ * console.log(decoded.sessionId) // owned-cursor
+ * ```
  * @internal
- * @category internals
+ * @category schemas
  * @since 0.0.0
  */
 export class CursorIdentity extends S.Class<CursorIdentity>($I`CursorIdentity`)(
@@ -88,12 +140,22 @@ export class CursorIdentity extends S.Class<CursorIdentity>($I`CursorIdentity`)(
     sessionId: S.NonEmptyString,
     models: S.Struct({ currentModelId: S.Literal("claude-opus-5-5[context=300k,effort=medium,fast=false]") }),
   },
-  $I.annote("CursorIdentity", { description: "Validated partial CursorIdentity provider wire envelope." })
+  $I.annote("CursorIdentity", {
+    description: "Verifies the Cursor session model identifier including context, effort and fast-mode qualifiers.",
+  })
 ) {}
 /**
- * Private implementation boundary used by the managed session facade.
+ * Decodes the Grok session model and configuration options for subsequent effort verification.
+ *
+ * **Example** (Decode a synthetic GrokIdentity envelope)
+ * ```ts
+ * import { GrokIdentity } from "../../src/AiProviderCliSession.wire.models.ts"
+ * import * as S from "effect/Schema"
+ * const decoded = S.decodeUnknownSync(GrokIdentity)({ sessionId: "owned-grok", models: { currentModelId: "grok-4.7" }, configOptions: [{ id: "reasoning_effort", currentValue: "medium" }] })
+ * console.log(decoded.models.currentModelId) // grok-4.7
+ * ```
  * @internal
- * @category internals
+ * @category schemas
  * @since 0.0.0
  */
 export class GrokIdentity extends S.Class<GrokIdentity>($I`GrokIdentity`)(
@@ -102,12 +164,20 @@ export class GrokIdentity extends S.Class<GrokIdentity>($I`GrokIdentity`)(
     models: S.Struct({ currentModelId: S.Literal("grok-4.7") }),
     configOptions: S.Array(S.Struct({ id: S.String, currentValue: S.Unknown })),
   },
-  $I.annote("GrokIdentity", { description: "Validated partial GrokIdentity provider wire envelope." })
+  $I.annote("GrokIdentity", {
+    description: "Decodes the Grok session model and configuration options for subsequent effort verification.",
+  })
 ) {}
 /**
- * Private implementation boundary used by the managed session facade.
+ * Defines the six exact MCP messaging tool names accepted by the managed permission callback.
+ *
+ * **Example** (Select a scoped acknowledgement tool)
+ * ```ts
+ * import { MessagingToolName } from "../../src/AiProviderCliSession.wire.models.ts"
+ * console.log(MessagingToolName.make("agent_message_acknowledge")) // agent_message_acknowledge
+ * ```
  * @internal
- * @category internals
+ * @category schemas
  * @since 0.0.0
  */
 export const MessagingToolName = LiteralKit([
@@ -117,11 +187,27 @@ export const MessagingToolName = LiteralKit([
   "agent_message_acknowledge",
   "agent_message_inspect",
   "agent_message_discover",
-]);
+]).annotate($I.annote("MessagingToolName", { description: "Exact scoped MCP messaging tool identifiers." }));
+
 /**
- * Private implementation boundary used by the managed session facade.
+ * Decoded identifier of an allowed scoped MCP messaging tool.
  * @internal
- * @category internals
+ * @category type-level
+ * @since 0.0.0
+ */
+export type MessagingToolName = typeof MessagingToolName.Type;
+/**
+ * Verifies the Claude initialize control response and its dontAsk permission mode.
+ *
+ * **Example** (Decode a synthetic ClaudeHandshake envelope)
+ * ```ts
+ * import { ClaudeHandshake } from "../../src/AiProviderCliSession.wire.models.ts"
+ * import * as S from "effect/Schema"
+ * const decoded = S.decodeUnknownSync(ClaudeHandshake)({ type: "control_response", response: { subtype: "success", request_id: "beep-initialize", response: { current_permission_mode: "dontAsk" } } })
+ * console.log(decoded.response.response.current_permission_mode) // dontAsk
+ * ```
+ * @internal
+ * @category schemas
  * @since 0.0.0
  */
 export class ClaudeHandshake extends S.Class<ClaudeHandshake>($I`ClaudeHandshake`)(
@@ -133,12 +219,22 @@ export class ClaudeHandshake extends S.Class<ClaudeHandshake>($I`ClaudeHandshake
       response: S.Struct({ current_permission_mode: S.Literal("dontAsk") }),
     }),
   },
-  $I.annote("ClaudeHandshake", { description: "Validated partial ClaudeHandshake provider wire envelope." })
+  $I.annote("ClaudeHandshake", {
+    description: "Verifies the Claude initialize control response and its dontAsk permission mode.",
+  })
 ) {}
 /**
- * Private implementation boundary used by the managed session facade.
+ * Verifies the Claude session initialization model and permission-mode readback.
+ *
+ * **Example** (Decode a synthetic ClaudeInit envelope)
+ * ```ts
+ * import { ClaudeInit } from "../../src/AiProviderCliSession.wire.models.ts"
+ * import * as S from "effect/Schema"
+ * const decoded = S.decodeUnknownSync(ClaudeInit)({ type: "system", subtype: "init", session_id: "owned-claude", model: "claude-opus-5-5", permissionMode: "dontAsk" })
+ * console.log(decoded.model) // claude-opus-5-5
+ * ```
  * @internal
- * @category internals
+ * @category schemas
  * @since 0.0.0
  */
 export class ClaudeInit extends S.Class<ClaudeInit>($I`ClaudeInit`)(
@@ -149,12 +245,22 @@ export class ClaudeInit extends S.Class<ClaudeInit>($I`ClaudeInit`)(
     model: S.Literal("claude-opus-5-5"),
     permissionMode: S.Literal("dontAsk"),
   },
-  $I.annote("ClaudeInit", { description: "Validated partial ClaudeInit provider wire envelope." })
+  $I.annote("ClaudeInit", {
+    description: "Verifies the Claude session initialization model and permission-mode readback.",
+  })
 ) {}
 /**
- * Private implementation boundary used by the managed session facade.
+ * Decodes a Claude terminal result without treating its subtype as proof of success.
+ *
+ * **Example** (Decode a synthetic ClaudeResult envelope)
+ * ```ts
+ * import { ClaudeResult } from "../../src/AiProviderCliSession.wire.models.ts"
+ * import * as S from "effect/Schema"
+ * const decoded = S.decodeUnknownSync(ClaudeResult)({ type: "result", subtype: "success", is_error: false, session_id: "owned-claude", result: "synthetic reply" })
+ * console.log(decoded.subtype) // success
+ * ```
  * @internal
- * @category internals
+ * @category schemas
  * @since 0.0.0
  */
 export class ClaudeResult extends S.Class<ClaudeResult>($I`ClaudeResult`)(
@@ -165,25 +271,47 @@ export class ClaudeResult extends S.Class<ClaudeResult>($I`ClaudeResult`)(
     result: S.optionalKey(S.String),
     session_id: S.NonEmptyString,
   },
-  $I.annote("ClaudeResult", { description: "Validated partial ClaudeResult provider wire envelope." })
+  $I.annote("ClaudeResult", {
+    description: "Decodes a Claude terminal result without treating its subtype as proof of success.",
+  })
 ) {}
 /**
- * Private implementation boundary used by the managed session facade.
+ * Decodes the identifier of a reverse Claude control request for host permission handling.
+ *
+ * **Example** (Decode a synthetic ClaudeControl envelope)
+ * ```ts
+ * import { ClaudeControl } from "../../src/AiProviderCliSession.wire.models.ts"
+ * import * as S from "effect/Schema"
+ * const decoded = S.decodeUnknownSync(ClaudeControl)({ type: "control_request", request_id: "owned-request" })
+ * console.log(decoded.request_id) // owned-request
+ * ```
  * @internal
- * @category internals
+ * @category schemas
  * @since 0.0.0
  */
 export class ClaudeControl extends S.Class<ClaudeControl>($I`ClaudeControl`)(
   { type: S.Literal("control_request"), request_id: S.String },
-  $I.annote("ClaudeControl", { description: "Validated partial ClaudeControl provider wire envelope." })
+  $I.annote("ClaudeControl", {
+    description: "Decodes the identifier of a reverse Claude control request for host permission handling.",
+  })
 ) {}
 /**
- * Private implementation boundary used by the managed session facade.
+ * Decodes the stream message discriminator before selecting a Claude payload schema.
+ *
+ * **Example** (Decode a synthetic ClaudeEnvelope envelope)
+ * ```ts
+ * import { ClaudeEnvelope } from "../../src/AiProviderCliSession.wire.models.ts"
+ * import * as S from "effect/Schema"
+ * const decoded = S.decodeUnknownSync(ClaudeEnvelope)({ type: "system" })
+ * console.log(decoded.type) // system
+ * ```
  * @internal
- * @category internals
+ * @category schemas
  * @since 0.0.0
  */
 export class ClaudeEnvelope extends S.Class<ClaudeEnvelope>($I`ClaudeEnvelope`)(
   { type: S.String },
-  $I.annote("ClaudeEnvelope", { description: "Validated partial ClaudeEnvelope provider wire envelope." })
+  $I.annote("ClaudeEnvelope", {
+    description: "Decodes the stream message discriminator before selecting a Claude payload schema.",
+  })
 ) {}

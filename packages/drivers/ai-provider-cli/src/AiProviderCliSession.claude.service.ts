@@ -37,9 +37,23 @@ import type { ManagedLaunchProfile, ManagedSessionMessage } from "./AiProviderCl
 import type { ManagedSession } from "./AiProviderCliSession.service.ts";
 
 /**
- * Private implementation boundary used by the managed session facade.
+ * Opens a scoped Claude stream with isolated settings and explicit messaging tools.
+ *
+ * **Example** (Compose an owned Claude launch)
+ * ```ts
+ * import { openClaude } from "../../src/AiProviderCliSession.claude.service.ts"
+ * import * as Effect from "effect/Effect"
+ * import { ManagedLaunchProfile } from "@beep/ai-provider-cli"
+ * const profile = ManagedLaunchProfile.make({
+ *   provider: "claude", executable: "claude", prefixArgs: [],
+ *   workspace: "/owned/workspace", profileRoot: "/owned/profile",
+ *   env: { HOME: "/owned/profile" }, authLane: "existing-subscription", tools: []
+ * })
+ * const operation = openClaude(profile)
+ * console.log(Effect.isEffect(operation)) // true; no process or filesystem effect runs
+ * ```
  * @internal
- * @category internals
+ * @category resource-management
  * @since 0.0.0
  */
 export const openClaude = Effect.fn("AiProviderCliSession.openClaude")(function* (profile: ManagedLaunchProfile) {

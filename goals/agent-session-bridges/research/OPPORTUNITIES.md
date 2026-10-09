@@ -71,3 +71,16 @@ input generation inside it would change that role. Retain one narrowly reasoned
 inventory exception and its removal condition. No production source or live
 receipt is changed by that inventory judgment. Prevention: distinguish executable
 protocol fixtures from schema property suites in the checker.
+
+## 2026-10-09 — Hosted fresh documentation scan exceeds package proof
+
+On PR #1571 at `5b0207b8c7`, Heavy Docgen rejected 27 provider-internal exports
+using the unrecognized category `internals`. JSDoc Ratchet's freshly generated
+inventory also reported 26 added missing examples, two schema-annotation findings
+and two section-order findings. Earlier package audit/docgen and the committed
+inventory ratchet passed, so those receipts did not establish fresh repository
+metadata compliance. Read both completed job logs immediately and repair the
+introduced documentation against the canonical JSDoc categories and example
+grammar; do not grow the baseline or exclude the internal files. Prevention:
+run fresh documentation inventory and bounded repository metadata checks when
+adding private cross-file exports, as well as the package's own docgen.

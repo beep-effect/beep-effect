@@ -10,9 +10,17 @@ import { failure } from "./AiProviderCliSession.profile.service.ts";
 import { CursorIdentity } from "./AiProviderCliSession.wire.models.ts";
 
 /**
- * Private implementation boundary used by the managed session facade.
+ * Verifies the Cursor session model readback while recording permission policy as launch enforced.
+ *
+ * **Example** (Verify a synthetic Cursor identity)
+ * ```ts
+ * import { verifyCursor } from "../../src/AiProviderCliSession.cursor.service.ts"
+ * import * as Effect from "effect/Effect"
+ * const identity = Effect.runSync(verifyCursor({ sessionId: "owned-cursor", models: { currentModelId: "claude-opus-5-5[context=300k,effort=medium,fast=false]" } }))
+ * console.log(identity.model) // claude-opus-5-5
+ * ```
  * @internal
- * @category internals
+ * @category validation
  * @since 0.0.0
  */
 export const verifyCursor = Effect.fn("ManagedCursor.verifyIdentity")(function* (started: unknown) {
@@ -33,9 +41,16 @@ export const verifyCursor = Effect.fn("ManagedCursor.verifyIdentity")(function* 
 });
 
 /**
- * Provider-specific launch and identity boundary.
+ * Builds Cursor ACP arguments with an explicit workspace, model, ask mode and sandbox.
+ *
+ * **Example** (Inspect the owned workspace)
+ * ```ts
+ * import { cursorArguments } from "../../src/AiProviderCliSession.cursor.service.ts"
+ * import * as A from "effect/Array"
+ * console.log(A.contains(cursorArguments("/owned/workspace"), "/owned/workspace")) // true
+ * ```
  * @internal
- * @category internals
+ * @category configuration
  * @since 0.0.0
  */
 export const cursorArguments = (workspace: string) => [

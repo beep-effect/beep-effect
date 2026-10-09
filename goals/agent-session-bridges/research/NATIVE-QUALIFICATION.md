@@ -165,3 +165,29 @@ touched only the Claude launch module, its synthetic fixture and provider README
 Grok, Codex, router and scoped-tool implementation remained unchanged. The Grok
 receipt retains its original complete source inventory, including the earlier
 Claude module hash. It is not relabeled as a run of the later complete tree.
+
+## Hosted documentation repair
+
+The first integrated PR head (`5b0207b8c7`) failed Heavy Docgen and the fresh
+JSDoc inventory ratchet. Twenty-seven private provider exports used an invalid
+category; required examples, the messaging-tool domain's annotation/type
+companion, and two router comment section orders also needed repair. Package
+docgen had compiled/rendered successfully without proving those global metadata
+requirements.
+
+The corrective wave supplies approved categories and 50 compilable provider
+examples, canonical LiteralKit metadata and the private type companion. The two
+router changes move comments only. Literal domains, wire fields, provider pins,
+tool grants and native control flow remain unchanged. Full provider audit/docgen
+passed again (21.9 and 3.0 seconds), all four scoped documentation tasks passed,
+and a direct provider metadata check analyzed the package without proof-manifest
+reuse and found zero missing documentation. The CLI's comment-only repair passed
+canonical quick lint/check (3.7 and 8.5 seconds).
+
+The live receipts retain their original source inventories. This documentation
+and schema-metadata wave is subsequent evidence, not a retroactive reassignment
+of live-run hashes. A fresh global inventory generated after the source freeze
+passed the JSDoc ratchet: 21 tracked totals, zero increases, and zero legacy
+non-generated findings. Missing export examples decreased from nine to eight;
+no baseline was weakened. The final hosted head remains the merge gate for the
+corrective wave.

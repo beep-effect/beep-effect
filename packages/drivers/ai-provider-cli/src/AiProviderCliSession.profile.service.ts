@@ -16,9 +16,15 @@ import { ManagedSessionError } from "./AiProviderCliSession.errors.ts";
 import type { ManagedLaunchProfile } from "./AiProviderCliSession.models.ts";
 
 /**
- * Private implementation boundary used by the managed session facade.
+ * Constructs typed managed-session errors from a safe operation, reason and message.
+ *
+ * **Example** (Inspect a classified timeout)
+ * ```ts
+ * import { failure } from "../../src/AiProviderCliSession.profile.service.ts"
+ * console.log(failure.make("prompt", "timeout", "Native request timed out").reason) // timeout
+ * ```
  * @internal
- * @category internals
+ * @category error-handling
  * @since 0.0.0
  */
 export const failure = {
@@ -26,9 +32,17 @@ export const failure = {
     ManagedSessionError.make({ operation, reason, message }),
 };
 /**
- * Private implementation boundary used by the managed session facade.
+ * Preserves typed session failures and redacts unclassified native transport errors.
+ *
+ * **Example** (Preserve a known timeout)
+ * ```ts
+ * import { failure, transportFailure } from "../../src/AiProviderCliSession.profile.service.ts"
+ * import * as Effect from "effect/Effect"
+ * const error = Effect.runSync(Effect.fail(failure.make("prompt", "timeout", "Native request timed out")).pipe(transportFailure("receive"), Effect.flip))
+ * console.log(error.reason) // timeout
+ * ```
  * @internal
- * @category internals
+ * @category error-handling
  * @since 0.0.0
  */
 export const transportFailure = (operation: string) =>
@@ -44,9 +58,16 @@ export const transportFailure = (operation: string) =>
         )
   );
 /**
- * Private implementation boundary used by the managed session facade.
+ * Encodes protocol payloads as JSON through the schema encoder.
+ *
+ * **Example** (Encode a synthetic message identifier)
+ * ```ts
+ * import { encodeJson } from "../../src/AiProviderCliSession.profile.service.ts"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.runSync(encodeJson({ messageId: "synthetic" }))) // {"messageId":"synthetic"}
+ * ```
  * @internal
- * @category internals
+ * @category encoding
  * @since 0.0.0
  */
 export const encodeJson = Effect.fn("ManagedSession.encodeJson")((input: unknown) =>
@@ -54,9 +75,23 @@ export const encodeJson = Effect.fn("ManagedSession.encodeJson")((input: unknown
 );
 
 /**
- * Private implementation boundary used by the managed session facade.
+ * Exclusively writes an owned Codex configuration with explicit policy and scoped MCP servers.
+ *
+ * **Example** (Compose private Codex preparation)
+ * ```ts
+ * import { prepareCodex } from "../../src/AiProviderCliSession.profile.service.ts"
+ * import * as Effect from "effect/Effect"
+ * import { ManagedLaunchProfile } from "@beep/ai-provider-cli"
+ * const profile = ManagedLaunchProfile.make({
+ *   provider: "codex", executable: "codex", prefixArgs: [],
+ *   workspace: "/owned/workspace", profileRoot: "/owned/profile",
+ *   env: { HOME: "/owned/profile" }, authLane: "existing-subscription", tools: []
+ * })
+ * const operation = prepareCodex(profile)
+ * console.log(Effect.isEffect(operation)) // true; no process or filesystem effect runs
+ * ```
  * @internal
- * @category internals
+ * @category configuration
  * @since 0.0.0
  */
 export const prepareCodex = Effect.fn("AiProviderCliSession.prepareCodex")(function* (profile: ManagedLaunchProfile) {
@@ -104,9 +139,23 @@ export const prepareCodex = Effect.fn("AiProviderCliSession.prepareCodex")(funct
 });
 
 /**
- * Private implementation boundary used by the managed session facade.
+ * Validates private writable directories and exclusively writes the named Grok sandbox configuration.
+ *
+ * **Example** (Compose private Grok preparation)
+ * ```ts
+ * import { prepareGrok } from "../../src/AiProviderCliSession.profile.service.ts"
+ * import * as Effect from "effect/Effect"
+ * import { ManagedLaunchProfile } from "@beep/ai-provider-cli"
+ * const profile = ManagedLaunchProfile.make({
+ *   provider: "grok", executable: "grok", prefixArgs: [],
+ *   workspace: "/owned/workspace", profileRoot: "/owned/profile",
+ *   env: { HOME: "/owned/profile" }, authLane: "existing-subscription", tools: []
+ * })
+ * const operation = prepareGrok(profile)
+ * console.log(Effect.isEffect(operation)) // true; no process or filesystem effect runs
+ * ```
  * @internal
- * @category internals
+ * @category configuration
  * @since 0.0.0
  */
 export const prepareGrok = Effect.fn("AiProviderCliSession.prepareGrok")(function* (profile: ManagedLaunchProfile) {
@@ -166,9 +215,23 @@ export const prepareGrok = Effect.fn("AiProviderCliSession.prepareGrok")(functio
 });
 
 /**
- * Private implementation boundary used by the managed session facade.
+ * Rejects nonisolated profiles and environment selectors that would change the approved auth route.
+ *
+ * **Example** (Compose launch validation)
+ * ```ts
+ * import { validateProfile } from "../../src/AiProviderCliSession.profile.service.ts"
+ * import * as Effect from "effect/Effect"
+ * import { ManagedLaunchProfile } from "@beep/ai-provider-cli"
+ * const profile = ManagedLaunchProfile.make({
+ *   provider: "codex", executable: "codex", prefixArgs: [],
+ *   workspace: "/owned/workspace", profileRoot: "/owned/profile",
+ *   env: { HOME: "/owned/profile" }, authLane: "existing-subscription", tools: []
+ * })
+ * const operation = validateProfile(profile)
+ * console.log(Effect.isEffect(operation)) // true; no process or filesystem effect runs
+ * ```
  * @internal
- * @category internals
+ * @category validation
  * @since 0.0.0
  */
 export const validateProfile = Effect.fn("ManagedSession.validateProfile")(function* (profile: ManagedLaunchProfile) {

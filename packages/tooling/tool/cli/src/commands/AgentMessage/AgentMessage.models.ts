@@ -256,6 +256,11 @@ export class PolicySnapshot extends S.Class<PolicySnapshot>($I`PolicySnapshot`)(
 /**
  * Host-resolved execution location with independently observed lane, run and turn references.
  *
+ * **Details**
+ *
+ * The host supplies its canonical workspace. Optional references remain absent until observed;
+ * a session identifier is not used as a substitute for a run or turn identifier.
+ *
  * **Example** (Record an observed workspace and run)
  *
  * ```ts
@@ -265,11 +270,6 @@ export class PolicySnapshot extends S.Class<PolicySnapshot>($I`PolicySnapshot`)(
  * const execution = EndpointExecutionRef.make({ workspace: "/workspace/repository", runId: O.some("owned-run") })
  * console.log(O.isNone(execution.turnId)) // true
  * ```
- *
- * **Details**
- *
- * The host supplies its canonical workspace. Optional references remain absent until observed;
- * a session identifier is not used as a substitute for a run or turn identifier.
  *
  * @category models
  * @since 0.0.0
@@ -316,6 +316,11 @@ export type EndpointHostMode = typeof EndpointHostMode.Type;
 /**
  * Provider and backend ownership with optional observed host and application references.
  *
+ * **Details**
+ *
+ * A backend name records the enrolled transport. It does not prove native application control.
+ * Host and application identifiers are supplied only when the owner observes them.
+ *
  * **Example** (Identify an owned app-server process)
  *
  * ```ts
@@ -325,11 +330,6 @@ export type EndpointHostMode = typeof EndpointHostMode.Type;
  * const host = EndpointHostRef.make({ mode: "managed-process", provider: "codex", backend: "codex-app-server-stdio" })
  * console.log(O.isNone(host.appId)) // true
  * ```
- *
- * **Details**
- *
- * A backend name records the enrolled transport. It does not prove native application control.
- * Host and application identifiers are supplied only when the owner observes them.
  *
  * @category models
  * @since 0.0.0

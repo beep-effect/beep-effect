@@ -20,8 +20,8 @@ const $I = $AiProviderCliId.create("AiProviderCliSession.models");
  * @category schemas
  * @since 0.0.0
  */
-export const ManagedProvider = LiteralKit(["codex", "grok", "claude", "cursor"]).pipe(
-  $I.annoteSchema("ManagedProvider", { description: "Native managed runtime identifiers." })
+export const ManagedProvider = LiteralKit(["codex", "grok", "claude", "cursor"]).annotate(
+  $I.annote("ManagedProvider", { description: "Native managed runtime identifiers." })
 );
 /**
  * Runtime selected at the native boundary.
