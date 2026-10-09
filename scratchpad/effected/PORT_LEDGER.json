@@ -5738,12 +5738,171 @@
           "entry": "."
         }
       ],
-      "exportsAdded": [],
+      "exportsAdded": [
+        {
+          "name": "InvalidBasicAuthUsernameError",
+          "kind": "both",
+          "entry": "."
+        }
+      ],
       "newDeps": [],
       "fixturesBytes": 0,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/npm/IntegrityHash.test.ts; scratchpad/test/npm/DependencySpecifier.test.ts; scratchpad/test/npm/Manifest.test.ts; scratchpad/test/npm/ReleaseAgeGate.test.ts; scratchpad/test/npm/RegistryKind.test.ts; scratchpad/test/npm/PackagePublish.test.ts:377",
+          "upstreamBehaviour": "DependencySpecifier, IntegrityHash and CorepackIntegrityHash attach statics with Object.assign; Manifest/NpmRegistry/ReleaseAgeGate use string Sets and Object helpers; release-age filtering and timing use Date.parse/Date.now; pack output uses JSON.parse, yielding SyntaxError for malformed JSON.",
+          "labBehaviour": "Schema statics are explicit S.Opaque class members; membership uses HashSet and record operations use effect/Record; date filtering uses S.DateFromString plus DateTime and timing uses Clock; pack JSON uses S.fromJsonString(PackJson), yielding SchemaError for malformed JSON.",
+          "reason": "native-runtime: no-native-runtime and the 2026-10-09 grilling/schema-statics rulings remove the allowlisted Object.assign sites; preferSchemaOverJson forces the cause-class change (round-1 codemod-3). Branded strings, shared corepack-schema identity and date-string parsing are retained."
+        },
+        {
+          "test": "scratchpad/test/npm/PackagePublish.test.ts:649,664; scratchpad/test/npm/NpmRegistry.test.ts:531; scratchpad/test/npm/PackageTarball.test.ts:228; scratchpad/test/npm/Manifest.test.ts:74; scratchpad/test/npm/CatalogAssemblyError.test.ts:94; scratchpad/test/npm/WorkspaceResolver.test.ts:67; NpmRegistry test-double and PackagePublish unstubbed-member cases",
+          "upstreamBehaviour": "basicCredentialFromPair throws RangeError; unstubbed registry/publish methods die with native Error; RegistryReadError, PublishError, TarballError, ManifestDecodeError, CatalogAssemblyError and DependencyResolutionError encode Error causes without their originating stack.",
+          "labBehaviour": "InvalidBasicAuthUsernameError is a public S.TaggedError typed failure; test-double defects use UnstubbedRegistryMethodError/UnstubbedPublishMethodError; all six existing error cause schemas use S.Defect({ includeStack: true }) while retaining cause optionality.",
+          "reason": "tagged-errors: D5/D11, EF-1 and the Effect-first tagged-error cause contract require schema errors and preserved stacks; round-1 codemod-1 and fix-npm-g2/g3 identify the constructor, defect and wire changes."
+        },
+        {
+          "test": "scratchpad/test/npm/DependencySection.test.ts; scratchpad/test/npm/DependencySpecifier.test.ts; scratchpad/test/npm/IntegrityHash.test.ts; scratchpad/test/npm/PackageManagerPin.test.ts; scratchpad/test/npm/PackageManagerCache.test.ts; scratchpad/test/npm/PackageTarball.test.ts:244; scratchpad/test/npm/NpmRegistry.test.ts; scratchpad/test/npm/PackagePublish.test.ts",
+          "upstreamBehaviour": "Credentials, registry targets/seeds, publish outcomes/options and cache options are type-only models; dependency, manager, registry and algorithm vocabularies are literal schemas/type unions; integrity/specifier/pin guards duplicate grammar; error cases share optional-field bags; branded schemas use Object.assign statics.",
+          "labBehaviour": "These data models have annotated structural schemas and derived types; named vocabularies use LiteralKit and guards derive from schemas; error facades project to validated internal tagged variants without discarding external fields; three branded schemas use S.Opaque statics; pack output has one JSON codec; SriIntegrityHash gains its derived type.",
+          "reason": "schema-first: D5, laws 17-20, EF-12/13/33/35 and the 2026-10-09 S.Opaque ruling require schema sources of truth. DependencyProtocol/IntegrityAlgorithm gain barrel runtime exports; other new model schemas remain available from their defining modules. Existing structural boundaries and literal order are retained."
+        },
+        {
+          "test": "scratchpad/test/npm/ReleaseAgeGate.test.ts (PartialReleaseAgeGate schema cases); scratchpad/test/npm/PackagePublish.test.ts (pack/dryRun sizing cases); scratchpad/test/npm/NpmRegistry.test.ts; scratchpad/test/npm/PackageTarball.test.ts; no upstream assertion was changed solely for these finite refinements",
+          "upstreamBehaviour": "PackJsonEntry.size/unpackedSize/entryCount, PackedTarball.packedSize/unpackedSize/fileCount, registry/tarball status, publish exitCode and PartialReleaseAgeGate.ageMinutes use Schema.Number; DryRunOutcome sizing fields are type-only numbers.",
+          "labBehaviour": "All listed fields validate S.Finite; DryRunOutcome has optional finite sizing fields in its new schema. The already-finite ReleaseAgeGate AgeMinutes retains upstream Number.check(nonnegative, finite), including check order.",
+          "reason": "numeric-domains: @effect/tsgo schemaNumber and the 2026-10-09 finite-domain ruling, recorded in round-1 codemod-2 and fix-npm-g2:23, require rejection of non-finite schema inputs; npm-34 restoration is excluded from the divergence."
+        },
+        {
+          "test": "scratchpad/test/npm/DependencySpecifier.test.ts (classified payload assertions); scratchpad/test/npm/PackagePublish.test.ts (typed auth errors); scratchpad/test/npm/WorkspaceResolver.test.ts:79,120,130; scratchpad/test/npm/IntegrityHash.test.ts (algorithmOf)",
+          "upstreamBehaviour": "Manifest codec plumbing uses any and casts; DependencySection casts an Object.fromEntries inverse; IntegrityHash.algorithmOf casts extracted prefixes; tests cast classified/error payloads and inject an invalid reason with as never.",
+          "labBehaviour": "Manifest has explicit encoded/transformation types and Result-based encoding; the inverse mapping uses satisfies; algorithmOf validates its prefix with a schema guard; tests narrow payloads with guards and inject wrong inputs through deliberatelyInvalid<T> while retaining constructor and decoder rejection coverage.",
+          "reason": "type-safety: D15 removes unsafe assertions and the Manifest biome suppression; the 2026-10-09 deliberate-input ruling permits exactly the isolated generic cast in scratchpad/test/npm/deliberatelyInvalid.ts. Test diagnostic skip-file directives remain and are inventoried as backlog-10."
+        },
+        {
+          "test": "module suite scratchpad/test/npm/**",
+          "upstreamBehaviour": "Schema errors are instantiated with new; known-input codecs use decodeUnknown variants; generators use fail/yield wrappers, catch-to-fail and map(Option.some); service-only test generators and unchecked array reads retain diagnostic-triggering shapes.",
+          "labBehaviour": "Schema construction uses .make, known-input decoding uses decodeEffect/decodeExit/decodeResult, typed errors can be yielded directly, error mapping uses mapError/catchIf, Option wrapping uses asSome, service-only reads use Effect.service, and the base64 sextet read checks undefined.",
+          "reason": "tsgo-diagnostics: step-2 @effect/tsgo diagnostics (7f67982f77 and 8b9e30ace7), including newSchemaClass and typed codec/combinator opportunities, require these retained source/test shapes. The temporary basicCredentialFromPair dual overload was removed in fix-npm-g2 and is not recorded."
+        },
+        {
+          "test": "scratchpad/test/npm/CatalogResolver.test.ts; scratchpad/test/npm/WorkspaceResolver.test.ts; scratchpad/test/npm/PackagePublish.test.ts:83,150,356,642,649,656; scratchpad/test/npm/PackageTarball.test.ts; scratchpad/test/npm/DependencySpecifier.test.ts; scratchpad/test/npm/PackageManagerPin.test.ts",
+          "upstreamBehaviour": "basicCredentialFromPair returns synchronously and throws for a colon-bearing username; executor command uses inline Effect.gen; resolver no-op methods and integrity/specifier decoders lack Effect.fn wrappers; domain code calls native string/array helpers and hand-builds lowercase hex.",
+          "labBehaviour": "basicCredentialFromPair returns a lazy Effect typed with InvalidBasicAuthUsernameError, retaining two arguments; executor command uses Effect.fnUntraced; no-op services, decoder helpers and test fixture methods use Effect.fn; string parsing/matching and digest encoding use Effect helpers, including Hex.encode.",
+          "reason": "effect-first: EF-1/EF-5, effect-fn and the Effect helper/match laws require these shapes; fix-npm-g2 adjusts credential success/rejection/redaction tests. fix-npm-g5 restores the executor helper to fnUntraced, so no added executor trace span is recorded."
+        },
+        {
+          "test": "module suite scratchpad/test/npm/**",
+          "upstreamBehaviour": "npm source, tests and carried JSDoc examples import Effect modules from the root effect barrel.",
+          "labBehaviour": "Source, tests and carried examples import each Effect module through effect/<Module>; existing effect/http, effect/process and encoding subpaths remain; Option extension users import the existing @beep/utils/Option helper.",
+          "reason": "effect-imports: AGENTS.md per-module import law and the operator revision step 3 (e8f7588108) require module-specific Effect imports. This is a structural import-graph change."
+        },
+        {
+          "test": "module suite scratchpad/test/npm/**",
+          "upstreamBehaviour": "Services use @effected/npm identifiers; schema classes/errors use short local identifiers; schema values, fields and reusable checks lack namespaced @beep/identity metadata.",
+          "labBehaviour": "Module-local $ScratchpadId.create(\"effected/npm/<module>\") composers supply $I service/class/error identifiers and schema/field/check annotations, including the new literal/model schemas in DependencySpecifier, IntegrityHash, RegistryCredential, PackagePublish and NpmRegistry.",
+          "reason": "identity-annotations: operator revision step 4, D5 and EF-12 require IdentityComposer identifiers and schema metadata; beedfd60a8 and fix-npm-g1/g2/g3/g4 ground the systematic annotation changes."
+        },
+        {
+          "test": "scratchpad/test/npm/NpmRegistry.test.ts:210 (the registry token source-contract assertion)",
+          "upstreamBehaviour": "The removed-token source-contract test reads ../src/NpmRegistry.ts in the upstream package layout.",
+          "labBehaviour": "The same assertion reads ../../effected/npm/NpmRegistry.ts in the lab and still requires the explicit readonly token?: never source tripwire.",
+          "reason": "test-environment: D9 and the 2026-10-09 lab-layout/test-environment ruling require source-inspection paths to follow the copied module. The diff changes the path only, preserving the original tripwire assertions."
+        },
+        {
+          "test": "scratchpad/test/npm/reachability.test.ts:23,40,64,104,115,128",
+          "upstreamBehaviour": "The vocabulary/IO reachability guard scans ../src/ and forbids ./NpmRegistry.js, ./PackagePublish.js, ./NpmExecutor.js and @effected/commands import edges.",
+          "labBehaviour": "It scans ../../effected/npm/ and forbids the corresponding .ts IO modules and ../commands/index.ts edge; the vocabulary list, comment-stripper regression and individually named service-export assertions remain.",
+          "reason": "reachability: D9 and the lab import-graph retargeting ruling require reachability assertions to name actual copied paths. Effect imports now resolve through dedicated subpaths; no new package-free requirement or weakened vocabulary guard is introduced."
+        },
+        {
+          "test": "scratchpad/test/npm/Manifest.test.ts:52; scratchpad/test/npm/Manifest.test.ts:64",
+          "upstreamBehaviour": "Manifest.decode stores unknown keys by assigning into an ordinary rest object; an own __proto__ field invokes the inherited setter and disappears from toRecord output.",
+          "labBehaviour": "Manifest.makeWire collects unknown entries and builds rest with effect/Record.fromEntries, preserving an own __proto__ field as data while typed dependency fields retain precedence over rest collisions.",
+          "reason": "upstream-bug: fix-npm-g3.md:1,25 records the pinned upstream probe: inputKeys [\"name\",\"__proto__\"] became outputKeys [\"name\"]. Round-1 npm-1 identifies the same defect; the added round-trip and collision regressions assert preserved keys, marker data and full record equality."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "backlog-1 — The attribution list contains a source-comment fragment (scratchpad/effected/npm/README.md:274)",
+          "reason": "docs: Delete the leaked bullet during S2, leaving Port-notes bookkeeping to the central codemod."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-2 — The README teaches upstream installation/imports and retains forbidden example imports (scratchpad/effected/npm/README.md:3)",
+          "reason": "docs: During S2 apply the prescribed lab README adaptation and rewrite examples to the lab path and dedicated Effect imports. The added-export-record fragment of sol-1-15 is deduped into codemod-4."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-3 — The module overview prose was dropped (scratchpad/effected/npm/index.ts:1)",
+          "reason": "docs: Carry the oracle overview into the correct documentation carrier during S2, preserving its substance and adapting import paths; do not introduce an @module tag."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-4 — Documentation carriers and the finite-age explanation need the deferred S2 pass (scratchpad/effected/npm/CatalogResolver.ts:38)",
+          "reason": "jsdoc: Convert carried prose to titled Examples and prescribed metadata; update the finite-age/combination remarks to the actual schema. Do not perform ledger/Port-note recording here."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-5 — Tests lack canonical variant-and-payload assertions (scratchpad/test/npm/DependencySpecifier.test.ts:102)",
+          "reason": "test: During S3 use assertSome/assertNone and Result/Exit helpers with expected payloads/Causes, preserving oracle meaning."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-6 — Effectful acquisition/scope ownership has not been migrated to it.layer (scratchpad/test/npm/PackageTarball.test.ts:69)",
+          "reason": "test: During S3 move effectful fixtures to it.layer; retain per-test provision for pure stubs."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "backlog-7 — Generated schema/codec round-trip and parser/formatter fidelity/idempotence properties are missing (scratchpad/test/npm/IntegrityHash.test.ts:1)",
+          "reason": "test: During S3 add the canonical Arbitrary.schema/fcRuns properties while retaining all oracle suites. The specific manifest bug regression is already required under npm-1."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-8 — Equivalent spreads could be expressed in fewer helper calls; no required failure is established (scratchpad/effected/npm/NpmExecutor.ts:104)",
+          "reason": "effect-idiom: Optionally collapse adjacent calls into one heterogeneous struct per site when this code is next touched; backlog under D11."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-9 — Test fixture/collection idioms remain to be migrated, without a reported source-domain bug (scratchpad/test/npm/CatalogResolver.test.ts:30)",
+          "reason": "test: During S3 use HashMap fixtures with Option lookup and a HashSet for reachability; retain the original fixture behavior and assertions."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "backlog-10 — The test-rule enforcement claim is qualified by directives; repo policy remediation cannot be assigned to this module (scratchpad/test/npm/NpmRegistry.test.ts:1)",
+          "reason": "tsgo: Move module-local test-canon replacements to S3; track any repo-wide directive/checker/config policy separately because it is outside the port write surface."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 4,
+              "backlog": 1
+            },
+            "sol": {
+              "required": 12,
+              "backlog": 6
+            },
+            "fable": {
+              "required": 13,
+              "backlog": 12
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

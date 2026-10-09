@@ -67,7 +67,7 @@ export type PartialReleaseAgeGate = typeof PartialReleaseAgeGate.Type;
 // integer of minutes, but `combine` takes `Math.max` of arbitrary finite
 // contributions, and requiring an integer here would make a fractional
 // contribution throw at construction, breaking `combine`'s totality.
-const AgeMinutes = S.Finite.check(S.isGreaterThanOrEqualTo(0), S.isFinite());
+const AgeMinutes = S.Number.check(S.isGreaterThanOrEqualTo(0), S.isFinite());
 
 // Match a package name against a single pattern with pnpm `@pnpm/matcher`
 // semantics: an exact-name match, or a `*`-glob where `*` matches ANY run of

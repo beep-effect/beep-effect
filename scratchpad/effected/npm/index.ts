@@ -12,7 +12,7 @@ export {
 export {
 	CatalogSpecifier,
 	type ClassifiedSpecifier,
-	type DependencyProtocol,
+	DependencyProtocol,
 	DependencySpecifier,
 	type DependencySpecifierBrand,
 	DistTagSpecifier,
@@ -24,7 +24,7 @@ export {
 } from "./DependencySpecifier.ts";
 export {
 	CorepackIntegrityHash,
-	type IntegrityAlgorithm,
+	IntegrityAlgorithm,
 	IntegrityHash,
 	type IntegrityHashBrand,
 	InvalidIntegrityHashError,
@@ -76,6 +76,7 @@ export {
 export { PackageTarball, type PackageTarballShape, TarballError } from "./PackageTarball.ts";
 export { PublishError } from "./PublishError.ts";
 export {
+	InvalidBasicAuthUsernameError,
 	type BasicCredential,
 	type RegistryCredential,
 	type TokenCredential,

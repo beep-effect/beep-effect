@@ -5,6 +5,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { DependencyResolutionError, WorkspaceResolver } from "../../effected/npm/index.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 describe("WorkspaceResolver", () => {
 	layer(WorkspaceResolver.noop)("no-op default layer", (it) => {
@@ -63,6 +64,18 @@ describe("WorkspaceResolver", () => {
 			assert.isTrue(error instanceof Error);
 		});
 
+		it.effect("encodes the originating cause stack", () =>
+			Effect.gen(function* () {
+				const cause = new Error("catalog not found");
+				const stack = cause.stack;
+				if (stack === undefined) assert.fail("expected the originating Error stack");
+				const encoded = yield* S.encodeEffect(DependencyResolutionError)(
+					DependencyResolutionError.make({ specifier: "catalog:", cause }),
+				);
+				assert.deepStrictEqual(encoded.cause, { name: cause.name, message: cause.message, stack });
+			}),
+		);
+
 		it("preserves an Error cause without stringifying it", () => {
 			const cause = new Error("catalog not found");
 			const error = DependencyResolutionError.make({ specifier: "catalog:", cause });
@@ -105,6 +118,16 @@ describe("WorkspaceResolver", () => {
 		});
 
 		it("rejects a reason outside the literal union", () => {
+			assert.throws(() =>
+				DependencyResolutionError.make({
+					specifier: "workspace:x",
+					reason: deliberatelyInvalid<"mechanism" | "no-version">("bogus"),
+					cause: undefined,
+				}),
+			);
+		});
+
+		it("the decoder also rejects a reason outside the literal union", () => {
 			assert.throws(() =>
 				Result.getOrThrow(
 					S.decodeUnknownResult(DependencyResolutionError)({

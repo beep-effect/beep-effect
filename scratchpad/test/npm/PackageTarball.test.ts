@@ -8,7 +8,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
-import type { TarballError } from "../../effected/npm/index.ts";
+import { TarballError } from "../../effected/npm/index.ts";
 import { PackageTarball, PublishedVersion } from "../../effected/npm/index.ts";
 import { scripted } from "./publish-fixtures.ts";
 
@@ -222,4 +222,56 @@ describe("PackageTarball", () => {
 			}),
 		);
 	});
+});
+
+describe("TarballError facade", () => {
+	it.effect("encodes the originating cause stack and preserves cause optionality", () =>
+		Effect.gen(function* () {
+			const cause = new Error("download failed");
+			const stack = cause.stack;
+			if (stack === undefined) assert.fail("expected the originating Error stack");
+			const encoded = yield* S.encodeEffect(TarballError)(
+				TarballError.make({ reason: "http", package: "pkg", version: "1.0.0", cause }),
+			);
+			assert.deepStrictEqual(encoded.cause, { name: cause.name, message: cause.message, stack });
+			const withoutCause = yield* S.encodeEffect(TarballError)(
+				TarballError.make({ reason: "notFound", package: "pkg", version: "1.0.0" }),
+			);
+			assert.isFalse("cause" in withoutCause);
+		}),
+	);
+
+	it.effect("keeps compatible payloads on the facade while messages use their reason's fields", () =>
+		Effect.gen(function* () {
+			const input = {
+				_tag: "TarballError" as const,
+				reason: "notFound" as const,
+				package: "pkg",
+				version: "1.0.0",
+				status: 404,
+				expected: "irrelevant",
+				actual: "irrelevant",
+				cause: "irrelevant",
+			};
+			const error = yield* S.decodeEffect(TarballError)(input);
+			assert.strictEqual(error.message, "No published tarball for pkg@1.0.0");
+			assert.deepStrictEqual(yield* S.encodeEffect(TarballError)(error), input);
+			assert.strictEqual(
+				TarballError.make({ reason: "http", package: "pkg", version: "1.0.0" }).message,
+				"Could not download the tarball for pkg@1.0.0",
+			);
+			assert.strictEqual(
+				TarballError.make({ reason: "integrityMismatch", package: "pkg", version: "1.0.0" }).message,
+				"The tarball for pkg@1.0.0 did not match the integrity the registry published (expected unknown, got unknown)",
+			);
+			assert.strictEqual(
+				TarballError.make({ reason: "integrityUnverifiable", package: "pkg", version: "1.0.0" }).message,
+				"Could not compute a digest to verify pkg@1.0.0, so its integrity was never checked (expected unknown)",
+			);
+			assert.strictEqual(
+				TarballError.make({ reason: "extractFailed", package: "pkg", version: "1.0.0" }).message,
+				"Could not extract the tarball for pkg@1.0.0",
+			);
+		}),
+	);
 });

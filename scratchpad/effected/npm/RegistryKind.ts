@@ -1,6 +1,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
-import * as S from "effect/Schema";
-import * as Match from "effect/Match";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as Str from "effect/String";
+import * as O from "effect/Option";
 
 const $I = $ScratchpadId.create("effected/npm/RegistryKind");
 
@@ -16,7 +17,7 @@ const $I = $ScratchpadId.create("effected/npm/RegistryKind");
  *
  * @public
  */
-export const RegistryKind = S.Literals(["npm", "github-packages", "jsr", "custom"]).pipe($I.annoteSchema("RegistryKind", { description: "Which well-known registry a URL points at." }));
+export const RegistryKind = LiteralKit(["npm", "github-packages", "jsr", "custom"]).annotate($I.annote("RegistryKind", { description: "Which well-known registry a URL points at." }));
 
 /**
  * The decoded type of {@link (RegistryKind:variable)}.
@@ -28,12 +29,12 @@ export type RegistryKind = typeof RegistryKind.Type;
 /** The hostname of a registry URL, or `undefined` when it does not parse. */
 const hostnameOf = (registry: string): string | undefined => {
 	try {
-		return new URL(registry).hostname.toLowerCase();
+		return Str.toLowerCase(new URL(registry).hostname);
 	} catch {
 		// A bare host (`registry.npmjs.org/`) is not a URL; try again with a
 		// scheme before giving up, because npm config values are written both ways.
 		try {
-			return new URL(`https://${registry}`).hostname.toLowerCase();
+			return Str.toLowerCase(new URL(`https://${registry}`).hostname);
 		} catch {
 			return undefined;
 		}
@@ -49,7 +50,7 @@ const hostnameOf = (registry: string): string | undefined => {
  * whether a token is sent and whether provenance is requested.
  */
 const matchesDomain = (hostname: string | undefined, domain: string): boolean =>
-	hostname !== undefined && (hostname === domain || hostname.endsWith(`.${domain}`));
+	hostname !== undefined && (hostname === domain || Str.endsWith(`.${domain}`)(hostname));
 
 /**
  * Classify a registry URL.
@@ -113,13 +114,13 @@ export const registryHost = (registry: string): string => {
 		// polynomial-backtracking regex over a value this package does not
 		// control, and CodeQL flags it; `indexOf` is linear and says the same
 		// thing.
-		const withoutScheme = registry.startsWith("https://")
-			? registry.slice(8)
-			: registry.startsWith("http://")
-				? registry.slice(7)
+		const withoutScheme = Str.startsWith("https://")(registry)
+			? Str.slice(8)(registry)
+			: Str.startsWith("http://")(registry)
+				? Str.slice(7)(registry)
 				: registry;
-		const slash = withoutScheme.indexOf("/");
-		return slash === -1 ? withoutScheme : withoutScheme.slice(0, slash);
+		const slash = O.getOrElse(Str.indexOf("/")(withoutScheme), () => -1);
+		return slash === -1 ? withoutScheme : Str.slice(0, slash)(withoutScheme);
 	}
 };
 
@@ -152,13 +153,12 @@ export const registryHost = (registry: string): string => {
  * @public
  */
 export const registryShortLabel = (registry: string): string =>
-	Match.value(classifyRegistry(registry)).pipe(
-		Match.when("npm", () => "npm"),
-		Match.when("github-packages", () => "github"),
-		Match.when("jsr", () => "jsr"),
-		Match.when("custom", () => registryHost(registry)),
-		Match.exhaustive,
-	);
+	RegistryKind.$match(classifyRegistry(registry), {
+        npm: () => "npm",
+        "github-packages": () => "github",
+        jsr: () => "jsr",
+        custom: () => registryHost(registry),
+    });
 
 /**
  * A human-readable display name for a registry: `npm`, `GitHub Packages`,
@@ -181,11 +181,10 @@ export const registryShortLabel = (registry: string): string =>
  */
 export const registryDisplayName = (registry: string | null | undefined): string => {
 	if (registry === null || registry === undefined || registry === "") return "npm";
-	return Match.value(classifyRegistry(registry)).pipe(
-		Match.when("npm", () => "npm"),
-		Match.when("github-packages", () => "GitHub Packages"),
-		Match.when("jsr", () => "JSR"),
-		Match.when("custom", () => registryHost(registry)),
-		Match.exhaustive,
-	);
+	return RegistryKind.$match(classifyRegistry(registry), {
+        npm: () => "npm",
+        "github-packages": () => "GitHub Packages",
+        jsr: () => "JSR",
+        custom: () => registryHost(registry),
+    });
 };

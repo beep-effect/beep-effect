@@ -41,7 +41,7 @@ const $I = $ScratchpadId.create("effected/npm/Manifest");
  */
 export class ManifestDecodeError extends S.TaggedError<ManifestDecodeError>($I`ManifestDecodeError`)("ManifestDecodeError", {
 	/** The underlying `SchemaError`, preserved structurally rather than stringified. */
-	cause: S.Defect().annotateKey({ description: "The underlying `SchemaError`, preserved structurally rather than stringified." }),
+	cause: S.Defect({ includeStack: true }).annotateKey({ description: "The underlying `SchemaError`, preserved structurally rather than stringified." }),
 }, $I.annote("ManifestDecodeError", { description: "Indicates that an unknown value could not be decoded into a Manifest." })) {
 	/** Summarizes the decode failure in one line. */
 	override get message(): string {
@@ -103,12 +103,12 @@ const makeWire = (
 			>({
 				decode: (raw: { readonly [k: string]: unknown }) => {
 					const known: Record<string, unknown> = {};
-					const rest: Record<string, unknown> = {};
+					const rest: Array<readonly [string, unknown]> = [];
 					for (const [key, value] of R.toEntries(raw)) {
 						if (HashSet.has(DEPENDENCY_FIELDS, key)) known[key] = value;
-						else rest[key] = value;
+						else rest.push([key, value]);
 					}
-					return { ...known, rest };
+					return { ...known, rest: R.fromEntries(rest) };
 				},
 				encode: (encoded: Record<string, unknown> & { readonly rest?: Record<string, unknown> }) => {
 					const { rest, ...known } = encoded;

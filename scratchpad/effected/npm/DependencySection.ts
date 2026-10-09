@@ -11,7 +11,7 @@
 // so the correspondence is written once.
 
 import { $ScratchpadId } from "@beep/identity/packages";
-import * as S from "effect/Schema";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 
 const $I = $ScratchpadId.create("effected/npm/DependencySection");
 
@@ -21,7 +21,7 @@ const $I = $ScratchpadId.create("effected/npm/DependencySection");
  *
  * @public
  */
-export const DependencyKind = S.Literals(["prod", "dev", "peer", "optional"]).pipe($I.annoteSchema("DependencyKind", { description: "The short dependency kind: which dependency map an entry came from, named the way consumers branch on it." }));
+export const DependencyKind = LiteralKit(["prod", "dev", "peer", "optional"]).annotate($I.annote("DependencyKind", { description: "The short dependency kind: which dependency map an entry came from, named the way consumers branch on it." }));
 
 /**
  * The union of short dependency kinds.
@@ -36,12 +36,12 @@ export type DependencyKind = typeof DependencyKind.Type;
  *
  * @public
  */
-export const DependencyField = S.Literals([
+export const DependencyField = LiteralKit([
 	"dependencies",
 	"devDependencies",
 	"peerDependencies",
 	"optionalDependencies",
-]).pipe($I.annoteSchema("DependencyField", { description: "The manifest field name a dependency is declared under, matching the `package.json` / `package-lock.json` key exactly." }));
+]).annotate($I.annote("DependencyField", { description: "The manifest field name a dependency is declared under, matching the `package.json` / `package-lock.json` key exactly." }));
 
 /**
  * The union of manifest dependency-map field names.

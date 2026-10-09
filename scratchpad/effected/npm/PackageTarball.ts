@@ -1,3 +1,4 @@
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { $ScratchpadId } from "@beep/identity/packages";
 import { Run } from "../commands/index.ts";
 import type * as Scope from "effect/Scope";
@@ -9,6 +10,9 @@ import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Result from "effect/Result";
+import * as Str from "effect/String";
+import { pipe } from "effect/Function";
 import * as Base64 from "effect/encoding/Base64";
 import { HttpClient } from "effect/http";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -17,12 +21,16 @@ import type { PublishedVersion } from "./NpmRegistry.ts";
 
 const $I = $ScratchpadId.create("effected/npm/PackageTarball");
 
+const TarballReason = LiteralKit(["notFound", "http", "integrityMismatch", "integrityUnverifiable", "extractFailed"])
+	.annotate($I.annote("TarballReason", { description: "The reason a published tarball could not be read." }));
+type TarballReason = typeof TarballReason.Type;
+
 /**
  * Raised when a published tarball cannot be fetched, verified or extracted.
  *
  * @public
  */
-export class TarballError extends S.TaggedError<TarballError>($I`TarballError`)("TarballError", {
+const TarballErrorPayload = S.Struct({
 	/**
 	 * `notFound` — the registry recorded no tarball for this version, or the
 	 * tarball URL answered 404. `http` — any other transport or non-2xx
@@ -40,7 +48,7 @@ export class TarballError extends S.TaggedError<TarballError>($I`TarballError`)(
 	 * `integrityUnverifiable` — the registry vouched for an integrity but no
 	 * digest could be computed to check it, so nothing was compared.
 	 */
-	reason: S.Literals(["notFound", "http", "integrityMismatch", "integrityUnverifiable", "extractFailed"]).annotateKey({ description: "`notFound` — the registry recorded no tarball for this version, or the tarball URL answered 404. `http` — any other transport or non-2xx failure. `integrityMismatch` — the bytes did not match the integrity the registry vouched for. `extractFailed` — the bytes could not be written or unpacked." }),
+	reason: TarballReason.annotateKey({ description: "`notFound` — the registry recorded no tarball for this version, or the tarball URL answered 404. `http` — any other transport or non-2xx failure. `integrityMismatch` — the bytes did not match the integrity the registry vouched for. `extractFailed` — the bytes could not be written or unpacked." }),
 	/** The package being fetched. */
 	package: S.String.annotateKey({ description: "The package being fetched." }),
 	/** The version being fetched. */
@@ -52,18 +60,48 @@ export class TarballError extends S.TaggedError<TarballError>($I`TarballError`)(
 	/** The integrity the downloaded bytes actually have. */
 	actual: S.optionalKey(S.String).annotateKey({ description: "The integrity the downloaded bytes actually have." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
-}, $I.annote("TarballError", { description: "Raised when a published tarball cannot be fetched, verified or extracted." })) {
+	cause: S.optionalKey(S.Defect({ includeStack: true })).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}).annotate($I.annote("TarballErrorPayload", { description: "The compatible public tarball error payload." }));
+
+const TarballCommon = {
+	package: TarballErrorPayload.fields.package,
+	version: TarballErrorPayload.fields.version,
+};
+
+const TarballFailure = TarballReason.mapMembers(([notFound, http, integrityMismatch, integrityUnverifiable, extractFailed]) => [
+	S.Struct({ ...TarballCommon, reason: notFound.annotateKey({ description: "No tarball was published or the URL answered 404." }), status: TarballErrorPayload.fields.status })
+		.annotate($I.annote("TarballNotFound", { description: "A missing published tarball." })),
+	S.Struct({ ...TarballCommon, reason: http.annotateKey({ description: "A transport or non-2xx download failure." }), status: TarballErrorPayload.fields.status, cause: TarballErrorPayload.fields.cause })
+		.annotate($I.annote("TarballHttpFailure", { description: "A failed tarball download." })),
+	S.Struct({ ...TarballCommon, reason: integrityMismatch.annotateKey({ description: "The measured integrity differs from the published integrity." }), expected: TarballErrorPayload.fields.expected, actual: TarballErrorPayload.fields.actual })
+		.annotate($I.annote("TarballIntegrityMismatch", { description: "A measured integrity mismatch." })),
+	S.Struct({ ...TarballCommon, reason: integrityUnverifiable.annotateKey({ description: "No digest could be computed to verify the tarball." }), expected: TarballErrorPayload.fields.expected, cause: TarballErrorPayload.fields.cause })
+		.annotate($I.annote("TarballIntegrityUnverifiable", { description: "An unmeasured tarball integrity." })),
+	S.Struct({ ...TarballCommon, reason: extractFailed.annotateKey({ description: "The tarball could not be written or unpacked." }), cause: TarballErrorPayload.fields.cause })
+		.annotate($I.annote("TarballExtractionFailure", { description: "A failed tarball extraction." })),
+] as const).pipe(S.annotate($I.annote("TarballFailure", { description: "Validated case-specific tarball failures." })), S.toTaggedUnion("reason"));
+
+// The public optional-field bag remains compatible. Composition projects it
+// into the validated member for its reason, dropping irrelevant fields there.
+const TarballFailureFromPayload = S.toType(TarballErrorPayload).pipe(S.decodeTo(S.toType(TarballFailure)));
+
+/** Raised when a published tarball cannot be fetched, verified or extracted. */
+export class TarballError extends S.TaggedError<TarballError>($I`TarballError`)("TarballError", TarballErrorPayload,
+	$I.annote("TarballError", { description: "Raised when a published tarball cannot be fetched, verified or extracted." }),
+) {
+	private get variant(): typeof TarballFailure.Type {
+		return pipe(this, S.decodeUnknownResult(TarballFailureFromPayload), Result.getOrThrow);
+	}
+
 	override get message(): string {
 		const what = `${this.package}@${this.version}`;
-		return Match.value(this.reason).pipe(
-			Match.when("notFound", () => `No published tarball for ${what}`),
-			Match.when("http", () => `Could not download the tarball for ${what}${this.status === undefined ? "" : ` (HTTP ${this.status})`}`),
-			Match.when("integrityMismatch", () => `The tarball for ${what} did not match the integrity the registry published (expected ${this.expected ?? "unknown"}, got ${this.actual ?? "unknown"})`),
-			Match.when("integrityUnverifiable", () => `Could not compute a digest to verify ${what}, so its integrity was never checked (expected ${this.expected ?? "unknown"})`),
-			Match.when("extractFailed", () => `Could not extract the tarball for ${what}`),
-			Match.exhaustive,
-		);
+		return TarballFailure.match(this.variant, {
+			notFound: () => `No published tarball for ${what}`,
+			http: (failure) => `Could not download the tarball for ${what}${failure.status === undefined ? "" : ` (HTTP ${failure.status})`}`,
+			integrityMismatch: (failure) => `The tarball for ${what} did not match the integrity the registry published (expected ${failure.expected ?? "unknown"}, got ${failure.actual ?? "unknown"})`,
+			integrityUnverifiable: (failure) => `Could not compute a digest to verify ${what}, so its integrity was never checked (expected ${failure.expected ?? "unknown"})`,
+			extractFailed: () => `Could not extract the tarball for ${what}`,
+		});
 	}
 }
 
@@ -95,7 +133,7 @@ const digestAlgorithmOf = (algorithm: string): Crypto.DigestAlgorithm | undefine
 	);
 
 /** An SRI value without its base64 padding, for a padding-insensitive compare. */
-const unpadded = (value: string): string => value.replace(/=+$/, "");
+const unpadded = Str.replace(/=+$/, "");
 
 /** Builds the service over already-resolved platform services. */
 const make = Effect.fnUntraced(function* () {
@@ -108,7 +146,7 @@ const make = Effect.fnUntraced(function* () {
 		const name = published.name;
 		const version = published.version;
 		const fail = (
-			reason: "notFound" | "http" | "integrityMismatch" | "integrityUnverifiable" | "extractFailed",
+			reason: TarballReason,
 			extra: { status?: number; expected?: string; actual?: string; cause?: unknown } = {},
 		): TarballError => TarballError.make({ reason, package: name, version, ...extra });
 
@@ -157,7 +195,7 @@ const make = Effect.fnUntraced(function* () {
 					// docstring — a failure to verify presented as a measured
 					// mismatch is the exact class this package fixes elsewhere.
 					.pipe(Effect.mapError((cause) => fail("integrityUnverifiable", { expected, cause })));
-				const actual = `${expected.slice(0, expected.indexOf("-"))}-${Base64.encode(digest)}`;
+				const actual = `${Str.slice(0, O.getOrElse(Str.indexOf("-")(expected), () => -1))(expected)}-${Base64.encode(digest)}`;
 				// Compared without base64 padding: the SRI grammar permits an
 				// unpadded value, and a padding difference is not a byte
 				// difference. Refusing a valid tarball over one would be the

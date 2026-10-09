@@ -7,6 +7,8 @@
 // by its text containing the summary).
 
 import { assert, describe, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { CatalogAssemblyError } from "../../effected/npm/index.ts";
 
 const NAME = "@effected/pnpm-plugin-effect";
@@ -87,3 +89,16 @@ describe("CatalogAssemblyError.message", () => {
 		assert.isUndefined(error.reason);
 	});
 });
+
+// Cause encoding must keep the diagnostic information used outside this process.
+it.effect("CatalogAssemblyError encodes the originating cause stack", () =>
+	Effect.gen(function* () {
+		const cause = new Error("unreadable catalog");
+		const stack = cause.stack;
+		if (stack === undefined) assert.fail("expected the originating Error stack");
+		const encoded = yield* S.encodeEffect(CatalogAssemblyError)(
+			CatalogAssemblyError.make({ source: "manifest", path: "pnpm-workspace.yaml", cause }),
+		);
+		assert.deepStrictEqual(encoded.cause, { name: cause.name, message: cause.message, stack });
+	}),
+);

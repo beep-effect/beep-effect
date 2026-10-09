@@ -1,17 +1,21 @@
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Match from "effect/Match";
+import * as Result from "effect/Result";
+import { flow } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "@beep/utils/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import * as A from "effect/Array";
 import type { HttpClientError } from "effect/http";
 import { HttpClient } from "effect/http";
 import { IntegrityHash } from "./IntegrityHash.ts";
-import type { RegistryCredential } from "./RegistryCredential.ts";
+import { RegistryCredential } from "./RegistryCredential.ts";
 import { classifyRegistry } from "./RegistryKind.ts";
 import * as R from "effect/Record";
 
@@ -35,9 +39,9 @@ export const DEFAULT_REGISTRY = "https://registry.npmjs.org";
  *
  * @public
  */
-export interface RegistryTarget {
+export const RegistryTarget = S.Struct({
 	/** Registry base URL. Defaults to {@link DEFAULT_REGISTRY}. */
-	readonly registry?: string | undefined;
+	registry: S.optional(S.String).annotateKey({ description: "Registry base URL; omission selects the public npm registry." }),
 	/**
 	 * Superseded by {@link RegistryTarget.credential}.
 	 *
@@ -52,7 +56,7 @@ export interface RegistryTarget {
 	 * published", and a publish flow acting on it republishes a version that
 	 * already exists. Typed `never`, the same spread fails to compile.
 	 */
-	readonly token?: never;
+	token: S.optionalKey(S.Never).annotateKey({ description: "Removed token option; use a token credential instead." }),
 	/**
 	 * How to authenticate, for a registry that requires auth to read.
 	 *
@@ -62,7 +66,11 @@ export interface RegistryTarget {
 	 * registry — a bearer probe against a basic-auth registry answers 401 and
 	 * reads as "not published".
 	 */
-	readonly credential?: RegistryCredential | undefined;
+	credential: S.optional(RegistryCredential).annotateKey({ description: "The redacted credential for this registry read." }),
+}).annotate($I.annote("RegistryTarget", { description: "A structural per-call registry and credential boundary." }));
+export interface RegistryTarget extends S.Schema.Type<typeof RegistryTarget> {
+	/** @deprecated Use credential. Retained explicitly for the source-level tripwire contract. */
+	readonly token?: never;
 }
 
 /**
@@ -99,6 +107,57 @@ export class PublishTime extends S.Class<PublishTime>($I`PublishTime`)({
 	publishedAt: S.DateTimeUtc.annotateKey({ description: "When it was published." }),
 }, $I.annote("PublishTime", { description: "When one version of a package was published." })) {}
 
+const RegistryReadFailureKind = LiteralKit(["transport", "status", "decode"]).annotate(
+	$I.annote("RegistryReadFailureKind", { description: "The supported RegistryReadError cases." }),
+);
+
+const RegistryReadErrorPayload = S.Struct({
+	/** Why the read failed. */
+	kind: RegistryReadFailureKind.annotateKey({ description: "Why the read failed." }),
+	/** The package that was being read. */
+	package: S.String.annotateKey({ description: "The package that was being read." }),
+	/** The registry that was being read from. */
+	registry: S.String.annotateKey({ description: "The registry that was being read from." }),
+	/** The HTTP status, for `kind: "status"`. */
+	status: S.optionalKey(S.Finite).annotateKey({ description: "The HTTP status, for `kind: \"status\"`." }),
+	/** The underlying failure. */
+	cause: S.optionalKey(S.Defect({ includeStack: true })).annotateKey({ description: "The underlying failure." }),
+}).annotate(
+	$I.annote("RegistryReadErrorPayload", { description: "The compatible public RegistryReadError payload." }),
+);
+
+const RegistryReadFailure = RegistryReadFailureKind.mapMembers(([transport, status, decode]) => [
+	S.Struct({
+		kind: transport.annotateKey({ description: "The request produced no response." }),
+		package: RegistryReadErrorPayload.fields.package,
+		registry: RegistryReadErrorPayload.fields.registry,
+		cause: RegistryReadErrorPayload.fields.cause,
+	}).annotate($I.annote("RegistryTransportFailure", { description: "The request produced no response." })),
+	S.Struct({
+		kind: status.annotateKey({ description: "The registry returned an unsuccessful status." }),
+		package: RegistryReadErrorPayload.fields.package,
+		registry: RegistryReadErrorPayload.fields.registry,
+		status: RegistryReadErrorPayload.fields.status,
+	}).annotate($I.annote("RegistryStatusFailure", { description: "The registry returned an unsuccessful status." })),
+	S.Struct({
+		kind: decode.annotateKey({ description: "The registry body could not be decoded." }),
+		package: RegistryReadErrorPayload.fields.package,
+		registry: RegistryReadErrorPayload.fields.registry,
+		cause: RegistryReadErrorPayload.fields.cause,
+	}).annotate($I.annote("RegistryDecodeFailure", { description: "The registry body could not be decoded." })),
+] as const).pipe(
+	S.annotate($I.annote("RegistryReadFailure", { description: "Validated case-specific RegistryReadError payloads." })),
+	S.toTaggedUnion("kind"),
+);
+
+const RegistryReadFailureFromPayload = RegistryReadErrorPayload.pipe(
+	S.toType,
+	S.decodeTo(RegistryReadFailure.pipe(S.toType)),
+	S.annotate($I.annote("RegistryReadFailureFromPayload", { description: "Project the compatible payload into a validated case without encoding its cause." })),
+);
+
+const registryReadFailure = flow(S.decodeUnknownResult(RegistryReadFailureFromPayload), Result.getOrThrow);
+
 /**
  * A registry read failed.
  *
@@ -112,26 +171,15 @@ export class PublishTime extends S.Class<PublishTime>($I`PublishTime`)({
  *
  * @public
  */
-export class RegistryReadError extends S.TaggedError<RegistryReadError>($I`RegistryReadError`)("RegistryReadError", {
-	/** Why the read failed. */
-	kind: S.Literals(["transport", "status", "decode"]).annotateKey({ description: "Why the read failed." }),
-	/** The package that was being read. */
-	package: S.String.annotateKey({ description: "The package that was being read." }),
-	/** The registry that was being read from. */
-	registry: S.String.annotateKey({ description: "The registry that was being read from." }),
-	/** The HTTP status, for `kind: "status"`. */
-	status: S.optionalKey(S.Finite).annotateKey({ description: "The HTTP status, for `kind: \"status\"`." }),
-	/** The underlying failure. */
-	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure." }),
-}, $I.annote("RegistryReadError", { description: "A registry read failed." })) {
+export class RegistryReadError extends S.TaggedError<RegistryReadError>($I`RegistryReadError`)("RegistryReadError", RegistryReadErrorPayload, $I.annote("RegistryReadError", { description: "A registry read failed." })) {
 	override get message(): string {
-		const where = `${this.package} on ${this.registry}`;
-		return Match.value(this.kind).pipe(
-			Match.when("transport", () => `Could not reach the registry for ${where}`),
-			Match.when("status", () => `Registry read for ${where} failed with status ${this.status ?? "unknown"}`),
-			Match.when("decode", () => `Registry read for ${where} returned an unreadable body`),
-			Match.exhaustive,
-		);
+		const failure = registryReadFailure(this);
+		const where = `${failure.package} on ${failure.registry}`;
+		return RegistryReadFailure.match(failure, {
+			transport: () => `Could not reach the registry for ${where}`,
+			status: (detail) => `Registry read for ${where} failed with status ${detail.status ?? "unknown"}`,
+			decode: () => `Registry read for ${where} returned an unreadable body`,
+		});
 	}
 }
 
@@ -188,7 +236,7 @@ const integrityField = (raw: string | undefined): { integrity?: typeof Integrity
 
 /** `https://host` + `/@scope%2Fname` — the slash in a scoped name must be encoded. */
 const packageUrl = (registry: string, name: string, version?: string): string => {
-	const base = registry.endsWith("/") ? registry.slice(0, -1) : registry;
+	const base = Str.endsWith("/")(registry) ? Str.slice(0, -1)(registry) : registry;
 	const encoded = encodeURIComponent(name);
 	return version === undefined ? `${base}/${encoded}` : `${base}/${encoded}/${encodeURIComponent(version)}`;
 };
@@ -319,7 +367,10 @@ const make = Effect.fnUntraced(function* () {
 			? versionFromPackument(name, versionNumber, registry, target)
 			: read(VersionManifest, packageUrl(registry, name, versionNumber), name, registry, target).pipe(
 					Effect.catchIf(
-						(error) => error.kind === "status" && error.status === 405,
+						(error) => {
+							const failure = registryReadFailure(error);
+							return RegistryReadFailure.guards.status(failure) && failure.status === 405;
+						},
 						() => versionFromPackument(name, versionNumber, registry, target),
 					),
 				);
@@ -391,14 +442,15 @@ const notStubbed = (method: string) => () =>
  *
  * @public
  */
-export interface SeededVersion {
+export const SeededVersion = S.Struct({
 	/** Published integrity, if any. */
-	readonly integrity?: string | undefined;
+	integrity: S.optional(S.String).annotateKey({ description: "Published integrity, if any." }),
 	/** Tarball URL, if any. */
-	readonly tarball?: string | undefined;
+	tarball: S.optional(S.String).annotateKey({ description: "Published tarball URL, if any." }),
 	/** Publish timestamp as an ISO-8601 string, if any. */
-	readonly publishedAt?: string | undefined;
-}
+	publishedAt: S.optional(S.String).annotateKey({ description: "ISO-8601 publish timestamp, if any." }),
+}).annotate($I.annote("SeededVersion", { description: "Structural registry-visible facts for a seeded version." }));
+export type SeededVersion = typeof SeededVersion.Type;
 
 /**
  * A whole fake registry world, keyed the way real reads are.
@@ -411,12 +463,13 @@ export interface SeededVersion {
  *
  * @public
  */
-export interface RegistrySeed {
+export const RegistrySeed = S.Struct({
 	/** registry → package → version → facts. */
-	readonly registries: Record<string, Record<string, Record<string, SeededVersion>>>;
+	registries: S.Record(S.String, S.Record(S.String, S.Record(S.String, SeededVersion))).annotateKey({ description: "Registry to package to version to seeded facts." }),
 	/** package → dist-tag map, when a test asserts on tags. */
-	readonly distTags?: Record<string, Record<string, string>> | undefined;
-}
+	distTags: S.optional(S.Record(S.String, S.Record(S.String, S.String))).annotateKey({ description: "Package to dist-tag map, when seeded." }),
+}).annotate($I.annote("RegistrySeed", { description: "A structural fake registry world retaining every dictionary axis." }));
+export type RegistrySeed = typeof RegistrySeed.Type;
 
 /**
  * Reads package metadata from an npm-protocol registry over core `HttpClient`:
@@ -504,7 +557,7 @@ export class NpmRegistry extends Context.Service<NpmRegistry, NpmRegistryShape>(
 			distTags: (name) => Effect.succeed({ ...(seed.distTags?.[name] ?? {}) }),
 			publishTimes: (name, target) =>
 				Effect.succeed(
-					R.toEntries(at(target)[name] ?? {}).flatMap(([version, facts]) => {
+					A.flatMap(R.toEntries(at(target)[name] ?? {}), ([version, facts]) => {
 						if (facts.publishedAt === undefined) return [];
 						const parsed = DateTime.make(facts.publishedAt);
 						return O.isNone(parsed) ? [] : [PublishTime.make({ version, publishedAt: parsed.value })];

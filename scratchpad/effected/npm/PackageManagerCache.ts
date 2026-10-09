@@ -13,6 +13,7 @@
 // path, and yarn Classic's cache is not `~/.yarn/cache`).
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 import * as Match from "effect/Match";
 
@@ -21,7 +22,8 @@ const $I = $ScratchpadId.create("effected/npm/PackageManagerCache");
 /**
  * The package managers the default-cache table has a row for.
  *
- * @remarks
+ * **Details**
+ *
  * yarn is **two** rows — `yarn-classic` (v1) and `yarn-berry` (v2+) — because
  * the two lines document different cache locations and nothing about a bare
  * manager name says which major is in play. This is deliberately not
@@ -29,13 +31,30 @@ const $I = $ScratchpadId.create("effected/npm/PackageManagerCache");
  * pin spells `yarn` and resolves the major from the version; a cache lookup
  * has no version to ask.
  *
+ * **Example** (Read the cache-manager vocabulary)
+ *
+ * ```ts
+ * import { CachingPackageManager } from "./PackageManagerCache.ts";
+ *
+ * CachingPackageManager.literals;
+ * // => ["npm", "pnpm", "yarn-classic", "yarn-berry", "bun"]
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  * @public
  */
-export const CachingPackageManager = S.Literals(["npm", "pnpm", "yarn-classic", "yarn-berry", "bun"]).pipe($I.annoteSchema("CachingPackageManager", { description: "The package managers the default-cache table has a row for." }));
+export const CachingPackageManager = LiteralKit(["npm", "pnpm", "yarn-classic", "yarn-berry", "bun"]).annotate(
+	$I.annote("CachingPackageManager", {
+		description: "The package managers the default-cache table has a row for.",
+	}),
+);
 
 /**
  * The union of managers the default-cache table covers.
  *
+ * @category type-level
+ * @since 0.0.0
  * @public
  */
 export type CachingPackageManager = typeof CachingPackageManager.Type;
@@ -43,19 +62,51 @@ export type CachingPackageManager = typeof CachingPackageManager.Type;
 /**
  * What {@link PackageManagerCache.defaultDirectory} derives the answer from.
  *
+ * **Details**
+ *
+ * Plain objects retain the upstream boundary shape. Both strings are required;
+ * platform names outside Windows and macOS select the Linux/XDG family.
+ *
+ * **Example** (Construct cache-directory inputs)
+ *
+ * ```ts
+ * import { DefaultCacheDirectoryOptions, PackageManagerCache } from "./PackageManagerCache.ts";
+ *
+ * const options = DefaultCacheDirectoryOptions.make({ platform: "darwin", home: "/Users/ci" });
+ * PackageManagerCache.defaultDirectory("pnpm", options);
+ * // => "/Users/ci/Library/pnpm/store"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  * @public
  */
-export interface DefaultCacheDirectoryOptions {
+export const DefaultCacheDirectoryOptions = S.Struct({
 	/**
 	 * The platform the manager runs on, `process.platform`-shaped: `win32` is
 	 * the Windows family, `darwin` the macOS family, and anything else falls to
 	 * the Linux/XDG family — so a BSD caller gets the XDG answer rather than a
 	 * refusal.
 	 */
-	readonly platform: string;
+	platform: S.String.annotateKey({
+		description: "The process.platform-shaped platform; win32 is Windows, darwin is macOS, and anything else uses Linux/XDG defaults.",
+	}),
 	/** The user's home directory, e.g. `os.homedir()` or `$HOME`. */
-	readonly home: string;
-}
+	home: S.String.annotateKey({ description: "The user's home directory, e.g. os.homedir() or $HOME." }),
+}).annotate(
+	$I.annote("DefaultCacheDirectoryOptions", {
+		description: "The platform and home directory used to derive a package manager's default cache directory.",
+	}),
+);
+
+/**
+ * The plain-object inputs accepted by {@link PackageManagerCache.defaultDirectory}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ * @public
+ */
+export type DefaultCacheDirectoryOptions = typeof DefaultCacheDirectoryOptions.Type;
 
 /** Join under `home` with the platform family's separator — no IO, no `node:path`. */
 const under = (home: string, windows: boolean, ...parts: ReadonlyArray<string>): string =>

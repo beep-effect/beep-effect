@@ -76,7 +76,7 @@ export class DependencyResolutionError extends S.TaggedError<DependencyResolutio
 			S.withDecodingDefaultKey(Effect.succeed("mechanism" as const)),
 			S.withConstructorDefault(Effect.succeed("mechanism" as const)),
 		).annotateKey({ description: "Why the specifier could not be resolved." }),
-		cause: S.Defect().annotateKey({ description: "The originating resolution failure, preserved structurally; absent when a known workspace member declares no version" }),
+		cause: S.Defect({ includeStack: true }).annotateKey({ description: "The originating resolution failure, preserved structurally; absent when a known workspace member declares no version" }),
 	}, $I.annote("DependencyResolutionError", { description: "Raised when a `catalog:` or `workspace:` specifier cannot be resolved because the resolution mechanism itself failed — not for an ordinary unmatched specifier, which resolves to `Option.none()` instead. Both CatalogResolver and WorkspaceResolver fail with it." }),
 ) {
 	/** Renders `specifier` and `reason` into a one-line failure message. */

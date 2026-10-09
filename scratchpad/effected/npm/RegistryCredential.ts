@@ -2,7 +2,8 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import * as Redacted from "effect/Redacted";
 import * as Base64 from "effect/encoding/Base64";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effected/npm/RegistryCredential");
 
@@ -32,11 +33,12 @@ export class InvalidBasicAuthUsernameError extends S.TaggedError<InvalidBasicAut
  *
  * @public
  */
-export interface TokenCredential {
-	readonly kind: "token";
+export const TokenCredential = S.Struct({
+	kind: S.Literal("token").annotateKey({ description: "Bearer-token authentication." }),
 	/** The token, verbatim. Never written to argv. */
-	readonly token: Redacted.Redacted<string>;
-}
+	token: S.Redacted(S.String).annotateKey({ description: "The redacted bearer token, never written to argv." }),
+}).annotate($I.annote("TokenCredential", { description: "A structural bearer-token credential boundary." }));
+export type TokenCredential = typeof TokenCredential.Type;
 
 /**
  * HTTP basic auth — npm's `_auth`, carried as the **already-encoded** blob.
@@ -55,11 +57,12 @@ export interface TokenCredential {
  *
  * @public
  */
-export interface BasicCredential {
-	readonly kind: "basic";
+export const BasicCredential = S.Struct({
+	kind: S.Literal("basic").annotateKey({ description: "HTTP basic authentication." }),
 	/** Base64 of `user:password`, exactly as it belongs in an npmrc `_auth`. */
-	readonly encoded: Redacted.Redacted<string>;
-}
+	encoded: S.Redacted(S.String).annotateKey({ description: "Redacted base64 of user:password, used verbatim." }),
+}).annotate($I.annote("BasicCredential", { description: "A structural encoded basic-auth credential boundary." }));
+export type BasicCredential = typeof BasicCredential.Type;
 
 /**
  * How to authenticate to a registry.
@@ -73,7 +76,11 @@ export interface BasicCredential {
  *
  * @public
  */
-export type RegistryCredential = TokenCredential | BasicCredential;
+export const RegistryCredential = S.Union([TokenCredential, BasicCredential]).pipe(
+	S.annotate($I.annote("RegistryCredential", { description: "The credential kind determines both npmrc key and HTTP scheme." })),
+	S.toTaggedUnion("kind"),
+);
+export type RegistryCredential = typeof RegistryCredential.Type;
 
 /**
  * A {@link BasicCredential} from a username and password, encoding for you.
@@ -89,23 +96,20 @@ export type RegistryCredential = TokenCredential | BasicCredential;
  * @param username - The user half. A `:` here is not representable in basic
  *   auth and is refused rather than silently corrupting the credential.
  * @param password - The password half.
- * @returns The encoded credential.
- * @throws InvalidBasicAuthUsernameError - when `username` contains a `:`.
+ * @returns An Effect producing the encoded credential or failing with InvalidBasicAuthUsernameError.
  *
  * @public
  */
-export const basicCredentialFromPair: {
-	(username: string, password: Redacted.Redacted<string>): BasicCredential;
-	(password: Redacted.Redacted<string>): (username: string) => BasicCredential;
-} = dual(2, (username: string, password: Redacted.Redacted<string>): BasicCredential => {
-	if (username.includes(":")) {
-		// The separator is positional and unescapable: a colon in the user half
-		// would re-split into a different pair on the server. Failing loudly beats
-		// minting a credential that authenticates as someone else.
-		throw InvalidBasicAuthUsernameError.make({ message: "A basic-auth username cannot contain a colon" });
+export const basicCredentialFromPair = Effect.fn("RegistryCredential.basicCredentialFromPair")((
+	username: string,
+	password: Redacted.Redacted<string>,
+): Effect.Effect<BasicCredential, InvalidBasicAuthUsernameError> => Effect.suspend(() => {
+	if (Str.includes(":")(username)) {
+		// The separator is positional and unescapable: refuse a mis-split pair.
+		return Effect.fail(InvalidBasicAuthUsernameError.make({ message: "A basic-auth username cannot contain a colon" }));
 	}
-	return {
+	return Effect.succeed(BasicCredential.make({
 		kind: "basic",
 		encoded: Redacted.make(Base64.encode(`${username}:${Redacted.value(password)}`)),
-	};
-});
+	}));
+}));

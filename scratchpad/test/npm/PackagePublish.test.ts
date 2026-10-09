@@ -16,6 +16,8 @@ import { basicCredentialFromPair, InvalidBasicAuthUsernameError } from "../../ef
 import type { ScriptResult } from "./publish-fixtures.ts";
 import { fakeCrypto, scripted } from "./publish-fixtures.ts";
 
+const WireCause = S.Struct({ name: S.String, message: S.String, stack: S.String });
+
 const HOME = "/home/runner";
 const NPMRC = `${HOME}/.npmrc`;
 const TOKEN = Redacted.make("s3cr3t-token");
@@ -637,21 +639,34 @@ describe("PackagePublish.setupAuth with basic auth", () => {
 });
 
 describe("basicCredentialFromPair", () => {
-	it("encodes the pair the way npm's own username/_password path does", () => {
-		const credential = basicCredentialFromPair("user", Redacted.make("pass"));
+	it.effect("encodes the pair the way npm's own username/_password path does", () => Effect.gen(function* () {
+		const credential = yield* basicCredentialFromPair("user", Redacted.make("pass"));
 		assert.strictEqual(credential.kind, "basic");
 		// base64("user:pass"), computed independently.
 		assert.strictEqual(Redacted.value(credential.encoded), "dXNlcjpwYXNz");
-	});
+	}));
 
-	it("refuses a colon in the username rather than minting a mis-split credential", () => {
+	it.effect("refuses a colon in the username rather than minting a mis-split credential", () => Effect.gen(function* () {
 		// The separator is positional and unescapable: "a:b" + ":" + "c" re-splits
 		// on the server as user "a", password "b:c".
-		assert.throws(() => basicCredentialFromPair("a:b", Redacted.make("c")), InvalidBasicAuthUsernameError);
-	});
+		const error = yield* Effect.flip(basicCredentialFromPair("a:b", Redacted.make("c")));
+		assert.instanceOf(error, InvalidBasicAuthUsernameError);
+	}));
 
-	it("keeps the encoded credential out of any loggable value", () => {
-		const credential = basicCredentialFromPair("user", Redacted.make("pass"));
+	it.effect("keeps the encoded credential out of any loggable value", () => Effect.gen(function* () {
+		const credential = yield* basicCredentialFromPair("user", Redacted.make("pass"));
 		assert.notInclude(String(credential.encoded), "dXNlcjpwYXNz");
-	});
+	}));
+});
+
+
+describe("PublishError encoding", () => {
+	it.effect("preserves the originating cause stack", () => Effect.gen(function* () {
+		const cause = new Error("publish encode probe");
+		const encoded = yield* S.encodeEffect(PublishError)(PublishError.make({ kind: "digest", subject: "pkg.tgz", cause }));
+		const wireCause = yield* S.decodeUnknownEffect(WireCause)(encoded.cause);
+		assert.strictEqual(wireCause.name, cause.name);
+		assert.strictEqual(wireCause.message, cause.message);
+		assert.strictEqual(wireCause.stack, cause.stack);
+	}));
 });

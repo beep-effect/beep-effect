@@ -275,11 +275,26 @@ The surface grows when a consumer proves it needs more, not before.
 
 ### Added exports
 
-None.
+| Export | Facets | Why |
+| --- | --- | --- |
+| `InvalidBasicAuthUsernameError` | value, type | Added by review round 1; see the deviations below. |
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — The lab uses Effect collections, record/date/clock helpers, JSON codecs and S.Opaque statics where upstream used native runtime operations, with malformed pack JSON now carrying SchemaError. (scratchpad/test/npm/IntegrityHash.test.ts; scratchpad/test/npm/DependencySpecifier.test.ts; scratchpad/test/npm/Manifest.test.ts; scratchpad/test/npm/ReleaseAgeGate.test.ts; scratchpad/test/npm/RegistryKind.test.ts; scratchpad/test/npm/PackagePublish.test.ts:377)
+- **tagged-errors** — The lab replaces upstream native credential/test-double errors with tagged errors and preserves originating stacks when encoding the six existing error causes. (scratchpad/test/npm/PackagePublish.test.ts:649,664; scratchpad/test/npm/NpmRegistry.test.ts:531; scratchpad/test/npm/PackageTarball.test.ts:228; scratchpad/test/npm/Manifest.test.ts:74; scratchpad/test/npm/CatalogAssemblyError.test.ts:94; scratchpad/test/npm/WorkspaceResolver.test.ts:67; NpmRegistry test-double and PackagePublish unstubbed-member cases)
+- **schema-first** — The lab derives model types, guards and vocabularies from executable schemas and uses S.Opaque statics and validated internal error variants where upstream maintained type-only models and helper-first grammar. (scratchpad/test/npm/DependencySection.test.ts; scratchpad/test/npm/DependencySpecifier.test.ts; scratchpad/test/npm/IntegrityHash.test.ts; scratchpad/test/npm/PackageManagerPin.test.ts; scratchpad/test/npm/PackageManagerCache.test.ts; scratchpad/test/npm/PackageTarball.test.ts:244; scratchpad/test/npm/NpmRegistry.test.ts; scratchpad/test/npm/PackagePublish.test.ts)
+- **numeric-domains** — The lab validates the listed status, exit-code, sizing and partial-age fields as finite numbers where upstream used unconstrained Number schemas or type-only numbers. (scratchpad/test/npm/ReleaseAgeGate.test.ts (PartialReleaseAgeGate schema cases); scratchpad/test/npm/PackagePublish.test.ts (pack/dryRun sizing cases); scratchpad/test/npm/NpmRegistry.test.ts; scratchpad/test/npm/PackageTarball.test.ts; no upstream assertion was changed solely for these finite refinements)
+- **type-safety** — The lab uses checked codec types, guards and satisfies in place of upstream unsafe casts, with invalid test inputs confined to the operator-approved helper. (scratchpad/test/npm/DependencySpecifier.test.ts (classified payload assertions); scratchpad/test/npm/PackagePublish.test.ts (typed auth errors); scratchpad/test/npm/WorkspaceResolver.test.ts:79,120,130; scratchpad/test/npm/IntegrityHash.test.ts (algorithmOf))
+- **tsgo-diagnostics** — The lab uses diagnostic-compliant schema constructors, decoding and Effect combinators where upstream used new constructors, broader decoders and redundant generator/error wrappers. (module suite scratchpad/test/npm/**)
+- **effect-first** — The lab runs credential validation through a typed Effect and uses Effect function wrappers, matches and helper modules where upstream used synchronous throwing logic, inline generators and native helpers. (scratchpad/test/npm/CatalogResolver.test.ts; scratchpad/test/npm/WorkspaceResolver.test.ts; scratchpad/test/npm/PackagePublish.test.ts:83,150,356,642,649,656; scratchpad/test/npm/PackageTarball.test.ts; scratchpad/test/npm/DependencySpecifier.test.ts; scratchpad/test/npm/PackageManagerPin.test.ts)
+- **effect-imports** — The lab imports Effect modules from dedicated subpaths where upstream source, tests and carried examples imported the root effect barrel. (module suite scratchpad/test/npm/**)
+- **identity-annotations** — The lab gives services, schemas, fields and reusable checks namespaced @beep/identity metadata where upstream used local or @effected service identifiers and unannotated schema values. (module suite scratchpad/test/npm/**)
+- **test-environment** — The lab token-contract test reads the copied NpmRegistry source path where upstream read its package-local src path. (scratchpad/test/npm/NpmRegistry.test.ts:210 (the registry token source-contract assertion))
+- **reachability** — The lab reachability guard scans copied TypeScript modules and their relative commands edge where upstream scanned package src and published import specifiers. (scratchpad/test/npm/reachability.test.ts:23,40,64,104,115,128)
+- **upstream-bug** — The lab preserves an own __proto__ unknown field during Manifest round-trip where upstream loses that field through ordinary-object assignment. (scratchpad/test/npm/Manifest.test.ts:52; scratchpad/test/npm/Manifest.test.ts:64)
 
 ### Dependency backlog
 

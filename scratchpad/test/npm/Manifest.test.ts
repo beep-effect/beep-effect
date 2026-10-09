@@ -2,6 +2,8 @@ import { assert, describe, it, layer } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import {
 	CatalogAssemblyError,
 	CatalogResolver,
@@ -44,6 +46,38 @@ describe("Manifest.decode and the wire codec", () => {
 			const record = manifest.toRecord();
 			assert.isFalse("rest" in record);
 			assert.deepStrictEqual(record, input);
+		}),
+	);
+
+	it.effect("round-trips an own __proto__ unknown field as data", () =>
+		Effect.gen(function* () {
+			const input = { name: "p", ["__proto__"]: { marker: 1 } };
+			assert.deepStrictEqual(R.keys(input), ["name", "__proto__"]);
+			const manifest = yield* Manifest.decode(input);
+			const record = manifest.toRecord();
+			assert.deepStrictEqual(R.keys(record), ["name", "__proto__"]);
+			assert.deepStrictEqual(R.get(record, "__proto__"), O.some({ marker: 1 }));
+			assert.deepStrictEqual(record, input);
+		}),
+	);
+
+	it("typed dependency fields win over a collision in rest", () => {
+		const manifest = Manifest.make({
+			dependencies: { effect: "^4.0.0" },
+			rest: { dependencies: { effect: "wrong" }, ["__proto__"]: { marker: 1 } },
+		});
+		const record = manifest.toRecord();
+		assert.deepStrictEqual(record.dependencies, { effect: "^4.0.0" });
+		assert.deepStrictEqual(R.get(record, "__proto__"), O.some({ marker: 1 }));
+	});
+
+	it.effect("ManifestDecodeError encodes the originating cause stack", () =>
+		Effect.gen(function* () {
+			const cause = new Error("invalid dependency field");
+			const stack = cause.stack;
+			if (stack === undefined) assert.fail("expected the originating Error stack");
+			const encoded = yield* S.encodeEffect(ManifestDecodeError)(ManifestDecodeError.make({ cause }));
+			assert.deepStrictEqual(encoded.cause, { name: cause.name, message: cause.message, stack });
 		}),
 	);
 

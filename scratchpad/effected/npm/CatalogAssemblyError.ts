@@ -11,13 +11,14 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
+import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effected/npm/CatalogAssemblyError");
 
 /** The message a cause carries, if it carries a non-empty one: an `Error`'s `message`, or a thrown string. */
 const causeMessage = (cause: unknown): string | undefined => {
 	const text = cause instanceof Error ? cause.message : P.isString(cause) ? cause : undefined;
-	return text === undefined || text.trim() === "" ? undefined : text;
+	return text === undefined || Str.trim(text) === "" ? undefined : text;
 };
 
 /**
@@ -51,7 +52,7 @@ export class CatalogAssemblyError extends S.TaggedError<CatalogAssemblyError>($I
 	/** The file, the catalog name, or the config dependency name. */
 	path: S.String.annotateKey({ description: "The file, the catalog name, or the config dependency name." }),
 	/** The originating failure. */
-	cause: S.Defect().annotateKey({ description: "The originating failure." }),
+	cause: S.Defect({ includeStack: true }).annotateKey({ description: "The originating failure." }),
 	/**
 	 * Why a `hooks`-source failure could not resolve a config dependency at its
 	 * declared version, when that is what failed. Absent for every other

@@ -11,11 +11,14 @@
 // fallback to build-metadata parsing.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { SemVer } from "../semver/index.ts";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Result from "effect/Result";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { CorepackIntegrityHash } from "./IntegrityHash.ts";
@@ -46,7 +49,7 @@ export class InvalidPackageManagerPinError extends S.TaggedError<InvalidPackageM
 		 * all land here), or `integrity` (the tail after `+` is not a corepack
 		 * `<algo>.<hex>` hash).
 		 */
-		reason: S.Literals(["format", "name", "version", "integrity"]).annotateKey({ description: "Which component of the pin failed: `format` (no `@` separator at all), `name` (not one of the four supported package managers), `version` (not an exact SemVer 2.0.0 version — ranges, partial versions and dist-tags all land here), or `integrity` (the tail after `+` is not a corepack `<algo>.<hex>` hash)." }),
+		reason: LiteralKit(["format", "name", "version", "integrity"]).annotateKey({ description: "Which component of the pin failed: `format` (no `@` separator at all), `name` (not one of the four supported package managers), `version` (not an exact SemVer 2.0.0 version — ranges, partial versions and dist-tags all land here), or `integrity` (the tail after `+` is not a corepack `<algo>.<hex>` hash)." }),
 	}, $I.annote("InvalidPackageManagerPinError", { description: "Indicates that a string could not be parsed as a corepack package-manager pin (`<name>@<version>[+<integrity>]`)." }),
 ) {
 	override get message(): string {
@@ -89,7 +92,7 @@ export class InvalidPackageManagerPinError extends S.TaggedError<InvalidPackageM
  *
  * @public
  */
-export const PackageManagerPinName = S.Literals(["npm", "pnpm", "yarn", "bun"]).pipe($I.annoteSchema("PackageManagerPinName", { description: "The four package managers a corepack pin can name." }));
+export const PackageManagerPinName = LiteralKit(["npm", "pnpm", "yarn", "bun"]).annotate($I.annote("PackageManagerPinName", { description: "The four package managers a corepack pin can name." }));
 
 /**
  * The decoded type of {@link (PackageManagerPinName:variable)}:
@@ -99,8 +102,7 @@ export const PackageManagerPinName = S.Literals(["npm", "pnpm", "yarn", "bun"]).
  */
 export type PackageManagerPinName = typeof PackageManagerPinName.Type;
 
-const isPinName = (value: string): value is PackageManagerPinName =>
-	value === "npm" || value === "pnpm" || value === "yarn" || value === "bun";
+const isPinName = S.is(PackageManagerPinName);
 
 // A pin's version is an exact SemVer version with NO build metadata: the pin
 // grammar cannot express it (the first `+` always begins the integrity), so a
@@ -110,6 +112,7 @@ const pinVersion = SemVer.pipe(
 	S.check(
 		S.makeFilter((version: SemVer) =>
 			version.build.length === 0 ? undefined : "Expected a version without build metadata",
+            $I.annote("PinVersionCheck", { title: "Pinnable version", description: "An exact version without build metadata, which the pin grammar cannot represent." }),
 		),
 	),
 );
@@ -214,19 +217,19 @@ export class PackageManagerPin extends S.Class<PackageManagerPin>($I`PackageMana
 	 * a valid pin.
 	 */
 	static parseResult(input: string): Result.Result<PackageManagerPin, InvalidPackageManagerPinError> {
-		const at = input.indexOf("@");
+		const at = O.getOrElse(Str.indexOf("@")(input), () => -1);
 		if (at === -1) {
 			return Result.fail(InvalidPackageManagerPinError.make({ input, reason: "format" }));
 		}
-		const name = input.slice(0, at);
+		const name = Str.slice(0, at)(input);
 		if (!isPinName(name)) {
 			return Result.fail(InvalidPackageManagerPinError.make({ input, reason: "name" }));
 		}
-		const rest = input.slice(at + 1);
+		const rest = Str.slice(at + 1)(input);
 		// The first `+` begins the integrity component, unconditionally — the
 		// version part of a pin never carries build metadata.
-		const plus = rest.indexOf("+");
-		const candidate = plus === -1 ? rest : rest.slice(0, plus);
+		const plus = O.getOrElse(Str.indexOf("+")(rest), () => -1);
+		const candidate = plus === -1 ? rest : Str.slice(0, plus)(rest);
 		// The string-level ruling is `SemVer.isPinnable` — the same export
 		// `@effected/package-json`'s field model consumes — and it is stricter
 		// than the trimming parse: a padded version substring (`pnpm@ 11.17.0`)
@@ -238,7 +241,7 @@ export class PackageManagerPin extends S.Class<PackageManagerPin>($I`PackageMana
 		if (plus === -1) {
 			return Result.succeed(PackageManagerPin.make({ name, version: version.success }));
 		}
-		const integrity = S.decodeExit(CorepackIntegrityHash)(rest.slice(plus + 1));
+		const integrity = S.decodeExit(CorepackIntegrityHash)(Str.slice(plus + 1)(rest));
 		if (Exit.isFailure(integrity)) {
 			return Result.fail(InvalidPackageManagerPinError.make({ input, reason: "integrity" }));
 		}

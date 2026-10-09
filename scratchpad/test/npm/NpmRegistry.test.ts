@@ -12,6 +12,8 @@ import * as S from "effect/Schema";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
 import { NpmRegistry, PublishedVersion, RegistryReadError } from "../../effected/npm/NpmRegistry.ts";
 
+const WireCause = S.Struct({ name: S.String, message: S.String, stack: S.String });
+
 /** One scripted HTTP outcome. */
 type Route = { readonly status: number; readonly body?: unknown; readonly raw?: string } | { readonly fail: true };
 
@@ -522,4 +524,16 @@ describe("NpmRegistry test doubles", () => {
 			),
 		),
 	);
+});
+
+
+describe("RegistryReadError encoding", () => {
+	it.effect("preserves the originating cause stack", () => Effect.gen(function* () {
+		const cause = new Error("registry encode probe");
+		const encoded = yield* S.encodeEffect(RegistryReadError)(RegistryReadError.make({ kind: "transport", package: "pkg", registry: "https://registry.npmjs.org", cause }));
+		const wireCause = yield* S.decodeUnknownEffect(WireCause)(encoded.cause);
+		assert.strictEqual(wireCause.name, cause.name);
+		assert.strictEqual(wireCause.message, cause.message);
+		assert.strictEqual(wireCause.stack, cause.stack);
+	}));
 });

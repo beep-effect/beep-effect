@@ -9,7 +9,7 @@ import { PublishError } from "./PublishError.ts";
 const $I = $ScratchpadId.create("effected/npm/NpmExecutor");
 
 /** Build the pinned command through the project-local launcher. */
-const command = Effect.fn("command")(function* (
+const command = Effect.fnUntraced(function* (
 	spec: string,
 	all: ReadonlyArray<string>,
 ): Effect.fn.Return<ChildProcess.StandardCommand, PublishError, LocalExec> {
