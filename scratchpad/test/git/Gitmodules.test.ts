@@ -291,7 +291,7 @@ describe("Gitmodules", () => {
 			const document = S.toJsonSchemaDocument(GitmodulesEntry);
 			assert.nestedPropertyVal(
 				document,
-				"definitions.GitmodulesEntryEncoded.properties.name.pattern",
+				"definitions.@beep/scratchpad/effected/git/Gitmodules/GitmodulesEntryEncoded.properties.name.pattern",
 				String.raw`^[^\n\r\0]*$`,
 			);
 		});

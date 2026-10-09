@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -22,6 +23,8 @@ import {
   serializeValue,
 } from "./internal/config.ts";
 
+const $I = $ScratchpadId.create("effected/git/GitConfig");
+
 /**
  * One structural problem found while parsing git-config text.
  *
@@ -33,7 +36,7 @@ import {
  *
  * @public
  */
-export class GitConfigDiagnostic extends S.Class<GitConfigDiagnostic>("GitConfigDiagnostic")({
+export class GitConfigDiagnostic extends S.Class<GitConfigDiagnostic>($I`GitConfigDiagnostic`)({
   /** What kind of malformation this is. */
   code: S.Literals([
     "invalidSectionHeader",
@@ -42,18 +45,18 @@ export class GitConfigDiagnostic extends S.Class<GitConfigDiagnostic>("GitConfig
     "unterminatedQuote",
     "invalidEscape",
     "unexpectedCharacter",
-  ]),
+  ]).annotateKey({ description: "What kind of malformation this is." }),
   /** A human-readable description of the problem. */
-  message: S.String,
+  message: S.String.annotateKey({ description: "A human-readable description of the problem." }),
   /** The character offset where the problem starts. */
-  offset: S.Finite,
+  offset: S.Finite.annotateKey({ description: "The character offset where the problem starts." }),
   /** The length of the problematic span. */
-  length: S.Finite,
+  length: S.Finite.annotateKey({ description: "The length of the problematic span." }),
   /** Zero-based line of `offset`. */
-  line: S.Finite,
+  line: S.Finite.annotateKey({ description: "Zero-based line of `offset`." }),
   /** Zero-based character-in-line of `offset`. */
-  character: S.Finite,
-}) {
+  character: S.Finite.annotateKey({ description: "Zero-based character-in-line of `offset`." }),
+}, $I.annote("GitConfigDiagnostic", { description: "One structural problem found while parsing git-config text." })) {
 }
 
 /**
@@ -66,12 +69,12 @@ export class GitConfigDiagnostic extends S.Class<GitConfigDiagnostic>("GitConfig
  *
  * @public
  */
-export class GitConfigParseError extends S.TaggedError<GitConfigParseError>()("GitConfigParseError", {
+export class GitConfigParseError extends S.TaggedError<GitConfigParseError>($I`GitConfigParseError`)("GitConfigParseError", {
   /** The raw input that failed to parse. */
-  input: S.String,
+  input: S.String.annotateKey({ description: "The raw input that failed to parse." }),
   /** Every structural problem found, in document order. */
-  diagnostics: S.Array(GitConfigDiagnostic),
-}) {
+  diagnostics: S.Array(GitConfigDiagnostic).annotateKey({ description: "Every structural problem found, in document order." }),
+}, $I.annote("GitConfigParseError", { description: "The document could not be parsed as git-config text." })) {
   /** Renders the first diagnostic and the total count into a one-line message. */
   override get message(): string {
     const first = this.diagnostics[0];
@@ -85,9 +88,9 @@ export class GitConfigParseError extends S.TaggedError<GitConfigParseError>()("G
  *
  * @public
  */
-export class GitConfigEditError extends S.TaggedError<GitConfigEditError>()("GitConfigEditError", {
+export class GitConfigEditError extends S.TaggedError<GitConfigEditError>($I`GitConfigEditError`)("GitConfigEditError", {
   /** The edit operation that was refused. */
-  op: S.Literals(["set", "append", "unset", "unsetAll", "addSection", "removeSection", "renameSection"]),
+  op: S.Literals(["set", "append", "unset", "unsetAll", "addSection", "removeSection", "renameSection"]).annotateKey({ description: "The edit operation that was refused." }),
   /** Why it was refused. */
   reason: S.Literals([
     "missingSection",
@@ -96,14 +99,14 @@ export class GitConfigEditError extends S.TaggedError<GitConfigEditError>()("Git
     "invalidSubsection",
     "invalidKey",
     "invalidValue",
-  ]),
+  ]).annotateKey({ description: "Why it was refused." }),
   /** The section name the edit addressed. */
-  section: S.String,
+  section: S.String.annotateKey({ description: "The section name the edit addressed." }),
   /** The subsection name the edit addressed, when it had one. */
-  subsection: S.optionalKey(S.String),
+  subsection: S.optionalKey(S.String).annotateKey({ description: "The subsection name the edit addressed, when it had one." }),
   /** The variable name the edit addressed, when it had one. */
-  key: S.optionalKey(S.String),
-}) {
+  key: S.optionalKey(S.String).annotateKey({ description: "The variable name the edit addressed, when it had one." }),
+}, $I.annote("GitConfigEditError", { description: "A surgical edit could not be applied to a GitConfig document." })) {
   /** Renders the refused operation into a one-line message. */
   override get message(): string {
     const address = this.subsection === undefined ? `[${this.section}]` : `[${this.section} "${this.subsection}"]`;
@@ -133,16 +136,16 @@ export class GitConfigEditError extends S.TaggedError<GitConfigEditError>()("Git
  *
  * @public
  */
-export class GitConfigEntry extends S.Class<GitConfigEntry>("GitConfigEntry")({
+export class GitConfigEntry extends S.Class<GitConfigEntry>($I`GitConfigEntry`)({
   /** The variable name, raw spelling preserved (names compare case-insensitively). */
-  key: S.String,
+  key: S.String.annotateKey({ description: "The variable name, raw spelling preserved (names compare case-insensitively)." }),
   /** The decoded value; absent for the bare boolean-true shorthand. */
-  value: S.optionalKey(S.String),
+  value: S.optionalKey(S.String).annotateKey({ description: "The decoded value; absent for the bare boolean-true shorthand." }),
   /** Character offset of the entry's line start. */
-  offset: S.Finite,
+  offset: S.Finite.annotateKey({ description: "Character offset of the entry's line start." }),
   /** Length through the entry's final newline (continuation lines included). */
-  length: S.Finite,
-}) {
+  length: S.Finite.annotateKey({ description: "Length through the entry's final newline (continuation lines included)." }),
+}, $I.annote("GitConfigEntry", { description: "One variable line of a git-config document." })) {
 }
 
 /**
@@ -158,18 +161,18 @@ export class GitConfigEntry extends S.Class<GitConfigEntry>("GitConfigEntry")({
  *
  * @public
  */
-export class GitConfigSection extends S.Class<GitConfigSection>("GitConfigSection")({
+export class GitConfigSection extends S.Class<GitConfigSection>($I`GitConfigSection`)({
   /** The section name, raw spelling preserved. */
-  name: S.String,
+  name: S.String.annotateKey({ description: "The section name, raw spelling preserved." }),
   /** The decoded subsection name, when present. */
-  subsection: S.optionalKey(S.String),
+  subsection: S.optionalKey(S.String).annotateKey({ description: "The decoded subsection name, when present." }),
   /** Character offset of the header's line start. */
-  offset: S.Finite,
+  offset: S.Finite.annotateKey({ description: "Character offset of the header's line start." }),
   /** Length of the whole section span (header through the next header's line start). */
-  length: S.Finite,
+  length: S.Finite.annotateKey({ description: "Length of the whole section span (header through the next header's line start)." }),
   /** The section's variable lines, in document order. */
-  entries: S.Array(GitConfigEntry),
-}) {
+  entries: S.Array(GitConfigEntry).annotateKey({ description: "The section's variable lines, in document order." }),
+}, $I.annote("GitConfigSection", { description: "One section of a git-config document." })) {
 }
 
 /**
@@ -183,12 +186,12 @@ export class GitConfigSection extends S.Class<GitConfigSection>("GitConfigSectio
  *
  * @public
  */
-export class GitConfigInclude extends S.Class<GitConfigInclude>("GitConfigInclude")({
+export class GitConfigInclude extends S.Class<GitConfigInclude>($I`GitConfigInclude`)({
   /** The include path exactly as written (not resolved, not expanded). */
-  path: S.String,
+  path: S.String.annotateKey({ description: "The include path exactly as written (not resolved, not expanded)." }),
   /** The `includeIf` condition, when this came from an `includeIf` section. */
-  condition: S.optionalKey(S.String),
-}) {
+  condition: S.optionalKey(S.String).annotateKey({ description: "The `includeIf` condition, when this came from an `includeIf` section." }),
+}, $I.annote("GitConfigInclude", { description: "One `include` / `includeIf` directive found in the document." })) {
 }
 
 /** The offset of every line start in `text`, ascending — computed once per parse so mapping many diagnostics stays linear. */
@@ -325,12 +328,12 @@ const appendAtEof = (text: string, content: string): string =>
  *
  * @public
  */
-export class GitConfig extends S.Class<GitConfig>("GitConfig")({
+export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
   /** The document's source text — `stringify` returns exactly this. */
-  text: S.String,
+  text: S.String.annotateKey({ description: "The document's source text — `stringify` returns exactly this." }),
   /** The sections scanned from `text`, in document order. */
-  sections: S.Array(GitConfigSection),
-}) {
+  sections: S.Array(GitConfigSection).annotateKey({ description: "The sections scanned from `text`, in document order." }),
+}, $I.annote("GitConfig", { description: "A lossless git-config document: the source text plus the structural index scanned from it." })) {
   /**
    * Parses git-config text into a lossless document — the pure, synchronous
    * primitive.

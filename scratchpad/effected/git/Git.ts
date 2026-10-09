@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -13,6 +14,8 @@ import type { GitConfigScope, GitInvocation } from "./GitCommand.ts";
 import { GitCommand } from "./GitCommand.ts";
 import type { Collected } from "./internal/run.ts";
 import { runCollected } from "./internal/run.ts";
+
+const $I = $ScratchpadId.create("effected/git/Git");
 
 /** git's own ceiling: a run that has not answered in 30s is not going to. */
 const GIT_TIMEOUT = Duration.seconds(30);
@@ -223,7 +226,7 @@ const sshEnv = (resolved: string): Record<string, string> =>
  *
  * @public
  */
-export class GitCommandError extends S.TaggedError<GitCommandError>()("GitCommandError", {
+export class GitCommandError extends S.TaggedError<GitCommandError>($I`GitCommandError`)("GitCommandError", {
   /**
    * Discriminates a pre-spawn guard rejection from a genuine git failure.
    * `"refused"` — a pre-spawn guard (an option-like ref) rejected the
@@ -231,7 +234,7 @@ export class GitCommandError extends S.TaggedError<GitCommandError>()("GitComman
    * and exited non-zero, or the spawn/IO itself failed. Composed retry/fallback
    * logic routes on this instead of matching `detail` prose.
    */
-  kind: S.Literals(["refused", "failed"]),
+  kind: S.Literals(["refused", "failed"]).annotateKey({ description: "Discriminates a pre-spawn guard rejection from a genuine git failure. `\"refused\"` — a pre-spawn guard (an option-like ref) rejected the invocation and no process was ever spawned. `\"failed\"` — git actually ran and exited non-zero, or the spawn/IO itself failed. Composed retry/fallback logic routes on this instead of matching `detail` prose." }),
   /**
    * The REDACTED argument vector, without the leading `git`.
    *
@@ -242,21 +245,21 @@ export class GitCommandError extends S.TaggedError<GitCommandError>()("GitComman
    * `userinfo@`). The raw argv is never persisted in an error value, and
    * `message` renders this redacted vector.
    */
-  args: S.Array(S.String),
+  args: S.Array(S.String).annotateKey({ description: "The REDACTED argument vector, without the leading `git`." }),
   /** The working directory the command ran in. */
-  cwd: S.String,
+  cwd: S.String.annotateKey({ description: "The working directory the command ran in." }),
   /** git's exit code, when it produced one. */
-  exitCode: S.optionalKey(S.Finite),
+  exitCode: S.optionalKey(S.Finite).annotateKey({ description: "git's exit code, when it produced one." }),
   /** git's stderr, captured under `LC_ALL=C`. */
-  stderr: S.String,
+  stderr: S.String.annotateKey({ description: "git's stderr, captured under `LC_ALL=C`." }),
   /**
    * A human-readable reason, set whenever an exit code does not sum up the
    * failure: an absorbed spawn failure, a timeout, a pre-spawn guard refusal,
    * or output git produced that the member could not parse. `message` renders
    * it verbatim when present.
    */
-  detail: S.optionalKey(S.String),
-}) {
+  detail: S.optionalKey(S.String).annotateKey({ description: "A human-readable reason, set whenever an exit code does not sum up the failure: an absorbed spawn failure, a timeout, a pre-spawn guard refusal, or output git produced that the member could not parse. `message` renders it verbatim when present." }),
+}, $I.annote("GitCommandError", { description: "git ran and failed in a way that is not one of the recognized domain cases (NotARepositoryError / UnknownRefError), or the spawn itself failed before git could run at all." })) {
   /** Renders the invocation and its failure into a one-line message. */
   override get message(): string {
     return this.detail !== undefined
@@ -270,10 +273,10 @@ export class GitCommandError extends S.TaggedError<GitCommandError>()("GitComman
  *
  * @public
  */
-export class NotARepositoryError extends S.TaggedError<NotARepositoryError>()("NotARepositoryError", {
+export class NotARepositoryError extends S.TaggedError<NotARepositoryError>($I`NotARepositoryError`)("NotARepositoryError", {
   /** The working directory that is not a git repository. */
-  cwd: S.String,
-}) {
+  cwd: S.String.annotateKey({ description: "The working directory that is not a git repository." }),
+}, $I.annote("NotARepositoryError", { description: "`cwd` is not inside a git work tree." })) {
   /** Renders the failing directory into a one-line message. */
   override get message(): string {
     return `not a git repository: ${this.cwd}`;
@@ -285,12 +288,12 @@ export class NotARepositoryError extends S.TaggedError<NotARepositoryError>()("N
  *
  * @public
  */
-export class UnknownRefError extends S.TaggedError<UnknownRefError>()("UnknownRefError", {
+export class UnknownRefError extends S.TaggedError<UnknownRefError>($I`UnknownRefError`)("UnknownRefError", {
   /** The ref (or ref range) that failed to resolve. */
-  ref: S.String,
+  ref: S.String.annotateKey({ description: "The ref (or ref range) that failed to resolve." }),
   /** The working directory the ref was resolved against. */
-  cwd: S.String,
-}) {
+  cwd: S.String.annotateKey({ description: "The working directory the ref was resolved against." }),
+}, $I.annote("UnknownRefError", { description: "`ref` does not resolve to an object in the repository at `cwd`." })) {
   /** Renders the unresolvable ref into a one-line message. */
   override get message(): string {
     return `unknown ref '${this.ref}' in ${this.cwd}`;
@@ -309,12 +312,12 @@ export class UnknownRefError extends S.TaggedError<UnknownRefError>()("UnknownRe
  *
  * @public
  */
-export class NonFastForwardError extends S.TaggedError<NonFastForwardError>()("NonFastForwardError", {
+export class NonFastForwardError extends S.TaggedError<NonFastForwardError>($I`NonFastForwardError`)("NonFastForwardError", {
   /** The working directory the push ran in. */
-  cwd: S.String,
+  cwd: S.String.annotateKey({ description: "The working directory the push ran in." }),
   /** The refspec that was rejected, when the caller passed one. */
-  refspec: S.optionalKey(S.String),
-}) {
+  refspec: S.optionalKey(S.String).annotateKey({ description: "The refspec that was rejected, when the caller passed one." }),
+}, $I.annote("NonFastForwardError", { description: "A `git push` was rejected because the remote ref has moved: the classic non-fast-forward rejection (`fetch first` / `non-fast-forward`), or a `--force-with-lease` lease failure (`stale info`)." })) {
   /** Renders the rejected push into a one-line message. */
   override get message(): string {
     return this.refspec !== undefined
@@ -336,10 +339,10 @@ export class NonFastForwardError extends S.TaggedError<NonFastForwardError>()("N
  *
  * @public
  */
-export class MergeConflictError extends S.TaggedError<MergeConflictError>()("MergeConflictError", {
+export class MergeConflictError extends S.TaggedError<MergeConflictError>($I`MergeConflictError`)("MergeConflictError", {
   /** The working directory the merge ran in. */
-  cwd: S.String,
-}) {
+  cwd: S.String.annotateKey({ description: "The working directory the merge ran in." }),
+}, $I.annote("MergeConflictError", { description: "A merge-shaped operation (`pull`, `stash pop`, `stash apply`) stopped with conflict markers in the working tree." })) {
   /** Renders the conflicted merge into a one-line message. */
   override get message(): string {
     return `merge conflict in ${this.cwd}: fix conflicts (or abort) before continuing`;
@@ -359,10 +362,10 @@ export class MergeConflictError extends S.TaggedError<MergeConflictError>()("Mer
  *
  * @public
  */
-export class DirtyWorktreeError extends S.TaggedError<DirtyWorktreeError>()("DirtyWorktreeError", {
+export class DirtyWorktreeError extends S.TaggedError<DirtyWorktreeError>($I`DirtyWorktreeError`)("DirtyWorktreeError", {
   /** The working directory whose local changes blocked the operation. */
-  cwd: S.String,
-}) {
+  cwd: S.String.annotateKey({ description: "The working directory whose local changes blocked the operation." }),
+}, $I.annote("DirtyWorktreeError", { description: "A merge-shaped operation refused to start because local modifications would be overwritten — git's refusal reads `Your local changes ... would be overwritten by merge`." })) {
   /** Renders the blocked operation into a one-line message. */
   override get message(): string {
     return `local changes would be overwritten in ${this.cwd}: commit or stash them first`;
@@ -374,16 +377,16 @@ export class DirtyWorktreeError extends S.TaggedError<DirtyWorktreeError>()("Dir
  *
  * @public
  */
-export class LsTreeEntry extends S.Class<LsTreeEntry>("LsTreeEntry")({
+export class LsTreeEntry extends S.Class<LsTreeEntry>($I`LsTreeEntry`)({
   /** The entry's file mode, e.g. `100644`. */
-  mode: S.String,
+  mode: S.String.annotateKey({ description: "The entry's file mode, e.g. `100644`." }),
   /** The kind of object the entry points at. */
-  type: S.Literals(["blob", "tree", "commit"]),
+  type: S.Literals(["blob", "tree", "commit"]).annotateKey({ description: "The kind of object the entry points at." }),
   /** The object id the entry points at. */
-  oid: S.String,
+  oid: S.String.annotateKey({ description: "The object id the entry points at." }),
   /** The entry's path, relative to the tree root. May contain spaces or newlines. */
-  path: S.String,
-}) {
+  path: S.String.annotateKey({ description: "The entry's path, relative to the tree root. May contain spaces or newlines." }),
+}, $I.annote("LsTreeEntry", { description: "One entry of a `git ls-tree` listing." })) {
 }
 
 /**
@@ -397,7 +400,7 @@ export class LsTreeEntry extends S.Class<LsTreeEntry>("LsTreeEntry")({
  *
  * @public
  */
-export class NameStatusEntry extends S.Class<NameStatusEntry>("NameStatusEntry")({
+export class NameStatusEntry extends S.Class<NameStatusEntry>($I`NameStatusEntry`)({
   /**
    * The change kind, decoded from git's one-letter status code. `T` decodes
    * to `"typeChanged"` and `B` to `"broken"` — this package's spelling, not
@@ -413,12 +416,12 @@ export class NameStatusEntry extends S.Class<NameStatusEntry>("NameStatusEntry")
     "unmerged",
     "unknown",
     "broken",
-  ]),
+  ]).annotateKey({ description: "The change kind, decoded from git's one-letter status code. `T` decodes to `\"typeChanged\"` and `B` to `\"broken\"` — this package's spelling, not porcelain's `\"typechange\"`." }),
   /** The entry's path — for a rename or copy, the NEW path. */
-  path: S.String,
+  path: S.String.annotateKey({ description: "The entry's path — for a rename or copy, the NEW path." }),
   /** The pre-rename/pre-copy path; present only for renamed/copied entries. */
-  oldPath: S.optionalKey(S.String),
-}) {
+  oldPath: S.optionalKey(S.String).annotateKey({ description: "The pre-rename/pre-copy path; present only for renamed/copied entries." }),
+}, $I.annote("NameStatusEntry", { description: "One entry of a `git diff --name-status` listing." })) {
 }
 
 /**
@@ -709,14 +712,14 @@ const parseNameStatus = (output: string): ReadonlyArray<NameStatusEntry> => {
  *
  * @public
  */
-export class CommitInfo extends S.Class<CommitInfo>("CommitInfo")({
+export class CommitInfo extends S.Class<CommitInfo>($I`CommitInfo`)({
   /** The commit's full object id (`%H`). */
-  sha: S.String,
+  sha: S.String.annotateKey({ description: "The commit's full object id (`%H`)." }),
   /** git's `%G?` signature verdict: Good, Bad, Unknown validity, eXpired, expired-key (Y), Revoked, cannot-check (E), None. */
-  signatureStatus: S.Literals(["G", "B", "U", "X", "Y", "R", "E", "N"]),
+  signatureStatus: S.Literals(["G", "B", "U", "X", "Y", "R", "E", "N"]).annotateKey({ description: "git's `%G?` signature verdict: Good, Bad, Unknown validity, eXpired, expired-key (Y), Revoked, cannot-check (E), None." }),
   /** The raw commit message (`%B`), untrimmed — includes git's trailing format newline. */
-  message: S.String,
-}) {
+  message: S.String.annotateKey({ description: "The raw commit message (`%B`), untrimmed — includes git's trailing format newline." }),
+}, $I.annote("CommitInfo", { description: "The metadata of a single commit, read via `git log -1` with NUL-separated `%H` / `%G?` / `%B` placeholders." })) {
 }
 
 /**
@@ -740,20 +743,20 @@ export class CommitInfo extends S.Class<CommitInfo>("CommitInfo")({
  *
  * @public
  */
-export class CommitLogEntry extends S.Class<CommitLogEntry>("CommitLogEntry")({
+export class CommitLogEntry extends S.Class<CommitLogEntry>($I`CommitLogEntry`)({
   /** The commit's full object id (`%H`). */
-  sha: S.String,
+  sha: S.String.annotateKey({ description: "The commit's full object id (`%H`)." }),
   /** When the change was authored (`%aI`), as a UTC instant. */
-  authoredAt: S.DateTimeUtcFromString,
+  authoredAt: S.DateTimeUtcFromString.annotateKey({ description: "When the change was authored (`%aI`), as a UTC instant." }),
   /** When the commit object was written (`%cI`), as a UTC instant. */
-  committedAt: S.DateTimeUtcFromString,
+  committedAt: S.DateTimeUtcFromString.annotateKey({ description: "When the commit object was written (`%cI`), as a UTC instant." }),
   /** The author's name (`%an`). */
-  authorName: S.String,
+  authorName: S.String.annotateKey({ description: "The author's name (`%an`)." }),
   /** The author's email address (`%ae`). */
-  authorEmail: S.String,
+  authorEmail: S.String.annotateKey({ description: "The author's email address (`%ae`)." }),
   /** The paths this commit touched, root-relative and raw; empty when it touched none. */
-  paths: S.Array(S.String),
-}) {
+  paths: S.Array(S.String).annotateKey({ description: "The paths this commit touched, root-relative and raw; empty when it touched none." }),
+}, $I.annote("CommitLogEntry", { description: "One commit of a `git log` listing, with the paths that commit touched." })) {
 }
 
 /** The `\x1e` byte every `git log` record opens with (`GitCommand.log`'s `%x1e`). */
@@ -840,16 +843,16 @@ export interface StatusRenderOptions {
  *
  * @public
  */
-export class StatusEntry extends S.Class<StatusEntry>("StatusEntry")({
+export class StatusEntry extends S.Class<StatusEntry>($I`StatusEntry`)({
   /** The index-side status code (first porcelain column). */
-  x: porcelainCode,
+  x: porcelainCode.annotateKey({ description: "The index-side status code (first porcelain column)." }),
   /** The working-tree-side status code (second porcelain column). */
-  y: porcelainCode,
+  y: porcelainCode.annotateKey({ description: "The working-tree-side status code (second porcelain column)." }),
   /** The entry's path — for a rename or copy, the NEW path. */
-  path: S.String,
+  path: S.String.annotateKey({ description: "The entry's path — for a rename or copy, the NEW path." }),
   /** The original path; present only on rename/copy entries. */
-  origPath: S.optionalKey(S.String),
-}) {
+  origPath: S.optionalKey(S.String).annotateKey({ description: "The original path; present only on rename/copy entries." }),
+}, $I.annote("StatusEntry", { description: "One entry of a `git status --porcelain -z` listing." })) {
   /**
    * Renders this entry back to one porcelain-shaped line: `XY <path>`.
    *
@@ -964,16 +967,16 @@ const parseStatus = (output: string): ReadonlyArray<StatusEntry> => {
  *
  * @public
  */
-export class SubmoduleStatusEntry extends S.Class<SubmoduleStatusEntry>("SubmoduleStatusEntry")({
+export class SubmoduleStatusEntry extends S.Class<SubmoduleStatusEntry>($I`SubmoduleStatusEntry`)({
   /** The decoded state prefix. */
-  state: S.Literals(["current", "uninitialized", "outOfSync", "conflict"]),
+  state: S.Literals(["current", "uninitialized", "outOfSync", "conflict"]).annotateKey({ description: "The decoded state prefix." }),
   /** The submodule's checked-out (or, uninitialized, gitlink) commit sha. */
-  sha: S.String,
+  sha: S.String.annotateKey({ description: "The submodule's checked-out (or, uninitialized, gitlink) commit sha." }),
   /** The submodule's path relative to the superproject root. */
-  path: S.String,
+  path: S.String.annotateKey({ description: "The submodule's path relative to the superproject root." }),
   /** The `git describe` suffix, present only for initialized submodules. */
-  describe: S.optionalKey(S.String),
-}) {
+  describe: S.optionalKey(S.String).annotateKey({ description: "The `git describe` suffix, present only for initialized submodules." }),
+}, $I.annote("SubmoduleStatusEntry", { description: "One line of a `git submodule status` listing." })) {
 }
 
 /**
@@ -1024,12 +1027,12 @@ const parseSubmoduleStatus = (output: string): ReadonlyArray<SubmoduleStatusEntr
  *
  * @public
  */
-export class LsRemoteEntry extends S.Class<LsRemoteEntry>("LsRemoteEntry")({
+export class LsRemoteEntry extends S.Class<LsRemoteEntry>($I`LsRemoteEntry`)({
   /** The sha the advertised ref points at. */
-  sha: S.String,
+  sha: S.String.annotateKey({ description: "The sha the advertised ref points at." }),
   /** The full advertised refname, `^{}` peel suffix included. */
-  ref: S.String,
-}) {
+  ref: S.String.annotateKey({ description: "The full advertised refname, `^{}` peel suffix included." }),
+}, $I.annote("LsRemoteEntry", { description: "One ref a remote advertises, from `git ls-remote`." })) {
   /**
    * The human-facing short name of an advertised refname: the
    * `refs/heads/` / `refs/tags/` / `refs/remotes/` prefix and any `^{}`
@@ -1095,14 +1098,14 @@ const parseLsRemote = (output: string): ReadonlyArray<LsRemoteEntry> =>
  *
  * @public
  */
-export class StashEntry extends S.Class<StashEntry>("StashEntry")({
+export class StashEntry extends S.Class<StashEntry>($I`StashEntry`)({
   /** The reflog selector (`stash@{0}`) — the index other stash methods take. */
-  ref: S.String,
+  ref: S.String.annotateKey({ description: "The reflog selector (`stash@{0}`) — the index other stash methods take." }),
   /** The stash commit's sha. */
-  sha: S.String,
+  sha: S.String.annotateKey({ description: "The stash commit's sha." }),
   /** The reflog subject: `WIP on <branch>: ...` or `On <branch>: <message>`. */
-  message: S.String,
-}) {
+  message: S.String.annotateKey({ description: "The reflog subject: `WIP on <branch>: ...` or `On <branch>: <message>`." }),
+}, $I.annote("StashEntry", { description: "One stash entry, from `git stash list`." })) {
 }
 
 /**
@@ -1121,14 +1124,14 @@ const parseStashList = (output: string): ReadonlyArray<StashEntry> =>
  *
  * @public
  */
-export class BranchEntry extends S.Class<BranchEntry>("BranchEntry")({
+export class BranchEntry extends S.Class<BranchEntry>($I`BranchEntry`)({
   /** The short branch name (`main`, or `origin/main` for a remote branch). */
-  name: S.String,
+  name: S.String.annotateKey({ description: "The short branch name (`main`, or `origin/main` for a remote branch)." }),
   /** The branch tip's sha. */
-  sha: S.String,
+  sha: S.String.annotateKey({ description: "The branch tip's sha." }),
   /** Whether this branch is checked out in the current working tree. */
-  current: S.Boolean,
-}) {
+  current: S.Boolean.annotateKey({ description: "Whether this branch is checked out in the current working tree." }),
+}, $I.annote("BranchEntry", { description: "One local (or remote-tracking) branch, from `git branch --list`." })) {
 }
 
 /**
@@ -1152,17 +1155,17 @@ const parseBranchList = (output: string): ReadonlyArray<BranchEntry> =>
  *
  * @public
  */
-export class RefEntry extends S.Class<RefEntry>("RefEntry")({
+export class RefEntry extends S.Class<RefEntry>($I`RefEntry`)({
   /** The full refname (`refs/tags/v1`). */
-  ref: S.String,
+  ref: S.String.annotateKey({ description: "The full refname (`refs/tags/v1`)." }),
   /** The sha of the object the ref points at. */
-  sha: S.String,
+  sha: S.String.annotateKey({ description: "The sha of the object the ref points at." }),
   /**
    * The pointed-at object's type. An annotated tag is `tag` (the tag
    * object itself, not its target commit).
    */
-  objectType: S.Literals(["commit", "tag", "tree", "blob"]),
-}) {
+  objectType: S.Literals(["commit", "tag", "tree", "blob"]).annotateKey({ description: "The pointed-at object's type. An annotated tag is `tag` (the tag object itself, not its target commit)." }),
+}, $I.annote("RefEntry", { description: "One ref, from `git for-each-ref`." })) {
 }
 
 const refEntryInput = S.Struct(RefEntry.fields);
@@ -1193,16 +1196,16 @@ const parseForEachRef = (output: string): ReadonlyArray<RefEntry> =>
  *
  * @public
  */
-export class ConfigListEntry extends S.Class<ConfigListEntry>("ConfigListEntry")({
+export class ConfigListEntry extends S.Class<ConfigListEntry>($I`ConfigListEntry`)({
   /** The canonical dotted key (`section.subsection.key`). */
-  key: S.String,
+  key: S.String.annotateKey({ description: "The canonical dotted key (`section.subsection.key`)." }),
   /**
    * The raw value. A valueless key (git's boolean-true shorthand,
    * `[section]` + bare `key`) surfaces as the empty string — distinguish it
    * with `configGetAll` if the difference matters.
    */
-  value: S.String,
-}) {
+  value: S.String.annotateKey({ description: "The raw value. A valueless key (git's boolean-true shorthand, `[section]` + bare `key`) surfaces as the empty string — distinguish it with `configGetAll` if the difference matters." }),
+}, $I.annote("ConfigListEntry", { description: "One configuration entry, from `git config --list`." })) {
 }
 
 /**
@@ -1227,22 +1230,22 @@ const parseConfigList = (output: string): ReadonlyArray<ConfigListEntry> =>
  *
  * @public
  */
-export class WorktreeEntry extends S.Class<WorktreeEntry>("WorktreeEntry")({
+export class WorktreeEntry extends S.Class<WorktreeEntry>($I`WorktreeEntry`)({
   /** The working tree's absolute path. */
-  path: S.String,
+  path: S.String.annotateKey({ description: "The working tree's absolute path." }),
   /** The checked-out commit sha; absent for a bare repository entry. */
-  head: S.optionalKey(S.String),
+  head: S.optionalKey(S.String).annotateKey({ description: "The checked-out commit sha; absent for a bare repository entry." }),
   /** The checked-out branch's full refname; absent when detached or bare. */
-  branch: S.optionalKey(S.String),
+  branch: S.optionalKey(S.String).annotateKey({ description: "The checked-out branch's full refname; absent when detached or bare." }),
   /** Whether the working tree is in detached-HEAD state. */
-  detached: S.Boolean,
+  detached: S.Boolean.annotateKey({ description: "Whether the working tree is in detached-HEAD state." }),
   /** Whether the entry is the bare repository itself. */
-  bare: S.Boolean,
+  bare: S.Boolean.annotateKey({ description: "Whether the entry is the bare repository itself." }),
   /** Present when the worktree is locked; holds the lock reason (possibly empty). */
-  locked: S.optionalKey(S.String),
+  locked: S.optionalKey(S.String).annotateKey({ description: "Present when the worktree is locked; holds the lock reason (possibly empty)." }),
   /** Present when the worktree is prunable; holds the reason (possibly empty). */
-  prunable: S.optionalKey(S.String),
-}) {
+  prunable: S.optionalKey(S.String).annotateKey({ description: "Present when the worktree is prunable; holds the reason (possibly empty)." }),
+}, $I.annote("WorktreeEntry", { description: "One working tree, from `git worktree list --porcelain`." })) {
 }
 
 /**
@@ -1315,16 +1318,16 @@ const parseWorktreeList = (output: string): ReadonlyArray<WorktreeEntry> => {
  *
  * @public
  */
-export class LsFilesEntry extends S.Class<LsFilesEntry>("LsFilesEntry")({
+export class LsFilesEntry extends S.Class<LsFilesEntry>($I`LsFilesEntry`)({
   /** The entry's file mode, e.g. `100644` — `160000` for a gitlink. */
-  mode: S.String,
+  mode: S.String.annotateKey({ description: "The entry's file mode, e.g. `100644` — `160000` for a gitlink." }),
   /** The staged object id. */
-  oid: S.String,
+  oid: S.String.annotateKey({ description: "The staged object id." }),
   /** The merge stage: `0` normally; `1`/`2`/`3` during an unresolved merge. */
-  stage: S.Finite,
+  stage: S.Finite.annotateKey({ description: "The merge stage: `0` normally; `1`/`2`/`3` during an unresolved merge." }),
   /** The entry's path, relative to `cwd`. May contain spaces or newlines. */
-  path: S.String,
-}) {
+  path: S.String.annotateKey({ description: "The entry's path, relative to `cwd`. May contain spaces or newlines." }),
+}, $I.annote("LsFilesEntry", { description: "One index (staging area) entry, from `git ls-files --stage`." })) {
 }
 
 /**
@@ -4504,7 +4507,7 @@ const notStubbed = (method: string) => () =>
  *
  * @public
  */
-export class Git extends Context.Service<Git, GitShape>()("@beep/scratchpad/effected/git/Git") {
+export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
   /** Resolves `ChildProcessSpawner` once, at construction — every method's `R` is `never`. */
   static readonly layer: Layer.Layer<Git, never, ChildProcessSpawner.ChildProcessSpawner> = Layer.effect(
     this,

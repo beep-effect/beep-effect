@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -7,13 +8,15 @@ import type { GitConfigEditError, GitConfigParseError } from "./GitConfig.ts";
 import { GitConfig } from "./GitConfig.ts";
 import { serializeHeader, serializeValue } from "./internal/config.ts";
 
+const $I = $ScratchpadId.create("effected/git/Gitmodules");
+
 /**
  * One `[submodule "<name>"]` entry of a `.gitmodules` document, decoded into
  * typed fields.
  *
  * @public
  */
-export class GitmodulesEntry extends S.Class<GitmodulesEntry>("GitmodulesEntry")({
+export class GitmodulesEntry extends S.Class<GitmodulesEntry>($I`GitmodulesEntry`)({
 	/**
 	 * The submodule's logical name — the section's subsection, case-sensitive.
 	 *
@@ -26,43 +29,43 @@ export class GitmodulesEntry extends S.Class<GitmodulesEntry>("GitmodulesEntry")
 	 * lines — so the check bites only on hand-built entries, matching
 	 * `GitConfig.addSection`'s refusal of `[\n\r\0]` subsections.
 	 */
-	name: S.String.check(S.isPattern(/^[^\n\r\0]*$/u)),
+	name: S.String.check(S.isPattern(/^[^\n\r\0]*$/u)).annotateKey({ description: "The submodule's logical name — the section's subsection, case-sensitive." }),
 	/** The submodule's path relative to the superproject root (`submodule.<name>.path`). */
-	path: S.String,
+	path: S.String.annotateKey({ description: "The submodule's path relative to the superproject root (`submodule.<name>.path`)." }),
 	/** The submodule's remote URL (`submodule.<name>.url`). */
-	url: S.String,
+	url: S.String.annotateKey({ description: "The submodule's remote URL (`submodule.<name>.url`)." }),
 	/** The branch the submodule tracks (`submodule.<name>.branch`), when recorded. */
-	branch: S.optionalKey(S.String),
+	branch: S.optionalKey(S.String).annotateKey({ description: "The branch the submodule tracks (`submodule.<name>.branch`), when recorded." }),
 	/** Whether the submodule clones shallow (`submodule.<name>.shallow`), when recorded. */
-	shallow: S.optionalKey(S.Boolean),
+	shallow: S.optionalKey(S.Boolean).annotateKey({ description: "Whether the submodule clones shallow (`submodule.<name>.shallow`), when recorded." }),
 	/**
 	 * The update strategy (`submodule.<name>.update`), when recorded. Kept as a
 	 * raw string deliberately: beyond `checkout`/`rebase`/`merge`/`none` git
 	 * accepts arbitrary `!command` values, so a literal union would reject
 	 * valid documents.
 	 */
-	update: S.optionalKey(S.String),
+	update: S.optionalKey(S.String).annotateKey({ description: "The update strategy (`submodule.<name>.update`), when recorded. Kept as a raw string deliberately: beyond `checkout`/`rebase`/`merge`/`none` git accepts arbitrary `!command` values, so a literal union would reject valid documents." }),
 	/** The status-ignore policy (`submodule.<name>.ignore`), when recorded. */
-	ignore: S.optionalKey(S.Literals(["all", "dirty", "untracked", "none"])),
+	ignore: S.optionalKey(S.Literals(["all", "dirty", "untracked", "none"])).annotateKey({ description: "The status-ignore policy (`submodule.<name>.ignore`), when recorded." }),
 	/** Whether fetch recurses into the submodule (`submodule.<name>.fetchRecurseSubmodules`), when recorded. */
-	fetchRecurseSubmodules: S.optionalKey(S.Union([S.Boolean, S.Literal("on-demand")])),
-}) {}
+	fetchRecurseSubmodules: S.optionalKey(S.Union([S.Boolean, S.Literal("on-demand")])).annotateKey({ description: "Whether fetch recurses into the submodule (`submodule.<name>.fetchRecurseSubmodules`), when recorded." }),
+}, $I.annote("GitmodulesEntry", { description: "One `[submodule \"<name>\"]` entry of a `.gitmodules` document, decoded into typed fields." })) {}
 
 /**
  * A `[submodule]` section could not be decoded into a {@link GitmodulesEntry}.
  *
  * @public
  */
-export class GitmodulesDecodeError extends S.TaggedError<GitmodulesDecodeError>()("GitmodulesDecodeError", {
+export class GitmodulesDecodeError extends S.TaggedError<GitmodulesDecodeError>($I`GitmodulesDecodeError`)("GitmodulesDecodeError", {
 	/** The submodule name (the section's subsection) that failed to decode. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "The submodule name (the section's subsection) that failed to decode." }),
 	/** The field the failure is about, when it is field-specific. */
-	field: S.optionalKey(S.String),
+	field: S.optionalKey(S.String).annotateKey({ description: "The field the failure is about, when it is field-specific." }),
 	/** The offending raw value, when there was one. */
-	value: S.optionalKey(S.String),
+	value: S.optionalKey(S.String).annotateKey({ description: "The offending raw value, when there was one." }),
 	/** What went wrong. */
-	reason: S.Literals(["missingPath", "missingUrl", "invalidValue"]),
-}) {
+	reason: S.Literals(["missingPath", "missingUrl", "invalidValue"]).annotateKey({ description: "What went wrong." }),
+}, $I.annote("GitmodulesDecodeError", { description: "A `[submodule]` section could not be decoded into a GitmodulesEntry." })) {
 	/** Renders the failing submodule and field into a one-line message. */
 	override get message(): string {
 		return this.reason === "missingPath"
@@ -132,10 +135,10 @@ const render = (fields: (typeof Gitmodules)["Encoded"]): string => {
  *
  * @public
  */
-export class Gitmodules extends S.Class<Gitmodules>("Gitmodules")({
+export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
 	/** The decoded submodule entries, in first-appearance order. */
-	entries: S.Array(GitmodulesEntry),
-}) {
+	entries: S.Array(GitmodulesEntry).annotateKey({ description: "The decoded submodule entries, in first-appearance order." }),
+}, $I.annote("Gitmodules", { description: "The typed view over a `.gitmodules` document: the decoded submodule entries, in first-appearance order." })) {
 	/**
 	 * Decodes an already-parsed git-config document into submodule entries —
 	 * the pure, synchronous primitive.
