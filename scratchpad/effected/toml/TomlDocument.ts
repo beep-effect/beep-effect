@@ -9,6 +9,7 @@
 // `TomlDiagnostic` instances and the tagged `TomlParseError`. The dependency
 // edge runs facade → engine only.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
@@ -20,6 +21,8 @@ import { analyze, buildValue } from "./internal/semantic.ts";
 import { TomlParseError } from "./Toml.ts";
 import { TomlDiagnostic } from "./TomlDiagnostic.ts";
 import { TomlExpression } from "./TomlNode.ts";
+
+const $I = $ScratchpadId.create("effected/toml/TomlDocument");
 
 /**
  * Materialize an engine throw into the typed error: `RawTomlError` becomes a
@@ -78,11 +81,11 @@ const materializeError = (text: string, defect: unknown): TomlParseError => {
  *
  * @public
  */
-export class TomlDocument extends S.Class<TomlDocument>("TomlDocument")({
-	source: S.String,
-	expressions: S.Array(TomlExpression),
-	diagnostics: S.Array(TomlDiagnostic),
-}) {
+export class TomlDocument extends S.Class<TomlDocument>($I`TomlDocument`)({
+	source: S.String.annotateKey({ description: "Original TOML text preserved exactly, including comments, whitespace and line endings" }),
+	expressions: S.Array(TomlExpression).annotateKey({ description: "Top-level constructs and trivia in document order, with spans covering the original text exactly" }),
+	diagnostics: S.Array(TomlDiagnostic).annotateKey({ description: "Semantic violations recorded during parsing that prevent conversion to a plain value" }),
+}, $I.annote("TomlDocument", { description: "A parsed TOML document that never loses a byte: the `source` text, the linear (TomlExpression:type) CST whose spans tile the source exactly, and any semantic violations as TomlDiagnostic data." })) {
 	/**
 	 * Parse TOML text into a lossless document. Fails with
 	 * {@link TomlParseError} only on lex/parse errors — including a

@@ -6,6 +6,7 @@
 // deriving `line`/`character` from `offset` against the source text. The
 // dependency edge runs public modules → engine only.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import {
 	TOML_LEX_ERROR_CODES,
@@ -14,12 +15,14 @@ import {
 	TOML_STRINGIFY_ERROR_CODES,
 } from "./internal/diagnostics.ts";
 
+const $I = $ScratchpadId.create("effected/toml/TomlDiagnostic");
+
 /**
  * Error codes emitted by the lexer stage.
  *
  * @public
  */
-export const TomlLexErrorCode = S.Literals(TOML_LEX_ERROR_CODES);
+export const TomlLexErrorCode = S.Literals(TOML_LEX_ERROR_CODES).pipe($I.annoteSchema("TomlLexErrorCode", { description: "Error codes emitted by the lexer stage." }));
 
 /**
  * The union of all lexer-stage error code string literals.
@@ -33,7 +36,7 @@ export type TomlLexErrorCode = typeof TomlLexErrorCode.Type;
  *
  * @public
  */
-export const TomlParseErrorCode = S.Literals(TOML_PARSE_ERROR_CODES);
+export const TomlParseErrorCode = S.Literals(TOML_PARSE_ERROR_CODES).pipe($I.annoteSchema("TomlParseErrorCode", { description: "Error codes emitted by the parser stage." }));
 
 /**
  * The union of all parser-stage error code string literals.
@@ -47,7 +50,7 @@ export type TomlParseErrorCode = typeof TomlParseErrorCode.Type;
  *
  * @public
  */
-export const TomlSemanticErrorCode = S.Literals(TOML_SEMANTIC_ERROR_CODES);
+export const TomlSemanticErrorCode = S.Literals(TOML_SEMANTIC_ERROR_CODES).pipe($I.annoteSchema("TomlSemanticErrorCode", { description: "Error codes emitted by the semantic (table/key conflict) stage." }));
 
 /**
  * The union of all semantic-stage error code string literals.
@@ -61,7 +64,7 @@ export type TomlSemanticErrorCode = typeof TomlSemanticErrorCode.Type;
  *
  * @public
  */
-export const TomlStringifyErrorCode = S.Literals(TOML_STRINGIFY_ERROR_CODES);
+export const TomlStringifyErrorCode = S.Literals(TOML_STRINGIFY_ERROR_CODES).pipe($I.annoteSchema("TomlStringifyErrorCode", { description: "Error codes emitted by the stringifier stage." }));
 
 /**
  * The union of all stringifier-stage error code string literals.
@@ -81,7 +84,7 @@ export const TomlErrorCode = S.Union([
 	TomlParseErrorCode,
 	TomlSemanticErrorCode,
 	TomlStringifyErrorCode,
-]);
+]).pipe($I.annoteSchema("TomlErrorCode", { description: "Union of all TOML error codes across all pipeline stages. Stage discrimination lives here (in the code), not in separate error classes." }));
 
 /**
  * The union of all TOML error code string literals.
@@ -103,14 +106,14 @@ export type TomlErrorCode = typeof TomlErrorCode.Type;
  *
  * @public
  */
-export class TomlDiagnostic extends S.Class<TomlDiagnostic>("TomlDiagnostic")({
-	code: TomlErrorCode,
-	message: S.String,
-	offset: S.Finite,
-	length: S.Finite,
-	line: S.Finite,
-	character: S.Finite,
-}) {
+export class TomlDiagnostic extends S.Class<TomlDiagnostic>($I`TomlDiagnostic`)({
+	code: TomlErrorCode.annotateKey({ description: "Failure category emitted during TOML lexing, parsing, semantic validation, or stringification" }),
+	message: S.String.annotateKey({ description: "Human-readable explanation supplied by the TOML engine for the failure" }),
+	offset: S.Finite.annotateKey({ description: "Zero-based start position of the diagnostic span in source UTF-16 code units, or zero for stringification failures" }),
+	length: S.Finite.annotateKey({ description: "Diagnostic span length in source UTF-16 code units, with zero used for position-only or stringification failures" }),
+	line: S.Finite.annotateKey({ description: "Zero-based source line derived from the diagnostic offset, counting CRLF as one line break" }),
+	character: S.Finite.annotateKey({ description: "Zero-based position within the source line in UTF-16 code units, derived from the diagnostic offset" }),
+}, $I.annote("TomlDiagnostic", { description: "One structured diagnostic: its (TomlErrorCode:type), a human-readable `message`, and its exact position (`offset`/`length`, plus zero-based `line`/`character`)." })) {
 	/**
 	 * Materialize an engine record, deriving `line`/`character` (0-based)
 	 * from `offset` against the source text. Advanced — the parse/stringify

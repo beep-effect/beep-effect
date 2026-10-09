@@ -7,7 +7,10 @@
 // Leaf module: imports only `effect`. The scanner constructs these, value
 // stringify prints them, and the corpus harness compares them.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/toml/TomlDateTime");
 
 /** Zero-pad `value` to `width` digits (never truncates a wider value). */
 function pad(value: number, width: number): string {
@@ -93,8 +96,8 @@ function formatOffset(offsetMinutes: number): string {
  *
  * @public
  */
-export class TomlLocalDate extends S.Class<TomlLocalDate>("TomlLocalDate")(
-	S.Struct(dateFields).check(isRealCalendarDate),
+export class TomlLocalDate extends S.Class<TomlLocalDate>($I`TomlLocalDate`)(
+	S.Struct(dateFields).check(isRealCalendarDate), $I.annote("TomlLocalDate", { description: "A TOML local date: `year`-`month`-`day` with no time-of-day or offset, validated against the real Gregorian calendar." }),
 ) {
 	override toString(): string {
 		return formatDate(this);
@@ -107,7 +110,7 @@ export class TomlLocalDate extends S.Class<TomlLocalDate>("TomlLocalDate")(
  *
  * @public
  */
-export class TomlLocalTime extends S.Class<TomlLocalTime>("TomlLocalTime")(timeFields) {
+export class TomlLocalTime extends S.Class<TomlLocalTime>($I`TomlLocalTime`)(timeFields, $I.annote("TomlLocalTime", { description: "A TOML local time: `hour`:`minute`:`second`[.`nanosecond`] with no date or offset. `second` tolerates the RFC 3339 leap second (0-60)." })) {
 	override toString(): string {
 		return formatTime(this);
 	}
@@ -119,8 +122,8 @@ export class TomlLocalTime extends S.Class<TomlLocalTime>("TomlLocalTime")(timeF
  *
  * @public
  */
-export class TomlLocalDateTime extends S.Class<TomlLocalDateTime>("TomlLocalDateTime")(
-	S.Struct({ ...dateFields, ...timeFields }).check(isRealCalendarDate),
+export class TomlLocalDateTime extends S.Class<TomlLocalDateTime>($I`TomlLocalDateTime`)(
+	S.Struct({ ...dateFields, ...timeFields }).check(isRealCalendarDate), $I.annote("TomlLocalDateTime", { description: "A TOML local date-time: a TomlLocalDate and a TomlLocalTime combined, with no offset." }),
 ) {
 	override toString(): string {
 		return `${formatDate(this)}T${formatTime(this)}`;
@@ -134,12 +137,12 @@ export class TomlLocalDateTime extends S.Class<TomlLocalDateTime>("TomlLocalDate
  *
  * @public
  */
-export class TomlOffsetDateTime extends S.Class<TomlOffsetDateTime>("TomlOffsetDateTime")(
+export class TomlOffsetDateTime extends S.Class<TomlOffsetDateTime>($I`TomlOffsetDateTime`)(
 	S.Struct({
 		...dateFields,
 		...timeFields,
 		offsetMinutes: S.Int.check(S.isBetween({ minimum: -1439, maximum: 1439 })),
-	}).check(isRealCalendarDate),
+	}).check(isRealCalendarDate), $I.annote("TomlOffsetDateTime", { description: "A TOML offset date-time: a TomlLocalDateTime plus `offsetMinutes` (-1439-1439). Parsing enforces `hh <= 23` / `mm <= 59` before construction; this class only bounds the combined minute count." }),
 ) {
 	override toString(): string {
 		return `${formatDate(this)}T${formatTime(this)}${formatOffset(this.offsetMinutes)}`;

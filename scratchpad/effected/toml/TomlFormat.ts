@@ -15,6 +15,7 @@
 // tagged TomlModificationError. The dependency edge runs facade → engine
 // only.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -39,6 +40,8 @@ import {
 	TomlTrivia,
 } from "./TomlNode.ts";
 
+const $I = $ScratchpadId.create("effected/toml/TomlFormat");
+
 /**
  * A range accepted at the `format`/`formatToString` call sites: either a
  * {@link TomlRange} instance or a plain `{ offset, length }` literal (the two
@@ -56,9 +59,9 @@ export type TomlRangeLike = TomlRange | { readonly offset: number; readonly leng
  *
  * @public
  */
-export class TomlFormattingOptions extends S.Class<TomlFormattingOptions>("TomlFormattingOptions")({
-	newline: S.optionalKey(S.Literals(["\n", "\r\n"])),
-}) {}
+export class TomlFormattingOptions extends S.Class<TomlFormattingOptions>($I`TomlFormattingOptions`)({
+	newline: S.optionalKey(S.Literals(["\n", "\r\n"])).annotateKey({ description: "LF or CRLF used to normalize line endings outside multiline strings during formatting and terminate inserted lines during modification" }),
+}, $I.annote("TomlFormattingOptions", { description: "Options controlling formatting and modification behavior. The only knob is `newline`: for `format` it normalizes every newline outside multi-line strings; for `modify` it overrides the dominant newline inherited by inserted lines." })) {}
 
 /**
  * Raised when `TomlFormat.modify` cannot resolve the requested path against
@@ -69,9 +72,9 @@ export class TomlFormattingOptions extends S.Class<TomlFormattingOptions>("TomlF
  *
  * @public
  */
-export class TomlModificationError extends S.TaggedError<TomlModificationError>()("TomlModificationError", {
-	diagnostic: TomlDiagnostic,
-}) {
+export class TomlModificationError extends S.TaggedError<TomlModificationError>($I`TomlModificationError`)("TomlModificationError", {
+	diagnostic: TomlDiagnostic.annotateKey({ description: "Structured failure detail carrying the code, message and source position explaining why modification failed" }),
+}, $I.annote("TomlModificationError", { description: "Raised when `TomlFormat.modify` cannot resolve the requested path against the document's semantic view, when the insertion target refuses (an inline table or an implicitly created table), or when the replacement value cannot render as TOML. Carries one structured TomlDiagnostic — never a collapsed `reason` string." })) {
 	override get message(): string {
 		return `TOML modification failed: ${this.diagnostic.code} ${this.diagnostic.message}`;
 	}

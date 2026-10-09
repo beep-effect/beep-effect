@@ -9,6 +9,7 @@
 // TomlParseError / TomlStringifyError. The dependency edge runs facade →
 // engine only, so `noImportCycles` stays satisfied.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -20,6 +21,8 @@ import { parseExpressions } from "./internal/parser.ts";
 import { buildValue } from "./internal/semantic.ts";
 import { stringifyValue } from "./internal/stringifyValue.ts";
 import { TomlDiagnostic } from "./TomlDiagnostic.ts";
+
+const $I = $ScratchpadId.create("effected/toml/Toml");
 
 /**
  * Options controlling stringify behavior. The only knob is `newline` —
@@ -34,9 +37,9 @@ import { TomlDiagnostic } from "./TomlDiagnostic.ts";
  *
  * @public
  */
-export class TomlStringifyOptions extends S.Class<TomlStringifyOptions>("TomlStringifyOptions")({
-	newline: S.optionalKey(S.Literals(["\n", "\r\n"])),
-}) {}
+export class TomlStringifyOptions extends S.Class<TomlStringifyOptions>($I`TomlStringifyOptions`)({
+	newline: S.optionalKey(S.Literals(["\n", "\r\n"])).annotateKey({ description: "Line separator in emitted TOML, either LF or CRLF, defaulting to LF" }),
+}, $I.annote("TomlStringifyOptions", { description: "Options controlling stringify behavior. The only knob is `newline` — omitted, it resolves to `\"\\n\"`." })) {}
 
 /**
  * Parse failure: the {@link TomlDiagnostic} entries describing why the
@@ -53,9 +56,9 @@ export class TomlStringifyOptions extends S.Class<TomlStringifyOptions>("TomlStr
  *
  * @public
  */
-export class TomlParseError extends S.TaggedError<TomlParseError>()("TomlParseError", {
-	diagnostics: S.Array(TomlDiagnostic),
-}) {
+export class TomlParseError extends S.TaggedError<TomlParseError>($I`TomlParseError`)("TomlParseError", {
+	diagnostics: S.Array(TomlDiagnostic).annotateKey({ description: "Structured reasons the TOML document was rejected, currently containing only the first violation" }),
+}, $I.annote("TomlParseError", { description: "Parse failure: the TomlDiagnostic entries describing why the document was rejected (first violation wins, so there is one today; the array shape matches `@effected/yaml`'s aggregate contract). Raised by Toml.parse and the decode direction of the schema factories." })) {
 	override get message(): string {
 		const count = this.diagnostics.length;
 		const first = this.diagnostics[0];
@@ -73,9 +76,9 @@ export class TomlParseError extends S.TaggedError<TomlParseError>()("TomlParseEr
  *
  * @public
  */
-export class TomlStringifyError extends S.TaggedError<TomlStringifyError>()("TomlStringifyError", {
-	diagnostic: TomlDiagnostic,
-}) {
+export class TomlStringifyError extends S.TaggedError<TomlStringifyError>($I`TomlStringifyError`)("TomlStringifyError", {
+	diagnostic: TomlDiagnostic.annotateKey({ description: "Structured reason TOML encoding failed, with source offset zero because no source text exists" }),
+}, $I.annote("TomlStringifyError", { description: "Stringification failure: an unsupported value, an out-of-range integer, a circular reference or a tripped depth guard, as one structured TomlDiagnostic (offset `0` — there is no source text). Raised by Toml.stringify and the encode direction of the schema factories." })) {
 	override get message(): string {
 		return `TOML stringify failed: ${this.diagnostic.code} ${this.diagnostic.message}`;
 	}

@@ -10,7 +10,10 @@
 // semantics) so consumer code can be written once over "a document codec's
 // Edit/Range/Path".
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/toml/TomlEdit");
 
 /**
  * A single path segment: a `string` for table keys or a `number` for array
@@ -35,10 +38,10 @@ export type TomlPath = ReadonlyArray<TomlSegment>;
  *
  * @public
  */
-export class TomlRange extends S.Class<TomlRange>("TomlRange")({
-	offset: S.Finite,
-	length: S.Finite,
-}) {}
+export class TomlRange extends S.Class<TomlRange>($I`TomlRange`)({
+	offset: S.Finite.annotateKey({ description: "Zero-based starting position in UTF-16 code units for selecting expressions to format" }),
+	length: S.Finite.annotateKey({ description: "Extent of the formatting region in UTF-16 code units" }),
+}, $I.annote("TomlRange", { description: "A range within a TOML document, expressed as a zero-based character `offset` and a `length` in UTF-16 code units. Pass to `TomlFormat.format` to restrict formatting to the expressions intersecting a region." })) {}
 
 /**
  * A non-mutating text edit: replace the span `[offset, offset + length)` with
@@ -52,11 +55,11 @@ export class TomlRange extends S.Class<TomlRange>("TomlRange")({
  *
  * @public
  */
-export class TomlEdit extends S.Class<TomlEdit>("TomlEdit")({
-	offset: S.Finite,
-	length: S.Finite,
-	content: S.String,
-}) {
+export class TomlEdit extends S.Class<TomlEdit>($I`TomlEdit`)({
+	offset: S.Finite.annotateKey({ description: "Zero-based starting position of the text splice in UTF-16 code units" }),
+	length: S.Finite.annotateKey({ description: "Number of UTF-16 code units to replace, with zero inserting text without removing any" }),
+	content: S.String.annotateKey({ description: "Replacement text for the selected span, with an empty string deleting that span" }),
+}, $I.annote("TomlEdit", { description: "A non-mutating text edit: replace the span `[offset, offset + length)` with `content`. Set `length` to `0` to insert, `content` to `\"\"` to delete." })) {
 	/**
 	 * Apply `edits` to `text`, producing a new string. Edits are applied in
 	 * reverse-offset order so earlier offsets stay valid; the input `edits`
