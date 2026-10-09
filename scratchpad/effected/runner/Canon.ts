@@ -85,7 +85,7 @@ export interface CanonVerdict {
 export const canonFindings = Effect.fn("Canon.findings")(function* (config: RunnerConfig, target: AuditTarget) {
   const path = yield* Path.Path;
   const lab = labPaths(target);
-  const files = yield* listTsFiles(config.repoRoot, lab.testDir);
+  const files = [...(yield* listTsFiles(config.repoRoot, lab.testDir)), ...lab.extraTests];
   const project = new Project({ skipAddingFilesFromTsConfig: true });
   const findings = yield* Effect.forEach(files, (file) =>
     detectEffectVitestFindings(project.addSourceFileAtPath(path.join(config.repoRoot, file)), file, "@beep/scratchpad")

@@ -79,6 +79,7 @@ export const resolveRunnerConfig = Effect.fn("Runner.resolveRunnerConfig")(funct
  * const paths = labPaths("yaml")
  * console.log(paths.sourceDir) // "scratchpad/effected/yaml"
  * console.log(paths.testDir) // "scratchpad/test/yaml"
+ * console.log(labPaths("jsonl").extraTests) // ["scratchpad/test/jsonl.test.ts"]
  * ```
  *
  * @category getters
@@ -90,6 +91,7 @@ export const labPaths = (
   readonly sourceDir: string;
   readonly testDir: string;
   readonly extraSources: ReadonlyArray<string>;
+  readonly extraTests: ReadonlyArray<string>;
   readonly tsconfig: string;
   readonly docgenConfig: string;
   readonly docgenSrcDir: string;
@@ -98,6 +100,7 @@ export const labPaths = (
   sourceDir: `scratchpad/effected/${target}`,
   testDir: `scratchpad/test/${target}`,
   extraSources: AuditTarget.is.runner(target) ? ["scratchpad/effected/audit.ts"] : [],
+  extraTests: AuditTarget.is.jsonl(target) ? ["scratchpad/test/jsonl.test.ts"] : [],
   tsconfig: `scratchpad/effected/${target}/tsconfig.json`,
   docgenConfig: `scratchpad/docgen.${target}.json`,
   docgenSrcDir: `effected/${target}`,

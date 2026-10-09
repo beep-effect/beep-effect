@@ -94,7 +94,7 @@ export const targetFiles = Effect.fn("Gates.targetFiles")(function* (repoRoot: s
   const lab = labPaths(target);
   const sources = yield* listTsFiles(repoRoot, lab.sourceDir);
   const tests = yield* listTsFiles(repoRoot, lab.testDir);
-  return [...sources, ...lab.extraSources, ...tests];
+  return [...sources, ...lab.extraSources, ...tests, ...lab.extraTests];
 });
 
 /**
@@ -552,8 +552,9 @@ export const lint = Effect.fn("Gates.lint")(function* (config: RunnerConfig, tar
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const lab = labPaths(target);
-  const directories = yield* Effect.filter([lab.sourceDir, ...lab.extraSources, lab.testDir], (directory) =>
-    fs.exists(path.join(config.repoRoot, directory))
+  const directories = yield* Effect.filter(
+    [lab.sourceDir, ...lab.extraSources, lab.testDir, ...lab.extraTests],
+    (directory) => fs.exists(path.join(config.repoRoot, directory))
   );
   const files = yield* targetFiles(config.repoRoot, target);
   const cli = (args: ReadonlyArray<string>) =>

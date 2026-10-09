@@ -85,3 +85,17 @@ Paths use `~`; no secrets, no machine ids.
   "cratchpad/effected/OPPORTUNITIES.md": `capture` trims the whole `git status --porcelain`
   output, so the first line loses its leading status space and `Str.slice(3)` eats the path's
   first letter; parse porcelain lines with a regex instead of a fixed slice.
+
+## 2026-10-08 — the Grok seat's exit 1 was its turn budget, not quota
+
+- **What:** two rounds stalled on a seat that exited 1 with a few lines of narration and no
+  findings; the round could not close without it.
+- **Evidence:** `grok usage <session>` showed `modelCalls: 80` for both failed sessions, exactly
+  the launch's `--max-turns 80`; the round that succeeded used 47. `grok export <session>` showed
+  the seat still reading files when it stopped (about 190 tool calls).
+- **Recovery:** `grok --resume <session> --prompt-file <"write the report now">` with the same
+  model, effort and read-only tool flags returned both reports without redoing the reading.
+- **Prevention:** the launch now allows 200 turns; a seat exit 1 means "read `grok usage`" before
+  it means "unavailable". The scope guard now matches porcelain status letters instead of slicing
+  by column and exempts every module's `.review/` directory; the lint, parity, canon and brief
+  surfaces include `scratchpad/test/jsonl.test.ts`; the JSDoc law rejects a second lead paragraph.

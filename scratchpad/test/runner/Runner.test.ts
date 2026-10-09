@@ -6,6 +6,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as Str from "effect/String";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -122,6 +123,8 @@ describe("paths", () => {
   it("maps modules and the runner to lab directories", () => {
     assert.strictEqual(labPaths("yaml").testDir, "scratchpad/test/yaml");
     assert.deepStrictEqual(labPaths("runner").extraSources, ["scratchpad/effected/audit.ts"]);
+    assert.deepStrictEqual(labPaths("jsonl").extraTests, ["scratchpad/test/jsonl.test.ts"]);
+    assert.deepStrictEqual(labPaths("jsonc").extraTests, []);
     assert.strictEqual(upstreamPaths("memfs").okfModule, "okf/modules/memfs.md");
     assert.isTrue(isModuleTarget("cli"));
     assert.isFalse(isModuleTarget("runner"));
@@ -314,10 +317,32 @@ describe("review loop", () => {
     assert.include(scripts[1] ?? "", 'model_reasoning_effort="high"');
     assert.include(scripts[1] ?? "", "round-1/sol.md");
   });
-  it("finds reviewer edits outside the round directory", () => {
-    const status = [" M scratchpad/effected/jsonl/Line.ts", "?? scratchpad/effected/jsonl/.review/round-1/grok.md", ""].join("\n");
-    assert.deepStrictEqual(outOfScopeChanges(status, "scratchpad/effected/jsonl/.review/"), ["scratchpad/effected/jsonl/Line.ts"]);
-    assert.deepStrictEqual(pipe("", outOfScopeChanges("x/")), []);
+  it("finds reviewer edits outside every round's evidence directory", () => {
+    const status = [
+      " M scratchpad/effected/jsonl/Line.ts",
+      "?? scratchpad/effected/jsonl/.review/round-1/grok.md",
+      "?? scratchpad/effected/jsonc/.review/round-2/sol.md",
+      "R  scratchpad/test/jsonl/Old.test.ts -> scratchpad/test/jsonl/New.test.ts",
+      "",
+    ].join("\n");
+    assert.deepStrictEqual(outOfScopeChanges(status), [
+      "scratchpad/effected/jsonl/Line.ts",
+      "scratchpad/test/jsonl/New.test.ts",
+    ]);
+    assert.deepStrictEqual(outOfScopeChanges(""), []);
+  });
+  it("parses a status whose first line lost its leading space to trimming", () => {
+    const trimmed = Str.trim(" M scratchpad/effected/jsonl/Line.ts\n M scratchpad/test/jsonl/Line.test.ts\n");
+    assert.deepStrictEqual(outOfScopeChanges(trimmed), [
+      "scratchpad/effected/jsonl/Line.ts",
+      "scratchpad/test/jsonl/Line.test.ts",
+    ]);
+  });
+  it("gives Grok a turn budget that outlasts a full investigation and names extra test files in the brief", () => {
+    const grok = A.join(seatLaunches("/repo", "scratchpad/effected/jsonl/.review/round-1")[0]?.launch.args ?? [], " ");
+    assert.include(grok, "--max-turns 200");
+    assert.include(reviewBrief("jsonl", { round: 1, commit: "abc" }), "scratchpad/test/jsonl.test.ts (and nothing else)");
+    assert.notInclude(reviewBrief("jsonc", { round: 1, commit: "abc" }), "jsonc.test.ts");
   });
   it("names the accumulating ledger fields", () => {
     assert.deepStrictEqual(AppendField.literals, ["deviations", "backlog", "reviewRounds", "exportsAdded"]);
@@ -371,6 +396,14 @@ describe("jsdoc law", () => {
   it("accepts a canonical block", () => {
     const text = block("Lead.", "", "**Details**", "", "More.", "", "**Example** (Use it)", "", "```ts", "x", "```", "", "@see {@link X} for the schema.", "@category utilities", "@since 0.0.0");
     assert.deepStrictEqual(blockFindings(text), []);
+  });
+  it("allows exactly one lead paragraph before the first section or tag", () => {
+    const two = block("Lead.", "", "A warning that belongs in Gotchas.", "", "**Details**", "", "More.", "@category utilities", "@since 0.0.0");
+    assert.deepStrictEqual(blockFindings(two), ["lead-paragraphs: 2 paragraphs before the first section or tag"]);
+    const wrapped = block("A lead that wraps", "over two lines.", "", "@category utilities", "@since 0.0.0");
+    assert.deepStrictEqual(blockFindings(wrapped), []);
+    const afterSection = block("Lead.", "", "**Details**", "", "One.", "", "Two.", "@since 0.0.0");
+    assert.deepStrictEqual(blockFindings(afterSection), []);
   });
   it("requires a When to use section to open with an allowed phrase", () => {
     const bad = block("Lead.", "", "**When to use**", "", "Use at boundaries.", "@since 0.0.0");

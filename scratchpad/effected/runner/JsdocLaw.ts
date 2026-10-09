@@ -59,6 +59,8 @@ export const blockFindings = (text: string): ReadonlyArray<string> => {
   };
   let seenTag = false;
   let awaitingWhenToUse = false;
+  let leadParagraphs = 0;
+  let inLeadParagraph = false;
   for (const line of lines) {
     const trimmed = Str.trim(line);
     if (Str.startsWith("```")(trimmed)) {
@@ -104,6 +106,14 @@ export const blockFindings = (text: string): ReadonlyArray<string> => {
       }
       continue;
     }
+    if (O.isNone(currentSection) && !seenTag && !Str.startsWith("@")(trimmed)) {
+      if (trimmed.length === 0) {
+        inLeadParagraph = false;
+      } else if (!inLeadParagraph) {
+        inLeadParagraph = true;
+        leadParagraphs += 1;
+      }
+    }
     if (Str.startsWith("@")(trimmed)) {
       if (!seenTag) closeExample();
       seenTag = true;
@@ -120,6 +130,7 @@ export const blockFindings = (text: string): ReadonlyArray<string> => {
     }
   }
   if (!seenTag) closeExample();
+  if (leadParagraphs > 1) findings.push(`lead-paragraphs: ${leadParagraphs} paragraphs before the first section or tag`);
   return findings;
 };
 

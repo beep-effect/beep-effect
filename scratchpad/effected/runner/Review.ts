@@ -12,6 +12,13 @@
  * Codex's read-only sandbox, and their reports land in
  * `scratchpad/effected/<m>/.review/round-N/`.
  *
+ * **Gotchas**
+ *
+ * Grok exits 1 with a report of narration only when it spends its
+ * `--max-turns` budget before writing findings (`grok usage <session>` then
+ * shows `modelCalls` equal to the cap). That is a launch limit, not a quota
+ * failure: resume the session (`grok --resume <id>`) and ask for the report.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -113,7 +120,7 @@ export const reviewBrief: {
   return `${A.join(
     [
       `You are a read-only reviewer. Module: ${module}. Commit: ${subject.commit}. Round: ${subject.round}.`,
-      `Surface: scratchpad/effected/${module}/** and scratchpad/test/${module}/** (and nothing else).`,
+      `Surface: ${A.join([`scratchpad/effected/${module}/**`, `scratchpad/test/${module}/**`, ...labPaths(module).extraTests], ", ")} (and nothing else).`,
       `Upstream oracle: ~/YeeBois/references/effect/effected/packages/${module} (read-only).`,
       `Law surfaces: ${A.join(LAW_SURFACES, ", ")}.`,
       "Decisions D1-D20 in scratchpad/EFFECTED_PORT_GOAL.md bind you; D9 (behaviour-preserving), D11 (what is",
@@ -201,7 +208,7 @@ export const seatLaunches: {
       command: "bash",
       args: [
         "-c",
-        `grok -m grok-4.7 --reasoning-effort xhigh --tools "read_file,grep,list_dir" --deny "Write(**)" --deny "Edit(**)" --always-approve --prompt-file "${directory}/BRIEF.md" --output-format plain --max-turns 80 > "${directory}/grok.md"`,
+        `grok -m grok-4.7 --reasoning-effort xhigh --tools "read_file,grep,list_dir" --deny "Write(**)" --deny "Edit(**)" --always-approve --prompt-file "${directory}/BRIEF.md" --output-format plain --max-turns 200 > "${directory}/grok.md"`,
       ],
       cwd: repoRoot,
     },
@@ -219,39 +226,45 @@ export const seatLaunches: {
   },
 ]);
 
+const REVIEW_EVIDENCE = /^scratchpad\/effected\/[^/]+\/\.review\//;
+const PORCELAIN_LINE = /^[ MADRCUT?!]{1,2} (?:.* -> )?(.+)$/;
+
 /**
- * Working-tree paths changed outside an allowed prefix, from
+ * Working-tree paths changed outside every round's evidence directory, from
  * `git status --porcelain` output.
+ *
+ * **Details**
+ *
+ * The status letters are matched instead of sliced by column, so output whose
+ * first line lost its leading space to trimming still parses, and a rename
+ * reports its new path. Evidence of any module's round is exempt because two
+ * modules may be in review at once.
  *
  * **Example** (Find a reviewer edit)
  *
  * ```ts
  * import { outOfScopeChanges } from "@beep/scratchpad/effected/runner/Review"
  *
- * const status = " M scratchpad/effected/jsonl/Line.ts\n?? scratchpad/effected/jsonl/.review/round-1/grok.md\n"
- * console.log(outOfScopeChanges(status, "scratchpad/effected/jsonl/.review/")) // ["scratchpad/effected/jsonl/Line.ts"]
+ * const status = "M scratchpad/effected/jsonl/Line.ts\n?? scratchpad/effected/jsonc/.review/round-2/grok.md\n"
+ * console.log(outOfScopeChanges(status)) // ["scratchpad/effected/jsonl/Line.ts"]
  * ```
  *
  * @category diagnostics
  * @since 0.0.0
  */
-export const outOfScopeChanges: {
-  (allowedPrefix: string): (porcelain: string) => ReadonlyArray<string>;
-  (porcelain: string, allowedPrefix: string): ReadonlyArray<string>;
-} = dual(2, (porcelain: string, allowedPrefix: string): ReadonlyArray<string> =>
+export const outOfScopeChanges = (porcelain: string): ReadonlyArray<string> =>
   A.filter(
-    A.map(
-      A.filter(Str.split("\n")(porcelain), (line) => line.length > 3),
-      (line) => Str.trim(Str.slice(3)(line))
-    ),
-    (file) => !Str.startsWith(allowedPrefix)(file)
-  )
-);
+    A.flatMap(Str.split("\n")(porcelain), (line) => {
+      const match = PORCELAIN_LINE.exec(line);
+      return match === null ? [] : [Str.trim(match[1] ?? "")];
+    }),
+    (file) => file.length > 0 && !REVIEW_EVIDENCE.test(file)
+  );
 
 /**
  * Runs the Grok and Sol seats in parallel on the brief of a round, then
- * reports any working-tree change outside the round directory (reviewers
- * never edit; the caller reverts and files a receipt).
+ * reports any working-tree change outside the review evidence directories
+ * (reviewers never edit; the caller reverts and files a receipt).
  *
  * **Example** (Run the CLI seats)
  *
@@ -280,13 +293,18 @@ export const runCliSeats = Effect.fn("Review.runCliSeats")(function* (
     { concurrency: "unbounded" }
   );
   const after = yield* capture({ command: "git", args: ["status", "--porcelain"], cwd: config.repoRoot });
-  const preexisting = outOfScopeChanges(before, `${directory}/`);
-  const edits = A.filter(outOfScopeChanges(after, `${directory}/`), (file) => !A.contains(preexisting, file));
+  const preexisting = outOfScopeChanges(before);
+  const edits = A.filter(outOfScopeChanges(after), (file) => !A.contains(preexisting, file));
+  const lab = labPaths(module);
+  const surface = [`${lab.sourceDir}/`, `${lab.testDir}/`, ...lab.extraTests];
   for (const result of results) {
     yield* Console.log(`[effected] ${module} review round ${round}: seat ${result.seat} exited ${result.exitCode}`);
   }
   for (const file of edits) {
-    yield* Console.log(`[effected] ${module} review round ${round}: OUT-OF-SCOPE CHANGE ${file}`);
+    const label = A.some(surface, (prefix) => Str.startsWith(prefix)(file))
+      ? "OUT-OF-SCOPE CHANGE"
+      : "CHANGE OUTSIDE THE REVIEWED MODULE (another lane, or a reviewer)";
+    yield* Console.log(`[effected] ${module} review round ${round}: ${label} ${file}`);
   }
   return { directory, results, edits };
 });
