@@ -4,6 +4,8 @@
 
 Lifecycle: `active`
 
+Latest E evidence: [GitHub audit](./history/receipts/stage-4-github-audit.md), [settings snapshots](./history/receipts/stage-3-github-settings.md), and [lane handoff](./history/handoffs/rsc-e-github-2026-10-09.md). E source repairs are final in ready PR #1568. Both integrated full package gates and all local hosted-parity lanes pass; focused fixtures pass 127 tests and scoped coverage passes 396 tests across all seven touched baseline files. The actual GITHUB_TOKEN hosted governance step passes. Cross-lane, trusted-main writer and post-merge acceptance remain open; inherited hosted coverage reds remain attributed for the consolidated repair.
+
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission
