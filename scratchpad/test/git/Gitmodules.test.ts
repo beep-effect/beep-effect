@@ -1,7 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Result, Schema } from "effect";
 import { GitConfig } from "../../effected/git/GitConfig.ts";
-import type { GitmodulesDecodeError, GitmodulesParseError } from "../../effected/git/Gitmodules.ts";
+import type { GitmodulesParseError } from "../../effected/git/Gitmodules.ts";
 import { Gitmodules, GitmodulesEntry } from "../../effected/git/Gitmodules.ts";
 
 /** Unwraps a successful Result or fails the test with the failure's message. */
@@ -121,19 +121,23 @@ describe("Gitmodules", () => {
 		it("missing path and missing url fail typed, naming the entry", () => {
 			const noPath = decodeFailure('[submodule "a"]\n\turl = u\n');
 			assert.strictEqual(noPath._tag, "GitmodulesDecodeError");
-			assert.strictEqual((noPath as GitmodulesDecodeError).reason, "missingPath");
-			assert.strictEqual((noPath as GitmodulesDecodeError).name, "a");
+			if (noPath._tag !== "GitmodulesDecodeError") assert.fail("expected GitmodulesDecodeError");
+			assert.strictEqual(noPath.reason, "missingPath");
+			assert.strictEqual(noPath.name, "a");
 			const noUrl = decodeFailure('[submodule "a"]\n\tpath = p\n');
-			assert.strictEqual((noUrl as GitmodulesDecodeError).reason, "missingUrl");
+			if (noUrl._tag !== "GitmodulesDecodeError") assert.fail("expected GitmodulesDecodeError");
+			assert.strictEqual(noUrl.reason, "missingUrl");
 		});
 
 		it("an undecodable ignore or shallow value fails typed with the offending value", () => {
 			const badIgnore = decodeFailure('[submodule "a"]\n\tpath = p\n\turl = u\n\tignore = bogus\n');
-			assert.strictEqual((badIgnore as GitmodulesDecodeError).reason, "invalidValue");
-			assert.strictEqual((badIgnore as GitmodulesDecodeError).field, "ignore");
-			assert.strictEqual((badIgnore as GitmodulesDecodeError).value, "bogus");
+			if (badIgnore._tag !== "GitmodulesDecodeError") assert.fail("expected GitmodulesDecodeError");
+			assert.strictEqual(badIgnore.reason, "invalidValue");
+			assert.strictEqual(badIgnore.field, "ignore");
+			assert.strictEqual(badIgnore.value, "bogus");
 			const badShallow = decodeFailure('[submodule "a"]\n\tpath = p\n\turl = u\n\tshallow = maybe\n');
-			assert.strictEqual((badShallow as GitmodulesDecodeError).reason, "invalidValue");
+			if (badShallow._tag !== "GitmodulesDecodeError") assert.fail("expected GitmodulesDecodeError");
+			assert.strictEqual(badShallow.reason, "invalidValue");
 		});
 
 		it("malformed git-config text surfaces the underlying parse error", () => {

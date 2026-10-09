@@ -150,7 +150,7 @@ describe("Git surface — introspection repository (fixture A)", () => {
 	}, 30_000);
 
 	afterAll(async () => {
-		if (dirA) await rm(dirA, { recursive: true, force: true });
+		if (dirA !== "") await rm(dirA, { recursive: true, force: true });
 	});
 
 	it.effect("nameStatus (working-tree form) reports modify, rename and add with typed statuses", () =>
@@ -348,8 +348,8 @@ describe("Git surface — submodule/fetch pair (fixture B)", () => {
 	}, 30_000);
 
 	afterAll(async () => {
-		if (libDir) await rm(libDir, { recursive: true, force: true });
-		if (superDir) await rm(superDir, { recursive: true, force: true });
+		if (libDir !== "") await rm(libDir, { recursive: true, force: true });
+		if (superDir !== "") await rm(superDir, { recursive: true, force: true });
 	});
 
 	// Sequential, order-dependent stages against the same superproject: add
@@ -446,7 +446,7 @@ describe("Git surface — submodule/fetch pair (fixture B)", () => {
 		}, 30_000);
 
 		afterAll(async () => {
-			if (cloneDir) await rm(cloneDir, { recursive: true, force: true });
+			if (cloneDir !== "") await rm(cloneDir, { recursive: true, force: true });
 		});
 
 		it.effect(
@@ -539,8 +539,8 @@ describe("Git.log — history repository (fixture C)", () => {
 	}, 60_000);
 
 	afterAll(async () => {
-		if (dirC) await rm(dirC, { recursive: true, force: true });
-		if (emptyDir) await rm(emptyDir, { recursive: true, force: true });
+		if (dirC !== "") await rm(dirC, { recursive: true, force: true });
+		if (emptyDir !== "") await rm(emptyDir, { recursive: true, force: true });
 	});
 
 	it.effect("--follow walks a real rename; the same query without it stops at the rename", () =>

@@ -599,7 +599,7 @@ const validateAddress = (
     return editError(op, "invalidSubsection", section, subsection, key);
   }
   if (key !== undefined && !isValidKey(key)) return editError(op, "invalidKey", section, subsection, key);
-  if (value?.includes("\0")) return editError(op, "invalidValue", section, subsection, key);
+  if (value?.includes("\0") === true) return editError(op, "invalidValue", section, subsection, key);
   return undefined;
 };
 

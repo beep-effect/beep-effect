@@ -16,8 +16,7 @@ const cwd = "/repo";
 const run = <A, E>(program: Effect.Effect<A, E, Git>, byArgs: (args: ReadonlyArray<string>) => ScriptResult) =>
 	program.pipe(Effect.provide(Git.layer), Effect.provide(scripted(byArgs)));
 
-const log = (options?: Parameters<GitShape["log"]>[1]) =>
-	Effect.gen(function* () {
+const log = Effect.fn("log")(function* (options?: Parameters<GitShape["log"]>[1]) {
 		const git = yield* Git;
 		return yield* git.log(cwd, options);
 	});

@@ -18,6 +18,7 @@ import { runCollected } from "./internal/run.ts";
 
 /** git's own ceiling: a run that has not answered in 30s is not going to. */
 const GIT_TIMEOUT = Duration.seconds(30);
+const encodeJsonString = Schema.encodeEffect(Schema.fromJsonString(Schema.String));
 
 /**
  * The environment EVERY `Git` invocation is spawned with. A network-touching
@@ -2318,7 +2319,7 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
               args: invocation.redactedArgs,
               cwd,
               stderr: "",
-              detail: `unparseable common-dir output (--path-format needs git 2.31 or later): ${JSON.stringify(answer)}`,
+              detail: `unparseable common-dir output (--path-format needs git 2.31 or later): ${yield* encodeJsonString(answer).pipe(Effect.orDie)}`,
             });
         }
         return answer;

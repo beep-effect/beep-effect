@@ -48,7 +48,8 @@ describe("Git.makeTest", () => {
 			for (const method of Object.keys(double) as ReadonlyArray<keyof typeof double>) {
 				const fn = double[method];
 				assert.isFunction(fn);
-				const exit = yield* Effect.exit((fn as () => Effect.Effect<unknown, unknown>)());
+				const effect: Effect.Effect<unknown, Effect.Error<ReturnType<typeof fn>>> = Reflect.apply(fn, undefined, []);
+				const exit = yield* Effect.exit(effect);
 				assert.isTrue(Exit.isFailure(exit) && Cause.hasDies(exit.cause), `${method} should die unstubbed`);
 			}
 		}),

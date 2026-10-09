@@ -19,6 +19,8 @@
 //   recognized escapes; a backslash at end of line continues the value onto
 //   the next line; `#` and `;` start a comment outside quotes.
 
+import { dual } from "effect/Function";
+
 /** The diagnostic vocabulary the scanner can emit. */
 export type RawDiagnosticCode =
 	| "invalidSectionHeader"
@@ -404,17 +406,23 @@ const scanEntry = (text: string, lineStart: number, keyStart: number, diagnostic
 };
 
 /** Does `section` match the (name, subsection) address under git's case rules? */
-export const matchesSection = (section: RawSection, name: string, subsection: string | undefined): boolean => {
+export const matchesSection: {
+	(name: string, subsection: string | undefined): (section: RawSection) => boolean;
+	(section: RawSection, name: string, subsection: string | undefined): boolean;
+} = dual(3, (section: RawSection, name: string, subsection: string | undefined): boolean => {
 	if (section.name.toLowerCase() !== name.toLowerCase()) return false;
 	if (subsection === undefined) return section.subsection === undefined;
 	if (section.subsection === undefined) return false;
 	return section.fold
 		? section.subsection.toLowerCase() === subsection.toLowerCase()
 		: section.subsection === subsection;
-};
+});
 
 /** Does `entry` carry `key` (variable names compare case-insensitively)? */
-export const matchesKey = (entry: RawEntry, key: string): boolean => entry.key.toLowerCase() === key.toLowerCase();
+export const matchesKey: {
+	(key: string): (entry: RawEntry) => boolean;
+	(entry: RawEntry, key: string): boolean;
+} = dual(2, (entry: RawEntry, key: string): boolean => entry.key.toLowerCase() === key.toLowerCase());
 
 /**
  * Serializes a value for insertion into a config line: quoted and escaped
@@ -433,8 +441,11 @@ export const serializeValue = (value: string): string => {
 };
 
 /** Serializes a section header. The subsection is quoted-and-escaped when present. */
-export const serializeHeader = (name: string, subsection: string | undefined): string =>
-	subsection === undefined ? `[${name}]` : `[${name} "${subsection.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"]`;
+export const serializeHeader: {
+	(subsection: string | undefined): (name: string) => string;
+	(name: string, subsection: string | undefined): string;
+} = dual(2, (name: string, subsection: string | undefined): string =>
+	subsection === undefined ? `[${name}]` : `[${name} "${subsection.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"]`);
 
 /** One text splice: replace `length` characters at `offset` with `content`. */
 export interface Splice {
@@ -444,17 +455,23 @@ export interface Splice {
 }
 
 /** Applies a single splice to the text. */
-export const applySplice = (text: string, splice: Splice): string =>
-	text.slice(0, splice.offset) + splice.content + text.slice(splice.offset + splice.length);
+export const applySplice: {
+	(splice: Splice): (text: string) => string;
+	(text: string, splice: Splice): string;
+} = dual(2, (text: string, splice: Splice): string =>
+	text.slice(0, splice.offset) + splice.content + text.slice(splice.offset + splice.length));
 
 /** The indentation to use for a new entry in `section`: its first entry's, else a tab. */
-export const sectionIndent = (text: string, section: RawSection): string => {
+export const sectionIndent: {
+	(section: RawSection): (text: string) => string;
+	(text: string, section: RawSection): string;
+} = dual(2, (text: string, section: RawSection): string => {
 	const first = section.entries[0];
 	if (first === undefined) return "\t";
 	let end = first.offset;
 	while (isWs(text[end])) end += 1;
 	return text.slice(first.offset, end);
-};
+});
 
 /** Where a new entry line inserts in `section`: after its last entry, else right after the header line. */
 export const sectionInsertOffset = (section: RawSection): number => {

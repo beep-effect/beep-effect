@@ -289,12 +289,10 @@ describe("Git", () => {
 			unstaged: string;
 			staged: string;
 			untracked: string;
-		}): ((args: ReadonlyArray<string>) => ScriptResult) => {
-			return (args) => {
+		}): ((args: ReadonlyArray<string>) => ScriptResult) => (args) => {
 				if (args[0] === "ls-files") return { stdout: byKind.untracked, exit: 0 };
 				if (args.includes("--cached")) return { stdout: byKind.staged, exit: 0 };
 				return { stdout: byKind.unstaged, exit: 0 };
-			};
 		};
 
 		it.effect("unions unstaged, staged and untracked paths, deduplicated", () =>
@@ -318,8 +316,7 @@ describe("Git", () => {
 		);
 
 		// Captures the argv of every spawned command for one workingChanges run.
-		const argvOf = (options: { readonly relative?: boolean }) =>
-			Effect.gen(function* () {
+		const argvOf = Effect.fn("argvOf")(function* (options: { readonly relative?: boolean }) {
 				const seen: Array<ReadonlyArray<string>> = [];
 				const program = Effect.gen(function* () {
 					const git = yield* Git;
@@ -2978,13 +2975,12 @@ describe("Git — remaining tiers (round 2)", () => {
 		 * what the probes report for `core.sshCommand` and `ssh.variant`
 		 * (omitted = unset, a silent exit 1).
 		 */
-		const spawned = (options: {
+		const spawned = Effect.fn("spawned")(function* (options: {
 			readonly env?: Record<string, string | undefined>;
 			readonly configured?: string;
 			readonly variant?: string;
 			readonly network?: boolean;
-		}) =>
-			Effect.gen(function* () {
+		}) {
 				const seen: Array<{
 					readonly args: ReadonlyArray<string>;
 					readonly options: ChildProcess.StandardCommand["options"];
@@ -3254,7 +3250,10 @@ describe("Git — remaining tiers (round 2)", () => {
 		// argv regardless of who emitted it. This table is the only guard.
 		const NETWORK_MEMBERS: ReadonlyArray<{
 			readonly name: string;
-			readonly call: (git: Git["Service"]) => Effect.Effect<unknown, unknown>;
+			readonly call: (git: Git["Service"]) => Effect.Effect<
+				unknown,
+				GitCommandError | NotARepositoryError | UnknownRefError | NonFastForwardError | MergeConflictError | DirtyWorktreeError
+			>;
 		}> = [
 			{ name: "lsRemote", call: (git) => git.lsRemote(cwd, "ssh://git@example.invalid/x.git") },
 			{ name: "fetch", call: (git) => git.fetch(cwd, { ref: "main", remote: "origin" }) },
@@ -3320,7 +3319,7 @@ describe("Git — remaining tiers (round 2)", () => {
 				let reads = 0;
 				const counting = ConfigProvider.make((path) => {
 					if (path.join(".").includes("GIT_SSH_COMMAND")) reads += 1;
-					return Effect.succeed(undefined);
+					return Effect.as(Effect.void, undefined);
 				});
 				yield* Effect.gen(function* () {
 					const git = yield* Git;

@@ -29,7 +29,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { afterAll, assert, beforeAll, describe, it } from "@effect/vitest";
-import { ConfigProvider, Effect, Layer, Option } from "effect";
+import { ConfigProvider, Effect, Layer, Option, Schema } from "effect";
 import type { ChildProcessSpawner } from "effect/process";
 import { ChildProcess } from "effect/process";
 import { Git, NotARepositoryError } from "../../../effected/git/Git.ts";
@@ -37,6 +37,7 @@ import { runCollected } from "../../../effected/git/internal/run.ts";
 
 /** Resolves both `Git` and every Node platform service (including the real `ChildProcessSpawner`). */
 const TestLayer = Git.layer.pipe(Layer.provideMerge(NodeServices.layer));
+const encodeSshArgvJson = Schema.encodeEffect(Schema.fromJsonString(Schema.Array(Schema.String)));
 
 const run = <A, E>(effect: Effect.Effect<A, E, Git | ChildProcessSpawner.ChildProcessSpawner>) =>
 	effect.pipe(Effect.provide(TestLayer));
@@ -180,7 +181,7 @@ describe("Git — real repository integration", () => {
 	}, 30_000);
 
 	afterAll(async () => {
-		if (fixtureDir) await rm(fixtureDir, { recursive: true, force: true });
+		if (fixtureDir !== "") await rm(fixtureDir, { recursive: true, force: true });
 	});
 
 	it.effect("show at both commits: changed content differs", () =>
@@ -361,7 +362,7 @@ describe("Git — real repository integration", () => {
 		}, 30_000);
 
 		afterAll(async () => {
-			if (dirtyDir) await rm(dirtyDir, { recursive: true, force: true });
+			if (dirtyDir !== "") await rm(dirtyDir, { recursive: true, force: true });
 		});
 
 		it.effect("relative:true reports cwd-relative paths from the repo root (--relative honored)", () =>
@@ -406,7 +407,7 @@ describe("Git — real repository integration", () => {
 		}, 30_000);
 
 		afterAll(async () => {
-			if (cloneDir) await rm(cloneDir, { recursive: true, force: true });
+			if (cloneDir !== "") await rm(cloneDir, { recursive: true, force: true });
 		});
 
 		it.effect("checkout moves HEAD, verified via revParse", () =>
@@ -435,7 +436,7 @@ describe("Git — real repository integration", () => {
 		});
 
 		afterAll(async () => {
-			if (emptyDir) await rm(emptyDir, { recursive: true, force: true });
+			if (emptyDir !== "") await rm(emptyDir, { recursive: true, force: true });
 		});
 
 		it.effect("revParse fails with NotARepositoryError", () =>
@@ -498,7 +499,7 @@ describe("Git — real repository integration", () => {
 				// The pin arrived at a REAL git, which passed it through to ssh.
 				assert.isTrue(
 					argv.some((token, index) => token === "-o" && argv[index + 1] === "BatchMode=yes"),
-					`expected "-o BatchMode=yes" in the ssh argv, got: ${JSON.stringify(argv)}`,
+					`expected "-o BatchMode=yes" in the ssh argv, got: ${yield* encodeSshArgvJson(argv)}`,
 				);
 			}).pipe(
 				Effect.provide(Git.layer),
