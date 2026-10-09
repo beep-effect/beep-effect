@@ -1032,3 +1032,31 @@ Final post-#1594 kernel/schema rerun passes 19/19 tasks uncached,
 18.048 seconds. Stream check still prints only the active summary for this
 slug; doctor blocking_new=0/blocking_inherited=0. The final ordered packet
 set is repeated before the amended commit and last push below.
+
+### Final published-head closeout receipt
+
+Round-2 push confirms PR2 head 832e26dcbbbb2c2bd9a0642f70d9141d85f36119.
+`yeet ready` reports already ready; final closeout succeeds, live status
+shows zero unresolved threads, and GitHub confirms OPEN/isDraft=false and
+structural MERGEABLE. Current required checks are pending, not all-green.
+Both main updates ride the allowed repair pushes; total push count is three.
+No round-3 push or PR merge.
+
+D25: the 40-minute monitor observed all three heads and final-head pending
+checks. Cancelled it before handoff; job status is terminated and systemd
+unit inactive. Its proof result is acknowledged observed. This is not a
+ready verdict or a merge waiver. Reversal: resubmit the same bounded monitor
+from this lane. All owned heavy tool sessions are terminal.
+The following report describes the exact published head; this containing
+local closeout commit changes only SPEC/handoff receipts and is deliberately
+not a fourth push. The published handoff already carries implementation,
+qualification, decisions and mechanical-site tables.
+
+lane: domain-kernel
+head: 832e26dcbbbb2c2bd9a0642f70d9141d85f36119 (exact published PR2 head; subsequent local closeout commit contains receipts only)
+PR(s): PR1 #1577 MERGED at 78b77b1084d83eb105e9161d56c68d6848b63047 | PR2 #1593 OPEN, content-final, ready for review, exact head confirmed; hosted merge readiness pending
+package-verify: @beep/shared-domain: pass; @beep/agents-tables: pass; @beep/architecture-lab-tables: pass; @beep/documents-tables: pass; @beep/epistemic-tables: pass; @beep/workspace-tables: pass; @beep/db-admin: pass; @beep/professional-desktop: pass; @beep/repo-cli: pass; @beep/agents-server: pass; @beep/law-practice-server: pass; @beep/epistemic-domain: pass; @beep/workspace-domain: pass; @beep/agents-domain: pass; @beep/law-practice-domain: pass. Original eleven default proofs are retained run-3/run-4 evidence, not fresh proofs of subsequent main integrations. Four domain default audit+docgen proofs are fresh in run 7 and precede the final XML-only main fix. After that fix, the required kernel/schema check+test+docgen+lint gate passes 19/19 tasks uncached. Complete local Property Laws passes 90/90 tasks uncached before the XML-only integration.
+hosted-parity: test-tsgo: pass (retained run-4 evidence, not rerun in run 7) | docgen local: pass (retained run-4 evidence; fresh kernel/schema and four domain docgen proofs also pass) | jsdoc-ratchet: fail (fresh local inventory generation passes; eight ratchet metrics grow only in main-identical source files, zero owned kernel findings in those metrics; hosted generic generation failure does not reproduce locally and its cause remains unexposed) | knowledge refs: pass (retained run-4 evidence, not rerun) | fallow audit+health: pass (retained run-4 evidence, not rerun) | scoped coverage: pass (retained run-4 evidence, 120 tests, existing entity baseline met, zero uncovered executable units; not rerun). Final-head hosted checks remain pending; no all-green hosted proof is claimed.
+handoff: goals/domain-kernel-hardening/history/handoffs/domain-kernel-2026-10-09.md
+open items: P0/P1 complete; P2/P3 pending as separate waves under the amended ruling; lifecycle active, no completed-retained claim. PR2 has zero unresolved review threads at final read and remains structurally MERGEABLE; required checks and the review window still gate merge readiness. Publication used exactly three pushes: initial, round 1, round 2; never merged a PR or rebased published work. D21 leaves the stale Effect/Vitest inventory to B; reversal is owner refresh plus main integration and gate rerun. Seven PracticeKg anchor rows are enumerated in the committed handoff. D22/D23 repair 17 exact-wire fixture subjects across four domain packages; cumulative mechanical count 89 within 90, zero slice model/behavior edits; reverse with kernel rollback. D24 attributes local JSDoc growth to main-owned epistemic-use-cases, repo-cli, scratchpad, infra and freshbooks sources; reverse by integrating owner source repairs, not relaxing the baseline. Orchestrator S11 owns the two invalid private-workspace changesets and inherited inventory/JSDoc reds; #1589 bootstrap fix and #1594 XML fix are integrated. Vercel build-rate-limit rows acknowledged environment-only. D25 settles the bounded readiness monitor after final-head observation; job is terminated, unit inactive, proof receipt observed, no owned running job remains; reversal is resubmitting the 40-minute monitor from this lane. The last local commit appends this exact closeout report and monitor decision only, with no extra push. Orchestrator owns stale docs/ROADMAP.md platform re-entry bullet at 349, Parked packets row at 383, cohort prose at 406. Follow-ups: stale DomainModel.make detector, desktop migration rollout, and hosted inventory-generation diagnostics. Graft saved approximately 161,134 tokens across six retrieval calls.
+final 832e26dcbbbb2c2bd9a0642f70d9141d85f36119 #1593
