@@ -24,6 +24,7 @@ import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { HarnessLedgerIoError } from "../HarnessLedger.errors.ts";

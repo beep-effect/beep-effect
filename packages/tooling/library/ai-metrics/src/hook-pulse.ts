@@ -934,7 +934,12 @@ const classifyRepoRelativeSurface = (segments: ReadonlyArray<string>): O.Option<
       O.some(contextSurfaceKey(HookPulseContextSurfaceKind.Enum["agents-md"], "AGENTS.md"))
     ),
     Match.when(
-      { depth: (depth: number) => depth >= 4, first: ".claude", second: "skills", third: Match.string },
+      {
+        depth: (depth: number) => depth >= 4,
+        first: Match.is(".claude", ".agents", ".codex", ".cursor"),
+        second: "skills",
+        third: Match.string,
+      },
       ({ third: name }) => O.some(contextSurfaceKey(HookPulseContextSurfaceKind.Enum.skill, name))
     ),
     Match.when({ depth: 3, first: ".claude", second: "hooks", third: Match.string }, ({ third: name }) =>

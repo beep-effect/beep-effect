@@ -472,8 +472,9 @@ export type HarnessLedgerServiceRequirements =
 const makeHarnessLedgerService = Effect.fn("HarnessLedgerService.make")(function* () {
   const context = yield* Effect.context<HarnessLedgerServiceRequirements>();
   return HarnessLedgerService.of({
-    reconcile: (stateDir, transcriptDir, agentKind) =>
-      reconcileTranscripts(stateDir, transcriptDir, agentKind).pipe(Effect.provide(context)),
+    reconcile: Effect.fn("HarnessLedgerService.reconcile")((stateDir, transcriptDir, agentKind) =>
+      reconcileTranscripts(stateDir, transcriptDir, agentKind).pipe(Effect.provide(context))
+    ),
     propose: Effect.fn("HarnessLedgerService.propose")((options) => proposeImpl(options).pipe(Effect.provide(context))),
     disposition: Effect.fn("HarnessLedgerService.disposition")((options) =>
       dispositionImpl(options).pipe(Effect.provide(context))

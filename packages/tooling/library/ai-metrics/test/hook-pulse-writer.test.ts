@@ -940,11 +940,11 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         });
         expect(run.stdout).toBe(writer === cursorWriterPath ? "{}\n" : "");
         expect(run.rows).toHaveLength(1);
-        const decoded = yield* decodeHookPulseRow(O.getOrThrow(A.head(run.rows)));
+        const decoded = yield* decodeHookPulseRow(pipe(A.head(run.rows), O.getOrThrow));
         assertSome(decoded.harnessHash, oracle.harnessHash);
         expect(decoded.agentKind).toBe(writer === cursorWriterPath ? "cursor-cli" : "codex-cli");
       }
-    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer))
+    }).pipe(Effect.scoped)
   );
 
   it.effect("stamps SessionStart with the harness hash the TypeScript snapshot derives", () =>

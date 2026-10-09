@@ -340,7 +340,7 @@ def repo_relative($path):
 def classify:
   if . == null then null
   elif length == 1 and (.[0] == "AGENTS.md" or .[0] == "CLAUDE.md") then "agents-md:AGENTS.md"
-  elif length >= 4 and .[0] == ".claude" and .[1] == "skills" then "skill:" + .[2]
+  elif length >= 4 and (.[0] == ".claude" or .[0] == ".agents" or .[0] == ".codex" or .[0] == ".cursor") and .[1] == "skills" then "skill:" + .[2]
   elif length == 3 and .[0] == ".claude" and .[1] == "hooks" then "hook:" + .[2]
   elif length == 3 and .[0] == ".claude" and .[1] == "agents" then "agent-definition:" + .[2]
   elif length == 2 and .[0] == ".claude" and (.[1] | test("^settings(\\..+)?\\.json$")) then "settings:" + .[1]
