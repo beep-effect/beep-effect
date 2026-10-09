@@ -1,0 +1,438 @@
+{
+  "module": "cli",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/cli/CliExit.ts",
+        "scratchpad/effected/cli/CliAudience.ts",
+        "scratchpad/effected/cli/CliRuntime.ts",
+        "scratchpad/effected/cli/Status.ts",
+        "scratchpad/effected/cli/internal/ExitRequested.ts",
+        "scratchpad/effected/cli/CliLogger.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/CliExit.test.ts",
+        "scratchpad/test/cli/CliAudience.test.ts",
+        "scratchpad/test/cli/CliRuntime.test.ts",
+        "scratchpad/test/cli/CliMain.test.ts",
+        "scratchpad/test/cli/CliMain.logging.test.ts",
+        "scratchpad/test/cli/Status.test.ts",
+        "scratchpad/test/cli/CliLogger.test.ts"
+      ],
+      "findings": [
+        "cli-1",
+        "cli-3",
+        "cli-4",
+        "cli-7",
+        "allow-2",
+        "allow-6"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/cli/CliLog.ts",
+        "scratchpad/effected/cli/internal/fileSink.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/CliLog.test.ts",
+        "scratchpad/test/cli/CliLog.options.test.ts",
+        "scratchpad/test/cli/CliLog.file.test.ts"
+      ],
+      "findings": [
+        "cli-2",
+        "cli-10"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/cli/Doc.ts",
+        "scratchpad/effected/cli/Token.ts",
+        "scratchpad/effected/cli/Glyphs.ts",
+        "scratchpad/effected/cli/internal/failureTarget.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/Doc.test.ts",
+        "scratchpad/test/cli/Doc.counter.plural.test.ts",
+        "scratchpad/test/cli/Doc.print.test.ts",
+        "scratchpad/test/cli/Token.test.ts",
+        "scratchpad/test/cli/Glyphs.test.ts",
+        "scratchpad/test/cli/CliFailure.spans.test.ts"
+      ],
+      "findings": [
+        "cli-5",
+        "cli-6",
+        "cli-8",
+        "allow-3",
+        "allow-4",
+        "allow-7"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/cli/CliFailure.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/CliFailure.test.ts"
+      ],
+      "findings": [
+        "allow-1"
+      ]
+    },
+    {
+      "id": "g5",
+      "files": [
+        "scratchpad/effected/cli/TestTerminal.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/TestTerminal.regressions.test.ts"
+      ],
+      "findings": [
+        "cli-9"
+      ]
+    },
+    {
+      "id": "g6",
+      "files": [
+        "scratchpad/effected/cli/internal/renderDoc.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/Render.plain.test.ts",
+        "scratchpad/test/cli/Render.ansi.test.ts",
+        "scratchpad/test/cli/Render.githubLog.test.ts"
+      ],
+      "findings": [
+        "cli-13"
+      ]
+    },
+    {
+      "id": "g7",
+      "files": [
+        "scratchpad/effected/cli/internal/scanAudience.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/scanAudience.test.ts",
+        "scratchpad/test/cli/scanAudience.differential.test.ts"
+      ],
+      "findings": [
+        "cli-14"
+      ]
+    },
+    {
+      "id": "g8",
+      "files": [
+        "scratchpad/effected/cli/ui/CliUi.ts",
+        "scratchpad/effected/cli/ui/CliUiLive.ts",
+        "scratchpad/effected/cli/ui/internal/ink.ts",
+        "scratchpad/effected/cli/ui/internal/lazyView.ts",
+        "scratchpad/effected/cli/ui/internal/inkChalk.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/ui/CliUi.rejection.test.ts",
+        "scratchpad/test/cli/ui/CliUi.fallback.test.ts",
+        "scratchpad/test/cli/ui/CliUi.live.lazy.test.ts",
+        "scratchpad/test/cli/ui/CliUi.live.modes.test.ts",
+        "scratchpad/test/cli/ui/inkMissing.test.ts",
+        "scratchpad/test/cli/ui/inkLoad.test.ts",
+        "scratchpad/test/cli/ui/inkChalk.test.ts",
+        "scratchpad/test/cli/boundary.test.ts",
+        "scratchpad/test/cli/helpers/live.ts",
+        "scratchpad/test/cli/ui/CliUi.run.test.ts",
+        "scratchpad/test/cli/ui/inkBridge.test.ts"
+      ],
+      "findings": [
+        "cli-11",
+        "cli-21",
+        "cli-22",
+        "cli-23",
+        "cli-24",
+        "allow-8"
+      ]
+    },
+    {
+      "id": "g9",
+      "files": [
+        "scratchpad/effected/cli/ui/Select.ts",
+        "scratchpad/effected/cli/ui/TextInput.ts",
+        "scratchpad/effected/cli/ui/Viewport.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/ui/Select.test.ts",
+        "scratchpad/test/cli/ui/TextInput.test.ts",
+        "scratchpad/test/cli/ui/TextInput.mask.test.ts",
+        "scratchpad/test/cli/ui/widgetText.test.ts",
+        "scratchpad/test/cli/ui/Viewport.test.ts"
+      ],
+      "findings": [
+        "cli-12",
+        "cli-17",
+        "cli-18"
+      ]
+    },
+    {
+      "id": "g10",
+      "files": [
+        "scratchpad/effected/cli/ui/UiKey.ts",
+        "scratchpad/effected/cli/ui/testing/CliUiTest.ts",
+        "scratchpad/effected/cli/ui/testing/terminalModel.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/ui/keys.test.ts",
+        "scratchpad/test/cli/ui/CliUiTest.test.ts",
+        "scratchpad/test/cli/ui/CliUiTest.session.transcript.test.ts",
+        "scratchpad/test/cli/ui/CliUiTest.ergonomics.test.ts"
+      ],
+      "findings": [
+        "cli-19",
+        "cli-20",
+        "allow-10"
+      ]
+    },
+    {
+      "id": "g11",
+      "files": [
+        "scratchpad/effected/cli/ui/testing/fakeStreams.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/ui/fakeStreams.regressions.test.ts"
+      ],
+      "findings": [
+        "cli-15",
+        "cli-16"
+      ]
+    },
+    {
+      "id": "g12",
+      "files": [
+        "scratchpad/effected/cli/ui/MultiSelect.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/ui/MultiSelect.test.ts"
+      ],
+      "findings": [
+        "allow-9"
+      ]
+    },
+    {
+      "id": "g13",
+      "files": [
+        "scratchpad/effected/cli/internal/HelpRouting.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/CliHelpRouting.test.ts"
+      ],
+      "findings": [
+        "allow-5"
+      ]
+    }
+  ],
+  "findings": {
+    "cli-1": {
+      "file": "scratchpad/effected/cli/CliLogger.ts",
+      "class": "type-safety",
+      "summary": "The optional curried makeCliLogger overload promises a function but returns a logger for undefined.",
+      "fix": "Require underActions in the curried overload; retain the data-first zero-argument constructor. Add a type/runtime regression for valid overload dispatch."
+    },
+    "cli-2": {
+      "file": "scratchpad/effected/cli/CliLog.ts",
+      "class": "bug",
+      "summary": "Inherited LEVELS properties are accepted as log levels.",
+      "fix": "Normalize the key, require R.has(LEVELS, key), and use the existing warning-and-None fallback otherwise. Add constructor and __proto__ regressions; forward upstream-bug evidence to the central deviation codemod."
+    },
+    "cli-3": {
+      "file": "scratchpad/effected/cli/CliExit.ts",
+      "class": "schema",
+      "summary": "Incomplete schema and field annotations on introduced CLI errors.",
+      "fix": "Add meaningful identity-backed schema annotations to InvalidExitCodeError, AudienceConflictError and UnknownStatusError, and field descriptions to their message fields and CliRuntimeError.message. Preserve current tags, names and messages; verify metadata without changing deferred JSDoc."
+    },
+    "cli-4": {
+      "file": "scratchpad/effected/cli/internal/ExitRequested.ts",
+      "class": "law",
+      "summary": "ExitRequested uses Data.TaggedError instead of the required schema error base.",
+      "fix": "Use identity-annotated S.TaggedError with an annotated exit-code field (S.Finite as required), derive message and Runtime.errorExitCode, and preserve name ExitRequested and errorReported=false. Update CliRuntime and CliRuntime.test.ts construction to .make({ code }); keep exit behavior and send bookkeeping centrally."
+    },
+    "cli-5": {
+      "file": "scratchpad/effected/cli/Doc.ts",
+      "class": "schema",
+      "summary": "The plain-data document AST has no executable schema source of truth.",
+      "fix": "Define identity-annotated structural and recursive schemas for Inline, Block, LinkTarget, TreeNode, Column and Counter; derive the existing types while preserving plain-object variants, callbacks and optional fields. Coordinate with allow-3: runtime freezing is dropped under the later ruling, and its assertions are retargeted rather than preserved."
+    },
+    "cli-6": {
+      "file": "scratchpad/effected/cli/Token.ts",
+      "class": "schema",
+      "summary": "NamedColor and TokenName are erased named literal domains.",
+      "fix": "Define identity-annotated LiteralKit values for NamedColor and TokenName and derive the existing types; preserve literal order and membership. Coordinate with allow-7."
+    },
+    "cli-7": {
+      "file": "scratchpad/effected/cli/Status.ts",
+      "class": "schema",
+      "summary": "CoreStatusName is an erased named literal domain.",
+      "fix": "Define an identity-annotated CoreStatusName LiteralKit and derive its type, preserving order and the existing vocabulary behavior."
+    },
+    "cli-8": {
+      "file": "scratchpad/effected/cli/internal/failureTarget.ts",
+      "class": "schema",
+      "summary": "Span settings duplicate a finite domain and a manual membership check.",
+      "fix": "Define an identity-annotated LiteralKit for app, all and off; derive the enumeration and guard. Preserve order, case normalization and the invalid-setting message."
+    },
+    "cli-9": {
+      "file": "scratchpad/effected/cli/TestTerminal.ts",
+      "class": "bug",
+      "summary": "TestTerminal counts rejected post-end input as read.",
+      "fix": "Increase offered only by the number Queue.offerAll accepted, accounting for its returned unaccepted array. Add an end-then-offer-without-reader regression; forward verified upstream-bug bookkeeping centrally."
+    },
+    "cli-10": {
+      "file": "scratchpad/effected/cli/internal/fileSink.ts",
+      "class": "effect-idiom",
+      "summary": "makeFileSink has the inner writer's append span name.",
+      "fix": "Name the outer Effect.fn wrapper makeFileSink, leaving the inner append name intact. Verify constructor-versus-write telemetry. The forced introduction of tracing is handled separately by codemod-2; this finding corrects the misleading name, not all port-added spans."
+    },
+    "cli-11": {
+      "file": "scratchpad/effected/cli/ui/CliUi.ts",
+      "class": "bug",
+      "summary": "CliUi.lazy throws synchronously where the oracle returned a rejected promise.",
+      "fix": "Use a synchronous-invocation promise boundary such as Promise.try(load).then(module => module.default(control)), preserving immediate loader invocation and rejection of synchronous exceptions without async. Add a rejection regression."
+    },
+    "cli-12": {
+      "file": "scratchpad/effected/cli/ui/Select.ts",
+      "class": "bug",
+      "summary": "Out-of-range initial Select indices can select a disabled choice.",
+      "fix": "Clamp the initial search position to the choices bounds before forward/backward search; preserve search preference. Add negative and above-bound initial-index cases and forward verified upstream-bug bookkeeping centrally."
+    },
+    "cli-13": {
+      "file": "scratchpad/effected/cli/internal/renderDoc.ts",
+      "class": "bug",
+      "summary": "Verbatim text loses trailing spaces in plain, ANSI and GitHub-log rendering.",
+      "fix": "Mark Verbatim line spans hold: true so branch-local and final trimLine passes preserve content and whitespace-only indentation. Add fidelity cases for the three text renderers and forward upstream-bug bookkeeping centrally."
+    },
+    "cli-14": {
+      "file": "scratchpad/effected/cli/internal/scanAudience.ts",
+      "class": "schema",
+      "summary": "scanAudience duplicates the existing audience kit with ad-hoc guards.",
+      "fix": "Import the existing AudienceKind kit directly from ../../env/Audience.ts (read-only dependency); derive both guards via S.is(AudienceKind), use the derived type for booleans, and delete KINDS. Preserve spellings and counts. Do not edit env/index.ts or create another audience kit."
+    },
+    "cli-15": {
+      "file": "scratchpad/effected/cli/ui/testing/fakeStreams.ts",
+      "class": "bug",
+      "summary": "Buffered fake-stream writes recurse until the stack overflows.",
+      "fix": "Drain synchronous _write completions iteratively with a trampoline that resumes for genuine backpressure; preserve ordering and exactly one batch callback. Add a cork/12000 writes/uncork regression checking all bytes and callbacks."
+    },
+    "cli-16": {
+      "file": "scratchpad/effected/cli/ui/testing/fakeStreams.ts",
+      "class": "bug",
+      "summary": "Handle-less fake stdin ref/unref leaks connect listeners.",
+      "fix": "Override MemorySocket.ref and unref to return this without registering listeners; add repeated raw-mode/ref/unref cycles and assert no connect-listener growth or warning."
+    },
+    "cli-17": {
+      "file": "scratchpad/effected/cli/ui/TextInput.ts",
+      "class": "bug",
+      "summary": "TextInput displays unsanitized ANSI and physical newlines from its value.",
+      "fix": "Sanitize and fold display segments before windowAround measurement and Ink rendering, while preserving the original editing, validation, submission and cursor semantics. Add hostile initial-value regressions at color none; forward upstream-bug bookkeeping centrally."
+    },
+    "cli-18": {
+      "file": "scratchpad/effected/cli/ui/Viewport.ts",
+      "class": "bug",
+      "summary": "Viewport uses stale hook-derived Box widths during an immediate resize repaint.",
+      "fix": "Remove both hook-derived widths; express the outer one-column margin through layout (for example marginRight: 1) and let clipped rows stretch within current layout. Retain clipping and add an 80-to-20-column resize regression; forward upstream-bug bookkeeping centrally."
+    },
+    "cli-19": {
+      "file": "scratchpad/effected/cli/ui/testing/terminalModel.ts",
+      "class": "bug",
+      "summary": "terminalModel prints ST-terminated OSC 8 protocol as text.",
+      "fix": "Consume OSC sequences ending in either BEL or ST (ESC followed by backslash); add a hyperlink transcript regression that returns only label. Forward upstream-bug bookkeeping centrally."
+    },
+    "cli-20": {
+      "file": "scratchpad/effected/cli/ui/UiKey.ts",
+      "class": "schema",
+      "summary": "UiKey and its named key inventory lack schema ownership.",
+      "fix": "Define identity-annotated KeyName LiteralKit and schema-backed Named/Char payload union; derive types while preserving fromInk, named, char and plain payloads. Tie the KEY_BYTES inventory in CliUiTest.ts to the derived domain without changing byte mappings."
+    },
+    "cli-21": {
+      "file": "scratchpad/effected/cli/ui/internal/ink.ts",
+      "class": "law",
+      "summary": "The production missing-Ink-peers error uses Data.TaggedError.",
+      "fix": "Replace TestError with an identity-annotated S.TaggedError with annotated message and optional cause, construct with .make, and preserve Error name, missing-peer message and cause. The tag may be named for missing peers; forward the law-forced tag/export bookkeeping centrally."
+    },
+    "cli-22": {
+      "file": "scratchpad/effected/cli/ui/internal/lazyView.ts",
+      "class": "law",
+      "summary": "Lazy-view shape and load errors use Data.TaggedError.",
+      "fix": "Use identity-annotated S.TaggedError for LazyViewShapeError and LazyViewLoadError with annotated message/cause fields as appropriate, update constructors to .make, and preserve deterministic cached shape-error identity, retryable load failure, causes and Error display name. Coordinate the shape-error id with allow-8 in CliUiLive.ts."
+    },
+    "cli-23": {
+      "file": "scratchpad/effected/cli/ui/internal/inkChalk.ts",
+      "class": "law",
+      "summary": "inkChalk still reads node:fs through a scanner-missed builtin lookup.",
+      "fix": "Replace process.getBuiltinModule(\"node:fs\").realpathSync with the FileSystem service and propagate the Effect-based realpath resolution through inkChalk and loadInk in ink.ts, preserving selection of Ink's shared Chalk instance. Adapt inkChalk tests and the boundary licence to the service implementation; do not add an allowlist entry or change repo-level scanners. Forward forced boundary-test bookkeeping centrally."
+    },
+    "cli-24": {
+      "file": "scratchpad/effected/cli/ui/CliUi.ts",
+      "class": "tsgo",
+      "summary": "CliUi.fallback wraps and immediately calls a local Effect.fn.",
+      "fix": "Return the existing Effect.gen directly from this one-time fallback builder instead of defining and immediately calling a local Effect.fn. Preserve explained state lifetime, prompt behavior and error handling. Treat all other forced traced wrappers under codemod-2."
+    },
+    "allow-1": {
+      "file": "scratchpad/effected/cli/CliFailure.ts",
+      "class": "law",
+      "summary": "new-map-set: remove EFFECTED-CLI-CAUSE-CYCLE under the later operator replacement ruling.",
+      "fix": "Use a per-cause-chain ancestor/visited array scanned with === instead of the native identity Set. Preserve cycle termination, MAX_DEPTH and distinct equal-looking object identity; add cycle and distinct-object regressions."
+    },
+    "allow-2": {
+      "file": "scratchpad/effected/cli/CliRuntime.ts",
+      "class": "law",
+      "summary": "new-map-set: remove EFFECTED-CLI-CURRENT-LOGGERS under the later operator replacement ruling.",
+      "fix": "Replace the native CurrentLoggers Set using Logger.layer([makeCliLogger(...)]) through Effect.scopedWith, Layer.buildWithScope and Effect.provideContext. Preserve logger scope and warning routing; apply no diagnostic suppression and request no repo allowlist edit."
+    },
+    "allow-3": {
+      "file": "scratchpad/effected/cli/Doc.ts",
+      "class": "law",
+      "summary": "object-method: remove EFFECTED-CLI-FROZEN-DOC under the later operator replacement ruling.",
+      "fix": "Drop Object.freeze and freeze/frozenArray wrappers while keeping readonly types and independent copied child arrays. Retarget every Object.isFrozen assertion in Doc.test.ts and Doc.counter.plural.test.ts to the new representation and constructor/aliasing semantics. Coordinate with cli-5 and send systemic D9 bookkeeping centrally."
+    },
+    "allow-4": {
+      "file": "scratchpad/effected/cli/Glyphs.ts",
+      "class": "law",
+      "summary": "object-method: remove EFFECTED-CLI-FROZEN-GLYPHS under the later operator replacement ruling.",
+      "fix": "Drop all Object.freeze calls on unicode/ascii glyphs and nested spinner/path/tree members; retain readonly data and exact glyph/frame order. Retarget Glyphs.test.ts isFrozen assertions to the readonly representation and content guarantees; send systemic D9 bookkeeping centrally."
+    },
+    "allow-5": {
+      "file": "scratchpad/effected/cli/internal/HelpRouting.ts",
+      "class": "law",
+      "summary": "object-method: remove EFFECTED-CLI-HELP-ROUTING-PROTOTYPE under the later operator replacement ruling.",
+      "fix": "Replace prototype-based formatter and console wrappers with fully typed explicit delegating objects. Delegate every unoverridden method/property to the original instance with correct binding and live access; preserve recording and stdout/stderr behavior and validate overrides structurally (no Object.create/assign or lib-sourced any)."
+    },
+    "allow-6": {
+      "file": "scratchpad/effected/cli/Status.ts",
+      "class": "law",
+      "summary": "object-method: remove EFFECTED-CLI-FROZEN-STATUS under the later operator replacement ruling.",
+      "fix": "Drop Object.freeze on resolved status snapshots; preserve copied snapshot fields and token identity with readonly types. Retarget the isFrozen assertion in Status.test.ts to snapshot and identity semantics; send systemic D9 bookkeeping centrally."
+    },
+    "allow-7": {
+      "file": "scratchpad/effected/cli/Token.ts",
+      "class": "law",
+      "summary": "object-method: remove EFFECTED-CLI-FROZEN-TOKENS under the later operator replacement ruling.",
+      "fix": "Drop Object.freeze on Token.defaults and each default style; retain readonly style/default types and exact values. Retarget Token.test.ts isFrozen assertions to the new representation/content; send systemic D9 bookkeeping centrally."
+    },
+    "allow-8": {
+      "file": "scratchpad/effected/cli/ui/CliUiLive.ts",
+      "class": "law",
+      "summary": "new-map-set: remove EFFECTED-CLI-LAZY-VIEW-WARNED under the later operator replacement ruling.",
+      "fix": "Give owned LazyViewShapeError instances stable ids and track warned errors by those primitive ids in MutableHashMap. Coordinate lazyView.ts with CliUiLive.ts; preserve once-per-cached-shape-error warning, distinct error identity and retry behavior. Do not mark user objects by reference globally."
+    },
+    "allow-9": {
+      "file": "scratchpad/effected/cli/ui/MultiSelect.ts",
+      "class": "law",
+      "summary": "new-map-set: remove EFFECTED-CLI-MULTISELECT-CHOSEN under the later operator replacement ruling.",
+      "fix": "Change public chosen from ReadonlySet<number> to Effect HashSet<number>, migrate init/step/render/selected membership and updates, and adapt tests and public state types. Preserve returned selection order explicitly by walking flattened document items, never by depending on hash iteration."
+    },
+    "allow-10": {
+      "file": "scratchpad/effected/cli/ui/testing/CliUiTest.ts",
+      "class": "law",
+      "summary": "object-method: remove EFFECTED-CLI-TEST-AMBIENT-CONSOLE under the later operator replacement ruling.",
+      "fix": "Replace Object.create(ambient) with a fully typed explicit delegating Console object; capture overridden stdout/stderr methods and forward every other member to ambient with correct binding and live behavior. Add delegation regressions; do not use prototype wrappers or spread-only copies."
+    }
+  }
+}

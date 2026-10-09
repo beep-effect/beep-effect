@@ -1,0 +1,352 @@
+{
+  "module": "github",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/github/CheckRun.ts",
+        "scratchpad/effected/github/GitCommit.ts",
+        "scratchpad/effected/github/GitHubCommit.ts",
+        "scratchpad/effected/github/GitHubError.ts",
+        "scratchpad/effected/github/PullRequest.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/resources.test.ts",
+        "scratchpad/test/github/resources2.test.ts",
+        "scratchpad/test/github/GitHubError.test.ts"
+      ],
+      "findings": [
+        "req-02",
+        "req-04",
+        "req-05",
+        "req-06",
+        "req-08",
+        "req-26"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/github/GitHubApp.ts",
+        "scratchpad/effected/github/GitBranch.ts",
+        "scratchpad/effected/github/CodeScanning.ts",
+        "scratchpad/effected/github/DeploymentEnvironment.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/GitHubApp.test.ts",
+        "scratchpad/test/github/GitBranch.test.ts",
+        "scratchpad/test/github/CodeScanning.test.ts",
+        "scratchpad/test/github/DeploymentEnvironment.test.ts"
+      ],
+      "findings": [
+        "req-01",
+        "req-03",
+        "req-07"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/github/GitHubClient.ts",
+        "scratchpad/effected/github/GitHubRepository.ts",
+        "scratchpad/effected/github/GraphQL.ts",
+        "scratchpad/effected/github/Rest.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/GitHubClient.test.ts",
+        "scratchpad/test/github/GitHubRepository.test.ts",
+        "scratchpad/test/github/Rest.test.ts",
+        "scratchpad/test/github/deliberatelyInvalid.ts"
+      ],
+      "findings": [
+        "req-09",
+        "req-10",
+        "req-18",
+        "req-20",
+        "req-23",
+        "req-25",
+        "req-27"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/github/RepositorySecret.ts",
+        "scratchpad/effected/github/RepositoryVariable.ts",
+        "scratchpad/effected/github/RepositorySecurity.ts",
+        "scratchpad/effected/github/Ruleset.ts",
+        "scratchpad/effected/github/internal/crypto.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/RepositorySecret.test.ts",
+        "scratchpad/test/github/RepositoryVariable.test.ts",
+        "scratchpad/test/github/RepositorySecurity.test.ts",
+        "scratchpad/test/github/Ruleset.test.ts",
+        "scratchpad/test/github/crypto.test.ts"
+      ],
+      "findings": [
+        "req-11",
+        "req-13",
+        "req-14",
+        "req-21",
+        "req-22",
+        "req-24"
+      ]
+    },
+    {
+      "id": "g5",
+      "files": [
+        "scratchpad/effected/github/GitTag.ts",
+        "scratchpad/effected/github/PullRequestComment.ts",
+        "scratchpad/effected/github/WorkflowDispatch.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/GitTag.test.ts",
+        "scratchpad/test/github/PullRequestComment.test.ts",
+        "scratchpad/test/github/WorkflowDispatch.test.ts"
+      ],
+      "findings": [
+        "req-12",
+        "req-16",
+        "req-17",
+        "req-28"
+      ]
+    },
+    {
+      "id": "g6",
+      "files": [
+        "scratchpad/effected/github/TokenPermissions.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/TokenPermissions.test.ts"
+      ],
+      "findings": [
+        "req-15",
+        "req-19"
+      ]
+    },
+    {
+      "id": "g7",
+      "files": [
+        "scratchpad/effected/github/internal/octokit.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/transport.test.ts"
+      ],
+      "findings": [
+        "req-29",
+        "req-30",
+        "req-31",
+        "req-32",
+        "req-33",
+        "req-34"
+      ]
+    }
+  ],
+  "findings": {
+    "req-01": {
+      "file": "scratchpad/effected/github/GitHubApp.ts",
+      "class": "bug",
+      "summary": "Serialize installation-token refresh and retain ownership of every replacement.",
+      "fix": "Use one semaphore permit around freshness checking and rotation; re-read held state inside the permit. Concurrent callers must share one replacement token, and scope cleanup must revoke it. Add the concurrent-expiry regression using the recording transport. Supply the upstream-bug evidence and test path to central deviation bookkeeping; this group edits no ledger or Port notes."
+    },
+    "req-02": {
+      "file": "scratchpad/effected/github/CheckRun.ts",
+      "class": "bug",
+      "summary": "Protect synchronous withCheckRun callback construction with the exit handler.",
+      "fix": "Attach the existing exit handler to Effect.suspend(() => use(run.id, conclude)). Attempt conclusion on a synchronous callback defect and retain that original defect. Add a regression asserting the concluding PATCH. Supply the verified upstream-bug evidence for central recording."
+    },
+    "req-03": {
+      "file": "scratchpad/effected/github/GitBranch.ts",
+      "class": "bug",
+      "summary": "Restore undefined results for branch deletion, environment deletion and app-token revocation.",
+      "fix": "Restore the oracle generators that yield the request and fall through, or apply Effect.asVoid before a terminal return. Fix GitBranch.delete (:289), DeploymentEnvironment.delete (:150) and GitHubApp.revoke (:495); assert successful results are undefined with HTTP 204. The missingReturnYieldStar diagnostic no longer justifies leaking the body after Rest.Data became a successful empty-string type."
+    },
+    "req-04": {
+      "file": "scratchpad/effected/github/GitHubCommit.ts",
+      "class": "effect-idiom",
+      "summary": "Decode external commit files through the typed GitHubError channel at all three call sites.",
+      "fix": "Make external file decoding effectful with S.decodeUnknownEffect(CommitFile), mapping schema errors to GitHubError.decode with the calling operation. Replace synchronous map(fileOf) in compare, changedFiles and PullRequest.listFiles with effectful traversal. Keep rejecting invalid statuses, keep successful field/order semantics, remove any now-unused CommitFileDecodeError, and add failure-channel regressions. Central recording must cite the EF-3/error-boundary law and adjusted tests."
+    },
+    "req-05": {
+      "file": "scratchpad/effected/github/CheckRun.ts",
+      "class": "bug",
+      "summary": "Preserve complete U+FFFD characters when truncating UTF-8 check-run output.",
+      "fix": "Find a valid UTF-8 byte boundary before decoding the budgeted prefix; remove only an incomplete trailing sequence, never a complete U+FFFD already in the input. Add complete-U+FFFD and split-sequence regressions while preserving the notice and byte limit. Supply the verified upstream-bug receipt for central recording."
+    },
+    "req-06": {
+      "file": "scratchpad/effected/github/CheckRun.ts",
+      "class": "schema",
+      "summary": "Use LiteralKit for the seven named literal domains owned by the commit/check/pull-request group.",
+      "fix": "Replace these seven named S.Literals domains with LiteralKit from @beep/schema; retain literals, annotations, type/value exports and all literals consumers. Derive merge-option types from MergeMethod, retaining the off case for setAutoMerge. Keep anonymous inline wire unions as S.Literals. PermissionLevel is the separate concrete domain in req-19."
+    },
+    "req-07": {
+      "file": "scratchpad/effected/github/CodeScanning.ts",
+      "class": "schema",
+      "summary": "Give CodeScanningSetup and DeploymentEnvironmentInfo owning runtime schemas.",
+      "fix": "Define identity-annotated boundary schemas with derived same-name types for both shapes. Retain upstream structural fields, open string input types and optional-key omission semantics; use the environment schema at construction/decoding. A struct can preserve plain-object results. Do not combine this with the optional stricter route-domain proposal in backlog-06."
+    },
+    "req-08": {
+      "file": "scratchpad/effected/github/CheckRun.ts",
+      "class": "schema",
+      "summary": "Complete tagged-error identity and field annotations in CheckRun, GitHubCommit and PullRequest.",
+      "fix": "Add the owning $I.annote class annotations and descriptive annotateKey metadata for retained error fields. req-04 may remove CommitFileDecodeError; do not recreate it merely to annotate it. Keep the lawful tagged-error representation. The distinct GitHubClient/GitHubRepository copies are owned by req-09."
+    },
+    "req-09": {
+      "file": "scratchpad/effected/github/GitHubClient.ts",
+      "class": "schema",
+      "summary": "Complete tagged-error identity and field annotations in GitHubClient and GitHubRepository.",
+      "fix": "Add $I.annote metadata and descriptive annotateKey annotations to the retained UnstubbedError / FixtureError schemas. Keep their tagged-error behavior. Record-only requests about the original native-error replacements belong to codemod-01."
+    },
+    "req-10": {
+      "file": "scratchpad/effected/github/GitHubRepository.ts",
+      "class": "bug",
+      "summary": "Restore GitHubRepository.settings and ownerType child spans.",
+      "fix": "Retain the lawful effect-valued generators and pipe them through Effect.withSpan(\"GitHubRepository.settings\") and Effect.withSpan(\"GitHubRepository.ownerType\"). Add a span regression proving coordinate annotations attach to these resource spans; derived defaultBranch/nodeId must retain settings tracing."
+    },
+    "req-11": {
+      "file": "scratchpad/effected/github/RepositorySecret.ts",
+      "class": "bug",
+      "summary": "Restore undefined results for secret/variable/ruleset deletes and security setters.",
+      "fix": "Discard each affected transport result: restore the oracle bare yield and fall-through, or return the request after Effect.asVoid. Assert undefined success for each delete and both branches of each security setter in the existing module-local suites. Do not change request routes or successful wire bodies."
+    },
+    "req-12": {
+      "file": "scratchpad/effected/github/GitTag.ts",
+      "class": "bug",
+      "summary": "Restore undefined results for tag and pull-request-comment deletion.",
+      "fix": "Restore bare request yields followed by generator completion, or apply Effect.asVoid before returning. Add focused HTTP-204 success-value regressions in the two named new suites; existing mixed resource suites are owned exclusively by g1."
+    },
+    "req-13": {
+      "file": "scratchpad/effected/github/Ruleset.ts",
+      "class": "bug",
+      "summary": "Restore the upstream open RulesetPayload contract and rewritten upstream test inputs.",
+      "fix": "Restore upstream target/enforcement string fields and optional unknown conditions/rules/bypass_actors in an identity-annotated schema-backed boundary. Restore the upstream test payload expressions that were replaced by narrowed RulesetPayload.make calls. Preserve pass-through behavior for future vocabulary, partial parameters and non-ref_name conditions without casts. Keep any useful closed Octokit helper outside the public upsert contract; do not introduce a required closed-vocabulary drift alarm. The existing added value export remains a centrally recorded D2 addition."
+    },
+    "req-14": {
+      "file": "scratchpad/effected/github/internal/crypto.ts",
+      "class": "bug",
+      "summary": "Return typed failures for decoded secret keys whose length is not 32 bytes.",
+      "fix": "Use Result.flatMap after Base64.decode to check PUBLIC_KEY_BYTES before nonce construction or nacl.box. Return an EncodingError failure for empty/short/oversized decoded keys, retain the existing valid-key algorithm, and update the RepositorySecret sealing failure message to cover key shape. Add 0/31/33-byte Result-failure and service typed-error regressions. Supply the verified upstream-bug evidence for central recording."
+    },
+    "req-15": {
+      "file": "scratchpad/effected/github/TokenPermissions.ts",
+      "class": "bug",
+      "summary": "Use own-property permission reads and preserve prototype-name permission keys.",
+      "fix": "Use R.get / R.has for both granted and required maps; build permission records with R.fromEntries so __proto__, constructor and toString remain ordinary own keys. Preserve ranks and arbitrary permission names. Add missing/extra regressions for prototype names and verify assertSufficient/assertExact fail correctly. Supply the verified upstream-bug receipt for central recording."
+    },
+    "req-16": {
+      "file": "scratchpad/effected/github/WorkflowDispatch.ts",
+      "class": "bug",
+      "summary": "Match and retain the requested workflow_dispatch run, including numeric workflow IDs.",
+      "fix": "Use the workflow-specific runs route with workflow_id: workflow and event: \"workflow_dispatch\", retaining creation-time/ref constraints. Select one matching run and poll that run ID until completion. Add numeric-ID, suffix-collision and unrelated-event regressions in the new owned WorkflowDispatch.test.ts suite. Supply the verified upstream-bug receipt for central recording."
+    },
+    "req-17": {
+      "file": "scratchpad/effected/github/WorkflowDispatch.ts",
+      "class": "bug",
+      "summary": "Enforce a real polling deadline and handle zero polling intervals.",
+      "fix": "Validate a positive polling interval and wrap the polling operation in an Effect deadline/timeout mapped to the existing typed 408 error. Specify the invalid-interval failure with a typed error, and bound time spent inside requests as well as sleeps. Add zero-interval and blocked-request deadline regressions. Supply the verified upstream-bug evidence for central recording."
+    },
+    "req-18": {
+      "file": "scratchpad/effected/github/Rest.ts",
+      "class": "type-safety",
+      "summary": "Distribute Rest.Data over route unions before interpreting bodyless responses.",
+      "fix": "Use R extends Route ? ([Endpoints[R][\"response\"][\"data\"]] extends [never] ? \"\" : Endpoints[R][\"response\"][\"data\"]) : never. Add a type regression for a union of one bodyful GET and one bodyless DELETE, preserving both possible successful payloads."
+    },
+    "req-19": {
+      "file": "scratchpad/effected/github/TokenPermissions.ts",
+      "class": "schema",
+      "summary": "Make PermissionLevel a LiteralKit and derive its membership guard.",
+      "fix": "Construct PermissionLevel with LiteralKit, retain identity annotations and the read/write/admin values, and derive the type and membership guard from the owning schema. Replace the manual membership chain in fromGitHub with S.is(PermissionLevel) / the derived kit guard. Coordinate its record construction with req-15."
+    },
+    "req-20": {
+      "file": "scratchpad/effected/github/GitHubRepository.ts",
+      "class": "schema",
+      "summary": "Derive the repository status-object guard from an owning schema.",
+      "fix": "Define an identity-annotated status-object boundary schema and derive isStatusObject with S.is. Preserve enabled/disabled membership and the current excess-property behavior. Add acceptance/rejection checks in the existing repository suite; any unavoidable law-forced acceptance change is supplied for central deviation recording."
+    },
+    "req-21": {
+      "file": "scratchpad/effected/github/Ruleset.ts",
+      "class": "schema",
+      "summary": "Use IdentityComposer metadata for retained Ruleset schemas and fields.",
+      "fix": "Apply $I.annoteSchema to RulesetPayload and every retained named supporting schema, and add descriptive key annotations. req-13 restores the public open shape and may remove narrow supporting schemas; annotate survivors only. This fixes the schema metadata itself; recording identity-derived JSON Schema keys is central codemod work."
+    },
+    "req-22": {
+      "file": "scratchpad/effected/github/RepositorySecret.ts",
+      "class": "schema",
+      "summary": "Give SecretInfo, VariableInfo and RulesetInfo owning schemas with derived types.",
+      "fix": "Introduce identity-annotated schema-backed same-name declarations and derived type exports for these three pure data models. Preserve the existing plain-object result shape, field optionality and output semantics; boundary structs avoid unnecessary prototype changes. Add schema/result compatibility cases to the existing owned suites."
+    },
+    "req-23": {
+      "file": "scratchpad/effected/github/GraphQL.ts",
+      "class": "law",
+      "summary": "Pass the GraphQL document decoder directly instead of wrapping it.",
+      "fix": "Pass the existing decode helper directly into new GraphQLDocument, preserving the other constructor arguments and variable encoder. Fable supplies assignability evidence and the concrete terse-effect gate limitation, so this is a demonstrated missed Code Law shape."
+    },
+    "req-24": {
+      "file": "scratchpad/effected/github/RepositorySecret.ts",
+      "class": "law",
+      "summary": "Use Effect.succeed directly for successful secret sealing.",
+      "fix": "Replace onSuccess: (sealed) => Effect.succeed(sealed) with onSuccess: Effect.succeed. Keep deferred make(client) lambdas whose upstream TDZ rationale is documented. Fable cites the direct-reference law and the constant-thunk-only gate gap."
+    },
+    "req-25": {
+      "file": "scratchpad/test/github/GitHubRepository.test.ts",
+      "class": "test",
+      "summary": "Restore the upstream updateSettings test path using deliberatelyInvalid.",
+      "fix": "Create the one authorized module helper deliberatelyInvalid<T>(value: unknown): T => value as T at scratchpad/test/github/deliberatelyInvalid.ts. Restore the upstream call to r.updateSettings(deliberatelyInvalid<RepositoryPatch>({ security_and_analysis: ... })) and its original input/assertions; retain an applySettings variant only as an additional test under its proper describe. No shared fixtures or external module helpers are edited."
+    },
+    "req-26": {
+      "file": "scratchpad/effected/github/PullRequest.ts",
+      "class": "schema",
+      "summary": "Give UpsertedPullRequest an owning return-model schema.",
+      "fix": "Introduce an identity-annotated schema-backed UpsertedPullRequest declaration with a same-name derived type. Preserve field types, optionality and plain-object returns, using a boundary struct rather than an unnecessary class-prototype change. Verify existing upsert results in the owned resource suite."
+    },
+    "req-27": {
+      "file": "scratchpad/effected/github/GitHubRepository.ts",
+      "class": "schema",
+      "summary": "Give AppliedSettings an owning return-model schema.",
+      "fix": "Introduce an identity-annotated schema-backed AppliedSettings declaration with a same-name derived type. Preserve structural fields, optionality and plain-object returns, using a boundary struct where class construction would change behavior. Verify result compatibility in GitHubRepository.test.ts."
+    },
+    "req-28": {
+      "file": "scratchpad/effected/github/WorkflowDispatch.ts",
+      "class": "schema",
+      "summary": "Give WorkflowInfo an owning return-model schema.",
+      "fix": "Introduce an identity-annotated schema-backed WorkflowInfo declaration and same-name derived type while retaining plain-object list results and field optionality. Verify list-result compatibility in the new owned WorkflowDispatch.test.ts suite; coordinate with req-16/req-17."
+    },
+    "req-29": {
+      "file": "scratchpad/effected/github/internal/octokit.ts",
+      "class": "type-safety",
+      "summary": "Remove the Octokit request<string> implicit-any narrowing.",
+      "fix": "Use Octokit's free-response-type options overload instead of request<string>: derive route options with a schema/kit-owned RequestMethod guard, preserving Octokit route parsing, defaults and option precedence, then call octokit.request<A>({ ...routeOptions(route), ...withSignal(params, signal) }). Add typed boundary / route-compatibility regressions. Do not retain an any-based trust site merely by recording it; D15 has no such waiver."
+    },
+    "req-30": {
+      "file": "scratchpad/effected/github/internal/octokit.ts",
+      "class": "type-safety",
+      "summary": "Remove the array-to-record user-defined narrowing in thrown-header handling.",
+      "fix": "Delete the hand-written isRecord predicate. Narrow with P.isObjectOrArray(headers) and an explicit !A.isArray(headers) check, or an owning schema-derived record guard, before calling the record header reader. Preserve valid Octokit object headers and add malformed-header regressions. If excluding malformed array headers changes acceptance, cite law 17 as the section-14 cause; do not rely on the claim that arrays can never carry custom header properties."
+    },
+    "req-31": {
+      "file": "scratchpad/effected/github/internal/octokit.ts",
+      "class": "law",
+      "summary": "Use the schema-backed error idiom for TransportFailure.",
+      "fix": "Replace Data.TaggedError with an identity-annotated S.TaggedError carrying the original thrown value as S.Defect(), or remove the private carrier using the one-argument Effect.tryPromise UnknownError cause while preserving classification and header recording. Prefer the schema-backed carrier if removing it exposes another diagnostic. Remove unused imports and verify classified error payloads remain unchanged."
+    },
+    "req-32": {
+      "file": "scratchpad/effected/github/internal/octokit.ts",
+      "class": "effect-idiom",
+      "summary": "Replace the two explicit-generic succeed(none()) forms missed by tsgo.",
+      "fix": "Replace both Effect.succeed(O.none<ReadonlyArray<A>>()) occurrences at :171 and :181 with Effect.succeedNone, preserving the pagination completion branches and declared result types."
+    },
+    "req-33": {
+      "file": "scratchpad/effected/github/internal/octokit.ts",
+      "class": "bug",
+      "summary": "Forward the current attempt AbortSignal into each pagination request.",
+      "fix": "Give the Octokit iterator a request-method wrapper injecting the current attempt AbortSignal; receive that signal in the attempt callback and forward it to the wrapper. Preserve iterator normalization, continuation and request options. Factory params.request alone is insufficient because the installed iterator discards it. Add interrupt-during-pending-page regression proving the fetch receives a signal and aborts; supply the verified upstream-bug evidence for central recording."
+    },
+    "req-34": {
+      "file": "scratchpad/effected/github/internal/octokit.ts",
+      "class": "bug",
+      "summary": "Forward AbortSignal into GraphQL requests.",
+      "fix": "Receive the signal in the attempt callback and call octokit.graphql(document, withSignal(variables, signal)), preserving other request options. Add interrupt-during-pending-GraphQL regression proving the fetch aborts. Supply the verified upstream-bug evidence for central recording; updating explanatory docs waits for S2."
+    }
+  }
+}

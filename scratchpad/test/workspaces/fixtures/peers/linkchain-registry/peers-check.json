@@ -1,0 +1,29 @@
+{
+  "packages/b": {
+    "bad": {},
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  },
+  "packages/c": {
+    "bad": {},
+    "missing": {
+      "react": [
+        {
+          "parents": [
+            {
+              "name": "react-dom",
+              "version": "18.3.1"
+            }
+          ],
+          "optional": false,
+          "wantedRange": "^18.3.1"
+        }
+      ]
+    },
+    "conflicts": [],
+    "intersections": {
+      "react": "^18.3.1"
+    }
+  }
+}

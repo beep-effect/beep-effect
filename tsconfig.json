@@ -2084,6 +2084,13 @@
       "@beep/epistemic-domain/values/ContradictionDetection": [
         "./packages/epistemic/domain/src/values/ContradictionDetection/index.ts"
       ]
-    }
+    },
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "inlays": true,
+        "noExternal": true
+      }
+    ]
   }
 }

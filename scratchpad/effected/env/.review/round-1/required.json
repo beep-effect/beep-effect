@@ -1,0 +1,125 @@
+{
+  "module": "env",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/env/Audience.ts",
+        "scratchpad/effected/env/RuntimeEnv.ts",
+        "scratchpad/effected/env/internal/agentCi.ts",
+        "scratchpad/effected/env/ColorLevel.ts",
+        "scratchpad/effected/env/TerminalEnv.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "env-1",
+        "env-2",
+        "env-3",
+        "env-7",
+        "env-8",
+        "env-9"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/env/internal/osc8/terminals.ts",
+        "scratchpad/effected/env/internal/osc8/detect.ts",
+        "scratchpad/effected/env/internal/osc8/wrappers.ts",
+        "scratchpad/effected/env/internal/osc8/env.ts"
+      ],
+      "tests": [
+        "scratchpad/test/env/osc8.env.test.ts"
+      ],
+      "findings": [
+        "env-4",
+        "env-5",
+        "env-6",
+        "env-10",
+        "env-11",
+        "env-12",
+        "env-13"
+      ]
+    }
+  ],
+  "findings": {
+    "env-1": {
+      "file": "scratchpad/effected/env/Audience.ts",
+      "class": "schema",
+      "summary": "Named audience kind/source domains lack a schema source of truth; the type, override membership and warning members can drift.",
+      "fix": "Define identity-annotated AudienceKind and AudienceSource LiteralKits in Audience.ts, derive their types, derive membership from the kind kit and warning text from its literals, and use the source kit type in AudienceShape. Preserve literals, warning order, precedence and plain service values. Keep index.ts type-only exports; added subpath value exports are recorded centrally."
+    },
+    "env-2": {
+      "file": "scratchpad/effected/env/RuntimeEnv.ts",
+      "class": "schema",
+      "summary": "CI detection, the exported type and the wire schema independently declare the same finite domain.",
+      "fix": "Define the identity-annotated CiName LiteralKit and derived type in internal/agentCi.ts, type detectCi with it, and import/re-export it from RuntimeEnv.ts for optionField(CiName). This avoids a RuntimeEnv/agentCi runtime cycle. Preserve the encoded strings and keep index.ts type-only CiName export; record added exports centrally."
+    },
+    "env-3": {
+      "file": "scratchpad/effected/env/ColorLevel.ts",
+      "class": "schema",
+      "summary": "The named color-level domain has no required LiteralKit schema or derived guard.",
+      "fix": "Define an identity-annotated ColorLevel LiteralKit with none/basic/256/truecolor and derive the existing type. Keep the barrel export type-only and preserve all colorDepth outputs. Record any added subpath export centrally."
+    },
+    "env-4": {
+      "file": "scratchpad/effected/env/internal/osc8/terminals.ts",
+      "class": "schema",
+      "summary": "The named terminal domain lacks the required schema source of truth.",
+      "fix": "Define an identity-annotated KnownTerminal LiteralKit containing exactly the existing names and derive KnownTerminal from its Type. Retain the terminal table order, identification behavior and type-only consumers; do not expose a new barrel value."
+    },
+    "env-5": {
+      "file": "scratchpad/effected/env/internal/osc8/detect.ts",
+      "class": "schema",
+      "summary": "The diagnostic reason type and explanation dispatch maintain separate finite-domain definitions.",
+      "fix": "Introduce the identity-annotated Osc8Reason LiteralKit and derived type; derive explanation dispatch from the kit's matcher. Preserve all nine reason strings and every explanation byte."
+    },
+    "env-6": {
+      "file": "scratchpad/effected/env/internal/osc8/env.ts",
+      "class": "schema",
+      "summary": "The truthiness specification domain lacks its required LiteralKit schema.",
+      "fix": "Define an identity-annotated TruthySpec LiteralKit and derive its type in this internal file. Keep the exact two strings and existing truthiness semantics; combine with env-13's upstream-signature restoration, without adding a curried form."
+    },
+    "env-7": {
+      "file": "scratchpad/effected/env/RuntimeEnv.ts",
+      "class": "schema",
+      "summary": "RuntimeEnv field and terminal submodel identities are missing; the terminal override type duplicates an existing schema shape.",
+      "fix": "Use $I.annoteKey for agent/ci/terminal and nested name/version fields, with stable field identities and descriptions. Extract the nested plain terminal shape into a named, identity-annotated local S.Struct (DetectedTerminal), reuse it in the terminal option field, and derive RuntimeEnvOverrides.terminal from its Type. Preserve wire keys, null/default decoding and plain terminal objects; do not introduce a RuntimeEnv-to-detect cycle. Central codemod records law-forced identity-key deviations."
+    },
+    "env-8": {
+      "file": "scratchpad/effected/env/RuntimeEnv.ts",
+      "class": "law",
+      "summary": "Production source violates the canonical Schema namespace alias.",
+      "fix": "Rename the namespace import and implementation references to S; rename optionField's generic S parameter to avoid shadowing. Preserve all schema behavior and leave prose conversion to S2."
+    },
+    "env-9": {
+      "file": "scratchpad/effected/env/TerminalEnv.ts",
+      "class": "schema",
+      "summary": "The stream capability snapshot has no schema source for its structural type or validation.",
+      "fix": "Define an identity-annotated StreamEnv S.Struct and derive the existing same-name structural type, using ColorLevel's kit. Preserve plain-object construction, Option columns, booleans and existing accepted values; do not turn service/layer options into data schemas or add S3 properties in this wave. Keep barrel types unchanged."
+    },
+    "env-10": {
+      "file": "scratchpad/effected/env/internal/osc8/terminals.ts",
+      "class": "schema",
+      "summary": "The capability and identification payloads lack schema-derived structural types.",
+      "fix": "Define named identity-annotated S.Struct values for Osc8Capabilities and IdentifyResult and derive their existing types. Preserve plain objects and nullable version values, existing defaults and table entries; keep TerminalEntry/TerminalMatch behavioral contracts structural where schemas are impractical."
+    },
+    "env-11": {
+      "file": "scratchpad/effected/env/internal/osc8/wrappers.ts",
+      "class": "schema",
+      "summary": "The wrapper diagnostic payload has no schema source of truth.",
+      "fix": "Define an identity-annotated WrapperInfo S.Struct and derive its same-name type, preserving plain objects, null for no wrapper and the existing conservative boolean. Use S.Literals for its anonymous inline name field, or a LiteralKit only if that domain is separately named/reused. Retain the vendored attribution header."
+    },
+    "env-12": {
+      "file": "scratchpad/effected/env/internal/osc8/detect.ts",
+      "class": "schema",
+      "summary": "Detection input and projected result payloads lack schema-derived runtime contracts.",
+      "fix": "Introduce named identity-annotated S.Struct models for ProcessSnapshot and Osc8Detection and derive their existing types. Preserve the env record's string/undefined semantics, plain-object results and nested Option name/version values. Keep operational function contracts structural and do not change detection output or add a runtime import cycle."
+    },
+    "env-13": {
+      "file": "scratchpad/effected/env/internal/osc8/env.ts",
+      "class": "bug",
+      "summary": "An unforced upstream API divergence advertises a curried specification overload that cannot work at runtime.",
+      "fix": "Restore the pinned upstream plain (value: string | undefined, spec: TruthySpec = \"default\") => boolean signature and body shape, retaining the law-forced HashSet replacement and env-6's domain kit; remove the dual import and both overload declarations. Restore any upstream test lines rewritten for this API (the current suite already uses direct forms), and add a focused direct-signature regression in osc8.env.test.ts. Do not retain or test the zero-argument curried extension as an accepted API."
+    }
+  }
+}

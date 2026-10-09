@@ -1,0 +1,368 @@
+// The `funding` field model: where to send money for a package.
+//
+// npm accepts three encodings — a bare URL string, an object with `url` and an
+// optional `type`, or an array mixing either — and this model normalizes the
+// READ side of that: `Funding.FromField` always decodes to an array, so a
+// consumer crediting maintainers never branches on arity.
+//
+// The WRITE side is not normalized, which is the whole difficulty. The package
+// holds the same wire-fidelity requirement `Person`, `Repository` and `Bugs`
+// do: a formatter must not rewrite one legal encoding into another. A lone
+// entry read as a bare value therefore re-encodes as a bare value, never as a
+// one-element array, and an entry read from the string form re-encodes to that
+// exact string. Both are remembered as private provenance on the instance — its
+// wire value, and whether it was the whole field written bare — because
+// provenance must not appear in the encoded output, must not affect
+// structural equality, and must not survive being copied into a hand-built
+// value.
+//
+// Unlike `Bugs`, whose email-only entry makes `url` optional, `url` is
+// REQUIRED here: npm's object form carries no other way to say where the money
+// goes, so an entry without one is a decode failure rather than a
+// partially-populated value. The failure is expressed the way every other
+// shape violation in this tier is — as a schema issue, which the manifest
+// tiers normalize to `PackageDecodeError` at their decode boundary — rather
+// than as a degradation, which is `LenientManifest`'s job alone.
+
+import { $ScratchpadId } from "@beep/identity/packages";
+import type * as SchemaIssue from "effect/SchemaIssue";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
+import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+
+const $I = $ScratchpadId.create("effected/package-json/Funding");
+
+/** The wire value a single funding entry was decoded from. */
+type EntryWire = string | { readonly [k: string]: unknown };
+
+const KNOWN_FUNDING_KEYS = HashSet.make("type", "url");
+
+// Validated by the same route `Person.schema` uses: the struct produces the
+// issue tree, so a missing or non-string `url` reads exactly as it would from
+// decoding the class directly.
+const FundingFields = S.Struct({
+	type: S.optionalKey(S.String),
+	url: S.String,
+});
+
+const decodeFundingFields = S.decodeUnknownEffect(FundingFields);
+
+const restOf = (raw: { readonly [k: string]: unknown }): Record<string, unknown> => {
+	const rest: Record<string, unknown> = {};
+	for (const [key, value] of R.toEntries(raw)) {
+		if (!HashSet.has(KNOWN_FUNDING_KEYS, key)) rest[key] = value;
+	}
+	return rest;
+};
+
+/**
+ * Whether the remembered object still describes this entry. Guarding the
+ * replay is load-bearing: `Schema.Class` instances are not frozen, so an entry
+ * mutated in place keeps a provenance entry that no longer describes it, and
+ * an unguarded replay would write the ORIGINAL object back — silently
+ * discarding the edit.
+ */
+const isFaithfulObject = (wire: { readonly [k: string]: unknown }, funding: Funding): boolean => {
+	if (wire.url !== funding.url) return false;
+	if ((P.isString(wire.type) ? wire.type : undefined) !== funding.type) return false;
+	// Keys added to `rest` after the decode are not in the remembered object.
+	for (const [key, value] of R.toEntries(funding.rest ?? {})) {
+		if (wire[key] !== value) return false;
+	}
+	return true;
+};
+
+/** Whether the bare string form can still carry everything this entry holds. */
+const isStringExpressible = (funding: Funding): boolean =>
+	funding.type === undefined && R.keys(funding.rest ?? {}).length === 0;
+
+const encodeEntry = (funding: Funding): EntryWire => {
+	const wire = Funding.wireOf(funding);
+	// Shape fidelity, `Person`'s rule: an edited string entry re-emits as a
+	// STRING (rebuilt from the new url), not upgraded to the object form — a
+	// manifest's `funding` must not change representation because the url was
+	// edited. The object form is the fallback only when the string genuinely
+	// cannot carry the value, which is exactly when the entry gained a `type`
+	// or an unknown key, since a string has no syntax for either.
+	if (P.isString(wire) && isStringExpressible(funding)) return funding.url;
+	if (wire !== undefined && !P.isString(wire) && isFaithfulObject(wire, funding)) return wire;
+	return {
+		...(funding.type !== undefined && { type: funding.type }),
+		url: funding.url,
+		...funding.rest,
+	};
+};
+
+const decodeEntry = (input: EntryWire): Effect.Effect<Funding, SchemaIssue.Issue> => {
+	if (P.isString(input)) {
+		const funding = Funding.make({ url: input });
+		Funding.rememberWire(funding, input);
+		return Effect.succeed(funding);
+	}
+	return decodeFundingFields(input).pipe(
+		Effect.mapError((error) => error.issue),
+		Effect.map((fields) => {
+			const rest = restOf(input);
+			const funding = Funding.make({ ...fields, ...(R.keys(rest).length > 0 ? { rest } : {}) });
+			Funding.rememberWire(funding, input);
+			return funding;
+		}),
+	);
+};
+
+const EntryValue = S.Union([S.Record(S.String, S.Unknown), S.String]);
+const FieldValue = S.Union([EntryValue, S.Array(EntryValue)]);
+
+/**
+ * Where to send money for a package: one funding entry.
+ *
+ * **Details**
+ *
+ * npm's `funding` field accepts a bare URL string, this object form, or an
+ * array of either. `url` is **required** — it is the only thing the field
+ * actually says — so an object without one fails to decode rather than
+ * producing a half-populated entry. `type` (`"individual"`, `"github"`, …) is
+ * caller data and is kept **verbatim**, never normalized.
+ *
+ * **Example** (Decode a funding URL into an entry array)
+ *
+ * ```ts
+ * import { Funding } from "@beep/scratchpad/effected/package-json/Funding";
+ * import * as Effect from "effect/Effect";
+ * import * as S from "effect/Schema";
+ *
+ * const program = Effect.gen(function* () {
+ *   // Always an array, whichever encoding the manifest used.
+ *   const entries = yield* S.decodeUnknownEffect(Funding.FromField)("https://example.com/sponsor");
+ *   console.log(entries[0]?.url); // "https://example.com/sponsor"
+ * });
+ * Effect.runSync(program);
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @public
+ * @category models
+ * @since 0.0.0
+ */
+export class Funding extends S.Class<Funding>($I`Funding`)({
+	/** The funding platform, when the object form carried one (`"github"`, …). */
+	type: S.optionalKey(S.String).annotateKey({ description: "The funding platform, when the object form carried one (`\"github\"`, …)." }),
+	/** Where the money goes, exactly as the manifest wrote it. */
+	url: S.String.annotateKey({ description: "Where the money goes, exactly as the manifest wrote it." }),
+	/** Keys outside the documented set, preserved so encoding does not drop them. */
+	rest: S.optionalKey(S.Record(S.String, S.Unknown)).annotateKey({ description: "Keys outside the documented set, preserved so encoding does not drop them." }),
+}, $I.annote("Funding", { description: "Where to send money for a package: one funding entry." })) {
+	/**
+	 * Stores the original single-entry wire spelling outside schema data and object spreads.
+	 *
+	 * **Example** (Read wire provenance through its accessor)
+	 *
+	 * ```ts
+	 * import { Funding } from "@beep/scratchpad/effected/package-json/Funding";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const entry = S.decodeUnknownSync(Funding.FromValue)("https://example.com/sponsor");
+	 * console.log(Funding.wireOf(entry)) // https://example.com/sponsor
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
+	#wire: EntryWire | undefined = undefined;
+	/**
+	 * Remembers whether an entry represented the entire bare funding field.
+	 *
+	 * **Example** (Inspect bare-field provenance through its accessor)
+	 *
+	 * ```ts
+	 * import { Funding } from "@beep/scratchpad/effected/package-json/Funding";
+	 * import * as S from "effect/Schema";
+	 * import * as A from "effect/Array";
+	 *
+	 * const entries = S.decodeUnknownSync(Funding.FromField)("https://example.com/sponsor");
+	 * console.log(A.some(entries, Funding.isBareField)) // true
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
+	#bareField = false;
+
+	/**
+	 *  Instance-owned wire provenance, excluded from schema data and object spreads.
+	 *
+	 * **Example** (Read the remembered wire spelling)
+	 *
+	 * ```ts
+	 * import { Funding } from "@beep/scratchpad/effected/package-json/Funding";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const entry = S.decodeUnknownSync(Funding.FromValue)("https://example.com/sponsor");
+	 * console.log(Funding.wireOf(entry)) // https://example.com/sponsor
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
+	static wireOf(funding: Funding): EntryWire | undefined {
+		return funding.#wire;
+	}
+
+	/**
+	 *  Remember the spelling read by a wire codec.
+	 *
+	 * **Example** (Remember an entry URL spelling)
+	 *
+	 * ```ts
+	 * import { Funding } from "@beep/scratchpad/effected/package-json/Funding";
+	 *
+	 * const entry = Funding.make({ url: "https://example.com/sponsor" });
+	 * Funding.rememberWire(entry, entry.url);
+	 * console.log(Funding.wireOf(entry)) // https://example.com/sponsor
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
+	static rememberWire(funding: Funding, wire: EntryWire): void {
+		funding.#wire = wire;
+	}
+
+	/**
+	 *  Whether this entry was decoded as the entire bare field.
+	 *
+	 * **Example** (Inspect a hand-built entry arity)
+	 *
+	 * ```ts
+	 * import { Funding } from "@beep/scratchpad/effected/package-json/Funding";
+	 *
+	 * const entry = Funding.make({ url: "https://example.com/sponsor" });
+	 * console.log(Funding.isBareField(entry)) // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
+	static isBareField(funding: Funding): boolean {
+		return funding.#bareField;
+	}
+
+	/**
+	 *  Arity belongs to the entry because Schema.Array rebuilds its containing array.
+	 *
+	 * **Example** (Mark an entry as the entire bare field)
+	 *
+	 * ```ts
+	 * import { Funding } from "@beep/scratchpad/effected/package-json/Funding";
+	 *
+	 * const entry = Funding.make({ url: "https://example.com/sponsor" });
+	 * Funding.rememberBareField(entry);
+	 * console.log(Funding.isBareField(entry)) // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
+	static rememberBareField(funding: Funding): void {
+		funding.#bareField = true;
+	}
+
+	/**
+	 * A single `funding` entry: the bare URL string or the object form, always
+	 * decoded to a {@link Funding} and always re-encoded in the form it was read
+	 * from.
+	 *
+	 * **Details**
+	 *
+	 * Provenance belongs to the instance, so an entry that is *rebuilt* rather
+	 * than carried through has none and encodes in the canonical object form.
+	 *
+	 * **Example** (Round-trip a single URL spelling)
+	 *
+	 * ```ts
+	 * import { Funding } from "@beep/scratchpad/effected/package-json/Funding";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const entry = S.decodeUnknownSync(Funding.FromValue)("https://example.com/sponsor");
+	 * console.log(S.encodeSync(Funding.FromValue)(entry)) // https://example.com/sponsor
+	 * ```
+	 *
+	 * @category schemas
+	 * @since 0.0.0
+	 */
+	static readonly FromValue: S.Codec<Funding, string | { readonly [k: string]: unknown }> = EntryValue.pipe(
+		S.decodeTo(
+			S.instanceOf(Funding),
+			// `transformEffect` rather than `transform`: this transform constructs
+			// the instance itself — the only way to associate the raw wire value
+			// with the result — so it must carry the field validation the class
+			// factory would otherwise perform, including the required `url`.
+			SchemaTransformation.transformEffect({
+				decode: (input: string | { readonly [k: string]: unknown }) => decodeEntry(input),
+				encode: (funding: Funding) => Effect.succeed(encodeEntry(funding)),
+			}),
+		),
+	);
+
+	/**
+	 * The `funding` field: a lone entry or an array of them, **always** decoded
+	 * to an array so a consumer never branches on arity.
+	 *
+	 * **Details**
+	 *
+	 * The normalization is one-directional. A field written bare re-encodes
+	 * bare, not as a one-element array — the arity is remembered against the
+	 * single entry that WAS the field, and the replay is guarded on that entry
+	 * still being alone, so pushing a second entry into the decoded array in
+	 * place upgrades the field to the array form instead of silently dropping
+	 * the addition. An entry built by hand has no provenance, so an array of
+	 * such entries encodes as an array.
+	 *
+	 * **Example** (Normalize a bare field and preserve its wire arity)
+	 *
+	 * ```ts
+	 * import { Funding } from "@beep/scratchpad/effected/package-json/Funding";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const entries = S.decodeUnknownSync(Funding.FromField)("https://example.com/sponsor");
+	 * console.log(entries.length) // 1
+	 * console.log(S.encodeSync(Funding.FromField)(entries)) // https://example.com/sponsor
+	 * ```
+	 *
+	 * @category schemas
+	 * @since 0.0.0
+	 */
+	static readonly FromField: S.Codec<
+		ReadonlyArray<Funding>,
+		string | { readonly [k: string]: unknown } | ReadonlyArray<string | { readonly [k: string]: unknown }>
+	> = FieldValue.pipe(
+		S.decodeTo(
+			Funding.pipe(S.instanceOf, S.Array),
+			SchemaTransformation.transformEffect({
+				decode: (
+					input: string | { readonly [k: string]: unknown } | ReadonlyArray<string | { readonly [k: string]: unknown }>,
+				) => {
+					const bare = !A.isArray<typeof input>(input);
+					const values = bare ? [input] : input;
+					return Effect.map(Effect.forEach(values, decodeEntry), (entries) => {
+						const only = entries[0];
+						if (bare && only !== undefined) Funding.rememberBareField(only);
+						return entries;
+					});
+				},
+				encode: (entries: ReadonlyArray<Funding>) => {
+					const only = entries.length === 1 ? entries[0] : undefined;
+					// Guarded on the entry still being alone: pushing a second entry
+					// into the decoded field upgrades it to the array form rather
+					// than silently dropping the addition.
+					if (only !== undefined && Funding.isBareField(only)) return Effect.succeed(encodeEntry(only));
+					return Effect.succeed(A.map(entries, encodeEntry));
+				},
+			}),
+		),
+	);
+}

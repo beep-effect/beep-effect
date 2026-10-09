@@ -1,0 +1,64 @@
+{
+	"name": "@effected/toml",
+	"version": "0.1.0",
+	"private": true,
+	"description": "TOML 1.0.0 parsing, editing and formatting as Effect schemas: typed diagnostics, a lossless CST and first-class date-time values.",
+	"keywords": [
+		"toml",
+		"parser",
+		"config",
+		"cst",
+		"effect",
+		"schema",
+		"effected"
+	],
+	"homepage": "https://github.com/spencerbeggs/effected/tree/main/packages/toml#readme",
+	"bugs": {
+		"url": "https://github.com/spencerbeggs/effected/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/spencerbeggs/effected.git",
+		"directory": "packages/toml"
+	},
+	"license": "MIT",
+	"author": {
+		"name": "C. Spencer Beggs",
+		"email": "spencer@beggs.codes",
+		"url": "https://spencerbeg.gs"
+	},
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./package.json": "./package.json"
+	},
+	"scripts": {
+		"build:dev": "node savvy.build.ts --target dev",
+		"build:prod": "node savvy.build.ts --target prod",
+		"prepare": "turbo run build:dev",
+		"types:check": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@effect/vitest": "catalog:effect",
+		"@savvy-web/bundler": "^2.0.0",
+		"@types/node": "catalog:silk",
+		"effect": "catalog:effect",
+		"smol-toml": "1.7.0",
+		"typescript": "catalog:silk"
+	},
+	"peerDependencies": {
+		"effect": "catalog:effect"
+	},
+	"engines": {
+		"node": ">=24.11.0"
+	},
+	"publishConfig": {
+		"access": "public",
+		"directory": "dist/dev/pkg",
+		"linkDirectory": true,
+		"targets": {
+			"npm": true
+		}
+	}
+}

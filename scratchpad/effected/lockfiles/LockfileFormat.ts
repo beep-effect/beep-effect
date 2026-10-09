@@ -1,0 +1,141 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as O from "effect/Option";
+
+const $I = $ScratchpadId.create("effected/lockfiles/LockfileFormat");
+
+/**
+ * The lockfile formats this package parses: bun's `bun.lock` (JSONC), npm's
+ * `package-lock.json` (JSON), pnpm's `pnpm-lock.yaml` and yarn Berry's
+ * `yarn.lock` (both YAML).
+ *
+ * **Details**
+ *
+ * The literal names the *lockfile format*, not the package manager that
+ * happens to write it — this package models lockfiles. Yarn support is
+ * Berry only; classic (v1) `yarn.lock` is not YAML and fails
+ * `Lockfile.parse` with a typed `LockfileParseError`.
+ *
+ * The format literal says nothing about which *versions* of that format are
+ * supported: pnpm `lockfileVersion` 9+ and npm `lockfileVersion` 3+ parse,
+ * and older ones fail typed. See `Lockfile.parse`.
+ *
+ * **Example** (Validate a format name)
+ *
+ * ```ts
+ * import { LockfileFormat } from "@beep/scratchpad/effected/lockfiles/LockfileFormat";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(LockfileFormat)("pnpm")); // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const LockfileFormat = LiteralKit(["bun", "npm", "pnpm", "yarn"]).pipe($I.annoteSchema("LockfileFormat", { description: "The lockfile formats this package parses: bun's `bun.lock` (JSONC), npm's `package-lock.json` (JSON), pnpm's `pnpm-lock.yaml` and yarn Berry's `yarn.lock` (both YAML)." }));
+
+/**
+ * The union of supported lockfile format names.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type LockfileFormat = typeof LockfileFormat.Type;
+
+// Primary first — filenameFor and fromFilename both read element zero, so the
+// primary spelling has exactly one home.
+const FILENAMES: Readonly<Record<LockfileFormat, readonly [string, ...ReadonlyArray<string>]>> = {
+	bun: ["bun.lock", "bun.lockb"],
+	npm: ["package-lock.json", "npm-shrinkwrap.json"],
+	pnpm: ["pnpm-lock.yaml"],
+	yarn: ["yarn.lock"],
+};
+
+/**
+ * The conventional lockfile filename for a format: `"bun.lock"`,
+ * `"package-lock.json"`, `"pnpm-lock.yaml"` or `"yarn.lock"`.
+ *
+ * **Details**
+ *
+ * The primary name only — the first element of {@link filenamesFor}, which is
+ * what detection that must also see the genuine alternates should use.
+ *
+ * **Example** (Find the conventional npm filename)
+ *
+ * ```ts
+ * import { filenameFor } from "@beep/scratchpad/effected/lockfiles/LockfileFormat";
+ *
+ * console.log(filenameFor("npm")); // package-lock.json
+ * ```
+ *
+ * @public
+ * @category getters
+ * @since 0.0.0
+ */
+export const filenameFor = (format: LockfileFormat): string => FILENAMES[format][0];
+
+/**
+ * Every filename a format is genuinely written under, primary first.
+ *
+ * **Details**
+ *
+ * Real detection needs more than the conventional name: npm honours
+ * `npm-shrinkwrap.json` (and prefers it over `package-lock.json` when both
+ * exist — the ordering here is conventional-name-first, not npm's own
+ * precedence), and bun has shipped two formats, the current text `bun.lock`
+ * and the older **binary** `bun.lockb`. pnpm and yarn each have exactly one.
+ *
+ * Only genuine *lockfile* spellings appear here. Files that merely influence
+ * what an install resolves to — `pnpm-workspace.yaml`, `.pnpmfile.cjs`, yarn's
+ * PnP artifacts — are a consumer's cache policy, not alternates of the
+ * lockfile.
+ *
+ * Two deliberate asymmetries with the rest of this module: `bun.lockb` is a
+ * detection alternate but not a parse target (`Lockfile.parse` takes text; the
+ * binary format fails typed), and {@link fromFilename} keeps answering for the
+ * primary names only.
+ *
+ * **Example** (Include binary bun detection)
+ *
+ * ```ts
+ * import { filenamesFor } from "@beep/scratchpad/effected/lockfiles/LockfileFormat";
+ *
+ * console.log(filenamesFor("bun").join(", ")); // bun.lock, bun.lockb
+ * ```
+ *
+ * @public
+ * @category getters
+ * @since 0.0.0
+ */
+export const filenamesFor = (format: LockfileFormat): readonly [string, ...ReadonlyArray<string>] => FILENAMES[format];
+
+/**
+ * The format a lockfile filename identifies, if any.
+ *
+ * **Details**
+ *
+ * Matches exact conventional filenames only (`"bun.lock"`,
+ * `"package-lock.json"`, `"pnpm-lock.yaml"`, `"yarn.lock"`) — paths, other
+ * spellings and the {@link filenamesFor} alternates return `Option.none()`.
+ *
+ * **Example** (Reject alternate filenames)
+ *
+ * ```ts
+ * import { fromFilename } from "@beep/scratchpad/effected/lockfiles/LockfileFormat";
+ * import * as O from "effect/Option";
+ *
+ * console.log(O.isNone(fromFilename("npm-shrinkwrap.json"))); // true
+ * ```
+ *
+ * @public
+ * @category parsing
+ * @since 0.0.0
+ */
+export const fromFilename = (name: string): O.Option<LockfileFormat> => {
+	for (const format of LockfileFormat.literals) {
+		if (FILENAMES[format][0] === name) return O.some(format);
+	}
+	return O.none();
+};

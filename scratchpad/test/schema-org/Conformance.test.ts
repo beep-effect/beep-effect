@@ -1,0 +1,366 @@
+import { assert, describe, it } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import { APIReference } from "../../effected/schema-org/APIReference.ts";
+import {
+	Conformance,
+	ConformanceOptions,
+	DanglingReference,
+	DeprecatedProperty,
+	NonConformantGraphError,
+	PropertyNotOnType,
+	UnknownTerm,
+} from "../../effected/schema-org/Conformance.ts";
+import { CreativeWork } from "../../effected/schema-org/CreativeWork.ts";
+import type { JsonLdNode } from "../../effected/schema-org/JsonLdDocument.ts";
+import { JsonLdDocument } from "../../effected/schema-org/JsonLdDocument.ts";
+import { NodeRef } from "../../effected/schema-org/NodeRef.ts";
+import { Organization } from "../../effected/schema-org/Organization.ts";
+import { Person } from "../../effected/schema-org/Person.ts";
+import { SoftwareSourceCode } from "../../effected/schema-org/SoftwareSourceCode.ts";
+import { TechArticle } from "../../effected/schema-org/TechArticle.ts";
+import { Vocabulary } from "../../effected/schema-org/Vocabulary.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
+
+/** Assemble a graph without going through the identity checks, which are not what this suite is about. */
+const graphOf = (...nodes: ReadonlyArray<JsonLdNode>): JsonLdDocument => JsonLdDocument.make({ "@graph": nodes });
+
+const PKG = "https://example.com/pkg#package";
+
+describe("Conformance.check", () => {
+	it("passes an inherited property, which is the consumer's first graph", () => {
+		// `license` names exactly one domain, CreativeWork. A direct-membership
+		// check rejects this graph, and rejecting it is how the gate gets
+		// switched off.
+		const graph = graphOf(
+			SoftwareSourceCode.make({
+				"@id": PKG,
+				name: "example",
+				license: ["https://spdx.org/licenses/MIT"],
+				codeRepository: "https://github.com/example/example",
+			}),
+		);
+		assert.deepStrictEqual(Conformance.check(graph), []);
+	});
+
+	it("passes a property inherited through a NON-FIRST parent of a multi-parent type", () => {
+		// HowToStep is a ListItem AND a CreativeWork AND an ItemList. `license`
+		// arrives through the second parent, `itemListElement` through the third,
+		// so a single-parent walk reports both as misplaced.
+		assert.isTrue(Vocabulary.isPropertyOn("license", "HowToStep"));
+		assert.isTrue(Vocabulary.isPropertyOn("itemListElement", "HowToStep"));
+		const graph = graphOf(
+			CreativeWork.make({
+				"@id": `${PKG}-step`,
+				additional: { license: "https://spdx.org/licenses/MIT" },
+			}),
+		);
+		assert.deepStrictEqual(Conformance.check(graph), []);
+	});
+
+	it("passes a many-domain property matching a non-first domain entry", () => {
+		// `sponsor` names MedicalStudy, Event, Organization, Person, CreativeWork
+		// and Grant — CreativeWork is the fifth. Equality against the first entry
+		// reports this; membership does not.
+		const graph = graphOf(
+			CreativeWork.make({ "@id": PKG, additional: { sponsor: { "@id": "https://example.com/#acme" } } }),
+			Organization.make({ "@id": `${PKG}-org`, additional: { sponsor: { "@id": "https://example.com/#acme" } } }),
+			Organization.make({ "@id": "https://example.com/#acme" }),
+		);
+		assert.deepStrictEqual(Conformance.check(graph), []);
+	});
+
+	it("skips a foreign-namespace term with no issue at all", () => {
+		// A consumer writing gs1:telephone opted into a vocabulary this package
+		// does not claim to police. Reporting it would be a false rejection;
+		// passing it clean is not an accident but the documented rule.
+		const graph = graphOf(Organization.make({ "@id": PKG, additional: { "gs1:telephone": "+1 555 0100" } }));
+		assert.deepStrictEqual(Conformance.check(graph), []);
+		assert.isFalse(Vocabulary.hasProperty("gs1:telephone"));
+	});
+
+	it("treats a schema:-prefixed term exactly like its bare spelling", () => {
+		// The hole a naive "has a colon, skip it" rule leaves: the prefixed form
+		// is legal JSON-LD, so skipping it would silently stop validating
+		// anything a consumer writes that way.
+		const legal = graphOf(CreativeWork.make({ "@id": PKG, additional: { "schema:license": "https://x" } }));
+		assert.deepStrictEqual(Conformance.check(legal), []);
+
+		const misplaced = graphOf(
+			SoftwareSourceCode.make({ "@id": PKG, additional: { "schema:softwareVersion": "1.2.3" } }),
+		);
+		const issues = Conformance.check(misplaced);
+		assert.strictEqual(issues.length, 1);
+		const [issue] = issues;
+		assert.instanceOf(issue, PropertyNotOnType);
+		// The issue quotes the term as the author wrote it.
+		if (S.is(PropertyNotOnType)(issue)) assert.strictEqual(issue.property, "schema:softwareVersion");
+
+		const invented = graphOf(CreativeWork.make({ "@id": PKG, additional: { "schema:notATerm": "x" } }));
+		assert.strictEqual(Conformance.check(invented).length, 1);
+		assert.instanceOf(Conformance.check(invented)[0], UnknownTerm);
+	});
+
+	it("reports a term whose prefix the vocabulary document never declares", () => {
+		// `gs1:` is declared in schema.org's own @context, so it is a vocabulary
+		// the consumer plausibly opted into. `bogus:` is not declared by anyone,
+		// which is no evidence of a real namespace and at least as likely to be
+		// a typo — silence is the expensive direction, so it is reported.
+		const graph = graphOf(Organization.make({ "@id": PKG, additional: { "bogus:telephone": "+1 555 0100" } }));
+		const issues = Conformance.check(graph);
+		assert.strictEqual(issues.length, 1);
+		const [issue] = issues;
+		assert.instanceOf(issue, UnknownTerm);
+		if (S.is(UnknownTerm)(issue)) assert.strictEqual(issue.term, "bogus:telephone");
+	});
+
+	it("skips every prefix the document declares, not just the one in the fixture", () => {
+		// The recognized set is derived from the document's @context, so a
+		// hand-kept list cannot drift out of date behind it.
+		const graph = graphOf(
+			Organization.make({
+				"@id": PKG,
+				additional: {
+					"gs1:telephone": "+1 555 0100",
+					"unece:Country": "US",
+					"foaf:homepage": "https://example.com",
+					"fibo-fnd-org-org:Organization": "acme",
+				},
+			}),
+		);
+		assert.deepStrictEqual(Conformance.check(graph), []);
+	});
+
+	it("passes a pending term, which is what shipping the full table buys", () => {
+		// `creditText` is a pending term on CreativeWork. The cut this design
+		// started with would have made it a documented false positive.
+		const graph = graphOf(CreativeWork.make({ "@id": PKG, additional: { creditText: "Photo: Alice" } }));
+		assert.deepStrictEqual(Conformance.check(graph), []);
+	});
+
+	it("reports a real property used on a type it is not legal on", () => {
+		// The authentic case: softwareVersion is SoftwareApplication's;
+		// SoftwareSourceCode spells it `version`. It reads correct and is
+		// silently ignored downstream.
+		const graph = graphOf(SoftwareSourceCode.make({ "@id": PKG, additional: { softwareVersion: "1.2.3" } }));
+		const issues = Conformance.check(graph);
+		assert.strictEqual(issues.length, 1);
+		const [issue] = issues;
+		assert.instanceOf(issue, PropertyNotOnType);
+		assert.strictEqual(issue?._tag, "PropertyNotOnType");
+		assert.deepStrictEqual(S.is(PropertyNotOnType)(issue) ? [issue.nodeId, issue.nodeType, issue.property] : [], [
+			PKG,
+			"SoftwareSourceCode",
+			"softwareVersion",
+		]);
+	});
+
+	it("reports an invented property as UnknownTerm, never as a domain violation", () => {
+		const graph = graphOf(SoftwareSourceCode.make({ "@id": PKG, additional: { codeRepositoryUrl: "https://x" } }));
+		const issues = Conformance.check(graph);
+		assert.strictEqual(issues.length, 1);
+		const [issue] = issues;
+		assert.instanceOf(issue, UnknownTerm);
+		if (S.is(UnknownTerm)(issue)) {
+			assert.strictEqual(issue.kind, "property");
+			assert.strictEqual(issue.term, "codeRepositoryUrl");
+		}
+	});
+
+	it("reports an invented @type as UnknownTerm and does not bury it in property noise", () => {
+		// v4 constructors validate, so an invented `@type` cannot be built — it
+		// arrives by mutation after construction, or from a graph decoded out of
+		// foreign JSON. `check` is total and must survive either.
+		const node = SoftwareSourceCode.make({ "@id": PKG, name: "x", codeRepository: "https://example.com" });
+		const graph = graphOf(node);
+		(deliberatelyInvalid<{ "@type": string }>(node))["@type"] = "SoftwareSourceCodeRepository";
+		const issues = Conformance.check(graph);
+		assert.strictEqual(issues.length, 1);
+		const [issue] = issues;
+		assert.instanceOf(issue, UnknownTerm);
+		if (S.is(UnknownTerm)(issue)) assert.strictEqual(issue.kind, "type");
+	});
+
+	it("flags a deprecated property with its successor rather than rejecting it", () => {
+		// `runtime` is legal on SoftwareSourceCode and superseded by
+		// `runtimePlatform`: valid but flagged, exactly as spdx treats a
+		// deprecated license id.
+		const graph = graphOf(SoftwareSourceCode.make({ "@id": PKG, additional: { runtime: "node" } }));
+		const issues = Conformance.check(graph);
+		assert.strictEqual(issues.length, 1);
+		const [issue] = issues;
+		assert.instanceOf(issue, DeprecatedProperty);
+		if (S.is(DeprecatedProperty)(issue)) {
+			assert.strictEqual(issue.property, "runtime");
+			assert.strictEqual(issue.supersededBy, "runtimePlatform");
+		}
+		// Reported, but the default gate does not fail on it.
+		assertSuccess(Result.map(Conformance.validateResult(graph), () => undefined), undefined);
+		assertFailure(Result.mapError(Conformance.validateResult(graph, { deprecations: "report" }), () => undefined), undefined);
+	});
+
+	it("reports a dangling reference with the property it sits in", () => {
+		const graph = graphOf(SoftwareSourceCode.make({ "@id": PKG, author: [NodeRef.to("https://example.com/#alice")] }));
+		const issues = Conformance.check(graph);
+		assert.strictEqual(issues.length, 1);
+		const [issue] = issues;
+		assert.instanceOf(issue, DanglingReference);
+		if (S.is(DanglingReference)(issue)) {
+			assert.strictEqual(issue.property, "author");
+			assert.strictEqual(issue.reference, "https://example.com/#alice");
+		}
+	});
+
+	it("does not report a reference the graph defines", () => {
+		const alice = "https://example.com/#alice";
+		const graph = graphOf(
+			SoftwareSourceCode.make({ "@id": PKG, author: [NodeRef.to(alice)] }),
+			Person.make({ "@id": alice, name: "Alice" }),
+		);
+		assert.deepStrictEqual(Conformance.check(graph), []);
+	});
+});
+
+describe("Conformance.validateResult", () => {
+	const misplaced = graphOf(SoftwareSourceCode.make({ "@id": PKG, additional: { softwareVersion: "1.2.3" } }));
+	const invented = graphOf(SoftwareSourceCode.make({ "@id": PKG, additional: { notATerm: "x" } }));
+	const dangling = graphOf(SoftwareSourceCode.make({ "@id": PKG, author: [NodeRef.to("https://example.com/#alice")] }));
+
+	it("fails on a domain violation by default", () => {
+		const result = Conformance.validateResult(misplaced);
+		assertFailure(Result.mapError(result, () => undefined), undefined);
+		const error = Result.isFailure(result) ? result.failure : undefined;
+		assert.instanceOf(error, NonConformantGraphError);
+		assert.strictEqual(error?.issues.length, 1);
+	});
+
+	it("reports an unknown term without failing, and fails it under strict mode", () => {
+		assertSuccess(Result.map(Conformance.validateResult(invented), () => undefined), undefined);
+		assert.strictEqual(Conformance.check(invented).length, 1, "still reported, never silently passed");
+		assertFailure(Result.mapError(Conformance.validateResult(invented, { unknownTerms: "fail" }), () => undefined), undefined);
+	});
+
+	it("leaves a dangling reference out of the gate until asked", () => {
+		assertSuccess(Result.map(Conformance.validateResult(dangling), () => undefined), undefined);
+		assertFailure(Result.mapError(Conformance.validateResult(dangling, { danglingReferences: "report" }), () => undefined), undefined);
+	});
+
+	it("returns the graph itself on success", () => {
+		const clean = graphOf(SoftwareSourceCode.make({ "@id": PKG, name: "example" }));
+		const result = Conformance.validateResult(clean);
+		assertSuccess(Result.map(result, () => undefined), undefined);
+		if (Result.isSuccess(result)) assert.strictEqual(result.success, clean);
+	});
+
+	it("carries every issue on the error, not only the failing ones", () => {
+		const both = graphOf(
+			SoftwareSourceCode.make({
+				"@id": PKG,
+				author: [NodeRef.to("https://example.com/#alice")],
+				additional: { softwareVersion: "1.2.3" },
+			}),
+		);
+		const result = Conformance.validateResult(both);
+		assertFailure(Result.mapError(result, () => undefined), undefined);
+		const error = Result.isFailure(result) ? result.failure : undefined;
+		assert.strictEqual(error?.issues.length, 2);
+		assert.isTrue(error?.message.includes("schema.org 30.0"));
+	});
+
+	it.effect("has an Effect twin defined in terms of the Result form", () =>
+		Effect.gen(function* () {
+			const error = yield* Effect.flip(Conformance.validate(misplaced));
+			assert.instanceOf(error, NonConformantGraphError);
+			const ok = yield* Conformance.validate(graphOf(Person.make({ "@id": PKG, name: "Alice" })));
+			assert.instanceOf(ok, JsonLdDocument);
+		}),
+	);
+});
+
+describe("self-conformance", () => {
+	// The test that keeps the hand-written node classes honest: every field of
+	// every shipped class must be domainIncludes-legal on that class's @type,
+	// against the vendored table. It fails the day someone adds a
+	// plausible-sounding field, and again the day schema.org moves one.
+	const CLASSES = [
+		["SoftwareSourceCode", SoftwareSourceCode],
+		["TechArticle", TechArticle],
+		["APIReference", APIReference],
+		["Person", Person],
+		["Organization", Organization],
+		["CreativeWork", CreativeWork],
+	] as const;
+
+	for (const [name, schema] of CLASSES) {
+		it(`declares only properties schema.org defines on ${name}`, () => {
+			const fields = Object.keys(schema.fields).filter(
+				(field) => field !== "@id" && field !== "@type" && field !== "additional",
+			);
+			assert.isAbove(fields.length, 0, "positive control: the class must actually have fields to check");
+			assert.isTrue(Vocabulary.hasType(name));
+			const illegal = fields.filter((field) => !Vocabulary.isPropertyOn(field, name));
+			assert.deepStrictEqual(illegal, []);
+		});
+	}
+});
+
+
+describe("Conformance catch-all references", () => {
+	it("reports scalar, array and repeated references with their originating properties in node order", () => {
+		const graph = graphOf(CreativeWork.make({ "@id": PKG, additional: {
+			sponsor: { "@id": "#first" },
+			citation: [{ "@id": "#second" }, { "@id": "#first" }, { "@id": "#present" }],
+		} }), Person.make({ "@id": "#present" }));
+		assert.deepStrictEqual(Conformance.check(graph), [
+			DanglingReference.make({ nodeId: PKG, nodeType: "CreativeWork", property: "sponsor", reference: "#first" }),
+			DanglingReference.make({ nodeId: PKG, nodeType: "CreativeWork", property: "citation", reference: "#second" }),
+			DanglingReference.make({ nodeId: PKG, nodeType: "CreativeWork", property: "citation", reference: "#first" }),
+		]);
+		assertSuccess(Result.map(Conformance.validateResult(graph), () => undefined), undefined);
+		assertFailure(Result.mapError(Conformance.validateResult(graph, { danglingReferences: "report" }), () => undefined), undefined);
+	});
+
+	it("ignores non-reference shapes and still reports malformed string ids on unchecked graphs", () => {
+		const graph = graphOf(CreativeWork.make({ "@id": PKG, additional: { citation: [
+			{ "@id": 42 }, { "@id": null }, {},
+			{ "@id": "#embedded", name: "node" },
+			{ "@value": "value", "@id": "#value" },
+			{ "@id": "bad id" },
+		] } }));
+		assert.deepStrictEqual(Conformance.check(graph), [
+			DanglingReference.make({ nodeId: PKG, nodeType: "CreativeWork", property: "citation", reference: "bad id" }),
+		]);
+	});
+
+	it("checks references on foreign nodes and preserves written property names", () => {
+		const node = CreativeWork.make({ "@id": PKG, additional: { "gs1:sponsor": { "@id": "#missing" } } });
+		const graph = graphOf(node);
+		deliberatelyInvalid<{ "@type": string }>(node)["@type"] = "gs1:Product";
+		assert.deepStrictEqual(Conformance.check(graph), [
+			DanglingReference.make({ nodeId: PKG, nodeType: "gs1:Product", property: "gs1:sponsor", reference: "#missing" }),
+		]);
+	});
+});
+
+describe("ConformanceOptions schema and compatible runtime input", () => {
+	it("decodes omitted and explicitly undefined policies to safe defaults", () => {
+		for (const input of [{}, { unknownTerms: undefined, deprecations: undefined, danglingReferences: undefined }]) {
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(ConformanceOptions)(input)), {
+				unknownTerms: "report", deprecations: "ignore", danglingReferences: "ignore",
+			});
+		}
+	});
+
+	it("preserves plain callers and non-failing out-of-union runtime policies", () => {
+		const graph = graphOf(SoftwareSourceCode.make({ "@id": PKG, author: [NodeRef.to("#missing")], additional: { notATerm: "x", runtime: "node" } }));
+		assertSuccess(Result.map(Conformance.validateResult(graph, { unknownTerms: undefined, deprecations: undefined, danglingReferences: undefined }), () => undefined), undefined);
+		assertSuccess(Result.map(Conformance.validateResult(graph, deliberatelyInvalid<ConformanceOptions>({
+			unknownTerms: "other", deprecations: "other", danglingReferences: "other",
+		})), () => undefined), undefined);
+		assertFailure(Result.mapError(Conformance.validateResult(graph, deliberatelyInvalid<ConformanceOptions>({
+			unknownTerms: "fail", deprecations: "other", danglingReferences: "other",
+		})), () => undefined), undefined);
+	});
+});

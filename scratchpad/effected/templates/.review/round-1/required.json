@@ -1,0 +1,142 @@
+{
+  "module": "templates",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/templates/SectionDialect.ts",
+        "scratchpad/effected/templates/SectionDocument.ts",
+        "scratchpad/effected/templates/SectionOutcome.ts",
+        "scratchpad/effected/templates/internal/scan.ts",
+        "scratchpad/effected/templates/internal/reconcile.ts",
+        "scratchpad/effected/templates/internal/attributes.ts"
+      ],
+      "tests": [
+        "scratchpad/test/templates/SectionDialect.test.ts",
+        "scratchpad/test/templates/SectionDocument.test.ts",
+        "scratchpad/test/templates/SectionDocument.reconcile.test.ts",
+        "scratchpad/test/templates/SectionAttributes.test.ts"
+      ],
+      "findings": [
+        "sol-1-1",
+        "sol-1-2",
+        "sol-1-3",
+        "sol-1-4",
+        "sol-1-5",
+        "fable-1-5",
+        "fable-1-6",
+        "fable-1-9",
+        "fable-1-1",
+        "allow-1"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/templates/Section.ts",
+        "scratchpad/effected/templates/CommentStyle.ts"
+      ],
+      "tests": [
+        "scratchpad/test/templates/Section.test.ts",
+        "scratchpad/test/templates/CommentStyle.test.ts"
+      ],
+      "findings": [
+        "fable-1-7",
+        "fable-1-8"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/templates/ManagedSection.ts"
+      ],
+      "tests": [
+        "scratchpad/test/templates/ManagedSection.test.ts"
+      ],
+      "findings": [
+        "sol-1-9"
+      ]
+    }
+  ],
+  "findings": {
+    "sol-1-1": {
+      "file": "scratchpad/effected/templates/SectionDialect.ts",
+      "class": "bug",
+      "summary": "A leading BOM hides the first BEGIN marker and produces orphanedEnd.",
+      "fix": "Recognize the first-line opening marker after the leading BOM; report its start after the BOM so reconciliation preserves that byte. Add parse/read and preservation regressions in SectionDocument.test.ts, retaining the original upstream cases. Record the demonstrated upstream-bug deviation under section 14."
+    },
+    "sol-1-2": {
+      "file": "scratchpad/effected/templates/SectionDialect.ts",
+      "class": "bug",
+      "summary": "Rendering CRLF content with CRLF output doubles carriage returns and causes immediate drift.",
+      "fix": "Normalize existing CRLF to LF before converting LF to the requested EOL; retain marker-injection refusal and all upstream assertions. Add render/parse/check regressions to SectionDialect.test.ts and SectionDocument.test.ts, and record the verified upstream-bug deviation."
+    },
+    "sol-1-3": {
+      "file": "scratchpad/effected/templates/internal/reconcile.ts",
+      "class": "perf",
+      "summary": "Missing-section anchor searches perform n(n-1) lookups instead of linear anchor preprocessing.",
+      "fix": "Precompute nearest existing successor and predecessor anchors, then place missing sections in one pass. Preserve successor preference, declaration order, foreign spans and all existing output bytes. Extend SectionDocument.reconcile.test.ts with mixed-anchor and no-anchor regressions and retain its upstream cases; do not claim the whole algorithm is linear merely from fixing these searches."
+    },
+    "sol-1-4": {
+      "file": "scratchpad/effected/templates/SectionOutcome.ts",
+      "class": "schema",
+      "summary": "SyncOutcome and CheckOutcome lack schema authority for their public tagged data models.",
+      "fix": "Define annotated schema authority for both tagged families and derive their public types. Preserve existing variant constructor names, $is/$match APIs, payloads and Data equality/prototype behavior through explicit compatibility constructors/statics; do not infer API freedom from the current tests. If schema values need statics, use an S.Opaque class with static members per the ruling. Add focused compatibility checks to SectionDocument.test.ts and retain all upstream tests."
+    },
+    "sol-1-5": {
+      "file": "scratchpad/effected/templates/SectionDocument.ts",
+      "class": "schema",
+      "summary": "Scan/reconciliation data records lack schemas and duplicate the public reconciliation output.",
+      "fix": "Define annotated structural schemas and schema-derived types for ReconcileInput, the shared reconciliation output, ScanFailure and ScanResult. Reuse one output schema for SectionReconciliation and ReconcileOutput. Preserve plain-object return representations, the ok discriminant and existing required-versus-optional fields (including ScanFailure.key explicitly allowing undefined). Use lazy references where necessary to avoid new initialization cycles. Retain upstream tests and verify the contracts in SectionDocument.test.ts and SectionDocument.reconcile.test.ts."
+    },
+    "fable-1-5": {
+      "file": "scratchpad/effected/templates/SectionDialect.ts",
+      "class": "schema",
+      "summary": "The named Eol domain has separate type-only and runtime literal definitions.",
+      "fix": "Define an annotated Eol LiteralKit and derive its same-name type; reuse it in SectionDocument.eol while preserving the existing type export, both literal values and defaults. Keep the existing barrel type surface; any added value export is recorded centrally. Retain EOL tests and verify schema acceptance in SectionDialect.test.ts and SectionDocument.test.ts."
+    },
+    "fable-1-6": {
+      "file": "scratchpad/effected/templates/internal/scan.ts",
+      "class": "schema",
+      "summary": "The named ScanFailureReason domain lacks an annotated LiteralKit authority.",
+      "fix": "Define an annotated ScanFailureReason LiteralKit, derive its type, retain SCAN_FAILURE_REASONS as the kit's literals for existing callers, and reuse the kit in SectionParseError and the scan-result schemas. Type REASON_PROSE exhaustively by ScanFailureReason, preserving messages and failure order; a $match rewrite is optional. Retain the malformed-document tests in SectionDocument.test.ts."
+    },
+    "fable-1-7": {
+      "file": "scratchpad/effected/templates/Section.ts",
+      "class": "schema",
+      "summary": "SectionKey lacks identity, reusable-check metadata and its schema-derived type.",
+      "fix": "Annotate SectionKey with its file-local $I composer, annotate its reusable check with identifier/title/description and a user-facing message, and add export type SectionKey = typeof SectionKey.Type. Preserve the exact pattern and unbranded strings. Update only JSON Schema paths that identity forces in Section.test.ts; keep every upstream assertion's meaning. Recording identity-key and added-export changes belongs to the central codemod."
+    },
+    "fable-1-8": {
+      "file": "scratchpad/effected/templates/CommentStyle.ts",
+      "class": "schema",
+      "summary": "The reused Delimiter schema/check lacks composer identity and check metadata.",
+      "fix": "Annotate Delimiter using the existing file-local $I composer and add identifier/title/description plus a user-facing message to its pattern check. Preserve the nonempty, control-character-free grammar and optional suffix behavior; retain CommentStyle.test.ts's invalid-input assertions and adjust metadata expectations only if needed."
+    },
+    "fable-1-9": {
+      "file": "scratchpad/effected/templates/internal/attributes.ts",
+      "class": "schema",
+      "summary": "Named attribute constraints and renderer guards are not schema-derived.",
+      "fix": "Define annotated AttributeName and AttributeValue schemas with built-in checks, derive guards through S.is, and use them in render. Retain ATTRIBUTE_NAME_PATTERN if its existing export must remain and retain the single-pass parser, invalidAttribute refusal and error order. Preserve the old regex's exact accepted-input semantics, including JavaScript $ behavior, rather than silently tightening trailing-newline handling. Keep and extend SectionAttributes.test.ts and SectionDialect.test.ts to prove equivalence."
+    },
+    "sol-1-9": {
+      "file": "scratchpad/effected/templates/ManagedSection.ts",
+      "class": "schema",
+      "summary": "SectionFileError encoding drops cause stacks because S.Defect lacks includeStack.",
+      "fix": "Use S.Defect({ includeStack: true }) while retaining field annotations. Add a focused encode/decode stack-preservation regression in ManagedSection.test.ts, retaining existing error-channel cases. Record the resulting law-forced encoding change with the central per-module deviation pass."
+    },
+    "fable-1-1": {
+      "file": "scratchpad/effected/templates/internal/scan.ts",
+      "class": "law",
+      "summary": "Native hits.sort violates law 10 outside the green checker's hotspot scope.",
+      "fix": "Replace the native sort with A.sort(hits, Order.mapInput(Order.number, (hit: MarkerHit) => hit.start)), using dedicated Effect imports. Preserve stable ascending hit order. Retain the multi-style and malformed-structure cases in SectionDocument.test.ts."
+    },
+    "allow-1": {
+      "file": "scratchpad/effected/templates/SectionDialect.ts",
+      "class": "law",
+      "summary": "Removed allowlist entry kind new-map-set: owner-external WeakMap caches SectionDialect matchers.",
+      "fix": "Remove the external WeakMap and keep compiled matchers in a field owned by each SectionDialect instance, computing them with their owner. Preserve per-instance reuse, isolation between equal-but-distinct dialects, pure schema fields/wire form and repeated scans without lastIndex contamination. Do not use structural global maps or Equal.byReferenceUnsafe. Add ownership/reuse/isolation checks to SectionDialect.test.ts and retain scan regressions. Allowlist deletion and the native-runtime class's ledger/README record belong to the central wave, outside this inventory's write scope."
+    }
+  }
+}
+

@@ -1,0 +1,1 @@
+I'll review the jsonc port at that commit against the upstream oracle and the binding decisions, and report findings only. First I'm loading the decision record, port notes, and both trees.The trees are in place. Next I’ll read the binding decisions, recorded deviations, and a structural diff against the upstream oracle.

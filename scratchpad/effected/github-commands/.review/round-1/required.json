@@ -1,0 +1,44 @@
+{
+  "module": "github-commands",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/github-commands/WorkflowCommand.ts",
+        "scratchpad/effected/github-commands/CommandNeutralizer.ts",
+        "scratchpad/effected/github-commands/index.ts",
+        "scratchpad/effected/github-commands/README.md",
+        "scratchpad/effected/PORT_LEDGER.json"
+      ],
+      "tests": [
+        "scratchpad/test/github-commands/WorkflowCommand.test.ts",
+        "scratchpad/test/github-commands/CommandNeutralizer.test.ts"
+      ],
+      "findings": [
+        "sol-1-2",
+        "sol-1-3",
+        "sol-1-4"
+      ]
+    }
+  ],
+  "findings": {
+    "sol-1-2": {
+      "file": "scratchpad/effected/github-commands/CommandNeutralizer.ts",
+      "class": "bug",
+      "summary": "V2 treats U+FEFF as .NET whitespace and modifies a quiet line.",
+      "fix": "Before changing behavior, record the verified upstream-bug in PORT_LEDGER.json and README Port notes -> Deviations, citing the counterexample and adjusted test. Replace V2 with /^[\\t-\\r \\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]*::/ and correct its whitespace comment. In CommandNeutralizer.test.ts add the unchanged-output regression for \"\\uFEFF::error::x\" and a focused table proving every oracle whitespace code point still receives the U+200B prefix and becomes non-command. Retain the existing exhaustive suite and oracle helper."
+    },
+    "sol-1-3": {
+      "file": "scratchpad/effected/github-commands/WorkflowCommand.ts",
+      "class": "schema",
+      "summary": "AnnotationProperties is pure wire data defined only by an interface.",
+      "fix": "Replace the interface with an IdentityComposer-annotated S.Struct named AnnotationProperties, with optional title/file string fields and optional startLine/endLine/startColumn/endColumn number fields, and derive the same-name type from typeof AnnotationProperties.Type. Use S.optionalKey and the numeric base required by schema laws (S.Finite where required); add no extra integer/range constraints, coercion or automatic decoding in command helpers. Export the schema value through index.ts while preserving the existing type export and structural call signatures. Add focused runtime-contract checks in WorkflowCommand.test.ts without rewriting upstream assertions. Added-export and any law-forced finite/identity bookkeeping belong to the central per-class deviation codemod."
+    },
+    "sol-1-4": {
+      "file": "scratchpad/effected/github-commands/WorkflowCommand.ts",
+      "class": "effect-idiom",
+      "summary": "Both command implementations retain native string/array helpers and an ad-hoc undefined guard.",
+      "fix": "Import String, Array and Predicate from their effect/<Module> paths, and flow/pipe from effect/Function. Express escapeMessage as flow(Str.replaceAll(\"%\", \"%25\"), Str.replaceAll(\"\\r\", \"%0D\"), Str.replaceAll(\"\\n\", \"%0A\")); express escapeProperty as flow(escapeMessage, Str.replaceAll(\":\", \"%3A\"), Str.replaceAll(\",\", \"%2C\")). Keep render's R.toEntries snapshot, then use Effect array filtering with a sound tuple refinement checking P.isNotUndefined, mapping and A.join(\",\"); preserve property ordering and getter-read behavior. Use Str.replace with the existing global LEGACY regex, Str.split with the existing LINE_BREAK expression, A.map and A.join(\"\\n\") in CommandNeutralizer. Preserve percent-first escaping, global replacement and line splitting; retain upstream assertions in both test files."
+    }
+  }
+}

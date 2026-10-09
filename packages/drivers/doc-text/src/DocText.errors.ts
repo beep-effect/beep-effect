@@ -6,8 +6,9 @@
  */
 
 import { $I as $RootId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { O } from "@beep/utils";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";

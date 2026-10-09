@@ -1,0 +1,568 @@
+{
+  "module": "workspaces",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/workspaces/LockfileReader.ts",
+        "scratchpad/effected/workspaces/ChangeDetector.ts",
+        "scratchpad/effected/workspaces/LayerPolicy.ts",
+        "scratchpad/effected/workspaces/PackageManagerName.ts",
+        "scratchpad/effected/workspaces/ConfigDependencySpec.ts",
+        "scratchpad/effected/workspaces/ConfigDependencyHooks.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/ChangeDetector.test.ts",
+        "scratchpad/test/workspaces/ConfigDependencyHooksSubprocess.test.ts",
+        "scratchpad/test/workspaces/ConfigDependencySpec.test.ts",
+        "scratchpad/test/workspaces/LayerPolicy.test.ts",
+        "scratchpad/test/workspaces/LockfileReader.test.ts",
+        "scratchpad/test/workspaces/PackageManagerDetector.test.ts"
+      ],
+      "findings": [
+        "r01",
+        "r02",
+        "r03",
+        "r04",
+        "r05",
+        "r06",
+        "r07",
+        "r08",
+        "r09",
+        "r11",
+        "allow-1",
+        "r52"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/workspaces/DependencyGraph.ts",
+        "scratchpad/effected/workspaces/PeerCheck.ts",
+        "scratchpad/effected/workspaces/DuplicateCheck.ts",
+        "scratchpad/effected/workspaces/internal/roots.ts",
+        "scratchpad/effected/workspaces/WorkspaceLayering.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/DependencyGraph.test.ts",
+        "scratchpad/test/workspaces/DuplicateCheck.test.ts",
+        "scratchpad/test/workspaces/PeerCheck.test.ts",
+        "scratchpad/test/workspaces/WorkspaceLayering.test.ts"
+      ],
+      "findings": [
+        "r10",
+        "r14",
+        "r16",
+        "r24",
+        "r34",
+        "r36",
+        "allow-2"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/workspaces/ReleaseTag.ts",
+        "scratchpad/effected/workspaces/VersioningStrategy.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/ReleaseTag.test.ts",
+        "scratchpad/test/workspaces/TrackingTag.test.ts",
+        "scratchpad/test/workspaces/VersioningStrategy.test.ts"
+      ],
+      "findings": [
+        "r12",
+        "r13",
+        "r19",
+        "r20",
+        "r21"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/workspaces/SourceBoundary.ts",
+        "scratchpad/effected/workspaces/internal/sourceText.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/SourceBoundary.test.ts",
+        "scratchpad/test/workspaces/SourceBoundaryScan.test.ts",
+        "scratchpad/test/workspaces/sourceText.test.ts"
+      ],
+      "findings": [
+        "r15",
+        "r17",
+        "r22",
+        "r26",
+        "r27",
+        "r42",
+        "r43",
+        "r44"
+      ]
+    },
+    {
+      "id": "g5",
+      "files": [
+        "scratchpad/effected/workspaces/PackedInstall.ts",
+        "scratchpad/effected/workspaces/internal/packedInstallPlan.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/PackedInstall.test.ts",
+        "scratchpad/test/workspaces/PackedInstallPlan.test.ts",
+        "scratchpad/test/workspaces/PackedInstallPreflight.test.ts"
+      ],
+      "findings": [
+        "r18",
+        "r23",
+        "r25",
+        "allow-4"
+      ]
+    },
+    {
+      "id": "g6",
+      "files": [
+        "scratchpad/effected/workspaces/WorkspaceDiscovery.ts",
+        "scratchpad/effected/workspaces/internal/enumerate.ts",
+        "scratchpad/effected/workspaces/internal/patterns.ts",
+        "scratchpad/effected/workspaces/internal/traverse.ts",
+        "scratchpad/effected/workspaces/WorkspacesSync.ts",
+        "scratchpad/effected/workspaces/index.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/WorkspaceDiscovery.test.ts",
+        "scratchpad/test/workspaces/WorkspaceDiscoveryPerRoot.test.ts",
+        "scratchpad/test/workspaces/WorkspacesSync.test.ts",
+        "scratchpad/test/workspaces/entrypoints.test.ts",
+        "scratchpad/test/workspaces/enumerate.test.ts",
+        "scratchpad/test/workspaces/patterns.test.ts"
+      ],
+      "findings": [
+        "r33",
+        "r37",
+        "r38",
+        "r45",
+        "r46",
+        "r48",
+        "r49",
+        "r51",
+        "allow-5",
+        "r53"
+      ]
+    },
+    {
+      "id": "g7",
+      "files": [
+        "scratchpad/effected/workspaces/WorkspaceCatalogs.ts",
+        "scratchpad/effected/workspaces/internal/catalogs.ts",
+        "scratchpad/effected/workspaces/WorkspaceStateSnapshot.ts",
+        "scratchpad/effected/workspaces/WorkspacePackage.ts",
+        "scratchpad/effected/workspaces/internal/importerVersions.ts",
+        "scratchpad/effected/workspaces/WorkspaceSnapshots.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/WorkspaceCatalogs.test.ts",
+        "scratchpad/test/workspaces/WorkspaceCatalogsPmAware.test.ts",
+        "scratchpad/test/workspaces/WorkspacePackage.test.ts",
+        "scratchpad/test/workspaces/WorkspaceSnapshots.test.ts",
+        "scratchpad/test/workspaces/WorkspaceStateSnapshotSeed.test.ts",
+        "scratchpad/test/workspaces/WorkspacesStopAt.test.ts",
+        "scratchpad/test/workspaces/importerVersions.test.ts",
+        "scratchpad/test/workspaces/integration/WorkspaceSnapshotsNested.int.test.ts"
+      ],
+      "findings": [
+        "r28",
+        "r29",
+        "r30",
+        "r32",
+        "r35",
+        "r39",
+        "r40",
+        "r41",
+        "allow-3",
+        "allow-6",
+        "allow-7"
+      ]
+    },
+    {
+      "id": "g8",
+      "files": [
+        "scratchpad/effected/workspaces/WorkspaceRoot.ts",
+        "scratchpad/effected/workspaces/internal/configDependencyShared.ts",
+        "scratchpad/effected/workspaces/internal/configDependencyResolution.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/ConfigDependencyFetch.test.ts",
+        "scratchpad/test/workspaces/WorkspaceRoot.test.ts",
+        "scratchpad/test/workspaces/integration/ConfigDependencyResolution.int.test.ts"
+      ],
+      "findings": [
+        "r31",
+        "r47",
+        "r50"
+      ]
+    }
+  ],
+  "findings": {
+    "r01": {
+      "file": "scratchpad/effected/workspaces/LockfileReader.ts",
+      "class": "schema",
+      "summary": "Serializing these errors loses the originating failure’s stack, contrary to the explicit error-schema requirement. The green type and lint gates do not establish stack preservation.",
+      "fix": "Change these three cause fields to `S.Defect({ includeStack: true })`, retaining their field annotations. Add the smallest stack-preserving encoding assertion."
+    },
+    "r02": {
+      "file": "scratchpad/effected/workspaces/ConfigDependencyHooks.ts",
+      "class": "schema",
+      "summary": "The replay configuration, provenance and result models have no schema source of truth. Their types and tolerant validation logic can diverge independently; the required schema-derived construction, guards and codecs are unavailable. These are data payloads, beyond the permitted service-contract interface exception.",
+      "fix": "Define annotated schemas for these payloads and derive their existing type names from `.Type`; model `HookReplaySource` with `LiteralKit`. Preserve the plain external object shapes and current tolerant threading semantics, deriving the applicable guards from the schemas rather than introducing stricter hook rejection."
+    },
+    "r03": {
+      "file": "scratchpad/effected/workspaces/LockfileReader.ts",
+      "class": "schema",
+      "summary": "Root-resolution configuration remains a handwritten data model, so its shape, optionality and future codecs cannot derive from one executable contract.",
+      "fix": "Add an annotated options schema and derive `LockfileReaderOptions` from its `.Type`. Preserve the existing distinction between `cwd?: string` and `stopAt?: string | undefined`, and retain lazy cwd resolution."
+    },
+    "r04": {
+      "file": "scratchpad/effected/workspaces/PackageManagerName.ts",
+      "class": "schema",
+      "summary": "The normalized manager-hint model has no executable schema despite being directly representable by Schema. Its two construction paths and its type definition remain independent.",
+      "fix": "Define one annotated `ManagerHint` schema, derive its type, and construct normalized hints through it. Keep the existing behavior that malformed hints are ignored and an invalid version drops only the version."
+    },
+    "r05": {
+      "file": "scratchpad/effected/workspaces/PackageManagerName.ts",
+      "class": "schema",
+      "summary": "These named domains do not meet the required `LiteralKit` idiom. Consumers must keep spelling literal values and branching independently of the domain’s derived helper surface.",
+      "fix": "Replace the two `S.Literals(...)` constructors with `LiteralKit(...)`, retaining annotations, same-name type aliases and the exact literal order. The evidence order is observable and must remain unchanged."
+    },
+    "r06": {
+      "file": "scratchpad/effected/workspaces/ConfigDependencySpec.ts",
+      "class": "schema",
+      "summary": "The constraint rejecting build metadata has no identifying or descriptive check metadata. Annotating the enclosing class and field does not annotate the filter itself.",
+      "fix": "Supply the filter’s metadata argument with a namespaced `$I` identifier, title and description. Keep its predicate and existing failure text unchanged."
+    },
+    "r07": {
+      "file": "scratchpad/effected/workspaces/LayerPolicy.ts",
+      "class": "schema",
+      "summary": "The policy’s custom glob constraint does not satisfy the required check metadata contract. Its enclosing field description cannot supply the missing filter identity and description.",
+      "fix": "Add a namespaced `$I` identifier and description to the existing filter metadata, preserving its title and validation behavior."
+    },
+    "r08": {
+      "file": "scratchpad/effected/workspaces/ConfigDependencySpec.ts",
+      "class": "schema",
+      "summary": "The exported string codec lacks its own schema identity, title and description, leaving the annotation migration incomplete for this public runtime schema.",
+      "fix": "Annotate the completed codec through `$I.annoteSchema(...)` with a distinct codec identifier and meaningful description, preserving its declared `S.Codec<ConfigDependencySpec, string>` contract and transformation behavior."
+    },
+    "r09": {
+      "file": "scratchpad/effected/workspaces/PackageManagerName.ts",
+      "class": "schema",
+      "summary": "The manifest-object constraint lives in two hand-written predicates instead of one schema; `manifestOf` decodes JSON with `S.Unknown` and then re-checks the shape by hand, duplicating what the schema layer already expresses.",
+      "fix": "Define an annotated JsonObject schema in PackageManagerName.ts, derive isPlainObject with S.is, and reuse that schema-derived guard in LayerPolicy.ts instead of spelling the constraint twice. Preserve array/null/function rejection and tolerant manifest handling; use only these existing source files."
+    },
+    "r10": {
+      "file": "scratchpad/effected/workspaces/DependencyGraph.ts",
+      "class": "law",
+      "summary": "Law 10 violation the hotspot-scoped gate cannot see; the module is inconsistent with itself on the ordering idiom.",
+      "fix": "Replace each `[...xs].sort()` with `A.sort(A.fromIterable(xs), Str.Order)` and `current.sort()` / `next.sort()` with `current = A.sort(current, Str.Order)` (import `* as Str from \"effect/String\"`)."
+    },
+    "r11": {
+      "file": "scratchpad/effected/workspaces/ChangeDetector.ts",
+      "class": "law",
+      "summary": "Law 10 violation outside the gate's scope.",
+      "fix": "`A.sort(A.fromIterable(committed), Str.Order)` and `A.sort(A.fromIterable(MutableHashSet.fromIterable([...committed, ...working])), Str.Order)`."
+    },
+    "r12": {
+      "file": "scratchpad/effected/workspaces/ReleaseTag.ts",
+      "class": "schema",
+      "summary": "`TagStyle` is an exported literal domain built with `S.Literals`. It decodes the same two strings as upstream and has no `.Enum`, `.is`, or `.$match`. `jsonc` (`NavigateContainer`) is the D5 bar and uses `LiteralKit`.",
+      "fix": "`import { LiteralKit } from \"@beep/schema/LiteralKit\"` and `LiteralKit([\"single\", \"scoped\"]).pipe($I.annoteSchema(\"TagStyle\", { description: \"...\" }))`. Keep `export type TagStyle = typeof TagStyle.Type`. Decode stays the same."
+    },
+    "r13": {
+      "file": "scratchpad/effected/workspaces/VersioningStrategy.ts",
+      "class": "schema",
+      "summary": "`VersioningStrategyType` is an exported literal domain (`\"single\" | \"fixed-group\" | \"independent\"`) built with `S.Literals`, then used as the `type` field. Callers get no kit helpers. Classification results are unchanged.",
+      "fix": "Same swap as grok-1-1: `LiteralKit([\"single\", \"fixed-group\", \"independent\"]).pipe($I.annoteSchema(...))`. Leave the `type` field pointing at that const."
+    },
+    "r14": {
+      "file": "scratchpad/effected/workspaces/PeerCheck.ts",
+      "class": "schema",
+      "summary": "`UnverifiedReason` is a hand-written four-string union, and `PeerCheck.unverified` repeats those strings as `S.Literals` at line 709. The copies match today. Adding a reason to one side does not update the other, so `PeerCheck.make` and the push sites can disagree.",
+      "fix": "One `LiteralKit` of the four strings, exported under the same name, `export type UnverifiedReason = typeof UnverifiedReason.Type`, and use that kit as the `unverified` element schema. No new reason, no new decode."
+    },
+    "r15": {
+      "file": "scratchpad/effected/workspaces/SourceBoundary.ts",
+      "class": "schema",
+      "summary": "The seven offence rules live in an anonymous `S.Literals`, and `export type OffenceRule = Offence[\"rule\"]` only re-exports the decoded union. The public domain has no `.is` or `.Enum`. `scan` and `check` still emit the same rule strings.",
+      "fix": "`export const OffenceRule = LiteralKit([\"process\", \"node:process\", \"stdout-write\", \"console\", \"console-stdout\", \"forbidImports\", \"forbidTokens\"]).pipe($I.annoteSchema(...))`, `export type OffenceRule = typeof OffenceRule.Type`, and set `Offence.rule` to that kit."
+    },
+    "r16": {
+      "file": "scratchpad/effected/workspaces/PeerCheck.ts",
+      "class": "bug",
+      "summary": "A dependency outside the workspace is joined to an unrelated internal package with the same remaining path. The report attributes that internal package’s peers to the external dependency and claims the link was verified, although the external manifest was never supplied or examined.",
+      "fix": "Preserve unmatched leading `..` segments during normalization, and never cancel an existing `..` with another `..`. An external target must remain distinct from a workspace-relative target and retain the unverified marker. Add a regression for a root link escaping the workspace."
+    },
+    "r17": {
+      "file": "scratchpad/effected/workspaces/SourceBoundary.ts",
+      "class": "bug",
+      "summary": "The global realpath visited set lets the first directory alias determine the waiver policy for every alias of that directory. An allowed symlink can therefore suppress an offence under an unallowed source path. The same issue affects `allowRules`.",
+      "fix": "Use ancestry-based realpath cycle detection instead of globally dropping previously visited directories, so distinct logical paths receive their own waiver evaluation while ancestor cycles remain bounded. Add the allowed-alias regression."
+    },
+    "r18": {
+      "file": "scratchpad/effected/workspaces/PackedInstall.ts",
+      "class": "bug",
+      "summary": "A stale or incorrectly selected build artifact can pass the packed-install proof under another package’s identity. The result claims it packed the requested carrier even though the archive’s manifest identifies a different package.",
+      "fix": "Check each workspace tarball manifest’s `name` against the closure package’s name before accepting it or installing consumers; fail `PackFailed` on a mismatch or missing name. Add a mismatched-carrier regression."
+    },
+    "r19": {
+      "file": "scratchpad/effected/workspaces/ReleaseTag.ts",
+      "class": "bug",
+      "summary": "An arbitrary repository tag or version containing an oversized numeric component aborts these query APIs with a synchronous exception instead of returning `unrecognized` or an empty alias list.",
+      "fix": "Validate converted major/minor values against the existing integer field schemas before constructing a `TrackingTag`. Return `unrecognized` from the tracking-classification branch and `[]` from alias derivation when those fields cannot be represented. Add both overflow regressions."
+    },
+    "r20": {
+      "file": "scratchpad/effected/workspaces/ReleaseTag.ts",
+      "class": "bug",
+      "summary": "Malformed version text is presented as a release, and malformed build metadata can produce stable floating aliases. Invalid suffixes receive the same classification as valid release versions.",
+      "fix": "Validate the complete version grammar before extracting its numeric core, preserving the existing treatment of valid build metadata and prereleases. Keep the separate truncated tracking-tag grammar. Add malformed-suffix regressions."
+    },
+    "r21": {
+      "file": "scratchpad/effected/workspaces/ReleaseTag.ts",
+      "class": "schema",
+      "summary": "TagClassification, ClassifyOptions and PackageRelease lack owning schemas.",
+      "fix": "Define annotated structural schemas for TagClassification, ClassifyOptions and PackageRelease and derive their existing types. Preserve structural inputs, discriminator strings, optionality and results. The other payloads from the same compound report are r22/r23."
+    },
+    "r22": {
+      "file": "scratchpad/effected/workspaces/SourceBoundary.ts",
+      "class": "schema",
+      "summary": "BoundaryRule and BoundaryFixture lack owning schemas.",
+      "fix": "Define annotated structural schemas for BoundaryRule and BoundaryFixture and derive their existing types. Preserve current structural inputs, optionality and waiver semantics. Keep function/service contracts as interfaces."
+    },
+    "r23": {
+      "file": "scratchpad/effected/workspaces/PackedInstall.ts",
+      "class": "schema",
+      "summary": "Replacement and ClosurePlan lack owning schemas.",
+      "fix": "Define annotated structural schemas for Replacement and ClosurePlan, including their finite kind domain, and derive existing types. Preserve plain construction inputs and carrier/closure/replacement order."
+    },
+    "r24": {
+      "file": "scratchpad/effected/workspaces/internal/roots.ts",
+      "class": "law",
+      "summary": "The domain index remains a native Map while the law gate reports the module clean; the code depends on MutableHashMap's internal bucket layout, and the site is absent from the allowlist the fix wave works from.",
+      "fix": "Return the two MutableHashMaps themselves from internal/roots.ts and type InstanceIndex accordingly. Replace every rootInstances, PeerCheck and DuplicateCheck native get/iteration/size use with supported Effect collection APIs and Option lookups. Preserve instance traversal and result order; do not add an allowlist exception."
+    },
+    "r25": {
+      "file": "scratchpad/effected/workspaces/PackedInstall.ts",
+      "class": "law",
+      "summary": "Law 10 violation in module source; a reviewer or future lint hardening (`A.sort` rule) fails the module.",
+      "fix": "`A.sort(A.fromIterable(MutableHashMap.keys(wanted)), Str.Order)` at :759 and `A.sort(names, Str.Order).join(\", \")` at :1347 (import `* as A from \"effect/Array\"` and `* as Str from \"effect/String\"`)."
+    },
+    "r26": {
+      "file": "scratchpad/effected/workspaces/SourceBoundary.ts",
+      "class": "law",
+      "summary": "Law 10 violation in module source with ad-hoc comparator helpers that `Order.mapInput`/`Order.combine` already express.",
+      "fix": "Define `const byCodeUnit = Str.Order; const byPosition = Order.combine(Order.mapInput(Str.Order, (o: Offence) => o.file), Order.combine(Order.mapInput(Num.Order, (o) => o.line), Order.mapInput(Num.Order, (o) => o.column)))` and use `A.sort(found, Order.mapInput(Num.Order, (f) => f.offset))` at :618 and `A.sort(files, byCodeUnit)` etc. at :706-709."
+    },
+    "r27": {
+      "file": "scratchpad/test/workspaces/SourceBoundary.test.ts",
+      "class": "law",
+      "summary": "The upstream test no longer proves that `.js` specifiers (the form every upstream consumer scans) are extracted, and a fixture was silently altered; the suite passes but its meaning drifted, which is what D9 forbids.",
+      "fix": "Restore the pinned upstream .js source-text fixture strings and matching expectations at SourceBoundary.test.ts:103-121,147-148, plus require(\"./y/\" + name) at :140. These changes were not forced by a law, diagnostic or ruling. Keep actual test-file import specifiers adapted to the lab."
+    },
+    "r28": {
+      "file": "scratchpad/effected/workspaces/WorkspaceCatalogs.ts",
+      "class": "bug",
+      "summary": "Catalog lookups read inherited properties as declared dependencies. `rangeOf` violates its `Option<string>` contract and suppresses valid seed or importer fallback; `resolveSpecifier` passes the inherited function into pnpm’s resolver and throws despite its totality contract.",
+      "fix": "Require own-property membership at both the catalog-name and dependency-name levels. Apply those checks in `rangeOf` and before `resolveSpecifier` delegates to pnpm. Add negative controls for inherited names and a positive control for an explicitly declared `\"constructor\"` dependency."
+    },
+    "r29": {
+      "file": "scratchpad/effected/workspaces/WorkspaceStateSnapshot.ts",
+      "class": "bug",
+      "summary": "The importer fallback traverses prototypes at both lookup levels. An absent dependency can produce a non-string payload, and an absent importer can fabricate a string version from the inherited `Object` constructor’s `name`. This can produce false resolution or diff results even after the catalog lookup in sol-1-1 is fixed.",
+      "fix": "Use own-property lookups for `importerPath` and `dependency`, returning `None` when either key is absent. Add regression cases for inherited importer and dependency names."
+    },
+    "r30": {
+      "file": "scratchpad/effected/workspaces/WorkspacePackage.ts",
+      "class": "bug",
+      "summary": "Assignments into the three plain result objects invoke the inherited `__proto__` setter. Additions and removals disappear, and a changed dependency modifies the result object’s prototype instead of creating a diff entry. The diff loses information that the input schema and merged dependency record preserve.",
+      "fix": "Construct result entries with an own-key-safe operation, such as `R.set` or `R.fromEntries`, for all three branches. Preserve ordinary result-object behavior. Add addition, removal and change regression cases for `\"__proto__\"`."
+    },
+    "r31": {
+      "file": "scratchpad/effected/workspaces/WorkspaceRoot.ts",
+      "class": "bug",
+      "summary": "A non-object manifest at a nearer ancestor aborts discovery and hides a valid workspace root above it. The explicit preservation of the null-property-access defect retains a verified upstream bug in malformed-input handling.",
+      "fix": "Remove the null-specific raw throw and let the object guard treat null as not a root. Add the demonstrated null-manifest-below-valid-root regression. This verified upstream bug is allowed by D9/section 14; converting throw to Effect.die alone preserves the bug and is not the selected fix."
+    },
+    "r32": {
+      "file": "scratchpad/effected/workspaces/WorkspaceCatalogs.ts",
+      "class": "law",
+      "summary": "A native Object call in domain logic that neither the checker nor the allowlist can see; the per-entry copy exists purely to satisfy narrowing.",
+      "fix": "Keep the existing per-name error loop, derive a structural catalog-record guard from annotated S.Record schemas, and retain the validated original reference instead of copying with Object.defineProperty. Preserve own __proto__ keys and current validation/error behavior."
+    },
+    "r33": {
+      "file": "scratchpad/effected/workspaces/WorkspaceDiscovery.ts",
+      "class": "law",
+      "summary": "Three native sorts in domain logic that the native-runtime gate never scans in this tree.",
+      "fix": "`A.sort(Order.mapInput(Order.Number, (e) => -e.prefix.length))` for :584 (same descending-by-length order, stable); hoist one `const byName = Order.make<WorkspacePackage>((a, b) => { const c = a.name.localeCompare(b.name); return c < 0 ? -1 : c > 0 ? 1 : 0; })` and use `A.sort(byName)` at :659 and :788 (keeps localeCompare semantics exactly)."
+    },
+    "r34": {
+      "file": "scratchpad/effected/workspaces/WorkspaceLayering.ts",
+      "class": "law",
+      "summary": "Six native sorts in pure domain logic outside the gate's hotspot scope.",
+      "fix": "`A.sort(Order.String)` at each site; ordering is identical (default sort compares UTF-16 code units, which is what `Order.String`'s `<`/`>` comparison does)."
+    },
+    "r35": {
+      "file": "scratchpad/effected/workspaces/WorkspaceSnapshots.ts",
+      "class": "law",
+      "summary": "Native in-place sort in domain logic outside the gate's hotspot scope.",
+      "fix": "Collect into `const collected: Array<string> = []` and `const memberDirs = A.sort(collected, Order.String);` (same code-unit order)."
+    },
+    "r36": {
+      "file": "scratchpad/effected/workspaces/WorkspaceLayering.ts",
+      "class": "schema",
+      "summary": "Two sources of truth for one named domain; adding a reason to one side type-checks until the schema rejects a report at runtime.",
+      "fix": "`const OffenceReason = LiteralKit([\"upward\", \"sameLayer\", \"toolingReachesLayer\", \"intoUnconstrained\", \"intoUnclassified\"]); type OffenceReason = typeof OffenceReason.Type;` and `reason: OffenceReason` in the offenders struct."
+    },
+    "r37": {
+      "file": "scratchpad/effected/workspaces/WorkspaceDiscovery.ts",
+      "class": "schema",
+      "summary": "The same literal domains are spelled three times across the service and its internals with no shared schema, guard or `.Enum`; `patternKindOf` exists only to paper over the duplication.",
+      "fix": "`export const EnumerationFailureKind = LiteralKit([...])` in internal/enumerate.ts and `export const PatternReadFailureKind = LiteralKit([...])` in internal/patterns.ts (types derived from them); in WorkspaceDiscovery.ts `const WorkspacePatternErrorKind = LiteralKit([the five])`, `kind: WorkspacePatternErrorKind`, delete `patternKindOf` (the subset literal type is assignable); likewise `const WorkspaceDiscoveryErrorKind = LiteralKit([the five])` for :67."
+    },
+    "r38": {
+      "file": "scratchpad/effected/workspaces/WorkspaceDiscovery.ts",
+      "class": "schema",
+      "summary": "Public importerMap still returns a native .backing map.",
+      "fix": "Return an Effect HashMap from importerMap and remove .backing extraction. Adapt module-local consumers/tests with Effect lookups. Retain an explicit ordered key sequence wherever importer iteration promises insertion order; do not keep a native-collection exception. The independent versions contract from this report is r39."
+    },
+    "r39": {
+      "file": "scratchpad/effected/workspaces/WorkspaceStateSnapshot.ts",
+      "class": "schema",
+      "summary": "Public snapshot versions still returns a native .backing map.",
+      "fix": "Represent versions with an Effect HashMap and supported lookups, adapting module-local consumers/tests. Keep explicit package-name order where insertion order is observable, and exclude unversioned members as before. Do not expose .backing or retain an exception."
+    },
+    "r40": {
+      "file": "scratchpad/effected/workspaces/WorkspaceSnapshots.ts",
+      "class": "effect-idiom",
+      "summary": "One file in the module parses JSON outside the schema path the others settled on; upstream parity, so behaviour is unchanged.",
+      "fix": "Use S.fromJsonString(S.Unknown) with the available decodeUnknownResult/decodeResult API and fold failures to the same empty object. Preserve acceptance/rejection and fallback behavior; derive any object guard from its owning schema."
+    },
+    "r41": {
+      "file": "scratchpad/effected/workspaces/internal/catalogs.ts",
+      "class": "law",
+      "summary": "A native Object call the checker cannot see and the allowlist cannot register.",
+      "fix": "Build normalized catalog entries and clean records with R.fromEntries and read via R.get. Remove Object.defineProperty/define while retaining hostile __proto__ cases and array-form normalization semantics. Checker hardening is outside this write surface; do not add an allowlist entry."
+    },
+    "r42": {
+      "file": "scratchpad/effected/workspaces/internal/sourceText.ts",
+      "class": "bug",
+      "summary": "Module specifiers reach rule matching with their escapes unprocessed. Valid JavaScript can therefore import a forbidden built-in while the scanner reports no offence. This limitation is absent from the documented scanner limits and recorded deviations.",
+      "fix": "Preserve the raw literals and source offsets produced by `lex`, but provide cooked ECMAScript string values for module-specifier matching. Add the escaped-import regression fixture."
+    },
+    "r43": {
+      "file": "scratchpad/effected/workspaces/internal/sourceText.ts",
+      "class": "bug",
+      "summary": "Identifier-boundary checks pass individual UTF-16 code units to the Unicode regular expression. Each half of an astral identifier character fails that check, so the scanner incorrectly treats the embedded `process` substring as a separate identifier. Valid source consequently fails the boundary check.",
+      "fix": "Make identifier-boundary lookups and backward identifier scans operate on complete Unicode code points while retaining UTF-16 offsets for diagnostics. Add fixtures for astral characters on both sides of a forbidden identifier."
+    },
+    "r44": {
+      "file": "scratchpad/effected/workspaces/internal/sourceText.ts",
+      "class": "bug",
+      "summary": "A line comment stops only at LF. With another valid JavaScript line terminator, the lexer blanks the following executable statement as part of the comment, allowing real forbidden references to pass undetected.",
+      "fix": "Recognize all four ECMAScript line terminators when ending line comments. Preserve those terminators in the lexed views and update location accounting consistently, treating CRLF as one line break. Add the three regression fixtures."
+    },
+    "r45": {
+      "file": "scratchpad/effected/workspaces/WorkspacesSync.ts",
+      "class": "schema",
+      "summary": "The synchronous discovery boundary maintains a second handwritten definition of a dependency map instead of deriving validation from the schema that owns the model. The committed guard remains present despite the green gates; this is a semantic schema-modeling violation, not a claimed compiler diagnostic.",
+      "fix": "Derive S.is from WorkspacePackage's existing dependency-field schema and remove handwritten isStringRecord. Preserve all-or-nothing fallback for malformed maps and upstream empty/default behavior; keep the tolerant stringRecord adapter only if needed. This also removes the two-helper wall reported by part-4/fable-1-15; do not inline a second handwritten predicate."
+    },
+    "r46": {
+      "file": "scratchpad/effected/workspaces/internal/traverse.ts",
+      "class": "schema",
+      "summary": "A reused domain constraint remains an ad-hoc boolean helper rather than a schema-derived guard. Its accepted values, annotations, and validation behavior cannot be derived from one schema definition.",
+      "fix": "Define an annotated depth schema and derive `isValidMaxDepth` with `S.is`. Preserve the upstream predicate exactly: a read-only equivalence probe showed that replacing it with `S.Int.check(S.isGreaterThanOrEqualTo(1))` would newly reject `1e100`, which upstream accepts. Use an annotated `Number.isInteger` filter where needed to retain that contract."
+    },
+    "r47": {
+      "file": "scratchpad/effected/workspaces/internal/configDependencyShared.ts",
+      "class": "schema",
+      "summary": "The resolution state model exists only as a TypeScript declaration, with case construction and discrimination maintained separately. This named, reused domain model does not satisfy the required schema-first representation.",
+      "fix": "Define an identity-annotated `S.TaggedUnion` for `absent`, `unversioned`, and `version`, and derive the existing type from it. Preserve the current structural objects, tag strings, and version acceptance behavior."
+    },
+    "r48": {
+      "file": "scratchpad/effected/workspaces/internal/enumerate.ts",
+      "class": "law",
+      "summary": "Enumeration results use native sorting outside the gate scope.",
+      "fix": "Replace results.sort with A.sort and Order.mapInput(Str.Order, r => r.relativePath), preserving stable code-unit order. Independent sorts from this compound report are r49/r50."
+    },
+    "r49": {
+      "file": "scratchpad/effected/workspaces/WorkspacesSync.ts",
+      "class": "law",
+      "summary": "Synchronous package ordering uses native Array.sort.",
+      "fix": "Use A.sort with an explicit Order on the included relative-path key, preserving stable code-unit order."
+    },
+    "r50": {
+      "file": "scratchpad/effected/workspaces/internal/configDependencyResolution.ts",
+      "class": "law",
+      "summary": "Store candidate preference uses native Array.sort.",
+      "fix": "Use A.sort with a reversed numeric Order mapped to the existing Number(v.slice(1)) key, preserving stable ties and candidate preference exactly."
+    },
+    "r51": {
+      "file": "scratchpad/effected/workspaces/index.ts",
+      "class": "law",
+      "summary": "The package barrel omits the public depth error thrown by getWorkspacePackagesSync.",
+      "fix": "Add WorkspaceEnumerationDepthError to index.ts's WorkspacesSync export block and assert its availability through the package entrypoint. Keep the law-forced tagged error. Added-export bookkeeping is c06, handled centrally."
+    },
+    "allow-1": {
+      "file": "scratchpad/effected/workspaces/ConfigDependencyHooks.ts",
+      "class": "law",
+      "summary": "Replace allowlisted object-method: EFFECTED-WS-FROZEN-DEFAULTS.",
+      "fix": "Drop Object.freeze on NoPeerDependencyRules and all nested defaults. Keep readonly types/schema-derived values and build public records via R.fromEntries with R.get for lookups. Retarget any isFrozen assertion to the readonly/schema representation, preserving default content and replay behavior."
+    },
+    "allow-2": {
+      "file": "scratchpad/effected/workspaces/DependencyGraph.ts",
+      "class": "law",
+      "summary": "Replace allowlisted new-map-set: EFFECTED-WS-ADJACENCY.",
+      "fix": "Replace adjacency and forward/reverse indexes with HashMap<string, HashSet<string>>. Use Effect collection access throughout graph algorithms, remove the ReadonlyMap/ReadonlySet adapter classes, and keep explicit vertex/neighbor order where promised. Retarget native adjacency get/size tests while retaining every graph/cycle/order expectation."
+    },
+    "allow-3": {
+      "file": "scratchpad/effected/workspaces/internal/importerVersions.ts",
+      "class": "law",
+      "summary": "Replace allowlisted object-method: EFFECTED-WS-NULL-PROTOTYPE.",
+      "fix": "Replace internal null-prototype dictionaries with Effect HashMap/MutableHashMap, preserving first-field-wins and importer order. Build the public nested record with R.fromEntries and read it with R.get. Preserve __proto__, constructor and toString as own keys with no inherited fallback."
+    },
+    "allow-4": {
+      "file": "scratchpad/effected/workspaces/internal/packedInstallPlan.ts",
+      "class": "law",
+      "summary": "Replace allowlisted object-method: EFFECTED-WS-NULL-PROTOTYPE.",
+      "fix": "Replace the null-prototype consumer dependency dictionary with an internal Effect HashMap and a public R.fromEntries record read through R.get. Preserve hostile keys and selected dependency order/content. Retarget PackedInstallPlan.test.ts:323's null-prototype assertion and the absent-constructor assertion to own-key-safe lookup semantics."
+    },
+    "allow-5": {
+      "file": "scratchpad/effected/workspaces/WorkspaceDiscovery.ts",
+      "class": "law",
+      "summary": "Replace allowlisted new-map-set: EFFECTED-WS-DISCOVERY-INDEXES.",
+      "fix": "Remove all three WeakMaps (ownerIndexes, packageIndexes, versionIndexes). Compute/store indexes as fields on module-owned discovery memo/state or resolver-owner objects, refresh them with the owning package snapshot, and compare snapshot identity with === only where needed. Preserve lookup correctness, identity-sensitive refresh and bounded retention; do not globally mark caller objects for reference equality."
+    },
+    "allow-6": {
+      "file": "scratchpad/effected/workspaces/WorkspacePackage.ts",
+      "class": "law",
+      "summary": "Replace allowlisted object-method: EFFECTED-WS-NULL-PROTOTYPE.",
+      "fix": "Drop runtime freezing and Object.create(null) for dependency/manifest defaults. Keep readonly schema/type representations, build public records with R.fromEntries, and read with R.get. Preserve absent-key behavior for __proto__, constructor and toString; retarget any representation assertions without reintroducing freezing."
+    },
+    "allow-7": {
+      "file": "scratchpad/effected/workspaces/WorkspaceStateSnapshot.ts",
+      "class": "law",
+      "summary": "Replace allowlisted object-method: EFFECTED-WS-NULL-PROTOTYPE.",
+      "fix": "Drop runtime freezing and Object.create(null) for the snapshot dependency-map default. Build the public record with R.fromEntries and use R.get for reads, with internal HashMap indexes. Preserve absent-key behavior and readonly representations; retarget any freeze/prototype assertions."
+    },
+    "r52": {
+      "file": "scratchpad/effected/workspaces/ConfigDependencyHooks.ts",
+      "class": "effect-idiom",
+      "summary": "stringArrayOr wraps the existing P.isString guard in a trivial lambda.",
+      "fix": "`A.isArray(value) && value.every(P.isString) ? value : fallback`."
+    },
+    "r53": {
+      "file": "scratchpad/effected/workspaces/WorkspacesSync.ts",
+      "class": "effect-idiom",
+      "summary": "Untrusted publishConfig is decoded through a typed-input rather than unknown-input decoder.",
+      "fix": "`Effect.runSyncExit(S.decodeUnknownEffect(PublishConfig)(publishConfig))`."
+    }
+  }
+}
+

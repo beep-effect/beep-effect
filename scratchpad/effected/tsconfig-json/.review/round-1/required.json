@@ -1,0 +1,140 @@
+{
+  "module": "tsconfig-json",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/tsconfig-json/CompilerOptions.ts",
+        "scratchpad/effected/tsconfig-json/TsconfigJson.ts",
+        "scratchpad/effected/tsconfig-json/CompilerOptionsFromProgrammatic.ts",
+        "scratchpad/effected/tsconfig-json/TsEnumCodec.ts"
+      ],
+      "tests": [
+        "scratchpad/test/tsconfig-json/CompilerOptions.test.ts",
+        "scratchpad/test/tsconfig-json/TsconfigJson.test.ts",
+        "scratchpad/test/tsconfig-json/CompilerOptionsFromProgrammatic.test.ts",
+        "scratchpad/test/tsconfig-json/TsEnumCodec.test.ts",
+        "scratchpad/test/tsconfig-json/TsEnumCodec.assignability.test.ts"
+      ],
+      "findings": [
+        "sol-1-1",
+        "sol-1-3",
+        "sol-1-4",
+        "sol-1-2-record",
+        "sol-1-6",
+        "sol-1-7-enums",
+        "fable-1-1-proof"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/tsconfig-json/ResolvedTsconfig.ts",
+        "scratchpad/effected/tsconfig-json/PortableTsconfig.ts",
+        "scratchpad/effected/tsconfig-json/TsconfigDiscovery.ts"
+      ],
+      "tests": [
+        "scratchpad/test/tsconfig-json/ResolvedTsconfig.test.ts",
+        "scratchpad/test/tsconfig-json/PortableTsconfig.test.ts",
+        "scratchpad/test/tsconfig-json/TsconfigDiscovery.test.ts"
+      ],
+      "findings": [
+        "sol-1-2-models",
+        "sol-1-7-resolved"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/tsconfig-json/JsxConfig.ts"
+      ],
+      "tests": [
+        "scratchpad/test/tsconfig-json/JsxConfig.test.ts"
+      ],
+      "findings": [
+        "sol-1-5"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/tsconfig-json/TsconfigLoader.ts",
+        "scratchpad/effected/tsconfig-json/internal/extendsTarget.ts"
+      ],
+      "tests": [
+        "scratchpad/test/tsconfig-json/TsconfigLoader.test.ts"
+      ],
+      "findings": [
+        "fable-1-4-internals"
+      ]
+    }
+  ],
+  "findings": {
+    "sol-1-1": {
+      "file": "scratchpad/effected/tsconfig-json/CompilerOptions.ts",
+      "class": "schema",
+      "summary": "The public schema/codec surface lacks canonical IdentityComposer identities and field metadata.",
+      "fix": "Create file-local $ScratchpadId composers in the four named files; apply $I.annote to every affected schema/codec and meaningful field annotations to object fields, including the named internal PluginEntry and IgnoreDeprecations blocks. Preserve case folding, optionality and unknown-key passthrough. Generated identity-key deviation records belong to the central codemod."
+    },
+    "sol-1-3": {
+      "file": "scratchpad/effected/tsconfig-json/CompilerOptions.ts",
+      "class": "schema",
+      "summary": "Named literal domains have no canonical kit; EnumFamily additionally has no schema source of truth.",
+      "fix": "Use LiteralKit for Target, Module, ModuleResolution, Jsx, NewLine, ModuleDetection, Lib, IgnoreDeprecations, WatchFile, WatchDirectory, FallbackPolling and EnumFamily. Derive EnumFamily from its kit and retain the existing case-insensitive decodeTo transforms and canonical spellings. Kits can remain local when no public addition is needed. Do not replace the anonymous inline TsconfigExtendsError.reason union solely on this evidence."
+    },
+    "sol-1-4": {
+      "file": "scratchpad/effected/tsconfig-json/CompilerOptions.ts",
+      "class": "schema",
+      "summary": "Non-class schema values cannot consistently be used under the same identifier as their decoded types.",
+      "fix": "Add same-name schema-derived type aliases to the non-class schema/codec exports in CompilerOptions.ts, TsconfigJson.ts and CompilerOptionsFromProgrammatic.ts. Retain existing Type/Encoded namespaces and upstream export kinds. ProgrammaticCompilerOptions already has its alias at TsEnumCodec.ts:315. Leave added-export recording to the central codemod."
+    },
+    "sol-1-2-record": {
+      "file": "scratchpad/effected/tsconfig-json/CompilerOptionsFromProgrammatic.ts",
+      "class": "schema",
+      "summary": "The encoded-side data domain has a parallel handwritten type instead of a schema source of truth.",
+      "fix": "Define the unknown-valued ProgrammaticRecord schema, derive its public type, and use the schema consistently for the codec encoded-side model. Preserve invalid known-field inputs so decoding can reject them through typed schema issues; preserve unknown passthrough."
+    },
+    "sol-1-2-models": {
+      "file": "scratchpad/effected/tsconfig-json/ResolvedTsconfig.ts",
+      "class": "schema",
+      "summary": "Resolved/portable data and discovery/projection configuration lack schema-derived types and runtime models.",
+      "fix": "Define schema sources of truth for ResolvedTsconfig, PortableTsconfig, PortableTsconfigOptions and FindNearestOptions and derive their public types. Use S.Opaque classes with static members where a schema must retain the existing facade. Preserve plain-object helper results, optional-key semantics, passthrough and existing helper names. Keep function-bearing SyncFileSystem/SyncPath ports as interfaces; avoid Object.assign/defineProperties facades."
+    },
+    "sol-1-5": {
+      "file": "scratchpad/effected/tsconfig-json/JsxConfig.ts",
+      "class": "schema",
+      "summary": "The automatic variant can lack its required import source, and the classic model carries an automatic-only field.",
+      "fix": "Model runtime variants with LiteralKit and the prescribed toTaggedUnion(\"runtime\") construction, with importSource required on automatic and absent from the classic modeled/encoded variant. Preserve fromCompilerOptions, its defaults, Option results and upstream call sites. Retarget the smallest affected assertions for the law-forced representation and pin both variants in JsxConfig.test.ts; route deviation bookkeeping centrally."
+    },
+    "sol-1-6": {
+      "file": "scratchpad/effected/tsconfig-json/TsconfigJson.ts",
+      "class": "law",
+      "summary": "Encoding the parse error discards the diagnostic cause stack required by the error-field contract.",
+      "fix": "Change the cause schema to S.Defect({ includeStack: true }), retain its field annotation, and add a focused encoded stack-preservation assertion in TsconfigJson.test.ts. Central bookkeeping records the law-forced encoded-shape change."
+    },
+    "sol-1-7-enums": {
+      "file": "scratchpad/effected/tsconfig-json/TsEnumCodec.ts",
+      "class": "effect-idiom",
+      "summary": "Public enum combinators lack the required pipeable API.",
+      "fix": "Add typed data-first/data-last overloads backed by dual to TsEnumCodec.encode and decode, preserving all current two-argument results. Add curried-form parity assertions in TsEnumCodec.test.ts."
+    },
+    "sol-1-7-resolved": {
+      "file": "scratchpad/effected/tsconfig-json/ResolvedTsconfig.ts",
+      "class": "effect-idiom",
+      "summary": "These public resolved-config combinators lack the required data-last forms.",
+      "fix": "Add typed dual overloads for the existing fixed arities, retaining all existing data-first arguments and results. Verify curried/data-first equivalence in ResolvedTsconfig.test.ts while coordinating with the schema facade conversion in the same group."
+    },
+    "fable-1-1-proof": {
+      "file": "scratchpad/test/tsconfig-json/TsEnumCodec.assignability.test.ts",
+      "class": "type-safety",
+      "summary": "The adjusted upstream type test no longer proves the surviving known-key compiler shape. This is the concrete test repair in fable-1-1, separated from its central bookkeeping request.",
+      "fix": "Retain the upstream CompilerOptionsReplica and add a cast-free assignment of the known subset (target, module, moduleResolution, jsx, newLine, moduleDetection and lib) picked from encodeCompilerOptions output. Keep the new unknown-passthrough assertions. Do not claim that the entire unknown-valued result assigns to ts.CompilerOptions and do not restore the unsafe upstream assertion."
+    },
+    "fable-1-4-internals": {
+      "file": "scratchpad/effected/tsconfig-json/internal/extendsTarget.ts",
+      "class": "effect-idiom",
+      "summary": "Internal loading now emits extra spans without a law/diagnostic requirement to add tracing. This is a tracing-behavior regression, not an unmeasured performance claim.",
+      "fix": "Use Effect.fnUntraced for loadAbs, collect, readManifest, resolveRelative and tryCandidate, retaining generator bodies and return contracts. Preserve qualified public loader spans. Restore any upstream tracing assertions rewritten for these internal spans and add a focused no-extra-internal-spans regression in TsconfigLoader.test.ts. Keep diagnostic-required fn/dual adaptations; do not revert to law-violating bare Effect.gen."
+    }
+  }
+}

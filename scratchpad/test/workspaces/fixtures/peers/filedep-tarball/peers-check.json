@@ -1,0 +1,23 @@
+{
+  "packages/host": {
+    "bad": {
+      "react": [
+        {
+          "parents": [
+            {
+              "name": "react-dom",
+              "version": "18.3.1"
+            }
+          ],
+          "optional": false,
+          "wantedRange": "^18.3.1",
+          "foundVersion": "file:vendor/react-18.3.1.tgz",
+          "resolvedFrom": []
+        }
+      ]
+    },
+    "missing": {},
+    "conflicts": [],
+    "intersections": {}
+  }
+}

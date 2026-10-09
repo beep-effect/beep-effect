@@ -1,0 +1,17 @@
+{
+  "name": "custom-fields-pkg",
+  "version": "1.0.0",
+  "customArray": [
+    1,
+    2,
+    3
+  ],
+  "customObject": {
+    "nested": true,
+    "deep": {
+      "value": "kept"
+    }
+  },
+  "customString": "preserved",
+  "x-custom-namespace": "also preserved"
+}

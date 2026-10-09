@@ -1,0 +1,360 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import { dual } from "effect/Function";
+import * as Match from "effect/Match";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
+// The canonical TOML document emitter over plain JavaScript values — the
+// encode side of the value pipeline. Layout contract: within a table,
+// non-table pairs emit first (document order), then sub-tables as
+// `[dotted.header]` sections depth-first, then arrays whose every element is
+// a plain object as `[[dotted.header]]` sections; a blank line precedes every
+// header line except at document start.
+//
+// Error carriers per the engine firewall: RawTomlError for value errors
+// (UnsupportedValue, IntegerOutOfRange, CircularReference — offsets 0, there
+// is no source text) and GuardExceeded for the nesting-depth cap. ONLY the
+// public facade catches them.
+
+import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } from "../TomlDateTime.ts";
+import type { TomlStringifyErrorCodeRaw } from "./diagnostics.ts";
+import { RawTomlError } from "./diagnostics.ts";
+import { GuardExceeded, MAX_NESTING_DEPTH } from "./limits.ts";
+
+const $I = $ScratchpadId.create("effected/toml/internal/stringifyValue");
+
+class TomlStringifyInvariantError extends S.TaggedError<TomlStringifyInvariantError>($I`TomlStringifyInvariantError`)(
+	"TomlStringifyInvariantError",
+	{ message: S.String.annotateKey({ description: "Explanation of the violated stringify engine invariant." }) },
+	$I.annote("TomlStringifyInvariantError", { description: "An impossible state in the TOML value emitter." }),
+) {}
+
+const INT64_MIN = -(2n ** 63n);
+const INT64_MAX = 2n ** 63n - 1n;
+// 2^63 as a float is exact (a power of two); anything >= it overflows int64.
+const INT64_FLOAT_BOUND = 2 ** 63;
+
+const BARE_KEY = /^[A-Za-z0-9_-]+$/;
+
+/** Error path segments: keys are strings, array indices are numbers. */
+type Path = ReadonlyArray<string | number>;
+
+const raise = (code: TomlStringifyErrorCodeRaw, message: string): never => {
+	throw RawTomlError.make({ code, message, offset: 0, length: 0 });
+};
+
+const guardDepth = (depth: number): void => {
+	if (depth > MAX_NESTING_DEPTH) {
+		throw GuardExceeded.new("NestingDepthExceeded", MAX_NESTING_DEPTH, depth, 0);
+	}
+};
+
+/** Render an error path for diagnostics: dotted keys, bracketed indices. */
+const renderPath = (path: Path): string => {
+	if (path.length === 0) {
+		return "(root)";
+	}
+	let out = "";
+	for (const segment of path) {
+		if (P.isNumber(segment)) {
+			out += `[${segment}]`;
+		} else {
+			out += out === "" ? renderKey(segment) : `.${renderKey(segment)}`;
+		}
+	}
+	return out;
+};
+
+/** The JS type name for an UnsupportedValue message. */
+const jsTypeName = (value: unknown): string => {
+	if (value === null) {
+		return "null";
+	}
+	if (!P.isObjectKeyword(value) || P.isFunction(value)) {
+		return typeof value;
+	}
+	const name = Object.getPrototypeOf(value)?.constructor?.name;
+	return P.isString(name) && name.length > 0 ? name : "object";
+};
+
+/** A basic single-line string: `"` `\` and control characters escaped. */
+const renderString = (value: string): string => {
+	let out = '"';
+	for (let i = 0; i < value.length; i++) {
+		const code = value.charCodeAt(i);
+		if (code === 0x22) {
+			out += '\\"';
+		} else if (code === 0x5c) {
+			out += "\\\\";
+		} else if (code === 0x08) {
+			out += "\\b";
+		} else if (code === 0x09) {
+			out += "\\t";
+		} else if (code === 0x0a) {
+			out += "\\n";
+		} else if (code === 0x0c) {
+			out += "\\f";
+		} else if (code === 0x0d) {
+			out += "\\r";
+		} else if (code < 0x20 || code === 0x7f) {
+			out += `\\u${code.toString(16).toUpperCase().padStart(4, "0")}`;
+		} else {
+			out += value[i];
+		}
+	}
+	return `${out}"`;
+};
+
+/**
+ * Render a key bare when it matches the bare-key grammar, else basic-quoted.
+ *
+ * **Example** (Quote a key containing spaces)
+ *
+ * ```ts
+ * import { renderKey } from "@beep/scratchpad/effected/toml/internal/stringifyValue"
+ *
+ * console.log(renderKey("server port")) // "server port"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderKey = (key: string): string => (BARE_KEY.test(key) ? key : renderString(key));
+
+/** A dotted header path, quoting per-segment by the key rule. */
+const renderHeaderPath = (path: ReadonlyArray<string>): string => path.map(renderKey).join(".");
+
+/**
+ * A `number`: integral values inside the int64 range emit as decimal integers
+ * (a JS `1.0` is indistinguishable from `1` — every JS emitter shares this
+ * divergence); `-0` emits as `-0.0`; integral values outside the int64 range
+ * emit as floats so they round-trip instead of overflowing at parse time;
+ * non-integral values emit as the shortest round-trip decimal with a
+ * guaranteed `.` or `e`; the specials emit as `inf`/`-inf`/`nan`.
+ */
+const renderNumber = (value: number): string => {
+	if (Number.isNaN(value)) {
+		return "nan";
+	}
+	if (value === Number.POSITIVE_INFINITY) {
+		return "inf";
+	}
+	if (value === Number.NEGATIVE_INFINITY) {
+		return "-inf";
+	}
+	if (Object.is(value, -0)) {
+		return "-0.0";
+	}
+	if (Number.isInteger(value) && value >= -INT64_FLOAT_BOUND && value < INT64_FLOAT_BOUND) {
+		return String(value);
+	}
+	const text = String(value);
+	return /[.eE]/.test(text) ? text : `${text}.0`;
+};
+
+const isTomlDateTime = S.is(S.Union([TomlOffsetDateTime, TomlLocalDateTime, TomlLocalDate, TomlLocalTime]));
+
+/** Plain objects only (null-prototype included) — never arrays or class instances. */
+const isPlainObject = (value: unknown): value is Record<string, unknown> => {
+	if (!P.isObjectKeyword(value) || P.isFunction(value) || A.isArray(value)) {
+		return false;
+	}
+	const proto = Object.getPrototypeOf(value);
+	return proto === Object.prototype || proto === null;
+};
+
+/** Scalar rendering; `undefined` means "not a scalar" (arrays/objects/rejects). */
+const renderScalar = Match.fn((value: unknown, _path: Path) => value).pipe(
+	Match.when(P.isString, renderString),
+	Match.when(P.isBoolean, (value) => value ? "true" : "false"),
+	Match.when(P.isNumber, renderNumber),
+	Match.when(P.isBigInt, (value, _input, path) => {
+		if (value < INT64_MIN || value > INT64_MAX) {
+			raise("IntegerOutOfRange", `integer ${value} at ${renderPath(path)} is outside the 64-bit signed range`);
+		}
+		return value.toString();
+	}),
+	Match.when(isTomlDateTime, (value) => value.toString()),
+	Match.orElse(() => undefined),
+);
+
+const checkCircular = (value: object, ancestors: ReadonlyArray<object>, path: Path): void => {
+	if (A.some(ancestors, (ancestor) => ancestor === value)) {
+		raise("CircularReference", `circular reference at ${renderPath(path)}`);
+	}
+};
+
+/** One value as an inline fragment: scalars, inline arrays, inline tables. */
+const renderInline = (value: unknown, path: Path, depth: number, ancestors: ReadonlyArray<object>): string => {
+	// Guard on container DESCENT only, never on a scalar leaf — mirroring the
+	// parse side, which checks parseArray/parseInlineTable at the opening
+	// bracket and never guards the leaf. Guarding the leaf too would give
+	// stringify a one-level tighter effective bound than parse: a value parsed
+	// at exactly MAX_NESTING_DEPTH containers with a non-empty innermost
+	// element would fail to re-emit.
+	if (A.isArray(value)) {
+		guardDepth(depth);
+		checkCircular(value, ancestors, path);
+		const nextAncestors = [...ancestors, value];
+		const items = value.map((item, index) => renderInline(item, [...path, index], depth + 1, nextAncestors));
+		return `[${items.join(", ")}]`;
+	}
+	if (isPlainObject(value)) {
+		guardDepth(depth);
+		checkCircular(value, ancestors, path);
+		const nextAncestors = [...ancestors, value];
+		const parts = R.keys(value).map(
+			(key) => `${renderKey(key)} = ${renderInline(value[key], [...path, key], depth + 1, nextAncestors)}`,
+		);
+		return parts.length === 0 ? "{}" : `{ ${parts.join(", ")} }`;
+	}
+	const scalar = renderScalar(value, path);
+	if (scalar !== undefined) {
+		return scalar;
+	}
+	return raise("UnsupportedValue", `unsupported ${jsTypeName(value)} value at ${renderPath(path)}`);
+};
+
+/**
+ * Render a single value as an inline TOML fragment (scalars, arrays and
+ * objects all inline).
+ *
+ * **Details**
+ *
+ * The single-value seam the document modify entry point rides on.
+ *
+ * **Example** (Render an inline table with an array)
+ *
+ * ```ts
+ * import { renderInlineValue } from "@beep/scratchpad/effected/toml/internal/stringifyValue"
+ *
+ * console.log(renderInlineValue({ ports: [8080, 8081] })) // { ports = [8080, 8081] }
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderInlineValue = (value: unknown): string => renderInline(value, [], 0, []);
+
+/** A table's entries split into the three layout groups, document order kept. */
+interface Classified {
+	readonly pairs: Array<string>;
+	readonly tables: Array<string>;
+	readonly arrayTables: Array<string>;
+}
+
+const classify = (table: Record<string, unknown>): Classified => {
+	const pairs: Array<string> = [];
+	const tables: Array<string> = [];
+	const arrayTables: Array<string> = [];
+	for (const key of R.keys(table)) {
+		const value = table[key];
+		if (isPlainObject(value)) {
+			tables.push(key);
+		} else if (A.isArray(value) && value.length > 0 && value.every(isPlainObject)) {
+			arrayTables.push(key);
+		} else {
+			pairs.push(key);
+		}
+	}
+	return { pairs, tables, arrayTables };
+};
+
+/** Push a header line, preceded by a blank line except at document start. */
+const pushHeader = (lines: Array<string>, header: string): void => {
+	if (lines.length > 0) {
+		lines.push("");
+	}
+	lines.push(header);
+};
+
+/**
+ * Emit one table's body: pairs, then sub-table sections, then
+ * array-of-tables sections. `headerPath` carries the dotted section path
+ * (strings only); `errorPath` additionally carries array indices.
+ */
+const emitTable = (
+	table: Record<string, unknown>,
+	headerPath: ReadonlyArray<string>,
+	errorPath: Path,
+	lines: Array<string>,
+	depth: number,
+	ancestors: ReadonlyArray<object>,
+): void => {
+	guardDepth(depth);
+	checkCircular(table, ancestors, errorPath);
+	const tableAncestors = [...ancestors, table];
+	const { pairs, tables, arrayTables } = classify(table);
+	for (const key of pairs) {
+		lines.push(`${renderKey(key)} = ${renderInline(table[key], [...errorPath, key], depth + 1, tableAncestors)}`);
+	}
+	for (const key of tables) {
+		pushHeader(lines, `[${renderHeaderPath([...headerPath, key])}]`);
+		const value = table[key];
+		if (!isPlainObject(value)) {
+			return raise("UnsupportedValue", `unsupported ${jsTypeName(value)} value at ${renderPath([...errorPath, key])}`);
+		}
+		emitTable(
+			value,
+			[...headerPath, key],
+			[...errorPath, key],
+			lines,
+			depth + 1,
+			tableAncestors,
+		);
+	}
+	for (const key of arrayTables) {
+		const array = table[key];
+		if (!A.isArray(array) || !array.every(isPlainObject)) {
+			return raise("UnsupportedValue", `unsupported ${jsTypeName(array)} value at ${renderPath([...errorPath, key])}`);
+		}
+		checkCircular(array, tableAncestors, [...errorPath, key]);
+		const arrayAncestors = [...tableAncestors, array];
+		for (let index = 0; index < array.length; index++) {
+			pushHeader(lines, `[[${renderHeaderPath([...headerPath, key])}]]`);
+			const element = array[index];
+			if (element === undefined) {
+				throw TomlStringifyInvariantError.make({ message: "missing array-table element" });
+			}
+			emitTable(element, [...headerPath, key], [...errorPath, key, index], lines, depth + 1, arrayAncestors);
+		}
+	}
+};
+
+/**
+ * Stringify a plain value as a canonical TOML document.
+ *
+ * **Details**
+ *
+ * An empty root emits the empty string; anything else ends with `newline`.
+ *
+ * **Gotchas**
+ *
+ * The root must be a plain object (a TOML document is a table).
+ *
+ * **Example** (Emit a document with a trailing newline)
+ *
+ * ```ts
+ * import { stringifyValue } from "@beep/scratchpad/effected/toml/internal/stringifyValue"
+ *
+ * console.log(JSON.stringify(stringifyValue({ port: 8080 }, "\n"))) // "port = 8080\n"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
+export const stringifyValue: {
+	(value: unknown, newline: string): string;
+	(newline: string): (value: unknown) => string;
+} = dual(2, (value: unknown, newline: string): string => {
+	if (!isPlainObject(value)) {
+		return raise(
+			"UnsupportedValue",
+			`unsupported ${jsTypeName(value)} value at ${renderPath([])} — a TOML document is a table`,
+		);
+	}
+	const lines: Array<string> = [];
+	emitTable(value, [], [], lines, 0, []);
+	return lines.length === 0 ? "" : `${lines.join(newline)}${newline}`;
+});

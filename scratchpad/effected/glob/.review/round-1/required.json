@@ -1,0 +1,119 @@
+{
+  "module": "glob",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/glob/GlobPattern.ts",
+        "scratchpad/effected/glob/GlobSet.ts",
+        "scratchpad/effected/glob/internal/limits.ts",
+        "scratchpad/effected/glob/internal/types.ts",
+        "scratchpad/effected/glob/internal/ast.ts",
+        "scratchpad/effected/glob/internal/assertValidPattern.ts"
+      ],
+      "tests": [
+        "scratchpad/test/glob/GlobPattern.test.ts",
+        "scratchpad/test/glob/GlobSet.test.ts",
+        "scratchpad/test/glob/engine.test.ts",
+        "scratchpad/test/glob/deliberatelyInvalid.ts"
+      ],
+      "findings": [
+        "sol-1-1",
+        "grok-1-2",
+        "sol-1-2",
+        "sol-1-4a",
+        "sol-1-5",
+        "fable-1-2"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/glob/internal/braceExpressions.ts",
+        "scratchpad/effected/glob/internal/minimatch.ts",
+        "scratchpad/effected/glob/internal/braceExpansion.ts",
+        "scratchpad/effected/glob/internal/escape.ts",
+        "scratchpad/effected/glob/internal/unescape.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "sol-1-4b",
+        "sol-1-6",
+        "fable-1-7a"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "package.json",
+        "bun.lock"
+      ],
+      "tests": [],
+      "findings": [
+        "fable-1-3"
+      ]
+    }
+  ],
+  "findings": {
+    "sol-1-1": {
+      "file": "scratchpad/effected/glob/GlobPattern.ts",
+      "class": "bug",
+      "summary": "Overflowing expansion counts become defects instead of typed GlobPatternError failures.",
+      "fix": "Restore intentional non-finite measurements for GlobPatternError.actual using S.Number with the documented, reasoned line-local schemaNumber exception; retain finite validation for limit. Add the reproducer to GlobPattern.test.ts and GlobSet.test.ts for synchronous Result and Effect failure boundaries. Preserve actual Infinity in the GuardExceeded schema conversion (sol-1-2)."
+    },
+    "grok-1-2": {
+      "file": "scratchpad/effected/glob/GlobPattern.ts",
+      "class": "schema",
+      "summary": "GuardReason, Platform and ExtglobType lack a single schema-owned literal domain.",
+      "fix": "Create one identity-annotated LiteralKit for each of GuardReason (limits.ts), Platform (types.ts) and ExtglobType (ast.ts). Derive the same-name types from .Type, reuse the kits in GlobPatternError.reason and GlobPatternOptions.platform, and replace the ExtglobType membership set/predicate with the kit guard. Copy the actual oracle member lists exactly (Platform has 12 members despite the seat calling it 13); preserve every accepted literal."
+    },
+    "sol-1-2": {
+      "file": "scratchpad/effected/glob/internal/limits.ts",
+      "class": "schema",
+      "summary": "GuardExceeded is a Data.TaggedError without the required schema contract.",
+      "fix": "Define GuardExceeded directly with S.TaggedError and $I identity, schema and field annotations, using the shared GuardReason kit. Preserve the positional (reason, limit, actual) constructor, existing message, name = \"Error\", _tag and instanceof behavior so existing throw sites need no rewrites. Keep limit finite and allow the intentional actual Infinity via the documented schemaNumber exception. Extend engine.test.ts with schema/constructor parity and non-finite-measurement regression assertions. Do not adopt the behavior-changing alternatives listed under Rejected."
+    },
+    "sol-1-4a": {
+      "file": "scratchpad/effected/glob/internal/limits.ts",
+      "class": "schema",
+      "summary": "Core error schemas and facade fields lack required identity annotations.",
+      "fix": "Add meaningful $I.annote title/description metadata and message.annotateKey descriptions to InvalidCap, InvalidPattern and ASTError; add field descriptions to GlobPattern.source and GlobSet.patterns. Preserve identifiers, tags and behavior. This is the core-surface portion of sol-1-4; the two remaining error contracts are owned exclusively by sol-1-4b."
+    },
+    "sol-1-4b": {
+      "file": "scratchpad/effected/glob/internal/braceExpressions.ts",
+      "class": "schema",
+      "summary": "BraceExpressionError and MinimatchError lack required identity annotations.",
+      "fix": "Add meaningful $I.annote title/description metadata and message.annotateKey descriptions to BraceExpressionError and MinimatchError. Preserve the existing error identities and tags; do not collapse them into a new error family. This is the disjoint remaining portion of sol-1-4, separated to keep each write group at six or fewer source files."
+    },
+    "sol-1-5": {
+      "file": "scratchpad/effected/glob/GlobPattern.ts",
+      "class": "schema",
+      "summary": "The two public compilability filters lack identifier and description metadata.",
+      "fix": "Use distinct $I.annote metadata for each compilability check, with identifier, meaningful title and description. Preserve the predicate and existing guard-message behavior."
+    },
+    "sol-1-6": {
+      "file": "scratchpad/effected/glob/internal/braceExpansion.ts",
+      "class": "effect-idiom",
+      "summary": "Brace-expansion module initialization runs five internal Effect runtimes.",
+      "fix": "Acquire the default Random service once and generate the five salts with nextDoubleUnsafe(), preserving their string prefixes/suffixes and synchronous lifetime. Remove the now-unused Effect import. Retain the existing escape/brace-expansion oracle tests; no test rewrite is needed."
+    },
+    "fable-1-7a": {
+      "file": "scratchpad/effected/glob/internal/escape.ts",
+      "class": "effect-idiom",
+      "summary": "Four optional-options helpers acquired unforced dual API shapes.",
+      "fix": "Restore the four pinned upstream arrow signatures and full-arity behavior for escape, unescape, expand and braceExpand, keeping required import, native-runtime and typed-error changes. Remove their unused dual/Predicate imports (keep unrelated uses where needed). Restore any upstream test lines changed for these wrappers; none were identified in the reviewed test diffs. Retain upstream one-argument/default-options and full-arity oracle tests. The mandatory-arity portion of the seat report is rejected separately."
+    },
+    "fable-1-2": {
+      "file": "scratchpad/test/glob/GlobPattern.test.ts",
+      "class": "test",
+      "summary": "Wrong-input tests were moved from Class.make to decoding, losing constructor coverage.",
+      "fix": "Add the single sanctioned scratchpad/test/glob/deliberatelyInvalid.ts helper with export const deliberatelyInvalid = <T>(value: unknown): T => value as T and its documentation. Restore the upstream make subjects with dot: deliberatelyInvalid<boolean>(undefined) and platform: deliberatelyInvalid<\"posix\">(\"vms\"). Preserve the throwing assertions and all other tests."
+    },
+    "fable-1-3": {
+      "file": "package.json",
+      "class": "bug",
+      "summary": "A root minimatch override makes the glob oracle suite use 10.2.5 instead of pinned 10.2.6.",
+      "fix": "Correct the root minimatch override so it permits the pinned 10.2.6 oracle (use 10.2.6 for the existing blanket override, or a supported narrower override preserving the exact glob oracle). Regenerate bun.lock through beep-heavy bun install, confirm resolution from scratchpad/test/glob is 10.2.6, then run the module test gate. Keep scratchpad/package.json's already-correct exact 10.2.6 declaration and the compliance assertions unchanged. No test file edit is required; package.json and bun.lock are an explicit shared-config write surface."
+    }
+  }
+}

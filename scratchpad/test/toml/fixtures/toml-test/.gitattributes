@@ -1,0 +1,6 @@
+# Vendored upstream compliance corpus: several fixtures under invalid/control/
+# and valid/ deliberately embed bare CR / CRLF bytes to exercise line-ending
+# handling. Disable Git's line-ending normalization for this whole tree so
+# the vendored files stay byte-for-byte identical to upstream, overriding
+# the repo-root `*.toml text eol=lf` rule.
+* -text

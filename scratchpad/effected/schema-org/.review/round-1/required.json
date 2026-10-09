@@ -1,0 +1,110 @@
+{
+  "module": "schema-org",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/schema-org/NodeRef.ts",
+        "scratchpad/effected/schema-org/Vocabulary.ts",
+        "scratchpad/effected/schema-org/JsonLdDocument.ts",
+        "scratchpad/effected/schema-org/Conformance.ts"
+      ],
+      "tests": [
+        "scratchpad/test/schema-org/nodes.test.ts",
+        "scratchpad/test/schema-org/Vocabulary.test.ts",
+        "scratchpad/test/schema-org/JsonLdDocument.test.ts",
+        "scratchpad/test/schema-org/Conformance.test.ts"
+      ],
+      "findings": [
+        "req-1",
+        "req-2",
+        "req-3",
+        "req-4",
+        "req-5",
+        "req-6",
+        "req-7",
+        "req-8",
+        "req-9",
+        "req-10"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/schema-org/internal/vocabulary.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "req-11"
+      ]
+    }
+  ],
+  "findings": {
+    "req-1": {
+      "file": "scratchpad/effected/schema-org/Vocabulary.ts",
+      "class": "law",
+      "summary": "Replace codec-created native public Sets with Effect HashSet and preserve promised order explicitly.",
+      "fix": "Remove both decodeStringSet constants and return HashSet.HashSet<string> from ancestorsOf, propertiesOf and nodeIds, using HashSet.empty/fromIterable and HashSet.has in Conformance.check and danglingReferences. Retain an explicit readonly sequence wherever public insertion order was promised; retain dangling-reference first-seen order with an output array plus a membership set. Retarget Vocabulary.test.ts membership/size assertions to HashSet helpers and add representation/order regressions in the existing Vocabulary.test.ts and JsonLdDocument.test.ts. D9 recording is codemod-2, not group work."
+    },
+    "req-2": {
+      "file": "scratchpad/effected/schema-org/NodeRef.ts",
+      "class": "schema",
+      "summary": "Annotate the NodeId schema and its reusable pattern check.",
+      "fix": "Keep the existing pattern and add identifier/title/description metadata to S.isPattern plus $I.annoteSchema(\"NodeId\", { description: ... }) to NodeId. Derive identifiers through the existing IdentityComposer. Preserve accepted strings, deferred graph validation and the upstream decode message; the unforced generic-message proposal is rejected-1."
+    },
+    "req-3": {
+      "file": "scratchpad/effected/schema-org/NodeRef.ts",
+      "class": "schema",
+      "summary": "Derive NodeRef.isValidId once from NodeId.",
+      "fix": "Derive the guard once with S.is(NodeId), retaining the public (id: string) => boolean contract, for example static readonly isValidId = S.is(NodeId). Preserve deferred checking and retain the upstream agreement test lines unchanged."
+    },
+    "req-4": {
+      "file": "scratchpad/effected/schema-org/Conformance.ts",
+      "class": "schema",
+      "summary": "Build the named TermKind domain with LiteralKit.",
+      "fix": "Construct TermKind with LiteralKit([\"type\", \"property\"]) from @beep/schema/LiteralKit, retain $I.annoteSchema and the same-name type alias, and use TermKind.Enum.type/property at the two issue-construction sites. Preserve the encoded and decoded literals; do not add as const to the LiteralKit input."
+    },
+    "req-5": {
+      "file": "scratchpad/effected/schema-org/Vocabulary.ts",
+      "class": "effect-idiom",
+      "summary": "Keep vocabulary lookup absence in Option throughout.",
+      "fix": "Consume get results with O.match/O.flatMap/O.map; use A.get for name-table lookup and remove the nullable supersedingName adapter. Preserve empty-query and false outcomes and the existing type-first supersededBy lookup semantics, including returning none for a known unsuperseded type. Coordinate ancestorsOf/propertiesOf with req-1."
+    },
+    "req-6": {
+      "file": "scratchpad/effected/schema-org/Conformance.ts",
+      "class": "effect-idiom",
+      "summary": "Represent native-versus-foreign term absence with Option.",
+      "fix": "Return O.Option<string> from nativeTerm and consume it with O.match/O.flatMap at the type and property call sites. Preserve bare terms, schema: stripping, declared-foreign skips, undeclared-prefix unknown issues, issue order and the existing foreign-node reference checks."
+    },
+    "req-7": {
+      "file": "scratchpad/effected/schema-org/Conformance.ts",
+      "class": "schema",
+      "summary": "Replace the policy data interface with a schema-derived contract without tightening runtime acceptance.",
+      "fix": "Define an identity-annotated schema for the three policies and derive the current optional ConformanceOptions input type from it; use named LiteralKit policy domains. Model safe defaults at the schema boundary while preserving ordinary plain-object callers, omitted/explicit-undefined fields and existing non-failing handling of out-of-union runtime policy strings. Do not add throwing validation or new rejection behavior to validateResult/validate. Keep conformance-entry.ts type-only export unchanged. Added-export recording belongs to codemod-1."
+    },
+    "req-8": {
+      "file": "scratchpad/effected/schema-org/JsonLdDocument.ts",
+      "class": "bug",
+      "summary": "Discover and validate JSON-LD node references inside additional catch-all fields.",
+      "fix": "Extend reference discovery to scalar and array node-reference objects containing only a string @id within additional, retaining the originating property name. Share or consistently reuse that discovery in buildResult, danglingReferences and Conformance.check; preserve typed NodeRef behavior and treat JSON-LD value/embedded-node objects separately. Add regressions for missing, present, duplicate, scalar, array and malformed catch-all references in JsonLdDocument.test.ts and Conformance.test.ts. This changes upstream behavior on demonstrated bugs; its section-14 bookkeeping is backlog-13, outside group ownership."
+    },
+    "req-9": {
+      "file": "scratchpad/effected/schema-org/NodeRef.ts",
+      "class": "schema",
+      "summary": "Export the NodeId schema-derived type alias.",
+      "fix": "Add export type NodeId = typeof NodeId.Type in NodeRef.ts. Keep the existing root export, which re-exports the merged value/type symbol; do not edit index.ts solely for this. D2 added-export bookkeeping belongs to codemod-1."
+    },
+    "req-10": {
+      "file": "scratchpad/effected/schema-org/Conformance.ts",
+      "class": "perf",
+      "summary": "Hoist and share the NodeRef schema guard instead of constructing it per value.",
+      "fix": "Hoist S.is(NodeRef) once adjacent to NodeRef and share that guard with the two collectors, preferably a module-local-to-public-source export used directly by Conformance.ts and JsonLdDocument.ts without modifying the root barrel. Preserve nominal typed-reference acceptance; the additional wire-reference branch from req-8 uses its own schema-derived guard. Retain existing oracle tests. Any added export is recorded by codemod-1."
+    },
+    "req-11": {
+      "file": "scratchpad/effected/schema-org/internal/vocabulary.ts",
+      "class": "effect-idiom",
+      "summary": "Replace decodeRow native string splitting with effect/String.",
+      "fix": "Import effect/String as Str and replace row.split(\",\") with Str.split(row, \",\"). Keep the empty/undefined guard, numeric conversion, row indexes and upstream tests unchanged. Array/loop cleanup is separately deferred in backlog-12, so this fix needs no test-file edits."
+    }
+  }
+}

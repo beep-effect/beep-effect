@@ -1,0 +1,88 @@
+{
+  "name": "@savvy-web/pnpm-module-template",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A template repository for bootstrapping single Node.js packages with the Savvy Web toolchain.",
+  "homepage": "https://github.com/spencerbeggs/pnpm-module-template#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spencerbeggs/pnpm-module-template.git"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "C. Spencer Beggs",
+    "email": "spencer@savvyweb.systems",
+    "url": "https://savvyweb.systems"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "turbo run build:dev build:prod --log-order=grouped",
+    "build:dev": "rslib build --config-loader native --env-mode dev",
+    "build:inspect": "rslib inspect --config-loader native --env-mode npm --verbose",
+    "build:prod": "rslib build --config-loader native --env-mode npm",
+    "ci:build": "CI=\"true\" turbo run build:dev build:prod --log-order=grouped --output-logs=full",
+    "ci:test": "CI=\"true\" vitest run --coverage",
+    "commit:check": "savvy-commit check",
+    "commit:init": "savvy-commit init",
+    "lint": "biome check --max-diagnostics=none",
+    "lint:fix": "biome check --write --max-diagnostics=none",
+    "lint:fix:unsafe": "biome check --write --unsafe --max-diagnostics=none",
+    "lint:md": "markdownlint-cli2 '**/*.{md,mdx}' --config './lib/configs/.markdownlint-cli2.jsonc'",
+    "lint:md:fix": "markdownlint-cli2  --config './lib/configs/.markdownlint-cli2.jsonc' --fix",
+    "prepare": "husky",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest --watch",
+    "typecheck": "turbo run types:check --log-prefix=none --log-order=grouped",
+    "types:check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@savvy-web/changesets": "^0.8.0",
+    "@savvy-web/commitlint": "^0.6.0",
+    "@savvy-web/lint-staged": "^0.8.0",
+    "@savvy-web/rslib-builder": "^0.21.3",
+    "@savvy-web/vitest": "^1.4.0"
+  },
+  "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "10.33.0",
+      "onFail": "ignore"
+    },
+    "runtime": [
+      {
+        "name": "node",
+        "version": "24.11.0",
+        "onFail": "ignore"
+      }
+    ]
+  },
+  "publishConfig": {
+    "access": "public",
+    "directory": "dist/dev",
+    "linkDirectory": true,
+    "targets": [
+      {
+        "protocol": "npm",
+        "registry": "https://npm.pkg.github.com/",
+        "directory": "dist/npm",
+        "access": "public",
+        "provenance": true
+      },
+      {
+        "protocol": "npm",
+        "registry": "https://registry.npmjs.org/",
+        "directory": "dist/npm",
+        "access": "public",
+        "provenance": true
+      }
+    ]
+  }
+}

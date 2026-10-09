@@ -1,0 +1,110 @@
+{
+  "module": "sbom",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/sbom/SbomDocument.ts",
+        "scratchpad/effected/sbom/NtiaReport.ts",
+        "scratchpad/effected/sbom/SigstoreSigner.ts"
+      ],
+      "tests": [
+        "scratchpad/test/sbom/conformance.test.ts",
+        "scratchpad/test/sbom/NtiaReport.test.ts",
+        "scratchpad/test/sbom/SigstoreSigner.test.ts",
+        "scratchpad/test/sbom/reachability.test.ts"
+      ],
+      "findings": [
+        "r2",
+        "r8",
+        "r9",
+        "r10"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/sbom/Sbom.ts",
+        "scratchpad/effected/sbom/InTotoStatement.ts",
+        "scratchpad/effected/sbom/SbomMetadataSource.ts",
+        "scratchpad/effected/sbom/SlsaProvenance.ts"
+      ],
+      "tests": [
+        "scratchpad/test/sbom/Sbom.test.ts",
+        "scratchpad/test/sbom/InTotoStatement.test.ts",
+        "scratchpad/test/sbom/SbomMetadataSource.test.ts",
+        "scratchpad/test/sbom/SlsaProvenance.test.ts"
+      ],
+      "findings": [
+        "r1",
+        "r3",
+        "r4",
+        "r5",
+        "r6",
+        "r7"
+      ]
+    }
+  ],
+  "findings": {
+    "r1": {
+      "file": "scratchpad/effected/sbom/Sbom.ts",
+      "class": "law",
+      "summary": "Native array sorting survives a green gate despite the explicit law.",
+      "fix": "Use effect/Array A.sort with an explicit Order preserving localeCompare: Order.mapInput(Order.make<string>((a, b) => Str.localeCompare(b)(a)), (component: Component) => component.name), with Str from effect/String. Preserve stable ordering and upstream assertions; do not substitute Order.String."
+    },
+    "r2": {
+      "file": "scratchpad/effected/sbom/SbomDocument.ts",
+      "class": "schema",
+      "summary": "Named domains use the anonymous-union constructor and lack the mandated LiteralKit representation.",
+      "fix": "Replace all four S.Literals constructors with LiteralKit from @beep/schema/LiteralKit. Preserve members, names, derived types and identity annotation pipes; do not add as const. If dependency-reachability assertions change because of this law-required import, retarget only those assertions; central codemod records the deviation."
+    },
+    "r3": {
+      "file": "scratchpad/effected/sbom/InTotoStatement.ts",
+      "class": "schema",
+      "summary": "The exported digest schema has no canonical identity; the required identity pass missed it.",
+      "fix": "Apply $I.annoteSchema(\"Sha256Digest\", { description: \"A SHA-256 digest as 64 lowercase hexadecimal characters, without an algorithm prefix.\" }) to the base schema before the existing statics. Preserve the brand, accepted strings and upstream pattern assertion."
+    },
+    "r4": {
+      "file": "scratchpad/effected/sbom/SlsaProvenance.ts",
+      "class": "schema",
+      "summary": "The pre-review field-annotation pass is incomplete. This is schema AST metadata required by step 4, rather than deferred JSDoc carrier conversion.",
+      "fix": "Add meaningful annotateKey({ description }) metadata from the existing descriptions to these nested fields and containers. Preserve source prose, schema shapes and decoding behavior."
+    },
+    "r5": {
+      "file": "scratchpad/effected/sbom/Sbom.ts",
+      "class": "schema",
+      "summary": "Public input and configuration data have no schema source of truth.",
+      "fix": "Define identity-annotated structural schemas and derive the existing public type names from them in their four owning files. Preserve structural assignability, readonly shapes and explicit-undefined optional semantics; keep function boundaries unchanged and add no new input validation. Added-export bookkeeping belongs to the central codemod."
+    },
+    "r6": {
+      "file": "scratchpad/effected/sbom/Sbom.ts",
+      "class": "effect-idiom",
+      "summary": "Public JSON boundaries bypass the required Schema codec path.",
+      "fix": "Encode the existing assembled wire objects using S.fromJsonString and the appropriate synchronous Result codec. Preserve key order, SBOM space default 2, statement default 0, caller indentation behavior and the open predicate contract. Preserve successful bytes and upstream assertions; law-forced failure changes are recorded centrally, without assigning README or ledger writes."
+    },
+    "r7": {
+      "file": "scratchpad/effected/sbom/InTotoStatement.ts",
+      "class": "schema",
+      "summary": "The named digest constraint has a second predicate independent of its schema.",
+      "fix": "Derive the call-time guard from the schema: static isValid = (value: string): boolean => S.is(Sha256Digest)(normalizeDigest(value)). Keep normalization and all accepted/rejected inputs unchanged."
+    },
+    "r8": {
+      "file": "scratchpad/effected/sbom/SigstoreSigner.ts",
+      "class": "schema",
+      "summary": "The error's field metadata was omitted from the required annotation pass.",
+      "fix": "Add a meaningful description with S.String.annotateKey on message. Preserve the error tag, payload and message text. This is the file-local error-field portion of fable-1-8; provenance-field metadata is r4."
+    },
+    "r9": {
+      "file": "scratchpad/effected/sbom/SigstoreSigner.ts",
+      "class": "law",
+      "summary": "A behavior-neutral direct-helper law fix remains in production source. A demonstrated gate miss qualifies under D11 despite the seat's backlog label.",
+      "fix": "Replace the fallback wrapper with sign: overrides.sign ?? unstubbed. Preserve override selection and the existing unstubbed typed error. The separate test identity-lambda portion is deferred as b9."
+    },
+    "r10": {
+      "file": "scratchpad/effected/sbom/NtiaReport.ts",
+      "class": "schema",
+      "summary": "Reused and named NTIA domain constraints remain ad-hoc predicates. The explicit law makes this required despite the seat's backlog label.",
+      "fix": "Model trimmed non-empty and pkg:-prefix constraints as local schemas with built-in checks and derived S.is guards. Preserve trimming, undefined handling, returned values and all upstream NTIA results. Do not tighten Component.purl acceptance or add public input validation. The independent vcs Option-chain suggestion is b10."
+    }
+  }
+}

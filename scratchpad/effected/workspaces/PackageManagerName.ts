@@ -1,0 +1,802 @@
+// Which package manager drives this workspace, and how we work that out.
+//
+// `PackageManagerName` is structurally identical to `@effected/lockfiles`'
+// `LockfileFormat` and assigns freely to it — which is exactly what
+// `LockfileReader` relies on. They are kept as separate names because they are
+// separate concepts (which PM runs the repo vs. which lockfile grammar to
+// parse), and because `@effected/package-json` already exports a
+// `PackageManager` class for the corepack `pnpm@10.33.0` field.
+
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import { $ScratchpadId } from "@beep/identity/packages";
+import { PackageManager } from "../package-json/index.ts";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
+import { WorkspaceManifestError } from "./WorkspacePackage.ts";
+import * as P from "effect/Predicate";
+
+const $I = $ScratchpadId.create("effected/workspaces/PackageManagerName");
+
+const JsonValue = S.fromJsonString(S.Unknown);
+
+class PackageManagerDetectorDefect extends S.TaggedError<PackageManagerDetectorDefect>($I`PackageManagerDetectorDefect`)("PackageManagerDetectorDefect", {
+	message: S.String,
+}, $I.annote("PackageManagerDetectorDefect", { description: "An invalid manifest value or unstubbed package manager detector." })) {}
+
+/**
+ * The four package managers this package understands.
+ *
+ * **Example** (Validate supported manager names)
+ *
+ * ```ts
+ * import { PackageManagerName } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(PackageManagerName)("pnpm")) // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PackageManagerName = LiteralKit(["npm", "pnpm", "yarn", "bun"]).pipe($I.annoteSchema("PackageManagerName", { description: "The four package managers this package understands." }));
+
+/**
+ * The decoded type of {@link (PackageManagerName:variable)}: `"npm" | "pnpm" | "yarn" | "bun"`.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PackageManagerName = typeof PackageManagerName.Type;
+
+/**
+ * The markers {@link PackageManagerDetector} probes, in the priority order it
+ * probes them.
+ *
+ * **Details**
+ *
+ * One vocabulary serves both halves of the detection contract: the failure path
+ * reports every member as `PackageManagerDetectionError.checked`, and the
+ * success path reports the one that fired as
+ * `DetectedPackageManager.evidence`. A closed literal union rather than
+ * free text, so a consumer logging *why* a workspace was classified asserts
+ * against the kit's vocabulary instead of re-deriving the probe with its own
+ * filesystem reads.
+ *
+ * The `package.json#…` spellings name manifest *fields*; the rest are marker
+ * files at the workspace root.
+ *
+ * **Example** (Recognize a declaration marker)
+ *
+ * ```ts
+ * import { PackageManagerEvidence } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(PackageManagerEvidence)("package.json#packageManager")) // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PackageManagerEvidence = LiteralKit([
+	// The workspace tier: which manager runs this WORKSPACE.
+	"pnpm-workspace.yaml",
+	"bun.lock",
+	"bun.lockb",
+	"yarn.lock",
+	"package.json#workspaces",
+	// The standalone tier: which manager runs this single-package repo.
+	"pnpm-lock.yaml",
+	"package-lock.json",
+	// The declaration tier: which manager is MEANT to run, before any install.
+	// devEngines first: it is authoritative for the name (`declaredName`
+	// believes it over the top-level field), so the union order IS the decision
+	// precedence — the same rule that orders every other member.
+	"package.json#devEngines.packageManager",
+	"package.json#packageManager",
+]).pipe($I.annoteSchema("PackageManagerEvidence", { description: "The markers PackageManagerDetector probes, in the priority order it probes them." }));
+
+/**
+ * The decoded type of {@link (PackageManagerEvidence:variable)}: the marker
+ * that decided a detection.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PackageManagerEvidence = typeof PackageManagerEvidence.Type;
+
+/**
+ * The outcome of package-manager detection at a workspace root.
+ *
+ * **Details**
+ *
+ * `version` is `Option.none()` unless a manifest field naming the *same* manager
+ * that was detected also carries a version — a `packageManager: "yarn@4"` in a
+ * pnpm workspace tells us nothing about pnpm's version, so it is not reported as
+ * one. The two fields consulted are the corepack top-level `packageManager` and
+ * `devEngines.packageManager`; see {@link PackageManagerDetector} for the
+ * precedence between them.
+ *
+ * `evidence` is the rung of the priority order that decided the **name** — the
+ * verdict's provenance, in the same vocabulary the failure path reports as
+ * `PackageManagerDetectionError.checked`. For the bun and yarn rungs the
+ * lockfile is the recorded signal even though the rung is a conjunction (the
+ * lockfile *plus* a manifest field naming the manager): the manifest field alone
+ * would have resolved in the declaration tier, so the lockfile is what this rung
+ * added. The version's provenance is deliberately not carried — it follows the
+ * two-field precedence above, which is a rule, not a probe.
+ *
+ * **Example** (Construct a detection with workspace evidence)
+ *
+ * ```ts
+ * import { DetectedPackageManager } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+ * import * as O from "effect/Option";
+ *
+ * const detected = DetectedPackageManager.make({
+ *   name: "pnpm",
+ *   version: O.none(),
+ *   runtime: "node",
+ *   evidence: "pnpm-workspace.yaml",
+ * });
+ *
+ * console.log(detected.evidence) // pnpm-workspace.yaml
+ * ```
+ *
+ * @public
+ * @category models
+ * @since 0.0.0
+ */
+export class DetectedPackageManager extends S.Class<DetectedPackageManager>($I`DetectedPackageManager`)({
+	/** The detected manager. */
+	name: PackageManagerName.annotateKey({ description: "The detected manager." }),
+	/** Its version, when a manifest field agrees on the manager and carries one. */
+	version: S.Option(S.String).annotateKey({ description: "Its version, when a manifest field agrees on the manager and carries one." }),
+	/** The JavaScript runtime the manager implies. */
+	runtime: S.Literals(["node", "bun"]).annotateKey({ description: "The JavaScript runtime the manager implies." }),
+	/** The rung of the priority order that decided the name. */
+	evidence: PackageManagerEvidence.annotateKey({ description: "The rung of the priority order that decided the name." }),
+}, $I.annote("DetectedPackageManager", { description: "The outcome of package-manager detection at a workspace root." })) {}
+
+/**
+ * A manager named by one of the two manifest fields: the name, plus the exact
+ * version when the field carries one that parses.
+ */
+const ManagerHint = S.Struct({
+	name: S.String.annotateKey({ description: "The manager name declared by the manifest." }),
+	version: S.Option(S.String).annotateKey({ description: "The exact parsed version, or none when absent or invalid." }),
+}).pipe($I.annoteSchema("ManagerHint", { description: "A normalized manifest manager hint whose invalid version does not discard its name." }));
+
+type ManagerHint = typeof ManagerHint.Type;
+
+/**
+ * Whether `value` is a non-null, non-array object — corepack's own shape test.
+ *
+ * **Example** (Validate a manifest object)
+ *
+ * ```ts
+ * import { JsonObject } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(JsonObject)({ packageManager: "pnpm@10.33.0" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const JsonObject = S.Record(S.String, S.Unknown).pipe(
+	$I.annoteSchema("JsonObject", { description: "A string-keyed object accepted as a manifest or policy, excluding null, arrays and functions." }),
+);
+
+/**
+ * A manifest or policy object with arbitrary field values.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type JsonObject = typeof JsonObject.Type;
+
+/**
+ * Whether a value satisfies the manifest-object schema.
+ *
+ * **Example** (Reject an array as a manifest object)
+ *
+ * ```ts
+ * import { isPlainObject } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+ *
+ * console.log(isPlainObject([])) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isPlainObject = S.is(JsonObject);
+
+/**
+ * The exact version a `name` + `version` pair denotes, or none when the version
+ * is not an exact version.
+ *
+ * **Details**
+ *
+ * Reuses the corepack `name@version+integrity` grammar rather than a second
+ * parser, so a `devEngines` version carrying a hash (`11.11.0+sha512.…`)
+ * normalizes to the same `11.11.0` the
+ * top-level field reports — and a *range* (`^11`, `11.x`) yields none, because a
+ * range is not a version and corepack will not run one either.
+ */
+const exactVersionOf = (name: string, version: string): O.Option<string> =>
+	S.decodeOption(PackageManager.FromString)(`${name}@${version}`).pipe(O.map((pm) => pm.version));
+
+/**
+ * The `devEngines.packageManager` hint, or none.
+ *
+ * **Details**
+ *
+ * Every malformed shape corepack itself tolerates is tolerated here by *ignoring
+ * the field*, never by failing detection: a non-object `devEngines`, a
+ * non-object `packageManager`, an **array** of them (corepack does not support
+ * arrays in this slot and falls back), a missing or non-string `name`, and a
+ * `name` containing `@`. A version that is not an exact version is dropped on its
+ * own, keeping the name — the name is still a valid disambiguator.
+ */
+const devEnginesHint = (manifest: Record<string, unknown>): O.Option<ManagerHint> => {
+	const devEngines = manifest.devEngines;
+	if (!isPlainObject(devEngines)) return O.none();
+
+	const slot = devEngines.packageManager;
+	if (!isPlainObject(slot)) return O.none();
+
+	const name = slot.name;
+	if (!P.isString(name) || name === "" || name.includes("@")) return O.none();
+
+	const version = slot.version;
+	return O.some(ManagerHint.make({
+		name,
+		version: P.isString(version) && version !== "" ? exactVersionOf(name, version) : O.none<string>(),
+	}));
+};
+
+/** The corepack top-level `packageManager` hint, or none when absent or malformed. */
+const corepackHint = (manifest: Record<string, unknown>): O.Option<ManagerHint> => {
+	const raw = manifest.packageManager;
+	if (!P.isString(raw)) return O.none();
+	return S.decodeOption(PackageManager.FromString)(raw).pipe(
+		O.map((pm) => ManagerHint.make({ name: pm.name, version: O.some(pm.version) })),
+	);
+};
+
+/**
+ * Raised when a directory carries no lockfile and no workspace configuration,
+ * so no package manager can be attributed to it.
+ *
+ * **Example** (Report the root and checked marker)
+ *
+ * ```ts
+ * import { PackageManagerDetectionError } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+ *
+ * const error = PackageManagerDetectionError.make({
+ *   root: "/repo",
+ *   checked: ["pnpm-workspace.yaml"],
+ * });
+ *
+ * console.log(error.message) // No package manager detected at /repo (checked pnpm-workspace.yaml)
+ * ```
+ *
+ * @public
+ * @category errors
+ * @since 0.0.0
+ */
+export class PackageManagerDetectionError extends S.TaggedError<PackageManagerDetectionError>($I`PackageManagerDetectionError`)(
+	"PackageManagerDetectionError",
+	{
+		/** The workspace root that was probed. */
+		root: S.String.annotateKey({ description: "The workspace root that was probed." }),
+		/** The marker files probed, in the order they were probed. */
+		checked: S.Array(S.String).annotateKey({ description: "The marker files probed, in the order they were probed." }),
+	}, $I.annote("PackageManagerDetectionError", { description: "Raised when a directory carries no lockfile and no workspace configuration, so no package manager can be attributed to it." }),
+) {
+	/**
+	 * Renders the root and probed markers into a one-line message.
+	 *
+	 * **Example** (Read the detection failure message)
+	 *
+	 * ```ts
+	 * import { PackageManagerDetectionError } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+	 *
+	 * const error = PackageManagerDetectionError.make({
+	 *   root: "/repo",
+	 *   checked: ["pnpm-workspace.yaml"],
+	 * });
+	 *
+	 * console.log(error.message) // No package manager detected at /repo (checked pnpm-workspace.yaml)
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
+	override get message(): string {
+		return `No package manager detected at ${this.root} (checked ${this.checked.join(", ")})`;
+	}
+}
+
+/**
+ * The markers probed, in priority order. Derived from the evidence vocabulary so
+ * the failure path's `checked` and the success path's `evidence` cannot drift.
+ */
+const CHECKED = PackageManagerEvidence.literals;
+
+/**
+ * Every failure {@link PackageManagerDetector} can surface: no manager could be
+ * attributed to the root, or the root's `package.json` exists but cannot be read
+ * or parsed.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PackageManagerDetectionFailure = PackageManagerDetectionError | WorkspaceManifestError;
+
+/**
+ * The {@link PackageManagerDetector} service shape.
+ *
+ * **Details**
+ *
+ * Exported so a consumer can type a bespoke double against the contract without
+ * reaching into the class — the `WorkspaceDiscoveryShape` /
+ * `PublishabilityDetectorShape` convention.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export interface PackageManagerDetectorShape {
+	/**
+	 * Detect the package manager at a workspace root.
+	 *
+	 * **Example** (Compose a stubbed detection)
+	 *
+	 * ```ts
+	 * import { PackageManagerDetectionError, PackageManagerDetector } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const detector = PackageManagerDetector.makeTest({
+	 *   detect: () => Effect.fail(PackageManagerDetectionError.make({
+	 *     root: "/repo",
+	 *     checked: [],
+	 *   })),
+	 * });
+	 *
+	 * console.log(Effect.isEffect(detector.detect("/repo"))) // true
+	 * ```
+	 *
+	 * @category queries
+	 * @since 0.0.0
+	 */
+	readonly detect: (root: string) => Effect.Effect<DetectedPackageManager, PackageManagerDetectionFailure>;
+}
+
+/**
+ * Detects which package manager owns a workspace root.
+ *
+ * **Details**
+ *
+ * **Lockfile evidence is the primary signal** — it is what says which manager
+ * actually ran. Priority, first match wins: a `pnpm-workspace.yaml` means pnpm;
+ * a bun lockfile *plus* a manifest field naming bun means bun; a `yarn.lock`
+ * *plus* a manifest field naming yarn means yarn; a root `package.json` with a
+ * `workspaces` field falls back to npm.
+ *
+ * The manifest conjunction is deliberate: a stray `yarn.lock` in an npm repo is
+ * common, and only a declared manager name disambiguates it.
+ *
+ * **Two manifest fields declare a manager, and they are not interchangeable.**
+ * Corepack reads both, and this is the rule that falls out of how it treats
+ * them:
+ *
+ * - `devEngines.packageManager.name` is authoritative for the **name**.
+ *   Corepack *errors* when a top-level `packageManager` disagrees with it (per
+ *   `devEngines.packageManager.onFail`), so where both are present and disagree,
+ *   `devEngines` is the one to believe. When `devEngines` names a manager, the
+ *   top-level field's name is not consulted as a disambiguator at all.
+ * - The top-level `packageManager` is authoritative for the exact **version**:
+ *   it is the field that carries the integrity hash. Where both name the same
+ *   manager, its version wins; where it is absent, `devEngines.packageManager.version`
+ *   supplies the version instead.
+ *
+ * A version is reported **only when the field it came from names the manager
+ * that was actually detected**. A `packageManager: "yarn@4"` in a pnpm workspace
+ * says nothing about pnpm's version, so no version is reported — and the same
+ * discipline applies to `devEngines`.
+ *
+ * Malformed manifest *hints* are ignored rather than fatal, matching corepack: a
+ * non-object or array `devEngines.packageManager`, a `name` containing `@`, or a
+ * version that is not an exact version cannot turn a detectable workspace into a
+ * detection failure. A manifest that exists but cannot be **read or parsed** is a
+ * different thing entirely and fails with a `WorkspaceManifestError` — a corrupt
+ * root manifest is a real problem, not a missing hint.
+ *
+ * **Example** (Compose detection through the service)
+ *
+ * ```ts
+ * import { PackageManagerDetector } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+ * import * as Effect from "effect/Effect";
+ *
+ * const program = Effect.flatMap(PackageManagerDetector, (detector) => detector.detect("/repo"));
+ *
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @public
+ * @category services
+ * @since 0.0.0
+ */
+export class PackageManagerDetector extends Context.Service<PackageManagerDetector, PackageManagerDetectorShape>()(
+	$I`PackageManagerDetector`,
+) {
+	/**
+	 * Builds the service over core `FileSystem` and `Path`.
+	 *
+	 * **Example** (Construct the filesystem-backed service effect)
+	 *
+	 * ```ts
+	 * import { PackageManagerDetector } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * console.log(Effect.isEffect(PackageManagerDetector.make)) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
+	static readonly make: Effect.Effect<
+		{ readonly detect: (root: string) => Effect.Effect<DetectedPackageManager, PackageManagerDetectionFailure> },
+		never,
+		FileSystem.FileSystem | Path.Path
+	> = Effect.gen(function* () {
+		const fs = yield* FileSystem.FileSystem;
+		const path = yield* Path.Path;
+
+		const has = (root: string, file: string): Effect.Effect<boolean> =>
+			fs.exists(path.join(root, file)).pipe(Effect.orElseSucceed(() => false));
+
+		/**
+		 * The root manifest, read and parsed **once** per detection.
+		 *
+		 * **Details**
+		 *
+		 * An absent manifest is `Option.none()` — a bun or yarn repo with no root
+		 * `package.json` is unusual but not an error. A manifest that is present but
+		 * unreadable, unparseable, or not a JSON object fails typed: those are
+		 * corrupt-manifest conditions, and swallowing them would report "no manager
+		 * declared" for a repo whose manifest is simply broken.
+		 */
+		const manifestOf = Effect.fnUntraced(function* (root: string): Effect.fn.Return<O.Option<Record<string, unknown>>, WorkspaceManifestError> {
+			const packageJsonPath = path.join(root, "package.json");
+			const exists = yield* fs.exists(packageJsonPath).pipe(Effect.orElseSucceed(() => false));
+			if (!exists) return O.none<Record<string, unknown>>();
+
+			const content = yield* fs
+				.readFileString(packageJsonPath)
+				.pipe(Effect.mapError((cause) => WorkspaceManifestError.make({ packageJsonPath, kind: "read", cause })));
+
+			const parsed = yield* S.decodeEffect(JsonValue)(content).pipe(Effect.mapError((cause) => WorkspaceManifestError.make({ packageJsonPath, kind: "decode", cause })));
+
+			if (!isPlainObject(parsed)) {
+				return yield* WorkspaceManifestError.make({
+						packageJsonPath,
+						kind: "decode",
+						cause: PackageManagerDetectorDefect.make({ message: "package.json is not a JSON object" }),
+					});
+			}
+			return O.some(parsed);
+		});
+
+		/**
+		 * The manager name the manifest declares, if any.
+		 *
+		 * **Details**
+		 *
+		 * `devEngines` first — it is authoritative for the name, and corepack errors
+		 * when the top-level field contradicts it.
+		 */
+		const declaredName = (hints: {
+			readonly devEngines: O.Option<ManagerHint>;
+			readonly corepack: O.Option<ManagerHint>;
+		}): O.Option<string> =>
+			O.map(
+				O.orElse(hints.devEngines, () => hints.corepack),
+				(hint) => hint.name,
+			);
+
+		/** Whether the manifest declares `name` as its manager. */
+		const namesManager = (
+			hints: { readonly devEngines: O.Option<ManagerHint>; readonly corepack: O.Option<ManagerHint> },
+			name: PackageManagerName,
+		): boolean => O.contains(declaredName(hints), name);
+
+		/**
+		 * The version to report for the manager that was detected — none unless a
+		 * field naming *that* manager carries one.
+		 *
+		 * **Details**
+		 *
+		 * The top-level `packageManager` wins when it names the manager, because it
+		 * is the field carrying the integrity hash; `devEngines` supplies the version
+		 * when it does not.
+		 */
+		const versionFor = (
+			hints: { readonly devEngines: O.Option<ManagerHint>; readonly corepack: O.Option<ManagerHint> },
+			name: PackageManagerName,
+		): O.Option<string> => {
+			if (!namesManager(hints, name)) return O.none();
+			const fromCorepack = O.flatMap(hints.corepack, (hint) =>
+				hint.name === name ? hint.version : O.none<string>(),
+			);
+			return O.orElse(fromCorepack, () =>
+				O.flatMap(hints.devEngines, (hint) => (hint.name === name ? hint.version : O.none<string>())),
+			);
+		};
+
+		const detect = Effect.fn("PackageManagerDetector.detect")(function* (root: string) {
+			const manifest = yield* manifestOf(root);
+			const hints = {
+				devEngines: O.flatMap(manifest, devEnginesHint),
+				corepack: O.flatMap(manifest, corepackHint),
+			};
+
+			if (yield* has(root, "pnpm-workspace.yaml")) {
+				return DetectedPackageManager.make({
+					name: "pnpm",
+					version: versionFor(hints, "pnpm"),
+					runtime: "node",
+					evidence: "pnpm-workspace.yaml",
+				});
+			}
+
+			// Which bun lockfile is present, probed in priority order — the marker
+			// itself is the evidence a success reports, so the OR is not collapsed
+			// into a bare boolean.
+			const bunLock: O.Option<"bun.lock" | "bun.lockb"> = (yield* has(root, "bun.lock"))
+				? O.some("bun.lock")
+				: (yield* has(root, "bun.lockb"))
+					? O.some("bun.lockb")
+					: O.none();
+			if (O.isSome(bunLock) && namesManager(hints, "bun")) {
+				return DetectedPackageManager.make({
+					name: "bun",
+					version: versionFor(hints, "bun"),
+					runtime: "bun",
+					evidence: bunLock.value,
+				});
+			}
+
+			if ((yield* has(root, "yarn.lock")) && namesManager(hints, "yarn")) {
+				return DetectedPackageManager.make({
+					name: "yarn",
+					version: versionFor(hints, "yarn"),
+					runtime: "node",
+					evidence: "yarn.lock",
+				});
+			}
+
+			const workspaces = O.map(manifest, (fields) => fields.workspaces);
+			if (O.isSome(workspaces) && workspaces.value !== undefined && workspaces.value !== null) {
+				return DetectedPackageManager.make({
+					name: "npm",
+					version: versionFor(hints, "npm"),
+					runtime: "node",
+					evidence: "package.json#workspaces",
+				});
+			}
+
+			// ── the standalone tier ────────────────────────────────────────────
+			//
+			// Every workspace marker has missed, so this is not a workspace. Most
+			// repos are not: a single-package repo with a pnpm-lock.yaml and no
+			// `workspaces` field must still be detectable.
+			//
+			// It runs after the workspace tier on purpose, so no input that
+			// already resolved there can change its answer, and a stray package-lock.json
+			// cannot turn a pnpm workspace into an npm repo.
+			//
+			// The conjunctions mirror the workspace tier exactly rather than
+			// inventing a looser second rule inside one service: a pnpm or npm
+			// lockfile is written by exactly one manager and stands alone, while a
+			// yarn or bun lockfile still needs the manifest to name its manager,
+			// because a stray yarn.lock is as common here as in a workspace.
+			if (yield* has(root, "pnpm-lock.yaml")) {
+				return DetectedPackageManager.make({
+					name: "pnpm",
+					version: versionFor(hints, "pnpm"),
+					runtime: "node",
+					evidence: "pnpm-lock.yaml",
+				});
+			}
+
+			if (O.isSome(bunLock) && namesManager(hints, "bun")) {
+				return DetectedPackageManager.make({
+					name: "bun",
+					version: versionFor(hints, "bun"),
+					runtime: "bun",
+					evidence: bunLock.value,
+				});
+			}
+
+			if ((yield* has(root, "yarn.lock")) && namesManager(hints, "yarn")) {
+				return DetectedPackageManager.make({
+					name: "yarn",
+					version: versionFor(hints, "yarn"),
+					runtime: "node",
+					evidence: "yarn.lock",
+				});
+			}
+
+			if (yield* has(root, "package-lock.json")) {
+				return DetectedPackageManager.make({
+					name: "npm",
+					version: versionFor(hints, "npm"),
+					runtime: "node",
+					evidence: "package-lock.json",
+				});
+			}
+
+			// ── the declaration tier ───────────────────────────────────────────
+			//
+			// No lockfile at all. A fresh clone before its first install has none to
+			// read, but its manifest still says plainly which manager is meant to
+			// run — weaker evidence than a lockfile, which is why it is consulted
+			// last, but evidence nonetheless.
+			const declared = declaredName(hints);
+			if (O.isSome(declared)) {
+				const name = declared.value;
+				if (name === "pnpm" || name === "npm" || name === "yarn" || name === "bun") {
+					return DetectedPackageManager.make({
+						name,
+						version: versionFor(hints, name),
+						runtime: name === "bun" ? "bun" : "node",
+						// The field that supplied the name — `declaredName` believes
+						// devEngines first, so the evidence mirrors that precedence.
+						evidence: O.isSome(hints.devEngines)
+							? "package.json#devEngines.packageManager"
+							: "package.json#packageManager",
+					});
+				}
+			}
+
+			// Nothing matched, and the package REFUSES TO GUESS: a default is policy,
+			// not detection. A caller who wants one writes `Effect.orElseSucceed`
+			// where a reader can see it.
+			return yield* PackageManagerDetectionError.make({ root, checked: CHECKED });
+		});
+
+		return {
+			detect: (root: string) =>
+				detect(root).pipe(Effect.provideService(FileSystem.FileSystem, fs), Effect.provideService(Path.Path, path)),
+		};
+	});
+
+	/**
+	 * Provides the live detector over core `FileSystem` and `Path`.
+	 *
+	 * **Example** (Inspect the live detector layer)
+	 *
+	 * ```ts
+	 * import { PackageManagerDetector } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(PackageManagerDetector.layer)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
+	static readonly layer: Layer.Layer<PackageManagerDetector, never, FileSystem.FileSystem | Path.Path> = Layer.effect(
+		PackageManagerDetector,
+		PackageManagerDetector.make,
+	);
+
+	/**
+	 * The sanctioned in-memory double.
+	 *
+	 * **Gotchas**
+	 *
+	 * **`detect` has no honest default, so an unstubbed call dies** — the
+	 * `WorkspaceDiscovery.info` posture, for the same reason. A stand-in that
+	 * answered `"pnpm"` would hand a consumer a fact nothing established, and it
+	 * would contradict the very service it stands in for: the live detector's
+	 * defining property is that it refuses to guess when no evidence matches.
+	 * A double that guesses is worse than no double.
+	 *
+	 * Failing typed would be the subtler mistake: `PackageManagerDetectionError`
+	 * reads as a legitimate "no manager here" answer, so a consumer would branch
+	 * on it and proceed, never learning that the test simply forgot to stub.
+	 *
+	 * The defect is also not absorbed by `Effect.catch` or any typed-error
+	 * handler — deliberately, so code under test with a best-effort `catch`
+	 * around detection cannot make the mandatory stub look optional; the
+	 * unstubbed call still fails the test.
+	 *
+	 * **Example** (Stub pnpm detection with workspace evidence)
+	 *
+	 * ```ts
+	 * import { DetectedPackageManager, PackageManagerDetector } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
+	 *
+	 * const detector = PackageManagerDetector.makeTest({
+	 *   detect: () =>
+	 *     Effect.succeed(
+	 *       DetectedPackageManager.make({
+	 *         name: "pnpm",
+	 *         version: O.none(),
+	 *         runtime: "node",
+	 *         evidence: "pnpm-workspace.yaml",
+	 *       }),
+	 *     ),
+	 * });
+	 *
+	 * console.log(Effect.runSync(detector.detect("/repo")).name) // pnpm
+	 * ```
+	 *
+	 * @param overrides - Members to supply; anything omitted dies on use.
+	 * @category testing
+	 * @since 0.0.0
+	 */
+	static readonly makeTest = (overrides: Partial<PackageManagerDetectorShape> = {}): PackageManagerDetectorShape => ({
+		detect: () =>
+			Effect.die(
+				PackageManagerDetectorDefect.make({
+					message: "PackageManagerDetector.makeTest: detect() was called but not stubbed — no honest default DetectedPackageManager exists for a test double; pass a `detect` override.",
+				}),
+			),
+		...overrides,
+	});
+
+	/**
+	 * {@link PackageManagerDetector.makeTest} behind `Layer.succeed`.
+	 *
+	 * **Gotchas**
+	 *
+	 * A parameterized layer factory mints a **fresh reference per call**, and
+	 * layers memoize by reference — bind the result to a `const` and reuse it
+	 * rather than calling `layerTest(...)` at each composition site.
+	 *
+	 * Pairs with `WorkspaceRoot.layerTest` and `WorkspaceDiscovery.layerTest` to
+	 * stand up the whole discovery path with no filesystem at all.
+	 *
+	 * **Example** (Provide a stubbed detector layer)
+	 *
+	 * ```ts
+	 * import { DetectedPackageManager, PackageManagerDetector } from "@beep/scratchpad/effected/workspaces/PackageManagerName";
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
+	 *
+	 * const TestDetector = PackageManagerDetector.layerTest({
+	 *   detect: () => Effect.succeed(DetectedPackageManager.make({
+	 *     name: "bun",
+	 *     version: O.none(),
+	 *     runtime: "bun",
+	 *     evidence: "bun.lock",
+	 *   })),
+	 * });
+	 * const program = Effect.flatMap(PackageManagerDetector, (detector) => detector.detect("/repo"));
+	 * const detected = Effect.runSync(Effect.provide(program, TestDetector));
+	 *
+	 * console.log(detected.name) // bun
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
+	static readonly layerTest = (
+		overrides: Partial<PackageManagerDetectorShape> = {},
+	): Layer.Layer<PackageManagerDetector> =>
+		Layer.succeed(PackageManagerDetector, PackageManagerDetector.makeTest(overrides));
+}
