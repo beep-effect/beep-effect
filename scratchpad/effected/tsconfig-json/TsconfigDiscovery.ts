@@ -3,18 +3,27 @@ import type * as FileSystem from "effect/FileSystem";
 import type * as O from "effect/Option";
 import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/tsconfig-json/TsconfigDiscovery");
 
 /**
  * Options for {@link TsconfigDiscovery.findNearest}.
  *
  * @public
  */
-export interface FindNearestOptions {
+export const FindNearestOptions = S.Struct({
 	/** The config file name to search for. Defaults to `"tsconfig.json"`. */
-	readonly filename?: string;
+	filename: S.optionalKey(S.String).annotateKey({ description: "The config filename; defaults to tsconfig.json." }),
 	/** Stop ascending after this directory, inclusive. */
-	readonly stopAt?: string;
-}
+	stopAt: S.optionalKey(S.String).annotateKey({ description: "Stop ascending after this directory, inclusive." }),
+}).annotate($I.annote("FindNearestOptions", {
+	description: "Filename and inclusive directory boundary for nearest tsconfig discovery.",
+}));
+
+/** The schema-derived nearest-config discovery options. @public */
+export type FindNearestOptions = typeof FindNearestOptions.Type;
 
 // Implementation of TsconfigDiscovery.findNearest; the public contract lives on the static.
 const findNearest = Effect.fn("findNearest")(function* (

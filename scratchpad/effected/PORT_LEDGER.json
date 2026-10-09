@@ -8349,9 +8349,132 @@
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 1504,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/tsconfig-json/TsEnumCodec.test.ts:114; scratchpad/test/tsconfig-json/ResolvedTsconfig.test.ts:137; scratchpad/test/tsconfig-json/TsconfigLoader.test.ts:364; module suite scratchpad/test/tsconfig-json/**",
+          "upstreamBehaviour": "TsEnumCodec FamilyTable used native Map; ResolvedTsconfig consumed-key lists and extendsTarget CONDITIONS/ DUNDER_KEYS used Set; record traversal used Object.keys/hasOwn/create; TsconfigLoaderSync.unsupported threw native Error.",
+          "labBehaviour": "FamilyTable uses MutableHashMap; consumed-key and condition/dunder lists use HashSet; traversal uses effect/Record keys/has; wildcard dictionaries use a typed null-prototype literal; unsupported throws a schema-tagged error. Primitive-key lookup, alias precedence and own-key filtering remain.",
+          "reason": "native-runtime: Native-runtime law replaces native collections, Object helpers and native Error with Effect representations; confirmed by the S1 commit and round-1 fable-1-10. No identity-keyed collection or freezing conversion occurs in this module."
+        },
+        {
+          "test": "scratchpad/test/tsconfig-json/TsconfigJson.test.ts:189; scratchpad/test/tsconfig-json/TsconfigLoaderSync.test.ts:94; scratchpad/test/tsconfig-json/TsconfigLoaderSync.test.ts:108",
+          "upstreamBehaviour": "TsconfigLoaderSync.unsupported threw Error with an informative message; TsconfigParseError was already schema-tagged, but its S.Defect cause encoding omitted the diagnostic stack.",
+          "labBehaviour": "UnsupportedPathOperationError is an internal S.TaggedError class with the same message and a new tag; TsconfigParseError.cause uses S.Defect({ includeStack: true }) and retains the encoded Error stack. Existing parse/extends typed failures remain.",
+          "reason": "tagged-errors: Native Error prohibition and the cause-field law require schema-tagged failures and S.Defect({ includeStack: true }); fix-tsconfig-json-g1.md records sol-1-6 and the encoded-stack test. The unsupported-operation tag has no dedicated test; see summary."
+        },
+        {
+          "test": "scratchpad/test/tsconfig-json/JsxConfig.test.ts:49; scratchpad/test/tsconfig-json/JsxConfig.test.ts:63; scratchpad/test/tsconfig-json/ResolvedTsconfig.test.ts:26; scratchpad/test/tsconfig-json/PortableTsconfig.test.ts:9; scratchpad/test/tsconfig-json/TsconfigDiscovery.test.ts:13; scratchpad/test/tsconfig-json/TsEnumCodec.assignability.test.ts:35",
+          "upstreamBehaviour": "Compiler/watch enum domains used S.Literals and EnumFamily a handwritten union; ProgrammaticRecord and ProgrammaticCompilerOptions were interfaces; ResolvedTsconfig/PortableTsconfig were interface/static facades and their options were type-only. JsxConfig was S.Class with optional importSource on both runtimes.",
+          "labBehaviour": "CompilerOptions.ts/TsconfigJson.ts domains and TsEnumCodec.EnumFamily use LiteralKit and derived aliases; programmatic records and discovery/portable options are schemas; ResolvedTsconfig/PortableTsconfig retain statics through S.Opaque. JsxConfig is a LiteralKit runtime union on S.Opaque: automatic requires importSource, classic strips it; projection defaults remain.",
+          "reason": "schema-first: Schema-first EF-33, named-domain law 19, tagged-union law 20/EF-13 and the confirmed S.Opaque statics ruling; fix groups g1-g3 and inventory sol-1-2/3/4/5 require these models. Same-name types and runtime schema exports are grouped here rather than creating a separate added-exports class."
+        },
+        {
+          "test": "scratchpad/test/tsconfig-json/CompilerOptions.test.ts:70; scratchpad/test/tsconfig-json/CompilerOptions.test.ts:144; scratchpad/test/tsconfig-json/TsEnumCodec.assignability.test.ts:35; no dedicated non-finite rejection test",
+          "upstreamBehaviour": "CompilerOptions.maxNodeModuleJsDepth used S.Number and accepted Infinity/NaN in the round-1 oracle probe; ProgrammaticCompilerOptions was a type-only interface with numeric enum keys.",
+          "labBehaviour": "CompilerOptions.maxNodeModuleJsDepth uses S.Finite and rejects non-finite values; the new ProgrammaticCompilerOptions schema uses S.Finite for target, module, moduleResolution, jsx, newLine and moduleDetection. Finite-number and known-key tests remain; direct rejection coverage is absent.",
+          "reason": "numeric-domains: The @effect/tsgo schemaNumber rule TS377098 and the 2026-10-09 S.Finite ruling require finite numeric schemas; INVENTORY sol-1-9 and sol.md:60 record upstream Success versus port Failure for Infinity/NaN. The record does not claim that the requested rejection test was added."
+        },
+        {
+          "test": "scratchpad/test/tsconfig-json/TsEnumCodec.assignability.test.ts:35; scratchpad/test/tsconfig-json/TsEnumCodec.assignability.test.ts:52; scratchpad/test/tsconfig-json/TsEnumCodec.assignability.test.ts:66; scratchpad/test/tsconfig-json/TsEnumCodec.test.ts:204; module suite scratchpad/test/tsconfig-json/**",
+          "upstreamBehaviour": "encodeCompilerOptions asserted its unknown-valued result as a narrower ProgrammaticCompilerOptions whose full record assigned to the compiler replica; the programmatic codec, path transforms, portable discrimination and tests used casts/non-null assertions.",
+          "labBehaviour": "Unknown passthrough remains unknown in the schema-derived result; full-record tests assign to ProgrammaticRecord, while a cast-free Struct.pick of all six enum keys plus lib still assigns to the upstream compiler replica. The codec uses transformEffect/schema decoding, typed path copies and guards remove assertions, and deliberatelyInvalid.ts owns the one permitted wrong-input cast.",
+          "reason": "type-safety: D15 prohibits unsafe assertions; the operator permits only the named per-module deliberatelyInvalid helper. INVENTORY grok-1-1-deviation and fable-1-1-proof retain the public type widening and restored known-key proof; consumers must validate or select passthrough values for narrower compiler APIs."
+        },
+        {
+          "test": "scratchpad/test/tsconfig-json/TsconfigLoader.test.ts:66; scratchpad/test/tsconfig-json/TsconfigLoader.test.ts:364; module suite scratchpad/test/tsconfig-json/**",
+          "upstreamBehaviour": "internal/extendsTarget.resolveExports and resolveExtendsTarget exposed only fixed-arity data-first signatures.",
+          "labBehaviour": "Both exported helpers use typed dual(2) overloads and expose data-last forms while preserving existing two-argument resolution, Option results and error contracts; resolveExtendsTarget wraps an untraced Effect generator.",
+          "reason": "tsgo-diagnostics: The step-2 @effect/tsgo pipeable-signature diagnostics forced the two dual adaptations in dd1a74a113; INVENTORY fable-1-8 explicitly retains them as diagnostic-supported. Static-property pipeable additions from the review wave are grouped under effect-first."
+        },
+        {
+          "test": "scratchpad/test/tsconfig-json/TsEnumCodec.test.ts:114; scratchpad/test/tsconfig-json/ResolvedTsconfig.test.ts:40; scratchpad/test/tsconfig-json/ResolvedTsconfig.test.ts:49; scratchpad/test/tsconfig-json/ResolvedTsconfig.test.ts:59; scratchpad/test/tsconfig-json/TsconfigLoader.test.ts:22; scratchpad/test/tsconfig-json/JsxConfig.test.ts:15",
+          "upstreamBehaviour": "Discovery and internal loading returned bare Effect.gen effects; TsEnumCodec encode/decode and ResolvedTsconfig statics were data-first only; JSX projection used switch, and case-folding/guards/optional-field construction used native or ad-hoc helpers.",
+          "labBehaviour": "TsconfigDiscovery.findNearest uses Effect.fn(\"findNearest\"); loadAbs/collect/readManifest/resolveRelative/tryCandidate and resolveExtendsTarget use fnUntraced. Enum encode/decode and resolved absolutize/merge/substituteConfigDir gain dual forms; Match, String, Predicate, Array and Option helpers replace equivalent native/conditional expressions. Existing public loader spans remain.",
+          "reason": "effect-first: Effect-fn and terse-effect laws plus EF-18 require these helper shapes; fix groups g1/g2 pin curried parity and g4 restores upstream untraced internals. The restored internal span regression is not an upstream-bug deviation."
+        },
+        {
+          "test": "module suite scratchpad/test/tsconfig-json/**",
+          "upstreamBehaviour": "Source, test and JSDoc imports obtained Effect modules from the root effect barrel.",
+          "labBehaviour": "Source, tests, fixtures and examples import each module through effect/Effect, effect/Schema, effect/Option, effect/FileSystem and other effect/* paths; dual, identity and pipe come from effect/Function.",
+          "reason": "effect-imports: The per-module effect/* import law and port step 3 forbid root-barrel imports; e8f7588108 and the S0-to-working-tree diff ground the structural conversion. Existing relative sibling-module paths were already present in S0."
+        },
+        {
+          "test": "module suite scratchpad/test/tsconfig-json/**",
+          "upstreamBehaviour": "Public schemas/codecs lacked canonical @beep/identity composer identities and field metadata; existing schema error/class identities used unqualified literal names.",
+          "labBehaviour": "CompilerOptions, TsconfigJson, CompilerOptionsFromProgrammatic, TsEnumCodec, JsxConfig, ResolvedTsconfig, PortableTsconfig, TsconfigDiscovery and loader errors use file-local $ScratchpadId composers, $I.annote schema/domain metadata and annotated object fields.",
+          "reason": "identity-annotations: Port step 4 and EF-12 require @beep/identity $I annotations; INVENTORY sol-1-1 and fix-tsconfig-json-g1.md confirm completion. That report labels this identity-keys, but it concerns annotations rather than identity-keyed collections and is normalized here."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-10 — Complete S2 JSDoc carriers (scratchpad/effected/tsconfig-json/TsconfigDiscovery.ts:33)",
+          "reason": "jsdoc: During S2 convert remaining carriers, retain bodies/fences, add meaningful titled examples and tags, and use supported categories such as schemas."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-11 — Establish schema property coverage and run floors (scratchpad/test/tsconfig-json/CompilerOptions.test.ts:138)",
+          "reason": "test: During S3 retain upstream properties and add schema-derived round-trip, normalization and fidelity properties with fcRuns(n), accounting for lossy enum aliases."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-12 — Migrate assertions to the vitest canon (scratchpad/test/tsconfig-json/TsconfigLoader.test.ts:21)",
+          "reason": "test: During S3 use assertSome/assertNone/assertSuccess/assertFailure from @effect/vitest/utils while preserving payloads and plain-value assertions."
+        },
+        {
+          "seat": "grok",
+          "round": 1,
+          "finding": "sol-1-13 — Correct compiler handoff documentation (scratchpad/effected/tsconfig-json/README.md:117)",
+          "reason": "docs: During S2 distinguish guaranteed numeric enum/lib fields from unknown passthrough, describe consumer validation/selection and adapt the stale assertion claim."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-7 — Measure redundant programmatic codec schema work (scratchpad/effected/tsconfig-json/CompilerOptionsFromProgrammatic.ts:97)",
+          "reason": "perf: Benchmark first; if justified, factor a wide-input encodeRecord implementation and compose the codec transform without assertions, preserving validation and round trips."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-9 — Consolidate optional-field helper expressions (scratchpad/effected/tsconfig-json/ResolvedTsconfig.ts:299)",
+          "reason": "effect-idiom: Consolidate each result literal into one multi-key O.getSomesStruct call and simplify the typed paths presence guard in a later focused cleanup."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-10 — Consider immutable enum lookup tables (scratchpad/effected/tsconfig-json/TsEnumCodec.ts:70)",
+          "reason": "effect-idiom: Consider immutable HashMap forward/reverse tables and HashMap.get, preserving alias last-row-wins semantics; this is an immutability preference."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-4-public — Qualify the public discovery span name (scratchpad/effected/tsconfig-json/TsconfigDiscovery.ts:20)",
+          "reason": "effect-idiom: Consider naming the public span TsconfigDiscovery.findNearest; keep this preference separate from the required restoration of internal untraced behavior."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 5,
+              "backlog": 0
+            },
+            "sol": {
+              "required": 9,
+              "backlog": 4
+            },
+            "fable": {
+              "required": 4,
+              "backlog": 6
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,

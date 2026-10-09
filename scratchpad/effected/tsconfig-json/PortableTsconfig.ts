@@ -28,6 +28,10 @@ import * as P from "effect/Predicate";
 import type { CompilerOptions } from "./CompilerOptions.ts";
 import type { ResolvedTsconfig } from "./ResolvedTsconfig.ts";
 import * as A from "effect/Array";
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/tsconfig-json/PortableTsconfig");
 
 const TSCONFIG_SCHEMA_URL = "https://json.schemastore.org/tsconfig";
 
@@ -193,19 +197,21 @@ const isResolvedTsconfig = (input: ResolvedTsconfig | CompilerOptions.Type): inp
  *
  * @public
  */
-export interface PortableTsconfig {
+const PortableTsconfigData = S.Struct({
 	/** The tsconfig JSON Schema URL, stamped for IDE support. */
-	readonly $schema: "https://json.schemastore.org/tsconfig";
+	$schema: S.Literal(TSCONFIG_SCHEMA_URL).annotateKey({ description: "The tsconfig JSON Schema URL." }),
 	/** The allow-listed, forced-flag-applied compiler options. */
-	readonly compilerOptions: Record<string, unknown>;
-}
+	compilerOptions: S.Record(S.String, S.Unknown).annotateKey({ description: "Allow-listed options with forced portable flags." }),
+}).annotate($I.annote("PortableTsconfig", {
+	description: "A portable compiler-options-only tsconfig for virtual TypeScript environments.",
+}));
 
 /**
  * Options for {@link (PortableTsconfig:class).make}.
  *
  * @public
  */
-export interface PortableTsconfigOptions {
+export const PortableTsconfigOptions = S.Struct({
 	/**
 	 * Carry `types` (an array of `@types` package NAMES) onto the portable
 	 * shape when the source declares it. Defaults to `false`.
@@ -220,11 +226,19 @@ export interface PortableTsconfigOptions {
 	 * directories, which are machine-specific and config-location-dependent,
 	 * so they are never portable.
 	 */
-	readonly includeTypes?: boolean;
-}
+	includeTypes: S.optionalKey(S.Boolean).annotateKey({ description: "Carry types package names when the consumer can resolve them; defaults to false." }),
+}).annotate($I.annote("PortableTsconfigOptions", {
+	description: "Opt-ins for resolution-dependent portable compiler options.",
+}));
+
+/** The schema-derived portable projection options. @public */
+export type PortableTsconfigOptions = typeof PortableTsconfigOptions.Type;
 
 // Implementation of PortableTsconfig.make; the public contract lives on the static.
-const make = (input: ResolvedTsconfig | CompilerOptions.Type, options?: PortableTsconfigOptions): PortableTsconfig => {
+const make = (
+	input: ResolvedTsconfig | CompilerOptions.Type,
+	options?: PortableTsconfigOptions & S.MakeOptions,
+): PortableTsconfig => {
 	const source: Record<string, unknown> = isResolvedTsconfig(input) ? input.compilerOptions : input;
 	const compilerOptions: Record<string, unknown> = {};
 	for (const key of PRESERVED_OPTIONS) {
@@ -247,9 +261,7 @@ const make = (input: ResolvedTsconfig | CompilerOptions.Type, options?: Portable
  *
  * @public
  */
-// biome-ignore lint/suspicious/noUnsafeDeclarationMerging: deliberate — the class carries only statics and a private constructor, so it contributes no instance members to the merge; the interface (above) remains the sole shape of a PortableTsconfig data value.
-export class PortableTsconfig {
-	private constructor() {}
+export class PortableTsconfig extends S.Opaque<PortableTsconfig>()(PortableTsconfigData) {
 
 	/**
 	 * Project a {@link (ResolvedTsconfig:interface)} or a bare
@@ -275,5 +287,5 @@ export class PortableTsconfig {
 	 * @param options - Opt-ins for options that are portable but
 	 * resolution-dependent. Omitted means the strict, always-safe subset.
 	 */
-	static readonly make = make;
+	static override readonly make = make;
 }

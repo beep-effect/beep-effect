@@ -20,34 +20,32 @@
 //     one ("decodes enum values case-insensitively" / "rejects an unknown
 //     enum value").
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import { identity } from "effect/Function";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+
+const $I = $ScratchpadId.create("effected/tsconfig-json/CompilerOptions");
 
 /**
  * Case-insensitive literal-union decode; canonical lowercase encode. Module-
  * internal — every exported enum schema below is built
  * from it, but the helper itself is not part of the public surface.
  */
-const caseInsensitiveLiterals = <const L extends ReadonlyArray<string>>(literals: L) =>
+const caseInsensitiveLiterals = <const L extends ReadonlyArray<string>>(literals: S.Literals<L>) =>
 	S.String.pipe(
 		S.decodeTo(
-			S.Literals(literals),
+			literals,
 			SchemaTransformation.transform({
-				decode: (s: string) => s.toLowerCase(),
-				encode: (s: string) => s,
+				decode: Str.toLowerCase,
+				encode: identity,
 			}),
 		),
 	);
 
-/**
- * `compilerOptions.target` — the ECMAScript target. `es5` is deprecated in TS
- * 6.0; `es3` has no literal (a removed value — a `target: "es3"` value fails
- * decode against this schema rather than silently passing through, since
- * `target` itself is a live, typed field).
- *
- * @public
- */
-export const Target = caseInsensitiveLiterals([
+const TargetKit = LiteralKit([
 	"es5",
 	"es6",
 	"es2015",
@@ -62,15 +60,11 @@ export const Target = caseInsensitiveLiterals([
 	"es2024",
 	"es2025",
 	"esnext",
-]);
+]).annotate(
+	$I.annote("TargetLiterals", { description: "The ECMAScript language target, including supported aliases." }),
+);
 
-/**
- * `compilerOptions.module` — the module output format. `none`, `amd`, `umd`
- * and `system` are deprecated in TS 6.0.
- *
- * @public
- */
-export const Module = caseInsensitiveLiterals([
+const ModuleKit = LiteralKit([
 	"none",
 	"commonjs",
 	"amd",
@@ -86,37 +80,27 @@ export const Module = caseInsensitiveLiterals([
 	"node20",
 	"nodenext",
 	"preserve",
-]);
+]).annotate(
+	$I.annote("ModuleLiterals", { description: "The emitted JavaScript module format." }),
+);
 
-/**
- * `compilerOptions.moduleResolution`. `node10`, `node` and `classic` are
- * deprecated in TS 6.0.
- *
- * @public
- */
-export const ModuleResolution = caseInsensitiveLiterals(["node10", "node", "classic", "node16", "nodenext", "bundler"]);
+const ModuleResolutionKit = LiteralKit(["node10", "node", "classic", "node16", "nodenext", "bundler"]).annotate(
+	$I.annote("ModuleResolutionLiterals", { description: "The strategy used to resolve module imports." }),
+);
 
-/**
- * `compilerOptions.jsx`. There is no `none` literal — tsc's option map has
- * only these five.
- *
- * @public
- */
-export const Jsx = caseInsensitiveLiterals(["preserve", "react-native", "react-jsx", "react-jsxdev", "react"]);
+const JsxKit = LiteralKit(["preserve", "react-native", "react-jsx", "react-jsxdev", "react"]).annotate(
+	$I.annote("JsxLiterals", { description: "The JSX emit mode." }),
+);
 
-/** `compilerOptions.newLine`. @public */
-export const NewLine = caseInsensitiveLiterals(["crlf", "lf"]);
+const NewLineKit = LiteralKit(["crlf", "lf"]).annotate(
+	$I.annote("NewLineLiterals", { description: "The newline sequence used in emitted files." }),
+);
 
-/** `compilerOptions.moduleDetection`. @public */
-export const ModuleDetection = caseInsensitiveLiterals(["auto", "legacy", "force"]);
+const ModuleDetectionKit = LiteralKit(["auto", "legacy", "force"]).annotate(
+	$I.annote("ModuleDetectionLiterals", { description: "The strategy for identifying module source files." }),
+);
 
-/**
- * `compilerOptions.lib` member values — the complete TS 6.0.3 set, lowercase
- * canonical.
- *
- * @public
- */
-export const Lib = caseInsensitiveLiterals([
+const LibKit = LiteralKit([
 	"es5",
 	"es6",
 	"es7",
@@ -224,21 +208,101 @@ export const Lib = caseInsensitiveLiterals([
 	"esnext.typedarrays",
 	"decorators",
 	"decorators.legacy",
-]);
+]).annotate(
+	$I.annote("LibLiterals", { description: "A supported TypeScript standard library short name." }),
+);
+
+/**
+ * `compilerOptions.target` — the ECMAScript target. `es5` is deprecated in TS
+ * 6.0; `es3` has no literal (a removed value — a `target: "es3"` value fails
+ * decode against this schema rather than silently passing through, since
+ * `target` itself is a live, typed field).
+ *
+ * @public
+ */
+export const Target = caseInsensitiveLiterals(TargetKit).annotate(
+	$I.annote("Target", { description: "The ECMAScript language target, including supported aliases." }),
+);
+
+export type Target = typeof Target.Type;
+
+/**
+ * `compilerOptions.module` — the module output format. `none`, `amd`, `umd`
+ * and `system` are deprecated in TS 6.0.
+ *
+ * @public
+ */
+export const Module = caseInsensitiveLiterals(ModuleKit).annotate(
+	$I.annote("Module", { description: "The emitted JavaScript module format." }),
+);
+
+export type Module = typeof Module.Type;
+
+/**
+ * `compilerOptions.moduleResolution`. `node10`, `node` and `classic` are
+ * deprecated in TS 6.0.
+ *
+ * @public
+ */
+export const ModuleResolution = caseInsensitiveLiterals(ModuleResolutionKit).annotate(
+	$I.annote("ModuleResolution", { description: "The strategy used to resolve module imports." }),
+);
+
+export type ModuleResolution = typeof ModuleResolution.Type;
+
+/**
+ * `compilerOptions.jsx`. There is no `none` literal — tsc's option map has
+ * only these five.
+ *
+ * @public
+ */
+export const Jsx = caseInsensitiveLiterals(JsxKit).annotate(
+	$I.annote("Jsx", { description: "The JSX emit mode." }),
+);
+
+export type Jsx = typeof Jsx.Type;
+
+/** `compilerOptions.newLine`. @public */
+export const NewLine = caseInsensitiveLiterals(NewLineKit).annotate(
+	$I.annote("NewLine", { description: "The newline sequence used in emitted files." }),
+);
+
+export type NewLine = typeof NewLine.Type;
+
+/** `compilerOptions.moduleDetection`. @public */
+export const ModuleDetection = caseInsensitiveLiterals(ModuleDetectionKit).annotate(
+	$I.annote("ModuleDetection", { description: "The strategy for identifying module source files." }),
+);
+
+export type ModuleDetection = typeof ModuleDetection.Type;
+
+/**
+ * `compilerOptions.lib` member values — the complete TS 6.0.3 set, lowercase
+ * canonical.
+ *
+ * @public
+ */
+export const Lib = caseInsensitiveLiterals(LibKit).annotate(
+	$I.annote("Lib", { description: "A supported TypeScript standard library short name." }),
+);
+
+export type Lib = typeof Lib.Type;
 
 // `compilerOptions.ignoreDeprecations` — the values are version strings, not
 // case-varying identifiers, so this stays a plain (non-case-insensitive)
 // literal schema and is not exported by name.
-const IgnoreDeprecations = S.Literals(["5.0", "6.0"]);
+const IgnoreDeprecations = LiteralKit(["5.0", "6.0"]).annotate(
+	$I.annote("IgnoreDeprecations", { description: "The deprecation version whose diagnostics are suppressed." }),
+);
 
 /**
  * One `compilerOptions.plugins[]` entry: `name` is required and typed; every
  * other key is preserved verbatim (ts-plugin authors attach arbitrary extra
  * configuration).
  */
-const PluginEntry = S.StructWithRest(S.Struct({ name: S.String }), [
+const PluginEntry = S.StructWithRest(S.Struct({ name: S.String.annotateKey({ description: "The module name of the TypeScript language-service plugin." }) }), [
 	S.Record(S.String, S.Unknown),
-]);
+]).annotate($I.annote("PluginEntry", { description: "A named language-service plugin with arbitrary plugin configuration preserved." }));
 
 /**
  * `compilerOptions`, decoded as every live boolean, string, path, array,
@@ -251,141 +315,143 @@ const PluginEntry = S.StructWithRest(S.Struct({ name: S.String }), [
 export const CompilerOptions = S.StructWithRest(
 	S.Struct({
 		// ── Enum-valued options ─────────────────────────────────────
-		target: S.optionalKey(Target),
-		module: S.optionalKey(Module),
-		moduleResolution: S.optionalKey(ModuleResolution),
-		jsx: S.optionalKey(Jsx),
-		newLine: S.optionalKey(NewLine),
-		moduleDetection: S.optionalKey(ModuleDetection),
-		lib: Lib.pipe(S.Array, S.optionalKey),
-		ignoreDeprecations: S.optionalKey(IgnoreDeprecations),
+		target: S.optionalKey(Target).annotateKey({ description: "The ECMAScript language target." }),
+		module: S.optionalKey(Module).annotateKey({ description: "The emitted JavaScript module format." }),
+		moduleResolution: S.optionalKey(ModuleResolution).annotateKey({ description: "The module import resolution strategy." }),
+		jsx: S.optionalKey(Jsx).annotateKey({ description: "The JSX emit mode." }),
+		newLine: S.optionalKey(NewLine).annotateKey({ description: "The newline sequence for emitted files." }),
+		moduleDetection: S.optionalKey(ModuleDetection).annotateKey({ description: "The source-file module detection strategy." }),
+		lib: Lib.pipe(S.Array, S.optionalKey).annotateKey({ description: "The standard libraries included in compilation." }),
+		ignoreDeprecations: S.optionalKey(IgnoreDeprecations).annotateKey({ description: "The deprecation version whose diagnostics are suppressed." }),
 
 		// ── Boolean options — live typed set ─────
-		strict: S.optionalKey(S.Boolean),
-		noImplicitAny: S.optionalKey(S.Boolean),
-		strictNullChecks: S.optionalKey(S.Boolean),
-		strictFunctionTypes: S.optionalKey(S.Boolean),
-		strictBindCallApply: S.optionalKey(S.Boolean),
-		strictPropertyInitialization: S.optionalKey(S.Boolean),
-		strictBuiltinIteratorReturn: S.optionalKey(S.Boolean),
-		noImplicitThis: S.optionalKey(S.Boolean),
-		useUnknownInCatchVariables: S.optionalKey(S.Boolean),
+		strict: S.optionalKey(S.Boolean).annotateKey({ description: "Enables all strict type-checking options." }),
+		noImplicitAny: S.optionalKey(S.Boolean).annotateKey({ description: "Reports expressions and declarations with an implied any type." }),
+		strictNullChecks: S.optionalKey(S.Boolean).annotateKey({ description: "Distinguishes null and undefined from other types." }),
+		strictFunctionTypes: S.optionalKey(S.Boolean).annotateKey({ description: "Checks function parameter variance strictly." }),
+		strictBindCallApply: S.optionalKey(S.Boolean).annotateKey({ description: "Checks bind, call and apply arguments strictly." }),
+		strictPropertyInitialization: S.optionalKey(S.Boolean).annotateKey({ description: "Checks that class properties are initialized." }),
+		strictBuiltinIteratorReturn: S.optionalKey(S.Boolean).annotateKey({ description: "Uses strict return types for built-in iterators." }),
+		noImplicitThis: S.optionalKey(S.Boolean).annotateKey({ description: "Reports this expressions with an implied any type." }),
+		useUnknownInCatchVariables: S.optionalKey(S.Boolean).annotateKey({ description: "Types catch-clause variables as unknown." }),
 		/** @deprecated Deprecated in TypeScript 6.0 when set to `false`. */
-		alwaysStrict: S.optionalKey(S.Boolean),
-		noUnusedLocals: S.optionalKey(S.Boolean),
-		noUnusedParameters: S.optionalKey(S.Boolean),
-		exactOptionalPropertyTypes: S.optionalKey(S.Boolean),
-		noImplicitReturns: S.optionalKey(S.Boolean),
-		noFallthroughCasesInSwitch: S.optionalKey(S.Boolean),
-		noUncheckedIndexedAccess: S.optionalKey(S.Boolean),
-		noImplicitOverride: S.optionalKey(S.Boolean),
-		noPropertyAccessFromIndexSignature: S.optionalKey(S.Boolean),
-		allowUnusedLabels: S.optionalKey(S.Boolean),
-		allowUnreachableCode: S.optionalKey(S.Boolean),
-		noUncheckedSideEffectImports: S.optionalKey(S.Boolean),
-		allowJs: S.optionalKey(S.Boolean),
-		checkJs: S.optionalKey(S.Boolean),
-		resolveJsonModule: S.optionalKey(S.Boolean),
-		allowArbitraryExtensions: S.optionalKey(S.Boolean),
-		allowImportingTsExtensions: S.optionalKey(S.Boolean),
-		rewriteRelativeImportExtensions: S.optionalKey(S.Boolean),
-		resolvePackageJsonExports: S.optionalKey(S.Boolean),
-		resolvePackageJsonImports: S.optionalKey(S.Boolean),
+		alwaysStrict: S.optionalKey(S.Boolean).annotateKey({ description: "Parses files in strict mode and emits a use-strict directive." }),
+		noUnusedLocals: S.optionalKey(S.Boolean).annotateKey({ description: "Reports unused local declarations." }),
+		noUnusedParameters: S.optionalKey(S.Boolean).annotateKey({ description: "Reports unused function parameters." }),
+		exactOptionalPropertyTypes: S.optionalKey(S.Boolean).annotateKey({ description: "Checks optional properties without adding undefined." }),
+		noImplicitReturns: S.optionalKey(S.Boolean).annotateKey({ description: "Reports code paths that do not return a value." }),
+		noFallthroughCasesInSwitch: S.optionalKey(S.Boolean).annotateKey({ description: "Reports fallthrough cases in switch statements." }),
+		noUncheckedIndexedAccess: S.optionalKey(S.Boolean).annotateKey({ description: "Adds undefined to unchecked indexed accesses." }),
+		noImplicitOverride: S.optionalKey(S.Boolean).annotateKey({ description: "Requires override on overriding class members." }),
+		noPropertyAccessFromIndexSignature: S.optionalKey(S.Boolean).annotateKey({ description: "Requires indexed access for index-signature properties." }),
+		allowUnusedLabels: S.optionalKey(S.Boolean).annotateKey({ description: "Controls diagnostics for unused labels." }),
+		allowUnreachableCode: S.optionalKey(S.Boolean).annotateKey({ description: "Controls diagnostics for unreachable code." }),
+		noUncheckedSideEffectImports: S.optionalKey(S.Boolean).annotateKey({ description: "Checks unresolved side-effect imports." }),
+		allowJs: S.optionalKey(S.Boolean).annotateKey({ description: "Includes JavaScript files in compilation." }),
+		checkJs: S.optionalKey(S.Boolean).annotateKey({ description: "Reports type errors in JavaScript files." }),
+		resolveJsonModule: S.optionalKey(S.Boolean).annotateKey({ description: "Enables importing JSON modules." }),
+		allowArbitraryExtensions: S.optionalKey(S.Boolean).annotateKey({ description: "Allows imports with arbitrary extensions when declarations exist." }),
+		allowImportingTsExtensions: S.optionalKey(S.Boolean).annotateKey({ description: "Allows TypeScript extensions in import paths." }),
+		rewriteRelativeImportExtensions: S.optionalKey(S.Boolean).annotateKey({ description: "Rewrites relative TypeScript import extensions on emit." }),
+		resolvePackageJsonExports: S.optionalKey(S.Boolean).annotateKey({ description: "Uses package.json exports during module resolution." }),
+		resolvePackageJsonImports: S.optionalKey(S.Boolean).annotateKey({ description: "Uses package.json imports during module resolution." }),
 		/** @deprecated Deprecated in TypeScript 6.0 when set to `false`. */
-		allowSyntheticDefaultImports: S.optionalKey(S.Boolean),
+		allowSyntheticDefaultImports: S.optionalKey(S.Boolean).annotateKey({ description: "Allows default imports from modules without a default export." }),
 		/** @deprecated Deprecated in TypeScript 6.0 when set to `false`. */
-		esModuleInterop: S.optionalKey(S.Boolean),
-		preserveSymlinks: S.optionalKey(S.Boolean),
-		allowUmdGlobalAccess: S.optionalKey(S.Boolean),
-		verbatimModuleSyntax: S.optionalKey(S.Boolean),
-		isolatedModules: S.optionalKey(S.Boolean),
-		isolatedDeclarations: S.optionalKey(S.Boolean),
-		erasableSyntaxOnly: S.optionalKey(S.Boolean),
-		forceConsistentCasingInFileNames: S.optionalKey(S.Boolean),
-		declaration: S.optionalKey(S.Boolean),
-		declarationMap: S.optionalKey(S.Boolean),
-		emitDeclarationOnly: S.optionalKey(S.Boolean),
-		sourceMap: S.optionalKey(S.Boolean),
-		inlineSourceMap: S.optionalKey(S.Boolean),
-		inlineSources: S.optionalKey(S.Boolean),
-		removeComments: S.optionalKey(S.Boolean),
-		importHelpers: S.optionalKey(S.Boolean),
+		esModuleInterop: S.optionalKey(S.Boolean).annotateKey({ description: "Emits interoperability helpers for CommonJS imports." }),
+		preserveSymlinks: S.optionalKey(S.Boolean).annotateKey({ description: "Resolves modules without resolving symlinks to their real paths." }),
+		allowUmdGlobalAccess: S.optionalKey(S.Boolean).annotateKey({ description: "Allows accessing UMD globals from module files." }),
+		verbatimModuleSyntax: S.optionalKey(S.Boolean).annotateKey({ description: "Preserves imports and exports without rewriting module syntax." }),
+		isolatedModules: S.optionalKey(S.Boolean).annotateKey({ description: "Checks compatibility with single-file transpilation." }),
+		isolatedDeclarations: S.optionalKey(S.Boolean).annotateKey({ description: "Requires explicit declarations for isolated declaration emit." }),
+		erasableSyntaxOnly: S.optionalKey(S.Boolean).annotateKey({ description: "Allows only TypeScript syntax that can be erased." }),
+		forceConsistentCasingInFileNames: S.optionalKey(S.Boolean).annotateKey({ description: "Checks consistent filename casing across references." }),
+		declaration: S.optionalKey(S.Boolean).annotateKey({ description: "Emits declaration files." }),
+		declarationMap: S.optionalKey(S.Boolean).annotateKey({ description: "Emits source maps for declaration files." }),
+		emitDeclarationOnly: S.optionalKey(S.Boolean).annotateKey({ description: "Emits declarations without JavaScript." }),
+		sourceMap: S.optionalKey(S.Boolean).annotateKey({ description: "Emits separate JavaScript source maps." }),
+		inlineSourceMap: S.optionalKey(S.Boolean).annotateKey({ description: "Embeds source maps in emitted JavaScript." }),
+		inlineSources: S.optionalKey(S.Boolean).annotateKey({ description: "Embeds source contents in source maps." }),
+		removeComments: S.optionalKey(S.Boolean).annotateKey({ description: "Removes comments from emitted files." }),
+		importHelpers: S.optionalKey(S.Boolean).annotateKey({ description: "Imports emit helpers from tslib." }),
 		/** @deprecated Deprecated in TypeScript 6.0. */
-		downlevelIteration: S.optionalKey(S.Boolean),
-		emitBOM: S.optionalKey(S.Boolean),
-		noEmit: S.optionalKey(S.Boolean),
-		noEmitHelpers: S.optionalKey(S.Boolean),
-		noEmitOnError: S.optionalKey(S.Boolean),
-		preserveConstEnums: S.optionalKey(S.Boolean),
-		stripInternal: S.optionalKey(S.Boolean),
-		experimentalDecorators: S.optionalKey(S.Boolean),
-		emitDecoratorMetadata: S.optionalKey(S.Boolean),
-		useDefineForClassFields: S.optionalKey(S.Boolean),
-		noCheck: S.optionalKey(S.Boolean),
-		composite: S.optionalKey(S.Boolean),
-		incremental: S.optionalKey(S.Boolean),
-		disableSourceOfProjectReferenceRedirect: S.optionalKey(S.Boolean),
-		disableSolutionSearching: S.optionalKey(S.Boolean),
-		disableReferencedProjectLoad: S.optionalKey(S.Boolean),
-		assumeChangesOnlyAffectDirectDependencies: S.optionalKey(S.Boolean),
-		noErrorTruncation: S.optionalKey(S.Boolean),
-		noLib: S.optionalKey(S.Boolean),
-		noResolve: S.optionalKey(S.Boolean),
-		skipDefaultLibCheck: S.optionalKey(S.Boolean),
-		skipLibCheck: S.optionalKey(S.Boolean),
-		diagnostics: S.optionalKey(S.Boolean),
-		extendedDiagnostics: S.optionalKey(S.Boolean),
-		listFiles: S.optionalKey(S.Boolean),
-		listFilesOnly: S.optionalKey(S.Boolean),
-		listEmittedFiles: S.optionalKey(S.Boolean),
-		explainFiles: S.optionalKey(S.Boolean),
-		traceResolution: S.optionalKey(S.Boolean),
-		preserveWatchOutput: S.optionalKey(S.Boolean),
-		pretty: S.optionalKey(S.Boolean),
-		disableSizeLimit: S.optionalKey(S.Boolean),
-		libReplacement: S.optionalKey(S.Boolean),
-		stableTypeOrdering: S.optionalKey(S.Boolean),
+		downlevelIteration: S.optionalKey(S.Boolean).annotateKey({ description: "Emits iterable-compatible helpers for older targets." }),
+		emitBOM: S.optionalKey(S.Boolean).annotateKey({ description: "Adds a byte-order mark to emitted files." }),
+		noEmit: S.optionalKey(S.Boolean).annotateKey({ description: "Disables all file emission." }),
+		noEmitHelpers: S.optionalKey(S.Boolean).annotateKey({ description: "Disables generation of emit helpers." }),
+		noEmitOnError: S.optionalKey(S.Boolean).annotateKey({ description: "Disables emit when diagnostics report errors." }),
+		preserveConstEnums: S.optionalKey(S.Boolean).annotateKey({ description: "Preserves const enum declarations on emit." }),
+		stripInternal: S.optionalKey(S.Boolean).annotateKey({ description: "Omits declarations marked internal." }),
+		experimentalDecorators: S.optionalKey(S.Boolean).annotateKey({ description: "Enables legacy experimental decorators." }),
+		emitDecoratorMetadata: S.optionalKey(S.Boolean).annotateKey({ description: "Emits decorator type metadata." }),
+		useDefineForClassFields: S.optionalKey(S.Boolean).annotateKey({ description: "Uses define semantics for class fields." }),
+		noCheck: S.optionalKey(S.Boolean).annotateKey({ description: "Disables full type checking." }),
+		composite: S.optionalKey(S.Boolean).annotateKey({ description: "Enables constraints for referenced composite projects." }),
+		incremental: S.optionalKey(S.Boolean).annotateKey({ description: "Stores incremental compilation information." }),
+		disableSourceOfProjectReferenceRedirect: S.optionalKey(S.Boolean).annotateKey({ description: "Uses referenced declaration files instead of project sources." }),
+		disableSolutionSearching: S.optionalKey(S.Boolean).annotateKey({ description: "Disables automatic solution-project searching." }),
+		disableReferencedProjectLoad: S.optionalKey(S.Boolean).annotateKey({ description: "Disables automatic loading of referenced projects." }),
+		assumeChangesOnlyAffectDirectDependencies: S.optionalKey(S.Boolean).annotateKey({ description: "Limits incremental checking to direct dependencies." }),
+		noErrorTruncation: S.optionalKey(S.Boolean).annotateKey({ description: "Prevents truncation of diagnostic messages." }),
+		noLib: S.optionalKey(S.Boolean).annotateKey({ description: "Disables automatic inclusion of library files." }),
+		noResolve: S.optionalKey(S.Boolean).annotateKey({ description: "Disables adding imported files to the compilation." }),
+		skipDefaultLibCheck: S.optionalKey(S.Boolean).annotateKey({ description: "Skips checking bundled declaration libraries." }),
+		skipLibCheck: S.optionalKey(S.Boolean).annotateKey({ description: "Skips checking declaration files." }),
+		diagnostics: S.optionalKey(S.Boolean).annotateKey({ description: "Reports compiler performance diagnostics." }),
+		extendedDiagnostics: S.optionalKey(S.Boolean).annotateKey({ description: "Reports detailed compiler performance diagnostics." }),
+		listFiles: S.optionalKey(S.Boolean).annotateKey({ description: "Lists files included in compilation." }),
+		listFilesOnly: S.optionalKey(S.Boolean).annotateKey({ description: "Lists compilation files without further processing." }),
+		listEmittedFiles: S.optionalKey(S.Boolean).annotateKey({ description: "Lists generated output files." }),
+		explainFiles: S.optionalKey(S.Boolean).annotateKey({ description: "Explains why files are included in compilation." }),
+		traceResolution: S.optionalKey(S.Boolean).annotateKey({ description: "Reports module-resolution decisions." }),
+		preserveWatchOutput: S.optionalKey(S.Boolean).annotateKey({ description: "Preserves terminal output between watch compilations." }),
+		pretty: S.optionalKey(S.Boolean).annotateKey({ description: "Formats diagnostics with color and context." }),
+		disableSizeLimit: S.optionalKey(S.Boolean).annotateKey({ description: "Disables the language-service source size limit." }),
+		libReplacement: S.optionalKey(S.Boolean).annotateKey({ description: "Enables replacement of bundled libraries through packages." }),
+		stableTypeOrdering: S.optionalKey(S.Boolean).annotateKey({ description: "Uses stable ordering when serializing types." }),
 
 		// ── Path strings ─────────────────────────────────────────────
 		/** @deprecated Deprecated in TypeScript 6.0. */
-		outFile: S.optionalKey(S.String),
-		outDir: S.optionalKey(S.String),
-		rootDir: S.optionalKey(S.String),
-		declarationDir: S.optionalKey(S.String),
-		sourceRoot: S.optionalKey(S.String),
-		mapRoot: S.optionalKey(S.String),
-		tsBuildInfoFile: S.optionalKey(S.String),
+		outFile: S.optionalKey(S.String).annotateKey({ description: "The combined JavaScript output file." }),
+		outDir: S.optionalKey(S.String).annotateKey({ description: "The directory for emitted files." }),
+		rootDir: S.optionalKey(S.String).annotateKey({ description: "The root directory of compilation sources." }),
+		declarationDir: S.optionalKey(S.String).annotateKey({ description: "The directory for emitted declaration files." }),
+		sourceRoot: S.optionalKey(S.String).annotateKey({ description: "The source root recorded in source maps." }),
+		mapRoot: S.optionalKey(S.String).annotateKey({ description: "The location of emitted source maps." }),
+		tsBuildInfoFile: S.optionalKey(S.String).annotateKey({ description: "The incremental compilation state file." }),
 		/** @deprecated Deprecated in TypeScript 6.0. */
-		baseUrl: S.optionalKey(S.String),
-		generateCpuProfile: S.optionalKey(S.String),
-		generateTrace: S.optionalKey(S.String),
+		baseUrl: S.optionalKey(S.String).annotateKey({ description: "The base directory for non-relative module resolution." }),
+		generateCpuProfile: S.optionalKey(S.String).annotateKey({ description: "The output file for the compiler CPU profile." }),
+		generateTrace: S.optionalKey(S.String).annotateKey({ description: "The directory for compiler tracing output." }),
 
 		// ── Path lists ───────────────────────────────────────────────
-		typeRoots: S.String.pipe(S.Array, S.optionalKey),
-		rootDirs: S.String.pipe(S.Array, S.optionalKey),
+		typeRoots: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "The directories searched for type packages." }),
+		rootDirs: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "The source directories treated as one virtual root." }),
 
 		// ── Plain strings ────────────────────────────────────────────
-		jsxFactory: S.optionalKey(S.String),
-		jsxFragmentFactory: S.optionalKey(S.String),
-		jsxImportSource: S.optionalKey(S.String),
-		reactNamespace: S.optionalKey(S.String),
+		jsxFactory: S.optionalKey(S.String).annotateKey({ description: "The factory used for classic JSX elements." }),
+		jsxFragmentFactory: S.optionalKey(S.String).annotateKey({ description: "The factory used for classic JSX fragments." }),
+		jsxImportSource: S.optionalKey(S.String).annotateKey({ description: "The module providing the automatic JSX runtime." }),
+		reactNamespace: S.optionalKey(S.String).annotateKey({ description: "The namespace used for legacy React JSX." }),
 
 		// ── String lists ─────────────────────────────────────────────
-		types: S.String.pipe(S.Array, S.optionalKey),
-		customConditions: S.String.pipe(S.Array, S.optionalKey),
-		moduleSuffixes: S.String.pipe(S.Array, S.optionalKey),
+		types: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "The type packages included in the global scope." }),
+		customConditions: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "Additional package export conditions for resolution." }),
+		moduleSuffixes: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "Filename suffixes tried during module resolution." }),
 
 		// ── Record ────────────────────────────────────────────────────
-		paths: S.optionalKey(S.Record(S.String, S.Array(S.String))),
+		paths: S.optionalKey(S.Record(S.String, S.Array(S.String))).annotateKey({ description: "Module specifiers mapped to candidate path patterns." }),
 
 		// ── Objects ───────────────────────────────────────────────────
-		plugins: PluginEntry.pipe(S.Array, S.optionalKey),
+		plugins: PluginEntry.pipe(S.Array, S.optionalKey).annotateKey({ description: "Language-service plugins and their configuration." }),
 
 		// ── Number ────────────────────────────────────────────────────
-		maxNodeModuleJsDepth: S.optionalKey(S.Finite),
+		maxNodeModuleJsDepth: S.optionalKey(S.Finite).annotateKey({ description: "The maximum dependency depth for JavaScript files." }),
 	}),
 	[S.Record(S.String, S.Unknown)],
-);
+).annotate($I.annote("CompilerOptions", { description: "Optional typed compiler options with unknown and removed options preserved." }));
+
+export type CompilerOptions = typeof CompilerOptions.Type;
 
 /**
  * Type-only companion namespace for {@link (CompilerOptions:variable)}, exposing its
@@ -399,7 +465,7 @@ export declare namespace CompilerOptions {
 	 *
 	 * @public
 	 */
-	export type Type = typeof CompilerOptions.Type;
+	export type Type = CompilerOptions;
 	/**
 	 * The encoded (on-disk JSON) `compilerOptions` shape.
 	 *

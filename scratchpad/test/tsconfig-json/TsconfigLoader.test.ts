@@ -1,6 +1,9 @@
 import { assert, describe, it, layer } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Str from "effect/String";
+import * as Tracer from "effect/Tracer";
 import { resolveExports, resolveExtendsTarget } from "../../effected/tsconfig-json/internal/extendsTarget.ts";
 import { TsconfigLoader } from "../../effected/tsconfig-json/TsconfigLoader.ts";
 import { fixtureLayer } from "./fixtures.ts";
@@ -9,6 +12,51 @@ import { fixtureLayer } from "./fixtures.ts";
 const tree = (...entries: ReadonlyArray<readonly [string, string]>): ReadonlyMap<string, string> => new Map(entries);
 
 const EMPTY = "{}";
+
+layer(
+	fixtureLayer(
+		tree(
+			["/proj/app/tsconfig.json", '{"extends":"./local"}'],
+			["/proj/app/local.json", '{"extends":"base"}'],
+			["/proj/node_modules/base/package.json", '{"tsconfig":"./base.json"}'],
+			["/proj/node_modules/base/base.json", '{"compilerOptions":{"strict":true}}'],
+		),
+	),
+)("TsconfigLoader, tracing", (it) => {
+	it.effect("preserves public loader spans without extra internal loading spans", () =>
+		Effect.gen(function* () {
+			let spanNames = A.empty<string>();
+			const tracer = Tracer.make({
+				span(options) {
+					spanNames = A.append(spanNames, options.name);
+					return new Tracer.NativeSpan(options);
+				},
+			});
+			yield* Effect.gen(function* () {
+				const doc = yield* TsconfigLoader.load("/proj/app/tsconfig.json");
+				assert.strictEqual(doc.extends, "./local");
+				const resolved = yield* TsconfigLoader.resolve("/proj/app/tsconfig.json");
+				assert.deepStrictEqual(resolved.extendedPaths, [
+					"/proj/node_modules/base/base.json",
+					"/proj/app/local.json",
+					"/proj/app/tsconfig.json",
+				]);
+				const options = yield* TsconfigLoader.compilerOptions("/proj/app/tsconfig.json");
+				assert.strictEqual(options.strict, true);
+			}).pipe(Effect.withTracer(tracer));
+			assert.deepStrictEqual(A.filter(spanNames, Str.startsWith("TsconfigLoader.")), [
+				"TsconfigLoader.load",
+				"TsconfigLoader.resolve",
+				"TsconfigLoader.compilerOptions",
+				"TsconfigLoader.resolve",
+			]);
+			assert.deepStrictEqual(
+				A.filter(spanNames, (name) => A.contains(["loadAbs", "collect", "readManifest", "resolveRelative", "tryCandidate"], name)),
+				[],
+			);
+		}),
+	);
+});
 
 // ---------------------------------------------------------------------------
 // E1 — relative / rooted targets

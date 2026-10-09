@@ -1,7 +1,21 @@
 import { assert, describe, it } from "@effect/vitest";
 import type { CompilerOptions } from "../../effected/tsconfig-json/CompilerOptions.ts";
-import { PortableTsconfig } from "../../effected/tsconfig-json/PortableTsconfig.ts";
+import { PortableTsconfig, PortableTsconfigOptions } from "../../effected/tsconfig-json/PortableTsconfig.ts";
 import type { ResolvedTsconfig } from "../../effected/tsconfig-json/ResolvedTsconfig.ts";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+
+describe("PortableTsconfig runtime models", () => {
+	it("validates and decodes plain projection results and exact optional options", () => {
+		const portable = PortableTsconfig.make({ strict: true });
+		assert.deepStrictEqual(S.decodeOption(PortableTsconfig)(portable), O.some(portable));
+		assert.isFalse(S.is(PortableTsconfig)({ ...portable, $schema: "https://example.com/other" }));
+		assert.deepStrictEqual(S.decodeOption(PortableTsconfigOptions)({}), O.some({}));
+		assert.isTrue(S.is(PortableTsconfigOptions)({ includeTypes: false }));
+		assert.isTrue(S.is(PortableTsconfigOptions)({ includeTypes: true }));
+		assert.isFalse(S.is(PortableTsconfigOptions)({ includeTypes: undefined }));
+	});
+});
 
 // A "full option zoo" compilerOptions object: at least one representative from
 // every R1 category (enum, live boolean, dead boolean, deprecated boolean,

@@ -152,7 +152,7 @@ export const resolveExports: {
  * manifest-less lookups (no exports, no tsconfig field) rather than deciding
  * the candidate. A `PlatformError` from `exists` flows through.
  */
-const readManifest = Effect.fn("readManifest")(function* (
+const readManifest = Effect.fnUntraced(function* (
 	fs: FileSystem.FileSystem,
 	manifestPath: string,
 ): Effect.fn.Return<Record<string, unknown>, PlatformError.PlatformError> {
@@ -173,7 +173,7 @@ const ownProp = (record: Record<string, unknown>, key: string): unknown =>
  * extensionless); otherwise, if the target does not already end in `.json`, the
  * `.json`-appended path is tried. There is no directory fallback.
  */
-const resolveRelative = Effect.fn("resolveRelative")(function* (
+const resolveRelative = Effect.fnUntraced(function* (
 	fs: FileSystem.FileSystem,
 	path: Path.Path,
 	fromDir: string,
@@ -197,7 +197,7 @@ const resolveRelative = Effect.fn("resolveRelative")(function* (
  * tsc probes `<pkg>/tsconfig.json` even when the manifest is absent
  * (loadNodeModuleFromDirectoryWorker, typescript.js:45943).
  */
-const tryCandidate = Effect.fn("tryCandidate")(function* (
+const tryCandidate = Effect.fnUntraced(function* (
 	fs: FileSystem.FileSystem,
 	path: Path.Path,
 	dir: string,

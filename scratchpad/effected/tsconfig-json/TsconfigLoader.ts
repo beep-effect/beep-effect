@@ -96,7 +96,7 @@ const extendsSpecs = (doc: TsconfigJson.Type): ReadonlyArray<string> => {
 };
 
 /** Read + decode one config at an already-absolute, normalized path; wrap decode failures with that path. */
-const loadAbs = Effect.fn("loadAbs")(function* (
+const loadAbs = Effect.fnUntraced(function* (
 	abs: string,
 ): Effect.fn.Return<TsconfigJson.Type, TsconfigParseError | PlatformError.PlatformError, FileSystem.FileSystem> {
 	const fs = yield* FileSystem.FileSystem;
@@ -122,7 +122,7 @@ interface ConfigLayer {
  * already-visited normalized absolute paths on THIS branch (copied per branch,
  * so a diamond is legal); it excludes `configPath` itself until it is admitted.
  */
-const collect = Effect.fn("collect")(function* (
+const collect = Effect.fnUntraced(function* (
 	configPath: string,
 	chain: ReadonlyArray<string>,
 ): Effect.fn.Return<

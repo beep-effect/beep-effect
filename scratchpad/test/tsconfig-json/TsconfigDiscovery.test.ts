@@ -1,12 +1,24 @@
-import { assert, layer } from "@effect/vitest";
+import { assert, describe, it, layer } from "@effect/vitest";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
-import { TsconfigDiscovery } from "../../effected/tsconfig-json/TsconfigDiscovery.ts";
+import { FindNearestOptions, TsconfigDiscovery } from "../../effected/tsconfig-json/TsconfigDiscovery.ts";
 import { fixtureLayer } from "./fixtures.ts";
+import * as S from "effect/Schema";
+
+describe("FindNearestOptions runtime model", () => {
+	it("decodes plain options and preserves exact optional-key semantics", () => {
+		const options: FindNearestOptions = { filename: "tsconfig.build.json", stopAt: "/a/b" };
+		assert.deepStrictEqual(S.decodeOption(FindNearestOptions)(options), O.some(options));
+		assert.deepStrictEqual(S.decodeOption(FindNearestOptions)({}), O.some({}));
+		assert.isFalse(S.is(FindNearestOptions)({ filename: undefined }));
+		assert.isFalse(S.is(FindNearestOptions)({ stopAt: undefined }));
+		assert.isFalse(S.is(FindNearestOptions)({ filename: 1 }));
+	});
+});
 
 /** Build a fixture tree from `[absolutePath, contents]` pairs; contents are irrelevant to discovery. */
 const tree = (...entries: ReadonlyArray<readonly [string, string]>): ReadonlyMap<string, string> => new Map(entries);

@@ -1,7 +1,11 @@
 // @effect-diagnostics nodeBuiltinImport:skip-file
 import { posix } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
+import { pipe } from "effect/Function";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { ResolvedTsconfig } from "../../effected/tsconfig-json/ResolvedTsconfig.ts";
+import type { TsconfigJson } from "../../effected/tsconfig-json/TsconfigJson.ts";
 
 // The injected path resolver mirrors `Path.Path.resolve` (absolute `b` wins;
 // relative `b` resolves against `a`, collapsing `.`/`..`). POSIX for
@@ -17,6 +21,50 @@ const cd = (rest: string): string => `\${configDir}${rest}`;
 const seed = (): ResolvedTsconfig => ({ configPath: "", extendedPaths: [], compilerOptions: {} });
 
 const { absolutize, merge, substituteConfigDir } = ResolvedTsconfig;
+
+describe("ResolvedTsconfig runtime model and dual combinators", () => {
+	it("decodes plain resolved objects with passthrough and exact optional keys", () => {
+		const resolved: ResolvedTsconfig = {
+			configPath: "/proj/tsconfig.json",
+			extendedPaths: ["/proj/base.json", "/proj/tsconfig.json"],
+			compilerOptions: { strict: true, futureOption: { enabled: true } },
+			include: [],
+			compileOnSave: false,
+			futureTopLevel: { value: 1 },
+		};
+		assert.deepStrictEqual(S.decodeOption(ResolvedTsconfig)(resolved), O.some(resolved));
+		assert.isFalse(S.is(ResolvedTsconfig)({ ...resolved, files: undefined }));
+		assert.isFalse(S.is(ResolvedTsconfig)({ ...resolved, compilerOptions: { strict: "true" } }));
+	});
+
+	it("absolutize is equivalent in data-first and data-last forms", () => {
+		const doc: TsconfigJson.Type = {
+			compilerOptions: { outDir: "./dist", rootDirs: ["./src", cd("/shared")], paths: { "@app/*": ["src/*"] } },
+		};
+		assert.deepStrictEqual(pipe(doc, absolutize("/proj", join)), absolutize(doc, "/proj", join));
+		const withoutOptions: TsconfigJson.Type = { files: ["src/index.ts"] };
+		assert.strictEqual(pipe(withoutOptions, absolutize("/proj", join)), withoutOptions);
+	});
+
+	it("merge is equivalent in data-first and data-last forms", () => {
+		const base = merge(seed(), { compilerOptions: { strict: false }, include: ["src"], futureKey: "base" }, "/proj/config/base.json");
+		const derived: TsconfigJson.Type = {
+			compilerOptions: { strict: true, paths: { "@app/*": ["src/*"] } },
+			watchOptions: { excludeFiles: [cd("/generated")] },
+			futureKey: "derived",
+		};
+		assert.deepStrictEqual(pipe(base, merge(derived, "/proj/tsconfig.json")), merge(base, derived, "/proj/tsconfig.json"));
+	});
+
+	it("substituteConfigDir is equivalent in data-first and data-last forms", () => {
+		const resolved = merge(seed(), {
+			compilerOptions: { outDir: cd("/dist"), paths: { "@app/*": [cd("/src/*")] } },
+			include: [cd("/src")],
+			watchOptions: { excludeDirectories: [cd("/generated")] },
+		}, "/proj/tsconfig.json");
+		assert.deepStrictEqual(pipe(resolved, substituteConfigDir("/final")), substituteConfigDir(resolved, "/final"));
+	});
+});
 
 describe("ResolvedTsconfig.merge — E4 merge per field", () => {
 	it("E4 compilerOptions: per-key shallow assign, derived wins", () => {

@@ -26,12 +26,15 @@
 // runtime while `TsEnumCodec` type-imports it back — a conceptual inversion and
 // a `noImportCycles` risk. This module imports both; nothing imports it.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as SchemaParser from "effect/SchemaParser";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { CompilerOptions } from "./CompilerOptions.ts";
 import { TsEnumCodec } from "./TsEnumCodec.ts";
+
+const $I = $ScratchpadId.create("effected/tsconfig-json/CompilerOptionsFromProgrammatic");
 
 /**
  * The untyped record this codec accepts on its encoded side. Exported because
@@ -42,9 +45,11 @@ import { TsEnumCodec } from "./TsEnumCodec.ts";
  *
  * @public
  */
-export interface ProgrammaticRecord {
-	readonly [key: string]: unknown;
-}
+export const ProgrammaticRecord = S.Record(S.String, S.Unknown).annotate(
+	$I.annote("ProgrammaticRecord", { description: "Unvalidated programmatic compiler options, including invalid known fields and unknown passthrough values." }),
+);
+
+export type ProgrammaticRecord = typeof ProgrammaticRecord.Type;
 
 /**
  * A codec between the **programmatic** `compilerOptions` shape TypeScript's own
@@ -88,8 +93,8 @@ export interface ProgrammaticRecord {
  * @category codecs
  * @since 0.0.0
  */
-export const CompilerOptionsFromProgrammatic: S.Codec<typeof CompilerOptions.Type, ProgrammaticRecord> =
-	S.Record(S.String, S.Unknown).pipe(
+export const CompilerOptionsFromProgrammatic: S.Codec<CompilerOptions, ProgrammaticRecord> =
+	ProgrammaticRecord.pipe(
 		S.decodeTo(
 			CompilerOptions,
 			SchemaTransformation.transformEffect({
@@ -100,4 +105,7 @@ export const CompilerOptionsFromProgrammatic: S.Codec<typeof CompilerOptions.Typ
 					),
 			}),
 		),
+		S.annotate($I.annote("CompilerOptionsFromProgrammatic", { description: "A validating codec between programmatic numeric compiler options and canonical string compiler options." })),
 	);
+
+export type CompilerOptionsFromProgrammatic = typeof CompilerOptionsFromProgrammatic.Type;

@@ -14,13 +14,18 @@
 // calling. `dirname`/`relative`/`isAbsolutePath` are pure POSIX string ops on
 // that convention, which keeps the module IO-free while matching tsc's behavior.
 
-import type { CompilerOptions } from "./CompilerOptions.ts";
-import type { Reference, TsconfigJson, TypeAcquisition, WatchOptions } from "./TsconfigJson.ts";
+import { $ScratchpadId } from "@beep/identity/packages";
+import { CompilerOptions } from "./CompilerOptions.ts";
+import { Reference, type TsconfigJson, TypeAcquisition, WatchOptions } from "./TsconfigJson.ts";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as HashSet from "effect/HashSet";
 import * as O from "@beep/utils/Option";
+import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/tsconfig-json/ResolvedTsconfig");
 
 /**
  * The result of resolving a tsconfig.json's full `extends` chain: the merged
@@ -31,32 +36,32 @@ import * as O from "@beep/utils/Option";
  *
  * @public
  */
-export interface ResolvedTsconfig {
+const ResolvedTsconfigData = S.StructWithRest(S.Struct({
 	/** The own (most-derived) config's path — the last of {@link (ResolvedTsconfig:interface).extendedPaths}. */
-	readonly configPath: string;
+	configPath: S.String.annotateKey({ description: "The own, most-derived config path." }),
 	/** The full resolution chain, base-most first and own config last. */
-	readonly extendedPaths: ReadonlyArray<string>;
+	extendedPaths: S.Array(S.String).annotateKey({ description: "The resolution chain, base-most first." }),
 	/** The per-key merged compiler options (derived wins; `paths` replaced wholesale). */
-	readonly compilerOptions: CompilerOptions.Type;
+	compilerOptions: S.toType(CompilerOptions).annotateKey({ description: "Per-key merged compiler options." }),
 	/** The resolved `files`, if any config in the chain declared it. */
-	readonly files?: ReadonlyArray<string>;
+	files: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "Resolved files, when declared." }),
 	/** The resolved `include`, if any config in the chain declared it. */
-	readonly include?: ReadonlyArray<string>;
+	include: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "Resolved include entries, when declared." }),
 	/** The resolved `exclude`, if any config in the chain declared it. */
-	readonly exclude?: ReadonlyArray<string>;
+	exclude: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "Resolved exclude entries, when declared." }),
 	/** The own config's `references` (never inherited). */
-	readonly references?: ReadonlyArray<Reference.Type>;
+	references: Reference.pipe(S.toType, S.Array, S.optionalKey).annotateKey({ description: "The own config's references." }),
 	/** The per-key merged `watchOptions`. */
-	readonly watchOptions?: WatchOptions.Type;
+	watchOptions: WatchOptions.pipe(S.toType, S.optionalKey).annotateKey({ description: "Per-key merged watch options." }),
 	/** The own config's `typeAcquisition` (never inherited). */
-	readonly typeAcquisition?: TypeAcquisition.Type;
+	typeAcquisition: TypeAcquisition.pipe(S.toType, S.optionalKey).annotateKey({ description: "The own config's type acquisition." }),
 	/** `compileOnSave`, inherited only when own is undefined and the inherited value is truthy. */
-	readonly compileOnSave?: boolean;
+	compileOnSave: S.optionalKey(S.Boolean).annotateKey({ description: "The inherited or own compile-on-save flag." }),
 	/** The directory of the config that declared `paths`, against which `paths` values resolve. */
-	readonly pathsBase?: string;
-	/** Unknown top-level keys, preserved through the merge (forward tolerance). */
-	readonly [key: string]: unknown;
-}
+	pathsBase: S.optionalKey(S.String).annotateKey({ description: "The directory of the config declaring paths." }),
+}), [S.Record(S.String, S.Unknown)]).annotate($I.annote("ResolvedTsconfig", {
+	description: "A resolved tsconfig extends chain with provenance and unknown-key passthrough.",
+}));
 
 // ── The `${configDir}` template ────────────────────────────────────────
 
@@ -169,7 +174,10 @@ const transformCompilerOptionPaths = (
 };
 
 // Implementation of ResolvedTsconfig.absolutize; the public contract lives on the static.
-const absolutize = (
+const absolutize: {
+	(configDir: string, join: (a: string, b: string) => string): (doc: TsconfigJson.Type) => TsconfigJson.Type;
+	(doc: TsconfigJson.Type, configDir: string, join: (a: string, b: string) => string): TsconfigJson.Type;
+} = dual(3, (
 	doc: TsconfigJson.Type,
 	configDir: string,
 	join: (a: string, b: string) => string,
@@ -178,7 +186,7 @@ const absolutize = (
 	if (co === undefined) return doc;
 	const absolutizeValue = (value: string): string => (startsWithConfigDir(value) ? value : join(configDir, value));
 	return { ...doc, compilerOptions: transformCompilerOptionPaths(co, absolutizeValue, false) };
-};
+});
 
 // ── merge per field ────────────────────────────────────────────────────
 
@@ -257,7 +265,10 @@ const mergeWatchOptions = (
 };
 
 // Implementation of ResolvedTsconfig.merge; the public contract lives on the static.
-const merge = (base: ResolvedTsconfig, derived: TsconfigJson.Type, derivedPath: string): ResolvedTsconfig => {
+const merge: {
+	(derived: TsconfigJson.Type, derivedPath: string): (base: ResolvedTsconfig) => ResolvedTsconfig;
+	(base: ResolvedTsconfig, derived: TsconfigJson.Type, derivedPath: string): ResolvedTsconfig;
+} = dual(3, (base: ResolvedTsconfig, derived: TsconfigJson.Type, derivedPath: string): ResolvedTsconfig => {
 	const finalDir = dirname(derivedPath);
 	const baseDir = dirname(base.configPath);
 
@@ -305,7 +316,7 @@ const merge = (base: ResolvedTsconfig, derived: TsconfigJson.Type, derivedPath: 
 		...O.getSomesStruct({ compileOnSave: O.fromUndefinedOr(compileOnSave) }),
 		...O.getSomesStruct({ pathsBase: O.fromUndefinedOr(pathsBase) }),
 	};
-};
+});
 
 // ── ${configDir} substitution (final phase) ──────────────────────────────
 
@@ -325,7 +336,10 @@ const substituteWatchExcludes = (
 };
 
 // Implementation of ResolvedTsconfig.substituteConfigDir; the public contract lives on the static.
-const substituteConfigDir = (resolved: ResolvedTsconfig, finalDir: string): ResolvedTsconfig => {
+const substituteConfigDir: {
+	(finalDir: string): (resolved: ResolvedTsconfig) => ResolvedTsconfig;
+	(resolved: ResolvedTsconfig, finalDir: string): ResolvedTsconfig;
+} = dual(2, (resolved: ResolvedTsconfig, finalDir: string): ResolvedTsconfig => {
 	const substitute = (value: string): string =>
 		startsWithConfigDir(value) ? finalDir + value.slice(CONFIG_DIR_TEMPLATE.length) : value;
 
@@ -343,7 +357,7 @@ const substituteConfigDir = (resolved: ResolvedTsconfig, finalDir: string): Reso
 		...O.getSomesStruct({ exclude: O.fromUndefinedOr(exclude) }),
 		...O.getSomesStruct({ watchOptions: O.fromUndefinedOr(watchOptions) }),
 	};
-};
+});
 
 /**
  * The pure extends-merge engine: parse-time path absolutization
@@ -353,9 +367,7 @@ const substituteConfigDir = (resolved: ResolvedTsconfig, finalDir: string): Reso
  *
  * @public
  */
-// biome-ignore lint/suspicious/noUnsafeDeclarationMerging: deliberate — the class carries only statics and a private constructor, so it contributes no instance members to the merge; the interface (above) remains the sole shape of a ResolvedTsconfig data value.
-export class ResolvedTsconfig {
-	private constructor() {}
+export class ResolvedTsconfig extends S.Opaque<ResolvedTsconfig>()(ResolvedTsconfigData) {
 
 	/**
 	 * Absolutize a config's path-typed options against its own

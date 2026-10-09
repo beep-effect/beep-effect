@@ -186,6 +186,20 @@ describe("TsconfigParseError", () => {
 		assert.strictEqual(error._tag, "TsconfigParseError");
 	});
 
+	it.effect("preserves the diagnostic cause stack when encoded", () =>
+		Effect.gen(function* () {
+			const cause = new Error("inner");
+			const stack = cause.stack ?? assert.fail("The diagnostic cause must carry a stack.");
+			const error = TsconfigParseError.make({ path: "/repo/tsconfig.json", cause });
+			const encoded = yield* S.encodeEffect(TsconfigParseError)(error);
+			assert.deepStrictEqual(encoded.cause, {
+				name: cause.name,
+				message: cause.message,
+				stack,
+			});
+		}),
+	);
+
 	it("allows an empty path when not file-bound", () => {
 		const error = TsconfigParseError.make({ path: "", cause: new Error("boom") });
 		assert.strictEqual(error.path, "");

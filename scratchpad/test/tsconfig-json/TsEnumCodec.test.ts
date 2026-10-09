@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import type { CompilerOptions } from "../../effected/tsconfig-json/CompilerOptions.ts";
 import { TsEnumCodec } from "../../effected/tsconfig-json/TsEnumCodec.ts";
@@ -113,6 +114,14 @@ describe("TsEnumCodec", () => {
 			it(`${family}`, () => {
 				for (const { name, value, canonical } of rows) {
 					assert.deepStrictEqual(
+						pipe(family, TsEnumCodec.encode(name)),
+						TsEnumCodec.encode(family, name),
+					);
+					assert.deepStrictEqual(
+						pipe(family, TsEnumCodec.decode(value)),
+						TsEnumCodec.decode(family, value),
+					);
+					assert.deepStrictEqual(
 						TsEnumCodec.encode(family, name),
 						O.some(value),
 						`encode(${family}, ${name}) should be Option.some(${value})`,
@@ -141,6 +150,8 @@ describe("TsEnumCodec", () => {
 		it("encode of an unknown string returns Option.none()", () => {
 			assert.isTrue(O.isNone(TsEnumCodec.encode("target", "es9999")));
 			assert.isTrue(O.isNone(TsEnumCodec.encode("jsx", "none")));
+			assert.deepStrictEqual(TsEnumCodec.encode("es9999")("target"), TsEnumCodec.encode("target", "es9999"));
+			assert.deepStrictEqual(TsEnumCodec.encode("none")("jsx"), TsEnumCodec.encode("jsx", "none"));
 		});
 
 		it("decode of an unknown/future numeric member returns Option.none()", () => {
@@ -148,6 +159,8 @@ describe("TsEnumCodec", () => {
 			assert.isTrue(O.isNone(TsEnumCodec.decode("target", 100))); // JSON — decode-only, no table entry
 			assert.isTrue(O.isNone(TsEnumCodec.decode("jsx", 0))); // JsxEmit.None — no tsconfig string
 			assert.isTrue(O.isNone(TsEnumCodec.decode("target", 12345)));
+			assert.deepStrictEqual(TsEnumCodec.decode(12345)("target"), TsEnumCodec.decode("target", 12345));
+			assert.deepStrictEqual(TsEnumCodec.decode(0)("jsx"), TsEnumCodec.decode("jsx", 0));
 		});
 	});
 

@@ -42,6 +42,9 @@
 //     `encodeCompilerOptions({ target: "es2023", strict: true, lib: ["esnext"] })`
 //     → `{ target: 10, strict: true, lib: ["lib.esnext.d.ts"] }`.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as S from "effect/Schema";
@@ -49,21 +52,26 @@ import type { CompilerOptions } from "./CompilerOptions.ts";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 
+const $I = $ScratchpadId.create("effected/tsconfig-json/TsEnumCodec");
+
 /**
  * The nine `compilerOptions` / `watchOptions` enum families this codec knows.
  *
  * @public
  */
-export type EnumFamily =
-	| "target"
-	| "module"
-	| "moduleResolution"
-	| "jsx"
-	| "newLine"
-	| "moduleDetection"
-	| "watchFile"
-	| "watchDirectory"
-	| "fallbackPolling";
+const EnumFamily = LiteralKit([
+	"target",
+	"module",
+	"moduleResolution",
+	"jsx",
+	"newLine",
+	"moduleDetection",
+	"watchFile",
+	"watchDirectory",
+	"fallbackPolling",
+]).annotate($I.annote("EnumFamily", { description: "The compiler and watcher enum families supported by the numeric codec." }));
+
+export type EnumFamily = typeof EnumFamily.Type;
 
 /** One family's forward (string→number, aliases included) and reverse (number→canonical string) maps. */
 interface FamilyTable {
@@ -196,12 +204,20 @@ const TABLES: Record<EnumFamily, FamilyTable> = {
 };
 
 // Implementation of TsEnumCodec.encode; the public contract lives on the static.
-const encode = (family: EnumFamily, value: string): O.Option<number> =>
-	MutableHashMap.get(TABLES[family].forward, value);
+const encode: {
+	(value: string): (family: EnumFamily) => O.Option<number>;
+	(family: EnumFamily, value: string): O.Option<number>;
+} = dual(2, (family: EnumFamily, value: string): O.Option<number> =>
+	MutableHashMap.get(TABLES[family].forward, value),
+);
 
 // Implementation of TsEnumCodec.decode; the public contract lives on the static.
-const decode = (family: EnumFamily, value: number): O.Option<string> =>
-	MutableHashMap.get(TABLES[family].reverse, value);
+const decode: {
+	(value: number): (family: EnumFamily) => O.Option<string>;
+	(family: EnumFamily, value: number): O.Option<string>;
+} = dual(2, (family: EnumFamily, value: number): O.Option<string> =>
+	MutableHashMap.get(TABLES[family].reverse, value),
+);
 
 // Implementation of TsEnumCodec.normalizeLibReference; the public contract lives on the static.
 const normalizeLibReference = (lib: string): string => {
@@ -291,20 +307,19 @@ export type ProgrammaticCompilerOptionsValue =
  */
 export const ProgrammaticCompilerOptions = S.StructWithRest(
 	S.Struct({
-		target: S.optionalKey(S.Finite),
-		module: S.optionalKey(S.Finite),
-		moduleResolution: S.optionalKey(S.Finite),
-		jsx: S.optionalKey(S.Finite),
-		newLine: S.optionalKey(S.Finite),
-		moduleDetection: S.optionalKey(S.Finite),
-		lib: S.String.pipe(S.Array, S.mutable, S.optionalKey),
+		target: S.optionalKey(S.Finite).annotateKey({ description: "The numeric TypeScript target enum value." }),
+		module: S.optionalKey(S.Finite).annotateKey({ description: "The numeric TypeScript module enum value." }),
+		moduleResolution: S.optionalKey(S.Finite).annotateKey({ description: "The numeric TypeScript moduleResolution enum value." }),
+		jsx: S.optionalKey(S.Finite).annotateKey({ description: "The numeric TypeScript jsx enum value." }),
+		newLine: S.optionalKey(S.Finite).annotateKey({ description: "The numeric TypeScript newLine enum value." }),
+		moduleDetection: S.optionalKey(S.Finite).annotateKey({ description: "The numeric TypeScript moduleDetection enum value." }),
+		lib: S.String.pipe(S.Array, S.mutable, S.optionalKey).annotateKey({ description: "The standard library file names included in compilation." }),
 	}),
 	[S.Record(S.String, S.Unknown)],
-).annotate({
-	identifier: "ProgrammaticCompilerOptions",
+).annotate($I.annote("ProgrammaticCompilerOptions", {
 	title: "Programmatic Compiler Options",
 	description: "Numeric compiler option enums and library file names with unknown options preserved.",
-});
+}));
 
 /**
  * Programmatic compiler options with unknown passthrough values.
