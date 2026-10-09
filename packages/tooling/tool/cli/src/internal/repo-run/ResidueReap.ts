@@ -1395,6 +1395,19 @@ const removeResolvedCandidate = Effect.fnUntraced(function* (
     : yield* removeThroughDirectoryHandle(handle.value, candidate.path);
 });
 
+const publishSyncedArchiveIntent = Effect.fnUntraced(function* (
+  intent: ResidueArchiveIntent,
+  journalPath: string,
+  phase: ResidueArchiveIntent["phase"],
+  label: string
+) {
+  const path = yield* Path.Path;
+  const archive = yield* ResidueArchive;
+  yield* syncDirectory(path.dirname(intent.source));
+  yield* syncDirectory(path.dirname(intent.destination));
+  yield* archive.publish(journalPath, yield* encodeIntent(ResidueArchiveIntent.make({ ...intent, phase })), label);
+});
+
 // Processes follow moved inodes. A refused rollback remains journaled for restore.
 const fenceArchiveMove = Effect.fnUntraced(function* (intent: ResidueArchiveIntent, journalPath: string) {
   const archive = yield* ResidueArchive;
@@ -1471,13 +1484,7 @@ const archiveCandidate = Effect.fnUntraced(function* (
           skipReason: BoundMoveOutcome.is["identity-changed"](moved) ? "path-changed" : "removal-failed",
         });
       yield* fenceArchiveMove(intent, journalPath);
-      yield* syncDirectory(path.dirname(intent.source));
-      yield* syncDirectory(path.dirname(intent.destination));
-      yield* archive.publish(
-        journalPath,
-        yield* encodeIntent(ResidueArchiveIntent.make({ ...intent, phase: "moved" })),
-        "residue archive move"
-      );
+      yield* publishSyncedArchiveIntent(intent, journalPath, "moved", "residue archive move");
       yield* checkpoint("moved");
       return true;
     })
@@ -1779,6 +1786,11 @@ const citationSkip = Effect.fnUntraced(function* (checkout: string, candidatePat
 });
 
 // Traversal state is internal and never serialized; each entry is charged before probing.
+type CheckoutEntryLocation = {
+  readonly beep: string;
+  readonly name: string;
+  readonly realEntry: string;
+};
 type CheckoutScan = {
   readonly beneath: Array<string>;
   readonly pending: Array<string>;
@@ -1789,7 +1801,7 @@ const checkScanCap = (scan: CheckoutScan, cap: number) =>
 
 const visitCheckoutDirectory = Effect.fnUntraced(function* (
   scan: CheckoutScan,
-  location: { readonly beep: string; readonly name: string; readonly realEntry: string },
+  location: CheckoutEntryLocation,
   cap: number
 ) {
   const fs = yield* FileSystem.FileSystem;
@@ -1816,7 +1828,7 @@ const visitCheckoutDirectory = Effect.fnUntraced(function* (
 
 const visitCheckoutEntry = Effect.fnUntraced(function* (
   scan: CheckoutScan,
-  location: { readonly beep: string; readonly name: string; readonly realEntry: string },
+  location: CheckoutEntryLocation,
   cap: number
 ) {
   const fs = yield* FileSystem.FileSystem;
@@ -2429,7 +2441,6 @@ const recoveryRefusal = (message: string, skipReason: ResidueReapSkipReason = "r
 const restoreArchivedIntent = Effect.fnUntraced(function* (context: RecoveryIntent) {
   const { entry, intent, journalPath } = context;
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const archive = yield* ResidueArchive;
   const refuse = recoveryRefusal;
   if (yield* fs.exists(intent.source)) return yield* refuse("Restore refuses an occupied source", "path-changed");
@@ -2441,18 +2452,11 @@ const restoreArchivedIntent = Effect.fnUntraced(function* (context: RecoveryInte
         ? "path-changed"
         : "removal-failed"
     );
-  yield* syncDirectory(path.dirname(intent.source));
-  yield* syncDirectory(path.dirname(intent.destination));
-  yield* archive.publish(
-    journalPath,
-    yield* encodeIntent(ResidueArchiveIntent.make({ ...intent, phase: "restored" })),
-    "residue archive restore"
-  );
+  yield* publishSyncedArchiveIntent(intent, journalPath, "restored", "residue archive restore");
   return unapplied(ResidueReapCandidate.make({ ...entry, action: "skip", retentionReason: "restored from archive" }));
 });
 const reconcileArchivedIntent = Effect.fnUntraced(function* (context: RecoveryIntent) {
   const { entry, intent, destination, journalPath } = context;
-  const path = yield* Path.Path;
   const archive = yield* ResidueArchive;
   const refuse = recoveryRefusal;
   const holders = yield* scanProcessAttachments({
@@ -2467,13 +2471,7 @@ const reconcileArchivedIntent = Effect.fnUntraced(function* (context: RecoveryIn
     );
     return yield* refuse("Archived inode has live or unknown writers; preserved for restore", "lock-held");
   }
-  yield* syncDirectory(path.dirname(intent.source));
-  yield* syncDirectory(path.dirname(intent.destination));
-  yield* archive.publish(
-    journalPath,
-    yield* encodeIntent(ResidueArchiveIntent.make({ ...intent, phase: "moved" })),
-    "reconciled residue archive move"
-  );
+  yield* publishSyncedArchiveIntent(intent, journalPath, "moved", "reconciled residue archive move");
   return unapplied(ResidueReapCandidate.make({ ...entry, action: "archive-move", recoveryDestination: destination }));
 });
 const reconcileSourceIntent = Effect.fnUntraced(function* (context: RecoveryIntent) {
@@ -2489,27 +2487,36 @@ const reconcileSourceIntent = Effect.fnUntraced(function* (context: RecoveryInte
   }
   return yield* applyCandidate(entry, O.some(realOwner), settings.policy, () => Effect.void);
 });
-const recoverArchiveIntent = Effect.fnUntraced(function* (context: RecoveryIntent) {
-  const { entry, intent, restore } = context;
-  const fs = yield* FileSystem.FileSystem;
-  const refuse = recoveryRefusal;
+const archivePhaseSkip = ({ entry, intent, restore }: RecoveryIntent): O.Option<AppliedCandidate> => {
   if (Str.Equivalence(intent.phase, "restored"))
-    return unapplied(
-      ResidueReapCandidate.make({
-        ...entry,
-        action: "skip",
-        retentionReason: "already restored; resume never rearchives",
-      })
+    return O.some(
+      unapplied(
+        ResidueReapCandidate.make({
+          ...entry,
+          action: "skip",
+          retentionReason: "already restored; resume never rearchives",
+        })
+      )
     );
   if (!restore && Str.Equivalence(intent.phase, "fenced-live"))
-    return unapplied(
-      ResidueReapCandidate.make({
-        ...entry,
-        action: "skip",
-        skipReason: "lock-held",
-        retentionReason: "fenced-live; restore or start a new run",
-      })
+    return O.some(
+      unapplied(
+        ResidueReapCandidate.make({
+          ...entry,
+          action: "skip",
+          skipReason: "lock-held",
+          retentionReason: "fenced-live; restore or start a new run",
+        })
+      )
     );
+  return O.none();
+};
+const recoverArchiveIntent = Effect.fnUntraced(function* (context: RecoveryIntent) {
+  const { intent, restore } = context;
+  const fs = yield* FileSystem.FileSystem;
+  const refuse = recoveryRefusal;
+  const retained = archivePhaseSkip(context);
+  if (O.isSome(retained)) return retained.value;
   const identityAt = Effect.fnUntraced(function* (target: string) {
     if (O.isSome(yield* fs.readLink(target).pipe(Effect.option))) return false;
     return O.exists(O.flatMap(yield* fs.stat(target).pipe(Effect.option), directoryIdentity), (identity) =>
@@ -2555,6 +2562,21 @@ const resolveRecoveryAddresses = Effect.fnUntraced(function* (
     return yield* refuse("Archive source boundary mismatch", "path-changed");
   return { resolvedSource, resolvedDestination };
 });
+type RecoveryRow = {
+  readonly candidate: ResidueReapCandidate;
+  readonly warnings: ReadonlyArray<string>;
+  readonly refused: boolean;
+};
+const assertIntentBinding = (
+  intent: ResidueArchiveIntent,
+  addresses: Effect.Success<ReturnType<typeof resolveRecoveryAddresses>>,
+  lexicalSource: string
+) =>
+  !Str.Equivalence(intent.lexicalSource, lexicalSource) ||
+  !Str.Equivalence(intent.source, addresses.resolvedSource) ||
+  !Str.Equivalence(intent.destination, addresses.resolvedDestination)
+    ? Effect.fail(recoveryRefusal("Archive intent boundary mismatch", "path-changed"))
+    : Effect.void;
 const recoverArchiveEntry = Effect.fnUntraced(function* (
   entry: ResidueReapCandidate,
   index: number,
@@ -2563,7 +2585,6 @@ const recoverArchiveEntry = Effect.fnUntraced(function* (
   const { settings, root } = context;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const refuse = recoveryRefusal;
   if (!isCheckoutResidueClass(entry.reapClass))
     return unapplied(
       ResidueReapCandidate.make({
@@ -2589,14 +2610,9 @@ const recoverArchiveEntry = Effect.fnUntraced(function* (
       })
     );
   if (!hasIntent) return yield* applyCandidate(entry, O.some(realOwner), settings.policy, () => Effect.void);
-  const { resolvedSource, resolvedDestination } = yield* resolveRecoveryAddresses(entry, owner, destination, context);
+  const addresses = yield* resolveRecoveryAddresses(entry, owner, destination, context);
   const intent = yield* decodeIntent(yield* fs.readFileString(journalPath));
-  if (
-    !Str.Equivalence(intent.lexicalSource, entry.path) ||
-    !Str.Equivalence(intent.source, resolvedSource) ||
-    !Str.Equivalence(intent.destination, resolvedDestination)
-  )
-    return yield* refuse("Archive intent boundary mismatch", "path-changed");
+  yield* assertIntentBinding(intent, addresses, entry.path);
   return yield* recoverArchiveIntent({ ...context, entry, intent, destination, journalPath, realOwner });
 });
 
@@ -2613,7 +2629,7 @@ const recoverArchiveRun = Effect.fnUntraced(function* (settings: ResidueReapSett
   const report = yield* decodeReport(yield* fs.readFileString(path.join(root, "plan.json")));
   if (!Str.Equivalence(report.repoRoot, settings.repoRoot) || !Str.Equivalence(optionOr(report.runId, ""), runId))
     return yield* refuse("Archive report owner mismatch");
-  const rows = yield* Effect.forEach(
+  const rows: ReadonlyArray<RecoveryRow> = yield* Effect.forEach(
     report.candidates,
     Effect.fnUntraced(function* (entry, index) {
       const operation = recoverArchiveEntry(entry, index, { settings, root, report, restore });
